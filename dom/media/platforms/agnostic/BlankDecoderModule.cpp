@@ -48,7 +48,7 @@ public:
                        media::TimeUnit::FromMicroseconds(aSample->mDuration),
                        aSample->mOffset);
     if (!data) {
-      mCallback->Error();
+    mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
     } else {
       mCallback->Output(data);
     }

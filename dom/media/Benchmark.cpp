@@ -282,7 +282,7 @@ BenchmarkPlayback::Output(MediaData* aData)
 }
 
 void
-BenchmarkPlayback::Error()
+BenchmarkPlayback::Error(MediaDataDecoderError aError)
 {
   RefPtr<Benchmark> ref(mMainThreadState);
   Dispatch(NS_NewRunnableFunction([this, ref]() {  MainThreadShutdown(); }));

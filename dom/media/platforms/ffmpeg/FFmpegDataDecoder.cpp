@@ -121,7 +121,10 @@ FFmpegDataDecoder<LIBAV_VER>::ProcessDecode(MediaRawData* aSample)
   }
   switch (DoDecode(aSample)) {
     case DecodeResult::DECODE_ERROR:
-      mCallback->Error();
+      mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
+      break;
+    case DecodeResult::FATAL_ERROR:
+      mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
       break;
     default:
       if (mTaskQueue->IsEmpty()) {
