@@ -109,8 +109,8 @@ function testStartConnectionWithDevice() {
         if (connectionFromEvent) {
           is(connection, connectionFromEvent, "The connection from promise and the one from |connectionavailable| event should be the same.");
         }
-        connection.onstatechange = function() {
-          connection.onstatechange = null;
+        connection.onconnect = function() {
+          connection.onconnect = null;
           is(connection.state, "connected", "Connection should be connected.");
           aResolve();
         };

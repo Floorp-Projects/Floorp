@@ -135,8 +135,8 @@ function testStartConnection() {
       ok(connection, "Sender: Connection should be available.");
       ok(connection.id, "Sender: Connection ID should be set.");
       is(connection.state, "connecting", "The initial state should be connecting.");
-      connection.onstatechange = function() {
-        connection.onstatechange = null;
+      connection.onconnect = function() {
+        connection.onconnect = null;
         is(connection.state, "connected", "Connection should be connected.");
         aResolve();
       };
@@ -182,12 +182,15 @@ function testIncomingMessage() {
 function testTerminateConnection() {
   return new Promise(function(aResolve, aReject) {
     info('Sender: --- testTerminateConnection ---');
-    connection.onstatechange = function() {
-      connection.onstatechange = null;
+    connection.onterminate = function() {
+      connection.onterminate = null;
       is(connection.state, "terminated", "Sender: Connection should be terminated.");
       aResolve();
     };
-    connection.terminate();
+    gScript.addMessageListener('ready-to-terminate', function onReadyToTerminate() {
+      gScript.removeMessageListener('ready-to-terminate', onReadyToTerminate);
+      connection.terminate();
+    });
   });
 }
 

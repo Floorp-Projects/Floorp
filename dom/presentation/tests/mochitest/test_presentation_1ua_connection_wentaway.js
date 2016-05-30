@@ -1,37 +1,23 @@
-<!DOCTYPE HTML>
-<!-- vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: -->
-<html>
-  <!-- Any copyright is dedicated to the Public Domain.
-    - http://creativecommons.org/publicdomain/zero/1.0/ -->
-  <head>
-    <meta charset="utf-8">
-    <title>Test for B2G Presentation API when sender and receiver at the same side</title>
-    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
-    <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
-  </head>
-  <body>
-    <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1234492">
-      Test for B2G Presentation API when sender and receiver at the same side</a>
-    <script type="application/javascript;version=1.8">
-
 'use strict';
+
+SimpleTest.waitForExplicitFinish();
 
 function debug(str) {
   // info(str);
 }
 
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript1UA.js'));
-var receiverUrl = SimpleTest.getTestFileURL('file_presentation_1ua_receiver.html');
+var receiverUrl = SimpleTest.getTestFileURL('file_presentation_1ua_wentaway.html');
 var request;
 var connection;
 var receiverIframe;
 
-function postMessageToIframe(aType) {
-  receiverIframe.src = receiverUrl + "#" +
-                       encodeURIComponent(JSON.stringify({ type: aType }));
-}
-
 function setup() {
+  SpecialPowers.addPermission("presentation",
+                              true, { url: receiverUrl,
+                                      originAttributes: {
+                                        appId: SpecialPowers.Ci.nsIScriptSecurityManager.NO_APP_ID,
+                                        inIsolatedMozBrowser: true }});
 
   gScript.addMessageListener('device-prompt', function devicePromptHandler() {
     debug('Got message: device-prompt');
@@ -41,20 +27,24 @@ function setup() {
 
   gScript.addMessageListener('control-channel-established', function controlChannelEstablishedHandler() {
     debug('Got message: control-channel-established');
-    gScript.removeMessageListener('control-channel-established', controlChannelEstablishedHandler);
+    gScript.removeMessageListener('control-channel-established',
+                                  controlChannelEstablishedHandler);
     receiverIframe = document.createElement('iframe');
-    receiverIframe.setAttribute('src', receiverUrl);
     receiverIframe.setAttribute("mozbrowser", "true");
     receiverIframe.setAttribute("mozpresentation", receiverUrl);
-    receiverIframe.onload = function() {
-      info('Receiver loaded.');
-      gScript.sendAsyncMessage('trigger-control-channel-open');
-    };
+    var oop = location.pathname.indexOf('_inproc') == -1;
+    receiverIframe.setAttribute("remote", oop);
+
+    receiverIframe.setAttribute('src', receiverUrl);
+    receiverIframe.addEventListener("mozbrowserloadend", function mozbrowserloadendHander() {
+      receiverIframe.removeEventListener("mozbrowserloadend", mozbrowserloadendHander);
+      info("Receiver loaded.");
+      gScript.sendAsyncMessage("trigger-control-channel-open");
+    });
 
     // This event is triggered when the iframe calls "alert".
     receiverIframe.addEventListener("mozbrowsershowmodalprompt", function receiverListener(evt) {
       var message = evt.detail.message;
-      debug('Got iframe message: ' + message);
       if (/^OK /.exec(message)) {
         ok(true, message.replace(/^OK /, ""));
       } else if (/^KO /.exec(message)) {
@@ -83,7 +73,8 @@ function setup() {
 
   gScript.addMessageListener('promise-setup-ready', function promiseSetupReadyHandler() {
     debug('Got message: promise-setup-ready');
-    gScript.removeMessageListener('promise-setup-ready', promiseSetupReadyHandler);
+    gScript.removeMessageListener('promise-setup-ready',
+                                  promiseSetupReadyHandler);
     gScript.sendAsyncMessage('trigger-on-session-request', receiverUrl);
   });
 
@@ -128,7 +119,7 @@ function testStartConnection() {
       connection = aConnection;
       ok(connection, "Sender: Connection should be available.");
       ok(connection.id, "Sender: Connection ID should be set.");
-      is(connection.state, "connecting", "The initial state should be connecting.");
+      is(connection.state, "connecting", "Sender: The initial state should be connecting.");
       connection.onconnect = function() {
         connection.onconnect = null;
         is(connection.state, "connected", "Connection should be connected.");
@@ -142,49 +133,17 @@ function testStartConnection() {
   });
 }
 
-function testSendMessage() {
+function testConnectionWentaway() {
   return new Promise(function(aResolve, aReject) {
-    info('Sender: --- testSendMessage ---');
-    gScript.addMessageListener('trigger-message-from-sender', function triggerMessageFromSenderHandler() {
-      debug('Got message: trigger-message-from-sender');
-      gScript.removeMessageListener('trigger-message-from-sender', triggerMessageFromSenderHandler);
-      info('Send message to receiver');
-      connection.send('msg-sender-to-receiver');
-    });
-
-    gScript.addMessageListener('message-from-sender-received', function messageFromSenderReceivedHandler() {
-      debug('Got message: message-from-sender-received');
-      gScript.removeMessageListener('message-from-sender-received', messageFromSenderReceivedHandler);
-      aResolve();
-    });
-  });
-}
-
-function testIncomingMessage() {
-  return new Promise(function(aResolve, aReject) {
-    info('Sender: --- testIncomingMessage ---');
-    connection.addEventListener('message', function messageHandler(evt) {
-      connection.removeEventListener('message', messageHandler);
-      let msg = evt.data;
-      is(msg, "msg-receiver-to-sender", "Sender: Sender should receive message from Receiver");
-      postMessageToIframe('message-from-receiver-received');
-      aResolve();
-    });
-    postMessageToIframe('trigger-message-from-receiver');
-  });
-}
-
-function testTerminateConnection() {
-  return new Promise(function(aResolve, aReject) {
-    info('Sender: --- testTerminateConnection ---');
-    connection.onterminate = function() {
-      connection.onterminate = null;
-      is(connection.state, "terminated", "Sender: Connection should be terminated.");
+    info('Sender: --- testConnectionWentaway ---');
+    connection.onclose = function() {
+      connection.onclose = null;
+      is(connection.state, "closed", "Sender: Connection should be closed.");
       aResolve();
     };
-    gScript.addMessageListener('ready-to-terminate', function onReadyToTerminate() {
-      gScript.removeMessageListener('ready-to-terminate', onReadyToTerminate);
-      connection.terminate();
+    gScript.addMessageListener('ready-to-remove-receiverFrame', function onReadyToRemove() {
+      gScript.removeMessageListener('ready-to-remove-receiverFrame', onReadyToRemove);
+      receiverIframe.src = "http://example.com";
     });
   });
 }
@@ -197,18 +156,21 @@ function teardown() {
     SimpleTest.finish();
   });
 
+  SpecialPowers.removePermission("presentation",
+                                 { url: receiverUrl,
+                                   originAttributes: {
+                                     appId: SpecialPowers.Ci.nsIScriptSecurityManager.NO_APP_ID,
+                                     inIsolatedMozBrowser: true }});
   gScript.sendAsyncMessage('teardown');
 }
 
 function runTests() {
   setup().then(testCreateRequest)
          .then(testStartConnection)
-         .then(testSendMessage)
-         .then(testIncomingMessage)
-         .then(testTerminateConnection);
+         .then(testConnectionWentaway)
+         .then(teardown);
 }
 
-SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPermissions([
   {type: 'presentation-device-manage', allow: false, context: document},
   {type: 'presentation', allow: true, context: document},
@@ -216,11 +178,8 @@ SpecialPowers.pushPermissions([
 ], () => {
   SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
                                       ["dom.presentation.test.enabled", true],
-                                      ["dom.presentation.test.stage", 0],
-                                      ["dom.mozBrowserFramesEnabled", true]]},
+                                      ["dom.mozBrowserFramesEnabled", true],
+                                      ["dom.ipc.tabs.disabled", false],
+                                      ["dom.presentation.test.stage", 0]]},
                             runTests);
 });
-
-    </script>
-  </body>
-</html>
