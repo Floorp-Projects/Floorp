@@ -16,6 +16,41 @@ namespace X86Encoding {
 
 static const size_t MaxInstructionSize = 16;
 
+// These enumerated values are following the Intel documentation Volume 2C [1],
+// Appendix A.2 and Appendix A.3.
+//
+// Operand size/types as listed in the Appendix A.2.  Tables of the instructions
+// and their operands can be found in the Appendix A.3.
+//
+// E = reg/mem
+// G = reg (reg field of ModR/M)
+// U = xmm (R/M field of ModR/M)
+// V = xmm (reg field of ModR/M)
+// W = xmm/mem64
+// I = immediate
+// O = offset
+//
+// b = byte (8-bit)
+// w = word (16-bit)
+// v = register size
+// d = double (32-bit)
+// dq = double-quad (128-bit) (xmm)
+// ss = scalar float 32 (xmm)
+// ps = packed float 32 (xmm)
+// sd = scalar double (xmm)
+// pd = packed double (xmm)
+// z = 16/32/64-bit
+// vqp = (*)
+//
+// (*) Some website [2] provides a convenient list of all instructions, but be
+// aware that they do not follow the Intel documentation naming, as the
+// following enumeration does. Do not use these names as a reference for adding
+// new instructions.
+//
+// [1] http://www.intel.com/content/www/us/en/architecture-and-technology/64-ia-32-architectures-software-developer-manual-325462.html
+// [2] http://ref.x86asm.net/geek.html
+//
+// OPn_NAME_DstSrc
 enum OneByteOpcodeID {
     OP_NOP_00                       = 0x00,
     OP_ADD_EbGb                     = 0x00,
@@ -146,7 +181,7 @@ enum TwoByteOpcodeID {
     OP2_CVTSI2SD_VsdEd  = 0x2A,
     OP2_CVTTSD2SI_GdWsd = 0x2C,
     OP2_UCOMISD_VsdWsd  = 0x2E,
-    OP2_CMOVZ_GvqpEvqp  = 0x44,
+    OP2_CMOVZ_GvEv      = 0x44,
     OP2_MOVMSKPD_EdVd   = 0x50,
     OP2_ANDPS_VpsWps    = 0x54,
     OP2_ANDNPS_VpsWps   = 0x55,
