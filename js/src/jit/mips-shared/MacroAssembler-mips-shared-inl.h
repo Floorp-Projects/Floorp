@@ -749,6 +749,19 @@ MacroAssembler::branchTestMagic(Condition cond, const BaseIndex& address, Label*
     branchTestMagic(cond, scratch2, label);
 }
 
+// ========================================================================
+// Memory access primitives.
+void
+MacroAssembler::storeFloat32x3(FloatRegister src, const Address& dest)
+{
+    MOZ_CRASH("NYI");
+}
+void
+MacroAssembler::storeFloat32x3(FloatRegister src, const BaseIndex& dest)
+{
+    MOZ_CRASH("NYI");
+}
+
 //}}} check_macroassembler_style
 // ===============================================================
 

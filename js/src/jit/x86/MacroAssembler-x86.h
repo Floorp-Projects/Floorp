@@ -805,10 +805,6 @@ class MacroAssemblerX86 : public MacroAssemblerX86Shared
     inline void loadUnboxedValue(const T& src, MIRType type, AnyRegister dest);
 
     template <typename T>
-    void storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const T& dest,
-                           MIRType slotType);
-
-    template <typename T>
     void storeUnboxedPayload(ValueOperand value, T address, size_t nbytes) {
         switch (nbytes) {
           case 4:
