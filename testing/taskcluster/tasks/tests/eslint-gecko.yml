@@ -27,7 +27,7 @@ task:
           tar xvfz eslint.tar.gz &&
           rm eslint.tar.gz &&
           cd ../.. &&
-          testing/eslint/node_modules/.bin/eslint --plugin html --ext [.js,.jsm,.jsx,.xml,.html] -f tools/lint/eslint-formatter .
+          testing/eslint/node_modules/.bin/eslint --quiet --plugin html --ext [.js,.jsm,.jsx,.xml,.html] -f tools/lint/eslint-formatter .
 
   extra:
     locations:
