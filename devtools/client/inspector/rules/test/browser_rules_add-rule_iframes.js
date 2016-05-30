@@ -17,39 +17,19 @@ add_task(function* () {
   yield addTab("data:text/html;charset=utf-8," + encodeURIComponent(TEST_URI));
   let {inspector, view} = yield openRuleView();
   yield selectNode("div", inspector);
-  yield addNewRule(inspector, view);
-  yield testNewRule(view, "div", 1);
+  yield addNewRuleAndDismissEditor(inspector, view, "div", 1);
   yield addNewProperty(view, 1, "color", "red");
 
   let innerFrameDiv1 = yield getNodeFrontInFrame("div", "#frame1", inspector);
   yield selectNode(innerFrameDiv1, inspector);
-  yield addNewRule(inspector, view);
-  yield testNewRule(view, "div", 1);
+  yield addNewRuleAndDismissEditor(inspector, view, "div", 1);
   yield addNewProperty(view, 1, "color", "blue");
 
   let innerFrameDiv2 = yield getNodeFrontInFrame("div", "#frame2", inspector);
   yield selectNode(innerFrameDiv2, inspector);
-  yield addNewRule(inspector, view);
-  yield testNewRule(view, "div", 1);
+  yield addNewRuleAndDismissEditor(inspector, view, "div", 1);
   yield addNewProperty(view, 1, "color", "green");
 });
-
-/**
- * Check the newly created rule has the expected selector and submit the
- * selector editor.
- */
-function* testNewRule(view, expected, index) {
-  let idRuleEditor = getRuleViewRuleEditor(view, index);
-  let editor = idRuleEditor.selectorText.ownerDocument.activeElement;
-  is(editor.value, expected,
-      "Selector editor value is as expected: " + expected);
-
-  info("Entering the escape key");
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
-
-  is(idRuleEditor.selectorText.textContent, expected,
-      "Selector text value is as expected: " + expected);
-}
 
 /**
  * Add a new property in the rule at the provided index in the rule view.
