@@ -15,6 +15,7 @@
 namespace IPC {
 class Message;
 }
+class PickleIterator;
 
 namespace mozilla {
 namespace dom {
@@ -30,16 +31,24 @@ public:
   }
 
   static already_AddRefed<SharedJSAllocatedData>
-  CreateFromExternalData(const void* aData, size_t aDataLength)
+  AllocateForExternalData(size_t aDataLength)
   {
     uint64_t* data = Allocate64bitSafely(aDataLength);
     if (!data) {
       return nullptr;
     }
 
-    memcpy(data, aData, aDataLength);
     RefPtr<SharedJSAllocatedData> sharedData =
       new SharedJSAllocatedData(data, aDataLength);
+    return sharedData.forget();
+  }
+
+  static already_AddRefed<SharedJSAllocatedData>
+  CreateFromExternalData(const void* aData, size_t aDataLength)
+  {
+    RefPtr<SharedJSAllocatedData> sharedData =
+      AllocateForExternalData(aDataLength);
+    memcpy(sharedData->Data(), aData, aDataLength);
     return sharedData.forget();
   }
 
@@ -137,7 +146,7 @@ public:
 
   // For IPC serialization
   void WriteIPCParams(IPC::Message* aMessage) const;
-  bool ReadIPCParams(const IPC::Message* aMessage, void** aIter);
+  bool ReadIPCParams(const IPC::Message* aMessage, PickleIterator* aIter);
 
 private:
   uint64_t* MOZ_NON_OWNING_REF mExternalData;

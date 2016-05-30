@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "MDNSResponderReply.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "private/pprio.h"
 
 namespace mozilla {

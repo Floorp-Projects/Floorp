@@ -187,6 +187,12 @@ function ResponsiveUI(aWindow, aTab)
   this.mm.addMessageListener("ResponsiveMode:OnContentResize",
                              this.bound_onContentResize);
 
+  // We must be ready to handle window or tab close now that we have saved
+  // ourselves in ActiveTabs.  Otherwise we risk leaking the window.
+  this.mainWindow.addEventListener("unload", this);
+  this.tab.addEventListener("TabClose", this);
+  this.tabContainer.addEventListener("TabSelect", this);
+
   ActiveTabs.set(this.tab, this);
 
   this.inited = this.init();
@@ -225,10 +231,6 @@ ResponsiveUI.prototype = {
 
     // Load Presets
     this.loadPresets();
-
-    // Events
-    this.tab.addEventListener("TabClose", this);
-    this.tabContainer.addEventListener("TabSelect", this);
 
     // Setup the UI
     this.container.setAttribute("responsivemode", "true");
@@ -343,8 +345,9 @@ ResponsiveUI.prototype = {
     debug("RESET STACK SIZE");
     this.stack.setAttribute("style", style);
 
-    // Wait for resize message before stopping in the child when testing
-    if (DevToolsUtils.testing) {
+    // Wait for resize message before stopping in the child when testing,
+    // but only if we should expect to still get a message.
+    if (DevToolsUtils.testing && this.tab.linkedBrowser.messageManager) {
       yield this.waitForMessage("ResponsiveMode:OnContentResize");
     }
 
@@ -354,6 +357,7 @@ ResponsiveUI.prototype = {
     // Remove listeners.
     this.menulist.removeEventListener("select", this.bound_presetSelected, true);
     this.menulist.removeEventListener("change", this.bound_handleManualInput, true);
+    this.mainWindow.removeEventListener("unload", this);
     this.tab.removeEventListener("TabClose", this);
     this.tabContainer.removeEventListener("TabSelect", this);
     this.rotatebutton.removeEventListener("command", this.bound_rotate, true);
@@ -362,6 +366,7 @@ ResponsiveUI.prototype = {
     this.addbutton.removeEventListener("command", this.bound_addPreset, true);
     this.removebutton.removeEventListener("command", this.bound_removePreset, true);
     this.touchbutton.removeEventListener("command", this.bound_touch, true);
+    this.userAgentInput.removeEventListener("blur", this.bound_changeUA, true);
 
     // Removed elements.
     this.container.removeChild(this.toolbar);
@@ -391,9 +396,11 @@ ResponsiveUI.prototype = {
 
     this._telemetry.toolClosed("responsive");
 
-    let stopped = this.waitForMessage("ResponsiveMode:Stop:Done");
-    this.tab.linkedBrowser.messageManager.sendAsyncMessage("ResponsiveMode:Stop");
-    yield stopped;
+    if (this.tab.linkedBrowser.messageManager) {
+      let stopped = this.waitForMessage("ResponsiveMode:Stop:Done");
+      this.tab.linkedBrowser.messageManager.sendAsyncMessage("ResponsiveMode:Stop");
+      yield stopped;
+    }
 
     this.inited = null;
     ResponsiveUIManager.emit("off", { tab: this.tab });
@@ -426,6 +433,7 @@ ResponsiveUI.prototype = {
   handleEvent: function (aEvent) {
     switch (aEvent.type) {
       case "TabClose":
+      case "unload":
         this.close();
         break;
       case "TabSelect":
@@ -449,7 +457,10 @@ ResponsiveUI.prototype = {
    * Uncheck the menu items.
    */
   unCheckMenus: function RUI_unCheckMenus() {
-    this.chromeDoc.getElementById("menu_responsiveUI").setAttribute("checked", "false");
+    let el = this.chromeDoc.getElementById("menu_responsiveUI");
+    if (el) {
+      el.setAttribute("checked", "false");
+    }
   },
 
   /**

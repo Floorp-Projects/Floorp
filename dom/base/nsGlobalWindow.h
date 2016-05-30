@@ -1431,9 +1431,6 @@ private:
    * @param aExtraArgument Another way to pass arguments in.  This is mutually
    *        exclusive with the argv/argc approach.
    *
-   * @param aJSCallerContext The calling script's context. This must be null
-   *        when aCalledNoScript is true.
-   *
    * @param aReturn [out] The window that was opened, if any.
    *
    * Outer windows only.
@@ -1448,7 +1445,6 @@ private:
                         bool aNavigate,
                         nsIArray *argv,
                         nsISupports *aExtraArgument,
-                        JSContext *aJSCallerContext,
                         nsPIDOMWindowOuter **aReturn);
 
 public:

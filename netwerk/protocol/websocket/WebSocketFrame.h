@@ -34,7 +34,7 @@ public:
 
   // For IPC serialization
   void WriteIPCParams(IPC::Message* aMessage) const;
-  bool ReadIPCParams(const IPC::Message* aMessage, void** aIter);
+  bool ReadIPCParams(const IPC::Message* aMessage, PickleIterator* aIter);
 
   DOMHighResTimeStamp mTimeStamp;
 

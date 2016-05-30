@@ -591,7 +591,7 @@ InvokeInterruptCallback(JSContext* cx)
         // Debugger treats invoking the interrupt callback as a "step", so
         // invoke the onStep handler.
         if (cx->compartment()->isDebuggee()) {
-            ScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
+            ScriptFrameIter iter(cx);
             if (!iter.done() &&
                 cx->compartment() == iter.compartment() &&
                 iter.script()->stepModeEnabled())

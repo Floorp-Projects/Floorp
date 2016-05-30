@@ -316,8 +316,7 @@ nsXBLProtoImplAnonymousMethod::Execute(nsIContent* aBoundElement, JSAddonId* aAd
   // Now call the method
 
   // Check whether script is enabled.
-  bool scriptAllowed = nsContentUtils::GetSecurityManager()->
-                         ScriptAllowed(js::GetGlobalForObjectCrossCompartment(method));
+  bool scriptAllowed = xpc::Scriptability::Get(method).Allowed();
 
   if (scriptAllowed) {
     JS::Rooted<JS::Value> retval(cx);

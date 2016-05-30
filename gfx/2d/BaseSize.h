@@ -18,7 +18,12 @@ namespace gfx {
  */
 template <class T, class Sub>
 struct BaseSize {
-  T width, height;
+  union {
+    struct {
+      T width, height;
+    };
+    T components[2];
+  };
 
   // Constructors
   MOZ_CONSTEXPR BaseSize() : width(0), height(0) {}

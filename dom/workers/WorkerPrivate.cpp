@@ -3582,23 +3582,6 @@ WorkerPrivateParent<Derived>::SetPrincipal(nsIPrincipal* aPrincipal,
 }
 
 template <class Derived>
-JSContext*
-WorkerPrivateParent<Derived>::ParentJSContext() const
-{
-  AssertIsOnParentThread();
-
-  if (mParent) {
-    return mParent->GetJSContext();
-  }
-
-  AssertIsOnMainThread();
-
-  return mLoadInfo.mScriptContext ?
-         mLoadInfo.mScriptContext->GetNativeContext() :
-         nsContentUtils::GetSafeJSContext();
-}
-
-template <class Derived>
 void
 WorkerPrivateParent<Derived>::UpdateOverridenLoadGroup(nsILoadGroup* aBaseLoadGroup)
 {

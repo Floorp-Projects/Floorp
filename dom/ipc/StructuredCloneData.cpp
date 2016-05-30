@@ -98,14 +98,13 @@ StructuredCloneData::WriteIPCParams(IPC::Message* aMsg) const
   WriteParam(aMsg, DataLength());
 
   if (DataLength()) {
-    // Structured clone data must be 64-bit aligned.
-    aMsg->WriteBytes(Data(), DataLength(), sizeof(uint64_t));
+    aMsg->WriteBytes(Data(), DataLength());
   }
 }
 
 bool
 StructuredCloneData::ReadIPCParams(const IPC::Message* aMsg,
-                                   void** aIter)
+                                   PickleIterator* aIter)
 {
   MOZ_ASSERT(!Data());
 
@@ -118,17 +117,13 @@ StructuredCloneData::ReadIPCParams(const IPC::Message* aMsg,
     return true;
   }
 
-  uint64_t* dataBuffer = nullptr;
-  const char** buffer =
-    const_cast<const char**>(reinterpret_cast<char**>(&dataBuffer));
-  // Structured clone data must be 64-bit aligned.
-  if (!aMsg->ReadBytes(aIter, buffer, dataLength, sizeof(uint64_t))) {
+  mSharedData = SharedJSAllocatedData::AllocateForExternalData(dataLength);
+  NS_ENSURE_TRUE(mSharedData, false);
+
+  if (!aMsg->ReadBytesInto(aIter, mSharedData->Data(), dataLength)) {
+    mSharedData = nullptr;
     return false;
   }
-
-  mSharedData = SharedJSAllocatedData::CreateFromExternalData(dataBuffer,
-                                                              dataLength);
-  NS_ENSURE_TRUE(mSharedData, false);
 
   return true;
 }

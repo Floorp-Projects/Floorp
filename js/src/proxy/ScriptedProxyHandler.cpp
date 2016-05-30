@@ -1390,9 +1390,9 @@ js::proxy(JSContext* cx, unsigned argc, Value* vp)
 static bool
 RevokeProxy(JSContext* cx, unsigned argc, Value* vp)
 {
-    CallReceiver rec = CallReceiverFromVp(vp);
+    CallArgs args = CallArgsFromVp(argc, vp);
 
-    RootedFunction func(cx, &rec.callee().as<JSFunction>());
+    RootedFunction func(cx, &args.callee().as<JSFunction>());
     RootedObject p(cx, func->getExtendedSlot(ScriptedProxyHandler::REVOKE_SLOT).toObjectOrNull());
 
     if (p) {
@@ -1404,7 +1404,7 @@ RevokeProxy(JSContext* cx, unsigned argc, Value* vp)
         p->as<ProxyObject>().setExtra(ScriptedProxyHandler::HANDLER_EXTRA, NullValue());
     }
 
-    rec.rval().setUndefined();
+    args.rval().setUndefined();
     return true;
 }
 

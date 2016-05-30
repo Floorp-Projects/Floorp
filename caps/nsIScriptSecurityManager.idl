@@ -126,11 +126,6 @@ interface nsIScriptSecurityManager : nsISupports
                                       in AUTF8String uri,
                                       in unsigned long flags);
 
-    /**
-     * Return true if scripts may be executed in the scope of the given global.
-     */
-    [noscript,notxpcom] boolean scriptAllowed(in JSObjectPtr aGlobal);
-
     ///////////////// Principals ///////////////////////
 
     /**

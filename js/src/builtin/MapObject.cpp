@@ -586,11 +586,11 @@ MapObject::extract(HandleObject o)
 }
 
 ValueMap&
-MapObject::extract(CallReceiver call)
+MapObject::extract(const CallArgs& args)
 {
-    MOZ_ASSERT(call.thisv().isObject());
-    MOZ_ASSERT(call.thisv().toObject().hasClass(&MapObject::class_));
-    return *call.thisv().toObject().as<MapObject>().getData();
+    MOZ_ASSERT(args.thisv().isObject());
+    MOZ_ASSERT(args.thisv().toObject().hasClass(&MapObject::class_));
+    return *args.thisv().toObject().as<MapObject>().getData();
 }
 
 uint32_t
@@ -1208,11 +1208,11 @@ SetObject::extract(HandleObject o)
 }
 
 ValueSet &
-SetObject::extract(CallReceiver call)
+SetObject::extract(const CallArgs& args)
 {
-    MOZ_ASSERT(call.thisv().isObject());
-    MOZ_ASSERT(call.thisv().toObject().hasClass(&SetObject::class_));
-    return *static_cast<SetObject&>(call.thisv().toObject()).getData();
+    MOZ_ASSERT(args.thisv().isObject());
+    MOZ_ASSERT(args.thisv().toObject().hasClass(&SetObject::class_));
+    return *static_cast<SetObject&>(args.thisv().toObject()).getData();
 }
 
 uint32_t

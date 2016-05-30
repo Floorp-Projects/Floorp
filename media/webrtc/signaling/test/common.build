@@ -63,7 +63,6 @@ if CONFIG['OS_TARGET'] == 'Darwin':
         '-framework Carbon',
         '-framework CoreAudio',
         '-framework OpenGL',
-        '-framework QTKit',
         '-framework AVFoundation',
         '-framework CoreMedia',
         '-framework QuartzCore',

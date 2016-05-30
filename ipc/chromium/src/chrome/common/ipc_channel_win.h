@@ -12,10 +12,11 @@
 #include <queue>
 #include <string>
 
-#include "base/buffer.h"
 #include "base/message_loop.h"
 #include "base/task.h"
 #include "nsISupportsImpl.h"
+
+#include "mozilla/Maybe.h"
 
 namespace IPC {
 
@@ -83,12 +84,18 @@ class Channel::ChannelImpl : public MessageLoopForIO::IOHandler {
   // Messages to be sent are queued here.
   std::queue<Message*> output_queue_;
 
+  // If sending a message blocks then we use this iterator to keep track of
+  // where in the message we are. It gets reset when the message is finished
+  // sending.
+  mozilla::Maybe<Pickle::BufferList::IterImpl> partial_write_iter_;
+
   // We read from the pipe into this buffer
   char input_buf_[Channel::kReadBufferSize];
+  size_t input_buf_offset_;
 
-  // Large messages that span multiple pipe buffers, get built-up using
-  // this buffer.
-  Buffer input_overflow_buf_;
+  // Large incoming messages that span multiple pipe buffers get built-up in the
+  // buffers of this message.
+  mozilla::Maybe<Message> incoming_message_;
 
   // In server-mode, we have to wait for the client to connect before we
   // can begin reading.  We make use of the input_state_ when performing

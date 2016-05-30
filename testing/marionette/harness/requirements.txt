@@ -1,4 +1,4 @@
-marionette-driver >= 1.4.0
+marionette-driver >= 2.0.0
 browsermob-proxy >= 0.6.0
 manifestparser >= 1.1
 wptserve >= 1.3.0

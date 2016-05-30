@@ -107,34 +107,6 @@ js::BoxNonStrictThis(JSContext* cx, HandleValue thisv, MutableHandleValue vp)
     return true;
 }
 
-/*
- * ECMA requires "the global object", but in embeddings such as the browser,
- * which have multiple top-level objects (windows, frames, etc. in the DOM),
- * we prefer fun's parent.  An example that causes this code to run:
- *
- *   // in window w1
- *   function f() { return this }
- *   function g() { return f }
- *
- *   // in window w2
- *   var h = w1.g()
- *   alert(h() == w1)
- *
- * The alert should display "true".
- */
-bool
-js::BoxNonStrictThis(JSContext* cx, const CallReceiver& call)
-{
-    MOZ_ASSERT(!call.thisv().isMagic());
-
-#ifdef DEBUG
-    JSFunction* fun = call.callee().is<JSFunction>() ? &call.callee().as<JSFunction>() : nullptr;
-    MOZ_ASSERT_IF(fun && fun->isInterpreted(), !fun->strict());
-#endif
-
-    return BoxNonStrictThis(cx, call.thisv(), call.mutableThisv());
-}
-
 bool
 js::GetFunctionThis(JSContext* cx, AbstractFramePtr frame, MutableHandleValue res)
 {

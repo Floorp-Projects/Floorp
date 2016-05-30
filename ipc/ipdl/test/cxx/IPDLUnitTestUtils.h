@@ -19,7 +19,7 @@ struct ParamTraits<mozilla::_ipdltest::Bad>
 
   // Defined in TestActorPunning.cpp.
   static void Write(Message* aMsg, const paramType& aParam);
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult);
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult);
 };
 
 } // namespace IPC

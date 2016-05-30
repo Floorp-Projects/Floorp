@@ -22,7 +22,12 @@ namespace gfx {
  */
 template <class T, class Sub, class Coord = T>
 struct BasePoint {
-  T x, y;
+  union {
+    struct {
+      T x, y;
+    };
+    T components[2];
+  };
 
   // Constructors
   MOZ_CONSTEXPR BasePoint() : x(0), y(0) {}

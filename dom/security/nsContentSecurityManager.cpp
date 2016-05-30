@@ -85,9 +85,10 @@ DoCheckLoadURIChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
     return NS_OK;
   }
 
-  nsresult rv = NS_OK;
+  if (IsImageLoadInEditorAppType(aLoadInfo)) {
+    return NS_OK;
+  }
 
-  nsCOMPtr<nsIPrincipal> loadingPrincipal = aLoadInfo->LoadingPrincipal();
   uint32_t flags = nsIScriptSecurityManager::STANDARD;
   if (aLoadInfo->GetAllowChrome()) {
     flags |= nsIScriptSecurityManager::ALLOW_CHROME;
@@ -96,29 +97,13 @@ DoCheckLoadURIChecks(nsIURI* aURI, nsILoadInfo* aLoadInfo)
     flags |= nsIScriptSecurityManager::DISALLOW_SCRIPT;
   }
 
-  bool isImageInEditorType = IsImageLoadInEditorAppType(aLoadInfo);
-
-  // We don't have a loadingPrincipal for TYPE_DOCUMENT
-  if (aLoadInfo->GetExternalContentPolicyType() != nsIContentPolicy::TYPE_DOCUMENT &&
-      !isImageInEditorType) {
-    rv = nsContentUtils::GetSecurityManager()->
-      CheckLoadURIWithPrincipal(loadingPrincipal,
-                                aURI,
-                                flags);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-
-  // If the loadingPrincipal and the triggeringPrincipal are different, then make
-  // sure the triggeringPrincipal is allowed to access that URI.
-  nsCOMPtr<nsIPrincipal> triggeringPrincipal = aLoadInfo->TriggeringPrincipal();
-  if (loadingPrincipal != triggeringPrincipal && !isImageInEditorType) {
-    rv = nsContentUtils::GetSecurityManager()->
-           CheckLoadURIWithPrincipal(triggeringPrincipal,
+  // Only call CheckLoadURIWithPrincipal() using the TriggeringPrincipal and not
+  // the LoadingPrincipal when SEC_ALLOW_CROSS_ORIGIN_* security flags are set,
+  // to allow, e.g. user stylesheets to load chrome:// URIs.
+  return nsContentUtils::GetSecurityManager()->
+           CheckLoadURIWithPrincipal(aLoadInfo->TriggeringPrincipal(),
                                      aURI,
                                      flags);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
-  return NS_OK;
 }
 
 static bool

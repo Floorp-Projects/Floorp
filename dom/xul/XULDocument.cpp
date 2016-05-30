@@ -93,6 +93,7 @@
 #include "mozilla/dom/URL.h"
 #include "nsIContentPolicy.h"
 #include "mozAutoDocUpdate.h"
+#include "xpcpublic.h"
 #include "mozilla/StyleSheetHandle.h"
 #include "mozilla/StyleSheetHandleInlines.h"
 
@@ -3511,7 +3512,7 @@ XULDocument::ExecuteScript(nsXULPrototypeScript *aScript)
     AutoEntryScript aes(mScriptGlobalObject, "precompiled XUL <script> element");
     JSContext* cx = aes.cx();
     JS::Rooted<JSObject*> baseGlobal(cx, JS::CurrentGlobalOrNull(cx));
-    NS_ENSURE_TRUE(nsContentUtils::GetSecurityManager()->ScriptAllowed(baseGlobal), NS_OK);
+    NS_ENSURE_TRUE(xpc::Scriptability::Get(baseGlobal).Allowed(), NS_OK);
 
     JSAddonId* addonId = mCurrentPrototype ? MapURIToAddonID(mCurrentPrototype->GetURI()) : nullptr;
     JS::Rooted<JSObject*> global(cx, xpc::GetAddonScope(cx, baseGlobal, addonId));

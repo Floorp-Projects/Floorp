@@ -23,14 +23,9 @@ namespace js {
 class ScopeIter;
 
 /*
- * For a given |call|, convert null/undefined |this| into the global object for
- * the callee and replace other primitives with boxed versions. This assumes
- * that call.callee() is not strict mode code. This is the special/slow case of
- * ComputeThis.
+ * Convert null/undefined |thisv| into the current global object for the
+ * compartment, and replace other primitives with boxed versions.
  */
-extern bool
-BoxNonStrictThis(JSContext* cx, const CallReceiver& call);
-
 extern bool
 BoxNonStrictThis(JSContext* cx, HandleValue thisv, MutableHandleValue vp);
 

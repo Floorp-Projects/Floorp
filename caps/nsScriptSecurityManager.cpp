@@ -227,20 +227,6 @@ private:
     bool mMustFreeName;
 };
 
-JSContext *
-nsScriptSecurityManager::GetCurrentJSContext()
-{
-    // Get JSContext from stack.
-    return nsXPConnect::XPConnect()->GetCurrentJSContext();
-}
-
-JSContext *
-nsScriptSecurityManager::GetSafeJSContext()
-{
-    // Get JSContext from stack.
-    return nsXPConnect::XPConnect()->GetSafeJSContext();
-}
-
 /* static */
 bool
 nsScriptSecurityManager::SecurityCompareURIs(nsIURI* aSourceURI,
@@ -1110,16 +1096,6 @@ nsScriptSecurityManager::CheckLoadURIStrWithPrincipal(nsIPrincipal* aPrincipal,
     }
 
     return rv;
-}
-
-bool
-nsScriptSecurityManager::ScriptAllowed(JSObject *aGlobal)
-{
-    MOZ_ASSERT(aGlobal);
-    MOZ_ASSERT(JS_IsGlobalObject(aGlobal) || js::IsWindowProxy(aGlobal));
-
-    // Check the bits on the compartment private.
-    return xpc::Scriptability::Get(aGlobal).Allowed();
 }
 
 ///////////////// Principals ///////////////////////
