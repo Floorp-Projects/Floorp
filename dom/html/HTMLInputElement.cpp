@@ -3800,6 +3800,15 @@ HTMLInputElement::PreHandleEvent(EventChainPreVisitor& aVisitor)
   // We must cache type because mType may change during JS event (bug 2369)
   aVisitor.mItemFlags |= mType;
 
+  if (aVisitor.mEvent->mMessage == eFocus &&
+      aVisitor.mEvent->IsTrusted() &&
+      MayFireChangeOnBlur() &&
+      // StartRangeThumbDrag already set mFocusedValue on 'mousedown' before
+      // we get the 'focus' event.
+      !mIsDraggingRange) {
+    GetValue(mFocusedValue);
+  }
+
   // Fire onchange (if necessary), before we do the blur, bug 357684.
   if (aVisitor.mEvent->mMessage == eBlur) {
     // Experimental mobile types rely on the system UI to prevent users to not
@@ -4235,12 +4244,6 @@ HTMLInputElement::PostHandleEvent(EventChainPostVisitor& aVisitor)
 
   if (aVisitor.mEvent->mMessage == eFocus ||
       aVisitor.mEvent->mMessage == eBlur) {
-    if (aVisitor.mEvent->mMessage == eFocus &&
-        MayFireChangeOnBlur() &&
-        !mIsDraggingRange) { // StartRangeThumbDrag already set mFocusedValue
-      GetValue(mFocusedValue);
-    }
-
     if (aVisitor.mEvent->mMessage == eBlur) {
       if (mIsDraggingRange) {
         FinishRangeThumbDrag();
