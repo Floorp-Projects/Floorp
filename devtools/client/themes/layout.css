@@ -7,6 +7,12 @@
   overflow: auto;
 }
 
+#layout-wrapper {
+  /* The sidebar-panel is not focusable, this wrapper will catch click events in
+     all the empty area around the layout-container */
+  height: 100%;
+}
+
 #layout-container {
   /* The view will grow bigger as the window gets resized, until 400px */
   max-width: 400px;
