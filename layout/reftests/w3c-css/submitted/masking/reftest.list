@@ -25,6 +25,8 @@ fails == mask-image-3b.html mask-image-3-ref.html
 fails == mask-image-3c.html mask-image-3-ref.html
 fails == mask-image-3d.html mask-image-3-ref.html
 fails == mask-image-3e.html mask-image-3-ref.html
+fails == mask-image-4a.html blank.html
+fails == mask-image-4b.html blank.html
 
 # mask-clip test cases
 fails == mask-clip-1.html mask-clip-1-ref.html

@@ -444,6 +444,7 @@ GenerateMaskSurface(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
     return;
   }
 
+
   // Mask composition result on CoreGraphic::A8 surface is not correct
   // when mask-mode is not add(source over). Switch to skia when CG backend
   // detected.
