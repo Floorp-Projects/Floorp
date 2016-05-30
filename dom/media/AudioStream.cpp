@@ -423,9 +423,6 @@ void
 AudioStream::StartUnlocked()
 {
   mMonitor.AssertCurrentThreadOwns();
-  if (!mCubebStream) {
-    return;
-  }
 
   if (mState == INITIALIZED) {
     mState = STARTED;
@@ -453,7 +450,7 @@ AudioStream::Pause()
     return;
   }
 
-  if (!mCubebStream || (mState != STARTED && mState != RUNNING)) {
+  if (mState != STARTED && mState != RUNNING) {
     mState = STOPPED; // which also tells async OpenCubeb not to start, just init
     return;
   }
@@ -472,7 +469,7 @@ void
 AudioStream::Resume()
 {
   MonitorAutoLock mon(mMonitor);
-  if (!mCubebStream || mState != STOPPED) {
+  if (mState != STOPPED) {
     return;
   }
 
@@ -523,7 +520,7 @@ AudioStream::GetPositionInFramesUnlocked()
 {
   mMonitor.AssertCurrentThreadOwns();
 
-  if (!mCubebStream || mState == ERRORED) {
+  if (mState == ERRORED) {
     return -1;
   }
 
