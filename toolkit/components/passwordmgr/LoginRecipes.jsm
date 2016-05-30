@@ -250,7 +250,7 @@ var LoginRecipesContent = {
     }
     let field = aParent.ownerDocument.querySelector(aSelector);
     if (!field) {
-      log.warn("Login field selector wasn't matched:", aSelector);
+      log.debug("Login field selector wasn't matched:", aSelector);
       return null;
     }
     if (!(field instanceof aParent.ownerDocument.defaultView.HTMLInputElement)) {

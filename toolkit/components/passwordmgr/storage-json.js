@@ -244,14 +244,25 @@ this.LoginManagerStorage_json.prototype = {
    */
   searchLogins(count, matchData) {
     let realMatchData = {};
+    let options = {};
     // Convert nsIPropertyBag to normal JS object
     let propEnum = matchData.enumerator;
     while (propEnum.hasMoreElements()) {
       let prop = propEnum.getNext().QueryInterface(Ci.nsIProperty);
-      realMatchData[prop.name] = prop.value;
+      switch (prop.name) {
+        // Some property names aren't field names but are special options to affect the search.
+        case "schemeUpgrades": {
+          options[prop.name] = prop.value;
+          break;
+        }
+        default: {
+          realMatchData[prop.name] = prop.value;
+          break;
+        }
+      }
     }
 
-    let [logins, ids] = this._searchLogins(realMatchData);
+    let [logins, ids] = this._searchLogins(realMatchData, options);
 
     // Decrypt entries found for the caller.
     logins = this._decryptLogins(logins);
@@ -268,51 +279,38 @@ this.LoginManagerStorage_json.prototype = {
    * is an array of encrypted nsLoginInfo and ids is an array of associated
    * ids in the database.
    */
-  _searchLogins(matchData) {
+  _searchLogins(matchData, aOptions = {
+    schemeUpgrades: false,
+  }) {
     this._store.ensureDataReady();
 
     let conditions = [];
 
     function match(aLogin) {
-      let returnValue = {
-        match: false,
-        strictMatch: true
-      };
-
       for (let field in matchData) {
-        let value = matchData[field];
+        let wantedValue = matchData[field];
         switch (field) {
-          // Historical compatibility requires this special case
           case "formSubmitURL":
-            if (value != null) {
-              if (aLogin.formSubmitURL != "" && aLogin.formSubmitURL != value) {
-                // Check for cases that don't have fallback matches.
-                if (value == "" || value == "javascript:" ||
-                    aLogin.formSubmitURL == "javascript:" ||
-                    aLogin.formSubmitURL == null) {
-                  return returnValue;
-                }
-
-                // Check if it matches with a different scheme.
-                let loginURI = Services.io.newURI(aLogin.formSubmitURL, null, null);
-                let matchURI = Services.io.newURI(value, null, null);
-
-                if (loginURI.hostPort != matchURI.hostPort) {
-                  return returnValue; // not a match at all
-                }
-
-                if ((loginURI.scheme != "http" && loginURI.scheme != "https") ||
-                    (matchURI.scheme != "http" && matchURI.scheme != "https")) {
-                  // Not a match at all since we only fallback HTTP <=> HTTPS.
-                  return returnValue;
-                }
-
-                returnValue.strictMatch = false; // not a strict match
+            if (wantedValue != null) {
+              // Historical compatibility requires this special case
+              if (aLogin.formSubmitURL == "") {
+                break;
+              }
+              if (!LoginHelper.isOriginMatching(aLogin[field], wantedValue, aOptions)) {
+                return false;
               }
               break;
             }
-          // Normal cases.
+            // fall through
           case "hostname":
+            if (wantedValue != null) { // needed for formSubmitURL fall through
+              if (!LoginHelper.isOriginMatching(aLogin[field], wantedValue, aOptions)) {
+                return false;
+              }
+              break;
+            }
+            // fall through
+          // Normal cases.
           case "httpRealm":
           case "id":
           case "usernameField":
@@ -325,10 +323,10 @@ this.LoginManagerStorage_json.prototype = {
           case "timeLastUsed":
           case "timePasswordChanged":
           case "timesUsed":
-            if (value == null && aLogin[field]) {
-              return returnValue;
-            } else if (aLogin[field] != value) {
-              return returnValue;
+            if (wantedValue == null && aLogin[field]) {
+              return false;
+            } else if (aLogin[field] != wantedValue) {
+              return false;
             }
             break;
           // Fail if caller requests an unknown property.
@@ -336,14 +334,12 @@ this.LoginManagerStorage_json.prototype = {
             throw new Error("Unexpected field: " + field);
         }
       }
-      returnValue.match = true;
-      return returnValue;
+      return true;
     }
 
-    let foundLogins = [], foundIds = [], fallbackLogins = [], fallbackIds = [];
+    let foundLogins = [], foundIds = [];
     for (let loginItem of this._store.data.logins) {
-      let result = match(loginItem);
-      if (result.match) {
+      if (match(loginItem)) {
         // Create the new nsLoginInfo object, push to array
         let login = Cc["@mozilla.org/login-manager/loginInfo;1"].
                     createInstance(Ci.nsILoginInfo);
@@ -358,22 +354,12 @@ this.LoginManagerStorage_json.prototype = {
         login.timeLastUsed = loginItem.timeLastUsed;
         login.timePasswordChanged = loginItem.timePasswordChanged;
         login.timesUsed = loginItem.timesUsed;
-        // If protocol does not match, use as a fallback login
-        if (result.strictMatch) {
-          foundLogins.push(login);
-          foundIds.push(loginItem.id);
-        } else {
-          fallbackLogins.push(login);
-          fallbackIds.push(loginItem.id);
-        }
+        foundLogins.push(login);
+        foundIds.push(loginItem.id);
       }
     }
 
-    if (!foundLogins.length && fallbackLogins.length) {
-      this.log("_searchLogins: returning", fallbackLogins.length, "fallback logins");
-      return [fallbackLogins, fallbackIds];
-    }
-    this.log("_searchLogins: returning", foundLogins.length, "logins");
+    this.log("_searchLogins: returning", foundLogins.length, "logins for", matchData);
     return [foundLogins, foundIds];
   },
 
