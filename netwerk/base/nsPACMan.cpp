@@ -180,6 +180,7 @@ public:
   explicit ExecutePACThreadAction(nsPACMan *aPACMan)
     : mPACMan(aPACMan)
     , mCancel(false)
+    , mCancelStatus(NS_OK)
     , mSetupPAC(false)
   { }
 
