@@ -34,14 +34,6 @@ add_task(function* () {
   yield addNewProperty(view, 1, "color", "green");
 });
 
-function* addNewRule(inspector, view) {
-  info("Adding the new rule using the button");
-  view.addRuleButton.click();
-  info("Waiting for rule view to change");
-  let onRuleViewChanged = once(view, "ruleview-changed");
-  yield onRuleViewChanged;
-}
-
 /**
  * Check the newly created rule has the expected selector and submit the
  * selector editor.
