@@ -912,7 +912,7 @@ public class GeckoAppShell
                                        .build();
         notificationIntent.setData(dataUri);
         PendingIntent contentIntent = PendingIntent.getActivity(
-                getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+                getContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
 
         ALERT_COOKIES.put(aAlertName, aAlertCookie);
         callObserver(aAlertName, "alertshow", aAlertCookie);
