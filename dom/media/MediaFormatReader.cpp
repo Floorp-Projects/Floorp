@@ -1344,7 +1344,6 @@ MediaFormatReader::ResetDecode(TargetQueues aQueues)
 
   if (HasVideo()) {
     mVideo.ResetDemuxer();
-    mVideo.ResetState();
     Reset(TrackInfo::kVideoTrack);
     if (mVideo.HasPromise()) {
       mVideo.RejectPromise(CANCELED, __func__);
@@ -1353,7 +1352,6 @@ MediaFormatReader::ResetDecode(TargetQueues aQueues)
 
   if (HasAudio() && aQueues == AUDIO_VIDEO) {
     mAudio.ResetDemuxer();
-    mAudio.ResetState();
     Reset(TrackInfo::kAudioTrack);
     if (mAudio.HasPromise()) {
       mAudio.RejectPromise(CANCELED, __func__);
