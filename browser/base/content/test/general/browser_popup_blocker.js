@@ -21,10 +21,17 @@ function test() {
 
     // Show the menu.
     let popupShown = promiseWaitForEvent(window, "popupshown");
+    let popupFilled = BrowserTestUtils.waitForMessage(gBrowser.selectedBrowser.messageManager,
+                                                      "PopupBlocking:ReplyGetBlockedPopupList");
     notification.querySelector("button").doCommand();
     let popup_event = yield popupShown;
     let menu = popup_event.target;
     is(menu.id, "blockedPopupOptions", "Blocked popup menu shown");
+
+    yield popupFilled;
+    // The menu is filled on the same message that we waited for, so let's ensure that it
+    // had a chance of running before this test code.
+    yield new Promise(resolve => executeSoon(resolve));
 
     // Check the menu contents.
     let sep = menu.querySelector("menuseparator");
