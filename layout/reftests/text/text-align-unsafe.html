@@ -12,7 +12,7 @@
    }
 .test1 p {
    text-align: unsafe right;
-   -moz-text-align-last: end;
+   text-align-last: end;
 }
 .test2 p {
    text-align: unsafe right;
@@ -25,7 +25,7 @@
 }
 .test5 p {
    text-align: left;
-   -moz-text-align-last: unsafe right;
+   text-align-last: unsafe right;
 }
   </style>
  </head>
@@ -58,7 +58,7 @@
   var elem = document.querySelector('.test5 p');
   var a = window.getComputedStyle(elem,null).getPropertyValue("text-align");
   document.body.appendChild(document.createTextNode(a +"|"));
-  a = window.getComputedStyle(elem,null).getPropertyValue("-moz-text-align-last");
+  a = window.getComputedStyle(elem,null).getPropertyValue("text-align-last");
   document.body.appendChild(document.createTextNode(a));
 
   document.documentElement.removeAttribute('class');
