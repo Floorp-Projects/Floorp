@@ -93,7 +93,7 @@ public:
   static already_AddRefed<Animation>
   Constructor(const GlobalObject& aGlobal,
               KeyframeEffectReadOnly* aEffect,
-              AnimationTimeline* aTimeline,
+              const Optional<AnimationTimeline*>& aTimeline,
               ErrorResult& aRv);
   void GetId(nsAString& aResult) const { aResult = mId; }
   void SetId(const nsAString& aId);
