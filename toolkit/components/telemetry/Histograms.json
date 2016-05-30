@@ -4390,21 +4390,21 @@
     "description": "THUMBNAILS: Thumbnail found"
   },
   "FX_MIGRATION_ENTRY_POINT": {
-    "expires_in_version": "49",
+    "expires_in_version": "53",
     "kind": "enumerated",
     "n_values": 10,
     "releaseChannelCollection": "opt-out",
     "description": "Where the migration wizard was entered from. 0=Other/catch-all, 1=first-run, 2=refresh-firefox, 3=Places window, 4=Password manager"
   },
   "FX_MIGRATION_SOURCE_BROWSER": {
-    "expires_in_version": "49",
+    "expires_in_version": "53",
     "kind": "enumerated",
     "n_values": 15,
     "releaseChannelCollection": "opt-out",
     "description": "The browser that data is pulled from. The values correspond to the internal browser ID (see MigrationUtils.jsm)"
   },
   "FX_MIGRATION_ERRORS": {
-    "expires_in_version": "49",
+    "expires_in_version": "53",
     "kind": "enumerated",
     "keyed": true,
     "n_values": 12,
@@ -4412,7 +4412,7 @@
     "description": "Errors encountered during migration in buckets defined by the datatype, keyed by the string description of the browser."
   },
   "FX_MIGRATION_USAGE": {
-    "expires_in_version": "49",
+    "expires_in_version": "53",
     "kind": "enumerated",
     "keyed": true,
     "n_values": 12,
@@ -4420,7 +4420,7 @@
     "description": "Usage of migration for each datatype when migration is run through the post-firstrun flow which allows individual datatypes, keyed by the string description of the browser."
   },
   "FX_MIGRATION_HOMEPAGE_IMPORTED": {
-    "expires_in_version": "49",
+    "expires_in_version": "53",
     "kind": "boolean",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
