@@ -340,7 +340,7 @@ private:
   CGContextScaleCTM(aContext, 1.0 / scale, 1.0 / scale);
 
   CGSize viewSize = [self bounds].size;
-  nsIntSize backingSize(viewSize.width * scale, viewSize.height * scale);
+  gfx::IntSize backingSize(viewSize.width * scale, viewSize.height * scale);
 
   CGContextSaveGState(aContext);
 
@@ -356,9 +356,7 @@ private:
   RefPtr<gfxContext> targetContext;
   if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(gfx::BackendType::COREGRAPHICS)) {
     RefPtr<gfx::DrawTarget> dt =
-      gfx::Factory::CreateDrawTargetForCairoCGContext(aContext,
-                                                      gfx::IntSize(backingSize.width,
-                                                                   backingSize.height));
+      gfx::Factory::CreateDrawTargetForCairoCGContext(aContext, backingSize);
     if (!dt || !dt->IsValid()) {
         gfxDevCrash(mozilla::gfx::LogReason::InvalidContext) << "Window context problem 1 " << backingSize;
         return;
@@ -372,8 +370,7 @@ private:
     targetSurface->SetAllowUseAsSource(false);
     RefPtr<gfx::DrawTarget> dt =
       gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(targetSurface,
-                                                             gfx::IntSize(backingSize.width,
-                                                                          backingSize.height));
+                                                             backingSize);
     if (!dt || !dt->IsValid()) {
         gfxDevCrash(mozilla::gfx::LogReason::InvalidContext) << "Window context problem 2 " << backingSize;
         return;
