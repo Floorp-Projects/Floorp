@@ -379,6 +379,15 @@ LoginManager.prototype = {
   searchLogins(count, matchData) {
     log.debug("Searching for logins");
 
+    matchData.QueryInterface(Ci.nsIPropertyBag2);
+    if (!matchData.hasKey("hostname")) {
+      log.warn("searchLogins: A `hostname` is recommended");
+    }
+
+    if (!matchData.hasKey("formSubmitURL") && !matchData.hasKey("httpRealm")) {
+      log.warn("searchLogins: `formSubmitURL` or `httpRealm` is recommended");
+    }
+
     return this._storage.searchLogins(count, matchData);
   },
 
