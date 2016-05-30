@@ -2658,7 +2658,7 @@ private:
   static uint32_t sDOMNodeRemovedSuppressCount;
   static uint32_t sMicroTaskLevel;
   // Not an nsCOMArray because removing elements from those is slower
-  static nsTArray< nsCOMPtr<nsIRunnable> >* sBlockedScriptRunners;
+  static AutoTArray<nsCOMPtr<nsIRunnable>, 8>* sBlockedScriptRunners;
   static uint32_t sRunnersCountAtFirstBlocker;
   static uint32_t sScriptBlockerCountWhereRunnersPrevented;
 
