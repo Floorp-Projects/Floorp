@@ -6,16 +6,18 @@
 
 <!ENTITY searchreset.pageTitle      "Restore your search settings?">
 
-<!ENTITY searchreset.pageInfo1      "Your search settings might be out-of-date. Firefox can help you restore the default search settings.">
+<!ENTITY searchreset.pageInfo1      "Your search settings might be out-of-date. &brandShortName; can help you restore the default search settings.">
 
+
+<!-- LOCALIZATION NOTE (searchreset.selector.label): this string is
+followed by a dropdown of all the built-in search engines. -->
 <!ENTITY searchreset.selector.label "This will set your default search engine to">
 
 <!-- LOCALIZATION NOTE (searchreset.beforelink.pageInfo,
 searchreset.afterlink.pageInfo): these two string are used respectively
-before and after the the "Settings page" link (searchreset.link.pageInfo).
+before and after the "Settings page" link (searchreset.link.pageInfo2).
 Localizers can use one of them, or both, to better adapt this sentence to
-their language.
--->
+their language. -->
 <!ENTITY searchreset.beforelink.pageInfo2 "You can change these settings at any time from the ">
 <!ENTITY searchreset.afterlink.pageInfo2  ".">
 
