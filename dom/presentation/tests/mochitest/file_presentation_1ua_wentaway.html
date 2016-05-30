@@ -75,58 +75,17 @@ function testConnectionReady() {
   });
 }
 
-function testIncomingMessage() {
+function testConnectionWentaway() {
   return new Promise(function(aResolve, aReject) {
-    info('Receiver: --- testIncomingMessage ---');
-    connection.addEventListener('message', function messageHandler(evt) {
-      connection.removeEventListener('message', messageHandler);
-      let msg = evt.data;
-      is(msg, 'msg-sender-to-receiver', 'Receiver: Receiver should receive message from sender.');
-      command('forward-command', JSON.stringify({ name: 'message-from-sender-received' }));
-      aResolve();
-    });
-    command('forward-command', JSON.stringify({ name: 'trigger-message-from-sender' }));
-  });
-}
-
-function testSendMessage() {
-  return new Promise(function(aResolve, aReject) {
-    window.addEventListener('hashchange', function hashchangeHandler(evt) {
-      var message = JSON.parse(decodeURIComponent(window.location.hash.substring(1)));
-      if (message.type === 'trigger-message-from-receiver') {
-        info('Receiver: --- testSendMessage ---');
-        connection.send('msg-receiver-to-sender');
-      }
-      if (message.type === 'message-from-receiver-received') {
-        window.removeEventListener('hashchange', hashchangeHandler);
-        aResolve();
-      }
-    });
-  });
-}
-
-// Currently, PresentationSessionInfo::NotifyTransportClosed only set the state to
-// STATE_CLOSED. So, when sender call connection.terminate(), we can only get STATE_CLOSED
-// at receiver side. This should be fixed in bu 1210340.
-function testConnectionClosed() {
-  return new Promise(function(aResolve, aReject) {
-    info('Receiver: --- testConnectionClosed ---');
-    connection.onclose = function() {
-      connection.onclose = null;
-      is(connection.state, "closed", "Receiver: Connection should be closed.");
-      aResolve();
-    };
-    command('forward-command', JSON.stringify({ name: 'ready-to-terminate' }));
+    info('Receiver: --- testConnectionWentaway ---\n');
+    command('forward-command', JSON.stringify({ name: 'ready-to-remove-receiverFrame' }));
   });
 }
 
 function runTests() {
   testConnectionAvailable()
   .then(testConnectionReady)
-  .then(testIncomingMessage)
-  .then(testSendMessage)
-  .then(testConnectionClosed)
-  .then(finish);
+  .then(testConnectionWentaway);
 }
 
 runTests();

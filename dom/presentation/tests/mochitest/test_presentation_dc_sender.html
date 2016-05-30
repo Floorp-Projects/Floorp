@@ -113,8 +113,8 @@ function testStartConnection() {
         if (connectionFromEvent) {
           is(connection, connectionFromEvent, "The connection from promise and the one from |connectionavailable| event should be the same.");
         }
-        connection.onstatechange = function() {
-          connection.onstatechange = null;
+        connection.onconnect = function() {
+          connection.onconnect = null;
           is(connection.state, "connected", "Connection should be connected.");
           aResolve();
         };
@@ -163,8 +163,8 @@ function testTerminateConnection() {
       info("The data transport is closed. " + aReason);
     });
 
-    connection.onstatechange = function() {
-      connection.onstatechange = null;
+    connection.onterminate = function() {
+      connection.onterminate = null;
       is(connection.state, "terminated", "Connection should be terminated.");
       aResolve();
     };

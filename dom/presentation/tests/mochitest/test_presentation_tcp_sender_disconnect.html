@@ -93,8 +93,8 @@ function testStartConnection() {
         ok(connection, "Connection should be available.");
         ok(connection.id, "Connection ID should be set.");
         is(connection.state, "connecting", "The initial state should be connecting.");
-        connection.onstatechange = function() {
-          connection.onstatechange = null;
+        connection.onconnect = function() {
+          connection.onconnect = null;
           is(connection.state, "connected", "Connection should be connected.");
           aResolve();
         };
@@ -115,8 +115,8 @@ function testDisconnection() {
       info("The data transport is closed. " + aReason);
     });
 
-    connection.onstatechange = function() {
-      connection.onstatechange = null;
+    connection.onclose = function() {
+      connection.onclose = null;
       is(connection.state, "closed", "Connection should be closed.");
       aResolve();
     };
