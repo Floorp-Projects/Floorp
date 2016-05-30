@@ -421,24 +421,33 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  /*
-   * searchLogins
-   *
+  /**
    * Public wrapper around _searchLogins to convert the nsIPropertyBag to a
    * JavaScript object and decrypt the results.
    *
-   * Returns an array of decrypted nsILoginInfo.
+   * @return {nsILoginInfo[]} which are decrypted.
    */
   searchLogins : function(count, matchData) {
     let realMatchData = {};
+    let options = {};
     // Convert nsIPropertyBag to normal JS object
     let propEnum = matchData.enumerator;
     while (propEnum.hasMoreElements()) {
       let prop = propEnum.getNext().QueryInterface(Ci.nsIProperty);
-      realMatchData[prop.name] = prop.value;
+      switch (prop.name) {
+        // Some property names aren't field names but are special options to affect the search.
+        case "schemeUpgrades": {
+          options[prop.name] = prop.value;
+          break;
+        }
+        default: {
+          realMatchData[prop.name] = prop.value;
+          break;
+        }
+      }
     }
 
-    let [logins, ids] = this._searchLogins(realMatchData);
+    let [logins, ids] = this._searchLogins(realMatchData, options);
 
     // Decrypt entries found for the caller.
     logins = this._decryptLogins(logins);
@@ -448,9 +457,7 @@ LoginManagerStorage_mozStorage.prototype = {
   },
 
 
-  /*
-   * _searchLogins
-   *
+  /**
    * Private method to perform arbitrary searches on any field. Decryption is
    * left to the caller.
    *
@@ -458,21 +465,40 @@ LoginManagerStorage_mozStorage.prototype = {
    * is an array of encrypted nsLoginInfo and ids is an array of associated
    * ids in the database.
    */
-  _searchLogins : function (matchData) {
+  _searchLogins : function (matchData, aOptions = {
+    schemeUpgrades: false,
+  }) {
     let conditions = [], params = {};
 
     for (let field in matchData) {
       let value = matchData[field];
+      let condition = "";
       switch (field) {
-        // Historical compatibility requires this special case
         case "formSubmitURL":
           if (value != null) {
-              conditions.push("formSubmitURL = :formSubmitURL OR formSubmitURL = ''");
-              params["formSubmitURL"] = value;
-              break;
+            // Historical compatibility requires this special case
+            condition = "formSubmitURL = '' OR ";
           }
-        // Normal cases.
+          // Fall through
         case "hostname":
+          if (value != null) {
+            condition += `${field} = :${field}`;
+            params[field] = value;
+            let valueURI;
+            try {
+              if (aOptions.schemeUpgrades && (valueURI = Services.io.newURI(value, null, null)) &&
+                  valueURI.scheme == "https") {
+                condition += ` OR ${field} = :http${field}`;
+                params["http" + field] = "http://" + valueURI.hostPort;
+              }
+            } catch (ex) {
+              // newURI will throw for some values (e.g. chrome://FirefoxAccounts)
+              // but those URLs wouldn't support upgrades anyways.
+            }
+            break;
+          }
+          // Fall through
+        // Normal cases.
         case "httpRealm":
         case "id":
         case "usernameField":
@@ -486,15 +512,18 @@ LoginManagerStorage_mozStorage.prototype = {
         case "timePasswordChanged":
         case "timesUsed":
           if (value == null) {
-              conditions.push(field + " isnull");
+            condition = field + " isnull";
           } else {
-              conditions.push(field + " = :" + field);
-              params[field] = value;
+            condition = field + " = :" + field;
+            params[field] = value;
           }
           break;
         // Fail if caller requests an unknown property.
         default:
           throw new Error("Unexpected field: " + field);
+      }
+      if (condition) {
+        conditions.push(condition);
       }
     }
 
