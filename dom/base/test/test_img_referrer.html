@@ -151,14 +151,28 @@ var tests = (function() {
   yield resetState();
   sjs = "/tests/dom/base/test/img_referrer_testserver.sjs?action=generate-setAttribute-test1";
   name = 'set-referrer-policy-attribute-before-src';
-  yield iframe.src = sjs + "&policy=" + escape('no-referrer') + "&name=" + name;
+  yield iframe.src = sjs + "&imgPolicy=" + escape('no-referrer') + "&policy=" + escape('unsafe-url') + "&name=" + name;
   yield checkIndividualResults("no-referrer in img", ["none"], [name]);
 
   yield resetState();
   sjs = "/tests/dom/base/test/img_referrer_testserver.sjs?action=generate-setAttribute-test2";
   name = 'set-referrer-policy-attribute-after-src';
-  yield iframe.src = sjs + "&policy=" + escape('no-referrer') + "&name=" + name;
+  yield iframe.src = sjs + "&imgPolicy=" + escape('no-referrer') + "&policy=" + escape('unsafe-url') + "&name=" + name;
   yield checkIndividualResults("no-referrer in img", ["none"], [name]);
+
+  yield resetState();
+  sjs =
+    "/tests/dom/base/test/img_referrer_testserver.sjs?action=generate-setAttribute-test2";
+  name = 'set-invalid-referrer-policy-attribute-before-src-invalid';
+  yield iframe.src = sjs + "&imgPolicy=" + escape('invalid') + "&policy=" + escape('unsafe-url') + "&name=" + name;
+  yield checkIndividualResults("unsafe-url in meta, invalid in img", ["full"], [name]);
+
+  yield resetState();
+  sjs =
+    "/tests/dom/base/test/img_referrer_testserver.sjs?action=generate-setAttribute-test2";
+  name = 'set-invalid-referrer-policy-attribute-before-src-invalid';
+  yield iframe.src = sjs + "&imgPolicy=" + escape('default') + "&policy=" + escape('unsafe-url') + "&name=" + name;
+  yield checkIndividualResults("unsafe-url in meta, default in img", ["full"], [name]);
 
   // complete.  Be sure to yield so we don't call this twice.
   yield SimpleTest.finish();

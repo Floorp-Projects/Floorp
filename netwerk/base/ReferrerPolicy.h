@@ -7,6 +7,7 @@
 
 #include "nsStringGlue.h"
 #include "nsIHttpChannel.h"
+#include "nsUnicharUtils.h"
 
 namespace mozilla { namespace net {
 
@@ -27,7 +28,8 @@ enum ReferrerPolicy {
   /* spec tokens: always unsafe-url */
   RP_Unsafe_URL                  = nsIHttpChannel::REFERRER_POLICY_UNSAFE_URL,
 
-  /* referrer policy is not set */
+  /* spec tokens: empty string */
+  /* The empty string "" corresponds to no referrer policy, or unset policy */
   RP_Unset                       = nsIHttpChannel::REFERRER_POLICY_UNSET,
 };
 
@@ -53,71 +55,89 @@ const char kRPS_Unsafe_URL[]                  = "unsafe-url";
 inline ReferrerPolicy
 ReferrerPolicyFromString(const nsAString& content)
 {
-  // This is implemented step by step as described in the Referrer Policy
-  // specification, section 6.4 "Determine token's Policy".
-  if (content.LowerCaseEqualsLiteral(kRPS_Never) ||
-      content.LowerCaseEqualsLiteral(kRPS_No_Referrer)) {
+  if (content.IsEmpty()) {
     return RP_No_Referrer;
   }
-  if (content.LowerCaseEqualsLiteral(kRPS_Origin)) {
+
+  nsString lowerContent(content);
+  ToLowerCase(lowerContent);
+  // This is implemented step by step as described in the Referrer Policy
+  // specification, section "Determine token's Policy".
+  if (lowerContent.EqualsLiteral(kRPS_Never) ||
+      lowerContent.EqualsLiteral(kRPS_No_Referrer)) {
+    return RP_No_Referrer;
+  }
+  if (lowerContent.EqualsLiteral(kRPS_Origin)) {
     return RP_Origin;
   }
-  if (content.LowerCaseEqualsLiteral(kRPS_Default) ||
-      content.LowerCaseEqualsLiteral(kRPS_No_Referrer_When_Downgrade)) {
+  if (lowerContent.EqualsLiteral(kRPS_Default) ||
+      lowerContent.EqualsLiteral(kRPS_No_Referrer_When_Downgrade)) {
     return RP_No_Referrer_When_Downgrade;
   }
-  if (content.LowerCaseEqualsLiteral(kRPS_Origin_When_Cross_Origin) ||
-      content.LowerCaseEqualsLiteral(kRPS_Origin_When_Crossorigin)) {
+  if (lowerContent.EqualsLiteral(kRPS_Origin_When_Cross_Origin) ||
+      lowerContent.EqualsLiteral(kRPS_Origin_When_Crossorigin)) {
     return RP_Origin_When_Crossorigin;
   }
-  if (content.LowerCaseEqualsLiteral(kRPS_Always) ||
-      content.LowerCaseEqualsLiteral(kRPS_Unsafe_URL)) {
+  if (lowerContent.EqualsLiteral(kRPS_Always) ||
+      lowerContent.EqualsLiteral(kRPS_Unsafe_URL)) {
     return RP_Unsafe_URL;
   }
-  // Spec says if none of the previous match, use No_Referrer.
-  return RP_No_Referrer;
+  // Spec says if none of the previous match, use empty string.
+  return RP_Unset;
 
 }
 
 inline bool
 IsValidReferrerPolicy(const nsAString& content)
 {
-  return content.LowerCaseEqualsLiteral(kRPS_Never)
-      || content.LowerCaseEqualsLiteral(kRPS_No_Referrer)
-      || content.LowerCaseEqualsLiteral(kRPS_Origin)
-      || content.LowerCaseEqualsLiteral(kRPS_Default)
-      || content.LowerCaseEqualsLiteral(kRPS_No_Referrer_When_Downgrade)
-      || content.LowerCaseEqualsLiteral(kRPS_Origin_When_Cross_Origin)
-      || content.LowerCaseEqualsLiteral(kRPS_Origin_When_Crossorigin)
-      || content.LowerCaseEqualsLiteral(kRPS_Always)
-      || content.LowerCaseEqualsLiteral(kRPS_Unsafe_URL);
-}
+  if (content.IsEmpty()) {
+    return true;
+  }
 
-inline bool
-IsValidAttributeReferrerPolicy(const nsAString& aContent)
-{
-  return aContent.LowerCaseEqualsLiteral(kRPS_No_Referrer)
-      || aContent.LowerCaseEqualsLiteral(kRPS_Origin)
-      || aContent.LowerCaseEqualsLiteral(kRPS_No_Referrer_When_Downgrade)
-      || aContent.LowerCaseEqualsLiteral(kRPS_Origin_When_Cross_Origin)
-      || aContent.LowerCaseEqualsLiteral(kRPS_Unsafe_URL);
+  nsString lowerContent(content);
+  ToLowerCase(lowerContent);
+
+  return lowerContent.EqualsLiteral(kRPS_Never)
+      || lowerContent.EqualsLiteral(kRPS_No_Referrer)
+      || lowerContent.EqualsLiteral(kRPS_Origin)
+      || lowerContent.EqualsLiteral(kRPS_Default)
+      || lowerContent.EqualsLiteral(kRPS_No_Referrer_When_Downgrade)
+      || lowerContent.EqualsLiteral(kRPS_Origin_When_Cross_Origin)
+      || lowerContent.EqualsLiteral(kRPS_Origin_When_Crossorigin)
+      || lowerContent.EqualsLiteral(kRPS_Always)
+      || lowerContent.EqualsLiteral(kRPS_Unsafe_URL);
 }
 
 inline ReferrerPolicy
-AttributeReferrerPolicyFromString(const nsAString& aContent)
+AttributeReferrerPolicyFromString(const nsAString& content)
 {
-  // if the referrer attribute string is empty, return RP_Unset
-  if (aContent.IsEmpty()) {
+  // Specs : https://html.spec.whatwg.org/multipage/infrastructure.html#referrer-policy-attribute
+  // Spec says the empty string "" corresponds to no referrer policy, or RP_Unset
+  if (content.IsEmpty()) {
     return RP_Unset;
   }
-  // if the referrer attribute string is not empty and contains a valid
-  // referrer policy, return the according enum value
-  if (IsValidAttributeReferrerPolicy(aContent)) {
-    return ReferrerPolicyFromString(aContent);
+
+  nsString lowerContent(content);
+  ToLowerCase(lowerContent);
+
+  if (lowerContent.EqualsLiteral(kRPS_No_Referrer)) {
+    return RP_No_Referrer;
   }
-  // in any other case the referrer attribute contains an invalid
-  // policy value, we thus return RP_No_Referrer
-  return RP_No_Referrer;
+  if (lowerContent.EqualsLiteral(kRPS_Origin)) {
+    return RP_Origin;
+  }
+  if (lowerContent.EqualsLiteral(kRPS_No_Referrer_When_Downgrade)) {
+    return RP_No_Referrer_When_Downgrade;
+  }
+  if (lowerContent.EqualsLiteral(kRPS_Origin_When_Cross_Origin)) {
+    return RP_Origin_When_Crossorigin;
+  }
+  if (lowerContent.EqualsLiteral(kRPS_Unsafe_URL)) {
+    return RP_Unsafe_URL;
+  }
+  // Spec says invalid value default is empty string state
+  // So, return RP_Unset if none of the previous match, return RP_Unset
+  return RP_Unset;
 }
 
 } // namespace net
