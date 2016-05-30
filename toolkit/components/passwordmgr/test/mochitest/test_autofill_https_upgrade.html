@@ -1,0 +1,117 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test autocomplete on an HTTPS page using upgraded HTTP logins</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="satchel_common.js"></script>
+  <script type="text/javascript" src="pwmgr_common.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script>
+const MISSING_ACTION_PATH = TESTS_DIR + "mochitest/form_basic.html";
+const CROSS_ORIGIN_SECURE_PATH = TESTS_DIR + "mochitest/form_cross_origin_secure_action.html";
+
+const chromeScript = runChecksAfterCommonInit(false);
+
+let nsLoginInfo = SpecialPowers.wrap(SpecialPowers.Components).Constructor("@mozilla.org/login-manager/loginInfo;1",
+SpecialPowers.Ci.nsILoginInfo,
+"init");
+</script>
+<p id="display"></p>
+
+<!-- we presumably can't hide the content for this test. -->
+<div id="content">
+  <iframe></iframe>
+</div>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+let iframe = SpecialPowers.wrap(document.getElementsByTagName("iframe")[0]);
+
+// Check for expected username/password in form.
+function checkACForm(expectedUsername, expectedPassword) {
+  let iframeDoc = iframe.contentDocument;
+  let uname = iframeDoc.getElementById("form-basic-username");
+  let pword = iframeDoc.getElementById("form-basic-password");
+  let formID = uname.parentNode.id;
+  is(uname.value, expectedUsername, "Checking " + formID + " username");
+  is(pword.value, expectedPassword, "Checking " + formID + " password");
+}
+function* prepareLoginsAndProcessForm(url, logins = []) {
+  LoginManager.removeAllLogins();
+
+  let dates = Date.now();
+  for (let login of logins) {
+    SpecialPowers.do_QueryInterface(login, SpecialPowers.Ci.nsILoginMetaInfo);
+    // Force all dates to be the same so they don't affect things like deduping.
+    login.timeCreated = login.timePasswordChanged = login.timeLastUsed = dates;
+    LoginManager.addLogin(login);
+  }
+
+  iframe.src = url;
+  yield promiseFormsProcessed();
+}
+
+add_task(function* setup() {
+  yield SpecialPowers.pushPrefEnv({"set": [["signon.schemeUpgrades", true]]});
+})
+
+add_task(function* test_simpleNoDupesNoAction() {
+  yield prepareLoginsAndProcessForm("https://example.com" + MISSING_ACTION_PATH, [
+    new nsLoginInfo("http://example.com", "http://example.com", null,
+                    "name2", "pass2", "uname", "pword"),
+  ]);
+
+  checkACForm("name2", "pass2");
+});
+
+add_task(function* test_simpleNoDupesUpgradeOriginAndAction() {
+  yield prepareLoginsAndProcessForm("https://example.com" + CROSS_ORIGIN_SECURE_PATH, [
+    new nsLoginInfo("http://example.com", "http://another.domain", null,
+                    "name2", "pass2", "uname", "pword"),
+  ]);
+
+  checkACForm("name2", "pass2");
+});
+
+add_task(function* test_simpleNoDupesUpgradeOriginOnly() {
+  yield prepareLoginsAndProcessForm("https://example.com" + CROSS_ORIGIN_SECURE_PATH, [
+    new nsLoginInfo("http://example.com", "https://another.domain", null,
+                    "name2", "pass2", "uname", "pword"),
+  ]);
+
+  checkACForm("name2", "pass2");
+});
+
+add_task(function* test_simpleNoDupesUpgradeActionOnly() {
+  yield prepareLoginsAndProcessForm("https://example.com" + CROSS_ORIGIN_SECURE_PATH, [
+    new nsLoginInfo("https://example.com", "http://another.domain", null,
+                    "name2", "pass2", "uname", "pword"),
+  ]);
+
+  checkACForm("name2", "pass2");
+});
+
+add_task(function* test_dedupe() {
+  yield prepareLoginsAndProcessForm("https://example.com" + MISSING_ACTION_PATH, [
+    new nsLoginInfo("https://example.com", "https://example.com", null,
+                    "name1", "passHTTPStoHTTPS", "uname", "pword"),
+    new nsLoginInfo("http://example.com", "http://example.com", null,
+                    "name1", "passHTTPtoHTTP", "uname", "pword"),
+    new nsLoginInfo("http://example.com", "https://example.com", null,
+                    "name1", "passHTTPtoHTTPS", "uname", "pword"),
+    new nsLoginInfo("https://example.com", "http://example.com", null,
+                    "name1", "passHTTPStoHTTP", "uname", "pword"),
+  ]);
+
+  checkACForm("name1", "passHTTPStoHTTPS");
+});
+
+</script>
+</pre>
+</body>
+</html>

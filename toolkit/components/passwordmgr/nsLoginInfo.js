@@ -5,7 +5,6 @@
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
 
 function nsLoginInfo() {}
 
@@ -49,18 +48,8 @@ nsLoginInfo.prototype = {
 
     // If either formSubmitURL is blank (but not null), then match.
     if (this.formSubmitURL != "" && aLogin.formSubmitURL != "" &&
-        this.formSubmitURL != aLogin.formSubmitURL) {
-      // If we have the same formSubmitURL hostPort we should match (ignore scheme)
-      try {
-        let loginURI = Services.io.newURI(aLogin.formSubmitURL, null, null);
-        let matchURI = Services.io.newURI(this.formSubmitURL, null, null);
-        if (loginURI.hostPort != matchURI.hostPort) {
-          return false;
-        }
-      } catch (e) {
-        return false;
-      }
-    }
+        this.formSubmitURL != aLogin.formSubmitURL)
+      return false;
 
     // The .usernameField and .passwordField values are ignored.
 

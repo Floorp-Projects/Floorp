@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1463504139000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1464091834000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -973,6 +973,12 @@
     </emItem>
       <emItem  blockID="i550" id="colmer@yopmail.com">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i1222" id="tmbepff@trendmicro.com">
+                        <versionRange  minVersion="0" maxVersion="9.2.0.1024" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -3624,6 +3630,13 @@
                       <device>0x0046</device>
                   </devices>
             <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>8.15.10.2086</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g1215">      <os>WINNT 5.1</os>      <vendor>0x8086</vendor>            <feature>HARDWARE_VIDEO_DECODING</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>10.18.10.3947</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g1216">      <os>WINNT 5.2</os>      <vendor>0x8086</vendor>            <feature>HARDWARE_VIDEO_DECODING</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>10.18.10.3947</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g1217">      <os>WINNT 6.0</os>      <vendor>0x8086</vendor>            <feature>HARDWARE_VIDEO_DECODING</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>10.18.10.3947</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g1218">      <os>WINNT 6.1</os>      <vendor>0x8086</vendor>            <feature>HARDWARE_VIDEO_DECODING</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>10.18.10.3947</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g1219">      <os>WINNT 6.2</os>      <vendor>0x8086</vendor>            <feature>HARDWARE_VIDEO_DECODING</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>10.18.10.3947</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g1220">      <os>WINNT 6.3</os>      <vendor>0x8086</vendor>            <feature>HARDWARE_VIDEO_DECODING</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>10.18.10.3947</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
+    <gfxBlacklistEntry  blockID="g1221">      <os>WINNT 10.0</os>      <vendor>0x8086</vendor>            <feature>HARDWARE_VIDEO_DECODING</feature>      <featureStatus>BLOCKED_DRIVER_VERSION</featureStatus>      <driverVersion>10.18.10.3947</driverVersion>      <driverVersionComparator>EQUAL</driverVersionComparator>    </gfxBlacklistEntry>
     </gfxItems>
 
   <certItems>

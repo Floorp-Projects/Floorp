@@ -60,9 +60,6 @@ var setupScript = runInParent(function setup() {
   var login8C = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete5", null,
                                 "form9userAABzz", "form9pass", "uname", "pword");
 
-  var login9 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete6", null,
-                               "testuser9", "testpass9", "uname", "pword");
-
   var login10 = new nsLoginInfo("http://mochi.test:8888", "http://autocomplete7", null,
                                 "testuser10", "testpass10", "uname", "pword");
 
@@ -81,7 +78,6 @@ var setupScript = runInParent(function setup() {
     Services.logins.addLogin(login8A);
     Services.logins.addLogin(login8B);
     // login8C is added later
-    Services.logins.addLogin(login9);
     Services.logins.addLogin(login10);
   } catch (e) {
     assert.ok(false, "addLogin threw: " + e);
@@ -164,15 +160,8 @@ var setupScript = runInParent(function setup() {
     <button type="submit">Submit</button>
   </form>
 
-  <!-- test for different scheme -->
-  <form id="form10" action="https://autocomplete6" onsubmit="return false;">
-    <input  type="text"       name="uname">
-    <input  type="password"   name="pword">
-    <button type="submit">Submit</button>
-  </form>
-
   <!-- test for onUsernameInput recipe testing -->
-  <form id="form11" action="https://autocomplete7" onsubmit="return false;">
+  <form id="form11" action="http://autocomplete7" onsubmit="return false;">
     <input  type="text"   name="1">
     <input  type="text"   name="2">
     <button type="submit">Submit</button>
@@ -230,7 +219,6 @@ add_task(function* test_form1_initial_empty() {
   checkACForm("", "");
   let popupState = yield getPopupState();
   is(popupState.open, false, "Check popup is initially closed");
-  is(popupState.selectedIndex, -1, "Check no entries are selected");
 });
 
 add_task(function* test_form1_first_entry() {
@@ -240,6 +228,10 @@ add_task(function* test_form1_first_entry() {
   let shownPromise = promiseACShown();
   doKey("down"); // open
   yield shownPromise;
+
+  let popupState = yield getPopupState();
+  is(popupState.selectedIndex, -1, "Check no entries are selected upon opening");
+
   doKey("down"); // first
   checkACForm("", ""); // value shouldn't update just by selecting
   doKey("return"); // not "enter"!
@@ -439,7 +431,7 @@ add_task(function* test_form1_delete() {
   // Delete the first entry (of 4), "tempuser1"
   doKey("down");
   var numLogins;
-  numLogins = countLogins(chromeScript, "http://mochi.test:8888", "http://autocomplete:8888", null);
+  numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
   is(numLogins, 5, "Correct number of logins before deleting one");
 
   var deletionPromise = promiseStorageChanged(["removeLogin"]);
@@ -449,7 +441,7 @@ add_task(function* test_form1_delete() {
   yield deletionPromise;
 
   checkACForm("", "");
-  numLogins = countLogins(chromeScript, "http://mochi.test:8888", "http://autocomplete:8888", null);
+  numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
   is(numLogins, 4, "Correct number of logins after deleting one");
   notifyMenuChanged(4);
   doKey("return");
@@ -481,7 +473,7 @@ add_task(function* test_form1_delete_second() {
   doKey("down");
   doKey("delete", shiftModifier);
   checkACForm("", "");
-  numLogins = countLogins(chromeScript, "http://mochi.test:8888", "http://autocomplete:8888", null);
+  numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
   is(numLogins, 3, "Correct number of logins after deleting one");
   doKey("return");
   yield promiseFormsProcessed();
@@ -513,7 +505,7 @@ add_task(function* test_form1_delete_last() {
   doKey("down");
   doKey("delete", shiftModifier);
   checkACForm("", "");
-  numLogins = countLogins(chromeScript, "http://mochi.test:8888", "http://autocomplete:8888", null);
+  numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
   is(numLogins, 2, "Correct number of logins after deleting one");
   doKey("return");
   yield promiseFormsProcessed();
@@ -545,7 +537,7 @@ add_task(function* test_form1_check_only_entry_remaining() {
   doKey("delete", shiftModifier);
   //doKey("return");
   checkACForm("", "");
-  numLogins = countLogins(chromeScript, "http://mochi.test:8888", "http://autocomplete:8888", null);
+  numLogins = LoginManager.countLogins("http://mochi.test:8888", "http://autocomplete:8888", null);
   is(numLogins, 1, "Correct number of logins after deleting one");
 
   // remove the login that's not shown in the list.
@@ -750,23 +742,6 @@ add_task(function* test_form9_autocomplete_cache() {
   yield promise0;
   popupState = yield getPopupState();
   is(popupState.open, false, "Check popup stays closed due to cached empty result");
-});
-
-add_task(function* test_form10_formSubmitURLScheme() {
-  // Check that formSubmitURL with different schemes matches
-  uname = $_(10, "uname");
-  pword = $_(10, "pword");
-  restoreForm();
-  let shownPromise = promiseACShown();
-  doKey("down"); // open
-  yield shownPromise;
-
-  // Check first entry
-  doKey("down");
-  checkACForm("", ""); // value shouldn't update
-  doKey("return"); // not "enter"!
-  yield promiseFormsProcessed();
-  checkACForm("testuser9", "testpass9");
 });
 
 add_task(function* test_form11_recipes() {

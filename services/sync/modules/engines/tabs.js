@@ -268,30 +268,6 @@ TabStore.prototype = {
     this._remoteClients[record.id] = Object.assign({}, record.cleartext, {
       lastModified: record.modified
     });
-
-    // We should remove the following code which sets the notifyTabState pref,
-    // it doesn't seem to be used anywhere and appears broken (we divide by
-    // 1000 but it is already seconds!). See bug 1272806.
-
-    // Lose some precision, but that's good enough (seconds).
-    let roundModify = Math.floor(record.modified / 1000);
-    let notifyState = Svc.Prefs.get("notifyTabState");
-
-    // If there's no existing pref, save this first modified time.
-    if (notifyState == null) {
-      Svc.Prefs.set("notifyTabState", roundModify);
-      return;
-    }
-
-    // Don't change notifyState if it's already 0 (don't notify).
-    if (notifyState == 0) {
-      return;
-    }
-
-    // We must have gotten a new tab that isn't the same as last time.
-    if (notifyState != roundModify) {
-      Svc.Prefs.set("notifyTabState", 0);
-    }
   },
 
   update: function (record) {
