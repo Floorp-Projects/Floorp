@@ -340,7 +340,7 @@ add_task(function test_deduplicate_logins() {
     },
     {
       keyset: ["hostname", "username", "password", "formSubmitURL"],
-      results: 22,
+      results: 23,
     },
   ];
 
