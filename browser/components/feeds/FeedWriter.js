@@ -10,6 +10,7 @@ const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 const FEEDWRITER_CID = Components.ID("{49bb6593-3aff-4eb3-a068-2712c28bd58e}");
 const FEEDWRITER_CONTRACTID = "@mozilla.org/browser/feeds/result-writer;1";
@@ -889,16 +890,14 @@ FeedWriter.prototype = {
     let ssm = Services.scriptSecurityManager;
     let nullPrincipal = ssm.createNullPrincipal(attrs);
 
-    let resolvedURI = Cc["@mozilla.org/network/io-service;1"].
-                      getService(Ci.nsIIOService).
-                      newChannel2("about:feeds",
-                                  null,
-                                  null,
-                                  null, // aLoadingNode
-                                  nullPrincipal,
-                                  null, // aTriggeringPrincipal
-                                  Ci.nsILoadInfo.SEC_NORMAL,
-                                  Ci.nsIContentPolicy.TYPE_OTHER).URI;
+    // this channel is not going to be openend, use a nullPrincipal
+    // and the most restrctive securityFlag.
+    let resolvedURI = NetUtil.newChannel({
+      uri: "about:feeds",
+      loadingPrincipal: nullPrincipal,
+      securityFlags: Ci.nsILoadInfo.SEC_REQUIRE_SAME_ORIGIN_DATA_IS_BLOCKED,
+      contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER
+    }).URI;
 
     if (resolvedURI.equals(chan.URI))
       return chan.originalURI;
