@@ -44,6 +44,7 @@ public:
     , mIsResponderReady(false)
     , mIsTransportReady(false)
     , mState(nsIPresentationSessionListener::STATE_CONNECTING)
+    , mReason(NS_OK)
   {
     MOZ_ASSERT(!mUrl.IsEmpty());
     MOZ_ASSERT(!mSessionId.IsEmpty());
@@ -117,17 +118,18 @@ protected:
 
   virtual nsresult UntrackFromService();
 
-  void SetState(uint32_t aState)
+  void SetStateWithReason(uint32_t aState, nsresult aReason)
   {
     if (mState == aState) {
       return;
     }
 
     mState = aState;
+    mReason = aReason;
 
     // Notify session state change.
     if (mListener) {
-      nsresult rv = mListener->NotifyStateChange(mSessionId, mState);
+      nsresult rv = mListener->NotifyStateChange(mSessionId, mState, aReason);
       NS_WARN_IF(NS_FAILED(rv));
     }
   }
@@ -145,6 +147,7 @@ protected:
   bool mIsResponderReady;
   bool mIsTransportReady;
   uint32_t mState; // CONNECTED, CLOSED, TERMINATED
+  nsresult mReason;
   nsCOMPtr<nsIPresentationSessionListener> mListener;
   nsCOMPtr<nsIPresentationDevice> mDevice;
   nsCOMPtr<nsIPresentationSessionTransport> mTransport;

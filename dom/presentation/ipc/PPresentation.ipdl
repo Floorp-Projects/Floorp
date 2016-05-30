@@ -32,6 +32,7 @@ struct CloseSessionRequest
 {
   nsString sessionId;
   uint8_t role;
+  uint8_t closedReason;
 };
 
 struct TerminateSessionRequest
@@ -55,7 +56,9 @@ sync protocol PPresentation
 
 child:
   async NotifyAvailableChange(bool aAvailable);
-  async NotifySessionStateChange(nsString aSessionId, uint16_t aState);
+  async NotifySessionStateChange(nsString aSessionId,
+                                 uint16_t aState,
+                                 nsresult aReason);
   async NotifyMessage(nsString aSessionId, nsCString aData);
   async NotifySessionConnect(uint64_t aWindowId, nsString aSessionId);
 

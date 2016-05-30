@@ -31,7 +31,8 @@ public:
   nsresult NotifyAvailableChange(bool aAvailable);
 
   nsresult NotifySessionStateChange(const nsAString& aSessionId,
-                                    uint16_t aState);
+                                    uint16_t aState,
+                                    nsresult aReason);
 
   nsresult NotifyMessage(const nsAString& aSessionId,
                          const nsACString& aData);
