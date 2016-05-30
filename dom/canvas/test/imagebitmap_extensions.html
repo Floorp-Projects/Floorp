@@ -7,6 +7,7 @@
 </head>
 <body>
 <script src="imagebitmap_extensions_prepareSources.js"></script>
+<script src="imagebitmap_extensions_data.js"></script>
 <script src="imagebitmap_extensions.js"></script>
 <script type="text/javascript">
 
@@ -20,6 +21,7 @@ function runTests() {
 
   prepareSources().
     then(testExceptions).
+    then(testColorConversions()).
     then( function() { return Promise.all([testAccessing_randomTest("Video", gVideo, 20), // video might use slightly different frames
                                            testAccessing_randomTest("Image", gImage, 0),
                                            testAccessing_randomTest("Canvas", gCanvas, 0),
