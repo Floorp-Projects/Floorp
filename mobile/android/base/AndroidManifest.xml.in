@@ -294,8 +294,10 @@
 
         </activity>
 
+#ifdef MOZ_ANDROID_CUSTOM_TABS
         <activity android:name="org.mozilla.gecko.customtabs.CustomTabsActivity"
             android:theme="@style/Theme.AppCompat.NoActionBar" />
+#endif
 
         <!-- Service to handle requests from overlays. -->
         <service android:name="org.mozilla.gecko.overlays.service.OverlayActionService" />
@@ -382,6 +384,7 @@
           android:name="org.mozilla.gecko.telemetry.TelemetryUploadService"
           android:exported="false"/>
 
+#ifdef MOZ_ANDROID_CUSTOM_TABS
         <service
             android:name="org.mozilla.gecko.customtabs.GeckoCustomTabsService"
             android:exported="true">
@@ -389,6 +392,7 @@
                 <action android:name="android.support.customtabs.action.CustomTabsService" />
             </intent-filter>
         </service>
+#endif
 
 #include ../services/manifests/FxAccountAndroidManifest_services.xml.in
 
