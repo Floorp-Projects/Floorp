@@ -30,6 +30,10 @@ const MessageHandler = {
       "DOM:ManifestObtainer:Obtain",
       this.obtainManifest.bind(this)
     );
+    addMessageListener(
+      "DOM:Manifest:FireInstallEvent",
+      this.fireInstallEvent.bind(this)
+    );
   },
 
   /**
@@ -60,6 +64,19 @@ const MessageHandler = {
     }
     sendAsyncMessage("DOM:ManifestObtainer:Obtain", response);
   }),
+
+  fireInstallEvent({data: {id}}){
+    const ev = new Event("install");
+    const response = makeMsgResponse(id);
+    if (!content || content.top !== content) {
+      const msg = "Can only dispatch install event on top-level browsing contexts.";
+      response.result = serializeError(new Error(msg));
+    } else {
+      response.success = true;
+      content.dispatchEvent(ev);
+    }
+    sendAsyncMessage("DOM:Manifest:FireInstallEvent", response);
+  }
 };
 /**
  * Utility function to Serializes an JS Error, so it can be transferred over
