@@ -40,12 +40,12 @@ var tests = (function() {
   yield checkIndividualResults("default", ["full"]);
 
   // check invalid policy
-  // According to the spec section 6.4, if there is a policy token
-  // and it is not one of the expected tokens, "No Referrer"
-  // should be the policy used.
+  // According to the spec section Determine token's Policy,if there is a policy
+  // token and it is not one of the expected tokens, Empty string should be the
+  // policy used.
   yield resetCounter();
   yield iframe.src = sjs + "&policy=" + escape('invalid-policy');
-  yield checkIndividualResults("invalid", ["none"]);
+  yield checkIndividualResults("invalid", ["full"]);
 
   // whitespace checks.
   // according to the spec section 4.1, the content attribute's value
@@ -83,6 +83,11 @@ var tests = (function() {
   yield resetCounter();
   yield iframe.src = sjs + "&policy=" + escape('no-referrer');
   yield checkIndividualResults("no-referrer", ["none"]);
+
+  // Case insensitive
+  yield resetCounter();
+  yield iframe.src = sjs + "&policy=" + escape('\f OrigIn');
+  yield checkIndividualResults("origin case insensitive", ["origin"]);
 
   // complete.  Be sure to yield so we don't call this twice.
   yield SimpleTest.finish();
