@@ -30,7 +30,8 @@ public:
   ~ProxyAutoConfig();
 
   nsresult Init(const nsCString &aPACURI,
-                const nsCString &aPACScript);
+                const nsCString &aPACScript,
+                bool aIncludePath);
   void     SetThreadLocalIndex(uint32_t index);
   void     Shutdown();
   void     GC();
@@ -108,6 +109,7 @@ private:
   bool              mShutdown;
   nsCString         mPACScript;
   nsCString         mPACURI;
+  bool              mIncludePath;
   nsCString         mRunningHost;
   uint32_t          mRunningAppId;
   nsString          mRunningAppOrigin;
