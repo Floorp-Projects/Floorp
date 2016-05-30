@@ -123,8 +123,8 @@ function testIncomingMessage() {
 
 function testTerminateConnection() {
   return new Promise(function(aResolve, aReject) {
-    connection.onstatechange = function() {
-      connection.onstatechange = null;
+    connection.onterminate = function() {
+      connection.onterminate = null;
       is(connection.state, "terminated", "Connection should be terminated.");
       aResolve();
     };
