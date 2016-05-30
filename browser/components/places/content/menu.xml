@@ -346,15 +346,14 @@
       ]]></handler>
 
       <handler event="dragstart"><![CDATA[
-        let elt = event.target;
-        if (!elt._placesNode)
+        if (!event.target._placesNode)
           return;
 
-        let draggedElt = elt._placesNode;
+        let draggedElt = event.target._placesNode;
 
         // Force a copy action if parent node is a query or we are dragging a
         // not-removable node.
-        if (!PlacesControllerDragHelper.canMoveNode(draggedElt, elt))
+        if (!PlacesControllerDragHelper.canMoveNode(draggedElt))
           event.dataTransfer.effectAllowed = "copyLink";
 
         // Activate the view and cache the dragged element.
