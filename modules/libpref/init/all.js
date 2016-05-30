@@ -4248,6 +4248,7 @@ pref("signon.storeWhenAutocompleteOff",     true);
 pref("signon.ui.experimental",              false);
 pref("signon.debug",                        false);
 pref("signon.recipes.path",                 "chrome://passwordmgr/content/recipes.json");
+pref("signon.schemeUpgrades",               false);
 
 // Satchel (Form Manager) prefs
 pref("browser.formfill.debug",            false);
