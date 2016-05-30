@@ -26,7 +26,9 @@ const SENTINEL_MSG = "testing ineffective sandboxing message";
 function test() {
   loadTab(TEST_URI_WARNING).then(() => {
     openConsole().then((hud) => {
-      content.console.log(SENTINEL_MSG);
+      ContentTask.spawn(gBrowser.selectedBrowser, SENTINEL_MSG, function*(msg) {
+        content.console.log(msg);
+      });
       waitForMessages({
         webconsole: hud,
         messages: [
@@ -46,14 +48,16 @@ function test() {
         is(msgs.length, 1, "one security message");
         testNoWarning(0);
       });
-    })
+    });
   });
 }
 
 function testNoWarning(id) {
   loadTab(TEST_URI_NOWARNING[id]).then(() => {
     openConsole().then((hud) => {
-      content.console.log(SENTINEL_MSG);
+      ContentTask.spawn(gBrowser.selectedBrowser, SENTINEL_MSG, function*(msg) {
+        content.console.log(msg);
+      });
       waitForMessages({
         webconsole: hud,
         messages: [
