@@ -89,6 +89,12 @@ typedef any Transferable;
 Window implements GlobalEventHandlers;
 Window implements WindowEventHandlers;
 
+[NoInterfaceObject, Exposed=(Window)]
+interface AppInstallEventHandlersMixin {
+  attribute EventHandler oninstall;
+};
+Window implements AppInstallEventHandlersMixin;
+
 // http://www.whatwg.org/specs/web-apps/current-work/
 [NoInterfaceObject, Exposed=(Window,Worker)]
 interface WindowTimers {
