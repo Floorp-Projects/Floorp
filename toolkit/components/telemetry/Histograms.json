@@ -4460,6 +4460,26 @@
     "releaseChannelCollection": "opt-out",
     "description": "Where automatic migration was attempted, indicates to what degree we succeeded."
   },
+  "FX_STARTUP_MIGRATION_DATA_RECENCY": {
+    "bug_numbers": [1276694],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "53",
+    "keyed": true,
+    "kind": "exponential",
+    "n_buckets": 50,
+    "high": 8760,
+    "releaseChannelCollection": "opt-out",
+    "description": "The 'last modified' time of the data we imported on the initial profile migration (time delta with 'now' at the time of migration, in hours). Collected for all browsers for which migration data is available, and stored keyed by browser identifier (e.g. 'ie', 'edge', 'safari', etc.)."
+  },
+  "FX_STARTUP_MIGRATION_USED_RECENT_BROWSER": {
+    "bug_numbers": [1276694],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "53",
+    "keyed": true,
+    "kind": "boolean",
+    "releaseChannelCollection": "opt-out",
+    "description": "Whether the browser we migrated from was the browser with the most recent data. Keyed by that browser's identifier (e.g. 'ie', 'edge', 'safari', etc.)."
+  },
   "FX_STARTUP_EXTERNAL_CONTENT_HANDLER": {
     "bug_numbers": [1276027],
     "alert_emails": ["jaws@mozilla.com"],
