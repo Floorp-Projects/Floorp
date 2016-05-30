@@ -58,6 +58,10 @@ public:
 #else
   static const int DEFAULT_SAMPLE_RATE = 16000;
 #endif
+  // This allows using whatever rate the graph is using for the
+  // MediaStreamTrack. This is useful for microphone data, we know it's already
+  // at the correct rate for insertion in the MSG.
+  static const int USE_GRAPH_RATE = -1;
 
   /* Populate an array of video sources in the nsTArray. Also include devices
    * that are currently unavailable. */
