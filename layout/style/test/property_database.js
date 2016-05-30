@@ -3744,6 +3744,45 @@ var gCSSProperties = {
     other_values: [ "double", "dotted", "dashed", "wavy", "-moz-none" ],
     invalid_values: [ "none", "groove", "ridge", "inset", "outset", "solid dashed", "wave" ]
   },
+  "text-emphasis": {
+    domProp: "textEmphasis",
+    inherited: true,
+    type: CSS_TYPE_TRUE_SHORTHAND,
+    prerequisites: { "color": "black" },
+    subproperties: [ "text-emphasis-style", "text-emphasis-color" ],
+    initial_values: [ "none currentColor", "currentColor none", "none", "currentColor", "none black" ],
+    other_values: [ "filled dot black", "#f00 circle open", "sesame filled rgba(0,0,255,0.5)", "red", "green none", "currentColor filled", "currentColor open" ],
+    invalid_values: [ "filled black dot", "filled filled red", "open open circle #000", "circle dot #f00", "rubbish" ]
+  },
+  "text-emphasis-color": {
+    domProp: "textEmphasisColor",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    prerequisites: { "color": "black" },
+    initial_values: [ "currentColor", "black", "rgb(0,0,0)" ],
+    other_values: [ "red", "rgba(255,255,255,0.5)", "transparent" ],
+    invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "000000", "ff00ff", "rgb(255,xxx,255)" ]
+  },
+  "text-emphasis-position": {
+    domProp: "textEmphasisPosition",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "over right", "right over" ],
+    other_values: [ "over left", "left over", "under left", "left under", "under right", "right under" ],
+    invalid_values: [ "over over", "left left", "over right left", "rubbish left", "over rubbish" ]
+  },
+  "text-emphasis-style": {
+    domProp: "textEmphasisStyle",
+    inherited: true,
+    type: CSS_TYPE_LONGHAND,
+    initial_values: [ "none" ],
+    other_values: [ "filled", "open", "dot", "circle", "double-circle", "triangle", "sesame", "'#'",
+                    "filled dot", "filled circle", "filled double-circle", "filled triangle", "filled sesame",
+                    "dot filled", "circle filled", "double-circle filled", "triangle filled", "sesame filled",
+                    "dot open", "circle open", "double-circle open", "triangle open", "sesame open" ],
+    invalid_values: [ "rubbish", "dot rubbish", "rubbish dot", "open rubbish", "rubbish open", "open filled", "dot circle",
+                      "open '#'", "'#' filled", "dot '#'", "'#' circle", "1", "1 open", "open 1" ]
+  },
   "text-indent": {
     domProp: "textIndent",
     inherited: true,
@@ -7623,48 +7662,6 @@ if (IsCSSPropertyPrefEnabled("layout.css.float-logical-values.enabled")) {
   gCSSProperties["float"].invalid_values.push("inline-end");
   gCSSProperties["clear"].invalid_values.push("inline-start");
   gCSSProperties["clear"].invalid_values.push("inline-end");
-}
-
-if (IsCSSPropertyPrefEnabled("layout.css.text-emphasis.enabled")) {
-  gCSSProperties["text-emphasis"] = {
-    domProp: "textEmphasis",
-    inherited: true,
-    type: CSS_TYPE_TRUE_SHORTHAND,
-    prerequisites: { "color": "black" },
-    subproperties: [ "text-emphasis-style", "text-emphasis-color" ],
-    initial_values: [ "none currentColor", "currentColor none", "none", "currentColor", "none black" ],
-    other_values: [ "filled dot black", "#f00 circle open", "sesame filled rgba(0,0,255,0.5)", "red", "green none", "currentColor filled", "currentColor open" ],
-    invalid_values: [ "filled black dot", "filled filled red", "open open circle #000", "circle dot #f00", "rubbish" ]
-  };
-  gCSSProperties["text-emphasis-color"] = {
-    domProp: "textEmphasisColor",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    prerequisites: { "color": "black" },
-    initial_values: [ "currentColor", "black", "rgb(0,0,0)" ],
-    other_values: [ "red", "rgba(255,255,255,0.5)", "transparent" ],
-    invalid_values: [ "#0", "#00", "#00000", "#0000000", "#000000000", "000000", "ff00ff", "rgb(255,xxx,255)" ]
-  };
-  gCSSProperties["text-emphasis-position"] = {
-    domProp: "textEmphasisPosition",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "over right", "right over" ],
-    other_values: [ "over left", "left over", "under left", "left under", "under right", "right under" ],
-    invalid_values: [ "over over", "left left", "over right left", "rubbish left", "over rubbish" ]
-  };
-  gCSSProperties["text-emphasis-style"] = {
-    domProp: "textEmphasisStyle",
-    inherited: true,
-    type: CSS_TYPE_LONGHAND,
-    initial_values: [ "none" ],
-    other_values: [ "filled", "open", "dot", "circle", "double-circle", "triangle", "sesame", "'#'",
-                    "filled dot", "filled circle", "filled double-circle", "filled triangle", "filled sesame",
-                    "dot filled", "circle filled", "double-circle filled", "triangle filled", "sesame filled",
-                    "dot open", "circle open", "double-circle open", "triangle open", "sesame open" ],
-    invalid_values: [ "rubbish", "dot rubbish", "rubbish dot", "open rubbish", "rubbish open", "open filled", "dot circle",
-                      "open '#'", "'#' filled", "dot '#'", "'#' circle", "1", "1 open", "open 1" ]
-  };
 }
 
 if (IsCSSPropertyPrefEnabled("layout.css.background-clip-text.enabled")) {
