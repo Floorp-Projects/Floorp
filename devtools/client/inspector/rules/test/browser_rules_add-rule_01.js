@@ -42,19 +42,6 @@ add_task(function* () {
   for (let data of TEST_DATA) {
     let {node, expected} = data;
     yield selectNode(node, inspector);
-    yield addNewRule(inspector, view);
-    yield testNewRule(view, expected);
+    yield addNewRuleAndDismissEditor(inspector, view, expected, 1);
   }
 });
-
-function* testNewRule(view, expected) {
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let editor = ruleEditor.selectorText.ownerDocument.activeElement;
-  is(editor.value, expected, "Selector editor value is as expected: " + expected);
-
-  info("Escaping from the selector inplace editor");
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
-
-  is(ruleEditor.selectorText.textContent, expected,
-     "Selector text value is as expected: " + expected);
-}

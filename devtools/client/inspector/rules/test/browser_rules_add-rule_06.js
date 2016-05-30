@@ -36,14 +36,6 @@ add_task(function* () {
   for (let data of TEST_DATA) {
     let {node, expected} = data;
     yield selectNode(node, inspector);
-    yield addNewRule(inspector, view);
-    yield testNewRule(view, expected, 1);
+    yield addNewRuleAndDismissEditor(inspector, view, expected, 1);
   }
 });
-
-function* testNewRule(view, expected, index) {
-  let idRuleEditor = getRuleViewRuleEditor(view, index);
-  let editor = idRuleEditor.selectorText.ownerDocument.activeElement;
-  is(editor.value, expected,
-      "Selector editor value is as expected: " + expected);
-}

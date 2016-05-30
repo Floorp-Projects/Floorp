@@ -44,24 +44,11 @@ add_task(function* () {
 });
 
 function* testNewRule(inspector, view, expected) {
-  info("Adding a new rule and expecting a ruleview-changed event");
-  let onRuleViewChanged = view.once("ruleview-changed");
-  yield addNewRule(inspector, view);
-  yield onRuleViewChanged;
-
-  let ruleEditor = getRuleViewRuleEditor(view, 1);
-  let editor = ruleEditor.selectorText.ownerDocument.activeElement;
-  is(editor.value, expected,
-     "Selector editor value is as expected: " + expected);
-
-  info("Entering the escape key");
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
-
-  is(ruleEditor.selectorText.textContent, expected,
-     "Selector text value is as expected: " + expected);
+  yield addNewRuleAndDismissEditor(inspector, view, expected, 1);
 
   info("Adding new properties to new rule: " + expected);
-  onRuleViewChanged = view.once("ruleview-changed");
+  let ruleEditor = getRuleViewRuleEditor(view, 1);
+  let onRuleViewChanged = view.once("ruleview-changed");
   ruleEditor.addProperty("font-weight", "bold", "");
   yield onRuleViewChanged;
 
