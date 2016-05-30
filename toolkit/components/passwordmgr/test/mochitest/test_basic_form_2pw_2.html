@@ -56,7 +56,7 @@ function checkSubmit(formNum) {
   if (formNum == 999) {
     is(numSubmittedForms, 999, "Ensuring all forms submitted for testing.");
 
-    var numEndingLogins = countLogins();
+    var numEndingLogins = LoginManager.countLogins("", "", "");
 
     ok(numEndingLogins > 0, "counting logins at end");
     is(numStartingLogins, numEndingLogins + 222, "counting logins at end");

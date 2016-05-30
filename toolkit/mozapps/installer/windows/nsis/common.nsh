@@ -5097,10 +5097,20 @@
       Push $R6
       Push $R5
 
+      ; Don't install on systems that don't support SSE2. The parameter value of
+      ; 10 is for PF_XMMI64_INSTRUCTIONS_AVAILABLE which will check whether the
+      ; SSE2 instruction set is available.
+      System::Call "kernel32::IsProcessorFeaturePresent(i 10)i .R8"
+      ${If} "$R8" == "0"
+        MessageBox MB_OK|MB_ICONSTOP "$R9"
+        ; Nothing initialized so no need to call OnEndCommon
+        Quit
+      ${EndIf}
+
       !ifdef HAVE_64BIT_BUILD
         ${Unless} ${RunningX64}
         ${OrUnless} ${AtLeastWin7}
-          MessageBox MB_OK|MB_ICONSTOP "$R9" IDOK
+          MessageBox MB_OK|MB_ICONSTOP "$R9"
           ; Nothing initialized so no need to call OnEndCommon
           Quit
         ${EndUnless}
@@ -5132,7 +5142,7 @@
           ${OrIf} "$R8" == "3"
           ${OrIf} "$R8" == "4"
           ${OrIf} "$R8" == "5"
-            MessageBox MB_OK|MB_ICONSTOP "$R9" IDOK
+            MessageBox MB_OK|MB_ICONSTOP "$R9"
             ; Nothing initialized so no need to call OnEndCommon
             Quit
           ${EndIf}
