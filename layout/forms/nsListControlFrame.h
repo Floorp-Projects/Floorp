@@ -60,7 +60,7 @@ public:
   virtual nsresult HandleEvent(nsPresContext* aPresContext,
                                mozilla::WidgetGUIEvent* aEvent,
                                nsEventStatus* aEventStatus) override;
-  
+
   virtual void SetInitialChildList(ChildListID     aListID,
                                    nsFrameList&    aChildList) override;
 
@@ -76,8 +76,8 @@ public:
                     nsContainerFrame* aParent,
                     nsIFrame*         aPrevInFlow) override;
 
-  virtual void DidReflow(nsPresContext*            aPresContext, 
-                         const nsHTMLReflowState*  aReflowState, 
+  virtual void DidReflow(nsPresContext*            aPresContext,
+                         const nsHTMLReflowState*  aReflowState,
                          nsDidReflowStatus         aStatus) override;
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
 
@@ -251,7 +251,7 @@ public:
 #ifdef ACCESSIBILITY
   /**
    * Post a custom DOM event for the change, so that accessibility can
-   * fire a native focus event for accessibility 
+   * fire a native focus event for accessibility
    * (Some 3rd party products need to track our focus)
    */
   void FireMenuItemActiveEvent(); // Inform assistive tech what got focused
@@ -319,7 +319,7 @@ protected:
   virtual ~nsListControlFrame();
 
   /**
-   * Sets the mSelectedIndex and mOldSelectedIndex from figuring out what 
+   * Sets the mSelectedIndex and mOldSelectedIndex from figuring out what
    * item was selected using content
    * @param aPoint the event point, in listcontrolframe coordinates
    * @return NS_OK if it successfully found the selection
@@ -389,7 +389,7 @@ protected:
    * @return how many displayable options/optgroups this frame has.
    */
   uint32_t GetNumberOfRows();
-  
+
   // Data Members
   int32_t      mStartSelectionIndex;
   int32_t      mEndSelectionIndex;
@@ -427,7 +427,7 @@ protected:
 
   // True if the selection can be set to nothing or disabled options.
   bool mForceSelection:1;
-  
+
   // The last computed block size we reflowed at if we're a combobox
   // dropdown.
   // XXXbz should we be using a subclass here?  Or just not worry
@@ -437,7 +437,7 @@ protected:
   // At the time of our last dropdown, the backstop color to draw in case we
   // are translucent.
   nscolor mLastDropdownBackstopColor;
-  
+
   RefPtr<nsListEventListener> mEventListener;
 
   static nsListControlFrame * mFocused;

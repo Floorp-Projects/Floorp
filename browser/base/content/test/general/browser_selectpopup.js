@@ -111,7 +111,7 @@ function doSelectTests(contentType, dtd)
 
   // On Windows, one can navigate on disabled menuitems
   let expectedIndex = isWindows ? 5 : 9;
-     
+
   is(menulist.menuBoxObject.activeChild, menulist.getItemAtIndex(expectedIndex),
      "Skip optgroup header and disabled items select item 7");
   is(menulist.selectedIndex, isWindows ? 5 : 1, "Select or skip disabled item selectedIndex");
@@ -185,7 +185,7 @@ add_task(function*() {
 
   // Wait a bit just to make sure the popup won't close.
   yield new Promise(resolve => setTimeout(resolve, 1000));
-  
+
   is(selectPopup.state, "open", "Different popup did not affect open popup");
 
   yield hideSelectPopup(selectPopup);
