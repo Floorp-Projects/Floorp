@@ -36,14 +36,6 @@ function* runTestData(inspector, view, pseudoClasses) {
   yield resetPseudoLocks(inspector, view);
 }
 
-function* addNewRule(inspector, view) {
-  info("Adding the new rule using the button");
-  view.addRuleButton.click();
-  info("Waiting for rule view to change");
-  let onRuleViewChanged = once(view, "ruleview-changed");
-  yield onRuleViewChanged;
-}
-
 function* testNewRule(view, pseudoClasses, index) {
   let idRuleEditor = getRuleViewRuleEditor(view, index);
   let editor = idRuleEditor.selectorText.ownerDocument.activeElement;
