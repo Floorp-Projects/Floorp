@@ -80,7 +80,7 @@ module.exports = createClass({
           }, Strings.GetStringFromName("addonDebugging.label")),
           "(",
           dom.a({ href: MORE_INFO_URL, target: "_blank" },
-            Strings.GetStringFromName("addonDebugging.moreInfo")),
+            Strings.GetStringFromName("moreInfo")),
           ")"
         ),
         dom.button({

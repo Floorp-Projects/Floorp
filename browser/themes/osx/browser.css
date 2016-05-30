@@ -87,12 +87,10 @@
   margin-left: 7px;
 }
 
-@media (-moz-mac-lion-theme) {
-  .titlebar-placeholder[type="fullscreen-button"],
-  #titlebar-secondary-buttonbox {
-    margin-right: 7px;
-    margin-left: 7px;
-  }
+.titlebar-placeholder[type="fullscreen-button"],
+#titlebar-secondary-buttonbox {
+  margin-right: 7px;
+  margin-left: 7px;
 }
 
 #main-window:not(:-moz-lwtheme) > #titlebar {
@@ -1062,31 +1060,23 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 
 #main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-icon,
 #main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
-#main-window:not([customizing]) .toolbarbutton-1 > .toolbarbutton-menubutton-button[disabled="true"] > .toolbarbutton-icon {
-  opacity: .4;
+#main-window:not([customizing]) .toolbarbutton-1 > .toolbarbutton-menubutton-button[disabled="true"] > .toolbarbutton-icon,
+#main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-menu-dropmarker,
+#main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-menubutton-dropmarker,
+.toolbarbutton-1:not(:hover):-moz-window-inactive > #downloads-indicator-anchor,
+.toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-icon,
+.toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-text,
+.toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-badge-stack > .toolbarbutton-icon,
+.toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menu-dropmarker,
+.toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
+.toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
+  opacity: .5;
 }
 
-@media (-moz-mac-lion-theme) {
-  #main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-icon,
-  #main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
-  #main-window:not([customizing]) .toolbarbutton-1 > .toolbarbutton-menubutton-button[disabled="true"] > .toolbarbutton-icon,
-  #main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-menu-dropmarker,
-  #main-window:not([customizing]) .toolbarbutton-1[disabled="true"] > .toolbarbutton-menubutton-dropmarker,
-  .toolbarbutton-1:not(:hover):-moz-window-inactive > #downloads-indicator-anchor,
-  .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-icon,
-  .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-text,
-  .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-badge-stack > .toolbarbutton-icon,
-  .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menu-dropmarker,
-  .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menubutton-dropmarker > .dropmarker-icon,
-  .toolbarbutton-1:not(:hover):-moz-window-inactive > .toolbarbutton-menubutton-button > .toolbarbutton-icon {
-    opacity: .5;
-  }
-
-  #main-window:not([customizing]) .toolbarbutton-1:-moz-window-inactive[disabled="true"] > .toolbarbutton-icon,
-  #main-window:not([customizing]) .toolbarbutton-1:-moz-window-inactive[disabled="true"] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
-  #main-window:not([customizing]) .toolbarbutton-1:-moz-window-inactive > .toolbarbutton-menubutton-button[disabled="true"] > .toolbarbutton-icon {
-    opacity: .25;
-  }
+#main-window:not([customizing]) .toolbarbutton-1:-moz-window-inactive[disabled="true"] > .toolbarbutton-icon,
+#main-window:not([customizing]) .toolbarbutton-1:-moz-window-inactive[disabled="true"] > .toolbarbutton-badge-stack > .toolbarbutton-icon,
+#main-window:not([customizing]) .toolbarbutton-1:-moz-window-inactive > .toolbarbutton-menubutton-button[disabled="true"] > .toolbarbutton-icon {
+  opacity: .25;
 }
 
 .toolbarbutton-1 > .toolbarbutton-menu-dropmarker,
@@ -1222,48 +1212,26 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 }
 
 #forward-button:not(:-moz-lwtheme) {
-  background: linear-gradient(hsl(0,0%,99%), hsl(0,0%,67%)) padding-box;
+  background-image: linear-gradient(hsla(0,0%,100%,.73), hsla(0,0%,100%,.05) 85%);
   border: 1px solid;
-  border-color: hsl(0,0%,31%) hsla(0,0%,29%,.6) hsl(0,0%,27%);
-  box-shadow: inset 0 1px 0 hsla(0,0%,100%,.35),
+  border-color: hsla(0,0%,0%,.35) hsla(0,0%,0%,.25) hsla(0,0%,0%,.2);
+  box-shadow: inset 0 1px 0 hsla(0,0%,100%,.2),
+              inset 0 0 1px hsla(0,0%,100%,.1),
               0 1px 0 hsla(0,0%,100%,.2);
 }
 
 #forward-button:hover:active:not(:-moz-lwtheme) {
-  background-image: linear-gradient(hsl(0,0%,74%), hsl(0,0%,61%));
-  box-shadow: inset rgba(0,0,0,.3) 0 -6px 10px,
-              inset #000 0 1px 3px,
-              inset rgba(0,0,0,.2) 0 1px 3px,
+  background-image: linear-gradient(hsla(0,0%,60%,.37), hsla(0,0%,100%,.35) 95%);
+  border-color: hsla(0,0%,0%,.43) hsla(0,0%,0%,.25) hsla(0,0%,0%,.37);
+  box-shadow: inset 0 1px 0 hsla(0,0%,0%,.02),
+              inset 0 1px 2px hsla(0,0%,0%,.2),
               0 1px 0 hsla(0,0%,100%,.2);
 }
 
 #forward-button:-moz-window-inactive:not(:-moz-lwtheme) {
-  border-color: hsl(0,0%,64%) hsl(0,0%,65%) hsl(0,0%,66%);
-  background-image: linear-gradient(hsl(0,0%,99%), hsl(0,0%,82%));
+  background-image: none;
+  border-color: hsla(0,0%,0%,.2);
   box-shadow: inset 0 1px 0 hsla(0,0%,100%,.35);
-}
-
-@media (-moz-mac-lion-theme) {
-  #forward-button:not(:-moz-lwtheme) {
-    background-image: linear-gradient(hsla(0,0%,100%,.73), hsla(0,0%,100%,.05) 85%);
-    border-color: hsla(0,0%,0%,.35) hsla(0,0%,0%,.25) hsla(0,0%,0%,.2);
-    box-shadow: inset 0 1px 0 hsla(0,0%,100%,.2),
-                inset 0 0 1px hsla(0,0%,100%,.1),
-                0 1px 0 hsla(0,0%,100%,.2);
-  }
-
-  #forward-button:hover:active:not(:-moz-lwtheme) {
-    background-image: linear-gradient(hsla(0,0%,60%,.37), hsla(0,0%,100%,.35) 95%);
-    border-color: hsla(0,0%,0%,.43) hsla(0,0%,0%,.25) hsla(0,0%,0%,.37);
-    box-shadow: inset 0 1px 0 hsla(0,0%,0%,.02),
-                inset 0 1px 2px hsla(0,0%,0%,.2),
-                0 1px 0 hsla(0,0%,100%,.2);
-  }
-
-  #forward-button:-moz-window-inactive:not(:-moz-lwtheme) {
-    background-image: none;
-    border-color: hsla(0,0%,0%,.2);
-  }
 }
 
 @media (-moz-mac-yosemite-theme) {
@@ -1488,34 +1456,19 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
 .searchbar-textbox {
   font: icon;
   -moz-appearance: none;
-  box-shadow: 0 1px rgba(255, 255, 255, 0.2), inset 0 1px hsla(0,0%,0%,.05);
+  box-shadow: 0 1px 0 hsla(0,0%,100%,.2),
+              inset 0 0 1px hsla(0,0%,0%,.05),
+              inset 0 1px 2px hsla(0,0%,0%,.1);
   margin: 0 4px;
   padding: 1px 0;
   border: 1px solid;
-  border-color: #626262 #787878 #8c8c8c;
+  background-image: linear-gradient(hsl(0,0%,97%), hsl(0,0%,100%));
+  border-color: hsla(0,0%,0%,.35) hsla(0,0%,0%,.25) hsla(0,0%,0%,.15);
   background-clip: padding-box;
 }
 
 #urlbar[readonly] {
   background-color: -moz-field;
-}
-
-@media (-moz-mac-lion-theme) {
-  #urlbar,
-  .searchbar-textbox {
-    background-image: linear-gradient(hsl(0,0%,97%), hsl(0,0%,100%));
-    border-color: hsla(0,0%,0%,.35) hsla(0,0%,0%,.25) hsla(0,0%,0%,.15);
-    box-shadow: 0 1px 0 hsla(0,0%,100%,.2),
-                inset 0 0 1px hsla(0,0%,0%,.05),
-                inset 0 1px 2px hsla(0,0%,0%,.1);
-  }
-}
-
-@media not all and (-moz-mac-lion-theme) {
-  #urlbar:-moz-window-inactive,
-  .searchbar-textbox:-moz-window-inactive {
-    border-color: @toolbarbuttonInactiveBorderColor@;
-  }
 }
 
 @media (-moz-mac-yosemite-theme) {
@@ -2590,10 +2543,8 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   text-shadow: @loweredShadow@;
 }
 
-@media (-moz-mac-lion-theme) {
-  #navigator-toolbox[inFullscreen] > #TabsToolbar {
-    padding-top: var(--space-above-tabbar);
-  }
+#navigator-toolbox[inFullscreen] > #TabsToolbar {
+  padding-top: var(--space-above-tabbar);
 }
 
 #tabbrowser-tabs {
@@ -3529,25 +3480,23 @@ menulist.translate-infobar-element > .menulist-dropmarker {
   }
 }
 
-@media (-moz-mac-lion-theme) {
-  #TabsToolbar > .private-browsing-indicator {
-    transform: translateY(calc(-1 * var(--space-above-tabbar)));
-    /* We offset by 38px for mask graphic, plus 4px to account for the
-     * margin-left, which sums to 42px.
-     */
-    margin-right: -42px;
-  }
+#TabsToolbar > .private-browsing-indicator {
+  transform: translateY(calc(-1 * var(--space-above-tabbar)));
+  /* We offset by 38px for mask graphic, plus 4px to account for the
+   * margin-left, which sums to 42px.
+   */
+  margin-right: -42px;
+}
 
-  #main-window[privatebrowsingmode=temporary] .titlebar-placeholder[type="fullscreen-button"],
-  #main-window[privatebrowsingmode=temporary] > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > #titlebar-fullscreen-button {
-    margin-left: 0px;
-  }
+#main-window[privatebrowsingmode=temporary] .titlebar-placeholder[type="fullscreen-button"],
+#main-window[privatebrowsingmode=temporary] > #titlebar > #titlebar-content > #titlebar-secondary-buttonbox > #titlebar-fullscreen-button {
+  margin-left: 0px;
+}
 
-  #main-window[privatebrowsingmode=temporary][inFullscreen] .titlebar-placeholder[type="fullscreen-button"] {
-    /* Override display:none for .titlebar-placeholder in fullscreen so we can have consistent
-       position and padding for the private browsing indicator. */
-    display: -moz-box;
-  }
+#main-window[privatebrowsingmode=temporary][inFullscreen] .titlebar-placeholder[type="fullscreen-button"] {
+  /* Override display:none for .titlebar-placeholder in fullscreen so we can have consistent
+     position and padding for the private browsing indicator. */
+  display: -moz-box;
 }
 
 #TabsToolbar > .private-browsing-indicator:-moz-locale-dir(rtl) {

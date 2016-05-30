@@ -19,7 +19,7 @@ module.exports = createClass({
   displayName: "TargetList",
 
   render() {
-    let { client, debugDisabled, targetClass, targets, sort } = this.props;
+    let { client, debugDisabled, error, targetClass, targets, sort } = this.props;
     if (sort) {
       targets = targets.sort(LocaleCompare);
     }
@@ -27,11 +27,16 @@ module.exports = createClass({
       return targetClass({ client, target, debugDisabled });
     });
 
+    let content = "";
+    if (error) {
+      content = error;
+    } else if (targets.length > 0) {
+      content = dom.ul({ className: "target-list" }, targets);
+    } else {
+      content = dom.p(null, Strings.GetStringFromName("nothing"));
+    }
+
     return dom.div({ id: this.props.id, className: "targets" },
-      dom.h2(null, this.props.name),
-      targets.length > 0 ?
-        dom.ul({ className: "target-list" }, targets) :
-        dom.p(null, Strings.GetStringFromName("nothing"))
-    );
+      dom.h2(null, this.props.name), content);
   },
 });
