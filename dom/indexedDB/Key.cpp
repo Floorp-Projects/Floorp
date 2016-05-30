@@ -12,7 +12,7 @@
 #include "js/Date.h"
 #include "js/Value.h"
 #include "jsfriendapi.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozIStorageStatement.h"
 #include "mozIStorageValueArray.h"

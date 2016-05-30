@@ -1615,7 +1615,7 @@ GetStrokeDashData(nsIFrame* aFrame,
     }
 
   } else {
-    uint32_t count = style->mStrokeDasharrayLength;
+    uint32_t count = style->mStrokeDasharray.Length();
     if (!count || !aDashes.SetLength(count, fallible)) {
       return false;
     }
@@ -1630,7 +1630,7 @@ GetStrokeDashData(nsIFrame* aFrame,
       }
     }
 
-    const nsStyleCoord *dasharray = style->mStrokeDasharray;
+    const nsTArray<nsStyleCoord>& dasharray = style->mStrokeDasharray;
 
     for (uint32_t i = 0; i < count; i++) {
       aDashes[i] = SVGContentUtils::CoordToFloat(ctx,
@@ -1648,7 +1648,7 @@ GetStrokeDashData(nsIFrame* aFrame,
     *aDashOffset = SVGContentUtils::CoordToFloat(ctx,
                                                  style->mStrokeDashoffset);
   }
-  
+
   return (totalLength > 0.0);
 }
 

@@ -448,42 +448,32 @@ const Class StringObject::class_ = {
 };
 
 /*
- * Returns a JSString * for the |this| value associated with 'call', or throws
- * a TypeError if |this| is null or undefined.  This algorithm is the same as
- * calling CheckObjectCoercible(this), then returning ToString(this), as all
- * String.prototype.* methods do (other than toString and valueOf).
+ * Perform the initial |RequireObjectCoercible(thisv)| and |ToString(thisv)|
+ * from nearly all String.prototype.* functions.
  */
 static MOZ_ALWAYS_INLINE JSString*
-ThisToStringForStringProto(JSContext* cx, CallReceiver call)
+ToStringForStringFunction(JSContext* cx, HandleValue thisv)
 {
     JS_CHECK_RECURSION(cx, return nullptr);
 
-    if (call.thisv().isString())
-        return call.thisv().toString();
+    if (thisv.isString())
+        return thisv.toString();
 
-    if (call.thisv().isObject()) {
-        RootedObject obj(cx, &call.thisv().toObject());
+    if (thisv.isObject()) {
+        RootedObject obj(cx, &thisv.toObject());
         if (obj->is<StringObject>()) {
             StringObject* nobj = &obj->as<StringObject>();
             Rooted<jsid> id(cx, NameToId(cx->names().toString));
-            if (ClassMethodIsNative(cx, nobj, &StringObject::class_, id, str_toString)) {
-                JSString* str = nobj->unbox();
-                call.setThis(StringValue(str));
-                return str;
-            }
+            if (ClassMethodIsNative(cx, nobj, &StringObject::class_, id, str_toString))
+                return nobj->unbox();
         }
-    } else if (call.thisv().isNullOrUndefined()) {
+    } else if (thisv.isNullOrUndefined()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_CANT_CONVERT_TO,
-                             call.thisv().isNull() ? "null" : "undefined", "object");
+                             thisv.isNull() ? "null" : "undefined", "object");
         return nullptr;
     }
 
-    JSString* str = ToStringSlow<CanGC>(cx, call.thisv());
-    if (!str)
-        return nullptr;
-
-    call.setThis(StringValue(str));
-    return str;
+    return ToStringSlow<CanGC>(cx, thisv);
 }
 
 MOZ_ALWAYS_INLINE bool
@@ -655,9 +645,9 @@ ToLowerCase(JSContext* cx, JSLinearString* str)
 }
 
 static inline bool
-ToLowerCaseHelper(JSContext* cx, CallReceiver call)
+ToLowerCaseHelper(JSContext* cx, const CallArgs& args)
 {
-    RootedString str(cx, ThisToStringForStringProto(cx, call));
+    RootedString str(cx, ToStringForStringFunction(cx, args.thisv()));
     if (!str)
         return false;
 
@@ -672,7 +662,7 @@ ToLowerCaseHelper(JSContext* cx, CallReceiver call)
     if (!str)
         return false;
 
-    call.rval().setString(str);
+    args.rval().setString(str);
     return true;
 }
 
@@ -692,7 +682,7 @@ js::str_toLocaleLowerCase(JSContext* cx, unsigned argc, Value* vp)
      * ECMA has reserved that argument, presumably for defining the locale.
      */
     if (cx->runtime()->localeCallbacks && cx->runtime()->localeCallbacks->localeToLowerCase) {
-        RootedString str(cx, ThisToStringForStringProto(cx, args));
+        RootedString str(cx, ToStringForStringFunction(cx, args.thisv()));
         if (!str)
             return false;
 
@@ -806,9 +796,9 @@ ToUpperCase(JSContext* cx, JSLinearString* str)
 }
 
 static bool
-ToUpperCaseHelper(JSContext* cx, CallReceiver call)
+ToUpperCaseHelper(JSContext* cx, const CallArgs& args)
 {
-    RootedString str(cx, ThisToStringForStringProto(cx, call));
+    RootedString str(cx, ToStringForStringFunction(cx, args.thisv()));
     if (!str)
         return false;
 
@@ -823,7 +813,7 @@ ToUpperCaseHelper(JSContext* cx, CallReceiver call)
     if (!str)
         return false;
 
-    call.rval().setString(str);
+    args.rval().setString(str);
     return true;
 }
 
@@ -843,7 +833,7 @@ js::str_toLocaleUpperCase(JSContext* cx, unsigned argc, Value* vp)
      * ECMA has reserved that argument, presumably for defining the locale.
      */
     if (cx->runtime()->localeCallbacks && cx->runtime()->localeCallbacks->localeToUpperCase) {
-        RootedString str(cx, ThisToStringForStringProto(cx, args));
+        RootedString str(cx, ToStringForStringFunction(cx, args.thisv()));
         if (!str)
             return false;
 
@@ -863,7 +853,7 @@ bool
 js::str_localeCompare(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedString str(cx, ThisToStringForStringProto(cx, args));
+    RootedString str(cx, ToStringForStringFunction(cx, args.thisv()));
     if (!str)
         return false;
 
@@ -897,7 +887,7 @@ js::str_normalize(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // Steps 1-3.
-    RootedString str(cx, ThisToStringForStringProto(cx, args));
+    RootedString str(cx, ToStringForStringFunction(cx, args.thisv()));
     if (!str)
         return false;
 
@@ -982,7 +972,7 @@ js::str_charAt(JSContext* cx, unsigned argc, Value* vp)
         if (i >= str->length())
             goto out_of_range;
     } else {
-        str = ThisToStringForStringProto(cx, args);
+        str = ToStringForStringFunction(cx, args.thisv());
         if (!str)
             return false;
 
@@ -1044,7 +1034,7 @@ js::str_charCodeAt(JSContext* cx, unsigned argc, Value* vp)
     if (args.thisv().isString()) {
         str = args.thisv().toString();
     } else {
-        str = ThisToStringForStringProto(cx, args);
+        str = ToStringForStringFunction(cx, args.thisv());
         if (!str)
             return false;
     }
@@ -1536,7 +1526,7 @@ js::str_includes(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // Steps 1, 2, and 3
-    RootedString str(cx, ThisToStringForStringProto(cx, args));
+    RootedString str(cx, ToStringForStringFunction(cx, args.thisv()));
     if (!str)
         return false;
 
@@ -1593,7 +1583,7 @@ js::str_indexOf(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // Steps 1, 2, and 3
-    RootedString str(cx, ThisToStringForStringProto(cx, args));
+    RootedString str(cx, ToStringForStringFunction(cx, args.thisv()));
     if (!str)
         return false;
 
@@ -1664,7 +1654,7 @@ bool
 js::str_lastIndexOf(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    RootedString textstr(cx, ThisToStringForStringProto(cx, args));
+    RootedString textstr(cx, ToStringForStringFunction(cx, args.thisv()));
     if (!textstr)
         return false;
 
@@ -1760,7 +1750,7 @@ js::str_startsWith(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // Steps 1, 2, and 3
-    RootedString str(cx, ThisToStringForStringProto(cx, args));
+    RootedString str(cx, ToStringForStringFunction(cx, args.thisv()));
     if (!str)
         return false;
 
@@ -1826,7 +1816,7 @@ js::str_endsWith(JSContext* cx, unsigned argc, Value* vp)
     CallArgs args = CallArgsFromVp(argc, vp);
 
     // Steps 1, 2, and 3
-    RootedString str(cx, ThisToStringForStringProto(cx, args));
+    RootedString str(cx, ToStringForStringFunction(cx, args.thisv()));
     if (!str)
         return false;
 
@@ -1910,10 +1900,9 @@ TrimString(const CharT* chars, bool trimLeft, bool trimRight, size_t length,
 }
 
 static bool
-TrimString(JSContext* cx, Value* vp, bool trimLeft, bool trimRight)
+TrimString(JSContext* cx, const CallArgs& args, bool trimLeft, bool trimRight)
 {
-    CallReceiver call = CallReceiverFromVp(vp);
-    RootedString str(cx, ThisToStringForStringProto(cx, call));
+    RootedString str(cx, ToStringForStringFunction(cx, args.thisv()));
     if (!str)
         return false;
 
@@ -1935,26 +1924,29 @@ TrimString(JSContext* cx, Value* vp, bool trimLeft, bool trimRight)
     if (!str)
         return false;
 
-    call.rval().setString(str);
+    args.rval().setString(str);
     return true;
 }
 
 bool
 js::str_trim(JSContext* cx, unsigned argc, Value* vp)
 {
-    return TrimString(cx, vp, true, true);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return TrimString(cx, args, true, true);
 }
 
 bool
 js::str_trimLeft(JSContext* cx, unsigned argc, Value* vp)
 {
-    return TrimString(cx, vp, true, false);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return TrimString(cx, args, true, false);
 }
 
 bool
 js::str_trimRight(JSContext* cx, unsigned argc, Value* vp)
 {
-    return TrimString(cx, vp, false, true);
+    CallArgs args = CallArgsFromVp(argc, vp);
+    return TrimString(cx, args, false, true);
 }
 
 // Utility for building a rope (lazy concatenation) of strings.
@@ -2490,7 +2482,7 @@ bool
 js::str_concat(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
-    JSString* str = ThisToStringForStringProto(cx, args);
+    JSString* str = ToStringForStringFunction(cx, args.thisv());
     if (!str)
         return false;
 

@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsCRT.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "nsBMPEncoder.h"
 #include "nsPNGEncoder.h"
 #include "nsICOEncoder.h"

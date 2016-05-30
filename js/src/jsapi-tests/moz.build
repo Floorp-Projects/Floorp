@@ -13,6 +13,7 @@ UNIFIED_SOURCES += [
     'testArrayBuffer.cpp',
     'testArrayBufferView.cpp',
     'testBug604087.cpp',
+    'testCallArgs.cpp',
     'testCallNonGenericMethodOnProxy.cpp',
     'testChromeBuffer.cpp',
     'testClassGetter.cpp',

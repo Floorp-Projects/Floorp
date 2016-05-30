@@ -71,7 +71,7 @@ struct ParamTraits<mozilla::layers::SurfaceDescriptorX11> {
     WriteParam(aMsg, aParam.mGLXPixmap);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult) {
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
     return (ReadParam(aMsg, aIter, &aResult->mId) &&
             ReadParam(aMsg, aIter, &aResult->mSize) &&
             ReadParam(aMsg, aIter, &aResult->mFormat) &&

@@ -312,14 +312,6 @@ CreateMediaDecodeTaskQueue()
   return queue.forget();
 }
 
-already_AddRefed<FlushableTaskQueue>
-CreateFlushableMediaDecodeTaskQueue()
-{
-  RefPtr<FlushableTaskQueue> queue = new FlushableTaskQueue(
-    GetMediaThreadPool(MediaThreadType::PLATFORM_DECODER));
-  return queue.forget();
-}
-
 void
 SimpleTimer::Cancel() {
   if (mTimer) {

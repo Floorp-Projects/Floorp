@@ -79,14 +79,14 @@ struct ParamTraits<mozilla::layers::MagicGrallocBufferHandle> {
   typedef mozilla::layers::MagicGrallocBufferHandle paramType;
 
   static void Write(Message* aMsg, const paramType& aParam);
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult);
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult);
 };
 
 template<>
 struct ParamTraits<mozilla::layers::GrallocBufferRef> {
   typedef mozilla::layers::GrallocBufferRef paramType;
   static void Write(Message* aMsg, const paramType& aParam);
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult);
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult);
 };
 
 

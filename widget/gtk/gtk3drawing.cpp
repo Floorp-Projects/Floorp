@@ -18,7 +18,6 @@
 
 #include <math.h>
 
-static GtkWidget* gProtoWindow;
 static GtkWidget* gProtoLayout;
 static GtkWidget* gButtonWidget;
 static GtkWidget* gToggleButtonWidget;
@@ -102,15 +101,6 @@ gint
 moz_gtk_enable_style_props(style_prop_t styleGetProp)
 {
     style_prop_func = styleGetProp;
-    return MOZ_GTK_SUCCESS;
-}
-
-static gint
-ensure_window_widget()
-{
-    if (!gProtoWindow) {
-        gProtoWindow = GetWidget(MOZ_GTK_WINDOW);
-    }
     return MOZ_GTK_SUCCESS;
 }
 
@@ -220,7 +210,7 @@ ensure_entry_widget()
  * g_object_add_weak_pointer().
  * Note that if we don't find the inner widgets (which shouldn't happen), we
  * fallback to use generic "non-inner" widgets, and they don't need that kind
- * of weak pointer since they are explicit children of gProtoWindow and as
+ * of weak pointer since they are explicit children of gProtoLayout and as
  * such GTK holds a strong reference to them. */
 static void
 moz_gtk_get_combo_box_inner_button(GtkWidget *widget, gpointer client_data)
@@ -328,7 +318,7 @@ ensure_info_bar()
  * g_object_add_weak_pointer().
  * Note that if we don't find the inner widgets (which shouldn't happen), we
  * fallback to use generic "non-inner" widgets, and they don't need that kind
- * of weak pointer since they are explicit children of gProtoWindow and as
+ * of weak pointer since they are explicit children of gProtoLayout and as
  * such GTK holds a strong reference to them. */
 static void
 moz_gtk_get_combo_box_entry_inner_widgets(GtkWidget *widget,
@@ -762,16 +752,14 @@ static gint
 moz_gtk_window_paint(cairo_t *cr, GdkRectangle* rect,
                      GtkTextDirection direction)
 {
-    GtkStyleContext* style;
+    GtkStyleContext* style = ClaimStyleContext(MOZ_GTK_WINDOW, direction);
 
-    ensure_window_widget();
-    gtk_widget_set_direction(gProtoWindow, direction);
-
-    style = gtk_widget_get_style_context(gProtoWindow);	
     gtk_style_context_save(style);
     gtk_style_context_add_class(style, GTK_STYLE_CLASS_BACKGROUND);
     gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
     gtk_style_context_restore(style);
+
+    ReleaseStyleContext(style);
 
     return MOZ_GTK_SUCCESS;
 }
@@ -1057,9 +1045,10 @@ moz_gtk_scrollbar_trough_paint(WidgetNodeType widget,
                                GtkTextDirection direction)
 {
     if (flags & MOZ_GTK_TRACK_OPAQUE) {
-        GtkStyleContext* style =
-            gtk_widget_get_style_context(GTK_WIDGET(gProtoWindow));
-        gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
+        GtkStyleContext* style = ClaimStyleContext(MOZ_GTK_WINDOW, direction);
+        gtk_render_background(style, cr,
+                              rect->x, rect->y, rect->width, rect->height);
+        ReleaseStyleContext(style);
     }
 
     GtkStyleContext* style =
@@ -3308,7 +3297,6 @@ moz_gtk_shutdown()
     if (gTreeHeaderSortArrowWidget)
         gtk_widget_destroy(gTreeHeaderSortArrowWidget);
 
-    gProtoWindow = NULL;
     gProtoLayout = NULL;
     gButtonWidget = NULL;
     gToggleButtonWidget = NULL;

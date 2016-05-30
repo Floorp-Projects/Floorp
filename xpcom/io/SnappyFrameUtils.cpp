@@ -7,7 +7,7 @@
 #include "mozilla/SnappyFrameUtils.h"
 
 #include "crc32c.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "nsDebug.h"
 #include "snappy/snappy.h"
 

@@ -3074,10 +3074,9 @@ PropertyProvider::ComputeJustification(Range aRange)
 {
   // Horizontal-in-vertical frame is orthogonal to the line, so it
   // doesn't actually include any justification opportunity inside.
-  // Note: although the spec says such frame should be treated as a
-  // U+FFFC, which indicates it is justifiable on its sides, we don't
-  // do that because it is difficult to implement, and doesn't make
-  // any difference in common use cases.
+  // The spec says such frame should be treated as a U+FFFC. Since we
+  // do not insert justification opportunities on the sides of that
+  // character, the sides of this frame are not justifiable either.
   if (mFrame->StyleContext()->IsTextCombined()) {
     return;
   }

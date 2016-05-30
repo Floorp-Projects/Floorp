@@ -6,7 +6,7 @@
 #include "nsUTF16ToUnicode.h"
 #include "nsCharTraits.h"
 #include "mozilla/CheckedInt.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 
 enum {
   STATE_NORMAL = 0,

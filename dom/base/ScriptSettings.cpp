@@ -781,9 +781,7 @@ danger::AutoCxPusher::AutoCxPusher(JSContext* cx, bool allowNull)
     mScx = GetScriptContextFromJSContext(cx);
 
   XPCJSContextStack *stack = XPCJSRuntime::Get()->GetJSContextStack();
-  if (!stack->Push(cx)) {
-    MOZ_CRASH();
-  }
+  stack->Push(cx);
   mStackDepthAfterPush = stack->Count();
 
 #ifdef DEBUG

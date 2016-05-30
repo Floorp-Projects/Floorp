@@ -869,7 +869,6 @@ Activation::Activation(JSContext* cx, Kind kind)
     compartment_(cx->compartment()),
     prev_(cx->runtime_->activation_),
     prevProfiling_(prev_ ? prev_->mostRecentProfiling() : nullptr),
-    savedFrameChain_(0),
     hideScriptedCallerCount_(0),
     frameCache_(cx),
     asyncStack_(cx, cx->runtime_->asyncStackForNewActivations),

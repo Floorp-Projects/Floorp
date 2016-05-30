@@ -68,7 +68,7 @@ struct ParamTraits<AlertNotificationType>
     WriteParam(aMsg, inPrivateBrowsing);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     bool isNull;
     NS_ENSURE_TRUE(ReadParam(aMsg, aIter, &isNull), false);

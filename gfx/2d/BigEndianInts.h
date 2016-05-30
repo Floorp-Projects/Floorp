@@ -7,7 +7,7 @@
 #ifndef mozilla_BigEndianInts_h
 #define mozilla_BigEndianInts_h
 
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 
 namespace mozilla {
 

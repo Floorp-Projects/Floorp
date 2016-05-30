@@ -8,6 +8,7 @@
 #include "AnimationUtils.h"
 #include "mozilla/dom/AnimationBinding.h"
 #include "mozilla/dom/AnimationPlaybackEvent.h"
+#include "mozilla/dom/DocumentTimeline.h"
 #include "mozilla/AnimationTarget.h"
 #include "mozilla/AutoRestore.h"
 #include "mozilla/AsyncEventDispatcher.h" // For AsyncEventDispatcher
@@ -87,7 +88,7 @@ namespace {
 /* static */ already_AddRefed<Animation>
 Animation::Constructor(const GlobalObject& aGlobal,
                        KeyframeEffectReadOnly* aEffect,
-                       AnimationTimeline* aTimeline,
+                       const Optional<AnimationTimeline*>& aTimeline,
                        ErrorResult& aRv)
 {
   nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aGlobal.GetAsSupports());
@@ -99,7 +100,20 @@ Animation::Constructor(const GlobalObject& aGlobal,
     return nullptr;
   }
 
-  animation->SetTimeline(aTimeline);
+  AnimationTimeline* timeline;
+  if (aTimeline.WasPassed()) {
+    timeline = aTimeline.Value();
+  } else {
+    nsIDocument* document =
+      AnimationUtils::GetCurrentRealmDocument(aGlobal.Context());
+    if (!document) {
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+    timeline = document->Timeline();
+  }
+
+  animation->SetTimeline(timeline);
   animation->SetEffect(aEffect);
 
   return animation.forget();

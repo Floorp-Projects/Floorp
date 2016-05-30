@@ -7,7 +7,7 @@
 #include <string.h>
 
 #include "mozilla/DebugOnly.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include <stdint.h>
 
 #include "OpusParser.h"
