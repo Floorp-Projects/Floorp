@@ -596,38 +596,6 @@ CompartmentSizeOfIncludingThisCallback(MallocSizeOf mallocSizeOf, JSCompartment*
     return priv ? priv->SizeOfIncludingThis(mallocSizeOf) : 0;
 }
 
-/*
- * Return true if there exists a non-system inner window which is a current
- * inner window and whose reflector is gray.  We don't merge system
- * compartments, so we don't use them to trigger merging CCs.
- */
-bool XPCJSRuntime::UsefulToMergeZones() const
-{
-    MOZ_ASSERT(NS_IsMainThread());
-
-    nsGlobalWindow::WindowByIdTable* windowsById =
-        nsGlobalWindow::GetWindowsTable();
-    if (!windowsById) {
-        return false;
-    }
-
-    for (auto iter = windowsById->Iter(); !iter.Done(); iter.Next()) {
-        nsGlobalWindow* window = iter.Data();
-        if (!window->IsInnerWindow() ||
-            !window->AsInner()->IsCurrentInnerWindow()) {
-            continue;
-        }
-
-        JSObject* reflector = window->FastGetGlobalJSObject();
-        if (JS::ObjectIsMarkedGray(reflector) &&
-            !js::IsSystemCompartment(js::GetObjectCompartment(reflector))) {
-            return true;
-        }
-    }
-
-    return false;
-}
-
 void XPCJSRuntime::TraceNativeBlackRoots(JSTracer* trc)
 {
     // Skip this part if XPConnect is shutting down. We get into
