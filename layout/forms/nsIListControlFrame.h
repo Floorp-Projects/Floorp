@@ -16,7 +16,7 @@ class HTMLOptionElement;
 } // namespace dom
 } // namespace mozilla
 
-/** 
+/**
   * nsIListControlFrame is the interface for frame-based listboxes.
   */
 class nsIListControlFrame : public nsQueryFrame
