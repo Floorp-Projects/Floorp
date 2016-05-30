@@ -256,7 +256,7 @@ PresentationSessionInfo::SetListener(nsIPresentationSessionListener* aListener)
 
     // The transport might become ready, or might become un-ready again, before
     // the listener has registered. So notify the listener of the state change.
-    return mListener->NotifyStateChange(mSessionId, mState);
+    return mListener->NotifyStateChange(mSessionId, mState, mReason);
   }
 
   return NS_OK;
@@ -284,7 +284,7 @@ PresentationSessionInfo::Close(nsresult aReason,
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
-  SetState(aState);
+  SetStateWithReason(aState, aReason);
 
   Shutdown(aReason);
   return NS_OK;
@@ -293,7 +293,7 @@ PresentationSessionInfo::Close(nsresult aReason,
 nsresult
 PresentationSessionInfo::ReplySuccess()
 {
-  SetState(nsIPresentationSessionListener::STATE_CONNECTED);
+  SetStateWithReason(nsIPresentationSessionListener::STATE_CONNECTED, NS_OK);
   return NS_OK;
 }
 
@@ -380,7 +380,7 @@ PresentationSessionInfo::NotifyTransportClosed(nsresult aReason)
 
   if (mState == nsIPresentationSessionListener::STATE_CONNECTED) {
     // The transport channel is closed unexpectedly (not caused by a |Close| call).
-    SetState(nsIPresentationSessionListener::STATE_CLOSED);
+    SetStateWithReason(nsIPresentationSessionListener::STATE_CLOSED, aReason);
   }
 
   Shutdown(aReason);
@@ -668,7 +668,7 @@ PresentationControllingInfo::NotifyClosed(nsresult aReason)
   if (NS_WARN_IF(NS_FAILED(aReason) || !mIsResponderReady)) {
     // The presentation session instance may already exist.
     // Change the state to TERMINATED since it never succeeds.
-    SetState(nsIPresentationSessionListener::STATE_TERMINATED);
+    SetStateWithReason(nsIPresentationSessionListener::STATE_TERMINATED, aReason);
 
     // Reply error for an abnormal close.
     return ReplyError(NS_ERROR_DOM_OPERATION_ERR);
@@ -719,7 +719,7 @@ PresentationControllingInfo::OnStopListening(nsIServerSocket* aServerSocket,
   }
 
   // It happens after the session is ready. Change the state to CLOSED.
-  SetState(nsIPresentationSessionListener::STATE_CLOSED);
+  SetStateWithReason(nsIPresentationSessionListener::STATE_CLOSED, aStatus);
 
   return NS_OK;
 }
@@ -994,7 +994,7 @@ PresentationPresentingInfo::NotifyClosed(nsresult aReason)
   if (NS_WARN_IF(NS_FAILED(aReason))) {
     // The presentation session instance may already exist.
     // Change the state to TERMINATED since it never succeeds.
-    SetState(nsIPresentationSessionListener::STATE_TERMINATED);
+    SetStateWithReason(nsIPresentationSessionListener::STATE_TERMINATED, aReason);
 
     // Reply error for an abnormal close.
     return ReplyError(NS_ERROR_DOM_OPERATION_ERR);

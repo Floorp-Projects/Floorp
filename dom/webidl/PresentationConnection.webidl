@@ -34,10 +34,9 @@ interface PresentationConnection : EventTarget {
    */
   readonly attribute PresentationConnectionState state;
 
-  /*
-   * It is called when connection state changes.
-   */
-  attribute EventHandler onstatechange;
+  attribute EventHandler onconnect;
+  attribute EventHandler onclose;
+  attribute EventHandler onterminate;
 
   /*
    * After a communication channel has been established between the controlling
