@@ -72,7 +72,7 @@
 // DEFINED_ON is a macro which check if, for the current architecture, the
 // method is defined on the macro assembler or not.
 //
-// For each architecutre, we have a macro named DEFINED_ON_arch.  This macro is
+// For each architecture, we have a macro named DEFINED_ON_arch.  This macro is
 // empty if this is not the current architecture.  Otherwise it must be either
 // set to "define" or "crash" (only use for the none target so-far).
 //
@@ -94,7 +94,7 @@
 //
 //   crash
 //
-// or to nothing, if the current architecture is not lsited in the list of
+// or to nothing, if the current architecture is not listed in the list of
 // arguments of DEFINED_ON.  Note, only one of the DEFINED_ON_arch macro
 // contributes to the non-empty result, which is the macro of the current
 // architecture if it is listed in the arguments of DEFINED_ON.
@@ -1119,6 +1119,28 @@ class MacroAssembler : public MacroAssemblerSpecific
     template <typename T, class L>
     inline void branchTestMagicImpl(Condition cond, const T& t, L label)
         DEFINED_ON(arm, arm64, x86_shared);
+
+  public:
+    // ========================================================================
+    // Memory access primitives.
+    inline void storeDouble(FloatRegister src, const Address& dest)
+        DEFINED_ON(x86_shared, arm, arm64, mips32, mips64);
+    inline void storeDouble(FloatRegister src, const BaseIndex& dest)
+        DEFINED_ON(x86_shared, arm, arm64, mips32, mips64);
+    inline void storeDouble(FloatRegister src, const Operand& dest) DEFINED_ON(x86_shared);
+
+    inline void storeFloat32(FloatRegister src, const Address& dest)
+        DEFINED_ON(x86_shared, arm, arm64, mips32, mips64);
+    inline void storeFloat32(FloatRegister src, const BaseIndex& dest)
+        DEFINED_ON(x86_shared, arm, arm64, mips32, mips64);
+    inline void storeFloat32(FloatRegister src, const Operand& dest) DEFINED_ON(x86_shared);
+
+    inline void storeFloat32x3(FloatRegister src, const Address& dest) PER_SHARED_ARCH;
+    inline void storeFloat32x3(FloatRegister src, const BaseIndex& dest) PER_SHARED_ARCH;
+
+    template <typename T>
+    void storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const T& dest,
+                           MIRType slotType) PER_ARCH;
 
     //}}} check_macroassembler_style
   public:
