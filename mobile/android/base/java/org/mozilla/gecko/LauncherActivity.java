@@ -25,7 +25,7 @@ public class LauncherActivity extends Activity {
 
         GeckoAppShell.ensureCrashHandling();
 
-        if (isCustomTabsIntent()) {
+        if (AppConstants.MOZ_ANDROID_CUSTOM_TABS && isCustomTabsIntent()) {
             dispatchCustomTabsIntent();
         } else if (isViewIntentWithURL()) {
             dispatchViewIntent();
