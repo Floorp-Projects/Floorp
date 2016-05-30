@@ -14,8 +14,7 @@ add_task(function* () {
   yield selectNode("#testid", inspector);
 
   info("Adding a new rule for this node and blurring the new selector field");
-  yield addNewRule(inspector, view);
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
+  yield addNewRuleAndDismissEditor(inspector, view, "#testid", 1);
 
   info("Adding a new property for this rule");
   let ruleEditor = getRuleViewRuleEditor(view, 1);

@@ -22,10 +22,10 @@ add_task(function* () {
   let {inspector, view} = yield openRuleView();
   yield selectNode("#testid", inspector);
 
-  yield addNewRule(inspector, view);
+  yield addNewRuleAndDismissEditor(inspector, view, "#testid", 1);
 
-  info("Adding new properties to the new rule");
-  yield testNewRule(view, "#testid", 1);
+  info("Adding a new property to the new rule");
+  yield testAddingProperty(view, 1);
 
   info("Editing existing selector field");
   yield testEditSelector(view, "span");
@@ -37,21 +37,10 @@ add_task(function* () {
   yield checkModifiedElement(view, "span", 1);
 });
 
-function* testNewRule(view, expected, index) {
-  let idRuleEditor = getRuleViewRuleEditor(view, index);
-  let editor = idRuleEditor.selectorText.ownerDocument.activeElement;
-  is(editor.value, expected,
-      "Selector editor value is as expected: " + expected);
-
-  info("Entering the escape key");
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
-
-  is(idRuleEditor.selectorText.textContent, expected,
-      "Selector text value is as expected: " + expected);
-
-  info("Adding new properties to new rule: " + expected);
-  idRuleEditor.addProperty("font-weight", "bold", "");
-  let textProps = idRuleEditor.rule.textProps;
+function* testAddingProperty(view, index) {
+  let ruleEditor = getRuleViewRuleEditor(view, index);
+  ruleEditor.addProperty("font-weight", "bold", "");
+  let textProps = ruleEditor.rule.textProps;
   let lastRule = textProps[textProps.length - 1];
   is(lastRule.name, "font-weight", "Last rule name is font-weight");
   is(lastRule.value, "bold", "Last rule value is bold");
