@@ -467,8 +467,8 @@ LoginManagerStorage_mozStorage.prototype = {
         // Historical compatibility requires this special case
         case "formSubmitURL":
           if (value != null) {
-              // As we also need to check for different schemes at the URI
-              // this case gets handled by filtering the result of the query.
+              conditions.push("formSubmitURL = :formSubmitURL OR formSubmitURL = ''");
+              params["formSubmitURL"] = value;
               break;
           }
         // Normal cases.
@@ -506,7 +506,7 @@ LoginManagerStorage_mozStorage.prototype = {
     }
 
     let stmt;
-    let logins = [], ids = [], fallbackLogins = [], fallbackIds = [];
+    let logins = [], ids = [];
     try {
       stmt = this._dbCreateStatement(query, params);
       // We can't execute as usual here, since we're iterating over rows
@@ -525,24 +525,8 @@ LoginManagerStorage_mozStorage.prototype = {
         login.timeLastUsed = stmt.row.timeLastUsed;
         login.timePasswordChanged = stmt.row.timePasswordChanged;
         login.timesUsed = stmt.row.timesUsed;
-
-        if (login.formSubmitURL == "" || typeof(matchData.formSubmitURL) == "undefined" ||
-            login.formSubmitURL == matchData.formSubmitURL) {
-            logins.push(login);
-            ids.push(stmt.row.id);
-        } else if (login.formSubmitURL != null &&
-                   login.formSubmitURL != "javascript:" &&
-                   matchData.formSubmitURL != "javascript:") {
-          let loginURI = Services.io.newURI(login.formSubmitURL, null, null);
-          let matchURI = Services.io.newURI(matchData.formSubmitURL, null, null);
-
-          if (loginURI.hostPort == matchURI.hostPort &&
-              ((loginURI.scheme == "http" && matchURI.scheme == "https") ||
-              (loginURI.scheme == "https" && matchURI.scheme == "http"))) {
-            fallbackLogins.push(login);
-            fallbackIds.push(stmt.row.id);
-          }
-        }
+        logins.push(login);
+        ids.push(stmt.row.id);
       }
     } catch (e) {
       this.log("_searchLogins failed: " + e.name + " : " + e.message);
@@ -552,10 +536,6 @@ LoginManagerStorage_mozStorage.prototype = {
       }
     }
 
-    if (!logins.length && fallbackLogins.length) {
-      this.log("_searchLogins: returning " + fallbackLogins.length + " fallback logins");
-      return [fallbackLogins, fallbackIds];
-    }
     this.log("_searchLogins: returning " + logins.length + " logins");
     return [logins, ids];
   },
@@ -733,20 +713,6 @@ LoginManagerStorage_mozStorage.prototype = {
     };
 
     let resultLogins = _countLoginsHelper(hostname, formSubmitURL, httpRealm);
-    if (resultLogins == 0 && formSubmitURL != null &&
-        formSubmitURL != "" && formSubmitURL != "javascript:") {
-      let formSubmitURI = Services.io.newURI(formSubmitURL, null, null);
-      let newScheme = null;
-      if (formSubmitURI.scheme == "http") {
-        newScheme = "https";
-      } else if (formSubmitURI.scheme == "https") {
-        newScheme = "http";
-      }
-      if (newScheme) {
-        let newFormSubmitURL = newScheme + "://" + formSubmitURI.hostPort;
-        resultLogins = _countLoginsHelper(hostname, newFormSubmitURL, httpRealm);
-      }
-    }
     this.log("_countLogins: counted logins: " + resultLogins);
     return resultLogins;
   },
