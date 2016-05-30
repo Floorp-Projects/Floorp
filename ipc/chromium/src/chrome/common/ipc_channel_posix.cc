@@ -35,6 +35,10 @@
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/UniquePtr.h"
 
+#ifdef MOZ_FAULTY
+#include "mozilla/ipc/Faulty.h"
+#endif
+
 // Work around possible OS limitations.
 static const size_t kMaxIOVecSize = 256;
 
@@ -561,6 +565,9 @@ bool Channel::ChannelImpl::ProcessOutgoingMessages() {
   // Write out all the messages we can till the write blocks or there are no
   // more outgoing messages.
   while (!output_queue_.empty()) {
+#ifdef MOZ_FAULTY
+    Singleton<mozilla::ipc::Faulty>::get()->MaybeCollectAndClosePipe(pipe_);
+#endif
     Message* msg = output_queue_.front();
 
     struct msghdr msgh = {0};
