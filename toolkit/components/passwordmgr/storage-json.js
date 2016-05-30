@@ -244,14 +244,25 @@ this.LoginManagerStorage_json.prototype = {
    */
   searchLogins(count, matchData) {
     let realMatchData = {};
+    let options = {};
     // Convert nsIPropertyBag to normal JS object
     let propEnum = matchData.enumerator;
     while (propEnum.hasMoreElements()) {
       let prop = propEnum.getNext().QueryInterface(Ci.nsIProperty);
-      realMatchData[prop.name] = prop.value;
+      switch (prop.name) {
+        // Some property names aren't field names but are special options to affect the search.
+        case "schemeUpgrades": {
+          options[prop.name] = prop.value;
+          break;
+        }
+        default: {
+          realMatchData[prop.name] = prop.value;
+          break;
+        }
+      }
     }
 
-    let [logins, ids] = this._searchLogins(realMatchData);
+    let [logins, ids] = this._searchLogins(realMatchData, options);
 
     // Decrypt entries found for the caller.
     logins = this._decryptLogins(logins);
@@ -268,25 +279,38 @@ this.LoginManagerStorage_json.prototype = {
    * is an array of encrypted nsLoginInfo and ids is an array of associated
    * ids in the database.
    */
-  _searchLogins(matchData) {
+  _searchLogins(matchData, aOptions = {
+    schemeUpgrades: false,
+  }) {
     this._store.ensureDataReady();
 
     let conditions = [];
 
     function match(aLogin) {
       for (let field in matchData) {
-        let value = matchData[field];
+        let wantedValue = matchData[field];
         switch (field) {
-          // Historical compatibility requires this special case
           case "formSubmitURL":
-            if (value != null) {
-              if (aLogin.formSubmitURL != "" && aLogin.formSubmitURL != value) {
+            if (wantedValue != null) {
+              // Historical compatibility requires this special case
+              if (aLogin.formSubmitURL == "") {
+                break;
+              }
+              if (!LoginHelper.isOriginMatching(aLogin[field], wantedValue, aOptions)) {
                 return false;
               }
               break;
             }
-          // Normal cases.
+            // fall through
           case "hostname":
+            if (wantedValue != null) { // needed for formSubmitURL fall through
+              if (!LoginHelper.isOriginMatching(aLogin[field], wantedValue, aOptions)) {
+                return false;
+              }
+              break;
+            }
+            // fall through
+          // Normal cases.
           case "httpRealm":
           case "id":
           case "usernameField":
@@ -299,9 +323,9 @@ this.LoginManagerStorage_json.prototype = {
           case "timeLastUsed":
           case "timePasswordChanged":
           case "timesUsed":
-            if (value == null && aLogin[field]) {
+            if (wantedValue == null && aLogin[field]) {
               return false;
-            } else if (aLogin[field] != value) {
+            } else if (aLogin[field] != wantedValue) {
               return false;
             }
             break;
@@ -335,7 +359,7 @@ this.LoginManagerStorage_json.prototype = {
       }
     }
 
-    this.log("_searchLogins: returning", foundLogins.length, "logins");
+    this.log("_searchLogins: returning", foundLogins.length, "logins for", matchData);
     return [foundLogins, foundIds];
   },
 

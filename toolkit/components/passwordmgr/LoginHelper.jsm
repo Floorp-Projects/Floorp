@@ -40,7 +40,7 @@ this.LoginHelper = {
 
   createLogger(aLogPrefix) {
     let getMaxLogLevel = () => {
-      return this.debug ? "debug" : "error";
+      return this.debug ? "debug" : "warn";
     };
 
     // Create a new instance of the ConsoleAPI so we can control the maxLogLevel with a pref.
@@ -131,6 +131,79 @@ this.LoginHelper = {
     if (aLogin.hostname.indexOf(" (") != -1) {
       throw new Error("bad parens in hostname");
     }
+  },
+
+  /**
+   * Returns a new XPCOM property bag with the provided properties.
+   *
+   * @param {Object} aProperties
+   *        Each property of this object is copied to the property bag.  This
+   *        parameter can be omitted to return an empty property bag.
+   *
+   * @return A new property bag, that is an instance of nsIWritablePropertyBag,
+   *         nsIWritablePropertyBag2, nsIPropertyBag, and nsIPropertyBag2.
+   */
+  newPropertyBag(aProperties) {
+    let propertyBag = Cc["@mozilla.org/hash-property-bag;1"]
+                      .createInstance(Ci.nsIWritablePropertyBag);
+    if (aProperties) {
+      for (let [name, value] of Iterator(aProperties)) {
+        propertyBag.setProperty(name, value);
+      }
+    }
+    return propertyBag.QueryInterface(Ci.nsIPropertyBag)
+                      .QueryInterface(Ci.nsIPropertyBag2)
+                      .QueryInterface(Ci.nsIWritablePropertyBag2);
+  },
+
+  /**
+   * Helper to avoid the `count` argument and property bags when calling
+   * Services.logins.searchLogins from JS.
+   *
+   * @param {Object} aSearchOptions - A regular JS object to copy to a property bag before searching
+   * @return {nsILoginInfo[]} - The result of calling searchLogins.
+   */
+  searchLoginsWithObject(aSearchOptions) {
+    return Services.logins.searchLogins({}, this.newPropertyBag(aSearchOptions));
+  },
+
+  /**
+   * @param {String} aLoginOrigin - An origin value from a stored login's
+   *                                hostname or formSubmitURL properties.
+   * @param {String} aSearchOrigin - The origin that was are looking to match
+   *                                 with aLoginOrigin. This would normally come
+   *                                 from a form or page that we are considering.
+   * @param {nsILoginFindOptions} aOptions - Options to affect whether the origin
+   *                                         from the login (aLoginOrigin) is a
+   *                                         match for the origin we're looking
+   *                                         for (aSearchOrigin).
+   */
+  isOriginMatching(aLoginOrigin, aSearchOrigin, aOptions = {
+    schemeUpgrades: false,
+  }) {
+    if (aLoginOrigin == aSearchOrigin) {
+      return true;
+    }
+
+    if (!aOptions) {
+      return false;
+    }
+
+    if (aOptions.schemeUpgrades) {
+      try {
+        let loginURI = Services.io.newURI(aLoginOrigin, null, null);
+        let searchURI = Services.io.newURI(aSearchOrigin, null, null);
+        if (loginURI.scheme == "http" && searchURI.scheme == "https" &&
+            loginURI.hostPort == searchURI.hostPort) {
+          return true;
+        }
+      } catch (ex) {
+        // newURI will throw for some values e.g. chrome://FirefoxAccounts
+        return false;
+      }
+    }
+
+    return false;
   },
 
   /**
