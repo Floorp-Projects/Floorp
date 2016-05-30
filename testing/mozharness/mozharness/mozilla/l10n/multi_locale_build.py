@@ -106,6 +106,9 @@ class MultiLocaleBuild(LocalesMixin, MercurialScript):
                                               'upload-multi', 'summary'],
                                  require_config_file=require_config_file)
 
+    def query_l10n_env(self):
+        return self.query_env()
+
     def clobber(self):
         c = self.config
         if c['work_dir'] != '.':

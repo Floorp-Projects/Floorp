@@ -173,6 +173,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
             'all_actions': [
                 "clobber",
                 "pull",
+                "clone-locales",
                 "list-locales",
                 "setup",
                 "repack",
@@ -465,7 +466,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
     def _query_revision(self):
         """ Get the gecko revision in this order of precedence
               * cached value
-              * command line arg --revision   (development)
+              * command line arg --revision   (development, taskcluster)
               * buildbot properties           (try with buildbot forced build)
               * buildbot change               (try with buildbot scheduler)
               * from the en-US build          (m-c & m-a)
@@ -637,6 +638,8 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
         self.info("repositories: %s" % repos)
         self.vcs_checkout_repos(repos, parent_dir=dirs['abs_work_dir'],
                                 tag_override=config.get('tag_override'))
+
+    def clone_locales(self):
         self.pull_locale_source()
 
     def setup(self):
