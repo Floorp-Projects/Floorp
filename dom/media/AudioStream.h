@@ -340,8 +340,6 @@ private:
   void GetUnprocessed(AudioBufferWriter& aWriter);
   void GetTimeStretched(AudioBufferWriter& aWriter);
 
-  void StartUnlocked();
-
   // The monitor is held to protect all access to member variables.
   Monitor mMonitor;
 
