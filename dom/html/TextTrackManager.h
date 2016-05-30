@@ -11,6 +11,7 @@
 #include "mozilla/dom/TextTrackList.h"
 #include "mozilla/dom/TextTrackCueList.h"
 #include "mozilla/StaticPtr.h"
+#include "nsContentUtils.h"
 
 class nsIWebVTTParserWrapper;
 
@@ -97,6 +98,11 @@ public:
 
   void DispatchTimeMarchesOn();
 
+  void NotifyShutdown()
+  {
+    mShutdown = true;
+  }
+
 private:
   void TimeMarchesOn();
 
@@ -135,6 +141,35 @@ private:
   void GetTextTracksOfKind(TextTrackKind aTextTrackKind,
                            nsTArray<TextTrack*>& aTextTracks);
   bool TrackIsDefault(TextTrack* aTextTrack);
+
+  class ShutdownObserverProxy final : public nsIObserver
+  {
+    NS_DECL_ISUPPORTS
+
+  public:
+    explicit ShutdownObserverProxy(TextTrackManager* aManager)
+      : mManager(aManager)
+    {
+      nsContentUtils::RegisterShutdownObserver(this);
+    }
+
+    NS_IMETHODIMP Observe(nsISupports *aSubject, const char *aTopic, const char16_t *aData) override
+    {
+      MOZ_ASSERT(NS_IsMainThread());
+      if (strcmp(aTopic, NS_XPCOM_SHUTDOWN_OBSERVER_ID) == 0) {
+        nsContentUtils::UnregisterShutdownObserver(this);
+        mManager->NotifyShutdown();
+      }
+      return NS_OK;
+    }
+
+  private:
+    ~ShutdownObserverProxy() {};
+    TextTrackManager* mManager;
+  };
+
+  RefPtr<ShutdownObserverProxy> mShutdownProxy;
+  bool mShutdown;
 };
 
 } // namespace dom
