@@ -391,6 +391,10 @@ already_AddRefed<ShimInterfaceInfo>
 xptiInterfaceEntry::GetShimForParam(uint16_t methodIndex,
                                     const nsXPTParamInfo* param)
 {
+    if(methodIndex < mMethodBaseIndex) {
+        return mParent->GetShimForParam(methodIndex, param);
+    }
+
     uint16_t interfaceIndex = 0;
     nsresult rv = GetInterfaceIndexForParam(methodIndex, param,
                                             &interfaceIndex);

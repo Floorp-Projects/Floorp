@@ -173,7 +173,7 @@ ErrorResult::SerializeMessage(IPC::Message* aMsg) const
 }
 
 bool
-ErrorResult::DeserializeMessage(const IPC::Message* aMsg, void** aIter)
+ErrorResult::DeserializeMessage(const IPC::Message* aMsg, PickleIterator* aIter)
 {
   using namespace IPC;
   nsAutoPtr<Message> readMessage(new Message());
@@ -295,7 +295,7 @@ ErrorResult::SerializeDOMExceptionInfo(IPC::Message* aMsg) const
 }
 
 bool
-ErrorResult::DeserializeDOMExceptionInfo(const IPC::Message* aMsg, void** aIter)
+ErrorResult::DeserializeDOMExceptionInfo(const IPC::Message* aMsg, PickleIterator* aIter)
 {
   using namespace IPC;
   nsCString message;
@@ -2182,7 +2182,7 @@ InterfaceHasInstance(JSContext* cx, JS::Handle<JSObject*> obj,
 
   if (jsipc::IsWrappedCPOW(instance)) {
     bool boolp = false;
-    if (!jsipc::DOMInstanceOf(cx, js::CheckedUnwrap(instance), clasp->mPrototypeID,
+    if (!jsipc::DOMInstanceOf(cx, js::UncheckedUnwrap(instance), clasp->mPrototypeID,
                               clasp->mDepth, &boolp)) {
       return false;
     }

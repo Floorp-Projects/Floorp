@@ -7,7 +7,7 @@
 #include "WifiCertService.h"
 
 #include "mozilla/ClearOnShutdown.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/ModuleUtils.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/dom/File.h"

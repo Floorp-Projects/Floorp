@@ -13,7 +13,7 @@
 #include <unistd.h>
 #endif
 
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 
 #include "jsstr.h"
 

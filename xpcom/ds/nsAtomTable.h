@@ -10,7 +10,8 @@
 #include "mozilla/MemoryReporting.h"
 #include <stddef.h>
 
-void NS_PurgeAtomTable();
+void NS_InitAtomTable();
+void NS_ShutdownAtomTable();
 
 void NS_SizeOfAtomTablesIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
                                       size_t* aMain, size_t* aStatic);

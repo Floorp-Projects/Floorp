@@ -273,7 +273,7 @@ class MessageChannel : HasResultCodes
     bool HasPendingEvents();
 
     void ProcessPendingRequests(AutoEnterTransaction& aTransaction);
-    bool ProcessPendingRequest(const Message &aUrgent);
+    bool ProcessPendingRequest(Message &&aUrgent);
 
     void MaybeUndeferIncall();
     void EnqueuePendingMessages();
@@ -283,7 +283,7 @@ class MessageChannel : HasResultCodes
     bool DequeueOne(Message *recvd);
 
     // Dispatches an incoming message to its appropriate handler.
-    void DispatchMessage(const Message &aMsg);
+    void DispatchMessage(Message &&aMsg);
 
     // DispatchMessage will route to one of these functions depending on the
     // protocol type of the message.
@@ -291,7 +291,7 @@ class MessageChannel : HasResultCodes
     void DispatchUrgentMessage(const Message &aMsg);
     void DispatchAsyncMessage(const Message &aMsg);
     void DispatchRPCMessage(const Message &aMsg);
-    void DispatchInterruptMessage(const Message &aMsg, size_t aStackDepth);
+    void DispatchInterruptMessage(Message &&aMsg, size_t aStackDepth);
 
     // Return true if the wait ended because a notification was received.
     //
@@ -362,7 +362,7 @@ class MessageChannel : HasResultCodes
 
     void DebugAbort(const char* file, int line, const char* cond,
                     const char* why,
-                    bool reply=false) const;
+                    bool reply=false);
 
     // This method is only safe to call on the worker thread, or in a
     // debugger with all threads paused.

@@ -164,7 +164,7 @@ ArgumentsGetterImpl(JSContext* cx, const CallArgs& args)
         return false;
 
     // Return null if this function wasn't found on the stack.
-    NonBuiltinScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
+    NonBuiltinScriptFrameIter iter(cx);
     if (!AdvanceToActiveCallLinear(cx, iter, fun)) {
         args.rval().setNull();
         return true;
@@ -255,7 +255,7 @@ CallerGetterImpl(JSContext* cx, const CallArgs& args)
         return false;
 
     // Also return null if this function wasn't found on the stack.
-    NonBuiltinScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
+    NonBuiltinScriptFrameIter iter(cx);
     if (!AdvanceToActiveCallLinear(cx, iter, fun)) {
         args.rval().setNull();
         return true;
@@ -326,7 +326,7 @@ CallerSetterImpl(JSContext* cx, const CallArgs& args)
     // computing the caller, checking that no security boundaries are crossed,
     // and throwing a TypeError if the resulting caller is strict.
 
-    NonBuiltinScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
+    NonBuiltinScriptFrameIter iter(cx);
     if (!AdvanceToActiveCallLinear(cx, iter, fun))
         return true;
 
@@ -1221,7 +1221,7 @@ js::fun_apply(JSContext* cx, unsigned argc, Value* vp)
     // the calling frame (which we must do now).
     if (args[1].isMagic(JS_OPTIMIZED_ARGUMENTS)) {
         // Step 3-6.
-        ScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
+        ScriptFrameIter iter(cx);
         MOZ_ASSERT(iter.numActualArgs() <= ARGS_LENGTH_MAX);
         if (!args2.init(iter.numActualArgs()))
             return false;
@@ -2341,9 +2341,9 @@ js::DefineFunction(JSContext* cx, HandleObject obj, HandleId id, Native native,
 }
 
 void
-js::ReportIncompatibleMethod(JSContext* cx, CallReceiver call, const Class* clasp)
+js::ReportIncompatibleMethod(JSContext* cx, const CallArgs& args, const Class* clasp)
 {
-    RootedValue thisv(cx, call.thisv());
+    RootedValue thisv(cx, args.thisv());
 
 #ifdef DEBUG
     if (thisv.isObject()) {
@@ -2364,7 +2364,7 @@ js::ReportIncompatibleMethod(JSContext* cx, CallReceiver call, const Class* clas
     }
 #endif
 
-    if (JSFunction* fun = ReportIfNotFunction(cx, call.calleev())) {
+    if (JSFunction* fun = ReportIfNotFunction(cx, args.calleev())) {
         JSAutoByteString funNameBytes;
         if (const char* funName = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_PROTO,
@@ -2374,13 +2374,13 @@ js::ReportIncompatibleMethod(JSContext* cx, CallReceiver call, const Class* clas
 }
 
 void
-js::ReportIncompatible(JSContext* cx, CallReceiver call)
+js::ReportIncompatible(JSContext* cx, const CallArgs& args)
 {
-    if (JSFunction* fun = ReportIfNotFunction(cx, call.calleev())) {
+    if (JSFunction* fun = ReportIfNotFunction(cx, args.calleev())) {
         JSAutoByteString funNameBytes;
         if (const char* funName = GetFunctionNameBytes(cx, fun, &funNameBytes)) {
             JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_INCOMPATIBLE_METHOD,
-                                 funName, "method", InformalValueTypeName(call.thisv()));
+                                 funName, "method", InformalValueTypeName(args.thisv()));
         }
     }
 }

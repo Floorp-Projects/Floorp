@@ -10,42 +10,46 @@
 #include <string.h>
 #include <stdio.h>
 
+using mozilla::WrapNotNull;
+
 /***************************************************************************/
 /* Forward declarations. */
 
 static PRBool
-DoInterfaceDirectoryEntry(XPTArena *arena, XPTCursor *cursor,
+DoInterfaceDirectoryEntry(XPTArena *arena, NotNull<XPTCursor*> cursor,
                           XPTInterfaceDirectoryEntry *ide);
 
 static PRBool
-DoConstDescriptor(XPTArena *arena, XPTCursor *cursor, XPTConstDescriptor *cd,
-                  XPTInterfaceDescriptor *id);
+DoConstDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
+                  XPTConstDescriptor *cd, XPTInterfaceDescriptor *id);
 
 static PRBool
-DoMethodDescriptor(XPTArena *arena, XPTCursor *cursor, XPTMethodDescriptor *md, 
-                   XPTInterfaceDescriptor *id);
+DoMethodDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
+                   XPTMethodDescriptor *md, XPTInterfaceDescriptor *id);
 
 static PRBool
-SkipAnnotation(XPTCursor *cursor, bool *isLast);
+SkipAnnotation(NotNull<XPTCursor*> cursor, bool *isLast);
 
 static PRBool
-DoInterfaceDescriptor(XPTArena *arena, XPTCursor *outer, XPTInterfaceDescriptor **idp);
+DoInterfaceDescriptor(XPTArena *arena, NotNull<XPTCursor*> outer,
+                      XPTInterfaceDescriptor **idp);
 
 static PRBool
-DoTypeDescriptorPrefix(XPTArena *arena, XPTCursor *cursor, XPTTypeDescriptorPrefix *tdp);
+DoTypeDescriptorPrefix(XPTArena *arena, NotNull<XPTCursor*> cursor,
+                       XPTTypeDescriptorPrefix *tdp);
 
 static PRBool
-DoTypeDescriptor(XPTArena *arena, XPTCursor *cursor, XPTTypeDescriptor *td,
-                 XPTInterfaceDescriptor *id);
+DoTypeDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
+                 XPTTypeDescriptor *td, XPTInterfaceDescriptor *id);
 
 static PRBool
-DoParamDescriptor(XPTArena *arena, XPTCursor *cursor, XPTParamDescriptor *pd,
-                  XPTInterfaceDescriptor *id);
+DoParamDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
+                  XPTParamDescriptor *pd, XPTInterfaceDescriptor *id);
 
 /***************************************************************************/
 
 XPT_PUBLIC_API(PRBool)
-XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp)
+XPT_DoHeader(XPTArena *arena, NotNull<XPTCursor*> cursor, XPTHeader **headerp)
 {
     unsigned int i;
     uint32_t file_length = 0;
@@ -140,7 +144,7 @@ XPT_DoHeader(XPTArena *arena, XPTCursor *cursor, XPTHeader **headerp)
 
 /* InterfaceDirectoryEntry records go in the header */
 PRBool
-DoInterfaceDirectoryEntry(XPTArena *arena, XPTCursor *cursor,
+DoInterfaceDirectoryEntry(XPTArena *arena, NotNull<XPTCursor*> cursor,
                           XPTInterfaceDirectoryEntry *ide)
 {
     char* dummy_name_space;
@@ -190,11 +194,12 @@ InterfaceDescriptorAddTypes(XPTArena *arena, XPTInterfaceDescriptor *id,
 }
 
 PRBool
-DoInterfaceDescriptor(XPTArena *arena, XPTCursor *outer, 
+DoInterfaceDescriptor(XPTArena *arena, NotNull<XPTCursor*> outer,
                       XPTInterfaceDescriptor **idp)
 {
     XPTInterfaceDescriptor *id;
-    XPTCursor curs, *cursor = &curs;
+    XPTCursor curs;
+    NotNull<XPTCursor*> cursor = WrapNotNull(&curs);
     uint32_t i, id_sz = 0;
 
     id = XPT_NEWZAP(arena, XPTInterfaceDescriptor);
@@ -255,8 +260,8 @@ DoInterfaceDescriptor(XPTArena *arena, XPTCursor *outer,
 }
 
 PRBool
-DoConstDescriptor(XPTArena *arena, XPTCursor *cursor, XPTConstDescriptor *cd,
-                  XPTInterfaceDescriptor *id)
+DoConstDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
+                  XPTConstDescriptor *cd, XPTInterfaceDescriptor *id)
 {
     PRBool ok = PR_FALSE;
 
@@ -308,8 +313,8 @@ DoConstDescriptor(XPTArena *arena, XPTCursor *cursor, XPTConstDescriptor *cd,
 }
 
 PRBool
-DoMethodDescriptor(XPTArena *arena, XPTCursor *cursor, XPTMethodDescriptor *md,
-                   XPTInterfaceDescriptor *id)
+DoMethodDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
+                   XPTMethodDescriptor *md, XPTInterfaceDescriptor *id)
 {
     int i;
 
@@ -337,8 +342,8 @@ DoMethodDescriptor(XPTArena *arena, XPTCursor *cursor, XPTMethodDescriptor *md,
 }
 
 PRBool
-DoParamDescriptor(XPTArena *arena, XPTCursor *cursor, XPTParamDescriptor *pd, 
-                  XPTInterfaceDescriptor *id)
+DoParamDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
+                  XPTParamDescriptor *pd, XPTInterfaceDescriptor *id)
 {
     if (!XPT_Do8(cursor, &pd->flags) ||
         !DoTypeDescriptor(arena, cursor, &pd->type, id))
@@ -348,14 +353,15 @@ DoParamDescriptor(XPTArena *arena, XPTCursor *cursor, XPTParamDescriptor *pd,
 }
 
 PRBool
-DoTypeDescriptorPrefix(XPTArena *arena, XPTCursor *cursor, XPTTypeDescriptorPrefix *tdp)
+DoTypeDescriptorPrefix(XPTArena *arena, NotNull<XPTCursor*> cursor,
+                       XPTTypeDescriptorPrefix *tdp)
 {
     return XPT_Do8(cursor, &tdp->flags);
 }
 
 PRBool
-DoTypeDescriptor(XPTArena *arena, XPTCursor *cursor, XPTTypeDescriptor *td,
-                 XPTInterfaceDescriptor *id)
+DoTypeDescriptor(XPTArena *arena, NotNull<XPTCursor*> cursor,
+                 XPTTypeDescriptor *td, XPTInterfaceDescriptor *id)
 {
     if (!DoTypeDescriptorPrefix(arena, cursor, &td->prefix)) {
         return PR_FALSE;
@@ -407,7 +413,7 @@ DoTypeDescriptor(XPTArena *arena, XPTCursor *cursor, XPTTypeDescriptor *td,
 }
 
 PRBool
-SkipAnnotation(XPTCursor *cursor, bool *isLast)
+SkipAnnotation(NotNull<XPTCursor*> cursor, bool *isLast)
 {
     uint8_t flags;
     if (!XPT_Do8(cursor, &flags))

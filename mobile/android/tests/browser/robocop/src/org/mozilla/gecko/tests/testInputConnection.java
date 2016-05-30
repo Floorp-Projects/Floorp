@@ -226,6 +226,29 @@ public class testInputConnection extends JavascriptBridgeTest {
             ic.deleteSurroundingText(2, 2);
             assertTextAndSelectionAt("Can clear text", ic, "", 0);
 
+            // Bug 1275371 - shift+backspace should not forward delete on Android.
+            final KeyEvent delKey = new KeyEvent(KeyEvent.ACTION_DOWN,
+                                                 KeyEvent.KEYCODE_DEL);
+
+            ic.beginBatchEdit();
+            ic.commitText("foo", 1);
+            ic.setSelection(1, 1);
+            ic.endBatchEdit();
+            assertTextAndSelectionAt("Can commit text", ic, "foo", 1);
+
+            ic.sendKeyEvent(shiftKey);
+            ic.sendKeyEvent(delKey);
+            ic.sendKeyEvent(KeyEvent.changeAction(delKey, KeyEvent.ACTION_UP));
+            assertTextAndSelectionAt("Can backspace with shift+backspace", ic, "oo", 0);
+
+            ic.sendKeyEvent(delKey);
+            ic.sendKeyEvent(KeyEvent.changeAction(delKey, KeyEvent.ACTION_UP));
+            ic.sendKeyEvent(KeyEvent.changeAction(shiftKey, KeyEvent.ACTION_UP));
+            assertTextAndSelectionAt("Cannot forward delete with shift+backspace", ic, "oo", 0);
+
+            ic.deleteSurroundingText(0, 2);
+            assertTextAndSelectionAt("Can clear text", ic, "", 0);
+
             // Make sure we don't leave behind stale events for the following test.
             processGeckoEvents(ic);
             processInputConnectionEvents();

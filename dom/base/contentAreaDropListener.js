@@ -120,6 +120,8 @@ ContentAreaDropListener.prototype =
     // also check for nodes in other child or sibling frames by checking
     // if both have the same top window.
     if (sourceDocument && eventDocument) {
+      if (sourceDocument.defaultView == null)
+        return true;
       let sourceRoot = sourceDocument.defaultView.top;
       if (sourceRoot && sourceRoot == eventDocument.defaultView.top)
         return false;

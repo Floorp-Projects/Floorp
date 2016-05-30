@@ -13,7 +13,7 @@ namespace mozilla {
 namespace dom {
 
 bool
-ReadRemoteEvent(const IPC::Message* aMsg, void** aIter,
+ReadRemoteEvent(const IPC::Message* aMsg, PickleIterator* aIter,
                 RemoteDOMEvent* aResult)
 {
   aResult->mEvent = nullptr;

@@ -487,6 +487,10 @@ XRE_InitChildProcess(int aArgc,
 #if MOZ_WIDGET_GTK == 2
   XRE_GlibInit();
 #endif
+#ifdef MOZ_WIDGET_GTK
+  // Setting the name here avoids the need to pass this through to gtk_init().
+  g_set_prgname(aArgv[0]);
+#endif
 
 #if defined(MOZ_WIDGET_QT)
   nsQAppInstance::AddRef();

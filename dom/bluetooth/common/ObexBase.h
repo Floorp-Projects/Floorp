@@ -8,7 +8,7 @@
 #define mozilla_dom_bluetooth_ObexBase_h
 
 #include "BluetoothCommon.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/UniquePtr.h"
 #include "nsTArray.h"
 

@@ -105,17 +105,6 @@ interface nsIAppShellService : nsISupports
   readonly attribute mozIDOMWindowProxy hiddenPrivateDOMWindow;
 
   /**
-   * Return the (singleton) application hidden window as an nsIDOMWindow,
-   * and, the corresponding JavaScript context pointer.  This is useful
-   * if you'd like to subsequently call OpenDialog on the hidden window.
-   * @aHiddenDOMWindow the hidden window QI'd to type nsIDOMWindow
-   * @aJSContext       the corresponding JavaScript context
-   */
-  [noscript]
-  void getHiddenWindowAndJSContext(out mozIDOMWindowProxy aHiddenDOMWindow,
-                                   out JSContext aJSContext);
-
-  /**
    * Return true if the application hidden window was provided by the
    * application. If it wasn't, the default hidden window was used. This will
    * usually be false on all non-mac platforms.

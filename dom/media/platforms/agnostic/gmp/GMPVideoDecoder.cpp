@@ -6,7 +6,7 @@
 
 #include "GMPVideoDecoder.h"
 #include "GMPVideoHost.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "prsystem.h"
 #include "MediaData.h"
 #include "GMPDecoderModule.h"

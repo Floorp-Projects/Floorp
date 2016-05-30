@@ -15,12 +15,15 @@
 #include "nsString.h"
 #include "nsTObserverArray.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/NotNull.h"
 #include "nsAutoPtr.h"
 #include "mozilla/AlreadyAddRefed.h"
 
 namespace mozilla {
 class CycleCollectedJSRuntime;
 }
+
+using mozilla::NotNull;
 
 // A native thread
 class nsThread
@@ -74,7 +77,7 @@ public:
   uint32_t
   RecursionDepth() const;
 
-  void ShutdownComplete(struct nsThreadShutdownContext* aContext);
+  void ShutdownComplete(NotNull<struct nsThreadShutdownContext*> aContext);
 
   void WaitForAllAsynchronousShutdowns();
 
@@ -108,10 +111,11 @@ protected:
 
   // Wrappers for event queue methods:
   nsresult PutEvent(nsIRunnable* aEvent, nsNestedEventTarget* aTarget);
-  nsresult PutEvent(already_AddRefed<nsIRunnable>&& aEvent, nsNestedEventTarget* aTarget);
+  nsresult PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
+                    nsNestedEventTarget* aTarget);
 
-  nsresult DispatchInternal(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFlags,
-                            nsNestedEventTarget* aTarget);
+  nsresult DispatchInternal(already_AddRefed<nsIRunnable>&& aEvent,
+                            uint32_t aFlags, nsNestedEventTarget* aTarget);
 
   struct nsThreadShutdownContext* ShutdownInternal(bool aSync);
 
@@ -160,13 +164,14 @@ protected:
     NS_DECL_THREADSAFE_ISUPPORTS
     NS_DECL_NSIEVENTTARGET
 
-    nsNestedEventTarget(nsThread* aThread, nsChainedEventQueue* aQueue)
+    nsNestedEventTarget(NotNull<nsThread*> aThread,
+                        NotNull<nsChainedEventQueue*> aQueue)
       : mThread(aThread)
       , mQueue(aQueue)
     {
     }
 
-    RefPtr<nsThread> mThread;
+    NotNull<RefPtr<nsThread>> mThread;
 
     // This is protected by mThread->mLock.
     nsChainedEventQueue* mQueue;
@@ -188,10 +193,10 @@ protected:
   mozilla::CycleCollectedJSRuntime* mScriptObserver;
 
   // Only accessed on the target thread.
-  nsAutoTObserverArray<nsCOMPtr<nsIThreadObserver>, 2> mEventObservers;
+  nsAutoTObserverArray<NotNull<nsCOMPtr<nsIThreadObserver>>, 2> mEventObservers;
 
-  nsChainedEventQueue* mEvents;  // never null
-  nsChainedEventQueue  mEventsRoot;
+  NotNull<nsChainedEventQueue*> mEvents;  // never null
+  nsChainedEventQueue mEventsRoot;
 
   int32_t   mPriority;
   PRThread* mThread;

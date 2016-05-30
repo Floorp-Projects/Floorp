@@ -7,7 +7,7 @@
 #define nsUnicodeToUTF16_h_
 
 #include "nsUCSupport.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 
 class nsUnicodeToUTF16BE: public nsBasicEncoder
 {

@@ -141,7 +141,7 @@ BenchmarkPlayback::BenchmarkPlayback(Benchmark* aMainThreadState,
                                      MediaDataDemuxer* aDemuxer)
   : QueueObject(new TaskQueue(GetMediaThreadPool(MediaThreadType::PLAYBACK)))
   , mMainThreadState(aMainThreadState)
-  , mDecoderTaskQueue(new FlushableTaskQueue(GetMediaThreadPool(
+  , mDecoderTaskQueue(new TaskQueue(GetMediaThreadPool(
                         MediaThreadType::PLATFORM_DECODER)))
   , mDemuxer(aDemuxer)
   , mSampleIndex(0)

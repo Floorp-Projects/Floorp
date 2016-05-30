@@ -78,7 +78,7 @@ struct ParamTraits<SerializedURI>
     WriteParam(aMsg, aParam.charset);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     nsCString spec, charset;
     if (ReadParam(aMsg, aIter, &spec) &&
@@ -105,7 +105,7 @@ struct ParamTraits<ChromePackage>
     WriteParam(aMsg, aParam.flags);
   }
   
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     nsCString package;
     SerializedURI contentBaseURI, localeBaseURI, skinBaseURI;
@@ -147,7 +147,7 @@ struct ParamTraits<SubstitutionMapping>
     WriteParam(aMsg, aParam.resolvedURI);
   }
   
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     nsCString scheme, path;
     SerializedURI resolvedURI;
@@ -183,7 +183,7 @@ struct ParamTraits<OverrideMapping>
     WriteParam(aMsg, aParam.overrideURI);
   }
   
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     SerializedURI originalURI;
     SerializedURI overrideURI;
