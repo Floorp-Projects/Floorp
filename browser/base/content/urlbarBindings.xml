@@ -382,6 +382,9 @@ file, You can obtain one at http://mozilla.org/MPL/2.0/.
           {
             this.value = url;
             gBrowser.userTypedValue = url;
+            if (gInitialPages.includes(url)) {
+              gBrowser.selectedBrowser.initialPageLoadedFromURLBar = url;
+            }
             try {
               addToUrlbarHistory(url);
             } catch (ex) {
