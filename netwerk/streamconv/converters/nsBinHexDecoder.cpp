@@ -30,6 +30,8 @@ nsBinHexDecoder::nsBinHexDecoder() :
 {
   mDataBuffer = nullptr;
   mOutgoingBuffer = nullptr;
+  mPosInDataBuffer = 0;
+  mRlebuf = 0;
 
   mOctetBuf.val = 0;
   mHeader.type = 0;
