@@ -229,6 +229,9 @@ var LoginManagerContent = {
     let win = doc.defaultView;
 
     let formOrigin = LoginUtils._getPasswordOrigin(doc.documentURI);
+    if (!formOrigin) {
+      return Promise.reject("_getLoginDataFromParent: A form origin is required");
+    }
     let actionOrigin = LoginUtils._getActionOrigin(form);
 
     let messageManager = messageManagerFromWindow(win);

@@ -1,3 +1,5 @@
+const TESTS_DIR = "/tests/toolkit/components/passwordmgr/test/";
+
 /**
  * Returns the element with the specified |name| attribute.
  */
@@ -275,7 +277,7 @@ function promiseFormsProcessed(expectedCount = 1) {
       processedCount++;
       if (processedCount == expectedCount) {
         SpecialPowers.removeObserver(onProcessedForm, "passwordmgr-processed-form");
-        resolve(subject, data);
+        resolve(SpecialPowers.Cu.waiveXrays(subject), data);
       }
     }
     SpecialPowers.addObserver(onProcessedForm, "passwordmgr-processed-form", false);
@@ -318,10 +320,6 @@ function promiseStorageChanged(expectedChangeTypes) {
   });
 }
 
-function countLogins(chromeScript, formOrigin, submitOrigin, httpRealm) {
-  return chromeScript.sendSyncMessage("countLogins", {formOrigin, submitOrigin, httpRealm})[0][0];
-}
-
 /**
  * Run a function synchronously in the parent process and destroy it in the test cleanup function.
  * @param {Function|String} aFunctionOrURL - either a function that will be stringified and run
@@ -361,6 +359,7 @@ if (this.addMessageListener) {
   // Ignore ok/is in commonInit since they aren't defined in a chrome script.
   ok = is = () => {}; // eslint-disable-line no-native-reassign
 
+  Cu.import("resource://gre/modules/LoginHelper.jsm");
   Cu.import("resource://gre/modules/Services.jsm");
   Cu.import("resource://gre/modules/Task.jsm");
 
@@ -391,8 +390,17 @@ if (this.addMessageListener) {
     sendAsyncMessage("recipesReset");
   }));
 
-  addMessageListener("countLogins", ({formOrigin, submitOrigin, httpRealm}) => {
-    return Services.logins.countLogins(formOrigin, submitOrigin, httpRealm);
+  addMessageListener("proxyLoginManager", msg => {
+    // Recreate nsILoginInfo objects from vanilla JS objects.
+    let recreatedArgs = msg.args.map((arg, index) => {
+      if (msg.loginInfoIndices.includes(index)) {
+        return LoginHelper.vanillaObjectToLogin(arg);
+      }
+
+      return arg;
+    });
+
+    return Services.logins[msg.methodName](...recreatedArgs);
   });
 
   var globalMM = Cc["@mozilla.org/globalmessagemanager;1"].getService(Ci.nsIMessageListenerManager);
@@ -421,5 +429,34 @@ if (this.addMessageListener) {
         LoginManagerParent._recipeManager.reset();
       }
     });
+  });
+
+
+  let { LoginHelper } = SpecialPowers.Cu.import("resource://gre/modules/LoginHelper.jsm", {});
+  /**
+   * Proxy for Services.logins (nsILoginManager).
+   * Only supports arguments which support structured clone plus {nsILoginInfo}
+   * Assumes properties are methods.
+   */
+  this.LoginManager = new Proxy({}, {
+    get(target, prop, receiver) {
+      return (...args) => {
+        let loginInfoIndices = [];
+        let cloneableArgs = args.map((val, index) => {
+          if (SpecialPowers.call_Instanceof(val, SpecialPowers.Ci.nsILoginInfo)) {
+            loginInfoIndices.push(index);
+            return LoginHelper.loginToVanillaObject(val);
+          }
+
+          return val;
+        });
+
+        return chromeScript.sendSyncMessage("proxyLoginManager", {
+          args: cloneableArgs,
+          loginInfoIndices,
+          methodName: prop,
+        })[0][0];
+      };
+    },
   });
 }
