@@ -272,14 +272,6 @@ add_task(function* test_dedupeLogins_preferredOriginMissing() {
       ["scheme", "timePasswordChanged"],
       "",
     ],
-    [
-      "resolveBy scheme + timePasswordChanged, invalid preferredOrigin",
-      /preferred origin/,
-      [DOMAIN1_HTTPS_TO_HTTPS_U1_P1, DOMAIN1_HTTP_TO_HTTP_U1_P1],
-      undefined,
-      ["scheme", "timePasswordChanged"],
-      "example.com",
-    ],
   ];
 
   for (let tc of testcases) {

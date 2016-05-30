@@ -375,8 +375,8 @@ this.LoginHelper = {
     }
 
     if (!preferredOriginScheme && resolveBy.includes("scheme")) {
-      throw new Error("dedupeLogins: Deduping with a scheme preference but couldn't " +
-                      "get the preferred origin scheme.");
+      log.warn("dedupeLogins: Deduping with a scheme preference but couldn't " +
+               "get the preferred origin scheme.");
     }
 
     // We use a Map to easily lookup logins by their unique keys.
