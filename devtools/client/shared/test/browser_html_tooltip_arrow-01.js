@@ -72,9 +72,9 @@ add_task(function* () {
     let arrow = tooltip.arrow;
     ok(arrow, "Tooltip has an arrow");
 
-    // Get the geometry of the anchor, the tooltip frame & arrow.
+    // Get the geometry of the anchor, the tooltip panel & arrow.
     let arrowBounds = arrow.getBoxQuads({relativeTo: doc})[0].bounds;
-    let frameBounds = tooltip.frame.getBoxQuads({relativeTo: doc})[0].bounds;
+    let panelBounds = tooltip.panel.getBoxQuads({relativeTo: doc})[0].bounds;
     let anchorBounds = el.getBoxQuads({relativeTo: doc})[0].bounds;
 
     let intersects = arrowBounds.left <= anchorBounds.right &&
@@ -84,10 +84,10 @@ add_task(function* () {
     ok(intersects || isBlockedByViewport,
       "Tooltip arrow is aligned with the anchor, or stuck on viewport's edge.");
 
-    let isInFrame = arrowBounds.left >= frameBounds.left &&
-                    arrowBounds.right <= frameBounds.right;
-    ok(isInFrame,
-      "The tooltip arrow remains inside the tooltip frame horizontally");
+    let isInPanel = arrowBounds.left >= panelBounds.left &&
+                    arrowBounds.right <= panelBounds.right;
+    ok(isInPanel,
+      "The tooltip arrow remains inside the tooltip panel horizontally");
 
     yield hideTooltip(tooltip);
   }
