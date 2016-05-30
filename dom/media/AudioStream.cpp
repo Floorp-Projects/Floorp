@@ -326,8 +326,7 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
     return NS_ERROR_FAILURE;
   }
 
-  MOZ_LOG(gAudioStreamLog, LogLevel::Debug,
-    ("%s  channels: %d, rate: %d for %p", __FUNCTION__, aNumChannels, aRate, this));
+  LOG("%s channels: %d, rate: %d", __FUNCTION__, aNumChannels, aRate);
   mInRate = mOutRate = aRate;
   mChannels = aNumChannels;
   mOutChannels = aNumChannels;
