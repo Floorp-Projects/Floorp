@@ -268,10 +268,11 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
             return;
         }
 
-        final boolean isHttpOrHttps = StringUtils.isHttpOrHttps(url);
         final String baseDomain = tab.getBaseDomain();
 
         String strippedURL = stripAboutReaderURL(url);
+
+        final boolean isHttpOrHttps = StringUtils.isHttpOrHttps(strippedURL);
 
         if (mPrefs.shouldTrimUrls()) {
             strippedURL = StringUtils.stripCommonSubdomains(StringUtils.stripScheme(strippedURL));
@@ -290,12 +291,9 @@ public class ToolbarDisplayLayout extends ThemedLinearLayout {
                 && SwitchBoard.isInExperiment(mActivity, Experiments.URLBAR_SHOW_ORIGIN_ONLY)) {
             // Show just the base domain as title
             setTitle(baseDomain);
-        } else if (isHttpOrHttps) {
+        } else {
             // Display full URL with base domain highlighted as title
             updateAndColorTitleFromFullURL(strippedURL, baseDomain, tab.isPrivate());
-        } else {
-            // Not http(s): Just show the full URL as title
-            setTitle(url);
         }
     }
 
