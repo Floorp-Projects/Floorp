@@ -12,7 +12,6 @@
 #include "nsIScriptContext.h"
 #include "nsPIDOMWindow.h"
 #include "nsJSUtils.h"
-#include "nsIScriptSecurityManager.h"
 #include "xpcprivate.h"
 #include "WorkerPrivate.h"
 #include "nsGlobalWindow.h"
@@ -177,8 +176,7 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
     // Check that it's ok to run this callback at all.
     // Make sure to use realCallback to get the global of the callback object,
     // not the wrapper.
-    bool allowed = nsContentUtils::GetSecurityManager()->
-      ScriptAllowed(js::GetGlobalForObjectCrossCompartment(realCallback));
+    bool allowed = xpc::Scriptability::Get(realCallback).Allowed();
 
     if (!allowed) {
       aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,

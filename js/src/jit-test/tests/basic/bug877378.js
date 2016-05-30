@@ -4,7 +4,7 @@ evalcx("\
         y = evaluate(\"Object.defineProperty(this,\\\"y\\\",\
                          {get:  function() {}}\
                     );\",\
-               {catchTermination: true, saveFrameChain: true}\
+               {catchTermination: true}\
         );\
     }",
     newGlobal('')
@@ -13,7 +13,6 @@ evalcx("\
 evalcx("\
     for (x = 0; x < 1; ++x) { \
         v = evaluate(\"gc\",{ \
-            saveFrameChain: true \
         })\
     }\
 ", newGlobal(''));

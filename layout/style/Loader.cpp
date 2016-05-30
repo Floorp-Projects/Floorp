@@ -52,6 +52,7 @@
 #include "nsINetworkPredictor.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/URL.h"
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/StyleSheetHandle.h"
 #include "mozilla/StyleSheetHandleInlines.h"
 
@@ -2083,7 +2084,17 @@ Loader::LoadStyleLink(nsIContent* aElement,
   }
 
   nsresult rv = CheckContentPolicy(principal, aURL, context, false);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    if (aElement) {
+      // Fire an async error event on it.
+      RefPtr<AsyncEventDispatcher> loadBlockingAsyncDispatcher =
+        new LoadBlockingAsyncEventDispatcher(aElement,
+                                             NS_LITERAL_STRING("error"),
+                                             false, false);
+      loadBlockingAsyncDispatcher->PostDOMEvent();
+    }
+    return rv;
+  }
 
   StyleSheetState state;
   StyleSheetHandle::RefPtr sheet;

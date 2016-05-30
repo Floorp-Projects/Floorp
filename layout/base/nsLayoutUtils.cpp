@@ -9292,7 +9292,7 @@ nsLayoutUtils::UpdateDisplayPortMarginsFromPendingMessages() {
     mozilla::dom::ContentChild::GetSingleton()->GetIPCChannel()->PeekMessages(
       [](const IPC::Message& aMsg) -> bool {
         if (aMsg.type() == mozilla::layers::PAPZ::Msg_UpdateFrame__ID) {
-          void* iter = nullptr;
+          PickleIterator iter(aMsg);
           FrameMetrics frame;
           if (!IPC::ReadParam(&aMsg, &iter, &frame)) {
             MOZ_ASSERT(false);

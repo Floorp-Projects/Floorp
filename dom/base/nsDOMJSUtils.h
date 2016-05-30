@@ -30,8 +30,6 @@ GetScriptContextFromJSContext(JSContext *cx)
   return scx;
 }
 
-JSObject* GetDefaultScopeFromJSContext(JSContext *cx);
-
 // A factory function for turning a JS::Value argv into an nsIArray
 // but also supports an effecient way of extracting the original argv.
 // The resulting object will take a copy of the array, and ensure each

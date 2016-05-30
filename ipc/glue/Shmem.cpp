@@ -1,6 +1,5 @@
-/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*-
- * vim: sw=2 ts=8 et :
- */
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* vim: set ts=8 sts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -34,7 +33,7 @@ public:
   }
 
   static bool
-  ReadInfo(const Message* msg, void** iter,
+  ReadInfo(const Message* msg, PickleIterator* iter,
            id_t* aIPDLId,
            size_t* aSize,
            SharedMemory::SharedMemoryType* aType)
@@ -100,7 +99,7 @@ ReadSegment(const IPC::Message& aDescriptor, Shmem::id_t* aId, size_t* aNBytes, 
     return nullptr;
   }
   SharedMemory::SharedMemoryType type;
-  void* iter = nullptr;
+  PickleIterator iter(aDescriptor);
   if (!ShmemCreated::ReadInfo(&aDescriptor, &iter, aId, aNBytes, &type)) {
     return nullptr;
   }

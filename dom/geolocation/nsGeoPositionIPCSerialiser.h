@@ -53,7 +53,7 @@ struct ParamTraits<nsIDOMGeoPositionCoords*>
   }
 
   // Function to de-serialize a geoposition
-  static bool Read(const Message* aMsg, void **aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     // Check if it is the null pointer we have transfered
     bool isNull;
@@ -119,7 +119,7 @@ struct ParamTraits<nsIDOMGeoPosition*>
   }
 
   // Function to de-serialize a geoposition
-  static bool Read(const Message* aMsg, void **aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     // Check if it is the null pointer we have transfered
     bool isNull;

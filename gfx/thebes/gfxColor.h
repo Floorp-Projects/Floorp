@@ -7,7 +7,7 @@
 #define GFX_COLOR_H
 
 #include "mozilla/Attributes.h" // for MOZ_ALWAYS_INLINE
-#include "mozilla/Endian.h" // for mozilla::NativeEndian::swapToBigEndian
+#include "mozilla/EndianUtils.h" // for mozilla::NativeEndian::swapToBigEndian
 
 /**
  * GFX_BLOCK_RGB_TO_FRGB(from,to)

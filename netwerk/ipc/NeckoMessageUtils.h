@@ -54,7 +54,7 @@ struct ParamTraits<Permission>
     WriteParam(aMsg, aParam.expireTime);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, Permission* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, Permission* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->origin) &&
            ReadParam(aMsg, aIter, &aResult->type) &&
@@ -112,18 +112,13 @@ struct ParamTraits<mozilla::net::NetAddr>
     }
   }
 
-  static bool Read(const Message* aMsg, void** aIter, mozilla::net::NetAddr* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, mozilla::net::NetAddr* aResult)
   {
     if (!ReadParam(aMsg, aIter, &aResult->raw.family))
       return false;
 
     if (aResult->raw.family == AF_UNSPEC) {
-      const char *tmp;
-      if (aMsg->ReadBytes(aIter, &tmp, sizeof(aResult->raw.data))) {
-        memcpy(&(aResult->raw.data), tmp, sizeof(aResult->raw.data));
-        return true;
-      }
-      return false;
+      return aMsg->ReadBytesInto(aIter, &aResult->raw.data, sizeof(aResult->raw.data));
     } else if (aResult->raw.family == AF_INET) {
       return ReadParam(aMsg, aIter, &aResult->inet.port) &&
              ReadParam(aMsg, aIter, &aResult->inet.ip);
@@ -135,12 +130,7 @@ struct ParamTraits<mozilla::net::NetAddr>
              ReadParam(aMsg, aIter, &aResult->inet6.scope_id);
 #if defined(XP_UNIX)
     } else if (aResult->raw.family == AF_LOCAL) {
-      const char *tmp;
-      if (aMsg->ReadBytes(aIter, &tmp, sizeof(aResult->local.path))) {
-        memcpy(&(aResult->local.path), tmp, sizeof(aResult->local.path));
-        return true;
-      }
-      return false;
+      return aMsg->ReadBytesInto(aIter, &aResult->local.path, sizeof(aResult->local.path));
 #endif
     }
 
@@ -174,7 +164,7 @@ struct ParamTraits<mozilla::net::ResourceTimingStruct>
     WriteParam(aMsg, aParam.cacheReadEnd);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, mozilla::net::ResourceTimingStruct* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, mozilla::net::ResourceTimingStruct* aResult)
   {
     return ReadParam(aMsg, aIter, &aResult->domainLookupStart) &&
            ReadParam(aMsg, aIter, &aResult->domainLookupEnd) &&

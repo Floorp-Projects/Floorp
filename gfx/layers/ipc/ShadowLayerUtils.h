@@ -50,7 +50,7 @@ template <>
 struct ParamTraits<mozilla::layers::SurfaceDescriptorX11> {
   typedef mozilla::layers::SurfaceDescriptorX11 paramType;
   static void Write(Message*, const paramType&) {}
-  static bool Read(const Message*, void**, paramType*) { return false; }
+  static bool Read(const Message*, PickleIterator*, paramType*) { return false; }
 };
 #endif  // !defined(MOZ_HAVE_XSURFACEDESCRIPTORX11)
 
@@ -59,14 +59,14 @@ template <>
 struct ParamTraits<mozilla::layers::MagicGrallocBufferHandle> {
   typedef mozilla::layers::MagicGrallocBufferHandle paramType;
   static void Write(Message*, const paramType&) {}
-  static bool Read(const Message*, void**, paramType*) { return false; }
+  static bool Read(const Message*, PickleIterator*, paramType*) { return false; }
 };
 
 template <>
 struct ParamTraits<mozilla::layers::GrallocBufferRef> {
   typedef mozilla::layers::GrallocBufferRef paramType;
   static void Write(Message*, const paramType&) {}
-  static bool Read(const Message*, void**, paramType*) { return false; }
+  static bool Read(const Message*, PickleIterator*, paramType*) { return false; }
 };
 #endif  // !defined(MOZ_HAVE_XSURFACEDESCRIPTORGRALLOC)
 

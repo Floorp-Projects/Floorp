@@ -37,16 +37,12 @@ CallTrusted(JSContext* cx, unsigned argc, JS::Value* vp)
 {
     JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
 
-    if (!JS_SaveFrameChain(cx))
-        return false;
-
     bool ok = false;
     {
         JSAutoCompartment ac(cx, trusted_glob);
         JS::RootedValue funVal(cx, JS::ObjectValue(*trusted_fun));
         ok = JS_CallFunctionValue(cx, nullptr, funVal, JS::HandleValueArray::empty(), args.rval());
     }
-    JS_RestoreFrameChain(cx);
     return ok;
 }
 
@@ -159,10 +155,6 @@ BEGIN_TEST(testChromeBuffer)
         CHECK(match);
     }
 
-    /*
-     * Check that JS_SaveFrameChain called on the way from content to chrome
-     * (say, as done by XPCJSContextSTack::Push) works.
-     */
     {
         {
             JSAutoCompartment ac(cx, trusted_glob);

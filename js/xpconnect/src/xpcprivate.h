@@ -782,8 +782,6 @@ public:
 
     enum {NO_ARGS = (unsigned) -1};
 
-    static JSContext* GetDefaultJSContext();
-
     XPCCallContext(XPCContext::LangType callerLanguage,
                    JSContext* cx,
                    JS::HandleObject obj    = nullptr,
@@ -2766,19 +2764,9 @@ private:
 /***************************************************************************/
 // XPCJSContextStack is not actually an xpcom object, but xpcom calls are
 // delegated to it as an implementation detail.
-struct XPCJSContextInfo {
-    explicit XPCJSContextInfo(JSContext* aCx) :
-        cx(aCx),
-        savedFrameChain(false)
-    {}
-    JSContext* cx;
-
-    // Whether the frame chain was saved
-    bool savedFrameChain;
-};
 
 namespace xpc {
-bool PushNullJSContext();
+void PushNullJSContext();
 void PopNullJSContext();
 
 } /* namespace xpc */
@@ -2808,27 +2796,23 @@ public:
 
     JSContext* Peek()
     {
-        return mStack.IsEmpty() ? nullptr : mStack[mStack.Length() - 1].cx;
+        return mStack.IsEmpty() ? nullptr : mStack[mStack.Length() - 1];
     }
 
     JSContext* InitSafeJSContext();
     JSContext* GetSafeJSContext();
-    bool HasJSContext(JSContext* cx);
-
-    const InfallibleTArray<XPCJSContextInfo>* GetStack()
-    { return &mStack; }
 
 private:
     friend class mozilla::dom::danger::AutoCxPusher;
-    friend bool xpc::PushNullJSContext();
+    friend void xpc::PushNullJSContext();
     friend void xpc::PopNullJSContext();
 
     // We make these private so that stack manipulation can only happen
     // through one of the above friends.
-    JSContext* Pop();
-    bool Push(JSContext* cx);
+    void Pop();
+    void Push(JSContext* cx);
 
-    AutoTArray<XPCJSContextInfo, 16> mStack;
+    AutoTArray<JSContext*, 16> mStack;
     XPCJSRuntime* mRuntime;
     JSContext*  mSafeJSContext;
 };

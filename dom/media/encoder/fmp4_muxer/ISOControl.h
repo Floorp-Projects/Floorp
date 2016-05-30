@@ -6,7 +6,7 @@
 #ifndef ISOCOMPOSITOR_H_
 #define ISOCOMPOSITOR_H_
 
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "nsTArray.h"
 #include "ISOTrackMetadata.h"
 #include "EncodedFrameContainer.h"

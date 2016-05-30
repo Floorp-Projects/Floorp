@@ -140,7 +140,7 @@ NotifyPaintEvent::Serialize(IPC::Message* aMsg,
 }
 
 NS_IMETHODIMP_(bool)
-NotifyPaintEvent::Deserialize(const IPC::Message* aMsg, void** aIter)
+NotifyPaintEvent::Deserialize(const IPC::Message* aMsg, PickleIterator* aIter)
 {
   NS_ENSURE_TRUE(Event::Deserialize(aMsg, aIter), false);
 

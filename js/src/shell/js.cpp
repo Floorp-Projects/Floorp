@@ -79,6 +79,10 @@
 #include "shell/jsoptparse.h"
 #include "shell/jsshell.h"
 #include "shell/OSObject.h"
+#include "threading/ConditionVariable.h"
+#include "threading/LockGuard.h"
+#include "threading/Mutex.h"
+#include "threading/Thread.h"
 #include "vm/ArgumentsObject.h"
 #include "vm/Compression.h"
 #include "vm/Debugger.h"
@@ -105,6 +109,7 @@ using namespace js::shell;
 using mozilla::ArrayLength;
 using mozilla::Atomic;
 using mozilla::Maybe;
+using mozilla::Nothing;
 using mozilla::NumberEqualsInt32;
 using mozilla::PodCopy;
 using mozilla::PodEqual;
@@ -134,7 +139,7 @@ static const size_t gMaxStackSize = 128 * sizeof(size_t) * 1024;
  * Limit the timeout to 30 minutes to prevent an overflow on platfoms
  * that represent the time internally in microseconds using 32-bit int.
  */
-static const double MAX_TIMEOUT_INTERVAL = 1800.0;  // seconds
+static const TimeDuration MAX_TIMEOUT_INTERVAL = TimeDuration::FromSeconds(1800.0);
 
 #ifdef NIGHTLY_BUILD
 # define SHARED_MEMORY_DEFAULT 1
@@ -166,17 +171,25 @@ struct ShellRuntime
     /*
      * Watchdog thread state.
      */
-    PRLock* watchdogLock;
-    PRCondVar* watchdogWakeup;
-    PRThread* watchdogThread;
-    bool watchdogHasTimeout;
-    int64_t watchdogTimeout;
+    Mutex watchdogLock;
+    ConditionVariable watchdogWakeup;
+    Maybe<Thread> watchdogThread;
+    Maybe<TimeStamp> watchdogTimeout;
 
-    PRCondVar* sleepWakeup;
+    ConditionVariable sleepWakeup;
 
     int exitCode;
     bool quitting;
-    bool gotError;
+};
+
+struct MOZ_STACK_CLASS EnvironmentPreparer : public js::ScriptEnvironmentPreparer {
+    JSContext* cx;
+    explicit EnvironmentPreparer(JSContext* cx)
+      : cx(cx)
+    {
+        js::SetScriptEnvironmentPreparer(JS_GetRuntime(cx), this);
+    }
+    void invoke(JS::HandleObject scope, Closure& closure) override;
 };
 
 // Shell state set once at startup.
@@ -215,9 +228,6 @@ mozilla::Atomic<bool> jsCacheOpened(false);
 
 static bool
 SetTimeoutValue(JSContext* cx, double t);
-
-static bool
-InitWatchdog(JSRuntime* rt);
 
 static void
 KillWatchdog(JSRuntime *rt);
@@ -315,15 +325,8 @@ ShellRuntime::ShellRuntime(JSRuntime* rt)
 #ifdef SPIDERMONKEY_PROMISE
     promiseRejectionTrackerCallback(rt, NullValue()),
 #endif // SPIDERMONKEY_PROMISE
-    watchdogLock(nullptr),
-    watchdogWakeup(nullptr),
-    watchdogThread(nullptr),
-    watchdogHasTimeout(false),
-    watchdogTimeout(0),
-    sleepWakeup(nullptr),
     exitCode(0),
-    quitting(false),
-    gotError(false)
+    quitting(false)
 {}
 
 static ShellRuntime*
@@ -498,6 +501,18 @@ SkipUTF8BOM(FILE* file)
         ungetc(ch1, file);
 }
 
+void
+EnvironmentPreparer::invoke(HandleObject scope, Closure& closure)
+{
+    MOZ_ASSERT(!JS_IsExceptionPending(cx));
+
+    AutoCompartment ac(cx, scope);
+    if (!closure(cx))
+        JS_ReportPendingException(cx);
+
+    MOZ_ASSERT(!JS_IsExceptionPending(cx));
+}
+
 static void
 RunFile(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
 {
@@ -527,9 +542,7 @@ RunFile(JSContext* cx, const char* filename, FILE* file, bool compileOnly)
                .setIsRunOnce(true)
                .setNoScriptRval(true);
 
-        sr->gotError = false;
         (void) JS::Compile(cx, options, file, &script);
-        MOZ_ASSERT_IF(!script, sr->gotError);
     }
 
     #ifdef DEBUG
@@ -1334,30 +1347,6 @@ CacheEntry_setBytecode(JSContext* cx, HandleObject cache, uint8_t* buffer, uint3
     return true;
 }
 
-class AutoSaveFrameChain
-{
-    JSContext* cx_;
-    bool saved_;
-
-  public:
-    explicit AutoSaveFrameChain(JSContext* cx)
-      : cx_(cx),
-        saved_(false)
-    {}
-
-    bool save() {
-        if (!JS_SaveFrameChain(cx_))
-            return false;
-        saved_ = true;
-        return true;
-    }
-
-    ~AutoSaveFrameChain() {
-        if (saved_)
-            JS_RestoreFrameChain(cx_);
-    }
-};
-
 static bool
 Evaluate(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -1391,7 +1380,6 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
     RootedString sourceMapURL(cx);
     RootedObject global(cx, nullptr);
     bool catchTermination = false;
-    bool saveFrameChain = false;
     bool loadBytecode = false;
     bool saveBytecode = false;
     bool assertEqBytecode = false;
@@ -1452,11 +1440,6 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
         if (!v.isUndefined())
             catchTermination = ToBoolean(v);
 
-        if (!JS_GetProperty(cx, opts, "saveFrameChain", &v))
-            return false;
-        if (!v.isUndefined())
-            saveFrameChain = ToBoolean(v);
-
         if (!JS_GetProperty(cx, opts, "loadBytecode", &v))
             return false;
         if (!v.isUndefined())
@@ -1506,10 +1489,6 @@ Evaluate(JSContext* cx, unsigned argc, Value* vp)
     }
 
     {
-        AutoSaveFrameChain asfc(cx);
-        if (saveFrameChain && !asfc.save())
-            return false;
-
         JSAutoCompartment ac(cx, global);
         RootedScript script(cx);
 
@@ -2048,7 +2027,7 @@ ValueToScript(JSContext* cx, Value vArg, JSFunction** funp = nullptr)
 static JSScript*
 GetTopScript(JSContext* cx)
 {
-    NonBuiltinScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
+    NonBuiltinScriptFrameIter iter(cx);
     return iter.done() ? nullptr : iter.script();
 }
 
@@ -2972,12 +2951,6 @@ WorkerMain(void* arg)
     JS_InitDestroyPrincipalsCallback(rt, ShellPrincipals::destroy);
     SetWorkerRuntimeOptions(rt);
 
-    if (!InitWatchdog(rt)) {
-        JS_DestroyRuntime(rt);
-        js_delete(input);
-        return;
-    }
-
     JSContext* cx = NewContext(rt);
     if (!cx) {
         JS_DestroyRuntime(rt);
@@ -2989,6 +2962,8 @@ WorkerMain(void* arg)
     sr->jobQueue.init(cx, JobQueue(SystemAllocPolicy()));
     JS::SetEnqueuePromiseJobCallback(rt, ShellEnqueuePromiseJobCallback);
 #endif // SPIDERMONKEY_PROMISE
+
+    EnvironmentPreparer environmentPreparer(cx);
 
     JS::SetLargeAllocationFailureCallback(rt, my_LargeAllocFailCallback, (void*)cx);
 
@@ -3118,17 +3093,6 @@ ShapeOf(JSContext* cx, unsigned argc, JS::Value* vp)
     return true;
 }
 
-/*
- * Check that t1 comes strictly before t2. The function correctly deals with
- * wrap-around between t2 and t1 assuming that t2 and t1 stays within INT32_MAX
- * from each other. We use MAX_TIMEOUT_INTERVAL to enforce this restriction.
- */
-static bool
-IsBefore(int64_t t1, int64_t t2)
-{
-    return int32_t(t1 - t2) < 0;
-}
-
 static bool
 Sleep_fn(JSContext* cx, unsigned argc, Value* vp)
 {
@@ -3140,98 +3104,76 @@ Sleep_fn(JSContext* cx, unsigned argc, Value* vp)
         double t_secs;
         if (!ToNumber(cx, args[0], &t_secs))
             return false;
+        duration = TimeDuration::FromSeconds(Max(0.0, t_secs));
 
         /* NB: The next condition also filter out NaNs. */
-        if (!(t_secs <= MAX_TIMEOUT_INTERVAL)) {
+        if (duration > MAX_TIMEOUT_INTERVAL) {
             JS_ReportError(cx, "Excessive sleep interval");
             return false;
         }
-        duration = TimeDuration::FromSeconds(Max(0.0, t_secs));
     }
-    PR_Lock(sr->watchdogLock);
-    TimeStamp toWakeup = TimeStamp::Now() + duration;
-    for (;;) {
-        PR_WaitCondVar(sr->sleepWakeup, DurationToPRInterval(duration));
-        if (sr->serviceInterrupt)
-            break;
-        auto now = TimeStamp::Now();
-        if (now >= toWakeup)
-            break;
-        duration = toWakeup - now;
+    {
+        LockGuard<Mutex> guard(sr->watchdogLock);
+        TimeStamp toWakeup = TimeStamp::Now() + duration;
+        for (;;) {
+            sr->sleepWakeup.wait_for(guard, duration);
+            if (sr->serviceInterrupt)
+                break;
+            auto now = TimeStamp::Now();
+            if (now >= toWakeup)
+                break;
+            duration = toWakeup - now;
+        }
     }
-    PR_Unlock(sr->watchdogLock);
     args.rval().setUndefined();
     return !sr->serviceInterrupt;
-}
-
-static bool
-InitWatchdog(JSRuntime* rt)
-{
-    ShellRuntime* sr = GetShellRuntime(rt);
-    MOZ_ASSERT(!sr->watchdogThread);
-    sr->watchdogLock = PR_NewLock();
-    if (sr->watchdogLock) {
-        sr->watchdogWakeup = PR_NewCondVar(sr->watchdogLock);
-        if (sr->watchdogWakeup) {
-            sr->sleepWakeup = PR_NewCondVar(sr->watchdogLock);
-            if (sr->sleepWakeup)
-                return true;
-            PR_DestroyCondVar(sr->watchdogWakeup);
-        }
-        PR_DestroyLock(sr->watchdogLock);
-    }
-    return false;
 }
 
 static void
 KillWatchdog(JSRuntime* rt)
 {
     ShellRuntime* sr = GetShellRuntime(rt);
-    PRThread* thread;
+    Maybe<Thread> thread;
 
-    PR_Lock(sr->watchdogLock);
-    thread = sr->watchdogThread;
-    if (thread) {
-        /*
-         * The watchdog thread is running, tell it to terminate waking it up
-         * if necessary.
-         */
-        sr->watchdogThread = nullptr;
-        PR_NotifyCondVar(sr->watchdogWakeup);
+    {
+        LockGuard<Mutex> guard(sr->watchdogLock);
+        Swap(sr->watchdogThread, thread);
+        if (thread) {
+            // The watchdog thread becoming Nothing is its signal to exit.
+            sr->watchdogWakeup.notify_one();
+        }
     }
-    PR_Unlock(sr->watchdogLock);
     if (thread)
-        PR_JoinThread(thread);
-    PR_DestroyCondVar(sr->sleepWakeup);
-    PR_DestroyCondVar(sr->watchdogWakeup);
-    PR_DestroyLock(sr->watchdogLock);
+        thread->join();
+
+    MOZ_ASSERT(!sr->watchdogThread);
 }
 
 static void
-WatchdogMain(void* arg)
+WatchdogMain(JSRuntime* rt)
 {
-    PR_SetCurrentThreadName("JS Watchdog");
+    ThisThread::SetName("JS Watchdog");
 
-    JSRuntime* rt = (JSRuntime*) arg;
     ShellRuntime* sr = GetShellRuntime(rt);
 
-    PR_Lock(sr->watchdogLock);
+    LockGuard<Mutex> guard(sr->watchdogLock);
     while (sr->watchdogThread) {
-        int64_t now = PRMJ_Now();
-        if (sr->watchdogHasTimeout && !IsBefore(now, sr->watchdogTimeout)) {
+        auto now = TimeStamp::Now();
+        if (sr->watchdogTimeout && now >= sr->watchdogTimeout.value()) {
             /*
              * The timeout has just expired. Request an interrupt callback
              * outside the lock.
              */
-            sr->watchdogHasTimeout = false;
-            PR_Unlock(sr->watchdogLock);
-            CancelExecution(rt);
-            PR_Lock(sr->watchdogLock);
+            sr->watchdogTimeout = Nothing();
+            {
+                UnlockGuard<Mutex> unlock(guard);
+                CancelExecution(rt);
+            }
 
             /* Wake up any threads doing sleep. */
-            PR_NotifyAllCondVar(sr->sleepWakeup);
+            sr->sleepWakeup.notify_all();
         } else {
-            if (sr->watchdogHasTimeout) {
+            if (sr->watchdogTimeout) {
                 /*
                  * Time hasn't expired yet. Simulate an interrupt callback
                  * which doesn't abort execution.
@@ -3239,15 +3181,12 @@ WatchdogMain(void* arg)
                 JS_RequestInterruptCallback(rt);
             }
 
-            TimeDuration sleepDuration = sr->watchdogHasTimeout
+            TimeDuration sleepDuration = sr->watchdogTimeout
                                          ? TimeDuration::FromSeconds(0.1)
                                          : TimeDuration::Forever();
-            mozilla::DebugOnly<PRStatus> status =
-              PR_WaitCondVar(sr->watchdogWakeup, DurationToPRInterval(sleepDuration));
-            MOZ_ASSERT(status == PR_SUCCESS);
+            sr->watchdogWakeup.wait_for(guard, sleepDuration);
         }
     }
-    PR_Unlock(sr->watchdogLock);
 }
 
 static bool
@@ -3256,34 +3195,21 @@ ScheduleWatchdog(JSRuntime* rt, double t)
     ShellRuntime* sr = GetShellRuntime(rt);
 
     if (t <= 0) {
-        PR_Lock(sr->watchdogLock);
-        sr->watchdogHasTimeout = false;
-        PR_Unlock(sr->watchdogLock);
+        LockGuard<Mutex> guard(sr->watchdogLock);
+        sr->watchdogTimeout = Nothing();
         return true;
     }
 
-    int64_t interval = int64_t(ceil(t * PRMJ_USEC_PER_SEC));
-    int64_t timeout = PRMJ_Now() + interval;
-    PR_Lock(sr->watchdogLock);
+    auto interval = TimeDuration::FromSeconds(t);
+    auto timeout = TimeStamp::Now() + interval;
+    LockGuard<Mutex> guard(sr->watchdogLock);
     if (!sr->watchdogThread) {
-        MOZ_ASSERT(!sr->watchdogHasTimeout);
-        sr->watchdogThread = PR_CreateThread(PR_USER_THREAD,
-                                          WatchdogMain,
-                                          rt,
-                                          PR_PRIORITY_NORMAL,
-                                          PR_GLOBAL_THREAD,
-                                          PR_JOINABLE_THREAD,
-                                          0);
-        if (!sr->watchdogThread) {
-            PR_Unlock(sr->watchdogLock);
-            return false;
-        }
-    } else if (!sr->watchdogHasTimeout || IsBefore(timeout, sr->watchdogTimeout)) {
-         PR_NotifyCondVar(sr->watchdogWakeup);
+        MOZ_ASSERT(!sr->watchdogTimeout);
+        sr->watchdogThread.emplace(WatchdogMain, rt);
+    } else if (!sr->watchdogTimeout || timeout < sr->watchdogTimeout.value()) {
+         sr->watchdogWakeup.notify_one();
     }
-    sr->watchdogHasTimeout = true;
-    sr->watchdogTimeout = timeout;
-    PR_Unlock(sr->watchdogLock);
+    sr->watchdogTimeout = Some(timeout);
     return true;
 }
 
@@ -3332,7 +3258,7 @@ static bool
 SetTimeoutValue(JSContext* cx, double t)
 {
     /* NB: The next condition also filter out NaNs. */
-    if (!(t <= MAX_TIMEOUT_INTERVAL)) {
+    if (TimeDuration::FromSeconds(t) > MAX_TIMEOUT_INTERVAL) {
         JS_ReportError(cx, "Excessive timeout value");
         return false;
     }
@@ -4295,7 +4221,7 @@ DecompileThisScript(JSContext* cx, unsigned argc, Value* vp)
 {
     CallArgs args = CallArgsFromVp(argc, vp);
 
-    NonBuiltinScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
+    NonBuiltinScriptFrameIter iter(cx);
     if (iter.done()) {
         args.rval().setString(cx->runtime()->emptyString);
         return true;
@@ -5300,8 +5226,6 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
 "      columnNumber: starting column number for error messages and debug info\n"
 "      global: global in which to execute the code\n"
 "      newContext: if true, create and use a new cx (default: false)\n"
-"      saveFrameChain: if true, save the frame chain before evaluating code\n"
-"         and restore it afterwards\n"
 "      catchTermination: if true, catch termination (failure without\n"
 "         an exception value, as for slow scripts or out-of-memory)\n"
 "         and return 'terminated'\n"
@@ -6026,7 +5950,7 @@ js::shell::my_ErrorReporter(JSContext* cx, const char* message, JSErrorReport* r
     if (JS_IsExceptionPending(cx))
         (void) JS_GetPendingException(cx, &exn);
 
-    sr->gotError = PrintError(cx, fp, message, report, reportWarnings);
+    (void) PrintError(cx, fp, message, report, reportWarnings);
     if (!exn.isUndefined()) {
         JS::AutoSaveExceptionState savedExc(cx);
         if (!PrintStackTrace(cx, exn))
@@ -6040,16 +5964,6 @@ js::shell::my_ErrorReporter(JSContext* cx, const char* message, JSErrorReport* r
         else
             sr->exitCode = EXITCODE_RUNTIME_ERROR;
     }
-}
-
-static void
-my_OOMCallback(JSContext* cx, void* data)
-{
-    // If a script is running, the engine is about to throw the string "out of
-    // memory", which may or may not be caught. Otherwise the engine will just
-    // unwind and return null/false, with no exception set.
-    if (!JS_IsRunning(cx))
-        GetShellRuntime(cx)->gotError = true;
 }
 
 static bool
@@ -7455,7 +7369,6 @@ main(int argc, char** argv, char** envp)
     // Waiting is allowed on the shell's main thread, for now.
     JS_SetFutexCanWait(rt);
     JS_SetErrorReporter(rt, my_ErrorReporter);
-    JS::SetOutOfMemoryCallback(rt, my_OOMCallback, nullptr);
     if (!SetRuntimeOptions(rt, op))
         return 1;
 
@@ -7480,9 +7393,6 @@ main(int argc, char** argv, char** envp)
     if (!offThreadState.init())
         return 1;
 
-    if (!InitWatchdog(rt))
-        return 1;
-
     cx = NewContext(rt);
     if (!cx)
         return 1;
@@ -7491,6 +7401,8 @@ main(int argc, char** argv, char** envp)
     sr->jobQueue.init(cx, JobQueue(SystemAllocPolicy()));
     JS::SetEnqueuePromiseJobCallback(rt, ShellEnqueuePromiseJobCallback);
 #endif // SPIDERMONKEY_PROMISE
+
+    EnvironmentPreparer environmentPreparer(cx);
 
     JS_SetGCParameter(rt, JSGC_MODE, JSGC_MODE_INCREMENTAL);
 

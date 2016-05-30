@@ -143,7 +143,7 @@ struct ParamTraits<mozilla::layers::APZTestData>
     WriteParam(aMsg, aParam.mRepaintRequests);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     return (ReadParam(aMsg, aIter, &aResult->mPaints) &&
             ReadParam(aMsg, aIter, &aResult->mRepaintRequests));
