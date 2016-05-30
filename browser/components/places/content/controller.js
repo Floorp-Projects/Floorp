@@ -1550,19 +1550,27 @@ var PlacesControllerDragHelper = {
    *
    * @param   aNode
    *          A nsINavHistoryResultNode node.
+   * @param   [optional] aDOMNode
+   *          A XUL DOM node.
    * @return True if the node can be moved, false otherwise.
    */
-  canMoveNode:
-  function PCDH_canMoveNode(aNode) {
+  canMoveNode(aNode, aDOMNode) {
     // Only bookmark items are movable.
     if (aNode.itemId == -1)
       return false;
 
+    let parentNode = aNode.parent;
+    if (!parentNode) {
+      // Normally parentless places nodes can not be moved,
+      // but simulated bookmarked URI nodes are special.
+      return aDOMNode &&
+             aDOMNode.hasAttribute("simulated-places-node") &&
+             PlacesUtils.nodeIsBookmark(aNode);
+    }
+
     // Once tags and bookmarked are divorced, the tag-query check should be
     // removed.
-    let parentNode = aNode.parent;
-    return parentNode != null &&
-           !(PlacesUtils.nodeIsFolder(parentNode) &&
+    return !(PlacesUtils.nodeIsFolder(parentNode) &&
              PlacesUIUtils.isContentsReadOnly(parentNode)) &&
            !PlacesUtils.nodeIsTagQuery(parentNode);
   },
