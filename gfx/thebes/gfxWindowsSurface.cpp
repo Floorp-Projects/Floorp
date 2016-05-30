@@ -14,13 +14,6 @@
 
 #include "nsString.h"
 
-gfxWindowsSurface::gfxWindowsSurface(HWND wnd, uint32_t flags) :
-    mOwnsDC(true), mForPrinting(false), mWnd(wnd)
-{
-    mDC = ::GetDC(mWnd);
-    InitWithDC(flags);
-}
-
 gfxWindowsSurface::gfxWindowsSurface(HDC dc, uint32_t flags) :
     mOwnsDC(false), mForPrinting(false), mDC(dc), mWnd(nullptr)
 {
@@ -72,33 +65,6 @@ gfxWindowsSurface::gfxWindowsSurface(const mozilla::gfx::IntSize& realSize, gfxI
     } else {
         mDC = nullptr;
     }
-}
-
-gfxWindowsSurface::gfxWindowsSurface(HDC dc, const mozilla::gfx::IntSize& realSize, gfxImageFormat imageFormat) :
-    mOwnsDC(false), mForPrinting(false), mWnd(nullptr)
-{
-    mozilla::gfx::IntSize size(realSize);
-    if (!CheckSurfaceSize(size))
-        MakeInvalid(size);
-
-    cairo_format_t cformat = GfxFormatToCairoFormat(imageFormat);
-    cairo_surface_t *surf =
-        cairo_win32_surface_create_with_ddb(dc, cformat,
-                                            size.width, size.height);
-
-    Init(surf);
-
-    if (mSurfaceValid) {
-        // DDBs will generally only use 3 bytes per pixel when RGB24
-        int bytesPerPixel =
-            ((imageFormat == mozilla::gfx::SurfaceFormat::X8R8G8B8_UINT32) ? 3 : 4);
-        RecordMemoryUsed(size.width * size.height * bytesPerPixel + sizeof(gfxWindowsSurface));
-    }
-
-    if (CairoStatus() == 0)
-        mDC = cairo_win32_surface_get_dc(CairoSurface());
-    else
-        mDC = nullptr;
 }
 
 gfxWindowsSurface::gfxWindowsSurface(cairo_surface_t *csurf) :
