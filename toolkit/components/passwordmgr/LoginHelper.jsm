@@ -34,9 +34,10 @@ Cu.import("resource://gre/modules/XPCOMUtils.jsm");
  */
 this.LoginHelper = {
   /**
-   * Warning: this only updates if a logger was created.
+   * Warning: these only update if a logger was created.
    */
   debug: Services.prefs.getBoolPref("signon.debug"),
+  schemeUpgrades: Services.prefs.getBoolPref("signon.schemeUpgrades"),
 
   createLogger(aLogPrefix) {
     let getMaxLogLevel = () => {
@@ -54,6 +55,7 @@ this.LoginHelper = {
     // Watch for pref changes and update this.debug and the maxLogLevel for created loggers
     Services.prefs.addObserver("signon.", () => {
       this.debug = Services.prefs.getBoolPref("signon.debug");
+      this.schemeUpgrades = Services.prefs.getBoolPref("signon.schemeUpgrades");
       logger.maxLogLevel = getMaxLogLevel();
     }, false);
 
@@ -333,38 +335,131 @@ this.LoginHelper = {
   },
 
   /**
-   * Removes duplicates from a list of logins.
+   * Removes duplicates from a list of logins while preserving the sort order.
    *
    * @param {nsILoginInfo[]} logins
    *        A list of logins we want to deduplicate.
-   *
-   * @param {string[] = ["username", "password"]} uniqueKeys
+   * @param {string[]} [uniqueKeys = ["username", "password"]]
    *        A list of login attributes to use as unique keys for the deduplication.
+   * @param {string[]} [resolveBy = ["timeLastUsed"]]
+   *        Ordered array of keyword strings used to decide which of the
+   *        duplicates should be used. "scheme" would prefer the login that has
+   *        a scheme matching `preferredOrigin`'s if there are two logins with
+   *        the same `uniqueKeys`. The default preference to distinguish two
+   *        logins is `timeLastUsed`. If there is no preference between two
+   *        logins, the first one found wins.
+   * @param {string} [preferredOrigin = undefined]
+   *        String representing the origin to use for preferring one login over
+   *        another when they are dupes. This is used with "scheme" for
+   *        `resolveBy` so the scheme from this origin will be preferred.
    *
    * @returns {nsILoginInfo[]} list of unique logins.
    */
-  dedupeLogins(logins, uniqueKeys = ["username", "password"]) {
+  dedupeLogins(logins, uniqueKeys = ["username", "password"],
+               resolveBy = ["timeLastUsed"],
+               preferredOrigin = undefined) {
     const KEY_DELIMITER = ":";
+
+    if (!preferredOrigin && resolveBy.includes("scheme")) {
+      throw new Error("dedupeLogins: `preferredOrigin` is required in order to "+
+                      "prefer schemes which match it.");
+    }
+
+    let preferredOriginScheme;
+    if (preferredOrigin) {
+      try {
+        preferredOriginScheme = Services.io.newURI(preferredOrigin, null, null).scheme;
+      } catch (ex) {
+        // Handle strings that aren't valid URIs e.g. chrome://FirefoxAccounts
+      }
+    }
+
+    if (!preferredOriginScheme && resolveBy.includes("scheme")) {
+      throw new Error("dedupeLogins: Deduping with a scheme preference but couldn't " +
+                      "get the preferred origin scheme.");
+    }
+
+    // We use a Map to easily lookup logins by their unique keys.
+    let loginsByKeys = new Map();
 
     // Generate a unique key string from a login.
     function getKey(login, uniqueKeys) {
       return uniqueKeys.reduce((prev, key) => prev + KEY_DELIMITER + login[key], "");
     }
 
-    // We use a Map to easily lookup logins by their unique keys.
-    let loginsByKeys = new Map();
+    /**
+     * @return {bool} whether `login` is preferred over its duplicate (considering `uniqueKeys`)
+     *                `existingLogin`.
+     *
+     * `resolveBy` is a sorted array so we can return true the first time `login` is preferred
+     * over the existingLogin.
+     */
+    function isLoginPreferred(existingLogin, login) {
+      if (!resolveBy || resolveBy.length == 0) {
+        // If there is no preference, prefer the existing login.
+        return false;
+      }
+
+      for (let preference of resolveBy) {
+        switch (preference) {
+          case "scheme": {
+            if (!preferredOriginScheme) {
+              break;
+            }
+
+            try {
+              // Only `hostname` is currently considered
+              let existingLoginURI = Services.io.newURI(existingLogin.hostname, null, null);
+              let loginURI = Services.io.newURI(login.hostname, null, null);
+              // If the schemes of the two logins are the same or neither match the
+              // preferredOriginScheme then we have no preference and look at the next resolveBy.
+              if (loginURI.scheme == existingLoginURI.scheme ||
+                  (loginURI.scheme != preferredOriginScheme &&
+                   existingLoginURI.scheme != preferredOriginScheme)) {
+                break;
+              }
+
+              return loginURI.scheme == preferredOriginScheme;
+            } catch (ex) {
+              // Some URLs aren't valid nsIURI (e.g. chrome://FirefoxAccounts)
+              log.debug("dedupeLogins/shouldReplaceExisting: Error comparing schemes:",
+                        existingLogin.hostname, login.hostname,
+                        "preferredOrigin:", preferredOrigin, ex);
+            }
+            break;
+          }
+          case "timeLastUsed":
+          case "timePasswordChanged": {
+            // If we find a more recent login for the same key, replace the existing one.
+            let loginDate = login.QueryInterface(Ci.nsILoginMetaInfo)[preference];
+            let storedLoginDate = existingLogin.QueryInterface(Ci.nsILoginMetaInfo)[preference];
+            if (loginDate == storedLoginDate) {
+              break;
+            }
+
+            return loginDate > storedLoginDate;
+          }
+          default: {
+            throw new Error("dedupeLogins: Invalid resolveBy preference: " + preference);
+          }
+        }
+      }
+
+      return false;
+    }
+
     for (let login of logins) {
       let key = getKey(login, uniqueKeys);
-      // If we find a more recently used login for the same key, replace the existing one.
+
       if (loginsByKeys.has(key)) {
-        let loginDate = login.QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
-        let storedLoginDate = loginsByKeys.get(key).QueryInterface(Ci.nsILoginMetaInfo).timeLastUsed;
-        if (loginDate < storedLoginDate) {
+        if (!isLoginPreferred(loginsByKeys.get(key), login)) {
+          // If there is no preference for the new login, use the existing one.
           continue;
         }
       }
       loginsByKeys.set(key, login);
     }
+
     // Return the map values in the form of an array.
     return [...loginsByKeys.values()];
   },
@@ -491,14 +586,12 @@ this.LoginHelper = {
    */
   loginToVanillaObject(login) {
     let obj = {};
-    for (let i in login) {
+    for (let i in login.QueryInterface(Ci.nsILoginMetaInfo)) {
       if (typeof login[i] !== 'function') {
         obj[i] = login[i];
       }
     }
 
-    login.QueryInterface(Ci.nsILoginMetaInfo);
-    obj.guid = login.guid;
     return obj;
   },
 
@@ -506,15 +599,17 @@ this.LoginHelper = {
    * Convert an object received from IPC into an nsILoginInfo (with guid).
    */
   vanillaObjectToLogin(login) {
-    var formLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
-                  createInstance(Ci.nsILoginInfo);
+    let formLogin = Cc["@mozilla.org/login-manager/loginInfo;1"].
+                    createInstance(Ci.nsILoginInfo);
     formLogin.init(login.hostname, login.formSubmitURL,
                    login.httpRealm, login.username,
                    login.password, login.usernameField,
                    login.passwordField);
 
     formLogin.QueryInterface(Ci.nsILoginMetaInfo);
-    formLogin.guid = login.guid;
+    for (let prop of ["guid", "timeCreated", "timeLastUsed", "timePasswordChanged", "timesUsed"]) {
+      formLogin[prop] = login[prop];
+    }
     return formLogin;
   },
 
@@ -552,3 +647,8 @@ this.LoginHelper = {
     }
   }
 };
+
+XPCOMUtils.defineLazyGetter(this, "log", () => {
+  let logger = LoginHelper.createLogger("LoginHelper");
+  return logger;
+});

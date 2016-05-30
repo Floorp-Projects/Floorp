@@ -10,6 +10,8 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 
+XPCOMUtils.defineLazyModuleGetter(this, "LoginHelper",
+                                  "resource://gre/modules/LoginHelper.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "LoginManagerParent",
                                   "resource://gre/modules/LoginManagerParent.jsm");
 
@@ -93,7 +95,16 @@ var LoginManagerContextMenu = {
    * @returns {nsILoginInfo[]} a login list
    */
   _findLogins(documentURI) {
-    let logins = Services.logins.findLogins({}, documentURI.prePath, "", "");
+    let searchParams = {
+      hostname: documentURI.prePath,
+      schemeUpgrades: LoginHelper.schemeUpgrades,
+    };
+    let logins = LoginHelper.searchLoginsWithObject(searchParams);
+    let resolveBy = [
+      "scheme",
+      "timePasswordChanged",
+    ];
+    logins = LoginHelper.dedupeLogins(logins, ["username", "password"], resolveBy, documentURI.prePath);
 
     // Sort logins in alphabetical order and by date.
     logins.sort((loginA, loginB) => {
