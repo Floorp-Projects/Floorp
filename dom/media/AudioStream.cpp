@@ -315,6 +315,13 @@ struct ToCubebFormat<AUDIO_FORMAT_S16> {
   static const cubeb_sample_format value = CUBEB_SAMPLE_S16NE;
 };
 
+template <typename Function, typename... Args>
+int AudioStream::InvokeCubeb(Function aFunction, Args&&... aArgs)
+{
+  MonitorAutoUnlock mon(mMonitor);
+  return aFunction(mCubebStream.get(), Forward<Args>(aArgs)...);
+}
+
 nsresult
 AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
                   const dom::AudioChannel aAudioChannel)
@@ -414,16 +421,11 @@ AudioStream::Start()
 {
   MonitorAutoLock mon(mMonitor);
   if (mState == INITIALIZED) {
+    // DataCallback might be called before InvokeCubeb returns
+    // if cubeb_stream_start() succeeds. mState must be set to STARTED
+    // beforehand.
     mState = STARTED;
-    int r;
-    {
-      MonitorAutoUnlock mon(mMonitor);
-      r = cubeb_stream_start(mCubebStream.get());
-      // DataCallback might be called before we exit this scope
-      // if cubeb_stream_start() succeeds. mState must be set to STARTED
-      // beforehand.
-    }
-    if (r != CUBEB_OK) {
+    if (InvokeCubeb(cubeb_stream_start) != CUBEB_OK) {
       mState = ERRORED;
     }
     LOG("started, state %s", mState == STARTED ? "STARTED" : "ERRORED");
@@ -444,11 +446,7 @@ AudioStream::Pause()
     return;
   }
 
-  int r;
-  {
-    MonitorAutoUnlock mon(mMonitor);
-    r = cubeb_stream_stop(mCubebStream.get());
-  }
+  int r = InvokeCubeb(cubeb_stream_stop);
   if (mState != ERRORED && r == CUBEB_OK) {
     mState = STOPPED;
   }
@@ -462,11 +460,7 @@ AudioStream::Resume()
     return;
   }
 
-  int r;
-  {
-    MonitorAutoUnlock mon(mMonitor);
-    r = cubeb_stream_start(mCubebStream.get());
-  }
+  int r = InvokeCubeb(cubeb_stream_start);
   if (mState != ERRORED && r == CUBEB_OK) {
     mState = STARTED;
   }
@@ -514,13 +508,9 @@ AudioStream::GetPositionInFramesUnlocked()
   }
 
   uint64_t position = 0;
-  {
-    MonitorAutoUnlock mon(mMonitor);
-    if (cubeb_stream_get_position(mCubebStream.get(), &position) != CUBEB_OK) {
-      return -1;
-    }
+  if (InvokeCubeb(cubeb_stream_get_position, &position) != CUBEB_OK) {
+    return -1;
   }
-
   return std::min<uint64_t>(position, INT64_MAX);
 }
 

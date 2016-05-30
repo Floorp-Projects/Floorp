@@ -340,6 +340,9 @@ private:
   void GetUnprocessed(AudioBufferWriter& aWriter);
   void GetTimeStretched(AudioBufferWriter& aWriter);
 
+  template <typename Function, typename... Args>
+  int InvokeCubeb(Function aFunction, Args&&... aArgs);
+
   // The monitor is held to protect all access to member variables.
   Monitor mMonitor;
 
