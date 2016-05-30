@@ -15,7 +15,9 @@ const TEST_URI = `data:text/xml;charset=UTF-8,<?xml version="1.0"?>
   <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
    title="Tooltip test">
     <vbox flex="1">
-      <hbox id="box1" flex="1">test1</hbox>
+      <hbox id="box1" flex="1">
+        <textbox></textbox>
+      </hbox>
       <hbox id="box2" flex="1">test2</hbox>
       <hbox id="box3" flex="1">
         <textbox id="box3-input"></textbox>
@@ -31,7 +33,7 @@ loadHelperScript("helper_html_tooltip.js");
 
 add_task(function* () {
   yield addTab("about:blank");
-  let [,, doc] = yield createHost("bottom", TEST_URI);
+  let [, , doc] = yield createHost("bottom", TEST_URI);
 
   yield testNoAutoFocus(doc);
   yield testAutoFocus(doc);

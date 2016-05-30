@@ -2704,10 +2704,10 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
         maxDim: Services.prefs.getIntPref(PREVIEW_MAX_DIM_PREF)
       };
 
-      yield setImageTooltip(tooltip, this.markup.doc, data, options);
+      setImageTooltip(tooltip, this.markup.doc, data, options);
     } catch (e) {
       // Indicate the failure but show the tooltip anyway.
-      yield setBrokenImageTooltip(tooltip, this.markup.doc);
+      setBrokenImageTooltip(tooltip, this.markup.doc);
     }
     return true;
   }),
