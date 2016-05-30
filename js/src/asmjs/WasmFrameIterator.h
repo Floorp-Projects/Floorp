@@ -98,6 +98,7 @@ class ProfilingFrameIterator
 };
 
 // Prologue/epilogue code generation
+
 void
 GenerateExitPrologue(jit::MacroAssembler& masm, unsigned framePushed, ExitReason reason,
                      ProfilingOffsets* offsets);
@@ -105,20 +106,21 @@ void
 GenerateExitEpilogue(jit::MacroAssembler& masm, unsigned framePushed, ExitReason reason,
                      ProfilingOffsets* offsets);
 void
-GenerateFunctionPrologue(jit::MacroAssembler& masm, unsigned framePushed, FuncOffsets* offsets);
+GenerateFunctionPrologue(jit::MacroAssembler& masm, unsigned framePushed, uint32_t sigIndex,
+                         FuncOffsets* offsets);
 void
 GenerateFunctionEpilogue(jit::MacroAssembler& masm, unsigned framePushed, FuncOffsets* offsets);
 
 // Runtime patching to enable/disable profiling
 
 void
-EnableProfilingPrologue(const Module& module, const CallSite& callSite, bool enabled);
+ToggleProfiling(const Module& module, const CallSite& callSite, bool enabled);
 
 void
-EnableProfilingThunk(const Module& module, const CallThunk& callThunk, bool enabled);
+ToggleProfiling(const Module& module, const CallThunk& callThunk, bool enabled);
 
 void
-EnableProfilingEpilogue(const Module& module, const CodeRange& codeRange, bool enabled);
+ToggleProfiling(const Module& module, const CodeRange& codeRange, bool enabled);
 
 } // namespace wasm
 } // namespace js

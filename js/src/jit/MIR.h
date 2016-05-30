@@ -14425,38 +14425,36 @@ class MAsmJSLoadFuncPtr
   : public MUnaryInstruction,
     public NoTypePolicy::Data
 {
-    MAsmJSLoadFuncPtr(MDefinition* index, bool hasLimit, uint32_t limit, bool alwaysThrow,
-                      unsigned globalDataOffset)
-      : MUnaryInstruction(index), hasLimit_(hasLimit), limit_(limit), alwaysThrow_(alwaysThrow),
-        globalDataOffset_(globalDataOffset)
+    MAsmJSLoadFuncPtr(MDefinition* index, uint32_t limit, unsigned globalDataOffset)
+      : MUnaryInstruction(index), limit_(limit), globalDataOffset_(globalDataOffset)
     {
         setResultType(MIRType::Pointer);
     }
 
-    bool hasLimit_;
     uint32_t limit_;
-    bool alwaysThrow_;
     unsigned globalDataOffset_;
 
   public:
     INSTRUCTION_HEADER(AsmJSLoadFuncPtr)
 
+    static const uint32_t NoLimit = UINT32_MAX;
+
     static MAsmJSLoadFuncPtr* New(TempAllocator& alloc, MDefinition* index, uint32_t limit,
-                                  bool alwaysThrow, unsigned globalDataOffset)
+                                  unsigned globalDataOffset)
     {
-        return new(alloc) MAsmJSLoadFuncPtr(index, true, limit, alwaysThrow, globalDataOffset);
+        MOZ_ASSERT(limit != NoLimit);
+        return new(alloc) MAsmJSLoadFuncPtr(index, limit, globalDataOffset);
     }
 
     static MAsmJSLoadFuncPtr* New(TempAllocator& alloc, MDefinition* index,
                                   unsigned globalDataOffset)
     {
-        return new(alloc) MAsmJSLoadFuncPtr(index, false, 0, false, globalDataOffset);
+        return new(alloc) MAsmJSLoadFuncPtr(index, NoLimit, globalDataOffset);
     }
 
     MDefinition* index() const { return getOperand(0); }
-    bool hasLimit() const { return hasLimit_; }
-    uint32_t limit() const { MOZ_ASSERT(hasLimit_); return limit_; }
-    bool alwaysThrow() const { return alwaysThrow_; }
+    bool hasLimit() const { return limit_ != NoLimit; }
+    uint32_t limit() const { MOZ_ASSERT(hasLimit()); return limit_; }
     unsigned globalDataOffset() const { return globalDataOffset_; }
 
     HashNumber valueHash() const override;
@@ -14568,22 +14566,52 @@ class MAsmJSCall final
     class Callee {
       public:
         enum Which { Internal, Dynamic, Builtin };
+        static const uint32_t NoSigIndex = UINT32_MAX;
       private:
         Which which_;
         union {
             uint32_t internal_;
-            MDefinition* dynamic_;
+            struct {
+                MDefinition* callee_;
+                uint32_t sigIndex_;
+            } dynamic;
             wasm::SymbolicAddress builtin_;
         } u;
       public:
         Callee() {}
-        explicit Callee(uint32_t callee) : which_(Internal) { u.internal_ = callee; }
-        explicit Callee(MDefinition* callee) : which_(Dynamic) { u.dynamic_ = callee; }
-        explicit Callee(wasm::SymbolicAddress callee) : which_(Builtin) { u.builtin_ = callee; }
-        Which which() const { return which_; }
-        uint32_t internal() const { MOZ_ASSERT(which_ == Internal); return u.internal_; }
-        MDefinition* dynamic() const { MOZ_ASSERT(which_ == Dynamic); return u.dynamic_; }
-        wasm::SymbolicAddress builtin() const { MOZ_ASSERT(which_ == Builtin); return u.builtin_; }
+        explicit Callee(uint32_t callee) : which_(Internal) {
+            u.internal_ = callee;
+        }
+        explicit Callee(MDefinition* callee, uint32_t sigIndex = NoSigIndex) : which_(Dynamic) {
+            u.dynamic.callee_ = callee;
+            u.dynamic.sigIndex_ = sigIndex;
+        }
+        explicit Callee(wasm::SymbolicAddress callee) : which_(Builtin) {
+            u.builtin_ = callee;
+        }
+        Which which() const {
+            return which_;
+        }
+        uint32_t internal() const {
+            MOZ_ASSERT(which_ == Internal);
+            return u.internal_;
+        }
+        MDefinition* dynamicPtr() const {
+            MOZ_ASSERT(which_ == Dynamic);
+            return u.dynamic.callee_;
+        }
+        bool dynamicHasSigIndex() const {
+            MOZ_ASSERT(which_ == Dynamic);
+            return u.dynamic.sigIndex_ != NoSigIndex;
+        }
+        uint32_t dynamicSigIndex() const {
+            MOZ_ASSERT(dynamicHasSigIndex());
+            return u.dynamic.sigIndex_;
+        }
+        wasm::SymbolicAddress builtin() const {
+            MOZ_ASSERT(which_ == Builtin);
+            return u.builtin_;
+        }
     };
 
   private:
