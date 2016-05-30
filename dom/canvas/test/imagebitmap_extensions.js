@@ -47,36 +47,208 @@ function promiseThrows(p, name) {
 }
 
 function testExceptions() {
-
-  function callMappedDataLengthWithUnsupportedFormat(format) {
-    return new Promise(function(resolve, reject) {
-      var p = createImageBitmap(gImageData);
-      p.then(
-        function(bitmap) {
-          try {
-            bitmap.mappedDataLength(format);
-            resolve();
-          }
-          catch (e) {
-            reject(e);
-          }
-        },
-        function() { resolve(); });
-    });
-  }
-
   return Promise.all([
-    promiseThrows(callMappedDataLengthWithUnsupportedFormat("RGB24"), "[Exception] RGB24 is not supported yet."),
-    promiseThrows(callMappedDataLengthWithUnsupportedFormat("BGR24"), "[Exception] BGR24 is not supported yet."),
-    promiseThrows(callMappedDataLengthWithUnsupportedFormat("GRAY8"), "[Exception] GRAY8 is not supported yet."),
-    promiseThrows(callMappedDataLengthWithUnsupportedFormat("YUV444P"), "[Exception] GRYUV444PAY is not supported yet."),
-    promiseThrows(callMappedDataLengthWithUnsupportedFormat("YUV422P"), "[Exception] YUV422P is not supported yet."),
-    promiseThrows(callMappedDataLengthWithUnsupportedFormat("YUV420SP_NV12"), "[Exception] YUV420SP_NV12 is not supported yet."),
-    promiseThrows(callMappedDataLengthWithUnsupportedFormat("YUV420SP_NV21"), "[Exception] YUV420SP_NV21 is not supported yet."),
-    promiseThrows(callMappedDataLengthWithUnsupportedFormat("HSV"), "[Exception] HSV is not supported yet."),
-    promiseThrows(callMappedDataLengthWithUnsupportedFormat("Lab"), "[Exception] Lab is not supported yet."),
-    promiseThrows(callMappedDataLengthWithUnsupportedFormat("DEPTH"), "[Exception] DEPTH is not supported yet.")
+    promiseThrows(testColorConversion("GRAY8", "RGBA32", undefined, true), "[Exception] Cannot convert from GRAY8 to RGBA32"),
+    promiseThrows(testColorConversion("GRAY8", "BGRA32", undefined, true), "[Exception] Cannot convert from GRAY8 to BGRA32"),
+    promiseThrows(testColorConversion("GRAY8", "RGB24", undefined, true), "[Exception] Cannot convert from GRAY8 to RGB24"),
+    promiseThrows(testColorConversion("GRAY8", "BGR24", undefined, true), "[Exception] Cannot convert from GRAY8 to BGR24"),
+    promiseThrows(testColorConversion("GRAY8", "YUV444P", undefined, true), "[Exception] Cannot convert from GRAY8 to YUV444P"),
+    promiseThrows(testColorConversion("GRAY8", "YUV422P", undefined, true), "[Exception] Cannot convert from GRAY8 to YUV422P"),
+    promiseThrows(testColorConversion("GRAY8", "YUV420P", undefined, true), "[Exception] Cannot convert from GRAY8 to YUV420P"),
+    promiseThrows(testColorConversion("GRAY8", "YUV420SP_NV12", undefined, true), "[Exception] Cannot convert from GRAY8 to YUV420SP_NV12"),
+    promiseThrows(testColorConversion("GRAY8", "YUV420SP_NV21", undefined, true), "[Exception] Cannot convert from GRAY8 to YUV420SP_NV21"),
+    promiseThrows(testColorConversion("GRAY8", "HSV", undefined, true), "[Exception] Cannot convert from GRAY8 to HSV"),
+    promiseThrows(testColorConversion("GRAY8", "Lab", undefined, true), "[Exception] Cannot convert from GRAY8 to Lab"),
+    promiseThrows(testColorConversion("GRAY8", "DEPTH", undefined, true), "[Exception] Cannot convert from GRAY8 to DEPTH"),
+
+    promiseThrows(testColorConversion("DEPTH", "RGBA32", undefined, true), "[Exception] Cannot convert from DEPTH to RGBA32"),
+    promiseThrows(testColorConversion("DEPTH", "BGRA32", undefined, true), "[Exception] Cannot convert from DEPTH to BGRA32"),
+    promiseThrows(testColorConversion("DEPTH", "RGB24", undefined, true), "[Exception] Cannot convert from DEPTH to RGB24"),
+    promiseThrows(testColorConversion("DEPTH", "BGR24", undefined, true), "[Exception] Cannot convert from DEPTH to BGR24"),
+    promiseThrows(testColorConversion("DEPTH", "GRAY8", undefined, true), "[Exception] Cannot convert from DEPTH to GRAY8"),
+    promiseThrows(testColorConversion("DEPTH", "YUV444P", undefined, true), "[Exception] Cannot convert from DEPTH to YUV444P"),
+    promiseThrows(testColorConversion("DEPTH", "YUV422P", undefined, true), "[Exception] Cannot convert from DEPTH to YUV422P"),
+    promiseThrows(testColorConversion("DEPTH", "YUV420P", undefined, true), "[Exception] Cannot convert from DEPTH to YUV420P"),
+    promiseThrows(testColorConversion("DEPTH", "YUV420SP_NV12", undefined, true), "[Exception] Cannot convert from DEPTH to YUV420SP_NV12"),
+    promiseThrows(testColorConversion("DEPTH", "YUV420SP_NV21", undefined, true), "[Exception] Cannot convert from DEPTH to YUV420SP_NV21"),
+    promiseThrows(testColorConversion("DEPTH", "HSV", undefined, true), "[Exception] Cannot convert from DEPTH to HSV"),
+    promiseThrows(testColorConversion("DEPTH", "Lab", undefined, true), "[Exception] Cannot convert from DEPTH to Lab"),
+
+    promiseThrows(testColorConversion("RGBA32", "DEPTH", undefined, true), "[Exception] Cannot convert from RGBA32 to DEPTH"),
+    promiseThrows(testColorConversion("BGRA32", "DEPTH", undefined, true), "[Exception] Cannot convert from BGRA32 to DEPTH"),
+    promiseThrows(testColorConversion("RGB24", "DEPTH", undefined, true), "[Exception] Cannot convert from RGB24 to DEPTH"),
+    promiseThrows(testColorConversion("BGR24", "DEPTH", undefined, true), "[Exception] Cannot convert from BGR24 to DEPTH"),
+    promiseThrows(testColorConversion("YUV444P", "DEPTH", undefined, true), "[Exception] Cannot convert from YUV444P to DEPTH"),
+    promiseThrows(testColorConversion("YUV422P", "DEPTH", undefined, true), "[Exception] Cannot convert from YUV422P to DEPTH"),
+    promiseThrows(testColorConversion("YUV420P", "DEPTH", undefined, true), "[Exception] Cannot convert from YUV420P to DEPTH"),
+    promiseThrows(testColorConversion("YUV420SP_NV12", "DEPTH", undefined, true), "[Exception] Cannot convert from YUV420SP_NV12 to DEPTH"),
+    promiseThrows(testColorConversion("YUV420SP_NV21", "DEPTH", undefined, true), "[Exception] Cannot convert from YUV420SP_NV21 to DEPTH"),
+    promiseThrows(testColorConversion("HSV", "DEPTH", undefined, true), "[Exception] Cannot convert from HSV to DEPTH"),
+    promiseThrows(testColorConversion("Lab", "DEPTH", undefined, true), "[Exception] Cannot convert from Lab to DEPTH"),
   ]);
+}
+
+function testColorConversions() {
+  return Promise.all([// From RGBA32
+                      testColorConversion("RGBA32", "RGBA32"),
+                      testColorConversion("RGBA32", "BGRA32"),
+                      testColorConversion("RGBA32", "RGB24"),
+                      testColorConversion("RGBA32", "BGR24"),
+                      testColorConversion("RGBA32", "GRAY8"),
+                      testColorConversion("RGBA32", "YUV444P"),
+                      testColorConversion("RGBA32", "YUV422P"),
+                      testColorConversion("RGBA32", "YUV420P"),
+                      testColorConversion("RGBA32", "YUV420SP_NV12"),
+                      testColorConversion("RGBA32", "YUV420SP_NV21"),
+                      testColorConversion("RGBA32", "HSV", 0.01),
+                      testColorConversion("RGBA32", "Lab", 0.5),
+
+                      // From BGRA32
+                      testColorConversion("BGRA32", "RGBA32"),
+                      testColorConversion("BGRA32", "BGRA32"),
+                      testColorConversion("BGRA32", "RGB24"),
+                      testColorConversion("BGRA32", "BGR24"),
+                      testColorConversion("BGRA32", "GRAY8"),
+                      testColorConversion("BGRA32", "YUV444P", 3),
+                      testColorConversion("BGRA32", "YUV422P"),
+                      testColorConversion("BGRA32", "YUV420P"),
+                      testColorConversion("BGRA32", "YUV420SP_NV12"),
+                      testColorConversion("BGRA32", "YUV420SP_NV21"),
+                      testColorConversion("BGRA32", "HSV", 0.01),
+                      testColorConversion("BGRA32", "Lab", 0.5),
+
+                      // From RGB24
+                      testColorConversion("RGB24", "RGBA32"),
+                      testColorConversion("RGB24", "BGRA32"),
+                      testColorConversion("RGB24", "RGB24"),
+                      testColorConversion("RGB24", "BGR24"),
+                      testColorConversion("RGB24", "GRAY8"),
+                      testColorConversion("RGB24", "YUV444P"),
+                      testColorConversion("RGB24", "YUV422P"),
+                      testColorConversion("RGB24", "YUV420P"),
+                      testColorConversion("RGB24", "YUV420SP_NV12"),
+                      testColorConversion("RGB24", "YUV420SP_NV21"),
+                      testColorConversion("RGB24", "HSV", 0.01),
+                      testColorConversion("RGB24", "Lab", 0.5),
+
+                      // From BGR24
+                      testColorConversion("BGR24", "RGBA32"),
+                      testColorConversion("BGR24", "BGRA32"),
+                      testColorConversion("BGR24", "RGB24"),
+                      testColorConversion("BGR24", "BGR24"),
+                      testColorConversion("BGR24", "GRAY8"),
+                      testColorConversion("BGR24", "YUV444P"),
+                      testColorConversion("BGR24", "YUV422P"),
+                      testColorConversion("BGR24", "YUV420P"),
+                      testColorConversion("BGR24", "YUV420SP_NV12"),
+                      testColorConversion("BGR24", "YUV420SP_NV21"),
+                      testColorConversion("BGR24", "HSV", 0.01),
+                      testColorConversion("BGR24", "Lab", 0.5),
+
+                      // From YUV444P
+                      testColorConversion("YUV444P", "RGBA32"),
+                      testColorConversion("YUV444P", "BGRA32"),
+                      testColorConversion("YUV444P", "RGB24"),
+                      testColorConversion("YUV444P", "BGR24"),
+                      testColorConversion("YUV444P", "GRAY8"),
+                      testColorConversion("YUV444P", "YUV444P"),
+                      testColorConversion("YUV444P", "YUV422P", 3),
+                      testColorConversion("YUV444P", "YUV420P", 3),
+                      testColorConversion("YUV444P", "YUV420SP_NV12", 3),
+                      testColorConversion("YUV444P", "YUV420SP_NV21", 3),
+                      testColorConversion("YUV444P", "HSV", 0.01),
+                      testColorConversion("YUV444P", "Lab", 0.01),
+
+                      // From YUV422P
+                      testColorConversion("YUV422P", "RGBA32"),
+                      testColorConversion("YUV422P", "BGRA32"),
+                      testColorConversion("YUV422P", "RGB24"),
+                      testColorConversion("YUV422P", "BGR24"),
+                      testColorConversion("YUV422P", "GRAY8"),
+                      testColorConversion("YUV422P", "YUV444P", 3),
+                      testColorConversion("YUV422P", "YUV422P"),
+                      testColorConversion("YUV422P", "YUV420P"),
+                      testColorConversion("YUV422P", "YUV420SP_NV12"),
+                      testColorConversion("YUV422P", "YUV420SP_NV21"),
+                      testColorConversion("YUV422P", "HSV", 0.01),
+                      testColorConversion("YUV422P", "Lab", 0.01),
+
+                      // From YUV420P
+                      testColorConversion("YUV420P", "RGBA32"),
+                      testColorConversion("YUV420P", "BGRA32"),
+                      testColorConversion("YUV420P", "RGB24"),
+                      testColorConversion("YUV420P", "BGR24"),
+                      testColorConversion("YUV420P", "GRAY8"),
+                      testColorConversion("YUV420P", "YUV444P", 3),
+                      testColorConversion("YUV420P", "YUV422P"),
+                      testColorConversion("YUV420P", "YUV420P"),
+                      testColorConversion("YUV420P", "YUV420SP_NV12"),
+                      testColorConversion("YUV420P", "YUV420SP_NV21"),
+                      testColorConversion("YUV420P", "HSV", 0.01),
+                      testColorConversion("YUV420P", "Lab", 0.01),
+
+                      // From NV12
+                      testColorConversion("YUV420SP_NV12", "RGBA32"),
+                      testColorConversion("YUV420SP_NV12", "BGRA32"),
+                      testColorConversion("YUV420SP_NV12", "RGB24"),
+                      testColorConversion("YUV420SP_NV12", "BGR24"),
+                      testColorConversion("YUV420SP_NV12", "GRAY8"),
+                      testColorConversion("YUV420SP_NV12", "YUV444P", 3),
+                      testColorConversion("YUV420SP_NV12", "YUV422P"),
+                      testColorConversion("YUV420SP_NV12", "YUV420P"),
+                      testColorConversion("YUV420SP_NV12", "YUV420SP_NV12"),
+                      testColorConversion("YUV420SP_NV12", "YUV420SP_NV21"),
+                      testColorConversion("YUV420SP_NV12", "HSV", 0.01),
+                      testColorConversion("YUV420SP_NV12", "Lab", 0.01),
+
+                      // From NV21
+                      testColorConversion("YUV420SP_NV21", "RGBA32"),
+                      testColorConversion("YUV420SP_NV21", "BGRA32"),
+                      testColorConversion("YUV420SP_NV21", "RGB24"),
+                      testColorConversion("YUV420SP_NV21", "BGR24"),
+                      testColorConversion("YUV420SP_NV21", "GRAY8"),
+                      testColorConversion("YUV420SP_NV21", "YUV444P", 3),
+                      testColorConversion("YUV420SP_NV21", "YUV422P"),
+                      testColorConversion("YUV420SP_NV21", "YUV420P"),
+                      testColorConversion("YUV420SP_NV21", "YUV420SP_NV12"),
+                      testColorConversion("YUV420SP_NV21", "YUV420SP_NV21"),
+                      testColorConversion("YUV420SP_NV21", "HSV", 0.01),
+                      testColorConversion("YUV420SP_NV21", "Lab", 0.01),
+
+                      // From HSV
+                      testColorConversion("HSV", "RGBA32"),
+                      testColorConversion("HSV", "BGRA32"),
+                      testColorConversion("HSV", "RGB24"),
+                      testColorConversion("HSV", "BGR24"),
+                      testColorConversion("HSV", "GRAY8"),
+                      testColorConversion("HSV", "YUV444P"),
+                      testColorConversion("HSV", "YUV422P"),
+                      testColorConversion("HSV", "YUV420P"),
+                      testColorConversion("HSV", "YUV420SP_NV12"),
+                      testColorConversion("HSV", "YUV420SP_NV21"),
+                      testColorConversion("HSV", "HSV", 0),
+                      testColorConversion("HSV", "Lab", 0.5),
+
+                      // From Lab
+                      testColorConversion("Lab", "RGBA32", 1),
+                      testColorConversion("Lab", "BGRA32", 1),
+                      testColorConversion("Lab", "RGB24", 1),
+                      testColorConversion("Lab", "BGR24", 1),
+                      testColorConversion("Lab", "GRAY8", 1),
+                      testColorConversion("Lab", "YUV444P", 1),
+                      testColorConversion("Lab", "YUV422P", 1),
+                      testColorConversion("Lab", "YUV420P", 1),
+                      testColorConversion("Lab", "YUV420SP_NV12", 1),
+                      testColorConversion("Lab", "YUV420SP_NV21", 1),
+                      testColorConversion("Lab", "HSV", 0.5),
+                      testColorConversion("Lab", "Lab", 0),
+
+                      // From GRAY8
+                      testColorConversion("GRAY8", "GRAY8"),
+
+                      // From DEPTH
+                      testColorConversion("DEPTH", "DEPTH", 0, Uint16Array),
+                     ]);
 }
 
 // Create an ImageBitmap, _bitmap_, from the _source_.
@@ -167,5 +339,83 @@ function testCreateFromArrayBffer_randomTest(sourceType, source, duration) {
           function(ev) { console.log("promiseMapDataInto rejected!"); failed(ev); reject(); });
       },
       function(ev) { failed(ev); reject(); });
+  });
+}
+
+function testColorConversion(sourceFromat, destinationFormat, tolerance, shouldThrow) {
+
+  tolerance = tolerance || 0;
+  shouldThrow = shouldThrow || false;
+
+  return new Promise(function(resolve, reject) {
+    var [srcData, dstData] = getTestData(sourceFromat, destinationFormat);
+
+    ok(!!srcData, "Get valid srcData of type:" + sourceFromat);
+    ok(!!dstData, "Get valid dstData of type:" + destinationFormat);
+
+    // printInfo(sourceFromat, srcData);
+    // printInfo(destinationFormat, dstData);
+
+    // Create a new ImageBitmap from an ArrayBuffer.
+    var p = createImageBitmap(srcData.buffer,
+                              0,
+                              srcData.bufferLength,
+                              srcData.format,
+                              srcData.pixelLayout);
+
+    p.then(
+      function(srcBitmap) {
+        ok(!!srcBitmap, "Should get a valid srcBitmap.");
+        ok(srcBitmap.findOptimalFormat() == sourceFromat, "srcBitmap.findOptimalFormat():" + srcBitmap.findOptimalFormat() +
+                                                          " should equal to sourceFromat:" + sourceFromat);
+
+        var dstBufferLength = srcBitmap.mappedDataLength(destinationFormat);
+        var dstBuffer = new ArrayBuffer(dstBufferLength);
+        var dstBufferView = new dstData.ArrayType(dstBuffer, 0, dstBufferLength / dstData.ArrayType.BYTES_PER_ELEMENT);
+
+        // Do color conversion here.
+        var p2 = srcBitmap.mapDataInto(destinationFormat, dstBuffer, 0);
+        p2.then(
+          function(dstPixelLayout) {
+            var dataPixalLayout = dstData.pixelLayout;
+
+            // Check pixel layout.
+            ok(dstPixelLayout.length == dstData.channelCount, "dstPixelLayout.length:" + dstPixelLayout.length +
+                                                              " should equal to dstData.channelCount:" + dstData.channelCount);
+
+            for (var c = 0; c < dstData.channelCount; ++c) {
+              var dstChannelLayout = dstPixelLayout[c];
+              var dataChannelLayout = dataPixalLayout[c];
+              ok(dstChannelLayout.width == dataChannelLayout.width, "channel[" + c + "] dstChannelLayout.width:" + dstChannelLayout.width + " should equal to dataChannelLayout.width:" + dataChannelLayout.width);
+              ok(dstChannelLayout.height == dataChannelLayout.height, "channel[" + c + "] dstChannelLayout.height:" + dstChannelLayout.height + " should equal to dataChannelLayout.height:" + dataChannelLayout.height);
+              ok(dstChannelLayout.skip == dataChannelLayout.skip, "channel[" + c + "] dstChannelLayout.skip:" + dstChannelLayout.skip + " should equal to dataChannelLayout.skip:" + dataChannelLayout.skip);
+
+              for (var i = 0; i < dstChannelLayout.height; ++i) {
+                for (var j = 0; j < dstChannelLayout.width; ++j) {
+                  var byteOffset = dstChannelLayout.offset + i * dstChannelLayout.stride + j * (dstChannelLayout.skip + 1) * dstData.ArrayType.BYTES_PER_ELEMENT;
+                  var view = new dstData.ArrayType(dstBuffer, byteOffset, 1);
+                  var dstBufferViewValue = view[0];
+                  var dstDataValue = dstData.getPixelValue(i, j, c);
+                  ok(Math.abs(dstBufferViewValue - dstDataValue) <= tolerance,
+                     "[" + sourceFromat + " -> " + destinationFormat + "] pixel(" + i + "," + j + ") channnel(" + c +
+                     "): dstBufferViewValue:" + dstBufferViewValue +
+                     " should equal to dstDataValue:" + dstDataValue);
+                }
+              }
+            }
+
+            resolve();
+          },
+          function(ev) {
+            // If the "mapDataInto" throws, the flow goes here.
+            if (!shouldThrow) { failed(ev); }
+            reject();
+          }
+        );
+      },
+      function(ev) {
+        reject(ev);
+      }
+    );
   });
 }

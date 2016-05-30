@@ -1,3 +1,4 @@
+importScripts("imagebitmap_extensions_data.js");
 importScripts("imagebitmap_extensions.js");
 
 var gGroundTruthImageData;
@@ -30,6 +31,7 @@ function ok(expect, msg) {
 
 function runTests() {
   testExceptions().
+  then(testColorConversions()).
   then( function() { return Promise.all([testAccessing_randomTest("ImageData", gImageData, 0),
                                          testAccessing_randomTest("ImageBitmap", gImageBitmap, 0),
                                          testAccessing_randomTest("PNG", gPNGBlob, 0),
