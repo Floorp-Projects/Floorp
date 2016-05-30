@@ -684,15 +684,7 @@
               function replyReceived(msg) {
                 self.messageManager.removeMessageListener("PopupBlocking:ReplyGetBlockedPopupList",
                                                           replyReceived);
-                let list = msg.data.popupData;
-                if (list.length) {
-                  for (let i = 0; i < list.length; i++) {
-                    let scope = Components.utils.import("resource://gre/modules/BrowserUtils.jsm", {});
-                    let uri = scope.BrowserUtils.makeURI(list[i].popupWindowURI);
-                    list[i].popupWindowURI = uri;
-                  }
-                }
-                resolve(list);
+                resolve(msg.data.popupData);
               }
             );
           });
