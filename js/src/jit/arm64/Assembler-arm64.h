@@ -460,6 +460,11 @@ static MOZ_CONSTEXPR_VAR Register ABINonArgReg1 = r9;
 static MOZ_CONSTEXPR_VAR Register ABINonArgReturnReg0 = r8;
 static MOZ_CONSTEXPR_VAR Register ABINonArgReturnReg1 = r9;
 
+// Registers used for asm.js/wasm table calls. These registers must be disjoint
+// from the ABI argument registers and from each other.
+static MOZ_CONSTEXPR_VAR Register WasmTableCallPtrReg = ABINonArgReg0;
+static MOZ_CONSTEXPR_VAR Register WasmTableCallSigReg = ABINonArgReg1;
+
 static inline bool
 GetIntArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register* out)
 {
