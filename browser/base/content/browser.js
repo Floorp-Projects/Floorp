@@ -597,10 +597,10 @@ var gPopupBlockerObserver = {
 
           // popupWindowURI will be null if the file picker popup is blocked.
           // xxxdz this should make the option say "Show file picker" and do it (Bug 590306)
-          if (!blockedPopup.popupWindowURI)
+          if (!blockedPopup.popupWindowURIspec)
             continue;
 
-          var popupURIspec = blockedPopup.popupWindowURI.spec;
+          var popupURIspec = blockedPopup.popupWindowURIspec;
 
           // Sometimes the popup URI that we get back from the blockedPopup
           // isn't useful (for instance, netscape.com's popup URI ends up
@@ -608,6 +608,7 @@ var gPopupBlockerObserver = {
           // the popup they're trying to show).  This isn't going to be
           // useful to the user, so we won't create a menu item for it.
           if (popupURIspec == "" || popupURIspec == "about:blank" ||
+              popupURIspec == "<self>" ||
               popupURIspec == uri.spec)
             continue;
 
@@ -660,7 +661,7 @@ var gPopupBlockerObserver = {
   {
     let popups = aBrowser.retrieveListOfBlockedPopups().then(popups => {
       for (let i = 0; i < popups.length; i++) {
-        if (popups[i].popupWindowURI)
+        if (popups[i].popupWindowURIspec)
           aBrowser.unblockPopup(i);
       }
     }, null);
