@@ -479,10 +479,10 @@ MediaEngineWebRTCMicrophoneSource::NotifyInputData(MediaStreamGraph* aGraph,
   while (mPacketizer->PacketsAvailable()) {
     uint32_t samplesPerPacket = mPacketizer->PacketSize() *
                                 mPacketizer->Channels();
-    if (mInputBufferLen < samplesPerPacket) {
-      mInputBuffer = MakeUnique<int16_t[]>(samplesPerPacket);
+    if (mInputBuffer.Length() < samplesPerPacket) {
+      mInputBuffer.SetLength(samplesPerPacket);
     }
-    int16_t *packet = mInputBuffer.get();
+    int16_t* packet = mInputBuffer.Elements();
     mPacketizer->Output(packet);
 
     mVoERender->ExternalRecordingInsertData(packet, samplesPerPacket, aRate, 0);
@@ -515,10 +515,6 @@ do {                                                                \
     }                                                               \
   }                                                                 \
 }  while(0)
-
-
-
-
 
 void
 MediaEngineWebRTCMicrophoneSource::DeviceChanged() {

@@ -434,7 +434,7 @@ public:
     , mSampleFrequency(MediaEngine::DEFAULT_SAMPLE_RATE)
     , mPlayoutDelay(0)
     , mNullTransport(nullptr)
-    , mInputBufferLen(0) {
+  {
     MOZ_ASSERT(aVoiceEnginePtr);
     MOZ_ASSERT(aAudioInput);
     mDeviceName.Assign(NS_ConvertUTF8toUTF16(name));
@@ -554,9 +554,7 @@ private:
 
   NullTransport *mNullTransport;
 
-  // For full_duplex packetizer output
-  size_t mInputBufferLen;
-  UniquePtr<int16_t[]> mInputBuffer;
+  nsTArray<int16_t> mInputBuffer;
 };
 
 class MediaEngineWebRTC : public MediaEngine
