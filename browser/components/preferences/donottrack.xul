@@ -7,7 +7,12 @@
 <?xml-stylesheet href="chrome://global/skin/"?>
 <?xml-stylesheet href="chrome://browser/skin/preferences/preferences.css"?>
 
-<!DOCTYPE prefwindow SYSTEM "chrome://browser/locale/preferences/donottrack.dtd" >
+<!DOCTYPE prefwindow [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd">
+<!ENTITY % doNotTrackDTD SYSTEM "chrome://browser/locale/preferences/donottrack.dtd">
+%brandDTD;
+%doNotTrackDTD;
+]>
 
 <prefwindow id="DoNotTrackDialog" type="child"
             xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
@@ -24,12 +29,15 @@
     <hbox align="center" pack="start">
       <!-- Work around focus ring not showing properly. -->
       <spacer style="width: 1em;"/>
-      <checkbox label="&doNotTrackCheckbox.label;"
+      <checkbox label="&doNotTrackCheckbox2.label;"
                 accesskey="&doNotTrackCheckbox.accesskey;"
                 preference="privacy.donottrackheader.enabled"/>
-      <label class="text-link doNotTrackLearnMore"
+    </hbox>
+    <description flex="1" class="doNotTrackLearnMore">
+      &doNotTrackTPInfo.description;
+      <label class="text-link"
              value="&doNotTrackLearnMore.label;"
              href="https://www.mozilla.org/dnt"/>
-    </hbox>
+    </description>
   </prefpane>
 </prefwindow>
