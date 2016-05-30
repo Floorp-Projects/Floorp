@@ -619,8 +619,7 @@ bool XPCJSRuntime::UsefulToMergeZones() const
         }
 
         JSObject* reflector = window->FastGetGlobalJSObject();
-        if (reflector &&
-            JS::ObjectIsMarkedGray(reflector) &&
+        if (JS::ObjectIsMarkedGray(reflector) &&
             !js::IsSystemCompartment(js::GetObjectCompartment(reflector))) {
             return true;
         }
