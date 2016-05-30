@@ -776,24 +776,6 @@ class MacroAssemblerX86Shared : public Assembler
             MOZ_CRASH("unexpected operand kind");
         }
     }
-    void storeDouble(FloatRegister src, const Address& dest) {
-        vmovsd(src, dest);
-    }
-    void storeDouble(FloatRegister src, const BaseIndex& dest) {
-        vmovsd(src, dest);
-    }
-    void storeDouble(FloatRegister src, const Operand& dest) {
-        switch (dest.kind()) {
-          case Operand::MEM_REG_DISP:
-            storeDouble(src, dest.toAddress());
-            break;
-          case Operand::MEM_SCALE:
-            storeDouble(src, dest.toBaseIndex());
-            break;
-          default:
-            MOZ_CRASH("unexpected operand kind");
-        }
-    }
     void moveDouble(FloatRegister src, FloatRegister dest) {
         // Use vmovapd instead of vmovsd to avoid dependencies.
         vmovapd(src, dest);
@@ -1020,22 +1002,6 @@ class MacroAssemblerX86Shared : public Assembler
         vmovaps(src, dest);
     }
 
-    void storeFloat32x3(FloatRegister src, const Address& dest) {
-        Address destZ(dest);
-        destZ.offset += 2 * sizeof(int32_t);
-        storeDouble(src, dest);
-        ScratchSimd128Scope scratch(asMasm());
-        vmovhlps(src, scratch, scratch);
-        storeFloat32(scratch, destZ);
-    }
-    void storeFloat32x3(FloatRegister src, const BaseIndex& dest) {
-        BaseIndex destZ(dest);
-        destZ.offset += 2 * sizeof(int32_t);
-        storeDouble(src, dest);
-        ScratchSimd128Scope scratch(asMasm());
-        vmovhlps(src, scratch, scratch);
-        storeFloat32(scratch, destZ);
-    }
     void storeAlignedSimd128Float(FloatRegister src, const Address& dest) {
         vmovaps(src, Operand(dest));
     }
@@ -1148,24 +1114,6 @@ class MacroAssemblerX86Shared : public Assembler
             break;
           case Operand::MEM_SCALE:
             loadFloat32(src.toBaseIndex(), dest);
-            break;
-          default:
-            MOZ_CRASH("unexpected operand kind");
-        }
-    }
-    void storeFloat32(FloatRegister src, const Address& dest) {
-        vmovss(src, dest);
-    }
-    void storeFloat32(FloatRegister src, const BaseIndex& dest) {
-        vmovss(src, dest);
-    }
-    void storeFloat32(FloatRegister src, const Operand& dest) {
-        switch (dest.kind()) {
-          case Operand::MEM_REG_DISP:
-            storeFloat32(src, dest.toAddress());
-            break;
-          case Operand::MEM_SCALE:
-            storeFloat32(src, dest.toBaseIndex());
             break;
           default:
             MOZ_CRASH("unexpected operand kind");
@@ -1386,7 +1334,7 @@ MacroAssemblerX86Shared::storeScalar<int32_t>(Register src, const Address& dest)
 }
 template <> inline void
 MacroAssemblerX86Shared::storeScalar<float>(FloatRegister src, const Address& dest) {
-    storeFloat32(src, dest);
+    vmovss(src, dest);
 }
 
 } // namespace jit

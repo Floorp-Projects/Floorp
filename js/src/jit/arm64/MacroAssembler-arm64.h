@@ -284,34 +284,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
         storePtr(temp, dest);
     }
 
-    template <typename T>
-    void storeUnboxedValue(ConstantOrRegister value, MIRType valueType, const T& dest, MIRType slotType) {
-        if (valueType == MIRType::Double) {
-            storeDouble(value.reg().typedReg().fpu(), dest);
-            return;
-        }
-
-        // For known integers and booleans, we can just store the unboxed value if
-        // the slot has the same type.
-        if ((valueType == MIRType::Int32 || valueType == MIRType::Boolean) && slotType == valueType) {
-            if (value.constant()) {
-                Value val = value.value();
-                if (valueType == MIRType::Int32)
-                    store32(Imm32(val.toInt32()), dest);
-                else
-                    store32(Imm32(val.toBoolean() ? 1 : 0), dest);
-            } else {
-                store32(value.reg().typedReg().gpr(), dest);
-            }
-            return;
-        }
-
-        if (value.constant())
-            storeValue(value.value(), dest);
-        else
-            storeValue(ValueTypeFromMIRType(valueType), value.reg().typedReg().gpr(), dest);
-
-    }
     void loadValue(Address src, Register val) {
         Ldr(ARMRegister(val, 64), MemOperand(src));
     }
@@ -973,8 +945,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
 
     void loadFloat32x3(const Address& src, FloatRegister dest) { MOZ_CRASH("NYI"); }
     void loadFloat32x3(const BaseIndex& src, FloatRegister dest) { MOZ_CRASH("NYI"); }
-    void storeFloat32x3(FloatRegister src, const Address& dest) { MOZ_CRASH("NYI"); }
-    void storeFloat32x3(FloatRegister src, const BaseIndex& dest) { MOZ_CRASH("NYI"); }
     void loadAlignedSimd128Float(const Address& addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
     void loadAlignedSimd128Float(const BaseIndex& addr, FloatRegister dest) { MOZ_CRASH("NYI"); }
     void storeAlignedSimd128Float(FloatRegister src, const Address& addr) { MOZ_CRASH("NYI"); }
@@ -1161,20 +1131,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
             Add(scratch64, base, Operand(index, vixl::LSL, unsigned(src.scale)));
             Ldr(ARMFPRegister(dest, 32), MemOperand(scratch64, src.offset));
         }
-    }
-
-    void storeDouble(FloatRegister src, const Address& dest) {
-        Str(ARMFPRegister(src, 64), MemOperand(ARMRegister(dest.base, 64), dest.offset));
-    }
-    void storeDouble(FloatRegister src, const BaseIndex& dest) {
-        doBaseIndex(ARMFPRegister(src, 64), dest, vixl::STR_d);
-    }
-
-    void storeFloat32(FloatRegister src, Address addr) {
-        Str(ARMFPRegister(src, 32), MemOperand(ARMRegister(addr.base, 64), addr.offset));
-    }
-    void storeFloat32(FloatRegister src, BaseIndex addr) {
-        doBaseIndex(ARMFPRegister(src, 32), addr, vixl::STR_s);
     }
 
     void moveDouble(FloatRegister src, FloatRegister dest) {
