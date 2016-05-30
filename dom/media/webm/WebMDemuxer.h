@@ -42,13 +42,19 @@ class MediaRawDataQueue {
 
   void PushFront(MediaRawDataQueue&& aOther) {
     while (!aOther.mQueue.empty()) {
-      Push(aOther.PopFront());
+      PushFront(aOther.Pop());
     }
   }
 
   already_AddRefed<MediaRawData> PopFront() {
     RefPtr<MediaRawData> result = mQueue.front().forget();
     mQueue.pop_front();
+    return result.forget();
+  }
+
+  already_AddRefed<MediaRawData> Pop() {
+    RefPtr<MediaRawData> result = mQueue.back().forget();
+    mQueue.pop_back();
     return result.forget();
   }
 
