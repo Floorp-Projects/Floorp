@@ -511,7 +511,8 @@ PresentationService::SendSessionMessage(const nsAString& aSessionId,
 
 NS_IMETHODIMP
 PresentationService::CloseSession(const nsAString& aSessionId,
-                                  uint8_t aRole)
+                                  uint8_t aRole,
+                                  uint8_t aClosedReason)
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(!aSessionId.IsEmpty());
@@ -521,6 +522,13 @@ PresentationService::CloseSession(const nsAString& aSessionId,
   RefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId, aRole);
   if (NS_WARN_IF(!info)) {
     return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  if (aClosedReason == nsIPresentationService::CLOSED_REASON_WENTAWAY) {
+    UntrackSessionInfo(aSessionId, aRole);
+    // Remove nsIPresentationSessionListener since we don't want to dispatch
+    // PresentationConnectionClosedEvent if the page is went away.
+    info->SetListener(nullptr);
   }
 
   return info->Close(NS_OK, nsIPresentationSessionListener::STATE_CLOSED);
@@ -582,7 +590,8 @@ PresentationService::RegisterSessionListener(const nsAString& aSessionId,
     // the receiver side, since a presentation session is created at beginning
     // and here is the place to realize the underlying establishment fails.
     nsresult rv = aListener->NotifyStateChange(aSessionId,
-                                               nsIPresentationSessionListener::STATE_TERMINATED);
+                                               nsIPresentationSessionListener::STATE_TERMINATED,
+                                               NS_ERROR_NOT_AVAILABLE);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

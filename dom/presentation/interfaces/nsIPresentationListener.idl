@@ -25,7 +25,8 @@ interface nsIPresentationSessionListener : nsISupports
    * Called when session state changes.
    */
   void notifyStateChange(in DOMString sessionId,
-                         in unsigned short state);
+                         in unsigned short state,
+                         in nsresult reason);
 
   /*
    * Called when receive messages.
