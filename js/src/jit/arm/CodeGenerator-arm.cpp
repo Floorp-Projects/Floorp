@@ -2781,14 +2781,10 @@ CodeGeneratorARM::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins)
                       wasm::JumpTarget::OutOfBounds);
     }
 
-    if (mir->alwaysThrow()) {
-        masm.jump(wasm::JumpTarget::BadIndirectCall);
-    } else {
-        unsigned addr = mir->globalDataOffset();
-        masm.ma_mov(Imm32(addr - AsmJSGlobalRegBias), tmp);
-        masm.as_add(tmp, tmp, lsl(index, 2));
-        masm.ma_ldr(DTRAddr(GlobalReg, DtrRegImmShift(tmp, LSL, 0)), out);
-    }
+    unsigned addr = mir->globalDataOffset();
+    masm.ma_mov(Imm32(addr - AsmJSGlobalRegBias), tmp);
+    masm.as_add(tmp, tmp, lsl(index, 2));
+    masm.ma_ldr(DTRAddr(GlobalReg, DtrRegImmShift(tmp, LSL, 0)), out);
 }
 
 void

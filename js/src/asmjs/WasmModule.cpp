@@ -364,6 +364,8 @@ CodeRange::CodeRange(Kind kind, Offsets offsets)
     end_(offsets.end),
     funcIndex_(0),
     funcLineOrBytecode_(0),
+    funcBeginToTableEntry_(0),
+    funcBeginToTableProfilingJump_(0),
     funcBeginToNonProfilingEntry_(0),
     funcProfilingJumpToProfilingReturn_(0),
     funcProfilingEpilogueToProfilingReturn_(0),
@@ -379,6 +381,8 @@ CodeRange::CodeRange(Kind kind, ProfilingOffsets offsets)
     end_(offsets.end),
     funcIndex_(0),
     funcLineOrBytecode_(0),
+    funcBeginToTableEntry_(0),
+    funcBeginToTableProfilingJump_(0),
     funcBeginToNonProfilingEntry_(0),
     funcProfilingJumpToProfilingReturn_(0),
     funcProfilingEpilogueToProfilingReturn_(0),
@@ -395,6 +399,8 @@ CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode, FuncOffset
     end_(offsets.end),
     funcIndex_(funcIndex),
     funcLineOrBytecode_(funcLineOrBytecode),
+    funcBeginToTableEntry_(offsets.tableEntry - begin_),
+    funcBeginToTableProfilingJump_(offsets.tableProfilingJump - begin_),
     funcBeginToNonProfilingEntry_(offsets.nonProfilingEntry - begin_),
     funcProfilingJumpToProfilingReturn_(profilingReturn_ - offsets.profilingJump),
     funcProfilingEpilogueToProfilingReturn_(profilingReturn_ - offsets.profilingEpilogue),
@@ -402,6 +408,8 @@ CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode, FuncOffset
 {
     MOZ_ASSERT(begin_ < profilingReturn_);
     MOZ_ASSERT(profilingReturn_ < end_);
+    MOZ_ASSERT(funcBeginToTableEntry_ == offsets.tableEntry - begin_);
+    MOZ_ASSERT(funcBeginToTableProfilingJump_ == offsets.tableProfilingJump - begin_);
     MOZ_ASSERT(funcBeginToNonProfilingEntry_ == offsets.nonProfilingEntry - begin_);
     MOZ_ASSERT(funcProfilingJumpToProfilingReturn_ == profilingReturn_ - offsets.profilingJump);
     MOZ_ASSERT(funcProfilingEpilogueToProfilingReturn_ == profilingReturn_ - offsets.profilingEpilogue);
@@ -802,29 +810,31 @@ Module::setProfilingEnabled(JSContext* cx, bool enabled)
         AutoFlushICache::setRange(uintptr_t(code()), codeBytes());
 
         for (const CallSite& callSite : module_->callSites)
-            EnableProfilingPrologue(*this, callSite, enabled);
+            ToggleProfiling(*this, callSite, enabled);
 
         for (const CallThunk& callThunk : module_->callThunks)
-            EnableProfilingThunk(*this, callThunk, enabled);
+            ToggleProfiling(*this, callThunk, enabled);
 
         for (const CodeRange& codeRange : module_->codeRanges)
-            EnableProfilingEpilogue(*this, codeRange, enabled);
+            ToggleProfiling(*this, codeRange, enabled);
     }
 
-    // Update the function-pointer tables to point to profiling prologues.
-    for (FuncPtrTable& table : funcPtrTables_) {
-        auto array = reinterpret_cast<void**>(globalData() + table.globalDataOffset);
-        for (size_t i = 0; i < table.numElems; i++) {
-            const CodeRange* codeRange = lookupCodeRange(array[i]);
-            // Don't update entries for the BadIndirectCall exit.
-            if (codeRange->isInline())
-                continue;
-            void* from = code() + codeRange->funcNonProfilingEntry();
-            void* to = code() + codeRange->funcProfilingEntry();
-            if (!enabled)
-                Swap(from, to);
-            MOZ_ASSERT(array[i] == from);
-            array[i] = to;
+    // In asm.js, table elements point directly to the prologue and must be
+    // updated to reflect the profiling mode. In wasm, table elements point to
+    // the (one) table entry which checks signature before jumping to the
+    // appropriate prologue (which is patched by ToggleProfiling).
+    if (isAsmJS()) {
+        for (FuncPtrTable& table : funcPtrTables_) {
+            auto array = reinterpret_cast<void**>(globalData() + table.globalDataOffset);
+            for (size_t i = 0; i < table.numElems; i++) {
+                const CodeRange* codeRange = lookupCodeRange(array[i]);
+                void* from = code() + codeRange->funcNonProfilingEntry();
+                void* to = code() + codeRange->funcProfilingEntry();
+                if (!enabled)
+                    Swap(from, to);
+                MOZ_ASSERT(array[i] == from);
+                array[i] = to;
+            }
         }
     }
 

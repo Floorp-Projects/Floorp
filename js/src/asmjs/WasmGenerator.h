@@ -84,21 +84,22 @@ struct ModuleGeneratorData
 {
     CompileArgs                     args;
     ModuleKind                      kind;
-    uint32_t                        numTableElems;
     mozilla::Atomic<uint32_t>       minHeapLength;
 
     DeclaredSigVector               sigs;
-    TableModuleGeneratorDataVector  sigToTable;
     DeclaredSigPtrVector            funcSigs;
     ImportModuleGeneratorDataVector imports;
     GlobalDescVector                globals;
+
+    TableModuleGeneratorData        wasmTable;
+    TableModuleGeneratorDataVector  asmJSSigToTable;
 
     uint32_t funcSigIndex(uint32_t funcIndex) const {
         return funcSigs[funcIndex] - sigs.begin();
     }
 
     explicit ModuleGeneratorData(ExclusiveContext* cx, ModuleKind kind = ModuleKind::Wasm)
-      : args(cx), kind(kind), numTableElems(0), minHeapLength(0)
+      : args(cx), kind(kind), minHeapLength(0)
     {}
 };
 
@@ -147,14 +148,13 @@ class MOZ_STACK_CLASS ModuleGenerator
 
     MOZ_MUST_USE bool finishOutstandingTask();
     bool funcIsDefined(uint32_t funcIndex) const;
-    uint32_t funcEntry(uint32_t funcIndex) const;
+    const CodeRange& funcCodeRange(uint32_t funcIndex) const;
     MOZ_MUST_USE bool convertOutOfRangeBranchesToThunks();
     MOZ_MUST_USE bool finishTask(IonCompileTask* task);
     MOZ_MUST_USE bool finishCodegen(StaticLinkData* link);
     MOZ_MUST_USE bool finishStaticLinkData(uint8_t* code, uint32_t codeBytes, StaticLinkData* link);
     MOZ_MUST_USE bool addImport(const Sig& sig, uint32_t globalDataOffset);
-    MOZ_MUST_USE bool allocateGlobalBytes(uint32_t bytes, uint32_t align,
-                                          uint32_t* globalDataOffset);
+    MOZ_MUST_USE bool allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOff);
 
   public:
     explicit ModuleGenerator(ExclusiveContext* cx);
@@ -198,9 +198,6 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool finishFuncDef(uint32_t funcIndex, unsigned generateTime,
                                     FunctionGenerator* fg);
     MOZ_MUST_USE bool finishFuncDefs();
-
-    // Function-pointer tables:
-    static const uint32_t BadIndirectCall = UINT32_MAX;
 
     // asm.js lazy initialization:
     void initSig(uint32_t sigIndex, Sig&& sig);

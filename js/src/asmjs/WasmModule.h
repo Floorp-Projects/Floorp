@@ -205,6 +205,8 @@ class CodeRange
     uint32_t end_;
     uint32_t funcIndex_;
     uint32_t funcLineOrBytecode_;
+    uint8_t funcBeginToTableEntry_;
+    uint8_t funcBeginToTableProfilingJump_;
     uint8_t funcBeginToNonProfilingEntry_;
     uint8_t funcProfilingJumpToProfilingReturn_;
     uint8_t funcProfilingEpilogueToProfilingReturn_;
@@ -255,6 +257,14 @@ class CodeRange
     uint32_t funcProfilingEntry() const {
         MOZ_ASSERT(isFunction());
         return begin();
+    }
+    uint32_t funcTableEntry() const {
+        MOZ_ASSERT(isFunction());
+        return begin_ + funcBeginToTableEntry_;
+    }
+    uint32_t funcTableProfilingJump() const {
+        MOZ_ASSERT(isFunction());
+        return begin_ + funcBeginToTableProfilingJump_;
     }
     uint32_t funcNonProfilingEntry() const {
         MOZ_ASSERT(isFunction());
