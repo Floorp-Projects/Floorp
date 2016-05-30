@@ -1,0 +1,32 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+EXTRA_JS_MODULES += [
+    'Subprocess.jsm',
+]
+
+EXTRA_JS_MODULES.subprocess += [
+    'subprocess_common.jsm',
+    'subprocess_shared.js',
+    'subprocess_worker_common.js',
+]
+
+if CONFIG['OS_TARGET'] == 'WINNT':
+    EXTRA_JS_MODULES.subprocess += [
+        'subprocess_shared_win.js',
+        'subprocess_win.jsm',
+        'subprocess_worker_win.js',
+    ]
+else:
+    EXTRA_JS_MODULES.subprocess += [
+        'subprocess_shared_unix.js',
+        'subprocess_unix.jsm',
+        'subprocess_worker_unix.js',
+    ]
+
+XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
+
+SPHINX_TREES['toolkit_modules/subprocess'] = ['docs']

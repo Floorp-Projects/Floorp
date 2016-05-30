@@ -1,8 +1,3 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
 /**
  * Provides infrastructure for automated login components tests.
  */
@@ -12,7 +7,7 @@
 ////////////////////////////////////////////////////////////////////////////////
 //// Globals
 
-var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
+let { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
@@ -37,6 +32,7 @@ XPCOMUtils.defineLazyModuleGetter(this, "LoginTestUtils",
                                   "resource://testing-common/LoginTestUtils.jsm");
 LoginTestUtils.Assert = Assert;
 const TestData = LoginTestUtils.testData;
+const newPropertyBag = LoginHelper.newPropertyBag;
 
 /**
  * All the tests are implemented with add_task, this starts them automatically.
@@ -57,7 +53,7 @@ function run_test()
 // used, on Windows these might still be pending deletion on the physical file
 // system.  Thus, start from a new base number every time, to make a collision
 // with a file that is still pending deletion highly unlikely.
-var gFileCounter = Math.floor(Math.random() * 1000000);
+let gFileCounter = Math.floor(Math.random() * 1000000);
 
 /**
  * Returns a reference to a temporary file, that is guaranteed not to exist, and
@@ -91,30 +87,6 @@ function getTempFile(aLeafName)
   });
 
   return file;
-}
-
-/**
- * Returns a new XPCOM property bag with the provided properties.
- *
- * @param aProperties
- *        Each property of this object is copied to the property bag.  This
- *        parameter can be omitted to return an empty property bag.
- *
- * @return A new property bag, that is an instance of nsIWritablePropertyBag,
- *         nsIWritablePropertyBag2, nsIPropertyBag, and nsIPropertyBag2.
- */
-function newPropertyBag(aProperties)
-{
-  let propertyBag = Cc["@mozilla.org/hash-property-bag;1"]
-                      .createInstance(Ci.nsIWritablePropertyBag);
-  if (aProperties) {
-    for (let [name, value] of Iterator(aProperties)) {
-      propertyBag.setProperty(name, value);
-    }
-  }
-  return propertyBag.QueryInterface(Ci.nsIPropertyBag)
-                    .QueryInterface(Ci.nsIPropertyBag2)
-                    .QueryInterface(Ci.nsIWritablePropertyBag2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

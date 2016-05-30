@@ -24,7 +24,6 @@ function test_create() {
              modified: 1000};
   store.applyIncoming(rec);
   deepEqual(store._remoteClients["id1"], { lastModified: 1000, foo: "bar" });
-  equal(Svc.Prefs.get("notifyTabState"), 1);
 
   _("Create a second record");
   rec = {id: "id2",
@@ -33,7 +32,6 @@ function test_create() {
          modified: 2000};
   store.applyIncoming(rec);
   deepEqual(store._remoteClients["id2"], { lastModified: 2000, foo2: "bar2" });
-  equal(Svc.Prefs.get("notifyTabState"), 0);
 
   _("Create a third record");
   rec = {id: "id3",
@@ -42,10 +40,6 @@ function test_create() {
          modified: 3000};
   store.applyIncoming(rec);
   deepEqual(store._remoteClients["id3"], { lastModified: 3000, foo3: "bar3" });
-  equal(Svc.Prefs.get("notifyTabState"), 0);
-
-  // reset the notifyTabState
-  Svc.Prefs.reset("notifyTabState");
 }
 
 function test_getAllTabs() {

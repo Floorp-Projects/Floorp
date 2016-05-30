@@ -1,9 +1,4 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
-/* Any copyright is dedicated to the Public Domain.
- * http://creativecommons.org/publicdomain/zero/1.0/ */
-
-/**
+/*
  * Tests methods that find specific logins in the store (findLogins,
  * searchLogins, and countLogins).
  *
@@ -97,55 +92,6 @@ function checkAllSearches(aQuery, aExpectedCount)
   checkSearchLogins(aQuery, aExpectedCount);
 }
 
-/**
- * Tests findLogins, searchLogins, and countLogins with a different set of
- * queries for the search and expected resultset.
- *
- * @param {Object} aQuery
- *        The "hostname", "formSubmitURL", and "httpRealm" properties of this
- *        object are passed as parameters to findLogins, countLogins
- *        and searchLogins function.
- * @param {Object} buildQuery
- *        The "hostname", "formSubmitURL", and "httpRealm" properties of the
- *        object used to build the expected logins to have as a result.
- * @param {Number} aExpectedCount
- *        Number of logins from the test data that should be found.  The actual
- *        list of logins is obtained using the buildExpectedLogins helper, and
- *        this value is just used to verify that modifications to the test data
- *        don't make the current test meaningless.
- */
-function checkAllSearchesTwoSets(aQuery, expectedQuery, aExpectedCount)
-{
-  do_print("Testing all search functions for " + JSON.stringify(aQuery) +
-           " and " + JSON.stringify(expectedQuery));
-
-  let expectedLogins = buildExpectedLogins(expectedQuery);
-
-  // The findLogins and countLogins functions support wildcard matches by
-  // specifying empty strings as parameters, while searchLogins requires
-  // omitting the property entirely.
-  let hostname = ("hostname" in aQuery) ? aQuery.hostname : "";
-  let formSubmitURL = ("formSubmitURL" in aQuery) ? aQuery.formSubmitURL : "";
-  let httpRealm = ("httpRealm" in aQuery) ? aQuery.httpRealm : "";
-
-  // Test findLogins.
-  let outCount = {};
-  let logins = Services.logins.findLogins(outCount, hostname, formSubmitURL,
-                                          httpRealm);
-  do_check_eq(outCount.value, expectedLogins.length);
-  LoginTestUtils.assertLoginListsMatches(logins, expectedLogins, true);
-
-  // Test countLogins.
-  let count = Services.logins.countLogins(hostname, formSubmitURL, httpRealm)
-  do_check_eq(count, expectedLogins.length);
-
-  // Test searchLogins.
-  outCount = {};
-  logins = Services.logins.searchLogins(outCount, newPropertyBag(expectedQuery));
-  do_check_eq(outCount.value, expectedLogins.length);
-  LoginTestUtils.assertLoginListsMatches(logins, expectedLogins, true);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 //// Tests
 
@@ -165,10 +111,10 @@ add_task(function test_initialize()
 add_task(function test_search_all_basic()
 {
   // Find all logins, using no filters in the search functions.
-  checkAllSearches({}, 22);
+  checkAllSearches({}, 23);
 
   // Find all form logins, then all authentication logins.
-  checkAllSearches({ httpRealm: null }, 13);
+  checkAllSearches({ httpRealm: null }, 14);
   checkAllSearches({ formSubmitURL: null }, 9);
 
   // Find all form logins on one host, then all authentication logins.
@@ -181,16 +127,18 @@ add_task(function test_search_all_basic()
   checkAllSearches({ hostname: "http://www.example.com" }, 1);
   checkAllSearches({ hostname: "https://www.example.com" }, 1);
   checkAllSearches({ hostname: "https://example.com" }, 1);
-  checkAllSearches({ hostname: "http://www3.example.com" }, 2);
+  checkAllSearches({ hostname: "http://www3.example.com" }, 3);
 
   // Verify that scheme and subdomain are distinct in formSubmitURL.
   checkAllSearches({ formSubmitURL: "http://www.example.com" }, 2);
-  checkAllSearches({ formSubmitURL: "https://www.example.com" }, 1);
+  checkAllSearches({ formSubmitURL: "https://www.example.com" }, 2);
   checkAllSearches({ formSubmitURL: "http://example.com" }, 1);
 
   // Find by formSubmitURL on a single host.
   checkAllSearches({ hostname: "http://www3.example.com",
                      formSubmitURL: "http://www.example.com" }, 1);
+  checkAllSearches({ hostname: "http://www3.example.com",
+                     formSubmitURL: "https://www.example.com" }, 1);
   checkAllSearches({ hostname: "http://www3.example.com",
                      formSubmitURL: "http://example.com" }, 1);
 
@@ -213,8 +161,8 @@ add_task(function test_search_all_basic()
  */
 add_task(function test_searchLogins()
 {
-  checkSearchLogins({ usernameField: "form_field_username" }, 11);
-  checkSearchLogins({ passwordField: "form_field_password" }, 12);
+  checkSearchLogins({ usernameField: "form_field_username" }, 12);
+  checkSearchLogins({ passwordField: "form_field_password" }, 13);
 
   // Find all logins with an empty usernameField, including for authentication.
   checkSearchLogins({ usernameField: "" }, 11);
@@ -250,8 +198,9 @@ add_task(function test_search_all_full_case_sensitive()
   checkAllSearches({ hostname: "example.com" }, 0);
 
   checkAllSearches({ formSubmitURL: "http://www.example.com" }, 2);
+  checkAllSearches({ formSubmitURL: "http://www.example.com/" }, 0);
   checkAllSearches({ formSubmitURL: "http://" }, 0);
-  Assert.throws(() => checkAllSearches({ formSubmitURL: "example.com" }, 0), /NS_ERROR_MALFORMED_URI/);
+  checkAllSearches({ formSubmitURL: "example.com" }, 0);
 
   checkAllSearches({ httpRealm: "The HTTP Realm" }, 3);
   checkAllSearches({ httpRealm: "The http Realm" }, 0);
@@ -271,20 +220,4 @@ add_task(function test_search_all_empty()
 
   checkSearchLogins({ hostname: "" }, 0);
   checkSearchLogins({ id: "1000" }, 0);
-});
-
-
-add_task(function test_search_different_formSubmitURL_scheme()
-{
-  let aQuery = {
-    formSubmitURL: "https://www.example.com",
-    hostname: "http://www.example.com",
-  };
-
-  let buildQuery = {
-    formSubmitURL: "http://www.example.com",
-    hostname: "http://www.example.com",
-  }
-
-  checkAllSearchesTwoSets(aQuery, buildQuery, 1);
 });
