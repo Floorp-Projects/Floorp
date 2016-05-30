@@ -12,9 +12,6 @@ const {TooltipToggle} = require("devtools/client/shared/widgets/tooltip/TooltipT
 const XUL_NS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
-const IFRAME_URL = "chrome://devtools/content/shared/widgets/tooltip-frame.xhtml";
-const IFRAME_CONTAINER_ID = "tooltip-iframe-container";
-
 const POSITION = {
   TOP: "top",
   BOTTOM: "bottom",
@@ -79,51 +76,23 @@ function HTMLTooltip(toolbox,
 
   this.container = this._createContainer();
 
-  // Promise that will resolve when the container can be filled with content.
-  this.containerReady = new Promise(resolve => {
-    if (this._isXUL()) {
-      // In XUL context, load a placeholder document in the iframe container.
-      let onLoad = () => {
-        this.frame.removeEventListener("load", onLoad, true);
-        resolve();
-      };
-
-      this.frame.addEventListener("load", onLoad, true);
-      this.frame.setAttribute("src", IFRAME_URL);
-      this.doc.querySelector("window").appendChild(this.container);
-    } else {
-      // In non-XUL context the container is ready to use as is.
-      this.doc.body.appendChild(this.container);
-      resolve();
-    }
-  });
+  if (this._isXUL()) {
+    this.doc.querySelector("window").appendChild(this.container);
+  } else {
+    // In non-XUL context the container is ready to use as is.
+    this.doc.body.appendChild(this.container);
+  }
 }
 
 module.exports.HTMLTooltip = HTMLTooltip;
 
 HTMLTooltip.prototype = {
   /**
-   * The tooltip frame is the child of the tooltip container that will only
-   * contain the tooltip content (and not the arrow or any other tooltip styling
-   * element).
-   * In XUL contexts, this is an iframe. In non XUL contexts this is a div,
-   * which also happens to be the tooltip.panel property.
-   */
-  get frame() {
-    return this.container.querySelector(".tooltip-panel");
-  },
-
-  /**
    * The tooltip panel is the parentNode of the tooltip content provided in
    * setContent().
    */
   get panel() {
-    if (!this._isXUL()) {
-      return this.frame;
-    }
-    // In XUL context, the content is wrapped in an iframe.
-    let win = this.frame.contentWindow.wrappedJSObject;
-    return win.document.getElementById(IFRAME_CONTAINER_ID);
+    return this.container.querySelector(".tooltip-panel");
   },
 
   /**
@@ -153,10 +122,8 @@ HTMLTooltip.prototype = {
     this.preferredWidth = width + themeWidth;
     this.preferredHeight = height + themeHeight;
 
-    return this.containerReady.then(() => {
-      this.panel.innerHTML = "";
-      this.panel.appendChild(content);
-    });
+    this.panel.innerHTML = "";
+    this.panel.appendChild(content);
   },
 
   /**
@@ -172,33 +139,31 @@ HTMLTooltip.prototype = {
    *          more space is available.
    */
   show: function (anchor, {position} = {}) {
-    this.containerReady.then(() => {
-      let computedPosition = this._findBestPosition(anchor, position);
+    let computedPosition = this._findBestPosition(anchor, position);
 
-      let isTop = computedPosition.position === POSITION.TOP;
-      this.container.classList.toggle("tooltip-top", isTop);
-      this.container.classList.toggle("tooltip-bottom", !isTop);
+    let isTop = computedPosition.position === POSITION.TOP;
+    this.container.classList.toggle("tooltip-top", isTop);
+    this.container.classList.toggle("tooltip-bottom", !isTop);
 
-      this.container.style.width = computedPosition.width + "px";
-      this.container.style.height = computedPosition.height + "px";
-      this.container.style.top = computedPosition.top + "px";
-      this.container.style.left = computedPosition.left + "px";
+    this.container.style.width = computedPosition.width + "px";
+    this.container.style.height = computedPosition.height + "px";
+    this.container.style.top = computedPosition.top + "px";
+    this.container.style.left = computedPosition.left + "px";
 
-      if (this.type === TYPE.ARROW) {
-        this.arrow.style.left = computedPosition.arrowLeft + "px";
+    if (this.type === TYPE.ARROW) {
+      this.arrow.style.left = computedPosition.arrowLeft + "px";
+    }
+
+    this.container.classList.add("tooltip-visible");
+
+    this.attachEventsTimer = this.doc.defaultView.setTimeout(() => {
+	  this._focusedElement = this.doc.activeElement;
+      if (this.autofocus) {
+        this.panel.focus();
       }
-
-      this.container.classList.add("tooltip-visible");
-
-      this.attachEventsTimer = this.doc.defaultView.setTimeout(() => {
-        this._focusedElement = this.doc.activeElement;
-        if (this.autofocus) {
-          this.frame.focus();
-        }
-        this.topWindow.addEventListener("click", this._onClick, true);
-        this.emit("shown");
-      }, 0);
-    });
+      this.topWindow.addEventListener("click", this._onClick, true);
+      this.emit("shown");
+    }, 0);
   },
 
   /**
@@ -242,12 +207,7 @@ HTMLTooltip.prototype = {
     container.setAttribute("type", this.type);
     container.classList.add("tooltip-container");
 
-    let html;
-    if (this._isXUL()) {
-      html = '<iframe class="devtools-tooltip-iframe tooltip-panel"></iframe>';
-    } else {
-      html = '<div class="tooltip-panel"></div>';
-    }
+    let html = '<div class="tooltip-panel"></div>';
 
     if (this.type === TYPE.ARROW) {
       html += '<div class="tooltip-arrow"></div>';
