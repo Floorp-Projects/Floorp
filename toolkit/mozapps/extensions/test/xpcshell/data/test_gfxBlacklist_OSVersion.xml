@@ -16,7 +16,7 @@
       <driverVersionComparator> LESS_THAN </driverVersionComparator>
     </gfxBlacklistEntry>
     <gfxBlacklistEntry>
-      <os>Darwin 12</os>
+      <os>Darwin 13</os>
       <vendor>0xabcd</vendor>
       <devices>
         <device>0x2783</device>

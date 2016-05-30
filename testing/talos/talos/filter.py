@@ -186,3 +186,8 @@ def v8_subtest(series, name):
                  }
 
     return reference[name] / geometric_mean(series)
+
+
+@define_filter
+def responsiveness_Metric(val_list):
+    return sum([float(x)*float(x) / 1000000.0 for x in val_list])

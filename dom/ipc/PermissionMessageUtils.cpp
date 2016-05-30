@@ -37,7 +37,7 @@ ParamTraits<Principal>::Write(Message* aMsg, const paramType& aParam) {
 }
 
 bool
-ParamTraits<Principal>::Read(const Message* aMsg, void** aIter, paramType* aResult)
+ParamTraits<Principal>::Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
 {
   bool isNull;
   if (!ReadParam(aMsg, aIter, &isNull)) {

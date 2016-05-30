@@ -161,7 +161,7 @@ CreateTrivialDecoder()
   DecoderType decoderType = DecoderFactory::GetDecoderType("image/gif");
   RefPtr<SourceBuffer> sourceBuffer = new SourceBuffer();
   RefPtr<Decoder> decoder =
-    DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer,
+    DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer, Nothing(),
                                            DefaultSurfaceFlags());
   return decoder.forget();
 }
@@ -508,6 +508,56 @@ ImageTestCase NoFrameDelayGIFTestCase()
   // marked TEST_CASE_IS_ANIMATED because the metadata decoder can't detect that
   // it's animated.
   return ImageTestCase("no-frame-delay.gif", "image/gif", IntSize(100, 100));
+}
+
+ImageTestCase DownscaledPNGTestCase()
+{
+  // This testcase (and all the other "downscaled") testcases) consists of 25
+  // lines of green, followed by 25 lines of red, followed by 25 lines of green,
+  // followed by 25 more lines of red. It's intended that tests downscale it
+  // from 100x100 to 20x20, so we specify a 20x20 output size.
+  return ImageTestCase("downscaled.png", "image/png", IntSize(100, 100),
+                       IntSize(20, 20));
+}
+
+ImageTestCase DownscaledGIFTestCase()
+{
+  return ImageTestCase("downscaled.gif", "image/gif", IntSize(100, 100),
+                       IntSize(20, 20));
+}
+
+ImageTestCase DownscaledJPGTestCase()
+{
+  return ImageTestCase("downscaled.jpg", "image/jpeg", IntSize(100, 100),
+                       IntSize(20, 20));
+}
+
+ImageTestCase DownscaledBMPTestCase()
+{
+  return ImageTestCase("downscaled.bmp", "image/bmp", IntSize(100, 100),
+                       IntSize(20, 20));
+}
+
+ImageTestCase DownscaledICOTestCase()
+{
+  return ImageTestCase("downscaled.ico", "image/x-icon", IntSize(100, 100),
+                       IntSize(20, 20), TEST_CASE_IS_TRANSPARENT);
+}
+
+ImageTestCase DownscaledIconTestCase()
+{
+  return ImageTestCase("downscaled.icon", "image/icon", IntSize(100, 100),
+                       IntSize(20, 20), TEST_CASE_IS_TRANSPARENT);
+}
+
+ImageTestCase DownscaledTransparentICOWithANDMaskTestCase()
+{
+  // This test case is an ICO with AND mask transparency. We want to ensure that
+  // we can downscale it without crashing or triggering ASAN failures, but its
+  // content isn't simple to verify, so for now we don't check the output.
+  return ImageTestCase("transparent-ico-with-and-mask.ico", "image/x-icon",
+                       IntSize(32, 32), IntSize(20, 20),
+                       TEST_CASE_IS_TRANSPARENT | TEST_CASE_IGNORE_OUTPUT);
 }
 
 } // namespace image

@@ -19,7 +19,7 @@
 #include "Http2Stream.h"
 #include "Http2Push.h"
 
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Preferences.h"
 #include "nsHttp.h"

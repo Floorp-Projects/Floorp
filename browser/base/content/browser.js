@@ -2686,7 +2686,7 @@ const TLS_ERROR_REPORT_TELEMETRY_AUTO_UNCHECKED = 3;
 const TLS_ERROR_REPORT_TELEMETRY_MANUAL_SEND    = 4;
 const TLS_ERROR_REPORT_TELEMETRY_AUTO_SEND      = 5;
 
-const PREF_SSL_IMPACT_ROOTS = ["security.tls.version.min", "security.tls.version.max", "security.ssl3."];
+const PREF_SSL_IMPACT_ROOTS = ["security.tls.version.", "security.ssl3."];
 
 const PREF_SSL_IMPACT = PREF_SSL_IMPACT_ROOTS.reduce((prefs, root) => {
   return prefs.concat(Services.prefs.getChildList(root));

@@ -304,8 +304,8 @@ NS_IMPL_ISUPPORTS_INHERITED(DelayedRunnable, Runnable, nsITimerCallback)
 
 struct nsThreadShutdownContext
 {
-  nsThreadShutdownContext(nsThread* aTerminatingThread,
-                          nsThread* aJoiningThread,
+  nsThreadShutdownContext(NotNull<nsThread*> aTerminatingThread,
+                          NotNull<nsThread*> aJoiningThread,
                           bool      aAwaitingShutdownAck)
     : mTerminatingThread(aTerminatingThread)
     , mJoiningThread(aJoiningThread)
@@ -319,9 +319,9 @@ struct nsThreadShutdownContext
   }
 
   // NB: This will be the last reference.
-  RefPtr<nsThread> mTerminatingThread;
-  nsThread* mJoiningThread;
-  bool      mAwaitingShutdownAck;
+  NotNull<RefPtr<nsThread>> mTerminatingThread;
+  NotNull<nsThread*> mJoiningThread;
+  bool mAwaitingShutdownAck;
 };
 
 // This event is responsible for notifying nsThread::Shutdown that it is time
@@ -331,7 +331,7 @@ struct nsThreadShutdownContext
 class nsThreadShutdownAckEvent : public CancelableRunnable
 {
 public:
-  explicit nsThreadShutdownAckEvent(nsThreadShutdownContext* aCtx)
+  explicit nsThreadShutdownAckEvent(NotNull<nsThreadShutdownContext*> aCtx)
     : mShutdownContext(aCtx)
   {
   }
@@ -347,14 +347,15 @@ public:
 private:
   virtual ~nsThreadShutdownAckEvent() { }
 
-  nsThreadShutdownContext* mShutdownContext;
+  NotNull<nsThreadShutdownContext*> mShutdownContext;
 };
 
 // This event is responsible for setting mShutdownContext
 class nsThreadShutdownEvent : public Runnable
 {
 public:
-  nsThreadShutdownEvent(nsThread* aThr, nsThreadShutdownContext* aCtx)
+  nsThreadShutdownEvent(NotNull<nsThread*> aThr,
+                        NotNull<nsThreadShutdownContext*> aCtx)
     : mThread(aThr)
     , mShutdownContext(aCtx)
   {
@@ -366,8 +367,8 @@ public:
     return NS_OK;
   }
 private:
-  RefPtr<nsThread>       mThread;
-  nsThreadShutdownContext* mShutdownContext;
+  NotNull<RefPtr<nsThread>> mThread;
+  NotNull<nsThreadShutdownContext*> mShutdownContext;
 };
 
 //-----------------------------------------------------------------------------
@@ -500,9 +501,11 @@ nsThread::ThreadFunc(void* aArg)
   nsThreadManager::get()->UnregisterCurrentThread(self);
 
   // Dispatch shutdown ACK
-  MOZ_ASSERT(self->mShutdownContext->mTerminatingThread == self);
-  event = do_QueryObject(new nsThreadShutdownAckEvent(self->mShutdownContext));
-  self->mShutdownContext->mJoiningThread->Dispatch(event, NS_DISPATCH_NORMAL);
+  NotNull<nsThreadShutdownContext*> context =
+    WrapNotNull(self->mShutdownContext);
+  MOZ_ASSERT(context->mTerminatingThread == self);
+  event = do_QueryObject(new nsThreadShutdownAckEvent(context));
+  context->mJoiningThread->Dispatch(event, NS_DISPATCH_NORMAL);
 
   // Release any observer of the thread here.
   self->SetObserver(nullptr);
@@ -553,7 +556,7 @@ int sCanaryOutputFD = -1;
 nsThread::nsThread(MainThreadFlag aMainThread, uint32_t aStackSize)
   : mLock("nsThread.mLock")
   , mScriptObserver(nullptr)
-  , mEvents(&mEventsRoot)
+  , mEvents(WrapNotNull(&mEventsRoot))
   , mEventsRoot(mLock)
   , mPriority(PRIORITY_NORMAL)
   , mThread(nullptr)
@@ -594,10 +597,9 @@ nsThread::Init()
   mShutdownRequired = true;
 
   // ThreadFunc is responsible for setting mThread
-  PRThread* thr = PR_CreateThread(PR_USER_THREAD, ThreadFunc, this,
-                                  PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
-                                  PR_JOINABLE_THREAD, mStackSize);
-  if (!thr) {
+  if (!PR_CreateThread(PR_USER_THREAD, ThreadFunc, this,
+                       PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD,
+                       PR_JOINABLE_THREAD, mStackSize)) {
     NS_RELEASE_THIS();
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -806,16 +808,17 @@ nsThread::ShutdownInternal(bool aSync)
     mShutdownRequired = false;
   }
 
-  nsThread* currentThread = nsThreadManager::get()->GetCurrentThread();
-  MOZ_ASSERT(currentThread);
+  NotNull<nsThread*> currentThread =
+    WrapNotNull(nsThreadManager::get()->GetCurrentThread());
 
   nsAutoPtr<nsThreadShutdownContext>& context =
     *currentThread->mRequestedShutdownContexts.AppendElement();
-  context = new nsThreadShutdownContext(this, currentThread, aSync);
+  context = new nsThreadShutdownContext(WrapNotNull(this), currentThread, aSync);
 
   // Set mShutdownContext and wake up the thread in case it is waiting for
   // events to process.
-  nsCOMPtr<nsIRunnable> event = new nsThreadShutdownEvent(this, context);
+  nsCOMPtr<nsIRunnable> event =
+    new nsThreadShutdownEvent(WrapNotNull(this), WrapNotNull(context.get()));
   // XXXroc What if posting the event fails due to OOM?
   PutEvent(event.forget(), nullptr);
 
@@ -826,7 +829,7 @@ nsThread::ShutdownInternal(bool aSync)
 }
 
 void
-nsThread::ShutdownComplete(nsThreadShutdownContext* aContext)
+nsThread::ShutdownComplete(NotNull<nsThreadShutdownContext*> aContext)
 {
   MOZ_ASSERT(mThread);
   MOZ_ASSERT(aContext->mTerminatingThread == this);
@@ -880,8 +883,9 @@ nsThread::Shutdown()
     return NS_OK;
   }
 
-  nsThreadShutdownContext* context = ShutdownInternal(/* aSync = */ true);
-  NS_ENSURE_TRUE(context, NS_ERROR_UNEXPECTED);
+  nsThreadShutdownContext* maybeContext = ShutdownInternal(/* aSync = */ true);
+  NS_ENSURE_TRUE(maybeContext, NS_ERROR_UNEXPECTED);
+  NotNull<nsThreadShutdownContext*> context = WrapNotNull(maybeContext);
 
   // Process events on the current thread until we receive a shutdown ACK.
   // Allows waiting; ensure no locks are held that would deadlock us!
@@ -950,7 +954,7 @@ void canary_alarm_handler(int signum)
 #define NOTIFY_EVENT_OBSERVERS(func_, params_)                                 \
   PR_BEGIN_MACRO                                                               \
     if (!mEventObservers.IsEmpty()) {                                          \
-      nsAutoTObserverArray<nsCOMPtr<nsIThreadObserver>, 2>::ForwardIterator    \
+      nsAutoTObserverArray<NotNull<nsCOMPtr<nsIThreadObserver>>, 2>::ForwardIterator \
         iter_(mEventObservers);                                                \
       nsCOMPtr<nsIThreadObserver> obs_;                                        \
       while (iter_.HasMore()) {                                                \
@@ -1138,7 +1142,7 @@ nsThread::AddObserver(nsIThreadObserver* aObserver)
   NS_WARN_IF_FALSE(!mEventObservers.Contains(aObserver),
                    "Adding an observer twice!");
 
-  if (!mEventObservers.AppendElement(aObserver)) {
+  if (!mEventObservers.AppendElement(WrapNotNull(aObserver))) {
     NS_WARNING("Out of memory!");
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -1167,8 +1171,9 @@ nsThread::PushEventQueue(nsIEventTarget** aResult)
     return NS_ERROR_NOT_SAME_THREAD;
   }
 
-  nsChainedEventQueue* queue = new nsChainedEventQueue(mLock);
-  queue->mEventTarget = new nsNestedEventTarget(this, queue);
+  NotNull<nsChainedEventQueue*> queue =
+    WrapNotNull(new nsChainedEventQueue(mLock));
+  queue->mEventTarget = new nsNestedEventTarget(WrapNotNull(this), queue);
 
   {
     MutexAutoLock lock(mLock);
@@ -1206,7 +1211,7 @@ nsThread::PopEventQueue(nsIEventTarget* aInnermostTarget)
     MOZ_ASSERT(mEvents != &mEventsRoot);
 
     queue = mEvents;
-    mEvents = mEvents->mNext;
+    mEvents = WrapNotNull(mEvents->mNext);
 
     nsCOMPtr<nsIRunnable> event;
     while (queue->GetEvent(false, getter_AddRefs(event), lock)) {
@@ -1301,8 +1306,8 @@ nsThread::nsNestedEventTarget::DispatchFromScript(nsIRunnable* aEvent, uint32_t 
 NS_IMETHODIMP
 nsThread::nsNestedEventTarget::Dispatch(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFlags)
 {
-  LOG(("THRD(%p) Dispatch [%p %x] to nested loop %p\n", mThread.get(), /*XXX aEvent*/ nullptr,
-       aFlags, this));
+  LOG(("THRD(%p) Dispatch [%p %x] to nested loop %p\n", mThread.get().get(),
+       /*XXX aEvent*/ nullptr, aFlags, this));
 
   return mThread->DispatchInternal(Move(aEvent), aFlags, this);
 }

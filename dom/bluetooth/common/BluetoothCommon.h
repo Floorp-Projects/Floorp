@@ -9,7 +9,7 @@
 
 #include <algorithm>
 #include "mozilla/Compiler.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/Observer.h"
 #include "mozilla/UniquePtr.h"
 #include "nsPrintfCString.h"

@@ -56,8 +56,13 @@ add_task(function* setup() {
 });
 
 add_task(function* () {
-  // Load page to set data for the plugin.
   yield BrowserTestUtils.openNewForegroundTab(gBrowser, testURL);
+
+  // Set data for the plugin after the page load.
+  yield ContentTask.spawn(gBrowser.selectedBrowser, null, function*() {
+    content.wrappedJSObject.testSteps();
+  });
+
   ok(stored(["192.168.1.1","foo.com","nonexistent.foo.com","bar.com","localhost"]),
     "Data stored for sites");
 

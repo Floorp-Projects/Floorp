@@ -29,7 +29,7 @@ struct ParamTraits<mozilla::VisibilityCounter>
     WriteParam(aMsg, uint8_t(aParam));
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     uint8_t valueAsByte;
     if (ReadParam(aMsg, aIter, &valueAsByte)) {

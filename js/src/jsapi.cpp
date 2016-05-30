@@ -1305,14 +1305,16 @@ JS::CurrentGlobalOrNull(JSContext* cx)
 }
 
 JS_PUBLIC_API(Value)
-JS_ComputeThis(JSContext* cx, Value* vp)
+JS::detail::ComputeThis(JSContext* cx, Value* vp)
 {
     AssertHeapIsIdle(cx);
     assertSameCompartment(cx, JSValueArray(vp, 2));
-    CallReceiver call = CallReceiverFromVp(vp);
-    if (!BoxNonStrictThis(cx, call))
+
+    MutableHandleValue thisv = MutableHandleValue::fromMarkedLocation(&vp[1]);
+    if (!BoxNonStrictThis(cx, thisv, thisv))
         return NullValue();
-    return call.thisv();
+
+    return thisv;
 }
 
 JS_PUBLIC_API(void*)
@@ -5010,22 +5012,6 @@ JS_IsRunning(JSContext* cx)
     return cx->currentlyRunning();
 }
 
-JS_PUBLIC_API(bool)
-JS_SaveFrameChain(JSContext* cx)
-{
-    AssertHeapIsIdleOrIterating(cx);
-    CHECK_REQUEST(cx);
-    return cx->saveFrameChain();
-}
-
-JS_PUBLIC_API(void)
-JS_RestoreFrameChain(JSContext* cx)
-{
-    AssertHeapIsIdleOrIterating(cx);
-    CHECK_REQUEST(cx);
-    cx->restoreFrameChain();
-}
-
 JS::AutoSetAsyncStackForNewCalls::AutoSetAsyncStackForNewCalls(
   JSContext* cx, HandleObject stack, const char* asyncCause,
   JS::AutoSetAsyncStackForNewCalls::AsyncCallKind kind)
@@ -6471,9 +6457,6 @@ GetScriptedCallerActivationFast(JSContext* cx, Activation** activation)
 {
     ActivationIterator activationIter(cx->runtime());
 
-    while (!activationIter.done() && activationIter->cx() != cx)
-        ++activationIter;
-
     if (activationIter.done()) {
         *activation = nullptr;
         return true;
@@ -6505,7 +6488,7 @@ GetScriptedCallerGlobal(JSContext* cx)
         if (!activation)
             return nullptr;
     } else {
-        NonBuiltinFrameIter i(cx, FrameIter::GO_THROUGH_SAVED);
+        NonBuiltinFrameIter i(cx);
         if (i.done())
             return nullptr;
         activation = i.activation();

@@ -55,7 +55,7 @@
       <driverVersionComparator> EQUAL </driverVersionComparator>
     </gfxBlacklistEntry>
     <gfxBlacklistEntry>
-      <os>Darwin 10</os>
+      <os>Darwin 13</os>
       <vendor>0xabcd</vendor>
       <devices>
         <device>0x2783</device>
@@ -124,7 +124,7 @@
       <featureStatus> BLOCKED_DEVICE </featureStatus>
     </gfxBlacklistEntry>
     <gfxBlacklistEntry>
-      <os>Darwin 10</os>
+      <os>Darwin 13</os>
       <vendor>0xabcd</vendor>
       <devices>
         <device>0x6666</device>

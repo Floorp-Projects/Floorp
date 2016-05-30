@@ -58,7 +58,6 @@ RUN yum install -y \
   mesa-libGL-devel \
   mesa-libGL-devel.i686 \
   mozilla-python27 \
-  mozilla-python27-mercurial \
   mpfr-devel.x86_64 \
   ncurses-devel.i686 \
   ncurses:-devel \
@@ -129,7 +128,7 @@ RUN wget --no-check-certificate https://pypi.python.org/packages/source/s/setupt
     cd setuptools-1.4.2 && python setup.py install && \
     cd - && rm -rf setuptools-1.4.2* && \
     curl https://bootstrap.pypa.io/get-pip.py | python - && \
-    pip install virtualenv
+    pip install virtualenv mercurial
 
 # Generate machine uuid file
 RUN dbus-uuidgen --ensure=/var/lib/dbus/machine-id

@@ -32,7 +32,7 @@ ParamTraits<GonkNativeHandle>::Write(Message* aMsg,
 
 bool
 ParamTraits<GonkNativeHandle>::Read(const Message* aMsg,
-                               void** aIter, paramType* aResult)
+                               PickleIterator* aIter, paramType* aResult)
 {
   size_t nbytes;
   const char* data;

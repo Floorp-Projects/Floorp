@@ -86,7 +86,7 @@
 
 #include "ImageLogging.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/Likely.h"
 #include "nsBMPDecoder.h"
 

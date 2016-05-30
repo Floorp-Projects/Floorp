@@ -7,7 +7,7 @@
 #include "ContainerParser.h"
 
 #include "WebMBufferedParser.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/ErrorResult.h"
 #include "mp4_demuxer/MoofParser.h"
 #include "mozilla/Logging.h"

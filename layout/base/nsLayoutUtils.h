@@ -2324,7 +2324,7 @@ public:
   static bool IsGridTemplateSubgridValueEnabled();
 
   /**
-   * Checks whether support for the CSS text-align (and -moz-text-align-last)
+   * Checks whether support for the CSS text-align (and text-align-last)
    * 'true' value is enabled.
    */
   static bool IsTextAlignUnsafeValueEnabled();

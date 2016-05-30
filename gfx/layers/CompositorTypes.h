@@ -66,9 +66,11 @@ enum class TextureFlags : uint32_t {
   // The texture is being allocated for a compositor that no longer exists.
   // This flag is only used in the parent process.
   INVALID_COMPOSITOR = 1 << 12,
+  // The texture was created by converting from YCBCR to RGB
+  RGB_FROM_YCBCR = 1 << 13,
 
   // OR union of all valid bits
-  ALL_BITS           = (1 << 13) - 1,
+  ALL_BITS           = (1 << 14) - 1,
   // the default flags
   DEFAULT = NO_FLAGS
 };

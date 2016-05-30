@@ -381,7 +381,7 @@ nsMathMLElement::ParseNumericValue(const nsString& aString,
     return false;
   }
 
-  if (ParseNamedSpaceValue(aString, aCSSValue, aFlags)) {
+  if (ParseNamedSpaceValue(str, aCSSValue, aFlags)) {
     return true;
   }
 

@@ -21,7 +21,7 @@ struct ParamTraits<LookAndFeelInt>
     WriteParam(aMsg, aParam.value);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     int32_t id, value;
     if (ReadParam(aMsg, aIter, &id) &&

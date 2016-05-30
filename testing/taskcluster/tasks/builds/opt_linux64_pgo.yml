@@ -11,10 +11,13 @@ task:
   routes:
     - 'index.buildbot.branches.{{project}}.linux64-pgo'
     - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux64-pgo'
+    - 'coalesce.v1.builds.{{project}}.linux64-pgo'
 
   workerType: opt-linux64
 
   payload:
+    supersederUrl: 'https://coalesce.mozilla-releng.net/v1/list/builds.{{project}}.linux64-pgo'
+
     env:
       # add various options to mozharness command line run
       MOZHARNESS_OPTIONS: 'enable-pgo'

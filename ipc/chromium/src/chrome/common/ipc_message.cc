@@ -73,24 +73,11 @@ Message::Message(int32_t routing_id, msgid_t type, PriorityValue priority,
   InitLoggingVariables(aName);
 }
 
-Message::Message(const char* data, int data_len, Ownership ownership)
-  : Pickle(data, data_len, ownership)
+Message::Message(const char* data, int data_len)
+  : Pickle(sizeof(Header), data, data_len)
 {
   MOZ_COUNT_CTOR(IPC::Message);
   InitLoggingVariables();
-}
-
-Message::Message(const Message& other) : Pickle(other) {
-  MOZ_COUNT_CTOR(IPC::Message);
-  InitLoggingVariables(other.name_);
-#if defined(OS_POSIX)
-  file_descriptor_set_ = other.file_descriptor_set_;
-#endif
-#ifdef MOZ_TASK_TRACER
-  header()->source_event_id = other.header()->source_event_id;
-  header()->parent_task_id = other.header()->parent_task_id;
-  header()->source_event_type = other.header()->source_event_type;
-#endif
 }
 
 Message::Message(Message&& other) : Pickle(mozilla::Move(other)) {
@@ -108,20 +95,6 @@ Message::Message(Message&& other) : Pickle(mozilla::Move(other)) {
 
 void Message::InitLoggingVariables(const char* const aName) {
   name_ = aName;
-}
-
-Message& Message::operator=(const Message& other) {
-  *static_cast<Pickle*>(this) = other;
-  InitLoggingVariables(other.name_);
-#if defined(OS_POSIX)
-  file_descriptor_set_ = other.file_descriptor_set_;
-#endif
-#ifdef MOZ_TASK_TRACER
-  header()->source_event_id = other.header()->source_event_id;
-  header()->parent_task_id = other.header()->parent_task_id;
-  header()->source_event_type = other.header()->source_event_type;
-#endif
-  return *this;
 }
 
 Message& Message::operator=(Message&& other) {
@@ -153,7 +126,7 @@ bool Message::WriteFileDescriptor(const base::FileDescriptor& descriptor) {
   }
 }
 
-bool Message::ReadFileDescriptor(void** iter,
+bool Message::ReadFileDescriptor(PickleIterator* iter,
                                 base::FileDescriptor* descriptor) const {
   int descriptor_index;
   if (!ReadInt(iter, &descriptor_index))

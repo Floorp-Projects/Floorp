@@ -49,7 +49,7 @@ ParamTraits<GrallocBufferRef>::Write(Message* aMsg,
 }
 
 bool
-ParamTraits<GrallocBufferRef>::Read(const Message* aMsg, void** aIter,
+ParamTraits<GrallocBufferRef>::Read(const Message* aMsg, PickleIterator* aIter,
                                     paramType* aParam)
 {
   int owner;
@@ -109,7 +109,7 @@ ParamTraits<MagicGrallocBufferHandle>::Write(Message* aMsg,
 
 bool
 ParamTraits<MagicGrallocBufferHandle>::Read(const Message* aMsg,
-                                            void** aIter, paramType* aResult)
+                                            PickleIterator* aIter, paramType* aResult)
 {
   MOZ_ASSERT(!aResult->mGraphicBuffer.get());
   MOZ_ASSERT(aResult->mRef.mOwner == 0);

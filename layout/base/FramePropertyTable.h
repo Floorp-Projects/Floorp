@@ -168,9 +168,8 @@ public:
   void Set(const nsIFrame* aFrame, Descriptor<T> aProperty,
            PropertyType<T> aValue)
   {
-    ReinterpretHelper<T> helper{};
-    helper.value = aValue;
-    SetInternal(aFrame, aProperty, helper.ptr);
+    void* ptr = ReinterpretHelper<T>::ToPointer(aValue);
+    SetInternal(aFrame, aProperty, ptr);
   }
 
   /**
@@ -213,9 +212,8 @@ public:
   PropertyType<T> Get(const nsIFrame* aFrame, Descriptor<T> aProperty,
                       bool* aFoundResult = nullptr)
   {
-    ReinterpretHelper<T> helper;
-    helper.ptr = GetInternal(aFrame, aProperty, aFoundResult);
-    return helper.value;
+    void* ptr = GetInternal(aFrame, aProperty, aFoundResult);
+    return ReinterpretHelper<T>::FromPointer(ptr);
   }
   /**
    * Remove a property value for a frame. This requires one hashtable
@@ -233,9 +231,8 @@ public:
   PropertyType<T> Remove(const nsIFrame* aFrame, Descriptor<T> aProperty,
                          bool* aFoundResult = nullptr)
   {
-    ReinterpretHelper<T> helper;
-    helper.ptr = RemoveInternal(aFrame, aProperty, aFoundResult);
-    return helper.value;
+    void* ptr = RemoveInternal(aFrame, aProperty, aFoundResult);
+    return ReinterpretHelper<T>::FromPointer(ptr);
   }
   /**
    * Remove and destroy a property value for a frame. This requires one
@@ -272,16 +269,39 @@ protected:
 
   void DeleteInternal(const nsIFrame* aFrame, UntypedDescriptor aProperty);
 
-  // A helper union being used here rather than simple reinterpret_cast
-  // is because PropertyType<T> could be float, bool, uint8_t, etc.
-  // which do not have defined behavior for a direct cast.
   template<typename T>
-  union ReinterpretHelper
+  struct ReinterpretHelper
   {
-    void* ptr;
-    PropertyType<T> value;
     static_assert(sizeof(PropertyType<T>) <= sizeof(void*),
                   "size of the value must never be larger than a pointer");
+
+    static void* ToPointer(PropertyType<T> aValue)
+    {
+      void* ptr = nullptr;
+      memcpy(&ptr, &aValue, sizeof(aValue));
+      return ptr;
+    }
+
+    static PropertyType<T> FromPointer(void* aPtr)
+    {
+      PropertyType<T> value;
+      memcpy(&value, &aPtr, sizeof(value));
+      return value;
+    }
+  };
+
+  template<typename T>
+  struct ReinterpretHelper<T*>
+  {
+    static void* ToPointer(T* aValue)
+    {
+      return static_cast<void*>(aValue);
+    }
+
+    static T* FromPointer(void* aPtr)
+    {
+      return static_cast<T*>(aPtr);
+    }
   };
 
   /**

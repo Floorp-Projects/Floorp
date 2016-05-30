@@ -4361,7 +4361,7 @@ XREMain::XRE_mainRun()
   }
 #endif /* MOZ_INSTRUMENT_EVENT_LOOP */
 
-#if defined(MOZ_SANDBOX) && defined(XP_LINUX)
+#if defined(MOZ_SANDBOX) && defined(XP_LINUX) && !defined(ANDROID)
   // If we're on Linux, we now have information about the OS capabilities
   // available to us.
   SandboxInfo::SubmitTelemetry();
