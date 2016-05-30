@@ -107,7 +107,7 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
 
   if (!PrepareFrame()) {
     NS_WARNING("FFmpeg audio decoder failed to allocate frame.");
-    return DecodeResult::DECODE_ERROR;
+    return DecodeResult::FATAL_ERROR;
   }
 
   int64_t samplePosition = aSample->mOffset;
@@ -127,7 +127,7 @@ FFmpegAudioDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample)
       uint32_t numChannels = mCodecContext->channels;
       AudioConfig::ChannelLayout layout(numChannels);
       if (!layout.IsValid()) {
-        return DecodeResult::DECODE_ERROR;
+        return DecodeResult::FATAL_ERROR;
       }
 
       uint32_t samplingRate = mCodecContext->sample_rate;
