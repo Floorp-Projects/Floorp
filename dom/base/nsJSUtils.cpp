@@ -174,8 +174,7 @@ nsJSUtils::EvaluateString(JSContext* aCx,
 
   nsresult rv = NS_OK;
 
-  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-  NS_ENSURE_TRUE(ssm->ScriptAllowed(aEvaluationGlobal), NS_OK);
+  NS_ENSURE_TRUE(xpc::Scriptability::Get(aEvaluationGlobal).Allowed(), NS_OK);
 
   bool ok = true;
   // Scope the JSAutoCompartment so that we can later wrap the return value
@@ -294,8 +293,7 @@ nsJSUtils::CompileModule(JSContext* aCx,
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(nsContentUtils::IsInMicroTask());
 
-  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-  NS_ENSURE_TRUE(ssm->ScriptAllowed(aEvaluationGlobal), NS_OK);
+  NS_ENSURE_TRUE(xpc::Scriptability::Get(aEvaluationGlobal).Allowed(), NS_OK);
 
   if (!JS::CompileModule(aCx, aCompileOptions, aSrcBuf, aModule)) {
     return NS_ERROR_FAILURE;
@@ -316,9 +314,7 @@ nsJSUtils::ModuleDeclarationInstantiation(JSContext* aCx, JS::Handle<JSObject*> 
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(nsContentUtils::IsInMicroTask());
 
-  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-  JSObject* global = JS_GetGlobalForObject(aCx, aModule);
-  NS_ENSURE_TRUE(ssm->ScriptAllowed(global), NS_OK);
+  NS_ENSURE_TRUE(xpc::Scriptability::Get(aModule).Allowed(), NS_OK);
 
   if (!JS::ModuleDeclarationInstantiation(aCx, aModule)) {
     return NS_ERROR_FAILURE;
@@ -339,9 +335,7 @@ nsJSUtils::ModuleEvaluation(JSContext* aCx, JS::Handle<JSObject*> aModule)
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(nsContentUtils::IsInMicroTask());
 
-  nsIScriptSecurityManager* ssm = nsContentUtils::GetSecurityManager();
-  JSObject* global = JS_GetGlobalForObject(aCx, aModule);
-  NS_ENSURE_TRUE(ssm->ScriptAllowed(global), NS_OK);
+  NS_ENSURE_TRUE(xpc::Scriptability::Get(aModule).Allowed(), NS_OK);
 
   if (!JS::ModuleEvaluation(aCx, aModule)) {
     return NS_ERROR_FAILURE;
@@ -380,15 +374,6 @@ nsJSUtils::ResetTimeZone()
 //
 // nsDOMJSUtils.h
 //
-
-JSObject* GetDefaultScopeFromJSContext(JSContext *cx)
-{
-  // DOM JSContexts don't store their default compartment object on
-  // the cx, so in those cases we need to fetch it via the scx
-  // instead.
-  nsIScriptContext *scx = GetScriptContextFromJSContext(cx);
-  return  scx ? scx->GetWindowProxy() : nullptr;
-}
 
 bool nsAutoJSString::init(const JS::Value &v)
 {

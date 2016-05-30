@@ -10,7 +10,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsTArray.h"
 #include "mozilla/Likely.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/UniquePtr.h"
 
@@ -1008,6 +1008,5 @@ protected:
     static const char* gISOFontNameCharsets[];
     static const char* gMSFontNameCharsets[];
 };
-
 
 #endif /* GFX_FONT_UTILS_H */

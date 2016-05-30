@@ -1169,7 +1169,7 @@ Event::Serialize(IPC::Message* aMsg, bool aSerializeInterfaceType)
 }
 
 NS_IMETHODIMP_(bool)
-Event::Deserialize(const IPC::Message* aMsg, void** aIter)
+Event::Deserialize(const IPC::Message* aMsg, PickleIterator* aIter)
 {
   nsString type;
   NS_ENSURE_TRUE(IPC::ReadParam(aMsg, aIter, &type), false);

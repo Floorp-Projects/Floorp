@@ -4574,23 +4574,6 @@ GetWaitForAllPromise(JSContext* cx, const JS::AutoObjectVector& promises);
 extern JS_PUBLIC_API(bool)
 JS_IsRunning(JSContext* cx);
 
-/*
- * Saving and restoring frame chains.
- *
- * These two functions are used to set aside cx's call stack while that stack
- * is inactive. After a call to JS_SaveFrameChain, it looks as if there is no
- * code running on cx. Before calling JS_RestoreFrameChain, cx's call stack
- * must be balanced and all nested calls to JS_SaveFrameChain must have had
- * matching JS_RestoreFrameChain calls.
- *
- * JS_SaveFrameChain deals with cx not having any code running on it.
- */
-extern JS_PUBLIC_API(bool)
-JS_SaveFrameChain(JSContext* cx);
-
-extern JS_PUBLIC_API(void)
-JS_RestoreFrameChain(JSContext* cx);
-
 namespace JS {
 
 /**

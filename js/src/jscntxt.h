@@ -344,21 +344,6 @@ struct JSContext : public js::ExclusiveContext,
     /* True if generating an error, to prevent runaway recursion. */
     bool                generatingError;
 
-    /* See JS_SaveFrameChain/JS_RestoreFrameChain. */
-  private:
-    struct SavedFrameChain {
-        SavedFrameChain(JSCompartment* comp, unsigned count)
-          : compartment(comp), enterCompartmentCount(count) {}
-        JSCompartment* compartment;
-        unsigned enterCompartmentCount;
-    };
-    typedef js::Vector<SavedFrameChain, 1, js::SystemAllocPolicy> SaveStack;
-    SaveStack           savedFrameChains_;
-  public:
-    bool saveFrameChain();
-    void restoreFrameChain();
-
-  public:
     /* State for object and array toSource conversion. */
     js::AutoCycleDetector::Set cycleDetectorSet;
 

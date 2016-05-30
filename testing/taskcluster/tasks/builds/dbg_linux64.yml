@@ -9,8 +9,8 @@ task:
       description: 'Linux64 Dbg'
 
   routes:
-    - 'index.buildbot.branches.{{project}}.linux64'
-    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux64'
+    - 'index.buildbot.branches.{{project}}.linux64-debug'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux64-debug'
 
   workerType: dbg-linux64
 

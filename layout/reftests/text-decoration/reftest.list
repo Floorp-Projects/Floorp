@@ -109,4 +109,4 @@ fuzzy-if(OSX==1010,1,2) == underline-button-2.html underline-button-2-ref.html
 == underline-select-2.html underline-select-2-ref.html
 == 1133392.html 1133392-ref.html
 != 1159729-offset-adjustment.html 1159729-offset-adjustment-notref.html
-pref(layout.css.text-emphasis.enabled,true) == emphasis-style-dynamic.html emphasis-style-dynamic-ref.html
+== emphasis-style-dynamic.html emphasis-style-dynamic-ref.html

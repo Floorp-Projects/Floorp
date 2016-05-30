@@ -711,7 +711,6 @@ nsPerformanceStatsService::Dispose()
     obs->RemoveObserver(this, "profile-before-change");
     obs->RemoveObserver(this, "quit-application");
     obs->RemoveObserver(this, "quit-application-granted");
-    obs->RemoveObserver(this, "content-child-shutdown");
     obs->RemoveObserver(this, "xpcom-will-shutdown");
   }
 
@@ -784,7 +783,6 @@ nsPerformanceStatsService::InitInternal()
     obs->AddObserver(this, "profile-before-change", false);
     obs->AddObserver(this, "quit-application-granted", false);
     obs->AddObserver(this, "quit-application", false);
-    obs->AddObserver(this, "content-child-shutdown", false);
     obs->AddObserver(this, "xpcom-will-shutdown", false);
   }
 
@@ -813,7 +811,6 @@ nsPerformanceStatsService::Observe(nsISupports *aSubject, const char *aTopic,
   MOZ_ASSERT(strcmp(aTopic, "profile-before-change") == 0
              || strcmp(aTopic, "quit-application") == 0
              || strcmp(aTopic, "quit-application-granted") == 0
-             || strcmp(aTopic, "content-child-shutdown") == 0
              || strcmp(aTopic, "xpcom-will-shutdown") == 0);
 
   Dispose();

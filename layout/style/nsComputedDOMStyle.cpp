@@ -5622,7 +5622,7 @@ nsComputedDOMStyle::DoGetStrokeDasharray()
 {
   const nsStyleSVG* svg = StyleSVG();
 
-  if (!svg->mStrokeDasharrayLength || !svg->mStrokeDasharray) {
+  if (svg->mStrokeDasharray.IsEmpty()) {
     RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
     val->SetIdent(eCSSKeyword_none);
     return val.forget();
@@ -5630,7 +5630,7 @@ nsComputedDOMStyle::DoGetStrokeDasharray()
 
   RefPtr<nsDOMCSSValueList> valueList = GetROCSSValueList(true);
 
-  for (uint32_t i = 0; i < svg->mStrokeDasharrayLength; i++) {
+  for (uint32_t i = 0; i < svg->mStrokeDasharray.Length(); i++) {
     RefPtr<nsROCSSPrimitiveValue> dash = new nsROCSSPrimitiveValue;
     SetValueToCoord(dash, svg->mStrokeDasharray[i], true);
     valueList->AppendCSSValue(dash.forget());

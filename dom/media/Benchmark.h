@@ -17,7 +17,7 @@
 
 namespace mozilla {
 
-class FlushableTaskQueue;
+class TaskQueue;
 class Benchmark;
 
 class BenchmarkPlayback : public QueueObject, private MediaDataDecoderCallback
@@ -39,7 +39,7 @@ class BenchmarkPlayback : public QueueObject, private MediaDataDecoderCallback
 
   Atomic<Benchmark*> mMainThreadState;
 
-  RefPtr<FlushableTaskQueue> mDecoderTaskQueue;
+  RefPtr<TaskQueue> mDecoderTaskQueue;
   RefPtr<MediaDataDecoder> mDecoder;
 
   // Object only accessed on Thread()

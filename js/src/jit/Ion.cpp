@@ -2860,7 +2860,7 @@ jit::SetEnterJitData(JSContext* cx, EnterJitData& data, RunState& state,
             data.maxArgc = 1;
             data.maxArgv = vals.begin();
             if (state.asExecute()->newTarget().isNull()) {
-                ScriptFrameIter iter(cx, FrameIter::GO_THROUGH_SAVED);
+                ScriptFrameIter iter(cx);
                 vals.infallibleAppend(iter.newTarget());
             } else {
                 vals.infallibleAppend(state.asExecute()->newTarget());

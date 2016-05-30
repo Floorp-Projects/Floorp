@@ -82,7 +82,7 @@ struct ParamTraits<mozilla::plugins::NPRemoteEvent>
         aMsg->WriteDouble(aParam.contentsScaleFactor);
     }
 
-    static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+    static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
     {
         int type = 0;
         if (!aMsg->ReadInt(aIter, &type)) {

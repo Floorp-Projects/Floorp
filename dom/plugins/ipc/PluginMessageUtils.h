@@ -280,7 +280,7 @@ struct ParamTraits<NPRect>
     WriteParam(aMsg, aParam.right);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     uint16_t top, left, bottom, right;
     if (ReadParam(aMsg, aIter, &top) &&
@@ -313,7 +313,7 @@ struct ParamTraits<NPWindowType>
     aMsg->WriteInt16(int16_t(aParam));
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     int16_t result;
     if (aMsg->ReadInt16(aIter, &result)) {
@@ -352,7 +352,7 @@ struct ParamTraits<mozilla::plugins::NPRemoteWindow>
 #endif
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     uint64_t window;
     int32_t x, y;
@@ -443,7 +443,7 @@ struct ParamTraits<NPNSString*>
     }
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     bool haveString = false;
     if (!aMsg->ReadBool(aIter, &haveString)) {
@@ -459,15 +459,19 @@ struct ParamTraits<NPNSString*>
       return false;
     }
 
-    UniChar* buffer = nullptr;
+    // Avoid integer multiplication overflow.
+    if (length > INT_MAX / static_cast<long>(sizeof(UniChar))) {
+      return false;
+    }
+
+    auto chars = mozilla::MakeUnique<UniChar[]>(length);
     if (length != 0) {
-      if (!aMsg->ReadBytes(aIter, (const char**)&buffer, length * sizeof(UniChar)) ||
-          !buffer) {
+      if (!aMsg->ReadBytesInto(aIter, chars.get(), length * sizeof(UniChar))) {
         return false;
       }
     }
 
-    *aResult = (NPNSString*)::CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*)buffer,
+    *aResult = (NPNSString*)::CFStringCreateWithBytes(kCFAllocatorDefault, (UInt8*)chars.get(),
                                                       length * sizeof(UniChar),
                                                       kCFStringEncodingUTF16, false);
     if (!*aResult) {
@@ -507,7 +511,7 @@ struct ParamTraits<NSCursorInfo>
     free(buffer);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     NSCursorInfo::Type type;
     if (!aMsg->ReadInt(aIter, (int*)&type)) {
@@ -525,16 +529,16 @@ struct ParamTraits<NSCursorInfo>
       return false;
     }
 
-    uint8_t* data = nullptr;
+    auto data = mozilla::MakeUnique<uint8_t[]>(dataLength);
     if (dataLength != 0) {
-      if (!aMsg->ReadBytes(aIter, (const char**)&data, dataLength) || !data) {
+      if (!aMsg->ReadBytesInto(aIter, data.get(), dataLength)) {
         return false;
       }
     }
 
     aResult->SetType(type);
     aResult->SetHotSpot(nsPoint(hotSpotX, hotSpotY));
-    aResult->SetCustomImageData(data, dataLength);
+    aResult->SetCustomImageData(data.get(), dataLength);
 
     return true;
   }
@@ -566,7 +570,7 @@ struct ParamTraits<NSCursorInfo>
   static void Write(Message* aMsg, const paramType& aParam) {
     NS_RUNTIMEABORT("NSCursorInfo isn't meaningful on this platform");
   }
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult) {
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult) {
     NS_RUNTIMEABORT("NSCursorInfo isn't meaningful on this platform");
     return false;
   }
@@ -584,7 +588,7 @@ struct ParamTraits<mozilla::plugins::IPCByteRange>
     WriteParam(aMsg, aParam.length);
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     paramType p;
     if (ReadParam(aMsg, aIter, &p.offset) &&
@@ -606,7 +610,7 @@ struct ParamTraits<NPNVariable>
     WriteParam(aMsg, int(aParam));
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     int intval;
     if (ReadParam(aMsg, aIter, &intval)) {
@@ -627,7 +631,7 @@ struct ParamTraits<NPNURLVariable>
     WriteParam(aMsg, int(aParam));
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     int intval;
     if (ReadParam(aMsg, aIter, &intval)) {
@@ -653,7 +657,7 @@ struct ParamTraits<NPCoordinateSpace>
     WriteParam(aMsg, int32_t(aParam));
   }
 
-  static bool Read(const Message* aMsg, void** aIter, paramType* aResult)
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
     int32_t intval;
     if (ReadParam(aMsg, aIter, &intval)) {

@@ -13,7 +13,7 @@
 #include "prio.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/net/DNS.h"
 #include "nsServiceManagerUtils.h"
 #include "nsIFile.h"

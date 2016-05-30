@@ -117,8 +117,8 @@ class MapObject : public NativeObject {
     static const JSFunctionSpec methods[];
     static const JSPropertySpec staticProperties[];
     ValueMap* getData() { return static_cast<ValueMap*>(getPrivate()); }
-    static ValueMap & extract(HandleObject o);
-    static ValueMap & extract(CallReceiver call);
+    static ValueMap& extract(HandleObject o);
+    static ValueMap& extract(const CallArgs& args);
     static void mark(JSTracer* trc, JSObject* obj);
     static void finalize(FreeOp* fop, JSObject* obj);
     static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
@@ -204,8 +204,8 @@ class SetObject : public NativeObject {
     static const JSPropertySpec staticProperties[];
 
     ValueSet* getData() { return static_cast<ValueSet*>(getPrivate()); }
-    static ValueSet & extract(HandleObject o);
-    static ValueSet & extract(CallReceiver call);
+    static ValueSet& extract(HandleObject o);
+    static ValueSet& extract(const CallArgs& args);
     static void mark(JSTracer* trc, JSObject* obj);
     static void finalize(FreeOp* fop, JSObject* obj);
     static bool construct(JSContext* cx, unsigned argc, Value* vp);

@@ -14,6 +14,7 @@
     "testName": true,
     "testDescr": true,
     "testStates": true,
+    "testRelation": true,
     "testAccessibleTree": true,
     "isAccessible": true,
     "getAccessibleDOMNodeID": true,

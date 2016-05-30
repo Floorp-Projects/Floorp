@@ -13,7 +13,7 @@
 #include <stdint.h>
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/CheckedInt.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/UniquePtr.h"
 #include <algorithm>
 

@@ -41,13 +41,19 @@ function sanitizeHost(host) {
 }
 
 /**
- * The cookie 'expires' value needs converting into something more readable
+ * The cookie 'expires' value needs converting into something more readable.
+ *
+ * And the unit of expires is sec, the unit that in argument of Date() needs 
+ * millisecond.
  */
 function translateExpires(expires) {
   if (expires == 0) {
     return l10n.lookup("cookieListOutSession");
   }
-  return new Date(expires).toLocaleString();
+
+  let expires_msec = expires * 1000;
+
+  return (new Date(expires_msec)).toLocaleString();
 }
 
 /**

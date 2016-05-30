@@ -10,7 +10,7 @@
 #include "GMPParent.h"
 #include "gmp-storage.h"
 #include "mozilla/unused.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "nsClassHashtable.h"
 #include "prio.h"
 #include "mozIGeckoMediaPluginService.h"

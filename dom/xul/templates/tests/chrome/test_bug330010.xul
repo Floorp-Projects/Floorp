@@ -18,8 +18,11 @@ function boom()
 
   var ds = RDF.GetDataSourceBlocking(src);
 
+  var s = document.getElementById("s");
+  s.setAttribute("datasources", "file_bug330010.rdf");
+
   var x = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "hbox");
-  var generatedShape = document.getElementById("s").childNodes[3];
+  var generatedShape = s.childNodes[3];
   generatedShape.appendChild(x);
   document.documentElement.removeChild(document.getElementById("s"));
   ok(true, "Didn't crash");
@@ -29,7 +32,7 @@ function boom()
 ]]>
 </script>
 
-  <html:div datasources="file_bug330010.rdf" ref="urn:root" flex="1" id="s">
+  <html:div datasources="rdf:null" ref="urn:root" flex="1" id="s">
     <template>
       <rule>
         <conditions>

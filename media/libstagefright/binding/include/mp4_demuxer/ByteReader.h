@@ -5,7 +5,7 @@
 #ifndef BYTE_READER_H_
 #define BYTE_READER_H_
 
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/Vector.h"
 #include "nsTArray.h"
 #include "MediaData.h"

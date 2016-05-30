@@ -8,28 +8,21 @@
 namespace mozilla {
 namespace safebrowsing {
 
+const size_t ChunkSet::IO_BUFFER_SIZE;
+
 nsresult
 ChunkSet::Serialize(nsACString& aChunkStr)
 {
   aChunkStr.Truncate();
-
-  uint32_t i = 0;
-  while (i < mChunks.Length()) {
-    if (i != 0) {
+  for (const Range* range = mRanges.begin(); range != mRanges.end(); range++) {
+    if (range != mRanges.begin()) {
       aChunkStr.Append(',');
     }
-    aChunkStr.AppendInt((int32_t)mChunks[i]);
 
-    uint32_t first = i;
-    uint32_t last = first;
-    i++;
-    while (i < mChunks.Length() && (mChunks[i] == mChunks[i - 1] + 1 || mChunks[i] == mChunks[i - 1])) {
-      last = i++;
-    }
-
-    if (last != first) {
+    aChunkStr.AppendInt((int32_t)range->Begin());
+    if (range->Begin() != range->End()) {
       aChunkStr.Append('-');
-      aChunkStr.AppendInt((int32_t)mChunks[last]);
+      aChunkStr.AppendInt((int32_t)range->End());
     }
   }
 
@@ -39,50 +32,116 @@ ChunkSet::Serialize(nsACString& aChunkStr)
 nsresult
 ChunkSet::Set(uint32_t aChunk)
 {
-  size_t idx = mChunks.BinaryIndexOf(aChunk);
-  if (idx == nsTArray<uint32_t>::NoIndex) {
-    if (!mChunks.InsertElementSorted(aChunk, fallible)) {
-      return NS_ERROR_OUT_OF_MEMORY;
+  if (!Has(aChunk)) {
+    Range chunkRange(aChunk, aChunk);
+
+    if (mRanges.Length() == 0) {
+      if (!mRanges.AppendElement(chunkRange, fallible)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      return NS_OK;
+    }
+
+    if (mRanges.LastElement().Precedes(chunkRange)) {
+      mRanges.LastElement().End(aChunk);
+    } else if (chunkRange.Precedes(mRanges[0])) {
+      mRanges[0].Begin(aChunk);
+    } else {
+      ChunkSet tmp;
+      if (!tmp.mRanges.AppendElement(chunkRange, fallible)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+
+      return Merge(tmp);
     }
   }
+
   return NS_OK;
 }
 
 bool
 ChunkSet::Has(uint32_t aChunk) const
 {
-  return mChunks.BinaryIndexOf(aChunk) != nsTArray<uint32_t>::NoIndex;
+  size_t idx;
+  return BinarySearchIf(mRanges, 0, mRanges.Length(),
+                        Range::IntersectionComparator(Range(aChunk, aChunk)),
+                        &idx);
+                        // IntersectionComparator works because we create a
+                        // single-chunk range.
 }
 
 nsresult
 ChunkSet::Merge(const ChunkSet& aOther)
 {
-  const uint32_t *dupIter = aOther.mChunks.Elements();
-  const uint32_t *end = aOther.mChunks.Elements() + aOther.mChunks.Length();
+  size_t oldLen = mRanges.Length();
 
-  for (const uint32_t *iter = dupIter; iter != end; iter++) {
-    nsresult rv = Set(*iter);
-    NS_ENSURE_SUCCESS(rv, rv);
+  for (const Range* mergeRange = aOther.mRanges.begin();
+       mergeRange != aOther.mRanges.end(); mergeRange++) {
+    if (!HasSubrange(*mergeRange)) {
+      if (!mRanges.InsertElementSorted(*mergeRange, fallible)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
+  }
+
+  if (oldLen < mRanges.Length()) {
+    for (size_t i = 1; i < mRanges.Length(); i++) {
+      while (mRanges[i - 1].FoldLeft(mRanges[i])) {
+        mRanges.RemoveElementAt(i);
+
+        if (i == mRanges.Length()) {
+          return NS_OK;
+        }
+      }
+    }
   }
 
   return NS_OK;
 }
 
+uint32_t
+ChunkSet::Length() const
+{
+  uint32_t len = 0;
+  for (const Range* range = mRanges.begin(); range != mRanges.end(); range++) {
+    len += range->Length();
+  }
+
+  return len;
+}
+
 nsresult
 ChunkSet::Remove(const ChunkSet& aOther)
 {
-  uint32_t *addIter = mChunks.Elements();
-  uint32_t *end = mChunks.Elements() + mChunks.Length();
+  for (const Range* removalRange = aOther.mRanges.begin();
+       removalRange != aOther.mRanges.end(); removalRange++) {
 
-  for (uint32_t *iter = addIter; iter != end; iter++) {
-    if (!aOther.Has(*iter)) {
-      *addIter = *iter;
-      addIter++;
+    if (mRanges.Length() == 0) {
+      return NS_OK;
     }
-  }
 
-  if (!mChunks.SetLength(addIter - mChunks.Elements(), fallible)) {
-    return NS_ERROR_OUT_OF_MEMORY;
+    if (mRanges.LastElement().End() < removalRange->Begin() ||
+        aOther.mRanges.LastElement().End() < mRanges[0].Begin()) {
+      return NS_OK;
+    }
+
+    size_t intersectionIdx;
+    while (BinarySearchIf(mRanges, 0, mRanges.Length(),
+           Range::IntersectionComparator(*removalRange), &intersectionIdx)) {
+
+      ChunkSet remains;
+      nsresult rv = mRanges[intersectionIdx].Remove(*removalRange, remains);
+
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+
+      mRanges.RemoveElementAt(intersectionIdx);
+      if (!mRanges.InsertElementsAt(intersectionIdx, remains.mRanges,
+                                    fallible)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+    }
   }
 
   return NS_OK;
@@ -91,7 +150,128 @@ ChunkSet::Remove(const ChunkSet& aOther)
 void
 ChunkSet::Clear()
 {
-  mChunks.Clear();
+  mRanges.Clear();
+}
+
+nsresult
+ChunkSet::Write(nsIOutputStream* aOut)
+{
+  nsTArray<uint32_t> chunks(IO_BUFFER_SIZE);
+
+  for (const Range* range = mRanges.begin(); range != mRanges.end(); range++) {
+    for (uint32_t chunk = range->Begin(); chunk <= range->End(); chunk++) {
+      chunks.AppendElement(chunk);
+
+      if (chunks.Length() == chunks.Capacity()) {
+        nsresult rv = WriteTArray(aOut, chunks);
+
+        if (NS_FAILED(rv)) {
+          return rv;
+        }
+
+        chunks.Clear();
+      }
+    }
+  }
+
+  nsresult rv = WriteTArray(aOut, chunks);
+
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+ChunkSet::Read(nsIInputStream* aIn, uint32_t aNumElements)
+{
+  nsTArray<uint32_t> chunks(IO_BUFFER_SIZE);
+
+  while (aNumElements != 0) {
+    chunks.Clear();
+
+    uint32_t numToRead = aNumElements > IO_BUFFER_SIZE ? IO_BUFFER_SIZE : aNumElements;
+
+    nsresult rv = ReadTArray(aIn, &chunks, numToRead);
+
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    aNumElements -= numToRead;
+
+    for (const uint32_t* c = chunks.begin(); c != chunks.end(); c++) {
+      rv = Set(*c);
+
+      if (NS_FAILED(rv)) {
+        return rv;
+      }
+    }
+  }
+
+  return NS_OK;
+}
+
+bool
+ChunkSet::HasSubrange(const Range& aSubrange) const
+{
+  for (const Range* range = mRanges.begin(); range != mRanges.end(); range++) {
+    if (range->Contains(aSubrange)) {
+      return true;
+    } else if (!(aSubrange.Begin() > range->End() ||
+                 range->Begin() > aSubrange.End())) {
+      // In this case, aSubrange overlaps this range but is not a subrange.
+      // because the ChunkSet implementation ensures that there are no
+      // overlapping ranges, this means that aSubrange cannot be a subrange of
+      // any of the following ranges
+      return false;
+    }
+  }
+
+  return false;
+}
+
+uint32_t
+ChunkSet::Range::Length() const
+{
+  return mEnd - mBegin + 1;
+}
+
+nsresult
+ChunkSet::Range::Remove(const Range& aRange, ChunkSet& aRemainderSet) const
+{
+  if (mBegin < aRange.mBegin && aRange.mBegin <= mEnd) {
+    // aRange overlaps & follows this range
+    Range range(mBegin, aRange.mBegin - 1);
+    if (!aRemainderSet.mRanges.AppendElement(range, fallible)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  if (mBegin <= aRange.mEnd && aRange.mEnd < mEnd) {
+    // aRange overlaps & precedes this range
+    Range range(aRange.mEnd + 1, mEnd);
+    if (!aRemainderSet.mRanges.AppendElement(range, fallible)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+  }
+
+  return NS_OK;
+}
+
+bool
+ChunkSet::Range::FoldLeft(const Range& aRange)
+{
+  if (Contains(aRange)) {
+    return true;
+  } else if (Precedes(aRange) ||
+             (mBegin <= aRange.mBegin && aRange.mBegin <= mEnd)) {
+    mEnd = aRange.mEnd;
+    return true;
+  }
+
+  return false;
 }
 
 } // namespace safebrowsing

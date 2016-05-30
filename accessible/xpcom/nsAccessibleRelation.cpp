@@ -24,6 +24,18 @@ nsAccessibleRelation::nsAccessibleRelation(uint32_t aType,
     mTargets->AppendElement(static_cast<nsIAccessible*>(ToXPC(targetAcc)), false);
 }
 
+nsAccessibleRelation::nsAccessibleRelation(uint32_t aType,
+                                           const nsTArray<ProxyAccessible*>* aTargets) :
+  mType(aType)
+{
+  mTargets = do_CreateInstance(NS_ARRAY_CONTRACTID);
+  for (uint32_t idx = 0; idx < aTargets->Length(); ++idx) {
+    mTargets->AppendElement(
+      static_cast<nsIAccessible*>(ToXPC(aTargets->ElementAt(idx))),
+      false);
+  }
+}
+
 nsAccessibleRelation::~nsAccessibleRelation()
 {
 }

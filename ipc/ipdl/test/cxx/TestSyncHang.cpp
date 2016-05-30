@@ -1,4 +1,5 @@
 #include "TestSyncHang.h"
+#include "base/task.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
 #include "IPDLUnitTests.h"      // fail etc.

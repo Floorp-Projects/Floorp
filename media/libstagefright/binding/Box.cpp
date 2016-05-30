@@ -6,7 +6,7 @@
 
 #include "mp4_demuxer/Box.h"
 #include "mp4_demuxer/Stream.h"
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include <algorithm>
 
 using namespace mozilla;

@@ -58,8 +58,7 @@ public:
   const NPP mNpp;
   bool mDestroyPending;
 
-  static NPObject *GetNewOrUsed(NPP npp, JSContext *cx,
-                                JS::Handle<JSObject*> obj);
+  static NPObject* GetNewOrUsed(NPP npp, JS::Handle<JSObject*> obj);
   static bool HasOwnProperty(NPObject* npobj, NPIdentifier npid);
 
   void trace(JSTracer* trc) {

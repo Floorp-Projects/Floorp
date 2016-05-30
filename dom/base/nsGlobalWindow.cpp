@@ -8111,7 +8111,6 @@ nsGlobalWindow::Open(const nsAString& aUrl, const nsAString& aName,
                       false,          // aDoJSFixups
                       true,           // aNavigate
                       nullptr, nullptr,  // No args
-                      nullptr,           // aJSCallerContext
                       _retval);
 }
 
@@ -8127,7 +8126,6 @@ nsGlobalWindow::OpenJS(const nsAString& aUrl, const nsAString& aName,
                       true,           // aDoJSFixups
                       true,           // aNavigate
                       nullptr, nullptr,  // No args
-                      nsContentUtils::GetCurrentJSContext(), // aJSCallerContext
                       _retval);
 }
 
@@ -8147,7 +8145,6 @@ nsGlobalWindow::OpenDialog(const nsAString& aUrl, const nsAString& aName,
                       false,                   // aDoJSFixups
                       true,                    // aNavigate
                       nullptr, aExtraArgument,    // Arguments
-                      nullptr,                    // aJSCallerContext
                       _retval);
 }
 
@@ -8166,7 +8163,6 @@ nsGlobalWindow::OpenNoNavigate(const nsAString& aUrl,
                       false,          // aDoJSFixups
                       false,          // aNavigate
                       nullptr, nullptr,  // No args
-                      nullptr,           // aJSCallerContext
                       _retval);
 
 }
@@ -8195,7 +8191,6 @@ nsGlobalWindow::OpenDialogOuter(JSContext* aCx, const nsAString& aUrl,
                         false,            // aDoJSFixups
                         true,                // aNavigate
                         argvArray, nullptr,  // Arguments
-                        aCx,                 // aJSCallerContext
                         getter_AddRefs(dialog));
   return dialog.forget();
 }
@@ -8633,13 +8628,14 @@ nsGlobalWindow::FinalClose()
   // broken addons. The chrome tests in toolkit/mozapps/downloads are a good
   // testing ground.
   //
-  // In particular, if |win|'s JSContext is at the top of the stack, we must
+  // In particular, if some inner of |win| is the entry global, we must
   // complete _two_ round-trips to the event loop before the call to
   // ReallyCloseWindow. This allows setTimeout handlers that are set after
   // FinalClose() is called to run before the window is torn down.
-  bool indirect = GetContextInternal() && // Occasionally null. See bug 877390.
-                  (nsContentUtils::GetCurrentJSContext() ==
-                   GetContextInternal()->GetNativeContext());
+  nsCOMPtr<nsPIDOMWindowInner> entryWindow =
+    do_QueryInterface(GetEntryGlobal());
+  bool indirect =
+    entryWindow && entryWindow->GetOuterWindow() == this->AsOuter();
   if (NS_FAILED(nsCloseEvent::PostCloseEvent(this, indirect))) {
     ReallyCloseWindow();
   } else {
@@ -9275,7 +9271,6 @@ nsGlobalWindow::ShowModalDialogOuter(const nsAString& aUrl, nsIVariant* aArgumen
                         true,           // aDoJSFixups
                         true,           // aNavigate
                         nullptr, argHolder, // args
-                        nullptr,            // aJSCallerContext
                         getter_AddRefs(dlgWin));
   nsContentUtils::SetMicroTaskLevel(oldMicroTaskLevel);
   LeaveModalState();
@@ -11744,7 +11739,6 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
                              bool aDoJSFixups, bool aNavigate,
                              nsIArray *argv,
                              nsISupports *aExtraArgument,
-                             JSContext *aJSCallerContext,
                              nsPIDOMWindowOuter **aReturn)
 {
   MOZ_ASSERT(IsOuterWindow());
@@ -11758,8 +11752,6 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
                   "Can't pass in arguments both ways");
   NS_PRECONDITION(!aCalledNoScript || (!argv && argc == 0),
                   "Can't pass JS args when called via the noscript methods");
-  NS_PRECONDITION(!aJSCallerContext || !aCalledNoScript,
-                  "Shouldn't have caller context when called noscript");
 
   mozilla::Maybe<AutoUnblockScriptClosing> closeUnblocker;
 
@@ -11820,13 +11812,18 @@ nsGlobalWindow::OpenInternal(const nsAString& aUrl, const nsAString& aName,
   if (checkForPopup) {
     abuseLevel = RevisePopupAbuseLevel(abuseLevel);
     if (abuseLevel >= openAbused) {
-      if (aJSCallerContext) {
+      if (!aCalledNoScript) {
         // If script in some other window is doing a window.open on us and
         // it's being blocked, then it's OK to close us afterwards, probably.
         // But if we're doing a window.open on ourselves and block the popup,
         // prevent this window from closing until after this script terminates
         // so that whatever popup blocker UI the app has will be visible.
-        if (mContext == GetScriptContextFromJSContext(aJSCallerContext)) {
+        nsCOMPtr<nsPIDOMWindowInner> entryWindow =
+          do_QueryInterface(GetEntryGlobal());
+        // Note that entryWindow can be null here if some JS component was the
+        // place where script was entered for this JS execution.
+        if (entryWindow &&
+            entryWindow->GetOuterWindow() == this->AsOuter()) {
           mBlockScriptedClosingFlag = true;
           closeUnblocker.emplace(this);
         }

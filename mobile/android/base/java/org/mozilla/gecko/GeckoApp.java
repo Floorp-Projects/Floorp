@@ -701,6 +701,8 @@ public abstract class GeckoApp
                   rec.recordGeckoStartupTime(mGeckoReadyStartupTimer.getElapsed());
                 }
 
+                GeckoApplication.get().onDelayedStartup();
+
             } else if (event.equals("Gecko:Exited")) {
                 // Gecko thread exited first; let GeckoApp die too.
                 doShutdown();

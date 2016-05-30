@@ -110,7 +110,7 @@ CheckMetadata(const ImageTestCase& aTestCase,
 
   // Create a full decoder, so we can compare the result.
   decoder =
-    DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer,
+    DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer, Nothing(),
                                            DefaultSurfaceFlags());
   ASSERT_TRUE(decoder != nullptr);
 

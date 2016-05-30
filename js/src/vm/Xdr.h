@@ -7,7 +7,7 @@
 #ifndef vm_Xdr_h
 #define vm_Xdr_h
 
-#include "mozilla/Endian.h"
+#include "mozilla/EndianUtils.h"
 #include "mozilla/TypeTraits.h"
 
 #include "jsatom.h"
