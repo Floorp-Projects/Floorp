@@ -95,11 +95,23 @@ function _attachConsole(aListeners, aCallback, aAttachToTab, aAttachToWorker)
         let tab = aResponse.tabs[aResponse.selected];
         aState.dbgClient.attachTab(tab.actor, function (response, tabClient) {
           if (aAttachToWorker) {
-            var worker = new Worker("console-test-worker.js");
+            let workerName = "console-test-worker.js#" + new Date().getTime();
+            var worker = new Worker(workerName);
             worker.addEventListener("message", function listener() {
               worker.removeEventListener("message", listener);
               tabClient.listWorkers(function (response) {
-                tabClient.attachWorker(response.workers[0].actor, function (response, workerClient) {
+                let worker = response.workers.filter(w => w.url == workerName)[0];
+                if (!worker) {
+                  console.error("listWorkers failed. Unable to find the " +
+                                "worker actor\n");
+                  return;
+                }
+                tabClient.attachWorker(worker.actor, function (response, workerClient) {
+                  if (!workerClient || response.error) {
+                    console.error("attachWorker failed. No worker client or " +
+                                  " error: " + response.error);
+                    return;
+                  }
                   workerClient.attachThread({}, function (aResponse) {
                     aState.actor = workerClient.consoleActor;
                     aState.dbgClient.attachConsole(workerClient.consoleActor, aListeners,

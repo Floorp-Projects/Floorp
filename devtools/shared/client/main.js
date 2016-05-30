@@ -1479,6 +1479,8 @@ WorkerClient.prototype = {
         aOnResponse(connectReponse, this.thread);
         return [connectResponse, this.thread];
       });
+    }, error => {
+      aOnResponse(error, null);
     });
   },
 
