@@ -3701,8 +3701,8 @@ var gCSSProperties = {
     other_values: [ "center", "justify", "end", "match-parent" ],
     invalid_values: [ "true", "true true" ]
   },
-  "-moz-text-align-last": {
-    domProp: "MozTextAlignLast",
+  "text-align-last": {
+    domProp: "textAlignLast",
     inherited: true,
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "auto" ],
@@ -4836,7 +4836,14 @@ var gCSSProperties = {
     type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
     alias_for: "hyphens",
     subproperties: [ "hyphens" ],
-  }
+  },
+  "-moz-text-align-last": {
+    domProp: "MozTextAlignLast",
+    inherited: true,
+    type: CSS_TYPE_SHORTHAND_AND_LONGHAND,
+    alias_for: "text-align-last",
+    subproperties: [ "text-align-last" ],
+  },
 }
 
 function logical_axis_prop_get_computed(cs, property)

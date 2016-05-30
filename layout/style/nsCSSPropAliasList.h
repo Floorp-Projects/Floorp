@@ -183,6 +183,10 @@ CSS_PROP_ALIAS(-moz-hyphens,
                hyphens,
                MozHyphens,
                "")
+CSS_PROP_ALIAS(-moz-text-align-last,
+               text_align_last,
+               MozTextAlignLast,
+               "")
 
 #define WEBKIT_PREFIX_PREF "layout.css.prefixes.webkit"
 
