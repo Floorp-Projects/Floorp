@@ -380,6 +380,9 @@ pref("media.suspend-bkgnd-video.enabled", true);
 #else
 pref("media.suspend-bkgnd-video.enabled", false);
 #endif
+// Delay, in ms, from time window goes to background to suspending
+// video decoders. Defaults to 10 seconds.
+pref("media.suspend-bkgnd-video.delay-ms", 10000);
 
 #ifdef MOZ_WEBRTC
 pref("media.navigator.enabled", true);
