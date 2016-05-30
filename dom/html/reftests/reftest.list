@@ -57,3 +57,6 @@ pref(dom.image.picture.enabled,true) pref(dom.image.srcset.enabled,true) == bug1
 # Test imageset is using permissions.default.image
 pref(permissions.default.image,1) HTTP == bug1196784-with-srcset.html bug1196784-no-srcset.html
 pref(permissions.default.image,2) HTTP == bug1196784-with-srcset.html bug1196784-no-srcset.html
+
+# Test video with rotation information can be rotated.
+== bug1228601-video-rotation-90.html bug1228601-video-rotated-ref.html
