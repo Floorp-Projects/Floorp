@@ -236,8 +236,8 @@ class LSimdExtractElementBase : public LInstructionHelper<1, 1, 0>
     const LAllocation* getBase() {
         return getOperand(0);
     }
-    unsigned lane() const {
-        return mir_->toSimdExtractElement()->lane();
+    MSimdExtractElement* mir() const {
+        return mir_->toSimdExtractElement();
     }
 };
 
@@ -280,8 +280,8 @@ class LSimdExtractElementU2D : public LInstructionHelper<1, 1, 1>
         setOperand(0, base);
         setTemp(0, temp);
     }
-    unsigned lane() const {
-        return mir_->toSimdExtractElement()->lane();
+    MSimdExtractElement* mir() const {
+        return mir_->toSimdExtractElement();
     }
     const LDefinition* temp() {
         return getTemp(0);
