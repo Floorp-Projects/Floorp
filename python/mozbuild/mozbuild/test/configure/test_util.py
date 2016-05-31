@@ -18,9 +18,15 @@ from mozpack import path as mozpath
 
 from mozbuild.configure.util import (
     ConfigureOutputHandler,
+    getpreferredencoding,
     LineIO,
     Version,
 )
+
+from mozbuild.configure import (
+    ConfigureSandbox,
+)
+
 from mozbuild.util import exec_
 
 from buildconfig import topsrcdir
@@ -409,6 +415,30 @@ class TestLineIO(unittest.TestCase):
             self.assertEqual(lines, ['a', 'b'])
 
         self.assertEqual(lines, ['a', 'b', 'c'])
+
+
+class TestLogSubprocessOutput(unittest.TestCase):
+
+    def test_non_ascii_subprocess_output(self):
+        out = StringIO()
+        sandbox = ConfigureSandbox({}, {}, [], out, out)
+
+        sandbox.include_file(mozpath.join(topsrcdir, 'build',
+                             'moz.configure', 'util.configure'))
+        sandbox.include_file(mozpath.join(topsrcdir, 'python', 'mozbuild',
+                                          'mozbuild', 'test', 'configure',
+                                          'data', 'subprocess.configure'))
+        status = 0
+        try:
+            sandbox.run()
+        except SystemExit as e:
+            status = e.code
+
+        self.assertEquals(status, 0)
+        quote_char = "'"
+        if getpreferredencoding().lower() == 'utf-8':
+            quote_char = '\u00B4'.encode('utf-8')
+        self.assertEquals(out.getvalue().strip(), quote_char)
 
 
 class TestVersion(unittest.TestCase):
