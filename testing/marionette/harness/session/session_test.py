@@ -15,6 +15,8 @@ import weakref
 import warnings
 
 
+from mozprofile import FirefoxProfile
+from mozrunner import FirefoxRunner
 from marionette_driver.errors import (
         MarionetteException, TimeoutException,
         JavascriptException, NoSuchElementException, NoSuchWindowException,
@@ -28,221 +30,19 @@ from marionette_driver.wait import Wait
 from marionette_driver.expected import element_present, element_not_present
 from mozlog import get_default_logger
 
+from marionette.marionette_test import (
+        SkipTest,
+        _ExpectedFailure,
+        _UnexpectedSuccess,
+        skip,
+        expectedFailure,
+        parameterized,
+        with_parameters,
+        wraps_parameterized,
+        MetaParameterized,
+        JSTest
+        )
 
-class SkipTest(Exception):
-    """
-    Raise this exception in a test to skip it.
-
-    Usually you can use TestResult.skip() or one of the skipping decorators
-    instead of raising this directly.
-    """
-    pass
-
-class _ExpectedFailure(Exception):
-    """
-    Raise this when a test is expected to fail.
-
-    This is an implementation detail.
-    """
-
-    def __init__(self, exc_info):
-        super(_ExpectedFailure, self).__init__()
-        self.exc_info = exc_info
-
-class _UnexpectedSuccess(Exception):
-    """
-    The test was supposed to fail, but it didn't!
-    """
-    pass
-
-def skip(reason):
-    """Unconditionally skip a test."""
-    def decorator(test_item):
-        if not isinstance(test_item, (type, types.ClassType)):
-            @functools.wraps(test_item)
-            def skip_wrapper(*args, **kwargs):
-                raise SkipTest(reason)
-            test_item = skip_wrapper
-
-        test_item.__unittest_skip__ = True
-        test_item.__unittest_skip_why__ = reason
-        return test_item
-    return decorator
-
-def expectedFailure(func):
-    @functools.wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            func(*args, **kwargs)
-        except Exception:
-            raise _ExpectedFailure(sys.exc_info())
-        raise _UnexpectedSuccess
-    return wrapper
-
-def skip_if_chrome(target):
-    def wrapper(self, *args, **kwargs):
-        if self.marionette._send_message("getContext", key="value") == "chrome":
-            raise SkipTest("skipping test in chrome context")
-        return target(self, *args, **kwargs)
-    return wrapper
-
-def skip_if_desktop(target):
-    def wrapper(self, *args, **kwargs):
-        if self.marionette.session_capabilities.get('b2g') is None:
-            raise SkipTest('skipping due to desktop')
-        return target(self, *args, **kwargs)
-    return wrapper
-
-def skip_if_e10s(target):
-    def wrapper(self, *args, **kwargs):
-        with self.marionette.using_context('chrome'):
-            multi_process_browser = self.marionette.execute_script("""
-            try {
-              return Services.appinfo.browserTabsRemoteAutostart;
-            } catch (e) {
-              return false;
-            }""")
-
-        if multi_process_browser:
-            raise SkipTest('skipping due to e10s')
-        return target(self, *args, **kwargs)
-    return wrapper
-
-def skip_unless_protocol(predicate):
-    """Given a predicate passed the current protocol level, skip the
-    test if the predicate does not match."""
-    def decorator(test_item):
-        @functools.wraps(test_item)
-        def skip_wrapper(self):
-            level = self.marionette.client.protocol
-            if not predicate(level):
-                raise SkipTest('skipping because protocol level is %s' % level)
-            return self
-        return skip_wrapper
-    return decorator
-
-def skip_unless_browser_pref(pref, predicate=bool):
-    """
-    Skip a test based on the value of a browser preference.
-
-    :param pref: the preference name
-    :param predicate: a function that should return false to skip the test.
-                      The function takes one parameter, the preference value.
-                      Defaults to the python built-in bool function.
-
-    Note that the preference must exist, else a failure is raised.
-
-    Example: ::
-
-      class TestSomething(MarionetteTestCase):
-          @skip_unless_browser_pref("accessibility.tabfocus",
-                                    lambda value: value >= 7)
-          def test_foo(self):
-              pass  # test implementation here
-    """
-    def wrapper(target):
-        @functools.wraps(target)
-        def wrapped(self, *args, **kwargs):
-            value = self.marionette.get_pref(pref)
-            if value is None:
-                self.fail("No such browser preference: %r" % pref)
-            if not predicate(value):
-                raise SkipTest("browser preference %r: %r" % (pref, value))
-            return target(self, *args, **kwargs)
-        return wrapped
-    return wrapper
-
-def parameterized(func_suffix, *args, **kwargs):
-    """
-    A decorator that can generate methods given a base method and some data.
-
-    **func_suffix** is used as a suffix for the new created method and must be
-    unique given a base method. if **func_suffix** countains characters that
-    are not allowed in normal python function name, these characters will be
-    replaced with "_".
-
-    This decorator can be used more than once on a single base method. The class
-    must have a metaclass of :class:`MetaParameterized`.
-
-    Example::
-
-      # This example will generate two methods:
-      #
-      # - MyTestCase.test_it_1
-      # - MyTestCase.test_it_2
-      #
-      class MyTestCase(MarionetteTestCase):
-          @parameterized("1", 5, named='name')
-          @parameterized("2", 6, named='name2')
-          def test_it(self, value, named=None):
-              print value, named
-
-    :param func_suffix: will be used as a suffix for the new method
-    :param \*args: arguments to pass to the new method
-    :param \*\*kwargs: named arguments to pass to the new method
-    """
-    def wrapped(func):
-        if not hasattr(func, 'metaparameters'):
-            func.metaparameters = []
-        func.metaparameters.append((func_suffix, args, kwargs))
-        return func
-    return wrapped
-
-def with_parameters(parameters):
-    """
-    A decorator that can generate methods given a base method and some data.
-    Acts like :func:`parameterized`, but define all methods in one call.
-
-    Example::
-
-      # This example will generate two methods:
-      #
-      # - MyTestCase.test_it_1
-      # - MyTestCase.test_it_2
-      #
-
-      DATA = [("1", [5], {'named':'name'}), ("2", [6], {'named':'name2'})]
-
-      class MyTestCase(MarionetteTestCase):
-          @with_parameters(DATA)
-          def test_it(self, value, named=None):
-              print value, named
-
-    :param parameters: list of tuples (**func_suffix**, **args**, **kwargs**)
-                       defining parameters like in :func:`todo`.
-    """
-    def wrapped(func):
-        func.metaparameters = parameters
-        return func
-    return wrapped
-
-def wraps_parameterized(func, func_suffix, args, kwargs):
-    """Internal: for MetaParameterized"""
-    def wrapper(self):
-        return func(self, *args, **kwargs)
-    wrapper.__name__ = func.__name__ + '_' + str(func_suffix)
-    wrapper.__doc__ = '[%s] %s' % (func_suffix, func.__doc__)
-    return wrapper
-
-class MetaParameterized(type):
-    """
-    A metaclass that allow a class to use decorators like :func:`parameterized`
-    or :func:`with_parameters` to generate new methods.
-    """
-    RE_ESCAPE_BAD_CHARS = re.compile(r'[\.\(\) -/]')
-    def __new__(cls, name, bases, attrs):
-        for k, v in attrs.items():
-            if callable(v) and hasattr(v, 'metaparameters'):
-                for func_suffix, args, kwargs in v.metaparameters:
-                    func_suffix = cls.RE_ESCAPE_BAD_CHARS.sub('_', func_suffix)
-                    wrapper = wraps_parameterized(v, func_suffix, args, kwargs)
-                    if wrapper.__name__ in attrs:
-                        raise KeyError("%s is already a defined method on %s" %
-                                        (wrapper.__name__, name))
-                    attrs[wrapper.__name__] = wrapper
-                del attrs[k]
-
-        return type.__new__(cls, name, bases, attrs)
 
 class JSTest:
     head_js_re = re.compile(r"MARIONETTE_HEAD_JS(\s*)=(\s*)['|\"](.*?)['|\"];")
@@ -261,9 +61,10 @@ class CommonTestCase(unittest.TestCase):
         unittest.TestCase.__init__(self, methodName)
         self.loglines = []
         self.duration = 0
-        self.start_time = 0
         self.expected = kwargs.pop('expected', 'pass')
         self.logger = get_default_logger()
+        self.profile = FirefoxProfile()
+        self.binary = kwargs.pop('binary', None)
 
     def _enter_pm(self):
         if self.pydebugger:
@@ -406,7 +207,7 @@ class CommonTestCase(unittest.TestCase):
         return m is not None
 
     @classmethod
-    def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette, testvars):
+    def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, testvars):
         """
         Adds all the tests in the specified file to the specified suite.
         """
@@ -434,7 +235,7 @@ class CommonTestCase(unittest.TestCase):
         # a persistent circular reference which in turn would prevent
         # proper garbage collection.
         self.start_time = time.time()
-        self.marionette = self._marionette_weakref()
+        self.marionette = Marionette(bin=self.binary, profile=self.profile)
         if self.marionette.session is None:
             self.marionette.start_session()
         if self.marionette.timeout is not None:
@@ -445,7 +246,7 @@ class CommonTestCase(unittest.TestCase):
             self.marionette.timeouts(self.marionette.TIMEOUT_PAGE, 30000)
 
     def tearDown(self):
-        pass
+        self.marionette.cleanup()
 
     def cleanTest(self):
         self._deleteSession()
@@ -607,13 +408,12 @@ class CommonTestCase(unittest.TestCase):
 
 
 
-class MarionetteTestCase(CommonTestCase):
+class SessionTestCase(CommonTestCase):
 
     match_re = re.compile(r"test_(.*)\.py$")
 
-    def __init__(self, marionette_weakref, methodName='runTest',
+    def __init__(self, methodName='runTest',
                  filepath='', **kwargs):
-        self._marionette_weakref = marionette_weakref
         self.marionette = None
         self.methodName = methodName
         self.filepath = filepath
@@ -622,7 +422,7 @@ class MarionetteTestCase(CommonTestCase):
         CommonTestCase.__init__(self, methodName, **kwargs)
 
     @classmethod
-    def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette, testvars, **kwargs):
+    def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, testvars, **kwargs):
         # since we use imp.load_source to load test modules, if a module
         # is loaded with the same name as another one the module would just be
         # reloaded.
@@ -645,33 +445,15 @@ class MarionetteTestCase(CommonTestCase):
                 issubclass(obj, unittest.TestCase)):
                 testnames = testloader.getTestCaseNames(obj)
                 for testname in testnames:
-                    suite.addTest(obj(weakref.ref(marionette),
-                                  methodName=testname,
+                    suite.addTest(obj(methodName=testname,
                                   filepath=filepath,
                                   testvars=testvars,
                                   **kwargs))
 
     def setUp(self):
         CommonTestCase.setUp(self)
-        self.marionette.test_name = self.test_name
-        self.marionette.execute_script("log('TEST-START: %s:%s')" %
-                                       (self.filepath.replace('\\', '\\\\'), self.methodName),
-                                       sandbox="simpletest")
 
     def tearDown(self):
-        if not self.marionette.check_for_crash():
-            try:
-                self.marionette.clear_imported_scripts()
-                self.marionette.execute_script("log('TEST-END: %s:%s')" %
-                                               (self.filepath.replace('\\', '\\\\'),
-                                                self.methodName),
-                                               sandbox="simpletest")
-                self.marionette.test_name = None
-            except (MarionetteException, IOError):
-                # We have tried to log the test end when there is no listener
-                # object that we can access
-                pass
-
         CommonTestCase.tearDown(self)
 
     def wait_for_condition(self, method, timeout=30):
@@ -684,35 +466,23 @@ class MarionetteTestCase(CommonTestCase):
         else:
             raise TimeoutException("wait_for_condition timed out")
 
-class MarionetteJSTestCase(CommonTestCase):
+class SessionJSTestCase(CommonTestCase):
 
     match_re = re.compile(r"test_(.*)\.js$")
 
-    def __init__(self, marionette_weakref, methodName='runTest', jsFile=None, **kwargs):
+    def __init__(self, methodName='runTest', jsFile=None, **kwargs):
         assert(jsFile)
         self.jsFile = jsFile
-        self._marionette_weakref = marionette_weakref
         self.marionette = None
         self.test_container = kwargs.pop('test_container', None)
         CommonTestCase.__init__(self, methodName)
 
     @classmethod
-    def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, marionette, testvars, **kwargs):
-        suite.addTest(cls(weakref.ref(marionette), jsFile=filepath, **kwargs))
+    def add_tests_to_suite(cls, mod_name, filepath, suite, testloader, testvars, **kwargs):
+        suite.addTest(cls(jsFile=filepath, **kwargs))
 
     def runTest(self):
-        if self.marionette.session is None:
-            self.marionette.start_session()
-        self.marionette.execute_script(
-            "log('TEST-START: %s');" % self.jsFile.replace('\\', '\\\\'),
-            sandbox="simpletest")
-
         self.run_js_test(self.jsFile)
-
-        self.marionette.execute_script(
-            "log('TEST-END: %s');" % self.jsFile.replace('\\', '\\\\'),
-            sandbox="simpletest")
-        self.marionette.test_name = None
 
     def get_test_class_name(self):
         # returns a dot separated folders as class name
