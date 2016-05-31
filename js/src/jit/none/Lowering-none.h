@@ -92,6 +92,7 @@ class LIRGeneratorNone : public LIRGeneratorShared
     void visitSimdSelect(MSimdSelect* ins) { MOZ_CRASH(); }
     void visitSimdSplat(MSimdSplat* ins) { MOZ_CRASH(); }
     void visitSimdSwizzle(MSimdSwizzle* ins) { MOZ_CRASH(); }
+    void visitSimdShuffle(MSimdShuffle* ins) { MOZ_CRASH(); }
     void visitSimdValueX4(MSimdValueX4* lir) { MOZ_CRASH(); }
     void visitSubstr(MSubstr*) { MOZ_CRASH(); }
     void visitSimdBinaryArith(js::jit::MSimdBinaryArith*) { MOZ_CRASH(); }

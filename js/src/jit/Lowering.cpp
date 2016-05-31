@@ -4436,26 +4436,6 @@ LIRGenerator::visitSimdGeneralShuffle(MSimdGeneralShuffle*ins)
 }
 
 void
-LIRGenerator::visitSimdShuffle(MSimdShuffle* ins)
-{
-    MOZ_ASSERT(IsSimdType(ins->lhs()->type()));
-    MOZ_ASSERT(IsSimdType(ins->rhs()->type()));
-    MOZ_ASSERT(IsSimdType(ins->type()));
-    MOZ_ASSERT(ins->type() == MIRType::Int32x4 || ins->type() == MIRType::Float32x4);
-
-    bool zFromLHS = ins->lane(2) < 4;
-    bool wFromLHS = ins->lane(3) < 4;
-    uint32_t lanesFromLHS = (ins->lane(0) < 4) + (ins->lane(1) < 4) + zFromLHS + wFromLHS;
-
-    LSimdShuffle* lir = new (alloc()) LSimdShuffle();
-    lowerForFPU(lir, ins, ins->lhs(), ins->rhs());
-
-    // See codegen for requirements details.
-    LDefinition temp = (lanesFromLHS == 3) ? tempCopy(ins->rhs(), 1) : LDefinition::BogusTemp();
-    lir->setTemp(0, temp);
-}
-
-void
 LIRGenerator::visitSimdUnaryArith(MSimdUnaryArith* ins)
 {
     MOZ_ASSERT(IsSimdType(ins->input()->type()));
