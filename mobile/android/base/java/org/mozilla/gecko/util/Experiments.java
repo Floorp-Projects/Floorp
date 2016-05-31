@@ -24,9 +24,6 @@ import java.util.List;
 public class Experiments {
     private static final String LOGTAG = "GeckoExperiments";
 
-    // Show search mode (instead of home panels) when tapping on urlbar if there is a search term in the urlbar.
-    public static final String SEARCH_TERM = "search-term";
-
     // Show a system notification linking to a "What's New" page on app update.
     public static final String WHATSNEW_NOTIFICATION = "whatsnew-notification";
 
