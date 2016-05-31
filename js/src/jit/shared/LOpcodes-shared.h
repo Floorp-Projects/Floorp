@@ -47,6 +47,7 @@
     _(SimdBinaryArithIx8)           \
     _(SimdBinaryArithIx4)           \
     _(SimdBinaryArithFx4)           \
+    _(SimdBinarySaturating)         \
     _(SimdBinaryBitwise)            \
     _(SimdShift)                    \
     _(SimdSelect)                   \
