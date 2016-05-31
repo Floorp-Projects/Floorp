@@ -4406,36 +4406,6 @@ LIRGenerator::visitSimdAnyTrue(MSimdAnyTrue* ins)
 }
 
 void
-LIRGenerator::visitSimdGeneralShuffle(MSimdGeneralShuffle*ins)
-{
-    MOZ_ASSERT(IsSimdType(ins->type()));
-
-    LSimdGeneralShuffleBase* lir;
-    if (ins->type() == MIRType::Int32x4)
-        lir = new (alloc()) LSimdGeneralShuffleI(temp());
-    else if (ins->type() == MIRType::Float32x4)
-        lir = new (alloc()) LSimdGeneralShuffleF(temp());
-    else
-        MOZ_CRASH("Unknown SIMD kind when doing a shuffle");
-
-    if (!lir->init(alloc(), ins->numVectors() + ins->numLanes()))
-        return;
-
-    for (unsigned i = 0; i < ins->numVectors(); i++) {
-        MOZ_ASSERT(IsSimdType(ins->vector(i)->type()));
-        lir->setOperand(i, useRegister(ins->vector(i)));
-    }
-
-    for (unsigned i = 0; i < ins->numLanes(); i++) {
-        MOZ_ASSERT(ins->lane(i)->type() == MIRType::Int32);
-        lir->setOperand(i + ins->numVectors(), useRegister(ins->lane(i)));
-    }
-
-    assignSnapshot(lir, Bailout_BoundsCheck);
-    define(lir, ins);
-}
-
-void
 LIRGenerator::visitSimdUnaryArith(MSimdUnaryArith* ins)
 {
     MOZ_ASSERT(IsSimdType(ins->input()->type()));

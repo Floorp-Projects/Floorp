@@ -2946,6 +2946,7 @@ CodeGeneratorX86Shared::visitSimdGeneralShuffle(LSimdGeneralShuffleBase* ins, Re
     }
 
     Label bail;
+    const Scale laneScale = ScaleFromElemWidth(sizeof(T));
 
     for (size_t i = 0; i < mir->numLanes(); i++) {
         Operand lane = ToOperand(ins->lane(i));
@@ -2954,11 +2955,11 @@ CodeGeneratorX86Shared::visitSimdGeneralShuffle(LSimdGeneralShuffleBase* ins, Re
         masm.j(Assembler::Above, &bail);
 
         if (lane.kind() == Operand::REG) {
-            masm.loadScalar<T>(Operand(StackPointer, ToRegister(ins->lane(i)), TimesFour, Simd128DataSize),
+            masm.loadScalar<T>(Operand(StackPointer, ToRegister(ins->lane(i)), laneScale, Simd128DataSize),
                                tempRegister);
         } else {
             masm.load32(lane, laneTemp);
-            masm.loadScalar<T>(Operand(StackPointer, laneTemp, TimesFour, Simd128DataSize), tempRegister);
+            masm.loadScalar<T>(Operand(StackPointer, laneTemp, laneScale, Simd128DataSize), tempRegister);
         }
 
         masm.storeScalar<T>(tempRegister, Address(StackPointer, i * sizeof(T)));
@@ -2984,7 +2985,16 @@ CodeGeneratorX86Shared::visitSimdGeneralShuffle(LSimdGeneralShuffleBase* ins, Re
 void
 CodeGeneratorX86Shared::visitSimdGeneralShuffleI(LSimdGeneralShuffleI* ins)
 {
-    visitSimdGeneralShuffle<int32_t, Register>(ins, ToRegister(ins->temp()));
+    switch (ins->mir()->type()) {
+      case MIRType::Int8x16:
+        return visitSimdGeneralShuffle<int8_t, Register>(ins, ToRegister(ins->temp()));
+      case MIRType::Int16x8:
+        return visitSimdGeneralShuffle<int16_t, Register>(ins, ToRegister(ins->temp()));
+      case MIRType::Int32x4:
+        return visitSimdGeneralShuffle<int32_t, Register>(ins, ToRegister(ins->temp()));
+      default:
+        MOZ_CRASH("unsupported type for general shuffle");
+    }
 }
 void
 CodeGeneratorX86Shared::visitSimdGeneralShuffleF(LSimdGeneralShuffleF* ins)

@@ -940,3 +940,46 @@ LIRGeneratorX86Shared::visitSimdShuffle(MSimdShuffle* ins)
     }
 }
 
+void
+LIRGeneratorX86Shared::visitSimdGeneralShuffle(MSimdGeneralShuffle* ins)
+{
+    MOZ_ASSERT(IsSimdType(ins->type()));
+
+    LSimdGeneralShuffleBase* lir;
+    if (IsIntegerSimdType(ins->type())) {
+#if defined(JS_CODEGEN_X86)
+        // The temp register must be usable with 8-bit load and store
+        // instructions, so one of %eax-%edx.
+        LDefinition t;
+        if (ins->type() == MIRType::Int8x16)
+            t = tempFixed(ebx);
+        else
+            t = temp();
+#else
+        LDefinition t = temp();
+#endif
+        lir = new (alloc()) LSimdGeneralShuffleI(t);
+    } else if (ins->type() == MIRType::Float32x4) {
+        lir = new (alloc()) LSimdGeneralShuffleF(temp());
+    } else {
+        MOZ_CRASH("Unknown SIMD kind when doing a shuffle");
+    }
+
+    if (!lir->init(alloc(), ins->numVectors() + ins->numLanes()))
+        return;
+
+    for (unsigned i = 0; i < ins->numVectors(); i++) {
+        MOZ_ASSERT(IsSimdType(ins->vector(i)->type()));
+        lir->setOperand(i, useRegister(ins->vector(i)));
+    }
+
+    for (unsigned i = 0; i < ins->numLanes(); i++) {
+        MOZ_ASSERT(ins->lane(i)->type() == MIRType::Int32);
+        // Note that there can be up to 16 lane arguments, so we can't assume
+        // that they all get an allocated register.
+        lir->setOperand(i + ins->numVectors(), use(ins->lane(i)));
+    }
+
+    assignSnapshot(lir, Bailout_BoundsCheck);
+    define(lir, ins);
+}
