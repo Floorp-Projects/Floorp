@@ -629,11 +629,17 @@ class MacroAssemblerX86Shared : public Assembler
         }
     };
 
+    void load8ZeroExtend(const Operand& src, Register dest) {
+        movzbl(src, dest);
+    }
     void load8ZeroExtend(const Address& src, Register dest) {
         movzbl(Operand(src), dest);
     }
     void load8ZeroExtend(const BaseIndex& src, Register dest) {
         movzbl(Operand(src), dest);
+    }
+    void load8SignExtend(const Operand& src, Register dest) {
+        movsbl(src, dest);
     }
     void load8SignExtend(const Address& src, Register dest) {
         movsbl(Operand(src), dest);
@@ -682,6 +688,9 @@ class MacroAssemblerX86Shared : public Assembler
         xchgb(output, Operand(mem));
         movsbl(output, output);
     }
+    void load16ZeroExtend(const Operand& src, Register dest) {
+        movzwl(src, dest);
+    }
     void load16ZeroExtend(const Address& src, Register dest) {
         movzwl(Operand(src), dest);
     }
@@ -721,6 +730,9 @@ class MacroAssemblerX86Shared : public Assembler
             movl(value, output);
         xchgw(output, Operand(mem));
         movswl(output, output);
+    }
+    void load16SignExtend(const Operand& src, Register dest) {
+        movswl(src, dest);
     }
     void load16SignExtend(const Address& src, Register dest) {
         movswl(Operand(src), dest);
@@ -1332,24 +1344,44 @@ class MacroAssemblerX86Shared : public Assembler
     bool buildOOLFakeExitFrame(void* fakeReturnAddr);
 };
 
-template <> inline void
-MacroAssemblerX86Shared::loadAlignedVector<int32_t>(const Address& src, FloatRegister dest) {
-    loadAlignedSimd128Int(src, dest);
-}
-template <> inline void
-MacroAssemblerX86Shared::loadAlignedVector<float>(const Address& src, FloatRegister dest) {
+// Specialize for float to use movaps. Use movdqa for everything else.
+template <>
+inline void
+MacroAssemblerX86Shared::loadAlignedVector<float>(const Address& src, FloatRegister dest)
+{
     loadAlignedSimd128Float(src, dest);
 }
 
-template <> inline void
-MacroAssemblerX86Shared::storeAlignedVector<int32_t>(FloatRegister src, const Address& dest) {
-    storeAlignedSimd128Int(src, dest);
+template <typename T>
+inline void
+MacroAssemblerX86Shared::loadAlignedVector(const Address& src, FloatRegister dest)
+{
+    loadAlignedSimd128Int(src, dest);
 }
-template <> inline void
-MacroAssemblerX86Shared::storeAlignedVector<float>(FloatRegister src, const Address& dest) {
+
+// Specialize for float to use movaps. Use movdqa for everything else.
+template <>
+inline void
+MacroAssemblerX86Shared::storeAlignedVector<float>(FloatRegister src, const Address& dest)
+{
     storeAlignedSimd128Float(src, dest);
 }
 
+template <typename T>
+inline void
+MacroAssemblerX86Shared::storeAlignedVector(FloatRegister src, const Address& dest)
+{
+    storeAlignedSimd128Int(src, dest);
+}
+
+template <> inline void
+MacroAssemblerX86Shared::loadScalar<int8_t>(const Operand& src, Register dest) {
+    load8ZeroExtend(src, dest);
+}
+template <> inline void
+MacroAssemblerX86Shared::loadScalar<int16_t>(const Operand& src, Register dest) {
+    load16ZeroExtend(src, dest);
+}
 template <> inline void
 MacroAssemblerX86Shared::loadScalar<int32_t>(const Operand& src, Register dest) {
     load32(src, dest);
@@ -1359,6 +1391,14 @@ MacroAssemblerX86Shared::loadScalar<float>(const Operand& src, FloatRegister des
     loadFloat32(src, dest);
 }
 
+template <> inline void
+MacroAssemblerX86Shared::storeScalar<int8_t>(Register src, const Address& dest) {
+    store8(src, dest);
+}
+template <> inline void
+MacroAssemblerX86Shared::storeScalar<int16_t>(Register src, const Address& dest) {
+    store16(src, dest);
+}
 template <> inline void
 MacroAssemblerX86Shared::storeScalar<int32_t>(Register src, const Address& dest) {
     store32(src, dest);
