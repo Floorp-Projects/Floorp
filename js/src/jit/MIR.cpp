@@ -1267,8 +1267,7 @@ MSimdConvert::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinition
         // Compute hi = obj >> 16 (lane-wise unsigned shift).
         MInstruction* c16 = MConstant::New(alloc, Int32Value(16));
         addTo->add(c16);
-        MInstruction* hi = MSimdShift::New(alloc, obj, c16, MSimdShift::ursh);
-        addTo->add(hi);
+        MInstruction* hi = MSimdShift::AddLegalized(alloc, addTo, obj, c16, MSimdShift::ursh);
 
         // Compute lo = obj & 0xffff (lane-wise).
         MInstruction* m16 =
@@ -1363,6 +1362,94 @@ MSimdBinaryComp::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinit
 
     // This is a legal operation already. Just create the instruction requested.
     MInstruction* result = MSimdBinaryComp::New(alloc, left, right, op, sign);
+    addTo->add(result);
+    return result;
+}
+
+MInstruction*
+MSimdShift::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinition* left,
+                         MDefinition* right, Operation op)
+{
+    MIRType opType = left->type();
+    MOZ_ASSERT(IsIntegerSimdType(opType));
+
+    // SSE does not provide 8x16 shift instructions.
+    if (opType == MIRType::Int8x16) {
+        // Express the shift in terms of Int16x8 shifts by splitting into even
+        // and odd lanes, place 8-bit lanes into the high bits of Int16x8
+        // vectors `even` and `odd`. Shift, mask, combine.
+        //
+        //   wide = Int16x8.fromInt8x16Bits(left);
+        //   shiftBy = right & 7
+        //   mask = Int16x8.splat(0xff00);
+        //
+        MInstruction* wide = MSimdReinterpretCast::New(alloc, left, MIRType::Int16x8);
+        addTo->add(wide);
+
+        // wide = yyxx yyxx yyxx yyxx yyxx yyxx yyxx yyxx
+
+        MInstruction* shiftMask = MConstant::New(alloc, Int32Value(7));
+        addTo->add(shiftMask);
+        MBinaryBitwiseInstruction* shiftBy = MBitAnd::New(alloc, right, shiftMask);
+        shiftBy->setInt32Specialization();
+        addTo->add(shiftBy);
+
+        // Move the even 8x16 lanes into the high bits of the 16x8 lanes.
+        MInstruction* eight = MConstant::New(alloc, Int32Value(8));
+        addTo->add(eight);
+        MInstruction* even = MSimdShift::AddLegalized(alloc, addTo, wide, eight, lsh);
+
+        // Leave the odd lanes in place.
+        MInstruction* odd = wide;
+
+        // even = xx00 xx00 xx00 xx00 xx00 xx00 xx00 xx00
+        // odd  = yyxx yyxx yyxx yyxx yyxx yyxx yyxx yyxx
+
+        MInstruction* mask =
+          MSimdConstant::New(alloc, SimdConstant::SplatX8(int16_t(0xff00)), MIRType::Int16x8);
+        addTo->add(mask);
+
+        // Left-shift: Clear the low bits in `odd` before shifting.
+        if (op == lsh) {
+            odd = MSimdBinaryBitwise::New(alloc, odd, mask, MSimdBinaryBitwise::and_);
+            addTo->add(odd);
+            // odd  = yy00 yy00 yy00 yy00 yy00 yy00 yy00 yy00
+        }
+
+        // Do the real shift twice: once for the even lanes, once for the odd
+        // lanes. This is a recursive call, but with a different type.
+        even = MSimdShift::AddLegalized(alloc, addTo, even, shiftBy, op);
+        odd = MSimdShift::AddLegalized(alloc, addTo, odd, shiftBy, op);
+
+        // even = XX~~ XX~~ XX~~ XX~~ XX~~ XX~~ XX~~ XX~~
+        // odd  = YY~~ YY~~ YY~~ YY~~ YY~~ YY~~ YY~~ YY~~
+
+        // Right-shift: Clear the low bits in `odd` after shifting.
+        if (op != lsh) {
+            odd = MSimdBinaryBitwise::New(alloc, odd, mask, MSimdBinaryBitwise::and_);
+            addTo->add(odd);
+            // odd  = YY00 YY00 YY00 YY00 YY00 YY00 YY00 YY00
+        }
+
+        // Move the even lanes back to their original place.
+        even = MSimdShift::AddLegalized(alloc, addTo, even, eight, ursh);
+
+        // Now, `odd` contains the odd lanes properly shifted, and `even`
+        // contains the even lanes properly shifted:
+        //
+        // even = 00XX 00XX 00XX 00XX 00XX 00XX 00XX 00XX
+        // odd  = YY00 YY00 YY00 YY00 YY00 YY00 YY00 YY00
+        //
+        // Combine:
+        MInstruction* result = MSimdBinaryBitwise::New(alloc, even, odd, MSimdBinaryBitwise::or_);
+        addTo->add(result);
+        result = MSimdReinterpretCast::New(alloc, result, opType);
+        addTo->add(result);
+        return result;
+    }
+
+    // This is a legal operation already. Just create the instruction requested.
+    MInstruction* result = MSimdShift::New(alloc, left, right, op);
     addTo->add(result);
     return result;
 }

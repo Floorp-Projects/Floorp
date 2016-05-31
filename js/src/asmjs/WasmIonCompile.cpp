@@ -349,15 +349,12 @@ class FunctionCompiler
         return MSimdBinaryComp::AddLegalized(alloc(), curBlock_, lhs, rhs, op, sign);
     }
 
-    template<class T>
-    MDefinition* binarySimd(MDefinition* lhs, MDefinition* rhs, typename T::Operation op)
+    MDefinition* binarySimdShift(MDefinition* lhs, MDefinition* rhs, MSimdShift::Operation op)
     {
         if (inDeadCode())
             return nullptr;
 
-        T* ins = T::New(alloc(), lhs, rhs, op);
-        curBlock_->add(ins);
-        return ins;
+        return MSimdShift::AddLegalized(alloc(), curBlock_, lhs, rhs, op);
     }
 
     MDefinition* swizzleSimd(MDefinition* vector, const uint8_t lanes[], MIRType type)
@@ -2406,7 +2403,7 @@ EmitSimdShift(FunctionCompiler& f, ValType operandType, MSimdShift::Operation op
     if (!f.iter().readSimdShiftByScalar(operandType, &lhs, &rhs))
         return false;
 
-    f.iter().setResult(f.binarySimd<MSimdShift>(lhs, rhs, op));
+    f.iter().setResult(f.binarySimdShift(lhs, rhs, op));
     return true;
 }
 
