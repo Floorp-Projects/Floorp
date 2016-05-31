@@ -41,7 +41,7 @@ dictionary ChromeFilePropertyBag : FilePropertyBag {
 // Mozilla extensions
 partial interface File {
 
-  [GetterThrows]
+  [GetterThrows, Deprecated="FileLastModifiedDate"]
   readonly attribute Date lastModifiedDate;
 
   [BinaryName="path", Func="mozilla::dom::Directory::WebkitBlinkDirectoryPickerEnabled"]
