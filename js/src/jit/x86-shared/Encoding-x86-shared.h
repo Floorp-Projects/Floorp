@@ -266,6 +266,7 @@ enum ThreeByteOpcodeID {
     OP3_ROUNDSS_VsdWsd  = 0x0A,
     OP3_ROUNDSD_VsdWsd  = 0x0B,
     OP3_BLENDVPS_VdqWdq = 0x14,
+    OP3_PEXTRB_EdVdqIb  = 0x14,
     OP3_PEXTRD_EdVdqIb  = 0x16,
     OP3_BLENDPS_VpsWpsIb = 0x0C,
     OP3_PTEST_VdVd      = 0x17,
