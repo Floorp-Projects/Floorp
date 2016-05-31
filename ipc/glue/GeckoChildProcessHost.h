@@ -220,6 +220,12 @@ private:
   // it to stay alive and have not yet been destroyed.
   Atomic<int32_t> mAssociatedActors;
 
+  // Remember original env values so we can restore it (there is no other
+  // simple way how to change environment of a child process than to modify
+  // the current environment).
+  nsCString mRestoreOrigNSPRLogName;
+  nsCString mRestoreOrigMozLogName;
+
   static uint32_t sNextUniqueID;
 };
 
