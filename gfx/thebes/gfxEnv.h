@@ -47,6 +47,7 @@ public:
 
   // Disabling the crash guard in DriverCrashGuard
   DECL_GFX_ENV_ONCE("MOZ_DISABLE_CRASH_GUARD", DisableCrashGuard);
+  DECL_GFX_ENV_ONCE("MOZ_FORCE_CRASH_GUARD_NIGHTLY", ForceCrashGuardNightly);
 
   // We force present to work around some Windows bugs - disable that if this
   // environment variable is set.
