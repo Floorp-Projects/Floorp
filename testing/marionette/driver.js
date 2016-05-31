@@ -1811,7 +1811,10 @@ GeckoDriver.prototype.getElementProperty = function*(cmd, resp) {
 
   switch (this.context) {
     case Context.CHROME:
-      throw new UnsupportedOperationError();
+      let win = this.getCurrentWindow();
+      let el = this.curBrowser.seenEls.get(id, {frame: win});
+      resp.body.value = el[name];
+      break;
 
     case Context.CONTENT:
       return this.listener.getElementProperty(id, name);
