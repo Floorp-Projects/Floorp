@@ -635,6 +635,58 @@ LIRGeneratorX86Shared::lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElemen
 }
 
 void
+LIRGeneratorX86Shared::visitSimdExtractElement(MSimdExtractElement* ins)
+{
+    MOZ_ASSERT(IsSimdType(ins->input()->type()));
+    MOZ_ASSERT(!IsSimdType(ins->type()));
+
+    switch (ins->input()->type()) {
+      case MIRType::Int8x16:
+      case MIRType::Int16x8:
+      case MIRType::Int32x4: {
+        MOZ_ASSERT(ins->signedness() != SimdSign::NotApplicable);
+        LUse use = useRegisterAtStart(ins->input());
+        if (ins->type() == MIRType::Double) {
+            // Extract an Uint32 lane into a double.
+            MOZ_ASSERT(ins->signedness() == SimdSign::Unsigned);
+            define(new (alloc()) LSimdExtractElementU2D(use, temp()), ins);
+        } else {
+            auto* lir = new (alloc()) LSimdExtractElementI(use);
+#if defined(JS_CODEGEN_X86)
+            // On x86 (32-bit), we may need to use movsbl or movzbl instructions
+            // to sign or zero extend the extracted lane to 32 bits. The 8-bit
+            // version of these instructions require a source register that is
+            // %al, %bl, %cl, or %dl.
+            // Fix it to %ebx since we can't express that constraint better.
+            if (ins->input()->type() == MIRType::Int8x16) {
+                defineFixed(lir, ins, LAllocation(AnyRegister(ebx)));
+                return;
+            }
+#endif
+            define(lir, ins);
+        }
+        break;
+      }
+      case MIRType::Float32x4: {
+        MOZ_ASSERT(ins->signedness() == SimdSign::NotApplicable);
+        LUse use = useRegisterAtStart(ins->input());
+        define(new(alloc()) LSimdExtractElementF(use), ins);
+        break;
+      }
+      case MIRType::Bool8x16:
+      case MIRType::Bool16x8:
+      case MIRType::Bool32x4: {
+        MOZ_ASSERT(ins->signedness() == SimdSign::NotApplicable);
+        LUse use = useRegisterAtStart(ins->input());
+        define(new(alloc()) LSimdExtractElementB(use), ins);
+        break;
+      }
+      default:
+        MOZ_CRASH("Unknown SIMD kind when extracting element");
+    }
+}
+
+void
 LIRGeneratorX86Shared::visitSimdBinaryArith(MSimdBinaryArith* ins)
 {
     MOZ_ASSERT(IsSimdType(ins->lhs()->type()));

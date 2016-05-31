@@ -4386,44 +4386,6 @@ LIRGenerator::visitSimdReinterpretCast(MSimdReinterpretCast* ins)
 }
 
 void
-LIRGenerator::visitSimdExtractElement(MSimdExtractElement* ins)
-{
-    MOZ_ASSERT(IsSimdType(ins->input()->type()));
-    MOZ_ASSERT(!IsSimdType(ins->type()));
-
-    switch (ins->input()->type()) {
-      case MIRType::Int32x4: {
-        MOZ_ASSERT(ins->signedness() != SimdSign::NotApplicable);
-        // Note: there could be int16x8 in the future, which doesn't use the
-        // same instruction. We either need to pass the arity or create new LIns.
-        LUse use = useRegisterAtStart(ins->input());
-        if (ins->type() == MIRType::Double) {
-            // Extract an Uint32 lane into a double.
-            MOZ_ASSERT(ins->signedness() == SimdSign::Unsigned);
-            define(new (alloc()) LSimdExtractElementU2D(use, temp()), ins);
-        } else {
-            define(new (alloc()) LSimdExtractElementI(use), ins);
-        }
-        break;
-      }
-      case MIRType::Float32x4: {
-        MOZ_ASSERT(ins->signedness() == SimdSign::NotApplicable);
-        LUse use = useRegisterAtStart(ins->input());
-        define(new(alloc()) LSimdExtractElementF(use), ins);
-        break;
-      }
-      case MIRType::Bool32x4: {
-        MOZ_ASSERT(ins->signedness() == SimdSign::NotApplicable);
-        LUse use = useRegisterAtStart(ins->input());
-        define(new(alloc()) LSimdExtractElementB(use), ins);
-        break;
-      }
-      default:
-        MOZ_CRASH("Unknown SIMD kind when extracting element");
-    }
-}
-
-void
 LIRGenerator::visitSimdInsertElement(MSimdInsertElement* ins)
 {
     MOZ_ASSERT(IsSimdType(ins->type()));

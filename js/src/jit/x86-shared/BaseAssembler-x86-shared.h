@@ -3262,19 +3262,16 @@ public:
         threeByteOpImmInt32Simd("vpinsrd", VEX_PD, OP3_PINSRD_VdqEdIb, ESCAPE_3A, lane, offset, base, src0, dst);
     }
 
+    void vpextrb_irr(unsigned lane, XMMRegisterID src, RegisterID dst)
+    {
+        MOZ_ASSERT(lane < 16);
+        threeByteOpImmSimdInt32("vpextrb", VEX_PD, OP3_PEXTRB_EdVdqIb, ESCAPE_3A, lane, (XMMRegisterID)dst, (RegisterID)src);
+    }
+
     void vpextrd_irr(unsigned lane, XMMRegisterID src, RegisterID dst)
     {
         MOZ_ASSERT(lane < 4);
         threeByteOpImmSimdInt32("vpextrd", VEX_PD, OP3_PEXTRD_EdVdqIb, ESCAPE_3A, lane, (XMMRegisterID)dst, (RegisterID)src);
-    }
-
-    void vpextrd_irm(unsigned lane, XMMRegisterID src, int32_t offset, RegisterID base)
-    {
-        MOZ_ASSERT(lane < 4);
-        spew("pextrd     $0x%x, %s, " MEM_ob, lane, XMMRegName(src), ADDR_ob(offset, base));
-        m_formatter.prefix(PRE_SSE_66);
-        m_formatter.threeByteOp(OP3_PEXTRD_EdVdqIb, ESCAPE_3A, offset, base, (RegisterID)src);
-        m_formatter.immediate8u(lane);
     }
 
     void vblendps_irr(unsigned imm, XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)

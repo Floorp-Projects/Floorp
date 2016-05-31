@@ -2647,9 +2647,10 @@ CodeGeneratorX86Shared::visitSimdReinterpretCast(LSimdReinterpretCast* ins)
     }
 }
 
-// Extract an integer lane from the vector register |input| and place it in |output|.
+// Extract an integer lane from the 32x4 vector register |input| and place it in
+// |output|.
 void
-CodeGeneratorX86Shared::emitSimdExtractLane(FloatRegister input, Register output, unsigned lane)
+CodeGeneratorX86Shared::emitSimdExtractLane32x4(FloatRegister input, Register output, unsigned lane)
 {
     if (lane == 0) {
         // The value we want to extract is in the low double-word
@@ -2663,15 +2664,81 @@ CodeGeneratorX86Shared::emitSimdExtractLane(FloatRegister input, Register output
     }
 }
 
+// Extract an integer lane from the 16x8 vector register |input|, sign- or
+// zero-extend to 32 bits and place the result in |output|.
+void
+CodeGeneratorX86Shared::emitSimdExtractLane16x8(FloatRegister input, Register output,
+                                                unsigned lane, SimdSign signedness)
+{
+    // Unlike pextrd and pextrb, this is available in SSE2.
+    masm.vpextrw(lane, input, output);
+
+    if (signedness == SimdSign::Signed)
+        masm.movswl(output, output);
+}
+
+// Extract an integer lane from the 8x16 vector register |input|, sign- or
+// zero-extend to 32 bits and place the result in |output|.
+void
+CodeGeneratorX86Shared::emitSimdExtractLane8x16(FloatRegister input, Register output,
+                                                unsigned lane, SimdSign signedness)
+{
+    if (AssemblerX86Shared::HasSSE41()) {
+        masm.vpextrb(lane, input, output);
+        // vpextrb clears the high bits, so no further extension required.
+        if (signedness == SimdSign::Unsigned)
+            signedness = SimdSign::NotApplicable;
+    } else {
+        // Extract the relevant 16 bits containing our lane, then shift the
+        // right 8 bits into place.
+        emitSimdExtractLane16x8(input, output, lane / 2, SimdSign::Unsigned);
+        if (lane % 2) {
+            masm.shrl(Imm32(8), output);
+            // The shrl handles the zero-extension. Don't repeat it.
+            if (signedness == SimdSign::Unsigned)
+                signedness = SimdSign::NotApplicable;
+        }
+    }
+
+    // We have the right low 8 bits in |output|, but we may need to fix the high
+    // bits.
+    switch (signedness) {
+      case SimdSign::Signed:
+        masm.movsbl(output, output);
+        break;
+      case SimdSign::Unsigned:
+        masm.movzbl(output, output);
+        break;
+      case SimdSign::NotApplicable:
+        // No adjustment needed.
+        break;
+    }
+}
+
 void
 CodeGeneratorX86Shared::visitSimdExtractElementB(LSimdExtractElementB* ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
     Register output = ToRegister(ins->output());
+    MSimdExtractElement* mir = ins->mir();
+    unsigned length = SimdTypeToLength(mir->specialization());
 
-    emitSimdExtractLane(input, output, ins->lane());
+    switch (length) {
+      case 4:
+        emitSimdExtractLane32x4(input, output, mir->lane());
+        break;
+      case 8:
+        // Get a lane, don't bother fixing the high bits since we'll mask below.
+        emitSimdExtractLane16x8(input, output, mir->lane(), SimdSign::NotApplicable);
+        break;
+      case 16:
+        emitSimdExtractLane8x16(input, output, mir->lane(), SimdSign::NotApplicable);
+        break;
+      default:
+        MOZ_CRASH("Unhandled SIMD length");
+    }
 
-    // We need to generate a 0/1 value. We have 0/-1.
+    // We need to generate a 0/1 value. We have 0/-1 and possibly dirty high bits.
     masm.and32(Imm32(1), output);
 }
 
@@ -2680,8 +2747,22 @@ CodeGeneratorX86Shared::visitSimdExtractElementI(LSimdExtractElementI* ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
     Register output = ToRegister(ins->output());
+    MSimdExtractElement* mir = ins->mir();
+    unsigned length = SimdTypeToLength(mir->specialization());
 
-    emitSimdExtractLane(input, output, ins->lane());
+    switch (length) {
+      case 4:
+        emitSimdExtractLane32x4(input, output, mir->lane());
+        break;
+      case 8:
+        emitSimdExtractLane16x8(input, output, mir->lane(), mir->signedness());
+        break;
+      case 16:
+        emitSimdExtractLane8x16(input, output, mir->lane(), mir->signedness());
+        break;
+      default:
+        MOZ_CRASH("Unhandled SIMD length");
+    }
 }
 
 void
@@ -2690,8 +2771,9 @@ CodeGeneratorX86Shared::visitSimdExtractElementU2D(LSimdExtractElementU2D* ins)
     FloatRegister input = ToFloatRegister(ins->input());
     FloatRegister output = ToFloatRegister(ins->output());
     Register temp = ToRegister(ins->temp());
-
-    emitSimdExtractLane(input, temp, ins->lane());
+    MSimdExtractElement* mir = ins->mir();
+    MOZ_ASSERT(mir->specialization() == MIRType::Int32x4);
+    emitSimdExtractLane32x4(input, temp, mir->lane());
     masm.convertUInt32ToDouble(temp, output);
 }
 
@@ -2701,7 +2783,7 @@ CodeGeneratorX86Shared::visitSimdExtractElementF(LSimdExtractElementF* ins)
     FloatRegister input = ToFloatRegister(ins->input());
     FloatRegister output = ToFloatRegister(ins->output());
 
-    unsigned lane = ins->lane();
+    unsigned lane = ins->mir()->lane();
     if (lane == 0) {
         // The value we want to extract is in the low double-word
         if (input != output)
