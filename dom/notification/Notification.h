@@ -185,7 +185,7 @@ public:
     const nsAString& aTag,
     const nsAString& aIcon,
     const nsAString& aData,
-    const nsAString& aServiceWorkerRegistrationScope,
+    const nsAString& aServiceWorkerRegistrationID,
     ErrorResult& aRv);
 
   void GetID(nsAString& aRetval) {
