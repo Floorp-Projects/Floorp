@@ -464,7 +464,8 @@ GenerateMaskSurface(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
   // when mask-mode is not add(source over). Switch to skia when CG backend
   // detected.
   RefPtr<DrawTarget> maskDT =
-    (ctx.GetDrawTarget()->GetBackendType() == BackendType::COREGRAPHICS)
+    (ctx.GetDrawTarget()->GetBackendType() == BackendType::COREGRAPHICS ||
+     ctx.GetDrawTarget()->GetBackendType() == BackendType::DIRECT2D1_1)
     ? Factory::CreateDrawTarget(BackendType::SKIA, maskSurfaceRect.Size(),
                                 SurfaceFormat::A8)
     : ctx.GetDrawTarget()->CreateSimilarDrawTarget(maskSurfaceRect.Size(),
