@@ -1725,7 +1725,7 @@ LIRGenerator::visitMul(MMul* ins)
         ReorderCommutative(&lhs, &rhs, ins);
 
         // If our RHS is a constant -1.0, we can optimize to an LNegD.
-        if (rhs->isConstant() && rhs->toConstant()->toDouble() == -1.0)
+        if (!ins->mustPreserveNaN() && rhs->isConstant() && rhs->toConstant()->toDouble() == -1.0)
             defineReuseInput(new(alloc()) LNegD(useRegisterAtStart(lhs)), ins, 0);
         else
             lowerForFPU(new(alloc()) LMathD(JSOP_MUL), ins, lhs, rhs);
@@ -1737,7 +1737,7 @@ LIRGenerator::visitMul(MMul* ins)
         ReorderCommutative(&lhs, &rhs, ins);
 
         // We apply the same optimizations as for doubles
-        if (rhs->isConstant() && rhs->toConstant()->toFloat32() == -1.0f)
+        if (!ins->mustPreserveNaN() && rhs->isConstant() && rhs->toConstant()->toFloat32() == -1.0f)
             defineReuseInput(new(alloc()) LNegF(useRegisterAtStart(lhs)), ins, 0);
         else
             lowerForFPU(new(alloc()) LMathF(JSOP_MUL), ins, lhs, rhs);
