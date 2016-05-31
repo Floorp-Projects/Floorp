@@ -1118,7 +1118,6 @@ nsCSPPolicy::permits(CSPDirective aDir,
   }
 
   NS_ASSERTION(aUri, "permits needs an uri to perform the check!");
-  outViolatedDirective.Truncate();
 
   nsCSPDirective* defaultDir = nullptr;
 
