@@ -193,7 +193,8 @@ TextTrackManager::RemoveTextTrack(TextTrack* aTextTrack, bool aPendingListOnly)
   TextTrackCueList* removeCueList = aTextTrack->GetCues();
   if (removeCueList) {
     for (uint32_t i = 0; i < removeCueList->Length(); ++i) {
-      mNewCues->RemoveCue(*((*removeCueList)[i]));
+      ErrorResult dummyRv;
+      mNewCues->RemoveCue(*((*removeCueList)[i]), dummyRv);
     }
     DispatchTimeMarchesOn();
   }
@@ -204,9 +205,6 @@ TextTrackManager::DidSeek()
 {
   if (mTextTracks) {
     mTextTracks->DidSeek();
-  }
-  if (mMediaElement) {
-    mLastTimeMarchesOnCalled = mMediaElement->CurrentTime();
   }
   mHasSeeked = true;
 }
@@ -266,7 +264,8 @@ void
 TextTrackManager::NotifyCueRemoved(TextTrackCue& aCue)
 {
   if (mNewCues) {
-    mNewCues->RemoveCue(aCue);
+    ErrorResult dummyRv;
+    mNewCues->RemoveCue(aCue, dummyRv);
   }
   DispatchTimeMarchesOn();
 }
@@ -533,8 +532,7 @@ TextTrackManager::TimeMarchesOn()
   }
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(parentObject);
 
-  if (mMediaElement &&
-      (!(mMediaElement->GetPlayedOrSeeked())|| mMediaElement->Seeking())) {
+  if (mMediaElement && !(mMediaElement->GetPlayedOrSeeked())) {
     return;
   }
 
@@ -572,7 +570,8 @@ TextTrackManager::TimeMarchesOn()
   }
   for (uint32_t i = 0; i < currentCues->Length(); ++i) {
     TextTrackCue* cue = (*currentCues)[i];
-    otherCues->RemoveCue(*cue);
+    ErrorResult dummy;
+    otherCues->RemoveCue(*cue, dummy);
   }
 
   // Step 4.
@@ -697,10 +696,6 @@ TextTrackManager::TimeMarchesOn()
     TextTrack* ttrack = affectedTracks[i];
     if (ttrack) {
       ttrack->DispatchTrustedEvent(NS_LITERAL_STRING("cuechange"));
-      HTMLTrackElement* trackElement = ttrack->GetTrackElement();
-      if (trackElement) {
-        trackElement->DispatchTrackRunnable(NS_LITERAL_STRING("cuechange"));
-      }
     }
   }
 
