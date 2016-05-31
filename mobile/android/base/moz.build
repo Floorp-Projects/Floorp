@@ -116,6 +116,7 @@ gujar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'util/INIParser.java',
     'util/INISection.java',
     'util/InputOptionsUtils.java',
+    'util/IntentUtils.java',
     'util/IOUtils.java',
     'util/JSONUtils.java',
     'util/MenuUtils.java',
