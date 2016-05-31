@@ -322,9 +322,7 @@ class FunctionCompiler
 
         MOZ_ASSERT(IsSimdType(lhs->type()) && rhs->type() == lhs->type());
         MOZ_ASSERT(lhs->type() == type);
-        auto* ins = MSimdBinaryArith::New(alloc(), lhs, rhs, op);
-        curBlock_->add(ins);
-        return ins;
+        return MSimdBinaryArith::AddLegalized(alloc(), curBlock_, lhs, rhs, op);
     }
 
     MDefinition* binarySimd(MDefinition* lhs, MDefinition* rhs, MSimdBinaryBitwise::Operation op,
