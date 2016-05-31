@@ -71,7 +71,7 @@ class MercurialRepoManipulationMixin(object):
             if os.path.exists(repo_path):
                 # hg up -C to discard uncommitted changes
                 self.run_command(
-                    hg + ["up", "-C", "-r", repo_config['revision']],
+                    hg + ["up", "-C", "-r", repo_config['branch']],
                     cwd=repo_path,
                     error_list=HgErrorList,
                     halt_on_failure=True,
@@ -93,7 +93,7 @@ class MercurialRepoManipulationMixin(object):
                 # 2nd hg up -C to make sure we're not on a stranded head
                 # which can happen when reverting debugsetparents
                 self.run_command(
-                    hg + ["up", "-C", "-r", repo_config['revision']],
+                    hg + ["up", "-C", "-r", repo_config['branch']],
                     cwd=repo_path,
                     error_list=HgErrorList,
                     halt_on_failure=True,
