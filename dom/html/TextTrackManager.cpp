@@ -22,8 +22,6 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_ISUPPORTS(TextTrackManager::ShutdownObserverProxy, nsIObserver);
-
 CompareTextTracks::CompareTextTracks(HTMLMediaElement* aMediaElement)
 {
   mMediaElement = aMediaElement;
@@ -96,7 +94,6 @@ TextTrackManager::TextTrackManager(HTMLMediaElement *aMediaElement)
   , mLastTimeMarchesOnCalled(0.0)
   , mTimeMarchesOnDispatched(false)
   , performedTrackSelection(false)
-  , mShutdown(false)
 {
   nsISupports* parentObject =
     mMediaElement->OwnerDoc()->GetParentObject();
@@ -115,12 +112,10 @@ TextTrackManager::TextTrackManager(HTMLMediaElement *aMediaElement)
     sParserWrapper = parserWrapper;
     ClearOnShutdown(&sParserWrapper);
   }
-  mShutdownProxy = new ShutdownObserverProxy(this);
 }
 
 TextTrackManager::~TextTrackManager()
 {
-  nsContentUtils::UnregisterShutdownObserver(mShutdownProxy);
 }
 
 TextTrackList*
@@ -517,7 +512,7 @@ TextTrackManager::DispatchTimeMarchesOn()
   // enqueue the current playback position and whether only that changed
   // through its usual monotonic increase during normal playback; current
   // executing call upon completion will check queue for further 'work'.
-  if (!mTimeMarchesOnDispatched && !mShutdown) {
+  if (!mTimeMarchesOnDispatched) {
     NS_DispatchToMainThread(NewRunnableMethod(this, &TextTrackManager::TimeMarchesOn));
     mTimeMarchesOnDispatched = true;
   }
