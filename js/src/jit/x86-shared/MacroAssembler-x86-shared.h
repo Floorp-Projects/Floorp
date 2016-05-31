@@ -971,22 +971,41 @@ class MacroAssemblerX86Shared : public Assembler
         vsqrtps(src, dest);
     }
 
-    void packedLeftShiftByScalar(FloatRegister src, FloatRegister dest) {
+    void packedLeftShiftByScalarInt16x8(FloatRegister src, FloatRegister dest) {
+        vpsllw(src, dest, dest);
+    }
+    void packedLeftShiftByScalarInt16x8(Imm32 count, FloatRegister dest) {
+        vpsllw(count, dest, dest);
+    }
+    void packedRightShiftByScalarInt16x8(FloatRegister src, FloatRegister dest) {
+        vpsraw(src, dest, dest);
+    }
+    void packedRightShiftByScalarInt16x8(Imm32 count, FloatRegister dest) {
+        vpsraw(count, dest, dest);
+    }
+    void packedUnsignedRightShiftByScalarInt16x8(FloatRegister src, FloatRegister dest) {
+        vpsrlw(src, dest, dest);
+    }
+    void packedUnsignedRightShiftByScalarInt16x8(Imm32 count, FloatRegister dest) {
+        vpsrlw(count, dest, dest);
+    }
+
+    void packedLeftShiftByScalarInt32x4(FloatRegister src, FloatRegister dest) {
         vpslld(src, dest, dest);
     }
-    void packedLeftShiftByScalar(Imm32 count, FloatRegister dest) {
+    void packedLeftShiftByScalarInt32x4(Imm32 count, FloatRegister dest) {
         vpslld(count, dest, dest);
     }
-    void packedRightShiftByScalar(FloatRegister src, FloatRegister dest) {
+    void packedRightShiftByScalarInt32x4(FloatRegister src, FloatRegister dest) {
         vpsrad(src, dest, dest);
     }
-    void packedRightShiftByScalar(Imm32 count, FloatRegister dest) {
+    void packedRightShiftByScalarInt32x4(Imm32 count, FloatRegister dest) {
         vpsrad(count, dest, dest);
     }
-    void packedUnsignedRightShiftByScalar(FloatRegister src, FloatRegister dest) {
+    void packedUnsignedRightShiftByScalarInt32x4(FloatRegister src, FloatRegister dest) {
         vpsrld(src, dest, dest);
     }
-    void packedUnsignedRightShiftByScalar(Imm32 count, FloatRegister dest) {
+    void packedUnsignedRightShiftByScalarInt32x4(Imm32 count, FloatRegister dest) {
         vpsrld(count, dest, dest);
     }
 

@@ -625,6 +625,9 @@ class LSimdShift : public LInstructionHelper<1, 2, 1>
     MSimdShift* mir() const {
         return mir_->toSimdShift();
     }
+    MIRType type() const {
+        return mir_->type();
+    }
 };
 
 // SIMD selection of lanes from two int32x4 or float32x4 arguments based on a
