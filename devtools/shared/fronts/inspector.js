@@ -6,7 +6,7 @@
 const { Ci } = require("chrome");
 require("devtools/shared/fronts/styles");
 require("devtools/shared/fronts/highlighters");
-const { ShortLongString } = require("devtools/server/actors/string");
+const { SimpleStringFront } = require("devtools/server/actors/string");
 const {
   Front,
   FrontClassWithSpec,
@@ -321,7 +321,7 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
     }
 
     let str = this._form.nodeValue || "";
-    return promise.resolve(new ShortLongString(str));
+    return promise.resolve(new SimpleStringFront(str));
   }, {
     impl: "_getNodeValue"
   }),
