@@ -30,18 +30,10 @@
 
 namespace mozilla {
 
-#if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN) || defined(MOZ_APPLEMEDIA) || defined(MOZ_FFMPEG)
-#define MP4_READER_DORMANT_HEURISTIC
-#else
-#undef MP4_READER_DORMANT_HEURISTIC
-#endif
-
 MP4Decoder::MP4Decoder(MediaDecoderOwner* aOwner)
   : MediaDecoder(aOwner)
 {
-#if defined(MP4_READER_DORMANT_HEURISTIC)
   mDormantSupported = Preferences::GetBool("media.decoder.heuristic.dormant.enabled", false);
-#endif
 }
 
 MediaDecoderStateMachine* MP4Decoder::CreateStateMachine()
