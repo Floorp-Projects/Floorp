@@ -1488,6 +1488,7 @@ class MConstant : public MNullaryInstruction
     MConstant(const Value& v, CompilerConstraintList* constraints);
     explicit MConstant(JSObject* obj);
     explicit MConstant(float f);
+    explicit MConstant(double d);
     explicit MConstant(int64_t i);
 
   public:
@@ -1495,6 +1496,8 @@ class MConstant : public MNullaryInstruction
     static MConstant* New(TempAllocator& alloc, const Value& v,
                           CompilerConstraintList* constraints = nullptr);
     static MConstant* NewFloat32(TempAllocator& alloc, double d);
+    static MConstant* NewRawFloat32(TempAllocator& alloc, float d);
+    static MConstant* NewRawDouble(TempAllocator& alloc, double d);
     static MConstant* NewInt64(TempAllocator& alloc, int64_t i);
     static MConstant* NewAsmJS(TempAllocator& alloc, const Value& v, MIRType type);
     static MConstant* NewConstraintlessObject(TempAllocator& alloc, JSObject* v);
@@ -5091,8 +5094,11 @@ class MToFloat32
   : public MToFPInstruction
 {
   protected:
+    bool mustPreserveNaN_;
+
     explicit MToFloat32(MDefinition* def, ConversionKind conversion = NonStringPrimitives)
-      : MToFPInstruction(def, conversion)
+      : MToFPInstruction(def, conversion),
+        mustPreserveNaN_(false)
     {
         setResultType(MIRType::Float32);
         setMovable();
@@ -5107,15 +5113,19 @@ class MToFloat32
     INSTRUCTION_HEADER(ToFloat32)
     TRIVIAL_NEW_WRAPPERS
 
-    static MToFloat32* NewAsmJS(TempAllocator& alloc, MDefinition* def) {
-        return new(alloc) MToFloat32(def, NonStringPrimitives);
+    static MToFloat32* NewAsmJS(TempAllocator& alloc, MDefinition* def, bool mustPreserveNaN) {
+        auto* ret = MToFloat32::New(alloc, def, NonStringPrimitives);
+        ret->mustPreserveNaN_ = mustPreserveNaN;
+        return ret;
     }
 
     virtual MDefinition* foldsTo(TempAllocator& alloc) override;
     bool congruentTo(const MDefinition* ins) const override {
-        if (!ins->isToFloat32() || ins->toToFloat32()->conversion() != conversion())
+        if (!congruentIfOperandsEqual(ins))
             return false;
-        return congruentIfOperandsEqual(ins);
+        auto* other = ins->toToFloat32();
+        return other->conversion() == conversion() &&
+               other->mustPreserveNaN_ == mustPreserveNaN_;
     }
     AliasSet getAliasSet() const override {
         return AliasSet::None();
@@ -5943,10 +5953,16 @@ class MBinaryArithInstruction
     // analysis detect a precision loss in the multiplication.
     TruncateKind implicitTruncate_;
 
+    // Whether we must preserve NaN semantics, and in particular not fold
+    // (x op id) or (id op x) to x, or replace a division by a multiply of the
+    // exact reciprocal.
+    bool mustPreserveNaN_;
+
   public:
     MBinaryArithInstruction(MDefinition* left, MDefinition* right)
       : MBinaryInstruction(left, right),
-        implicitTruncate_(NoTruncate)
+        implicitTruncate_(NoTruncate),
+        mustPreserveNaN_(false)
     {
         specialization_ = MIRType::None;
         setMovable();
@@ -5956,6 +5972,9 @@ class MBinaryArithInstruction
                                         MDefinition* left, MDefinition* right);
 
     bool constantDoubleResult(TempAllocator& alloc);
+
+    void setMustPreserveNaN(bool b) { mustPreserveNaN_ = b; }
+    bool mustPreserveNaN() const { return mustPreserveNaN_; }
 
     MDefinition* foldsTo(TempAllocator& alloc) override;
 
@@ -5974,7 +5993,10 @@ class MBinaryArithInstruction
     virtual void trySpecializeFloat32(TempAllocator& alloc) override;
 
     bool congruentTo(const MDefinition* ins) const override {
-        return binaryCongruentTo(ins);
+        if (!binaryCongruentTo(ins))
+            return false;
+        const auto* other = static_cast<const MBinaryArithInstruction*>(ins);
+        return other->mustPreserveNaN_ == mustPreserveNaN_;
     }
     AliasSet getAliasSet() const override {
         if (specialization_ >= MIRType::Object)
@@ -6013,16 +6035,21 @@ class MMinMax
     INSTRUCTION_HEADER(MinMax)
     TRIVIAL_NEW_WRAPPERS
 
+    static MMinMax* NewWasm(TempAllocator& alloc, MDefinition* left, MDefinition* right,
+                            MIRType type, bool isMax)
+    {
+        return New(alloc, left, right, type, isMax);
+    }
+
     bool isMax() const {
         return isMax_;
     }
 
     bool congruentTo(const MDefinition* ins) const override {
-        if (!ins->isMinMax())
+        if (!congruentIfOperandsEqual(ins))
             return false;
-        if (isMax() != ins->toMinMax()->isMax())
-            return false;
-        return congruentIfOperandsEqual(ins);
+        const MMinMax* other = ins->toMinMax();
+        return other->isMax() == isMax();
     }
 
     AliasSet getAliasSet() const override {
@@ -6633,11 +6660,12 @@ class MSub : public MBinaryArithInstruction
     TRIVIAL_NEW_WRAPPERS
 
     static MSub* NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right,
-                          MIRType type)
+                          MIRType type, bool mustPreserveNaN = false)
     {
         MSub* sub = new(alloc) MSub(left, right);
         sub->specialization_ = type;
         sub->setResultType(type);
+        sub->setMustPreserveNaN(mustPreserveNaN);
         if (type == MIRType::Int32)
             sub->setTruncateKind(Truncate);
         return sub;
@@ -6707,6 +6735,13 @@ class MMul : public MBinaryArithInstruction
     {
         return new(alloc) MMul(left, right, type, mode);
     }
+    static MMul* NewWasm(TempAllocator& alloc, MDefinition* left, MDefinition* right, MIRType type,
+                         Mode mode, bool mustPreserveNaN)
+    {
+        auto* ret = new(alloc) MMul(left, right, type, mode);
+        ret->setMustPreserveNaN(mustPreserveNaN);
+        return ret;
+    }
 
     MDefinition* foldsTo(TempAllocator& alloc) override;
     void analyzeEdgeCasesForward() override;
@@ -6726,6 +6761,9 @@ class MMul : public MBinaryArithInstruction
             return false;
 
         if (mode_ != mul->mode())
+            return false;
+
+        if (mustPreserveNaN() != mul->mustPreserveNaN())
             return false;
 
         return binaryCongruentTo(ins);
@@ -6799,13 +6837,15 @@ class MDiv : public MBinaryArithInstruction
         return new(alloc) MDiv(left, right, type);
     }
     static MDiv* NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right,
-                          MIRType type, bool unsignd, bool trapOnError = false)
+                          MIRType type, bool unsignd, bool trapOnError = false,
+                          bool mustPreserveNaN = false)
     {
         MDiv* div = new(alloc) MDiv(left, right, type);
         div->unsigned_ = unsignd;
         div->trapOnError_ = trapOnError;
         if (trapOnError)
             div->setGuard(); // not removable because of possible side-effects.
+        div->setMustPreserveNaN(mustPreserveNaN);
         if (type == MIRType::Int32)
             div->setTruncateKind(Truncate);
         return div;

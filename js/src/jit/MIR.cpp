@@ -189,17 +189,20 @@ EvaluateExactReciprocal(TempAllocator& alloc, MDiv* ins)
         return nullptr;
 
     Value ret;
-    ret.setDouble(1.0 / (double) num);
+    ret.setDouble(1.0 / double(num));
+
     MConstant* foldedRhs;
     if (ins->type() == MIRType::Float32)
         foldedRhs = MConstant::NewFloat32(alloc, ret.toDouble());
     else
         foldedRhs = MConstant::New(alloc, ret);
+
     MOZ_ASSERT(foldedRhs->type() == ins->type());
     ins->block()->insertBefore(ins, foldedRhs);
 
     MMul* mul = MMul::New(alloc, left, foldedRhs, ins->type());
     mul->setCommutative();
+    mul->setMustPreserveNaN(ins->mustPreserveNaN());
     return mul;
 }
 
@@ -739,6 +742,18 @@ MConstant::NewFloat32(TempAllocator& alloc, double d)
 }
 
 MConstant*
+MConstant::NewRawFloat32(TempAllocator& alloc, float f)
+{
+    return new(alloc) MConstant(f);
+}
+
+MConstant*
+MConstant::NewRawDouble(TempAllocator& alloc, double d)
+{
+    return new(alloc) MConstant(d);
+}
+
+MConstant*
 MConstant::NewInt64(TempAllocator& alloc, int64_t i)
 {
     return new(alloc) MConstant(i);
@@ -880,6 +895,13 @@ MConstant::MConstant(float f)
 {
     setResultType(MIRType::Float32);
     payload_.f = f;
+    setMovable();
+}
+
+MConstant::MConstant(double d)
+{
+    setResultType(MIRType::Double);
+    payload_.d = d;
     setMovable();
 }
 
@@ -2982,6 +3004,9 @@ MBinaryArithInstruction::foldsTo(TempAllocator& alloc)
         return folded;
     }
 
+    if (mustPreserveNaN_)
+        return this;
+
     // 0 + -0 = 0. So we can't remove addition
     if (isAdd() && specialization_ != MIRType::Int32)
         return this;
@@ -3103,6 +3128,7 @@ MMinMax::foldsTo(TempAllocator& alloc)
 
         double lnum = lhs()->toConstant()->numberToDouble();
         double rnum = rhs()->toConstant()->numberToDouble();
+
         double result;
         if (isMax())
             result = js::math_max_impl(lnum, rnum);
@@ -4120,8 +4146,12 @@ MToFloat32::foldsTo(TempAllocator& alloc)
         return input;
 
     // If x is a Float32, Float32(Double(x)) == x
-    if (input->isToDouble() && input->toToDouble()->input()->type() == MIRType::Float32)
+    if (!mustPreserveNaN_ &&
+        input->isToDouble() &&
+        input->toToDouble()->input()->type() == MIRType::Float32)
+    {
         return input->toToDouble()->input();
+    }
 
     if (input->isConstant() && input->toConstant()->isTypeRepresentableAsDouble())
         return MConstant::NewFloat32(alloc, float(input->toConstant()->numberToDouble()));
