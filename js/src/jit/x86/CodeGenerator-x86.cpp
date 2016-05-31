@@ -270,6 +270,8 @@ CodeGeneratorX86::load(Scalar::Type accessType, const Operand& srcAddr, const LD
       case Scalar::Float32:      masm.vmovssWithPatch(srcAddr, ToFloatRegister(out)); break;
       case Scalar::Float64:      masm.vmovsdWithPatch(srcAddr, ToFloatRegister(out)); break;
       case Scalar::Float32x4:
+      case Scalar::Int8x16:
+      case Scalar::Int16x8:
       case Scalar::Int32x4:      MOZ_CRASH("SIMD load should be handled in their own function");
       case Scalar::MaxTypedArrayViewType: MOZ_CRASH("unexpected type");
     }
@@ -370,6 +372,14 @@ CodeGeneratorX86::loadSimd(Scalar::Type type, unsigned numElems, const Operand& 
         }
         break;
       }
+      case Scalar::Int8x16:
+        MOZ_ASSERT(numElems == 16, "unexpected partial load");
+        masm.vmovdquWithPatch(srcAddr, out);
+        break;
+      case Scalar::Int16x8:
+        MOZ_ASSERT(numElems == 8, "unexpected partial load");
+        masm.vmovdquWithPatch(srcAddr, out);
+        break;
       case Scalar::Int8:
       case Scalar::Uint8:
       case Scalar::Int16:
@@ -496,6 +506,8 @@ CodeGeneratorX86::store(Scalar::Type accessType, const LAllocation* value, const
         break;
 
       case Scalar::Float32x4:
+      case Scalar::Int8x16:
+      case Scalar::Int16x8:
       case Scalar::Int32x4:
         MOZ_CRASH("SIMD stores should be handled in emitSimdStore");
 
@@ -558,6 +570,14 @@ CodeGeneratorX86::storeSimd(Scalar::Type type, unsigned numElems, FloatRegister 
         }
         break;
       }
+      case Scalar::Int8x16:
+        MOZ_ASSERT(numElems == 16, "unexpected partial store");
+        masm.vmovdquWithPatch(in, dstAddr);
+        break;
+      case Scalar::Int16x8:
+        MOZ_ASSERT(numElems == 8, "unexpected partial store");
+        masm.vmovdquWithPatch(in, dstAddr);
+        break;
       case Scalar::Int8:
       case Scalar::Uint8:
       case Scalar::Int16:

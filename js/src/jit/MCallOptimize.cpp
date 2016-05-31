@@ -3812,6 +3812,10 @@ SimdTypeToArrayElementType(SimdType type)
 {
     switch (type) {
       case SimdType::Float32x4: return Scalar::Float32x4;
+      case SimdType::Int8x16:
+      case SimdType::Uint8x16:  return Scalar::Int8x16;
+      case SimdType::Int16x8:
+      case SimdType::Uint16x8:  return Scalar::Int16x8;
       case SimdType::Int32x4:
       case SimdType::Uint32x4:  return Scalar::Int32x4;
       default:                MOZ_CRASH("unexpected simd type");

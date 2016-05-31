@@ -2032,6 +2032,8 @@ TypedArrayObject::getElement(uint32_t index)
       case Scalar::Uint8Clamped:
         return Uint8ClampedArray::getIndexValue(this, index);
       case Scalar::Float32x4:
+      case Scalar::Int8x16:
+      case Scalar::Int16x8:
       case Scalar::Int32x4:
       case Scalar::MaxTypedArrayViewType:
         break;
@@ -2074,6 +2076,8 @@ TypedArrayObject::setElement(TypedArrayObject& obj, uint32_t index, double d)
         Float64Array::setIndexValue(obj, index, d);
         return;
       case Scalar::Float32x4:
+      case Scalar::Int8x16:
+      case Scalar::Int16x8:
       case Scalar::Int32x4:
       case Scalar::MaxTypedArrayViewType:
         break;

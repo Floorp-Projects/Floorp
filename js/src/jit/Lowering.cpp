@@ -3441,6 +3441,8 @@ LIRGenerator::visitStoreUnboxedScalar(MStoreUnboxedScalar* ins)
 
     if (ins->isSimdWrite()) {
         MOZ_ASSERT_IF(ins->writeType() == Scalar::Float32x4, ins->value()->type() == MIRType::Float32x4);
+        MOZ_ASSERT_IF(ins->writeType() == Scalar::Int8x16, ins->value()->type() == MIRType::Int8x16);
+        MOZ_ASSERT_IF(ins->writeType() == Scalar::Int16x8, ins->value()->type() == MIRType::Int16x8);
         MOZ_ASSERT_IF(ins->writeType() == Scalar::Int32x4, ins->value()->type() == MIRType::Int32x4);
     } else if (ins->isFloatWrite()) {
         MOZ_ASSERT_IF(ins->writeType() == Scalar::Float32, ins->value()->type() == MIRType::Float32);

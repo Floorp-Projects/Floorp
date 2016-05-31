@@ -250,6 +250,10 @@ class ScalarTypeDescr : public SimpleTypeDescr
                       "TypedObjectConstants.h must be consistent with Scalar::Type");
         static_assert(Scalar::Float32x4 == JS_SCALARTYPEREPR_FLOAT32X4,
                       "TypedObjectConstants.h must be consistent with Scalar::Type");
+        static_assert(Scalar::Int8x16 == JS_SCALARTYPEREPR_INT8X16,
+                      "TypedObjectConstants.h must be consistent with Scalar::Type");
+        static_assert(Scalar::Int16x8 == JS_SCALARTYPEREPR_INT16X8,
+                      "TypedObjectConstants.h must be consistent with Scalar::Type");
         static_assert(Scalar::Int32x4 == JS_SCALARTYPEREPR_INT32X4,
                       "TypedObjectConstants.h must be consistent with Scalar::Type");
 
