@@ -216,10 +216,22 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineSimd(callInfo, target, SimdType::Int32x4);
       case InlinableNative::SimdUint32x4:
         return inlineSimd(callInfo, target, SimdType::Uint32x4);
+      case InlinableNative::SimdInt16x8:
+        return inlineSimd(callInfo, target, SimdType::Int16x8);
+      case InlinableNative::SimdUint16x8:
+        return inlineSimd(callInfo, target, SimdType::Uint16x8);
+      case InlinableNative::SimdInt8x16:
+        return inlineSimd(callInfo, target, SimdType::Int8x16);
+      case InlinableNative::SimdUint8x16:
+        return inlineSimd(callInfo, target, SimdType::Uint8x16);
       case InlinableNative::SimdFloat32x4:
         return inlineSimd(callInfo, target, SimdType::Float32x4);
       case InlinableNative::SimdBool32x4:
         return inlineSimd(callInfo, target, SimdType::Bool32x4);
+      case InlinableNative::SimdBool16x8:
+        return inlineSimd(callInfo, target, SimdType::Bool16x8);
+      case InlinableNative::SimdBool8x16:
+        return inlineSimd(callInfo, target, SimdType::Bool8x16);
 
       // Testing functions.
       case InlinableNative::TestBailout:
@@ -3328,16 +3340,18 @@ IonBuilder::inlineSimd(CallInfo& callInfo, JSFunction* target, SimdType type)
         return inlineSimdStore(callInfo, native, type, 3);
 
         // Bitcasts. One for each type with a memory representation.
-      case SimdOperation::Fn_fromInt8x16Bits:
-      case SimdOperation::Fn_fromInt16x8Bits:
-        return InliningStatus_NotInlined;
       case SimdOperation::Fn_fromInt32x4Bits:
         return inlineSimdConvert(callInfo, native, true, SimdType::Int32x4, type);
       case SimdOperation::Fn_fromUint32x4Bits:
         return inlineSimdConvert(callInfo, native, true, SimdType::Uint32x4, type);
-      case SimdOperation::Fn_fromUint8x16Bits:
+      case SimdOperation::Fn_fromInt16x8Bits:
+        return inlineSimdConvert(callInfo, native, true, SimdType::Int16x8, type);
       case SimdOperation::Fn_fromUint16x8Bits:
-        return InliningStatus_NotInlined;
+        return inlineSimdConvert(callInfo, native, true, SimdType::Uint16x8, type);
+      case SimdOperation::Fn_fromInt8x16Bits:
+        return inlineSimdConvert(callInfo, native, true, SimdType::Int8x16, type);
+      case SimdOperation::Fn_fromUint8x16Bits:
+        return inlineSimdConvert(callInfo, native, true, SimdType::Uint8x16, type);
       case SimdOperation::Fn_fromFloat32x4Bits:
         return inlineSimdConvert(callInfo, native, true, SimdType::Float32x4, type);
       case SimdOperation::Fn_fromFloat64x2Bits:
