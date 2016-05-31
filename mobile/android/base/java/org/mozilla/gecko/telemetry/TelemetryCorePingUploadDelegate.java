@@ -34,6 +34,7 @@ public class TelemetryCorePingUploadDelegate extends BrowserAppDelegate {
             "Gecko" + TelemetryCorePingUploadDelegate.class.getSimpleName(), 0, 23);
 
     private TelemetryDispatcher telemetryDispatcher; // lazy
+    private final SessionMeasurements sessionMeasurements = new SessionMeasurements();
 
     @Override
     public void onStart(final BrowserApp browserApp) {
@@ -47,6 +48,18 @@ public class TelemetryCorePingUploadDelegate extends BrowserAppDelegate {
         // and we want to upload the first run ASAP (e.g. to get install data before the app may crash).
         final SearchEngineManager searchEngineManager = browserApp.getSearchEngineManager();
         searchEngineManager.getEngine(new UploadTelemetryCorePingCallback(browserApp));
+    }
+
+    @Override
+    public void onResume(BrowserApp browserApp) {
+        sessionMeasurements.recordSessionStart();
+    }
+
+    @Override
+    public void onPause(BrowserApp browserApp) {
+        // onStart/onStop is ideal over onResume/onPause. However, onStop is not guaranteed to be called and
+        // dealing with that possibility adds a lot of complexity that we don't want to handle at this point.
+        sessionMeasurements.recordSessionEnd(browserApp);
     }
 
     @WorkerThread // via constructor
@@ -107,7 +120,7 @@ public class TelemetryCorePingUploadDelegate extends BrowserAppDelegate {
                     // Each profile can have different telemetry data so we intentionally grab the shared prefs for the profile.
                     final SharedPreferences sharedPrefs = getSharedPreferences(activity);
                     final SessionMeasurements.SessionMeasurementsContainer sessionMeasurementsContainer =
-                            activity.getSessionMeasurementDelegate().getAndResetSessionMeasurements(activity);
+                            sessionMeasurements.getAndResetSessionMeasurements(activity);
                     final TelemetryCorePingBuilder pingBuilder = new TelemetryCorePingBuilder(activity)
                             .setClientID(clientID)
                             .setDefaultSearchEngine(TelemetryCorePingBuilder.getEngineIdentifier(engine))
