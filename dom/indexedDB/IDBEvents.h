@@ -47,6 +47,7 @@ extern const char16_t* kErrorEventType;
 extern const char16_t* kSuccessEventType;
 extern const char16_t* kUpgradeNeededEventType;
 extern const char16_t* kVersionChangeEventType;
+extern const char16_t* kCloseEventType;
 
 already_AddRefed<nsIDOMEvent>
 CreateGenericEvent(EventTarget* aOwner,
