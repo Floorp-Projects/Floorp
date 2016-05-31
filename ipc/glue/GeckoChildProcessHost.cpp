@@ -523,13 +523,9 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts, b
     return PerformAsyncLaunchInternal(aExtraOpts, arch);
   }
 
-  ++mChildCounter;
-
-  // remember original value so we can restore it.
   // - Note: this code is not called re-entrantly, nor are restoreOrig*LogName
   //   or mChildCounter touched by any other thread, so this is safe.
-  static nsAutoCString restoreOrigNSPRLogName;
-  static nsAutoCString restoreOrigMozLogName;
+  ++mChildCounter;
 
   // Must keep these on the same stack where from we call PerformAsyncLaunchInternal
   // so that PR_DuplicateEnvironment() still sees a valid memory.
@@ -537,16 +533,16 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts, b
   nsAutoCString mozLogName;
 
   if (origNSPRLogName) {
-    if (restoreOrigNSPRLogName.IsEmpty()) {
-      restoreOrigNSPRLogName.AssignLiteral("NSPR_LOG_FILE=");
-      restoreOrigNSPRLogName.Append(origNSPRLogName);
+    if (mRestoreOrigNSPRLogName.IsEmpty()) {
+      mRestoreOrigNSPRLogName.AssignLiteral("NSPR_LOG_FILE=");
+      mRestoreOrigNSPRLogName.Append(origNSPRLogName);
     }
     SetChildLogName("NSPR_LOG_FILE=", origNSPRLogName, nsprLogName);
   }
   if (origMozLogName) {
-    if (restoreOrigMozLogName.IsEmpty()) {
-      restoreOrigMozLogName.AssignLiteral("MOZ_LOG_FILE=");
-      restoreOrigMozLogName.Append(origMozLogName);
+    if (mRestoreOrigMozLogName.IsEmpty()) {
+      mRestoreOrigMozLogName.AssignLiteral("MOZ_LOG_FILE=");
+      mRestoreOrigMozLogName.Append(origMozLogName);
     }
     SetChildLogName("MOZ_LOG_FILE=", origMozLogName, mozLogName);
   }
@@ -555,10 +551,10 @@ GeckoChildProcessHost::PerformAsyncLaunch(std::vector<std::string> aExtraOpts, b
 
   // Revert to original value
   if (origNSPRLogName) {
-    PR_SetEnv(restoreOrigNSPRLogName.get());
+    PR_SetEnv(mRestoreOrigNSPRLogName.get());
   }
   if (origMozLogName) {
-    PR_SetEnv(restoreOrigMozLogName.get());
+    PR_SetEnv(mRestoreOrigMozLogName.get());
   }
 
   return retval;
