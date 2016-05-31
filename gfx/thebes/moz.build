@@ -289,6 +289,11 @@ CFLAGS += CONFIG['TK_CFLAGS']
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('android', 'gonk', 'qt'):
     CXXFLAGS += CONFIG['CAIRO_FT_CFLAGS']
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    # This is set for "normal Android", that is, when Gecko is running on
+    # top of the android java runtime.
+    DEFINES['MOZ_USING_ANDROID_JAVA_WIDGETS'] = True
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] in ('gtk2', 'gtk3', 'qt'):
     CXXFLAGS += CONFIG['MOZ_PANGO_CFLAGS']
 
