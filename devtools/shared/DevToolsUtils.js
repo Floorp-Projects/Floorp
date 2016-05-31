@@ -536,11 +536,14 @@ function newChannelForURL(url, { policy, window, principal }) {
 
   let channelOptions = {
     contentPolicyType: policy,
-    loadUsingSystemPrincipal: true,
     securityFlags: securityFlags,
     uri: url
   };
   if (principal) {
+    // contentPolicyType is required when loading with a custom principal
+    if (!channelOptions.contentPolicyType) {
+      channelOptions.contentPolicyType = Ci.nsIContentPolicy.TYPE_OTHER;
+    }
     channelOptions.loadingPrincipal = principal;
   } else {
     channelOptions.loadUsingSystemPrincipal = true;
