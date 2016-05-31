@@ -589,7 +589,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'telemetry/stores/TelemetryJSONFilePingStore.java',
     'telemetry/stores/TelemetryPingStore.java',
     'telemetry/TelemetryConstants.java',
-    'telemetry/TelemetryCorePingUploadDelegate.java',
+    'telemetry/TelemetryCorePingDelegate.java',
     'telemetry/TelemetryDispatcher.java',
     'telemetry/TelemetryPing.java',
     'telemetry/TelemetryUploadService.java',

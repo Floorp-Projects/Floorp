@@ -77,7 +77,7 @@ import org.mozilla.gecko.tabs.TabHistoryFragment;
 import org.mozilla.gecko.tabs.TabHistoryPage;
 import org.mozilla.gecko.tabs.TabsPanel;
 import org.mozilla.gecko.telemetry.TelemetryUploadService;
-import org.mozilla.gecko.telemetry.TelemetryCorePingUploadDelegate;
+import org.mozilla.gecko.telemetry.TelemetryCorePingDelegate;
 import org.mozilla.gecko.telemetry.measurements.SearchCountMeasurements;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.toolbar.BrowserToolbar;
@@ -309,7 +309,7 @@ public class BrowserApp extends GeckoApp
             (BrowserAppDelegate) new BookmarkStateChangeDelegate(),
             (BrowserAppDelegate) new ReaderViewBookmarkPromotion(),
             (BrowserAppDelegate) new ContentNotificationsDelegate(),
-            new TelemetryCorePingUploadDelegate()
+            new TelemetryCorePingDelegate()
     ));
 
     @NonNull
