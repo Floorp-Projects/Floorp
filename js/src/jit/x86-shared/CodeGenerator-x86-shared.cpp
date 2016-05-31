@@ -2533,14 +2533,14 @@ CodeGeneratorX86Shared::visitFloat32x4ToUint32x4(LFloat32x4ToUint32x4* ins)
     // We can identify A-lanes by the sign bits in A: Any A-lanes will be
     // positive in A, and N, B, and V-lanes will be 0x80000000 in A. Compute a
     // mask of non-A-lanes into |tempF|.
-    masm.zeroFloat32x4(tempF);
+    masm.zeroSimd128Float(tempF);
     masm.packedGreaterThanInt32x4(Operand(out), tempF);
 
     // Clear the A-lanes in B.
-    masm.bitwiseAndX4(Operand(tempF), scratch);
+    masm.bitwiseAndSimd128(Operand(tempF), scratch);
 
     // Compute the final result: A for A-lanes, A|B for B-lanes.
-    masm.bitwiseOrX4(Operand(scratch), out);
+    masm.bitwiseOrSimd128(Operand(scratch), out);
 
     // We still need to filter out the V-lanes. They would show up as 0x80000000
     // in both A and B. Since we cleared the valid A-lanes in B, the V-lanes are
@@ -3315,7 +3315,7 @@ CodeGeneratorX86Shared::visitSimdBinaryCompIx4(LSimdBinaryCompIx4* ins)
         // if that's what it's used in.
         masm.loadConstantSimd128Int(allOnes, scratch);
         masm.packedEqualInt32x4(rhs, lhs);
-        masm.bitwiseXorX4(Operand(scratch), lhs);
+        masm.bitwiseXorSimd128(Operand(scratch), lhs);
         return;
       case MSimdBinaryComp::greaterThanOrEqual:
         // src := rhs
@@ -3325,13 +3325,13 @@ CodeGeneratorX86Shared::visitSimdBinaryCompIx4(LSimdBinaryCompIx4* ins)
             masm.loadAlignedSimd128Int(rhs, scratch);
         masm.packedGreaterThanInt32x4(ToOperand(ins->lhs()), scratch);
         masm.loadConstantSimd128Int(allOnes, lhs);
-        masm.bitwiseXorX4(Operand(scratch), lhs);
+        masm.bitwiseXorSimd128(Operand(scratch), lhs);
         return;
       case MSimdBinaryComp::lessThanOrEqual:
         // lhs <= rhs is equivalent to !(rhs < lhs), which we compute here.
         masm.loadConstantSimd128Int(allOnes, scratch);
         masm.packedGreaterThanInt32x4(rhs, lhs);
-        masm.bitwiseXorX4(Operand(scratch), lhs);
+        masm.bitwiseXorSimd128(Operand(scratch), lhs);
         return;
     }
     MOZ_CRASH("unexpected SIMD op");
@@ -3535,6 +3535,58 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4* ins)
 }
 
 void
+CodeGeneratorX86Shared::visitSimdUnaryArithIx16(LSimdUnaryArithIx16* ins)
+{
+    Operand in = ToOperand(ins->input());
+    FloatRegister out = ToFloatRegister(ins->output());
+
+    static const SimdConstant allOnes = SimdConstant::SplatX16(-1);
+
+    switch (ins->operation()) {
+      case MSimdUnaryArith::neg:
+        masm.zeroSimd128Int(out);
+        masm.packedSubInt8(in, out);
+        return;
+      case MSimdUnaryArith::not_:
+        masm.loadConstantSimd128Int(allOnes, out);
+        masm.bitwiseXorSimd128(in, out);
+        return;
+      case MSimdUnaryArith::abs:
+      case MSimdUnaryArith::reciprocalApproximation:
+      case MSimdUnaryArith::reciprocalSqrtApproximation:
+      case MSimdUnaryArith::sqrt:
+        break;
+    }
+    MOZ_CRASH("unexpected SIMD op");
+}
+
+void
+CodeGeneratorX86Shared::visitSimdUnaryArithIx8(LSimdUnaryArithIx8* ins)
+{
+    Operand in = ToOperand(ins->input());
+    FloatRegister out = ToFloatRegister(ins->output());
+
+    static const SimdConstant allOnes = SimdConstant::SplatX8(-1);
+
+    switch (ins->operation()) {
+      case MSimdUnaryArith::neg:
+        masm.zeroSimd128Int(out);
+        masm.packedSubInt16(in, out);
+        return;
+      case MSimdUnaryArith::not_:
+        masm.loadConstantSimd128Int(allOnes, out);
+        masm.bitwiseXorSimd128(in, out);
+        return;
+      case MSimdUnaryArith::abs:
+      case MSimdUnaryArith::reciprocalApproximation:
+      case MSimdUnaryArith::reciprocalSqrtApproximation:
+      case MSimdUnaryArith::sqrt:
+        break;
+    }
+    MOZ_CRASH("unexpected SIMD op");
+}
+
+void
 CodeGeneratorX86Shared::visitSimdUnaryArithIx4(LSimdUnaryArithIx4* ins)
 {
     Operand in = ToOperand(ins->input());
@@ -3544,12 +3596,12 @@ CodeGeneratorX86Shared::visitSimdUnaryArithIx4(LSimdUnaryArithIx4* ins)
 
     switch (ins->operation()) {
       case MSimdUnaryArith::neg:
-        masm.zeroInt32x4(out);
+        masm.zeroSimd128Int(out);
         masm.packedSubInt32(in, out);
         return;
       case MSimdUnaryArith::not_:
         masm.loadConstantSimd128Int(allOnes, out);
-        masm.bitwiseXorX4(in, out);
+        masm.bitwiseXorSimd128(in, out);
         return;
       case MSimdUnaryArith::abs:
       case MSimdUnaryArith::reciprocalApproximation:
@@ -3580,15 +3632,15 @@ CodeGeneratorX86Shared::visitSimdUnaryArithFx4(LSimdUnaryArithFx4* ins)
     switch (ins->operation()) {
       case MSimdUnaryArith::abs:
         masm.loadConstantSimd128Float(signMasks, out);
-        masm.bitwiseAndX4(in, out);
+        masm.bitwiseAndSimd128(in, out);
         return;
       case MSimdUnaryArith::neg:
         masm.loadConstantSimd128Float(minusZero, out);
-        masm.bitwiseXorX4(in, out);
+        masm.bitwiseXorSimd128(in, out);
         return;
       case MSimdUnaryArith::not_:
         masm.loadConstantSimd128Float(allOnes, out);
-        masm.bitwiseXorX4(in, out);
+        masm.bitwiseXorSimd128(in, out);
         return;
       case MSimdUnaryArith::reciprocalApproximation:
         masm.packedRcpApproximationFloat32x4(in, out);
@@ -3709,9 +3761,9 @@ CodeGeneratorX86Shared::visitSimdSelect(LSimdSelect* ins)
     if (!mir->mask()->isSimdBinaryComp())
         masm.packedRightShiftByScalar(Imm32(31), temp);
 
-    masm.bitwiseAndX4(Operand(temp), output);
-    masm.bitwiseAndNotX4(Operand(onFalse), temp);
-    masm.bitwiseOrX4(Operand(temp), output);
+    masm.bitwiseAndSimd128(Operand(temp), output);
+    masm.bitwiseAndNotSimd128(Operand(onFalse), temp);
+    masm.bitwiseOrSimd128(Operand(temp), output);
 }
 
 void

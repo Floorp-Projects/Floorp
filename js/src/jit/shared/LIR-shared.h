@@ -525,6 +525,22 @@ class LSimdUnaryArith : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Unary SIMD arithmetic operation on a Int8x16 operand
+class LSimdUnaryArithIx16 : public LSimdUnaryArith
+{
+  public:
+    LIR_HEADER(SimdUnaryArithIx16);
+    explicit LSimdUnaryArithIx16(const LAllocation& in) : LSimdUnaryArith(in) {}
+};
+
+// Unary SIMD arithmetic operation on a Int16x8 operand
+class LSimdUnaryArithIx8 : public LSimdUnaryArith
+{
+  public:
+    LIR_HEADER(SimdUnaryArithIx8);
+    explicit LSimdUnaryArithIx8(const LAllocation& in) : LSimdUnaryArith(in) {}
+};
+
 // Unary SIMD arithmetic operation on a Int32x4 operand
 class LSimdUnaryArithIx4 : public LSimdUnaryArith
 {
