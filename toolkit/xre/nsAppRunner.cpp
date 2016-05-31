@@ -4793,11 +4793,11 @@ MultiprocessBlockPolicy() {
 #endif
 
   /**
-   * Avoids enabling e10s for OS X 10.6 - 10.8 users (<= Lion) as these
+   * Avoids enabling e10s for OS X 10.6 - 10.8 users (<= Mountain Lion) as these
    * versions will be unsupported soon.
    */
 #if defined(XP_MACOSX)
-  if (!nsCocoaFeatures::OnMountainLionOrLater()) {
+  if (!nsCocoaFeatures::OnMavericksOrLater()) {
     gMultiprocessBlockPolicy = kE10sDisabledForOperatingSystem;
     return gMultiprocessBlockPolicy;
   }
