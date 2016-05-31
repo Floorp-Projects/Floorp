@@ -2176,12 +2176,8 @@ CodeGeneratorMIPSShared::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins)
                       wasm::JumpTarget::OutOfBounds);
     }
 
-    if (mir->alwaysThrow()) {
-        masm.jump(wasm::JumpTarget::BadIndirectCall);
-    } else {
-        BaseIndex source(GlobalReg, index, ScalePointer, addr);
-        masm.loadPtr(source, out);
-    }
+    BaseIndex source(GlobalReg, index, ScalePointer, addr);
+    masm.loadPtr(source, out);
 }
 
 void

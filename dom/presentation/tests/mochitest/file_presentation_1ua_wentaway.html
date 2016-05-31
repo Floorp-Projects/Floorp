@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<!-- vim: set shiftwidth=2 tabstop=2 autoindent cindent expandtab: -->
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>Test for B2G PresentationReceiver at receiver side</title>
+  </head>
+  <body>
+    <div id="content"></div>
+<script type="application/javascript;version=1.7">
+
+"use strict";
+
+function is(a, b, msg) {
+  if (a === b) {
+    alert('OK ' + msg);
+  } else {
+    alert('KO ' + msg + ' | reason: ' + a + ' != ' + b);
+  }
+}
+
+function ok(a, msg) {
+  alert((a ? 'OK ' : 'KO ') + msg);
+}
+
+function info(msg) {
+  alert('INFO ' + msg);
+}
+
+function command(name, data) {
+  alert('COMMAND ' + JSON.stringify({name: name, data: data}));
+}
+
+function finish() {
+  alert('DONE');
+}
+
+var connection;
+
+function testConnectionAvailable() {
+  return new Promise(function(aResolve, aReject) {
+    info('Receiver: --- testConnectionAvailable ---');
+    ok(navigator.presentation, "Receiver: navigator.presentation should be available.");
+    ok(navigator.presentation.receiver, "Receiver: navigator.presentation.receiver should be available.");
+
+    navigator.presentation.receiver.connectionList
+    .then((aList) => {
+      is(aList.connections.length, 1, "Should get one conncetion.");
+      connection = aList.connections[0];
+      ok(connection.id, "Connection ID should be set: " + connection.id);
+      is(connection.state, "connected", "Connection state at receiver side should be connected.");
+      aResolve();
+    })
+    .catch((aError) => {
+      ok(false, "Receiver: Error occurred when getting the connection: " + aError);
+      finish();
+      aReject();
+    });
+  });
+}
+
+function testConnectionReady() {
+  return new Promise(function(aResolve, aReject) {
+    info('Receiver: --- testConnectionReady ---');
+    connection.onconnect = function() {
+      connection.onconnect = null;
+      ok(false, "Should not get |onconnect| event.")
+      aReject();
+    };
+    if (connection.state === "connected") {
+      connection.onconnect = null;
+      is(connection.state, "connected", "Receiver: Connection state should become connected.");
+      aResolve();
+    }
+  });
+}
+
+function testConnectionWentaway() {
+  return new Promise(function(aResolve, aReject) {
+    info('Receiver: --- testConnectionWentaway ---\n');
+    command('forward-command', JSON.stringify({ name: 'ready-to-remove-receiverFrame' }));
+  });
+}
+
+function runTests() {
+  testConnectionAvailable()
+  .then(testConnectionReady)
+  .then(testConnectionWentaway);
+}
+
+runTests();
+
+</script>
+  </body>
+</html>

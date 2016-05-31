@@ -163,7 +163,12 @@ struct IMEState final
      * directly. Because we don't process some native events, but they may
      * be needed by the plug-in.
      */
-    PLUGIN
+    PLUGIN,
+    /**
+     * 'Unknown' is useful when you cache this enum.  So, this shouldn't be
+     * used with nsIWidget::SetInputContext().
+     */
+    UNKNOWN
   };
   Enabled mEnabled;
 

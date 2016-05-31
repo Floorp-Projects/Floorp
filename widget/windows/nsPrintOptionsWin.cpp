@@ -123,9 +123,6 @@ nsPrintOptionsWin::DeserializeToPrintSettings(const PrintData& data,
     psWin->SetPrintableWidthInInches(data.printableWidthInInches());
     psWin->SetPrintableHeightInInches(data.printableHeightInInches());
 
-    nsXPIDLString printerName;
-    settings->GetPrinterName(getter_Copies(printerName));
-
     if (data.devModeData().IsEmpty()) {
       psWin->SetDevMode(nullptr);
     } else {

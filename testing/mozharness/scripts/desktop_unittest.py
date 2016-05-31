@@ -550,6 +550,11 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                                                     'resources',
                                                     module))
 
+    def get_timeout_for_category(self, suite_category):
+        if suite_category == 'cppunittest':
+            return 2500
+        return self.config["suite_definitions"][suite_category].get('run_timeout', 1000)
+
     def _run_category_suites(self, suite_category, preflight_run_method=None):
         """run suite(s) to a specific category"""
         dirs = self.query_abs_dirs()
@@ -609,7 +614,7 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
                 if not os.path.isdir(env['MOZ_UPLOAD_DIR']):
                     self.mkdir_p(env['MOZ_UPLOAD_DIR'])
                 env = self.query_env(partial_env=env, log_level=INFO)
-                cmd_timeout = 2500 if suite_category == 'cppunittest' else 1000
+                cmd_timeout = self.get_timeout_for_category(suite_category)
                 return_code = self.run_command(cmd, cwd=dirs['abs_work_dir'],
                                                output_timeout=cmd_timeout,
                                                output_parser=parser,

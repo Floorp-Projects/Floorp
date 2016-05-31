@@ -1107,13 +1107,9 @@ CodeGeneratorX64::visitAsmJSLoadFuncPtr(LAsmJSLoadFuncPtr* ins)
                       wasm::JumpTarget::OutOfBounds);
     }
 
-    if (mir->alwaysThrow()) {
-        masm.jump(wasm::JumpTarget::BadIndirectCall);
-    } else {
-        CodeOffset label = masm.leaRipRelative(tmp);
-        masm.loadPtr(Operand(tmp, index, TimesEight, 0), out);
-        masm.append(AsmJSGlobalAccess(label, mir->globalDataOffset()));
-    }
+    CodeOffset label = masm.leaRipRelative(tmp);
+    masm.loadPtr(Operand(tmp, index, ScalePointer, 0), out);
+    masm.append(AsmJSGlobalAccess(label, mir->globalDataOffset()));
 }
 
 void

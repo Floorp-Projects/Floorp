@@ -4205,8 +4205,10 @@ LIRGenerator::visitAsmJSCall(MAsmJSCall* ins)
     for (unsigned i = 0; i < ins->numArgs(); i++)
         args[i] = useFixed(ins->getOperand(i), ins->registerForArg(i));
 
-    if (ins->callee().which() == MAsmJSCall::Callee::Dynamic)
-        args[ins->dynamicCalleeOperandIndex()] = useFixed(ins->callee().dynamic(), CallTempReg0);
+    if (ins->callee().which() == MAsmJSCall::Callee::Dynamic) {
+        args[ins->dynamicCalleeOperandIndex()] =
+            useFixed(ins->callee().dynamicPtr(), WasmTableCallPtrReg);
+    }
 
     LInstruction* lir = new(alloc()) LAsmJSCall(args, ins->numOperands());
     if (ins->type() == MIRType::None)

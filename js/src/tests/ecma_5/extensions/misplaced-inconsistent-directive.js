@@ -57,8 +57,14 @@ if (isAsmJSCompilationAvailable())
 evaluateNoRval("'use strict'; function f8() {} 'use strict'; function f9() {}");
 evaluateNoRval("'use strict'; function f10() { var z; 'use strict' }");
 
-if (isAsmJSCompilationAvailable())
-  evaluateNoRval("function f11() { 'use asm'; return {}; }");
+if (isAsmJSCompilationAvailable()) {
+  try {
+    evaluateNoRval("function f11() { 'use asm'; return {}; }");
+  } catch(e) {
+    if (!e.toString().includes("Successfully compiled asm.js code"))
+      throw e;
+  }
+}
 
 /******************************************************************************/
 

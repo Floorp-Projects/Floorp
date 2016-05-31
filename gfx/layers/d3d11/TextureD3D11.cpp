@@ -687,10 +687,16 @@ DXGITextureHostD3D11::SetCompositor(Compositor* aCompositor)
 bool
 DXGITextureHostD3D11::Lock()
 {
+  if (!mCompositor) {
+    NS_WARNING("no suitable compositor");
+    return false;
+  }
+
   if (!GetDevice()) {
     NS_WARNING("trying to lock a TextureHost without a D3D device");
     return false;
   }
+
   if (!mTextureSource) {
     if (!mTexture && !OpenSharedHandle()) {
       gfxWindowsPlatform::GetPlatform()->ForceDeviceReset(ForcedDeviceResetReason::OPENSHAREDHANDLE);
@@ -804,6 +810,11 @@ DXGIYCbCrTextureHostD3D11::SetCompositor(Compositor* aCompositor)
 bool
 DXGIYCbCrTextureHostD3D11::Lock()
 {
+  if (!mCompositor) {
+    NS_WARNING("no suitable compositor");
+    return false;
+  }
+
   if (!GetDevice()) {
     NS_WARNING("trying to lock a TextureHost without a D3D device");
     return false;

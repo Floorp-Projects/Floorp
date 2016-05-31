@@ -96,7 +96,6 @@ function testStartConnectionWithDevice() {
 
       if (connection) {
         is(connection, connectionFromEvent, "The connection from promise and the one from |connectionavailable| event should be the same.");
-        aResolve();
       }
     };
 
@@ -105,12 +104,16 @@ function testStartConnectionWithDevice() {
         connection = aConnection;
         ok(connection, "Connection should be available.");
         ok(connection.id, "Connection ID should be set.");
-        is(connection.state, "connected", "Connection state at sender side should be connected by default.");
+        is(connection.state, "connecting", "The initial state should be connecting.");
 
         if (connectionFromEvent) {
           is(connection, connectionFromEvent, "The connection from promise and the one from |connectionavailable| event should be the same.");
-          aResolve();
         }
+        connection.onconnect = function() {
+          connection.onconnect = null;
+          is(connection.state, "connected", "Connection should be connected.");
+          aResolve();
+        };
       },
       function(aError) {
         ok(false, "Error occurred when establishing a connection: " + aError);

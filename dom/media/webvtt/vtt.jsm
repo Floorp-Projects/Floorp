@@ -1051,6 +1051,10 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
           maxPosition = containerBox[size] + step,
           initialAxis = axis[0];
 
+      if (step == 0) {
+        return;
+      }
+
       // If the specified intial position is greater then the max position then
       // clamp the box to the amount of steps it would take for the box to
       // reach the max position.

@@ -1,0 +1,44 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1265279
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1265279 - Web Manifest: Implement window.oninstall</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script>
+"use strict";
+SimpleTest.waitForExplicitFinish();
+is(window.hasOwnProperty("oninstall"), true, "window has own oninstall property");
+is(window.oninstall, null, "window install is initially set to null");
+
+// Check that enumerable, configurable, and has a getter and setter
+const objDescriptor = Object.getOwnPropertyDescriptor(window, "oninstall");
+is(objDescriptor.enumerable, true, "is enumerable");
+is(objDescriptor.configurable, true, "is configurable");
+is(objDescriptor.hasOwnProperty("get"), true, "has getter");
+is(objDescriptor.hasOwnProperty("set"), true, "has setter");
+
+// Test is we receive the event on window.install
+const customEv = new CustomEvent("install");
+window.oninstall = function handler(ev){
+  window.oninstall = null;
+  is(ev, customEv, "The events should be the same");
+  testAddEventListener();
+};
+window.dispatchEvent(customEv);
+
+// Test that it works with .addEventListener("install", f);
+function testAddEventListener(){
+  const customEv2 = new CustomEvent("install");
+  window.addEventListener("install", function handler2(ev2) {
+    window.removeEventListener("install", handler2);
+    is(ev2, customEv2, "The events should be the same");
+    SimpleTest.finish();
+  });
+  window.dispatchEvent(customEv2);
+}
+  </script>
+</head>

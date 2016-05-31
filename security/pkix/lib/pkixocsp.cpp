@@ -765,7 +765,7 @@ MatchKeyHash(TrustDomain& trustDomain, Input keyHash,
   if (keyHash.GetLength() != SHA1_DIGEST_LENGTH)  {
     return Result::ERROR_OCSP_MALFORMED_RESPONSE;
   }
-  static uint8_t hashBuf[SHA1_DIGEST_LENGTH];
+  uint8_t hashBuf[SHA1_DIGEST_LENGTH];
   Result rv = KeyHash(trustDomain, subjectPublicKeyInfo, hashBuf,
                       sizeof hashBuf);
   if (rv != Success) {

@@ -189,14 +189,21 @@ class ABIArgGenerator
     ABIArg next(MIRType argType);
     ABIArg& current() { return current_; }
     uint32_t stackBytesConsumedSoFar() const { return stackOffset_; }
-
-    // Note: these registers are all guaranteed to be different
-    static const Register NonArgReturnReg0;
-    static const Register NonArgReturnReg1;
-    static const Register NonVolatileReg;
-    static const Register NonArg_VolatileReg;
-    static const Register NonReturn_VolatileReg0;
 };
+
+// Avoid r11, which is the MacroAssembler's ScratchReg.
+static MOZ_CONSTEXPR_VAR Register ABINonArgReg0 = rax;
+static MOZ_CONSTEXPR_VAR Register ABINonArgReg1 = rbx;
+
+// Note: these three registers are all guaranteed to be different
+static MOZ_CONSTEXPR_VAR Register ABINonArgReturnReg0 = r10;
+static MOZ_CONSTEXPR_VAR Register ABINonArgReturnReg1 = r12;
+static MOZ_CONSTEXPR_VAR Register ABINonVolatileReg = r13;
+
+// Registers used for asm.js/wasm table calls. These registers must be disjoint
+// from the ABI argument registers and from each other.
+static MOZ_CONSTEXPR_VAR Register WasmTableCallPtrReg = ABINonArgReg0;
+static MOZ_CONSTEXPR_VAR Register WasmTableCallSigReg = ABINonArgReg1;
 
 static MOZ_CONSTEXPR_VAR Register OsrFrameReg = IntArgReg3;
 
