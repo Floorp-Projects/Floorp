@@ -26,26 +26,13 @@ from moztest.adapters.unit import StructuredTestRunner, StructuredTestResult
 from moztest.results import TestResultCollection, TestResult, relevant_line
 import mozversion
 
-import httpd
+from marionette.runner import httpd
 
 
 here = os.path.abspath(os.path.dirname(__file__))
 
-def update_mozinfo(path=None):
-    """walk up directories to find mozinfo.json and update the info"""
 
-    path = path or here
-    dirs = set()
-    while path != os.path.expanduser('~'):
-        if path in dirs:
-            break
-        dirs.add(path)
-        path = os.path.split(path)[0]
-
-    return mozinfo.find_and_update_from_json(*dirs)
-
-
-class MarionetteTest(TestResult):
+class SessionTest(TestResult):
 
     @property
     def test_name(self):
@@ -56,13 +43,12 @@ class MarionetteTest(TestResult):
         else:
             return self.name
 
-class MarionetteTestResult(StructuredTestResult, TestResultCollection):
+class SessionTestResult(StructuredTestResult, TestResultCollection):
 
-    resultClass = MarionetteTest
+    resultClass = SessionTest
 
     def __init__(self, *args, **kwargs):
-        self.marionette = kwargs.pop('marionette')
-        TestResultCollection.__init__(self, 'MarionetteTest')
+        TestResultCollection.__init__(self, 'SessionTest')
         self.passed = 0
         self.testsRun = 0
         self.result_modifiers = [] # used by mixins to modify the result
@@ -144,31 +130,31 @@ class MarionetteTestResult(StructuredTestResult, TestResultCollection):
 
     def addError(self, test, err):
         self.add_test_result(test, output=self._exc_info_to_string(err, test), result_actual='ERROR')
-        super(MarionetteTestResult, self).addError(test, err)
+        super(SessionTestResult, self).addError(test, err)
 
     def addFailure(self, test, err):
         self.add_test_result(test, output=self._exc_info_to_string(err, test), result_actual='UNEXPECTED-FAIL')
-        super(MarionetteTestResult, self).addFailure(test, err)
+        super(SessionTestResult, self).addFailure(test, err)
 
     def addSuccess(self, test):
         self.passed += 1
         self.add_test_result(test, result_actual='PASS')
-        super(MarionetteTestResult, self).addSuccess(test)
+        super(SessionTestResult, self).addSuccess(test)
 
     def addExpectedFailure(self, test, err):
         """Called when an expected failure/error occured."""
         self.add_test_result(test, output=self._exc_info_to_string(err, test),
                              result_actual='KNOWN-FAIL')
-        super(MarionetteTestResult, self).addExpectedFailure(test, err)
+        super(SessionTestResult, self).addExpectedFailure(test, err)
 
     def addUnexpectedSuccess(self, test):
         """Called when a test was expected to fail, but succeed."""
         self.add_test_result(test, result_actual='UNEXPECTED-PASS')
-        super(MarionetteTestResult, self).addUnexpectedSuccess(test)
+        super(SessionTestResult, self).addUnexpectedSuccess(test)
 
     def addSkip(self, test, reason):
         self.add_test_result(test, output=reason, result_actual='SKIPPED')
-        super(MarionetteTestResult, self).addSkip(test, reason)
+        super(SessionTestResult, self).addSkip(test, reason)
 
     def getInfo(self, test):
         return test.test_name
@@ -203,40 +189,30 @@ class MarionetteTestResult(StructuredTestResult, TestResultCollection):
 
     def stopTest(self, *args, **kwargs):
         unittest._TextTestResult.stopTest(self, *args, **kwargs)
-        if self.marionette.check_for_crash():
-            # this tells unittest.TestSuite not to continue running tests
-            self.shouldStop = True
-            test = next((a for a in args if isinstance(a, unittest.TestCase)),
-                        None)
-            if test:
-                self.addError(test, sys.exc_info())
 
 
-class MarionetteTextTestRunner(StructuredTestRunner):
+class SessionTextTestRunner(StructuredTestRunner):
 
-    resultclass = MarionetteTestResult
+    resultclass = SessionTestResult
 
     def __init__(self, **kwargs):
-        self.marionette = kwargs.pop('marionette')
-        self.capabilities = kwargs.pop('capabilities')
-
+        self.binary = kwargs.pop('binary')
         StructuredTestRunner.__init__(self, **kwargs)
 
     def _makeResult(self):
         return self.resultclass(self.stream,
                                 self.descriptions,
                                 self.verbosity,
-                                marionette=self.marionette,
                                 logger=self.logger,
                                 result_callbacks=self.result_callbacks)
 
     def run(self, test):
-        result = super(MarionetteTextTestRunner, self).run(test)
+        result = super(SessionTextTestRunner, self).run(test)
         result.printLogs(test)
         return result
 
 
-class BaseMarionetteArguments(ArgumentParser):
+class BaseSessionArguments(ArgumentParser):
     socket_timeout_default = 360.0
 
     def __init__(self, **kwargs):
@@ -257,11 +233,6 @@ class BaseMarionetteArguments(ArgumentParser):
                         action='count',
                         help='Increase verbosity to include debug messages with -v, '
                             'and trace messages with -vv.')
-        self.add_argument('--address',
-                        help='host:port of running Gecko instance to connect to')
-        self.add_argument('--device',
-                        dest='device_serial',
-                        help='serial ID of a device to use for adb / fastboot')
         self.add_argument('--app',
                         help='application to use')
         self.add_argument('--app-arg',
@@ -319,8 +290,6 @@ class BaseMarionetteArguments(ArgumentParser):
         self.add_argument('--this-chunk',
                         type=int,
                         help='which chunk to run')
-        self.add_argument('--sources',
-                        help='path to sources.xml (Firefox OS only)')
         self.add_argument('--server-root',
                         help='url to a webserver or path to a document root from which content '
                         'resources are served (default: {}).'.format(os.path.join(
@@ -412,8 +381,8 @@ class BaseMarionetteArguments(ArgumentParser):
                 print '{0} does not exist'.format(path)
                 sys.exit(1)
 
-        if not args.address and not args.binary:
-            print 'must specify --binary, or --address'
+        if not args.binary:
+            print 'must specify --binary'
             sys.exit(1)
 
         if args.total_chunks is not None and args.this_chunk is None:
@@ -447,9 +416,9 @@ class BaseMarionetteArguments(ArgumentParser):
         return args
 
 
-class BaseMarionetteTestRunner(object):
+class BaseSessionTestRunner(object):
 
-    textrunnerclass = MarionetteTextTestRunner
+    textrunnerclass = SessionTextTestRunner
     driverclass = Marionette
 
     def __init__(self, address=None,
@@ -461,7 +430,7 @@ class BaseMarionetteTestRunner(object):
                  sdcard=None, this_chunk=1, total_chunks=1, sources=None,
                  server_root=None, gecko_log=None, result_callbacks=None,
                  prefs=None, test_tags=None,
-                 socket_timeout=BaseMarionetteArguments.socket_timeout_default,
+                 socket_timeout=BaseSessionArguments.socket_timeout_default,
                  startup_timeout=None, addons=None, workspace=None,
                  verbose=0, e10s=True, **kwargs):
         self.address = address
@@ -472,15 +441,12 @@ class BaseMarionetteTestRunner(object):
         self.addons = addons
         self.logger = logger
         self.httpd = None
-        self.marionette = None
         self.logdir = logdir
         self.repeat = repeat
         self.test_kwargs = kwargs
         self.symbols_path = symbols_path
         self.timeout = timeout
         self.socket_timeout = socket_timeout
-        self._device = None
-        self._capabilities = None
         self._appinfo = None
         self._appName = None
         self.shuffle = shuffle
@@ -506,7 +472,7 @@ class BaseMarionetteTestRunner(object):
 
         def gather_debug(test, status):
             rv = {}
-            marionette = test._marionette_weakref()
+            marionette = test.marionette
 
             # In the event we're gathering debug without starting a session, skip marionette commands
             if marionette.session is not None:
@@ -579,49 +545,6 @@ class BaseMarionetteTestRunner(object):
         return data
 
     @property
-    def capabilities(self):
-        if self._capabilities:
-            return self._capabilities
-
-        self.marionette.start_session()
-        self._capabilities = self.marionette.session_capabilities
-        self.marionette.delete_session()
-        return self._capabilities
-
-    @property
-    def appinfo(self):
-        if self._appinfo:
-            return self._appinfo
-
-        self.marionette.start_session()
-        with self.marionette.using_context('chrome'):
-            self._appinfo = self.marionette.execute_script("""
-            try {
-              return Services.appinfo;
-            } catch (e) {
-              return null;
-            }""")
-        self.marionette.delete_session()
-        self._appinfo = self._appinfo or {}
-        return self._appinfo
-
-    @property
-    def device(self):
-        if self._device:
-            return self._device
-
-        self._device = self.capabilities.get('device')
-        return self._device
-
-    @property
-    def appName(self):
-        if self._appName:
-            return self._appName
-
-        self._appName = self.capabilities.get('browserName')
-        return self._appName
-
-    @property
     def bin(self):
         return self._bin
 
@@ -634,11 +557,6 @@ class BaseMarionetteTestRunner(object):
         """
         self._bin = path
         self.tests = []
-        if hasattr(self, 'marionette') and self.marionette:
-            self.marionette.cleanup()
-            if self.marionette.instance:
-                self.marionette.instance = None
-        self.marionette = None
 
     def reset_test_stats(self):
         self.passed = 0
@@ -649,133 +567,22 @@ class BaseMarionetteTestRunner(object):
         self.skipped = 0
         self.failures = []
 
-    def _build_kwargs(self):
-        if self.logdir and not os.access(self.logdir, os.F_OK):
-            os.mkdir(self.logdir)
-
-        kwargs = {
-            'timeout': self.timeout,
-            'socket_timeout': self.socket_timeout,
-            'prefs': self.prefs,
-            'startup_timeout': self.startup_timeout,
-            'verbose': self.verbose,
-        }
-        if self.bin:
-            kwargs.update({
-                'host': 'localhost',
-                'port': 2828,
-                'app': self.app,
-                'app_args': self.app_args,
-                'bin': self.bin,
-                'profile': self.profile,
-                'addons': self.addons,
-                'gecko_log': self.gecko_log,
-            })
-
-        if self.address:
-            host, port = self.address.split(':')
-            kwargs.update({
-                'host': host,
-                'port': int(port),
-            })
-
-            if not self.bin:
-                try:
-                    #establish a socket connection so we can vertify the data come back
-                    connection = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-                    connection.connect((host,int(port)))
-                    connection.close()
-                except Exception, e:
-                    raise Exception("Connection attempt to %s:%s failed with error: %s" %(host,port,e))
-        if self.workspace:
-            kwargs['workspace'] = self.workspace_path
-        return kwargs
-
-    def start_marionette(self):
-        self.marionette = self.driverclass(**self._build_kwargs())
-
-    def launch_test_container(self):
-        if self.marionette.session is None:
-            self.marionette.start_session()
-        self.marionette.set_context(self.marionette.CONTEXT_CONTENT)
-
-        result = self.marionette.execute_async_script("""
-if((navigator.mozSettings == undefined) || (navigator.mozSettings == null) || (navigator.mozApps == undefined) || (navigator.mozApps == null)) {
-    marionetteScriptFinished(false);
-    return;
-}
-let setReq = navigator.mozSettings.createLock().set({'lockscreen.enabled': false});
-setReq.onsuccess = function() {
-    let appName = 'Test Container';
-    let activeApp = window.wrappedJSObject.Service.currentApp;
-
-    // if the Test Container is already open then do nothing
-    if(activeApp.name === appName){
-        marionetteScriptFinished(true);
-    }
-
-    let appsReq = navigator.mozApps.mgmt.getAll();
-    appsReq.onsuccess = function() {
-        let apps = appsReq.result;
-        for (let i = 0; i < apps.length; i++) {
-            let app = apps[i];
-            if (app.manifest.name === appName) {
-                app.launch();
-                window.addEventListener('appopen', function apploadtime(){
-                    window.removeEventListener('appopen', apploadtime);
-                    marionetteScriptFinished(true);
-                });
-                return;
-            }
-        }
-        marionetteScriptFinished(false);
-    }
-    appsReq.onerror = function() {
-        marionetteScriptFinished(false);
-    }
-}
-setReq.onerror = function() {
-    marionetteScriptFinished(false);
-}""", script_timeout=60000)
-
-        if not result:
-            raise Exception("Could not launch test container app")
-
-    def record_crash(self):
-        crash = True
-        try:
-            crash = self.marionette.check_for_crash()
-            self.crashed += int(crash)
-        except Exception:
-            traceback.print_exc()
-        return crash
-
     def run_tests(self, tests):
         assert len(tests) > 0
         assert len(self.test_handlers) > 0
         self.reset_test_stats()
         self.start_time = time.time()
 
-        need_external_ip = True
-        if not self.marionette:
-            self.start_marionette()
-            # if we're working against a desktop version, we usually don't need
-            # an external ip
-            if self.capabilities['device'] == "desktop":
-                need_external_ip = False
-        self.logger.info('Initial Profile Destination is '
-                         '"{}"'.format(self.marionette.profile_path))
-
         # Gaia sets server_root and that means we shouldn't spin up our own httpd
         if not self.httpd:
             if self.server_root is None or os.path.isdir(self.server_root):
                 self.logger.info("starting httpd")
-                self.start_httpd(need_external_ip)
-                self.marionette.baseurl = self.httpd.get_url()
-                self.logger.info("running httpd on %s" % self.marionette.baseurl)
+                self.httpd = self.create_httpd(False)
+                self.base_url = self.httpd.get_url()
+                self.logger.info("running httpd on %s" % self.base_url)
             else:
-                self.marionette.baseurl = self.server_root
-                self.logger.info("using remote content from %s" % self.marionette.baseurl)
+                self.base_url = self.server_root
+                self.logger.info("using remote content from %s" % self.base_url)
 
         device_info = None
 
@@ -792,13 +599,8 @@ setReq.onerror = function() {
                             % '\n  '.join(invalid_tests))
 
         self.logger.info("running with e10s: {}".format(self.e10s))
-        version_info = mozversion.get_version(binary=self.bin,
-                                              sources=self.sources,
-                                              dm_type=os.environ.get('DM_TRANS', 'adb') )
 
-        self.logger.suite_start(self.tests,
-                                version_info=version_info,
-                                device_info=device_info)
+        self.logger.suite_start(self.tests)
 
         for test in self.manifest_skipped_tests:
             name = os.path.basename(test['path'])
@@ -850,15 +652,8 @@ setReq.onerror = function() {
             for failed_test in self.failures:
                 self.logger.info('%s' % failed_test[0])
 
-        self.record_crash()
         self.end_time = time.time()
         self.elapsedtime = self.end_time - self.start_time
-
-        if self.marionette.instance:
-            self.marionette.instance.close()
-            self.marionette.instance = None
-
-        self.marionette.cleanup()
 
         for run_tests in self.mixin_run_tests:
             run_tests(tests)
@@ -867,11 +662,6 @@ setReq.onerror = function() {
 
         self.logger.info('mode: {}'.format('e10s' if self.e10s else 'non-e10s'))
         self.logger.suite_end()
-
-    def start_httpd(self, need_external_ip):
-        warnings.warn("start_httpd has been deprecated in favour of create_httpd",
-            DeprecationWarning)
-        self.httpd = self.create_httpd(need_external_ip)
 
     def create_httpd(self, need_external_ip):
         host = "127.0.0.1"
@@ -894,7 +684,6 @@ setReq.onerror = function() {
                         self.add_test(filepath)
             return
 
-
         file_ext = os.path.splitext(os.path.split(filepath)[-1])[1]
 
         if file_ext == '.ini':
@@ -904,13 +693,9 @@ setReq.onerror = function() {
             filters = []
             if self.test_tags:
                 filters.append(tags(self.test_tags))
-            json_path = update_mozinfo(filepath)
-            self.logger.info("mozinfo updated with the following: {}".format(None))
             manifest_tests = manifest.active_tests(exists=False,
                                                    disabled=True,
                                                    filters=filters,
-                                                   device=self.device,
-                                                   app=self.appName,
                                                    e10s=self.e10s,
                                                    **mozinfo.info)
             if len(manifest_tests) == 0:
@@ -941,7 +726,9 @@ setReq.onerror = function() {
 
         testloader = unittest.TestLoader()
         suite = unittest.TestSuite()
+        self.test_kwargs['binary'] = self.bin
         self.test_kwargs['expected'] = expected
+        self.test_kwargs['base_url'] = self.base_url
         self.test_kwargs['test_container'] = test_container
         mod_name = os.path.splitext(os.path.split(filepath)[-1])[0]
         for handler in self.test_handlers:
@@ -950,16 +737,14 @@ setReq.onerror = function() {
                                            filepath,
                                            suite,
                                            testloader,
-                                           self.marionette,
                                            self.testvars,
                                            **self.test_kwargs)
                 break
 
         if suite.countTestCases():
             runner = self.textrunnerclass(logger=self.logger,
-                                          marionette=self.marionette,
-                                          capabilities=self.capabilities,
-                                          result_callbacks=self.result_callbacks)
+                                          result_callbacks=self.result_callbacks,
+                                          binary=self.bin)
 
             if test_container:
                 self.launch_test_container()
@@ -993,8 +778,6 @@ setReq.onerror = function() {
 
         for test in tests:
             self.run_test(test['filepath'], test['expected'], test['test_container'])
-            if self.record_crash():
-                break
 
     def run_test_sets(self):
         if len(self.tests) < 1:
@@ -1018,8 +801,5 @@ setReq.onerror = function() {
     def cleanup(self):
         if self.httpd:
             self.httpd.stop()
-
-        if self.marionette:
-            self.marionette.cleanup()
 
     __del__ = cleanup
