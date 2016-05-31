@@ -313,7 +313,8 @@ protected:
   int64_t GetPositionInFramesUnlocked();
 
 private:
-  nsresult OpenCubeb(cubeb_stream_params &aParams, TimeStamp aStartTime);
+  nsresult OpenCubeb(cubeb_stream_params& aParams,
+                     TimeStamp aStartTime, bool aIsFirst);
 
   static long DataCallback_S(cubeb_stream*, void* aThis,
                              const void* /* aInputBuffer */, void* aOutputBuffer,
@@ -371,7 +372,6 @@ private:
   };
 
   StreamState mState;
-  bool mIsFirst;
 
   DataSource& mDataSource;
 };

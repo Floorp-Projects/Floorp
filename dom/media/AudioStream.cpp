@@ -327,7 +327,7 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
                   const dom::AudioChannel aAudioChannel)
 {
   auto startTime = TimeStamp::Now();
-  mIsFirst = CubebUtils::GetFirstStream();
+  auto isFirst = CubebUtils::GetFirstStream();
 
   LOG("%s channels: %d, rate: %d", __FUNCTION__, aNumChannels, aRate);
   mInRate = mOutRate = aRate;
@@ -354,11 +354,12 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
   params.format = ToCubebFormat<AUDIO_OUTPUT_FORMAT>::value;
   mAudioClock.Init();
 
-  return OpenCubeb(params, startTime);
+  return OpenCubeb(params, startTime, isFirst);
 }
 
 nsresult
-AudioStream::OpenCubeb(cubeb_stream_params &aParams, TimeStamp aStartTime)
+AudioStream::OpenCubeb(cubeb_stream_params& aParams,
+                       TimeStamp aStartTime, bool aIsFirst)
 {
   cubeb* cubebContext = CubebUtils::GetCubebContext();
   if (!cubebContext) {
@@ -378,9 +379,9 @@ AudioStream::OpenCubeb(cubeb_stream_params &aParams, TimeStamp aStartTime)
   }
 
   TimeDuration timeDelta = TimeStamp::Now() - aStartTime;
-  LOG("creation time %sfirst: %u ms", mIsFirst ? "" : "not ",
+  LOG("creation time %sfirst: %u ms", aIsFirst ? "" : "not ",
       (uint32_t) timeDelta.ToMilliseconds());
-  Telemetry::Accumulate(mIsFirst ? Telemetry::AUDIOSTREAM_FIRST_OPEN_MS :
+  Telemetry::Accumulate(aIsFirst ? Telemetry::AUDIOSTREAM_FIRST_OPEN_MS :
       Telemetry::AUDIOSTREAM_LATER_OPEN_MS, timeDelta.ToMilliseconds());
 
   return NS_OK;
