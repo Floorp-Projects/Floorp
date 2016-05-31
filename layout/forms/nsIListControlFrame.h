@@ -76,9 +76,9 @@ public:
   virtual void AboutToRollup() = 0;
 
   /**
-   * Fire on change (used by combobox)
+   * Fire on input and on change (used by combobox)
    */
-  virtual void FireOnChange() = 0;
+  virtual void FireOnInputAndOnChange() = 0;
 
   /**
    * Tell the selected list to roll up and ensure that the proper index is

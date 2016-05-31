@@ -139,10 +139,10 @@ public:
   virtual void AboutToRollup() override;
 
   /**
-   * Dispatch a DOM onchange event synchroniously.
+   * Dispatch a DOM oninput and onchange event synchroniously.
    * @note This method might destroy the frame, pres shell and other objects.
    */
-  virtual void FireOnChange() override;
+  virtual void FireOnInputAndOnChange() override;
 
   /**
    * Makes aIndex the selected option of a combobox list.
