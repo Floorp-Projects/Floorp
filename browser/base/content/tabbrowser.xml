@@ -1217,7 +1217,7 @@
                 this._adjustFocusAfterTabSwitch(this.mCurrentTab);
             }
 
-            updateUserContextUIIndicator(gBrowser.selectedBrowser);
+            updateUserContextUIIndicator();
 
             this.tabContainer._setPositionalAttributes();
 
@@ -4328,7 +4328,12 @@
                 tab.setUserContextId(data.userContextId);
               }
 
-              updateUserContextUIIndicator(browser);
+	      // We don't want to update the container icon and identifier if
+	      // this is not the selected browser.
+              if (browser == gBrowser.selectedBrowser) {
+                updateUserContextUIIndicator();
+              }
+
               break;
             }
             case "Findbar:Keypress": {
