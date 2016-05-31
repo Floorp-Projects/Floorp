@@ -199,8 +199,6 @@
 /* Tooltip: Events */
 
 #devtools-tooltip-events-container {
-  margin: -4px; /* Compensate for the .panel-arrowcontent padding. */
-  max-width: 590px;
   overflow-y: auto;
 }
 
@@ -208,6 +206,7 @@
   display: flex;
   align-items: center;
   cursor: pointer;
+  overflow: hidden;
 }
 
 .event-header:first-child {
@@ -216,6 +215,11 @@
 
 .event-header:not(:first-child) {
   border-width: 1px 0 0 0;
+}
+
+.devtools-tooltip-events-container {
+  height: 100%;
+  overflow-y: auto;
 }
 
 .event-tooltip-event-type,
@@ -232,9 +236,14 @@
 }
 
 .event-tooltip-filename {
-  margin-inline-end: 0;
+  margin: 0 5px;
   font-size: 100%;
   flex-shrink: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  /* Force ellipsis to be displayed on the left */
+  direction: rtl;
 }
 
 .event-tooltip-debugger-icon {
@@ -251,7 +260,7 @@
 
 .event-tooltip-content-box {
   display: none;
-  height: 100px;
+  height: 54px;
   overflow: hidden;
   margin-inline-end: 0;
   border: 1px solid var(--theme-splitter-color);
@@ -260,6 +269,7 @@
 
 .event-toolbox-content-box iframe {
   height: 100%;
+  border-style: none;
 }
 
 .event-tooltip-content-box[open] {
@@ -288,6 +298,7 @@
   display: flex;
   flex-shrink: 0;
   align-items: center;
+  height: 14px;
   border-radius: 3px;
   padding: 2px;
   margin-inline-start: 5px;
