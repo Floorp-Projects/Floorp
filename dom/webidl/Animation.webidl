@@ -21,7 +21,7 @@ interface Animation : EventTarget {
   [Func="nsDocument::IsWebAnimationsEnabled", Pure]
   readonly attribute AnimationEffectReadOnly? effect;
   [Func="nsDocument::IsWebAnimationsEnabled"]
-  readonly attribute AnimationTimeline? timeline;
+  attribute AnimationTimeline? timeline;
   [BinaryName="startTimeAsDouble"]
   attribute double? startTime;
   [SetterThrows, BinaryName="currentTimeAsDouble"]
