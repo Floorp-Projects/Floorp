@@ -52,13 +52,6 @@ NS_IMETHODIMP nsSystemAlertsService::ShowAlertNotification(const nsAString & aIm
   return ShowAlert(alert, aAlertListener);
 }
 
-NS_IMETHODIMP nsSystemAlertsService::ShowPersistentNotification(const nsAString& aPersistentData,
-                                                                nsIAlertNotification* aAlert,
-                                                                nsIObserver* aAlertListener)
-{
-  return ShowAlert(aAlert, aAlertListener);
-}
-
 NS_IMETHODIMP nsSystemAlertsService::ShowAlert(nsIAlertNotification* aAlert,
                                                nsIObserver* aAlertListener)
 {
