@@ -5854,8 +5854,8 @@ CreateLastWarningObject(JSContext* cx, JSErrorReport* report)
         return false;
 
     RootedString nameStr(cx);
-    if (report->exnType == JSEXN_NONE)
-        nameStr = JS_NewStringCopyZ(cx, "None");
+    if (report->exnType == JSEXN_WARN)
+        nameStr = JS_NewStringCopyZ(cx, "Warning");
     else
         nameStr = GetErrorTypeName(cx->runtime(), report->exnType);
     if (!nameStr)
@@ -5958,7 +5958,7 @@ js::shell::my_ErrorReporter(JSContext* cx, const char* message, JSErrorReport* r
         savedExc.restore();
     }
 
-    if (report->exnType != JSEXN_NONE && !JSREPORT_IS_WARNING(report->flags)) {
+    if (!JSREPORT_IS_WARNING(report->flags)) {
         if (report->errorNumber == JSMSG_OUT_OF_MEMORY)
             sr->exitCode = EXITCODE_OUT_OF_MEMORY;
         else
