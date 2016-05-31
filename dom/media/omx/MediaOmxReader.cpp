@@ -176,7 +176,7 @@ void MediaOmxReader::ReleaseMediaResources()
   mMediaResourceRequest.DisconnectIfExists();
   mMetadataPromise.RejectIfExists(ReadMetadataFailureReason::METADATA_ERROR, __func__);
 
-  ResetDecode(AUDIO_VIDEO);
+  ResetDecode();
   // Before freeing a video codec, all video buffers needed to be released
   // even from graphics pipeline.
   VideoFrameContainer* container = mDecoder->GetVideoFrameContainer();

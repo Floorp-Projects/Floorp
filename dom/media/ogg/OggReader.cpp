@@ -169,17 +169,17 @@ nsresult OggReader::Init() {
   return NS_OK;
 }
 
-nsresult OggReader::ResetDecode(TargetQueues aQueues)
+nsresult OggReader::ResetDecode(TrackSet aTracks)
 {
-  return ResetDecode(false, aQueues);
+  return ResetDecode(false, aTracks);
 }
 
-nsresult OggReader::ResetDecode(bool start, TargetQueues aQueues)
+nsresult OggReader::ResetDecode(bool start, TrackSet aTracks)
 {
   MOZ_ASSERT(OnTaskQueue());
   nsresult res = NS_OK;
 
-  if (NS_FAILED(MediaDecoderReader::ResetDecode(aQueues))) {
+  if (NS_FAILED(MediaDecoderReader::ResetDecode(aTracks))) {
     res = NS_ERROR_FAILURE;
   }
 
