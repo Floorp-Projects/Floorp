@@ -363,8 +363,7 @@ private:
 
   enum StreamState {
     INITIALIZED, // Initialized, playback has not begun.
-    STARTED,     // cubeb started, but callbacks haven't started
-    RUNNING,     // DataCallbacks have started after STARTED, or after Resume().
+    STARTED,     // cubeb started.
     STOPPED,     // Stopped by a call to Pause().
     DRAINED,     // StateCallback has indicated that the drain is complete.
     ERRORED,     // Stream disabled due to an internal error.
