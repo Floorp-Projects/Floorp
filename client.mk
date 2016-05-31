@@ -432,6 +432,15 @@ endif # MOZ_CURRENT_PROJECT
 ####################################
 # Postflight, after building all projects
 
+ifdef MOZ_AUTOMATION
+ifndef MOZ_CURRENT_PROJECT
+realbuild::
+# Only run the automation/build target for the first project.
+# (i.e. first platform of universal builds)
+	$(MAKE) -f $(TOPSRCDIR)/client.mk automation/build $(addprefix MOZ_CURRENT_PROJECT=,$(firstword $(MOZ_BUILD_PROJECTS)))
+endif
+endif
+
 realbuild postflight_all::
 ifeq (,$(MOZ_CURRENT_PROJECT)$(if $(MOZ_POSTFLIGHT_ALL),,1))
 # Don't run postflight_all for individual projects in multi-project builds
