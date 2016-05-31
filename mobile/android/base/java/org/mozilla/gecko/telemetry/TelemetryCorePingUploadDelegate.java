@@ -58,6 +58,10 @@ public class TelemetryCorePingUploadDelegate extends BrowserAppDelegate {
         return telemetryDispatcher;
     }
 
+    private SharedPreferences getSharedPreferences(final BrowserApp activity) {
+        return GeckoSharedPrefs.forProfileName(activity, activity.getProfile().getName());
+    }
+
     private class UploadTelemetryCorePingCallback implements SearchEngineManager.SearchEngineCallback {
         private final WeakReference<BrowserApp> activityWeakReference;
 
@@ -101,7 +105,7 @@ public class TelemetryCorePingUploadDelegate extends BrowserAppDelegate {
                     }
 
                     // Each profile can have different telemetry data so we intentionally grab the shared prefs for the profile.
-                    final SharedPreferences sharedPrefs = GeckoSharedPrefs.forProfileName(activity, profile.getName());
+                    final SharedPreferences sharedPrefs = getSharedPreferences(activity);
                     final SessionMeasurements.SessionMeasurementsContainer sessionMeasurementsContainer =
                             activity.getSessionMeasurementDelegate().getAndResetSessionMeasurements(activity);
                     final TelemetryCorePingBuilder pingBuilder = new TelemetryCorePingBuilder(activity)
