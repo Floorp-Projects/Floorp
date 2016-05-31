@@ -313,9 +313,11 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     void visitSimdUnaryArithFx4(LSimdUnaryArithFx4* lir);
     void visitSimdBinaryCompIx4(LSimdBinaryCompIx4* lir);
     void visitSimdBinaryCompFx4(LSimdBinaryCompFx4* lir);
+    void visitSimdBinaryArithIx16(LSimdBinaryArithIx16* lir);
+    void visitSimdBinaryArithIx8(LSimdBinaryArithIx8* lir);
     void visitSimdBinaryArithIx4(LSimdBinaryArithIx4* lir);
     void visitSimdBinaryArithFx4(LSimdBinaryArithFx4* lir);
-    void visitSimdBinaryBitwiseX4(LSimdBinaryBitwiseX4* lir);
+    void visitSimdBinaryBitwise(LSimdBinaryBitwise* lir);
     void visitSimdShift(LSimdShift* lir);
     void visitSimdSelect(LSimdSelect* ins);
     void visitSimdAllTrue(LSimdAllTrue* ins);

@@ -4537,18 +4537,8 @@ LIRGenerator::visitSimdBinaryBitwise(MSimdBinaryBitwise* ins)
     MDefinition* lhs = ins->lhs();
     MDefinition* rhs = ins->rhs();
     ReorderCommutative(&lhs, &rhs, ins);
-
-    switch (ins->type()) {
-      case MIRType::Bool32x4:
-      case MIRType::Int32x4:
-      case MIRType::Float32x4: {
-        LSimdBinaryBitwiseX4* lir = new(alloc()) LSimdBinaryBitwiseX4;
-        lowerForFPU(lir, ins, lhs, rhs);
-        break;
-      }
-      default:
-        MOZ_CRASH("Unknown SIMD kind when doing bitwise operations");
-    }
+    LSimdBinaryBitwise* lir = new(alloc()) LSimdBinaryBitwise;
+    lowerForFPU(lir, ins, lhs, rhs);
 }
 
 void
