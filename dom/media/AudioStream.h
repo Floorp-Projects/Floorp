@@ -211,9 +211,6 @@ public:
   // was opened, of the audio hardware.  Thread-safe.
   int64_t GetPositionInFrames();
 
-  // Returns true when the audio stream is paused.
-  bool IsPaused();
-
   static uint32_t GetPreferredRate()
   {
     CubebUtils::InitPreferredSampleRate();
