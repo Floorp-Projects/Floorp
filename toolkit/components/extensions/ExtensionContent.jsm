@@ -83,6 +83,10 @@ var api = context => {
         return context.messenger.connect(context.messageManager, name, recipient);
       },
 
+      get id() {
+        return context.extensionId;
+      },
+
       get lastError() {
         return context.lastError;
       },
