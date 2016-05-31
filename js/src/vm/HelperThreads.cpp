@@ -1271,6 +1271,8 @@ GlobalHelperThreadState::mergeParseTaskCompartment(JSRuntime* rt, ParseTask* par
     LeaveParseTaskZone(rt, parseTask);
 
     {
+        gc::ZoneCellIter iter(parseTask->cx->zone(), gc::AllocKind::OBJECT_GROUP);
+
         // Generator functions don't have Function.prototype as prototype but a
         // different function object, so the IdentifyStandardPrototype trick
         // below won't work.  Just special-case it.
@@ -1286,7 +1288,8 @@ GlobalHelperThreadState::mergeParseTaskCompartment(JSRuntime* rt, ParseTask* par
         // to the corresponding prototype in the new compartment. This will briefly
         // create cross compartment pointers, which will be fixed by the
         // MergeCompartments call below.
-        for (auto group = parseTask->cx->zone()->cellIter<ObjectGroup>(); !group.done(); group.next()) {
+        for (; !iter.done(); iter.next()) {
+            ObjectGroup* group = iter.get<ObjectGroup>();
             TaggedProto proto(group->proto());
             if (!proto.isObject())
                 continue;

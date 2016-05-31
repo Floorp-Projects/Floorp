@@ -11,7 +11,6 @@
 #include "mozilla/ThreadLocal.h"
 
 #include "jscompartment.h"
-#include "jsgc.h"
 #include "jsprf.h"
 
 #include "gc/Marking.h"
@@ -590,8 +589,8 @@ JitRuntime::Mark(JSTracer* trc, AutoLockForExclusiveAccess& lock)
 {
     MOZ_ASSERT(!trc->runtime()->isHeapMinorCollecting());
     Zone* zone = trc->runtime()->atomsCompartment(lock)->zone();
-    for (auto i = zone->cellIter<JitCode>(); !i.done(); i.next()) {
-        JitCode* code = i;
+    for (gc::ZoneCellIterUnderGC i(zone, gc::AllocKind::JITCODE); !i.done(); i.next()) {
+        JitCode* code = i.get<JitCode>();
         TraceRoot(trc, &code, "wrapper");
     }
 }
@@ -1352,7 +1351,8 @@ jit::ToggleBarriers(JS::Zone* zone, bool needs)
     if (!rt->hasJitRuntime())
         return;
 
-    for (auto script = zone->cellIter<JSScript>(); !script.done(); script.next()) {
+    for (gc::ZoneCellIterUnderGC i(zone, gc::AllocKind::SCRIPT); !i.done(); i.next()) {
+        JSScript* script = i.get<JSScript>();
         if (script->hasIonScript())
             script->ionScript()->toggleBarriers(needs);
         if (script->hasBaselineScript())

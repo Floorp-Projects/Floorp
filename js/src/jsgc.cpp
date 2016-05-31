@@ -2381,10 +2381,15 @@ GCRuntime::sweepTypesAfterCompacting(Zone* zone)
 
     AutoClearTypeInferenceStateOnOOM oom(zone);
 
-    for (auto script = zone->cellIter<JSScript>(); !script.done(); script.next())
+    for (ZoneCellIterUnderGC i(zone, AllocKind::SCRIPT); !i.done(); i.next()) {
+        JSScript* script = i.get<JSScript>();
         script->maybeSweepTypes(&oom);
-    for (auto group = zone->cellIter<ObjectGroup>(); !group.done(); group.next())
+    }
+
+    for (ZoneCellIterUnderGC i(zone, AllocKind::OBJECT_GROUP); !i.done(); i.next()) {
+        ObjectGroup* group = i.get<ObjectGroup>();
         group->maybeSweep(&oom);
+    }
 
     zone->types.endSweep(rt);
 }
@@ -3976,11 +3981,10 @@ GCRuntime::checkForCompartmentMismatches()
         return;
 
     CompartmentCheckTracer trc(rt);
-    AutoAssertEmptyNursery empty(rt);
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         trc.zone = zone;
         for (auto thingKind : AllAllocKinds()) {
-            for (auto i = zone->cellIter<TenuredCell>(thingKind, empty); !i.done(); i.next()) {
+            for (ZoneCellIterUnderGC i(zone, thingKind); !i.done(); i.next()) {
                 trc.src = i.getCell();
                 trc.srcKind = MapAllocToTraceKind(thingKind);
                 trc.compartment = DispatchTraceKindTyped(MaybeCompartmentFunctor(),
@@ -3999,10 +4003,9 @@ RelazifyFunctions(Zone* zone, AllocKind kind)
                kind == AllocKind::FUNCTION_EXTENDED);
 
     JSRuntime* rt = zone->runtimeFromMainThread();
-    AutoAssertEmptyNursery empty(rt);
 
-    for (auto i = zone->cellIter<JSObject>(kind, empty); !i.done(); i.next()) {
-        JSFunction* fun = &i->as<JSFunction>();
+    for (ZoneCellIterUnderGC i(zone, kind); !i.done(); i.next()) {
+        JSFunction* fun = &i.get<JSObject>()->as<JSFunction>();
         if (fun->hasScript())
             fun->maybeRelazify(rt);
     }
@@ -6916,7 +6919,8 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
     RootedObject targetStaticGlobalLexicalScope(rt);
     targetStaticGlobalLexicalScope = &target->maybeGlobal()->lexicalScope().staticBlock();
 
-    for (auto script = source->zone()->cellIter<JSScript>(); !script.done(); script.next()) {
+    for (ZoneCellIter iter(source->zone(), AllocKind::SCRIPT); !iter.done(); iter.next()) {
+        JSScript* script = iter.get<JSScript>();
         MOZ_ASSERT(script->compartment() == source);
         script->compartment_ = target;
         script->setTypesGeneration(target->zone()->types.generation);
@@ -6948,12 +6952,14 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
         }
     }
 
-    for (auto base = source->zone()->cellIter<BaseShape>(); !base.done(); base.next()) {
+    for (ZoneCellIter iter(source->zone(), AllocKind::BASE_SHAPE); !iter.done(); iter.next()) {
+        BaseShape* base = iter.get<BaseShape>();
         MOZ_ASSERT(base->compartment() == source);
         base->compartment_ = target;
     }
 
-    for (auto group = source->zone()->cellIter<ObjectGroup>(); !group.done(); group.next()) {
+    for (ZoneCellIter iter(source->zone(), AllocKind::OBJECT_GROUP); !iter.done(); iter.next()) {
+        ObjectGroup* group = iter.get<ObjectGroup>();
         group->setGeneration(target->zone()->types.generation);
         group->compartment_ = target;
 
@@ -6975,7 +6981,8 @@ gc::MergeCompartments(JSCompartment* source, JSCompartment* target)
 
     // After fixing JSFunctions' compartments, we can fix LazyScripts'
     // enclosing scopes.
-    for (auto lazy = source->zone()->cellIter<LazyScript>(); !lazy.done(); lazy.next()) {
+    for (ZoneCellIter iter(source->zone(), AllocKind::LAZY_SCRIPT); !iter.done(); iter.next()) {
+        LazyScript* lazy = iter.get<LazyScript>();
         MOZ_ASSERT(lazy->functionNonDelazifying()->compartment() == target);
 
         // See warning in handleParseWorkload. If we start optimizing global
@@ -7109,9 +7116,12 @@ js::ReleaseAllJITCode(FreeOp* fop)
 void
 js::PurgeJITCaches(Zone* zone)
 {
-    /* Discard Ion caches. */
-    for (auto script = zone->cellIter<JSScript>(); !script.done(); script.next())
+    for (ZoneCellIter i(zone, AllocKind::SCRIPT); !i.done(); i.next()) {
+        JSScript* script = i.get<JSScript>();
+
+        /* Discard Ion caches. */
         jit::PurgeCaches(script);
+    }
 }
 
 void
@@ -7381,7 +7391,8 @@ js::gc::CheckHashTablesAfterMovingGC(JSRuntime* rt)
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
         zone->checkUniqueIdTableAfterMovingGC();
 
-        for (auto baseShape = zone->cellIter<BaseShape>(); !baseShape.done(); baseShape.next()) {
+        for (ZoneCellIterUnderGC i(zone, AllocKind::BASE_SHAPE); !i.done(); i.next()) {
+            BaseShape* baseShape = i.get<BaseShape>();
             if (baseShape->hasTable())
                 baseShape->table().checkAfterMovingGC();
         }
@@ -7857,29 +7868,6 @@ StateName(State state)
     MOZ_ASSERT(ArrayLength(names) == NUM_STATES);
     MOZ_ASSERT(state < NUM_STATES);
     return names[state];
-}
-
-void
-AutoAssertHeapBusy::checkCondition(JSRuntime *rt)
-{
-    this->rt = rt;
-    MOZ_ASSERT(rt->isHeapBusy());
-}
-
-void
-AutoAssertEmptyNursery::checkCondition(JSRuntime *rt) {
-    this->rt = rt;
-    MOZ_ASSERT(rt->gc.nursery.isEmpty());
-}
-
-AutoEmptyNursery::AutoEmptyNursery(JSRuntime *rt)
-  : AutoAssertEmptyNursery()
-{
-    MOZ_ASSERT(!rt->mainThread.suppressGC);
-    rt->gc.stats.suspendPhases();
-    rt->gc.evictNursery();
-    rt->gc.stats.resumePhases();
-    checkCondition(rt);
 }
 
 } /* namespace gc */

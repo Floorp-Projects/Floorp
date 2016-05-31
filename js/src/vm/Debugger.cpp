@@ -2352,8 +2352,8 @@ UpdateExecutionObservabilityOfScriptsInZone(JSContext* cx, Zone* zone,
                     return false;
             }
         } else {
-            for (auto iter = zone->cellIter<JSScript>(); !iter.done(); iter.next()) {
-                JSScript* script = iter;
+            for (gc::ZoneCellIter iter(zone, gc::AllocKind::SCRIPT); !iter.done(); iter.next()) {
+                JSScript* script = iter.get<JSScript>();
                 if (obs.shouldRecompileOrInvalidate(script) &&
                     !gc::IsAboutToBeFinalizedUnbarriered(&script))
                 {
