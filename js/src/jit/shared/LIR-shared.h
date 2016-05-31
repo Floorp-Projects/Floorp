@@ -308,6 +308,9 @@ class LSimdInsertElementBase : public LInstructionHelper<1, 2, 0>
     unsigned lane() const {
         return mir_->toSimdInsertElement()->lane();
     }
+    unsigned length() const {
+        return SimdTypeToLength(mir_->toSimdInsertElement()->type());
+    }
 };
 
 // Replace an element from a given SIMD integer or boolean lane with a given value.

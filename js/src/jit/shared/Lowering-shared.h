@@ -271,6 +271,8 @@ class LIRGeneratorShared : public MDefinitionVisitor
     // these stubs in the specific sub-classes.
     // Some SIMD visitors are implemented in LIRGenerator in Lowering.cpp. These
     // shared implementations are not included here.
+    void visitSimdInsertElement(MSimdInsertElement*) override { MOZ_CRASH("NYI"); }
+    void visitSimdExtractElement(MSimdExtractElement*) override { MOZ_CRASH("NYI"); }
     void visitSimdBinaryArith(MSimdBinaryArith*) override { MOZ_CRASH("NYI"); }
     void visitSimdSelect(MSimdSelect*) override { MOZ_CRASH("NYI"); }
     void visitSimdSplat(MSimdSplat*) override { MOZ_CRASH("NYI"); }

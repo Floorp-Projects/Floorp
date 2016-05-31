@@ -2701,7 +2701,8 @@ CodeGeneratorX86Shared::emitSimdExtractLane8x16(FloatRegister input, Register ou
     }
 
     // We have the right low 8 bits in |output|, but we may need to fix the high
-    // bits.
+    // bits. Note that this requires |output| to be one of the %eax-%edx
+    // registers.
     switch (signedness) {
       case SimdSign::Signed:
         masm.movsbl(output, output);
@@ -2810,20 +2811,44 @@ CodeGeneratorX86Shared::visitSimdInsertElementI(LSimdInsertElementI* ins)
     FloatRegister output = ToFloatRegister(ins->output());
     MOZ_ASSERT(vector == output); // defineReuseInput(0)
 
-    unsigned component = unsigned(ins->lane());
+    unsigned lane = ins->lane();
+    unsigned length = ins->length();
+
+    if (length == 8) {
+        // Available in SSE 2.
+        masm.vpinsrw(lane, value, vector, output);
+        return;
+    }
 
     // Note that, contrarily to float32x4, we cannot use vmovd if the inserted
     // value goes into the first component, as vmovd clears out the higher lanes
     // of the output.
     if (AssemblerX86Shared::HasSSE41()) {
         // TODO: Teach Lowering that we don't need defineReuseInput if we have AVX.
-        masm.vpinsrd(component, value, vector, output);
-        return;
+        switch (length) {
+          case 4:
+            masm.vpinsrd(lane, value, vector, output);
+            return;
+          case 16:
+            masm.vpinsrb(lane, value, vector, output);
+            return;
+        }
     }
 
     masm.reserveStack(Simd128DataSize);
     masm.storeAlignedSimd128Int(vector, Address(StackPointer, 0));
-    masm.store32(value, Address(StackPointer, component * sizeof(int32_t)));
+    switch (length) {
+      case 4:
+        masm.store32(value, Address(StackPointer, lane * sizeof(int32_t)));
+        break;
+      case 16:
+        // Note that this requires `value` to be in one the registers where the
+        // low 8 bits are addressible (%eax - %edx on x86, all of them on x86-64).
+        masm.store8(value, Address(StackPointer, lane * sizeof(int8_t)));
+        break;
+      default:
+        MOZ_CRASH("Unsupported SIMD length");
+    }
     masm.loadAlignedSimd128Int(Address(StackPointer, 0), output);
     masm.freeStack(Simd128DataSize);
 }
