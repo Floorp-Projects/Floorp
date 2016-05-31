@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabParent.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/unused.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"
@@ -98,20 +99,45 @@ PrintingParent::ShowPrintDialog(PBrowserParent* aParent,
   // nsIWebBrowserPrint to keep the dialogs happy.
   nsCOMPtr<nsIWebBrowserPrint> wbp = new MockWebBrowserPrint(aData);
 
+  // Use the existing RemotePrintJob and its settings, if we have one, to make
+  // sure they stay current.
+  RemotePrintJobParent* remotePrintJob =
+    static_cast<RemotePrintJobParent*>(aData.remotePrintJobParent());
   nsCOMPtr<nsIPrintSettings> settings;
-  nsresult rv = mPrintSettingsSvc->GetNewPrintSettings(getter_AddRefs(settings));
+  nsresult rv;
+  if (remotePrintJob) {
+    settings = remotePrintJob->GetPrintSettings();
+  } else {
+    rv = mPrintSettingsSvc->GetNewPrintSettings(getter_AddRefs(settings));
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  // We only want to use the print silently setting from the parent.
+  bool printSilently;
+  rv = settings->GetPrintSilent(&printSilently);
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = mPrintSettingsSvc->DeserializeToPrintSettings(aData, settings);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  rv = pps->ShowPrintDialog(parentWin, wbp, settings);
+  rv = settings->SetPrintSilent(printSilently);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  // Serialize back to aResult. Use the existing RemotePrintJob if we have one
-  // otherwise SerializeAndEnsureRemotePrintJob() will create a new one.
-  RemotePrintJobParent* remotePrintJob =
-    static_cast<RemotePrintJobParent*>(aData.remotePrintJobParent());
+  // If we are printing silently then we just need to initialize the print
+  // settings with anything specific from the printer.
+  if (printSilently ||
+      Preferences::GetBool("print.always_print_silent", printSilently)) {
+    nsXPIDLString printerName;
+    rv = settings->GetPrinterName(getter_Copies(printerName));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    settings->SetIsInitializedFromPrinter(false);
+    mPrintSettingsSvc->InitPrintSettingsFromPrinter(printerName, settings);
+  } else {
+    rv = pps->ShowPrintDialog(parentWin, wbp, settings);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
   rv = SerializeAndEnsureRemotePrintJob(settings, nullptr, remotePrintJob,
                                         aResult);
 
@@ -258,7 +284,7 @@ PrintingParent::SerializeAndEnsureRemotePrintJob(
     }
   }
 
-  rv = mPrintSettingsSvc->SerializeToPrintData(aPrintSettings, nullptr,
+  rv = mPrintSettingsSvc->SerializeToPrintData(printSettings, nullptr,
                                                aPrintData);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;

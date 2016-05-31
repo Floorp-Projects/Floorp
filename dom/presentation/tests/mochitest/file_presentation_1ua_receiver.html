@@ -42,11 +42,13 @@ function testConnectionAvailable() {
     info('Receiver: --- testConnectionAvailable ---');
     ok(navigator.presentation, "Receiver: navigator.presentation should be available.");
     ok(navigator.presentation.receiver, "Receiver: navigator.presentation.receiver should be available.");
-    navigator.presentation.receiver.getConnection()
-    .then((aConnection) => {
-      connection = aConnection;
-      ok(connection.id, "Receiver: Connection ID should be set: " + connection.id);
-      is(connection.state, "closed", "Connection state at receiver side should be closed by default.");
+
+    navigator.presentation.receiver.connectionList
+    .then((aList) => {
+      is(aList.connections.length, 1, "Should get one conncetion.");
+      connection = aList.connections[0];
+      ok(connection.id, "Connection ID should be set: " + connection.id);
+      is(connection.state, "connected", "Connection state at receiver side should be connected.");
       aResolve();
     })
     .catch((aError) => {
@@ -60,13 +62,13 @@ function testConnectionAvailable() {
 function testConnectionReady() {
   return new Promise(function(aResolve, aReject) {
     info('Receiver: --- testConnectionReady ---');
-    connection.onstatechange = function() {
-      connection.onstatechange = null;
-      is(connection.state, "connected", "Receiver: Connection state should become connected.");
-      aResolve();
+    connection.onconnect = function() {
+      connection.onconnect = null;
+      ok(false, "Should not get |onconnect| event.")
+      aReject();
     };
     if (connection.state === "connected") {
-      connection.onstatechange = null;
+      connection.onconnect = null;
       is(connection.state, "connected", "Receiver: Connection state should become connected.");
       aResolve();
     }
@@ -103,15 +105,18 @@ function testSendMessage() {
   });
 }
 
-function testTerminateConnection() {
+// Currently, PresentationSessionInfo::NotifyTransportClosed only set the state to
+// STATE_CLOSED. So, when sender call connection.terminate(), we can only get STATE_CLOSED
+// at receiver side. This should be fixed in bu 1210340.
+function testConnectionClosed() {
   return new Promise(function(aResolve, aReject) {
-    info('Receiver: --- testTerminateConnection ---');
-    connection.onstatechange = function() {
-      connection.onstatechange = null;
-      is(connection.state, "terminated", "Receiver: Connection should be terminated.");
+    info('Receiver: --- testConnectionClosed ---');
+    connection.onclose = function() {
+      connection.onclose = null;
+      is(connection.state, "closed", "Receiver: Connection should be closed.");
       aResolve();
     };
-    connection.terminate();
+    command('forward-command', JSON.stringify({ name: 'ready-to-terminate' }));
   });
 }
 
@@ -120,7 +125,7 @@ function runTests() {
   .then(testConnectionReady)
   .then(testIncomingMessage)
   .then(testSendMessage)
-  .then(testTerminateConnection)
+  .then(testConnectionClosed)
   .then(finish);
 }
 

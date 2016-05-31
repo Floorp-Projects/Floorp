@@ -424,14 +424,21 @@ struct ProfilingOffsets : Offsets
 
 struct FuncOffsets : ProfilingOffsets
 {
-    MOZ_IMPLICIT FuncOffsets(uint32_t nonProfilingEntry = 0,
-                             uint32_t profilingJump = 0,
-                             uint32_t profilingEpilogue = 0)
+    MOZ_IMPLICIT FuncOffsets()
       : ProfilingOffsets(),
-        nonProfilingEntry(nonProfilingEntry),
-        profilingJump(profilingJump),
-        profilingEpilogue(profilingEpilogue)
+        tableEntry(0),
+        tableProfilingJump(0),
+        nonProfilingEntry(0),
+        profilingJump(0),
+        profilingEpilogue(0)
     {}
+
+    // Function CodeRanges have a table entry which takes an extra signature
+    // argument which is checked against the callee's signature before falling
+    // through to the normal prologue. When profiling is enabled, a nop on the
+    // fallthrough is patched to instead jump to the profiling epilogue.
+    uint32_t tableEntry;
+    uint32_t tableProfilingJump;
 
     // Function CodeRanges have an additional non-profiling entry that comes
     // after the profiling entry and a non-profiling epilogue that comes before
@@ -445,6 +452,8 @@ struct FuncOffsets : ProfilingOffsets
 
     void offsetBy(uint32_t offset) {
         ProfilingOffsets::offsetBy(offset);
+        tableEntry += offset;
+        tableProfilingJump += offset;
         nonProfilingEntry += offset;
         profilingJump += offset;
         profilingEpilogue += offset;
@@ -786,6 +795,7 @@ static const unsigned MaxFuncs                   =      512 * 1024;
 static const unsigned MaxLocals                  =       64 * 1024;
 static const unsigned MaxImports                 =       64 * 1024;
 static const unsigned MaxExports                 =       64 * 1024;
+static const unsigned MaxTables                  =        4 * 1024;
 static const unsigned MaxTableElems              =      128 * 1024;
 static const unsigned MaxArgsPerFunc             =        4 * 1024;
 static const unsigned MaxBrTableElems            = 4 * 1024 * 1024;

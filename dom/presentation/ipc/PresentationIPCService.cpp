@@ -81,11 +81,14 @@ PresentationIPCService::SendSessionMessage(const nsAString& aSessionId,
 
 NS_IMETHODIMP
 PresentationIPCService::CloseSession(const nsAString& aSessionId,
-                                     uint8_t aRole)
+                                     uint8_t aRole,
+                                     uint8_t aClosedReason)
 {
   MOZ_ASSERT(!aSessionId.IsEmpty());
 
-  return SendRequest(nullptr, CloseSessionRequest(nsString(aSessionId), aRole));
+  return SendRequest(nullptr, CloseSessionRequest(nsString(aSessionId),
+                                                  aRole,
+                                                  aClosedReason));
 }
 
 NS_IMETHODIMP
@@ -198,14 +201,15 @@ PresentationIPCService::GetWindowIdBySessionId(const nsAString& aSessionId,
 
 nsresult
 PresentationIPCService::NotifySessionStateChange(const nsAString& aSessionId,
-                                                 uint16_t aState)
+                                                 uint16_t aState,
+                                                 nsresult aReason)
 {
   nsCOMPtr<nsIPresentationSessionListener> listener;
   if (NS_WARN_IF(!mSessionListeners.Get(aSessionId, getter_AddRefs(listener)))) {
     return NS_OK;
   }
 
-  return listener->NotifyStateChange(aSessionId, aState);
+  return listener->NotifyStateChange(aSessionId, aState, aReason);
 }
 
 nsresult

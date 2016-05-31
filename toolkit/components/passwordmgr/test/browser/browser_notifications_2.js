@@ -1,3 +1,9 @@
+add_task(function* setup() {
+  yield SpecialPowers.pushPrefEnv({"set": [
+    ["signon.rememberSignons.visibilityToggle", true]
+  ]});
+});
+
 /**
  * Test that the doorhanger main action button is disabled
  * when the password field is empty.

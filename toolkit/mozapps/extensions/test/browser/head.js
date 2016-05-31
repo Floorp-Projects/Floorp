@@ -52,7 +52,8 @@ var PREF_CHECK_COMPATIBILITY;
   } catch (e) { }
   if (channel != "aurora" &&
     channel != "beta" &&
-    channel != "release") {
+    channel != "release" &&
+    channel != "esr") {
     var version = "nightly";
   } else {
     version = Services.appinfo.version.replace(/^([^\.]+\.[0-9]+[a-z]*).*/gi, "$1");

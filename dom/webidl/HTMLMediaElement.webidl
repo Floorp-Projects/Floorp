@@ -179,3 +179,40 @@ partial interface HTMLMediaElement {
   [Pref="media.useAudioChannelService.testing"]
   readonly attribute unsigned long computedSuspended;
 };
+
+/*
+ * HTMLMediaElement::seekToNextFrame() is a Mozilla experimental feature.
+ *
+ * The SeekToNextFrame() method provides a way to access a video element's video
+ * frames one by one without going through the realtime playback. So, it lets
+ * authors use "frame" as unit to access the video element's underlying data,
+ * instead of "time".
+ *
+ * The SeekToNextFrame() is a kind of seek operation, so normally, once it is
+ * invoked, a "seeking" event is dispatched. However, if the media source has no
+ * video data or is not seekable, the operation is ignored without filing the
+ * "seeking" event.
+ *
+ * Once the SeekToNextFrame() is done, a "seeked" event should always be filed
+ * and a "ended" event might also be filed depends on where the media element's
+ * position before seeking was. There are two cases:
+ * Assume the media source has n+1 video frames where n is a non-negative
+ * integers and the frame sequence is indexed from zero.
+ * (1) If the currentTime is at anywhere smaller than the n-th frame's beginning
+ *     time, say the currentTime is now pointing to a position which is smaller
+ *     than the x-th frame's beginning time and larger or equal to the (x-1)-th
+ *     frame's beginning time, where x belongs to [1, n], then the
+ *     SeekToNextFrame() operation seeks the media to the x-th frame, sets the
+ *     media's currentTime to the x-th frame's beginning time and dispatches a
+ *     "seeked" event.
+ * (2) Otherwise, if the currentTime is larger or equal to the n-th frame's
+ *     beginning time, then the SeekToNextFrame() operation sets the media's
+ *     currentTime to the duration of the media source and dispatches a "seeked"
+ *     event and an "ended" event.
+ */
+partial interface HTMLMediaElement {
+  [Throws, Pref="media.seekToNextFrame.enabled"]
+  void seekToNextFrame(); // This API should be an asynchronous one which
+                          // returns a Promise<void>. Bug 1276272 follows this
+                          // issue.
+};

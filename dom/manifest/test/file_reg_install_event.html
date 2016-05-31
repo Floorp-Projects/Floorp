@@ -1,0 +1,9 @@
+<script>
+window.addEventListener("install", (ev) => {
+  document
+    .querySelector("#output")
+    .innerHTML = "event received!"
+});
+</script>
+<link rel="manifest" href="file_manifest.json">
+<h1 id=output>waiting for event</h1>

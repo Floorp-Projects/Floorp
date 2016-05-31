@@ -200,10 +200,13 @@ PresentationParent::NotifyAvailableChange(bool aAvailable)
 
 NS_IMETHODIMP
 PresentationParent::NotifyStateChange(const nsAString& aSessionId,
-                                      uint16_t aState)
+                                      uint16_t aState,
+                                      nsresult aReason)
 {
   if (NS_WARN_IF(mActorDestroyed ||
-                 !SendNotifySessionStateChange(nsString(aSessionId), aState))) {
+                 !SendNotifySessionStateChange(nsString(aSessionId),
+                                               aState,
+                                               aReason))) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;
@@ -311,7 +314,9 @@ PresentationRequestParent::DoRequest(const CloseSessionRequest& aRequest)
     return NotifyError(NS_ERROR_DOM_SECURITY_ERR);
   }
 
-  nsresult rv = mService->CloseSession(aRequest.sessionId(), aRequest.role());
+  nsresult rv = mService->CloseSession(aRequest.sessionId(),
+                                       aRequest.role(),
+                                       aRequest.closedReason());
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return NotifyError(rv);
   }

@@ -41,6 +41,39 @@ NS_NewHTMLVideoFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 
 NS_IMPL_FRAMEARENA_HELPERS(nsVideoFrame)
 
+// A matrix to obtain a correct-rotated video frame.
+static Matrix
+ComputeRotationMatrix(gfxFloat aRotatedWidth,
+                      gfxFloat aRotatedHeight,
+                      VideoInfo::Rotation aDegrees)
+{
+  Matrix shiftVideoCenterToOrigin;
+  if (aDegrees == VideoInfo::Rotation::kDegree_90 ||
+      aDegrees == VideoInfo::Rotation::kDegree_270) {
+    shiftVideoCenterToOrigin = Matrix::Translation(-aRotatedHeight / 2.0,
+                                                   -aRotatedWidth / 2.0);
+  } else {
+    shiftVideoCenterToOrigin = Matrix::Translation(-aRotatedWidth / 2.0,
+                                                   -aRotatedHeight / 2.0);
+  }
+
+  Matrix rotation = Matrix::Rotation(gfx::Float(aDegrees / 180.0 * M_PI));
+  Matrix shiftLeftTopToOrigin = Matrix::Translation(aRotatedWidth / 2.0,
+                                                    aRotatedHeight / 2.0);
+  return shiftVideoCenterToOrigin * rotation * shiftLeftTopToOrigin;
+}
+
+static void
+SwapScaleWidthHeightForRotation(IntSize& aSize, VideoInfo::Rotation aDegrees)
+{
+  if (aDegrees == VideoInfo::Rotation::kDegree_90 ||
+      aDegrees == VideoInfo::Rotation::kDegree_270) {
+    int32_t tmpWidth = aSize.width;
+    aSize.width = aSize.height;
+    aSize.height = tmpWidth;
+  }
+}
+
 nsVideoFrame::nsVideoFrame(nsStyleContext* aContext)
   : nsContainerFrame(aContext)
 {
@@ -172,7 +205,7 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   RefPtr<ImageContainer> container = element->GetImageContainer();
   if (!container)
     return nullptr;
-  
+
   // Retrieve the size of the decoded video frame, before being scaled
   // by pixel aspect ratio.
   mozilla::gfx::IntSize frameSize = container->GetCurrentSize();
@@ -200,8 +233,12 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   if (destGFXRect.IsEmpty()) {
     return nullptr;
   }
+
+  VideoInfo::Rotation rotationDeg = element->RotationDegrees();
   IntSize scaleHint(static_cast<int32_t>(destGFXRect.Width()),
                     static_cast<int32_t>(destGFXRect.Height()));
+  // scaleHint is set regardless of rotation, so swap w/h if needed.
+  SwapScaleWidthHeightForRotation(scaleHint, rotationDeg);
   container->SetScaleHint(scaleHint);
 
   RefPtr<ImageLayer> layer = static_cast<ImageLayer*>
@@ -216,7 +253,13 @@ nsVideoFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   layer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(this));
   // Set a transform on the layer to draw the video in the right place
   gfxPoint p = destGFXRect.TopLeft() + aContainerParameters.mOffset;
-  Matrix transform = Matrix::Translation(p.x, p.y);
+
+  Matrix preTransform = ComputeRotationMatrix(destGFXRect.Width(),
+                                              destGFXRect.Height(),
+                                              rotationDeg);
+
+  Matrix transform = preTransform * Matrix::Translation(p.x, p.y);
+
   layer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
   layer->SetScaleToSize(scaleHint, ScaleMode::STRETCH);
   RefPtr<Layer> result = layer.forget();
@@ -356,7 +399,7 @@ public:
     MOZ_COUNT_DTOR(nsDisplayVideo);
   }
 #endif
-  
+
   NS_DISPLAY_DECL_NAME("Video", TYPE_VIDEO)
 
   // It would be great if we could override GetOpaqueRegion to return nonempty here,
