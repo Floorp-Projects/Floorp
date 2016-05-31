@@ -51,7 +51,8 @@ protected:
 
 public:
   nsresult Init() override;
-  nsresult ResetDecode(TargetQueues aQueues = AUDIO_VIDEO) override;
+  nsresult ResetDecode(TrackSet aTracks = TrackSet(TrackInfo::kAudioTrack,
+                                                   TrackInfo::kVideoTrack)) override;
   bool DecodeAudioData() override;
 
   // If the Theora granulepos has not been captured, it may read several packets
@@ -86,7 +87,9 @@ private:
 
   // Specialized Reset() method to signal if the seek is
   // to the start of the stream.
-  nsresult ResetDecode(bool start, TargetQueues aQueues = AUDIO_VIDEO);
+  nsresult ResetDecode(bool start,
+                       TrackSet aTracks = TrackSet(TrackInfo::kAudioTrack,
+                                                   TrackInfo::kVideoTrack));
 
   nsresult SeekInternal(int64_t aTime, int64_t aEndTime);
 
