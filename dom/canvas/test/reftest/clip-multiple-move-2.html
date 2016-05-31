@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+<canvas id="canvas" width="150" height="150"></canvas>
+
+<script>
+
+var canvas = document.getElementById('canvas');
+var ctx = canvas.getContext('2d');
+
+ctx.fillStyle = '#f00';
+ctx.fillRect(0, 0, 150, 150);
+
+ctx.beginPath();
+ctx.moveTo(0, 0);
+ctx.moveTo(0, -1);
+ctx.lineTo(0, 150);
+ctx.lineTo(150, 150);
+
+// The coordinate '149.99999' makes skia use GrConvexPolyEffect to handle the points.
+// The result should be same as '150'. So this test checks if the GrConvexPolyEffect
+// works well.
+ctx.lineTo(149.99999, -1);
+
+ctx.closePath();
+ctx.clip();
+
+ctx.fillStyle = '#0f0';
+ctx.fillRect(0, 0, 150, 150);
+
+</script>
+</body></html>
