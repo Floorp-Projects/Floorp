@@ -900,34 +900,6 @@ IMEStateManager::GetNewIMEState(nsPresContext* aPresContext,
   return newIMEState;
 }
 
-// Helper class, used for IME enabled state change notification
-class IMEEnabledStateChangedEvent : public Runnable {
-public:
-  explicit IMEEnabledStateChangedEvent(uint32_t aState)
-    : mState(aState)
-  {
-  }
-
-  NS_IMETHOD Run()
-  {
-    nsCOMPtr<nsIObserverService> observerService =
-      services::GetObserverService();
-    if (observerService) {
-      MOZ_LOG(sISMLog, LogLevel::Info,
-        ("ISM: IMEEnabledStateChangedEvent::Run(), notifies observers of "
-         "\"ime-enabled-state-changed\""));
-      nsAutoString state;
-      state.AppendInt(mState);
-      observerService->NotifyObservers(nullptr, "ime-enabled-state-changed",
-                                       state.get());
-    }
-    return NS_OK;
-  }
-
-private:
-  uint32_t mState;
-};
-
 static bool
 MayBeIMEUnawareWebApp(nsINode* aNode)
 {
@@ -1120,15 +1092,6 @@ IMEStateManager::SetInputContext(nsIWidget* aWidget,
 
   aWidget->SetInputContext(aInputContext, aAction);
   sActiveInputContextWidget = aWidget;
-
-  // Don't compare with old IME enabled state for reducing the count of
-  // notifying observers since in a remote process, nsIWidget::GetInputContext()
-  // call here may cause synchronous IPC, it's much more expensive than
-  // notifying observes.
-
-  // XXX Looks like nobody is observing this.
-  nsContentUtils::AddScriptRunner(
-    new IMEEnabledStateChangedEvent(aInputContext.mIMEState.mEnabled));
 }
 
 // static
