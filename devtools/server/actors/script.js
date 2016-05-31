@@ -2015,7 +2015,9 @@ const ThreadActor = ActorClass({
       // debugger, and carefully avoid the use of unsafeSynchronize in this
       // function when source maps are disabled.
       for (let actor of bpActors) {
-        actor.originalLocation.originalSourceActor._setBreakpoint(actor);
+        if (actor.isPending) {
+          actor.originalLocation.originalSourceActor._setBreakpoint(actor);
+        }
       }
     }
 
