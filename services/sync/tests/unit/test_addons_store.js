@@ -228,7 +228,7 @@ add_test(function test_addon_syncability() {
   do_check_true(store.isAddonSyncable(addon));
 
   let dummy = {};
-  const KEYS = ["id", "syncGUID", "type", "scope", "foreignInstall"];
+  const KEYS = ["id", "syncGUID", "type", "scope", "foreignInstall", "isSyncable"];
   for (let k of KEYS) {
     dummy[k] = addon[k];
   }
@@ -242,6 +242,10 @@ add_test(function test_addon_syncability() {
   dummy.scope = 0;
   do_check_false(store.isAddonSyncable(dummy));
   dummy.scope = addon.scope;
+
+  dummy.isSyncable = false;
+  do_check_false(store.isAddonSyncable(dummy));
+  dummy.isSyncable = addon.isSyncable;
 
   dummy.foreignInstall = true;
   do_check_false(store.isAddonSyncable(dummy));
@@ -300,7 +304,7 @@ add_test(function test_ignore_hotfixes() {
   do_check_true(store.isAddonSyncable(addon));
 
   let dummy = {};
-  const KEYS = ["id", "syncGUID", "type", "scope", "foreignInstall"];
+  const KEYS = ["id", "syncGUID", "type", "scope", "foreignInstall", "isSyncable"];
   for (let k of KEYS) {
     dummy[k] = addon[k];
   }

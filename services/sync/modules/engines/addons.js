@@ -281,6 +281,14 @@ AddonsStore.prototype = {
       }
     }
 
+    // Ignore incoming records for which an existing non-syncable addon
+    // exists.
+    let existingMeta = this.reconciler.addons[record.addonID];
+    if (existingMeta && !this.isAddonSyncable(existingMeta)) {
+      this._log.info("Ignoring incoming record for an existing but non-syncable addon", record.addonID);
+      return;
+    }
+
     Store.prototype.applyIncoming.call(this, record);
   },
 
@@ -534,7 +542,10 @@ AddonsStore.prototype = {
     //   3) Not installed by a foreign entity (i.e. installed by the app)
     //      since they act like global extensions.
     //   4) Is not a hotfix.
-    //   5) Are installed from AMO
+    //   5) The addons XPIProvider doesn't veto it (i.e not being installed in
+    //      the profile directory, or any other reasons it says the addon can't
+    //      be synced)
+    //   6) Are installed from AMO
 
     // We could represent the test as a complex boolean expression. We go the
     // verbose route so the failure reason is logged.
@@ -554,6 +565,12 @@ AddonsStore.prototype = {
       return false;
     }
 
+    // If the addon manager says it's not syncable, we skip it.
+    if (!addon.isSyncable) {
+      this._log.debug(addon.id + " not syncable: vetoed by the addon manager.");
+      return false;
+    }
+
     // This may be too aggressive. If an add-on is downloaded from AMO and
     // manually placed in the profile directory, foreignInstall will be set.
     // Arguably, that add-on should be syncable.
@@ -564,6 +581,10 @@ AddonsStore.prototype = {
     }
 
     // Ignore hotfix extensions (bug 741670). The pref may not be defined.
+    // XXX - note that addon.isSyncable will be false for hotfix addons, so
+    // this check isn't strictly necessary - except for Sync tests which aren't
+    // setup to create a "real" hotfix addon. This can be removed once those
+    // tests are fixed (but keeping it doesn't hurt either)
     if (this._extensionsPrefs.get("hotfix.id", null) == addon.id) {
       this._log.debug(addon.id + " not syncable: is a hotfix.");
       return false;
