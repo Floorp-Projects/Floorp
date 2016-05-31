@@ -332,16 +332,6 @@ public:
 
   void SetTrackElement(HTMLTrackElement* aTrackElement);
 
-  void SetActive(bool aActive)
-  {
-    mActive = aActive;
-  }
-
-  bool GetActive()
-  {
-    return mActive;
-  }
-
 private:
   ~TextTrackCue();
 
@@ -375,8 +365,6 @@ private:
   // anytime a property that relates to the display of the TextTrackCue is
   // changed.
   bool mReset;
-
-  bool mActive;
 
   static StaticRefPtr<nsIWebVTTParserWrapper> sParserWrapper;
 };

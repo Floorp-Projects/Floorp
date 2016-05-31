@@ -61,7 +61,6 @@ public:
 
   nsresult DispatchTrackEvent(nsIDOMEvent* aEvent);
   void CreateAndDispatchChangeEvent();
-  void SetCuesInactive();
 
   IMPL_EVENT_HANDLER(change)
   IMPL_EVENT_HANDLER(addtrack)
