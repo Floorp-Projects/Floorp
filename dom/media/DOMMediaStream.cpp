@@ -600,7 +600,11 @@ DOMMediaStream::RemoveTrack(MediaStreamTrack& aTrack)
   // to block it in the port. Doing this for a locked track is still OK as it
   // will first block the track, then destroy the port. Both cause the track to
   // end.
-  BlockPlaybackTrack(toRemove);
+  // If the track has already ended, it's input port might be gone, so in those
+  // cases blocking the underlying track should be avoided.
+  if (!aTrack.Ended()) {
+    BlockPlaybackTrack(toRemove);
+  }
 
   DebugOnly<bool> removed = mTracks.RemoveElement(toRemove);
   MOZ_ASSERT(removed);
