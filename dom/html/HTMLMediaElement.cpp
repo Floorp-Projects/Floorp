@@ -3740,13 +3740,13 @@ void HTMLMediaElement::SeekCompleted()
 {
   mPlayingBeforeSeek = false;
   SetPlayedOrSeeked(true);
-  if (mTextTrackManager) {
-    mTextTrackManager->DidSeek();
-  }
   FireTimeUpdate(false);
   DispatchAsyncEvent(NS_LITERAL_STRING("seeked"));
   // We changed whether we're seeking so we need to AddRemoveSelfReference
   AddRemoveSelfReference();
+  if (mTextTrackManager) {
+    mTextTrackManager->DidSeek();
+  }
   if (mCurrentPlayRangeStart == -1.0) {
     mCurrentPlayRangeStart = CurrentTime();
   }
