@@ -1035,6 +1035,10 @@ SessionStore.prototype = {
       entry.originalURI = aEntry.originalURI.spec;
     }
 
+    if (aEntry.loadReplace) {
+      entry.loadReplace = aEntry.loadReplace;
+    }
+
     if (aEntry.contentType) {
       entry.contentType = aEntry.contentType;
     }
@@ -1121,6 +1125,10 @@ SessionStore.prototype = {
 
     if (aEntry.originalURI) {
       shEntry.originalURI =  Services.io.newURI(aEntry.originalURI, null, null);
+    }
+
+    if (aEntry.loadReplace) {
+      shEntry.loadReplace = aEntry.loadReplace;
     }
 
     if (aEntry.cacheKey) {
