@@ -115,10 +115,6 @@ interface nsIAlertNotification : nsISupports
 [scriptable, uuid(f7a36392-d98b-4141-a7d7-4e46642684e3)]
 interface nsIAlertsService : nsISupports
 {
-  void showPersistentNotification(in AString persistentData,
-                                  in nsIAlertNotification alert,
-                                  [optional] in nsIObserver alertListener);
-
   void showAlert(in nsIAlertNotification alert,
                  [optional] in nsIObserver alertListener);
   /**
