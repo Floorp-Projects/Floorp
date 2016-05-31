@@ -148,6 +148,10 @@ skip-if(!winWidget) pref(webgl.disable-angle,true)  == webgl-color-test.html?nat
 # Do we correctly handle multiple clip paths?
 != clip-multiple-paths.html clip-multiple-paths-badref.html
 
+# Bug 1255062
+== clip-multiple-move-1.html clip-multiple-move-1-ref.html
+== clip-multiple-move-2.html clip-multiple-move-2-ref.html
+
 # Bug 815648
 == stroketext-shadow.html stroketext-shadow-ref.html
 
