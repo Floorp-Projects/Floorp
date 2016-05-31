@@ -362,6 +362,8 @@ public:
   /** Identical to CloneInternal(TrackForwardingOption::EXPLICIT) */
   already_AddRefed<DOMMediaStream> Clone();
 
+  IMPL_EVENT_HANDLER(addtrack)
+
   // NON-WebIDL
 
   /**
@@ -522,7 +524,12 @@ public:
    * Called for each track in our owned stream to indicate to JS that we
    * are carrying that track.
    *
-   * Creates a MediaStreamTrack, adds it to mTracks and returns it.
+   * Creates a MediaStreamTrack, adds it to mTracks, raises "addtrack" and
+   * returns it.
+   *
+   * Note that "addtrack" is raised synchronously and only has an effect if
+   * this MediaStream is already exposed to script. For spec compliance this is
+   * to be called from an async task.
    */
   MediaStreamTrack* CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
                                    MediaStreamTrackSource* aSource);
@@ -602,6 +609,10 @@ protected:
 
   // Dispatches NotifyTrackRemoved() to all registered track listeners.
   void NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack);
+
+  // Dispatches "addtrack" or "removetrack".
+  nsresult DispatchTrackEvent(const nsAString& aName,
+                              const RefPtr<MediaStreamTrack>& aTrack);
 
   class OwnedStreamListener;
   friend class OwnedStreamListener;
