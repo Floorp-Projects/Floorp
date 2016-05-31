@@ -50,6 +50,27 @@ add_task(function* () {
       }
     });
 
+    let awaitZoom = (tabId, newValue) => {
+      let listener;
+
+      return new Promise(resolve => {
+        listener = info => {
+          if (info.tabId == tabId && info.newZoomFactor == newValue) {
+            resolve();
+          }
+        };
+        browser.tabs.onZoomChange.addListener(listener);
+
+        browser.tabs.getZoom(tabId).then(zoomFactor => {
+          if (zoomFactor == newValue) {
+            resolve();
+          }
+        });
+      }).then(() => {
+        browser.tabs.onZoomChange.removeListener(listener);
+      });
+    };
+
     let checkZoom = (tabId, newValue, oldValue = null) => {
       let awaitEvent;
       if (oldValue != null && !zoomEvents.length) {
@@ -118,9 +139,10 @@ add_task(function* () {
       return checkZoom(tabIds[1], 1.5, 2);
     }).then(() => {
       browser.test.log(`Switch to tab 1, expect asynchronous zoom change just after the switch`);
-      return browser.tabs.update(tabIds[0], {active: true});
-    }).then(() => {
-      return new Promise(resolve => setTimeout(resolve, 0));
+      return Promise.all([
+        awaitZoom(tabIds[0], 1.5),
+        browser.tabs.update(tabIds[0], {active: true}),
+      ]);
     }).then(() => {
       return checkZoom(tabIds[0], 1.5, 2);
     }).then(() => {
