@@ -3393,12 +3393,6 @@ IonBuilder::inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* descr)
         return InliningStatus_NotInlined;
     }
 
-    // NYI, this will be removed by a bug 1136226 patch.
-    if (SimdTypeToLength(simdType) != 4) {
-        trackOptimizationOutcome(TrackedOutcome::SimdTypeNotOptimized);
-        return InliningStatus_NotInlined;
-    }
-
     // Take the templateObject out of Baseline ICs, such that we can box
     // SIMD value type in the same kind of objects.
     MOZ_ASSERT(size_t(descr->size(descr->type())) < InlineTypedObject::MaximumSize);
@@ -3418,7 +3412,8 @@ IonBuilder::inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* descr)
     // containing the coercion of 'undefined' to the right type.
     MConstant* defVal = nullptr;
     MIRType laneType = SimdTypeToLaneType(simdType);
-    if (callInfo.argc() < SimdTypeToLength(simdType)) {
+    unsigned lanes = SimdTypeToLength(simdType);
+    if (lanes != 4 || callInfo.argc() < lanes) {
         if (laneType == MIRType::Int32) {
             defVal = constant(Int32Value(0));
         } else if (laneType == MIRType::Boolean) {
@@ -3432,19 +3427,41 @@ IonBuilder::inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* descr)
         }
     }
 
-    MDefinition* lane[4];
-    for (unsigned i = 0; i < 4; i++)
-        lane[i] = callInfo.getArgWithDefault(i, defVal);
+    MInstruction *values = nullptr;
 
-    // Convert boolean lanes into Int32 0 / -1.
-    if (laneType == MIRType::Boolean) {
+    // Use the MSimdValueX4 constructor for X4 vectors.
+    if (lanes == 4) {
+        MDefinition* lane[4];
         for (unsigned i = 0; i < 4; i++)
-            lane[i] = convertToBooleanSimdLane(lane[i]);
-    }
+            lane[i] = callInfo.getArgWithDefault(i, defVal);
 
-    MSimdValueX4* values =
-      MSimdValueX4::New(alloc(), simdType, lane[0], lane[1], lane[2], lane[3]);
-    current->add(values);
+        // Convert boolean lanes into Int32 0 / -1.
+        if (laneType == MIRType::Boolean) {
+            for (unsigned i = 0; i < 4; i++)
+                lane[i] = convertToBooleanSimdLane(lane[i]);
+        }
+
+        values = MSimdValueX4::New(alloc(), simdType, lane[0], lane[1], lane[2], lane[3]);
+        current->add(values);
+    } else {
+        // For general constructor calls, start from splat(defVal), insert one
+        // lane at a time.
+        values = MSimdSplat::New(alloc(), defVal, simdType);
+        current->add(values);
+
+        // Stop early if constructor doesn't have enough arguments. These lanes
+        // then get the default value.
+        if (callInfo.argc() < lanes)
+            lanes = callInfo.argc();
+
+        for (unsigned i = 0; i < lanes; i++) {
+            MDefinition* lane = callInfo.getArg(i);
+            if (laneType == MIRType::Boolean)
+                lane = convertToBooleanSimdLane(lane);
+            values = MSimdInsertElement::New(alloc(), values, lane, i);
+            current->add(values);
+        }
+    }
 
     MSimdBox* obj = MSimdBox::New(alloc(), constraints(), values, inlineTypedObject, descr->type(),
                                   inlineTypedObject->group()->initialHeap(constraints()));
