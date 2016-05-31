@@ -116,8 +116,3 @@ contract @mozilla.org/colorpicker;1 {430b987f-bb9f-46a3-99a5-241749220b29}
 # AndroidActivitiesGlue.js
 component {e4deb5f6-d5e3-4fce-bc53-901dd9951c48} AndroidActivitiesGlue.js
 contract @mozilla.org/dom/activities/ui-glue;1 {e4deb5f6-d5e3-4fce-bc53-901dd9951c48}
-
-# PersistentNotificationHandler.js
-component {75390fe7-f8a3-423a-b3b1-258d7eabed40} PersistentNotificationHandler.js
-contract @mozilla.org/persistent-notification-handler;1 {75390fe7-f8a3-423a-b3b1-258d7eabed40}
-category persistent-notification-click PersistentNotificationHandler @mozilla.org/persistent-notification-handler;1

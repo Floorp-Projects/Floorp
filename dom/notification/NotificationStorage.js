@@ -118,7 +118,7 @@ NotificationStorage.prototype = {
       this._byTag[origin][tag] = notification;
     };
 
-    if (serviceWorkerRegistrationScope || this.canPut(origin)) {
+    if (this.canPut(origin)) {
       cpmm.sendAsyncMessage("Notification:Save", {
         origin: origin,
         notification: notification
