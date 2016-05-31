@@ -89,15 +89,15 @@ public:
     // To keep proper order of the original headers we MUST call
     // ParseCachedOriginalHeaders FIRST and then ParseCachedHead.
     //
-    // block must be null terminated. parsing is destructive.
-    nsresult ParseCachedHead(char *block);
+    // block must be null terminated.
+    nsresult ParseCachedHead(const char *block);
     nsresult ParseCachedOriginalHeaders(char *block);
 
-    // parse the status line. line must be null terminated.
-    void ParseStatusLine(const char *line);
+    // parse the status line.
+    void ParseStatusLine(const nsACString &line);
 
-    // parse a header line. line must be null terminated. parsing is destructive.
-    nsresult ParseHeaderLine(const char *line);
+    // parse a header line.
+    nsresult ParseHeaderLine(const nsACString &line);
 
     // cache validation support methods
     nsresult ComputeFreshnessLifetime(uint32_t *);
@@ -144,8 +144,8 @@ private:
     void ParseCacheControl(const char *);
     void ParsePragma(const char *);
 
-    void ParseStatusLine_locked(const char *line);
-    nsresult ParseHeaderLine_locked(const char *line, bool originalFromNetHeaders);
+    void ParseStatusLine_locked(const nsACString &line);
+    nsresult ParseHeaderLine_locked(const nsACString &line, bool originalFromNetHeaders);
 
     // these return failure if the header does not exist.
     nsresult ParseDateHeader(nsHttpAtom header, uint32_t *result) const;
