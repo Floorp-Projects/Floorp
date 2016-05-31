@@ -508,22 +508,6 @@ AndroidBridge::GetClipboardText(nsAString& aText)
 }
 
 void
-AndroidBridge::ShowPersistentAlertNotification(const nsAString& aPersistentData,
-                                               const nsAString& aImageUrl,
-                                               const nsAString& aAlertTitle,
-                                               const nsAString& aAlertText,
-                                               const nsAString& aAlertCookie,
-                                               const nsAString& aAlertName,
-                                               nsIPrincipal* aPrincipal)
-{
-    nsAutoString host;
-    nsAlertsUtils::GetSourceHostPort(aPrincipal, host);
-
-    GeckoAppShell::ShowPersistentAlertNotificationWrapper
-        (aPersistentData, aImageUrl, aAlertTitle, aAlertText, aAlertCookie, aAlertName, host);
-}
-
-void
 AndroidBridge::ShowAlertNotification(const nsAString& aImageUrl,
                                      const nsAString& aAlertTitle,
                                      const nsAString& aAlertText,

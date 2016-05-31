@@ -177,18 +177,10 @@ public:
 
     bool GetClipboardText(nsAString& aText);
 
-    void ShowPersistentAlertNotification(const nsAString& aPersistentData,
-                                         const nsAString& aImageUrl,
-                                         const nsAString& aAlertTitle,
-                                         const nsAString& aAlertText,
-                                         const nsAString& aAlertCookie,
-                                         const nsAString& aAlertName,
-                                         nsIPrincipal* aPrincipal);
-
     void ShowAlertNotification(const nsAString& aImageUrl,
                                const nsAString& aAlertTitle,
                                const nsAString& aAlertText,
-                               const nsAString& aAlertCookie,
+                               const nsAString& aAlertData,
                                nsIObserver *aAlertListener,
                                const nsAString& aAlertName,
                                nsIPrincipal* aPrincipal);

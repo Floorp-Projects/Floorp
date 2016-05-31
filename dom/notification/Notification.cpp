@@ -6,7 +6,6 @@
 
 #include "mozilla/dom/Notification.h"
 
-#include "mozilla/JSONWriter.h"
 #include "mozilla/Move.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Preferences.h"
@@ -1667,19 +1666,6 @@ Notification::IsInPrivateBrowsing()
   return false;
 }
 
-namespace {
-  struct StringWriteFunc : public JSONWriteFunc
-  {
-    nsAString& mBuffer; // This struct must not outlive this buffer
-    StringWriteFunc(nsAString& buffer) : mBuffer(buffer) {}
-
-    void Write(const char* aStr)
-    {
-      mBuffer.Append(NS_ConvertUTF8toUTF16(aStr));
-    }
-  };
-}
-
 void
 Notification::ShowInternal()
 {
@@ -1731,7 +1717,6 @@ Notification::ShowInternal()
   nsAutoString soundUrl;
   ResolveIconAndSoundURL(iconUrl, soundUrl);
 
-  bool isPersistent = false;
   nsCOMPtr<nsIObserver> observer;
   if (mScope.IsEmpty()) {
     // Ownership passed to observer.
@@ -1746,7 +1731,6 @@ Notification::ShowInternal()
       observer = new MainThreadNotificationObserver(Move(ownership));
     }
   } else {
-    isPersistent = true;
     // This observer does not care about the Notification. It will be released
     // at the end of this function.
     //
@@ -1830,7 +1814,6 @@ Notification::ShowInternal()
   nsCOMPtr<nsIAlertNotification> alert =
     do_CreateInstance(ALERT_NOTIFICATION_CONTRACTID);
   NS_ENSURE_TRUE_VOID(alert);
-  nsIPrincipal* principal = GetPrincipal();
   rv = alert->Init(alertName, iconUrl, mTitle, mBody,
                    true,
                    uniqueCookie,
@@ -1840,29 +1823,7 @@ Notification::ShowInternal()
                    GetPrincipal(),
                    inPrivateBrowsing);
   NS_ENSURE_SUCCESS_VOID(rv);
-
-  if (isPersistent) {
-    nsAutoString persistentData;
-
-    JSONWriter w(MakeUnique<StringWriteFunc>(persistentData));
-    w.Start();
-
-    nsAutoString origin;
-    Notification::GetOrigin(principal, origin);
-    w.StringProperty("origin", NS_ConvertUTF16toUTF8(origin).get());
-
-    w.StringProperty("id", NS_ConvertUTF16toUTF8(mID).get());
-
-    nsAutoCString originSuffix;
-    principal->GetOriginSuffix(originSuffix);
-    w.StringProperty("originSuffix", originSuffix.get());
-
-    w.End();
-
-    alertService->ShowPersistentNotification(persistentData, alert, alertObserver);
-  } else {
-    alertService->ShowAlert(alert, alertObserver);
-  }
+  alertService->ShowAlert(alert, alertObserver);
 }
 
 /* static */ bool
