@@ -33,6 +33,8 @@ public class TelemetryCorePingUploadDelegate extends BrowserAppDelegate {
     private static final String LOGTAG = StringUtils.safeSubstring(
             "Gecko" + TelemetryCorePingUploadDelegate.class.getSimpleName(), 0, 23);
 
+    private static final String PREF_IS_FIRST_RUN = "telemetry-isFirstRun";
+
     private TelemetryDispatcher telemetryDispatcher; // lazy
     private final SessionMeasurements sessionMeasurements = new SessionMeasurements();
 
@@ -46,6 +48,32 @@ public class TelemetryCorePingUploadDelegate extends BrowserAppDelegate {
         //
         // We're left with onStart/onStop and we upload in onStart because onStop is not guaranteed to be called
         // and we want to upload the first run ASAP (e.g. to get install data before the app may crash).
+        uploadPing(browserApp);
+    }
+
+    @Override
+    public void onStop(final BrowserApp browserApp) {
+        // We've decided to upload primarily in onStart (see note there). However, if it's the first run,
+        // it's possible a user used fennec and decided never to return to it again - it'd be great to get
+        // their session information before they decided to give it up so we upload here on first run.
+        //
+        // Caveats:
+        //   * onStop is not guaranteed to be called in low memory conditions so it's possible we won't upload,
+        // but it's better than it was before.
+        //   * Besides first run (because of this call), we can never get the user's *last* session data.
+        //
+        // If we are really interested in the user's last session data, we could consider uploading in onStop
+        // but it's less robust (see discussion in bug 1277091).
+        final SharedPreferences sharedPrefs = getSharedPreferences(browserApp);
+        if (sharedPrefs.getBoolean(PREF_IS_FIRST_RUN, true)) {
+            sharedPrefs.edit()
+                    .putBoolean(PREF_IS_FIRST_RUN, false)
+                    .apply();
+            uploadPing(browserApp);
+        }
+    }
+
+    private void uploadPing(final BrowserApp browserApp) {
         final SearchEngineManager searchEngineManager = browserApp.getSearchEngineManager();
         searchEngineManager.getEngine(new UploadTelemetryCorePingCallback(browserApp));
     }
