@@ -46,7 +46,7 @@ class CDMWrapper {
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CDMWrapper)
 
-  CDMWrapper(cdm::ContentDecryptionModule_8* aCDM)
+  explicit CDMWrapper(cdm::ContentDecryptionModule_8* aCDM)
     : mCDM(aCDM)
   {
     MOZ_ASSERT(mCDM);
