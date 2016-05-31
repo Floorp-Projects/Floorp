@@ -82,6 +82,28 @@
       this.onProcessed = function showProcessor_onProcessed()
       {
         testLiAccessibleTree();
+        gSequence.processNext();
+      }
+    };
+
+    function textReplaceProcessor()
+    {
+      this.liNode = getNode("li");
+
+      this.process = function textReplaceProcessor_process()
+      {
+        this.liNode.textContent = "hey";
+      }
+
+      this.onProcessed = function textReplaceProcessor_onProcessed()
+      {
+        var tree = {
+          LISTITEM: [
+            { STATICTEXT: [] },
+            { TEXT_LEAF: [] }
+          ]
+        };
+        testAccessibleTree(this.liNode, tree);
         SimpleTest.finish();
       }
     };
@@ -89,8 +111,9 @@
     ////////////////////////////////////////////////////////////////////////////
     // Test
 
-    var gSequence = null;
+    //gA11yEventDumpToConsole = true;
 
+    var gSequence = null;
     function doTest()
     {
       testLiAccessibleTree();
@@ -101,6 +124,8 @@
                        "hide HTML li");
       gSequence.append(new showProcessor(), EVENT_SHOW, getNode("li"),
                        "show HTML li");
+      gSequence.append(new textReplaceProcessor(), EVENT_REORDER, getNode("li"),
+                       "change text of HTML li");
 
       gSequence.processNext(); // SimpleTest.finish() will be called in the end
     }

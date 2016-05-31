@@ -157,7 +157,7 @@ public:
   virtual already_AddRefed<nsIPersistentProperties> NativeAttributes() override;
   virtual Relation RelationByType(RelationType aRelationType) override;
 
-  bool InsertChildAt(uint32_t aIndex, Accessible* aChild) override;
+  virtual bool InsertChildAt(uint32_t aIndex, Accessible* aChild) override;
 
 protected:
   virtual ~HTMLTableAccessible() {}
