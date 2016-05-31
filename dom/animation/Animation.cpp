@@ -155,21 +155,20 @@ Animation::SetTimeline(AnimationTimeline* aTimeline)
   PostUpdate();
 }
 
+// https://w3c.github.io/web-animations/#setting-the-timeline
 void
 Animation::SetTimelineNoUpdate(AnimationTimeline* aTimeline)
 {
+  RefPtr<AnimationTimeline> oldTimeline = mTimeline;
   if (mTimeline == aTimeline) {
     return;
   }
 
-  if (mTimeline) {
-    mTimeline->NotifyAnimationUpdated(*this);
+  mTimeline = aTimeline;
+  if (!mStartTime.IsNull()) {
+    mHoldTime.SetNull();
   }
 
-  mTimeline = aTimeline;
-
-  // FIXME(spec): Once we implement the seeking defined in the spec
-  // surely this should be SeekFlag::DidSeek but the spec says otherwise.
   UpdateTiming(SeekFlag::NoSeek, SyncNotifyFlag::Async);
 }
 
