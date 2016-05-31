@@ -3245,29 +3245,21 @@ IonBuilder::inlineSimd(CallInfo& callInfo, JSFunction* target, SimdType type)
 
         // Binary arithmetic.
       case SimdOperation::Fn_add:
-        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_add,
-                                                  type);
+        return inlineSimdBinaryArith(callInfo, native, MSimdBinaryArith::Op_add, type);
       case SimdOperation::Fn_sub:
-        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_sub,
-                                                  type);
+        return inlineSimdBinaryArith(callInfo, native, MSimdBinaryArith::Op_sub, type);
       case SimdOperation::Fn_mul:
-        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_mul,
-                                                  type);
+        return inlineSimdBinaryArith(callInfo, native, MSimdBinaryArith::Op_mul, type);
       case SimdOperation::Fn_div:
-        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_div,
-                                                  type);
+        return inlineSimdBinaryArith(callInfo, native, MSimdBinaryArith::Op_div, type);
       case SimdOperation::Fn_max:
-        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_max,
-                                                  type);
+        return inlineSimdBinaryArith(callInfo, native, MSimdBinaryArith::Op_max, type);
       case SimdOperation::Fn_min:
-        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_min,
-                                                  type);
+        return inlineSimdBinaryArith(callInfo, native, MSimdBinaryArith::Op_min, type);
       case SimdOperation::Fn_maxNum:
-        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_maxNum,
-                                                  type);
+        return inlineSimdBinaryArith(callInfo, native, MSimdBinaryArith::Op_maxNum, type);
       case SimdOperation::Fn_minNum:
-        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_minNum,
-                                                  type);
+        return inlineSimdBinaryArith(callInfo, native, MSimdBinaryArith::Op_minNum, type);
 
         // Binary saturating.
       case SimdOperation::Fn_addSaturate:
@@ -3277,16 +3269,13 @@ IonBuilder::inlineSimd(CallInfo& callInfo, JSFunction* target, SimdType type)
 
         // Binary bitwise.
       case SimdOperation::Fn_and:
-        return inlineSimdBinary<MSimdBinaryBitwise>(callInfo, native, MSimdBinaryBitwise::and_,
-                                                    type);
+        return inlineSimdBinaryBitwise(callInfo, native, MSimdBinaryBitwise::and_, type);
       case SimdOperation::Fn_or:
-        return inlineSimdBinary<MSimdBinaryBitwise>(callInfo, native, MSimdBinaryBitwise::or_,
-                                                    type);
+        return inlineSimdBinaryBitwise(callInfo, native, MSimdBinaryBitwise::or_, type);
       case SimdOperation::Fn_xor:
-        return inlineSimdBinary<MSimdBinaryBitwise>(callInfo, native, MSimdBinaryBitwise::xor_,
-                                                    type);
+        return inlineSimdBinaryBitwise(callInfo, native, MSimdBinaryBitwise::xor_, type);
 
-        // Shifts.
+      // Shifts.
       case SimdOperation::Fn_shiftLeftByScalar:
         return inlineSimdShift(callInfo, native, MSimdShift::lsh, type);
       case SimdOperation::Fn_shiftRightByScalar:
@@ -3549,11 +3538,9 @@ IonBuilder::boxSimd(CallInfo& callInfo, MDefinition* ins, InlineTypedObject* tem
     return InliningStatus_Inlined;
 }
 
-// Inline a binary SIMD operation where both arguments are SIMD types.
-template<typename T>
 IonBuilder::InliningStatus
-IonBuilder::inlineSimdBinary(CallInfo& callInfo, JSNative native, typename T::Operation op,
-                             SimdType type)
+IonBuilder::inlineSimdBinaryArith(CallInfo& callInfo, JSNative native,
+                                  MSimdBinaryArith::Operation op, SimdType type)
 {
     InlineTypedObject* templateObj = nullptr;
     if (!canInlineSimd(callInfo, native, 2, &templateObj))
@@ -3562,7 +3549,22 @@ IonBuilder::inlineSimdBinary(CallInfo& callInfo, JSNative native, typename T::Op
     MDefinition* lhs = unboxSimd(callInfo.getArg(0), type);
     MDefinition* rhs = unboxSimd(callInfo.getArg(1), type);
 
-    T* ins = T::New(alloc(), lhs, rhs, op);
+    auto* ins = MSimdBinaryArith::AddLegalized(alloc(), current, lhs, rhs, op);
+    return boxSimd(callInfo, ins, templateObj);
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineSimdBinaryBitwise(CallInfo& callInfo, JSNative native,
+                                    MSimdBinaryBitwise::Operation op, SimdType type)
+{
+    InlineTypedObject* templateObj = nullptr;
+    if (!canInlineSimd(callInfo, native, 2, &templateObj))
+        return InliningStatus_NotInlined;
+
+    MDefinition* lhs = unboxSimd(callInfo.getArg(0), type);
+    MDefinition* rhs = unboxSimd(callInfo.getArg(1), type);
+
+    auto* ins = MSimdBinaryBitwise::New(alloc(), lhs, rhs, op);
     return boxSimd(callInfo, ins, templateObj);
 }
 
