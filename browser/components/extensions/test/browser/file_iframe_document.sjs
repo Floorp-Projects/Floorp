@@ -19,6 +19,7 @@ function handleRequest(request, response) {
   response.processAsync();
 
   response.setHeader("Content-Type", "text/html", false);
+  response.setHeader("Cache-Control", "no-cache", false);
   response.write(`<!DOCTYPE html>
     <html lang="en">
     <head>
