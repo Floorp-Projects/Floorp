@@ -53,9 +53,13 @@ add_task(function* () {
 
   info("try ctrl-l to clear output");
   executeSoon(() => {
-    let selector = "key[command=consoleCmd_clearOutput]:not([disabled])";
-    let clearKey = hud.ui.window.document.querySelector(selector);
-    synthesizeKeyFromKeyTag(clearKey);
+    let clearShortcut;
+    if (Services.appinfo.OS === "Darwin") {
+      clearShortcut = WCUL10n.getStr("webconsole.clear.keyOSX");
+    } else {
+      clearShortcut = WCUL10n.getStr("webconsole.clear.key");
+    }
+    synthesizeKeyShortcut(clearShortcut);
   });
   yield hud.jsterm.once("messages-cleared");
 
@@ -64,7 +68,7 @@ add_task(function* () {
      "jsterm input is focused");
 
   info("try ctrl-f to focus filter");
-  EventUtils.synthesizeKey("F", { accelKey: true });
+  synthesizeKeyShortcut(WCUL10n.getStr("webconsole.find.key"));
   ok(!hud.jsterm.inputNode.getAttribute("focused"),
      "jsterm input is not focused");
   is(hud.ui.filterBox.getAttribute("focused"), "true",
