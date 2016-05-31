@@ -627,14 +627,14 @@ public:
 
 /**
  * A structure designed to be used like a linked list of PtrInfo, except
- * that allocates the PtrInfo 32K-at-a-time.
+ * it allocates many PtrInfos at a time.
  */
 class NodePool
 {
 private:
   // The -2 allows us to use |BlockSize + 1| for |mEntries|, and fit |mNext|,
   // all without causing slop.
-  enum { BlockSize = 8 * 1024 - 2 };
+  enum { BlockSize = 4 * 1024 - 2 };
 
   struct Block
   {
@@ -647,8 +647,8 @@ private:
 
       // Ensure Block is the right size (see the comment on BlockSize above).
       static_assert(
-        sizeof(Block) == 163824 ||      // 32-bit; equals 39.997 pages
-        sizeof(Block) == 262120,        // 64-bit; equals 63.994 pages
+        sizeof(Block) ==  81904 ||      // 32-bit; equals 19.996 x 4 KiB pages
+        sizeof(Block) == 131048,        // 64-bit; equals 31.994 x 4 KiB pages
         "ill-sized NodePool::Block"
       );
     }
