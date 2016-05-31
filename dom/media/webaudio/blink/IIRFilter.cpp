@@ -129,4 +129,24 @@ void IIRFilter::getFrequencyResponse(int nFrequencies, const float* frequency, f
     }
 }
 
+bool IIRFilter::buffersAreZero()
+{
+    double* xBuffer = m_xBuffer.Elements();
+    double* yBuffer = m_yBuffer.Elements();
+
+    for (size_t k = 0; k < m_feedforward->Length(); ++k) {
+        if (xBuffer[(m_bufferIndex - k) & (kBufferLength - 1)] != 0.0) {
+            return false;
+        }
+    }
+
+    for (size_t k = 0; k < m_feedback->Length(); ++k) {
+        if (fabs(yBuffer[(m_bufferIndex - k) & (kBufferLength - 1)]) >= FLT_MIN) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
 } // namespace blink
