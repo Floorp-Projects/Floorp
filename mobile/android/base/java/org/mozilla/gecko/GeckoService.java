@@ -129,7 +129,9 @@ public class GeckoService extends Service {
     }
 
     public static Intent getIntentToCreateServices(final Context context, final String category) {
-        return getIntentToCreateServices(context, category, /* data */ null);
+        final Intent intent = getIntentForAction(context, INTENT_ACTION_CREATE_SERVICES);
+        intent.putExtra(INTENT_SERVICE_CATEGORY, category);
+        return intent;
     }
 
     public static void setIntentProfile(final Intent intent, final String profileName,
