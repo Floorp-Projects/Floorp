@@ -984,6 +984,9 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
 
     mOptions.antialias = gl->Caps().antialias;
 
+    //////
+    // Initial setup.
+
     MakeContextCurrent();
 
     gl->fViewport(0, 0, mWidth, mHeight);
@@ -991,20 +994,13 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
     mViewportHeight = mHeight;
 
     gl->fScissor(0, 0, mWidth, mHeight);
-
-    // Make sure that we clear this out, otherwise
-    // we'll end up displaying random memory
     gl->fBindFramebuffer(LOCAL_GL_FRAMEBUFFER, 0);
 
+    //////
+    // Check everything
+
     AssertCachedBindings();
-    AssertCachedState();
-
-    // Clear immediately, because we need to present the cleared initial
-    // buffer.
-    mBackbufferNeedsClear = true;
-    ClearBackbufferIfNeeded();
-
-    mShouldPresent = true;
+    AssertCachedGlobalState();
 
     MOZ_ASSERT(gl->Caps().color);
 
@@ -1020,8 +1016,14 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
     MOZ_ASSERT(gl->Caps().antialias == mOptions.antialias);
     MOZ_ASSERT(gl->Caps().preserve == mOptions.preserveDrawingBuffer);
 
-    AssertCachedBindings();
-    AssertCachedState();
+    //////
+    // Clear immediately, because we need to present the cleared initial buffer
+    mBackbufferNeedsClear = true;
+    ClearBackbufferIfNeeded();
+
+    mShouldPresent = true;
+
+    //////
 
     reporter.SetSuccessful();
 
@@ -1416,8 +1418,7 @@ WebGLContext::ForceClearFramebufferWithDefaultValues(GLbitfield clearBits,
 
     // Fun GL fact: No need to worry about the viewport here, glViewport is just
     // setting up a coordinates transformation, it doesn't affect glClear at all.
-    AssertCachedState(); // Can't check cached bindings, as we could
-                         // have a different FB bound temporarily.
+    AssertCachedGlobalState();
 
     // Prepare GL state for clearing.
     gl->fDisable(LOCAL_GL_SCISSOR_TEST);

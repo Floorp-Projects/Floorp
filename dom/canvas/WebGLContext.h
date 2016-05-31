@@ -376,7 +376,7 @@ public:
     bool TryToRestoreContext();
 
     void AssertCachedBindings();
-    void AssertCachedState();
+    void AssertCachedGlobalState();
 
     dom::HTMLCanvasElement* GetCanvas() const { return mCanvasElement; }
 
