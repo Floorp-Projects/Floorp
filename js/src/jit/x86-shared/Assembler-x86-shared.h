@@ -2167,6 +2167,31 @@ class AssemblerX86Shared : public AssemblerShared
         masm.vpsrld_ir(count.value, src0.encoding(), dest.encoding());
     }
 
+    void vpsllw(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.vpsllw_rr(src1.encoding(), src0.encoding(), dest.encoding());
+    }
+    void vpsllw(Imm32 count, FloatRegister src0, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.vpsllw_ir(count.value, src0.encoding(), dest.encoding());
+    }
+    void vpsraw(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.vpsraw_rr(src1.encoding(), src0.encoding(), dest.encoding());
+    }
+    void vpsraw(Imm32 count, FloatRegister src0, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.vpsraw_ir(count.value, src0.encoding(), dest.encoding());
+    }
+    void vpsrlw(FloatRegister src1, FloatRegister src0, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.vpsrlw_rr(src1.encoding(), src0.encoding(), dest.encoding());
+    }
+    void vpsrlw(Imm32 count, FloatRegister src0, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.vpsrlw_ir(count.value, src0.encoding(), dest.encoding());
+    }
+
     void vcvtsi2sd(const Operand& src1, FloatRegister src0, FloatRegister dest) {
         MOZ_ASSERT(HasSSE2());
         switch (src1.kind()) {
