@@ -154,12 +154,10 @@ enum OneByteOpcodeID {
 };
 
 enum class ShiftID {
-    vpsrld = 2,
-    vpsrlq = 2,
+    vpsrlx = 2,
     vpsrldq = 3,
     vpsrad = 4,
-    vpslld = 6,
-    vpsllq = 6
+    vpsllx = 6
 };
 
 enum TwoByteOpcodeID {
@@ -219,6 +217,9 @@ enum TwoByteOpcodeID {
     OP2_MOVDQ_VsdWsd    = 0x6F,
     OP2_MOVDQ_VdqWdq    = 0x6F,
     OP2_PSHUFD_VdqWdqIb = 0x70,
+    OP2_PSLLW_UdqIb     = 0x71,
+    OP2_PSRAW_UdqIb     = 0x71,
+    OP2_PSRLW_UdqIb     = 0x71,
     OP2_PSLLD_UdqIb     = 0x72,
     OP2_PSRAD_UdqIb     = 0x72,
     OP2_PSRLD_UdqIb     = 0x72,
@@ -250,14 +251,17 @@ enum TwoByteOpcodeID {
     OP2_PINSRW          = 0xC4,
     OP2_PEXTRW_GdUdIb   = 0xC5,
     OP2_SHUFPS_VpsWpsIb = 0xC6,
+    OP2_PSRLW_VdqWdq    = 0xD1,
     OP2_PSRLD_VdqWdq    = 0xD2,
     OP2_PMULLW_VdqWdq   = 0xD5,
     OP2_MOVQ_WdVd       = 0xD6,
     OP2_PANDDQ_VdqWdq   = 0xDB,
     OP2_PANDNDQ_VdqWdq  = 0xDF,
+    OP2_PSRAW_VdqWdq    = 0xE1,
     OP2_PSRAD_VdqWdq    = 0xE2,
     OP2_PORDQ_VdqWdq    = 0xEB,
     OP2_PXORDQ_VdqWdq   = 0xEF,
+    OP2_PSLLW_VdqWdq    = 0xF1,
     OP2_PSLLD_VdqWdq    = 0xF2,
     OP2_PMULUDQ_VdqWdq  = 0xF4,
     OP2_PSUBB_VdqWdq    = 0xF8,

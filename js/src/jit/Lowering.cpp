@@ -4544,8 +4544,8 @@ LIRGenerator::visitSimdBinaryBitwise(MSimdBinaryBitwise* ins)
 void
 LIRGenerator::visitSimdShift(MSimdShift* ins)
 {
-    MOZ_ASSERT(ins->type() == MIRType::Int32x4);
-    MOZ_ASSERT(ins->lhs()->type() == MIRType::Int32x4);
+    MOZ_ASSERT(IsIntegerSimdType(ins->type()));
+    MOZ_ASSERT(ins->lhs()->type() == ins->type());
     MOZ_ASSERT(ins->rhs()->type() == MIRType::Int32);
 
     LUse vector = useRegisterAtStart(ins->lhs());

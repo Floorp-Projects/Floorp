@@ -2758,13 +2758,13 @@ public:
     void vpsllq_ir(uint32_t count, XMMRegisterID src, XMMRegisterID dst)
     {
         MOZ_ASSERT(count < 64);
-        shiftOpImmSimd("vpsllq", OP2_PSRLDQ_Vd, ShiftID::vpsllq, count, src, dst);
+        shiftOpImmSimd("vpsllq", OP2_PSRLDQ_Vd, ShiftID::vpsllx, count, src, dst);
     }
 
     void vpsrlq_ir(uint32_t count, XMMRegisterID src, XMMRegisterID dst)
     {
         MOZ_ASSERT(count < 64);
-        shiftOpImmSimd("vpsrlq", OP2_PSRLDQ_Vd, ShiftID::vpsrlq, count, src, dst);
+        shiftOpImmSimd("vpsrlq", OP2_PSRLDQ_Vd, ShiftID::vpsrlx, count, src, dst);
     }
 
     void vpslld_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
@@ -2775,7 +2775,7 @@ public:
     void vpslld_ir(uint32_t count, XMMRegisterID src, XMMRegisterID dst)
     {
         MOZ_ASSERT(count < 32);
-        shiftOpImmSimd("vpslld", OP2_PSLLD_UdqIb, ShiftID::vpslld, count, src, dst);
+        shiftOpImmSimd("vpslld", OP2_PSLLD_UdqIb, ShiftID::vpsllx, count, src, dst);
     }
 
     void vpsrad_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
@@ -2797,7 +2797,40 @@ public:
     void vpsrld_ir(uint32_t count, XMMRegisterID src, XMMRegisterID dst)
     {
         MOZ_ASSERT(count < 32);
-        shiftOpImmSimd("vpsrld", OP2_PSRLD_UdqIb, ShiftID::vpsrld, count, src, dst);
+        shiftOpImmSimd("vpsrld", OP2_PSRLD_UdqIb, ShiftID::vpsrlx, count, src, dst);
+    }
+
+    void vpsllw_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpsllw", VEX_PD, OP2_PSLLW_VdqWdq, src1, src0, dst);
+    }
+
+    void vpsllw_ir(uint32_t count, XMMRegisterID src, XMMRegisterID dst)
+    {
+        MOZ_ASSERT(count < 16);
+        shiftOpImmSimd("vpsllw", OP2_PSLLW_UdqIb, ShiftID::vpsllx, count, src, dst);
+    }
+
+    void vpsraw_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpsraw", VEX_PD, OP2_PSRAW_VdqWdq, src1, src0, dst);
+    }
+
+    void vpsraw_ir(int32_t count, XMMRegisterID src, XMMRegisterID dst)
+    {
+        MOZ_ASSERT(count < 16);
+        shiftOpImmSimd("vpsraw", OP2_PSRAW_UdqIb, ShiftID::vpsrad, count, src, dst);
+    }
+
+    void vpsrlw_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpsrlw", VEX_PD, OP2_PSRLW_VdqWdq, src1, src0, dst);
+    }
+
+    void vpsrlw_ir(uint32_t count, XMMRegisterID src, XMMRegisterID dst)
+    {
+        MOZ_ASSERT(count < 16);
+        shiftOpImmSimd("vpsrlw", OP2_PSRLW_UdqIb, ShiftID::vpsrlx, count, src, dst);
     }
 
     void vmovmskpd_rr(XMMRegisterID src, RegisterID dst)
