@@ -4445,15 +4445,32 @@ LIRGenerator::visitSimdBinaryComp(MSimdBinaryComp* ins)
     if (ShouldReorderCommutative(ins->lhs(), ins->rhs(), ins))
         ins->reverse();
 
-    if (ins->specialization() == MIRType::Int32x4) {
-        MOZ_ASSERT(ins->signedness() == SimdSign::Signed);
-        LSimdBinaryCompIx4* add = new(alloc()) LSimdBinaryCompIx4();
-        lowerForCompIx4(add, ins, ins->lhs(), ins->rhs());
-    } else if (ins->specialization() == MIRType::Float32x4) {
-        MOZ_ASSERT(ins->signedness() == SimdSign::NotApplicable);
-        LSimdBinaryCompFx4* add = new(alloc()) LSimdBinaryCompFx4();
-        lowerForCompFx4(add, ins, ins->lhs(), ins->rhs());
-    } else {
+    switch (ins->specialization()) {
+      case MIRType::Int8x16: {
+          MOZ_ASSERT(ins->signedness() == SimdSign::Signed);
+          LSimdBinaryCompIx16* add = new (alloc()) LSimdBinaryCompIx16();
+          lowerForFPU(add, ins, ins->lhs(), ins->rhs());
+          return;
+      }
+      case MIRType::Int16x8: {
+          MOZ_ASSERT(ins->signedness() == SimdSign::Signed);
+          LSimdBinaryCompIx8* add = new (alloc()) LSimdBinaryCompIx8();
+          lowerForFPU(add, ins, ins->lhs(), ins->rhs());
+          return;
+      }
+      case MIRType::Int32x4: {
+          MOZ_ASSERT(ins->signedness() == SimdSign::Signed);
+          LSimdBinaryCompIx4* add = new (alloc()) LSimdBinaryCompIx4();
+          lowerForCompIx4(add, ins, ins->lhs(), ins->rhs());
+          return;
+      }
+      case MIRType::Float32x4: {
+          MOZ_ASSERT(ins->signedness() == SimdSign::NotApplicable);
+          LSimdBinaryCompFx4* add = new (alloc()) LSimdBinaryCompFx4();
+          lowerForCompFx4(add, ins, ins->lhs(), ins->rhs());
+          return;
+      }
+      default:
         MOZ_CRASH("Unknown compare type when comparing values");
     }
 }
