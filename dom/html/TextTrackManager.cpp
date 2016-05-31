@@ -172,7 +172,6 @@ TextTrackManager::AddCues(TextTrack* aTextTrack)
     for (uint32_t i = 0; i < cueList->Length(); ++i) {
       mNewCues->AddCue(*cueList->IndexedGetter(i, dummy));
     }
-    DispatchTimeMarchesOn();
   }
 }
 
@@ -189,15 +188,6 @@ TextTrackManager::RemoveTextTrack(TextTrack* aTextTrack, bool aPendingListOnly)
   }
 
   mTextTracks->RemoveTextTrack(aTextTrack);
-  // Remove the cues in mNewCues belong to aTextTrack.
-  TextTrackCueList* removeCueList = aTextTrack->GetCues();
-  if (removeCueList) {
-    for (uint32_t i = 0; i < removeCueList->Length(); ++i) {
-      ErrorResult dummyRv;
-      mNewCues->RemoveCue(*((*removeCueList)[i]), dummyRv);
-    }
-    DispatchTimeMarchesOn();
-  }
 }
 
 void
@@ -245,10 +235,6 @@ TextTrackManager::UpdateCueDisplay()
   } else if (overlay->Length() > 0) {
     nsContentUtils::SetNodeTextContent(overlay, EmptyString(), true);
   }
-  // Call TimeMarchesOn() directly instead DispatchTimeMarchesOn()
-  // because we had render the new cue, so we must run
-  // TimeMarchesOn immediately.
-  TimeMarchesOn();
 }
 
 void
@@ -257,17 +243,6 @@ TextTrackManager::AddCue(TextTrackCue& aCue)
   if (mNewCues) {
     mNewCues->AddCue(aCue);
   }
-  DispatchTimeMarchesOn();
-}
-
-void
-TextTrackManager::NotifyCueRemoved(TextTrackCue& aCue)
-{
-  if (mNewCues) {
-    ErrorResult dummyRv;
-    mNewCues->RemoveCue(aCue, dummyRv);
-  }
-  DispatchTimeMarchesOn();
 }
 
 void
@@ -532,10 +507,6 @@ TextTrackManager::TimeMarchesOn()
   }
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(parentObject);
 
-  if (mMediaElement && !(mMediaElement->GetPlayedOrSeeked())) {
-    return;
-  }
-
   // Step 3.
   double currentPlaybackTime = mMediaElement->CurrentTime();
   bool hasNormalPlayback = !mHasSeeked;
@@ -550,7 +521,6 @@ TextTrackManager::TimeMarchesOn()
   for (uint32_t index = 0; index < mTextTracks->Length(); ++index) {
     TextTrack* ttrack = mTextTracks->IndexedGetter(index, dummy);
     if (ttrack && dummy) {
-      // TODO: call GetCueListByTimeInterval on mNewCues?
       TextTrackCueList* activeCueList = ttrack->GetActiveCues();
       if (activeCueList) {
         for (uint32_t i = 0; i < activeCueList->Length(); ++i) {
