@@ -2635,16 +2635,10 @@ CodeGeneratorX86Shared::visitSimdReinterpretCast(LSimdReinterpretCast* ins)
     if (input.aliases(output))
         return;
 
-    switch (ins->mir()->type()) {
-      case MIRType::Int32x4:
+    if (IsIntegerSimdType(ins->mir()->type()))
         masm.vmovdqa(input, output);
-        break;
-      case MIRType::Float32x4:
+    else
         masm.vmovaps(input, output);
-        break;
-      default:
-        MOZ_CRASH("Unknown SIMD kind");
-    }
 }
 
 // Extract an integer lane from the 32x4 vector register |input| and place it in

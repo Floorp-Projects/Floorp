@@ -2491,6 +2491,13 @@ class MSimdShift
         return new(alloc) MSimdShift(left, right, op);
     }
 
+    // Create an MSimdShift instruction and add it to the basic block. Possibly
+    // create and add an equivalent sequence of instructions instead if the
+    // current target doesn't support the requested shift operation directly.
+    // Return the inserted MInstruction that computes the shifted value.
+    static MInstruction* AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinition* left,
+                                      MDefinition* right, Operation op);
+
     // Get the relevant right shift operation given the signedness of a type.
     static Operation rshForSign(SimdSign sign) {
         return sign == SimdSign::Unsigned ? ursh : rsh;
