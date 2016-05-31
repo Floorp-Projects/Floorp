@@ -44,6 +44,8 @@
     _(SimdUnaryArithIx8)            \
     _(SimdUnaryArithIx4)            \
     _(SimdUnaryArithFx4)            \
+    _(SimdBinaryCompIx16)           \
+    _(SimdBinaryCompIx8)            \
     _(SimdBinaryCompIx4)            \
     _(SimdBinaryCompFx4)            \
     _(SimdBinaryArithIx16)          \

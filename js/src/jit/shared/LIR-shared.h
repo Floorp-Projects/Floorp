@@ -510,7 +510,23 @@ public:
     }
 };
 
-// Binary SIMD comparison operation between two Int32x4 operands
+// Binary SIMD comparison operation between two Int8x16 operands.
+class LSimdBinaryCompIx16 : public LSimdBinaryComp
+{
+  public:
+    LIR_HEADER(SimdBinaryCompIx16);
+    LSimdBinaryCompIx16() : LSimdBinaryComp() {}
+};
+
+// Binary SIMD comparison operation between two Int16x8 operands.
+class LSimdBinaryCompIx8 : public LSimdBinaryComp
+{
+  public:
+    LIR_HEADER(SimdBinaryCompIx8);
+    LSimdBinaryCompIx8() : LSimdBinaryComp() {}
+};
+
+// Binary SIMD comparison operation between two Int32x4 operands.
 class LSimdBinaryCompIx4 : public LSimdBinaryComp
 {
   public:

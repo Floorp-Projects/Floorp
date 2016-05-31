@@ -2574,9 +2574,56 @@ public:
 
     // SSE operations:
 
+    void vpcmpeqb_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpcmpeqb", VEX_PD, OP2_PCMPEQB_VdqWdq, src1, src0, dst);
+    }
+    void vpcmpeqb_mr(int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpcmpeqb", VEX_PD, OP2_PCMPEQB_VdqWdq, offset, base, src0, dst);
+    }
+    void vpcmpeqb_mr(const void* address, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpcmpeqb", VEX_PD, OP2_PCMPEQB_VdqWdq, address, src0, dst);
+    }
+
+    void vpcmpgtb_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpcmpgtb", VEX_PD, OP2_PCMPGTB_VdqWdq, src1, src0, dst);
+    }
+    void vpcmpgtb_mr(int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpcmpgtb", VEX_PD, OP2_PCMPGTB_VdqWdq, offset, base, src0, dst);
+    }
+    void vpcmpgtb_mr(const void* address, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpcmpgtb", VEX_PD, OP2_PCMPGTB_VdqWdq, address, src0, dst);
+    }
+
     void vpcmpeqw_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
-        twoByteOpSimd("vpcmpeqw", VEX_PD, OP2_PCMPEQW, src1, src0, dst);
+        twoByteOpSimd("vpcmpeqw", VEX_PD, OP2_PCMPEQW_VdqWdq, src1, src0, dst);
+    }
+    void vpcmpeqw_mr(int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpcmpeqw", VEX_PD, OP2_PCMPEQW_VdqWdq, offset, base, src0, dst);
+    }
+    void vpcmpeqw_mr(const void* address, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpcmpeqw", VEX_PD, OP2_PCMPEQW_VdqWdq, address, src0, dst);
+    }
+
+    void vpcmpgtw_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpcmpgtw", VEX_PD, OP2_PCMPGTW_VdqWdq, src1, src0, dst);
+    }
+    void vpcmpgtw_mr(int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpcmpgtw", VEX_PD, OP2_PCMPGTW_VdqWdq, offset, base, src0, dst);
+    }
+    void vpcmpgtw_mr(const void* address, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpcmpgtw", VEX_PD, OP2_PCMPGTW_VdqWdq, address, src0, dst);
     }
 
     void vpcmpeqd_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)

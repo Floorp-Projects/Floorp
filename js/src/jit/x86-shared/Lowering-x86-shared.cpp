@@ -137,12 +137,7 @@ LIRGeneratorX86Shared::lowerForFPU(LInstructionHelper<1, 2, Temps>* ins, MDefini
 {
     // Without AVX, we'll need to use the x86 encodings where one of the
     // inputs must be the same location as the output.
-    //
-    // :TODO: (Bug 1132894) Note, we might have to allocate a different
-    // registers if the MIRType of the reused operand differs from the MIRType
-    // of returned value, as MUST_REUSE_INPUT is not yet capable of reusing the
-    // same register but with a different register type.
-    if (!Assembler::HasAVX() && mir->type() == lhs->type()) {
+    if (!Assembler::HasAVX()) {
         ins->setOperand(0, useRegisterAtStart(lhs));
         ins->setOperand(1, lhs != rhs ? use(rhs) : useAtStart(rhs));
         defineReuseInput(ins, mir, 0);
