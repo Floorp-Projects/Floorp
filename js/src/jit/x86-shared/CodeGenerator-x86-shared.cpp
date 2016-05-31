@@ -2599,6 +2599,39 @@ CodeGeneratorX86Shared::visitSimdValueFloat32x4(LSimdValueFloat32x4* ins)
 }
 
 void
+CodeGeneratorX86Shared::visitSimdSplatX16(LSimdSplatX16* ins)
+{
+    MOZ_ASSERT(SimdTypeToLength(ins->mir()->type()) == 16);
+    Register input = ToRegister(ins->getOperand(0));
+    FloatRegister output = ToFloatRegister(ins->output());
+    masm.vmovd(input, output);
+    if (AssemblerX86Shared::HasSSSE3()) {
+        masm.zeroSimd128Int(ScratchSimd128Reg);
+        masm.vpshufb(ScratchSimd128Reg, output, output);
+    } else {
+        // Use two shifts to duplicate the low 8 bits into the low 16 bits.
+        masm.vpsllw(Imm32(8), output, output);
+        masm.vmovdqa(output, ScratchSimd128Reg);
+        masm.vpsrlw(Imm32(8), ScratchSimd128Reg, ScratchSimd128Reg);
+        masm.vpor(ScratchSimd128Reg, output, output);
+        // Then do an X8 splat.
+        masm.vpshuflw(0, output, output);
+        masm.vpshufd(0, output, output);
+    }
+}
+
+void
+CodeGeneratorX86Shared::visitSimdSplatX8(LSimdSplatX8* ins)
+{
+    MOZ_ASSERT(SimdTypeToLength(ins->mir()->type()) == 8);
+    Register input = ToRegister(ins->getOperand(0));
+    FloatRegister output = ToFloatRegister(ins->output());
+    masm.vmovd(input, output);
+    masm.vpshuflw(0, output, output);
+    masm.vpshufd(0, output, output);
+}
+
+void
 CodeGeneratorX86Shared::visitSimdSplatX4(LSimdSplatX4* ins)
 {
     FloatRegister output = ToFloatRegister(ins->output());
@@ -2607,22 +2640,14 @@ CodeGeneratorX86Shared::visitSimdSplatX4(LSimdSplatX4* ins)
     MOZ_ASSERT(IsSimdType(mir->type()));
     JS_STATIC_ASSERT(sizeof(float) == sizeof(int32_t));
 
-    switch (mir->type()) {
-      case MIRType::Int32x4:
-      case MIRType::Bool32x4: {
-        Register r = ToRegister(ins->getOperand(0));
-        masm.vmovd(r, output);
-        masm.vpshufd(0, output, output);
-        break;
-      }
-      case MIRType::Float32x4: {
+    if (mir->type() == MIRType::Float32x4) {
         FloatRegister r = ToFloatRegister(ins->getOperand(0));
         FloatRegister rCopy = masm.reusedInputFloat32x4(r, output);
         masm.vshufps(0, rCopy, rCopy, output);
-        break;
-      }
-      default:
-        MOZ_CRASH("Unknown SIMD kind");
+    } else {
+        Register r = ToRegister(ins->getOperand(0));
+        masm.vmovd(r, output);
+        masm.vpshufd(0, output, output);
     }
 }
 

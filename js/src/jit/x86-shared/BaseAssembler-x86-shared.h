@@ -2825,6 +2825,21 @@ public:
         twoByteOpImmSimd("vpshufd", VEX_PD, OP2_PSHUFD_VdqWdqIb, mask, address, invalid_xmm, dst);
     }
 
+    void vpshuflw_irr(uint32_t mask, XMMRegisterID src, XMMRegisterID dst)
+    {
+        twoByteOpImmSimd("vpshuflw", VEX_SD, OP2_PSHUFLW_VdqWdqIb, mask, src, invalid_xmm, dst);
+    }
+
+    void vpshufhw_irr(uint32_t mask, XMMRegisterID src, XMMRegisterID dst)
+    {
+        twoByteOpImmSimd("vpshufhw", VEX_SS, OP2_PSHUFHW_VdqWdqIb, mask, src, invalid_xmm, dst);
+    }
+
+    void vpshufb_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        threeByteOpSimd("vpshufb", VEX_PD, OP3_PSHUFB_VdqWdq, ESCAPE_38, src1, src0, dst);
+    }
+
     void vshufps_irr(uint32_t mask, XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
         twoByteOpImmSimd("vshufps", VEX_PS, OP2_SHUFPS_VpsWpsIb, mask, src1, src0, dst);

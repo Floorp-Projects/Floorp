@@ -1085,6 +1085,7 @@ class AssemblerX86Shared : public AssemblerShared
 
     static bool HasSSE2() { return CPUInfo::IsSSE2Present(); }
     static bool HasSSE3() { return CPUInfo::IsSSE3Present(); }
+    static bool HasSSSE3() { return CPUInfo::IsSSSE3Present(); }
     static bool HasSSE41() { return CPUInfo::IsSSE41Present(); }
     static bool HasPOPCNT() { return CPUInfo::IsPOPCNTPresent(); }
     static bool SupportsFloatingPoint() { return CPUInfo::IsSSE2Present(); }
@@ -2995,6 +2996,19 @@ class AssemblerX86Shared : public AssemblerShared
           default:
             MOZ_CRASH("unexpected operand kind");
         }
+    }
+
+    void vpshuflw(uint32_t mask, FloatRegister src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.vpshuflw_irr(mask, src.encoding(), dest.encoding());
+    }
+    void vpshufhw(uint32_t mask, FloatRegister src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE2());
+        masm.vpshufhw_irr(mask, src.encoding(), dest.encoding());
+    }
+    void vpshufb(FloatRegister mask, FloatRegister src, FloatRegister dest) {
+        MOZ_ASSERT(HasSSSE3());
+        masm.vpshufb_rr(mask.encoding(), src.encoding(), dest.encoding());
     }
     void vmovddup(FloatRegister src, FloatRegister dest) {
         MOZ_ASSERT(HasSSE3());

@@ -814,19 +814,27 @@ void
 LIRGeneratorX86Shared::visitSimdSplat(MSimdSplat* ins)
 {
     LAllocation x = useRegisterAtStart(ins->getOperand(0));
-    LSimdSplatX4* lir = new(alloc()) LSimdSplatX4(x);
 
     switch (ins->type()) {
-      case MIRType::Int32x4:
-      case MIRType::Bool32x4:
-        define(lir, ins);
+      case MIRType::Int8x16:
+        define(new (alloc()) LSimdSplatX16(x), ins);
         break;
+      case MIRType::Int16x8:
+        define(new (alloc()) LSimdSplatX8(x), ins);
+        break;
+      case MIRType::Int32x4:
       case MIRType::Float32x4:
-        // (Non-AVX) codegen actually wants the input and the output to be in
-        // the same register, but we can't currently use defineReuseInput
-        // because they have different types (scalar vs vector), so a spill slot
-        // for one may not be suitable for the other.
-        define(lir, ins);
+      case MIRType::Bool8x16:
+      case MIRType::Bool16x8:
+      case MIRType::Bool32x4:
+        // Use the SplatX4 instruction for all boolean splats. Since the input
+        // value is a 32-bit int that is either 0 or -1, the X4 splat gives
+        // the right result for all boolean geometries.
+        // For floats, (Non-AVX) codegen actually wants the input and the output
+        // to be in the same register, but we can't currently use
+        // defineReuseInput because they have different types (scalar vs
+        // vector), so a spill slot for one may not be suitable for the other.
+        define(new (alloc()) LSimdSplatX4(x), ins);
         break;
       default:
         MOZ_CRASH("Unknown SIMD kind");

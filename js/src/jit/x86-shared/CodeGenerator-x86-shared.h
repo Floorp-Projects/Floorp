@@ -291,6 +291,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     // SIMD operators
     void visitSimdValueInt32x4(LSimdValueInt32x4* lir);
     void visitSimdValueFloat32x4(LSimdValueFloat32x4* lir);
+    void visitSimdSplatX16(LSimdSplatX16* lir);
+    void visitSimdSplatX8(LSimdSplatX8* lir);
     void visitSimdSplatX4(LSimdSplatX4* lir);
     void visitSimd128Int(LSimd128Int* ins);
     void visitSimd128Float(LSimd128Float* ins);
