@@ -2,55 +2,32 @@
 /* vim: set sts=2 sw=2 et tw=80: */
 "use strict";
 
-Cu.import("resource://gre/modules/AppConstants.jsm");
-
 add_task(function* test_user_defined_commands() {
   // Create a window before the extension is loaded.
   let win1 = yield BrowserTestUtils.openNewBrowserWindow();
   yield BrowserTestUtils.loadURI(win1.gBrowser.selectedBrowser, "about:robots");
   yield BrowserTestUtils.browserLoaded(win1.gBrowser.selectedBrowser);
 
-  let commands = {
-    "toggle-feature-using-alt-shift-3": {
-      "suggested_key": {
-        "default": "Alt+Shift+3",
-      },
-    },
-    "toggle-feature-using-control-shift-4": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+4",
-      },
-    },
-    "toggle-feature-using-control-page-up": {
-      "suggested_key": {
-        "default": "Ctrl+PageUp",
-      },
-    },
-    "toggle-feature-using-alt-shift-comma": {
-      "suggested_key": {
-        "default": "Alt+Shift+Comma",
-      },
-      "unrecognized_property": "with-a-random-value",
-    },
-    "toggle-feature-with-whitespace-in-suggested-key": {
-      "suggested_key": {
-        "default": "  Alt + Shift + 2  ",
-      },
-    },
-  };
-
-  // Register the Mac OS-X specific commands.
-  if (AppConstants.platform == "macosx") {
-    commands["toggle-feature-using-mac-control-5"] = {
-      "suggested_key": {
-        "default": "MacCtrl+5",
-      },
-    };
-  }
-
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "commands": commands,
+      "commands": {
+        "toggle-feature-using-alt-shift-3": {
+          "suggested_key": {
+            "default": "Alt+Shift+3",
+          },
+        },
+        "toggle-feature-using-alt-shift-comma": {
+          "suggested_key": {
+            "default": "Alt+Shift+Comma",
+          },
+          "unrecognized_property": "with-a-random-value",
+        },
+        "toggle-feature-with-whitespace-in-suggested-key": {
+          "suggested_key": {
+            "default": "  Alt + Shift + 2  ",
+          },
+        },
+      },
     },
 
     background: function() {
@@ -81,32 +58,17 @@ add_task(function* test_user_defined_commands() {
   let keysetID = `ext-keyset-id-${makeWidgetId(extension.id)}`;
   let keyset = win1.document.getElementById(keysetID);
   ok(keyset != null, "Expected keyset to exist");
-  is(keyset.childNodes.length, Object.keys(commands).length, "Expected keyset to have the correct number of children");
+  is(keyset.childNodes.length, 3, "Expected keyset to have 3 children");
 
   keyset = win2.document.getElementById(keysetID);
   ok(keyset != null, "Expected keyset to exist");
-  is(keyset.childNodes.length, Object.keys(commands).length, "Expected keyset to have the correct number of children");
+  is(keyset.childNodes.length, 3, "Expected keyset to have 3 children");
 
   // Confirm that the commands are registered to both windows.
   yield focusWindow(win1);
   EventUtils.synthesizeKey("3", {altKey: true, shiftKey: true});
   let message = yield extension.awaitMessage("oncommand");
   is(message, "toggle-feature-using-alt-shift-3", "Expected onCommand listener to fire with correct message");
-
-  EventUtils.synthesizeKey("4", {accelKey: true, shiftKey: true});
-  message = yield extension.awaitMessage("oncommand");
-  is(message, "toggle-feature-using-control-shift-4", "Expected onCommand listener to fire with correct message");
-
-  EventUtils.synthesizeKey("VK_PAGE_UP", {accelKey: true});
-  message = yield extension.awaitMessage("oncommand");
-  is(message, "toggle-feature-using-control-page-up", "Expected onCommand listener to fire with correct message");
-
-  // Test the Mac OS-X specific shortcut.
-  if (AppConstants.platform == "macosx") {
-    EventUtils.synthesizeKey("5", {ctrlKey: true});
-    message = yield extension.awaitMessage("oncommand");
-    is(message, "toggle-feature-using-mac-control-5", "Expected onCommand listener to fire with correct message");
-  }
 
   yield focusWindow(win2);
   EventUtils.synthesizeKey("VK_COMMA", {altKey: true, shiftKey: true});
