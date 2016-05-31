@@ -562,10 +562,6 @@ private:
 #ifdef MOZ_EME
   RefPtr<CDMProxy> mCDMProxy;
 #endif
-
-#if defined(READER_DORMANT_HEURISTIC)
-  const bool mDormantEnabled;
-#endif
 };
 
 } // namespace mozilla
