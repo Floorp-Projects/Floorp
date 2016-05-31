@@ -900,3 +900,43 @@ LIRGeneratorX86Shared::visitSimdSwizzle(MSimdSwizzle* ins)
         MOZ_CRASH("Unknown SIMD kind when getting lane");
     }
 }
+
+void
+LIRGeneratorX86Shared::visitSimdShuffle(MSimdShuffle* ins)
+{
+    MOZ_ASSERT(IsSimdType(ins->lhs()->type()));
+    MOZ_ASSERT(IsSimdType(ins->rhs()->type()));
+    MOZ_ASSERT(IsSimdType(ins->type()));
+    if (ins->type() == MIRType::Int32x4 || ins->type() == MIRType::Float32x4) {
+        bool zFromLHS = ins->lane(2) < 4;
+        bool wFromLHS = ins->lane(3) < 4;
+        uint32_t lanesFromLHS = (ins->lane(0) < 4) + (ins->lane(1) < 4) + zFromLHS + wFromLHS;
+
+        LSimdShuffleX4* lir = new (alloc()) LSimdShuffleX4();
+        lowerForFPU(lir, ins, ins->lhs(), ins->rhs());
+
+        // See codegen for requirements details.
+        LDefinition temp =
+          (lanesFromLHS == 3) ? tempCopy(ins->rhs(), 1) : LDefinition::BogusTemp();
+        lir->setTemp(0, temp);
+    } else {
+        MOZ_ASSERT(ins->type() == MIRType::Int8x16 || ins->type() == MIRType::Int16x8);
+        LSimdShuffle* lir = new (alloc()) LSimdShuffle();
+        lir->setOperand(0, useRegister(ins->lhs()));
+        lir->setOperand(1, useRegister(ins->rhs()));
+        define(lir, ins);
+        // We need a GPR temp register for pre-SSSE3 codegen, and an SSE temp
+        // when using pshufb.
+        if (Assembler::HasSSSE3()) {
+            lir->setTemp(0, temp(LDefinition::SIMD128INT));
+        } else {
+            // The temp must be a GPR usable with 8-bit loads and stores.
+#if defined(JS_CODEGEN_X86)
+            lir->setTemp(0, tempFixed(ebx));
+#else
+            lir->setTemp(0, temp());
+#endif
+        }
+    }
+}
+

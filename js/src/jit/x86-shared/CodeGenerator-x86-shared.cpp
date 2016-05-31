@@ -3104,6 +3104,64 @@ void
 CodeGeneratorX86Shared::visitSimdShuffle(LSimdShuffle* ins)
 {
     FloatRegister lhs = ToFloatRegister(ins->lhs());
+    FloatRegister rhs = ToFloatRegister(ins->rhs());
+    FloatRegister output = ToFloatRegister(ins->output());
+    const unsigned numLanes = ins->numLanes();
+    const unsigned bytesPerLane = 16 / numLanes;
+
+    // Convert the shuffle to a byte-wise shuffle.
+    uint8_t bLane[16];
+    for (unsigned i = 0; i < numLanes; i++) {
+        for (unsigned b = 0; b < bytesPerLane; b++) {
+            bLane[i * bytesPerLane + b] = ins->lane(i) * bytesPerLane + b;
+        }
+    }
+
+    // Use pshufb if it is available.
+    if (AssemblerX86Shared::HasSSSE3()) {
+        FloatRegister scratch1 = ToFloatRegister(ins->temp());
+        ScratchSimd128Scope scratch2(masm);
+
+        // Use pshufb instructions to gather the lanes from each source vector.
+        // A negative index creates a zero lane, so the two vectors can be combined.
+
+        // Set scratch2 = lanes from lhs.
+        int8_t idx[16];
+        for (unsigned i = 0; i < 16; i++)
+            idx[i] = bLane[i] < 16 ? bLane[i] : -1;
+        masm.loadConstantSimd128Int(SimdConstant::CreateX16(idx), scratch1);
+        FloatRegister lhsCopy = masm.reusedInputInt32x4(lhs, scratch2);
+        masm.vpshufb(scratch1, lhsCopy, scratch2);
+
+        // Set output = lanes from rhs.
+        for (unsigned i = 0; i < 16; i++)
+            idx[i] = bLane[i] >= 16 ? bLane[i] - 16 : -1;
+        masm.loadConstantSimd128Int(SimdConstant::CreateX16(idx), scratch1);
+        FloatRegister rhsCopy = masm.reusedInputInt32x4(rhs, output);
+        masm.vpshufb(scratch1, rhsCopy, output);
+
+        // Combine.
+        masm.vpor(scratch2, output, output);
+        return;
+    }
+
+    // Worst-case fallback for pre-SSE3 machines. Bounce through memory.
+    Register temp = ToRegister(ins->getTemp(0));
+    masm.reserveStack(3 * Simd128DataSize);
+    masm.storeAlignedSimd128Int(lhs, Address(StackPointer, Simd128DataSize));
+    masm.storeAlignedSimd128Int(rhs, Address(StackPointer, 2 * Simd128DataSize));
+    for (unsigned i = 0; i < 16; i++) {
+        masm.load8ZeroExtend(Address(StackPointer, Simd128DataSize + bLane[i]), temp);
+        masm.store8(temp, Address(StackPointer, i));
+    }
+    masm.loadAlignedSimd128Int(Address(StackPointer, 0), output);
+    masm.freeStack(3 * Simd128DataSize);
+}
+
+void
+CodeGeneratorX86Shared::visitSimdShuffleX4(LSimdShuffleX4* ins)
+{
+    FloatRegister lhs = ToFloatRegister(ins->lhs());
     Operand rhs = ToOperand(ins->rhs());
     FloatRegister out = ToFloatRegister(ins->output());
 

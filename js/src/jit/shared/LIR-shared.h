@@ -443,11 +443,11 @@ class LSimdGeneralShuffleF : public LSimdGeneralShuffleBase
 };
 
 // Base class for both int32x4 and float32x4 shuffle instructions.
-class LSimdShuffle : public LInstructionHelper<1, 2, 1>
+class LSimdShuffleX4 : public LInstructionHelper<1, 2, 1>
 {
   public:
-    LIR_HEADER(SimdShuffle);
-    LSimdShuffle()
+    LIR_HEADER(SimdShuffleX4);
+    LSimdShuffleX4()
     {}
 
     const LAllocation* lhs() {
@@ -465,6 +465,28 @@ class LSimdShuffle : public LInstructionHelper<1, 2, 1>
     bool lanesMatch(uint32_t x, uint32_t y, uint32_t z, uint32_t w) const {
         return mir_->toSimdShuffle()->lanesMatch(x, y, z, w);
     }
+};
+
+// Remaining shuffles (8x16, 16x8).
+class LSimdShuffle : public LInstructionHelper<1, 2, 1>
+{
+  public:
+    LIR_HEADER(SimdShuffle);
+    LSimdShuffle()
+    {}
+
+    const LAllocation* lhs() {
+        return getOperand(0);
+    }
+    const LAllocation* rhs() {
+        return getOperand(1);
+    }
+    const LDefinition* temp() {
+        return getTemp(0);
+    }
+
+    unsigned numLanes() const { return mir_->toSimdShuffle()->numLanes(); }
+    unsigned lane(unsigned i) const { return mir_->toSimdShuffle()->lane(i); }
 };
 
 // Binary SIMD comparison operation between two SIMD operands
