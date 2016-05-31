@@ -92,10 +92,6 @@ TextTrack::SetMode(TextTrackMode aValue)
 {
   if (mMode != aValue) {
     mMode = aValue;
-    if (aValue == TextTrackMode::Disabled) {
-      SetCuesInactive();
-      //TODO: Apply the rules for text track cue rendering Bug 865407
-    }
     if (mTextTrackList) {
       mTextTrackList->CreateAndDispatchChangeEvent();
     }
@@ -129,9 +125,6 @@ TextTrack::AddCue(TextTrackCue& aCue)
 void
 TextTrack::RemoveCue(TextTrackCue& aCue, ErrorResult& aRv)
 {
-  //TODO: Apply the rules for text track cue rendering Bug 865407
-  aCue.SetActive(false);
-
   mCueList->RemoveCue(aCue, aRv);
   SetDirty();
 }
@@ -268,12 +261,6 @@ TextTrack::GetTrackElement() {
 void
 TextTrack::SetTrackElement(HTMLTrackElement* aTrackElement) {
   mTrackElement = aTrackElement;
-}
-
-void
-TextTrack::SetCuesInactive()
-{
-  mCueList->SetCuesInactive();
 }
 
 } // namespace dom
