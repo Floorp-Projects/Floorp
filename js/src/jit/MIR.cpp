@@ -1531,6 +1531,11 @@ MSimdBinaryArith::printOpcode(GenericPrinter& out) const
     PrintOpcodeOperation(this, out);
 }
 void
+MSimdBinarySaturating::printOpcode(GenericPrinter& out) const
+{
+    PrintOpcodeOperation(this, out);
+}
+void
 MSimdBinaryBitwise::printOpcode(GenericPrinter& out) const
 {
     PrintOpcodeOperation(this, out);

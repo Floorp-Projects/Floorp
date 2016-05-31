@@ -774,6 +774,23 @@ LIRGeneratorX86Shared::visitSimdBinaryArith(MSimdBinaryArith* ins)
 }
 
 void
+LIRGeneratorX86Shared::visitSimdBinarySaturating(MSimdBinarySaturating* ins)
+{
+    MOZ_ASSERT(IsSimdType(ins->lhs()->type()));
+    MOZ_ASSERT(IsSimdType(ins->rhs()->type()));
+    MOZ_ASSERT(IsSimdType(ins->type()));
+
+    MDefinition* lhs = ins->lhs();
+    MDefinition* rhs = ins->rhs();
+
+    if (ins->isCommutative())
+        ReorderCommutative(&lhs, &rhs, ins);
+
+    LSimdBinarySaturating* lir = new (alloc()) LSimdBinarySaturating();
+    lowerForFPU(lir, ins, lhs, rhs);
+}
+
+void
 LIRGeneratorX86Shared::visitSimdSelect(MSimdSelect* ins)
 {
     MOZ_ASSERT(IsSimdType(ins->type()));

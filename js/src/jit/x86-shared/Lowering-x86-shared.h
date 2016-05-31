@@ -59,6 +59,7 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
     void visitSimdInsertElement(MSimdInsertElement* ins);
     void visitSimdExtractElement(MSimdExtractElement* ins);
     void visitSimdBinaryArith(MSimdBinaryArith* ins);
+    void visitSimdBinarySaturating(MSimdBinarySaturating* ins);
     void visitSimdSelect(MSimdSelect* ins);
     void visitSimdSplat(MSimdSplat* ins);
     void visitSimdValueX4(MSimdValueX4* ins);

@@ -2406,6 +2406,72 @@ class MSimdBinaryArith
     ALLOW_CLONE(MSimdBinaryArith)
 };
 
+class MSimdBinarySaturating
+  : public MBinaryInstruction,
+    public MixPolicy<SimdSameAsReturnedTypePolicy<0>, SimdSameAsReturnedTypePolicy<1>>::Data
+{
+  public:
+    enum Operation
+    {
+        add,
+        sub,
+    };
+
+    static const char* OperationName(Operation op)
+    {
+        switch (op) {
+          case add:
+            return "add";
+          case sub:
+            return "sub";
+        }
+        MOZ_CRASH("unexpected operation");
+    }
+
+  private:
+    Operation operation_;
+    SimdSign sign_;
+
+    MSimdBinarySaturating(MDefinition* left, MDefinition* right, Operation op, SimdSign sign)
+      : MBinaryInstruction(left, right)
+      , operation_(op)
+      , sign_(sign)
+    {
+        MOZ_ASSERT(left->type() == right->type());
+        MIRType type = left->type();
+        MOZ_ASSERT(type == MIRType::Int8x16 || type == MIRType::Int16x8);
+        setResultType(type);
+        setMovable();
+        if (op == add)
+            setCommutative();
+    }
+
+  public:
+    INSTRUCTION_HEADER(SimdBinarySaturating)
+    static MSimdBinarySaturating* New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
+                                      Operation op, SimdSign sign)
+    {
+        return new (alloc) MSimdBinarySaturating(left, right, op, sign);
+    }
+
+    AliasSet getAliasSet() const override { return AliasSet::None(); }
+
+    Operation operation() const { return operation_; }
+    SimdSign signedness() const { return sign_; }
+
+    bool congruentTo(const MDefinition* ins) const override
+    {
+        if (!binaryCongruentTo(ins))
+            return false;
+        return operation_ == ins->toSimdBinarySaturating()->operation() &&
+               sign_ == ins->toSimdBinarySaturating()->signedness();
+    }
+
+    void printOpcode(GenericPrinter& out) const override;
+
+    ALLOW_CLONE(MSimdBinarySaturating)
+};
+
 class MSimdBinaryBitwise
   : public MBinaryInstruction,
     public MixPolicy<SimdSameAsReturnedTypePolicy<0>, SimdSameAsReturnedTypePolicy<1> >::Data

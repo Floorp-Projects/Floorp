@@ -3587,6 +3587,57 @@ CodeGeneratorX86Shared::visitSimdBinaryArithFx4(LSimdBinaryArithFx4* ins)
 }
 
 void
+CodeGeneratorX86Shared::visitSimdBinarySaturating(LSimdBinarySaturating* ins)
+{
+    FloatRegister lhs = ToFloatRegister(ins->lhs());
+    Operand rhs = ToOperand(ins->rhs());
+    FloatRegister output = ToFloatRegister(ins->output());
+
+    SimdSign sign = ins->signedness();
+    MOZ_ASSERT(sign != SimdSign::NotApplicable);
+
+    switch (ins->type()) {
+      case MIRType::Int8x16:
+        switch (ins->operation()) {
+          case MSimdBinarySaturating::add:
+            if (sign == SimdSign::Signed)
+                masm.vpaddsb(rhs, lhs, output);
+            else
+                masm.vpaddusb(rhs, lhs, output);
+            return;
+          case MSimdBinarySaturating::sub:
+            if (sign == SimdSign::Signed)
+                masm.vpsubsb(rhs, lhs, output);
+            else
+                masm.vpsubusb(rhs, lhs, output);
+            return;
+        }
+        break;
+
+      case MIRType::Int16x8:
+        switch (ins->operation()) {
+          case MSimdBinarySaturating::add:
+            if (sign == SimdSign::Signed)
+                masm.vpaddsw(rhs, lhs, output);
+            else
+                masm.vpaddusw(rhs, lhs, output);
+            return;
+          case MSimdBinarySaturating::sub:
+            if (sign == SimdSign::Signed)
+                masm.vpsubsw(rhs, lhs, output);
+            else
+                masm.vpsubusw(rhs, lhs, output);
+            return;
+        }
+        break;
+
+      default:
+        break;
+    }
+    MOZ_CRASH("unsupported type for SIMD saturating arithmetic");
+}
+
+void
 CodeGeneratorX86Shared::visitSimdUnaryArithIx16(LSimdUnaryArithIx16* ins)
 {
     Operand in = ToOperand(ins->input());
