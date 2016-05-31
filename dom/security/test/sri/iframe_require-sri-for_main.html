@@ -1,0 +1,31 @@
+<script>
+  window.hasCORSLoaded = false; // set through script_crossdomain1.js
+</script>
+
+<!-- cors-enabled. should be loaded -->
+<script src="http://example.com/tests/dom/security/test/sri/script_crossdomain1.js"
+        crossorigin=""
+        integrity="sha512-9Tv2DL1fHvmPQa1RviwKleE/jq72jgxj8XGLyWn3H6Xp/qbtfK/jZINoPFAv2mf0Nn1TxhZYMFULAbzJNGkl4Q=="
+        onload="parent.postMessage('good_sriLoaded', '*');"></script>
+
+<!-- cors but not using SRI. should trigger onerror -->
+<script src="http://example.com/tests/dom/security/test/sri/script_crossdomain5.js"
+          onload="parent.postMessage('bad_nonsriLoaded', '*');"
+          onerror="parent.postMessage('good_nonsriBlocked', '*');"></script>
+
+<!-- cors and integrity. it should just load fine. -->
+<link rel="stylesheet" href="style1.css"
+      integrity="sha256-qs8lnkunWoVldk5d5E+652yth4VTSHohlBKQvvgGwa8="
+      onload="parent.postMessage('good_sriLoaded', '*');">
+
+<!-- not using SRI, should trigger onerror -->
+<link rel="stylesheet" href="style3.css"
+      onload="parent.postMessage('bad_nonsriLoaded', '*');"
+      onerror="parent.postMessage('good_nonsriBlocked', '*');">
+
+<p id="black-text">black text</p>
+<script>
+  window.onload = function() {
+    parent.postMessage("finish", '*');
+  }
+</script>

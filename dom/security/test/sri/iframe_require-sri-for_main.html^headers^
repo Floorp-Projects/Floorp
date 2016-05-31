@@ -1,0 +1,1 @@
+content-security-policy: require-sri-for script style
