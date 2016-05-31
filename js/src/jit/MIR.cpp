@@ -1301,15 +1301,11 @@ MSimdConvert::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinition
           MSimdConstant::New(alloc, SimdConstant::SplatX4(BiasValue), MIRType::Float32x4);
         addTo->add(bias);
         MInstruction* fhi_debiased =
-          MSimdBinaryArith::New(alloc, fhi, bias, MSimdBinaryArith::Op_sub);
-        addTo->add(fhi_debiased);
+          MSimdBinaryArith::AddLegalized(alloc, addTo, fhi, bias, MSimdBinaryArith::Op_sub);
 
         // Compute the final result.
-        MInstruction* result =
-          MSimdBinaryArith::New(alloc, fhi_debiased, flo, MSimdBinaryArith::Op_add);
-        addTo->add(result);
-
-        return result;
+        return MSimdBinaryArith::AddLegalized(alloc, addTo, fhi_debiased, flo,
+                                              MSimdBinaryArith::Op_add);
     }
 
     if (fromType == MIRType::Float32x4 && toType == MIRType::Int32x4) {
@@ -1341,10 +1337,10 @@ MSimdBinaryComp::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinit
         addTo->add(bias);
 
         // Add the bias.
-        MInstruction* bleft = MSimdBinaryArith::New(alloc, left, bias, MSimdBinaryArith::Op_add);
-        addTo->add(bleft);
-        MInstruction* bright = MSimdBinaryArith::New(alloc, right, bias, MSimdBinaryArith::Op_add);
-        addTo->add(bright);
+        MInstruction* bleft =
+          MSimdBinaryArith::AddLegalized(alloc, addTo, left, bias, MSimdBinaryArith::Op_add);
+        MInstruction* bright =
+          MSimdBinaryArith::AddLegalized(alloc, addTo, right, bias, MSimdBinaryArith::Op_add);
 
         // Do the equivalent signed comparison.
         MInstruction* result = MSimdBinaryComp::New(alloc, bleft, bright, op, SimdSign::Signed);
@@ -1362,6 +1358,73 @@ MSimdBinaryComp::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinit
 
     // This is a legal operation already. Just create the instruction requested.
     MInstruction* result = MSimdBinaryComp::New(alloc, left, right, op, sign);
+    addTo->add(result);
+    return result;
+}
+
+MInstruction*
+MSimdBinaryArith::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinition* left,
+                               MDefinition* right, Operation op)
+{
+    MOZ_ASSERT(left->type() == right->type());
+    MIRType opType = left->type();
+    MOZ_ASSERT(IsSimdType(opType));
+
+    // SSE does not have 8x16 multiply instructions.
+    if (opType == MIRType::Int8x16 && op == Op_mul) {
+        // Express the multiply in terms of Int16x8 multiplies by handling the
+        // even and odd lanes separately.
+
+        MInstruction* wideL = MSimdReinterpretCast::New(alloc, left, MIRType::Int16x8);
+        addTo->add(wideL);
+        MInstruction* wideR = MSimdReinterpretCast::New(alloc, right, MIRType::Int16x8);
+        addTo->add(wideR);
+
+        // wideL = yyxx yyxx yyxx yyxx yyxx yyxx yyxx yyxx
+        // wideR = bbaa bbaa bbaa bbaa bbaa bbaa bbaa bbaa
+
+        // Shift the odd lanes down to the low bits of the 16x8 vectors.
+        MInstruction* eight = MConstant::New(alloc, Int32Value(8));
+        addTo->add(eight);
+        MInstruction* evenL = wideL;
+        MInstruction* evenR = wideR;
+        MInstruction* oddL =
+          MSimdShift::AddLegalized(alloc, addTo, wideL, eight, MSimdShift::ursh);
+        MInstruction* oddR =
+          MSimdShift::AddLegalized(alloc, addTo, wideR, eight, MSimdShift::ursh);
+
+        // evenL = yyxx yyxx yyxx yyxx yyxx yyxx yyxx yyxx
+        // evenR = bbaa bbaa bbaa bbaa bbaa bbaa bbaa bbaa
+        // oddL  = 00yy 00yy 00yy 00yy 00yy 00yy 00yy 00yy
+        // oddR  = 00bb 00bb 00bb 00bb 00bb 00bb 00bb 00bb
+
+        // Now do two 16x8 multiplications. We can use the low bits of each.
+        MInstruction* even = MSimdBinaryArith::AddLegalized(alloc, addTo, evenL, evenR, Op_mul);
+        MInstruction* odd = MSimdBinaryArith::AddLegalized(alloc, addTo, oddL, oddR, Op_mul);
+
+        // even = ~~PP ~~PP ~~PP ~~PP ~~PP ~~PP ~~PP ~~PP
+        // odd  = ~~QQ ~~QQ ~~QQ ~~QQ ~~QQ ~~QQ ~~QQ ~~QQ
+
+        MInstruction* mask =
+          MSimdConstant::New(alloc, SimdConstant::SplatX8(int16_t(0x00ff)), MIRType::Int16x8);
+        addTo->add(mask);
+        even = MSimdBinaryBitwise::New(alloc, even, mask, MSimdBinaryBitwise::and_);
+        addTo->add(even);
+        odd = MSimdShift::AddLegalized(alloc, addTo, odd, eight, MSimdShift::lsh);
+
+        // even = 00PP 00PP 00PP 00PP 00PP 00PP 00PP 00PP
+        // odd  = QQ00 QQ00 QQ00 QQ00 QQ00 QQ00 QQ00 QQ00
+
+        // Combine:
+        MInstruction* result = MSimdBinaryBitwise::New(alloc, even, odd, MSimdBinaryBitwise::or_);
+        addTo->add(result);
+        result = MSimdReinterpretCast::New(alloc, result, opType);
+        addTo->add(result);
+        return result;
+    }
+
+    // This is a legal operation already. Just create the instruction requested.
+    MInstruction* result = MSimdBinaryArith::New(alloc, left, right, op);
     addTo->add(result);
     return result;
 }
