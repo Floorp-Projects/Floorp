@@ -732,24 +732,45 @@ LIRGeneratorX86Shared::visitSimdBinaryArith(MSimdBinaryArith* ins)
     if (ins->isCommutative())
         ReorderCommutative(&lhs, &rhs, ins);
 
-    if (ins->type() == MIRType::Int32x4) {
-        LSimdBinaryArithIx4* lir = new(alloc()) LSimdBinaryArithIx4();
-        bool needsTemp = ins->operation() == MSimdBinaryArith::Op_mul && !MacroAssembler::HasSSE41();
-        lir->setTemp(0, needsTemp ? temp(LDefinition::SIMD128INT) : LDefinition::BogusTemp());
-        lowerForFPU(lir, ins, lhs, rhs);
-        return;
+    switch (ins->type()) {
+      case MIRType::Int8x16: {
+          LSimdBinaryArithIx16* lir = new (alloc()) LSimdBinaryArithIx16();
+          lir->setTemp(0, LDefinition::BogusTemp());
+          lowerForFPU(lir, ins, lhs, rhs);
+          return;
+      }
+
+      case MIRType::Int16x8: {
+          LSimdBinaryArithIx8* lir = new (alloc()) LSimdBinaryArithIx8();
+          lir->setTemp(0, LDefinition::BogusTemp());
+          lowerForFPU(lir, ins, lhs, rhs);
+          return;
+      }
+
+      case MIRType::Int32x4: {
+          LSimdBinaryArithIx4* lir = new (alloc()) LSimdBinaryArithIx4();
+          bool needsTemp =
+              ins->operation() == MSimdBinaryArith::Op_mul && !MacroAssembler::HasSSE41();
+          lir->setTemp(0, needsTemp ? temp(LDefinition::SIMD128INT) : LDefinition::BogusTemp());
+          lowerForFPU(lir, ins, lhs, rhs);
+          return;
+      }
+
+      case MIRType::Float32x4: {
+          LSimdBinaryArithFx4* lir = new (alloc()) LSimdBinaryArithFx4();
+
+          bool needsTemp = ins->operation() == MSimdBinaryArith::Op_max ||
+              ins->operation() == MSimdBinaryArith::Op_minNum ||
+              ins->operation() == MSimdBinaryArith::Op_maxNum;
+          lir->setTemp(0,
+                       needsTemp ? temp(LDefinition::SIMD128FLOAT) : LDefinition::BogusTemp());
+          lowerForFPU(lir, ins, lhs, rhs);
+          return;
+      }
+
+      default:
+        MOZ_CRASH("unknown simd type on binary arith operation");
     }
-
-    MOZ_ASSERT(ins->type() == MIRType::Float32x4, "unknown simd type on binary arith operation");
-
-    LSimdBinaryArithFx4* lir = new(alloc()) LSimdBinaryArithFx4();
-
-    bool needsTemp = ins->operation() == MSimdBinaryArith::Op_max ||
-                     ins->operation() == MSimdBinaryArith::Op_minNum ||
-                     ins->operation() == MSimdBinaryArith::Op_maxNum;
-    lir->setTemp(0, needsTemp ? temp(LDefinition::SIMD128FLOAT) : LDefinition::BogusTemp());
-
-    lowerForFPU(lir, ins, lhs, rhs);
 }
 
 void

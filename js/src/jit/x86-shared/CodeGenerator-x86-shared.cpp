@@ -3368,6 +3368,64 @@ CodeGeneratorX86Shared::visitSimdBinaryCompFx4(LSimdBinaryCompFx4* ins)
 }
 
 void
+CodeGeneratorX86Shared::visitSimdBinaryArithIx16(LSimdBinaryArithIx16* ins)
+{
+    FloatRegister lhs = ToFloatRegister(ins->lhs());
+    Operand rhs = ToOperand(ins->rhs());
+    FloatRegister output = ToFloatRegister(ins->output());
+
+    MSimdBinaryArith::Operation op = ins->operation();
+    switch (op) {
+      case MSimdBinaryArith::Op_add:
+        masm.vpaddb(rhs, lhs, output);
+        return;
+      case MSimdBinaryArith::Op_sub:
+        masm.vpsubb(rhs, lhs, output);
+        return;
+      case MSimdBinaryArith::Op_mul:
+        // 8x16 mul is a valid operation, but not supported in SSE or AVX.
+        // The operation is synthesized from 16x8 multiplies by
+        // MSimdBinaryArith::AddLegalized().
+        break;
+      case MSimdBinaryArith::Op_div:
+      case MSimdBinaryArith::Op_max:
+      case MSimdBinaryArith::Op_min:
+      case MSimdBinaryArith::Op_minNum:
+      case MSimdBinaryArith::Op_maxNum:
+        break;
+    }
+    MOZ_CRASH("unexpected SIMD op");
+}
+
+void
+CodeGeneratorX86Shared::visitSimdBinaryArithIx8(LSimdBinaryArithIx8* ins)
+{
+    FloatRegister lhs = ToFloatRegister(ins->lhs());
+    Operand rhs = ToOperand(ins->rhs());
+    FloatRegister output = ToFloatRegister(ins->output());
+
+    MSimdBinaryArith::Operation op = ins->operation();
+    switch (op) {
+      case MSimdBinaryArith::Op_add:
+        masm.vpaddw(rhs, lhs, output);
+        return;
+      case MSimdBinaryArith::Op_sub:
+        masm.vpsubw(rhs, lhs, output);
+        return;
+      case MSimdBinaryArith::Op_mul:
+        masm.vpmullw(rhs, lhs, output);
+        return;
+      case MSimdBinaryArith::Op_div:
+      case MSimdBinaryArith::Op_max:
+      case MSimdBinaryArith::Op_min:
+      case MSimdBinaryArith::Op_minNum:
+      case MSimdBinaryArith::Op_maxNum:
+        break;
+    }
+    MOZ_CRASH("unexpected SIMD op");
+}
+
+void
 CodeGeneratorX86Shared::visitSimdBinaryArithIx4(LSimdBinaryArithIx4* ins)
 {
     FloatRegister lhs = ToFloatRegister(ins->lhs());
@@ -3656,7 +3714,7 @@ CodeGeneratorX86Shared::visitSimdUnaryArithFx4(LSimdUnaryArithFx4* ins)
 }
 
 void
-CodeGeneratorX86Shared::visitSimdBinaryBitwiseX4(LSimdBinaryBitwiseX4* ins)
+CodeGeneratorX86Shared::visitSimdBinaryBitwise(LSimdBinaryBitwise* ins)
 {
     FloatRegister lhs = ToFloatRegister(ins->lhs());
     Operand rhs = ToOperand(ins->rhs());

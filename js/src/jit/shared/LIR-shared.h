@@ -497,6 +497,22 @@ class LSimdBinaryArith : public LInstructionHelper<1, 2, 1>
     }
 };
 
+// Binary SIMD arithmetic operation between two Int8x16 operands
+class LSimdBinaryArithIx16 : public LSimdBinaryArith
+{
+  public:
+    LIR_HEADER(SimdBinaryArithIx16);
+    LSimdBinaryArithIx16() : LSimdBinaryArith() {}
+};
+
+// Binary SIMD arithmetic operation between two Int16x8 operands
+class LSimdBinaryArithIx8 : public LSimdBinaryArith
+{
+  public:
+    LIR_HEADER(SimdBinaryArithIx8);
+    LSimdBinaryArithIx8() : LSimdBinaryArith() {}
+};
+
 // Binary SIMD arithmetic operation between two Int32x4 operands
 class LSimdBinaryArithIx4 : public LSimdBinaryArith
 {
@@ -557,11 +573,11 @@ class LSimdUnaryArithFx4 : public LSimdUnaryArith
     explicit LSimdUnaryArithFx4(const LAllocation& in) : LSimdUnaryArith(in) {}
 };
 
-// Binary SIMD bitwise operation between two int32x4 or float32x4 operands
-class LSimdBinaryBitwiseX4 : public LInstructionHelper<1, 2, 0>
+// Binary SIMD bitwise operation between two 128-bit operands.
+class LSimdBinaryBitwise : public LInstructionHelper<1, 2, 0>
 {
   public:
-    LIR_HEADER(SimdBinaryBitwiseX4);
+    LIR_HEADER(SimdBinaryBitwise);
     const LAllocation* lhs() {
         return getOperand(0);
     }
