@@ -294,7 +294,6 @@ class LIRGenerator : public LIRGeneratorSpecific
     void visitRecompileCheck(MRecompileCheck* ins);
     void visitSimdBox(MSimdBox* ins);
     void visitSimdUnbox(MSimdUnbox* ins);
-    void visitSimdGeneralShuffle(MSimdGeneralShuffle* ins);
     void visitSimdUnaryArith(MSimdUnaryArith* ins);
     void visitSimdBinaryComp(MSimdBinaryComp* ins);
     void visitSimdBinaryBitwise(MSimdBinaryBitwise* ins);

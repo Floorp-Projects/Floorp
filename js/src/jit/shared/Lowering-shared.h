@@ -280,6 +280,7 @@ class LIRGeneratorShared : public MDefinitionVisitor
     void visitSimdBinarySaturating(MSimdBinarySaturating*) override { MOZ_CRASH("NYI"); }
     void visitSimdSwizzle(MSimdSwizzle*) override { MOZ_CRASH("NYI"); }
     void visitSimdShuffle(MSimdShuffle*) override { MOZ_CRASH("NYI"); }
+    void visitSimdGeneralShuffle(MSimdGeneralShuffle*) override { MOZ_CRASH("NYI"); }
 };
 
 } // namespace jit
