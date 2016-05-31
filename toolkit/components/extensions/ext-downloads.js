@@ -420,8 +420,13 @@ extensions.registerSchemaAPI("downloads", "downloads", (extension, context) => {
           if (options.filename) {
             target = OS.Path.join(downloadsDir, options.filename);
           } else {
-            let uri = NetUtil.newURI(options.url).QueryInterface(Ci.nsIURL);
-            target = OS.Path.join(downloadsDir, uri.fileName);
+            let uri = NetUtil.newURI(options.url);
+
+            let filename;
+            if (uri instanceof Ci.nsIURL) {
+              filename = uri.fileName;
+            }
+            target = OS.Path.join(downloadsDir, filename || "download");
           }
 
           // This has a race, something else could come along and create
