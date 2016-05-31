@@ -2706,7 +2706,7 @@ SimdToExpr(SimdType type, SimdOperation op)
     switch (type) {
       case SimdType::Uint8x16:
         // Handle the special unsigned opcodes, then fall through to Int8x16.
-        switch(op) {
+        switch (op) {
           case SimdOperation::Fn_addSaturate:        return Expr::I8x16addSaturateU;
           case SimdOperation::Fn_subSaturate:        return Expr::I8x16subSaturateU;
           case SimdOperation::Fn_extractLane:        return Expr::I8x16extractLaneU;
@@ -2721,7 +2721,12 @@ SimdToExpr(SimdType type, SimdOperation op)
         MOZ_FALLTHROUGH;
       case SimdType::Int8x16:
         // Bitcasts Uint8x16 <--> Int8x16 become noops.
-        if (op == SimdOperation::Fn_fromUint8x16Bits) return Expr::Limit;
+        switch (op) {
+          case SimdOperation::Fn_fromUint8x16Bits: return Expr::Limit;
+          case SimdOperation::Fn_fromUint16x8Bits: return Expr::I8x16fromInt16x8Bits;
+          case SimdOperation::Fn_fromUint32x4Bits: return Expr::I8x16fromInt32x4Bits;
+          default: break;
+        }
         ENUMERATE(I8x16, FORALL_INT8X16_ASMJS_OP, I8x16CASE)
         break;
 
@@ -2742,7 +2747,12 @@ SimdToExpr(SimdType type, SimdOperation op)
         MOZ_FALLTHROUGH;
       case SimdType::Int16x8:
         // Bitcasts Uint16x8 <--> Int16x8 become noops.
-        if (op == SimdOperation::Fn_fromUint16x8Bits) return Expr::Limit;
+        switch (op) {
+          case SimdOperation::Fn_fromUint8x16Bits: return Expr::I16x8fromInt8x16Bits;
+          case SimdOperation::Fn_fromUint16x8Bits: return Expr::Limit;
+          case SimdOperation::Fn_fromUint32x4Bits: return Expr::I16x8fromInt32x4Bits;
+          default: break;
+        }
         ENUMERATE(I16x8, FORALL_INT16X8_ASMJS_OP, I16x8CASE)
         break;
 
@@ -2761,11 +2771,22 @@ SimdToExpr(SimdType type, SimdOperation op)
         MOZ_FALLTHROUGH;
       case SimdType::Int32x4:
         // Bitcasts Uint32x4 <--> Int32x4 become noops.
-        if (op == SimdOperation::Fn_fromUint32x4Bits) return Expr::Limit;
+        switch (op) {
+          case SimdOperation::Fn_fromUint8x16Bits: return Expr::I32x4fromInt8x16Bits;
+          case SimdOperation::Fn_fromUint16x8Bits: return Expr::I32x4fromInt16x8Bits;
+          case SimdOperation::Fn_fromUint32x4Bits: return Expr::Limit;
+          default: break;
+        }
         ENUMERATE(I32x4, FORALL_INT32X4_ASMJS_OP, I32x4CASE)
         break;
 
       case SimdType::Float32x4:
+        switch (op) {
+          case SimdOperation::Fn_fromUint8x16Bits: return Expr::F32x4fromInt8x16Bits;
+          case SimdOperation::Fn_fromUint16x8Bits: return Expr::F32x4fromInt16x8Bits;
+          case SimdOperation::Fn_fromUint32x4Bits: return Expr::F32x4fromInt32x4Bits;
+          default: break;
+        }
         ENUMERATE(F32x4, FORALL_FLOAT32X4_ASMJS_OP, F32x4CASE)
         break;
 
@@ -3387,6 +3408,8 @@ IsSimdValidOperationType(SimdType type, SimdOperation op)
       case SimdType::Int32x4:
         switch (op) {
           case SimdOperation::Constructor:
+          case SimdOperation::Fn_fromUint8x16Bits:
+          case SimdOperation::Fn_fromUint16x8Bits:
           case SimdOperation::Fn_fromUint32x4Bits:
           FORALL_INT32X4_ASMJS_OP(CASE) return true;
           default: return false;
@@ -3395,6 +3418,8 @@ IsSimdValidOperationType(SimdType type, SimdOperation op)
       case SimdType::Uint32x4:
         switch (op) {
           case SimdOperation::Constructor:
+          case SimdOperation::Fn_fromUint8x16Bits:
+          case SimdOperation::Fn_fromUint16x8Bits:
           case SimdOperation::Fn_fromInt32x4Bits:
           FORALL_INT32X4_ASMJS_OP(CASE) return true;
           default: return false;
@@ -3403,6 +3428,9 @@ IsSimdValidOperationType(SimdType type, SimdOperation op)
       case SimdType::Float32x4:
         switch (op) {
           case SimdOperation::Constructor:
+          case SimdOperation::Fn_fromUint8x16Bits:
+          case SimdOperation::Fn_fromUint16x8Bits:
+          case SimdOperation::Fn_fromUint32x4Bits:
           FORALL_FLOAT32X4_ASMJS_OP(CASE) return true;
           default: return false;
         }
@@ -7542,19 +7570,25 @@ ValidateSimdOperation(JSContext* cx, const AsmJSGlobal& global, HandleValue glob
         switch (global.simdOperation()) {
           FORALL_INT8X16_ASMJS_OP(SET_NATIVE_INT8X16)
           SET_NATIVE_INT8X16(fromUint8x16Bits)
+          SET_NATIVE_INT8X16(fromUint16x8Bits)
+          SET_NATIVE_INT8X16(fromUint32x4Bits)
           default: MOZ_CRASH("shouldn't have been validated in the first place");
         }
         break;
       case SimdType::Int16x8:
         switch (global.simdOperation()) {
           FORALL_INT16X8_ASMJS_OP(SET_NATIVE_INT16X8)
+          SET_NATIVE_INT16X8(fromUint8x16Bits)
           SET_NATIVE_INT16X8(fromUint16x8Bits)
+          SET_NATIVE_INT16X8(fromUint32x4Bits)
           default: MOZ_CRASH("shouldn't have been validated in the first place");
         }
         break;
       case SimdType::Int32x4:
         switch (global.simdOperation()) {
           FORALL_INT32X4_ASMJS_OP(SET_NATIVE_INT32X4)
+          SET_NATIVE_INT32X4(fromUint8x16Bits)
+          SET_NATIVE_INT32X4(fromUint16x8Bits)
           SET_NATIVE_INT32X4(fromUint32x4Bits)
           default: MOZ_CRASH("shouldn't have been validated in the first place");
         }
@@ -7563,19 +7597,25 @@ ValidateSimdOperation(JSContext* cx, const AsmJSGlobal& global, HandleValue glob
         switch (global.simdOperation()) {
           FORALL_INT8X16_ASMJS_OP(SET_NATIVE_UINT8X16)
           SET_NATIVE_UINT8X16(fromInt8x16Bits)
+          SET_NATIVE_UINT8X16(fromUint16x8Bits)
+          SET_NATIVE_UINT8X16(fromUint32x4Bits)
           default: MOZ_CRASH("shouldn't have been validated in the first place");
         }
         break;
       case SimdType::Uint16x8:
         switch (global.simdOperation()) {
           FORALL_INT16X8_ASMJS_OP(SET_NATIVE_UINT16X8)
+          SET_NATIVE_UINT16X8(fromUint8x16Bits)
           SET_NATIVE_UINT16X8(fromInt16x8Bits)
+          SET_NATIVE_UINT16X8(fromUint32x4Bits)
           default: MOZ_CRASH("shouldn't have been validated in the first place");
         }
         break;
       case SimdType::Uint32x4:
         switch (global.simdOperation()) {
           FORALL_INT32X4_ASMJS_OP(SET_NATIVE_UINT32X4)
+          SET_NATIVE_UINT32X4(fromUint8x16Bits)
+          SET_NATIVE_UINT32X4(fromUint16x8Bits)
           SET_NATIVE_UINT32X4(fromInt32x4Bits)
           default: MOZ_CRASH("shouldn't have been validated in the first place");
         }
@@ -7583,6 +7623,9 @@ ValidateSimdOperation(JSContext* cx, const AsmJSGlobal& global, HandleValue glob
       case SimdType::Float32x4:
         switch (global.simdOperation()) {
           FORALL_FLOAT32X4_ASMJS_OP(SET_NATIVE_FLOAT32X4)
+          SET_NATIVE_FLOAT32X4(fromUint8x16Bits)
+          SET_NATIVE_FLOAT32X4(fromUint16x8Bits)
+          SET_NATIVE_FLOAT32X4(fromUint32x4Bits)
           default: MOZ_CRASH("shouldn't have been validated in the first place");
         }
         break;
