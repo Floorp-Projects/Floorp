@@ -142,9 +142,9 @@ public:
 
   bool IPCOpen() const { return mIPCOpen; }
 
-  void Lock() const { mLock.Enter(); }
+  void Lock() const { if (mForwarder->UsesImageBridge()) { mLock.Enter(); } }
 
-  void Unlock() const { mLock.Leave(); }
+  void Unlock() const { if (mForwarder->UsesImageBridge()) { mLock.Leave(); } }
 
 private:
 
