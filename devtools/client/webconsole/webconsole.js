@@ -36,6 +36,8 @@ loader.lazyImporter(this, "VariablesView", "resource://devtools/client/shared/wi
 loader.lazyImporter(this, "VariablesViewController", "resource://devtools/client/shared/widgets/VariablesViewController.jsm");
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
 loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
+loader.lazyRequireGetter(this, "KeyShortcuts", "devtools/client/shared/key-shortcuts", true);
+loader.lazyRequireGetter(this, "ZoomKeys", "devtools/client/shared/zoom-keys");
 
 const STRINGS_URI = "chrome://devtools/locale/webconsole.properties";
 var l10n = new WebConsoleUtils.L10n(STRINGS_URI);
@@ -521,12 +523,6 @@ WebConsoleFrame.prototype = {
 
     let doc = this.document;
 
-    if (system.constants.platform === "macosx") {
-      doc.querySelector("#key_clearOSX").removeAttribute("disabled");
-    } else {
-      doc.querySelector("#key_clear").removeAttribute("disabled");
-    }
-
     this.filterBox = doc.querySelector(".hud-filter-box");
     this.outputNode = doc.getElementById("output-container");
     this.outputWrapper = doc.getElementById("output-wrapper");
@@ -536,25 +532,6 @@ WebConsoleFrame.prototype = {
 
     this._setFilterTextBoxEvents();
     this._initFilterButtons();
-
-    let fontSize = this.owner._browserConsole ?
-                   Services.prefs.getIntPref("devtools.webconsole.fontSize") :
-                   0;
-
-    if (fontSize != 0) {
-      fontSize = Math.max(MIN_FONT_SIZE, fontSize);
-
-      this.outputNode.style.fontSize = fontSize + "px";
-      this.completeNode.style.fontSize = fontSize + "px";
-      this.inputNode.style.fontSize = fontSize + "px";
-    }
-
-    if (this.owner._browserConsole) {
-      for (let id of ["Enlarge", "Reduce", "Reset"]) {
-        this.document.getElementById("cmd_fullZoom" + id)
-                     .removeAttribute("disabled");
-      }
-    }
 
     // Update the character width and height needed for the popup offset
     // calculations.
@@ -627,6 +604,8 @@ WebConsoleFrame.prototype = {
       newValue: Services.prefs.getBoolPref(PREF_MESSAGE_TIMESTAMP),
     });
 
+    this._initShortcuts();
+
     // focus input node
     this.jsterm.focus();
   },
@@ -668,6 +647,34 @@ WebConsoleFrame.prototype = {
     for (let pref of prefs) {
       this.filterPrefs[pref] = Services.prefs.getBoolPref(
         this._filterPrefsPrefix + pref);
+    }
+  },
+
+  _initShortcuts: function() {
+    var shortcuts = new KeyShortcuts({
+      window: this.window
+    });
+
+    shortcuts.on(l10n.getStr("webconsole.find.key"),
+                 (name, event) => {
+                   this.filterBox.focus();
+                   event.preventDefault();
+                 });
+
+    let clearShortcut;
+    if (system.constants.platform === "macosx") {
+      clearShortcut = l10n.getStr("webconsole.clear.keyOSX");
+    } else {
+      clearShortcut = l10n.getStr("webconsole.clear.key");
+    }
+    shortcuts.on(clearShortcut,
+                 () => this.jsterm.clearOutput(true));
+
+    if (this.owner._browserConsole) {
+      shortcuts.on(l10n.getStr("webconsole.close.key"),
+                   this.window.close.bind(this.window));
+
+      ZoomKeys.register(this.window);
     }
   },
 
@@ -796,50 +803,6 @@ WebConsoleFrame.prototype = {
         this.document.querySelector("toolbarbutton[category=server]");
       serverLogging.removeAttribute("accesskey");
     }
-  },
-
-  /**
-   * Increase, decrease or reset the font size.
-   *
-   * @param string size
-   *        The size of the font change. Accepted values are "+" and "-".
-   *        An unmatched size assumes a font reset.
-   */
-  changeFontSize: function (size) {
-    let fontSize = this.window
-                   .getComputedStyle(this.outputNode, null)
-                   .getPropertyValue("font-size").replace("px", "");
-
-    if (this.outputNode.style.fontSize) {
-      fontSize = this.outputNode.style.fontSize.replace("px", "");
-    }
-
-    if (size == "+" || size == "-") {
-      fontSize = parseInt(fontSize, 10);
-
-      if (size == "+") {
-        fontSize += 1;
-      } else {
-        fontSize -= 1;
-      }
-
-      if (fontSize < MIN_FONT_SIZE) {
-        fontSize = MIN_FONT_SIZE;
-      }
-
-      Services.prefs.setIntPref("devtools.webconsole.fontSize", fontSize);
-      fontSize = fontSize + "px";
-
-      this.completeNode.style.fontSize = fontSize;
-      this.inputNode.style.fontSize = fontSize;
-      this.outputNode.style.fontSize = fontSize;
-    } else {
-      this.completeNode.style.fontSize = "";
-      this.inputNode.style.fontSize = "";
-      this.outputNode.style.fontSize = "";
-      Services.prefs.clearUserPref("devtools.webconsole.fontSize");
-    }
-    this._updateCharSize();
   },
 
   /**
@@ -3049,15 +3012,8 @@ CommandController.prototype = {
         return this.owner._contextMenuHandler.lastClickedMessage &&
               !this.owner.output.getSelectedMessages(1)[0];
       }
-      case "consoleCmd_clearOutput":
       case "cmd_selectAll":
-      case "cmd_find":
         return true;
-      case "cmd_fontSizeEnlarge":
-      case "cmd_fontSizeReduce":
-      case "cmd_fontSizeReset":
-      case "cmd_close":
-        return this.owner.owner._browserConsole;
     }
     return false;
   },
@@ -3070,29 +3026,11 @@ CommandController.prototype = {
       case "consoleCmd_copyURL":
         this.copyURL();
         break;
-      case "consoleCmd_clearOutput":
-        this.owner.jsterm.clearOutput(true);
-        break;
       case "cmd_copy":
         this.copyLastClicked();
         break;
-      case "cmd_find":
-        this.owner.filterBox.focus();
-        break;
       case "cmd_selectAll":
         this.selectAll();
-        break;
-      case "cmd_fontSizeEnlarge":
-        this.owner.changeFontSize("+");
-        break;
-      case "cmd_fontSizeReduce":
-        this.owner.changeFontSize("-");
-        break;
-      case "cmd_fontSizeReset":
-        this.owner.changeFontSize("");
-        break;
-      case "cmd_close":
-        this.owner.window.close();
         break;
     }
   }
