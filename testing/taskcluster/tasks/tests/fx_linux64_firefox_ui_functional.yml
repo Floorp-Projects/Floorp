@@ -24,4 +24,4 @@ task:
       groupName: Desktop firefox-ui-tests
       groupSymbol: tc-Fxfn
       symbol: en-US
-      tier: 3
+      tier: 2
