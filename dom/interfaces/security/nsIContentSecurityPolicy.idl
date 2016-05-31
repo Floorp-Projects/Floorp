@@ -59,6 +59,7 @@ interface nsIContentSecurityPolicy : nsISerializable
   const unsigned short UPGRADE_IF_INSECURE_DIRECTIVE  = 17;
   const unsigned short CHILD_SRC_DIRECTIVE            = 18;
   const unsigned short BLOCK_ALL_MIXED_CONTENT        = 19;
+  const unsigned short REQUIRE_SRI_FOR                = 20;
 
   /**
    * Accessor method for a read-only string version of the policy at a given
@@ -186,13 +187,15 @@ interface nsIContentSecurityPolicy : nsISerializable
                            [optional] in AString nonce,
                            [optional] in AString content);
 
-  const unsigned short VIOLATION_TYPE_INLINE_SCRIPT = 1;
-  const unsigned short VIOLATION_TYPE_EVAL          = 2;
-  const unsigned short VIOLATION_TYPE_INLINE_STYLE  = 3;
-  const unsigned short VIOLATION_TYPE_NONCE_SCRIPT  = 4;
-  const unsigned short VIOLATION_TYPE_NONCE_STYLE   = 5;
-  const unsigned short VIOLATION_TYPE_HASH_SCRIPT   = 6;
-  const unsigned short VIOLATION_TYPE_HASH_STYLE    = 7;
+  const unsigned short VIOLATION_TYPE_INLINE_SCRIPT          = 1;
+  const unsigned short VIOLATION_TYPE_EVAL                   = 2;
+  const unsigned short VIOLATION_TYPE_INLINE_STYLE           = 3;
+  const unsigned short VIOLATION_TYPE_NONCE_SCRIPT           = 4;
+  const unsigned short VIOLATION_TYPE_NONCE_STYLE            = 5;
+  const unsigned short VIOLATION_TYPE_HASH_SCRIPT            = 6;
+  const unsigned short VIOLATION_TYPE_HASH_STYLE             = 7;
+  const unsigned short VIOLATION_TYPE_REQUIRE_SRI_FOR_STYLE  = 8;
+  const unsigned short VIOLATION_TYPE_REQUIRE_SRI_FOR_SCRIPT = 9;
 
   /**
    * Called after the CSP object is created to fill in appropriate request
@@ -202,6 +205,13 @@ interface nsIContentSecurityPolicy : nsISerializable
    */
   void setRequestContext(in nsIDOMDocument aDocument,
                          in nsIPrincipal aPrincipal);
+
+
+  /*
+   * Checks if a CSP requires Subresource Integrity (SRI)
+   * for a given nsContentPolicyType.
+   */
+  bool requireSRIForType(in nsContentPolicyType aContentType);
 
   /**
    * Verifies ancestry as permitted by the policy.
