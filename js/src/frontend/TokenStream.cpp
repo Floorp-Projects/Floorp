@@ -578,8 +578,16 @@ CompileError::throwError(JSContext* cx)
     // as the non-top-level "load", "eval", or "compile" native function
     // returns false, the top-level reporter will eventually receive the
     // uncaught exception report.
-    if (!ErrorToException(cx, message, &report, nullptr, nullptr))
-        CallErrorReporter(cx, message, &report);
+    if (ErrorToException(cx, message, &report, nullptr, nullptr))
+        return;
+
+    // Like ReportError, don't call the error reporter if the embedding is
+    // responsible for handling exceptions. In this case the error reporter
+    // must only be used for warnings.
+    if (cx->options().autoJSAPIOwnsErrorReporting() && !JSREPORT_IS_WARNING(report.flags))
+        return;
+
+    CallErrorReporter(cx, message, &report);
 }
 
 CompileError::~CompileError()
