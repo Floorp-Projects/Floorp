@@ -43,7 +43,8 @@ public class TelemetryCorePingUploadDelegate extends BrowserAppDelegate {
         // We don't upload in onResume/onPause because that will be called each time the Activity is obscured,
         // including by our own Activities/dialogs, and there is no reason to upload each time we're unobscured.
         //
-        // So we're left with onStart/onStop.
+        // We're left with onStart/onStop and we upload in onStart because onStop is not guaranteed to be called
+        // and we want to upload the first run ASAP (e.g. to get install data before the app may crash).
         final SearchEngineManager searchEngineManager = browserApp.getSearchEngineManager();
         searchEngineManager.getEngine(new UploadTelemetryCorePingCallback(browserApp));
     }
