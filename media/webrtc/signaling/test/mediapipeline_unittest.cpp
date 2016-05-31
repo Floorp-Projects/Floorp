@@ -137,7 +137,7 @@ class TransportInfo {
 class TestAgent {
  public:
   TestAgent() :
-      audio_config_(109, "opus", 48000, 960, 2, 64000),
+      audio_config_(109, "opus", 48000, 960, 2, 64000, false),
       audio_conduit_(mozilla::AudioSessionConduit::Create()),
       audio_(),
       audio_pipeline_() {
