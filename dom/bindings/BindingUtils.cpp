@@ -26,8 +26,6 @@
 #include "nsIPrincipal.h"
 #include "nsIXPConnect.h"
 #include "nsUTF8Utils.h"
-#include "WorkerPrivate.h"
-#include "WorkerRunnable.h"
 #include "WrapperFactory.h"
 #include "xpcprivate.h"
 #include "XrayWrapper.h"
@@ -57,8 +55,6 @@
 
 namespace mozilla {
 namespace dom {
-
-using namespace workers;
 
 const JSErrorFormatString ErrorFormatString[] = {
 #define MSG_DEF(_name, _argc, _exn, _str) \
@@ -3289,101 +3285,6 @@ SetDocumentAndPageUseCounter(JSContext* aCx, JSObject* aObject,
   }
 }
 
-namespace {
-
-// This runnable is used to write a deprecation message from a worker to the
-// console running on the main-thread.
-class DeprecationWarningRunnable final : public Runnable
-                                       , public WorkerFeature
-{
-  WorkerPrivate* mWorkerPrivate;
-  nsIDocument::DeprecatedOperations mOperation;
-
-public:
-  DeprecationWarningRunnable(WorkerPrivate* aWorkerPrivate,
-                             nsIDocument::DeprecatedOperations aOperation)
-    : mWorkerPrivate(aWorkerPrivate)
-    , mOperation(aOperation)
-  {
-    MOZ_ASSERT(aWorkerPrivate);
-  }
-
-  void
-  Dispatch()
-  {
-    if (NS_WARN_IF(!mWorkerPrivate->AddFeature(this))) {
-      return;
-    }
-
-    if (NS_WARN_IF(NS_FAILED(NS_DispatchToMainThread(this)))) {
-      mWorkerPrivate->RemoveFeature(this);
-      return;
-    }
-  }
-
-  virtual bool
-  Notify(workers::Status aStatus) override
-  {
-    // We don't care about the notification. We just want to keep the
-    // mWorkerPrivate alive.
-    return true;
-  }
-
-private:
-
-  NS_IMETHOD
-  Run() override
-  {
-    MOZ_ASSERT(NS_IsMainThread());
-
-    // Walk up to our containing page
-    WorkerPrivate* wp = mWorkerPrivate;
-    while (wp->GetParent()) {
-      wp = wp->GetParent();
-    }
-
-    nsPIDOMWindowInner* window = wp->GetWindow();
-    if (window && window->GetExtantDoc()) {
-      window->GetExtantDoc()->WarnOnceAbout(mOperation);
-    }
-
-    ReleaseWorker();
-    return NS_OK;
-  }
-
-  void
-  ReleaseWorker()
-  {
-    class ReleaseRunnable final : public WorkerRunnable
-    {
-      RefPtr<DeprecationWarningRunnable> mRunnable;
-
-    public:
-      ReleaseRunnable(WorkerPrivate* aWorkerPrivate,
-                      DeprecationWarningRunnable* aRunnable)
-        : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
-        , mRunnable(aRunnable)
-      {}
-
-      virtual bool
-      WorkerRun(JSContext* aCx, workers::WorkerPrivate* aWorkerPrivate) override
-      {
-        MOZ_ASSERT(aWorkerPrivate);
-        aWorkerPrivate->AssertIsOnWorkerThread();
-
-        aWorkerPrivate->RemoveFeature(mRunnable);
-        return true;
-      }
-    };
-
-    RefPtr<ReleaseRunnable> runnable =
-      new ReleaseRunnable(mWorkerPrivate, this);
-    NS_WARN_IF(!runnable->Dispatch());
-  }
-};
-
-} // anonymous namespace
-
 void
 DeprecationWarning(JSContext* aCx, JSObject* aObject,
                    nsIDocument::DeprecatedOperations aOperation)
@@ -3394,23 +3295,10 @@ DeprecationWarning(JSContext* aCx, JSObject* aObject,
     return;
   }
 
-  if (NS_IsMainThread()) {
-    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global.GetAsSupports());
-    if (window && window->GetExtantDoc()) {
-      window->GetExtantDoc()->WarnOnceAbout(aOperation);
-    }
-
-    return;
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(global.GetAsSupports());
+  if (window && window->GetExtantDoc()) {
+    window->GetExtantDoc()->WarnOnceAbout(aOperation);
   }
-
-  WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(aCx);
-  if (!workerPrivate) {
-    return;
-  }
-
-  RefPtr<DeprecationWarningRunnable> runnable =
-    new DeprecationWarningRunnable(workerPrivate, aOperation);
-  runnable->Dispatch();
 }
 
 namespace binding_detail {
