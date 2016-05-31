@@ -110,14 +110,15 @@ HTMLTooltip.prototype = {
    *        The tooltip content, should be a HTML element.
    * @param {Number} width
    *        Preferred width for the tooltip container
-   * @param {Number} height
+   * @param {Number} height (optional)
    *        Preferred height for the tooltip container. If the content height is
    *        smaller than the container's height, the tooltip will automatically
-   *        shrink around the content.
+   *        shrink around the content. If not specified, will use all the height
+   *        available.
    * @return {Promise} a promise that will resolve when the content has been
    *         added in the tooltip container.
    */
-  setContent: function (content, width, height) {
+  setContent: function (content, width, height = Infinity) {
     let themeHeight = EXTRA_HEIGHT[this.type] + 2 * EXTRA_BORDER[this.type];
     let themeWidth = 2 * EXTRA_BORDER[this.type];
 

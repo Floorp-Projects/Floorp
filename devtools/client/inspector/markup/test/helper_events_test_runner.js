@@ -70,7 +70,7 @@ function* checkEventsForNode(test, inspector, testActor) {
   info("tooltip shown");
 
   // Check values
-  let headers = tooltip.content.querySelectorAll(".event-header");
+  let headers = tooltip.panel.querySelectorAll(".event-header");
   let nodeFront = container.node;
   let cssSelector = nodeFront.nodeName + "#" + nodeFront.id;
 
@@ -83,18 +83,21 @@ function* checkEventsForNode(test, inspector, testActor) {
     let attributes = header.querySelectorAll(".event-tooltip-attributes");
     let contentBox = header.nextElementSibling;
 
-    is(type.getAttribute("value"), expected[i].type,
+    is(type.textContent, expected[i].type,
        "type matches for " + cssSelector);
-    is(filename.getAttribute("value"), expected[i].filename,
+    is(filename.textContent, expected[i].filename,
        "filename matches for " + cssSelector);
 
     is(attributes.length, expected[i].attributes.length,
        "we have the correct number of attributes");
 
     for (let j = 0; j < expected[i].attributes.length; j++) {
-      is(attributes[j].getAttribute("value"), expected[i].attributes[j],
+      is(attributes[j].textContent, expected[i].attributes[j],
          "attribute[" + j + "] matches for " + cssSelector);
     }
+
+    // Make sure the header is not hidden by scrollbars before clicking.
+    header.scrollIntoView();
 
     EventUtils.synthesizeMouseAtCenter(header, {}, type.ownerGlobal);
     yield tooltip.once("event-tooltip-ready");
