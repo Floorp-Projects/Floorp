@@ -4483,13 +4483,23 @@ LIRGenerator::visitSimdUnaryArith(MSimdUnaryArith* ins)
     // Cannot be at start, as the ouput is used as a temporary to store values.
     LUse in = use(ins->input());
 
-    if (ins->type() == MIRType::Int32x4 || ins->type() == MIRType::Bool32x4) {
-        LSimdUnaryArithIx4* lir = new(alloc()) LSimdUnaryArithIx4(in);
-        define(lir, ins);
-    } else if (ins->type() == MIRType::Float32x4) {
-        LSimdUnaryArithFx4* lir = new(alloc()) LSimdUnaryArithFx4(in);
-        define(lir, ins);
-    } else {
+    switch (ins->type()) {
+      case MIRType::Int8x16:
+      case MIRType::Bool8x16:
+        define(new (alloc()) LSimdUnaryArithIx16(in), ins);
+        break;
+      case MIRType::Int16x8:
+      case MIRType::Bool16x8:
+        define(new (alloc()) LSimdUnaryArithIx8(in), ins);
+        break;
+      case MIRType::Int32x4:
+      case MIRType::Bool32x4:
+        define(new (alloc()) LSimdUnaryArithIx4(in), ins);
+        break;
+      case MIRType::Float32x4:
+        define(new (alloc()) LSimdUnaryArithFx4(in), ins);
+        break;
+      default:
         MOZ_CRASH("Unknown SIMD kind for unary operation");
     }
 }

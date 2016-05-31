@@ -804,24 +804,24 @@ class MacroAssemblerX86Shared : public Assembler
         vcvtdq2ps(src, dest);
     }
 
-    void bitwiseAndX4(const Operand& src, FloatRegister dest) {
+    void bitwiseAndSimd128(const Operand& src, FloatRegister dest) {
         // TODO Using the "ps" variant for all types incurs a domain crossing
         // penalty for integer types and double.
         vandps(src, dest, dest);
     }
-    void bitwiseAndNotX4(const Operand& src, FloatRegister dest) {
+    void bitwiseAndNotSimd128(const Operand& src, FloatRegister dest) {
         vandnps(src, dest, dest);
     }
-    void bitwiseOrX4(const Operand& src, FloatRegister dest) {
+    void bitwiseOrSimd128(const Operand& src, FloatRegister dest) {
         vorps(src, dest, dest);
     }
-    void bitwiseXorX4(const Operand& src, FloatRegister dest) {
+    void bitwiseXorSimd128(const Operand& src, FloatRegister dest) {
         vxorps(src, dest, dest);
     }
-    void zeroFloat32x4(FloatRegister dest) {
+    void zeroSimd128Float(FloatRegister dest) {
         vxorps(dest, dest, dest);
     }
-    void zeroInt32x4(FloatRegister dest) {
+    void zeroSimd128Int(FloatRegister dest) {
         vpxor(dest, dest, dest);
     }
 
@@ -938,6 +938,18 @@ class MacroAssemblerX86Shared : public Assembler
     }
     void packedGreaterThanInt32x4(const Operand& src, FloatRegister dest) {
         vpcmpgtd(src, dest, dest);
+    }
+    void packedAddInt8(const Operand& src, FloatRegister dest) {
+        vpaddb(src, dest, dest);
+    }
+    void packedSubInt8(const Operand& src, FloatRegister dest) {
+        vpsubb(src, dest, dest);
+    }
+    void packedAddInt16(const Operand& src, FloatRegister dest) {
+        vpaddw(src, dest, dest);
+    }
+    void packedSubInt16(const Operand& src, FloatRegister dest) {
+        vpsubw(src, dest, dest);
     }
     void packedAddInt32(const Operand& src, FloatRegister dest) {
         vpaddd(src, dest, dest);
@@ -1197,7 +1209,7 @@ class MacroAssemblerX86Shared : public Assembler
         static const SimdConstant zero = SimdConstant::SplatX4(0);
         static const SimdConstant minusOne = SimdConstant::SplatX4(-1);
         if (v == zero) {
-            zeroInt32x4(dest);
+            zeroSimd128Int(dest);
             return true;
         }
         if (v == minusOne) {
@@ -1211,7 +1223,7 @@ class MacroAssemblerX86Shared : public Assembler
         if (v == zero) {
             // This won't get inlined if the SimdConstant v contains -0 in any
             // lane, as operator== here does a memcmp.
-            zeroFloat32x4(dest);
+            zeroSimd128Float(dest);
             return true;
         }
         return false;

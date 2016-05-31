@@ -37,6 +37,8 @@
     _(SimdSwizzleI)                 \
     _(SimdSwizzleF)                 \
     _(SimdShuffle)                  \
+    _(SimdUnaryArithIx16)           \
+    _(SimdUnaryArithIx8)            \
     _(SimdUnaryArithIx4)            \
     _(SimdUnaryArithFx4)            \
     _(SimdBinaryCompIx4)            \
