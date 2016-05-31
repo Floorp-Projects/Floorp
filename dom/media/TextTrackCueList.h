@@ -54,8 +54,6 @@ public:
   void RemoveAll();
   void GetArray(nsTArray<RefPtr<TextTrackCue> >& aCues);
 
-  void SetCuesInactive();
-
 private:
   ~TextTrackCueList();
 

@@ -117,13 +117,5 @@ TextTrackCueList::GetArray(nsTArray<RefPtr<TextTrackCue> >& aCues)
 }
 
 
-void
-TextTrackCueList::SetCuesInactive()
-{
-  for(uint32_t i = 0; i < mList.Length(); ++i) {
-    mList[i]->SetActive(false);
-  }
-}
-
 } // namespace dom
 } // namespace mozilla

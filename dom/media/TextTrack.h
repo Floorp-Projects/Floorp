@@ -118,8 +118,6 @@ public:
     return mTextTrackSource;
   }
 
-  void SetCuesInactive();
-
 private:
   ~TextTrack();
 
