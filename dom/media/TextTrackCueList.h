@@ -12,7 +12,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "mozilla/ErrorResult.h"
-#include "Intervals.h"
 
 namespace mozilla {
 namespace dom {
@@ -56,9 +55,6 @@ public:
   void GetArray(nsTArray<RefPtr<TextTrackCue> >& aCues);
 
   void SetCuesInactive();
-
-  already_AddRefed<TextTrackCueList>
-  GetCueListByTimeInterval(media::Interval<double>& aInterval);
 
 private:
   ~TextTrackCueList();
