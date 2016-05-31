@@ -54,13 +54,15 @@ void CSP_LogMessage(const nsAString& aMessage,
 
 /* =============== Constant and Type Definitions ================== */
 
-#define INLINE_STYLE_VIOLATION_OBSERVER_TOPIC   "violated base restriction: Inline Stylesheets will not apply"
-#define INLINE_SCRIPT_VIOLATION_OBSERVER_TOPIC  "violated base restriction: Inline Scripts will not execute"
-#define EVAL_VIOLATION_OBSERVER_TOPIC           "violated base restriction: Code will not be created from strings"
-#define SCRIPT_NONCE_VIOLATION_OBSERVER_TOPIC   "Inline Script had invalid nonce"
-#define STYLE_NONCE_VIOLATION_OBSERVER_TOPIC    "Inline Style had invalid nonce"
-#define SCRIPT_HASH_VIOLATION_OBSERVER_TOPIC    "Inline Script had invalid hash"
-#define STYLE_HASH_VIOLATION_OBSERVER_TOPIC     "Inline Style had invalid hash"
+#define INLINE_STYLE_VIOLATION_OBSERVER_TOPIC        "violated base restriction: Inline Stylesheets will not apply"
+#define INLINE_SCRIPT_VIOLATION_OBSERVER_TOPIC       "violated base restriction: Inline Scripts will not execute"
+#define EVAL_VIOLATION_OBSERVER_TOPIC                "violated base restriction: Code will not be created from strings"
+#define SCRIPT_NONCE_VIOLATION_OBSERVER_TOPIC        "Inline Script had invalid nonce"
+#define STYLE_NONCE_VIOLATION_OBSERVER_TOPIC         "Inline Style had invalid nonce"
+#define SCRIPT_HASH_VIOLATION_OBSERVER_TOPIC         "Inline Script had invalid hash"
+#define STYLE_HASH_VIOLATION_OBSERVER_TOPIC          "Inline Style had invalid hash"
+#define REQUIRE_SRI_SCRIPT_VIOLATION_OBSERVER_TOPIC  "Missing required Subresource Integrity for Script"
+#define REQUIRE_SRI_STYLE_VIOLATION_OBSERVER_TOPIC   "Missing required Subresource Integrity for Style"
 
 // these strings map to the CSPDirectives in nsIContentSecurityPolicy
 // NOTE: When implementing a new directive, you will need to add it here but also
@@ -89,7 +91,9 @@ static const char* CSPStrDirectives[] = {
   "manifest-src",              // MANIFEST_SRC_DIRECTIVE
   "upgrade-insecure-requests", // UPGRADE_IF_INSECURE_DIRECTIVE
   "child-src",                 // CHILD_SRC_DIRECTIVE
-  "block-all-mixed-content"    // BLOCK_ALL_MIXED_CONTENT
+  "block-all-mixed-content",   // BLOCK_ALL_MIXED_CONTENT
+  "require-sri-for"            // REQUIRE_SRI_FOR
+
 };
 
 inline const char* CSP_CSPDirectiveToString(CSPDirective aDir)
@@ -121,6 +125,7 @@ enum CSPKeyword {
   CSP_UNSAFE_EVAL,
   CSP_NONE,
   CSP_NONCE,
+  CSP_REQUIRE_SRI_FOR,
   // CSP_LAST_KEYWORD_VALUE always needs to be the last element in the enum
   // because we use it to calculate the size for the char* array.
   CSP_LAST_KEYWORD_VALUE,
@@ -136,6 +141,7 @@ static const char* CSPStrKeywords[] = {
   "'unsafe-eval'",   // CSP_UNSAFE_EVAL
   "'none'",          // CSP_NONE
   "'nonce-",         // CSP_NONCE
+  "require-sri-for"  // CSP_REQUIRE_SRI_FOR
   // Remember: CSP_HASH is not supposed to be used
 };
 
@@ -479,6 +485,25 @@ class nsUpgradeInsecureDirective : public nsCSPDirective {
       {  MOZ_ASSERT(false, "upgrade-insecure-requests does not hold any srcs"); }
 };
 
+/* ===== nsRequireSRIForDirective ========================= */
+
+class nsRequireSRIForDirective : public nsCSPDirective {
+  public:
+    explicit nsRequireSRIForDirective(CSPDirective aDirective);
+    ~nsRequireSRIForDirective();
+
+    void toString(nsAString& outStr) const;
+
+    void addType(nsContentPolicyType aType)
+      { mTypes.AppendElement(aType); }
+    bool hasType(nsContentPolicyType aType) const;
+    bool restrictsContentType(nsContentPolicyType aType) const;
+    bool allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce) const;
+
+  private:
+    nsTArray<nsContentPolicyType> mTypes;
+};
+
 /* =============== nsCSPPolicy ================== */
 
 class nsCSPPolicy {
@@ -532,6 +557,8 @@ class nsCSPPolicy {
                                           nsAString& outDirective) const;
 
     void getDirectiveAsString(CSPDirective aDir, nsAString& outDirective) const;
+
+    bool requireSRIForType(nsContentPolicyType aContentType);
 
     inline uint32_t getNumDirectives() const
       { return mDirectives.Length(); }
