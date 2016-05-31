@@ -201,9 +201,8 @@ js::DumpPCCounts(JSContext* cx, HandleScript script, Sprinter* sp)
 void
 js::DumpCompartmentPCCounts(JSContext* cx)
 {
-    RootedScript script(cx);
-    for (auto iter = cx->zone()->cellIter<JSScript>(); !iter.done(); iter.next()) {
-        script = iter;
+    for (ZoneCellIter i(cx->zone(), gc::AllocKind::SCRIPT); !i.done(); i.next()) {
+        RootedScript script(cx, i.get<JSScript>());
         if (script->compartment() != cx->compartment())
             continue;
 
@@ -1658,7 +1657,8 @@ js::StopPCCountProfiling(JSContext* cx)
         return;
 
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
-        for (auto script = zone->cellIter<JSScript>(); !script.done(); script.next()) {
+        for (ZoneCellIter i(zone, AllocKind::SCRIPT); !i.done(); i.next()) {
+            JSScript* script = i.get<JSScript>();
             if (script->hasScriptCounts() && script->types()) {
                 if (!vec->append(script))
                     return;
@@ -2025,7 +2025,8 @@ GenerateLcovInfo(JSContext* cx, JSCompartment* comp, GenericPrinter& out)
     }
     Rooted<ScriptVector> topScripts(cx, ScriptVector(cx));
     for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
-        for (auto script = zone->cellIter<JSScript>(); !script.done(); script.next()) {
+        for (ZoneCellIter i(zone, AllocKind::SCRIPT); !i.done(); i.next()) {
+            JSScript* script = i.get<JSScript>();
             if (script->compartment() != comp ||
                 !script->isTopLevel() ||
                 !script->filename())

@@ -2545,15 +2545,16 @@ js::PrintTypes(JSContext* cx, JSCompartment* comp, bool force)
     if (!force && !InferSpewActive(ISpewResult))
         return;
 
-    RootedScript script(cx);
-    for (auto iter = zone->cellIter<JSScript>(); !iter.done(); iter.next()) {
-        script = iter;
+    for (gc::ZoneCellIter i(zone, gc::AllocKind::SCRIPT); !i.done(); i.next()) {
+        RootedScript script(cx, i.get<JSScript>());
         if (script->types())
             script->types()->printTypes(cx, script);
     }
 
-    for (auto group = zone->cellIter<ObjectGroup>(); !group.done(); group.next())
+    for (gc::ZoneCellIter i(zone, gc::AllocKind::OBJECT_GROUP); !i.done(); i.next()) {
+        ObjectGroup* group = i.get<ObjectGroup>();
         group->print();
+    }
 #endif
 }
 
@@ -4424,8 +4425,10 @@ TypeZone::endSweep(JSRuntime* rt)
 void
 TypeZone::clearAllNewScriptsOnOOM()
 {
-    for (auto iter = zone()->cellIter<ObjectGroup>(); !iter.done(); iter.next()) {
-        ObjectGroup* group = iter;
+    for (gc::ZoneCellIter iter(zone(), gc::AllocKind::OBJECT_GROUP);
+         !iter.done(); iter.next())
+    {
+        ObjectGroup* group = iter.get<ObjectGroup>();
         if (!IsAboutToBeFinalizedUnbarriered(&group))
             group->maybeClearNewScriptOnOOM();
     }
@@ -4434,9 +4437,8 @@ TypeZone::clearAllNewScriptsOnOOM()
 AutoClearTypeInferenceStateOnOOM::~AutoClearTypeInferenceStateOnOOM()
 {
     if (oom) {
-        JSRuntime* rt = zone->runtimeFromMainThread();
         zone->setPreservingCode(false);
-        zone->discardJitCode(rt->defaultFreeOp());
+        zone->discardJitCode(zone->runtimeFromMainThread()->defaultFreeOp());
         zone->types.clearAllNewScriptsOnOOM();
     }
 }
