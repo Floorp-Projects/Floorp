@@ -1678,7 +1678,7 @@ nsTableFrame::AncestorsHaveStyleBSize(const nsHTMLReflowState& aParentReflowStat
 {
   WritingMode wm = aParentReflowState.GetWritingMode();
   for (const nsHTMLReflowState* rs = &aParentReflowState;
-       rs && rs->frame; rs = rs->parentReflowState) {
+       rs && rs->frame; rs = rs->mParentReflowState) {
     nsIAtom* frameType = rs->frame->GetType();
     if (IS_TABLE_CELL(frameType)                     ||
         (nsGkAtoms::tableRowFrame      == frameType) ||
@@ -1713,7 +1713,7 @@ nsTableFrame::CheckRequestSpecialBSizeReflow(const nsHTMLReflowState& aReflowSta
       (NS_UNCONSTRAINEDSIZE == aReflowState.ComputedBSize() ||  // no computed bsize
        0                    == aReflowState.ComputedBSize()) &&
       eStyleUnit_Percent == aReflowState.mStylePosition->BSize(wm).GetUnit() && // pct bsize
-      nsTableFrame::AncestorsHaveStyleBSize(*aReflowState.parentReflowState)) {
+      nsTableFrame::AncestorsHaveStyleBSize(*aReflowState.mParentReflowState)) {
     nsTableFrame::RequestSpecialBSizeReflow(aReflowState);
   }
 }
@@ -1727,7 +1727,7 @@ void
 nsTableFrame::RequestSpecialBSizeReflow(const nsHTMLReflowState& aReflowState)
 {
   // notify the frame and its ancestors of the special reflow, stopping at the containing table
-  for (const nsHTMLReflowState* rs = &aReflowState; rs && rs->frame; rs = rs->parentReflowState) {
+  for (const nsHTMLReflowState* rs = &aReflowState; rs && rs->frame; rs = rs->mParentReflowState) {
     nsIAtom* frameType = rs->frame->GetType();
     NS_ASSERTION(IS_TABLE_CELL(frameType) ||
                  nsGkAtoms::tableRowFrame == frameType ||
@@ -2762,7 +2762,7 @@ nsTableFrame::InitChildReflowState(nsHTMLReflowState& aReflowState)
   aReflowState.Init(presContext, nullptr, pCollapseBorder, &padding);
 
   NS_ASSERTION(!mBits.mResizedColumns ||
-               !aReflowState.parentReflowState->mFlags.mSpecialBSizeReflow,
+               !aReflowState.mParentReflowState->mFlags.mSpecialBSizeReflow,
                "should not resize columns on special bsize reflow");
   if (mBits.mResizedColumns) {
     aReflowState.SetIResize(true);

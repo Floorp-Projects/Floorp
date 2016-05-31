@@ -348,7 +348,7 @@ nsRubyBaseContainerFrame::Reflow(nsPresContext* aPresContext,
     }
 
     nsHTMLReflowState* reflowState = new nsHTMLReflowState(
-      aPresContext, *aReflowState.parentReflowState, textContainer,
+      aPresContext, *aReflowState.mParentReflowState, textContainer,
       availSize.ConvertTo(textContainer->GetWritingMode(), lineWM));
     reflowStates.AppendElement(reflowState);
     nsLineLayout* lineLayout = new nsLineLayout(aPresContext,
