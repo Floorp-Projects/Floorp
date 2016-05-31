@@ -123,7 +123,7 @@ ParamTraits<MagicGrallocBufferHandle>::Read(const Message* aMsg,
   if (!aMsg->ReadInt(aIter, &owner) ||
       !aMsg->ReadInt64(aIter, &index) ||
       !aMsg->ReadSize(aIter, &nbytes) ||
-      !aMsg->ReadBytes(aIter, &data, nbytes)) {
+      !aMsg->ReadBytesInto(aIter, &data, nbytes)) {
     printf_stderr("ParamTraits<MagicGrallocBufferHandle>::Read() failed to read a message\n");
     return false;
   }
@@ -139,7 +139,7 @@ ParamTraits<MagicGrallocBufferHandle>::Read(const Message* aMsg,
     }
     // If the GraphicBuffer was shared cross-process, SCM_RIGHTS does
     // the right thing and dup's the fd. If it's shared cross-thread,
-    // SCM_RIGHTS doesn't dup the fd. 
+    // SCM_RIGHTS doesn't dup the fd.
     // But in shared cross-thread, dup fd is not necessary because we get
     // a pointer to the GraphicBuffer directly from SharedBufferManagerParent
     // and don't create a new GraphicBuffer around the fd.
