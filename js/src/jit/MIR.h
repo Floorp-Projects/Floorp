@@ -2383,6 +2383,12 @@ class MSimdBinaryArith
         return new(alloc) MSimdBinaryArith(left, right, op);
     }
 
+    // Create an MSimdBinaryArith instruction and add it to the basic block. Possibly
+    // create and add an equivalent sequence of instructions instead if the
+    // current target doesn't support the requested shift operation directly.
+    static MInstruction* AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinition* left,
+                                      MDefinition* right, Operation op);
+
     AliasSet getAliasSet() const override {
         return AliasSet::None();
     }
