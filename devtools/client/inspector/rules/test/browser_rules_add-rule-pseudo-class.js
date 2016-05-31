@@ -31,32 +31,11 @@ add_task(function* () {
 
 function* runTestData(inspector, view, pseudoClasses) {
   yield setPseudoLocks(inspector, view, pseudoClasses);
-  yield addNewRule(inspector, view);
-  yield testNewRule(view, pseudoClasses, 1);
-  yield resetPseudoLocks(inspector, view);
-}
 
-function* addNewRule(inspector, view) {
-  info("Adding the new rule using the button");
-  view.addRuleButton.click();
-  info("Waiting for rule view to change");
-  let onRuleViewChanged = once(view, "ruleview-changed");
-  yield onRuleViewChanged;
-}
-
-function* testNewRule(view, pseudoClasses, index) {
-  let idRuleEditor = getRuleViewRuleEditor(view, index);
-  let editor = idRuleEditor.selectorText.ownerDocument.activeElement;
   let expected = EXPECTED_SELECTOR + pseudoClasses.join("");
+  yield addNewRuleAndDismissEditor(inspector, view, expected, 1);
 
-  is(editor.value, expected,
-      "Selector editor value is as expected: " + expected);
-
-  info("Entering the escape key");
-  EventUtils.synthesizeKey("VK_ESCAPE", {});
-
-  is(idRuleEditor.selectorText.textContent, expected,
-      "Selector text value is as expected: " + expected);
+  yield resetPseudoLocks(inspector, view);
 }
 
 function* setPseudoLocks(inspector, view, pseudoClasses) {
