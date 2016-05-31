@@ -149,6 +149,10 @@ let requests = {
                                   proc => [proc.id, proc.pid]));
     return {data};
   },
+
+  waitForNoProcesses() {
+    return Promise.all(Array.from(io.processes.values(), proc => proc.exitPromise));
+  },
 };
 
 onmessage = event => {
