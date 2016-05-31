@@ -161,6 +161,7 @@ struct D3DDLLBlacklistingCache
   nsCString mBlacklistedDLL;
 };
 StaticAutoPtr<D3DDLLBlacklistingCache> sD3D11BlacklistingCache;
+StaticAutoPtr<D3DDLLBlacklistingCache> sD3D9BlacklistingCache;
 
 // If a blacklisted DLL is found, return its information, otherwise "".
 static const nsACString&
@@ -283,6 +284,12 @@ FindD3D11BlacklistedDLL() {
                                 "media.wmf.disable-d3d11-for-dlls");
 }
 
+static const nsACString&
+FindD3D9BlacklistedDLL() {
+  return FindDXVABlacklistedDLL(sD3D9BlacklistingCache,
+                                "media.wmf.disable-d3d9-for-dlls");
+}
+
 class CreateDXVAManagerEvent : public Runnable {
 public:
   CreateDXVAManagerEvent(LayersBackend aBackend, nsCString& aFailureReason)
@@ -311,9 +318,16 @@ public:
       failureReason = &secondFailureReason;
       mFailureReason.Append(NS_LITERAL_CSTRING("; "));
     }
-    mDXVA2Manager = DXVA2Manager::CreateD3D9DXVA(*failureReason);
-    // Make sure we include the messages from both attempts (if applicable).
-    mFailureReason.Append(secondFailureReason);
+
+    const nsACString& blacklistedDLL = FindD3D9BlacklistedDLL();
+    if (!blacklistedDLL.IsEmpty()) {
+      mFailureReason.AppendPrintf("D3D9 blacklisted with DLL %s",
+                                  blacklistedDLL);
+    } else {
+      mDXVA2Manager = DXVA2Manager::CreateD3D9DXVA(*failureReason);
+      // Make sure we include the messages from both attempts (if applicable).
+      mFailureReason.Append(secondFailureReason);
+    }
     return NS_OK;
   }
   nsAutoPtr<DXVA2Manager> mDXVA2Manager;
