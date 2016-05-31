@@ -3,25 +3,9 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 from .base import (
-    BaseMarionetteArguments,
-    BaseMarionetteTestRunner,
-    Marionette,
-    MarionetteTest,
-    MarionetteTestResult,
-    MarionetteTextTestRunner,
-    TestManifest,
-    TestResult,
-    TestResultCollection,
-)
-
-from .mixins import (
-    EnduranceArguments,
-    EnduranceTestCaseMixin,
-    HTMLReportingArguments,
-    HTMLReportingTestResultMixin,
-    HTMLReportingTestRunnerMixin,
-    MemoryEnduranceTestCaseMixin,
-    BrowserMobProxyTestCaseMixin,
-    BrowserMobProxyArguments,
-    BrowserMobTestCase,
+    BaseSessionArguments,
+    BaseSessionTestRunner,
+    SessionTest,
+    SessionTestResult,
+    SessionTextTestRunner,
 )

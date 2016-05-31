@@ -5,51 +5,14 @@
 import itertools
 
 from marionette_driver import errors
-from marionette.marionette_test import MarionetteTestCase as TC
+from session.session_test import SessionTestCase as TC
 
 
-class TestProtocol1Errors(TC):
+class TestHelloWorld(TC):
     def setUp(self):
         TC.setUp(self)
-        self.op = self.marionette.protocol
-        self.marionette.protocol = 1
 
     def tearDown(self):
-        self.marionette.protocol = self.op
-        TC.tearDown(self)
-
-    def test_malformed_packet(self):
-        for t in [{}, {"error": None}]:
-            with self.assertRaisesRegexp(errors.MarionetteException, "Malformed packet"):
-                self.marionette._handle_error(t)
-
-    def test_known_error_code(self):
-        with self.assertRaises(errors.NoSuchElementException):
-            self.marionette._handle_error(
-                {"error": {"status": errors.NoSuchElementException.code[0]}})
-
-    def test_known_error_status(self):
-        with self.assertRaises(errors.NoSuchElementException):
-            self.marionette._handle_error(
-                {"error": {"status": errors.NoSuchElementException.status}})
-
-    def test_unknown_error_code(self):
-        with self.assertRaises(errors.MarionetteException):
-            self.marionette._handle_error({"error": {"status": 123456}})
-
-    def test_unknown_error_status(self):
-        with self.assertRaises(errors.MarionetteException):
-            self.marionette._handle_error({"error": {"status": "barbera"}})
-
-
-class TestProtocol2Errors(TC):
-    def setUp(self):
-        TC.setUp(self)
-        self.op = self.marionette.protocol
-        self.marionette.protocol = 2
-
-    def tearDown(self):
-        self.marionette.protocol = self.op
         TC.tearDown(self)
 
     def test_malformed_packet(self):
