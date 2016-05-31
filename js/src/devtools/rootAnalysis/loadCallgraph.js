@@ -53,8 +53,13 @@ function addGCFunction(caller, reason)
 
 function addCallEdge(caller, callee, suppressed)
 {
-    addToKeyedList(calleeGraph, caller, {callee:callee, suppressed:suppressed});
-    addToKeyedList(callerGraph, callee, {caller:caller, suppressed:suppressed});
+    if (!(caller in calleeGraph))
+        calleeGraph[caller] = [];
+    calleeGraph[caller].push({callee:callee, suppressed:suppressed});
+
+    if (!(callee in callerGraph))
+        callerGraph[callee] = [];
+    callerGraph[callee].push({caller:caller, suppressed:suppressed});
 }
 
 // Map from identifier to full "mangled|readable" name. Or sometimes to a
