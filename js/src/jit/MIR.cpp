@@ -1161,6 +1161,16 @@ MSimdSplat::foldsTo(TempAllocator& alloc)
         cst = SimdConstant::SplatX4(v);
         break;
       }
+      case MIRType::Int8x16: {
+        int32_t v = op->toConstant()->toInt32();
+        cst = SimdConstant::SplatX16(v);
+        break;
+      }
+      case MIRType::Int16x8: {
+        int32_t v = op->toConstant()->toInt32();
+        cst = SimdConstant::SplatX8(v);
+        break;
+      }
       case MIRType::Int32x4: {
         int32_t v = op->toConstant()->toInt32();
         cst = SimdConstant::SplatX4(v);
