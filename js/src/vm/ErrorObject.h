@@ -60,8 +60,7 @@ class ErrorObject : public NativeObject
     static const Class classes[JSEXN_LIMIT];
 
     static const Class * classForType(JSExnType type) {
-        MOZ_ASSERT(type != JSEXN_NONE);
-        MOZ_ASSERT(type < JSEXN_LIMIT);
+        MOZ_ASSERT(type < JSEXN_WARN);
         return &classes[type];
     }
 

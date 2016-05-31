@@ -36,7 +36,8 @@ public:
 
   virtual bool
   RecvNotifySessionStateChange(const nsString& aSessionId,
-                               const uint16_t& aState) override;
+                               const uint16_t& aState,
+                               const nsresult& aReason) override;
 
   virtual bool
   RecvNotifyMessage(const nsString& aSessionId,

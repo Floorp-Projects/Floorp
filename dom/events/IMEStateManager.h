@@ -70,6 +70,20 @@ public:
   static void WidgetDestroyed(nsIWidget* aWidget);
 
   /**
+   * GetWidgetForActiveInputContext() returns a widget which IMEStateManager
+   * is managing input context with.  If a widget instance needs to cache
+   * the last input context for nsIWidget::GetInputContext() or something,
+   * it should check if its cache is valid with this method before using it
+   * because if this method returns another instance, it means that
+   * IMEStateManager may have already changed shared input context via the
+   * widget.
+   */
+  static nsIWidget* GetWidgetForActiveInputContext()
+  {
+    return sActiveInputContextWidget;
+  }
+
+  /**
    * SetIMEContextForChildProcess() is called when aTabParent receives
    * SetInputContext() from the remote process.
    */
@@ -237,6 +251,9 @@ protected:
   static StaticRefPtr<nsIContent> sContent;
   static nsPresContext* sPresContext;
   static nsIWidget* sFocusedIMEWidget;
+  // sActiveInputContextWidget is the last widget whose SetInputContext() is
+  // called.
+  static nsIWidget* sActiveInputContextWidget;
   static StaticRefPtr<TabParent> sActiveTabParent;
   // sActiveIMEContentObserver points to the currently active
   // IMEContentObserver.  This is null if there is no focused editor.

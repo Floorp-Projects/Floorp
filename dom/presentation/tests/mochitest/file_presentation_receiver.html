@@ -37,20 +37,21 @@ function testConnectionAvailable() {
     ok(navigator.presentation, "navigator.presentation should be available in OOP receiving pages.");
     ok(navigator.presentation.receiver, "navigator.presentation.receiver should be available in OOP receiving pages.");
 
-    navigator.presentation.receiver.getConnection().then(
-      function(aConnection) {
-        connection = aConnection;
-
+    navigator.presentation.receiver.connectionList.then(
+      function(aList) {
+        is(aList.connections.length, 1, "Should get one conncetion.");
+        connection = aList.connections[0];
         ok(connection.id, "Connection ID should be set: " + connection.id);
-        is(connection.state, "closed", "Connection state at receiver side should be closed by default.");
+        is(connection.state, "connected", "Connection state at receiver side should be connected.");
         aResolve();
       },
       function(aError) {
-        ok(false, "Error occurred when getting the connection: " + aError);
+        ok(false, "Error occurred when getting the connection list: " + aError);
         finish();
         aReject();
       }
     );
+    command({ name: 'trigger-incoming-offer' });
   });
 }
 
@@ -88,15 +89,20 @@ function testConnectionUnavailableDiffOriginInnerIframe() {
   });
 }
 
-function testConnectionReady() {
+function testConnectionListSameObject() {
   return new Promise(function(aResolve, aReject) {
-    connection.onstatechange = function() {
-      connection.onstatechange = null;
-      is(connection.state, "connected", "Connection state should become connected.");
-      aResolve();
-    };
-
-    command({ name: 'trigger-incoming-offer' });
+    is(navigator.presentation.receiver.connectionList, navigator.presentation.receiver.connectionList, "The promise should be the same object.");
+    var promise = navigator.presentation.receiver.connectionList.then(
+      function(aList) {
+        is(connection, aList.connections[0], "The connection from list and the one from |connectionavailable| event should be the same.");
+        aResolve();
+      },
+      function(aError) {
+        ok(false, "Error occurred when getting the connection list: " + aError);
+        finish();
+        aReject();
+      }
+    );
   });
 }
 
@@ -117,8 +123,8 @@ function testIncomingMessage() {
 
 function testTerminateConnection() {
   return new Promise(function(aResolve, aReject) {
-    connection.onstatechange = function() {
-      connection.onstatechange = null;
+    connection.onterminate = function() {
+      connection.onterminate = null;
       is(connection.state, "terminated", "Connection should be terminated.");
       aResolve();
     };
@@ -131,7 +137,7 @@ testConnectionAvailable().
 then(testDefauleRequestIsNull).
 then(testConnectionAvailableSameOriginInnerIframe).
 then(testConnectionUnavailableDiffOriginInnerIframe).
-then(testConnectionReady).
+then(testConnectionListSameObject).
 then(testIncomingMessage).
 then(testTerminateConnection).
 then(finish);

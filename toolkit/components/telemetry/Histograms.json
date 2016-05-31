@@ -1055,6 +1055,14 @@
     "kind": "boolean",
     "description": "2D canvas used"
   },
+  "CANVAS_WEBGL_ACCL_FAILURE_ID": {
+    "alert_emails": ["bgirard@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "keyed": true,
+    "description": "Track the failure IDs that lead us to reject attempting to create an accelerated context. CANVAS_WEBGL_FAILURE_ID reports the overall WebGL status with the attempt to fallback.",
+    "bug_numbers": [1272808]
+  },
   "CANVAS_WEBGL_FAILURE_ID": {
     "alert_emails": ["bgirard@mozilla.com"],
     "expires_in_version": "never",

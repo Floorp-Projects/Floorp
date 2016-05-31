@@ -1,0 +1,81 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test seekToNextFrame of media files that should play OK</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+  <script type="text/javascript" src="manifest.js"></script>
+</head>
+<body>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+var manager = new MediaTestManager;
+
+function startTest(test, token) {
+  var v = document.createElement('video');
+  v.preload = "metadata";
+  v.token = token;
+  v.seenSeeking = false;
+  v.seenEnded = false;
+
+  var handler = {
+    "ontimeout": function() {
+      Log(token, "timed out: ended=" + v.seenEnded);
+    }
+  };
+  manager.started(token, handler);
+
+  v.src = test.name;
+  v.name = test.name;
+
+  var onLoadedmetadata = function(test, v) { return function() {
+    v.seekToNextFrame();
+  }}(test, v);
+
+  var finish = function() {
+    v.finished = true;
+    v.removeEventListener("loadedmetadata", onLoadedmetadata, false);
+    v.removeEventListener("seeking", onSeeking, false);
+    v.removeEventListener("seeked", onSeeked, false);
+    removeNodeAndSource(v);
+    manager.finished(v.token);
+  }
+
+  var onEnded = function(test, v) { return function() {
+    v.seenEnded = true;
+    finish();
+  }}(test, v);
+
+  var onSeeking = function(test, v) { return function() {
+    ok(!v.seenSeeking, "Should yet receive seeking event.")
+    v.seenSeeking = true;
+  }}(test, v);
+
+  var onSeeked = function(test, v) { return function() {
+    ok(v.seenSeeking, "Should have already received seeking event.")
+    v.seenSeeking = false;
+    v.seekToNextFrame();
+  }}(test, v);
+
+  v.addEventListener("loadedmetadata", onLoadedmetadata, false);
+  v.addEventListener("seeking", onSeeking, false);
+  v.addEventListener("seeked", onSeeked, false);
+  v.addEventListener("ended", onEnded, false);
+
+  document.body.appendChild(v);
+}
+
+SimpleTest.waitForExplicitFinish();
+SpecialPowers.pushPrefEnv(
+  {
+    "set": [["media.seekToNextFrame.enabled", true ]]
+  },
+  function() {
+    manager.runTests(gSeekToNextFrameTests, startTest);
+  });
+
+</script>
+</pre>
+</body>
+</html>

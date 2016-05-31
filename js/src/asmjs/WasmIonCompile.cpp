@@ -67,10 +67,10 @@ class FunctionCompiler
     typedef Vector<ControlFlowPatchVector, 0, SystemAllocPolicy> ControlFlowPatchsVector;
 
   public:
-    class Call;
+    class CallArgs;
 
   private:
-    typedef Vector<Call*, 0, SystemAllocPolicy> CallVector;
+    typedef Vector<CallArgs*, 0, SystemAllocPolicy> CallArgsVector;
 
     const ModuleGeneratorData& mg_;
     IonExprIter                iter_;
@@ -86,7 +86,7 @@ class FunctionCompiler
     MInstruction*              dummyIns_;
 
     MBasicBlock*               curBlock_;
-    CallVector                 callStack_;
+    CallArgsVector             callStack_;
     uint32_t                   maxStackArgBytes_;
 
     uint32_t                   loopDepth_;
@@ -764,7 +764,7 @@ class FunctionCompiler
     // arguments are stored above the maximum depth clobbered by a child
     // expression.
 
-    class Call
+    class CallArgs
     {
         uint32_t lineOrBytecode_;
         ABIArgGenerator abi_;
@@ -777,7 +777,7 @@ class FunctionCompiler
         friend class FunctionCompiler;
 
       public:
-        Call(FunctionCompiler& f, uint32_t lineOrBytecode)
+        CallArgs(FunctionCompiler& f, uint32_t lineOrBytecode)
           : lineOrBytecode_(lineOrBytecode),
             maxChildStackBytes_(0),
             spIncrement_(0),
@@ -785,25 +785,25 @@ class FunctionCompiler
         { }
     };
 
-    bool startCallArgs(Call* call)
+    bool startCallArgs(CallArgs* args)
     {
         // Always push calls to maintain the invariant that if we're inDeadCode
         // in finishCallArgs, we have something to pop.
-        return callStack_.append(call);
+        return callStack_.append(args);
     }
 
-    bool passArg(MDefinition* argDef, ValType type, Call* call)
+    bool passArg(MDefinition* argDef, ValType type, CallArgs* args)
     {
         if (inDeadCode())
             return true;
 
-        ABIArg arg = call->abi_.next(ToMIRType(type));
+        ABIArg arg = args->abi_.next(ToMIRType(type));
         if (arg.kind() != ABIArg::Stack)
-            return call->regArgs_.append(MAsmJSCall::Arg(arg.reg(), argDef));
+            return args->regArgs_.append(MAsmJSCall::Arg(arg.reg(), argDef));
 
         auto* mir = MAsmJSPassStackArg::New(alloc(), arg.offsetFromArgBase(), argDef);
         curBlock_->add(mir);
-        return call->stackArgs_.append(mir);
+        return args->stackArgs_.append(mir);
     }
 
     void propagateMaxStackArgBytes(uint32_t stackBytes)
@@ -815,38 +815,38 @@ class FunctionCompiler
         }
 
         // Non-outermost call
-        Call* outer = callStack_.back();
+        CallArgs* outer = callStack_.back();
         outer->maxChildStackBytes_ = Max(outer->maxChildStackBytes_, stackBytes);
         if (stackBytes && !outer->stackArgs_.empty())
             outer->childClobbers_ = true;
     }
 
-    void finishCallArgs(Call* call)
+    void finishCallArgs(CallArgs* args)
     {
-        MOZ_ALWAYS_TRUE(callStack_.popCopy() == call);
+        MOZ_ALWAYS_TRUE(callStack_.popCopy() == args);
 
         if (inDeadCode()) {
-            propagateMaxStackArgBytes(call->maxChildStackBytes_);
+            propagateMaxStackArgBytes(args->maxChildStackBytes_);
             return;
         }
 
-        uint32_t stackBytes = call->abi_.stackBytesConsumedSoFar();
+        uint32_t stackBytes = args->abi_.stackBytesConsumedSoFar();
 
-        if (call->childClobbers_) {
-            call->spIncrement_ = AlignBytes(call->maxChildStackBytes_, AsmJSStackAlignment);
-            for (MAsmJSPassStackArg* stackArg : call->stackArgs_)
-                stackArg->incrementOffset(call->spIncrement_);
-            stackBytes += call->spIncrement_;
+        if (args->childClobbers_) {
+            args->spIncrement_ = AlignBytes(args->maxChildStackBytes_, AsmJSStackAlignment);
+            for (MAsmJSPassStackArg* stackArg : args->stackArgs_)
+                stackArg->incrementOffset(args->spIncrement_);
+            stackBytes += args->spIncrement_;
         } else {
-            call->spIncrement_ = 0;
-            stackBytes = Max(stackBytes, call->maxChildStackBytes_);
+            args->spIncrement_ = 0;
+            stackBytes = Max(stackBytes, args->maxChildStackBytes_);
         }
 
         propagateMaxStackArgBytes(stackBytes);
     }
 
   private:
-    bool callPrivate(MAsmJSCall::Callee callee, const Call& call, ExprType ret, MDefinition** def)
+    bool callPrivate(MAsmJSCall::Callee callee, const CallArgs& args, ExprType ret, MDefinition** def)
     {
         if (inDeadCode()) {
             *def = nullptr;
@@ -860,8 +860,8 @@ class FunctionCompiler
           case MAsmJSCall::Callee::Builtin:  kind = CallSiteDesc::Register; break;
         }
 
-        MAsmJSCall* ins = MAsmJSCall::New(alloc(), CallSiteDesc(call.lineOrBytecode_, kind),
-                                          callee, call.regArgs_, ToMIRType(ret), call.spIncrement_);
+        MAsmJSCall* ins = MAsmJSCall::New(alloc(), CallSiteDesc(args.lineOrBytecode_, kind),
+                                          callee, args.regArgs_, ToMIRType(ret), args.spIncrement_);
         if (!ins)
             return false;
 
@@ -871,46 +871,39 @@ class FunctionCompiler
     }
 
   public:
-    bool internalCall(const Sig& sig, uint32_t funcIndex, const Call& call, MDefinition** def)
+    bool internalCall(const Sig& sig, uint32_t funcIndex, const CallArgs& args, MDefinition** def)
     {
-        return callPrivate(MAsmJSCall::Callee(funcIndex), call, sig.ret(), def);
+        return callPrivate(MAsmJSCall::Callee(funcIndex), args, sig.ret(), def);
     }
 
-    bool funcPtrCall(const Sig& sig, uint32_t length, uint32_t globalDataOffset, MDefinition* index,
-                     const Call& call, MDefinition** def)
+    bool funcPtrCall(uint32_t sigIndex, uint32_t length, uint32_t globalDataOffset,
+                     MDefinition* index, const CallArgs& args, MDefinition** def)
     {
         if (inDeadCode()) {
             *def = nullptr;
             return true;
         }
 
-        MAsmJSLoadFuncPtr* ptrFun;
+        MAsmJSCall::Callee callee;
         if (mg().kind == ModuleKind::AsmJS) {
             MOZ_ASSERT(IsPowerOfTwo(length));
             MConstant* mask = MConstant::New(alloc(), Int32Value(length - 1));
             curBlock_->add(mask);
             MBitAnd* maskedIndex = MBitAnd::NewAsmJS(alloc(), index, mask, MIRType::Int32);
             curBlock_->add(maskedIndex);
-            ptrFun = MAsmJSLoadFuncPtr::New(alloc(), maskedIndex, globalDataOffset);
+            MInstruction* ptrFun = MAsmJSLoadFuncPtr::New(alloc(), maskedIndex, globalDataOffset);
             curBlock_->add(ptrFun);
+            callee = MAsmJSCall::Callee(ptrFun);
         } else {
-            // For wasm code, as a space optimization, the ModuleGenerator does not allocate a
-            // table for signatures which do not contain any indirectly-callable functions.
-            // However, these signatures may still be called (it is not a validation error)
-            // so we instead have a flag alwaysThrow which throws an exception instead of loading
-            // the function pointer from the (non-existant) array.
-            MOZ_ASSERT(!length || length == mg_.numTableElems);
-            bool alwaysThrow = !length;
-
-            ptrFun = MAsmJSLoadFuncPtr::New(alloc(), index, mg_.numTableElems, alwaysThrow,
-                                            globalDataOffset);
+            MInstruction* ptrFun = MAsmJSLoadFuncPtr::New(alloc(), index, length, globalDataOffset);
             curBlock_->add(ptrFun);
+            callee = MAsmJSCall::Callee(ptrFun, sigIndex);
         }
 
-        return callPrivate(MAsmJSCall::Callee(ptrFun), call, sig.ret(), def);
+        return callPrivate(callee, args, mg_.sigs[sigIndex].ret(), def);
     }
 
-    bool ffiCall(unsigned globalDataOffset, const Call& call, ExprType ret, MDefinition** def)
+    bool ffiCall(unsigned globalDataOffset, const CallArgs& args, ExprType ret, MDefinition** def)
     {
         if (inDeadCode()) {
             *def = nullptr;
@@ -920,12 +913,12 @@ class FunctionCompiler
         MAsmJSLoadFFIFunc* ptrFun = MAsmJSLoadFFIFunc::New(alloc(), globalDataOffset);
         curBlock_->add(ptrFun);
 
-        return callPrivate(MAsmJSCall::Callee(ptrFun), call, ret, def);
+        return callPrivate(MAsmJSCall::Callee(ptrFun), args, ret, def);
     }
 
-    bool builtinCall(SymbolicAddress builtin, const Call& call, ValType type, MDefinition** def)
+    bool builtinCall(SymbolicAddress builtin, const CallArgs& args, ValType type, MDefinition** def)
     {
-        return callPrivate(MAsmJSCall::Callee(builtin), call, ToExprType(type), def);
+        return callPrivate(MAsmJSCall::Callee(builtin), args, ToExprType(type), def);
     }
 
     /*********************************************** Control flow generation */
@@ -1656,26 +1649,26 @@ EmitReturn(FunctionCompiler& f)
 }
 
 static bool
-EmitCallArgs(FunctionCompiler& f, const Sig& sig, FunctionCompiler::Call* ionCall)
+EmitCallArgs(FunctionCompiler& f, const Sig& sig, FunctionCompiler::CallArgs* args)
 {
-    if (!f.startCallArgs(ionCall))
+    if (!f.startCallArgs(args))
         return false;
 
     MDefinition* arg;
-    const ValTypeVector& args = sig.args();
-    uint32_t numArgs = args.length();
+    const ValTypeVector& argTypes = sig.args();
+    uint32_t numArgs = argTypes.length();
     for (size_t i = 0; i < numArgs; ++i) {
-        ValType argType = args[i];
+        ValType argType = argTypes[i];
         if (!f.iter().readCallArg(argType, numArgs, i, &arg))
             return false;
-        if (!f.passArg(arg, argType, ionCall))
+        if (!f.passArg(arg, argType, args))
             return false;
     }
 
     if (!f.iter().readCallArgsEnd(numArgs))
         return false;
 
-    f.finishCallArgs(ionCall);
+    f.finishCallArgs(args);
     return true;
 }
 
@@ -1691,15 +1684,15 @@ EmitCall(FunctionCompiler& f, uint32_t callOffset)
 
     const Sig& sig = *f.mg().funcSigs[calleeIndex];
 
-    FunctionCompiler::Call ionCall(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, &ionCall))
+    FunctionCompiler::CallArgs args(f, lineOrBytecode);
+    if (!EmitCallArgs(f, sig, &args))
         return false;
 
     if (!f.iter().readCallReturn(sig.ret()))
         return false;
 
     MDefinition* def;
-    if (!f.internalCall(sig, calleeIndex, ionCall, &def))
+    if (!f.internalCall(sig, calleeIndex, args, &def))
         return false;
 
     if (IsVoid(sig.ret()))
@@ -1721,8 +1714,8 @@ EmitCallIndirect(FunctionCompiler& f, uint32_t callOffset)
 
     const Sig& sig = f.mg().sigs[sigIndex];
 
-    FunctionCompiler::Call ionCall(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, &ionCall))
+    FunctionCompiler::CallArgs args(f, lineOrBytecode);
+    if (!EmitCallArgs(f, sig, &args))
         return false;
 
     MDefinition* callee;
@@ -1732,9 +1725,12 @@ EmitCallIndirect(FunctionCompiler& f, uint32_t callOffset)
     if (!f.iter().readCallReturn(sig.ret()))
         return false;
 
+    const TableModuleGeneratorData& table = f.mg().kind == ModuleKind::AsmJS
+                                            ? f.mg().asmJSSigToTable[sigIndex]
+                                            : f.mg().wasmTable;
+
     MDefinition* def;
-    const TableModuleGeneratorData& table = f.mg().sigToTable[sigIndex];
-    if (!f.funcPtrCall(sig, table.numElems, table.globalDataOffset, callee, ionCall, &def))
+    if (!f.funcPtrCall(sigIndex, table.numElems, table.globalDataOffset, callee, args, &def))
         return false;
 
     if (IsVoid(sig.ret()))
@@ -1757,15 +1753,15 @@ EmitCallImport(FunctionCompiler& f, uint32_t callOffset)
     const ImportModuleGeneratorData& import = f.mg().imports[importIndex];
     const Sig& sig = *import.sig;
 
-    FunctionCompiler::Call ionCall(f, lineOrBytecode);
-    if (!EmitCallArgs(f, sig, &ionCall))
+    FunctionCompiler::CallArgs args(f, lineOrBytecode);
+    if (!EmitCallArgs(f, sig, &args))
         return false;
 
     if (!f.iter().readCallReturn(sig.ret()))
         return false;
 
     MDefinition* def;
-    if (!f.ffiCall(import.globalDataOffset, ionCall, sig.ret(), &def))
+    if (!f.ffiCall(import.globalDataOffset, args, sig.ret(), &def))
         return false;
 
     if (IsVoid(sig.ret()))
@@ -2187,21 +2183,21 @@ EmitUnaryMathBuiltinCall(FunctionCompiler& f, uint32_t callOffset, SymbolicAddre
 {
     uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode(callOffset);
 
-    FunctionCompiler::Call call(f, lineOrBytecode);
-    if (!f.startCallArgs(&call))
+    FunctionCompiler::CallArgs args(f, lineOrBytecode);
+    if (!f.startCallArgs(&args))
         return false;
 
     MDefinition* input;
     if (!f.iter().readUnary(operandType, &input))
         return false;
 
-    if (!f.passArg(input, operandType, &call))
+    if (!f.passArg(input, operandType, &args))
         return false;
 
-    f.finishCallArgs(&call);
+    f.finishCallArgs(&args);
 
     MDefinition* def;
-    if (!f.builtinCall(callee, call, operandType, &def))
+    if (!f.builtinCall(callee, args, operandType, &def))
         return false;
 
     f.iter().setResult(def);
@@ -2214,8 +2210,8 @@ EmitBinaryMathBuiltinCall(FunctionCompiler& f, uint32_t callOffset, SymbolicAddr
 {
     uint32_t lineOrBytecode = f.readCallSiteLineOrBytecode(callOffset);
 
-    FunctionCompiler::Call call(f, lineOrBytecode);
-    if (!f.startCallArgs(&call))
+    FunctionCompiler::CallArgs args(f, lineOrBytecode);
+    if (!f.startCallArgs(&args))
         return false;
 
     MDefinition* lhs;
@@ -2223,16 +2219,16 @@ EmitBinaryMathBuiltinCall(FunctionCompiler& f, uint32_t callOffset, SymbolicAddr
     if (!f.iter().readBinary(operandType, &lhs, &rhs))
         return false;
 
-    if (!f.passArg(lhs, operandType, &call))
+    if (!f.passArg(lhs, operandType, &args))
         return false;
 
-    if (!f.passArg(rhs, operandType, &call))
+    if (!f.passArg(rhs, operandType, &args))
         return false;
 
-    f.finishCallArgs(&call);
+    f.finishCallArgs(&args);
 
     MDefinition* def;
-    if (!f.builtinCall(callee, call, operandType, &def))
+    if (!f.builtinCall(callee, args, operandType, &def))
         return false;
 
     f.iter().setResult(def);
@@ -3456,8 +3452,10 @@ wasm::IonCompileFunction(IonCompileTask* task)
         if (!lir)
             return false;
 
+        uint32_t sigIndex = task->mg().funcSigIndex(func.index());
+
         CodeGenerator codegen(&mir, lir, &results.masm());
-        if (!codegen.generateAsmJS(&results.offsets()))
+        if (!codegen.generateWasm(sigIndex, &results.offsets()))
             return false;
     }
 

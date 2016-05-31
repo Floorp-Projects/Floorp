@@ -149,11 +149,13 @@ interface nsIFrameLoader : nsISupports
   /**
    * Print the current document.
    *
+   * @param aOuterWindowID the ID of the outer window to print
    * @param aPrintSettings optional print settings to use; printSilent can be
    *                       set to prevent prompting.
    * @param aProgressListener optional print progress listener.
    */
-  void print(in nsIPrintSettings aPrintSettings,
+  void print(in unsigned long long aOuterWindowID,
+             in nsIPrintSettings aPrintSettings,
              in nsIWebProgressListener aProgressListener);
 
   /**

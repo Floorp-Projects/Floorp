@@ -9,7 +9,7 @@
  * For syntax details, see js/src/js.msg.
  */
 
-MSG_DEF(CTYPESMSG_PLACEHOLDER_0, 0, JSEXN_NONE, NULL)
+MSG_DEF(CTYPESMSG_PLACEHOLDER_0, 0, JSEXN_ERR, NULL)
 
 /* type conversion */
 MSG_DEF(CTYPESMSG_CONV_ERROR_ARG,3, JSEXN_TYPEERR, "can't pass {0} to argument {1} of {2}")

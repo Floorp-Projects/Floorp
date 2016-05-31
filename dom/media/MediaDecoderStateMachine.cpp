@@ -37,6 +37,7 @@
 #include "nsDeque.h"
 #include "prenv.h"
 
+#include "AccurateSeekTask.h"
 #include "AudioSegment.h"
 #include "DOMMediaStream.h"
 #include "ImageContainer.h"
@@ -46,6 +47,7 @@
 #include "MediaDecoderStateMachine.h"
 #include "MediaShutdownManager.h"
 #include "MediaTimer.h"
+#include "NextFrameSeekTask.h"
 #include "TimeUnits.h"
 #include "VideoSegment.h"
 #include "VideoUtils.h"
@@ -1394,9 +1396,9 @@ void MediaDecoderStateMachine::InitiateVideoDecodeRecoverySeek()
   CancelMediaDecoderReaderWrapperCallback();
 
   // Create a new SeekTask instance for the incoming seek task.
-  mSeekTask = SeekTask::CreateSeekTask(mDecoderID, OwnerThread(),
-                                       mReader.get(), Move(seekJob),
-                                       mInfo, Duration(), GetMediaTime());
+  mSeekTask = new AccurateSeekTask(mDecoderID, OwnerThread(),
+                                   mReader.get(), Move(seekJob),
+                                   mInfo, Duration(), GetMediaTime());
 
   mOnSeekingStart.Notify(MediaDecoderEventVisibility::Suppressed);
 
@@ -1464,6 +1466,11 @@ MediaDecoderStateMachine::Seek(SeekTarget aTarget)
   // We need to be able to seek in some way
   if (!mMediaSeekable && !mMediaSeekableOnlyInBufferedRanges) {
     DECODER_WARN("Seek() function should not be called on a non-seekable state machine");
+    return MediaDecoder::SeekPromise::CreateAndReject(/* aIgnored = */ true, __func__);
+  }
+
+  if (aTarget.IsNextFrame() && !HasVideo()) {
+    DECODER_WARN("Ignore a NextFrameSeekTask on a media file without video track.");
     return MediaDecoder::SeekPromise::CreateAndReject(/* aIgnored = */ true, __func__);
   }
 
@@ -1579,9 +1586,17 @@ MediaDecoderStateMachine::InitiateSeek(SeekJob aSeekJob)
   CancelMediaDecoderReaderWrapperCallback();
 
   // Create a new SeekTask instance for the incoming seek task.
-  mSeekTask = SeekTask::CreateSeekTask(mDecoderID, OwnerThread(),
-                                       mReader.get(), Move(aSeekJob),
-                                       mInfo, Duration(), GetMediaTime());
+  if (aSeekJob.mTarget.IsAccurate() || aSeekJob.mTarget.IsFast()) {
+    mSeekTask = new AccurateSeekTask(mDecoderID, OwnerThread(),
+                                     mReader.get(), Move(aSeekJob),
+                                     mInfo, Duration(), GetMediaTime());
+  } else if (aSeekJob.mTarget.IsNextFrame()) {
+    mSeekTask = new NextFrameSeekTask(mDecoderID, OwnerThread(), mReader.get(),
+                                      Move(aSeekJob), mInfo, Duration(),
+                                      GetMediaTime(), AudioQueue(), VideoQueue());
+  } else {
+    MOZ_ASSERT(false, "Cannot handle this seek task.");
+  }
 
   // Stop playback now to ensure that while we're outside the monitor
   // dispatching SeekingStarted, playback doesn't advance and mess with

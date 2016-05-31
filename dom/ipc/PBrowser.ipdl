@@ -798,9 +798,10 @@ child:
     /**
      * Tell the child to print the current page with the given settings.
      *
+     * @param aOuterWindowID the ID of the outer window to print
      * @param aPrintData the serialized settings to print with
      */
-    async Print(PrintData aPrintData);
+    async Print(uint64_t aOuterWindowID, PrintData aPrintData);
 
 /*
  * FIXME: write protocol!

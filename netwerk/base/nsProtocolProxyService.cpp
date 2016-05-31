@@ -1135,6 +1135,7 @@ class nsAsyncBridgeRequest final  : public nsPACManCallback
      nsAsyncBridgeRequest()
         : mMutex("nsDeprecatedCallback")
         , mCondVar(mMutex, "nsDeprecatedCallback")
+        , mStatus(NS_OK)
         , mCompleted(false)
     {
     }

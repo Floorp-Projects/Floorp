@@ -5928,7 +5928,7 @@ WorkerPrivate::ReportError(JSContext* aCx, const char* aFallbackMessage,
     columnNumber = aReport->tokenOffset();
     flags = aReport->flags;
     errorNumber = aReport->errorNumber;
-    MOZ_ASSERT(aReport->exnType >= JSEXN_NONE && aReport->exnType < JSEXN_LIMIT);
+    MOZ_ASSERT(aReport->exnType >= JSEXN_FIRST && aReport->exnType < JSEXN_LIMIT);
     exnType = JSExnType(aReport->exnType);
   }
   else {

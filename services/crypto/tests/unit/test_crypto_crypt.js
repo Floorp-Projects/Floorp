@@ -3,23 +3,7 @@ Cu.importGlobalProperties(['crypto']);
 
 var cryptoSvc = new WeaveCrypto();
 
-function run_test() {
-
-  if ("makeSECItem" in cryptoSvc)   // Only for js-ctypes WeaveCrypto.
-    test_makeSECItem();
-
-  if (this.gczeal) {
-    _("Running crypto tests with gczeal(2).");
-    gczeal(2);
-  }
-  test_bug_617650();
-  test_encrypt_decrypt();
-  test_key_memoization();
-  if (this.gczeal)
-    gczeal(0);
-}
-
-function test_key_memoization() {
+add_task(function* test_key_memoization() {
   let cryptoGlobal = cryptoSvc._getCrypto();
   let oldImport = cryptoGlobal.subtle.importKey;
   if (!oldImport) {
@@ -50,46 +34,19 @@ function test_key_memoization() {
 
   // Un-swizzle.
   cryptoGlobal.subtle.importKey = oldImport;
-}
-
-function multiple_decrypts(iterations) {
-  let iv = cryptoSvc.generateRandomIV();
-  let key = cryptoSvc.generateRandomKey();
-  let cipherText = cryptoSvc.encrypt("Hello, world.", key, iv);
-
-  for (let i = 0; i < iterations; ++i) {
-    let clearText = cryptoSvc.decrypt(cipherText, key, iv);
-    do_check_eq(clearText + " " + i, "Hello, world. " + i);
-  }
-  _("Done with multiple_decrypts.");
-}
-
-function test_bug_617650() {
-  if (this.gczeal) {
-    gczeal(2);
-    // Few iterations, because gczeal(2) is expensive... and makes it fail much faster!
-    _("gczeal set to 2; attempting 10 iterations of multiple_decrypts.");
-    multiple_decrypts(10);
-    gczeal(0);
-  } else {
-    // We can't use gczeal on non-debug builds, so try lots of reps instead.
-    _("No gczeal (non-debug build?); attempting 10,000 iterations of multiple_decrypts.");
-    multiple_decrypts(10000);
-  }
-}
+});
 
 // Just verify that it gets populated with the correct bytes.
-function test_makeUint8Array() {
+add_task(function* test_makeUint8Array() {
   Components.utils.import("resource://gre/modules/ctypes.jsm");
 
   let item1 = cryptoSvc.makeUint8Array("abcdefghi", false);
   do_check_true(item1);
   for (let i = 0; i < 8; ++i)
     do_check_eq(item1[i], "abcdefghi".charCodeAt(i));
-}
+});
 
-function test_encrypt_decrypt() {
-
+add_task(function* test_encrypt_decrypt() {
   // First, do a normal run with expected usage... Generate a random key and
   // iv, encrypt and decrypt a string.
   var iv = cryptoSvc.generateRandomIV();
@@ -253,4 +210,4 @@ function test_encrypt_decrypt() {
     failure = true;
   }
   do_check_true(failure);
-}
+});

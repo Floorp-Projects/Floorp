@@ -1,0 +1,13 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<head>
+<script>
+function done() {
+  document.documentElement.removeAttribute("class");
+}
+</script>
+</head>
+<body onload="setTimeout(done, 3);">
+  <video src="video_rotated.mp4" onended="done()" autoplay="true">
+</body>
+</html>
