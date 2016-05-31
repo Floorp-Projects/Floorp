@@ -969,11 +969,11 @@ CalculateContainingBlockSizeForAbsolutes(WritingMode aWM,
     // the correct padding area with the legend taken into account.
     const nsHTMLReflowState* aLastRS = &aReflowState;
     const nsHTMLReflowState* lastButOneRS = &aReflowState;
-    while (aLastRS->parentReflowState &&
-           aLastRS->parentReflowState->frame->GetContent() == frame->GetContent() &&
-           aLastRS->parentReflowState->frame->GetType() != nsGkAtoms::fieldSetFrame) {
+    while (aLastRS->mParentReflowState &&
+           aLastRS->mParentReflowState->frame->GetContent() == frame->GetContent() &&
+           aLastRS->mParentReflowState->frame->GetType() != nsGkAtoms::fieldSetFrame) {
       lastButOneRS = aLastRS;
-      aLastRS = aLastRS->parentReflowState;
+      aLastRS = aLastRS->mParentReflowState;
     }
     if (aLastRS != &aReflowState) {
       // Scrollbars need to be specifically excluded, if present, because they are outside the
@@ -1550,7 +1550,7 @@ nsBlockFrame::ComputeFinalSize(const nsHTMLReflowState& aReflowState,
 
   if (NS_UNCONSTRAINEDSIZE != aReflowState.ComputedBSize()
       && (GetParent()->GetType() != nsGkAtoms::columnSetFrame ||
-          aReflowState.parentReflowState->AvailableBSize() == NS_UNCONSTRAINEDSIZE)) {
+          aReflowState.mParentReflowState->AvailableBSize() == NS_UNCONSTRAINEDSIZE)) {
     ComputeFinalBSize(aReflowState, &aState.mReflowStatus,
                       aState.mBCoord + nonCarriedOutBDirMargin,
                       borderPadding, finalSize, aState.mConsumedBSize);
@@ -1956,8 +1956,8 @@ nsBlockFrame::PropagateFloatDamage(nsBlockReflowState& aState,
                                    nscoord aDeltaBCoord)
 {
   nsFloatManager *floatManager = aState.mReflowState.mFloatManager;
-  NS_ASSERTION((aState.mReflowState.parentReflowState &&
-                aState.mReflowState.parentReflowState->mFloatManager == floatManager) ||
+  NS_ASSERTION((aState.mReflowState.mParentReflowState &&
+                aState.mReflowState.mParentReflowState->mFloatManager == floatManager) ||
                 aState.mReflowState.mBlockDelta == 0, "Bad block delta passed in");
 
   // Check to see if there are any floats; if there aren't, there can't
