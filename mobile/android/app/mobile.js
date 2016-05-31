@@ -582,11 +582,7 @@ pref("apz.overscroll.enabled", true);
 #endif
 
 pref("layers.progressive-paint", true);
-#ifdef NIGHTLY_BUILD
-pref("layers.low-precision-buffer", false);
-#else
 pref("layers.low-precision-buffer", true);
-#endif
 pref("layers.low-precision-resolution", "0.25");
 pref("layers.low-precision-opacity", "1.0");
 // We want to limit layers for two reasons:
@@ -744,10 +740,6 @@ pref("layout.framevisibility.numscrollportwidths", 1);
 pref("layout.framevisibility.numscrollportheights", 1);
 
 pref("layers.enable-tiles", true);
-#ifdef NIGHTLY_BUILD
-pref("layers.tiles.fade-in.enabled", true);
-pref("layers.tiles.fade-in.duration-ms", 250);
-#endif
 
 // Enable the dynamic toolbar
 pref("browser.chrome.dynamictoolbar", true);
