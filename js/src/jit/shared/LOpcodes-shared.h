@@ -20,6 +20,8 @@
     _(Float32)                      \
     _(SimdBox)                      \
     _(SimdUnbox)                    \
+    _(SimdSplatX16)                 \
+    _(SimdSplatX8)                  \
     _(SimdSplatX4)                  \
     _(Simd128Int)                   \
     _(Simd128Float)                 \

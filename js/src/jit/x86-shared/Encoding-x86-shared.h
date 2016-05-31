@@ -217,6 +217,8 @@ enum TwoByteOpcodeID {
     OP2_MOVDQ_VsdWsd    = 0x6F,
     OP2_MOVDQ_VdqWdq    = 0x6F,
     OP2_PSHUFD_VdqWdqIb = 0x70,
+    OP2_PSHUFLW_VdqWdqIb = 0x70,
+    OP2_PSHUFHW_VdqWdqIb = 0x70,
     OP2_PSLLW_UdqIb     = 0x71,
     OP2_PSRAW_UdqIb     = 0x71,
     OP2_PSRLW_UdqIb     = 0x71,
@@ -281,6 +283,7 @@ enum TwoByteOpcodeID {
 };
 
 enum ThreeByteOpcodeID {
+    OP3_PSHUFB_VdqWdq   = 0x00,
     OP3_ROUNDSS_VsdWsd  = 0x0A,
     OP3_ROUNDSD_VsdWsd  = 0x0B,
     OP3_BLENDVPS_VdqWdq = 0x14,
