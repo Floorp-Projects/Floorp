@@ -1705,13 +1705,13 @@ class MSimdConvert
         }
     }
 
-  public:
-    INSTRUCTION_HEADER(SimdConvert)
-
     static MSimdConvert* New(TempAllocator& alloc, MDefinition* obj, MIRType toType, SimdSign sign)
     {
-        return new(alloc) MSimdConvert(obj, toType, sign);
+        return new (alloc) MSimdConvert(obj, toType, sign);
     }
+
+  public:
+    INSTRUCTION_HEADER(SimdConvert)
 
     // Create a MSimdConvert instruction and add it to the basic block.
     // Possibly create and add an equivalent sequence of instructions instead if
@@ -2288,14 +2288,14 @@ class MSimdBinaryComp
             setCommutative();
     }
 
-  public:
-    INSTRUCTION_HEADER(SimdBinaryComp)
-
     static MSimdBinaryComp* New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
                                 Operation op, SimdSign sign)
     {
-        return new(alloc) MSimdBinaryComp(left, right, op, sign);
+        return new (alloc) MSimdBinaryComp(left, right, op, sign);
     }
+
+  public:
+    INSTRUCTION_HEADER(SimdBinaryComp)
 
     // Create a MSimdBinaryComp or an equivalent sequence of instructions
     // supported by the current target.
@@ -2379,13 +2379,14 @@ class MSimdBinaryArith
             setCommutative();
     }
 
-  public:
-    INSTRUCTION_HEADER(SimdBinaryArith)
     static MSimdBinaryArith* New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
                                  Operation op)
     {
-        return new(alloc) MSimdBinaryArith(left, right, op);
+        return new (alloc) MSimdBinaryArith(left, right, op);
     }
+
+  public:
+    INSTRUCTION_HEADER(SimdBinaryArith)
 
     // Create an MSimdBinaryArith instruction and add it to the basic block. Possibly
     // create and add an equivalent sequence of instructions instead if the
@@ -2558,14 +2559,14 @@ class MSimdShift
         setMovable();
     }
 
-  public:
-    INSTRUCTION_HEADER(SimdShift)
-
     static MSimdShift* New(TempAllocator& alloc, MDefinition* left, MDefinition* right,
                            Operation op)
     {
-        return new(alloc) MSimdShift(left, right, op);
+        return new (alloc) MSimdShift(left, right, op);
     }
+
+  public:
+    INSTRUCTION_HEADER(SimdShift)
 
     // Create an MSimdShift instruction and add it to the basic block. Possibly
     // create and add an equivalent sequence of instructions instead if the
