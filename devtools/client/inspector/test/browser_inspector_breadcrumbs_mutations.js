@@ -149,7 +149,8 @@ const TEST_DATA = [{
 
 add_task(function* () {
   let {inspector} = yield openInspectorForURL(TEST_URI);
-  let container = inspector.panelDoc.getElementById("inspector-breadcrumbs");
+  let breadcrumbs = inspector.panelDoc.getElementById("inspector-breadcrumbs");
+  let container = breadcrumbs.querySelector(".html-arrowscrollbox-inner");
   let win = container.ownerDocument.defaultView;
 
   for (let {desc, setup, run, shouldRefresh, output} of TEST_DATA) {

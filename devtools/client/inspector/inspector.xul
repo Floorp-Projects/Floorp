@@ -168,14 +168,9 @@
       </html:div>
       <vbox flex="1" id="markup-box">
       </vbox>
-      <toolbar id="inspector-breadcrumbs-toolbar"
-        class="devtools-toolbar"
-        nowindowdrag="true">
-        <arrowscrollbox id="inspector-breadcrumbs"
-          class="breadcrumbs-widget-container"
-          flex="1" orient="horizontal"
-          clicktoscroll="true"/>
-      </toolbar>
+      <html:div id="inspector-breadcrumbs-toolbar" class="devtools-toolbar">
+        <html:div id="inspector-breadcrumbs" class="breadcrumbs-widget-container"/>
+      </html:div>
     </vbox>
     <splitter class="devtools-side-splitter"/>
     <tabbox id="inspector-sidebar" handleCtrlTab="false" class="devtools-sidebar-tabs" hidden="true">
