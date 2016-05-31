@@ -95,7 +95,8 @@ static_assert(JSEXN_ERR == 0 &&
               JSProto_Error + JSEXN_TYPEERR == JSProto_TypeError &&
               JSProto_Error + JSEXN_URIERR == JSProto_URIError &&
               JSProto_Error + JSEXN_DEBUGGEEWOULDRUN == JSProto_DebuggeeWouldRun &&
-              JSEXN_DEBUGGEEWOULDRUN + 1 == JSEXN_LIMIT,
+              JSEXN_DEBUGGEEWOULDRUN + 1 == JSEXN_WARN &&
+              JSEXN_WARN + 1 == JSEXN_LIMIT,
               "GetExceptionProtoKey and ExnTypeFromProtoKey require that "
               "each corresponding JSExnType and JSProtoKey value be separated "
               "by the same constant value");
@@ -104,7 +105,7 @@ static inline JSProtoKey
 GetExceptionProtoKey(JSExnType exn)
 {
     MOZ_ASSERT(JSEXN_ERR <= exn);
-    MOZ_ASSERT(exn < JSEXN_LIMIT);
+    MOZ_ASSERT(exn < JSEXN_WARN);
     return JSProtoKey(JSProto_Error + int(exn));
 }
 
@@ -113,7 +114,7 @@ ExnTypeFromProtoKey(JSProtoKey key)
 {
     JSExnType type = static_cast<JSExnType>(key - JSProto_Error);
     MOZ_ASSERT(type >= JSEXN_ERR);
-    MOZ_ASSERT(type < JSEXN_LIMIT);
+    MOZ_ASSERT(type < JSEXN_WARN);
     return type;
 }
 
