@@ -441,7 +441,7 @@ AudioStream::Pause()
     return;
   }
 
-  if (mState != STARTED && mState != RUNNING) {
+  if (mState != STARTED) {
     mState = STOPPED; // which also tells async OpenCubeb not to start, just init
     return;
   }
@@ -625,11 +625,6 @@ AudioStream::DataCallback(void* aBuffer, long aFrames)
 
   // NOTE: wasapi (others?) can call us back *after* stop()/Shutdown() (mState == SHUTDOWN)
   // Bug 996162
-
-  // callback tells us cubeb succeeded initializing
-  if (mState == STARTED) {
-    mState = RUNNING;
-  }
 
   if (mInRate == mOutRate) {
     GetUnprocessed(writer);
