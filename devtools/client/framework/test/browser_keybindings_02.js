@@ -13,6 +13,10 @@ var {Toolbox} = require("devtools/client/framework/toolbox");
 var strings = Services.strings.createBundle(
   "chrome://devtools/locale/toolbox.properties");
 
+function getZoomValue() {
+  return parseFloat(Services.prefs.getCharPref("devtools.toolbox.zoomValue"));
+}
+
 add_task(function* () {
   info("Create a test tab and open the toolbox");
   let tab = yield addTab(URL);
@@ -41,9 +45,9 @@ function zoomWithKey(toolbox, key) {
     return;
   }
   info("Zooming with key: " + key);
-  let currentZoom = toolbox.zoomValue;
-  synthesizeKeyShortcut(shortcut);
-  isnot(toolbox.zoomValue, currentZoom, "The zoom level was changed in the toolbox");
+  let currentZoom = getZoomValue();
+  synthesizeKeyShortcut(shortcut, toolbox.win);
+  isnot(getZoomValue(), currentZoom, "The zoom level was changed in the toolbox");
 }
 
 function* checkKeyBindings(toolbox) {
