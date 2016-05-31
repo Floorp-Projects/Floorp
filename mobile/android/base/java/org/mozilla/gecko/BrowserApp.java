@@ -2315,11 +2315,7 @@ public class BrowserApp extends GeckoApp
 
         final boolean isUserSearchTerm = selectedTab != null &&
                 !TextUtils.isEmpty(selectedTab.getUserRequested());
-        if (isUserSearchTerm && SwitchBoard.isInExperiment(getContext(), Experiments.SEARCH_TERM)) {
-            showBrowserSearchAfterAnimation(animator);
-        } else {
-            showHomePagerWithAnimator(panelId, null, animator);
-        }
+        showHomePagerWithAnimator(panelId, null, animator);
 
         animator.start();
         Telemetry.startUISession(TelemetryContract.Session.AWESOMESCREEN);
