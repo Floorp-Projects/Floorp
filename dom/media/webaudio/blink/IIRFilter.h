@@ -26,6 +26,8 @@ public:
         float* magResponse,
         float* phaseResponse);
 
+    bool buffersAreZero();
+
 private:
     // Filter memory
     //
