@@ -775,6 +775,7 @@ if CONFIG['MOZ_ANDROID_GCM']:
         CONFIG['ANDROID_PLAY_SERVICES_BASE_AAR_LIB'],
         CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB'],
         CONFIG['ANDROID_PLAY_SERVICES_GCM_AAR_LIB'],
+        CONFIG['ANDROID_PLAY_SERVICES_MEASUREMENT_AAR_LIB'],
     ]
 
     if CONFIG['ANDROID_PLAY_SERVICES_BASE_AAR']:
@@ -792,11 +793,14 @@ if CONFIG['MOZ_ANDROID_GCM']:
         ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_GCM_AAR_RES']]
         resjar.generated_sources += ['com/google/android/gms/gcm/R.java']
 
+    if CONFIG['ANDROID_PLAY_SERVICES_MEASUREMENT_AAR']:
+        ANDROID_EXTRA_PACKAGES += ['com.google.android.gms.measurement']
+        ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_MEASUREMENT_AAR_RES']]
+        resjar.generated_sources += ['com/google/android/gms/measurement/R.java']
+
 if CONFIG['MOZ_INSTALL_TRACKING']:
     gbjar.extra_jars += [
         CONFIG['ANDROID_PLAY_SERVICES_ADS_AAR_LIB'],
-        CONFIG['ANDROID_PLAY_SERVICES_ANALYTICS_AAR_LIB'],
-        CONFIG['ANDROID_PLAY_SERVICES_APPINDEXING_AAR_LIB'],
         CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR_LIB'],
     ]
 
@@ -804,17 +808,6 @@ if CONFIG['MOZ_INSTALL_TRACKING']:
         ANDROID_EXTRA_PACKAGES += ['com.google.android.gms.ads']
         ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_ADS_AAR_RES']]
         resjar.generated_sources += ['com/google/android/gms/ads/R.java']
-
-    if CONFIG['ANDROID_PLAY_SERVICES_ANALYTICS_AAR']:
-        ANDROID_EXTRA_PACKAGES += ['com.google.android.gms.analytics']
-        ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_ANALYTICS_AAR_RES']]
-        resjar.generated_sources += ['com/google/android/gms/analytics/R.java']
-
-    if CONFIG['ANDROID_PLAY_SERVICES_APPINDEXING_AAR']:
-        ANDROID_EXTRA_PACKAGES += ['com.google.android.gms.appindexing']
-        ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_PLAY_SERVICES_APPINDEXING_AAR_RES']]
-        resjar.generated_sources += ['com/google/android/gms/appindexing/R.java']
-
 
     if CONFIG['ANDROID_PLAY_SERVICES_BASEMENT_AAR']:
         ANDROID_EXTRA_PACKAGES += ['com.google.android.gms']

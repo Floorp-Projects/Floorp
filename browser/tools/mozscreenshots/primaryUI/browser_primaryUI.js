@@ -8,7 +8,9 @@ add_task(function* capture() {
   if (!shouldCapture()) {
     return;
   }
-  let sets = ["TabsInTitlebar", "Tabs", "WindowSize", "Toolbars", "LightweightThemes"];
 
+  requestLongerTimeout(20);
+
+  let sets = ["TabsInTitlebar", "Tabs", "WindowSize", "Toolbars", "LightweightThemes"];
   yield TestRunner.start(sets, "primaryUI");
 });

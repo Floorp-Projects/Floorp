@@ -254,7 +254,8 @@ function waitForNetworkEvents(aMonitor, aGetRequests, aPostRequests = 0) {
     let url = networkInfo.request.url;
     updateProgressForURL(url, event);
 
-    info("> Current state: " + JSON.stringify(progress, null, 2));
+    // Uncomment this to get a detailed progress logging (when debugging a test)
+    // info("> Current state: " + JSON.stringify(progress, null, 2));
 
     // There are 15 updates which need to be fired for a request to be
     // considered finished. The "requestPostData" packet isn't fired for

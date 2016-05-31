@@ -1467,13 +1467,15 @@ var StyleRuleActor = protocol.ActorClassWithSpec(styleRuleSpec, {
       if (newCssRule) {
         let ruleEntry = this.pageStyle.findEntryMatchingRule(node, newCssRule);
         if (ruleEntry.length === 1) {
-          isMatching = true;
           ruleProps =
             this.pageStyle.getAppliedProps(node, ruleEntry,
                                            { matchedSelectors: true });
         } else {
           ruleProps = this.pageStyle.getNewAppliedProps(node, newCssRule);
         }
+
+        isMatching = ruleProps.entries.some((ruleProp) =>
+          ruleProp.matchedSelectors.length > 0);
       }
 
       return { ruleProps, isMatching };

@@ -24,20 +24,24 @@ add_task(function* () {
 
   assertMarkupViewIsLoaded(inspector);
 
-  // Verify that the frame list button is visible and populated
+  // Verify that the frame map button is empty at the moment.
   let btn = toolbox.doc.getElementById("command-button-frames");
-  ok(!btn.firstChild.getAttribute("hidden"),
-     "The frame list button is visible");
-  let frameBtns = Array.slice(
-    btn.firstChild.querySelectorAll("[data-window-id]"));
-  is(frameBtns.length, 2, "We have both frames in the list");
-  frameBtns.sort(function (a, b) {
-    return a.getAttribute("label").localeCompare(b.getAttribute("label"));
+  ok(!btn.firstChild, "The frame list button doesn't have any children");
+
+  // Open frame menu and wait till it's available on the screen.
+  let menu = toolbox.showFramesMenu({target: btn});
+  yield once(menu, "open");
+
+  // Verify that the menu is popuplated.
+  let frames = menu.menuitems.slice();
+  is(frames.length, 2, "We have both frames in the menu");
+
+  frames.sort(function (a, b) {
+    return a.label.localeCompare(b.label);
   });
-  is(frameBtns[0].getAttribute("label"), FrameURL,
-     "Got top level document in the list");
-  is(frameBtns[1].getAttribute("label"), URL,
-     "Got iframe document in the list");
+
+  is(frames[0].label, FrameURL, "Got top level document in the list");
+  is(frames[1].label, URL, "Got iframe document in the list");
 
   // Listen to will-navigate to check if the view is empty
   let willNavigate = toolbox.target.once("will-navigate").then(() => {
@@ -50,7 +54,7 @@ add_task(function* () {
   let newRoot = inspector.once("new-root");
   yield selectNode("#top", inspector);
   info("Select the iframe");
-  frameBtns[0].click();
+  frames[0].click();
 
   yield willNavigate;
   yield newRoot;
@@ -59,9 +63,9 @@ add_task(function* () {
 
   // Verify we are on page one
   ok(!(yield testActor.hasNode("iframe")),
-     "We not longer have access to the top frame elements");
+    "We not longer have access to the top frame elements");
   ok((yield testActor.hasNode("#frame")),
-     "But now have direct access to the iframe elements");
+    "But now have direct access to the iframe elements");
 
   // On page 2 load, verify we have the right content
   assertMarkupViewIsLoaded(inspector);
