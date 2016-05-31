@@ -37,6 +37,45 @@
   padding: 0px;
   border-bottom-width: 0px;
   border-top-width: 1px;
+  display: block;
+  position: relative;
+}
+
+#inspector-breadcrumbs-toolbar,
+#inspector-breadcrumbs-toolbar * {
+  box-sizing: border-box;
+}
+
+#inspector-breadcrumbs {
+  display: flex;
+
+  /* Break out of the XUL flexbox, so the splitter can still shrink the
+     markup view even if the contents of the breadcrumbs are wider than
+     the new width. */
+  position: absolute;
+  top: 0;
+  left: 0;
+  bottom: 0;
+  right: 0;
+}
+
+#inspector-breadcrumbs .scrollbutton-up,
+#inspector-breadcrumbs .scrollbutton-down {
+  flex: 0;
+  display: flex;
+  align-items: center;
+}
+
+#inspector-breadcrumbs .html-arrowscrollbox-inner {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+#inspector-breadcrumbs .breadcrumbs-widget-item {
+  white-space: nowrap;
+  flex-shrink: 0;
+  font: message-box;
 }
 
 /* Expand/collapse panel toolbar button */
