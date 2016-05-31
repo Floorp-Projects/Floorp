@@ -16,6 +16,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/EnumSet.h"
+#include "mozilla/Maybe.h"
 #include "nsCOMPtr.h"
 #include "nsContainerFrame.h"
 #include "nsPoint.h"
@@ -3141,6 +3142,10 @@ public:
   void AddInactiveScrollPort(const nsRect& aRect);
 
   bool IsEmpty() const;
+
+  int32_t ZIndex() const override;
+  void SetOverrideZIndex(int32_t aZIndex);
+
   const nsRegion& HitRegion() { return mHitRegion; }
   const nsRegion& MaybeHitRegion() { return mMaybeHitRegion; }
   const nsRegion& DispatchToContentHitRegion() { return mDispatchToContentHitRegion; }
@@ -3169,6 +3174,11 @@ private:
   // These are points where panning is vertical, as determined by the touch-action
   // property. Always contained in the union of mHitRegion and mMaybeHitRegion.
   nsRegion mVerticalPanRegion;
+  // If these event regions are for an inactive scroll frame, the z-index of
+  // this display item is overridden to be the largest z-index of the content
+  // in the scroll frame. This ensures that the event regions item remains on
+  // top of the content after sorting items by z-index.
+  mozilla::Maybe<int32_t> mOverrideZIndex;
 };
 
 /**
