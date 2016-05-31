@@ -1338,28 +1338,42 @@ MSimdBinaryComp::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinit
     MOZ_ASSERT(IsSimdType(opType));
     bool IsEquality = op == equal || op == notEqual;
 
-    if (!SupportsUint32x4Compares && sign == SimdSign::Unsigned && !IsEquality) {
-        MOZ_ASSERT(opType == MIRType::Int32x4);
+    // Check if this is an unsupported unsigned compare that needs to be biased.
+    // If so, put the bias vector in `bias`.
+    if (sign == SimdSign::Unsigned && !IsEquality) {
+        MInstruction* bias = nullptr;
+
         // This is an order comparison of Uint32x4 vectors which are not supported on this target.
         // Simply offset |left| and |right| by INT_MIN, then do a signed comparison.
-        MInstruction* bias =
-          MSimdConstant::New(alloc, SimdConstant::SplatX4(int32_t(0x80000000)), opType);
-        addTo->add(bias);
+        if (!SupportsUint32x4Compares && opType == MIRType::Int32x4)
+            bias = MSimdConstant::New(alloc, SimdConstant::SplatX4(int32_t(0x80000000)), opType);
+        else if (!SupportsUint16x8Compares && opType == MIRType::Int16x8)
+            bias = MSimdConstant::New(alloc, SimdConstant::SplatX8(int16_t(0x8000)), opType);
+        if (!SupportsUint8x16Compares && opType == MIRType::Int8x16)
+            bias = MSimdConstant::New(alloc, SimdConstant::SplatX16(int8_t(0x80)), opType);
 
-        // Add the bias.
-        MInstruction* bleft =
-          MSimdBinaryArith::AddLegalized(alloc, addTo, left, bias, MSimdBinaryArith::Op_add);
-        MInstruction* bright =
-          MSimdBinaryArith::AddLegalized(alloc, addTo, right, bias, MSimdBinaryArith::Op_add);
+        if (bias) {
+            addTo->add(bias);
 
-        // Do the equivalent signed comparison.
-        MInstruction* result = MSimdBinaryComp::New(alloc, bleft, bright, op, SimdSign::Signed);
-        addTo->add(result);
+            // Add the bias.
+            MInstruction* bleft =
+              MSimdBinaryArith::AddLegalized(alloc, addTo, left, bias, MSimdBinaryArith::Op_add);
+            MInstruction* bright =
+              MSimdBinaryArith::AddLegalized(alloc, addTo, right, bias, MSimdBinaryArith::Op_add);
 
-        return result;
+            // Do the equivalent signed comparison.
+            MInstruction* result =
+              MSimdBinaryComp::New(alloc, bleft, bright, op, SimdSign::Signed);
+            addTo->add(result);
+
+            return result;
+        }
     }
 
-    if (!SupportsUint32x4Compares && sign == SimdSign::Unsigned && opType == MIRType::Int32x4) {
+    if (sign == SimdSign::Unsigned &&
+        ((!SupportsUint32x4Compares && opType == MIRType::Int32x4) ||
+         (!SupportsUint16x8Compares && opType == MIRType::Int16x8) ||
+         (!SupportsUint8x16Compares && opType == MIRType::Int8x16))) {
         // The sign doesn't matter for equality tests. Flip it to make the
         // backend assertions happy.
         MOZ_ASSERT(IsEquality);

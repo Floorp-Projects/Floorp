@@ -3402,6 +3402,126 @@ CodeGeneratorX86Shared::visitSimdShuffleX4(LSimdShuffleX4* ins)
 }
 
 void
+CodeGeneratorX86Shared::visitSimdBinaryCompIx16(LSimdBinaryCompIx16* ins)
+{
+    static const SimdConstant allOnes = SimdConstant::SplatX16(-1);
+
+    FloatRegister lhs = ToFloatRegister(ins->lhs());
+    Operand rhs = ToOperand(ins->rhs());
+    FloatRegister output = ToFloatRegister(ins->output());
+    MOZ_ASSERT_IF(!Assembler::HasAVX(), output == lhs);
+
+    ScratchSimd128Scope scratch(masm);
+
+    MSimdBinaryComp::Operation op = ins->operation();
+    switch (op) {
+      case MSimdBinaryComp::greaterThan:
+        masm.vpcmpgtb(rhs, lhs, output);
+        return;
+      case MSimdBinaryComp::equal:
+        masm.vpcmpeqb(rhs, lhs, output);
+        return;
+      case MSimdBinaryComp::lessThan:
+        // src := rhs
+        if (rhs.kind() == Operand::FPREG)
+            masm.moveSimd128Int(ToFloatRegister(ins->rhs()), scratch);
+        else
+            masm.loadAlignedSimd128Int(rhs, scratch);
+
+        // src := src > lhs (i.e. lhs < rhs)
+        // Improve by doing custom lowering (rhs is tied to the output register)
+        masm.vpcmpgtb(ToOperand(ins->lhs()), scratch, scratch);
+        masm.moveSimd128Int(scratch, output);
+        return;
+      case MSimdBinaryComp::notEqual:
+        // Ideally for notEqual, greaterThanOrEqual, and lessThanOrEqual, we
+        // should invert the comparison by, e.g. swapping the arms of a select
+        // if that's what it's used in.
+        masm.loadConstantSimd128Int(allOnes, scratch);
+        masm.vpcmpeqb(rhs, lhs, output);
+        masm.bitwiseXorSimd128(Operand(scratch), output);
+        return;
+      case MSimdBinaryComp::greaterThanOrEqual:
+        // src := rhs
+        if (rhs.kind() == Operand::FPREG)
+            masm.moveSimd128Int(ToFloatRegister(ins->rhs()), scratch);
+        else
+            masm.loadAlignedSimd128Int(rhs, scratch);
+        masm.vpcmpgtb(ToOperand(ins->lhs()), scratch, scratch);
+        masm.loadConstantSimd128Int(allOnes, output);
+        masm.bitwiseXorSimd128(Operand(scratch), output);
+        return;
+      case MSimdBinaryComp::lessThanOrEqual:
+        // lhs <= rhs is equivalent to !(rhs < lhs), which we compute here.
+        masm.loadConstantSimd128Int(allOnes, scratch);
+        masm.vpcmpgtb(rhs, lhs, output);
+        masm.bitwiseXorSimd128(Operand(scratch), output);
+        return;
+    }
+    MOZ_CRASH("unexpected SIMD op");
+}
+
+void
+CodeGeneratorX86Shared::visitSimdBinaryCompIx8(LSimdBinaryCompIx8* ins)
+{
+    static const SimdConstant allOnes = SimdConstant::SplatX8(-1);
+
+    FloatRegister lhs = ToFloatRegister(ins->lhs());
+    Operand rhs = ToOperand(ins->rhs());
+    FloatRegister output = ToFloatRegister(ins->output());
+    MOZ_ASSERT_IF(!Assembler::HasAVX(), output == lhs);
+
+    ScratchSimd128Scope scratch(masm);
+
+    MSimdBinaryComp::Operation op = ins->operation();
+    switch (op) {
+      case MSimdBinaryComp::greaterThan:
+        masm.vpcmpgtw(rhs, lhs, output);
+        return;
+      case MSimdBinaryComp::equal:
+        masm.vpcmpeqw(rhs, lhs, output);
+        return;
+      case MSimdBinaryComp::lessThan:
+        // src := rhs
+        if (rhs.kind() == Operand::FPREG)
+            masm.moveSimd128Int(ToFloatRegister(ins->rhs()), scratch);
+        else
+            masm.loadAlignedSimd128Int(rhs, scratch);
+
+        // src := src > lhs (i.e. lhs < rhs)
+        // Improve by doing custom lowering (rhs is tied to the output register)
+        masm.vpcmpgtw(ToOperand(ins->lhs()), scratch, scratch);
+        masm.moveSimd128Int(scratch, output);
+        return;
+      case MSimdBinaryComp::notEqual:
+        // Ideally for notEqual, greaterThanOrEqual, and lessThanOrEqual, we
+        // should invert the comparison by, e.g. swapping the arms of a select
+        // if that's what it's used in.
+        masm.loadConstantSimd128Int(allOnes, scratch);
+        masm.vpcmpeqw(rhs, lhs, output);
+        masm.bitwiseXorSimd128(Operand(scratch), output);
+        return;
+      case MSimdBinaryComp::greaterThanOrEqual:
+        // src := rhs
+        if (rhs.kind() == Operand::FPREG)
+            masm.moveSimd128Int(ToFloatRegister(ins->rhs()), scratch);
+        else
+            masm.loadAlignedSimd128Int(rhs, scratch);
+        masm.vpcmpgtw(ToOperand(ins->lhs()), scratch, scratch);
+        masm.loadConstantSimd128Int(allOnes, output);
+        masm.bitwiseXorSimd128(Operand(scratch), output);
+        return;
+      case MSimdBinaryComp::lessThanOrEqual:
+        // lhs <= rhs is equivalent to !(rhs < lhs), which we compute here.
+        masm.loadConstantSimd128Int(allOnes, scratch);
+        masm.vpcmpgtw(rhs, lhs, output);
+        masm.bitwiseXorSimd128(Operand(scratch), output);
+        return;
+    }
+    MOZ_CRASH("unexpected SIMD op");
+}
+
+void
 CodeGeneratorX86Shared::visitSimdBinaryCompIx4(LSimdBinaryCompIx4* ins)
 {
     static const SimdConstant allOnes = SimdConstant::SplatX4(-1);
