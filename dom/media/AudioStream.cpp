@@ -500,13 +500,6 @@ AudioStream::GetPositionInFramesUnlocked()
 }
 
 bool
-AudioStream::IsPaused()
-{
-  MonitorAutoLock mon(mMonitor);
-  return mState == STOPPED;
-}
-
-bool
 AudioStream::IsValidAudioFormat(Chunk* aChunk)
 {
   if (aChunk->Rate() != mInRate) {
