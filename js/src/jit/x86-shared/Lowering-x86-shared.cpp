@@ -794,8 +794,6 @@ void
 LIRGeneratorX86Shared::visitSimdSelect(MSimdSelect* ins)
 {
     MOZ_ASSERT(IsSimdType(ins->type()));
-    MOZ_ASSERT(ins->type() == MIRType::Int32x4 || ins->type() == MIRType::Float32x4,
-               "Unknown SIMD kind when doing bitwise operations");
 
     LSimdSelect* lins = new(alloc()) LSimdSelect;
     MDefinition* r0 = ins->getOperand(0);

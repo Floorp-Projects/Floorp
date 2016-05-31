@@ -5005,22 +5005,20 @@ class CheckSimdScalarArgs
 class CheckSimdSelectArgs
 {
     Type formalType_;
+    Type maskType_;
 
   public:
-    explicit CheckSimdSelectArgs(SimdType t) : formalType_(t) {}
+    explicit CheckSimdSelectArgs(SimdType t) : formalType_(t), maskType_(GetBooleanSimdType(t)) {}
 
     bool operator()(FunctionValidator& f, ParseNode* arg, unsigned argIndex, Type actualType) const
     {
-        if (argIndex == 0) {
-            // First argument of select is a bool32x4 mask.
-            if (!(actualType <= Type::Bool32x4))
-                return f.failf(arg, "%s is not a subtype of Bool32x4", actualType.toChars());
-            return true;
-        }
+        // The first argument is the boolean selector, the next two are the
+        // values to choose from.
+        Type wantedType = argIndex == 0 ? maskType_ : formalType_;
 
-        if (!(actualType <= formalType_)) {
+        if (!(actualType <= wantedType)) {
             return f.failf(arg, "%s is not a subtype of %s", actualType.toChars(),
-                           formalType_.toChars());
+                           wantedType.toChars());
         }
         return true;
     }
