@@ -29,9 +29,9 @@ import java.lang.ref.WeakReference;
 /**
  * An activity-lifecycle delegate for uploading the core ping.
  */
-public class TelemetryCorePingUploadDelegate extends BrowserAppDelegate {
+public class TelemetryCorePingDelegate extends BrowserAppDelegate {
     private static final String LOGTAG = StringUtils.safeSubstring(
-            "Gecko" + TelemetryCorePingUploadDelegate.class.getSimpleName(), 0, 23);
+            "Gecko" + TelemetryCorePingDelegate.class.getSimpleName(), 0, 23);
 
     private static final String PREF_IS_FIRST_RUN = "telemetry-isFirstRun";
 
