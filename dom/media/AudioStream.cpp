@@ -411,18 +411,20 @@ void
 AudioStream::Pause()
 {
   MonitorAutoLock mon(mMonitor);
+  MOZ_ASSERT(mState != INITIALIZED, "Must be Start()ed.");
+  MOZ_ASSERT(mState != STOPPED, "Already Pause()ed.");
+  MOZ_ASSERT(mState != SHUTDOWN, "Already Shutdown()ed.");
 
-  if (mState == ERRORED) {
+  // Do nothing if we are already drained or errored.
+  if (mState == DRAINED || mState == ERRORED) {
     return;
   }
 
-  if (mState != STARTED) {
-    mState = STOPPED; // which also tells async OpenCubeb not to start, just init
-    return;
-  }
-
-  int r = InvokeCubeb(cubeb_stream_stop);
-  if (mState != ERRORED && r == CUBEB_OK) {
+  if (InvokeCubeb(cubeb_stream_stop) != CUBEB_OK) {
+    mState = ERRORED;
+  } else if (mState != DRAINED && mState != ERRORED) {
+    // Don't transition to other states if we are already
+    // drained or errored.
     mState = STOPPED;
   }
 }
@@ -431,12 +433,20 @@ void
 AudioStream::Resume()
 {
   MonitorAutoLock mon(mMonitor);
-  if (mState != STOPPED) {
+  MOZ_ASSERT(mState != INITIALIZED, "Must be Start()ed.");
+  MOZ_ASSERT(mState != STARTED, "Already Start()ed.");
+  MOZ_ASSERT(mState != SHUTDOWN, "Already Shutdown()ed.");
+
+  // Do nothing if we are already drained or errored.
+  if (mState == DRAINED || mState == ERRORED) {
     return;
   }
 
-  int r = InvokeCubeb(cubeb_stream_start);
-  if (mState != ERRORED && r == CUBEB_OK) {
+  if (InvokeCubeb(cubeb_stream_start) != CUBEB_OK) {
+    mState = ERRORED;
+  } else if (mState != DRAINED && mState != ERRORED) {
+    // Don't transition to other states if we are already
+    // drained or errored.
     mState = STARTED;
   }
 }
