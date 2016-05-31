@@ -2538,6 +2538,8 @@ static inline Scalar::Type
 SimdExprTypeToViewType(ValType type, unsigned* defaultNumElems)
 {
     switch (type) {
+        case ValType::I8x16: *defaultNumElems = 16; return Scalar::Int8x16;
+        case ValType::I16x8: *defaultNumElems = 8; return Scalar::Int16x8;
         case ValType::I32x4: *defaultNumElems = 4; return Scalar::Int32x4;
         case ValType::F32x4: *defaultNumElems = 4; return Scalar::Float32x4;
         default:              break;
@@ -2822,15 +2824,17 @@ EmitSimdOp(FunctionCompiler& f, ValType type, SimdOperation op, SimdSign sign)
         return EmitSimdConvert(f, ValType::I32x4, type, SimdSign::Signed);
       case SimdOperation::Fn_fromUint32x4:
         return EmitSimdConvert(f, ValType::I32x4, type, SimdSign::Unsigned);
+      case SimdOperation::Fn_fromInt8x16Bits:
+      case SimdOperation::Fn_fromUint8x16Bits:
+        return EmitSimdBitcast(f, ValType::I8x16, type);
+      case SimdOperation::Fn_fromUint16x8Bits:
+      case SimdOperation::Fn_fromInt16x8Bits:
+        return EmitSimdBitcast(f, ValType::I16x8, type);
       case SimdOperation::Fn_fromInt32x4Bits:
       case SimdOperation::Fn_fromUint32x4Bits:
         return EmitSimdBitcast(f, ValType::I32x4, type);
       case SimdOperation::Fn_fromFloat32x4Bits:
-      case SimdOperation::Fn_fromInt8x16Bits:
         return EmitSimdBitcast(f, ValType::F32x4, type);
-      case SimdOperation::Fn_fromInt16x8Bits:
-      case SimdOperation::Fn_fromUint8x16Bits:
-      case SimdOperation::Fn_fromUint16x8Bits:
       case SimdOperation::Fn_fromFloat64x2Bits:
         MOZ_CRASH("NYI");
     }

@@ -598,6 +598,14 @@ CodeGeneratorX64::loadSimd(Scalar::Type type, unsigned numElems, const Operand& 
         }
         break;
       }
+      case Scalar::Int8x16:
+        MOZ_ASSERT(numElems = 16, "unexpected partial load");
+        masm.loadUnalignedSimd128Int(srcAddr, out);
+        break;
+      case Scalar::Int16x8:
+        MOZ_ASSERT(numElems = 8, "unexpected partial load");
+        masm.loadUnalignedSimd128Int(srcAddr, out);
+        break;
       case Scalar::Int8:
       case Scalar::Uint8:
       case Scalar::Int16:
@@ -698,6 +706,8 @@ CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
       case Scalar::Float32:   masm.loadFloat32(srcAddr, ToFloatRegister(out)); break;
       case Scalar::Float64:   masm.loadDouble(srcAddr, ToFloatRegister(out)); break;
       case Scalar::Float32x4:
+      case Scalar::Int8x16:
+      case Scalar::Int16x8:
       case Scalar::Int32x4:   MOZ_CRASH("SIMD loads should be handled in emitSimdLoad");
       case Scalar::Uint8Clamped:
       case Scalar::MaxTypedArrayViewType:
@@ -744,6 +754,14 @@ CodeGeneratorX64::storeSimd(Scalar::Type type, unsigned numElems, FloatRegister 
         }
         break;
       }
+      case Scalar::Int8x16:
+        MOZ_ASSERT(numElems == 16, "unexpected partial store");
+        masm.storeUnalignedSimd128Int(in, dstAddr);
+        break;
+      case Scalar::Int16x8:
+        MOZ_ASSERT(numElems == 8, "unexpected partial store");
+        masm.storeUnalignedSimd128Int(in, dstAddr);
+        break;
       case Scalar::Int8:
       case Scalar::Uint8:
       case Scalar::Int16:
@@ -845,6 +863,8 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
           case Scalar::Float32:
           case Scalar::Float64:
           case Scalar::Float32x4:
+          case Scalar::Int8x16:
+          case Scalar::Int16x8:
           case Scalar::Int32x4:
           case Scalar::Uint8Clamped:
           case Scalar::MaxTypedArrayViewType:
@@ -871,6 +891,8 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
             masm.storeUncanonicalizedDouble(ToFloatRegister(value), dstAddr);
             break;
           case Scalar::Float32x4:
+          case Scalar::Int8x16:
+          case Scalar::Int16x8:
           case Scalar::Int32x4:
             MOZ_CRASH("SIMD stores must be handled in emitSimdStore");
           case Scalar::Uint8Clamped:
