@@ -57,10 +57,15 @@ this.PlacesTestUtils = Object.freeze({
       if (typeof place.uri == "string") {
         place.uri = NetUtil.newURI(place.uri);
       } else if (place.uri instanceof URL) {
-        place.uri = NetUtil.newURI(place.href);
+        place.uri = NetUtil.newURI(place.uri.href);
       }
       if (typeof place.title != "string") {
         place.title = "test visit for " + place.uri.spec;
+      }
+      if (typeof place.referrer == "string") {
+        place.referrer = NetUtil.newURI(place.referrer);
+      } else if (place.referrer instanceof URL) {
+        place.referrer = NetUtil.newURI(place.referrer.href);
       }
       place.visits = [{
         transitionType: place.transition === undefined ? Ci.nsINavHistoryService.TRANSITION_LINK
