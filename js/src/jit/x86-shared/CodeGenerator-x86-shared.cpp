@@ -3918,18 +3918,16 @@ CodeGeneratorX86Shared::visitSimdSelect(LSimdSelect* ins)
         masm.vmovaps(mask, temp);
 
     MSimdSelect* mir = ins->mir();
+    unsigned lanes = SimdTypeToLength(mir->type());
 
-    if (AssemblerX86Shared::HasAVX()) {
+    if (AssemblerX86Shared::HasAVX() && lanes == 4) {
+        // TBD: Use vpblendvb for lanes > 4, HasAVX.
         masm.vblendvps(mask, onTrue, onFalse, output);
         return;
     }
 
     // SSE4.1 has plain blendvps which can do this, but it is awkward
     // to use because it requires the mask to be in xmm0.
-
-    // Propagate sign to all bits of mask vector, if necessary.
-    if (!mir->mask()->isSimdBinaryComp())
-        masm.packedRightShiftByScalarInt32x4(Imm32(31), temp);
 
     masm.bitwiseAndSimd128(Operand(temp), output);
     masm.bitwiseAndNotSimd128(Operand(onFalse), temp);

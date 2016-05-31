@@ -863,8 +863,8 @@ SimdShufflePolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
 bool
 SimdSelectPolicy::adjustInputs(TempAllocator& alloc, MInstruction* ins)
 {
-    // First input is the mask, which has to be a bool32x4.
-    MOZ_ASSERT(ins->getOperand(0)->type() == MIRType::Bool32x4);
+    // First input is the mask, which has to be a boolean.
+    MOZ_ASSERT(IsBooleanSimdType(ins->getOperand(0)->type()));
 
     // Next inputs are the two vectors of a particular type.
     for (unsigned i = 1; i < 3; i++)
