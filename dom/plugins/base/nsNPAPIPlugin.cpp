@@ -2303,6 +2303,13 @@ _setvalue(NPP npp, NPPVariable variable, void *result)
           return NPERR_NO_ERROR;
         }
 
+        // Since we only support for muting now, the implementation of suspend
+        // is equal to muting. Therefore, if we have already muted the plugin,
+        // then we don't need to call WindowSuspendChanged() again.
+        if (config.mMuted) {
+          return NPERR_NO_ERROR;
+        }
+
         rv = inst->WindowSuspendChanged(config.mSuspend);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return NPERR_NO_ERROR;
