@@ -635,6 +635,39 @@ LIRGeneratorX86Shared::lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElemen
 }
 
 void
+LIRGeneratorX86Shared::visitSimdInsertElement(MSimdInsertElement* ins)
+{
+    MOZ_ASSERT(IsSimdType(ins->type()));
+
+    LUse vec = useRegisterAtStart(ins->vector());
+    LUse val = useRegister(ins->value());
+    switch (ins->type()) {
+      case MIRType::Int8x16:
+      case MIRType::Bool8x16:
+        // When SSE 4.1 is not available, we need to go via the stack.
+        // This requires the value to be inserted to be in %eax-%edx.
+        // Pick %ebx since other instructions use %eax or %ecx hard-wired.
+#if defined(JS_CODEGEN_X86)
+        if (!AssemblerX86Shared::HasSSE41())
+            val = useFixed(ins->value(), ebx);
+#endif
+        defineReuseInput(new(alloc()) LSimdInsertElementI(vec, val), ins, 0);
+        break;
+      case MIRType::Int16x8:
+      case MIRType::Int32x4:
+      case MIRType::Bool16x8:
+      case MIRType::Bool32x4:
+        defineReuseInput(new(alloc()) LSimdInsertElementI(vec, val), ins, 0);
+        break;
+      case MIRType::Float32x4:
+        defineReuseInput(new(alloc()) LSimdInsertElementF(vec, val), ins, 0);
+        break;
+      default:
+        MOZ_CRASH("Unknown SIMD kind when generating constant");
+    }
+}
+
+void
 LIRGeneratorX86Shared::visitSimdExtractElement(MSimdExtractElement* ins)
 {
     MOZ_ASSERT(IsSimdType(ins->input()->type()));
