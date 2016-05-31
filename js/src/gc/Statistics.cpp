@@ -1110,8 +1110,10 @@ Statistics::suspendPhases(Phase suspension)
 void
 Statistics::resumePhases()
 {
+#ifdef DEBUG
     Phase popped = suspendedPhases[--suspended];
     MOZ_ASSERT(popped == PHASE_EXPLICIT_SUSPENSION || popped == PHASE_IMPLICIT_SUSPENSION);
+#endif
     while (suspended &&
            suspendedPhases[suspended - 1] != PHASE_EXPLICIT_SUSPENSION &&
            suspendedPhases[suspended - 1] != PHASE_IMPLICIT_SUSPENSION)
