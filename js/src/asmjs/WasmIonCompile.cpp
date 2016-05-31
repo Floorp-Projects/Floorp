@@ -273,6 +273,25 @@ class FunctionCompiler
         return constant;
     }
 
+    MDefinition* constant(float f)
+    {
+        if (inDeadCode())
+            return nullptr;
+        MConstant* constant = MConstant::NewRawFloat32(alloc(), f);
+        curBlock_->add(constant);
+        return constant;
+    }
+
+    MDefinition* constant(double d)
+    {
+        if (inDeadCode())
+            return nullptr;
+        MConstant* constant = MConstant::NewRawDouble(alloc(), d);
+        curBlock_->add(constant);
+        return constant;
+    }
+
+    // Specialized for MToFloat32
     template <class T>
     MDefinition* unary(MDefinition* op)
     {
@@ -309,6 +328,22 @@ class FunctionCompiler
         if (inDeadCode())
             return nullptr;
         T* ins = T::NewAsmJS(alloc(), lhs, rhs, type);
+        curBlock_->add(ins);
+        return ins;
+    }
+
+    bool mustPreserveNaN(MIRType type)
+    {
+        return IsFloatingPointType(type) && mg().kind == ModuleKind::Wasm;
+    }
+
+    MDefinition* sub(MDefinition* lhs, MDefinition* rhs, MIRType type)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        // wasm can't fold x - 0.0 because of NaN with custom payloads.
+        MSub* ins = MSub::NewAsmJS(alloc(), lhs, rhs, type, mustPreserveNaN(type));
         curBlock_->add(ins);
         return ins;
     }
@@ -482,7 +517,15 @@ class FunctionCompiler
     MDefinition* minMax(MDefinition* lhs, MDefinition* rhs, MIRType type, bool isMax) {
         if (inDeadCode())
             return nullptr;
-        MMinMax* ins = MMinMax::New(alloc(), lhs, rhs, type, isMax);
+
+        if (mustPreserveNaN(type)) {
+            // Convert signaling NaN to quiet NaNs.
+            MDefinition* zero = constant(DoubleValue(0.0), type);
+            lhs = sub(lhs, zero, type);
+            rhs = sub(rhs, zero, type);
+        }
+
+        MMinMax* ins = MMinMax::NewWasm(alloc(), lhs, rhs, type, isMax);
         curBlock_->add(ins);
         return ins;
     }
@@ -491,7 +534,9 @@ class FunctionCompiler
     {
         if (inDeadCode())
             return nullptr;
-        MMul* ins = MMul::New(alloc(), lhs, rhs, type, mode);
+
+        // wasm can't fold x * 1.0 because of NaN with custom payloads.
+        auto* ins = MMul::NewWasm(alloc(), lhs, rhs, type, mode, mustPreserveNaN(type));
         curBlock_->add(ins);
         return ins;
     }
@@ -501,7 +546,8 @@ class FunctionCompiler
     {
         if (inDeadCode())
             return nullptr;
-        MDiv* ins = MDiv::NewAsmJS(alloc(), lhs, rhs, type, unsignd, trapOnError);
+        auto* ins = MDiv::NewAsmJS(alloc(), lhs, rhs, type, unsignd, trapOnError,
+                                   mustPreserveNaN(type));
         curBlock_->add(ins);
         return ins;
     }
@@ -1507,6 +1553,16 @@ class FunctionCompiler
     }
 };
 
+template <>
+MDefinition* FunctionCompiler::unary<MToFloat32>(MDefinition* op)
+{
+    if (inDeadCode())
+        return nullptr;
+    auto* ins = MToFloat32::NewAsmJS(alloc(), op, mustPreserveNaN(op->type()));
+    curBlock_->add(ins);
+    return ins;
+}
+
 } // end anonymous namespace
 
 static bool
@@ -1867,7 +1923,7 @@ EmitGetGlobal(FunctionCompiler& f)
         result = f.constant(Int32Value(value.i32()), mirType);
         break;
       case ValType::I64:
-        result = f.constant(value.i64());
+        result = f.constant(int64_t(value.i64()));
         break;
       case ValType::F32:
         result = f.constant(Float32Value(value.f32()), mirType);
@@ -2014,16 +2070,27 @@ EmitReinterpret(FunctionCompiler& f, ValType resultType, ValType operandType, MI
     return true;
 }
 
-template <typename MIRClass>
 static bool
-EmitBinary(FunctionCompiler& f, ValType type, MIRType mirType)
+EmitAdd(FunctionCompiler& f, ValType type, MIRType mirType)
 {
     MDefinition* lhs;
     MDefinition* rhs;
     if (!f.iter().readBinary(type, &lhs, &rhs))
         return false;
 
-    f.iter().setResult(f.binary<MIRClass>(lhs, rhs, mirType));
+    f.iter().setResult(f.binary<MAdd>(lhs, rhs, mirType));
+    return true;
+}
+
+static bool
+EmitSub(FunctionCompiler& f, ValType type, MIRType mirType)
+{
+    MDefinition* lhs;
+    MDefinition* rhs;
+    if (!f.iter().readBinary(type, &lhs, &rhs))
+        return false;
+
+    f.iter().setResult(f.sub(lhs, rhs, mirType));
     return true;
 }
 
@@ -2894,9 +2961,9 @@ EmitExpr(FunctionCompiler& f)
         return true;
       }
       case Expr::I32Add:
-        return EmitBinary<MAdd>(f, ValType::I32, MIRType::Int32);
+        return EmitAdd(f, ValType::I32, MIRType::Int32);
       case Expr::I32Sub:
-        return EmitBinary<MSub>(f, ValType::I32, MIRType::Int32);
+        return EmitSub(f, ValType::I32, MIRType::Int32);
       case Expr::I32Mul:
         return EmitMul(f, ValType::I32, MIRType::Int32);
       case Expr::I32DivS:
@@ -2974,9 +3041,9 @@ EmitExpr(FunctionCompiler& f)
         return true;
       }
       case Expr::I64Add:
-        return EmitBinary<MAdd>(f, ValType::I64, MIRType::Int64);
+        return EmitAdd(f, ValType::I64, MIRType::Int64);
       case Expr::I64Sub:
-        return EmitBinary<MSub>(f, ValType::I64, MIRType::Int64);
+        return EmitSub(f, ValType::I64, MIRType::Int64);
       case Expr::I64Mul:
         return EmitMul(f, ValType::I64, MIRType::Int64);
       case Expr::I64DivS:
@@ -3048,13 +3115,13 @@ EmitExpr(FunctionCompiler& f)
         if (!f.iter().readF32Const(&f32))
             return false;
 
-        f.iter().setResult(f.constant(Float32Value(f32), MIRType::Float32));
+        f.iter().setResult(f.constant(f32));
         return true;
       }
       case Expr::F32Add:
-        return EmitBinary<MAdd>(f, ValType::F32, MIRType::Float32);
+        return EmitAdd(f, ValType::F32, MIRType::Float32);
       case Expr::F32Sub:
-        return EmitBinary<MSub>(f, ValType::F32, MIRType::Float32);
+        return EmitSub(f, ValType::F32, MIRType::Float32);
       case Expr::F32Mul:
         return EmitMul(f, ValType::F32, MIRType::Float32);
       case Expr::F32Div:
@@ -3104,13 +3171,13 @@ EmitExpr(FunctionCompiler& f)
         if (!f.iter().readF64Const(&f64))
             return false;
 
-        f.iter().setResult(f.constant(DoubleValue(f64), MIRType::Double));
+        f.iter().setResult(f.constant(f64));
         return true;
       }
       case Expr::F64Add:
-        return EmitBinary<MAdd>(f, ValType::F64, MIRType::Double);
+        return EmitAdd(f, ValType::F64, MIRType::Double);
       case Expr::F64Sub:
-        return EmitBinary<MSub>(f, ValType::F64, MIRType::Double);
+        return EmitSub(f, ValType::F64, MIRType::Double);
       case Expr::F64Mul:
         return EmitMul(f, ValType::F64, MIRType::Double);
       case Expr::F64Div:
