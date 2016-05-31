@@ -53,6 +53,7 @@
 #include "nsIConsoleService.h"
 #include "mozilla/BinarySearch.h"
 #include "nsIHttpHeaderVisitor.h"
+#include "nsIXULRuntime.h"
 
 #include <algorithm>
 
@@ -3307,26 +3308,49 @@ IMPL_TIMING_ATTR(RedirectEnd)
 nsPerformance*
 HttpBaseChannel::GetPerformance()
 {
-    // If performance timing is disabled, there is no need for the nsPerformance
-    // object anymore.
-    if (!mTimingEnabled) {
-        return nullptr;
-    }
+  // If performance timing is disabled, there is no need for the nsPerformance
+  // object anymore.
+  if (!mTimingEnabled) {
+    return nullptr;
+  }
 
-    nsCOMPtr<nsPIDOMWindowInner> pDomWindow = GetInnerDOMWindow();
-    if (!pDomWindow) {
-        return nullptr;
-    }
+  // There is no point in continuing, since the performance object in the parent
+  // isn't the same as the one in the child which will be reporting resource performance.
+  if (XRE_IsParentProcess() && BrowserTabsRemoteAutostart()) {
+    return nullptr;
+  }
 
-    nsPerformance* docPerformance = pDomWindow->GetPerformance();
-    if (!docPerformance) {
-        return nullptr;
-    }
-    // iframes should be added to the parent's entries list.
-    if (mLoadFlags & LOAD_DOCUMENT_URI) {
-        return docPerformance->GetParentPerformance();
-    }
-    return docPerformance;
+  if (!mLoadInfo) {
+    return nullptr;
+  }
+
+  // We don't need to report the resource timing entry for a TYPE_DOCUMENT load.
+  if (mLoadInfo->GetExternalContentPolicyType() == nsIContentPolicyBase::TYPE_DOCUMENT) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDOMDocument> domDocument;
+  mLoadInfo->GetLoadingDocument(getter_AddRefs(domDocument));
+  if (!domDocument) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsIDocument> loadingDocument = do_QueryInterface(domDocument);
+  if (!loadingDocument) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsPIDOMWindowInner> innerWindow = loadingDocument->GetInnerWindow();
+  if (!innerWindow) {
+    return nullptr;
+  }
+
+  nsPerformance* docPerformance = innerWindow->GetPerformance();
+  if (!docPerformance) {
+    return nullptr;
+  }
+
+  return docPerformance;
 }
 
 nsIURI*

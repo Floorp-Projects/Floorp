@@ -983,8 +983,6 @@ class MacroAssemblerARMCompat : public MacroAssemblerARM
     void store32(Imm32 src, const Address& address);
     void store32(Imm32 src, const BaseIndex& address);
 
-    void store32_NoSecondScratch(Imm32 src, const Address& address);
-
     void store64(Register64 src, Address address) {
         store32(src.low, address);
         store32(src.high, Address(address.base, address.offset + 4));

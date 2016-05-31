@@ -191,7 +191,7 @@ H264Converter::OnDecoderInitDone(const TrackType aTrackType)
   mInitPromiseRequest.Complete();
   for (uint32_t i = 0 ; i < mMediaRawSamples.Length(); i++) {
     if (NS_FAILED(mDecoder->Input(mMediaRawSamples[i]))) {
-      mCallback->Error();
+      mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
     }
   }
   mMediaRawSamples.Clear();
@@ -201,7 +201,7 @@ void
 H264Converter::OnDecoderInitFailed(MediaDataDecoder::DecoderFailureReason aReason)
 {
   mInitPromiseRequest.Complete();
-  mCallback->Error();
+  mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
 }
 
 nsresult

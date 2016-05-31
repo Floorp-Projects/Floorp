@@ -84,6 +84,7 @@ XPIDL_MODULE = 'dom_media'
 
 EXPORTS += [
     'AbstractMediaDecoder.h',
+    'AccurateSeekTask.h',
     'ADTSDecoder.h',
     'ADTSDemuxer.h',
     'AudioBufferUtils.h',
@@ -132,6 +133,7 @@ EXPORTS += [
     'MP3Decoder.h',
     'MP3Demuxer.h',
     'MP3FrameParser.h',
+    'NextFrameSeekTask.h',
     'nsIDocumentActivity.h',
     'PrincipalChangeObserver.h',
     'QueueObject.h',
@@ -196,6 +198,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+    'AccurateSeekTask.cpp',
     'ADTSDecoder.cpp',
     'ADTSDemuxer.cpp',
     'AudioCaptureStream.cpp',
@@ -242,6 +245,7 @@ UNIFIED_SOURCES += [
     'MP3Decoder.cpp',
     'MP3Demuxer.cpp',
     'MP3FrameParser.cpp',
+    'NextFrameSeekTask.cpp',
     'QueueObject.cpp',
     'RtspMediaResource.cpp',
     'SeekJob.cpp',

@@ -60,7 +60,7 @@ private:
 
   // MediaDataDecoderCallback implementation.
   void Output(MediaData* aData) override;
-  void Error() override;
+  void Error(MediaDataDecoderError aError) override;
   void InputExhausted() override;
   void DrainComplete() override;
   void ReleaseMediaResources() override;

@@ -200,6 +200,13 @@ RemotePrintJobParent::RegisterListener(nsIWebProgressListener* aListener)
   mPrintProgressListeners.AppendElement(aListener);
 }
 
+already_AddRefed<nsIPrintSettings>
+RemotePrintJobParent::GetPrintSettings()
+{
+  nsCOMPtr<nsIPrintSettings> printSettings = mPrintSettings;
+  return printSettings.forget();
+}
+
 RemotePrintJobParent::~RemotePrintJobParent()
 {
   MOZ_COUNT_DTOR(RemotePrintJobParent);

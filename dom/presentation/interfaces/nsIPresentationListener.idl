@@ -16,15 +16,17 @@ interface nsIPresentationAvailabilityListener : nsISupports
 [scriptable, uuid(7dd48df8-8f8c-48c7-ac37-7b9fd1acf2f8)]
 interface nsIPresentationSessionListener : nsISupports
 {
-  const unsigned short STATE_CONNECTED = 0;
-  const unsigned short STATE_CLOSED = 1;
-  const unsigned short STATE_TERMINATED = 2;
+  const unsigned short STATE_CONNECTING = 0;
+  const unsigned short STATE_CONNECTED = 1;
+  const unsigned short STATE_CLOSED = 2;
+  const unsigned short STATE_TERMINATED = 3;
 
   /*
    * Called when session state changes.
    */
   void notifyStateChange(in DOMString sessionId,
-                         in unsigned short state);
+                         in unsigned short state,
+                         in nsresult reason);
 
   /*
    * Called when receive messages.

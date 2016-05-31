@@ -43,11 +43,15 @@ interface nsICertOverrideService : nsISupports {
    *  The implementation will store a fingerprint of the cert.
    *  The implementation will decide which fingerprint alg is used.
    *
+   *  Each override is specific to exactly the errors overridden, so
+   *  overriding everything won't match certs at the given host:port
+   *  which only exhibit some subset of errors.
+   *
    *  @param aHostName The host (punycode) this mapping belongs to
    *  @param aPort The port this mapping belongs to, if it is -1 then it 
    *          is internaly treated as 443
    *  @param aCert The cert that should always be accepted
-   *  @param aOverrideBits The errors we want to be overriden
+   *  @param aOverrideBits The precise set of errors we want to be overriden
    */
   void rememberValidityOverride(in ACString aHostName,
                                 in int32_t aPort,

@@ -39,6 +39,10 @@ interface nsIPresentationService : nsISupports
   const unsigned short ROLE_CONTROLLER = 0x1;
   const unsigned short ROLE_RECEIVER = 0x2;
 
+  const unsigned short CLOSED_REASON_ERROR = 0x1;
+  const unsigned short CLOSED_REASON_CLOSED = 0x2;
+  const unsigned short CLOSED_REASON_WENTAWAY = 0x3;
+
   /*
    * Start a new presentation session and display a prompt box which asks users
    * to select a device.
@@ -82,7 +86,8 @@ interface nsIPresentationService : nsISupports
    * @param role: Identify the function called by controller or receiver.
    */
   void closeSession(in DOMString sessionId,
-                    in uint8_t role);
+                    in uint8_t role,
+                    in uint8_t closedReason);
 
   /*
    * Terminate the session.

@@ -164,6 +164,7 @@ MP4VideoInfo::Update(const MetaData* aMetaData, const char* aMimeType)
   mDisplay.height = FindInt32(aMetaData, kKeyDisplayHeight);
   mImage.width = FindInt32(aMetaData, kKeyWidth);
   mImage.height = FindInt32(aMetaData, kKeyHeight);
+  mRotation = VideoInfo::ToSupportedRotation(FindInt32(aMetaData, kKeyRotation));
 
   FindData(aMetaData, kKeyAVCC, mExtraData);
   if (!mExtraData->Length()) {

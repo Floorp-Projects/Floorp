@@ -123,6 +123,16 @@ mockSessionTransport.prototype = {
   close: function(reason) {
     sendAsyncMessage('data-transport-closed', reason);
     this._callback.QueryInterface(Ci.nsIPresentationSessionTransportCallback).notifyTransportClosed(reason);
+    if (this._role === Ci.nsIPresentationService.ROLE_CONTROLLER) {
+      if (mockSessionTransportOfReceiver._callback) {
+        mockSessionTransportOfReceiver._callback.QueryInterface(Ci.nsIPresentationSessionTransportCallback).notifyTransportClosed(reason);
+      }
+    }
+    else if (this._role === Ci.nsIPresentationService.ROLE_RECEIVER) {
+      if (mockSessionTransportOfSender._callback) {
+        mockSessionTransportOfSender._callback.QueryInterface(Ci.nsIPresentationSessionTransportCallback).notifyTransportClosed(reason);
+      }
+    }
   },
   simulateTransportReady: function() {
     this._callback.QueryInterface(Ci.nsIPresentationSessionTransportCallback).notifyTransportReady();

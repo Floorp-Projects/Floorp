@@ -46,7 +46,9 @@ private:
 };
 
 nsAsyncRedirectVerifyHelper::nsAsyncRedirectVerifyHelper()
-    : mCallbackInitiated(false),
+    : mFlags(0),
+      mWaitingForRedirectCallback(false),
+      mCallbackInitiated(false),
       mExpectedCallbacks(0),
       mResult(NS_OK)
 {

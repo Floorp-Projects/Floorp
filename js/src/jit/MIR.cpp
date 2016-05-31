@@ -4739,9 +4739,7 @@ HashNumber
 MAsmJSLoadFuncPtr::valueHash() const
 {
     HashNumber hash = MDefinition::valueHash();
-    hash = addU32ToHash(hash, hasLimit_);
     hash = addU32ToHash(hash, limit_);
-    hash = addU32ToHash(hash, alwaysThrow_);
     hash = addU32ToHash(hash, globalDataOffset_);
     return hash;
 }
@@ -4751,9 +4749,7 @@ MAsmJSLoadFuncPtr::congruentTo(const MDefinition* ins) const
 {
     if (ins->isAsmJSLoadFuncPtr()) {
         const MAsmJSLoadFuncPtr* load = ins->toAsmJSLoadFuncPtr();
-        return hasLimit_ == load->hasLimit_ &&
-               limit_ == load->limit_ &&
-               alwaysThrow_ == load->alwaysThrow_ &&
+        return limit_ == load->limit_ &&
                globalDataOffset_ == load->globalDataOffset_;
     }
     return false;
@@ -5106,7 +5102,7 @@ MAsmJSCall::New(TempAllocator& alloc, const wasm::CallSiteDesc& desc, Callee cal
     for (size_t i = 0; i < call->argRegs_.length(); i++)
         call->initOperand(i, args[i].def);
     if (callee.which() == Callee::Dynamic)
-        call->initOperand(call->argRegs_.length(), callee.dynamic());
+        call->initOperand(call->argRegs_.length(), callee.dynamicPtr());
 
     return call;
 }

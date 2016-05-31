@@ -319,15 +319,14 @@ nsresult
 AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
                   const dom::AudioChannel aAudioChannel)
 {
-  mStartTime = TimeStamp::Now();
+  auto startTime = TimeStamp::Now();
   mIsFirst = CubebUtils::GetFirstStream();
 
   if (!CubebUtils::GetCubebContext()) {
     return NS_ERROR_FAILURE;
   }
 
-  MOZ_LOG(gAudioStreamLog, LogLevel::Debug,
-    ("%s  channels: %d, rate: %d for %p", __FUNCTION__, aNumChannels, aRate, this));
+  LOG("%s channels: %d, rate: %d", __FUNCTION__, aNumChannels, aRate);
   mInRate = mOutRate = aRate;
   mChannels = aNumChannels;
   mOutChannels = aNumChannels;
@@ -352,13 +351,13 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
   params.format = ToCubebFormat<AUDIO_OUTPUT_FORMAT>::value;
   mAudioClock.Init();
 
-  return OpenCubeb(params);
+  return OpenCubeb(params, startTime);
 }
 
 // This code used to live inside AudioStream::Init(), but on Mac (others?)
 // it has been known to take 300-800 (or even 8500) ms to execute(!)
 nsresult
-AudioStream::OpenCubeb(cubeb_stream_params &aParams)
+AudioStream::OpenCubeb(cubeb_stream_params &aParams, TimeStamp aStartTime)
 {
   cubeb* cubebContext = CubebUtils::GetCubebContext();
   if (!cubebContext) {
@@ -391,13 +390,11 @@ AudioStream::OpenCubeb(cubeb_stream_params &aParams)
 
   mState = INITIALIZED;
 
-  if (!mStartTime.IsNull()) {
-    TimeDuration timeDelta = TimeStamp::Now() - mStartTime;
-    LOG("creation time %sfirst: %u ms", mIsFirst ? "" : "not ",
-        (uint32_t) timeDelta.ToMilliseconds());
-    Telemetry::Accumulate(mIsFirst ? Telemetry::AUDIOSTREAM_FIRST_OPEN_MS :
-        Telemetry::AUDIOSTREAM_LATER_OPEN_MS, timeDelta.ToMilliseconds());
-  }
+  TimeDuration timeDelta = TimeStamp::Now() - aStartTime;
+  LOG("creation time %sfirst: %u ms", mIsFirst ? "" : "not ",
+      (uint32_t) timeDelta.ToMilliseconds());
+  Telemetry::Accumulate(mIsFirst ? Telemetry::AUDIOSTREAM_FIRST_OPEN_MS :
+      Telemetry::AUDIOSTREAM_LATER_OPEN_MS, timeDelta.ToMilliseconds());
 
   return NS_OK;
 }
@@ -416,17 +413,6 @@ void
 AudioStream::Start()
 {
   MonitorAutoLock mon(mMonitor);
-  StartUnlocked();
-}
-
-void
-AudioStream::StartUnlocked()
-{
-  mMonitor.AssertCurrentThreadOwns();
-  if (!mCubebStream) {
-    return;
-  }
-
   if (mState == INITIALIZED) {
     mState = STARTED;
     int r;
@@ -453,7 +439,7 @@ AudioStream::Pause()
     return;
   }
 
-  if (!mCubebStream || (mState != STARTED && mState != RUNNING)) {
+  if (mState != STARTED && mState != RUNNING) {
     mState = STOPPED; // which also tells async OpenCubeb not to start, just init
     return;
   }
@@ -472,7 +458,7 @@ void
 AudioStream::Resume()
 {
   MonitorAutoLock mon(mMonitor);
-  if (!mCubebStream || mState != STOPPED) {
+  if (mState != STOPPED) {
     return;
   }
 
@@ -523,7 +509,7 @@ AudioStream::GetPositionInFramesUnlocked()
 {
   mMonitor.AssertCurrentThreadOwns();
 
-  if (!mCubebStream || mState == ERRORED) {
+  if (mState == ERRORED) {
     return -1;
   }
 

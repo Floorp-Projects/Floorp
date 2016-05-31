@@ -15,7 +15,7 @@ function testWarn(code) {
   g.eval('eval(code)');
   var warning = getLastWarning();
   assertEq(warning !== null, true, "warning should be caught for " + code);
-  assertEq(warning.name, "None");
+  assertEq(warning.name, "Warning");
 
   clearLastWarning();
   g.eval('eval(code)');
@@ -28,7 +28,7 @@ function testWarn(code) {
   g.eval('Reflect.parse(code);');
   warning = getLastWarning();
   assertEq(warning !== null, true, "warning should be caught for " + code);
-  assertEq(warning.name, "None");
+  assertEq(warning.name, "Warning");
 
   clearLastWarning();
   g.eval('Reflect.parse(code);');

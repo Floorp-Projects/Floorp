@@ -811,7 +811,7 @@
                        hidden="true"
                        onclick="ReaderParent.buttonClick(event);"/>
               </hbox>
-              <hbox id="userContext-icons">
+              <hbox id="userContext-icons" hidden="true">
                 <label id="userContext-label"/>
                 <image id="userContext-indicator"/>
               </hbox>

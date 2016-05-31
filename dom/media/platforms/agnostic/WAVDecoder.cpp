@@ -69,7 +69,7 @@ nsresult
 WaveDataDecoder::Input(MediaRawData* aSample)
 {
   if (!DoDecode(aSample)) {
-    mCallback->Error();
+    mCallback->Error(MediaDataDecoderError::DECODE_ERROR);
   }
   return NS_OK;
 }

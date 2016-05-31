@@ -6,6 +6,9 @@
 
 enum PresentationConnectionState
 {
+  // The initial state when a PresentationConnection is ceated.
+  "connecting",
+
   // Existing presentation, and the communication channel is active.
   "connected",
 
@@ -31,10 +34,9 @@ interface PresentationConnection : EventTarget {
    */
   readonly attribute PresentationConnectionState state;
 
-  /*
-   * It is called when connection state changes.
-   */
-  attribute EventHandler onstatechange;
+  attribute EventHandler onconnect;
+  attribute EventHandler onclose;
+  attribute EventHandler onterminate;
 
   /*
    * After a communication channel has been established between the controlling
