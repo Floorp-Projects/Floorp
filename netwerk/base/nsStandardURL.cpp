@@ -266,6 +266,7 @@ nsStandardURL::nsStandardURL(bool aSupportsFileURL, bool aTrackURL)
     mParser = net_GetStdURLParser();
 
 #ifdef DEBUG_DUMP_URLS_AT_SHUTDOWN
+    memset(&mDebugCList, 0, sizeof(mDebugCList));
     if (NS_IsMainThread()) {
         if (aTrackURL) {
             PR_APPEND_LINK(&mDebugCList, &gAllURLs);

@@ -624,11 +624,14 @@ typedef void
 /**
  * Possible exception types. These types are part of a JSErrorFormatString
  * structure. They define which error to throw in case of a runtime error.
- * JSEXN_NONE marks an unthrowable error.
+ *
+ * JSEXN_WARN is used for warnings in js.msg files (for instance because we
+ * don't want to prepend 'Error:' to warning messages). This value can go away
+ * if we ever decide to use an entirely separate mechanism for warnings.
  */
 typedef enum JSExnType {
-    JSEXN_NONE = -1,
-      JSEXN_ERR,
+    JSEXN_ERR,
+    JSEXN_FIRST = JSEXN_ERR,
         JSEXN_INTERNALERR,
         JSEXN_EVALERR,
         JSEXN_RANGEERR,
@@ -637,7 +640,8 @@ typedef enum JSExnType {
         JSEXN_TYPEERR,
         JSEXN_URIERR,
         JSEXN_DEBUGGEEWOULDRUN,
-        JSEXN_LIMIT
+    JSEXN_WARN,
+    JSEXN_LIMIT
 } JSExnType;
 
 typedef struct JSErrorFormatString {

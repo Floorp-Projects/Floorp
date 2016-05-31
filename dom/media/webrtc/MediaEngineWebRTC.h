@@ -434,7 +434,8 @@ public:
     , mSampleFrequency(MediaEngine::DEFAULT_SAMPLE_RATE)
     , mPlayoutDelay(0)
     , mNullTransport(nullptr)
-    , mInputBufferLen(0) {
+    , mSkipProcessing(false)
+  {
     MOZ_ASSERT(aVoiceEnginePtr);
     MOZ_ASSERT(aAudioInput);
     mDeviceName.Assign(NS_ConvertUTF8toUTF16(name));
@@ -515,6 +516,22 @@ private:
   bool InitEngine();
   void DeInitEngine();
 
+  // This is true when all processing is disabled, we can skip
+  // packetization, resampling and other processing passes.
+  bool PassThrough() {
+    return mSkipProcessing;
+  }
+  template<typename T>
+  void InsertInGraph(const T* aBuffer,
+                     size_t aFrames,
+                     uint32_t aChannels);
+
+  void PacketizeAndProcess(MediaStreamGraph* aGraph,
+                           const AudioDataValue* aBuffer,
+                           size_t aFrames,
+                           TrackRate aRate,
+                           uint32_t aChannels);
+
   webrtc::VoiceEngine* mVoiceEngine;
   RefPtr<mozilla::AudioInput> mAudioInput;
   RefPtr<WebRTCAudioDataListener> mListener;
@@ -549,14 +566,16 @@ private:
   nsString mDeviceName;
   nsCString mDeviceUUID;
 
-  uint32_t mSampleFrequency;
+  int32_t mSampleFrequency;
   int32_t mPlayoutDelay;
 
   NullTransport *mNullTransport;
 
-  // For full_duplex packetizer output
-  size_t mInputBufferLen;
-  UniquePtr<int16_t[]> mInputBuffer;
+  nsTArray<int16_t> mInputBuffer;
+  // mSkipProcessing is true if none of the processing passes are enabled,
+  // because of prefs or constraints. This allows simply copying the audio into
+  // the MSG, skipping resampling and the whole webrtc.org code.
+  bool mSkipProcessing;
 };
 
 class MediaEngineWebRTC : public MediaEngine

@@ -448,20 +448,22 @@ class ABIArgGenerator
     ABIArg& current() { return current_; }
     uint32_t stackBytesConsumedSoFar() const { return stackOffset_; }
 
-  public:
-    static const Register NonArgReturnReg0;
-    static const Register NonArgReturnReg1;
-    static const Register NonVolatileReg;
-    static const Register NonArg_VolatileReg;
-    static const Register NonReturn_VolatileReg0;
-    static const Register NonReturn_VolatileReg1;
-
   protected:
     unsigned intRegIndex_;
     unsigned floatRegIndex_;
     uint32_t stackOffset_;
     ABIArg current_;
 };
+
+static MOZ_CONSTEXPR_VAR Register ABINonArgReg0 = r8;
+static MOZ_CONSTEXPR_VAR Register ABINonArgReg1 = r9;
+static MOZ_CONSTEXPR_VAR Register ABINonArgReturnReg0 = r8;
+static MOZ_CONSTEXPR_VAR Register ABINonArgReturnReg1 = r9;
+
+// Registers used for asm.js/wasm table calls. These registers must be disjoint
+// from the ABI argument registers and from each other.
+static MOZ_CONSTEXPR_VAR Register WasmTableCallPtrReg = ABINonArgReg0;
+static MOZ_CONSTEXPR_VAR Register WasmTableCallSigReg = ABINonArgReg1;
 
 static inline bool
 GetIntArgReg(uint32_t usedIntArgs, uint32_t usedFloatArgs, Register* out)

@@ -141,7 +141,7 @@ public:
   void PlayFromStyle()
   {
     ErrorResult rv;
-    DoPlay(rv, Animation::LimitBehavior::Continue);
+    PlayNoUpdate(rv, Animation::LimitBehavior::Continue);
     // play() should not throw when LimitBehavior is Continue
     MOZ_ASSERT(!rv.Failed(), "Unexpected exception playing transition");
   }

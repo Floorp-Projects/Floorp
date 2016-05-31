@@ -88,8 +88,12 @@ function testStartConnection() {
       connection = aEvent.connection;
       ok(connection, "|connectionavailable| event is fired with a connection.");
       ok(connection.id, "Connection ID should be set.");
-      is(connection.state, "connected", "Connection state at sender side should be connected by default.");
-      aResolve();
+      is(connection.state, "connecting", "The initial state should be connecting.");
+      connection.onconnect = function() {
+        connection.onconnect = null;
+        is(connection.state, "connected", "Connection should be connected.");
+        aResolve();
+      };
     };
 
     // Simulate the UA triggers |start()| of the default request.
@@ -104,8 +108,8 @@ function testTerminateConnection() {
       info("The data transport is closed. " + aReason);
     });
 
-    connection.onstatechange = function() {
-      connection.onstatechange = null;
+    connection.onterminate = function() {
+      connection.onterminate = null;
       is(connection.state, "terminated", "Connection should be terminated.");
       aResolve();
     };

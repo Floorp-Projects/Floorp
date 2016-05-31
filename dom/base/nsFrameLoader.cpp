@@ -962,8 +962,25 @@ nsFrameLoader::SwapWithOtherRemoteLoader(nsFrameLoader* aOther,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  if (mRemoteBrowser->OriginAttributesRef() !=
-      aOther->mRemoteBrowser->OriginAttributesRef()) {
+  // When we swap docShells, maybe we have to deal with a new page created just
+  // for this operation. In this case, the browser code should already have set
+  // the correct userContextId attribute value in the owning XULElement, but our
+  // docShell, that has been created way before) doesn't know that that
+  // happened.
+  // This is the reason why now we must retrieve the correct value from the
+  // usercontextid attribute before comparing our originAttributes with the
+  // other one.
+  DocShellOriginAttributes ourOriginAttributes =
+    mRemoteBrowser->OriginAttributesRef();
+  rv = PopulateUserContextIdFromAttribute(ourOriginAttributes);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  DocShellOriginAttributes otherOriginAttributes =
+    aOther->mRemoteBrowser->OriginAttributesRef();
+  rv = aOther->PopulateUserContextIdFromAttribute(otherOriginAttributes);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (ourOriginAttributes != otherOriginAttributes) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -1343,8 +1360,25 @@ nsFrameLoader::SwapWithOtherLoader(nsFrameLoader* aOther,
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
-  if (ourDocshell->GetOriginAttributes() !=
-      otherDocshell->GetOriginAttributes()) {
+  // When we swap docShells, maybe we have to deal with a new page created just
+  // for this operation. In this case, the browser code should already have set
+  // the correct userContextId attribute value in the owning XULElement, but our
+  // docShell, that has been created way before) doesn't know that that
+  // happened.
+  // This is the reason why now we must retrieve the correct value from the
+  // usercontextid attribute before comparing our originAttributes with the
+  // other one.
+  DocShellOriginAttributes ourOriginAttributes =
+    ourDocshell->GetOriginAttributes();
+  rv = PopulateUserContextIdFromAttribute(ourOriginAttributes);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  DocShellOriginAttributes otherOriginAttributes =
+    otherDocshell->GetOriginAttributes();
+  rv = aOther->PopulateUserContextIdFromAttribute(otherOriginAttributes);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (ourOriginAttributes != otherOriginAttributes) {
     return NS_ERROR_NOT_IMPLEMENTED;
   }
 
@@ -2107,13 +2141,9 @@ nsFrameLoader::MaybeCreateDocShell()
   }
 
   // Grab the userContextId from owner if XUL
-  nsAutoString userContextIdStr;
-  if ((namespaceID == kNameSpaceID_XUL) &&
-      mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::usercontextid, userContextIdStr) &&
-      !userContextIdStr.IsEmpty()) {
-    nsresult rv;
-    attrs.mUserContextId = userContextIdStr.ToInteger(&rv);
-    NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv = PopulateUserContextIdFromAttribute(attrs);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
   }
 
   nsDocShell::Cast(mDocShell)->SetOriginAttributes(attrs);
@@ -3134,7 +3164,8 @@ nsFrameLoader::RequestNotifyLayerTreeCleared()
 }
 
 NS_IMETHODIMP
-nsFrameLoader::Print(nsIPrintSettings* aPrintSettings,
+nsFrameLoader::Print(uint64_t aOuterWindowID,
+                     nsIPrintSettings* aPrintSettings,
                      nsIWebProgressListener* aProgressListener)
 {
 #if defined(NS_PRINTING)
@@ -3149,26 +3180,23 @@ nsFrameLoader::Print(nsIPrintSettings* aPrintSettings,
       return rv;
     }
 
-    bool success = mRemoteBrowser->SendPrint(printData);
+    bool success = mRemoteBrowser->SendPrint(aOuterWindowID, printData);
     return success ? NS_OK : NS_ERROR_FAILURE;
   }
 
-  if (mDocShell) {
-    nsCOMPtr<nsIContentViewer> viewer;
-    mDocShell->GetContentViewer(getter_AddRefs(viewer));
-    if (!viewer) {
-      return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint = do_QueryInterface(viewer);
-    if (!webBrowserPrint) {
-      return NS_ERROR_FAILURE;
-    }
-
-    return webBrowserPrint->Print(aPrintSettings, aProgressListener);
+  nsGlobalWindow* outerWindow =
+    nsGlobalWindow::GetOuterWindowWithId(aOuterWindowID);
+  if (NS_WARN_IF(!outerWindow)) {
+    return NS_ERROR_FAILURE;
   }
 
-  return NS_ERROR_FAILURE;
+  nsCOMPtr<nsIWebBrowserPrint> webBrowserPrint =
+    do_GetInterface(outerWindow->AsOuter());
+  if (NS_WARN_IF(!webBrowserPrint)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return webBrowserPrint->Print(aPrintSettings, aProgressListener);
 #endif
   return NS_OK;
 }
@@ -3372,6 +3400,27 @@ nsFrameLoader::GetNewTabContext(MutableTabContext* aTabContext,
                                signedPkgOrigin,
                                presentationURLStr);
   NS_ENSURE_STATE(tabContextUpdated);
+
+  return NS_OK;
+}
+
+nsresult
+nsFrameLoader::PopulateUserContextIdFromAttribute(DocShellOriginAttributes& aAttr)
+{
+  if (aAttr.mUserContextId ==
+        nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID)  {
+    // Grab the userContextId from owner if XUL
+    nsAutoString userContextIdStr;
+    int32_t namespaceID = mOwnerContent->GetNameSpaceID();
+    if ((namespaceID == kNameSpaceID_XUL) &&
+        mOwnerContent->GetAttr(kNameSpaceID_None, nsGkAtoms::usercontextid,
+                               userContextIdStr) &&
+        !userContextIdStr.IsEmpty()) {
+      nsresult rv;
+      aAttr.mUserContextId = userContextIdStr.ToInteger(&rv);
+      NS_ENSURE_SUCCESS(rv, rv);
+    }
+  }
 
   return NS_OK;
 }

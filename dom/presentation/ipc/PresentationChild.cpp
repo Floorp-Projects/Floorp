@@ -68,10 +68,13 @@ PresentationChild::RecvNotifyAvailableChange(const bool& aAvailable)
 
 bool
 PresentationChild::RecvNotifySessionStateChange(const nsString& aSessionId,
-                                                const uint16_t& aState)
+                                                const uint16_t& aState,
+                                                const nsresult& aReason)
 {
   if (mService) {
-    NS_WARN_IF(NS_FAILED(mService->NotifySessionStateChange(aSessionId, aState)));
+    NS_WARN_IF(NS_FAILED(mService->NotifySessionStateChange(aSessionId,
+                                                            aState,
+                                                            aReason)));
   }
   return true;
 }

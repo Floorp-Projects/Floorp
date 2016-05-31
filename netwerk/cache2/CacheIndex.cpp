@@ -1369,6 +1369,20 @@ CacheIndex::AsyncGetDiskConsumption(nsICacheStorageConsumptionObserver* aObserve
   // Will be called when the index get to the READY state.
   index->mDiskConsumptionObservers.AppendElement(observer);
 
+  // Move forward with index re/building if it is pending
+  RefPtr<CacheIOThread> ioThread = CacheFileIOManager::IOThread();
+  if (ioThread) {
+    ioThread->Dispatch(NS_NewRunnableFunction([]() -> void {
+      StaticMutexAutoLock lock(sLock);
+
+      RefPtr<CacheIndex> index = gInstance;
+      if (index && index->mUpdateTimer) {
+        index->mUpdateTimer->Cancel();
+        index->DelayedUpdateLocked();
+      }
+    }), CacheIOThread::INDEX);
+  }
+
   return NS_OK;
 }
 
@@ -2500,30 +2514,41 @@ CacheIndex::DelayedUpdate(nsITimer *aTimer, void *aClosure)
 {
   LOG(("CacheIndex::DelayedUpdate()"));
 
-  nsresult rv;
   StaticMutexAutoLock lock(sLock);
-
   RefPtr<CacheIndex> index = gInstance;
 
   if (!index) {
     return;
   }
 
-  index->mUpdateTimer = nullptr;
+  index->DelayedUpdateLocked();
+}
 
-  if (!index->IsIndexUsable()) {
+// static
+void
+CacheIndex::DelayedUpdateLocked()
+{
+  LOG(("CacheIndex::DelayedUpdateLocked()"));
+
+  sLock.AssertCurrentThreadOwns();
+
+  nsresult rv;
+
+  mUpdateTimer = nullptr;
+
+  if (!IsIndexUsable()) {
     return;
   }
 
-  if (index->mState == READY && index->mShuttingDown) {
+  if (mState == READY && mShuttingDown) {
     return;
   }
 
   // mUpdateEventPending must be false here since StartUpdatingIndex() won't
   // schedule timer if it is true.
-  MOZ_ASSERT(!index->mUpdateEventPending);
-  if (index->mState != BUILDING && index->mState != UPDATING) {
-    LOG(("CacheIndex::DelayedUpdate() - Update was canceled"));
+  MOZ_ASSERT(!mUpdateEventPending);
+  if (mState != BUILDING && mState != UPDATING) {
+    LOG(("CacheIndex::DelayedUpdateLocked() - Update was canceled"));
     return;
   }
 
@@ -2531,13 +2556,13 @@ CacheIndex::DelayedUpdate(nsITimer *aTimer, void *aClosure)
   RefPtr<CacheIOThread> ioThread = CacheFileIOManager::IOThread();
   MOZ_ASSERT(ioThread);
 
-  index->mUpdateEventPending = true;
-  rv = ioThread->Dispatch(index, CacheIOThread::INDEX);
+  mUpdateEventPending = true;
+  rv = ioThread->Dispatch(this, CacheIOThread::INDEX);
   if (NS_FAILED(rv)) {
-    index->mUpdateEventPending = false;
-    NS_WARNING("CacheIndex::DelayedUpdate() - Can't dispatch event");
+    mUpdateEventPending = false;
+    NS_WARNING("CacheIndex::DelayedUpdateLocked() - Can't dispatch event");
     LOG(("CacheIndex::DelayedUpdate() - Can't dispatch event" ));
-    index->FinishUpdate(false);
+    FinishUpdate(false);
   }
 }
 

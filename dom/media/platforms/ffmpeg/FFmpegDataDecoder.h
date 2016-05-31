@@ -43,7 +43,8 @@ protected:
   enum DecodeResult {
     DECODE_FRAME,
     DECODE_NO_FRAME,
-    DECODE_ERROR
+    DECODE_ERROR,
+    FATAL_ERROR
   };
 
   // Flush and Drain operation, always run

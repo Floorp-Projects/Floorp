@@ -195,27 +195,24 @@ typedef Vector<Import, 0, SystemAllocPolicy> ImportVector;
 
 class CodeRange
 {
-    // All fields are treated as cacheable POD:
-    uint32_t funcIndex_;
-    uint32_t funcLineOrBytecode_;
-    uint32_t begin_;
-    uint32_t profilingReturn_;
-    uint32_t end_;
-    union {
-        struct {
-            uint8_t kind_;
-            uint8_t beginToEntry_;
-            uint8_t profilingJumpToProfilingReturn_;
-            uint8_t profilingEpilogueToProfilingReturn_;
-        } func;
-        uint8_t kind_;
-    } u;
-
-    void assertValid();
-
   public:
     enum Kind { Function, Entry, ImportJitExit, ImportInterpExit, Inline, CallThunk };
 
+  private:
+    // All fields are treated as cacheable POD:
+    uint32_t begin_;
+    uint32_t profilingReturn_;
+    uint32_t end_;
+    uint32_t funcIndex_;
+    uint32_t funcLineOrBytecode_;
+    uint8_t funcBeginToTableEntry_;
+    uint8_t funcBeginToTableProfilingJump_;
+    uint8_t funcBeginToNonProfilingEntry_;
+    uint8_t funcProfilingJumpToProfilingReturn_;
+    uint8_t funcProfilingEpilogueToProfilingReturn_;
+    Kind kind_ : 8;
+
+  public:
     CodeRange() = default;
     CodeRange(Kind kind, Offsets offsets);
     CodeRange(Kind kind, ProfilingOffsets offsets);
@@ -232,7 +229,19 @@ class CodeRange
 
     // Other fields are only available for certain CodeRange::Kinds.
 
-    Kind kind() const { return Kind(u.kind_); }
+    Kind kind() const {
+        return kind_;
+    }
+
+    bool isFunction() const {
+        return kind() == Function;
+    }
+    bool isImportExit() const {
+        return kind() == ImportJitExit || kind() == ImportInterpExit;
+    }
+    bool isInline() const {
+        return kind() == Inline;
+    }
 
     // Every CodeRange except entry and inline stubs has a profiling return
     // which is used for asynchronous profiling to determine the frame pointer.
@@ -245,30 +254,29 @@ class CodeRange
     // Functions have offsets which allow patching to selectively execute
     // profiling prologues/epilogues.
 
-    bool isFunction() const {
-        return kind() == Function;
-    }
-    bool isImportExit() const {
-        return kind() == ImportJitExit || kind() == ImportInterpExit;
-    }
-    bool isInline() const {
-        return kind() == Inline;
-    }
     uint32_t funcProfilingEntry() const {
         MOZ_ASSERT(isFunction());
         return begin();
     }
+    uint32_t funcTableEntry() const {
+        MOZ_ASSERT(isFunction());
+        return begin_ + funcBeginToTableEntry_;
+    }
+    uint32_t funcTableProfilingJump() const {
+        MOZ_ASSERT(isFunction());
+        return begin_ + funcBeginToTableProfilingJump_;
+    }
     uint32_t funcNonProfilingEntry() const {
         MOZ_ASSERT(isFunction());
-        return begin_ + u.func.beginToEntry_;
+        return begin_ + funcBeginToNonProfilingEntry_;
     }
-    uint32_t functionProfilingJump() const {
+    uint32_t funcProfilingJump() const {
         MOZ_ASSERT(isFunction());
-        return profilingReturn_ - u.func.profilingJumpToProfilingReturn_;
+        return profilingReturn_ - funcProfilingJumpToProfilingReturn_;
     }
     uint32_t funcProfilingEpilogue() const {
         MOZ_ASSERT(isFunction());
-        return profilingReturn_ - u.func.profilingEpilogueToProfilingReturn_;
+        return profilingReturn_ - funcProfilingEpilogueToProfilingReturn_;
     }
     uint32_t funcIndex() const {
         MOZ_ASSERT(isFunction());
