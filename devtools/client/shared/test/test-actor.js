@@ -326,9 +326,10 @@ var TestActor = exports.TestActor = protocol.ActorClass({
   }),
 
   /**
-   * Synthesize a mouse event on an element. This handler doesn't send a message
-   * back. Consumers should listen to specific events on the inspector/highlighter
-   * to know when the event got synthesized.
+   * Synthesize a mouse event on an element, after ensuring that it is visible
+   * in the viewport. This handler doesn't send a message back. Consumers
+   * should listen to specific events on the inspector/highlighter to know when
+   * the event got synthesized.
    * @param {String} selector The node selector to get the node target for the event
    * @param {Number} x
    * @param {Number} y
@@ -338,7 +339,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    */
   synthesizeMouse: protocol.method(function ({ selector, x, y, center, options }) {
     let node = this._querySelector(selector);
-
+    node.scrollIntoView();
     if (center) {
       EventUtils.synthesizeMouseAtCenter(node, options, node.ownerDocument.defaultView);
     } else {
