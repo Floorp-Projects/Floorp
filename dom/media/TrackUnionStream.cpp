@@ -332,12 +332,6 @@ TrackUnionStream::TrackUnionStream() :
                                    *static_cast<AudioSegment*>(segment),
                                    map->mInputPort->GetSource(),
                                    map->mInputTrackID);
-        } else {
-          // This part will be removed in bug 1201363.
-          l->NotifyQueuedTrackChanges(Graph(), outputTrack->GetID(),
-                                      outputStart, TrackEventCommand::TRACK_EVENT_NONE, *segment,
-                                      map->mInputPort->GetSource(),
-                                      map->mInputTrackID);
         }
       }
       for (TrackBound<MediaStreamTrackListener>& b : mTrackListeners) {
