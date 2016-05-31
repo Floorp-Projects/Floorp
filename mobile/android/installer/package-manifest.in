@@ -538,7 +538,6 @@
 @BINPATH@/components/MobileComponents.manifest
 @BINPATH@/components/MobileComponents.xpt
 @BINPATH@/components/NSSDialogService.js
-@BINPATH@/components/PersistentNotificationHandler.js
 @BINPATH@/components/PresentationDevicePrompt.js
 @BINPATH@/components/PromptService.js
 @BINPATH@/components/SessionStore.js
