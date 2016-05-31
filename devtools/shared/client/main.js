@@ -1638,11 +1638,14 @@ RootClient.prototype = {
         if (browser.frameLoader.tabParent) {
           // Tabs in child process
           packet.tabId = browser.frameLoader.tabParent.tabId;
+        } else if (browser.outerWindowID) {
+          // <xul:browser> tabs in parent process
+          packet.outerWindowID = browser.outerWindowID;
         } else {
-          // Tabs in parent process
+          // <iframe mozbrowser> tabs in parent process
           let windowUtils = browser.contentWindow
-            .QueryInterface(Ci.nsIInterfaceRequestor)
-            .getInterface(Ci.nsIDOMWindowUtils);
+                                   .QueryInterface(Ci.nsIInterfaceRequestor)
+                                   .getInterface(Ci.nsIDOMWindowUtils);
           packet.outerWindowID = windowUtils.outerWindowID;
         }
       } else {
