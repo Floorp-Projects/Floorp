@@ -54,10 +54,6 @@
   <string name="firstrun_tabqueue_message_on">&firstrun_tabqueue_message_on;</string>
   <string name="firstrun_tabqueue_subtext_on">&firstrun_tabqueue_subtext_on;</string>
 
-  <string name="firstrun_notifications_title">&firstrun_notifications_title;</string>
-  <string name="firstrun_notifications_message">&firstrun_notifications_message;</string>
-  <string name="firstrun_notifications_subtext">&firstrun_notifications_subtext;</string>
-
   <string name="firstrun_readerview_title">&firstrun_readerview_title;</string>
   <string name="firstrun_readerview_message">&firstrun_readerview_message;</string>
   <string name="firstrun_readerview_subtext">&firstrun_readerview_subtext;</string>
