@@ -10,6 +10,7 @@
 #include "mozilla/dom/ToJSValue.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsFrameLoader.h"
+#include "nsIContentSecurityPolicy.h"
 #include "nsIDocShell.h"
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
@@ -146,6 +147,24 @@ LoadInfo::LoadInfo(nsIPrincipal* aLoadingPrincipal,
       }
     }
   }
+
+    // If CSP requires SRI (require-sri-for), then store that information
+    // in the loadInfo so we can enforce SRI before loading the subresource.
+    if (!mEnforceSRI) {
+      // do not look into the CSP if already true:
+      // a CSP saying that SRI isn't needed should not
+      // overrule GetVerifySignedContent
+      nsCOMPtr<nsIContentSecurityPolicy> csp;
+      if (aLoadingPrincipal) {
+        aLoadingPrincipal->GetCsp(getter_AddRefs(csp));
+        // csp could be null if loading principal is system principal
+        if (csp) {
+          uint32_t loadType =
+            nsContentUtils::InternalContentPolicyTypeToExternal(aContentPolicyType);
+          csp->RequireSRIForType(loadType, &mEnforceSRI);
+        }
+      }
+    }
 
   if (!(mSecurityFlags & nsILoadInfo::SEC_FORCE_PRIVATE_BROWSING)) {
     if (aLoadingContext) {

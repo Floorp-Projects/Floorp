@@ -953,7 +953,7 @@ nsCSPDirective::toDomCSPStruct(mozilla::dom::CSP& outCSP) const
       outCSP.mChild_src.Value() = mozilla::Move(srcs);
       return;
 
-    // REFERRER_DIRECTIVE is handled in nsCSPPolicy::toDomCSPStruct()
+    // REFERRER_DIRECTIVE and REQUIRE_SRI_FOR are handled in nsCSPPolicy::toDomCSPStruct()
 
     default:
       NS_ASSERTION(false, "cannot find directive to convert CSP to JSON");
@@ -1073,6 +1073,56 @@ nsUpgradeInsecureDirective::toString(nsAString& outStr) const
 {
   outStr.AppendASCII(CSP_CSPDirectiveToString(
     nsIContentSecurityPolicy::UPGRADE_IF_INSECURE_DIRECTIVE));
+}
+
+/* ===== nsRequireSRIForDirective ========================= */
+
+nsRequireSRIForDirective::nsRequireSRIForDirective(CSPDirective aDirective)
+: nsCSPDirective(aDirective)
+{
+}
+
+nsRequireSRIForDirective::~nsRequireSRIForDirective()
+{
+}
+
+void
+nsRequireSRIForDirective::toString(nsAString &outStr) const
+{
+  outStr.AppendASCII(CSP_CSPDirectiveToString(
+    nsIContentSecurityPolicy::REQUIRE_SRI_FOR));
+  for (uint32_t i = 0; i < mTypes.Length(); i++) {
+    if (mTypes[i] == nsIContentPolicy::TYPE_SCRIPT) {
+      outStr.AppendASCII(" script");
+    }
+    else if (mTypes[i] == nsIContentPolicy::TYPE_STYLESHEET) {
+      outStr.AppendASCII(" style");
+    }
+  }
+}
+
+bool
+nsRequireSRIForDirective::hasType(nsContentPolicyType aType) const
+{
+  for (uint32_t i = 0; i < mTypes.Length(); i++) {
+    if (mTypes[i] == aType) {
+      return true;
+    }
+  }
+  return false;
+}
+
+bool
+nsRequireSRIForDirective::restrictsContentType(const nsContentPolicyType aType) const
+{
+  return this->hasType(aType);
+}
+
+bool
+nsRequireSRIForDirective::allows(enum CSPKeyword aKeyword, const nsAString& aHashOrNonce) const
+{
+  // can only disallow CSP_REQUIRE_SRI_FOR.
+  return (aKeyword != CSP_REQUIRE_SRI_FOR);
 }
 
 /* ===== nsCSPPolicy ========================= */
@@ -1310,6 +1360,17 @@ nsCSPPolicy::visitDirectiveSrcs(CSPDirective aDir, nsCSPSrcVisitor* aVisitor) co
   for (uint32_t i = 0; i < mDirectives.Length(); i++) {
     if (mDirectives[i]->equals(aDir)) {
       return mDirectives[i]->visitSrcs(aVisitor);
+    }
+  }
+  return false;
+}
+
+bool
+nsCSPPolicy::requireSRIForType(nsContentPolicyType aContentType)
+{
+  for (uint32_t i = 0; i < mDirectives.Length(); i++) {
+    if (mDirectives[i]->equals(nsIContentSecurityPolicy::REQUIRE_SRI_FOR)) {
+      return static_cast<nsRequireSRIForDirective*>(mDirectives[i])->hasType(aContentType);
     }
   }
   return false;
