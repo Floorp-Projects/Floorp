@@ -25,7 +25,6 @@ EXTRA_COMPONENTS += [
     'ImageBlockingPolicy.js',
     'LoginManagerPrompter.js',
     'NSSDialogService.js',
-    'PersistentNotificationHandler.js',
     'PresentationDevicePrompt.js',
     'PromptService.js',
     'SessionStore.js',
