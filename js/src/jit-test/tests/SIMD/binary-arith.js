@@ -10,13 +10,13 @@ function f() {
     var f2 = SIMD.Float32x4(4, 3, 2, 1);
 
     for (var i = 0; i < 150; i++) {
-        assertEqX4(SIMD.Float32x4.add(f1, f2), binaryX4((x, y) => x + y, f1, f2));
-        assertEqX4(SIMD.Float32x4.sub(f1, f2), binaryX4((x, y) => x - y, f1, f2));
-        assertEqX4(SIMD.Float32x4.mul(f1, f2), binaryX4((x, y) => x * y, f1, f2));
+        assertEqX4(SIMD.Float32x4.add(f1, f2), binaryX((x, y) => x + y, f1, f2));
+        assertEqX4(SIMD.Float32x4.sub(f1, f2), binaryX((x, y) => x - y, f1, f2));
+        assertEqX4(SIMD.Float32x4.mul(f1, f2), binaryX((x, y) => x * y, f1, f2));
 
-        assertEqX4(SIMD.Int32x4.add(i1, i2), binaryX4((x, y) => x + y, i1, i2));
-        assertEqX4(SIMD.Int32x4.sub(i1, i2), binaryX4((x, y) => x - y, i1, i2));
-        assertEqX4(SIMD.Int32x4.mul(i1, i2), binaryX4((x, y) => x * y, i1, i2));
+        assertEqX4(SIMD.Int32x4.add(i1, i2), binaryX((x, y) => x + y, i1, i2));
+        assertEqX4(SIMD.Int32x4.sub(i1, i2), binaryX((x, y) => x - y, i1, i2));
+        assertEqX4(SIMD.Int32x4.mul(i1, i2), binaryX((x, y) => x * y, i1, i2));
     }
 }
 

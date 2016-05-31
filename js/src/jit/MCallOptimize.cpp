@@ -3268,9 +3268,12 @@ IonBuilder::inlineSimd(CallInfo& callInfo, JSFunction* target, SimdType type)
       case SimdOperation::Fn_minNum:
         return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_minNum,
                                                   type);
+
+        // Binary saturating.
       case SimdOperation::Fn_addSaturate:
+        return inlineSimdBinarySaturating(callInfo, native, MSimdBinarySaturating::add, type);
       case SimdOperation::Fn_subSaturate:
-        MOZ_CRASH("NYI");
+        return inlineSimdBinarySaturating(callInfo, native, MSimdBinarySaturating::sub, type);
 
         // Binary bitwise.
       case SimdOperation::Fn_and:
@@ -3560,6 +3563,23 @@ IonBuilder::inlineSimdBinary(CallInfo& callInfo, JSNative native, typename T::Op
     MDefinition* rhs = unboxSimd(callInfo.getArg(1), type);
 
     T* ins = T::New(alloc(), lhs, rhs, op);
+    return boxSimd(callInfo, ins, templateObj);
+}
+
+// Inline a binary SIMD operation where both arguments are SIMD types.
+IonBuilder::InliningStatus
+IonBuilder::inlineSimdBinarySaturating(CallInfo& callInfo, JSNative native,
+                                       MSimdBinarySaturating::Operation op, SimdType type)
+{
+    InlineTypedObject* templateObj = nullptr;
+    if (!canInlineSimd(callInfo, native, 2, &templateObj))
+        return InliningStatus_NotInlined;
+
+    MDefinition* lhs = unboxSimd(callInfo.getArg(0), type);
+    MDefinition* rhs = unboxSimd(callInfo.getArg(1), type);
+
+    MSimdBinarySaturating* ins =
+      MSimdBinarySaturating::New(alloc(), lhs, rhs, op, GetSimdSign(type));
     return boxSimd(callInfo, ins, templateObj);
 }
 
