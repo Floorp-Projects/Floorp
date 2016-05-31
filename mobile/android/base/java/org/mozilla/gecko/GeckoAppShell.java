@@ -895,19 +895,6 @@ public class GeckoAppShell
         }
     }
 
-    @WrapForJNI(stubName = "ShowPersistentAlertNotificationWrapper")
-    public static void showPersistentAlertNotification(
-          String aPersistentData,
-          String aImageUrl, String aAlertTitle, String aAlertText,
-          String aAlertCookie, String aAlertName, String aHost) {
-        Intent notificationIntent = GeckoService.getIntentToCreateServices(
-                getApplicationContext(), "persistent-notification-click", aPersistentData);
-        int notificationID = aAlertName.hashCode();
-        PendingIntent contentIntent = PendingIntent.getService(
-                getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        notificationClient.add(notificationID, aImageUrl, aHost, aAlertTitle, aAlertText, contentIntent);
-    }
-
     @WrapForJNI(stubName = "ShowAlertNotificationWrapper")
     public static void showAlertNotification(String aImageUrl, String aAlertTitle, String aAlertText, String aAlertCookie, String aAlertName, String aHost) {
         // The intent to launch when the user clicks the expanded notification
