@@ -30,6 +30,7 @@ interface IDBDatabase : EventTarget {
     void           close ();
 
                 attribute EventHandler       onabort;
+                attribute EventHandler       onclose;
                 attribute EventHandler       onerror;
                 attribute EventHandler       onversionchange;
 };

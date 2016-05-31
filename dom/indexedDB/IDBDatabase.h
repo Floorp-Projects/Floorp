@@ -248,6 +248,7 @@ public:
   Storage() const;
 
   IMPL_EVENT_HANDLER(abort)
+  IMPL_EVENT_HANDLER(close)
   IMPL_EVENT_HANDLER(error)
   IMPL_EVENT_HANDLER(versionchange)
 
