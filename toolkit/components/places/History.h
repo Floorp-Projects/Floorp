@@ -69,7 +69,7 @@ public:
    * @param aVisitData
    *        The visit data to use to populate a new row in moz_places.
    */
-  nsresult InsertPlace(const VisitData& aVisitData);
+  nsresult InsertPlace(VisitData& aVisitData);
 
   /**
    * Updates an entry in moz_places with the data in aVisitData.

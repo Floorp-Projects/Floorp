@@ -27,6 +27,7 @@
 #include "nsNavHistoryQuery.h"
 #include "Database.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/Atomics.h"
 
 #define QUERYUPDATE_TIME 0
 #define QUERYUPDATE_SIMPLE 1
@@ -466,6 +467,15 @@ public:
                                            const nsACString& aGUID,
                                            bool aHidden,
                                            PRTime aLastVisitDate) const;
+
+  /**
+   * Store last insterted id for a table.
+   */
+  static mozilla::Atomic<int64_t> sLastInsertedPlaceId;
+  static mozilla::Atomic<int64_t> sLastInsertedVisitId;
+
+  static void StoreLastInsertedId(const nsACString& aTable,
+                                  const int64_t aLastInsertedId);
 
   bool isBatching() {
     return mBatchLevel > 0;
