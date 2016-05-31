@@ -347,6 +347,17 @@ class FunctionCompiler
         return MSimdBinaryComp::AddLegalized(alloc(), curBlock_, lhs, rhs, op, sign);
     }
 
+    MDefinition* binarySimdSaturating(MDefinition* lhs, MDefinition* rhs,
+                                      MSimdBinarySaturating::Operation op, SimdSign sign)
+    {
+        if (inDeadCode())
+            return nullptr;
+
+        auto* ins = MSimdBinarySaturating::New(alloc(), lhs, rhs, op, sign);
+        curBlock_->add(ins);
+        return ins;
+    }
+
     MDefinition* binarySimdShift(MDefinition* lhs, MDefinition* rhs, MSimdShift::Operation op)
     {
         if (inDeadCode())
@@ -2394,6 +2405,19 @@ EmitSimdBinaryComp(FunctionCompiler& f, ValType operandType, MSimdBinaryComp::Op
 }
 
 static bool
+EmitSimdBinarySaturating(FunctionCompiler& f, ValType type, MSimdBinarySaturating::Operation op,
+                         SimdSign sign)
+{
+    MDefinition* lhs;
+    MDefinition* rhs;
+    if (!f.iter().readBinary(type, &lhs, &rhs))
+        return false;
+
+    f.iter().setResult(f.binarySimdSaturating(lhs, rhs, op, sign));
+    return true;
+}
+
+static bool
 EmitSimdShift(FunctionCompiler& f, ValType operandType, MSimdShift::Operation op)
 {
     MDefinition* lhs;
@@ -2788,6 +2812,10 @@ EmitSimdOp(FunctionCompiler& f, ValType type, SimdOperation op, SimdSign sign)
       FOREACH_NUMERIC_SIMD_BINOP(_CASE)
       FOREACH_FLOAT_SIMD_BINOP(_CASE)
 #undef _CASE
+      case SimdOperation::Fn_addSaturate:
+        return EmitSimdBinarySaturating(f, type, MSimdBinarySaturating::add, sign);
+      case SimdOperation::Fn_subSaturate:
+        return EmitSimdBinarySaturating(f, type, MSimdBinarySaturating::sub, sign);
       case SimdOperation::Fn_fromFloat32x4:
         return EmitSimdConvert(f, ValType::F32x4, type, sign);
       case SimdOperation::Fn_fromInt32x4:
@@ -2804,8 +2832,6 @@ EmitSimdOp(FunctionCompiler& f, ValType type, SimdOperation op, SimdSign sign)
       case SimdOperation::Fn_fromUint8x16Bits:
       case SimdOperation::Fn_fromUint16x8Bits:
       case SimdOperation::Fn_fromFloat64x2Bits:
-      case SimdOperation::Fn_addSaturate:
-      case SimdOperation::Fn_subSaturate:
         MOZ_CRASH("NYI");
     }
     MOZ_CRASH("unexpected opcode");

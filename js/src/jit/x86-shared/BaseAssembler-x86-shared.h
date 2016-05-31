@@ -596,6 +596,32 @@ public:
         twoByteOpSimd("vpaddb", VEX_PD, OP2_PADDB_VdqWdq, address, src0, dst);
     }
 
+    void vpaddsb_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpaddsb", VEX_PD, OP2_PADDSB_VdqWdq, src1, src0, dst);
+    }
+    void vpaddsb_mr(int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpaddsb", VEX_PD, OP2_PADDSB_VdqWdq, offset, base, src0, dst);
+    }
+    void vpaddsb_mr(const void* address, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpaddsb", VEX_PD, OP2_PADDSB_VdqWdq, address, src0, dst);
+    }
+
+    void vpaddusb_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpaddusb", VEX_PD, OP2_PADDUSB_VdqWdq, src1, src0, dst);
+    }
+    void vpaddusb_mr(int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpaddusb", VEX_PD, OP2_PADDUSB_VdqWdq, offset, base, src0, dst);
+    }
+    void vpaddusb_mr(const void* address, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpaddusb", VEX_PD, OP2_PADDUSB_VdqWdq, address, src0, dst);
+    }
+
     void vpaddw_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
         twoByteOpSimd("vpaddw", VEX_PD, OP2_PADDW_VdqWdq, src1, src0, dst);
@@ -607,6 +633,32 @@ public:
     void vpaddw_mr(const void* address, XMMRegisterID src0, XMMRegisterID dst)
     {
         twoByteOpSimd("vpaddw", VEX_PD, OP2_PADDW_VdqWdq, address, src0, dst);
+    }
+
+    void vpaddsw_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpaddsw", VEX_PD, OP2_PADDSW_VdqWdq, src1, src0, dst);
+    }
+    void vpaddsw_mr(int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpaddsw", VEX_PD, OP2_PADDSW_VdqWdq, offset, base, src0, dst);
+    }
+    void vpaddsw_mr(const void* address, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpaddsw", VEX_PD, OP2_PADDSW_VdqWdq, address, src0, dst);
+    }
+
+    void vpaddusw_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpaddusw", VEX_PD, OP2_PADDUSW_VdqWdq, src1, src0, dst);
+    }
+    void vpaddusw_mr(int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpaddusw", VEX_PD, OP2_PADDUSW_VdqWdq, offset, base, src0, dst);
+    }
+    void vpaddusw_mr(const void* address, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpaddusw", VEX_PD, OP2_PADDUSW_VdqWdq, address, src0, dst);
     }
 
     void vpaddd_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
@@ -635,6 +687,32 @@ public:
         twoByteOpSimd("vpsubb", VEX_PD, OP2_PSUBB_VdqWdq, address, src0, dst);
     }
 
+    void vpsubsb_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpsubsb", VEX_PD, OP2_PSUBSB_VdqWdq, src1, src0, dst);
+    }
+    void vpsubsb_mr(int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpsubsb", VEX_PD, OP2_PSUBSB_VdqWdq, offset, base, src0, dst);
+    }
+    void vpsubsb_mr(const void* subress, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpsubsb", VEX_PD, OP2_PSUBSB_VdqWdq, subress, src0, dst);
+    }
+
+    void vpsubusb_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpsubusb", VEX_PD, OP2_PSUBUSB_VdqWdq, src1, src0, dst);
+    }
+    void vpsubusb_mr(int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpsubusb", VEX_PD, OP2_PSUBUSB_VdqWdq, offset, base, src0, dst);
+    }
+    void vpsubusb_mr(const void* subress, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpsubusb", VEX_PD, OP2_PSUBUSB_VdqWdq, subress, src0, dst);
+    }
+
     void vpsubw_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
         twoByteOpSimd("vpsubw", VEX_PD, OP2_PSUBW_VdqWdq, src1, src0, dst);
@@ -646,6 +724,32 @@ public:
     void vpsubw_mr(const void* address, XMMRegisterID src0, XMMRegisterID dst)
     {
         twoByteOpSimd("vpsubw", VEX_PD, OP2_PSUBW_VdqWdq, address, src0, dst);
+    }
+
+    void vpsubsw_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpsubsw", VEX_PD, OP2_PSUBSW_VdqWdq, src1, src0, dst);
+    }
+    void vpsubsw_mr(int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpsubsw", VEX_PD, OP2_PSUBSW_VdqWdq, offset, base, src0, dst);
+    }
+    void vpsubsw_mr(const void* subress, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpsubsw", VEX_PD, OP2_PSUBSW_VdqWdq, subress, src0, dst);
+    }
+
+    void vpsubusw_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpsubusw", VEX_PD, OP2_PSUBUSW_VdqWdq, src1, src0, dst);
+    }
+    void vpsubusw_mr(int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpsubusw", VEX_PD, OP2_PSUBUSW_VdqWdq, offset, base, src0, dst);
+    }
+    void vpsubusw_mr(const void* subress, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpsubusw", VEX_PD, OP2_PSUBUSW_VdqWdq, subress, src0, dst);
     }
 
     void vpsubd_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)

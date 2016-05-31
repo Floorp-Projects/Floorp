@@ -529,6 +529,34 @@ class LSimdBinaryArithFx4 : public LSimdBinaryArith
     LSimdBinaryArithFx4() : LSimdBinaryArith() {}
 };
 
+// Binary SIMD saturating arithmetic operation between two SIMD operands
+class LSimdBinarySaturating : public LInstructionHelper<1, 2, 0>
+{
+  public:
+    LIR_HEADER(SimdBinarySaturating);
+    LSimdBinarySaturating() {}
+
+    const LAllocation* lhs() {
+        return this->getOperand(0);
+    }
+    const LAllocation* rhs() {
+        return this->getOperand(1);
+    }
+
+    MSimdBinarySaturating::Operation operation() const {
+        return this->mir_->toSimdBinarySaturating()->operation();
+    }
+    SimdSign signedness() const {
+        return this->mir_->toSimdBinarySaturating()->signedness();
+    }
+    MIRType type() const {
+        return mir_->type();
+    }
+    const char* extraName() const {
+        return MSimdBinarySaturating::OperationName(operation());
+    }
+};
+
 // Unary SIMD arithmetic operation on a SIMD operand
 class LSimdUnaryArith : public LInstructionHelper<1, 1, 0>
 {
