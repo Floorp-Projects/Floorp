@@ -56,6 +56,7 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
     void lowerUrshD(MUrsh* mir);
     void lowerTruncateDToInt32(MTruncateToInt32* ins);
     void lowerTruncateFToInt32(MTruncateToInt32* ins);
+    void visitSimdInsertElement(MSimdInsertElement* ins);
     void visitSimdExtractElement(MSimdExtractElement* ins);
     void visitSimdBinaryArith(MSimdBinaryArith* ins);
     void visitSimdSelect(MSimdSelect* ins);

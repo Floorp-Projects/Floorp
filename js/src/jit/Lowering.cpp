@@ -4386,26 +4386,6 @@ LIRGenerator::visitSimdReinterpretCast(MSimdReinterpretCast* ins)
 }
 
 void
-LIRGenerator::visitSimdInsertElement(MSimdInsertElement* ins)
-{
-    MOZ_ASSERT(IsSimdType(ins->type()));
-
-    LUse vec = useRegisterAtStart(ins->vector());
-    LUse val = useRegister(ins->value());
-    switch (ins->type()) {
-      case MIRType::Int32x4:
-      case MIRType::Bool32x4:
-        defineReuseInput(new(alloc()) LSimdInsertElementI(vec, val), ins, 0);
-        break;
-      case MIRType::Float32x4:
-        defineReuseInput(new(alloc()) LSimdInsertElementF(vec, val), ins, 0);
-        break;
-      default:
-        MOZ_CRASH("Unknown SIMD kind when generating constant");
-    }
-}
-
-void
 LIRGenerator::visitSimdAllTrue(MSimdAllTrue* ins)
 {
     MDefinition* input = ins->input();

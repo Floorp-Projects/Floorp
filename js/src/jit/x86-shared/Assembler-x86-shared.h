@@ -2106,23 +2106,19 @@ class AssemblerX86Shared : public AssemblerShared
         masm.divl_r(divisor.encoding());
     }
 
+    void vpinsrb(unsigned lane, Register src1, FloatRegister src0, FloatRegister dest) {
+        MOZ_ASSERT(HasSSE41());
+        masm.vpinsrb_irr(lane, src1.encoding(), src0.encoding(), dest.encoding());
+    }
+    void vpinsrw(unsigned lane, Register src1, FloatRegister src0, FloatRegister dest) {
+        masm.vpinsrw_irr(lane, src1.encoding(), src0.encoding(), dest.encoding());
+    }
+
     void vpinsrd(unsigned lane, Register src1, FloatRegister src0, FloatRegister dest) {
         MOZ_ASSERT(HasSSE41());
         masm.vpinsrd_irr(lane, src1.encoding(), src0.encoding(), dest.encoding());
     }
-    void vpinsrd(unsigned lane, const Operand& src1, FloatRegister src0, FloatRegister dest) {
-        MOZ_ASSERT(HasSSE41());
-        switch (src1.kind()) {
-          case Operand::REG:
-            masm.vpinsrd_irr(lane, src1.reg(), src0.encoding(), dest.encoding());
-            break;
-          case Operand::MEM_REG_DISP:
-            masm.vpinsrd_imr(lane, src1.disp(), src1.base(), src0.encoding(), dest.encoding());
-            break;
-          default:
-            MOZ_CRASH("unexpected operand kind");
-        }
-    }
+
     void vpextrb(unsigned lane, FloatRegister src, Register dest) {
         MOZ_ASSERT(HasSSE41());
         masm.vpextrb_irr(lane, src.encoding(), dest.encoding());
