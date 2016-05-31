@@ -9,11 +9,11 @@ function booleanBinaryX4(op, v, w) {
     return arr;
 }
 
-function binaryX4(op, v, w) {
+function binaryX(op, v, w) {
     var arr = [];
     var [varr, warr] = [simdToArray(v), simdToArray(w)];
     [varr, warr] = [varr.map(Math.fround), warr.map(Math.fround)];
-    for (var i = 0; i < 4; i++)
+    for (var i = 0; i < varr.length; i++)
         arr[i] = op(varr[i], warr[i]);
     return arr.map(Math.fround);
 }
