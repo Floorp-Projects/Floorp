@@ -145,6 +145,7 @@ public:
   // Wrapper functions for Animation DOM methods when called from style.
 
   virtual void CancelFromStyle() { CancelNoUpdate(); }
+  void SetTimelineNoUpdate(AnimationTimeline* aTimeline);
 
   virtual void Tick();
   bool NeedsTicks() const
