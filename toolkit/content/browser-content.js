@@ -263,6 +263,7 @@ var PopupBlocking = {
     addEventListener("pagehide", this, true);
 
     addMessageListener("PopupBlocking:UnblockPopup", this);
+    addMessageListener("PopupBlocking:GetBlockedPopupList", this);
   },
 
   receiveMessage: function(msg) {
@@ -277,9 +278,34 @@ var PopupBlocking = {
           // If we have a requesting window and the requesting document is
           // still the current document, open the popup.
           if (dwi && dwi.document == internals.requestingDocument) {
-            dwi.open(data.popupWindowURI, data.popupWindowName, data.popupWindowFeatures);
+            dwi.open(data.popupWindowURIspec, data.popupWindowName, data.popupWindowFeatures);
           }
         }
+        break;
+      }
+
+      case "PopupBlocking:GetBlockedPopupList": {
+        let popupData = [];
+        let length = this.popupData ? this.popupData.length : 0;
+
+        // Limit 15 popup URLs to be reported through the UI
+        length = Math.min(length, 15);
+
+        for (let i = 0; i < length; i++) {
+          let popupWindowURIspec = this.popupData[i].popupWindowURIspec;
+
+          if (popupWindowURIspec == global.content.location.href) {
+            popupWindowURIspec = "<self>";
+          } else {
+            // Limit 500 chars to be sent because the URI will be cropped
+            // by the UI anyway, and data: URIs can be significantly larger.
+            popupWindowURIspec = popupWindowURIspec.substring(0, 500)
+          }
+
+          popupData.push({popupWindowURIspec});
+        }
+
+        sendAsyncMessage("PopupBlocking:ReplyGetBlockedPopupList", {popupData});
         break;
       }
     }
@@ -304,7 +330,7 @@ var PopupBlocking = {
     }
 
     let obj = {
-      popupWindowURI: ev.popupWindowURI ? ev.popupWindowURI.spec : "about:blank",
+      popupWindowURIspec: ev.popupWindowURI ? ev.popupWindowURI.spec : "about:blank",
       popupWindowFeatures: ev.popupWindowFeatures,
       popupWindowName: ev.popupWindowName
     };
@@ -351,7 +377,10 @@ var PopupBlocking = {
 
   updateBlockedPopups: function(freshPopup) {
     sendAsyncMessage("PopupBlocking:UpdateBlockedPopups",
-                     {blockedPopups: this.popupData, freshPopup: freshPopup});
+      {
+        count: this.popupData ? this.popupData.length : 0,
+        freshPopup
+      });
   },
 };
 PopupBlocking.init();

@@ -21,6 +21,10 @@ select {
   background-size: 16px, 16px;
 }
 
+select:-moz-dir(rtl) {
+  background-position: calc(100% - 8px) center, 4px center;
+}
+
 select:-moz-focusring {
   color: transparent;
   text-shadow: 0 0 0 var(--in-content-text-color);
@@ -33,4 +37,8 @@ option {
   background-position: 8px center;
   background-size: 16px;
   background-color: var(--in-content-page-background);
+}
+
+option:-moz-dir(rtl) {
+  background-position: calc(100% - 8px) center;
 }

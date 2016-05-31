@@ -105,6 +105,7 @@ devtools/client/webaudioeditor/**
 devtools/client/webconsole/**
 !devtools/client/webconsole/panel.js
 !devtools/client/webconsole/jsterm.js
+!devtools/client/webconsole/console-commands.js
 devtools/client/webide/**
 devtools/server/**
 !devtools/server/actors/webbrowser.js

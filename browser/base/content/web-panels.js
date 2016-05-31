@@ -74,6 +74,7 @@ function load()
     var panelBrowser = getPanelBrowser();
     panelBrowser.webProgress.addProgressListener(panelProgressListener,
                                                  Ci.nsIWebProgress.NOTIFY_ALL);
+    panelBrowser.messageManager.loadFrameScript("chrome://browser/content/content.js", true);
     var cachedurl = panelBrowser.getAttribute("cachedurl")
     if (cachedurl) {
         panelBrowser.webNavigation
