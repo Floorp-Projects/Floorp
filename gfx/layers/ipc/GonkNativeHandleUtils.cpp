@@ -37,7 +37,7 @@ ParamTraits<GonkNativeHandle>::Read(const Message* aMsg,
   size_t nbytes;
   const char* data;
   if (!aMsg->ReadSize(aIter, &nbytes) ||
-      !aMsg->ReadBytes(aIter, &data, nbytes)) {
+      !aMsg->ReadBytesInto(aIter, &data, nbytes)) {
     return false;
   }
 
