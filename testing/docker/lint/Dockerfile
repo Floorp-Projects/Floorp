@@ -1,16 +1,17 @@
-FROM          node:4.2
-MAINTAINER    Dave Townsend <dtownsend@oxymoronical.com>
+FROM          ubuntu:16.04
+MAINTAINER    Andrew Halberstadt <ahalberstadt@mozilla.com>
 
 RUN useradd -d /home/worker -s /bin/bash -m worker
 WORKDIR /home/worker
-
-# install necessary npm packages
-RUN           npm install -g taskcluster-vcs@2.3.12
 
 # Install tooltool directly from github.
 RUN mkdir /build
 ADD https://raw.githubusercontent.com/mozilla/build-tooltool/master/tooltool.py /build/tooltool.py
 RUN chmod +rx /build/tooltool.py
+
+# Install lint packages
+ADD           system-setup.sh   /tmp/system-setup.sh
+RUN           bash /tmp/system-setup.sh
 
 # Set variable normally configured at login, by the shells parent process, these
 # are taken from GNU su manual

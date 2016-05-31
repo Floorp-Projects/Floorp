@@ -6,22 +6,11 @@
 
 [Pref="dom.presentation.enabled",
  Func="Navigator::HasPresentationSupport"]
-interface PresentationReceiver : EventTarget {
+interface PresentationReceiver {
   /*
-   * Get the first connected presentation connection in a receiving browsing
-   * context.
+   * Get a list which contains all connected presentation connections
+   * in a receiving browsing context.
    */
-  [Throws]
-  Promise<PresentationConnection> getConnection();
-
-  /*
-   * Get all connected presentation connections in a receiving browsing context.
-   */
-  [Throws]
-  Promise<sequence<PresentationConnection>> getConnections();
-
-  /*
-   * It is called when an incoming connection is connecting.
-   */
-  attribute EventHandler onconnectionavailable;
+  [SameObject, Throws]
+  readonly attribute Promise<PresentationConnectionList> connectionList;
 };

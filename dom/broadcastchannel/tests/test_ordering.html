@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for BroadcastChannel.postMessage invalid State</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<div id="content"></div>
+
+<script type="application/javascript">
+
+let c1 = new BroadcastChannel('order');
+let c2 = new BroadcastChannel('order');
+let c3 = new BroadcastChannel('order');
+
+let events = [];
+let doneCount = 0;
+
+function whichBC(bc) {
+  if (bc == c1) return "c1";
+  if (bc == c2) return "c2";
+  if (bc == c3) return "c3";
+  return "What?!?";
+}
+
+function handler(e) {
+  events.push(e);
+  if (e.data == 'done') {
+    doneCount++;
+    if (doneCount == 2) {
+      is(events.length, 6, "Correct length");
+      is(whichBC(events[0].target), "c2", 'target for event 0');
+      is(events[0].data, 'from c1');
+      is(whichBC(events[1].target), "c3", 'target for event 1');
+      is(events[1].data, 'from c1');
+      is(whichBC(events[2].target), "c1", 'target for event 2');
+      is(events[2].data, 'from c3');
+      is(whichBC(events[3].target), "c2", 'target for event 3');
+      is(events[3].data, 'from c3');
+      is(whichBC(events[4].target), "c1", 'target for event 4');
+      is(events[4].data, 'done');
+      is(whichBC(events[5].target), "c3", 'target for event 5');
+      is(events[5].data, 'done');
+
+      SimpleTest.finish();
+    }
+  }
+}
+
+c1.onmessage = handler;
+c2.onmessage = handler;
+c3.onmessage = handler;
+
+c1.postMessage('from c1');
+c3.postMessage('from c3');
+c2.postMessage('done');
+
+SimpleTest.waitForExplicitFinish();
+
+</script>
+</body>
+</html>
+

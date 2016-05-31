@@ -313,7 +313,7 @@ protected:
   int64_t GetPositionInFramesUnlocked();
 
 private:
-  nsresult OpenCubeb(cubeb_stream_params &aParams);
+  nsresult OpenCubeb(cubeb_stream_params &aParams, TimeStamp aStartTime);
 
   static long DataCallback_S(cubeb_stream*, void* aThis,
                              const void* /* aInputBuffer */, void* aOutputBuffer,
@@ -340,8 +340,6 @@ private:
   void GetUnprocessed(AudioBufferWriter& aWriter);
   void GetTimeStretched(AudioBufferWriter& aWriter);
 
-  void StartUnlocked();
-
   // The monitor is held to protect all access to member variables.
   Monitor mMonitor;
 
@@ -353,9 +351,6 @@ private:
   uint32_t mOutChannels;
   AudioClock mAudioClock;
   soundtouch::SoundTouch* mTimeStretcher;
-
-  // Stream start time for stream open delay telemetry.
-  TimeStamp mStartTime;
 
   // Output file for dumping audio
   FILE* mDumpFile;

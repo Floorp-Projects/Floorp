@@ -33,6 +33,7 @@
 #include <stdarg.h>
 #include <string.h>
 
+#include "ds/PageProtectingVector.h"
 #include "jit/ExecutableAllocator.h"
 #include "jit/JitSpewer.h"
 
@@ -67,7 +68,21 @@ namespace js {
 
 namespace jit {
 
-    class AssemblerBuffer {
+    class AssemblerBuffer
+    {
+        template<size_t size, typename T>
+        MOZ_ALWAYS_INLINE void sizedAppendUnchecked(T value)
+        {
+            m_buffer.infallibleAppend(reinterpret_cast<unsigned char*>(&value), size);
+        }
+
+        template<size_t size, typename T>
+        MOZ_ALWAYS_INLINE void sizedAppend(T value)
+        {
+            if (MOZ_UNLIKELY(!m_buffer.append(reinterpret_cast<unsigned char*>(&value), size)))
+                oomDetected();
+        }
+
     public:
         AssemblerBuffer()
             : m_oom(false)
@@ -80,65 +95,28 @@ namespace jit {
                 oomDetected();
         }
 
-        bool growByUninitialized(size_t space)
-        {
-            if (MOZ_UNLIKELY(!m_buffer.growByUninitialized(space))) {
-                oomDetected();
-                return false;
-            }
-            return true;
-        }
-
         bool isAligned(size_t alignment) const
         {
             return !(m_buffer.length() & (alignment - 1));
         }
 
-        void putByteUnchecked(int value)
-        {
-            m_buffer.infallibleAppend(char(value));
-        }
+        MOZ_ALWAYS_INLINE void putByteUnchecked(int value) { sizedAppendUnchecked<1>(value); }
+        MOZ_ALWAYS_INLINE void putShortUnchecked(int value) { sizedAppendUnchecked<2>(value); }
+        MOZ_ALWAYS_INLINE void putIntUnchecked(int value) { sizedAppendUnchecked<4>(value); }
+        MOZ_ALWAYS_INLINE void putInt64Unchecked(int64_t value) { sizedAppendUnchecked<8>(value); }
 
-        void putByte(int value)
+        MOZ_ALWAYS_INLINE void putByte(int value) { sizedAppend<1>(value); }
+        MOZ_ALWAYS_INLINE void putShort(int value) { sizedAppend<2>(value); }
+        MOZ_ALWAYS_INLINE void putInt(int value) { sizedAppend<4>(value); }
+        MOZ_ALWAYS_INLINE void putInt64(int64_t value) { sizedAppend<8>(value); }
+
+        MOZ_MUST_USE bool append(const unsigned char* values, size_t size)
         {
-            if (MOZ_UNLIKELY(!m_buffer.append(char(value))))
+            if (MOZ_UNLIKELY(!m_buffer.append(values, size))) {
                 oomDetected();
-        }
-
-        void putShortUnchecked(int value)
-        {
-            m_buffer.infallibleGrowByUninitialized(2);
-            memcpy(m_buffer.end() - 2, &value, 2);
-        }
-
-        void putShort(int value)
-        {
-            if (MOZ_UNLIKELY(!m_buffer.growByUninitialized(2))) {
-                oomDetected();
-                return;
+                return false;
             }
-            memcpy(m_buffer.end() - 2, &value, 2);
-        }
-
-        void putIntUnchecked(int value)
-        {
-            m_buffer.infallibleGrowByUninitialized(4);
-            memcpy(m_buffer.end() - 4, &value, 4);
-        }
-
-        void putInt64Unchecked(int64_t value)
-        {
-            m_buffer.infallibleGrowByUninitialized(8);
-            memcpy(m_buffer.end() - 8, &value, 8);
-        }
-
-        void putInt(int value)
-        {
-            if (MOZ_UNLIKELY(!m_buffer.growByUninitialized(4))) {
-                oomDetected();
-                return;
-            }
-            memcpy(m_buffer.end() - 4, &value, 4);
+            return true;
         }
 
         unsigned char* data()
@@ -161,6 +139,16 @@ namespace jit {
             return m_buffer.begin();
         }
 
+        void enableBufferProtection() { m_buffer.enableProtection(); }
+        void disableBufferProtection() { m_buffer.disableProtection(); }
+
+        void unprotectDataRegion(size_t firstByteOffset, size_t lastByteOffset) {
+            m_buffer.unprotectRegion(firstByteOffset, lastByteOffset);
+        }
+        void reprotectDataRegion(size_t firstByteOffset, size_t lastByteOffset) {
+            m_buffer.reprotectRegion(firstByteOffset, lastByteOffset);
+        }
+
     protected:
         /*
          * OOM handling: This class can OOM in the ensureSpace() method trying
@@ -181,7 +169,7 @@ namespace jit {
             m_buffer.clear();
         }
 
-        mozilla::Vector<unsigned char, 256, SystemAllocPolicy> m_buffer;
+        PageProtectingVector<unsigned char, 256, SystemAllocPolicy> m_buffer;
         bool m_oom;
     };
 

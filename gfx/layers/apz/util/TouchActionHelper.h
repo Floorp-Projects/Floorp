@@ -3,12 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef __mozilla_widget_ContentHelper_h__
-#define __mozilla_widget_ContentHelper_h__
+#ifndef __mozilla_layers_TouchActionHelper_h__
+#define __mozilla_layers_TouchActionHelper_h__
 
 #include "nsIFrame.h"
 #include "nsIWidget.h"
 #include "mozilla/layers/APZCTreeManager.h"
+#include "mozilla/layers/APZUtils.h"  
 
 namespace mozilla {
 namespace widget {
@@ -16,13 +17,12 @@ namespace widget {
 /*
  * Allow different platform widgets to access Content/DOM stuff.
  */
-class ContentHelper
+class TouchActionHelper
 {
   typedef mozilla::layers::AllowedTouchBehavior AllowedTouchBehavior;
-  typedef uint32_t TouchBehaviorFlags;
 
 private:
-  static void UpdateAllowedBehavior(uint32_t aTouchActionValue, bool aConsiderPanning, TouchBehaviorFlags& aOutBehavior);
+  static void UpdateAllowedBehavior(uint32_t aTouchActionValue, bool aConsiderPanning, mozilla::layers::TouchBehaviorFlags& aOutBehavior);
 
 public:
   /*
@@ -30,10 +30,10 @@ public:
    * touch-action css property value from it according the rules specified in the spec:
    * http://www.w3.org/TR/pointerevents/#the-touch-action-css-property.
    */
-  static TouchBehaviorFlags GetAllowedTouchBehavior(nsIWidget* aWidget, const LayoutDeviceIntPoint& aPoint);
+  static mozilla::layers::TouchBehaviorFlags GetAllowedTouchBehavior(nsIWidget* aWidget, const LayoutDeviceIntPoint& aPoint);
 };
 
 } // namespace widget
 } // namespace mozilla
 
-#endif /*__mozilla_widget_ContentHelper_h__ */
+#endif /*__mozilla_layers_TouchActionHelper_h__ */

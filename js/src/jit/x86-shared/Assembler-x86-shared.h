@@ -911,7 +911,6 @@ class AssemblerX86Shared : public AssemblerShared
 
   public:
     void nop() { masm.nop(); }
-    void twoByteNop() { masm.twoByteNop(); }
     void j(Condition cond, Label* label) { jSrc(cond, label); }
     void jmp(Label* label) { jmpSrc(label); }
     void j(Condition cond, RepatchLabel* label) { jSrc(cond, label); }
@@ -1055,6 +1054,7 @@ class AssemblerX86Shared : public AssemblerShared
     }
     void patchCall(uint32_t callerOffset, uint32_t calleeOffset) {
         unsigned char* code = masm.data();
+        X86Encoding::AutoUnprotectAssemblerBufferRegion unprotect(masm, callerOffset - 4, 4);
         X86Encoding::SetRel32(code + callerOffset, code + calleeOffset);
     }
     CodeOffset thunkWithPatch() {
@@ -1062,10 +1062,21 @@ class AssemblerX86Shared : public AssemblerShared
     }
     void patchThunk(uint32_t thunkOffset, uint32_t targetOffset) {
         unsigned char* code = masm.data();
+        X86Encoding::AutoUnprotectAssemblerBufferRegion unprotect(masm, thunkOffset - 4, 4);
         X86Encoding::SetRel32(code + thunkOffset, code + targetOffset);
     }
     static void repatchThunk(uint8_t* code, uint32_t thunkOffset, uint32_t targetOffset) {
         X86Encoding::SetRel32(code + thunkOffset, code + targetOffset);
+    }
+
+    CodeOffset twoByteNop() {
+        return CodeOffset(masm.twoByteNop().offset());
+    }
+    static void patchTwoByteNopToJump(uint8_t* jump, uint8_t* target) {
+        X86Encoding::BaseAssembler::patchTwoByteNopToJump(jump, target);
+    }
+    static void patchJumpToTwoByteNop(uint8_t* jump) {
+        X86Encoding::BaseAssembler::patchJumpToTwoByteNop(jump);
     }
 
     void breakpoint() {

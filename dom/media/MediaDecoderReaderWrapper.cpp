@@ -397,9 +397,11 @@ MediaDecoderReaderWrapper::ResetDecode(TargetQueues aQueues)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
 
-  mAudioDataRequest.DisconnectIfExists();
+  if (aQueues == MediaDecoderReader::AUDIO_VIDEO) {
+    mAudioDataRequest.DisconnectIfExists();
+    mAudioWaitRequest.DisconnectIfExists();
+  }
   mVideoDataRequest.DisconnectIfExists();
-  mAudioWaitRequest.DisconnectIfExists();
   mVideoWaitRequest.DisconnectIfExists();
 
   nsCOMPtr<nsIRunnable> r =

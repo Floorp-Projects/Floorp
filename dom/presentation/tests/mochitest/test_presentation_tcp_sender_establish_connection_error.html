@@ -104,12 +104,17 @@ function testStartConnectionUnexpectedControlChannelCloseBeforeDataTransportInit
 
     request.start().then(
       function(aConnection) {
-        ok(false, "|start| shouldn't succeed in this case.");
-        aReject();
+        is(aConnection.state, "connecting", "The initial state should be connecting.");
+        aConnection.onterminate = function() {
+          aConnection.onterminate = null;
+          is(aConnection.state, "terminated", "Connection should be terminated.");
+          aResolve();
+        };
       },
       function(aError) {
-        is(aError.name, "OperationError", "OperationError is expected when a connection error happens during establishing a connection.");
-        aResolve();
+        ok(false, "Error occurred when establishing a connection: " + aError);
+        teardown();
+        aReject();
       }
     );
   });
@@ -147,12 +152,17 @@ function testStartConnectionUnexpectedControlChannelCloseNoReasonBeforeDataTrans
 
     request.start().then(
       function(aConnection) {
-        ok(false, "|start| shouldn't succeed in this case.");
-        aReject();
+        is(aConnection.state, "connecting", "The initial state should be connecting.");
+        aConnection.onterminate = function() {
+          aConnection.onterminate = null;
+          is(aConnection.state, "terminated", "Connection should be terminated.");
+          aResolve();
+        };
       },
       function(aError) {
-        is(aError.name, "OperationError", "OperationError is expected when a connection closed during establishing a connection.");
-        aResolve();
+        ok(false, "Error occurred when establishing a connection: " + aError);
+        teardown();
+        aReject();
       }
     );
   });
@@ -201,12 +211,17 @@ function testStartConnectionUnexpectedControlChannelCloseBeforeDataTransportRead
 
     request.start().then(
       function(aConnection) {
-        ok(false, "|start| shouldn't succeed in this case.");
-        aReject();
+        is(aConnection.state, "connecting", "The initial state should be connecting.");
+        aConnection.onterminate = function() {
+          aConnection.onterminate = null;
+          is(aConnection.state, "terminated", "Connection should be terminated.");
+          aResolve();
+        };
       },
       function(aError) {
-        is(aError.name, "OperationError", "OperationError is expected when a connection error happens during establishing a connection.");
-        aResolve();
+        ok(false, "Error occurred when establishing a connection: " + aError);
+        teardown();
+        aReject();
       }
     );
   });
@@ -255,12 +270,17 @@ function testStartConnectionUnexpectedControlChannelCloseNoReasonBeforeDataTrans
 
     request.start().then(
       function(aConnection) {
-        ok(false, "|start| shouldn't succeed in this case.");
-        aReject();
+        is(aConnection.state, "connecting", "The initial state should be connecting.");
+        aConnection.onterminate = function() {
+          aConnection.onterminate = null;
+          is(aConnection.state, "terminated", "Connection should be terminated.");
+          aResolve();
+        };
       },
       function(aError) {
-        is(aError.name, "OperationError", "OperationError is expected when a connection closed during establishing a connection.");
-        aResolve();
+        ok(false, "Error occurred when establishing a connection: " + aError);
+        teardown();
+        aReject();
       }
     );
   });
@@ -309,12 +329,17 @@ function testStartConnectionUnexpectedDataTransportClose() {
 
     request.start().then(
       function(aConnection) {
-        ok(false, "|start| shouldn't succeed in this case.");
-        aReject();
+        is(aConnection.state, "connecting", "The initial state should be connecting.");
+        aConnection.onterminate = function() {
+          aConnection.onterminate = null;
+          is(aConnection.state, "terminated", "Connection should be terminated.");
+          aResolve();
+        };
       },
       function(aError) {
-        is(aError.name, "OperationError", "OperationError is expected when a connection error happens during establishing a connection.");
-        aResolve();
+        ok(false, "Error occurred when establishing a connection: " + aError);
+        teardown();
+        aReject();
       }
     );
   });

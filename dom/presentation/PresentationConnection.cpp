@@ -4,15 +4,20 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "PresentationConnection.h"
+
 #include "mozilla/AsyncEventDispatcher.h"
+#include "mozilla/dom/DOMException.h"
 #include "mozilla/dom/MessageEvent.h"
 #include "mozilla/dom/MessageEventBinding.h"
+#include "mozilla/dom/PresentationConnectionClosedEvent.h"
+#include "mozilla/ErrorNames.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIPresentationService.h"
 #include "nsServiceManagerUtils.h"
 #include "nsStringStream.h"
-#include "PresentationConnection.h"
+#include "PresentationConnectionList.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -20,10 +25,12 @@ using namespace mozilla::dom;
 NS_IMPL_CYCLE_COLLECTION_CLASS(PresentationConnection)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PresentationConnection, DOMEventTargetHelper)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mOwningConnectionList)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PresentationConnection, DOMEventTargetHelper)
   tmp->Shutdown();
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mOwningConnectionList)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_ADDREF_INHERITED(PresentationConnection, DOMEventTargetHelper)
@@ -31,15 +38,17 @@ NS_IMPL_RELEASE_INHERITED(PresentationConnection, DOMEventTargetHelper)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(PresentationConnection)
   NS_INTERFACE_MAP_ENTRY(nsIPresentationSessionListener)
+  NS_INTERFACE_MAP_ENTRY(nsIRequest)
 NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
 
 PresentationConnection::PresentationConnection(nsPIDOMWindowInner* aWindow,
                                                const nsAString& aId,
                                                const uint8_t aRole,
-                                               PresentationConnectionState aState)
+                                               PresentationConnectionList* aList)
   : DOMEventTargetHelper(aWindow)
   , mId(aId)
-  , mState(aState)
+  , mState(PresentationConnectionState::Connecting)
+  , mOwningConnectionList(aList)
 {
   MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
              aRole == nsIPresentationService::ROLE_RECEIVER);
@@ -54,12 +63,12 @@ PresentationConnection::PresentationConnection(nsPIDOMWindowInner* aWindow,
 PresentationConnection::Create(nsPIDOMWindowInner* aWindow,
                                const nsAString& aId,
                                const uint8_t aRole,
-                               PresentationConnectionState aState)
+                               PresentationConnectionList* aList)
 {
   MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
              aRole == nsIPresentationService::ROLE_RECEIVER);
   RefPtr<PresentationConnection> connection =
-    new PresentationConnection(aWindow, aId, aRole, aState);
+    new PresentationConnection(aWindow, aId, aRole, aList);
   return NS_WARN_IF(!connection->Init()) ? nullptr : connection.forget();
 }
 
@@ -81,6 +90,18 @@ PresentationConnection::Init()
     return false;
   }
 
+  nsCOMPtr<nsILoadGroup> loadGroup;
+  GetLoadGroup(getter_AddRefs(loadGroup));
+  if(NS_WARN_IF(!loadGroup)) {
+    return false;
+  }
+
+  rv = loadGroup->AddRequest(this, nullptr);
+  if(NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
+  mWeakLoadGroup = do_GetWeakReference(loadGroup);
+
   return true;
 }
 
@@ -95,12 +116,18 @@ PresentationConnection::Shutdown()
 
   nsresult rv = service->UnregisterSessionListener(mId, mRole);
   NS_WARN_IF(NS_FAILED(rv));
+
+  nsCOMPtr<nsILoadGroup> loadGroup = do_QueryReferent(mWeakLoadGroup);
+  if (loadGroup) {
+    loadGroup->RemoveRequest(this, nullptr, NS_OK);
+    mWeakLoadGroup = nullptr;
+  }
 }
 
 /* virtual */ void
 PresentationConnection::DisconnectFromOwner()
 {
-  Shutdown();
+  NS_WARN_IF(NS_FAILED(ProcessConnectionWentAway()));
   DOMEventTargetHelper::DisconnectFromOwner();
 }
 
@@ -178,7 +205,8 @@ PresentationConnection::Terminate(ErrorResult& aRv)
 
 NS_IMETHODIMP
 PresentationConnection::NotifyStateChange(const nsAString& aSessionId,
-                                          uint16_t aState)
+                                          uint16_t aState,
+                                          nsresult aReason)
 {
   if (!aSessionId.Equals(mId)) {
     return NS_ERROR_INVALID_ARG;
@@ -186,6 +214,9 @@ PresentationConnection::NotifyStateChange(const nsAString& aSessionId,
 
   PresentationConnectionState state;
   switch (aState) {
+    case nsIPresentationSessionListener::STATE_CONNECTING:
+      state = PresentationConnectionState::Connecting;
+      break;
     case nsIPresentationSessionListener::STATE_CONNECTED:
       state = PresentationConnectionState::Connected;
       break;
@@ -203,24 +234,70 @@ PresentationConnection::NotifyStateChange(const nsAString& aSessionId,
   if (mState == state) {
     return NS_OK;
   }
-
   mState = state;
 
-  // Unregister session listener if the session is no longer connected.
-  if (mState == PresentationConnectionState::Terminated) {
-    nsCOMPtr<nsIPresentationService> service =
-      do_GetService(PRESENTATION_SERVICE_CONTRACTID);
-    if (NS_WARN_IF(!service)) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    nsresult rv = service->UnregisterSessionListener(mId, mRole);
-    if(NS_WARN_IF(NS_FAILED(rv))) {
+  nsresult rv = ProcessStateChanged(aReason);
+  if(NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
-    }
   }
 
-  return DispatchStateChangeEvent();
+  if (mOwningConnectionList) {
+    mOwningConnectionList->NotifyStateChange(aSessionId, this);
+  }
+
+  return NS_OK;
+}
+
+nsresult
+PresentationConnection::ProcessStateChanged(nsresult aReason)
+{
+  switch (mState) {
+    case PresentationConnectionState::Connected: {
+      RefPtr<AsyncEventDispatcher> asyncDispatcher =
+        new AsyncEventDispatcher(this, NS_LITERAL_STRING("connect"), false);
+      return asyncDispatcher->PostDOMEvent();
+    }
+    case PresentationConnectionState::Closed: {
+      PresentationConnectionClosedReason reason =
+        PresentationConnectionClosedReason::Closed;
+
+      nsString errorMsg;
+      if (NS_FAILED(aReason)) {
+        reason = PresentationConnectionClosedReason::Error;
+        nsCString name, message;
+
+        // If aReason is not a DOM error, use error name as message.
+        if (NS_FAILED(NS_GetNameAndMessageForDOMNSResult(aReason,
+                                                         name,
+                                                         message))) {
+          mozilla::GetErrorName(aReason, message);
+          message.InsertLiteral("Internal error: ", 0);
+        }
+        CopyUTF8toUTF16(message, errorMsg);
+      }
+
+      return DispatchConnectionClosedEvent(reason, errorMsg);
+    }
+    case PresentationConnectionState::Terminated: {
+      nsCOMPtr<nsIPresentationService> service =
+        do_GetService(PRESENTATION_SERVICE_CONTRACTID);
+      if (NS_WARN_IF(!service)) {
+        return NS_ERROR_NOT_AVAILABLE;
+      }
+
+      nsresult rv = service->UnregisterSessionListener(mId, mRole);
+      if(NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      RefPtr<AsyncEventDispatcher> asyncDispatcher =
+        new AsyncEventDispatcher(this, NS_LITERAL_STRING("terminate"), false);
+      return asyncDispatcher->PostDOMEvent();
+    }
+    default:
+      MOZ_CRASH("Unknown presentation session state.");
+      return NS_ERROR_INVALID_ARG;
+  }
 }
 
 NS_IMETHODIMP
@@ -252,10 +329,27 @@ PresentationConnection::NotifyMessage(const nsAString& aSessionId,
 }
 
 nsresult
-PresentationConnection::DispatchStateChangeEvent()
+PresentationConnection::DispatchConnectionClosedEvent(
+  PresentationConnectionClosedReason aReason,
+  const nsAString& aMessage)
 {
+  if (mState != PresentationConnectionState::Closed) {
+    MOZ_ASSERT(false, "The connection state should be closed.");
+    return NS_ERROR_FAILURE;
+  }
+
+  PresentationConnectionClosedEventInit init;
+  init.mReason = aReason;
+  init.mMessage = aMessage;
+
+  RefPtr<PresentationConnectionClosedEvent> closedEvent =
+    PresentationConnectionClosedEvent::Constructor(this,
+                                                   NS_LITERAL_STRING("close"),
+                                                   init);
+  closedEvent->SetTrusted(true);
+
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
-    new AsyncEventDispatcher(this, NS_LITERAL_STRING("statechange"), false);
+    new AsyncEventDispatcher(this, static_cast<Event*>(closedEvent));
   return asyncDispatcher->PostDOMEvent();
 }
 
@@ -286,4 +380,98 @@ PresentationConnection::DispatchMessageEvent(JS::Handle<JS::Value> aData)
   RefPtr<AsyncEventDispatcher> asyncDispatcher =
     new AsyncEventDispatcher(this, static_cast<Event*>(messageEvent));
   return asyncDispatcher->PostDOMEvent();
+}
+
+nsresult
+PresentationConnection::ProcessConnectionWentAway()
+{
+  if (mState != PresentationConnectionState::Connected &&
+      mState != PresentationConnectionState::Connecting) {
+    // If the state is not connected or connecting, do not need to
+    // close the session.
+    return NS_OK;
+  }
+
+  mState = PresentationConnectionState::Terminated;
+
+  nsCOMPtr<nsIPresentationService> service =
+    do_GetService(PRESENTATION_SERVICE_CONTRACTID);
+  if (NS_WARN_IF(!service)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return service->CloseSession(
+    mId, mRole, nsIPresentationService::CLOSED_REASON_WENTAWAY);
+}
+
+NS_IMETHODIMP
+PresentationConnection::GetName(nsACString &aResult)
+{
+  aResult.AssignLiteral("about:presentation-connection");
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresentationConnection::IsPending(bool* aRetval)
+{
+  *aRetval = true;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresentationConnection::GetStatus(nsresult* aStatus)
+{
+  *aStatus = NS_OK;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresentationConnection::Cancel(nsresult aStatus)
+{
+  nsCOMPtr<nsIRunnable> event =
+    NewRunnableMethod(this, &PresentationConnection::ProcessConnectionWentAway);
+  return NS_DispatchToCurrentThread(event);
+}
+NS_IMETHODIMP
+PresentationConnection::Suspend(void)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+NS_IMETHODIMP
+PresentationConnection::Resume(void)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+PresentationConnection::GetLoadGroup(nsILoadGroup** aLoadGroup)
+{
+  *aLoadGroup = nullptr;
+
+  nsCOMPtr<nsIDocument> doc = GetOwner() ? GetOwner()->GetExtantDoc() : nullptr;
+  if (!doc) {
+    return NS_ERROR_FAILURE;
+  }
+
+  *aLoadGroup = doc->GetDocumentLoadGroup().take();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresentationConnection::SetLoadGroup(nsILoadGroup * aLoadGroup)
+{
+  return NS_ERROR_UNEXPECTED;
+}
+
+NS_IMETHODIMP
+PresentationConnection::GetLoadFlags(nsLoadFlags* aLoadFlags)
+{
+  *aLoadFlags = nsIRequest::LOAD_BACKGROUND;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresentationConnection::SetLoadFlags(nsLoadFlags aLoadFlags)
+{
+  return NS_OK;
 }

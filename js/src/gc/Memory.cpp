@@ -763,6 +763,21 @@ ProtectPages(void* p, size_t size)
 }
 
 void
+MakePagesReadOnly(void* p, size_t size)
+{
+    MOZ_ASSERT(size % pageSize == 0);
+#if defined(XP_WIN)
+    DWORD oldProtect;
+    if (!VirtualProtect(p, size, PAGE_READONLY, &oldProtect))
+        MOZ_CRASH("VirtualProtect(PAGE_READONLY) failed");
+    MOZ_ASSERT(oldProtect == PAGE_READWRITE);
+#else  // assume Unix
+    if (mprotect(p, size, PROT_READ))
+        MOZ_CRASH("mprotect(PROT_READ) failed");
+#endif
+}
+
+void
 UnprotectPages(void* p, size_t size)
 {
     MOZ_ASSERT(size % pageSize == 0);
@@ -770,7 +785,7 @@ UnprotectPages(void* p, size_t size)
     DWORD oldProtect;
     if (!VirtualProtect(p, size, PAGE_READWRITE, &oldProtect))
         MOZ_CRASH("VirtualProtect(PAGE_READWRITE) failed");
-    MOZ_ASSERT(oldProtect == PAGE_NOACCESS);
+    MOZ_ASSERT(oldProtect == PAGE_NOACCESS || oldProtect == PAGE_READONLY);
 #else  // assume Unix
     if (mprotect(p, size, PROT_READ | PROT_WRITE))
         MOZ_CRASH("mprotect(PROT_READ | PROT_WRITE) failed");

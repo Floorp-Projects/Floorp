@@ -38,14 +38,13 @@ public:
 
   PresentationSessionInfo(const nsAString& aUrl,
                           const nsAString& aSessionId,
-                          const uint8_t aRole,
-                          nsIPresentationServiceCallback* aCallback)
+                          const uint8_t aRole)
     : mUrl(aUrl)
     , mSessionId(aSessionId)
     , mIsResponderReady(false)
     , mIsTransportReady(false)
-    , mState(nsIPresentationSessionListener::STATE_CLOSED)
-    , mCallback(aCallback)
+    , mState(nsIPresentationSessionListener::STATE_CONNECTING)
+    , mReason(NS_OK)
   {
     MOZ_ASSERT(!mUrl.IsEmpty());
     MOZ_ASSERT(!mSessionId.IsEmpty());
@@ -69,11 +68,6 @@ public:
   uint8_t GetRole() const
   {
     return mRole;
-  }
-
-  void SetCallback(nsIPresentationServiceCallback* aCallback)
-  {
-    mCallback = aCallback;
   }
 
   nsresult SetListener(nsIPresentationSessionListener* aListener);
@@ -124,17 +118,18 @@ protected:
 
   virtual nsresult UntrackFromService();
 
-  void SetState(uint32_t aState)
+  void SetStateWithReason(uint32_t aState, nsresult aReason)
   {
     if (mState == aState) {
       return;
     }
 
     mState = aState;
+    mReason = aReason;
 
     // Notify session state change.
     if (mListener) {
-      nsresult rv = mListener->NotifyStateChange(mSessionId, mState);
+      nsresult rv = mListener->NotifyStateChange(mSessionId, mState, aReason);
       NS_WARN_IF(NS_FAILED(rv));
     }
   }
@@ -152,7 +147,7 @@ protected:
   bool mIsResponderReady;
   bool mIsTransportReady;
   uint32_t mState; // CONNECTED, CLOSED, TERMINATED
-  nsCOMPtr<nsIPresentationServiceCallback> mCallback;
+  nsresult mReason;
   nsCOMPtr<nsIPresentationSessionListener> mListener;
   nsCOMPtr<nsIPresentationDevice> mDevice;
   nsCOMPtr<nsIPresentationSessionTransport> mTransport;
@@ -170,15 +165,11 @@ public:
   NS_DECL_NSISERVERSOCKETLISTENER
 
   PresentationControllingInfo(const nsAString& aUrl,
-                              const nsAString& aSessionId,
-                              nsIPresentationServiceCallback* aCallback)
+                              const nsAString& aSessionId)
     : PresentationSessionInfo(aUrl,
                               aSessionId,
-                              nsIPresentationService::ROLE_CONTROLLER,
-                              aCallback)
-  {
-    MOZ_ASSERT(mCallback);
-  }
+                              nsIPresentationService::ROLE_CONTROLLER)
+  {}
 
   nsresult Init(nsIPresentationControlChannel* aControlChannel) override;
 
@@ -225,8 +216,7 @@ public:
                              nsIPresentationDevice* aDevice)
     : PresentationSessionInfo(aUrl,
                               aSessionId,
-                              nsIPresentationService::ROLE_RECEIVER,
-                              nullptr)
+                              nsIPresentationService::ROLE_RECEIVER)
   {
     MOZ_ASSERT(aDevice);
     SetDevice(aDevice);
