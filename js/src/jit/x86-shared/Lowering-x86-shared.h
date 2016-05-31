@@ -62,6 +62,7 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
     void visitSimdBinarySaturating(MSimdBinarySaturating* ins);
     void visitSimdSelect(MSimdSelect* ins);
     void visitSimdSplat(MSimdSplat* ins);
+    void visitSimdSwizzle(MSimdSwizzle* ins);
     void visitSimdValueX4(MSimdValueX4* ins);
     void lowerCompareExchangeTypedArrayElement(MCompareExchangeTypedArrayElement* ins,
                                                bool useI386ByteRegisters);

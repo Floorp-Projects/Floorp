@@ -869,3 +869,34 @@ LIRGeneratorX86Shared::visitSimdValueX4(MSimdValueX4* ins)
         MOZ_CRASH("Unknown SIMD kind");
     }
 }
+
+void
+LIRGeneratorX86Shared::visitSimdSwizzle(MSimdSwizzle* ins)
+{
+    MOZ_ASSERT(IsSimdType(ins->input()->type()));
+    MOZ_ASSERT(IsSimdType(ins->type()));
+
+    if (IsIntegerSimdType(ins->input()->type())) {
+        LUse use = useRegisterAtStart(ins->input());
+        LSimdSwizzleI* lir = new (alloc()) LSimdSwizzleI(use);
+        define(lir, ins);
+        // We need a GPR temp register for pre-SSSE3 codegen (no vpshufb).
+        if (Assembler::HasSSSE3()) {
+            lir->setTemp(0, LDefinition::BogusTemp());
+        } else {
+            // The temp must be a GPR usable with 8-bit loads and stores.
+#if defined(JS_CODEGEN_X86)
+            lir->setTemp(0, tempFixed(ebx));
+#else
+            lir->setTemp(0, temp());
+#endif
+        }
+    } else if (ins->input()->type() == MIRType::Float32x4) {
+        LUse use = useRegisterAtStart(ins->input());
+        LSimdSwizzleF* lir = new (alloc()) LSimdSwizzleF(use);
+        define(lir, ins);
+        lir->setTemp(0, LDefinition::BogusTemp());
+    } else {
+        MOZ_CRASH("Unknown SIMD kind when getting lane");
+    }
+}

@@ -4406,25 +4406,6 @@ LIRGenerator::visitSimdAnyTrue(MSimdAnyTrue* ins)
 }
 
 void
-LIRGenerator::visitSimdSwizzle(MSimdSwizzle* ins)
-{
-    MOZ_ASSERT(IsSimdType(ins->input()->type()));
-    MOZ_ASSERT(IsSimdType(ins->type()));
-
-    if (ins->input()->type() == MIRType::Int32x4) {
-        LUse use = useRegisterAtStart(ins->input());
-        LSimdSwizzleI* lir = new (alloc()) LSimdSwizzleI(use);
-        define(lir, ins);
-    } else if (ins->input()->type() == MIRType::Float32x4) {
-        LUse use = useRegisterAtStart(ins->input());
-        LSimdSwizzleF* lir = new (alloc()) LSimdSwizzleF(use);
-        define(lir, ins);
-    } else {
-        MOZ_CRASH("Unknown SIMD kind when getting lane");
-    }
-}
-
-void
 LIRGenerator::visitSimdGeneralShuffle(MSimdGeneralShuffle*ins)
 {
     MOZ_ASSERT(IsSimdType(ins->type()));

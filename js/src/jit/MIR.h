@@ -1984,6 +1984,10 @@ class MSimdShuffleBase
     }
 
   public:
+    unsigned numLanes() const {
+        return arity_;
+    }
+
     unsigned lane(unsigned i) const {
         MOZ_ASSERT(i < arity_);
         return lane_[i];

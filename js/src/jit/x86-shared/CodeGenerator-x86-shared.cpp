@@ -2998,14 +2998,49 @@ CodeGeneratorX86Shared::visitSimdSwizzleI(LSimdSwizzleI* ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
     FloatRegister output = ToFloatRegister(ins->output());
+    const unsigned numLanes = ins->numLanes();
 
-    uint32_t x = ins->lane(0);
-    uint32_t y = ins->lane(1);
-    uint32_t z = ins->lane(2);
-    uint32_t w = ins->lane(3);
+    switch (numLanes) {
+        case 4: {
+            uint32_t x = ins->lane(0);
+            uint32_t y = ins->lane(1);
+            uint32_t z = ins->lane(2);
+            uint32_t w = ins->lane(3);
 
-    uint32_t mask = MacroAssembler::ComputeShuffleMask(x, y, z, w);
-    masm.shuffleInt32(mask, input, output);
+            uint32_t mask = MacroAssembler::ComputeShuffleMask(x, y, z, w);
+            masm.shuffleInt32(mask, input, output);
+            return;
+        }
+    }
+
+    // In the general case, use pshufb if it is available. Convert to a
+    // byte-wise swizzle.
+    const unsigned bytesPerLane = 16 / numLanes;
+    int8_t bLane[16];
+    for (unsigned i = 0; i < numLanes; i++) {
+        for (unsigned b = 0; b < bytesPerLane; b++) {
+            bLane[i * bytesPerLane + b] = ins->lane(i) * bytesPerLane + b;
+        }
+    }
+
+    if (AssemblerX86Shared::HasSSSE3()) {
+        ScratchSimd128Scope scratch(masm);
+        masm.loadConstantSimd128Int(SimdConstant::CreateX16(bLane), scratch);
+        FloatRegister inputCopy = masm.reusedInputInt32x4(input, output);
+        masm.vpshufb(scratch, inputCopy, output);
+        return;
+    }
+
+    // Worst-case fallback for pre-SSSE3 machines. Bounce through memory.
+    Register temp = ToRegister(ins->getTemp(0));
+    masm.reserveStack(2 * Simd128DataSize);
+    masm.storeAlignedSimd128Int(input, Address(StackPointer, Simd128DataSize));
+    for (unsigned i = 0; i < 16; i++) {
+        masm.load8ZeroExtend(Address(StackPointer, Simd128DataSize + bLane[i]), temp);
+        masm.store8(temp, Address(StackPointer, i));
+    }
+    masm.loadAlignedSimd128Int(Address(StackPointer, 0), output);
+    masm.freeStack(2 * Simd128DataSize);
 }
 
 void
@@ -3013,6 +3048,7 @@ CodeGeneratorX86Shared::visitSimdSwizzleF(LSimdSwizzleF* ins)
 {
     FloatRegister input = ToFloatRegister(ins->input());
     FloatRegister output = ToFloatRegister(ins->output());
+    MOZ_ASSERT(ins->numLanes() == 4);
 
     uint32_t x = ins->lane(0);
     uint32_t y = ins->lane(1);
