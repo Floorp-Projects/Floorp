@@ -212,7 +212,9 @@ DataTransferItemList::Add(const nsAString& aData,
   RefPtr<DataTransferItem> item =
     SetDataWithPrincipal(format, data, 0,
                          nsContentUtils::SubjectPrincipal(),
-                         true, aRv);
+                         /* aInsertOnly = */ true,
+                         /* aHidden = */ false,
+                         aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -243,7 +245,7 @@ DataTransferItemList::Add(File& aData, ErrorResult& aRv)
   RefPtr<DataTransferItem> item =
     SetDataWithPrincipal(type, data, index,
                          nsContentUtils::SubjectPrincipal(),
-                         true, aRv);
+                         true, false, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -332,6 +334,7 @@ DataTransferItemList::SetDataWithPrincipal(const nsAString& aType,
                                            uint32_t aIndex,
                                            nsIPrincipal* aPrincipal,
                                            bool aInsertOnly,
+                                           bool aHidden,
                                            ErrorResult& aRv)
 {
   if (aIndex < mIndexedItems.Length()) {
@@ -391,7 +394,7 @@ DataTransferItemList::SetDataWithPrincipal(const nsAString& aType,
   }
 
   // Add the new item
-  RefPtr<DataTransferItem> item = AppendNewItem(aIndex, aType, aData, aPrincipal);
+  RefPtr<DataTransferItem> item = AppendNewItem(aIndex, aType, aData, aPrincipal, aHidden);
 
   if (item->Kind() == DataTransferItem::KIND_FILE) {
     RegenerateFiles();
@@ -404,7 +407,8 @@ DataTransferItem*
 DataTransferItemList::AppendNewItem(uint32_t aIndex,
                                     const nsAString& aType,
                                     nsIVariant* aData,
-                                    nsIPrincipal* aPrincipal)
+                                    nsIPrincipal* aPrincipal,
+                                    bool aHidden)
 {
   if (mIndexedItems.Length() <= aIndex) {
     MOZ_ASSERT(mIndexedItems.Length() == aIndex);
@@ -414,6 +418,7 @@ DataTransferItemList::AppendNewItem(uint32_t aIndex,
   item->SetIndex(aIndex);
   item->SetPrincipal(aPrincipal);
   item->SetData(aData);
+  item->SetChromeOnly(aHidden);
 
   mIndexedItems[aIndex].AppendElement(item);
 
@@ -422,7 +427,7 @@ DataTransferItemList::AppendNewItem(uint32_t aIndex,
   // which is not a file to a non-zero index, invariants could be broken.
   // (namely the invariant that there are not 2 non-file entries in the items
   // array with the same type)
-  if (item->Kind() == DataTransferItem::KIND_FILE || aIndex == 0) {
+  if (!aHidden && (item->Kind() == DataTransferItem::KIND_FILE || aIndex == 0)) {
     mItems.AppendElement(item);
   }
 

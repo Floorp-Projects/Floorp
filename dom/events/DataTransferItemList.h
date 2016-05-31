@@ -75,7 +75,7 @@ public:
   already_AddRefed<DataTransferItem>
   SetDataWithPrincipal(const nsAString& aType, nsIVariant* aData,
                        uint32_t aIndex, nsIPrincipal* aPrincipal,
-                       bool aInsertOnly, ErrorResult& aRv);
+                       bool aInsertOnly, bool aHidden, ErrorResult& aRv);
 
   FileList* Files();
 
@@ -97,7 +97,8 @@ private:
   void ClearDataHelper(DataTransferItem* aItem, uint32_t aIndexHint,
                        uint32_t aMozOffsetHint, ErrorResult& aRv);
   DataTransferItem* AppendNewItem(uint32_t aIndex, const nsAString& aType,
-                                  nsIVariant* aData, nsIPrincipal* aPrincipal);
+                                  nsIVariant* aData, nsIPrincipal* aPrincipal,
+                                  bool aHidden);
   void RegenerateFiles();
 
   ~DataTransferItemList() {}

@@ -259,8 +259,8 @@ protected:
 
   // caches text and uri-list data formats that exist in the drag service or
   // clipboard for retrieval later.
-  void CacheExternalData(const char* aFormat, uint32_t aIndex,
-                         nsIPrincipal* aPrincipal);
+  nsresult CacheExternalData(const char* aFormat, uint32_t aIndex,
+                             nsIPrincipal* aPrincipal, bool aHidden);
 
   // caches the formats that exist in the drag service that were added by an
   // external drag
