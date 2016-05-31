@@ -670,6 +670,15 @@ public:
         twoByteOpSimd("vpmuludq", VEX_PD, OP2_PMULUDQ_VdqWdq, offset, base, src0, dst);
     }
 
+    void vpmullw_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpmullw", VEX_PD, OP2_PMULLW_VdqWdq, src1, src0, dst);
+    }
+    void vpmullw_mr(int32_t offset, RegisterID base, XMMRegisterID src0, XMMRegisterID dst)
+    {
+        twoByteOpSimd("vpmullw", VEX_PD, OP2_PMULLW_VdqWdq, offset, base, src0, dst);
+    }
+
     void vpmulld_rr(XMMRegisterID src1, XMMRegisterID src0, XMMRegisterID dst)
     {
         threeByteOpSimd("vpmulld", VEX_PD, OP3_PMULLD_VdqWdq, ESCAPE_38, src1, src0, dst);

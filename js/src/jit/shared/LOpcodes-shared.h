@@ -43,9 +43,11 @@
     _(SimdUnaryArithFx4)            \
     _(SimdBinaryCompIx4)            \
     _(SimdBinaryCompFx4)            \
+    _(SimdBinaryArithIx16)          \
+    _(SimdBinaryArithIx8)           \
     _(SimdBinaryArithIx4)           \
     _(SimdBinaryArithFx4)           \
-    _(SimdBinaryBitwiseX4)          \
+    _(SimdBinaryBitwise)            \
     _(SimdShift)                    \
     _(SimdSelect)                   \
     _(Value)                        \
