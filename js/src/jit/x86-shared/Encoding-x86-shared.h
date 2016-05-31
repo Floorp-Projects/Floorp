@@ -259,7 +259,11 @@ enum TwoByteOpcodeID {
     OP2_PXORDQ_VdqWdq   = 0xEF,
     OP2_PSLLD_VdqWdq    = 0xF2,
     OP2_PMULUDQ_VdqWdq  = 0xF4,
+    OP2_PSUBB_VdqWdq    = 0xF8,
+    OP2_PSUBW_VdqWdq    = 0xF9,
     OP2_PSUBD_VdqWdq    = 0xFA,
+    OP2_PADDB_VdqWdq    = 0xFC,
+    OP2_PADDW_VdqWdq    = 0xFD,
     OP2_PADDD_VdqWdq    = 0xFE
 };
 

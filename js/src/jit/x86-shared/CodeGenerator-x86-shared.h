@@ -307,6 +307,8 @@ class CodeGeneratorX86Shared : public CodeGeneratorShared
     void visitSimdSwizzleI(LSimdSwizzleI* lir);
     void visitSimdSwizzleF(LSimdSwizzleF* lir);
     void visitSimdShuffle(LSimdShuffle* lir);
+    void visitSimdUnaryArithIx16(LSimdUnaryArithIx16* lir);
+    void visitSimdUnaryArithIx8(LSimdUnaryArithIx8* lir);
     void visitSimdUnaryArithIx4(LSimdUnaryArithIx4* lir);
     void visitSimdUnaryArithFx4(LSimdUnaryArithFx4* lir);
     void visitSimdBinaryCompIx4(LSimdBinaryCompIx4* lir);
