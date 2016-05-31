@@ -88,6 +88,12 @@ automation/pretty-package: automation/buildsymbols
 automation/installer: automation/package
 automation/sdk: automation/installer automation/package
 
+# Universal builds need package staging happening before buildsymbols
+# (bug 834228)
+ifdef UNIVERSAL_BINARY
+automation/buildsymbols: automation/package
+endif
+
 # The 'pretty' versions of targets run before the regular ones to avoid
 # conflicts in writing to the same files.
 automation/installer: automation/pretty-installer
