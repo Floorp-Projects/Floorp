@@ -8,22 +8,30 @@
         display: none;
       }
       #light {
-        fill: #dde1e4; /* --theme-splitter-color */
+        fill: #999797;
       }
-      #light-selected {
+      #light-hovered {
         fill: #393f4c; /* --theme-body-color */
       }
+      #light-selected {
+        fill: #3b3b3b;
+      }
       #dark {
-        fill: #8fa1b2; /* --theme-body-color */
+        fill: #c6ccd0;
+      }
+      #dark-hovered {
+        fill: #dde1e4;
       }
       #dark-selected {
-        fill: #f5f7fa; /* --theme-selection-color */
+        fill: #fcfcfc;
       }
     </style>
     <path id="base-path" d="M7.9 16.3c-.3 0-.6-.1-.8-.4l-4-4.8c-.2-.3-.3-.5-.1-.8.1-.3.5-.3.9-.3h8c.4 0 .7 0 .9.3.2.4.1.6-.1.9l-4 4.8c-.2.3-.5.3-.8.3zM7.8 0c.3 0 .6.1.7.4L12.4 5c.2.3.3.4.1.7-.1.4-.5.3-.8.3H3.9c-.4 0-.8.1-.9-.2-.2-.4-.1-.6.1-.9L7 .3c.2-.3.5-.3.8-.3z"/>
   </defs>
   <use xlink:href="#base-path" id="light"/>
+  <use xlink:href="#base-path" id="light-hovered"/>
   <use xlink:href="#base-path" id="light-selected"/>
   <use xlink:href="#base-path" id="dark"/>
+  <use xlink:href="#base-path" id="dark-hovered"/>
   <use xlink:href="#base-path" id="dark-selected"/>
 </svg>
