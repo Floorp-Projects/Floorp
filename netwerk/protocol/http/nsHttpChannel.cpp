@@ -3375,12 +3375,28 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
             (gHttpHandler->SessionStartTime() > lastModifiedTime);
 
     // Get the cached HTTP response headers
+    mCachedResponseHead = new nsHttpResponseHead();
+
+    // A "original-response-headers" metadata element holds network original headers,
+    // i.e. the headers in the form as they arrieved from the network.
+    // We need to get the network original headers first, because we need to keep them
+    // in order.
+    rv = entry->GetMetaDataElement("original-response-headers", getter_Copies(buf));
+    if (NS_SUCCEEDED(rv)) {
+        mCachedResponseHead->ParseCachedOriginalHeaders((char *) buf.get());
+    }
+
+    buf.Adopt(0);
+    // A "response-head" metadata element holds response head, e.g. response status
+    // line and headers in the form Firefox uses them internally (no dupicate
+    // headers, etc.).
     rv = entry->GetMetaDataElement("response-head", getter_Copies(buf));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Parse the cached HTTP response headers
-    mCachedResponseHead = new nsHttpResponseHead();
-    rv = mCachedResponseHead->Parse((char *) buf.get());
+    // Parse string stored in a "response-head" metadata element.
+    // These response headers will be merged with the orignal headers (i.e. the
+    // headers stored in a "original-response-headers" metadata element).
+    rv = mCachedResponseHead->ParseCachedHead((char *) buf.get());
     NS_ENSURE_SUCCESS(rv, rv);
     buf.Adopt(0);
 
@@ -4624,6 +4640,10 @@ DoAddCacheEntryHeaders(nsHttpChannel *self,
     nsAutoCString head;
     responseHead->Flatten(head, true);
     rv = entry->SetMetaDataElement("response-head", head.get());
+    if (NS_FAILED(rv)) return rv;
+    head.Truncate();
+    responseHead->FlattenNetworkOriginalHeaders(head);
+    rv = entry->SetMetaDataElement("original-response-headers", head.get());
     if (NS_FAILED(rv)) return rv;
 
     // Indicate we have successfully finished setting metadata on the cache entry.

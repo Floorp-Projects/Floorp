@@ -81,11 +81,17 @@ public:
     // sense the first time the response is handled).
     // Both functions append to the string supplied string.
     void Flatten(nsACString &, bool pruneTransients);
-    void FlattenOriginalHeader(nsACString &buf);
+    void FlattenNetworkOriginalHeaders(nsACString &buf);
 
-    // parse flattened response head. block must be null terminated. parsing is
-    // destructive.
-    nsresult Parse(char *block);
+    // The next 2 functions parse flattened response head and original net headers.
+    // They are used when we are reading an entry from the cache.
+    //
+    // To keep proper order of the original headers we MUST call
+    // ParseCachedOriginalHeaders FIRST and then ParseCachedHead.
+    //
+    // block must be null terminated. parsing is destructive.
+    nsresult ParseCachedHead(char *block);
+    nsresult ParseCachedOriginalHeaders(char *block);
 
     // parse the status line. line must be null terminated.
     void ParseStatusLine(const char *line);
@@ -139,7 +145,7 @@ private:
     void ParsePragma(const char *);
 
     void ParseStatusLine_locked(const char *line);
-    nsresult ParseHeaderLine_locked(const char *line);
+    nsresult ParseHeaderLine_locked(const char *line, bool originalFromNetHeaders);
 
     // these return failure if the header does not exist.
     nsresult ParseDateHeader(nsHttpAtom header, uint32_t *result) const;

@@ -1564,7 +1564,9 @@ nsHttpTransaction::HandleContentStart()
             LOG3(("http response [\n"));
             nsAutoCString headers;
             mResponseHead->Flatten(headers, false);
-            mResponseHead->FlattenOriginalHeader(headers);
+            headers.AppendLiteral("  OriginalHeaders");
+            headers.AppendLiteral("\r\n");
+            mResponseHead->FlattenNetworkOriginalHeaders(headers);
             LogHeaders(headers.get());
             LOG3(("]\n"));
         }
