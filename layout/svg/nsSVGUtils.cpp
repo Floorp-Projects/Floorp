@@ -1426,10 +1426,10 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
     return;
   }
 
-  float opacity = MaybeOptimizeOpacity(aFrame,
-                                       GetOpacity(style->FillOpacitySource(),
-                                                  style->mFillOpacity,
-                                                  aContextPaint));
+  float fillOpacity = MaybeOptimizeOpacity(aFrame,
+                                           GetOpacity(style->FillOpacitySource(),
+                                                      style->mFillOpacity,
+                                                      aContextPaint));
   const DrawTarget* dt = aContext->GetDrawTarget();
 
   nsSVGPaintServerFrame *ps =
@@ -1438,7 +1438,7 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
   if (ps) {
     RefPtr<gfxPattern> pattern =
       ps->GetPaintServerPattern(aFrame, dt, aContext->CurrentMatrix(),
-                                &nsStyleSVG::mFill, opacity);
+                                &nsStyleSVG::mFill, fillOpacity);
     if (pattern) {
       pattern->CacheColorStops(dt);
       aOutPattern->Init(*pattern->GetPattern(dt));
@@ -1450,11 +1450,11 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
     RefPtr<gfxPattern> pattern;
     switch (style->mFill.mType) {
     case eStyleSVGPaintType_ContextFill:
-      pattern = aContextPaint->GetFillPattern(dt, opacity,
+      pattern = aContextPaint->GetFillPattern(dt, fillOpacity,
                                               aContext->CurrentMatrix());
       break;
     case eStyleSVGPaintType_ContextStroke:
-      pattern = aContextPaint->GetStrokePattern(dt, opacity,
+      pattern = aContextPaint->GetStrokePattern(dt, fillOpacity,
                                                 aContext->CurrentMatrix());
       break;
     default:
@@ -1471,7 +1471,7 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
   // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
   Color color(Color::FromABGR(GetFallbackOrPaintColor(aFrame->StyleContext(),
                                                       &nsStyleSVG::mFill)));
-  color.a *= opacity;
+  color.a *= fillOpacity;
   aOutPattern->InitColorPattern(ToDeviceColor(color));
 }
 
@@ -1486,10 +1486,10 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
     return;
   }
 
-  float opacity = MaybeOptimizeOpacity(aFrame,
-                                       GetOpacity(style->StrokeOpacitySource(),
-                                                  style->mStrokeOpacity,
-                                                  aContextPaint));
+  float strokeOpacity = MaybeOptimizeOpacity(aFrame,
+                                             GetOpacity(style->StrokeOpacitySource(),
+                                                        style->mStrokeOpacity,
+                                                        aContextPaint));
 
   const DrawTarget* dt = aContext->GetDrawTarget();
 
@@ -1499,7 +1499,7 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
   if (ps) {
     RefPtr<gfxPattern> pattern =
       ps->GetPaintServerPattern(aFrame, dt, aContext->CurrentMatrix(),
-                                &nsStyleSVG::mStroke, opacity);
+                                &nsStyleSVG::mStroke, strokeOpacity);
     if (pattern) {
       pattern->CacheColorStops(dt);
       aOutPattern->Init(*pattern->GetPattern(dt));
@@ -1511,11 +1511,11 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
     RefPtr<gfxPattern> pattern;
     switch (style->mStroke.mType) {
     case eStyleSVGPaintType_ContextFill:
-      pattern = aContextPaint->GetFillPattern(dt, opacity,
+      pattern = aContextPaint->GetFillPattern(dt, strokeOpacity,
                                               aContext->CurrentMatrix());
       break;
     case eStyleSVGPaintType_ContextStroke:
-      pattern = aContextPaint->GetStrokePattern(dt, opacity,
+      pattern = aContextPaint->GetStrokePattern(dt, strokeOpacity,
                                                 aContext->CurrentMatrix());
       break;
     default:
@@ -1532,7 +1532,7 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
   // See http://www.w3.org/TR/SVG11/coords.html#ObjectBoundingBox
   Color color(Color::FromABGR(GetFallbackOrPaintColor(aFrame->StyleContext(),
                                                       &nsStyleSVG::mStroke)));
-  color.a *= opacity;
+  color.a *= strokeOpacity;
   aOutPattern->InitColorPattern(ToDeviceColor(color));
 }
 
