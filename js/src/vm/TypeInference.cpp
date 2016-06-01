@@ -4058,14 +4058,25 @@ ConstraintTypeSet::trace(Zone* zone, JSTracer* trc)
     }
 }
 
-void
-ConstraintTypeSet::sweep(Zone* zone, AutoClearTypeInferenceStateOnOOM& oom)
+static inline void
+AssertGCStateForSweep(Zone* zone)
 {
     MOZ_ASSERT(zone->isGCSweepingOrCompacting());
 
     // IsAboutToBeFinalized doesn't work right on tenured objects when called
     // during a minor collection.
-    MOZ_ASSERT(!zone->runtimeFromMainThread()->isHeapMinorCollecting());
+    //
+    // We allow this when tracing the heap for CheckHeapOnMovingGC since that
+    // happens afterwards and is not part of minor collection.
+    DebugOnly<JSRuntime*> rt(zone->runtimeFromMainThread());
+    MOZ_ASSERT_IF(!rt->hasZealMode(ZealMode::CheckHeapOnMovingGC),
+                  !rt->isHeapMinorCollecting());
+}
+
+void
+ConstraintTypeSet::sweep(Zone* zone, AutoClearTypeInferenceStateOnOOM& oom)
+{
+    AssertGCStateForSweep(zone);
 
     /*
      * Purge references to objects that are no longer live. Type sets hold
@@ -4184,8 +4195,7 @@ ObjectGroup::sweep(AutoClearTypeInferenceStateOnOOM* oom)
 
     setGeneration(zone()->types.generation);
 
-    MOZ_ASSERT(zone()->isGCSweepingOrCompacting());
-    MOZ_ASSERT(!zone()->runtimeFromMainThread()->isHeapMinorCollecting());
+    AssertGCStateForSweep(zone());
 
     Maybe<AutoClearTypeInferenceStateOnOOM> fallbackOOM;
     EnsureHasAutoClearTypeInferenceStateOnOOM(oom, zone(), fallbackOOM);
@@ -4279,8 +4289,7 @@ JSScript::maybeSweepTypes(AutoClearTypeInferenceStateOnOOM* oom)
 
     setTypesGeneration(zone()->types.generation);
 
-    MOZ_ASSERT(zone()->isGCSweepingOrCompacting());
-    MOZ_ASSERT(!zone()->runtimeFromMainThread()->isHeapMinorCollecting());
+    AssertGCStateForSweep(zone());
 
     Maybe<AutoClearTypeInferenceStateOnOOM> fallbackOOM;
     EnsureHasAutoClearTypeInferenceStateOnOOM(oom, zone(), fallbackOOM);
