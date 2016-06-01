@@ -20,7 +20,7 @@ import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.favicons.Favicons;
-import org.mozilla.gecko.mozglue.SafeIntentUtils.SafeIntent;
+import org.mozilla.gecko.util.SafeIntent;
 import org.mozilla.gecko.notifications.WhatsNewReceiver;
 import org.mozilla.gecko.reader.ReaderModeUtils;
 import org.mozilla.gecko.util.GeckoEventListener;

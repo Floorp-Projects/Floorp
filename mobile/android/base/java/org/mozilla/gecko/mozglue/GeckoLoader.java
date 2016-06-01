@@ -24,7 +24,7 @@ import android.util.Log;
 import org.mozilla.gecko.annotation.JNITarget;
 import org.mozilla.gecko.annotation.RobocopTarget;
 import org.mozilla.gecko.AppConstants;
-import org.mozilla.gecko.mozglue.SafeIntentUtils.SafeIntent;
+import org.mozilla.gecko.util.SafeIntent;
 
 public final class GeckoLoader {
     private static final String LOGTAG = "GeckoLoader";

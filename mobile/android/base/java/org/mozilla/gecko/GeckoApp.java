@@ -25,7 +25,7 @@ import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuInflater;
 import org.mozilla.gecko.menu.MenuPanel;
 import org.mozilla.gecko.mozglue.SafeIntentUtils;
-import org.mozilla.gecko.mozglue.SafeIntentUtils.SafeIntent;
+import org.mozilla.gecko.util.SafeIntent;
 import org.mozilla.gecko.mozglue.GeckoLoader;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.preferences.ClearOnShutdownPref;
