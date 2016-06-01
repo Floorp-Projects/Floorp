@@ -67,7 +67,7 @@ public class Experiments {
         if (disabled != null) {
             throw new IllegalStateException("Disabled state already set");
         }
-        disabled = envVarMap.containsKey(ENVVAR_DISABLED);
+        disabled = !TextUtils.isEmpty(envVarMap.get(ENVVAR_DISABLED));
         if (disabled) {
             Log.d(LOGTAG, "Switchboard disabled by environment variable: " + ENVVAR_DISABLED);
         }
