@@ -52,6 +52,12 @@ class CallOnServerClose;
 class CallAcknowledge;
 class WebSocketEventService;
 
+extern nsresult
+CalculateWebSocketHashedSecret(const nsACString& aKey, nsACString& aHash);
+extern void
+ProcessServerWebSocketExtensions(const nsACString& aExtensions,
+                                 nsACString& aNegotiatedExtensions);
+
 // Used to enforce "1 connecting websocket per host" rule, and reconnect delays
 enum wsConnectingState {
   NOT_CONNECTING = 0,     // Not yet (or no longer) trying to open connection
