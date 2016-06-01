@@ -30,7 +30,7 @@
       <!-- Work around focus ring not showing properly. -->
       <spacer style="width: 1em;"/>
       <checkbox label="&doNotTrackCheckbox2.label;"
-                accesskey="&doNotTrackCheckbox.accesskey;"
+                accesskey="&doNotTrackCheckbox2.accesskey;"
                 preference="privacy.donottrackheader.enabled"/>
     </hbox>
     <description flex="1" class="doNotTrackLearnMore">
