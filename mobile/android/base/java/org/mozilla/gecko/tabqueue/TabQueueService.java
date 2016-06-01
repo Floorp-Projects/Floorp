@@ -11,7 +11,6 @@ import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.mozglue.SafeIntentUtils;
 import org.mozilla.gecko.preferences.GeckoPreferences;
 
 import android.annotation.TargetApi;
@@ -40,6 +39,7 @@ import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
+import org.mozilla.gecko.util.SafeIntent;
 
 import java.util.List;
 import java.util.concurrent.ExecutorService;
@@ -131,7 +131,7 @@ public class TabQueueService extends Service {
 
             final String lastUrl = sharedPreferences.getString(GeckoPreferences.PREFS_TAB_QUEUE_LAST_SITE, "");
 
-            final SafeIntentUtils.SafeIntent safeIntent = new SafeIntentUtils.SafeIntent(intent);
+            final SafeIntent safeIntent = new SafeIntent(intent);
             final String intentUrl = safeIntent.getDataString();
 
             final long lastRunTime = sharedPreferences.getLong(GeckoPreferences.PREFS_TAB_QUEUE_LAST_TIME, 0);
@@ -277,7 +277,7 @@ public class TabQueueService extends Service {
             Log.w(LOGTAG, "Error adding URL to tab queue - invalid intent passed in.");
             return;
         }
-        final SafeIntentUtils.SafeIntent safeIntent = new SafeIntentUtils.SafeIntent(intent);
+        final SafeIntent safeIntent = new SafeIntent(intent);
         final String intentData = safeIntent.getDataString();
 
         // As we're doing disk IO, let's run this stuff in a separate thread.
