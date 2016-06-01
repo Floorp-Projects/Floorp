@@ -30,6 +30,9 @@ var basic_pan_prefs = [
   ["apz.displayport_expiry_ms", 0],
 ];
 
+var touch_action_prefs = basic_pan_prefs.slice(); // make a copy
+touch_action_prefs.push(["layout.css.touch_action.enabled", true]);
+
 var subtests = [
   // Simple tests to exercise basic panning behaviour
   {'file': 'helper_basic_pan.html', 'prefs': basic_pan_prefs},
@@ -55,6 +58,9 @@ var subtests = [
   // timeout to a day, so that the entire test times out and fails if APZ does
   // end up waiting.
   {'file': 'helper_tap_passive.html', 'prefs': [["apz.content_response_timeout", 24 * 60 * 60 * 1000]]},
+
+  // Simple test to exercise touch-action CSS property
+  {'file': 'helper_touch_action.html', 'prefs': touch_action_prefs},
 ];
 
 if (isApzEnabled()) {
