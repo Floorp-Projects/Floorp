@@ -1525,10 +1525,9 @@ function setupShutdown(phaseName) {
   );
 }
 
-
-if (isContent) {
-  setupShutdown("contentChildShutdown");
-} else {
+// profile-before-change only exists in the parent, and OS.File should
+// not be used in the child process anyways.
+if (!isContent) {
   setupShutdown("profileBeforeChange")
 }
 File.shutdown = Barriers.shutdown.client;
