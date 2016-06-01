@@ -47,9 +47,13 @@ public:
   // Assumes the AudioStream lock is held and thus calls Unlocked versions
   // of AudioStream funcs.
   int64_t GetPositionUnlocked() const;
-  // Get the read position of the stream, in frames.
-  // Called on the state machine thead.
-  int64_t GetPositionInFrames() const;
+
+  /**
+   * @param frames The playback position in frames of the audio engine.
+   * @return The playback position in frames of the stream,
+   *         adjusted by playback rate changes and underrun frames.
+   */
+  int64_t GetPositionInFrames(int64_t frames) const;
 
   /**
    * @param frames The playback position in frames of the audio engine.
