@@ -6104,10 +6104,10 @@ nsComputedDOMStyle::DoGetMask()
       firstLayer.mComposite != NS_STYLE_MASK_COMPOSITE_ADD ||
       firstLayer.mMaskMode != NS_STYLE_MASK_MODE_MATCH_SOURCE ||
       !firstLayer.mPosition.IsInitialValue() ||
-      !firstLayer.mRepeat.IsInitialValue() ||
+      !firstLayer.mRepeat.IsInitialValue(nsStyleImageLayers::LayerType::Mask) ||
       !firstLayer.mSize.IsInitialValue() ||
       !(firstLayer.mImage.GetType() == eStyleImageType_Null ||
-          firstLayer.mImage.GetType() == eStyleImageType_Image)){
+        firstLayer.mImage.GetType() == eStyleImageType_Image)) {
     return nullptr;
   }
 
