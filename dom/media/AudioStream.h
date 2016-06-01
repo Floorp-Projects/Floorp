@@ -42,11 +42,6 @@ public:
   // Update the number of samples that has been written in the audio backend.
   // Called on the state machine thread.
   void UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun);
-  // Get the read position of the stream, in microseconds.
-  // Called on the state machine thead.
-  // Assumes the AudioStream lock is held and thus calls Unlocked versions
-  // of AudioStream funcs.
-  int64_t GetPositionUnlocked() const;
 
   /**
    * @param frames The playback position in frames of the audio engine.

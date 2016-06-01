@@ -665,14 +665,6 @@ void AudioClock::UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun)
   mFrameHistory->Append(aServiced, aUnderrun, mOutRate);
 }
 
-int64_t AudioClock::GetPositionUnlocked() const
-{
-  // GetPositionInFramesUnlocked() asserts it owns the monitor
-  int64_t frames = mAudioStream->GetPositionInFramesUnlocked();
-  NS_ASSERTION(frames < 0 || (mInRate != 0 && mOutRate != 0), "AudioClock not initialized.");
-  return frames >= 0 ? mFrameHistory->GetPosition(frames) : -1;
-}
-
 int64_t AudioClock::GetPositionInFrames(int64_t frames) const
 {
   return (GetPosition(frames) * mInRate) / USECS_PER_S;
