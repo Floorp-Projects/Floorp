@@ -50,6 +50,7 @@ public:
   // from the end of the current array should be more efficient than a general
   // sort step after all cues are loaded.
   void AddCue(TextTrackCue& aCue);
+  void RemoveCue(TextTrackCue& aCue);
   void RemoveCue(TextTrackCue& aCue, ErrorResult& aRv);
   void RemoveCueAt(uint32_t aIndex);
   void RemoveAll();
