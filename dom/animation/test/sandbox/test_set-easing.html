@@ -1,0 +1,32 @@
+<!doctype html>
+<head>
+<meta charset=utf-8>
+<title>Tests AnimationTimingFunction::SetEasing in sandbox</title>
+<script src="/tests/SimpleTest/SimpleTest.js"></script>
+<script src="/tests/SimpleTest/SpawnTask.js"></script>
+<link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+
+<script>
+"use strict";
+
+add_task(function* set_easing() {
+  const div = document.createElement("div");
+  document.body.appendChild(div);
+  div.animate({ opacity: [0, 1] }, 100000 );
+
+  const contentScript = function() {
+    doesThrow(() => {
+      document.getAnimations()[0].effect.timing.easing = "linear";
+    }, "AnimationTimingFunction::SetEasing should throw in sandbox.");
+  };
+
+  const sandbox = new SpecialPowers.Cu.Sandbox(window);
+  sandbox.importFunction(document, "document");
+  sandbox.importFunction(SimpleTest.doesThrow, "doesThrow");
+  SpecialPowers.Cu.evalInSandbox(`(${contentScript.toSource()})()`, sandbox);
+});
+
+</script>
+</body>
