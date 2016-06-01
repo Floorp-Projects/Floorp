@@ -26,10 +26,9 @@ function testWindows(windowsToOpen, expectedResults) {
                      (winData.isPopup ? "all=no" : "all");
       let url = "http://example.com/?window=" + windowsToOpen.length;
 
-      let openWindowPromise = BrowserTestUtils.waitForNewWindow();
+      let openWindowPromise = BrowserTestUtils.waitForNewWindow(true, url);
       openDialog(getBrowserURL(), "", features, url);
       let win = yield openWindowPromise;
-      yield BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
       yield BrowserTestUtils.closeWindow(win);
     }
 
