@@ -3,29 +3,34 @@
    - License, v. 2.0. If a copy of the MPL was not distributed with this
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
-     width="48" height="16" viewBox="0 0 32 16">
+     width="64" height="16" viewBox="0 0 64 16">
   <defs>
-    <circle id="shape-circle-base" cx="8" cy="8" r="7" />
-    <g id="shape-i">
-      <circle cx="8" cy="5" r="1" />
-      <rect x="7" y="7" width="2" height="5" rx="1" ry="1" />
-    </g>
-    <mask id="mask-ring-cutout">
-      <rect width="16" height="16" fill="#000" />
-      <use xlink:href="#shape-circle-base" fill="#fff" />
-      <circle cx="8" cy="8" r="6" fill="#000" />
-    </mask>
+    <style>
+      path {
+        fill-rule: evenodd;
+        fill: #999999;
+      }
+    </style>
   </defs>
 
   <view id="normal" viewBox="0 0 16 16"/>
   <g>
-    <use xlink:href="#shape-circle-base" mask="url(#mask-ring-cutout)" fill="#999" />
-    <use xlink:href="#shape-i" fill="#999" />
+    <path d="M128,193a7,7,0,1,1,7-7A7,7,0,0,1,128,193Zm0-13a6,6,0,1,0,6,6A6,6,0,0,0,128,180Zm0,10a1,1,0,0,1-1-1v-3a1,1,0,0,1,2,0v3A1,1,0,0,1,128,190Zm0-6a1,1,0,1,1,1-1A1,1,0,0,1,128,184Z" transform="translate(-120 -178)"/>
   </g>
 
   <view id="hover" viewBox="16 0 16 16"/>
   <g transform="translate(16)">
-    <use xlink:href="#shape-circle-base" fill="#4c9ed9" />
-    <use xlink:href="#shape-i" fill="#fff" />
+    <path d="M102,179a7,7,0,1,1-7,7A7,7,0,0,1,102,179Zm0,3a1,1,0,1,1-1,1A1,1,0,0,1,102,182Zm0,3a1,1,0,0,1,1,1v3a1,1,0,0,1-2,0v-3A1,1,0,0,1,102,185Z" transform="translate(-94 -178)"/>
   </g>
+
+  <view id="notice" viewBox="32 0 16 16"/>
+  <g transform="translate(32)">
+    <path d="M133.5,202a2.5,2.5,0,1,1,2.5-2.5A2.5,2.5,0,0,1,133.5,202Zm-5.5,1a1,1,0,1,1,1-1A1,1,0,0,1,128,203Zm1,5a1,1,0,0,1-2,0v-3a1,1,0,0,1,2,0v3Zm-1-9a6.08,6.08,0,1,0,5.629,3.987,3.452,3.452,0,0,0,.984-0.185A6.9,6.9,0,0,1,135,205a7,7,0,1,1-7-7,6.9,6.9,0,0,1,2.2.387,3.452,3.452,0,0,0-.185.984A5.951,5.951,0,0,0,128,199Z" transform="translate(-120 -197)"/>
+  </g>
+
+  <view id="notice-hover" viewBox="48 0 16 16"/>
+  <g transform="translate(48)">
+    <path d="M107.5,202a2.5,2.5,0,1,1,2.5-2.5A2.5,2.5,0,0,1,107.5,202Zm0,1.039a3.5,3.5,0,0,0,1.125-.2,7.124,7.124,0,1,1-4.464-4.464,3.5,3.5,0,0,0-.2,1.125A3.54,3.54,0,0,0,107.5,203.039ZM102,201a1,1,0,1,0,1,1A1,1,0,0,0,102,201Zm1,4a1,1,0,0,0-2,0v3a1,1,0,0,0,2,0v-3Z" transform="translate(-94 -197)"/>
+  </g>
+
 </svg>

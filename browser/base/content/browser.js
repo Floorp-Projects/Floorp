@@ -6895,6 +6895,10 @@ var gIdentityHandler = {
       tooltip = gNavigatorBundle.getString("identity.unknown.tooltip");
     }
 
+    if (SitePermissions.hasGrantedPermissions(this._uri)) {
+      this._identityBox.classList.add("grantedPermissions");
+    }
+
     // Push the appropriate strings out to the UI
     this._identityBox.tooltipText = tooltip;
     this._identityIcon.tooltipText = gNavigatorBundle.getString("identity.icon.tooltip");
