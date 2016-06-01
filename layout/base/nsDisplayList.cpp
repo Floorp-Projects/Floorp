@@ -2089,9 +2089,10 @@ void nsDisplayList::HitTest(nsDisplayListBuilder* aBuilder, const nsRect& aRect,
        static_cast<nsDisplayTransform*>(item)->IsParticipating3DContext()) ||
       ((itemType == nsDisplayItem::TYPE_PERSPECTIVE ||
         itemType == nsDisplayItem::TYPE_OPACITY) &&
-       static_cast<nsDisplayPerspective*>(item)->Frame()->Extend3DContext());
+       item->Frame()->Extend3DContext());
     if (same3DContext &&
-        !static_cast<nsDisplayTransform*>(item)->IsLeafOf3DContext()) {
+        (itemTime != nsDisplayItem::TYPE_TRANSFORM ||
+         !static_cast<nsDisplayTransform*>(item)->IsLeafOf3DContext())) {
       if (!item->GetClip().MayIntersect(aRect)) {
         continue;
       }
