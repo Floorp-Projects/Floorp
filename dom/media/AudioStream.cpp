@@ -125,7 +125,6 @@ AudioStream::AudioStream(DataSource& aSource)
   , mOutRate(0)
   , mChannels(0)
   , mOutChannels(0)
-  , mAudioClock(this)
   , mTimeStretcher(nullptr)
   , mDumpFile(nullptr)
   , mState(INITIALIZED)
@@ -352,7 +351,7 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
 #endif
 
   params.format = ToCubebFormat<AUDIO_OUTPUT_FORMAT>::value;
-  mAudioClock.Init();
+  mAudioClock.Init(aRate);
 
   return OpenCubeb(params, startTime, isFirst);
 }
@@ -646,18 +645,17 @@ AudioStream::StateCallback(cubeb_state aState)
   }
 }
 
-AudioClock::AudioClock(AudioStream* aStream)
- :mAudioStream(aStream),
-  mOutRate(0),
+AudioClock::AudioClock()
+: mOutRate(0),
   mInRate(0),
   mPreservesPitch(true),
   mFrameHistory(new FrameHistory())
 {}
 
-void AudioClock::Init()
+void AudioClock::Init(uint32_t aRate)
 {
-  mOutRate = mAudioStream->GetRate();
-  mInRate = mAudioStream->GetRate();
+  mOutRate = aRate;
+  mInRate = aRate;
 }
 
 void AudioClock::UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun)
