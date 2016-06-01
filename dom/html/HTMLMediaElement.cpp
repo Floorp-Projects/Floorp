@@ -776,6 +776,11 @@ void HTMLMediaElement::AbortExistingLoads()
     ChangeNetworkState(nsIDOMHTMLMediaElement::NETWORK_EMPTY);
     ChangeReadyState(nsIDOMHTMLMediaElement::HAVE_NOTHING);
 
+    //TODO: Apply the rules for text track cue rendering Bug 865407
+    if (mTextTrackManager) {
+      mTextTrackManager->GetTextTracks()->SetCuesInactive();
+    }
+
     if (fireTimeUpdate) {
       // Since we destroyed the decoder above, the current playback position
       // will now be reported as 0. The playback position was non-zero when
