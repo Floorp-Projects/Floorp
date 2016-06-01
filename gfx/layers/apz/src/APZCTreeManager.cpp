@@ -890,8 +890,32 @@ APZCTreeManager::ReceiveInputEvent(InputData& aEvent,
   return result;
 }
 
+static TouchBehaviorFlags
+ConvertToTouchBehavior(HitTestResult result)
+{
+  switch (result) {
+    case HitNothing:
+      return AllowedTouchBehavior::NONE;
+    case HitLayer:
+      return AllowedTouchBehavior::VERTICAL_PAN
+           | AllowedTouchBehavior::HORIZONTAL_PAN
+           | AllowedTouchBehavior::PINCH_ZOOM
+           | AllowedTouchBehavior::DOUBLE_TAP_ZOOM;
+    case HitLayerTouchActionNone:
+      return AllowedTouchBehavior::NONE;
+    case HitLayerTouchActionPanX:
+      return AllowedTouchBehavior::HORIZONTAL_PAN;
+    case HitLayerTouchActionPanY:
+      return AllowedTouchBehavior::VERTICAL_PAN;
+    case HitDispatchToContentRegion:
+    default:
+      return AllowedTouchBehavior::UNKNOWN;
+  }
+}
+
 already_AddRefed<AsyncPanZoomController>
 APZCTreeManager::GetTouchInputBlockAPZC(const MultiTouchInput& aEvent,
+                                        nsTArray<TouchBehaviorFlags>* aOutTouchBehaviors,
                                         HitTestResult* aOutHitResult)
 {
   RefPtr<AsyncPanZoomController> apzc;
@@ -901,13 +925,25 @@ APZCTreeManager::GetTouchInputBlockAPZC(const MultiTouchInput& aEvent,
 
   FlushRepaintsToClearScreenToGeckoTransform();
 
-  apzc = GetTargetAPZC(aEvent.mTouches[0].mScreenPoint, aOutHitResult);
+  HitTestResult hitResult;
+  apzc = GetTargetAPZC(aEvent.mTouches[0].mScreenPoint, &hitResult);
+  if (aOutTouchBehaviors) {
+    aOutTouchBehaviors->AppendElement(ConvertToTouchBehavior(hitResult));
+  }
   for (size_t i = 1; i < aEvent.mTouches.Length(); i++) {
-    RefPtr<AsyncPanZoomController> apzc2 = GetTargetAPZC(aEvent.mTouches[i].mScreenPoint, aOutHitResult);
+    RefPtr<AsyncPanZoomController> apzc2 = GetTargetAPZC(aEvent.mTouches[i].mScreenPoint, &hitResult);
+    if (aOutTouchBehaviors) {
+      aOutTouchBehaviors->AppendElement(ConvertToTouchBehavior(hitResult));
+    }
     apzc = GetMultitouchTarget(apzc, apzc2);
     APZCTM_LOG("Using APZC %p as the root APZC for multi-touch\n", apzc.get());
   }
 
+  if (aOutHitResult) {
+    // XXX we should probably be combining the hit results from the different
+    // touch points somehow, instead of just using the last one.
+    *aOutHitResult = hitResult;
+  }
   return apzc.forget();
 }
 
@@ -917,6 +953,7 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
                                    uint64_t* aOutInputBlockId)
 {
   aInput.mHandledByAPZ = true;
+  nsTArray<TouchBehaviorFlags> touchBehaviors;
   if (aInput.mType == MultiTouchInput::MULTITOUCH_START) {
     // If we are panned into overscroll and a second finger goes down,
     // ignore that second touch point completely. The touch-start for it is
@@ -935,7 +972,17 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
     }
 
     mHitResultForInputBlock = HitNothing;
-    mApzcForInputBlock = GetTouchInputBlockAPZC(aInput, &mHitResultForInputBlock);
+    mApzcForInputBlock = GetTouchInputBlockAPZC(aInput, &touchBehaviors, &mHitResultForInputBlock);
+    MOZ_ASSERT(touchBehaviors.Length() == aInput.mTouches.Length());
+    for (size_t i = 0; i < touchBehaviors.Length(); i++) {
+      APZCTM_LOG("Touch point has allowed behaviours 0x%02x\n", touchBehaviors[i]);
+      if (touchBehaviors[i] == AllowedTouchBehavior::UNKNOWN) {
+        // If there's any unknown items in the list, throw it out and we'll
+        // wait for the main thread to send us a notification.
+        touchBehaviors.Clear();
+        break;
+      }
+    }
   } else if (mApzcForInputBlock) {
     APZCTM_LOG("Re-using APZC %p as continuation of event block\n", mApzcForInputBlock.get());
   }
@@ -954,6 +1001,10 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
     for (size_t j = 0; j < aInput.mTouches.Length(); ++j) {
       if (aInput.mTouches[j].mIdentifier != mRetainedTouchIdentifier) {
         aInput.mTouches.RemoveElementAt(j);
+        if (!touchBehaviors.IsEmpty()) {
+          MOZ_ASSERT(touchBehaviors.Length() > j);
+          touchBehaviors.RemoveElementAt(j);
+        }
         --j;
       }
     }
@@ -970,6 +1021,9 @@ APZCTreeManager::ProcessTouchInput(MultiTouchInput& aInput,
     result = mInputQueue->ReceiveInputEvent(mApzcForInputBlock,
         /* aTargetConfirmed = */ mHitResultForInputBlock != HitDispatchToContentRegion,
         aInput, aOutInputBlockId);
+    if (!touchBehaviors.IsEmpty()) {
+      mInputQueue->SetAllowedTouchBehavior(*aOutInputBlockId, touchBehaviors);
+    }
 
     // For computing the event to pass back to Gecko, use up-to-date transforms
     // (i.e. not anything cached in an input block).
