@@ -47,9 +47,9 @@ const MS_PER_DAY = 86400000;
  });
 
 // Download remote resources early
-getJSON("devtools.webide.addonsURL", true);
-getJSON("devtools.webide.templatesURL", true);
-getJSON("devtools.devices.url", true);
+getJSON("devtools.webide.addonsURL");
+getJSON("devtools.webide.templatesURL");
+getJSON("devtools.devices.url");
 
 // See bug 989619
 console.log = console.log.bind(console);
