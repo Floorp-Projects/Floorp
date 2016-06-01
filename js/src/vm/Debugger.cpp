@@ -412,7 +412,7 @@ ValueToStableChars(JSContext* cx, const char *fnname, HandleValue value,
 {
     if (!value.isString()) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                             fnname, "string", InformalValueType(value));
+                             fnname, "string", InformalValueTypeName(value));
         return false;
     }
     RootedLinearString linear(cx, value.toString()->ensureLinear(cx));
