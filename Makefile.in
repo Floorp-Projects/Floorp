@@ -237,6 +237,9 @@ endif
 # with no regard for PGO passes. This decision could probably be revisited.
 recurse_pre-export:: install-dist/sdk
 
+recurse_artifact:
+	$(topsrcdir)/mach --log-no-times artifact install
+
 ifndef JS_STANDALONE
 ifdef ENABLE_TESTS
 # Additional makefile targets to call automated test suites
