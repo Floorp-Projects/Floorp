@@ -444,7 +444,7 @@ LIRGenerator::visitArrowNewTarget(MArrowNewTarget* ins)
     defineBox(lir, ins);
 }
 
-void
+bool
 LIRGenerator::lowerCallArguments(MCall* call)
 {
     uint32_t argc = call->numStackArgs();
@@ -475,7 +475,11 @@ LIRGenerator::lowerCallArguments(MCall* call)
             LStackArgT* stack = new(alloc()) LStackArgT(argslot, arg->type(), useRegisterOrConstant(arg));
             add(stack);
         }
+
+        if (!alloc().ensureBallast())
+            return false;
     }
+    return true;
 }
 
 void
@@ -486,7 +490,11 @@ LIRGenerator::visitCall(MCall* call)
     MOZ_ASSERT(CallTempReg1 != ArgumentsRectifierReg);
     MOZ_ASSERT(call->getFunction()->type() == MIRType::Object);
 
-    lowerCallArguments(call);
+    // In case of oom, skip the rest of the allocations.
+    if (!lowerCallArguments(call)) {
+        gen->abort("OOM: LIRGenerator::visitCall");
+        return;
+    }
 
     // Height of the current argument vector.
     JSFunction* target = call->getSingleTarget();

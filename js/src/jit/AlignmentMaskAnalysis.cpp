@@ -78,6 +78,9 @@ AlignmentMaskAnalysis::analyze()
 {
     for (ReversePostorderIterator block(graph_.rpoBegin()); block != graph_.rpoEnd(); block++) {
         for (MInstructionIterator i = block->begin(); i != block->end(); i++) {
+            if (!graph_.alloc().ensureBallast())
+                return false;
+
             // Note that we don't check for MAsmJSCompareExchangeHeap
             // or MAsmJSAtomicBinopHeap, because the backend and the OOB
             // mechanism don't support non-zero offsets for them yet.
