@@ -178,13 +178,3 @@ def config_status(topobjdir='.', topsrcdir='.', defines=None,
     if MachCommandConditions.is_android(env):
         if 'AndroidEclipse' not in options.backend:
             print(ANDROID_IDE_ADVERTISEMENT)
-
-    if env.substs.get('MOZ_ARTIFACT_BUILDS', False):
-        # Execute |mach artifact install| from the top source directory.
-        os.chdir(topsrcdir)
-        return subprocess.check_call([
-            sys.executable,
-            os.path.join(topsrcdir, 'mach'),
-            '--log-no-times',
-            'artifact',
-            'install'])
