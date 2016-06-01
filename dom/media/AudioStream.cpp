@@ -121,8 +121,6 @@ private:
 
 AudioStream::AudioStream(DataSource& aSource)
   : mMonitor("AudioStream")
-  , mInRate(0)
-  , mOutRate(0)
   , mChannels(0)
   , mOutChannels(0)
   , mTimeStretcher(nullptr)
@@ -328,7 +326,6 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
   auto isFirst = CubebUtils::GetFirstStream();
 
   LOG("%s channels: %d, rate: %d", __FUNCTION__, aNumChannels, aRate);
-  mInRate = mOutRate = aRate;
   mChannels = aNumChannels;
   mOutChannels = aNumChannels;
 
