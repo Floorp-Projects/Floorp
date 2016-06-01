@@ -60,6 +60,10 @@ class TempAllocator
         return p;
     }
 
+    // View this allocator as a fallible allocator.
+    struct Fallible { TempAllocator& alloc; };
+    Fallible fallible() { return { *this }; }
+
     LifoAlloc* lifoAlloc()
     {
         return &lifoScope_.alloc();
@@ -145,6 +149,9 @@ class AutoJitContextAlloc
 
 struct TempObject
 {
+    inline void* operator new(size_t nbytes, TempAllocator::Fallible view) noexcept {
+        return view.alloc.allocate(nbytes);
+    }
     inline void* operator new(size_t nbytes, TempAllocator& alloc) {
         return alloc.allocateInfallible(nbytes);
     }
