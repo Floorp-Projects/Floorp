@@ -447,6 +447,11 @@ enum IMEMessage : IMEMessageType
   // all dispatched events are handled completely.  So, the receiver shouldn't
   // count number of received this notification for comparing with the number
   // of dispatched events.
+  // NOTE: If a composition event causes moving focus from the focused editor,
+  //       this notification may not be notified as usual.  Even in such case,
+  //       NOTIFY_IME_OF_BLUR is always sent.  So, notification listeners
+  //       should tread the blur notification as including this if there is
+  //       pending composition events.
   NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED,
   // Position or size of focused element may be changed.
   NOTIFY_IME_OF_POSITION_CHANGE,

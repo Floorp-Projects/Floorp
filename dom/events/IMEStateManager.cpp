@@ -1208,6 +1208,13 @@ IMEStateManager::DispatchCompositionEvent(
 }
 
 // static
+IMEContentObserver*
+IMEStateManager::GetActiveContentObserver()
+{
+  return sActiveIMEContentObserver;
+}
+
+// static
 nsIContent*
 IMEStateManager::GetRootContent(nsPresContext* aPresContext)
 {
