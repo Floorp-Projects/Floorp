@@ -308,17 +308,19 @@ function runTest(event) {
     case 24:
       is(event.type, "mozfullscreenchange", "checking event type");
       is(video.volume, 0.6, "Volume should still be 0.6");
-      isVolumeSliderShowingCorrectVolume(video.volume);
-
-      synthesizeKey("VK_ESCAPE", {});
+      SimpleTest.executeSoon(function() {
+        isVolumeSliderShowingCorrectVolume(video.volume);
+        synthesizeKey("VK_ESCAPE", {});
+      });
       break;
 
     case 25:
       is(event.type, "mozfullscreenchange", "checking event type");
       is(video.volume, 0.6, "Volume should still be 0.6");
-      isVolumeSliderShowingCorrectVolume(video.volume);
-
-      SimpleTest.finish();
+      SimpleTest.executeSoon(function() {
+        isVolumeSliderShowingCorrectVolume(video.volume);
+        SimpleTest.finish();
+      });
       break;
 
     default:
