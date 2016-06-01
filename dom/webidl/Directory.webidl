@@ -15,7 +15,10 @@
  * http://w3c.github.io/filesystem-api/#idl-def-Directory
  * https://microsoftedge.github.io/directory-upload/proposal.html#directory-interface
  */
-[Exposed=(Window,Worker)]
+
+// This chromeConstructor is used by the MockFilePicker for testing only.
+[ChromeConstructor(DOMString path),
+ Exposed=(Window,Worker)]
 interface Directory {
   /*
    * The leaf name of the directory.
