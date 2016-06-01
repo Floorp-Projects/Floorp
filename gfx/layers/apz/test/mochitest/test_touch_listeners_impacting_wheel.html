@@ -27,26 +27,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1203140
 
 const kResponseTimeoutMs = 2 * 60 * 1000; // 2 minutes
 
-function parentProcessSnapshot() {
-  addMessageListener('snapshot', function(rect) {
-    Components.utils.import('resource://gre/modules/Services.jsm');
-    var topWin = Services.wm.getMostRecentWindow('navigator:browser');
-
-    // reposition the rect relative to the top-level browser window
-    rect = JSON.parse(rect);
-    rect.x -= topWin.mozInnerScreenX;
-    rect.y -= topWin.mozInnerScreenY;
-
-    // take the snapshot
-    var canvas = topWin.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
-    canvas.width = rect.w;
-    canvas.height = rect.h;
-    var ctx = canvas.getContext("2d");
-    ctx.drawWindow(topWin, rect.x, rect.y, rect.w, rect.h, 'rgb(255,255,255)', ctx.DRAWWINDOW_DRAW_VIEW | ctx.DRAWWINDOW_USE_WIDGET_LAYERS | ctx.DRAWWINDOW_DRAW_CARET);
-    return canvas.toDataURL();
-  });
-}
-
 function takeSnapshots(e) {
   // Grab some snapshots, and make sure some of them are different (i.e. check
   // the page is scrolling in the compositor, concurrently with this wheel
@@ -58,18 +38,12 @@ function takeSnapshots(e) {
   var lastSnapshot = null;
   var success = false;
 
-  var chromeHelper = SpecialPowers.loadChromeScript(parentProcessSnapshot);
-  SimpleTest.registerCleanupFunction(function() { chromeHelper.destroy() });
-
   // Get the position of the 'content' div relative to the screen
-  var contentDiv = document.getElementById('content');
-  var rect = coordinatesRelativeToWindow(0, 0, contentDiv);
-  rect.w = contentDiv.getBoundingClientRect().width * window.devicePixelRatio;
-  rect.h = contentDiv.getBoundingClientRect().height * window.devicePixelRatio;
+  var rect = rectRelativeToScreen(document.getElementById('content'));
 
   for (var i = 0; i < 10; i++) {
     SpecialPowers.DOMWindowUtils.advanceTimeAndRefresh(16);
-    var snapshot = chromeHelper.sendSyncMessage('snapshot', JSON.stringify(rect)).toString();
+    var snapshot = getSnapshot(rect);
     //dump("Took snapshot " + snapshot + "\n"); // this might help with debugging
 
     if (lastSnapshot && lastSnapshot != snapshot) {
