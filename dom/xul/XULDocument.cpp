@@ -3148,7 +3148,7 @@ XULDocument::MaybeBroadcast()
                 if (mDelayedAttrChangeBroadcasts[i].mNeedsAttrChange) {
                     nsCOMPtr<nsIContent> listener =
                         do_QueryInterface(mDelayedAttrChangeBroadcasts[i].mListener);
-                    nsString value = mDelayedAttrChangeBroadcasts[i].mAttr;
+                    const nsString& value = mDelayedAttrChangeBroadcasts[i].mAttr;
                     if (mDelayedAttrChangeBroadcasts[i].mSetAttr) {
                         listener->SetAttr(kNameSpaceID_None, attrName, value,
                                           true);
