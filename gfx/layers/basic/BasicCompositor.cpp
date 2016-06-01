@@ -288,7 +288,7 @@ AttemptVideoScale(TextureSourceBasic* aSource, const SourceSurface* aSourceMask,
                        const gfx::IntRect& aClipRect,
                        DrawTarget* aDest, const DrawTarget* aBuffer)
 {
-  if (!mozilla::supports_ssse3() && false)
+  if (true || !mozilla::supports_ssse3())
       return false;
   if (aNewTransform.IsTranslation()) // unscaled painting should take the regular path
       return false;
