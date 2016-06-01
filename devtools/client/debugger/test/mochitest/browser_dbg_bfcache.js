@@ -18,7 +18,7 @@ const test = Task.async(function* () {
   info("Starting browser_dbg_bfcache.js's `test`.");
 
   let options = {
-    source: EXAMPLE_URL + "code_script-switching-01.js",
+    source: "-01.js",
     line: 1
   };
   ([gTab, gDebuggee, gPanel]) = yield initDebugger(TAB_URL_1, options);

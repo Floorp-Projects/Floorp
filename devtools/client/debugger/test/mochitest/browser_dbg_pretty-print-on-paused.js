@@ -17,7 +17,7 @@ const SECOND_SOURCE_VALUE = EXAMPLE_URL + "code_ugly-2.js";
 function test() {
   // Wait for debugger panel to be fully set and break on debugger statement
   let options = {
-    source: EXAMPLE_URL + "code_script-switching-02.js",
+    source: "code_script-switching-02.js",
     line: 1
   };
   initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {

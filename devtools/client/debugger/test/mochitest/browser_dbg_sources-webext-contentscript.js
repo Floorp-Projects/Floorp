@@ -9,8 +9,6 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_script_webext_contentscript.html";
 
-let {getExtensionUUID} = Cu.import("resource://gre/modules/Extension.jsm", {});
-
 function test() {
   let gPanel, gDebugger;
   let gSources, gAddon;
@@ -31,10 +29,9 @@ function test() {
 
   return Task.spawn(function* () {
     gAddon = yield addAddon(EXAMPLE_URL + "/addon-webext-contentscript.xpi");
-    let uuid = getExtensionUUID(gAddon.id);
 
     let options = {
-      source: `moz-extension://${uuid}/webext-content-script.js`,
+      source: "webext-content-script.js",
       line: 1
     };
     [,, gPanel] = yield initDebugger(TAB_URL, options);

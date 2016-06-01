@@ -11,8 +11,8 @@
 
 const TAB_URL = EXAMPLE_URL + "doc_auto-pretty-print-02.html";
 
-var FIRST_SOURCE = EXAMPLE_URL + "code_ugly-6.js";
-var SECOND_SOURCE = EXAMPLE_URL + "code_ugly-7.js";
+var FIRST_SOURCE = "code_ugly-6.js";
+var SECOND_SOURCE = "code_ugly-7.js";
 
 function test() {
   let options = {
@@ -31,7 +31,7 @@ function test() {
     const actions = bindActionCreators(gPanel);
 
     Task.spawn(function* () {
-      const secondSource = queries.getSourceByURL(gController.getState(), SECOND_SOURCE);
+      const secondSource = queries.getSourceByURL(gController.getState(), EXAMPLE_URL + SECOND_SOURCE);
       actions.selectSource(secondSource);
 
       // It should be showing the loading text
