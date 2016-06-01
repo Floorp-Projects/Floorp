@@ -134,6 +134,11 @@ public class AddToHomeScreenPromotion extends BrowserAppDelegate implements Tabs
             return;
         }
 
+        if (tab.isPrivate()) {
+            // Never show the prompt for private browsing tabs.
+            return;
+        }
+
         if (!isInForeground) {
             // We only want to show this prompt if this tab is in the foreground and not on top
             // of the tabs tray.
