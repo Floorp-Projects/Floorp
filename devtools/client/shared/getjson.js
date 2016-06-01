@@ -8,36 +8,61 @@ const {CC} = require("chrome");
 const promise = require("promise");
 const Services = require("Services");
 
+loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
+
 const XMLHttpRequest = CC("@mozilla.org/xmlextras/xmlhttprequest;1");
 
-// Downloads and caches a JSON file from a URL given by the pref.
-exports.getJSON = function (prefName, bypassCache) {
-  if (!bypassCache) {
-    try {
-      let str = Services.prefs.getCharPref(prefName + "_cache");
-      let json = JSON.parse(str);
-      return promise.resolve(json);
-    } catch (e) {
-      // no pref or invalid json. Let's continue
-    }
-  }
-
+/**
+ * Downloads and caches a JSON file from an URL given by a pref.
+ *
+ * @param {String} prefName
+ *        The preference for the target URL
+ *
+ * @return {Promise}
+ *         - Resolved with the JSON object in case of successful request
+ *           or cache hit
+ *         - Rejected with an error message in case of failure
+ */
+exports.getJSON = function (prefName) {
   let deferred = promise.defer();
   let xhr = new XMLHttpRequest();
 
+  // We used to store cached data in preferences, but now we use asyncStorage
+  // Migration step: if it still exists, move this now useless preference in its
+  // new location and clear it
+  if (Services.prefs.prefHasUserValue(prefName + "_cache")) {
+    let json = Services.prefs.getCharPref(prefName + "_cache");
+    asyncStorage.setItem(prefName + "_cache", json).catch(function (e) {
+      // Could not move the cache, let's log the error but continue
+      console.error(e);
+    });
+    Services.prefs.clearUserPref(prefName + "_cache");
+  }
+
+  function readFromStorage(networkError) {
+    asyncStorage.getItem(prefName + "_cache").then(function (json) {
+      deferred.resolve(json);
+    }).catch(function (e) {
+      deferred.reject("JSON not available, CDN error: " + networkError +
+                      ", storage error: " + e);
+    });
+  }
+
   xhr.onload = () => {
-    let json;
     try {
-      json = JSON.parse(xhr.responseText);
+      let json = JSON.parse(xhr.responseText);
+      asyncStorage.setItem(prefName + "_cache", json).catch(function (e) {
+        // Could not update cache, let's log the error but continue
+        console.error(e);
+      });
+      deferred.resolve(json);
     } catch (e) {
-      return deferred.reject("Invalid JSON");
+      readFromStorage(e);
     }
-    Services.prefs.setCharPref(prefName + "_cache", xhr.responseText);
-    return deferred.resolve(json);
   };
 
   xhr.onerror = (e) => {
-    deferred.reject("Network error");
+    readFromStorage(e);
   };
 
   xhr.open("get", Services.prefs.getCharPref(prefName));
