@@ -15,7 +15,7 @@ var gSources, gFrames, gPrefs, gOptions;
 
 function test() {
   let options = {
-    source: ".coffee",
+    source: EXAMPLE_URL + "code_binary_search.coffee",
     line: 1
   };
   initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
