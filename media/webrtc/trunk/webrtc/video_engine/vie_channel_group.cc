@@ -281,6 +281,18 @@ bool ChannelGroup::CreateChannel(int channel_id,
   return true;
 }
 
+void ChannelGroup::Stop(int channel_id) {
+  ViEEncoder* vie_encoder = GetEncoder(channel_id);
+  DCHECK(vie_encoder != NULL);
+
+  // If we're owning the encoder, remove the feedback and stop all encoding
+  // threads and processing. This must be done before deleting the channel.
+  if (vie_encoder->channel_id() == channel_id) {
+    encoder_state_feedback_->RemoveEncoder(vie_encoder);
+    vie_encoder->StopThreadsAndRemoveSharedMembers();
+  }
+}
+
 void ChannelGroup::DeleteChannel(int channel_id) {
   ViEChannel* vie_channel = PopChannel(channel_id);
 
