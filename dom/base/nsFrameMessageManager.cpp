@@ -69,8 +69,6 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::ipc;
 
-static const size_t kMinTelemetryMessageSize = 8192;
-
 nsFrameMessageManager::nsFrameMessageManager(mozilla::dom::ipc::MessageManagerCallback* aCallback,
                                              nsFrameMessageManager* aParentManager,
                                              /* mozilla::dom::ipc::MessageManagerFlags */ uint32_t aFlags)
@@ -705,6 +703,21 @@ nsFrameMessageManager::SendRpcMessage(const nsAString& aMessageName,
                      aRetval, false);
 }
 
+static void
+RecordMessageSize(size_t aDataLength, const nsAString& aMessageName)
+{
+  static const size_t kMinTelemetryMessageSize = 8192;
+
+  if (aDataLength < kMinTelemetryMessageSize) {
+    return;
+  }
+
+  NS_ConvertUTF16toUTF8 messageName(aMessageName);
+
+  Telemetry::Accumulate(Telemetry::MESSAGE_MANAGER_MESSAGE_SIZE, messageName,
+                        aDataLength);
+}
+
 nsresult
 nsFrameMessageManager::SendMessage(const nsAString& aMessageName,
                                    JS::Handle<JS::Value> aJSON,
@@ -732,11 +745,7 @@ nsFrameMessageManager::SendMessage(const nsAString& aMessageName,
     return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
 
-  if (data.DataLength() >= kMinTelemetryMessageSize) {
-    Telemetry::Accumulate(Telemetry::MESSAGE_MANAGER_MESSAGE_SIZE,
-                          NS_ConvertUTF16toUTF8(aMessageName),
-                          data.DataLength());
-  }
+  RecordMessageSize(data.DataLength(), aMessageName);
 
   JS::Rooted<JSObject*> objects(aCx);
   if (aArgc >= 3 && aObjects.isObject()) {
@@ -818,11 +827,7 @@ nsFrameMessageManager::DispatchAsyncMessage(const nsAString& aMessageName,
     return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
 
-  if (data.DataLength() >= kMinTelemetryMessageSize) {
-    Telemetry::Accumulate(Telemetry::MESSAGE_MANAGER_MESSAGE_SIZE,
-                          NS_ConvertUTF16toUTF8(aMessageName),
-                          data.DataLength());
-  }
+  RecordMessageSize(data.DataLength(), aMessageName);
 
   JS::Rooted<JSObject*> objects(aCx);
   if (aArgc >= 3 && aObjects.isObject()) {
