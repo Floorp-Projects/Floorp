@@ -403,10 +403,6 @@ struct CacheIRStubKey : public DefaultHasher<CacheIRStubKey> {
 
     explicit CacheIRStubKey(CacheIRStubInfo* info) : stubInfo(info) {}
     CacheIRStubKey(CacheIRStubKey&& other) : stubInfo(Move(other.stubInfo)) { }
-
-    void operator=(CacheIRStubKey&& other) {
-        stubInfo = Move(other.stubInfo);
-    }
 };
 
 class JitCompartment
