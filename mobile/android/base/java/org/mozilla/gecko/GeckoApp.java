@@ -1404,10 +1404,16 @@ public abstract class GeckoApp
                             }
                             try {
                                 restoreMessage = restoreSessionTabs(isExternalURL, true);
+                                Telemetry.addToHistogram("FENNEC_SESSIONSTORE_RESTORING_FROM_BACKUP", 1);
                             } catch (SessionRestoreException ex) {
-                                // If this fails, too, do a normal startup.
-                                Log.e(LOGTAG, "An error occurred during restore", ex);
-                                mShouldRestore = false;
+                                if (!mShouldRestore) {
+                                    // Restoring only "failed" because the backup copy was deliberately empty, too.
+                                    Telemetry.addToHistogram("FENNEC_SESSIONSTORE_RESTORING_FROM_BACKUP", 1);
+                                } else {
+                                    // Restoring the backup failed, too, so do a normal startup.
+                                    Log.e(LOGTAG, "An error occurred during restore", ex);
+                                    mShouldRestore = false;
+                                }
                             }
                         }
                     }
