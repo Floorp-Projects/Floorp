@@ -209,6 +209,11 @@ interface nsIAsyncShutdownService: nsISupports {
   readonly attribute nsIAsyncShutdownClient webWorkersShutdown;
 
   /**
+   * Barrier for notification xpcom-will-shutdown.
+   */
+  readonly attribute nsIAsyncShutdownClient xpcomWillShutdown;
+
+  /**
    * Barrier for notification xpcom-threads-shutdown.
    */
   readonly attribute nsIAsyncShutdownClient xpcomThreadsShutdown;
