@@ -134,7 +134,7 @@ public:
   CloneUnfiltered(ErrorResult& aRv) const;
 
   void
-  SetBody(nsIInputStream* aBody);
+  SetBody(nsIInputStream* aBody, int64_t aBodySize);
 
   already_AddRefed<InternalResponse>
   GetInternalResponse() const;

@@ -281,7 +281,7 @@ TypeUtils::ToResponse(const CacheResponse& aIn)
   }
 
   nsCOMPtr<nsIInputStream> stream = ReadStream::Create(aIn.body());
-  ir->SetBody(stream);
+  ir->SetBody(stream, InternalResponse::UNKNOWN_BODY_SIZE);
 
   switch (aIn.type())
   {
