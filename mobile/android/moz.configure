@@ -56,6 +56,12 @@ imply_option('MOZ_SOCIAL', False)
 imply_option('MOZ_SERVICES_HEALTHREPORT', True)
 imply_option('MOZ_ANDROID_HISTORY', True)
 
+set_config('ANDROID_SUPPORT_LIBRARY_VERSION', '23.0.1')
+add_old_configure_assignment('ANDROID_SUPPORT_LIBRARY_VERSION', '23.0.1')
+
+set_config('ANDROID_GOOGLE_PLAY_SERVICES_VERSION', '8.4.0')
+add_old_configure_assignment('ANDROID_GOOGLE_PLAY_SERVICES_VERSION', '8.4.0')
+
 @depends(target)
 def check_target(target):
     if target.os != 'Android':

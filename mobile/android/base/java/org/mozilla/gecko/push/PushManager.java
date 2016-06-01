@@ -6,6 +6,7 @@
 package org.mozilla.gecko.push;
 
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.util.Log;
 
 import org.json.JSONObject;
@@ -101,14 +102,14 @@ public class PushManager {
         return registration;
     }
 
-    public PushSubscription subscribeChannel(final @NonNull String profileName, final @NonNull String service, final @NonNull JSONObject serviceData, final long now) throws ProfileNeedsConfigurationException, AutopushClientException, PushClient.LocalException, GcmTokenClient.NeedsGooglePlayServicesException, IOException {
+    public PushSubscription subscribeChannel(final @NonNull String profileName, final @NonNull String service, final @NonNull JSONObject serviceData, @Nullable String appServerKey, final long now) throws ProfileNeedsConfigurationException, AutopushClientException, PushClient.LocalException, GcmTokenClient.NeedsGooglePlayServicesException, IOException {
         Log.i(LOG_TAG, "Subscribing to channel for service: " + service + "; for profile named: " + profileName);
         final PushRegistration registration = advanceRegistration(profileName, now);
-        final PushSubscription subscription = subscribeChannel(registration, profileName, service, serviceData, System.currentTimeMillis());
+        final PushSubscription subscription = subscribeChannel(registration, profileName, service, serviceData, appServerKey, System.currentTimeMillis());
         return subscription;
     }
 
-    protected PushSubscription subscribeChannel(final @NonNull PushRegistration registration, final @NonNull String profileName, final @NonNull String service, final @NonNull JSONObject serviceData, final long now) throws AutopushClientException, PushClient.LocalException {
+    protected PushSubscription subscribeChannel(final @NonNull PushRegistration registration, final @NonNull String profileName, final @NonNull String service, final @NonNull JSONObject serviceData, @Nullable String appServerKey, final long now) throws AutopushClientException, PushClient.LocalException {
         final String uaid = registration.uaid.value;
         final String secret = registration.secret;
         if (uaid == null || secret == null) {
@@ -118,7 +119,7 @@ public class PushManager {
         // Verify endpoint is not null?
         final PushClient pushClient = pushClientFactory.getPushClient(registration.autopushEndpoint, registration.debug);
 
-        final SubscribeChannelResponse result = pushClient.subscribeChannel(uaid, secret);
+        final SubscribeChannelResponse result = pushClient.subscribeChannel(uaid, secret, appServerKey);
         if (registration.debug) {
             Log.i(LOG_TAG, "Got chid: " + result.channelID + " and endpoint: " + result.endpoint);
         } else {

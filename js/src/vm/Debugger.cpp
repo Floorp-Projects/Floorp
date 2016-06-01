@@ -406,6 +406,92 @@ NukeDebuggerWrapper(NativeObject *wrapper)
     wrapper->setPrivate(nullptr);
 }
 
+static bool
+ValueToStableChars(JSContext* cx, const char *fnname, HandleValue value,
+                   AutoStableStringChars& stableChars)
+{
+    if (!value.isString()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
+                             fnname, "string", "string");
+        return false;
+    }
+    RootedLinearString linear(cx, value.toString()->ensureLinear(cx));
+    if (!linear)
+        return false;
+    if (!stableChars.initTwoByte(cx, linear))
+        return false;
+    return true;
+}
+
+class MOZ_RAII EvalOptions {
+    const char* filename_;
+    unsigned lineno_;
+
+  public:
+    EvalOptions() : filename_(nullptr), lineno_(1) {}
+    ~EvalOptions();
+    const char* filename() const { return filename_; }
+    unsigned lineno() const { return lineno_; }
+    bool setFilename(JSContext* cx, const char* filename);
+    void setLineno(unsigned lineno) { lineno_ = lineno; }
+};
+
+EvalOptions::~EvalOptions()
+{
+    js_free(const_cast<char*>(filename_));
+}
+
+bool
+EvalOptions::setFilename(JSContext* cx, const char* filename)
+{
+    char* copy = nullptr;
+    if (filename) {
+        copy = JS_strdup(cx, filename);
+        if (!copy)
+            return false;
+    }
+
+    // EvalOptions always owns filename_, so this cast is okay.
+    js_free(const_cast<char*>(filename_));
+
+    filename_ = copy;
+    return true;
+}
+
+static bool
+ParseEvalOptions(JSContext* cx, HandleValue value, EvalOptions& options)
+{
+    if (!value.isObject())
+        return true;
+
+    RootedObject opts(cx, &value.toObject());
+
+    RootedValue v(cx);
+    if (!JS_GetProperty(cx, opts, "url", &v))
+        return false;
+    if (!v.isUndefined()) {
+        RootedString url_str(cx, ToString<CanGC>(cx, v));
+        if (!url_str)
+            return false;
+        JSAutoByteString url_bytes(cx, url_str);
+        if (!url_bytes)
+            return false;
+        if (!options.setFilename(cx, url_bytes.ptr()))
+            return false;
+    }
+
+    if (!JS_GetProperty(cx, opts, "lineNumber", &v))
+        return false;
+    if (!v.isUndefined()) {
+        uint32_t lineno;
+        if (!ToUint32(cx, v, &lineno))
+            return false;
+        options.setLineno(lineno);
+    }
+
+    return true;
+}
+
 
 /*** Breakpoints *********************************************************************************/
 
@@ -2283,8 +2369,8 @@ UpdateExecutionObservabilityOfScriptsInZone(JSContext* cx, Zone* zone,
                     return false;
             }
         } else {
-            for (gc::ZoneCellIter iter(zone, gc::AllocKind::SCRIPT); !iter.done(); iter.next()) {
-                JSScript* script = iter.get<JSScript>();
+            for (auto iter = zone->cellIter<JSScript>(); !iter.done(); iter.next()) {
+                JSScript* script = iter;
                 if (obs.shouldRecompileOrInvalidate(script) &&
                     !gc::IsAboutToBeFinalizedUnbarriered(&script))
                 {
@@ -7483,27 +7569,14 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
     return ExecuteKernel(cx, script, *env, NullValue(), frame, rval.address());
 }
 
-enum EvalBindings { EvalHasExtraBindings = true, EvalWithDefaultBindings = false };
-
 static bool
-DebuggerGenericEval(JSContext* cx, const char* fullMethodName, const Value& code,
-                    EvalBindings evalWithBindings, HandleValue bindings, HandleValue options,
-                    MutableHandleValue vp, Debugger* dbg, HandleObject scope,
-                    ScriptFrameIter* iter)
+DebuggerGenericEval(JSContext* cx, const mozilla::Range<const char16_t> chars,
+                    HandleObject bindings, const EvalOptions& options, MutableHandleValue vp,
+                    Debugger* dbg, HandleObject scope, ScriptFrameIter* iter)
 {
     /* Either we're specifying the frame, or a global. */
     MOZ_ASSERT_IF(iter, !scope);
     MOZ_ASSERT_IF(!iter, scope && IsGlobalLexicalScope(scope));
-
-    /* Check the first argument, the eval code string. */
-    if (!code.isString()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                             fullMethodName, "string", InformalValueTypeName(code));
-        return false;
-    }
-    RootedLinearString linear(cx, code.toString()->ensureLinear(cx));
-    if (!linear)
-        return false;
 
     /*
      * Gather keys and values of bindings, if any. This must be done in the
@@ -7512,51 +7585,19 @@ DebuggerGenericEval(JSContext* cx, const char* fullMethodName, const Value& code
      */
     AutoIdVector keys(cx);
     AutoValueVector values(cx);
-    if (evalWithBindings) {
-        RootedObject bindingsobj(cx, NonNullObject(cx, bindings));
-        if (!bindingsobj ||
-            !GetPropertyKeys(cx, bindingsobj, JSITER_OWNONLY, &keys) ||
+    if (bindings) {
+        if (!GetPropertyKeys(cx, bindings, JSITER_OWNONLY, &keys) ||
             !values.growBy(keys.length()))
         {
             return false;
         }
         for (size_t i = 0; i < keys.length(); i++) {
             MutableHandleValue valp = values[i];
-            if (!GetProperty(cx, bindingsobj, bindingsobj, keys[i], valp) ||
+            if (!GetProperty(cx, bindings, bindings, keys[i], valp) ||
                 !dbg->unwrapDebuggeeValue(cx, valp))
             {
                 return false;
             }
-        }
-    }
-
-    /* Set options from object if provided. */
-    JSAutoByteString url_bytes;
-    char* url = nullptr;
-    unsigned lineNumber = 1;
-
-    if (options.isObject()) {
-        RootedObject opts(cx, &options.toObject());
-        RootedValue v(cx);
-
-        if (!JS_GetProperty(cx, opts, "url", &v))
-            return false;
-        if (!v.isUndefined()) {
-            RootedString url_str(cx, ToString<CanGC>(cx, v));
-            if (!url_str)
-                return false;
-            url = url_bytes.encodeLatin1(cx, url_str);
-            if (!url)
-                return false;
-        }
-
-        if (!JS_GetProperty(cx, opts, "lineNumber", &v))
-            return false;
-        if (!v.isUndefined()) {
-            uint32_t lineno;
-            if (!ToUint32(cx, v, &lineno))
-                return false;
-            lineNumber = lineno;
         }
     }
 
@@ -7576,7 +7617,7 @@ DebuggerGenericEval(JSContext* cx, const char* fullMethodName, const Value& code
     }
 
     /* If evalWithBindings, create the inner environment. */
-    if (evalWithBindings) {
+    if (bindings) {
         RootedPlainObject nenv(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr));
         if (!nenv)
             return false;
@@ -7607,13 +7648,10 @@ DebuggerGenericEval(JSContext* cx, const char* fullMethodName, const Value& code
     RootedValue rval(cx);
     AbstractFramePtr frame = iter ? iter->abstractFramePtr() : NullFramePtr();
     jsbytecode* pc = iter ? iter->pc() : nullptr;
-    AutoStableStringChars stableChars(cx);
-    if (!stableChars.initTwoByte(cx, linear))
-        return false;
 
-    mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
-    bool ok = EvaluateInEnv(cx, env, frame, pc, chars, url ? url : "debugger eval code",
-                            lineNumber, &rval);
+    bool ok = EvaluateInEnv(cx, env, frame, pc, chars,
+                            options.filename() ? options.filename() : "debugger eval code",
+                            options.lineno(), &rval);
     return dbg->receiveCompletionValue(ac, ok, rval, vp);
 }
 
@@ -7625,9 +7663,17 @@ DebuggerFrame_eval(JSContext* cx, unsigned argc, Value* vp)
         return false;
     Debugger* dbg = Debugger::fromChildJSObject(thisobj);
     UpdateFrameIterPc(iter);
-    return DebuggerGenericEval(cx, "Debugger.Frame.prototype.eval",
-                               args[0], EvalWithDefaultBindings, JS::UndefinedHandleValue,
-                               args.get(1), args.rval(), dbg, nullptr, &iter);
+
+    AutoStableStringChars stableChars(cx);
+    if (!ValueToStableChars(cx, "Debugger.Frame.prototype.eval", args[0], stableChars))
+        return false;
+    mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
+
+    EvalOptions options;
+    if (!ParseEvalOptions(cx, args.get(1), options))
+        return false;
+
+    return DebuggerGenericEval(cx, chars, nullptr, options, args.rval(), dbg, nullptr, &iter);
 }
 
 static bool
@@ -7638,9 +7684,24 @@ DebuggerFrame_evalWithBindings(JSContext* cx, unsigned argc, Value* vp)
         return false;
     Debugger* dbg = Debugger::fromChildJSObject(thisobj);
     UpdateFrameIterPc(iter);
-    return DebuggerGenericEval(cx, "Debugger.Frame.prototype.evalWithBindings",
-                               args[0], EvalHasExtraBindings, args[1], args.get(2),
-                               args.rval(), dbg, nullptr, &iter);
+
+    AutoStableStringChars stableChars(cx);
+    if (!ValueToStableChars(cx, "Debugger.Frame.prototype.evalWithBindings", args[0],
+                            stableChars))
+    {
+        return false;
+    }
+    mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
+
+    RootedObject bindings(cx, NonNullObject(cx, args[1]));
+    if (!bindings)
+        return false;
+
+    EvalOptions options;
+    if (!ParseEvalOptions(cx, args.get(2), options))
+        return false;
+
+    return DebuggerGenericEval(cx, chars, bindings, options, args.rval(), dbg, nullptr, &iter);
 }
 
 static bool
@@ -8650,10 +8711,21 @@ DebuggerObject_executeInGlobal(JSContext* cx, unsigned argc, Value* vp)
     if (!RequireGlobalObject(cx, args.thisv(), referent))
         return false;
 
+    AutoStableStringChars stableChars(cx);
+    if (!ValueToStableChars(cx, "Debugger.Object.prototype.executeInGlobal", args[0],
+                            stableChars))
+    {
+        return false;
+    }
+    mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
+
+    EvalOptions options;
+    if (!ParseEvalOptions(cx, args.get(1), options))
+        return false;
+
     RootedObject globalLexical(cx, &referent->as<GlobalObject>().lexicalScope());
-    return DebuggerGenericEval(cx, "Debugger.Object.prototype.executeInGlobal",
-                               args[0], EvalWithDefaultBindings, JS::UndefinedHandleValue,
-                               args.get(1), args.rval(), dbg, globalLexical, nullptr);
+    return DebuggerGenericEval(cx, chars, nullptr, options, args.rval(), dbg, globalLexical,
+                               nullptr);
 }
 
 static bool
@@ -8666,10 +8738,25 @@ DebuggerObject_executeInGlobalWithBindings(JSContext* cx, unsigned argc, Value* 
     if (!RequireGlobalObject(cx, args.thisv(), referent))
         return false;
 
+    AutoStableStringChars stableChars(cx);
+    if (!ValueToStableChars(cx, "Debugger.Object.prototype.executeInGlobalWithBindings", args[0],
+                            stableChars))
+    {
+        return false;
+    }
+    mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
+
+    RootedObject bindings(cx, NonNullObject(cx, args[1]));
+    if (!bindings)
+        return false;
+
+    EvalOptions options;
+    if (!ParseEvalOptions(cx, args.get(2), options))
+        return false;
+
     RootedObject globalLexical(cx, &referent->as<GlobalObject>().lexicalScope());
-    return DebuggerGenericEval(cx, "Debugger.Object.prototype.executeInGlobalWithBindings",
-                               args[0], EvalHasExtraBindings, args[1], args.get(2),
-                               args.rval(), dbg, globalLexical, nullptr);
+    return DebuggerGenericEval(cx, chars, bindings, options, args.rval(), dbg, globalLexical,
+                               nullptr);
 }
 
 static bool

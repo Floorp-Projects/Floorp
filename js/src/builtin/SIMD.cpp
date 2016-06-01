@@ -277,12 +277,36 @@ static_assert(uint64_t(SimdOperation::Last) <= UINT16_MAX, "SimdOperation must f
 FLOAT32X4_FUNCTION_LIST(TDEFN)
 #undef TDEFN
 
+#define TDEFN(Name, Func, Operands) DEFN(Int8x16, Name)
+INT8X16_FUNCTION_LIST(TDEFN)
+#undef TDEFN
+
+#define TDEFN(Name, Func, Operands) DEFN(Uint8x16, Name)
+UINT8X16_FUNCTION_LIST(TDEFN)
+#undef TDEFN
+
+#define TDEFN(Name, Func, Operands) DEFN(Int16x8, Name)
+INT16X8_FUNCTION_LIST(TDEFN)
+#undef TDEFN
+
+#define TDEFN(Name, Func, Operands) DEFN(Uint16x8, Name)
+UINT16X8_FUNCTION_LIST(TDEFN)
+#undef TDEFN
+
 #define TDEFN(Name, Func, Operands) DEFN(Int32x4, Name)
 INT32X4_FUNCTION_LIST(TDEFN)
 #undef TDEFN
 
 #define TDEFN(Name, Func, Operands) DEFN(Uint32x4, Name)
 UINT32X4_FUNCTION_LIST(TDEFN)
+#undef TDEFN
+
+#define TDEFN(Name, Func, Operands) DEFN(Bool8x16, Name)
+BOOL8X16_FUNCTION_LIST(TDEFN)
+#undef TDEFN
+
+#define TDEFN(Name, Func, Operands) DEFN(Bool16x8, Name)
+BOOL16X8_FUNCTION_LIST(TDEFN)
 #undef TDEFN
 
 #define TDEFN(Name, Func, Operands) DEFN(Bool32x4, Name)
@@ -310,7 +334,7 @@ const JSFunctionSpec Float64x2Defn::Methods[]  = {
 
 const JSFunctionSpec Int8x16Defn::Methods[] = {
 #define SIMD_INT8X16_FUNCTION_ITEM(Name, Func, Operands) \
-    JS_FN(#Name, js::simd_int8x16_##Name, Operands, 0),
+    JS_INLINABLE_FN(#Name, js::simd_int8x16_##Name, Operands, 0, SimdInt8x16_##Name),
     INT8X16_FUNCTION_LIST(SIMD_INT8X16_FUNCTION_ITEM)
 #undef SIMD_INT8X16_FUNCTION_ITEM
     JS_FS_END
@@ -318,7 +342,7 @@ const JSFunctionSpec Int8x16Defn::Methods[] = {
 
 const JSFunctionSpec Int16x8Defn::Methods[] = {
 #define SIMD_INT16X8_FUNCTION_ITEM(Name, Func, Operands) \
-    JS_FN(#Name, js::simd_int16x8_##Name, Operands, 0),
+    JS_INLINABLE_FN(#Name, js::simd_int16x8_##Name, Operands, 0, SimdInt16x8_##Name),
     INT16X8_FUNCTION_LIST(SIMD_INT16X8_FUNCTION_ITEM)
 #undef SIMD_INT16X8_FUNCTION_ITEM
     JS_FS_END
@@ -334,7 +358,7 @@ const JSFunctionSpec Int32x4Defn::Methods[] = {
 
 const JSFunctionSpec Uint8x16Defn::Methods[] = {
 #define SIMD_UINT8X16_FUNCTION_ITEM(Name, Func, Operands) \
-    JS_FN(#Name, js::simd_uint8x16_##Name, Operands, 0),
+    JS_INLINABLE_FN(#Name, js::simd_uint8x16_##Name, Operands, 0, SimdUint8x16_##Name),
     UINT8X16_FUNCTION_LIST(SIMD_UINT8X16_FUNCTION_ITEM)
 #undef SIMD_UINT8X16_FUNCTION_ITEM
     JS_FS_END
@@ -342,7 +366,7 @@ const JSFunctionSpec Uint8x16Defn::Methods[] = {
 
 const JSFunctionSpec Uint16x8Defn::Methods[] = {
 #define SIMD_UINT16X8_FUNCTION_ITEM(Name, Func, Operands) \
-    JS_FN(#Name, js::simd_uint16x8_##Name, Operands, 0),
+    JS_INLINABLE_FN(#Name, js::simd_uint16x8_##Name, Operands, 0, SimdUint16x8_##Name),
     UINT16X8_FUNCTION_LIST(SIMD_UINT16X8_FUNCTION_ITEM)
 #undef SIMD_UINT16X8_FUNCTION_ITEM
     JS_FS_END
@@ -358,7 +382,7 @@ const JSFunctionSpec Uint32x4Defn::Methods[] = {
 
 const JSFunctionSpec Bool8x16Defn::Methods[] = {
 #define SIMD_BOOL8X16_FUNCTION_ITEM(Name, Func, Operands) \
-    JS_FN(#Name, js::simd_bool8x16_##Name, Operands, 0),
+    JS_INLINABLE_FN(#Name, js::simd_bool8x16_##Name, Operands, 0, SimdBool8x16_##Name),
     BOOL8X16_FUNCTION_LIST(SIMD_BOOL8X16_FUNCTION_ITEM)
 #undef SIMD_BOOL8X16_FUNCTION_ITEM
     JS_FS_END
@@ -366,7 +390,7 @@ const JSFunctionSpec Bool8x16Defn::Methods[] = {
 
 const JSFunctionSpec Bool16x8Defn::Methods[] = {
 #define SIMD_BOOL16X8_FUNCTION_ITEM(Name, Func, Operands) \
-    JS_FN(#Name, js::simd_bool16x8_##Name, Operands, 0),
+    JS_INLINABLE_FN(#Name, js::simd_bool16x8_##Name, Operands, 0, SimdBool16x8_##Name),
     BOOL16X8_FUNCTION_LIST(SIMD_BOOL16X8_FUNCTION_ITEM)
 #undef SIMD_BOOL16X8_FUNCTION_ITEM
     JS_FS_END

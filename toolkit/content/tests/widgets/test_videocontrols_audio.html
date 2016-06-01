@@ -37,9 +37,11 @@
   }
 
   function loadedmetadata(event) {
-    var controlBar = findElementByAttribute(video, "class", "controlBar");
-    is(controlBar.getAttribute("fullscreen-unavailable"), "true", "Fullscreen button is hidden");
-    SimpleTest.finish();
+    SimpleTest.executeSoon(function() {
+      var controlBar = findElementByAttribute(video, "class", "controlBar");
+      is(controlBar.getAttribute("fullscreen-unavailable"), "true", "Fullscreen button is hidden");
+      SimpleTest.finish();
+    });
   }
 
   var video = document.getElementById("video");

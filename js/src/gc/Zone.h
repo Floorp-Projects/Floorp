@@ -84,6 +84,9 @@ using UniqueIdMap = GCHashMap<Cell*,
 
 extern uint64_t NextCellUniqueId(JSRuntime* rt);
 
+template <typename T>
+class ZoneCellIter;
+
 } // namespace gc
 } // namespace js
 
@@ -155,6 +158,13 @@ struct Zone : public JS::shadow::Zone,
         gcMallocBytes -= ptrdiff_t(nbytes);
         if (MOZ_UNLIKELY(isTooMuchMalloc()))
             onTooMuchMalloc();
+    }
+
+    // Iterate over all cells in the zone. See the definition of ZoneCellIter
+    // in jsgcinlines.h for the possible arguments and documentation.
+    template <typename T, typename... Args>
+    js::gc::ZoneCellIter<T> cellIter(Args... args) {
+        return js::gc::ZoneCellIter<T>(const_cast<Zone*>(this), mozilla::Forward<Args>(args)...);
     }
 
     bool isTooMuchMalloc() const { return gcMallocBytes <= 0; }

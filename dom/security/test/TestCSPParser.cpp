@@ -101,7 +101,9 @@ nsresult runTest(uint32_t aExpectedPolicyCount, // this should be 0 for policies
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsIPrincipal> selfURIPrincipal;
-  rv = secman->GetSimpleCodebasePrincipal(selfURI, getter_AddRefs(selfURIPrincipal));
+  // Can't use BasePrincipal::CreateCodebasePrincipal here
+  // because the symbol is not visible here
+  rv = secman->GetCodebasePrincipal(selfURI, getter_AddRefs(selfURIPrincipal));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // create a CSP object

@@ -349,8 +349,11 @@ ConvertImage(size_t width, size_t height,
              const void* srcBegin, size_t srcStride, gl::OriginPos srcOrigin,
              WebGLTexelFormat srcFormat, bool srcPremultiplied,
              void* dstBegin, size_t dstStride, gl::OriginPos dstOrigin,
-             WebGLTexelFormat dstFormat, bool dstPremultiplied)
+             WebGLTexelFormat dstFormat, bool dstPremultiplied,
+             bool* const out_wasTrivial)
 {
+    *out_wasTrivial = true;
+
     if (srcFormat == WebGLTexelFormat::FormatNotSupportingAnyConversion ||
         dstFormat == WebGLTexelFormat::FormatNotSupportingAnyConversion)
     {
@@ -409,6 +412,8 @@ ConvertImage(size_t width, size_t height,
         }
         return true;
     }
+
+    *out_wasTrivial = false;
 
     WebGLImageConverter converter(width, height, srcItr, dstItr, srcStride, dstItrStride);
     converter.run(srcFormat, dstFormat, premultOp);

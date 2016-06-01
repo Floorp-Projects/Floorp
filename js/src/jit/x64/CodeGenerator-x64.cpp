@@ -598,6 +598,14 @@ CodeGeneratorX64::loadSimd(Scalar::Type type, unsigned numElems, const Operand& 
         }
         break;
       }
+      case Scalar::Int8x16:
+        MOZ_ASSERT(numElems = 16, "unexpected partial load");
+        masm.loadUnalignedSimd128Int(srcAddr, out);
+        break;
+      case Scalar::Int16x8:
+        MOZ_ASSERT(numElems = 8, "unexpected partial load");
+        masm.loadUnalignedSimd128Int(srcAddr, out);
+        break;
       case Scalar::Int8:
       case Scalar::Uint8:
       case Scalar::Int16:
@@ -698,6 +706,8 @@ CodeGeneratorX64::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
       case Scalar::Float32:   masm.loadFloat32(srcAddr, ToFloatRegister(out)); break;
       case Scalar::Float64:   masm.loadDouble(srcAddr, ToFloatRegister(out)); break;
       case Scalar::Float32x4:
+      case Scalar::Int8x16:
+      case Scalar::Int16x8:
       case Scalar::Int32x4:   MOZ_CRASH("SIMD loads should be handled in emitSimdLoad");
       case Scalar::Uint8Clamped:
       case Scalar::MaxTypedArrayViewType:
@@ -725,9 +735,9 @@ CodeGeneratorX64::storeSimd(Scalar::Type type, unsigned numElems, FloatRegister 
       case Scalar::Float32x4: {
         switch (numElems) {
           // In memory-to-register mode, movss zeroes out the high lanes.
-          case 1: masm.storeFloat32(in, dstAddr); break;
+          case 1: masm.storeUncanonicalizedFloat32(in, dstAddr); break;
           // See comment above, which also applies to movsd.
-          case 2: masm.storeDouble(in, dstAddr); break;
+          case 2: masm.storeUncanonicalizedDouble(in, dstAddr); break;
           case 4: masm.storeUnalignedSimd128Float(in, dstAddr); break;
           default: MOZ_CRASH("unexpected size for partial load");
         }
@@ -744,6 +754,14 @@ CodeGeneratorX64::storeSimd(Scalar::Type type, unsigned numElems, FloatRegister 
         }
         break;
       }
+      case Scalar::Int8x16:
+        MOZ_ASSERT(numElems == 16, "unexpected partial store");
+        masm.storeUnalignedSimd128Int(in, dstAddr);
+        break;
+      case Scalar::Int16x8:
+        MOZ_ASSERT(numElems == 8, "unexpected partial store");
+        masm.storeUnalignedSimd128Int(in, dstAddr);
+        break;
       case Scalar::Int8:
       case Scalar::Uint8:
       case Scalar::Int16:
@@ -816,11 +834,13 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
 {
     const MAsmJSStoreHeap* mir = ins->mir();
     Scalar::Type accessType = mir->accessType();
+    const LAllocation* value = ins->value();
+
+    canonicalizeIfDeterministic(accessType, value);
 
     if (Scalar::isSimdType(accessType))
         return emitSimdStore(ins);
 
-    const LAllocation* value = ins->value();
     const LAllocation* ptr = ins->ptr();
     Operand dstAddr = ptr->isBogus()
                       ? Operand(HeapReg, mir->offset())
@@ -843,6 +863,8 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
           case Scalar::Float32:
           case Scalar::Float64:
           case Scalar::Float32x4:
+          case Scalar::Int8x16:
+          case Scalar::Int16x8:
           case Scalar::Int32x4:
           case Scalar::Uint8Clamped:
           case Scalar::MaxTypedArrayViewType:
@@ -851,18 +873,31 @@ CodeGeneratorX64::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
     } else {
         switch (accessType) {
           case Scalar::Int8:
-          case Scalar::Uint8:        masm.movb(ToRegister(value), dstAddr); break;
+          case Scalar::Uint8:
+            masm.movb(ToRegister(value), dstAddr);
+            break;
           case Scalar::Int16:
-          case Scalar::Uint16:       masm.movw(ToRegister(value), dstAddr); break;
+          case Scalar::Uint16:
+            masm.movw(ToRegister(value), dstAddr);
+            break;
           case Scalar::Int32:
-          case Scalar::Uint32:       masm.movl(ToRegister(value), dstAddr); break;
-          case Scalar::Float32:      masm.storeFloat32(ToFloatRegister(value), dstAddr); break;
-          case Scalar::Float64:      masm.storeDouble(ToFloatRegister(value), dstAddr); break;
+          case Scalar::Uint32:
+            masm.movl(ToRegister(value), dstAddr);
+            break;
+          case Scalar::Float32:
+            masm.storeUncanonicalizedFloat32(ToFloatRegister(value), dstAddr);
+            break;
+          case Scalar::Float64:
+            masm.storeUncanonicalizedDouble(ToFloatRegister(value), dstAddr);
+            break;
           case Scalar::Float32x4:
-          case Scalar::Int32x4:      MOZ_CRASH("SIMD stores must be handled in emitSimdStore");
+          case Scalar::Int8x16:
+          case Scalar::Int16x8:
+          case Scalar::Int32x4:
+            MOZ_CRASH("SIMD stores must be handled in emitSimdStore");
           case Scalar::Uint8Clamped:
           case Scalar::MaxTypedArrayViewType:
-              MOZ_CRASH("unexpected array type");
+            MOZ_CRASH("unexpected array type");
         }
     }
     uint32_t after = masm.size();
@@ -1044,7 +1079,11 @@ CodeGeneratorX64::visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar* ins)
         break;
       // Aligned access: code is aligned on PageSize + there is padding
       // before the global data section.
+      case MIRType::Int8x16:
+      case MIRType::Int16x8:
       case MIRType::Int32x4:
+      case MIRType::Bool8x16:
+      case MIRType::Bool16x8:
       case MIRType::Bool32x4:
         label = masm.loadRipRelativeInt32x4(ToFloatRegister(ins->output()));
         break;

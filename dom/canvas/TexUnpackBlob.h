@@ -147,7 +147,7 @@ protected:
                                gfx::DataSourceSurface* surf, bool isSurfAlphaPremult,
                                UniqueBuffer* const out_convertedBuffer,
                                uint8_t* const out_convertedAlignment,
-                               bool* const out_outOfMemory);
+                               bool* const out_wasTrivial, bool* const out_outOfMemory);
     static bool UploadDataSurface(bool isSubImage, WebGLContext* webgl,
                                   TexImageTarget target, GLint level,
                                   const webgl::DriverUnpackInfo* dui, GLint xOffset,

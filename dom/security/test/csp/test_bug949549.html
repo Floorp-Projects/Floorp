@@ -41,7 +41,7 @@
       var secMan = SpecialPowers.Cc["@mozilla.org/scriptsecuritymanager;1"]
                    .getService(SpecialPowers.Ci.nsIScriptSecurityManager);
       var manifestURI = SpecialPowers.Services.io.newURI(gManifestURL, null, null);
-      principal = secMan.getSimpleCodebasePrincipal(manifestURI);
+      principal = secMan.createCodebasePrincipal(manifestURI, {});
       csp.setRequestContext(null, principal);
       ok(true, "setRequestContext hasn't thown");
     } catch(e) {

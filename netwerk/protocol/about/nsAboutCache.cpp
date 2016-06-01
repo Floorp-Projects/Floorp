@@ -131,11 +131,53 @@ nsAboutCache::Channel::Init(nsIURI* aURI, nsILoadInfo* aLoadInfo)
 
     FlushBuffer();
 
-    // Kick it, this goes async.
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsAboutCache::Channel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
+{
+    nsresult rv;
+
+    if (!mChannel) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    // Kick the walk loop.
     rv = VisitNextStorage();
     if (NS_FAILED(rv)) return rv;
 
+    rv = mChannel->AsyncOpen(aListener, aContext);
+    if (NS_FAILED(rv)) return rv;
+
     return NS_OK;
+}
+
+NS_IMETHODIMP nsAboutCache::Channel::AsyncOpen2(nsIStreamListener *aListener)
+{
+    return AsyncOpen(aListener, nullptr);
+}
+
+NS_IMETHODIMP nsAboutCache::Channel::Open(nsIInputStream * *_retval)
+{
+    nsresult rv;
+
+    if (!mChannel) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    // Kick the walk loop.
+    rv = VisitNextStorage();
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mChannel->Open(_retval);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsAboutCache::Channel::Open2(nsIInputStream * *_retval)
+{
+    return Open(_retval);
 }
 
 nsresult

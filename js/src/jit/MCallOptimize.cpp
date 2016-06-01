@@ -216,10 +216,22 @@ IonBuilder::inlineNativeCall(CallInfo& callInfo, JSFunction* target)
         return inlineSimd(callInfo, target, SimdType::Int32x4);
       case InlinableNative::SimdUint32x4:
         return inlineSimd(callInfo, target, SimdType::Uint32x4);
+      case InlinableNative::SimdInt16x8:
+        return inlineSimd(callInfo, target, SimdType::Int16x8);
+      case InlinableNative::SimdUint16x8:
+        return inlineSimd(callInfo, target, SimdType::Uint16x8);
+      case InlinableNative::SimdInt8x16:
+        return inlineSimd(callInfo, target, SimdType::Int8x16);
+      case InlinableNative::SimdUint8x16:
+        return inlineSimd(callInfo, target, SimdType::Uint8x16);
       case InlinableNative::SimdFloat32x4:
         return inlineSimd(callInfo, target, SimdType::Float32x4);
       case InlinableNative::SimdBool32x4:
         return inlineSimd(callInfo, target, SimdType::Bool32x4);
+      case InlinableNative::SimdBool16x8:
+        return inlineSimd(callInfo, target, SimdType::Bool16x8);
+      case InlinableNative::SimdBool8x16:
+        return inlineSimd(callInfo, target, SimdType::Bool8x16);
 
       // Testing functions.
       case InlinableNative::TestBailout:
@@ -3245,45 +3257,37 @@ IonBuilder::inlineSimd(CallInfo& callInfo, JSFunction* target, SimdType type)
 
         // Binary arithmetic.
       case SimdOperation::Fn_add:
-        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_add,
-                                                  type);
+        return inlineSimdBinaryArith(callInfo, native, MSimdBinaryArith::Op_add, type);
       case SimdOperation::Fn_sub:
-        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_sub,
-                                                  type);
+        return inlineSimdBinaryArith(callInfo, native, MSimdBinaryArith::Op_sub, type);
       case SimdOperation::Fn_mul:
-        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_mul,
-                                                  type);
+        return inlineSimdBinaryArith(callInfo, native, MSimdBinaryArith::Op_mul, type);
       case SimdOperation::Fn_div:
-        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_div,
-                                                  type);
+        return inlineSimdBinaryArith(callInfo, native, MSimdBinaryArith::Op_div, type);
       case SimdOperation::Fn_max:
-        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_max,
-                                                  type);
+        return inlineSimdBinaryArith(callInfo, native, MSimdBinaryArith::Op_max, type);
       case SimdOperation::Fn_min:
-        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_min,
-                                                  type);
+        return inlineSimdBinaryArith(callInfo, native, MSimdBinaryArith::Op_min, type);
       case SimdOperation::Fn_maxNum:
-        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_maxNum,
-                                                  type);
+        return inlineSimdBinaryArith(callInfo, native, MSimdBinaryArith::Op_maxNum, type);
       case SimdOperation::Fn_minNum:
-        return inlineSimdBinary<MSimdBinaryArith>(callInfo, native, MSimdBinaryArith::Op_minNum,
-                                                  type);
+        return inlineSimdBinaryArith(callInfo, native, MSimdBinaryArith::Op_minNum, type);
+
+        // Binary saturating.
       case SimdOperation::Fn_addSaturate:
+        return inlineSimdBinarySaturating(callInfo, native, MSimdBinarySaturating::add, type);
       case SimdOperation::Fn_subSaturate:
-        MOZ_CRASH("NYI");
+        return inlineSimdBinarySaturating(callInfo, native, MSimdBinarySaturating::sub, type);
 
         // Binary bitwise.
       case SimdOperation::Fn_and:
-        return inlineSimdBinary<MSimdBinaryBitwise>(callInfo, native, MSimdBinaryBitwise::and_,
-                                                    type);
+        return inlineSimdBinaryBitwise(callInfo, native, MSimdBinaryBitwise::and_, type);
       case SimdOperation::Fn_or:
-        return inlineSimdBinary<MSimdBinaryBitwise>(callInfo, native, MSimdBinaryBitwise::or_,
-                                                    type);
+        return inlineSimdBinaryBitwise(callInfo, native, MSimdBinaryBitwise::or_, type);
       case SimdOperation::Fn_xor:
-        return inlineSimdBinary<MSimdBinaryBitwise>(callInfo, native, MSimdBinaryBitwise::xor_,
-                                                    type);
+        return inlineSimdBinaryBitwise(callInfo, native, MSimdBinaryBitwise::xor_, type);
 
-        // Shifts.
+      // Shifts.
       case SimdOperation::Fn_shiftLeftByScalar:
         return inlineSimdShift(callInfo, native, MSimdShift::lsh, type);
       case SimdOperation::Fn_shiftRightByScalar:
@@ -3336,16 +3340,18 @@ IonBuilder::inlineSimd(CallInfo& callInfo, JSFunction* target, SimdType type)
         return inlineSimdStore(callInfo, native, type, 3);
 
         // Bitcasts. One for each type with a memory representation.
-      case SimdOperation::Fn_fromInt8x16Bits:
-      case SimdOperation::Fn_fromInt16x8Bits:
-        return InliningStatus_NotInlined;
       case SimdOperation::Fn_fromInt32x4Bits:
         return inlineSimdConvert(callInfo, native, true, SimdType::Int32x4, type);
       case SimdOperation::Fn_fromUint32x4Bits:
         return inlineSimdConvert(callInfo, native, true, SimdType::Uint32x4, type);
-      case SimdOperation::Fn_fromUint8x16Bits:
+      case SimdOperation::Fn_fromInt16x8Bits:
+        return inlineSimdConvert(callInfo, native, true, SimdType::Int16x8, type);
       case SimdOperation::Fn_fromUint16x8Bits:
-        return InliningStatus_NotInlined;
+        return inlineSimdConvert(callInfo, native, true, SimdType::Uint16x8, type);
+      case SimdOperation::Fn_fromInt8x16Bits:
+        return inlineSimdConvert(callInfo, native, true, SimdType::Int8x16, type);
+      case SimdOperation::Fn_fromUint8x16Bits:
+        return inlineSimdConvert(callInfo, native, true, SimdType::Uint8x16, type);
       case SimdOperation::Fn_fromFloat32x4Bits:
         return inlineSimdConvert(callInfo, native, true, SimdType::Float32x4, type);
       case SimdOperation::Fn_fromFloat64x2Bits:
@@ -3401,12 +3407,6 @@ IonBuilder::inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* descr)
         return InliningStatus_NotInlined;
     }
 
-    // NYI, this will be removed by a bug 1136226 patch.
-    if (SimdTypeToLength(simdType) != 4) {
-        trackOptimizationOutcome(TrackedOutcome::SimdTypeNotOptimized);
-        return InliningStatus_NotInlined;
-    }
-
     // Take the templateObject out of Baseline ICs, such that we can box
     // SIMD value type in the same kind of objects.
     MOZ_ASSERT(size_t(descr->size(descr->type())) < InlineTypedObject::MaximumSize);
@@ -3426,7 +3426,8 @@ IonBuilder::inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* descr)
     // containing the coercion of 'undefined' to the right type.
     MConstant* defVal = nullptr;
     MIRType laneType = SimdTypeToLaneType(simdType);
-    if (callInfo.argc() < SimdTypeToLength(simdType)) {
+    unsigned lanes = SimdTypeToLength(simdType);
+    if (lanes != 4 || callInfo.argc() < lanes) {
         if (laneType == MIRType::Int32) {
             defVal = constant(Int32Value(0));
         } else if (laneType == MIRType::Boolean) {
@@ -3440,19 +3441,41 @@ IonBuilder::inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* descr)
         }
     }
 
-    MDefinition* lane[4];
-    for (unsigned i = 0; i < 4; i++)
-        lane[i] = callInfo.getArgWithDefault(i, defVal);
+    MInstruction *values = nullptr;
 
-    // Convert boolean lanes into Int32 0 / -1.
-    if (laneType == MIRType::Boolean) {
+    // Use the MSimdValueX4 constructor for X4 vectors.
+    if (lanes == 4) {
+        MDefinition* lane[4];
         for (unsigned i = 0; i < 4; i++)
-            lane[i] = convertToBooleanSimdLane(lane[i]);
-    }
+            lane[i] = callInfo.getArgWithDefault(i, defVal);
 
-    MSimdValueX4* values =
-      MSimdValueX4::New(alloc(), simdType, lane[0], lane[1], lane[2], lane[3]);
-    current->add(values);
+        // Convert boolean lanes into Int32 0 / -1.
+        if (laneType == MIRType::Boolean) {
+            for (unsigned i = 0; i < 4; i++)
+                lane[i] = convertToBooleanSimdLane(lane[i]);
+        }
+
+        values = MSimdValueX4::New(alloc(), simdType, lane[0], lane[1], lane[2], lane[3]);
+        current->add(values);
+    } else {
+        // For general constructor calls, start from splat(defVal), insert one
+        // lane at a time.
+        values = MSimdSplat::New(alloc(), defVal, simdType);
+        current->add(values);
+
+        // Stop early if constructor doesn't have enough arguments. These lanes
+        // then get the default value.
+        if (callInfo.argc() < lanes)
+            lanes = callInfo.argc();
+
+        for (unsigned i = 0; i < lanes; i++) {
+            MDefinition* lane = callInfo.getArg(i);
+            if (laneType == MIRType::Boolean)
+                lane = convertToBooleanSimdLane(lane);
+            values = MSimdInsertElement::New(alloc(), values, lane, i);
+            current->add(values);
+        }
+    }
 
     MSimdBox* obj = MSimdBox::New(alloc(), constraints(), values, inlineTypedObject, descr->type(),
                                   inlineTypedObject->group()->initialHeap(constraints()));
@@ -3546,11 +3569,9 @@ IonBuilder::boxSimd(CallInfo& callInfo, MDefinition* ins, InlineTypedObject* tem
     return InliningStatus_Inlined;
 }
 
-// Inline a binary SIMD operation where both arguments are SIMD types.
-template<typename T>
 IonBuilder::InliningStatus
-IonBuilder::inlineSimdBinary(CallInfo& callInfo, JSNative native, typename T::Operation op,
-                             SimdType type)
+IonBuilder::inlineSimdBinaryArith(CallInfo& callInfo, JSNative native,
+                                  MSimdBinaryArith::Operation op, SimdType type)
 {
     InlineTypedObject* templateObj = nullptr;
     if (!canInlineSimd(callInfo, native, 2, &templateObj))
@@ -3559,7 +3580,39 @@ IonBuilder::inlineSimdBinary(CallInfo& callInfo, JSNative native, typename T::Op
     MDefinition* lhs = unboxSimd(callInfo.getArg(0), type);
     MDefinition* rhs = unboxSimd(callInfo.getArg(1), type);
 
-    T* ins = T::New(alloc(), lhs, rhs, op);
+    auto* ins = MSimdBinaryArith::AddLegalized(alloc(), current, lhs, rhs, op);
+    return boxSimd(callInfo, ins, templateObj);
+}
+
+IonBuilder::InliningStatus
+IonBuilder::inlineSimdBinaryBitwise(CallInfo& callInfo, JSNative native,
+                                    MSimdBinaryBitwise::Operation op, SimdType type)
+{
+    InlineTypedObject* templateObj = nullptr;
+    if (!canInlineSimd(callInfo, native, 2, &templateObj))
+        return InliningStatus_NotInlined;
+
+    MDefinition* lhs = unboxSimd(callInfo.getArg(0), type);
+    MDefinition* rhs = unboxSimd(callInfo.getArg(1), type);
+
+    auto* ins = MSimdBinaryBitwise::New(alloc(), lhs, rhs, op);
+    return boxSimd(callInfo, ins, templateObj);
+}
+
+// Inline a binary SIMD operation where both arguments are SIMD types.
+IonBuilder::InliningStatus
+IonBuilder::inlineSimdBinarySaturating(CallInfo& callInfo, JSNative native,
+                                       MSimdBinarySaturating::Operation op, SimdType type)
+{
+    InlineTypedObject* templateObj = nullptr;
+    if (!canInlineSimd(callInfo, native, 2, &templateObj))
+        return InliningStatus_NotInlined;
+
+    MDefinition* lhs = unboxSimd(callInfo.getArg(0), type);
+    MDefinition* rhs = unboxSimd(callInfo.getArg(1), type);
+
+    MSimdBinarySaturating* ins =
+      MSimdBinarySaturating::New(alloc(), lhs, rhs, op, GetSimdSign(type));
     return boxSimd(callInfo, ins, templateObj);
 }
 
@@ -3574,7 +3627,7 @@ IonBuilder::inlineSimdShift(CallInfo& callInfo, JSNative native, MSimdShift::Ope
 
     MDefinition* vec = unboxSimd(callInfo.getArg(0), type);
 
-    MInstruction* ins = MSimdShift::New(alloc(), vec, callInfo.getArg(1), op);
+    MInstruction* ins = MSimdShift::AddLegalized(alloc(), current, vec, callInfo.getArg(1), op);
     return boxSimd(callInfo, ins, templateObj);
 }
 
@@ -3792,6 +3845,10 @@ SimdTypeToArrayElementType(SimdType type)
 {
     switch (type) {
       case SimdType::Float32x4: return Scalar::Float32x4;
+      case SimdType::Int8x16:
+      case SimdType::Uint8x16:  return Scalar::Int8x16;
+      case SimdType::Int16x8:
+      case SimdType::Uint16x8:  return Scalar::Int16x8;
       case SimdType::Int32x4:
       case SimdType::Uint32x4:  return Scalar::Int32x4;
       default:                MOZ_CRASH("unexpected simd type");

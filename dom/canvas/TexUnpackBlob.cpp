@@ -218,10 +218,11 @@ TexUnpackBytes::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
 
         // And go!:
         MOZ_ASSERT(srcOrigin != dstOrigin || srcPremultiplied != dstPremultiplied);
+        bool unused_wasTrivial;
         if (!ConvertImage(mWidth, mHeight,
                           mBytes, rowStride, srcOrigin, texelFormat, srcPremultiplied,
                           tempBuffer.get(), rowStride, dstOrigin, texelFormat,
-                          dstPremultiplied))
+                          dstPremultiplied, &unused_wasTrivial))
         {
             MOZ_ASSERT(false, "ConvertImage failed unexpectedly.");
             *out_glError = LOCAL_GL_OUT_OF_MEMORY;
@@ -310,6 +311,10 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
 
         return; // Blitting was successful, so we're done!
     } while (false);
+
+    webgl->GenerateWarning("%s: Failed to hit GPU-copy fast-path. Falling back to CPU"
+                           " upload.",
+                           funcName);
 
     RefPtr<SourceSurface> surface = mImage->GetAsSourceSurface();
     if (!surface) {
@@ -662,7 +667,7 @@ TexUnpackSurface::ConvertSurface(WebGLContext* webgl, const webgl::DriverUnpackI
                                  gfx::DataSourceSurface* surf, bool isSurfAlphaPremult,
                                  UniqueBuffer* const out_convertedBuffer,
                                  uint8_t* const out_convertedAlignment,
-                                 bool* const out_outOfMemory)
+                                 bool* const out_wasTrivial, bool* const out_outOfMemory)
 {
     *out_outOfMemory = false;
 
@@ -719,9 +724,11 @@ TexUnpackSurface::ConvertSurface(WebGLContext* webgl, const webgl::DriverUnpackI
     const bool dstPremultiplied = webgl->mPixelStore_PremultiplyAlpha;
 
     // And go!:
+    bool wasTrivial;
     if (!ConvertImage(width, height,
                       srcBegin, srcStride, srcOrigin, srcFormat, srcPremultiplied,
-                      dstBegin, dstStride, dstOrigin, dstFormat, dstPremultiplied))
+                      dstBegin, dstStride, dstOrigin, dstFormat, dstPremultiplied,
+                      &wasTrivial))
     {
         MOZ_ASSERT(false, "ConvertImage failed unexpectedly.");
         NS_ERROR("ConvertImage failed unexpectedly.");
@@ -731,6 +738,7 @@ TexUnpackSurface::ConvertSurface(WebGLContext* webgl, const webgl::DriverUnpackI
 
     *out_convertedBuffer = Move(dstBuffer);
     *out_convertedAlignment = dstAlignment;
+    *out_wasTrivial = wasTrivial;
     return true;
 }
 
@@ -785,9 +793,10 @@ TexUnpackSurface::TexOrSubImage(bool isSubImage, bool needsRespec, const char* f
 
     UniqueBuffer convertedBuffer;
     uint8_t convertedAlignment;
+    bool wasTrivial;
     bool outOfMemory;
     if (!ConvertSurface(webgl, dui, dataSurf, mIsAlphaPremult, &convertedBuffer,
-                        &convertedAlignment, &outOfMemory))
+                        &convertedAlignment, &wasTrivial, &outOfMemory))
     {
         if (outOfMemory) {
             *out_glError = LOCAL_GL_OUT_OF_MEMORY;
@@ -796,6 +805,12 @@ TexUnpackSurface::TexOrSubImage(bool isSubImage, bool needsRespec, const char* f
             *out_glError = LOCAL_GL_OUT_OF_MEMORY;
         }
         return;
+    }
+
+    if (!wasTrivial) {
+        webgl->GenerateWarning("%s: Chosen format/type incured an expensive reformat:"
+                               " 0x%04x/0x%04x",
+                               funcName, dui->unpackFormat, dui->unpackType);
     }
 
     MOZ_ALWAYS_TRUE( webgl->gl->MakeCurrent() );

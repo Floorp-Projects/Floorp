@@ -1030,7 +1030,7 @@ function ReadManifest(aURL, inherited_status, aFilter)
             }
         }
 
-        var principal = secMan.getSimpleCodebasePrincipal(aURL);
+        var principal = secMan.createCodebasePrincipal(aURL, {});
 
         if (items[0] == "include") {
             if (items.length != 2)

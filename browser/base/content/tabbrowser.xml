@@ -637,15 +637,22 @@
                   // pointing to their resolved jar: or file: URIs.
                   if (!(originalLocation && gInitialPages.includes(originalLocation.spec) &&
                         originalLocation != "about:blank" &&
+                        this.mBrowser.initialPageLoadedFromURLBar != originalLocation.spec &&
                         this.mBrowser.currentURI && this.mBrowser.currentURI.spec == "about:blank")) {
-                    // This will trigger clearing the location bar. Don't do it if
-                    // we loaded off a blank browser and this is an initial page load
-                    // (e.g. about:privatebrowsing, about:newtab, etc.) so we avoid
-                    // clearing the location bar in case the user is typing in it.
-                    // loading about:blank shouldn't trigger this, either, because its
-                    // loads are "special".
+                    // Indicating that we started a load will allow the location
+                    // bar to be cleared when the load finishes.
+                    // In order to not overwrite user-typed content, we avoid it
+                    // (see if condition above) in a very specific case:
+                    // If the load is of an 'initial' page (e.g. about:privatebrowsing,
+                    // about:newtab, etc.), was not explicitly typed in the location
+                    // bar by the user, is not about:blank (because about:blank can be
+                    // loaded by websites under their principal), and the current
+                    // page in the browser is about:blank (indicating it is a newly
+                    // created or re-created browser, e.g. because it just switched
+                    // remoteness or is a new tab/window).
                     this.mBrowser.urlbarChangeTracker.startedLoad();
                   }
+                  delete this.mBrowser.initialPageLoadedFromURLBar;
                   // If the browser is loading it must not be crashed anymore
                   this.mTab.removeAttribute("crashed");
                 }
@@ -1217,7 +1224,7 @@
                 this._adjustFocusAfterTabSwitch(this.mCurrentTab);
             }
 
-            updateUserContextUIIndicator(gBrowser.selectedBrowser);
+            updateUserContextUIIndicator();
 
             this.tabContainer._setPositionalAttributes();
 
@@ -4328,7 +4335,12 @@
                 tab.setUserContextId(data.userContextId);
               }
 
-              updateUserContextUIIndicator(browser);
+	      // We don't want to update the container icon and identifier if
+	      // this is not the selected browser.
+              if (browser == gBrowser.selectedBrowser) {
+                updateUserContextUIIndicator();
+              }
+
               break;
             }
             case "Findbar:Keypress": {

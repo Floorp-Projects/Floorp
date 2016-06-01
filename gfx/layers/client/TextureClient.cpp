@@ -142,9 +142,9 @@ public:
 
   bool IPCOpen() const { return mIPCOpen; }
 
-  void Lock() const { mLock.Enter(); }
+  void Lock() const { if (mForwarder->UsesImageBridge()) { mLock.Enter(); } }
 
-  void Unlock() const { mLock.Leave(); }
+  void Unlock() const { if (mForwarder->UsesImageBridge()) { mLock.Leave(); } }
 
 private:
 
@@ -163,6 +163,69 @@ private:
     Release();
   }
 
+  // This lock is used order to prevent several threads to access the
+  // TextureClient's data concurrently. In particular, it prevents shutdown
+  // code to destroy a texture while another thread is reading or writing into
+  // it.
+  // In most places, the lock is held in short and bounded scopes in which we
+  // don't block on any other resource. There are few exceptions to this, which
+  // are discussed below.
+  //
+  // The locking pattern of TextureClient may in some case upset deadlock detection
+  // tools such as TSan.
+  // Typically our tile rendering code will lock all of its tiles, render into them
+  // and unlock them all right after that, which looks something like:
+  //
+  // Lock tile A
+  // Lock tile B
+  // Lock tile C
+  // Apply drawing commands to tiles A, B and C 
+  // Unlock tile A
+  // Unlock tile B
+  // Unlock tile C
+  //
+  // And later, we may end up rendering a tile buffer that has the same tiles,
+  // in a different order, for example:
+  //
+  // Lock tile B
+  // Lock tile A
+  // Lock tile D
+  // Apply drawing commands to tiles A, B and D
+  // Unlock tile B
+  // Unlock tile A
+  // Unlock tile D
+  //
+  // This is because textures being expensive to create, we recycle them as much
+  // as possible and they may reappear in the tile buffer in a different order.
+  //
+  // Unfortunately this is not very friendly to TSan's analysis, which will see
+  // that B was once locked while A was locked, and then A locked while B was
+  // locked. TSan identifies this as a potential dead-lock which would be the
+  // case if this kind of inconsistent and dependent locking order was happening
+  // concurrently.
+  // In the case of TextureClient, dependent locking only ever happens on the
+  // thread that draws into the texture (let's call it the producer thread). Other
+  // threads may call into a method that can lock the texture in a short and
+  // bounded scope inside of which it is not allowed to do anything that could
+  // cause the thread to block. A given texture can only have one producer thread.
+  //
+  // Another example of TSan-unfriendly locking pattern is when copying a texture
+  // into another, which also never happens outside of the producer thread.
+  // Copying A into B looks like this:
+  //
+  // Lock texture B
+  // Lock texture A
+  // Copy A into B
+  // Unlock A
+  // Unlock B
+  //
+  // In a given frame we may need to copy A into B and in another frame copy
+  // B into A. For example A and B can be the Front and Back buffers, alternating
+  // roles and the copy is needed to avoid the cost of re-drawing the valid
+  // region.
+  //
+  // The important rule is that all of the dependent locking must occur only
+  // in the texture's producer thread to avoid deadlocks.
   mutable gfx::CriticalSection mLock;
 
   RefPtr<CompositableForwarder> mForwarder;

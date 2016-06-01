@@ -171,6 +171,7 @@ function f32s(n, v) { return m.f32s((n|0) << 2 | 0, v); };
 
 var vec  = SIMD.Float32x4(5,6,7,8);
 var vec2 = SIMD.Float32x4(0,1,2,3);
+var vecWithNaN = SIMD.Float32x4(NaN, 2, NaN, 4);
 
 reset();
 f32s(0, vec);
@@ -183,6 +184,10 @@ assertEqX4(vec2, slice(F32, 0, 4));
 reset();
 f32s(4, vec);
 assertEqX4(vec, slice(F32, 4, 4));
+
+reset();
+f32s(4, vecWithNaN);
+assertEqX4(vecWithNaN, slice(F32, 4, 4));
 
 reset();
 m.f32scst(vec2);

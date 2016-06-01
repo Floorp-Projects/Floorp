@@ -14,6 +14,7 @@ TEST(OSXProxy, TestProxyBypassRules)
   EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("mozilla.org"), NS_LITERAL_CSTRING("mozilla.org")));
   EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("mozilla.org"),NS_LITERAL_CSTRING("*mozilla.org")));
   EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("mozilla.org"), NS_LITERAL_CSTRING("*.mozilla.org")));
+  EXPECT_FALSE(IsHostProxyEntry(NS_LITERAL_CSTRING("notmozilla.org"), NS_LITERAL_CSTRING("*.mozilla.org")));
   EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("www.mozilla.org"), NS_LITERAL_CSTRING("*mozilla.org")));
   EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("www.mozilla.org"), NS_LITERAL_CSTRING("*.mozilla.org")));
   EXPECT_TRUE(IsHostProxyEntry(NS_LITERAL_CSTRING("www.mozilla.com"), NS_LITERAL_CSTRING("*.mozilla.*")));

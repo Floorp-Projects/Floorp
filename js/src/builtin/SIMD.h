@@ -746,14 +746,20 @@
 // this list is shared between Int8x16 and Uint8x16.
 #define FORALL_INT8X16_ASMJS_OP(_)    \
     FORALL_INT_SIMD_OP(_)             \
-    FOREACH_SMINT_SIMD_BINOP(_)
+    FOREACH_SMINT_SIMD_BINOP(_)       \
+    _(fromInt16x8Bits)                \
+    _(fromInt32x4Bits)                \
+    _(fromFloat32x4Bits)
 
 // All operations on Int16x8 or Uint16x8 in the asm.js world.
 // Note: this does not include conversions and casts to/from Uint16x8 because
 // this list is shared between Int16x8 and Uint16x8.
 #define FORALL_INT16X8_ASMJS_OP(_)    \
     FORALL_INT_SIMD_OP(_)             \
-    FOREACH_SMINT_SIMD_BINOP(_)
+    FOREACH_SMINT_SIMD_BINOP(_)       \
+    _(fromInt8x16Bits)                \
+    _(fromInt32x4Bits)                \
+    _(fromFloat32x4Bits)
 
 // All operations on Int32x4 or Uint32x4 in the asm.js world.
 // Note: this does not include conversions and casts to/from Uint32x4 because
@@ -761,6 +767,8 @@
 #define FORALL_INT32X4_ASMJS_OP(_)    \
     FORALL_INT_SIMD_OP(_)             \
     FOREACH_MEMORY_X4_SIMD_OP(_)      \
+    _(fromInt8x16Bits)                \
+    _(fromInt16x8Bits)                \
     _(fromFloat32x4)                  \
     _(fromFloat32x4Bits)
 
@@ -768,10 +776,11 @@
 #define FORALL_FLOAT32X4_ASMJS_OP(_)  \
     FORALL_FLOAT_SIMD_OP(_)           \
     FOREACH_MEMORY_X4_SIMD_OP(_)      \
-    _(fromInt32x4)                    \
+    _(fromInt8x16Bits)                \
+    _(fromInt16x8Bits)                \
     _(fromInt32x4Bits)                \
-    _(fromUint32x4)                   \
-    _(fromUint32x4Bits)
+    _(fromInt32x4)                    \
+    _(fromUint32x4)
 
 namespace js {
 

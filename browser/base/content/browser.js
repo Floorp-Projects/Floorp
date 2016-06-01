@@ -4069,11 +4069,11 @@ function updateUserContextUIVisibility()
 /**
  * Updates the User Context UI indicators if the browser is in a non-default context
  */
-function updateUserContextUIIndicator(browser)
+function updateUserContextUIIndicator()
 {
   let hbox = document.getElementById("userContext-icons");
 
-  let userContextId = browser.getAttribute("usercontextid");
+  let userContextId = gBrowser.selectedBrowser.getAttribute("usercontextid");
   if (!userContextId) {
     hbox.hidden = true;
     return;
@@ -6420,8 +6420,16 @@ function checkEmptyPageOrigin(browser = gBrowser.selectedBrowser,
   let contentPrincipal = browser.contentPrincipal;
   // Not all principals have URIs...
   if (contentPrincipal.URI) {
-    // A manually entered about:blank URI is slightly magical:
-    if (uri.spec == "about:blank" && contentPrincipal.isNullPrincipal) {
+    // There are two specialcases involving about:blank. One is where
+    // the user has manually loaded it and it got created with a null
+    // principal. The other involves the case where we load
+    // some other empty page in a browser and the current page is the
+    // initial about:blank page (which has that as its principal, not
+    // just URI in which case it could be web-based). Especially in
+    // e10s, we need to tackle that case specifically to avoid race
+    // conditions when updating the URL bar.
+    if ((uri.spec == "about:blank" && contentPrincipal.isNullPrincipal) ||
+        contentPrincipal.URI.spec == "about:blank") {
       return true;
     }
     return contentPrincipal.URI.equals(uri);
