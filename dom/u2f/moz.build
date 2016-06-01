@@ -5,11 +5,13 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS.mozilla.dom += [
+    'NSSU2FTokenRemote.h',
     'U2F.h',
     'USBToken.h',
 ]
 
 UNIFIED_SOURCES += [
+    'NSSU2FTokenRemote.cpp',
     'U2F.cpp',
     'USBToken.cpp',
 ]
