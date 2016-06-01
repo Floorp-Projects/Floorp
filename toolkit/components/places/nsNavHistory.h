@@ -431,12 +431,14 @@ public:
    * Fires onVisit event to nsINavHistoryService observers
    */
   void NotifyOnVisit(nsIURI* aURI,
-                     int64_t aVisitID,
+                     int64_t aVisitId,
                      PRTime aTime,
-                     int64_t referringVisitID,
+                     int64_t aReferrerVisitId,
                      int32_t aTransitionType,
-                     const nsACString& aGUID,
-                     bool aHidden);
+                     const nsACString& aGuid,
+                     bool aHidden,
+                     uint32_t aVisitCount,
+                     uint32_t aTyped);
 
   /**
    * Fires onTitleChanged event to nsINavHistoryService observers

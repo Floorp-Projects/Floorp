@@ -80,6 +80,7 @@ struct VisitData {
   , frecency(-1)
   , lastVisitId(0)
   , lastVisitTime(0)
+  , visitCount(0)
   , referrerVisitId(0)
   , titleChanged(false)
   , shouldUpdateFrecency(true)
@@ -100,6 +101,7 @@ struct VisitData {
   , frecency(-1)
   , lastVisitId(0)
   , lastVisitTime(0)
+  , visitCount(0)
   , referrerVisitId(0)
   , titleChanged(false)
   , shouldUpdateFrecency(true)
@@ -142,6 +144,7 @@ struct VisitData {
   int32_t frecency;
   int64_t lastVisitId;
   PRTime lastVisitTime;
+  uint32_t visitCount;
 
   /**
    * Stores the title.  If this is empty (IsEmpty() returns true), then the
@@ -648,7 +651,9 @@ public:
     if (mPlace.transitionType != nsINavHistoryService::TRANSITION_EMBED) {
       navHistory->NotifyOnVisit(uri, mPlace.visitId, mPlace.visitTime,
                                 mPlace.referrerVisitId, mPlace.transitionType,
-                                mPlace.guid, mPlace.hidden);
+                                mPlace.guid, mPlace.hidden,
+                                mPlace.visitCount + 1, // Add current visit.
+                                static_cast<uint32_t>(mPlace.typed));
     }
 
     nsCOMPtr<nsIObserverService> obsService =
@@ -944,6 +949,8 @@ public:
         place.lastVisitTime = lastFetchedPlace->visitTime;
         place.titleChanged = !lastFetchedPlace->title.Equals(place.title);
         place.frecency = lastFetchedPlace->frecency;
+        // Add one visit for the previous loop.
+        place.visitCount = ++(*lastFetchedPlace).visitCount;
       }
 
       // If any transition is typed, ensure the page is marked as typed.
@@ -2136,7 +2143,7 @@ History::FetchPageInfo(VisitData& _place, bool* _exists)
   bool selectByURI = !_place.spec.IsEmpty();
   if (selectByURI) {
     stmt = GetStatement(
-      "SELECT guid, id, title, hidden, typed, frecency, last_visit_date, "
+      "SELECT guid, id, title, hidden, typed, frecency, visit_count, last_visit_date, "
       "(SELECT id FROM moz_historyvisits "
        "WHERE place_id = h.id AND visit_date = h.last_visit_date) AS last_visit_id "
       "FROM moz_places h "
@@ -2149,7 +2156,7 @@ History::FetchPageInfo(VisitData& _place, bool* _exists)
   }
   else {
     stmt = GetStatement(
-      "SELECT url, id, title, hidden, typed, frecency, last_visit_date, "
+      "SELECT url, id, title, hidden, typed, frecency, visit_count, last_visit_date, "
       "(SELECT id FROM moz_historyvisits "
        "WHERE place_id = h.id AND visit_date = h.last_visit_date) AS last_visit_id "
       "FROM moz_places h "
@@ -2215,9 +2222,13 @@ History::FetchPageInfo(VisitData& _place, bool* _exists)
 
   rv = stmt->GetInt32(5, &_place.frecency);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->GetInt64(6, &_place.lastVisitTime);
+  int32_t visitCount;
+  rv = stmt->GetInt32(6, &visitCount);
   NS_ENSURE_SUCCESS(rv, rv);
-  rv = stmt->GetInt64(7, &_place.lastVisitId);
+  _place.visitCount = visitCount;
+  rv = stmt->GetInt64(7, &_place.lastVisitTime);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->GetInt64(8, &_place.lastVisitId);
   NS_ENSURE_SUCCESS(rv, rv);
 
   return NS_OK;
