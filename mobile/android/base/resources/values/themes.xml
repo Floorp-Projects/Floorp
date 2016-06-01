@@ -21,9 +21,11 @@
 
     <style name="GeckoTitleDialogBase" parent="@android:style/Theme.Dialog" />
 
-    <style name="GeckoPreferencesBase" parent="Gecko">
-        <item name="android:windowNoTitle">false</item>
-        <item name="android:windowContentOverlay">@null</item>
+    <style name="Gecko.Preferences">
+        <item name="windowActionBar">true</item>
+        <item name="windowNoTitle">false</item>
+        <item name="actionBarTheme">@style/ThemeOverlay.AppCompat.Dark.ActionBar</item>
+        <item name="actionBarStyle">@style/PreferencesActionBar</item>
     </style>
 
     <!--
@@ -100,11 +102,6 @@
         <item name="topSitesGridItemViewStyle">@style/Widget.TopSitesGridItemView</item>
         <item name="topSitesGridViewStyle">@style/Widget.TopSitesGridView</item>
         <item name="topSitesThumbnailViewStyle">@style/Widget.TopSitesThumbnailView</item>
-    </style>
-
-    <style name="Gecko.Preferences" parent="GeckoPreferencesBase">
-        <!-- This fixed bug 1233412 (Crash in GeckoPrefs due to missing colorAccent in JB) -->
-        <item name="colorAccent">@color/action_orange</item>
     </style>
 
     <!-- Make an activity appear like an overlay. -->

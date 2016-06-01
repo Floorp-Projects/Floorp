@@ -3,10 +3,11 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 
 <!ENTITY window.title                 "Do Not Track">
-<!ENTITY window.width                 "40em">
-<!ENTITY window.height                "8em">
+<!ENTITY window.width                 "50em">
+<!ENTITY window.height                "10em">
 
-<!ENTITY doNotTrackCheckbox.label     "Use Do Not Track">
-<!ENTITY doNotTrackCheckbox.accesskey "U">
+<!ENTITY doNotTrackCheckbox2.label    "Always apply Do Not Track">
+<!ENTITY doNotTrackCheckbox.accesskey "A">
 
+<!ENTITY doNotTrackTPInfo.description "&brandShortName; will send a signal that you don’t want to be tracked whenever Tracking Protection is on.">
 <!ENTITY doNotTrackLearnMore.label    "Learn More">

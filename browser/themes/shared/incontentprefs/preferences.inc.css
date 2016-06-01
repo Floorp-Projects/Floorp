@@ -222,12 +222,22 @@ treecol {
 
 /* Privacy pane */
 
-.doNotTrackLearnMore,
 #trackingProtectionPBMLearnMore,
 #trackingProtectionLearnMore {
   margin-inline-start: 1.5em !important;
   margin-top: 0;
   font-weight: normal;
+}
+
+.doNotTrackLearnMore {
+  margin-inline-start: calc(1em + 30px);
+  margin-bottom: 1em;
+  font-weight: normal;
+}
+
+.doNotTrackLearnMore > label {
+  font-size: 1em !important;
+  margin-left: 0;
 }
 
 /* Collapse the non-active vboxes in decks to use only the height the
