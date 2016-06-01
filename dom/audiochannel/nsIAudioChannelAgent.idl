@@ -183,5 +183,5 @@ interface nsIAudioChannelAgent : nsISupports
    * notify the actually audible state to other services which want to know
    * about that, ex. tab sound indicator.
    */
-  void notifyStartedAudible(in bool audible);
+  void notifyStartedAudible(in bool audible, in uint32_t reason);
 };

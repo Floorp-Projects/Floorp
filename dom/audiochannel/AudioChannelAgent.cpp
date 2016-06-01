@@ -254,7 +254,7 @@ AudioChannelAgent::NotifyStoppedPlaying()
 }
 
 NS_IMETHODIMP
-AudioChannelAgent::NotifyStartedAudible(bool aAudible)
+AudioChannelAgent::NotifyStartedAudible(bool aAudible, uint32_t aReason)
 {
   MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
          ("AudioChannelAgent, NotifyStartedAudible, this = %p, "
@@ -266,7 +266,9 @@ AudioChannelAgent::NotifyStartedAudible(bool aAudible)
   }
 
   service->AudioAudibleChanged(
-    this, static_cast<AudioChannelService::AudibleState>(aAudible));
+    this,
+    static_cast<AudioChannelService::AudibleState>(aAudible),
+    static_cast<AudioChannelService::AudibleChangedReasons>(aReason));
   return NS_OK;
 }
 
