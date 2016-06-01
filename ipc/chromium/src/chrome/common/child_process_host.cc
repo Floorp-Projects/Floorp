@@ -67,14 +67,6 @@ void ChildProcessHost::SetHandle(base::ProcessHandle process) {
 #endif
 }
 
-bool ChildProcessHost::Send(IPC::Message* msg) {
-  if (!channel_.get()) {
-    delete msg;
-    return false;
-  }
-  return channel_->Send(msg);
-}
-
 ChildProcessHost::ListenerHook::ListenerHook(ChildProcessHost* host)
     : host_(host) {
 }
