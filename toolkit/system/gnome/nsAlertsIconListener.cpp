@@ -6,6 +6,7 @@
 #include "nsAlertsIconListener.h"
 #include "imgIContainer.h"
 #include "imgIRequest.h"
+#include "nsContentUtils.h"
 #include "imgLoader.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
@@ -248,14 +249,19 @@ nsAlertsIconListener::StartRequest(const nsAString & aImageUrl, bool aInPrivateB
   if (!imageUri)
     return ShowAlert(nullptr);
 
-  imgLoader* il = aInPrivateBrowsing ? imgLoader::PrivateBrowsingLoader()
-                                     : imgLoader::NormalLoader();
+  nsCOMPtr<imgILoader> il(do_GetService("@mozilla.org/image/loader;1"));
   if (!il)
     return ShowAlert(nullptr);
 
+  nsCOMPtr<nsIScriptSecurityManager> ssm = nsContentUtils::GetSecurityManager();
+  NS_ENSURE_TRUE(ssm, NS_ERROR_FAILURE);
+  nsCOMPtr<nsIPrincipal> systemPrincipal;
+  ssm->GetSystemPrincipal(getter_AddRefs(systemPrincipal));
+  NS_ENSURE_TRUE(systemPrincipal, NS_ERROR_FAILURE);
+
   nsresult rv = il->LoadImageXPCOM(imageUri, nullptr, nullptr,
-                                   NS_LITERAL_STRING("default"), nullptr, nullptr,
-                                   this, nullptr,
+                                   NS_LITERAL_STRING("default"),
+                                   systemPrincipal, nullptr, this, nullptr,
                                    aInPrivateBrowsing ? nsIRequest::LOAD_ANONYMOUS :
                                                         nsIRequest::LOAD_NORMAL,
                                    nullptr, 0 /* use default */,

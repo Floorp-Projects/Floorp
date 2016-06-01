@@ -1359,7 +1359,20 @@ imgLoader::FindEntryProperties(nsIURI* uri,
   *_retval = nullptr;
 
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDOMDoc);
-  ImageCacheKey key(uri, doc);
+  nsCOMPtr<nsIPrincipal> principal;
+  if (doc) {
+    principal = doc->NodePrincipal();
+  } else {
+    nsCOMPtr<nsIScriptSecurityManager> ssm = nsContentUtils::GetSecurityManager();
+    NS_ENSURE_TRUE(ssm, NS_ERROR_FAILURE);
+    ssm->GetSystemPrincipal(getter_AddRefs(principal));
+  }
+  NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
+
+  const PrincipalOriginAttributes& attrs =
+    BasePrincipal::Cast(principal)->OriginAttributesRef();
+
+  ImageCacheKey key(uri, attrs, doc);
   imgCacheTable& cache = GetCache(key);
 
   RefPtr<imgCacheEntry> entry;
@@ -2116,7 +2129,11 @@ imgLoader::LoadImage(nsIURI* aURI,
   // XXX For now ignore aCacheKey. We will need it in the future
   // for correctly dealing with image load requests that are a result
   // of post data.
-  ImageCacheKey key(aURI, aLoadingDocument);
+  NS_ENSURE_TRUE(aLoadingPrincipal, NS_ERROR_FAILURE);
+  const PrincipalOriginAttributes& attrs =
+    BasePrincipal::Cast(aLoadingPrincipal)->OriginAttributesRef();
+
+  ImageCacheKey key(aURI, attrs, aLoadingDocument);
   imgCacheTable& cache = GetCache(key);
 
   if (cache.Get(key, getter_AddRefs(entry)) && entry) {
@@ -2320,7 +2337,19 @@ imgLoader::LoadImageWithChannel(nsIChannel* channel,
   nsCOMPtr<nsIURI> uri;
   channel->GetURI(getter_AddRefs(uri));
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aCX);
-  ImageCacheKey key(uri, doc);
+
+  NS_ENSURE_TRUE(channel, NS_ERROR_FAILURE);
+  nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
+  NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIPrincipal> principal;
+  loadInfo->GetLoadingPrincipal(getter_AddRefs(principal));
+  NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
+
+  const PrincipalOriginAttributes& attrs =
+    BasePrincipal::Cast(principal)->OriginAttributesRef();
+
+  ImageCacheKey key(uri, attrs, doc);
 
   nsLoadFlags requestFlags = nsIRequest::LOAD_NORMAL;
   channel->GetLoadFlags(&requestFlags);
@@ -2422,7 +2451,7 @@ imgLoader::LoadImageWithChannel(nsIChannel* channel,
     // constructed above with the *current URI* and not the *original URI*. I'm
     // pretty sure this is a bug, and it's preventing us from ever getting a
     // cache hit in LoadImageWithChannel when redirects are involved.
-    ImageCacheKey originalURIKey(originalURI, doc);
+    ImageCacheKey originalURIKey(originalURI, attrs, doc);
 
     // Default to doing a principal check because we don't know who
     // started that load and whether their principal ended up being
