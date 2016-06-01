@@ -296,10 +296,6 @@ function copyObjectProperties(from, to, opts = {}) {
   }
 }
 
-function urlsafeBase64Encode(key) {
-  return ChromeUtils.base64URLEncode(new Uint8Array(key), { pad: false });
-}
-
 /**
  * The public API's constructor.
  */
@@ -359,7 +355,7 @@ FxAccountsInternal.prototype = {
   VERIFICATION_POLL_TIMEOUT_SUBSEQUENT: 30000, // 30 seconds.
   // The current version of the device registration, we use this to re-register
   // devices after we update what we send on device registration.
-  DEVICE_REGISTRATION_VERSION: 2,
+  DEVICE_REGISTRATION_VERSION: 1,
 
   _fxAccountsClient: null,
 
@@ -1517,12 +1513,6 @@ FxAccountsInternal.prototype = {
       // if we were able to obtain a subscription
       if (subscription && subscription.endpoint) {
         deviceOptions.pushCallback = subscription.endpoint;
-        let publicKey = subscription.getKey('p256dh');
-        let authKey = subscription.getKey('auth');
-        if (publicKey && authKey) {
-          deviceOptions.pushPublicKey = urlsafeBase64Encode(publicKey);
-          deviceOptions.pushAuthKey = urlsafeBase64Encode(authKey);
-        }
       }
 
       if (signedInUser.deviceId) {
