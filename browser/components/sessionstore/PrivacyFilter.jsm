@@ -14,18 +14,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PrivacyLevel",
   "resource:///modules/sessionstore/PrivacyLevel.jsm");
 
 /**
- * Returns whether the current privacy level allows saving data for the given
- * |url|.
- *
- * @param url The URL we want to save data for.
- * @return bool
- */
-function checkPrivacyLevel(url) {
-  let isHttps = url.startsWith("https:");
-  return PrivacyLevel.canSave({isHttps});
-}
-
-/**
  * A module that provides methods to filter various kinds of data collected
  * from a tab by the current privacy level as set by the user.
  */
@@ -42,7 +30,7 @@ this.PrivacyFilter = Object.freeze({
     let retval = {};
 
     for (let host of Object.keys(data)) {
-      if (checkPrivacyLevel(host)) {
+      if (PrivacyLevel.check(host)) {
         retval[host] = data[host];
       }
     }
@@ -62,7 +50,7 @@ this.PrivacyFilter = Object.freeze({
     // If the given form data object has an associated URL that we are not
     // allowed to store data for, bail out. We explicitly discard data for any
     // children as well even if storing data for those frames would be allowed.
-    if (data.url && !checkPrivacyLevel(data.url)) {
+    if (data.url && !PrivacyLevel.check(data.url)) {
       return;
     }
 
