@@ -30,6 +30,7 @@ import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -44,8 +45,38 @@ public class TelemetryUploadService extends IntentService {
     private static final String LOGTAG = StringUtils.safeSubstring("Gecko" + TelemetryUploadService.class.getSimpleName(), 0, 23);
     private static final String WORKER_THREAD_NAME = LOGTAG + "Worker";
 
+    private static final String ENV_VAR_NAME = "MOZ_DISABLE_TELEMETRY";
+
     public static final String ACTION_UPLOAD = "upload";
     public static final String EXTRA_STORE = "store";
+
+    /**
+     * An override for telemetry via Intents.
+     *
+     * BrowserApp.onCreate, which sets the disabled state, should run before
+     * TelemetryUploadService, so we don't have to synchronize/volatile.
+     */
+    private static Boolean isDisabledByLaunchingIntent = null;
+
+    /**
+     * As a sanity check, this method should only be called once.
+     */
+    public static void setDisabledFromEnvVar(final HashMap<String, String> envVarMap) {
+        if (isDisabledByLaunchingIntent != null) {
+            throw new IllegalStateException("Disabled state already set");
+        }
+        isDisabledByLaunchingIntent = envVarMap.containsKey(ENV_VAR_NAME);
+        if (isDisabledByLaunchingIntent) {
+            Log.d(LOGTAG, "Telemetry disabled by environment variable: " + ENV_VAR_NAME);
+        }
+    }
+
+    private static boolean isDisabledByLaunchingIntent() {
+        if (isDisabledByLaunchingIntent == null) {
+            throw new IllegalStateException("Disabled state not yet set.");
+        }
+        return isDisabledByLaunchingIntent;
+    }
 
     public TelemetryUploadService() {
         super(WORKER_THREAD_NAME);
@@ -179,6 +210,11 @@ public class TelemetryUploadService extends IntentService {
     public static boolean isUploadEnabledByAppConfig(final Context context) {
         if (!TelemetryConstants.UPLOAD_ENABLED) {
             Log.d(LOGTAG, "Telemetry upload feature is compile-time disabled");
+            return false;
+        }
+
+        if (isDisabledByLaunchingIntent()) {
+            Log.d(LOGTAG, "Telemetry upload feature is disabled by intent (in testing?)");
             return false;
         }
 
