@@ -34,26 +34,6 @@ class ChildProcessHost :
   // ResourceDispatcherHost::Receiver implementation:
   virtual bool Send(IPC::Message* msg);
 
-  // The Iterator class allows iteration through either all child processes, or
-  // ones of a specific type, depending on which constructor is used.  Note that
-  // this should be done from the IO thread and that the iterator should not be
-  // kept around as it may be invalidated on subsequent event processing in the
-  // event loop.
-  class Iterator {
-   public:
-    Iterator();
-    explicit Iterator(ProcessType type);
-    ChildProcessHost* operator->() { return *iterator_; }
-    ChildProcessHost* operator*() { return *iterator_; }
-    ChildProcessHost* operator++();
-    bool Done();
-
-   private:
-    bool all_;
-    ProcessType type_;
-    std::list<ChildProcessHost*>::iterator iterator_;
-  };
-
  protected:
   explicit ChildProcessHost(ProcessType type);
 
