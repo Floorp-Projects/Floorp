@@ -49,17 +49,9 @@ _copy_transformed_pattern (cairo_pattern_t *pattern,
 {
     _cairo_pattern_init_static_copy (pattern, original);
 
-    /* apply device_transform first so that it is transformed by ctm_inverse */
-    if (original->type == CAIRO_PATTERN_TYPE_SURFACE) {
-	cairo_surface_pattern_t *surface_pattern;
-	cairo_surface_t *surface;
-
-        surface_pattern = (cairo_surface_pattern_t *) original;
-        surface = surface_pattern->surface;
-
-	if (_cairo_surface_has_device_transform (surface))
-	    _cairo_pattern_transform (pattern, &surface->device_transform);
-    }
+    /* Device transform should already have been applied before cairo_surface_wrapper_* functions
+     * are called in _cairo_gstate_copy_transformed_pattern which all the gstate drawing
+     * functions call through _cairo_gstate_copy_transformed_source and such. */
 
     if (! _cairo_matrix_is_identity (ctm_inverse))
 	_cairo_pattern_transform (pattern, ctm_inverse);
