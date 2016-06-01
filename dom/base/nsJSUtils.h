@@ -134,25 +134,6 @@ private:
                                  void **aOffThreadToken);
 };
 
-class MOZ_STACK_CLASS AutoDontReportUncaught {
-  JSContext* mContext;
-  bool mWasSet;
-
-public:
-  explicit AutoDontReportUncaught(JSContext* aContext) : mContext(aContext) {
-    MOZ_ASSERT(aContext);
-    mWasSet = JS::ContextOptionsRef(mContext).dontReportUncaught();
-    if (!mWasSet) {
-      JS::ContextOptionsRef(mContext).setDontReportUncaught(true);
-    }
-  }
-  ~AutoDontReportUncaught() {
-    if (!mWasSet) {
-      JS::ContextOptionsRef(mContext).setDontReportUncaught(false);
-    }
-  }
-};
-
 template<typename T>
 inline bool
 AssignJSString(JSContext *cx, T &dest, JSString *s)
