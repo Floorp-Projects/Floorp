@@ -590,7 +590,7 @@ nsHttpChannel::ContinueHandleAsyncRedirect(nsresult rv)
         }
     }
 
-    CloseCacheEntry(false);
+    CloseCacheEntry(true);
 
     mIsPending = false;
 
@@ -616,7 +616,7 @@ nsHttpChannel::HandleAsyncNotModified()
 
     DoNotifyListener();
 
-    CloseCacheEntry(true);
+    CloseCacheEntry(false);
 
     mIsPending = false;
 
@@ -3788,7 +3788,7 @@ nsHttpChannel::OnCacheEntryAvailable(nsICacheEntry *entry,
 
     rv = OnCacheEntryAvailableInternal(entry, aNew, aAppCache, status);
     if (NS_FAILED(rv)) {
-        CloseCacheEntry(true);
+        CloseCacheEntry(false);
         AsyncAbort(rv);
     }
 
@@ -7499,7 +7499,7 @@ nsHttpChannel::OnPreflightFailed(nsresult aError)
     mIsCorsPreflightDone = 1;
     mPreflightChannel = nullptr;
 
-    CloseCacheEntry(true);
+    CloseCacheEntry(false);
     AsyncAbort(aError);
     return NS_OK;
 }
