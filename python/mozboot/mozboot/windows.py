@@ -13,7 +13,6 @@ class WindowsBootstrapper(BaseBootstrapper):
 
     SYSTEM_PACKAGES = [
         'mingw-w64-x86_64-make',
-        'mingw-w64-x86_64-python2',
         'mingw-w64-x86_64-python2-pip',
         'mingw-w64-x86_64-perl',
         'patch',
@@ -55,6 +54,9 @@ class WindowsBootstrapper(BaseBootstrapper):
 
     def upgrade_mercurial(self, current):
         self.pip_install('mercurial')
+
+    def upgrade_python(self, current):
+        self.pacman_install('mingw-w64-x86_64-python2')
 
     def install_browser_packages(self):
         self.pacman_install(*self.BROWSER_PACKAGES)
