@@ -32,12 +32,14 @@ public class IntentUtils {
      *
      * @return A Map of environment variable name to value, e.g. ENV_VAR -> VALUE
      */
-    public static HashMap<String, String> getEnvVarMap(@NonNull final Intent intent) {
+    public static HashMap<String, String> getEnvVarMap(@NonNull final Intent unsafeIntent) {
+        // This is expected to be an external intent so we should use SafeIntent to prevent crashing.
+        final SafeIntent safeIntent = new SafeIntent(unsafeIntent);
         final HashMap<String, String> out = new HashMap<>();
         final Pattern envVarPattern = Pattern.compile(ENV_VAR_REGEX);
         Matcher matcher = null;
 
-        String envValue = intent.getStringExtra("env0");
+        String envValue = safeIntent.getStringExtra("env0");
         int i = 1;
         while (envValue != null) {
             // Optimization to re-use matcher rather than creating new
@@ -53,7 +55,7 @@ public class IntentUtils {
                 final String envVarValue = matcher.group(2);
                 out.put(envVarName, envVarValue);
             }
-            envValue = intent.getStringExtra("env" + i);
+            envValue = safeIntent.getStringExtra("env" + i);
             i += 1;
         }
         return out;
