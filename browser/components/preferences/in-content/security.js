@@ -189,10 +189,10 @@ var gSecurityPane = {
 
       let malware = malwareTable.value
         .split(",")
-        .filter(x => x !== "goog-unwanted-simple" && x !== "test-unwanted-simple");
+        .filter(x => x !== "goog-unwanted-shavar" && x !== "test-unwanted-simple");
 
       if (blockUncommonUnwanted.checked) {
-        malware.push("goog-unwanted-simple");
+        malware.push("goog-unwanted-shavar");
         malware.push("test-unwanted-simple");
       }
 
