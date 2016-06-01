@@ -184,7 +184,16 @@ function synthesizeNativeTouch(aElement, aX, aY, aType, aObserver = null, aTouch
   return true;
 }
 
-function synthesizeNativeDrag(aElement, aX, aY, aDeltaX, aDeltaY, aObserver = null, aTouchId = 0) {
+// A handy constant when synthesizing native touch drag events with the pref
+// "apz.touch_start_tolerance" set to 0. In this case, the first touchmove with
+// a nonzero pixel movement is consumed by the APZ to transition from the
+// "touching" state to the "panning" state, so calls to synthesizeNativeTouchDrag
+// should add an extra pixel pixel for this purpose. The TOUCH_SLOP provides
+// a constant that can be used for this purpose. Note that if the touch start
+// tolerance is set to something higher, the touch slop amount used must be
+// correspondingly increased so as to be higher than the tolerance.
+const TOUCH_SLOP = 1;
+function synthesizeNativeTouchDrag(aElement, aX, aY, aDeltaX, aDeltaY, aObserver = null, aTouchId = 0) {
   synthesizeNativeTouch(aElement, aX, aY, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, null, aTouchId);
   var steps = Math.max(Math.abs(aDeltaX), Math.abs(aDeltaY));
   for (var i = 1; i < steps; i++) {
