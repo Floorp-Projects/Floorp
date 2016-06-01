@@ -455,6 +455,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'lwt/LightweightThemeDrawable.java',
     'mdns/MulticastDNSManager.java',
     'media/AudioFocusAgent.java',
+    'media/MediaControlService.java',
     'MediaCastingBar.java',
     'MemoryMonitor.java',
     'menu/GeckoMenu.java',
