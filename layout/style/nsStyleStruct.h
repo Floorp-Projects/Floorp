@@ -472,6 +472,12 @@ private:
 };
 
 struct nsStyleImageLayers {
+  nsStyleImageLayers();
+  nsStyleImageLayers(const nsStyleImageLayers &aSource);
+  ~nsStyleImageLayers() {
+    MOZ_COUNT_DTOR(nsStyleImageLayers);
+  }
+
   // Indices into kBackgroundLayerTable and kMaskLayerTable
   enum {
     shorthand = 0,
@@ -487,17 +493,6 @@ struct nsStyleImageLayers {
     maskMode,
     composite
   };
-
-  enum class LayerType : uint8_t {
-    Background = 0,
-    Mask
-  };
-
-  explicit nsStyleImageLayers(LayerType aType);
-  nsStyleImageLayers(const nsStyleImageLayers &aSource);
-  ~nsStyleImageLayers() {
-    MOZ_COUNT_DTOR(nsStyleImageLayers);
-  }
 
   struct Position;
   friend struct Position;
@@ -603,10 +598,13 @@ struct nsStyleImageLayers {
     // Initialize nothing
     Repeat() {}
 
-    bool IsInitialValue(LayerType aType) const;
+    bool IsInitialValue() const {
+      return mXRepeat == NS_STYLE_IMAGELAYER_REPEAT_REPEAT &&
+             mYRepeat == NS_STYLE_IMAGELAYER_REPEAT_REPEAT;
+    }
 
     // Initialize to initial values
-    void SetInitialValues(LayerType aType);
+    void SetInitialValues();
 
     bool operator==(const Repeat& aOther) const {
       return mXRepeat == aOther.mXRepeat &&
@@ -658,13 +656,9 @@ struct nsStyleImageLayers {
                                   // NS_STYLE_MASK_MODE_MATCH_SOURCE.
     Repeat        mRepeat;        // [reset] See nsStyleConsts.h
 
-    // This constructor does not initialize mRepeat or mOrigin and Initialize()
-    // must be called to do that.
+    // Initializes only mImage
     Layer();
     ~Layer();
-
-    // Initialize mRepeat and mOrigin by specified layer type
-    void Initialize(LayerType aType);
 
     // Register/unregister images with the document. We do this only
     // after the dust has settled in ComputeBackgroundData.
@@ -3547,7 +3541,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVGReset
   }
 
   nsStyleImageLayers    mMask;
-  nsStyleClipPath  mClipPath;         // [reset]
+  nsStyleClipPath mClipPath;          // [reset]
   nscolor          mStopColor;        // [reset]
   nscolor          mFloodColor;       // [reset]
   nscolor          mLightingColor;    // [reset]
