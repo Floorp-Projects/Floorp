@@ -725,6 +725,9 @@ Debugger::getScriptFrameWithIter(JSContext* cx, AbstractFramePtr frame,
     MOZ_ASSERT_IF(maybeIter, maybeIter->abstractFramePtr() == frame);
     MOZ_ASSERT(!frame.script()->selfHosted());
 
+    if (!frame.script()->ensureHasAnalyzedArgsUsage(cx))
+        return false;
+
     FrameMap::AddPtr p = frames.lookupForAdd(frame);
     if (!p) {
         /* Create and populate the Debugger.Frame object. */
