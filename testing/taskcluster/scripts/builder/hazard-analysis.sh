@@ -125,9 +125,11 @@ function check_hazards () {
     NUM_UNSAFE=$(grep -c '^Function.*takes unsafe address of unrooted' "$1"/refs.txt)
     NUM_UNNECESSARY=$(grep -c '^Function.* has unnecessary root' "$1"/unnecessary.txt)
 
+    set +x
     echo "TinderboxPrint: rooting hazards<br/>$NUM_HAZARDS"
     echo "TinderboxPrint: unsafe references to unrooted GC pointers<br/>$NUM_UNSAFE"
     echo "TinderboxPrint: unnecessary roots<br/>$NUM_UNSAFE"
+    set -x
 
     if [ $NUM_HAZARDS -gt 0 ]; then
         echo "TEST-UNEXPECTED-FAIL $NUM_HAZARDS hazards detected" >&2
