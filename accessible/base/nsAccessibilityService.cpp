@@ -201,6 +201,9 @@ static Accessible* New_HTMLOutput(nsIContent* aContent, Accessible* aContext)
 static Accessible* New_HTMLProgress(nsIContent* aContent, Accessible* aContext)
   { return new HTMLProgressMeterAccessible(aContent, aContext->Document()); }
 
+static Accessible* New_HTMLSummary(nsIContent* aContent, Accessible* aContext)
+  { return new HTMLSummaryAccessible(aContent, aContext->Document()); }
+
 static Accessible*
 New_HTMLTableAccessible(nsIContent* aContent, Accessible* aContext)
   { return new HTMLTableAccessible(aContent, aContext->Document()); }
