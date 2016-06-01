@@ -15,15 +15,11 @@ class ResourceDispatcher;
 
 // Child processes's background thread should derive from this class.
 class ChildThread : public IPC::Channel::Listener,
-                    public IPC::Message::Sender,
                     public base::Thread {
  public:
   // Creates the thread.
   explicit ChildThread(Thread::Options options);
   virtual ~ChildThread();
-
-  // IPC::Message::Sender implementation:
-  virtual bool Send(IPC::Message* msg);
 
   // See documentation on MessageRouter for AddRoute and RemoveRoute
   void AddRoute(int32_t routing_id, IPC::Channel::Listener* listener);

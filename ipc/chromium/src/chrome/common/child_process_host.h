@@ -25,14 +25,10 @@ class FileDescriptor;
 // Plugins/workers and other child processes that live on the IO thread should
 // derive from this class.
 class ChildProcessHost :
-                         public IPC::Message::Sender,
                          public ChildProcessInfo,
                          public IPC::Channel::Listener {
  public:
   virtual ~ChildProcessHost();
-
-  // ResourceDispatcherHost::Receiver implementation:
-  virtual bool Send(IPC::Message* msg);
 
  protected:
   explicit ChildProcessHost(ProcessType type);
