@@ -64,6 +64,12 @@
   z-index: 2; /* navbar is at 1 */
 }
 
+@media (-moz-mac-yosemite-theme) {
+  #navigator-toolbox::after {
+    background-image: linear-gradient(to top, hsla(0,0%,0%,.1), hsla(0,0%,0%,.1) 1px, hsla(0,0%,100%,0) 1px, hsla(0,0%,100%,0) 2px, transparent 3px);
+  }
+}
+
 #navigator-toolbox toolbarbutton:-moz-lwtheme {
   color: inherit;
   text-shadow: inherit;
@@ -148,6 +154,10 @@ toolbarseparator {
   #navigator-toolbox > toolbar:not(#TabsToolbar):not(#nav-bar):not(:-moz-lwtheme) {
     background-image: none;
   }
+
+  #navigator-toolbox > toolbar:-moz-window-inactive:not(#TabsToolbar):not(#nav-bar):not(:-moz-lwtheme) {
+    background-color: hsl(0,0%,95%);
+  }
 }
 
 #navigator-toolbox > toolbar:not(#toolbar-menubar):not(#TabsToolbar):not(#nav-bar):not(#addon-bar) {
@@ -190,6 +200,10 @@ toolbarseparator {
   #nav-bar {
     background: linear-gradient(hsl(0,0%,93%), hsl(0,0%,83%));
   }
+
+  #nav-bar:-moz-window-inactive {
+    background: linear-gradient(hsl(0,0%,97%), hsl(0,0%,95%));
+  }
 }
 
 /* Draw the bottom border of the tabs toolbar when it's not using
@@ -215,6 +229,10 @@ toolbarseparator {
     /* Position the toolbar above the bottom of background tabs */
     position: relative;
     z-index: 1;
+  }
+
+  #main-window[tabsintitlebar] #TabsToolbar:not([collapsed="true"]) + #nav-bar:-moz-window-inactive:not(:-moz-lwtheme) {
+    border-top-color: hsla(0,0%,0%,.05);
   }
 }
 
@@ -2480,6 +2498,54 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
 
   .tab-throbber[progress] {
     list-style-image: url("chrome://global/skin/icons/loading@2x.png");
+  }
+}
+
+@media (-moz-mac-yosemite-theme) {
+  .tab-background-middle[visuallyselected=true]:-moz-window-inactive {
+    background-image: url(chrome://browser/skin/yosemite/tab-active-middle-inactive.png),
+                      @fgTabTextureYosemiteInactive@,
+                      none;
+  }
+
+  .tab-background-start[visuallyselected=true]:-moz-window-inactive:-moz-locale-dir(ltr)::after,
+  .tab-background-end[visuallyselected=true]:-moz-window-inactive:-moz-locale-dir(rtl)::after {
+    background-image: url(chrome://browser/skin/yosemite/tab-stroke-start-inactive.png);
+  }
+
+  .tab-background-end[visuallyselected=true]:-moz-window-inactive:-moz-locale-dir(ltr)::after,
+  .tab-background-start[visuallyselected=true]:-moz-window-inactive:-moz-locale-dir(rtl)::after {
+    background-image: url(chrome://browser/skin/yosemite/tab-stroke-end-inactive.png);
+  }
+
+  .tab-background-start[visuallyselected=true]:-moz-window-inactive:-moz-locale-dir(ltr):not(:-moz-lwtheme)::before,
+  .tab-background-end[visuallyselected=true]:-moz-window-inactive:-moz-locale-dir(rtl):not(:-moz-lwtheme)::before {
+    background-image: url(chrome://browser/skin/yosemite/tab-selected-start-inactive.svg);
+    background-size: 100% 100%;
+  }
+
+  .tab-background-end[visuallyselected=true]:-moz-window-inactive:-moz-locale-dir(ltr):not(:-moz-lwtheme)::before,
+  .tab-background-start[visuallyselected=true]:-moz-window-inactive:-moz-locale-dir(rtl):not(:-moz-lwtheme)::before {
+    background-image: url(chrome://browser/skin/yosemite/tab-selected-end-inactive.svg);
+    background-size: 100% 100%;
+  }
+
+  @media (min-resolution: 2dppx) {
+    .tab-background-middle[visuallyselected=true]:-moz-window-inactive {
+      background-image: url(chrome://browser/skin/yosemite/tab-active-middle-inactive@2x.png),
+                        @fgTabTextureYosemiteInactive@,
+                        none;
+    }
+
+    .tab-background-start[visuallyselected=true]:-moz-window-inactive:-moz-locale-dir(ltr)::after,
+    .tab-background-end[visuallyselected=true]:-moz-window-inactive:-moz-locale-dir(rtl)::after {
+      background-image: url(chrome://browser/skin/yosemite/tab-stroke-start-inactive@2x.png);
+    }
+
+    .tab-background-end[visuallyselected=true]:-moz-window-inactive:-moz-locale-dir(ltr)::after,
+    .tab-background-start[visuallyselected=true]:-moz-window-inactive:-moz-locale-dir(rtl)::after {
+      background-image: url(chrome://browser/skin/yosemite/tab-stroke-end-inactive@2x.png);
+    }
   }
 }
 
