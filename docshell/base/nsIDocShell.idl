@@ -125,12 +125,11 @@ interface nsIDocShell : nsIDocShellTreeItem
    * of an nsIDocShellLoadInfo object...
    *
    * @param aURI            - The URI to load.
-   * @param aOriginalURI    - The URI to set as the originalURI on the channel
-   *                          that does the load. If null, aURI will be set as
-   *                          the originalURI.
-   * @param aLoadReplace    - If set LOAD_REPLACE flag will be set on the
-   *                          channel. aOriginalURI is null, this argument is
-   *                          ignored.
+   * @param aOriginalURI    - If aOriginalURI is present and this function ends
+   *                          up actually loading data from network or cache,
+   *                          but not from bfcache, (e.g. in case of a reload)
+   *                          aOriginalURI will be loaded instead of aURI.
+   *                          Thereby we will load all redirects again.
    * @param aReferrer       - Referring URI
    * @param aReferrerPolicy - Referrer policy
    * @param aOwner          - Owner (security principal)
@@ -158,7 +157,6 @@ interface nsIDocShell : nsIDocShellTreeItem
    */
   [noscript]void internalLoad(in nsIURI aURI,
                               in nsIURI aOriginalURI,
-                              in boolean aLoadReplace,
                               in nsIURI aReferrer,
                               in unsigned long aReferrerPolicy,
                               in nsISupports aOwner,
