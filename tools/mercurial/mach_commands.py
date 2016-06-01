@@ -44,20 +44,6 @@ class VersionControlCommands(object):
             config_paths.insert(0, '~/mercurial.ini')
         config_paths = map(os.path.expanduser, config_paths)
 
-        # Touch a file so we can periodically prompt to update extensions.
-        #
-        # We put this before main command logic because the command can
-        # persistently fail and we want people to get credit for the
-        # intention, not whether the command is bug free.
-        state_dir = os.path.join(self._context.state_dir, 'mercurial')
-        if not os.path.isdir(state_dir):
-            os.makedirs(state_dir)
-
-        state_path = os.path.join(state_dir, 'setup.lastcheck')
-
-        with open(state_path, 'a'):
-            os.utime(state_path, None)
-
         if update_only:
             from hgsetup.update import MercurialUpdater
             updater = MercurialUpdater(self._context.state_dir)
