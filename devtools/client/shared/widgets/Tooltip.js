@@ -18,7 +18,6 @@ const Heritage = require("sdk/core/heritage");
 const {Eyedropper} = require("devtools/client/eyedropper/eyedropper");
 const Editor = require("devtools/client/sourceeditor/editor");
 const Services = require("Services");
-const {Task} = require("devtools/shared/task");
 
 loader.lazyRequireGetter(this, "beautify", "devtools/shared/jsbeautify/beautify");
 loader.lazyRequireGetter(this, "setNamedTimeout", "devtools/client/shared/widgets/view-helpers", true);
@@ -521,31 +520,6 @@ Tooltip.prototype = {
   },
 
   /**
-   * Uses the provided inspectorFront's getImageDataFromURL method to resolve
-   * the relative URL on the server-side, in the page context, and then sets the
-   * tooltip content with the resulting image just like |setImageContent| does.
-   * @return a promise that resolves when the image is shown in the tooltip or
-   * resolves when the broken image tooltip content is ready, but never rejects.
-   */
-  setRelativeImageContent: Task.async(function* (imageUrl, inspectorFront,
-                                                 maxDim) {
-    if (imageUrl.startsWith("data:")) {
-      // If the imageUrl already is a data-url, save ourselves a round-trip
-      this.setImageContent(imageUrl, {maxDim: maxDim});
-    } else if (inspectorFront) {
-      try {
-        let {data, size} = yield inspectorFront.getImageDataFromURL(imageUrl,
-                                                                    maxDim);
-        size.maxDim = maxDim;
-        let str = yield data.string();
-        this.setImageContent(str, size);
-      } catch (e) {
-        this.setBrokenImageContent();
-      }
-    }
-  }),
-
-  /**
    * Fill the tooltip with a message explaining the the image is missing
    */
   setBrokenImageContent: function () {
@@ -560,7 +534,7 @@ Tooltip.prototype = {
    * Fill the tooltip with an image and add the image dimension at the bottom.
    *
    * Only use this for absolute URLs that can be queried from the devtools
-   * client-side. For relative URLs, use |setRelativeImageContent|.
+   * client-side.
    *
    * @param {string} imageUrl
    *        The url to load the image from
@@ -767,38 +741,6 @@ Tooltip.prototype = {
       return def.promise;
     }
   },
-
-  /**
-   * Set the content of the tooltip to display a font family preview.
-   * This is based on Lea Verou's Dablet.
-   * See https://github.com/LeaVerou/dabblet
-   * for more info.
-   * @param {String} font The font family value.
-   * @param {object} nodeFront
-   *        The NodeActor that will used to retrieve the dataURL for the font
-   *        family tooltip contents.
-   * @return A promise that resolves when the font tooltip content is ready, or
-   *         rejects if no font is provided
-   */
-  setFontFamilyContent: Task.async(function* (font, nodeFront) {
-    if (!font || !nodeFront) {
-      throw new Error("Missing font");
-    }
-
-    if (typeof nodeFront.getFontFamilyDataURL === "function") {
-      font = font.replace(/"/g, "'");
-      font = font.replace("!important", "");
-      font = font.trim();
-
-      let fillStyle =
-          (Services.prefs.getCharPref("devtools.theme") === "light") ?
-          "black" : "white";
-
-      let {data, size} = yield nodeFront.getFontFamilyDataURL(font, fillStyle);
-      let str = yield data.string();
-      this.setImageContent(str, { hideDimensionLabel: true, maxDim: size });
-    }
-  }),
 
   /**
    * Set the content of this tooltip to the MDN docs widget.
