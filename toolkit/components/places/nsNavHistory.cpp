@@ -485,14 +485,16 @@ nsNavHistory::LoadPrefs()
 
 void
 nsNavHistory::NotifyOnVisit(nsIURI* aURI,
-                          int64_t aVisitID,
+                          int64_t aVisitId,
                           PRTime aTime,
-                          int64_t referringVisitID,
+                          int64_t aReferrerVisitId,
                           int32_t aTransitionType,
-                          const nsACString& aGUID,
-                          bool aHidden)
+                          const nsACString& aGuid,
+                          bool aHidden,
+                          uint32_t aVisitCount,
+                          uint32_t aTyped)
 {
-  MOZ_ASSERT(!aGUID.IsEmpty());
+  MOZ_ASSERT(!aGuid.IsEmpty());
   // If there's no history, this visit will surely add a day.  If the visit is
   // added before or after the last cached day, the day count may have changed.
   // Otherwise adding multiple visits in the same day should not invalidate
@@ -505,8 +507,8 @@ nsNavHistory::NotifyOnVisit(nsIURI* aURI,
 
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavHistoryObserver,
-                   OnVisit(aURI, aVisitID, aTime, 0,
-                           referringVisitID, aTransitionType, aGUID, aHidden));
+                   OnVisit(aURI, aVisitId, aTime, 0, aReferrerVisitId,
+                           aTransitionType, aGuid, aHidden, aVisitCount, aTyped));
 }
 
 void
