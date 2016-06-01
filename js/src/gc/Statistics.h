@@ -86,6 +86,8 @@ enum Phase : uint8_t {
 
     PHASE_LIMIT,
     PHASE_NONE = PHASE_LIMIT,
+    PHASE_EXPLICIT_SUSPENSION = PHASE_LIMIT,
+    PHASE_IMPLICIT_SUSPENSION,
     PHASE_MULTI_PARENTS
 };
 
@@ -168,6 +170,22 @@ struct Statistics
     void beginPhase(Phase phase);
     void endPhase(Phase phase);
     void endParallelPhase(Phase phase, const GCParallelTask* task);
+
+    // Occasionally, we may be in the middle of something that is tracked by
+    // this class, and we need to do something unusual (eg evict the nursery)
+    // that doesn't normally nest within the current phase. Suspend the
+    // currently tracked phase stack, at which time the caller is free to do
+    // other tracked operations.
+    //
+    // This also happens internally with PHASE_GC_BEGIN and other "non-GC"
+    // phases. While in these phases, any beginPhase will automatically suspend
+    // the non-GC phase, until that inner stack is complete, at which time it
+    // will automatically resume the non-GC phase. Explicit suspensions do not
+    // get auto-resumed.
+    void suspendPhases(Phase suspension = PHASE_EXPLICIT_SUSPENSION);
+
+    // Resume a suspended stack of phases.
+    void resumePhases();
 
     void beginSlice(const ZoneGCStats& zoneStats, JSGCInvocationKind gckind,
                     SliceBudget budget, JS::gcreason::Reason reason);
@@ -318,13 +336,14 @@ struct Statistics
     size_t activeDagSlot;
 
     /*
-     * To avoid recursive nesting, we discontinue a callback phase when any
-     * other phases are started. Remember what phase to resume when the inner
-     * phases are complete. (And because GCs can nest within the callbacks any
-     * number of times, we need a whole stack of of phases to resume.)
+     * Certain phases can interrupt the phase stack, eg callback phases. When
+     * this happens, we move the suspended phases over to a sepearate list,
+     * terminated by a dummy PHASE_SUSPENSION phase (so that we can nest
+     * suspensions by suspending multiple stacks with a PHASE_SUSPENSION in
+     * between).
      */
-    Phase suspendedPhases[MAX_NESTING];
-    size_t suspendedPhaseNestingDepth;
+    Phase suspendedPhases[MAX_NESTING * 3];
+    size_t suspended;
 
     /* Sweep times for SCCs of compartments. */
     Vector<int64_t, 0, SystemAllocPolicy> sccTimes;

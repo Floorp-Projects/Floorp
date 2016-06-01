@@ -1,0 +1,23 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+@depends('--help')
+@imports('codecs')
+@imports(_from='mozbuild.configure.util', _import='getpreferredencoding')
+@imports('os')
+@imports(_from='__builtin__', _import='open')
+def dies_when_logging(_):
+    test_file = 'test.txt'
+    quote_char = "'"
+    if getpreferredencoding().lower() == 'utf-8':
+        quote_char = '\u00B4'.encode('utf-8')
+    try:
+        with open(test_file, 'w+') as fh:
+            fh.write(quote_char)
+        out = check_cmd_output('cat', 'test.txt')
+        log.info(out)
+    finally:
+        os.remove(test_file)

@@ -220,10 +220,13 @@ void ViEEncoder::StartThreadsAndSetSharedMembers(
 }
 
 void ViEEncoder::StopThreadsAndRemoveSharedMembers() {
-  vcm_.RegisterProtectionCallback(NULL);
-  vcm_protection_callback_ = NULL;
-  module_process_thread_.DeRegisterModule(&vcm_);
-  module_process_thread_.DeRegisterModule(&vpm_);
+  // Avoid trying to stop the threads/etc twice
+  if (vcm_protection_callback_) {
+    vcm_.RegisterProtectionCallback(NULL);
+    vcm_protection_callback_ = NULL;
+    module_process_thread_.DeRegisterModule(&vcm_);
+    module_process_thread_.DeRegisterModule(&vpm_);
+  }
 }
 
 void ViEEncoder::SetLoadManager(CPULoadStateCallbackInvoker* load_manager) {

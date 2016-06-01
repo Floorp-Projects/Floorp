@@ -25,6 +25,7 @@ from mozbuild.configure.options import (
 from mozbuild.configure.help import HelpFormatter
 from mozbuild.configure.util import (
     ConfigureOutputHandler,
+    getpreferredencoding,
     LineIO,
 )
 from mozbuild.util import (
@@ -157,8 +158,24 @@ class ConfigureSandbox(dict):
             def queue_debug():
                 yield
 
+        # Some callers will manage to log a bytestring with characters in it
+        # that can't be converted to ascii. Make our log methods robust to this
+        # by detecting the encoding that a producer is likely to have used.
+        encoding = getpreferredencoding()
+        def wrapped_log_method(logger, key):
+            method = getattr(logger, key)
+            if not encoding:
+                return method
+            def wrapped(*args, **kwargs):
+                out_args = [
+                    arg.decode(encoding) if isinstance(arg, str) else arg
+                    for arg in args
+                ]
+                return method(*out_args, **kwargs)
+            return wrapped
+
         log_namespace = {
-            k: getattr(logger, k)
+            k: wrapped_log_method(logger, k)
             for k in ('debug', 'info', 'warning', 'error')
         }
         log_namespace['queue_debug'] = queue_debug

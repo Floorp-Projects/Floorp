@@ -937,8 +937,6 @@ protected:
     GetEventListenerManagerForAttr(nsIAtom* aAttrName,
                                    bool* aDefer) override;
 
-  virtual const nsAttrName* InternalGetExistingAttrNameFromQName(const nsAString& aStr) const override;
-
   /**
    * Dispatch a simulated mouse click by keyboard to the given element.
    */

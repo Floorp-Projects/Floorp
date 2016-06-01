@@ -915,9 +915,12 @@ class IonBuilder
 
     InliningStatus inlineSimd(CallInfo& callInfo, JSFunction* target, SimdType type);
 
-    template <typename T>
-    InliningStatus inlineSimdBinary(CallInfo& callInfo, JSNative native,
-                                    typename T::Operation op, SimdType type);
+    InliningStatus inlineSimdBinaryArith(CallInfo& callInfo, JSNative native,
+                                         MSimdBinaryArith::Operation op, SimdType type);
+    InliningStatus inlineSimdBinaryBitwise(CallInfo& callInfo, JSNative native,
+                                           MSimdBinaryBitwise::Operation op, SimdType type);
+    InliningStatus inlineSimdBinarySaturating(CallInfo& callInfo, JSNative native,
+                                              MSimdBinarySaturating::Operation op, SimdType type);
     InliningStatus inlineSimdShift(CallInfo& callInfo, JSNative native, MSimdShift::Operation op,
                                    SimdType type);
     InliningStatus inlineSimdComp(CallInfo& callInfo, JSNative native,

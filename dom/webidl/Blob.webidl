@@ -32,11 +32,9 @@ interface Blob {
   // void close(); TODO bug 1048325
 };
 
-enum EndingTypes{"transparent", "native"};
+enum EndingTypes { "transparent", "native" };
 
 dictionary BlobPropertyBag {
-
   DOMString type = "";
   EndingTypes endings = "transparent";
-
 };

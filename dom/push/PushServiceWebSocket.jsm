@@ -477,8 +477,10 @@ this.PushServiceWebSocket = {
       console.warn("makeWebSocket: Network is offline.");
       return null;
     }
-    let socket = Cc["@mozilla.org/network/protocol;1?name=wss"]
-                   .createInstance(Ci.nsIWebSocketChannel);
+    let contractId = uri.scheme == "ws" ?
+                     "@mozilla.org/network/protocol;1?name=ws" :
+                     "@mozilla.org/network/protocol;1?name=wss";
+    let socket = Cc[contractId].createInstance(Ci.nsIWebSocketChannel);
 
     socket.initLoadInfo(null, // aLoadingNode
                         Services.scriptSecurityManager.getSystemPrincipal(),

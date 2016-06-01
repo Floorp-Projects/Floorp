@@ -48,9 +48,11 @@ static inline bool FrameHasBorderOrBackground(nsIFrame* f) {
 class nsDisplayTableItem : public nsDisplayItem
 {
 public:
-  nsDisplayTableItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame) :
+  nsDisplayTableItem(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
+                     bool aDrawsBackground = true) :
       nsDisplayItem(aBuilder, aFrame),
-      mPartHasFixedBackground(false) {}
+      mPartHasFixedBackground(false),
+      mDrawsBackground(aDrawsBackground) {}
 
   // With collapsed borders, parts of the collapsed border can extend outside
   // the table part frames, so allow this display element to blow out to our
@@ -67,6 +69,7 @@ public:
 
 private:
   bool mPartHasFixedBackground;
+  bool mDrawsBackground;
 };
 
 class nsAutoPushCurrentTableItem

@@ -243,6 +243,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorkerGlobalScope,
                                            WorkerGlobalScope)
   IMPL_EVENT_HANDLER(notificationclick)
+  IMPL_EVENT_HANDLER(notificationclose)
 
   ServiceWorkerGlobalScope(WorkerPrivate* aWorkerPrivate, const nsACString& aScope);
 

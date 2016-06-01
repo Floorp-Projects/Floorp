@@ -208,9 +208,15 @@ this.PushServiceAndroidGCM = {
   register: function(record) {
     console.debug("register:", record);
     let ctime = Date.now();
+    let appServerKey = record.appServerKey ?
+      ChromeUtils.base64URLEncode(record.appServerKey, {
+        // The Push server requires padding.
+        pad: true,
+      }) : null;
     // Caller handles errors.
     return Messaging.sendRequestForResult({
       type: "PushServiceAndroidGCM:SubscribeChannel",
+      appServerKey: appServerKey,
     }).then(data => {
       console.debug("Got data:", data);
       return PushCrypto.generateKeys()
@@ -227,6 +233,7 @@ this.PushServiceAndroidGCM = {
             p256dhPublicKey: exportedKeys[0],
             p256dhPrivateKey: exportedKeys[1],
             authenticationSecret: PushCrypto.generateAuthenticationSecret(),
+            appServerKey: record.appServerKey,
           })
       );
     });

@@ -3,12 +3,17 @@
 
 package org.mozilla.gecko.push.autopush.test;
 
+import java.security.KeyPair;
+import java.security.KeyPairGenerator;
+import java.security.PublicKey;
+
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mockito.ArgumentCaptor;
+import org.mozilla.apache.commons.codec.binary.Base64;
 import org.mozilla.gecko.background.fxa.FxAccountUtils;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 import org.mozilla.gecko.background.testhelpers.WaitHelper;
@@ -20,6 +25,7 @@ import org.mozilla.gecko.push.autopush.AutopushClientException;
 import org.mozilla.gecko.sync.Utils;
 import org.mozilla.gecko.sync.net.BaseResource;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.instanceOf;
 import static org.hamcrest.CoreMatchers.startsWith;
 import static org.mockito.Mockito.any;
@@ -108,19 +114,43 @@ public class TestLiveAutopushClient {
 
         // We should be able to subscribe to a channel.
         final RequestDelegate<SubscribeChannelResponse> subscribeDelegate = mock(RequestDelegate.class);
-        client.subscribeChannel(registerResponse.uaid, registerResponse.secret, subscribeDelegate);
+        client.subscribeChannel(registerResponse.uaid, registerResponse.secret, null, subscribeDelegate);
 
         final SubscribeChannelResponse subscribeResponse = assertSuccess(subscribeDelegate, SubscribeChannelResponse.class);
         Assert.assertNotNull(subscribeResponse);
         Assert.assertNotNull(subscribeResponse.channelID);
         Assert.assertNotNull(subscribeResponse.endpoint);
         Assert.assertThat(subscribeResponse.endpoint, startsWith(FxAccountUtils.getAudienceForURL(serverURL)));
+        Assert.assertThat(subscribeResponse.endpoint, containsString("/v1/"));
 
         // And we should be able to unsubscribe.
         final RequestDelegate<Void> unsubscribeDelegate = mock(RequestDelegate.class);
         client.unsubscribeChannel(registerResponse.uaid, registerResponse.secret, subscribeResponse.channelID, unsubscribeDelegate);
 
         Assert.assertNull(assertSuccess(unsubscribeDelegate, Void.class));
+
+        // We should be able to create a restricted subscription by specifying
+        // an ECDSA public key using the P-256 curve.
+        final RequestDelegate<SubscribeChannelResponse> subscribeWithKeyDelegate = mock(RequestDelegate.class);
+        final KeyPairGenerator keyPairGenerator = KeyPairGenerator.getInstance("ECDSA");
+        keyPairGenerator.initialize(256);
+        final KeyPair keyPair = keyPairGenerator.generateKeyPair();
+        final PublicKey publicKey = keyPair.getPublic();
+        String appServerKey = Base64.encodeBase64URLSafeString(publicKey.getEncoded());
+        client.subscribeChannel(registerResponse.uaid, registerResponse.secret, appServerKey, subscribeWithKeyDelegate);
+
+        final SubscribeChannelResponse subscribeWithKeyResponse = assertSuccess(subscribeWithKeyDelegate, SubscribeChannelResponse.class);
+        Assert.assertNotNull(subscribeWithKeyResponse);
+        Assert.assertNotNull(subscribeWithKeyResponse.channelID);
+        Assert.assertNotNull(subscribeWithKeyResponse.endpoint);
+        Assert.assertThat(subscribeWithKeyResponse.endpoint, startsWith(FxAccountUtils.getAudienceForURL(serverURL)));
+        Assert.assertThat(subscribeWithKeyResponse.endpoint, containsString("/v2/"));
+
+        // And we should be able to drop the restricted subscription.
+        final RequestDelegate<Void> unsubscribeWithKeyDelegate = mock(RequestDelegate.class);
+        client.unsubscribeChannel(registerResponse.uaid, registerResponse.secret, subscribeWithKeyResponse.channelID, unsubscribeWithKeyDelegate);
+
+        Assert.assertNull(assertSuccess(unsubscribeWithKeyDelegate, Void.class));
 
         // Trying to unsubscribe a second time should give a 410.
         final RequestDelegate<Void> reunsubscribeDelegate = mock(RequestDelegate.class);

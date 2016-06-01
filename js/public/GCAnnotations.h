@@ -23,7 +23,7 @@
 # define JS_HAZ_ROOTED __attribute__((tag("Rooted Pointer")))
 
 // Mark a type as something that should not be held live across a GC, but which
-// is itself not a GC pointer.
+// is not itself a GC pointer.
 # define JS_HAZ_GC_INVALIDATED __attribute__((tag("Invalidated by GC")))
 
 // Mark a type that would otherwise be considered a GC Pointer (eg because it
@@ -39,6 +39,9 @@
 // invalidating GC pointers.
 # define JS_HAZ_GC_CALL __attribute__((tag("GC Call")))
 
+// Mark an RAII class as suppressing GC within its scope.
+# define JS_HAZ_GC_SUPPRESSED __attribute__((tag("Suppress GC")))
+
 #else
 
 # define JS_HAZ_GC_THING
@@ -47,6 +50,7 @@
 # define JS_HAZ_GC_INVALIDATED
 # define JS_HAZ_NON_GC_POINTER
 # define JS_HAZ_GC_CALL
+# define JS_HAZ_GC_SUPPRESSED
 
 #endif
 

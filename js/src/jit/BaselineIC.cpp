@@ -5423,9 +5423,15 @@ GetTemplateObjectForSimd(JSContext* cx, JSFunction* target, MutableHandleObject 
     // Check if this is a native inlinable SIMD operation.
     SimdType ctrlType;
     switch (jitInfo->inlinableNative) {
+      case InlinableNative::SimdInt8x16:   ctrlType = SimdType::Int8x16;   break;
+      case InlinableNative::SimdUint8x16:  ctrlType = SimdType::Uint8x16;  break;
+      case InlinableNative::SimdInt16x8:   ctrlType = SimdType::Int16x8;   break;
+      case InlinableNative::SimdUint16x8:  ctrlType = SimdType::Uint16x8;  break;
       case InlinableNative::SimdInt32x4:   ctrlType = SimdType::Int32x4;   break;
       case InlinableNative::SimdUint32x4:  ctrlType = SimdType::Uint32x4;  break;
       case InlinableNative::SimdFloat32x4: ctrlType = SimdType::Float32x4; break;
+      case InlinableNative::SimdBool8x16:  ctrlType = SimdType::Bool8x16;  break;
+      case InlinableNative::SimdBool16x8:  ctrlType = SimdType::Bool16x8;  break;
       case InlinableNative::SimdBool32x4:  ctrlType = SimdType::Bool32x4;  break;
       // This is not an inlinable SIMD operation.
       default: return false;

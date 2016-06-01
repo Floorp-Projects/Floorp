@@ -2,12 +2,16 @@
 # mozharness/scripts/merge_day/gecko_migration.py -c \
 #   mozharness/configs/merge_day/aurora_to_beta.py -c
 #   mozharness/configs/merge_day/staging_beta_migration.py ...
+import os
+
+ABS_WORK_DIR = os.path.join(os.getcwd(), "build")
 
 config = {
     "log_name": "staging_beta",
 
+    "vcs_share_base": os.path.join(ABS_WORK_DIR, 'hg-shared'),
     "tools_repo_url": "https://hg.mozilla.org/build/tools",
-    "tools_repo_revision": "default",
+    "tools_repo_branch": "default",
     "from_repo_url": "ssh://hg.mozilla.org/releases/mozilla-aurora",
     "to_repo_url": "ssh://hg.mozilla.org/users/stage-ffxbld/mozilla-beta",
 

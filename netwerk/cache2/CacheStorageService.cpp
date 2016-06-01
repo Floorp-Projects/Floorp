@@ -455,7 +455,7 @@ private:
           }
         }
 
-        while (!mCancel) {
+        while (!mCancel && !CacheObserver::ShuttingDown()) {
           if (CacheIOThread::YieldAndRerun())
             return NS_OK;
 

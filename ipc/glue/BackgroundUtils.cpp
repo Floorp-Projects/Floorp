@@ -77,12 +77,12 @@ PrincipalInfoToPrincipal(const PrincipalInfo& aPrincipalInfo,
         return nullptr;
       }
 
-      if (info.attrs().mAppId == nsIScriptSecurityManager::UNKNOWN_APP_ID) {
-        rv = secMan->GetSimpleCodebasePrincipal(uri, getter_AddRefs(principal));
-      } else {
-        principal = BasePrincipal::CreateCodebasePrincipal(uri, info.attrs());
-        rv = principal ? NS_OK : NS_ERROR_FAILURE;
+      PrincipalOriginAttributes attrs;
+      if (info.attrs().mAppId != nsIScriptSecurityManager::UNKNOWN_APP_ID) {
+        attrs = info.attrs();
       }
+      principal = BasePrincipal::CreateCodebasePrincipal(uri, attrs);
+      rv = principal ? NS_OK : NS_ERROR_FAILURE;
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return nullptr;
       }

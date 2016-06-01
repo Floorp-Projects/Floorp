@@ -3217,33 +3217,6 @@ IMEInputHandler::SetMarkedText(NSAttributedString* aAttrString,
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-NSInteger
-IMEInputHandler::ConversationIdentifier()
-{
-  MOZ_LOG(gLog, LogLevel::Info,
-    ("%p IMEInputHandler::ConversationIdentifier, Destroyed()=%s",
-     this, TrueOrFalse(Destroyed())));
-
-  if (Destroyed()) {
-    return reinterpret_cast<NSInteger>(mView);
-  }
-
-  RefPtr<IMEInputHandler> kungFuDeathGrip(this);
-
-  // NOTE: The size of NSInteger is same as pointer size.
-  WidgetQueryContentEvent textContent(true, eQueryTextContent, mWidget);
-  textContent.InitForQueryTextContent(0, 0);
-  DispatchEvent(textContent);
-  if (!textContent.mSucceeded) {
-    MOZ_LOG(gLog, LogLevel::Info,
-      ("%p IMEInputHandler::ConversationIdentifier, Failed", this));
-    return reinterpret_cast<NSInteger>(mView);
-  }
-  // XXX This might return same ID as a previously existing editor if the
-  //     deleted editor was created at the same address.  Is there a better way?
-  return reinterpret_cast<NSInteger>(textContent.mReply.mContentsRoot);
-}
-
 NSAttributedString*
 IMEInputHandler::GetAttributedSubstringFromRange(NSRange& aRange,
                                                  NSRange* aActualRange)

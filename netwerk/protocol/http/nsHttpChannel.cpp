@@ -95,6 +95,7 @@
 #include "nsCORSListenerProxy.h"
 #include "nsISocketProvider.h"
 #include "mozilla/net/Predictor.h"
+#include "CacheControlParser.h"
 
 namespace mozilla { namespace net {
 
@@ -3146,6 +3147,14 @@ nsHttpChannel::OpenCacheEntry(bool isHttps)
 
     uint32_t cacheEntryOpenFlags;
     bool offline = gIOService->IsOffline() || appOffline;
+
+    nsAutoCString cacheControlRequestHeader;
+    mRequestHead.GetHeader(nsHttp::Cache_Control, cacheControlRequestHeader);
+    CacheControlParser cacheControlRequest(cacheControlRequestHeader);
+    if (cacheControlRequest.NoStore() && !PossiblyIntercepted()) {
+        goto bypassCacheEntryOpen;
+    }
+
     if (offline || (mLoadFlags & INHIBIT_CACHING)) {
         if (BYPASS_LOCAL_CACHE(mLoadFlags) && !offline && !PossiblyIntercepted()) {
             goto bypassCacheEntryOpen;
@@ -3313,6 +3322,16 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
 
     LOG(("nsHttpChannel::OnCacheEntryCheck enter [channel=%p entry=%p]",
         this, entry));
+
+    nsAutoCString cacheControlRequestHeader;
+    mRequestHead.GetHeader(nsHttp::Cache_Control, cacheControlRequestHeader);
+    CacheControlParser cacheControlRequest(cacheControlRequestHeader);
+
+    if (cacheControlRequest.NoStore()) {
+        LOG(("Not using cached response based on no-store request cache directive\n"));
+        *aResult = ENTRY_NOT_WANTED;
+        return NS_OK;
+    }
 
     // Remember the request is a custom conditional request so that we can
     // process any 304 response correctly.
@@ -3522,26 +3541,52 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
         // and didn't do heuristic on it. but defacto that is allowed now.
         //
         // Check if the cache entry has expired...
-        uint32_t time = 0; // a temporary variable for storing time values...
 
-        rv = entry->GetExpirationTime(&time);
+        uint32_t now = NowInSeconds();
+
+        uint32_t age = 0;
+        rv = mCachedResponseHead->ComputeCurrentAge(now, now, &age);
         NS_ENSURE_SUCCESS(rv, rv);
 
-        LOG(("  NowInSeconds()=%u, time=%u", NowInSeconds(), time));
-        if (NowInSeconds() <= time)
-            doValidation = false;
-        else if (mCachedResponseHead->MustValidateIfExpired())
+        uint32_t freshness = 0;
+        rv = mCachedResponseHead->ComputeFreshnessLifetime(&freshness);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        uint32_t expiration = 0;
+        rv = entry->GetExpirationTime(&expiration);
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        uint32_t maxAgeRequest, maxStaleRequest, minFreshRequest;
+
+        LOG(("  NowInSeconds()=%u, expiration time=%u, freshness lifetime=%u, age=%u",
+             now, expiration, freshness, age));
+
+        if (cacheControlRequest.NoCache()) {
+            LOG(("  validating, no-cache request"));
             doValidation = true;
-        else if (mLoadFlags & nsIRequest::VALIDATE_ONCE_PER_SESSION) {
+        } else if (cacheControlRequest.MaxStale(&maxStaleRequest)) {
+            uint32_t staleTime = age > freshness ? age - freshness : 0;
+            doValidation = staleTime > maxStaleRequest;
+            LOG(("  validating=%d, max-stale=%u requested", doValidation, maxStaleRequest));
+        } else if (cacheControlRequest.MaxAge(&maxAgeRequest)) {
+            doValidation = age > maxAgeRequest;
+            LOG(("  validating=%d, max-age=%u requested", doValidation, maxAgeRequest));
+        } else if (cacheControlRequest.MinFresh(&minFreshRequest)) {
+            uint32_t freshTime = freshness > age ? freshness - age : 0;
+            doValidation = freshTime < minFreshRequest;
+            LOG(("  validating=%d, min-fresh=%u requested", doValidation, minFreshRequest));
+        } else if (now <= expiration) {
+            doValidation = false;
+            LOG(("  not validating, expire time not in the past"));
+        } else if (mCachedResponseHead->MustValidateIfExpired()) {
+            doValidation = true;
+        } else if (mLoadFlags & nsIRequest::VALIDATE_ONCE_PER_SESSION) {
             // If the cached response does not include expiration infor-
             // mation, then we must validate the response, despite whether
             // or not this is the first access this session.  This behavior
             // is consistent with existing browsers and is generally expected
             // by web authors.
-            rv = mCachedResponseHead->ComputeFreshnessLifetime(&time);
-            NS_ENSURE_SUCCESS(rv, rv);
-
-            if (time == 0)
+            if (freshness == 0)
                 doValidation = true;
             else
                 doValidation = fromPreviousSession;
@@ -5268,6 +5313,12 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
 
     AddCookiesToRequest();
 
+    // After we notify any observers (on-opening-request, loadGroup, etc) we
+    // must return NS_OK and return any errors asynchronously via
+    // OnStart/OnStopRequest.  Observers may add a reference to the channel
+    // and expect to get OnStopRequest so they know when to drop the reference,
+    // etc.
+
     // notify "http-on-opening-request" observers, but not if this is a redirect
     if (!(mLoadFlags & LOAD_REPLACE)) {
         gHttpHandler->OnOpeningRequest(this);
@@ -5282,8 +5333,6 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     mListener = listener;
     mListenerContext = context;
 
-    // add ourselves to the load group.  from this point forward, we'll report
-    // all failures asynchronously.
     if (mLoadGroup)
         mLoadGroup->AddRequest(this, nullptr);
 
@@ -5297,16 +5346,20 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     // just once and early, AsyncOpen is the best place.
     mCustomAuthHeader = mRequestHead.HasHeader(nsHttp::Authorization);
 
-    // the only time we would already know the proxy information at this
-    // point would be if we were proxying a non-http protocol like ftp
-    if (!mProxyInfo && NS_SUCCEEDED(ResolveProxy()))
+    // The common case for HTTP channels is to begin proxy resolution and return
+    // at this point. The only time we know mProxyInfo already is if we're
+    // proxying a non-http protocol like ftp.
+    if (!mProxyInfo && NS_SUCCEEDED(ResolveProxy())) {
         return NS_OK;
+    }
 
     rv = BeginConnect();
-    if (NS_FAILED(rv))
-        ReleaseListeners();
+    if (NS_FAILED(rv)) {
+        CloseCacheEntry(false);
+        AsyncAbort(rv);
+    }
 
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5318,11 +5371,9 @@ nsHttpChannel::AsyncOpen2(nsIStreamListener *aListener)
   return AsyncOpen(listener, nullptr);
 }
 
-// BeginConnect() will not call AsyncAbort() on an error and if AsyncAbort needs
-// to be called the function calling BeginConnect will need to call AsyncAbort.
-// If BeginConnect is called from AsyncOpen, AsyncnAbort doesn't need to be
-// called. If it is called form another function (e.g. the function is called
-// from OnProxyAvailable) that function should call AsyncOpen.
+// BeginConnect() SHOULD NOT call AsyncAbort(). AsyncAbort will be called by
+// functions that called BeginConnect if needed. Only AsyncOpen and
+// OnProxyAvailable ever call BeginConnect.
 nsresult
 nsHttpChannel::BeginConnect()
 {
@@ -5490,13 +5541,12 @@ nsHttpChannel::BeginConnect()
         nsCOMPtr<nsIPackagedAppService> pas =
             do_GetService("@mozilla.org/network/packaged-app-service;1", &rv);
         if (NS_WARN_IF(NS_FAILED(rv))) {
-            AsyncAbort(rv);
             return rv;
         }
 
         rv = pas->GetResource(this, this);
         if (NS_FAILED(rv)) {
-            AsyncAbort(rv);
+            return rv;
         }
 
         // We need to alter the flags so the cache entry returned by the
@@ -5576,8 +5626,7 @@ nsHttpChannel::BeginConnect()
     }
 
     if (!(mLoadFlags & LOAD_CLASSIFY_URI)) {
-        ContinueBeginConnect();
-        return NS_OK;
+        return ContinueBeginConnectWithResult();
     }
 
     // mLocalBlocklist is true only if tracking protection is enabled and the
@@ -5603,7 +5652,7 @@ nsHttpChannel::BeginConnect()
          channelClassifier.get(), this));
     channelClassifier->Start(this);
     if (callContinueBeginConnect) {
-        ContinueBeginConnect();
+        return ContinueBeginConnectWithResult();
     }
     return NS_OK;
 }
@@ -5699,7 +5748,7 @@ nsHttpChannel::ContinueBeginConnect()
 {
     nsresult rv = ContinueBeginConnectWithResult();
     if (NS_FAILED(rv)) {
-        CloseCacheEntry(true);
+        CloseCacheEntry(false);
         AsyncAbort(rv);
     }
 }
@@ -5760,8 +5809,8 @@ nsHttpChannel::OnProxyAvailable(nsICancelable *request, nsIChannel *channel,
     }
 
     if (NS_FAILED(rv)) {
+        CloseCacheEntry(false);
         AsyncAbort(rv);
-        Cancel(rv);
     }
     return rv;
 }

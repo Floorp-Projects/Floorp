@@ -10,6 +10,7 @@
 #include "nsHttpHeaderArray.h"
 #include "nsURLHelper.h"
 #include "nsIHttpHeaderVisitor.h"
+#include "nsHttpHandler.h"
 
 namespace mozilla {
 namespace net {

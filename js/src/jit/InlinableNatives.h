@@ -84,8 +84,14 @@
                                     \
     _(SimdInt32x4)                  \
     _(SimdUint32x4)                 \
+    _(SimdInt16x8)                  \
+    _(SimdUint16x8)                 \
+    _(SimdInt8x16)                  \
+    _(SimdUint8x16)                 \
     _(SimdFloat32x4)                \
     _(SimdBool32x4)                 \
+    _(SimdBool16x8)                 \
+    _(SimdBool8x16)                 \
                                     \
     _(TestBailout)                  \
     _(TestAssertFloat32)            \
