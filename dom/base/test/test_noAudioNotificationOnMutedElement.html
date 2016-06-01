@@ -50,7 +50,7 @@ var tests = [
   },
 
   function() {
-    expectedNotification = 'inactive';
+    expectedNotification = 'inactive-nonaudible';
     audio.muted = true;
   },
 
@@ -60,7 +60,7 @@ var tests = [
   },
 
   function() {
-    expectedNotification = 'inactive';
+    expectedNotification = 'inactive-pause';
     audio.pause();
   },
 
@@ -71,7 +71,7 @@ var tests = [
   },
 
   function() {
-    expectedNotification = 'inactive';
+    expectedNotification = 'inactive-nonaudible';
     audio.muted = true;
   },
 
