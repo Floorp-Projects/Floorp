@@ -172,6 +172,41 @@ nsHttpHeaderArray::SetHeaderFromNet(nsHttpAtom header,
     return NS_OK;
 }
 
+nsresult
+nsHttpHeaderArray::SetResponseHeaderFromCache(nsHttpAtom header,
+                                              const nsACString &value,
+                                              nsHttpHeaderArray::HeaderVariety variety)
+{
+    MOZ_ASSERT((variety == eVarietyResponse) ||
+               (variety == eVarietyResponseNetOriginal),
+               "Headers from cache can only be eVarietyResponse and "
+               "eVarietyResponseNetOriginal");
+
+    if (variety == eVarietyResponseNetOriginal) {
+        return SetHeader_internal(header, value,
+                                  eVarietyResponseNetOriginal);
+    } else {
+        nsTArray<nsEntry>::index_type index = 0;
+        do {
+            index = mHeaders.IndexOf(header, index, nsEntry::MatchHeader());
+            if (index != mHeaders.NoIndex) {
+                nsEntry &entry = mHeaders[index];
+                if (value.Equals(entry.value)) {
+                    MOZ_ASSERT((entry.variety == eVarietyResponseNetOriginal) ||
+                               (entry.variety == eVarietyResponseNetOriginalAndResponse),
+                               "This array must contain only eVarietyResponseNetOriginal"
+                               " and eVarietyResponseNetOriginalAndRespons headers!");
+                    entry.variety = eVarietyResponseNetOriginalAndResponse;
+                    return NS_OK;
+                }
+                index++;
+            }
+        } while (index != mHeaders.NoIndex);
+        // If we are here, we have not found an entry so add a new one.
+        return SetHeader_internal(header, value, eVarietyResponse);
+    }
+}
+
 void
 nsHttpHeaderArray::ClearHeader(nsHttpAtom header)
 {
