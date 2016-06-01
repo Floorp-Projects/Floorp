@@ -232,12 +232,20 @@ tests:
         task: tasks/tests/fx_linux64_external_media_tests_opt.yml
   firefox-ui-functional:
     allowed_build_tasks:
+      tasks/builds/opt_linux64.yml:
+        task: tasks/tests/fx_linux64_firefox_ui_functional_opt.yml
       tasks/builds/dbg_linux64.yml:
-        task: tasks/tests/fx_linux64_firefox_ui_functional.yml
+        task: tasks/tests/fx_linux64_firefox_ui_functional_dbg.yml
+      tasks/builds/opt_linux64_pgo.yml:
+        task: tasks/tests/fx_linux64_firefox_ui_functional_opt.yml
   firefox-ui-functional-e10s:
     allowed_build_tasks:
+      tasks/builds/opt_linux64.yml:
+        task: tasks/tests/fx_linux64_firefox_ui_functional_e10s_opt.yml
       tasks/builds/dbg_linux64.yml:
-        task: tasks/tests/fx_linux64_firefox_ui_functional_e10s.yml
+        task: tasks/tests/fx_linux64_firefox_ui_functional_e10s_dbg.yml
+      tasks/builds/opt_linux64_pgo.yml:
+        task: tasks/tests/fx_linux64_firefox_ui_functional_e10s_opt.yml
   gtest:
     allowed_build_tasks:
       tasks/builds/opt_linux64.yml:
