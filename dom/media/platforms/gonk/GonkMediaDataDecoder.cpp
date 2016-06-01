@@ -175,7 +175,7 @@ GonkDecoderManager::ProcessInput(bool aEndOfStream)
     }
   } else {
     GMDD_LOG("input processed: error#%d", rv);
-    mDecodeCallback->Error();
+    mDecodeCallback->Error(MediaDataDecoderError::FATAL_ERROR);
   }
 }
 
@@ -189,7 +189,7 @@ GonkDecoderManager::ProcessFlush()
   mWaitOutput.Clear();
   if (mDecoder->flush() != OK) {
     GMDD_LOG("flush error");
-    mDecodeCallback->Error();
+    mDecodeCallback->Error(MediaDataDecoderError::FATAL_ERROR);
   }
   mIsFlushing = false;
   lock.NotifyAll();
@@ -225,7 +225,7 @@ GonkDecoderManager::ProcessToDo(bool aEndOfStream)
   mToDo.clear();
 
   if (NumQueuedSamples() > 0 && ProcessQueuedSamples() < 0) {
-    mDecodeCallback->Error();
+    mDecodeCallback->Error(MediaDataDecoderError::FATAL_ERROR);
     return;
   }
 
@@ -252,7 +252,7 @@ GonkDecoderManager::ProcessToDo(bool aEndOfStream)
     } else if (rv == NS_ERROR_NOT_AVAILABLE) {
       break;
     } else {
-      mDecodeCallback->Error();
+      mDecodeCallback->Error(MediaDataDecoderError::FATAL_ERROR);
       return;
     }
   }
@@ -280,7 +280,7 @@ GonkDecoderManager::ResetEOS()
   mWaitOutput.Clear();
   if (mDecoder->flush() != OK) {
     GMDD_LOG("flush error");
-    mDecodeCallback->Error();
+    mDecodeCallback->Error(MediaDataDecoderError::FATAL_ERROR);
   }
 }
 
