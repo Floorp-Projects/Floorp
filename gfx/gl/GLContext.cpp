@@ -100,6 +100,7 @@ static const char* const sExtensionNames[] = {
     "GL_ARB_robustness",
     "GL_ARB_sampler_objects",
     "GL_ARB_seamless_cube_map",
+    "GL_ARB_shader_texture_lod",
     "GL_ARB_sync",
     "GL_ARB_texture_compression",
     "GL_ARB_texture_float",
