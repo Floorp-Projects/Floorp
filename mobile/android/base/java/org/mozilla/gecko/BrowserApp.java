@@ -769,8 +769,9 @@ public class BrowserApp extends GeckoApp
      */
     private void configureForTestsBasedOnEnvironment(final Intent intent) {
         final HashMap<String, String> envVars = IntentUtils.getEnvVarMap(intent);
-        Experiments.setDisabledFromEnvVar(envVars);
-        TelemetryUploadService.setDisabledFromEnvVar(envVars);
+        final boolean isInAutomation = !TextUtils.isEmpty(envVars.get(IntentUtils.ENV_VAR_IN_AUTOMATION));
+        Experiments.setIsDisabled(isInAutomation);
+        TelemetryUploadService.setDisabled(isInAutomation);
     }
 
     /**
