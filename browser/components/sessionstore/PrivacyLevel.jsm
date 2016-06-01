@@ -9,10 +9,6 @@ this.EXPORTED_SYMBOLS = ["PrivacyLevel"];
 const Cu = Components.utils;
 
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
-XPCOMUtils.defineLazyServiceGetter(this, "gSessionStartup",
-  "@mozilla.org/browser/sessionstartup;1", "nsISessionStartup");
 
 const PREF = "browser.sessionstore.privacy_level";
 
@@ -31,6 +27,17 @@ const PRIVACY_FULL = 2;
  * The external API as exposed by this module.
  */
 var PrivacyLevel = Object.freeze({
+  /**
+   * Returns whether the current privacy level allows saving data for the given
+   * |url|.
+   *
+   * @param url The URL we want to save data for.
+   * @return bool
+   */
+  check: function (url) {
+    return PrivacyLevel.canSave({ isHttps: url.startsWith("https:") });
+  },
+
   /**
    * Checks whether we're allowed to save data for a specific site.
    *
