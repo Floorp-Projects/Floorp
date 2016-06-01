@@ -169,3 +169,32 @@ BEGIN_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandleForPrincip
     return tryScript(script);
 }
 END_FIXTURE_TEST(ScriptObjectFixture, bug438633_JS_CompileFileHandleForPrincipals)
+
+BEGIN_FIXTURE_TEST(ScriptObjectFixture, CloneAndExecuteScript)
+{
+    JS::RootedValue fortyTwo(cx);
+    fortyTwo.setInt32(42);
+    CHECK(JS_SetProperty(cx, global, "val", fortyTwo));
+    JS::RootedScript script(cx);
+    JS::CompileOptions options(cx);
+    options.setFileAndLine(__FILE__, __LINE__);
+    CHECK(JS_CompileScript(cx, "val", 3, options, &script));
+    JS::RootedValue value(cx);
+    CHECK(JS_ExecuteScript(cx, script, &value));
+    CHECK(value.toInt32() == 42);
+    {
+        JS::RootedObject global2(cx, createGlobal());
+        CHECK(global2);
+        JSAutoCompartment ac(cx, global2);
+        CHECK(JS_WrapValue(cx, &fortyTwo));
+        CHECK(JS_SetProperty(cx, global, "val", fortyTwo));
+        JS::RootedValue value2(cx);
+        CHECK(JS::CloneAndExecuteScript(cx, script, &value2));
+        CHECK(value2.toInt32() == 42);
+    }
+    JS::RootedValue value3(cx);
+    CHECK(JS_ExecuteScript(cx, script, &value3));
+    CHECK(value3.toInt32() == 42);
+    return true;
+}
+END_FIXTURE_TEST(ScriptObjectFixture, CloneAndExecuteScript)
