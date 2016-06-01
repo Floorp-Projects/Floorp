@@ -105,9 +105,11 @@ IsParentProcess()
 class AudioPlaybackRunnable final : public Runnable
 {
 public:
-  AudioPlaybackRunnable(nsPIDOMWindowOuter* aWindow, bool aActive)
+  AudioPlaybackRunnable(nsPIDOMWindowOuter* aWindow, bool aActive,
+                        AudioChannelService::AudibleChangedReasons aReason)
     : mWindow(aWindow)
     , mActive(aActive)
+    , mReason(aReason)
   {}
 
  NS_IMETHOD Run()
@@ -118,10 +120,12 @@ public:
       return NS_ERROR_FAILURE;
     }
 
+    nsAutoString state;
+    GetActiveState(state);
+
     observerService->NotifyObservers(ToSupports(mWindow),
                                      "audio-playback",
-                                     mActive ? MOZ_UTF16("active")
-                                             : MOZ_UTF16("inactive"));
+                                     state.get());
 
     MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
            ("AudioPlaybackRunnable, active = %d\n", mActive));
@@ -129,8 +133,22 @@ public:
   }
 
 private:
+  void GetActiveState(nsAString& astate)
+  {
+    if (mActive) {
+      CopyASCIItoUTF16("active", astate);
+    } else {
+      if(mReason == AudioChannelService::AudibleChangedReasons::ePauseStateChanged) {
+        CopyASCIItoUTF16("inactive-pause", astate);
+      } else {
+        CopyASCIItoUTF16("inactive-nonaudible", astate);
+      }
+    }
+  }
+
   nsCOMPtr<nsPIDOMWindowOuter> mWindow;
   bool mActive;
+  AudioChannelService::AudibleChangedReasons mReason;
 };
 
 } // anonymous namespace
@@ -372,14 +390,15 @@ AudioChannelService::GetMediaConfig(nsPIDOMWindowOuter* aWindow,
 
 void
 AudioChannelService::AudioAudibleChanged(AudioChannelAgent* aAgent,
-                                         AudibleState aAudible)
+                                         AudibleState aAudible,
+                                         AudibleChangedReasons aReason)
 {
   MOZ_ASSERT(aAgent);
 
   uint64_t windowID = aAgent->WindowID();
   AudioChannelWindow* winData = GetWindowData(windowID);
   if (winData) {
-    winData->AudioAudibleChanged(aAgent, aAudible);
+    winData->AudioAudibleChanged(aAgent, aAudible, aReason);
   }
 }
 
@@ -1193,7 +1212,9 @@ AudioChannelService::AudioChannelWindow::AppendAgent(AudioChannelAgent* aAgent,
   AppendAgentAndIncreaseAgentsNum(aAgent);
   AudioCapturedChanged(aAgent, AudioCaptureState::eCapturing);
   if (aAudible) {
-    AudioAudibleChanged(aAgent, AudibleState::eAudible);
+    AudioAudibleChanged(aAgent,
+                        AudibleState::eAudible,
+                        AudibleChangedReasons::eDataAudibleChanged);
   }
 }
 
@@ -1204,7 +1225,9 @@ AudioChannelService::AudioChannelWindow::RemoveAgent(AudioChannelAgent* aAgent)
 
   RemoveAgentAndReduceAgentsNum(aAgent);
   AudioCapturedChanged(aAgent, AudioCaptureState::eNotCapturing);
-  AudioAudibleChanged(aAgent, AudibleState::eNotAudible);
+  AudioAudibleChanged(aAgent,
+                      AudibleState::eNotAudible,
+                      AudibleChangedReasons::ePauseStateChanged);
 }
 
 void
@@ -1258,21 +1281,23 @@ AudioChannelService::AudioChannelWindow::AudioCapturedChanged(AudioChannelAgent*
 
 void
 AudioChannelService::AudioChannelWindow::AudioAudibleChanged(AudioChannelAgent* aAgent,
-                                                             AudibleState aAudible)
+                                                             AudibleState aAudible,
+                                                             AudibleChangedReasons aReason)
 {
   MOZ_ASSERT(aAgent);
 
   if (aAudible) {
-    AppendAudibleAgentIfNotContained(aAgent);
+    AppendAudibleAgentIfNotContained(aAgent, aReason);
   } else {
-    RemoveAudibleAgentIfContained(aAgent);
+    RemoveAudibleAgentIfContained(aAgent, aReason);
   }
 
   NotifyAudioCompetingChanged(aAgent, aAudible);
 }
 
 void
-AudioChannelService::AudioChannelWindow::AppendAudibleAgentIfNotContained(AudioChannelAgent* aAgent)
+AudioChannelService::AudioChannelWindow::AppendAudibleAgentIfNotContained(AudioChannelAgent* aAgent,
+                                                                          AudibleChangedReasons aReason)
 {
   MOZ_ASSERT(aAgent);
   MOZ_ASSERT(mAgents.Contains(aAgent));
@@ -1280,20 +1305,21 @@ AudioChannelService::AudioChannelWindow::AppendAudibleAgentIfNotContained(AudioC
   if (!mAudibleAgents.Contains(aAgent)) {
     mAudibleAgents.AppendElement(aAgent);
     if (IsFirstAudibleAgent()) {
-      NotifyAudioAudibleChanged(aAgent->Window(), AudibleState::eAudible);
+      NotifyAudioAudibleChanged(aAgent->Window(), AudibleState::eAudible, aReason);
     }
   }
 }
 
 void
-AudioChannelService::AudioChannelWindow::RemoveAudibleAgentIfContained(AudioChannelAgent* aAgent)
+AudioChannelService::AudioChannelWindow::RemoveAudibleAgentIfContained(AudioChannelAgent* aAgent,
+                                                                       AudibleChangedReasons aReason)
 {
   MOZ_ASSERT(aAgent);
 
   if (mAudibleAgents.Contains(aAgent)) {
     mAudibleAgents.RemoveElement(aAgent);
     if (IsLastAudibleAgent()) {
-      NotifyAudioAudibleChanged(aAgent->Window(), AudibleState::eNotAudible);
+      NotifyAudioAudibleChanged(aAgent->Window(), AudibleState::eNotAudible, aReason);
     }
   }
 }
@@ -1312,10 +1338,11 @@ AudioChannelService::AudioChannelWindow::IsLastAudibleAgent() const
 
 void
 AudioChannelService::AudioChannelWindow::NotifyAudioAudibleChanged(nsPIDOMWindowOuter* aWindow,
-                                                                   AudibleState aAudible)
+                                                                   AudibleState aAudible,
+                                                                   AudibleChangedReasons aReason)
 {
   RefPtr<AudioPlaybackRunnable> runnable =
-    new AudioPlaybackRunnable(aWindow, aAudible);
+    new AudioPlaybackRunnable(aWindow, aAudible, aReason);
   nsresult rv = NS_DispatchToCurrentThread(runnable);
   NS_WARN_IF(NS_FAILED(rv));
 }
