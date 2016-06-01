@@ -7,6 +7,7 @@
 #ifndef jit_JitAllocPolicy_h
 #define jit_JitAllocPolicy_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/TypeTraits.h"
 
@@ -180,7 +181,7 @@ class TempObjectPool
     T* allocate() {
         MOZ_ASSERT(alloc_);
         if (freed_.empty())
-            return new(*alloc_) T();
+            return new(alloc_->fallible()) T();
         return freed_.popFront();
     }
     void free(T* obj) {
