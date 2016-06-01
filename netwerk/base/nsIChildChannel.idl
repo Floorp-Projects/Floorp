@@ -23,7 +23,7 @@ interface nsIChildChannel : nsISupports
    * child channel, where the new channel is intended to be created on the
    * child process.
    */
-  void connectParent(in uint32_t id);
+  void connectParent(in uint32_t registrarId);
 
   /**
    * As AsyncOpen is called on the chrome process for redirect target channels,

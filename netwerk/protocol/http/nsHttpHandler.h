@@ -28,6 +28,7 @@ class nsIRequestContextService;
 class nsISiteSecurityService;
 class nsIStreamConverterService;
 class nsITimer;
+class nsIUUIDGenerator;
 
 
 namespace mozilla {
@@ -628,6 +629,11 @@ private:
     nsresult SpeculativeConnectInternal(nsIURI *aURI,
                                         nsIInterfaceRequestor *aCallbacks,
                                         bool anonymous);
+
+    // UUID generator for channelIds
+    nsCOMPtr<nsIUUIDGenerator> mUUIDGen;
+
+    nsresult NewChannelId(nsID *channelId);
 };
 
 extern nsHttpHandler *gHttpHandler;

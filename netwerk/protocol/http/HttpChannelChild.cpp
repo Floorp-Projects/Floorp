@@ -1148,44 +1148,50 @@ class Redirect1Event : public ChannelEvent
 {
  public:
   Redirect1Event(HttpChannelChild* child,
-                 const uint32_t& newChannelId,
+                 const uint32_t& registrarId,
                  const URIParams& newURI,
                  const uint32_t& redirectFlags,
                  const nsHttpResponseHead& responseHead,
-                 const nsACString& securityInfoSerialization)
+                 const nsACString& securityInfoSerialization,
+                 const nsACString& channelId)
   : mChild(child)
-  , mNewChannelId(newChannelId)
+  , mRegistrarId(registrarId)
   , mNewURI(newURI)
   , mRedirectFlags(redirectFlags)
   , mResponseHead(responseHead)
-  , mSecurityInfoSerialization(securityInfoSerialization) {}
+  , mSecurityInfoSerialization(securityInfoSerialization)
+  , mChannelId(channelId) {}
 
   void Run()
   {
-    mChild->Redirect1Begin(mNewChannelId, mNewURI, mRedirectFlags,
-                           mResponseHead, mSecurityInfoSerialization);
+    mChild->Redirect1Begin(mRegistrarId, mNewURI, mRedirectFlags,
+                           mResponseHead, mSecurityInfoSerialization,
+                           mChannelId);
   }
  private:
   HttpChannelChild*   mChild;
-  uint32_t            mNewChannelId;
+  uint32_t            mRegistrarId;
   URIParams           mNewURI;
   uint32_t            mRedirectFlags;
   nsHttpResponseHead  mResponseHead;
   nsCString           mSecurityInfoSerialization;
+  nsCString           mChannelId;
 };
 
 bool
-HttpChannelChild::RecvRedirect1Begin(const uint32_t& newChannelId,
+HttpChannelChild::RecvRedirect1Begin(const uint32_t& registrarId,
                                      const URIParams& newUri,
                                      const uint32_t& redirectFlags,
                                      const nsHttpResponseHead& responseHead,
-                                     const nsCString& securityInfoSerialization)
+                                     const nsCString& securityInfoSerialization,
+                                     const nsCString& channelId)
 {
   // TODO: handle security info
   LOG(("HttpChannelChild::RecvRedirect1Begin [this=%p]\n", this));
-  mEventQ->RunOrEnqueue(new Redirect1Event(this, newChannelId, newUri,
+  mEventQ->RunOrEnqueue(new Redirect1Event(this, registrarId, newUri,
                                            redirectFlags, responseHead,
-                                           securityInfoSerialization));
+                                           securityInfoSerialization,
+                                           channelId));
   return true;
 }
 
@@ -1250,11 +1256,12 @@ HttpChannelChild::SetupRedirect(nsIURI* uri,
 }
 
 void
-HttpChannelChild::Redirect1Begin(const uint32_t& newChannelId,
+HttpChannelChild::Redirect1Begin(const uint32_t& registrarId,
                                  const URIParams& newUri,
                                  const uint32_t& redirectFlags,
                                  const nsHttpResponseHead& responseHead,
-                                 const nsACString& securityInfoSerialization)
+                                 const nsACString& securityInfoSerialization,
+                                 const nsACString& channelId)
 {
   LOG(("HttpChannelChild::Redirect1Begin [this=%p]\n", this));
 
@@ -1273,7 +1280,12 @@ HttpChannelChild::Redirect1Begin(const uint32_t& newChannelId,
 
   if (NS_SUCCEEDED(rv)) {
     if (mRedirectChannelChild) {
-      mRedirectChannelChild->ConnectParent(newChannelId);
+      // Set the channelId allocated in parent to the child instance
+      nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(mRedirectChannelChild);
+      if (httpChannel) {
+        httpChannel->SetChannelId(channelId);
+      }
+      mRedirectChannelChild->ConnectParent(registrarId);
     }
     rv = gHttpHandler->AsyncOnChannelRedirect(this, newChannel, redirectFlags);
   }
@@ -1422,7 +1434,7 @@ HttpChannelChild::Redirect3Complete()
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-HttpChannelChild::ConnectParent(uint32_t id)
+HttpChannelChild::ConnectParent(uint32_t registrarId)
 {
   LOG(("HttpChannelChild::ConnectParent [this=%p]\n", this));
   mozilla::dom::TabChild* tabChild = nullptr;
@@ -1439,7 +1451,7 @@ HttpChannelChild::ConnectParent(uint32_t id)
   // until OnStopRequest, or we do a redirect, or we hit an IPDL error.
   AddIPDLReference();
 
-  HttpChannelConnectArgs connectArgs(id, mShouldParentIntercept);
+  HttpChannelConnectArgs connectArgs(registrarId, mShouldParentIntercept);
   PBrowserOrId browser = static_cast<ContentChild*>(gNeckoChild->Manager())
                          ->GetBrowserOrId(tabChild);
   if (!gNeckoChild->
@@ -1948,6 +1960,10 @@ HttpChannelChild::ContinueAsyncOpen()
   char rcid[NSID_LENGTH];
   mRequestContextID.ToProvidedString(rcid);
   openArgs.requestContextID().AssignASCII(rcid);
+
+  char chid[NSID_LENGTH];
+  mChannelId.ToProvidedString(chid);
+  openArgs.channelId().AssignASCII(chid);
 
   // The socket transport in the chrome process now holds a logical ref to us
   // until OnStopRequest, or we do a redirect, or we hit an IPDL error.
