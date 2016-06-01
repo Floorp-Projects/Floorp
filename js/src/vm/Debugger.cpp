@@ -7552,10 +7552,27 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
     return ExecuteKernel(cx, script, *env, NullValue(), frame, rval.address());
 }
 
+static bool
+ValueToStableChars(JSContext* cx, const char *fnname, HandleValue value,
+                   AutoStableStringChars& stableChars)
+{
+    if (!value.isString()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
+                             fnname, "string", "string");
+        return false;
+    }
+    RootedLinearString linear(cx, value.toString()->ensureLinear(cx));
+    if (!linear)
+        return false;
+    if (!stableChars.initTwoByte(cx, linear))
+        return false;
+    return true;
+}
+
 enum EvalBindings { EvalHasExtraBindings = true, EvalWithDefaultBindings = false };
 
 static bool
-DebuggerGenericEval(JSContext* cx, const char* fullMethodName, const Value& code,
+DebuggerGenericEval(JSContext* cx, const mozilla::Range<const char16_t> chars,
                     EvalBindings evalWithBindings, HandleValue bindings,
                     const EvalOptions& options, MutableHandleValue vp, Debugger* dbg,
                     HandleObject scope, ScriptFrameIter* iter)
@@ -7563,16 +7580,6 @@ DebuggerGenericEval(JSContext* cx, const char* fullMethodName, const Value& code
     /* Either we're specifying the frame, or a global. */
     MOZ_ASSERT_IF(iter, !scope);
     MOZ_ASSERT_IF(!iter, scope && IsGlobalLexicalScope(scope));
-
-    /* Check the first argument, the eval code string. */
-    if (!code.isString()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                             fullMethodName, "string", InformalValueTypeName(code));
-        return false;
-    }
-    RootedLinearString linear(cx, code.toString()->ensureLinear(cx));
-    if (!linear)
-        return false;
 
     /*
      * Gather keys and values of bindings, if any. This must be done in the
@@ -7646,11 +7653,7 @@ DebuggerGenericEval(JSContext* cx, const char* fullMethodName, const Value& code
     RootedValue rval(cx);
     AbstractFramePtr frame = iter ? iter->abstractFramePtr() : NullFramePtr();
     jsbytecode* pc = iter ? iter->pc() : nullptr;
-    AutoStableStringChars stableChars(cx);
-    if (!stableChars.initTwoByte(cx, linear))
-        return false;
 
-    mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
     bool ok = EvaluateInEnv(cx, env, frame, pc, chars,
                             options.filename() ? options.filename() : "debugger eval code",
                             options.lineno(), &rval);
@@ -7666,12 +7669,16 @@ DebuggerFrame_eval(JSContext* cx, unsigned argc, Value* vp)
     Debugger* dbg = Debugger::fromChildJSObject(thisobj);
     UpdateFrameIterPc(iter);
 
+    AutoStableStringChars stableChars(cx);
+    if (!ValueToStableChars(cx, "Debugger.Frame.prototype.eval", args[0], stableChars))
+        return false;
+    mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
+
     EvalOptions options;
     if (!ParseEvalOptions(cx, args.get(1), options))
         return false;
 
-    return DebuggerGenericEval(cx, "Debugger.Frame.prototype.eval",
-                               args[0], EvalWithDefaultBindings, JS::UndefinedHandleValue,
+    return DebuggerGenericEval(cx, chars, EvalWithDefaultBindings, JS::UndefinedHandleValue,
                                options, args.rval(), dbg, nullptr, &iter);
 }
 
@@ -7684,12 +7691,19 @@ DebuggerFrame_evalWithBindings(JSContext* cx, unsigned argc, Value* vp)
     Debugger* dbg = Debugger::fromChildJSObject(thisobj);
     UpdateFrameIterPc(iter);
 
+    AutoStableStringChars stableChars(cx);
+    if (!ValueToStableChars(cx, "Debugger.Frame.prototype.evalWithBindings", args[0],
+                            stableChars))
+    {
+        return false;
+    }
+    mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
+
     EvalOptions options;
     if (!ParseEvalOptions(cx, args.get(2), options))
         return false;
 
-    return DebuggerGenericEval(cx, "Debugger.Frame.prototype.evalWithBindings",
-                               args[0], EvalHasExtraBindings, args[1], options,
+    return DebuggerGenericEval(cx, chars, EvalHasExtraBindings, args[1], options,
                                args.rval(), dbg, nullptr, &iter);
 }
 
@@ -8700,13 +8714,20 @@ DebuggerObject_executeInGlobal(JSContext* cx, unsigned argc, Value* vp)
     if (!RequireGlobalObject(cx, args.thisv(), referent))
         return false;
 
+    AutoStableStringChars stableChars(cx);
+    if (!ValueToStableChars(cx, "Debugger.Object.prototype.executeInGlobal", args[0],
+                            stableChars))
+    {
+        return false;
+    }
+    mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
+
     EvalOptions options;
     if (!ParseEvalOptions(cx, args.get(1), options))
         return false;
 
     RootedObject globalLexical(cx, &referent->as<GlobalObject>().lexicalScope());
-    return DebuggerGenericEval(cx, "Debugger.Object.prototype.executeInGlobal",
-                               args[0], EvalWithDefaultBindings, JS::UndefinedHandleValue,
+    return DebuggerGenericEval(cx, chars, EvalWithDefaultBindings, JS::UndefinedHandleValue,
                                options, args.rval(), dbg, globalLexical, nullptr);
 }
 
@@ -8720,13 +8741,20 @@ DebuggerObject_executeInGlobalWithBindings(JSContext* cx, unsigned argc, Value* 
     if (!RequireGlobalObject(cx, args.thisv(), referent))
         return false;
 
+    AutoStableStringChars stableChars(cx);
+    if (!ValueToStableChars(cx, "Debugger.Object.prototype.executeInGlobalWithBindings", args[0],
+                            stableChars))
+    {
+        return false;
+    }
+    mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
+
     EvalOptions options;
     if (!ParseEvalOptions(cx, args.get(2), options))
         return false;
 
     RootedObject globalLexical(cx, &referent->as<GlobalObject>().lexicalScope());
-    return DebuggerGenericEval(cx, "Debugger.Object.prototype.executeInGlobalWithBindings",
-                               args[0], EvalHasExtraBindings, args[1], options,
+    return DebuggerGenericEval(cx, chars, EvalHasExtraBindings, args[1], options,
                                args.rval(), dbg, globalLexical, nullptr);
 }
 
