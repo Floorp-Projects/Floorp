@@ -12,6 +12,7 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/Timer.jsm");
 Cu.import("resource://testing-common/TestUtils.jsm");
+Cu.import("resource://testing-common/ContentTask.jsm");
 
 this.Preferences = {
 
@@ -39,7 +40,18 @@ this.Preferences = {
     }
   },
 
-  configurations: {},
+  configurations: {
+    "panePrivacy-DNTDialog": {
+      applyConfig: Task.async(function*(){
+        let browserWindow = Services.wm.getMostRecentWindow("navigator:browser");
+        yield prefHelper("panePrivacy", null);
+
+        yield ContentTask.spawn(browserWindow.gBrowser.selectedBrowser, null, function* () {
+          content.document.getElementById("doNotTrackSettings").click();
+        });
+      }),
+    },
+  },
 };
 
 let prefHelper = Task.async(function*(primary, advanced) {
@@ -65,4 +77,9 @@ let prefHelper = Task.async(function*(primary, advanced) {
   }
 
   yield readyPromise;
+
+  // close any dialog that might still be open
+  yield ContentTask.spawn(selectedBrowser.selectedBrowser, null, function*() {
+    content.window.gSubDialog.close();
+  });
 });
