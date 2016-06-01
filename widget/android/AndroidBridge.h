@@ -600,6 +600,10 @@ private:
   void AddObservers();
   void RemoveObservers();
 
+  void UpdateAudioPlayingWindows(nsPIDOMWindowOuter* aWindow, bool aPlaying);
+
+  nsTArray<nsPIDOMWindowOuter*> mAudioPlayingWindows;
+
 protected:
 };
 
