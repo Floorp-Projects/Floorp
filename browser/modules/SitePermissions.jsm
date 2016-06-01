@@ -16,6 +16,24 @@ this.SitePermissions = {
   BLOCK: Services.perms.DENY_ACTION,
   SESSION: Components.interfaces.nsICookiePermission.ACCESS_SESSION,
 
+  /* Returns a boolean indicating whether there are any granted
+   * (meaning allowed or session-allowed) permissions for the given URI.
+   * Will return false for invalid URIs (such as file:// URLs).
+   */
+  hasGrantedPermissions: function (aURI) {
+    if (!this.isSupportedURI(aURI)) {
+      return false;
+    }
+
+    for (let permission of this.listPermissions()) {
+      let state = this.get(aURI, permission);
+      if (state === this.ALLOW || state === this.SESSION) {
+        return true;
+      }
+    }
+    return false;
+  },
+
   /* Checks whether a UI for managing permissions should be exposed for a given
    * URI. This excludes file URIs, for instance, as they don't have a host,
    * even though nsIPermissionManager can still handle them.
