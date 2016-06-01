@@ -16,8 +16,6 @@
 #include "mozilla/ipc/BrowserProcessSubThread.h"
 #include "mozilla/ipc/Transport.h"
 typedef mozilla::ipc::BrowserProcessSubThread ChromeThread;
-#include "chrome/common/notification_service.h"
-#include "chrome/common/notification_type.h"
 #include "chrome/common/process_watcher.h"
 #include "chrome/common/result_codes.h"
 
@@ -25,28 +23,6 @@ using mozilla::ipc::FileDescriptor;
 
 namespace {
 typedef std::list<ChildProcessHost*> ChildProcessList;
-
-// The NotificationTask is used to notify about plugin process connection/
-// disconnection. It is needed because the notifications in the
-// NotificationService must happen in the main thread.
-class ChildNotificationTask : public mozilla::Runnable {
- public:
-  ChildNotificationTask(
-      NotificationType notification_type, ChildProcessInfo* info)
-      : notification_type_(notification_type), info_(*info) { }
-
-  NS_IMETHOD Run() {
-    NotificationService::current()->
-        Notify(notification_type_, NotificationService::AllSources(),
-               Details<ChildProcessInfo>(&info_));
-    return NS_OK;
-  }
-
- private:
-  NotificationType notification_type_;
-  ChildProcessInfo info_;
-};
-
 }  // namespace
 
 
@@ -121,30 +97,7 @@ bool ChildProcessHost::Send(IPC::Message* msg) {
   return channel_->Send(msg);
 }
 
-void ChildProcessHost::Notify(NotificationType type) {
-  MessageLoop* loop = ChromeThread::GetMessageLoop(ChromeThread::IO);
-  if (!loop)
-      loop = mozilla::ipc::ProcessChild::message_loop();
-  if (!loop)
-      loop = MessageLoop::current();
-  RefPtr<ChildNotificationTask> task = new ChildNotificationTask(type, this);
-  loop->PostTask(task.forget());
-}
-
 void ChildProcessHost::OnWaitableEventSignaled(base::WaitableEvent *event) {
-#if defined(OS_WIN)
-  HANDLE object = event->handle();
-  DCHECK(handle());
-  DCHECK_EQ(object, handle());
-
-  bool did_crash = base::DidProcessCrash(NULL, object);
-  if (did_crash) {
-    // Report that this child process crashed.
-    Notify(NotificationType(NotificationType::CHILD_PROCESS_CRASHED));
-  }
-  // Notify in the main loop of the disconnection.
-  Notify(NotificationType(NotificationType::CHILD_PROCESS_HOST_DISCONNECTED));
-#endif
 }
 
 ChildProcessHost::ListenerHook::ListenerHook(ChildProcessHost* host)
@@ -159,9 +112,6 @@ void ChildProcessHost::ListenerHook::OnMessageReceived(
 void ChildProcessHost::ListenerHook::OnChannelConnected(int32_t peer_pid) {
   host_->opening_channel_ = false;
   host_->OnChannelConnected(peer_pid);
-
-  // Notify in the main loop of the connection.
-  host_->Notify(NotificationType(NotificationType::CHILD_PROCESS_HOST_CONNECTED));
 }
 
 void ChildProcessHost::ListenerHook::OnChannelError() {

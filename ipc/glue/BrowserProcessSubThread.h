@@ -12,8 +12,6 @@
 
 #include "nsDebug.h"
 
-class NotificationService;
-
 namespace mozilla {
 namespace ipc {
 
@@ -53,8 +51,6 @@ private:
   // The identifier of this thread.  Only one thread can exist with a given
   // identifier at a given time.
   ID mIdentifier;
-
-  NotificationService* mNotificationService;
 
   // This lock protects |browser_threads_|.  Do not read or modify that array
   // without holding this lock.  Do not block while holding this lock.

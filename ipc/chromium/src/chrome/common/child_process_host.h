@@ -23,8 +23,6 @@ class FileDescriptor;
 }
 }
 
-class NotificationType;
-
 // Plugins/workers and other child processes that live on the IO thread should
 // derive from this class.
 class ChildProcessHost :
@@ -85,10 +83,6 @@ class ChildProcessHost :
 
   const IPC::Channel& channel() const { return *channel_; }
   IPC::Channel* channelp() const { return channel_.get(); }
-
- private:
-  // Sends the given notification to the notification service on the UI thread.
-  void Notify(NotificationType type);
 
  protected:
   // WaitableEventWatcher::Delegate implementation:
