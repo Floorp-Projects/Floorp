@@ -8,6 +8,10 @@ var {SitePermissions} = Cu.import("resource:///modules/SitePermissions.jsm", {})
 
 registerCleanupFunction(function() {
   SitePermissions.remove(gBrowser.currentURI, "install");
+  SitePermissions.remove(gBrowser.currentURI, "cookie");
+  SitePermissions.remove(gBrowser.currentURI, "geo");
+  SitePermissions.remove(gBrowser.currentURI, "camera");
+
   while (gBrowser.tabs.length > 1) {
     gBrowser.removeCurrentTab();
   }
@@ -25,7 +29,7 @@ add_task(function* testMainViewVisible() {
   ok(!is_hidden(emptyLabel), "List of permissions is empty");
   gIdentityHandler._identityPopup.hidden = true;
 
-  gIdentityHandler.setPermission("install", 1);
+  gIdentityHandler.setPermission("install", SitePermissions.ALLOW);
 
   gIdentityHandler._identityBox.click();
   ok(is_hidden(emptyLabel), "List of permissions is not empty");
@@ -46,4 +50,34 @@ add_task(function* testMainViewVisible() {
   gIdentityHandler._identityBox.click();
   ok(!is_hidden(emptyLabel), "List of permissions is empty");
   gIdentityHandler._identityPopup.hidden = true;
+});
+
+add_task(function* testIdentityIcon() {
+  let {gIdentityHandler} = gBrowser.ownerGlobal;
+  let tab = gBrowser.selectedTab = gBrowser.addTab();
+  yield promiseTabLoadEvent(tab, PERMISSIONS_PAGE);
+
+  gIdentityHandler.setPermission("geo", SitePermissions.ALLOW);
+  gIdentityHandler.refreshIdentityBlock();
+
+  ok(gIdentityHandler._identityBox.classList.contains("grantedPermissions"),
+    "identity-box signals granted permssions");
+
+  gIdentityHandler.setPermission("geo", SitePermissions.getDefault("geo"));
+  gIdentityHandler.refreshIdentityBlock();
+
+  ok(!gIdentityHandler._identityBox.classList.contains("grantedPermissions"),
+    "identity-box doesn't signal granted permssions");
+
+  gIdentityHandler.setPermission("camera", SitePermissions.BLOCK);
+  gIdentityHandler.refreshIdentityBlock();
+
+  ok(!gIdentityHandler._identityBox.classList.contains("grantedPermissions"),
+    "identity-box doesn't signal granted permssions");
+
+  gIdentityHandler.setPermission("cookie", SitePermissions.SESSION);
+  gIdentityHandler.refreshIdentityBlock();
+
+  ok(gIdentityHandler._identityBox.classList.contains("grantedPermissions"),
+    "identity-box signals granted permssions");
 });

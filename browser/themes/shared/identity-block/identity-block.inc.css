@@ -101,6 +101,15 @@
   list-style-image: url(chrome://browser/skin/identity-icon.svg#hover);
 }
 
+#identity-box.grantedPermissions > #identity-icon {
+  list-style-image: url(chrome://browser/skin/identity-icon.svg#notice);
+}
+
+#identity-box.grantedPermissions:hover > #identity-icon,
+#identity-box.grantedPermissions[open=true] > #identity-icon {
+  list-style-image: url(chrome://browser/skin/identity-icon.svg#notice-hover);
+}
+
 #urlbar[pageproxystate="valid"] > #identity-box.chromeUI > #identity-icon {
   list-style-image: url(chrome://branding/content/identity-icons-brand.svg);
 }
