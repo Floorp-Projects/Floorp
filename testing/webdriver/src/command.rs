@@ -370,6 +370,13 @@ pub struct NewSessionParameters {
     pub required: BTreeMap<String, Json>,
 }
 
+impl NewSessionParameters {
+    pub fn get(&self, name: &str) -> Option<&Json> {
+        debug!("Getting {} from capabilities", name);
+        self.required.get(name).or_else(|| self.desired.get(name))
+    }
+}
+
 impl Parameters for NewSessionParameters {
     fn from_json(body: &Json) -> WebDriverResult<NewSessionParameters> {
         let data = try_opt!(body.as_object(),
@@ -401,12 +408,15 @@ impl Parameters for NewSessionParameters {
     }
 }
 
-impl NewSessionParameters {
-    pub fn get(&self, name: &str) -> Option<&Json> {
-        debug!("Getting {} from capabilities", name);
-        self.required.get(name).or_else(|| self.desired.get(name))
+impl ToJson for NewSessionParameters {
+    fn to_json(&self) -> Json {
+        let mut data = BTreeMap::new();
+        data.insert("desiredCapabilities".to_owned(), self.desired.to_json());
+        data.insert("requiredCapabilities".to_owned(), self.required.to_json());
+        Json::Object(data)
     }
 }
+
 
 #[derive(PartialEq)]
 pub struct GetParameters {
