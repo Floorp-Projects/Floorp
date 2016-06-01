@@ -61,9 +61,7 @@ public:
 
   // Set the playback rate.
   // Called on the audio thread.
-  // Assumes the AudioStream lock is held and thus calls Unlocked versions
-  // of AudioStream funcs.
-  void SetPlaybackRateUnlocked(double aPlaybackRate);
+  void SetPlaybackRate(double aPlaybackRate);
   // Get the current playback rate.
   // Called on the audio thread.
   double GetPlaybackRate() const;
