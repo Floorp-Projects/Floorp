@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=968273
+
+If a load has redirects, reloading the page will load the page starting with the original
+URI and do the redirects again.
+-->
+<head>
+  <title>Test for Bug 968273</title>
+<script>
+  var SimpleTest = opener.SimpleTest;
+  var ok = opener.ok;
+  var is = opener.is;
+  var doOneReload = true;
+
+  function onLoadCheckFrame() {
+    ok(frames[0].performance, 'Window.performance should be defined');
+    ok(frames[0].performance.navigation, 'Window.performance.navigation should be defined');
+    // do this with a timeout to see the visuals of the navigations.
+    setTimeout("checkFrame();", 200);
+  }
+
+  function checkFrame() {
+    is(frames[0].performance.navigation.redirectCount, 1, "Expected rediect");
+    if (doOneReload == true) {
+      doOneReload = false;
+      // do a reload and check that a redirect is preformed again.
+      frames[0].location.reload();
+    } else {
+      SimpleTest.finish();
+    }
+  }
+
+</script>
+</head>
+<body>
+<div id="frames">
+<iframe name="child0" onload="onLoadCheckFrame();" src="bug968273_redirect.html"></iframe>
+</div>
+</body>
+</html>
