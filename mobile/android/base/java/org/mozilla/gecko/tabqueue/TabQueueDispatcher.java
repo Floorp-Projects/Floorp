@@ -16,7 +16,7 @@ import android.content.Intent;
 import android.os.Bundle;
 import android.text.TextUtils;
 import android.util.Log;
-import org.mozilla.gecko.util.SafeIntent;
+import org.mozilla.gecko.mozglue.SafeIntent;
 
 /**
  * This class takes over external url loads (Intent.VIEW) from the BrowserApp class.  It determines if

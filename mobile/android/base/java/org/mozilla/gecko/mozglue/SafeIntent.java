@@ -4,7 +4,8 @@
  * file, you can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-package org.mozilla.gecko.util;
+// This should be in util/, but is here because of build dependency issues.
+package org.mozilla.gecko.mozglue;
 
 import android.content.Intent;
 import android.net.Uri;
