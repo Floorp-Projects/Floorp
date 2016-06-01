@@ -312,6 +312,10 @@ TexUnpackImage::TexOrSubImage(bool isSubImage, bool needsRespec, const char* fun
         return; // Blitting was successful, so we're done!
     } while (false);
 
+    webgl->GenerateWarning("%s: Failed to hit GPU-copy fast-path. Falling back to CPU"
+                           " upload.",
+                           funcName);
+
     RefPtr<SourceSurface> surface = mImage->GetAsSourceSurface();
     if (!surface) {
         *out_glError = LOCAL_GL_OUT_OF_MEMORY;
