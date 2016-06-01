@@ -73,9 +73,6 @@ class ChildProcessHost :
   // ChildProcessHost using this function.
   void SetHandle(base::ProcessHandle handle);
 
-  // Notifies us that an instance has been created on this child process.
-  void InstanceCreated();
-
   // IPC::Channel::Listener implementation:
   virtual void OnMessageReceived(IPC::Message&& msg) { }
   virtual void OnChannelConnected(int32_t peer_pid) { }
