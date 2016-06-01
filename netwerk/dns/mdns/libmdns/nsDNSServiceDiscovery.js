@@ -5,13 +5,16 @@
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 Cu.import('resource://gre/modules/Services.jsm');
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-if (Services.prefs.getBoolPref("network.mdns.use_js_fallback")) {
-  Cu.import("resource://gre/modules/MulticastDNSFallback.jsm");
-} else {
+let { PlatformInfo } = ExtensionUtils;
+
+if (PlatformInfo.os == "android" && !Services.prefs.getBoolPref("network.mdns.use_js_fallback")) {
   Cu.import("resource://gre/modules/MulticastDNSAndroid.jsm");
+} else {
+  Cu.import("resource://gre/modules/MulticastDNS.jsm");
 }
 
 const DNSSERVICEDISCOVERY_CID = Components.ID("{f9346d98-f27a-4e89-b744-493843416480}");
@@ -54,6 +57,17 @@ ListenerWrapper.prototype = {
         // ignore exceptions
       }
     }
+
+    let attributes;
+    try {
+      attributes = _toPropertyBag2(aServiceInfo.attributes);
+    } catch (err) {
+        // Ignore unset attributes in object.
+        log("Caught unset attributes error: " + err + " - " + err.stack);
+        attributes = Cc['@mozilla.org/hash-property-bag;1']
+                        .createInstance(Ci.nsIWritablePropertyBag2);
+    }
+    serviceInfo.attributes = attributes;
 
     return serviceInfo;
   },
@@ -171,3 +185,17 @@ nsDNSServiceDiscovery.prototype = {
 };
 
 this.NSGetFactory = XPCOMUtils.generateNSGetFactory([nsDNSServiceDiscovery]);
+
+function _toPropertyBag2(obj)
+{
+  if (obj.QueryInterface) {
+    return obj.QueryInterface(Ci.nsIPropertyBag2);
+  }
+
+  let result = Cc['@mozilla.org/hash-property-bag;1']
+                  .createInstance(Ci.nsIWritablePropertyBag2);
+  for (let name in obj) {
+    result.setPropertyAsAString(name, obj[name]);
+  }
+  return result;
+}
