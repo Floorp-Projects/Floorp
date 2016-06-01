@@ -55,15 +55,6 @@ void ChildThread::MarkThread() {
 }
 #endif
 
-bool ChildThread::Send(IPC::Message* msg) {
-  if (!channel_.get()) {
-    delete msg;
-    return false;
-  }
-
-  return channel_->Send(msg);
-}
-
 void ChildThread::OnMessageReceived(IPC::Message&& msg) {
   if (msg.routing_id() == MSG_ROUTING_CONTROL) {
     OnControlMessageReceived(msg);
