@@ -11,6 +11,9 @@
 
 #include "WorkerPrivate.h"
 
+#define NOTIFICATION_CLICK_EVENT_NAME "notificationclick"
+#define NOTIFICATION_CLOSE_EVENT_NAME "notificationclose"
+
 class nsIInterceptedChannel;
 
 namespace mozilla {
@@ -93,16 +96,17 @@ public:
   SendPushSubscriptionChangeEvent();
 
   nsresult
-  SendNotificationClickEvent(const nsAString& aID,
-                             const nsAString& aTitle,
-                             const nsAString& aDir,
-                             const nsAString& aLang,
-                             const nsAString& aBody,
-                             const nsAString& aTag,
-                             const nsAString& aIcon,
-                             const nsAString& aData,
-                             const nsAString& aBehavior,
-                             const nsAString& aScope);
+  SendNotificationEvent(const nsAString& aEventName,
+                        const nsAString& aID,
+                        const nsAString& aTitle,
+                        const nsAString& aDir,
+                        const nsAString& aLang,
+                        const nsAString& aBody,
+                        const nsAString& aTag,
+                        const nsAString& aIcon,
+                        const nsAString& aData,
+                        const nsAString& aBehavior,
+                        const nsAString& aScope);
 
   nsresult
   SendFetchEvent(nsIInterceptedChannel* aChannel,
@@ -149,6 +153,7 @@ private:
     PushSubscriptionChangeEvent,
     MessageEvent,
     NotificationClickEvent,
+    NotificationCloseEvent,
     LifeCycleEvent,
     AttachEvent
   };

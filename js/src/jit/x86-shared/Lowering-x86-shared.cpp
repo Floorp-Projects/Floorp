@@ -137,12 +137,7 @@ LIRGeneratorX86Shared::lowerForFPU(LInstructionHelper<1, 2, Temps>* ins, MDefini
 {
     // Without AVX, we'll need to use the x86 encodings where one of the
     // inputs must be the same location as the output.
-    //
-    // :TODO: (Bug 1132894) Note, we might have to allocate a different
-    // registers if the MIRType of the reused operand differs from the MIRType
-    // of returned value, as MUST_REUSE_INPUT is not yet capable of reusing the
-    // same register but with a different register type.
-    if (!Assembler::HasAVX() && mir->type() == lhs->type()) {
+    if (!Assembler::HasAVX()) {
         ins->setOperand(0, useRegisterAtStart(lhs));
         ins->setOperand(1, lhs != rhs ? use(rhs) : useAtStart(rhs));
         defineReuseInput(ins, mir, 0);
@@ -635,6 +630,91 @@ LIRGeneratorX86Shared::lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElemen
 }
 
 void
+LIRGeneratorX86Shared::visitSimdInsertElement(MSimdInsertElement* ins)
+{
+    MOZ_ASSERT(IsSimdType(ins->type()));
+
+    LUse vec = useRegisterAtStart(ins->vector());
+    LUse val = useRegister(ins->value());
+    switch (ins->type()) {
+      case MIRType::Int8x16:
+      case MIRType::Bool8x16:
+        // When SSE 4.1 is not available, we need to go via the stack.
+        // This requires the value to be inserted to be in %eax-%edx.
+        // Pick %ebx since other instructions use %eax or %ecx hard-wired.
+#if defined(JS_CODEGEN_X86)
+        if (!AssemblerX86Shared::HasSSE41())
+            val = useFixed(ins->value(), ebx);
+#endif
+        defineReuseInput(new(alloc()) LSimdInsertElementI(vec, val), ins, 0);
+        break;
+      case MIRType::Int16x8:
+      case MIRType::Int32x4:
+      case MIRType::Bool16x8:
+      case MIRType::Bool32x4:
+        defineReuseInput(new(alloc()) LSimdInsertElementI(vec, val), ins, 0);
+        break;
+      case MIRType::Float32x4:
+        defineReuseInput(new(alloc()) LSimdInsertElementF(vec, val), ins, 0);
+        break;
+      default:
+        MOZ_CRASH("Unknown SIMD kind when generating constant");
+    }
+}
+
+void
+LIRGeneratorX86Shared::visitSimdExtractElement(MSimdExtractElement* ins)
+{
+    MOZ_ASSERT(IsSimdType(ins->input()->type()));
+    MOZ_ASSERT(!IsSimdType(ins->type()));
+
+    switch (ins->input()->type()) {
+      case MIRType::Int8x16:
+      case MIRType::Int16x8:
+      case MIRType::Int32x4: {
+        MOZ_ASSERT(ins->signedness() != SimdSign::NotApplicable);
+        LUse use = useRegisterAtStart(ins->input());
+        if (ins->type() == MIRType::Double) {
+            // Extract an Uint32 lane into a double.
+            MOZ_ASSERT(ins->signedness() == SimdSign::Unsigned);
+            define(new (alloc()) LSimdExtractElementU2D(use, temp()), ins);
+        } else {
+            auto* lir = new (alloc()) LSimdExtractElementI(use);
+#if defined(JS_CODEGEN_X86)
+            // On x86 (32-bit), we may need to use movsbl or movzbl instructions
+            // to sign or zero extend the extracted lane to 32 bits. The 8-bit
+            // version of these instructions require a source register that is
+            // %al, %bl, %cl, or %dl.
+            // Fix it to %ebx since we can't express that constraint better.
+            if (ins->input()->type() == MIRType::Int8x16) {
+                defineFixed(lir, ins, LAllocation(AnyRegister(ebx)));
+                return;
+            }
+#endif
+            define(lir, ins);
+        }
+        break;
+      }
+      case MIRType::Float32x4: {
+        MOZ_ASSERT(ins->signedness() == SimdSign::NotApplicable);
+        LUse use = useRegisterAtStart(ins->input());
+        define(new(alloc()) LSimdExtractElementF(use), ins);
+        break;
+      }
+      case MIRType::Bool8x16:
+      case MIRType::Bool16x8:
+      case MIRType::Bool32x4: {
+        MOZ_ASSERT(ins->signedness() == SimdSign::NotApplicable);
+        LUse use = useRegisterAtStart(ins->input());
+        define(new(alloc()) LSimdExtractElementB(use), ins);
+        break;
+      }
+      default:
+        MOZ_CRASH("Unknown SIMD kind when extracting element");
+    }
+}
+
+void
 LIRGeneratorX86Shared::visitSimdBinaryArith(MSimdBinaryArith* ins)
 {
     MOZ_ASSERT(IsSimdType(ins->lhs()->type()));
@@ -647,23 +727,61 @@ LIRGeneratorX86Shared::visitSimdBinaryArith(MSimdBinaryArith* ins)
     if (ins->isCommutative())
         ReorderCommutative(&lhs, &rhs, ins);
 
-    if (ins->type() == MIRType::Int32x4) {
-        LSimdBinaryArithIx4* lir = new(alloc()) LSimdBinaryArithIx4();
-        bool needsTemp = ins->operation() == MSimdBinaryArith::Op_mul && !MacroAssembler::HasSSE41();
-        lir->setTemp(0, needsTemp ? temp(LDefinition::SIMD128INT) : LDefinition::BogusTemp());
-        lowerForFPU(lir, ins, lhs, rhs);
-        return;
+    switch (ins->type()) {
+      case MIRType::Int8x16: {
+          LSimdBinaryArithIx16* lir = new (alloc()) LSimdBinaryArithIx16();
+          lir->setTemp(0, LDefinition::BogusTemp());
+          lowerForFPU(lir, ins, lhs, rhs);
+          return;
+      }
+
+      case MIRType::Int16x8: {
+          LSimdBinaryArithIx8* lir = new (alloc()) LSimdBinaryArithIx8();
+          lir->setTemp(0, LDefinition::BogusTemp());
+          lowerForFPU(lir, ins, lhs, rhs);
+          return;
+      }
+
+      case MIRType::Int32x4: {
+          LSimdBinaryArithIx4* lir = new (alloc()) LSimdBinaryArithIx4();
+          bool needsTemp =
+              ins->operation() == MSimdBinaryArith::Op_mul && !MacroAssembler::HasSSE41();
+          lir->setTemp(0, needsTemp ? temp(LDefinition::SIMD128INT) : LDefinition::BogusTemp());
+          lowerForFPU(lir, ins, lhs, rhs);
+          return;
+      }
+
+      case MIRType::Float32x4: {
+          LSimdBinaryArithFx4* lir = new (alloc()) LSimdBinaryArithFx4();
+
+          bool needsTemp = ins->operation() == MSimdBinaryArith::Op_max ||
+              ins->operation() == MSimdBinaryArith::Op_minNum ||
+              ins->operation() == MSimdBinaryArith::Op_maxNum;
+          lir->setTemp(0,
+                       needsTemp ? temp(LDefinition::SIMD128FLOAT) : LDefinition::BogusTemp());
+          lowerForFPU(lir, ins, lhs, rhs);
+          return;
+      }
+
+      default:
+        MOZ_CRASH("unknown simd type on binary arith operation");
     }
+}
 
-    MOZ_ASSERT(ins->type() == MIRType::Float32x4, "unknown simd type on binary arith operation");
+void
+LIRGeneratorX86Shared::visitSimdBinarySaturating(MSimdBinarySaturating* ins)
+{
+    MOZ_ASSERT(IsSimdType(ins->lhs()->type()));
+    MOZ_ASSERT(IsSimdType(ins->rhs()->type()));
+    MOZ_ASSERT(IsSimdType(ins->type()));
 
-    LSimdBinaryArithFx4* lir = new(alloc()) LSimdBinaryArithFx4();
+    MDefinition* lhs = ins->lhs();
+    MDefinition* rhs = ins->rhs();
 
-    bool needsTemp = ins->operation() == MSimdBinaryArith::Op_max ||
-                     ins->operation() == MSimdBinaryArith::Op_minNum ||
-                     ins->operation() == MSimdBinaryArith::Op_maxNum;
-    lir->setTemp(0, needsTemp ? temp(LDefinition::SIMD128FLOAT) : LDefinition::BogusTemp());
+    if (ins->isCommutative())
+        ReorderCommutative(&lhs, &rhs, ins);
 
+    LSimdBinarySaturating* lir = new (alloc()) LSimdBinarySaturating();
     lowerForFPU(lir, ins, lhs, rhs);
 }
 
@@ -671,8 +789,6 @@ void
 LIRGeneratorX86Shared::visitSimdSelect(MSimdSelect* ins)
 {
     MOZ_ASSERT(IsSimdType(ins->type()));
-    MOZ_ASSERT(ins->type() == MIRType::Int32x4 || ins->type() == MIRType::Float32x4,
-               "Unknown SIMD kind when doing bitwise operations");
 
     LSimdSelect* lins = new(alloc()) LSimdSelect;
     MDefinition* r0 = ins->getOperand(0);
@@ -691,19 +807,27 @@ void
 LIRGeneratorX86Shared::visitSimdSplat(MSimdSplat* ins)
 {
     LAllocation x = useRegisterAtStart(ins->getOperand(0));
-    LSimdSplatX4* lir = new(alloc()) LSimdSplatX4(x);
 
     switch (ins->type()) {
-      case MIRType::Int32x4:
-      case MIRType::Bool32x4:
-        define(lir, ins);
+      case MIRType::Int8x16:
+        define(new (alloc()) LSimdSplatX16(x), ins);
         break;
+      case MIRType::Int16x8:
+        define(new (alloc()) LSimdSplatX8(x), ins);
+        break;
+      case MIRType::Int32x4:
       case MIRType::Float32x4:
-        // (Non-AVX) codegen actually wants the input and the output to be in
-        // the same register, but we can't currently use defineReuseInput
-        // because they have different types (scalar vs vector), so a spill slot
-        // for one may not be suitable for the other.
-        define(lir, ins);
+      case MIRType::Bool8x16:
+      case MIRType::Bool16x8:
+      case MIRType::Bool32x4:
+        // Use the SplatX4 instruction for all boolean splats. Since the input
+        // value is a 32-bit int that is either 0 or -1, the X4 splat gives
+        // the right result for all boolean geometries.
+        // For floats, (Non-AVX) codegen actually wants the input and the output
+        // to be in the same register, but we can't currently use
+        // defineReuseInput because they have different types (scalar vs
+        // vector), so a spill slot for one may not be suitable for the other.
+        define(new (alloc()) LSimdSplatX4(x), ins);
         break;
       default:
         MOZ_CRASH("Unknown SIMD kind");
@@ -739,4 +863,118 @@ LIRGeneratorX86Shared::visitSimdValueX4(MSimdValueX4* ins)
       default:
         MOZ_CRASH("Unknown SIMD kind");
     }
+}
+
+void
+LIRGeneratorX86Shared::visitSimdSwizzle(MSimdSwizzle* ins)
+{
+    MOZ_ASSERT(IsSimdType(ins->input()->type()));
+    MOZ_ASSERT(IsSimdType(ins->type()));
+
+    if (IsIntegerSimdType(ins->input()->type())) {
+        LUse use = useRegisterAtStart(ins->input());
+        LSimdSwizzleI* lir = new (alloc()) LSimdSwizzleI(use);
+        define(lir, ins);
+        // We need a GPR temp register for pre-SSSE3 codegen (no vpshufb).
+        if (Assembler::HasSSSE3()) {
+            lir->setTemp(0, LDefinition::BogusTemp());
+        } else {
+            // The temp must be a GPR usable with 8-bit loads and stores.
+#if defined(JS_CODEGEN_X86)
+            lir->setTemp(0, tempFixed(ebx));
+#else
+            lir->setTemp(0, temp());
+#endif
+        }
+    } else if (ins->input()->type() == MIRType::Float32x4) {
+        LUse use = useRegisterAtStart(ins->input());
+        LSimdSwizzleF* lir = new (alloc()) LSimdSwizzleF(use);
+        define(lir, ins);
+        lir->setTemp(0, LDefinition::BogusTemp());
+    } else {
+        MOZ_CRASH("Unknown SIMD kind when getting lane");
+    }
+}
+
+void
+LIRGeneratorX86Shared::visitSimdShuffle(MSimdShuffle* ins)
+{
+    MOZ_ASSERT(IsSimdType(ins->lhs()->type()));
+    MOZ_ASSERT(IsSimdType(ins->rhs()->type()));
+    MOZ_ASSERT(IsSimdType(ins->type()));
+    if (ins->type() == MIRType::Int32x4 || ins->type() == MIRType::Float32x4) {
+        bool zFromLHS = ins->lane(2) < 4;
+        bool wFromLHS = ins->lane(3) < 4;
+        uint32_t lanesFromLHS = (ins->lane(0) < 4) + (ins->lane(1) < 4) + zFromLHS + wFromLHS;
+
+        LSimdShuffleX4* lir = new (alloc()) LSimdShuffleX4();
+        lowerForFPU(lir, ins, ins->lhs(), ins->rhs());
+
+        // See codegen for requirements details.
+        LDefinition temp =
+          (lanesFromLHS == 3) ? tempCopy(ins->rhs(), 1) : LDefinition::BogusTemp();
+        lir->setTemp(0, temp);
+    } else {
+        MOZ_ASSERT(ins->type() == MIRType::Int8x16 || ins->type() == MIRType::Int16x8);
+        LSimdShuffle* lir = new (alloc()) LSimdShuffle();
+        lir->setOperand(0, useRegister(ins->lhs()));
+        lir->setOperand(1, useRegister(ins->rhs()));
+        define(lir, ins);
+        // We need a GPR temp register for pre-SSSE3 codegen, and an SSE temp
+        // when using pshufb.
+        if (Assembler::HasSSSE3()) {
+            lir->setTemp(0, temp(LDefinition::SIMD128INT));
+        } else {
+            // The temp must be a GPR usable with 8-bit loads and stores.
+#if defined(JS_CODEGEN_X86)
+            lir->setTemp(0, tempFixed(ebx));
+#else
+            lir->setTemp(0, temp());
+#endif
+        }
+    }
+}
+
+void
+LIRGeneratorX86Shared::visitSimdGeneralShuffle(MSimdGeneralShuffle* ins)
+{
+    MOZ_ASSERT(IsSimdType(ins->type()));
+
+    LSimdGeneralShuffleBase* lir;
+    if (IsIntegerSimdType(ins->type())) {
+#if defined(JS_CODEGEN_X86)
+        // The temp register must be usable with 8-bit load and store
+        // instructions, so one of %eax-%edx.
+        LDefinition t;
+        if (ins->type() == MIRType::Int8x16)
+            t = tempFixed(ebx);
+        else
+            t = temp();
+#else
+        LDefinition t = temp();
+#endif
+        lir = new (alloc()) LSimdGeneralShuffleI(t);
+    } else if (ins->type() == MIRType::Float32x4) {
+        lir = new (alloc()) LSimdGeneralShuffleF(temp());
+    } else {
+        MOZ_CRASH("Unknown SIMD kind when doing a shuffle");
+    }
+
+    if (!lir->init(alloc(), ins->numVectors() + ins->numLanes()))
+        return;
+
+    for (unsigned i = 0; i < ins->numVectors(); i++) {
+        MOZ_ASSERT(IsSimdType(ins->vector(i)->type()));
+        lir->setOperand(i, useRegister(ins->vector(i)));
+    }
+
+    for (unsigned i = 0; i < ins->numLanes(); i++) {
+        MOZ_ASSERT(ins->lane(i)->type() == MIRType::Int32);
+        // Note that there can be up to 16 lane arguments, so we can't assume
+        // that they all get an allocated register.
+        lir->setOperand(i + ins->numVectors(), use(ins->lane(i)));
+    }
+
+    assignSnapshot(lir, Bailout_BoundsCheck);
+    define(lir, ins);
 }

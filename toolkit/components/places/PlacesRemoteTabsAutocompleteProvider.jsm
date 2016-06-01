@@ -15,12 +15,21 @@ const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-Cu.import("resource://services-sync/main.js");
 
 XPCOMUtils.defineLazyGetter(this, "weaveXPCService", function() {
   return Cc["@mozilla.org/weave/service;1"]
            .getService(Ci.nsISupports)
            .wrappedJSObject;
+});
+
+XPCOMUtils.defineLazyGetter(this, "Weave", () => {
+  try {
+    let {Weave} = Cu.import("resource://services-sync/main.js", {});
+    return Weave;
+  } catch (ex) {
+    // The app didn't build Sync.
+  }
+  return null;
 });
 
 // from MDN...
@@ -111,7 +120,8 @@ this.PlacesRemoteTabsAutocompleteProvider = {
   // a promise that resolves with an array of matching remote tabs.
   getMatches(searchString) {
     // If Sync isn't configured we bail early.
-    if (!Services.prefs.prefHasUserValue("services.sync.username")) {
+    if (Weave === null ||
+        !Services.prefs.prefHasUserValue("services.sync.username")) {
       return Promise.resolve([]);
     }
 

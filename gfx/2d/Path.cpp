@@ -259,7 +259,7 @@ FlattenBezierCurveSegment(const BezierControlPoints &aControlPoints,
 
   double t = 0;
   while (t < 1.0) {
-    PointD cp21 = currentCP.mCP2 - currentCP.mCP3;
+    PointD cp21 = currentCP.mCP2 - currentCP.mCP1;
     PointD cp31 = currentCP.mCP3 - currentCP.mCP1;
 
     /* To remove divisions and check for divide-by-zero, this is optimized from:

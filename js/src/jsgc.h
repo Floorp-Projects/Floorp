@@ -1269,7 +1269,7 @@ MaybeVerifyBarriers(JSContext* cx, bool always = false)
  * read the comment in vm/Runtime.h above |suppressGC| and take all appropriate
  * precautions before instantiating this class.
  */
-class MOZ_RAII AutoSuppressGC
+class MOZ_RAII JS_HAZ_GC_SUPPRESSED AutoSuppressGC
 {
     int32_t& suppressGC_;
 
@@ -1326,6 +1326,95 @@ struct MOZ_RAII AutoAssertNoNurseryAlloc
 #else
     explicit AutoAssertNoNurseryAlloc(JSRuntime* rt) {}
 #endif
+};
+
+/*
+ * There are a couple of classes here that serve mostly as "tokens" indicating
+ * that a condition holds. Some functions force the caller to possess such a
+ * token because they would misbehave if the condition were false, and it is
+ * far more clear to make the condition visible at the point where it can be
+ * affected rather than just crashing in an assertion down in the place where
+ * it is relied upon.
+ */
+
+/*
+ * Token meaning that the heap is busy and no allocations will be made.
+ *
+ * This class may be instantiated directly if it is known that the condition is
+ * already true, or it can be used as a base class for another RAII class that
+ * causes the condition to become true. Such base classes will use the no-arg
+ * constructor, establish the condition, then call checkCondition() to assert
+ * it and possibly record data needed to re-check the condition during
+ * destruction.
+ *
+ * Ordinarily, you would do something like this with a Maybe<> member that is
+ * emplaced during the constructor, but token-requiring functions want to
+ * require a reference to a base class instance. That said, you can always pass
+ * in the Maybe<> field as the token.
+ */
+class MOZ_RAII AutoAssertHeapBusy {
+  protected:
+    JSRuntime* rt;
+
+    // Check that the heap really is busy, and record the rt for the check in
+    // the destructor.
+    void checkCondition(JSRuntime *rt);
+
+    AutoAssertHeapBusy() : rt(nullptr) {
+    }
+
+  public:
+    explicit AutoAssertHeapBusy(JSRuntime* rt) {
+        checkCondition(rt);
+    }
+
+    ~AutoAssertHeapBusy() {
+        MOZ_ASSERT(rt); // checkCondition must always be called.
+        checkCondition(rt);
+    }
+};
+
+/*
+ * A class that serves as a token that the nursery is empty. It descends from
+ * AutoAssertHeapBusy, which means that it additionally requires the heap to be
+ * busy (which is not necessarily linked, but turns out to be true in practice
+ * for all users and simplifies the usage of these classes.)
+ */
+class MOZ_RAII AutoAssertEmptyNursery
+{
+  protected:
+    JSRuntime* rt;
+
+    // Check that the nursery is empty.
+    void checkCondition(JSRuntime *rt);
+
+    // For subclasses that need to empty the nursery in their constructors.
+    AutoAssertEmptyNursery() : rt(nullptr) {
+    }
+
+  public:
+    explicit AutoAssertEmptyNursery(JSRuntime* rt) {
+        checkCondition(rt);
+    }
+
+    ~AutoAssertEmptyNursery() {
+        checkCondition(rt);
+    }
+};
+
+/*
+ * Evict the nursery upon construction. Serves as a token indicating that the
+ * nursery is empty. (See AutoAssertEmptyNursery, above.)
+ *
+ * Note that this is very improper subclass of AutoAssertHeapBusy, in that the
+ * heap is *not* busy within the scope of an AutoEmptyNursery. I will most
+ * likely fix this by removing AutoAssertHeapBusy, but that is currently
+ * waiting on jonco's review.
+ */
+class MOZ_RAII AutoEmptyNursery : public AutoAssertEmptyNursery
+{
+  public:
+    explicit AutoEmptyNursery(JSRuntime *rt);
 };
 
 const char*

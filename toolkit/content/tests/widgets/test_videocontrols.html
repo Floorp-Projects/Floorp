@@ -88,7 +88,9 @@ function runTest(event) {
       is(video.muted, false, "checking video mute state");
 
       // Click the play button
-      synthesizeMouse(video, playButtonCenterX, playButtonCenterY, { });
+      SimpleTest.executeSoon(() => {
+        synthesizeMouse(video, playButtonCenterX, playButtonCenterY, { });
+      });
       break;
 
     case 2:
@@ -97,7 +99,9 @@ function runTest(event) {
       is(video.muted, false,  "checking video mute state");
 
       // Click the pause button
-      synthesizeMouse(video, playButtonCenterX, playButtonCenterY, { });
+      SimpleTest.executeSoon(() => {
+        synthesizeMouse(video, playButtonCenterX, playButtonCenterY, { });
+      });
       break;
 
     case 3:
@@ -105,7 +109,9 @@ function runTest(event) {
       is(video.paused, true,  "checking video play state");
       is(video.muted, false,  "checking video mute state");
 
-      synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { }); // Mute.
+      SimpleTest.executeSoon(() => {
+        synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { }); // Mute.
+      });
       break;
 
     case 4:
@@ -113,7 +119,9 @@ function runTest(event) {
       is(video.paused, true,  "checking video play state");
       is(video.muted,  true,  "checking video mute state");
 
-      synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { }); // Unmute.
+      SimpleTest.executeSoon(() => {
+        synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { }); // Unmute.
+      });
       break;
 
     /*
@@ -131,7 +139,9 @@ function runTest(event) {
       // totals: top: 40px, right: 60px, bottom: 80px, left: 100px
 
       // Click the play button
-      synthesizeMouse(video, 100 + playButtonCenterX, 40 + playButtonCenterY, { });
+      SimpleTest.executeSoon(() => {
+        synthesizeMouse(video, 100 + playButtonCenterX, 40 + playButtonCenterY, { });
+      });
       break;
 
     case 6:
@@ -147,7 +157,9 @@ function runTest(event) {
       is(video.muted, false,  "checking video mute state");
 
       // Click the mute button
-      synthesizeMouse(video, 100 + muteButtonCenterX, 40 + muteButtonCenterY, { });
+      SimpleTest.executeSoon(() => {
+        synthesizeMouse(video, 100 + muteButtonCenterX, 40 + muteButtonCenterY, { });
+      });
       break;
 
     case 8:
@@ -187,11 +199,13 @@ function runTest(event) {
       // Bug 477434 -- sometimes we get 0.098999 here instead of 0!
       // is(video.currentTime, 0.0, "checking playback position");
 
-      var beginDragX = scrubberOffsetX;
-      var endDragX = scrubberOffsetX + (scrubberWidth / 2);
-      synthesizeMouse(video, beginDragX, scrubberCenterY, { type: "mousedown", button: 0 });
-      synthesizeMouse(video, endDragX,   scrubberCenterY, { type: "mousemove", button: 0 });
-      synthesizeMouse(video, endDragX,   scrubberCenterY, { type: "mouseup",   button: 0 });
+      SimpleTest.executeSoon(() => {
+        var beginDragX = scrubberOffsetX;
+        var endDragX = scrubberOffsetX + (scrubberWidth / 2);
+        synthesizeMouse(video, beginDragX, scrubberCenterY, { type: "mousedown", button: 0 });
+        synthesizeMouse(video, endDragX,   scrubberCenterY, { type: "mousemove", button: 0 });
+        synthesizeMouse(video, endDragX,   scrubberCenterY, { type: "mouseup",   button: 0 });
+      });
       break;
 
     case 12:
@@ -208,7 +222,9 @@ function runTest(event) {
       var expectedTime = videoDuration / 2;
       ok(Math.abs(video.currentTime - expectedTime) < 0.1, "checking expected playback position");
 
-      synthesizeMouse(video, scrubberOffsetX + (scrubberWidth / 4), scrubberCenterY, { });
+      SimpleTest.executeSoon(() => {
+        synthesizeMouse(video, scrubberOffsetX + (scrubberWidth / 4), scrubberCenterY, { });
+      });
       break;
 
     case 14:
@@ -239,34 +255,40 @@ function runTest(event) {
       ok(!video.muted, "Video is not muted.");
 
       video.focus();
-      synthesizeKey("VK_DOWN", {});
+      SimpleTest.executeSoon(() => synthesizeKey("VK_DOWN", {}));
       break;
 
     case 17:
       is(event.type, "volumechange", "checking event type");
       is(video.volume, 0, "Volume should be 0.");
       ok(!video.muted, "Video is not muted.");
-      ok(isMuteButtonMuted(), "Mute button says it's muted");
 
-      synthesizeKey("VK_UP", {});
+      SimpleTest.executeSoon(() => {
+        ok(isMuteButtonMuted(), "Mute button says it's muted");
+        synthesizeKey("VK_UP", {});
+      });
       break;
 
     case 18:
       is(event.type, "volumechange", "checking event type");
       is(video.volume, 0.1, "Volume is increased.");
       ok(!video.muted, "Video is not muted.");
-      ok(!isMuteButtonMuted(), "Mute button says it's not muted");
 
-      synthesizeKey("VK_DOWN", {});
+      SimpleTest.executeSoon(() => {
+        ok(!isMuteButtonMuted(), "Mute button says it's not muted");
+        synthesizeKey("VK_DOWN", {});
+      });
       break;
 
     case 19:
       is(event.type, "volumechange", "checking event type");
       is(video.volume, 0, "Volume should be 0.");
       ok(!video.muted, "Video is not muted.");
-      ok(isMuteButtonMuted(), "Mute button says it's muted");
 
-      synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { });
+      SimpleTest.executeSoon(() => {
+        ok(isMuteButtonMuted(), "Mute button says it's muted");
+        synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { });
+      });
       break;
 
     case 20:
@@ -274,7 +296,7 @@ function runTest(event) {
       is(video.volume, 0.5, "Volume should be 0.5.");
       ok(!video.muted, "Video is not muted.");
 
-      synthesizeKey("VK_UP", {});
+      SimpleTest.executeSoon(() => synthesizeKey("VK_UP", {}));
       break;
 
     case 21:
@@ -282,7 +304,9 @@ function runTest(event) {
       is(video.volume, 0.6, "Volume should be 0.6.");
       ok(!video.muted, "Video is not muted.");
 
-      synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { });
+      SimpleTest.executeSoon(() => {
+        synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { });
+      });
       break;
 
     case 22:
@@ -290,9 +314,10 @@ function runTest(event) {
       is(video.volume, 0.6, "Volume should be 0.6.");
       ok(video.muted, "Video is muted.");
 
-      ok(isMuteButtonMuted(), "Mute button says it's muted");
-
-      synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { });
+      SimpleTest.executeSoon(() => {
+        ok(isMuteButtonMuted(), "Mute button says it's muted");
+        synthesizeMouse(video, muteButtonCenterX, muteButtonCenterY, { });
+      });
       break;
 
     case 23:
@@ -300,25 +325,28 @@ function runTest(event) {
       is(video.volume, 0.6, "Volume should be 0.6.");
       ok(!video.muted, "Video is not muted.");
 
-      ok(!isMuteButtonMuted(), "Mute button says it's not muted");
-
-      synthesizeMouse(video, fullscreenButtonCenterX, fullscreenButtonCenterY, { });
+      SimpleTest.executeSoon(() => {
+        ok(!isMuteButtonMuted(), "Mute button says it's not muted");
+        synthesizeMouse(video, fullscreenButtonCenterX, fullscreenButtonCenterY, { });
+      });
       break;
 
     case 24:
       is(event.type, "mozfullscreenchange", "checking event type");
       is(video.volume, 0.6, "Volume should still be 0.6");
-      isVolumeSliderShowingCorrectVolume(video.volume);
-
-      synthesizeKey("VK_ESCAPE", {});
+      SimpleTest.executeSoon(function() {
+        isVolumeSliderShowingCorrectVolume(video.volume);
+        synthesizeKey("VK_ESCAPE", {});
+      });
       break;
 
     case 25:
       is(event.type, "mozfullscreenchange", "checking event type");
       is(video.volume, 0.6, "Volume should still be 0.6");
-      isVolumeSliderShowingCorrectVolume(video.volume);
-
-      SimpleTest.finish();
+      SimpleTest.executeSoon(function() {
+        isVolumeSliderShowingCorrectVolume(video.volume);
+        SimpleTest.finish();
+      });
       break;
 
     default:

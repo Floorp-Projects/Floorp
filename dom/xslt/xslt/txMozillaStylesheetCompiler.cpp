@@ -417,11 +417,10 @@ txCompileObserver::loadURI(const nsAString& aUri,
     rv = NS_NewURI(getter_AddRefs(referrerUri), aReferrerUri);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIPrincipal> referrerPrincipal;
-    rv = nsContentUtils::GetSecurityManager()->
-      GetSimpleCodebasePrincipal(referrerUri,
-                                 getter_AddRefs(referrerPrincipal));
-    NS_ENSURE_SUCCESS(rv, rv);
+    PrincipalOriginAttributes attrs;
+    nsCOMPtr<nsIPrincipal> referrerPrincipal =
+      BasePrincipal::CreateCodebasePrincipal(referrerUri, attrs);
+    NS_ENSURE_TRUE(referrerPrincipal, NS_ERROR_FAILURE);
 
     return startLoad(uri, aCompiler, referrerPrincipal, aReferrerPolicy);
 }
@@ -622,11 +621,9 @@ txSyncCompileObserver::loadURI(const nsAString& aUri,
     rv = NS_NewURI(getter_AddRefs(referrerUri), aReferrerUri);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsIPrincipal> referrerPrincipal;
-    rv = nsContentUtils::GetSecurityManager()->
-      GetSimpleCodebasePrincipal(referrerUri,
-                                 getter_AddRefs(referrerPrincipal));
-    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr<nsIPrincipal> referrerPrincipal =
+      BasePrincipal::CreateCodebasePrincipal(referrerUri, PrincipalOriginAttributes());
+    NS_ENSURE_TRUE(referrerPrincipal, NS_ERROR_FAILURE);
 
     // This is probably called by js, a loadGroup for the channel doesn't
     // make sense.

@@ -30,8 +30,12 @@ ABIArgGenerator::next(MIRType type)
         current_ = ABIArg(stackOffset_);
         stackOffset_ += sizeof(uint64_t);
         break;
+      case MIRType::Int8x16:
+      case MIRType::Int16x8:
       case MIRType::Int32x4:
       case MIRType::Float32x4:
+      case MIRType::Bool8x16:
+      case MIRType::Bool16x8:
       case MIRType::Bool32x4:
         // SIMD values aren't passed in or out of C++, so we can make up
         // whatever internal ABI we like. visitAsmJSPassArg assumes

@@ -16,7 +16,8 @@ public class AudioFocusAgent {
     private static Context mContext;
     private AudioManager mAudioManager;
     private OnAudioFocusChangeListener mAfChangeListener;
-    private int mAudibleElementCounts;
+
+    private boolean mIsOwningAudioFocus = false;
 
     @WrapForJNI
     public static void notifyStartedPlaying() {
@@ -83,12 +84,10 @@ public class AudioFocusAgent {
         GeckoAppShell.notifyObservers(topic, data);
     }
 
-    private AudioFocusAgent() {
-        mAudibleElementCounts = 0;
-    }
+    private AudioFocusAgent() {}
 
     private void requestAudioFocusIfNeeded() {
-        if (!isFirstAudibleElement()) {
+        if (mIsOwningAudioFocus) {
             return;
         }
 
@@ -100,22 +99,18 @@ public class AudioFocusAgent {
             "AudioFocus request granted" : "AudioFoucs request failed";
         Log.d(LOGTAG, focusMsg);
         // TODO : Enable media control when get the AudioFocus, see bug1240423.
+        if (result == AudioManager.AUDIOFOCUS_GAIN) {
+            mIsOwningAudioFocus = true;
+        }
     }
 
     private void abandonAudioFocusIfNeeded() {
-        if (!isLastAudibleElement()) {
+        if (!mIsOwningAudioFocus) {
             return;
         }
 
         Log.d(LOGTAG, "Abandon AudioFocus");
         mAudioManager.abandonAudioFocus(mAfChangeListener);
-    }
-
-    private boolean isFirstAudibleElement() {
-        return (++mAudibleElementCounts == 1);
-    }
-
-    private boolean isLastAudibleElement() {
-        return (--mAudibleElementCounts == 0);
+        mIsOwningAudioFocus = false;
     }
 }

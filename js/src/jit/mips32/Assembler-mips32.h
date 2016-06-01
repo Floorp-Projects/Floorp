@@ -106,7 +106,9 @@ static MOZ_CONSTEXPR_VAR uint32_t AsmJSStackAlignment = SimdMemoryAlignment;
 // Does this architecture support SIMD conversions between Uint32x4 and Float32x4?
 static MOZ_CONSTEXPR_VAR bool SupportsUint32x4FloatConversions = false;
 
-// Does this architecture support comparisons of unsigned 32x4 integer vectors?
+// Does this architecture support comparisons of unsigned integer vectors?
+static MOZ_CONSTEXPR_VAR bool SupportsUint8x16Compares = false;
+static MOZ_CONSTEXPR_VAR bool SupportsUint16x8Compares = false;
 static MOZ_CONSTEXPR_VAR bool SupportsUint32x4Compares = false;
 
 static MOZ_CONSTEXPR_VAR Scale ScalePointer = TimesFour;

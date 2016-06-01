@@ -19,6 +19,7 @@ import static org.mockito.Matchers.anyBoolean;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Mockito.doReturn;
 import static org.mockito.Mockito.doThrow;
+import static org.mockito.Matchers.isNull;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -46,7 +47,7 @@ public class TestPushManager {
 
         doReturn(new SubscribeChannelResponse("opaque-chid", "https://localhost:8085/opaque-push-endpoint"))
                 .when(pushClient)
-                .subscribeChannel(anyString(), anyString());
+                .subscribeChannel(anyString(), anyString(), isNull(String.class));
 
         PushManager.PushClientFactory pushClientFactory = mock(PushManager.PushClientFactory.class);
         doReturn(pushClient).when(pushClientFactory).getPushClient(anyString(), anyBoolean());
@@ -140,7 +141,7 @@ public class TestPushManager {
         // We should be able to register with non-null serviceData.
         final JSONObject webpushData = new JSONObject();
         webpushData.put("version", 5);
-        PushSubscription subscription = manager.subscribeChannel("default", "webpush", webpushData, System.currentTimeMillis());
+        PushSubscription subscription = manager.subscribeChannel("default", "webpush", webpushData, null, System.currentTimeMillis());
         assertSubscribed(subscription);
 
         subscription = manager.registrationForSubscription(subscription.chid).getSubscription(subscription.chid);
@@ -148,7 +149,7 @@ public class TestPushManager {
         Assert.assertEquals(5, subscription.serviceData.get("version"));
 
         // We should be able to register with null serviceData.
-        subscription = manager.subscribeChannel("default", "sync", null, System.currentTimeMillis());
+        subscription = manager.subscribeChannel("default", "sync", null, null, System.currentTimeMillis());
         assertSubscribed(subscription);
 
         subscription = manager.registrationForSubscription(subscription.chid).getSubscription(subscription.chid);
@@ -165,7 +166,7 @@ public class TestPushManager {
         // We should be able to register with non-null serviceData.
         final JSONObject webpushData = new JSONObject();
         webpushData.put("version", 5);
-        PushSubscription subscription = manager.subscribeChannel("default", "webpush", webpushData, System.currentTimeMillis());
+        PushSubscription subscription = manager.subscribeChannel("default", "webpush", webpushData, null, System.currentTimeMillis());
         assertSubscribed(subscription);
 
         // No exception is success.
@@ -224,7 +225,7 @@ public class TestPushManager {
         registration = manager.registerUserAgent("default", System.currentTimeMillis());
         assertRegistered(registration, "http://localhost:8080", true);
 
-        PushSubscription subscription = manager.subscribeChannel("default", "webpush", null, System.currentTimeMillis());
+        PushSubscription subscription = manager.subscribeChannel("default", "webpush", null, null, System.currentTimeMillis());
         assertSubscribed(subscription);
 
         manager.startup(System.currentTimeMillis());
