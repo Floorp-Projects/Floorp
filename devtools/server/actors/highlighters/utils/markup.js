@@ -265,20 +265,6 @@ CanvasFrameAnonymousContentHelper.prototype = {
     }
     let doc = this.highlighterEnv.document;
 
-    // On B2G, for example, when connecting to keyboard just after startup,
-    // we connect to a hidden document, which doesn't accept
-    // insertAnonymousContent call yet.
-    if (doc.hidden) {
-      // In such scenario, just wait for the document to be visible
-      // before injecting anonymous content.
-      let onVisibilityChange = () => {
-        doc.removeEventListener("visibilitychange", onVisibilityChange);
-        this._insert();
-      };
-      doc.addEventListener("visibilitychange", onVisibilityChange);
-      return;
-    }
-
     // For now highlighters.css is injected in content as a ua sheet because
     // <style scoped> doesn't work inside anonymous content (see bug 1086532).
     // If it did, highlighters.css would be injected as an anonymous content
@@ -286,6 +272,12 @@ CanvasFrameAnonymousContentHelper.prototype = {
     installHelperSheet(this.highlighterEnv.window,
       "@import url('" + STYLESHEET_URI + "');");
     let node = this.nodeBuilder();
+
+    // It was stated that hidden documents don't accept
+    // `insertAnonymousContent` calls yet. That doesn't seems the case anymore,
+    // at least on desktop. Therefore, removing the code that was dealing with
+    // that scenario, fixes when we're adding anonymous content in a tab that
+    // is not the active one (see bug 1260043 and bug 1260044)
     this._content = doc.insertAnonymousContent(node);
   },
 
