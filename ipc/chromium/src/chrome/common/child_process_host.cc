@@ -113,10 +113,6 @@ void ChildProcessHost::SetHandle(base::ProcessHandle process) {
 #endif
 }
 
-void ChildProcessHost::InstanceCreated() {
-  Notify(NotificationType(NotificationType::CHILD_INSTANCE_CREATED));
-}
-
 bool ChildProcessHost::Send(IPC::Message* msg) {
   if (!channel_.get()) {
     delete msg;
@@ -157,17 +153,7 @@ ChildProcessHost::ListenerHook::ListenerHook(ChildProcessHost* host)
 
 void ChildProcessHost::ListenerHook::OnMessageReceived(
     IPC::Message&& msg) {
-
-  bool msg_is_ok = true;
-  bool handled = false;
-
-  if (!handled) {
-      host_->OnMessageReceived(mozilla::Move(msg));
-  }
-
-  if (!msg_is_ok)
-    base::KillProcess(host_->handle(), ResultCodes::KILLED_BAD_MESSAGE, false);
-
+  host_->OnMessageReceived(mozilla::Move(msg));
 }
 
 void ChildProcessHost::ListenerHook::OnChannelConnected(int32_t peer_pid) {
