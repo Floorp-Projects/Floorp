@@ -175,6 +175,11 @@ TaskbarPreview::Enable() {
 
 nsresult
 TaskbarPreview::Disable() {
+  if (!IsWindowAvailable()) {
+    // Window is already destroyed
+    return NS_OK;
+  }
+
   WindowHook &hook = GetWindowHook();
   (void) hook.RemoveMonitor(nsAppShell::GetTaskbarButtonCreatedMessage(), MainWindowHook, this);
 
