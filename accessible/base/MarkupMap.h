@@ -34,6 +34,10 @@ MARKUPMAP(dd,
           New_HTMLDefinition,
           roles::DEFINITION)
 
+MARKUPMAP(details,
+          New_HyperText,
+          roles::DETAILS)
+
 MARKUPMAP(div,
           nullptr,
           roles::SECTION)
@@ -312,6 +316,10 @@ MARKUPMAP(section,
           New_HyperText,
           roles::SECTION,
           Attr(xmlroles, region))
+
+MARKUPMAP(summary,
+          New_HTMLSummary,
+          roles::SUMMARY)
 
 MARKUPMAP(time,
           New_HyperText,
