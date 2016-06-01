@@ -15,7 +15,7 @@ function test() {
 
   Task.spawn(function* () {
     const options = {
-      source: "-01.js",
+      source: EXAMPLE_URL + "code_script-switching-01.js",
       line: 1
     };
     const [gTab,, gPanel ] = yield initDebugger(TAB_URL, options);

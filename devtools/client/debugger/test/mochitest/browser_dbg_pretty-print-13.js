@@ -14,7 +14,7 @@ const TAB_URL = EXAMPLE_URL + "doc_pretty-print-3.html";
 function test() {
   // Wait for debugger panel to be fully set and break on debugger statement
   let options = {
-    source: "code_ugly-8",
+    source: EXAMPLE_URL + "code_ugly-8",
     line: 2
   };
   initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {

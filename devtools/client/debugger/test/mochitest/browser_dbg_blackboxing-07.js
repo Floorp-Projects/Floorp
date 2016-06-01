@@ -14,7 +14,7 @@ var gTab, gPanel, gDebugger;
 
 function test() {
   let options = {
-    source: ".min.js"
+    source: EXAMPLE_URL + "code_blackboxing_unblackbox.min.js",
   };
   initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
     gTab = aTab;
