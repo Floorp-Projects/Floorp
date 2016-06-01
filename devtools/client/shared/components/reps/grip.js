@@ -9,15 +9,13 @@
 define(function (require, exports, module) {
   // ReactJS
   const React = require("devtools/client/shared/vendor/react");
-
   // Dependencies
   const { createFactories, isGrip } = require("./rep-utils");
   const { ObjectBox } = createFactories(require("./object-box"));
   const { Caption } = createFactories(require("./caption"));
-
+  const { PropRep } = createFactories(require("./prop-rep"));
   // Shortcuts
   const { span } = React.DOM;
-
   /**
    * @template TODO docs
    */
@@ -161,50 +159,11 @@ define(function (require, exports, module) {
       );
     },
   });
-
-  /**
-   * Property for a grip object.
-   */
-  let PropRep = React.createFactory(React.createClass({
-    displayName: "PropRep",
-
-    propTypes: {
-      name: React.PropTypes.string,
-      equal: React.PropTypes.string,
-      delim: React.PropTypes.string,
-    },
-
-    render: function () {
-      let { Rep } = createFactories(require("./rep"));
-
-      return (
-        span({},
-          span({
-            "className": "nodeName"},
-            this.props.name),
-          span({
-            "className": "objectEqual",
-            role: "presentation"},
-            this.props.equal
-          ),
-          Rep(this.props),
-          span({
-            "className": "objectComma",
-            role: "presentation"},
-            this.props.delim
-          )
-        )
-      );
-    }
-  }));
-
   // Registration
-
   function supportsObject(object, type) {
     if (!isGrip(object)) {
       return false;
     }
-
     return (object.preview && object.preview.ownProperties);
   }
 

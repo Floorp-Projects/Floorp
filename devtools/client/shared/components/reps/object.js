@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 "use strict";
-
 // Make this available to both AMD and CJS environments
 define(function (require, exports, module) {
   // Dependencies
@@ -13,10 +12,9 @@ define(function (require, exports, module) {
   const { createFactories } = require("./rep-utils");
   const { ObjectBox } = createFactories(require("./object-box"));
   const { Caption } = createFactories(require("./caption"));
-
+  const { PropRep } = createFactories(require("./prop-rep"));
   // Shortcuts
   const { span } = React.DOM;
-
   /**
    * Renders an object. An object is represented by a list of its
    * properties enclosed in curly brackets.
@@ -154,57 +152,10 @@ define(function (require, exports, module) {
       );
     },
   });
-
-  /**
-   * Renders object property, name-value pair.
-   */
-  let PropRep = React.createFactory(React.createClass({
-    displayName: "PropRep",
-
-    propTypes: {
-      object: React.PropTypes.any,
-      mode: React.PropTypes.string,
-      name: React.PropTypes.string,
-      equal: React.PropTypes.string,
-      delim: React.PropTypes.string,
-    },
-
-    render: function () {
-      let { Rep } = createFactories(require("./rep"));
-      let object = this.props.object;
-      let mode = this.props.mode;
-
-      return (
-        span({},
-          span({
-            "className": "nodeName"},
-            this.props.name
-          ),
-          span({
-            "className": "objectEqual",
-            role: "presentation"},
-            this.props.equal
-          ),
-          Rep({
-            object: object,
-            mode: mode
-          }),
-          span({
-            "className": "objectComma",
-            role: "presentation"},
-            this.props.delim
-          )
-        )
-      );
-    }
-  }));
-
   function supportsObject(object, type) {
     return true;
   }
-
   // Exports from this module
-
   exports.Obj = {
     rep: Obj,
     supportsObject: supportsObject
