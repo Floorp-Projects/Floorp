@@ -56,6 +56,8 @@ import android.graphics.Color;
 import android.graphics.drawable.BitmapDrawable;
 import android.net.Uri;
 import android.support.annotation.CheckResult;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.text.TextUtils;
 import android.util.Log;
 import org.mozilla.gecko.util.IOUtils;
@@ -1438,55 +1440,86 @@ public class LocalBrowserDB implements BrowserDB {
         cr.delete(mThumbnailsUriWithProfile, null, null);
     }
 
-    // Utility function for updating existing history using batch operations
+    /**
+     * Utility method used by AndroidImport for updating existing history record using batch operations.
+     *
+     * @param cr <code>ContentResolver</code> used for querying information about existing history records.
+     * @param operations Collection of operations for queueing record updates.
+     * @param url URL used for querying history records to update.
+     * @param title Optional new title.
+     * @param date  New last visited date. Will be used if newer than current last visited date.
+     * @param visits Will increment existing visit counts by this number.
+     */
     @Override
-    public void updateHistoryInBatch(ContentResolver cr,
-                                     Collection<ContentProviderOperation> operations,
-                                     String url, String title,
+    public void updateHistoryInBatch(@NonNull ContentResolver cr,
+                                     @NonNull Collection<ContentProviderOperation> operations,
+                                     @NonNull String url, @Nullable String title,
                                      long date, int visits) {
         final String[] projection = {
             History._ID,
             History.VISITS,
-            History.DATE_LAST_VISITED
+            History.LOCAL_VISITS,
+            History.DATE_LAST_VISITED,
+            History.LOCAL_DATE_LAST_VISITED
         };
 
-
-        // We need to get the old visit count.
+        // We need to get the old visit and date aggregates.
         final Cursor cursor = cr.query(withDeleted(mHistoryUriWithProfile),
                                        projection,
                                        History.URL + " = ?",
                                        new String[] { url },
                                        null);
+        if (cursor == null) {
+            Log.w(LOGTAG, "Null cursor while querying for old visit and date aggregates");
+            return;
+        }
+
         try {
-            ContentValues values = new ContentValues();
+            final ContentValues values = new ContentValues();
 
             // Restore deleted record if possible
             values.put(History.IS_DELETED, 0);
 
             if (cursor.moveToFirst()) {
-                int visitsCol = cursor.getColumnIndexOrThrow(History.VISITS);
-                int dateCol = cursor.getColumnIndexOrThrow(History.DATE_LAST_VISITED);
-                int oldVisits = cursor.getInt(visitsCol);
-                long oldDate = cursor.getLong(dateCol);
+                final int visitsCol = cursor.getColumnIndexOrThrow(History.VISITS);
+                final int localVisitsCol = cursor.getColumnIndexOrThrow(History.LOCAL_VISITS);
+                final int dateCol = cursor.getColumnIndexOrThrow(History.DATE_LAST_VISITED);
+                final int localDateCol = cursor.getColumnIndexOrThrow(History.LOCAL_DATE_LAST_VISITED);
+
+                final int oldVisits = cursor.getInt(visitsCol);
+                final int oldLocalVisits = cursor.getInt(localVisitsCol);
+                final long oldDate = cursor.getLong(dateCol);
+                final long oldLocalDate = cursor.getLong(localDateCol);
+
+                // NB: This will increment visit counts even if subsequent "insert visits" operations
+                // insert no new visits (see insertVisitsFromImportHistoryInBatch).
+                // So, we're doing a wrong thing here if user imports history more than once.
+                // See Bug 1277330.
                 values.put(History.VISITS, oldVisits + visits);
+                values.put(History.LOCAL_VISITS, oldLocalVisits + visits);
                 // Only update last visited if newer.
                 if (date > oldDate) {
                     values.put(History.DATE_LAST_VISITED, date);
                 }
+                if (date > oldLocalDate) {
+                    values.put(History.LOCAL_DATE_LAST_VISITED, date);
+                }
             } else {
                 values.put(History.VISITS, visits);
+                values.put(History.LOCAL_VISITS, visits);
                 values.put(History.DATE_LAST_VISITED, date);
+                values.put(History.LOCAL_DATE_LAST_VISITED, date);
             }
             if (title != null) {
                 values.put(History.TITLE, title);
             }
             values.put(History.URL, url);
 
-            Uri historyUri = withDeleted(mHistoryUriWithProfile).buildUpon().
+            final Uri historyUri = withDeleted(mHistoryUriWithProfile).buildUpon().
                 appendQueryParameter(BrowserContract.PARAM_INSERT_IF_NEEDED, "true").build();
 
             // Update or insert
-            ContentProviderOperation.Builder builder =
+            final ContentProviderOperation.Builder builder =
                 ContentProviderOperation.newUpdate(historyUri);
             builder.withSelection(History.URL + " = ?", new String[] { url });
             builder.withValues(values);
