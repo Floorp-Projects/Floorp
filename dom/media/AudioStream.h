@@ -224,8 +224,7 @@ public:
     CubebUtils::InitPreferredSampleRate();
     return CubebUtils::PreferredSampleRate();
   }
-  uint32_t GetRate() { return mOutRate; }
-  uint32_t GetChannels() { return mChannels; }
+
   uint32_t GetOutChannels() { return mOutChannels; }
 
   // Set playback rate as a multiple of the intrinsic playback rate. This is to
