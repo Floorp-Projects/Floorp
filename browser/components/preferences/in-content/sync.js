@@ -620,14 +620,11 @@ var gSyncPane = {
     if (confirm) {
       // We use a string bundle shared with aboutAccounts.
       let sb = Services.strings.createBundle("chrome://browser/locale/syncSetup.properties");
-      let continueLabel = sb.GetStringFromName("continue.label");
+      let disconnectLabel = sb.GetStringFromName("disconnect.label");
       let title = sb.GetStringFromName("disconnect.verify.title");
-      let brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
-      let brandShortName = brandBundle.GetStringFromName("brandShortName");
-      let body = sb.GetStringFromName("disconnect.verify.heading") +
+      let body = sb.GetStringFromName("disconnect.verify.bodyHeading") +
                  "\n\n" +
-                 sb.formatStringFromName("disconnect.verify.description",
-                                         [brandShortName], 1);
+                 sb.GetStringFromName("disconnect.verify.bodyText");
       let ps = Services.prompt;
       let buttonFlags = (ps.BUTTON_POS_0 * ps.BUTTON_TITLE_IS_STRING) +
                         (ps.BUTTON_POS_1 * ps.BUTTON_TITLE_CANCEL) +
@@ -640,7 +637,7 @@ var gSyncPane = {
       bag.setPropertyAsBool("allowTabModal", true);
 
       let pressed = prompt.confirmEx(title, body, buttonFlags,
-                                     continueLabel, null, null, null, {});
+                                     disconnectLabel, null, null, null, {});
 
       if (pressed != 0) { // 0 is the "continue" button
         return;
