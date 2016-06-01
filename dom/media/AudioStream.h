@@ -72,6 +72,9 @@ public:
   // Called on the audio thread.
   bool GetPreservesPitch() const;
 
+  uint32_t GetInputRate() const { return mInRate; }
+  uint32_t GetOutputRate() const { return mOutRate; }
+
 private:
   // Output rate in Hz (characteristic of the playback rate)
   uint32_t mOutRate;
