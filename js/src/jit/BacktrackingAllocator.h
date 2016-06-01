@@ -272,9 +272,7 @@ class LiveRange : public TempObject
     static LiveRange* FallibleNew(TempAllocator& alloc, uint32_t vreg,
                                   CodePosition from, CodePosition to)
     {
-        if (!alloc.ensureBallast())
-            return nullptr;
-        return new(alloc) LiveRange(vreg, Range(from, to));
+        return new(alloc.fallible()) LiveRange(vreg, Range(from, to));
     }
 
     uint32_t vreg() const {
@@ -422,9 +420,7 @@ class LiveBundle : public TempObject
   public:
     static LiveBundle* FallibleNew(TempAllocator& alloc, SpillSet* spill, LiveBundle* spillParent)
     {
-        if (!alloc.ensureBallast())
-            return nullptr;
-        return new(alloc) LiveBundle(spill, spillParent);
+        return new(alloc.fallible()) LiveBundle(spill, spillParent);
     }
 
     SpillSet* spillSet() const {
