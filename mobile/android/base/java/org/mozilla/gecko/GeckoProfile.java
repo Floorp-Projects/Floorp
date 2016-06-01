@@ -24,11 +24,11 @@ import org.mozilla.gecko.db.LocalBrowserDB;
 import org.mozilla.gecko.db.StubBrowserDB;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.firstrun.FirstrunAnimationContainer;
-import org.mozilla.gecko.mozglue.SafeIntentUtils;
 import org.mozilla.gecko.preferences.DistroSharedPrefsImport;
 import org.mozilla.gecko.util.FileUtils;
 import org.mozilla.gecko.util.INIParser;
 import org.mozilla.gecko.util.INISection;
+import org.mozilla.gecko.util.IntentUtils;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -227,7 +227,7 @@ public final class GeckoProfile {
 
             final String args;
             if (context instanceof Activity) {
-                args = SafeIntentUtils.getStringExtra(((Activity) context).getIntent(), "args");
+                args = IntentUtils.getStringExtraSafe(((Activity) context).getIntent(), "args");
             } else {
                 args = null;
             }

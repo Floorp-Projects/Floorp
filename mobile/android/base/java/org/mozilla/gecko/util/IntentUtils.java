@@ -7,7 +7,9 @@
 package org.mozilla.gecko.util;
 
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.annotation.NonNull;
+import org.mozilla.gecko.mozglue.SafeIntent;
 
 import java.util.HashMap;
 import java.util.regex.Matcher;
@@ -55,5 +57,17 @@ public class IntentUtils {
             i += 1;
         }
         return out;
+    }
+
+    public static Bundle getBundleExtraSafe(final Intent intent, final String name) {
+        return new SafeIntent(intent).getBundleExtra(name);
+    }
+
+    public static String getStringExtraSafe(final Intent intent, final String name) {
+        return new SafeIntent(intent).getStringExtra(name);
+    }
+
+    public static boolean getBooleanExtraSafe(final Intent intent, final String name, final boolean defaultValue) {
+        return new SafeIntent(intent).getBooleanExtra(name, defaultValue);
     }
 }
