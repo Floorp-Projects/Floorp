@@ -1,0 +1,19 @@
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/* vim: set sw=4 ts=4 et tw=80 : */
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+interface nsIHttpUpgradeListener;
+
+#include "nsISupports.idl"
+
+/**
+ * An interface which can be used to asynchronously request a nsITransport
+ * together with the input and output streams that go together with it.
+ */
+[scriptable, uuid(6fcec704-cfd2-46ef-a394-a64d5cb1475c)]
+interface nsITransportProvider : nsISupports
+{
+    void setListener(in nsIHttpUpgradeListener listener);
+};
