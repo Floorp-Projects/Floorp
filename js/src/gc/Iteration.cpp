@@ -95,21 +95,19 @@ js::IterateScripts(JSRuntime* rt, JSCompartment* compartment,
                    void* data, IterateScriptCallback scriptCallback)
 {
     MOZ_ASSERT(!rt->mainThread.suppressGC);
-    rt->gc.evictNursery();
-    MOZ_ASSERT(rt->gc.nursery.isEmpty());
-
+    AutoEmptyNursery empty(rt);
     AutoPrepareForTracing prep(rt, SkipAtoms);
 
     if (compartment) {
-        for (ZoneCellIterUnderGC i(compartment->zone(), gc::AllocKind::SCRIPT); !i.done(); i.next()) {
-            JSScript* script = i.get<JSScript>();
+        Zone* zone = compartment->zone();
+        for (auto script = zone->cellIter<JSScript>(empty); !script.done(); script.next()) {
             if (script->compartment() == compartment)
                 scriptCallback(rt, data, script);
         }
     } else {
         for (ZonesIter zone(rt, SkipAtoms); !zone.done(); zone.next()) {
-            for (ZoneCellIterUnderGC i(zone, gc::AllocKind::SCRIPT); !i.done(); i.next())
-                scriptCallback(rt, data, i.get<JSScript>());
+            for (auto script = zone->cellIter<JSScript>(empty); !script.done(); script.next())
+                scriptCallback(rt, data, script);
         }
     }
 }
@@ -117,14 +115,14 @@ js::IterateScripts(JSRuntime* rt, JSCompartment* compartment,
 void
 js::IterateGrayObjects(Zone* zone, GCThingCallback cellCallback, void* data)
 {
-    zone->runtimeFromMainThread()->gc.evictNursery();
-    AutoPrepareForTracing prep(zone->runtimeFromMainThread(), SkipAtoms);
+    JSRuntime* rt = zone->runtimeFromMainThread();
+    AutoEmptyNursery empty(rt);
+    AutoPrepareForTracing prep(rt, SkipAtoms);
 
     for (auto thingKind : ObjectAllocKinds()) {
-        for (ZoneCellIterUnderGC i(zone, thingKind); !i.done(); i.next()) {
-            JSObject* obj = i.get<JSObject>();
+        for (auto obj = zone->cellIter<JSObject>(thingKind, empty); !obj.done(); obj.next()) {
             if (obj->asTenured().isMarked(GRAY))
-                cellCallback(data, JS::GCCellPtr(obj));
+                cellCallback(data, JS::GCCellPtr(obj.get()));
         }
     }
 }

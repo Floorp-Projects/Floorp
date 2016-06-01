@@ -185,6 +185,19 @@ interface nsIServiceWorkerManager : nsISupports
                                   in AString aIcon,
                                   in AString aData,
                                   in AString aBehavior);
+
+  void sendNotificationCloseEvent(in ACString aOriginSuffix,
+                                  in ACString scope,
+                                  in AString aID,
+                                  in AString aTitle,
+                                  in AString aDir,
+                                  in AString aLang,
+                                  in AString aBody,
+                                  in AString aTag,
+                                  in AString aIcon,
+                                  in AString aData,
+                                  in AString aBehavior);
+
   [optional_argc] void sendPushEvent(in ACString aOriginAttributes,
                                      in ACString aScope,
                                      [optional] in uint32_t aDataLength,

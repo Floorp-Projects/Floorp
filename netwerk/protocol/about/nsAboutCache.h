@@ -17,6 +17,29 @@
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 
+#define NS_FORWARD_SAFE_NSICHANNEL_SUBSET(_to) \
+  NS_IMETHOD GetOriginalURI(nsIURI * *aOriginalURI) override { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOriginalURI(aOriginalURI); } \
+  NS_IMETHOD SetOriginalURI(nsIURI *aOriginalURI) override { return !_to ? NS_ERROR_NULL_POINTER : _to->SetOriginalURI(aOriginalURI); } \
+  NS_IMETHOD GetURI(nsIURI * *aURI) override { return !_to ? NS_ERROR_NULL_POINTER : _to->GetURI(aURI); } \
+  NS_IMETHOD GetOwner(nsISupports * *aOwner) override { return !_to ? NS_ERROR_NULL_POINTER : _to->GetOwner(aOwner); } \
+  NS_IMETHOD SetOwner(nsISupports *aOwner) override { return !_to ? NS_ERROR_NULL_POINTER : _to->SetOwner(aOwner); } \
+  NS_IMETHOD GetNotificationCallbacks(nsIInterfaceRequestor * *aNotificationCallbacks) override { return !_to ? NS_ERROR_NULL_POINTER : _to->GetNotificationCallbacks(aNotificationCallbacks); } \
+  NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor *aNotificationCallbacks) override { return !_to ? NS_ERROR_NULL_POINTER : _to->SetNotificationCallbacks(aNotificationCallbacks); } \
+  NS_IMETHOD GetSecurityInfo(nsISupports * *aSecurityInfo) override { return !_to ? NS_ERROR_NULL_POINTER : _to->GetSecurityInfo(aSecurityInfo); } \
+  NS_IMETHOD GetContentType(nsACString & aContentType) override { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentType(aContentType); } \
+  NS_IMETHOD SetContentType(const nsACString & aContentType) override { return !_to ? NS_ERROR_NULL_POINTER : _to->SetContentType(aContentType); } \
+  NS_IMETHOD GetContentCharset(nsACString & aContentCharset) override { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentCharset(aContentCharset); } \
+  NS_IMETHOD SetContentCharset(const nsACString & aContentCharset) override { return !_to ? NS_ERROR_NULL_POINTER : _to->SetContentCharset(aContentCharset); } \
+  NS_IMETHOD GetContentLength(int64_t *aContentLength) override { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentLength(aContentLength); } \
+  NS_IMETHOD SetContentLength(int64_t aContentLength) override { return !_to ? NS_ERROR_NULL_POINTER : _to->SetContentLength(aContentLength); } \
+  NS_IMETHOD GetContentDisposition(uint32_t *aContentDisposition) override { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentDisposition(aContentDisposition); } \
+  NS_IMETHOD SetContentDisposition(uint32_t aContentDisposition) override { return !_to ? NS_ERROR_NULL_POINTER : _to->SetContentDisposition(aContentDisposition); } \
+  NS_IMETHOD GetContentDispositionFilename(nsAString & aContentDispositionFilename) override { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentDispositionFilename(aContentDispositionFilename); } \
+  NS_IMETHOD SetContentDispositionFilename(const nsAString & aContentDispositionFilename) override { return !_to ? NS_ERROR_NULL_POINTER : _to->SetContentDispositionFilename(aContentDispositionFilename); } \
+  NS_IMETHOD GetContentDispositionHeader(nsACString & aContentDispositionHeader) override { return !_to ? NS_ERROR_NULL_POINTER : _to->GetContentDispositionHeader(aContentDispositionHeader); } \
+  NS_IMETHOD GetLoadInfo(nsILoadInfo * *aLoadInfo) override { return !_to ? NS_ERROR_NULL_POINTER : _to->GetLoadInfo(aLoadInfo); } \
+  NS_IMETHOD SetLoadInfo(nsILoadInfo *aLoadInfo) override { return !_to ? NS_ERROR_NULL_POINTER : _to->SetLoadInfo(aLoadInfo); } \
+
 class nsAboutCache final : public nsIAboutModule
 {
 public:
@@ -40,8 +63,12 @@ protected:
     {
         NS_DECL_ISUPPORTS
         NS_DECL_NSICACHESTORAGEVISITOR
-        NS_FORWARD_SAFE_NSICHANNEL(mChannel)
         NS_FORWARD_SAFE_NSIREQUEST(mChannel)
+        NS_FORWARD_SAFE_NSICHANNEL_SUBSET(mChannel)
+        NS_IMETHOD AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext) override;
+        NS_IMETHOD AsyncOpen2(nsIStreamListener *aListener) override;
+        NS_IMETHOD Open(nsIInputStream * *_retval) override;
+        NS_IMETHOD Open2(nsIInputStream * *_retval) override;
 
     private:
         virtual ~Channel() {}
@@ -55,7 +82,7 @@ protected:
         // one in the list then.)  Posts FireVisitStorage() when found.
         nsresult VisitNextStorage();
         // Helper method that calls VisitStorage() for the current storage.
-        // When it fails, OnCacheEntryVisitCompleted is simlated to close
+        // When it fails, OnCacheEntryVisitCompleted is simulated to close
         // the output stream and thus the about:cache channel.
         void FireVisitStorage();
         // Kiks the visit cycle for the given storage, names can be:

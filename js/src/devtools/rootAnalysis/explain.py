@@ -3,6 +3,8 @@
 import re
 import argparse
 
+from collections import defaultdict
+
 parser = argparse.ArgumentParser(description='Process some integers.')
 parser.add_argument('rootingHazards', nargs='?', default='rootingHazards.txt')
 parser.add_argument('gcFunctions', nargs='?', default='gcFunctions.txt')
@@ -22,7 +24,7 @@ try:
 
         # Map from a GC function name to the list of hazards resulting from
         # that GC function
-        hazardousGCFunctions = {}
+        hazardousGCFunctions = defaultdict(list)
 
         # List of tuples (gcFunction, index of hazard) used to maintain the
         # ordering of the hazards
@@ -53,7 +55,7 @@ try:
                 # Function names are surrounded by single quotes. Field calls
                 # are unquoted.
                 current_gcFunction = m.group(2)
-                hazardousGCFunctions.setdefault(current_gcFunction, []).append(line)
+                hazardousGCFunctions[current_gcFunction].append(line)
                 hazardOrder.append((current_gcFunction, len(hazardousGCFunctions[current_gcFunction]) - 1))
                 num_hazards += 1
                 continue
@@ -84,12 +86,13 @@ try:
             if current_func:
                 gcExplanations[current_func] = explanation
 
-            for gcFunction, index in hazardOrder:
-                gcHazards = hazardousGCFunctions[gcFunction]
-                if gcFunction in gcExplanations:
-                    print >>hazards, (gcHazards[index] + gcExplanations[gcFunction])
-                else:
-                    print >>hazards, gcHazards[index]
+        for gcFunction, index in hazardOrder:
+            gcHazards = hazardousGCFunctions[gcFunction]
+
+            if gcFunction in gcExplanations:
+                print >>hazards, (gcHazards[index] + gcExplanations[gcFunction])
+            else:
+                print >>hazards, gcHazards[index]
 
 except IOError as e:
     print 'Failed: %s' % str(e)

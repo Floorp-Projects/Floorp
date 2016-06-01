@@ -239,11 +239,14 @@ LIRGeneratorX86::visitAsmJSStoreHeap(MAsmJSStoreHeap* ins)
       case Scalar::Int16: case Scalar::Uint16:
       case Scalar::Int32: case Scalar::Uint32:
       case Scalar::Float32: case Scalar::Float64:
-      case Scalar::Float32x4: case Scalar::Int32x4:
-        // For now, don't allow constant values. The immediate operand
-        // affects instruction layout which affects patching.
-        lir = new(alloc()) LAsmJSStoreHeap(baseAlloc, useRegisterAtStart(ins->value()));
-        break;
+      case Scalar::Float32x4:
+      case Scalar::Int8x16:
+      case Scalar::Int16x8:
+      case Scalar::Int32x4:
+          // For now, don't allow constant values. The immediate operand
+          // affects instruction layout which affects patching.
+          lir = new (alloc()) LAsmJSStoreHeap(baseAlloc, useRegisterAtStart(ins->value()));
+          break;
       case Scalar::Uint8Clamped:
       case Scalar::MaxTypedArrayViewType:
         MOZ_CRASH("unexpected array type");

@@ -6,6 +6,15 @@
 // constructors/destructors.
 var internalMarker = " *INTERNAL* ";
 
+if (! Set.prototype.hasOwnProperty("update")) {
+    Object.defineProperty(Set.prototype, "update", {
+        value: function (collection) {
+            for (let elt of collection)
+                this.add(elt);
+        }
+    });
+}
+
 function assert(x, msg)
 {
     if (x)
@@ -181,4 +190,22 @@ function* readFileLines_gen(filename)
         yield linebuf.readString();
     libc.fclose(fp);
     libc.free(ctypes.void_t.ptr(linebuf));
+}
+
+function addToKeyedList(collection, key, entry)
+{
+    if (!(key in collection))
+        collection[key] = [];
+    collection[key].push(entry);
+}
+
+function loadTypeInfo(filename)
+{
+    var info = {};
+    for (var line of readFileLines_gen(filename)) {
+        line = line.replace(/\n/, "");
+        let [property, name] = line.split("$$");
+        addToKeyedList(info, property, name);
+    }
+    return info;
 }

@@ -186,7 +186,7 @@ private:
 
   bool mDiscoveryEnabled = false;
   bool mIsDiscovering = false;
-  uint32_t mDiscveryTimeoutMs;
+  uint32_t mDiscoveryTimeoutMs;
   nsCOMPtr<nsITimer> mDiscoveryTimer;
 
   bool mDiscoverable = false;

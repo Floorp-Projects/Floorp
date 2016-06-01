@@ -270,6 +270,8 @@ CodeGeneratorX86::load(Scalar::Type accessType, const Operand& srcAddr, const LD
       case Scalar::Float32:      masm.vmovssWithPatch(srcAddr, ToFloatRegister(out)); break;
       case Scalar::Float64:      masm.vmovsdWithPatch(srcAddr, ToFloatRegister(out)); break;
       case Scalar::Float32x4:
+      case Scalar::Int8x16:
+      case Scalar::Int16x8:
       case Scalar::Int32x4:      MOZ_CRASH("SIMD load should be handled in their own function");
       case Scalar::MaxTypedArrayViewType: MOZ_CRASH("unexpected type");
     }
@@ -370,6 +372,14 @@ CodeGeneratorX86::loadSimd(Scalar::Type type, unsigned numElems, const Operand& 
         }
         break;
       }
+      case Scalar::Int8x16:
+        MOZ_ASSERT(numElems == 16, "unexpected partial load");
+        masm.vmovdquWithPatch(srcAddr, out);
+        break;
+      case Scalar::Int16x8:
+        MOZ_ASSERT(numElems == 8, "unexpected partial load");
+        masm.vmovdquWithPatch(srcAddr, out);
+        break;
       case Scalar::Int8:
       case Scalar::Uint8:
       case Scalar::Int16:
@@ -473,16 +483,36 @@ CodeGeneratorX86::store(Scalar::Type accessType, const LAllocation* value, const
     switch (accessType) {
       case Scalar::Int8:
       case Scalar::Uint8Clamped:
-      case Scalar::Uint8:        masm.movbWithPatch(ToRegister(value), dstAddr); break;
+      case Scalar::Uint8:
+        masm.movbWithPatch(ToRegister(value), dstAddr);
+        break;
+
       case Scalar::Int16:
-      case Scalar::Uint16:       masm.movwWithPatch(ToRegister(value), dstAddr); break;
+      case Scalar::Uint16:
+        masm.movwWithPatch(ToRegister(value), dstAddr);
+        break;
+
       case Scalar::Int32:
-      case Scalar::Uint32:       masm.movlWithPatch(ToRegister(value), dstAddr); break;
-      case Scalar::Float32:      masm.vmovssWithPatch(ToFloatRegister(value), dstAddr); break;
-      case Scalar::Float64:      masm.vmovsdWithPatch(ToFloatRegister(value), dstAddr); break;
+      case Scalar::Uint32:
+        masm.movlWithPatch(ToRegister(value), dstAddr);
+        break;
+
+      case Scalar::Float32:
+        masm.vmovssWithPatch(ToFloatRegister(value), dstAddr);
+        break;
+
+      case Scalar::Float64:
+        masm.vmovsdWithPatch(ToFloatRegister(value), dstAddr);
+        break;
+
       case Scalar::Float32x4:
-      case Scalar::Int32x4:      MOZ_CRASH("SIMD stores should be handled in emitSimdStore");
-      case Scalar::MaxTypedArrayViewType: MOZ_CRASH("unexpected type");
+      case Scalar::Int8x16:
+      case Scalar::Int16x8:
+      case Scalar::Int32x4:
+        MOZ_CRASH("SIMD stores should be handled in emitSimdStore");
+
+      case Scalar::MaxTypedArrayViewType:
+        MOZ_CRASH("unexpected type");
     }
 }
 
@@ -493,8 +523,10 @@ CodeGeneratorX86::visitStoreTypedArrayElementStatic(LStoreTypedArrayElementStati
     Scalar::Type accessType = mir->accessType();
     Register ptr = ToRegister(ins->ptr());
     const LAllocation* value = ins->value();
-    uint32_t offset = mir->offset();
 
+    canonicalizeIfDeterministic(accessType, value);
+
+    uint32_t offset = mir->offset();
     if (!mir->needsBoundsCheck()) {
         Operand dstAddr(ptr, int32_t(mir->base().asValue()) + int32_t(offset));
         store(accessType, value, dstAddr);
@@ -538,6 +570,14 @@ CodeGeneratorX86::storeSimd(Scalar::Type type, unsigned numElems, FloatRegister 
         }
         break;
       }
+      case Scalar::Int8x16:
+        MOZ_ASSERT(numElems == 16, "unexpected partial store");
+        masm.vmovdquWithPatch(in, dstAddr);
+        break;
+      case Scalar::Int16x8:
+        MOZ_ASSERT(numElems == 8, "unexpected partial store");
+        masm.vmovdquWithPatch(in, dstAddr);
+        break;
       case Scalar::Int8:
       case Scalar::Uint8:
       case Scalar::Int16:
@@ -605,11 +645,13 @@ CodeGeneratorX86::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
 {
     const MAsmJSStoreHeap* mir = ins->mir();
     Scalar::Type accessType = mir->accessType();
+    const LAllocation* value = ins->value();
+
+    canonicalizeIfDeterministic(accessType, value);
 
     if (Scalar::isSimdType(accessType))
         return emitSimdStore(ins);
 
-    const LAllocation* value = ins->value();
     const LAllocation* ptr = ins->ptr();
     Operand dstAddr = ptr->isBogus()
                       ? Operand(PatchedAbsoluteAddress(mir->offset()))
@@ -774,7 +816,11 @@ CodeGeneratorX86::visitAsmJSLoadGlobalVar(LAsmJSLoadGlobalVar* ins)
         break;
       // Aligned access: code is aligned on PageSize + there is padding
       // before the global data section.
+      case MIRType::Int8x16:
+      case MIRType::Int16x8:
       case MIRType::Int32x4:
+      case MIRType::Bool8x16:
+      case MIRType::Bool16x8:
       case MIRType::Bool32x4:
         label = masm.vmovdqaWithPatch(PatchedAbsoluteAddress(), ToFloatRegister(ins->output()));
         break;

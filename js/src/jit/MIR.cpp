@@ -1161,6 +1161,16 @@ MSimdSplat::foldsTo(TempAllocator& alloc)
         cst = SimdConstant::SplatX4(v);
         break;
       }
+      case MIRType::Int8x16: {
+        int32_t v = op->toConstant()->toInt32();
+        cst = SimdConstant::SplatX16(v);
+        break;
+      }
+      case MIRType::Int16x8: {
+        int32_t v = op->toConstant()->toInt32();
+        cst = SimdConstant::SplatX8(v);
+        break;
+      }
       case MIRType::Int32x4: {
         int32_t v = op->toConstant()->toInt32();
         cst = SimdConstant::SplatX4(v);
@@ -1267,8 +1277,7 @@ MSimdConvert::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinition
         // Compute hi = obj >> 16 (lane-wise unsigned shift).
         MInstruction* c16 = MConstant::New(alloc, Int32Value(16));
         addTo->add(c16);
-        MInstruction* hi = MSimdShift::New(alloc, obj, c16, MSimdShift::ursh);
-        addTo->add(hi);
+        MInstruction* hi = MSimdShift::AddLegalized(alloc, addTo, obj, c16, MSimdShift::ursh);
 
         // Compute lo = obj & 0xffff (lane-wise).
         MInstruction* m16 =
@@ -1302,15 +1311,11 @@ MSimdConvert::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinition
           MSimdConstant::New(alloc, SimdConstant::SplatX4(BiasValue), MIRType::Float32x4);
         addTo->add(bias);
         MInstruction* fhi_debiased =
-          MSimdBinaryArith::New(alloc, fhi, bias, MSimdBinaryArith::Op_sub);
-        addTo->add(fhi_debiased);
+          MSimdBinaryArith::AddLegalized(alloc, addTo, fhi, bias, MSimdBinaryArith::Op_sub);
 
         // Compute the final result.
-        MInstruction* result =
-          MSimdBinaryArith::New(alloc, fhi_debiased, flo, MSimdBinaryArith::Op_add);
-        addTo->add(result);
-
-        return result;
+        return MSimdBinaryArith::AddLegalized(alloc, addTo, fhi_debiased, flo,
+                                              MSimdBinaryArith::Op_add);
     }
 
     if (fromType == MIRType::Float32x4 && toType == MIRType::Int32x4) {
@@ -1333,28 +1338,42 @@ MSimdBinaryComp::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinit
     MOZ_ASSERT(IsSimdType(opType));
     bool IsEquality = op == equal || op == notEqual;
 
-    if (!SupportsUint32x4Compares && sign == SimdSign::Unsigned && !IsEquality) {
-        MOZ_ASSERT(opType == MIRType::Int32x4);
+    // Check if this is an unsupported unsigned compare that needs to be biased.
+    // If so, put the bias vector in `bias`.
+    if (sign == SimdSign::Unsigned && !IsEquality) {
+        MInstruction* bias = nullptr;
+
         // This is an order comparison of Uint32x4 vectors which are not supported on this target.
         // Simply offset |left| and |right| by INT_MIN, then do a signed comparison.
-        MInstruction* bias =
-          MSimdConstant::New(alloc, SimdConstant::SplatX4(int32_t(0x80000000)), opType);
-        addTo->add(bias);
+        if (!SupportsUint32x4Compares && opType == MIRType::Int32x4)
+            bias = MSimdConstant::New(alloc, SimdConstant::SplatX4(int32_t(0x80000000)), opType);
+        else if (!SupportsUint16x8Compares && opType == MIRType::Int16x8)
+            bias = MSimdConstant::New(alloc, SimdConstant::SplatX8(int16_t(0x8000)), opType);
+        if (!SupportsUint8x16Compares && opType == MIRType::Int8x16)
+            bias = MSimdConstant::New(alloc, SimdConstant::SplatX16(int8_t(0x80)), opType);
 
-        // Add the bias.
-        MInstruction* bleft = MSimdBinaryArith::New(alloc, left, bias, MSimdBinaryArith::Op_add);
-        addTo->add(bleft);
-        MInstruction* bright = MSimdBinaryArith::New(alloc, right, bias, MSimdBinaryArith::Op_add);
-        addTo->add(bright);
+        if (bias) {
+            addTo->add(bias);
 
-        // Do the equivalent signed comparison.
-        MInstruction* result = MSimdBinaryComp::New(alloc, bleft, bright, op, SimdSign::Signed);
-        addTo->add(result);
+            // Add the bias.
+            MInstruction* bleft =
+              MSimdBinaryArith::AddLegalized(alloc, addTo, left, bias, MSimdBinaryArith::Op_add);
+            MInstruction* bright =
+              MSimdBinaryArith::AddLegalized(alloc, addTo, right, bias, MSimdBinaryArith::Op_add);
 
-        return result;
+            // Do the equivalent signed comparison.
+            MInstruction* result =
+              MSimdBinaryComp::New(alloc, bleft, bright, op, SimdSign::Signed);
+            addTo->add(result);
+
+            return result;
+        }
     }
 
-    if (!SupportsUint32x4Compares && sign == SimdSign::Unsigned && opType == MIRType::Int32x4) {
+    if (sign == SimdSign::Unsigned &&
+        ((!SupportsUint32x4Compares && opType == MIRType::Int32x4) ||
+         (!SupportsUint16x8Compares && opType == MIRType::Int16x8) ||
+         (!SupportsUint8x16Compares && opType == MIRType::Int8x16))) {
         // The sign doesn't matter for equality tests. Flip it to make the
         // backend assertions happy.
         MOZ_ASSERT(IsEquality);
@@ -1363,6 +1382,161 @@ MSimdBinaryComp::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinit
 
     // This is a legal operation already. Just create the instruction requested.
     MInstruction* result = MSimdBinaryComp::New(alloc, left, right, op, sign);
+    addTo->add(result);
+    return result;
+}
+
+MInstruction*
+MSimdBinaryArith::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinition* left,
+                               MDefinition* right, Operation op)
+{
+    MOZ_ASSERT(left->type() == right->type());
+    MIRType opType = left->type();
+    MOZ_ASSERT(IsSimdType(opType));
+
+    // SSE does not have 8x16 multiply instructions.
+    if (opType == MIRType::Int8x16 && op == Op_mul) {
+        // Express the multiply in terms of Int16x8 multiplies by handling the
+        // even and odd lanes separately.
+
+        MInstruction* wideL = MSimdReinterpretCast::New(alloc, left, MIRType::Int16x8);
+        addTo->add(wideL);
+        MInstruction* wideR = MSimdReinterpretCast::New(alloc, right, MIRType::Int16x8);
+        addTo->add(wideR);
+
+        // wideL = yyxx yyxx yyxx yyxx yyxx yyxx yyxx yyxx
+        // wideR = bbaa bbaa bbaa bbaa bbaa bbaa bbaa bbaa
+
+        // Shift the odd lanes down to the low bits of the 16x8 vectors.
+        MInstruction* eight = MConstant::New(alloc, Int32Value(8));
+        addTo->add(eight);
+        MInstruction* evenL = wideL;
+        MInstruction* evenR = wideR;
+        MInstruction* oddL =
+          MSimdShift::AddLegalized(alloc, addTo, wideL, eight, MSimdShift::ursh);
+        MInstruction* oddR =
+          MSimdShift::AddLegalized(alloc, addTo, wideR, eight, MSimdShift::ursh);
+
+        // evenL = yyxx yyxx yyxx yyxx yyxx yyxx yyxx yyxx
+        // evenR = bbaa bbaa bbaa bbaa bbaa bbaa bbaa bbaa
+        // oddL  = 00yy 00yy 00yy 00yy 00yy 00yy 00yy 00yy
+        // oddR  = 00bb 00bb 00bb 00bb 00bb 00bb 00bb 00bb
+
+        // Now do two 16x8 multiplications. We can use the low bits of each.
+        MInstruction* even = MSimdBinaryArith::AddLegalized(alloc, addTo, evenL, evenR, Op_mul);
+        MInstruction* odd = MSimdBinaryArith::AddLegalized(alloc, addTo, oddL, oddR, Op_mul);
+
+        // even = ~~PP ~~PP ~~PP ~~PP ~~PP ~~PP ~~PP ~~PP
+        // odd  = ~~QQ ~~QQ ~~QQ ~~QQ ~~QQ ~~QQ ~~QQ ~~QQ
+
+        MInstruction* mask =
+          MSimdConstant::New(alloc, SimdConstant::SplatX8(int16_t(0x00ff)), MIRType::Int16x8);
+        addTo->add(mask);
+        even = MSimdBinaryBitwise::New(alloc, even, mask, MSimdBinaryBitwise::and_);
+        addTo->add(even);
+        odd = MSimdShift::AddLegalized(alloc, addTo, odd, eight, MSimdShift::lsh);
+
+        // even = 00PP 00PP 00PP 00PP 00PP 00PP 00PP 00PP
+        // odd  = QQ00 QQ00 QQ00 QQ00 QQ00 QQ00 QQ00 QQ00
+
+        // Combine:
+        MInstruction* result = MSimdBinaryBitwise::New(alloc, even, odd, MSimdBinaryBitwise::or_);
+        addTo->add(result);
+        result = MSimdReinterpretCast::New(alloc, result, opType);
+        addTo->add(result);
+        return result;
+    }
+
+    // This is a legal operation already. Just create the instruction requested.
+    MInstruction* result = MSimdBinaryArith::New(alloc, left, right, op);
+    addTo->add(result);
+    return result;
+}
+
+MInstruction*
+MSimdShift::AddLegalized(TempAllocator& alloc, MBasicBlock* addTo, MDefinition* left,
+                         MDefinition* right, Operation op)
+{
+    MIRType opType = left->type();
+    MOZ_ASSERT(IsIntegerSimdType(opType));
+
+    // SSE does not provide 8x16 shift instructions.
+    if (opType == MIRType::Int8x16) {
+        // Express the shift in terms of Int16x8 shifts by splitting into even
+        // and odd lanes, place 8-bit lanes into the high bits of Int16x8
+        // vectors `even` and `odd`. Shift, mask, combine.
+        //
+        //   wide = Int16x8.fromInt8x16Bits(left);
+        //   shiftBy = right & 7
+        //   mask = Int16x8.splat(0xff00);
+        //
+        MInstruction* wide = MSimdReinterpretCast::New(alloc, left, MIRType::Int16x8);
+        addTo->add(wide);
+
+        // wide = yyxx yyxx yyxx yyxx yyxx yyxx yyxx yyxx
+
+        MInstruction* shiftMask = MConstant::New(alloc, Int32Value(7));
+        addTo->add(shiftMask);
+        MBinaryBitwiseInstruction* shiftBy = MBitAnd::New(alloc, right, shiftMask);
+        shiftBy->setInt32Specialization();
+        addTo->add(shiftBy);
+
+        // Move the even 8x16 lanes into the high bits of the 16x8 lanes.
+        MInstruction* eight = MConstant::New(alloc, Int32Value(8));
+        addTo->add(eight);
+        MInstruction* even = MSimdShift::AddLegalized(alloc, addTo, wide, eight, lsh);
+
+        // Leave the odd lanes in place.
+        MInstruction* odd = wide;
+
+        // even = xx00 xx00 xx00 xx00 xx00 xx00 xx00 xx00
+        // odd  = yyxx yyxx yyxx yyxx yyxx yyxx yyxx yyxx
+
+        MInstruction* mask =
+          MSimdConstant::New(alloc, SimdConstant::SplatX8(int16_t(0xff00)), MIRType::Int16x8);
+        addTo->add(mask);
+
+        // Left-shift: Clear the low bits in `odd` before shifting.
+        if (op == lsh) {
+            odd = MSimdBinaryBitwise::New(alloc, odd, mask, MSimdBinaryBitwise::and_);
+            addTo->add(odd);
+            // odd  = yy00 yy00 yy00 yy00 yy00 yy00 yy00 yy00
+        }
+
+        // Do the real shift twice: once for the even lanes, once for the odd
+        // lanes. This is a recursive call, but with a different type.
+        even = MSimdShift::AddLegalized(alloc, addTo, even, shiftBy, op);
+        odd = MSimdShift::AddLegalized(alloc, addTo, odd, shiftBy, op);
+
+        // even = XX~~ XX~~ XX~~ XX~~ XX~~ XX~~ XX~~ XX~~
+        // odd  = YY~~ YY~~ YY~~ YY~~ YY~~ YY~~ YY~~ YY~~
+
+        // Right-shift: Clear the low bits in `odd` after shifting.
+        if (op != lsh) {
+            odd = MSimdBinaryBitwise::New(alloc, odd, mask, MSimdBinaryBitwise::and_);
+            addTo->add(odd);
+            // odd  = YY00 YY00 YY00 YY00 YY00 YY00 YY00 YY00
+        }
+
+        // Move the even lanes back to their original place.
+        even = MSimdShift::AddLegalized(alloc, addTo, even, eight, ursh);
+
+        // Now, `odd` contains the odd lanes properly shifted, and `even`
+        // contains the even lanes properly shifted:
+        //
+        // even = 00XX 00XX 00XX 00XX 00XX 00XX 00XX 00XX
+        // odd  = YY00 YY00 YY00 YY00 YY00 YY00 YY00 YY00
+        //
+        // Combine:
+        MInstruction* result = MSimdBinaryBitwise::New(alloc, even, odd, MSimdBinaryBitwise::or_);
+        addTo->add(result);
+        result = MSimdReinterpretCast::New(alloc, result, opType);
+        addTo->add(result);
+        return result;
+    }
+
+    // This is a legal operation already. Just create the instruction requested.
+    MInstruction* result = MSimdShift::New(alloc, left, right, op);
     addTo->add(result);
     return result;
 }
@@ -1377,6 +1551,11 @@ PrintOpcodeOperation(T* mir, GenericPrinter& out)
 
 void
 MSimdBinaryArith::printOpcode(GenericPrinter& out) const
+{
+    PrintOpcodeOperation(this, out);
+}
+void
+MSimdBinarySaturating::printOpcode(GenericPrinter& out) const
 {
     PrintOpcodeOperation(this, out);
 }

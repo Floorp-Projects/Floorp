@@ -709,13 +709,6 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
         // The script wasn't in the cache , so compile it now.
         LOG(("Slow loading %s\n", nativePath.get()));
 
-        // If aPropagateExceptions is true, then our caller wants us to propagate
-        // any exceptions out to our caller. Ensure that the engine doesn't
-        // eagerly report the exception.
-        AutoSaveContextOptions asco(cx);
-        if (aPropagateExceptions)
-            ContextOptionsRef(cx).setDontReportUncaught(true);
-
         // Note - if mReuseLoaderGlobal is true, then we can't do lazy source,
         // because we compile things as functions (rather than script), and lazy
         // source isn't supported in that configuration. That's ok though,
@@ -938,9 +931,6 @@ mozJSComponentLoader::ObjectForLocation(ComponentLoaderInfo& aInfo,
         dom::AutoEntryScript aes(CurrentGlobalOrNull(cx),
                                  "component loader load module");
         JSContext* aescx = aes.cx();
-        AutoSaveContextOptions asco(aescx);
-        if (aPropagateExceptions)
-            ContextOptionsRef(aescx).setDontReportUncaught(true);
         bool ok;
         if (script) {
             ok = JS_ExecuteScript(aescx, script);

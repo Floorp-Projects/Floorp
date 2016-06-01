@@ -778,15 +778,6 @@ public:
                      NSRange* aReplacementRange = nullptr);
 
   /**
-   * ConversationIdentifier() returns an ID for the current editor.  The ID is
-   * guaranteed to be unique among currently existing editors.  But it might be
-   * the same as the ID of an editor that has already been destroyed.
-   *
-   * @return                      An identifier of current focused editor.
-   */
-  NSInteger ConversationIdentifier();
-
-  /**
    * GetAttributedSubstringFromRange() returns an NSAttributedString instance
    * which is allocated as autorelease for aRange.
    *

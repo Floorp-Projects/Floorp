@@ -133,12 +133,12 @@ nsTableCellFrame::NotifyPercentBSize(const nsHTMLReflowState& aReflowState)
 
     if (nsTableFrame::AncestorsHaveStyleBSize(*cellRS) ||
         (GetTableFrame()->GetEffectiveRowSpan(*this) == 1 &&
-         cellRS->parentReflowState->frame->
+         cellRS->mParentReflowState->frame->
            HasAnyStateBits(NS_ROW_HAS_CELL_WITH_STYLE_BSIZE))) {
 
-      for (const nsHTMLReflowState *rs = aReflowState.parentReflowState;
+      for (const nsHTMLReflowState *rs = aReflowState.mParentReflowState;
            rs != cellRS;
-           rs = rs->parentReflowState) {
+           rs = rs->mParentReflowState) {
         rs->frame->AddStateBits(NS_FRAME_CONTAINS_RELATIVE_BSIZE);
       }
 
@@ -151,7 +151,7 @@ nsTableCellFrame::NotifyPercentBSize(const nsHTMLReflowState& aReflowState)
 bool
 nsTableCellFrame::NeedsToObserve(const nsHTMLReflowState& aReflowState)
 {
-  const nsHTMLReflowState *rs = aReflowState.parentReflowState;
+  const nsHTMLReflowState *rs = aReflowState.mParentReflowState;
   if (!rs)
     return false;
   if (rs->frame == this) {
@@ -160,7 +160,7 @@ nsTableCellFrame::NeedsToObserve(const nsHTMLReflowState& aReflowState)
     // propagated to its kids.
     return true;
   }
-  rs = rs->parentReflowState;
+  rs = rs->mParentReflowState;
   if (!rs) {
     return false;
   }
@@ -508,10 +508,10 @@ nsTableCellFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
           // The cell background was not painted by the nsTablePainter,
           // so we need to do it. We have special background processing here
           // so we need to duplicate some code from nsFrame::DisplayBorderBackgroundOutline
-          nsDisplayTableItem* item =
-            new (aBuilder) nsDisplayTableCellBackground(aBuilder, this);
-          aLists.BorderBackground()->AppendNewToTop(item);
-          item->UpdateForFrameBackground(this);
+          nsDisplayBackgroundImage::AppendBackgroundItemsToTop(aBuilder,
+              this,
+              GetRectRelativeToSelf(),
+              aLists.BorderBackground());
         } else {
           // The nsTablePainter will paint our background. Make sure it
           // knows if we're background-attachment:fixed.

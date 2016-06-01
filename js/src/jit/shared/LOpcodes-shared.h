@@ -20,6 +20,8 @@
     _(Float32)                      \
     _(SimdBox)                      \
     _(SimdUnbox)                    \
+    _(SimdSplatX16)                 \
+    _(SimdSplatX8)                  \
     _(SimdSplatX4)                  \
     _(Simd128Int)                   \
     _(Simd128Float)                 \
@@ -37,13 +39,21 @@
     _(SimdSwizzleI)                 \
     _(SimdSwizzleF)                 \
     _(SimdShuffle)                  \
+    _(SimdShuffleX4)                \
+    _(SimdUnaryArithIx16)           \
+    _(SimdUnaryArithIx8)            \
     _(SimdUnaryArithIx4)            \
     _(SimdUnaryArithFx4)            \
+    _(SimdBinaryCompIx16)           \
+    _(SimdBinaryCompIx8)            \
     _(SimdBinaryCompIx4)            \
     _(SimdBinaryCompFx4)            \
+    _(SimdBinaryArithIx16)          \
+    _(SimdBinaryArithIx8)           \
     _(SimdBinaryArithIx4)           \
     _(SimdBinaryArithFx4)           \
-    _(SimdBinaryBitwiseX4)          \
+    _(SimdBinarySaturating)         \
+    _(SimdBinaryBitwise)            \
     _(SimdShift)                    \
     _(SimdSelect)                   \
     _(Value)                        \

@@ -238,10 +238,6 @@ StoreToTypedFloatArray(MacroAssembler& masm, int arrayType, const S& value, cons
         masm.storeFloat32(value, dest);
         break;
       case Scalar::Float64:
-#ifdef JS_MORE_DETERMINISTIC
-        // See the comment in TypedArrayObjectTemplate::doubleToNative.
-        masm.canonicalizeDouble(value);
-#endif
         masm.storeDouble(value, dest);
         break;
       case Scalar::Float32x4:
@@ -277,6 +273,14 @@ StoreToTypedFloatArray(MacroAssembler& masm, int arrayType, const S& value, cons
             break;
           default: MOZ_CRASH("unexpected number of elements in simd write");
         }
+        break;
+      case Scalar::Int8x16:
+        MOZ_ASSERT(numElems == 16, "unexpected partial store");
+        masm.storeUnalignedSimd128Int(value, dest);
+        break;
+      case Scalar::Int16x8:
+        MOZ_ASSERT(numElems == 8, "unexpected partial store");
+        masm.storeUnalignedSimd128Int(value, dest);
         break;
       default:
         MOZ_CRASH("Invalid typed array type");
@@ -373,6 +377,14 @@ MacroAssembler::loadFromTypedArray(Scalar::Type arrayType, const T& src, AnyRegi
             break;
           default: MOZ_CRASH("unexpected number of elements in SIMD load");
         }
+        break;
+      case Scalar::Int8x16:
+        MOZ_ASSERT(numElems == 16, "unexpected partial load");
+        loadUnalignedSimd128Int(src, dest.fpu());
+        break;
+      case Scalar::Int16x8:
+        MOZ_ASSERT(numElems == 8, "unexpected partial load");
+        loadUnalignedSimd128Int(src, dest.fpu());
         break;
       default:
         MOZ_CRASH("Invalid typed array type");

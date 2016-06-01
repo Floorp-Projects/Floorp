@@ -239,8 +239,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
         // to eat all exceptions either.
 
         {
-            AutoSaveContextOptions asco(cx);
-            ContextOptionsRef(cx).setDontReportUncaught(true);
+            MOZ_ASSERT(JS::ContextOptionsRef(cx).autoJSAPIOwnsErrorReporting());
             RootedValue arg(cx, JS::ObjectValue(*id));
             success = JS_CallFunctionValue(cx, jsobj, fun, HandleValueArray(arg), &retval);
         }
@@ -1214,9 +1213,7 @@ pre_call_clean_up:
         success = JS_SetProperty(cx, obj, name, rval);
     } else {
         if (!fval.isPrimitive()) {
-            AutoSaveContextOptions asco(cx);
-            ContextOptionsRef(cx).setDontReportUncaught(true);
-
+            MOZ_ASSERT(JS::ContextOptionsRef(cx).autoJSAPIOwnsErrorReporting());
             success = JS_CallFunctionValue(cx, thisObj, fval, args, &rval);
         } else {
             // The property was not an object so can't be a function.

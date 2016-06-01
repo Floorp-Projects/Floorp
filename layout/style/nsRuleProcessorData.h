@@ -404,13 +404,9 @@ struct MOZ_STACK_CLASS TreeMatchContext {
     , mCurrentStyleScope(nullptr)
   {
     if (aMatchVisited != eNeverMatchVisited) {
-      nsCOMPtr<nsISupports> container = mDocument->GetContainer();
-      if (container) {
-        nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(container);
-        NS_ASSERTION(loadContext, "Couldn't get loadContext from container; assuming no private browsing.");
-        if (loadContext) {
-          mUsingPrivateBrowsing = loadContext->UsePrivateBrowsing();
-        }
+      nsILoadContext* loadContext = mDocument->GetLoadContext();
+      if (loadContext) {
+        mUsingPrivateBrowsing = loadContext->UsePrivateBrowsing();
       }
     }
   }
