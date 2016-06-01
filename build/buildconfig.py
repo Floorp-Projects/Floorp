@@ -6,7 +6,7 @@ import imp
 import os
 import sys
 
-path = os.path.dirname(__file__)
+path = os.path.dirname(sys.executable)
 while not os.path.exists(os.path.join(path, 'config.status')):
     parent = os.path.normpath(os.path.join(path, os.pardir))
     if parent == path:
