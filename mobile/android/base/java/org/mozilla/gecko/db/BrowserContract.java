@@ -162,6 +162,11 @@ public class BrowserContract {
     public interface HistoryColumns {
         public static final String DATE_LAST_VISITED = "date";
         public static final String VISITS = "visits";
+        // Aggregates used to speed up top sites and search frecency-powered queries
+        public static final String LOCAL_VISITS = "visits_local";
+        public static final String REMOTE_VISITS = "visits_remote";
+        public static final String LOCAL_DATE_LAST_VISITED = "date_local";
+        public static final String REMOTE_DATE_LAST_VISITED = "date_remote";
     }
 
     @RobocopTarget
