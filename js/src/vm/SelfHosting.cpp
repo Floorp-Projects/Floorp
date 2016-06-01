@@ -3185,7 +3185,10 @@ js::IsSelfHostedFunctionWithName(JSFunction* fun, JSAtom* name)
 JSAtom*
 js::GetSelfHostedFunctionName(JSFunction* fun)
 {
-    return &fun->getExtendedSlot(LAZY_FUNCTION_NAME_SLOT).toString()->asAtom();
+    Value name = fun->getExtendedSlot(LAZY_FUNCTION_NAME_SLOT);
+    if (!name.isString())
+        return nullptr;
+    return &name.toString()->asAtom();
 }
 
 static_assert(JSString::MAX_LENGTH <= INT32_MAX,
