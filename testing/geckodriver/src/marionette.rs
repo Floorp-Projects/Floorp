@@ -267,6 +267,7 @@ impl MarionetteHandler {
 
     fn create_connection(&mut self, session_id: &Option<String>,
                          capabilities: &NewSessionParameters) -> WebDriverResult<()> {
+        debug!("create_connection");
         let profile = try!(self.load_profile(capabilities));
         let args = try!(self.load_browser_args(capabilities));
         match self.start_browser(profile, args) {
@@ -779,10 +780,10 @@ impl MarionetteCommand {
 
     fn from_webdriver_message(id: u64, msg: &WebDriverMessage<GeckoExtensionRoute>) -> WebDriverResult<MarionetteCommand> {
         let (opt_name, opt_parameters) = match msg.command {
-            NewSession(_) => {
+            NewSession(ref x) => {
                 let mut data = BTreeMap::new();
                 data.insert("sessionId".to_string(), Json::Null);
-                data.insert("capabilities".to_string(), Json::Null);
+                data.insert("capabilities".to_string(), x.to_json());
                 debug!("Creating NewSession message");
                 (Some("newSession"), Some(Ok(data)))
             },
