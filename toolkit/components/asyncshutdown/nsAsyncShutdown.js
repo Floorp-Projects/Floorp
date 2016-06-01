@@ -237,6 +237,7 @@ function nsAsyncShutdownService() {
 
     // All processes
     "webWorkersShutdown",
+    "xpcomWillShutdown",
     "xpcomThreadsShutdown",
     ]) {
     let k = _k;
