@@ -278,6 +278,17 @@ HitTestingTreeNode::HitTest(const ParentLayerPoint& aPoint) const
   {
     return HitTestResult::HitDispatchToContentRegion;
   }
+  if (gfxPrefs::TouchActionEnabled()) {
+    if (mEventRegions.mNoActionRegion.Contains(point.x, point.y)) {
+      return HitTestResult::HitLayerTouchActionNone;
+    }
+    if (mEventRegions.mHorizontalPanRegion.Contains(point.x, point.y)) {
+      return HitTestResult::HitLayerTouchActionPanX;
+    }
+    if (mEventRegions.mVerticalPanRegion.Contains(point.x, point.y)) {
+      return HitTestResult::HitLayerTouchActionPanY;
+    }
+  }
   return HitTestResult::HitLayer;
 }
 
