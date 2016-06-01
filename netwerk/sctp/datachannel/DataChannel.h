@@ -21,7 +21,6 @@
 #include "nsTArray.h"
 #include "nsDeque.h"
 #include "nsIInputStream.h"
-#include "nsITimer.h"
 #include "mozilla/Mutex.h"
 #include "DataChannelProtocol.h"
 #include "DataChannelListener.h"
@@ -92,16 +91,15 @@ public:
 };
 
 // One per PeerConnection
-class DataChannelConnection: public nsITimerCallback
+class DataChannelConnection
 #ifdef SCTP_DTLS_SUPPORTED
-                             , public sigslot::has_slots<>
+  : public sigslot::has_slots<>
 #endif
 {
   virtual ~DataChannelConnection();
 
 public:
-  NS_DECL_THREADSAFE_ISUPPORTS
-  NS_DECL_NSITIMERCALLBACK
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(DataChannelConnection)
 
   class DataConnectionListener : public SupportsWeakPtr<DataConnectionListener>
   {
@@ -189,6 +187,8 @@ public:
 
   void GetStreamIds(std::vector<uint16_t>* aStreamList);
 
+  bool SendDeferredMessages();
+
 protected:
   friend class DataChannelOnMessageAvailable;
   // Avoid cycles with PeerConnectionImpl
@@ -222,8 +222,6 @@ private:
 
   already_AddRefed<DataChannel> OpenFinish(already_AddRefed<DataChannel>&& aChannel);
 
-  void StartDefer();
-  bool SendDeferredMessages();
   void ProcessQueuedOpens();
   void ClearResets();
   void SendOutgoingStreamReset();
@@ -266,7 +264,7 @@ private:
   AutoTArray<RefPtr<DataChannel>,16> mStreams;
   nsDeque mPending; // Holds addref'ed DataChannel's -- careful!
   // holds data that's come in before a channel is open
-  nsTArray<nsAutoPtr<QueuedDataMessage> > mQueuedData;
+  nsTArray<nsAutoPtr<QueuedDataMessage>> mQueuedData;
 
   // Streams pending reset
   AutoTArray<uint16_t,4> mStreamsResetting;
@@ -283,10 +281,6 @@ private:
   uint16_t mRemotePort;
   bool mUsingDtls;
 
-  // Timer to control when we try to resend blocked messages
-  nsCOMPtr<nsITimer> mDeferredTimer;
-  uint32_t mDeferTimeout; // in ms
-  bool mTimerRunning;
   nsCOMPtr<nsIThread> mInternalIOThread;
 };
 
@@ -387,7 +381,12 @@ public:
   bool GetOrdered() { return !(mFlags & DATA_CHANNEL_FLAGS_OUT_OF_ORDER_ALLOWED); }
 
   // Amount of data buffered to send
-  uint32_t GetBufferedAmount();
+  uint32_t GetBufferedAmount()
+  {
+    MutexAutoLock lock(mConnection->mLock);
+    return GetBufferedAmountLocked();
+  }
+
 
   // Trigger amount for generating BufferedAmountLow events
   uint32_t GetBufferedAmountLowThreshold();
@@ -423,6 +422,7 @@ private:
   friend class DataChannelConnection;
 
   nsresult AddDataToBinaryMsg(const char *data, uint32_t size);
+  uint32_t GetBufferedAmountLocked() const;
 
   RefPtr<DataChannelConnection> mConnection;
   nsCString mLabel;
@@ -437,8 +437,8 @@ private:
   bool mIsRecvBinary;
   size_t mBufferedThreshold;
   nsCString mRecvBuffer;
-  nsTArray<nsAutoPtr<BufferedMsg> > mBufferedData;
-  nsTArray<nsCOMPtr<nsIRunnable> > mQueuedMessages;
+  nsTArray<nsAutoPtr<BufferedMsg>> mBufferedData; // GUARDED_BY(mConnection->mLock)
+  nsTArray<nsCOMPtr<nsIRunnable>> mQueuedMessages;
 };
 
 // used to dispatch notifications of incoming data to the main thread
@@ -454,7 +454,6 @@ public:
     ON_CHANNEL_OPEN,
     ON_CHANNEL_CLOSED,
     ON_DATA,
-    START_DEFER,
     BUFFER_LOW_THRESHOLD,
     NO_LONGER_BUFFERED,
   };  /* types */
@@ -554,9 +553,6 @@ public:
           default:
             break;
         }
-        break;
-      case START_DEFER:
-        mConnection->StartDefer();
         break;
     }
     return NS_OK;
