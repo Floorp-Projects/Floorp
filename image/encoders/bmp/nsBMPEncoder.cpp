@@ -127,7 +127,7 @@ nsBMPEncoder::StartImageEncode(uint32_t aWidth,
   // parse and check any provided output options
   Version version;
   uint32_t bpp;
-  nsresult rv = ParseOptions(aOutputOptions, &version, &bpp);
+  nsresult rv = ParseOptions(aOutputOptions, version, bpp);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -256,15 +256,11 @@ nsBMPEncoder::EndImageEncode()
 // Parses the encoder options and sets the bits per pixel to use
 // See InitFromData for a description of the parse options
 nsresult
-nsBMPEncoder::ParseOptions(const nsAString& aOptions, Version* version,
-                           uint32_t* bpp)
+nsBMPEncoder::ParseOptions(const nsAString& aOptions, Version& aVersionOut,
+                           uint32_t& aBppOut)
 {
-  if (version) {
-    *version = VERSION_3;
-  }
-  if (bpp) {
-    *bpp = 24;
-  }
+  aVersionOut = VERSION_3;
+  aBppOut = 24;
 
   // Parse the input string into a set of name/value pairs.
   // From a format like: name=value;bpp=<bpp_value>;name=value
@@ -291,9 +287,9 @@ nsBMPEncoder::ParseOptions(const nsAString& aOptions, Version* version,
     if (nameValuePair[0].Equals("version",
                                 nsCaseInsensitiveCStringComparator())) {
       if (nameValuePair[1].EqualsLiteral("3")) {
-        *version = VERSION_3;
+        aVersionOut = VERSION_3;
       } else if (nameValuePair[1].EqualsLiteral("5")) {
-        *version = VERSION_5;
+        aVersionOut = VERSION_5;
       } else {
         return NS_ERROR_INVALID_ARG;
       }
@@ -302,9 +298,9 @@ nsBMPEncoder::ParseOptions(const nsAString& aOptions, Version* version,
     // Parse the bpp portion of the string name=value;bpp=<bpp_value>;name=value
     if (nameValuePair[0].Equals("bpp", nsCaseInsensitiveCStringComparator())) {
       if (nameValuePair[1].EqualsLiteral("24")) {
-        *bpp = 24;
+        aBppOut = 24;
       } else if (nameValuePair[1].EqualsLiteral("32")) {
-        *bpp = 32;
+        aBppOut = 32;
       } else {
         return NS_ERROR_INVALID_ARG;
       }
