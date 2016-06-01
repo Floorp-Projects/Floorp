@@ -21,6 +21,10 @@ UNIFIED_SOURCES += [
     'AudioChannelService.cpp',
 ]
 
+LOCAL_INCLUDES += [
+    '/dom/base/',
+]
+
 include('/ipc/chromium/chromium-config.mozbuild')
 
 FINAL_LIBRARY = 'xul'
