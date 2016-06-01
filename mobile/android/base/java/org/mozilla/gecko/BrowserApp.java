@@ -51,8 +51,7 @@ import org.mozilla.gecko.javaaddons.JavaAddonManager;
 import org.mozilla.gecko.media.AudioFocusAgent;
 import org.mozilla.gecko.menu.GeckoMenu;
 import org.mozilla.gecko.menu.GeckoMenuItem;
-import org.mozilla.gecko.mozglue.SafeIntentUtils;
-import org.mozilla.gecko.util.SafeIntent;
+import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
 import org.mozilla.gecko.permissions.Permissions;
 import org.mozilla.gecko.preferences.ClearOnShutdownPref;
@@ -783,7 +782,7 @@ public class BrowserApp extends GeckoApp
             return;
         }
 
-        final String hostExtra = SafeIntentUtils.getStringExtra(intent, INTENT_KEY_SWITCHBOARD_HOST);
+        final String hostExtra = IntentUtils.getStringExtraSafe(intent, INTENT_KEY_SWITCHBOARD_HOST);
         final String host = TextUtils.isEmpty(hostExtra) ? DEFAULT_SWITCHBOARD_HOST : hostExtra;
 
         final String serverUrl;
