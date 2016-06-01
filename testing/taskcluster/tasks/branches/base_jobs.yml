@@ -48,6 +48,14 @@ builds:
     types:
       opt:
         task: tasks/builds/opt_linux64_st-an.yml
+  linux64-asan:
+    platforms:
+      - Linux64 ASan
+    types:
+      opt:
+        task: tasks/builds/opt_linux64-asan.yml
+      debug:
+        task: tasks/builds/dbg_linux64-asan.yml
   linux64-haz:
     platforms:
       - Linux64
