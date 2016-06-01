@@ -240,7 +240,7 @@ static void SetUint32LE(uint8_t* aDest, uint32_t aValue)
 }
 
 static FILE*
-OpenDumpFile(AudioStream* aStream)
+OpenDumpFile(uint32_t aChannels, uint32_t aRate)
 {
   if (!getenv("MOZ_DUMP_AUDIO"))
     return nullptr;
@@ -263,9 +263,9 @@ OpenDumpFile(AudioStream* aStream)
   static const int CHANNEL_OFFSET = 22;
   static const int SAMPLE_RATE_OFFSET = 24;
   static const int BLOCK_ALIGN_OFFSET = 32;
-  SetUint16LE(header + CHANNEL_OFFSET, aStream->GetChannels());
-  SetUint32LE(header + SAMPLE_RATE_OFFSET, aStream->GetRate());
-  SetUint16LE(header + BLOCK_ALIGN_OFFSET, aStream->GetChannels()*2);
+  SetUint16LE(header + CHANNEL_OFFSET, aChannels);
+  SetUint32LE(header + SAMPLE_RATE_OFFSET, aRate);
+  SetUint16LE(header + BLOCK_ALIGN_OFFSET, aChannels * 2);
   fwrite(header, sizeof(header), 1, f);
 
   return f;
@@ -332,7 +332,7 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
   mChannels = aNumChannels;
   mOutChannels = aNumChannels;
 
-  mDumpFile = OpenDumpFile(this);
+  mDumpFile = OpenDumpFile(aNumChannels, aRate);
 
   cubeb_stream_params params;
   params.rate = aRate;
