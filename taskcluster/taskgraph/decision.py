@@ -69,7 +69,7 @@ def taskgraph_decision(options):
                    taskgraph_to_json(tgg.full_task_graph))
 
     # write out the target task set to allow reproducing this as input
-    write_artifact('target_tasks.json',
+    write_artifact('target-tasks.json',
                    tgg.target_task_set.tasks.keys())
 
     # write out the optimized task graph to describe what will actually happen,
