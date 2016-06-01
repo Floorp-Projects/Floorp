@@ -1,0 +1,46 @@
+<head>
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Wheel-scrolling over inactive subframe with perspective</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+function* test(testDriver) {
+  var subframe = document.getElementById('scroll');
+
+  // scroll over the middle of the subframe, to make sure it scrolls,
+  // not the page
+  var scrollPos = subframe.scrollTop;
+  yield moveMouseAndScrollWheelOver(subframe, 100, 100, testDriver);
+  dump("after scroll, subframe.scrollTop = " + subframe.scrollTop + "\n");
+  ok(subframe.scrollTop > scrollPos, "subframe scrolled after wheeling over it");
+}
+
+waitUntilApzStable()
+.then(runContinuation(test))
+.then(subtestDone);
+
+  </script>
+  <style>
+    #scroll {
+      width: 200px;
+      height: 200px;
+      overflow: scroll;
+      perspective: 400px;
+    }
+    #scrolled {
+      width: 200px;
+      height: 1000px; /* so the subframe has room to scroll */
+      background: linear-gradient(red, blue); /* so you can see it scroll */
+      transform: translateZ(0px); /* so the perspective makes it to the display list */
+    }
+  </style>
+</head>
+<body>
+  <div id="scroll">
+    <div id="scrolled"></div>
+  </div>
+  <div style="height: 5000px;"></div><!-- So the page is scrollable as well -->
+</body>
+</head>
