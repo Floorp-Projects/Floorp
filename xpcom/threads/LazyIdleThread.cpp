@@ -398,7 +398,7 @@ LazyIdleThread::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags)
 }
 
 NS_IMETHODIMP
-LazyIdleThread::Dispatch(already_AddRefed<nsIRunnable>&& aEvent,
+LazyIdleThread::Dispatch(already_AddRefed<nsIRunnable> aEvent,
                          uint32_t aFlags)
 {
   ASSERT_OWNING_THREAD();
@@ -431,7 +431,7 @@ LazyIdleThread::Dispatch(already_AddRefed<nsIRunnable>&& aEvent,
 }
 
 NS_IMETHODIMP
-LazyIdleThread::DelayedDispatch(already_AddRefed<nsIRunnable>&&, uint32_t)
+LazyIdleThread::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
