@@ -65,6 +65,14 @@ builds:
         task: tasks/builds/opt_macosx64.yml
       debug:
         task: tasks/builds/dbg_macosx64.yml
+  linux64-asan:
+    platforms:
+      - Linux64 ASan
+    types:
+      opt:
+        task: tasks/builds/opt_linux64-asan.yml
+      debug:
+        task: tasks/builds/dbg_linux64-asan.yml
   macosx64-st-an:
     platforms:
       - MacOSX64 Static Analysis

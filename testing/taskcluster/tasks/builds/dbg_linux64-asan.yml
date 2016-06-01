@@ -1,0 +1,30 @@
+$inherits:
+  from: 'tasks/builds/base_linux64.yml'
+  variables:
+    build_name: 'linux64-asan'
+    build_type: 'dbg'
+task:
+  metadata:
+      name: '[TC] Linux64 ASan Dbg'
+      description: 'Linux64 ASan Dbg'
+
+  routes:
+    - 'index.buildbot.branches.{{project}}.linux64-asan'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux64-asan'
+
+  workerType: dbg-linux64
+
+  payload:
+    env:
+      MH_CUSTOM_BUILD_VARIANT_CFG: 'asan-tc-and-debug'
+
+  extra:
+    treeherder:
+      groupSymbol: tc
+      groupName: Submitted by taskcluster
+      symbol: Bd
+      machine:
+        # see https://github.com/mozilla/treeherder/blob/master/ui/js/values.js
+        platform: linux64
+      collection:
+        asan: true

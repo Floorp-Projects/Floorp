@@ -97,7 +97,6 @@ flags:
     - linux64
     - linux64-st-an
     - linux64-artifact
-    - linux64-asan
     - linux64-pgo
     - macosx64
     - macosx64-st-an
