@@ -713,6 +713,7 @@ RecordMessageSize(size_t aDataLength, const nsAString& aMessageName)
   }
 
   NS_ConvertUTF16toUTF8 messageName(aMessageName);
+  messageName.StripChars("0123456789");
 
   Telemetry::Accumulate(Telemetry::MESSAGE_MANAGER_MESSAGE_SIZE, messageName,
                         aDataLength);
