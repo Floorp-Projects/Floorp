@@ -23,7 +23,11 @@ function PresentationRequestUIGlue() { }
 PresentationRequestUIGlue.prototype = {
 
   sendRequest: function(aUrl, aSessionId, aDevice) {
-    let localDevice = aDevice.QueryInterface(Ci.nsIPresentationLocalDevice);
+    let localDevice;
+    try {
+      localDevice = aDevice.QueryInterface(Ci.nsIPresentationLocalDevice);
+    } catch (e) {}
+
     if (localDevice) {
       return this.sendTo1UA(aUrl, aSessionId, localDevice.windowId);
     } else {
