@@ -52,6 +52,7 @@ class ChannelGroup : public BitrateObserver {
                             int base_channel_id,
                             int number_of_cores,
                             bool disable_default_encoder);
+  void Stop(int channel_id);
   void DeleteChannel(int channel_id);
   void AddChannel(int channel_id);
   void RemoveChannel(int channel_id);

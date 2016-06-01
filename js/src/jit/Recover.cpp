@@ -1354,6 +1354,24 @@ RSimdBox::recover(JSContext* cx, SnapshotIterator& iter) const
     MOZ_ASSERT_IF(a.mode() == RValueAllocation::ANY_FLOAT_REG, a.fpuReg().isSimd128());
     const FloatRegisters::RegisterContent* raw = iter.floatAllocationPointer(a);
     switch (SimdType(type_)) {
+      case SimdType::Bool8x16:
+        resultObject = js::CreateSimd<Bool8x16>(cx, (const Bool8x16::Elem*) raw);
+        break;
+      case SimdType::Int8x16:
+        resultObject = js::CreateSimd<Int8x16>(cx, (const Int8x16::Elem*) raw);
+        break;
+      case SimdType::Uint8x16:
+        resultObject = js::CreateSimd<Uint8x16>(cx, (const Uint8x16::Elem*) raw);
+        break;
+      case SimdType::Bool16x8:
+        resultObject = js::CreateSimd<Bool16x8>(cx, (const Bool16x8::Elem*) raw);
+        break;
+      case SimdType::Int16x8:
+        resultObject = js::CreateSimd<Int16x8>(cx, (const Int16x8::Elem*) raw);
+        break;
+      case SimdType::Uint16x8:
+        resultObject = js::CreateSimd<Uint16x8>(cx, (const Uint16x8::Elem*) raw);
+        break;
       case SimdType::Bool32x4:
         resultObject = js::CreateSimd<Bool32x4>(cx, (const Bool32x4::Elem*) raw);
         break;
@@ -1368,24 +1386,6 @@ RSimdBox::recover(JSContext* cx, SnapshotIterator& iter) const
         break;
       case SimdType::Float64x2:
         MOZ_CRASH("NYI, RSimdBox of Float64x2");
-        break;
-      case SimdType::Int8x16:
-        MOZ_CRASH("NYI, RSimdBox of Int8x16");
-        break;
-      case SimdType::Int16x8:
-        MOZ_CRASH("NYI, RSimdBox of Int16x8");
-        break;
-      case SimdType::Uint8x16:
-        MOZ_CRASH("NYI, RSimdBox of UInt8x16");
-        break;
-      case SimdType::Uint16x8:
-        MOZ_CRASH("NYI, RSimdBox of UInt16x8");
-        break;
-      case SimdType::Bool8x16:
-        MOZ_CRASH("NYI, RSimdBox of Bool8x16");
-        break;
-      case SimdType::Bool16x8:
-        MOZ_CRASH("NYI, RSimdBox of Bool16x8");
         break;
       case SimdType::Bool64x2:
         MOZ_CRASH("NYI, RSimdBox of Bool64x2");

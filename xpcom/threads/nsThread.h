@@ -111,10 +111,10 @@ protected:
 
   // Wrappers for event queue methods:
   nsresult PutEvent(nsIRunnable* aEvent, nsNestedEventTarget* aTarget);
-  nsresult PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
+  nsresult PutEvent(already_AddRefed<nsIRunnable> aEvent,
                     nsNestedEventTarget* aTarget);
 
-  nsresult DispatchInternal(already_AddRefed<nsIRunnable>&& aEvent,
+  nsresult DispatchInternal(already_AddRefed<nsIRunnable> aEvent,
                             uint32_t aFlags, nsNestedEventTarget* aTarget);
 
   struct nsThreadShutdownContext* ShutdownInternal(bool aSync);
@@ -140,7 +140,7 @@ protected:
       mQueue.PutEvent(aEvent, aProofOfLock);
     }
 
-    void PutEvent(already_AddRefed<nsIRunnable>&& aEvent,
+    void PutEvent(already_AddRefed<nsIRunnable> aEvent,
                   mozilla::MutexAutoLock& aProofOfLock)
     {
       mQueue.PutEvent(mozilla::Move(aEvent), aProofOfLock);

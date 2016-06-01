@@ -236,8 +236,8 @@ nsColumnSetFrame::ChooseColumnStrategy(const nsHTMLReflowState& aReflowState,
   if (isBalancing) {
     const uint32_t MAX_NESTED_COLUMN_BALANCING = 2;
     uint32_t cnt = 0;
-    for (const nsHTMLReflowState* rs = aReflowState.parentReflowState;
-         rs && cnt < MAX_NESTED_COLUMN_BALANCING; rs = rs->parentReflowState) {
+    for (const nsHTMLReflowState* rs = aReflowState.mParentReflowState;
+         rs && cnt < MAX_NESTED_COLUMN_BALANCING; rs = rs->mParentReflowState) {
       if (rs->mFlags.mIsColumnBalancing) {
         ++cnt;
       }

@@ -482,7 +482,7 @@ Livemark.prototype = {
 
     // Security check the site URI against the feed URI principal.
     let secMan = Services.scriptSecurityManager;
-    let feedPrincipal = secMan.getSimpleCodebasePrincipal(this.feedURI);
+    let feedPrincipal = secMan.createCodebasePrincipal(this.feedURI, {});
     try {
       secMan.checkLoadURIWithPrincipal(feedPrincipal, aSiteURI,
                                        Ci.nsIScriptSecurityManager.DISALLOW_INHERIT_PRINCIPAL);
@@ -759,7 +759,7 @@ LivemarkLoadListener.prototype = {
       // We need this to make sure the item links are safe
       let feedPrincipal =
         Services.scriptSecurityManager
-                .getSimpleCodebasePrincipal(this._livemark.feedURI);
+                .createCodebasePrincipal(this._livemark.feedURI, {});
 
       // Enforce well-formedness because the existing code does
       if (!aResult || !aResult.doc || aResult.bozo) {

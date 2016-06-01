@@ -153,13 +153,13 @@ Zone::sweepBreakpoints(FreeOp* fop)
      */
 
     MOZ_ASSERT(isGCSweepingOrCompacting());
-    for (ZoneCellIterUnderGC i(this, AllocKind::SCRIPT); !i.done(); i.next()) {
-        JSScript* script = i.get<JSScript>();
+    for (auto iter = cellIter<JSScript>(); !iter.done(); iter.next()) {
+        JSScript* script = iter;
         if (!script->hasAnyBreakpointsOrStepMode())
             continue;
 
         bool scriptGone = IsAboutToBeFinalizedUnbarriered(&script);
-        MOZ_ASSERT(script == i.get<JSScript>());
+        MOZ_ASSERT(script == iter);
         for (unsigned i = 0; i < script->length(); i++) {
             BreakpointSite* site = script->getBreakpointSite(script->offsetToPC(i));
             if (!site)
@@ -207,10 +207,8 @@ Zone::discardJitCode(FreeOp* fop)
 
 #ifdef DEBUG
         /* Assert no baseline scripts are marked as active. */
-        for (ZoneCellIter i(this, AllocKind::SCRIPT); !i.done(); i.next()) {
-            JSScript* script = i.get<JSScript>();
+        for (auto script = cellIter<JSScript>(); !script.done(); script.next())
             MOZ_ASSERT_IF(script->hasBaselineScript(), !script->baselineScript()->active());
-        }
 #endif
 
         /* Mark baseline scripts on the stack as active. */
@@ -219,8 +217,7 @@ Zone::discardJitCode(FreeOp* fop)
         /* Only mark OSI points if code is being discarded. */
         jit::InvalidateAll(fop, this);
 
-        for (ZoneCellIter i(this, AllocKind::SCRIPT); !i.done(); i.next()) {
-            JSScript* script = i.get<JSScript>();
+        for (auto script = cellIter<JSScript>(); !script.done(); script.next())  {
             jit::FinishInvalidation(fop, script);
 
             /*

@@ -267,8 +267,17 @@ wasm::Classify(Expr expr)
       case Expr::F32x4fromInt32x4:
       case Expr::F32x4fromUint32x4:
       case Expr::I32x4fromFloat32x4Bits:
+      case Expr::I32x4fromInt8x16Bits:
+      case Expr::I32x4fromInt16x8Bits:
+      case Expr::I16x8fromInt8x16Bits:
+      case Expr::I16x8fromInt32x4Bits:
+      case Expr::I16x8fromFloat32x4Bits:
+      case Expr::I8x16fromInt16x8Bits:
+      case Expr::I8x16fromInt32x4Bits:
+      case Expr::I8x16fromFloat32x4Bits:
+      case Expr::F32x4fromInt8x16Bits:
+      case Expr::F32x4fromInt16x8Bits:
       case Expr::F32x4fromInt32x4Bits:
-      case Expr::F32x4fromUint32x4Bits:
         return ExprKind::Conversion;
       case Expr::I32Load8S:
       case Expr::I32Load8U:

@@ -19,6 +19,8 @@
 #include "nsIWeakReference.h"
 #include "mozilla/Services.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "nsIPermissionManager.h"
+#include "nsIDocument.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -66,7 +68,8 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsPluginArray,
                                       mWindow,
-                                      mPlugins)
+                                      mPlugins,
+                                      mCTPPlugins)
 
 static void
 GetPluginMimeTypes(const nsTArray<RefPtr<nsPluginElement> >& aPlugins,
@@ -146,6 +149,7 @@ nsPluginArray::Refresh(bool aReloadDocuments)
   }
 
   mPlugins.Clear();
+  mCTPPlugins.Clear();
 
   nsCOMPtr<nsIDOMNavigator> navigator = mWindow->GetNavigator();
 
@@ -221,6 +225,13 @@ nsPluginArray::NamedGetter(const nsAString& aName, bool &aFound)
 
   nsPluginElement* plugin = FindPlugin(mPlugins, aName);
   aFound = (plugin != nullptr);
+  if (!aFound) {
+    nsPluginElement* hiddenPlugin = FindPlugin(mCTPPlugins, aName);
+    if (hiddenPlugin) {
+      nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+      obs->NotifyObservers(hiddenPlugin->PluginTag(), "Plugin::HiddenPluginTouched", nsString(aName).get());
+    }
+  }
   return plugin;
 }
 
@@ -282,7 +293,7 @@ operator<(const RefPtr<nsPluginElement>& lhs,
 void
 nsPluginArray::EnsurePlugins()
 {
-  if (!mPlugins.IsEmpty()) {
+  if (!mPlugins.IsEmpty() || !mCTPPlugins.IsEmpty()) {
     // We already have an array of plugin elements.
     return;
   }
@@ -299,7 +310,31 @@ nsPluginArray::EnsurePlugins()
   // need to wrap each of these with a nsPluginElement, which is
   // scriptable.
   for (uint32_t i = 0; i < pluginTags.Length(); ++i) {
-    mPlugins.AppendElement(new nsPluginElement(mWindow, pluginTags[i]));
+    nsCOMPtr<nsPluginTag> pluginTag = do_QueryInterface(pluginTags[i]);
+    if (!pluginTag) {
+      mPlugins.AppendElement(new nsPluginElement(mWindow, pluginTags[i]));
+    } else if (pluginTag->IsActive()) {
+      uint32_t permission = nsIPermissionManager::ALLOW_ACTION;
+      if (pluginTag->IsClicktoplay()) {
+        nsCString name;
+        pluginTag->GetName(name);
+        if (NS_LITERAL_CSTRING("Shockwave Flash").Equals(name)) {
+          RefPtr<nsPluginHost> pluginHost = nsPluginHost::GetInst();
+          nsCString permString;
+          nsresult rv = pluginHost->GetPermissionStringForTag(pluginTag, 0, permString);
+          if (rv == NS_OK) {
+            nsIPrincipal* principal = mWindow->GetExtantDoc()->NodePrincipal();
+            nsCOMPtr<nsIPermissionManager> permMgr = services::GetPermissionManager();
+            permMgr->TestPermissionFromPrincipal(principal, permString.get(), &permission);
+          }
+        }
+      }
+      if (permission == nsIPermissionManager::ALLOW_ACTION) {
+        mPlugins.AppendElement(new nsPluginElement(mWindow, pluginTags[i]));
+      } else {
+        mCTPPlugins.AppendElement(new nsPluginElement(mWindow, pluginTags[i]));
+      }
+    }
   }
 
   // Alphabetize the enumeration order of non-hidden plugins to reduce

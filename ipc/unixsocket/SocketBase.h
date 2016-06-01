@@ -453,7 +453,7 @@ private:
  * the I/O thread to the consumer thread.
  */
 template <typename T>
-class SocketTask : public Runnable
+class SocketTask : public CancelableRunnable
 {
 public:
   virtual ~SocketTask()

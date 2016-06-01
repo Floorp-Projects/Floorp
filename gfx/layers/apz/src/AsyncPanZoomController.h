@@ -898,6 +898,8 @@ private:
   ParentLayerPoint mLastFlingVelocity;
   // The time at which the most recent fling started.
   TimeStamp mLastFlingTime;
+  // Indicates if the repaint-during-pinch timer is currently set
+  bool mPinchPaintTimerSet;
 
   // Deal with overscroll resulting from a fling animation. This is only ever
   // called on APZC instances that were actually performing a fling.
@@ -920,6 +922,9 @@ private:
 
   // Returns whether overscroll is allowed during an event.
   bool AllowScrollHandoffInCurrentBlock() const;
+
+  // Invoked by the pinch repaint timer.
+  void DoDelayedRequestContentRepaint();
 
   /* ===================================================================
    * The functions and members in this section are used to make ancestor chains

@@ -1,3 +1,7 @@
+import os
+
+ABS_WORK_DIR = os.path.join(os.getcwd(), "build")
+
 config = {
     "log_name": "beta_to_release",
     "copy_files": [
@@ -25,11 +29,10 @@ config = {
          "MAR_CHANNEL_ID=firefox-mozilla-release"),
     ],
 
-    # Disallow sharing, since we want pristine .hg directories.
-    # "vcs_share_base": None,
+    "vcs_share_base": os.path.join(ABS_WORK_DIR, 'hg-shared'),
     # "hg_share_base": None,
     "tools_repo_url": "https://hg.mozilla.org/build/tools",
-    "tools_repo_revision": "default",
+    "tools_repo_branch": "default",
     "from_repo_url": "ssh://hg.mozilla.org/releases/mozilla-beta",
     "to_repo_url": "ssh://hg.mozilla.org/releases/mozilla-release",
 

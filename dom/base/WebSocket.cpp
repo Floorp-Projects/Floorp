@@ -2719,10 +2719,10 @@ class WorkerRunnableDispatcher final : public WorkerRunnable
 
 public:
   WorkerRunnableDispatcher(WebSocketImpl* aImpl, WorkerPrivate* aWorkerPrivate,
-                           already_AddRefed<nsIRunnable>&& aEvent)
+                           already_AddRefed<nsIRunnable> aEvent)
     : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
     , mWebSocketImpl(aImpl)
-    , mEvent(aEvent)
+    , mEvent(Move(aEvent))
   {
   }
 
@@ -2779,7 +2779,7 @@ WebSocketImpl::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags)
 }
 
 NS_IMETHODIMP
-WebSocketImpl::Dispatch(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFlags)
+WebSocketImpl::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
 {
   nsCOMPtr<nsIRunnable> event_ref(aEvent);
   // If the target is the main-thread we can just dispatch the runnable.
@@ -2811,7 +2811,7 @@ WebSocketImpl::Dispatch(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFlags)
 }
 
 NS_IMETHODIMP
-WebSocketImpl::DelayedDispatch(already_AddRefed<nsIRunnable>&&, uint32_t)
+WebSocketImpl::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

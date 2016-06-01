@@ -72,12 +72,14 @@ def generate_hazards(config, outfilename):
                         '%(gcEdges)s',
                         '%(suppressedFunctions_list)s',
                         '%(gcTypes)s',
+                        '%(typeInfo)s',
                         str(i+1), '%(jobs)s',
                         'tmp.%s' % (i+1,)),
                        config)
         outfile = 'rootingHazards.%s' % (i+1,)
         output = open(outfile, 'w')
-        print_command(command, outfile=outfile, env=env(config))
+        if config['verbose']:
+            print_command(command, outfile=outfile, env=env(config))
         jobs.append((command, Popen(command, stdout=output, env=env(config))))
 
     final_status = 0
@@ -91,7 +93,8 @@ def generate_hazards(config, outfilename):
 
     with open(outfilename, 'w') as output:
         command = ['cat'] + [ 'rootingHazards.%s' % (i+1,) for i in range(int(config['jobs'])) ]
-        print_command(command, outfile=outfilename)
+        if config['verbose']:
+            print_command(command, outfile=outfilename)
         subprocess.call(command, stdout=output)
 
 JOBS = { 'dbs':
@@ -111,7 +114,7 @@ JOBS = { 'dbs':
               ()),
 
          'callgraph':
-             (('%(js)s', '%(analysis_scriptdir)s/computeCallgraph.js'),
+             (('%(js)s', '%(analysis_scriptdir)s/computeCallgraph.js', '%(typeInfo)s'),
               'callgraph.txt'),
 
          'gcFunctions':
@@ -120,8 +123,9 @@ JOBS = { 'dbs':
               ('gcFunctions.txt', 'gcFunctions.lst', 'gcEdges.txt', 'suppressedFunctions.lst')),
 
          'gcTypes':
-             (('%(js)s', '%(analysis_scriptdir)s/computeGCTypes.js',),
-              'gcTypes.txt'),
+             (('%(js)s', '%(analysis_scriptdir)s/computeGCTypes.js',
+               '[gcTypes]', '[typeInfo]'),
+              ('gcTypes.txt', 'typeInfo.txt')),
 
          'allFunctions':
              (('%(sixgill_bin)s/xdbkeys', 'src_body.xdb',),
@@ -155,7 +159,8 @@ def run_job(name, config):
         if isinstance(outfiles, basestring):
             stdout_filename = '%s.tmp' % name
             temp_map[stdout_filename] = outfiles
-            print_command(cmdspec, outfile=outfiles, env=env(config))
+            if config['verbose']:
+                print_command(cmdspec, outfile=outfiles, env=env(config))
         else:
             stdout_filename = None
             pc = list(cmdspec)
@@ -163,7 +168,8 @@ def run_job(name, config):
             for (i, name) in out_indexes(cmdspec):
                 pc[i] = outfiles[outfile]
                 outfile += 1
-            print_command(pc, env=env(config))
+            if config['verbose']:
+                print_command(pc, env=env(config))
 
         command = list(cmdspec)
         outfile = 0
@@ -190,15 +196,6 @@ config = { 'ANALYSIS_SCRIPTDIR': os.path.dirname(__file__) }
 defaults = [ '%s/defaults.py' % config['ANALYSIS_SCRIPTDIR'],
              '%s/defaults.py' % os.getcwd() ]
 
-for default in defaults:
-    try:
-        execfile(default, config)
-        print("Loaded %s" % default)
-    except:
-        pass
-
-data = config.copy()
-
 parser = argparse.ArgumentParser(description='Statically analyze build tree for rooting hazards.')
 parser.add_argument('step', metavar='STEP', type=str, nargs='?',
                     help='run starting from this step')
@@ -220,8 +217,21 @@ parser.add_argument('--tag', '-t', type=str, nargs='?',
                     help='name of job, also sets build command to "build.<tag>"')
 parser.add_argument('--expect-file', type=str, nargs='?',
                     help='deprecated option, temporarily still present for backwards compatibility')
+parser.add_argument('--verbose', '-v', action='store_true',
+                    help='Display cut & paste commands to run individual steps')
 
 args = parser.parse_args()
+
+for default in defaults:
+    try:
+        execfile(default, config)
+        if args.verbose:
+            print("Loaded %s" % default)
+    except:
+        pass
+
+data = config.copy()
+
 for k,v in vars(args).items():
     if v is not None:
         data[k] = v
@@ -232,7 +242,7 @@ if args.tag and not args.buildcommand:
 if args.jobs is not None:
     data['jobs'] = args.jobs
 if not data.get('jobs'):
-    data['jobs'] = subprocess.check_output(['nproc', '--ignore=1'])
+    data['jobs'] = subprocess.check_output(['nproc', '--ignore=1']).strip()
 
 if args.buildcommand:
     data['buildcommand'] = args.buildcommand
@@ -251,8 +261,8 @@ if not data.get('source') and data.get('sixgill_bin'):
     data['source'] = path.replace("/js/src/jsapi.cpp", "")
 
 steps = [ 'dbs',
-          'callgraph',
           'gcTypes',
+          'callgraph',
           'gcFunctions',
           'allFunctions',
           'hazards',
@@ -276,7 +286,7 @@ for step in steps:
         for (i, name) in out_indexes(command):
             data[name] = outfiles[outfile]
             outfile += 1
-        assert len(outfiles) == outfile, 'step \'%s\': mismatched number of output files and params' % step
+        assert len(outfiles) == outfile, 'step \'%s\': mismatched number of output files (%d) and params (%d)' % (step, outfile, len(outfiles))
 
 if args.step:
     steps = steps[steps.index(args.step):]

@@ -264,7 +264,7 @@ void InstallSignalHandlers(const char *aProgname)
   sigaction(SIGFPE, &sa, &osa);
 #endif
 
-  if (XRE_IsContentProcess()) {
+  if (!XRE_IsParentProcess()) {
     /*
      * If the user is debugging a Gecko parent process in gdb and hits ^C to
      * suspend, a SIGINT signal will be sent to the child. We ignore this signal

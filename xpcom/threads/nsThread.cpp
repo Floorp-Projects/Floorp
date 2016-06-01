@@ -636,7 +636,7 @@ nsThread::PutEvent(nsIRunnable* aEvent, nsNestedEventTarget* aTarget)
 }
 
 nsresult
-nsThread::PutEvent(already_AddRefed<nsIRunnable>&& aEvent, nsNestedEventTarget* aTarget)
+nsThread::PutEvent(already_AddRefed<nsIRunnable> aEvent, nsNestedEventTarget* aTarget)
 {
   // We want to leak the reference when we fail to dispatch it, so that
   // we won't release the event in a wrong thread.
@@ -673,7 +673,7 @@ nsThread::PutEvent(already_AddRefed<nsIRunnable>&& aEvent, nsNestedEventTarget* 
 }
 
 nsresult
-nsThread::DispatchInternal(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFlags,
+nsThread::DispatchInternal(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags,
                            nsNestedEventTarget* aTarget)
 {
   // We want to leak the reference when we fail to dispatch it, so that
@@ -739,7 +739,7 @@ nsThread::DispatchFromScript(nsIRunnable* aEvent, uint32_t aFlags)
 }
 
 NS_IMETHODIMP
-nsThread::Dispatch(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFlags)
+nsThread::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
 {
   LOG(("THRD(%p) Dispatch [%p %x]\n", this, /* XXX aEvent */nullptr, aFlags));
 
@@ -747,7 +747,7 @@ nsThread::Dispatch(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFlags)
 }
 
 NS_IMETHODIMP
-nsThread::DelayedDispatch(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aDelayMs)
+nsThread::DelayedDispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aDelayMs)
 {
   NS_ENSURE_TRUE(!!aDelayMs, NS_ERROR_UNEXPECTED);
 
@@ -1304,7 +1304,7 @@ nsThread::nsNestedEventTarget::DispatchFromScript(nsIRunnable* aEvent, uint32_t 
 }
 
 NS_IMETHODIMP
-nsThread::nsNestedEventTarget::Dispatch(already_AddRefed<nsIRunnable>&& aEvent, uint32_t aFlags)
+nsThread::nsNestedEventTarget::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
 {
   LOG(("THRD(%p) Dispatch [%p %x] to nested loop %p\n", mThread.get().get(),
        /*XXX aEvent*/ nullptr, aFlags, this));
@@ -1313,7 +1313,7 @@ nsThread::nsNestedEventTarget::Dispatch(already_AddRefed<nsIRunnable>&& aEvent, 
 }
 
 NS_IMETHODIMP
-nsThread::nsNestedEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable>&&, uint32_t)
+nsThread::nsNestedEventTarget::DelayedDispatch(already_AddRefed<nsIRunnable>, uint32_t)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

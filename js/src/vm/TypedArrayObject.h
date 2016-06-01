@@ -353,6 +353,8 @@ TypedArrayShift(Scalar::Type viewType)
       case Scalar::Float64:
         return 3;
       case Scalar::Float32x4:
+      case Scalar::Int8x16:
+      case Scalar::Int16x8:
       case Scalar::Int32x4:
         return 4;
       default:;

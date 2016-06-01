@@ -784,7 +784,10 @@ var SessionStoreInternal = {
         // clear user input instead), so we shouldn't set them here either.
         // They also don't fall under the issues in bug 439675 where user input
         // needs to be preserved if the load doesn't succeed.
-        if (!browser.userTypedValue && uri && !win.gInitialPages.includes(uri)) {
+        // We also don't do this for remoteness updates, where it should not
+        // be necessary.
+        if (!browser.userTypedValue && uri && !data.isRemotenessUpdate &&
+            !win.gInitialPages.includes(uri)) {
           browser.userTypedValue = uri;
         }
 
@@ -3335,7 +3338,8 @@ var SessionStoreInternal = {
       browser.messageManager.sendAsyncMessage("SessionStore:restoreHistory", {
         tabData: tabData,
         epoch: epoch,
-        loadArguments: aLoadArguments
+        loadArguments: aLoadArguments,
+        isRemotenessUpdate,
       });
 
     }
