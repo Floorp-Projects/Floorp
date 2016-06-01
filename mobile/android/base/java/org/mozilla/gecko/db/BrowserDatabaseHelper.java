@@ -300,7 +300,6 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
             Combined.URL
             Combined.TITLE
             Combined.VISITS
-            Combined.DISPLAY
             Combined.DATE_LAST_VISITED
             Combined.FAVICON_ID
 
@@ -404,7 +403,6 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
             Combined.URL
             Combined.TITLE
             Combined.VISITS
-            Combined.DISPLAY
             Combined.DATE_LAST_VISITED
             Combined.FAVICON_ID
             Combined.LOCAL_DATE_LAST_VISITED
