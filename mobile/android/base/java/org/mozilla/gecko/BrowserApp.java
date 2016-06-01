@@ -78,6 +78,7 @@ import org.mozilla.gecko.tabs.TabHistoryController.OnShowTabHistory;
 import org.mozilla.gecko.tabs.TabHistoryFragment;
 import org.mozilla.gecko.tabs.TabHistoryPage;
 import org.mozilla.gecko.tabs.TabsPanel;
+import org.mozilla.gecko.telemetry.TelemetryUploadService;
 import org.mozilla.gecko.telemetry.measurements.SearchCountMeasurements;
 import org.mozilla.gecko.telemetry.TelemetryDispatcher;
 import org.mozilla.gecko.telemetry.UploadTelemetryCorePingCallback;
@@ -96,6 +97,7 @@ import org.mozilla.gecko.util.FloatUtils;
 import org.mozilla.gecko.util.GamepadUtils;
 import org.mozilla.gecko.util.GeckoEventListener;
 import org.mozilla.gecko.util.HardwareUtils;
+import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.util.MenuUtils;
 import org.mozilla.gecko.util.NativeEventListener;
 import org.mozilla.gecko.util.NativeJSObject;
@@ -176,6 +178,7 @@ import java.net.URLEncoder;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.EnumSet;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -545,6 +548,7 @@ public class BrowserApp extends GeckoApp
         }
 
         final Intent intent = getIntent();
+        configureForTestsBasedOnEnvironment(intent);
 
         // This has to be prepared prior to calling GeckoApp.onCreate, because
         // widget code and BrowserToolbar need it, and they're created by the
@@ -761,11 +765,27 @@ public class BrowserApp extends GeckoApp
     }
 
     /**
+     * Sets up the testing configuration if the environment is configured as such.
+     *
+     * We need to read environment variables from the intent string
+     * extra because environment variables from our test harness aren't set
+     * until Gecko is loaded, and we need to know this before then.
+     *
+     * This method should be called early since other initialization
+     * may depend on its results.
+     */
+    private void configureForTestsBasedOnEnvironment(final Intent intent) {
+        final HashMap<String, String> envVars = IntentUtils.getEnvVarMap(intent);
+        Experiments.setDisabledFromEnvVar(envVars);
+        TelemetryUploadService.setDisabledFromEnvVar(envVars);
+    }
+
+    /**
      * Initializes the default Switchboard URLs the first time.
      * @param intent
      */
-    private void initSwitchboard(Intent intent) {
-        if (Experiments.isDisabled(new SafeIntent(intent)) || !AppConstants.MOZ_SWITCHBOARD) {
+    private void initSwitchboard(final Intent intent) {
+        if (Experiments.isDisabled() || !AppConstants.MOZ_SWITCHBOARD) {
             return;
         }
 
@@ -2315,11 +2335,7 @@ public class BrowserApp extends GeckoApp
 
         final boolean isUserSearchTerm = selectedTab != null &&
                 !TextUtils.isEmpty(selectedTab.getUserRequested());
-        if (isUserSearchTerm && SwitchBoard.isInExperiment(getContext(), Experiments.SEARCH_TERM)) {
-            showBrowserSearchAfterAnimation(animator);
-        } else {
-            showHomePagerWithAnimator(panelId, null, animator);
-        }
+        showHomePagerWithAnimator(panelId, null, animator);
 
         animator.start();
         Telemetry.startUISession(TelemetryContract.Session.AWESOMESCREEN);

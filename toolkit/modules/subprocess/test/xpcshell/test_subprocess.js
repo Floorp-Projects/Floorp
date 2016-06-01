@@ -413,6 +413,44 @@ add_task(function* test_subprocess_invalid_json() {
 });
 
 
+if (AppConstants.isPlatformAndVersionAtLeast("win", "6")) {
+  add_task(function* test_subprocess_inherited_descriptors() {
+    let {ctypes, libc, win32} = Cu.import("resource://gre/modules/subprocess/subprocess_win.jsm");
+
+    let secAttr = new win32.SECURITY_ATTRIBUTES();
+    secAttr.nLength = win32.SECURITY_ATTRIBUTES.size;
+    secAttr.bInheritHandle = true;
+
+    let handles = win32.createPipe(secAttr, 0);
+
+
+    let proc = yield Subprocess.call({
+      command: PYTHON,
+      arguments: ["-u", TEST_SCRIPT, "echo"],
+    });
+
+
+    // Close the output end of the pipe.
+    // Ours should be the only copy, so reads should fail after this.
+    handles[1].dispose();
+
+    let buffer = new ArrayBuffer(1);
+    let succeeded = libc.ReadFile(handles[0], buffer, buffer.byteLength,
+                                  null, null);
+
+    ok(!succeeded, "ReadFile should fail on broken pipe");
+    equal(ctypes.winLastError, win32.ERROR_BROKEN_PIPE, "Read should fail with ERROR_BROKEN_PIPE");
+
+
+    proc.stdin.close();
+
+    let {exitCode} = yield proc.wait();
+
+    equal(exitCode, 0, "Got expected exit code");
+  });
+}
+
+
 add_task(function* test_subprocess_wait() {
   let proc = yield Subprocess.call({
     command: PYTHON,
