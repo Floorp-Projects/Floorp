@@ -423,19 +423,6 @@ ValueToStableChars(JSContext* cx, const char *fnname, HandleValue value,
     return true;
 }
 
-class MOZ_RAII EvalOptions {
-    const char* filename_;
-    unsigned lineno_;
-
-  public:
-    EvalOptions() : filename_(nullptr), lineno_(1) {}
-    ~EvalOptions();
-    const char* filename() const { return filename_; }
-    unsigned lineno() const { return lineno_; }
-    bool setFilename(JSContext* cx, const char* filename);
-    void setLineno(unsigned lineno) { lineno_ = lineno; }
-};
-
 EvalOptions::~EvalOptions()
 {
     js_free(const_cast<char*>(filename_));
@@ -487,6 +474,42 @@ ParseEvalOptions(JSContext* cx, HandleValue value, EvalOptions& options)
         if (!ToUint32(cx, v, &lineno))
             return false;
         options.setLineno(lineno);
+    }
+
+    return true;
+}
+
+static bool
+RequireGlobalObject(JSContext* cx, HandleValue dbgobj, HandleObject referent)
+{
+    RootedObject obj(cx, referent);
+
+    if (!obj->is<GlobalObject>()) {
+        const char* isWrapper = "";
+        const char* isWindowProxy = "";
+
+        /* Help the poor programmer by pointing out wrappers around globals... */
+        if (obj->is<WrapperObject>()) {
+            obj = js::UncheckedUnwrap(obj);
+            isWrapper = "a wrapper around ";
+        }
+
+        /* ... and WindowProxies around Windows. */
+        if (IsWindowProxy(obj)) {
+            obj = ToWindowIfWindowProxy(obj);
+            isWindowProxy = "a WindowProxy referring to ";
+        }
+
+        if (obj->is<GlobalObject>()) {
+            ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_WRAPPER_IN_WAY,
+                                  JSDVG_SEARCH_STACK, dbgobj, nullptr,
+                                  isWrapper, isWindowProxy);
+        } else {
+            ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_BAD_REFERENT,
+                                  JSDVG_SEARCH_STACK, dbgobj, nullptr,
+                                  "a global object", nullptr);
+        }
+        return false;
     }
 
     return true;
@@ -8595,6 +8618,54 @@ DebuggerObject_apply(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+DebuggerObject_executeInGlobal(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT(cx, argc, vp, "executeInGlobal", args, object);
+    if (!args.requireAtLeast(cx, "Debugger.Object.prototype.executeInGlobal", 1))
+        return false;
+
+    AutoStableStringChars stableChars(cx);
+    if (!ValueToStableChars(cx, "Debugger.Object.prototype.executeInGlobal", args[0],
+                            stableChars))
+    {
+        return false;
+    }
+    mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
+
+    EvalOptions options;
+    if (!ParseEvalOptions(cx, args.get(1), options))
+        return false;
+
+    return DebuggerObject::executeInGlobal(cx, object, chars, nullptr, options, args.rval());
+}
+
+static bool
+DebuggerObject_executeInGlobalWithBindings(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT(cx, argc, vp, "executeInGlobalWithBindings", args, object);
+    if (!args.requireAtLeast(cx, "Debugger.Object.prototype.executeInGlobalWithBindings", 2))
+        return false;
+
+    AutoStableStringChars stableChars(cx);
+    if (!ValueToStableChars(cx, "Debugger.Object.prototype.executeInGlobalWithBindings", args[0],
+                            stableChars))
+    {
+        return false;
+    }
+    mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
+
+    RootedObject bindings(cx, NonNullObject(cx, args[1]));
+    if (!bindings)
+        return false;
+
+    EvalOptions options;
+    if (!ParseEvalOptions(cx, args.get(2), options))
+        return false;
+
+    return DebuggerObject::executeInGlobal(cx, object, chars, bindings, options, args.rval());
+}
+
+static bool
 DebuggerObject_makeDebuggeeValue(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "makeDebuggeeValue", args, dbg, referent);
@@ -8620,42 +8691,6 @@ DebuggerObject_makeDebuggeeValue(JSContext* cx, unsigned argc, Value* vp)
     }
 
     args.rval().set(arg0);
-    return true;
-}
-
-static bool
-RequireGlobalObject(JSContext* cx, HandleValue dbgobj, HandleObject referent)
-{
-    RootedObject obj(cx, referent);
-
-    if (!obj->is<GlobalObject>()) {
-        const char* isWrapper = "";
-        const char* isWindowProxy = "";
-
-        /* Help the poor programmer by pointing out wrappers around globals... */
-        if (obj->is<WrapperObject>()) {
-            obj = js::UncheckedUnwrap(obj);
-            isWrapper = "a wrapper around ";
-        }
-
-        /* ... and WindowProxies around Windows. */
-        if (IsWindowProxy(obj)) {
-            obj = ToWindowIfWindowProxy(obj);
-            isWindowProxy = "a WindowProxy referring to ";
-        }
-
-        if (obj->is<GlobalObject>()) {
-            ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_WRAPPER_IN_WAY,
-                                  JSDVG_SEARCH_STACK, dbgobj, nullptr,
-                                  isWrapper, isWindowProxy);
-        } else {
-            ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_BAD_REFERENT,
-                                  JSDVG_SEARCH_STACK, dbgobj, nullptr,
-                                  "a global object", nullptr);
-        }
-        return false;
-    }
-
     return true;
 }
 
@@ -8700,63 +8735,6 @@ DebuggerObject_forceLexicalInitializationByName(JSContext *cx, unsigned argc, Va
     }
     args.rval().setBoolean(initialized);
     return true;
-}
-
-static bool
-DebuggerObject_executeInGlobal(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "executeInGlobal", args, dbg, referent);
-    if (!args.requireAtLeast(cx, "Debugger.Object.prototype.executeInGlobal", 1))
-        return false;
-    if (!RequireGlobalObject(cx, args.thisv(), referent))
-        return false;
-
-    AutoStableStringChars stableChars(cx);
-    if (!ValueToStableChars(cx, "Debugger.Object.prototype.executeInGlobal", args[0],
-                            stableChars))
-    {
-        return false;
-    }
-    mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
-
-    EvalOptions options;
-    if (!ParseEvalOptions(cx, args.get(1), options))
-        return false;
-
-    RootedObject globalLexical(cx, &referent->as<GlobalObject>().lexicalScope());
-    return DebuggerGenericEval(cx, chars, nullptr, options, args.rval(), dbg, globalLexical,
-                               nullptr);
-}
-
-static bool
-DebuggerObject_executeInGlobalWithBindings(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "executeInGlobalWithBindings", args, dbg,
-                                    referent);
-    if (!args.requireAtLeast(cx, "Debugger.Object.prototype.executeInGlobalWithBindings", 2))
-        return false;
-    if (!RequireGlobalObject(cx, args.thisv(), referent))
-        return false;
-
-    AutoStableStringChars stableChars(cx);
-    if (!ValueToStableChars(cx, "Debugger.Object.prototype.executeInGlobalWithBindings", args[0],
-                            stableChars))
-    {
-        return false;
-    }
-    mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
-
-    RootedObject bindings(cx, NonNullObject(cx, args[1]));
-    if (!bindings)
-        return false;
-
-    EvalOptions options;
-    if (!ParseEvalOptions(cx, args.get(2), options))
-        return false;
-
-    RootedObject globalLexical(cx, &referent->as<GlobalObject>().lexicalScope());
-    return DebuggerGenericEval(cx, chars, bindings, options, args.rval(), dbg, globalLexical,
-                               nullptr);
 }
 
 static bool
@@ -8867,9 +8845,9 @@ const JSFunctionSpec DebuggerObject::methods_[] = {
     JS_FN("deleteProperty", DebuggerObject_deleteProperty, 1, 0),
     JS_FN("call", DebuggerObject_call, 0, 0),
     JS_FN("apply", DebuggerObject_apply, 0, 0),
-    JS_FN("makeDebuggeeValue", DebuggerObject_makeDebuggeeValue, 1, 0),
     JS_FN("executeInGlobal", DebuggerObject_executeInGlobal, 1, 0),
     JS_FN("executeInGlobalWithBindings", DebuggerObject_executeInGlobalWithBindings, 2, 0),
+    JS_FN("makeDebuggeeValue", DebuggerObject_makeDebuggeeValue, 1, 0),
     JS_FN("asEnvironment", DebuggerObject_asEnvironment, 0, 0),
     JS_FN("unwrap", DebuggerObject_unwrap, 0, 0),
     JS_FN("unsafeDereference", DebuggerObject_unsafeDereference, 0, 0),
@@ -9200,6 +9178,23 @@ DebuggerObject::call(JSContext* cx, Handle<DebuggerObject*> object, HandleValue 
     }
 
     return dbg->receiveCompletionValue(ac, ok, result, result);
+}
+
+/* static */ bool
+DebuggerObject::executeInGlobal(JSContext* cx, Handle<DebuggerObject*> object,
+                                mozilla::Range<const char16_t> chars, HandleObject bindings,
+                                const EvalOptions& options, MutableHandleValue result)
+{
+    RootedObject referent(cx, object->referent());
+    Debugger* dbg = object->owner();
+
+    RootedValue dbgobj(cx, ObjectValue(*object));
+    if (!RequireGlobalObject(cx, dbgobj, referent))
+        return false;
+    RootedObject globalLexical(cx, &referent->as<GlobalObject>().lexicalScope());
+
+    return DebuggerGenericEval(cx, chars, bindings, options, result, dbg, globalLexical,
+                               nullptr);
 }
 
 
