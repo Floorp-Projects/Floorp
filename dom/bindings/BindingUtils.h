@@ -1929,13 +1929,12 @@ struct FakeString {
     if (aLength < sInlineCapacity) {
       SetData(mInlineStorage);
     } else {
-      nsStringBuffer *buf = nsStringBuffer::Alloc((aLength + 1) * sizeof(nsString::char_type)).take();
+      RefPtr<nsStringBuffer> buf = nsStringBuffer::Alloc((aLength + 1) * sizeof(nsString::char_type));
       if (MOZ_UNLIKELY(!buf)) {
         return false;
       }
 
-      SetData(static_cast<nsString::char_type*>(buf->Data()));
-      mFlags = nsString::F_SHARED | nsString::F_TERMINATED;
+      AssignFromStringBuffer(buf.forget());
     }
     mLength = aLength;
     mData[mLength] = char16_t(0);
@@ -1970,6 +1969,10 @@ private:
   void SetData(nsString::char_type* aData) {
     MOZ_ASSERT(mFlags == nsString::F_TERMINATED);
     mData = const_cast<nsString::char_type*>(aData);
+  }
+  void AssignFromStringBuffer(already_AddRefed<nsStringBuffer> aBuffer) {
+    SetData(static_cast<nsString::char_type*>(aBuffer.take()->Data()));
+    mFlags = nsString::F_SHARED | nsString::F_TERMINATED;
   }
 
   friend class NonNull<nsAString>;
