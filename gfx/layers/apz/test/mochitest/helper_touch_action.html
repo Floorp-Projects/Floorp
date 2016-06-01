@@ -1,0 +1,116 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Sanity touch-action test</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+function checkScroll(x, y, desc) {
+  is(window.scrollX, x, desc + " - x axis");
+  is(window.scrollY, y, desc + " - y axis");
+}
+
+function* test(testDriver) {
+  const TOUCH_SLOP = 1;
+  var target = document.getElementById('target');
+
+  document.body.addEventListener('touchend', testDriver, { passive: true });
+
+  // drag the page up to scroll down by 50px
+  yield ok(synthesizeNativeDrag(target, 10, 100, 0, -(50 + TOUCH_SLOP)),
+      "Synthesized native vertical drag (1), waiting for touch-end event...");
+  yield flushApzRepaints(testDriver);
+  checkScroll(0, 50, "After first vertical drag, with pan-y" );
+
+  // switch style to pan-x
+  document.body.style.touchAction = 'pan-x';
+  ok(true, "Waiting for pan-x to propagate...");
+  yield waitForAllPaints(function() {
+    flushApzRepaints(testDriver);
+  });
+
+  // drag the page up to scroll down by 50px, but it won't happen because pan-x
+  yield ok(synthesizeNativeDrag(target, 10, 100, 0, -(50 + TOUCH_SLOP)),
+     "Synthesized native vertical drag (2), waiting for touch-end event...");
+  yield flushApzRepaints(testDriver);
+  checkScroll(0, 50, "After second vertical drag, with pan-x");
+
+  // drag the page left to scroll right by 50px
+  yield ok(synthesizeNativeDrag(target, 100, 10, -(50 + TOUCH_SLOP), 0),
+     "Synthesized horizontal drag (1), waiting for touch-end event...");
+  yield flushApzRepaints(testDriver);
+  checkScroll(50, 50, "After first horizontal drag, with pan-x");
+
+  // drag the page diagonally right/down to scroll up/left by 40px each axis;
+  // only the x-axis will actually scroll because pan-x
+  yield ok(synthesizeNativeDrag(target, 10, 10, (40 + TOUCH_SLOP), (40 + TOUCH_SLOP)),
+     "Synthesized diagonal drag (1), waiting for touch-end event...");
+  yield flushApzRepaints(testDriver);
+  checkScroll(10, 50, "After first diagonal drag, with pan-x");
+
+  // switch style back to pan-y
+  document.body.style.touchAction = 'pan-y';
+  ok(true, "Waiting for pan-y to propagate...");
+  yield waitForAllPaints(function() {
+    flushApzRepaints(testDriver);
+  });
+
+  // drag the page diagonally right/down to scroll up/left by 40px each axis;
+  // only the y-axis will actually scroll because pan-y
+  yield ok(synthesizeNativeDrag(target, 10, 10, (40 + TOUCH_SLOP), (40 + TOUCH_SLOP)),
+     "Synthesized diagonal drag (2), waiting for touch-end event...");
+  yield flushApzRepaints(testDriver);
+  checkScroll(10, 10, "After second diagonal drag, with pan-y");
+
+  // switch style to none
+  document.body.style.touchAction = 'none';
+  ok(true, "Waiting for none to propagate...");
+  yield waitForAllPaints(function() {
+    flushApzRepaints(testDriver);
+  });
+
+  // drag the page diagonally up/left to scroll down/right by 40px each axis;
+  // neither will scroll because of touch-action
+  yield ok(synthesizeNativeDrag(target, 100, 100, -(40 + TOUCH_SLOP), -(40 + TOUCH_SLOP)),
+      "Synthesized diagonal drag (3), waiting for touch-end event...");
+  yield flushApzRepaints(testDriver);
+  checkScroll(10, 10, "After third diagonal drag, with none");
+
+  document.body.style.touchAction = 'manipulation';
+  ok(true, "Waiting for manipulation to propagate...");
+  yield waitForAllPaints(function() {
+    flushApzRepaints(testDriver);
+  });
+
+  // drag the page diagonally up/left to scroll down/right by 40px each axis;
+  // both will scroll because of touch-action
+  yield ok(synthesizeNativeDrag(target, 100, 100, -(40 + TOUCH_SLOP), -(40 + TOUCH_SLOP)),
+      "Synthesized diagonal drag (4), waiting for touch-end event...");
+  yield flushApzRepaints(testDriver);
+  checkScroll(50, 50, "After fourth diagonal drag, with manipulation");
+}
+
+waitUntilApzStable()
+.then(runContinuation(test))
+.then(subtestDone);
+
+  </script>
+</head>
+<body style="touch-action: pan-y">
+ <div style="width: 5000px; height: 5000px; background-color: lightgreen;">
+  This div makes the page scrollable on both axes.<br>
+  This is the second line of text.<br>
+  This is the third line of text.<br>
+  This is the fourth line of text.
+ </div>
+ <!-- This fixed-position div remains in the same place relative to the browser chrome, so we
+      can use it as a targeting device for synthetic touch events. The body will move around
+      as we scroll, so we'd have to be constantly adjusting the synthetic drag coordinates
+      if we used that as the target element. -->
+ <div style="position:fixed; left: 10px; top: 10px; width: 1px; height: 1px" id="target"></div>
+</body>
+</html>
