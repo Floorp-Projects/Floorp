@@ -21,6 +21,7 @@
 #include "nsStringGlue.h"
 #include "nsTArray.h"
 #include "mozilla/dom/JSSlots.h"
+#include "mozilla/fallible.h"
 #include "nsMathUtils.h"
 #include "nsStringBuffer.h"
 #include "mozilla/dom/BindingDeclarations.h"
@@ -312,14 +313,22 @@ inline bool StringToJsval(JSContext* cx, nsAString& str, JS::MutableHandleValue 
 inline bool
 NonVoidStringToJsval(JSContext* cx, const nsAString& str, JS::MutableHandleValue rval)
 {
-    nsString mutableCopy(str);
+    nsString mutableCopy;
+    if (!mutableCopy.Assign(str, mozilla::fallible)) {
+        JS_ReportOutOfMemory(cx);
+        return false;
+    }
     return NonVoidStringToJsval(cx, mutableCopy, rval);
 }
 
 inline bool
 StringToJsval(JSContext* cx, const nsAString& str, JS::MutableHandleValue rval)
 {
-    nsString mutableCopy(str);
+    nsString mutableCopy;
+    if (!mutableCopy.Assign(str, mozilla::fallible)) {
+        JS_ReportOutOfMemory(cx);
+        return false;
+    }
     return StringToJsval(cx, mutableCopy, rval);
 }
 
