@@ -24,6 +24,11 @@ public class SafeIntentUtils {
         return new SafeIntent(intent).getBooleanExtra(name, defaultValue);
     }
 
+    /**
+     * External applications can pass values into Intents that can cause us to crash: in defense,
+     * we wrap {@link Intent} and catch the exceptions they may force us to throw. See bug 1090385
+     * for more.
+     */
     public static class SafeIntent {
         private final Intent intent;
 
