@@ -634,8 +634,10 @@
                     for (let event of this.videoEvents)
                         this.video.removeEventListener(event, this, false);
 
-                    for (let element of this.controlListeners)
-                        element.item.removeEventListener(element.event, element.func, false);
+                    for (let element of this.controlListeners) {
+                        element.item.removeEventListener(element.event, element.func,
+                                                         { mozSystemGroup: true });
+                    }
 
                     delete this.controlListeners;
 
@@ -952,11 +954,15 @@
 
                 _triggeredByControls: false,
 
+                startPlay : function () {
+                    this._triggeredByControls = true;
+                    this.hideClickToPlay();
+                    this.video.play();
+                },
+
                 togglePause : function () {
                     if (this.video.paused || this.video.ended) {
-                        this._triggeredByControls = true;
-                        this.hideClickToPlay();
-                        this.video.play();
+                        this.startPlay();
                     } else {
                         this.video.pause();
                     }
@@ -1033,21 +1039,13 @@
                         this.suppressError = true;
                         return;
                     }
-
-                    // Read defaultPrevented and the playback state asynchronously,
-                    // since Web content may want to consume the "click" event
-                    // but will only receive it after us. If web content
-                    // doesn't use preventDefault but still toggles playback,
-                    // we will treat that act the same as a call to preventDefault()
-                    // so the web content-initiated toggle is not reverted.
-                    let previousState = this.video.paused;
-                    setTimeout(() => {
-                        if (e.defaultPrevented ||
-                            this.video.paused != previousState) {
-                            return;
-                        }
-                        this.togglePause();
-                    }, 0);
+                    if (e.defaultPrevented)
+                        return;
+                    if (this.playButton.hasAttribute("paused")) {
+                        this.startPlay();
+                    } else {
+                        this.video.pause();
+                    }
                 },
                 hideClickToPlay : function () {
                     let videoHeight = this.video.clientHeight;
@@ -1343,7 +1341,7 @@
                     function addListener(elem, eventName, func) {
                       let boundFunc = func.bind(self);
                       self.controlListeners.push({ item: elem, event: eventName, func: boundFunc });
-                      elem.addEventListener(eventName, boundFunc, false);
+                      elem.addEventListener(eventName, boundFunc, { mozSystemGroup: true });
                     }
 
                     addListener(this.muteButton, "command", this.toggleMute);
@@ -1355,7 +1353,7 @@
 
                     addListener(this.videocontrols, "resizevideocontrols", this.adjustControlSize);
                     addListener(this.videocontrols, "transitionend", this.onTransitionEnd);
-                    addListener(this.video.ownerDocument, "mozfullscreenchange", this.onFullscreenChange);
+                    addListener(this.video.ownerDocument, "fullscreenchange", this.onFullscreenChange);
                     addListener(this.video, "keypress", this.keyHandler);
 
                     addListener(this.videocontrols, "dragstart", function(event) {
@@ -1671,8 +1669,10 @@
               for (let event of this.videoEvents)
                 this.video.removeEventListener(event, this, false);
 
-              for (let element of this.controlListeners)
-                element.item.removeEventListener(element.event, element.func, false);
+              for (let element of this.controlListeners) {
+                element.item.removeEventListener(element.event, element.func,
+                                                 { mozSystemGroup: true });
+              }
 
               delete this.controlListeners;
             },
@@ -1736,7 +1736,7 @@
               function addListener(elem, eventName, func) {
                 let boundFunc = func.bind(self);
                 self.controlListeners.push({ item: elem, event: eventName, func: boundFunc });
-                elem.addEventListener(eventName, boundFunc, false);
+                elem.addEventListener(eventName, boundFunc, { mozSystemGroup: true });
               }
               addListener(this.clickToPlay, "click", this.clickToPlayClickHandler);
               addListener(this.video, "MozNoControlsBlockedVideo", this.blockedVideoHandler);
