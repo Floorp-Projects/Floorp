@@ -29,10 +29,6 @@
 <!ENTITY firstrun_tabqueue_message_on "Success!">
 <!ENTITY firstrun_tabqueue_subtext_on "You can always turn this off in &settings; under &pref_category_general;.">
 
-<!ENTITY firstrun_notifications_title "Blogs">
-<!ENTITY firstrun_notifications_message "Stay informed">
-<!ENTITY firstrun_notifications_subtext "Get notified when blogs you have bookmarked post an update.">
-
 <!ENTITY firstrun_readerview_title "Articles">
 <!-- Localization note (firstrun_readerview_message): This is a casual way of describing getting rid of unnecessary things, and is referring to simplifying websites so only the article text and images are visible, removing unnecessary headers or ads. -->
 <!ENTITY firstrun_readerview_message "Lose the clutter">

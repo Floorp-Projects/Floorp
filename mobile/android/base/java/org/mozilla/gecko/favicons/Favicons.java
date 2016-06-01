@@ -43,6 +43,11 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public class Favicons {
     private static final String LOGTAG = "GeckoFavicons";
 
+    public enum LoadType {
+        PRIVILEGED,
+        UNPRIVILEGED
+    }
+
     // A magic URL representing the app's own favicon, used for about: pages.
     private static final String BUILT_IN_FAVICON_URL = "about:favicon";
 
@@ -214,7 +219,8 @@ public class Favicons {
      * @return The id of the asynchronous task created, NOT_LOADING if none is created, or
      *         LOADED if the value could be dispatched on the current thread.
      */
-    public static int getSizedFavicon(Context context, String pageURL, String faviconURL, int targetSize, int flags, OnFaviconLoadedListener listener) {
+    public static int getSizedFavicon(Context context, String pageURL, String faviconURL,
+                                      LoadType loadType, int targetSize, int flags, OnFaviconLoadedListener listener) {
         // Do we know the favicon URL for this page already?
         String cacheURL = faviconURL;
         if (cacheURL == null) {
@@ -222,13 +228,20 @@ public class Favicons {
         }
 
         // If there's no favicon URL given, try and hit the cache with the default one.
-        if (cacheURL == null)  {
+        if (cacheURL == null) {
             cacheURL = guessDefaultFaviconURL(pageURL);
         }
 
-        // If it's something we can't even figure out a default URL for, just give up.
         if (cacheURL == null) {
+            // If it's something we can't even figure out a default URL for, just give up.
             return dispatchResult(pageURL, null, defaultFavicon, listener);
+        } else if (loadType != LoadType.PRIVILEGED &&
+                !(cacheURL.startsWith("http://") || cacheURL.startsWith("https://"))) {
+            // Don't load internal / other favicons for non-privileged pages. This is only relevant
+            // for getSizedFavicon since this is the only method that allows using a specific favicon
+            // URL. All other methods operate via the cache, icons will only end up in the cache
+            // if we load them via getSizedFavicon in the first place.
+            return NOT_LOADING;
         }
 
         Bitmap cachedIcon = getSizedFaviconFromCache(cacheURL, targetSize);
@@ -255,7 +268,7 @@ public class Favicons {
      * @return The cached Favicon, rescaled to be as close as possible to the target size, if any exists.
      *         null if no applicable Favicon exists in the cache.
      */
-    public static Bitmap getSizedFaviconFromCache(String faviconURL, int targetSize) {
+    static Bitmap getSizedFaviconFromCache(String faviconURL, int targetSize) {
         return faviconsCache.getFaviconForDimensions(faviconURL, targetSize);
     }
 
@@ -595,7 +608,7 @@ public class Favicons {
      * @param url page URL to get a large favicon image for.
      * @param onFaviconLoadedListener listener to call back with the result.
      */
-    public static void getPreferredSizeFaviconForPage(Context context, String url, String iconURL, OnFaviconLoadedListener onFaviconLoadedListener) {
+    private static void getPreferredSizeFaviconForPage(Context context, String url, String iconURL, OnFaviconLoadedListener onFaviconLoadedListener) {
         int preferredSize = GeckoAppShell.getPreferredIconSize();
         loadUncachedFavicon(context, url, iconURL, LoadFaviconTask.FLAG_BYPASS_CACHE_WHEN_DOWNLOADING_ICONS, preferredSize, onFaviconLoadedListener);
     }
@@ -626,6 +639,13 @@ public class Favicons {
 
         if (row != null) {
             touchIconURL = (String) row.get(URLMetadataTable.TOUCH_ICON_COLUMN);
+        }
+
+        if (touchIconURL != null &&
+            !(touchIconURL.startsWith("http://") || touchIconURL.startsWith("https://"))) {
+            // We definitely don't want to load internal icons for homescreen shortcuts. See
+            // our use of LoadType.PRIVILEGED above for where allow non http(s) icons
+            touchIconURL = null;
         }
 
         // Retrieve the icon while bypassing the cache. Homescreen icon creation is a one-off event, hence it isn't
