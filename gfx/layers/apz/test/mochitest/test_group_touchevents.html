@@ -61,6 +61,9 @@ var subtests = [
 
   // Simple test to exercise touch-action CSS property
   {'file': 'helper_touch_action.html', 'prefs': touch_action_prefs},
+  // Tests that touch-action CSS properties are handled in APZ without waiting
+  // on the main-thread, when possible
+  {'file': 'helper_touch_action_regions.html', 'prefs': touch_action_prefs},
 ];
 
 if (isApzEnabled()) {
