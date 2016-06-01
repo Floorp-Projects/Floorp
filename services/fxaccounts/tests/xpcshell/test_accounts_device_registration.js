@@ -16,9 +16,6 @@ initTestLogging("Trace");
 var log = Log.repository.getLogger("Services.FxAccounts.test");
 log.level = Log.Level.Debug;
 
-const BOGUS_PUBLICKEY = "BBXOKjUb84pzws1wionFpfCBjDuCh4-s_1b52WA46K5wYL2gCWEOmFKWn_NkS5nmJwTBuO8qxxdjAIDtNeklvQc";
-const BOGUS_AUTHKEY = "GSsIiaD2Mr83iPqwFNK4rw";
-
 Services.prefs.setCharPref("identity.fxaccounts.loglevel", "Trace");
 Log.repository.getLogger("FirefoxAccounts").level = Log.Level.Trace;
 
@@ -109,11 +106,7 @@ function MockFxAccounts(device = {}) {
       registerPushEndpoint() {
         return new Promise((resolve) => {
           resolve({
-            endpoint: "http://mochi.test:8888",
-            getKey: function(type) {
-              return ChromeUtils.base64URLDecode(
-                type === "auth" ? BOGUS_AUTHKEY : BOGUS_PUBLICKEY,
-                { padding: "ignore" });
+            endpoint: "http://mochi.test:8888"
           });
         });
       },
@@ -169,8 +162,6 @@ add_task(function* test_updateDeviceRegistration_with_new_device() {
   do_check_eq(spy.registerDevice.args[0][1], deviceName);
   do_check_eq(spy.registerDevice.args[0][2], "desktop");
   do_check_eq(spy.registerDevice.args[0][3].pushCallback, "http://mochi.test:8888");
-  do_check_eq(spy.registerDevice.args[0][3].pushPublicKey, BOGUS_PUBLICKEY);
-  do_check_eq(spy.registerDevice.args[0][3].pushAuthKey, BOGUS_AUTHKEY);
 
   const state = fxa.internal.currentAccountState;
   const data = yield state.getUserAccountData();
@@ -222,8 +213,6 @@ add_task(function* test_updateDeviceRegistration_with_existing_device() {
   do_check_eq(spy.updateDevice.args[0][1], credentials.deviceId);
   do_check_eq(spy.updateDevice.args[0][2], deviceName);
   do_check_eq(spy.updateDevice.args[0][3].pushCallback, "http://mochi.test:8888");
-  do_check_eq(spy.updateDevice.args[0][3].pushPublicKey, BOGUS_PUBLICKEY);
-  do_check_eq(spy.updateDevice.args[0][3].pushAuthKey, BOGUS_AUTHKEY);
 
   const state = fxa.internal.currentAccountState;
   const data = yield state.getUserAccountData();
@@ -281,8 +270,6 @@ add_task(function* test_updateDeviceRegistration_with_unknown_device_error() {
   do_check_eq(spy.updateDevice.args[0][1], credentials.deviceId);
   do_check_eq(spy.updateDevice.args[0][2], deviceName);
   do_check_eq(spy.updateDevice.args[0][3].pushCallback, "http://mochi.test:8888");
-  do_check_eq(spy.updateDevice.args[0][3].pushPublicKey, BOGUS_PUBLICKEY);
-  do_check_eq(spy.updateDevice.args[0][3].pushAuthKey, BOGUS_AUTHKEY);
 
 
   const state = fxa.internal.currentAccountState;
@@ -346,8 +333,6 @@ add_task(function* test_updateDeviceRegistration_with_device_session_conflict_er
   do_check_eq(spy.updateDevice.args[0][1], credentials.deviceId);
   do_check_eq(spy.updateDevice.args[0][2], deviceName);
   do_check_eq(spy.updateDevice.args[0][3].pushCallback, "http://mochi.test:8888");
-  do_check_eq(spy.updateDevice.args[0][3].pushPublicKey, BOGUS_PUBLICKEY);
-  do_check_eq(spy.updateDevice.args[0][3].pushAuthKey, BOGUS_AUTHKEY);
   do_check_eq(spy.getDeviceList.count, 1);
   do_check_eq(spy.getDeviceList.args[0].length, 1);
   do_check_eq(spy.getDeviceList.args[0][0], credentials.sessionToken);
