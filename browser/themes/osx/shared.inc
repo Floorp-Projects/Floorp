@@ -3,7 +3,8 @@
 
 %filter substitution
 
-%define fgTabTexture linear-gradient(transparent 2px, hsla(0,0%,100%,.6) 2px, hsla(0,0%,100%,.6) 3px, hsl(0,0%,99%) 3px, hsl(0,0%,93%))
+%define fgTabTexture linear-gradient(transparent 2px, hsl(0,0%,99%) 2px, hsl(0,0%,93%))
+%define fgTabTextureYosemiteInactive linear-gradient(transparent 2px, hsl(0,0%,99%) 2px, hsl(0,0%,97%))
 %define toolbarColorLWT rgba(253,253,253,0.45)
 %define fgTabTextureLWT linear-gradient(transparent 2px, rgba(254,254,254,.72) 2px, @toolbarColorLWT@)
 %define fgTabBackgroundColor transparent
