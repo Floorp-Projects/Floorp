@@ -129,7 +129,8 @@ BEGIN_TEST(testIncrementalRoots)
 
     // This is marked during markRuntime
     JS::AutoObjectVector vec(cx);
-    vec.append(root);
+    if (!vec.append(root))
+        return false;
 
     // Tenure everything so intentionally unrooted objects don't move before we
     // can use them.

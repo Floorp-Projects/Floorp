@@ -1093,7 +1093,9 @@ nsOuterWindowProxy::AppendIndexedPropertyNames(JSContext *cx, JSObject *proxy,
     return false;
   }
   for (int32_t i = 0; i < int32_t(length); ++i) {
-    props.append(INT_TO_JSID(i));
+    if (!props.append(INT_TO_JSID(i))) {
+      return false;
+    }
   }
 
   return true;
