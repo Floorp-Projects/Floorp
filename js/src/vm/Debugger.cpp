@@ -406,6 +406,23 @@ NukeDebuggerWrapper(NativeObject *wrapper)
     wrapper->setPrivate(nullptr);
 }
 
+static bool
+ValueToStableChars(JSContext* cx, const char *fnname, HandleValue value,
+                   AutoStableStringChars& stableChars)
+{
+    if (!value.isString()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
+                             fnname, "string", "string");
+        return false;
+    }
+    RootedLinearString linear(cx, value.toString()->ensureLinear(cx));
+    if (!linear)
+        return false;
+    if (!stableChars.initTwoByte(cx, linear))
+        return false;
+    return true;
+}
+
 class MOZ_RAII EvalOptions {
     const char* filename_;
     unsigned lineno_;
@@ -7553,29 +7570,9 @@ EvaluateInEnv(JSContext* cx, Handle<Env*> env, AbstractFramePtr frame,
 }
 
 static bool
-ValueToStableChars(JSContext* cx, const char *fnname, HandleValue value,
-                   AutoStableStringChars& stableChars)
-{
-    if (!value.isString()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_NOT_EXPECTED_TYPE,
-                             fnname, "string", "string");
-        return false;
-    }
-    RootedLinearString linear(cx, value.toString()->ensureLinear(cx));
-    if (!linear)
-        return false;
-    if (!stableChars.initTwoByte(cx, linear))
-        return false;
-    return true;
-}
-
-enum EvalBindings { EvalHasExtraBindings = true, EvalWithDefaultBindings = false };
-
-static bool
 DebuggerGenericEval(JSContext* cx, const mozilla::Range<const char16_t> chars,
-                    EvalBindings evalWithBindings, HandleValue bindings,
-                    const EvalOptions& options, MutableHandleValue vp, Debugger* dbg,
-                    HandleObject scope, ScriptFrameIter* iter)
+                    HandleObject bindings, const EvalOptions& options, MutableHandleValue vp,
+                    Debugger* dbg, HandleObject scope, ScriptFrameIter* iter)
 {
     /* Either we're specifying the frame, or a global. */
     MOZ_ASSERT_IF(iter, !scope);
@@ -7588,17 +7585,15 @@ DebuggerGenericEval(JSContext* cx, const mozilla::Range<const char16_t> chars,
      */
     AutoIdVector keys(cx);
     AutoValueVector values(cx);
-    if (evalWithBindings) {
-        RootedObject bindingsobj(cx, NonNullObject(cx, bindings));
-        if (!bindingsobj ||
-            !GetPropertyKeys(cx, bindingsobj, JSITER_OWNONLY, &keys) ||
+    if (bindings) {
+        if (!GetPropertyKeys(cx, bindings, JSITER_OWNONLY, &keys) ||
             !values.growBy(keys.length()))
         {
             return false;
         }
         for (size_t i = 0; i < keys.length(); i++) {
             MutableHandleValue valp = values[i];
-            if (!GetProperty(cx, bindingsobj, bindingsobj, keys[i], valp) ||
+            if (!GetProperty(cx, bindings, bindings, keys[i], valp) ||
                 !dbg->unwrapDebuggeeValue(cx, valp))
             {
                 return false;
@@ -7622,7 +7617,7 @@ DebuggerGenericEval(JSContext* cx, const mozilla::Range<const char16_t> chars,
     }
 
     /* If evalWithBindings, create the inner environment. */
-    if (evalWithBindings) {
+    if (bindings) {
         RootedPlainObject nenv(cx, NewObjectWithGivenProto<PlainObject>(cx, nullptr));
         if (!nenv)
             return false;
@@ -7678,8 +7673,7 @@ DebuggerFrame_eval(JSContext* cx, unsigned argc, Value* vp)
     if (!ParseEvalOptions(cx, args.get(1), options))
         return false;
 
-    return DebuggerGenericEval(cx, chars, EvalWithDefaultBindings, JS::UndefinedHandleValue,
-                               options, args.rval(), dbg, nullptr, &iter);
+    return DebuggerGenericEval(cx, chars, nullptr, options, args.rval(), dbg, nullptr, &iter);
 }
 
 static bool
@@ -7699,12 +7693,15 @@ DebuggerFrame_evalWithBindings(JSContext* cx, unsigned argc, Value* vp)
     }
     mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
 
+    RootedObject bindings(cx, NonNullObject(cx, args[1]));
+    if (!bindings)
+        return false;
+
     EvalOptions options;
     if (!ParseEvalOptions(cx, args.get(2), options))
         return false;
 
-    return DebuggerGenericEval(cx, chars, EvalHasExtraBindings, args[1], options,
-                               args.rval(), dbg, nullptr, &iter);
+    return DebuggerGenericEval(cx, chars, bindings, options, args.rval(), dbg, nullptr, &iter);
 }
 
 static bool
@@ -8727,8 +8724,8 @@ DebuggerObject_executeInGlobal(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     RootedObject globalLexical(cx, &referent->as<GlobalObject>().lexicalScope());
-    return DebuggerGenericEval(cx, chars, EvalWithDefaultBindings, JS::UndefinedHandleValue,
-                               options, args.rval(), dbg, globalLexical, nullptr);
+    return DebuggerGenericEval(cx, chars, nullptr, options, args.rval(), dbg, globalLexical,
+                               nullptr);
 }
 
 static bool
@@ -8749,13 +8746,17 @@ DebuggerObject_executeInGlobalWithBindings(JSContext* cx, unsigned argc, Value* 
     }
     mozilla::Range<const char16_t> chars = stableChars.twoByteRange();
 
+    RootedObject bindings(cx, NonNullObject(cx, args[1]));
+    if (!bindings)
+        return false;
+
     EvalOptions options;
     if (!ParseEvalOptions(cx, args.get(2), options))
         return false;
 
     RootedObject globalLexical(cx, &referent->as<GlobalObject>().lexicalScope());
-    return DebuggerGenericEval(cx, chars, EvalHasExtraBindings, args[1], options,
-                               args.rval(), dbg, globalLexical, nullptr);
+    return DebuggerGenericEval(cx, chars, bindings, options, args.rval(), dbg, globalLexical,
+                               nullptr);
 }
 
 static bool
