@@ -92,14 +92,8 @@ public:
 
   virtual bool CanShutdown() { return true; }
 
-  virtual void OnWaitableEventSignaled(base::WaitableEvent *event);
-
   IPC::Channel* GetChannel() {
     return channelp();
-  }
-
-  base::WaitableEvent* GetShutDownEvent() {
-    return GetProcessEvent();
   }
 
   // Returns a "borrowed" handle to the child process - the handle returned
@@ -173,8 +167,6 @@ protected:
 #if defined(OS_POSIX)
   base::file_handle_mapping_vector mFileMap;
 #endif
-
-  base::WaitableEventWatcher::Delegate* mDelegate;
 
   ProcessHandle mChildProcessHandle;
 #if defined(OS_MACOSX)

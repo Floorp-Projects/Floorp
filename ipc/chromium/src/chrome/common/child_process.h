@@ -29,17 +29,6 @@ class ChildProcess {
   // Getter for this process' main thread.
   ChildThread* child_thread() { return child_thread_.get(); }
 
-  // A global event object that is signalled when the main thread's message
-  // loop exits.  This gives background threads a way to observe the main
-  // thread shutting down.  This can be useful when a background thread is
-  // waiting for some information from the browser process.  If the browser
-  // process goes away prematurely, the background thread can at least notice
-  // the child processes's main thread exiting to determine that it should give
-  // up waiting.
-  // For example, see the renderer code used to implement
-  // webkit_glue::GetCookies.
-  base::WaitableEvent* GetShutDownEvent();
-
   // These are used for ref-counting the child process.  The process shuts
   // itself down when the ref count reaches 0.
   // For example, in the renderer process, generally each tab managed by this

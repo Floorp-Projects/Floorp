@@ -102,7 +102,6 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
     mEnableSandboxLogging(false),
     mSandboxLevel(0),
 #endif
-    mDelegate(nullptr),
     mChildProcessHandle(0)
 #if defined(MOZ_WIDGET_COCOA)
   , mChildTask(MACH_PORT_NULL)
@@ -1213,15 +1212,6 @@ GeckoChildProcessHost::GetQueuedMessages(std::queue<IPC::Message>& queue)
   DCHECK(MessageLoopForIO::current());
   swap(queue, mQueue);
   // We expect the next listener to take over processing of our queue.
-}
-
-void
-GeckoChildProcessHost::OnWaitableEventSignaled(base::WaitableEvent *event)
-{
-  if (mDelegate) {
-    mDelegate->OnWaitableEventSignaled(event);
-  }
-  ChildProcessHost::OnWaitableEventSignaled(event);
 }
 
 bool GeckoChildProcessHost::sRunSelfAsContentProc(false);

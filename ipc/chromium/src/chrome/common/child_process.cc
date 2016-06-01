@@ -54,8 +54,3 @@ void ChildProcess::ReleaseProcess() {
   if (child_thread_.get())  // null in unittests.
     child_thread_->OnProcessFinalRelease();
 }
-
-base::WaitableEvent* ChildProcess::GetShutDownEvent() {
-  DCHECK(child_process_);
-  return &child_process_->shutdown_event_;
-}

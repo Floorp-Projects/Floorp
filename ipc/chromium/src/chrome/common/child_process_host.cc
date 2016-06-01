@@ -31,24 +31,13 @@ ChildProcessHost::ChildProcessHost(ProcessType type)
     :
       ChildProcessInfo(type),
       ALLOW_THIS_IN_INITIALIZER_LIST(listener_(this)),
-      opening_channel_(false),
-      process_event_(nullptr) {
+      opening_channel_(false) {
   Singleton<ChildProcessList>::get()->push_back(this);
 }
 
 
 ChildProcessHost::~ChildProcessHost() {
   Singleton<ChildProcessList>::get()->remove(this);
-
-  if (handle()) {
-    watcher_.StopWatching();
-
-#if defined(OS_WIN)
-    // Above call took ownership, so don't want WaitableEvent to assert because
-    // the handle isn't valid anymore.
-    process_event_->Release();
-#endif
-  }
 }
 
 bool ChildProcessHost::CreateChannel() {
@@ -81,11 +70,8 @@ bool ChildProcessHost::CreateChannel(FileDescriptor& aFileDescriptor) {
 
 void ChildProcessHost::SetHandle(base::ProcessHandle process) {
 #if defined(OS_WIN)
-  process_event_.reset(new base::WaitableEvent(process));
-
   DCHECK(!handle());
   set_handle(process);
-  watcher_.StartWatching(process_event_.get(), this);
 #endif
 }
 
@@ -95,9 +81,6 @@ bool ChildProcessHost::Send(IPC::Message* msg) {
     return false;
   }
   return channel_->Send(msg);
-}
-
-void ChildProcessHost::OnWaitableEventSignaled(base::WaitableEvent *event) {
 }
 
 ChildProcessHost::ListenerHook::ListenerHook(ChildProcessHost* host)
