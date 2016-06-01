@@ -203,7 +203,7 @@ GetCurrentJSStack(int32_t aMaxDepth)
     return nullptr;
   }
 
-  return exceptions::CreateStack(cx, aMaxDepth);
+  return dom::exceptions::CreateStack(cx, aMaxDepth);
 }
 
 AutoForceSetExceptionOnContext::AutoForceSetExceptionOnContext(JSContext* aCx)
