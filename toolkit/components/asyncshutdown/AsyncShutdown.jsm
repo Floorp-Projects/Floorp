@@ -1037,6 +1037,7 @@ if (isContent) {
 
 // All processes
 this.AsyncShutdown.webWorkersShutdown = getPhase("web-workers-shutdown");
+this.AsyncShutdown.xpcomWillShutdown = getPhase("xpcom-will-shutdown");
 this.AsyncShutdown.xpcomThreadsShutdown = getPhase("xpcom-threads-shutdown");
 
 this.AsyncShutdown.Barrier = Barrier;
