@@ -128,7 +128,9 @@ public:
                                      state.get());
 
     MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
-           ("AudioPlaybackRunnable, active = %d\n", mActive));
+           ("AudioPlaybackRunnable, active = %d, reason = %d\n",
+            mActive, mReason));
+
     return NS_OK;
   }
 
