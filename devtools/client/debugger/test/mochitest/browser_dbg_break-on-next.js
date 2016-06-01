@@ -15,7 +15,7 @@ function test() {
   let gSources, gBreakpoints, gTarget, gResumeButton, gResumeKey, gThreadClient;
 
   const options = {
-    source: EXAMPLE_URL + "code_script-eval.js",
+    source: "-eval.js",
     line: 1
   };
   initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {

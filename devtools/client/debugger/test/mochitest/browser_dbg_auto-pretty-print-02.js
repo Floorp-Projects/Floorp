@@ -14,15 +14,15 @@ const TAB_URL = EXAMPLE_URL + "doc_auto-pretty-print-02.html";
 var gTab, gDebuggee, gPanel, gDebugger;
 var gEditor, gSources, gPrefs, gOptions, gView;
 
-var gFirstSource = EXAMPLE_URL + "code_ugly-6.js";
-var gSecondSource = EXAMPLE_URL + "code_ugly-7.js";
+var gFirstSourceLabel = "code_ugly-6.js";
+var gSecondSourceLabel = "code_ugly-7.js";
 
 var gOriginalPref = Services.prefs.getBoolPref("devtools.debugger.auto-pretty-print");
 Services.prefs.setBoolPref("devtools.debugger.auto-pretty-print", true);
 
 function test() {
   let options = {
-    source: gFirstSource,
+    source: gFirstSourceLabel,
     line: 1
   };
   initDebugger(TAB_URL, options).then(([aTab, aDebuggee, aPanel]) => {
@@ -43,7 +43,7 @@ function test() {
 
       testSourceIsUgly();
 
-      yield waitForSourceShown(gPanel, gFirstSource);
+      yield waitForSourceShown(gPanel, gFirstSourceLabel);
       testSourceIsPretty();
       testPrettyPrintButtonOn();
 
@@ -84,13 +84,13 @@ function test() {
 
     function testFirstSourceLabel() {
       let source = gSources.selectedItem.attachment.source;
-      ok(source.url === gFirstSource,
+      ok(source.url === EXAMPLE_URL + gFirstSourceLabel,
         "First source url is correct.");
     }
 
     function testSecondSourceLabel() {
       let source = gSources.selectedItem.attachment.source;
-      ok(source.url === gSecondSource,
+      ok(source.url === EXAMPLE_URL + gSecondSourceLabel,
         "Second source url is correct.");
     }
 

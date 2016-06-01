@@ -12,7 +12,7 @@ const TAB_URL = EXAMPLE_URL + "doc_breakpoints-other-tabs.html";
 
 var test = Task.async(function* () {
   const options = {
-    source: EXAMPLE_URL + "code_breakpoints-other-tabs.js",
+    source: "code_breakpoints-other-tabs.js",
     line: 1
   };
   const [tab1,, panel1] = yield initDebugger(TAB_URL, options);

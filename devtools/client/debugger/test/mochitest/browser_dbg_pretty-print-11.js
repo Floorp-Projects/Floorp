@@ -15,7 +15,7 @@ var gEditor, gSources;
 function test() {
   // Wait for debugger panel to be fully set and break on debugger statement
   let options = {
-    source: EXAMPLE_URL + "code_ugly.js",
+    source: "code_ugly.js",
     line: 2
   };
   initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {

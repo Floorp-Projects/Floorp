@@ -14,7 +14,7 @@ function test() {
   let gSources, gBreakpoints;
 
   let options = {
-    source: EXAMPLE_URL + "code_script-eval.js",
+    source: "-eval.js",
     line: 1
   };
   initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
