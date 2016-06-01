@@ -213,11 +213,6 @@ interface nsIAsyncShutdownService: nsISupports {
   // Don't add a barrier for content-child-shutdown because this
   // makes it easier to cause shutdown hangs.
 
-  /**
-   * Barrier for notification xpcom-threads-shutdown.
-   */
-  readonly attribute nsIAsyncShutdownClient xpcomThreadsShutdown;
-
 };
 
 %{C++
