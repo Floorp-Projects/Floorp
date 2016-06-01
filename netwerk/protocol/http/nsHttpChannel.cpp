@@ -5313,6 +5313,12 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
 
     AddCookiesToRequest();
 
+    // After we notify any observers (on-opening-request, loadGroup, etc) we
+    // must return NS_OK and return any errors asynchronously via
+    // OnStart/OnStopRequest.  Observers may add a reference to the channel
+    // and expect to get OnStopRequest so they know when to drop the reference,
+    // etc.
+
     // notify "http-on-opening-request" observers, but not if this is a redirect
     if (!(mLoadFlags & LOAD_REPLACE)) {
         gHttpHandler->OnOpeningRequest(this);
@@ -5327,8 +5333,6 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     mListener = listener;
     mListenerContext = context;
 
-    // add ourselves to the load group.  from this point forward, we'll report
-    // all failures asynchronously.
     if (mLoadGroup)
         mLoadGroup->AddRequest(this, nullptr);
 
@@ -5342,16 +5346,20 @@ nsHttpChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *context)
     // just once and early, AsyncOpen is the best place.
     mCustomAuthHeader = mRequestHead.HasHeader(nsHttp::Authorization);
 
-    // the only time we would already know the proxy information at this
-    // point would be if we were proxying a non-http protocol like ftp
-    if (!mProxyInfo && NS_SUCCEEDED(ResolveProxy()))
+    // The common case for HTTP channels is to begin proxy resolution and return
+    // at this point. The only time we know mProxyInfo already is if we're
+    // proxying a non-http protocol like ftp.
+    if (!mProxyInfo && NS_SUCCEEDED(ResolveProxy())) {
         return NS_OK;
+    }
 
     rv = BeginConnect();
-    if (NS_FAILED(rv))
-        ReleaseListeners();
+    if (NS_FAILED(rv)) {
+        CloseCacheEntry(false);
+        AsyncAbort(rv);
+    }
 
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -5363,11 +5371,9 @@ nsHttpChannel::AsyncOpen2(nsIStreamListener *aListener)
   return AsyncOpen(listener, nullptr);
 }
 
-// BeginConnect() will not call AsyncAbort() on an error and if AsyncAbort needs
-// to be called the function calling BeginConnect will need to call AsyncAbort.
-// If BeginConnect is called from AsyncOpen, AsyncnAbort doesn't need to be
-// called. If it is called form another function (e.g. the function is called
-// from OnProxyAvailable) that function should call AsyncOpen.
+// BeginConnect() SHOULD NOT call AsyncAbort(). AsyncAbort will be called by
+// functions that called BeginConnect if needed. Only AsyncOpen and
+// OnProxyAvailable ever call BeginConnect.
 nsresult
 nsHttpChannel::BeginConnect()
 {
@@ -5535,13 +5541,12 @@ nsHttpChannel::BeginConnect()
         nsCOMPtr<nsIPackagedAppService> pas =
             do_GetService("@mozilla.org/network/packaged-app-service;1", &rv);
         if (NS_WARN_IF(NS_FAILED(rv))) {
-            AsyncAbort(rv);
             return rv;
         }
 
         rv = pas->GetResource(this, this);
         if (NS_FAILED(rv)) {
-            AsyncAbort(rv);
+            return rv;
         }
 
         // We need to alter the flags so the cache entry returned by the
@@ -5621,8 +5626,7 @@ nsHttpChannel::BeginConnect()
     }
 
     if (!(mLoadFlags & LOAD_CLASSIFY_URI)) {
-        ContinueBeginConnect();
-        return NS_OK;
+        return ContinueBeginConnectWithResult();
     }
 
     // mLocalBlocklist is true only if tracking protection is enabled and the
@@ -5648,7 +5652,7 @@ nsHttpChannel::BeginConnect()
          channelClassifier.get(), this));
     channelClassifier->Start(this);
     if (callContinueBeginConnect) {
-        ContinueBeginConnect();
+        return ContinueBeginConnectWithResult();
     }
     return NS_OK;
 }
@@ -5744,7 +5748,7 @@ nsHttpChannel::ContinueBeginConnect()
 {
     nsresult rv = ContinueBeginConnectWithResult();
     if (NS_FAILED(rv)) {
-        CloseCacheEntry(true);
+        CloseCacheEntry(false);
         AsyncAbort(rv);
     }
 }
@@ -5805,8 +5809,8 @@ nsHttpChannel::OnProxyAvailable(nsICancelable *request, nsIChannel *channel,
     }
 
     if (NS_FAILED(rv)) {
+        CloseCacheEntry(false);
         AsyncAbort(rv);
-        Cancel(rv);
     }
     return rv;
 }
