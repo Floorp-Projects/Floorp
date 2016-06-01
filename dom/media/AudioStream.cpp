@@ -162,7 +162,7 @@ nsresult AudioStream::EnsureTimeStretcherInitializedUnlocked()
   mMonitor.AssertCurrentThreadOwns();
   if (!mTimeStretcher) {
     mTimeStretcher = soundtouch::createSoundTouchObj();
-    mTimeStretcher->setSampleRate(mInRate);
+    mTimeStretcher->setSampleRate(mAudioClock.GetInputRate());
     mTimeStretcher->setChannels(mOutChannels);
     mTimeStretcher->setPitch(1.0);
   }
@@ -188,7 +188,6 @@ nsresult AudioStream::SetPlaybackRate(double aPlaybackRate)
   }
 
   mAudioClock.SetPlaybackRate(aPlaybackRate);
-  mOutRate = mInRate / aPlaybackRate;
 
   if (mAudioClock.GetPreservesPitch()) {
     mTimeStretcher->setTempo(aPlaybackRate);
@@ -503,8 +502,8 @@ AudioStream::GetPositionInFramesUnlocked()
 bool
 AudioStream::IsValidAudioFormat(Chunk* aChunk)
 {
-  if (aChunk->Rate() != mInRate) {
-    LOGW("mismatched sample %u, mInRate=%u", aChunk->Rate(), mInRate);
+  if (aChunk->Rate() != mAudioClock.GetInputRate()) {
+    LOGW("mismatched sample %u, mInRate=%u", aChunk->Rate(), mAudioClock.GetInputRate());
     return false;
   }
 
@@ -559,8 +558,8 @@ AudioStream::GetTimeStretched(AudioBufferWriter& aWriter)
     return;
   }
 
-  double playbackRate = static_cast<double>(mInRate) / mOutRate;
-  uint32_t toPopFrames = ceil(aWriter.Available() * playbackRate);
+  uint32_t toPopFrames =
+    ceil(aWriter.Available() * mAudioClock.GetPlaybackRate());
 
   while (mTimeStretcher->numSamples() < aWriter.Available()) {
     UniquePtr<Chunk> c = mDataSource.PopFrames(toPopFrames);
@@ -605,7 +604,7 @@ AudioStream::DataCallback(void* aBuffer, long aFrames)
   // NOTE: wasapi (others?) can call us back *after* stop()/Shutdown() (mState == SHUTDOWN)
   // Bug 996162
 
-  if (mInRate == mOutRate) {
+  if (mAudioClock.GetInputRate() == mAudioClock.GetOutputRate()) {
     GetUnprocessed(writer);
   } else {
     GetTimeStretched(writer);
