@@ -1405,16 +1405,6 @@ nsSVGUtils::SetupContextPaint(const DrawTarget* aDrawTarget,
   return toDraw;
 }
 
-static float
-MaybeOptimizeOpacity(nsIFrame *aFrame, float aFillOrStrokeOpacity)
-{
-  float opacity = aFrame->StyleEffects()->mOpacity;
-  if (opacity < 1 && nsSVGUtils::CanOptimizeOpacity(aFrame)) {
-    return aFillOrStrokeOpacity * opacity;
-  }
-  return aFillOrStrokeOpacity;
-}
-
 /* static */ void
 nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
                                gfxContext* aContext,
@@ -1426,10 +1416,18 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
     return;
   }
 
-  float fillOpacity = MaybeOptimizeOpacity(aFrame,
-                                           GetOpacity(style->FillOpacitySource(),
-                                                      style->mFillOpacity,
-                                                      aContextPaint));
+  const float opacity = aFrame->StyleEffects()->mOpacity;
+
+  float fillOpacity = GetOpacity(style->FillOpacitySource(),
+                                 style->mFillOpacity,
+                                 aContextPaint);
+  if (opacity < 1.0f &&
+      nsSVGUtils::CanOptimizeOpacity(aFrame)) {
+    // Combine the group opacity into the fill opacity (we will have skipped
+    // creating an offscreen surface to apply the group opacity).
+    fillOpacity *= opacity;
+  }
+
   const DrawTarget* dt = aContext->GetDrawTarget();
 
   nsSVGPaintServerFrame *ps =
@@ -1486,10 +1484,17 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
     return;
   }
 
-  float strokeOpacity = MaybeOptimizeOpacity(aFrame,
-                                             GetOpacity(style->StrokeOpacitySource(),
-                                                        style->mStrokeOpacity,
-                                                        aContextPaint));
+  const float opacity = aFrame->StyleEffects()->mOpacity;
+
+  float strokeOpacity = GetOpacity(style->StrokeOpacitySource(),
+                                   style->mStrokeOpacity,
+                                   aContextPaint);
+  if (opacity < 1.0f &&
+      nsSVGUtils::CanOptimizeOpacity(aFrame)) {
+    // Combine the group opacity into the stroke opacity (we will have skipped
+    // creating an offscreen surface to apply the group opacity).
+    strokeOpacity *= opacity;
+  }
 
   const DrawTarget* dt = aContext->GetDrawTarget();
 
