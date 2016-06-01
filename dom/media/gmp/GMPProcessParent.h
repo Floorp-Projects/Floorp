@@ -11,7 +11,6 @@
 #include "base/basictypes.h"
 #include "base/file_path.h"
 #include "base/thread.h"
-#include "base/waitable_event.h"
 #include "chrome/common/child_process_host.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
 
@@ -35,7 +34,6 @@ public:
   bool CanShutdown() override { return true; }
   const std::string& GetPluginFilePath() { return mGMPPath; }
 
-  using mozilla::ipc::GeckoChildProcessHost::GetShutDownEvent;
   using mozilla::ipc::GeckoChildProcessHost::GetChannel;
   using mozilla::ipc::GeckoChildProcessHost::GetChildProcessHandle;
 

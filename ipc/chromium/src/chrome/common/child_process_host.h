@@ -12,7 +12,6 @@
 #include <list>
 
 #include "base/basictypes.h"
-#include "base/waitable_event_watcher.h"
 #include "chrome/common/child_process_info.h"
 #include "chrome/common/ipc_channel.h"
 #include "mozilla/UniquePtr.h"
@@ -28,7 +27,6 @@ class FileDescriptor;
 class ChildProcessHost :
                          public IPC::Message::Sender,
                          public ChildProcessInfo,
-                         public base::WaitableEventWatcher::Delegate,
                          public IPC::Channel::Listener {
  public:
   virtual ~ChildProcessHost();
@@ -79,14 +77,8 @@ class ChildProcessHost :
   bool opening_channel() { return opening_channel_; }
   const std::wstring& channel_id() { return channel_id_; }
 
-  base::WaitableEvent* GetProcessEvent() { return process_event_.get(); }
-
   const IPC::Channel& channel() const { return *channel_; }
   IPC::Channel* channelp() const { return channel_.get(); }
-
- protected:
-  // WaitableEventWatcher::Delegate implementation:
-  virtual void OnWaitableEventSignaled(base::WaitableEvent *event);
 
  private:
   // By using an internal class as the IPC::Channel::Listener, we can intercept
@@ -113,11 +105,6 @@ class ChildProcessHost :
 
   // IPC Channel's id.
   std::wstring channel_id_;
-
-  // Used to watch the child process handle.
-  base::WaitableEventWatcher watcher_;
-
-  mozilla::UniquePtr<base::WaitableEvent> process_event_;
 };
 
 #endif  // CHROME_COMMON_CHILD_PROCESS_HOST_H_
