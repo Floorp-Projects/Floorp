@@ -1012,7 +1012,8 @@ gfxWindowsPlatform::SchedulePaintIfDeviceReset()
 {
   PROFILER_LABEL_FUNC(js::ProfileEntry::Category::GRAPHICS);
 
-  if (!DidRenderingDeviceReset()) {
+  DeviceResetReason resetReason = DeviceResetReason::OK;
+  if (!DidRenderingDeviceReset(&resetReason)) {
     return;
   }
 
@@ -1021,17 +1022,7 @@ gfxWindowsPlatform::SchedulePaintIfDeviceReset()
                       InvalidateWindowForDeviceReset,
                       0);
 
-  gfxCriticalNote << "Detected rendering device reset on refresh";
-}
-
-void
-gfxWindowsPlatform::UpdateRenderModeIfDeviceReset()
-{
-  PROFILER_LABEL_FUNC(js::ProfileEntry::Category::GRAPHICS);
-
-  if (DidRenderingDeviceReset()) {
-    UpdateRenderMode();
-  }
+  gfxCriticalNote << "Detected rendering device reset on refresh: " << (int)resetReason;
 }
 
 void
