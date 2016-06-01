@@ -481,7 +481,8 @@ int64_t
 AudioStream::GetPositionInFrames()
 {
   MonitorAutoLock mon(mMonitor);
-  return mAudioClock.GetPositionInFrames();
+  int64_t frames = GetPositionInFramesUnlocked();
+  return frames >= 0 ? mAudioClock.GetPositionInFrames(frames) : -1;
 }
 
 int64_t
@@ -672,9 +673,9 @@ int64_t AudioClock::GetPositionUnlocked() const
   return frames >= 0 ? mFrameHistory->GetPosition(frames) : -1;
 }
 
-int64_t AudioClock::GetPositionInFrames() const
+int64_t AudioClock::GetPositionInFrames(int64_t frames) const
 {
-  return (GetPositionUnlocked() * mInRate) / USECS_PER_S;
+  return (GetPosition(frames) * mInRate) / USECS_PER_S;
 }
 
 int64_t AudioClock::GetPosition(int64_t frames) const
