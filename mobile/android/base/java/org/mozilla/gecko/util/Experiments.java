@@ -6,8 +6,8 @@ package org.mozilla.gecko.util;
 
 import android.content.Context;
 
+import android.support.annotation.NonNull;
 import android.util.Log;
-import org.mozilla.gecko.mozglue.SafeIntentUtils.SafeIntent;
 import android.text.TextUtils;
 
 import com.keepsafe.switchboard.Preferences;
@@ -16,6 +16,7 @@ import org.mozilla.gecko.GeckoSharedPrefs;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 /**
  * This class should reflect the experiment names found in the Switchboard experiments config here:
@@ -23,6 +24,8 @@ import java.util.List;
  */
 public class Experiments {
     private static final String LOGTAG = "GeckoExperiments";
+
+    private static final String ENVVAR_DISABLED = "MOZ_DISABLE_SWITCHBOARD";
 
     // Show a system notification linking to a "What's New" page on app update.
     public static final String WHATSNEW_NOTIFICATION = "whatsnew-notification";
@@ -58,31 +61,22 @@ public class Experiments {
     private static volatile Boolean disabled = null;
 
     /**
-     * Determines whether Switchboard is disabled by the MOZ_DISABLE_SWITCHBOARD
-     * environment variable. We need to read this value from the intent string
-     * extra because environment variables from our test harness aren't set
-     * until Gecko is loaded, and we need to know this before then.
-     *
-     * @param intent Main intent that launched the app
-     * @return Whether Switchboard is disabled
+     * As a sanity check, this method may only be called once.
      */
-    public static boolean isDisabled(SafeIntent intent) {
+    public static void setDisabledFromEnvVar(@NonNull final Map<String, String> envVarMap) {
         if (disabled != null) {
-            return disabled;
+            throw new IllegalStateException("Disabled state already set");
         }
+        disabled = envVarMap.containsKey(ENVVAR_DISABLED);
+        if (disabled) {
+            Log.d(LOGTAG, "Switchboard disabled by environment variable: " + ENVVAR_DISABLED);
+        }
+    }
 
-        String env = intent.getStringExtra("env0");
-        for (int i = 1; env != null; i++) {
-            if (env.startsWith("MOZ_DISABLE_SWITCHBOARD=")) {
-                if (!env.endsWith("=")) {
-                    Log.d(LOGTAG, "Switchboard disabled by MOZ_DISABLE_SWITCHBOARD environment variable");
-                    disabled = true;
-                    return disabled;
-                }
-            }
-            env = intent.getStringExtra("env" + i);
+    public static boolean isDisabled() {
+        if (disabled == null) {
+            throw new IllegalStateException("Disabled state not yet set.");
         }
-        disabled = false;
         return disabled;
     }
 
