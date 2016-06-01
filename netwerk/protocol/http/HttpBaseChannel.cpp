@@ -143,7 +143,8 @@ HttpBaseChannel::Init(nsIURI *aURI,
                       uint32_t aCaps,
                       nsProxyInfo *aProxyInfo,
                       uint32_t aProxyResolveFlags,
-                      nsIURI *aProxyURI)
+                      nsIURI *aProxyURI,
+                      const nsID& aChannelId)
 {
   LOG(("HttpBaseChannel::Init [this=%p]\n", this));
 
@@ -155,6 +156,7 @@ HttpBaseChannel::Init(nsIURI *aURI,
   mCaps = aCaps;
   mProxyResolveFlags = aProxyResolveFlags;
   mProxyURI = aProxyURI;
+  mChannelId = aChannelId;
 
   // Construct connection info object
   nsAutoCString host;
@@ -1156,6 +1158,28 @@ HttpBaseChannel::nsContentEncodings::PrepareForNext(void)
 //-----------------------------------------------------------------------------
 // HttpBaseChannel::nsIHttpChannel
 //-----------------------------------------------------------------------------
+
+NS_IMETHODIMP
+HttpBaseChannel::GetChannelId(nsACString& aChannelId)
+{
+  char id[NSID_LENGTH];
+  mChannelId.ToProvidedString(id);
+  aChannelId.AssignASCII(id);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+HttpBaseChannel::SetChannelId(const nsACString& aChannelId)
+{
+  nsID newId;
+  nsAutoCString idStr(aChannelId);
+  if (newId.Parse(idStr.get())) {
+    mChannelId = newId;
+    return NS_OK;
+  }
+
+  return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP
 HttpBaseChannel::GetTransferSize(uint64_t *aTransferSize)
