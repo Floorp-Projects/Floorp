@@ -146,6 +146,7 @@ static const char pluginSandboxRules[] =
   "    (literal \"/usr/share/icu/icudt51l.dat\")\n"
   "    (regex #\"^/System/Library/Displays/Overrides/*\")\n"
   "    (regex #\"^/System/Library/CoreServices/CoreTypes.bundle/*\")\n"
+  "    (regex #\"^/usr/lib/libstdc\\+\\+\\..*dylib$\")\n"
   "    (literal \"%s\")\n"
   "    (literal \"%s\")\n"
   "    (literal \"%s\"))\n";
