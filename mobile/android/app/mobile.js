@@ -924,6 +924,9 @@ pref("dom.presentation.enabled", true);
 pref("dom.presentation.discovery.enabled", true);
 
 pref("dom.audiochannel.audioCompeting", true);
+// TODO : turn this pref default on in bug1264901
+pref("dom.audiochannel.mediaControl", false);
+
 // TODO : remove it after landing bug1242874 because now it's the only way to
 // suspend the MediaElement.
 pref("media.useAudioChannelAPI", true);
