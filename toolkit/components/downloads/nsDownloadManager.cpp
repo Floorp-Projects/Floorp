@@ -2328,7 +2328,7 @@ NS_IMETHODIMP
 nsDownloadManager::OnVisit(nsIURI *aURI, int64_t aVisitID, PRTime aTime,
                            int64_t aSessionID, int64_t aReferringID,
                            uint32_t aTransitionType, const nsACString& aGUID,
-                           bool aHidden)
+                           bool aHidden, uint32_t aVisitCount, uint32_t aTyped)
 {
   return NS_OK;
 }

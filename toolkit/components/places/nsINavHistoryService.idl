@@ -644,30 +644,44 @@ interface nsINavHistoryObserver : nsISupports
   void onEndUpdateBatch();
 
   /**
-   * Called when a resource is visited. This is called the first time a
-   * resource (page, image, etc.) is seen as well as every subsequent time.
+   * Called everytime a URI is visited.
    *
-   * Normally, transition types of TRANSITION_EMBED (corresponding to images in
-   * a page, for example) are not displayed in history results (unless
-   * includeHidden is set). Many observers can ignore _EMBED notifications
-   * (which will comprise the majority of visit notifications) to save work.
+   * @note TRANSITION_EMBED visits (corresponding to images in a page, for
+   *       example) are not displayed in history results. Most observers can
+   *       ignore TRANSITION_EMBED visit notifications (which will comprise the
+   *       majority of visit notifications) to save work.
    *
-   * @param aVisitID        ID of the visit that was just created.
-   * @param aTime           Time of the visit
-   * @param aSessionID      No longer supported (always set to 0).
-   * @param aReferringID    The ID of the visit the user came from. 0 if empty.
-   * @param aTransitionType One of nsINavHistory.TRANSITION_*
-   * @param aGUID           The unique ID associated with the page.
-   * @param aHidden         Whether the visited page is marked as hidden.
+   * @param aVisitId
+   *        Id of the visit that was just created.
+   * @param aTime
+   *        Time of the visit.
+   * @param aSessionId
+   *        No longer supported and always set to 0.
+   * @param aReferrerVisitId
+   *        The id of the visit the user came from, defaults to 0 for no referrer.
+   * @param aTransitionType
+   *        One of nsINavHistory.TRANSITION_*
+   * @param aGuid
+   *        The unique id associated with the page.
+   * @param aHidden
+   *        Whether the visited page is marked as hidden.
+   * @param aVisitCount
+   *        Number of visits (included this one) for this URI.
+   * @param aTyped
+   *        Whether the URI has been typed or not.
+   *        TODO (Bug 1271801): This will become a count, rather than a boolean.
+   *        For future compatibility, always compare it with "> 0".
    */
   void onVisit(in nsIURI aURI,
-               in long long aVisitID,
+               in long long aVisitId,
                in PRTime aTime,
-               in long long aSessionID,
-               in long long aReferringID,
+               in long long aSessionId,
+               in long long aReferrerVisitId,
                in unsigned long aTransitionType,
-               in ACString aGUID,
-               in boolean aHidden);
+               in ACString aGuid,
+               in boolean aHidden,
+               in unsigned long aVisitCount,
+               in unsigned long aTyped);
 
   /**
    * Called whenever either the "real" title or the custom title of the page

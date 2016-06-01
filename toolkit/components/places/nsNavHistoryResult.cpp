@@ -4597,9 +4597,14 @@ NS_IMETHODIMP
 nsNavHistoryResult::OnVisit(nsIURI* aURI, int64_t aVisitId, PRTime aTime,
                             int64_t aSessionId, int64_t aReferringId,
                             uint32_t aTransitionType, const nsACString& aGUID,
-                            bool aHidden)
+                            bool aHidden, uint32_t aVisitCount, uint32_t aTyped)
 {
   NS_ENSURE_ARG(aURI);
+
+  // Embed visits are never shown in our views.
+  if (aTransitionType == nsINavHistoryService::TRANSITION_EMBED) {
+    return NS_OK;
+  }
 
   uint32_t added = 0;
 
