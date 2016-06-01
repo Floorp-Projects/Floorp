@@ -35,10 +35,12 @@ class AudioConverter;
 class AudioClock
 {
 public:
-  explicit AudioClock(AudioStream* aStream);
-  // Initialize the clock with the current AudioStream. Need to be called
-  // before querying the clock. Called on the audio thread.
-  void Init();
+  AudioClock();
+
+  // Initialize the clock with the current sampling rate.
+  // Need to be called before querying the clock.
+  void Init(uint32_t aRate);
+
   // Update the number of samples that has been written in the audio backend.
   // Called on the state machine thread.
   void UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun);
@@ -71,10 +73,8 @@ public:
   // Get the current pitch preservation state.
   // Called on the audio thread.
   bool GetPreservesPitch() const;
+
 private:
-  // This AudioStream holds a strong reference to this AudioClock. This
-  // pointer is garanteed to always be valid.
-  AudioStream* const mAudioStream;
   // Output rate in Hz (characteristic of the playback rate)
   uint32_t mOutRate;
   // Input rate in Hz (characteristic of the media being played)
