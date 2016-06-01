@@ -53,12 +53,11 @@ public:
 
   void InitializeBlob(ErrorResult& aRv);
 
-  void InitializeBlob(
-       JSContext* aCx,
-       const Sequence<OwningArrayBufferOrArrayBufferViewOrBlobOrString>& aData,
-       const nsAString& aContentType,
-       bool aNativeEOL,
-       ErrorResult& aRv);
+  void InitializeBlob(JSContext* aCx,
+                      const Sequence<Blob::BlobPart>& aData,
+                      const nsAString& aContentType,
+                      bool aNativeEOL,
+                      ErrorResult& aRv);
 
   void InitializeChromeFile(Blob& aData,
                             const ChromeFilePropertyBag& aBag,

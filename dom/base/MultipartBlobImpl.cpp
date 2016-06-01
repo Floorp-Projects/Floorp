@@ -172,26 +172,25 @@ MultipartBlobImpl::InitializeBlob(ErrorResult& aRv)
 }
 
 void
-MultipartBlobImpl::InitializeBlob(
-       JSContext* aCx,
-       const Sequence<OwningArrayBufferOrArrayBufferViewOrBlobOrString>& aData,
-       const nsAString& aContentType,
-       bool aNativeEOL,
-       ErrorResult& aRv)
+MultipartBlobImpl::InitializeBlob(JSContext* aCx,
+                                  const Sequence<Blob::BlobPart>& aData,
+                                  const nsAString& aContentType,
+                                  bool aNativeEOL,
+                                  ErrorResult& aRv)
 {
   mContentType = aContentType;
   BlobSet blobSet;
 
   for (uint32_t i = 0, len = aData.Length(); i < len; ++i) {
-    const OwningArrayBufferOrArrayBufferViewOrBlobOrString& data = aData[i];
+    const Blob::BlobPart& data = aData[i];
 
     if (data.IsBlob()) {
       RefPtr<Blob> blob = data.GetAsBlob().get();
       blobSet.AppendBlobImpl(blob->Impl());
     }
 
-    else if (data.IsString()) {
-      aRv = blobSet.AppendString(data.GetAsString(), aNativeEOL, aCx);
+    else if (data.IsUSVString()) {
+      aRv = blobSet.AppendString(data.GetAsUSVString(), aNativeEOL, aCx);
       if (aRv.Failed()) {
         return;
       }
