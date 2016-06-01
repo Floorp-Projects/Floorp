@@ -53,12 +53,14 @@ OpusDataDecoder::Init()
   size_t length = mInfo.mCodecSpecificConfig->Length();
   uint8_t *p = mInfo.mCodecSpecificConfig->Elements();
   if (length < sizeof(uint64_t)) {
+    OPUS_DEBUG("CodecSpecificConfig too short to read codecDelay!");
     return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
   }
   int64_t codecDelay = BigEndian::readUint64(p);
   length -= sizeof(uint64_t);
   p += sizeof(uint64_t);
   if (NS_FAILED(DecodeHeader(p, length))) {
+    OPUS_DEBUG("Error decoding header!");
     return InitPromise::CreateAndReject(DecoderFailureReason::INIT_ERROR, __func__);
   }
 
