@@ -90,6 +90,20 @@ function coordinatesRelativeToScreen(aX, aY, aElement) {
   };
 }
 
+// Get the bounding box of aElement, and return it in device pixels
+// relative to the screen.
+function rectRelativeToScreen(aElement) {
+  var targetWindow = aElement.ownerDocument.defaultView;
+  var scale = targetWindow.devicePixelRatio;
+  var rect = aElement.getBoundingClientRect();
+  return {
+    x: (targetWindow.mozInnerScreenX + rect.left) * scale,
+    y: (targetWindow.mozInnerScreenY + rect.top) * scale,
+    w: (rect.width * scale),
+    h: (rect.height * scale)
+  };
+}
+
 // Synthesizes a native mousewheel event and returns immediately. This does not
 // guarantee anything; you probably want to use one of the other functions below
 // which actually wait for results.
