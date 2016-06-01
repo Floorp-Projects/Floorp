@@ -15,7 +15,7 @@ function test() {
   let gTab, gPanel, gDebugger, gSources;
 
   let options = {
-    source: "-01.js",
+    source: EXAMPLE_URL + "code_function-jump-01.js",
     line: 1
   };
   initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
