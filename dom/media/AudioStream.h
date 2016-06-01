@@ -279,10 +279,6 @@ private:
   // The monitor is held to protect all access to member variables.
   Monitor mMonitor;
 
-  // Input rate in Hz (characteristic of the media being played)
-  uint32_t mInRate;
-  // Output rate in Hz (characteristic of the playback rate)
-  uint32_t mOutRate;
   uint32_t mChannels;
   uint32_t mOutChannels;
   AudioClock mAudioClock;
