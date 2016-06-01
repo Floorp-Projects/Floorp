@@ -8,6 +8,7 @@ import android.app.IntentService;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.text.TextUtils;
 import android.util.Log;
 import ch.boye.httpclientandroidlib.HttpHeaders;
 import ch.boye.httpclientandroidlib.HttpResponse;
@@ -65,7 +66,7 @@ public class TelemetryUploadService extends IntentService {
         if (isDisabledByLaunchingIntent != null) {
             throw new IllegalStateException("Disabled state already set");
         }
-        isDisabledByLaunchingIntent = envVarMap.containsKey(ENV_VAR_NAME);
+        isDisabledByLaunchingIntent = !TextUtils.isEmpty(envVarMap.get(ENV_VAR_NAME));
         if (isDisabledByLaunchingIntent) {
             Log.d(LOGTAG, "Telemetry disabled by environment variable: " + ENV_VAR_NAME);
         }
