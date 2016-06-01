@@ -78,6 +78,7 @@ import org.mozilla.gecko.tabs.TabHistoryController.OnShowTabHistory;
 import org.mozilla.gecko.tabs.TabHistoryFragment;
 import org.mozilla.gecko.tabs.TabHistoryPage;
 import org.mozilla.gecko.tabs.TabsPanel;
+import org.mozilla.gecko.telemetry.TelemetryUploadService;
 import org.mozilla.gecko.telemetry.measurements.SearchCountMeasurements;
 import org.mozilla.gecko.telemetry.TelemetryDispatcher;
 import org.mozilla.gecko.telemetry.UploadTelemetryCorePingCallback;
@@ -776,6 +777,7 @@ public class BrowserApp extends GeckoApp
     private void configureForTestsBasedOnEnvironment(final Intent intent) {
         final HashMap<String, String> envVars = IntentUtils.getEnvVarMap(intent);
         Experiments.setDisabledFromEnvVar(envVars);
+        TelemetryUploadService.setDisabledFromEnvVar(envVars);
     }
 
     /**
