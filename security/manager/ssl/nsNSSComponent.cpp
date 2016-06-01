@@ -1691,9 +1691,8 @@ nsNSSComponent::InitializeNSS()
   MutexAutoLock lock(mutex);
 
   if (mNSSInitialized) {
-    PR_ASSERT(!"Trying to initialize NSS twice"); // We should never try to
-                                                  // initialize NSS more than
-                                                  // once in a process.
+    // We should never try to initialize NSS more than once in a process.
+    MOZ_ASSERT_UNREACHABLE("Trying to initialize NSS twice");
     return NS_ERROR_FAILURE;
   }
 
