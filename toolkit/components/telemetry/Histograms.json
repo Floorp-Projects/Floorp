@@ -9023,6 +9023,15 @@
     "releaseChannelCollection": "opt-out",
     "description": "Counts of plugin and content process crashes which are reported with a crash dump."
   },
+  "SUBPROCESS_LAUNCH_FAILURE": {
+    "alert_emails": ["haftandilian@mozilla.com"],
+    "expires_in_version": "never",
+    "bug_numbers": [1275430],
+    "kind": "count",
+    "keyed": true,
+    "releaseChannelCollection": "opt-out",
+    "description": "Counts the number of times launching a subprocess fails. Counts are by subprocess-type using the GeckoProcessType enum."
+  },
   "PROCESS_CRASH_SUBMIT_ATTEMPT": {
     "expires_in_version": "never",
     "kind": "count",
