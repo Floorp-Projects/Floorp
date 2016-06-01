@@ -15,13 +15,12 @@ function checkScroll(x, y, desc) {
 }
 
 function* test(testDriver) {
-  const TOUCH_SLOP = 1;
   var target = document.getElementById('target');
 
   document.body.addEventListener('touchend', testDriver, { passive: true });
 
   // drag the page up to scroll down by 50px
-  yield ok(synthesizeNativeDrag(target, 10, 100, 0, -(50 + TOUCH_SLOP)),
+  yield ok(synthesizeNativeTouchDrag(target, 10, 100, 0, -(50 + TOUCH_SLOP)),
       "Synthesized native vertical drag (1), waiting for touch-end event...");
   yield flushApzRepaints(testDriver);
   checkScroll(0, 50, "After first vertical drag, with pan-y" );
@@ -34,20 +33,20 @@ function* test(testDriver) {
   });
 
   // drag the page up to scroll down by 50px, but it won't happen because pan-x
-  yield ok(synthesizeNativeDrag(target, 10, 100, 0, -(50 + TOUCH_SLOP)),
+  yield ok(synthesizeNativeTouchDrag(target, 10, 100, 0, -(50 + TOUCH_SLOP)),
      "Synthesized native vertical drag (2), waiting for touch-end event...");
   yield flushApzRepaints(testDriver);
   checkScroll(0, 50, "After second vertical drag, with pan-x");
 
   // drag the page left to scroll right by 50px
-  yield ok(synthesizeNativeDrag(target, 100, 10, -(50 + TOUCH_SLOP), 0),
+  yield ok(synthesizeNativeTouchDrag(target, 100, 10, -(50 + TOUCH_SLOP), 0),
      "Synthesized horizontal drag (1), waiting for touch-end event...");
   yield flushApzRepaints(testDriver);
   checkScroll(50, 50, "After first horizontal drag, with pan-x");
 
   // drag the page diagonally right/down to scroll up/left by 40px each axis;
   // only the x-axis will actually scroll because pan-x
-  yield ok(synthesizeNativeDrag(target, 10, 10, (40 + TOUCH_SLOP), (40 + TOUCH_SLOP)),
+  yield ok(synthesizeNativeTouchDrag(target, 10, 10, (40 + TOUCH_SLOP), (40 + TOUCH_SLOP)),
      "Synthesized diagonal drag (1), waiting for touch-end event...");
   yield flushApzRepaints(testDriver);
   checkScroll(10, 50, "After first diagonal drag, with pan-x");
@@ -61,7 +60,7 @@ function* test(testDriver) {
 
   // drag the page diagonally right/down to scroll up/left by 40px each axis;
   // only the y-axis will actually scroll because pan-y
-  yield ok(synthesizeNativeDrag(target, 10, 10, (40 + TOUCH_SLOP), (40 + TOUCH_SLOP)),
+  yield ok(synthesizeNativeTouchDrag(target, 10, 10, (40 + TOUCH_SLOP), (40 + TOUCH_SLOP)),
      "Synthesized diagonal drag (2), waiting for touch-end event...");
   yield flushApzRepaints(testDriver);
   checkScroll(10, 10, "After second diagonal drag, with pan-y");
@@ -75,7 +74,7 @@ function* test(testDriver) {
 
   // drag the page diagonally up/left to scroll down/right by 40px each axis;
   // neither will scroll because of touch-action
-  yield ok(synthesizeNativeDrag(target, 100, 100, -(40 + TOUCH_SLOP), -(40 + TOUCH_SLOP)),
+  yield ok(synthesizeNativeTouchDrag(target, 100, 100, -(40 + TOUCH_SLOP), -(40 + TOUCH_SLOP)),
       "Synthesized diagonal drag (3), waiting for touch-end event...");
   yield flushApzRepaints(testDriver);
   checkScroll(10, 10, "After third diagonal drag, with none");
@@ -88,7 +87,7 @@ function* test(testDriver) {
 
   // drag the page diagonally up/left to scroll down/right by 40px each axis;
   // both will scroll because of touch-action
-  yield ok(synthesizeNativeDrag(target, 100, 100, -(40 + TOUCH_SLOP), -(40 + TOUCH_SLOP)),
+  yield ok(synthesizeNativeTouchDrag(target, 100, 100, -(40 + TOUCH_SLOP), -(40 + TOUCH_SLOP)),
       "Synthesized diagonal drag (4), waiting for touch-end event...");
   yield flushApzRepaints(testDriver);
   checkScroll(50, 50, "After fourth diagonal drag, with manipulation");
