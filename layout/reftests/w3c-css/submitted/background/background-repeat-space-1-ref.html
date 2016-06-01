@@ -22,6 +22,22 @@
         width: 32px;
         background-image: url(aqua-yellow-32x32.png);
       }
+      .outer_gradient
+      {
+        border: 1px solid black;
+        width: 106px;
+        height: 106px;
+        display: flex;
+        justify-content: space-between;
+        align-content: space-between;
+        flex-wrap: wrap;
+      }
+      .inner_gradient
+      {
+        height: 32px;
+        width: 32px;
+        background-image: linear-gradient(to top left, red, green);
+      }
     </style>
   </head>
   <body>
@@ -35,6 +51,17 @@
       <div class="inner"></div>
       <div class="inner"></div>
       <div class="inner"></div>
+    </div>
+    <div class="outer_gradient">
+      <div class="inner_gradient"></div>
+      <div class="inner_gradient"></div>
+      <div class="inner_gradient"></div>
+      <div class="inner_gradient"></div>
+      <div class="inner_gradient"></div>
+      <div class="inner_gradient"></div>
+      <div class="inner_gradient"></div>
+      <div class="inner_gradient"></div>
+      <div class="inner_gradient"></div>
     </div>
   </body>
 </html>
