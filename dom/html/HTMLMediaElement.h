@@ -700,6 +700,11 @@ public:
       mTextTrackManager->AddCue(aCue);
     }
   }
+  void NotifyCueRemoved(TextTrackCue& aCue) {
+    if (mTextTrackManager) {
+      mTextTrackManager->NotifyCueRemoved(aCue);
+    }
+  }
 
   /**
    * A public wrapper for FinishDecoderSetup()
