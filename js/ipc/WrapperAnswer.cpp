@@ -548,7 +548,8 @@ WrapperAnswer::RecvClassName(const ObjectId& objId, nsCString* name)
     RootedObject obj(cx, findObjectById(cx, objId));
     if (!obj) {
         // This is very unfortunate, but we have no choice.
-        return "<dead CPOW>";
+        *name = "<dead CPOW>";
+        return true;
     }
 
     LOG("%s.className()", ReceiverObj(objId));

@@ -60,7 +60,7 @@ MIRType MIRTypeFromValue(const js::Value& vp)
           case JS_UNINITIALIZED_LEXICAL:
             return MIRType::MagicUninitializedLexical;
           default:
-            MOZ_ASSERT(!"Unexpected magic constant");
+            MOZ_ASSERT_UNREACHABLE("Unexpected magic constant");
         }
     }
     return MIRTypeFromValueType(vp.extractNonDoubleType());
