@@ -145,7 +145,7 @@ MulticastDNSDeviceProvider::Init()
   Preferences::AddStrongObservers(this, kObservedPrefs);
 
   mDiscoveryEnabled = Preferences::GetBool(PREF_PRESENTATION_DISCOVERY);
-  mDiscveryTimeoutMs = Preferences::GetUint(PREF_PRESENTATION_DISCOVERY_TIMEOUT_MS);
+  mDiscoveryTimeoutMs = Preferences::GetUint(PREF_PRESENTATION_DISCOVERY_TIMEOUT_MS);
   mDiscoverable = Preferences::GetBool(PREF_PRESENTATION_DISCOVERABLE);
   mServiceName = Preferences::GetCString(PREF_PRESENTATION_DEVICE_NAME);
 
@@ -534,7 +534,7 @@ MulticastDNSDeviceProvider::ForceDiscovery()
     Unused << mDiscoveryTimer->Cancel();
 
     if (NS_WARN_IF(NS_FAILED( rv = mDiscoveryTimer->Init(this,
-        mDiscveryTimeoutMs,
+        mDiscoveryTimeoutMs,
         nsITimer::TYPE_ONE_SHOT)))) {
         return rv;
     }
@@ -565,7 +565,7 @@ MulticastDNSDeviceProvider::OnDiscoveryStarted(const nsACString& aServiceType)
 
   nsresult rv;
   if (NS_WARN_IF(NS_FAILED(rv = mDiscoveryTimer->Init(this,
-                                                      mDiscveryTimeoutMs,
+                                                      mDiscoveryTimeoutMs,
                                                       nsITimer::TYPE_ONE_SHOT)))) {
     return rv;
   }
@@ -924,7 +924,7 @@ MulticastDNSDeviceProvider::OnDiscoveryTimeoutChanged(uint32_t aTimeoutMs)
   LOG_I("OnDiscoveryTimeoutChanged = %d\n", aTimeoutMs);
   MOZ_ASSERT(NS_IsMainThread());
 
-  mDiscveryTimeoutMs = aTimeoutMs;
+  mDiscoveryTimeoutMs = aTimeoutMs;
 
   return NS_OK;
 }
