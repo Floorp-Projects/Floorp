@@ -40,7 +40,9 @@ function testZoomLevel(type, times, expected) {
   let zoom = getCurrentZoom(toolbox);
   is(zoom.toFixed(2), expected, "zoom level correct after zoom " + type);
 
-  is(toolbox.zoomValue.toFixed(2), expected,
+  let savedZoom = parseFloat(Services.prefs.getCharPref(
+    "devtools.toolbox.zoomValue"));
+  is(savedZoom.toFixed(2), expected,
      "saved zoom level is correct after zoom " + type);
 }
 

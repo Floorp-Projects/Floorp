@@ -669,9 +669,6 @@ BrowserConsole.prototype = extend(WebConsole.prototype, {
     };
     window.addEventListener("unload", onClose);
 
-    // Make sure Ctrl-W closes the Browser Console window.
-    window.document.getElementById("cmd_close").removeAttribute("disabled");
-
     this._telemetry.toolOpened("browserconsole");
 
     // Create an onFocus handler just to display the dev edition promo.

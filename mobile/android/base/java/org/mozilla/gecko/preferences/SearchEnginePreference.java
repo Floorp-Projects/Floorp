@@ -172,7 +172,9 @@ public class SearchEnginePreference extends CustomListPreference {
                 }
             }
 
-            Favicons.getSizedFavicon(getContext(), mIdentifier, iconURI, desiredWidth, 0,
+            Favicons.getSizedFavicon(getContext(), mIdentifier, iconURI,
+                Favicons.LoadType.PRIVILEGED, // We have an internal store of search engine icons, hence we're always loading PRIVILEGED icons here
+                desiredWidth, 0,
                 new OnFaviconLoadedListener() {
                     @Override
                     public void onFaviconLoaded(String url, String faviconURL, Bitmap favicon) {

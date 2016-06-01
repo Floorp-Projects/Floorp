@@ -16,5 +16,4 @@ public class TelemetryConstants {
             "Firefox-Android-Telemetry/" + AppConstants.MOZ_APP_VERSION + " (" + AppConstants.MOZ_APP_UA_NAME + ")";
 
     public static final String PREF_SERVER_URL = "telemetry-serverUrl";
-    public static final String PREF_SEQ_COUNT = "telemetry-seqCount";
 }
