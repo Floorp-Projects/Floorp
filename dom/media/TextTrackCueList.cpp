@@ -62,6 +62,13 @@ TextTrackCueList::operator[](uint32_t aIndex)
   return mList.SafeElementAt(aIndex, nullptr);
 }
 
+TextTrackCueList&
+TextTrackCueList::operator=(const TextTrackCueList& aOther)
+{
+  mList = aOther.mList;
+  return *this;
+}
+
 TextTrackCue*
 TextTrackCueList::GetCueById(const nsAString& aId)
 {
