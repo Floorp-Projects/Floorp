@@ -13,7 +13,7 @@ const TAB_URL = EXAMPLE_URL + "doc_function-search.html";
 
 function test() {
   let options = {
-    source: EXAMPLE_URL + "code_function-search-01.js",
+    source: "-01.js",
     line: 1
   };
   initDebugger(TAB_URL, options).then(([aTab, aDebuggee, aPanel]) => {

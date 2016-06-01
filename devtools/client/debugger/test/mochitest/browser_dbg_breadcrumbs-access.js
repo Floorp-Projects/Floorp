@@ -14,7 +14,7 @@ function test() {
   let gSources, gFrames;
 
   let options = {
-    source: EXAMPLE_URL + "code_script-switching-01.js",
+    source: "-01.js",
     line: 1
   };
   initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
