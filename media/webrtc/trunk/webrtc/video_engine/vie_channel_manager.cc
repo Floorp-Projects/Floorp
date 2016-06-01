@@ -148,6 +148,23 @@ int ViEChannelManager::CreateChannel(int* channel_id,
 int ViEChannelManager::DeleteChannel(int channel_id) {
   ChannelGroup* group = NULL;
   {
+    // Read lock to make sure no one tries to delete it on us
+    ViEChannelManagerScoped(*this);
+
+    // Protect the maps.
+    CriticalSectionScoped cs(channel_id_critsect_);
+
+    group = FindGroup(channel_id);
+    if (group == NULL)
+      return -1;
+    group->Stop(channel_id);
+  }
+  // Now release the read lock, and get a write lock since we know the
+  // threads are stopped.  Otherwise we can deadlock if we hold a write
+  // lock and the thread is processing and needs a read lock, and we try to
+  // stop the thread (ProcessThread::DeRegisterModule().  See Mozilla
+  // bug 1276156.
+  {
     // Write lock to make sure no one is using the channel.
     ViEManagerWriteScoped wl(this);
 

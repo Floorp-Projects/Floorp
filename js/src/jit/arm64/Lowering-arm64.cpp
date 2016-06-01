@@ -286,30 +286,6 @@ LIRGeneratorARM64::visitStoreTypedArrayElementStatic(MStoreTypedArrayElementStat
 }
 
 void
-LIRGeneratorARM64::visitSimdBinaryArith(MSimdBinaryArith* ins)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-LIRGeneratorARM64::visitSimdSelect(MSimdSelect* ins)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-LIRGeneratorARM64::visitSimdSplat(MSimdSplat* ins)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
-LIRGeneratorARM64::visitSimdValueX4(MSimdValueX4* ins)
-{
-    MOZ_CRASH("NYI");
-}
-
-void
 LIRGeneratorARM64::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins)
 {
     MOZ_CRASH("NYI");

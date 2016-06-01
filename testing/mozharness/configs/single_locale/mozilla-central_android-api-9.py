@@ -28,19 +28,19 @@ config = {
     },
     "repos": [{
         "repo": "https://hg.mozilla.org/mozilla-central",
-        "revision": "default",
+        "branch": "default",
         "dest": MOZILLA_DIR,
     }, {
         "repo": "https://hg.mozilla.org/build/buildbot-configs",
-        "revision": "default",
+        "branch": "default",
         "dest": "buildbot-configs"
     }, {
         "repo": "https://hg.mozilla.org/build/tools",
-        "revision": "default",
+        "branch": "default",
         "dest": "tools"
     }, {
         "repo": "https://hg.mozilla.org/build/compare-locales",
-        "revision": "RELEASE_AUTOMATION"
+        "branch": "RELEASE_AUTOMATION"
     }],
     "hg_l10n_base": "https://hg.mozilla.org/l10n-central",
     "hg_l10n_tag": "default",

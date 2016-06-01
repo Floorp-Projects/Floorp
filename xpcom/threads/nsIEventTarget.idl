@@ -11,7 +11,7 @@
 #include "mozilla/AlreadyAddRefed.h"
 %}
 
-native alreadyAddRefed_nsIRunnable(already_AddRefed<nsIRunnable>&&);
+native alreadyAddRefed_nsIRunnable(already_AddRefed<nsIRunnable>);
 
 [scriptable, uuid(88145945-3278-424e-9f37-d874cbdd9f6f)]
 interface nsIEventTarget : nsISupports

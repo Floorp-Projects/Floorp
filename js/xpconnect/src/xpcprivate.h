@@ -543,6 +543,7 @@ public:
         return mStrings[index];
     }
 
+    virtual bool UsefulToMergeZones() const override;
     void TraceNativeBlackRoots(JSTracer* trc) override;
     void TraceAdditionalNativeGrayRoots(JSTracer* aTracer) override;
     void TraverseAdditionalNativeRoots(nsCycleCollectionNoteRootCallback& cb) override;

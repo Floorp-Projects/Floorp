@@ -269,7 +269,7 @@ protected:
 struct nsHTMLReflowState : public nsCSSOffsetState {
   // the reflow states are linked together. this is the pointer to the
   // parent's reflow state
-  const nsHTMLReflowState* parentReflowState;
+  const nsHTMLReflowState* mParentReflowState;
 
   // pointer to the float manager associated with this area
   nsFloatManager* mFloatManager;

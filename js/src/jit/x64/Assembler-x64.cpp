@@ -55,9 +55,13 @@ ABIArgGenerator::next(MIRType type)
       case MIRType::Double:
         current_ = ABIArg(FloatArgRegs[regIndex_++]);
         break;
-      case MIRType::Bool32x4:
+      case MIRType::Int8x16:
+      case MIRType::Int16x8:
       case MIRType::Int32x4:
       case MIRType::Float32x4:
+      case MIRType::Bool8x16:
+      case MIRType::Bool16x8:
+      case MIRType::Bool32x4:
         // On Win64, >64 bit args need to be passed by reference, but asm.js
         // doesn't allow passing SIMD values to FFIs. The only way to reach
         // here is asm to asm calls, so we can break the ABI here.
@@ -91,9 +95,13 @@ ABIArgGenerator::next(MIRType type)
         else
             current_ = ABIArg(FloatArgRegs[floatRegIndex_++]);
         break;
-      case MIRType::Bool32x4:
+      case MIRType::Int8x16:
+      case MIRType::Int16x8:
       case MIRType::Int32x4:
       case MIRType::Float32x4:
+      case MIRType::Bool8x16:
+      case MIRType::Bool16x8:
+      case MIRType::Bool32x4:
         if (floatRegIndex_ == NumFloatArgRegs) {
             stackOffset_ = AlignBytes(stackOffset_, SimdMemoryAlignment);
             current_ = ABIArg(stackOffset_);

@@ -257,6 +257,8 @@ public:
         mReadBufferMode = readBufferMode;
     }
 
+    GLenum ReadBufferMode() const { return mReadBufferMode; }
+
 protected:
     WebGLFBAttachPoint* GetAttachPoint(GLenum attachment); // Fallible
 

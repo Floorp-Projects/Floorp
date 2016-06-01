@@ -153,7 +153,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
             if url:
                 self.gecko_repos.append({
                     "repo": url,
-                    "revision": self.config.get("%s_repo_revision", "default"),
+                    "branch": self.config.get("%s_repo_branch" % (k,), "default"),
                     "dest": dirs['abs_%s_dir' % k],
                     "vcs": "hg",
                 })
@@ -462,7 +462,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
             """
         repos = [{
             "repo": self.config["tools_repo_url"],
-            "revision": self.config["tools_repo_revision"],
+            "branch": self.config["tools_repo_branch"],
             "dest": "tools",
             "vcs": "hg",
         }] + self.query_repos()

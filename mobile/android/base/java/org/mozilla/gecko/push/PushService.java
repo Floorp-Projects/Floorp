@@ -322,6 +322,7 @@ public class PushService implements BundleEventListener {
             if ("PushServiceAndroidGCM:SubscribeChannel".equals(event)) {
                 final String service = SERVICE_WEBPUSH;
                 final JSONObject serviceData;
+                final String appServerKey = message.getString("appServerKey");
                 try {
                     serviceData = new JSONObject();
                     serviceData.put("profileName", geckoProfile.getName());
@@ -334,7 +335,7 @@ public class PushService implements BundleEventListener {
 
                 final PushSubscription subscription;
                 try {
-                    subscription = pushManager.subscribeChannel(geckoProfile.getName(), service, serviceData, System.currentTimeMillis());
+                    subscription = pushManager.subscribeChannel(geckoProfile.getName(), service, serviceData, appServerKey, System.currentTimeMillis());
                 } catch (PushManager.ProfileNeedsConfigurationException | AutopushClientException | PushClient.LocalException | IOException e) {
                     Log.e(LOG_TAG, "Got exception in " + event, e);
                     callback.sendError("Got exception handling message [" + event + "]: " + e.toString());

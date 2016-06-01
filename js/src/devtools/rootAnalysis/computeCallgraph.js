@@ -12,25 +12,19 @@ if (scriptArgs[0] == '--function') {
     scriptArgs = scriptArgs.slice(2);
 }
 
-var subclasses = {};
-var superclasses = {};
-var classFunctions = {};
+var typeInfo_filename = scriptArgs[0] || "typeInfo.txt";
 
-var fieldCallSeen = {};
+var subclasses = new Map(); // Map from csu => set of immediate subclasses
+var superclasses = new Map(); // Map from csu => set of immediate superclasses
+var classFunctions = new Map(); // Map from "csu:name" => set of full method name
 
-function addClassEntry(index, name, other)
+var virtualResolutionsSeen = new Set();
+
+function addEntry(map, name, entry)
 {
-    if (!(name in index)) {
-        index[name] = [other];
-        return;
-    }
-
-    for (var entry of index[name]) {
-        if (entry == other)
-            return;
-    }
-
-    index[name].push(other);
+    if (!map.has(name))
+        map.set(name, new Set());
+    map.get(name).add(entry);
 }
 
 // CSU is "Class/Struct/Union"
@@ -43,86 +37,111 @@ function processCSU(csuName, csu)
             var superclass = field.Field[1].Type.Name;
             var subclass = field.Field[1].FieldCSU.Type.Name;
             assert(subclass == csuName);
-            addClassEntry(subclasses, superclass, subclass);
-            addClassEntry(superclasses, subclass, superclass);
+            addEntry(subclasses, superclass, subclass);
+            addEntry(superclasses, subclass, superclass);
         }
         if ("Variable" in field) {
             // Note: not dealing with overloading correctly.
             var name = field.Variable.Name[0];
             var key = csuName + ":" + field.Field[0].Name[0];
-            if (!(key in classFunctions))
-                classFunctions[key] = [];
-            classFunctions[key].push(name);
+            addEntry(classFunctions, key, name);
         }
     }
 }
 
-function findVirtualFunctions(initialCSU, field, suppressed)
+// Return the nearest ancestor method definition, or all nearest definitions in
+// the case of multiple inheritance.
+function nearestAncestorMethods(csu, method)
 {
-    var worklist = [initialCSU];
-    var functions = [];
+    var key = csu + ":" + method;
 
-    // Virtual call targets on subclasses of nsISupports may be incomplete,
-    // if the interface is scriptable. Just treat all indirect calls on
-    // nsISupports objects as potentially GC'ing, except AddRef/Release
-    // which should never enter the JS engine (even when calling dtors).
-    while (worklist.length) {
-        var csu = worklist.pop();
-        if (csu == "nsISupports" && (field == "AddRef" || field == "Release")) {
-            suppressed[0] = true;
-            return [];
-        }
-        if (isOverridableField(initialCSU, csu, field)) {
-            // We will still resolve the virtual function call, because it's
-            // nice to have as complete a callgraph as possible for other uses.
-            // But push a token saying that we can run arbitrary code.
-            functions.push(null);
-        }
+    if (classFunctions.has(key))
+        return new Set(classFunctions.get(key));
 
-        if (csu in superclasses) {
-            for (var superclass of superclasses[csu])
-                worklist.push(superclass);
-        }
-    }
-
-    worklist = [csu];
-    while (worklist.length) {
-        var csu = worklist.pop();
-        var key = csu + ":" + field;
-
-        if (key in classFunctions) {
-            for (var name of classFunctions[key])
-                functions.push(name);
-        }
-
-        if (csu in subclasses) {
-            for (var subclass of subclasses[csu])
-                worklist.push(subclass);
-        }
+    var functions = new Set();
+    if (superclasses.has(csu)) {
+        for (var parent of superclasses.get(csu))
+            functions.update(nearestAncestorMethods(parent, method));
     }
 
     return functions;
 }
 
-var memoized = {};
+// Return [ instantations, suppressed ], where instantiations is a Set of all
+// possible implementations of 'field' given static type 'initialCSU', plus
+// null if arbitrary other implementations are possible, and suppressed is true
+// if we the method is assumed to be non-GC'ing by annotation.
+function findVirtualFunctions(initialCSU, field)
+{
+    var worklist = [initialCSU];
+    var functions = new Set();
+
+    // Loop through all methods of initialCSU (by looking at all methods of ancestor csus).
+    //
+    // If field is nsISupports::AddRef or ::Release, return an empty list and a
+    // boolean that says we assert that it cannot GC.
+    //
+    // If this is a method that is annotated to be dangerous (eg, it could be
+    // overridden with an implementation that could GC), then use null as a
+    // signal value that it should be considered to GC, even though we'll also
+    // collect all of the instantiations for other purposes.
+
+    while (worklist.length) {
+        var csu = worklist.pop();
+        if (isSuppressedVirtualMethod(csu, field))
+            return [ new Set(), true ];
+        if (isOverridableField(initialCSU, csu, field)) {
+            // We will still resolve the virtual function call, because it's
+            // nice to have as complete a callgraph as possible for other uses.
+            // But push a token saying that we can run arbitrary code.
+            functions.add(null);
+        }
+
+        if (superclasses.has(csu))
+            worklist.push(...superclasses.get(csu));
+    }
+
+    // Now return a list of all the instantiations of the method named 'field'
+    // that could execute on an instance of initialCSU or a descendant class.
+
+    // Start with the class itself, or if it doesn't define the method, all
+    // nearest ancestor definitions.
+    functions.update(nearestAncestorMethods(initialCSU, field));
+
+    // Then recurse through all descendants to add in their definitions.
+    var worklist = [initialCSU];
+    while (worklist.length) {
+        var csu = worklist.pop();
+        var key = csu + ":" + field;
+
+        if (classFunctions.has(key))
+            functions.update(classFunctions.get(key));
+
+        if (subclasses.has(csu))
+            worklist.push(...subclasses.get(csu));
+    }
+
+    return [ functions, false ];
+}
+
+var memoized = new Map();
 var memoizedCount = 0;
 
 function memo(name)
 {
-    if (!(name in memoized)) {
-        memoizedCount++;
-        memoized[name] = "" + memoizedCount;
-        print("#" + memoizedCount + " " + name);
+    if (!memoized.has(name)) {
+        let id = memoized.size + 1;
+        memoized.set(name, "" + id);
+        print(`#${id} ${name}`);
     }
-    return memoized[name];
+    return memoized.get(name);
 }
-
-var seenCallees = null;
-var seenSuppressedCallees = null;
 
 // Return a list of all callees that the given edge might be a call to. Each
 // one is represented by an object with a 'kind' field that is one of
-// ('direct', 'field', 'indirect', 'unknown').
+// ('direct', 'field', 'resolved-field', 'indirect', 'unknown'), though note
+// that 'resolved-field' is really a global record of virtual method
+// resolutions, indepedent of this particular edge.
 function getCallees(edge)
 {
     if (edge.Kind != "Call")
@@ -139,42 +158,42 @@ function getCallees(edge)
             var field = callee.Exp[0].Field;
             var fieldName = field.Name[0];
             var csuName = field.FieldCSU.Type.Name;
-            var functions = null;
+            var functions;
             if ("FieldInstanceFunction" in field) {
-                var suppressed = [ false ];
-                functions = findVirtualFunctions(csuName, fieldName, suppressed);
-                if (suppressed[0]) {
+                let suppressed;
+                [ functions, suppressed ] = findVirtualFunctions(csuName, fieldName, suppressed);
+                if (suppressed) {
                     // Field call known to not GC; mark it as suppressed so
                     // direct invocations will be ignored
                     callees.push({'kind': "field", 'csu': csuName, 'field': fieldName,
                                   'suppressed': true});
                 }
-            }
-            if (functions) {
-                // Known set of virtual call targets. Treat them as direct
-                // calls to all possible resolved types, but also record edges
-                // from this field call to each final callee. When the analysis
-                // is checking whether an edge can GC and it sees an unrooted
-                // pointer held live across this field call, it will know
-                // whether any of the direct callees can GC or not.
-                var targets = [];
-                var fullyResolved = true;
-                for (var name of functions) {
-                    if (name === null) {
-                        // virtual call on an nsISupports object
-                        callees.push({'kind': "field", 'csu': csuName, 'field': fieldName});
-                        fullyResolved = false;
-                    } else {
-                        callees.push({'kind': "direct", 'name': name});
-                        targets.push({'kind': "direct", 'name': name});
-                    }
-                }
-                if (fullyResolved)
-                    callees.push({'kind': "resolved-field", 'csu': csuName, 'field': fieldName, 'callees': targets});
             } else {
-                // Unknown set of call targets. Non-virtual field call.
-                callees.push({'kind': "field", 'csu': csuName, 'field': fieldName});
+                functions = new Set([null]); // field call
             }
+
+            // Known set of virtual call targets. Treat them as direct calls to
+            // all possible resolved types, but also record edges from this
+            // field call to each final callee. When the analysis is checking
+            // whether an edge can GC and it sees an unrooted pointer held live
+            // across this field call, it will know whether any of the direct
+            // callees can GC or not.
+            var targets = [];
+            var fullyResolved = true;
+            for (var name of functions) {
+                if (name === null) {
+                    // Unknown set of call targets, meaning either a function
+                    // pointer call ("field call") or a virtual method that can
+                    // be overridden in extensions.
+                    callees.push({'kind': "field", 'csu': csuName, 'field': fieldName});
+                    fullyResolved = false;
+                } else {
+                    callees.push({'kind': "direct", 'name': name});
+                    targets.push({'kind': "direct", 'name': name});
+                }
+            }
+            if (fullyResolved)
+                callees.push({'kind': "resolved-field", 'csu': csuName, 'field': fieldName, 'callees': targets});
         } else if (callee.Exp[0].Kind == "Var") {
             // indirect call through a variable.
             callees.push({'kind': "indirect", 'variable': callee.Exp[0].Variable.Name[0]});
@@ -219,7 +238,6 @@ function getTags(functionName, body) {
     var tags = new Set();
     var annotations = getAnnotations(body);
     if (functionName in annotations) {
-        print("crawling through");
         for (var [ annName, annValue ] of annotations[functionName]) {
             if (annName == 'Tag')
                 tags.add(annValue);
@@ -236,39 +254,45 @@ function processBody(functionName, body)
     for (var tag of getTags(functionName, body).values())
         print("T " + memo(functionName) + " " + tag);
 
+    // Set of all callees that have been output so far, in order to suppress
+    // repeated callgraph edges from being recorded. Use a separate set for
+    // suppressed callees, since we don't want a suppressed edge (within one
+    // RAII scope) to prevent an unsuppressed edge from being recorded. The
+    // seen array is indexed by a boolean 'suppressed' variable.
+    var seen = [ new Set(), new Set() ];
+
     lastline = null;
     for (var edge of body.PEdge) {
         if (edge.Kind != "Call")
             continue;
-        var edgeSuppressed = false;
-        var seen = seenCallees;
-        if (edge.Index[0] in body.suppressed) {
-            edgeSuppressed = true;
-            seen = seenSuppressedCallees;
-        }
+
+        // Whether this call is within the RAII scope of a GC suppression class
+        var edgeSuppressed = (edge.Index[0] in body.suppressed);
+
         for (var callee of getCallees(edge)) {
-            var prologue = (edgeSuppressed || callee.suppressed) ? "SUPPRESS_GC " : "";
+            var suppressed = Boolean(edgeSuppressed || callee.suppressed);
+            var prologue = suppressed ? "SUPPRESS_GC " : "";
             prologue += memo(functionName) + " ";
             if (callee.kind == 'direct') {
-                if (!(callee.name in seen)) {
-                    seen[callee.name] = true;
+                if (!seen[+suppressed].has(callee.name)) {
+                    seen[+suppressed].add(callee.name);
                     printOnce("D " + prologue + memo(callee.name));
                 }
             } else if (callee.kind == 'field') {
                 var { csu, field } = callee;
                 printOnce("F " + prologue + "CLASS " + csu + " FIELD " + field);
             } else if (callee.kind == 'resolved-field') {
-                // Fully-resolved field call (usually a virtual method). Record
-                // the callgraph edges. Do not consider suppression, since it
-                // is local to this callsite and we are writing out a global
+                // Fully-resolved field (virtual method) call. Record the
+                // callgraph edges. Do not consider suppression, since it is
+                // local to this callsite and we are writing out a global
                 // record here.
                 //
                 // Any field call that does *not* have an R entry must be
                 // assumed to call anything.
                 var { csu, field, callees } = callee;
                 var fullFieldName = csu + "." + field;
-                if (!(fullFieldName in fieldCallSeen)) {
-                    fieldCallSeen[fullFieldName] = true;
+                if (!virtualResolutionsSeen.has(fullFieldName)) {
+                    virtualResolutionsSeen.add(fullFieldName);
                     for (var target of callees)
                         printOnce("R " + memo(fullFieldName) + " " + memo(target.name));
                 }
@@ -284,7 +308,7 @@ function processBody(functionName, body)
     }
 }
 
-var callgraph = {};
+GCSuppressionTypes = loadTypeInfo(typeInfo_filename)["Suppress GC"] || [];
 
 var xdb = xdbLibrary();
 xdb.open("src_comp.xdb");
@@ -322,13 +346,11 @@ function process(functionName, functionBodies)
 {
     for (var body of functionBodies)
         body.suppressed = [];
+
     for (var body of functionBodies) {
         for (var [pbody, id] of allRAIIGuardedCallPoints(functionBodies, body, isSuppressConstructor))
             pbody.suppressed[id] = true;
     }
-
-    seenCallees = {};
-    seenSuppressedCallees = {};
 
     for (var body of functionBodies)
         processBody(functionName, body);
@@ -351,7 +373,7 @@ function process(functionName, functionBodies)
         // Bug 1056410: Oh joy. GCC does something even funkier internally,
         // where it generates calls to ~Foo() but a body for ~Foo(int32) even
         // though it uses the same mangled name for both. So we need to add a
-        // synthetic edge from the former to the latter.
+        // synthetic edge from ~Foo() -> ~Foo(int32).
         //
         // inChargeXTor will have the (int32).
         if (functionName.indexOf("::~") > 0) {
@@ -369,7 +391,7 @@ function process(functionName, functionBodies)
     // D1	# complete object destructor
     // D2	# base object destructor
     //
-    // In actual practice, I have observed a C4 constructor generated by gcc
+    // In actual practice, I have observed C4 and D4 xtors generated by gcc
     // 4.9.3 (but not 4.7.3). The gcc source code says:
     //
     //   /* This is the old-style "[unified]" constructor.
@@ -377,23 +399,29 @@ function process(functionName, functionBodies)
     //      it from the clones in order to share code and save space.  */
     //
     // Unfortunately, that "call... from the clones" does not seem to appear in
-    // the CFG we get from GCC. So if we see a C4 constructor, inject an edge
-    // to it from C1, C2, and C3. (Note that C3 isn't even used in current GCC,
-    // but add the edge anyway just in case.)
-    if (functionName.indexOf("C4E") != -1) {
+    // the CFG we get from GCC. So if we see a C4 constructor or D4 destructor,
+    // inject an edge to it from C1, C2, and C3 (or D1, D2, and D3). (Note that
+    // C3 isn't even used in current GCC, but add the edge anyway just in
+    // case.)
+    if (functionName.indexOf("C4E") != -1 || functionName.indexOf("D4Ev") != -1) {
         var [ mangled, unmangled ] = splitFunction(functionName);
         // E terminates the method name (and precedes the method parameters).
-        if (mangled.indexOf("C4E") != -1) {
-            // If "C4E" shows up in the mangled name for another reason, this
-            // will create bogus edges in the callgraph. But that shouldn't
-            // matter too much, and is somewhat difficult to avoid, so we will
-            // live with it.
-            var C1 = mangled.replace("C4E", "C1E");
-            var C2 = mangled.replace("C4E", "C2E");
-            var C3 = mangled.replace("C4E", "C3E");
-            print("D " + memo(C1) + " " + memo(mangled));
-            print("D " + memo(C2) + " " + memo(mangled));
-            print("D " + memo(C3) + " " + memo(mangled));
+        // If eg "C4E" shows up in the mangled name for another reason, this
+        // will create bogus edges in the callgraph. But will affect little and
+        // is somewhat difficult to avoid, so we will live with it.
+        for (let [synthetic, variant] of [['C4E', 'C1E'],
+                                          ['C4E', 'C2E'],
+                                          ['C4E', 'C3E'],
+                                          ['D4Ev', 'D1Ev'],
+                                          ['D4Ev', 'D2Ev'],
+                                          ['D4Ev', 'D3Ev']])
+        {
+            if (mangled.indexOf(synthetic) == -1)
+                continue;
+
+            let variant_mangled = mangled.replace(synthetic, variant);
+            let variant_full = variant_mangled + "$" + unmangled;
+            print("D " + memo(variant_full) + " " + memo(functionName));
         }
     }
 }

@@ -431,6 +431,20 @@ private:
 
   void
   MaybeSendUnregister(nsIPrincipal* aPrincipal, const nsACString& aScope);
+
+  nsresult
+  SendNotificationEvent(const nsAString& aEventName,
+                        const nsACString& aOriginSuffix,
+                        const nsACString& aScope,
+                        const nsAString& aID,
+                        const nsAString& aTitle,
+                        const nsAString& aDir,
+                        const nsAString& aLang,
+                        const nsAString& aBody,
+                        const nsAString& aTag,
+                        const nsAString& aIcon,
+                        const nsAString& aData,
+                        const nsAString& aBehavior);
 };
 
 } // namespace workers

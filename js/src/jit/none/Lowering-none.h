@@ -91,9 +91,12 @@ class LIRGeneratorNone : public LIRGeneratorShared
     LTableSwitchV* newLTableSwitchV(MTableSwitch*) { MOZ_CRASH(); }
     void visitSimdSelect(MSimdSelect* ins) { MOZ_CRASH(); }
     void visitSimdSplat(MSimdSplat* ins) { MOZ_CRASH(); }
+    void visitSimdSwizzle(MSimdSwizzle* ins) { MOZ_CRASH(); }
+    void visitSimdShuffle(MSimdShuffle* ins) { MOZ_CRASH(); }
     void visitSimdValueX4(MSimdValueX4* lir) { MOZ_CRASH(); }
     void visitSubstr(MSubstr*) { MOZ_CRASH(); }
     void visitSimdBinaryArith(js::jit::MSimdBinaryArith*) { MOZ_CRASH(); }
+    void visitSimdBinarySaturating(MSimdBinarySaturating* ins) { MOZ_CRASH(); }
     void visitRandom(js::jit::MRandom*) { MOZ_CRASH(); }
     void visitWasmTruncateToInt64(MWasmTruncateToInt64*) { MOZ_CRASH(); }
     void visitInt64ToFloatingPoint(MInt64ToFloatingPoint*) { MOZ_CRASH(); }

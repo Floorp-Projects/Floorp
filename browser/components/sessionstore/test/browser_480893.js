@@ -1,51 +1,47 @@
-/* This Source Code Form is subject to the terms of the Mozilla Public
- * License, v. 2.0. If a copy of the MPL was not distributed with this
- * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+"use strict";
 
-function test() {
-  /** Test for Bug 480893 **/
+/**
+ * Tests that we get sent to the right page when the user clicks
+ * the "Close" button in about:sessionrestore
+ */
+add_task(function*() {
+  yield SpecialPowers.pushPrefEnv({
+    "set": [
+      ["browser.startup.page", 0],
+    ]
+  });
 
-  waitForExplicitFinish();
-
-  // Test that starting a new session loads a blank page if Firefox is
-  // configured to display a blank page at startup (browser.startup.page = 0)
-  gPrefService.setIntPref("browser.startup.page", 0);
   let tab = gBrowser.addTab("about:sessionrestore");
   gBrowser.selectedTab = tab;
   let browser = tab.linkedBrowser;
-  promiseBrowserLoaded(browser).then(() => {
-    let doc = browser.contentDocument;
+  yield BrowserTestUtils.browserLoaded(browser, false, "about:sessionrestore");
 
-    // click on the "Start New Session" button after about:sessionrestore is loaded
-    doc.getElementById("errorCancel").click();
-    promiseBrowserLoaded(browser).then(() => {
-      let doc = browser.contentDocument;
+  let doc = browser.contentDocument;
 
-      is(doc.URL, "about:blank", "loaded page is about:blank");
+  // Click on the "Close" button after about:sessionrestore is loaded.
+  doc.getElementById("errorCancel").click();
 
-      // Test that starting a new session loads the homepage (set to http://mochi.test:8888)
-      // if Firefox is configured to display a homepage at startup (browser.startup.page = 1)
-      let homepage = "http://mochi.test:8888/";
-      gPrefService.setCharPref("browser.startup.homepage", homepage);
-      gPrefService.setIntPref("browser.startup.page", 1);
-      gBrowser.loadURI("about:sessionrestore");
-      promiseBrowserLoaded(browser).then(() => {
-        let doc = browser.contentDocument;
+  yield BrowserTestUtils.browserLoaded(browser, false, "about:blank");
 
-        // click on the "Start New Session" button after about:sessionrestore is loaded
-        doc.getElementById("errorCancel").click();
-        promiseBrowserLoaded(browser).then(() => {
-          let doc = browser.contentDocument;
-
-          is(doc.URL, homepage, "loaded page is the homepage");
-
-          // close tab, restore default values and finish the test
-          gBrowser.removeTab(tab);
-          gPrefService.clearUserPref("browser.startup.page");
-          gPrefService.clearUserPref("browser.startup.homepage");
-          finish();
-        });
-      });
-    });
+  // Test that starting a new session loads the homepage (set to http://mochi.test:8888)
+  // if Firefox is configured to display a homepage at startup (browser.startup.page = 1)
+  let homepage = "http://mochi.test:8888/";
+  yield SpecialPowers.pushPrefEnv({
+    "set": [
+      ["browser.startup.homepage", homepage],
+      ["browser.startup.page", 1],
+    ]
   });
-}
+
+  browser.loadURI("about:sessionrestore");
+  yield BrowserTestUtils.browserLoaded(browser, false, "about:sessionrestore");
+  doc = browser.contentDocument;
+
+  // Click on the "Close" button after about:sessionrestore is loaded.
+  doc.getElementById("errorCancel").click();
+  yield BrowserTestUtils.browserLoaded(browser);
+
+  is(browser.currentURI.spec, homepage, "loaded page is the homepage");
+
+  yield BrowserTestUtils.removeTab(tab);
+});

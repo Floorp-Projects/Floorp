@@ -340,7 +340,7 @@ public class AutopushClient {
     }
 
 
-    public void subscribeChannel(final String uaid, final String secret, RequestDelegate<SubscribeChannelResponse> delegate) {
+    public void subscribeChannel(final String uaid, final String secret, final String appServerKey, RequestDelegate<SubscribeChannelResponse> delegate) {
         final BaseResource resource;
         try {
             resource = new BaseResource(new URI(serverURI + "registration/" + uaid + "/subscription"));
@@ -366,6 +366,7 @@ public class AutopushClient {
         };
 
         final ExtendedJSONObject body = new ExtendedJSONObject();
+        body.put("key", appServerKey);
         resource.post(body);
     }
 

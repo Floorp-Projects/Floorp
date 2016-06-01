@@ -1,0 +1,37 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1265841 - controlled page</title>
+<script class="testbody" type="text/javascript">
+  var testWindow = parent;
+  if (opener) {
+    testWindow = opener;
+  }
+
+  navigator.serviceWorker.ready.then(function(swr) {
+    return swr.showNotification(
+      "Hi there. The ServiceWorker should receive a close event for this.",
+      { data: { complex: ["jsval", 5] }}).then(function() {
+        return swr;
+      });
+  }).then(function(swr) {
+    return swr.getNotifications();
+  }).then(function(notifications) {
+    notifications.forEach(function(notification) {
+      notification.close();
+    });
+  });
+
+  navigator.serviceWorker.onmessage = function(msg) {
+    testWindow.callback(msg.data.result);
+  };
+</script>
+
+</head>
+<body>
+</body>
+</html>
