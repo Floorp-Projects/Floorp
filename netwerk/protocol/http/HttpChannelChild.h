@@ -133,11 +133,12 @@ protected:
   bool RecvOnProgress(const int64_t& progress, const int64_t& progressMax) override;
   bool RecvOnStatus(const nsresult& status) override;
   bool RecvFailedAsyncOpen(const nsresult& status) override;
-  bool RecvRedirect1Begin(const uint32_t& newChannel,
+  bool RecvRedirect1Begin(const uint32_t& registrarId,
                           const URIParams& newURI,
                           const uint32_t& redirectFlags,
                           const nsHttpResponseHead& responseHead,
-                          const nsCString& securityInfoSerialization) override;
+                          const nsCString& securityInfoSerialization,
+                          const nsCString& channelId) override;
   bool RecvRedirect3Complete() override;
   bool RecvAssociateApplicationCache(const nsCString& groupID,
                                      const nsCString& clientID) override;
@@ -277,11 +278,12 @@ private:
   void OnStatus(const nsresult& status);
   void FailedAsyncOpen(const nsresult& status);
   void HandleAsyncAbort();
-  void Redirect1Begin(const uint32_t& newChannelId,
+  void Redirect1Begin(const uint32_t& registrarId,
                       const URIParams& newUri,
                       const uint32_t& redirectFlags,
                       const nsHttpResponseHead& responseHead,
-                      const nsACString& securityInfoSerialization);
+                      const nsACString& securityInfoSerialization,
+                      const nsACString& channelId);
   void Redirect3Complete();
   void DeleteSelf();
 
