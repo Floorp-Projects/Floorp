@@ -50,7 +50,8 @@ UpdateRequestReferrer(nsIGlobalObject* aGlobal, InternalRequest* aRequest);
 nsresult
 ExtractByteStreamFromBody(const OwningArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUSVStringOrURLSearchParams& aBodyInit,
                           nsIInputStream** aStream,
-                          nsCString& aContentType);
+                          nsCString& aContentType,
+                          uint64_t& aContentLength);
 
 /*
  * Non-owning version.
@@ -58,7 +59,8 @@ ExtractByteStreamFromBody(const OwningArrayBufferOrArrayBufferViewOrBlobOrFormDa
 nsresult
 ExtractByteStreamFromBody(const ArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUSVStringOrURLSearchParams& aBodyInit,
                           nsIInputStream** aStream,
-                          nsCString& aContentType);
+                          nsCString& aContentType,
+                          uint64_t& aContentLength);
 
 template <class Derived> class FetchBodyFeature;
 
