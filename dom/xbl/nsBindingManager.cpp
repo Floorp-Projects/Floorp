@@ -405,11 +405,8 @@ nsBindingManager::DoProcessAttachedQueue()
 }
 
 void
-nsBindingManager::ProcessAttachedQueue(uint32_t aSkipSize)
+nsBindingManager::ProcessAttachedQueueInternal(uint32_t aSkipSize)
 {
-  if (mProcessingAttachedStack || mAttachedStack.Length() <= aSkipSize)
-    return;
-
   mProcessingAttachedStack = true;
 
   // Excute constructors. Do this from high index to low
@@ -1013,21 +1010,6 @@ nsBindingManager::Traverse(nsIContent *aContent,
     cb.NoteXPCOMChild(aContent);
     NS_CYCLE_COLLECTION_NOTE_EDGE_NAME(cb, "[via binding manager] mWrapperTable value");
     cb.NoteXPCOMChild(value);
-  }
-}
-
-void
-nsBindingManager::BeginOutermostUpdate()
-{
-  mAttachedStackSizeOnOutermost = mAttachedStack.Length();
-}
-
-void
-nsBindingManager::EndOutermostUpdate()
-{
-  if (!mProcessingAttachedStack) {
-    ProcessAttachedQueue(mAttachedStackSizeOnOutermost);
-    mAttachedStackSizeOnOutermost = 0;
   }
 }
 
