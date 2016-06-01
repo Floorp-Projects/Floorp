@@ -65,8 +65,11 @@ using mozilla::PodMove;
 using mozilla::Maybe;
 
 static void
-selfHosting_ErrorReporter(JSContext* cx, const char* message, JSErrorReport* report)
+selfHosting_WarningReporter(JSContext* cx, const char* message, JSErrorReport* report)
 {
+    MOZ_ASSERT(report);
+    MOZ_ASSERT(JSREPORT_IS_WARNING(report->flags));
+
     PrintError(cx, stderr, message, report, true);
 }
 
@@ -2683,6 +2686,64 @@ JSRuntime::createSelfHostingGlobal(JSContext* cx)
     return shg;
 }
 
+static void
+MaybePrintAndClearPendingException(JSContext* cx, FILE* file)
+{
+    if (!cx->isExceptionPending())
+        return;
+
+    AutoClearPendingException acpe(cx);
+
+    RootedValue exn(cx);
+    if (!cx->getPendingException(&exn)) {
+        fprintf(file, "error getting pending exception\n");
+        return;
+    }
+    cx->clearPendingException();
+
+    ErrorReport report(cx);
+    if (!report.init(cx, exn, js::ErrorReport::WithSideEffects)) {
+        fprintf(file, "out of memory initializing ErrorReport\n");
+        return;
+    }
+
+    MOZ_ASSERT(!JSREPORT_IS_WARNING(report.report()->flags));
+    PrintError(cx, file, report.message(), report.report(), true);
+}
+
+class MOZ_STACK_CLASS AutoSelfHostingErrorReporter
+{
+    JSContext* cx_;
+    bool prevDontReportUncaught_;
+    bool prevAutoJSAPIOwnsErrorReporting_;
+    JSErrorReporter oldReporter_;
+
+  public:
+    explicit AutoSelfHostingErrorReporter(JSContext* cx)
+      : cx_(cx),
+        prevDontReportUncaught_(cx_->options().dontReportUncaught()),
+        prevAutoJSAPIOwnsErrorReporting_(cx_->options().autoJSAPIOwnsErrorReporting())
+    {
+        cx_->options().setDontReportUncaught(true);
+        cx_->options().setAutoJSAPIOwnsErrorReporting(true);
+
+        oldReporter_ = JS_SetErrorReporter(cx_->runtime(), selfHosting_WarningReporter);
+    }
+    ~AutoSelfHostingErrorReporter() {
+        cx_->options().setDontReportUncaught(prevDontReportUncaught_);
+        cx_->options().setAutoJSAPIOwnsErrorReporting(prevAutoJSAPIOwnsErrorReporting_);
+
+        JS_SetErrorReporter(cx_->runtime(), oldReporter_);
+
+        // Exceptions in self-hosted code will usually be printed to stderr in
+        // ErrorToException, but not all exceptions are handled there. For
+        // instance, ReportOutOfMemory will throw the "out of memory" string
+        // without going through ErrorToException. We handle these other
+        // exceptions here.
+        MaybePrintAndClearPendingException(cx_, stderr);
+    }
+};
+
 bool
 JSRuntime::initSelfHosting(JSContext* cx)
 {
@@ -2705,21 +2766,25 @@ JSRuntime::initSelfHosting(JSContext* cx)
 
     JSAutoCompartment ac(cx, shg);
 
-    CompileOptions options(cx);
-    FillSelfHostingCompileOptions(options);
-
     /*
      * Set a temporary error reporter printing to stderr because it is too
      * early in the startup process for any other reporter to be registered
      * and we don't want errors in self-hosted code to be silently swallowed.
+     *
+     * This class also overrides the warning reporter to print warnings to
+     * stderr. See selfHosting_WarningReporter.
      */
-    JSErrorReporter oldReporter = JS_SetErrorReporter(cx->runtime(), selfHosting_ErrorReporter);
+    AutoSelfHostingErrorReporter errorReporter(cx);
+
+    CompileOptions options(cx);
+    FillSelfHostingCompileOptions(options);
+
     RootedValue rv(cx);
-    bool ok = true;
 
     char* filename = getenv("MOZ_SELFHOSTEDJS");
     if (filename) {
-        ok = ok && Evaluate(cx, options, filename, &rv);
+        if (!Evaluate(cx, options, filename, &rv))
+            return false;
     } else {
         uint32_t srcLen = GetRawScriptsSize();
 
@@ -2729,13 +2794,13 @@ JSRuntime::initSelfHosting(JSContext* cx)
         if (!src || !DecompressString(compressed, compressedLen,
                                       reinterpret_cast<unsigned char*>(src.get()), srcLen))
         {
-            ok = false;
+            return false;
         }
 
-        ok = ok && Evaluate(cx, options, src, srcLen, &rv);
+        if (!Evaluate(cx, options, src, srcLen, &rv))
+            return false;
     }
-    JS_SetErrorReporter(cx->runtime(), oldReporter);
-    return ok;
+    return true;
 }
 
 void
