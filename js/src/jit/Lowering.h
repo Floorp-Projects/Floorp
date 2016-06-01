@@ -57,7 +57,7 @@ class LIRGenerator : public LIRGeneratorSpecific
     void lowerBinaryV(JSOp op, MBinaryInstruction* ins);
     void definePhis();
 
-    void lowerCallArguments(MCall* call);
+    MOZ_MUST_USE bool lowerCallArguments(MCall* call);
 
   public:
     bool visitInstruction(MInstruction* ins);
