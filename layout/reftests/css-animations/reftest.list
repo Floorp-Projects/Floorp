@@ -8,3 +8,4 @@ fails != print-no-animations.html print-no-animations-notref.html # reftest harn
 == in-visibility-hidden-animation-pseudo-element.html in-visibility-hidden-animation-pseudo-element-ref.html
 == partially-out-of-view-animation.html partially-out-of-view-animation-ref.html
 == animate-display-table-opacity.html animate-display-table-opacity-ref.html
+== stacking-context-transform-none-animation.html  stacking-context-transform-animation-ref.html
