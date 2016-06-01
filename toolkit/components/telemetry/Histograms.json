@@ -10749,15 +10749,16 @@
     "keyed": true,
     "description": "Measures the size of IPC messages by message name"
   },
-  "MESSAGE_MANAGER_MESSAGE_SIZE": {
-    "alert_emails": ["wmccloskey@mozilla.com"],
+  "MESSAGE_MANAGER_MESSAGE_SIZE2": {
+    "alert_emails": ["wmccloskey@mozilla.com","amccreight@mozilla.com"],
     "bug_numbers": [1260908],
     "expires_in_version": "55",
     "kind": "exponential",
+    "low": 8192,
     "high": 8000000,
     "n_buckets": 50,
     "keyed": true,
-    "description": "Measures the size of message manager messages by message name"
+    "description": "Each key is the message name, with digits removed, from an async message manager message that was larger than 8192 bytes, recorded in the sending process at the time of sending."
   },
   "SANDBOX_BROKER_INITIALIZED": {
     "alert_emails": ["bowen@mozilla.com"],
