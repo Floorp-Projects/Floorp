@@ -2119,6 +2119,10 @@ pref("services.blocklist.plugins.checked", 0);
 pref("services.blocklist.gfx.collection", "gfx");
 pref("services.blocklist.gfx.checked", 0);
 
+// Controls whether signing should be enforced on signature-capable blocklist
+// collections.
+pref("services.blocklist.signing.enforced", false);
+
 // For now, let's keep settings server update out of the release builds
 #ifdef RELEASE_BUILD
 pref("services.blocklist.update_enabled", false);
