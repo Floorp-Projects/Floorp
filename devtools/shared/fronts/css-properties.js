@@ -50,13 +50,18 @@ exports.CssPropertiesFront = CssPropertiesFront;
  * Ask questions to a CSS database. This class does not care how the database
  * gets loaded in, only the questions that you can ask to it.
  *
- * @param {array} properties
- *                A list of all supported CSS properties.
+ * @param {Array}  propertiesList
+ *                 A list of known properties.
+ * @param {Object} inheritedList
+ *                 The key is the property name, the value is whether or not
+ *                 that property is inherited.
  */
 function CssProperties(properties) {
   this.properties = properties;
-  // Bind isKnown so it can be passed around to helper functions.
+  // Bind isKnown and isInherited so it can be passed around to helper
+  // functions.
   this.isKnown = this.isKnown.bind(this);
+  this.isInherited = this.isInherited.bind(this);
 }
 
 CssProperties.prototype = {
@@ -69,7 +74,11 @@ CssProperties.prototype = {
    * @return {Boolean}
    */
   isKnown(property) {
-    return this.properties.includes(property) || isCssVariable(property);
+    return !!this.properties[property] || isCssVariable(property);
+  },
+
+  isInherited(property) {
+    return this.properties[property] && this.properties[property].isInherited;
   }
 };
 
@@ -92,20 +101,18 @@ exports.initCssProperties = Task.async(function* (toolbox) {
     return cachedCssProperties.get(client);
   }
 
-  let propertiesList, front;
+  let db, front;
 
   // Get the list dynamically if the cssProperties exists.
   if (toolbox.target.hasActor("cssProperties")) {
     front = CssPropertiesFront(client, toolbox.target.form);
-    const db = yield front.getCSSDatabase();
-    propertiesList = db.propertiesList;
+    db = yield front.getCSSDatabase();
   } else {
     // The target does not support this actor, so require a static list of
     // supported properties.
-    const db = require("devtools/client/shared/css-properties-db");
-    propertiesList = db.propertiesList;
+    db = require("devtools/shared/css-properties-db");
   }
-  const cssProperties = new CssProperties(propertiesList);
+  const cssProperties = new CssProperties(db);
   cachedCssProperties.set(client, {cssProperties, front});
   return {cssProperties, front};
 });
