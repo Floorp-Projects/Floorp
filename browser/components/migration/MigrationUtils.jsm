@@ -51,40 +51,6 @@ function getMigrationBundle() {
 }
 
 /**
- * Figure out what is the default browser, and if there is a migrator
- * for it, return that migrator's internal name.
- * For the time being, the "internal name" of a migrator is its contract-id
- * trailer (e.g. ie for @mozilla.org/profile/migrator;1?app=browser&type=ie),
- * but it will soon be exposed properly.
- */
-function getMigratorKeyForDefaultBrowser() {
-  // Canary uses the same description as Chrome so we can't distinguish them.
-  const APP_DESC_TO_KEY = {
-    "Internet Explorer":                 "ie",
-    "Safari":                            "safari",
-    "Firefox":                           "firefox",
-    "Google Chrome":                     "chrome",  // Windows, Linux
-    "Chrome":                            "chrome",  // OS X
-    "Chromium":                          "chromium", // Windows, OS X
-    "Chromium Web Browser":              "chromium", // Linux
-    "360\u5b89\u5168\u6d4f\u89c8\u5668": "360se",
-  };
-
-  let browserDesc = "";
-  try {
-    let browserDesc =
-      Cc["@mozilla.org/uriloader/external-protocol-service;1"].
-      getService(Ci.nsIExternalProtocolService).
-      getApplicationDescription("http");
-    return APP_DESC_TO_KEY[browserDesc] || "";
-  }
-  catch(ex) {
-    Cu.reportError("Could not detect default browser: " + ex);
-  }
-  return "";
-}
-
-/**
  * Shared prototype for migrators, implementing nsIBrowserProfileMigrator.
  *
  * To implement a migrator:
@@ -536,6 +502,40 @@ this.MigrationUtils = Object.freeze({
     } catch (ex) { Cu.reportError(ex); return null }
   },
 
+  /**
+   * Figure out what is the default browser, and if there is a migrator
+   * for it, return that migrator's internal name.
+   * For the time being, the "internal name" of a migrator is its contract-id
+   * trailer (e.g. ie for @mozilla.org/profile/migrator;1?app=browser&type=ie),
+   * but it will soon be exposed properly.
+   */
+  getMigratorKeyForDefaultBrowser() {
+    // Canary uses the same description as Chrome so we can't distinguish them.
+    const APP_DESC_TO_KEY = {
+      "Internet Explorer":                 "ie",
+      "Safari":                            "safari",
+      "Firefox":                           "firefox",
+      "Google Chrome":                     "chrome",  // Windows, Linux
+      "Chrome":                            "chrome",  // OS X
+      "Chromium":                          "chromium", // Windows, OS X
+      "Chromium Web Browser":              "chromium", // Linux
+      "360\u5b89\u5168\u6d4f\u89c8\u5668": "360se",
+    };
+
+    let browserDesc = "";
+    try {
+      let browserDesc =
+        Cc["@mozilla.org/uriloader/external-protocol-service;1"].
+        getService(Ci.nsIExternalProtocolService).
+        getApplicationDescription("http");
+      return APP_DESC_TO_KEY[browserDesc] || "";
+    }
+    catch(ex) {
+      Cu.reportError("Could not detect default browser: " + ex);
+    }
+    return "";
+  },
+
   // Whether or not we're in the process of startup migration
   get isStartupMigration() {
     return gProfileStartup != null;
@@ -676,7 +676,7 @@ this.MigrationUtils = Object.freeze({
       skipSourcePage = true;
     }
     else {
-      let defaultBrowserKey = getMigratorKeyForDefaultBrowser();
+      let defaultBrowserKey = this.getMigratorKeyForDefaultBrowser();
       if (defaultBrowserKey) {
         migrator = this.getMigrator(defaultBrowserKey);
         if (migrator)

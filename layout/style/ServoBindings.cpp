@@ -333,6 +333,78 @@ Gecko_CopyMozBindingFrom(nsStyleDisplay* aDest, const nsStyleDisplay* aSrc)
   aDest->mBinding = aSrc->mBinding;
 }
 
+
+void
+Gecko_SetNullImageValue(nsStyleImage* aImage)
+{
+  MOZ_ASSERT(aImage);
+  aImage->SetNull();
+}
+
+void
+Gecko_SetGradientImageValue(nsStyleImage* aImage, nsStyleGradient* aGradient)
+{
+  MOZ_ASSERT(aImage);
+  aImage->SetGradientData(aGradient);
+}
+
+void
+Gecko_CopyImageValueFrom(nsStyleImage* aImage, const nsStyleImage* aOther)
+{
+  MOZ_ASSERT(aImage);
+  MOZ_ASSERT(aOther);
+
+  *aImage = *aOther;
+}
+
+nsStyleGradient*
+Gecko_CreateGradient(uint8_t aShape,
+                     uint8_t aSize,
+                     bool aRepeating,
+                     bool aLegacySyntax,
+                     uint32_t aStopCount)
+{
+  nsStyleGradient* result = new nsStyleGradient();
+
+  result->mShape = aShape;
+  result->mSize = aSize;
+  result->mRepeating = aRepeating;
+  result->mLegacySyntax = aLegacySyntax;
+
+  result->mAngle.SetNoneValue();
+  result->mBgPosX.SetNoneValue();
+  result->mBgPosY.SetNoneValue();
+  result->mRadiusX.SetNoneValue();
+  result->mRadiusY.SetNoneValue();
+
+  nsStyleGradientStop dummyStop;
+  dummyStop.mLocation.SetNoneValue();
+  dummyStop.mColor = NS_RGB(0, 0, 0);
+  dummyStop.mIsInterpolationHint = 0;
+
+  for (uint32_t i = 0; i < aStopCount; i++) {
+    result->mStops.AppendElement(dummyStop);
+  }
+
+  return result;
+}
+
+void
+Gecko_SetGradientStop(nsStyleGradient* aGradient,
+                      uint32_t aIndex,
+                      const nsStyleCoord* aLocation,
+                      nscolor aColor,
+                      bool aIsInterpolationHint)
+{
+  MOZ_ASSERT(aGradient);
+  MOZ_ASSERT(aLocation);
+  MOZ_ASSERT(aIndex < aGradient->mStops.Length());
+
+  aGradient->mStops[aIndex].mColor = aColor;
+  aGradient->mStops[aIndex].mLocation = *aLocation;
+  aGradient->mStops[aIndex].mIsInterpolationHint = aIsInterpolationHint;
+}
+
 #define STYLE_STRUCT(name, checkdata_cb)                                      \
                                                                               \
 void                                                                          \

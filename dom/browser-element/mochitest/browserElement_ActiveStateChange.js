@@ -4,7 +4,7 @@ SimpleTest.waitForExplicitFinish();
 browserElementTestHelpers.setEnabledPref(true);
 browserElementTestHelpers.addPermission();
 
-var fileURL = 'http://example.org/tests/dom/browser-element/mochitest/file_browserElement_ActiveStateChangeOnChangingMutedOrVolume.html';
+var fileURL = 'http://example.org/tests/dom/browser-element/mochitest/file_browserElement_ActiveStateChange.html';
 var generator = runTests();
 var testFrame;
 var ac;
@@ -39,13 +39,9 @@ function setCommand(aArg) {
   var expectedActive = false;
   switch (aArg) {
     case 'play':
-    case 'unmute':
-    case 'volume-1':
       expectedActive = true;
       break;
     case 'pause':
-    case 'mute':
-    case 'volume-0':
       expectedActive = false;
       break;
     default :
@@ -64,18 +60,6 @@ function setCommand(aArg) {
 
 function runTests() {
   setCommand('play');
-  yield undefined;
-
-  setCommand('mute');
-  yield undefined;
-
-  setCommand('unmute');
-  yield undefined;
-
-  setCommand('volume-0');
-  yield undefined;
-
-  setCommand('volume-1');
   yield undefined;
 
   setCommand('pause');

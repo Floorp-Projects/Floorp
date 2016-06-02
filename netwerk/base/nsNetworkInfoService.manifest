@@ -1,0 +1,4 @@
+# nsNetworkInfoService.js
+
+component {0d8245af-d5d3-4100-a6b5-1cc026aa19f2} nsNetworkInfoService.js
+contract @mozilla.org/network-info-service;1 {0d8245af-d5d3-4100-a6b5-1cc026aa19f2}

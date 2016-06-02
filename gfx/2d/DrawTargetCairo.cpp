@@ -1960,11 +1960,17 @@ DrawTarget::Draw3DTransformedSurface(SourceSurface* aSurface, const Matrix4x4& a
     pixman_image_create_bits(PIXMAN_a8r8g8b8,
                              xformBounds.width, xformBounds.height,
                              (uint32_t*)dstSurf->GetData(), dstSurf->Stride());
+  if (!dst) {
+    return false;
+  }
   pixman_image_t* src =
     pixman_image_create_bits(srcFormat,
                              srcSurf->GetSize().width, srcSurf->GetSize().height,
                              (uint32_t*)srcMap.GetData(), srcMap.GetStride());
-  MOZ_ASSERT(src && dst, "Failed to create pixman images?");
+  if (!src) {
+    pixman_image_unref(dst);
+    return false;
+  }
 
   pixman_image_set_filter(src, PIXMAN_FILTER_BILINEAR, nullptr, 0);
   pixman_image_set_transform(src, &xform);

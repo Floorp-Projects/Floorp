@@ -204,7 +204,9 @@ nsresult TestDirectives() {
     { "script-src 'sha256-siVR8vAcqP06h2ppeNwqgjr0yZ6yned4X2VF84j4GmI='",
       "script-src 'sha256-siVR8vAcqP06h2ppeNwqgjr0yZ6yned4X2VF84j4GmI='" },
     { "referrer no-referrer",
-      "referrer no-referrer" }
+      "referrer no-referrer" },
+    { "require-sri-for script style",
+      "require-sri-for script style"}
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
@@ -270,7 +272,9 @@ nsresult TestIgnoreUpperLowerCasePolicies() {
     { "refERRer No-refeRRer",
       "referrer No-refeRRer" },
     { "upgrade-INSECURE-requests",
-      "upgrade-insecure-requests" }
+      "upgrade-insecure-requests" },
+    { "require-SRI-for sCript stYle",
+        "require-sri-for script style"}
   };
 
   uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
@@ -507,9 +511,14 @@ nsresult TestPoliciesWithInvalidSrc() {
       "connect-src 'none'" },
     { "script-src https://foo.com/%$",
       "script-src 'none'" },
+    { "require-SRI-for script elephants",
+      "require-sri-for script"},
+    { "require-sri-for paul",
+      ""}
   };
 
-  uint32_t policyCount = sizeof(policies) / sizeof(PolicyTest);
+  // amount of tests - 1, because the latest should be ignored.
+  uint32_t policyCount = (sizeof(policies) / sizeof(PolicyTest)) -1;
   return runTestSuite(policies, policyCount, 1);
 }
 

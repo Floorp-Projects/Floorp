@@ -31,6 +31,10 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
 <input type="checkbox" id="input_checkbox" onchange="++NonTextInputChange[5];"></input>
 <input type="number" id="input_number" onchange="++numberChange;"></input>
 <input type="range" id="input_range" onchange="++rangeChange;"></input>
+
+<!-- Input text with default value and blurs on focus-->
+<input type="text" id="input_text_value" onchange="++textInputValueChange"
+  onfocus="this.blur();" value="foo"></input>
  
 </div>
 <pre id="test">
@@ -42,6 +46,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
 
   var textareaChange = 0;
   var fileInputChange = 0;
+  var textInputValueChange = 0;
 
   var textInputTypes = ["text", "email", "search", "tel", "url", "password"];
   var textInputChange = [0, 0, 0, 0, 0, 0];
@@ -235,6 +240,15 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=722599
     input.click();
     input.blur();
     is(NonTextInputChange[5], 1, "Change event shouldn't be dispatched for checkbox ---> text input type change");
+
+    setTimeout(testInputWithDefaultValue, 0);
+  }
+
+  function testInputWithDefaultValue() {
+    // focus and blur an input text should not trigger change event if content hasn't changed.
+    var input = document.getElementById('input_text_value');
+    input.focus();
+    is(textInputValueChange, 0, "change event shouldn't be dispatched on input text with default value");
 
     SimpleTest.finish();
   }

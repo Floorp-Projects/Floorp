@@ -228,7 +228,7 @@ public:
   bool HasCalc();
   uint32_t Hash(PLDHashNumber aHash);
 
-  NS_INLINE_DECL_REFCOUNTING(nsStyleGradient)
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(nsStyleGradient)
 
 private:
   // Private destructor, to discourage deletion outside of Release():

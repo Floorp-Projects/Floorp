@@ -372,9 +372,35 @@
       testElm("del_container", obj);
 
       //////////////////////////////////////////////////////////////////////////
-      // HTML:details
+      // HTML:details with open state
 
-      ok(isAccessible("details"), "details element is not accessible");
+      obj = {
+        role: ROLE_DETAILS,
+        children: [
+          {
+            role: ROLE_SUMMARY,
+            states: STATE_EXPANDED,
+            actions: "collapse"
+         },
+         { role: ROLE_PARAGRAPH }
+        ]
+      };
+      testElm("details", obj);
+
+      //////////////////////////////////////////////////////////////////////////
+      // HTML:details with closed (default) state
+
+      obj = {
+        role: ROLE_DETAILS,
+        children: [
+          {
+            role: ROLE_SUMMARY,
+            states: STATE_COLLAPSED,
+            actions: "expand"
+         }
+        ]
+      };
+      testElm("details_closed", obj);
 
       //////////////////////////////////////////////////////////////////////////
       // HTML:dfn contained by paragraph
@@ -1399,6 +1425,11 @@
   <p id="del_container">normal<del>Removed</del></p>
 
   <details id="details" open="open">
+    <summary>Information</summary>
+    <p>If your browser supports this element, it should allow you to expand and collapse these details.</p>
+  </details>
+
+  <details id="details_closed">
     <summary>Information</summary>
     <p>If your browser supports this element, it should allow you to expand and collapse these details.</p>
   </details>

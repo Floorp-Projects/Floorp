@@ -944,6 +944,12 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
     case roles::PROPERTYPAGE:
       return @"AXTabPanel";
 
+    case roles::DETAILS:
+      return @"AXDetails";
+
+    case roles::SUMMARY:
+      return @"AXSummary";
+
     default:
       break;
   }

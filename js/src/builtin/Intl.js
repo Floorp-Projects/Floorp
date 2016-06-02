@@ -548,8 +548,8 @@ function DefaultLocaleIgnoringAvailableLocales() {
     }
 
     // Cache the candidate locale until the runtime default locale changes.
-    localeCandidateCache.runtimeDefaultLocale = runtimeDefaultLocale;
     localeCandidateCache.candidateDefaultLocale = candidate;
+    localeCandidateCache.runtimeDefaultLocale = runtimeDefaultLocale;
 
     assert(IsStructurallyValidLanguageTag(candidate),
            "the candidate must be structurally valid");
@@ -597,8 +597,8 @@ function DefaultLocale() {
     assert(localeContainsNoUnicodeExtensions(locale),
            "the computed default locale must not contain a Unicode extension sequence");
 
-    localeCache.runtimeDefaultLocale = runtimeDefaultLocale;
     localeCache.defaultLocale = locale;
+    localeCache.runtimeDefaultLocale = runtimeDefaultLocale;
 
     return locale;
 }

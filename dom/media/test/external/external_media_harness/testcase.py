@@ -4,6 +4,7 @@
 
 import re
 import os
+import time
 
 from marionette import BrowserMobProxyTestCaseMixin, MarionetteTestCase
 from marionette_driver import Wait
@@ -200,7 +201,7 @@ class NetworkBandwidthTestsMixin(object):
 
 reset_adobe_gmp_script = """
 navigator.requestMediaKeySystemAccess('com.adobe.primetime',
-[{initDataType: 'cenc'}]).then(
+[{initDataTypes: ['cenc']}]).then(
     function(access) {
         marionetteScriptFinished('success');
     },
@@ -241,8 +242,9 @@ class EMESetupMixin(object):
     def reset_GMP_version(self):
         if EMESetupMixin.version_needs_reset:
             with self.marionette.using_context('chrome'):
-                if self.prefs.get_pref('media.gm-eme-adobe.version'):
-                    self.prefs.set_pref('media.gm-eme-adobe.version', None)
+                if self.prefs.get_pref('media.gmp-eme-adobe.version'):
+                    self.prefs.reset_pref('media.gmp-eme-adobe.version')
+            with self.marionette.using_context('content'):
                 result = self.marionette.execute_async_script(
                     reset_adobe_gmp_script,
                     script_timeout=60000)

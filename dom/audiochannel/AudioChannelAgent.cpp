@@ -225,8 +225,8 @@ AudioChannelAgent::NotifyStartedPlaying(AudioPlaybackConfig* aConfig,
 
   MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
          ("AudioChannelAgent, NotifyStartedPlaying, this = %p, "
-          "mute = %d, volume = %f, suspend = %d\n", this,
-          config.mMuted, config.mVolume, config.mSuspend));
+          "audible = %d, mute = %d, volume = %f, suspend = %d\n", this,
+          aAudible, config.mMuted, config.mVolume, config.mSuspend));
 
   aConfig->SetConfig(config.mVolume, config.mMuted, config.mSuspend);
   mIsRegToService = true;
@@ -254,11 +254,11 @@ AudioChannelAgent::NotifyStoppedPlaying()
 }
 
 NS_IMETHODIMP
-AudioChannelAgent::NotifyStartedAudible(bool aAudible)
+AudioChannelAgent::NotifyStartedAudible(bool aAudible, uint32_t aReason)
 {
   MOZ_LOG(AudioChannelService::GetAudioChannelLog(), LogLevel::Debug,
          ("AudioChannelAgent, NotifyStartedAudible, this = %p, "
-          "audible = %d\n", this, aAudible));
+          "audible = %d, reason = %d\n", this, aAudible, aReason));
 
   RefPtr<AudioChannelService> service = AudioChannelService::GetOrCreate();
   if (NS_WARN_IF(!service)) {
@@ -266,7 +266,9 @@ AudioChannelAgent::NotifyStartedAudible(bool aAudible)
   }
 
   service->AudioAudibleChanged(
-    this, static_cast<AudioChannelService::AudibleState>(aAudible));
+    this,
+    static_cast<AudioChannelService::AudibleState>(aAudible),
+    static_cast<AudioChannelService::AudibleChangedReasons>(aReason));
   return NS_OK;
 }
 

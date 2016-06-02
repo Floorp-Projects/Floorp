@@ -58,14 +58,14 @@ function* test_visibility(url, browser) {
   is(result.computedVolume, 1, "Audio volume is 1");
   is(result.computedMuted, false, "Audio is not muted");
 
-  ok(!browser.audioMuted, "Audio should not be muted by default");
-  browser.mute();
-  ok(browser.audioMuted, "Audio should be muted now");
-
   yield BrowserTestUtils.withNewTab({
     gBrowser,
     url: "about:blank",
   }, function() {});
+
+  ok(!browser.audioMuted, "Audio should not be muted by default");
+  browser.mute();
+  ok(browser.audioMuted, "Audio should be muted now");
 
   yield wait_for_event(browser, "DOMAudioPlaybackStopped");
 

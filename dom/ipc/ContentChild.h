@@ -539,8 +539,12 @@ public:
                              const IPC::Principal& aPrincipal) override;
 
   virtual bool
-  RecvPushError(const nsCString& aScope, const nsString& aMessage,
-                const uint32_t& aFlags) override;
+  RecvPushError(const nsCString& aScope, const IPC::Principal& aPrincipal,
+                const nsString& aMessage, const uint32_t& aFlags) override;
+
+  virtual bool
+  RecvNotifyPushSubscriptionModifiedObservers(const nsCString& aScope,
+                                              const IPC::Principal& aPrincipal) override;
 
   // Get the directory for IndexedDB files. We query the parent for this and
   // cache the value

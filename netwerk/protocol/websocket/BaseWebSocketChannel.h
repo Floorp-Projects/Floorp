@@ -57,6 +57,8 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
                           uint32_t aContentPolicyType) override;
   NS_IMETHOD GetSerial(uint32_t* aSerial) override;
   NS_IMETHOD SetSerial(uint32_t aSerial) override;
+  NS_IMETHOD SetServerParameters(nsITransportProvider* aProvider,
+                                 const nsACString& aNegotiatedExtensions) override;
 
   // Off main thread URI access.
   virtual void GetEffectiveURL(nsAString& aEffectiveURL) const = 0;
@@ -85,6 +87,7 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
   nsCOMPtr<nsILoadGroup>          mLoadGroup;
   nsCOMPtr<nsILoadInfo>           mLoadInfo;
   nsCOMPtr<nsIEventTarget>        mTargetThread;
+  nsCOMPtr<nsITransportProvider>  mServerTransportProvider;
 
   nsCString                       mProtocol;
   nsCString                       mOrigin;
@@ -97,6 +100,7 @@ class BaseWebSocketChannel : public nsIWebSocketChannel,
 
   Atomic<bool>                    mEncrypted;
   bool                            mPingForced;
+  bool                            mIsServerSide;
 
   uint32_t                        mPingInterval;         /* milliseconds */
   uint32_t                        mPingResponseTimeout;  /* milliseconds */

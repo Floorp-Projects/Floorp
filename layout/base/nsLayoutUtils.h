@@ -2227,18 +2227,6 @@ public:
                                         bool clear);
 
   /**
-   * Given a frame with possibly animated content, finds the content node
-   * that contains its animations as well as the frame's pseudo-element type
-   * relative to the resulting content node. Returns true if animated content
-   * was found, otherwise it returns false and the output parameters are
-   * undefined.
-   */
-  static bool GetAnimationContent(const nsIFrame* aFrame,
-                                  nsIContent* &aContentResult,
-                                  mozilla::CSSPseudoElementType
-                                    &aPseudoTypeResult);
-
-  /**
    * Returns true if the frame has current (i.e. running or scheduled-to-run)
    * animations or transitions for the property.
    */

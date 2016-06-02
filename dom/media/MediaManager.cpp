@@ -110,8 +110,9 @@ already_AddRefed<nsIAsyncShutdownClient> GetShutdownPhase() {
   nsCOMPtr<nsIAsyncShutdownClient> shutdownPhase;
   nsresult rv = svc->GetProfileBeforeChange(getter_AddRefs(shutdownPhase));
   if (!shutdownPhase) {
-    // We are probably in a content process.
-    rv = svc->GetContentChildShutdown(getter_AddRefs(shutdownPhase));
+    // We are probably in a content process. We need to do cleanup at
+    // XPCOM shutdown in leakchecking builds.
+    rv = svc->GetXpcomWillShutdown(getter_AddRefs(shutdownPhase));
   }
   MOZ_RELEASE_ASSERT(shutdownPhase);
   MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));

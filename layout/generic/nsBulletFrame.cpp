@@ -188,8 +188,10 @@ public:
 
 class nsDisplayBullet final : public nsDisplayItem {
 public:
-  nsDisplayBullet(nsDisplayListBuilder* aBuilder, nsBulletFrame* aFrame) :
-    nsDisplayItem(aBuilder, aFrame) {
+  nsDisplayBullet(nsDisplayListBuilder* aBuilder, nsBulletFrame* aFrame)
+    : nsDisplayItem(aBuilder, aFrame)
+    , mDisableSubpixelAA(false)
+  {
     MOZ_COUNT_CTOR(nsDisplayBullet);
   }
 #ifdef NS_BUILD_REFCNT_LOGGING
@@ -219,6 +221,10 @@ public:
     return GetBounds(aBuilder, &snap);
   }
 
+  virtual void DisableComponentAlpha() override {
+    mDisableSubpixelAA = true;
+  }
+
   virtual nsDisplayItemGeometry* AllocateGeometry(nsDisplayListBuilder* aBuilder) override
   {
     return new nsDisplayBulletGeometry(this, aBuilder);
@@ -246,6 +252,9 @@ public:
 
     return nsDisplayItem::ComputeInvalidationRegion(aBuilder, aGeometry, aInvalidRegion);
   }
+
+protected:
+  bool mDisableSubpixelAA;
 };
 
 void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,
@@ -257,7 +266,8 @@ void nsDisplayBullet::Paint(nsDisplayListBuilder* aBuilder,
   }
 
   DrawResult result = static_cast<nsBulletFrame*>(mFrame)->
-    PaintBullet(*aCtx, ToReferenceFrame(), mVisibleRect, flags);
+    PaintBullet(*aCtx, ToReferenceFrame(), mVisibleRect, flags,
+                mDisableSubpixelAA);
 
   nsDisplayBulletGeometry::UpdateDrawResult(this, result);
 }
@@ -278,7 +288,8 @@ nsBulletFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 
 DrawResult
 nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
-                           const nsRect& aDirtyRect, uint32_t aFlags)
+                           const nsRect& aDirtyRect, uint32_t aFlags,
+                           bool aDisableSubpixelAA)
 {
   const nsStyleList* myList = StyleList();
   CounterStyle* listStyleType = myList->GetCounterStyle();
@@ -408,6 +419,9 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
 
   default:
     {
+      DrawTargetAutoDisableSubpixelAntialiasing
+        disable(aRenderingContext.GetDrawTarget(), aDisableSubpixelAA);
+
       aRenderingContext.ThebesContext()->SetColor(
         Color::FromABGR(nsLayoutUtils::GetColor(this, eCSSProperty_color)));
 

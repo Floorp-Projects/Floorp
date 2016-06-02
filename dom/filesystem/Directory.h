@@ -63,6 +63,11 @@ public:
   GetRoot(FileSystemBase* aFileSystem, ErrorResult& aRv);
 
   static already_AddRefed<Directory>
+  Constructor(const GlobalObject& aGlobal,
+              const nsAString& aRealPath,
+              ErrorResult& aRv);
+
+  static already_AddRefed<Directory>
   Create(nsISupports* aParent, nsIFile* aDirectory,
          FileSystemBase* aFileSystem = 0);
 
