@@ -111,9 +111,12 @@ public:
   }
 
   /**
-   * the offset of first selected clause or start of of compositon
+   * the offset of first selected clause or start of composition
    */
-  uint32_t OffsetOfTargetClause() const { return mCompositionTargetOffset; }
+  uint32_t NativeOffsetOfTargetClause() const
+  {
+    return mCompositionStartOffset + mTargetClauseOffsetInComposition;
+  }
 
   /**
    * Returns true if there is non-empty composition string and it's not fixed.
@@ -216,9 +219,9 @@ private:
 
   // Offset of the composition string from start of the editor
   uint32_t mCompositionStartOffset;
-  // Offset of the selected clause of the composition string from start of the
-  // editor
-  uint32_t mCompositionTargetOffset;
+  // Offset of the selected clause of the composition string from
+  // mCompositionStartOffset
+  uint32_t mTargetClauseOffsetInComposition;
 
   // See the comment for IsSynthesizedForTests().
   bool mIsSynthesizedForTests;
@@ -260,7 +263,7 @@ private:
     : mPresContext(nullptr)
     , mNativeContext(nullptr)
     , mCompositionStartOffset(0)
-    , mCompositionTargetOffset(0)
+    , mTargetClauseOffsetInComposition(0)
     , mIsSynthesizedForTests(false)
     , mIsComposing(false)
     , mIsEditorHandlingEvent(false)

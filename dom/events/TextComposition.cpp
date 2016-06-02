@@ -58,7 +58,7 @@ TextComposition::TextComposition(nsPresContext* aPresContext,
   , mTabParent(aTabParent)
   , mNativeContext(aCompositionEvent->mNativeIMEContext)
   , mCompositionStartOffset(0)
-  , mCompositionTargetOffset(0)
+  , mTargetClauseOffsetInComposition(0)
   , mIsSynthesizedForTests(aCompositionEvent->mFlags.mIsSynthesizedForTests)
   , mIsComposing(false)
   , mIsEditorHandlingEvent(false)
@@ -452,10 +452,9 @@ TextComposition::OnCompositionEventHandled(
       NS_WARNING("Cannot get start offset of IME composition");
       mCompositionStartOffset = 0;
     }
-    mCompositionTargetOffset = mCompositionStartOffset;
+    mTargetClauseOffsetInComposition = 0;
   } else if (aCompositionEvent->CausesDOMTextEvent()) {
-    mCompositionTargetOffset =
-      mCompositionStartOffset + aCompositionEvent->TargetClauseOffset();
+    mTargetClauseOffsetInComposition = aCompositionEvent->TargetClauseOffset();
   } else {
     return;
   }
