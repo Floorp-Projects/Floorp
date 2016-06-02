@@ -4335,6 +4335,7 @@ class IDLArgument(IDLObjectWithIdentifier):
         self.enforceRange = False
         self.clamp = False
         self._allowTreatNonCallableAsNull = False
+        self._extendedAttrDict = {}
 
         assert not variadic or optional
         assert not variadic or not defaultValue
@@ -4369,6 +4370,11 @@ class IDLArgument(IDLObjectWithIdentifier):
                                   ("a dictionary member" if self.dictionaryMember else
                                    "an argument"),
                                   [attribute.location])
+            attrlist = attribute.listValue()
+            self._extendedAttrDict[identifier] = attrlist if len(attrlist) else True
+
+    def getExtendedAttribute(self, name):
+        return self._extendedAttrDict.get(name, None)
 
     def isComplete(self):
         return self._isComplete
