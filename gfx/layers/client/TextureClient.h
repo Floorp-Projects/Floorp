@@ -29,6 +29,7 @@
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsISupportsImpl.h"            // for TextureImage::AddRef, etc
 #include "GfxTexturesReporter.h"
+#include "pratom.h"
 
 class gfxImageSurface;
 
@@ -174,6 +175,39 @@ struct MappedYCbCrTextureData {
         && cb.CopyInto(aDst.cb)
         && cr.CopyInto(aDst.cr);
   }
+};
+
+class TileLock;
+
+// A class to help implement copy-on-write semantics for shared tiles.
+class TextureReadLock {
+protected:
+  virtual ~TextureReadLock() {}
+
+public:
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING(TextureReadLock)
+
+  virtual int32_t ReadLock() = 0;
+  virtual int32_t ReadUnlock() = 0;
+  virtual int32_t GetReadCount() = 0;
+  virtual bool IsValid() const = 0;
+
+  static already_AddRefed<TextureReadLock>
+  Create(ClientIPCAllocator* aAllocator);
+
+  static already_AddRefed<TextureReadLock>
+  Open(const TileLock& aDescriptor, ISurfaceAllocator* aAllocator);
+
+  virtual bool Serialize(TileLock& aOutput) = 0;
+
+  enum LockType {
+    TYPE_MEMORY,
+    TYPE_SHMEM
+  };
+  virtual LockType GetType() = 0;
+
+protected:
+  NS_DECL_OWNINGTHREAD
 };
 
 #ifdef XP_WIN

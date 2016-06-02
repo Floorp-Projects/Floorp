@@ -29,6 +29,7 @@
 #include "IPDLActor.h"
 #include "BufferTexture.h"
 #include "gfxPrefs.h"
+#include "mozilla/layers/ShadowLayers.h"
 
 #ifdef XP_WIN
 #include "mozilla/layers/TextureD3D9.h"
@@ -1144,6 +1145,233 @@ TextureClient::PrintInfo(std::stringstream& aStream, const char* aPrefix)
     }
   }
 #endif
+}
+
+class MemoryTextureReadLock : public TextureReadLock {
+public:
+  MemoryTextureReadLock();
+
+  ~MemoryTextureReadLock();
+
+  virtual int32_t ReadLock() override;
+
+  virtual int32_t ReadUnlock() override;
+
+  virtual int32_t GetReadCount() override;
+
+  virtual LockType GetType() override { return TYPE_MEMORY; }
+
+  virtual bool IsValid() const override { return true; };
+
+  virtual bool Serialize(TileLock& aOutput) override;
+
+  int32_t mReadCount;
+};
+
+class ShmemTextureReadLock : public TextureReadLock {
+public:
+  struct ShmReadLockInfo {
+    int32_t readCount;
+  };
+
+  explicit ShmemTextureReadLock(ClientIPCAllocator* aAllocator);
+
+  ~ShmemTextureReadLock();
+
+  virtual int32_t ReadLock() override;
+
+  virtual int32_t ReadUnlock() override;
+
+  virtual int32_t GetReadCount() override;
+
+  virtual bool IsValid() const override { return mAllocSuccess; };
+
+  virtual LockType GetType() override { return TYPE_SHMEM; }
+
+  virtual bool Serialize(TileLock& aOutput) override;
+
+  mozilla::layers::ShmemSection& GetShmemSection() { return mShmemSection; }
+
+  ShmemTextureReadLock(ISurfaceAllocator* aAllocator, const mozilla::layers::ShmemSection& aShmemSection)
+    : mAllocator(aAllocator)
+    , mShmemSection(aShmemSection)
+    , mAllocSuccess(true)
+  {
+    MOZ_COUNT_CTOR(ShmemTextureReadLock);
+  }
+
+  ShmReadLockInfo* GetShmReadLockInfoPtr()
+  {
+    return reinterpret_cast<ShmReadLockInfo*>
+      (mShmemSection.shmem().get<char>() + mShmemSection.offset());
+  }
+
+  RefPtr<ISurfaceAllocator> mAllocator;
+  mozilla::layers::ShmemSection mShmemSection;
+  bool mAllocSuccess;
+};
+
+// static
+already_AddRefed<TextureReadLock>
+TextureReadLock::Open(const TileLock& aDescriptor, ISurfaceAllocator* aAllocator)
+{
+  RefPtr<TextureReadLock> lock;
+  if (aDescriptor.type() == TileLock::TShmemSection) {
+    const ShmemSection& section = aDescriptor.get_ShmemSection();
+    MOZ_RELEASE_ASSERT(section.shmem().IsReadable());
+    lock = new ShmemTextureReadLock(aAllocator, section);
+  } else {
+    if (!aAllocator->IsSameProcess()) {
+      // Trying to use a memory based lock instead of a shmem based one in
+      // the cross-process case is a bad security violation.
+      NS_ERROR("A client process may be trying to peek at the host's address space!");
+      return nullptr;
+    }
+    lock = reinterpret_cast<MemoryTextureReadLock*>(aDescriptor.get_uintptr_t());
+    MOZ_ASSERT(lock);
+    if (lock) {
+      // The corresponding AddRef is in MemoryTextureReadLock::Serialize
+      lock.get()->Release();
+    }
+  }
+
+  return lock.forget();
+}
+
+// static
+already_AddRefed<TextureReadLock>
+TextureReadLock::Create(ClientIPCAllocator* aAllocator)
+{
+  if (aAllocator->IsSameProcess()) {
+    // If our compositor is in the same process, we can save some cycles by not
+    // using shared memory.
+    return MakeAndAddRef<MemoryTextureReadLock>();
+  }
+
+  return MakeAndAddRef<ShmemTextureReadLock>(aAllocator);
+}
+
+MemoryTextureReadLock::MemoryTextureReadLock()
+: mReadCount(1)
+{
+  MOZ_COUNT_CTOR(MemoryTextureReadLock);
+}
+
+MemoryTextureReadLock::~MemoryTextureReadLock()
+{
+  // One read count that is added in constructor.
+  MOZ_ASSERT(mReadCount == 1);
+  MOZ_COUNT_DTOR(MemoryTextureReadLock);
+}
+
+bool
+MemoryTextureReadLock::Serialize(TileLock& aOutput)
+{
+  // AddRef here and Release when receiving on the host side to make sure the
+  // reference count doesn't go to zero before the host receives the message.
+  // see TextureReadLock::Open
+  this->AddRef();
+  aOutput = TileLock(uintptr_t(this));
+  return true;
+}
+
+int32_t
+MemoryTextureReadLock::ReadLock()
+{
+  NS_ASSERT_OWNINGTHREAD(MemoryTextureReadLock);
+
+  return PR_ATOMIC_INCREMENT(&mReadCount);
+}
+
+int32_t
+MemoryTextureReadLock::ReadUnlock()
+{
+  int32_t readCount = PR_ATOMIC_DECREMENT(&mReadCount);
+  MOZ_ASSERT(readCount >= 0);
+
+  return readCount;
+}
+
+int32_t
+MemoryTextureReadLock::GetReadCount()
+{
+  NS_ASSERT_OWNINGTHREAD(MemoryTextureReadLock);
+  return mReadCount;
+}
+
+ShmemTextureReadLock::ShmemTextureReadLock(ClientIPCAllocator* aAllocator)
+  : mAllocator(aAllocator)
+  , mAllocSuccess(false)
+{
+  MOZ_COUNT_CTOR(ShmemTextureReadLock);
+  MOZ_ASSERT(mAllocator);
+  if (mAllocator) {
+#define MOZ_ALIGN_WORD(x) (((x) + 3) & ~3)
+    if (mAllocator->AsLayerForwarder()->GetTileLockAllocator()->AllocShmemSection(
+        MOZ_ALIGN_WORD(sizeof(ShmReadLockInfo)), &mShmemSection)) {
+      ShmReadLockInfo* info = GetShmReadLockInfoPtr();
+      info->readCount = 1;
+      mAllocSuccess = true;
+    }
+  }
+}
+
+ShmemTextureReadLock::~ShmemTextureReadLock()
+{
+  auto fwd = mAllocator->AsLayerForwarder();
+  if (fwd) {
+    // Release one read count that is added in constructor.
+    // The count is kept for calling GetReadCount() by TextureClientPool.
+    ReadUnlock();
+  }
+  MOZ_COUNT_DTOR(ShmemTextureReadLock);
+}
+
+bool
+ShmemTextureReadLock::Serialize(TileLock& aOutput)
+{
+  aOutput = TileLock(GetShmemSection());
+  return true;
+}
+
+int32_t
+ShmemTextureReadLock::ReadLock() {
+  NS_ASSERT_OWNINGTHREAD(ShmemTextureReadLock);
+  if (!mAllocSuccess) {
+    return 0;
+  }
+  ShmReadLockInfo* info = GetShmReadLockInfoPtr();
+  return PR_ATOMIC_INCREMENT(&info->readCount);
+}
+
+int32_t
+ShmemTextureReadLock::ReadUnlock() {
+  if (!mAllocSuccess) {
+    return 0;
+  }
+  ShmReadLockInfo* info = GetShmReadLockInfoPtr();
+  int32_t readCount = PR_ATOMIC_DECREMENT(&info->readCount);
+  MOZ_ASSERT(readCount >= 0);
+  if (readCount <= 0) {
+    auto fwd = mAllocator->AsLayerForwarder();
+    if (fwd) {
+      fwd->GetTileLockAllocator()->DeallocShmemSection(mShmemSection);
+    } else {
+      // we are on the compositor process
+      FixedSizeSmallShmemSectionAllocator::FreeShmemSection(mShmemSection);
+    }
+  }
+  return readCount;
+}
+
+int32_t
+ShmemTextureReadLock::GetReadCount() {
+  NS_ASSERT_OWNINGTHREAD(ShmemTextureReadLock);
+  if (!mAllocSuccess) {
+    return 0;
+  }
+  ShmReadLockInfo* info = GetShmReadLockInfoPtr();
+  return info->readCount;
 }
 
 bool
