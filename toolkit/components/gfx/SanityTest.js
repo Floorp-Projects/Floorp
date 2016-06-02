@@ -304,7 +304,7 @@ SanityTest.prototype = {
     var sanityTest = Services.ww.openWindow(null,
         "chrome://gfxsanity/content/sanityparent.html",
         "Test Page",
-        "width=" + PAGE_WIDTH + ",height=" + PAGE_HEIGHT + ",chrome,titlebar=0,scrollbars=0,popup=1",
+        "width=" + PAGE_WIDTH + ",height=" + PAGE_HEIGHT + ",chrome,titlebar=0,scrollbars=0",
         null);
 
     // There's no clean way to have an invisible window and ensure it's always painted.
