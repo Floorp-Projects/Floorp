@@ -630,6 +630,8 @@ struct nsGridContainerFrame::GridItemInfo
   static_assert(mozilla::eLogicalAxisInline == 1, "unexpected index value");
 };
 
+using GridItemInfo = nsGridContainerFrame::GridItemInfo;
+
 /**
  * Utility class to find line names.  It provides an interface to lookup line
  * names with a dynamic number of repeat(auto-fill/fit) tracks taken into
@@ -1025,7 +1027,7 @@ struct nsGridContainerFrame::Tracks
                                  nscoord                     aPercentageBasis,
                                  IntrinsicISizeType          aConstraint,
                                  const LineRange&            aRange,
-                                 nsIFrame*                   aGridItem);
+                                 const GridItemInfo&         aGridItem);
   /**
    * Collect the tracks which are growable (matching aSelector) into
    * aGrowableTracks, and return the amount of space that can be used
@@ -3181,11 +3183,54 @@ nsGridContainerFrame::Tracks::Initialize(
 }
 
 /**
+ * Reflow aChild in the given aAvailableSize.
+ */
+static nscoord
+MeasuringReflow(nsIFrame*                aChild,
+                const nsHTMLReflowState* aReflowState,
+                nsRenderingContext*      aRC,
+                const LogicalSize&       aAvailableSize)
+{
+  nsContainerFrame* parent = aChild->GetParent();
+  nsPresContext* pc = aChild->PresContext();
+  Maybe<nsHTMLReflowState> dummyParentState;
+  const nsHTMLReflowState* rs = aReflowState;
+  if (!aReflowState) {
+    MOZ_ASSERT(!parent->HasAnyStateBits(NS_FRAME_IN_REFLOW));
+    dummyParentState.emplace(pc, parent, aRC,
+                             LogicalSize(parent->GetWritingMode(), 0,
+                                         NS_UNCONSTRAINEDSIZE),
+                             nsHTMLReflowState::DUMMY_PARENT_REFLOW_STATE);
+    rs = dummyParentState.ptr();
+  }
+#ifdef DEBUG
+  // This will suppress various CRAZY_SIZE warnings for this reflow.
+  parent->Properties().Set(
+    nsContainerFrame::DebugReflowingWithInfiniteISize(), true);
+#endif
+  nsHTMLReflowState childRS(pc, *rs, aChild, aAvailableSize, nullptr,
+                            nsHTMLReflowState::COMPUTE_SIZE_SHRINK_WRAP |
+                            nsHTMLReflowState::COMPUTE_SIZE_USE_AUTO_BSIZE);
+  nsHTMLReflowMetrics childSize(childRS);
+  nsReflowStatus childStatus;
+  const uint32_t flags = NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_SIZE_VIEW;
+  WritingMode wm = childRS.GetWritingMode();
+  parent->ReflowChild(aChild, pc, childSize, childRS, wm,
+                      LogicalPoint(wm), nsSize(), flags, childStatus);
+  parent->FinishReflowChild(aChild, pc, childSize, &childRS, wm,
+                            LogicalPoint(wm), nsSize(), flags);
+#ifdef DEBUG
+    parent->Properties().Delete(nsContainerFrame::DebugReflowingWithInfiniteISize());
+#endif
+  return childSize.BSize(wm);
+}
+
+/**
  * Return the [min|max]-content contribution of aChild to its parent (i.e.
  * the child's margin-box) in aAxis.
  */
 static nscoord
-ContentContribution(nsIFrame*                         aChild,
+ContentContribution(const GridItemInfo&               aGridItem,
                     const nsHTMLReflowState*          aReflowState,
                     nsRenderingContext*               aRC,
                     WritingMode                       aCBWM,
@@ -3193,83 +3238,54 @@ ContentContribution(nsIFrame*                         aChild,
                     nsLayoutUtils::IntrinsicISizeType aConstraint,
                     uint32_t                          aFlags = 0)
 {
+  nsIFrame* child = aGridItem.mFrame;
   PhysicalAxis axis(aCBWM.PhysicalAxis(aAxis));
-  nscoord size = nsLayoutUtils::IntrinsicForAxis(axis, aRC, aChild, aConstraint,
+  nscoord size = nsLayoutUtils::IntrinsicForAxis(axis, aRC, child, aConstraint,
                    aFlags | nsLayoutUtils::BAIL_IF_REFLOW_NEEDED);
   if (size == NS_INTRINSIC_WIDTH_UNKNOWN) {
     // We need to reflow the child to find its BSize contribution.
-    WritingMode wm = aChild->GetWritingMode();
-    nsContainerFrame* parent = aChild->GetParent();
-    nsPresContext* pc = aChild->PresContext();
-    Maybe<nsHTMLReflowState> dummyParentState;
-    const nsHTMLReflowState* rs = aReflowState;
-    if (!aReflowState) {
-      MOZ_ASSERT(!parent->HasAnyStateBits(NS_FRAME_IN_REFLOW));
-      dummyParentState.emplace(pc, parent, aRC,
-                               LogicalSize(parent->GetWritingMode(), 0,
-                                           NS_UNCONSTRAINEDSIZE),
-                               nsHTMLReflowState::DUMMY_PARENT_REFLOW_STATE);
-      rs = dummyParentState.ptr();
-    }
-#ifdef DEBUG
-    // This will suppress various CRAZY_SIZE warnings for this reflow.
-    parent->Properties().Set(
-      nsContainerFrame::DebugReflowingWithInfiniteISize(), true);
-#endif
     // XXX this will give mostly correct results for now (until bug 1174569).
-    LogicalSize availableSize(wm, INFINITE_ISIZE_COORD, NS_UNCONSTRAINEDSIZE);
-    nsHTMLReflowState childRS(pc, *rs, aChild, availableSize, nullptr,
-                              nsHTMLReflowState::COMPUTE_SIZE_SHRINK_WRAP |
-                              nsHTMLReflowState::COMPUTE_SIZE_USE_AUTO_BSIZE);
-    nsHTMLReflowMetrics childSize(childRS);
-    nsReflowStatus childStatus;
-    const uint32_t flags = NS_FRAME_NO_MOVE_FRAME | NS_FRAME_NO_SIZE_VIEW;
-    parent->ReflowChild(aChild, pc, childSize, childRS, wm,
-                        LogicalPoint(wm), nsSize(), flags, childStatus);
-    parent->FinishReflowChild(aChild, pc, childSize, &childRS, wm,
-                              LogicalPoint(wm), nsSize(), flags);
-    size = childSize.BSize(wm);
-    nsIFrame::IntrinsicISizeOffsetData offsets = aChild->IntrinsicBSizeOffsets();
+    LogicalSize availableSize(child->GetWritingMode(), INFINITE_ISIZE_COORD, NS_UNCONSTRAINEDSIZE);
+    size = ::MeasuringReflow(child, aReflowState, aRC, availableSize);
+    nsIFrame::IntrinsicISizeOffsetData offsets = child->IntrinsicBSizeOffsets();
     size += offsets.hMargin;
     size = nsLayoutUtils::AddPercents(aConstraint, size, offsets.hPctMargin);
-#ifdef DEBUG
-    parent->Properties().Delete(nsContainerFrame::DebugReflowingWithInfiniteISize());
-#endif
   }
   return std::max(size, 0);
 }
 
 static nscoord
-MinContentContribution(nsIFrame*                aChild,
+MinContentContribution(const GridItemInfo&      aGridItem,
                        const nsHTMLReflowState* aRS,
                        nsRenderingContext*      aRC,
                        WritingMode              aCBWM,
                        LogicalAxis              aAxis)
 {
-  return ContentContribution(aChild, aRS, aRC, aCBWM, aAxis,
+  return ContentContribution(aGridItem, aRS, aRC, aCBWM, aAxis,
                              nsLayoutUtils::MIN_ISIZE);
 }
 
 static nscoord
-MaxContentContribution(nsIFrame*                aChild,
+MaxContentContribution(const GridItemInfo&      aGridItem,
                        const nsHTMLReflowState* aRS,
                        nsRenderingContext*      aRC,
                        WritingMode              aCBWM,
                        LogicalAxis              aAxis)
 {
-  return ContentContribution(aChild, aRS, aRC, aCBWM, aAxis,
+  return ContentContribution(aGridItem, aRS, aRC, aCBWM, aAxis,
                              nsLayoutUtils::PREF_ISIZE);
 }
 
 static nscoord
-MinSize(nsIFrame*                aChild,
+MinSize(const GridItemInfo&      aGridItem,
         const nsHTMLReflowState* aRS,
         nsRenderingContext*      aRC,
         WritingMode              aCBWM,
         LogicalAxis              aAxis)
 {
+  nsIFrame* child = aGridItem.mFrame;
   PhysicalAxis axis(aCBWM.PhysicalAxis(aAxis));
-  const nsStylePosition* stylePos = aChild->StylePosition();
+  const nsStylePosition* stylePos = child->StylePosition();
   const nsStyleCoord& style = axis == eAxisHorizontal ? stylePos->mMinWidth
                                                       : stylePos->mMinHeight;
   // https://drafts.csswg.org/css-grid/#min-size-auto
@@ -3279,15 +3295,15 @@ MinSize(nsIFrame*                aChild,
   // otherwise), or NS_UNCONSTRAINEDSIZE for other min-width intrinsic values
   // (which results in always taking the "content size" part below).
   nscoord sz =
-    nsLayoutUtils::MinSizeContributionForAxis(axis, aRC, aChild,
+    nsLayoutUtils::MinSizeContributionForAxis(axis, aRC, child,
                                               nsLayoutUtils::MIN_ISIZE);
   auto unit = style.GetUnit();
   if (unit == eStyleUnit_Enumerated ||
       (unit == eStyleUnit_Auto &&
-       aChild->StyleDisplay()->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE)) {
+       child->StyleDisplay()->mOverflowX == NS_STYLE_OVERFLOW_VISIBLE)) {
     // Now calculate the "content size" part and return whichever is smaller.
     MOZ_ASSERT(unit != eStyleUnit_Enumerated || sz == NS_UNCONSTRAINEDSIZE);
-    sz = std::min(sz, ContentContribution(aChild, aRS, aRC, aCBWM, aAxis,
+    sz = std::min(sz, ContentContribution(aGridItem, aRS, aRC, aCBWM, aAxis,
                                           nsLayoutUtils::MIN_ISIZE,
                                           nsLayoutUtils::MIN_INTRINSIC_ISIZE));
   }
@@ -3354,7 +3370,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
   nscoord                     aPercentageBasis,
   IntrinsicISizeType          aConstraint,
   const LineRange&            aRange,
-  nsIFrame*                   aGridItem)
+  const GridItemInfo&         aGridItem)
 {
   Maybe<nscoord> minContentContribution;
   Maybe<nscoord> maxContentContribution;
@@ -3446,15 +3462,15 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
                                             : TrackSize::StateBits(0);
   iter.Reset();
   for (; !iter.AtEnd(); iter.Next()) {
-    nsIFrame* child = *iter;
-    const GridArea& area = aGridItems[iter.GridItemIndex()].mArea;
+    auto& gridItem = aGridItems[iter.GridItemIndex()];
+    const GridArea& area = gridItem.mArea;
     const LineRange& lineRange = area.*aRange;
     uint32_t span = lineRange.Extent();
     if (span == 1) {
       // Step 1. Size tracks to fit non-spanning items.
-      aGridItems[iter.GridItemIndex()].mIsFlexing[mAxis] =
+      gridItem.mIsFlexing[mAxis] =
         ResolveIntrinsicSizeStep1(aState, aFunctions, aPercentageBasis,
-                                  aConstraint, lineRange, child);
+                                  aConstraint, lineRange, gridItem);
     } else {
       TrackSize::StateBits state = TrackSize::StateBits(0);
       if (HasIntrinsicButNoFlexSizingInRange(lineRange, aConstraint, &state)) {
@@ -3470,23 +3486,23 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         stateBitsPerSpan[span] |= state;
         nscoord minSize = 0;
         if (state & (flexMin | TrackSize::eIntrinsicMinSizing)) { // for 2.1
-          minSize = MinSize(child, aState.mReflowState, rc, wm, mAxis);
+          minSize = MinSize(gridItem, aState.mReflowState, rc, wm, mAxis);
         }
         nscoord minContent = 0;
         if (state & (flexMin | TrackSize::eMinOrMaxContentMinSizing | // for 2.2
                      TrackSize::eIntrinsicMaxSizing)) {               // for 2.5
-          minContent = MinContentContribution(child, aState.mReflowState,
+          minContent = MinContentContribution(gridItem, aState.mReflowState,
                                               rc, wm, mAxis);
         }
         nscoord maxContent = 0;
         if (state & (TrackSize::eMaxContentMinSizing |         // for 2.3
                      TrackSize::eAutoOrMaxContentMaxSizing)) { // for 2.6
-          maxContent = MaxContentContribution(child, aState.mReflowState,
+          maxContent = MaxContentContribution(gridItem, aState.mReflowState,
                                               rc, wm, mAxis);
         }
         step2Items.AppendElement(
           Step2ItemData({span, state, lineRange, minSize,
-                         minContent, maxContent, child}));
+                         minContent, maxContent, *iter}));
       } else {
         aGridItems[iter.GridItemIndex()].mIsFlexing[mAxis] =
           !!(state & TrackSize::eFlexMaxSizing);
@@ -3744,7 +3760,7 @@ nsGridContainerFrame::Tracks::FindUsedFlexFraction(
   for (; !iter.AtEnd(); iter.Next()) {
     const GridItemInfo& item = aGridItems[iter.GridItemIndex()];
     if (item.mIsFlexing[mAxis]) {
-      nscoord spaceToFill = MaxContentContribution(*iter, rs, rc, wm, mAxis);
+      nscoord spaceToFill = MaxContentContribution(item, rs, rc, wm, mAxis);
       if (spaceToFill <= 0) {
         continue;
       }
