@@ -528,7 +528,7 @@ tasks:
         - '**/.eslintignore'
         - '**/*eslintrc*'
         # The plugin implementing custom checks.
-        - 'testing/eslint/eslint-plugin-mozilla/**'
+        - 'tools/lint/eslint/eslint-plugin-mozilla/**'
         # Other misc lint related files.
         - 'tools/lint/**'
         - 'testing/docker/lint/**'
