@@ -1230,6 +1230,10 @@ partial namespace TestNamespace {
 namespace TestRenamedNamespace {
 };
 
+[ProtoObjectHack]
+namespace TestProtoObjectHackedNamespace {
+};
+
 [SecureContext]
 interface TestSecureContextInterface {
   static void alsoSecureContext();
