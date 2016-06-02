@@ -162,9 +162,9 @@ Selection.prototype = {
   setNodeFront: function (value, reason = "unknown") {
     this.reason = reason;
 
-    // If a singleTextChild text node is being set, then set it's parent instead.
+    // If an inlineTextChild text node is being set, then set it's parent instead.
     let parentNode = value && value.parentNode();
-    if (value && parentNode && parentNode.singleTextChild === value) {
+    if (value && parentNode && parentNode.inlineTextChild === value) {
       value = parentNode;
     }
 
