@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { SimpleStringFront } = require("devtools/server/actors/string");
+const { ShortLongString } = require("devtools/server/actors/string");
 const { Front, FrontClassWithSpec } = require("devtools/shared/protocol");
 const { oldStyleSheetSpec } = require("devtools/shared/specs/styleeditor");
 const promise = require("promise");
@@ -43,7 +43,7 @@ const OldStyleSheetFront = FrontClassWithSpec(oldStyleSheetSpec, {
     let deferred = promise.defer();
 
     events.once(this, "source-load", (source) => {
-      let longStr = new SimpleStringFront(source);
+      let longStr = new ShortLongString(source);
       deferred.resolve(longStr);
     });
     this.fetchSource();

@@ -51,7 +51,7 @@ const TEST_DATA = [{
   selector: "#longtext-and-node",
   inline: false,
   value: LONG_VALUE,
-}];
+}, ];
 
 add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
