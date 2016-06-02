@@ -21,10 +21,8 @@ typedef mozilla::ipc::BrowserProcessSubThread ChromeThread;
 
 using mozilla::ipc::FileDescriptor;
 
-ChildProcessHost::ChildProcessHost(ProcessType type)
-    :
-      ChildProcessInfo(type),
-      ALLOW_THIS_IN_INITIALIZER_LIST(listener_(this)),
+ChildProcessHost::ChildProcessHost()
+    : ALLOW_THIS_IN_INITIALIZER_LIST(listener_(this)),
       opening_channel_(false) {
 }
 
@@ -58,13 +56,6 @@ bool ChildProcessHost::CreateChannel(FileDescriptor& aFileDescriptor) {
   opening_channel_ = true;
 
   return true;
-}
-
-void ChildProcessHost::SetHandle(base::ProcessHandle process) {
-#if defined(OS_WIN)
-  DCHECK(!handle());
-  set_handle(process);
-#endif
 }
 
 ChildProcessHost::ListenerHook::ListenerHook(ChildProcessHost* host)

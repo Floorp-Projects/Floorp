@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "base/message_loop.h"
-#include "chrome/common/child_process_info.h"
 
 #include "mozilla/ipc/Transport.h"
 #include "mozilla/ipc/ProtocolUtils.h"
