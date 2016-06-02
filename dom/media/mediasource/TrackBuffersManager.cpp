@@ -1690,7 +1690,7 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
   //  If highest end timestamp for track buffer is set and less than or equal to presentation timestamp:
   //   Remove all coded frames from track buffer that have a presentation timestamp greater than or equal to highest end timestamp and less than frame end timestamp"
   for (uint32_t i = aStartIndex; i < data.Length(); i++) {
-    MediaRawData* sample = data[i].get();
+    const RefPtr<MediaRawData> sample = data[i];
     TimeInterval sampleInterval =
       TimeInterval(TimeUnit::FromMicroseconds(sample->mTime),
                    TimeUnit::FromMicroseconds(sample->GetEndTime()));
@@ -1709,7 +1709,7 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
   // Remove decoding dependencies of the coded frames removed in the previous step:
   // Remove all coded frames between the coded frames removed in the previous step and the next random access point after those removed frames.
   for (uint32_t i = lastRemovedIndex + 1; i < data.Length(); i++) {
-    MediaRawData* sample = data[i].get();
+    const RefPtr<MediaRawData>& sample = data[i];
     if (sample->mKeyframe) {
       break;
     }
@@ -1719,7 +1719,7 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
   int64_t maxSampleDuration = 0;
   TimeIntervals removedIntervals;
   for (uint32_t i = firstRemovedIndex.ref(); i <= lastRemovedIndex; i++) {
-    MediaRawData* sample = data[i].get();
+    const RefPtr<MediaRawData> sample = data[i];
     TimeInterval sampleInterval =
       TimeInterval(TimeUnit::FromMicroseconds(sample->mTime),
                    TimeUnit::FromMicroseconds(sample->GetEndTime()));
