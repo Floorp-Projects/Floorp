@@ -64,6 +64,15 @@ class TestLinterTypes(TestCase):
         self.assertIsInstance(result, ResultContainer)
         self.assertEqual(result.linter, 'ExternalLinter')
 
+    def test_no_filter(self):
+        self.lint.read(os.path.join(self.lintdir, 'explicit_path.lint'))
+        result = self.lint.roll(self.files)
+        self.assertEqual(len(result), 0)
+
+        self.lint.lintargs['use_filters'] = False
+        result = self.lint.roll(self.files)
+        self.assertEqual(len(result), 1)
+
 
 if __name__ == '__main__':
     main()
