@@ -364,7 +364,12 @@ nsAppStartup::Quit(uint32_t aMode)
       mediator->GetEnumerator(nullptr, getter_AddRefs(windowEnumerator));
       if (windowEnumerator) {
         bool more;
-        while (windowEnumerator->HasMoreElements(&more), more) {
+        windowEnumerator->HasMoreElements(&more);
+        // If we reported no windows, we definitely shouldn't be
+        // iterating any here.
+        MOZ_ASSERT_IF(!mConsiderQuitStopper, !more);
+
+        while (more) {
           nsCOMPtr<nsISupports> window;
           windowEnumerator->GetNext(getter_AddRefs(window));
           nsCOMPtr<nsPIDOMWindowOuter> domWindow(do_QueryInterface(window));
@@ -373,6 +378,7 @@ nsAppStartup::Quit(uint32_t aMode)
             if (!domWindow->CanClose())
               return NS_OK;
           }
+          windowEnumerator->HasMoreElements(&more);
         }
       }
     }
