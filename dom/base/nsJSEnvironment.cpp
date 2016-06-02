@@ -574,10 +574,6 @@ DumpString(const nsAString &str)
 #define JS_OPTIONS_DOT_STR "javascript.options."
 
 static const char js_options_dot_str[]   = JS_OPTIONS_DOT_STR;
-#ifdef JS_GC_ZEAL
-static const char js_zeal_option_str[]        = JS_OPTIONS_DOT_STR "gczeal";
-static const char js_zeal_frequency_str[]     = JS_OPTIONS_DOT_STR "gczeal.frequency";
-#endif
 static const char js_memlog_option_str[]      = JS_OPTIONS_DOT_STR "mem.log";
 static const char js_memnotify_option_str[]   = JS_OPTIONS_DOT_STR "mem.notify";
 
@@ -586,14 +582,6 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
 {
   sPostGCEventsToConsole = Preferences::GetBool(js_memlog_option_str);
   sPostGCEventsToObserver = Preferences::GetBool(js_memnotify_option_str);
-
-#ifdef JS_GC_ZEAL
-  nsJSContext *context = reinterpret_cast<nsJSContext *>(data);
-  int32_t zeal = Preferences::GetInt(js_zeal_option_str, -1);
-  int32_t frequency = Preferences::GetInt(js_zeal_frequency_str, JS_DEFAULT_ZEAL_FREQ);
-  if (zeal >= 0)
-    ::JS_SetGCZeal(JS_GetRuntime(context->mContext), (uint8_t)zeal, frequency);
-#endif
 }
 
 nsJSContext::nsJSContext(bool aGCOnDestruction,
