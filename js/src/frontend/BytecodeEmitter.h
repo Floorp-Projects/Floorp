@@ -464,7 +464,6 @@ struct BytecodeEmitter
     MOZ_MUST_USE bool tryConvertFreeName(ParseNode* pn);
 
     MOZ_MUST_USE bool popStatement();
-    MOZ_MUST_USE bool popStatement(JumpTarget breakTarget);
     void pushStatement(StmtInfoBCE* stmt, StmtType type, JumpTarget top);
     void pushStatementInner(StmtInfoBCE* stmt, StmtType type, JumpTarget top);
     void pushLoopStatement(LoopStmtInfo* stmt, StmtType type, JumpTarget top);
