@@ -16,6 +16,45 @@ this.SitePermissions = {
   BLOCK: Services.perms.DENY_ACTION,
   SESSION: Components.interfaces.nsICookiePermission.ACCESS_SESSION,
 
+  /* Returns a list of objects representing all permissions that are currently
+   * set for the given URI. Each object contains the following keys:
+   * - id: the permissionID of the permission
+   * - label: the localized label
+   * - state: a constant representing the current permission state
+   *   (e.g. SitePermissions.ALLOW)
+   * - availableStates: an array of all available states for that permission,
+   *   represented as objects with the keys:
+   *   - id: the state constant
+   *   - label: the translated label of that state
+   */
+  getPermissionsByURI: function (aURI) {
+    if (!this.isSupportedURI(aURI)) {
+      return [];
+    }
+
+    let permissions = [];
+    for (let permission of this.listPermissions()) {
+      let state = this.get(aURI, permission);
+      if (state === this.UNKNOWN) {
+        continue;
+      }
+
+      let availableStates = this.getAvailableStates(permission).map( state => {
+        return { id: state, label: this.getStateLabel(permission, state) };
+      });
+      let label = this.getPermissionLabel(permission);
+
+      permissions.push({
+        id: permission,
+        label: label,
+        state: state,
+        availableStates: availableStates,
+      });
+    }
+
+    return permissions;
+  },
+
   /* Returns a boolean indicating whether there are any granted
    * (meaning allowed or session-allowed) permissions for the given URI.
    * Will return false for invalid URIs (such as file:// URLs).
