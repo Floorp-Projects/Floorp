@@ -21,10 +21,12 @@ ExtensionTestUtils.loadExtension = function(ext, id = null)
 
   registerCleanup(() => {
     if (messageQueue.size) {
-      SimpleTest.is(messageQueue.size, 0, "message queue is empty");
+      let names = Array.from(messageQueue, ([msg]) => msg);
+      SimpleTest.is(JSON.stringify(names), "[]", "message queue is empty");
     }
     if (messageAwaiter.size) {
-      SimpleTest.is(messageAwaiter.size, 0, "no tasks awaiting on messages");
+      let names = Array.from(messageAwaiter.keys());
+      SimpleTest.is(JSON.stringify(names), "[]", "no tasks awaiting on messages");
     }
   });
 
