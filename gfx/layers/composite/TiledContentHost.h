@@ -93,12 +93,6 @@ public:
 
   bool IsPlaceholderTile() const { return mTextureHost == nullptr; }
 
-  void ReadUnlock() {
-    if (mTextureHost) {
-      mTextureHost->ReadUnlock();
-    }
-  }
-
   void Dump(std::stringstream& aStream) {
     aStream << "TileHost(...)"; // fill in as needed
   }
