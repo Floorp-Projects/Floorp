@@ -645,6 +645,19 @@ BufferTextureHost::BindTextureSource(CompositableTextureSourceRef& aTexture)
   return !!aTexture;
 }
 
+void
+BufferTextureHost::UnbindTextureSource()
+{
+  // This texture is not used by any layer anymore.
+  // If the texture doesn't have an intermediate buffer, it means we are
+  // compositing synchronously on the CPU, so we don't need to wait until
+  // the end of the next composition to ReadUnlock (which other textures do
+  // by default).
+  // If the texture has an intermediate buffer we don't care either because
+  // texture uploads are also performed synchronously for BufferTextureHost.
+  ReadUnlock();
+}
+
 gfx::SurfaceFormat
 BufferTextureHost::GetFormat() const
 {
