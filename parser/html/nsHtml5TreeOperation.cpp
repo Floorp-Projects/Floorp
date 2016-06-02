@@ -640,6 +640,9 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
                               nsIContent** aScriptElement)
 {
   switch(mOpCode) {
+    case eTreeOpUninitialized: {
+      MOZ_CRASH("eTreeOpUninitialized");
+    }
     case eTreeOpAppend: {
       nsIContent* node = *(mOne.node);
       nsIContent* parent = *(mTwo.node);
@@ -669,6 +672,10 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       nsIContent* node = *(mOne.node);
       nsHtml5HtmlAttributes* attributes = mTwo.attributes;
       return AddAttributes(node, attributes, aBuilder);
+    }
+    case eTreeOpDocumentMode: {
+      aBuilder->SetDocumentMode(mOne.mode);
+      return NS_OK;
     }
     case eTreeOpCreateElementNetwork:
     case eTreeOpCreateElementNotNetwork: {
@@ -818,14 +825,6 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       aBuilder->DidBuildModel(false); // this causes a notifications flush anyway
       return NS_OK;
     }
-    case eTreeOpStartLayout: {
-      aBuilder->StartLayout(); // this causes a notification flush anyway
-      return NS_OK;
-    }
-    case eTreeOpDocumentMode: {
-      aBuilder->SetDocumentMode(mOne.mode);
-      return NS_OK;
-    }
     case eTreeOpSetStyleLineNumber: {
       nsIContent* node = *(mOne.node);
       nsCOMPtr<nsIStyleSheetLinkingElement> ssle = do_QueryInterface(node);
@@ -867,14 +866,6 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       } else {
         node->SetAttr(kNameSpaceID_None, nsGkAtoms::_class, depStr, true);
       }
-      return NS_OK;
-    }
-    case eTreeOpAddLineNumberId: {
-      nsIContent* node = *(mOne.node);
-      int32_t lineNumber = mFour.integer;
-      nsAutoString val(NS_LITERAL_STRING("line"));
-      val.AppendInt(lineNumber);
-      node->SetAttr(kNameSpaceID_None, nsGkAtoms::id, val, true);
       return NS_OK;
     }
     case eTreeOpAddViewSourceHref: {
@@ -932,6 +923,13 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       node->SetAttr(kNameSpaceID_None, nsGkAtoms::href, utf16, true);
       return rv;
     }
+    case eTreeOpAddViewSourceBase: {
+      char16_t* buffer = mTwo.unicharPtr;
+      int32_t length = mFour.integer;
+      nsDependentString baseUrl(buffer, length);
+      aBuilder->AddBase(baseUrl);
+      return NS_OK;
+    }
     case eTreeOpAddError: {
       nsIContent* node = *(mOne.node);
       char* msgId = mTwo.charPtr;
@@ -980,11 +978,16 @@ nsHtml5TreeOperation::Perform(nsHtml5TreeOpExecutor* aBuilder,
       }
       return rv;
     }
-    case eTreeOpAddViewSourceBase: {
-      char16_t* buffer = mTwo.unicharPtr;
-      int32_t length = mFour.integer;
-      nsDependentString baseUrl(buffer, length);
-      aBuilder->AddBase(baseUrl);
+    case eTreeOpAddLineNumberId: {
+      nsIContent* node = *(mOne.node);
+      int32_t lineNumber = mFour.integer;
+      nsAutoString val(NS_LITERAL_STRING("line"));
+      val.AppendInt(lineNumber);
+      node->SetAttr(kNameSpaceID_None, nsGkAtoms::id, val, true);
+      return NS_OK;
+    }
+    case eTreeOpStartLayout: {
+      aBuilder->StartLayout(); // this causes a notification flush anyway
       return NS_OK;
     }
     default: {
