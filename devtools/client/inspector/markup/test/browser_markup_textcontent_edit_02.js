@@ -17,7 +17,7 @@ add_task(function* () {
   yield inspector.markup.expandAll();
   yield waitForMultipleChildrenUpdates(inspector);
 
-  let nodeValue = yield getFirstChildNodeValue(SELECTOR, testActor);
+  let nodeValue = yield getNodeValue(SELECTOR, testActor);
   let expectedValue = "line6";
   is(nodeValue, expectedValue, "The test node's text content is correct");
 
@@ -84,9 +84,16 @@ add_task(function* () {
   yield sendKey("VK_RETURN", {}, editor, inspector.panelWin);
   yield onMutated;
 
-  nodeValue = yield getFirstChildNodeValue(SELECTOR, testActor);
+  nodeValue = yield getNodeValue(SELECTOR, testActor);
   is(nodeValue, expectedValue, "The test node's text content is correct");
 });
+
+function* getNodeValue(selector, testActor) {
+  let nodeValue = yield testActor.eval(`
+    content.document.querySelector("${selector}").firstChild.nodeValue;
+  `);
+  return nodeValue;
+}
 
 /**
  * Check that the editor selection is at the expected positions.
