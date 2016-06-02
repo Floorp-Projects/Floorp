@@ -1401,10 +1401,8 @@ pref("dom.push.enabled", true);
 pref("toolkit.pageThumbs.minWidth", 280);
 pref("toolkit.pageThumbs.minHeight", 190);
 
-#ifdef NIGHTLY_BUILD
-// Enable speech synthesis, only Nightly for now
+// Enable speech synthesis
 pref("media.webspeech.synth.enabled", true);
-#endif
 
 pref("browser.esedbreader.loglevel", "Error");
 
