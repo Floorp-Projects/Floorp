@@ -61,6 +61,25 @@ APPLICATIONS = dict(
     mobile_android=APPLICATIONS_LIST[2],
 )
 
+STATE_DIR_INFO = '''
+The Firefox build system and related tools store shared, persistent state
+in a common directory on the filesystem. On this machine, that directory
+is:
+
+  {statedir}
+
+If you would like to use a different directory, hit CTRL+c and set the
+MOZBUILD_STATE_PATH environment variable to the directory you'd like to
+use and re-run the bootstrapper.
+
+Would you like to create this directory?
+
+  1. Yes
+  2. No
+
+Your choice:
+'''
+
 FINISHED = '''
 Your system should be ready to build %s! If you have not already,
 obtain a copy of the source code by running:
@@ -91,6 +110,16 @@ DEBIAN_DISTROS = (
     'Elementary',
     '"elementary OS"',
 )
+
+
+def get_state_dir():
+    """Obtain path to a directory to hold state.
+
+    This code is shared with ``mach_bootstrap.py``.
+    """
+    state_user_dir = os.path.expanduser('~/.mozbuild')
+    state_env_dir = os.environ.get('MOZBUILD_STATE_PATH')
+    return state_env_dir or state_user_dir
 
 
 class Bootstrapper(object):
@@ -168,6 +197,24 @@ class Bootstrapper(object):
 
         self.instance.ensure_mercurial_modern()
         self.instance.ensure_python_modern()
+
+        # The state directory code is largely duplicated from mach_bootstrap.py.
+        # We can't easily import mach_bootstrap.py because the bootstrapper may
+        # run in self-contained mode and only the files in this directory will
+        # be available. We /could/ refactor parts of mach_bootstrap.py to be
+        # part of this directory to avoid the code duplication.
+        state_dir = get_state_dir()
+
+        if not os.path.exists(state_dir):
+            if not self.instance.no_interactive:
+                choice = self.instance.prompt_int(
+                    prompt=STATE_DIR_INFO.format(statedir=state_dir),
+                    low=1,
+                    high=2)
+
+                if choice == 1:
+                    print('Creating global state directory: %s' % state_dir)
+                    os.makedirs(state_dir, mode=0o770)
 
         print(self.finished % name)
 
