@@ -53,8 +53,9 @@ py_version = 'python%s.%s' % (sys.version_info[0], sys.version_info[1])
 
 is_jython = sys.platform.startswith('java')
 is_pypy = hasattr(sys, 'pypy_version_info')
-is_win = (sys.platform == 'win32')
+is_win = (sys.platform == 'win32' and os.sep == '\\')
 is_cygwin = (sys.platform == 'cygwin')
+is_msys2 = (sys.platform == 'win32' and os.sep == '/')
 is_darwin = (sys.platform == 'darwin')
 abiflags = getattr(sys, 'abiflags', '')
 
