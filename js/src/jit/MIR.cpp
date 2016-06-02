@@ -5039,13 +5039,67 @@ MFunctionEnvironment::foldsTo(TempAllocator& alloc)
     return input()->toLambda()->scopeChain();
 }
 
+static bool
+AddIsANonZeroAdditionOf(MAdd* add, MDefinition* ins)
+{
+    if (add->lhs() != ins && add->rhs() != ins)
+        return false;
+    MDefinition* other = (add->lhs() == ins) ? add->rhs() : add->lhs();
+    if (!IsNumberType(other->type()))
+        return false;
+    if (!other->isConstant())
+        return false;
+    if (other->toConstant()->numberToDouble() == 0)
+        return false;
+    return true;
+}
+
+static bool
+DefinitelyDifferentValue(MDefinition* ins1, MDefinition* ins2)
+{
+    if (ins1 == ins2)
+        return false;
+
+    // Drop the MToInt32 added by the TypePolicy for double and float values.
+    if (ins1->isToInt32())
+        return DefinitelyDifferentValue(ins1->toToInt32()->input(), ins2);
+    if (ins2->isToInt32())
+        return DefinitelyDifferentValue(ins2->toToInt32()->input(), ins1);
+
+    // Ignore the bounds check, which in most cases will contain the same info.
+    if (ins1->isBoundsCheck())
+        return DefinitelyDifferentValue(ins1->toBoundsCheck()->index(), ins2);
+    if (ins2->isBoundsCheck())
+        return DefinitelyDifferentValue(ins2->toBoundsCheck()->index(), ins1);
+
+    // For constants check they are not equal.
+    if (ins1->isConstant() && ins2->isConstant())
+        return !ins1->toConstant()->equals(ins2->toConstant());
+
+    // Check if "ins1 = ins2 + cte", which would make both instructions
+    // have different values.
+    if (ins1->isAdd()) {
+        if (AddIsANonZeroAdditionOf(ins1->toAdd(), ins2))
+            return true;
+    }
+    if (ins2->isAdd()) {
+        if (AddIsANonZeroAdditionOf(ins2->toAdd(), ins1))
+            return true;
+    }
+
+    return false;
+}
+
 MDefinition::AliasType
 MLoadElement::mightAlias(const MDefinition* def) const
 {
     if (def->isStoreElement()) {
         const MStoreElement* store = def->toStoreElement();
-        if (store->index() != index())
+        if (store->index() != index()) {
+            if (DefinitelyDifferentValue(store->index(), index()))
+                return AliasType::NoAlias;
             return AliasType::MayAlias;
+        }
 
         if (store->elements() != elements())
             return AliasType::MayAlias;
@@ -5069,8 +5123,11 @@ MLoadUnboxedObjectOrNull::mightAlias(const MDefinition* def) const
 {
     if (def->isStoreUnboxedObjectOrNull()) {
         const MStoreUnboxedObjectOrNull* store = def->toStoreUnboxedObjectOrNull();
-        if (store->index() != index())
+        if (store->index() != index()) {
+            if (DefinitelyDifferentValue(store->index(), index()))
+                return AliasType::NoAlias;
             return AliasType::MayAlias;
+        }
 
         if (store->elements() != elements())
             return AliasType::MayAlias;
