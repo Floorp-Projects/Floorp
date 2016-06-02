@@ -298,6 +298,8 @@ public:
 
   virtual void SetCompositor(Compositor* aCompositor) override;
 
+  virtual Compositor* GetCompositor() override { return mCompositor; }
+
   virtual bool Lock() override;
 
   virtual void Unlock() override {}
@@ -392,6 +394,8 @@ public:
   virtual void DeallocateDeviceData() override;
 
   virtual void SetCompositor(Compositor* aCompositor) override;
+
+  virtual Compositor* GetCompositor() override { return mCompositor; }
 
   virtual bool Lock() override;
 
@@ -488,6 +492,8 @@ public:
   virtual void DeallocateDeviceData() override {}
 
   virtual void SetCompositor(Compositor* aCompositor) override;
+
+  virtual Compositor* GetCompositor() override { return mCompositor; }
 
   virtual bool Lock() override;
 
