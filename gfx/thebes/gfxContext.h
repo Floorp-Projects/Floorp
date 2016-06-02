@@ -304,13 +304,6 @@ public:
      */
     void Mask(mozilla::gfx::SourceSurface *aSurface, mozilla::gfx::Float aAlpha, const mozilla::gfx::Matrix& aTransform);
     void Mask(mozilla::gfx::SourceSurface *aSurface, const mozilla::gfx::Matrix& aTransform) { Mask(aSurface, 1.0f, aTransform); }
-
-    /**
-     * Shorthand for creating a pattern and calling the pattern-taking
-     * variant of Mask.
-     */
-    void Mask(gfxASurface *surface, const gfxPoint& offset = gfxPoint(0.0, 0.0));
-
     void Mask(mozilla::gfx::SourceSurface *surface, float alpha = 1.0f, const mozilla::gfx::Point& offset = mozilla::gfx::Point());
 
     /**
