@@ -4,8 +4,6 @@
 
 var gFxAccounts = {
 
-  PREF_SYNC_START_DOORHANGER: "services.sync.ui.showSyncStartDoorhanger",
-  DOORHANGER_ACTIVATE_DELAY_MS: 5000,
   SYNC_MIGRATION_NOTIFICATION_TITLE: "fxa-migration",
 
   _initialized: false,
@@ -23,13 +21,11 @@ var gFxAccounts = {
     delete this.topics;
     return this.topics = [
       "weave:service:ready",
-      "weave:service:sync:start",
       "weave:service:login:error",
       "weave:service:setup-complete",
       "weave:ui:login:error",
       "fxa-migration:state-changed",
       this.FxAccountsCommon.ONLOGIN_NOTIFICATION,
-      this.FxAccountsCommon.ONVERIFIED_NOTIFICATION,
       this.FxAccountsCommon.ONLOGOUT_NOTIFICATION,
       this.FxAccountsCommon.ON_PROFILE_CHANGE_NOTIFICATION,
     ];
@@ -82,11 +78,6 @@ var gFxAccounts = {
     return Weave.Status.login == Weave.LOGIN_FAILED_LOGIN_REJECTED;
   },
 
-  get isActiveWindow() {
-    let fm = Services.focus;
-    return fm.activeWindow == window;
-  },
-
   init: function () {
     // Bail out if we're already initialized and for pop-up windows.
     if (this._initialized || !window.toolbar.visible) {
@@ -97,7 +88,6 @@ var gFxAccounts = {
       Services.obs.addObserver(this, topic, false);
     }
 
-    addEventListener("activate", this);
     gNavToolbox.addEventListener("customizationstarting", this);
     gNavToolbox.addEventListener("customizationending", this);
 
@@ -121,12 +111,6 @@ var gFxAccounts = {
 
   observe: function (subject, topic, data) {
     switch (topic) {
-      case this.FxAccountsCommon.ONVERIFIED_NOTIFICATION:
-        Services.prefs.setBoolPref(this.PREF_SYNC_START_DOORHANGER, true);
-        break;
-      case "weave:service:sync:start":
-        this.onSyncStart();
-        break;
       case "fxa-migration:state-changed":
         this.onMigrationStateChanged(data, subject);
         break;
@@ -136,23 +120,6 @@ var gFxAccounts = {
       default:
         this.updateUI();
         break;
-    }
-  },
-
-  onSyncStart: function () {
-    if (!this.isActiveWindow) {
-      return;
-    }
-
-    let showDoorhanger = false;
-
-    try {
-      showDoorhanger = Services.prefs.getBoolPref(this.PREF_SYNC_START_DOORHANGER);
-    } catch (e) { /* The pref might not exist. */ }
-
-    if (showDoorhanger) {
-      Services.prefs.clearUserPref(this.PREF_SYNC_START_DOORHANGER);
-      this.showSyncStartedDoorhanger();
     }
   },
 
@@ -199,33 +166,8 @@ var gFxAccounts = {
   },
 
   handleEvent: function (event) {
-    if (event.type == "activate") {
-      // Our window might have been in the background while we received the
-      // sync:start notification. If still needed, show the doorhanger after
-      // a short delay. Without this delay the doorhanger would not show up
-      // or with a too small delay show up while we're still animating the
-      // window.
-      setTimeout(() => this.onSyncStart(), this.DOORHANGER_ACTIVATE_DELAY_MS);
-    } else {
-      this._inCustomizationMode = event.type == "customizationstarting";
-      this.updateAppMenuItem();
-    }
-  },
-
-  showDoorhanger: function (id) {
-    let panel = document.getElementById(id);
-    let anchor = document.getElementById("PanelUI-menu-button");
-
-    let iconAnchor =
-      document.getAnonymousElementByAttribute(anchor, "class",
-                                              "toolbarbutton-icon");
-
-    panel.hidden = false;
-    panel.openPopup(iconAnchor || anchor, "bottomcenter topright");
-  },
-
-  showSyncStartedDoorhanger: function () {
-    this.showDoorhanger("sync-start-panel");
+    this._inCustomizationMode = event.type == "customizationstarting";
+    this.updateAppMenuItem();
   },
 
   updateUI: function () {
