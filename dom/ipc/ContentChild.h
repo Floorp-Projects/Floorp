@@ -612,6 +612,9 @@ public:
                           const nsString& aIconPath) override;
 
 private:
+  static void ForceKillTimerCallback(nsITimer* aTimer, void* aClosure);
+  void StartForceKillTimer();
+
   virtual void ActorDestroy(ActorDestroyReason why) override;
 
   virtual void ProcessingError(Result aCode, const char* aReason) override;
@@ -643,6 +646,7 @@ private:
   static ContentChild* sSingleton;
 
   nsCOMPtr<nsIDomainPolicy> mPolicy;
+  nsCOMPtr<nsITimer> mForceKillTimer;
 
   DISALLOW_EVIL_CONSTRUCTORS(ContentChild);
 };
