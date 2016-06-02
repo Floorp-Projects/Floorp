@@ -2494,6 +2494,7 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
                               const nsRect& aDirtyRect,
                               const nsRect& aDest,
                               const nsRect& aFillArea,
+                              const nsSize& aRepeatSize,
                               const CSSIntRect& aSrc,
                               const nsSize& aIntrinsicSize)
 {
@@ -2829,14 +2830,14 @@ nsCSSRendering::PaintGradient(nsPresContext* aPresContext,
   bool isCTMPreservingAxisAlignedRectangles = ctm.PreservesAxisAlignedRectangles();
 
   // xStart/yStart are the top-left corner of the top-left tile.
-  nscoord xStart = FindTileStart(dirty.x, aDest.x, aDest.width);
-  nscoord yStart = FindTileStart(dirty.y, aDest.y, aDest.height);
+  nscoord xStart = FindTileStart(dirty.x, aDest.x, aRepeatSize.width);
+  nscoord yStart = FindTileStart(dirty.y, aDest.y, aRepeatSize.height);
   nscoord xEnd = forceRepeatToCoverTiles ? xStart + aDest.width : dirty.XMost();
   nscoord yEnd = forceRepeatToCoverTiles ? yStart + aDest.height : dirty.YMost();
 
   // x and y are the top-left corner of the tile to draw
-  for (nscoord y = yStart; y < yEnd; y += aDest.height) {
-    for (nscoord x = xStart; x < xEnd; x += aDest.width) {
+  for (nscoord y = yStart; y < yEnd; y += aRepeatSize.height) {
+    for (nscoord x = xStart; x < xEnd; x += aRepeatSize.width) {
       // The coordinates of the tile
       gfxRect tileRect = nsLayoutUtils::RectToGfxRect(
                       nsRect(x, y, aDest.width, aDest.height),
@@ -5285,7 +5286,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     {
       nsCSSRendering::PaintGradient(aPresContext, aRenderingContext,
                                     mGradientData, aDirtyRect,
-                                    aDest, aFill, aSrc, mSize);
+                                    aDest, aFill, aRepeatSize, aSrc, mSize);
       break;
     }
     case eStyleImageType_Element:
@@ -5550,7 +5551,7 @@ nsImageRenderer::DrawBorderImageComponent(nsPresContext*       aPresContext,
                   : aFill;
 
   return Draw(aPresContext, aRenderingContext, aDirtyRect, destTile,
-              aFill, destTile.TopLeft(), nsSize(0, 0), aSrc);
+              aFill, destTile.TopLeft(), destTile.Size(), aSrc);
 }
 
 bool
