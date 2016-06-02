@@ -1759,6 +1759,12 @@ class IDLNamespace(IDLInterfaceOrNamespace):
             if identifier == "Exposed":
                 convertExposedAttrToGlobalNameSet(attr,
                                                   self._exposureGlobalNames)
+            elif identifier == "ClassString":
+                # Takes a string value to override the default "Object" if
+                # desired.
+                if not attr.hasValue():
+                    raise WebIDLError("[%s] must have a value" % identifier,
+                                      [attr.location])
             else:
                 raise WebIDLError("Unknown extended attribute %s on namespace" %
                                   identifier,
