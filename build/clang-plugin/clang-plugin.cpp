@@ -301,6 +301,11 @@ bool isIgnoredExprForMustUse(const Expr *E) {
 
   return false;
 }
+
+template<typename T>
+StringRef getNameChecked(const T& D) {
+  return D->getIdentifier() ? D->getName() : "";
+}
 }
 
 class CustomTypeAnnotation {
@@ -385,7 +390,7 @@ protected:
     if (getDeclarationNamespace(D) == "std") {
       // This doesn't check that it's really ::std::pair and not
       // ::std::something_else::pair, but should be good enough.
-      StringRef Name = D->getName();
+      StringRef Name = getNameChecked(D);
       if (Name == "pair" || Name == "atomic" || Name == "__atomic_base") {
         return false;
       }
@@ -477,7 +482,7 @@ public:
            !overridden && M != d->method_end(); ++M) {
         // The way that Clang checks if a method M overrides its parent method
         // is if the method has the same name but would not overload.
-        if (M->getName() == (*it)->getName() &&
+        if (getNameChecked(M) == getNameChecked(*it) &&
             !CI.getSema().IsOverload(*M, (*it), false)) {
           overridden = true;
           break;
@@ -549,7 +554,7 @@ bool classHasAddRefRelease(const CXXRecordDecl *D) {
   bool seenRelease = false;
   for (CXXRecordDecl::method_iterator method = D->method_begin();
        method != D->method_end(); ++method) {
-    const auto &name = method->getName();
+    const auto &name = getNameChecked(method);
     if (name == "AddRef") {
       seenAddRef = true;
     } else if (name == "Release") {
@@ -603,7 +608,7 @@ template <class T> bool IsInSystemHeader(const ASTContext &AC, const T &D) {
 const FieldDecl *getClassRefCntMember(const CXXRecordDecl *D) {
   for (RecordDecl::field_iterator field = D->field_begin(), e = D->field_end();
        field != e; ++field) {
-    if (field->getName() == "mRefCnt") {
+    if (getNameChecked(field) == "mRefCnt") {
       return *field;
     }
   }
@@ -723,7 +728,7 @@ AST_MATCHER(MemberExpr, isAddRefOrRelease) {
   ValueDecl *Member = Node.getMemberDecl();
   CXXMethodDecl *Method = dyn_cast<CXXMethodDecl>(Member);
   if (Method) {
-    const auto &Name = Method->getName();
+    const auto &Name = getNameChecked(Method);
     return Name == "AddRef" || Name == "Release";
   }
   return false;
@@ -1156,6 +1161,9 @@ void DiagnosticsMatcher::ScopeChecker::run(
 
   if (const ParmVarDecl *D =
           Result.Nodes.getNodeAs<ParmVarDecl>("parm_vardecl")) {
+    if (D->hasUnparsedDefaultArg() || D->hasUninstantiatedDefaultArg()) {
+      return;
+    }
     if (const Expr *Default = D->getDefaultArg()) {
       if (const MaterializeTemporaryExpr *E =
               dyn_cast<MaterializeTemporaryExpr>(Default)) {
