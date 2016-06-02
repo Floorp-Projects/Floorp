@@ -68,16 +68,6 @@ d/e/f.txt
         fmt = formatters.get('stylish', disable_colors=True)
         self.assertEqual(expected, fmt(self.results))
 
-    def test_treeherder_formatter(self):
-        expected = """
-TEST-UNEXPECTED-ERROR | a/b/c.txt:1:1 | oh no foo (foo)
-TEST-UNEXPECTED-ERROR | a/b/c.txt:4:1 | oh no baz (baz)
-TEST-UNEXPECTED-WARNING | d/e/f.txt:4:2 | oh no bar (bar-not-allowed)
-""".strip()
-
-        fmt = formatters.get('treeherder')
-        self.assertEqual(expected, fmt(self.results))
-
     def test_json_formatter(self):
         fmt = formatters.get('json')
         formatted = json.loads(fmt(self.results))
