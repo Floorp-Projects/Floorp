@@ -4080,16 +4080,53 @@ class IDLAttribute(IDLInterfaceMember):
                               "interface type as its type", [self.location])
 
     def validate(self):
+        def typeContainsChromeOnlyDictionaryMember(type):
+            if (type.nullable() or
+                type.isSequence() or
+                type.isMozMap()):
+                return typeContainsChromeOnlyDictionaryMember(type.inner)
+
+            if type.isUnion():
+                for memberType in type.flatMemberTypes:
+                    (contains, location) = typeContainsChromeOnlyDictionaryMember(memberType)
+                    if contains:
+                        return (True, location)
+
+            if type.isDictionary():
+                dictionary = type.inner
+                while dictionary:
+                    (contains, location) = dictionaryContainsChromeOnlyMember(dictionary)
+                    if contains:
+                        return (True, location)
+                    dictionary = dictionary.parent
+
+            return (False, None)
+
+        def dictionaryContainsChromeOnlyMember(dictionary):
+            for member in dictionary.members:
+                if member.getExtendedAttribute("ChromeOnly"):
+                    return (True, member.location)
+                (contains, location) = typeContainsChromeOnlyDictionaryMember(member.type)
+                if contains:
+                    return (True, location)
+            return (False, None)
+
         IDLInterfaceMember.validate(self)
 
-        if ((self.getExtendedAttribute("Cached") or
-             self.getExtendedAttribute("StoreInSlot")) and
-            not self.affects == "Nothing"):
-            raise WebIDLError("Cached attributes and attributes stored in "
-                              "slots must be Constant or Pure or "
-                              "Affects=Nothing, since the getter won't always "
-                              "be called.",
-                              [self.location])
+        if (self.getExtendedAttribute("Cached") or
+            self.getExtendedAttribute("StoreInSlot")):
+            if not self.affects == "Nothing":
+                raise WebIDLError("Cached attributes and attributes stored in "
+                                  "slots must be Constant or Pure or "
+                                  "Affects=Nothing, since the getter won't always "
+                                  "be called.",
+                                  [self.location])
+            (contains, location) = typeContainsChromeOnlyDictionaryMember(self.type)
+            if contains:
+                raise WebIDLError("[Cached] and [StoreInSlot] must not be used "
+                                  "on an attribute whose type contains a "
+                                  "[ChromeOnly] dictionary member",
+                                  [self.location, location])
         if self.getExtendedAttribute("Frozen"):
             if (not self.type.isSequence() and not self.type.isDictionary() and
                 not self.type.isMozMap()):
@@ -4365,6 +4402,11 @@ class IDLArgument(IDLObjectWithIdentifier):
                 self.enforceRange = True
             elif identifier == "TreatNonCallableAsNull":
                 self._allowTreatNonCallableAsNull = True
+            elif self.dictionaryMember and identifier == "ChromeOnly":
+                if not self.optional:
+                    raise WebIDLError("[ChromeOnly] must not be used on a required "
+                                      "dictionary member",
+                                      [attribute.location])
             else:
                 raise WebIDLError("Unhandled extended attribute on %s" %
                                   ("a dictionary member" if self.dictionaryMember else
