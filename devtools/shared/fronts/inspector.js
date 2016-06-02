@@ -3,7 +3,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const Services = require("Services");
 const { Ci } = require("chrome");
 require("devtools/shared/fronts/styles");
 require("devtools/shared/fronts/highlighters");
@@ -15,7 +14,6 @@ const {
   preEvent,
   types
 } = require("devtools/shared/protocol.js");
-const { makeInfallible } = require("devtools/shared/DevToolsUtils");
 const {
   inspectorSpec,
   nodeSpec,
@@ -71,15 +69,6 @@ const AttributeModificationList = Class({
   }
 });
 
-// A resolve that hits the main loop first.
-function delayedResolve(value) {
-  let deferred = promise.defer();
-  Services.tm.mainThread.dispatch(makeInfallible(() => {
-    deferred.resolve(value);
-  }), 0);
-  return deferred.promise;
-}
-
 /**
  * Client side of the node actor.
  *
@@ -122,6 +111,14 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
       this.actorID = form;
       return;
     }
+
+    // backward-compatibility: shortValue indicates we are connected to old server
+    if (form.shortValue) {
+      // If the value is not complete, set nodeValue to null, it will be fetched
+      // when calling getNodeValue()
+      form.nodeValue = form.incompleteValue ? null : form.shortValue;
+    }
+
     // Shallow copy of the form.  We could just store a reference, but
     // eventually we'll want to update some of the data.
     this._form = object.merge(form);
@@ -135,11 +132,11 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
       this.reparent(parentNodeFront);
     }
 
-    if (form.singleTextChild) {
-      this.singleTextChild =
-        types.getType("domnode").read(form.singleTextChild, ctx);
+    if (form.inlineTextChild) {
+      this.inlineTextChild =
+        types.getType("domnode").read(form.inlineTextChild, ctx);
     } else {
-      this.singleTextChild = undefined;
+      this.inlineTextChild = undefined;
     }
   },
 
@@ -186,8 +183,7 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
         });
       }
     } else if (change.type === "characterData") {
-      this._form.shortValue = change.newValue;
-      this._form.incompleteValue = change.incompleteValue;
+      this._form.nodeValue = change.newValue;
     } else if (change.type === "pseudoClassLock") {
       this._form.pseudoClassLocks = change.pseudoClassLocks;
     } else if (change.type === "events") {
@@ -259,12 +255,6 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
   get tagName() {
     return this.nodeType === Ci.nsIDOMNode.ELEMENT_NODE ? this.nodeName : null;
   },
-  get shortValue() {
-    return this._form.shortValue;
-  },
-  get incompleteValue() {
-    return !!this._form.incompleteValue;
-  },
 
   get isDocumentElement() {
     return !!this._form.isDocumentElement;
@@ -324,11 +314,14 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
   },
 
   getNodeValue: custom(function () {
-    if (!this.incompleteValue) {
-      return delayedResolve(new ShortLongString(this.shortValue));
+    // backward-compatibility: if nodevalue is null and shortValue is defined, the actual
+    // value of the node needs to be fetched on the server.
+    if (this._form.nodeValue === null && this._form.shortValue) {
+      return this._getNodeValue();
     }
 
-    return this._getNodeValue();
+    let str = this._form.nodeValue || "";
+    return promise.resolve(new ShortLongString(str));
   }, {
     impl: "_getNodeValue"
   }),
@@ -806,13 +799,6 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
             addedFronts.push(addedFront);
           }
 
-          if (change.singleTextChild) {
-            targetFront.singleTextChild =
-              types.getType("domnode").read(change.singleTextChild, this);
-          } else {
-            targetFront.singleTextChild = undefined;
-          }
-
           // Before passing to users, replace the added and removed actor
           // ids with front in the mutation record.
           emittedMutation.added = addedFronts;
@@ -856,6 +842,19 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
           }
         } else {
           targetFront.updateMutation(change);
+        }
+
+        // Update the inlineTextChild property of the target for a selected list of
+        // mutation types.
+        if (change.type === "inlineTextChild" ||
+            change.type === "childList" ||
+            change.type === "nativeAnonymousChildList") {
+          if (change.inlineTextChild) {
+            targetFront.inlineTextChild =
+              types.getType("domnode").read(change.inlineTextChild, this);
+          } else {
+            targetFront.inlineTextChild = undefined;
+          }
         }
 
         emitMutations.push(emittedMutation);
