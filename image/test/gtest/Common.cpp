@@ -224,15 +224,14 @@ CheckGeneratedImage(Decoder* aDecoder,
                                BGRAColor::Transparent(), aFuzz));
 }
 
-template <typename Func> void
-CheckSurfacePipeWrite(Decoder* aDecoder,
-                      SurfaceFilter* aFilter,
-                      Maybe<IntRect> aOutputRect,
-                      Maybe<IntRect> aInputRect,
-                      Maybe<IntRect> aInputWriteRect,
-                      Maybe<IntRect> aOutputWriteRect,
-                      uint8_t aFuzz,
-                      Func aFunc)
+void
+CheckWritePixels(Decoder* aDecoder,
+                 SurfaceFilter* aFilter,
+                 Maybe<IntRect> aOutputRect /* = Nothing() */,
+                 Maybe<IntRect> aInputRect /* = Nothing() */,
+                 Maybe<IntRect> aInputWriteRect /* = Nothing() */,
+                 Maybe<IntRect> aOutputWriteRect /* = Nothing() */,
+                 uint8_t aFuzz /* = 0 */)
 {
   IntRect outputRect = aOutputRect.valueOr(IntRect(0, 0, 100, 100));
   IntRect inputRect = aInputRect.valueOr(IntRect(0, 0, 100, 100));
@@ -241,7 +240,10 @@ CheckSurfacePipeWrite(Decoder* aDecoder,
 
   // Fill the image.
   int32_t count = 0;
-  auto result = aFunc(count);
+  auto result = aFilter->WritePixels<uint32_t>([&] {
+    ++count;
+    return AsVariant(BGRAColor::Green().AsPixel());
+  });
   EXPECT_EQ(WriteState::FINISHED, result);
   EXPECT_EQ(inputWriteRect.width * inputWriteRect.height, count);
 
@@ -249,7 +251,10 @@ CheckSurfacePipeWrite(Decoder* aDecoder,
 
   // Attempt to write more data and make sure nothing changes.
   const int32_t oldCount = count;
-  result = aFunc(count);
+  result = aFilter->WritePixels<uint32_t>([&] {
+    ++count;
+    return AsVariant(BGRAColor::Green().AsPixel());
+  });
   EXPECT_EQ(oldCount, count);
   EXPECT_EQ(WriteState::FINISHED, result);
   EXPECT_TRUE(aFilter->IsSurfaceFinished());
@@ -267,58 +272,13 @@ CheckSurfacePipeWrite(Decoder* aDecoder,
 }
 
 void
-CheckWritePixels(Decoder* aDecoder,
-                 SurfaceFilter* aFilter,
-                 Maybe<IntRect> aOutputRect /* = Nothing() */,
-                 Maybe<IntRect> aInputRect /* = Nothing() */,
-                 Maybe<IntRect> aInputWriteRect /* = Nothing() */,
-                 Maybe<IntRect> aOutputWriteRect /* = Nothing() */,
-                 uint8_t aFuzz /* = 0 */)
-{
-  CheckSurfacePipeWrite(aDecoder, aFilter,
-                        aOutputRect, aInputRect,
-                        aInputWriteRect, aOutputWriteRect,
-                        aFuzz,
-                        [&](int32_t& aCount) {
-    return aFilter->WritePixels<uint32_t>([&] {
-      ++aCount;
-      return AsVariant(BGRAColor::Green().AsPixel());
-    });
-  });
-}
-
-void
-CheckWriteRows(Decoder* aDecoder,
-               SurfaceFilter* aFilter,
-               Maybe<IntRect> aOutputRect /* = Nothing() */,
-               Maybe<IntRect> aInputRect /* = Nothing() */,
-               Maybe<IntRect> aInputWriteRect /* = Nothing() */,
-               Maybe<IntRect> aOutputWriteRect /* = Nothing() */,
-               uint8_t aFuzz /* = 0 */)
-{
-  CheckSurfacePipeWrite(aDecoder, aFilter,
-                        aOutputRect, aInputRect,
-                        aInputWriteRect, aOutputWriteRect,
-                        aFuzz,
-                        [&](int32_t& aCount) {
-    return aFilter->WriteRows<uint32_t>([&](uint32_t* aRow, uint32_t aLength) {
-      for (; aLength > 0; --aLength, ++aRow, ++aCount) {
-        *aRow = BGRAColor::Green().AsPixel();
-      }
-      return Nothing();
-    });
-  });
-}
-
-template <typename Func> void
-CheckPalettedSurfacePipeWrite(Decoder* aDecoder,
-                              SurfaceFilter* aFilter,
-                              Maybe<IntRect> aOutputRect,
-                              Maybe<IntRect> aInputRect,
-                              Maybe<IntRect> aInputWriteRect,
-                              Maybe<IntRect> aOutputWriteRect,
-                              uint8_t aFuzz,
-                              Func aFunc)
+CheckPalettedWritePixels(Decoder* aDecoder,
+                         SurfaceFilter* aFilter,
+                         Maybe<IntRect> aOutputRect /* = Nothing() */,
+                         Maybe<IntRect> aInputRect /* = Nothing() */,
+                         Maybe<IntRect> aInputWriteRect /* = Nothing() */,
+                         Maybe<IntRect> aOutputWriteRect /* = Nothing() */,
+                         uint8_t aFuzz /* = 0 */)
 {
   IntRect outputRect = aOutputRect.valueOr(IntRect(0, 0, 100, 100));
   IntRect inputRect = aInputRect.valueOr(IntRect(0, 0, 100, 100));
@@ -327,7 +287,10 @@ CheckPalettedSurfacePipeWrite(Decoder* aDecoder,
 
   // Fill the image.
   int32_t count = 0;
-  auto result = aFunc(count);
+  auto result = aFilter->WritePixels<uint8_t>([&] {
+    ++count;
+    return AsVariant(uint8_t(255));
+  });
   EXPECT_EQ(WriteState::FINISHED, result);
   EXPECT_EQ(inputWriteRect.width * inputWriteRect.height, count);
 
@@ -335,7 +298,10 @@ CheckPalettedSurfacePipeWrite(Decoder* aDecoder,
 
   // Attempt to write more data and make sure nothing changes.
   const int32_t oldCount = count;
-  result = aFunc(count);
+  result = aFilter->WritePixels<uint8_t>([&] {
+    ++count;
+    return AsVariant(uint8_t(255));
+  });
   EXPECT_EQ(oldCount, count);
   EXPECT_EQ(WriteState::FINISHED, result);
   EXPECT_TRUE(aFilter->IsSurfaceFinished());
@@ -358,50 +324,6 @@ CheckPalettedSurfacePipeWrite(Decoder* aDecoder,
   for (uint32_t i = 0; i < imageLength; ++i) {
     ASSERT_EQ(uint8_t(255), imageData[i]);
   }
-}
-
-void
-CheckPalettedWritePixels(Decoder* aDecoder,
-                         SurfaceFilter* aFilter,
-                         Maybe<IntRect> aOutputRect /* = Nothing() */,
-                         Maybe<IntRect> aInputRect /* = Nothing() */,
-                         Maybe<IntRect> aInputWriteRect /* = Nothing() */,
-                         Maybe<IntRect> aOutputWriteRect /* = Nothing() */,
-                         uint8_t aFuzz /* = 0 */)
-{
-  CheckPalettedSurfacePipeWrite(aDecoder, aFilter,
-                                aOutputRect, aInputRect,
-                                aInputWriteRect, aOutputWriteRect,
-                                aFuzz,
-                                [&](int32_t& aCount) {
-    return aFilter->WritePixels<uint8_t>([&] {
-      ++aCount;
-      return AsVariant(uint8_t(255));
-    });
-  });
-}
-
-void
-CheckPalettedWriteRows(Decoder* aDecoder,
-                       SurfaceFilter* aFilter,
-                       Maybe<IntRect> aOutputRect /* = Nothing() */,
-                       Maybe<IntRect> aInputRect /* = Nothing() */,
-                       Maybe<IntRect> aInputWriteRect /* = Nothing() */,
-                       Maybe<IntRect> aOutputWriteRect /* = Nothing() */,
-                       uint8_t aFuzz /* = 0*/)
-{
-  CheckPalettedSurfacePipeWrite(aDecoder, aFilter,
-                                aOutputRect, aInputRect,
-                                aInputWriteRect, aOutputWriteRect,
-                                aFuzz,
-                                [&](int32_t& aCount) {
-    return aFilter->WriteRows<uint8_t>([&](uint8_t* aRow, uint32_t aLength) {
-      for (; aLength > 0; --aLength, ++aRow, ++aCount) {
-        *aRow = uint8_t(255);
-      }
-      return Nothing();
-    });
-  });
 }
 
 

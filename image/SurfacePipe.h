@@ -16,8 +16,7 @@
  * Writing to the SurfacePipe is done using lambdas that act as generator
  * functions. Because the SurfacePipe machinery controls where the writes take
  * place, a bug in an image decoder cannot cause a buffer overflow of the
- * underlying surface. In particular, when using WritePixels() a buffer overflow
- * is impossible as long as the SurfacePipe code is correct.
+ * underlying surface.
  */
 
 #ifndef mozilla_image_SurfacePipe_h
@@ -50,8 +49,8 @@ struct SurfaceInvalidRect
 };
 
 /**
- * An enum used to allow the lambdas passed to WritePixels() and WriteRows() to
- * communicate their state to the caller.
+ * An enum used to allow the lambdas passed to WritePixels() to communicate
+ * their state to the caller.
  */
 enum class WriteState : uint8_t
 {
@@ -69,16 +68,14 @@ enum class WriteState : uint8_t
 /**
  * A template alias used to make the return value of WritePixels() lambdas
  * (which may return either a pixel value or a WriteState) easier to specify.
- * WriteRows() doesn't need such a template alias since WriteRows() lambdas
- * don't return a pixel value.
  */
 template <typename PixelType>
 using NextPixel = Variant<PixelType, WriteState>;
 
 /**
- * SurfaceFilter is the abstract superclass of SurfacePipe pipeline stages.
- * It implements the the code that actually writes to the surface -
- * WritePixels() and WriteRows() - which are non-virtual for efficiency.
+ * SurfaceFilter is the abstract superclass of SurfacePipe pipeline stages.  It
+ * implements the the code that actually writes to the surface - WritePixels()
+ * and the other Write*() methods - which are non-virtual for efficiency.
  *
  * SurfaceFilter's API is nonpublic; only SurfacePipe and other SurfaceFilters
  * should use it. Non-SurfacePipe code should use the methods on SurfacePipe.
@@ -92,8 +89,8 @@ using NextPixel = Variant<PixelType, WriteState>;
  * Config structs, passes the tail of the list to the next filter in the chain's
  * Configure() method, and then uses the head of the list to configure itself. A
  * SurfaceFilter's Configure() method must also call
- * SurfaceFilter::ConfigureFilter() to provide WritePixels() and WriteRows()
- * with the information they need to do their jobs.
+ * SurfaceFilter::ConfigureFilter() to provide the Write*() methods with the
+ * information they need to do their jobs.
  */
 class SurfaceFilter
 {
@@ -121,8 +118,7 @@ public:
   }
 
   /**
-   * Called by WritePixels() and WriteRows() to advance this filter to the next
-   * row.
+   * Called by WritePixels() to advance this filter to the next row.
    *
    * @return a pointer to the buffer for the next row, or nullptr to indicate
    *         that we've finished the entire surface.
@@ -145,9 +141,7 @@ public:
 
   /**
    * Write pixels to the surface one at a time by repeatedly calling a lambda
-   * that yields pixels. WritePixels() should be preferred over WriteRows()
-   * whenever using it will not introduce additional copies or other performance
-   * penalties, because it is completely memory safe.
+   * that yields pixels. WritePixels() is completely memory safe.
    *
    * Writing continues until every pixel in the surface has been written to
    * (i.e., IsSurfaceFinished() returns true) or the lambda returns a WriteState
@@ -207,73 +201,6 @@ public:
       }
 
       AdvanceRow();  // We've finished the row.
-    }
-
-    // We've finished the entire surface.
-    return WriteState::FINISHED;
-  }
-
-  /**
-   * Write rows to the surface one at a time by repeatedly calling a lambda
-   * that yields rows. Because WriteRows() is not completely memory safe,
-   * WritePixels() should be preferred whenever it can be used without
-   * introducing additional copies or other performance penalties.
-   *
-   * Writing continues until every row in the surface has been written to (i.e.,
-   * IsSurfaceFinished() returns true) or the lambda returns a WriteState which
-   * WriteRows() will return to the caller.
-   *
-   * The template parameter PixelType must be uint8_t (for paletted surfaces) or
-   * uint32_t (for BGRA/BGRX surfaces) and must be in agreement with the pixel
-   * size passed to ConfigureFilter().
-   *
-   * XXX(seth): We'll remove all support for paletted surfaces in bug 1247520,
-   * which means we can remove the PixelType template parameter from this
-   * method.
-   *
-   * @param aFunc A lambda that functions as a generator, yielding the next
-   *              row in the surface each time it's called. The lambda must
-   *              return a Maybe<WriteState> value; if Some(), the return value
-   *              indicates a WriteState to return to the caller, while
-   *              Nothing() indicates that the lambda can generate more rows.
-   *
-   * @return A WriteState value indicating the lambda generator's state.
-   *         WriteRows() itself will return WriteState::FINISHED if writing
-   *         has finished, regardless of the lambda's internal state.
-   */
-  template <typename PixelType, typename Func>
-  WriteState WriteRows(Func aFunc)
-  {
-    MOZ_ASSERT(mPixelSize == 1 || mPixelSize == 4);
-    MOZ_ASSERT_IF(mPixelSize == 1, sizeof(PixelType) == sizeof(uint8_t));
-    MOZ_ASSERT_IF(mPixelSize == 4, sizeof(PixelType) == sizeof(uint32_t));
-
-    if (IsSurfaceFinished()) {
-      return WriteState::FINISHED;  // Already done.
-    }
-
-    while (true) {
-      PixelType* rowPtr = reinterpret_cast<PixelType*>(mRowPointer);
-
-      Maybe<WriteState> result = aFunc(rowPtr, mInputSize.width);
-      if (result != Some(WriteState::FAILURE)) {
-        AdvanceRow();  // We've finished the row.
-      }
-
-      if (IsSurfaceFinished()) {
-        break;
-      }
-
-      if (result == Some(WriteState::FINISHED)) {
-        // Make sure that IsSurfaceFinished() returns true so the caller can't
-        // write anything else to the pipeline.
-        mRowPointer = nullptr;
-        mCol = 0;
-      }
-
-      if (result) {
-        return *result;
-      }
     }
 
     // We've finished the entire surface.
@@ -604,9 +531,7 @@ public:
 
   /**
    * Write pixels to the surface one at a time by repeatedly calling a lambda
-   * that yields pixels. WritePixels() should be preferred over WriteRows()
-   * whenever using it will not introduce additional copies or other performance
-   * penalties, because it is completely memory safe.
+   * that yields pixels. WritePixels() is completely memory safe.
    *
    * @see SurfaceFilter::WritePixels() for the canonical documentation.
    */
@@ -614,20 +539,6 @@ public:
   WriteState WritePixels(Func aFunc)
   {
     return mHead->WritePixels<PixelType>(Forward<Func>(aFunc));
-  }
-
-  /**
-   * Write rows to the surface one at a time by repeatedly calling a lambda
-   * that yields rows. Because WriteRows() is not completely memory safe,
-   * WritePixels() should be preferred whenever it can be used without
-   * introducing additional copies or other performance penalties.
-   *
-   * @see SurfaceFilter::WriteRows() for the canonical documentation.
-   */
-  template <typename PixelType, typename Func>
-  WriteState WriteRows(Func aFunc)
-  {
-    return mHead->WriteRows<PixelType>(Forward<Func>(aFunc));
   }
 
   /**

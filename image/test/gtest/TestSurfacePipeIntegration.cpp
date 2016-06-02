@@ -106,24 +106,6 @@ TEST(ImageSurfacePipeIntegration, DeinterlaceDownscaleWritePixels)
                                      SurfaceFormat::B8G8R8A8, false });
 }
 
-TEST(ImageSurfacePipeIntegration, DeinterlaceDownscaleWriteRows)
-{
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
-  ASSERT_TRUE(decoder != nullptr);
-
-  auto test = [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 25, 25)));
-  };
-
-  WithFilterPipeline(decoder, test,
-                     DeinterlacingConfig<uint32_t> { /* mProgressiveDisplay = */ true },
-                     DownscalingConfig { IntSize(100, 100),
-                                         SurfaceFormat::B8G8R8A8 },
-                     SurfaceConfig { decoder, 0, IntSize(25, 25),
-                                     SurfaceFormat::B8G8R8A8, false });
-}
-
 TEST(ImageSurfacePipeIntegration, RemoveFrameRectBottomRightDownscaleWritePixels)
 {
   // This test case uses a frame rect that extends beyond the borders of the
@@ -180,31 +162,6 @@ TEST(ImageSurfacePipeIntegration, RemoveFrameRectBottomRightDownscaleWritePixels
                                      SurfaceFormat::B8G8R8A8, false });
 }
 
-TEST(ImageSurfacePipeIntegration, RemoveFrameRectBottomRightDownscaleWriteRows)
-{
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
-  ASSERT_TRUE(decoder != nullptr);
-
-  // See the WritePixels version of this test for a discussion of where the
-  // numbers below come from.
-
-  auto test = [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 20, 20)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(50, 50, 100, 50)),
-                   /* aOutputWriteRect = */ Some(IntRect(10, 10, 10, 10)),
-                   /* aFuzz = */ 0x33);
-  };
-
-  WithFilterPipeline(decoder, test,
-                     RemoveFrameRectConfig { IntRect(50, 50, 100, 100) },
-                     DownscalingConfig { IntSize(100, 100),
-                                         SurfaceFormat::B8G8R8A8 },
-                     SurfaceConfig { decoder, 0, IntSize(20, 20),
-                                     SurfaceFormat::B8G8R8A8, false });
-}
-
 TEST(ImageSurfacePipeIntegration, RemoveFrameRectTopLeftDownscaleWritePixels)
 {
   // This test case uses a frame rect that extends beyond the borders of the
@@ -239,29 +196,6 @@ TEST(ImageSurfacePipeIntegration, RemoveFrameRectTopLeftDownscaleWritePixels)
                                      SurfaceFormat::B8G8R8A8, false });
 }
 
-TEST(ImageSurfacePipeIntegration, RemoveFrameRectTopLeftDownscaleWriteRows)
-{
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
-  ASSERT_TRUE(decoder != nullptr);
-
-  auto test = [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 20, 20)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aOutputWriteRect = */ Some(IntRect(0, 0, 10, 10)),
-                   /* aFuzz = */ 0x21);
-  };
-
-  WithFilterPipeline(decoder, test,
-                     RemoveFrameRectConfig { IntRect(-50, -50, 100, 100) },
-                     DownscalingConfig { IntSize(100, 100),
-                                         SurfaceFormat::B8G8R8A8 },
-                     SurfaceConfig { decoder, 0, IntSize(20, 20),
-                                     SurfaceFormat::B8G8R8A8, false });
-}
-
-
 TEST(ImageSurfacePipeIntegration, DeinterlaceRemoveFrameRectWritePixels)
 {
   RefPtr<Decoder> decoder = CreateTrivialDecoder();
@@ -286,30 +220,6 @@ TEST(ImageSurfacePipeIntegration, DeinterlaceRemoveFrameRectWritePixels)
                                      SurfaceFormat::B8G8R8A8, false });
 }
 
-TEST(ImageSurfacePipeIntegration, DeinterlaceRemoveFrameRectWriteRows)
-{
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
-  ASSERT_TRUE(decoder != nullptr);
-
-  // Note that aInputRect is the full 100x100 size even though
-  // RemoveFrameRectFilter is part of this pipeline, because deinterlacing
-  // requires reading every row.
-
-  auto test = [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(50, 50, 100, 100)),
-                   /* aOutputWriteRect = */ Some(IntRect(50, 50, 50, 50)));
-  };
-
-  WithFilterPipeline(decoder, test,
-                     DeinterlacingConfig<uint32_t> { /* mProgressiveDisplay = */ true },
-                     RemoveFrameRectConfig { IntRect(50, 50, 100, 100) },
-                     SurfaceConfig { decoder, 0, IntSize(100, 100),
-                                     SurfaceFormat::B8G8R8A8, false });
-}
-
 TEST(ImageSurfacePipeIntegration, DeinterlaceRemoveFrameRectDownscaleWritePixels)
 {
   RefPtr<Decoder> decoder = CreateTrivialDecoder();
@@ -322,29 +232,6 @@ TEST(ImageSurfacePipeIntegration, DeinterlaceRemoveFrameRectDownscaleWritePixels
                      /* aInputWriteRect = */ Some(IntRect(50, 50, 100, 100)),
                      /* aOutputWriteRect = */ Some(IntRect(10, 10, 10, 10)),
                      /* aFuzz = */ 33);
-  };
-
-  WithFilterPipeline(decoder, test,
-                     DeinterlacingConfig<uint32_t> { /* mProgressiveDisplay = */ true },
-                     RemoveFrameRectConfig { IntRect(50, 50, 100, 100) },
-                     DownscalingConfig { IntSize(100, 100),
-                                         SurfaceFormat::B8G8R8A8 },
-                     SurfaceConfig { decoder, 0, IntSize(20, 20),
-                                     SurfaceFormat::B8G8R8A8, false });
-}
-
-TEST(ImageSurfacePipeIntegration, DeinterlaceRemoveFrameRectDownscaleWriteRows)
-{
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
-  ASSERT_TRUE(decoder != nullptr);
-
-  auto test = [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 20, 20)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(50, 50, 100, 100)),
-                   /* aOutputWriteRect = */ Some(IntRect(10, 10, 10, 10)),
-                   /* aFuzz = */ 33);
   };
 
   WithFilterPipeline(decoder, test,

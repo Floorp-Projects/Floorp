@@ -68,12 +68,9 @@ TEST(ImageSurfaceSink, NullSurfaceSink)
   Maybe<SurfaceInvalidRect> invalidRect = sink.TakeInvalidRect();
   EXPECT_TRUE(invalidRect.isNothing());
 
-  result = sink.WriteRows<uint32_t>([&](uint32_t* aRow, uint32_t aLength) {
+  result = sink.WritePixels<uint32_t>([&]() {
     gotCalled = true;
-    for (; aLength > 0; --aLength, ++aRow) {
-      *aRow = BGRAColor::Green().AsPixel();
-    }
-    return Nothing();
+    return AsVariant(BGRAColor::Red().AsPixel());
   });
   EXPECT_FALSE(gotCalled);
   EXPECT_EQ(WriteState::FINISHED, result);
@@ -118,13 +115,6 @@ TEST(ImageSurfaceSink, SurfaceSinkWritePixels)
   });
 }
 
-TEST(ImageSurfaceSink, SurfaceSinkWriteRows)
-{
-  WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
-    CheckWriteRows(aDecoder, aSink);
-  });
-}
-
 TEST(ImageSurfaceSink, SurfaceSinkWritePixelsFinish)
 {
   WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
@@ -143,39 +133,6 @@ TEST(ImageSurfaceSink, SurfaceSinkWritePixelsFinish)
     result = aSink->WritePixels<uint32_t>([&]() {
       count++;
       return AsVariant(BGRAColor::Red().AsPixel());
-    });
-    EXPECT_EQ(WriteState::FINISHED, result);
-    EXPECT_EQ(0u, count);
-    EXPECT_TRUE(aSink->IsSurfaceFinished());
-
-    // Check that the generated image is correct.
-    RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
-    RefPtr<SourceSurface> surface = currentFrame->GetSurface();
-    EXPECT_TRUE(IsSolidColor(surface, BGRAColor::Transparent()));
-  });
-}
-
-TEST(ImageSurfaceSink, SurfaceSinkWriteRowsFinish)
-{
-  WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
-    // Write nothing into the surface; just finish immediately.
-    uint32_t count = 0;
-    auto result = aSink->WriteRows<uint32_t>([&](uint32_t* aRow, uint32_t aLength) {
-      count++;
-      return Some(WriteState::FINISHED);
-    });
-    EXPECT_EQ(WriteState::FINISHED, result);
-    EXPECT_EQ(1u, count);
-    EXPECT_TRUE(aSink->IsSurfaceFinished());
-
-    // Attempt to write more and make sure that nothing gets written.
-    count = 0;
-    result = aSink->WriteRows<uint32_t>([&](uint32_t* aRow, uint32_t aLength) {
-      count++;
-      for (; aLength > 0; --aLength, ++aRow) {
-        *aRow = BGRAColor::Green().AsPixel();
-      }
-      return Nothing();
     });
     EXPECT_EQ(WriteState::FINISHED, result);
     EXPECT_EQ(0u, count);
@@ -488,14 +445,6 @@ TEST(ImageSurfaceSink, PalettedSurfaceSinkWritePixelsFor0_0_100_100)
   });
 }
 
-TEST(ImageSurfaceSink, PalettedSurfaceSinkWriteRowsFor0_0_100_100)
-{
-  WithPalettedSurfaceSink(IntRect(0, 0, 100, 100),
-                          [](Decoder* aDecoder, PalettedSurfaceSink* aSink) {
-    CheckPalettedWriteRows(aDecoder, aSink);
-  });
-}
-
 TEST(ImageSurfaceSink, PalettedSurfaceSinkWritePixelsFor25_25_50_50)
 {
   WithPalettedSurfaceSink(IntRect(25, 25, 50, 50),
@@ -505,18 +454,6 @@ TEST(ImageSurfaceSink, PalettedSurfaceSinkWritePixelsFor25_25_50_50)
                              /* aInputRect = */ Some(IntRect(0, 0, 50, 50)),
                              /* aInputWriteRect = */ Some(IntRect(25, 25, 50, 50)),
                              /* aOutputWriteRect = */ Some(IntRect(25, 25, 50, 50)));
-  });
-}
-
-TEST(ImageSurfaceSink, PalettedSurfaceSinkWriteRowsFor25_25_50_50)
-{
-  WithPalettedSurfaceSink(IntRect(25, 25, 50, 50),
-                          [](Decoder* aDecoder, PalettedSurfaceSink* aSink) {
-    CheckPalettedWriteRows(aDecoder, aSink,
-                           /* aOutputRect = */ Some(IntRect(0, 0, 50, 50)),
-                           /* aInputRect = */ Some(IntRect(0, 0, 50, 50)),
-                           /* aInputWriteRect = */ Some(IntRect(25, 25, 50, 50)),
-                           /* aOutputWriteRect = */ Some(IntRect(25, 25, 50, 50)));
   });
 }
 
@@ -532,18 +469,6 @@ TEST(ImageSurfaceSink, PalettedSurfaceSinkWritePixelsForMinus25_Minus25_50_50)
   });
 }
 
-TEST(ImageSurfaceSink, PalettedSurfaceSinkWriteRowsForMinus25_Minus25_50_50)
-{
-  WithPalettedSurfaceSink(IntRect(-25, -25, 50, 50),
-                          [](Decoder* aDecoder, PalettedSurfaceSink* aSink) {
-    CheckPalettedWriteRows(aDecoder, aSink,
-                           /* aOutputRect = */ Some(IntRect(0, 0, 50, 50)),
-                           /* aInputRect = */ Some(IntRect(0, 0, 50, 50)),
-                           /* aInputWriteRect = */ Some(IntRect(-25, -25, 50, 50)),
-                           /* aOutputWriteRect = */ Some(IntRect(-25, -25, 50, 50)));
-  });
-}
-
 TEST(ImageSurfaceSink, PalettedSurfaceSinkWritePixelsFor75_Minus25_50_50)
 {
   WithPalettedSurfaceSink(IntRect(75, -25, 50, 50),
@@ -553,18 +478,6 @@ TEST(ImageSurfaceSink, PalettedSurfaceSinkWritePixelsFor75_Minus25_50_50)
                              /* aInputRect = */ Some(IntRect(0, 0, 50, 50)),
                              /* aInputWriteRect = */ Some(IntRect(75, -25, 50, 50)),
                              /* aOutputWriteRect = */ Some(IntRect(75, -25, 50, 50)));
-  });
-}
-
-TEST(ImageSurfaceSink, PalettedSurfaceSinkWriteRowsFor75_Minus25_50_50)
-{
-  WithPalettedSurfaceSink(IntRect(75, -25, 50, 50),
-                          [](Decoder* aDecoder, PalettedSurfaceSink* aSink) {
-    CheckPalettedWriteRows(aDecoder, aSink,
-                           /* aOutputRect = */ Some(IntRect(0, 0, 50, 50)),
-                           /* aInputRect = */ Some(IntRect(0, 0, 50, 50)),
-                           /* aInputWriteRect = */ Some(IntRect(75, -25, 50, 50)),
-                           /* aOutputWriteRect = */ Some(IntRect(75, -25, 50, 50)));
   });
 }
 
@@ -580,18 +493,6 @@ TEST(ImageSurfaceSink, PalettedSurfaceSinkWritePixelsForMinus25_75_50_50)
   });
 }
 
-TEST(ImageSurfaceSink, PalettedSurfaceSinkWriteRowsForMinus25_75_50_50)
-{
-  WithPalettedSurfaceSink(IntRect(-25, 75, 50, 50),
-                          [](Decoder* aDecoder, PalettedSurfaceSink* aSink) {
-    CheckPalettedWriteRows(aDecoder, aSink,
-                           /* aOutputRect = */ Some(IntRect(0, 0, 50, 50)),
-                           /* aInputRect = */ Some(IntRect(0, 0, 50, 50)),
-                           /* aInputWriteRect = */ Some(IntRect(-25, 75, 50, 50)),
-                           /* aOutputWriteRect = */ Some(IntRect(-25, 75, 50, 50)));
-  });
-}
-
 TEST(ImageSurfaceSink, PalettedSurfaceSinkWritePixelsFor75_75_50_50)
 {
   WithPalettedSurfaceSink(IntRect(75, 75, 50, 50),
@@ -601,17 +502,5 @@ TEST(ImageSurfaceSink, PalettedSurfaceSinkWritePixelsFor75_75_50_50)
                              /* aInputRect = */ Some(IntRect(0, 0, 50, 50)),
                              /* aInputWriteRect = */ Some(IntRect(75, 75, 50, 50)),
                              /* aOutputWriteRect = */ Some(IntRect(75, 75, 50, 50)));
-  });
-}
-
-TEST(ImageSurfaceSink, PalettedSurfaceSinkWriteRowsFor75_75_50_50)
-{
-  WithPalettedSurfaceSink(IntRect(75, 75, 50, 50),
-                          [](Decoder* aDecoder, PalettedSurfaceSink* aSink) {
-    CheckPalettedWriteRows(aDecoder, aSink,
-                           /* aOutputRect = */ Some(IntRect(0, 0, 50, 50)),
-                           /* aInputRect = */ Some(IntRect(0, 0, 50, 50)),
-                           /* aInputWriteRect = */ Some(IntRect(75, 75, 50, 50)),
-                           /* aOutputWriteRect = */ Some(IntRect(75, 75, 50, 50)));
   });
 }
