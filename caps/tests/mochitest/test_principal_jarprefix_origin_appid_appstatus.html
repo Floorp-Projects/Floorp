@@ -22,6 +22,9 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=758258
 
 var Ci = Components.interfaces;
 SimpleTest.waitForExplicitFinish();
+if (navigator.userAgent.indexOf("Mac OS X 10.10") != -1) {
+  SimpleTest.expectAssertions(0, 4);
+}
 
 /*
  * gData is an array of objects. Each object represents a test case.
