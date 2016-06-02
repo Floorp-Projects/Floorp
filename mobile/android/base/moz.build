@@ -469,7 +469,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'menu/MenuPanel.java',
     'menu/MenuPopup.java',
     'MotionEventInterceptor.java',
-    'NetworkInfoService.java',
     'NotificationClient.java',
     'NotificationHandler.java',
     'NotificationHelper.java',
