@@ -24,6 +24,7 @@ using namespace js;
 using namespace js::jit;
 
 using mozilla::Abs;
+using mozilla::BitwiseCast;
 using mozilla::DebugOnly;
 using mozilla::FloatingPoint;
 using mozilla::FloorLog2;
@@ -4650,6 +4651,60 @@ CodeGeneratorX86Shared::canonicalizeIfDeterministic(Scalar::Type type, const LAl
       }
     }
 #endif // JS_MORE_DETERMINISTIC
+}
+
+void
+CodeGeneratorX86Shared::visitCopySignF(LCopySignF* lir)
+{
+    FloatRegister lhs = ToFloatRegister(lir->getOperand(0));
+    FloatRegister rhs = ToFloatRegister(lir->getOperand(1));
+
+    FloatRegister out = ToFloatRegister(lir->output());
+
+    if (lhs == rhs) {
+        if (lhs != out)
+            masm.moveFloat32(lhs, out);
+        return;
+    }
+
+    ScratchFloat32Scope scratch(masm);
+
+    float clearSignMask = BitwiseCast<float>(INT32_MAX);
+    masm.loadConstantFloat32(clearSignMask, scratch);
+    masm.vandps(scratch, lhs, out);
+
+    float keepSignMask = BitwiseCast<float>(INT32_MIN);
+    masm.loadConstantFloat32(keepSignMask, scratch);
+    masm.vandps(rhs, scratch, scratch);
+
+    masm.vorps(scratch, out, out);
+}
+
+void
+CodeGeneratorX86Shared::visitCopySignD(LCopySignD* lir)
+{
+    FloatRegister lhs = ToFloatRegister(lir->getOperand(0));
+    FloatRegister rhs = ToFloatRegister(lir->getOperand(1));
+
+    FloatRegister out = ToFloatRegister(lir->output());
+
+    if (lhs == rhs) {
+        if (lhs != out)
+            masm.moveDouble(lhs, out);
+        return;
+    }
+
+    ScratchDoubleScope scratch(masm);
+
+    double clearSignMask = BitwiseCast<double>(INT64_MAX);
+    masm.loadConstantDouble(clearSignMask, scratch);
+    masm.vandpd(scratch, lhs, out);
+
+    double keepSignMask = BitwiseCast<double>(INT64_MIN);
+    masm.loadConstantDouble(keepSignMask, scratch);
+    masm.vandpd(rhs, scratch, scratch);
+
+    masm.vorpd(scratch, out, out);
 }
 
 } // namespace jit

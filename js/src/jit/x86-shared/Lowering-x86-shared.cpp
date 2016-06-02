@@ -978,3 +978,28 @@ LIRGeneratorX86Shared::visitSimdGeneralShuffle(MSimdGeneralShuffle* ins)
     assignSnapshot(lir, Bailout_BoundsCheck);
     define(lir, ins);
 }
+
+void
+LIRGeneratorX86Shared::visitCopySign(MCopySign* ins)
+{
+    MDefinition* lhs = ins->lhs();
+    MDefinition* rhs = ins->rhs();
+
+    MOZ_ASSERT(IsFloatingPointType(lhs->type()));
+    MOZ_ASSERT(lhs->type() == rhs->type());
+    MOZ_ASSERT(lhs->type() == ins->type());
+
+    LInstructionHelper<1, 2, 2>* lir;
+    if (lhs->type() == MIRType::Double)
+        lir = new(alloc()) LCopySignD();
+    else
+        lir = new(alloc()) LCopySignF();
+
+    // As lowerForFPU, but we want rhs to be in a FP register too.
+    lir->setOperand(0, useRegisterAtStart(lhs));
+    lir->setOperand(1, lhs != rhs ? useRegister(rhs) : useRegisterAtStart(rhs));
+    if (!Assembler::HasAVX())
+        defineReuseInput(lir, ins, 0);
+    else
+        define(lir, ins);
+}

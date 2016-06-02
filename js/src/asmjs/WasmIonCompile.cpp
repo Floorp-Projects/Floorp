@@ -2040,28 +2040,7 @@ EmitCopySign(FunctionCompiler& f, ValType operandType)
     if (!f.iter().readBinary(operandType, &lhs, &rhs))
         return false;
 
-    MIRType intType;
-    MDefinition* intMax;
-    MDefinition* intMin;
-    if (operandType == ValType::F32) {
-        intType = MIRType::Int32;
-        intMax = f.constant(Int32Value(INT32_MAX), MIRType::Int32);
-        intMin = f.constant(Int32Value(INT32_MIN), MIRType::Int32);
-    } else {
-        MOZ_ASSERT(operandType == ValType::F64);
-        intType = MIRType::Int64;
-        intMax = f.constant(int64_t(INT64_MAX));
-        intMin = f.constant(int64_t(INT64_MIN));
-    }
-
-    MDefinition* lhsi = f.unary<MAsmReinterpret>(lhs, intType);
-    MDefinition* rhsi = f.unary<MAsmReinterpret>(rhs, intType);
-
-    MDefinition* lhsNoSign = f.bitwise<MBitAnd>(lhsi, intMax, intType);
-    MDefinition* rhsSign = f.bitwise<MBitAnd>(rhsi, intMin, intType);
-
-    MDefinition* resi = f.bitwise<MBitOr>(lhsNoSign, rhsSign, intType);
-    f.iter().setResult(f.unary<MAsmReinterpret>(resi, ToMIRType(operandType)));
+    f.iter().setResult(f.binary<MCopySign>(lhs, rhs, ToMIRType(operandType)));
     return true;
 }
 
