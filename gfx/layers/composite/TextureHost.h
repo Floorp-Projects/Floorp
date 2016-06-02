@@ -634,6 +634,8 @@ public:
 
   virtual bool BindTextureSource(CompositableTextureSourceRef& aTexture) override;
 
+  virtual void UnbindTextureSource() override;
+
   virtual void DeallocateDeviceData() override;
 
   virtual void SetCompositor(Compositor* aCompositor) override;
