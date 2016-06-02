@@ -7,6 +7,7 @@
 #include "mozilla/Assertions.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/LoadContext.h"
+#include "mozilla/Preferences.h"
 #include "mozilla/dom/ScriptSettings.h" // for AutoJSAPI
 #include "nsContentUtils.h"
 #include "xpcpublic.h"
@@ -199,6 +200,23 @@ LoadContext::GetOriginAttributes(JS::MutableHandleValue aAttrs)
 
   bool ok = ToJSValue(cx, mOriginAttributes, aAttrs);
   NS_ENSURE_TRUE(ok, NS_ERROR_FAILURE);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+LoadContext::IsTrackingProtectionOn(bool* aIsTrackingProtectionOn)
+{
+  MOZ_ASSERT(mIsNotNull);
+
+  if (Preferences::GetBool("privacy.trackingprotection.enabled", false)) {
+    *aIsTrackingProtectionOn = true;
+  } else if (mUsePrivateBrowsing &&
+             Preferences::GetBool("privacy.trackingprotection.pbmode.enabled", false)) {
+    *aIsTrackingProtectionOn = true;
+  } else {
+    *aIsTrackingProtectionOn = false;
+  }
+
   return NS_OK;
 }
 
