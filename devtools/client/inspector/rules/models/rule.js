@@ -22,10 +22,6 @@ XPCOMUtils.defineLazyGetter(this, "osString", function () {
   return Cc["@mozilla.org/xre/app-info;1"].getService(Ci.nsIXULRuntime).OS;
 });
 
-XPCOMUtils.defineLazyGetter(this, "domUtils", function () {
-  return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
-});
-
 /**
  * Rule is responsible for the following:
  *   Manages a single style declaration or rule.
@@ -466,7 +462,7 @@ Rule.prototype = {
       // However, we must keep all properties in order for rule
       // rewriting to work properly.  So, compute the "invisible"
       // property here.
-      let invisible = this.inherited && !domUtils.isInheritedProperty(name);
+      let invisible = this.inherited && !this.cssProperties.isInherited(name);
       let value = store.userProperties.getProperty(this.style, name,
                                                    prop.value);
       let textProp = new TextProperty(this, name, value, prop.priority,
