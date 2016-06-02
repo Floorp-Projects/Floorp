@@ -90,6 +90,7 @@ SEARCH_PATHS = [
     'testing/web-platform/harness',
     'testing/web-platform/tests/tools/wptserve',
     'testing/xpcshell',
+    'tools/mercurial',
     'xpcom/idl-parser',
 ]
 
@@ -122,7 +123,6 @@ MACH_MODULES = [
     'testing/xpcshell/mach_commands.py',
     'tools/docs/mach_commands.py',
     'tools/lint/mach_commands.py',
-    'tools/mercurial/mach_commands.py',
     'tools/mach_commands.py',
     'tools/power/mach_commands.py',
     'mobile/android/mach_commands.py',
