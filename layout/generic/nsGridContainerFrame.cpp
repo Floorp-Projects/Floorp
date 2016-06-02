@@ -609,14 +609,54 @@ struct nsGridContainerFrame::GridArea
 
 struct nsGridContainerFrame::GridItemInfo
 {
+  /**
+   * Item state per axis.
+   */
+  enum StateBits : uint8_t {
+    eIsFlexing =            0x1, // does the item span a flex track?
+    eFirstBaseline =        0x2, // participate in first-baseline alignment?
+    // ditto last-baseline, mutually exclusive w. eFirstBaseline
+    eLastBaseline =         0x4,
+    eIsBaselineAligned = eFirstBaseline | eLastBaseline,
+    // One of e[Self|Content]Baseline is set when eIsBaselineAligned is true
+    eSelfBaseline =         0x8, // is it *-self:[last-]baseline alignment?
+    // Ditto *-content:[last-]baseline. Mutually exclusive w. eSelfBaseline.
+    eContentBaseline =     0x10,
+    eAllBaselineBits = eIsBaselineAligned | eSelfBaseline | eContentBaseline,
+  };
+
   explicit GridItemInfo(nsIFrame* aFrame,
                         const GridArea& aArea)
     : mFrame(aFrame)
     , mArea(aArea)
   {
-    mIsFlexing[0] = false;
-    mIsFlexing[1] = false;
+    mState[eLogicalAxisBlock] = StateBits(0);
+    mState[eLogicalAxisInline] = StateBits(0);
+    mBaselineOffset[eLogicalAxisBlock] = nscoord(0);
+    mBaselineOffset[eLogicalAxisInline] = nscoord(0);
   }
+
+  /**
+   * If the item is [align|justify]-self:[last-]baseline aligned in the given
+   * axis then set aBaselineOffset to the baseline offset and return aAlign.
+   * Otherwise, return a fallback alignment.
+   */
+  uint8_t GetSelfBaseline(uint8_t aAlign, LogicalAxis aAxis,
+                          nscoord* aBaselineOffset) const
+  {
+    MOZ_ASSERT(aAlign == NS_STYLE_ALIGN_BASELINE ||
+               aAlign == NS_STYLE_ALIGN_LAST_BASELINE);
+    if (!(mState[aAxis] & eSelfBaseline)) {
+      return aAlign == NS_STYLE_ALIGN_BASELINE ? NS_STYLE_ALIGN_SELF_START
+                                               : NS_STYLE_ALIGN_SELF_END;
+    }
+    *aBaselineOffset = mBaselineOffset[aAxis];
+    return aAlign;
+  }
+
+#ifdef DEBUG
+  void Dump() const;
+#endif
 
   static bool IsStartRowLessThan(const GridItemInfo* a, const GridItemInfo* b)
   {
@@ -625,12 +665,52 @@ struct nsGridContainerFrame::GridItemInfo
 
   nsIFrame* const mFrame;
   GridArea mArea;
-  bool mIsFlexing[2]; // does the item span a flex track? (LogicalAxis index)
+  // Offset from the margin edge to the baseline (LogicalAxis index).  It's from
+  // the start edge when eFirstBaseline is set, end edge otherwise. It's mutable
+  // since we update the value fairly late (just before reflowing the item).
+  mutable nscoord mBaselineOffset[2];
+  StateBits mState[2]; // state bits per axis (LogicalAxis index)
   static_assert(mozilla::eLogicalAxisBlock == 0, "unexpected index value");
   static_assert(mozilla::eLogicalAxisInline == 1, "unexpected index value");
 };
 
 using GridItemInfo = nsGridContainerFrame::GridItemInfo;
+using ItemState = GridItemInfo::StateBits;
+MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(ItemState)
+
+#ifdef DEBUG
+void
+nsGridContainerFrame::GridItemInfo::Dump() const
+{
+  auto Dump1 = [this] (const char* aMsg, LogicalAxis aAxis) {
+    auto state = mState[aAxis];
+    if (!state) {
+      return;
+    }
+    printf("%s", aMsg);
+    if (state & ItemState::eIsFlexing) {
+      printf("flexing ");
+    }
+    if (state & ItemState::eFirstBaseline) {
+      printf("baseline %s-alignment ",
+             (state & ItemState::eSelfBaseline) ? "self" : "content");
+    }
+    if (state & ItemState::eLastBaseline) {
+      printf("last-baseline %s-alignment ",
+             (state & ItemState::eSelfBaseline) ? "self" : "content");
+    }
+    if (state & ItemState::eIsBaselineAligned) {
+      printf("%.2fpx", NSAppUnitsToFloatPixels(mBaselineOffset[aAxis],
+                                               AppUnitsPerCSSPixel()));
+    }
+    printf("\n");
+  };
+  printf("grid-row: %d %d\n", mArea.mRows.mStart, mArea.mRows.mEnd);
+  Dump1("  grid block-axis: ", eLogicalAxisBlock);
+  printf("grid-column: %d %d\n", mArea.mCols.mStart, mArea.mCols.mEnd);
+  Dump1("  grid inline-axis: ", eLogicalAxisInline);
+}
+#endif
 
 /**
  * Utility class to find line names.  It provides an interface to lookup line
@@ -3449,7 +3529,7 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
 
   // Resolve Intrinsic Track Sizes
   // http://dev.w3.org/csswg/css-grid/#algo-content
-  // We're also setting mIsFlexing on the item here to speed up
+  // We're also setting eIsFlexing on the item state here to speed up
   // FindUsedFlexFraction later.
   AutoTArray<TrackSize::StateBits, 16> stateBitsPerSpan;
   nsTArray<Step2ItemData> step2Items;
@@ -3468,9 +3548,10 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
     uint32_t span = lineRange.Extent();
     if (span == 1) {
       // Step 1. Size tracks to fit non-spanning items.
-      gridItem.mIsFlexing[mAxis] =
-        ResolveIntrinsicSizeStep1(aState, aFunctions, aPercentageBasis,
-                                  aConstraint, lineRange, gridItem);
+      if (ResolveIntrinsicSizeStep1(aState, aFunctions, aPercentageBasis,
+                                    aConstraint, lineRange, gridItem)) {
+        gridItem.mState[mAxis] |= ItemState::eIsFlexing;
+      }
     } else {
       TrackSize::StateBits state = TrackSize::StateBits(0);
       if (HasIntrinsicButNoFlexSizingInRange(lineRange, aConstraint, &state)) {
@@ -3503,9 +3584,8 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSize(
         step2Items.AppendElement(
           Step2ItemData({span, state, lineRange, minSize,
                          minContent, maxContent, *iter}));
-      } else {
-        aGridItems[iter.GridItemIndex()].mIsFlexing[mAxis] =
-          !!(state & TrackSize::eFlexMaxSizing);
+      } else if (state & TrackSize::eFlexMaxSizing) {
+        gridItem.mState[mAxis] |= ItemState::eIsFlexing;
       }
     }
   }
@@ -3759,7 +3839,7 @@ nsGridContainerFrame::Tracks::FindUsedFlexFraction(
   // a flex track with its max-content contribution as 'space to fill'
   for (; !iter.AtEnd(); iter.Next()) {
     const GridItemInfo& item = aGridItems[iter.GridItemIndex()];
-    if (item.mIsFlexing[mAxis]) {
+    if (item.mState[mAxis] & ItemState::eIsFlexing) {
       nscoord spaceToFill = MaxContentContribution(item, rs, rc, wm, mAxis);
       if (spaceToFill <= 0) {
         continue;
