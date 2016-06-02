@@ -452,7 +452,7 @@ TextureClient::UnlockActor() const
 bool
 TextureClient::IsReadLocked() const
 {
-  return mReadLock && mReadLock->GetReadCount() > 1;
+  return mReadLock && mReadLock->GetReadCount() > 1 && !mPendingReadUnlock;
 }
 
 bool
@@ -528,6 +528,15 @@ TextureClient::Unlock()
     mBorrowedDrawTarget = nullptr;
   }
 
+  if (mOpenMode & OpenMode::OPEN_WRITE) {
+    if (mReadLock && !mPendingReadUnlock) {
+      // Take a read lock on behalf of the TextureHost. The latter will unlock
+      // after the shared data is available again for drawing.
+      mReadLock->ReadLock();
+    }
+    mPendingReadUnlock = true;
+  }
+
   mData->Unlock();
   mIsLocked = false;
   mOpenMode = OpenMode::OPEN_NONE;
@@ -535,8 +544,43 @@ TextureClient::Unlock()
   UnlockActor();
 }
 
+void
+TextureClient::EnableReadLock()
+{
+  if (!mReadLock) {
+    mReadLock = TextureReadLock::Create(mAllocator);
+    if (mPendingReadUnlock) {
+      // We would have done this during TextureClient::Unlock if the ReadLock
+      // had been there, need to account for this here.
+      mReadLock->ReadLock();
+    }
+  }
+}
+
+void
+TextureClient::SetReadLock(TextureReadLock* aLock)
+{
+  MOZ_ASSERT(!mReadLock);
+  mReadLock = aLock;
+}
+
+void
+TextureClient::SerializeReadLock(ReadLockDescriptor& aDescriptor)
+{
+  if (mReadLock && mPendingReadUnlock) {
+    mReadLock->Serialize(aDescriptor);
+    mPendingReadUnlock = false;
+  } else {
+    aDescriptor = null_t();
+  }
+}
+
 TextureClient::~TextureClient()
 {
+  if (mPendingReadUnlock && mReadLock) {
+    mReadLock->ReadUnlock();
+    mReadLock = nullptr;
+  }
   Destroy(false);
 }
 
@@ -1044,6 +1088,7 @@ TextureClient::TextureClient(TextureData* aData, TextureFlags aFlags, ClientIPCA
 , mExpectedDtRefs(0)
 #endif
 , mIsLocked(false)
+, mPendingReadUnlock(false)
 , mInUse(false)
 , mAddedToCompositableClient(false)
 , mWorkaroundAnnoyingSharedSurfaceLifetimeIssues(false)
@@ -1174,11 +1219,19 @@ public:
 
   virtual bool IsValid() const override { return true; };
 
-  virtual bool Serialize(TileLock& aOutput) override;
+  virtual bool Serialize(ReadLockDescriptor& aOutput) override;
 
   int32_t mReadCount;
 };
 
+// The cross-prcess implementation of TextureReadLock.
+//
+// Since we don't use cross-process reference counting for the ReadLock objects,
+// we use the lock's internal counter as a way to know when to deallocate the
+// underlying shmem section: when the counter is equal to 1, it means that the
+// lock is not "held" (the texture is writable), when the counter is equal to 0
+// it means that we can safely deallocate the shmem section without causing a race
+// condition with the other process.
 class ShmemTextureReadLock : public TextureReadLock {
 public:
   struct ShmReadLockInfo {
@@ -1199,7 +1252,7 @@ public:
 
   virtual LockType GetType() override { return TYPE_SHMEM; }
 
-  virtual bool Serialize(TileLock& aOutput) override;
+  virtual bool Serialize(ReadLockDescriptor& aOutput) override;
 
   mozilla::layers::ShmemSection& GetShmemSection() { return mShmemSection; }
 
@@ -1224,31 +1277,43 @@ public:
 
 // static
 already_AddRefed<TextureReadLock>
-TextureReadLock::Open(const TileLock& aDescriptor, ISurfaceAllocator* aAllocator)
+TextureReadLock::Deserialize(const ReadLockDescriptor& aDescriptor, ISurfaceAllocator* aAllocator)
 {
-  RefPtr<TextureReadLock> lock;
-  if (aDescriptor.type() == TileLock::TShmemSection) {
-    const ShmemSection& section = aDescriptor.get_ShmemSection();
-    MOZ_RELEASE_ASSERT(section.shmem().IsReadable());
-    lock = new ShmemTextureReadLock(aAllocator, section);
-  } else {
-    if (!aAllocator->IsSameProcess()) {
-      // Trying to use a memory based lock instead of a shmem based one in
-      // the cross-process case is a bad security violation.
-      NS_ERROR("A client process may be trying to peek at the host's address space!");
+  switch (aDescriptor.type()) {
+    case ReadLockDescriptor::TShmemSection: {
+      const ShmemSection& section = aDescriptor.get_ShmemSection();
+      MOZ_RELEASE_ASSERT(section.shmem().IsReadable());
+      return MakeAndAddRef<ShmemTextureReadLock>(aAllocator, section);
+    }
+    case ReadLockDescriptor::Tuintptr_t: {
+      if (!aAllocator->IsSameProcess()) {
+        // Trying to use a memory based lock instead of a shmem based one in
+        // the cross-process case is a bad security violation.
+        NS_ERROR("A client process may be trying to peek at the host's address space!");
+        return nullptr;
+      }
+      RefPtr<TextureReadLock> lock = reinterpret_cast<MemoryTextureReadLock*>(
+        aDescriptor.get_uintptr_t()
+      );
+
+      MOZ_ASSERT(lock);
+      if (lock) {
+        // The corresponding AddRef is in MemoryTextureReadLock::Serialize
+        lock.get()->Release();
+      }
+
+      return lock.forget();
+    }
+    case ReadLockDescriptor::Tnull_t: {
       return nullptr;
     }
-    lock = reinterpret_cast<MemoryTextureReadLock*>(aDescriptor.get_uintptr_t());
-    MOZ_ASSERT(lock);
-    if (lock) {
-      // The corresponding AddRef is in MemoryTextureReadLock::Serialize
-      lock.get()->Release();
+    default: {
+      // Invalid descriptor.
+      MOZ_DIAGNOSTIC_ASSERT(false);
     }
   }
-
-  return lock.forget();
+  return nullptr;
 }
-
 // static
 already_AddRefed<TextureReadLock>
 TextureReadLock::Create(ClientIPCAllocator* aAllocator)
@@ -1276,13 +1341,13 @@ MemoryTextureReadLock::~MemoryTextureReadLock()
 }
 
 bool
-MemoryTextureReadLock::Serialize(TileLock& aOutput)
+MemoryTextureReadLock::Serialize(ReadLockDescriptor& aOutput)
 {
   // AddRef here and Release when receiving on the host side to make sure the
   // reference count doesn't go to zero before the host receives the message.
-  // see TextureReadLock::Open
+  // see TextureReadLock::Deserialize
   this->AddRef();
-  aOutput = TileLock(uintptr_t(this));
+  aOutput = ReadLockDescriptor(uintptr_t(this));
   return true;
 }
 
@@ -1339,9 +1404,9 @@ ShmemTextureReadLock::~ShmemTextureReadLock()
 }
 
 bool
-ShmemTextureReadLock::Serialize(TileLock& aOutput)
+ShmemTextureReadLock::Serialize(ReadLockDescriptor& aOutput)
 {
-  aOutput = TileLock(GetShmemSection());
+  aOutput = ReadLockDescriptor(GetShmemSection());
   return true;
 }
 

@@ -312,9 +312,10 @@ struct ShmemSection {
   size_t size;
 };
 
-union TileLock {
+union ReadLockDescriptor {
   ShmemSection;
   uintptr_t;
+  null_t;
 };
 
 union MaybeTexture {
@@ -326,7 +327,8 @@ struct TexturedTileDescriptor {
   PTexture texture;
   MaybeTexture textureOnWhite;
   IntRect updateRect;
-  TileLock sharedLock;
+  ReadLockDescriptor sharedLock;
+  ReadLockDescriptor sharedLockOnWhite;
   bool wasPlaceholder;
 };
 
