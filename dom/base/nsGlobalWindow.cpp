@@ -2243,7 +2243,7 @@ public:
   NS_DECLARE_STATIC_IID_ACCESSOR(WINDOWSTATEHOLDER_IID)
   NS_DECL_ISUPPORTS
 
-  WindowStateHolder(nsIScriptContext* aContext, nsGlobalWindow *aWindow);
+  explicit WindowStateHolder(nsGlobalWindow *aWindow);
 
   nsGlobalWindow* GetInnerWindow() { return mInnerWindow; }
 
@@ -2264,10 +2264,9 @@ protected:
 
 NS_DEFINE_STATIC_IID_ACCESSOR(WindowStateHolder, WINDOWSTATEHOLDER_IID)
 
-WindowStateHolder::WindowStateHolder(nsIScriptContext* aContext,
-                                     nsGlobalWindow* aWindow)
+WindowStateHolder::WindowStateHolder(nsGlobalWindow* aWindow)
   : mInnerWindow(aWindow),
-    mInnerWindowReflector(aContext->GetNativeContext(), aWindow->GetWrapper())
+    mInnerWindowReflector(nsContentUtils::RootingCx(), aWindow->GetWrapper())
 {
   NS_PRECONDITION(aWindow, "null window");
   NS_PRECONDITION(aWindow->IsInnerWindow(), "Saving an outer window");
@@ -12949,7 +12948,7 @@ nsGlobalWindow::SaveWindowState()
   // to the page.
   inner->Freeze();
 
-  nsCOMPtr<nsISupports> state = new WindowStateHolder(mContext, inner);
+  nsCOMPtr<nsISupports> state = new WindowStateHolder(inner);
 
 #ifdef DEBUG_PAGE_CACHE
   printf("saving window state, state = %p\n", (void*)state);

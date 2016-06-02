@@ -715,12 +715,6 @@ nsJSContext::GetGlobalObject()
   return mGlobalObjectRef;
 }
 
-JSContext*
-nsJSContext::GetNativeContext()
-{
-  return mContext;
-}
-
 nsresult
 nsJSContext::InitContext()
 {
