@@ -55,13 +55,8 @@ class MachCommands(MachCommandBase):
         # run all linters
         results = lint.roll(paths)
 
-        status = 0
-        if results:
-            status = 1
-
         formatter = formatters.get(fmt)
         print(formatter(results))
-        return status
 
     @SubCommand('lint', 'setup',
                 "Setup required libraries for specified lints.")

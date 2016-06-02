@@ -42,7 +42,7 @@ def _run_linters(queue, paths, **lintargs):
         func = supported_types[linter['type']]
         res = func(paths, linter, **lintargs) or []
 
-        if not isinstance(res, (list, tuple)):
+        if isinstance(res, basestring):
             continue
 
         for r in res:

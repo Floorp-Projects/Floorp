@@ -6,7 +6,6 @@ import json
 
 from ..result import ResultEncoder
 from .stylish import StylishFormatter
-from .treeherder import TreeherderFormatter
 
 
 class JSONFormatter(object):
@@ -17,7 +16,6 @@ class JSONFormatter(object):
 all_formatters = {
     'json': JSONFormatter,
     'stylish': StylishFormatter,
-    'treeherder': TreeherderFormatter,
 }
 
 
