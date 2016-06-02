@@ -19,7 +19,7 @@ namespace layers {
 
 class ISurfaceAllocator;
 class CompositableForwarder;
-class gfxSharedReadLock;
+class TextureReadLock;
 
 class TextureClientAllocator
 {
@@ -34,7 +34,7 @@ public:
    * Return a TextureClient that is not yet ready to be reused, but will be
    * imminently.
    */
-  virtual void ReturnTextureClientDeferred(TextureClient *aClient, gfxSharedReadLock* aLock) = 0;
+  virtual void ReturnTextureClientDeferred(TextureClient *aClient, TextureReadLock* aLock) = 0;
 
   virtual void ReportClientLost() = 0;
 };
@@ -72,7 +72,7 @@ public:
    * Return a TextureClient that is not yet ready to be reused, but will be
    * imminently.
    */
-  void ReturnTextureClientDeferred(TextureClient *aClient, gfxSharedReadLock* aLock) override;
+  void ReturnTextureClientDeferred(TextureClient *aClient, TextureReadLock* aLock) override;
 
   /**
    * Attempt to shrink the pool so that there are no more than
@@ -143,9 +143,9 @@ private:
 
   struct TextureClientHolder {
     RefPtr<TextureClient> mTextureClient;
-    RefPtr<gfxSharedReadLock> mLock;
+    RefPtr<TextureReadLock> mLock;
 
-    TextureClientHolder(TextureClient* aTextureClient, gfxSharedReadLock* aLock)
+    TextureClientHolder(TextureClient* aTextureClient, TextureReadLock* aLock)
       : mTextureClient(aTextureClient), mLock(aLock)
     {}
   };

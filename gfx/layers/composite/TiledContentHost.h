@@ -52,8 +52,8 @@ public:
   TileHost()
   {}
 
-  // Constructs a TileHost from a gfxSharedReadLock and TextureHost.
-  TileHost(gfxSharedReadLock* aSharedLock,
+  // Constructs a TileHost from a TextureReadLock and TextureHost.
+  TileHost(TextureReadLock* aSharedLock,
                TextureHost* aTextureHost,
                TextureHost* aTextureHostOnWhite,
                TextureSource* aSource,
@@ -119,7 +119,7 @@ public:
    */
   float GetFadeInOpacity(float aOpacity);
 
-  RefPtr<gfxSharedReadLock> mSharedLock;
+  RefPtr<TextureReadLock> mSharedLock;
   CompositableTextureHostRef mTextureHost;
   CompositableTextureHostRef mTextureHostOnWhite;
   mutable CompositableTextureSourceRef mTextureSource;
@@ -159,7 +159,7 @@ public:
 protected:
 
   CSSToParentLayerScale2D mFrameResolution;
-  nsTArray<RefPtr<gfxSharedReadLock>> mDelayedUnlocks;
+  nsTArray<RefPtr<TextureReadLock>> mDelayedUnlocks;
 };
 
 /**
