@@ -18,7 +18,7 @@ config = {
     }, {
         "vcs": "hgtool",
         "repo": "https://hg.mozilla.org/releases/mozilla-beta",
-        "revision": "default",
+        "revision": "%(revision)s",
         "dest": "mozilla-beta",
     }, {
         "vcs": "hgtool",
