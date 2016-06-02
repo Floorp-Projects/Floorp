@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1150315
 /** Test for Bug 1150315 **/
 
 function testFunc(done_cb) {
-  var gotErrorEvent = false;
+  var gotEndEvent = false;
   // A long utterance that we will interrupt.
   var utterance = new SpeechSynthesisUtterance("Donec ac nunc feugiat, posuere " +
     "mauris id, pharetra velit. Donec fermentum orci nunc, sit amet maximus" +
@@ -63,14 +63,13 @@ function testFunc(done_cb) {
     speechSynthesis.cancel();
     speechSynthesis.speak(utterance3);
   });
-  utterance2.addEventListener('error', function(e) {
-    gotErrorEvent = true;
-    is(e.error, "interrupted", "Error event is has right error.")
+  utterance2.addEventListener('end', function(e) {
+    gotEndEvent = true;
   });
 
   var utterance3 = new SpeechSynthesisUtterance("Hello, world 3!");
   utterance3.addEventListener('start', function() {
-    ok(gotErrorEvent, "didn't get error event for previous utterance");
+    ok(gotEndEvent, "didn't get start event for this utterance");
   });
   utterance3.addEventListener('end', done_cb);
 

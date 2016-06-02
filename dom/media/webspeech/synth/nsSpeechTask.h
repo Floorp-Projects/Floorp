@@ -109,8 +109,6 @@ private:
 
   nsresult DispatchEndInner(float aElapsedTime, uint32_t aCharIndex);
 
-  nsresult DispatchErrorInner(float aElapsedTime, uint32_t aCharIndex, uint32_t aError);
-
   void CreateAudioChannelAgent();
 
   void DestroyAudioChannelAgent();
