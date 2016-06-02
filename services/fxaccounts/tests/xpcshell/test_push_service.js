@@ -143,6 +143,36 @@ add_test(function observePushTopicVerify() {
   pushService.observe(emptyMsg, mockPushService.pushTopic, FXA_PUSH_SCOPE_ACCOUNT_UPDATE);
 });
 
+add_test(function observePushTopicDeviceDisconnected() {
+  const deviceId = "bogusid";
+  let msg = {
+    data: {
+      json: () => ({
+        command: ON_DEVICE_DISCONNECTED_NOTIFICATION,
+        data: {
+          id: deviceId
+        }
+      })
+    },
+    QueryInterface: function() {
+      return this;
+    }
+  };
+  let obs = (subject, topic, data) => {
+    equal(data, deviceId)
+    Services.obs.removeObserver(obs, topic);
+    run_next_test();
+  };
+  Services.obs.addObserver(obs, ON_DEVICE_DISCONNECTED_NOTIFICATION, false);
+
+  let pushService = new FxAccountsPushService({
+    pushService: mockPushService,
+    fxAccounts: mockFxAccounts,
+  });
+
+  pushService.observe(msg, mockPushService.pushTopic, FXA_PUSH_SCOPE_ACCOUNT_UPDATE);
+});
+
 add_test(function observeSubscriptionChangeTopic() {
   let customAccounts = Object.assign(mockFxAccounts, {
     updateDeviceRegistration: function () {
