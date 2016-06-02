@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
-from WebIDL import IDLInterface, IDLExternalInterface, IDLImplementsStatement
+from WebIDL import IDLImplementsStatement
 import os
 from collections import defaultdict
 
@@ -53,7 +53,7 @@ class Configuration:
 
             assert not thing.isType()
 
-            if not thing.isInterface():
+            if not thing.isInterface() and not thing.isNamespace():
                 continue
             iface = thing
             self.interfaces[iface.identifier.name] = iface
@@ -433,6 +433,7 @@ class Descriptor(DescriptorProvider):
         # them as having a concrete descendant.
         self.concrete = (not self.interface.isExternal() and
                          not self.interface.isCallback() and
+                         not self.interface.isNamespace() and
                          desc.get('concrete', True))
         self.hasUnforgeableMembers = (self.concrete and
                                       any(MemberIsUnforgeable(m, self) for m in
