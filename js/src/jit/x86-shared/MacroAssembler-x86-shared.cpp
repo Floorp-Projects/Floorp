@@ -315,6 +315,94 @@ MacroAssemblerX86Shared::asmMergeWith(const MacroAssemblerX86Shared& other)
     return true;
 }
 
+void
+MacroAssemblerX86Shared::minMaxDouble(FloatRegister first, FloatRegister second, bool handleNaN, bool isMax)
+{
+    Label done, nan, minMaxInst;
+
+    // Do a vucomisd to catch equality and NaNs, which both require special
+    // handling. If the operands are ordered and inequal, we branch straight to
+    // the min/max instruction. If we wanted, we could also branch for less-than
+    // or greater-than here instead of using min/max, however these conditions
+    // will sometimes be hard on the branch predictor.
+    vucomisd(second, first);
+    j(Assembler::NotEqual, &minMaxInst);
+    if (handleNaN)
+        j(Assembler::Parity, &nan);
+
+    // Ordered and equal. The operands are bit-identical unless they are zero
+    // and negative zero. These instructions merge the sign bits in that
+    // case, and are no-ops otherwise.
+    if (isMax)
+        vandpd(second, first, first);
+    else
+        vorpd(second, first, first);
+    jump(&done);
+
+    // x86's min/max are not symmetric; if either operand is a NaN, they return
+    // the read-only operand. We need to return a NaN if either operand is a
+    // NaN, so we explicitly check for a NaN in the read-write operand.
+    if (handleNaN) {
+        bind(&nan);
+        vucomisd(first, first);
+        j(Assembler::Parity, &done);
+    }
+
+    // When the values are inequal, or second is NaN, x86's min and max will
+    // return the value we need.
+    bind(&minMaxInst);
+    if (isMax)
+        vmaxsd(second, first, first);
+    else
+        vminsd(second, first, first);
+
+    bind(&done);
+}
+
+void
+MacroAssemblerX86Shared::minMaxFloat32(FloatRegister first, FloatRegister second, bool handleNaN, bool isMax)
+{
+    Label done, nan, minMaxInst;
+
+    // Do a vucomiss to catch equality and NaNs, which both require special
+    // handling. If the operands are ordered and inequal, we branch straight to
+    // the min/max instruction. If we wanted, we could also branch for less-than
+    // or greater-than here instead of using min/max, however these conditions
+    // will sometimes be hard on the branch predictor.
+    vucomiss(second, first);
+    j(Assembler::NotEqual, &minMaxInst);
+    if (handleNaN)
+        j(Assembler::Parity, &nan);
+
+    // Ordered and equal. The operands are bit-identical unless they are zero
+    // and negative zero. These instructions merge the sign bits in that
+    // case, and are no-ops otherwise.
+    if (isMax)
+        vandps(second, first, first);
+    else
+        vorps(second, first, first);
+    jump(&done);
+
+    // x86's min/max are not symmetric; if either operand is a NaN, they return
+    // the read-only operand. We need to return a NaN if either operand is a
+    // NaN, so we explicitly check for a NaN in the read-write operand.
+    if (handleNaN) {
+        bind(&nan);
+        vucomiss(first, first);
+        j(Assembler::Parity, &done);
+    }
+
+    // When the values are inequal, or second is NaN, x86's min and max will
+    // return the value we need.
+    bind(&minMaxInst);
+    if (isMax)
+        vmaxss(second, first, first);
+    else
+        vminss(second, first, first);
+
+    bind(&done);
+}
+
 //{{{ check_macroassembler_style
 // ===============================================================
 // MacroAssembler high-level usage.
