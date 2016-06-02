@@ -279,47 +279,15 @@ this.BrowserTestUtils = {
   /**
    * Waits for the next browser window to open and be fully loaded.
    *
-   * @param {bool} delayedStartup (optional)
-   *        Whether or not to wait for the browser-delayed-startup-finished
-   *        observer notification before resolving. Defaults to true.
-   * @param {string} initialBrowserLoaded (optional)
-   *        If set, we will wait until the initial browser in the new
-   *        window has loaded a particular page. If unset, the initial
-   *        browser may or may not have finished loading its first page
-   *        when the resulting Promise resolves.
    * @return {Promise}
    *         A Promise which resolves the next time that a DOM window
    *         opens and the delayed startup observer notification fires.
    */
-  waitForNewWindow: Task.async(function* (delayedStartup=true,
-                                          initialBrowserLoaded=null) {
+  waitForNewWindow: Task.async(function* (delayedStartup=true) {
     let win = yield this.domWindowOpened();
 
-    let promises = [
-      TestUtils.topicObserved("browser-delayed-startup-finished",
-                              subject => subject == win),
-    ];
-
-    if (initialBrowserLoaded) {
-      yield this.waitForEvent(win, "DOMContentLoaded");
-
-      let browser = win.gBrowser.selectedBrowser;
-
-      // Retrieve the given browser's current process type.
-      let process =
-        browser.isRemoteBrowser ? Ci.nsIXULRuntime.PROCESS_TYPE_CONTENT
-                                : Ci.nsIXULRuntime.PROCESS_TYPE_DEFAULT;
-      if (win.gMultiProcessBrowser &&
-          !E10SUtils.canLoadURIInProcess(initialBrowserLoaded, process)) {
-        yield this.waitForEvent(browser, "XULFrameLoaderCreated");
-      }
-
-      let loadPromise = this.browserLoaded(browser, false, initialBrowserLoaded);
-      promises.push(loadPromise);
-    }
-
-    yield Promise.all(promises);
-
+    yield TestUtils.topicObserved("browser-delayed-startup-finished",
+                                   subject => subject == win);
     return win;
   }),
 
