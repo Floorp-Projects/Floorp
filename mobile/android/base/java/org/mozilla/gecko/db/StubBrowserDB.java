@@ -49,7 +49,7 @@ class StubURLMetadata implements URLMetadata {
         return new HashMap<String, Map<String, Object>>();
     }
 
-    public void save(final ContentResolver cr, final String url, final Map<String, Object> data) {
+    public void save(final ContentResolver cr, final Map<String, Object> data) {
     }
 }
 
