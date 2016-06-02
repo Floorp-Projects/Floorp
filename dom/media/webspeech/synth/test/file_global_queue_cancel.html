@@ -50,25 +50,17 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1188099
       SpecialPowers.wrap(win1.speechSynthesis).forceEnd();
 
     });
-
-    var error4 = synthEventPromise(utterance4, 'error').then(isCanceled);
-    var error5 = synthEventPromise(utterance5, 'error').then(isCanceled);
-
-    var end1 = synthEventPromise(utterance1, 'end').then(() => {
+    utterance1.addEventListener('end', function(e) {
       is(eventOrder.shift(), 'end1', 'end1');
       testSynthState(win1, { pending: true });
       testSynthState(win2, { pending: false });
     });
-
-    var start2 = synthEventPromise(utterance2, 'start').then(() => {
+    utterance2.addEventListener('start', function(e) {
       is(eventOrder.shift(), 'start2', 'start2');
       testSynthState(win1, { speaking: true, pending: true });
       testSynthState(win2, { speaking: true, pending: false });
+      win1.speechSynthesis.cancel();
     });
-
-    Promise.all([error4, error5, end1, start2]).then(
-      () => win1.speechSynthesis.cancel());
-
     utterance2.addEventListener('error', function(e) {
       is(eventOrder.shift(), 'error2', 'error2');
       testSynthState(win1, { speaking: false, pending: false });
@@ -78,10 +70,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1188099
 
     function wrongUtterance(e) {
       ok(false, 'This shall not be uttered: "' + e.target.text + '"');
-    }
-
-    function isCanceled(e) {
-      is(e.error, "canceled", "Utterance was canceled: " + e.target.text);
     }
 
     utterance3.addEventListener('start', wrongUtterance);
