@@ -92,17 +92,17 @@ struct TileClient
 
   void ReadUnlock()
   {
-    MOZ_ASSERT(mFrontLock, "ReadLock with no TextureReadLock");
-    if (mFrontLock) {
-      mFrontLock->ReadUnlock();
+    MOZ_ASSERT(mFrontBuffer && mFrontBuffer->GetReadLock());
+    if (mFrontBuffer && mFrontBuffer->GetReadLock()) {
+      mFrontBuffer->GetReadLock()->ReadUnlock();
     }
   }
 
   void ReadLock()
   {
-    MOZ_ASSERT(mFrontLock, "ReadLock with no TextureReadLock");
-    if (mFrontLock) {
-      mFrontLock->ReadLock();
+    MOZ_ASSERT(mFrontBuffer && mFrontBuffer->GetReadLock());
+    if (mFrontBuffer && mFrontBuffer->GetReadLock()) {
+      mFrontBuffer->GetReadLock()->ReadLock();
     }
   }
 
@@ -170,8 +170,6 @@ struct TileClient
   RefPtr<TextureClient> mBackBufferOnWhite;
   RefPtr<TextureClient> mFrontBuffer;
   RefPtr<TextureClient> mFrontBufferOnWhite;
-  RefPtr<TextureReadLock> mBackLock;
-  RefPtr<TextureReadLock> mFrontLock;
   RefPtr<ClientLayerManager> mManager;
   RefPtr<TextureClientAllocator> mAllocator;
   gfx::IntRect mUpdateRect;

@@ -426,8 +426,6 @@ TileClient::TileClient(const TileClient& o)
   mBackBufferOnWhite = o.mBackBufferOnWhite;
   mFrontBuffer = o.mFrontBuffer;
   mFrontBufferOnWhite = o.mFrontBufferOnWhite;
-  mBackLock = o.mBackLock;
-  mFrontLock = o.mFrontLock;
   mCompositableClient = o.mCompositableClient;
   mWasPlaceholder = o.mWasPlaceholder;
   mUpdateRect = o.mUpdateRect;
@@ -448,8 +446,6 @@ TileClient::operator=(const TileClient& o)
   mBackBufferOnWhite = o.mBackBufferOnWhite;
   mFrontBuffer = o.mFrontBuffer;
   mFrontBufferOnWhite = o.mFrontBufferOnWhite;
-  mBackLock = o.mBackLock;
-  mFrontLock = o.mFrontLock;
   mCompositableClient = o.mCompositableClient;
   mWasPlaceholder = o.mWasPlaceholder;
   mUpdateRect = o.mUpdateRect;
@@ -494,9 +490,6 @@ TileClient::Flip()
   mFrontBufferOnWhite = mBackBufferOnWhite;
   mBackBuffer.Set(this, frontBuffer);
   mBackBufferOnWhite = frontBufferOnWhite;
-  RefPtr<TextureReadLock> frontLock = mFrontLock;
-  mFrontLock = mBackLock;
-  mBackLock = frontLock;
   nsIntRegion invalidFront = mInvalidFront;
   mInvalidFront = mInvalidBack;
   mInvalidBack = invalidFront;
@@ -569,16 +562,20 @@ void
 TileClient::DiscardFrontBuffer()
 {
   if (mFrontBuffer) {
-    MOZ_ASSERT(mFrontLock);
+    MOZ_ASSERT(mFrontBuffer->GetReadLock());
 
     if (mCompositableClient) {
       mFrontBuffer->RemoveFromCompositable(mCompositableClient);
     }
 
-    mAllocator->ReturnTextureClientDeferred(mFrontBuffer, mFrontLock);
+    mAllocator->ReturnTextureClientDeferred(mFrontBuffer);
     if (mFrontBufferOnWhite) {
+      // TODO: right now we use he same ReadLock for the texture on black and
+      // the texture on white, but we may change that in the near future.
+      RefPtr<TextureReadLock> lock = mFrontBuffer->GetReadLock();
+      mFrontBuffer->SetReadLock(lock.forget());
       mFrontBufferOnWhite->RemoveFromCompositable(mCompositableClient);
-      mAllocator->ReturnTextureClientDeferred(mFrontBufferOnWhite, mFrontLock);
+      mAllocator->ReturnTextureClientDeferred(mFrontBufferOnWhite);
     }
     if (mFrontBuffer->IsLocked()) {
       mFrontBuffer->Unlock();
@@ -588,7 +585,6 @@ TileClient::DiscardFrontBuffer()
     }
     mFrontBuffer = nullptr;
     mFrontBufferOnWhite = nullptr;
-    mFrontLock = nullptr;
   }
 }
 
@@ -596,8 +592,8 @@ void
 TileClient::DiscardBackBuffer()
 {
   if (mBackBuffer) {
-    MOZ_ASSERT(mBackLock);
-    if (!mBackBuffer->HasSynchronization() && mBackLock->GetReadCount() > 1) {
+    MOZ_ASSERT(mBackBuffer->GetReadLock());
+    if (!mBackBuffer->HasSynchronization() && mBackBuffer->IsReadLocked()) {
       // Our current back-buffer is still locked by the compositor. This can occur
       // when the client is producing faster than the compositor can consume. In
       // this case we just want to drop it and not return it to the pool.
@@ -606,9 +602,11 @@ TileClient::DiscardBackBuffer()
        mAllocator->ReportClientLost();
      }
     } else {
-      mAllocator->ReturnTextureClientDeferred(mBackBuffer, mBackLock);
+      mAllocator->ReturnTextureClientDeferred(mBackBuffer);
       if (mBackBufferOnWhite) {
-        mAllocator->ReturnTextureClientDeferred(mBackBufferOnWhite, mBackLock);
+        RefPtr<TextureReadLock> lock = mBackBuffer->GetReadLock();
+        mBackBufferOnWhite->SetReadLock(lock.forget());
+        mAllocator->ReturnTextureClientDeferred(mBackBufferOnWhite);
       }
     }
     if (mBackBuffer->IsLocked()) {
@@ -619,7 +617,6 @@ TileClient::DiscardBackBuffer()
     }
     mBackBuffer.Set(this, nullptr);
     mBackBufferOnWhite = nullptr;
-    mBackLock = nullptr;
   }
 }
 
@@ -634,15 +631,14 @@ TileClient::GetBackBuffer(const nsIntRegion& aDirtyRegion,
   bool createdTextureClient = false;
   if (mFrontBuffer &&
       mFrontBuffer->HasIntermediateBuffer() &&
-      mFrontLock->GetReadCount() == 1 &&
+      !mFrontBuffer->IsReadLocked() &&
       !(aMode == SurfaceMode::SURFACE_COMPONENT_ALPHA && !mFrontBufferOnWhite)) {
     // If we had a backbuffer we no longer care about it since we'll
     // re-use the front buffer.
     DiscardBackBuffer();
     Flip();
   } else {
-    if (!mBackBuffer ||
-        mBackLock->GetReadCount() > 1) {
+    if (!mBackBuffer || mBackBuffer->IsReadLocked()) {
 
       if (mBackBuffer) {
         // Our current back-buffer is still locked by the compositor. This can occur
@@ -670,9 +666,7 @@ TileClient::GetBackBuffer(const nsIntRegion& aDirtyRegion,
         }
       }
 
-      mBackLock = TextureReadLock::Create(mManager->AsShadowForwarder());
-
-      MOZ_ASSERT(mBackLock && mBackLock->IsValid());
+      mBackBuffer->SetReadLock(TextureReadLock::Create(mManager->AsShadowForwarder()));
 
       createdTextureClient = true;
       mInvalidBack = IntRect(0, 0, mBackBuffer->GetSize().width, mBackBuffer->GetSize().height);
@@ -725,12 +719,11 @@ TileClient::GetTileDescriptor()
     mWasPlaceholder = true;
     return PlaceholderTileDescriptor();
   }
-  MOZ_ASSERT(mFrontLock);
   bool wasPlaceholder = mWasPlaceholder;
   mWasPlaceholder = false;
 
   TileLock lock;
-  mFrontLock->Serialize(lock);
+  mFrontBuffer->GetReadLock()->Serialize(lock);
 
   return TexturedTileDescriptor(nullptr, mFrontBuffer->GetIPDLActor(),
                                 mFrontBufferOnWhite ? MaybeTexture(mFrontBufferOnWhite->GetIPDLActor()) : MaybeTexture(null_t()),
