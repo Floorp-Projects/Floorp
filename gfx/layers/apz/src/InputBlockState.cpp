@@ -739,6 +739,9 @@ TouchBlockState::TouchBlockState(const RefPtr<AsyncPanZoomController>& aTargetAp
   , mTouchCounter(aCounter)
 {
   TBS_LOG("Creating %p\n", this);
+  if (!gfxPrefs::TouchActionEnabled()) {
+    mAllowedTouchBehaviorSet = true;
+  }
 }
 
 bool
@@ -778,6 +781,7 @@ bool
 TouchBlockState::HasReceivedAllContentNotifications() const
 {
   return CancelableBlockState::HasReceivedAllContentNotifications()
+      // See comment in TouchBlockState::IsReadyforHandling()
       && (!gfxPrefs::TouchActionEnabled() || mAllowedTouchBehaviorSet);
 }
 
@@ -789,6 +793,12 @@ TouchBlockState::IsReadyForHandling() const
   }
 
   if (!gfxPrefs::TouchActionEnabled()) {
+    // If TouchActionEnabled() was false when this block was created, then
+    // mAllowedTouchBehaviorSet is guaranteed to the true. However, the pref
+    // may have been flipped to false after the block was created. In that case,
+    // we should eventually get the touch-behaviour notification, or expire the
+    // content response timeout, but we don't really need to wait for those,
+    // since we don't care about the touch-behaviour values any more.
     return true;
   }
 

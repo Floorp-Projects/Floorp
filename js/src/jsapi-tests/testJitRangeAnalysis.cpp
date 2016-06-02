@@ -308,6 +308,9 @@ checkShiftRightRange(int32_t lhsLow, int32_t lhsHigh, int32_t lhsInc,
             Range* lhsRange = Range::NewInt32Range(func.alloc, lhsLower, lhsUpper);
             for (rhsLower = rhsLow; rhsLower <= rhsHigh; rhsLower += rhsInc) {
                 for (rhsUpper = rhsLower; rhsUpper <= rhsHigh; rhsUpper += rhsInc) {
+                    if (!func.alloc.ensureBallast())
+                        return false;
+
                     Range* rhsRange = Range::NewInt32Range(func.alloc, rhsLower, rhsUpper);
                     Range* result = Range::rsh(func.alloc, lhsRange, rhsRange);
                     int32_t min, max;

@@ -1,0 +1,57 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+#include "nsISupports.idl"
+
+/**
+ * Listener for getting list of addresses.
+ */
+[scriptable, uuid(c4bdaac1-3ab1-4fdb-9a16-17cbed794603)]
+interface nsIListNetworkAddressesListener : nsISupports
+{
+  /**
+   * Callback function that gets called by nsINetworkInfoService.listNetworkAddresses.
+   * Each address in the array is a string IP address in canonical form,
+   * e.g. 192.168.1.10, or an IPV6 address in string form.
+   */
+  void onListedNetworkAddresses([array, size_is(aAddressArraySize)] in string aAddressArray,
+                                in unsigned long aAddressArraySize);
+  void onListNetworkAddressesFailed();
+};
+
+/**
+ * Listener for getting hostname.
+ */
+[scriptable, uuid(3ebdcb62-2df4-4042-8864-3fa81abd4693)]
+interface nsIGetHostnameListener : nsISupports
+{
+  void onGotHostname(in AUTF8String aHostname);
+  void onGetHostnameFailed();
+};
+
+/**
+ * Service information
+ */
+[scriptable, uuid(55fc8dae-4a58-4e0f-a49b-901cbabae809)]
+interface nsINetworkInfoService : nsISupports
+{
+  /**
+   * Obtain a list of local machine network addresses.  The listener object's
+   * onListedNetworkAddresses will be called with the obtained addresses.
+   * On failure, the listener object's onListNetworkAddressesFailed() will be called.
+   */
+  void listNetworkAddresses(in nsIListNetworkAddressesListener aListener);
+
+  /**
+   * Obtain the hostname of the local machine.  The listener object's
+   * onGotHostname will be called with the obtained hostname.
+   * On failure, the listener object's onGetHostnameFailed() will be called.
+   */
+  void getHostname(in nsIGetHostnameListener aListener);
+};
+
+%{ C++
+#define NETWORKINFOSERVICE_CONTRACT_ID \
+  "@mozilla.org/network-info-service;1"
+%}

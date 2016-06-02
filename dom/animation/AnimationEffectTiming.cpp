@@ -134,10 +134,14 @@ AnimationEffectTiming::SetEasing(JSContext* aCx,
                                  const nsAString& aEasing,
                                  ErrorResult& aRv)
 {
+  nsIDocument* document = AnimationUtils::GetCurrentRealmDocument(aCx);
+  if (!document) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return;
+  }
+
   Maybe<ComputedTimingFunction> newFunction =
-    TimingParams::ParseEasing(aEasing,
-                              AnimationUtils::GetCurrentRealmDocument(aCx),
-                              aRv);
+    TimingParams::ParseEasing(aEasing, document, aRv);
   if (aRv.Failed()) {
     return;
   }

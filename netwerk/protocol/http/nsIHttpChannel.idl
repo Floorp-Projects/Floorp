@@ -447,4 +447,11 @@ interface nsIHttpChannel : nsIChannel
      * Identifies the request context for this load.
      */
     [noscript] attribute nsID requestContextID;
+
+    /**
+     * Unique ID of the channel, shared between parent and child. Needed if
+     * the channel activity needs to be monitored across process boundaries,
+     * like in devtools net monitor. See bug 1274556.
+     */
+    attribute ACString channelId;
 };

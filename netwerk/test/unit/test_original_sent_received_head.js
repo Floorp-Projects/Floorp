@@ -8,6 +8,8 @@
 //  and the form as they have been received from the network.
 //  Here, the "original headers" are tested.
 //
+//  Original headers will be stored in the cache as well. This test checks
+//  that too.
 
 // Note: sets Cc and Ci variables
 
@@ -21,30 +23,46 @@ XPCOMUtils.defineLazyGetter(this, "URL", function() {
 var httpserver = new HttpServer();
 var testpath = "/simple";
 var httpbody = "0123456789";
-var channel;
-var ios;
 
 var dbg=1
-if (dbg) { print("============== START =========="); }
 
 function run_test() {
-  setup_test();
-  do_test_pending();
-}
 
-function setup_test() {
-  if (dbg) { print("============== setup_test: in"); }
+  if (dbg) { print("============== START =========="); }
 
   httpserver.registerPathHandler(testpath, serverHandler);
   httpserver.start(-1);
+  run_next_test();
+}
 
-  channel = setupChannel(testpath);
+add_test(function test_headerChange() {
+  if (dbg) { print("============== test_headerChange setup: in"); }
+
+  var channel1 = setupChannel(testpath);
+  channel1.loadFlags = Components.interfaces.nsIRequest.LOAD_BYPASS_CACHE;
 
   // ChannelListener defined in head_channels.js
-  channel.asyncOpen2(new ChannelListener(checkResponse, channel));
+  channel1.asyncOpen2(new ChannelListener(checkResponse, null));
 
-  if (dbg) { print("============== setup_test: out"); }
-}
+  if (dbg) { print("============== test_headerChange setup: out"); }
+});
+
+add_test(function test_fromCache() {
+  if (dbg) { print("============== test_fromCache setup: in"); }
+
+  var channel2 = setupChannel(testpath);
+  channel2.loadFlags = Components.interfaces.nsIRequest.LOAD_FROM_CACHE;
+
+  // ChannelListener defined in head_channels.js
+  channel2.asyncOpen2(new ChannelListener(checkResponse, null));
+
+  if (dbg) { print("============== test_fromCache setup: out"); }
+});
+
+add_test(function finish() {
+  if (dbg) { print("============== STOP =========="); }
+  httpserver.stop(do_test_finished);
+});
 
 function setupChannel(path) {
   var chan = NetUtil.newChannel ({
@@ -58,31 +76,43 @@ function setupChannel(path) {
 function serverHandler(metadata, response) {
   if (dbg) { print("============== serverHandler: in"); }
 
-  response.setHeader("Content-Type", "text/plain", false);
-  response.setStatusLine("1.1", 200, "OK");
+  try {
+    var etag = metadata.getHeader("If-None-Match");
+  } catch(ex) {
+    var etag = "";
+  }
+  if (etag == "testtag") {
+    if (dbg) { print("============== 304 answerr: in"); }
+    response.setStatusLine("1.1", 304, "Not Modified");
+  } else {
+    response.setHeader("Content-Type", "text/plain", false);
+    response.setStatusLine("1.1", 200, "OK");
 
-  // Set a empty header. A empty link header will not appear in header list,
-  // but in the "original headers", it will be still exactly as received.
-  response.setHeaderNoCheck("Link", "", true);
-  response.setHeaderNoCheck("Link", "value1");
-  response.setHeaderNoCheck("Link", "value2");
-  response.setHeaderNoCheck("Location", "loc");
-  response.bodyOutputStream.write(httpbody, httpbody.length);
-
+    // Set a empty header. A empty link header will not appear in header list,
+    // but in the "original headers", it will be still exactly as received.
+    response.setHeaderNoCheck("Link", "", true);
+    response.setHeaderNoCheck("Link", "value1");
+    response.setHeaderNoCheck("Link", "value2");
+    response.setHeaderNoCheck("Location", "loc");
+    response.setHeader("Cache-Control", "max-age=10000", false);
+    response.setHeader("ETag", "testtag", false);
+    response.bodyOutputStream.write(httpbody, httpbody.length);
+  }
   if (dbg) { print("============== serverHandler: out"); }
 }
 
 function checkResponse(request, data, context) {
   if (dbg) { print("============== checkResponse: in"); }
 
-  do_check_eq(channel.responseStatus, 200);
-  do_check_eq(channel.responseStatusText, "OK");
-  do_check_true(channel.requestSucceeded);
+  request.QueryInterface(Components.interfaces.nsIHttpChannel);
+  do_check_eq(request.responseStatus, 200);
+  do_check_eq(request.responseStatusText, "OK");
+  do_check_true(request.requestSucceeded);
 
   // Response header have only one link header.
   var linkHeaderFound = 0;
   var locationHeaderFound = 0;
-  channel.visitResponseHeaders({
+  request.visitResponseHeaders({
     visitHeader: function visit(aName, aValue) {
       if (aName == "Link") {
         linkHeaderFound++;
@@ -100,7 +130,7 @@ function checkResponse(request, data, context) {
   // The "original header" still contains 3 link headers.
   var linkOrgHeaderFound = 0;
   var locationOrgHeaderFound = 0;
-  channel.visitOriginalResponseHeaders({
+  request.visitOriginalResponseHeaders({
     visitHeader: function visitOrg(aName, aValue) {
       if (aName == "Link") {
         if (linkOrgHeaderFound == 0) {
@@ -123,12 +153,12 @@ function checkResponse(request, data, context) {
 
   if (dbg) { print("============== Remove headers"); }
   // Remove header.
-  channel.setResponseHeader("Link", "", false);
-  channel.setResponseHeader("Location", "", false);
+  request.setResponseHeader("Link", "", false);
+  request.setResponseHeader("Location", "", false);
 
   var linkHeaderFound2 = false;
   var locationHeaderFound2 = 0;
-  channel.visitResponseHeaders({
+  request.visitResponseHeaders({
     visitHeader: function visit(aName, aValue) {
       if (aName == "Link") {
         linkHeaderFound2 = true;
@@ -144,7 +174,7 @@ function checkResponse(request, data, context) {
   // The "original header" still contains the empty header.
   var linkOrgHeaderFound2 = 0;
   var locationOrgHeaderFound2 = 0;
-  channel.visitOriginalResponseHeaders({
+  request.visitOriginalResponseHeaders({
     visitHeader: function visitOrg(aName, aValue) {
       if (aName == "Link") {
         if (linkOrgHeaderFound2 == 0) {
@@ -169,7 +199,7 @@ function checkResponse(request, data, context) {
 
   if (dbg) { print("============== Test GetResponseHeader"); }
   var linkOrgHeaderFound3 = 0;
-  channel.getOriginalResponseHeader("Link",{
+  request.getOriginalResponseHeader("Link",{
     visitHeader: function visitOrg(aName, aValue) {
       if (linkOrgHeaderFound3 == 0) {
         do_check_eq(aValue, "");
@@ -184,6 +214,7 @@ function checkResponse(request, data, context) {
   do_check_true(linkOrgHeaderFound2 == 3, 
                 "Original link header still here.");
 
-  httpserver.stop(do_test_finished);
   if (dbg) { print("============== checkResponse: out"); }
+
+  run_next_test();
 }

@@ -401,7 +401,7 @@ private:
   DECL_GFX_PREF(Live, "layout.css.scroll-snap.prediction-max-velocity", ScrollSnapPredictionMaxVelocity, int32_t, 2000);
   DECL_GFX_PREF(Live, "layout.css.scroll-snap.prediction-sensitivity", ScrollSnapPredictionSensitivity, float, 0.750f);
   DECL_GFX_PREF(Live, "layout.css.scroll-snap.proximity-threshold", ScrollSnapProximityThreshold, int32_t, 200);
-  DECL_GFX_PREF(Once, "layout.css.touch_action.enabled",       TouchActionEnabled, bool, false);
+  DECL_GFX_PREF(Live, "layout.css.touch_action.enabled",       TouchActionEnabled, bool, false);
   DECL_GFX_PREF(Live, "layout.display-list.dump",              LayoutDumpDisplayList, bool, false);
   DECL_GFX_PREF(Live, "layout.display-list.dump-content",      LayoutDumpDisplayListContent, bool, false);
   DECL_GFX_PREF(Live, "layout.event-regions.enabled",          LayoutEventRegionsEnabledDoNotUseDirectly, bool, false);

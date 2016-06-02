@@ -226,19 +226,19 @@ Would you like to install the `hg wip` alias?
 '''.strip()
 
 HGWATCHMAN_MINIMUM_VERSION = LooseVersion('3.5.2')
+FSMONITOR_MINIMUM_VERSION = LooseVersion('3.8')
 
-HGWATCHMAN_INFO = '''
-The hgwatchman extension integrates the watchman filesystem watching
+FSMONITOR_INFO = '''
+Filesystem monitor integrates the watchman filesystem watching
 tool with Mercurial. Commands like `hg status`, `hg diff`, and
 `hg commit` that need to examine filesystem state can query watchman
 and obtain filesystem state nearly instantaneously. The result is much
 faster command execution.
 
-When installed, the hgwatchman extension will launch a background
-watchman file watching daemon for accessed Mercurial repositories. It
-should "just work."
+When enabled, the filesystem monitor tool will launch a background
+watchman file watching daemon for accessed Mercurial repositories.
 
-Would you like to install hgwatchman
+Would you like to enable filesystem monitor tool
 '''.strip()
 
 FILE_PERMISSIONS_WARNING = '''
@@ -357,25 +357,32 @@ class MercurialSetupWizard(object):
 
         # hgwatchman is provided by MozillaBuild and we don't yet support
         # Linux/BSD.
+        # Note that the hgwatchman project has been renamed to fsmonitor and has
+        # been moved into Mercurial core, as of version 3.8. So, if your Mercurial
+        # version is modern enough (>=3.8), you could set fsmonitor in hgrc file
+        # directly.
         if ('hgwatchman' not in c.extensions
             and sys.platform.startswith('darwin')
             and hg_version >= HGWATCHMAN_MINIMUM_VERSION
-            and self._prompt_yn(HGWATCHMAN_INFO)):
-            # Unlike other extensions, we need to run an installer
-            # to compile a Python C extension.
-            try:
-                subprocess.check_output(
-                    ['make', 'local'],
-                    cwd=self.updater.hgwatchman_dir,
-                    stderr=subprocess.STDOUT)
+            and self._prompt_yn(FSMONITOR_INFO)):
+            if (hg_version >= FSMONITOR_MINIMUM_VERSION):
+                c.activate_extension('fsmonitor')
+            else:
+                # Unlike other extensions, we need to run an installer
+                # to compile a Python C extension.
+                try:
+                    subprocess.check_output(
+                        ['make', 'local'],
+                        cwd=self.updater.hgwatchman_dir,
+                        stderr=subprocess.STDOUT)
 
-                ext_path = os.path.join(self.updater.hgwatchman_dir,
-                                        'hgwatchman')
-                if self.can_use_extension(c, 'hgwatchman', ext_path):
-                    c.activate_extension('hgwatchman', ext_path)
-            except subprocess.CalledProcessError as e:
-                print('Error compiling hgwatchman; will not install hgwatchman')
-                print(e.output)
+                    ext_path = os.path.join(self.updater.hgwatchman_dir,
+                                            'hgwatchman')
+                    if self.can_use_extension(c, 'hgwatchman', ext_path):
+                        c.activate_extension('hgwatchman', ext_path)
+                except subprocess.CalledProcessError as e:
+                    print('Error compiling hgwatchman; will not install hgwatchman')
+                    print(e.output)
 
         if 'reviewboard' not in c.extensions:
             if hg_version < REVIEWBOARD_MINIMUM_VERSION:

@@ -12,6 +12,7 @@
 #include "SkFontHost_FreeType_common.h"
 
 #include "SkAdvancedTypefaceMetrics.h"
+#include "SkFDot6.h"
 #include "SkFontHost.h"
 #include "SkPath.h"
 #include "SkScalerContext.h"
@@ -19,6 +20,7 @@
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
+#include FT_OUTLINE_H
 
 #ifndef SK_FONTHOST_CAIRO_STANDALONE
 #define SK_FONTHOST_CAIRO_STANDALONE 1
@@ -67,6 +69,17 @@ private:
     FT_Face fFace;
 };
 
+static bool bothZero(SkScalar a, SkScalar b) {
+    return 0 == a && 0 == b;
+}
+
+// returns false if there is any non-90-rotation or skew
+static bool isAxisAligned(const SkScalerContext::Rec& rec) {
+    return 0 == rec.fPreSkewX &&
+           (bothZero(rec.fPost2x2[0][1], rec.fPost2x2[1][0]) ||
+            bothZero(rec.fPost2x2[0][0], rec.fPost2x2[1][1]));
+}
+
 class SkCairoFTTypeface : public SkTypeface {
 public:
     static SkTypeface* CreateTypeface(cairo_font_face_t* fontFace, const SkFontStyle& style, bool isFixedWidth) {
@@ -97,8 +110,12 @@ public:
         return new SkScalerContext_CairoFT(const_cast<SkCairoFTTypeface*>(this), desc);
     }
 
-    virtual void onFilterRec(SkScalerContextRec*) const override
+    virtual void onFilterRec(SkScalerContextRec* rec) const override
     {
+        // rotated text looks bad with hinting, so we disable it as needed
+        if (!isAxisAligned(*rec)) {
+            rec->setHinting(SkPaint::kNo_Hinting);
+        }
     }
 
     virtual void onGetFontDescriptor(SkFontDescriptor*, bool*) const override
@@ -285,18 +302,46 @@ void SkScalerContext_CairoFT::generateAdvance(SkGlyph* glyph)
 void SkScalerContext_CairoFT::generateMetrics(SkGlyph* glyph)
 {
     SkASSERT(fScaledFont != NULL);
-    cairo_text_extents_t extents;
-    cairo_glyph_t cairoGlyph = { glyph->getGlyphID(), 0.0, 0.0 };
-    cairo_scaled_font_glyph_extents(fScaledFont, &cairoGlyph, 1, &extents);
 
-    glyph->fAdvanceX = SkDoubleToFixed(extents.x_advance);
-    glyph->fAdvanceY = SkDoubleToFixed(extents.y_advance);
-    glyph->fWidth = SkToU16(SkScalarCeilToInt(extents.width));
-    glyph->fHeight = SkToU16(SkScalarCeilToInt(extents.height));
-    glyph->fLeft = SkToS16(SkScalarCeilToInt(extents.x_bearing));
-    glyph->fTop = SkToS16(SkScalarCeilToInt(extents.y_bearing));
-    glyph->fLsbDelta = 0;
-    glyph->fRsbDelta = 0;
+    glyph->zeroMetrics();
+
+    CairoLockedFTFace faceLock(fScaledFont);
+    FT_Face face = faceLock.getFace();
+
+    FT_Error err = FT_Load_Glyph( face, glyph->getGlyphID(), fLoadGlyphFlags );
+    if (err != 0) {
+        return;
+    }
+
+    switch (face->glyph->format) {
+    case FT_GLYPH_FORMAT_OUTLINE:
+        if (!face->glyph->outline.n_contours) {
+            break;
+        }
+        FT_BBox bbox;
+        FT_Outline_Get_CBox(&face->glyph->outline, &bbox);
+        bbox.xMin &= ~63;
+        bbox.yMin &= ~63;
+        bbox.xMax = (bbox.xMax + 63) & ~63;
+        bbox.yMax = (bbox.yMax + 63) & ~63;
+        glyph->fWidth  = SkToU16(SkFDot6Floor(bbox.xMax - bbox.xMin));
+        glyph->fHeight = SkToU16(SkFDot6Floor(bbox.yMax - bbox.yMin));
+        glyph->fTop    = -SkToS16(SkFDot6Floor(bbox.yMax));
+        glyph->fLeft   = SkToS16(SkFDot6Floor(bbox.xMin));
+        break;
+    case FT_GLYPH_FORMAT_BITMAP:
+        glyph->fWidth  = SkToU16(face->glyph->bitmap.width);
+        glyph->fHeight = SkToU16(face->glyph->bitmap.rows);
+        glyph->fTop    = -SkToS16(face->glyph->bitmap_top);
+        glyph->fLeft   = SkToS16(face->glyph->bitmap_left);
+        break;
+    default:
+        SkDEBUGFAIL("unknown glyph format");
+        return;
+    }
+
+    glyph->fAdvanceX = SkFDot6ToFloat(face->glyph->advance.x);
+    glyph->fAdvanceY = -SkFDot6ToFloat(face->glyph->advance.y);
 }
 
 void SkScalerContext_CairoFT::generateImage(const SkGlyph& glyph)

@@ -285,10 +285,11 @@ nsHttpChannel::Init(nsIURI *uri,
                     uint32_t caps,
                     nsProxyInfo *proxyInfo,
                     uint32_t proxyResolveFlags,
-                    nsIURI *proxyURI)
+                    nsIURI *proxyURI,
+                    const nsID& channelId)
 {
     nsresult rv = HttpBaseChannel::Init(uri, caps, proxyInfo,
-                                        proxyResolveFlags, proxyURI);
+                                        proxyResolveFlags, proxyURI, channelId);
     if (NS_FAILED(rv))
         return rv;
 
@@ -590,7 +591,7 @@ nsHttpChannel::ContinueHandleAsyncRedirect(nsresult rv)
         }
     }
 
-    CloseCacheEntry(false);
+    CloseCacheEntry(true);
 
     mIsPending = false;
 
@@ -616,7 +617,7 @@ nsHttpChannel::HandleAsyncNotModified()
 
     DoNotifyListener();
 
-    CloseCacheEntry(true);
+    CloseCacheEntry(false);
 
     mIsPending = false;
 
@@ -3375,12 +3376,28 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
             (gHttpHandler->SessionStartTime() > lastModifiedTime);
 
     // Get the cached HTTP response headers
+    mCachedResponseHead = new nsHttpResponseHead();
+
+    // A "original-response-headers" metadata element holds network original headers,
+    // i.e. the headers in the form as they arrieved from the network.
+    // We need to get the network original headers first, because we need to keep them
+    // in order.
+    rv = entry->GetMetaDataElement("original-response-headers", getter_Copies(buf));
+    if (NS_SUCCEEDED(rv)) {
+        mCachedResponseHead->ParseCachedOriginalHeaders((char *) buf.get());
+    }
+
+    buf.Adopt(0);
+    // A "response-head" metadata element holds response head, e.g. response status
+    // line and headers in the form Firefox uses them internally (no dupicate
+    // headers, etc.).
     rv = entry->GetMetaDataElement("response-head", getter_Copies(buf));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    // Parse the cached HTTP response headers
-    mCachedResponseHead = new nsHttpResponseHead();
-    rv = mCachedResponseHead->Parse((char *) buf.get());
+    // Parse string stored in a "response-head" metadata element.
+    // These response headers will be merged with the orignal headers (i.e. the
+    // headers stored in a "original-response-headers" metadata element).
+    rv = mCachedResponseHead->ParseCachedHead((char *) buf.get());
     NS_ENSURE_SUCCESS(rv, rv);
     buf.Adopt(0);
 
@@ -3772,7 +3789,7 @@ nsHttpChannel::OnCacheEntryAvailable(nsICacheEntry *entry,
 
     rv = OnCacheEntryAvailableInternal(entry, aNew, aAppCache, status);
     if (NS_FAILED(rv)) {
-        CloseCacheEntry(true);
+        CloseCacheEntry(false);
         AsyncAbort(rv);
     }
 
@@ -4624,6 +4641,10 @@ DoAddCacheEntryHeaders(nsHttpChannel *self,
     nsAutoCString head;
     responseHead->Flatten(head, true);
     rv = entry->SetMetaDataElement("response-head", head.get());
+    if (NS_FAILED(rv)) return rv;
+    head.Truncate();
+    responseHead->FlattenNetworkOriginalHeaders(head);
+    rv = entry->SetMetaDataElement("original-response-headers", head.get());
     if (NS_FAILED(rv)) return rv;
 
     // Indicate we have successfully finished setting metadata on the cache entry.
@@ -7479,7 +7500,7 @@ nsHttpChannel::OnPreflightFailed(nsresult aError)
     mIsCorsPreflightDone = 1;
     mPreflightChannel = nullptr;
 
-    CloseCacheEntry(true);
+    CloseCacheEntry(false);
     AsyncAbort(aError);
     return NS_OK;
 }

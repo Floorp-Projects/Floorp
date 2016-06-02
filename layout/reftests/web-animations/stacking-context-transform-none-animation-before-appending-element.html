@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html class="reftest-wait">
+<title>Transform animation whose target is not initially associated with any document creates a stacking context even if it has only 'transform:none' in its keyframe</title>
+<style>
+span {
+  height: 100px;
+  width: 100px;
+  position: fixed;
+  background: green;
+  top: 50px;
+}
+div {
+  width: 100px; height: 100px;
+  background: blue;
+}
+</style>
+<span></span>
+<script>
+  var div = document.createElement("div")
+  var anim = div.animate({ transform: ['none', 'none'] },
+                         { duration: 100000 });
+  document.body.appendChild(div);
+  anim.ready.then(function() {
+    document.documentElement.classList.remove("reftest-wait");
+  });
+</script>

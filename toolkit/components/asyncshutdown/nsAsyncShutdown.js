@@ -237,7 +237,7 @@ function nsAsyncShutdownService() {
 
     // All processes
     "webWorkersShutdown",
-    "xpcomThreadsShutdown",
+    "xpcomWillShutdown",
     ]) {
     let k = _k;
     Object.defineProperty(this, k, {

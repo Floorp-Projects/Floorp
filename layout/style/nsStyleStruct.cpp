@@ -3067,6 +3067,12 @@ nsChangeHint nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
     hint |= nsChangeHint_UpdateContainingBlock;
   }
 
+  // If touch-action is changed, we need to regenerate the event regions on
+  // the layers and send it over to the compositor for APZ to handle.
+  if (mTouchAction != aOther.mTouchAction) {
+    hint |= nsChangeHint_RepaintFrame;
+  }
+
   // Note:  Our current behavior for handling changes to the
   // transition-duration, transition-delay, and transition-timing-function
   // properties is to do nothing.  In other words, the transition

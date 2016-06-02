@@ -1,0 +1,7 @@
+---
+$inherits:
+  from: 'tasks/tests/fx_linux64_firefox_ui_functional_e10s.yml'
+task:
+  payload:
+    command:
+      - --download-symbols=true
