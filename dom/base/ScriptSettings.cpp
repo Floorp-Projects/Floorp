@@ -294,21 +294,6 @@ GetWebIDLCallerPrincipal()
   return aes->mWebIDLCallerPrincipal;
 }
 
-static JSContext*
-FindJSContext(nsIGlobalObject* aGlobalObject)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  JSContext *cx = nullptr;
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aGlobalObject);
-  if (sgo && sgo->GetScriptContext()) {
-    cx = sgo->GetScriptContext()->GetNativeContext();
-  }
-  if (!cx) {
-    cx = nsContentUtils::GetSafeJSContext();
-  }
-  return cx;
-}
-
 AutoJSAPI::AutoJSAPI()
   : mCx(nullptr)
   , mOldAutoJSAPIOwnsErrorReporting(false)
@@ -656,13 +641,13 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
                                  bool aIsMainThread,
                                  JSContext* aCx)
   : AutoJSAPI(aGlobalObject, aIsMainThread,
-              aCx ? aCx : FindJSContext(aGlobalObject))
+              aCx ? aCx : nsContentUtils::GetSafeJSContext())
   , ScriptSettingsStackEntry(aGlobalObject, /* aCandidate = */ true)
   , mWebIDLCallerPrincipal(nullptr)
 {
   MOZ_ASSERT(aGlobalObject);
   MOZ_ASSERT_IF(!aCx, aIsMainThread); // cx is mandatory off-main-thread.
-  MOZ_ASSERT_IF(aCx && aIsMainThread, aCx == FindJSContext(aGlobalObject));
+  MOZ_ASSERT_IF(aCx && aIsMainThread, aCx == nsContentUtils::GetSafeJSContext());
 
   if (aIsMainThread && gRunToCompletionListeners > 0) {
     mDocShellEntryMonitor.emplace(cx(), aReason);
