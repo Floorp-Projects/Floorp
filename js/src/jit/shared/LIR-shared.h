@@ -3399,6 +3399,22 @@ class LAbsF : public LInstructionHelper<1, 1, 0>
     }
 };
 
+// Copysign for doubles.
+class LCopySignD : public LInstructionHelper<1, 2, 2>
+{
+  public:
+    LIR_HEADER(CopySignD)
+    explicit LCopySignD() {}
+};
+
+// Copysign for float32.
+class LCopySignF : public LInstructionHelper<1, 2, 2>
+{
+  public:
+    LIR_HEADER(CopySignF)
+    explicit LCopySignF() {}
+};
+
 // Count leading zeroes on an int32.
 class LClzI : public LInstructionHelper<1, 1, 0>
 {

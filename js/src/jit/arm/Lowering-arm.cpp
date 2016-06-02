@@ -782,3 +782,25 @@ LIRGeneratorARM::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
 {
     MOZ_CRASH("NY");
 }
+
+void
+LIRGeneratorARM::visitCopySign(MCopySign* ins)
+{
+    MDefinition* lhs = ins->lhs();
+    MDefinition* rhs = ins->rhs();
+
+    MOZ_ASSERT(IsFloatingPointType(lhs->type()));
+    MOZ_ASSERT(lhs->type() == rhs->type());
+    MOZ_ASSERT(lhs->type() == ins->type());
+
+    LInstructionHelper<1, 2, 2>* lir;
+    if (lhs->type() == MIRType::Double)
+        lir = new(alloc()) LCopySignD();
+    else
+        lir = new(alloc()) LCopySignF();
+
+    lir->setTemp(0, temp());
+    lir->setTemp(1, temp());
+
+    lowerForFPU(lir, ins, lhs, rhs);
+}
