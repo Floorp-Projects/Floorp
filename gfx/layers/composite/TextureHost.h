@@ -168,10 +168,33 @@ protected:
   int mCompositableCount;
 };
 
-/**
- * equivalent of a RefPtr<TextureSource>, that calls AddCompositableRef and
- * ReleaseCompositableRef in addition to the usual AddRef and Release.
- */
+/// Equivalent of a RefPtr<TextureSource>, that calls AddCompositableRef and
+/// ReleaseCompositableRef in addition to the usual AddRef and Release.
+///
+/// The semantoics of these CompositableTextureRefs are important because they
+/// are used both as a synchronization/safety mechanism, and as an optimization
+/// mechanism. They are also tricky and subtle because we use them in a very
+/// implicit way (assigning to a CompositableTextureRef is less visible than
+/// explicitly calling a method or whatnot).
+/// It is Therefore important to be careful about the way we use this tool.
+///
+/// CompositableTextureRef is a mechanism that lets us count how many compositables
+/// are using a given texture (for TextureSource and TextureHost).
+/// We use it to run specific code when a texture is not used anymore, and also
+/// we trigger fast paths on some operations when we can see that the texture's
+/// CompositableTextureRef counter is equal to 1 (the texture is not shared
+/// between compositables).
+/// This means that it is important to observe the following rules:
+/// * CompositableHosts that receive UseTexture and similar messages *must* store
+/// all of the TextureHosts they receive in CompositableTextureRef slots for as
+/// long as they may be using them.
+/// * CompositableHosts must store each texture in a *single* CompositableTextureRef
+/// slot to ensure that the counter properly reflects how many compositables are
+/// using the texture.
+/// If a compositable needs to hold two references to a given texture (for example
+/// to have a pointer to the current texture in a list of textures that may be
+/// used), it can hold its extra references with RefPtr or whichever pointer type
+/// makes sense.
 template<typename T>
 class CompositableTextureRef {
 public:
@@ -581,11 +604,11 @@ public:
 
   TextureReadLock* GetReadLock() { return mReadLock; }
 
-  void ReadUnlock();
-
   virtual Compositor* GetCompositor() = 0;
 
 protected:
+  void ReadUnlock();
+
   FenceHandle mReleaseFenceHandle;
 
   FenceHandle mAcquireFenceHandle;

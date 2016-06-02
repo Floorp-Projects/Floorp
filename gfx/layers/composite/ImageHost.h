@@ -127,6 +127,9 @@ protected:
     int32_t mInputFrameID;
   };
 
+  // Use a simple RefPtr because the same texture is already held by a
+  // a CompositableTextureHostRef in the array of TimedImage.
+  // See the comment in CompositableTextureRef for more details.
   RefPtr<TextureHost> mCurrentTextureHost;
   CompositableTextureSourceRef mCurrentTextureSource;
   // When doing texture uploads it's best to alternate between two (or three)
