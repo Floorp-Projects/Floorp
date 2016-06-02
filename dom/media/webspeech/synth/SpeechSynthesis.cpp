@@ -12,7 +12,6 @@
 #include "mozilla/dom/Element.h"
 
 #include "mozilla/dom/SpeechSynthesisBinding.h"
-#include "mozilla/dom/SpeechSynthesisErrorEvent.h"
 #include "SpeechSynthesis.h"
 #include "nsSynthVoiceRegistry.h"
 #include "nsIDocument.h"
@@ -195,33 +194,12 @@ SpeechSynthesis::AdvanceQueue()
 }
 
 void
-SpeechSynthesis::DispatchToCanceledQueue()
-{
-  while (mCanceledQueue.Length()) {
-    RefPtr<SpeechSynthesisUtterance> utterance = mCanceledQueue.ElementAt(0);
-    mCanceledQueue.RemoveElementAt(0);
-
-    utterance->DispatchSpeechSynthesisErrorEvent(
-      0, 0, SpeechSynthesisErrorCode::Canceled);
-  }
-}
-
-void
 SpeechSynthesis::Cancel()
 {
-  if (mCanceledQueue.IsEmpty()) {
-    mCanceledQueue.SwapElements(mSpeechQueue);
-  } else {
-    while (mSpeechQueue.Length()) {
-      mCanceledQueue.AppendElement(mSpeechQueue.ElementAt(0));
-      mSpeechQueue.RemoveElementAt(0);
-    }
-  }
+  mSpeechQueue.Clear();
 
   if (mCurrentTask) {
     mCurrentTask->Cancel();
-  } else {
-    DispatchToCanceledQueue();
   }
 }
 
@@ -261,7 +239,6 @@ SpeechSynthesis::OnEnd(const nsSpeechTask* aTask)
   MOZ_ASSERT(mCurrentTask == aTask);
 
   mCurrentTask = nullptr;
-  DispatchToCanceledQueue();
   AdvanceQueue();
 }
 
