@@ -16,6 +16,9 @@ import warnings
 
 from distutils.version import LooseVersion
 
+IS_NATIVE_WIN = (sys.platform == 'win32' and os.sep == '\\')
+IS_MSYS2 = (sys.platform == 'win32' and os.sep == '/')
+IS_CYGWIN = (sys.platform == 'cygwin')
 
 # Minimum version of Python required to build.
 MINIMUM_PYTHON_VERSION = LooseVersion('2.7.3')
@@ -72,7 +75,7 @@ class VirtualenvManager(object):
         # we have a bit of a chicken-and-egg problem and can't reliably
         # import virtualenv. The functionality is trivial, so just implement
         # it here.
-        if sys.platform in ('win32', 'cygwin'):
+        if IS_CYGWIN or IS_NATIVE_WIN:
             return os.path.join(self.virtualenv_root, 'Scripts')
 
         return os.path.join(self.virtualenv_root, 'bin')
