@@ -1352,3 +1352,19 @@ ROLE(TEXT,
      IA2_ROLE_TEXT_FRAME,
      eNameFromSubtreeIfReqRule)
 
+ROLE(DETAILS,
+     "details",
+     ATK_ROLE_PANEL,
+     NSAccessibilityGroupRole,
+     ROLE_SYSTEM_GROUPING,
+     ROLE_SYSTEM_GROUPING,
+     eNoNameRule)
+
+ROLE(SUMMARY,
+     "summary",
+     ATK_ROLE_PUSH_BUTTON,
+     NSAccessibilityGroupRole,
+     ROLE_SYSTEM_PUSHBUTTON,
+     ROLE_SYSTEM_PUSHBUTTON,
+     eNameFromSubtreeRule)
+

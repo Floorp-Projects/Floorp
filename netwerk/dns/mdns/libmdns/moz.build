@@ -4,18 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    EXTRA_COMPONENTS += [
-        'nsDNSServiceDiscovery.js',
-        'nsDNSServiceDiscovery.manifest',
-    ]
-
-    EXTRA_JS_MODULES += [
-        'MulticastDNSAndroid.jsm',
-        'MulticastDNSFallback.jsm',
-    ]
-
-elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa' or \
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa' or \
         (CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['ANDROID_VERSION'] >= '16'):
     UNIFIED_SOURCES += [
         'MDNSResponderOperator.cpp',
@@ -32,6 +21,27 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa' or \
             '%' + '%s/%s' % (CONFIG['ANDROID_SOURCE'], d) for d in [
                 'external/mdnsresponder/mDNSShared',
             ]
+        ]
+
+else:
+    EXTRA_COMPONENTS += [
+        'nsDNSServiceDiscovery.js',
+        'nsDNSServiceDiscovery.manifest',
+    ]
+
+    EXTRA_JS_MODULES += [
+        'fallback/DataReader.jsm',
+        'fallback/DataWriter.jsm',
+        'fallback/DNSPacket.jsm',
+        'fallback/DNSRecord.jsm',
+        'fallback/DNSResourceRecord.jsm',
+        'fallback/DNSTypes.jsm',
+        'fallback/MulticastDNS.jsm',
+    ]
+
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+        EXTRA_JS_MODULES += [
+            'MulticastDNSAndroid.jsm',
         ]
 
 UNIFIED_SOURCES += [

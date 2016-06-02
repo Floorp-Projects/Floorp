@@ -63,7 +63,10 @@ nsDNSServiceInfo::nsDNSServiceInfo(nsIDNSServiceInfo* aServiceInfo)
       nsCOMPtr<nsIVariant> value;
       NS_WARN_IF(NS_FAILED(property->GetName(name)));
       NS_WARN_IF(NS_FAILED(property->GetValue(getter_AddRefs(value))));
-      NS_WARN_IF(NS_FAILED(newAttributes->SetPropertyAsInterface(name, value)));
+      nsAutoCString valueStr;
+      NS_WARN_IF(NS_FAILED(value->GetAsACString(valueStr)));
+
+      NS_WARN_IF(NS_FAILED(newAttributes->SetPropertyAsACString(name, valueStr)));
     }
 
     NS_WARN_IF(NS_FAILED(SetAttributes(newAttributes)));

@@ -38,6 +38,9 @@ Request::Request(nsIGlobalObject* aOwner, InternalRequest* aRequest)
   , mOwner(aOwner)
   , mRequest(aRequest)
 {
+  MOZ_ASSERT(aRequest->Headers()->Guard() == HeadersGuardEnum::Immutable ||
+             aRequest->Headers()->Guard() == HeadersGuardEnum::Request ||
+             aRequest->Headers()->Guard() == HeadersGuardEnum::Request_no_cors);
   SetMimeType();
 }
 
@@ -513,8 +516,11 @@ Request::Constructor(const GlobalObject& aGlobal,
         bodyInitNullable.Value();
       nsCOMPtr<nsIInputStream> stream;
       nsAutoCString contentType;
+      uint64_t contentLengthUnused;
       aRv = ExtractByteStreamFromBody(bodyInit,
-                                      getter_AddRefs(stream), contentType);
+                                      getter_AddRefs(stream),
+                                      contentType,
+                                      contentLengthUnused);
       if (NS_WARN_IF(aRv.Failed())) {
         return nullptr;
       }

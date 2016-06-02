@@ -16,6 +16,7 @@
 #include "LoadInfo.h"
 #include "nsIDOMNode.h"
 #include "mozilla/dom/ContentChild.h"
+#include "nsITransportProvider.h"
 
 using mozilla::dom::ContentChild;
 
@@ -39,6 +40,7 @@ BaseWebSocketChannel::BaseWebSocketChannel()
   , mClientSetPingTimeout(0)
   , mEncrypted(0)
   , mPingForced(0)
+  , mIsServerSide(false)
   , mPingInterval(0)
   , mPingResponseTimeout(10000)
 {
@@ -240,6 +242,17 @@ NS_IMETHODIMP
 BaseWebSocketChannel::SetSerial(uint32_t aSerial)
 {
   mSerial = aSerial;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+BaseWebSocketChannel::SetServerParameters(nsITransportProvider* aProvider,
+                                          const nsACString& aNegotiatedExtensions)
+{
+  MOZ_ASSERT(aProvider);
+  mServerTransportProvider = aProvider;
+  mNegotiatedExtensions = aNegotiatedExtensions;
+  mIsServerSide = true;
   return NS_OK;
 }
 

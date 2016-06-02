@@ -203,10 +203,10 @@ imgFrame::InitForDecoder(const nsIntSize& aImageSize,
 
     // Use the fallible allocator here. Paletted images always use 1 byte per
     // pixel, so calculating the amount of memory we need is straightforward.
-    mPalettedImageData =
-      static_cast<uint8_t*>(malloc(PaletteDataLength() + mFrameRect.Area()));
+    size_t dataSize = PaletteDataLength() + mFrameRect.Area();
+    mPalettedImageData = static_cast<uint8_t*>(calloc(dataSize, sizeof(uint8_t)));
     if (!mPalettedImageData) {
-      NS_WARNING("malloc for paletted image data should succeed");
+      NS_WARNING("Call to calloc for paletted image data should succeed");
     }
     NS_ENSURE_TRUE(mPalettedImageData, NS_ERROR_OUT_OF_MEMORY);
   } else {

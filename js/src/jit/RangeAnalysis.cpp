@@ -216,6 +216,9 @@ RangeAnalysis::addBetaNodes()
                 greater = left;
             }
             if (smaller && greater) {
+                if (!alloc().ensureBallast())
+                    return false;
+
                 MBeta* beta;
                 beta = MBeta::New(alloc(), smaller,
                                   Range::NewInt32Range(alloc(), JSVAL_INT_MIN, JSVAL_INT_MAX-1));
@@ -304,6 +307,9 @@ RangeAnalysis::addBetaNodes()
             out.printf("Adding beta node for %d with range ", val->id());
             comp.dump(out);
         }
+
+        if (!alloc().ensureBallast())
+            return false;
 
         MBeta* beta = MBeta::New(alloc(), val, new(alloc()) Range(comp));
         block->insertBefore(*block->begin(), beta);

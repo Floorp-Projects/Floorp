@@ -1,2 +1,3 @@
 test-pref(dom.animations-api.core.enabled,true) == 1246046-1.html green-box.html
 test-pref(dom.animations-api.core.enabled,true) == 1267937-1.html 1267937-ref.html
+test-pref(dom.animations-api.core.enabled,true) == stacking-context-transform-none-animation-before-appending-element.html stacking-context-animation-ref.html

@@ -209,6 +209,19 @@ class AutoSuppressDebuggeeNoExecuteChecks
     }
 };
 
+class MOZ_RAII EvalOptions {
+    const char* filename_;
+    unsigned lineno_;
+
+  public:
+    EvalOptions() : filename_(nullptr), lineno_(1) {}
+    ~EvalOptions();
+    const char* filename() const { return filename_; }
+    unsigned lineno() const { return lineno_; }
+    bool setFilename(JSContext* cx, const char* filename);
+    void setLineno(unsigned lineno) { lineno_ = lineno; }
+};
+
 /*
  * Env is the type of what ES5 calls "lexical environments" (runtime activations
  * of lexical scopes). This is currently just JSObject, and is implemented by
@@ -1058,6 +1071,9 @@ class DebuggerObject : public NativeObject
                                ObjectOpResult& result);
     static bool call(JSContext* cx, Handle<DebuggerObject*> object, HandleValue thisv,
                      Handle<ValueVector> args, MutableHandleValue result);
+    static bool executeInGlobal(JSContext* cx, Handle<DebuggerObject*> object,
+                                mozilla::Range<const char16_t> chars, HandleObject bindings,
+                                const EvalOptions& options, MutableHandleValue result);
 
   private:
     enum {

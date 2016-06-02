@@ -15,8 +15,8 @@ interface nsIX509Cert;
 
 /**
  * This represents the global list of triples
- *   {host:port, cert-fingerprint, allowed-overrides} 
- * that the user wants to accept without further warnings. 
+ *   {host:port, cert-fingerprint, allowed-overrides}
+ * that the user wants to accept without further warnings.
  */
 [scriptable, uuid(be019e47-22fc-4355-9f16-9ab047d6742d)]
 interface nsICertOverrideService : nsISupports {
@@ -48,7 +48,7 @@ interface nsICertOverrideService : nsISupports {
    *  which only exhibit some subset of errors.
    *
    *  @param aHostName The host (punycode) this mapping belongs to
-   *  @param aPort The port this mapping belongs to, if it is -1 then it 
+   *  @param aPort The port this mapping belongs to, if it is -1 then it
    *          is internaly treated as 443
    *  @param aCert The cert that should always be accepted
    *  @param aOverrideBits The precise set of errors we want to be overriden
@@ -58,6 +58,25 @@ interface nsICertOverrideService : nsISupports {
                                 in nsIX509Cert aCert,
                                 in uint32_t aOverrideBits,
                                 in boolean aTemporary);
+
+  /**
+   *  Certs with the given fingerprint should always be accepted for the
+   *  given hostname:port, regardless of errors verifying the cert.
+   *  Host:Port is a primary key, only one entry per host:port can exist.
+   *  The fingerprint should be an SHA-256 hash of the certificate.
+   *
+   *  @param aHostName The host (punycode) this mapping belongs to
+   *  @param aPort The port this mapping belongs to, if it is -1 then it
+   *          is internaly treated as 443
+   *  @param aCertFingerprint The cert fingerprint that should be accepted, in
+   *          the format 'AA:BB:...' (colon-separated upper-case hex bytes).
+   *  @param aOverrideBits The errors we want to be overriden
+   */
+  void rememberTemporaryValidityOverrideUsingFingerprint(
+      in ACString aHostName,
+      in int32_t aPort,
+      in ACString aCertFingerprint,
+      in uint32_t aOverrideBits);
 
   /**
    *  Return whether this host, port, cert triple has a stored override.
@@ -84,16 +103,16 @@ interface nsICertOverrideService : nsISupports {
    *  Retrieve the stored override for the given hostname:port.
    *
    *  @param aHostName The host (punycode) whose entry should be tested
-   *  @param aPort The port whose entry should be tested, if it is -1 then it 
+   *  @param aPort The port whose entry should be tested, if it is -1 then it
    *          is internaly treated as 443
    *  @param aHashAlg On return value True, the fingerprint hash algorithm
    *                  as an OID value in dotted notation.
-   *  @param aFingerprint On return value True, the stored fingerprint 
+   *  @param aFingerprint On return value True, the stored fingerprint
    *  @param aOverrideBits The errors that are currently overriden
-   *  @return whether a matching override entry for aHostNameWithPort 
+   *  @return whether a matching override entry for aHostNameWithPort
    *          and aFingerprint is currently on file
    */
-  boolean getValidityOverride(in ACString aHostName, 
+  boolean getValidityOverride(in ACString aHostName,
                               in int32_t aPort,
                               out ACString aHashAlg,
                               out ACString aFingerprint,

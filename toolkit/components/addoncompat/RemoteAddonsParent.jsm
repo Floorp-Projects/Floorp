@@ -260,12 +260,33 @@ var AboutProtocolParent = {
     }
 
     let uri = BrowserUtils.makeURI(msg.data.uri);
-    let contractID = msg.data.contractID;
-    let loadingPrincipal = msg.data.loadingPrincipal;
-    let securityFlags = msg.data.securityFlags;
-    let contentPolicyType = msg.data.contentPolicyType;
+    let channelParams;
+    if (msg.data.contentPolicyType === Ci.nsIContentPolicy.TYPE_DOCUMENT) {
+      // For TYPE_DOCUMENT loads, we cannot recreate the loadinfo here in the
+      // parent. In that case, treat this as a chrome (addon)-requested
+      // subload. When we use the data in the child, we'll load it into the
+      // correctly-principaled document.
+      channelParams = {
+        uri,
+        contractID: msg.data.contractID,
+        loadingPrincipal: Services.scriptSecurityManager.getSystemPrincipal(),
+        securityFlags: Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
+        contentPolicyType: Ci.nsIContentPolicy.TYPE_OTHER
+      };
+    } else {
+      // We can recreate the loadinfo here in the parent for non TYPE_DOCUMENT
+      // loads.
+      channelParams = {
+        uri,
+        contractID: msg.data.contractID,
+        loadingPrincipal: msg.data.loadingPrincipal,
+        securityFlags: msg.data.securityFlags,
+        contentPolicyType: msg.data.contentPolicyType
+      };
+    }
+
     try {
-      let channel = NetUtil.newChannel({uri, loadingPrincipal, securityFlags, contentPolicyType});
+      let channel = NetUtil.newChannel(channelParams);
 
       // We're not allowed to set channel.notificationCallbacks to a
       // CPOW, since the setter for notificationCallbacks is in C++,

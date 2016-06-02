@@ -92,6 +92,29 @@ protected:
   virtual ~HTMLOutputAccessible() {}
 };
 
+/**
+ * Accessible for the HTML summary element.
+ */
+class HTMLSummaryAccessible : public HyperTextAccessibleWrap
+{
+
+public:
+  enum { eAction_Click = 0 };
+
+  HTMLSummaryAccessible(nsIContent* aContent, DocAccessible* aDoc);
+
+  // Accessible
+  virtual uint64_t NativeState() override;
+
+  // ActionAccessible
+  virtual uint8_t ActionCount() override;
+  virtual void ActionNameAt(uint8_t aIndex, nsAString& aName) override;
+  virtual bool DoAction(uint8_t aIndex) override;
+
+  // Widgets
+  virtual bool IsWidget() const override;
+};
+
 } // namespace a11y
 } // namespace mozilla
 

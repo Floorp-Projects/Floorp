@@ -97,7 +97,8 @@ public:
   void GetSpokenText(nsAString& aText);
                          
   DrawResult PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
-                         const nsRect& aDirtyRect, uint32_t aFlags);
+                         const nsRect& aDirtyRect, uint32_t aFlags,
+                         bool aDisableSubpixelAA);
   
   virtual bool IsEmpty() override;
   virtual bool IsSelfEmpty() override;

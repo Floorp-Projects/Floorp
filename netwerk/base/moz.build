@@ -65,6 +65,7 @@ XPIDL_SOURCES += [
     'nsINestedURI.idl',
     'nsINetAddr.idl',
     'nsINetUtil.idl',
+    'nsINetworkInfoService.idl',
     'nsINetworkInterceptController.idl',
     'nsINetworkLinkService.idl',
     'nsINetworkPredictor.idl',
@@ -274,6 +275,31 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
 else:
     SOURCES += [
         'nsURLHelperUnix.cpp',
+    ]
+
+# nsINetworkInfoService support.
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    SOURCES += [
+        'NetworkInfoServiceWindows.cpp',
+        'nsNetworkInfoService.cpp',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
+    SOURCES += [
+        'NetworkInfoServiceCocoa.cpp',
+        'nsNetworkInfoService.cpp',
+    ]
+elif CONFIG['OS_TARGET'] == 'Linux':
+    SOURCES += [
+        'NetworkInfoServiceLinux.cpp',
+        'nsNetworkInfoService.cpp',
+    ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
+    EXTRA_COMPONENTS += [
+        'nsNetworkInfoService.js',
+        'nsNetworkInfoService.manifest'
+    ]
+    EXTRA_JS_MODULES += [
+        'NetworkInfoServiceAndroid.jsm',
     ]
 
 if CONFIG['MOZ_ENABLE_QTNETWORK']:
