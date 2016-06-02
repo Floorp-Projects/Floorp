@@ -66,7 +66,6 @@ ChildProcessHost::~ChildProcessHost() {
 
   if (handle()) {
     watcher_.StopWatching();
-    ProcessWatcher::EnsureProcessTerminated(handle());
 
 #if defined(OS_WIN)
     // Above call took ownership, so don't want WaitableEvent to assert because
