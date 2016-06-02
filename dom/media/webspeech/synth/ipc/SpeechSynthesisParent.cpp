@@ -196,7 +196,7 @@ SpeechTaskParent::DispatchResumeImpl(float aElapsedTime, uint32_t aCharIndex)
 }
 
 nsresult
-SpeechTaskParent::DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex, uint32_t aError)
+SpeechTaskParent::DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex)
 {
   MOZ_ASSERT(mActor);
   if(NS_WARN_IF(!(mActor->SendOnEnd(true, aElapsedTime, aCharIndex)))) {

@@ -79,7 +79,7 @@ protected:
 
   virtual nsresult DispatchResumeImpl(float aElapsedTime, uint32_t aCharIndex);
 
-  virtual nsresult DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex, uint32_t aError);
+  virtual nsresult DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex);
 
   virtual nsresult DispatchBoundaryImpl(const nsAString& aName,
                                         float aElapsedTime,
