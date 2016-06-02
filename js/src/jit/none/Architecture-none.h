@@ -89,6 +89,7 @@ class FloatRegisters
     static const uint32_t Allocatable = 0;
     static const SetType AllMask = 0;
     static const SetType AllDoubleMask = 0;
+    static const SetType AllSingleMask = 0;
     static const SetType VolatileMask = 0;
     static const SetType NonVolatileMask = 0;
     static const SetType NonAllocatableMask = 0;
