@@ -11,14 +11,10 @@
 #include "chrome/common/child_process.h"
 #include "chrome/common/chrome_switches.h"
 
-// V8 needs a 1MB stack size.
-const size_t ChildThread::kV8StackSize = 1024 * 1024;
-
 ChildThread::ChildThread(Thread::Options options)
     : Thread("Chrome_ChildThread"),
       owner_loop_(MessageLoop::current()),
-      options_(options),
-      check_with_browser_before_shutdown_(false) {
+      options_(options) {
   DCHECK(owner_loop_);
   channel_name_ = CommandLine::ForCurrentProcess()->GetSwitchValue(
       switches::kProcessChannelID);
@@ -56,9 +52,6 @@ void ChildThread::MarkThread() {
 #endif
 
 void ChildThread::OnMessageReceived(IPC::Message&& msg) {
-  if (msg.routing_id() == MSG_ROUTING_CONTROL) {
-    OnControlMessageReceived(msg);
-  }
 }
 
 ChildThread* ChildThread::current() {
@@ -76,12 +69,4 @@ void ChildThread::CleanUp() {
   // Need to destruct the SyncChannel to the browser before we go away because
   // it caches a pointer to this thread.
   channel_ = nullptr;
-}
-
-void ChildThread::OnProcessFinalRelease() {
-  if (!check_with_browser_before_shutdown_) {
-    RefPtr<mozilla::Runnable> task = new MessageLoop::QuitTask();
-    owner_loop_->PostTask(task.forget());
-    return;
-  }
 }
