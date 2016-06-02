@@ -2002,7 +2002,7 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState* aCBReflowState)
 LogicalSize
 nsHTMLReflowState::ComputeContainingBlockRectangle(
                      nsPresContext*           aPresContext,
-                     const nsHTMLReflowState* aContainingBlockRS)
+                     const nsHTMLReflowState* aContainingBlockRS) const
 {
   // Unless the element is absolutely positioned, the containing block is
   // formed by the content edge of the nearest block-level ancestor
