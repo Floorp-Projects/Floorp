@@ -27,6 +27,7 @@ add_task(function* test_isOriginPotentiallyTrustworthy() {
     ["http://127.0.0.1/", true],
     ["file:///", true],
     ["resource:///", true],
+    ["moz-extension://", true],
     ["about:config", false],
     ["urn:generic", false],
   ]) {
