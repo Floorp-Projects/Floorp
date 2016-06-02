@@ -166,7 +166,7 @@ SpeechTaskParent::DispatchEndImpl(float aElapsedTime, uint32_t aCharIndex)
     return NS_OK;
   }
 
-  if(NS_WARN_IF(!(mActor->SendOnEnd(false, aElapsedTime, aCharIndex, 0)))) {
+  if(NS_WARN_IF(!(mActor->SendOnEnd(false, aElapsedTime, aCharIndex)))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -199,7 +199,7 @@ nsresult
 SpeechTaskParent::DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex, uint32_t aError)
 {
   MOZ_ASSERT(mActor);
-  if(NS_WARN_IF(!(mActor->SendOnEnd(true, aElapsedTime, aCharIndex, aError)))) {
+  if(NS_WARN_IF(!(mActor->SendOnEnd(true, aElapsedTime, aCharIndex)))) {
     return NS_ERROR_FAILURE;
   }
 

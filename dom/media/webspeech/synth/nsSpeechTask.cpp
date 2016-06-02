@@ -533,8 +533,9 @@ nsSpeechTask::DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex, uint32_
   }
 
   mUtterance->mState = SpeechSynthesisUtterance::STATE_ENDED;
-  mUtterance->DispatchSpeechSynthesisErrorEvent(aCharIndex, aElapsedTime,
-                                                SpeechSynthesisErrorCode(aError));
+  mUtterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("error"),
+                                           aCharIndex, aElapsedTime,
+                                           EmptyString());
   return NS_OK;
 }
 

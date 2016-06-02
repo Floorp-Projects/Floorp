@@ -20,7 +20,6 @@ namespace dom {
 class SpeechSynthesisVoice;
 class SpeechSynthesis;
 class nsSynthVoiceRegistry;
-enum class SpeechSynthesisErrorCode : uint32_t;
 
 class SpeechSynthesisUtterance final : public DOMEventTargetHelper
 {
@@ -99,10 +98,6 @@ private:
   void DispatchSpeechSynthesisEvent(const nsAString& aEventType,
                                     uint32_t aCharIndex,
                                     float aElapsedTime, const nsAString& aName);
-
-  void DispatchSpeechSynthesisErrorEvent(uint32_t aCharIndex,
-                                         float aElapsedTime,
-                                         SpeechSynthesisErrorCode aError);
 
   nsString mText;
 
