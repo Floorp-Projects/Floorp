@@ -32,7 +32,7 @@ add_task(function* () {
   let menu = toolbox.showFramesMenu({target: btn});
   yield once(menu, "open");
 
-  let frames = menu.menuitems;
+  let frames = menu.items;
   is(frames.length, 2, "We have both frames in the list");
 
   // Select the iframe
