@@ -176,8 +176,7 @@ GetAndInitDisplayForAccelANGLE(GLLibraryEGL& egl)
     FeatureState& d3d11ANGLE = gfxConfig::GetFeature(Feature::D3D11_HW_ANGLE);
 
     if (!gfxPrefs::WebGLANGLETryD3D11())
-        d3d11ANGLE.UserDisable("User disabled D3D11 ANGLE by pref",
-                               NS_LITERAL_CSTRING("FAILURE_ID_ANGLE_PREF"));
+        d3d11ANGLE.UserDisable("User disabled D3D11 ANGLE by pref");
 
     if (gfxPrefs::WebGLANGLEForceD3D11())
         d3d11ANGLE.UserForceEnable("User force-enabled D3D11 ANGLE on disabled hardware");
