@@ -311,6 +311,11 @@ private:
     bool mDraining;
     bool mDrainComplete;
 
+    bool HasPendingDrain() const
+    {
+      return mDraining || mDrainComplete;
+    }
+
     uint32_t mNumOfConsecutiveError;
     uint32_t mMaxConsecutiveError;
 
