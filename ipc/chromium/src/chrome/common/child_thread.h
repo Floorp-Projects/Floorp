@@ -21,30 +21,13 @@ class ChildThread : public IPC::Channel::Listener,
   explicit ChildThread(Thread::Options options);
   virtual ~ChildThread();
 
-  // See documentation on MessageRouter for AddRoute and RemoveRoute
-  void AddRoute(int32_t routing_id, IPC::Channel::Listener* listener);
-  void RemoveRoute(int32_t routing_id);
-
-  MessageLoop* owner_loop() { return owner_loop_; }
-
  protected:
   friend class ChildProcess;
 
   // Starts the thread.
   bool Run();
 
-  // Overrides the channel name.  Used for --single-process mode.
-  void SetChannelName(const std::wstring& name) { channel_name_ = name; }
-
-  // Called when the process refcount is 0.
-  void OnProcessFinalRelease();
-
  protected:
-  // The required stack size if V8 runs on a thread.
-  static const size_t kV8StackSize;
-
-  virtual void OnControlMessageReceived(const IPC::Message& msg) { }
-
   // Returns the one child thread.
   static ChildThread* current();
 
@@ -70,11 +53,6 @@ class ChildThread : public IPC::Channel::Listener,
   mozilla::UniquePtr<IPC::Channel> channel_;
 
   Thread::Options options_;
-
-  // If true, checks with the browser process before shutdown.  This avoids race
-  // conditions if the process refcount is 0 but there's an IPC message inflight
-  // that would addref it.
-  bool check_with_browser_before_shutdown_;
 
   DISALLOW_EVIL_CONSTRUCTORS(ChildThread);
 };
