@@ -417,22 +417,6 @@ Gecko_CreateGradient(uint8_t aShape,
   return result;
 }
 
-void
-Gecko_SetGradientStop(nsStyleGradient* aGradient,
-                      uint32_t aIndex,
-                      const nsStyleCoord* aLocation,
-                      nscolor aColor,
-                      bool aIsInterpolationHint)
-{
-  MOZ_ASSERT(aGradient);
-  MOZ_ASSERT(aLocation);
-  MOZ_ASSERT(aIndex < aGradient->mStops.Length());
-
-  aGradient->mStops[aIndex].mColor = aColor;
-  aGradient->mStops[aIndex].mLocation = *aLocation;
-  aGradient->mStops[aIndex].mIsInterpolationHint = aIsInterpolationHint;
-}
-
 #define STYLE_STRUCT(name, checkdata_cb)                                      \
                                                                               \
 void                                                                          \
