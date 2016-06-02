@@ -33,6 +33,11 @@ const NOTIFY_TAB_RESTORED = "sessionstore-debug-tab-restored"; // WARNING: debug
 // the browser.sessionstore.max_concurrent_tabs pref.
 const MAX_CONCURRENT_TAB_RESTORES = 3;
 
+// Amount (in CSS px) by which we allow window edges to be off-screen
+// when restoring a window, before we override the saved position to
+// pull the window back within the available screen area.
+const SCREEN_EDGE_SLOP = 8;
+
 // global notifications observed
 const OBSERVING = [
   "browser-window-before-show", "domwindowclosed",
@@ -3485,26 +3490,40 @@ var SessionStoreInternal = {
       // convert screen's device pixel dimensions to CSS px dimensions
       screen.GetAvailRect(screenLeft, screenTop, screenWidth, screenHeight);
       let cssToDevScale = screen.defaultCSSScaleFactor;
-      let screenWidthCss = screenWidth.value / cssToDevScale;
-      let screenHeightCss = screenHeight.value / cssToDevScale;
-      // constrain the dimensions to the actual space available
-      if (aWidth > screenWidthCss) {
-        aWidth = screenWidthCss;
-      }
-      if (aHeight > screenHeightCss) {
-        aHeight = screenHeightCss;
-      }
-      // and then pull the window within the screen's bounds
-      if (aLeft < screenLeftCss) {
+      let screenRightCss = screenLeftCss + screenWidth.value / cssToDevScale;
+      let screenBottomCss = screenTopCss + screenHeight.value / cssToDevScale;
+
+      // Pull the window within the screen's bounds (allowing a little slop
+      // for windows that may be deliberately placed with their border off-screen
+      // as when Win10 "snaps" a window to the left/right edge -- bug 1276516).
+      // First, ensure the left edge is large enough...
+      if (aLeft < screenLeftCss - SCREEN_EDGE_SLOP) {
         aLeft = screenLeftCss;
-      } else if (aLeft + aWidth > screenLeftCss + screenWidthCss) {
-        aLeft = screenLeftCss + screenWidthCss - aWidth;
       }
-      if (aTop < screenTopCss) {
+      // Then check the resulting right edge, and reduce it if necessary.
+      let right = aLeft + aWidth;
+      if (right > screenRightCss + SCREEN_EDGE_SLOP) {
+        right = screenRightCss;
+        // See if we can move the left edge leftwards to maintain width.
+        if (aLeft > screenLeftCss) {
+          aLeft = Math.max(right - aWidth, screenLeftCss);
+        }
+      }
+      // Finally, update aWidth to account for the adjusted left and right edges.
+      aWidth = right - aLeft;
+
+      // And do the same in the vertical dimension.
+      if (aTop < screenTopCss - SCREEN_EDGE_SLOP) {
         aTop = screenTopCss;
-      } else if (aTop + aHeight > screenTopCss + screenHeightCss) {
-        aTop = screenTopCss + screenHeightCss - aHeight;
       }
+      let bottom = aTop + aHeight;
+      if (bottom > screenBottomCss + SCREEN_EDGE_SLOP) {
+        bottom = screenBottomCss;
+        if (aTop > screenTopCss) {
+          aTop = Math.max(bottom - aHeight, screenTopCss);
+        }
+      }
+      aHeight = bottom - aTop;
     }
 
     // only modify those aspects which aren't correct yet
