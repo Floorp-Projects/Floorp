@@ -2,6 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
+
 class DateTimeValue(object):
     """
     Interface for setting the value of HTML5 "date" and "time" input elements.
@@ -46,4 +47,3 @@ class DateTimeValue(object):
     @time.setter
     def time(self, time_value):
         self.element.send_keys(time_value.strftime('%H:%M:%S'))
-
