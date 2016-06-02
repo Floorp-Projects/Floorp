@@ -6311,7 +6311,7 @@ FullscreenTransitionTask::Run()
     // more than exposing an intermediate state.
     mTimer = do_CreateInstance(NS_TIMER_CONTRACTID);
     uint32_t timeout =
-      Preferences::GetUint("full-screen-api.transition.timeout", 500);
+      Preferences::GetUint("full-screen-api.transition.timeout", 1000);
     mTimer->Init(observer, timeout, nsITimer::TYPE_ONE_SHOT);
   } else if (stage == eAfterToggle) {
     Telemetry::AccumulateTimeDelta(Telemetry::FULLSCREEN_TRANSITION_BLACK_MS,
