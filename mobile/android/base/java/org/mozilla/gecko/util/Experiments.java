@@ -54,19 +54,6 @@ public class Experiments {
     // Show name of organization (EV cert) instead of full URL in URL bar (Bug 1249594).
     public static final String URLBAR_SHOW_EV_CERT_OWNER = "urlbar-show-ev-cert-owner";
 
-    private static boolean isDisabled = false;
-
-    public static void setIsDisabled(final boolean isDisabled) {
-        Experiments.isDisabled = isDisabled;
-        if (isDisabled) {
-            Log.d(LOGTAG, "Switchboard disabled (env var?)");
-        }
-    }
-
-    public static boolean isDisabled() {
-        return isDisabled;
-    }
-
     /**
      * Returns if a user is in certain local experiment.
      * @param experiment Name of experiment to look up
