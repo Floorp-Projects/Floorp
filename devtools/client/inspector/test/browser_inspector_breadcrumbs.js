@@ -27,7 +27,8 @@ const NODES = [
 
 add_task(function* () {
   let { inspector } = yield openInspectorForURL(TEST_URI);
-  let container = inspector.panelDoc.getElementById("inspector-breadcrumbs");
+  let breadcrumbs = inspector.panelDoc.getElementById("inspector-breadcrumbs");
+  let container = breadcrumbs.querySelector(".html-arrowscrollbox-inner");
 
   for (let node of NODES) {
     info("Testing node " + node.selector);
@@ -62,7 +63,7 @@ add_task(function* () {
     is(labelTag.textContent, node.nodeName,
       "Node " + node.selector + " has the expected tag name");
 
-    is(checkedButton.getAttribute("tooltiptext"), node.title,
+    is(checkedButton.getAttribute("title"), node.title,
       "Node " + node.selector + " has the expected tooltip");
   }
 
