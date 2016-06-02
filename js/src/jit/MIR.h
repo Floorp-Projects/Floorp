@@ -1032,10 +1032,7 @@ class MInstruction
 
     // Convenient function used for replacing a load by the value of the store
     // if the types are match, and boxing the value if they do not match.
-    //
-    // Note: There is no need for such function in AsmJS functions as they do
-    // not use any MIRType::Value.
-    MDefinition* foldsToStoredValue(TempAllocator& alloc, MDefinition* loaded);
+    MDefinition* foldsToStore(TempAllocator& alloc);
 
     void setResumePoint(MResumePoint* resumePoint);
 
@@ -9539,6 +9536,7 @@ class MLoadElement
             return false;
         return congruentIfOperandsEqual(other);
     }
+    AliasType mightAlias(const MDefinition* store) const override;
     MDefinition* foldsTo(TempAllocator& alloc) override;
     AliasSet getAliasSet() const override {
         return AliasSet::Load(AliasSet::Element);
@@ -9698,6 +9696,7 @@ class MLoadUnboxedObjectOrNull
     AliasSet getAliasSet() const override {
         return AliasSet::Load(AliasSet::UnboxedElement);
     }
+    AliasType mightAlias(const MDefinition* store) const override;
     MDefinition* foldsTo(TempAllocator& alloc) override;
 
     ALLOW_CLONE(MLoadUnboxedObjectOrNull)
@@ -10940,6 +10939,8 @@ class MLoadFixedSlotAndUnbox
         }
         return congruentIfOperandsEqual(ins);
     }
+
+    MDefinition* foldsTo(TempAllocator& alloc) override;
 
     AliasSet getAliasSet() const override {
         return AliasSet::Load(AliasSet::FixedSlot);
