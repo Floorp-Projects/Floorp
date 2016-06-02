@@ -9,7 +9,6 @@
 #include "base/message_loop.h"
 #include "base/object_watcher.h"
 #include "base/sys_info.h"
-#include "chrome/common/result_codes.h"
 
 // Maximum amount of time (in milliseconds) to wait for the process to exit.
 static const int kWaitInterval = 2000;
@@ -81,7 +80,7 @@ class ChildReaper : public mozilla::Runnable,
     // terminates.  We just care that it eventually terminates, and that's what
     // TerminateProcess should do for us. Don't check for the result code since
     // it fails quite often. This should be investigated eventually.
-    TerminateProcess(process_, ResultCodes::HUNG);
+    TerminateProcess(process_, base::PROCESS_END_PROCESS_WAS_HUNG);
 
     // Now, just cleanup as if the process exited normally.
     OnObjectSignaled(process_);

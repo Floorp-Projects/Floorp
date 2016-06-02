@@ -17,7 +17,6 @@
 #include "mozilla/ipc/Transport.h"
 typedef mozilla::ipc::BrowserProcessSubThread ChromeThread;
 #include "chrome/common/process_watcher.h"
-#include "chrome/common/result_codes.h"
 
 using mozilla::ipc::FileDescriptor;
 
