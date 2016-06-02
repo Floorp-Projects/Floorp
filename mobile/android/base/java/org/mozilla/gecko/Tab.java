@@ -354,7 +354,7 @@ public class Tab {
         ThreadUtils.postToBackgroundThread(new Runnable() {
             @Override
             public void run() {
-                urlMetadata.save(cr, mUrl, data);
+                urlMetadata.save(cr, data);
             }
         });
     }
