@@ -31,14 +31,6 @@ LazyLogModule gAudioStreamLog("AudioStream");
 #define LOGW(x, ...) MOZ_LOG(gAudioStreamLog, mozilla::LogLevel::Warning, ("%p " x, this, ##__VA_ARGS__))
 
 /**
- * When MOZ_DUMP_AUDIO is set in the environment (to anything),
- * we'll drop a series of files in the current working directory named
- * dumped-audio-<nnn>.wav, one per AudioStream created, containing
- * the audio for the stream including any skips due to underruns.
- */
-static int gDumpedAudioCount = 0;
-
-/**
  * Keep a list of frames sent to the audio engine in each DataCallback along
  * with the playback rate at the moment. Since the playback rate and number of
  * underrun frames can vary in each callback. We need to keep the whole history
@@ -240,14 +232,21 @@ static void SetUint32LE(uint8_t* aDest, uint32_t aValue)
 static FILE*
 OpenDumpFile(uint32_t aChannels, uint32_t aRate)
 {
+  /**
+   * When MOZ_DUMP_AUDIO is set in the environment (to anything),
+   * we'll drop a series of files in the current working directory named
+   * dumped-audio-<nnn>.wav, one per AudioStream created, containing
+   * the audio for the stream including any skips due to underruns.
+   */
+  static Atomic<int> gDumpedAudioCount(0);
+
   if (!getenv("MOZ_DUMP_AUDIO"))
     return nullptr;
   char buf[100];
-  snprintf_literal(buf, "dumped-audio-%d.wav", gDumpedAudioCount);
+  snprintf_literal(buf, "dumped-audio-%d.wav", ++gDumpedAudioCount);
   FILE* f = fopen(buf, "wb");
   if (!f)
     return nullptr;
-  ++gDumpedAudioCount;
 
   uint8_t header[] = {
     // RIFF header
