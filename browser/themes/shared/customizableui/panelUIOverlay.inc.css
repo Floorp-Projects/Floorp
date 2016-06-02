@@ -1450,6 +1450,11 @@ menuitem[checked="true"].subviewbutton > .menu-iconic-left {
   visibility: hidden;
 }
 
+#PanelUI-containersItems > .subviewbutton > .toolbarbutton-icon {
+  width: 16px;
+  height: 16px;
+}
+
 .panel-mainview[panelid=customizationui-widget-panel],
 #customizationui-widget-multiview > .panel-viewcontainer,
 #customizationui-widget-multiview > .panel-viewcontainer > .panel-viewstack,

@@ -166,6 +166,21 @@ Directory::GetRoot(FileSystemBase* aFileSystem, ErrorResult& aRv)
 }
 
 /* static */ already_AddRefed<Directory>
+Directory::Constructor(const GlobalObject& aGlobal,
+                       const nsAString& aRealPath,
+                       ErrorResult& aRv)
+{
+  nsCOMPtr<nsIFile> path;
+  aRv = NS_NewNativeLocalFile(NS_ConvertUTF16toUTF8(aRealPath),
+                              true, getter_AddRefs(path));
+  if (NS_WARN_IF(aRv.Failed())) {
+    return nullptr;
+  }
+
+  return Create(aGlobal.GetAsSupports(), path);
+}
+
+/* static */ already_AddRefed<Directory>
 Directory::Create(nsISupports* aParent, nsIFile* aFile,
                   FileSystemBase* aFileSystem)
 {

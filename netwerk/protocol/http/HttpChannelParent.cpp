@@ -133,12 +133,13 @@ HttpChannelParent::Init(const HttpChannelCreationArgs& aArgs)
                        a.cacheKey(), a.requestContextID(), a.preflightArgs(),
                        a.initialRwin(), a.blockAuthPrompt(),
                        a.suspendAfterSynthesizeResponse(),
-                       a.allowStaleCacheContent(), a.contentTypeHint());
+                       a.allowStaleCacheContent(), a.contentTypeHint(),
+                       a.channelId());
   }
   case HttpChannelCreationArgs::THttpChannelConnectArgs:
   {
     const HttpChannelConnectArgs& cArgs = aArgs.get_HttpChannelConnectArgs();
-    return ConnectChannel(cArgs.channelId(), cArgs.shouldIntercept());
+    return ConnectChannel(cArgs.registrarId(), cArgs.shouldIntercept());
   }
   default:
     NS_NOTREACHED("unknown open type");
@@ -264,7 +265,8 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
                                  const bool&                aBlockAuthPrompt,
                                  const bool&                aSuspendAfterSynthesizeResponse,
                                  const bool&                aAllowStaleCacheContent,
-                                 const nsCString&           aContentTypeHint)
+                                 const nsCString&           aContentTypeHint,
+                                 const nsCString&           aChannelId)
 {
   nsCOMPtr<nsIURI> uri = DeserializeURI(aURI);
   if (!uri) {
@@ -318,6 +320,10 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
     return SendFailedAsyncOpen(rv);
 
   mChannel = static_cast<nsHttpChannel *>(channel.get());
+
+  // Set the channelId allocated in child to the parent instance
+  mChannel->SetChannelId(aChannelId);
+
   mChannel->SetWarningReporter(this);
   mChannel->SetTimingEnabled(true);
   if (mPBOverride != kPBOverride_Unset) {
@@ -496,14 +502,14 @@ HttpChannelParent::DoAsyncOpen(  const URIParams&           aURI,
 }
 
 bool
-HttpChannelParent::ConnectChannel(const uint32_t& channelId, const bool& shouldIntercept)
+HttpChannelParent::ConnectChannel(const uint32_t& registrarId, const bool& shouldIntercept)
 {
   nsresult rv;
 
   LOG(("HttpChannelParent::ConnectChannel: Looking for a registered channel "
-       "[this=%p, id=%lu]\n", this, channelId));
+       "[this=%p, id=%lu]\n", this, registrarId));
   nsCOMPtr<nsIChannel> channel;
-  rv = NS_LinkRedirectChannels(channelId, this, getter_AddRefs(channel));
+  rv = NS_LinkRedirectChannels(registrarId, this, getter_AddRefs(channel));
   mChannel = static_cast<nsHttpChannel*>(channel.get());
   LOG(("  found channel %p, rv=%08x", mChannel.get(), rv));
 
@@ -1251,13 +1257,13 @@ HttpChannelParent::Delete()
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP
-HttpChannelParent::StartRedirect(uint32_t newChannelId,
+HttpChannelParent::StartRedirect(uint32_t registrarId,
                                  nsIChannel* newChannel,
                                  uint32_t redirectFlags,
                                  nsIAsyncVerifyRedirectCallback* callback)
 {
-  LOG(("HttpChannelParent::StartRedirect [this=%p, newChannelId=%lu "
-       "newChannel=%p callback=%p]\n", this, newChannelId, newChannel,
+  LOG(("HttpChannelParent::StartRedirect [this=%p, registrarId=%lu "
+       "newChannel=%p callback=%p]\n", this, registrarId, newChannel,
        callback));
 
   if (mIPCClosed)
@@ -1272,11 +1278,22 @@ HttpChannelParent::StartRedirect(uint32_t newChannelId,
   nsCString secInfoSerialization;
   UpdateAndSerializeSecurityInfo(secInfoSerialization);
 
+  // If the channel is a HTTP channel, we also want to inform the child
+  // about the parent's channelId attribute, so that both parent and child
+  // share the same ID. Useful for monitoring channel activity in devtools.
+  nsAutoCString channelId;
+  nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(newChannel);
+  if (httpChannel) {
+    nsresult rv = httpChannel->GetChannelId(channelId);
+    NS_ENSURE_SUCCESS(rv, NS_BINDING_ABORTED);
+  }
+
   nsHttpResponseHead *responseHead = mChannel->GetResponseHead();
-  bool result = SendRedirect1Begin(newChannelId, uriParams, redirectFlags,
+  bool result = SendRedirect1Begin(registrarId, uriParams, redirectFlags,
                                    responseHead ? *responseHead
                                                 : nsHttpResponseHead(),
-                                   secInfoSerialization);
+                                   secInfoSerialization,
+                                   channelId);
   if (!result) {
     // Bug 621446 investigation
     mSentRedirect1BeginFailed = true;

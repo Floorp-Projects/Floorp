@@ -808,12 +808,19 @@ FrameAnimator::DrawFrameTo(const uint8_t* aSrcData, const nsIntRect& aSrcRect,
           aSrcRect.width, aSrcRect.height,
           reinterpret_cast<uint32_t*>(const_cast<uint8_t*>(aSrcData)),
           aSrcRect.width * 4);
+    if (!src) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     pixman_image_t* dst =
       pixman_image_create_bits(PIXMAN_a8r8g8b8,
                                aDstRect.width,
                                aDstRect.height,
                                reinterpret_cast<uint32_t*>(aDstPixels),
                                aDstRect.width * 4);
+    if (!dst) {
+      pixman_image_unref(src);
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     auto op = aBlendMethod == BlendMethod::SOURCE ? PIXMAN_OP_SRC
                                                   : PIXMAN_OP_OVER;

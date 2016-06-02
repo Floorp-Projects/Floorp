@@ -38,6 +38,7 @@ XPIDL_SOURCES += [
     'nsISSLStatusProvider.idl',
     'nsITokenDialogs.idl',
     'nsITokenPasswordDialogs.idl',
+    'nsIU2FToken.idl',
     'nsIUserCertPicker.idl',
     'nsIWeakCryptoOverride.idl',
     'nsIX509Cert.idl',

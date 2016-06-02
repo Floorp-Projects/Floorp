@@ -6847,6 +6847,8 @@ IonBuilder::makeCallHelper(JSFunction* target, CallInfo& callInfo)
     for (int i = targetArgs; i > (int)callInfo.argc(); i--) {
         MOZ_ASSERT_IF(target, !target->isNative());
         MConstant* undef = constant(UndefinedValue());
+        if (!alloc().ensureBallast())
+            return nullptr;
         call->addArg(i, undef);
     }
 
@@ -11570,13 +11572,13 @@ IonBuilder::getPropTryArgumentsLength(bool* emitted, MDefinition* obj)
 {
     MOZ_ASSERT(*emitted == false);
 
+    if (JSOp(*pc) != JSOP_LENGTH)
+        return true;
+
     bool isOptimizedArgs = false;
     if (!checkIsDefinitelyOptimizedArguments(obj, &isOptimizedArgs))
         return false;
     if (!isOptimizedArgs)
-        return true;
-
-    if (JSOp(*pc) != JSOP_LENGTH)
         return true;
 
     trackOptimizationSuccess();
@@ -11602,13 +11604,13 @@ IonBuilder::getPropTryArgumentsCallee(bool* emitted, MDefinition* obj, PropertyN
 {
     MOZ_ASSERT(*emitted == false);
 
+    if (name != names().callee)
+        return true;
+
     bool isOptimizedArgs = false;
     if (!checkIsDefinitelyOptimizedArguments(obj, &isOptimizedArgs))
         return false;
     if (!isOptimizedArgs)
-        return true;
-
-    if (name != names().callee)
         return true;
 
     MOZ_ASSERT(script()->hasMappedArgsObj());

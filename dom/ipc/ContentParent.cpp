@@ -267,7 +267,7 @@ using namespace mozilla::system;
 #endif
 
 #ifndef MOZ_SIMPLEPUSH
-#include "nsIPushNotifier.h"
+#include "mozilla/dom/PushNotifier.h"
 #endif
 
 #ifdef XP_WIN
@@ -5828,15 +5828,8 @@ ContentParent::RecvNotifyPushObservers(const nsCString& aScope,
                                        const nsString& aMessageId)
 {
 #ifndef MOZ_SIMPLEPUSH
-  nsCOMPtr<nsIPushNotifier> pushNotifier =
-      do_GetService("@mozilla.org/push/Notifier;1");
-  if (NS_WARN_IF(!pushNotifier)) {
-      return true;
-  }
-
-  nsresult rv = pushNotifier->NotifyPushObservers(aScope, aPrincipal,
-                                                  Nothing());
-  Unused << NS_WARN_IF(NS_FAILED(rv));
+  PushMessageDispatcher dispatcher(aScope, aPrincipal, aMessageId, Nothing());
+  Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObservers()));
 #endif
   return true;
 }
@@ -5848,15 +5841,8 @@ ContentParent::RecvNotifyPushObserversWithData(const nsCString& aScope,
                                                InfallibleTArray<uint8_t>&& aData)
 {
 #ifndef MOZ_SIMPLEPUSH
-  nsCOMPtr<nsIPushNotifier> pushNotifier =
-      do_GetService("@mozilla.org/push/Notifier;1");
-  if (NS_WARN_IF(!pushNotifier)) {
-      return true;
-  }
-
-  nsresult rv = pushNotifier->NotifyPushObservers(aScope, aPrincipal,
-                                                  Some(aData));
-  Unused << NS_WARN_IF(NS_FAILED(rv));
+  PushMessageDispatcher dispatcher(aScope, aPrincipal, aMessageId, Some(aData));
+  Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObservers()));
 #endif
   return true;
 }
@@ -5866,15 +5852,8 @@ ContentParent::RecvNotifyPushSubscriptionChangeObservers(const nsCString& aScope
                                                          const IPC::Principal& aPrincipal)
 {
 #ifndef MOZ_SIMPLEPUSH
-  nsCOMPtr<nsIPushNotifier> pushNotifier =
-      do_GetService("@mozilla.org/push/Notifier;1");
-  if (NS_WARN_IF(!pushNotifier)) {
-      return true;
-  }
-
-  nsresult rv = pushNotifier->NotifySubscriptionChangeObservers(aScope,
-                                                                aPrincipal);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
+  PushSubscriptionChangeDispatcher dispatcher(aScope, aPrincipal);
+  Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObservers()));
 #endif
   return true;
 }
@@ -5884,15 +5863,8 @@ ContentParent::RecvNotifyPushSubscriptionModifiedObservers(const nsCString& aSco
                                                            const IPC::Principal& aPrincipal)
 {
 #ifndef MOZ_SIMPLEPUSH
-  nsCOMPtr<nsIPushNotifier> pushNotifier =
-      do_GetService("@mozilla.org/push/Notifier;1");
-  if (NS_WARN_IF(!pushNotifier)) {
-      return true;
-  }
-
-  nsresult rv = pushNotifier->NotifySubscriptionModifiedObservers(aScope,
-                                                                  aPrincipal);
-  Unused << NS_WARN_IF(NS_FAILED(rv));
+  PushSubscriptionModifiedDispatcher dispatcher(aScope, aPrincipal);
+  Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObservers()));
 #endif
   return true;
 }

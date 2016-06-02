@@ -547,7 +547,7 @@ private:
 
     RefPtr<InternalResponse> ir =
       new InternalResponse(200, NS_LITERAL_CSTRING("OK"));
-    ir->SetBody(body);
+    ir->SetBody(body, mCN->Buffer().Length());
 
     ir->InitChannelInfo(mChannelInfo);
     if (mPrincipalInfo) {

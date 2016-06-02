@@ -12,6 +12,7 @@ interface nsIInputStream;
 interface nsILoadInfo;
 interface nsIDOMNode;
 interface nsIPrincipal;
+interface nsITransportProvider;
 
 #include "nsISupports.idl"
 
@@ -228,6 +229,15 @@ interface nsIWebSocketChannel : nsISupports
      * created via IPC, the serial number is received from the child process.
      */
     attribute unsigned long serial;
+
+    /**
+     * Set a nsITransportProvider and negotated extensions to be used by this
+     * channel. Calling this function also means that this channel will
+     * implement the server-side part of a websocket connection rather than the
+     * client-side part.
+     */
+    void setServerParameters(in nsITransportProvider aProvider,
+                             in ACString aNegotiatedExtensions);
 
 %{C++
     inline uint32_t Serial()

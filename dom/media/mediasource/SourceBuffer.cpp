@@ -33,12 +33,6 @@ extern mozilla::LogModule* GetMediaSourceAPILog();
 #define MSE_DEBUGV(arg, ...) MOZ_LOG(GetMediaSourceLog(), mozilla::LogLevel::Verbose, ("SourceBuffer(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))
 #define MSE_API(arg, ...) MOZ_LOG(GetMediaSourceAPILog(), mozilla::LogLevel::Debug, ("SourceBuffer(%p:%s)::%s: " arg, this, mType.get(), __func__, ##__VA_ARGS__))
 
-#if defined(MOZ_GONK_MEDIACODEC) || defined(XP_WIN) || defined(MOZ_APPLEMEDIA) || defined(MOZ_FFMPEG)
-#define MP4_READER_DORMANT_HEURISTIC
-#else
-#undef MP4_READER_DORMANT_HEURISTIC
-#endif
-
 namespace mozilla {
 
 using media::TimeUnit;
@@ -308,9 +302,7 @@ SourceBuffer::SourceBuffer(MediaSource* aMediaSource, const nsACString& aType)
     new TrackBuffersManager(aMediaSource->GetDecoder(), aType);
 
   // Now that we know what type we're dealing with, enable dormant as needed.
-#if defined(MP4_READER_DORMANT_HEURISTIC)
   aMediaSource->GetDecoder()->NotifyDormantSupported(Preferences::GetBool("media.decoder.heuristic.dormant.enabled", false));
-#endif
 
   MSE_DEBUG("Create mTrackBuffersManager=%p",
             mTrackBuffersManager.get());

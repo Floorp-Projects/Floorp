@@ -48,6 +48,14 @@ builds:
     types:
       opt:
         task: tasks/builds/opt_linux64_st-an.yml
+  linux64-asan:
+    platforms:
+      - Linux64 ASan
+    types:
+      opt:
+        task: tasks/builds/opt_linux64-asan.yml
+      debug:
+        task: tasks/builds/dbg_linux64-asan.yml
   linux64-haz:
     platforms:
       - Linux64
@@ -224,12 +232,20 @@ tests:
         task: tasks/tests/fx_linux64_external_media_tests_opt.yml
   firefox-ui-functional:
     allowed_build_tasks:
+      tasks/builds/opt_linux64.yml:
+        task: tasks/tests/fx_linux64_firefox_ui_functional_opt.yml
       tasks/builds/dbg_linux64.yml:
-        task: tasks/tests/fx_linux64_firefox_ui_functional.yml
+        task: tasks/tests/fx_linux64_firefox_ui_functional_dbg.yml
+      tasks/builds/opt_linux64_pgo.yml:
+        task: tasks/tests/fx_linux64_firefox_ui_functional_opt.yml
   firefox-ui-functional-e10s:
     allowed_build_tasks:
+      tasks/builds/opt_linux64.yml:
+        task: tasks/tests/fx_linux64_firefox_ui_functional_e10s_opt.yml
       tasks/builds/dbg_linux64.yml:
-        task: tasks/tests/fx_linux64_firefox_ui_functional_e10s.yml
+        task: tasks/tests/fx_linux64_firefox_ui_functional_e10s_dbg.yml
+      tasks/builds/opt_linux64_pgo.yml:
+        task: tasks/tests/fx_linux64_firefox_ui_functional_e10s_opt.yml
   gtest:
     allowed_build_tasks:
       tasks/builds/opt_linux64.yml:
@@ -508,6 +524,16 @@ tasks:
         # The plugin implementing custom checks.
         - 'testing/eslint/eslint-plugin-mozilla/**'
         # Other misc lint related files.
+        - 'tools/lint/**'
+        - 'testing/docker/lint/**'
+  flake8-gecko:
+    task: tasks/tests/mozlint-flake8.yml
+    root: true
+    when:
+      file_patterns:
+        - '**/*.py'
+        - '**/.flake8'
+        - 'python/mozlint/**'
         - 'tools/lint/**'
         - 'testing/docker/lint/**'
   android-api-15-gradle-dependencies:

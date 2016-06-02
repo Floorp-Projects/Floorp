@@ -47,6 +47,11 @@
 #define BUILD_BINHEX_DECODER 1
 #endif
 
+#if defined(XP_MACOSX) || defined(XP_WIN) || \
+    (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
+#define BUILD_NETWORK_INFO_SERVICE 1
+#endif
+
 typedef nsCategoryCache<nsIContentSniffer> ContentSnifferCache;
 ContentSnifferCache* gNetSniffers = nullptr;
 ContentSnifferCache* gDataSniffers = nullptr;
@@ -441,6 +446,15 @@ namespace net {
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsTXTToHTMLConv, Init)
 } // namespace net
 } // namespace mozilla
+
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef BUILD_NETWORK_INFO_SERVICE
+#include "nsNetworkInfoService.h"
+typedef mozilla::net::nsNetworkInfoService nsNetworkInfoService;
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNetworkInfoService, Init)
+#endif // BUILD_NETWORK_INFO_SERVICE
+
 
 #include "nsIndexedToHTML.h"
 #ifdef BUILD_BINHEX_DECODER
@@ -857,6 +871,9 @@ NS_DEFINE_NAMED_CID(NS_NSILOADCONTEXTINFOFACTORY_CID);
 NS_DEFINE_NAMED_CID(NS_NETWORKPREDICTOR_CID);
 NS_DEFINE_NAMED_CID(NS_CAPTIVEPORTAL_CID);
 NS_DEFINE_NAMED_CID(NS_REQUESTCONTEXTSERVICE_CID);
+#ifdef BUILD_NETWORK_INFO_SERVICE
+NS_DEFINE_NAMED_CID(NETWORKINFOSERVICE_CID);
+#endif // BUILD_NETWORK_INFO_SERVICE
 
 static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_IOSERVICE_CID, false, nullptr, nsIOServiceConstructor },
@@ -1009,6 +1026,9 @@ static const mozilla::Module::CIDEntry kNeckoCIDs[] = {
     { &kNS_NETWORKPREDICTOR_CID, false, nullptr, mozilla::net::Predictor::Create },
     { &kNS_CAPTIVEPORTAL_CID, false, nullptr, mozilla::net::CaptivePortalServiceConstructor },
     { &kNS_REQUESTCONTEXTSERVICE_CID, false, nullptr, RequestContextServiceConstructor },
+#ifdef BUILD_NETWORK_INFO_SERVICE
+    { &kNETWORKINFOSERVICE_CID, false, nullptr, nsNetworkInfoServiceConstructor },
+#endif
     { nullptr }
 };
 
@@ -1167,6 +1187,9 @@ static const mozilla::Module::ContractIDEntry kNeckoContracts[] = {
     { NS_NETWORKPREDICTOR_CONTRACTID, &kNS_NETWORKPREDICTOR_CID },
     { NS_CAPTIVEPORTAL_CONTRACTID, &kNS_CAPTIVEPORTAL_CID },
     { NS_REQUESTCONTEXTSERVICE_CONTRACTID, &kNS_REQUESTCONTEXTSERVICE_CID },
+#ifdef BUILD_NETWORK_INFO_SERVICE
+    { NETWORKINFOSERVICE_CONTRACT_ID, &kNETWORKINFOSERVICE_CID },
+#endif
     { nullptr }
 };
 

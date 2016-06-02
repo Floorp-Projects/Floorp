@@ -67,6 +67,11 @@ void
 nsSVGViewBox::Init()
 {
   mHasBaseVal = false;
+  // We shouldn't use mBaseVal for rendering (its usages should be guarded with
+  // "mHasBaseVal" checks), but just in case we do by accident, this will
+  // ensure that we treat it as "none" and ignore its numeric values:
+  mBaseVal.none = true;
+
   mAnimVal = nullptr;
 }
 

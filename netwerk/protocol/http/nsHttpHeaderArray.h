@@ -61,6 +61,9 @@ public:
     nsresult SetHeaderFromNet(nsHttpAtom header, const nsACString &value,
                               bool response);
 
+    nsresult SetResponseHeaderFromCache(nsHttpAtom header, const nsACString &value,
+                                        HeaderVariety variety);
+
     nsresult GetHeader(nsHttpAtom header, nsACString &value) const;
     nsresult GetOriginalHeader(nsHttpAtom aHeader,
                                nsIHttpHeaderVisitor *aVisitor);

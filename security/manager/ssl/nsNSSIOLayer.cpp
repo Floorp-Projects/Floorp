@@ -1330,33 +1330,33 @@ nsSSLIOLayerHelpers::nsSSLIOLayerHelpers()
 static int
 _PSM_InvalidInt(void)
 {
-    PR_ASSERT(!"I/O method is invalid");
-    PR_SetError(PR_INVALID_METHOD_ERROR, 0);
-    return -1;
+  MOZ_ASSERT_UNREACHABLE("I/O method is invalid");
+  PR_SetError(PR_INVALID_METHOD_ERROR, 0);
+  return -1;
 }
 
 static int64_t
 _PSM_InvalidInt64(void)
 {
-    PR_ASSERT(!"I/O method is invalid");
-    PR_SetError(PR_INVALID_METHOD_ERROR, 0);
-    return -1;
+  MOZ_ASSERT_UNREACHABLE("I/O method is invalid");
+  PR_SetError(PR_INVALID_METHOD_ERROR, 0);
+  return -1;
 }
 
 static PRStatus
 _PSM_InvalidStatus(void)
 {
-    PR_ASSERT(!"I/O method is invalid");
-    PR_SetError(PR_INVALID_METHOD_ERROR, 0);
-    return PR_FAILURE;
+  MOZ_ASSERT_UNREACHABLE("I/O method is invalid");
+  PR_SetError(PR_INVALID_METHOD_ERROR, 0);
+  return PR_FAILURE;
 }
 
 static PRFileDesc*
 _PSM_InvalidDesc(void)
 {
-    PR_ASSERT(!"I/O method is invalid");
-    PR_SetError(PR_INVALID_METHOD_ERROR, 0);
-    return nullptr;
+  MOZ_ASSERT_UNREACHABLE("I/O method is invalid");
+  PR_SetError(PR_INVALID_METHOD_ERROR, 0);
+  return nullptr;
 }
 
 static PRStatus

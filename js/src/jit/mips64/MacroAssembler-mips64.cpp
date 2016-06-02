@@ -355,7 +355,7 @@ void
 MacroAssemblerMIPS64::ma_dins(Register rt, Register rs, Imm32 pos, Imm32 size)
 {
     if (pos.value >= 0 && pos.value < 32) {
-        if (size.value >= 2)
+        if (pos.value + size.value > 32)
           as_dinsm(rt, rs, pos.value, size.value);
         else
           as_dins(rt, rs, pos.value, size.value);

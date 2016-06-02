@@ -97,6 +97,7 @@
 #include "nsIDOMWindowUtils.h"
 #include "Units.h"
 #include "UnitTransforms.h"
+#include "mozilla/UniquePtrExtensions.h"
 
 using namespace mozilla;
 using namespace mozilla::layers;
@@ -1531,6 +1532,71 @@ bool nsChildView::PaintWindow(LayoutDeviceIntRegion aRegion)
 
   mIsDispatchPaint = oldDispatchPaint;
   return returnValue;
+}
+
+bool
+nsChildView::PaintWindowInContext(CGContextRef aContext, const LayoutDeviceIntRegion& aRegion, gfx::IntSize aSurfaceSize)
+{
+  if (!mBackingSurface || mBackingSurface->GetSize() != aSurfaceSize) {
+    mBackingSurface =
+      gfxPlatform::GetPlatform()->CreateOffscreenContentDrawTarget(aSurfaceSize,
+                                                                   gfx::SurfaceFormat::B8G8R8A8);
+    if (!mBackingSurface) {
+      return false;
+    }
+  }
+
+  RefPtr<gfxContext> targetContext = gfxContext::ForDrawTarget(mBackingSurface);
+  MOZ_ASSERT(targetContext); // already checked the draw target above
+
+  // Set up the clip region and clear existing contents in the backing surface.
+  targetContext->NewPath();
+  for (auto iter = aRegion.RectIter(); !iter.Done(); iter.Next()) {
+    const LayoutDeviceIntRect& r = iter.Get();
+    targetContext->Rectangle(gfxRect(r.x, r.y, r.width, r.height));
+    mBackingSurface->ClearRect(gfx::Rect(r.ToUnknownRect()));
+  }
+  targetContext->Clip();
+
+  nsAutoRetainCocoaObject kungFuDeathGrip(mView);
+  bool painted = false;
+  if (GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_BASIC) {
+    nsBaseWidget::AutoLayerManagerSetup
+      setupLayerManager(this, targetContext, BufferMode::BUFFER_NONE);
+    painted = PaintWindow(aRegion);
+  } else if (GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
+    // We only need this so that we actually get DidPaintWindow fired
+    painted = PaintWindow(aRegion);
+  }
+
+  uint8_t* data;
+  gfx::IntSize size;
+  int32_t stride;
+  gfx::SurfaceFormat format;
+
+  if (!mBackingSurface->LockBits(&data, &size, &stride, &format)) {
+    return false;
+  }
+
+  // Draw the backing surface onto the window.
+  CGDataProviderRef provider = CGDataProviderCreateWithData(NULL, data, stride * size.height, NULL);
+  NSColorSpace* colorSpace = [[mView window] colorSpace];
+  CGImageRef image = CGImageCreate(size.width, size.height, 8, 32, stride,
+                                   [colorSpace CGColorSpace],
+                                   kCGBitmapByteOrder32Host | kCGImageAlphaPremultipliedFirst,
+                                   provider, NULL, false, kCGRenderingIntentDefault);
+  CGContextSaveGState(aContext);
+  CGContextTranslateCTM(aContext, 0, size.height);
+  CGContextScaleCTM(aContext, 1, -1);
+  CGContextSetBlendMode(aContext, kCGBlendModeCopy);
+  CGContextDrawImage(aContext, CGRectMake(0, 0, size.width, size.height), image);
+  CGImageRelease(image);
+  CGDataProviderRelease(provider);
+  CGContextRestoreGState(aContext);
+
+  mBackingSurface->ReleaseBits(data);
+
+  return painted;
 }
 
 #pragma mark -
@@ -3815,50 +3881,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
   NSSize viewSize = [self bounds].size;
   nsIntSize backingSize(viewSize.width * scale, viewSize.height * scale);
-
-  CGContextSaveGState(aContext);
-
   LayoutDeviceIntRegion region = [self nativeDirtyRegionWithBoundingRect:aRect];
 
-  // Create Cairo objects.
-  RefPtr<gfxQuartzSurface> targetSurface;
-
-  RefPtr<gfx::DrawTarget> dt =
-    gfx::Factory::CreateDrawTargetForCairoCGContext(aContext,
-                                                    gfx::IntSize(backingSize.width,
-                                                                 backingSize.height));
-  if (!dt || !dt->IsValid()) {
-    // This used to be an assertion, so keep crashing in nightly+aurora
-    gfxDevCrash(mozilla::gfx::LogReason::InvalidContext) << "Cannot create target with CreateDrawTargetForCairoCGContext " << backingSize;
-    return;
-  }
-  dt->AddUserData(&gfxContext::sDontUseAsSourceKey, dt, nullptr);
-  RefPtr<gfxContext> targetContext = gfxContext::ForDrawTarget(dt);
-  MOZ_ASSERT(targetContext); // already checked the draw target above
-
-  // Set up the clip region.
-  targetContext->NewPath();
-  for (auto iter = region.RectIter(); !iter.Done(); iter.Next()) {
-    const LayoutDeviceIntRect& r = iter.Get();
-    targetContext->Rectangle(gfxRect(r.x, r.y, r.width, r.height));
-  }
-  targetContext->Clip();
-
-  nsAutoRetainCocoaObject kungFuDeathGrip(self);
-  bool painted = false;
-  if (mGeckoChild->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_BASIC) {
-    nsBaseWidget::AutoLayerManagerSetup
-      setupLayerManager(mGeckoChild, targetContext, BufferMode::BUFFER_NONE);
-    painted = mGeckoChild->PaintWindow(region);
-  } else if (mGeckoChild->GetLayerManager()->GetBackendType() == LayersBackend::LAYERS_CLIENT) {
-    // We only need this so that we actually get DidPaintWindow fired
-    painted = mGeckoChild->PaintWindow(region);
-  }
-
-  targetContext = nullptr;
-  targetSurface = nullptr;
-
-  CGContextRestoreGState(aContext);
+  bool painted = mGeckoChild->PaintWindowInContext(aContext, region, backingSize);
 
   // Undo the scale transform so that from now on the context is in
   // CocoaPoints again.

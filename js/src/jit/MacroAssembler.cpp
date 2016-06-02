@@ -2458,9 +2458,9 @@ MacroAssembler::passABIArg(const MoveOperand& from, MoveOp::Type type)
     if (from == to)
         return;
 
-    if (!enoughMemory_)
+    if (oom())
         return;
-    enoughMemory_ = moveResolver_.addMove(from, to, type);
+    propagateOOM(moveResolver_.addMove(from, to, type));
 }
 
 void

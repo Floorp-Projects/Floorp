@@ -1133,7 +1133,8 @@ jit::EliminatePhis(MIRGenerator* mir, MIRGraph& graph,
         while (iter != block->phisEnd()) {
             MPhi* phi = *iter++;
             if (phi->isUnused()) {
-                phi->optimizeOutAllUses(graph.alloc());
+                if (!phi->optimizeOutAllUses(graph.alloc()))
+                    return false;
                 block->discardPhi(phi);
             }
         }

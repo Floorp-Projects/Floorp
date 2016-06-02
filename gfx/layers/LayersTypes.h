@@ -190,29 +190,14 @@ struct EventRegions {
   bool operator==(const EventRegions& aRegions) const
   {
     return mHitRegion == aRegions.mHitRegion &&
-           mDispatchToContentHitRegion == aRegions.mDispatchToContentHitRegion;
+           mDispatchToContentHitRegion == aRegions.mDispatchToContentHitRegion &&
+           mNoActionRegion == aRegions.mNoActionRegion &&
+           mHorizontalPanRegion == aRegions.mHorizontalPanRegion &&
+           mVerticalPanRegion == aRegions.mVerticalPanRegion;
   }
   bool operator!=(const EventRegions& aRegions) const
   {
     return !(*this == aRegions);
-  }
-
-  void OrWith(const EventRegions& aOther)
-  {
-    mHitRegion.OrWith(aOther.mHitRegion);
-    mDispatchToContentHitRegion.OrWith(aOther.mDispatchToContentHitRegion);
-  }
-
-  void AndWith(const nsIntRegion& aRegion)
-  {
-    mHitRegion.AndWith(aRegion);
-    mDispatchToContentHitRegion.AndWith(aRegion);
-  }
-
-  void Sub(const EventRegions& aMinuend, const nsIntRegion& aSubtrahend)
-  {
-    mHitRegion.Sub(aMinuend.mHitRegion, aSubtrahend);
-    mDispatchToContentHitRegion.Sub(aMinuend.mDispatchToContentHitRegion, aSubtrahend);
   }
 
   void ApplyTranslationAndScale(float aXTrans, float aYTrans, float aXScale, float aYScale)
@@ -234,12 +219,18 @@ struct EventRegions {
   {
     mHitRegion.Transform(aTransform);
     mDispatchToContentHitRegion.Transform(aTransform);
+    mNoActionRegion.Transform(aTransform);
+    mHorizontalPanRegion.Transform(aTransform);
+    mVerticalPanRegion.Transform(aTransform);
   }
 
   bool IsEmpty() const
   {
     return mHitRegion.IsEmpty()
-        && mDispatchToContentHitRegion.IsEmpty();
+        && mDispatchToContentHitRegion.IsEmpty()
+        && mNoActionRegion.IsEmpty()
+        && mHorizontalPanRegion.IsEmpty()
+        && mVerticalPanRegion.IsEmpty();
   }
 
   nsCString ToString() const
