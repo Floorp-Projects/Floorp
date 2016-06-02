@@ -50,7 +50,6 @@ public:
   virtual nsIScriptGlobalObject *GetGlobalObject() override;
   inline nsIScriptGlobalObject *GetGlobalObjectRef() { return mGlobalObjectRef; }
 
-  virtual JSContext* GetNativeContext() override;
   virtual nsresult InitContext() override;
   virtual bool IsContextInitialized() override;
 
