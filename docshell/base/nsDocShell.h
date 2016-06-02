@@ -1034,6 +1034,10 @@ private:
                               nsIDocShellTreeItem* aOriginalRequestor,
                               nsIDocShellTreeItem** aResult);
 
+  // Helper assertion to enforce that mInPrivateBrowsing is in sync with
+  // OriginAttributes.mPrivateBrowsingId
+  void AssertOriginAttributesMatchPrivateBrowsing();
+
   // Notify consumers of a search being loaded through the observer service:
   void MaybeNotifyKeywordSearchLoading(const nsString& aProvider,
                                        const nsString& aKeyword);
