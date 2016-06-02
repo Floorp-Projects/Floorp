@@ -4,14 +4,13 @@
 
 "use strict";
 
-var {Cu} = require("chrome");
 var {DebuggerServer} = require("devtools/server/main");
 
 var promise = require("promise");
 var {Class} = require("sdk/core/heritage");
 
 var protocol = require("devtools/shared/protocol");
-var {method, Arg, Option, RetVal} = protocol;
+var {method, Arg, RetVal} = protocol;
 
 exports.LongStringActor = protocol.ActorClass({
   typeName: "longstractor",
@@ -64,9 +63,17 @@ exports.ShortLongString = Class({
     this.str = str;
   },
 
-  get length() { return this.str.length; },
-  get initial() { return this.str; },
-  string: function () { return promise.resolve(this.str); },
+  get length() {
+    return this.str.length;
+  },
+
+  get initial() {
+    return this.str;
+  },
+
+  string: function () {
+    return promise.resolve(this.str);
+  },
 
   substring: function (start, end) {
     return promise.resolve(this.str.substring(start, end));
@@ -99,13 +106,12 @@ exports.LongStringFront = protocol.FrontClass(exports.LongStringActor, {
   string: function () {
     if (!this.strPromise) {
       let promiseRest = (thusFar) => {
-        if (thusFar.length === this.length)
+        if (thusFar.length === this.length) {
           return promise.resolve(thusFar);
-        else {
-          return this.substring(thusFar.length,
-                                thusFar.length + DebuggerServer.LONG_STRING_READ_LENGTH)
-            .then((next) => promiseRest(thusFar + next));
         }
+        return this.substring(thusFar.length,
+          thusFar.length + DebuggerServer.LONG_STRING_READ_LENGTH)
+          .then((next) => promiseRest(thusFar + next));
       };
 
       this.strPromise = promiseRest(this.initial);
@@ -124,11 +130,11 @@ protocol.types.addType("longstring", {
     if (!(context instanceof protocol.Actor)) {
       throw Error("Passing a longstring as an argument isn't supported.");
     }
+
     if (value.short) {
       return value.str;
-    } else {
-      return stringActorType.write(value, context, detail);
     }
+    return stringActorType.write(value, context, detail);
   },
   read: (value, context, detail) => {
     if (context instanceof protocol.Actor) {
