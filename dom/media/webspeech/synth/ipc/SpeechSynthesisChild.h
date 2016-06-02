@@ -56,8 +56,7 @@ protected:
 
   bool RecvOnEnd(const bool& aIsError,
                  const float& aElapsedTime,
-                 const uint32_t& aCharIndex,
-                 const uint32_t& aError) override;
+                 const uint32_t& aCharIndex) override;
 
   bool RecvOnPause(const float& aElapsedTime, const uint32_t& aCharIndex) override;
 

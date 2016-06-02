@@ -96,14 +96,13 @@ SpeechSynthesisRequestChild::RecvOnStart(const nsString& aUri)
 bool
 SpeechSynthesisRequestChild::RecvOnEnd(const bool& aIsError,
                                        const float& aElapsedTime,
-                                       const uint32_t& aCharIndex,
-                                       const uint32_t& aError)
+                                       const uint32_t& aCharIndex)
 {
   SpeechSynthesisRequestChild* actor = mTask->mActor;
   mTask->mActor = nullptr;
 
   if (aIsError) {
-    mTask->DispatchErrorImpl(aElapsedTime, aCharIndex, aError);
+    mTask->DispatchErrorImpl(aElapsedTime, aCharIndex, 0);
   } else {
     mTask->DispatchEndImpl(aElapsedTime, aCharIndex);
   }

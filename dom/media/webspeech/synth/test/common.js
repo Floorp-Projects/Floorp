@@ -39,8 +39,7 @@ function synthTestQueue(aTestArgs, aEndFunc) {
     u.addEventListener('error',
       (function (expectedError) {
         return function onerror_handler(e) {
-          ok(e instanceof SpeechSynthesisErrorEvent, "error event is of right type");
-          is(expectedError, e.error, "Matched error type");
+          ok(expectedError, "Error in speech utterance '" + e.target.text + "'");
         };
       })(aTestArgs[i][1] ? aTestArgs[i][1].err : false));
 

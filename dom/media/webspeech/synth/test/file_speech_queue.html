@@ -52,7 +52,7 @@ function testFunc(done_cb) {
      [{text: "How are you doing?", args: { lang: "en-GB" } },
       { rate: 1, pitch: 1, uri: langUriMap['en-GB']}],
      [{text: "Come stai?", args: { lang: "it-IT-fail" } },
-      { rate: 1, pitch: 1, uri: langUriMap['it-IT-fail'], err: "synthesis-failed" }],
+      { rate: 1, pitch: 1, uri: langUriMap['it-IT-fail'], err: true }],
      [{text: "¡hasta mañana!", args: { lang: "es-MX" } },
       { uri: langUriMap['es-MX'] }]],
     function () {

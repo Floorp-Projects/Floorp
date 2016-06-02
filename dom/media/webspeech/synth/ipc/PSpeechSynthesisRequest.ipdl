@@ -29,7 +29,7 @@ async protocol PSpeechSynthesisRequest
 
  child:
 
-  async OnEnd(bool aIsError, float aElapsedTime, uint32_t aCharIndex, uint32_t aError);
+  async OnEnd(bool aIsError, float aElapsedTime, uint32_t aCharIndex);
 
   async OnStart(nsString aUri);
 
