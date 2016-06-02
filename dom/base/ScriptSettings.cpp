@@ -344,16 +344,20 @@ WarningOnlyErrorReporter(JSContext* aCx, const char* aMessage,
                          JSErrorReport* aRep);
 
 void
-AutoJSAPI::InitInternal(JSObject* aGlobal, JSContext* aCx, bool aIsMainThread)
+AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
+                        JSContext* aCx, bool aIsMainThread)
 {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aIsMainThread == NS_IsMainThread());
+  MOZ_ASSERT(bool(aGlobalObject) == bool(aGlobal));
+  MOZ_ASSERT_IF(aGlobalObject, aGlobalObject->GetGlobalJSObject() == aGlobal);
 #ifdef DEBUG
   bool haveException = JS_IsExceptionPending(aCx);
 #endif // DEBUG
 
   mCx = aCx;
   mIsMainThread = aIsMainThread;
+  mGlobalObject = aGlobalObject;
   if (aIsMainThread) {
     // This Rooted<> is necessary only as long as AutoCxPusher::AutoCxPusher
     // can GC, which is only possible because XPCJSContextStack::Push calls
@@ -451,7 +455,8 @@ AutoJSAPI::AutoJSAPI(nsIGlobalObject* aGlobalObject,
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aIsMainThread == NS_IsMainThread());
 
-  InitInternal(aGlobalObject->GetGlobalJSObject(), aCx, aIsMainThread);
+  InitInternal(aGlobalObject, aGlobalObject->GetGlobalJSObject(), aCx,
+               aIsMainThread);
 }
 
 void
@@ -459,7 +464,7 @@ AutoJSAPI::Init()
 {
   MOZ_ASSERT(!mCx, "An AutoJSAPI should only be initialised once");
 
-  InitInternal(/* aGlobal */ nullptr,
+  InitInternal(/* aGlobalObject */ nullptr, /* aGlobal */ nullptr,
                nsContentUtils::GetDefaultJSContextForThread(),
                NS_IsMainThread());
 }
@@ -479,7 +484,7 @@ AutoJSAPI::Init(nsIGlobalObject* aGlobalObject, JSContext* aCx)
     return false;
   }
 
-  InitInternal(global, aCx, NS_IsMainThread());
+  InitInternal(aGlobalObject, global, aCx, NS_IsMainThread());
   return true;
 }
 
