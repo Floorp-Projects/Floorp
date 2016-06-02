@@ -72,7 +72,6 @@ nsHTMLReflowState::nsHTMLReflowState(nsPresContext*       aPresContext,
   AvailableBSize() = aAvailableSpace.BSize(mWritingMode);
   mFloatManager = nullptr;
   mLineLayout = nullptr;
-  memset(&mFlags, 0, sizeof(mFlags));
   mDiscoveredClearance = nullptr;
   mPercentBSizeObserver = nullptr;
 
@@ -165,7 +164,8 @@ nsCSSOffsetState::nsCSSOffsetState(nsIFrame *aFrame,
              "flex/grid items");
   LogicalSize cbSize(aContainingBlockWritingMode, aContainingBlockISize,
                      aContainingBlockISize);
-  InitOffsets(aContainingBlockWritingMode, cbSize, frame->GetType());
+  ReflowStateFlags flags;
+  InitOffsets(aContainingBlockWritingMode, cbSize, frame->GetType(), flags);
 }
 
 // Initialize a reflow state for a child frame's reflow. Some state
@@ -2126,7 +2126,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext*     aPresContext,
   if (nullptr == mParentReflowState || mFlags.mDummyParentReflowState) {
     // XXXldb This doesn't mean what it used to!
     InitOffsets(wm, OffsetPercentBasis(frame, wm, aContainingBlockSize),
-                aFrameType, aBorder, aPadding);
+                aFrameType, mFlags, aBorder, aPadding);
     // Override mComputedMargin since reflow roots start from the
     // frame's boundary, which is inside the margin.
     ComputedPhysicalMargin().SizeTo(0, 0, 0, 0);
@@ -2184,7 +2184,7 @@ nsHTMLReflowState::InitConstraints(nsPresContext*     aPresContext,
     WritingMode cbwm = cbrs->GetWritingMode();
     InitOffsets(cbwm, OffsetPercentBasis(frame, cbwm,
                                          cbSize.ConvertTo(cbwm, wm)),
-                aFrameType, aBorder, aPadding);
+                aFrameType, mFlags, aBorder, aPadding);
 
     // For calculating the size of this box, we use its own writing mode
     const nsStyleCoord &blockSize = mStylePosition->BSize(wm);
@@ -2438,8 +2438,9 @@ void
 nsCSSOffsetState::InitOffsets(WritingMode aWM,
                               const LogicalSize& aPercentBasis,
                               nsIAtom* aFrameType,
-                              const nsMargin *aBorder,
-                              const nsMargin *aPadding)
+                              ReflowStateFlags aFlags,
+                              const nsMargin* aBorder,
+                              const nsMargin* aPadding)
 {
   DISPLAY_INIT_OFFSETS(frame, this, aPercentBasis, aBorder, aPadding);
 
