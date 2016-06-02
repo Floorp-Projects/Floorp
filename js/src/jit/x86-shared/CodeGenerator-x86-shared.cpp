@@ -663,45 +663,10 @@ CodeGeneratorX86Shared::visitMinMaxD(LMinMaxD* ins)
     MOZ_ASSERT(first == output);
 #endif
 
-    Label done, nan, minMaxInst;
+    bool specialHandling = !ins->mir()->range() || ins->mir()->range()->canBeNaN();
+    bool isMax = ins->mir()->isMax();
 
-    // Do a vucomisd to catch equality and NaNs, which both require special
-    // handling. If the operands are ordered and inequal, we branch straight to
-    // the min/max instruction. If we wanted, we could also branch for less-than
-    // or greater-than here instead of using min/max, however these conditions
-    // will sometimes be hard on the branch predictor.
-    masm.vucomisd(second, first);
-    masm.j(Assembler::NotEqual, &minMaxInst);
-    if (!ins->mir()->range() || ins->mir()->range()->canBeNaN())
-        masm.j(Assembler::Parity, &nan);
-
-    // Ordered and equal. The operands are bit-identical unless they are zero
-    // and negative zero. These instructions merge the sign bits in that
-    // case, and are no-ops otherwise.
-    if (ins->mir()->isMax())
-        masm.vandpd(second, first, first);
-    else
-        masm.vorpd(second, first, first);
-    masm.jump(&done);
-
-    // x86's min/max are not symmetric; if either operand is a NaN, they return
-    // the read-only operand. We need to return a NaN if either operand is a
-    // NaN, so we explicitly check for a NaN in the read-write operand.
-    if (!ins->mir()->range() || ins->mir()->range()->canBeNaN()) {
-        masm.bind(&nan);
-        masm.vucomisd(first, first);
-        masm.j(Assembler::Parity, &done);
-    }
-
-    // When the values are inequal, or second is NaN, x86's min and max will
-    // return the value we need.
-    masm.bind(&minMaxInst);
-    if (ins->mir()->isMax())
-        masm.vmaxsd(second, first, first);
-    else
-        masm.vminsd(second, first, first);
-
-    masm.bind(&done);
+    masm.minMaxDouble(first, second, specialHandling, isMax);
 }
 
 void
@@ -714,45 +679,10 @@ CodeGeneratorX86Shared::visitMinMaxF(LMinMaxF* ins)
     MOZ_ASSERT(first == output);
 #endif
 
-    Label done, nan, minMaxInst;
+    bool specialHandling = !ins->mir()->range() || ins->mir()->range()->canBeNaN();
+    bool isMax = ins->mir()->isMax();
 
-    // Do a vucomiss to catch equality and NaNs, which both require special
-    // handling. If the operands are ordered and inequal, we branch straight to
-    // the min/max instruction. If we wanted, we could also branch for less-than
-    // or greater-than here instead of using min/max, however these conditions
-    // will sometimes be hard on the branch predictor.
-    masm.vucomiss(second, first);
-    masm.j(Assembler::NotEqual, &minMaxInst);
-    if (!ins->mir()->range() || ins->mir()->range()->canBeNaN())
-        masm.j(Assembler::Parity, &nan);
-
-    // Ordered and equal. The operands are bit-identical unless they are zero
-    // and negative zero. These instructions merge the sign bits in that
-    // case, and are no-ops otherwise.
-    if (ins->mir()->isMax())
-        masm.vandps(second, first, first);
-    else
-        masm.vorps(second, first, first);
-    masm.jump(&done);
-
-    // x86's min/max are not symmetric; if either operand is a NaN, they return
-    // the read-only operand. We need to return a NaN if either operand is a
-    // NaN, so we explicitly check for a NaN in the read-write operand.
-    if (!ins->mir()->range() || ins->mir()->range()->canBeNaN()) {
-        masm.bind(&nan);
-        masm.vucomiss(first, first);
-        masm.j(Assembler::Parity, &done);
-    }
-
-    // When the values are inequal, or second is NaN, x86's min and max will
-    // return the value we need.
-    masm.bind(&minMaxInst);
-    if (ins->mir()->isMax())
-        masm.vmaxss(second, first, first);
-    else
-        masm.vminss(second, first, first);
-
-    masm.bind(&done);
+    masm.minMaxFloat32(first, second, specialHandling, isMax);
 }
 
 void
