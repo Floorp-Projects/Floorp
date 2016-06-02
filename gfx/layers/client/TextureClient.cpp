@@ -452,13 +452,7 @@ TextureClient::UnlockActor() const
 bool
 TextureClient::IsReadLocked() const
 {
-  // mPendingReadUnlock is true when the texture has been written into (and as 
-  // a result the read-count already incremented on the behalf of the compositor),
-  // but we haven't sent the notification for the compositor to use the texture,
-  // so it is still OK to access the texture data on this side.
-  // If we didn't take mPendingReadUnlock into account here, we would not be able
-  // to Lock and Unlock a texture twice before sending it.
-  return mReadLock && mReadLock->GetReadCount() > 1 && !mPendingReadUnlock;
+  return mReadLock && mReadLock->GetReadCount() > 1;
 }
 
 bool
@@ -535,12 +529,7 @@ TextureClient::Unlock()
   }
 
   if (mOpenMode & OpenMode::OPEN_WRITE) {
-    if (mReadLock && !mPendingReadUnlock) {
-      // Take a read lock on behalf of the TextureHost. The latter will unlock
-      // after the shared data is available again for drawing.
-      mReadLock->ReadLock();
-    }
-    mPendingReadUnlock = true;
+    mUpdated = true;
   }
 
   mData->Unlock();
@@ -555,27 +544,18 @@ TextureClient::EnableReadLock()
 {
   if (!mReadLock) {
     mReadLock = TextureReadLock::Create(mAllocator);
-    if (mPendingReadUnlock) {
-      // We would have done this during TextureClient::Unlock if the ReadLock
-      // had been there, need to account for this here.
-      mReadLock->ReadLock();
-    }
   }
-}
-
-void
-TextureClient::SetReadLock(TextureReadLock* aLock)
-{
-  MOZ_ASSERT(!mReadLock);
-  mReadLock = aLock;
 }
 
 void
 TextureClient::SerializeReadLock(ReadLockDescriptor& aDescriptor)
 {
-  if (mReadLock && mPendingReadUnlock) {
+  if (mReadLock && mUpdated) {
+    // Take a read lock on behalf of the TextureHost. The latter will unlock
+    // after the shared data is available again for drawing.
+    mReadLock->ReadLock();
     mReadLock->Serialize(aDescriptor);
-    mPendingReadUnlock = false;
+    mUpdated = false;
   } else {
     aDescriptor = null_t();
   }
@@ -583,10 +563,7 @@ TextureClient::SerializeReadLock(ReadLockDescriptor& aDescriptor)
 
 TextureClient::~TextureClient()
 {
-  if (mPendingReadUnlock && mReadLock) {
-    mReadLock->ReadUnlock();
-    mReadLock = nullptr;
-  }
+  mReadLock = nullptr;
   Destroy(false);
 }
 
@@ -1094,7 +1071,7 @@ TextureClient::TextureClient(TextureData* aData, TextureFlags aFlags, ClientIPCA
 , mExpectedDtRefs(0)
 #endif
 , mIsLocked(false)
-, mPendingReadUnlock(false)
+, mUpdated(false)
 , mInUse(false)
 , mAddedToCompositableClient(false)
 , mWorkaroundAnnoyingSharedSurfaceLifetimeIssues(false)

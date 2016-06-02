@@ -653,8 +653,6 @@ public:
 
   void EnableReadLock();
 
-  void SetReadLock(TextureReadLock* aLock);
-
   TextureReadLock* GetReadLock() { return mReadLock; }
 
   bool IsReadLocked() const;
@@ -710,10 +708,10 @@ protected:
   uint32_t mExpectedDtRefs;
 #endif
   bool mIsLocked;
-  // True when there has been a modification of the texture that hasn't been sent
-  // to the compositor yet. We keep track of this to avoid sending the texture's
-  // ReadLock twice after a single update.
-  bool mPendingReadUnlock;
+  // This member tracks that the texture was written into until the update
+  // is sent to the compositor. We need this remember to lock mReadLock on
+  // behalf of the compositor just before sending the notification.
+  bool mUpdated;
   bool mInUse;
 
   bool mAddedToCompositableClient;
