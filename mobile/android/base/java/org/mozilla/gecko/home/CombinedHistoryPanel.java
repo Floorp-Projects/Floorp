@@ -110,7 +110,7 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
 
         mHistoryAdapter = new CombinedHistoryAdapter(getResources());
         mClientsAdapter = new ClientsAdapter(getContext());
-        mRecentTabsAdapter = new RecentTabsAdapter();
+        mRecentTabsAdapter = new RecentTabsAdapter(getContext());
 
         mSyncStatusListener = new RemoteTabsSyncListener();
         FirefoxAccounts.addSyncStatusListener(mSyncStatusListener);
@@ -138,6 +138,8 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
 
         mPanelFooterButton = (Button) view.findViewById(R.id.clear_history_button);
         mPanelFooterButton.setOnClickListener(new OnFooterButtonClickListener());
+
+        mRecentTabsAdapter.startListeningForClosedTabs();
     }
 
     private void setUpRecyclerView() {
@@ -576,6 +578,13 @@ public class CombinedHistoryPanel extends HomeFragment implements RemoteClientsD
         public void onSyncFinished() {
             mRefreshLayout.setRefreshing(false);
         }
+    }
+
+    @Override
+    public void onDestroyView() {
+        super.onDestroyView();
+
+        mRecentTabsAdapter.stopListeningForClosedTabs();
     }
 
     @Override
