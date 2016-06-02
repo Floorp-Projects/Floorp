@@ -2,11 +2,11 @@ $inherits:
   from: 'tasks/builds/base_macosx64.yml'
   variables:
     build_name: 'macosx64'
-    build_type: 'dbg'
+    build_type: 'debug'
 task:
   metadata:
-      name: '[TC] MacOSX64 Dbg'
-      description: 'MacOSX64 Dbg'
+      name: '[TC] MacOSX64 Debug'
+      description: 'MacOSX64 Debug'
 
   workerType: dbg-macosx64
 
