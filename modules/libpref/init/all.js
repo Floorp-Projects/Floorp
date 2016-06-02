@@ -2408,7 +2408,11 @@ pref("layout.css.prefixes.font-features", true);
 pref("layout.css.prefixes.gradients", true);
 
 // Are webkit-prefixed properties & property-values supported?
+#ifdef EARLY_BETA_OR_EARLIER
 pref("layout.css.prefixes.webkit", true);
+#else
+pref("layout.css.prefixes.webkit", false);
+#endif
 
 // Are "-webkit-{min|max}-device-pixel-ratio" media queries supported?
 // (Note: this pref has no effect if the master 'layout.css.prefixes.webkit'
@@ -2432,7 +2436,11 @@ pref("layout.css.scope-pseudo.enabled", true);
 pref("layout.css.background-blend-mode.enabled", true);
 
 // Is support for background-clip:text enabled?
+#ifdef EARLY_BETA_OR_EARLIER
 pref("layout.css.background-clip-text.enabled", true);
+#else
+pref("layout.css.background-clip-text.enabled", false);
+#endif
 
 // Is support for CSS vertical text enabled?
 pref("layout.css.vertical-text.enabled", true);
