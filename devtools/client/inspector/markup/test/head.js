@@ -90,6 +90,20 @@ var getContainerForSelector = Task.async(function* (selector, inspector) {
 });
 
 /**
+ * Retrieve the nodeValue for the firstChild of a provided selector on the content page.
+ *
+ * @param {String} selector
+ * @param {TestActorFront} testActor The current TestActorFront instance.
+ * @return {String} the nodeValue of the first
+ */
+function* getFirstChildNodeValue(selector, testActor) {
+  let nodeValue = yield testActor.eval(`
+    content.document.querySelector("${selector}").firstChild.nodeValue;
+  `);
+  return nodeValue;
+}
+
+/**
  * Using the markupview's _waitForChildren function, wait for all queued
  * children updates to be handled.
  * @param {InspectorPanel} inspector The instance of InspectorPanel currently
