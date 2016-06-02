@@ -14,7 +14,7 @@ function test() {
   let gIframe, gEditor, gSources, gFrames;
 
   let options = {
-    source: "inline-debugger-statement.html",
+    source: EXAMPLE_URL + "doc_inline-debugger-statement.html",
     line: 1
   };
   initDebugger(TAB_URL, options).then(([aTab, aDebuggee, aPanel]) => {

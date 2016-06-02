@@ -17,7 +17,7 @@ function test() {
   RootActor.prototype.traits.noPrettyPrinting = true;
 
   let options = {
-    source: "code_ugly-5.js",
+    source: EXAMPLE_URL + "code_ugly-5.js",
     line: 1
   };
   initDebugger(TAB_URL, options).then(([aTab, aDebuggee, aPanel]) => {
