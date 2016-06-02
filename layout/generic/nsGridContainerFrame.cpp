@@ -1133,6 +1133,12 @@ struct nsGridContainerFrame::Tracks
                                nsTArray<GridItemInfo>& aGridItems);
 
   /**
+   * Apply the additional alignment needed to align the baseline-aligned subtree
+   * the item belongs to within its baseline track.
+   */
+  void AlignBaselineSubtree(const GridItemInfo& aGridItem) const;
+
+  /**
    * Resolve Intrinsic Track Sizes.
    * http://dev.w3.org/csswg/css-grid/#algo-content
    */
@@ -1686,7 +1692,13 @@ struct MOZ_STACK_CLASS nsGridContainerFrame::GridReflowState
       DebugOnly<size_t> len = mGridItems.Length();
       for (auto& itemInfo : mSharedGridData->mGridItems) {
         if (itemInfo.mFrame == childFirstInFlow) {
-          mGridItems.AppendElement(GridItemInfo(child, itemInfo.mArea));
+          auto item = mGridItems.AppendElement(GridItemInfo(child, itemInfo.mArea));
+          // Copy the item's baseline data so that the item's last fragment can do
+          // last-baseline alignment if necessary.
+          item->mState[0] |= itemInfo.mState[0] & ItemState::eAllBaselineBits;
+          item->mState[1] |= itemInfo.mState[1] & ItemState::eAllBaselineBits;
+          item->mBaselineOffset[0] = itemInfo.mBaselineOffset[0];
+          item->mBaselineOffset[1] = itemInfo.mBaselineOffset[1];
           break;
         }
       }
@@ -2226,8 +2238,9 @@ SpaceToFill(WritingMode aWM, const LogicalSize& aSize, nscoord aMargin,
 // Align an item's margin box in its aAxis inside aCBSize.
 static void
 AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe, LogicalAxis aAxis,
-                 bool aSameSide, nscoord aCBSize, const nsHTMLReflowState& aRS,
-                 const LogicalSize& aChildSize, LogicalPoint* aPos)
+                 bool aSameSide, nscoord aBaselineAdjust, nscoord aCBSize,
+                 const nsHTMLReflowState& aRS, const LogicalSize& aChildSize,
+                 LogicalPoint* aPos)
 {
   MOZ_ASSERT(aAlignment != NS_STYLE_ALIGN_AUTO, "unexpected 'auto' "
              "computed value for normal flow grid item");
@@ -2316,8 +2329,14 @@ AlignJustifySelf(uint8_t aAlignment, bool aOverflowSafe, LogicalAxis aAxis,
   switch (aAlignment) {
     case NS_STYLE_ALIGN_BASELINE:
     case NS_STYLE_ALIGN_LAST_BASELINE:
-      NS_WARNING("NYI: baseline/last-baseline for grid (bug 1151204)"); // XXX
-      MOZ_FALLTHROUGH;
+      if (MOZ_LIKELY(aSameSide == (aAlignment == NS_STYLE_ALIGN_BASELINE))) {
+        offset = marginStart + aBaselineAdjust;
+      } else {
+        nscoord size = aAxis == eLogicalAxisBlock ? aChildSize.BSize(wm)
+                                                  : aChildSize.ISize(wm);
+        offset = aCBSize - (size + marginEnd) - aBaselineAdjust;
+      }
+      break;
     case NS_STYLE_ALIGN_STRETCH:
       MOZ_FALLTHROUGH; // ComputeSize() deals with it
     case NS_STYLE_ALIGN_START:
@@ -2355,7 +2374,8 @@ SameSide(WritingMode aContainerWM, LogicalSide aContainerSide,
 }
 
 static void
-AlignSelf(uint8_t aAlignSelf, const LogicalRect& aCB, const WritingMode aCBWM,
+AlignSelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
+          uint8_t aAlignSelf, const LogicalRect& aCB, const WritingMode aCBWM,
           const nsHTMLReflowState& aRS, const LogicalSize& aSize,
           LogicalPoint* aPos)
 {
@@ -2376,13 +2396,20 @@ AlignSelf(uint8_t aAlignSelf, const LogicalRect& aCB, const WritingMode aCBWM,
   bool sameSide = SameSide(aCBWM, eLogicalSideBStart,
                            childWM, isOrthogonal ? eLogicalSideIStart
                                                  : eLogicalSideBStart);
+  nscoord baselineAdjust = 0;
+  if (alignSelf == NS_STYLE_ALIGN_BASELINE ||
+      alignSelf == NS_STYLE_ALIGN_LAST_BASELINE) {
+    alignSelf = aGridItem.GetSelfBaseline(alignSelf, eLogicalAxisBlock,
+                                          &baselineAdjust);
+  }
   LogicalAxis axis = isOrthogonal ? eLogicalAxisInline : eLogicalAxisBlock;
-  AlignJustifySelf(alignSelf, overflowSafe, axis, sameSide,
+  AlignJustifySelf(alignSelf, overflowSafe, axis, sameSide, baselineAdjust,
                    aCB.BSize(aCBWM), aRS, aSize, aPos);
 }
 
 static void
-JustifySelf(uint8_t aJustifySelf, const LogicalRect& aCB, const WritingMode aCBWM,
+JustifySelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
+            uint8_t aJustifySelf, const LogicalRect& aCB, const WritingMode aCBWM,
             const nsHTMLReflowState& aRS, const LogicalSize& aSize,
             LogicalPoint* aPos)
 {
@@ -2399,21 +2426,27 @@ JustifySelf(uint8_t aJustifySelf, const LogicalRect& aCB, const WritingMode aCBW
   bool sameSide = SameSide(aCBWM, eLogicalSideIStart,
                            childWM, isOrthogonal ? eLogicalSideBStart
                                                  : eLogicalSideIStart);
+  nscoord baselineAdjust = 0;
   // Grid's 'justify-self' axis is always parallel to the container's inline
   // axis, so justify-self:left|right always applies.
   switch (justifySelf) {
     case NS_STYLE_JUSTIFY_LEFT:
       justifySelf = aCBWM.IsBidiLTR() ? NS_STYLE_JUSTIFY_START
                                       : NS_STYLE_JUSTIFY_END;
-    break;
+      break;
     case NS_STYLE_JUSTIFY_RIGHT:
       justifySelf = aCBWM.IsBidiLTR() ? NS_STYLE_JUSTIFY_END
                                       : NS_STYLE_JUSTIFY_START;
-    break;
+      break;
+    case NS_STYLE_JUSTIFY_BASELINE:
+    case NS_STYLE_JUSTIFY_LAST_BASELINE:
+      justifySelf = aGridItem.GetSelfBaseline(justifySelf, eLogicalAxisInline,
+                                              &baselineAdjust);
+      break;
   }
 
   LogicalAxis axis = isOrthogonal ? eLogicalAxisBlock : eLogicalAxisInline;
-  AlignJustifySelf(justifySelf, overflowSafe, axis, sameSide,
+  AlignJustifySelf(justifySelf, overflowSafe, axis, sameSide, baselineAdjust,
                    aCB.ISize(aCBWM), aRS, aSize, aPos);
 }
 
@@ -3382,6 +3415,12 @@ ContentContribution(const GridItemInfo&               aGridItem,
     size += offsets.hMargin;
     size = nsLayoutUtils::AddPercents(aConstraint, size, offsets.hPctMargin);
   }
+  MOZ_ASSERT(aGridItem.mBaselineOffset[aAxis] >= 0,
+             "baseline offset should be non-negative at this point");
+  MOZ_ASSERT((aGridItem.mState[aAxis] & ItemState::eIsBaselineAligned) ||
+             aGridItem.mBaselineOffset[aAxis] == nscoord(0),
+             "baseline offset should be zero when not baseline-aligned");
+  size += aGridItem.mBaselineOffset[aAxis];
   return std::max(size, 0);
 }
 
@@ -3425,7 +3464,12 @@ MinSize(const GridItemInfo&      aGridItem,
   // transferred size" for min-width:auto if overflow == visible (as min-width:0
   // otherwise), or NS_UNCONSTRAINEDSIZE for other min-width intrinsic values
   // (which results in always taking the "content size" part below).
-  nscoord sz =
+  MOZ_ASSERT(aGridItem.mBaselineOffset[aAxis] >= 0,
+             "baseline offset should be non-negative at this point");
+  MOZ_ASSERT((aGridItem.mState[aAxis] & ItemState::eIsBaselineAligned) ||
+             aGridItem.mBaselineOffset[aAxis] == nscoord(0),
+             "baseline offset should be zero when not baseline-aligned");
+  nscoord sz = aGridItem.mBaselineOffset[aAxis] +
     nsLayoutUtils::MinSizeContributionForAxis(axis, aRC, child,
                                               nsLayoutUtils::MIN_ISIZE);
   auto unit = style.GetUnit();
@@ -3673,17 +3717,15 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
           auto childSide = isInlineAxis == isOrthogonal ? eLogicalSideIStart
                                                         : eLogicalSideBStart;
           bool sameSide = SameSide(wm, side, childWM, childSide);
-          if (isInlineAxis) {
-            switch (selfAlignment) {
-              case NS_STYLE_ALIGN_LEFT:
-                selfAlignment = wm.IsBidiLTR() ? NS_STYLE_ALIGN_START
-                                               : NS_STYLE_ALIGN_END;
-                break;
-              case NS_STYLE_ALIGN_RIGHT:
-                selfAlignment = wm.IsBidiLTR() ? NS_STYLE_ALIGN_END
-                                               : NS_STYLE_ALIGN_START;
-                break;
-            }
+          switch (selfAlignment) {
+            case NS_STYLE_ALIGN_LEFT:
+              selfAlignment = !isInlineAxis || wm.IsBidiLTR() ? NS_STYLE_ALIGN_START
+                                                              : NS_STYLE_ALIGN_END;
+              break;
+            case NS_STYLE_ALIGN_RIGHT:
+              selfAlignment = isInlineAxis && wm.IsBidiLTR() ? NS_STYLE_ALIGN_END
+                                                             : NS_STYLE_ALIGN_START;
+              break;
           }
           switch (selfAlignment) {
             case NS_STYLE_ALIGN_START:
@@ -3755,7 +3797,7 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
                (ItemState::eSelfBaseline | ItemState::eContentBaseline),
                "*-self and *-content baseline bits are mutually exclusive");
     MOZ_ASSERT(!(state &
-                 (ItemState::eSelfBaseline | ItemState::eContentBaseline)) ==
+                 (ItemState::eFirstBaseline | ItemState::eLastBaseline)) ==
                !(state &
                  (ItemState::eSelfBaseline | ItemState::eContentBaseline)),
                "first/last bit requires self/content bit and vice versa");
@@ -3774,6 +3816,48 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
 
   CalculateItemBaselines(firstBaselineItems, BaselineSharingGroup::eFirst);
   CalculateItemBaselines(lastBaselineItems, BaselineSharingGroup::eLast);
+}
+
+void
+nsGridContainerFrame::Tracks::AlignBaselineSubtree(
+  const GridItemInfo& aGridItem) const
+{
+  auto state = aGridItem.mState[mAxis];
+  if (!(state & ItemState::eIsBaselineAligned)) {
+    return;
+  }
+  const GridArea& area = aGridItem.mArea;
+  int32_t baselineTrack;
+  const bool isFirstBaseline = state & ItemState::eFirstBaseline;
+  if (isFirstBaseline) {
+    baselineTrack = mAxis == eLogicalAxisBlock ? area.mRows.mStart
+                                               : area.mCols.mStart;
+  } else {
+    baselineTrack = (mAxis == eLogicalAxisBlock ? area.mRows.mEnd
+                                                : area.mCols.mEnd) - 1;
+  }
+  const TrackSize& sz = mSizes[baselineTrack];
+  auto baselineGroup = isFirstBaseline ? BaselineSharingGroup::eFirst
+                                       : BaselineSharingGroup::eLast;
+  nscoord delta = sz.mBase - sz.mBaselineSubtreeSize[baselineGroup];
+  const auto subtreeAlign = mBaselineSubtreeAlign[baselineGroup];
+  switch (subtreeAlign) {
+    case NS_STYLE_ALIGN_START:
+      if (state & ItemState::eLastBaseline) {
+        aGridItem.mBaselineOffset[mAxis] += delta;
+      }
+      break;
+    case NS_STYLE_ALIGN_END:
+      if (isFirstBaseline) {
+        aGridItem.mBaselineOffset[mAxis] += delta;
+      }
+      break;
+    case NS_STYLE_ALIGN_CENTER:
+      aGridItem.mBaselineOffset[mAxis] += delta / 2;
+      break;
+    default:
+      MOZ_ASSERT_UNREACHABLE("unexpected baseline subtree alignment");
+  }
 }
 
 void
@@ -4478,6 +4562,8 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
       toFragmentainerEnd = std::max(toFragmentainerEnd, 0);
     }
     cb += aContentArea.Origin(wm);
+    aState.mRows.AlignBaselineSubtree(*aGridItemInfo);
+    aState.mCols.AlignBaselineSubtree(*aGridItemInfo);
   } else {
     cb = aContentArea;
   }
@@ -4532,10 +4618,10 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
     LogicalSize size = childSize.Size(childWM); // from the ReflowChild()
     if (NS_FRAME_IS_COMPLETE(aStatus)) {
       auto align = childRS.mStylePosition->ComputedAlignSelf(containerSC);
-      AlignSelf(align, cb, wm, childRS, size, &childPos);
+      AlignSelf(*aGridItemInfo, align, cb, wm, childRS, size, &childPos);
     }
     auto justify = childRS.mStylePosition->ComputedJustifySelf(containerSC);
-    JustifySelf(justify, cb, wm, childRS, size, &childPos);
+    JustifySelf(*aGridItemInfo, justify, cb, wm, childRS, size, &childPos);
   } else {
     // Put a placeholder at the padding edge, in case an ancestor is its CB.
     childPos -= padStart;
