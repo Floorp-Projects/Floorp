@@ -395,6 +395,7 @@ union MaybeFence {
 
 struct TimedTexture {
   PTexture texture;
+  ReadLockDescriptor sharedLock;
   MaybeFence fence;
   TimeStamp timeStamp;
   IntRect picture;
@@ -420,6 +421,8 @@ struct OpUseTexture {
 struct OpUseComponentAlphaTextures {
   PTexture textureOnBlack;
   PTexture textureOnWhite;
+  ReadLockDescriptor sharedLockBlack;
+  ReadLockDescriptor sharedLockWhite;
 };
 
 union MaybeRegion {
