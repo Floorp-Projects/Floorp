@@ -11,8 +11,3 @@ BROWSER_CHROME_MANIFESTS += [
 MOCHITEST_MANIFESTS += [
     'mochitest.ini',
 ]
-
-MOCHITEST_CHROME_MANIFESTS += [
-    'chrome.ini',
-]
-
