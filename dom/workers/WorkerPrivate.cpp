@@ -6367,7 +6367,7 @@ WorkerPrivate::UpdateGCZealInternal(JSContext* aCx, uint8_t aGCZeal,
 {
   AssertIsOnWorkerThread();
 
-  JS_SetGCZeal(aCx, aGCZeal, aFrequency);
+  JS_SetGCZeal(JS_GetRuntime(aCx), aGCZeal, aFrequency);
 
   for (uint32_t index = 0; index < mChildWorkers.Length(); index++) {
     mChildWorkers[index]->UpdateGCZeal(aGCZeal, aFrequency);
