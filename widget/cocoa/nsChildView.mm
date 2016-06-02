@@ -3366,6 +3366,8 @@ NSEvent* gLastDragMouseDownEvent = nil;
     // progress.
     mDidForceRefreshOpenGL = NO;
 
+    mNeedsGLUpdate = NO;
+
     [self setFocusRingType:NSFocusRingTypeNone];
 
 #ifdef __LP64__
@@ -3457,17 +3459,9 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
 
   [mGLContext clearDrawable];
+  CGLLockContext((CGLContextObj)[mGLContext CGLContextObj]);
   [self updateGLContext];
-
-  NS_OBJC_END_TRY_ABORT_BLOCK;
-}
-
-- (void)setGLContext:(NSOpenGLContext *)aGLContext
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
-
-  mGLContext = aGLContext;
-  [mGLContext retain];
+  CGLUnlockContext((CGLContextObj)[mGLContext CGLContextObj]);
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -3485,11 +3479,17 @@ NSEvent* gLastDragMouseDownEvent = nil;
   }
 
   if (!mGLContext) {
-    [self setGLContext:aGLContext];
-    [self updateGLContext];
+    mGLContext = aGLContext;
+    [mGLContext retain];
+    mNeedsGLUpdate = true;
   }
 
   CGLLockContext((CGLContextObj)[aGLContext CGLContextObj]);
+
+  if (mNeedsGLUpdate) {
+    [self updateGLContext];
+    mNeedsGLUpdate = NO;
+  }
 
   return true;
 
@@ -3722,17 +3722,17 @@ NSEvent* gLastDragMouseDownEvent = nil;
 
 -(void)updateGLContext
 {
-  if (mGLContext) {
-    CGLLockContext((CGLContextObj)[mGLContext CGLContextObj]);
-    [mGLContext setView:self];
-    [mGLContext update];
-    CGLUnlockContext((CGLContextObj)[mGLContext CGLContextObj]);
-  }
+  [mGLContext setView:self];
+  [mGLContext update];
 }
 
 - (void)_surfaceNeedsUpdate:(NSNotification*)notification
 {
-   [self updateGLContext];
+  if (mGLContext) {
+    CGLLockContext((CGLContextObj)[mGLContext CGLContextObj]);
+    mNeedsGLUpdate = YES;
+    CGLUnlockContext((CGLContextObj)[mGLContext CGLContextObj]);
+  }
 }
 
 - (BOOL)wantsBestResolutionOpenGLSurface
