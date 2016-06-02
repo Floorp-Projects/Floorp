@@ -382,14 +382,7 @@ wasm::GenerateFunctionEpilogue(MacroAssembler& masm, unsigned framePushed, FuncO
 
     // Generate a nop that is overwritten by a jump to the profiling epilogue
     // when profiling is enabled.
-    {
-#if defined(JS_CODEGEN_ARM)
-        // Forbid pools from being inserted between the profilingJump label and
-        // the nop since we need the location of the actual nop to patch it.
-        AutoForbidPools afp(&masm, 1);
-#endif
-        offsets->profilingJump = masm.nopPatchableToNearJump().offset();
-    }
+    offsets->profilingJump = masm.nopPatchableToNearJump().offset();
 
     // Normal epilogue:
     masm.addToStackPtr(Imm32(framePushed + AsmJSFrameBytesAfterReturnAddress));
