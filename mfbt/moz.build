@@ -35,6 +35,7 @@ EXPORTS.mozilla = [
     'decimal/Decimal.h',
     'double-conversion/source/double-conversion.h',
     'double-conversion/source/utils.h',
+    'DoublyLinkedList.h',
     'EndianUtils.h',
     'EnumeratedArray.h',
     'EnumeratedRange.h',
