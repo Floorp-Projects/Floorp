@@ -209,39 +209,55 @@ GetPropertyNameFromPC(JSScript* script, jsbytecode* pc);
 #ifdef JS_DEBUG
 
 /*
- * Routines to print out values during debugging.  These are FRIEND_API to help
+ * Routines to print out values during debugging. These are FRIEND_API to help
  * the debugger find them and to support temporarily hacking js::Dump* calls
- * into other code.
+ * into other code. Note that there are overloads that do not require the FILE*
+ * parameter, which will default to stderr.
  */
 
 extern JS_FRIEND_API(void)
-DumpString(JSString* str);
+DumpString(JSString* str, FILE* fp);
 
 extern JS_FRIEND_API(void)
-DumpAtom(JSAtom* atom);
+DumpAtom(JSAtom* atom, FILE* fp);
 
 extern JS_FRIEND_API(void)
-DumpObject(JSObject* obj);
+DumpObject(JSObject* obj, FILE* fp);
 
 extern JS_FRIEND_API(void)
-DumpChars(const char16_t* s, size_t n);
+DumpChars(const char16_t* s, size_t n, FILE* fp);
 
 extern JS_FRIEND_API(void)
-DumpValue(const JS::Value& val);
+DumpValue(const JS::Value& val, FILE* fp);
 
 extern JS_FRIEND_API(void)
-DumpId(jsid id);
+DumpId(jsid id, FILE* fp);
 
 extern JS_FRIEND_API(void)
-DumpInterpreterFrame(JSContext* cx, InterpreterFrame* start = nullptr);
+DumpInterpreterFrame(JSContext* cx, FILE* fp, InterpreterFrame* start = nullptr);
 
 extern JS_FRIEND_API(bool)
-DumpPC(JSContext* cx);
+DumpPC(JSContext* cx, FILE* fp);
 
 extern JS_FRIEND_API(bool)
-DumpScript(JSContext* cx, JSScript* scriptArg);
+DumpScript(JSContext* cx, JSScript* scriptArg, FILE* fp);
+
+// Versions for use directly in a debugger (default parameters are not handled
+// well in gdb; built-in handles like stderr are not handled well in lldb.)
+extern JS_FRIEND_API(void) DumpString(JSString* str);
+extern JS_FRIEND_API(void) DumpAtom(JSAtom* atom);
+extern JS_FRIEND_API(void) DumpObject(JSObject* obj);
+extern JS_FRIEND_API(void) DumpChars(const char16_t* s, size_t n);
+extern JS_FRIEND_API(void) DumpValue(const JS::Value& val);
+extern JS_FRIEND_API(void) DumpId(jsid id);
+extern JS_FRIEND_API(void) DumpInterpreterFrame(JSContext* cx, InterpreterFrame* start = nullptr);
+extern JS_FRIEND_API(bool) DumpPC(JSContext* cx);
+extern JS_FRIEND_API(bool) DumpScript(JSContext* cx, JSScript* scriptArg);
 
 #endif
+
+extern JS_FRIEND_API(void)
+DumpBacktrace(JSContext* cx, FILE* fp);
 
 extern JS_FRIEND_API(void)
 DumpBacktrace(JSContext* cx);

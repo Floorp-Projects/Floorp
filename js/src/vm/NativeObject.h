@@ -434,14 +434,14 @@ class NativeObject : public JSObject
         // Backdoor allowing direct access to copy on write elements.
         return HeapSlotArray(elements_, true);
     }
-    const Value& getDenseElement(uint32_t idx) {
+    const Value& getDenseElement(uint32_t idx) const {
         MOZ_ASSERT(idx < getDenseInitializedLength());
         return elements_[idx];
     }
     bool containsDenseElement(uint32_t idx) {
         return idx < getDenseInitializedLength() && !elements_[idx].isMagic(JS_ELEMENTS_HOLE);
     }
-    uint32_t getDenseInitializedLength() {
+    uint32_t getDenseInitializedLength() const {
         return getElementsHeader()->initializedLength;
     }
     uint32_t getDenseCapacity() const {

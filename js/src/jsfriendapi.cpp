@@ -656,34 +656,74 @@ JS_CloneObject(JSContext* cx, HandleObject obj, HandleObject protoArg)
 }
 
 #ifdef DEBUG
+
 JS_FRIEND_API(void)
-js::DumpString(JSString* str)
+js::DumpString(JSString* str, FILE* fp)
 {
-    str->dump();
+    str->dump(fp);
 }
 
 JS_FRIEND_API(void)
-js::DumpAtom(JSAtom* atom)
+js::DumpAtom(JSAtom* atom, FILE* fp)
 {
-    atom->dump();
+    atom->dump(fp);
 }
 
 JS_FRIEND_API(void)
-js::DumpChars(const char16_t* s, size_t n)
+js::DumpChars(const char16_t* s, size_t n, FILE* fp)
 {
-    fprintf(stderr, "char16_t * (%p) = ", (void*) s);
-    JSString::dumpChars(s, n);
-    fputc('\n', stderr);
+    fprintf(fp, "char16_t * (%p) = ", (void*) s);
+    JSString::dumpChars(s, n, fp);
+    fputc('\n', fp);
 }
 
 JS_FRIEND_API(void)
-js::DumpObject(JSObject* obj)
+js::DumpObject(JSObject* obj, FILE* fp)
 {
     if (!obj) {
-        fprintf(stderr, "NULL\n");
+        fprintf(fp, "NULL\n");
         return;
     }
-    obj->dump();
+    obj->dump(fp);
+}
+
+JS_FRIEND_API(void)
+js::DumpString(JSString* str) {
+    DumpString(str, stderr);
+}
+JS_FRIEND_API(void)
+js::DumpAtom(JSAtom* atom) {
+    DumpAtom(atom, stderr);
+}
+JS_FRIEND_API(void)
+js::DumpObject(JSObject* obj) {
+    DumpObject(obj, stderr);
+}
+JS_FRIEND_API(void)
+js::DumpChars(const char16_t* s, size_t n) {
+    DumpChars(s, n, stderr);
+}
+JS_FRIEND_API(void)
+js::DumpValue(const JS::Value& val) {
+    DumpValue(val, stderr);
+}
+JS_FRIEND_API(void)
+js::DumpId(jsid id) {
+    DumpId(id, stderr);
+}
+JS_FRIEND_API(void)
+js::DumpInterpreterFrame(JSContext* cx, InterpreterFrame* start)
+{
+    DumpInterpreterFrame(cx, stderr, start);
+}
+JS_FRIEND_API(bool)
+js::DumpPC(JSContext* cx) {
+    return DumpPC(cx, stdout);
+}
+JS_FRIEND_API(bool)
+js::DumpScript(JSContext* cx, JSScript* scriptArg)
+{
+    return DumpScript(cx, scriptArg, stdout);
 }
 
 #endif
