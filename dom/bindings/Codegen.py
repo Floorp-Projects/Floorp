@@ -625,7 +625,7 @@ def NeedsGeneratedHasInstance(descriptor):
     return descriptor.hasXPConnectImpls or descriptor.interface.isConsequential()
 
 
-def InterfaceObjectProtoGetter(descriptor):
+def InterfaceObjectProtoGetter(descriptor, forXrays=False):
     """
     Returns a tuple with two elements:
 
@@ -645,7 +645,11 @@ def InterfaceObjectProtoGetter(descriptor):
         protoGetter = prefix + "::GetConstructorObject"
         protoHandleGetter = prefix + "::GetConstructorObjectHandle"
     elif descriptor.interface.isNamespace():
-        protoGetter = "JS_GetObjectPrototype"
+        if (forXrays or
+            not descriptor.interface.getExtendedAttribute("ProtoObjectHack")):
+            protoGetter = "JS_GetObjectPrototype"
+        else:
+            protoGetter = "binding_detail::GetHackedNamespaceProtoObject"
         protoHandleGetter = None
     else:
         protoGetter = "JS_GetFunctionPrototype"
@@ -682,7 +686,8 @@ class CGInterfaceObjectJSClass(CGThing):
         if len(self.descriptor.interface.namedConstructors) > 0:
             slotCount += (" + %i /* slots for the named constructors */" %
                           len(self.descriptor.interface.namedConstructors))
-        (protoGetter, _) = InterfaceObjectProtoGetter(self.descriptor)
+        (protoGetter, _) = InterfaceObjectProtoGetter(self.descriptor,
+                                                      forXrays=True)
 
         if ctorname == "ThrowingConstructor" and hasinstance == "InterfaceHasInstance":
             ret = ""
