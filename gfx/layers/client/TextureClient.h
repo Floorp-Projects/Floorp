@@ -632,6 +632,12 @@ public:
   virtual void RemoveFromCompositable(CompositableClient* aCompositable,
                                       AsyncTransactionWaiter* aWaiter = nullptr);
 
+  void SetReadLock(already_AddRefed<TextureReadLock> aLock) { mReadLock = aLock; }
+
+  TextureReadLock* GetReadLock() { return mReadLock; }
+
+  bool IsReadLocked() const;
+
 private:
   static void TextureClientRecycleCallback(TextureClient* aClient, void* aClosure);
 
@@ -666,6 +672,7 @@ protected:
   RefPtr<TextureChild> mActor;
   RefPtr<ITextureClientRecycleAllocator> mRecycleAllocator;
   RefPtr<AsyncTransactionWaiter> mRemoveFromCompositableWaiter;
+  RefPtr<TextureReadLock> mReadLock;
 
   TextureData* mData;
   RefPtr<gfx::DrawTarget> mBorrowedDrawTarget;

@@ -23,7 +23,7 @@
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 #include "mozilla/layers/LayersTypes.h"  // for LayerRenderState, etc
 #include "mozilla/layers/TextureHost.h"  // for TextureHost
-#include "mozilla/layers/TiledContentClient.h"
+#include "mozilla/layers/TextureClient.h"
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "nsRegion.h"                   // for nsIntRegion
 #include "nscore.h"                     // for nsACString
@@ -40,6 +40,7 @@ class Compositor;
 class ISurfaceAllocator;
 class Layer;
 class ThebesBufferData;
+class TextureReadLock;
 struct EffectChain;
 
 
@@ -58,8 +59,7 @@ public:
                TextureHost* aTextureHostOnWhite,
                TextureSource* aSource,
                TextureSource* aSourceOnWhite)
-    : mSharedLock(aSharedLock)
-    , mTextureHost(aTextureHost)
+    : mTextureHost(aTextureHost)
     , mTextureHostOnWhite(aTextureHostOnWhite)
     , mTextureSource(aSource)
     , mTextureSourceOnWhite(aSourceOnWhite)
@@ -70,7 +70,6 @@ public:
     mTextureHostOnWhite = o.mTextureHostOnWhite;
     mTextureSource = o.mTextureSource;
     mTextureSourceOnWhite = o.mTextureSourceOnWhite;
-    mSharedLock = o.mSharedLock;
     mTilePosition = o.mTilePosition;
   }
   TileHost& operator=(const TileHost& o) {
@@ -81,7 +80,6 @@ public:
     mTextureHostOnWhite = o.mTextureHostOnWhite;
     mTextureSource = o.mTextureSource;
     mTextureSourceOnWhite = o.mTextureSourceOnWhite;
-    mSharedLock = o.mSharedLock;
     mTilePosition = o.mTilePosition;
     return *this;
   }
@@ -96,9 +94,8 @@ public:
   bool IsPlaceholderTile() const { return mTextureHost == nullptr; }
 
   void ReadUnlock() {
-    if (mSharedLock) {
-      mSharedLock->ReadUnlock();
-      mSharedLock = nullptr;
+    if (mTextureHost) {
+      mTextureHost->ReadUnlock();
     }
   }
 
@@ -119,7 +116,6 @@ public:
    */
   float GetFadeInOpacity(float aOpacity);
 
-  RefPtr<TextureReadLock> mSharedLock;
   CompositableTextureHostRef mTextureHost;
   CompositableTextureHostRef mTextureHostOnWhite;
   mutable CompositableTextureSourceRef mTextureSource;

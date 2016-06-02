@@ -450,6 +450,12 @@ TextureClient::UnlockActor() const
 }
 
 bool
+TextureClient::IsReadLocked() const
+{
+  return mReadLock && mReadLock->GetReadCount() > 1;
+}
+
+bool
 TextureClient::Lock(OpenMode aMode)
 {
   MOZ_ASSERT(IsValid());
@@ -461,6 +467,11 @@ TextureClient::Lock(OpenMode aMode)
   if (mRemoveFromCompositableWaiter) {
     mRemoveFromCompositableWaiter->WaitComplete();
     mRemoveFromCompositableWaiter = nullptr;
+  }
+
+  if (aMode & OpenMode::OPEN_WRITE && IsReadLocked()) {
+    NS_WARNING("Attempt to Lock a texture that is being read by the compositor!");
+    return false;
   }
 
   LockActor();
