@@ -1206,7 +1206,7 @@ EndSwapDocShellsForViews(nsView* aSibling)
         nsIFrame::RemoveInPopupStateBitFromDescendants(frame);
       }
       if (frame->HasInvalidFrameInSubtree()) {
-        while (parent && !parent->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT)) {
+        while (parent && !parent->HasAnyStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT | NS_FRAME_IS_NONDISPLAY)) {
           parent->AddStateBits(NS_FRAME_DESCENDANT_NEEDS_PAINT);
           parent = nsLayoutUtils::GetCrossDocParentFrame(parent);
         }
