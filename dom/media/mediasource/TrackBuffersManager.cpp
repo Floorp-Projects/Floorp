@@ -1624,6 +1624,12 @@ TrackBuffersManager::InsertFrames(TrackBuffer& aSamples,
   intersection.Intersection(aIntervals);
 
   if (intersection.Length()) {
+    if (aSamples[0]->mKeyframe) {
+      // We are starting a new GOP, we do not have to worry about breaking an
+      // existing current coded frame group. Reset the next insertion index
+      // so the search for when to start our frames removal can be exhaustive.
+      trackBuffer.mNextInsertionIndex.reset();
+    }
     RemoveFrames(aIntervals, trackBuffer, trackBuffer.mNextInsertionIndex.refOr(0));
   }
 
