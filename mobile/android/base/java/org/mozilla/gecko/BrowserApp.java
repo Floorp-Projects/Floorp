@@ -2313,8 +2313,6 @@ public class BrowserApp extends GeckoApp
 
         mBrowserToolbar.startEditing(url, animator);
 
-        final boolean isUserSearchTerm = selectedTab != null &&
-                !TextUtils.isEmpty(selectedTab.getUserRequested());
         showHomePagerWithAnimator(panelId, null, animator);
 
         animator.start();
