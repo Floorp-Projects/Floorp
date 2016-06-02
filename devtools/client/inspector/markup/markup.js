@@ -44,6 +44,8 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const Heritage = require("sdk/core/heritage");
 const {parseAttribute} =
       require("devtools/client/shared/node-attribute-parser");
+const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis",
+      Ci.nsIPrefLocalizedString).data;
 const {Task} = require("devtools/shared/task");
 const {scrollIntoViewIfNeeded} = require("devtools/shared/layout/utils");
 const {PrefObserver} = require("devtools/client/styleeditor/utils");
@@ -987,10 +989,6 @@ MarkupView.prototype = {
         // accessibility where necessary.
         this._updateChildren(container, {flash: true}).then(() =>
           container.updateLevel());
-      } else if (type === "inlineTextChild") {
-        container.childrenDirty = true;
-        this._updateChildren(container, {flash: true});
-        container.update();
       }
     }
 
@@ -1551,19 +1549,19 @@ MarkupView.prototype = {
       return promise.resolve(container);
     }
 
-    if (container.inlineTextChild
-        && container.inlineTextChild != container.node.inlineTextChild) {
+    if (container.singleTextChild
+        && container.singleTextChild != container.node.singleTextChild) {
       // This container was doing double duty as a container for a single
       // text child, back that out.
-      this._containers.delete(container.inlineTextChild);
-      container.clearInlineTextChild();
+      this._containers.delete(container.singleTextChild);
+      container.clearSingleTextChild();
 
       if (container.hasChildren && container.selected) {
         container.setExpanded(true);
       }
     }
 
-    if (container.node.inlineTextChild) {
+    if (container.node.singleTextChild) {
       container.setExpanded(false);
       // this container will do double duty as the container for the single
       // text child.
@@ -1571,9 +1569,9 @@ MarkupView.prototype = {
         container.children.removeChild(container.children.firstChild);
       }
 
-      container.setInlineTextChild(container.node.inlineTextChild);
+      container.setSingleTextChild(container.node.singleTextChild);
 
-      this._containers.set(container.node.inlineTextChild, container);
+      this._containers.set(container.node.singleTextChild, container);
       container.childrenDirty = false;
       return promise.resolve(container);
     }
@@ -2010,7 +2008,7 @@ MarkupContainer.prototype = {
    * True if the current node can be expanded.
    */
   get canExpand() {
-    return this._hasChildren && !this.node.inlineTextChild;
+    return this._hasChildren && !this.node.singleTextChild;
   },
 
   /**
@@ -2719,13 +2717,13 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
     });
   },
 
-  setInlineTextChild: function (inlineTextChild) {
-    this.inlineTextChild = inlineTextChild;
+  setSingleTextChild: function (singleTextChild) {
+    this.singleTextChild = singleTextChild;
     this.editor.updateTextEditor();
   },
 
-  clearInlineTextChild: function () {
-    this.inlineTextChild = undefined;
+  clearSingleTextChild: function () {
+    this.singleTextChild = undefined;
     this.editor.updateTextEditor();
   },
 
@@ -2907,14 +2905,25 @@ TextEditor.prototype = {
   },
 
   update: function () {
-    let longstr = null;
-    this.node.getNodeValue().then(ret => {
-      longstr = ret;
-      return longstr.string();
-    }).then(str => {
-      longstr.release().then(null, console.error);
-      this.value.textContent = str;
-    }).then(null, console.error);
+    if (!this.selected || !this.node.incompleteValue) {
+      let text = this.node.shortValue;
+      if (this.node.incompleteValue) {
+        text += ELLIPSIS;
+      }
+      this.value.textContent = text;
+    } else {
+      let longstr = null;
+      this.node.getNodeValue().then(ret => {
+        longstr = ret;
+        return longstr.string();
+      }).then(str => {
+        longstr.release().then(null, console.error);
+        if (this.selected) {
+          this.value.textContent = str;
+          this.markup.emit("text-expand");
+        }
+      }).then(null, console.error);
+    }
   },
 
   destroy: function () {},
@@ -3105,7 +3114,7 @@ ElementEditor.prototype = {
    * Update the inline text editor in case of a single text child node.
    */
   updateTextEditor: function () {
-    let node = this.node.inlineTextChild;
+    let node = this.node.singleTextChild;
 
     if (this.textEditor && this.textEditor.node != node) {
       this.elt.removeChild(this.textEditor.elt);
