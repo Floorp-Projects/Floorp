@@ -263,19 +263,6 @@ void CheckWritePixels(Decoder* aDecoder,
                       uint8_t aFuzz = 0);
 
 /**
- * Tests the result of calling WriteRows() using the provided SurfaceFilter
- * pipeline. The pipeline must be a normal (i.e., non-paletted) pipeline.
- * @see CheckWritePixels() for documentation of the arguments.
- */
-void CheckWriteRows(Decoder* aDecoder,
-                    SurfaceFilter* aFilter,
-                    Maybe<gfx::IntRect> aOutputRect = Nothing(),
-                    Maybe<gfx::IntRect> aInputRect = Nothing(),
-                    Maybe<gfx::IntRect> aInputWriteRect = Nothing(),
-                    Maybe<gfx::IntRect> aOutputWriteRect = Nothing(),
-                    uint8_t aFuzz = 0);
-
-/**
  * Tests the result of calling WritePixels() using the provided SurfaceFilter
  * pipeline. The pipeline must be a paletted pipeline.
  * @see CheckWritePixels() for documentation of the arguments.
@@ -287,19 +274,6 @@ void CheckPalettedWritePixels(Decoder* aDecoder,
                               Maybe<gfx::IntRect> aInputWriteRect = Nothing(),
                               Maybe<gfx::IntRect> aOutputWriteRect = Nothing(),
                               uint8_t aFuzz = 0);
-
-/**
- * Tests the result of calling WriteRows() using the provided SurfaceFilter
- * pipeline. The pipeline must be a paletted pipeline.
- * @see CheckWritePixels() for documentation of the arguments.
- */
-void CheckPalettedWriteRows(Decoder* aDecoder,
-                            SurfaceFilter* aFilter,
-                            Maybe<gfx::IntRect> aOutputRect = Nothing(),
-                            Maybe<gfx::IntRect> aInputRect = Nothing(),
-                            Maybe<gfx::IntRect> aInputWriteRect = Nothing(),
-                            Maybe<gfx::IntRect> aOutputWriteRect = Nothing(),
-                            uint8_t aFuzz = 0);
 
 
 ///////////////////////////////////////////////////////////////////////////////
