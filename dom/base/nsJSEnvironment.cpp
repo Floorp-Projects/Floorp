@@ -574,15 +574,6 @@ DumpString(const nsAString &str)
 #define JS_OPTIONS_DOT_STR "javascript.options."
 
 static const char js_options_dot_str[]   = JS_OPTIONS_DOT_STR;
-static const char js_memlog_option_str[]      = JS_OPTIONS_DOT_STR "mem.log";
-static const char js_memnotify_option_str[]   = JS_OPTIONS_DOT_STR "mem.notify";
-
-void
-nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
-{
-  sPostGCEventsToConsole = Preferences::GetBool(js_memlog_option_str);
-  sPostGCEventsToObserver = Preferences::GetBool(js_memnotify_option_str);
-}
 
 nsJSContext::nsJSContext(bool aGCOnDestruction,
                          nsIScriptGlobalObject* aGlobalObject)
@@ -600,10 +591,6 @@ nsJSContext::nsJSContext(bool aGCOnDestruction,
 
     // Make sure the new context gets the default context options
     JS::ContextOptionsRef(mContext).setPrivateIsNSISupports(true);
-
-    // Watch for the JS boolean options
-    Preferences::RegisterCallback(JSOptionChangedCallback,
-                                  js_options_dot_str, this);
   }
   mIsInitialized = false;
   mProcessingScriptTag = false;
@@ -640,10 +627,6 @@ nsJSContext::DestroyJSContext()
 
   // Clear our entry in the JSContext, bugzilla bug 66413
   ::JS_SetContextPrivate(mContext, nullptr);
-
-  // Unregister our "javascript.options.*" pref-changed callback.
-  Preferences::UnregisterCallback(JSOptionChangedCallback,
-                                  js_options_dot_str, this);
 
   if (mGCOnDestruction) {
     PokeGC(JS::gcreason::NSJSCONTEXT_DESTROY);
@@ -747,8 +730,6 @@ nsJSContext::InitContext()
 
   if (!mContext)
     return NS_ERROR_OUT_OF_MEMORY;
-
-  JSOptionChangedCallback(js_options_dot_str, this);
 
   return NS_OK;
 }
@@ -1185,7 +1166,6 @@ static const JSFunctionSpec JProfFunctions[] = {
 nsresult
 nsJSContext::InitClasses(JS::Handle<JSObject*> aGlobalObj)
 {
-  JSOptionChangedCallback(js_options_dot_str, this);
   AutoJSAPI jsapi;
   jsapi.Init();
   JSContext* cx = jsapi.cx();
@@ -2610,6 +2590,11 @@ nsJSContext::EnsureStatics()
   Preferences::AddUintVarCache(&sCompactOnUserInactiveDelay,
                                "javascript.options.compact_on_user_inactive_delay",
                                NS_DEAULT_INACTIVE_GC_DELAY);
+
+  Preferences::AddBoolVarCache(&sPostGCEventsToConsole,
+                               JS_OPTIONS_DOT_STR "mem.log");
+  Preferences::AddBoolVarCache(&sPostGCEventsToObserver,
+                               JS_OPTIONS_DOT_STR "mem.notify");
 
   nsIObserver* observer = new nsJSEnvironmentObserver();
   obs->AddObserver(observer, "memory-pressure", false);
