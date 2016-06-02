@@ -131,6 +131,8 @@ if majver == 2:
         REQUIRED_MODULES.extend(['warnings', 'linecache', '_abcoll', 'abc'])
     if minver >= 7:
         REQUIRED_MODULES.extend(['_weakrefset'])
+    if is_msys2:
+        REQUIRED_MODULES.extend(['functools'])
 elif majver == 3:
     # Some extra modules are needed for Python 3, but different ones
     # for different versions.
