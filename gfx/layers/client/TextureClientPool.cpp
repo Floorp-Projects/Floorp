@@ -158,7 +158,7 @@ TextureClientPool::ReturnTextureClient(TextureClient *aClient)
 }
 
 void
-TextureClientPool::ReturnTextureClientDeferred(TextureClient *aClient, gfxSharedReadLock* aLock)
+TextureClientPool::ReturnTextureClientDeferred(TextureClient *aClient, TextureReadLock* aLock)
 {
   if (!aClient) {
     return;
