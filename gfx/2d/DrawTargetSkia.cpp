@@ -582,9 +582,13 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
   MarkChanged();
 
   ScaledFontBase* skiaFont = static_cast<ScaledFontBase*>(aFont);
+  SkTypeface* typeface = skiaFont->GetSkTypeface();
+  if (!typeface) {
+    return;
+  }
 
   AutoPaintSetup paint(mCanvas.get(), aOptions, aPattern);
-  paint.mPaint.setTypeface(skiaFont->GetSkTypeface());
+  paint.mPaint.setTypeface(typeface);
   paint.mPaint.setTextSize(SkFloatToScalar(skiaFont->mSize));
   paint.mPaint.setTextEncoding(SkPaint::kGlyphID_TextEncoding);
 
