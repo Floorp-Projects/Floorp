@@ -165,8 +165,7 @@ bool OpusParser::DecodeTags(unsigned char* aData, size_t aLength)
   // won't fit in the packet, stop reading now.
   if (ncomments > (bytes>>2))
     return false;
-  uint32_t i;
-  for (i = 0; i < ncomments; i++) {
+  for (uint32_t i = 0; i < ncomments; i++) {
     if (bytes < 4)
       return false;
     len = LittleEndian::readUint32(buf);
@@ -190,4 +189,3 @@ bool OpusParser::DecodeTags(unsigned char* aData, size_t aLength)
 }
 
 } // namespace mozilla
-

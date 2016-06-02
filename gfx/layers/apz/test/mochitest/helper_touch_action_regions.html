@@ -1,0 +1,246 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Test to ensure APZ doesn't always wait for touch-action</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript">
+
+function failure(e) {
+  ok(false, "This event listener should not have triggered: " + e.type);
+}
+
+function success(e) {
+  success.triggered = true;
+}
+
+// This helper function provides a way for the child process to synchronously
+// check how many touch events the chrome process main-thread has processed. This
+// function can be called with three values: 'start', 'report', and 'end'.
+// The 'start' invocation sets up the listeners, and should be invoked before
+// the touch events of interest are generated. This should only be called once.
+// This returns true on success, and false on failure.
+// The 'report' invocation can be invoked multiple times, and returns an object
+// (in JSON string format) containing the counters.
+// The 'end' invocation tears down the listeners, and should be invoked once
+// at the end to clean up. Returns true on success, false on failure.
+function chromeTouchEventCounter(operation) {
+  function chromeProcessCounter() {
+    addMessageListener('start', function() {
+      Components.utils.import('resource://gre/modules/Services.jsm');
+      var topWin = Services.wm.getMostRecentWindow('navigator:browser');
+      if (typeof topWin.eventCounts != 'undefined') {
+        dump('Found pre-existing eventCounts object on the top window!\n');
+        return false;
+      }
+      topWin.eventCounts = { 'touchstart': 0, 'touchmove': 0, 'touchend': 0 };
+      topWin.counter = function(e) {
+        topWin.eventCounts[e.type]++;
+      }
+
+      topWin.addEventListener('touchstart', topWin.counter, { passive: true });
+      topWin.addEventListener('touchmove', topWin.counter, { passive: true });
+      topWin.addEventListener('touchend', topWin.counter, { passive: true });
+
+      return true;
+    });
+
+    addMessageListener('report', function() {
+      Components.utils.import('resource://gre/modules/Services.jsm');
+      var topWin = Services.wm.getMostRecentWindow('navigator:browser');
+      return JSON.stringify(topWin.eventCounts);
+    });
+
+    addMessageListener('end', function() {
+      Components.utils.import('resource://gre/modules/Services.jsm');
+      var topWin = Services.wm.getMostRecentWindow('navigator:browser');
+      if (typeof topWin.eventCounts == 'undefined') {
+        dump('The eventCounts object was not found on the top window!\n');
+        return false;
+      }
+      topWin.removeEventListener('touchstart', topWin.counter);
+      topWin.removeEventListener('touchmove', topWin.counter);
+      topWin.removeEventListener('touchend', topWin.counter);
+      delete topWin.counter;
+      delete topWin.eventCounts;
+      return true;
+    });
+  }
+
+  if (typeof chromeTouchEventCounter.chromeHelper == 'undefined') {
+    // This is the first time getSnapshot is being called; do initialization
+    chromeTouchEventCounter.chromeHelper = SpecialPowers.loadChromeScript(chromeProcessCounter);
+    SimpleTest.registerCleanupFunction(function() { chromeTouchEventCounter.chromeHelper.destroy() });
+  }
+
+  return chromeTouchEventCounter.chromeHelper.sendSyncMessage(operation, "");
+}
+
+// Simple wrapper that waits until the chrome process has seen |count| instances
+// of the |eventType| event. Returns true on success, and false if 10 seconds
+// go by without the condition being satisfied.
+function waitFor(eventType, count) {
+  var start = Date.now();
+  while (JSON.parse(chromeTouchEventCounter('report'))[eventType] != count) {
+    if (Date.now() - start > 10000) {
+      // It's taking too long, let's abort
+      return false;
+    }
+  }
+  return true;
+}
+
+function* test(testDriver) {
+  // The main part of this test should run completely before the child process'
+  // main-thread deals with the touch event, so check to make sure that happens.
+  document.body.addEventListener('touchstart', failure, { passive: true });
+
+  // What we want here is to synthesize all of the touch events (from this code in
+  // the child process), and have the chrome process generate and process them,
+  // but not allow the events to be dispatched back into the child process until
+  // later. This allows us to ensure that the APZ in the chrome process is not
+  // waiting for the child process to send notifications upon processing the
+  // events. If it were doing so, the APZ would block and this test would fail.
+
+  // In order to actually implement this, we call the synthesize functions with
+  // a async callback in between. The synthesize functions just queue up a
+  // runnable on the child process main thread and return immediately, so with
+  // the async callbacks, the child process main thread queue looks like
+  // this after we're done setting it up:
+  //     synthesizeTouchStart
+  //     callback testDriver
+  //     synthesizeTouchMove
+  //     callback testDriver
+  //     ...
+  //     synthesizeTouchEnd
+  //     callback testDriver
+  //
+  // If, after setting up this queue, we yield once, the first synthesization and
+  // callback will run - this will send a synthesization message to the chrome
+  // process, and return control back to us right away. When the chrome process
+  // processes with the synthesized event, it will dispatch the DOM touch event
+  // back to the child process over IPC, which will go into the end of the child
+  // process main thread queue, like so:
+  //     synthesizeTouchStart   (done)
+  //     invoke testDriver      (done)
+  //     synthesizeTouchMove
+  //     invoke testDriver
+  //     ...
+  //     synthesizeTouchEnd
+  //     invoke testDriver
+  //     handle DOM touchstart  <-- touchstart goes at end of queue
+  //
+  // As we continue yielding one at a time, the synthesizations run, and the
+  // touch events get added to the end of the queue. As we yield, we take
+  // snapshots in the chrome process, to make sure that the APZ has started
+  // scrolling even though we know we haven't yet processed the DOM touch events
+  // in the child process yet.
+  //
+  // Note that the "async callback" we use here is SpecialPowers.executeSoon,
+  // because nothing else does exactly what we want:
+  // - setTimeout(..., 0) does not maintain ordering, because it respects the
+  //   time delta provided (i.e. the callback can jump the queue to meet its
+  //   deadline).
+  // - SpecialPowers.spinEventLoop and SpecialPowers.executeAfterFlushingMessageQueue
+  //   are not e10s friendly, and can get arbitrarily delayed due to IPC
+  //   round-trip time.
+  // - SimpleTest.executeSoon has a codepath that delegates to setTimeout, so
+  //   is less reliable if it ever decides to switch to that codepath.
+
+  // The other problem we need to deal with is the asynchronicity in the chrome
+  // process. That is, we might request a snapshot before the chrome process has
+  // actually synthesized the event and processed it. To guard against this, we
+  // register a thing in the chrome process that counts the touch events that
+  // have been dispatched, and poll that thing synchronously in order to make
+  // sure we only snapshot after the event in question has been processed.
+  // That's what the chromeTouchEventCounter business is all about. The sync
+  // polling looks bad but in practice only ends up needing to poll once or
+  // twice before the condition is satisfied, and as an extra precaution we add
+  // a time guard so it fails after 10s of polling.
+
+  // So, here we go...
+
+  // Set up the chrome process touch listener
+  ok(chromeTouchEventCounter('start'), "Chrome touch counter registered");
+
+  // Set up the child process events and callbacks
+  var scroller = document.getElementById('scroller');
+  synthesizeNativeTouch(scroller, 10, 110, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, null, 0);
+  SpecialPowers.executeSoon(testDriver);
+  for (var i = 1; i < 10; i++) {
+    synthesizeNativeTouch(scroller, 10, 110 - (i * 10), SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, null, 0);
+    SpecialPowers.executeSoon(testDriver);
+  }
+  synthesizeNativeTouch(scroller, 10, 10, SpecialPowers.DOMWindowUtils.TOUCH_REMOVE, null, 0);
+  SpecialPowers.executeSoon(testDriver);
+  ok(true, "Finished setting up event queue");
+
+  // Get our baseline snapshot
+  var rect = rectRelativeToScreen(scroller);
+  var lastSnapshot = getSnapshot(rect);
+  ok(true, "Got baseline snapshot");
+
+  yield; // this will tell the chrome process to synthesize the touchstart event
+         // and then we wait to make sure it got processed:
+  ok(waitFor('touchstart', 1), "Touchstart processed in chrome process");
+
+  // Loop through the touchmove events
+  for (var i = 1; i < 10; i++) {
+    yield;
+    ok(waitFor('touchmove', i), "Touchmove processed in chrome process");
+
+    var snapshot = getSnapshot(rect);
+    if (i == 1) {
+      // The first touchmove is consumed to get us into the panning state, so
+      // no actual panning occurs
+      ok(lastSnapshot == snapshot, "Snapshot 1 was the same as baseline");
+    } else {
+      ok(lastSnapshot != snapshot, "Snapshot " + i + " was different from the previous one");
+    }
+    lastSnapshot = snapshot;
+  }
+
+  // Wait for the touchend as well, just for good form
+  yield;
+  ok(waitFor('touchend', 1), "Touchend processed in chrome process");
+
+  // Clean up the chrome process hooks
+  chromeTouchEventCounter('end');
+
+  // Now we are going to release our grip on the child process main thread,
+  // so that all the DOM events that were queued up can be processed. We
+  // register a touchstart listener to make sure this happens.
+  document.body.removeEventListener('touchstart', failure);
+  document.body.addEventListener('touchstart', success, { passive: true });
+  yield flushApzRepaints(testDriver);
+  ok(success.triggered, "The touchstart event handler was triggered after snapshotting completed");
+  document.body.removeEventListener('touchstart', success);
+}
+
+if (SpecialPowers.isMainProcess()) {
+  // This is probably android, where everything is single-process. The
+  // test structure depends on e10s, so the test won't run properly on
+  // this platform. Skip it
+  ok(true, "Skipping test because it is designed to run from the content process");
+  subtestDone();
+} else {
+  waitUntilApzStable()
+  .then(runContinuation(test))
+  .then(subtestDone);
+}
+
+  </script>
+</head>
+<body>
+ <div id="scroller" style="width: 400px; height: 400px; overflow: scroll; touch-action: pan-y">
+  <div style="width: 200px; height: 200px; background-color: lightgreen;">
+   This is a colored div that will move on the screen as the scroller scrolls.
+  </div>
+  <div style="width: 1000px; height: 1000px; background-color: lightblue">
+   This is a large div to make the scroller scrollable.
+  </div>
+</body>
+</html>

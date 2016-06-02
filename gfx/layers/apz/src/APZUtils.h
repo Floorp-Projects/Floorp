@@ -19,6 +19,9 @@ namespace layers {
 enum HitTestResult {
   HitNothing,
   HitLayer,
+  HitLayerTouchActionNone,
+  HitLayerTouchActionPanX,
+  HitLayerTouchActionPanY,
   HitDispatchToContentRegion,
 };
 

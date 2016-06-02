@@ -259,24 +259,21 @@ nsHttpResponseHead::Flatten(nsACString &buf, bool pruneTransients)
 }
 
 void
-nsHttpResponseHead::FlattenOriginalHeader(nsACString &buf)
+nsHttpResponseHead::FlattenNetworkOriginalHeaders(nsACString &buf)
 {
     ReentrantMonitorAutoEnter monitor(mReentrantMonitor);
     if (mVersion == NS_HTTP_VERSION_0_9) {
         return;
     }
 
-    buf.AppendLiteral("  OriginalHeaders");
-    buf.AppendLiteral("\r\n");
-
     mHeaders.FlattenOriginalHeader(buf);
 }
 
 nsresult
-nsHttpResponseHead::Parse(char *block)
+nsHttpResponseHead::ParseCachedHead(char *block)
 {
     ReentrantMonitorAutoEnter monitor(mReentrantMonitor);
-    LOG(("nsHttpResponseHead::Parse [this=%p]\n", this));
+    LOG(("nsHttpResponseHead::ParseCachedHead [this=%p]\n", this));
 
     // this command works on a buffer as prepared by Flatten, as such it is
     // not very forgiving ;-)
@@ -299,8 +296,55 @@ nsHttpResponseHead::Parse(char *block)
             return NS_ERROR_UNEXPECTED;
 
         *p = 0;
-        ParseHeaderLine_locked(block);
+        ParseHeaderLine_locked(block, false);
 
+    } while (1);
+
+    return NS_OK;
+}
+
+nsresult
+nsHttpResponseHead::ParseCachedOriginalHeaders(char *block)
+{
+    ReentrantMonitorAutoEnter monitor(mReentrantMonitor);
+    LOG(("nsHttpResponseHead::ParseCachedOriginalHeader [this=%p]\n", this));
+
+    // this command works on a buffer as prepared by FlattenOriginalHeader,
+    // as such it is not very forgiving ;-)
+
+    if (!block) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    char *p = block;
+    nsHttpAtom hdr = {0};
+    char *val;
+    nsresult rv;
+
+    do {
+        block = p;
+
+        if (*block == 0)
+            break;
+
+        p = PL_strstr(block, "\r\n");
+        if (!p)
+            return NS_ERROR_UNEXPECTED;
+
+        *p = 0;
+        if (NS_FAILED(nsHttpHeaderArray::ParseHeaderLine(block, &hdr, &val))) {
+            return NS_OK;
+        }
+
+        rv = mHeaders.SetResponseHeaderFromCache(hdr,
+                                                 nsDependentCString(val),
+                                                 nsHttpHeaderArray::eVarietyResponseNetOriginal);
+
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+
+        p = p + 2;
     } while (1);
 
     return NS_OK;
@@ -505,21 +549,28 @@ nsresult
 nsHttpResponseHead::ParseHeaderLine(const char *line)
 {
     ReentrantMonitorAutoEnter monitor(mReentrantMonitor);
-    return ParseHeaderLine_locked(line);
+    return ParseHeaderLine_locked(line, true);
 }
 
 nsresult
-nsHttpResponseHead::ParseHeaderLine_locked(const char *line)
+nsHttpResponseHead::ParseHeaderLine_locked(const char *line, bool originalFromNetHeaders)
 {
     nsHttpAtom hdr = {0};
     char *val;
 
     if (NS_FAILED(nsHttpHeaderArray::ParseHeaderLine(line, &hdr, &val))) {
         return NS_OK;
-    } 
-    nsresult rv = mHeaders.SetHeaderFromNet(hdr,
-                                            nsDependentCString(val),
-                                            true);
+    }
+    nsresult rv;
+    if (originalFromNetHeaders) {
+        rv = mHeaders.SetHeaderFromNet(hdr,
+                                       nsDependentCString(val),
+                                       true);
+    } else {
+        rv = mHeaders.SetResponseHeaderFromCache(hdr,
+                                                 nsDependentCString(val),
+                                                 nsHttpHeaderArray::eVarietyResponse);
+    }
     if (NS_FAILED(rv)) {
         return rv;
     }

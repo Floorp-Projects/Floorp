@@ -121,11 +121,12 @@ struct HttpChannelOpenArgs
   bool                        suspendAfterSynthesizeResponse;
   bool                        allowStaleCacheContent;
   nsCString                   contentTypeHint;
+  nsCString                   channelId;
 };
 
 struct HttpChannelConnectArgs
 {
-  uint32_t channelId;
+  uint32_t registrarId;
   bool shouldIntercept;
 };
 

@@ -1030,14 +1030,12 @@ if (!isContent) {
   this.AsyncShutdown.quitApplicationGranted = getPhase("quit-application-granted");
 }
 
-// Content process
-if (isContent) {
-  this.AsyncShutdown.contentChildShutdown = getPhase("content-child-shutdown");
-}
+// Don't add a barrier for content-child-shutdown because this
+// makes it easier to cause shutdown hangs.
 
 // All processes
 this.AsyncShutdown.webWorkersShutdown = getPhase("web-workers-shutdown");
-this.AsyncShutdown.xpcomThreadsShutdown = getPhase("xpcom-threads-shutdown");
+this.AsyncShutdown.xpcomWillShutdown = getPhase("xpcom-will-shutdown");
 
 this.AsyncShutdown.Barrier = Barrier;
 

@@ -79,14 +79,28 @@ function nativeMouseUpEventMsg() {
 }
 
 // Convert (aX, aY), in CSS pixels relative to aElement's bounding rect,
-// to device pixels relative to aElement's containing window.
-function coordinatesRelativeToWindow(aX, aY, aElement) {
+// to device pixels relative to the screen.
+function coordinatesRelativeToScreen(aX, aY, aElement) {
   var targetWindow = aElement.ownerDocument.defaultView;
   var scale = targetWindow.devicePixelRatio;
   var rect = aElement.getBoundingClientRect();
   return {
     x: (targetWindow.mozInnerScreenX + rect.left + aX) * scale,
     y: (targetWindow.mozInnerScreenY + rect.top + aY) * scale
+  };
+}
+
+// Get the bounding box of aElement, and return it in device pixels
+// relative to the screen.
+function rectRelativeToScreen(aElement) {
+  var targetWindow = aElement.ownerDocument.defaultView;
+  var scale = targetWindow.devicePixelRatio;
+  var rect = aElement.getBoundingClientRect();
+  return {
+    x: (targetWindow.mozInnerScreenX + rect.left) * scale,
+    y: (targetWindow.mozInnerScreenY + rect.top) * scale,
+    w: (rect.width * scale),
+    h: (rect.height * scale)
   };
 }
 
@@ -97,7 +111,7 @@ function coordinatesRelativeToWindow(aX, aY, aElement) {
 // aDeltaX and aDeltaY are pixel deltas, and aObserver can be left undefined
 // if not needed.
 function synthesizeNativeWheel(aElement, aX, aY, aDeltaX, aDeltaY, aObserver) {
-  var pt = coordinatesRelativeToWindow(aX, aY, aElement);
+  var pt = coordinatesRelativeToScreen(aX, aY, aElement);
   if (aDeltaX && aDeltaY) {
     throw "Simultaneous wheeling of horizontal and vertical is not supported on all platforms.";
   }
@@ -155,7 +169,7 @@ function synthesizeNativeWheelAndWaitForScrollEvent(aElement, aX, aY, aDeltaX, a
 // Synthesizes a native mouse move event and returns immediately.
 // aX and aY are relative to the top-left of |aElement|'s containing window.
 function synthesizeNativeMouseMove(aElement, aX, aY) {
-  var pt = coordinatesRelativeToWindow(aX, aY, aElement);
+  var pt = coordinatesRelativeToScreen(aX, aY, aElement);
   var utils = SpecialPowers.getDOMWindowUtils(aElement.ownerDocument.defaultView);
   utils.sendNativeMouseEvent(pt.x, pt.y, nativeMouseMoveEventMsg(), 0, aElement);
   return true;
@@ -178,13 +192,22 @@ function synthesizeNativeMouseMoveAndWaitForMoveEvent(aElement, aX, aY, aCallbac
 // Synthesizes a native touch event and dispatches it. aX and aY in CSS pixels
 // relative to the top-left of |aElement|'s bounding rect.
 function synthesizeNativeTouch(aElement, aX, aY, aType, aObserver = null, aTouchId = 0) {
-  var pt = coordinatesRelativeToWindow(aX, aY, aElement);
+  var pt = coordinatesRelativeToScreen(aX, aY, aElement);
   var utils = SpecialPowers.getDOMWindowUtils(aElement.ownerDocument.defaultView);
   utils.sendNativeTouchPoint(aTouchId, aType, pt.x, pt.y, 1, 90, aObserver);
   return true;
 }
 
-function synthesizeNativeDrag(aElement, aX, aY, aDeltaX, aDeltaY, aObserver = null, aTouchId = 0) {
+// A handy constant when synthesizing native touch drag events with the pref
+// "apz.touch_start_tolerance" set to 0. In this case, the first touchmove with
+// a nonzero pixel movement is consumed by the APZ to transition from the
+// "touching" state to the "panning" state, so calls to synthesizeNativeTouchDrag
+// should add an extra pixel pixel for this purpose. The TOUCH_SLOP provides
+// a constant that can be used for this purpose. Note that if the touch start
+// tolerance is set to something higher, the touch slop amount used must be
+// correspondingly increased so as to be higher than the tolerance.
+const TOUCH_SLOP = 1;
+function synthesizeNativeTouchDrag(aElement, aX, aY, aDeltaX, aDeltaY, aObserver = null, aTouchId = 0) {
   synthesizeNativeTouch(aElement, aX, aY, SpecialPowers.DOMWindowUtils.TOUCH_CONTACT, null, aTouchId);
   var steps = Math.max(Math.abs(aDeltaX), Math.abs(aDeltaY));
   for (var i = 1; i < steps; i++) {
@@ -197,21 +220,21 @@ function synthesizeNativeDrag(aElement, aX, aY, aDeltaX, aDeltaY, aObserver = nu
 }
 
 function synthesizeNativeTap(aElement, aX, aY, aObserver = null) {
-  var pt = coordinatesRelativeToWindow(aX, aY, aElement);
+  var pt = coordinatesRelativeToScreen(aX, aY, aElement);
   var utils = SpecialPowers.getDOMWindowUtils(aElement.ownerDocument.defaultView);
   utils.sendNativeTouchTap(pt.x, pt.y, false, aObserver);
   return true;
 }
 
 function synthesizeNativeMouseEvent(aElement, aX, aY, aType, aObserver = null) {
-  var pt = coordinatesRelativeToWindow(aX, aY, aElement);
+  var pt = coordinatesRelativeToScreen(aX, aY, aElement);
   var utils = SpecialPowers.getDOMWindowUtils(aElement.ownerDocument.defaultView);
   utils.sendNativeMouseEvent(pt.x, pt.y, aType, 0, aElement, aObserver);
   return true;
 }
 
 function synthesizeNativeClick(aElement, aX, aY, aObserver = null) {
-  var pt = coordinatesRelativeToWindow(aX, aY, aElement);
+  var pt = coordinatesRelativeToScreen(aX, aY, aElement);
   var utils = SpecialPowers.getDOMWindowUtils(aElement.ownerDocument.defaultView);
   utils.sendNativeMouseEvent(pt.x, pt.y, nativeMouseDownEventMsg(), 0, aElement, function() {
     utils.sendNativeMouseEvent(pt.x, pt.y, nativeMouseUpEventMsg(), 0, aElement, aObserver);

@@ -267,3 +267,48 @@ function runContinuation(testFunction) {
     });
   };
 }
+
+// Take a snapshot of the given rect, *including compositor transforms* (i.e.
+// includes async scroll transforms applied by APZ). If you don't need the
+// compositor transforms, you can probably get away with using
+// SpecialPowers.snapshotWindowWithOptions or one of the friendlier wrappers.
+// The rect provided is expected to be relative to the screen, for example as
+// returned by rectRelativeToScreen in apz_test_native_event_utils.js.
+// Example usage:
+//   var snapshot = getSnapshot(rectRelativeToScreen(myDiv));
+// which will take a snapshot of the 'myDiv' element. Note that if part of the
+// element is obscured by other things on top, the snapshot will include those
+// things. If it is clipped by a scroll container, the snapshot will include
+// that area anyway, so you will probably get parts of the scroll container in
+// the snapshot. If the rect extends outside the browser window then the
+// results are undefined.
+// The snapshot is returned in the form of a data URL.
+function getSnapshot(rect) {
+  function parentProcessSnapshot() {
+    addMessageListener('snapshot', function(rect) {
+      Components.utils.import('resource://gre/modules/Services.jsm');
+      var topWin = Services.wm.getMostRecentWindow('navigator:browser');
+
+      // reposition the rect relative to the top-level browser window
+      rect = JSON.parse(rect);
+      rect.x -= topWin.mozInnerScreenX;
+      rect.y -= topWin.mozInnerScreenY;
+
+      // take the snapshot
+      var canvas = topWin.document.createElementNS("http://www.w3.org/1999/xhtml", "canvas");
+      canvas.width = rect.w;
+      canvas.height = rect.h;
+      var ctx = canvas.getContext("2d");
+      ctx.drawWindow(topWin, rect.x, rect.y, rect.w, rect.h, 'rgb(255,255,255)', ctx.DRAWWINDOW_DRAW_VIEW | ctx.DRAWWINDOW_USE_WIDGET_LAYERS | ctx.DRAWWINDOW_DRAW_CARET);
+      return canvas.toDataURL();
+    });
+  }
+
+  if (typeof getSnapshot.chromeHelper == 'undefined') {
+    // This is the first time getSnapshot is being called; do initialization
+    getSnapshot.chromeHelper = SpecialPowers.loadChromeScript(parentProcessSnapshot);
+    SimpleTest.registerCleanupFunction(function() { getSnapshot.chromeHelper.destroy() });
+  }
+
+  return getSnapshot.chromeHelper.sendSyncMessage('snapshot', JSON.stringify(rect)).toString();
+}

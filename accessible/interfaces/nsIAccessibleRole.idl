@@ -8,7 +8,7 @@
 /**
  * Defines cross platform (Gecko) roles.
  */
-[scriptable, uuid(da0c7824-147c-11e5-917c-60a44c717042)]
+[scriptable, uuid(05a9f33f-dcfd-4e7b-b825-138ba784c1f5)]
 interface nsIAccessibleRole : nsISupports
 {
   /**
@@ -965,4 +965,16 @@ interface nsIAccessibleRole : nsISupports
    * TEXT_CONTAINER role.
    */
   const unsigned long ROLE_TEXT = 166;
+
+  /**
+   * A text container exposing brief amount of information. See related
+   * DETAILS role.
+   */
+  const unsigned long ROLE_DETAILS = 167;
+
+  /**
+   * A text container exposing brief amount of information. See related
+   * SUMMARY role.
+   */
+  const unsigned long ROLE_SUMMARY = 168;
 };

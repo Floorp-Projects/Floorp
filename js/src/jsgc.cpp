@@ -7122,7 +7122,7 @@ ArenaLists::normalizeBackgroundFinalizeState(AllocKind thingKind)
       case BFS_DONE:
         break;
       default:
-        MOZ_ASSERT(!"Background finalization in progress, but it should not be.");
+        MOZ_ASSERT_UNREACHABLE("Background finalization in progress, but it should not be.");
         break;
     }
 }

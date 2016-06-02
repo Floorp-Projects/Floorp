@@ -18,11 +18,14 @@ function pageLoad(aEvent) {
   gNextTest = null;
 }
 
-function prepareTest(nextTest, url, window) {
+function prepareTest(nextTest, url, browser) {
   gNextTest = nextTest;
-  if (!window)
-    window = gTestBrowser.contentWindow;
-  window.location = url;
+  if (!browser)
+    browser = gTestBrowser;
+
+  ContentTask.spawn(browser, url, function(url){
+    content.location = url;
+  });
 }
 
 function finishTest() {
@@ -43,7 +46,7 @@ function createPrivateWindow(nextTest, url) {
     gPrivateBrowser = gPrivateWindow.getBrowser().selectedBrowser;
     gPrivateBrowser.addEventListener("load", pageLoad, true);
     gNextTest = function() {
-      prepareTest(nextTest, url, gPrivateBrowser.contentWindow);
+      prepareTest(nextTest, url, gPrivateBrowser);
     };
   });
 }
@@ -192,7 +195,7 @@ function test3c() {
       let buttonContainer = gPrivateWindow.PopupNotifications.panel.firstChild._buttonContainer;
       ok(buttonContainer.hidden, "Test 3c, Activated plugin in a private window should not have visible buttons");
 
-      prepareTest(test3d, gHttpTestRoot + "plugin_two_types.html", gPrivateBrowser.contentWindow);
+      prepareTest(test3d, gHttpTestRoot + "plugin_two_types.html", gPrivateBrowser);
     });
   });
 }

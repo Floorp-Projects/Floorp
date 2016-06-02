@@ -807,15 +807,13 @@ gfxFT2FontList::AppendFacesFromCachedFaceList(
     const char *beginning = aFaceList.get();
     const char *end = strchr(beginning, ',');
     while (end) {
-        nsString familyName =
-            NS_ConvertUTF8toUTF16(beginning, end - beginning);
+        NS_ConvertUTF8toUTF16 familyName(beginning, end - beginning);
         ToLowerCase(familyName);
         beginning = end + 1;
         if (!(end = strchr(beginning, ','))) {
             break;
         }
-        nsString faceName =
-            NS_ConvertUTF8toUTF16(beginning, end - beginning);
+        NS_ConvertUTF8toUTF16 faceName(beginning, end - beginning);
         beginning = end + 1;
         if (!(end = strchr(beginning, ','))) {
             break;

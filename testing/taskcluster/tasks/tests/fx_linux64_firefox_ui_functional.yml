@@ -6,7 +6,6 @@ task:
     command:
       - --installer-url={{build_url}}
       - --test-packages-url={{test_packages_url}}
-      - --download-symbols=ondemand
     env:
         MOZHARNESS_SCRIPT: 'mozharness/scripts/firefox_ui_tests/functional.py'
         MOZHARNESS_CONFIG: >
@@ -24,4 +23,4 @@ task:
       groupName: Desktop firefox-ui-tests
       groupSymbol: tc-Fxfn
       symbol: en-US
-      tier: 3
+      tier: 2

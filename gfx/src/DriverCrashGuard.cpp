@@ -69,8 +69,9 @@ AreCrashGuardsEnabled()
 #ifdef NIGHTLY_BUILD
   // We only use the crash guard on non-nightly channels, since the nightly
   // channel is for development and having graphics features perma-disabled
-  // is rather annoying.
-  return false;
+  // is rather annoying.  Unless the user forces is with an environment
+  // variable, which comes in handy for testing.
+  return gfxEnv::ForceCrashGuardNightly();
 #else
   // Check to see if all guards have been disabled through the environment.
   if (gfxEnv::DisableCrashGuard()) {

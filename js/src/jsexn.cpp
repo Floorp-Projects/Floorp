@@ -536,10 +536,11 @@ js::ErrorToException(JSContext* cx, const char* message, JSErrorReport* reportp,
 
     // Similarly, we cannot throw a proper object inside the self-hosting
     // compartment, as we cannot construct the Error constructor without
-    // self-hosted code. Tell our caller to report immediately.
-    // Without self-hosted code, we cannot get started anyway.
-    if (cx->runtime()->isSelfHostingCompartment(cx->compartment()))
+    // self-hosted code. Just print the error to stderr to help debugging.
+    if (cx->runtime()->isSelfHostingCompartment(cx->compartment())) {
+        PrintError(cx, stderr, message, reportp, true);
         return false;
+    }
 
     // Find the exception index associated with this error.
     JSErrNum errorNumber = static_cast<JSErrNum>(reportp->errorNumber);

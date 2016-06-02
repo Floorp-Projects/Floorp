@@ -94,6 +94,23 @@ TEST(ImageSurfaceSink, NullSurfaceSink)
   EXPECT_TRUE(invalidRect.isNothing());
 }
 
+TEST(ImageSurfaceSink, SurfaceSinkInitialization)
+{
+  WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
+    // Check initial state.
+    EXPECT_FALSE(aSink->IsSurfaceFinished());
+    Maybe<SurfaceInvalidRect> invalidRect = aSink->TakeInvalidRect();
+    EXPECT_TRUE(invalidRect.isNothing());
+
+    // Check that the surface is zero-initialized. We verify this by calling
+    // CheckGeneratedImage() and telling it that we didn't write to the surface
+    // anyway (i.e., we wrote to the empty rect); it will then expect the entire
+    // surface to be transparent, which is what it should be if it was
+    // zero-initialied.
+    CheckGeneratedImage(aDecoder, IntRect(0, 0, 0, 0));
+  });
+}
+
 TEST(ImageSurfaceSink, SurfaceSinkWritePixels)
 {
   WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
@@ -437,6 +454,28 @@ TEST(ImageSurfaceSink, SurfaceSinkFlipVertically)
       RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
       RefPtr<SourceSurface> surface = currentFrame->GetSurface();
       EXPECT_TRUE(IsSolidColor(surface, BGRAColor::Green()));
+    }
+  });
+}
+
+TEST(ImageSurfaceSink, PalettedSurfaceSinkInitialization)
+{
+  WithPalettedSurfaceSink(IntRect(0, 0, 100, 100),
+                          [](Decoder* aDecoder, PalettedSurfaceSink* aSink) {
+    // Check initial state.
+    EXPECT_FALSE(aSink->IsSurfaceFinished());
+    Maybe<SurfaceInvalidRect> invalidRect = aSink->TakeInvalidRect();
+    EXPECT_TRUE(invalidRect.isNothing());
+
+    // Check that the paletted image data is zero-initialized.
+    RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
+    uint8_t* imageData = nullptr;
+    uint32_t imageLength = 0;
+    currentFrame->GetImageData(&imageData, &imageLength);
+    ASSERT_TRUE(imageData != nullptr);
+    ASSERT_EQ(100u * 100u, imageLength);
+    for (uint32_t i = 0; i < imageLength; ++i) {
+      ASSERT_EQ(uint8_t(0), imageData[i]);
     }
   });
 }

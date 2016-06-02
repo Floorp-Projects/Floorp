@@ -1,0 +1,152 @@
+---
+# List of all possible flags for each category of tests used in the case where
+# "all" is specified.
+flags:
+  aliases:
+    # Aliases specify shorthands that can be used in try syntax.  An alias can
+    # specify a simple replacement:
+    #   fb: foobar  -- replaces fb with foobar
+    #
+    # or an expansion into several test suites (which cannot themselves be
+    # aliases):
+    #   footests:
+    #     - foo
+    #     - bar
+    #     - bing
+    #
+    # or a pattern or patterns (identified by leading and trailing /) that
+    # will be matched against the available flags
+    #   dt: /devtools.*/
+    #   footests:
+    #     - browser-foo
+    #     - /foo.*/   -- selects all defined flags starting with "foo"
+    #
+    # Note that alias expansion is performed in the absence of any chunk
+    # prefixes.  For example, the first example above would replace "foo-7"
+    # with "foobar-7".  Note that a few aliases allowed chunks to be specified
+    # without a leading `-`, for example 'mochitest-dt1'. That's no longer
+    # supported.
+    cppunit: /cppunit.*/
+    crashtest: /crashtest.*/
+    crashtest-e10s: /crashtest-e10s.*/
+    e10s: /.*e10s.*/
+    external-media-tests: /external-media-tests.*/
+    firefox-ui-functional: /firefox-ui-functional.*/
+    firefox-ui-functional-e10s: /firefox-ui-functional-e10s.*/
+    gaia-js-integration: /.*gaia-js-integration.*/
+    gtest: /gtest.*/
+    jittest: /jittest.*/
+    jittests: /jittest.*/
+    jsreftest: /jsreftest.*/
+    jsreftest-e10s: /jsreftest-e10s.*/
+    luciddream: /luciddream.*/
+    marionette: /marionette.*/
+    marionette-e10s: /marionette-e10s.*/
+    mochitest: /mochitest.*/
+    mochitests: /mochitest.*/
+    mochitest-e10s: /mochitest-e10s.*/
+    mochitests-e10s: /mochitest-e10s.*/
+    mochitest-debug: /mochitest-debug-.*/
+    mochitest-a11y: /.*mochitest-a11y.*/
+    mochitest-bc: /mochitest-browser-chrome.*/
+    mochitest-bc-e10s: /mochitest-browser-chrome-e10s.*/
+    mochitest-browser-chrome: /mochitest-browser-chrome.*/
+    mochitest-browser-chrome-e10s: /mochitest-browser-chrome-e10s.*/
+    mochitest-chrome: /.*mochitest-chrome.*/
+    mochitest-dt: /mochitest-devtools-chrome.*/
+    mochitest-dt-e10s: /mochitest-devtools-chrome-e10s.*/
+    mochitest-gl: /mochitest-webgl.*/
+    mochitest-gl-e10s: /mochitest-webgl-e10s.*/
+    mochitest-gpu: /mochitest-gpu.*/
+    mochitest-gpu-e10s: /mochitest-gpu-e10s.*/
+    mochitest-clipboard: /mochitest-clipboard.*/
+    mochitest-clipboard-e10s: /mochitest-clipboard-e10s.*/
+    mochitest-jetpack: /mochitest-jetpack.*/
+    mochitest-media: /mochitest-media.*/
+    mochitest-media-e10s: /mochitest-media-e10s.*/
+    mochitest-vg: /mochitest-valgrind.*/
+    reftest: /(plain-)?reftest.*/
+    reftest-no-accel: /(plain-)?reftest-no-accel.*/
+    reftests: /(plain-)?reftest.*/
+    reftests-e10s: /(plain-)?reftest-e10s.*/
+    reftest-no-accel-e10s: /(plain-)?reftest-no-accel-e10s.*/
+    robocop: /robocop.*/
+    web-platform-test: /web-platform-tests.*/
+    web-platform-tests: /web-platform-tests.*/
+    web-platform-tests-e10s: /web-platform-tests-e10s.*/
+    web-platform-tests-reftests: /web-platform-tests-reftests.*/
+    web-platform-tests-reftests-e10s: /web-platform-tests-reftests-e10s.*/
+    xpcshell: /xpcshell.*/
+
+  builds:
+    - linux32_gecko  # b2g desktop linux 32 bit
+    - linux64_gecko  # b2g desktop linux 64 bit
+    - linux64-mulet  # Firefox desktop - b2g gecko linux 64 bit
+    - linux64-haz    # Firefox desktop browser, rooting hazard analysis
+    - linux64-shell-haz  # JS shell, rooting hazard analysis
+    - linux64-mulet-haz  # Firefox desktop - b2g gecko linux 64 bit, rooting hazard analysis
+    - macosx64_gecko # b2g desktop osx 64 bit
+    - win32_gecko    # b2g desktop win 32 bit
+    - nexus-5l-eng
+    - aries
+    - aries-eng
+    - android-api-15
+    - android-api-15-frontend
+    - android-partner-sample1
+    - linux
+    - linux64
+    - linux64-st-an
+    - linux64-artifact
+    - linux64-pgo
+    - macosx64
+    - macosx64-st-an
+
+  tests:
+    - cppunit
+    - crashtest
+    - crashtest-e10s
+    - external-media-tests
+    - firefox-ui-functional
+    - firefox-ui-functional-e10s
+    - gaia-build
+    - gaia-build-unit
+    - gaia-js-integration
+    - gaia-linter
+    - gaia-unit
+    - gaia-unit-oop
+    - gtest
+    - jittests
+    - jsreftest
+    - jsreftest-e10s
+    - luciddream
+    - marionette
+    - marionette-e10s
+    - marionette-webapi
+    - mochitest
+    - mochitest-a11y
+    - mochitest-browser-chrome
+    - mochitest-browser-chrome-e10s
+    - mochitest-chrome
+    - mochitest-devtools-chrome
+    - mochitest-devtools-chrome-e10s
+    - mochitest-e10s
+    - mochitest-jetpack
+    - mochitest-media
+    - mochitest-media-e10s
+    - mochitest-webgl
+    - mochitest-webgl-e10s
+    - mochitest-gpu
+    - mochitest-gpu-e10s
+    - mochitest-clipboard
+    - mochitest-clipboard-e10s
+    - mochitest-valgrind
+    - mozmill
+    - reftest
+    - reftest-e10s
+    - reftest-no-accel
+    - reftest-no-accel-e10s
+    - web-platform-tests
+    - web-platform-tests-e10s
+    - web-platform-tests-reftests
+    - web-platform-tests-reftests-e10s
+    - xpcshell

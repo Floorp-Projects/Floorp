@@ -233,11 +233,8 @@ def bootstrap(topsrcdir, mozilla_dir=None):
     # case. For default behavior, we educate users and give them an opportunity
     # to react. We always exit after creating the directory because users don't
     # like surprises.
-    try:
-        import mach.main
-    except ImportError:
-        sys.path[0:0] = [os.path.join(mozilla_dir, path) for path in SEARCH_PATHS]
-        import mach.main
+    sys.path[0:0] = [os.path.join(mozilla_dir, path) for path in SEARCH_PATHS]
+    import mach.main
 
     def telemetry_handler(context, data):
         # We have not opted-in to telemetry
