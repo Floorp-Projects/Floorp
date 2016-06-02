@@ -29,6 +29,7 @@ var gWalker = null;
 var gClient = null;
 var valueNode;
 var valueFront;
+var longStringFront;
 var longString = "stringstringstringstringstringstringstringstringstringstringstring";
 var truncatedLongString = longString.substring(0, testSummaryLength);
 var shortString = "str";
@@ -62,6 +63,7 @@ addTest(testSetLongValue);
 function setupValueTest() {
   valueNode = gInspectee.querySelector("#longstring").firstChild;
   promiseDone(gWalker.querySelector(gWalker.rootNode, "#longstring").then(node => {
+    longStringFront = node;
     return gWalker.children(node);
   }).then(children => {
     valueFront = children.nodes[0];
@@ -76,52 +78,71 @@ function setupFrameValueTest() {
     return gWalker.children(childFrame);
   }).then(children => {
     let nodes = children.nodes;
-    ok(nodes.length, 1, "There should be only one child of the iframe");
+    is(nodes.length, 1, "There should be only one child of the iframe");
     is(nodes[0].nodeType, Node.DOCUMENT_NODE, "iframe child should be a document node");
     return gWalker.querySelector(nodes[0], "#longstring");
   }).then(node => {
+    longStringFront = node;
     return gWalker.children(node);
   }).then(children => {
     valueFront = children.nodes[0];
   }).then(runNextTest));
 }
 
+function checkNodeFrontValue(front, expectedValue) {
+  return front.getNodeValue().then(longstring => {
+    return longstring.string();
+  }).then(str => {
+    is(str, expectedValue, "Node value is as expected");
+  })
+}
+
 function testKeepLongValue() {
   // After first setup we should have a long string in the node
-  is(valueFront.shortValue.length, testSummaryLength, "After setup the test node should be truncated.");
-  ok(valueFront.incompleteValue, "After setup the node value should be incomplete.");
+  ok(!longStringFront.inlineTextChild, "Text node is too long to be inlined.");
+
   valueNode.nodeValue = longString;
-  gWalker.once("mutations", () => {
-    is(valueFront.shortValue, truncatedLongString, "Value should have changed to a truncated value");
-    ok(valueFront.incompleteValue, "Node value should stay incomplete.");
-    runNextTest();
+  gWalker.once("mutations", (changes) => {
+    ok(!longStringFront.inlineTextChild, "Text node is too long to be inlined.");
+    ok(!changes.some(change => change.type === "inlineTextChild"),
+      "No inline text child mutation was fired.");
+    checkNodeFrontValue(valueFront, longString).then(runNextTest);
   });
 }
 
 function testSetShortValue() {
+  ok(!longStringFront.inlineTextChild, "Text node is too long to be inlined.");
+
   valueNode.nodeValue = shortString;
-  gWalker.once("mutations", () => {
-    is(valueFront.shortValue, shortString, "Value should not be truncated.");
-    ok(!valueFront.incompleteValue, "Value should not be incomplete.");
-    runNextTest();
+  gWalker.once("mutations", (changes) => {
+    ok(!!longStringFront.inlineTextChild, "Text node is short enough to be inlined.");
+    ok(changes.some(change => change.type === "inlineTextChild"),
+      "An inlineTextChild mutation was fired.");
+    checkNodeFrontValue(valueFront, shortString).then(runNextTest);
   });
 }
 
 function testKeepShortValue() {
+  ok(!!longStringFront.inlineTextChild, "Text node is short enough to be inlined.");
+
   valueNode.nodeValue = shortString2;
-  gWalker.once("mutations", () => {
-    is(valueFront.shortValue, shortString2, "Value should not be truncated.");
-    ok(!valueFront.incompleteValue, "Value should not be incomplete.");
-    runNextTest();
+  gWalker.once("mutations", (changes) => {
+    ok(!!longStringFront.inlineTextChild, "Text node is short enough to be inlined.");
+    ok(!changes.some(change => change.type === "inlineTextChild"),
+      "No inline text child mutation was fired.");
+    checkNodeFrontValue(valueFront, shortString2).then(runNextTest);
   });
 }
 
 function testSetLongValue() {
+  ok(!!longStringFront.inlineTextChild, "Text node is short enough to be inlined.");
+
   valueNode.nodeValue = longString;
-  gWalker.once("mutations", () => {
-    is(valueFront.shortValue, truncatedLongString, "Value should have changed to a truncated value");
-    ok(valueFront.incompleteValue, "Node value should stay incomplete.");
-    runNextTest();
+  gWalker.once("mutations", (changes) => {
+    ok(!longStringFront.inlineTextChild, "Text node is too long to be inlined.");
+    ok(changes.some(change => change.type === "inlineTextChild"),
+      "An inlineTextChild mutation was fired.");
+    checkNodeFrontValue(valueFront, longString).then(runNextTest);
   });
 }
 
@@ -131,7 +152,6 @@ addTest(function cleanup() {
   delete gClient;
   runNextTest();
 });
-
 
   </script>
 </head>
