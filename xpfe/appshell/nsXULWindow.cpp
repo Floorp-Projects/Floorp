@@ -103,6 +103,7 @@ nsXULWindow::nsXULWindow(uint32_t aChromeFlags)
     mChromeFlagsFrozen(false),
     mIgnoreXULSizeMode(false),
     mDestroying(false),
+    mRegistered(false),
     mContextFlags(0),
     mPersistentAttributesDirty(0),
     mPersistentAttributesMask(0),
@@ -549,7 +550,7 @@ NS_IMETHODIMP nsXULWindow::Destroy()
     mWindow = nullptr;
   }
 
-  if (!mIsHiddenWindow) {
+  if (!mIsHiddenWindow && mRegistered) {
     /* Inform appstartup we've destroyed this window and it could
        quit now if it wanted. This must happen at least after mDocShell
        is destroyed, because onunload handlers fire then, and those being
