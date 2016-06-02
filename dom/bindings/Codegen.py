@@ -638,11 +638,15 @@ def InterfaceObjectProtoGetter(descriptor):
     """
     parentInterface = descriptor.interface.parent
     if parentInterface:
+        assert not descriptor.interface.isNamespace()
         parentIfaceName = parentInterface.identifier.name
         parentDesc = descriptor.getDescriptor(parentIfaceName)
         prefix = toBindingNamespace(parentDesc.name)
         protoGetter = prefix + "::GetConstructorObject"
         protoHandleGetter = prefix + "::GetConstructorObjectHandle"
+    elif descriptor.interface.isNamespace():
+        protoGetter = "JS_GetObjectPrototype"
+        protoHandleGetter = None
     else:
         protoGetter = "JS_GetFunctionPrototype"
         protoHandleGetter = None
@@ -661,7 +665,10 @@ class CGInterfaceObjectJSClass(CGThing):
 
     def define(self):
         if self.descriptor.interface.ctor():
+            assert not self.descriptor.interface.isNamespace()
             ctorname = CONSTRUCT_HOOK_NAME
+        elif self.descriptor.interface.isNamespace():
+            ctorname = "nullptr"
         else:
             ctorname = "ThrowingConstructor"
         if NeedsGeneratedHasInstance(self.descriptor):
@@ -680,6 +687,9 @@ class CGInterfaceObjectJSClass(CGThing):
         if ctorname == "ThrowingConstructor" and hasinstance == "InterfaceHasInstance":
             ret = ""
             classOpsPtr = "&sBoringInterfaceObjectClassClassOps"
+        elif ctorname == "nullptr" and hasinstance == "nullptr":
+            ret = ""
+            classOpsPtr = "JS_NULL_CLASS_OPS"
         else:
             ret = fill(
                 """
@@ -703,33 +713,51 @@ class CGInterfaceObjectJSClass(CGThing):
                 hasInstance=hasinstance)
             classOpsPtr = "&sInterfaceObjectClassOps"
 
+        if self.descriptor.interface.isNamespace():
+            classString = self.descriptor.interface.getExtendedAttribute("ClassString")
+            if classString is None:
+                classString = "Object"
+            else:
+                classString = classString[0]
+            toStringResult = "[object %s]" % classString
+            objectOps = "JS_NULL_OBJECT_OPS"
+        else:
+            classString = "Function"
+            toStringResult = ("function %s() {\\n    [native code]\\n}" %
+                              self.descriptor.interface.identifier.name)
+            # We need non-default ObjectOps so we can actually make
+            # use of our toStringResult.
+            objectOps = "&sInterfaceObjectClassObjectOps"
+
         ret = ret + fill(
             """
             static const DOMIfaceAndProtoJSClass sInterfaceObjectClass = {
               {
-                "Function",
+                "${classString}",
                 JSCLASS_IS_DOMIFACEANDPROTOJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(${slotCount}),
                 ${classOpsPtr},
                 JS_NULL_CLASS_SPEC,
                 JS_NULL_CLASS_EXT,
-                &sInterfaceObjectClassObjectOps
+                ${objectOps}
               },
               eInterface,
               ${prototypeID},
               ${depth},
               ${hooks},
-              "function ${name}() {\\n    [native code]\\n}",
+              "${toStringResult}",
               ${protoGetter}
             };
             """,
+            classString=classString,
             slotCount=slotCount,
             ctorname=ctorname,
             hasInstance=hasinstance,
             classOpsPtr=classOpsPtr,
             hooks=NativePropertyHooks(self.descriptor),
-            name=self.descriptor.interface.identifier.name,
+            objectOps=objectOps,
             prototypeID=prototypeID,
             depth=depth,
+            toStringResult=toStringResult,
             protoGetter=protoGetter)
         return ret
 
