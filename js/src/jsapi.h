@@ -1270,20 +1270,9 @@ RuntimeOptionsRef(JSContext* cx);
 class JS_PUBLIC_API(ContextOptions) {
   public:
     ContextOptions()
-      : privateIsNSISupports_(false),
-        dontReportUncaught_(false),
+      : dontReportUncaught_(false),
         autoJSAPIOwnsErrorReporting_(false)
     {
-    }
-
-    bool privateIsNSISupports() const { return privateIsNSISupports_; }
-    ContextOptions& setPrivateIsNSISupports(bool flag) {
-        privateIsNSISupports_ = flag;
-        return *this;
-    }
-    ContextOptions& togglePrivateIsNSISupports() {
-        privateIsNSISupports_ = !privateIsNSISupports_;
-        return *this;
     }
 
     bool dontReportUncaught() const { return dontReportUncaught_; }
