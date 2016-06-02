@@ -452,6 +452,12 @@ TextureClient::UnlockActor() const
 bool
 TextureClient::IsReadLocked() const
 {
+  // mPendingReadUnlock is true when the texture has been written into (and as 
+  // a result the read-count already incremented on the behalf of the compositor),
+  // but we haven't sent the notification for the compositor to use the texture,
+  // so it is still OK to access the texture data on this side.
+  // If we didn't take mPendingReadUnlock into account here, we would not be able
+  // to Lock and Unlock a texture twice before sending it.
   return mReadLock && mReadLock->GetReadCount() > 1 && !mPendingReadUnlock;
 }
 

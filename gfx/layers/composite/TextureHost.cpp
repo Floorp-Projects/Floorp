@@ -312,6 +312,10 @@ TextureHost::TextureHost(TextureFlags aFlags)
 
 TextureHost::~TextureHost()
 {
+  // If we still have a ReadLock, unlock it. At this point we don't care about
+  // the texture client being written into on the other side since it should be
+  // destroyed by now. But we will hit assertions if we don't ReadUnlock before
+  // destroying the lock itself.
   ReadUnlock();
   MOZ_COUNT_DTOR(TextureHost);
 }
@@ -693,6 +697,8 @@ BufferTextureHost::MaybeUpload(nsIntRegion *aRegion)
   }
 
   if (mHasIntermediateBuffer) {
+    // We just did the texture upload, the content side can now freely write
+    // into the shared buffer.
     ReadUnlock();
   }
 

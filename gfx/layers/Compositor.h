@@ -533,6 +533,12 @@ public:
     return mParent;
   }
 
+  /// Most compositor backends operate asynchronously under the hood. This
+  /// means that when a layer stops using a texture it is often desirable to
+  /// wait for the end of the next composition before releasing the texture's
+  /// ReadLock.
+  /// This function provides a convenient way to do this delayed unlocking, if
+  /// the texture itself requires it.
   void UnlockAfterComposition(already_AddRefed<TextureReadLock> aLock)
   {
     mUnlockAfterComposition.AppendElement(aLock);
