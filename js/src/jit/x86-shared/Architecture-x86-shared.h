@@ -261,6 +261,7 @@ class FloatRegisters {
     static const SetType AllPhysMask = ((1 << TotalPhys) - 1);
     static const SetType AllMask = AllPhysMask * Spread;
     static const SetType AllDoubleMask = AllPhysMask * SpreadDouble;
+    static const SetType AllSingleMask = AllPhysMask * SpreadSingle;
 
 #if defined(JS_CODEGEN_X86)
     static const SetType NonAllocatableMask =
