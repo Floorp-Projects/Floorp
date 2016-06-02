@@ -1341,7 +1341,11 @@ MockInstall.prototype = {
           return;
         }
 
-        AddonManagerPrivate.callAddonListeners("onInstalling", this.addon);
+        let needsRestart = (this.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_INSTALL);
+        AddonManagerPrivate.callAddonListeners("onInstalling", this.addon, needsRestart);
+        if (!needsRestart) {
+          AddonManagerPrivate.callAddonListeners("onInstalled", this.addon);
+        }
 
         this.state = AddonManager.STATE_INSTALLED;
         this.callListeners("onInstallEnded");
