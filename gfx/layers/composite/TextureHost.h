@@ -41,6 +41,7 @@ namespace layers {
 class BufferDescriptor;
 class Compositor;
 class CompositableParentManager;
+class ReadLockDescriptor;
 class CompositorBridgeParent;
 class SurfaceDescriptor;
 class HostIPCAllocator;
@@ -409,7 +410,7 @@ public:
   /**
    * Called when another TextureHost will take over.
    */
-  virtual void UnbindTextureSource() {}
+  virtual void UnbindTextureSource();
 
   /**
    * Is called before compositing if the shared data has changed since last
@@ -575,11 +576,14 @@ public:
 
   virtual FenceHandle GetCompositorReleaseFence() { return FenceHandle(); }
 
-  void SetReadLock(already_AddRefed<TextureReadLock> aLock);
+  void DeserializeReadLock(const ReadLockDescriptor& aDesc,
+                           ISurfaceAllocator* aAllocator);
 
   TextureReadLock* GetReadLock() { return mReadLock; }
 
   void ReadUnlock();
+
+  virtual Compositor* GetCompositor() = 0;
 
 protected:
   FenceHandle mReleaseFenceHandle;
@@ -633,6 +637,8 @@ public:
   virtual void DeallocateDeviceData() override;
 
   virtual void SetCompositor(Compositor* aCompositor) override;
+
+  virtual Compositor* GetCompositor() override { return mCompositor; }
 
   /**
    * Return the format that is exposed to the compositor when calling

@@ -70,8 +70,6 @@ public:
     return false;
   }
 
-  void ReadLock();
-
   void ReleaseTiles();
 
   void DiscardBuffers();

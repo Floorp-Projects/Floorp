@@ -90,22 +90,6 @@ struct TileClient
     return mBackBuffer == nullptr && mFrontBuffer == nullptr;
   }
 
-  void ReadUnlock()
-  {
-    MOZ_ASSERT(mFrontBuffer && mFrontBuffer->GetReadLock());
-    if (mFrontBuffer && mFrontBuffer->GetReadLock()) {
-      mFrontBuffer->GetReadLock()->ReadUnlock();
-    }
-  }
-
-  void ReadLock()
-  {
-    MOZ_ASSERT(mFrontBuffer && mFrontBuffer->GetReadLock());
-    if (mFrontBuffer && mFrontBuffer->GetReadLock()) {
-      mFrontBuffer->GetReadLock()->ReadLock();
-    }
-  }
-
   void DiscardBuffers()
   {
     DiscardFrontBuffer();

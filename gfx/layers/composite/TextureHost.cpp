@@ -325,6 +325,26 @@ void TextureHost::Finalize()
 }
 
 void
+TextureHost::UnbindTextureSource()
+{
+  if (mReadLock) {
+    auto compositor = GetCompositor();
+    // This TextureHost is not used anymore. Since most compositor backends are
+    // working asynchronously under the hood a compositor could still be using
+    // this texture, so it is generally best to wait until the end of the next
+    // composition before calling ReadUnlock. We ask the compositor to take care
+    // of that for us.
+    if (compositor) {
+      compositor->UnlockAfterComposition(mReadLock.forget());
+    } else {
+      // GetCompositor returned null which means no compositor can be using this
+      // texture. We can ReadUnlock right away.
+      ReadUnlock();
+    }
+  }
+}
+
+void
 TextureHost::RecycleTexture(TextureFlags aFlags)
 {
   MOZ_ASSERT(GetFlags() & TextureFlags::RECYCLE);
@@ -503,9 +523,18 @@ BufferTextureHost::Unlock()
 }
 
 void
-TextureHost::SetReadLock(already_AddRefed<TextureReadLock> aLock)
+TextureHost::DeserializeReadLock(const ReadLockDescriptor& aDesc,
+                                 ISurfaceAllocator* aAllocator)
 {
-  mReadLock = aLock;
+  RefPtr<TextureReadLock> lock = TextureReadLock::Deserialize(aDesc, aAllocator);
+  if (!lock) {
+    return;
+  }
+
+  // If mReadLock is not null it means we haven't unlocked it yet and the content
+  // side should not have been able to write into this texture and send a new lock!
+  MOZ_ASSERT(!mReadLock);
+  mReadLock = lock.forget();
 }
 
 void

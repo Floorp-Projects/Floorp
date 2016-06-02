@@ -1205,6 +1205,8 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
 void
 CompositorD3D11::EndFrame()
 {
+  Compositor::EndFrame();
+
   if (!mDefaultRT) {
     return;
   }

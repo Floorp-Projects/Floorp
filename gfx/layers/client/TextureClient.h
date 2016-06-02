@@ -177,9 +177,27 @@ struct MappedYCbCrTextureData {
   }
 };
 
-class TileLock;
+class ReadLockDescriptor;
 
-// A class to help implement copy-on-write semantics for shared tiles.
+// A class to help implement copy-on-write semantics for shared textures.
+//
+// A TextureClient/Host pair can opt into using a ReadLock by calling
+// TextureClient::EnableReadLock. This will equip the TextureClient with a
+// ReadLock object that will be automatically ReadLock()'ed by the texture itself
+// when it is written into (see TextureClient::Unlock).
+// A TextureReadLock's counter starts at 1 and is expected to be equal to 1 when the
+// lock is destroyed. See ShmemTextureReadLock for explanations about why we use
+// 1 instead of 0 as the initial state.
+// TextureReadLock is mostly internally managed by the TextureClient/Host pair,
+// and the compositable only has to forward it during updates. If an update message
+// contains a null_t lock, it means that the texture was not written into on the
+// content side, and there is no synchronization required on the compositor side
+// (or it means that the texture pair did not opt into using ReadLocks).
+// On the compositor side, the TextureHost can receive a ReadLock during a
+// transaction, and will both ReadUnlock() it and drop it as soon as the shared
+// data is available again for writing (the texture upload is done, or the compositor
+// not reading the texture anymore). The lock is dropped to make sure it is
+// ReadUnlock()'ed only once.
 class TextureReadLock {
 protected:
   virtual ~TextureReadLock() {}
@@ -196,9 +214,9 @@ public:
   Create(ClientIPCAllocator* aAllocator);
 
   static already_AddRefed<TextureReadLock>
-  Open(const TileLock& aDescriptor, ISurfaceAllocator* aAllocator);
+  Deserialize(const ReadLockDescriptor& aDescriptor, ISurfaceAllocator* aAllocator);
 
-  virtual bool Serialize(TileLock& aOutput) = 0;
+  virtual bool Serialize(ReadLockDescriptor& aOutput) = 0;
 
   enum LockType {
     TYPE_MEMORY,
@@ -632,11 +650,16 @@ public:
   virtual void RemoveFromCompositable(CompositableClient* aCompositable,
                                       AsyncTransactionWaiter* aWaiter = nullptr);
 
-  void SetReadLock(already_AddRefed<TextureReadLock> aLock) { mReadLock = aLock; }
+
+  void EnableReadLock();
+
+  void SetReadLock(TextureReadLock* aLock);
 
   TextureReadLock* GetReadLock() { return mReadLock; }
 
   bool IsReadLocked() const;
+
+  void SerializeReadLock(ReadLockDescriptor& aDescriptor);
 
 private:
   static void TextureClientRecycleCallback(TextureClient* aClient, void* aClosure);
@@ -687,6 +710,10 @@ protected:
   uint32_t mExpectedDtRefs;
 #endif
   bool mIsLocked;
+  // True when there has been a modification of the texture that hasn't been sent
+  // to the compositor yet. We keep track of this to avoid sending the texture's
+  // ReadLock twice after a single update.
+  bool mPendingReadUnlock;
   bool mInUse;
 
   bool mAddedToCompositableClient;
