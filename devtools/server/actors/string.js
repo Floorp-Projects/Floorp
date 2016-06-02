@@ -52,11 +52,13 @@ exports.LongStringActor = protocol.ActorClass({
 });
 
 /**
- * When a caller is expecting a LongString actor but the string is already available on
- * client, the SimpleStringFront can be used as it shares the same API as a
- * LongStringFront but will not make unnecessary trips to the server.
+ * When a LongString on the server is short enough to be passed
+ * as a full string, the client will get a ShortLongString instead of
+ * a LongStringFront.  Its API should match.
+ *
+ * I'm very proud of this name.
  */
-exports.SimpleStringFront = Class({
+exports.ShortLongString = Class({
   initialize: function (str) {
     this.str = str;
   },
@@ -139,7 +141,7 @@ protocol.types.addType("longstring", {
       throw Error("Passing a longstring as an argument isn't supported.");
     }
     if (typeof (value) === "string") {
-      return exports.SimpleStringFront(value);
+      return exports.ShortLongString(value);
     }
     return stringActorType.read(value, context, detail);
   }
