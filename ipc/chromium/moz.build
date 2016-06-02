@@ -27,7 +27,6 @@ UNIFIED_SOURCES += [
     'src/base/timer.cc',
     'src/chrome/common/child_process.cc',
     'src/chrome/common/child_process_host.cc',
-    'src/chrome/common/child_process_info.cc',
     'src/chrome/common/child_thread.cc',
     'src/chrome/common/chrome_switches.cc',
     'src/chrome/common/ipc_channel.cc',
