@@ -63,8 +63,7 @@ public:
                          const char* aDisableMessage);
   static void DisableByDefault(Feature aFeature,
                                FeatureStatus aDisableStatus,
-                               const char* aDisableMessage,
-                               const nsACString& aFailureId = EmptyCString());
+                               const char* aDisableMessage);
   static void EnableByDefault(Feature aFeature);
 
   // Set a environment status that overrides both the default and user
@@ -74,8 +73,7 @@ public:
   // the feature.
   static void Disable(Feature aFeature,
                       FeatureStatus aStatus,
-                      const char* aMessage,
-                      const nsACString& aFailureId = EmptyCString());
+                      const char* aMessage);
 
   // Given a preference name, infer the default value and whether or not the
   // user has changed it. |aIsEnablePref| specifies whether or not the pref
@@ -90,28 +88,25 @@ public:
   // decisions.
   static void SetFailed(Feature aFeature,
                         FeatureStatus aStatus,
-                        const char* aMessage,
-                        const nsACString& aFailureId = EmptyCString());
+                        const char* aMessage);
 
   // Force a feature to be disabled permanently. This is the same as
   // SetFailed(), but the name may be clearer depending on the context.
   static void ForceDisable(Feature aFeature,
                            FeatureStatus aStatus,
-                           const char* aMessage,
-                           const nsACString& aFailureId = EmptyCString())
+                           const char* aMessage)
   {
-    SetFailed(aFeature, aStatus, aMessage, aFailureId);
+    SetFailed(aFeature, aStatus, aMessage);
   }
 
   // Convenience helpers for SetFailed().
   static bool MaybeSetFailed(Feature aFeature,
                              bool aEnable,
                              FeatureStatus aDisableStatus,
-                             const char* aDisableMessage,
-                             const nsACString& aFailureId = EmptyCString())
+                             const char* aDisableMessage)
   {
     if (!aEnable) {
-      SetFailed(aFeature, aDisableStatus, aDisableMessage, aFailureId);
+      SetFailed(aFeature, aDisableStatus, aDisableMessage);
       return false;
     }
     return true;
@@ -120,15 +115,14 @@ public:
   // Convenience helper for SetFailed().
   static bool MaybeSetFailed(Feature aFeature,
                              FeatureStatus aStatus,
-                             const char* aDisableMessage,
-                             const nsACString& aFailureId = EmptyCString())
+                             const char* aDisableMessage)
   {
     return MaybeSetFailed(
       aFeature,
       (aStatus != FeatureStatus::Available &&
        aStatus != FeatureStatus::ForceEnabled),
       aStatus,
-      aDisableMessage, aFailureId);
+      aDisableMessage);
   }
 
   // Re-enables a feature that was previously disabled, by attaching it to a
@@ -150,7 +144,7 @@ public:
   // of a parameter.
   static void UserEnable(Feature aFeature, const char* aMessage);
   static void UserForceEnable(Feature aFeature, const char* aMessage);
-  static void UserDisable(Feature aFeature, const char* aMessage, const nsACString& aFailureId = EmptyCString());
+  static void UserDisable(Feature aFeature, const char* aMessage);
 
   // Query whether a fallback has been toggled.
   static bool UseFallback(Fallback aFallback);
@@ -168,12 +162,6 @@ public:
   typedef mozilla::function<void(const char* aName, const char* aMsg)> 
     FallbackIterCallback;
   static void ForEachFallback(const FallbackIterCallback& aCallback);
-
-  // Get the most descriptive failure id message for this feature.
-  static const nsACString& GetFailureId(Feature aFeature);
-
-  static void Init();
-  static void Shutdown();
 
 private:
   void ForEachFallbackImpl(const FallbackIterCallback& aCallback);

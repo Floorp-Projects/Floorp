@@ -284,8 +284,7 @@ private:
     void InitializeD2D();
     bool InitDWriteSupport();
 
-    void DisableD2D(mozilla::gfx::FeatureStatus aStatus, const char* aMessage,
-                    const nsACString& aFailureId);
+    void DisableD2D(mozilla::gfx::FeatureStatus aStatus, const char* aMessage);
 
     void InitializeConfig();
     void InitializeD3D9Config();
