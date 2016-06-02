@@ -764,12 +764,6 @@ danger::AutoCxPusher::AutoCxPusher(JSContext* cx, bool allowNull)
 {
   MOZ_ASSERT_IF(!allowNull, cx);
 
-  // Hold a strong ref to the nsIScriptContext, if any. This ensures that we
-  // only destroy the mContext of an nsJSContext when it is not on the cx stack
-  // (and therefore not in use). See nsJSContext::DestroyJSContext().
-  if (cx)
-    mScx = GetScriptContextFromJSContext(cx);
-
   XPCJSContextStack *stack = XPCJSRuntime::Get()->GetJSContextStack();
   stack->Push(cx);
   mStackDepthAfterPush = stack->Count();
@@ -801,7 +795,6 @@ danger::AutoCxPusher::~AutoCxPusher()
   DebugOnly<JSContext*> stackTop;
   MOZ_ASSERT(mPushedContext == nsXPConnect::XPConnect()->GetCurrentJSContext());
   XPCJSRuntime::Get()->GetJSContextStack()->Pop();
-  mScx = nullptr;
 }
 
 bool
