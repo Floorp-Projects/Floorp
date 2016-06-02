@@ -248,7 +248,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
     }
 
     let parentNode = this.walker.parentNode(this);
-    let singleTextChild = this.walker.singleTextChild(this);
+    let inlineTextChild = this.walker.inlineTextChild(this);
 
     let form = {
       actor: this.actorID,
@@ -257,9 +257,10 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       nodeType: this.rawNode.nodeType,
       namespaceURI: this.rawNode.namespaceURI,
       nodeName: this.rawNode.nodeName,
+      nodeValue: this.rawNode.nodeValue,
       displayName: getNodeDisplayName(this.rawNode),
       numChildren: this.numChildren,
-      singleTextChild: singleTextChild ? singleTextChild.form() : undefined,
+      inlineTextChild: inlineTextChild ? inlineTextChild.form() : undefined,
 
       // doctype attributes
       name: this.rawNode.name,
@@ -283,18 +284,6 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
 
     if (this.isDocumentElement()) {
       form.isDocumentElement = true;
-    }
-
-    if (this.rawNode.nodeValue) {
-      // We only include a short version of the value if it's longer than
-      // gValueSummaryLength
-      if (this.rawNode.nodeValue.length > gValueSummaryLength) {
-        form.shortValue = this.rawNode.nodeValue
-          .substring(0, gValueSummaryLength);
-        form.incompleteValue = true;
-      } else {
-        form.shortValue = this.rawNode.nodeValue;
-      }
     }
 
     // Add an extra API for custom properties added by other
@@ -330,6 +319,7 @@ var NodeActor = exports.NodeActor = protocol.ActorClassWithSpec(nodeSpec, {
       nativeAnonymousChildList: true,
       attributes: true,
       characterData: true,
+      characterDataOldValue: true,
       childList: true,
       subtree: true
     });
@@ -1147,12 +1137,12 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
   },
 
   /**
-   * If the given NodeActor only has a single text node as a child,
-   * return that child's NodeActor.
+   * If the given NodeActor only has a single text node as a child with a text
+   * content small enough to be inlined, return that child's NodeActor.
    *
    * @param NodeActor node
    */
-  singleTextChild: function (node) {
+  inlineTextChild: function (node) {
     // Quick checks to prevent creating a new walker if possible.
     if (node.isBeforePseudoElement ||
         node.isAfterPseudoElement ||
@@ -1164,11 +1154,15 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
     let docWalker = this.getDocumentWalker(node.rawNode);
     let firstChild = docWalker.firstChild();
 
-    // If the first child isn't a text node, or there are multiple children
-    // then bail out
+    // Bail out if:
+    // - more than one child
+    // - unique child is not a text node
+    // - unique child is a text node, but is too long to be inlined
     if (!firstChild ||
+        docWalker.nextSibling() ||
         firstChild.nodeType !== Ci.nsIDOMNode.TEXT_NODE ||
-        docWalker.nextSibling()) {
+        firstChild.nodeValue.length > gValueSummaryLength
+        ) {
       return undefined;
     }
 
@@ -2200,8 +2194,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    *   newValue: <string> - The new value of the attribute, if any.
    *
    * `characterData` type:
-   *   newValue: <string> - the new shortValue for the node
-   *   [incompleteValue: true] - True if the shortValue was truncated.
+   *   newValue: <string> - the new nodeValue for the node
    *
    * `childList` type is returned when the set of children for a node
    * has changed.  Includes extra data, which can be used by the client to
@@ -2211,7 +2204,7 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
    *     seen by the client* that were added to the target node.
    *   removed: array of <domnode actor ID> The list of actors *previously
    *     seen by the client* that were removed from the target node.
-   *   singleTextChild: If the node now has a single text child, it will
+   *   inlineTextChild: If the node now has a single text child, it will
    *     be sent here.
    *
    * Actors that are included in a MutationRecord's `removed` but
@@ -2288,13 +2281,8 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
                             targetNode.getAttribute(mutation.attributeName)
                             : null;
       } else if (type === "characterData") {
-        if (targetNode.nodeValue.length > gValueSummaryLength) {
-          mutation.newValue = targetNode.nodeValue
-            .substring(0, gValueSummaryLength);
-          mutation.incompleteValue = true;
-        } else {
-          mutation.newValue = targetNode.nodeValue;
-        }
+        mutation.newValue = targetNode.nodeValue;
+        this._maybeQueueInlineTextChildMutation(change, targetNode);
       } else if (type === "childList" || type === "nativeAnonymousChildList") {
         // Get the list of removed and added actors that the client has seen
         // so that it can keep its ownership tree up to date.
@@ -2330,13 +2318,48 @@ var WalkerActor = protocol.ActorClassWithSpec(walkerSpec, {
         mutation.removed = removedActors;
         mutation.added = addedActors;
 
-        let singleTextChild = this.singleTextChild(targetActor);
-        if (singleTextChild) {
-          mutation.singleTextChild = singleTextChild.form();
+        let inlineTextChild = this.inlineTextChild(targetActor);
+        if (inlineTextChild) {
+          mutation.inlineTextChild = inlineTextChild.form();
         }
       }
       this.queueMutation(mutation);
     }
+  },
+
+  /**
+   * Check if the provided mutation could change the way the target element is
+   * inlined with its parent node. If it might, a custom mutation of type
+   * "inlineTextChild" will be queued.
+   *
+   * @param {MutationRecord} mutation
+   *        A characterData type mutation
+   */
+  _maybeQueueInlineTextChildMutation: function (mutation) {
+    let {oldValue, target} = mutation;
+    let newValue = target.nodeValue;
+    let limit = gValueSummaryLength;
+
+    if ((oldValue.length <= limit && newValue.length <= limit) ||
+        (oldValue.length > limit && newValue.length > limit)) {
+      // Bail out if the new & old values are both below/above the size limit.
+      return;
+    }
+
+    let parentActor = this.getNode(target.parentNode);
+    if (!parentActor || parentActor.rawNode.children.length > 0) {
+      // If the parent node has other children, a character data mutation will
+      // not change anything regarding inlining text nodes.
+      return;
+    }
+
+    let inlineTextChild = this.inlineTextChild(parentActor);
+    this.queueMutation({
+      type: "inlineTextChild",
+      target: parentActor.actorID,
+      inlineTextChild:
+        inlineTextChild ? inlineTextChild.form() : undefined
+    });
   },
 
   onFrameLoad: function ({ window, isTopLevel }) {
