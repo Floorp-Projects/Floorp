@@ -5,6 +5,9 @@
 XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
                                   "resource://devtools/shared/event-emitter.js");
 
+XPCOMUtils.defineLazyModuleGetter(this, "Services",
+                                  "resource://gre/modules/Services.jsm");
+
 // Import the android PageActions module.
 XPCOMUtils.defineLazyModuleGetter(this, "PageActions",
                                   "resource://gre/modules/PageActions.jsm");
@@ -28,7 +31,15 @@ function PageAction(options, extension) {
     icon: DEFAULT_ICON,
     id: extension.id,
     clickCallback: () => {
-      this.emit("click");
+      if (this.default_popup) {
+        let win = Services.wm.getMostRecentWindow("navigator:browser");
+        win.BrowserApp.addTab(this.default_popup, {
+          selected: true,
+          parentId: win.BrowserApp.selectedTab.id
+        });
+      } else {
+        this.emit("click");
+      }
     },
   };
 
@@ -85,6 +96,7 @@ extensions.registerSchemaAPI("pageAction", null, (extension, context) => {
       show(tabId) {
         pageActionMap.get(extension).show(tabId);
       },
+
       hide(tabId) {
         pageActionMap.get(extension).hide(tabId);
       },

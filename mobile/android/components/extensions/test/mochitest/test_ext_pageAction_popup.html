@@ -1,0 +1,100 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>PageAction Test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+Cu.import("resource://gre/modules/Services.jsm");
+
+add_task(function* test_contentscript() {
+  function backgroundScript() {
+    // TODO: Use the Tabs API to obtain the tab ids for showing pageActions.
+    let tabId = 1;
+    browser.test.onMessage.addListener(msg => {
+      if (msg === "page-action-show") {
+        // TODO: switch to using .show(tabId).then(...) once bug 1270742 lands.
+        browser.pageAction.show(tabId);
+        browser.test.sendMessage("page-action-shown");
+      } else if (msg == "page-action-close-popup") {
+        browser.runtime.sendMessage("close-popup");
+      }
+    });
+
+    browser.pageAction.onClicked.addListener(tab => {
+      browser.test.fail(`The onClicked listener should never fire when a popup is shown.`);
+    });
+
+    browser.test.sendMessage("ready");
+  }
+
+  function popupScript() {
+    window.onload = () => {
+      browser.test.sendMessage("from-page-action-popup-shown");
+    };
+    browser.runtime.onMessage.addListener(msg => {
+      if (msg == "close-popup") {
+        window.close();
+      }
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${backgroundScript}())`,
+    manifest: {
+      "name": "PageAction Extension",
+      "page_action": {
+        "default_title": "Page Action",
+        "default_popup": "popup.html",
+      },
+    },
+    files: {
+      "popup.html": `<html><head><meta charset="utf-8"><script src="popup.js"></${"script"}></head></html>`,
+      "popup.js": `(${popupScript})()`,
+    },
+  });
+
+  let tabClosedPromise = new Promise(resolve => {
+    let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+    let BrowserApp = chromeWin.BrowserApp;
+
+    let tabCloseListener = (event) => {
+      BrowserApp.deck.removeEventListener("TabClose", tabCloseListener, false);
+      let browser = event.target;
+      let url = browser.currentURI.spec
+      resolve(url);
+    }
+
+    BrowserApp.deck.addEventListener("TabClose", tabCloseListener, false);
+  });
+
+  yield extension.startup();
+  yield extension.awaitMessage("ready");
+
+  extension.sendMessage("page-action-show");
+  yield extension.awaitMessage("page-action-shown");
+  ok(isPageActionShown(extension.id), "The PageAction should be shown");
+
+  clickPageAction(extension.id);
+  yield extension.awaitMessage("from-page-action-popup-shown");
+
+  extension.sendMessage("page-action-close-popup");
+
+  let url = yield tabClosedPromise;
+  ok(url.includes("popup.html"), "The tab for the popup should be closed");
+
+  yield extension.unload();
+  ok(!isPageActionShown(extension.id), "The PageAction should be removed after unload");
+});
+</script>
+
+</body>
+</html>
