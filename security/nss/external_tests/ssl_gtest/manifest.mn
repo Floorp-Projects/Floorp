@@ -17,6 +17,7 @@ CPPSRCS = \
       ssl_loopback_unittest.cc \
       ssl_extension_unittest.cc \
       ssl_skip_unittest.cc \
+      ssl_ciphersuite_unittest.cc \
       ssl_gtest.cc \
       test_io.cc \
       tls_agent.cc \
@@ -32,6 +33,7 @@ INCLUDES += -I$(CORE_DEPTH)/external_tests/google_test/gtest/include \
 REQUIRES = nspr nss libdbm gtest
 
 PROGRAM = ssl_gtest
-EXTRA_LIBS = $(DIST)/lib/$(LIB_PREFIX)gtest.$(LIB_SUFFIX)
+EXTRA_LIBS = $(DIST)/lib/$(LIB_PREFIX)gtest.$(LIB_SUFFIX) \
+             $(DIST)/lib/$(LIB_PREFIX)softokn.$(LIB_SUFFIX)
 
 USE_STATIC_LIBS = 1

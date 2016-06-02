@@ -110,8 +110,6 @@ class TlsServerKeyExchangeEcdhe {
   DataBuffer public_key_;
 };
 
-class TlsChaCha20Poly1305Test : public TlsConnectTls12 {};
-
 TEST_P(TlsConnectGeneric, SetupOnly) {}
 
 TEST_P(TlsConnectGeneric, Connect) {
@@ -144,10 +142,6 @@ TEST_P(TlsConnectGenericPre13, ConnectEcdhWithoutDisablingSuites) {
 
   Connect();
   CheckKeys(ssl_kea_ecdh, ssl_auth_ecdh_ecdsa);
-}
-
-TEST_P(TlsConnectStreamPre13, ConnectRC4) {
-  ConnectWithCipherSuite(TLS_RSA_WITH_RC4_128_SHA);
 }
 
 TEST_P(TlsConnectGenericPre13, ConnectFalseStart) {
@@ -703,19 +697,6 @@ TEST_P(TlsConnectGeneric, ConnectSendReceive) {
   SendReceive();
 }
 
-TEST_P(TlsChaCha20Poly1305Test, SendReceiveChaCha20Poly1305DheRsa) {
-  ConnectWithCipherSuite(TLS_DHE_RSA_WITH_CHACHA20_POLY1305_SHA256);
-}
-
-TEST_P(TlsChaCha20Poly1305Test, SendReceiveChaCha20Poly1305EcdheRsa) {
-  ConnectWithCipherSuite(TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256);
-}
-
-TEST_P(TlsChaCha20Poly1305Test, SendReceiveChaCha20Poly1305EcdheEcdsa) {
-  Reset(TlsAgent::kServerEcdsa);
-  ConnectWithCipherSuite(TLS_ECDHE_ECDSA_WITH_CHACHA20_POLY1305_SHA256);
-}
-
 // The next two tests takes advantage of the fact that we
 // automatically read the first 1024 bytes, so if
 // we provide 1200 bytes, they overrun the read buffer
@@ -1011,6 +992,7 @@ TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   TlsExtensionCapture *c1 =
       new TlsExtensionCapture(kTlsExtensionPreSharedKey);
+  client_->SetPacketFilter(c1);
   client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
                            SSL_LIBRARY_VERSION_TLS_1_3);
   server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
@@ -1019,15 +1001,19 @@ TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
   Connect();
   SendReceive();
   CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
-  DataBuffer psk1(c1->extension());
-  ASSERT_GE(psk1.len(), 0UL);
-  ASSERT_TRUE(!!client_->peer_cert());
+  // The filter will go away when we reset, so save the captured extension.
+  DataBuffer initialTicket(c1->extension());
+  ASSERT_LT(0U, initialTicket.len());
+
+  ScopedCERTCertificate cert1(SSL_PeerCertificate(client_->ssl_fd()));
+  ASSERT_TRUE(!!cert1.get());
 
   Reset();
   ClearStats();
   ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
   TlsExtensionCapture *c2 =
       new TlsExtensionCapture(kTlsExtensionPreSharedKey);
+  client_->SetPacketFilter(c2);
   client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
                            SSL_LIBRARY_VERSION_TLS_1_3);
   server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
@@ -1036,9 +1022,10 @@ TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
   Connect();
   SendReceive();
   CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
-  DataBuffer psk2(c2->extension());
-  ASSERT_GE(psk2.len(), 0UL);
-  ASSERT_TRUE(!!client_->peer_cert());
+  ASSERT_LT(0U, c2->extension().len());
+
+  ScopedCERTCertificate cert2(SSL_PeerCertificate(client_->ssl_fd()));
+  ASSERT_TRUE(!!cert2.get());
 
   // Check that the cipher suite is reported the same on both sides, though in
   // TLS 1.3 resumption actually negotiates a different cipher suite.
@@ -1049,7 +1036,70 @@ TEST_F(TlsConnectTest, TestTls13ResumptionTwice) {
   EXPECT_EQ(original_suite, resumed_suite);
 
   // TODO(ekr@rtfm.com): This will change when we fix bug 1257047.
-  ASSERT_EQ(psk1, psk2);
+  ASSERT_EQ(initialTicket, c2->extension());
+}
+
+TEST_F(TlsConnectTest, DisableClientPSKAndFailToResume) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  Connect();
+  SendReceive(); // Need to read so that we absorb the session ticket.
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  TlsExtensionCapture *capture =
+      new TlsExtensionCapture(kTlsExtensionPreSharedKey);
+  client_->SetPacketFilter(capture);
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  EXPECT_EQ(SECSuccess,
+            SSL_CipherPrefSet(client_->ssl_fd(),
+                              TLS_ECDHE_PSK_WITH_AES_128_GCM_SHA256,
+                              PR_FALSE));
+  ExpectResumption(RESUME_NONE);
+  Connect();
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  EXPECT_EQ(0U, capture->extension().len());
+}
+
+TEST_F(TlsConnectTest, DisableServerPSKAndFailToResume) {
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  Connect();
+  SendReceive(); // Need to read so that we absorb the session ticket.
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+
+  Reset();
+  ConfigureSessionCache(RESUME_BOTH, RESUME_TICKET);
+  TlsExtensionCapture *clientCapture =
+      new TlsExtensionCapture(kTlsExtensionPreSharedKey);
+  client_->SetPacketFilter(clientCapture);
+  TlsExtensionCapture *serverCapture =
+      new TlsExtensionCapture(kTlsExtensionPreSharedKey);
+  server_->SetPacketFilter(serverCapture);
+  client_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
+                           SSL_LIBRARY_VERSION_TLS_1_3);
+  EXPECT_EQ(SECSuccess,
+            SSL_CipherPrefSet(server_->ssl_fd(),
+                              TLS_ECDHE_PSK_WITH_AES_128_GCM_SHA256,
+                              PR_FALSE));
+  ExpectResumption(RESUME_NONE);
+  Connect();
+  CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
+  // The client should have the extension, but the server should not.
+  EXPECT_LT(0U, clientCapture->extension().len());
+  EXPECT_EQ(0U, serverCapture->extension().len());
 }
 
 TEST_P(TlsConnectDatagram, TestDtlsHolddownExpiry) {
@@ -1098,7 +1148,7 @@ class BeforeFinished : public TlsRecordFilter {
           DataBuffer ccs;
           header.Write(&ccs, 0, body);
           server_->SendDirect(ccs);
-          ForceRead();
+          client_->Handshake();
           state_ = AFTER_CCS;
           // Request that the original record be dropped by the filter.
           return DROP;
@@ -1121,16 +1171,6 @@ class BeforeFinished : public TlsRecordFilter {
   }
 
  private:
-  void ForceRead() {
-    // Read from the socket to get libssl to process the handshake messages that
-    // were sent from the server up until now.
-    uint8_t block[10];
-    int32_t rv = PR_Read(client_->ssl_fd(), block, sizeof(block));
-    // Expect a blocking error here, since the handshake shouldn't have completed.
-    EXPECT_GT(0, rv);
-    EXPECT_EQ(PR_WOULD_BLOCK_ERROR, PR_GetError());
-  }
-
   TlsAgent* client_;
   TlsAgent* server_;
   VoidFunction before_ccs_;
@@ -1231,6 +1271,105 @@ TEST_P(TlsConnectGenericPre13, ConnectECDHEmptyClientPoint) {
   server_->CheckErrorCode(SSL_ERROR_RX_MALFORMED_CLIENT_KEY_EXCH);
 }
 
+#ifdef NSS_ENABLE_TLS_1_3
+// Running code after the client has started processing the encrypted part of
+// the server's first flight, but before the Finished is processed is very hard
+// in TLS 1.3.  These encrypted messages are sent in a single encrypted blob.
+// The following test uses DTLS to make it possible to force the client to
+// process the handshake in pieces.
+//
+// The first encrypted message from the server is dropped, and the MTU is
+// reduced to just below the original message size so that the server sends two
+// messages.  The Finished message is then processed separately.
+class BeforeFinished13 : public PacketFilter {
+ private:
+  enum HandshakeState {
+    INIT,
+    BEFORE_FIRST_FRAGMENT,
+    BEFORE_SECOND_FRAGMENT,
+    DONE
+  };
+  typedef std::function<void(void)> VoidFunction;
+
+ public:
+  BeforeFinished13(TlsAgent* client, TlsAgent *server,
+                   VoidFunction before_finished)
+      : client_(client),
+        server_(server),
+        before_finished_(before_finished),
+        records_(0) {}
+
+ protected:
+  virtual PacketFilter::Action Filter(const DataBuffer& input,
+                                      DataBuffer* output) {
+    switch (++records_) {
+      case 1:
+        // Packet 1 is the server's entire first flight.  Drop it.
+        EXPECT_EQ(SECSuccess,
+                  SSLInt_SetMTU(server_->ssl_fd(), input.len() - 1));
+        return DROP;
+
+        // Packet 2 is the first part of the server's retransmitted first
+        // flight.  Keep that.
+
+      case 3:
+        // Packet 3 is the second part of the server's retransmitted first
+        // flight.  Before passing that on, make sure that the client processes
+        // packet 2, then call the before_finished_() callback.
+        client_->Handshake();
+        before_finished_();
+        break;
+
+      default:
+        break;
+    }
+    return KEEP;
+  }
+
+ private:
+  TlsAgent *client_;
+  TlsAgent *server_;
+  VoidFunction before_finished_;
+  size_t records_;
+};
+
+// This test uses an AuthCertificateCallback that blocks.  A filter is used to
+// split the server's first flight into two pieces.  Before the second piece is
+// processed by the client, SSL_AuthCertificateComplete() is called.
+TEST_F(TlsConnectDatagram13, AuthCompleteBeforeFinished) {
+  client_->SetAuthCertificateCallback(
+      [](TlsAgent&, PRBool, PRBool) -> SECStatus {
+        return SECWouldBlock;
+      });
+  server_->SetPacketFilter(new BeforeFinished13(client_, server_, [this]() {
+        EXPECT_EQ(SECSuccess, SSL_AuthCertificateComplete(client_->ssl_fd(), 0));
+      }));
+  Connect();
+}
+
+static void TriggerAuthComplete(PollTarget *target, Event event) {
+  std::cerr << "client: call SSL_AuthCertificateComplete" << std::endl;
+  EXPECT_EQ(TIMER_EVENT, event);
+  TlsAgent* client = static_cast<TlsAgent*>(target);
+  EXPECT_EQ(SECSuccess, SSL_AuthCertificateComplete(client->ssl_fd(), 0));
+}
+
+// This test uses a simple AuthCertificateCallback.  Due to the way that the
+// entire server flight is processed, the call to SSL_AuthCertificateComplete
+// will trigger after the Finished message is processed.
+TEST_F(TlsConnectDatagram13, AuthCompleteAfterFinished) {
+  client_->SetAuthCertificateCallback(
+      [this](TlsAgent&, PRBool, PRBool) -> SECStatus {
+        Poller::Timer *timer_handle;
+        // This is really just to unroll the stack.
+        Poller::Instance()->SetTimer(1U, client_, TriggerAuthComplete,
+                                     &timer_handle);
+        return SECWouldBlock;
+      });
+  Connect();
+}
+#endif // NSS_ENABLE_TLS_1_3
+
 INSTANTIATE_TEST_CASE_P(GenericStream, TlsConnectGeneric,
                         ::testing::Combine(
                           TlsConnectTestBase::kTlsModesStream,
@@ -1244,9 +1383,6 @@ INSTANTIATE_TEST_CASE_P(StreamOnly, TlsConnectStream,
                         TlsConnectTestBase::kTlsVAll);
 INSTANTIATE_TEST_CASE_P(DatagramOnly, TlsConnectDatagram,
                         TlsConnectTestBase::kTlsV11Plus);
-
-INSTANTIATE_TEST_CASE_P(ChaCha20, TlsChaCha20Poly1305Test,
-                        TlsConnectTestBase::kTlsModesAll);
 
 INSTANTIATE_TEST_CASE_P(Pre12Stream, TlsConnectPre12,
                         ::testing::Combine(
@@ -1263,11 +1399,11 @@ INSTANTIATE_TEST_CASE_P(Version12Only, TlsConnectTls12,
 INSTANTIATE_TEST_CASE_P(Pre13Stream, TlsConnectGenericPre13,
                         ::testing::Combine(
                           TlsConnectTestBase::kTlsModesStream,
-                          TlsConnectTestBase::kTlsV10To12));
+                          TlsConnectTestBase::kTlsV10ToV12));
 INSTANTIATE_TEST_CASE_P(Pre13Datagram, TlsConnectGenericPre13,
                         ::testing::Combine(
                              TlsConnectTestBase::kTlsModesDatagram,
                              TlsConnectTestBase::kTlsV11V12));
 INSTANTIATE_TEST_CASE_P(Pre13StreamOnly, TlsConnectStreamPre13,
-                        TlsConnectTestBase::kTlsV10To12);
+                        TlsConnectTestBase::kTlsV10ToV12);
 }  // namespace nspr_test
