@@ -9,7 +9,7 @@
 
 interface nsIFile;
 
-[Constructor(sequence<(ArrayBuffer or ArrayBufferView or Blob or DOMString)> fileBits,
+[Constructor(sequence<BlobPart> fileBits,
              USVString fileName, optional FilePropertyBag options),
 
  // These constructors are just for chrome callers:

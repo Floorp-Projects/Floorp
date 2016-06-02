@@ -1,0 +1,44 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for SRI require-sri-for CSP directive</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1265318">Mozilla Bug 1265318</a>
+<iframe style="width:200px;height:200px;" id="test_frame"></iframe>
+</body>
+<script type="application/javascript">
+  SimpleTest.waitForExplicitFinish();
+  function handler(event) {
+    switch (event.data) {
+      case 'good_sriLoaded':
+        ok(true, "Eligible SRI resources was correctly loaded.");
+        break;
+      case 'bad_nonsriLoaded':
+        ok(false, "Eligible non-SRI resource should be blocked by the CSP!");
+        break;
+      case 'good_nonsriBlocked':
+        ok(true, "Eligible non-SRI resources was correctly blocked by the CSP.");
+        break;
+      case 'finish':
+        var blackText = frame.contentDocument.getElementById('black-text');
+        var blackTextColor = frame.contentWindow.getComputedStyle(blackText, null).getPropertyValue('color');
+        ok(blackTextColor == 'rgb(0, 0, 0)', "The second part should still be black.");
+        removeEventListener('message', handler);
+        SimpleTest.finish();
+        break;
+      default:
+        break;
+    }
+  }
+  addEventListener("message", handler);
+  var frame = document.getElementById("test_frame");
+  frame.src = "iframe_require-sri-for_main.html";
+</script>
+</html>

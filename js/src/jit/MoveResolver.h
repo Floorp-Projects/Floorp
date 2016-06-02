@@ -309,7 +309,7 @@ class MoveResolver
     //
     // After calling addMove() for each parallel move, resolve() performs the
     // cycle resolution algorithm. Calling addMove() again resets the resolver.
-    bool addMove(const MoveOperand& from, const MoveOperand& to, MoveOp::Type type);
+    MOZ_MUST_USE bool addMove(const MoveOperand& from, const MoveOperand& to, MoveOp::Type type);
     bool resolve();
     void sortMemoryToMemoryMoves();
 

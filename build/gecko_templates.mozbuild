@@ -71,8 +71,6 @@ def GeckoBinary(linkage='dependent', msvcrt='dynamic', mozglue=None):
                         LDFLAGS += ['-rdynamic']
                     if CONFIG['MOZ_MEMORY']:
                         USE_LIBS += ['memory']
-                    if CONFIG['MOZ_LINKER']:
-                        OS_LIBS += CONFIG['MOZ_ZLIB_LIBS']
             elif mozglue == 'library':
                 if not CONFIG['MOZ_GLUE_IN_PROGRAM']:
                     USE_LIBS += ['mozglue']

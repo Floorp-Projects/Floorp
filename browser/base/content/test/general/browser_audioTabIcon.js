@@ -1,14 +1,19 @@
 const PAGE = "https://example.com/browser/browser/base/content/test/general/file_mediaPlayback.html";
 
 function* wait_for_tab_playing_event(tab, expectPlaying) {
-  yield BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, (event) => {
-    if (event.detail.changed.indexOf("soundplaying") >= 0) {
-      is(tab.hasAttribute("soundplaying"), expectPlaying, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
-      is(tab.soundPlaying, expectPlaying, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
-      return true;
-    }
-    return false;
-  });
+  if (tab.soundPlaying == expectPlaying) {
+    ok(true, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
+    return true;
+  } else {
+    yield BrowserTestUtils.waitForEvent(tab, "TabAttrModified", false, (event) => {
+      if (event.detail.changed.indexOf("soundplaying") >= 0) {
+        is(tab.hasAttribute("soundplaying"), expectPlaying, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
+        is(tab.soundPlaying, expectPlaying, "The tab should " + (expectPlaying ? "" : "not ") + "be playing");
+        return true;
+      }
+      return false;
+    });
+  }
 }
 
 function* play(tab) {

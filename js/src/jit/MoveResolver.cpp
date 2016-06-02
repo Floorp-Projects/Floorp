@@ -6,6 +6,8 @@
 
 #include "jit/MoveResolver.h"
 
+#include "mozilla/Attributes.h"
+
 #include "jit/MacroAssembler.h"
 #include "jit/RegisterSets.h"
 

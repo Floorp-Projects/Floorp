@@ -4390,21 +4390,21 @@
     "description": "THUMBNAILS: Thumbnail found"
   },
   "FX_MIGRATION_ENTRY_POINT": {
-    "expires_in_version": "49",
+    "expires_in_version": "53",
     "kind": "enumerated",
     "n_values": 10,
     "releaseChannelCollection": "opt-out",
     "description": "Where the migration wizard was entered from. 0=Other/catch-all, 1=first-run, 2=refresh-firefox, 3=Places window, 4=Password manager"
   },
   "FX_MIGRATION_SOURCE_BROWSER": {
-    "expires_in_version": "49",
+    "expires_in_version": "53",
     "kind": "enumerated",
     "n_values": 15,
     "releaseChannelCollection": "opt-out",
     "description": "The browser that data is pulled from. The values correspond to the internal browser ID (see MigrationUtils.jsm)"
   },
   "FX_MIGRATION_ERRORS": {
-    "expires_in_version": "49",
+    "expires_in_version": "53",
     "kind": "enumerated",
     "keyed": true,
     "n_values": 12,
@@ -4412,7 +4412,7 @@
     "description": "Errors encountered during migration in buckets defined by the datatype, keyed by the string description of the browser."
   },
   "FX_MIGRATION_USAGE": {
-    "expires_in_version": "49",
+    "expires_in_version": "53",
     "kind": "enumerated",
     "keyed": true,
     "n_values": 12,
@@ -4420,11 +4420,29 @@
     "description": "Usage of migration for each datatype when migration is run through the post-firstrun flow which allows individual datatypes, keyed by the string description of the browser."
   },
   "FX_MIGRATION_HOMEPAGE_IMPORTED": {
-    "expires_in_version": "49",
+    "expires_in_version": "53",
     "kind": "boolean",
     "keyed": true,
     "releaseChannelCollection": "opt-out",
     "description": "Whether the homepage was imported during browser migration. Only available on release builds during firstrun."
+  },
+  "FX_STARTUP_MIGRATION_BROWSER_COUNT": {
+    "bug_numbers": [1275114],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "53",
+    "kind": "enumerated",
+    "n_values": 15,
+    "releaseChannelCollection": "opt-out",
+    "description": "Number of browsers from which the user could migrate on initial profile migration. Only available on release builds during firstrun."
+  },
+  "FX_STARTUP_MIGRATION_EXISTING_DEFAULT_BROWSER": {
+    "bug_numbers": [1275114],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "53",
+    "kind": "enumerated",
+    "n_values": 15,
+    "releaseChannelCollection": "opt-out",
+    "description": "The browser that was the default on the initial profile migration. The values correspond to the internal browser ID (see MigrationUtils.jsm)"
   },
   "INPUT_EVENT_RESPONSE_MS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
@@ -8935,14 +8953,6 @@
     "kind": "boolean",
     "description": "Whether the e10s pref was set but it was blocked from running due to blacklisted conditions"
   },
-  "E10S_ADDONS_BLOCKER_RAN": {
-    "alert_emails": ["firefox-dev@mozilla.org"],
-    "expires_in_version": "49",
-    "kind": "flag",
-    "releaseChannelCollection": "opt-out",
-    "bug_numbers": [1248796],
-    "description": "Whether the code to block e10s for add-ons users was called"
-  },
   "BLOCKED_ON_PLUGIN_MODULE_INIT_MS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "expires_in_version": "never",
@@ -9012,6 +9022,15 @@
     "keyed": true,
     "releaseChannelCollection": "opt-out",
     "description": "Counts of plugin and content process crashes which are reported with a crash dump."
+  },
+  "SUBPROCESS_LAUNCH_FAILURE": {
+    "alert_emails": ["haftandilian@mozilla.com"],
+    "expires_in_version": "never",
+    "bug_numbers": [1275430],
+    "kind": "count",
+    "keyed": true,
+    "releaseChannelCollection": "opt-out",
+    "description": "Counts the number of times launching a subprocess fails. Counts are by subprocess-type using the GeckoProcessType enum."
   },
   "PROCESS_CRASH_SUBMIT_ATTEMPT": {
     "expires_in_version": "never",
@@ -10739,15 +10758,16 @@
     "keyed": true,
     "description": "Measures the size of IPC messages by message name"
   },
-  "MESSAGE_MANAGER_MESSAGE_SIZE": {
-    "alert_emails": ["wmccloskey@mozilla.com"],
+  "MESSAGE_MANAGER_MESSAGE_SIZE2": {
+    "alert_emails": ["wmccloskey@mozilla.com","amccreight@mozilla.com"],
     "bug_numbers": [1260908],
     "expires_in_version": "55",
     "kind": "exponential",
+    "low": 8192,
     "high": 8000000,
     "n_buckets": 50,
     "keyed": true,
-    "description": "Measures the size of message manager messages by message name"
+    "description": "Each key is the message name, with digits removed, from an async message manager message that was larger than 8192 bytes, recorded in the sending process at the time of sending."
   },
   "SANDBOX_BROKER_INITIALIZED": {
     "alert_emails": ["bowen@mozilla.com"],

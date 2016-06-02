@@ -672,7 +672,8 @@ child:
     /**
      * Send a Push error message to all service worker clients in the child.
      */
-    async PushError(nsCString scope, nsString message, uint32_t flags);
+    async PushError(nsCString scope, Principal principal, nsString message,
+                    uint32_t flags);
 
     /**
      * Windows specific: associate this content process with the browsers
@@ -1198,15 +1199,15 @@ parent:
     async NotifyPushSubscriptionChangeObservers(nsCString scope,
                                                 Principal principal);
 
-    /**
-     * Notify `push-subscription-modified` observers in the parent.
-     */
-    async NotifyPushSubscriptionModifiedObservers(nsCString scope,
-                                                  Principal principal);
-
 both:
      async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
                         Principal aPrincipal, ClonedMessageData aData);
+
+    /**
+     * Notify `push-subscription-modified` observers in the parent and child.
+     */
+    async NotifyPushSubscriptionModifiedObservers(nsCString scope,
+                                                  Principal principal);
 };
 
 }

@@ -7,6 +7,7 @@
 #ifndef jit_JitAllocPolicy_h
 #define jit_JitAllocPolicy_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/GuardObjects.h"
 #include "mozilla/TypeTraits.h"
 
@@ -59,6 +60,10 @@ class TempAllocator
             return nullptr;
         return p;
     }
+
+    // View this allocator as a fallible allocator.
+    struct Fallible { TempAllocator& alloc; };
+    Fallible fallible() { return { *this }; }
 
     LifoAlloc* lifoAlloc()
     {
@@ -145,6 +150,9 @@ class AutoJitContextAlloc
 
 struct TempObject
 {
+    inline void* operator new(size_t nbytes, TempAllocator::Fallible view) noexcept {
+        return view.alloc.allocate(nbytes);
+    }
     inline void* operator new(size_t nbytes, TempAllocator& alloc) {
         return alloc.allocateInfallible(nbytes);
     }
@@ -173,7 +181,7 @@ class TempObjectPool
     T* allocate() {
         MOZ_ASSERT(alloc_);
         if (freed_.empty())
-            return new(*alloc_) T();
+            return new(alloc_->fallible()) T();
         return freed_.popFront();
     }
     void free(T* obj) {

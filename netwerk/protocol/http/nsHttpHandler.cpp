@@ -54,6 +54,7 @@
 #include "nsComponentManagerUtils.h"
 #include "nsSocketTransportService2.h"
 #include "nsIOService.h"
+#include "nsIUUIDGenerator.h"
 
 #include "mozilla/net/NeckoChild.h"
 #include "mozilla/net/NeckoParent.h"
@@ -1895,7 +1896,7 @@ nsHttpHandler::SetAcceptEncodings(const char *aAcceptEncodings, bool isSecure)
             mHttpsAcceptEncodings = aAcceptEncodings;
         }
     }
-      
+
     return NS_OK;
 }
 
@@ -2033,7 +2034,11 @@ nsHttpHandler::NewProxiedChannel2(nsIURI *uri,
         net_EnsurePSMInit();
     }
 
-    rv = httpChannel->Init(uri, caps, proxyInfo, proxyResolveFlags, proxyURI);
+    nsID channelId;
+    rv = NewChannelId(&channelId);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = httpChannel->Init(uri, caps, proxyInfo, proxyResolveFlags, proxyURI, channelId);
     if (NS_FAILED(rv))
         return rv;
 
@@ -2437,6 +2442,19 @@ nsHttpHandler::ShutdownConnectionManager()
     if (mConnMgr) {
         mConnMgr->Shutdown();
     }
+}
+
+nsresult
+nsHttpHandler::NewChannelId(nsID *channelId)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  if (!mUUIDGen) {
+    nsresult rv;
+    mUUIDGen = do_GetService("@mozilla.org/uuid-generator;1", &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+
+  return mUUIDGen->GenerateUUIDInPlace(channelId);
 }
 
 } // namespace net

@@ -21,6 +21,7 @@ InternalResponse::InternalResponse(uint16_t aStatus, const nsACString& aStatusTe
   , mStatus(aStatus)
   , mStatusText(aStatusText)
   , mHeaders(new InternalHeaders(HeadersGuardEnum::Response))
+  , mBodySize(UNKNOWN_BODY_SIZE)
 {
 }
 
