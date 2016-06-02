@@ -708,7 +708,7 @@ def main():
                        no_setuptools=options.no_setuptools,
                        no_pip=options.no_pip,
                        no_wheel=options.no_wheel,
-                       symlink=options.symlink)
+                       symlink=options.symlink and hasattr(os, 'symlink')) # MOZ: Make sure we don't use symlink when we don't have it
     if 'after_install' in globals():
         after_install(options, home_dir)
 
