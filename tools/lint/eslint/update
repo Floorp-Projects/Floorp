@@ -1,5 +1,5 @@
 #!/bin/sh
-# Force the scripts working directory to be projdir/testing/eslint.
+# Force the scripts working directory to be projdir/tools/lint/eslint.
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 cd $DIR
 
@@ -55,7 +55,7 @@ rm manifest.tt
 ./tooltool.py add --visibility public eslint.tar.gz
 
 echo "Uploading eslint.tar.gz to tooltool..."
-./tooltool.py upload --authentication-file=~/.tooltool-token --message "node_modules folder update for testing/eslint"
+./tooltool.py upload --authentication-file=~/.tooltool-token --message "node_modules folder update for tools/lint/eslint"
 
 echo "Cleaning up..."
 rm eslint.tar.gz
