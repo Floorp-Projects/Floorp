@@ -13,7 +13,6 @@
 
 #include "mozilla/dom/nsSynthVoiceRegistry.h"
 #include "mozilla/dom/nsSpeechTask.h"
-#include "mozilla/dom/SpeechSynthesisErrorEvent.h"
 #include "mozilla/Preferences.h"
 
 namespace mozilla {
@@ -132,13 +131,9 @@ SapiCallback::OnSpeechEvent(const SPEVENT& speechEvent)
     break;
   case SPEI_END_INPUT_STREAM:
     if (mSpeakTextLen) {
-      // mSpeakTextLen will be > 0 on any utterance except a cancel utterance.
       mCurrentIndex = mSpeakTextLen;
-      mTask->DispatchEnd(GetTickCount() - mStartingTime, mCurrentIndex);
-    } else {
-      mTask->DispatchError(GetTickCount() - mStartingTime, mCurrentIndex,
-        uint32_t(SpeechSynthesisErrorCode::Interrupted));
     }
+    mTask->DispatchEnd(GetTickCount() - mStartingTime, mCurrentIndex);
     mTask = nullptr;
     break;
   case SPEI_TTS_BOOKMARK:

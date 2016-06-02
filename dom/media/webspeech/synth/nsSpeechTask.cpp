@@ -411,7 +411,7 @@ nsSpeechTask::DispatchEndImpl(float aElapsedTime, uint32_t aCharIndex)
   DestroyAudioChannelAgent();
 
   MOZ_ASSERT(mUtterance);
-  if(NS_WARN_IF(mUtterance->mState != SpeechSynthesisUtterance::STATE_SPEAKING)) {
+  if(NS_WARN_IF(mUtterance->mState == SpeechSynthesisUtterance::STATE_ENDED)) {
     return NS_ERROR_NOT_AVAILABLE;
   }
 
@@ -426,10 +426,14 @@ nsSpeechTask::DispatchEndImpl(float aElapsedTime, uint32_t aCharIndex)
     mSpeechSynthesis->OnEnd(this);
   }
 
-  utterance->mState = SpeechSynthesisUtterance::STATE_ENDED;
-  utterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("end"),
-                                          aCharIndex, aElapsedTime,
-                                          EmptyString());
+  if (utterance->mState == SpeechSynthesisUtterance::STATE_PENDING) {
+    utterance->mState = SpeechSynthesisUtterance::STATE_NONE;
+  } else {
+    utterance->mState = SpeechSynthesisUtterance::STATE_ENDED;
+    utterance->DispatchSpeechSynthesisEvent(NS_LITERAL_STRING("end"),
+                                            aCharIndex, aElapsedTime,
+                                            EmptyString());
+  }
 
   return NS_OK;
 }
@@ -509,12 +513,6 @@ nsSpeechTask::DispatchError(float aElapsedTime, uint32_t aCharIndex, uint32_t aE
     return NS_ERROR_FAILURE;
   }
 
-  return DispatchErrorInner(aElapsedTime, aCharIndex, aError);
-}
-
-nsresult
-nsSpeechTask::DispatchErrorInner(float aElapsedTime, uint32_t aCharIndex, uint32_t aError)
-{
   if (!mPreCanceled) {
     nsSynthVoiceRegistry::GetInstance()->SpeakNext();
   }
@@ -534,12 +532,9 @@ nsSpeechTask::DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex, uint32_
     mSpeechSynthesis->OnEnd(this);
   }
 
-  RefPtr<SpeechSynthesisUtterance> utterance = mUtterance;
-  utterance->mState = (utterance->mState == SpeechSynthesisUtterance::STATE_SPEAKING) ?
-    SpeechSynthesisUtterance::STATE_ENDED : SpeechSynthesisUtterance::STATE_NONE;
-  utterance->DispatchSpeechSynthesisErrorEvent(aCharIndex, aElapsedTime,
-                                               SpeechSynthesisErrorCode(aError));
-
+  mUtterance->mState = SpeechSynthesisUtterance::STATE_ENDED;
+  mUtterance->DispatchSpeechSynthesisErrorEvent(aCharIndex, aElapsedTime,
+                                                SpeechSynthesisErrorCode(aError));
   return NS_OK;
 }
 
@@ -665,8 +660,7 @@ nsSpeechTask::Cancel()
   }
 
   if (!mIndirectAudio) {
-    DispatchErrorInner(GetCurrentTime(), GetCurrentCharOffset(),
-                       uint32_t(SpeechSynthesisErrorCode::Interrupted));
+    DispatchEndInner(GetCurrentTime(), GetCurrentCharOffset());
   }
 }
 
