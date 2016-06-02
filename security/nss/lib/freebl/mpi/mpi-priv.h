@@ -95,61 +95,19 @@ extern const float s_logv_2[];
 
 /* {{{ private function declarations */
 
-/* 
-   If MP_MACRO is false, these will be defined as actual functions;
-   otherwise, suitable macro definitions will be used.  This works
-   around the fact that ANSI C89 doesn't support an 'inline' keyword
-   (although I hear C9x will ... about bloody time).  At present, the
-   macro definitions are identical to the function bodies, but they'll
-   expand in place, instead of generating a function call.
+void     s_mp_setz(mp_digit *dp, mp_size count); /* zero digits           */
+void     s_mp_copy(const mp_digit *sp, mp_digit *dp, mp_size count); /* copy */
+void    *s_mp_alloc(size_t nb, size_t ni);       /* general allocator     */
+void     s_mp_free(void *ptr);                   /* general free function */
 
-   I chose these particular functions to be made into macros because
-   some profiling showed they are called a lot on a typical workload,
-   and yet they are primarily housekeeping.
- */
-#if MP_MACRO == 0
- void     s_mp_setz(mp_digit *dp, mp_size count); /* zero digits           */
- void     s_mp_copy(const mp_digit *sp, mp_digit *dp, mp_size count); /* copy */
- void    *s_mp_alloc(size_t nb, size_t ni);       /* general allocator     */
- void     s_mp_free(void *ptr);                   /* general free function */
 extern unsigned long mp_allocs;
 extern unsigned long mp_frees;
 extern unsigned long mp_copies;
-#else
-
- /* Even if these are defined as macros, we need to respect the settings
-    of the MP_MEMSET and MP_MEMCPY configuration options...
-  */
- #if MP_MEMSET == 0
-  #define  s_mp_setz(dp, count) \
-       {int ix;for(ix=0;ix<(count);ix++)(dp)[ix]=0;}
- #else
-  #define  s_mp_setz(dp, count) memset(dp, 0, (count) * sizeof(mp_digit))
- #endif /* MP_MEMSET */
-
- #if MP_MEMCPY == 0
-  #define  s_mp_copy(sp, dp, count) \
-       {int ix;for(ix=0;ix<(count);ix++)(dp)[ix]=(sp)[ix];}
- #else
-  #define  s_mp_copy(sp, dp, count) memcpy(dp, sp, (count) * sizeof(mp_digit))
- #endif /* MP_MEMCPY */
-
- #define  s_mp_alloc(nb, ni)  calloc(nb, ni)
- #define  s_mp_free(ptr) {if(ptr) free(ptr);}
-#endif /* MP_MACRO */
 
 mp_err   s_mp_grow(mp_int *mp, mp_size min);   /* increase allocated size */
 mp_err   s_mp_pad(mp_int *mp, mp_size min);    /* left pad with zeroes    */
 
-#if MP_MACRO == 0
- void     s_mp_clamp(mp_int *mp);               /* clip leading zeroes     */
-#else
- #define  s_mp_clamp(mp)\
-  { mp_size used = MP_USED(mp); \
-    while (used > 1 && DIGIT(mp, used - 1) == 0) --used; \
-    MP_USED(mp) = used; \
-  } 
-#endif /* MP_MACRO */
+void     s_mp_clamp(mp_int *mp);               /* clip leading zeroes     */
 
 void     s_mp_exch(mp_int *a, mp_int *b);      /* swap a and b in place   */
 

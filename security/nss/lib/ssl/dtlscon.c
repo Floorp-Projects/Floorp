@@ -32,15 +32,11 @@ static const PRUint16 COMMON_MTU_VALUES[] = {
 
 /* List copied from ssl3con.c:cipherSuites */
 static const ssl3CipherSuite nonDTLSSuites[] = {
-#ifndef NSS_DISABLE_ECC
     TLS_ECDHE_ECDSA_WITH_RC4_128_SHA,
     TLS_ECDHE_RSA_WITH_RC4_128_SHA,
-#endif /* NSS_DISABLE_ECC */
     TLS_DHE_DSS_WITH_RC4_128_SHA,
-#ifndef NSS_DISABLE_ECC
     TLS_ECDH_RSA_WITH_RC4_128_SHA,
     TLS_ECDH_ECDSA_WITH_RC4_128_SHA,
-#endif /* NSS_DISABLE_ECC */
     TLS_RSA_WITH_RC4_128_MD5,
     TLS_RSA_WITH_RC4_128_SHA,
     TLS_RSA_EXPORT1024_WITH_RC4_56_SHA,
@@ -346,7 +342,8 @@ dtls_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
                 ss->ssl3.hs.rtTimeoutMs = DTLS_RETRANSMIT_INITIAL_MS;
             }
 
-            rv = ssl3_HandleHandshakeMessage(ss, buf.buf, ss->ssl3.hs.msg_len);
+            rv = ssl3_HandleHandshakeMessage(ss, buf.buf, ss->ssl3.hs.msg_len,
+                                             buf.len == fragment_length);
             if (rv == SECFailure) {
                 /* Do not attempt to process rest of messages in this record */
                 break;
@@ -357,8 +354,7 @@ dtls_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
                  * in a waiting state. */
                 rv = dtls_RetransmitDetected(ss);
                 break;
-            }
-            else if (message_seq > ss->ssl3.hs.recvMessageSeq) {
+            } else if (message_seq > ss->ssl3.hs.recvMessageSeq) {
                 /* Case 2
                  *
                  * Ignore this message. This means we don't handle out of
@@ -453,9 +449,10 @@ dtls_HandleHandshake(sslSocket *ss, sslBuffer *origBuf)
                 if (ss->ssl3.hs.recvdHighWater == ss->ssl3.hs.msg_len) {
                     ss->ssl3.hs.recvdHighWater = -1;
 
-                    rv = ssl3_HandleHandshakeMessage(ss,
-                                                     ss->ssl3.hs.msg_body.buf,
-                                                     ss->ssl3.hs.msg_len);
+                    rv = ssl3_HandleHandshakeMessage(
+                        ss,
+                        ss->ssl3.hs.msg_body.buf, ss->ssl3.hs.msg_len,
+                        buf.len == fragment_length);
                     if (rv == SECFailure)
                         break; /* Skip rest of record */
 

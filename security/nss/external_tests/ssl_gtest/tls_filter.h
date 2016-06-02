@@ -194,7 +194,7 @@ class TlsExtensionFilter : public TlsHandshakeFilter {
  public:
   static bool FindClientHelloExtensions(TlsParser* parser,
                                         const Versioned& header);
-  static bool FindServerHelloExtensions(TlsParser* parser, uint16_t version);
+  static bool FindServerHelloExtensions(TlsParser* parser);
 
  private:
   PacketFilter::Action FilterExtensions(TlsParser* parser,

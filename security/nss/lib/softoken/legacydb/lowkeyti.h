@@ -45,7 +45,6 @@ extern const SEC_ASN1Template lg_nsslowkey_DHPrivateKeyTemplate[];
 extern const SEC_ASN1Template lg_nsslowkey_DHPrivateKeyExportTemplate[];
 #ifndef NSS_DISABLE_ECC
 #define NSSLOWKEY_EC_PRIVATE_KEY_VERSION   1  /* as per SECG 1 C.4 */
-extern const SEC_ASN1Template lg_nsslowkey_ECParamsTemplate[];
 extern const SEC_ASN1Template lg_nsslowkey_ECPrivateKeyTemplate[];
 #endif /* NSS_DISABLE_ECC */
 
