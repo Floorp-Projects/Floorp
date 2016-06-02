@@ -11,7 +11,6 @@
 #include "nsThreadUtils.h"
 #include "mozilla/dom/nsSynthVoiceRegistry.h"
 #include "mozilla/dom/nsSpeechTask.h"
-#include "mozilla/dom/SpeechSynthesisErrorEvent.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Assertions.h"
 #include "OSXSpeechSynthesizerService.h"
@@ -154,10 +153,7 @@ SpeechTaskCallback::OnError(uint32_t aIndex)
   if (!mTask) {
     return;
   }
-
-  // XXX: Provide more specific error messages
-  mTask->DispatchError(GetTimeDurationFromStart(), aIndex,
-    uint32_t(dom::SpeechSynthesisErrorCode::Synthesis_failed));
+  mTask->DispatchError(GetTimeDurationFromStart(), aIndex);
 }
 
 void

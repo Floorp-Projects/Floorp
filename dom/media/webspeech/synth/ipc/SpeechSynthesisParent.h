@@ -90,7 +90,7 @@ public:
 
   nsresult DispatchResumeImpl(float aElapsedTime, uint32_t aCharIndex);
 
-  nsresult DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex, uint32_t aError);
+  nsresult DispatchErrorImpl(float aElapsedTime, uint32_t aCharIndex);
 
   nsresult DispatchBoundaryImpl(const nsAString& aName,
                                 float aElapsedTime, uint32_t aCharIndex);
