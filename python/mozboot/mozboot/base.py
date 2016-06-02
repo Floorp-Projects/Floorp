@@ -326,7 +326,7 @@ class BaseBootstrapper(object):
         if modern:
             print('Your version of Mercurial (%s) is sufficiently modern.' %
                   version)
-            return
+            return installed, modern
 
         self._ensure_package_manager_updated()
 
@@ -340,12 +340,14 @@ class BaseBootstrapper(object):
             print('You do not have Mercurial installed')
 
         if self.upgrade_mercurial(version) is False:
-            return
+            return installed, modern
 
         installed, modern, after = self.is_mercurial_modern()
 
         if installed and not modern:
             print(MERCURIAL_UPGRADE_FAILED % (MODERN_MERCURIAL_VERSION, after))
+
+        return installed, modern
 
     def upgrade_mercurial(self, current):
         """Upgrade Mercurial.
