@@ -330,7 +330,16 @@ BytecodeEmitter::emitN(JSOp op, size_t extra, ptrdiff_t* offset)
 bool
 BytecodeEmitter::emitJumpTarget(JumpTarget* target)
 {
-    target->offset = offset();
+    ptrdiff_t off = offset();
+
+    // Alias consecutive jump targets.
+    if (off == current->lastTarget.offset + ptrdiff_t(JSOP_JUMPTARGET_LENGTH)) {
+        target->offset = current->lastTarget.offset;
+        return true;
+    }
+
+    target->offset = off;
+    current->lastTarget.offset = off;
     if (!emit1(JSOP_JUMPTARGET))
         return false;
     return true;
@@ -3501,7 +3510,7 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
     }
 
     // Set the SRC_SWITCH note's offset operand to tell end of switch.
-    if (!setSrcNoteOffset(noteIndex, 0, offset() - top.offset))
+    if (!setSrcNoteOffset(noteIndex, 0, lastNonJumpTargetOffset() - top.offset))
         return false;
 
     if (switchOp == JSOP_TABLESWITCH) {
@@ -7980,7 +7989,7 @@ BytecodeEmitter::emitLabeledStatement(const LabeledStatement* pn)
         return false;
 
     /* Patch the JSOP_LABEL offset. */
-    JumpTarget brk{ offset() };
+    JumpTarget brk{ lastNonJumpTargetOffset() };
     patchJumpsToTarget(top, brk);
 
     if (!popStatement())
