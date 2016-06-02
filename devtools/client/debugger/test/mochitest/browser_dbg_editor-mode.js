@@ -15,7 +15,7 @@ var gEditor, gSources;
 
 function test() {
   let options = {
-    source: "code_script-switching-01.js?a=b",
+    source: EXAMPLE_URL + "code_script-switching-01.js?a=b",
     line: 1
   };
   initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
