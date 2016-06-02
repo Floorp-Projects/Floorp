@@ -626,6 +626,9 @@ AudioCallbackDriver::Init()
                           mGraphImpl->mOutputWanted ? &output : nullptr, latency,
                           DataCallback_s, StateCallback_s, this) == CUBEB_OK) {
       mAudioStream.own(stream);
+      int rv = cubeb_stream_set_volume(mAudioStream, CubebUtils::GetVolumeScale());
+      NS_WARN_IF_FALSE(rv == CUBEB_OK,
+          "Could not set the audio stream volume in GraphDriver.cpp");
     } else {
 #ifdef MOZ_WEBRTC
       StaticMutexAutoUnlock unlock(AudioInputCubeb::Mutex());
