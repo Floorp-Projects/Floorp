@@ -50,6 +50,7 @@ public class BrowserContract {
     public static final String PARAM_IS_TEST = "test";
     public static final String PARAM_INSERT_IF_NEEDED = "insert_if_needed";
     public static final String PARAM_INCREMENT_VISITS = "increment_visits";
+    public static final String PARAM_INCREMENT_REMOTE_AGGREGATES = "increment_remote_aggregates";
     public static final String PARAM_EXPIRE_PRIORITY = "priority";
     public static final String PARAM_DATASET_ID = "dataset_id";
     public static final String PARAM_GROUP_BY = "group_by";
@@ -162,6 +163,11 @@ public class BrowserContract {
     public interface HistoryColumns {
         public static final String DATE_LAST_VISITED = "date";
         public static final String VISITS = "visits";
+        // Aggregates used to speed up top sites and search frecency-powered queries
+        public static final String LOCAL_VISITS = "visits_local";
+        public static final String REMOTE_VISITS = "visits_remote";
+        public static final String LOCAL_DATE_LAST_VISITED = "date_local";
+        public static final String REMOTE_DATE_LAST_VISITED = "date_remote";
     }
 
     @RobocopTarget

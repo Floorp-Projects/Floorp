@@ -46,13 +46,18 @@ public class BrowserProviderHistoryVisitsTestBase {
     }
 
     protected Uri insertHistoryItem(String url, String guid) throws RemoteException {
-        return insertHistoryItem(url, guid, System.currentTimeMillis());
+        return insertHistoryItem(url, guid, System.currentTimeMillis(), null);
     }
 
-    protected Uri insertHistoryItem(String url, String guid, Long lastVisited) throws RemoteException {
+    protected Uri insertHistoryItem(String url, String guid, Long lastVisited, Integer visitCount) throws RemoteException {
         ContentValues historyItem = new ContentValues();
         historyItem.put(BrowserContract.History.URL, url);
-        historyItem.put(BrowserContract.History.GUID, guid);
+        if (guid != null) {
+            historyItem.put(BrowserContract.History.GUID, guid);
+        }
+        if (visitCount != null) {
+            historyItem.put(BrowserContract.History.VISITS, visitCount);
+        }
         historyItem.put(BrowserContract.History.DATE_LAST_VISITED, lastVisited);
 
         return historyClient.insert(historyTestUri, historyItem);

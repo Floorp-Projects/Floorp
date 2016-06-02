@@ -9,8 +9,6 @@ import android.Manifest;
 import android.app.DownloadManager;
 import android.os.Environment;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.WorkerThread;
 import org.json.JSONArray;
 import org.mozilla.gecko.adjust.AdjustHelperInterface;
 import org.mozilla.gecko.annotation.RobocopTarget;
@@ -79,10 +77,8 @@ import org.mozilla.gecko.tabs.TabHistoryFragment;
 import org.mozilla.gecko.tabs.TabHistoryPage;
 import org.mozilla.gecko.tabs.TabsPanel;
 import org.mozilla.gecko.telemetry.TelemetryUploadService;
+import org.mozilla.gecko.telemetry.TelemetryCorePingDelegate;
 import org.mozilla.gecko.telemetry.measurements.SearchCountMeasurements;
-import org.mozilla.gecko.telemetry.TelemetryDispatcher;
-import org.mozilla.gecko.telemetry.UploadTelemetryCorePingCallback;
-import org.mozilla.gecko.telemetry.measurements.SessionMeasurements;
 import org.mozilla.gecko.toolbar.AutocompleteHandler;
 import org.mozilla.gecko.toolbar.BrowserToolbar;
 import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
@@ -312,14 +308,12 @@ public class BrowserApp extends GeckoApp
             (BrowserAppDelegate) new ScreenshotDelegate(),
             (BrowserAppDelegate) new BookmarkStateChangeDelegate(),
             (BrowserAppDelegate) new ReaderViewBookmarkPromotion(),
-            (BrowserAppDelegate) new ContentNotificationsDelegate()
+            (BrowserAppDelegate) new ContentNotificationsDelegate(),
+            new TelemetryCorePingDelegate()
     ));
 
     @NonNull
     private SearchEngineManager mSearchEngineManager; // Contains reference to Context - DO NOT LEAK!
-
-    private TelemetryDispatcher mTelemetryDispatcher; // lazy.
-    private final SessionMeasurements mSessionMeasurements = new SessionMeasurements();
 
     private boolean mHasResumed;
 
@@ -1004,7 +998,6 @@ public class BrowserApp extends GeckoApp
 
         // Needed for Adjust to get accurate session measurements
         AdjustConstants.getAdjustHelper().onResume();
-        mSessionMeasurements.recordSessionStart();
 
         if (!mHasResumed) {
             EventDispatcher.getInstance().unregisterGeckoThreadListener((GeckoEventListener) this,
@@ -1028,10 +1021,6 @@ public class BrowserApp extends GeckoApp
 
         // Needed for Adjust to get accurate session measurements
         AdjustConstants.getAdjustHelper().onPause();
-
-        // onStart/onStop is ideal over onResume/onPause. However, onStop is not guaranteed to be called and
-        // dealing with that possibility adds a lot of complexity that we don't want to handle at this point.
-        mSessionMeasurements.recordSessionEnd(this);
 
         if (mHasResumed) {
             // Register for Prompt:ShowTop so we can foreground this activity even if it's hidden.
@@ -1085,15 +1074,6 @@ public class BrowserApp extends GeckoApp
                 FileCleanupController.startIfReady(BrowserApp.this, sharedPrefs, profile.getDir().getAbsolutePath());
             }
         });
-
-        // We don't upload in onCreate because that's only called when the Activity needs to be instantiated
-        // and it's possible the system will never free the Activity from memory.
-        //
-        // We don't upload in onResume/onPause because that will be called each time the Activity is obscured,
-        // including by our own Activities/dialogs, and there is no reason to upload each time we're unobscured.
-        //
-        // So we're left with onStart/onStop.
-        mSearchEngineManager.getEngine(new UploadTelemetryCorePingCallback(BrowserApp.this));
 
         for (final BrowserAppDelegate delegate : delegates) {
             delegate.onStart(this);
@@ -3923,16 +3903,8 @@ public class BrowserApp extends GeckoApp
     @Override
     public int getLayout() { return R.layout.gecko_app; }
 
-    @WorkerThread // via constructor
-    public TelemetryDispatcher getTelemetryDispatcher() {
-        if (mTelemetryDispatcher == null) {
-            mTelemetryDispatcher = new TelemetryDispatcher(getProfile().getDir().getAbsolutePath());
-        }
-        return mTelemetryDispatcher;
-    }
-
-    public SessionMeasurements getSessionMeasurementDelegate() {
-        return mSessionMeasurements;
+    public SearchEngineManager getSearchEngineManager() {
+        return mSearchEngineManager;
     }
 
     // For use from tests only.

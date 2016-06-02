@@ -39,17 +39,12 @@ public class AndroidBrowserHistoryDataAccessor extends
     cv.put(BrowserContract.History.URL, rec.histURI);
     if (rec.visits != null) {
       JSONArray visits = rec.visits;
-      long mostRecent = 0;
-      for (int i = 0; i < visits.size(); i++) {
-        JSONObject visit = (JSONObject) visits.get(i);
-        long visitDate = (Long) visit.get(VisitsHelper.SYNC_DATE_KEY);
-        if (visitDate > mostRecent) {
-          mostRecent = visitDate;
-        }
-      }
+      long mostRecent = getLastVisited(visits);
+
       // Fennec stores history timestamps in milliseconds, and visit timestamps in microseconds.
       // The rest of Sync works in microseconds. This is the conversion point for records coming form Sync.
       cv.put(BrowserContract.History.DATE_LAST_VISITED, mostRecent / 1000);
+      cv.put(BrowserContract.History.REMOTE_DATE_LAST_VISITED, mostRecent / 1000);
       cv.put(BrowserContract.History.VISITS, Long.toString(visits.size()));
     }
     return cv;
@@ -140,16 +135,54 @@ public class AndroidBrowserHistoryDataAccessor extends
                    size     + " records; continuing to update visits.");
     }
 
+    final ContentValues remoteVisitAggregateValues = new ContentValues();
+    final Uri historyIncrementRemoteAggregateUri = getUri().buildUpon()
+            .appendQueryParameter(BrowserContract.PARAM_INCREMENT_REMOTE_AGGREGATES, "true")
+            .build();
     for (Record record : records) {
       HistoryRecord rec = (HistoryRecord) record;
       if (rec.visits != null && rec.visits.size() != 0) {
-        context.getContentResolver().bulkInsert(
+        int remoteVisitsInserted = context.getContentResolver().bulkInsert(
                 BrowserContract.Visits.CONTENT_URI,
                 VisitsHelper.getVisitsContentValues(rec.guid, rec.visits)
         );
+
+        // If we just inserted any visits, update remote visit aggregate values.
+        // While inserting visits, we might not insert all of rec.visits - if we already have a local
+        // visit record with matching (guid,date), we will skip that visit.
+        // Remote visits aggregate value will be incremented by number of visits inserted.
+        // Note that we don't need to set REMOTE_DATE_LAST_VISITED, because it already gets set above.
+        if (remoteVisitsInserted > 0) {
+          // Note that REMOTE_VISITS must be set before calling cr.update(...) with a URI
+          // that has PARAM_INCREMENT_REMOTE_AGGREGATES=true.
+          remoteVisitAggregateValues.put(BrowserContract.History.REMOTE_VISITS, remoteVisitsInserted);
+          context.getContentResolver().update(
+                  historyIncrementRemoteAggregateUri,
+                  remoteVisitAggregateValues,
+                  BrowserContract.History.GUID + " = ?", new String[] {rec.guid}
+          );
+        }
       }
     }
 
     return inserted;
+  }
+
+  /**
+   * Helper method used to find largest <code>VisitsHelper.SYNC_DATE_KEY</code> value in a provided JSONArray.
+   *
+   * @param visits Array of objects which will be searched.
+   * @return largest value of <code>VisitsHelper.SYNC_DATE_KEY</code>.
+     */
+  private long getLastVisited(JSONArray visits) {
+    long mostRecent = 0;
+    for (int i = 0; i < visits.size(); i++) {
+      final JSONObject visit = (JSONObject) visits.get(i);
+      long visitDate = (Long) visit.get(VisitsHelper.SYNC_DATE_KEY);
+      if (visitDate > mostRecent) {
+        mostRecent = visitDate;
+      }
+    }
+    return mostRecent;
   }
 }
