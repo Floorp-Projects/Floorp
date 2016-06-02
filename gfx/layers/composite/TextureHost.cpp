@@ -17,6 +17,7 @@
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
 #include "mozilla/layers/TextureHostOGL.h"  // for TextureHostOGL
 #include "mozilla/layers/ImageDataSerializer.h"
+#include "mozilla/layers/TextureClient.h"
 #include "nsAString.h"
 #include "mozilla/RefPtr.h"                   // for nsRefPtr
 #include "nsPrintfCString.h"            // for nsPrintfCString
@@ -311,6 +312,7 @@ TextureHost::TextureHost(TextureFlags aFlags)
 
 TextureHost::~TextureHost()
 {
+  ReadUnlock();
   MOZ_COUNT_DTOR(TextureHost);
 }
 
@@ -500,6 +502,21 @@ BufferTextureHost::Unlock()
   mLocked = false;
 }
 
+void
+TextureHost::SetReadLock(already_AddRefed<TextureReadLock> aLock)
+{
+  mReadLock = aLock;
+}
+
+void
+TextureHost::ReadUnlock()
+{
+  if (mReadLock) {
+    mReadLock->ReadUnlock();
+    mReadLock = nullptr;
+  }
+}
+
 bool
 BufferTextureHost::EnsureWrappingTextureSource()
 {
@@ -631,6 +648,10 @@ BufferTextureHost::MaybeUpload(nsIntRegion *aRegion)
 
   if (!Upload(aRegion)) {
     return false;
+  }
+
+  if (mHasIntermediateBuffer) {
+    ReadUnlock();
   }
 
   // We no longer have an invalid region.

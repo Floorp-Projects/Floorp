@@ -46,6 +46,7 @@ class SurfaceDescriptor;
 class HostIPCAllocator;
 class ISurfaceAllocator;
 class TextureHostOGL;
+class TextureReadLock;
 class TextureSourceOGL;
 class TextureSourceD3D9;
 class TextureSourceD3D11;
@@ -574,6 +575,12 @@ public:
 
   virtual FenceHandle GetCompositorReleaseFence() { return FenceHandle(); }
 
+  void SetReadLock(already_AddRefed<TextureReadLock> aLock);
+
+  TextureReadLock* GetReadLock() { return mReadLock; }
+
+  void ReadUnlock();
+
 protected:
   FenceHandle mReleaseFenceHandle;
 
@@ -584,6 +591,7 @@ protected:
   virtual void UpdatedInternal(const nsIntRegion *Region) {}
 
   PTextureParent* mActor;
+  RefPtr<TextureReadLock> mReadLock;
   TextureFlags mFlags;
   int mCompositableCount;
 

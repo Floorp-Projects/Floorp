@@ -33,7 +33,7 @@ public:
 
   // TextureClientAllocator
   already_AddRefed<TextureClient> GetTextureClient() override;
-  void ReturnTextureClientDeferred(TextureClient* aClient, TextureReadLock* aLock) override {}
+  void ReturnTextureClientDeferred(TextureClient* aClient) override {}
   void ReportClientLost() override {}
 
   // ClientTiledLayerBuffer

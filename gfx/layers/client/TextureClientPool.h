@@ -34,7 +34,7 @@ public:
    * Return a TextureClient that is not yet ready to be reused, but will be
    * imminently.
    */
-  virtual void ReturnTextureClientDeferred(TextureClient *aClient, TextureReadLock* aLock) = 0;
+  virtual void ReturnTextureClientDeferred(TextureClient *aClient) = 0;
 
   virtual void ReportClientLost() = 0;
 };
@@ -72,7 +72,7 @@ public:
    * Return a TextureClient that is not yet ready to be reused, but will be
    * imminently.
    */
-  void ReturnTextureClientDeferred(TextureClient *aClient, TextureReadLock* aLock) override;
+  void ReturnTextureClientDeferred(TextureClient *aClient) override;
 
   /**
    * Attempt to shrink the pool so that there are no more than
@@ -141,21 +141,12 @@ private:
   /// existence is always mOutstandingClients + the size of mTextureClients.
   uint32_t mOutstandingClients;
 
-  struct TextureClientHolder {
-    RefPtr<TextureClient> mTextureClient;
-    RefPtr<TextureReadLock> mLock;
-
-    TextureClientHolder(TextureClient* aTextureClient, TextureReadLock* aLock)
-      : mTextureClient(aTextureClient), mLock(aLock)
-    {}
-  };
-
   // On b2g gonk, std::queue might be a better choice.
   // On ICS, fence wait happens implicitly before drawing.
   // Since JB, fence wait happens explicitly when fetching a client from the pool.
   std::stack<RefPtr<TextureClient> > mTextureClients;
 
-  std::list<TextureClientHolder> mTextureClientsDeferred;
+  std::list<RefPtr<TextureClient>> mTextureClientsDeferred;
   RefPtr<nsITimer> mTimer;
   RefPtr<CompositableForwarder> mSurfaceAllocator;
 };

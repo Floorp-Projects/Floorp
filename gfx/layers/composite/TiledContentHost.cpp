@@ -19,7 +19,7 @@
 #include "nsPoint.h"                    // for IntPoint
 #include "nsPrintfCString.h"            // for nsPrintfCString
 #include "nsRect.h"                     // for IntRect
-#include "mozilla/layers/TiledContentClient.h"
+#include "mozilla/layers/TextureClient.h"
 
 namespace mozilla {
 using namespace gfx;
@@ -186,15 +186,6 @@ UseTileTexture(CompositableTextureHostRef& aTexture,
   aTexture->PrepareTextureSource(aTextureSource);
 }
 
-bool
-GetCopyOnWriteLock(const TileLock& ipcLock, TileHost& aTile, ISurfaceAllocator* aAllocator) {
-  MOZ_ASSERT(aAllocator);
-
-  RefPtr<TextureReadLock> sharedLock = TextureReadLock::Open(ipcLock, aAllocator);
-  aTile.mSharedLock = sharedLock;
-  return !!sharedLock;
-}
-
 void
 TiledLayerBufferComposite::MarkTilesForUnlock()
 {
@@ -205,9 +196,9 @@ TiledLayerBufferComposite::MarkTilesForUnlock()
   for (TileHost& tile : mRetainedTiles) {
     // Tile with an internal buffer get unlocked as soon as we've uploaded,
     // so won't have a lock at this point.
-    if (tile.mTextureHost && tile.mSharedLock) {
-      mDelayedUnlocks.AppendElement(tile.mSharedLock);
-      tile.mSharedLock = nullptr;
+    if (tile.mTextureHost && tile.mTextureHost->GetReadLock()) {
+      mDelayedUnlocks.AppendElement(tile.mTextureHost->GetReadLock());
+      tile.mTextureHost->SetReadLock(nullptr);
     }
   }
 }
@@ -334,13 +325,14 @@ TiledLayerBufferComposite::UseTiles(const SurfaceDescriptorTiles& aTiles,
 
     const TexturedTileDescriptor& texturedDesc = tileDesc.get_TexturedTileDescriptor();
 
-    const TileLock& ipcLock = texturedDesc.sharedLock();
-    if (!GetCopyOnWriteLock(ipcLock, tile, aAllocator)) {
-      return false;
-    }
-
     tile.mTextureHost = TextureHost::AsTextureHost(texturedDesc.textureParent());
     tile.mTextureHost->SetCompositor(aCompositor);
+
+    tile.mTextureHost->SetReadLock(TextureReadLock::Open(texturedDesc.sharedLock(), aAllocator));
+
+    if (!tile.mTextureHost->GetReadLock()) {
+      return false;
+    }
 
     if (texturedDesc.textureOnWhite().type() == MaybeTexture::TPTextureParent) {
       tile.mTextureHostOnWhite =
