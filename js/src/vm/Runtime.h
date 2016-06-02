@@ -475,6 +475,10 @@ struct WellKnownSymbols
     const ImmutableSymbolPtr& get(JS::SymbolCode code) const {
         return get(size_t(code));
     }
+
+    WellKnownSymbols() {}
+    WellKnownSymbols(const WellKnownSymbols&) = delete;
+    WellKnownSymbols& operator=(const WellKnownSymbols&) = delete;
 };
 
 #define NAME_OFFSET(name)       offsetof(JSAtomState, name)
