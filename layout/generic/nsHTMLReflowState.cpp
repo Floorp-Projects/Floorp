@@ -161,7 +161,9 @@ nsCSSOffsetState::nsCSSOffsetState(nsIFrame *aFrame,
   MOZ_ASSERT(!aFrame->IsFlexOrGridItem(),
              "We're about to resolve percent margin & padding "
              "values against CB inline size, which is incorrect for "
-             "flex/grid items");
+             "flex/grid items. "
+             "Additionally for grid items, this path doesn't handle baseline "
+             "padding contribution - see nsCSSOffsetState::InitOffsets");
   LogicalSize cbSize(aContainingBlockWritingMode, aContainingBlockISize,
                      aContainingBlockISize);
   ReflowStateFlags flags;
@@ -2488,6 +2490,33 @@ nsCSSOffsetState::InitOffsets(WritingMode aWM,
   }
   else {
     needPaddingProp = ComputePadding(aWM, aPercentBasis, aFrameType);
+  }
+
+  // Add [align|justify]-content:baseline padding contribution.
+  typedef const FramePropertyDescriptor<SmallValueHolder<nscoord>>* Prop;
+  auto ApplyBaselinePadding = [this, &needPaddingProp]
+         (LogicalAxis aAxis, Prop aProp) {
+    bool found;
+    nscoord val = frame->Properties().Get(aProp, &found);
+    if (found) {
+      NS_ASSERTION(val != nscoord(0), "zero in this property is useless");
+      WritingMode wm = GetWritingMode();
+      LogicalSide side;
+      if (val > 0) {
+        side = MakeLogicalSide(aAxis, eLogicalEdgeStart);
+      } else {
+        side = MakeLogicalSide(aAxis, eLogicalEdgeEnd);
+        val = -val;
+      }
+      mComputedPadding.Side(wm.PhysicalSide(side)) += val;
+      needPaddingProp = true;
+    }
+  };
+  if (!aFlags.mUseAutoBSize) {
+    ApplyBaselinePadding(eLogicalAxisBlock, nsIFrame::BBaselinePadProperty());
+  }
+  if (!aFlags.mShrinkWrap) {
+    ApplyBaselinePadding(eLogicalAxisInline, nsIFrame::IBaselinePadProperty());
   }
 
   if (isThemed) {
