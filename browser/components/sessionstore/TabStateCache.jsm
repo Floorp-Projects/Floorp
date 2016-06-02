@@ -63,7 +63,7 @@ var TabStateCacheInternal = {
   /**
    * Helper function used by update (see below). For message size
    * optimization sometimes we don't update the whole session storage
-   * only the values those have been changed.
+   * only the values that have been changed.
    *
    * @param data (object)
    *        The cached data where we want to update the changes.
