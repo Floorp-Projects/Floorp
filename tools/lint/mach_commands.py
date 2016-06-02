@@ -81,6 +81,11 @@ class MachCommands(MachCommandBase):
     @CommandArgument(
         '-f', '--format', dest='fmt', default='stylish',
         help="Formatter to use. Defaults to 'stylish'.")
+    @CommandArgument(
+        '-n', '--no-filter', dest='use_filters', default=True, action='store_false',
+        help="Ignore all filtering. This is useful for quickly testing a "
+             "directory that otherwise wouldn't be run, without needing to "
+             "modify the config file.")
     def lint(self, paths, linters=None, fmt='stylish', **lintargs):
         """Run linters."""
         from mozlint import LintRoller, formatters

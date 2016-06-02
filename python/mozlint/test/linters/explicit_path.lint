@@ -1,0 +1,13 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+
+LINTER = {
+    'name': "ExplicitPathLinter",
+    'description': "Only lint a specific file name",
+    'rule': 'no-foobar',
+    'include': [
+        'no_foobar.js',
+    ],
+    'type': 'string',
+    'payload': 'foobar',
+}
