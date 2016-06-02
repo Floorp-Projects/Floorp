@@ -584,18 +584,23 @@ struct JS_PUBLIC_API(MovableCellHasher<JS::Heap<T>>)
 
 namespace js {
 
+// The alignment must be set because the Rooted and PersistentRooted ptr fields
+// may be accessed through reinterpret_cast<Rooted<ConcreteTraceable>*>, and
+// the compiler may choose a different alignment for the ptr field when it
+// knows the actual type stored in DispatchWrapper<T>.
+//
+// It would make more sense to align only those specific fields of type
+// DispatchWrapper, rather than DispatchWrapper itself, but that causes MSVC to
+// fail when Rooted is used in an IsConvertible test.
 template <typename T>
-class DispatchWrapper
+class alignas(8) DispatchWrapper
 {
     static_assert(JS::MapTypeToRootKind<T>::kind == JS::RootKind::Traceable,
                   "DispatchWrapper is intended only for usage with a Traceable");
 
     using TraceFn = void (*)(JSTracer*, T*, const char*);
     TraceFn tracer;
-#if JS_BITS_PER_WORD == 32
-    uint32_t padding; // Ensure the storage fields have CellSize alignment.
-#endif
-    T storage;
+    alignas(gc::CellSize) T storage;
 
   public:
     template <typename U>
@@ -1059,7 +1064,6 @@ class PersistentRooted : public js::PersistentRootedBase<T>,
         MapTypeToRootKind<T>::kind == JS::RootKind::Traceable,
         js::DispatchWrapper<T>,
         T>::Type;
-
     MaybeWrapped ptr;
 } JS_HAZ_ROOTED;
 
