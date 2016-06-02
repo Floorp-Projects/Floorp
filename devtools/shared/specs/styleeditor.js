@@ -38,24 +38,3 @@ const oldStyleSheetSpec = generateActorSpec({
 });
 
 exports.oldStyleSheetSpec = oldStyleSheetSpec;
-
-const styleEditorSpec = generateActorSpec({
-  typeName: "styleeditor",
-
-  events: {
-    "document-load": {
-      type: "documentLoad",
-      styleSheets: Arg(0, "array:old-stylesheet")
-    }
-  },
-
-  method: {
-    newDocument: {},
-    newStyleSheet: {
-      request: { text: Arg(0, "string") },
-      response: { styleSheet: RetVal("old-stylesheet") }
-    }
-  }
-});
-
-exports.styleEditorSpec = styleEditorSpec;
