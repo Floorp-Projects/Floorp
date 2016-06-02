@@ -720,7 +720,7 @@ GCZeal(JSContext* cx, unsigned argc, Value* vp)
             return false;
     }
 
-    JS_SetGCZeal(cx, (uint8_t)zeal, frequency);
+    JS_SetGCZeal(cx->runtime(), (uint8_t)zeal, frequency);
     args.rval().setUndefined();
     return true;
 }
@@ -1303,7 +1303,7 @@ OOMTest(JSContext* cx, unsigned argc, Value* vp)
         threadEnd = threadOption + 1;
     }
 
-    JS_SetGCZeal(cx, 0, JS_DEFAULT_ZEAL_FREQ);
+    JS_SetGCZeal(cx->runtime(), 0, JS_DEFAULT_ZEAL_FREQ);
 
     for (unsigned thread = threadStart; thread < threadEnd; thread++) {
         if (verbose)
