@@ -26,6 +26,8 @@
  *  NSSCKFWInstance_CreateMutex
  *  NSSCKFWInstance_GetConfigurationData
  *  NSSCKFWInstance_GetInitArgs
+ *  NSSCKFWInstance_DestroySessionHandle
+ *  NSSCKFWInstance_FindSessionHandle
  *
  *  -- implement public accessors --
  *  nssCKFWInstance_GetMDInstance
@@ -34,12 +36,12 @@
  *  nssCKFWInstance_CreateMutex
  *  nssCKFWInstance_GetConfigurationData
  *  nssCKFWInstance_GetInitArgs
+ *  nssCKFWInstance_DestroySessionHandle
+ *  nssCKFWInstance_FindSessionHandle
  *
  *  -- private accessors --
  *  nssCKFWInstance_CreateSessionHandle
  *  nssCKFWInstance_ResolveSessionHandle
- *  nssCKFWInstance_DestroySessionHandle
- *  nssCKFWInstance_FindSessionHandle
  *  nssCKFWInstance_CreateObjectHandle
  *  nssCKFWInstance_ResolveObjectHandle
  *  nssCKFWInstance_DestroyObjectHandle
@@ -1265,4 +1267,28 @@ NSSCKFWInstance_GetInitArgs(
 #endif /* DEBUG */
 
     return nssCKFWInstance_GetInitArgs(fwInstance);
+}
+
+/*
+ * nssCKFWInstance_DestroySessionHandle
+ *
+ */
+NSS_IMPLEMENT void
+NSSCKFWInstance_DestroySessionHandle(
+    NSSCKFWInstance *fwInstance,
+    CK_SESSION_HANDLE hSession)
+{
+    nssCKFWInstance_DestroySessionHandle(fwInstance, hSession);
+}
+
+/*
+ * nssCKFWInstance_FindSessionHandle
+ *
+ */
+NSS_IMPLEMENT CK_SESSION_HANDLE
+NSSCKFWInstance_FindSessionHandle(
+    NSSCKFWInstance *fwInstance,
+    NSSCKFWSession *fwSession)
+{
+    return nssCKFWInstance_FindSessionHandle(fwInstance, fwSession);
 }

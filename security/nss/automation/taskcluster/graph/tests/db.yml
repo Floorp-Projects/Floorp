@@ -1,0 +1,13 @@
+---
+- task:
+    metadata:
+      name: DB tests
+      description: DB tests
+
+    payload:
+      env:
+        NSS_TESTS: dbtests
+
+    extra:
+      treeherder:
+        symbol: DB

@@ -8,14 +8,15 @@
 #include "gtest/gtest.h"
 
 int main(int argc, char **argv) {
-  // Start the tests
   ::testing::InitGoogleTest(&argc, argv);
 
   NSS_NoDB_Init(nullptr);
   NSS_SetDomesticPolicy();
   int rv = RUN_ALL_TESTS();
 
-  NSS_Shutdown();
+  if (NSS_Shutdown() != SECSuccess) {
+    return 1;
+  }
 
   return rv;
 }

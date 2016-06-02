@@ -1,0 +1,20 @@
+---
+reruns: 2
+
+task:
+  created: !from_now 0
+  deadline: !from_now 24
+  provisionerId: aws-provisioner-v1
+  workerType: ttaubert-win2012r2
+  schedulerId: task-graph-scheduler
+
+  metadata:
+    owner: !env TC_OWNER
+    source: !env TC_SOURCE
+
+  payload:
+    maxRunTime: 3600
+
+    command:
+      - "time /t && hg clone -r %NSS_HEAD_REVISION% %NSS_HEAD_REPOSITORY% nss"
+      - "time /t && bash -c nss/automation/taskcluster/windows/run_tests.sh"

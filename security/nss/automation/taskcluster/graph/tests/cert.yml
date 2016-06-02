@@ -1,0 +1,13 @@
+---
+- task:
+    metadata:
+      name: Cert tests
+      description: Cert tests
+
+    payload:
+      env:
+        NSS_TESTS: cert
+
+    extra:
+      treeherder:
+        symbol: Cert

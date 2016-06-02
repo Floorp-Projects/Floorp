@@ -1,0 +1,13 @@
+---
+- task:
+    metadata:
+      name: CRMF tests
+      description: CRMF tests
+
+    payload:
+      env:
+        NSS_TESTS: crmf
+
+    extra:
+      treeherder:
+        symbol: CRMF

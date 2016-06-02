@@ -1,0 +1,13 @@
+---
+- task:
+    metadata:
+      name: FIPS tests
+      description: FIPS tests
+
+    payload:
+      env:
+        NSS_TESTS: fips
+
+    extra:
+      treeherder:
+        symbol: FIPS
