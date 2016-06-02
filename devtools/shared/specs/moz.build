@@ -10,6 +10,7 @@ DevToolsModules(
     'css-properties.js',
     'highlighters.js',
     'inspector.js',
+    'node.js',
     'storage.js',
     'styleeditor.js',
     'styles.js',
