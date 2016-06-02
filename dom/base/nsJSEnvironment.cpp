@@ -592,7 +592,7 @@ nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
   int32_t zeal = Preferences::GetInt(js_zeal_option_str, -1);
   int32_t frequency = Preferences::GetInt(js_zeal_frequency_str, JS_DEFAULT_ZEAL_FREQ);
   if (zeal >= 0)
-    ::JS_SetGCZeal(context->mContext, (uint8_t)zeal, frequency);
+    ::JS_SetGCZeal(JS_GetRuntime(context->mContext), (uint8_t)zeal, frequency);
 #endif
 }
 

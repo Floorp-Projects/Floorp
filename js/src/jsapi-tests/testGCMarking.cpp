@@ -86,7 +86,7 @@ BEGIN_TEST(testIncrementalRoots)
 
 #ifdef JS_GC_ZEAL
     // Disable zeal modes because this test needs to control exactly when the GC happens.
-    JS_SetGCZeal(cx, 0, 100);
+    JS_SetGCZeal(rt, 0, 100);
 #endif
 
     // Construct a big object graph to mark. In JS, the resulting object graph
