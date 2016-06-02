@@ -80,32 +80,26 @@ SpeechSynthesis::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return SpeechSynthesisBinding::Wrap(aCx, this, aGivenProto);
 }
 
-SpeechSynthesisUtterance*
-SpeechSynthesis::CurrentUtterance() const
-{
-  return mCurrentTask ? mCurrentTask->mUtterance.get() : nullptr;
-}
-
 bool
 SpeechSynthesis::Pending() const
 {
-  if (mSpeechQueue.Length() > 0) {
+  switch (mSpeechQueue.Length()) {
+  case 0:
+    return false;
+
+  case 1:
+    return mSpeechQueue.ElementAt(0)->GetState() == SpeechSynthesisUtterance::STATE_PENDING;
+
+  default:
     return true;
   }
-
-  SpeechSynthesisUtterance* utterance = CurrentUtterance();
-  if (utterance && utterance->GetState() == SpeechSynthesisUtterance::STATE_PENDING) {
-    return true;
-  }
-
-  return false;
 }
 
 bool
 SpeechSynthesis::Speaking() const
 {
-  SpeechSynthesisUtterance* utterance = CurrentUtterance();
-  if (utterance && utterance->GetState() == SpeechSynthesisUtterance::STATE_SPEAKING) {
+  if (!mSpeechQueue.IsEmpty() &&
+      mSpeechQueue.ElementAt(0)->GetState() == SpeechSynthesisUtterance::STATE_SPEAKING) {
     return true;
   }
 
@@ -116,15 +110,14 @@ SpeechSynthesis::Speaking() const
 bool
 SpeechSynthesis::Paused() const
 {
-  SpeechSynthesisUtterance* utterance = CurrentUtterance();
   return mHoldQueue || (mCurrentTask && mCurrentTask->IsPrePaused()) ||
-         (utterance && utterance->IsPaused());
+         (!mSpeechQueue.IsEmpty() && mSpeechQueue.ElementAt(0)->IsPaused());
 }
 
 bool
 SpeechSynthesis::HasEmptyQueue() const
 {
-  return !mCurrentTask && mSpeechQueue.Length() == 0;
+  return mSpeechQueue.Length() == 0;
 }
 
 bool SpeechSynthesis::HasVoices() const
@@ -169,7 +162,6 @@ SpeechSynthesis::AdvanceQueue()
   }
 
   RefPtr<SpeechSynthesisUtterance> utterance = mSpeechQueue.ElementAt(0);
-  mSpeechQueue.RemoveElementAt(0);
 
   nsAutoString docLang;
   nsCOMPtr<nsPIDOMWindowInner> window = GetOwner();
@@ -196,7 +188,14 @@ SpeechSynthesis::AdvanceQueue()
 void
 SpeechSynthesis::Cancel()
 {
-  mSpeechQueue.Clear();
+  if (!mSpeechQueue.IsEmpty() &&
+      mSpeechQueue.ElementAt(0)->GetState() == SpeechSynthesisUtterance::STATE_SPEAKING) {
+    // Remove all queued utterances except for current one, we will remove it
+    // in OnEnd
+    mSpeechQueue.RemoveElementsAt(1, mSpeechQueue.Length() - 1);
+  } else {
+    mSpeechQueue.Clear();
+  }
 
   if (mCurrentTask) {
     mCurrentTask->Cancel();
@@ -210,8 +209,8 @@ SpeechSynthesis::Pause()
     return;
   }
 
-  SpeechSynthesisUtterance* utterance = CurrentUtterance();
-  if (utterance && utterance->GetState() != SpeechSynthesisUtterance::STATE_ENDED) {
+  if (mCurrentTask && !mSpeechQueue.IsEmpty() &&
+      mSpeechQueue.ElementAt(0)->GetState() != SpeechSynthesisUtterance::STATE_ENDED) {
     mCurrentTask->Pause();
   } else {
     mHoldQueue = true;
@@ -237,6 +236,10 @@ void
 SpeechSynthesis::OnEnd(const nsSpeechTask* aTask)
 {
   MOZ_ASSERT(mCurrentTask == aTask);
+
+  if (!mSpeechQueue.IsEmpty()) {
+    mSpeechQueue.RemoveElementAt(0);
+  }
 
   mCurrentTask = nullptr;
   AdvanceQueue();
