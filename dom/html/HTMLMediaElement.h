@@ -695,9 +695,9 @@ public:
     }
   }
 
-  void AddCue(TextTrackCue& aCue) {
+  void NotifyCueAdded(TextTrackCue& aCue) {
     if (mTextTrackManager) {
-      mTextTrackManager->AddCue(aCue);
+      mTextTrackManager->NotifyCueAdded(aCue);
     }
   }
   void NotifyCueRemoved(TextTrackCue& aCue) {

@@ -255,7 +255,7 @@ TextTrackManager::UpdateCueDisplay()
 }
 
 void
-TextTrackManager::AddCue(TextTrackCue& aCue)
+TextTrackManager::NotifyCueAdded(TextTrackCue& aCue)
 {
   if (mNewCues) {
     mNewCues->AddCue(aCue);
