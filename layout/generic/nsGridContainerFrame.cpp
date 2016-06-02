@@ -35,6 +35,14 @@ const uint32_t nsGridContainerFrame::kTranslatedMaxLine =
 const uint32_t nsGridContainerFrame::kAutoLine = kTranslatedMaxLine + 3457U;
 typedef nsTHashtable< nsPtrHashKey<nsIFrame> > FrameHashtable;
 
+// https://drafts.csswg.org/css-align-3/#baseline-sharing-group
+enum BaselineSharingGroup
+{
+  // NOTE Used as an array index so must be 0 and 1.
+  eFirst = 0,
+  eLast = 1,
+};
+
 static void
 ReparentFrame(nsIFrame* aFrame, nsContainerFrame* aOldParent,
               nsContainerFrame* aNewParent)
@@ -135,6 +143,9 @@ struct nsGridContainerFrame::TrackSize
   nscoord mBase;
   nscoord mLimit;
   nscoord mPosition;  // zero until we apply 'align/justify-content'
+  // mBaselineSubtreeSize is the size of a baseline-aligned subtree within
+  // this track.  One subtree per baseline-sharing group (per track).
+  nscoord mBaselineSubtreeSize[2];
   StateBits mState;
 };
 
@@ -198,6 +209,9 @@ nsGridContainerFrame::TrackSize::Initialize(nscoord aPercentageBasis,
         mLimit = mBase;
       }
   }
+
+  mBaselineSubtreeSize[BaselineSharingGroup::eFirst] = nscoord(0);
+  mBaselineSubtreeSize[BaselineSharingGroup::eLast] = nscoord(0);
 }
 
 /**
@@ -1066,7 +1080,12 @@ struct nsGridContainerFrame::TrackSizingFunctions
  */
 struct nsGridContainerFrame::Tracks
 {
-  explicit Tracks(LogicalAxis aAxis) : mAxis(aAxis) {}
+  explicit Tracks(LogicalAxis aAxis)
+    : mAxis(aAxis)
+  {
+    mBaselineSubtreeAlign[BaselineSharingGroup::eFirst] = NS_STYLE_ALIGN_AUTO;
+    mBaselineSubtreeAlign[BaselineSharingGroup::eLast] = NS_STYLE_ALIGN_AUTO;
+  }
 
   void Initialize(const TrackSizingFunctions& aFunctions,
                   const nsStyleCoord&         aGridGap,
@@ -1085,6 +1104,33 @@ struct nsGridContainerFrame::Tracks
   bool HasIntrinsicButNoFlexSizingInRange(const LineRange&      aRange,
                                           IntrinsicISizeType    aConstraint,
                                           TrackSize::StateBits* aState) const;
+
+  // Some data we collect for aligning baseline-aligned items.
+  struct ItemBaselineData
+  {
+    uint32_t mBaselineTrack;
+    nscoord mBaseline;
+    nscoord mSize;
+    GridItemInfo* mGridItem;
+    static bool IsBaselineTrackLessThan(const ItemBaselineData& a,
+                                        const ItemBaselineData& b)
+    {
+      return a.mBaselineTrack < b.mBaselineTrack;
+    }
+  };
+
+  /**
+   * Calculate baseline offsets for the given set of items.
+   * Helper for InitialzeItemBaselines.
+   */
+  void CalculateItemBaselines(nsTArray<ItemBaselineData>& aBaselineItems,
+                              BaselineSharingGroup aBaselineGroup);
+
+  /**
+   * Initialize grid item baseline state and offsets.
+   */
+  void InitializeItemBaselines(GridReflowState&        aState,
+                               nsTArray<GridItemInfo>& aGridItems);
 
   /**
    * Resolve Intrinsic Track Sizes.
@@ -1518,6 +1564,11 @@ struct nsGridContainerFrame::Tracks
   nscoord mContentBoxSize;
   nscoord mGridGap;
   LogicalAxis mAxis;
+  // Used for aligning a baseline-aligned subtree of items.  The only possible
+  // values are NS_STYLE_ALIGN_{START,END,CENTER,AUTO}.  AUTO means there are
+  // no baseline-aligned items in any track in that axis.
+  // There is one alignment value for each BaselineSharingGroup.
+  uint8_t mBaselineSubtreeAlign[2];
 };
 
 /**
@@ -3403,6 +3454,7 @@ nsGridContainerFrame::Tracks::CalculateSizes(
   if (percentageBasis == NS_UNCONSTRAINEDSIZE) {
     percentageBasis = 0;
   }
+  InitializeItemBaselines(aState, aGridItems);
   ResolveIntrinsicSize(aState, aGridItems, aFunctions, aRange, percentageBasis,
                        aConstraint);
   if (aConstraint != nsLayoutUtils::MIN_ISIZE) {
@@ -3500,6 +3552,228 @@ nsGridContainerFrame::Tracks::ResolveIntrinsicSizeStep1(
     sz.mLimit = sz.mBase;
   }
   return sz.mState & TrackSize::eFlexMaxSizing;
+}
+
+void
+nsGridContainerFrame::Tracks::CalculateItemBaselines(
+  nsTArray<ItemBaselineData>& aBaselineItems,
+  BaselineSharingGroup aBaselineGroup)
+{
+  if (aBaselineItems.IsEmpty()) {
+    return;
+  }
+
+  // Sort the collected items on their baseline track.
+  std::sort(aBaselineItems.begin(), aBaselineItems.end(),
+            ItemBaselineData::IsBaselineTrackLessThan);
+
+  nscoord maxBaseline = 0;
+  nscoord maxDescent = 0;
+  uint32_t currentTrack = kAutoLine; // guaranteed to not match any item
+  uint32_t trackStartIndex = 0;
+  for (uint32_t i = 0, len = aBaselineItems.Length(); true ; ++i) {
+    // Find the maximum baseline and descent in the current track.
+    if (i != len) {
+      const ItemBaselineData& item = aBaselineItems[i];
+      if (currentTrack == item.mBaselineTrack) {
+        maxBaseline = std::max(maxBaseline, item.mBaseline);
+        maxDescent = std::max(maxDescent, item.mSize - item.mBaseline);
+        continue;
+      }
+    }
+    // Iterate the current track again and update the baseline offsets making
+    // all items baseline-aligned within this group in this track.
+    for (uint32_t j = trackStartIndex; j < i; ++j) {
+      const ItemBaselineData& item = aBaselineItems[j];
+      item.mGridItem->mBaselineOffset[mAxis] = maxBaseline - item.mBaseline;
+      MOZ_ASSERT(item.mGridItem->mBaselineOffset[mAxis] >= 0);
+    }
+    // Store the size of this baseline-aligned subtree.
+    if (i != 0) {
+      mSizes[currentTrack].mBaselineSubtreeSize[aBaselineGroup] =
+        maxBaseline + maxDescent;
+    }
+    if (i == len) {
+      break;
+    }
+    // Initialize data for the next track with baseline-aligned items.
+    const ItemBaselineData& item = aBaselineItems[i];
+    currentTrack = item.mBaselineTrack;
+    trackStartIndex = i;
+    maxBaseline = item.mBaseline;
+    maxDescent = item.mSize - item.mBaseline;
+  }
+}
+
+void
+nsGridContainerFrame::Tracks::InitializeItemBaselines(
+  GridReflowState&        aState,
+  nsTArray<GridItemInfo>& aGridItems)
+{
+
+  nsTArray<ItemBaselineData> firstBaselineItems;
+  nsTArray<ItemBaselineData> lastBaselineItems;
+  WritingMode wm = aState.mWM;
+  nsStyleContext* containerSC = aState.mFrame->StyleContext();
+  GridItemCSSOrderIterator& iter = aState.mIter;
+  iter.Reset();
+  for (; !iter.AtEnd(); iter.Next()) {
+    nsIFrame* child = *iter;
+    GridItemInfo& gridItem = aGridItems[iter.GridItemIndex()];
+    uint32_t baselineTrack = kAutoLine;
+    auto state = ItemState(0);
+    auto childWM = child->GetWritingMode();
+    const bool isOrthogonal = wm.IsOrthogonalTo(childWM);
+    const bool isInlineAxis = mAxis == eLogicalAxisInline; // i.e. columns
+    // XXX update the line below to include orthogonal grid/table boxes
+    // XXX since they have baselines in both dimensions. And flexbox with
+    // XXX reversed main/cross axis?
+    const bool itemHasBaselineParallelToTrack = isInlineAxis == isOrthogonal;
+    if (itemHasBaselineParallelToTrack) {
+      // [align|justify]-self:[last-]baseline.
+      auto selfAlignment = isOrthogonal ?
+        child->StylePosition()->ComputedJustifySelf(containerSC) :
+        child->StylePosition()->ComputedAlignSelf(containerSC);
+      selfAlignment &= ~NS_STYLE_ALIGN_FLAG_BITS;
+      if (selfAlignment == NS_STYLE_ALIGN_BASELINE) {
+        state |= ItemState::eFirstBaseline | ItemState::eSelfBaseline;
+        const GridArea& area = gridItem.mArea;
+        baselineTrack = isOrthogonal ? area.mCols.mStart : area.mRows.mStart;
+      } else if (selfAlignment == NS_STYLE_ALIGN_LAST_BASELINE) {
+        state |= ItemState::eLastBaseline | ItemState::eSelfBaseline;
+        const GridArea& area = gridItem.mArea;
+        baselineTrack = (isOrthogonal ? area.mCols.mEnd : area.mRows.mEnd) - 1;
+      }
+
+      // [align|justify]-content:[last-]baseline.
+      // https://drafts.csswg.org/css-align-3/#baseline-align-content
+      // "[...] and its computed 'align-self' or 'justify-self' (whichever
+      // affects its block axis) is 'stretch' or 'self-start' ('self-end').
+      // For this purpose, the 'start', 'end', 'flex-start', and 'flex-end'
+      // values of 'align-self' are treated as either 'self-start' or
+      // 'self-end', whichever they end up equivalent to.
+      auto alignContent = child->StylePosition()->ComputedAlignContent();
+      alignContent &= ~NS_STYLE_ALIGN_FLAG_BITS;
+      if (alignContent == NS_STYLE_ALIGN_BASELINE ||
+          alignContent == NS_STYLE_ALIGN_LAST_BASELINE) {
+        const auto selfAlignEdge = alignContent == NS_STYLE_ALIGN_BASELINE ?
+          NS_STYLE_ALIGN_SELF_START : NS_STYLE_ALIGN_SELF_END;
+        bool validCombo = selfAlignment == NS_STYLE_ALIGN_NORMAL ||
+                          selfAlignment == NS_STYLE_ALIGN_STRETCH ||
+                          selfAlignment == selfAlignEdge;
+        if (!validCombo) {
+          // |sameSide| is true if the container's start side in this axis is
+          // the same as the child's start side, in the child's parallel axis.
+          // XXX SameSide is way to complicated to use! - add a WritingMode
+          // XXX method instead that does this in a better way.
+          auto side = isInlineAxis ? eLogicalSideBStart : eLogicalSideIStart;
+          // XXX the "isInlineAxis == isOrthogonal" is currently redundant, but
+          // might be relevant if we change the itemHasBaselineParallelToTrack
+          // condition above?
+          auto childSide = isInlineAxis == isOrthogonal ? eLogicalSideIStart
+                                                        : eLogicalSideBStart;
+          bool sameSide = SameSide(wm, side, childWM, childSide);
+          if (isInlineAxis) {
+            switch (selfAlignment) {
+              case NS_STYLE_ALIGN_LEFT:
+                selfAlignment = wm.IsBidiLTR() ? NS_STYLE_ALIGN_START
+                                               : NS_STYLE_ALIGN_END;
+                break;
+              case NS_STYLE_ALIGN_RIGHT:
+                selfAlignment = wm.IsBidiLTR() ? NS_STYLE_ALIGN_END
+                                               : NS_STYLE_ALIGN_START;
+                break;
+            }
+          }
+          switch (selfAlignment) {
+            case NS_STYLE_ALIGN_START:
+            case NS_STYLE_ALIGN_FLEX_START:
+              validCombo = sameSide ==
+                           (alignContent == NS_STYLE_ALIGN_BASELINE);
+              break;
+            case NS_STYLE_ALIGN_END:
+            case NS_STYLE_ALIGN_FLEX_END:
+              validCombo = sameSide ==
+                           (alignContent == NS_STYLE_ALIGN_LAST_BASELINE);
+              break;
+          }
+        }
+        if (validCombo) {
+          const GridArea& area = gridItem.mArea;
+          if (alignContent == NS_STYLE_ALIGN_BASELINE) {
+            state |= ItemState::eFirstBaseline | ItemState::eContentBaseline;
+            baselineTrack = isOrthogonal ? area.mCols.mStart : area.mRows.mStart;
+          } else if (alignContent == NS_STYLE_ALIGN_LAST_BASELINE) {
+            state |= ItemState::eLastBaseline | ItemState::eContentBaseline;
+            baselineTrack = (isOrthogonal ? area.mCols.mEnd : area.mRows.mEnd) - 1;
+          }
+        }
+      }
+    }
+
+    if (state & ItemState::eIsBaselineAligned) {
+      // XXX available size issue
+      LogicalSize avail(childWM, INFINITE_ISIZE_COORD, NS_UNCONSTRAINEDSIZE);
+      auto* rc = &aState.mRenderingContext;
+      // XXX figure out if we can avoid/merge this reflow with the main reflow.
+      // XXX (after bug 1174569 is sorted out)
+      ::MeasuringReflow(child, aState.mReflowState, rc, avail);
+      nscoord baseline;
+      if (state & ItemState::eFirstBaseline) {
+        if (nsLayoutUtils::GetFirstLineBaseline(wm, child, &baseline)) {
+          auto frameSize = isInlineAxis ? child->ISize(wm) : child->BSize(wm);
+          auto m = child->GetLogicalUsedMargin(wm);
+          baseline += isInlineAxis ? m.IStart(wm) : m.BStart(wm);
+          auto alignSize = frameSize + (isInlineAxis ? m.IStartEnd(wm)
+                                                     : m.BStartEnd(wm));
+          firstBaselineItems.AppendElement(ItemBaselineData(
+            { baselineTrack, baseline, alignSize, &gridItem }));
+        } else {
+          state &= ~ItemState::eFirstBaseline;
+        }
+      } else {
+        if (nsLayoutUtils::GetLastLineBaseline(wm, child, &baseline)) {
+          auto frameSize = isInlineAxis ? child->ISize(wm) : child->BSize(wm);
+          auto m = child->GetLogicalUsedMargin(wm);
+          auto descent = frameSize - baseline + (isInlineAxis ? m.IEnd(wm)
+                                                              : m.BEnd(wm));
+          auto alignSize = frameSize + (isInlineAxis ? m.IStartEnd(wm)
+                                                     : m.BStartEnd(wm));
+          lastBaselineItems.AppendElement(ItemBaselineData(
+            { baselineTrack, descent, alignSize, &gridItem }));
+        } else {
+          state &= ~ItemState::eLastBaseline;
+        }
+      }
+    }
+    MOZ_ASSERT((state &
+                (ItemState::eFirstBaseline | ItemState::eLastBaseline)) !=
+               (ItemState::eFirstBaseline | ItemState::eLastBaseline),
+               "baseline and last-baseline bits are mutually exclusive");
+    MOZ_ASSERT((state &
+                (ItemState::eSelfBaseline | ItemState::eContentBaseline)) !=
+               (ItemState::eSelfBaseline | ItemState::eContentBaseline),
+               "*-self and *-content baseline bits are mutually exclusive");
+    MOZ_ASSERT(!(state &
+                 (ItemState::eSelfBaseline | ItemState::eContentBaseline)) ==
+               !(state &
+                 (ItemState::eSelfBaseline | ItemState::eContentBaseline)),
+               "first/last bit requires self/content bit and vice versa");
+    gridItem.mState[mAxis] = state;
+    gridItem.mBaselineOffset[mAxis] = nscoord(0);
+  }
+
+  if (firstBaselineItems.IsEmpty() && lastBaselineItems.IsEmpty()) {
+    return;
+  }
+
+  // TODO: CSS Align spec issue - how to align a baseline subtree in a track?
+  // https://lists.w3.org/Archives/Public/www-style/2016May/0141.html
+  mBaselineSubtreeAlign[BaselineSharingGroup::eFirst] = NS_STYLE_ALIGN_START;
+  mBaselineSubtreeAlign[BaselineSharingGroup::eLast] = NS_STYLE_ALIGN_END;
+
+  CalculateItemBaselines(firstBaselineItems, BaselineSharingGroup::eFirst);
+  CalculateItemBaselines(lastBaselineItems, BaselineSharingGroup::eLast);
 }
 
 void
@@ -5178,6 +5452,10 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
       sharedGridData->mCols.mSizes.Clear();
       sharedGridData->mCols.mSizes.SwapElements(gridReflowState.mCols.mSizes);
       sharedGridData->mCols.mContentBoxSize = gridReflowState.mCols.mContentBoxSize;
+      sharedGridData->mCols.mBaselineSubtreeAlign[0] =
+        gridReflowState.mCols.mBaselineSubtreeAlign[0];
+      sharedGridData->mCols.mBaselineSubtreeAlign[1] =
+        gridReflowState.mCols.mBaselineSubtreeAlign[1];
       sharedGridData->mRows.mSizes.Clear();
       sharedGridData->mRows.mSizes.SwapElements(gridReflowState.mRows.mSizes);
       // Save the original row grid sizes and gaps so we can restore them later
@@ -5192,6 +5470,10 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
         prevTrackEnd = sz.mPosition + sz.mBase;
       }
       sharedGridData->mRows.mContentBoxSize = gridReflowState.mRows.mContentBoxSize;
+      sharedGridData->mRows.mBaselineSubtreeAlign[0] =
+        gridReflowState.mRows.mBaselineSubtreeAlign[0];
+      sharedGridData->mRows.mBaselineSubtreeAlign[1] =
+        gridReflowState.mRows.mBaselineSubtreeAlign[1];
       sharedGridData->mGridItems.Clear();
       sharedGridData->mGridItems.SwapElements(gridReflowState.mGridItems);
       sharedGridData->mAbsPosItems.Clear();
