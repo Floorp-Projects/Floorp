@@ -4549,6 +4549,7 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
   WritingMode childWM = aChild->GetWritingMode();
   bool isConstrainedBSize = false;
   nscoord toFragmentainerEnd;
+  const bool isOrthogonal = wm.IsOrthogonalTo(childWM);
   if (MOZ_LIKELY(isGridItem)) {
     MOZ_ASSERT(aGridItemInfo->mFrame == aChild);
     const GridArea& area = aGridItemInfo->mArea;
@@ -4564,6 +4565,34 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
     cb += aContentArea.Origin(wm);
     aState.mRows.AlignBaselineSubtree(*aGridItemInfo);
     aState.mCols.AlignBaselineSubtree(*aGridItemInfo);
+    // Setup [align|justify]-content:[last-]baseline related frame properties.
+    // These are added to the padding in nsCSSOffsetState::InitOffsets.
+    // (a negative value signals the value is for 'last-baseline' and should be
+    //  added to the (logical) end padding)
+    typedef const FramePropertyDescriptor<SmallValueHolder<nscoord>>* Prop;
+    auto SetProp = [aGridItemInfo, aChild] (LogicalAxis aGridAxis,
+                                            Prop aProp) {
+      auto state = aGridItemInfo->mState[aGridAxis];
+      auto baselineAdjust = (state & ItemState::eContentBaseline) ?
+             aGridItemInfo->mBaselineOffset[aGridAxis] : nscoord(0);
+      if (baselineAdjust < nscoord(0)) {
+        // This happens when the subtree overflows its track.
+        // XXX spec issue? it's unclear how to handle this.
+        baselineAdjust = nscoord(0);
+      } else if (baselineAdjust > nscoord(0) &&
+                 (state & ItemState::eLastBaseline)) {
+        baselineAdjust = -baselineAdjust;
+      }
+      if (baselineAdjust != nscoord(0)) {
+        aChild->Properties().Set(aProp, baselineAdjust);
+      } else {
+        aChild->Properties().Delete(aProp);
+      }
+    };
+    SetProp(eLogicalAxisBlock, isOrthogonal ? IBaselinePadProperty() :
+                                              BBaselinePadProperty());
+    SetProp(eLogicalAxisInline, isOrthogonal ? BBaselinePadProperty() :
+                                               IBaselinePadProperty());
   } else {
     cb = aContentArea;
   }
@@ -4618,9 +4647,19 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
     LogicalSize size = childSize.Size(childWM); // from the ReflowChild()
     if (NS_FRAME_IS_COMPLETE(aStatus)) {
       auto align = childRS.mStylePosition->ComputedAlignSelf(containerSC);
+      auto state = aGridItemInfo->mState[eLogicalAxisBlock];
+      if (state & ItemState::eContentBaseline) {
+        align = (state & ItemState::eFirstBaseline) ? NS_STYLE_ALIGN_SELF_START
+                                                    : NS_STYLE_ALIGN_SELF_END;
+      }
       AlignSelf(*aGridItemInfo, align, cb, wm, childRS, size, &childPos);
     }
     auto justify = childRS.mStylePosition->ComputedJustifySelf(containerSC);
+    auto state = aGridItemInfo->mState[eLogicalAxisInline];
+    if (state & ItemState::eContentBaseline) {
+      justify = (state & ItemState::eFirstBaseline) ? NS_STYLE_JUSTIFY_SELF_START
+                                                    : NS_STYLE_JUSTIFY_SELF_END;
+    }
     JustifySelf(*aGridItemInfo, justify, cb, wm, childRS, size, &childPos);
   } else {
     // Put a placeholder at the padding edge, in case an ancestor is its CB.
