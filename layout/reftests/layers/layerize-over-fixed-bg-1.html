@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>The fixed background should not cause .inner to move to a different layer than .outer</title>
+
+<style>
+
+body {
+  margin: 0;
+  height: 3000px;
+}
+
+.outer {
+  border: 1px solid black;
+  margin: 10px;
+}
+
+.outer > div {
+  margin: 10px;
+}
+
+.fixed-bg {
+  height: 100px;
+  background-image: linear-gradient(lime, lime);
+  background-attachment: fixed;
+}
+
+.inner {
+  border: 1px solid blue;
+  padding: 20px;
+}
+
+</style>
+
+<div class="outer" reftest-assigned-layer="page-background">
+  <!-- .inner and .fixed-bg do not overlap, so .inner should be merged into
+       the same layer as .outer. -->
+  <div class="fixed-bg"></div>
+  <div class="inner" reftest-assigned-layer="page-background"></div>
+</div>
