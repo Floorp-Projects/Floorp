@@ -1824,7 +1824,7 @@ IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
      * IME specific composition string style, we used following rules:
      *
      *   1: If attrUnderline and attrForground are specified, we assumed the
-     *      clause is NS_TEXTRANGE_SELECTEDCONVERTEDTEXT.
+     *      clause is TextRangeType::eSelectedClause.
      *   2: If only attrUnderline is specified, we assumed the clause is
      *      TextRangeType::eConvertedClause.
      *   3: If only attrForground is specified, we assumed the clause is
@@ -1859,7 +1859,7 @@ IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
     // selected.
     else if (aTextRange.mStartOffset <= aUTF16CaretOffset &&
              aTextRange.mEndOffset > aUTF16CaretOffset) {
-        aTextRange.mRangeType = TextRangeType::NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
+        aTextRange.mRangeType = TextRangeType::eSelectedClause;
     }
     // Otherwise, we should assume that the clause is converted but not
     // selected.

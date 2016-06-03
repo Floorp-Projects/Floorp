@@ -2753,10 +2753,10 @@ IMEInputHandler::ConvertToTextRangeType(uint32_t aUnderlineStyle,
     case NSUnderlineStyleSingle:
       return TextRangeType::eConvertedClause;
     case NSUnderlineStyleThick:
-      return TextRangeType::NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
+      return TextRangeType::eSelectedClause;
     default:
       NS_WARNING("Unexpected line style");
-      return TextRangeType::NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
+      return TextRangeType::eSelectedClause;
   }
 }
 

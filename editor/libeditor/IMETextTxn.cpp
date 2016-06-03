@@ -144,7 +144,7 @@ ToSelectionType(TextRangeType aTextRangeType)
       return nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT;
     case TextRangeType::eConvertedClause:
       return nsISelectionController::SELECTION_IME_CONVERTEDTEXT;
-    case TextRangeType::NS_TEXTRANGE_SELECTEDCONVERTEDTEXT:
+    case TextRangeType::eSelectedClause:
       return nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT;
     default:
       MOZ_CRASH("Selection type is invalid");

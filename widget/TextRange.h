@@ -130,13 +130,12 @@ struct TextRangeStyle
 
 enum class TextRangeType : RawTextRangeType
 {
-  eUninitialized = 0x00,
-  eCaret = 0x01,
-  eRawClause = nsITextInputProcessor::ATTR_RAW_CLAUSE,
+  eUninitialized     = 0x00,
+  eCaret             = 0x01,
+  eRawClause         = nsITextInputProcessor::ATTR_RAW_CLAUSE,
   eSelectedRawClause = nsITextInputProcessor::ATTR_SELECTED_RAW_CLAUSE,
-  eConvertedClause = nsITextInputProcessor::ATTR_CONVERTED_CLAUSE,
-  NS_TEXTRANGE_SELECTEDCONVERTEDTEXT =
-    nsITextInputProcessor::ATTR_SELECTED_CLAUSE
+  eConvertedClause   = nsITextInputProcessor::ATTR_CONVERTED_CLAUSE,
+  eSelectedClause    = nsITextInputProcessor::ATTR_SELECTED_CLAUSE
 };
 
 bool IsValidRawTextRangeValue(RawTextRangeType aRawTextRangeValue);
@@ -204,7 +203,7 @@ class TextRangeArray final : public AutoTArray<TextRange, 10>
     for (uint32_t i = 0; i < Length(); ++i) {
       const TextRange& range = ElementAt(i);
       if (range.mRangeType == TextRangeType::eSelectedRawClause ||
-          range.mRangeType == TextRangeType::NS_TEXTRANGE_SELECTEDCONVERTEDTEXT) {
+          range.mRangeType == TextRangeType::eSelectedClause) {
         return &range;
       }
     }

@@ -155,7 +155,7 @@ public:
    * @param aTextRangeType  One of TextRangeType::eRawClause,
    *                        TextRangeType::eSelectedRawClause,
    *                        TextRangeType::eConvertedClause or
-   *                        NS_TEXTRANGE_SELECTEDCONVERTEDTEXT.
+   *                        TextRangeType::eSelectedClause.
    */
   nsresult AppendClauseToPendingComposition(uint32_t aLength,
                                             TextRangeType aTextRangeType)
