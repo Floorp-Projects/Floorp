@@ -5478,22 +5478,6 @@ dnl ========================================================
 MOZ_CONFIG_CLANG_PLUGIN
 
 dnl ========================================================
-dnl = Enable stripping of libs & executables
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(strip,
-[  --enable-strip          Enable stripping of libs & executables ],
-    ENABLE_STRIP=1,
-    ENABLE_STRIP= )
-
-dnl ========================================================
-dnl = Enable stripping of libs & executables when packaging
-dnl ========================================================
-MOZ_ARG_ENABLE_BOOL(install-strip,
-[  --enable-install-strip  Enable stripping of libs & executables when packaging ],
-    PKG_SKIP_STRIP= ,
-    PKG_SKIP_STRIP=1)
-
-dnl ========================================================
 dnl = --disable-elf-hack
 dnl ========================================================
 
@@ -6538,8 +6522,6 @@ AC_SUBST(MOZ_ANDROID_BROWSER_INTENT_CLASS)
 AC_SUBST(MOZ_ANDROID_SEARCH_INTENT_CLASS)
 AC_SUBST(MOZ_EXCLUDE_HYPHENATION_DICTIONARIES)
 AC_SUBST(MOZ_INSTALL_TRACKING)
-AC_SUBST(ENABLE_STRIP)
-AC_SUBST(PKG_SKIP_STRIP)
 AC_SUBST(STRIP_FLAGS)
 AC_SUBST(USE_ELF_HACK)
 AC_SUBST(INCREMENTAL_LINKER)
