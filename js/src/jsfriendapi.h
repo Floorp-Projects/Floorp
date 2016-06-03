@@ -1109,9 +1109,6 @@ GetPCCountScriptContents(JSContext* cx, size_t script);
 JS_FRIEND_API(char*)
 GetCodeCoverageSummary(JSContext* cx, size_t* length);
 
-JS_FRIEND_API(bool)
-ContextHasOutstandingRequests(const JSContext* cx);
-
 typedef void
 (* ActivityCallback)(void* arg, bool active);
 
