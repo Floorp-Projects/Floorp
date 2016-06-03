@@ -1828,7 +1828,7 @@ IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
      *   2: If only attrUnderline is specified, we assumed the clause is
      *      NS_TEXTRANGE_CONVERTEDTEXT.
      *   3: If only attrForground is specified, we assumed the clause is
-     *      NS_TEXTRANGE_SELECTEDRAWTEXT.
+     *      TextRangeType::eSelectedRawClause.
      *   4: If neither attrUnderline nor attrForeground is specified, we assumed
      *      the clause is TextRangeType::eRawClause.
      *

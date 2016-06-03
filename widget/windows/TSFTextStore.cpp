@@ -2054,7 +2054,7 @@ GetGeckoSelectionValue(TF_DISPLAYATTRIBUTE& aDisplayAttr)
     case TF_ATTR_CONVERTED:
       return TextRangeType::NS_TEXTRANGE_CONVERTEDTEXT;
     case TF_ATTR_TARGET_NOTCONVERTED:
-      return TextRangeType::NS_TEXTRANGE_SELECTEDRAWTEXT;
+      return TextRangeType::eSelectedRawClause;
     default:
       return TextRangeType::eRawClause;
   }
@@ -2523,7 +2523,7 @@ TSFTextStore::RecordCompositionUpdateAction()
         range.mRangeStyle.IsNoChangeStyle()) {
       range.mRangeStyle.Clear();
       // The looks of selected type is better than others.
-      range.mRangeType = TextRangeType::NS_TEXTRANGE_SELECTEDRAWTEXT;
+      range.mRangeType = TextRangeType::eSelectedRawClause;
     }
   }
 

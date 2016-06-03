@@ -2742,10 +2742,10 @@ IMEInputHandler::ConvertToTextRangeType(uint32_t aUnderlineStyle,
       case NSUnderlineStyleSingle:
         return TextRangeType::eRawClause;
       case NSUnderlineStyleThick:
-        return TextRangeType::NS_TEXTRANGE_SELECTEDRAWTEXT;
+        return TextRangeType::eSelectedRawClause;
       default:
         NS_WARNING("Unexpected line style");
-        return TextRangeType::NS_TEXTRANGE_SELECTEDRAWTEXT;
+        return TextRangeType::eSelectedRawClause;
     }
   }
 
