@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Locale;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.R;
 
@@ -29,6 +30,7 @@ import android.text.format.DateFormat;
 import android.text.format.DateUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.WindowManager;
@@ -338,7 +340,17 @@ public class DateTimePicker extends FrameLayout {
                 }
             });
 
-            mPickers.addView(mCalendar);
+            final int height;
+            if (Versions.preLollipop) {
+                // The 4.X version of CalendarView doesn't request any height, resulting in
+                // the whole dialog not appearing unless we manually request height.
+                height =  (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 200, getResources().getDisplayMetrics());;
+            } else {
+                height = LayoutParams.WRAP_CONTENT;
+            }
+
+            mPickers.addView(mCalendar, LayoutParams.MATCH_PARENT, height);
+
         } else {
             // If the screen is more wide than high, we are displaying day and
             // time spinners, and if there is no calendar displayed, we should
