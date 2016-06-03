@@ -44,6 +44,7 @@ const { Cc, Ci, Cu } = require("chrome");
 const Services = require("Services");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { getRootBindingParent } = require("devtools/shared/layout/utils");
+const nodeConstants = require("devtools/shared/dom-node-constants");
 
 // This should be ok because none of the functions that use this should be used
 // on the worker thread, where Cu is not available.
@@ -539,7 +540,7 @@ CssLogic.prototype = {
         return true;
       }
     } while ((element = element.parentNode) &&
-             element.nodeType === Ci.nsIDOMNode.ELEMENT_NODE);
+             element.nodeType === nodeConstants.ELEMENT_NODE);
 
     return false;
   },
@@ -652,7 +653,7 @@ CssLogic.prototype = {
         this._matchedRules.push([rule, status]);
       }
     } while ((element = element.parentNode) &&
-              element.nodeType === Ci.nsIDOMNode.ELEMENT_NODE);
+              element.nodeType === nodeConstants.ELEMENT_NODE);
   },
 
   /**
@@ -784,7 +785,7 @@ CssLogic.getBindingElementAndPseudo = function (node) {
 CssLogic.getComputedStyle = function (node) {
   if (!node ||
       Cu.isDeadWrapper(node) ||
-      node.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE ||
+      node.nodeType !== nodeConstants.ELEMENT_NODE ||
       !node.ownerDocument ||
       !node.ownerDocument.defaultView) {
     return null;

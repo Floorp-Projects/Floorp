@@ -4,7 +4,6 @@
 "use strict";
 
 const Services = require("Services");
-const { Ci } = require("chrome");
 require("devtools/shared/fronts/styles");
 require("devtools/shared/fronts/highlighters");
 const { ShortLongString } = require("devtools/server/actors/string");
@@ -27,6 +26,7 @@ const { Task } = require("devtools/shared/task");
 const { Class } = require("sdk/core/heritage");
 const events = require("sdk/event/core");
 const object = require("sdk/util/object");
+const nodeConstants = require("devtools/shared/dom-node-constants.js");
 
 const HIDDEN_CLASS = "__fx-devtools-hide-shortcut__";
 
@@ -257,7 +257,7 @@ const NodeFront = FrontClassWithSpec(nodeSpec, {
     return this._form.isInHTMLDocument;
   },
   get tagName() {
-    return this.nodeType === Ci.nsIDOMNode.ELEMENT_NODE ? this.nodeName : null;
+    return this.nodeType === nodeConstants.ELEMENT_NODE ? this.nodeName : null;
   },
   get shortValue() {
     return this._form.shortValue;
@@ -829,7 +829,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
           // document children, because we should have gotten a documentUnload
           // first.
           for (let child of targetFront.treeChildren()) {
-            if (child.nodeType === Ci.nsIDOMNode.DOCUMENT_NODE) {
+            if (child.nodeType === nodeConstants.DOCUMENT_NODE) {
               console.trace("Got an unexpected frameLoad in the inspector, " +
                 "please file a bug on bugzilla.mozilla.org!");
             }

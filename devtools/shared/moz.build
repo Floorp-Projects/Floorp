@@ -47,6 +47,7 @@ DevToolsModules(
     'defer.js',
     'deprecated-sync-thenables.js',
     'DevToolsUtils.js',
+    'dom-node-constants.js',
     'event-emitter.js',
     'event-parsers.js',
     'indentation.js',
