@@ -5552,10 +5552,13 @@ ContentParent::RecvCreateWindow(PBrowserParent* aThisTab,
   // nsString (since primitives are not nullable). If we detect the voided
   // nsString, we know that we need to send OpenWindow2 a nullptr for the URI.
   const char* uri = aURI.IsVoid() ? nullptr : finalURIString.get();
-  const char* name = aName.IsVoid() ? nullptr : NS_ConvertUTF16toUTF8(aName).get();
   const char* features = aFeatures.IsVoid() ? nullptr : aFeatures.get();
 
-  *aResult = pwwatch->OpenWindow2(parent, uri, name, features, aCalledFromJS,
+  *aResult = pwwatch->OpenWindow2(parent, uri,
+                                  aName.IsVoid() ?
+                                    nullptr :
+                                    NS_ConvertUTF16toUTF8(aName).get(),
+                                  features, aCalledFromJS,
                                   false, false, thisTabParent, nullptr,
                                   aFullZoom, 1, getter_AddRefs(window));
 
