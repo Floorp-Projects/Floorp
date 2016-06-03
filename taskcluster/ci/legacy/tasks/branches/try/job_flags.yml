@@ -17,6 +17,8 @@ builds:
     types:
       opt:
         task: tasks/builds/android_api_15.yml
+      debug:
+        task: tasks/builds/android_api_15_debug.yml
   android-partner-sample1:
     platforms:
       - Android
