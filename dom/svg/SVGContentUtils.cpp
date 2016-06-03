@@ -79,7 +79,7 @@ GetStrokeDashData(SVGContentUtils::AutoStrokeOptions* aStrokeOptions,
   Float totalLengthOfDashes = 0.0, totalLengthOfGaps = 0.0;
   Float pathScale = 1.0;
 
-  if (aContextPaint && aStyleSVG->StrokeDasharrayFromObject()) {
+  if (aContextPaint && aStyleSVG->mStrokeDasharrayFromObject) {
     const FallibleTArray<gfxFloat>& dashSrc = aContextPaint->GetStrokeDashArray();
     dashArrayLength = dashSrc.Length();
     if (dashArrayLength <= 0) {
@@ -155,7 +155,7 @@ GetStrokeDashData(SVGContentUtils::AutoStrokeOptions* aStrokeOptions,
     return eNoStroke;
   }
 
-  if (aContextPaint && aStyleSVG->StrokeDashoffsetFromObject()) {
+  if (aContextPaint && aStyleSVG->mStrokeDashoffsetFromObject) {
     aStrokeOptions->mDashOffset = Float(aContextPaint->GetStrokeDashOffset());
   } else {
     aStrokeOptions->mDashOffset =
@@ -262,7 +262,7 @@ SVGContentUtils::GetStrokeWidth(nsSVGElement* aElement,
 
   const nsStyleSVG* styleSVG = styleContext->StyleSVG();
 
-  if (aContextPaint && styleSVG->StrokeWidthFromObject()) {
+  if (aContextPaint && styleSVG->mStrokeWidthFromObject) {
     return aContextPaint->GetStrokeWidth();
   }
 

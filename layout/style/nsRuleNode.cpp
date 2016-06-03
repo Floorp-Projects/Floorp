@@ -9314,11 +9314,11 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
 
   // fill-opacity: factor, inherit, initial,
   // context-fill-opacity, context-stroke-opacity
-  nsStyleSVGOpacitySource contextFillOpacity = svg->FillOpacitySource();
+  nsStyleSVGOpacitySource contextFillOpacity = svg->mFillOpacitySource;
   SetSVGOpacity(*aRuleData->ValueForFillOpacity(),
                 svg->mFillOpacity, contextFillOpacity, conditions,
-                parentSVG->mFillOpacity, parentSVG->FillOpacitySource());
-  svg->SetFillOpacitySource(contextFillOpacity);
+                parentSVG->mFillOpacity, parentSVG->mFillOpacitySource);
+  svg->mFillOpacitySource = contextFillOpacity;
 
   // fill-rule: enum, inherit, initial
   SetValue(*aRuleData->ValueForFillRule(),
@@ -9414,7 +9414,7 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
   case eCSSUnit_Inherit:
   case eCSSUnit_Unset:
     conditions.SetUncacheable();
-    svg->SetStrokeDashoffsetFromObject(parentSVG->StrokeDashoffsetFromObject());
+    svg->mStrokeDasharrayFromObject = parentSVG->mStrokeDasharrayFromObject;
     svg->mStrokeDasharray = parentSVG->mStrokeDasharray;
     break;
 
@@ -9422,19 +9422,19 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
     MOZ_ASSERT(strokeDasharrayValue->GetIntValue() ==
                      NS_STYLE_STROKE_PROP_CONTEXT_VALUE,
                "Unknown keyword for stroke-dasharray");
-    svg->SetStrokeDashoffsetFromObject(true);
+    svg->mStrokeDasharrayFromObject = true;
     svg->mStrokeDasharray.Clear();
     break;
 
   case eCSSUnit_Initial:
   case eCSSUnit_None:
-    svg->SetStrokeDashoffsetFromObject(false);
+    svg->mStrokeDasharrayFromObject = false;
     svg->mStrokeDasharray.Clear();
     break;
 
   case eCSSUnit_List:
   case eCSSUnit_ListDep: {
-    svg->SetStrokeDashoffsetFromObject(false);
+    svg->mStrokeDasharrayFromObject = false;
     svg->mStrokeDasharray.Clear();
 
     // count number of values
@@ -9463,10 +9463,10 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
   // stroke-dashoffset: <dashoffset>, inherit
   const nsCSSValue *strokeDashoffsetValue =
     aRuleData->ValueForStrokeDashoffset();
-  svg->SetStrokeDashoffsetFromObject(
+  svg->mStrokeDashoffsetFromObject =
     strokeDashoffsetValue->GetUnit() == eCSSUnit_Enumerated &&
-    strokeDashoffsetValue->GetIntValue() == NS_STYLE_STROKE_PROP_CONTEXT_VALUE);
-  if (svg->StrokeDashoffsetFromObject()) {
+    strokeDashoffsetValue->GetIntValue() == NS_STYLE_STROKE_PROP_CONTEXT_VALUE;
+  if (svg->mStrokeDashoffsetFromObject) {
     svg->mStrokeDashoffset.SetCoordValue(0);
   } else {
     SetCoord(*aRuleData->ValueForStrokeDashoffset(),
@@ -9498,11 +9498,11 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
             SETFCT_UNSET_INHERIT);
 
   // stroke-opacity:
-  nsStyleSVGOpacitySource contextStrokeOpacity = svg->StrokeOpacitySource();
+  nsStyleSVGOpacitySource contextStrokeOpacity = svg->mStrokeOpacitySource;
   SetSVGOpacity(*aRuleData->ValueForStrokeOpacity(),
                 svg->mStrokeOpacity, contextStrokeOpacity, conditions,
-                parentSVG->mStrokeOpacity, parentSVG->StrokeOpacitySource());
-  svg->SetStrokeOpacitySource(contextStrokeOpacity);
+                parentSVG->mStrokeOpacity, parentSVG->mStrokeOpacitySource);
+  svg->mStrokeOpacitySource = contextStrokeOpacity;
 
   // stroke-width:
   const nsCSSValue* strokeWidthValue = aRuleData->ValueForStrokeWidth();
@@ -9511,17 +9511,17 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
     MOZ_ASSERT(strokeWidthValue->GetIntValue() ==
                  NS_STYLE_STROKE_PROP_CONTEXT_VALUE,
                "Unrecognized keyword for stroke-width");
-    svg->SetStrokeWidthFromObject(true);
+    svg->mStrokeWidthFromObject = true;
     svg->mStrokeWidth.SetCoordValue(nsPresContext::CSSPixelsToAppUnits(1));
     break;
 
   case eCSSUnit_Initial:
-    svg->SetStrokeWidthFromObject(false);
+    svg->mStrokeWidthFromObject = false;
     svg->mStrokeWidth.SetCoordValue(nsPresContext::CSSPixelsToAppUnits(1));
     break;
 
   default:
-    svg->SetStrokeWidthFromObject(false);
+    svg->mStrokeWidthFromObject = false;
     SetCoord(*strokeWidthValue,
              svg->mStrokeWidth, parentSVG->mStrokeWidth,
              SETCOORD_LPH | SETCOORD_FACTOR | SETCOORD_UNSET_INHERIT,
