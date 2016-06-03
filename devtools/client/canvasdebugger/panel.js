@@ -8,7 +8,7 @@
 const { Cc, Ci, Cu, Cr } = require("chrome");
 const promise = require("promise");
 const EventEmitter = require("devtools/shared/event-emitter");
-const { CanvasFront } = require("devtools/server/actors/canvas");
+const { CanvasFront } = require("devtools/shared/fronts/canvas");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 function CanvasDebuggerPanel(iframeWindow, toolbox) {
