@@ -18,6 +18,7 @@ const {executeSoon} = require("devtools/shared/DevToolsUtils");
 var {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 var {Task} = require("devtools/shared/task");
 const {initCssProperties} = require("devtools/shared/fronts/css-properties");
+const nodeConstants = require("devtools/shared/dom-node-constants");
 
 loader.lazyRequireGetter(this, "CSS", "CSS");
 
@@ -1254,15 +1255,15 @@ InspectorPanel.prototype = {
     let node = this.selection.nodeFront;
 
     switch (node.nodeType) {
-      case Ci.nsIDOMNode.ELEMENT_NODE :
+      case nodeConstants.ELEMENT_NODE :
         this._copyLongString(this.walker.outerHTML(node));
         break;
-      case Ci.nsIDOMNode.COMMENT_NODE :
+      case nodeConstants.COMMENT_NODE :
         this._getLongString(node.getNodeValue()).then(comment => {
           clipboardHelper.copyString("<!--" + comment + "-->");
         });
         break;
-      case Ci.nsIDOMNode.DOCUMENT_TYPE_NODE :
+      case nodeConstants.DOCUMENT_TYPE_NODE :
         clipboardHelper.copyString(node.doctypeString);
         break;
     }

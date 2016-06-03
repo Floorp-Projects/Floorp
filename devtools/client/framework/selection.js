@@ -6,7 +6,8 @@
 
 "use strict";
 
-const { Cu, Ci } = require("chrome");
+const { Cu } = require("chrome");
+const nodeConstants = require("devtools/shared/dom-node-constants.js")
 const { getRootBindingParent } = require("devtools/shared/layout/utils");
 var EventEmitter = require("devtools/shared/event-emitter");
 
@@ -262,8 +263,8 @@ Selection.prototype = {
 
   // Node type
 
-  isElementNode: function () {
-    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.ELEMENT_NODE;
+  isElementNode: function() {
+    return this.isNode() && this.nodeFront.nodeType == nodeConstants.ELEMENT_NODE;
   },
 
   isPseudoElementNode: function () {
@@ -274,36 +275,36 @@ Selection.prototype = {
     return this.isNode() && this.nodeFront.isAnonymous;
   },
 
-  isAttributeNode: function () {
-    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.ATTRIBUTE_NODE;
+  isAttributeNode: function() {
+    return this.isNode() && this.nodeFront.nodeType == nodeConstants.ATTRIBUTE_NODE;
   },
 
-  isTextNode: function () {
-    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.TEXT_NODE;
+  isTextNode: function() {
+    return this.isNode() && this.nodeFront.nodeType == nodeConstants.TEXT_NODE;
   },
 
-  isCDATANode: function () {
-    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.CDATA_SECTION_NODE;
+  isCDATANode: function() {
+    return this.isNode() && this.nodeFront.nodeType == nodeConstants.CDATA_SECTION_NODE;
   },
 
-  isEntityRefNode: function () {
-    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.ENTITY_REFERENCE_NODE;
+  isEntityRefNode: function() {
+    return this.isNode() && this.nodeFront.nodeType == nodeConstants.ENTITY_REFERENCE_NODE;
   },
 
-  isEntityNode: function () {
-    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.ENTITY_NODE;
+  isEntityNode: function() {
+    return this.isNode() && this.nodeFront.nodeType == nodeConstants.ENTITY_NODE;
   },
 
-  isProcessingInstructionNode: function () {
-    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.PROCESSING_INSTRUCTION_NODE;
+  isProcessingInstructionNode: function() {
+    return this.isNode() && this.nodeFront.nodeType == nodeConstants.PROCESSING_INSTRUCTION_NODE;
   },
 
-  isCommentNode: function () {
-    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.PROCESSING_INSTRUCTION_NODE;
+  isCommentNode: function() {
+    return this.isNode() && this.nodeFront.nodeType == nodeConstants.PROCESSING_INSTRUCTION_NODE;
   },
 
-  isDocumentNode: function () {
-    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.DOCUMENT_NODE;
+  isDocumentNode: function() {
+    return this.isNode() && this.nodeFront.nodeType == nodeConstants.DOCUMENT_NODE;
   },
 
   /**
@@ -324,15 +325,15 @@ Selection.prototype = {
            this.nodeFront.nodeName === "HEAD";
   },
 
-  isDocumentTypeNode: function () {
-    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.DOCUMENT_TYPE_NODE;
+  isDocumentTypeNode: function() {
+    return this.isNode() && this.nodeFront.nodeType == nodeConstants.DOCUMENT_TYPE_NODE;
   },
 
-  isDocumentFragmentNode: function () {
-    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.DOCUMENT_FRAGMENT_NODE;
+  isDocumentFragmentNode: function() {
+    return this.isNode() && this.nodeFront.nodeType == nodeConstants.DOCUMENT_FRAGMENT_NODE;
   },
 
-  isNotationNode: function () {
-    return this.isNode() && this.nodeFront.nodeType == Ci.nsIDOMNode.NOTATION_NODE;
+  isNotationNode: function() {
+    return this.isNode() && this.nodeFront.nodeType == nodeConstants.NOTATION_NODE;
   },
 };
