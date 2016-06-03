@@ -3194,7 +3194,7 @@ enum nsStyleSVGPaintType {
   eStyleSVGPaintType_ContextStroke
 };
 
-enum nsStyleSVGOpacitySource : uint8_t {
+enum nsStyleSVGOpacitySource {
   eStyleSVGOpacitySource_Normal,
   eStyleSVGOpacitySource_ContextFillOpacity,
   eStyleSVGOpacitySource_ContextStrokeOpacity
@@ -3277,46 +3277,16 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG
   uint8_t          mStrokeLinejoin;   // [inherited] see nsStyleConsts.h
   uint8_t          mTextAnchor;       // [inherited] see nsStyleConsts.h
 
-  nsStyleSVGOpacitySource FillOpacitySource() const {
-    uint8_t value = (mContextFlags & FILL_OPACITY_SOURCE_MASK) >>
-                    FILL_OPACITY_SOURCE_SHIFT;
-    return nsStyleSVGOpacitySource(value);
-  }
-  nsStyleSVGOpacitySource StrokeOpacitySource() const {
-    uint8_t value = (mContextFlags & STROKE_OPACITY_SOURCE_MASK) >>
-                    STROKE_OPACITY_SOURCE_SHIFT;
-    return nsStyleSVGOpacitySource(value);
-  }
-  bool StrokeDasharrayFromObject() const {
-    return mContextFlags & STROKE_DASHARRAY_CONTEXT;
-  }
-  bool StrokeDashoffsetFromObject() const {
-    return mContextFlags & STROKE_DASHOFFSET_CONTEXT;
-  }
-  bool StrokeWidthFromObject() const {
-    return mContextFlags & STROKE_WIDTH_CONTEXT;
-  }
+  // In SVG glyphs, whether we inherit fill or stroke opacity from the outer
+  // text object.
+  // Use 3 bits to avoid signedness problems in MSVC.
+  nsStyleSVGOpacitySource mFillOpacitySource    : 3;
+  nsStyleSVGOpacitySource mStrokeOpacitySource  : 3;
 
-  void SetFillOpacitySource(nsStyleSVGOpacitySource aValue) {
-    mContextFlags = (mContextFlags & ~FILL_OPACITY_SOURCE_MASK) |
-                    (aValue << FILL_OPACITY_SOURCE_SHIFT);
-  }
-  void SetStrokeOpacitySource(nsStyleSVGOpacitySource aValue) {
-    mContextFlags = (mContextFlags & ~STROKE_OPACITY_SOURCE_MASK) |
-                    (aValue << STROKE_OPACITY_SOURCE_SHIFT);
-  }
-  void SetStrokeDasharrayFromObject(bool aValue) {
-    mContextFlags = (mContextFlags & ~STROKE_DASHARRAY_CONTEXT) |
-                    (aValue ? STROKE_DASHARRAY_CONTEXT : 0);
-  }
-  void SetStrokeDashoffsetFromObject(bool aValue) {
-    mContextFlags = (mContextFlags & ~STROKE_DASHOFFSET_CONTEXT) |
-                    (aValue ? STROKE_DASHOFFSET_CONTEXT : 0);
-  }
-  void SetStrokeWidthFromObject(bool aValue) {
-    mContextFlags = (mContextFlags & ~STROKE_WIDTH_CONTEXT) |
-                    (aValue ? STROKE_WIDTH_CONTEXT : 0);
-  }
+  // SVG glyph outer object inheritance for other properties
+  bool mStrokeDasharrayFromObject   : 1;
+  bool mStrokeDashoffsetFromObject  : 1;
+  bool mStrokeWidthFromObject       : 1;
 
   bool HasMarker() const {
     return mMarkerStart || mMarkerMid || mMarkerEnd;
@@ -3337,22 +3307,6 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG
   bool HasFill() const {
     return mFill.mType != eStyleSVGPaintType_None && mFillOpacity > 0;
   }
-
-private:
-  // Flags to represent the use of context-fill and context-stroke
-  // for fill-opacity or stroke-opacity, and context-value for stroke-dasharray,
-  // stroke-dashoffset and stroke-width.
-  enum {
-    FILL_OPACITY_SOURCE_MASK   = 0x03,  // fill-opacity: context-{fill,stroke}
-    STROKE_OPACITY_SOURCE_MASK = 0x0C,  // stroke-opacity: context-{fill,stroke}
-    STROKE_DASHARRAY_CONTEXT   = 0x10,  // stroke-dasharray: context-value
-    STROKE_DASHOFFSET_CONTEXT  = 0x20,  // stroke-dashoffset: context-value
-    STROKE_WIDTH_CONTEXT       = 0x40,  // stroke-width: context-value
-    FILL_OPACITY_SOURCE_SHIFT   = 0,
-    STROKE_OPACITY_SOURCE_SHIFT = 2,
-  };
-
-  uint8_t          mContextFlags;     // [inherited]
 };
 
 class nsStyleBasicShape final

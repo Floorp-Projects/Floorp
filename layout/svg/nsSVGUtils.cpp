@@ -1370,7 +1370,7 @@ nsSVGUtils::SetupContextPaint(const DrawTarget* aDrawTarget,
   if (style->mFill.mType == eStyleSVGPaintType_None) {
     aThisContextPaint->SetFillOpacity(0.0f);
   } else {
-    float opacity = nsSVGUtils::GetOpacity(style->FillOpacitySource(),
+    float opacity = nsSVGUtils::GetOpacity(style->mFillOpacitySource,
                                            style->mFillOpacity,
                                            aOuterContextPaint);
 
@@ -1388,7 +1388,7 @@ nsSVGUtils::SetupContextPaint(const DrawTarget* aDrawTarget,
   if (style->mStroke.mType == eStyleSVGPaintType_None) {
     aThisContextPaint->SetStrokeOpacity(0.0f);
   } else {
-    float opacity = nsSVGUtils::GetOpacity(style->StrokeOpacitySource(),
+    float opacity = nsSVGUtils::GetOpacity(style->mStrokeOpacitySource,
                                            style->mStrokeOpacity,
                                            aOuterContextPaint);
 
@@ -1427,7 +1427,7 @@ nsSVGUtils::MakeFillPatternFor(nsIFrame* aFrame,
   }
 
   float opacity = MaybeOptimizeOpacity(aFrame,
-                                       GetOpacity(style->FillOpacitySource(),
+                                       GetOpacity(style->mFillOpacitySource,
                                                   style->mFillOpacity,
                                                   aContextPaint));
   const DrawTarget* dt = aContext->GetDrawTarget();
@@ -1487,7 +1487,7 @@ nsSVGUtils::MakeStrokePatternFor(nsIFrame* aFrame,
   }
 
   float opacity = MaybeOptimizeOpacity(aFrame,
-                                       GetOpacity(style->StrokeOpacitySource(),
+                                       GetOpacity(style->mStrokeOpacitySource,
                                                   style->mStrokeOpacity,
                                                   aContextPaint));
 
@@ -1577,7 +1577,7 @@ float
 nsSVGUtils::GetStrokeWidth(nsIFrame* aFrame, gfxTextContextPaint *aContextPaint)
 {
   const nsStyleSVG *style = aFrame->StyleSVG();
-  if (aContextPaint && style->StrokeWidthFromObject()) {
+  if (aContextPaint && style->mStrokeWidthFromObject) {
     return aContextPaint->GetStrokeWidth();
   }
 
@@ -1604,7 +1604,7 @@ GetStrokeDashData(nsIFrame* aFrame,
      content->GetParent() : content);
 
   gfxFloat totalLength = 0.0;
-  if (aContextPaint && style->StrokeDasharrayFromObject()) {
+  if (aContextPaint && style->mStrokeDasharrayFromObject) {
     aDashes = aContextPaint->GetStrokeDashArray();
 
     for (uint32_t i = 0; i < aDashes.Length(); i++) {
@@ -1642,7 +1642,7 @@ GetStrokeDashData(nsIFrame* aFrame,
     }
   }
 
-  if (aContextPaint && style->StrokeDashoffsetFromObject()) {
+  if (aContextPaint && style->mStrokeDashoffsetFromObject) {
     *aDashOffset = aContextPaint->GetStrokeDashOffset();
   } else {
     *aDashOffset = SVGContentUtils::CoordToFloat(ctx,
