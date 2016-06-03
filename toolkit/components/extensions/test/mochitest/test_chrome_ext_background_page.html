@@ -5,6 +5,7 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
   <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
   <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="chrome_head.js"></script>
   <script type="text/javascript" src="head.js"></script>
   <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
 </head>
@@ -13,9 +14,6 @@
 <script type="text/javascript">
 "use strict";
 
-const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
-
-Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://testing-common/TestUtils.jsm");
 
 /* eslint-disable mozilla/balanced-listeners */
