@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_PresentationChild_h
 #define mozilla_dom_PresentationChild_h
 
+#include "mozilla/dom/PPresentationBuilderChild.h"
 #include "mozilla/dom/PPresentationChild.h"
 #include "mozilla/dom/PPresentationRequestChild.h"
 
@@ -31,6 +32,16 @@ public:
   virtual bool
   DeallocPPresentationRequestChild(PPresentationRequestChild* aActor) override;
 
+  bool RecvPPresentationBuilderConstructor(PPresentationBuilderChild* aActor,
+                                           const nsString& aSessionId,
+                                           const uint8_t& aRole) override;
+
+  virtual PPresentationBuilderChild*
+  AllocPPresentationBuilderChild(const nsString& aSessionId, const uint8_t& aRole) override;
+
+  virtual bool
+  DeallocPPresentationBuilderChild(PPresentationBuilderChild* aActor) override;
+
   virtual bool
   RecvNotifyAvailableChange(const bool& aAvailable) override;
 
@@ -50,7 +61,7 @@ public:
 private:
   virtual ~PresentationChild();
 
-  bool mActorDestroyed;
+  bool mActorDestroyed = false;
   RefPtr<PresentationIPCService> mService;
 };
 
@@ -70,7 +81,7 @@ public:
 private:
   virtual ~PresentationRequestChild();
 
-  bool mActorDestroyed;
+  bool mActorDestroyed = false;
   nsCOMPtr<nsIPresentationServiceCallback> mCallback;
 };
 
