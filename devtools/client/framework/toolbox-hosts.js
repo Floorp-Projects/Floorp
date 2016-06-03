@@ -6,11 +6,10 @@
 
 "use strict";
 
-const {Cu} = require("chrome");
 const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
 const Services = require("Services");
-Cu.import("resource://devtools/client/shared/DOMHelpers.jsm");
+const {DOMHelpers} = require("resource://devtools/client/shared/DOMHelpers.jsm");
 
 loader.lazyRequireGetter(this, "system", "devtools/shared/system");
 

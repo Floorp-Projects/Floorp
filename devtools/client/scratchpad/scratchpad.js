@@ -55,12 +55,12 @@ const Services = require("Services");
 const {gDevTools} = require("devtools/client/framework/devtools");
 const {Heritage} = require("devtools/client/shared/widgets/view-helpers");
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
-Cu.import("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
-Cu.import("resource://gre/modules/jsdebugger.jsm");
-Cu.import("resource://gre/modules/osfile.jsm");
-Cu.import("resource://gre/modules/reflect.jsm");
+const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
+const {NetUtil} = require("resource://gre/modules/NetUtil.jsm");
+const {ScratchpadManager} = require("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
+const {addDebuggerToGlobal} = require("resource://gre/modules/jsdebugger.jsm");
+const {OS} = require("resource://gre/modules/osfile.jsm");
+const {Reflect} = require("resource://gre/modules/reflect.jsm");
 
 XPCOMUtils.defineConstant(this, "SCRATCHPAD_CONTEXT_CONTENT", SCRATCHPAD_CONTEXT_CONTENT);
 XPCOMUtils.defineConstant(this, "SCRATCHPAD_CONTEXT_BROWSER", SCRATCHPAD_CONTEXT_BROWSER);

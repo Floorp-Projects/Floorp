@@ -2,15 +2,13 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test the functionality of the BreakpointActorMap object.
 
-const { BreakpointActorMap, ThreadActor } = require("devtools/server/actors/script");
+const { BreakpointActorMap } = require("devtools/server/actors/script");
 
-function run_test()
-{
-  Cu.import("resource://gre/modules/jsdebugger.jsm");
-  addDebuggerToGlobal(this);
-
+function run_test() {
   test_get_actor();
   test_set_actor();
   test_delete_actor();

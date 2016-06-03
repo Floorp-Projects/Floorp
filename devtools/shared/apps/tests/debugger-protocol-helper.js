@@ -1,6 +1,8 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
@@ -9,8 +11,8 @@ const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { DebuggerClient } = require("devtools/shared/client/main");
 const { DebuggerServer } = require("devtools/server/main");
 const Services = require("Services");
-const { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm");
-const { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm");
+const { FileUtils } = require("resource://gre/modules/FileUtils.jsm");
+const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
 
 var gClient, gActor;
 
@@ -152,7 +154,7 @@ addMessageListener("addFrame", function (aMessage) {
 
 addMessageListener("tweak-app-object", function (aMessage) {
   let appId = aMessage.appId;
-  Cu.import("resource://gre/modules/Webapps.jsm");
+  let { DOMApplicationRegistry } = Cu.import("resource://gre/modules/Webapps.jsm", {});
   let reg = DOMApplicationRegistry;
   if ("removable" in aMessage) {
     reg.webapps[appId].removable = aMessage.removable;

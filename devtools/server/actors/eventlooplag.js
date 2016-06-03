@@ -2,15 +2,17 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 /**
  * The eventLoopLag actor emits "event-loop-lag" events when the event
  * loop gets unresponsive. The event comes with a "time" property (the
  * duration of the lag in milliseconds).
  */
 
-const {Ci, Cu} = require("chrome");
+const {Ci} = require("chrome");
 const Services = require("Services");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const protocol = require("devtools/shared/protocol");
 const {method, Arg, RetVal} = protocol;
 const events = require("sdk/event/core");
