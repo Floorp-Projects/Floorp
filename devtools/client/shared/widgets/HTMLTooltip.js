@@ -229,22 +229,27 @@ HTMLTooltip.prototype = {
   },
 
   _isInTooltipContainer: function (node) {
-    let contentWindow = this.panel.ownerDocument.defaultView;
+    let tooltipWindow = this.panel.ownerDocument.defaultView;
     let win = node.ownerDocument.defaultView;
 
-    if (win === contentWindow) {
-      // If node is in the same window as the tooltip, check if the tooltip
-      // parent contains node.
+    if (this.arrow && this.arrow === node) {
+      return true;
+    }
+
+    if (win === tooltipWindow) {
+      // If node is in the same window as the tooltip, check if the tooltip panel
+      // contains node.
       return this.panel.contains(node);
     }
 
-    // Otherwise check if the node window is in the tooltip window.
+    // Otherwise check if the node window is in the tooltip container.
     while (win.parent && win.parent != win) {
       win = win.parent;
-      if (win === contentWindow) {
-        return true;
+      if (win === tooltipWindow) {
+        return this.panel.contains(win.frameElement);
       }
     }
+
     return false;
   },
 
