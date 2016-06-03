@@ -351,7 +351,7 @@ public:
 
   virtual const char* Name() const override { return "SurfaceTextureSource"; }
 
-  virtual TextureSourceOGL* AsSourceOGL() { return this; }
+  virtual TextureSourceOGL* AsSourceOGL() override { return this; }
 
   virtual void BindTexture(GLenum activetex, gfx::Filter aFilter) override;
 
@@ -363,7 +363,7 @@ public:
 
   virtual gfx::Matrix4x4 GetTextureTransform() override;
 
-  virtual GLenum GetTextureTarget() const { return mTextureTarget; }
+  virtual GLenum GetTextureTarget() const override { return mTextureTarget; }
 
   virtual GLenum GetWrapMode() const override { return mWrapMode; }
 
@@ -418,7 +418,7 @@ public:
 
   virtual gfx::IntSize GetSize() const override { return mSize; }
 
-  virtual const char* Name() { return "SurfaceTextureHost"; }
+  virtual const char* Name() override { return "SurfaceTextureHost"; }
 
 protected:
   RefPtr<gl::AndroidSurfaceTexture> mSurfTex;

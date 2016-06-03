@@ -32,23 +32,23 @@ public:
 
     virtual already_AddRefed<gfxASurface>
     CreateOffscreenSurface(const IntSize& aSize,
-                           gfxImageFormat aFormat);
+                           gfxImageFormat aFormat) override;
     
-    virtual gfxImageFormat GetOffscreenFormat() { return mOffscreenFormat; }
+    virtual gfxImageFormat GetOffscreenFormat() override { return mOffscreenFormat; }
     
     already_AddRefed<mozilla::gfx::ScaledFont>
-      GetScaledFontForFont(mozilla::gfx::DrawTarget* aTarget, gfxFont *aFont);
+      GetScaledFontForFont(mozilla::gfx::DrawTarget* aTarget, gfxFont *aFont) override;
 
     // to support IPC font list (sharing between chrome and content)
     void GetSystemFontList(InfallibleTArray<FontListEntry>* retValue);
 
     // platform implementations of font functions
-    virtual bool IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlags);
-    virtual gfxPlatformFontList* CreatePlatformFontList();
+    virtual bool IsFontFormatSupported(nsIURI *aFontURI, uint32_t aFormatFlags) override;
+    virtual gfxPlatformFontList* CreatePlatformFontList() override;
 
     virtual void GetCommonFallbackFonts(uint32_t aCh, uint32_t aNextCh,
                                         Script aRunScript,
-                                        nsTArray<const char*>& aFontList);
+                                        nsTArray<const char*>& aFontList) override;
 
     gfxFontGroup*
     CreateFontGroup(const mozilla::FontFamilyList& aFontFamilyList,
