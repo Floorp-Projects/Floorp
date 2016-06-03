@@ -37,6 +37,7 @@ class FxDesktopBuild(BuildScript, object):
                 'upload-files',  # upload from BB to TC
                 'sendchange',
                 'check-test',
+                'valgrind-test',
                 'package-source',
                 'generate-source-signing-manifest',
                 'multi-l10n',
