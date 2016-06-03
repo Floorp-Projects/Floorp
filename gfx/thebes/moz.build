@@ -52,6 +52,11 @@ EXPORTS += [
     'VsyncSource.h',
 ]
 
+EXPORTS.mozilla.gfx += [
+    'PrintTarget.h',
+    'PrintTargetThebes.h',
+]
+
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
     EXPORTS += [
         'gfxAndroidPlatform.h',
@@ -202,6 +207,8 @@ SOURCES += [
     # gfxPlatform.cpp includes mac system header conflicting with point/size
     'gfxPlatform.cpp',
     'gfxPrefs.cpp',
+    'PrintTarget.cpp',
+    'PrintTargetThebes.cpp',
 ]
 
 UNIFIED_SOURCES += [
