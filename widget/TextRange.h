@@ -131,7 +131,7 @@ struct TextRangeStyle
 enum class TextRangeType : RawTextRangeType
 {
   eUninitialized = 0x00,
-  NS_TEXTRANGE_CARETPOSITION = 0x01,
+  eCaret = 0x01,
   NS_TEXTRANGE_RAWINPUT =
     nsITextInputProcessor::ATTR_RAW_CLAUSE,
   NS_TEXTRANGE_SELECTEDRAWTEXT =
@@ -169,7 +169,7 @@ struct TextRange
 
   bool IsClause() const
   {
-    return mRangeType != TextRangeType::NS_TEXTRANGE_CARETPOSITION;
+    return mRangeType != TextRangeType::eCaret;
   }
 
   bool Equals(const TextRange& aOther) const
@@ -265,7 +265,7 @@ public:
   bool HasCaret() const
   {
     for (const TextRange& range : *this) {
-      if (range.mRangeType == TextRangeType::NS_TEXTRANGE_CARETPOSITION) {
+      if (range.mRangeType == TextRangeType::eCaret) {
         return true;
       }
     }
@@ -275,7 +275,7 @@ public:
   uint32_t GetCaretPosition() const
   {
     for (const TextRange& range : *this) {
-      if (range.mRangeType == TextRangeType::NS_TEXTRANGE_CARETPOSITION) {
+      if (range.mRangeType == TextRangeType::eCaret) {
         return range.mStartOffset;
       }
     }

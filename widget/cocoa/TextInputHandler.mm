@@ -2833,7 +2833,7 @@ IMEInputHandler::CreateTextRangeArray(NSAttributedString *aAttrString,
   TextRange range;
   range.mStartOffset = aSelectedRange.location + aSelectedRange.length;
   range.mEndOffset = range.mStartOffset;
-  range.mRangeType = TextRangeType::NS_TEXTRANGE_CARETPOSITION;
+  range.mRangeType = TextRangeType::eCaret;
   textRangeArray->AppendElement(range);
 
   MOZ_LOG(gLog, LogLevel::Info,

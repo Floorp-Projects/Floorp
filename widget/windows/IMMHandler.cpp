@@ -1905,7 +1905,7 @@ PlatformToNSAttr(uint8_t aAttr)
       return TextRangeType::NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
     default:
       NS_ASSERTION(false, "unknown attribute");
-      return TextRangeType::NS_TEXTRANGE_CARETPOSITION;
+      return TextRangeType::eCaret;
   }
 }
 

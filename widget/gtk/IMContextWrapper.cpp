@@ -1672,7 +1672,7 @@ IMContextWrapper::CreateTextRangeArray(GtkIMContext* aContext,
 
     TextRange range;
     range.mStartOffset = range.mEndOffset = caretOffsetInUTF16;
-    range.mRangeType = TextRangeType::NS_TEXTRANGE_CARETPOSITION;
+    range.mRangeType = TextRangeType::eCaret;
     textRangeArray->AppendElement(range);
     MOZ_LOG(gGtkIMLog, LogLevel::Debug,
         ("GTKIM: %p   CreateTextRangeArray(), mStartOffset=%u, "
