@@ -409,6 +409,8 @@ private:
   RefPtr<Presentation> mPresentation;
 
   nsTArray<RefPtr<Promise> > mVRGetDevicesPromises;
+
+  bool mBatteryTelemetryReported;
 };
 
 } // namespace dom
