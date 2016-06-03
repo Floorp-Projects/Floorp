@@ -78,14 +78,14 @@ class Sprinter final : public GenericPrinter
     size_t                size;             // size of buffer allocated at base
     ptrdiff_t             offset;           // offset of next free char in buffer
 
-    bool realloc_(size_t newSize);
+    MOZ_MUST_USE bool realloc_(size_t newSize);
 
   public:
     explicit Sprinter(ExclusiveContext* cx, bool shouldReportOOM = true);
     ~Sprinter();
 
     // Initialize this sprinter, returns false on error.
-    bool init();
+    MOZ_MUST_USE bool init();
 
     void checkInvariants() const;
 
@@ -132,7 +132,7 @@ class Fprinter final : public GenericPrinter
     ~Fprinter();
 
     // Initialize this printer, returns false on error.
-    bool init(const char* path);
+    MOZ_MUST_USE bool init(const char* path);
     void init(FILE* fp);
     bool isInitialized() const {
         return file_ != nullptr;
