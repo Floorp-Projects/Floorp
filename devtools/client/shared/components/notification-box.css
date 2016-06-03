@@ -33,7 +33,6 @@
 /* Style */
 
 .notificationbox .notification {
-  color: InfoText;
   background-color: InfoBackground;
   text-shadow: none;
   border-top: 1px solid ThreeDShadow;

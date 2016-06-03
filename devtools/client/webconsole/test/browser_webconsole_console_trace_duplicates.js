@@ -15,7 +15,7 @@ function test() {
     const {tab} = yield loadTab("data:text/html;charset=utf8,<p>hello");
     const hud = yield openConsole(tab);
 
-    content.location = TEST_URI;
+    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URI);
 
     // NB: Now that stack frames include a column number multiple invocations
     //     on the same line are considered unique. ie:

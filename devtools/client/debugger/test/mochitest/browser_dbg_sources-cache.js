@@ -12,7 +12,7 @@ const TOTAL_SOURCES = 4;
 
 function test() {
   let options = {
-    source: "-01.js",
+    source: EXAMPLE_URL + "code_function-search-01.js",
     line: 1
   };
   initDebugger(TAB_URL, options).then(([aTab, aDebuggee, aPanel]) => {
