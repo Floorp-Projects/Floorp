@@ -661,7 +661,7 @@ function CanonicalizeLocaleList(locales) {
     if (typeof locales === "string")
         locales = [locales];
     var O = ToObject(locales);
-    var len = TO_UINT32(O.length);
+    var len = ToLength(O.length);
     var k = 0;
     while (k < len) {
         // Don't call ToString(k) - SpiderMonkey is faster with integers.
