@@ -27,7 +27,7 @@ static PRDescIdentity test_fd_identity = PR_INVALID_IO_LAYER;
   PR_ASSERT(PR_FALSE);                           \
   PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0)
 
-#define LOG(a) std::cerr << name_ << ": " << a << std::endl;
+#define LOG(a) std::cerr << name_ << ": " << a << std::endl
 
 class Packet : public DataBuffer {
  public:
@@ -47,7 +47,9 @@ class Packet : public DataBuffer {
 
 // Implementation of NSPR methods
 static PRStatus DummyClose(PRFileDesc *f) {
+  DummyPrSocket *io = reinterpret_cast<DummyPrSocket *>(f->secret);
   f->secret = nullptr;
+  delete io;
   return PR_SUCCESS;
 }
 
@@ -256,7 +258,10 @@ DummyPrSocket::~DummyPrSocket() {
 
 void DummyPrSocket::Reset() {
   delete filter_;
-  peer_ = nullptr;
+  if (peer_) {
+    peer_->SetPeer(nullptr);
+    peer_ = nullptr;
+  }
   while (!input_.empty())
   {
     Packet* front = input_.front();

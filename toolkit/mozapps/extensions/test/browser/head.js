@@ -531,6 +531,12 @@ function is_element_hidden(aElement, aMsg) {
   ok(is_hidden(aElement), aMsg || (aElement + " should be hidden"));
 }
 
+function promiseAddonByID(aId) {
+  return new Promise(resolve => {
+    AddonManager.getAddonByID(aId, resolve);
+  });
+}
+
 function promiseAddonsByIDs(aIDs) {
   return new Promise(resolve => {
     AddonManager.getAddonsByIDs(aIDs, resolve);
@@ -1341,7 +1347,11 @@ MockInstall.prototype = {
           return;
         }
 
-        AddonManagerPrivate.callAddonListeners("onInstalling", this.addon);
+        let needsRestart = (this.operationsRequiringRestart & AddonManager.OP_NEEDS_RESTART_INSTALL);
+        AddonManagerPrivate.callAddonListeners("onInstalling", this.addon, needsRestart);
+        if (!needsRestart) {
+          AddonManagerPrivate.callAddonListeners("onInstalled", this.addon);
+        }
 
         this.state = AddonManager.STATE_INSTALLED;
         this.callListeners("onInstallEnded");

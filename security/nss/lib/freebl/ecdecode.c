@@ -187,7 +187,7 @@ EC_FillParams(PLArenaPool *arena, const SECItem *encodedParams,
     params->type = ec_params_named;
     params->name = ECCurve_noName;
 
-    /* For named curves, fill out curveOID */
+    /* Fill out curveOID */
     params->curveOID.len = oid.len;
     params->curveOID.data = (unsigned char *) PORT_ArenaAlloc(arena, oid.len);
     if (params->curveOID.data == NULL) goto cleanup;

@@ -155,7 +155,6 @@ public class GeckoApplication extends Application
         NotificationHelper.getInstance(context).init();
 
         MulticastDNSManager.getInstance(context).init();
-        NetworkInfoService.getInstance(context).init();
 
         // Make sure that all browser-ish applications default to the real LocalBrowserDB.
         // GeckoView consumers use their own Application class, so this doesn't affect them.

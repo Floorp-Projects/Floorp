@@ -750,7 +750,7 @@ MediaFormatReader::NeedInput(DecoderData& aDecoder)
   // run of input than we input, decoders fire an "input exhausted" callback,
   // which overrides our "few more samples" threshold.
   return
-    !aDecoder.mDraining &&
+    !aDecoder.HasPendingDrain() &&
     !aDecoder.HasFatalError() &&
     aDecoder.mDecodingRequested &&
     !aDecoder.mDemuxRequest.Exists() &&
@@ -813,7 +813,7 @@ MediaFormatReader::UpdateReceivedNewData(TrackType aTrack)
     return false;
   }
 
-  if (decoder.mDrainComplete || decoder.mDraining) {
+  if (decoder.HasPendingDrain()) {
     // We do not want to clear mWaitingForData or mDemuxEOS while
     // a drain is in progress in order to properly complete the operation.
     return false;
@@ -1205,8 +1205,7 @@ MediaFormatReader::Update(TrackType aTrack)
         return;
       }
     } else if (decoder.mDemuxEOS && !decoder.mNeedDraining &&
-               !decoder.mDraining && !decoder.mDrainComplete &&
-               decoder.mQueuedSamples.IsEmpty()) {
+               !decoder.HasPendingDrain() && decoder.mQueuedSamples.IsEmpty()) {
       // It is possible to transition from WAITING_FOR_DATA directly to EOS
       // state during the internal seek; in which case no draining would occur.
       // There is no more samples left to be decoded and we are already in

@@ -33,7 +33,7 @@ public:
 
   // TextureClientAllocator
   already_AddRefed<TextureClient> GetTextureClient() override;
-  void ReturnTextureClientDeferred(TextureClient* aClient, gfxSharedReadLock* aLock) override {}
+  void ReturnTextureClientDeferred(TextureClient* aClient) override {}
   void ReportClientLost() override {}
 
   // ClientTiledLayerBuffer
@@ -69,8 +69,6 @@ public:
   bool IsLowPrecision() const override {
     return false;
   }
-
-  void ReadLock();
 
   void ReleaseTiles();
 

@@ -125,7 +125,6 @@ AudioStream::AudioStream(DataSource& aSource)
   , mOutRate(0)
   , mChannels(0)
   , mOutChannels(0)
-  , mAudioClock(this)
   , mTimeStretcher(nullptr)
   , mDumpFile(nullptr)
   , mState(INITIALIZED)
@@ -188,7 +187,7 @@ nsresult AudioStream::SetPlaybackRate(double aPlaybackRate)
     return NS_ERROR_FAILURE;
   }
 
-  mAudioClock.SetPlaybackRateUnlocked(aPlaybackRate);
+  mAudioClock.SetPlaybackRate(aPlaybackRate);
   mOutRate = mInRate / aPlaybackRate;
 
   if (mAudioClock.GetPreservesPitch()) {
@@ -352,7 +351,7 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
 #endif
 
   params.format = ToCubebFormat<AUDIO_OUTPUT_FORMAT>::value;
-  mAudioClock.Init();
+  mAudioClock.Init(aRate);
 
   return OpenCubeb(params, startTime, isFirst);
 }
@@ -411,18 +410,20 @@ void
 AudioStream::Pause()
 {
   MonitorAutoLock mon(mMonitor);
+  MOZ_ASSERT(mState != INITIALIZED, "Must be Start()ed.");
+  MOZ_ASSERT(mState != STOPPED, "Already Pause()ed.");
+  MOZ_ASSERT(mState != SHUTDOWN, "Already Shutdown()ed.");
 
-  if (mState == ERRORED) {
+  // Do nothing if we are already drained or errored.
+  if (mState == DRAINED || mState == ERRORED) {
     return;
   }
 
-  if (mState != STARTED) {
-    mState = STOPPED; // which also tells async OpenCubeb not to start, just init
-    return;
-  }
-
-  int r = InvokeCubeb(cubeb_stream_stop);
-  if (mState != ERRORED && r == CUBEB_OK) {
+  if (InvokeCubeb(cubeb_stream_stop) != CUBEB_OK) {
+    mState = ERRORED;
+  } else if (mState != DRAINED && mState != ERRORED) {
+    // Don't transition to other states if we are already
+    // drained or errored.
     mState = STOPPED;
   }
 }
@@ -431,12 +432,20 @@ void
 AudioStream::Resume()
 {
   MonitorAutoLock mon(mMonitor);
-  if (mState != STOPPED) {
+  MOZ_ASSERT(mState != INITIALIZED, "Must be Start()ed.");
+  MOZ_ASSERT(mState != STARTED, "Already Start()ed.");
+  MOZ_ASSERT(mState != SHUTDOWN, "Already Shutdown()ed.");
+
+  // Do nothing if we are already drained or errored.
+  if (mState == DRAINED || mState == ERRORED) {
     return;
   }
 
-  int r = InvokeCubeb(cubeb_stream_start);
-  if (mState != ERRORED && r == CUBEB_OK) {
+  if (InvokeCubeb(cubeb_stream_start) != CUBEB_OK) {
+    mState = ERRORED;
+  } else if (mState != DRAINED && mState != ERRORED) {
+    // Don't transition to other states if we are already
+    // drained or errored.
     mState = STARTED;
   }
 }
@@ -463,14 +472,16 @@ int64_t
 AudioStream::GetPosition()
 {
   MonitorAutoLock mon(mMonitor);
-  return mAudioClock.GetPositionUnlocked();
+  int64_t frames = GetPositionInFramesUnlocked();
+  return frames >= 0 ? mAudioClock.GetPosition(frames) : -1;
 }
 
 int64_t
 AudioStream::GetPositionInFrames()
 {
   MonitorAutoLock mon(mMonitor);
-  return mAudioClock.GetPositionInFrames();
+  int64_t frames = GetPositionInFramesUnlocked();
+  return frames >= 0 ? mAudioClock.GetPositionInFrames(frames) : -1;
 }
 
 int64_t
@@ -487,13 +498,6 @@ AudioStream::GetPositionInFramesUnlocked()
     return -1;
   }
   return std::min<uint64_t>(position, INT64_MAX);
-}
-
-bool
-AudioStream::IsPaused()
-{
-  MonitorAutoLock mon(mMonitor);
-  return mState == STOPPED;
 }
 
 bool
@@ -641,18 +645,17 @@ AudioStream::StateCallback(cubeb_state aState)
   }
 }
 
-AudioClock::AudioClock(AudioStream* aStream)
- :mAudioStream(aStream),
-  mOutRate(0),
+AudioClock::AudioClock()
+: mOutRate(0),
   mInRate(0),
   mPreservesPitch(true),
   mFrameHistory(new FrameHistory())
 {}
 
-void AudioClock::Init()
+void AudioClock::Init(uint32_t aRate)
 {
-  mOutRate = mAudioStream->GetRate();
-  mInRate = mAudioStream->GetRate();
+  mOutRate = aRate;
+  mInRate = aRate;
 }
 
 void AudioClock::UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun)
@@ -660,20 +663,17 @@ void AudioClock::UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun)
   mFrameHistory->Append(aServiced, aUnderrun, mOutRate);
 }
 
-int64_t AudioClock::GetPositionUnlocked() const
+int64_t AudioClock::GetPositionInFrames(int64_t frames) const
 {
-  // GetPositionInFramesUnlocked() asserts it owns the monitor
-  int64_t frames = mAudioStream->GetPositionInFramesUnlocked();
-  NS_ASSERTION(frames < 0 || (mInRate != 0 && mOutRate != 0), "AudioClock not initialized.");
-  return frames >= 0 ? mFrameHistory->GetPosition(frames) : -1;
+  return (GetPosition(frames) * mInRate) / USECS_PER_S;
 }
 
-int64_t AudioClock::GetPositionInFrames() const
+int64_t AudioClock::GetPosition(int64_t frames) const
 {
-  return (GetPositionUnlocked() * mInRate) / USECS_PER_S;
+  return mFrameHistory->GetPosition(frames);
 }
 
-void AudioClock::SetPlaybackRateUnlocked(double aPlaybackRate)
+void AudioClock::SetPlaybackRate(double aPlaybackRate)
 {
   mOutRate = static_cast<uint32_t>(mInRate / aPlaybackRate);
 }

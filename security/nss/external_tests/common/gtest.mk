@@ -4,7 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include ../../cmd/platlibs.mk
+include $(CORE_DEPTH)/cmd/platlibs.mk
 
 MKPROG = $(CCC)
 MKSHLIB	= $(CCC) $(DSO_LDOPTS) $(DARWIN_SDK_SHLIBFLAGS)

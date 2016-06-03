@@ -54,6 +54,7 @@ public:
     , mIsNotNull(aToCopy.mIsNotNull)
 #endif
   {
+    MOZ_ASSERT(aToCopy.mUsePrivateBrowsing == (aAttrs.mPrivateBrowsingId != 0));
   }
 
   // appId/inIsolatedMozBrowser arguments override those in SerializedLoadContext
@@ -71,6 +72,7 @@ public:
     , mIsNotNull(aToCopy.mIsNotNull)
 #endif
   {
+    MOZ_ASSERT(aToCopy.mUsePrivateBrowsing == (aAttrs.mPrivateBrowsingId != 0));
   }
 
   LoadContext(dom::Element* aTopFrameElement,
@@ -88,6 +90,7 @@ public:
     , mIsNotNull(true)
 #endif
   {
+    MOZ_ASSERT(aUsePrivateBrowsing == (aAttrs.mPrivateBrowsingId != 0));
   }
 
   // Constructor taking reserved appId for the safebrowsing cookie.

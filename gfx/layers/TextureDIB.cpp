@@ -436,6 +436,8 @@ DIBTextureHost::UpdatedInternal(const nsIntRegion* aRegion)
   if (!mTextureSource->Update(surf, const_cast<nsIntRegion*>(aRegion))) {
     mTextureSource = nullptr;
   }
+
+  ReadUnlock();
 }
 
 TextureHostFileMapping::TextureHostFileMapping(TextureFlags aFlags,
@@ -484,6 +486,8 @@ TextureHostFileMapping::UpdatedInternal(const nsIntRegion* aRegion)
   } else {
     mTextureSource = nullptr;
   }
+
+  ReadUnlock();
 }
 
 }

@@ -21,7 +21,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsPIDOMWindow.h"
 #include "GeckoProfiler.h"
-#include "nsDOMJSUtils.h" // for GetScriptContextFromJSContext
 #include "nsJSPrincipals.h"
 #include "xpcpublic.h"
 #include "nsContentUtils.h"
@@ -102,8 +101,6 @@ nsJSUtils::CompileFunction(AutoJSAPI& jsapi,
   MOZ_ASSERT_IF(aScopeChain.length() != 0,
                 js::IsObjectInContextCompartment(aScopeChain[0], cx));
   MOZ_ASSERT_IF(aOptions.versionSet, aOptions.version != JSVERSION_UNKNOWN);
-  mozilla::DebugOnly<nsIScriptContext*> ctx = GetScriptContextFromJSContext(cx);
-  MOZ_ASSERT_IF(ctx, ctx->IsContextInitialized());
 
   // Do the junk Gecko is supposed to do before calling into JSAPI.
   for (size_t i = 0; i < aScopeChain.length(); ++i) {

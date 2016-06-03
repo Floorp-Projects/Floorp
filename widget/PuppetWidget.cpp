@@ -641,7 +641,7 @@ PuppetWidget::NotifyIMEInternal(const IMENotification& aIMENotification)
       return NotifyIMEOfSelectionChange(aIMENotification);
     case NOTIFY_IME_OF_TEXT_CHANGE:
       return NotifyIMEOfTextChange(aIMENotification);
-    case NOTIFY_IME_OF_COMPOSITION_UPDATE:
+    case NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED:
       return NotifyIMEOfCompositionUpdate(aIMENotification);
     case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
       return NotifyIMEOfMouseButtonEvent(aIMENotification);

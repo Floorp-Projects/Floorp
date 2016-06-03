@@ -29,7 +29,9 @@ Filter(JSContext* cx, HandleObject wrapper, AutoIdVector& props)
         else if (JS_IsExceptionPending(cx))
             return false;
     }
-    props.resize(w);
+    if (!props.resize(w))
+        return false;
+
     return true;
 }
 

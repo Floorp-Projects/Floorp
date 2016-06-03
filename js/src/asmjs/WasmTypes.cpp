@@ -55,7 +55,16 @@ WasmReportOverRecursed()
 static bool
 WasmHandleExecutionInterrupt()
 {
-    return CheckForInterrupt(JSRuntime::innermostWasmActivation()->cx());
+    WasmActivation* activation = JSRuntime::innermostWasmActivation();
+    bool success = CheckForInterrupt(activation->cx());
+
+    // Preserve the invariant that having a non-null resumePC means that we are
+    // handling an interrupt.  Note that resumePC has already been copied onto
+    // the stack by the interrupt stub, so we can clear it before returning
+    // to the stub.
+    activation->setResumePC(nullptr);
+
+    return success;
 }
 
 static void

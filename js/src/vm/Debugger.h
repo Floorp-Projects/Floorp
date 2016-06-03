@@ -1071,6 +1071,8 @@ class DebuggerObject : public NativeObject
                                ObjectOpResult& result);
     static bool call(JSContext* cx, Handle<DebuggerObject*> object, HandleValue thisv,
                      Handle<ValueVector> args, MutableHandleValue result);
+    static bool forceLexicalInitializationByName(JSContext* cx, Handle<DebuggerObject*> object,
+                                                 HandleId id, bool& result);
     static bool executeInGlobal(JSContext* cx, Handle<DebuggerObject*> object,
                                 mozilla::Range<const char16_t> chars, HandleObject bindings,
                                 const EvalOptions& options, MutableHandleValue result);
@@ -1087,6 +1089,8 @@ class DebuggerObject : public NativeObject
     static const JSPropertySpec promiseProperties_[];
 #endif // SPIDERMONKEY_PROMISE
     static const JSFunctionSpec methods_[];
+
+    static bool requireGlobalObject(JSContext* cx, Handle<DebuggerObject*> object);
 
     JSObject* referent() const {
         JSObject* obj = (JSObject*) getPrivate();

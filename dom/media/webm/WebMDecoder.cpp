@@ -9,6 +9,7 @@
 #include "WebMDemuxer.h"
 #include "WebMDecoder.h"
 #include "VideoUtils.h"
+#include "nsContentTypeParser.h"
 
 namespace mozilla {
 
@@ -68,6 +69,22 @@ WebMDecoder::CanHandleMediaType(const nsACString& aMIMETypeExcludingCodecs,
     return false;
   }
   return true;
+}
+
+/* static */ bool
+WebMDecoder::CanHandleMediaType(const nsAString& aContentType)
+{
+  nsContentTypeParser parser(aContentType);
+  nsAutoString mimeType;
+  nsresult rv = parser.GetType(mimeType);
+  if (NS_FAILED(rv)) {
+    return false;
+  }
+  nsString codecs;
+  parser.GetParameter("codecs", codecs);
+
+  return CanHandleMediaType(NS_ConvertUTF16toUTF8(mimeType),
+                            codecs);
 }
 
 void

@@ -725,6 +725,9 @@ Debugger::getScriptFrameWithIter(JSContext* cx, AbstractFramePtr frame,
     MOZ_ASSERT_IF(maybeIter, maybeIter->abstractFramePtr() == frame);
     MOZ_ASSERT(!frame.script()->selfHosted());
 
+    if (!frame.script()->ensureHasAnalyzedArgsUsage(cx))
+        return false;
+
     FrameMap::AddPtr p = frames.lookupForAdd(frame);
     if (!p) {
         /* Create and populate the Debugger.Frame object. */
@@ -8618,6 +8621,47 @@ DebuggerObject_apply(JSContext* cx, unsigned argc, Value* vp)
 }
 
 static bool
+DebuggerObject_asEnvironment(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "asEnvironment", args, dbg, referent);
+    if (!RequireGlobalObject(cx, args.thisv(), referent))
+        return false;
+
+    Rooted<Env*> env(cx);
+    {
+        AutoCompartment ac(cx, referent);
+        env = GetDebugScopeForGlobalLexicalScope(cx);
+        if (!env)
+            return false;
+    }
+
+    return dbg->wrapEnvironment(cx, env, args.rval());
+}
+
+// Lookup a binding on the referent's global scope and change it to undefined
+// if it is an uninitialized lexical, otherwise do nothing. The method's
+// JavaScript return value is true _only_ when an uninitialized lexical has been
+// altered, otherwise it is false.
+bool
+DebuggerObject_forceLexicalInitializationByName(JSContext *cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT(cx, argc, vp, "forceLexicalInitializationByName", args, object)
+    if (!args.requireAtLeast(cx, "Debugger.Object.prototype.forceLexicalInitializationByName", 1))
+        return false;
+
+    RootedId id(cx);
+    if (!ValueToIdentifier(cx, args[0], &id))
+        return false;
+
+    bool result;
+    if (!DebuggerObject::forceLexicalInitializationByName(cx, object, id, result))
+        return false;
+
+    args.rval().setBoolean(result);
+    return true;
+}
+
+static bool
 DebuggerObject_executeInGlobal(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "executeInGlobal", args, object);
@@ -8692,67 +8736,6 @@ DebuggerObject_makeDebuggeeValue(JSContext* cx, unsigned argc, Value* vp)
 
     args.rval().set(arg0);
     return true;
-}
-
-// Lookup a binding on the referent's global scope and change it to undefined
-// if it is an uninitialized lexical, otherwise do nothing. The method's return
-// value is true _only_ when an uninitialized lexical has been altered, otherwise
-// it is false.
-bool
-DebuggerObject_forceLexicalInitializationByName(JSContext *cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "forceLexicalInitializationByname", args, referent);
-    if (!args.requireAtLeast(cx, "Debugger.Object.prototype.forceLexicalInitializationByName", 1))
-        return false;
-    if (!RequireGlobalObject(cx, args.thisv(), referent))
-        return false;
-
-    RootedObject globalLexical(cx, &referent->as<GlobalObject>().lexicalScope());
-
-    if (!args[0].isString()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
-                             JSMSG_NOT_EXPECTED_TYPE, "Debugger.Object.prototype.forceLexicalInitializationByName",
-                             "string", InformalValueTypeName(args[0]));
-        return false;
-    }
-
-    RootedId id(cx);
-    if (!ValueToIdentifier(cx, args[0], &id))
-        return false;
-
-    RootedObject pobj(cx);
-    RootedShape shape(cx);
-    if (!LookupProperty(cx, globalLexical, id, &pobj, &shape))
-        return false;
-
-    bool initialized = false;
-    if (shape) {
-        Value v = globalLexical->as<NativeObject>().getSlot(shape->slot());
-        if (shape->hasSlot() && v.isMagic() && v.whyMagic() == JS_UNINITIALIZED_LEXICAL) {
-            globalLexical->as<NativeObject>().setSlot(shape->slot(), UndefinedValue());
-            initialized = true;
-        }
-    }
-    args.rval().setBoolean(initialized);
-    return true;
-}
-
-static bool
-DebuggerObject_asEnvironment(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "asEnvironment", args, dbg, referent);
-    if (!RequireGlobalObject(cx, args.thisv(), referent))
-        return false;
-
-    Rooted<Env*> env(cx);
-    {
-        AutoCompartment ac(cx, referent);
-        env = GetDebugScopeForGlobalLexicalScope(cx);
-        if (!env)
-            return false;
-    }
-
-    return dbg->wrapEnvironment(cx, env, args.rval());
 }
 
 static bool
@@ -8830,7 +8813,6 @@ const JSPropertySpec DebuggerObject::promiseProperties_[] = {
 #endif // SPIDERMONKEY_PROMISE
 
 const JSFunctionSpec DebuggerObject::methods_[] = {
-    JS_FN("forceLexicalInitializationByName", DebuggerObject_forceLexicalInitializationByName, 1, 0),
     JS_FN("isExtensible", DebuggerObject_isExtensible, 0, 0),
     JS_FN("isSealed", DebuggerObject_isSealed, 0, 0),
     JS_FN("isFrozen", DebuggerObject_isFrozen, 0, 0),
@@ -8845,10 +8827,11 @@ const JSFunctionSpec DebuggerObject::methods_[] = {
     JS_FN("deleteProperty", DebuggerObject_deleteProperty, 1, 0),
     JS_FN("call", DebuggerObject_call, 0, 0),
     JS_FN("apply", DebuggerObject_apply, 0, 0),
+    JS_FN("asEnvironment", DebuggerObject_asEnvironment, 0, 0),
+    JS_FN("forceLexicalInitializationByName", DebuggerObject_forceLexicalInitializationByName, 1, 0),
     JS_FN("executeInGlobal", DebuggerObject_executeInGlobal, 1, 0),
     JS_FN("executeInGlobalWithBindings", DebuggerObject_executeInGlobalWithBindings, 2, 0),
     JS_FN("makeDebuggeeValue", DebuggerObject_makeDebuggeeValue, 1, 0),
-    JS_FN("asEnvironment", DebuggerObject_asEnvironment, 0, 0),
     JS_FN("unwrap", DebuggerObject_unwrap, 0, 0),
     JS_FN("unsafeDereference", DebuggerObject_unsafeDereference, 0, 0),
     JS_FS_END
@@ -9181,20 +9164,93 @@ DebuggerObject::call(JSContext* cx, Handle<DebuggerObject*> object, HandleValue 
 }
 
 /* static */ bool
+DebuggerObject::forceLexicalInitializationByName(JSContext* cx, Handle<DebuggerObject*> object,
+                                                 HandleId id, bool& result)
+{
+    if (!DebuggerObject::requireGlobalObject(cx, object))
+        return false;
+
+    if (!JSID_IS_STRING(id)) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
+                             JSMSG_NOT_EXPECTED_TYPE, "Debugger.Object.prototype.forceLexicalInitializationByName",
+                             "string", InformalValueTypeName(IdToValue(id)));
+        return false;
+    }
+
+
+    RootedObject referent(cx, object->referent());
+
+    RootedObject globalLexical(cx, &referent->as<GlobalObject>().lexicalScope());
+
+    RootedObject pobj(cx);
+    RootedShape shape(cx);
+    if (!LookupProperty(cx, globalLexical, id, &pobj, &shape))
+        return false;
+
+    result = false;
+    if (shape) {
+        Value v = globalLexical->as<NativeObject>().getSlot(shape->slot());
+        if (shape->hasSlot() && v.isMagic() && v.whyMagic() == JS_UNINITIALIZED_LEXICAL) {
+            globalLexical->as<NativeObject>().setSlot(shape->slot(), UndefinedValue());
+            result = true;
+        }
+    }
+
+    return true;
+}
+
+/* static */ bool
 DebuggerObject::executeInGlobal(JSContext* cx, Handle<DebuggerObject*> object,
                                 mozilla::Range<const char16_t> chars, HandleObject bindings,
                                 const EvalOptions& options, MutableHandleValue result)
 {
+    if (!DebuggerObject::requireGlobalObject(cx, object))
+        return false;
+
     RootedObject referent(cx, object->referent());
     Debugger* dbg = object->owner();
 
-    RootedValue dbgobj(cx, ObjectValue(*object));
-    if (!RequireGlobalObject(cx, dbgobj, referent))
-        return false;
     RootedObject globalLexical(cx, &referent->as<GlobalObject>().lexicalScope());
 
     return DebuggerGenericEval(cx, chars, bindings, options, result, dbg, globalLexical,
                                nullptr);
+}
+
+/* static */ bool
+DebuggerObject::requireGlobalObject(JSContext* cx, Handle<DebuggerObject*> object)
+{
+    RootedObject referent(cx, object->referent());
+
+    if (!referent->is<GlobalObject>()) {
+        const char* isWrapper = "";
+        const char* isWindowProxy = "";
+
+        /* Help the poor programmer by pointing out wrappers around globals... */
+        if (referent->is<WrapperObject>()) {
+            referent = js::UncheckedUnwrap(referent);
+            isWrapper = "a wrapper around ";
+        }
+
+        /* ... and WindowProxies around Windows. */
+        if (IsWindowProxy(referent)) {
+            referent = ToWindowIfWindowProxy(referent);
+            isWindowProxy = "a WindowProxy referring to ";
+        }
+
+        RootedValue dbgobj(cx, ObjectValue(*object));
+        if (referent->is<GlobalObject>()) {
+            ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_WRAPPER_IN_WAY,
+                                  JSDVG_SEARCH_STACK, dbgobj, nullptr,
+                                  isWrapper, isWindowProxy);
+        } else {
+            ReportValueErrorFlags(cx, JSREPORT_ERROR, JSMSG_DEBUG_BAD_REFERENT,
+                                  JSDVG_SEARCH_STACK, dbgobj, nullptr,
+                                  "a global object", nullptr);
+        }
+        return false;
+    }
+
+    return true;
 }
 
 

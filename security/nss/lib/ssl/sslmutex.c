@@ -448,7 +448,7 @@ sslMutex_Unlock(sslMutex *pMutex)
     }
 #ifdef WINNT
     return single_process_sslMutex_Unlock(pMutex);
-    /* release PRLock for other fibers in the process */
+/* release PRLock for other fibers in the process */
 #else
     return SECSuccess;
 #endif

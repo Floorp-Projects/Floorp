@@ -1624,7 +1624,17 @@ TrackBuffersManager::InsertFrames(TrackBuffer& aSamples,
   intersection.Intersection(aIntervals);
 
   if (intersection.Length()) {
-    RemoveFrames(aIntervals, trackBuffer, trackBuffer.mNextInsertionIndex.refOr(0));
+    if (aSamples[0]->mKeyframe) {
+      // We are starting a new GOP, we do not have to worry about breaking an
+      // existing current coded frame group. Reset the next insertion index
+      // so the search for when to start our frames removal can be exhaustive.
+      trackBuffer.mNextInsertionIndex.reset();
+    }
+    size_t index =
+      RemoveFrames(aIntervals, trackBuffer, trackBuffer.mNextInsertionIndex.refOr(0));
+    if (index) {
+      trackBuffer.mNextInsertionIndex = Some(index);
+    }
   }
 
   // 16. Add the coded frame with the presentation timestamp, decode timestamp, and frame duration to the track buffer.
@@ -1661,7 +1671,7 @@ TrackBuffersManager::InsertFrames(TrackBuffer& aSamples,
   }
 }
 
-void
+size_t
 TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
                                   TrackData& aTrackData,
                                   uint32_t aStartIndex)
@@ -1680,7 +1690,7 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
   //  If highest end timestamp for track buffer is set and less than or equal to presentation timestamp:
   //   Remove all coded frames from track buffer that have a presentation timestamp greater than or equal to highest end timestamp and less than frame end timestamp"
   for (uint32_t i = aStartIndex; i < data.Length(); i++) {
-    MediaRawData* sample = data[i].get();
+    const RefPtr<MediaRawData> sample = data[i];
     TimeInterval sampleInterval =
       TimeInterval(TimeUnit::FromMicroseconds(sample->mTime),
                    TimeUnit::FromMicroseconds(sample->GetEndTime()));
@@ -1693,13 +1703,13 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
   }
 
   if (firstRemovedIndex.isNothing()) {
-    return;
+    return 0;
   }
 
   // Remove decoding dependencies of the coded frames removed in the previous step:
   // Remove all coded frames between the coded frames removed in the previous step and the next random access point after those removed frames.
   for (uint32_t i = lastRemovedIndex + 1; i < data.Length(); i++) {
-    MediaRawData* sample = data[i].get();
+    const RefPtr<MediaRawData>& sample = data[i];
     if (sample->mKeyframe) {
       break;
     }
@@ -1709,7 +1719,7 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
   int64_t maxSampleDuration = 0;
   TimeIntervals removedIntervals;
   for (uint32_t i = firstRemovedIndex.ref(); i <= lastRemovedIndex; i++) {
-    MediaRawData* sample = data[i].get();
+    const RefPtr<MediaRawData> sample = data[i];
     TimeInterval sampleInterval =
       TimeInterval(TimeUnit::FromMicroseconds(sample->mTime),
                    TimeUnit::FromMicroseconds(sample->GetEndTime()));
@@ -1757,6 +1767,8 @@ TrackBuffersManager::RemoveFrames(const TimeIntervals& aIntervals,
 
   data.RemoveElementsAt(firstRemovedIndex.ref(),
                         lastRemovedIndex - firstRemovedIndex.ref() + 1);
+
+  return firstRemovedIndex.ref();
 }
 
 void

@@ -1,0 +1,20 @@
+---
+- task:
+    metadata:
+      name: "Linux 64 (MemLeak, debug)"
+      description: "Linux 64 (MemLeak, debug)"
+
+    payload:
+      env:
+        NSS_TESTS: memleak
+        USE_64: 1
+
+    extra:
+      treeherder:
+        build:
+          platform: linux64
+        collection:
+          memleak: true
+
+  tests:
+    - memleak

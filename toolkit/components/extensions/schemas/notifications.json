@@ -81,6 +81,24 @@
             "description": "A timestamp associated with the notification, in milliseconds past the epoch.",
             "type": "number"
           },
+          "buttons": {
+            "unsupported": true,
+            "optional": true,
+            "description": "Text and icons for up to two notification action buttons.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "iconUrl": {
+                  "optional": true,
+                  "type": "string"
+                }
+              }
+            }
+          },
           "imageUrl": {
             "optional": true,
             "description": "A URL to the image thumbnail for image-type notifications.",
@@ -151,6 +169,24 @@
             "optional": true,
             "description": "A timestamp associated with the notification, in milliseconds past the epoch.",
             "type": "number"
+          },
+          "buttons": {
+            "unsupported": true,
+            "optional": true,
+            "description": "Text and icons for up to two notification action buttons.",
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "title": {
+                  "type": "string"
+                },
+                "iconUrl": {
+                  "optional": true,
+                  "type": "string"
+                }
+              }
+            }
           },
           "imageUrl": {
             "optional": true,

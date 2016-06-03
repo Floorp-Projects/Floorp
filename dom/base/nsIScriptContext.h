@@ -17,8 +17,8 @@
 class nsIScriptGlobalObject;
 
 #define NS_ISCRIPTCONTEXT_IID \
-{ 0x901f0d5e, 0x217a, 0x45fa, \
-  { 0x9a, 0xca, 0x45, 0x0f, 0xe7, 0x2f, 0x10, 0x9a } }
+{ 0x54cbe9cf, 0x7282, 0x421a, \
+ { 0x91, 0x6f, 0xd0, 0x70, 0x73, 0xde, 0xb8, 0xc0 } }
 
 class nsIOffThreadScriptReceiver;
 
@@ -36,12 +36,6 @@ public:
    *
    **/
   virtual nsIScriptGlobalObject *GetGlobalObject() = 0;
-
-  /**
-   * Return the native script context
-   *
-   **/
-  virtual JSContext* GetNativeContext() = 0;
 
   /**
    * Initialize the context generally. Does not create a global object.

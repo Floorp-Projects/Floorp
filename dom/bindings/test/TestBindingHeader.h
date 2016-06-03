@@ -1424,6 +1424,19 @@ public:
   virtual nsISupports* GetParentObject();
 };
 
+class TestNamespace {
+public:
+  static bool Foo(const GlobalObject&);
+  static int32_t Bar(const GlobalObject&);
+  static void Baz(const GlobalObject&);
+};
+
+class TestRenamedNamespace {
+};
+
+class TestProtoObjectHackedNamespace {
+};
+
 } // namespace dom
 } // namespace mozilla
 

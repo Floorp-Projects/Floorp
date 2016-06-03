@@ -1,0 +1,13 @@
+---
+- task:
+    metadata:
+      name: GTests
+      description: GTests
+
+    payload:
+      env:
+        NSS_TESTS: ssl_gtests gtests
+
+    extra:
+      treeherder:
+        symbol: GTest

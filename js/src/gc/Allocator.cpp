@@ -20,82 +20,6 @@
 using namespace js;
 using namespace gc;
 
-bool
-GCRuntime::gcIfNeededPerAllocation(JSContext* cx)
-{
-#ifdef JS_GC_ZEAL
-    if (needZealousGC())
-        runDebugGC();
-#endif
-
-    // Invoking the interrupt callback can fail and we can't usefully
-    // handle that here. Just check in case we need to collect instead.
-    if (rt->hasPendingInterrupt())
-        gcIfRequested(cx);
-
-    // If we have grown past our GC heap threshold while in the middle of
-    // an incremental GC, we're growing faster than we're GCing, so stop
-    // the world and do a full, non-incremental GC right now, if possible.
-    if (isIncrementalGCInProgress() &&
-        cx->zone()->usage.gcBytes() > cx->zone()->threshold.gcTriggerBytes())
-    {
-        PrepareZoneForGC(cx->zone());
-        AutoKeepAtoms keepAtoms(cx->perThreadData);
-        gc(GC_NORMAL, JS::gcreason::INCREMENTAL_TOO_SLOW);
-    }
-
-    return true;
-}
-
-template <AllowGC allowGC>
-bool
-GCRuntime::checkAllocatorState(JSContext* cx, AllocKind kind)
-{
-    if (allowGC) {
-        if (!gcIfNeededPerAllocation(cx))
-            return false;
-    }
-
-#if defined(JS_GC_ZEAL) || defined(DEBUG)
-    MOZ_ASSERT_IF(rt->isAtomsCompartment(cx->compartment()),
-                  kind == AllocKind::STRING ||
-                  kind == AllocKind::FAT_INLINE_STRING ||
-                  kind == AllocKind::SYMBOL ||
-                  kind == AllocKind::JITCODE);
-    MOZ_ASSERT(!rt->isHeapBusy());
-    MOZ_ASSERT(isAllocAllowed());
-#endif
-
-    // Crash if we perform a GC action when it is not safe.
-    if (allowGC && !rt->mainThread.suppressGC)
-        JS::AutoAssertOnGC::VerifyIsSafeToGC(rt);
-
-    // For testing out of memory conditions
-    if (js::oom::ShouldFailWithOOM()) {
-        // If we are doing a fallible allocation, percolate up the OOM
-        // instead of reporting it.
-        if (allowGC)
-            ReportOutOfMemory(cx);
-        return false;
-    }
-
-    return true;
-}
-
-template <typename T>
-/* static */ void
-GCRuntime::checkIncrementalZoneState(ExclusiveContext* cx, T* t)
-{
-#ifdef DEBUG
-    if (!cx->isJSContext())
-        return;
-
-    Zone* zone = cx->asJSContext()->zone();
-    MOZ_ASSERT_IF(t && zone->wasGCStarted() && (zone->isGCMarking() || zone->isGCSweeping()),
-                  t->asTenured().arena()->allocatedDuringIncremental);
-#endif
-}
-
 template <typename T, AllowGC allowGC /* = CanGC */>
 JSObject*
 js::Allocate(ExclusiveContext* cx, AllocKind kind, size_t nDynamicSlots, InitialHeap heap,
@@ -256,7 +180,123 @@ GCRuntime::tryNewTenuredThing(ExclusiveContext* cx, AllocKind kind, size_t thing
     return t;
 }
 
-/* static */ void*
+template <AllowGC allowGC>
+bool
+GCRuntime::checkAllocatorState(JSContext* cx, AllocKind kind)
+{
+    if (allowGC) {
+        if (!gcIfNeededPerAllocation(cx))
+            return false;
+    }
+
+#if defined(JS_GC_ZEAL) || defined(DEBUG)
+    MOZ_ASSERT_IF(rt->isAtomsCompartment(cx->compartment()),
+                  kind == AllocKind::STRING ||
+                  kind == AllocKind::FAT_INLINE_STRING ||
+                  kind == AllocKind::SYMBOL ||
+                  kind == AllocKind::JITCODE);
+    MOZ_ASSERT(!rt->isHeapBusy());
+    MOZ_ASSERT(isAllocAllowed());
+#endif
+
+    // Crash if we perform a GC action when it is not safe.
+    if (allowGC && !rt->mainThread.suppressGC)
+        JS::AutoAssertOnGC::VerifyIsSafeToGC(rt);
+
+    // For testing out of memory conditions
+    if (js::oom::ShouldFailWithOOM()) {
+        // If we are doing a fallible allocation, percolate up the OOM
+        // instead of reporting it.
+        if (allowGC)
+            ReportOutOfMemory(cx);
+        return false;
+    }
+
+    return true;
+}
+
+bool
+GCRuntime::gcIfNeededPerAllocation(JSContext* cx)
+{
+#ifdef JS_GC_ZEAL
+    if (needZealousGC())
+        runDebugGC();
+#endif
+
+    // Invoking the interrupt callback can fail and we can't usefully
+    // handle that here. Just check in case we need to collect instead.
+    if (rt->hasPendingInterrupt())
+        gcIfRequested(cx);
+
+    // If we have grown past our GC heap threshold while in the middle of
+    // an incremental GC, we're growing faster than we're GCing, so stop
+    // the world and do a full, non-incremental GC right now, if possible.
+    if (isIncrementalGCInProgress() &&
+        cx->zone()->usage.gcBytes() > cx->zone()->threshold.gcTriggerBytes())
+    {
+        PrepareZoneForGC(cx->zone());
+        AutoKeepAtoms keepAtoms(cx->perThreadData);
+        gc(GC_NORMAL, JS::gcreason::INCREMENTAL_TOO_SLOW);
+    }
+
+    return true;
+}
+
+template <typename T>
+/* static */ void
+GCRuntime::checkIncrementalZoneState(ExclusiveContext* cx, T* t)
+{
+#ifdef DEBUG
+    if (!cx->isJSContext())
+        return;
+
+    Zone* zone = cx->asJSContext()->zone();
+    MOZ_ASSERT_IF(t && zone->wasGCStarted() && (zone->isGCMarking() || zone->isGCSweeping()),
+                  t->asTenured().arena()->allocatedDuringIncremental);
+#endif
+}
+
+
+// ///////////  Arena -> Thing Allocator  //////////////////////////////////////
+
+// After pulling a Chunk out of the empty chunks pool, we want to run the
+// background allocator to refill it. The code that takes Chunks does so under
+// the GC lock. We need to start the background allocation under the helper
+// threads lock. To avoid lock inversion we have to delay the start until after
+// we are outside the GC lock. This class handles that delay automatically.
+class MOZ_RAII js::gc::AutoMaybeStartBackgroundAllocation
+{
+    JSRuntime* runtime;
+
+  public:
+    AutoMaybeStartBackgroundAllocation()
+      : runtime(nullptr)
+    {}
+
+    void tryToStartBackgroundAllocation(JSRuntime* rt) {
+        runtime = rt;
+    }
+
+    ~AutoMaybeStartBackgroundAllocation() {
+        if (runtime)
+            runtime->gc.startBackgroundAllocTaskIfIdle();
+    }
+};
+
+void
+GCRuntime::startBackgroundAllocTaskIfIdle()
+{
+    AutoLockHelperThreadState helperLock;
+    if (allocTask.isRunning())
+        return;
+
+    // Join the previous invocation of the task. This will return immediately
+    // if the thread has never been started.
+    allocTask.joinWithLockHeld();
+    allocTask.startWithLockHeld();
+}
+
+/* static */ TenuredCell*
 GCRuntime::refillFreeListFromAnyThread(ExclusiveContext* cx, AllocKind thingKind, size_t thingSize)
 {
     cx->arenas()->checkEmptyFreeList(thingKind);
@@ -267,7 +307,7 @@ GCRuntime::refillFreeListFromAnyThread(ExclusiveContext* cx, AllocKind thingKind
     return refillFreeListOffMainThread(cx, thingKind);
 }
 
-/* static */ void*
+/* static */ TenuredCell*
 GCRuntime::refillFreeListFromMainThread(JSContext* cx, AllocKind thingKind, size_t thingSize)
 {
     ArenaLists *arenas = cx->arenas();
@@ -279,7 +319,7 @@ GCRuntime::refillFreeListFromMainThread(JSContext* cx, AllocKind thingKind, size
     return arenas->allocateFromArena(zone, thingKind, maybeStartBGAlloc);
 }
 
-/* static */ void*
+/* static */ TenuredCell*
 GCRuntime::refillFreeListOffMainThread(ExclusiveContext* cx, AllocKind thingKind)
 {
     ArenaLists* arenas = cx->arenas();
@@ -296,6 +336,22 @@ GCRuntime::refillFreeListOffMainThread(ExclusiveContext* cx, AllocKind thingKind
         HelperThreadState().wait(GlobalHelperThreadState::PRODUCER);
 
     return arenas->allocateFromArena(zone, thingKind, maybeStartBGAlloc);
+}
+
+/* static */ TenuredCell*
+GCRuntime::refillFreeListInGC(Zone* zone, AllocKind thingKind)
+{
+    /*
+     * Called by compacting GC to refill a free list while we are in a GC.
+     */
+
+    zone->arenas.checkEmptyFreeList(thingKind);
+    mozilla::DebugOnly<JSRuntime*> rt = zone->runtimeFromMainThread();
+    MOZ_ASSERT(rt->isHeapCollecting());
+    MOZ_ASSERT_IF(!rt->isHeapMinorCollecting(), !rt->gc.isBackgroundSweeping());
+
+    AutoMaybeStartBackgroundAllocation maybeStartBackgroundAllocation;
+    return zone->arenas.allocateFromArena(zone, thingKind, maybeStartBackgroundAllocation);
 }
 
 TenuredCell*
@@ -364,4 +420,216 @@ GCRuntime::arenaAllocatedDuringGC(JS::Zone* zone, Arena* arena)
         arena->setNextAllocDuringSweep(arenasAllocatedDuringSweep);
         arenasAllocatedDuringSweep = arena;
     }
+}
+
+
+// ///////////  Chunk -> Arena Allocator  //////////////////////////////////////
+
+bool
+GCRuntime::wantBackgroundAllocation(const AutoLockGC& lock) const
+{
+    // To minimize memory waste, we do not want to run the background chunk
+    // allocation if we already have some empty chunks or when the runtime has
+    // a small heap size (and therefore likely has a small growth rate).
+    return allocTask.enabled() &&
+           emptyChunks(lock).count() < tunables.minEmptyChunkCount(lock) &&
+           (fullChunks(lock).count() + availableChunks(lock).count()) >= 4;
+}
+
+Arena*
+GCRuntime::allocateArena(Chunk* chunk, Zone* zone, AllocKind thingKind, const AutoLockGC& lock)
+{
+    MOZ_ASSERT(chunk->hasAvailableArenas());
+
+    // Fail the allocation if we are over our heap size limits.
+    if (!rt->isHeapMinorCollecting() &&
+        !isHeapCompacting() &&
+        usage.gcBytes() >= tunables.gcMaxBytes())
+    {
+        return nullptr;
+    }
+
+    Arena* arena = chunk->allocateArena(rt, zone, thingKind, lock);
+    zone->usage.addGCArena();
+
+    // Trigger an incremental slice if needed.
+    if (!rt->isHeapMinorCollecting() && !isHeapCompacting())
+        maybeAllocTriggerZoneGC(zone, lock);
+
+    return arena;
+}
+
+Arena*
+Chunk::allocateArena(JSRuntime* rt, Zone* zone, AllocKind thingKind, const AutoLockGC& lock)
+{
+    Arena* arena = info.numArenasFreeCommitted > 0
+                   ? fetchNextFreeArena(rt)
+                   : fetchNextDecommittedArena();
+    arena->init(zone, thingKind);
+    updateChunkListAfterAlloc(rt, lock);
+    return arena;
+}
+
+inline void
+GCRuntime::updateOnFreeArenaAlloc(const ChunkInfo& info)
+{
+    MOZ_ASSERT(info.numArenasFreeCommitted <= numArenasFreeCommitted);
+    --numArenasFreeCommitted;
+}
+
+Arena*
+Chunk::fetchNextFreeArena(JSRuntime* rt)
+{
+    MOZ_ASSERT(info.numArenasFreeCommitted > 0);
+    MOZ_ASSERT(info.numArenasFreeCommitted <= info.numArenasFree);
+
+    Arena* arena = info.freeArenasHead;
+    info.freeArenasHead = arena->next;
+    --info.numArenasFreeCommitted;
+    --info.numArenasFree;
+    rt->gc.updateOnFreeArenaAlloc(info);
+
+    return arena;
+}
+
+Arena*
+Chunk::fetchNextDecommittedArena()
+{
+    MOZ_ASSERT(info.numArenasFreeCommitted == 0);
+    MOZ_ASSERT(info.numArenasFree > 0);
+
+    unsigned offset = findDecommittedArenaOffset();
+    info.lastDecommittedArenaOffset = offset + 1;
+    --info.numArenasFree;
+    decommittedArenas.unset(offset);
+
+    Arena* arena = &arenas[offset];
+    MarkPagesInUse(arena, ArenaSize);
+    arena->setAsNotAllocated();
+
+    return arena;
+}
+
+/*
+ * Search for and return the next decommitted Arena. Our goal is to keep
+ * lastDecommittedArenaOffset "close" to a free arena. We do this by setting
+ * it to the most recently freed arena when we free, and forcing it to
+ * the last alloc + 1 when we allocate.
+ */
+uint32_t
+Chunk::findDecommittedArenaOffset()
+{
+    /* Note: lastFreeArenaOffset can be past the end of the list. */
+    for (unsigned i = info.lastDecommittedArenaOffset; i < ArenasPerChunk; i++) {
+        if (decommittedArenas.get(i))
+            return i;
+    }
+    for (unsigned i = 0; i < info.lastDecommittedArenaOffset; i++) {
+        if (decommittedArenas.get(i))
+            return i;
+    }
+    MOZ_CRASH("No decommitted arenas found.");
+}
+
+
+// ///////////  System -> Chunk Allocator  /////////////////////////////////////
+
+Chunk*
+GCRuntime::pickChunk(const AutoLockGC& lock,
+                     AutoMaybeStartBackgroundAllocation& maybeStartBackgroundAllocation)
+{
+    if (availableChunks(lock).count())
+        return availableChunks(lock).head();
+
+    Chunk* chunk = emptyChunks(lock).pop();
+    if (!chunk) {
+        chunk = Chunk::allocate(rt);
+        if (!chunk)
+            return nullptr;
+        MOZ_ASSERT(chunk->info.numArenasFreeCommitted == 0);
+    }
+
+    MOZ_ASSERT(chunk->unused());
+    MOZ_ASSERT(!fullChunks(lock).contains(chunk));
+
+    if (wantBackgroundAllocation(lock))
+        maybeStartBackgroundAllocation.tryToStartBackgroundAllocation(rt);
+
+    chunkAllocationSinceLastGC = true;
+
+    availableChunks(lock).push(chunk);
+
+    return chunk;
+}
+
+BackgroundAllocTask::BackgroundAllocTask(JSRuntime* rt, ChunkPool& pool)
+  : runtime(rt),
+    chunkPool_(pool),
+    enabled_(CanUseExtraThreads() && GetCPUCount() >= 2)
+{
+}
+
+/* virtual */ void
+BackgroundAllocTask::run()
+{
+    TraceLoggerThread* logger = TraceLoggerForCurrentThread();
+    AutoTraceLog logAllocation(logger, TraceLogger_GCAllocation);
+
+    AutoLockGC lock(runtime);
+    while (!cancel_ && runtime->gc.wantBackgroundAllocation(lock)) {
+        Chunk* chunk;
+        {
+            AutoUnlockGC unlock(lock);
+            chunk = Chunk::allocate(runtime);
+            if (!chunk)
+                break;
+        }
+        chunkPool_.push(chunk);
+    }
+}
+
+/* static */ Chunk*
+Chunk::allocate(JSRuntime* rt)
+{
+    Chunk* chunk = static_cast<Chunk*>(MapAlignedPages(ChunkSize, ChunkSize));
+    if (!chunk)
+        return nullptr;
+    chunk->init(rt);
+    rt->gc.stats.count(gcstats::STAT_NEW_CHUNK);
+    return chunk;
+}
+
+void
+Chunk::init(JSRuntime* rt)
+{
+    JS_POISON(this, JS_FRESH_TENURED_PATTERN, ChunkSize);
+
+    /*
+     * We clear the bitmap to guard against JS::GCThingIsMarkedGray being called
+     * on uninitialized data, which would happen before the first GC cycle.
+     */
+    bitmap.clear();
+
+    /*
+     * Decommit the arenas. We do this after poisoning so that if the OS does
+     * not have to recycle the pages, we still get the benefit of poisoning.
+     */
+    decommitAllArenas(rt);
+
+    /* Initialize the chunk info. */
+    info.init();
+    new (&info.trailer) ChunkTrailer(rt);
+
+    /* The rest of info fields are initialized in pickChunk. */
+}
+
+void Chunk::decommitAllArenas(JSRuntime* rt)
+{
+    decommittedArenas.clear(true);
+    MarkPagesUnused(&arenas[0], ArenasPerChunk * ArenaSize);
+
+    info.freeArenasHead = nullptr;
+    info.lastDecommittedArenaOffset = 0;
+    info.numArenasFree = ArenasPerChunk;
+    info.numArenasFreeCommitted = 0;
 }

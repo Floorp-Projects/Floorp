@@ -12,24 +12,6 @@
 
 class nsIJSArgArray;
 
-// seems like overkill for just this 1 function - but let's see what else
-// falls out first.
-inline nsIScriptContext *
-GetScriptContextFromJSContext(JSContext *cx)
-{
-  if (!(JS::ContextOptionsRef(cx).privateIsNSISupports())) {
-    return nullptr;
-  }
-
-  nsCOMPtr<nsIScriptContext> scx =
-    do_QueryInterface(static_cast<nsISupports *>
-                                 (::JS_GetContextPrivate(cx)));
-
-  // This will return a pointer to something that's about to be
-  // released, but that's ok here.
-  return scx;
-}
-
 // A factory function for turning a JS::Value argv into an nsIArray
 // but also supports an effecient way of extracting the original argv.
 // The resulting object will take a copy of the array, and ensure each

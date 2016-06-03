@@ -220,6 +220,13 @@ public:
     return *mPtr;
   }
 
+  T* operator->() const
+  {
+    MOZ_ASSERT(mPtr >= mRangeStart);
+    MOZ_ASSERT(mPtr < mRangeEnd);
+    return mPtr;
+  }
+
   template <typename U>
   bool operator==(const RangedPtr<U>& aOther) const
   {

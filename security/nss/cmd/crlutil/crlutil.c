@@ -39,6 +39,7 @@ FindCRL(CERTCertDBHandle *certHandle, char *name, int type)
     if (!cert) {
         CERTName *certName = NULL;
         PLArenaPool *arena = NULL;
+        SECStatus rv = SECSuccess;
 
         certName = CERT_AsciiToName(name);
         if (certName) {
@@ -48,11 +49,16 @@ FindCRL(CERTCertDBHandle *certHandle, char *name, int type)
                     SEC_ASN1EncodeItem(arena, NULL, (void *)certName,
                                        SEC_ASN1_GET(CERT_NameTemplate));
                 if (nameItem) {
-                    SECITEM_CopyItem(NULL, &derName, nameItem);
+                    rv = SECITEM_CopyItem(NULL, &derName, nameItem);
                 }
                 PORT_FreeArena(arena, PR_FALSE);
             }
             CERT_DestroyName(certName);
+        }
+
+        if (rv != SECSuccess) {
+            SECU_PrintError(progName, "SECITEM_CopyItem failed, out of memory");
+            return ((CERTSignedCrl *)NULL);
         }
 
         if (!derName.len || !derName.data) {

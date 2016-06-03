@@ -132,38 +132,28 @@ this.History = Object.freeze({
   },
 
   /**
-   * Adds a set of visits for one or more page.
+   * Adds a number of visits for a single page.
    *
    * Any change may be observed through nsINavHistoryObserver
    *
-   * @note This function recomputes the frecency of the page automatically,
-   * regardless of the value of property `frecency` passed as argument.
-   * @note If there is no entry for the page, the entry is created.
-   *
-   * @param infos: (PageInfo)
+   * @param pageInfo: (PageInfo)
    *      Information on a page. This `PageInfo` MUST contain
-   *        - either a property `guid` or a property `url`, as specified
-   *          by the definition of `PageInfo`;
+   *        - a property `url`, as specified by the definition of `PageInfo`.
    *        - a property `visits`, as specified by the definition of
    *          `PageInfo`, which MUST contain at least one visit.
    *      If a property `title` is provided, the title of the page
    *      is updated.
-   *      If the `visitDate` of a visit is not provided, it defaults
+   *      If the `date` of a visit is not provided, it defaults
    *      to now.
-   *            or (Array<PageInfo>)
-   *      An array of the above, to batch requests.
-   * @param onResult: (function(PageInfo), [optional])
-   *      A callback invoked for each page, with the updated
-   *      information on that page. Note that this `PageInfo`
-   *      does NOT contain the visit data (i.e. `visits` is
-   *      `undefined`).
+   *      If the `transition` of a visit is not provided, it defaults to
+   *      TRANSITION_LINK.
    *
    * @return (Promise)
-   *      A promise resolved once the operation is complete, including
-   *      all calls to `onResult`.
-   * @resolves (bool)
-   *      `true` if at least one page entry was created, `false` otherwise
-   *       (i.e. if page entries were updated but not created).
+   *      A promise resolved once the operation is complete.
+   * @resolves (PageInfo)
+   *      A PageInfo object populated with data after the insert is complete.
+   * @rejects (Error)
+   *      Rejects if the insert was unsuccessful.
    *
    * @throws (Error)
    *      If the `url` specified was for a protocol that should not be
@@ -171,22 +161,97 @@ this.History = Object.freeze({
    *      "moz-anno:", "view-source:", "resource:", "data:", "wyciwyg:",
    *      "javascript:", "blob:").
    * @throws (Error)
-   *      If `infos` has an unexpected type.
+   *      If `pageInfo` has an unexpected type.
    * @throws (Error)
-   *      If a `PageInfo` has neither `guid` nor `url`.
+   *      If `pageInfo` does not have a `url`.
    * @throws (Error)
-   *      If a `guid` property provided is not a valid GUID.
+   *      If `pageInfo` does not have a `visits` property or if the
+   *      value of `visits` is ill-typed or is an empty array.
+   * @throws (Error)
+   *      If an element of `visits` has an invalid `date`.
+   * @throws (Error)
+   *      If an element of `visits` has an invalid `transition`.
+   */
+  insert: function (pageInfo) {
+    if (typeof pageInfo != "object" || !pageInfo) {
+      throw new TypeError("pageInfo must be an object");
+    }
+
+    let info = validatePageInfo(pageInfo);
+
+    return PlacesUtils.withConnectionWrapper("History.jsm: insert",
+      db => insert(db, info));
+  },
+
+  /**
+   * Adds a number of visits for a number of pages.
+   *
+   * Any change may be observed through nsINavHistoryObserver
+   *
+   * @param pageInfos: (Array<PageInfo>)
+   *      Information on a page. This `PageInfo` MUST contain
+   *        - a property `url`, as specified by the definition of `PageInfo`.
+   *        - a property `visits`, as specified by the definition of
+   *          `PageInfo`, which MUST contain at least one visit.
+   *      If a property `title` is provided, the title of the page
+   *      is updated.
+   *      If the `date` of a visit is not provided, it defaults
+   *      to now.
+   *      If the `transition` of a visit is not provided, it defaults to
+   *      TRANSITION_LINK.
+   * @param onResult: (function(PageInfo))
+   *      A callback invoked for each page inserted.
+   * @param onError: (function(PageInfo))
+   *      A callback invoked for each page which generated an error
+   *      when an insert was attempted.
+   *
+   * @return (Promise)
+   *      A promise resolved once the operation is complete.
+   * @resolves (null)
+   * @rejects (Error)
+   *      Rejects if all of the inserts were unsuccessful.
+   *
+   * @throws (Error)
+   *      If the `url` specified was for a protocol that should not be
+   *      stored (e.g. "chrome:", "mailbox:", "about:", "imap:", "news:",
+   *      "moz-anno:", "view-source:", "resource:", "data:", "wyciwyg:",
+   *      "javascript:", "blob:").
+   * @throws (Error)
+   *      If `pageInfos` has an unexpected type.
+   * @throws (Error)
+   *      If a `pageInfo` does not have a `url`.
    * @throws (Error)
    *      If a `PageInfo` does not have a `visits` property or if the
    *      value of `visits` is ill-typed or is an empty array.
    * @throws (Error)
    *      If an element of `visits` has an invalid `date`.
    * @throws (Error)
-   *      If an element of `visits` is missing `transition` or if
-   *      the value of `transition` is invalid.
+   *      If an element of `visits` has an invalid `transition`.
    */
-  update: function (infos, onResult) {
-    throw new Error("Method not implemented");
+  insertMany: function (pageInfos, onResult, onError) {
+    let infos = [];
+
+    if (!Array.isArray(pageInfos)) {
+      throw new TypeError("pageInfos must be an array");
+    }
+    if (!pageInfos.length) {
+      throw new TypeError("pageInfos may not be an empty array");
+    }
+
+    if (onResult && typeof onResult != "function") {
+      throw new TypeError(`onResult: ${onResult} is not a valid function`);
+    }
+    if (onError && typeof onError != "function") {
+      throw new TypeError(`onError: ${onError} is not a valid function`);
+    }
+
+    for (let pageInfo of pageInfos) {
+      let info = validatePageInfo(pageInfo);
+      infos.push(info);
+    }
+
+    return PlacesUtils.withConnectionWrapper("History.jsm: insertMany",
+      db => insertMany(db, infos, onResult, onError));
   },
 
   /**
@@ -390,6 +455,103 @@ this.History = Object.freeze({
   TRANSITION_FRAMED_LINK: Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK,
 });
 
+/**
+ * Validate an input PageInfo object, returning a valid PageInfo object.
+ *
+ * @param pageInfo: (PageInfo)
+ * @return (PageInfo)
+ */
+function validatePageInfo(pageInfo) {
+  let info = {
+    visits: [],
+  };
+
+  if (!pageInfo.url) {
+    throw new TypeError("PageInfo object must have a url property");
+  }
+
+  info.url = normalizeToURLOrGUID(pageInfo.url);
+
+  if (typeof pageInfo.title === "string" && pageInfo.title.length) {
+    info.title = pageInfo.title;
+  } else if (pageInfo.title != null && pageInfo.title != undefined) {
+    throw new TypeError(`title property of PageInfo object: ${pageInfo.title} must be a string if provided`);
+  }
+
+  if (!pageInfo.visits || !Array.isArray(pageInfo.visits) || !pageInfo.visits.length) {
+    throw new TypeError("PageInfo object must have an array of visits");
+  }
+  for (let inVisit of pageInfo.visits) {
+    let visit = {
+      date: new Date(),
+      transition: inVisit.transition || History.TRANSITION_LINK,
+    };
+
+    if (!isValidTransitionType(visit.transition)) {
+      throw new TypeError(`transition: ${visit.transition} is not a valid transition type`);
+    }
+
+    if (inVisit.date) {
+      ensureDate(inVisit.date);
+      if (inVisit.date > Date.now()) {
+        throw new TypeError(`date: ${inVisit.date} cannot be a future date`);
+      }
+      visit.date = inVisit.date;
+    }
+
+    if (inVisit.referrer) {
+      visit.referrer = normalizeToURLOrGUID(inVisit.referrer);
+    }
+    info.visits.push(visit);
+  }
+  return info;
+}
+
+/**
+ * Convert a PageInfo object into the format expected by updatePlaces.
+ *
+ * Note: this assumes that the PageInfo object has already been validated
+ * via validatePageInfo.
+ *
+ * @param pageInfo: (PageInfo)
+ * @return (info)
+ */
+function convertForUpdatePlaces(pageInfo) {
+  let info = {
+    uri: PlacesUtils.toURI(pageInfo.url),
+    title: pageInfo.title,
+    visits: [],
+  };
+
+  for (let inVisit of pageInfo.visits) {
+    let visit = {
+      visitDate: PlacesUtils.toPRTime(inVisit.date),
+      transitionType: inVisit.transition,
+      referrerURI: (inVisit.referrer) ? PlacesUtils.toURI(inVisit.referrer) : undefined,
+    };
+    info.visits.push(visit);
+  }
+  return info;
+}
+
+/**
+ * Is a value a valid transition type?
+ *
+ * @param transitionType: (String)
+ * @return (Boolean)
+ */
+function isValidTransitionType(transitionType) {
+  return [
+    History.TRANSITION_LINK,
+    History.TRANSITION_TYPED,
+    History.TRANSITION_BOOKMARK,
+    History.TRANSITION_EMBED,
+    History.TRANSITION_REDIRECT_PERMANENT,
+    History.TRANSITION_REDIRECT_TEMPORARY,
+    History.TRANSITION_DOWNLOAD,
+    History.TRANSITION_FRAMED_LINK
+  ].includes(transitionType);
+}
 
 /**
  * Normalize a key to either a string (if it is a valid GUID) or an
@@ -402,7 +564,7 @@ this.History = Object.freeze({
 function normalizeToURLOrGUID(key) {
   if (typeof key === "string") {
     // A string may be a URL or a guid
-    if (/^[a-zA-Z0-9\-_]{12}$/.test(key)) {
+    if (PlacesUtils.isValidGuid(key)) {
       return key;
     }
     return new URL(key);
@@ -766,4 +928,88 @@ var remove = Task.async(function*(db, {guids, urls}, onResult = null) {
   }
 
   return hasPagesToRemove;
+});
+
+/**
+ * Merges an updateInfo object, as returned by asyncHistory.updatePlaces
+ * into a PageInfo object as defined in this file.
+ *
+ * @param updateInfo: (Object)
+ *      An object that represents a page that is generated by
+ *      asyncHistory.updatePlaces.
+ * @param pageInfo: (PageInfo)
+ *      An PageInfo object into which to merge the data from updateInfo.
+ *      Defaults to an empty object so that this method can be used
+ *      to simply convert an updateInfo object into a PageInfo object.
+ *
+ * @return (PageInfo)
+ *      A PageInfo object populated with data from updateInfo.
+ */
+function mergeUpdateInfoIntoPageInfo(updateInfo, pageInfo={}) {
+  pageInfo.guid = updateInfo.guid;
+  if (!pageInfo.url) {
+    pageInfo.url = new URL(updateInfo.uri.spec);
+    pageInfo.title = updateInfo.title;
+    pageInfo.visits = updateInfo.visits.map(visit => {
+      return {
+        date: PlacesUtils.toDate(visit.visitDate),
+        transition: visit.transitionType,
+        referrer: (visit.referrerURI) ? new URL(visit.referrerURI.spec) : null
+      }
+    });
+  }
+  return pageInfo;
+}
+
+// Inner implementation of History.insert.
+var insert = Task.async(function*(db, pageInfo) {
+  let info = convertForUpdatePlaces(pageInfo);
+
+  return new Promise((resolve, reject) => {
+    PlacesUtils.asyncHistory.updatePlaces(info, {
+      handleError: error => {
+        reject(error);
+      },
+      handleResult: result => {
+        pageInfo = mergeUpdateInfoIntoPageInfo(result, pageInfo);
+      },
+      handleCompletion: () => {
+        resolve(pageInfo);
+      }
+    });
+  });
+});
+
+// Inner implementation of History.insertMany.
+var insertMany = Task.async(function*(db, pageInfos, onResult, onError) {
+  let infos = [];
+  let onResultData = [];
+  let onErrorData = [];
+
+  for (let pageInfo of pageInfos) {
+    let info = convertForUpdatePlaces(pageInfo);
+    infos.push(info);
+  }
+
+  return new Promise((resolve, reject) => {
+    PlacesUtils.asyncHistory.updatePlaces(infos, {
+      handleError: (resultCode, result) => {
+        let pageInfo = mergeUpdateInfoIntoPageInfo(result);
+        onErrorData.push(pageInfo);
+      },
+      handleResult: result => {
+        let pageInfo = mergeUpdateInfoIntoPageInfo(result);
+        onResultData.push(pageInfo);
+      },
+      handleCompletion: () => {
+        notifyOnResult(onResultData, onResult);
+        notifyOnResult(onErrorData, onError);
+        if (onResultData.length) {
+          resolve();
+        } else {
+          reject({message: "No items were added to history."})
+        }
+      }
+    });
+  });
 });

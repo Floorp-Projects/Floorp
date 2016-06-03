@@ -88,7 +88,7 @@ ssl_Trace(const char *format, ...)
 }
 
 void
-ssl_PrintKey(sslSocket *ss, const char *msg, PK11SymKey* key)
+ssl_PrintKey(sslSocket *ss, const char *msg, PK11SymKey *key)
 {
     SECStatus rv;
     SECItem *rawkey;

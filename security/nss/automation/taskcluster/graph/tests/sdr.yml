@@ -1,0 +1,13 @@
+---
+- task:
+    metadata:
+      name: SDR tests
+      description: SDR tests
+
+    payload:
+      env:
+        NSS_TESTS: sdr
+
+    extra:
+      treeherder:
+        symbol: SDR

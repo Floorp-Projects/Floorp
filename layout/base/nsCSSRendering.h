@@ -450,6 +450,7 @@ struct nsCSSRendering {
                             const nsRect& aDirtyRect,
                             const nsRect& aDest,
                             const nsRect& aFill,
+                            const nsSize& aRepeatSize,
                             const mozilla::CSSIntRect& aSrc,
                             const nsSize& aIntrinsiceSize);
 

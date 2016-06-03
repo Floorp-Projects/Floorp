@@ -284,7 +284,7 @@ PacketFilter::Action TlsExtensionFilter::FilterHandshake(
   }
   if (header.handshake_type() == kTlsHandshakeServerHello) {
     TlsParser parser(input);
-    if (!FindServerHelloExtensions(&parser, header.version())) {
+    if (!FindServerHelloExtensions(&parser)) {
       return KEEP;
     }
     return FilterExtensions(&parser, input, output);
@@ -312,13 +312,19 @@ bool TlsExtensionFilter::FindClientHelloExtensions(TlsParser* parser,
   return true;
 }
 
-bool TlsExtensionFilter::FindServerHelloExtensions(TlsParser* parser,
-                                                   uint16_t version) {
-  if (!parser->Skip(2 + 32)) { // version + random
+bool TlsExtensionFilter::FindServerHelloExtensions(TlsParser* parser) {
+  uint32_t vtmp;
+  if (!parser->Read(&vtmp, 2)) {
     return false;
   }
-  if (!parser->SkipVariable(1)) { // session ID
+  uint16_t version = static_cast<uint16_t>(vtmp);
+  if (!parser->Skip(32)) { // random
     return false;
+  }
+  if (NormalizeTlsVersion(version) <= SSL_LIBRARY_VERSION_TLS_1_2) {
+    if (!parser->SkipVariable(1)) { // session ID
+      return false;
+    }
   }
   if (!parser->Skip(2)) { // cipher suite
     return false;

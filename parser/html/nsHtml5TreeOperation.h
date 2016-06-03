@@ -58,8 +58,6 @@ enum eHtml5TreeOperation {
   eTreeOpAddViewSourceBase,
   eTreeOpAddError,
   eTreeOpAddLineNumberId,
-  eTreeOpAddErrorAtom,
-  eTreeOpAddErrorTwoAtoms,
   eTreeOpStartLayout
 };
 

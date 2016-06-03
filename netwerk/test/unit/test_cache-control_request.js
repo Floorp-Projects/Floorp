@@ -84,6 +84,12 @@ function resource_fresh_100_handler(metadata, response)
 function run_test()
 {
   do_get_profile();
+
+  if (!newCacheBackEndUsed()) {
+    do_check_true(true, "This test doesn't run when the old cache back end is used since it depends on the new APIs.");
+    return;
+  }
+
   do_test_pending();
 
   httpserver.registerPathHandler(resource_age_100, resource_age_100_handler);

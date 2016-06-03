@@ -56,30 +56,12 @@ TEST(ImageDownscalingFilter, WritePixels100_100to99_99)
   });
 }
 
-TEST(ImageDownscalingFilter, WriteRows100_100to99_99)
-{
-  WithDownscalingFilter(IntSize(100, 100), IntSize(99, 99),
-                        [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 99, 99)));
-  });
-}
-
 TEST(ImageDownscalingFilter, WritePixels100_100to33_33)
 {
   WithDownscalingFilter(IntSize(100, 100), IntSize(33, 33),
                         [](Decoder* aDecoder, SurfaceFilter* aFilter) {
     CheckWritePixels(aDecoder, aFilter,
                      /* aOutputRect = */ Some(IntRect(0, 0, 33, 33)));
-  });
-}
-
-TEST(ImageDownscalingFilter, WriteRows100_100to33_33)
-{
-  WithDownscalingFilter(IntSize(100, 100), IntSize(33, 33),
-                        [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 33, 33)));
   });
 }
 
@@ -92,30 +74,12 @@ TEST(ImageDownscalingFilter, WritePixels100_100to1_1)
   });
 }
 
-TEST(ImageDownscalingFilter, WriteRows100_100to1_1)
-{
-  WithDownscalingFilter(IntSize(100, 100), IntSize(1, 1),
-                        [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 1, 1)));
-  });
-}
-
 TEST(ImageDownscalingFilter, WritePixels100_100to33_99)
 {
   WithDownscalingFilter(IntSize(100, 100), IntSize(33, 99),
                         [](Decoder* aDecoder, SurfaceFilter* aFilter) {
     CheckWritePixels(aDecoder, aFilter,
                      /* aOutputRect = */ Some(IntRect(0, 0, 33, 99)));
-  });
-}
-
-TEST(ImageDownscalingFilter, WriteRows100_100to33_99)
-{
-  WithDownscalingFilter(IntSize(100, 100), IntSize(33, 99),
-                        [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 33, 99)));
   });
 }
 
@@ -128,15 +92,6 @@ TEST(ImageDownscalingFilter, WritePixels100_100to99_33)
   });
 }
 
-TEST(ImageDownscalingFilter, WriteRows100_100to99_33)
-{
-  WithDownscalingFilter(IntSize(100, 100), IntSize(99, 33),
-                        [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 99, 33)));
-  });
-}
-
 TEST(ImageDownscalingFilter, WritePixels100_100to99_1)
 {
   WithDownscalingFilter(IntSize(100, 100), IntSize(99, 1),
@@ -146,30 +101,12 @@ TEST(ImageDownscalingFilter, WritePixels100_100to99_1)
   });
 }
 
-TEST(ImageDownscalingFilter, WriteRows100_100to99_1)
-{
-  WithDownscalingFilter(IntSize(100, 100), IntSize(99, 1),
-                        [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 99, 1)));
-  });
-}
-
 TEST(ImageDownscalingFilter, WritePixels100_100to1_99)
 {
   WithDownscalingFilter(IntSize(100, 100), IntSize(1, 99),
                         [](Decoder* aDecoder, SurfaceFilter* aFilter) {
     CheckWritePixels(aDecoder, aFilter,
                      /* aOutputRect = */ Some(IntRect(0, 0, 1, 99)));
-  });
-}
-
-TEST(ImageDownscalingFilter, WriteRows100_100to1_99)
-{
-  WithDownscalingFilter(IntSize(100, 100), IntSize(1, 99),
-                        [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 1, 99)));
   });
 }
 
@@ -243,41 +180,6 @@ TEST(ImageDownscalingFilter, WritePixelsOutput100_100to20_20)
   });
 }
 
-TEST(ImageDownscalingFilter, WriteRowsOutput100_100to20_20)
-{
-  WithDownscalingFilter(IntSize(100, 100), IntSize(20, 20),
-                        [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    // Fill the image. It consists of 25 lines of green, followed by 25 lines of
-    // red, followed by 25 lines of green, followed by 25 more lines of red.
-    uint32_t count = 0;
-    auto result = aFilter->WriteRows<uint32_t>([&](uint32_t* aRow, uint32_t aLength) {
-      uint32_t color = (count <= 25 * 100) || (count > 50 * 100 && count <= 75 * 100)
-                     ? BGRAColor::Green().AsPixel()
-                     : BGRAColor::Red().AsPixel();
-      for (; aLength > 0; --aLength, ++aRow, ++count) {
-        *aRow = color;
-      }
-      return Nothing();
-    });
-    EXPECT_EQ(WriteState::FINISHED, result);
-    EXPECT_EQ(100u * 100u, count);
-
-    AssertCorrectPipelineFinalState(aFilter,
-                                    IntRect(0, 0, 100, 100),
-                                    IntRect(0, 0, 20, 20));
-
-    // Check that the generated image is correct. (Note that we skip rows near
-    // the transitions between colors, since the downscaler does not produce a
-    // sharp boundary at these points.)
-    RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
-    RefPtr<SourceSurface> surface = currentFrame->GetSurface();
-    EXPECT_TRUE(RowsAreSolidColor(surface, 0, 4, BGRAColor::Green(), /* aFuzz = */ 2));
-    EXPECT_TRUE(RowsAreSolidColor(surface, 6, 3, BGRAColor::Red(), /* aFuzz = */ 3));
-    EXPECT_TRUE(RowsAreSolidColor(surface, 11, 3, BGRAColor::Green(), /* aFuzz = */ 3));
-    EXPECT_TRUE(RowsAreSolidColor(surface, 16, 4, BGRAColor::Red(), /* aFuzz = */ 3));
-  });
-}
-
 TEST(ImageDownscalingFilter, WritePixelsOutput100_100to10_20)
 {
   WithDownscalingFilter(IntSize(100, 100), IntSize(10, 20),
@@ -303,41 +205,6 @@ TEST(ImageDownscalingFilter, WritePixelsOutput100_100to10_20)
     // the transitions between colors, since the downscaler does not produce a
     // sharp boundary at these points. Even some of the rows we test need a
     // small amount of fuzz; this is just the nature of Lanczos downscaling.
-    RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
-    RefPtr<SourceSurface> surface = currentFrame->GetSurface();
-    EXPECT_TRUE(RowsAreSolidColor(surface, 0, 4, BGRAColor::Green(), /* aFuzz = */ 2));
-    EXPECT_TRUE(RowsAreSolidColor(surface, 6, 3, BGRAColor::Red(), /* aFuzz = */ 3));
-    EXPECT_TRUE(RowsAreSolidColor(surface, 11, 3, BGRAColor::Green(), /* aFuzz = */ 3));
-    EXPECT_TRUE(RowsAreSolidColor(surface, 16, 4, BGRAColor::Red(), /* aFuzz = */ 3));
-  });
-}
-
-TEST(ImageDownscalingFilter, WriteRowsOutput100_100to10_20)
-{
-  WithDownscalingFilter(IntSize(100, 100), IntSize(10, 20),
-                        [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    // Fill the image. It consists of 25 lines of green, followed by 25 lines of
-    // red, followed by 25 lines of green, followed by 25 more lines of red.
-    uint32_t count = 0;
-    auto result = aFilter->WriteRows<uint32_t>([&](uint32_t* aRow, uint32_t aLength) {
-      uint32_t color = (count <= 25 * 100) || (count > 50 * 100 && count <= 75 * 100)
-                     ? BGRAColor::Green().AsPixel()
-                     : BGRAColor::Red().AsPixel();
-      for (; aLength > 0; --aLength, ++aRow, ++count) {
-        *aRow = color;
-      }
-      return Nothing();
-    });
-    EXPECT_EQ(WriteState::FINISHED, result);
-    EXPECT_EQ(100u * 100u, count);
-
-    AssertCorrectPipelineFinalState(aFilter,
-                                    IntRect(0, 0, 100, 100),
-                                    IntRect(0, 0, 10, 20));
-
-    // Check that the generated image is correct. (Note that we skip rows near
-    // the transitions between colors, since the downscaler does not produce a
-    // sharp boundary at these points.)
     RawAccessFrameRef currentFrame = aDecoder->GetCurrentFrameRef();
     RefPtr<SourceSurface> surface = currentFrame->GetSurface();
     EXPECT_TRUE(RowsAreSolidColor(surface, 0, 4, BGRAColor::Green(), /* aFuzz = */ 2));

@@ -281,6 +281,8 @@ public:
 
   virtual void SetCompositor(Compositor* aCompositor) override;
 
+  virtual Compositor* GetCompositor() override;
+
   virtual gfx::SurfaceFormat GetFormat() const override { return mFormat; }
 
   virtual bool Lock() override;
@@ -319,6 +321,8 @@ public:
   virtual void DeallocateDeviceData() override{}
 
   virtual void SetCompositor(Compositor* aCompositor) override;
+
+  virtual Compositor* GetCompositor() override;
 
   virtual gfx::SurfaceFormat GetFormat() const override{ return gfx::SurfaceFormat::YUV; }
 

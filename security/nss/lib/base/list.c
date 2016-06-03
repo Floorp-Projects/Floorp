@@ -117,6 +117,9 @@ nssList_Create(NSSArena *arenaOpt, PRBool threadSafe)
 NSS_IMPLEMENT PRStatus
 nssList_Destroy(nssList *list)
 {
+    if (!list) {
+        return PR_SUCCESS;
+    }
     if (!list->i_alloced_arena) {
         nssList_Clear(list, NULL);
     }
@@ -155,6 +158,9 @@ nssList_Clear(nssList *list, nssListElementDestructorFunc destructor)
 {
     PRCList *link;
     nssListElement *node, *tmp;
+    if (!list) {
+        return;
+    }
     NSSLIST_LOCK_IF(list);
     node = list->head;
     list->head = NULL;
@@ -355,7 +361,9 @@ nssListIterator_Destroy(nssListIterator *iter)
     if (iter->lock) {
         (void)PZ_DestroyLock(iter->lock);
     }
-    nssList_Destroy(iter->list);
+    if (iter->list) {
+        nssList_Destroy(iter->list);
+    }
     nss_ZFreeIf(iter);
 }
 

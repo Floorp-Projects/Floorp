@@ -44,7 +44,7 @@ extern "C" MFBT_API bool IsSignalHandlingBroken();
 
 // For platforms where the signal/exception handler runs on the same
 // thread/stack as the victim (Unix and Windows), we can use TLS to find any
-// currently executing asm.js code.
+// currently executing wasm code.
 static JSRuntime*
 RuntimeForCurrentThread()
 {
@@ -1321,16 +1321,16 @@ wasm::EnsureSignalHandlersInstalled(JSRuntime* rt)
 // JSRuntime::requestInterrupt sets interrupt_ (which is checked frequently by
 // C++ code at every Baseline JIT loop backedge) and jitStackLimit_ (which is
 // checked at every Baseline and Ion JIT function prologue). The remaining
-// sources of potential iloops (Ion loop backedges and all asm.js code) are
+// sources of potential iloops (Ion loop backedges and all wasm code) are
 // handled by this function:
-//  1. Ion loop backedges are patched to instead point to a stub that handles the
-//     interrupt;
-//  2. if the main thread's pc is inside asm.js code, the pc is updated to point
+//  1. Ion loop backedges are patched to instead point to a stub that handles
+//     the interrupt;
+//  2. if the main thread's pc is inside wasm code, the pc is updated to point
 //     to a stub that handles the interrupt.
 void
 js::InterruptRunningJitCode(JSRuntime* rt)
 {
-    // If signal handlers weren't installed, then Ion and asm.js emit normal
+    // If signal handlers weren't installed, then Ion and wasm emit normal
     // interrupt checks and don't need asynchronous interruption.
     if (!rt->canUseSignalHandlers())
         return;
@@ -1340,8 +1340,8 @@ js::InterruptRunningJitCode(JSRuntime* rt)
     if (!rt->startHandlingJitInterrupt())
         return;
 
-    // If we are on runtime's main thread, then: pc is not in asm.js code (so
-    // nothing to do for asm.js) and we can patch Ion backedges without any
+    // If we are on runtime's main thread, then: pc is not in wasm code (so
+    // nothing to do for wasm) and we can patch Ion backedges without any
     // special synchronization.
     if (rt == RuntimeForCurrentThread()) {
         RedirectIonBackedgesToInterruptCheck(rt);
