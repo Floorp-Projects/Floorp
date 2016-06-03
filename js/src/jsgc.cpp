@@ -7635,6 +7635,8 @@ AutoAssertHeapBusy::checkCondition(JSRuntime *rt)
 
 void
 AutoAssertEmptyNursery::checkCondition(JSRuntime *rt) {
+    if (!noAlloc)
+        noAlloc.emplace(rt);
     this->rt = rt;
     MOZ_ASSERT(rt->gc.nursery.isEmpty());
 }
