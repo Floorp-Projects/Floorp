@@ -76,7 +76,7 @@
 
 #include "GeckoProfiler.h"
 
-#include "mozilla/Telemetry.h"
+ #include "base/histogram.h"
 
 #if defined(MOZ_SANDBOX) && defined(XP_WIN)
 #include "mozilla/sandboxTarget.h"
@@ -318,7 +318,8 @@ XRE_InitChildProcess(int aArgc,
 #endif
 
   // This is needed by Telemetry to initialize histogram collection.
-  Telemetry::CreateStatisticsRecorder();
+  UniquePtr<base::StatisticsRecorder> statisticsRecorder =
+    MakeUnique<base::StatisticsRecorder>();
 
 #if !defined(MOZ_WIDGET_ANDROID) && !defined(MOZ_WIDGET_GONK)
   // On non-Fennec Gecko, the GMPLoader code resides in plugin-container,
@@ -667,7 +668,7 @@ XRE_InitChildProcess(int aArgc,
     }
   }
 
-  Telemetry::DestroyStatisticsRecorder();
+  statisticsRecorder = nullptr;
   profiler_shutdown();
   NS_LogTerm();
   return XRE_DeinitCommandLine();
