@@ -494,7 +494,7 @@ child:
      * Communication between the PuppetBidiKeyboard and the actual
      * BidiKeyboard hosted by the parent
      */
-    async BidiKeyboardNotify(bool isLangRTL);
+    async BidiKeyboardNotify(bool isLangRTL, bool haveBidiKeyboards);
 
     /**
      * Dump this process's GC and CC logs to the provided files.
@@ -702,7 +702,8 @@ parent:
     sync GetProcessAttributes()
         returns (ContentParentId cpId, bool isForApp, bool isForBrowser);
     sync GetXPCOMProcessAttributes()
-        returns (bool isOffline, bool isConnected, bool isLangRTL, nsString[] dictionaries,
+        returns (bool isOffline, bool isConnected, bool isLangRTL,
+                 bool haveBidiKeyboards, nsString[] dictionaries,
                  ClipboardCapabilities clipboardCaps,
                  DomainPolicyClone domainPolicy,
                  StructuredCloneData initialData);
