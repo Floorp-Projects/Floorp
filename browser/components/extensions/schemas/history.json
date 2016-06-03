@@ -187,9 +187,8 @@
       },
       {
         "name": "addUrl",
-        "unsupported": true,
         "type": "function",
-        "description": "Adds a URL to the history at the current time with a $(topic:transition-types)[transition type] of \"link\".",
+        "description": "Adds a URL to the history with a default visitTime of the current time and a default $(topic:transition-types)[transition type] of \"link\".",
         "async": "callback",
         "parameters": [
           {
@@ -198,7 +197,22 @@
             "properties": {
               "url": {
                 "type": "string",
-                "description": "The URL to add."
+                "description": "The URL to add. Must be a valid URL that can be added to history."
+              },
+              "title": {
+                "type": "string",
+                "optional": true,
+                "description": "The title of the page."
+              },
+              "transition": {
+                "$ref": "TransitionType",
+                "optional": true,
+                "description": "The $(topic:transition-types)[transition type] for this visit from its referrer."
+              },
+              "visitTime": {
+                "$ref": "HistoryTime",
+                "optional": true,
+                "description": "The date when this visit occurred."
               }
             }
           },
@@ -245,12 +259,12 @@
             "type": "object",
             "properties": {
               "startTime": {
-                "type": "number",
-                "description": "Items added to history after this date, represented in milliseconds since the epoch."
+                "$ref": "HistoryTime",
+                "description": "Items added to history after this date."
               },
               "endTime": {
-                "type": "number",
-                "description": "Items added to history before this date, represented in milliseconds since the epoch."
+                "$ref": "HistoryTime",
+                "description": "Items added to history before this date."
               }
             }
           },

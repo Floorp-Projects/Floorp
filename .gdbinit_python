@@ -1,0 +1,5 @@
+python
+import sys
+sys.path.append('python/gdbpp/')
+import gdbpp
+end

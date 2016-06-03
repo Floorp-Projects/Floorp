@@ -33,7 +33,8 @@ public:
            mInIsolatedMozBrowser == aOther.mInIsolatedMozBrowser &&
            mAddonId == aOther.mAddonId &&
            mUserContextId == aOther.mUserContextId &&
-           mSignedPkg == aOther.mSignedPkg;
+           mSignedPkg == aOther.mSignedPkg &&
+           mPrivateBrowsingId == aOther.mPrivateBrowsingId;
   }
   bool operator!=(const OriginAttributes& aOther) const
   {
@@ -50,6 +51,10 @@ public:
   // |uri!key1=value1&key2=value2| and returns the uri without the suffix.
   bool PopulateFromOrigin(const nsACString& aOrigin,
                           nsACString& aOriginNoSuffix);
+
+  // Helper function to match mIsPrivateBrowsing to existing private browsing
+  // flags. Once all other flags are removed, this can be removed too.
+  void SyncAttributesWithPrivateBrowsing(bool aInPrivateBrowsing);
 
 protected:
   OriginAttributes() {}
@@ -172,6 +177,10 @@ public:
     }
 
     if (mSignedPkg.WasPassed() && mSignedPkg.Value() != aAttrs.mSignedPkg) {
+      return false;
+    }
+
+    if (mPrivateBrowsingId.WasPassed() && mPrivateBrowsingId.Value() != aAttrs.mPrivateBrowsingId) {
       return false;
     }
 

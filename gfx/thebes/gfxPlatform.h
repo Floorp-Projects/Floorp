@@ -615,11 +615,6 @@ public:
     // widget. This should only be used within nsRefreshDriver.
     virtual void SchedulePaintIfDeviceReset() {}
 
-    // Immediately update all platform bits if a device reset has occurred.
-    // This should only be used at the top of the callstack (i.e. within
-    // a task, OS event, or IPDL message).
-    virtual void UpdateRenderModeIfDeviceReset() {}
-
     /**
      * Helper method, creates a draw target for a specific Azure backend.
      * Used by CreateOffscreenDrawTarget.

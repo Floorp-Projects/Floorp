@@ -179,7 +179,8 @@ ChromeUtils::IsOriginAttributesEqual(dom::GlobalObject& aGlobal,
          aA.mAppId == aB.mAppId &&
          aA.mInIsolatedMozBrowser == aB.mInIsolatedMozBrowser &&
          aA.mSignedPkg == aB.mSignedPkg &&
-         aA.mUserContextId == aB.mUserContextId;
+         aA.mUserContextId == aB.mUserContextId &&
+         aA.mPrivateBrowsingId == aB.mPrivateBrowsingId;
 }
 
 } // namespace dom

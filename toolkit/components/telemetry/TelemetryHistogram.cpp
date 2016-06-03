@@ -896,7 +896,9 @@ KeyedHistogram::GetJSKeys(JSContext* cx, JS::CallArgs& args)
     JS::RootedValue jsKey(cx);
     const NS_ConvertUTF8toUTF16 key(iter.Get()->GetKey());
     jsKey.setString(JS_NewUCStringCopyN(cx, key.Data(), key.Length()));
-    keys.append(jsKey);
+    if (!keys.append(jsKey)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
   JS::RootedObject jsKeys(cx, JS_NewArrayObject(cx, keys));

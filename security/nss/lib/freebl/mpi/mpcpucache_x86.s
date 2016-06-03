@@ -569,6 +569,7 @@ freebl_cpuid:
 	movl	%edx, %ebp
 /APP
 	pushl %ebx
+	xorl %ecx, %ecx
 	cpuid
 	mov %ebx,%esi
 	popl %ebx

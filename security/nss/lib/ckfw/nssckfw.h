@@ -32,6 +32,9 @@
  *  NSSCKFWInstance_MayCreatePthreads
  *  NSSCKFWInstance_CreateMutex
  *  NSSCKFWInstance_GetConfigurationData
+ *  NSSCKFWInstance_GetInitArgs
+ *  NSSCKFWInstance_DestroySessionHandle
+ *  NSSCKFWInstance_FindSessionHandle
  */
 
 /*
@@ -92,11 +95,30 @@ NSSCKFWInstance_GetInitArgs(
     NSSCKFWInstance *fwInstance);
 
 /*
+ * nssCKFWInstance_DestroySessionHandle
+ *
+ */
+NSS_EXTERN void
+NSSCKFWInstance_DestroySessionHandle(
+    NSSCKFWInstance *fwInstance,
+    CK_SESSION_HANDLE hSession);
+
+/*
+ * nssCKFWInstance_FindSessionHandle
+ *
+ */
+NSS_EXTERN CK_SESSION_HANDLE
+NSSCKFWInstance_FindSessionHandle(
+    NSSCKFWInstance *fwInstance,
+    NSSCKFWSession *fwSession);
+
+/*
  * NSSCKFWSlot
  *
  *  NSSCKFWSlot_GetMDSlot
  *  NSSCKFWSlot_GetFWInstance
  *  NSSCKFWSlot_GetMDInstance
+ *  NSSCKFWSlot_GetSlotID
  *
  */
 
@@ -125,6 +147,15 @@ NSSCKFWSlot_GetFWInstance(
 
 NSS_EXTERN NSSCKMDInstance *
 NSSCKFWSlot_GetMDInstance(
+    NSSCKFWSlot *fwSlot);
+
+/*
+ * NSSCKFWSlot_GetSlotID
+ *
+ */
+
+NSS_EXTERN CK_SLOT_ID
+NSSCKFWSlot_GetSlotID(
     NSSCKFWSlot *fwSlot);
 
 /*
@@ -218,6 +249,7 @@ NSSCKFWMechanism_GetParameter(
  *  NSSCKFWSession_IsRWSession
  *  NSSCKFWSession_IsSO
  *  NSSCKFWSession_GetCurrentCryptoOperation
+ *  NSSCKFWSession_GetFWSlot
  *
  */
 
@@ -277,6 +309,15 @@ NSS_EXTERN NSSCKFWCryptoOperation *
 NSSCKFWSession_GetCurrentCryptoOperation(
     NSSCKFWSession *fwSession,
     NSSCKFWCryptoOperationState state);
+
+/*
+ * NSSCKFWSession_GetFWSlot
+ *
+ */
+
+NSS_EXTERN NSSCKFWSlot *
+NSSCKFWSession_GetFWSlot(
+    NSSCKFWSession *fwSession);
 
 /*
  * NSSCKFWObject

@@ -805,7 +805,7 @@ CreateJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSRuntime* aRuntime)
   js::SetCTypesActivityCallback(aRuntime, CTypesActivityCallback);
 
 #ifdef JS_GC_ZEAL
-  JS_SetGCZeal(workerCx, settings.gcZeal, settings.gcZealFrequency);
+  JS_SetGCZeal(aRuntime, settings.gcZeal, settings.gcZealFrequency);
 #endif
 
   return workerCx;

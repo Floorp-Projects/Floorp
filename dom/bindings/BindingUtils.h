@@ -3276,17 +3276,26 @@ struct StrongPtrForMember
 
 inline
 JSObject*
-GetErrorPrototype(JSContext* aCx, JS::Handle<JSObject*> aForObj)
+GetErrorPrototype(JSContext* aCx, JS::Handle<JSObject*>)
 {
   return JS_GetErrorPrototype(aCx);
 }
 
 inline
 JSObject*
-GetIteratorPrototype(JSContext* aCx, JS::Handle<JSObject*> aForObj)
+GetIteratorPrototype(JSContext* aCx, JS::Handle<JSObject*>)
 {
   return JS_GetIteratorPrototype(aCx);
 }
+
+namespace binding_detail {
+inline
+JSObject*
+GetHackedNamespaceProtoObject(JSContext* aCx, JS::Handle<JSObject*>)
+{
+  return JS_NewPlainObject(aCx);
+}
+} // namespace binding_detail
 
 // Resolve an id on the given global object that wants to be included in
 // Exposed=System webidl annotations.  False return value means exception

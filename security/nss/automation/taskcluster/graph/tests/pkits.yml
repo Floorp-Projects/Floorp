@@ -1,0 +1,13 @@
+---
+- task:
+    metadata:
+      name: NIST PKITS tests
+      description: NIST PKITS tests
+
+    payload:
+      env:
+        NSS_TESTS: pkits
+
+    extra:
+      treeherder:
+        symbol: PKITS

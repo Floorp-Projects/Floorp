@@ -1012,7 +1012,7 @@ struct Chunk
 
   public:
     /* Unlink and return the freeArenasHead. */
-    inline Arena* fetchNextFreeArena(JSRuntime* rt);
+    Arena* fetchNextFreeArena(JSRuntime* rt);
 };
 
 static_assert(sizeof(Chunk) == ChunkSize,

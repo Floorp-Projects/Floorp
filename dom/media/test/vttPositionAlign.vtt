@@ -1,0 +1,25 @@
+WEBVTT
+
+00:00.000 --> 00:00.500
+Cue 0 : PositionAlign should be "center".
+
+00:00.700 --> 00:00.800 position:50%,line-left
+Cue 1 : PositionAlign should be "line-left".
+
+00:00.700 --> 00:00.800 position:50%,center
+Cue 2 : PositionAlign should be "center".
+
+00:00.700 --> 00:00.800 position:50%,line-right
+Cue 3 : PositionAlign should be "line-right".
+
+00:00.700 --> 00:00.800 position:50%,auto
+Cue 4 : PositionAlign should be "auto"
+
+00:00.700 --> 00:00.800 position:50%,auto align:left
+Cue 5 : PositionAlign should be "auto", but computedPositionAlign should be "line-left".
+
+00:00.700 --> 00:00.800 position:50%,auto align:right
+Cue 6 : PositionAlign should be "auto", but computedPositionAlign should be "line-right".
+
+00:00.700 --> 00:00.800 position:50%,auto align:middle
+Cue 7 : PositionAlign should be "auto", but computedPositionAlign should be "center".

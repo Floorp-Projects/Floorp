@@ -434,14 +434,14 @@ class AutoLeaveZeal
     explicit AutoLeaveZeal(JSContext* cx) : cx_(cx) {
         uint32_t dummy;
         JS_GetGCZealBits(cx_, &zealBits_, &frequency_, &dummy);
-        JS_SetGCZeal(cx_, 0, 0);
+        JS_SetGCZeal(JS_GetRuntime(cx_), 0, 0);
         JS::PrepareForFullGC(JS_GetRuntime(cx_));
         JS::GCForReason(JS_GetRuntime(cx_), GC_SHRINK, JS::gcreason::DEBUG_GC);
     }
     ~AutoLeaveZeal() {
         for (size_t i = 0; i < sizeof(zealBits_) * 8; i++) {
             if (zealBits_ & (1 << i))
-                JS_SetGCZeal(cx_, i, frequency_);
+                JS_SetGCZeal(JS_GetRuntime(cx_), i, frequency_);
         }
 
 #ifdef DEBUG

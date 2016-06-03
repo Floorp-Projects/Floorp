@@ -154,6 +154,11 @@ protected:
   bool SetTabContext(const TabContext& aContext);
 
   /**
+   * Set the tab context's origin attributes to a private browsing value.
+   */
+  void SetPrivateBrowsingAttributes(bool aIsPrivateBrowsing);
+
+  /**
    * Set the TabContext for this frame. This can either be:
    *  - an app frame (with the given own app) inside the given owner app. Either
    *    apps can be null.

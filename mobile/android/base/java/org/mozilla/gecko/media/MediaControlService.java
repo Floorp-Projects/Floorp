@@ -20,7 +20,6 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
-import android.R;
 
 public class MediaControlService extends Service {
     private static final String LOGTAG = "MediaControlService";
@@ -84,7 +83,7 @@ public class MediaControlService extends Service {
     }
 
     private void handleIntent(Intent intent) {
-        if(intent == null || intent.getAction() == null ||
+        if (intent == null || intent.getAction() == null ||
            !mIsInitMediaSession) {
             return;
         }

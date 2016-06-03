@@ -648,7 +648,15 @@ sec_pkcs7_decoder_notify (void *arg, PRBool before, void *dest, int depth)
 	after = PR_TRUE;
 
     p7dcx = (SEC_PKCS7DecoderContext*)arg;
+    if (!p7dcx) {
+	return;
+    }
+
     cinfo = p7dcx->cinfo;
+
+    if (!cinfo) {
+	return;
+    }
 
     if (cinfo->contentTypeTag == NULL) {
 	if (after && dest == &(cinfo->contentType))
@@ -866,6 +874,10 @@ sec_pkcs7_decoder_notify (void *arg, PRBool before, void *dest, int depth)
 
       case SEC_OID_PKCS7_ENCRYPTED_DATA:
 	encd = cinfo->content.encryptedData;
+
+	if (!encd) {
+	    break;
+	}
 
 	/*
 	 * XXX If the decryption key callback is set, we want to start

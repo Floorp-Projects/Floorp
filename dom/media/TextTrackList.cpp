@@ -211,5 +211,13 @@ TextTrackList::SetTextTrackManager(TextTrackManager* aTextTrackManager)
   mTextTrackManager = aTextTrackManager;
 }
 
+void
+TextTrackList::SetCuesInactive()
+{
+  for (uint32_t i = 0; i < Length(); i++) {
+    mTextTracks[i]->SetCuesInactive();
+  }
+}
+
 } // namespace dom
 } // namespace mozilla

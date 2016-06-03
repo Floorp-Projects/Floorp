@@ -233,10 +233,30 @@ function testSubtree() {
     is(records[1].removedNodes.length, 0, "Shouldn't have got removedNodes");
 
     observer.disconnect();
-    SimpleTest.finish();
+    testDictionaryWithoutChromePriv();
   });
   SpecialPowers.observeMutationEvents(m, document, true, true);
   parent.style.display = "block";
+}
+
+function testDictionaryWithoutChromePriv()
+{
+  var m = new MutationObserver(function() {});
+  try {
+    m.observe(document, { childList: true, get nativeAnonymousChildList() { throw "Foo1"; } } );
+    ok(true, "Shouldn't throw!");
+  } catch(ex) {
+    ok(false, "Did throw " + ex);
+  }
+
+  try {
+    m.observe(document, { childList: true, get animations() { throw "Foo2"; } } );
+    ok(true, "Shouldn't throw!");
+  } catch(ex) {
+    ok(false, "Did throw " + ex);
+  }
+  
+  SimpleTest.finish();
 }
 
 </script>

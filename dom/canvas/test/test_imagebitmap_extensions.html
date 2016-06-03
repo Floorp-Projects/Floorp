@@ -1,0 +1,36 @@
+<!DOCTYPE HTML>
+<heand>
+  <title>Test ImageBitmap Extensions (Bug 1141979)</title>
+  <meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+  <div id="content"><div>
+  <script type="text/javascript">
+    SimpleTest.waitForExplicitFinish();
+
+    // The createImageBitmap() method is part of Window whose
+    // prototype was created before the preference is set. So I create another
+    // iframe with the right preference setting so that the
+    // createImageBitmap() will be visible.
+    SpecialPowers.pushPrefEnv({'set': [
+      ['canvas.imagebitmap_extensions.enabled', true]
+    ]}, function() {
+      var div = document.getElementById("content");
+      ok(div, "Parent exists");
+
+      var ifr = document.createElement("iframe");
+      ifr.setAttribute('src', "imagebitmap_extensions.html");
+      div.appendChild(ifr);
+    });
+
+    window.onmessage = function(event) {
+      if (event.data.type == "status") {
+        ok(event.data.status, event.data.msg);
+      } else if (event.data.type == "finish") {
+        SimpleTest.finish();
+      }
+    }
+  </script>
+</body>

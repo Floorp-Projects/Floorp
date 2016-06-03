@@ -603,6 +603,11 @@ struct nsStyleImageLayers {
              mYRepeat == NS_STYLE_IMAGELAYER_REPEAT_REPEAT;
     }
 
+    bool DependsOnPositioningAreaSize() const {
+      return mXRepeat == NS_STYLE_IMAGELAYER_REPEAT_SPACE ||
+             mYRepeat == NS_STYLE_IMAGELAYER_REPEAT_SPACE;
+    }
+
     // Initialize to initial values
     void SetInitialValues();
 

@@ -14,7 +14,7 @@ project_flag('MOZ_LOCALE_SWITCHER',
 
 project_flag('MOZ_ANDROID_GCM',
              help='Enable GCM registration on Nightly builds only',
-             default=enabled_in_nightly,
+             default=True,
              set_for_old_configure=True)
 
 project_flag('MOZ_ANDROID_DOWNLOADS_INTEGRATION',

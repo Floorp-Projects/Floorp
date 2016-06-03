@@ -11,7 +11,6 @@ CPPSRCS = \
       pk11_pbkdf2_unittest.cc \
       pk11_prf_unittest.cc \
       pk11_rsapss_unittest.cc \
-      pk11_gtest.cc \
       $(NULL)
 
 INCLUDES += -I$(CORE_DEPTH)/external_tests/google_test/gtest/include \
@@ -20,4 +19,7 @@ INCLUDES += -I$(CORE_DEPTH)/external_tests/google_test/gtest/include \
 REQUIRES = nspr nss libdbm gtest
 
 PROGRAM = pk11_gtest
-EXTRA_LIBS = $(DIST)/lib/$(LIB_PREFIX)gtest.$(LIB_SUFFIX)
+
+EXTRA_LIBS = $(DIST)/lib/$(LIB_PREFIX)gtest.$(LIB_SUFFIX) $(EXTRA_OBJS) \
+             ../common/$(OBJDIR)/gtests$(OBJ_SUFFIX)
+

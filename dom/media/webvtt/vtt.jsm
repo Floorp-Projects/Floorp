@@ -211,7 +211,7 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
           vals = v.split(",");
           settings.percent(k, vals[0]);
           if (vals.length === 2) {
-            settings.alt("positionAlign", vals[1], ["start", "middle", "end"]);
+            settings.alt("positionAlign", vals[1], ["line-left", "center", "line-right", "auto"]);
           }
           break;
         case "size":
@@ -238,13 +238,7 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
         end: 100,
         right: 100
       }, cue.align);
-      cue.positionAlign = settings.get("positionAlign", {
-        start: "start",
-        left: "start",
-        middle: "middle",
-        end: "end",
-        right: "end"
-      }, cue.align);
+      cue.positionAlign = settings.get("positionAlign", "center");
     }
 
     function skipWhitespace() {
@@ -788,16 +782,17 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
     // position of the cue box. The reference edge will be resolved later when
     // the box orientation styles are applied.
     var textPos = 0;
-    switch (cue.positionAlign) {
-    case "start":
-      textPos = cue.position;
-      break;
-    case "middle":
-      textPos = cue.position - (cue.size / 2);
-      break;
-    case "end":
-      textPos = cue.position - cue.size;
-      break;
+    switch (cue.computedPositionAlign) {
+      // TODO : modify these fomula to follow the spec, see bug 1277437.
+      case "line-left":
+        textPos = cue.position;
+        break;
+      case "center":
+        textPos = cue.position - (cue.size / 2);
+        break;
+      case "line-right":
+        textPos = cue.position - cue.size;
+        break;
     }
 
     // Horizontal box orientation; textPos is the distance from the left edge of the

@@ -1,0 +1,13 @@
+---
+- task:
+    metadata:
+      name: OCSP tests
+      description: OCSP tests
+
+    payload:
+      env:
+        NSS_TESTS: ocsp
+
+    extra:
+      treeherder:
+        symbol: OCSP

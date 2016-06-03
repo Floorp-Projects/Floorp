@@ -239,6 +239,10 @@ const kEventConstructors = {
                                                          return new ErrorEvent(aName, aProps);
                                                        },
   },
+  FlyWebFetchEvent:                          { create: null, // Cannot create untrusted event from JS.
+                                             },
+  FlyWebWebSocketEvent:                      { create: null, // Cannot create untrusted event from JS.
+                                             },
   FocusEvent:                                { create: function (aName, aProps) {
                                                          return new FocusEvent(aName, aProps);
                                                        },

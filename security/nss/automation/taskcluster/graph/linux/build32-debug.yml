@@ -1,0 +1,139 @@
+---
+- task:
+    metadata:
+      name: "Linux 32 (debug)"
+      description: "Linux 32 (debug)"
+
+    payload:
+      env:
+        NSS_ENABLE_TLS_1_3: 1
+
+    extra:
+      treeherder:
+        build:
+          platform: linux32
+        collection:
+          debug: true
+
+  tests:
+    - cert
+    - chains
+    - cipher
+    - crmf
+    - db
+    - ec
+    - fips
+    - gtests
+    - lowhash
+    - merge
+    - ocsp
+    - pkits
+    - pkix
+    - sdr
+    - smime
+    - tools
+
+- task:
+    metadata:
+      name: "Linux 32 (debug, no TLS 1.3)"
+      description: "Linux 32 (debug, no TLS 1.3)"
+
+    payload:
+      env:
+        NSS_TESTS: ssl
+
+    extra:
+      treeherder:
+        build:
+          platform: linux32
+        collection:
+          debug: true
+        groupSymbol: Builds
+        groupName: Various builds
+        symbol: noTLSv1.3
+
+  tests:
+    - ssl
+
+- task:
+    metadata:
+      name: "Linux 32 (debug, clang-3.8)"
+      description: "Linux 32 (debug, clang-3.8)"
+
+    payload:
+      env:
+        NSS_ENABLE_TLS_1_3: 1
+        GCC_VERSION: clang-3.8
+        GXX_VERSION: clang++-3.8
+
+    extra:
+      treeherder:
+        build:
+          platform: linux32
+        collection:
+          debug: true
+        groupSymbol: Builds
+        groupName: Various builds
+        symbol: clang-3.8
+
+- task:
+    metadata:
+      name: "Linux 32 (debug, gcc-4.8)"
+      description: "Linux 32 (debug, gcc-4.8)"
+
+    payload:
+      env:
+        NSS_ENABLE_TLS_1_3: 1
+        GCC_VERSION: gcc-4.8
+        GXX_VERSION: g++-4.8
+
+    extra:
+      treeherder:
+        build:
+          platform: linux32
+        collection:
+          debug: true
+        groupSymbol: Builds
+        groupName: Various builds
+        symbol: gcc-4.8
+
+- task:
+    metadata:
+      name: "Linux 32 (debug, gcc-6.1)"
+      description: "Linux 32 (debug, gcc-6.1)"
+
+    payload:
+      env:
+        NSS_ENABLE_TLS_1_3: 1
+        GCC_VERSION: gcc-6
+        GXX_VERSION: g++-6
+
+    extra:
+      treeherder:
+        build:
+          platform: linux32
+        collection:
+          debug: true
+        groupSymbol: Builds
+        groupName: Various builds
+        symbol: gcc-6.1
+
+- task:
+    metadata:
+      name: "Linux 32 (debug, NO_PKCS11_BYPASS=1)"
+      description: "Linux 32 (debug, NO_PKCS11_BYPASS=1)"
+
+    payload:
+      env:
+        NSS_ENABLE_TLS_1_3: 1
+        NO_PKCS11_BYPASS: 1
+
+    extra:
+      treeherder:
+        build:
+          platform: linux32
+        collection:
+          debug: true
+        groupSymbol: Builds
+        groupName: Various builds
+        symbol: noPkcs11Bypass

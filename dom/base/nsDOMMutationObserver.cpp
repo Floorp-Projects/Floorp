@@ -629,15 +629,11 @@ nsDOMMutationObserver::Observe(nsINode& aTarget,
   bool attributeOldValue =
     aOptions.mAttributeOldValue.WasPassed() &&
     aOptions.mAttributeOldValue.Value();
-  bool nativeAnonymousChildList = aOptions.mNativeAnonymousChildList &&
-    nsContentUtils::ThreadsafeIsCallerChrome();
+  bool nativeAnonymousChildList = aOptions.mNativeAnonymousChildList;
   bool characterDataOldValue =
     aOptions.mCharacterDataOldValue.WasPassed() &&
     aOptions.mCharacterDataOldValue.Value();
-  bool animations =
-    aOptions.mAnimations.WasPassed() &&
-    aOptions.mAnimations.Value() &&
-    nsContentUtils::ThreadsafeIsCallerChrome();
+  bool animations = aOptions.mAnimations;
 
   if (!aOptions.mAttributes.WasPassed() &&
       (aOptions.mAttributeOldValue.WasPassed() ||
@@ -763,7 +759,7 @@ nsDOMMutationObserver::GetObservingInfo(
     info.mAttributeOldValue.Construct(mr->AttributeOldValue());
     info.mCharacterDataOldValue.Construct(mr->CharacterDataOldValue());
     info.mNativeAnonymousChildList = mr->NativeAnonymousChildList();
-    info.mAnimations.Construct(mr->Animations());
+    info.mAnimations = mr->Animations();
     nsCOMArray<nsIAtom>& filters = mr->AttributeFilter();
     if (filters.Count()) {
       info.mAttributeFilter.Construct();

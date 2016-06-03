@@ -625,7 +625,7 @@ def NeedsGeneratedHasInstance(descriptor):
     return descriptor.hasXPConnectImpls or descriptor.interface.isConsequential()
 
 
-def InterfaceObjectProtoGetter(descriptor):
+def InterfaceObjectProtoGetter(descriptor, forXrays=False):
     """
     Returns a tuple with two elements:
 
@@ -638,11 +638,19 @@ def InterfaceObjectProtoGetter(descriptor):
     """
     parentInterface = descriptor.interface.parent
     if parentInterface:
+        assert not descriptor.interface.isNamespace()
         parentIfaceName = parentInterface.identifier.name
         parentDesc = descriptor.getDescriptor(parentIfaceName)
         prefix = toBindingNamespace(parentDesc.name)
         protoGetter = prefix + "::GetConstructorObject"
         protoHandleGetter = prefix + "::GetConstructorObjectHandle"
+    elif descriptor.interface.isNamespace():
+        if (forXrays or
+            not descriptor.interface.getExtendedAttribute("ProtoObjectHack")):
+            protoGetter = "JS_GetObjectPrototype"
+        else:
+            protoGetter = "binding_detail::GetHackedNamespaceProtoObject"
+        protoHandleGetter = None
     else:
         protoGetter = "JS_GetFunctionPrototype"
         protoHandleGetter = None
@@ -661,7 +669,10 @@ class CGInterfaceObjectJSClass(CGThing):
 
     def define(self):
         if self.descriptor.interface.ctor():
+            assert not self.descriptor.interface.isNamespace()
             ctorname = CONSTRUCT_HOOK_NAME
+        elif self.descriptor.interface.isNamespace():
+            ctorname = "nullptr"
         else:
             ctorname = "ThrowingConstructor"
         if NeedsGeneratedHasInstance(self.descriptor):
@@ -675,11 +686,15 @@ class CGInterfaceObjectJSClass(CGThing):
         if len(self.descriptor.interface.namedConstructors) > 0:
             slotCount += (" + %i /* slots for the named constructors */" %
                           len(self.descriptor.interface.namedConstructors))
-        (protoGetter, _) = InterfaceObjectProtoGetter(self.descriptor)
+        (protoGetter, _) = InterfaceObjectProtoGetter(self.descriptor,
+                                                      forXrays=True)
 
         if ctorname == "ThrowingConstructor" and hasinstance == "InterfaceHasInstance":
             ret = ""
             classOpsPtr = "&sBoringInterfaceObjectClassClassOps"
+        elif ctorname == "nullptr" and hasinstance == "nullptr":
+            ret = ""
+            classOpsPtr = "JS_NULL_CLASS_OPS"
         else:
             ret = fill(
                 """
@@ -703,33 +718,51 @@ class CGInterfaceObjectJSClass(CGThing):
                 hasInstance=hasinstance)
             classOpsPtr = "&sInterfaceObjectClassOps"
 
+        if self.descriptor.interface.isNamespace():
+            classString = self.descriptor.interface.getExtendedAttribute("ClassString")
+            if classString is None:
+                classString = "Object"
+            else:
+                classString = classString[0]
+            toStringResult = "[object %s]" % classString
+            objectOps = "JS_NULL_OBJECT_OPS"
+        else:
+            classString = "Function"
+            toStringResult = ("function %s() {\\n    [native code]\\n}" %
+                              self.descriptor.interface.identifier.name)
+            # We need non-default ObjectOps so we can actually make
+            # use of our toStringResult.
+            objectOps = "&sInterfaceObjectClassObjectOps"
+
         ret = ret + fill(
             """
             static const DOMIfaceAndProtoJSClass sInterfaceObjectClass = {
               {
-                "Function",
+                "${classString}",
                 JSCLASS_IS_DOMIFACEANDPROTOJSCLASS | JSCLASS_HAS_RESERVED_SLOTS(${slotCount}),
                 ${classOpsPtr},
                 JS_NULL_CLASS_SPEC,
                 JS_NULL_CLASS_EXT,
-                &sInterfaceObjectClassObjectOps
+                ${objectOps}
               },
               eInterface,
               ${prototypeID},
               ${depth},
               ${hooks},
-              "function ${name}() {\\n    [native code]\\n}",
+              "${toStringResult}",
               ${protoGetter}
             };
             """,
+            classString=classString,
             slotCount=slotCount,
             ctorname=ctorname,
             hasInstance=hasinstance,
             classOpsPtr=classOpsPtr,
             hooks=NativePropertyHooks(self.descriptor),
-            name=self.descriptor.interface.identifier.name,
+            objectOps=objectOps,
             prototypeID=prototypeID,
             depth=depth,
+            toStringResult=toStringResult,
             protoGetter=protoGetter)
         return ret
 
@@ -12725,9 +12758,18 @@ class CGDictionary(CGThing):
         # by the author needs to get converted, so we can remember if we have any
         # members present here.
         conversionReplacements["convert"] += "mIsAnyMemberPresent = true;\n"
-        conversion = ("if (!isNull && !${propGet}) {\n"
-                      "  return false;\n"
-                      "}\n")
+        if isChromeOnly(member):
+            conversion = ("if (!isNull) {\n"
+                          "  if (!nsContentUtils::ThreadsafeIsCallerChrome()) {\n"
+                          "    temp->setUndefined();\n"
+                          "  } else if (!${propGet}) {\n"
+                          "    return false;\n"
+                          "  }\n"
+                          "}\n")
+        else:
+            conversion = ("if (!isNull && !${propGet}) {\n"
+                          "  return false;\n"
+                          "}\n")
         if member.defaultValue:
             if (member.type.isUnion() and
                 (not member.type.nullable() or
@@ -12837,6 +12879,8 @@ class CGDictionary(CGThing):
         if member.canHaveMissingValue():
             # Only do the conversion if we have a value
             conversion = CGIfWrapper(conversion, "%s.WasPassed()" % memberLoc)
+        if isChromeOnly(member):
+            conversion = CGIfWrapper(conversion, "nsContentUtils::ThreadsafeIsCallerChrome()")
         return conversion
 
     def getMemberTrace(self, member):

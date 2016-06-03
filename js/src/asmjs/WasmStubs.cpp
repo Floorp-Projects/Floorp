@@ -949,11 +949,10 @@ wasm::GenerateJumpTarget(MacroAssembler& masm, JumpTarget target)
 }
 
 static const LiveRegisterSet AllRegsExceptSP(
-    GeneralRegisterSet(Registers::AllMask&
-                       ~(uint32_t(1) << Registers::StackPointer)),
+    GeneralRegisterSet(Registers::AllMask & ~(uint32_t(1) << Registers::StackPointer)),
     FloatRegisterSet(FloatRegisters::AllMask));
 
-// The async interrupt-callback exit is called from arbitrarily-interrupted asm.js
+// The async interrupt-callback exit is called from arbitrarily-interrupted wasm
 // code. That means we must first save *all* registers and restore *all*
 // registers (except the stack pointer) when we resume. The address to resume to
 // (assuming that js::HandleExecutionInterrupt doesn't indicate that the
@@ -1009,9 +1008,7 @@ wasm::GenerateInterruptStub(MacroAssembler& masm)
     masm.subFromStackPtr(Imm32(sizeof(intptr_t)));
     // set to zero so we can use masm.framePushed() below.
     masm.setFramePushed(0);
-    // When this platform supports SIMD extensions, we'll need to push high lanes
-    // of SIMD registers as well.
-    JS_STATIC_ASSERT(!SupportsSimd);
+    static_assert(!SupportsSimd, "high lanes of SIMD registers need to be saved too.");
     // save all registers,except sp. After this stack is alligned.
     masm.PushRegsInMask(AllRegsExceptSP);
 
@@ -1069,11 +1066,8 @@ wasm::GenerateInterruptStub(MacroAssembler& masm)
     masm.loadPtr(Address(IntArgReg0, WasmActivation::offsetOfResumePC()), IntArgReg1);
     masm.storePtr(IntArgReg1, Address(r6, 14 * sizeof(uint32_t*)));
 
-    // When this platform supports SIMD extensions, we'll need to push and pop
-    // high lanes of SIMD registers as well.
-
     // Save all FP registers
-    JS_STATIC_ASSERT(!SupportsSimd);
+    static_assert(!SupportsSimd, "high lanes of SIMD registers need to be saved too.");
     masm.PushRegsInMask(LiveRegisterSet(GeneralRegisterSet(0),
                                         FloatRegisterSet(FloatRegisters::AllDoubleMask)));
 

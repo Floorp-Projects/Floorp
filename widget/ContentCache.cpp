@@ -29,28 +29,7 @@ GetNotificationName(const IMENotification* aNotification)
   if (!aNotification) {
     return "Not notification";
   }
-  switch (aNotification->mMessage) {
-    case NOTIFY_IME_OF_FOCUS:
-      return "NOTIFY_IME_OF_FOCUS";
-    case NOTIFY_IME_OF_BLUR:
-      return "NOTIFY_IME_OF_BLUR";
-    case NOTIFY_IME_OF_SELECTION_CHANGE:
-      return "NOTIFY_IME_OF_SELECTION_CHANGE";
-    case NOTIFY_IME_OF_TEXT_CHANGE:
-      return "NOTIFY_IME_OF_TEXT_CHANGE";
-    case NOTIFY_IME_OF_COMPOSITION_UPDATE:
-      return "NOTIFY_IME_OF_COMPOSITION_UPDATE";
-    case NOTIFY_IME_OF_POSITION_CHANGE:
-      return "NOTIFY_IME_OF_POSITION_CHANGE";
-    case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
-      return "NOTIFY_IME_OF_MOUSE_BUTTON_EVENT";
-    case REQUEST_TO_COMMIT_COMPOSITION:
-      return "REQUEST_TO_COMMIT_COMPOSITION";
-    case REQUEST_TO_CANCEL_COMPOSITION:
-      return "REQUEST_TO_CANCEL_COMPOSITION";
-    default:
-      return "Unsupported notification";
-  }
+  return ToChar(aNotification->mMessage);
 }
 
 class GetRectText : public nsAutoCString
@@ -991,7 +970,7 @@ ContentCacheInParent::MaybeNotifyIME(nsIWidget* aWidget,
     case NOTIFY_IME_OF_POSITION_CHANGE:
       mPendingLayoutChange.MergeWith(aNotification);
       break;
-    case NOTIFY_IME_OF_COMPOSITION_UPDATE:
+    case NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED:
       mPendingCompositionUpdate.MergeWith(aNotification);
       break;
     default:
