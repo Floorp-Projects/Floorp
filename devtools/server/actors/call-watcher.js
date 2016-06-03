@@ -313,7 +313,7 @@ var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClassWithSpec(ca
    */
   resumeRecording: function () {
     this._recording = true;
-  }
+  },
 
   /**
    * Stops recording function calls.
