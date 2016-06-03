@@ -124,6 +124,7 @@
   border: 0;
   border-radius: 4px;
   box-shadow: 0px 4px 8px 0px rgba(0,0,0,0.40);
+  -moz-user-select: none;
 }
 
 /* Only used on desktop */
