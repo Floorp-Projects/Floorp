@@ -3670,6 +3670,19 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
   nsDisplayList savedItems;
   nsDisplayItem* item;
   while ((item = aList->RemoveBottom()) != nullptr) {
+    nsDisplayItem::Type itemType = item->GetType();
+
+    // If the item is a event regions item, but is empty (has no regions in it)
+    // then we should just throw it out
+    if (itemType == nsDisplayItem::TYPE_LAYER_EVENT_REGIONS) {
+      nsDisplayLayerEventRegions* eventRegions =
+        static_cast<nsDisplayLayerEventRegions*>(item);
+      if (eventRegions->IsEmpty()) {
+        item->~nsDisplayItem();
+        continue;
+      }
+    }
+
     // Peek ahead to the next item and try merging with it or swapping with it
     // if necessary.
     nsDisplayItem* aboveItem;
@@ -3678,6 +3691,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         aList->RemoveBottom();
         item->~nsDisplayItem();
         item = aboveItem;
+        itemType = item->GetType();
       } else {
         break;
       }
@@ -3699,8 +3713,6 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     if (mBuilder->NeedToForceTransparentSurfaceForItem(item)) {
       aList->SetNeedsTransparentSurface();
     }
-
-    nsDisplayItem::Type itemType = item->GetType();
 
     if (mParameters.mForEventsOnly && !item->GetChildren() &&
         itemType != nsDisplayItem::TYPE_LAYER_EVENT_REGIONS) {
