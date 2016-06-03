@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<heand>
+  <title>Test ImageBitmap Extensions On Worker (Bug 1141979)</title>
+  <meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+  <div id="content"><div>
+  <script src="imagebitmap_extensions_prepareSources.js"></script>
+  <script type="text/javascript">
+
+    var worker;
+
+    SimpleTest.waitForExplicitFinish();
+    SpecialPowers.pushPrefEnv({'set': [
+      ['canvas.imagebitmap_extensions.enabled', true]
+    ]}, function() {
+          worker = new Worker("imagebitmap_extensions_on_worker.js");
+          worker.onmessage = function(event) {
+            if (event.data.type == "status") {
+              ok(event.data.status, event.data.msg);
+            } else if (event.data.type == "finish") {
+              SimpleTest.finish();
+            }
+          };
+
+          ok(!!worker, "Worker created successfully.");
+          prepareSources().then(function() {
+            worker.postMessage({"type": "setSources",
+                                "groundTruthImageData": gGroundTruthImageData,
+                                "imageData": gImageData,
+                                "imageBitmap": gImageBitmap,
+                                "pngBlob": gPNGBlob,
+                                "jpegBlob": gJPEGBlob});
+          });
+    });
+  </script>
+</body>

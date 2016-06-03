@@ -294,21 +294,6 @@ GetWebIDLCallerPrincipal()
   return aes->mWebIDLCallerPrincipal;
 }
 
-static JSContext*
-FindJSContext(nsIGlobalObject* aGlobalObject)
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  JSContext *cx = nullptr;
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface(aGlobalObject);
-  if (sgo && sgo->GetScriptContext()) {
-    cx = sgo->GetScriptContext()->GetNativeContext();
-  }
-  if (!cx) {
-    cx = nsContentUtils::GetSafeJSContext();
-  }
-  return cx;
-}
-
 AutoJSAPI::AutoJSAPI()
   : mCx(nullptr)
   , mOldAutoJSAPIOwnsErrorReporting(false)
@@ -344,16 +329,20 @@ WarningOnlyErrorReporter(JSContext* aCx, const char* aMessage,
                          JSErrorReport* aRep);
 
 void
-AutoJSAPI::InitInternal(JSObject* aGlobal, JSContext* aCx, bool aIsMainThread)
+AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
+                        JSContext* aCx, bool aIsMainThread)
 {
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aIsMainThread == NS_IsMainThread());
+  MOZ_ASSERT(bool(aGlobalObject) == bool(aGlobal));
+  MOZ_ASSERT_IF(aGlobalObject, aGlobalObject->GetGlobalJSObject() == aGlobal);
 #ifdef DEBUG
   bool haveException = JS_IsExceptionPending(aCx);
 #endif // DEBUG
 
   mCx = aCx;
   mIsMainThread = aIsMainThread;
+  mGlobalObject = aGlobalObject;
   if (aIsMainThread) {
     // This Rooted<> is necessary only as long as AutoCxPusher::AutoCxPusher
     // can GC, which is only possible because XPCJSContextStack::Push calls
@@ -451,7 +440,8 @@ AutoJSAPI::AutoJSAPI(nsIGlobalObject* aGlobalObject,
   MOZ_ASSERT(aCx);
   MOZ_ASSERT(aIsMainThread == NS_IsMainThread());
 
-  InitInternal(aGlobalObject->GetGlobalJSObject(), aCx, aIsMainThread);
+  InitInternal(aGlobalObject, aGlobalObject->GetGlobalJSObject(), aCx,
+               aIsMainThread);
 }
 
 void
@@ -459,7 +449,7 @@ AutoJSAPI::Init()
 {
   MOZ_ASSERT(!mCx, "An AutoJSAPI should only be initialised once");
 
-  InitInternal(/* aGlobal */ nullptr,
+  InitInternal(/* aGlobalObject */ nullptr, /* aGlobal */ nullptr,
                nsContentUtils::GetDefaultJSContextForThread(),
                NS_IsMainThread());
 }
@@ -479,7 +469,7 @@ AutoJSAPI::Init(nsIGlobalObject* aGlobalObject, JSContext* aCx)
     return false;
   }
 
-  InitInternal(global, aCx, NS_IsMainThread());
+  InitInternal(aGlobalObject, global, aCx, NS_IsMainThread());
   return true;
 }
 
@@ -651,13 +641,13 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
                                  bool aIsMainThread,
                                  JSContext* aCx)
   : AutoJSAPI(aGlobalObject, aIsMainThread,
-              aCx ? aCx : FindJSContext(aGlobalObject))
+              aCx ? aCx : nsContentUtils::GetSafeJSContext())
   , ScriptSettingsStackEntry(aGlobalObject, /* aCandidate = */ true)
   , mWebIDLCallerPrincipal(nullptr)
 {
   MOZ_ASSERT(aGlobalObject);
   MOZ_ASSERT_IF(!aCx, aIsMainThread); // cx is mandatory off-main-thread.
-  MOZ_ASSERT_IF(aCx && aIsMainThread, aCx == FindJSContext(aGlobalObject));
+  MOZ_ASSERT_IF(aCx && aIsMainThread, aCx == nsContentUtils::GetSafeJSContext());
 
   if (aIsMainThread && gRunToCompletionListeners > 0) {
     mDocShellEntryMonitor.emplace(cx(), aReason);
@@ -774,12 +764,6 @@ danger::AutoCxPusher::AutoCxPusher(JSContext* cx, bool allowNull)
 {
   MOZ_ASSERT_IF(!allowNull, cx);
 
-  // Hold a strong ref to the nsIScriptContext, if any. This ensures that we
-  // only destroy the mContext of an nsJSContext when it is not on the cx stack
-  // (and therefore not in use). See nsJSContext::DestroyJSContext().
-  if (cx)
-    mScx = GetScriptContextFromJSContext(cx);
-
   XPCJSContextStack *stack = XPCJSRuntime::Get()->GetJSContextStack();
   stack->Push(cx);
   mStackDepthAfterPush = stack->Count();
@@ -811,7 +795,6 @@ danger::AutoCxPusher::~AutoCxPusher()
   DebugOnly<JSContext*> stackTop;
   MOZ_ASSERT(mPushedContext == nsXPConnect::XPConnect()->GetCurrentJSContext());
   XPCJSRuntime::Get()->GetJSContextStack()->Pop();
-  mScx = nullptr;
 }
 
 bool

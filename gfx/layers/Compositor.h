@@ -133,6 +133,7 @@ class CompositorOGL;
 class CompositorD3D9;
 class CompositorD3D11;
 class BasicCompositor;
+class TextureReadLock;
 
 enum SurfaceInitMode
 {
@@ -185,22 +186,13 @@ enum SurfaceInitMode
 class Compositor
 {
 protected:
-  virtual ~Compositor() {}
+  virtual ~Compositor();
 
 public:
   NS_INLINE_DECL_REFCOUNTING(Compositor)
 
   explicit Compositor(widget::CompositorWidgetProxy* aWidget,
-                      CompositorBridgeParent* aParent = nullptr)
-    : mCompositorID(0)
-    , mDiagnosticTypes(DiagnosticTypes::NO_DIAGNOSTIC)
-    , mParent(aParent)
-    , mPixelsPerFrame(0)
-    , mPixelsFilled(0)
-    , mScreenRotation(ROTATION_0)
-    , mWidget(aWidget)
-  {
-  }
+                      CompositorBridgeParent* aParent = nullptr);
 
   virtual already_AddRefed<DataTextureSource> CreateDataTextureSource(TextureFlags aFlags = TextureFlags::NO_FLAGS) = 0;
 
@@ -388,8 +380,10 @@ public:
 
   /**
    * Flush the current frame to the screen and tidy up.
+   *
+   * Derived class overriding this should call Compositor::EndFrame.
    */
-  virtual void EndFrame() = 0;
+  virtual void EndFrame();
 
   virtual void SetDispAcquireFence(Layer* aLayer);
 
@@ -539,6 +533,17 @@ public:
     return mParent;
   }
 
+  /// Most compositor backends operate asynchronously under the hood. This
+  /// means that when a layer stops using a texture it is often desirable to
+  /// wait for the end of the next composition before releasing the texture's
+  /// ReadLock.
+  /// This function provides a convenient way to do this delayed unlocking, if
+  /// the texture itself requires it.
+  void UnlockAfterComposition(already_AddRefed<TextureReadLock> aLock)
+  {
+    mUnlockAfterComposition.AppendElement(aLock);
+  }
+
 protected:
   void DrawDiagnosticsInternal(DiagnosticFlags aFlags,
                                const gfx::Rect& aVisibleRect,
@@ -562,6 +567,11 @@ protected:
     const gfx::Matrix4x4& aTransform,
     gfx::Matrix4x4* aOutTransform,
     gfx::Rect* aOutLayerQuad = nullptr);
+
+  /**
+   * An array of locks that will need to be unlocked after the next composition.
+   */
+  nsTArray<RefPtr<TextureReadLock>> mUnlockAfterComposition;
 
   /**
    * Render time for the current composition.

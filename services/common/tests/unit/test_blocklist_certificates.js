@@ -108,6 +108,10 @@ add_task(function* test_something(){
 });
 
 function run_test() {
+  // Ensure that signature verification is disabled to prevent interference
+  // with basic certificate sync tests
+  Services.prefs.setBoolPref("services.blocklist.signing.enforced", false);
+
   // Set up an HTTP Server
   server = new HttpServer();
   server.start(-1);

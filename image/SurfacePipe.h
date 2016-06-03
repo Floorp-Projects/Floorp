@@ -16,8 +16,7 @@
  * Writing to the SurfacePipe is done using lambdas that act as generator
  * functions. Because the SurfacePipe machinery controls where the writes take
  * place, a bug in an image decoder cannot cause a buffer overflow of the
- * underlying surface. In particular, when using WritePixels() a buffer overflow
- * is impossible as long as the SurfacePipe code is correct.
+ * underlying surface.
  */
 
 #ifndef mozilla_image_SurfacePipe_h
@@ -25,6 +24,7 @@
 
 #include <stdint.h>
 
+#include "mozilla/Likely.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
 #include "mozilla/UniquePtr.h"
@@ -49,8 +49,8 @@ struct SurfaceInvalidRect
 };
 
 /**
- * An enum used to allow the lambdas passed to WritePixels() and WriteRows() to
- * communicate their state to the caller.
+ * An enum used to allow the lambdas passed to WritePixels() to communicate
+ * their state to the caller.
  */
 enum class WriteState : uint8_t
 {
@@ -68,16 +68,14 @@ enum class WriteState : uint8_t
 /**
  * A template alias used to make the return value of WritePixels() lambdas
  * (which may return either a pixel value or a WriteState) easier to specify.
- * WriteRows() doesn't need such a template alias since WriteRows() lambdas
- * don't return a pixel value.
  */
 template <typename PixelType>
 using NextPixel = Variant<PixelType, WriteState>;
 
 /**
- * SurfaceFilter is the abstract superclass of SurfacePipe pipeline stages.
- * It implements the the code that actually writes to the surface -
- * WritePixels() and WriteRows() - which are non-virtual for efficiency.
+ * SurfaceFilter is the abstract superclass of SurfacePipe pipeline stages.  It
+ * implements the the code that actually writes to the surface - WritePixels()
+ * and the other Write*() methods - which are non-virtual for efficiency.
  *
  * SurfaceFilter's API is nonpublic; only SurfacePipe and other SurfaceFilters
  * should use it. Non-SurfacePipe code should use the methods on SurfacePipe.
@@ -91,8 +89,8 @@ using NextPixel = Variant<PixelType, WriteState>;
  * Config structs, passes the tail of the list to the next filter in the chain's
  * Configure() method, and then uses the head of the list to configure itself. A
  * SurfaceFilter's Configure() method must also call
- * SurfaceFilter::ConfigureFilter() to provide WritePixels() and WriteRows()
- * with the information they need to do their jobs.
+ * SurfaceFilter::ConfigureFilter() to provide the Write*() methods with the
+ * information they need to do their jobs.
  */
 class SurfaceFilter
 {
@@ -120,8 +118,7 @@ public:
   }
 
   /**
-   * Called by WritePixels() and WriteRows() to advance this filter to the next
-   * row.
+   * Called by WritePixels() to advance this filter to the next row.
    *
    * @return a pointer to the buffer for the next row, or nullptr to indicate
    *         that we've finished the entire surface.
@@ -144,9 +141,7 @@ public:
 
   /**
    * Write pixels to the surface one at a time by repeatedly calling a lambda
-   * that yields pixels. WritePixels() should be preferred over WriteRows()
-   * whenever using it will not introduce additional copies or other performance
-   * penalties, because it is completely memory safe.
+   * that yields pixels. WritePixels() is completely memory safe.
    *
    * Writing continues until every pixel in the surface has been written to
    * (i.e., IsSurfaceFinished() returns true) or the lambda returns a WriteState
@@ -213,14 +208,11 @@ public:
   }
 
   /**
-   * Write rows to the surface one at a time by repeatedly calling a lambda
-   * that yields rows. Because WriteRows() is not completely memory safe,
-   * WritePixels() should be preferred whenever it can be used without
-   * introducing additional copies or other performance penalties.
-   *
-   * Writing continues until every row in the surface has been written to (i.e.,
-   * IsSurfaceFinished() returns true) or the lambda returns a WriteState which
-   * WriteRows() will return to the caller.
+   * Write a row to the surface by copying from a buffer. This is bounds checked
+   * and memory safe with respect to the surface, but care must still be taken
+   * by the caller not to overread the source buffer. This variant of
+   * WriteBuffer() requires a source buffer which contains |mInputSize.width|
+   * pixels.
    *
    * The template parameter PixelType must be uint8_t (for paletted surfaces) or
    * uint32_t (for BGRA/BGRX surfaces) and must be in agreement with the pixel
@@ -230,18 +222,58 @@ public:
    * which means we can remove the PixelType template parameter from this
    * method.
    *
-   * @param aFunc A lambda that functions as a generator, yielding the next
-   *              row in the surface each time it's called. The lambda must
-   *              return a Maybe<WriteState> value; if Some(), the return value
-   *              indicates a WriteState to return to the caller, while
-   *              Nothing() indicates that the lambda can generate more rows.
+   * @param aSource A buffer to copy from. This buffer must be
+   *                |mInputSize.width| pixels wide,  which means
+   *                |mInputSize.width * sizeof(PixelType)| bytes. May not be
+   *                null.
    *
-   * @return A WriteState value indicating the lambda generator's state.
-   *         WriteRows() itself will return WriteState::FINISHED if writing
-   *         has finished, regardless of the lambda's internal state.
+   * @return WriteState::FINISHED if the entire surface has been written to.
+   *         Otherwise, returns WriteState::NEED_MORE_DATA. If a null |aSource|
+   *         value is passed, returns WriteState::FAILURE.
    */
-  template <typename PixelType, typename Func>
-  WriteState WriteRows(Func aFunc)
+  template <typename PixelType>
+  WriteState WriteBuffer(const PixelType* aSource)
+  {
+    return WriteBuffer(aSource, 0, mInputSize.width);
+  }
+
+  /**
+   * Write a row to the surface by copying from a buffer. This is bounds checked
+   * and memory safe with respect to the surface, but care must still be taken
+   * by the caller not to overread the source buffer. This variant of
+   * WriteBuffer() reads at most @aLength pixels from the buffer and writes them
+   * to the row starting at @aStartColumn. Any pixels in columns before
+   * @aStartColumn or after the pixels copied from the buffer are cleared.
+   *
+   * Bounds checking failures produce warnings in debug builds because although
+   * the bounds checking maintains safety, this kind of failure could indicate a
+   * bug in the calling code.
+   *
+   * The template parameter PixelType must be uint8_t (for paletted surfaces) or
+   * uint32_t (for BGRA/BGRX surfaces) and must be in agreement with the pixel
+   * size passed to ConfigureFilter().
+   *
+   * XXX(seth): We'll remove all support for paletted surfaces in bug 1247520,
+   * which means we can remove the PixelType template parameter from this
+   * method.
+   *
+   * @param aSource A buffer to copy from. This buffer must be @aLength pixels
+   *                wide, which means |aLength * sizeof(PixelType)| bytes. May
+   *                not be null.
+   * @param aStartColumn The column to start writing to in the row. Columns
+   *                     before this are cleared.
+   * @param aLength The number of bytes, at most, which may be copied from
+   *                @aSource. Fewer bytes may be copied in practice due to
+   *                bounds checking.
+   *
+   * @return WriteState::FINISHED if the entire surface has been written to.
+   *         Otherwise, returns WriteState::NEED_MORE_DATA. If a null |aSource|
+   *         value is passed, returns WriteState::FAILURE.
+   */
+  template <typename PixelType>
+  WriteState WriteBuffer(const PixelType* aSource,
+                         const size_t aStartColumn,
+                         const size_t aLength)
   {
     MOZ_ASSERT(mPixelSize == 1 || mPixelSize == 4);
     MOZ_ASSERT_IF(mPixelSize == 1, sizeof(PixelType) == sizeof(uint8_t));
@@ -251,32 +283,107 @@ public:
       return WriteState::FINISHED;  // Already done.
     }
 
-    while (true) {
-      PixelType* rowPtr = reinterpret_cast<PixelType*>(mRowPointer);
-
-      Maybe<WriteState> result = aFunc(rowPtr, mInputSize.width);
-      if (result != Some(WriteState::FAILURE)) {
-        AdvanceRow();  // We've finished the row.
-      }
-
-      if (IsSurfaceFinished()) {
-        break;
-      }
-
-      if (result == Some(WriteState::FINISHED)) {
-        // Make sure that IsSurfaceFinished() returns true so the caller can't
-        // write anything else to the pipeline.
-        mRowPointer = nullptr;
-        mCol = 0;
-      }
-
-      if (result) {
-        return *result;
-      }
+    if (MOZ_UNLIKELY(!aSource)) {
+      NS_WARNING("Passed a null pointer to WriteBuffer");
+      return WriteState::FAILURE;
     }
 
-    // We've finished the entire surface.
-    return WriteState::FINISHED;
+    PixelType* dest = reinterpret_cast<PixelType*>(mRowPointer);
+
+    // Clear the area before |aStartColumn|.
+    const size_t prefixLength = std::min<size_t>(mInputSize.width, aStartColumn);
+    if (MOZ_UNLIKELY(prefixLength != aStartColumn)) {
+      NS_WARNING("Provided starting column is out-of-bounds in WriteBuffer");
+    }
+
+    memset(dest, 0, mInputSize.width * sizeof(PixelType));
+    dest += prefixLength;
+
+    // Write |aLength| pixels from |aSource| into the row, with bounds checking.
+    const size_t bufferLength =
+      std::min<size_t>(mInputSize.width - prefixLength, aLength);
+    if (MOZ_UNLIKELY(bufferLength != aLength)) {
+      NS_WARNING("Provided buffer length is out-of-bounds in WriteBuffer");
+    }
+
+    memcpy(dest, aSource, bufferLength * sizeof(PixelType));
+    dest += bufferLength;
+
+    // Clear the rest of the row.
+    const size_t suffixLength = mInputSize.width - (prefixLength + bufferLength);
+    memset(dest, 0, suffixLength * sizeof(PixelType));
+
+    AdvanceRow();
+
+    return IsSurfaceFinished() ? WriteState::FINISHED
+                               : WriteState::NEED_MORE_DATA;
+  }
+
+  /**
+   * Write an empty row to the surface.
+   *
+   * @return WriteState::FINISHED if the entire surface has been written to.
+   *         Otherwise, returns WriteState::NEED_MORE_DATA.
+   */
+  WriteState WriteEmptyRow()
+  {
+    if (IsSurfaceFinished()) {
+      return WriteState::FINISHED;  // Already done.
+    }
+
+    memset(mRowPointer, 0, mInputSize.width * mPixelSize);
+    AdvanceRow();
+
+    return IsSurfaceFinished() ? WriteState::FINISHED
+                               : WriteState::NEED_MORE_DATA;
+  }
+
+  /**
+   * Write a row to the surface by calling a lambda that uses a pointer to
+   * directly write to the row. This is unsafe because SurfaceFilter can't
+   * provide any bounds checking; that's up to the lambda itself. For this
+   * reason, the other Write*() methods should be preferred whenever it's
+   * possible to use them; WriteUnsafeComputedRow() should be used only when
+   * it's absolutely necessary to avoid extra copies or other performance
+   * penalties.
+   *
+   * This method should never be exposed to SurfacePipe consumers; it's strictly
+   * for use in SurfaceFilters. If external code needs this method, it should
+   * probably be turned into a SurfaceFilter.
+   *
+   * The template parameter PixelType must be uint8_t (for paletted surfaces) or
+   * uint32_t (for BGRA/BGRX surfaces) and must be in agreement with the pixel
+   * size passed to ConfigureFilter().
+   *
+   * XXX(seth): We'll remove all support for paletted surfaces in bug 1247520,
+   * which means we can remove the PixelType template parameter from this
+   * method.
+   *
+   * @param aFunc A lambda that writes directly to the row.
+   *
+   * @return WriteState::FINISHED if the entire surface has been written to.
+   *         Otherwise, returns WriteState::NEED_MORE_DATA.
+   */
+  template <typename PixelType, typename Func>
+  WriteState WriteUnsafeComputedRow(Func aFunc)
+  {
+    MOZ_ASSERT(mPixelSize == 1 || mPixelSize == 4);
+    MOZ_ASSERT_IF(mPixelSize == 1, sizeof(PixelType) == sizeof(uint8_t));
+    MOZ_ASSERT_IF(mPixelSize == 4, sizeof(PixelType) == sizeof(uint32_t));
+
+    if (IsSurfaceFinished()) {
+      return WriteState::FINISHED;  // Already done.
+    }
+
+    // Call the provided lambda with a pointer to the buffer for the current
+    // row. This is unsafe because we can't do any bounds checking; the lambda
+    // itself has to be responsible for that.
+    PixelType* rowPtr = reinterpret_cast<PixelType*>(mRowPointer);
+    aFunc(rowPtr, mInputSize.width);
+    AdvanceRow();
+
+    return IsSurfaceFinished() ? WriteState::FINISHED
+                               : WriteState::NEED_MORE_DATA;
   }
 
   //////////////////////////////////////////////////////////////////////////////
@@ -424,9 +531,7 @@ public:
 
   /**
    * Write pixels to the surface one at a time by repeatedly calling a lambda
-   * that yields pixels. WritePixels() should be preferred over WriteRows()
-   * whenever using it will not introduce additional copies or other performance
-   * penalties, because it is completely memory safe.
+   * that yields pixels. WritePixels() is completely memory safe.
    *
    * @see SurfaceFilter::WritePixels() for the canonical documentation.
    */
@@ -437,17 +542,46 @@ public:
   }
 
   /**
-   * Write rows to the surface one at a time by repeatedly calling a lambda
-   * that yields rows. Because WriteRows() is not completely memory safe,
-   * WritePixels() should be preferred whenever it can be used without
-   * introducing additional copies or other performance penalties.
+   * Write a row to the surface by copying from a buffer. This is bounds checked
+   * and memory safe with respect to the surface, but care must still be taken
+   * by the caller not to overread the source buffer. This variant of
+   * WriteBuffer() requires a source buffer which contains |mInputSize.width|
+   * pixels.
    *
-   * @see SurfaceFilter::WriteRows() for the canonical documentation.
+   * @see SurfaceFilter::WriteBuffer() for the canonical documentation.
    */
-  template <typename PixelType, typename Func>
-  WriteState WriteRows(Func aFunc)
+  template <typename PixelType>
+  WriteState WriteBuffer(const PixelType* aSource)
   {
-    return mHead->WriteRows<PixelType>(Forward<Func>(aFunc));
+    return mHead->WriteBuffer<PixelType>(aSource);
+  }
+
+  /**
+   * Write a row to the surface by copying from a buffer. This is bounds checked
+   * and memory safe with respect to the surface, but care must still be taken
+   * by the caller not to overread the source buffer. This variant of
+   * WriteBuffer() reads at most @aLength pixels from the buffer and writes them
+   * to the row starting at @aStartColumn. Any pixels in columns before
+   * @aStartColumn or after the pixels copied from the buffer are cleared.
+   *
+   * @see SurfaceFilter::WriteBuffer() for the canonical documentation.
+   */
+  template <typename PixelType>
+  WriteState WriteBuffer(const PixelType* aSource,
+                         const size_t aStartColumn,
+                         const size_t aLength)
+  {
+    return mHead->WriteBuffer<PixelType>(aSource, aStartColumn, aLength);
+  }
+
+  /**
+   * Write an empty row to the surface.
+   *
+   * @see SurfaceFilter::WriteEmptyRow() for the canonical documentation.
+   */
+  WriteState WriteEmptyRow()
+  {
+    return mHead->WriteEmptyRow();
   }
 
   /// @return true if we've finished writing to the surface.

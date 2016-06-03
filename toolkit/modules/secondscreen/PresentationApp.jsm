@@ -39,7 +39,9 @@ PresentationApp.prototype = {
     .then((session) => {
       this._session = session;
       if (callback) {
-        callback(true);
+        session.addEventListener('connect', () => {
+          callback(true);
+        });
       }
     }, () => {
       if (callback) {
@@ -82,7 +84,7 @@ function RemoteMedia(session, listener) {
   this._status = STATE_UNINIT;
 
   this._session.addEventListener("message", this);
-  this._session.addEventListener("statechange", this);
+  this._session.addEventListener("terminate", this);
 
   if (this._listener && "onRemoteMediaStart" in this._listener) {
     Services.tm.mainThread.dispatch((function() {
@@ -99,8 +101,8 @@ RemoteMedia.prototype = {
       case "message":
         this._onmessage(e);
         break;
-      case "statechange":
-        this._onstatechange(e);
+      case "terminate":
+        this._onterminate(e);
         break;
     }
   },
@@ -128,13 +130,11 @@ RemoteMedia.prototype = {
     }
   },
 
-  _onstatechange: function(e) {
-    DEBUG && debug("onstatechange: " + this._session.state);
-    if (this._session.state !== "connected") {
-      this._status = STATE_SHUTDOWN;
-      if (this._listener && "onRemoteMediaStop" in this._listener) {
-        this._listener.onRemoteMediaStop(this);
-      }
+  _onterminate: function(e) {
+    DEBUG && debug("onterminate: " + this._session.state);
+    this._status = STATE_SHUTDOWN;
+    if (this._listener && "onRemoteMediaStop" in this._listener) {
+      this._listener.onRemoteMediaStop(this);
     }
   },
 

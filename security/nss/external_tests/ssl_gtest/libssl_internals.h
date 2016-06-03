@@ -26,7 +26,6 @@ PRBool SSLInt_ExtensionNegotiated(PRFileDesc *fd, PRUint16 ext);
 void SSLInt_ClearSessionTicketKey();
 PRInt32 SSLInt_CountTls13CipherSpecs(PRFileDesc *fd);
 void SSLInt_ForceTimerExpiry(PRFileDesc *fd);
+SECStatus SSLInt_SetMTU(PRFileDesc *fd, PRUint16 mtu);
 
-#endif
-
-
+#endif // ndef libssl_internals_h_

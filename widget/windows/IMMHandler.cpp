@@ -1972,8 +1972,8 @@ IMMHandler::DispatchCompositionChangeEvent(nsWindow* aWindow,
 
   // NOTE: Calling SetIMERelatedWindowsPos() from this method will be failure
   //       in e10s mode.  compositionchange event will notify this of
-  //       NOTIFY_IME_OF_COMPOSITION_UPDATE, then SetIMERelatedWindowsPos()
-  //       will be called.
+  //       NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED, then
+  //       SetIMERelatedWindowsPos() will be called.
 
   // XXX Sogou (Simplified Chinese IME) returns contradictory values:
   //     The cursor position is actual cursor position. However, other values

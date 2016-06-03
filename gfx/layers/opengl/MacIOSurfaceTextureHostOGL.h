@@ -73,6 +73,8 @@ public:
 
   virtual void SetCompositor(Compositor* aCompositor) override;
 
+  virtual Compositor* GetCompositor() override { return mCompositor; }
+
   virtual bool Lock() override;
 
   virtual gfx::SurfaceFormat GetFormat() const override;

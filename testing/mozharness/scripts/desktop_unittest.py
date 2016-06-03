@@ -171,6 +171,35 @@ class DesktopUnittest(TestingMixin, MercurialScript, BlobUploadMixin, MozbaseMix
         self.abs_app_dir = None
         self.abs_res_dir = None
 
+        # Construct an identifier to be used to identify Perfherder data
+        # for resource monitoring recording. This attempts to uniquely
+        # identify this test invocation configuration.
+        perfherder_parts = []
+        perfherder_options = []
+        suites = (
+            ('specified_mochitest_suites', 'mochitest'),
+            ('specified_reftest_suites', 'reftest'),
+            ('specified_xpcshell_suites', 'xpcshell'),
+            ('specified_cppunittest_suites', 'cppunit'),
+            ('specified_gtest_suites', 'gtest'),
+            ('specified_jittest_suites', 'jittest'),
+            ('specified_mozbase_suites', 'mozbase'),
+            ('specified_mozmill_suites', 'mozmill'),
+        )
+        for s, prefix in suites:
+            if s in c:
+                perfherder_parts.append(prefix)
+                perfherder_parts.extend(c[s])
+
+        if 'this_chunk' in c:
+            perfherder_parts.append(c['this_chunk'])
+
+        if c['e10s']:
+            perfherder_options.append('e10s')
+
+        self.resource_monitor_perfherder_id = ('.'.join(perfherder_parts),
+                                               perfherder_options)
+
     # helper methods {{{2
     def _pre_config_lock(self, rw_config):
         super(DesktopUnittest, self)._pre_config_lock(rw_config)

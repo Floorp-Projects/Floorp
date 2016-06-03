@@ -522,13 +522,6 @@ MP_MEMCPY       - If true, use memcpy() to copy buffers.  If you run
                   into weird alignment bugs, set this to zero and an
                   explicit loop will be used.
 
-MP_CRYPTO       - If true, whenever arrays of digits are free'd, they
-                  are zeroed first.  This is useful if you're using
-                  the library in a cryptographic environment; however,
-                  it does add overhead to each free operation.  For
-                  performance, if you don't care about zeroing your
-                  buffers, set this to false.
-
 MP_ARGCHK       - Set to 0, 1, or 2.  This defines how the argument
                   checking macro, ARGCHK(), gets expanded.  If this 
                   is set to zero, ARGCHK() expands to nothing; no 

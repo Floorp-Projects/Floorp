@@ -42,6 +42,7 @@ NSS_SRCDIRS = \
  dbtest \
  derdump  \
  digest  \
+ ecperf \
  httpserv  \
  listsuites \
  makepqg  \

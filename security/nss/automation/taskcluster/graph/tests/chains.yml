@@ -1,0 +1,13 @@
+---
+- task:
+    metadata:
+      name: Chains tests
+      description: Chains tests
+
+    payload:
+      env:
+        NSS_TESTS: chains
+
+    extra:
+      treeherder:
+        symbol: Chains

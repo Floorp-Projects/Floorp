@@ -21,3 +21,4 @@ skip-if(!asyncPan) != pull-background-displayport-6.html about:blank # fails wit
 fuzzy(2,30150) == opacity-blending.html opacity-blending-ref.html
 fuzzy(16,5) == mask-layer-transform.html mask-layer-transform-ref.html
 fuzzy-if(gtkWidget,1,17) == forced-bg-color-outside-visible-region.html forced-bg-color-outside-visible-region-ref.html
+!= layerize-over-fixed-bg-1.html about:blank

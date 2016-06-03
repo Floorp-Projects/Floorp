@@ -49,7 +49,8 @@ FrameIterator::FrameIterator()
     module_(nullptr),
     callsite_(nullptr),
     codeRange_(nullptr),
-    fp_(nullptr)
+    fp_(nullptr),
+    missingFrameMessage_(false)
 {
     MOZ_ASSERT(done());
 }
@@ -59,20 +60,54 @@ FrameIterator::FrameIterator(const WasmActivation& activation)
     module_(&activation.module()),
     callsite_(nullptr),
     codeRange_(nullptr),
-    fp_(activation.fp())
+    fp_(activation.fp()),
+    missingFrameMessage_(false)
 {
-    if (fp_)
+    if (fp_) {
         settle();
+        return;
+    }
+
+    void* pc = activation.resumePC();
+    if (!pc)
+        return;
+
+    const CodeRange* codeRange = module_->lookupCodeRange(pc);
+    MOZ_ASSERT(codeRange);
+
+    if (codeRange->kind() == CodeRange::Function)
+        codeRange_ = codeRange;
+    else
+        missingFrameMessage_ = true;
+
+    MOZ_ASSERT(!done());
+}
+
+bool
+FrameIterator::done() const
+{
+    return !fp_ &&
+           !codeRange_ &&
+           !missingFrameMessage_;
 }
 
 void
 FrameIterator::operator++()
 {
     MOZ_ASSERT(!done());
-    DebugOnly<uint8_t*> oldfp = fp_;
-    fp_ += callsite_->stackDepth();
-    MOZ_ASSERT_IF(module_->profilingEnabled(), fp_ == CallerFPFromFP(oldfp));
-    settle();
+    if (fp_) {
+        DebugOnly<uint8_t*> oldfp = fp_;
+        fp_ += callsite_->stackDepth();
+        MOZ_ASSERT_IF(module_->profilingEnabled(), fp_ == CallerFPFromFP(oldfp));
+        settle();
+    } else if (codeRange_) {
+        MOZ_ASSERT(codeRange_);
+        codeRange_ = nullptr;
+        missingFrameMessage_ = true;
+    } else {
+        MOZ_ASSERT(missingFrameMessage_);
+        missingFrameMessage_ = false;
+    }
 }
 
 void
@@ -85,12 +120,13 @@ FrameIterator::settle()
     codeRange_ = codeRange;
 
     switch (codeRange->kind()) {
-        case CodeRange::Function:
+      case CodeRange::Function:
         callsite_ = module_->lookupCallSite(returnAddress);
         MOZ_ASSERT(callsite_);
         break;
       case CodeRange::Entry:
         fp_ = nullptr;
+        codeRange_ = nullptr;
         MOZ_ASSERT(done());
         break;
       case CodeRange::ImportJitExit:
@@ -107,10 +143,18 @@ FrameIterator::functionDisplayAtom() const
     MOZ_ASSERT(!done());
 
     UniqueChars owner;
-    const char* chars = module_->getFuncName(cx_, codeRange_->funcIndex(), &owner);
-    if (!chars) {
-        cx_->clearPendingException();
-        return cx_->names().empty;
+
+    const char* chars;
+    if (missingFrameMessage_) {
+        chars = "asm.js/wasm frames may be missing; enable the profiler before running to see all "
+                "frames";
+    } else {
+        MOZ_ASSERT(codeRange_);
+        chars = module_->getFuncName(cx_, codeRange_->funcIndex(), &owner);
+        if (!chars) {
+            cx_->clearPendingException();
+            return cx_->names().empty;
+        }
     }
 
     JSAtom* atom = AtomizeUTF8Chars(cx_, chars, strlen(chars));
@@ -126,7 +170,9 @@ unsigned
 FrameIterator::lineOrBytecode() const
 {
     MOZ_ASSERT(!done());
-    return callsite_->lineOrBytecode();
+    return callsite_ ? callsite_->lineOrBytecode()
+                     : codeRange_ ? codeRange_->funcLineOrBytecode()
+                                  : 0;
 }
 
 /*****************************************************************************/
@@ -336,14 +382,7 @@ wasm::GenerateFunctionEpilogue(MacroAssembler& masm, unsigned framePushed, FuncO
 
     // Generate a nop that is overwritten by a jump to the profiling epilogue
     // when profiling is enabled.
-    {
-#if defined(JS_CODEGEN_ARM)
-        // Forbid pools from being inserted between the profilingJump label and
-        // the nop since we need the location of the actual nop to patch it.
-        AutoForbidPools afp(&masm, 1);
-#endif
-        offsets->profilingJump = masm.nopPatchableToNearJump().offset();
-    }
+    offsets->profilingJump = masm.nopPatchableToNearJump().offset();
 
     // Normal epilogue:
     masm.addToStackPtr(Imm32(framePushed + AsmJSFrameBytesAfterReturnAddress));

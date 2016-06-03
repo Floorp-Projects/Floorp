@@ -441,8 +441,18 @@ enum IMEMessage : IMEMessageType
   NOTIFY_IME_OF_SELECTION_CHANGE,
   // Text in the focused editable content is changed
   NOTIFY_IME_OF_TEXT_CHANGE,
-  // Composition string has been updated
-  NOTIFY_IME_OF_COMPOSITION_UPDATE,
+  // Notified when a dispatched composition event is handled by the
+  // contents.  This must be notified after the other notifications.
+  // Note that if a remote process has focus, this is notified only once when
+  // all dispatched events are handled completely.  So, the receiver shouldn't
+  // count number of received this notification for comparing with the number
+  // of dispatched events.
+  // NOTE: If a composition event causes moving focus from the focused editor,
+  //       this notification may not be notified as usual.  Even in such case,
+  //       NOTIFY_IME_OF_BLUR is always sent.  So, notification listeners
+  //       should tread the blur notification as including this if there is
+  //       pending composition events.
+  NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED,
   // Position or size of focused element may be changed.
   NOTIFY_IME_OF_POSITION_CHANGE,
   // Mouse button event is fired on a character in focused editor
@@ -454,6 +464,9 @@ enum IMEMessage : IMEMessageType
   // (some platforms may not support)
   REQUEST_TO_CANCEL_COMPOSITION
 };
+
+// FYI: Implemented in nsBaseWidget.cpp
+const char* ToChar(IMEMessage aIMEMessage);
 
 struct IMENotification final
 {
@@ -560,7 +573,7 @@ struct IMENotification final
         mTextChangeData += aNotification.mTextChangeData;
         break;
       case NOTIFY_IME_OF_POSITION_CHANGE:
-      case NOTIFY_IME_OF_COMPOSITION_UPDATE:
+      case NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED:
         MOZ_ASSERT(aNotification.mMessage == mMessage);
         break;
       default:

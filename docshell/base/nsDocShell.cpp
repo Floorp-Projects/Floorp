@@ -814,6 +814,7 @@ nsDocShell::nsDocShell()
   , mParentCharsetSource(0)
   , mJSRunToCompletionDepth(0)
 {
+  AssertOriginAttributesMatchPrivateBrowsing();
   mHistoryID = ++gDocshellIDCounter;
   if (gDocShellCount++ == 0) {
     NS_ASSERTION(sURIFixup == nullptr,
@@ -2182,7 +2183,7 @@ NS_IMETHODIMP
 nsDocShell::GetUsePrivateBrowsing(bool* aUsePrivateBrowsing)
 {
   NS_ENSURE_ARG_POINTER(aUsePrivateBrowsing);
-
+  AssertOriginAttributesMatchPrivateBrowsing();
   *aUsePrivateBrowsing = mInPrivateBrowsing;
   return NS_OK;
 }
@@ -2205,6 +2206,9 @@ nsDocShell::SetPrivateBrowsing(bool aUsePrivateBrowsing)
   bool changed = aUsePrivateBrowsing != mInPrivateBrowsing;
   if (changed) {
     mInPrivateBrowsing = aUsePrivateBrowsing;
+
+    mOriginAttributes.SyncAttributesWithPrivateBrowsing(mInPrivateBrowsing);
+
     if (mAffectPrivateSessionLifetime) {
       if (aUsePrivateBrowsing) {
         IncreasePrivateDocShellCount();
@@ -2274,6 +2278,7 @@ nsDocShell::SetAffectPrivateSessionLifetime(bool aAffectLifetime)
 {
   bool change = aAffectLifetime != mAffectPrivateSessionLifetime;
   if (change && mInPrivateBrowsing) {
+    AssertOriginAttributesMatchPrivateBrowsing();
     if (aAffectLifetime) {
       IncreasePrivateDocShellCount();
     } else {
@@ -2966,6 +2971,7 @@ nsDocShell::GetSessionStorageForPrincipal(nsIPrincipal* aPrincipal,
 
   nsCOMPtr<nsPIDOMWindowOuter> domWin = GetWindow();
 
+  AssertOriginAttributesMatchPrivateBrowsing();
   if (aCreate) {
     return manager->CreateStorage(domWin->GetCurrentInnerWindow(), aPrincipal,
                                   aDocumentURI, mInPrivateBrowsing, aStorage);
@@ -3658,6 +3664,11 @@ nsDocShell::FindItemWithName(const char16_t* aName,
     }
     return NS_OK;
   }
+}
+
+void
+nsDocShell::AssertOriginAttributesMatchPrivateBrowsing(){
+  MOZ_ASSERT((mOriginAttributes.mPrivateBrowsingId != 0) == mInPrivateBrowsing);
 }
 
 nsresult
@@ -5763,6 +5774,7 @@ nsDocShell::Destroy()
 
   if (mInPrivateBrowsing) {
     mInPrivateBrowsing = false;
+    mOriginAttributes.SyncAttributesWithPrivateBrowsing(mInPrivateBrowsing);
     if (mAffectPrivateSessionLifetime) {
       DecreasePrivateDocShellCount();
     }
@@ -6420,6 +6432,7 @@ nsDocShell::SetTitle(const char16_t* aTitle)
     }
   }
 
+  AssertOriginAttributesMatchPrivateBrowsing();
   if (mCurrentURI && mLoadType != LOAD_ERROR_PAGE && mUseGlobalHistory &&
       !mInPrivateBrowsing) {
     nsCOMPtr<IHistory> history = services::GetHistoryService();

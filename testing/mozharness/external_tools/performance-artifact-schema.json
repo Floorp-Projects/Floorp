@@ -1,0 +1,144 @@
+{
+    "definitions": {
+        "framework_schema": {
+            "properties": {
+                "name": {
+                    "title": "Framework name",
+                    "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "subtest_schema": {
+            "properties": {
+                "name": {
+                    "title": "Subtest name",
+                    "type": "string"
+                },
+                "value": {
+                    "description": "Summary value for subtest",
+                    "title": "Subtest value",
+                    "type": "number"
+                },
+                "lowerIsBetter": {
+                    "description": "Whether lower values are better for subtest",
+                    "title": "Lower is better",
+                    "type": "boolean"
+                },
+                "shouldAlert": {
+                    "description": "Whether we should alert",
+                    "title": "Should alert",
+                    "type": "boolean"
+                },
+                "alertThreshold": {
+                    "description": "% change threshold before alerting",
+                    "title": "Alert threshold",
+                    "type": "number"
+                },
+                "minBackWindow": {
+                    "description": "Minimum back window to use for alerting",
+                    "title": "Minimum back window",
+                    "type": "number"
+                },
+                "maxBackWindow": {
+                    "description": "Maximum back window to use for alerting",
+                    "title": "Maximum back window",
+                    "type": "number"
+                },
+                "foreWindow": {
+                    "description": "Fore window to use for alerting",
+                    "title": "Fore window",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "name",
+                "value"
+            ],
+            "type": "object"
+        },
+        "suite_schema": {
+            "properties": {
+                "name": {
+                    "title": "Suite name",
+                    "type": "string"
+                },
+                "extraOptions": {
+                    "type": "array",
+                    "title": "Extra options used in running suite",
+                    "items": {
+                        "type": "string"
+                    },
+                    "uniqueItems": true
+                },
+                "subtests": {
+                    "items": {
+                        "$ref": "#/definitions/subtest_schema"
+                    },
+                    "title": "Subtests",
+                    "type": "array"
+                },
+                "value": {
+                    "title": "Suite value",
+                    "type": "number"
+                },
+                "lowerIsBetter": {
+                    "description": "Whether lower values are better for suite",
+                    "title": "Lower is better",
+                    "type": "boolean"
+                },
+                "shouldAlert": {
+                    "description": "Whether we should alert on this suite (overrides default behaviour)",
+                    "title": "Should alert",
+                    "type": "boolean"
+                },
+                "alertThreshold": {
+                    "description": "% change threshold before alerting",
+                    "title": "Alert threshold",
+                    "type": "number"
+                },
+                "minBackWindow": {
+                    "description": "Minimum back window to use for alerting",
+                    "title": "Minimum back window",
+                    "type": "number"
+                },
+                "maxBackWindow": {
+                    "description": "Maximum back window to use for alerting",
+                    "title": "Maximum back window",
+                    "type": "number"
+                },
+                "foreWindow": {
+                    "description": "Fore window to use for alerting",
+                    "title": "Fore window",
+                    "type": "number"
+                }
+            },
+            "required": [
+                "name",
+                "subtests"
+            ],
+            "type": "object"
+        }
+    },
+    "description": "Structure for submitting performance data as part of a job",
+    "id": "https://treeherder.mozilla.org/schemas/v1/performance-artifact.json#",
+    "properties": {
+        "framework": {
+            "$ref": "#/definitions/framework_schema"
+        },
+        "suites": {
+            "description": "List of suite-level data submitted as part of this structure",
+            "items": {
+                "$ref": "#/definitions/suite_schema"
+            },
+            "title": "Performance suites",
+            "type": "array"
+        }
+    },
+    "required": [
+        "framework",
+        "suites"
+    ],
+    "title": "Perfherder Schema",
+    "type": "object"
+}

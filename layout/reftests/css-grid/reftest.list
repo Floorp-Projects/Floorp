@@ -76,6 +76,13 @@ fuzzy-if(winWidget,1,36) == grid-auto-min-sizing-definite-001.html grid-auto-min
 == grid-item-justify-001.html grid-item-justify-001-ref.html
 == grid-item-justify-002.html grid-item-justify-002-ref.html
 == grid-item-stretch-001.html grid-item-stretch-001-ref.html
+== grid-item-self-baseline-001.html grid-item-self-baseline-001-ref.html
+skip-if(!gtkWidget) == grid-item-content-baseline-001.html grid-item-content-baseline-001-ref.html # depends on exact Ahem baseline font metrics which seems to differ between platforms
+skip-if(!gtkWidget) == grid-item-content-baseline-002.html grid-item-content-baseline-002-ref.html # ditto
+skip-if(!gtkWidget) == grid-item-mixed-baseline-001.html grid-item-mixed-baseline-001-ref.html # ditto
+skip-if(!gtkWidget) == grid-item-mixed-baseline-002.html grid-item-mixed-baseline-002-ref.html # ditto
+skip-if(!gtkWidget) == grid-item-mixed-baseline-003.html grid-item-mixed-baseline-003-ref.html # ditto
+skip-if(!gtkWidget) == grid-item-mixed-baseline-004.html grid-item-mixed-baseline-004-ref.html # ditto
 == grid-align-content-001.html grid-align-content-001-ref.html
 == grid-justify-content-001.html grid-justify-content-001-ref.html
 skip-if(Android&&isDebugBuild) == grid-justify-content-002.html grid-justify-content-002-ref.html # Bug 1245884 - slow

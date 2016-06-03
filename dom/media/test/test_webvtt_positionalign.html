@@ -1,0 +1,95 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset='utf-8'>
+  <title>WebVTT : position align test</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<div id="content">
+</div>
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var video = document.createElement("video");
+var trackElement = document.createElement("track");
+var cuesNumber = 8;
+
+function isTrackElemenLoaded() {
+  // Re-que isTrackElemenLoaded() at the end of the event loop until the track
+  // element has loaded its data.
+  if (trackElement.readyState == 1) {
+    setTimeout(isTrackElemenLoaded, 0);
+    return;
+  }
+
+  is(trackElement.readyState, 2, "Track::ReadyState should be set to LOADED.");
+  runTest();
+}
+
+function runTest() {
+  info("--- check cues number ---");
+  var cues = trackElement.track.cues;
+  is(cues.length, cuesNumber, "Cues number is correct.");
+
+  info("--- check the typedef of TextTrackCue and VTTCue ---");
+  isnot(window.TextTrackCue, undefined, "TextTrackCue should be defined.");
+  isnot(window.VTTCue, undefined, "VTTCue should be defined.");
+
+  info("--- check the type of first parsed cue ---");
+  ok(cues[0] instanceof TextTrackCue, "Cue should be an instanceof TextTrackCue.");
+  ok(cues[0] instanceof VTTCue, "Cue should be an instanceof VTTCue.");
+
+  info("--- check the cue's position alignment ---");
+  is(cues[0].positionAlign, "center",     cues[0].text);
+  is(cues[1].positionAlign, "line-left",  cues[1].text);
+  is(cues[2].positionAlign, "center",     cues[2].text);
+  is(cues[3].positionAlign, "line-right", cues[3].text);
+  is(cues[4].positionAlign, "auto",       cues[4].text);
+
+  info("--- check the cue's computed position alignment ---");
+  // The "computedPositionAlign" is the chrome-only attributes, we need to get
+  // the chrome privilege for cues.
+  cuesChrome = SpecialPowers.wrap(cues);
+  is(cuesChrome[5].computedPositionAlign, "line-left",  cuesChrome[5].text);
+  is(cuesChrome[6].computedPositionAlign, "line-right", cuesChrome[6].text);
+  is(cuesChrome[7].computedPositionAlign, "center",     cuesChrome[7].text);
+
+  info("--- check the cue's computed position alignment from DOM API ---");
+  is(cuesChrome[0].computedPositionAlign, "center", "Cue's computedPositionAlign align is center.");
+
+  cuesChrome[0].positionAlign = "auto";
+  is(cuesChrome[0].positionAlign, "auto", "Change cue's position align to \"auto\"");
+
+  cuesChrome[0].align = "left";
+  is(cuesChrome[0].align, "left", "Change cue's align to \"left\".");
+
+  is(cuesChrome[0].computedPositionAlign, "line-left",  "Cue's computedPositionAlign becomes to \"line-left\"");
+
+  info("--- finish test ---");
+  SimpleTest.finish();
+}
+
+function setupTest() {
+  info("--- setup test ---");
+  video.src = "seek.webm";
+  video.preload = "auto";
+
+  trackElement.src = "vttPositionAlign.vtt";
+  trackElement.kind = "subtitles";
+  trackElement.default = true;
+
+  document.getElementById("content").appendChild(video);
+  video.appendChild(trackElement);
+  video.addEventListener("loadedmetadata", function() {
+    video.removeEventListener("loadedmetadata", runTest);
+    isTrackElemenLoaded();
+  });
+}
+
+onload = setupTest;
+</script>
+</body>
+</html>

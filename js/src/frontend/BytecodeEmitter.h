@@ -208,9 +208,11 @@ struct BytecodeEmitter
         uint32_t    currentLine;    /* line number for tree-based srcnote gen */
         uint32_t    lastColumn;     /* zero-based column index on currentLine of
                                        last SRC_COLSPAN-annotated opcode */
+        JumpTarget lastTarget;      // Last jump target emitted.
 
         EmitSection(ExclusiveContext* cx, uint32_t lineNum)
-          : code(cx), notes(cx), lastNoteOffset(0), currentLine(lineNum), lastColumn(0)
+          : code(cx), notes(cx), lastNoteOffset(0), currentLine(lineNum), lastColumn(0),
+            lastTarget{ -1 - ptrdiff_t(JSOP_JUMPTARGET_LENGTH) }
         {}
     };
     EmitSection prologue, main, *current;
@@ -374,6 +376,19 @@ struct BytecodeEmitter
     unsigned currentLine() const { return current->currentLine; }
     unsigned lastColumn() const { return current->lastColumn; }
 
+    // Check if the last emitted opcode is a jump target.
+    bool lastOpcodeIsJumpTarget() const {
+        return offset() - current->lastTarget.offset == ptrdiff_t(JSOP_JUMPTARGET_LENGTH);
+    }
+
+    // JumpTarget should not be part of the emitted statement, as they can be
+    // aliased by multiple statements. If we included the jump target as part of
+    // the statement we might have issues where the enclosing statement might
+    // not contain all the opcodes of the enclosed statements.
+    ptrdiff_t lastNonJumpTargetOffset() const {
+        return lastOpcodeIsJumpTarget() ? current->lastTarget.offset : offset();
+    }
+
     void setFunctionBodyEndPos(TokenPos pos) {
         functionBodyEndPos = pos.end;
         functionBodyEndPosSet = true;
@@ -448,8 +463,7 @@ struct BytecodeEmitter
 
     MOZ_MUST_USE bool tryConvertFreeName(ParseNode* pn);
 
-    bool popStatement();
-    bool popStatement(JumpTarget breakTarget);
+    MOZ_MUST_USE bool popStatement();
     void pushStatement(StmtInfoBCE* stmt, StmtType type, JumpTarget top);
     void pushStatementInner(StmtInfoBCE* stmt, StmtType type, JumpTarget top);
     void pushLoopStatement(LoopStmtInfo* stmt, StmtType type, JumpTarget top);

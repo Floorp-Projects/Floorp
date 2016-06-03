@@ -65,7 +65,7 @@
 }
 
 @media (-moz-mac-yosemite-theme) {
-  #navigator-toolbox::after {
+  #navigator-toolbox:-moz-window-inactive::after {
     background-image: linear-gradient(to top, hsla(0,0%,0%,.1), hsla(0,0%,0%,.1) 1px, hsla(0,0%,100%,0) 1px, hsla(0,0%,100%,0) 2px, transparent 3px);
   }
 }

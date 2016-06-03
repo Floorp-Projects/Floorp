@@ -1,0 +1,92 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+Test that when content opens a new window with a name, that the
+newly opened window actually gets that name, and that subsequent
+attempts to open a window with that name will target the same
+window.
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test named windows</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="head.js" type="application/javascript;version=1.8"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <a href="#" id="link">Click me</a>
+
+  <script type="application/javascript">
+    "use strict";
+
+    const NAME = "my_window";
+    const TARGET_URL = "data:text/html,<html><body>test_named_window.html new window</body></html>";
+    const TARGET_URL_2 = TARGET_URL + "#2";
+    const TARGET_URL_3 = TARGET_URL + "#3";
+
+    /**
+     * Returns a Promise that resolves once some target has had
+     * some event dispatched on it.
+     *
+     * @param target
+     *        The thing to wait for the event to be dispatched
+     *        through.
+     * @param eventName
+     *        The name of the event to wait for.
+     * @returns Promise
+     */
+    function promiseEvent(target, eventName) {
+      return new Promise(resolve => {
+        target.addEventListener(eventName, function onEvent(e) {
+          target.removeEventListener(eventName, onEvent, true);
+          resolve(e);
+        }, true);
+      });
+    }
+
+    add_task(function*() {
+      // This magic value of 2 means that by default, when content tries
+      // to open a new window, it'll actually open in a new window instead
+      // of a new tab.
+      yield SpecialPowers.pushPrefEnv({"set": [
+        ["browser.link.open_newwindow", 2],
+      ]});
+
+      let win1 = window.open(TARGET_URL, "my_window");
+      yield promiseEvent(win1, "load");
+
+      let name = SpecialPowers.wrap(win1)
+                 .QueryInterface(SpecialPowers.Ci.nsIInterfaceRequestor)
+                 .getInterface(SpecialPowers.Ci.nsIWebNavigation)
+                 .QueryInterface(SpecialPowers.Ci.nsIDocShellTreeItem)
+                 .name;
+
+      is(name, NAME, "Should have the expected name");
+      is(win1.location.href, new URL(TARGET_URL).href,
+         "Should have loaded target TARGET_URL in the original window");
+
+      let hashChange = promiseEvent(win1, "hashchange");
+      let win2 = window.open(TARGET_URL_2, "my_window");
+      yield hashChange;
+
+      is(win1, win2, "Should have gotten back the same window");
+      is(win1.location.href, new URL(TARGET_URL_2).href,
+         "Should have re-targeted pre-existing window");
+
+      hashChange = promiseEvent(win1, "hashchange");
+      let link = document.getElementById("link");
+      link.setAttribute("target", NAME);
+      link.setAttribute("href", TARGET_URL_3);
+      link.click();
+
+      yield hashChange;
+
+      is(win1.location.href, new URL(TARGET_URL_3).href,
+         "Should have re-targeted pre-existing window");
+
+      win1.close();
+    });
+  </script>
+</body>
+</html>

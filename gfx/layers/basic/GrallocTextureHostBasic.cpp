@@ -162,6 +162,7 @@ GrallocTextureHostBasic::BindTextureSource(CompositableTextureSourceRef& aTextur
 void
 GrallocTextureHostBasic::UnbindTextureSource()
 {
+  TextureHost::UnbindTextureSource();
   ClearTextureSource();
 }
 

@@ -173,6 +173,51 @@ public:
                    mozilla::WritingMode aContainingBlockWritingMode,
                    nscoord aContainingBlockISize);
 
+  struct ReflowStateFlags {
+    ReflowStateFlags() { memset(this, 0, sizeof(*this)); }
+    uint16_t mSpecialBSizeReflow:1;  // used by tables to communicate special reflow (in process) to handle
+                                     // percent bsize frames inside cells which may not have computed bsizes
+    uint16_t mNextInFlowUntouched:1; // nothing in the frame's next-in-flow (or its descendants)
+                                     // is changing
+    uint16_t mIsTopOfPage:1;         // Is the current context at the top of a
+                                     // page?  When true, we force something
+                                     // that's too tall for a page/column to
+                                     // fit anyway to avoid infinite loops.
+    uint16_t mAssumingHScrollbar:1;  // parent frame is an nsIScrollableFrame and it
+                                     // is assuming a horizontal scrollbar
+    uint16_t mAssumingVScrollbar:1;  // parent frame is an nsIScrollableFrame and it
+                                     // is assuming a vertical scrollbar
+
+    uint16_t mIsIResize:1;           // Is frame (a) not dirty and (b) a
+                                     // different inline-size than before?
+
+    uint16_t mIsBResize:1;           // Is frame (a) not dirty and (b) a
+                                     // different block-size than before or
+                                     // (potentially) in a context where
+                                     // percent block-sizes have a different
+                                     // basis?
+    uint16_t mTableIsSplittable:1;   // tables are splittable, this should happen only inside a page
+                                     // and never insider a column frame
+    uint16_t mHeightDependsOnAncestorCell:1;   // Does frame height depend on
+                                               // an ancestor table-cell?
+    uint16_t mIsColumnBalancing:1;   // nsColumnSetFrame is balancing columns
+    uint16_t mIsFlexContainerMeasuringHeight:1; // nsFlexContainerFrame is
+                                                // reflowing this child to
+                                                // measure its intrinsic height.
+    uint16_t mDummyParentReflowState:1; // a "fake" reflow state made
+                                        // in order to be the parent
+                                        // of a real one
+    uint16_t mMustReflowPlaceholders:1; // Should this frame reflow its place-
+                                        // holder children? If the available
+                                        // height of this frame didn't change,
+                                        // but its in a paginated environment
+                                        // (e.g. columns), it should always
+                                        // reflow its placeholder children.
+    uint16_t mShrinkWrap:1; // stores the COMPUTE_SIZE_SHRINK_WRAP ctor flag
+    uint16_t mUseAutoBSize:1; // stores the COMPUTE_SIZE_USE_AUTO_BSIZE ctor flag
+    uint16_t mStaticPosIsCBOrigin:1; // the STATIC_POS_IS_CB_ORIGIN ctor flag
+  };
+
 #ifdef DEBUG
   // Reflow trace methods.  Defined in nsFrame.cpp so they have access
   // to the display-reflow infrastructure.
@@ -234,8 +279,9 @@ protected:
   void InitOffsets(mozilla::WritingMode aWM,
                    const mozilla::LogicalSize& aPercentBasis,
                    nsIAtom* aFrameType,
-                   const nsMargin *aBorder = nullptr,
-                   const nsMargin *aPadding = nullptr);
+                   ReflowStateFlags aFlags,
+                   const nsMargin* aBorder = nullptr,
+                   const nsMargin* aPadding = nullptr);
 
   /*
    * Convert nsStyleCoord to nscoord when percentages depend on the
@@ -543,50 +589,7 @@ public:
   // This value keeps track of how deeply nested a given reflow state
   // is from the top of the frame tree.
   int16_t mReflowDepth;
-
-  struct ReflowStateFlags {
-    uint16_t mSpecialBSizeReflow:1;  // used by tables to communicate special reflow (in process) to handle
-                                     // percent bsize frames inside cells which may not have computed bsizes
-    uint16_t mNextInFlowUntouched:1; // nothing in the frame's next-in-flow (or its descendants)
-                                     // is changing
-    uint16_t mIsTopOfPage:1;         // Is the current context at the top of a
-                                     // page?  When true, we force something
-                                     // that's too tall for a page/column to
-                                     // fit anyway to avoid infinite loops.
-    uint16_t mAssumingHScrollbar:1;  // parent frame is an nsIScrollableFrame and it
-                                     // is assuming a horizontal scrollbar
-    uint16_t mAssumingVScrollbar:1;  // parent frame is an nsIScrollableFrame and it
-                                     // is assuming a vertical scrollbar
-
-    uint16_t mIsIResize:1;           // Is frame (a) not dirty and (b) a
-                                     // different inline-size than before?
-
-    uint16_t mIsBResize:1;           // Is frame (a) not dirty and (b) a
-                                     // different block-size than before or
-                                     // (potentially) in a context where
-                                     // percent block-sizes have a different
-                                     // basis?
-    uint16_t mTableIsSplittable:1;   // tables are splittable, this should happen only inside a page
-                                     // and never insider a column frame
-    uint16_t mHeightDependsOnAncestorCell:1;   // Does frame height depend on
-                                               // an ancestor table-cell?
-    uint16_t mIsColumnBalancing:1;   // nsColumnSetFrame is balancing columns
-    uint16_t mIsFlexContainerMeasuringHeight:1; // nsFlexContainerFrame is
-                                                // reflowing this child to
-                                                // measure its intrinsic height.
-    uint16_t mDummyParentReflowState:1; // a "fake" reflow state made
-                                        // in order to be the parent
-                                        // of a real one
-    uint16_t mMustReflowPlaceholders:1; // Should this frame reflow its place-
-                                        // holder children? If the available
-                                        // height of this frame didn't change,
-                                        // but its in a paginated environment
-                                        // (e.g. columns), it should always
-                                        // reflow its placeholder children.
-    uint16_t mShrinkWrap:1; // stores the COMPUTE_SIZE_SHRINK_WRAP ctor flag
-    uint16_t mUseAutoBSize:1; // stores the COMPUTE_SIZE_USE_AUTO_BSIZE ctor flag
-    uint16_t mStaticPosIsCBOrigin:1; // the STATIC_POS_IS_CB_ORIGIN ctor flag
-  } mFlags;
+  ReflowStateFlags mFlags;
 
   // Logical and physical accessors for the resize flags. All users should go
   // via these accessors, so that in due course we can change the storage from
@@ -733,8 +736,8 @@ public:
 
 
   mozilla::LogicalSize ComputeContainingBlockRectangle(
-         nsPresContext*          aPresContext,
-         const nsHTMLReflowState* aContainingBlockRS);
+         nsPresContext*           aPresContext,
+         const nsHTMLReflowState* aContainingBlockRS) const;
 
   /**
    * Apply the mComputed(Min/Max)Width constraints to the content

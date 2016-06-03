@@ -46,6 +46,12 @@ static SECStatus tls13_AESGCM(
     unsigned char *out, int *outlen, int maxout,
     const unsigned char *in, int inlen,
     const unsigned char *additionalData, int additionalDataLen);
+static SECStatus tls13_ChaCha20Poly1305(
+    ssl3KeyMaterial *keys,
+    PRBool doDecrypt,
+    unsigned char *out, int *outlen, int maxout,
+    const unsigned char *in, int inlen,
+    const unsigned char *additionalData, int additionalDataLen);
 static SECStatus tls13_SendEncryptedExtensions(sslSocket *ss);
 static SECStatus tls13_HandleEncryptedExtensions(sslSocket *ss, SSL3Opaque *b,
                                                  PRUint32 length);
@@ -231,21 +237,51 @@ tls13_CheckHsState(sslSocket *ss, int err, const char *error_name,
 SSLHashType
 tls13_GetHash(sslSocket *ss)
 {
-    /* TODO(ekr@rtfm.com): This needs to actually be looked up. */
-    return ssl_hash_sha256;
+    /* All TLS 1.3 cipher suites must have an explict PRF hash. */
+    PORT_Assert(ss->ssl3.hs.suite_def->prf_hash != ssl_hash_none);
+    return ss->ssl3.hs.suite_def->prf_hash;
+}
+
+unsigned int
+tls13_GetHashSize(sslSocket *ss)
+{
+    switch (tls13_GetHash(ss)) {
+        case ssl_hash_sha256:
+            return 32;
+        case ssl_hash_sha384:
+            return 48;
+        default:
+            PORT_Assert(0);
+    }
+    return 32;
 }
 
 CK_MECHANISM_TYPE
 tls13_GetHkdfMechanism(sslSocket *ss)
 {
-    /* TODO(ekr@rtfm.com): This needs to actually be looked up. */
+    switch (tls13_GetHash(ss)) {
+        case ssl_hash_sha256:
+            return CKM_NSS_HKDF_SHA256;
+        case ssl_hash_sha384:
+            return CKM_NSS_HKDF_SHA384;
+        default:
+            /*PORT_Assert(0);*/
+            return CKM_NSS_HKDF_SHA256;
+    }
     return CKM_NSS_HKDF_SHA256;
 }
 
 static CK_MECHANISM_TYPE
 tls13_GetHmacMechanism(sslSocket *ss)
 {
-    /* TODO(ekr@rtfm.com): This needs to actually be looked up. */
+    switch (tls13_GetHash(ss)) {
+        case ssl_hash_sha256:
+            return CKM_SHA256_HMAC;
+        case ssl_hash_sha384:
+            return CKM_SHA384_HMAC;
+        default:
+            PORT_Assert(0);
+    }
     return CKM_SHA256_HMAC;
 }
 
@@ -341,16 +377,23 @@ tls13_HandlePostHelloHandshakeMessage(sslSocket *ss, SSL3Opaque *b,
 static SECStatus
 tls13_RecoverWrappedSharedSecret(sslSocket *ss, sslSessionID *sid)
 {
-    PK11SymKey *wrapKey;  /* wrapping key */
+    PK11SymKey *wrapKey; /* wrapping key */
     PK11SymKey *SS = NULL;
-    SECItem wrappedMS = {siBuffer, NULL, 0};
+    SECItem wrappedMS = { siBuffer, NULL, 0 };
+    SSLHashType hashType;
     SECStatus rv;
-    PK11SlotInfo *slot = NULL;
+
     SSL_TRC(3, ("%d: TLS13[%d]: recovering static secret (%s)",
                 SSL_GETPID(), ss->fd,
                 ss->sec.isServer ? "server" : "client"));
     if (!sid->u.ssl3.keys.msIsWrapped) {
         PORT_Assert(0); /* I think this can't happen. */
+        return SECFailure;
+    }
+
+    hashType = tls13_GetHash(ss);
+    if (hashType != ssl_hash_sha256 && hashType != ssl_hash_sha384) {
+        PORT_Assert(0);
         return SECFailure;
     }
 
@@ -365,8 +408,8 @@ tls13_RecoverWrappedSharedSecret(sslSocket *ss, sslSessionID *sid)
                                       sid->u.ssl3.masterWrapMech,
                                       ss->pkcs11PinArg);
     } else {
-        slot = SECMOD_LookupSlot(sid->u.ssl3.masterModuleID,
-                                 sid->u.ssl3.masterSlotID);
+        PK11SlotInfo *slot = SECMOD_LookupSlot(sid->u.ssl3.masterModuleID,
+                                               sid->u.ssl3.masterSlotID);
         if (!slot)
             return SECFailure;
 
@@ -375,20 +418,20 @@ tls13_RecoverWrappedSharedSecret(sslSocket *ss, sslSessionID *sid)
                                   sid->u.ssl3.masterWrapMech,
                                   sid->u.ssl3.masterWrapSeries,
                                   ss->pkcs11PinArg);
+        PK11_FreeSlot(slot);
     }
     if (!wrapKey) {
         return SECFailure;
     }
 
     wrappedMS.data = sid->u.ssl3.keys.wrapped_master_secret;
-    wrappedMS.len  = sid->u.ssl3.keys.wrapped_master_secret_len;
+    wrappedMS.len = sid->u.ssl3.keys.wrapped_master_secret_len;
 
     /* unwrap the "master secret" which becomes SS. */
-    PORT_Assert(tls13_GetHash(ss) == ssl_hash_sha256);
     SS = PK11_UnwrapSymKeyWithFlags(wrapKey, sid->u.ssl3.masterWrapMech,
                                     NULL, &wrappedMS,
                                     CKM_SSL3_MASTER_KEY_DERIVE,
-                                    CKA_DERIVE, 32,
+                                    CKA_DERIVE, tls13_GetHashSize(ss),
                                     CKF_SIGN | CKF_VERIFY);
     PK11_FreeSymKey(wrapKey);
     if (!SS) {
@@ -428,13 +471,8 @@ tls13_AllowPskCipher(const sslSocket *ss, const ssl3CipherSuiteDef *cipher_def)
         sslSessionID *sid = ss->sec.ci.sid;
         const ssl3CipherSuiteDef *cached_cipher_def;
 
-        /* This is zero when called from ssl3_ConstructV2CipherSpecsHack.
-         * TODO(ekr@rtfm.com): remove when SSLv2 is removed. Bug 1228555.
-         */
-        if (!sid)
-            return PR_FALSE;
-
         /* Verify that this was cached. */
+        PORT_Assert(sid);
         if (sid->cached == never_cached)
             return PR_FALSE;
 
@@ -450,9 +488,12 @@ tls13_AllowPskCipher(const sslSocket *ss, const ssl3CipherSuiteDef *cipher_def)
         if (cached_cipher_def->bulk_cipher_alg !=
             cipher_def->bulk_cipher_alg)
             return PR_FALSE;
+
+        /* PSK cipher must have the same PSK hash as was negotiated before. */
+        if (cipher_def->prf_hash != cached_cipher_def->prf_hash) {
+            return PR_FALSE;
+        }
     }
-    /* TODO(ekr@rtfm.com): Check the KDF code whenever we have
-     * adjustable KDFs. */
     SSL_TRC(3, ("%d: TLS 1.3[%d]: Enabling cipher suite suite 0x%04x",
                 SSL_GETPID(), ss->fd,
                 cipher_def->cipher_suite));
@@ -464,7 +505,7 @@ tls13_AllowPskCipher(const sslSocket *ss, const ssl3CipherSuiteDef *cipher_def)
 static PRBool
 tls13_CanResume(sslSocket *ss, const sslSessionID *sid)
 {
-    const sslServerCert* sc;
+    const sslServerCert *sc;
 
     if (sid->version != ss->version) {
         return PR_FALSE;
@@ -512,7 +553,7 @@ tls13_HandleClientHelloPart2(sslSocket *ss,
 #ifndef PARANOID
     /* Look for a matching cipher suite. */
     j = ssl3_config_match_init(ss);
-    if (j <= 0) {                  /* no ciphers are working/supported by PK11 */
+    if (j <= 0) { /* no ciphers are working/supported by PK11 */
         FATAL_ERROR(ss, PORT_GetError(), internal_error);
         goto loser;
     }
@@ -554,14 +595,14 @@ tls13_HandleClientHelloPart2(sslSocket *ss,
         ss->sec.ci.sid = sid;
     } else {
         if (sid) { /* we had a sid, but it's no longer valid, free it */
-            SSL_AtomicIncrementLong(& ssl3stats->hch_sid_cache_not_ok);
+            SSL_AtomicIncrementLong(&ssl3stats->hch_sid_cache_not_ok);
             if (ss->sec.uncache)
                 ss->sec.uncache(sid);
             ssl_FreeSID(sid);
             sid = NULL;
         }
         ss->ssl3.hs.origCipherSuite = ss->ssl3.hs.cipher_suite;
-        SSL_AtomicIncrementLong(& ssl3stats->hch_sid_cache_misses);
+        SSL_AtomicIncrementLong(&ssl3stats->hch_sid_cache_misses);
     }
 
     /* This call needs to happen before the SNI callback because
@@ -574,7 +615,7 @@ tls13_HandleClientHelloPart2(sslSocket *ss,
 
     rv = ssl3_ServerCallSNICallback(ss);
     if (rv != SECSuccess) {
-        goto loser;  /* An alert has already been sent. */
+        goto loser; /* An alert has already been sent. */
     }
 
     if (sid) {
@@ -600,7 +641,7 @@ tls13_HandleClientHelloPart2(sslSocket *ss,
      * below. */
     rv = tls13_HandleClientKeyShare(ss);
     if (rv != SECSuccess) {
-        goto loser;  /* An alert was sent already. */
+        goto loser; /* An alert was sent already. */
     }
 
     if (!sid) {
@@ -646,7 +687,6 @@ tls13_HandleClientKeyShare(sslSocket *ss)
 
     /* Figure out what group we expect */
     switch (ss->ssl3.hs.kea_def->exchKeyType) {
-#ifndef NSS_DISABLE_ECC
         case ssl_kea_ecdh:
         case ssl_kea_ecdh_psk:
             expectedGroup = ssl3_GetCurveNameForServerSocket(ss);
@@ -656,7 +696,6 @@ tls13_HandleClientKeyShare(sslSocket *ss)
                 return SECFailure;
             }
             break;
-#endif
         default:
             /* Got an unknown or unsupported Key Exchange Algorithm.
              * Can't happen. */
@@ -1022,7 +1061,7 @@ tls13_HandleServerHelloPart2(sslSocket *ss)
         /* No PSK negotiated.*/
         if (ss->ssl3.hs.kea_def->authKeyType == ssl_auth_psk) {
             FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_SERVER_HELLO,
-                            illegal_parameter);
+                        illegal_parameter);
             return SECFailure;
         }
         if (ssl3_ClientExtensionAdvertised(ss, ssl_tls13_pre_shared_key_xtn)) {
@@ -1049,7 +1088,6 @@ tls13_HandleServerHelloPart2(sslSocket *ss)
         }
     }
 
-
     /* Discard current SID and make a new one, though it may eventually
      * end up looking a lot like the old one.
      */
@@ -1074,7 +1112,6 @@ tls13_HandleServerHelloPart2(sslSocket *ss)
     return SECSuccess;
 }
 
-
 /*
  * Called from ssl3_HandleServerHello.
  *
@@ -1085,7 +1122,6 @@ tls13_HandleServerKeyShare(sslSocket *ss)
 {
     SECStatus rv;
     ECName expectedGroup;
-    PRCList *cur_p;
     TLS13KeyShareEntry *entry;
 
     SSL_TRC(3, ("%d: TLS13[%d]: handle server_key_share handshake",
@@ -1094,26 +1130,23 @@ tls13_HandleServerKeyShare(sslSocket *ss)
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
 
     switch (ss->ssl3.hs.kea_def->exchKeyType) {
-#ifndef NSS_DISABLE_ECC
         case ssl_kea_ecdh:
         case ssl_kea_ecdh_psk:
             expectedGroup = ssl3_PubKey2ECName(ss->ephemeralECDHKeyPair->pubKey);
             break;
-#endif /* NSS_DISABLE_ECC */
         default:
             FATAL_ERROR(ss, SEC_ERROR_UNSUPPORTED_KEYALG, handshake_failure);
             return SECFailure;
     }
 
     /* This list should have one entry. */
-    cur_p = PR_NEXT_LINK(&ss->ssl3.hs.remoteKeyShares);
-    if (!cur_p) {
+    if (PR_CLIST_IS_EMPTY(&ss->ssl3.hs.remoteKeyShares)) {
         FATAL_ERROR(ss, SSL_ERROR_MISSING_KEY_SHARE, missing_extension);
         return SECFailure;
     }
-    PORT_Assert(PR_NEXT_LINK(cur_p) == &ss->ssl3.hs.remoteKeyShares);
+    entry = (TLS13KeyShareEntry *)PR_NEXT_LINK(&ss->ssl3.hs.remoteKeyShares);
+    PORT_Assert(PR_NEXT_LINK(&entry->link) == &ss->ssl3.hs.remoteKeyShares);
 
-    entry = (TLS13KeyShareEntry *)cur_p;
     if (entry->group != expectedGroup) {
         FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_KEY_SHARE, illegal_parameter);
         return SECFailure;
@@ -1213,7 +1246,7 @@ tls13_SetupNullCipherSpec(sslSocket *ss)
     PR_APPEND_LINK(&spec->link, &ss->ssl3.hs.cipherSpecs);
 
     ssl3_InitCipherSpec(spec);
-    spec->refCt = 2;  /* One for read, one for write. */
+    spec->refCt = 2; /* One for read, one for write. */
     SSL_TRC(50, ("%d: TLS 1.3: Setting up cipher spec %d. ref ct = %d",
                  SSL_GETPID(), spec, spec->refCt));
     ssl_GetSpecWriteLock(ss);
@@ -1263,7 +1296,7 @@ tls13_SetupPendingCipherSpec(sslSocket *ss)
         return SECFailure;
     }
 
-    spec->refCt = 2;  /* One for read and one for write. */
+    spec->refCt = 2; /* One for read and one for write. */
     SSL_TRC(50, ("%d: TLS 1.3: Setting up cipher spec %d. ref ct = %d",
                  SSL_GETPID(), spec, spec->refCt));
 
@@ -1339,13 +1372,8 @@ tls13_AddContextToHashes(sslSocket *ss, SSL3Hashes *hashes /* IN/OUT */,
                                                               : server_cert_verify_string;
     unsigned int hashlength;
 
-    /* Double check that we are doing SHA-256 for the handshake hash.*/
-    PORT_Assert(hashes->hashAlg == ssl_hash_sha256);
-    if (hashes->hashAlg != ssl_hash_sha256) {
-        PORT_SetError(SEC_ERROR_INVALID_ARGS);
-        goto loser;
-    }
-    PORT_Assert(hashes->len == 32);
+    /* Double check that we are doing the same hash.*/
+    PORT_Assert(hashes->len == tls13_GetHashSize(ss));
 
     ctx = PK11_CreateDigestContext(ssl3_TLSHashAlgorithmToOID(algorithm));
     if (!ctx) {
@@ -1431,18 +1459,18 @@ tls13_DeriveTrafficKeys(sslSocket *ss, ssl3CipherSpec *spec,
             goto loser;                                                             \
         }                                                                           \
     } while (0)
-#define EXPAND_TRAFFIC_KEY(purpose_, target_)                                 \
-    do {                                                                      \
-        FORMAT_LABEL(phase, purpose_);                                        \
-        rv = tls13_HkdfExpandLabel(prk, tls13_GetHash(ss),                    \
-                                   hashes.u.raw, hashes.len,                  \
-                                   label, strlen(label),                      \
+#define EXPAND_TRAFFIC_KEY(purpose_, target_)                               \
+    do {                                                                    \
+        FORMAT_LABEL(phase, purpose_);                                      \
+        rv = tls13_HkdfExpandLabel(prk, tls13_GetHash(ss),                  \
+                                   hashes.u.raw, hashes.len,                \
+                                   label, strlen(label),                    \
                                    bulkAlgorithm, keySize, &spec->target_); \
-        if (rv != SECSuccess) {                                               \
-            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);                         \
-            PORT_Assert(0);                                                   \
-            goto loser;                                                       \
-        }                                                                     \
+        if (rv != SECSuccess) {                                             \
+            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);                       \
+            PORT_Assert(0);                                                 \
+            goto loser;                                                     \
+        }                                                                   \
     } while (0)
 
 #define EXPAND_TRAFFIC_IV(purpose_, target_)                    \
@@ -1451,7 +1479,7 @@ tls13_DeriveTrafficKeys(sslSocket *ss, ssl3CipherSpec *spec,
         rv = tls13_HkdfExpandLabelRaw(prk, tls13_GetHash(ss),   \
                                       hashes.u.raw, hashes.len, \
                                       label, strlen(label),     \
-                                      spec->target_, ivSize); \
+                                      spec->target_, ivSize);   \
         if (rv != SECSuccess) {                                 \
             PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);           \
             PORT_Assert(0);                                     \
@@ -1508,7 +1536,7 @@ tls13_InitCipherSpec(sslSocket *ss, TrafficKeyType type,
                      InstallCipherSpecDirection install)
 {
     ssl3CipherSpec *spec =
-            (ssl3CipherSpec *)PR_LIST_TAIL(&ss->ssl3.hs.cipherSpecs);
+        (ssl3CipherSpec *)PR_LIST_TAIL(&ss->ssl3.hs.cipherSpecs);
 
     ssl3CipherSpec *cwSpec;
     SECStatus rv;
@@ -1533,25 +1561,26 @@ tls13_InitCipherSpec(sslSocket *ss, TrafficKeyType type,
         case calg_aes_gcm:
             spec->aead = tls13_AESGCM;
             break;
+        case calg_chacha20:
+            spec->aead = tls13_ChaCha20Poly1305;
+            break;
         default:
             PORT_Assert(0);
             goto loser;
             break;
     }
 
-    /* Generic behaviors -- common to all crypto methods */
+    /* We use the epoch for cipher suite identification, so increment
+     * it in both TLS and DTLS. */
+    if (cwSpec->epoch == PR_UINT16_MAX) {
+        goto loser;
+    }
+    spec->epoch = cwSpec->epoch + 1;
+
     if (!IS_DTLS(ss)) {
         spec->read_seq_num.high = spec->write_seq_num.high = 0;
     } else {
-        if (cwSpec->epoch == PR_UINT16_MAX) {
-            /* The problem here is that we have rehandshaked too many
-             * times (you are not allowed to wrap the epoch). The
-             * spec says you should be discarding the connection
-             * and start over, so not much we can do here. */
-            goto loser;
-        }
         /* The sequence number has the high 16 bits as the epoch. */
-        spec->epoch = cwSpec->epoch + 1;
         spec->read_seq_num.high = spec->write_seq_num.high =
             spec->epoch << 16;
 
@@ -1597,14 +1626,11 @@ tls13_ComputeHandshakeHashes(sslSocket *ss,
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
     /* TODO(ekr@rtfm.com): This first clause is futureproofing for
      * 0-RTT. */
-    if (ss->ssl3.hs.hashType == handshake_hash_unknown) {
-        PORT_Assert(0);
-    } else {
-        ctx = PK11_CloneContext(ss->ssl3.hs.sha);
-        if (!ctx) {
-            ssl_MapLowLevelError(SSL_ERROR_SHA_DIGEST_FAILURE);
-            return SECFailure;
-        }
+    PORT_Assert(ss->ssl3.hs.hashType != handshake_hash_unknown);
+    ctx = PK11_CloneContext(ss->ssl3.hs.sha);
+    if (!ctx) {
+        ssl_MapLowLevelError(SSL_ERROR_SHA_DIGEST_FAILURE);
+        return SECFailure;
     }
 
     rv = PK11_DigestFinal(ctx, hashes->u.raw, &hashes->len,
@@ -1619,8 +1645,8 @@ tls13_ComputeHandshakeHashes(sslSocket *ss,
 
     /* If we ever support ciphersuites where the PRF hash isn't SHA-256
      * then this will need to be updated. */
-    PORT_Assert(hashes->len == 32);
-    hashes->hashAlg = ssl_hash_sha256;
+    PORT_Assert(hashes->len == tls13_GetHashSize(ss));
+    hashes->hashAlg = tls13_GetHash(ss);
 
     PK11_DestroyContext(ctx, PR_TRUE);
     return SECSuccess;
@@ -1744,7 +1770,7 @@ tls13_ComputeSecrets2(sslSocket *ss)
 
     rv = tls13_ComputeHandshakeHashes(ss, &hashes);
     if (rv != SECSuccess) {
-        PORT_Assert(0);  /* Should never fail */
+        PORT_Assert(0); /* Should never fail */
         ssl_MapLowLevelError(SSL_ERROR_SESSION_KEY_GEN_FAILURE);
         return SECFailure;
     }
@@ -1799,17 +1825,80 @@ tls13_DestroyCipherSpecs(PRCList *list)
     while (!PR_CLIST_IS_EMPTY(list)) {
         cur_p = PR_LIST_TAIL(list);
         PR_REMOVE_LINK(cur_p);
-        ssl3_DestroyCipherSpec((ssl3CipherSpec*)cur_p, PR_FALSE);
+        ssl3_DestroyCipherSpec((ssl3CipherSpec *)cur_p, PR_FALSE);
         PORT_Free(cur_p);
+    }
+}
+
+/* draft-ietf-tls-tls13 Section 5.2.2 specifies the following
+ * nonce algorithm:
+ *
+ * The length of the per-record nonce (iv_length) is set to max(8 bytes,
+ * N_MIN) for the AEAD algorithm (see [RFC5116] Section 4).  An AEAD
+ * algorithm where N_MAX is less than 8 bytes MUST NOT be used with TLS.
+ * The per-record nonce for the AEAD construction is formed as follows:
+ *
+ * 1.  The 64-bit record sequence number is padded to the left with
+ *     zeroes to iv_length.
+ *
+ * 2.  The padded sequence number is XORed with the static
+ *     client_write_iv or server_write_iv, depending on the role.
+ *
+ * The resulting quantity (of length iv_length) is used as the per-
+ * record nonce.
+ *
+ * Existing suites have the same nonce size: N_MIN = N_MAX = 12 bytes
+ *
+ * See RFC 5288 and https://tools.ietf.org/html/draft-ietf-tls-chacha20-poly1305-04#section-2
+ */
+static void
+tls13_WriteNonce(ssl3KeyMaterial *keys,
+                 const unsigned char *seqNumBuf, unsigned int seqNumLen,
+                 unsigned char *nonce, unsigned int nonceLen)
+{
+    size_t i;
+
+    PORT_Assert(nonceLen == 12);
+    memcpy(nonce, keys->write_iv, 12);
+
+    /* XOR the last 8 bytes of the IV with the sequence number. */
+    PORT_Assert(seqNumLen == 8);
+    for (i = 0; i < 8; ++i) {
+        nonce[4 + i] ^= seqNumBuf[i];
     }
 }
 
 /* Implement the SSLAEADCipher interface defined in sslimpl.h.
  *
- * That interface mixes the AD and the sequence number, but in
- * TLS 1.3 there is no additional data so this value is just the
- * encoded sequence number and we call it |seqNumBuf|.
+ * That interface takes the additional data (see below) and reinterprets that as
+ * a sequence number. In TLS 1.3 there is no additional data so this value is
+ * just the encoded sequence number.
  */
+static SECStatus
+tls13_AEAD(ssl3KeyMaterial *keys, PRBool doDecrypt,
+           unsigned char *out, int *outlen, int maxout,
+           const unsigned char *in, int inlen,
+           CK_MECHANISM_TYPE mechanism,
+           unsigned char *aeadParams, unsigned int aeadParamLength)
+{
+    SECStatus rv;
+    unsigned int uOutLen = 0;
+    SECItem param = {
+        siBuffer, aeadParams, aeadParamLength
+    };
+
+    if (doDecrypt) {
+        rv = PK11_Decrypt(keys->write_key, mechanism, &param,
+                          out, &uOutLen, maxout, in, inlen);
+    } else {
+        rv = PK11_Encrypt(keys->write_key, mechanism, &param,
+                          out, &uOutLen, maxout, in, inlen);
+    }
+    *outlen = (int)uOutLen;
+
+    return rv;
+}
+
 static SECStatus
 tls13_AESGCM(ssl3KeyMaterial *keys,
              PRBool doDecrypt,
@@ -1818,63 +1907,48 @@ tls13_AESGCM(ssl3KeyMaterial *keys,
              int maxout,
              const unsigned char *in,
              int inlen,
-             const unsigned char *seqNumBuf,
-             int seqNumLen)
+             const unsigned char *additionalData,
+             int additionalDataLen)
 {
-    SECItem param;
-    SECStatus rv = SECFailure;
-    unsigned char nonce[12];
-    size_t i;
-    unsigned int uOutLen;
     CK_GCM_PARAMS gcmParams;
-    static const int tagSize = 16;
+    unsigned char nonce[12];
 
-    PORT_Assert(seqNumLen == 8);
-
-    /* draft-ietf-tls-tls13 Section 5.2.2 specifies the following
-     * nonce algorithm:
-     *
-     * The length of the per-record nonce (iv_length) is set to max(8 bytes,
-     * N_MIN) for the AEAD algorithm (see [RFC5116] Section 4).  An AEAD
-     * algorithm where N_MAX is less than 8 bytes MUST NOT be used with TLS.
-     * The per-record nonce for the AEAD construction is formed as follows:
-     *
-     * 1.  The 64-bit record sequence number is padded to the left with
-     *     zeroes to iv_length.
-     *
-     * 2.  The padded sequence number is XORed with the static
-     *     client_write_iv or server_write_iv, depending on the role.
-     *
-     * The resulting quantity (of length iv_length) is used as the per-
-     * record nonce.
-     *
-     * Per RFC 5288: N_MIN = N_MAX = 12 bytes.
-     *
-     */
-    memcpy(nonce, keys->write_iv, sizeof(nonce));
-    for (i = 0; i < 8; ++i) {
-        nonce[4 + i] ^= seqNumBuf[i];
-    }
-
-    param.type = siBuffer;
-    param.data = (unsigned char *)&gcmParams;
-    param.len = sizeof(gcmParams);
+    memset(&gcmParams, 0, sizeof(gcmParams));
     gcmParams.pIv = nonce;
     gcmParams.ulIvLen = sizeof(nonce);
     gcmParams.pAAD = NULL;
     gcmParams.ulAADLen = 0;
-    gcmParams.ulTagBits = tagSize * 8;
+    gcmParams.ulTagBits = 128; /* GCM measures tag length in bits. */
 
-    if (doDecrypt) {
-        rv = PK11_Decrypt(keys->write_key, CKM_AES_GCM, &param, out, &uOutLen,
-                          maxout, in, inlen);
-    } else {
-        rv = PK11_Encrypt(keys->write_key, CKM_AES_GCM, &param, out, &uOutLen,
-                          maxout, in, inlen);
-    }
-    *outlen = (int)uOutLen;
+    tls13_WriteNonce(keys, additionalData, additionalDataLen,
+                     nonce, sizeof(nonce));
+    return tls13_AEAD(keys, doDecrypt, out, outlen, maxout, in, inlen,
+                      CKM_AES_GCM,
+                      (unsigned char *)&gcmParams, sizeof(gcmParams));
+}
 
-    return rv;
+static SECStatus
+tls13_ChaCha20Poly1305(ssl3KeyMaterial *keys, PRBool doDecrypt,
+                       unsigned char *out, int *outlen, int maxout,
+                       const unsigned char *in, int inlen,
+                       const unsigned char *additionalData,
+                       int additionalDataLen)
+{
+    CK_NSS_AEAD_PARAMS aeadParams;
+    unsigned char nonce[12];
+
+    memset(&aeadParams, 0, sizeof(aeadParams));
+    aeadParams.pNonce = nonce;
+    aeadParams.ulNonceLen = sizeof(nonce);
+    aeadParams.pAAD = NULL; /* No AAD in TLS 1.3. */
+    aeadParams.ulAADLen = 0;
+    aeadParams.ulTagLen = 16; /* The Poly1305 tag is 16 octets. */
+
+    tls13_WriteNonce(keys, additionalData, additionalDataLen,
+                     nonce, sizeof(nonce));
+    return tls13_AEAD(keys, doDecrypt, out, outlen, maxout, in, inlen,
+                      CKM_NSS_CHACHA20_POLY1305,
+                      (unsigned char *)&aeadParams, sizeof(aeadParams));
 }
 
 static SECStatus
@@ -2151,8 +2225,7 @@ tls13_SendFinished(sslSocket *ss)
     }
 
     rv = ssl3_FlushHandshake(ss,
-                             (IS_DTLS(ss) && !ss->sec.isServer) ?
-                             ssl_SEND_FLAG_NO_RETRANSMIT : 0);
+                             (IS_DTLS(ss) && !ss->sec.isServer) ? ssl_SEND_FLAG_NO_RETRANSMIT : 0);
     if (rv != SECSuccess) {
         errCode = PR_GetError();
         goto alert_loser;
@@ -2233,7 +2306,7 @@ tls13_HandleFinished(sslSocket *ss, SSL3Opaque *b, PRUint32 length,
 
         rv = tls13_FinishHandshake(ss);
         if (rv != SECSuccess) {
-            return SECFailure;  /* Error code and alerts handled below */
+            return SECFailure; /* Error code and alerts handled below */
         }
         ssl_GetXmitBufLock(ss);
         if (ss->opt.enableSessionTickets &&
@@ -2242,19 +2315,13 @@ tls13_HandleFinished(sslSocket *ss, SSL3Opaque *b, PRUint32 length,
             rv = ssl3_SendNewSessionTicket(ss);
             if (rv != SECSuccess) {
                 ssl_ReleaseXmitBufLock(ss);
-                return SECFailure;  /* Error code and alerts handled below */
+                return SECFailure; /* Error code and alerts handled below */
             }
             rv = ssl3_FlushHandshake(ss, 0);
         }
         ssl_ReleaseXmitBufLock(ss);
 
     } else {
-        if (ss->ssl3.hs.authCertificatePending) {
-            /* TODO(ekr@rtfm.com): Handle pending auth */
-            FATAL_ERROR(ss, SEC_ERROR_LIBRARY_FAILURE, internal_error);
-            PORT_Assert(0);
-            return SECFailure;
-        }
         rv = tls13_InitCipherSpec(ss, TrafficKeyApplicationData,
                                   InstallCipherSpecRead);
         if (rv != SECSuccess) {
@@ -2313,8 +2380,7 @@ tls13_SendClientSecondRound(sslSocket *ss)
         PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
         return SECFailure;
     }
-    if (ss->ssl3.hs.authCertificatePending && (sendClientCert ||
-                                               ss->ssl3.sendEmptyCert)) {
+    if (ss->ssl3.hs.authCertificatePending) {
         SSL_TRC(3, ("%d: TLS13[%p]: deferring ssl3_SendClientSecondRound because"
                     " certificate authentication is still pending.",
                     SSL_GETPID(), ss->fd));
@@ -2662,7 +2728,7 @@ tls13_UnprotectRecord(sslSocket *ss, SSL3Ciphertext *cText, sslBuffer *plaintext
         SSL_TRC(3,
                 ("%d: TLS13[%d]: record too short to contain valid AEAD data",
                  SSL_GETPID(), ss->fd));
-        PORT_SetError(SSL_ERROR_RX_RECORD_TOO_LONG);
+        PORT_SetError(SSL_ERROR_BAD_MAC_READ);
         return SECFailure;
     }
 

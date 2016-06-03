@@ -5,6 +5,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ContentEventHandler.h"
+#include "IMEContentObserver.h"
+#include "IMEStateManager.h"
 #include "nsContentUtils.h"
 #include "nsIContent.h"
 #include "nsIEditor.h"
@@ -397,8 +399,7 @@ TextComposition::DispatchCompositionEvent(
     MOZ_ASSERT(!HasEditor(), "Why does the editor still keep to hold this?");
   }
 
-  // Notify composition update to widget if possible
-  NotityUpdateComposition(aCompositionEvent);
+  OnCompositionEventHandled(aCompositionEvent);
 }
 
 // static
@@ -426,7 +427,7 @@ TextComposition::HandleSelectionEvent(nsPresContext* aPresContext,
 }
 
 void
-TextComposition::NotityUpdateComposition(
+TextComposition::OnCompositionEventHandled(
                    const WidgetCompositionEvent* aCompositionEvent)
 {
   MOZ_RELEASE_ASSERT(!mTabParent);
@@ -456,7 +457,23 @@ TextComposition::NotityUpdateComposition(
     return;
   }
 
-  NotifyIME(NOTIFY_IME_OF_COMPOSITION_UPDATE);
+  RefPtr<IMEContentObserver> contentObserver =
+    IMEStateManager::GetActiveContentObserver();
+  // When IMEContentObserver is managing the editor which has this composition,
+  // composition event handled notification should be sent after the observer
+  // notifies all pending notifications.  Therefore, we should use it.
+  // XXX If IMEContentObserver suddenly loses focus after here and notifying
+  //     widget of pending notifications, we won't notify widget of composition
+  //     event handled.  Although, this is a bug but it should be okay since
+  //     destroying IMEContentObserver notifies IME of blur.  So, native IME
+  //     handler can treat it as this notification too.
+  if (contentObserver && contentObserver->IsManaging(this)) {
+    contentObserver->MaybeNotifyCompositionEventHandled();
+    return;
+  }
+  // Otherwise, e.g., this composition is in non-active window, we should
+  // notify widget directly.
+  NotifyIME(NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED);
 }
 
 void

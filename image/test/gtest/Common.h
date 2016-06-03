@@ -109,6 +109,12 @@ bool IsSolidColor(gfx::SourceSurface* aSurface,
                   uint8_t aFuzz = 0);
 
 /**
+ * @returns true if every pixel of @aDecoder's surface has the palette index
+ * specified by @aColor.
+ */
+bool IsSolidPalettedColor(Decoder* aDecoder, uint8_t aColor);
+
+/**
  * @returns true if every pixel in the range of rows specified by @aStartRow and
  * @aRowCount of @aSurface is @aColor.
  *
@@ -123,6 +129,15 @@ bool RowsAreSolidColor(gfx::SourceSurface* aSurface,
                        uint8_t aFuzz = 0);
 
 /**
+ * @returns true if every pixel in the range of rows specified by @aStartRow and
+ * @aRowCount of @aDecoder's surface has the palette index specified by @aColor.
+ */
+bool PalettedRowsAreSolidColor(Decoder* aDecoder,
+                               int32_t aStartRow,
+                               int32_t aRowCount,
+                               uint8_t aColor);
+
+/**
  * @returns true if every pixel in the rect specified by @aRect is @aColor.
  *
  * If @aFuzz is nonzero, a tolerance of @aFuzz is allowed in each color
@@ -133,6 +148,14 @@ bool RectIsSolidColor(gfx::SourceSurface* aSurface,
                       const gfx::IntRect& aRect,
                       BGRAColor aColor,
                       uint8_t aFuzz = 0);
+
+/**
+ * @returns true if every pixel in the rect specified by @aRect has the palette
+ * index specified by @aColor.
+ */
+bool PalettedRectIsSolidColor(Decoder* aDecoder,
+                              const gfx::IntRect& aRect,
+                              uint8_t aColor);
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -219,12 +242,25 @@ void AssertCorrectPipelineFinalState(SurfaceFilter* aFilter,
  * @param aRect The region in the space of the output surface that the filter
  *              pipeline will actually write to. It's expected that pixels in
  *              this region are green, while pixels outside this region are
- *              transparent. Defaults to the entire output rect.
+ *              transparent.
  * @param aFuzz The amount of fuzz to use in pixel comparisons.
  */
 void CheckGeneratedImage(Decoder* aDecoder,
                          const gfx::IntRect& aRect,
                          uint8_t aFuzz = 0);
+
+/**
+ * Checks a generated paletted image for correctness. Reports any unexpected
+ * deviation from the expected image as GTest failures.
+ *
+ * @param aDecoder The decoder which contains the image. The decoder's current
+ *                 frame will be checked.
+ * @param aRect The region in the space of the output surface that the filter
+ *              pipeline will actually write to. It's expected that pixels in
+ *              this region have a palette index of 255, while pixels outside
+ *              this region have a palette index of 0.
+ */
+void CheckGeneratedPalettedImage(Decoder* aDecoder, const gfx::IntRect& aRect);
 
 /**
  * Tests the result of calling WritePixels() using the provided SurfaceFilter
@@ -263,19 +299,6 @@ void CheckWritePixels(Decoder* aDecoder,
                       uint8_t aFuzz = 0);
 
 /**
- * Tests the result of calling WriteRows() using the provided SurfaceFilter
- * pipeline. The pipeline must be a normal (i.e., non-paletted) pipeline.
- * @see CheckWritePixels() for documentation of the arguments.
- */
-void CheckWriteRows(Decoder* aDecoder,
-                    SurfaceFilter* aFilter,
-                    Maybe<gfx::IntRect> aOutputRect = Nothing(),
-                    Maybe<gfx::IntRect> aInputRect = Nothing(),
-                    Maybe<gfx::IntRect> aInputWriteRect = Nothing(),
-                    Maybe<gfx::IntRect> aOutputWriteRect = Nothing(),
-                    uint8_t aFuzz = 0);
-
-/**
  * Tests the result of calling WritePixels() using the provided SurfaceFilter
  * pipeline. The pipeline must be a paletted pipeline.
  * @see CheckWritePixels() for documentation of the arguments.
@@ -287,19 +310,6 @@ void CheckPalettedWritePixels(Decoder* aDecoder,
                               Maybe<gfx::IntRect> aInputWriteRect = Nothing(),
                               Maybe<gfx::IntRect> aOutputWriteRect = Nothing(),
                               uint8_t aFuzz = 0);
-
-/**
- * Tests the result of calling WriteRows() using the provided SurfaceFilter
- * pipeline. The pipeline must be a paletted pipeline.
- * @see CheckWritePixels() for documentation of the arguments.
- */
-void CheckPalettedWriteRows(Decoder* aDecoder,
-                            SurfaceFilter* aFilter,
-                            Maybe<gfx::IntRect> aOutputRect = Nothing(),
-                            Maybe<gfx::IntRect> aInputRect = Nothing(),
-                            Maybe<gfx::IntRect> aInputWriteRect = Nothing(),
-                            Maybe<gfx::IntRect> aOutputWriteRect = Nothing(),
-                            uint8_t aFuzz = 0);
 
 
 ///////////////////////////////////////////////////////////////////////////////

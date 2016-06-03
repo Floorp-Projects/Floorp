@@ -2319,7 +2319,8 @@ class DebugScopeProxy : public BaseProxyHandler
                 if (inScope)
                     props[j++].set(props[i]);
             }
-            props.resize(j);
+            if (!props.resize(j))
+                return false;
         }
 
         /*

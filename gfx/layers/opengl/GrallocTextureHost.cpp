@@ -259,6 +259,7 @@ GrallocTextureHostOGL::GetAsSurface() {
 void
 GrallocTextureHostOGL::UnbindTextureSource()
 {
+  TextureHost::UnbindTextureSource();
   // Clear the reference to the TextureSource (if any), because we know that
   // another TextureHost is being bound to the TextureSource. This means that
   // we will have to re-do gl->fEGLImageTargetTexture2D next time we go through

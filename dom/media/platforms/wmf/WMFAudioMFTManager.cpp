@@ -60,6 +60,24 @@ AACAudioSpecificConfigToUserData(uint8_t aAACProfileLevelIndication,
   w[1] = aAACProfileLevelIndication;
 
   aOutUserData.AppendElements(heeInfo, heeInfoLen);
+
+  if (aAACProfileLevelIndication == 2 && aConfigLength > 2) {
+    // The AudioSpecificConfig is TTTTTFFF|FCCCCGGG
+    // (T=ObjectType, F=Frequency, C=Channel, G=GASpecificConfig)
+    // If frequency = 0xf, then the frequency is explicitly defined on 24 bits.
+    int8_t profile = (aAudioSpecConfig[0] & 0xF8) >> 3;
+    int8_t frequency =
+      (aAudioSpecConfig[0] & 0x7) << 1 | (aAudioSpecConfig[1] & 0x80) >> 7;
+    int8_t channels = (aAudioSpecConfig[1] & 0x78) >> 3;
+    int8_t gasc = aAudioSpecConfig[1] & 0x7;
+    if (frequency != 0xf && channels && !gasc) {
+      // We enter this condition if the AudioSpecificConfig should theorically
+      // be 2 bytes long but it's not.
+      // The WMF AAC decoder will error if unknown extensions are found,
+      // so remove them.
+      aConfigLength = 2;
+    }
+  }
   aOutUserData.AppendElements(aAudioSpecConfig, aConfigLength);
 }
 
@@ -76,7 +94,7 @@ WMFAudioMFTManager::WMFAudioMFTManager(
     mStreamType = MP3;
   } else if (aConfig.mMimeType.EqualsLiteral("audio/mp4a-latm")) {
     mStreamType = AAC;
-    AACAudioSpecificConfigToUserData(aConfig.mProfile,
+    AACAudioSpecificConfigToUserData(aConfig.mExtendedProfile,
                                      aConfig.mCodecSpecificConfig->Elements(),
                                      aConfig.mCodecSpecificConfig->Length(),
                                      mUserData);

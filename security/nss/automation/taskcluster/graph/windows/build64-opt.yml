@@ -1,0 +1,35 @@
+---
+- task:
+    metadata:
+      name: "Windows 2012 64 (opt)"
+      description: "Windows 2012 64 (opt)"
+
+    payload:
+      env:
+        NSS_ENABLE_TLS_1_3: 1
+        BUILD_OPT: 1
+        USE_64: 1
+
+    extra:
+      treeherder:
+        build:
+          platform: windows2012-64
+        collection:
+          opt: true
+
+  tests:
+    - cert
+    - cipher
+    - crmf
+    - db
+    - ec
+    - fips
+    - gtests
+    - lowhash
+    - merge
+    - ocsp
+    - pkits
+    - pkix
+    - sdr
+    - smime
+    - tools

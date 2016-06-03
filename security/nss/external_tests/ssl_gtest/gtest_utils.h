@@ -16,26 +16,25 @@ namespace nss_test {
 // Gtest utilities
 class Timeout : public PollTarget {
  public:
-  Timeout(int32_t timer_ms) : handle_(nullptr), timed_out_(false) {
+  Timeout(int32_t timer_ms) : handle_(nullptr) {
     Poller::Instance()->SetTimer(timer_ms, this, &Timeout::ExpiredCallback,
                                  &handle_);
   }
   ~Timeout() {
-    Cancel();
+    if (handle_) {
+      handle_->Cancel();
+    }
   }
 
   static void ExpiredCallback(PollTarget* target, Event event) {
     Timeout* timeout = static_cast<Timeout*>(target);
-    timeout->timed_out_ = true;
+    timeout->handle_ = nullptr;
   }
 
-  void Cancel() { handle_->Cancel(); }
-
-  bool timed_out() const { return timed_out_; }
+  bool timed_out() const { return !handle_; }
 
  private:
   Poller::Timer* handle_;
-  bool timed_out_;
 };
 
 }  // namespace nss_test

@@ -5,9 +5,9 @@ checkout:
 test:
     override:
         - make nss_build_all
-        - cd tests; NSS_TESTS="ssl_gtests pk11_gtests der_gtests util_gtests" NSS_CYCLES=standard ./all.sh
+        - cd tests; NSS_TESTS="ssl_gtests gtests" NSS_CYCLES=standard ./all.sh
         - BUILD_OPT=1 make nss_build_all
-        - cd tests; BUILD_OPT=1 NSS_TESTS="ssl_gtests pk11_gtests der_gtests util_gtests" NSS_CYCLES=standard ./all.sh
+        - cd tests; BUILD_OPT=1 NSS_TESTS="ssl_gtests gtests" NSS_CYCLES=standard ./all.sh
 
 machine:
     environment:

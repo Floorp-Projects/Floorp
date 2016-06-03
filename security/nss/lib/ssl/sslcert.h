@@ -23,13 +23,11 @@
 typedef struct sslServerCertTypeStr {
     SSLAuthType authType;
     union {
-#ifndef NSS_DISABLE_ECC
         /* For ssl_auth_ecdsa and ssl_auth_ecdh_*.  This is only the named curve
          * of the end-entity certificate key.  The keys in other certificates in
          * the chain aren't directly relevant to the operation of TLS (though it
          * might make certificate validation difficult, libssl doesn't care). */
         ECName namedCurve;
-#endif
     } u;
 } sslServerCertType;
 
@@ -53,6 +51,7 @@ typedef struct sslServerCertStr {
 } sslServerCert;
 
 extern sslServerCert *ssl_NewServerCert(const sslServerCertType *slot);
+extern sslServerCert *ssl_CopyServerCert(const sslServerCert *oc);
 extern sslServerCert *ssl_FindServerCert(const sslSocket *ss,
                                          const sslServerCertType *slot);
 extern sslServerCert *ssl_FindServerCertByAuthType(const sslSocket *ss,

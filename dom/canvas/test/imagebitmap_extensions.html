@@ -1,0 +1,49 @@
+<!DOCTYPE HTML>
+<head>
+  <title>Test ImageBitmap Extensions (Bug 1141979)</title>
+  <meta charset="utf-8">
+  <script src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" href="/tests/SimpleTest/test.css">
+</head>
+<body>
+<script src="imagebitmap_extensions_prepareSources.js"></script>
+<script src="imagebitmap_extensions_data.js"></script>
+<script src="imagebitmap_extensions.js"></script>
+<script type="text/javascript">
+
+runTests();
+
+function ok(expect, msg) {
+  window.parent.postMessage({"type": "status", status: !!expect, msg: msg}, "*");
+}
+
+function runTests() {
+
+  prepareSources().
+    then( function() { return Promise.all([testAccessing_randomTest("Video", gVideo, 20), // video might use slightly different frames
+                                           testAccessing_randomTest("Image", gImage, 0),
+                                           testAccessing_randomTest("Canvas", gCanvas, 0),
+                                           testAccessing_randomTest("Ctx", gCtx, 0),
+                                           testAccessing_randomTest("ImageData", gImageData, 0),
+                                           testAccessing_randomTest("ImageBitmap", gImageBitmap, 0),
+                                           testAccessing_randomTest("PNG", gPNGBlob, 0),
+                                           testAccessing_randomTest("JPEG", gJPEGBlob, 10) // JPEG loses information
+                                          ]); }).
+    then( function() { return Promise.all([testCreateFromArrayBffer_randomTest("Video", gVideo, 20), // video might use slightly different frames
+                                           testCreateFromArrayBffer_randomTest("Image", gImage, 0),
+                                           testCreateFromArrayBffer_randomTest("Canvas", gCanvas, 0),
+                                           testCreateFromArrayBffer_randomTest("Ctx", gCtx, 0),
+                                           testCreateFromArrayBffer_randomTest("ImageData", gImageData, 0),
+                                           testCreateFromArrayBffer_randomTest("ImageBitmap", gImageBitmap, 0),
+                                           testCreateFromArrayBffer_randomTest("PNG", gPNGBlob, 0),
+                                           testCreateFromArrayBffer_randomTest("JPEG", gJPEGBlob, 10) // JPEG loses information
+                                          ]); }).
+    then(testDraw()).
+    then(testExceptions).
+    then(testColorConversions()).
+    then(function() { return testInvalidAccess([gVideo, gImage, gCanvas, gCtx, gImageData, gImageBitmap, gPNGBlob, gJPEGBlob]); } ).
+    then(function() {window.parent.postMessage({"type": "finish"}, "*");}, function(ev) { failed(ev); window.parent.postMessage({"type": "finish"}, "*"); });
+}
+
+</script>
+</body>

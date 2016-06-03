@@ -2069,6 +2069,9 @@ sftk_InitCBCMac(CK_SESSION_HANDLE hSession, CK_MECHANISM_PTR pMechanism,
 
     switch (pMechanism->mechanism) {
     case CKM_RC2_MAC_GENERAL:
+	if (!pMechanism->pParameter) {
+	    return CKR_MECHANISM_PARAM_INVALID;
+	}
 	mac_bytes = 
 	    ((CK_RC2_MAC_GENERAL_PARAMS *)pMechanism->pParameter)->ulMacLength;
 	/* fall through */
@@ -6084,7 +6087,7 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
     int             i;
     unsigned int    outLen;
     unsigned char   sha_out[SHA1_LENGTH];
-    unsigned char   key_block[NUM_MIXERS * MD5_LENGTH];
+    unsigned char   key_block[NUM_MIXERS * SFTK_MAX_MAC_LENGTH];
     unsigned char   key_block2[MD5_LENGTH];
     PRBool          isFIPS;		
     HASH_HashType   hashType;
