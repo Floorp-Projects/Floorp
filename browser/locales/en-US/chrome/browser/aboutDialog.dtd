@@ -65,6 +65,7 @@
 <!ENTITY update.adminDisabled       "Updates disabled by your system administrator">
 <!-- LOCALIZATION NOTE (update.otherInstanceHandlingUpdates): try to make the localized text short -->
 <!ENTITY update.otherInstanceHandlingUpdates "&brandShortName; is being updated by another instance">
+<!ENTITY update.restarting          "Restarting…">
 
 <!-- LOCALIZATION NOTE (update.failed.start,update.failed.linkText,update.failed.end):
      update.failed.start, update.failed.linkText, and update.failed.end all go into
