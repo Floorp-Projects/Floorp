@@ -4,16 +4,4 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    'e10srollout',
-    'loop',
-    'pdfjs',
-    'pocket',
-    'webcompat',
-]
-
-# Only include the following system add-ons if building Aurora or Nightly
-if 'a' in CONFIG['GRE_MILESTONE']:
-    DIRS += [
-        'flyweb',
-    ]
+JAR_MANIFESTS += ['jar.mn']
