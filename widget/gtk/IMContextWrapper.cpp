@@ -1830,7 +1830,7 @@ IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
      *   3: If only attrForground is specified, we assumed the clause is
      *      NS_TEXTRANGE_SELECTEDRAWTEXT.
      *   4: If neither attrUnderline nor attrForeground is specified, we assumed
-     *      the clause is NS_TEXTRANGE_RAWINPUT.
+     *      the clause is TextRangeType::eRawClause.
      *
      * However, this rules are odd since there can be two or more selected
      * clauses.  Additionally, our old rules caused that IME developers/users
@@ -1852,7 +1852,7 @@ IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
     if (!utf8ClauseStart &&
         utf8ClauseEnd == static_cast<gint>(strlen(aUTF8CompositionString)) &&
         aTextRange.mEndOffset == aUTF16CaretOffset) {
-        aTextRange.mRangeType = TextRangeType::NS_TEXTRANGE_RAWINPUT;
+        aTextRange.mRangeType = TextRangeType::eRawClause;
     }
     // Typically, the caret is set at the start of the selected clause.
     // So, if the caret is in the clause, we can assume that the clause is

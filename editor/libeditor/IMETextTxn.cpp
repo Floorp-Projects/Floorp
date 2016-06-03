@@ -138,7 +138,7 @@ static SelectionType
 ToSelectionType(TextRangeType aTextRangeType)
 {
   switch (aTextRangeType) {
-    case TextRangeType::NS_TEXTRANGE_RAWINPUT:
+    case TextRangeType::eRawClause:
       return nsISelectionController::SELECTION_IME_RAWINPUT;
     case TextRangeType::NS_TEXTRANGE_SELECTEDRAWTEXT:
       return nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT;
