@@ -4754,12 +4754,10 @@ already_AddRefed<TimeRanges>
 HTMLMediaElement::Buffered() const
 {
   RefPtr<TimeRanges> ranges = new TimeRanges(ToSupports(OwnerDoc()));
-  if (mReadyState > nsIDOMHTMLMediaElement::HAVE_NOTHING) {
-    if (mDecoder) {
-      media::TimeIntervals buffered = mDecoder->GetBuffered();
-      if (!buffered.IsInvalid()) {
-        buffered.ToTimeRanges(ranges);
-      }
+  if (mDecoder) {
+    media::TimeIntervals buffered = mDecoder->GetBuffered();
+    if (!buffered.IsInvalid()) {
+      buffered.ToTimeRanges(ranges);
     }
   }
   return ranges.forget();
