@@ -7520,6 +7520,13 @@ nsWindow::DealWithPopups(HWND aWnd, UINT aMessage,
       // automatically activate the popup on the mousedown otherwise.
       return true;
 
+    case WM_SHOWWINDOW:
+      // If the window is being minimized, close popups.
+      if (aLParam == SW_PARENTCLOSING) {
+        break;
+      }
+      return false;
+
     case WM_KILLFOCUS:
       // If focus moves to other window created in different process/thread,
       // e.g., a plugin window, popups should be rolled up.
