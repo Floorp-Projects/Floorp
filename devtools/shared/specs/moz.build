@@ -9,6 +9,7 @@ DevToolsModules(
     'addons.js',
     'animation.js',
     'call-watcher.js',
+    'canvas.js',
     'css-properties.js',
     'heap-snapshot-file.js',
     'highlighters.js',
