@@ -69,6 +69,7 @@
 #include "nsStyleStruct.h"              // for nsTimingFunction
 #include "nsTArray.h"                   // for nsTArray, nsTArray_Impl, etc
 #include "nsThreadUtils.h"              // for NS_IsMainThread
+#include "nsViewportInfo.h"             // for kViewportMinScale, kViewportMaxScale
 #include "prsystem.h"                   // for PR_GetPhysicalMemorySize
 #include "SharedMemoryBasic.h"          // for SharedMemoryBasic
 #include "ScrollSnap.h"                 // for ScrollSnapUtils
@@ -400,16 +401,6 @@ static bool IsHighMemSystem()
 }
 
 /**
- * Maximum zoom amount, always used, even if a page asks for higher.
- */
-static const CSSToParentLayerScale MAX_ZOOM(8.0f);
-
-/**
- * Minimum zoom amount, always used, even if a page asks for lower.
- */
-static const CSSToParentLayerScale MIN_ZOOM(0.125f);
-
-/**
  * Is aAngle within the given threshold of the horizontal axis?
  * @param aAngle an angle in radians in the range [0, pi]
  * @param aThreshold an angle in radians in the range [0, pi/2]
@@ -702,7 +693,9 @@ AsyncPanZoomController::AsyncPanZoomController(uint64_t aLayersId,
      mX(this),
      mY(this),
      mPanDirRestricted(false),
-     mZoomConstraints(false, false, MIN_ZOOM, MAX_ZOOM),
+     mZoomConstraints(false, false,
+        mFrameMetrics.GetDevPixelsPerCSSPixel() * kViewportMinScale / ParentLayerToScreenScale(1),
+        mFrameMetrics.GetDevPixelsPerCSSPixel() * kViewportMaxScale / ParentLayerToScreenScale(1)),
      mLastSampleTime(GetFrameTime()),
      mLastCheckerboardReport(GetFrameTime()),
      mOverscrollEffect(MakeUnique<OverscrollEffect>(*this)),
@@ -3675,11 +3668,17 @@ void AsyncPanZoomController::UpdateZoomConstraints(const ZoomConstraints& aConst
     NS_WARNING("APZC received zoom constraints with NaN values; dropping...");
     return;
   }
+
+  CSSToParentLayerScale min = mFrameMetrics.GetDevPixelsPerCSSPixel()
+    * kViewportMinScale / ParentLayerToScreenScale(1);
+  CSSToParentLayerScale max = mFrameMetrics.GetDevPixelsPerCSSPixel()
+    * kViewportMaxScale / ParentLayerToScreenScale(1);
+
   // inf float values and other bad cases should be sanitized by the code below.
   mZoomConstraints.mAllowZoom = aConstraints.mAllowZoom;
   mZoomConstraints.mAllowDoubleTapZoom = aConstraints.mAllowDoubleTapZoom;
-  mZoomConstraints.mMinZoom = (MIN_ZOOM > aConstraints.mMinZoom ? MIN_ZOOM : aConstraints.mMinZoom);
-  mZoomConstraints.mMaxZoom = (MAX_ZOOM > aConstraints.mMaxZoom ? aConstraints.mMaxZoom : MAX_ZOOM);
+  mZoomConstraints.mMinZoom = (min > aConstraints.mMinZoom ? min : aConstraints.mMinZoom);
+  mZoomConstraints.mMaxZoom = (max > aConstraints.mMaxZoom ? aConstraints.mMaxZoom : max);
   if (mZoomConstraints.mMaxZoom < mZoomConstraints.mMinZoom) {
     mZoomConstraints.mMaxZoom = mZoomConstraints.mMinZoom;
   }
