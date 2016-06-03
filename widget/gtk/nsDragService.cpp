@@ -436,16 +436,11 @@ nsDragService::SetAlphaPixmap(SourceSurface *aSurface,
 
     gdk_drawable_set_colormap(GDK_DRAWABLE(pixmap), alphaColormap);
 
-    // Make a gfxXlibSurface wrapped around the pixmap to render on
-    RefPtr<gfxASurface> xPixmapSurface =
-         nsWindow::GetSurfaceForGdkDrawable(GDK_DRAWABLE(pixmap),
-                                            dragRect.Size());
-    if (!xPixmapSurface)
-      return false;
-
+    // Make a DrawTarget wrapped around the pixmap to render on
     RefPtr<DrawTarget> dt =
-    gfxPlatform::GetPlatform()->
-      CreateDrawTargetForSurface(xPixmapSurface, IntSize(dragRect.width, dragRect.height));
+         nsWindow::GetDrawTargetForGdkDrawable(GDK_DRAWABLE(pixmap),
+                                               IntRect(dragRect.width,
+                                                       dragRect.height));
     if (!dt)
       return false;
 
