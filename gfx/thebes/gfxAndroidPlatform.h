@@ -82,7 +82,6 @@ protected:
     }
 
 private:
-    int mScreenDepth;
     gfxImageFormat mOffscreenFormat;
 
 #ifdef MOZ_WIDGET_GONK
