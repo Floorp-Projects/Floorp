@@ -333,21 +333,6 @@ nsHttpNTLMAuth::ChallengeReceived(nsIHttpAuthenticableChannel *channel,
 }
 
 NS_IMETHODIMP
-nsHttpNTLMAuth::GenerateCredentialsAsync(nsIHttpAuthenticableChannel *authChannel,
-                                         nsIHttpAuthenticatorCallback* aCallback,
-                                         const char *challenge,
-                                         bool isProxyAuth,
-                                         const char16_t *domain,
-                                         const char16_t *username,
-                                         const char16_t *password,
-                                         nsISupports *sessionState,
-                                         nsISupports *continuationState,
-                                         nsICancelable **aCancellable)
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsHttpNTLMAuth::GenerateCredentials(nsIHttpAuthenticableChannel *authChannel,
                                     const char      *challenge,
                                     bool             isProxyAuth,
