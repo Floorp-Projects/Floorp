@@ -65,7 +65,7 @@ IsValidRawTextRangeValue(RawTextRangeType aRawTextRangeType)
     case TextRangeType::eCaret:
     case TextRangeType::eRawClause:
     case TextRangeType::eSelectedRawClause:
-    case TextRangeType::NS_TEXTRANGE_CONVERTEDTEXT:
+    case TextRangeType::eConvertedClause:
     case TextRangeType::NS_TEXTRANGE_SELECTEDCONVERTEDTEXT:
       return true;
     default:
@@ -98,8 +98,8 @@ ToChar(TextRangeType aTextRangeType)
       return "TextRangeType::eRawClause";
     case TextRangeType::eSelectedRawClause:
       return "TextRangeType::eSelectedRawClause";
-    case TextRangeType::NS_TEXTRANGE_CONVERTEDTEXT:
-      return "NS_TEXTRANGE_CONVERTEDTEXT";
+    case TextRangeType::eConvertedClause:
+      return "TextRangeType::eConvertedClause";
     case TextRangeType::NS_TEXTRANGE_SELECTEDCONVERTEDTEXT:
       return "NS_TEXTRANGE_SELECTEDCONVERTEDTEXT";
     default:
