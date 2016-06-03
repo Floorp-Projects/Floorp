@@ -8,6 +8,7 @@ DevToolsModules(
     'addons.js',
     'animation.js',
     'css-properties.js',
+    'heap-snapshot-file.js',
     'highlighters.js',
     'inspector.js',
     'node.js',
