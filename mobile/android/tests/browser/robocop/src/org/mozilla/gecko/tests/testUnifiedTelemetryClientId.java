@@ -49,8 +49,6 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
         getFHRClientIdParentDir().delete();
     }
 
-    // TODO: If the intent service runs in the background, it could break this test. The service is disabled
-    // on non-official builds (e.g. this one) but that may not be the case on TBPL.
     public void testUnifiedTelemetryClientId() throws Exception {
         blockForReadyAndLoadJS(TEST_JS);
         resetJSCache(); // Must be called after Gecko is loaded.
