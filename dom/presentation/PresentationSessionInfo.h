@@ -208,7 +208,6 @@ class PresentationPresentingInfo final : public PresentationSessionInfo
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_NSIPRESENTATIONCONTROLCHANNELLISTENER
-  NS_DECL_NSIPRESENTATIONSESSIONTRANSPORTBUILDERLISTENER
   NS_DECL_NSITIMERCALLBACK
 
   PresentationPresentingInfo(const nsAString& aUrl,
@@ -225,6 +224,8 @@ public:
   nsresult Init(nsIPresentationControlChannel* aControlChannel) override;
 
   nsresult NotifyResponderReady();
+
+  NS_IMETHODIMP OnSessionTransport(nsIPresentationSessionTransport* transport) override;
 
   void ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
 
