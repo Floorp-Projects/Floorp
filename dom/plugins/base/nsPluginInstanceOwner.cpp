@@ -889,7 +889,7 @@ nsPluginInstanceOwner::GetCompositionString(uint32_t aType,
           case TextRangeType::eRawClause:
             type = ATTR_INPUT;
             break;
-          case TextRangeType::NS_TEXTRANGE_SELECTEDRAWTEXT:
+          case TextRangeType::eSelectedRawClause:
             type = ATTR_TARGET_NOTCONVERTED;
             break;
           case TextRangeType::NS_TEXTRANGE_CONVERTEDTEXT:

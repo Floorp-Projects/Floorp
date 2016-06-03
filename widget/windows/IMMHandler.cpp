@@ -1900,7 +1900,7 @@ PlatformToNSAttr(uint8_t aAttr)
     case ATTR_CONVERTED:
       return TextRangeType::NS_TEXTRANGE_CONVERTEDTEXT;
     case ATTR_TARGET_NOTCONVERTED:
-      return TextRangeType::NS_TEXTRANGE_SELECTEDRAWTEXT;
+      return TextRangeType::eSelectedRawClause;
     case ATTR_TARGET_CONVERTED:
       return TextRangeType::NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
     default:
