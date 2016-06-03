@@ -13,7 +13,7 @@ const promise = require("promise");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { CallWatcherFront } = require("devtools/shared/fronts/call-watcher");
-const { CanvasFront } = require("devtools/server/actors/canvas");
+const { CanvasFront } = require("devtools/shared/fronts/canvas");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
 const { Heritage, WidgetMethods, setNamedTimeout, clearNamedTimeout,
