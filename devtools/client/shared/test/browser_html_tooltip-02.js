@@ -12,13 +12,16 @@ const HTML_NS = "http://www.w3.org/1999/xhtml";
 const TEST_URI = `data:text/xml;charset=UTF-8,<?xml version="1.0"?>
   <?xml-stylesheet href="chrome://global/skin/global.css"?>
   <?xml-stylesheet href="chrome://devtools/skin/tooltips.css"?>
-  <window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-   title="Tooltip test">
+  <window
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    htmlns="http://www.w3.org/1999/xhtml"
+    title="Tooltip test">
     <vbox flex="1">
       <hbox id="box1" flex="1">test1</hbox>
       <hbox id="box2" flex="1">test2</hbox>
       <hbox id="box3" flex="1">test3</hbox>
       <hbox id="box4" flex="1">test4</hbox>
+      <iframe id="frame" width="200"></iframe>
     </vbox>
   </window>`;
 
@@ -32,6 +35,7 @@ add_task(function* () {
   yield testTooltipNotClosingOnInsideClick(doc);
   yield testConsumeOutsideClicksFalse(doc);
   yield testConsumeOutsideClicksTrue(doc);
+  yield testClickInsideIframe(doc);
 });
 
 function* testTooltipNotClosingOnInsideClick(doc) {
@@ -87,6 +91,22 @@ function* testConsumeOutsideClicksTrue(doc) {
   is(box4clicks, 0, "box4 catched no click event");
   is(tooltip.isVisible(), false, "Tooltip is hidden");
 
+  tooltip.destroy();
+}
+
+function* testClickInsideIframe(doc) {
+  info("Test closing a tooltip via click inside an iframe");
+  let frame = doc.getElementById("frame");
+
+  let tooltip = new HTMLTooltip({doc});
+  yield tooltip.setContent(getTooltipContent(doc), 100, 50);
+  yield showTooltip(tooltip, doc.getElementById("box1"));
+
+  let onHidden = once(tooltip, "hidden");
+  EventUtils.synthesizeMouseAtCenter(frame, {}, doc.defaultView);
+  yield onHidden;
+
+  is(tooltip.isVisible(), false, "Tooltip is hidden");
   tooltip.destroy();
 }
 
