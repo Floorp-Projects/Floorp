@@ -3771,7 +3771,7 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
           firstBaselineItems.AppendElement(ItemBaselineData(
             { baselineTrack, baseline, alignSize, &gridItem }));
         } else {
-          state &= ~ItemState::eFirstBaseline;
+          state &= ~ItemState::eAllBaselineBits;
         }
       } else {
         if (nsLayoutUtils::GetLastLineBaseline(wm, child, &baseline)) {
@@ -3784,7 +3784,7 @@ nsGridContainerFrame::Tracks::InitializeItemBaselines(
           lastBaselineItems.AppendElement(ItemBaselineData(
             { baselineTrack, descent, alignSize, &gridItem }));
         } else {
-          state &= ~ItemState::eLastBaseline;
+          state &= ~ItemState::eAllBaselineBits;
         }
       }
     }
