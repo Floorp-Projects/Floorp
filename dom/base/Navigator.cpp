@@ -204,6 +204,7 @@ Navigator::Init()
 
 Navigator::Navigator(nsPIDOMWindowInner* aWindow)
   : mWindow(aWindow)
+  , mBatteryTelemetryReported(false)
 {
   MOZ_ASSERT(aWindow->IsInnerWindow(), "Navigator must get an inner window!");
 }
@@ -307,6 +308,7 @@ Navigator::Invalidate()
   }
 
   mBatteryPromise = nullptr;
+  mBatteryTelemetryReported = false;
 
 #ifdef MOZ_B2G_FM
   if (mFMRadio) {
@@ -1586,6 +1588,10 @@ Navigator::GetBattery(ErrorResult& aRv)
     return nullptr;
   }
   mBatteryPromise = batteryPromise;
+
+  // We just initialized mBatteryPromise, so we know this is the first time
+  // this page has accessed navigator.getBattery(). 1 = navigator.getBattery()
+  Telemetry::Accumulate(Telemetry::BATTERY_STATUS_COUNT, 1);
 
   if (!mBatteryManager) {
     mBatteryManager = new battery::BatteryManager(mWindow);
