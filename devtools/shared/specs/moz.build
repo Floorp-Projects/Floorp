@@ -17,5 +17,6 @@ DevToolsModules(
     'storage.js',
     'styleeditor.js',
     'styles.js',
-    'stylesheets.js'
+    'stylesheets.js',
+    'webaudio.js'
 )
