@@ -549,16 +549,22 @@ nsFrameSelection::nsFrameSelection()
   mSelectingTableCellMode = 0;
   mSelectedCellIndex = 0;
 
+  nsAutoCopyListener *autoCopy = nullptr;
+  // On macOS, cache the current selection to send to osx service menu.
+#ifdef XP_MACOSX
+  autoCopy = nsAutoCopyListener::GetInstance(nsIClipboard::kSelectionCache);
+#endif
+
   // Check to see if the autocopy pref is enabled
   //   and add the autocopy listener if it is
   if (Preferences::GetBool("clipboard.autocopy")) {
-    nsAutoCopyListener *autoCopy = nsAutoCopyListener::GetInstance();
+    autoCopy = nsAutoCopyListener::GetInstance(nsIClipboard::kSelectionClipboard);
+  }
 
-    if (autoCopy) {
-      int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
-      if (mDomSelections[index]) {
-        autoCopy->Listen(mDomSelections[index]);
-      }
+  if (autoCopy) {
+    int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
+    if (mDomSelections[index]) {
+      autoCopy->Listen(mDomSelections[index]);
     }
   }
 
@@ -6467,6 +6473,11 @@ NS_IMPL_ISUPPORTS(nsAutoCopyListener, nsISelectionListener)
  *   selections?
  * - maybe we should just never clear the X clipboard?  That would make this 
  *   problem just go away, which is very tempting.
+ *
+ * On macOS,
+ * nsIClipboard::kSelectionCache is the flag for current selection cache.
+ * Set the current selection cache on the parent process in
+ * widget cocoa nsClipboard whenever selection changes.
  */
 
 NS_IMETHODIMP
@@ -6493,7 +6504,7 @@ nsAutoCopyListener::NotifySelectionChanged(nsIDOMDocument *aDoc,
 
   // call the copy code
   return nsCopySupport::HTMLCopy(aSel, doc,
-                                 nsIClipboard::kSelectionClipboard, false);
+                                 mCachedClipboard, false);
 }
 
 // SelectionChangeListener
