@@ -1902,7 +1902,7 @@ PlatformToNSAttr(uint8_t aAttr)
     case ATTR_TARGET_NOTCONVERTED:
       return TextRangeType::eSelectedRawClause;
     case ATTR_TARGET_CONVERTED:
-      return TextRangeType::NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
+      return TextRangeType::eSelectedClause;
     default:
       NS_ASSERTION(false, "unknown attribute");
       return TextRangeType::eCaret;

@@ -627,7 +627,7 @@ TextEventDispatcher::PendingComposition::AppendClause(
     case TextRangeType::eRawClause:
     case TextRangeType::eSelectedRawClause:
     case TextRangeType::eConvertedClause:
-    case TextRangeType::NS_TEXTRANGE_SELECTEDCONVERTEDTEXT: {
+    case TextRangeType::eSelectedClause: {
       EnsureClauseArray();
       TextRange textRange;
       textRange.mStartOffset =
