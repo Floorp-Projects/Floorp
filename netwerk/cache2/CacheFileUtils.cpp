@@ -508,6 +508,17 @@ DetailedCacheHitTelemetry::AddRecord(ERecType aType, TimeStamp aLoadStart)
   }
 }
 
+void
+FreeBuffer(void *aBuf) {
+#ifndef NS_FREE_PERMANENT_DATA
+  if (CacheObserver::ShuttingDown()) {
+    return;
+  }
+#endif
+
+  free(aBuf);
+}
+
 } // namespace CacheFileUtils
 } // namespace net
 } // namespace mozilla

@@ -146,6 +146,9 @@ private:
   static HitRate sHRStats[kNumOfRanges];
 };
 
+void
+FreeBuffer(void *aBuf);
+
 } // namespace CacheFileUtils
 } // namespace net
 } // namespace mozilla
