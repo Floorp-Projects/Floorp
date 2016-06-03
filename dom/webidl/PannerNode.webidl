@@ -32,6 +32,16 @@ interface PannerNode : AudioNode {
     [Deprecated="PannerNodeDoppler"]
     void setVelocity(double x, double y, double z);
 
+    // Cartesian coordinate for position
+    readonly attribute AudioParam positionX;
+    readonly attribute AudioParam positionY;
+    readonly attribute AudioParam positionZ;
+
+    // Cartesian coordinate for orientation
+    readonly attribute AudioParam orientationX;
+    readonly attribute AudioParam orientationY;
+    readonly attribute AudioParam orientationZ;
+
     // Distance model and attributes
     attribute DistanceModelType distanceModel;
     attribute double refDistance;
