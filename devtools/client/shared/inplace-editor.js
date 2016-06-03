@@ -23,7 +23,7 @@
 
 "use strict";
 
-const {Ci, Cu, Cc} = require("chrome");
+const {Ci, Cc} = require("chrome");
 const Services = require("Services");
 
 const HTML_NS = "http://www.w3.org/1999/xhtml";
@@ -42,7 +42,7 @@ const MAX_POPUP_ENTRIES = 500;
 const FOCUS_FORWARD = Ci.nsIFocusManager.MOVEFOCUS_FORWARD;
 const FOCUS_BACKWARD = Ci.nsIFocusManager.MOVEFOCUS_BACKWARD;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const EventEmitter = require("devtools/shared/event-emitter");
 const { findMostRelevantCssPropertyIndex } = require("./suggestion-picker");
 

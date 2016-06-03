@@ -1,16 +1,16 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-var Cc = Components.classes;
+"use strict";
+
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 var Cr = Components.results;
-var CC = Components.Constructor;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
 const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const Services = require("Services");
+const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
+const {FileUtils} = require("resource://gre/modules/FileUtils.jsm");
 const {DebuggerClient} = require("devtools/shared/client/main");
 const {DebuggerServer} = require("devtools/server/main");
 const {AppActorFront} = require("devtools/shared/apps/app-actor-front");
@@ -121,5 +121,3 @@ function do_get_webappsdir() {
   };
   Services.dirsvc.QueryInterface(Ci.nsIDirectoryService).registerProvider(provider);
 }
-
-

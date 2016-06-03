@@ -4,13 +4,12 @@
 
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-Cu.import("resource://testing-common/Assert.jsm");
-
-Cu.import("resource://devtools/client/shared/browser-loader.js");
+var { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
 var { require } = BrowserLoader({
   baseURI: "resource://devtools/client/memory/",
   window: this
 });
+var { Assert } = require("resource://testing-common/Assert.jsm");
 var Services = require("Services");
 var { Task } = require("devtools/shared/task");
 

@@ -107,6 +107,7 @@ devtools/client/webconsole/**
 !devtools/client/webconsole/jsterm.js
 !devtools/client/webconsole/console-commands.js
 devtools/client/webide/**
+!devtools/client/webide/components/webideCli.js
 devtools/server/**
 !devtools/server/actors/webbrowser.js
 !devtools/server/actors/styles.js
@@ -117,6 +118,7 @@ devtools/shared/*.js
 !devtools/shared/event-emitter.js
 !devtools/shared/task.js
 devtools/shared/*.jsm
+!devtools/shared/Loader.jsm
 devtools/shared/apps/**
 devtools/shared/client/**
 devtools/shared/discovery/**

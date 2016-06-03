@@ -5,7 +5,7 @@
 
 // Tests for DevToolsUtils.fetch on file:// URI's.
 
-const { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm");
+const { FileUtils } = Cu.import("resource://gre/modules/FileUtils.jsm", {});
 const { OS } = Cu.import("resource://gre/modules/osfile.jsm", {});
 
 const TEST_CONTENT = "aéd";
