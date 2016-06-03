@@ -13,8 +13,11 @@ DevToolsModules(
     'css-properties.js',
     'highlighters.js',
     'inspector.js',
+    'preference.js',
+    'settings.js',
     'storage.js',
     'styles.js',
     'stylesheets.js',
-    'webaudio.js'
+    'webaudio.js',
+    'webgl.js'
 )
