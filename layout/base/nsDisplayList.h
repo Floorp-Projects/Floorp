@@ -4093,14 +4093,12 @@ public:
                                                const nsPoint& aOrigin,
                                                float aAppUnitsPerPixel,
                                                uint32_t aFlags,
-                                               const nsRect* aBoundsOverride = nullptr,
-                                               nsIFrame** aOutAncestor = nullptr);
+                                               const nsRect* aBoundsOverride = nullptr);
   static Matrix4x4 GetResultingTransformMatrix(const FrameTransformProperties& aProperties,
                                                const nsPoint& aOrigin,
                                                float aAppUnitsPerPixel,
                                                uint32_t aFlags,
-                                               const nsRect* aBoundsOverride = nullptr,
-                                               nsIFrame** aOutAncestor = nullptr);
+                                               const nsRect* aBoundsOverride = nullptr);
   /**
    * Return true when we should try to prerender the entire contents of the
    * transformed frame even when it's not completely visible (yet).
@@ -4180,8 +4178,7 @@ private:
                                                        const nsPoint& aOrigin,
                                                        float aAppUnitsPerPixel,
                                                        uint32_t aFlags,
-                                                       const nsRect* aBoundsOverride,
-                                                       nsIFrame** aOutAncestor);
+                                                       const nsRect* aBoundsOverride);
 
   StoreList mStoredList;
   Matrix4x4 mTransform;
