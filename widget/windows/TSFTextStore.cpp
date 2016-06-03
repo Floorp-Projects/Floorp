@@ -2056,7 +2056,7 @@ GetGeckoSelectionValue(TF_DISPLAYATTRIBUTE& aDisplayAttr)
     case TF_ATTR_TARGET_NOTCONVERTED:
       return TextRangeType::NS_TEXTRANGE_SELECTEDRAWTEXT;
     default:
-      return TextRangeType::NS_TEXTRANGE_RAWINPUT;
+      return TextRangeType::eRawClause;
   }
 }
 
@@ -2428,7 +2428,7 @@ TSFTextStore::RecordCompositionUpdateAction()
   // we always pass in at least one range to eCompositionChange
   newRange.mStartOffset = 0;
   newRange.mEndOffset = action->mData.Length();
-  newRange.mRangeType = TextRangeType::NS_TEXTRANGE_RAWINPUT;
+  newRange.mRangeType = TextRangeType::eRawClause;
   action->mRanges->AppendElement(newRange);
 
   RefPtr<ITfRange> range;
@@ -2473,7 +2473,7 @@ TSFTextStore::RecordCompositionUpdateAction()
     TF_DISPLAYATTRIBUTE attr;
     hr = GetDisplayAttribute(attrPropetry, range, &attr);
     if (FAILED(hr)) {
-      newRange.mRangeType = TextRangeType::NS_TEXTRANGE_RAWINPUT;
+      newRange.mRangeType = TextRangeType::eRawClause;
     } else {
       newRange.mRangeType = GetGeckoSelectionValue(attr);
       if (GetColor(attr.crText, newRange.mRangeStyle.mForegroundColor)) {

@@ -3147,7 +3147,7 @@ nsWindow::GeckoViewSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
             TextRange range;
             range.mStartOffset = 0;
             range.mEndOffset = event.mData.Length();
-            range.mRangeType = TextRangeType::NS_TEXTRANGE_RAWINPUT;
+            range.mRangeType = TextRangeType::eRawClause;
             event.mRanges = new TextRangeArray();
             event.mRanges->AppendElement(range);
         }

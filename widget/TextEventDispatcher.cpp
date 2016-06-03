@@ -624,7 +624,7 @@ TextEventDispatcher::PendingComposition::AppendClause(
   }
 
   switch (aTextRangeType) {
-    case TextRangeType::NS_TEXTRANGE_RAWINPUT:
+    case TextRangeType::eRawClause:
     case TextRangeType::NS_TEXTRANGE_SELECTEDRAWTEXT:
     case TextRangeType::NS_TEXTRANGE_CONVERTEDTEXT:
     case TextRangeType::NS_TEXTRANGE_SELECTEDCONVERTEDTEXT: {
@@ -669,7 +669,7 @@ TextEventDispatcher::PendingComposition::Set(const nsAString& aString,
   if (!aRanges || aRanges->IsEmpty()) {
     // Create dummy range if aString isn't empty.
     if (!aString.IsEmpty()) {
-      rv = AppendClause(str.Length(), TextRangeType::NS_TEXTRANGE_RAWINPUT);
+      rv = AppendClause(str.Length(), TextRangeType::eRawClause);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
