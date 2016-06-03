@@ -11,31 +11,14 @@ const {serializeStack, parseStack} = require("toolkit/loader");
 const {on, once, off, emit} = events;
 const {method, Arg, Option, RetVal} = protocol;
 
-/**
- * Type describing a single function call in a stack trace.
- */
-protocol.types.addDictType("call-stack-item", {
-  name: "string",
-  file: "string",
-  line: "number"
-});
-
-/**
- * Type describing an overview of a function call.
- */
-protocol.types.addDictType("call-details", {
-  type: "number",
-  name: "string",
-  stack: "array:call-stack-item"
-});
+const { functionCallSpec, callWatcherSpec } = require("devtools/shared/specs/call-watcher");
+const { CallWatcherFront } = require("devtools/shared/fronts/call-watcher");
 
 /**
  * This actor contains information about a function call, like the function
  * type, name, stack, arguments, returned value etc.
  */
-var FunctionCallActor = protocol.ActorClass({
-  typeName: "function-call",
-
+var FunctionCallActor = protocol.ActorClassWithSpec(functionCallSpec, {
   /**
    * Creates the function call actor.
    *
@@ -135,7 +118,7 @@ var FunctionCallActor = protocol.ActorClass({
    * Gets more information about this function call, which is not necessarily
    * available on the Front instance.
    */
-  getDetails: method(function () {
+  getDetails: function () {
     let { type, name, stack, timestamp } = this.details;
 
     // Since not all calls on the stack have corresponding owner files (e.g.
@@ -157,9 +140,7 @@ var FunctionCallActor = protocol.ActorClass({
       stack: stack,
       timestamp: timestamp
     };
-  }, {
-    response: { info: RetVal("call-details") }
-  }),
+  },
 
   /**
    * Serializes the arguments so that they can be easily be transferred
@@ -243,35 +224,9 @@ var FunctionCallActor = protocol.ActorClass({
 });
 
 /**
- * The corresponding Front object for the FunctionCallActor.
- */
-var FunctionCallFront = protocol.FrontClass(FunctionCallActor, {
-  initialize: function (client, form) {
-    protocol.Front.prototype.initialize.call(this, client, form);
-  },
-
-  /**
-   * Adds some generic information directly to this instance,
-   * to avoid extra roundtrips.
-   */
-  form: function (form) {
-    this.actorID = form.actor;
-    this.type = form.type;
-    this.name = form.name;
-    this.file = form.file;
-    this.line = form.line;
-    this.timestamp = form.timestamp;
-    this.callerPreview = form.callerPreview;
-    this.argsPreview = form.argsPreview;
-    this.resultPreview = form.resultPreview;
-  }
-});
-
-/**
  * This actor observes function calls on certain objects or globals.
  */
-var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
-  typeName: "call-watcher",
+var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClassWithSpec(callWatcherSpec, {
   initialize: function (conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;
@@ -282,16 +237,6 @@ var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
   destroy: function (conn) {
     protocol.Actor.prototype.destroy.call(this, conn);
     this.finalize();
-  },
-
-  events: {
-    /**
-     * Events emitted when the `onCall` function isn't provided.
-     */
-    "call": {
-      type: "call",
-      function: Arg(0, "function-call")
-    }
   },
 
   /**
@@ -306,7 +251,7 @@ var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
    * created, in order to instrument the specified objects and become
    * aware of everything the content does with them.
    */
-  setup: method(function ({ tracedGlobals, tracedFunctions, startRecording, performReload, holdWeak, storeCalls }) {
+  setup: function ({ tracedGlobals, tracedFunctions, startRecording, performReload, holdWeak, storeCalls }) {
     if (this._initialized) {
       return;
     }
@@ -328,24 +273,14 @@ var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
     if (performReload) {
       this.tabActor.window.location.reload();
     }
-  }, {
-    request: {
-      tracedGlobals: Option(0, "nullable:array:string"),
-      tracedFunctions: Option(0, "nullable:array:string"),
-      startRecording: Option(0, "boolean"),
-      performReload: Option(0, "boolean"),
-      holdWeak: Option(0, "boolean"),
-      storeCalls: Option(0, "boolean")
-    },
-    oneway: true
-  }),
+  },
 
   /**
    * Stops listening for document global changes and puts this actor
    * to hibernation. This method is called automatically just before the
    * actor is destroyed.
    */
-  finalize: method(function () {
+  finalize: function () {
     if (!this._initialized) {
       return;
     }
@@ -357,50 +292,44 @@ var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
 
     this._tracedGlobals = null;
     this._tracedFunctions = null;
-  }, {
-    oneway: true
-  }),
+  },
 
   /**
    * Returns whether the instrumented function calls are currently recorded.
    */
-  isRecording: method(function () {
+  isRecording: function () {
     return this._recording;
-  }, {
-    response: RetVal("boolean")
-  }),
+  },
 
   /**
    * Initialize the timestamp epoch used to offset function call timestamps.
    */
-  initTimestampEpoch: method(function () {
+  initTimestampEpoch: function () {
     this._timestampEpoch = this.tabActor.window.performance.now();
-  }),
+  },
 
   /**
    * Starts recording function calls.
    */
-  resumeRecording: method(function () {
+  resumeRecording: function () {
     this._recording = true;
-  }),
+  }
 
   /**
    * Stops recording function calls.
    */
-  pauseRecording: method(function () {
+  pauseRecording: function () {
     this._recording = false;
     return this._functionCalls;
-  }, {
-    response: { calls: RetVal("array:function-call") }
-  }),
+  },
 
   /**
    * Erases all the recorded function calls.
    * Calling `resumeRecording` or `pauseRecording` does not erase history.
    */
-  eraseRecording: method(function () {
+  eraseRecording: function () {
     this._functionCalls = [];
-  }),
+  },
 
   /**
    * Invoked whenever the current tab actor's document global is created.
@@ -603,196 +532,6 @@ var CallWatcherActor = exports.CallWatcherActor = protocol.ActorClass({
     }
   }
 });
-
-/**
- * The corresponding Front object for the CallWatcherActor.
- */
-var CallWatcherFront = exports.CallWatcherFront = protocol.FrontClass(CallWatcherActor, {
-  initialize: function (client, { callWatcherActor }) {
-    protocol.Front.prototype.initialize.call(this, client, { actor: callWatcherActor });
-    this.manage(this);
-  }
-});
-
-/**
- * Constants.
- */
-CallWatcherFront.METHOD_FUNCTION = 0;
-CallWatcherFront.GETTER_FUNCTION = 1;
-CallWatcherFront.SETTER_FUNCTION = 2;
-
-CallWatcherFront.KNOWN_METHODS = {};
-
-CallWatcherFront.KNOWN_METHODS["CanvasRenderingContext2D"] = {
-  asyncDrawXULElement: {
-    enums: new Set([6]),
-  },
-  drawWindow: {
-    enums: new Set([6])
-  },
-};
-
-CallWatcherFront.KNOWN_METHODS["WebGLRenderingContext"] = {
-  activeTexture: {
-    enums: new Set([0]),
-  },
-  bindBuffer: {
-    enums: new Set([0]),
-  },
-  bindFramebuffer: {
-    enums: new Set([0]),
-  },
-  bindRenderbuffer: {
-    enums: new Set([0]),
-  },
-  bindTexture: {
-    enums: new Set([0]),
-  },
-  blendEquation: {
-    enums: new Set([0]),
-  },
-  blendEquationSeparate: {
-    enums: new Set([0, 1]),
-  },
-  blendFunc: {
-    enums: new Set([0, 1]),
-  },
-  blendFuncSeparate: {
-    enums: new Set([0, 1, 2, 3]),
-  },
-  bufferData: {
-    enums: new Set([0, 1, 2]),
-  },
-  bufferSubData: {
-    enums: new Set([0, 1]),
-  },
-  checkFramebufferStatus: {
-    enums: new Set([0]),
-  },
-  clear: {
-    enums: new Set([0]),
-  },
-  compressedTexImage2D: {
-    enums: new Set([0, 2]),
-  },
-  compressedTexSubImage2D: {
-    enums: new Set([0, 6]),
-  },
-  copyTexImage2D: {
-    enums: new Set([0, 2]),
-  },
-  copyTexSubImage2D: {
-    enums: new Set([0]),
-  },
-  createShader: {
-    enums: new Set([0]),
-  },
-  cullFace: {
-    enums: new Set([0]),
-  },
-  depthFunc: {
-    enums: new Set([0]),
-  },
-  disable: {
-    enums: new Set([0]),
-  },
-  drawArrays: {
-    enums: new Set([0]),
-  },
-  drawElements: {
-    enums: new Set([0, 2]),
-  },
-  enable: {
-    enums: new Set([0]),
-  },
-  framebufferRenderbuffer: {
-    enums: new Set([0, 1, 2]),
-  },
-  framebufferTexture2D: {
-    enums: new Set([0, 1, 2]),
-  },
-  frontFace: {
-    enums: new Set([0]),
-  },
-  generateMipmap: {
-    enums: new Set([0]),
-  },
-  getBufferParameter: {
-    enums: new Set([0, 1]),
-  },
-  getParameter: {
-    enums: new Set([0]),
-  },
-  getFramebufferAttachmentParameter: {
-    enums: new Set([0, 1, 2]),
-  },
-  getProgramParameter: {
-    enums: new Set([1]),
-  },
-  getRenderbufferParameter: {
-    enums: new Set([0, 1]),
-  },
-  getShaderParameter: {
-    enums: new Set([1]),
-  },
-  getShaderPrecisionFormat: {
-    enums: new Set([0, 1]),
-  },
-  getTexParameter: {
-    enums: new Set([0, 1]),
-  },
-  getVertexAttrib: {
-    enums: new Set([1]),
-  },
-  getVertexAttribOffset: {
-    enums: new Set([1]),
-  },
-  hint: {
-    enums: new Set([0, 1]),
-  },
-  isEnabled: {
-    enums: new Set([0]),
-  },
-  pixelStorei: {
-    enums: new Set([0]),
-  },
-  readPixels: {
-    enums: new Set([4, 5]),
-  },
-  renderbufferStorage: {
-    enums: new Set([0, 1]),
-  },
-  stencilFunc: {
-    enums: new Set([0]),
-  },
-  stencilFuncSeparate: {
-    enums: new Set([0, 1]),
-  },
-  stencilMaskSeparate: {
-    enums: new Set([0]),
-  },
-  stencilOp: {
-    enums: new Set([0, 1, 2]),
-  },
-  stencilOpSeparate: {
-    enums: new Set([0, 1, 2, 3]),
-  },
-  texImage2D: {
-    enums: args => args.length > 6 ? new Set([0, 2, 6, 7]) : new Set([0, 2, 3, 4]),
-  },
-  texParameterf: {
-    enums: new Set([0, 1]),
-  },
-  texParameteri: {
-    enums: new Set([0, 1, 2]),
-  },
-  texSubImage2D: {
-    enums: args => args.length === 9 ? new Set([0, 6, 7]) : new Set([0, 4, 5]),
-  },
-  vertexAttribPointer: {
-    enums: new Set([2])
-  },
-};
 
 /**
  * A lookup table for cross-referencing flags or properties with their name
