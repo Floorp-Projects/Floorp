@@ -269,6 +269,18 @@ public:
   }
 #endif
 
+  /**
+   * Return true if boxes with this writing mode should use central baselines.
+   */
+  bool IsCentralBaseline() const { return IsVertical() && !IsSideways(); }
+
+  /**
+   * Return true if boxes with this writing mode should use alphabetical
+   * baselines.
+   */
+  bool IsAlphabeticalBaseline() const { return !IsCentralBaseline(); }
+
+
   static mozilla::PhysicalAxis PhysicalAxisForLogicalAxis(
                                               uint8_t aWritingModeValue,
                                               LogicalAxis aAxis)
