@@ -595,7 +595,7 @@ TextEventDispatcher::PendingComposition::Clear()
 {
   mString.Truncate();
   mClauses = nullptr;
-  mCaret.mRangeType = TextRangeType::NS_TEXTRANGE_UNDEFINED;
+  mCaret.mRangeType = TextRangeType::eUninitialized;
 }
 
 void

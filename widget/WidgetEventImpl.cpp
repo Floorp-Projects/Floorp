@@ -61,7 +61,7 @@ bool
 IsValidRawTextRangeValue(RawTextRangeType aRawTextRangeType)
 {
   switch (static_cast<TextRangeType>(aRawTextRangeType)) {
-    case TextRangeType::NS_TEXTRANGE_UNDEFINED:
+    case TextRangeType::eUninitialized:
     case TextRangeType::NS_TEXTRANGE_CARETPOSITION:
     case TextRangeType::NS_TEXTRANGE_RAWINPUT:
     case TextRangeType::NS_TEXTRANGE_SELECTEDRAWTEXT:
@@ -90,8 +90,8 @@ const char*
 ToChar(TextRangeType aTextRangeType)
 {
   switch (aTextRangeType) {
-    case TextRangeType::NS_TEXTRANGE_UNDEFINED:
-      return "NS_TEXTRANGE_UNDEFINED";
+    case TextRangeType::eUninitialized:
+      return "TextRangeType::eUninitialized";
     case TextRangeType::NS_TEXTRANGE_CARETPOSITION:
       return "NS_TEXTRANGE_CARETPOSITION";
     case TextRangeType::NS_TEXTRANGE_RAWINPUT:
