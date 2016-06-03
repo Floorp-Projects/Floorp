@@ -2138,7 +2138,7 @@ Http2Session::RecvAltSvc(Http2Session *self)
       return NS_OK;
     }
 
-    origin.Assign(self->mInputFrameDataStream->Transaction()->RequestHead()->Origin());
+    self->mInputFrameDataStream->Transaction()->RequestHead()->Origin(origin);
   } else if (!self->mInputFrameID) {
     // ID 0 streams must supply their own origin
     if (origin.IsEmpty()) {

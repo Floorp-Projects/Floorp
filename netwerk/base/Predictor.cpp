@@ -2422,7 +2422,8 @@ Predictor::UpdateCacheability(nsIURI *sourceURI, nsIURI *targetURI,
 
   RefPtr<Predictor> self = sSelf;
   if (self) {
-    const nsCString method = requestHead.Method();
+    nsAutoCString method;
+    requestHead.Method(method);
     self->UpdateCacheabilityInternal(sourceURI, targetURI, httpStatus,
                                      method);
   }
