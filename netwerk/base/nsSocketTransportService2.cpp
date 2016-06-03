@@ -57,38 +57,6 @@ Atomic<PRThread*, Relaxed> gSocketThread;
 uint32_t nsSocketTransportService::gMaxCount;
 PRCallOnceType nsSocketTransportService::gMaxCountInitOnce;
 
-class DebugMutexAutoLock
-{
-public:
-    explicit DebugMutexAutoLock(Mutex& mutex);
-    ~DebugMutexAutoLock();
-
-private:
-    Mutex *mLock;
-    static Atomic<PRThread *, Relaxed> sDebugOwningThread;
-};
-
-Atomic<PRThread *, Relaxed> DebugMutexAutoLock::sDebugOwningThread;
-
-DebugMutexAutoLock::DebugMutexAutoLock(Mutex& mutex)
-    :mLock(&mutex)
-{
-  PRThread *currentThread = PR_GetCurrentThread();
-  MOZ_DIAGNOSTIC_ASSERT(sDebugOwningThread != currentThread);
-  SOCKET_LOG(("Acquiring lock on thread %p", currentThread));
-  mLock->Lock();
-  sDebugOwningThread = currentThread;
-  SOCKET_LOG(("Acquired lock on thread %p", currentThread));
-}
-
-DebugMutexAutoLock::~DebugMutexAutoLock()
-{
-  sDebugOwningThread = nullptr;
-  mLock->Unlock();
-  mLock = nullptr;
-  SOCKET_LOG(("Released lock on thread %p", PR_GetCurrentThread()));
-}
-
 //-----------------------------------------------------------------------------
 // ctor/dtor (called on the main/UI thread by the service manager)
 
@@ -149,7 +117,7 @@ nsSocketTransportService::~nsSocketTransportService()
 already_AddRefed<nsIThread>
 nsSocketTransportService::GetThreadSafely()
 {
-    DebugMutexAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     nsCOMPtr<nsIThread> result = mThread;
     return result.forget();
 }
@@ -556,7 +524,7 @@ nsSocketTransportService::Init()
     if (NS_FAILED(rv)) return rv;
     
     {
-        DebugMutexAutoLock lock(mLock);
+        MutexAutoLock lock(mLock);
         // Install our mThread, protecting against concurrent readers
         thread.swap(mThread);
     }
@@ -601,7 +569,7 @@ nsSocketTransportService::Shutdown()
         return NS_ERROR_UNEXPECTED;
 
     {
-        DebugMutexAutoLock lock(mLock);
+        MutexAutoLock lock(mLock);
 
         // signal the socket thread to shutdown
         mShuttingDown = true;
@@ -614,7 +582,7 @@ nsSocketTransportService::Shutdown()
     // join with thread
     mThread->Shutdown();
     {
-        DebugMutexAutoLock lock(mLock);
+        MutexAutoLock lock(mLock);
         // Drop our reference to mThread and make sure that any concurrent
         // readers are excluded
         mThread = nullptr;
@@ -655,7 +623,7 @@ nsSocketTransportService::GetOffline(bool *offline)
 NS_IMETHODIMP
 nsSocketTransportService::SetOffline(bool offline)
 {
-    DebugMutexAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     if (!mOffline && offline) {
         // signal the socket thread to go offline, so it will detach sockets
         mGoingOffline = true;
@@ -788,7 +756,7 @@ nsSocketTransportService::OnDispatchedEvent(nsIThreadInternal *thread)
         return NS_OK;
     }
 
-    DebugMutexAutoLock lock(mLock);
+    MutexAutoLock lock(mLock);
     if (mPollableEvent) {
         mPollableEvent->Signal();
     }
@@ -835,7 +803,7 @@ nsSocketTransportService::Run()
     gSocketThread = PR_GetCurrentThread();
 
     {
-        DebugMutexAutoLock lock(mLock);
+        MutexAutoLock lock(mLock);
         mPollableEvent.reset(new PollableEvent());
         //
         // NOTE: per bug 190000, this failure could be caused by Zone-Alarm
@@ -970,7 +938,7 @@ nsSocketTransportService::Run()
         bool goingOffline = false;
         // now that our event queue is empty, check to see if we should exit
         {
-            DebugMutexAutoLock lock(mLock);
+            MutexAutoLock lock(mLock);
             if (mShuttingDown) {
                 if (mTelemetryEnabledPref &&
                     !startOfCycleForLastCycleCalc.IsNull()) {
@@ -1160,7 +1128,7 @@ nsSocketTransportService::DoPollIteration(TimeDuration *pollDuration)
         }
 
         if (n != 0 && (mPollList[0].out_flags & (PR_POLL_READ | PR_POLL_EXCEPT))) {
-            DebugMutexAutoLock lock(mLock);
+            MutexAutoLock lock(mLock);
 
             // acknowledge pollable event (should not block)
             if (mPollableEvent &&
