@@ -124,7 +124,7 @@ xp_iconv(iconv_t converter,
          const char** aInput, size_t* aInputLeft,
          char** aOutput, size_t* aOutputLeft)
 {
-  size_t res, outputAvail = aOutputLeft ? *aOutputLeft : 0;
+  size_t res, outputAvail = *aOutputLeft;
   res = iconv(converter, ICONV_INPUT(aInput), aInputLeft, aOutput, aOutputLeft);
   if (res == (size_t)-1) {
     // on some platforms (e.g., linux) iconv will fail with
