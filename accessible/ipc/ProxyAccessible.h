@@ -24,14 +24,28 @@ class Attribute;
 class DocAccessibleParent;
 enum class RelationType;
 
+enum Interfaces
+{
+  HYPERTEXT = 1,
+  HYPERLINK = 1 << 1,
+  IMAGE = 1 << 2,
+  VALUE = 1 << 3,
+  TABLE = 1 << 4,
+  TABLECELL = 1 << 5,
+  DOCUMENT = 1 << 6,
+  SELECTION = 1 << 7,
+  ACTION = 1 << 8,
+};
+
 class ProxyAccessible
 {
 public:
 
   ProxyAccessible(uint64_t aID, ProxyAccessible* aParent,
-                  DocAccessibleParent* aDoc, role aRole) :
+                  DocAccessibleParent* aDoc, role aRole, uint32_t aInterfaces) :
      mParent(aParent), mDoc(aDoc), mWrapper(0), mID(aID), mRole(aRole),
-     mOuterDoc(false), mIsDoc(false)
+     mOuterDoc(false), mIsDoc(false),
+     mHasValue(aInterfaces & Interfaces::VALUE)
   {
     MOZ_COUNT_CTOR(ProxyAccessible);
   }
@@ -406,7 +420,7 @@ public:
 protected:
   explicit ProxyAccessible(DocAccessibleParent* aThisAsDoc) :
     mParent(nullptr), mDoc(aThisAsDoc), mWrapper(0), mID(0),
-    mRole(roles::DOCUMENT), mOuterDoc(false), mIsDoc(true)
+    mRole(roles::DOCUMENT), mOuterDoc(false), mIsDoc(true), mHasValue(false)
   { MOZ_COUNT_CTOR(ProxyAccessible); }
 
 protected:
@@ -417,22 +431,12 @@ private:
   DocAccessibleParent* mDoc;
   uintptr_t mWrapper;
   uint64_t mID;
-  role mRole : 30;
+  role mRole : 29;
   bool mOuterDoc : 1;
-  const bool mIsDoc: 1;
-};
 
-enum Interfaces
-{
-  HYPERTEXT = 1,
-  HYPERLINK = 1 << 1,
-  IMAGE = 1 << 2,
-  VALUE = 1 << 3,
-  TABLE = 1 << 4,
-  TABLECELL = 1 << 5,
-  DOCUMENT = 1 << 6,
-  SELECTION = 1 << 7,
-  ACTION = 1 << 8,
+public:
+  const bool mIsDoc: 1;
+  const bool mHasValue: 1;
 };
 
 }
