@@ -184,12 +184,6 @@ var gSyncPane = {
     this._populateComputerName(Weave.Service.clientsEngine.localName);
   },
 
-  _closeSyncStatusMessageBox: function() {
-    document.getElementById("syncStatusMessage").removeAttribute("message-type");
-    document.getElementById("syncStatusMessageTitle").textContent = "";
-    document.getElementById("syncStatusMessageDescription").textContent = "";
-  },
-
   _setupEventListeners: function() {
     function setEventListener(aId, aEventType, aCallback)
     {
@@ -197,9 +191,6 @@ var gSyncPane = {
               .addEventListener(aEventType, aCallback.bind(gSyncPane));
     }
 
-    setEventListener("syncStatusMessageClose", "command", function () {
-      gSyncPane._closeSyncStatusMessageBox();
-    });
     setEventListener("noAccountSetup", "click", function (aEvent) {
       aEvent.stopPropagation();
       gSyncPane.openSetup(null);
@@ -593,31 +584,23 @@ var gSyncPane = {
   },
 
   verifyFirefoxAccount: function() {
-    this._closeSyncStatusMessageBox();
-    let changesyncStatusMessage = (data) => {
+    let showVerifyNotification = (data) => {
       let isError = !data;
-      let syncStatusMessage = document.getElementById("syncStatusMessage");
-      let syncStatusMessageTitle = document.getElementById("syncStatusMessageTitle");
-      let syncStatusMessageDescription = document.getElementById("syncStatusMessageDescription");
       let maybeNot = isError ? "Not" : "";
       let sb = this._accountsStringBundle;
       let title = sb.GetStringFromName("verification" + maybeNot + "SentTitle");
       let email = !isError && data ? data.email : "";
-      let description = sb.formatStringFromName("verification" + maybeNot + "SentFull", [email], 1)
-
-      syncStatusMessageTitle.textContent = title;
-      syncStatusMessageDescription.textContent = description;
-      let messageType = isError ? "verify-error" : "verify-success";
-      syncStatusMessage.setAttribute("message-type", messageType);
+      let body = sb.formatStringFromName("verification" + maybeNot + "SentBody", [email], 1);
+      new Notification(title, { body })
     }
 
     let onError = () => {
-      changesyncStatusMessage();
+      showVerifyNotification();
     };
 
     let onSuccess = data => {
       if (data) {
-        changesyncStatusMessage(data);
+        showVerifyNotification(data);
       } else {
         onError();
       }
@@ -637,14 +620,11 @@ var gSyncPane = {
     if (confirm) {
       // We use a string bundle shared with aboutAccounts.
       let sb = Services.strings.createBundle("chrome://browser/locale/syncSetup.properties");
-      let continueLabel = sb.GetStringFromName("continue.label");
+      let disconnectLabel = sb.GetStringFromName("disconnect.label");
       let title = sb.GetStringFromName("disconnect.verify.title");
-      let brandBundle = Services.strings.createBundle("chrome://branding/locale/brand.properties");
-      let brandShortName = brandBundle.GetStringFromName("brandShortName");
-      let body = sb.GetStringFromName("disconnect.verify.heading") +
+      let body = sb.GetStringFromName("disconnect.verify.bodyHeading") +
                  "\n\n" +
-                 sb.formatStringFromName("disconnect.verify.description",
-                                         [brandShortName], 1);
+                 sb.GetStringFromName("disconnect.verify.bodyText");
       let ps = Services.prompt;
       let buttonFlags = (ps.BUTTON_POS_0 * ps.BUTTON_TITLE_IS_STRING) +
                         (ps.BUTTON_POS_1 * ps.BUTTON_TITLE_CANCEL) +
@@ -657,7 +637,7 @@ var gSyncPane = {
       bag.setPropertyAsBool("allowTabModal", true);
 
       let pressed = prompt.confirmEx(title, body, buttonFlags,
-                                     continueLabel, null, null, null, {});
+                                     disconnectLabel, null, null, null, {});
 
       if (pressed != 0) { // 0 is the "continue" button
         return;

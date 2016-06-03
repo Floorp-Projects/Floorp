@@ -11,7 +11,7 @@ const TAB_URL = EXAMPLE_URL + "doc_script-eval.html";
 
 function test() {
   let options = {
-    source: "-eval.js",
+    source: EXAMPLE_URL + "code_script-eval.js",
     line: 1
   };
   initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {
