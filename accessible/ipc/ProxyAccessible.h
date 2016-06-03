@@ -425,14 +425,14 @@ private:
 enum Interfaces
 {
   HYPERTEXT = 1,
-  HYPERLINK = 2,
-  IMAGE = 4,
-  VALUE = 8,
-  TABLE = 16,
-  TABLECELL = 32,
-  DOCUMENT = 64,
-  SELECTION = 128,
-  ACTION = 256,
+  HYPERLINK = 1 << 1,
+  IMAGE = 1 << 2,
+  VALUE = 1 << 3,
+  TABLE = 1 << 4,
+  TABLECELL = 1 << 5,
+  DOCUMENT = 1 << 6,
+  SELECTION = 1 << 7,
+  ACTION = 1 << 8,
 };
 
 }
