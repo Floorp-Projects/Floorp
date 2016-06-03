@@ -453,7 +453,7 @@ PresentationService::StartSession(const nsAString& aUrl,
 
   NS_ConvertUTF16toUTF8 utf8DeviceId(aDeviceId);
   bool hasMore;
-  while(NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore){
+  while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore) {
     nsCOMPtr<nsISupports> isupports;
     rv = enumerator->GetNext(getter_AddRefs(isupports));
 

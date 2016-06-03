@@ -68,12 +68,13 @@ NS_IMPL_CYCLE_COLLECTING_RELEASE(PresentationTCPSessionTransport)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(PresentationTCPSessionTransport)
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIPresentationSessionTransport)
-  NS_INTERFACE_MAP_ENTRY(nsIPresentationSessionTransport)
-  NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
-  NS_INTERFACE_MAP_ENTRY(nsIPresentationTCPSessionTransportBuilder)
   NS_INTERFACE_MAP_ENTRY(nsIInputStreamCallback)
-  NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+  NS_INTERFACE_MAP_ENTRY(nsIPresentationSessionTransport)
+  NS_INTERFACE_MAP_ENTRY(nsIPresentationSessionTransportBuilder)
+  NS_INTERFACE_MAP_ENTRY(nsIPresentationTCPSessionTransportBuilder)
   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+  NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+  NS_INTERFACE_MAP_ENTRY(nsITransportEventSink)
 NS_INTERFACE_MAP_END
 
 PresentationTCPSessionTransport::PresentationTCPSessionTransport()
