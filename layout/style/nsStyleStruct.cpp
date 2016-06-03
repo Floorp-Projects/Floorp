@@ -834,11 +834,8 @@ nsStyleSVG::nsStyleSVG(StyleStructContext aContext)
   , mStrokeLinecap(NS_STYLE_STROKE_LINECAP_BUTT)
   , mStrokeLinejoin(NS_STYLE_STROKE_LINEJOIN_MITER)
   , mTextAnchor(NS_STYLE_TEXT_ANCHOR_START)
-  , mFillOpacitySource(eStyleSVGOpacitySource_Normal)
-  , mStrokeOpacitySource(eStyleSVGOpacitySource_Normal)
-  , mStrokeDasharrayFromObject(false)
-  , mStrokeDashoffsetFromObject(false)
-  , mStrokeWidthFromObject(false)
+  , mContextFlags((eStyleSVGOpacitySource_Normal << FILL_OPACITY_SOURCE_SHIFT) |
+                  (eStyleSVGOpacitySource_Normal << STROKE_OPACITY_SOURCE_SHIFT))
 {
   MOZ_COUNT_CTOR(nsStyleSVG);
 }
@@ -869,11 +866,7 @@ nsStyleSVG::nsStyleSVG(const nsStyleSVG& aSource)
   , mStrokeLinecap(aSource.mStrokeLinecap)
   , mStrokeLinejoin(aSource.mStrokeLinejoin)
   , mTextAnchor(aSource.mTextAnchor)
-  , mFillOpacitySource(aSource.mFillOpacitySource)
-  , mStrokeOpacitySource(aSource.mStrokeOpacitySource)
-  , mStrokeDasharrayFromObject(aSource.mStrokeDasharrayFromObject)
-  , mStrokeDashoffsetFromObject(aSource.mStrokeDashoffsetFromObject)
-  , mStrokeWidthFromObject(aSource.mStrokeWidthFromObject)
+  , mContextFlags(aSource.mContextFlags)
 {
   MOZ_COUNT_CTOR(nsStyleSVG);
 }
@@ -955,11 +948,7 @@ nsChangeHint nsStyleSVG::CalcDifference(const nsStyleSVG& aOther) const
        mPaintOrder            != aOther.mPaintOrder            ||
        mShapeRendering        != aOther.mShapeRendering        ||
        mStrokeDasharray       != aOther.mStrokeDasharray       ||
-       mFillOpacitySource     != aOther.mFillOpacitySource     ||
-       mStrokeOpacitySource   != aOther.mStrokeOpacitySource   ||
-       mStrokeDasharrayFromObject != aOther.mStrokeDasharrayFromObject ||
-       mStrokeDashoffsetFromObject != aOther.mStrokeDashoffsetFromObject ||
-       mStrokeWidthFromObject != aOther.mStrokeWidthFromObject) {
+       mContextFlags          != aOther.mContextFlags) {
     return hint | nsChangeHint_RepaintFrame;
   }
 
