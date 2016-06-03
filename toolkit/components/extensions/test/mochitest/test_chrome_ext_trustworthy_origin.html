@@ -1,0 +1,54 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="chrome_head.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+/**
+ * This test is asserting that moz-extension: URLs are recognized as trustworthy local origins
+ */
+
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
+XPCOMUtils.defineLazyServiceGetter(this, "gContentSecurityManager",
+                                   "@mozilla.org/contentsecuritymanager;1",
+                                   "nsIContentSecurityManager");
+
+add_task(function* () {
+  function backgroundScript() {
+    browser.test.sendMessage("ready", browser.runtime.getURL("/test.html"));
+  }
+
+  let extensionData = {
+    background: "(" + backgroundScript.toString() + ")()",
+    manifest: {},
+    files: {
+      "test.html": `<html><head></head><body></body></html>`,
+    },
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+  yield extension.startup();
+
+  let url = yield extension.awaitMessage("ready");
+
+  let uri = NetUtil.newURI(url);
+  let principal = Services.scriptSecurityManager.getCodebasePrincipal(uri);
+  is(gContentSecurityManager.isOriginPotentiallyTrustworthy(principal), true);
+
+  yield extension.unload();
+});
+</script>
+
+</body>
+</html>
