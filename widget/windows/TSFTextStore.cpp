@@ -2050,7 +2050,7 @@ GetGeckoSelectionValue(TF_DISPLAYATTRIBUTE& aDisplayAttr)
 {
   switch (aDisplayAttr.bAttr) {
     case TF_ATTR_TARGET_CONVERTED:
-      return TextRangeType::NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
+      return TextRangeType::eSelectedClause;
     case TF_ATTR_CONVERTED:
       return TextRangeType::eConvertedClause;
     case TF_ATTR_TARGET_NOTCONVERTED:
