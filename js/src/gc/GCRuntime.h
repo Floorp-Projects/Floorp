@@ -29,6 +29,7 @@ namespace gc {
 
 typedef Vector<JS::Zone*, 4, SystemAllocPolicy> ZoneVector;
 
+class AutoMaybeStartBackgroundAllocation;
 class MarkingValidator;
 class AutoTraceSession;
 struct MovingTracer;
@@ -875,7 +876,7 @@ class GCRuntime
                                          size_t nDynamicSlots);
     template <typename T, AllowGC allowGC>
     static T* tryNewTenuredThing(ExclusiveContext* cx, AllocKind kind, size_t thingSize);
-    static void* refillFreeListInGC(Zone* zone, AllocKind thingKind);
+    static TenuredCell* refillFreeListInGC(Zone* zone, AllocKind thingKind);
 
   private:
     enum IncrementalProgress
@@ -897,11 +898,11 @@ class GCRuntime
     MOZ_MUST_USE bool gcIfNeededPerAllocation(JSContext* cx);
     template <typename T>
     static void checkIncrementalZoneState(ExclusiveContext* cx, T* t);
-    static void* refillFreeListFromAnyThread(ExclusiveContext* cx, AllocKind thingKind,
-                                             size_t thingSize);
-    static void* refillFreeListFromMainThread(JSContext* cx, AllocKind thingKind,
-                                              size_t thingSize);
-    static void* refillFreeListOffMainThread(ExclusiveContext* cx, AllocKind thingKind);
+    static TenuredCell* refillFreeListFromAnyThread(ExclusiveContext* cx, AllocKind thingKind,
+                                                    size_t thingSize);
+    static TenuredCell* refillFreeListFromMainThread(JSContext* cx, AllocKind thingKind,
+                                                     size_t thingSize);
+    static TenuredCell* refillFreeListOffMainThread(ExclusiveContext* cx, AllocKind thingKind);
 
     /*
      * Return the list of chunks that can be released outside the GC lock.
@@ -913,7 +914,7 @@ class GCRuntime
 
     friend class BackgroundAllocTask;
     friend class AutoMaybeStartBackgroundAllocation;
-    inline bool wantBackgroundAllocation(const AutoLockGC& lock) const;
+    bool wantBackgroundAllocation(const AutoLockGC& lock) const;
     void startBackgroundAllocTaskIfIdle();
 
     void requestMajorGC(JS::gcreason::Reason reason);

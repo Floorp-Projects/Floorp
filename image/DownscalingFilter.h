@@ -307,13 +307,12 @@ private:
     auto filterValues =
       mYFilter->FilterForValue(mOutputRow, &filterOffset, &filterLength);
 
-    mNext.template WriteRows<uint32_t>([&](uint32_t* aRow, uint32_t aLength)
-            -> Maybe<WriteState> {
+    mNext.template WriteUnsafeComputedRow<uint32_t>([&](uint32_t* aRow,
+                                                        uint32_t aLength) {
       skia::ConvolveVertically(static_cast<const FilterValue*>(filterValues),
                                filterLength, mWindow.get(), mXFilter->num_values(),
                                reinterpret_cast<uint8_t*>(aRow), mHasAlpha,
                                supports_sse2() || supports_mmi());
-      return Some(WriteState::NEED_MORE_DATA);
     });
 
     mOutputRow++;

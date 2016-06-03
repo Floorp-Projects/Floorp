@@ -322,7 +322,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
 
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,1 //BRDA:$,0,3,- //BRDA:$,0,4,-
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,1 //BRDA:$,0,1,- //BRDA:$,0,2,-
     case 2:
       l.push('2');        //DA:$,1
     case 5:
@@ -339,7 +339,7 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
 
 checkLcov(function () { //FN:$,top-level //FNDA:1,%
   var l = ",".split(','); //DA:$,1
-  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,2,- //BRDA:$,0,3,1
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,- //BRDA:$,0,2,1
     case 3:
       l.push('1');        //DA:$,0
     case 5:
@@ -374,6 +374,136 @@ checkLcov(function () { //FN:$,top-level //FNDA:1,%
   //LH:6
   //BRF:4
   //BRH:2
+});
+
+checkLcov(function () { //FN:$,top-level //FNDA:1,%
+  var l = ",".split(','); //DA:$,1
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,1 //BRDA:$,0,2,- //BRDA:$,0,3,-
+    case 0:
+    case 1:
+      l.push('0');        //DA:$,0
+      l.push('1');        //DA:$,0
+    case 2:
+      l.push('2');        //DA:$,1
+    case 3:
+      l.push('3');        //DA:$,1
+  }
+  l.pop();                //DA:$,1
+  //FNF:1
+  //FNH:1
+  //LF:7
+  //LH:5
+  //BRF:4
+  //BRH:1
+});
+
+checkLcov(function () { //FN:$,top-level //FNDA:1,%
+  var l = ",".split(','); //DA:$,1
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,- //BRDA:$,0,2,1 //BRDA:$,0,3,-
+    case 0:
+      l.push('0');        //DA:$,0
+    case 1:
+      l.push('1');        //DA:$,0
+    case 2:
+    case 3:
+      l.push('2');        //DA:$,1
+      l.push('3');        //DA:$,1
+  }
+  l.pop();                //DA:$,1
+  //FNF:1
+  //FNH:1
+  //LF:7
+  //LH:5
+  //BRF:4
+  //BRH:1
+});
+
+checkLcov(function () { //FN:$,top-level //FNDA:1,%
+  var l = ",".split(','); //DA:$,1
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,- //BRDA:$,0,2,1 //BRDA:$,0,3,-
+    case 0:
+      l.push('0');        //DA:$,0
+    case 1:
+    default:
+      l.push('1');        //DA:$,0
+    case 2:
+      l.push('2');        //DA:$,1
+    case 3:
+      l.push('3');        //DA:$,1
+  }
+  l.pop();                //DA:$,1
+  //FNF:1
+  //FNH:1
+  //LF:7
+  //LH:5
+  //BRF:4
+  //BRH:1
+});
+
+checkLcov(function () { //FN:$,top-level //FNDA:1,%
+  var l = ",".split(','); //DA:$,1
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,- //BRDA:$,0,2,1 //BRDA:$,0,3,-
+    case 0:
+      l.push('0');        //DA:$,0
+    case 1:
+      l.push('1');        //DA:$,0
+    default:
+    case 2:
+      l.push('2');        //DA:$,1
+    case 3:
+      l.push('3');        //DA:$,1
+  }
+  l.pop();                //DA:$,1
+  //FNF:1
+  //FNH:1
+  //LF:7
+  //LH:5
+  //BRF:4
+  //BRH:1
+});
+
+checkLcov(function () { //FN:$,top-level //FNDA:1,%
+  var l = ",".split(','); //DA:$,1
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,- //BRDA:$,0,2,1 //BRDA:$,0,3,- //BRDA:$,0,4,-
+    case 0:
+      l.push('0');        //DA:$,0
+    case 1:
+      l.push('1');        //DA:$,0
+    default:
+      l.push('default');  //DA:$,0
+    case 2:
+      l.push('2');        //DA:$,1
+    case 3:
+      l.push('3');        //DA:$,1
+  }
+  l.pop();                //DA:$,1
+  //FNF:1
+  //FNH:1
+  //LF:8
+  //LH:5
+  //BRF:5
+  //BRH:1
+});
+
+checkLcov(function () { //FN:$,top-level //FNDA:1,%
+  var l = ",".split(','); //DA:$,1
+  switch (l.length) {     //DA:$,1 //BRDA:$,0,0,- //BRDA:$,0,1,- //BRDA:$,0,2,- //BRDA:$,0,3,1
+    case 0:
+      l.push('0');        //DA:$,0
+    case 1:
+      l.push('1');        //DA:$,0
+    default:
+      l.push('2');        //DA:$,1
+    case 3:
+      l.push('3');        //DA:$,1
+  }
+  l.pop();                //DA:$,1
+  //FNF:1
+  //FNH:1
+  //LF:7
+  //LH:5
+  //BRF:4
+  //BRH:1
 });
 
 // If you add a test case here, do the same in

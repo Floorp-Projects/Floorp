@@ -1,0 +1,13 @@
+---
+- task:
+    metadata:
+      name: libpkix tests
+      description: libpkix tests
+
+    payload:
+      env:
+        NSS_TESTS: libpkix
+
+    extra:
+      treeherder:
+        symbol: PKIX

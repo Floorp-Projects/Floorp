@@ -62,13 +62,13 @@ PRIntervalTime maxInterval = PR_INTERVAL_NO_TIMEOUT;
 
 int ssl3CipherSuites[] = {
     -1,                                  /* SSL_FORTEZZA_DMS_WITH_FORTEZZA_CBC_SHA* a */
-    -1,                                  /* SSL_FORTEZZA_DMS_WITH_RC4_128_SHA,	 * b */
+    -1,                                  /* SSL_FORTEZZA_DMS_WITH_RC4_128_SHA,   * b */
     TLS_RSA_WITH_RC4_128_MD5,            /* c */
     TLS_RSA_WITH_3DES_EDE_CBC_SHA,       /* d */
     TLS_RSA_WITH_DES_CBC_SHA,            /* e */
     TLS_RSA_EXPORT_WITH_RC4_40_MD5,      /* f */
     TLS_RSA_EXPORT_WITH_RC2_CBC_40_MD5,  /* g */
-    -1,                                  /* SSL_FORTEZZA_DMS_WITH_NULL_SHA,	 * h */
+    -1,                                  /* SSL_FORTEZZA_DMS_WITH_NULL_SHA,      * h */
     TLS_RSA_WITH_NULL_MD5,               /* i */
     SSL_RSA_FIPS_WITH_3DES_EDE_CBC_SHA,  /* j */
     SSL_RSA_FIPS_WITH_DES_CBC_SHA,       /* k */
@@ -218,15 +218,13 @@ PrintParameterUsage(void)
     fprintf(stderr,
             "%-20s Restricts the set of enabled SSL/TLS protocols versions.\n"
             "%-20s All versions are enabled by default.\n"
-            "%-20s Possible values for min/max: ssl3 tls1.0 tls1.1 tls1.2\n"
+            "%-20s Possible values for min/max: ssl3 tls1.0 tls1.1 tls1.2 tls1.3\n"
             "%-20s Example: \"-V ssl3:\" enables SSL 3 and newer.\n",
             "-V [min]:[max]", "", "", "");
     fprintf(stderr, "%-20s Send TLS_FALLBACK_SCSV\n", "-K");
     fprintf(stderr, "%-20s Prints only payload data. Skips HTTP header.\n", "-S");
     fprintf(stderr, "%-20s Client speaks first. \n", "-f");
-    fprintf(stderr, "%-20s Use synchronous certificate validation "
-                    "(currently required for TLS 1.3)\n",
-            "-O");
+    fprintf(stderr, "%-20s Use synchronous certificate validation\n", "-O");
     fprintf(stderr, "%-20s Override bad server cert. Make it OK.\n", "-o");
     fprintf(stderr, "%-20s Disable SSL socket locking.\n", "-s");
     fprintf(stderr, "%-20s Verbose progress reporting.\n", "-v");
@@ -239,7 +237,6 @@ PrintParameterUsage(void)
     fprintf(stderr, "%-20s Enable false start.\n", "-g");
     fprintf(stderr, "%-20s Enable the cert_status extension (OCSP stapling).\n", "-T");
     fprintf(stderr, "%-20s Enable the signed_certificate_timestamp extension.\n", "-U");
-    fprintf(stderr, "%-20s Enable the extended master secret extension (session hash).\n", "-G");
     fprintf(stderr, "%-20s Require fresh revocation info from side channel.\n"
                     "%-20s -F once means: require for server cert only\n"
                     "%-20s -F twice means: require for intermediates, too\n"
@@ -726,8 +723,8 @@ thread_main(void *arg)
 #ifdef WIN32
     {
         /* Put stdin into O_BINARY mode
-	** or else incoming \r\n's will become \n's.
-	*/
+        ** or else incoming \r\n's will become \n's.
+        */
         int smrv = _setmode(_fileno(stdin), _O_BINARY);
         if (smrv == -1) {
             fprintf(stderr,

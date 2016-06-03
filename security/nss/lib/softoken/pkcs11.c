@@ -2213,8 +2213,6 @@ sftk_IsWeakKey(unsigned char *key,CK_KEY_TYPE key_type)
 /* return the function list */
 CK_RV NSC_GetFunctionList(CK_FUNCTION_LIST_PTR *pFunctionList)
 {
-    CHECK_FORK();
-
     *pFunctionList = (CK_FUNCTION_LIST_PTR) &sftk_funcList;
     return CKR_OK;
 }
@@ -2222,8 +2220,6 @@ CK_RV NSC_GetFunctionList(CK_FUNCTION_LIST_PTR *pFunctionList)
 /* return the function list */
 CK_RV C_GetFunctionList(CK_FUNCTION_LIST_PTR *pFunctionList)
 {
-    CHECK_FORK();
-
     return NSC_GetFunctionList(pFunctionList);
 }
 

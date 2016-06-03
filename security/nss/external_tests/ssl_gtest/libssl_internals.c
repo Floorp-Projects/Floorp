@@ -96,6 +96,17 @@ SSLInt_ClearSessionTicketKey()
   NSS_UnregisterShutdown(ssl3_SessionTicketShutdown, NULL);
 }
 
+SECStatus
+SSLInt_SetMTU(PRFileDesc *fd, PRUint16 mtu)
+{
+  sslSocket *ss = ssl_FindSocket(fd);
+  if (ss) {
+    ss->ssl3.mtu = mtu;
+    return SECSuccess;
+  }
+  return SECFailure;
+}
+
 PRInt32 SSLInt_CountTls13CipherSpecs(PRFileDesc *fd)
 {
   PRCList *cur_p;

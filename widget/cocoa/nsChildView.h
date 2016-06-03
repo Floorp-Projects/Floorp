@@ -205,6 +205,10 @@ typedef NSInteger NSEventGestureAxis;
   // to send its pair event first, in case we didn't yet for any reason.
   BOOL mExpectingWheelStop;
 
+  // Set to YES when our GL surface has been updated and we need to call
+  // updateGLContext before we composite.
+  BOOL mNeedsGLUpdate;
+
   // Holds our drag service across multiple drag calls. The reference to the
   // service is obtained when the mouse enters the view and is released when
   // the mouse exits or there is a drop. This prevents us from having to
@@ -276,7 +280,6 @@ typedef NSInteger NSEventGestureAxis;
 - (void)updateGLContext;
 - (void)_surfaceNeedsUpdate:(NSNotification*)notification;
 
-- (void)setGLContext:(NSOpenGLContext *)aGLContext;
 - (bool)preRender:(NSOpenGLContext *)aGLContext;
 - (void)postRender:(NSOpenGLContext *)aGLContext;
 

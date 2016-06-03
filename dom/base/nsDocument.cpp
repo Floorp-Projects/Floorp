@@ -164,6 +164,7 @@
 #include "mozilla/dom/HTMLIFrameElement.h"
 #include "mozilla/dom/HTMLImageElement.h"
 #include "mozilla/dom/MediaSource.h"
+#include "mozilla/dom/FlyWebService.h"
 
 #include "mozAutoDocUpdate.h"
 #include "nsGlobalWindow.h"
@@ -8985,6 +8986,13 @@ nsDocument::CanSavePresentation(nsIRequest *aNewRequest)
   // Don't save presentations for documents containing MSE content, to
   // reduce memory usage.
   if (ContainsMSEContent()) {
+    return false;
+  }
+
+  // Don't save presentation if there are active FlyWeb connections or FlyWeb
+  // servers.
+  FlyWebService* flyWebService = FlyWebService::GetExisting();
+  if (flyWebService && flyWebService->HasConnectionOrServer(win->WindowID())) {
     return false;
   }
 

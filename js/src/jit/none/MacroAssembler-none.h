@@ -84,8 +84,8 @@ static MOZ_CONSTEXPR_VAR Register ABINonArgReg1 = { Registers::invalid_reg };
 static MOZ_CONSTEXPR_VAR Register ABINonArgReturnReg0 = { Registers::invalid_reg };
 static MOZ_CONSTEXPR_VAR Register ABINonArgReturnReg1 = { Registers::invalid_reg };
 
-static MOZ_CONSTEXPR_VAR Register WasmTableCallPtrReg = { Register::invalid_reg };
-static MOZ_CONSTEXPR_VAR Register WasmTableCallSigReg = { Register::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register WasmTableCallPtrReg = { Registers::invalid_reg };
+static MOZ_CONSTEXPR_VAR Register WasmTableCallSigReg = { Registers::invalid_reg };
 
 static MOZ_CONSTEXPR_VAR uint32_t ABIStackAlignment = 4;
 static MOZ_CONSTEXPR_VAR uint32_t CodeAlignment = 4;

@@ -47,8 +47,7 @@
 #define BUILD_BINHEX_DECODER 1
 #endif
 
-#if defined(XP_MACOSX) || defined(XP_WIN) || \
-    (defined(XP_LINUX) && !defined(MOZ_WIDGET_ANDROID))
+#if defined(XP_MACOSX) || defined(XP_WIN) || defined(XP_LINUX)
 #define BUILD_NETWORK_INFO_SERVICE 1
 #endif
 

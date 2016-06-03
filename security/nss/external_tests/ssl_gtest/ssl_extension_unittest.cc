@@ -106,7 +106,7 @@ class TlsExtensionInjector : public TlsHandshakeFilter {
       offset = parser.consumed();
     } else if (header.handshake_type() == kTlsHandshakeServerHello) {
       TlsParser parser(input);
-      if (!TlsExtensionFilter::FindServerHelloExtensions(&parser, header.version())) {
+      if (!TlsExtensionFilter::FindServerHelloExtensions(&parser)) {
         return KEEP;
       }
       offset = parser.consumed();
@@ -209,6 +209,14 @@ class TlsExtensionTest13
  public:
   TlsExtensionTest13()
     : TlsExtensionTestBase(TlsConnectTestBase::ToMode(GetParam()),
+                           SSL_LIBRARY_VERSION_TLS_1_3) {}
+};
+
+class TlsExtensionTest13Stream
+    : public TlsExtensionTestBase {
+ public:
+  TlsExtensionTest13Stream()
+    : TlsExtensionTestBase(STREAM,
                            SSL_LIBRARY_VERSION_TLS_1_3) {}
 };
 
@@ -655,6 +663,21 @@ TEST_P(TlsExtensionTest13, ModifyDraftVersionAndFail) {
   EXPECT_EQ(SSL_ERROR_UNSUPPORTED_VERSION, server_->error_code());
 }
 
+#ifdef NSS_ENABLE_TLS_1_3
+// This test only works with TLS because the MAC error causes a
+// timeout on the server.
+TEST_F(TlsExtensionTest13Stream, DropServerKeyShare) {
+  EnsureTlsSetup();
+  server_->SetPacketFilter(
+      new TlsExtensionDropper(ssl_tls13_key_share_xtn));
+  ConnectExpectFail();
+  EXPECT_EQ(SSL_ERROR_MISSING_KEY_SHARE, client_->error_code());
+  // We are trying to decrypt but we can't. Kind of a screwy error
+  // from the TLS 1.3 stack.
+  EXPECT_EQ(SSL_ERROR_BAD_MAC_READ, server_->error_code());
+}
+#endif
+
 INSTANTIATE_TEST_CASE_P(ExtensionStream, TlsExtensionTestGeneric,
                         ::testing::Combine(
                           TlsConnectTestBase::kTlsModesStream,
@@ -674,7 +697,7 @@ INSTANTIATE_TEST_CASE_P(ExtensionTls12Plus, TlsExtensionTest12Plus,
 INSTANTIATE_TEST_CASE_P(ExtensionPre13Stream, TlsExtensionTestPre13,
                         ::testing::Combine(
                           TlsConnectTestBase::kTlsModesStream,
-                          TlsConnectTestBase::kTlsV10To12));
+                          TlsConnectTestBase::kTlsV10ToV12));
 INSTANTIATE_TEST_CASE_P(ExtensionPre13Datagram, TlsExtensionTestPre13,
                         ::testing::Combine(
                           TlsConnectTestBase::kTlsModesAll,

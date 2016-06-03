@@ -2534,7 +2534,8 @@ nsStyleImageLayers::Layer::RenderingMightDependOnPositioningAreaSizeChange() con
   }
 
   return mPosition.DependsOnPositioningAreaSize() ||
-      mSize.DependsOnPositioningAreaSize(mImage);
+      mSize.DependsOnPositioningAreaSize(mImage) ||
+      mRepeat.DependsOnPositioningAreaSize();
 }
 
 bool

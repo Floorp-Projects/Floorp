@@ -1032,10 +1032,7 @@ class MInstruction
 
     // Convenient function used for replacing a load by the value of the store
     // if the types are match, and boxing the value if they do not match.
-    //
-    // Note: There is no need for such function in AsmJS functions as they do
-    // not use any MIRType::Value.
-    MDefinition* foldsToStoredValue(TempAllocator& alloc, MDefinition* loaded);
+    MDefinition* foldsToStore(TempAllocator& alloc);
 
     void setResumePoint(MResumePoint* resumePoint);
 
@@ -8090,9 +8087,9 @@ class MRegExp : public MNullaryInstruction
     CompilerGCPointer<RegExpObject*> source_;
     bool mustClone_;
 
-    MRegExp(CompilerConstraintList* constraints, RegExpObject* source, bool mustClone)
+    MRegExp(CompilerConstraintList* constraints, RegExpObject* source)
       : source_(source),
-        mustClone_(mustClone)
+        mustClone_(true)
     {
         setResultType(MIRType::Object);
         setResultTypeSet(MakeSingletonTypeSet(constraints, source));
@@ -8102,11 +8099,14 @@ class MRegExp : public MNullaryInstruction
     INSTRUCTION_HEADER(RegExp)
 
     static MRegExp* New(TempAllocator& alloc, CompilerConstraintList* constraints,
-                        RegExpObject* source, bool mustClone)
+                        RegExpObject* source)
     {
-        return new(alloc) MRegExp(constraints, source, mustClone);
+        return new(alloc) MRegExp(constraints, source);
     }
 
+    void setDoNotClone() {
+        mustClone_ = false;
+    }
     bool mustClone() const {
         return mustClone_;
     }
@@ -9536,6 +9536,7 @@ class MLoadElement
             return false;
         return congruentIfOperandsEqual(other);
     }
+    AliasType mightAlias(const MDefinition* store) const override;
     MDefinition* foldsTo(TempAllocator& alloc) override;
     AliasSet getAliasSet() const override {
         return AliasSet::Load(AliasSet::Element);
@@ -9695,6 +9696,7 @@ class MLoadUnboxedObjectOrNull
     AliasSet getAliasSet() const override {
         return AliasSet::Load(AliasSet::UnboxedElement);
     }
+    AliasType mightAlias(const MDefinition* store) const override;
     MDefinition* foldsTo(TempAllocator& alloc) override;
 
     ALLOW_CLONE(MLoadUnboxedObjectOrNull)
@@ -10937,6 +10939,8 @@ class MLoadFixedSlotAndUnbox
         }
         return congruentIfOperandsEqual(ins);
     }
+
+    MDefinition* foldsTo(TempAllocator& alloc) override;
 
     AliasSet getAliasSet() const override {
         return AliasSet::Load(AliasSet::FixedSlot);

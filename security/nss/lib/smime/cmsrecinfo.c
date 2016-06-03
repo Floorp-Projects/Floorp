@@ -138,8 +138,8 @@ nss_cmsrecipientinfo_create(NSSCMSMessage *cmsg,
 		PORT_SetError(SEC_ERROR_NO_MEMORY);
 		break;
 	    } 
-	    SECITEM_CopyItem(poolp, rid->id.subjectKeyID, subjKeyID);
-	    if (rid->id.subjectKeyID->data == NULL) {
+	    rv = SECITEM_CopyItem(poolp, rid->id.subjectKeyID, subjKeyID);
+	    if (rv != SECSuccess || rid->id.subjectKeyID->data == NULL) {
 		rv = SECFailure;
 		PORT_SetError(SEC_ERROR_NO_MEMORY);
 		break;

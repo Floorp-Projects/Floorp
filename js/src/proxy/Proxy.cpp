@@ -174,8 +174,10 @@ js::AppendUnique(JSContext* cx, AutoIdVector& base, AutoIdVector& others)
                 break;
             }
         }
-        if (unique)
-            uniqueOthers.append(others[i]);
+        if (unique) {
+            if (!uniqueOthers.append(others[i]))
+                return false;
+        }
     }
     return base.appendAll(uniqueOthers);
 }

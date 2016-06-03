@@ -40,15 +40,12 @@ public:
   explicit AutoCxPusher(JSContext *aCx, bool aAllowNull = false);
   ~AutoCxPusher();
 
-  nsIScriptContext* GetScriptContext() { return mScx; }
-
   // Returns true if this AutoCxPusher performed the push that is currently at
   // the top of the cx stack.
   bool IsStackTop() const;
 
 private:
   mozilla::Maybe<JSAutoRequest> mAutoRequest;
-  nsCOMPtr<nsIScriptContext> mScx;
   uint32_t mStackDepthAfterPush;
 #ifdef DEBUG
   JSContext* mPushedContext;
@@ -305,6 +302,11 @@ protected:
   AutoJSAPI(nsIGlobalObject* aGlobalObject, bool aIsMainThread, JSContext* aCx);
 
 private:
+  // We need to hold a strong ref to our global object, so it won't go away
+  // while we're being used.  This _could_ become a JS::Rooted<JSObject*> if we
+  // grabbed our JSContext in our constructor instead of waiting for Init(), so
+  // we could construct this at that point.  It might be worth it do to that.
+  RefPtr<nsIGlobalObject> mGlobalObject;
   mozilla::Maybe<danger::AutoCxPusher> mCxPusher;
   mozilla::Maybe<JSAutoNullableCompartment> mAutoNullableCompartment;
   JSContext *mCx;
@@ -315,7 +317,8 @@ private:
   bool mIsMainThread;
   Maybe<JSErrorReporter> mOldErrorReporter;
 
-  void InitInternal(JSObject* aGlobal, JSContext* aCx, bool aIsMainThread);
+  void InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
+                    JSContext* aCx, bool aIsMainThread);
 
   AutoJSAPI(const AutoJSAPI&) = delete;
   AutoJSAPI& operator= (const AutoJSAPI&) = delete;

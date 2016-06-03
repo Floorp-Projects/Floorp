@@ -1,0 +1,13 @@
+---
+- task:
+    metadata:
+      name: Merge tests
+      description: Merge tests
+
+    payload:
+      env:
+        NSS_TESTS: merge
+
+    extra:
+      treeherder:
+        symbol: Merge

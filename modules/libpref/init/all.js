@@ -380,6 +380,9 @@ pref("media.suspend-bkgnd-video.enabled", true);
 #else
 pref("media.suspend-bkgnd-video.enabled", false);
 #endif
+// Delay, in ms, from time window goes to background to suspending
+// video decoders. Defaults to 10 seconds.
+pref("media.suspend-bkgnd-video.delay-ms", 10000);
 
 #ifdef MOZ_WEBRTC
 pref("media.navigator.enabled", true);
@@ -791,6 +794,13 @@ pref("canvas.filters.enabled", false);
 // Add support for canvas path objects
 pref("canvas.path.enabled", true);
 pref("canvas.capturestream.enabled", true);
+
+// Disable the ImageBitmap-extensions in the release build.
+#ifdef RELEASE_BUILD
+pref("canvas.imagebitmap_extensions.enabled", false);
+#else
+pref("canvas.imagebitmap_extensions.enabled", true);
+#endif
 
 // We want the ability to forcibly disable platform a11y, because
 // some non-a11y-related components attempt to bring it up.  See bug
@@ -2118,6 +2128,10 @@ pref("services.blocklist.plugins.collection", "plugins");
 pref("services.blocklist.plugins.checked", 0);
 pref("services.blocklist.gfx.collection", "gfx");
 pref("services.blocklist.gfx.checked", 0);
+
+// Controls whether signing should be enforced on signature-capable blocklist
+// collections.
+pref("services.blocklist.signing.enforced", false);
 
 // For now, let's keep settings server update out of the release builds
 #ifdef RELEASE_BUILD
@@ -4633,7 +4647,7 @@ pref("full-screen-api.pointer-lock.enabled", true);
 pref("full-screen-api.transition-duration.enter", "200 200");
 pref("full-screen-api.transition-duration.leave", "200 200");
 // timeout for black screen in fullscreen transition, unit: ms
-pref("full-screen-api.transition.timeout", 500);
+pref("full-screen-api.transition.timeout", 1000);
 // time for the warning box stays on the screen before sliding out, unit: ms
 pref("full-screen-api.warning.timeout", 3000);
 // delay for the warning box to show when pointer stays on the top, unit: ms
@@ -4960,6 +4974,8 @@ pref("dom.forms.inputmode", true);
 
 // InputMethods for soft keyboards in B2G
 pref("dom.mozInputMethod.enabled", false);
+
+pref("dom.flyweb.enabled", false);
 
 // Telephony API
 #ifdef MOZ_B2G_RIL
@@ -5412,6 +5428,9 @@ pref("dom.node.rootNode.enabled", false);
 #else
 pref("dom.node.rootNode.enabled", true);
 #endif
+
+// Default media volume
+pref("media.default_volume", "1.0");
 
 // Once bug 1276272 is resolved, we will trun this preference to default ON in
 // non-release channels.

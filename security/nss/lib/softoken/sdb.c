@@ -411,7 +411,7 @@ sdb_measureAccess(const char *directory)
 	 * temp remains unchanged during our loop. */
         PR_snprintf(tempStartOfFilename, maxFileNameLen,
 		    ".%lu%s", (PRUint32)(time+i), doesntExistName);
-	PR_Access(temp,PR_ACCESS_EXISTS);
+	PR_Access(temp, PR_ACCESS_EXISTS);
 	next = PR_IntervalNow();
 	delta = next - time;
 	if (delta >= duration)
@@ -1730,11 +1730,16 @@ sdb_init(char *dbname, char *table, sdbDataType type, int *inUpdate,
 	error = sdb_mapSQLError(type, sqlerr); 
 	goto loser;
     }
-    /* sql created the file, but it doesn't set appropriate modes for
-     * a database */
-    if (create) {
-	/* NO NSPR call for this? :( */
-	chmod (dbname, 0600);
+
+    /*
+     * SQL created the file, but it doesn't set appropriate modes for
+     * a database.
+     *
+     * NO NSPR call for chmod? :(
+     */
+    if (create && chmod(dbname, 0600) != 0) {
+        error = sdb_mapSQLError(type, SQLITE_CANTOPEN);
+        goto loser;
     }
 
     if (flags != SDB_RDONLY) {

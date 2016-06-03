@@ -4,7 +4,10 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-TEST_DIRS += ['compiledtest']
+TEST_DIRS += [
+    'compiledtest', 
+    'gtest'
+]
 
 # Change the following line to avoid bug 1081323 (clobber after changing a manifest):
 # Add test for webglcontextcreationerror.
@@ -53,9 +56,15 @@ UNIFIED_SOURCES += [
     'DocumentRendererChild.cpp',
     'DocumentRendererParent.cpp',
     'ImageBitmap.cpp',
+    'ImageBitmapColorUtils.cpp',
     'ImageBitmapRenderingContext.cpp',
+    'ImageBitmapUtils.cpp',
     'ImageData.cpp',
     'OffscreenCanvas.cpp',
+]
+
+SOURCES += [
+    'ImageUtils.cpp',
 ]
 
 # WebGL Sources

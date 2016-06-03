@@ -160,6 +160,10 @@ WEBIDL_FILES = [
     'FileMode.webidl',
     'FileReader.webidl',
     'FileReaderSync.webidl',
+    'FlyWebDiscoveryManager.webidl',
+    'FlyWebFetchEvent.webidl',
+    'FlyWebPublish.webidl',
+    'FlyWebWebSocketEvent.webidl',
     'FocusEvent.webidl',
     'FontFace.webidl',
     'FontFaceSet.webidl',
@@ -759,6 +763,7 @@ if CONFIG['MOZ_B2G_FM']:
     ]
 
 GENERATED_EVENTS_WEBIDL_FILES = [
+    'AddonEvent.webidl',
     'AnimationPlaybackEvent.webidl',
     'AutocompleteErrorEvent.webidl',
     'BlobEvent.webidl',

@@ -4352,6 +4352,10 @@ certcallback(SECItem *dbdata, SECItem *dbkey, certDBEntryType type, void *data)
     }
     
     entry = (certDBEntryCert *)PORT_ArenaAlloc(arena, sizeof(certDBEntryCert));
+    if (!entry) {
+	PORT_SetError(SEC_ERROR_NO_MEMORY);
+	goto loser;
+    }
     mystate = (PermCertCallbackState *)data;
     entry->common.version = (unsigned int)dbdata->data[0];
     entry->common.type = (certDBEntryType)dbdata->data[1];

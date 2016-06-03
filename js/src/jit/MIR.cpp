@@ -270,22 +270,53 @@ MDefinition::mightBeMagicType() const
 }
 
 MDefinition*
-MInstruction::foldsToStoredValue(TempAllocator& alloc, MDefinition* loaded)
+MInstruction::foldsToStore(TempAllocator& alloc)
 {
+    if (!dependency())
+        return nullptr;
+
+    MDefinition* store = dependency();
+    if (mightAlias(store) != AliasType::MustAlias)
+        return nullptr;
+
+    if (!store->block()->dominates(block()))
+        return nullptr;
+
+    MDefinition* value;
+    switch (store->op()) {
+      case Op_StoreFixedSlot:
+        value = store->toStoreFixedSlot()->value();
+        break;
+      case Op_StoreSlot:
+        value = store->toStoreSlot()->value();
+        break;
+      case Op_StoreElement:
+        value = store->toStoreElement()->value();
+        break;
+      case Op_StoreUnboxedObjectOrNull:
+        value = store->toStoreUnboxedObjectOrNull()->value();
+        break;
+      default:
+        MOZ_CRASH("unknown store");
+    }
+
     // If the type are matching then we return the value which is used as
     // argument of the store.
-    if (loaded->type() != type()) {
+    if (value->type() != type()) {
         // If we expect to read a type which is more generic than the type seen
         // by the store, then we box the value used by the store.
         if (type() != MIRType::Value)
-            return this;
+            return nullptr;
+        // We cannot unbox ObjectOrNull yet.
+        if (value->type() == MIRType::ObjectOrNull)
+            return nullptr;
 
-        MOZ_ASSERT(loaded->type() < MIRType::Value);
-        MBox* box = MBox::New(alloc, loaded);
-        loaded = box;
+        MOZ_ASSERT(value->type() < MIRType::Value);
+        MBox* box = MBox::New(alloc, value);
+        value = box;
     }
 
-    return loaded;
+    return value;
 }
 
 void
@@ -4807,38 +4838,49 @@ MNewArray::MNewArray(CompilerConstraintList* constraints, uint32_t length, MCons
 }
 
 MDefinition::AliasType
-MLoadFixedSlot::mightAlias(const MDefinition* store) const
+MLoadFixedSlot::mightAlias(const MDefinition* def) const
 {
-    if (store->isStoreFixedSlot() && store->toStoreFixedSlot()->slot() != slot())
-        return AliasType::NoAlias;
-    return AliasType::MayAlias;
-}
-
-MDefinition::AliasType
-MLoadFixedSlotAndUnbox::mightAlias(const MDefinition* store) const
-{
-    if (store->isStoreFixedSlot() && store->toStoreFixedSlot()->slot() != slot())
-        return AliasType::NoAlias;
+    if (def->isStoreFixedSlot()) {
+        const MStoreFixedSlot* store = def->toStoreFixedSlot();
+        if (store->slot() != slot())
+            return AliasType::NoAlias;
+        if (store->object() != object())
+            return AliasType::MayAlias;
+        return AliasType::MustAlias;
+    }
     return AliasType::MayAlias;
 }
 
 MDefinition*
 MLoadFixedSlot::foldsTo(TempAllocator& alloc)
 {
-    if (!dependency() || !dependency()->isStoreFixedSlot())
-        return this;
+    if (MDefinition* def = foldsToStore(alloc))
+        return def;
 
-    MStoreFixedSlot* store = dependency()->toStoreFixedSlot();
-    if (!store->block()->dominates(block()))
-        return this;
+    return this;
+}
 
-    if (store->object() != object())
-        return this;
+MDefinition::AliasType
+MLoadFixedSlotAndUnbox::mightAlias(const MDefinition* def) const
+{
+    if (def->isStoreFixedSlot()) {
+        const MStoreFixedSlot* store = def->toStoreFixedSlot();
+        if (store->slot() != slot())
+            return AliasType::NoAlias;
+        if (store->object() != object())
+            return AliasType::MayAlias;
+        return AliasType::MustAlias;
+    }
+    return AliasType::MayAlias;
+}
 
-    if (store->slot() != slot())
-        return this;
+MDefinition*
+MLoadFixedSlotAndUnbox::foldsTo(TempAllocator& alloc)
+{
+    if (MDefinition* def = foldsToStore(alloc))
+        return def;
 
-    return foldsToStoredValue(alloc, store->value());
+    return this;
 }
 
 MDefinition::AliasType
@@ -4956,10 +4998,18 @@ MAsmJSLoadFFIFunc::congruentTo(const MDefinition* ins) const
 }
 
 MDefinition::AliasType
-MLoadSlot::mightAlias(const MDefinition* store) const
+MLoadSlot::mightAlias(const MDefinition* def) const
 {
-    if (store->isStoreSlot() && store->toStoreSlot()->slot() != slot())
-        return AliasType::NoAlias;
+    if (def->isStoreSlot()) {
+        const MStoreSlot* store = def->toStoreSlot();
+        if (store->slot() != slot())
+            return AliasType::NoAlias;
+
+        if (store->slots() != slots())
+            return AliasType::MayAlias;
+
+        return AliasType::MustAlias;
+    }
     return AliasType::MayAlias;
 }
 
@@ -4974,20 +5024,10 @@ MLoadSlot::valueHash() const
 MDefinition*
 MLoadSlot::foldsTo(TempAllocator& alloc)
 {
-    if (!dependency() || !dependency()->isStoreSlot())
-        return this;
+    if (MDefinition* def = foldsToStore(alloc))
+        return def;
 
-    MStoreSlot* store = dependency()->toStoreSlot();
-    if (!store->block()->dominates(block()))
-        return this;
-
-    if (store->slots() != slots())
-        return this;
-
-    if (store->slot() != slot())
-        return this;
-
-    return foldsToStoredValue(alloc, store->value());
+    return this;
 }
 
 MDefinition*
@@ -4999,48 +5039,114 @@ MFunctionEnvironment::foldsTo(TempAllocator& alloc)
     return input()->toLambda()->scopeChain();
 }
 
+static bool
+AddIsANonZeroAdditionOf(MAdd* add, MDefinition* ins)
+{
+    if (add->lhs() != ins && add->rhs() != ins)
+        return false;
+    MDefinition* other = (add->lhs() == ins) ? add->rhs() : add->lhs();
+    if (!IsNumberType(other->type()))
+        return false;
+    if (!other->isConstant())
+        return false;
+    if (other->toConstant()->numberToDouble() == 0)
+        return false;
+    return true;
+}
+
+static bool
+DefinitelyDifferentValue(MDefinition* ins1, MDefinition* ins2)
+{
+    if (ins1 == ins2)
+        return false;
+
+    // Drop the MToInt32 added by the TypePolicy for double and float values.
+    if (ins1->isToInt32())
+        return DefinitelyDifferentValue(ins1->toToInt32()->input(), ins2);
+    if (ins2->isToInt32())
+        return DefinitelyDifferentValue(ins2->toToInt32()->input(), ins1);
+
+    // Ignore the bounds check, which in most cases will contain the same info.
+    if (ins1->isBoundsCheck())
+        return DefinitelyDifferentValue(ins1->toBoundsCheck()->index(), ins2);
+    if (ins2->isBoundsCheck())
+        return DefinitelyDifferentValue(ins2->toBoundsCheck()->index(), ins1);
+
+    // For constants check they are not equal.
+    if (ins1->isConstant() && ins2->isConstant())
+        return !ins1->toConstant()->equals(ins2->toConstant());
+
+    // Check if "ins1 = ins2 + cte", which would make both instructions
+    // have different values.
+    if (ins1->isAdd()) {
+        if (AddIsANonZeroAdditionOf(ins1->toAdd(), ins2))
+            return true;
+    }
+    if (ins2->isAdd()) {
+        if (AddIsANonZeroAdditionOf(ins2->toAdd(), ins1))
+            return true;
+    }
+
+    return false;
+}
+
+MDefinition::AliasType
+MLoadElement::mightAlias(const MDefinition* def) const
+{
+    if (def->isStoreElement()) {
+        const MStoreElement* store = def->toStoreElement();
+        if (store->index() != index()) {
+            if (DefinitelyDifferentValue(store->index(), index()))
+                return AliasType::NoAlias;
+            return AliasType::MayAlias;
+        }
+
+        if (store->elements() != elements())
+            return AliasType::MayAlias;
+
+        return AliasType::MustAlias;
+    }
+    return AliasType::MayAlias;
+}
+
 MDefinition*
 MLoadElement::foldsTo(TempAllocator& alloc)
 {
-    if (!dependency() || !dependency()->isStoreElement())
-        return this;
+    if (MDefinition* def = foldsToStore(alloc))
+        return def;
 
-    MStoreElement* store = dependency()->toStoreElement();
-    if (!store->block()->dominates(block()))
-        return this;
+    return this;
+}
 
-    if (store->elements() != elements())
-        return this;
+MDefinition::AliasType
+MLoadUnboxedObjectOrNull::mightAlias(const MDefinition* def) const
+{
+    if (def->isStoreUnboxedObjectOrNull()) {
+        const MStoreUnboxedObjectOrNull* store = def->toStoreUnboxedObjectOrNull();
+        if (store->index() != index()) {
+            if (DefinitelyDifferentValue(store->index(), index()))
+                return AliasType::NoAlias;
+            return AliasType::MayAlias;
+        }
 
-    if (store->index() != index())
-        return this;
+        if (store->elements() != elements())
+            return AliasType::MayAlias;
 
-    return foldsToStoredValue(alloc, store->value());
+        if (store->offsetAdjustment() != offsetAdjustment())
+            return AliasType::MayAlias;
+
+        return AliasType::MustAlias;
+    }
+    return AliasType::MayAlias;
 }
 
 MDefinition*
 MLoadUnboxedObjectOrNull::foldsTo(TempAllocator& alloc)
 {
-    if (!dependency() || !dependency()->isStoreUnboxedObjectOrNull())
-        return this;
+    if (MDefinition* def = foldsToStore(alloc))
+        return def;
 
-    MStoreUnboxedObjectOrNull* store = dependency()->toStoreUnboxedObjectOrNull();
-    if (!store->block()->dominates(block()))
-        return this;
-
-    if (store->elements() != elements())
-        return this;
-
-    if (store->index() != index())
-        return this;
-
-    if (store->value()->type() == MIRType::ObjectOrNull)
-        return this;
-
-    if (store->offsetAdjustment() != offsetAdjustment())
-        return this;
-
-    return foldsToStoredValue(alloc, store->value());
+    return this;
 }
 
 bool

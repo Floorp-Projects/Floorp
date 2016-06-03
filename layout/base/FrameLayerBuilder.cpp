@@ -421,7 +421,6 @@ public:
     mSolidColor(NS_RGBA(0, 0, 0, 0)),
     mIsSolidColorInVisibleRegion(false),
     mFontSmoothingBackgroundColor(NS_RGBA(0,0,0,0)),
-    mExclusiveToOneItem(false),
     mClipMovesWithLayer(true),
     mIsCaret(false),
     mNeedComponentAlpha(false),
@@ -576,10 +575,6 @@ public:
    * transparent parts of the layer.
    */
   nscolor mFontSmoothingBackgroundColor;
-  /**
-   * True if only one display item can be assigned to this layer.
-   */
-  bool mExclusiveToOneItem;
   /**
    * True unless the layer contains exactly one item whose clip scrolls
    * relative to the layer rather than moving with the layer.
@@ -952,7 +947,6 @@ public:
   PaintedLayerData* FindPaintedLayerFor(AnimatedGeometryRoot* aAnimatedGeometryRoot,
                                         const DisplayItemScrollClip* aScrollClip,
                                         const nsIntRect& aVisibleRect,
-                                        bool aForceOwnLayer,
                                         bool aBackfaceidden,
                                         NewPaintedLayerCallbackType aNewPaintedLayerCallback);
 
@@ -2654,39 +2648,32 @@ PaintedLayerDataNode::FindPaintedLayerFor(const nsIntRect& aVisibleRect,
                                           NewPaintedLayerCallbackType aNewPaintedLayerCallback)
 {
   if (!mPaintedLayerDataStack.IsEmpty()) {
-    if (mPaintedLayerDataStack[0].mExclusiveToOneItem) {
-      MOZ_ASSERT(mPaintedLayerDataStack.Length() == 1);
-      SetAllDrawingAbove();
-      MOZ_ASSERT(mPaintedLayerDataStack.IsEmpty());
-    } else {
-      PaintedLayerData* lowestUsableLayer = nullptr;
-      for (auto& data : Reversed(mPaintedLayerDataStack)) {
-        if (data.mVisibleAboveRegion.Intersects(aVisibleRect)) {
-          break;
-        }
-        MOZ_ASSERT(!data.mExclusiveToOneItem);
-        if (data.mBackfaceHidden == aBackfaceHidden &&
-            data.mScrollClip == aScrollClip) {
-          lowestUsableLayer = &data;
-        }
-        nsIntRegion visibleRegion = data.mVisibleRegion;
-        // Also check whether the event-regions intersect the visible rect,
-        // unless we're in an inactive layer, in which case the event-regions
-        // will be hoisted out into their own layer.
-        // For performance reasons, we check the intersection with the bounds
-        // of the event-regions.
-        if (!mTree.ContState().IsInInactiveLayer() &&
-            (data.mScaledHitRegionBounds.Intersects(aVisibleRect) ||
-             data.mScaledMaybeHitRegionBounds.Intersects(aVisibleRect))) {
-          break;
-        }
-        if (visibleRegion.Intersects(aVisibleRect)) {
-          break;
-        }
+    PaintedLayerData* lowestUsableLayer = nullptr;
+    for (auto& data : Reversed(mPaintedLayerDataStack)) {
+      if (data.mVisibleAboveRegion.Intersects(aVisibleRect)) {
+        break;
       }
-      if (lowestUsableLayer) {
-        return lowestUsableLayer;
+      if (data.mBackfaceHidden == aBackfaceHidden &&
+          data.mScrollClip == aScrollClip) {
+        lowestUsableLayer = &data;
       }
+      nsIntRegion visibleRegion = data.mVisibleRegion;
+      // Also check whether the event-regions intersect the visible rect,
+      // unless we're in an inactive layer, in which case the event-regions
+      // will be hoisted out into their own layer.
+      // For performance reasons, we check the intersection with the bounds
+      // of the event-regions.
+      if (!mTree.ContState().IsInInactiveLayer() &&
+          (data.mScaledHitRegionBounds.Intersects(aVisibleRect) ||
+           data.mScaledMaybeHitRegionBounds.Intersects(aVisibleRect))) {
+        break;
+      }
+      if (visibleRegion.Intersects(aVisibleRect)) {
+        break;
+      }
+    }
+    if (lowestUsableLayer) {
+      return lowestUsableLayer;
     }
   }
   return mPaintedLayerDataStack.AppendElement(aNewPaintedLayerCallback());
@@ -2815,21 +2802,16 @@ PaintedLayerData*
 PaintedLayerDataTree::FindPaintedLayerFor(AnimatedGeometryRoot* aAnimatedGeometryRoot,
                                           const DisplayItemScrollClip* aScrollClip,
                                           const nsIntRect& aVisibleRect,
-                                          bool aForceOwnLayer,
                                           bool aBackfaceHidden,
                                           NewPaintedLayerCallbackType aNewPaintedLayerCallback)
 {
-  const nsIntRect* bounds = aForceOwnLayer ? nullptr : &aVisibleRect;
+  const nsIntRect* bounds = &aVisibleRect;
   FinishPotentiallyIntersectingNodes(aAnimatedGeometryRoot, bounds);
   PaintedLayerDataNode* node = EnsureNodeFor(aAnimatedGeometryRoot);
 
-  if (aForceOwnLayer) {
-    node->SetAllDrawingAbove();
-  }
   PaintedLayerData* data =
     node->FindPaintedLayerFor(aVisibleRect, aBackfaceHidden, aScrollClip,
                               aNewPaintedLayerCallback);
-  data->mExclusiveToOneItem = aForceOwnLayer;
   return data;
 }
 
@@ -4005,6 +3987,10 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
         mPaintedLayerDataTree.AddingOwnLayer(animatedGeometryRoot,
                                              clipPtr,
                                              uniformColorPtr);
+      } else if (!clipMovesWithLayer) {
+        mPaintedLayerDataTree.AddingOwnLayer(animatedGeometryRootForClip,
+                                             clipPtr,
+                                             uniformColorPtr);
       } else {
         // Using itemVisibleRect here isn't perfect. itemVisibleRect can be
         // larger or smaller than the potential bounds of item's contents in
@@ -4189,7 +4175,7 @@ ContainerState::ProcessDisplayItems(nsDisplayList* aList)
     } else {
       PaintedLayerData* paintedLayerData =
         mPaintedLayerDataTree.FindPaintedLayerFor(animatedGeometryRoot, agrScrollClip,
-                                                  itemVisibleRect, false,
+                                                  itemVisibleRect,
                                                   item->Frame()->In3DContextAndBackfaceIsHidden(),
                                                   [&]() {
           return NewPaintedLayerData(item, animatedGeometryRoot, agrScrollClip,

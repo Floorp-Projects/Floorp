@@ -9,6 +9,13 @@
 
 enum AutoKeyword { "auto" };
 
+enum PositionAlignSetting {
+  "line-left",
+  "center",
+  "line-right",
+  "auto"
+};
+
 enum AlignSetting {
   "start",
   "middle",
@@ -36,7 +43,7 @@ interface VTTCue : TextTrackCue {
   [SetterThrows]
   attribute long position;
   [SetterThrows]
-  attribute AlignSetting positionAlign;
+  attribute PositionAlignSetting positionAlign;
   [SetterThrows]
   attribute long size;
   attribute AlignSetting align;
@@ -50,4 +57,6 @@ partial interface VTTCue {
   attribute HTMLDivElement? displayState;
   [ChromeOnly]
   readonly attribute boolean hasBeenReset;
+  [ChromeOnly]
+  readonly attribute PositionAlignSetting computedPositionAlign;
 };

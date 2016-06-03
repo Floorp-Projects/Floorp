@@ -27,7 +27,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=995943
   SimpleTest.waitForExplicitFinish();
   SimpleTest.requestCompleteLog();
   if (navigator.userAgent.indexOf("Mac OS X 10.10") != -1)
-    SimpleTest.expectAssertions(5); // See bug 1067022
+    SimpleTest.expectAssertions(6, 9); // See bug 1067022
   else if (Services.appinfo.OS == "WINNT")
     SimpleTest.expectAssertions(0, 1); // See bug 1067022
 

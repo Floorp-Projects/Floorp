@@ -33,7 +33,7 @@ void
 TextTrackCue::SetDefaultCueSettings()
 {
   mPosition = 50;
-  mPositionAlign = AlignSetting::Middle;
+  mPositionAlign = PositionAlignSetting::Center;
   mSize = 100;
   mPauseOnExit = false;
   mSnapToLines = true;
@@ -41,6 +41,7 @@ TextTrackCue::SetDefaultCueSettings()
   mAlign = AlignSetting::Middle;
   mLineAlign = AlignSetting::Start;
   mVertical = DirectionSetting::_empty;
+  mActive = false;
 }
 
 TextTrackCue::TextTrackCue(nsPIDOMWindowInner* aOwnerWindow,
@@ -166,6 +167,20 @@ TextTrackCue::SetRegion(TextTrackRegion* aRegion)
   }
   mRegion = aRegion;
   mReset = true;
+}
+
+PositionAlignSetting
+TextTrackCue::ComputedPositionAlign()
+{
+  // See spec https://w3c.github.io/webvtt/#cue-computed-position-alignment
+  if (mPositionAlign != PositionAlignSetting::Auto) {
+    return mPositionAlign;
+  } else if (mAlign == AlignSetting::Left) {
+    return PositionAlignSetting::Line_left;
+  } else if (mAlign == AlignSetting::Right) {
+    return PositionAlignSetting::Line_right;
+  }
+  return PositionAlignSetting::Center;
 }
 
 } // namespace dom

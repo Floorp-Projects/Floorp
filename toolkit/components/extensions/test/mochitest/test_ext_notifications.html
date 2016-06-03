@@ -186,6 +186,40 @@ add_task(function* test_notifications_populated_getAll() {
   yield extension.unload();
 });
 
+add_task(function* test_buttons_unsupported() {
+  function backgroundScript() {
+    let opts = {
+      type: "basic",
+      title: "Testing Notification",
+      message: "Carry on",
+      buttons: [{title: "Button title"}],
+    };
+
+    let exception = {};
+    try {
+      browser.notifications.create(opts);
+    } catch (e) {
+      exception = e;
+    }
+
+    browser.test.assertTrue(
+      String(exception).includes('Property "buttons" is unsupported by Firefox'),
+      "notifications.create with buttons option threw an expected exception"
+    );
+    browser.test.notifyPass("buttons-unsupported");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["notifications"],
+    },
+    background: `(${backgroundScript})()`,
+  });
+  yield extension.startup();
+  yield extension.awaitFinish("buttons-unsupported");
+  yield extension.unload();
+});
+
 </script>
 
 </body>

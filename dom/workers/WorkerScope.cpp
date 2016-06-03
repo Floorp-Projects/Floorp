@@ -15,6 +15,7 @@
 #include "mozilla/dom/FunctionBinding.h"
 #include "mozilla/dom/IDBFactory.h"
 #include "mozilla/dom/ImageBitmap.h"
+#include "mozilla/dom/ImageBitmapBinding.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
@@ -414,6 +415,11 @@ already_AddRefed<Promise>
 WorkerGlobalScope::CreateImageBitmap(const ImageBitmapSource& aImage,
                                      ErrorResult& aRv)
 {
+  if (aImage.IsArrayBuffer() || aImage.IsArrayBufferView()) {
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    return nullptr;
+  }
+
   return ImageBitmap::Create(this, aImage, Nothing(), aRv);
 }
 
@@ -422,7 +428,28 @@ WorkerGlobalScope::CreateImageBitmap(const ImageBitmapSource& aImage,
                                      int32_t aSx, int32_t aSy, int32_t aSw, int32_t aSh,
                                      ErrorResult& aRv)
 {
+  if (aImage.IsArrayBuffer() || aImage.IsArrayBufferView()) {
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    return nullptr;
+  }
+
   return ImageBitmap::Create(this, aImage, Some(gfx::IntRect(aSx, aSy, aSw, aSh)), aRv);
+}
+
+already_AddRefed<mozilla::dom::Promise>
+WorkerGlobalScope::CreateImageBitmap(const ImageBitmapSource& aImage,
+                                     int32_t aOffset, int32_t aLength,
+                                     ImageBitmapFormat aFormat,
+                                     const Sequence<ChannelPixelLayout>& aLayout,
+                                     ErrorResult& aRv)
+{
+  if (aImage.IsArrayBuffer() || aImage.IsArrayBufferView()) {
+    return ImageBitmap::Create(this, aImage, aOffset, aLength, aFormat, aLayout,
+                               aRv);
+  } else {
+    aRv.Throw(NS_ERROR_TYPE_ERR);
+    return nullptr;
+  }
 }
 
 DedicatedWorkerGlobalScope::DedicatedWorkerGlobalScope(WorkerPrivate* aWorkerPrivate)

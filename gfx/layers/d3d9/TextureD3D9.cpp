@@ -935,6 +935,8 @@ TextureHostD3D9::UpdatedInternal(const nsIntRegion* aRegion)
   if (!mTextureSource->UpdateFromTexture(mTexture, regionToUpdate)) {
     gfxCriticalNote << "[D3D9] DataTextureSourceD3D9::UpdateFromTexture failed";
   }
+
+  ReadUnlock();
 }
 
 IDirect3DDevice9*
@@ -957,6 +959,12 @@ TextureHostD3D9::SetCompositor(Compositor* aCompositor)
   if (mTextureSource) {
     mTextureSource->SetCompositor(aCompositor);
   }
+}
+
+Compositor*
+TextureHostD3D9::GetCompositor()
+{
+  return mCompositor;
 }
 
 bool
@@ -1085,6 +1093,12 @@ DXGITextureHostD3D9::SetCompositor(Compositor* aCompositor)
   }
 }
 
+Compositor*
+DXGITextureHostD3D9::GetCompositor()
+{
+  return mCompositor;
+}
+
 void
 DXGITextureHostD3D9::DeallocateDeviceData()
 {
@@ -1122,6 +1136,12 @@ DXGIYCbCrTextureHostD3D9::SetCompositor(Compositor* aCompositor)
     mTextureSources[1] = nullptr;
     mTextureSources[2] = nullptr;
   }
+}
+
+Compositor*
+DXGIYCbCrTextureHostD3D9::GetCompositor()
+{
+  return mCompositor;
 }
 
 bool

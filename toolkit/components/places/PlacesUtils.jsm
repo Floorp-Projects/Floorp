@@ -261,6 +261,29 @@ this.PlacesUtils = {
   },
 
   /**
+   * Is a string a valid GUID?
+   *
+   * @param guid: (String)
+   * @return (Boolean)
+   */
+  isValidGuid(guid) {
+    return (/^[a-zA-Z0-9\-_]{12}$/.test(guid));
+  },
+
+  /**
+   * Converts a string or n URL object to an nsIURI.
+   *
+   * @param url (URL) or (String)
+   *        the URL to convert.
+   * @return nsIURI for the given URL.
+   */
+  toURI(url) {
+    url = (url instanceof URL) ? url.href : url;
+
+    return NetUtil.newURI(url);
+  },
+
+  /**
    * Convert a Date object to a PRTime (microseconds).
    *
    * @param date
@@ -272,15 +295,14 @@ this.PlacesUtils = {
   },
 
   /**
-   * Convert a PRTime to a time.
+   * Convert a PRTime to a Date object.
    *
    * @param time
    *        microseconds from the epoch.
-   * @return time
-   *        milliseconds from the epoch.
+   * @return a Date object.
    */
-  toTime(time) {
-    return time / 1000;
+  toDate(time) {
+    return new Date(parseInt(time / 1000));
   },
 
   /**
