@@ -1431,8 +1431,11 @@ public:
 
   bool ChildrenHavePerspective() const;
 
-  // Calculate the overflow size of all child frames, taking preserve-3d into account
-  void ComputePreserve3DChildrenOverflow(nsOverflowAreas& aOverflowAreas, const nsRect& aBounds);
+  /**
+   * Includes the overflow area of all descendants that participate in the current
+   * 3d context into aOverflowAreas.
+   */
+  void ComputePreserve3DChildrenOverflow(nsOverflowAreas& aOverflowAreas);
 
   void RecomputePerspectiveChildrenOverflow(const nsIFrame* aStartFrame, const nsRect* aBounds);
 
