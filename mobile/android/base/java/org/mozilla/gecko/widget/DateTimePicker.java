@@ -45,8 +45,6 @@ public class DateTimePicker extends FrameLayout {
     private static final String LOGTAG = "GeckoDateTimePicker";
     private static final int DEFAULT_START_YEAR = 1;
     private static final int DEFAULT_END_YEAR = 9999;
-    // Minimal screen width (in inches) for which we can show the calendar;
-    private static final int SCREEN_SIZE_THRESHOLD = 5;
     private static final char DATE_FORMAT_DAY = 'd';
     private static final char DATE_FORMAT_MONTH = 'M';
     private static final char DATE_FORMAT_YEAR = 'y';
@@ -320,14 +318,7 @@ public class DateTimePicker extends FrameLayout {
         // If we're displaying a date, the screen is wide enough
         // (and if we're using an SDK where the calendar view exists)
         // then display a calendar.
-        if (Versions.feature11Plus &&
-            (mState == PickersState.DATE || mState == PickersState.DATETIME) &&
-            mScreenWidth >= SCREEN_SIZE_THRESHOLD) {
-
-            if (DEBUG) {
-                Log.d(LOGTAG, "SDK > 10 and screen wide enough, displaying calendar");
-            }
-
+        if (mState == PickersState.DATE || mState == PickersState.DATETIME) {
             mCalendar = new CalendarView(context);
             mCalendar.setVisibility(GONE);
 
@@ -552,12 +543,7 @@ public class DateTimePicker extends FrameLayout {
     }
 
     public void toggleCalendar(boolean shown) {
-        if ((mState != PickersState.DATE && mState != PickersState.DATETIME) ||
-            mScreenWidth < SCREEN_SIZE_THRESHOLD) {
-            if (DEBUG) {
-                Log.d(LOGTAG, "Cannot display calendar on this device, in this state" +
-                              ": screen width :" + mScreenWidth);
-            }
+        if ((mState != PickersState.DATE && mState != PickersState.DATETIME)) {
             return;
         }
 
