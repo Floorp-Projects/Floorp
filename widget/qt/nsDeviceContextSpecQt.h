@@ -22,7 +22,7 @@ public:
 
     NS_DECL_ISUPPORTS
 
-    NS_IMETHOD GetSurfaceForPrinter(gfxASurface** surface);
+    virtual already_AddRefed<PrintTarget> MakePrintTarget() final;
 
     NS_IMETHOD Init(nsIWidget* aWidget,
                     nsIPrintSettings* aPS,

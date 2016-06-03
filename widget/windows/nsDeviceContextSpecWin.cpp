@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/gfx/PrintTargetThebes.h"
 #include "mozilla/RefPtr.h"
 
 #include "nsDeviceContextSpecWin.h"
@@ -49,6 +50,7 @@ PRLogModuleInfo * kWidgetPrintingLogMod = PR_NewLogModule("printing-widget");
 #define PR_PL(_p1)  MOZ_LOG(kWidgetPrintingLogMod, mozilla::LogLevel::Debug, _p1)
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 
 static const wchar_t kDriverName[] =  L"WINSPOOL";
 
@@ -220,11 +222,10 @@ static void CleanAndCopyString(wchar_t*& aStr, const wchar_t* aNewStr)
   }
 }
 
-NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface)
+already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget()
 {
   NS_ASSERTION(mDevMode, "DevMode can't be NULL here");
 
-  *surface = nullptr;
   RefPtr<gfxASurface> newSurface;
 
   if (mOutputFormat == nsIPrintSettings::kOutputFormatPDF) {
@@ -234,7 +235,7 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
     double width, height;
     mPrintSettings->GetEffectivePageSize(&width, &height);
     if (width <= 0 || height <= 0) {
-      return NS_ERROR_FAILURE;
+      return nullptr;
     }
 
     // convert twips to points
@@ -243,13 +244,15 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
 
     nsCOMPtr<nsIFile> file = do_CreateInstance("@mozilla.org/file/local;1");
     nsresult rv = file->InitWithPath(filename);
-    if (NS_FAILED(rv))
-      return rv;
+    if (NS_FAILED(rv)) {
+      return nullptr;
+    }
 
     nsCOMPtr<nsIFileOutputStream> stream = do_CreateInstance("@mozilla.org/network/file-output-stream;1");
     rv = stream->Init(file, -1, -1, 0);
-    if (NS_FAILED(rv))
-      return rv;
+    if (NS_FAILED(rv)) {
+      return nullptr;
+    }
 
     newSurface = new gfxPDFSurface(stream, gfxSize(width, height));
   } else {
@@ -258,20 +261,23 @@ NS_IMETHODIMP nsDeviceContextSpecWin::GetSurfaceForPrinter(gfxASurface **surface
       HDC dc = ::CreateDCW(mDriverName, mDeviceName, nullptr, mDevMode);
       if (!dc) {
         gfxCriticalError(gfxCriticalError::DefaultOptions(false)) << "Failed to create device context in GetSurfaceForPrinter";
-        return NS_ERROR_GFX_PRINTER_NAME_NOT_FOUND;
+        return nullptr;
       }
 
       // have this surface take over ownership of this DC
       newSurface = new gfxWindowsSurface(dc, gfxWindowsSurface::FLAG_TAKE_DC | gfxWindowsSurface::FLAG_FOR_PRINTING);
       if (newSurface->GetType() == (gfxSurfaceType)-1) {
         gfxCriticalError() << "Invalid windows surface from " << gfx::hexa(dc);
-        return NS_ERROR_FAILURE;
+        return nullptr;
       }
     }
   }
 
-  newSurface.forget(surface);
-  return NS_OK;
+  if (!newSurface) {
+    return nullptr;
+  }
+
+  return PrintTargetThebes::CreateOrNull(newSurface);
 }
 
 float
