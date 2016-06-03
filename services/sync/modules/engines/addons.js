@@ -25,9 +25,12 @@
  *
  * Synchronization is influenced by the following preferences:
  *
- *  - services.sync.addons.ignoreRepositoryChecking
  *  - services.sync.addons.ignoreUserEnabledChanges
  *  - services.sync.addons.trustedSourceHostnames
+ *
+ *  and also influenced by whether addons have repository caching enabled and
+ *  whether they allow installation of addons from insecure options (both of
+ *  which are themselves influenced by the "extensions." pref branch)
  *
  * See the documentation in services-sync.js for the behavior of these prefs.
  */
@@ -291,7 +294,7 @@ AddonsStore.prototype = {
       id:               record.addonID,
       syncGUID:         record.id,
       enabled:          record.enabled,
-      requireSecureURI: !Svc.Prefs.get("addons.ignoreRepositoryChecking", false),
+      requireSecureURI: this._extensionsPrefs.get("install.requireSecureOrigin", true),
     }], cb);
 
     // This will throw if there was an error. This will get caught by the sync
@@ -566,10 +569,10 @@ AddonsStore.prototype = {
       return false;
     }
 
-    // We provide a back door to skip the repository checking of an add-on.
-    // This is utilized by the tests to make testing easier. Users could enable
-    // this, but it would sacrifice security.
-    if (Svc.Prefs.get("addons.ignoreRepositoryChecking", false)) {
+    // If the AddonRepository's cache isn't enabled (which it typically isn't
+    // in tests), getCachedAddonByID always returns null - so skip the check
+    // in that case.
+    if (!AddonRepository.cacheEnabled) {
       return true;
     }
 
