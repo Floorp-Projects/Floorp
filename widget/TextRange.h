@@ -132,8 +132,7 @@ enum class TextRangeType : RawTextRangeType
 {
   eUninitialized = 0x00,
   eCaret = 0x01,
-  NS_TEXTRANGE_RAWINPUT =
-    nsITextInputProcessor::ATTR_RAW_CLAUSE,
+  eRawClause = nsITextInputProcessor::ATTR_RAW_CLAUSE,
   NS_TEXTRANGE_SELECTEDRAWTEXT =
     nsITextInputProcessor::ATTR_SELECTED_RAW_CLAUSE,
   NS_TEXTRANGE_CONVERTEDTEXT =

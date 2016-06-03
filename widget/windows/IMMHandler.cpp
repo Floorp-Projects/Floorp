@@ -1896,7 +1896,7 @@ PlatformToNSAttr(uint8_t aAttr)
     case ATTR_INPUT_ERROR:
     // case ATTR_FIXEDCONVERTED:
     case ATTR_INPUT:
-      return TextRangeType::NS_TEXTRANGE_RAWINPUT;
+      return TextRangeType::eRawClause;
     case ATTR_CONVERTED:
       return TextRangeType::NS_TEXTRANGE_CONVERTEDTEXT;
     case ATTR_TARGET_NOTCONVERTED:

@@ -152,7 +152,7 @@ public:
    * the pending composition string.
    *
    * @param aLength         Length of the clause.
-   * @param aTextRangeType  One of NS_TEXTRANGE_RAWINPUT,
+   * @param aTextRangeType  One of TextRangeType::eRawClause,
    *                        NS_TEXTRANGE_SELECTEDRAWTEXT,
    *                        NS_TEXTRANGE_CONVERTEDTEXT or
    *                        NS_TEXTRANGE_SELECTEDCONVERTEDTEXT.
