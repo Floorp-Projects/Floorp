@@ -35,10 +35,16 @@ overriden for a given subdirectory by creating a new ``.flake8`` file in the sub
 that ``.flake8`` files cannot inherit from one another, so all configuration you wish to keep must
 be re-defined.
 
+.. warning::
+
+    Only ``.flake8`` files that live in a directory that is explicitly included in the ``include``
+    directive will be considered. See `bug 1277851`_ for more details.
+
 For an overview of the supported configuration, see `flake8's documentation`_.
 
 .. _Flake8: https://flake8.readthedocs.io/en/latest/
 .. _pep8: http://pep8.readthedocs.io/en/latest/
 .. _pyflakes: https://github.com/pyflakes/pyflakes
 .. _mccabe: https://github.com/pycqa/mccabe
+.. _bug 1277851: https://bugzilla.mozilla.org/show_bug.cgi?id=1277851
 .. _flake8's documentation: https://flake8.readthedocs.io/en/latest/config.html
