@@ -64,6 +64,21 @@ def process_line(line):
     results.append(result.from_linter(LINTER, **res))
 
 
+def run_process(cmdargs):
+    # flake8 seems to handle SIGINT poorly. Handle it here instead
+    # so we can kill the process without a cryptic traceback.
+    orig = signal.signal(signal.SIGINT, signal.SIG_IGN)
+    proc = ProcessHandler(cmdargs, env=os.environ,
+                          processOutputLine=process_line)
+    proc.run()
+    signal.signal(signal.SIGINT, orig)
+
+    try:
+        proc.wait()
+    except KeyboardInterrupt:
+        proc.kill()
+
+
 def lint(files, **lintargs):
     binary = os.environ.get('FLAKE8')
     if not binary:
@@ -86,20 +101,19 @@ def lint(files, **lintargs):
     if exclude:
         cmdargs += ['--exclude', ','.join(lintargs['exclude'])]
 
-    cmdargs += files
+    # Run any paths with a .flake8 file in the directory separately so
+    # it gets picked up. This means only .flake8 files that live in
+    # directories that are explicitly included will be considered.
+    # See bug 1277851
+    no_config = []
+    for f in files:
+        if not os.path.isfile(os.path.join(f, '.flake8')):
+            no_config.append(f)
+            continue
+        run_process(cmdargs+[f])
 
-    # flake8 seems to handle SIGINT poorly. Handle it here instead
-    # so we can kill the process without a cryptic traceback.
-    orig = signal.signal(signal.SIGINT, signal.SIG_IGN)
-    proc = ProcessHandler(cmdargs, env=os.environ,
-                          processOutputLine=process_line)
-    proc.run()
-    signal.signal(signal.SIGINT, orig)
-
-    try:
-        proc.wait()
-    except KeyboardInterrupt:
-        proc.kill()
+    if no_config:
+        run_process(cmdargs+no_config)
 
     return results
 
