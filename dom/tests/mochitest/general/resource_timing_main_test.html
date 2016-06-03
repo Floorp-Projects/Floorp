@@ -196,6 +196,10 @@ function checkEntries(anEntryList) {
     ok (!!namedEntries && (namedEntries.length == 1),
       "An entry with the name '" + resourceName + "' should be available");
 
+    if (!namedEntries.length) {
+      continue;
+    }
+
     // Double check for the entry name.
     is (namedEntries[0].name, resourceName, "The resource name is invalid");
 
