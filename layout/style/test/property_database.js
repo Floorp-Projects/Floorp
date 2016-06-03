@@ -6989,8 +6989,8 @@ if (SupportsMaskShorthand()) {
     domProp: "maskOrigin",
     inherited: false,
     type: CSS_TYPE_LONGHAND,
-    initial_values: [ "padding-box" ],
-    other_values: [ "border-box", "content-box", "border-box, padding-box", "padding-box, padding-box, padding-box", "border-box, border-box" ],
+    initial_values: [ "border-box" ],
+    other_values: [ "padding-box", "content-box", "border-box, padding-box", "padding-box, padding-box, padding-box", "border-box, border-box" ],
     invalid_values: [ "margin-box", "padding-box padding-box" ]
   };
   gCSSProperties["mask-position"] = {
