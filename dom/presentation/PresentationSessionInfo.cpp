@@ -433,6 +433,30 @@ PresentationSessionInfo::OnError(nsresult reason)
   return ReplyError(reason);
 }
 
+NS_IMETHODIMP
+PresentationSessionInfo::SendOffer(nsIPresentationChannelDescription* aOffer)
+{
+  return mControlChannel->SendOffer(aOffer);
+}
+
+NS_IMETHODIMP
+PresentationSessionInfo::SendAnswer(nsIPresentationChannelDescription* aAnswer)
+{
+  return mControlChannel->SendAnswer(aAnswer);
+}
+
+NS_IMETHODIMP
+PresentationSessionInfo::SendIceCandidate(const nsAString& candidate)
+{
+  return mControlChannel->SendIceCandidate(candidate);
+}
+
+NS_IMETHODIMP
+PresentationSessionInfo::Close(nsresult reason)
+{
+  return mControlChannel->Close(reason);
+}
+
 /**
  * Implementation of PresentationControllingInfo
  *
@@ -580,8 +604,18 @@ PresentationControllingInfo::GetAddress()
 NS_IMETHODIMP
 PresentationControllingInfo::OnIceCandidate(const nsAString& aCandidate)
 {
-  MOZ_ASSERT(false, "Should not receive ICE candidates.");
-  return NS_ERROR_FAILURE;
+  if (mTransportType != nsIPresentationChannelDescription::TYPE_DATACHANNEL) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (NS_WARN_IF(!mBuilder)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIPresentationDataChannelSessionTransportBuilder>
+    builder = do_QueryInterface(mBuilder);
+
+  return builder->OnIceCandidate(aCandidate);
 }
 
 nsresult
@@ -612,6 +646,16 @@ PresentationControllingInfo::OnOffer(nsIPresentationChannelDescription* aDescrip
 NS_IMETHODIMP
 PresentationControllingInfo::OnAnswer(nsIPresentationChannelDescription* aDescription)
 {
+  if (mTransportType == nsIPresentationChannelDescription::TYPE_DATACHANNEL) {
+
+    if (NS_WARN_IF(!mBuilder)) {
+      return NS_ERROR_FAILURE;
+    }
+    nsCOMPtr<nsIPresentationDataChannelSessionTransportBuilder>
+      builder = do_QueryInterface(mBuilder);
+    return builder->OnAnswer(aDescription);
+  }
+
   mIsResponderReady = true;
 
   // Close the control channel since it's no longer needed.
@@ -651,7 +695,6 @@ PresentationControllingInfo::NotifyOpened()
 
   return builder->BuildDataChannelTransport(nsIPresentationService::ROLE_CONTROLLER,
                                             GetWindow(),
-                                            mControlChannel,
                                             this);
 
 }
@@ -660,6 +703,16 @@ NS_IMETHODIMP
 PresentationControllingInfo::NotifyClosed(nsresult aReason)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (mTransportType == nsIPresentationChannelDescription::TYPE_DATACHANNEL) {
+    if (NS_WARN_IF(!mBuilder)) {
+      return NS_ERROR_FAILURE;
+    }
+    nsCOMPtr<nsIPresentationDataChannelSessionTransportBuilder>
+      builder = do_QueryInterface(mBuilder);
+
+    NS_WARN_IF(NS_FAILED(builder->NotifyClosed(aReason)));
+  }
 
   // Unset control channel here so it won't try to re-close it in potential
   // subsequent |Shutdown| calls.
@@ -823,12 +876,6 @@ PresentationPresentingInfo::OnSessionTransport(nsIPresentationSessionTransport* 
   return NS_OK;
 }
 
-NS_IMETHODIMP
-PresentationPresentingInfo::OnError(nsresult reason)
-{
-  return PresentationSessionInfo::OnError(reason);
-}
-
 nsresult
 PresentationPresentingInfo::InitTransportAndSendAnswer()
 {
@@ -869,20 +916,13 @@ PresentationPresentingInfo::InitTransportAndSendAnswer()
     mTransportType = nsIPresentationChannelDescription::TYPE_DATACHANNEL;
     rv = builder->BuildDataChannelTransport(nsIPresentationService::ROLE_RECEIVER,
                                             GetWindow(),
-                                            mControlChannel,
                                             this);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
     // delegate |onOffer| to builder
-    nsCOMPtr<nsIPresentationControlChannelListener> listener(do_QueryInterface(builder));
-
-    if (NS_WARN_IF(!listener)) {
-      return NS_ERROR_NOT_AVAILABLE;
-    }
-
-    return listener->OnOffer(mRequesterDescription);
+    return builder->OnOffer(mRequesterDescription);
   }
 
   MOZ_ASSERT(false, "Unknown nsIPresentationChannelDescription type!");
@@ -971,8 +1011,14 @@ PresentationPresentingInfo::OnAnswer(nsIPresentationChannelDescription* aDescrip
 NS_IMETHODIMP
 PresentationPresentingInfo::OnIceCandidate(const nsAString& aCandidate)
 {
-  MOZ_ASSERT(false, "Should not receive ICE candidates.");
-  return NS_ERROR_FAILURE;
+  if (NS_WARN_IF(!mBuilder)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIPresentationDataChannelSessionTransportBuilder>
+    builder = do_QueryInterface(mBuilder);
+
+  return builder->OnIceCandidate(aCandidate);
 }
 
 NS_IMETHODIMP
@@ -986,6 +1032,16 @@ NS_IMETHODIMP
 PresentationPresentingInfo::NotifyClosed(nsresult aReason)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (mTransportType == nsIPresentationChannelDescription::TYPE_DATACHANNEL) {
+    if (NS_WARN_IF(!mBuilder)) {
+      return NS_ERROR_FAILURE;
+    }
+    nsCOMPtr<nsIPresentationDataChannelSessionTransportBuilder>
+      builder = do_QueryInterface(mBuilder);
+
+    NS_WARN_IF(NS_FAILED(builder->NotifyClosed(aReason)));
+  }
 
   // Unset control channel here so it won't try to re-close it in potential
   // subsequent |Shutdown| calls.
