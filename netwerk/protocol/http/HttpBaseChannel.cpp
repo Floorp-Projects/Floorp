@@ -52,6 +52,7 @@
 #include "nsIURL.h"
 #include "nsIConsoleService.h"
 #include "mozilla/BinarySearch.h"
+#include "nsIXULRuntime.h"
 
 #include <algorithm>
 
