@@ -306,8 +306,10 @@ public class Favicons {
         }
 
         // No joy using in-memory resources. Go to background thread and ask the database.
+        // Note: this is a near duplicate of loadUncachedFavicon, however loadUncachedFavicon
+        // can download favicons, whereas we want to restrict ourselves to the cache.
         final LoadFaviconTask task =
-            new LoadFaviconTask(context, pageURL, targetURL, 0, callback, targetSize, true);
+            new LoadFaviconTask(context, pageURL, targetURL, 0, callback, targetSize, /* onlyFromLocal: */ true);
         final int taskId = task.getId();
         synchronized (loadTasks) {
             loadTasks.put(taskId, task);
