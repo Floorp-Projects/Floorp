@@ -105,19 +105,25 @@
   z-index: 9999;
   display: none;
   background: transparent;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.tooltip-top {
+  flex-direction: column;
+}
+
+.tooltip-bottom {
+  flex-direction: column-reverse;
 }
 
 .tooltip-panel{
   background-color: var(--theme-tooltip-background);
+  pointer-events: all;
 }
 
 .tooltip-visible {
-  display: block;
-}
-
-.tooltip-container[type="normal"] > .tooltip-panel {
-  height: 100%;
-  width: 100%;
+  display: flex;
 }
 
 /* Tooltip : arrow style */
@@ -127,9 +133,10 @@
 }
 
 .tooltip-container[type="arrow"] > .tooltip-panel {
-  position: absolute;
+  position: relative;
+  flex-grow: 0;
+  min-height: 10px;
   box-sizing: border-box;
-  height: calc(100% - 13px);
   width: 100%;
 
   border: 3px solid var(--theme-tooltip-border);
@@ -145,18 +152,24 @@
 }
 
 .tooltip-arrow {
-  position: absolute;
+  position: relative;
   height: 16px;
   width: 32px;
   overflow: hidden;
+  pointer-events: all;
+  flex-shrink: 0;
+}
+
+.tooltip-filler {
+  flex: 1;
 }
 
 .tooltip-top .tooltip-arrow {
-  bottom: 0;
+  margin-top: -3px;
 }
 
 .tooltip-bottom .tooltip-arrow {
-  top: 0;
+  margin-bottom: -3px;
 }
 
 .tooltip-arrow:before {
