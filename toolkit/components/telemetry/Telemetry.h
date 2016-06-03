@@ -38,13 +38,6 @@ enum TimerResolution {
 };
 
 /**
- * Create and destroy the underlying base::StatisticsRecorder singleton.
- * Creation has to be done very early in the startup sequence.
- */
-void CreateStatisticsRecorder();
-void DestroyStatisticsRecorder();
-
-/**
  * Initialize the Telemetry service on the main thread at startup.
  */
 void Init();
