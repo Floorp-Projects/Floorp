@@ -231,12 +231,12 @@ pref("dom.ipc.plugins.enabled", true);
 // product URLs
 // The breakpad report server to link to in about:crashes
 pref("breakpad.reportURL", "https://crash-stats.mozilla.com/report/index/");
-pref("app.releaseNotesURL", "http://www.mozilla.com/%LOCALE%/b2g/%VERSION%/releasenotes/");
-pref("app.support.baseURL", "http://support.mozilla.com/b2g");
-pref("app.privacyURL", "http://www.mozilla.com/%LOCALE%/m/privacy.html");
-pref("app.creditsURL", "http://www.mozilla.org/credits/");
-pref("app.featuresURL", "http://www.mozilla.com/%LOCALE%/b2g/features/");
-pref("app.faqURL", "http://www.mozilla.com/%LOCALE%/b2g/faq/");
+pref("app.releaseNotesURL", "https://www.mozilla.com/%LOCALE%/b2g/%VERSION%/releasenotes/");
+pref("app.support.baseURL", "https://support.mozilla.com/b2g");
+pref("app.privacyURL", "https://www.mozilla.com/%LOCALE%/m/privacy.html");
+pref("app.creditsURL", "https://www.mozilla.org/credits/");
+pref("app.featuresURL", "https://www.mozilla.com/%LOCALE%/b2g/features/");
+pref("app.faqURL", "https://www.mozilla.com/%LOCALE%/b2g/faq/");
 
 // Name of alternate about: page for certificate errors (when undefined, defaults to about:neterror)
 pref("security.alternate_certificate_error_page", "certerror");
