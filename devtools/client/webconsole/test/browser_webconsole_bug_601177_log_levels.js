@@ -29,7 +29,7 @@ add_task(function* () {
 });
 
 function testLogLevels(hud) {
-  content.location = TEST_URI2;
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URI2);
 
   info("waiting for messages");
 

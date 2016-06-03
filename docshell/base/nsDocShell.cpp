@@ -13389,6 +13389,21 @@ nsDocShell::IsAppOfType(uint32_t aAppType, bool* aIsOfType)
 }
 
 NS_IMETHODIMP
+nsDocShell::IsTrackingProtectionOn(bool* aIsTrackingProtectionOn)
+{
+  if (Preferences::GetBool("privacy.trackingprotection.enabled", false)) {
+    *aIsTrackingProtectionOn = true;
+  } else if (mInPrivateBrowsing &&
+             Preferences::GetBool("privacy.trackingprotection.pbmode.enabled", false)) {
+    *aIsTrackingProtectionOn = true;
+  } else {
+    *aIsTrackingProtectionOn = false;
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
 nsDocShell::GetIsContent(bool* aIsContent)
 {
   *aIsContent = (mItemType == typeContent);

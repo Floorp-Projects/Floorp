@@ -189,6 +189,9 @@
      it is applicable. -->
 <!ENTITY pref_search_hint2 "TIP: Add any website to your list of search providers by long-pressing on its search field and then touching the &formatI; icon.">
 <!ENTITY pref_category_advanced "Advanced">
+<!-- Localization note (pref_category_advanced_summary3): “data saver” in this
+     context means consuming less data, e.g. by not loading images, not
+     “storing data”. -->
 <!ENTITY pref_category_advanced_summary3 "Restore tabs, data saver, developer tools">
 <!ENTITY pref_category_notifications "Notifications">
 <!ENTITY pref_category_notifications_summary "New features, website updates">
@@ -240,6 +243,9 @@
 <!ENTITY pref_cookies_not_accept_foreign "Enabled, excluding 3rd party">
 <!ENTITY pref_cookies_disabled "Disabled">
 
+<!-- Localization note (pref_category_data_saver): “data saver” in this
+     context means consuming less data, e.g. by not loading images, not
+     “storing data”. -->
 <!ENTITY pref_category_data_saver "Data saver">
 <!ENTITY pref_category_media "Media">
 <!ENTITY pref_category_developer_tools "Developer tools">

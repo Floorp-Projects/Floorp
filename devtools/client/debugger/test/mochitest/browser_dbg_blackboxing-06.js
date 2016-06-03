@@ -15,7 +15,7 @@ var gSources;
 
 function test() {
   let options = {
-    source: "code_blackboxing_blackboxme.js",
+    source: EXAMPLE_URL + "code_blackboxing_blackboxme.js",
     line: 1
   };
   initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {

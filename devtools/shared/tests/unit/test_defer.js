@@ -6,7 +6,7 @@
 
 var Cu = Components.utils;
 var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
-const defer = require("devtools/shared/promise_defer");
+const defer = require("devtools/shared/defer");
 
 function testResolve() {
   const deferred = defer();
