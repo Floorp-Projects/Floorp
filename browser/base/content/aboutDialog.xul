@@ -112,6 +112,9 @@
               <hbox id="unsupportedSystem" align="center">
                 <label>&update.unsupported.start;</label><label id="unsupportedLink" class="text-link">&update.unsupported.linkText;</label><label>&update.unsupported.end;</label>
               </hbox>
+              <hbox id="restarting" align="center">
+                <label>&update.restarting;</label>
+              </hbox>
             </deck>
 #endif
           </vbox>
