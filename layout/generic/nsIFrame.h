@@ -1431,13 +1431,10 @@ public:
 
   bool ChildrenHavePerspective() const;
 
-  /**
-   * Includes the overflow area of all descendants that participate in the current
-   * 3d context into aOverflowAreas.
-   */
-  void ComputePreserve3DChildrenOverflow(nsOverflowAreas& aOverflowAreas);
+  // Calculate the overflow size of all child frames, taking preserve-3d into account
+  void ComputePreserve3DChildrenOverflow(nsOverflowAreas& aOverflowAreas, const nsRect& aBounds);
 
-  void RecomputePerspectiveChildrenOverflow(const nsIFrame* aStartFrame);
+  void RecomputePerspectiveChildrenOverflow(const nsIFrame* aStartFrame, const nsRect* aBounds);
 
   /**
    * Returns the number of ancestors between this and the root of our frame tree
