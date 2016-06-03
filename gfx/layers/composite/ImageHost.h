@@ -119,7 +119,7 @@ public:
 
 protected:
   struct TimedImage {
-    RefPtr<TextureHost> mTextureHost;
+    CompositableTextureHostRef mTextureHost;
     TimeStamp mTimeStamp;
     gfx::IntRect mPictureRect;
     int32_t mFrameID;
@@ -127,7 +127,10 @@ protected:
     int32_t mInputFrameID;
   };
 
-  CompositableTextureHostRef mCurrentTextureHost;
+  // Use a simple RefPtr because the same texture is already held by a
+  // a CompositableTextureHostRef in the array of TimedImage.
+  // See the comment in CompositableTextureRef for more details.
+  RefPtr<TextureHost> mCurrentTextureHost;
   CompositableTextureSourceRef mCurrentTextureSource;
   // When doing texture uploads it's best to alternate between two (or three)
   // texture sources so that the texture we upload to isn't being used by

@@ -62,8 +62,7 @@ SSL_GetChannelInfo(PRFileDesc *fd, SSLChannelInfo *info, PRUintn len)
              * and is safe because we only enable the corresponding PSK
              * cipher suite.
              */
-            inf.cipherSuite = ss->version >= SSL_LIBRARY_VERSION_TLS_1_3 ?
-                    ss->ssl3.hs.origCipherSuite : ss->ssl3.hs.cipher_suite;
+            inf.cipherSuite = ss->version >= SSL_LIBRARY_VERSION_TLS_1_3 ? ss->ssl3.hs.origCipherSuite : ss->ssl3.hs.cipher_suite;
             inf.compressionMethod = ss->ssl3.cwSpec->compression_method;
             ssl_ReleaseSpecReadLock(ss);
             inf.compressionMethodName =
@@ -127,8 +126,7 @@ SSL_GetPreliminaryChannelInfo(PRFileDesc *fd,
      * and is safe because we only enable the corresponding PSK
      * cipher suite.
      */
-    inf.cipherSuite = ss->version >= SSL_LIBRARY_VERSION_TLS_1_3 ?
-            ss->ssl3.hs.origCipherSuite : ss->ssl3.hs.cipher_suite;
+    inf.cipherSuite = ss->version >= SSL_LIBRARY_VERSION_TLS_1_3 ? ss->ssl3.hs.origCipherSuite : ss->ssl3.hs.cipher_suite;
 
     memcpy(info, &inf, inf.length);
     return SECSuccess;
@@ -144,7 +142,7 @@ SSL_GetPreliminaryChannelInfo(PRFileDesc *fd,
 /* ECDH suites incorrectly report S_RSA or S_ECDSA */
 #define S_RSA "RSA", ssl_auth_rsa_decrypt
 #define S_ECDSA "ECDSA", ssl_auth_ecdsa
-#define S_PSK   "PSK", ssl_auth_psk
+#define S_PSK "PSK", ssl_auth_psk
 
 /* real authentication algorithm */
 #define A_DSA ssl_auth_dsa
@@ -191,6 +189,7 @@ SSL_GetPreliminaryChannelInfo(PRFileDesc *fd,
 
 /* "mac algorithm" and size */
 #define M_AEAD_128 "AEAD", ssl_mac_aead, 128
+#define M_SHA384 "SHA384", ssl_hmac_sha384, 384
 #define M_SHA256 "SHA256", ssl_hmac_sha256, 256
 #define M_SHA "SHA1", ssl_mac_sha, 160
 #define M_MD5 "MD5", ssl_mac_md5, 128
@@ -201,7 +200,7 @@ SSL_GetPreliminaryChannelInfo(PRFileDesc *fd,
 #define F_FIPS_NSTD 1, 0, 1, 0
 #define F_NFIPS_STD 0, 0, 0, 0
 #define F_NFIPS_NSTD 0, 0, 1, 0 /* i.e., trash */
-#define F_EXPORT 0, 1, 0, 0 /* i.e., trash */
+#define F_EXPORT 0, 1, 0, 0     /* i.e., trash */
 
 static const SSLCipherSuiteInfo suiteInfo[] = {
     /* <------ Cipher suite --------------------> <auth> <KEA>  <bulk cipher> <MAC> <FIPS> */
@@ -252,7 +251,6 @@ static const SSLCipherSuiteInfo suiteInfo[] = {
     { 0, CS(RSA_WITH_NULL_SHA), S_RSA, K_RSA, C_NULL, B_0, M_SHA, F_EXPORT, A_RSAD },
     { 0, CS(RSA_WITH_NULL_MD5), S_RSA, K_RSA, C_NULL, B_0, M_MD5, F_EXPORT, A_RSAD },
 
-#ifndef NSS_DISABLE_ECC
     /* ECC cipher suites */
     { 0, CS(ECDHE_RSA_WITH_AES_128_GCM_SHA256), S_RSA, K_ECDHE, C_AESGCM, B_128, M_AEAD_128, F_FIPS_STD, A_RSAS },
     { 0, CS(ECDHE_ECDSA_WITH_AES_128_GCM_SHA256), S_ECDSA, K_ECDHE, C_AESGCM, B_128, M_AEAD_128, F_FIPS_STD, A_ECDSA },
@@ -285,7 +283,14 @@ static const SSLCipherSuiteInfo suiteInfo[] = {
     { 0, CS(ECDHE_RSA_WITH_AES_128_CBC_SHA256), S_RSA, K_ECDHE, C_AES, B_128, M_SHA256, F_FIPS_STD, A_RSAS },
     { 0, CS(ECDHE_RSA_WITH_AES_256_CBC_SHA), S_RSA, K_ECDHE, C_AES, B_256, M_SHA, F_FIPS_STD, A_RSAS },
     { 0, CS(ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256), S_RSA, K_ECDHE, C_CHACHA20, B_256, M_AEAD_128, F_NFIPS_STD, A_RSAS },
-#endif /* NSS_DISABLE_ECC */
+    { 0, CS(ECDHE_RSA_WITH_AES_256_CBC_SHA384), S_RSA, K_ECDHE, C_AES, B_256, M_SHA384, F_FIPS_STD, A_RSAS },
+    { 0, CS(ECDHE_ECDSA_WITH_AES_256_CBC_SHA384), S_ECDSA, K_ECDHE, C_AES, B_256, M_SHA384, F_FIPS_STD, A_ECDSA },
+    { 0, CS(ECDHE_ECDSA_WITH_AES_256_GCM_SHA384), S_ECDSA, K_ECDHE, C_AESGCM, B_256, M_AEAD_128, F_FIPS_STD, A_ECDSA },
+    { 0, CS(ECDHE_RSA_WITH_AES_256_GCM_SHA384), S_RSA, K_ECDHE, C_AESGCM, B_256, M_AEAD_128, F_FIPS_STD, A_RSAS },
+
+    { 0, CS(DHE_DSS_WITH_AES_256_GCM_SHA384), S_DSA, K_DHE, C_AESGCM, B_256, M_AEAD_128, F_FIPS_STD, A_DSA },
+    { 0, CS(DHE_RSA_WITH_AES_256_GCM_SHA384), S_RSA, K_DHE, C_AESGCM, B_256, M_AEAD_128, F_FIPS_STD, A_RSAS },
+    { 0, CS(RSA_WITH_AES_256_GCM_SHA384), S_RSA, K_RSA, C_AESGCM, B_256, M_AEAD_128, F_FIPS_STD, A_RSAD }
 };
 
 #define NUM_SUITEINFOS ((sizeof suiteInfo) / (sizeof suiteInfo[0]))
@@ -461,8 +466,9 @@ SSL_ExportKeyingMaterial(PRFileDesc *fd,
         PORT_SetError(SSL_ERROR_HANDSHAKE_NOT_COMPLETED);
         rv = SECFailure;
     } else {
+        HASH_HashType ht = ssl3_GetTls12HashType(ss);
         rv = ssl3_TLSPRFWithMasterSecret(ss->ssl3.cwSpec, label, labelLen, val,
-                                         valLen, out, outLen);
+                                         valLen, out, outLen, ht);
     }
     ssl_ReleaseSpecReadLock(ss);
 

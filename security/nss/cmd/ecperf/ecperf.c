@@ -8,14 +8,8 @@
 #include "nss.h"
 #include "secutil.h"
 #include "pkcs11.h"
-#include <nspr.h>
+#include "nspr.h"
 #include <stdio.h>
-#include <strings.h>
-#include <assert.h>
-
-#include <time.h>
-#include <sys/time.h>
-#include <sys/resource.h>
 
 #define __PASTE(x, y) x##y
 
@@ -89,6 +83,9 @@ static SECOidTag ecCurve_oid_map[] = {
     SEC_OID_SECG_EC_SECT193R1,
     SEC_OID_SECG_EC_SECT193R2,
     SEC_OID_SECG_EC_SECT239K1,
+    SEC_OID_UNKNOWN, /* ECCurve_WTLS_1 */
+    SEC_OID_UNKNOWN, /* ECCurve_WTLS_8 */
+    SEC_OID_UNKNOWN, /* ECCurve_WTLS_9 */
     SEC_OID_UNKNOWN /* ECCurve_pastLastCurve */
 };
 
@@ -125,6 +122,9 @@ PKCS11Thread(void *data)
     PR_Lock(threadData->lock);
     crv = NSC_OpenSession(1, CKF_SERIAL_SESSION, NULL, 0, &session);
     PR_Unlock(threadData->lock);
+    if (crv != CKR_OK) {
+        return;
+    }
 
     if (threadData->isSign) {
         sig.data = sigData;
@@ -209,6 +209,12 @@ M_TimeOperation(void (*threadFunc)(void *),
             } else {
                 rv = (*opfunc)(param1, param2, param3);
             }
+            if (rv != SECSuccess) {
+                PORT_Free(threadIDs);
+                PORT_Free(threadData);
+                SECU_PrintError("Error:", op);
+                return rv;
+            }
         }
         total = iters;
     } else {
@@ -231,9 +237,6 @@ M_TimeOperation(void (*threadFunc)(void *),
             /* check the status */
             total += threadData[i].count;
         }
-
-        PORT_Free(threadIDs);
-        PORT_Free(threadData);
     }
 
     totalTime = PR_Now() - startTime;
@@ -246,6 +249,9 @@ M_TimeOperation(void (*threadFunc)(void *),
             *rate = ((double)total) / dUserTime;
         }
     }
+    PORT_Free(threadIDs);
+    PORT_Free(threadData);
+
     return SECSuccess;
 }
 
@@ -311,8 +317,9 @@ hexString2SECItem(PLArenaPool *arena, SECItem *item, const char *str)
     int byteval = 0;
     int tmp = PORT_Strlen(str);
 
-    if ((tmp % 2) != 0)
+    if ((tmp % 2) != 0) {
         return NULL;
+    }
 
     /* skip leading 00's unless the hex string is "00" */
     while ((tmp > 2) && (str[0] == '0') && (str[1] == '0')) {
@@ -384,6 +391,7 @@ PKCS11_Sign(CK_SESSION_HANDLE session, CK_OBJECT_HANDLE *hKey,
 {
     CK_RV crv;
     CK_MECHANISM mech;
+    CK_ULONG sigLen = sig->len;
 
     mech.mechanism = CKM_ECDSA;
     mech.pParameter = NULL;
@@ -394,12 +402,12 @@ PKCS11_Sign(CK_SESSION_HANDLE session, CK_OBJECT_HANDLE *hKey,
         printf("Sign Failed CK_RV=0x%x\n", (int)crv);
         return SECFailure;
     }
-    crv = NSC_Sign(session, digest->data, digest->len, sig->data,
-                   (CK_ULONG_PTR)&sig->len);
+    crv = NSC_Sign(session, digest->data, digest->len, sig->data, &sigLen);
     if (crv != CKR_OK) {
         printf("Sign Failed CK_RV=0x%x\n", (int)crv);
         return SECFailure;
     }
+    sig->len = (unsigned int)sigLen;
     return SECSuccess;
 }
 
@@ -530,23 +538,27 @@ ectest_curve_pkcs11(ECCurveName curve, int iterations, int numThreads)
     rv = M_TimeOperation(PKCS11Thread, (op_func)PKCS11_Derive, "ECDH_Derive",
                          &ecPriv, &mech, NULL, iterations, numThreads,
                          lock, session, 0, &deriveRate);
-    if (rv != SECSuccess)
+    if (rv != SECSuccess) {
         goto cleanup;
+    }
     rv = M_TimeOperation(PKCS11Thread, (op_func)PKCS11_Sign, "ECDSA_Sign",
                          (void *)&ecPriv, &sig, &digest, iterations, numThreads,
                          lock, session, 1, &signRate);
-    if (rv != SECSuccess)
+    if (rv != SECSuccess) {
         goto cleanup;
+    }
     printf("        ECDHE max rate = %.2f\n", (deriveRate + signRate) / 4.0);
     /* get a signature */
     rv = PKCS11_Sign(session, &ecPriv, &sig, &digest);
-    if (rv != SECSuccess)
+    if (rv != SECSuccess) {
         goto cleanup;
+    }
     rv = M_TimeOperation(PKCS11Thread, (op_func)PKCS11_Verify, "ECDSA_Verify",
                          (void *)&ecPub, &sig, &digest, iterations, numThreads,
                          lock, session, 0, NULL);
-    if (rv != SECSuccess)
+    if (rv != SECSuccess) {
         goto cleanup;
+    }
 
 cleanup:
     if (lock) {
@@ -590,7 +602,7 @@ ectest_curve_freebl(ECCurveName curve, int iterations, int numThreads)
     unsigned char digestData[20];
     double signRate, deriveRate;
     char genenc[3 + 2 * 2 * MAX_ECKEY_LEN];
-    SECStatus rv;
+    SECStatus rv = SECFailure;
 
     GFP_POPULATE(ecParams, curve);
 
@@ -607,22 +619,25 @@ ectest_curve_freebl(ECCurveName curve, int iterations, int numThreads)
     ecPub.ecParams = ecParams;
     ecPub.publicValue = ecPriv->publicValue;
 
-    M_TimeOperation(genericThread, (op_func)ECDH_DeriveWrap, "ECDH_Derive",
-                    ecPriv, &ecPub, NULL, iterations, numThreads, 0, 0, 0, &deriveRate);
-    if (rv != SECSuccess)
+    rv = M_TimeOperation(genericThread, (op_func)ECDH_DeriveWrap, "ECDH_Derive",
+                         ecPriv, &ecPub, NULL, iterations, numThreads, 0, 0, 0, &deriveRate);
+    if (rv != SECSuccess) {
         goto cleanup;
-    M_TimeOperation(genericThread, (op_func)ECDSA_SignDigest, "ECDSA_Sign",
-                    ecPriv, &sig, &digest, iterations, numThreads, 0, 0, 1, &signRate);
+    }
+    rv = M_TimeOperation(genericThread, (op_func)ECDSA_SignDigest, "ECDSA_Sign",
+                         ecPriv, &sig, &digest, iterations, numThreads, 0, 0, 1, &signRate);
     if (rv != SECSuccess)
         goto cleanup;
     printf("        ECDHE max rate = %.2f\n", (deriveRate + signRate) / 4.0);
     rv = ECDSA_SignDigest(ecPriv, &sig, &digest);
-    if (rv != SECSuccess)
+    if (rv != SECSuccess) {
         goto cleanup;
-    M_TimeOperation(genericThread, (op_func)ECDSA_VerifyDigest, "ECDSA_Verify",
-                    &ecPub, &sig, &digest, iterations, numThreads, 0, 0, 0, NULL);
-    if (rv != SECSuccess)
+    }
+    rv = M_TimeOperation(genericThread, (op_func)ECDSA_VerifyDigest, "ECDSA_Verify",
+                         &ecPub, &sig, &digest, iterations, numThreads, 0, 0, 0, NULL);
+    if (rv != SECSuccess) {
         goto cleanup;
+    }
 
 cleanup:
     return rv;
@@ -632,7 +647,9 @@ cleanup:
 void
 printUsage(char *prog)
 {
-    printf("Usage: %s [-i iterations] [-t threads ] [-ans] [-fp] [-A]\n", prog);
+    printf("Usage: %s [-i iterations] [-t threads ] [-ans] [-fp] [-Al]\n"
+           "-a: ansi\n-n: nist\n-s: secp\n-f: usefreebl\n-p: usepkcs11\n-A: all\n",
+           prog);
 }
 
 /* Performs tests of elliptic curve cryptography over prime fields If
@@ -651,26 +668,31 @@ main(int argv, char **argc)
     int iterations = 100;
     int numThreads = 1;
 
+    const CK_C_INITIALIZE_ARGS pk11args = {
+        NULL, NULL, NULL, NULL, CKF_LIBRARY_CANT_CREATE_OS_THREADS,
+        (void *)"flags=readOnly,noCertDB,noModDB", NULL
+    };
+
     /* read command-line arguments */
     for (i = 1; i < argv; i++) {
-        if (strcasecmp(argc[i], "-i") == 0) {
+        if (PL_strcasecmp(argc[i], "-i") == 0) {
             i++;
             iterations = atoi(argc[i]);
-        } else if (strcasecmp(argc[i], "-t") == 0) {
+        } else if (PL_strcasecmp(argc[i], "-t") == 0) {
             i++;
             numThreads = atoi(argc[i]);
-        } else if (strcasecmp(argc[i], "-A") == 0) {
+        } else if (PL_strcasecmp(argc[i], "-A") == 0) {
             ansi = nist = secp = 1;
             usepkcs11 = usefreebl = 1;
-        } else if (strcasecmp(argc[i], "-a") == 0) {
+        } else if (PL_strcasecmp(argc[i], "-a") == 0) {
             ansi = 1;
-        } else if (strcasecmp(argc[i], "-n") == 0) {
+        } else if (PL_strcasecmp(argc[i], "-n") == 0) {
             nist = 1;
-        } else if (strcasecmp(argc[i], "-s") == 0) {
+        } else if (PL_strcasecmp(argc[i], "-s") == 0) {
             secp = 1;
-        } else if (strcasecmp(argc[i], "-p") == 0) {
+        } else if (PL_strcasecmp(argc[i], "-p") == 0) {
             usepkcs11 = 1;
-        } else if (strcasecmp(argc[i], "-f") == 0) {
+        } else if (PL_strcasecmp(argc[i], "-f") == 0) {
             usefreebl = 1;
         } else {
             printUsage(argc[0]);
@@ -691,15 +713,26 @@ main(int argv, char **argc)
         goto cleanup;
     }
 
+    if (usepkcs11) {
+        CK_RV crv = NSC_Initialize((CK_VOID_PTR)&pk11args);
+        if (crv != CKR_OK) {
+            fprintf(stderr, "NSC_Initialize failed crv=0x%x\n", (unsigned int)crv);
+            return SECFailure;
+        }
+    }
+
     /* specific arithmetic tests */
     if (nist) {
+#ifdef NSS_ECC_MORE_THAN_SUITE_B
         ECTEST_NAMED_GFP("SECP-160K1", ECCurve_SECG_PRIME_160K1);
         ECTEST_NAMED_GFP("NIST-P192", ECCurve_NIST_P192);
         ECTEST_NAMED_GFP("NIST-P224", ECCurve_NIST_P224);
+#endif
         ECTEST_NAMED_GFP("NIST-P256", ECCurve_NIST_P256);
         ECTEST_NAMED_GFP("NIST-P384", ECCurve_NIST_P384);
         ECTEST_NAMED_GFP("NIST-P521", ECCurve_NIST_P521);
     }
+#ifdef NSS_ECC_MORE_THAN_SUITE_B
     if (ansi) {
         ECTEST_NAMED_GFP("ANSI X9.62 PRIME192v1", ECCurve_X9_62_PRIME_192V1);
         ECTEST_NAMED_GFP("ANSI X9.62 PRIME192v2", ECCurve_X9_62_PRIME_192V2);
@@ -726,6 +759,7 @@ main(int argv, char **argc)
         ECTEST_NAMED_GFP("SECP-384R1", ECCurve_SECG_PRIME_384R1);
         ECTEST_NAMED_GFP("SECP-521R1", ECCurve_SECG_PRIME_521R1);
     }
+#endif
 
 cleanup:
     if (rv != SECSuccess) {

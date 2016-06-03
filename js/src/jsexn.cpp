@@ -634,7 +634,10 @@ ErrorReportToString(JSContext* cx, JSErrorReport* reportp)
      * goes out of its way to avoid this.
      */
     JSExnType type = static_cast<JSExnType>(reportp->exnType);
-    RootedString str(cx, ClassName(GetExceptionProtoKey(type), cx));
+    RootedString str(cx);
+    if (type != JSEXN_WARN)
+        str = ClassName(GetExceptionProtoKey(type), cx);
+
     /*
      * If "str" is null at this point, that means we just want to use
      * reportp->ucmessage without prefixing it with anything.

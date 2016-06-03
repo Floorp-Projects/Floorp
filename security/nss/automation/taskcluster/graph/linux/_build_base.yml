@@ -1,0 +1,40 @@
+---
+reruns: 2
+
+task:
+  created: !from_now 0
+  deadline: !from_now 24
+  provisionerId: aws-provisioner-v1
+  workerType: hg-worker
+  schedulerId: task-graph-scheduler
+
+  metadata:
+    owner: !env TC_OWNER
+    source: !env TC_SOURCE
+
+  payload:
+    maxRunTime: 3600
+    image: ttaubert/nss-ci:0.0.16
+
+    artifacts:
+      public:
+        type: directory
+        path: /home/worker/artifacts
+        expires: !from_now 24
+
+    command:
+      - "/bin/bash"
+      - "-c"
+      - "bin/checkout.sh && nss/automation/taskcluster/scripts/build.sh"
+
+    env:
+      NSS_HEAD_REPOSITORY: !env NSS_HEAD_REPOSITORY
+      NSS_HEAD_REVISION: !env NSS_HEAD_REVISION
+      GCC_VERSION: gcc-5
+      GXX_VERSION: g++-5
+
+  extra:
+    treeherder:
+      revision: !env TC_REVISION
+      revision_hash: !env TC_REVISION_HASH
+      symbol: B

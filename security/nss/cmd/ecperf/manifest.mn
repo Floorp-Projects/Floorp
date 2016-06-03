@@ -1,24 +1,24 @@
-# 
+#
 # This Source Code Form is subject to the terms of the Mozilla Public
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DEPTH	= ../..
+DEPTH = ../..
 CORE_DEPTH = ../..
 
-# MODULE public and private header  directories are implicitly REQUIRED.
+# MODULE public and private header directories are implicitly REQUIRED.
 MODULE = nss
 
 INCLUDES += -I$(CORE_DEPTH)/nss/lib/softoken
 
 # This next line is used by .mk files
 # and gets translated into $LINCS in manifest.mnw
-REQUIRES = dbm seccmd 
+REQUIRES = dbm seccmd
 
-# DIRS = 
+# DIRS =
 
-CSRCS	= ecperf.c 
+CSRCS = ecperf.c
 
-PROGRAM	= ecperf
+PROGRAM = ecperf
 
 USE_STATIC_LIBS = 1

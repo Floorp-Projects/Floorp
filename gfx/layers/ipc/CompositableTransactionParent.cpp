@@ -179,6 +179,7 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
         t->mFrameID = timedTexture.frameID();
         t->mProducerID = timedTexture.producerID();
         t->mInputFrameID = timedTexture.inputFrameID();
+        t->mTexture->DeserializeReadLock(timedTexture.sharedLock(), this);
         MOZ_ASSERT(ValidatePictureRect(t->mTexture->GetSize(), t->mPictureRect));
 
         MaybeFence maybeFence = timedTexture.fence();
@@ -202,7 +203,8 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       const OpUseComponentAlphaTextures& op = aEdit.detail().get_OpUseComponentAlphaTextures();
       RefPtr<TextureHost> texOnBlack = TextureHost::AsTextureHost(op.textureOnBlackParent());
       RefPtr<TextureHost> texOnWhite = TextureHost::AsTextureHost(op.textureOnWhiteParent());
-
+      texOnBlack->DeserializeReadLock(op.sharedLockBlack(), this);
+      texOnWhite->DeserializeReadLock(op.sharedLockWhite(), this);
       MOZ_ASSERT(texOnBlack && texOnWhite);
       compositable->UseComponentAlphaTextures(texOnBlack, texOnWhite);
 

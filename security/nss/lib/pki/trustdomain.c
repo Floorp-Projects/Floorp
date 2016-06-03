@@ -112,6 +112,9 @@ nssTrustDomain_GetActiveSlots (
     NSSSlot **slots = NULL;
     NSSToken **tp, **tokens;
     *updateLevel = 1;
+    if (!td->tokenList) {
+        return NULL;
+    }
     NSSRWLock_LockRead(td->tokensLock);
     count = nssList_Count(td->tokenList);
     tokens = nss_ZNEWARRAY(NULL, NSSToken *, count + 1);

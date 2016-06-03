@@ -30,6 +30,8 @@ public:
 
   virtual void SetCompositor(Compositor* aCompositor) override;
 
+  virtual Compositor* GetCompositor() override { return mCompositor; }
+
   virtual void DeallocateSharedData() override;
 
   virtual void ForgetSharedData() override;

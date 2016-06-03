@@ -224,6 +224,12 @@ public:
   static nsINode* GetRootEditableNode(nsPresContext* aPresContext,
                                       nsIContent* aContent);
 
+  /**
+   * Returns active IMEContentObserver but may be nullptr if focused content
+   * isn't editable or focus in a remote process.
+   */
+  static IMEContentObserver* GetActiveContentObserver();
+
 protected:
   static nsresult OnChangeFocusInternal(nsPresContext* aPresContext,
                                         nsIContent* aContent,

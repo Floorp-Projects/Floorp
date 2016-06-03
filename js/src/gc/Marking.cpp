@@ -2156,10 +2156,8 @@ js::TenuringTracer::moveToTenured(JSObject* src)
 
     TenuredCell* t = zone->arenas.allocateFromFreeList(dstKind, Arena::thingSize(dstKind));
     if (!t) {
-        zone->arenas.checkEmptyFreeList(dstKind);
-        AutoMaybeStartBackgroundAllocation maybeStartBackgroundAllocation;
         AutoEnterOOMUnsafeRegion oomUnsafe;
-        t = zone->arenas.allocateFromArena(zone, dstKind, maybeStartBackgroundAllocation);
+        t = runtime()->gc.refillFreeListInGC(zone, dstKind);
         if (!t)
             oomUnsafe.crash(ChunkSize, "Failed to allocate object while tenuring.");
     }

@@ -277,7 +277,8 @@ BaseProxyHandler::getOwnEnumerablePropertyKeys(JSContext* cx, HandleObject proxy
     }
 
     MOZ_ASSERT(i <= props.length());
-    props.resize(i);
+    if (!props.resize(i))
+        return false;
 
     return true;
 }

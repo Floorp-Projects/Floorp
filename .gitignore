@@ -116,3 +116,6 @@ testing/talos/lib/
 testing/talos/talos/tests/tp5n.zip
 testing/talos/talos/tests/tp5n
 testing/talos/talos/tests/devtools/damp.manifest.develop
+
+# Ignore files created when running a reftest.
+lextab.py

@@ -374,7 +374,8 @@ private:
   /**
    * Calculate composition offset then notify composition update to widget
    */
-  void NotityUpdateComposition(const WidgetCompositionEvent* aCompositionEvent);
+  void OnCompositionEventHandled(
+         const WidgetCompositionEvent* aCompositionEvent);
 
   /**
    * CompositionEventDispatcher dispatches the specified composition (or text)

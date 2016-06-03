@@ -1,0 +1,13 @@
+---
+- task:
+    metadata:
+      name: Cipher tests
+      description: Cipher tests
+
+    payload:
+      env:
+        NSS_TESTS: cipher
+
+    extra:
+      treeherder:
+        symbol: Cipher

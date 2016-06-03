@@ -745,6 +745,7 @@ nsSocketTransport::nsSocketTransport()
     , mResolving(false)
     , mNetAddrIsSet(false)
     , mSelfAddrIsSet(false)
+    , mNetAddrPreResolved(false)
     , mLock("nsSocketTransport.mLock")
     , mFD(this)
     , mFDref(0)
@@ -885,6 +886,23 @@ nsSocketTransport::Init(const char **types, uint32_t typeCount,
 }
 
 nsresult
+nsSocketTransport::InitPreResolved(const char **socketTypes, uint32_t typeCount,
+                                   const nsACString &host, uint16_t port,
+                                   const nsACString &hostRoute, uint16_t portRoute,
+                                   nsIProxyInfo *proxyInfo,
+                                   const mozilla::net::NetAddr* addr)
+{
+  nsresult rv = Init(socketTypes, typeCount, host, port, hostRoute, portRoute, proxyInfo);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  mNetAddr = *addr;
+  mNetAddrPreResolved = true;
+  return NS_OK;
+}
+
+nsresult
 nsSocketTransport::InitWithFilename(const char *filename)
 {
 #if defined(XP_UNIX)
@@ -1014,6 +1032,11 @@ nsSocketTransport::ResolveHost()
                 " bypass cache" : ""));
 
     nsresult rv;
+
+    if (mNetAddrPreResolved) {
+        mState = STATE_RESOLVING;
+        return PostEvent(MSG_DNS_LOOKUP_COMPLETE, NS_OK, nullptr);
+    }
 
     if (!mProxyHost.IsEmpty()) {
         if (!mProxyTransparent || mProxyTransparentResolvesHost) {
@@ -1877,8 +1900,9 @@ nsSocketTransport::OnSocketEvent(uint32_t type, nsresult status, nsISupports *pa
             else
                 mCondition = status;
         }
-        else if (mState == STATE_RESOLVING)
+        else if (mState == STATE_RESOLVING) {
             mCondition = InitiateSocket();
+        }
         break;
 
     case MSG_RETRY_INIT_SOCKET:

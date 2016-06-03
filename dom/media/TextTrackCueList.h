@@ -12,6 +12,7 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "mozilla/ErrorResult.h"
+#include "Intervals.h"
 
 namespace mozilla {
 namespace dom {
@@ -43,16 +44,22 @@ public:
   TextTrackCue* IndexedGetter(uint32_t aIndex, bool& aFound);
   TextTrackCue* operator[](uint32_t aIndex);
   TextTrackCue* GetCueById(const nsAString& aId);
-
+  TextTrackCueList& operator=(const TextTrackCueList& aOther);
   // Adds a cue to mList by performing an insertion sort on mList.
   // We expect most files to already be sorted, so an insertion sort starting
   // from the end of the current array should be more efficient than a general
   // sort step after all cues are loaded.
   void AddCue(TextTrackCue& aCue);
+  void RemoveCue(TextTrackCue& aCue);
   void RemoveCue(TextTrackCue& aCue, ErrorResult& aRv);
   void RemoveCueAt(uint32_t aIndex);
   void RemoveAll();
   void GetArray(nsTArray<RefPtr<TextTrackCue> >& aCues);
+
+  void SetCuesInactive();
+
+  already_AddRefed<TextTrackCueList>
+  GetCueListByTimeInterval(media::Interval<double>& aInterval);
 
 private:
   ~TextTrackCueList();

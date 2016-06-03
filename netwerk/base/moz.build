@@ -48,7 +48,6 @@ XPIDL_SOURCES += [
     'nsIFileURL.idl',
     'nsIForcePendingChannel.idl',
     'nsIFormPOSTActionChannel.idl',
-    'nsIHttpAuthenticatorCallback.idl',
     'nsIHttpPushListener.idl',
     'nsIIncrementalDownload.idl',
     'nsIIncrementalStreamLoader.idl',
@@ -294,12 +293,9 @@ elif CONFIG['OS_TARGET'] == 'Linux':
         'nsNetworkInfoService.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
-    EXTRA_COMPONENTS += [
-        'nsNetworkInfoService.js',
-        'nsNetworkInfoService.manifest'
-    ]
-    EXTRA_JS_MODULES += [
-        'NetworkInfoServiceAndroid.jsm',
+    SOURCES += [
+        'NetworkInfoServiceLinux.cpp',
+        'nsNetworkInfoService.cpp',
     ]
 
 if CONFIG['MOZ_ENABLE_QTNETWORK']:

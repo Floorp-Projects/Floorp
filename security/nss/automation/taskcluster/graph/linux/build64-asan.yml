@@ -1,0 +1,63 @@
+---
+- task:
+    metadata:
+      name: "Linux 64 (ASan, debug)"
+      description: "Linux 64 (ASan, debug)"
+
+    payload:
+      env:
+        NSS_ENABLE_TLS_1_3: 1
+        GCC_VERSION: clang-3.8
+        GXX_VERSION: clang++-3.8
+        USE_ASAN: 1
+        USE_64: 1
+
+    extra:
+      treeherder:
+        build:
+          platform: linux64
+        collection:
+          asan: true
+
+  tests:
+    - cert
+    - chains
+    - cipher
+    - crmf
+    - db
+    - ec
+    - fips
+    - gtests
+    - lowhash
+    - merge
+    - ocsp
+    - pkits
+    - pkix
+    - sdr
+    - smime
+    - tools
+
+- task:
+    metadata:
+      name: "Linux 64 (ASan, debug, no TLS 1.3)"
+      description: "Linux 64 (ASan, debug, no TLS 1.3)"
+
+    payload:
+      env:
+        GCC_VERSION: clang-3.8
+        GXX_VERSION: clang++-3.8
+        NSS_TESTS: ssl
+        USE_ASAN: 1
+        USE_64: 1
+
+    extra:
+      treeherder:
+        build:
+          platform: linux64
+        collection:
+          asan: true
+        groupSymbol: SSL
+        groupName: SSL tests
+
+  tests:
+    - ssl

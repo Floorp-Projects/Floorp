@@ -292,15 +292,9 @@ private:
       return;
     }
 
-    int32_t rowToOutput = aStart;
-    mNext.template WriteRows<PixelType>([&](PixelType* aRow, uint32_t aLength) {
-      const uint8_t* rowToOutputPointer = GetRowPointer(rowToOutput);
-      memcpy(aRow, rowToOutputPointer, aLength * sizeof(PixelType));
-
-      rowToOutput++;
-      return rowToOutput >= aUntil ? Some(WriteState::NEED_MORE_DATA)
-                                   : Nothing();
-    });
+    for (int32_t rowToOutput = aStart; rowToOutput < aUntil; ++rowToOutput) {
+      mNext.WriteBuffer(reinterpret_cast<PixelType*>(GetRowPointer(rowToOutput)));
+    }
   }
 
   uint8_t* GetRowPointer(uint32_t aRow) const
@@ -424,14 +418,9 @@ protected:
     // Advance the next pipeline stage to the beginning of the frame rect,
     // outputting blank rows.
     if (mFrameRect.y > 0) {
-      int32_t rowsToWrite = mFrameRect.y;
-      mNext.template WriteRows<uint32_t>([&](uint32_t* aRow, uint32_t aLength)
-                                           -> Maybe<WriteState> {
-        memset(aRow, 0, aLength * sizeof(uint32_t));
-        rowsToWrite--;
-        return rowsToWrite > 0 ? Nothing()
-                               : Some(WriteState::NEED_MORE_DATA);
-      });
+      for (int32_t rowToOutput = 0; rowToOutput < mFrameRect.y ; ++rowToOutput) {
+        mNext.WriteEmptyRow();
+      }
     }
 
     // We're at the beginning of the frame rect now, so return if we're either
@@ -447,10 +436,7 @@ protected:
     // We've finished the region specified by the frame rect, but the frame rect
     // is empty, so we need to output the rest of the image immediately. Advance
     // to the end of the next pipeline stage's buffer, outputting blank rows.
-    mNext.template WriteRows<uint32_t>([](uint32_t* aRow, uint32_t aLength) {
-      memset(aRow, 0, aLength * sizeof(uint32_t));
-      return Nothing();
-    });
+    while (mNext.WriteEmptyRow() == WriteState::NEED_MORE_DATA) { }
 
     mRow = mFrameRect.YMost();
     return nullptr;  // We're done.
@@ -474,48 +460,33 @@ protected:
 
     // If we had to buffer, copy the data. Otherwise, just advance the row.
     if (mBuffer) {
-      mNext.template WriteRows<uint32_t>([&](uint32_t* aRow, uint32_t aLength) {
-        // Clear the part of the row before the clamped frame rect.
-        MOZ_ASSERT(mFrameRect.x >= 0);
-        MOZ_ASSERT(uint32_t(mFrameRect.x) < aLength);
-        memset(aRow, 0, mFrameRect.x * sizeof(uint32_t));
+      // We write from the beginning of the buffer unless |mUnclampedFrameRect.x|
+      // is negative; if that's the case, we have to skip the portion of the
+      // unclamped frame rect that's outside the row.
+      uint32_t* source = reinterpret_cast<uint32_t*>(mBuffer.get()) -
+                         std::min(mUnclampedFrameRect.x, 0);
 
-        // Write the part of the row that's inside the clamped frame rect.
-        MOZ_ASSERT(mFrameRect.width >= 0);
-        aRow += mFrameRect.x;
-        aLength -= std::min(aLength, uint32_t(mFrameRect.x));
-        uint32_t toWrite = std::min(aLength, uint32_t(mFrameRect.width));
-        uint8_t* source = mBuffer.get() -
-                          std::min(mUnclampedFrameRect.x, 0) * sizeof(uint32_t);
-        MOZ_ASSERT(source >= mBuffer.get());
-        MOZ_ASSERT(source + toWrite * sizeof(uint32_t)
-                     <= mBuffer.get() + mUnclampedFrameRect.width * sizeof(uint32_t));
-        memcpy(aRow, source, toWrite * sizeof(uint32_t));
+      // We write |mFrameRect.width| columns starting at |mFrameRect.x|; we've
+      // already clamped these values to the size of the output, so we don't
+      // have to worry about bounds checking here (though WriteBuffer() will do
+      // it for us in any case).
+      WriteState state = mNext.WriteBuffer(source, mFrameRect.x, mFrameRect.width);
 
-        // Clear the part of the row after the clamped frame rect.
-        aRow += toWrite;
-        aLength -= std::min(aLength, toWrite);
-        memset(aRow, 0, aLength * sizeof(uint32_t));
-
-        return Some(WriteState::NEED_MORE_DATA);
-      });
-
-      rowPtr = mBuffer.get();
+      rowPtr = state == WriteState::NEED_MORE_DATA ? mBuffer.get()
+                                                   : nullptr;
     } else {
       rowPtr = mNext.AdvanceRow();
     }
 
-    // If there's still more data coming, just adjust the pointer and return.
+    // If there's still more data coming or we're already done, just adjust the
+    // pointer and return.
     if (mRow < mFrameRect.YMost() || rowPtr == nullptr) {
       return AdjustRowPointer(rowPtr);
     }
 
     // We've finished the region specified by the frame rect. Advance to the end
     // of the next pipeline stage's buffer, outputting blank rows.
-    mNext.template WriteRows<uint32_t>([](uint32_t* aRow, uint32_t aLength) {
-      memset(aRow, 0, aLength * sizeof(uint32_t));
-      return Nothing();
-    });
+    while (mNext.WriteEmptyRow() == WriteState::NEED_MORE_DATA) { }
 
     mRow = mFrameRect.YMost();
     return nullptr;  // We're done.
@@ -525,7 +496,7 @@ private:
   uint8_t* AdjustRowPointer(uint8_t* aNextRowPointer) const
   {
     if (mBuffer) {
-      MOZ_ASSERT(aNextRowPointer == mBuffer.get());
+      MOZ_ASSERT(aNextRowPointer == mBuffer.get() || aNextRowPointer == nullptr);
       return aNextRowPointer;  // No adjustment needed for an intermediate buffer.
     }
 

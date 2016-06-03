@@ -295,25 +295,27 @@ remove_email_entry (
 	if (ce) {
 	    nssList *subjects = ce->entry.list;
 	    /* Remove the subject list from the email hash */
-	    nssList_Remove(subjects, subjectList);
+            if (subjects) {
+		nssList_Remove(subjects, subjectList);
 #ifdef DEBUG_CACHE
-	    log_item_dump("removed subject list", &cert->subject);
-	    PR_LOG(s_log, PR_LOG_DEBUG, ("for email %s", cert->email));
+		log_item_dump("removed subject list", &cert->subject);
+		PR_LOG(s_log, PR_LOG_DEBUG, ("for email %s", cert->email));
 #endif
-	    if (nssList_Count(subjects) == 0) {
-		/* No more subject lists for email, delete list and
-		* remove hash entry
-		*/
-		(void)nssList_Destroy(subjects);
-		nssHash_Remove(cache->email, cert->email);
-		/* there are no entries left for this address, free space
-		 * used for email entries
-		 */
-		nssArena_Destroy(ce->arena);
+		if (nssList_Count(subjects) == 0) {
+		    /* No more subject lists for email, delete list and
+		     * remove hash entry
+		     */
+		    (void)nssList_Destroy(subjects);
+		    nssHash_Remove(cache->email, cert->email);
+		    /* there are no entries left for this address, free space
+		     * used for email entries
+		     */
+		     nssArena_Destroy(ce->arena);
 #ifdef DEBUG_CACHE
-		PR_LOG(s_log, PR_LOG_DEBUG, ("removed email %s", cert->email));
+		    PR_LOG(s_log, PR_LOG_DEBUG, ("removed email %s", cert->email));
 #endif
-	    }
+		}
+            }
 	    nssrv = PR_SUCCESS;
 	}
     }

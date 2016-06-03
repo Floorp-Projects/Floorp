@@ -367,7 +367,7 @@ nss_MD_unix_map_bind_error(int err)
         case EINVAL:
             prError = PR_SOCKET_ADDRESS_IS_BOUND_ERROR;
             break;
-            /*
+        /*
              * UNIX domain sockets are not supported in NSPR
              */
         case EIO:
@@ -647,7 +647,7 @@ nss_MD_unix_map_default_error(int err)
         case EAGAIN:
             prError = PR_WOULD_BLOCK_ERROR;
             break;
-    /*
+/*
      * On QNX and Neutrino, EALREADY is defined as EBUSY.
      */
 #if EALREADY != EBUSY

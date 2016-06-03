@@ -1217,6 +1217,23 @@ interface TestDeprecatedInterface {
 interface TestInterfaceWithPromiseConstructorArg {
 };
 
+namespace TestNamespace {
+  readonly attribute boolean foo;
+  long bar();
+};
+
+partial namespace TestNamespace {
+  void baz();
+};
+
+[ClassString="RenamedNamespaceClassName"]
+namespace TestRenamedNamespace {
+};
+
+[ProtoObjectHack]
+namespace TestProtoObjectHackedNamespace {
+};
+
 [SecureContext]
 interface TestSecureContextInterface {
   static void alsoSecureContext();

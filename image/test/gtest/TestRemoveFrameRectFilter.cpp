@@ -57,18 +57,6 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_0_0_100_100)
   });
 }
 
-TEST(ImageRemoveFrameRectFilter, WriteRows100_100_to_0_0_100_100)
-{
-  WithRemoveFrameRectFilter(IntSize(100, 100),
-                            IntRect(0, 0, 100, 100),
-                            [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(0, 0, 100, 100)));
-  });
-}
-
 TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_0_0_0_0)
 {
   WithRemoveFrameRectFilter(IntSize(100, 100),
@@ -79,19 +67,6 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_0_0_0_0)
                      /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
                      /* aInputWriteRect = */ Some(IntRect(0, 0, 0, 0)),
                      /* aOutputWriteRect = */ Some(IntRect(0, 0, 0, 0)));
-  });
-}
-
-TEST(ImageRemoveFrameRectFilter, WriteRows100_100_to_0_0_0_0)
-{
-  WithRemoveFrameRectFilter(IntSize(100, 100),
-                            IntRect(0, 0, 0, 0),
-                            [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(0, 0, 0, 0)),
-                   /* aOutputWriteRect = */ Some(IntRect(0, 0, 0, 0)));
   });
 }
 
@@ -108,19 +83,6 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_Minus50_50_0_0)
   });
 }
 
-TEST(ImageRemoveFrameRectFilter, WriteRows100_100_to_Minus50_50_0_0)
-{
-  WithRemoveFrameRectFilter(IntSize(100, 100),
-                            IntRect(-50, 50, 0, 0),
-                            [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(0, 0, 0, 0)),
-                   /* aOutputWriteRect = */ Some(IntRect(0, 0, 0, 0)));
-  });
-}
-
 TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_50_Minus50_0_0)
 {
   WithRemoveFrameRectFilter(IntSize(100, 100),
@@ -131,19 +93,6 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_50_Minus50_0_0)
                      /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
                      /* aInputWriteRect = */ Some(IntRect(0, 0, 0, 0)),
                      /* aOutputWriteRect = */ Some(IntRect(0, 0, 0, 0)));
-  });
-}
-
-TEST(ImageRemoveFrameRectFilter, WriteRows100_100_to_50_Minus50_0_0)
-{
-  WithRemoveFrameRectFilter(IntSize(100, 100),
-                            IntRect(50, -50, 0, 0),
-                            [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(0, 0, 0, 0)),
-                   /* aOutputWriteRect = */ Some(IntRect(0, 0, 0, 0)));
   });
 }
 
@@ -160,19 +109,6 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_150_50_0_0)
   });
 }
 
-TEST(ImageRemoveFrameRectFilter, WriteRows100_100_to_150_50_0_0)
-{
-  WithRemoveFrameRectFilter(IntSize(100, 100),
-                            IntRect(150, 50, 0, 0),
-                            [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(0, 0, 0, 0)),
-                   /* aOutputWriteRect = */ Some(IntRect(0, 0, 0, 0)));
-  });
-}
-
 TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_50_150_0_0)
 {
   WithRemoveFrameRectFilter(IntSize(100, 100),
@@ -183,19 +119,6 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_50_150_0_0)
                      /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
                      /* aInputWriteRect = */ Some(IntRect(0, 0, 0, 0)),
                      /* aOutputWriteRect = */ Some(IntRect(0, 0, 0, 0)));
-  });
-}
-
-TEST(ImageRemoveFrameRectFilter, WriteRows100_100_to_50_150_0_0)
-{
-  WithRemoveFrameRectFilter(IntSize(100, 100),
-                            IntRect(50, 150, 0, 0),
-                            [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(0, 0, 0, 0)),
-                   /* aOutputWriteRect = */ Some(IntRect(0, 0, 0, 0)));
   });
 }
 
@@ -215,22 +138,6 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_200_200_100_100)
   });
 }
 
-TEST(ImageRemoveFrameRectFilter, WriteRows100_100_to_200_200_100_100)
-{
-  WithRemoveFrameRectFilter(IntSize(100, 100),
-                            IntRect(200, 200, 100, 100),
-                            [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    // Note that aInputRect is zero-size because RemoveFrameRectFilter ignores
-    // trailing rows that don't show up in the output. (Leading rows
-    // unfortunately can't be ignored.)
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(0, 0, 0, 0)),
-                   /* aOutputWriteRect = */ Some(IntRect(0, 0, 0, 0)));
-  });
-}
-
 TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_Minus200_25_100_100)
 {
   WithRemoveFrameRectFilter(IntSize(100, 100),
@@ -244,22 +151,6 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_Minus200_25_100_100)
                      /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
                      /* aInputWriteRect = */ Some(IntRect(0, 0, 0, 0)),
                      /* aOutputWriteRect = */ Some(IntRect(0, 0, 0, 0)));
-  });
-}
-
-TEST(ImageRemoveFrameRectFilter, WriteRows100_100_to_Minus200_25_100_100)
-{
-  WithRemoveFrameRectFilter(IntSize(100, 100),
-                            IntRect(-200, 25, 100, 100),
-                            [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    // Note that aInputRect is zero-size because RemoveFrameRectFilter ignores
-    // trailing rows that don't show up in the output. (Leading rows
-    // unfortunately can't be ignored.)
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(0, 0, 0, 0)),
-                   /* aOutputWriteRect = */ Some(IntRect(0, 0, 0, 0)));
   });
 }
 
@@ -279,22 +170,6 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_25_Minus200_100_100)
   });
 }
 
-TEST(ImageRemoveFrameRectFilter, WriteRows100_100_to_25_Minus200_100_100)
-{
-  WithRemoveFrameRectFilter(IntSize(100, 100),
-                            IntRect(25, -200, 100, 100),
-                            [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    // Note that aInputRect is zero-size because RemoveFrameRectFilter ignores
-    // trailing rows that don't show up in the output. (Leading rows
-    // unfortunately can't be ignored.)
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(0, 0, 0, 0)),
-                   /* aOutputWriteRect = */ Some(IntRect(0, 0, 0, 0)));
-  });
-}
-
 TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_200_25_100_100)
 {
   WithRemoveFrameRectFilter(IntSize(100, 100),
@@ -308,22 +183,6 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_200_25_100_100)
                      /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
                      /* aInputWriteRect = */ Some(IntRect(0, 0, 0, 0)),
                      /* aOutputWriteRect = */ Some(IntRect(0, 0, 0, 0)));
-  });
-}
-
-TEST(ImageRemoveFrameRectFilter, WriteRows100_100_to_200_25_100_100)
-{
-  WithRemoveFrameRectFilter(IntSize(100, 100),
-                            IntRect(200, 25, 100, 100),
-                            [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    // Note that aInputRect is zero-size because RemoveFrameRectFilter ignores
-    // trailing rows that don't show up in the output. (Leading rows
-    // unfortunately can't be ignored.)
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(0, 0, 0, 0)),
-                   /* aOutputWriteRect = */ Some(IntRect(0, 0, 0, 0)));
   });
 }
 
@@ -343,22 +202,6 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_25_200_100_100)
   });
 }
 
-TEST(ImageRemoveFrameRectFilter, WriteRows100_100_to_25_200_100_100)
-{
-  WithRemoveFrameRectFilter(IntSize(100, 100),
-                            IntRect(25, 200, 100, 100),
-                            [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    // Note that aInputRect is zero-size because RemoveFrameRectFilter ignores
-    // trailing rows that don't show up in the output. (Leading rows
-    // unfortunately can't be ignored.)
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(0, 0, 0, 0)),
-                   /* aOutputWriteRect = */ Some(IntRect(0, 0, 0, 0)));
-  });
-}
-
 TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_Minus200_Minus200_100_100)
 {
   WithRemoveFrameRectFilter(IntSize(100, 100),
@@ -369,19 +212,6 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_Minus200_Minus200_100_100
                      /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
                      /* aInputWriteRect = */ Some(IntRect(0, 0, 0, 0)),
                      /* aOutputWriteRect = */ Some(IntRect(0, 0, 0, 0)));
-  });
-}
-
-TEST(ImageRemoveFrameRectFilter, WriteRows100_100_to_Minus200_Minus200_100_100)
-{
-  WithRemoveFrameRectFilter(IntSize(100, 100),
-                            IntRect(-200, -200, 100, 100),
-                            [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(0, 0, 0, 0)),
-                   /* aOutputWriteRect = */ Some(IntRect(0, 0, 0, 0)));
   });
 }
 
@@ -398,19 +228,6 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_Minus50_Minus50_100_100)
   });
 }
 
-TEST(ImageRemoveFrameRectFilter, WriteRows100_100_to_Minus50_Minus50_100_100)
-{
-  WithRemoveFrameRectFilter(IntSize(100, 100),
-                            IntRect(-50, -50, 100, 100),
-                            [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aOutputWriteRect = */ Some(IntRect(0, 0, 50, 50)));
-  });
-}
-
 TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_Minus50_25_100_50)
 {
   WithRemoveFrameRectFilter(IntSize(100, 100),
@@ -421,19 +238,6 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_Minus50_25_100_50)
                      /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
                      /* aInputWriteRect = */ Some(IntRect(0, 0, 100, 50)),
                      /* aOutputWriteRect = */ Some(IntRect(0, 25, 50, 50)));
-  });
-}
-
-TEST(ImageRemoveFrameRectFilter, WriteRows100_100_to_Minus50_25_100_50)
-{
-  WithRemoveFrameRectFilter(IntSize(100, 100),
-                            IntRect(-50, 25, 100, 50),
-                            [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(0, 0, 100, 50)),
-                   /* aOutputWriteRect = */ Some(IntRect(0, 25, 50, 50)));
   });
 }
 
@@ -450,19 +254,6 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_25_Minus50_50_100)
   });
 }
 
-TEST(ImageRemoveFrameRectFilter, WriteRows100_100_to_25_Minus50_50_100)
-{
-  WithRemoveFrameRectFilter(IntSize(100, 100),
-                            IntRect(25, -50, 50, 100),
-                            [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(0, 0, 50, 100)),
-                   /* aOutputWriteRect = */ Some(IntRect(25, 0, 50, 50)));
-  });
-}
-
 TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_50_25_100_50)
 {
   WithRemoveFrameRectFilter(IntSize(100, 100),
@@ -473,19 +264,6 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_50_25_100_50)
                      /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
                      /* aInputWriteRect = */ Some(IntRect(0, 0, 100, 50)),
                      /* aOutputWriteRect = */ Some(IntRect(50, 25, 50, 50)));
-  });
-}
-
-TEST(ImageRemoveFrameRectFilter, WriteRows100_100_to_50_25_100_50)
-{
-  WithRemoveFrameRectFilter(IntSize(100, 100),
-                            IntRect(50, 25, 100, 50),
-                            [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(0, 0, 100, 50)),
-                   /* aOutputWriteRect = */ Some(IntRect(50, 25, 50, 50)));
   });
 }
 
@@ -502,22 +280,6 @@ TEST(ImageRemoveFrameRectFilter, WritePixels100_100_to_25_50_50_100)
                      /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
                      /* aInputWriteRect = */ Some(IntRect(0, 0, 50, 50)),
                      /* aOutputWriteRect = */ Some(IntRect(25, 50, 50, 100)));
-  });
-}
-
-TEST(ImageRemoveFrameRectFilter, WriteRows100_100_to_25_50_50_100)
-{
-  WithRemoveFrameRectFilter(IntSize(100, 100),
-                            IntRect(25, 50, 50, 100),
-                            [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    // Note that aInputRect is 50x50 because RemoveFrameRectFilter ignores
-    // trailing rows that don't show up in the output. (Leading rows
-    // unfortunately can't be ignored.)
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(0, 0, 50, 50)),
-                   /* aOutputWriteRect = */ Some(IntRect(25, 50, 50, 100)));
   });
 }
 

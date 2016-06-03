@@ -35,26 +35,33 @@ class AudioConverter;
 class AudioClock
 {
 public:
-  explicit AudioClock(AudioStream* aStream);
-  // Initialize the clock with the current AudioStream. Need to be called
-  // before querying the clock. Called on the audio thread.
-  void Init();
+  AudioClock();
+
+  // Initialize the clock with the current sampling rate.
+  // Need to be called before querying the clock.
+  void Init(uint32_t aRate);
+
   // Update the number of samples that has been written in the audio backend.
   // Called on the state machine thread.
   void UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun);
-  // Get the read position of the stream, in microseconds.
-  // Called on the state machine thead.
-  // Assumes the AudioStream lock is held and thus calls Unlocked versions
-  // of AudioStream funcs.
-  int64_t GetPositionUnlocked() const;
-  // Get the read position of the stream, in frames.
-  // Called on the state machine thead.
-  int64_t GetPositionInFrames() const;
+
+  /**
+   * @param frames The playback position in frames of the audio engine.
+   * @return The playback position in frames of the stream,
+   *         adjusted by playback rate changes and underrun frames.
+   */
+  int64_t GetPositionInFrames(int64_t frames) const;
+
+  /**
+   * @param frames The playback position in frames of the audio engine.
+   * @return The playback position in microseconds of the stream,
+   *         adjusted by playback rate changes and underrun frames.
+   */
+  int64_t GetPosition(int64_t frames) const;
+
   // Set the playback rate.
   // Called on the audio thread.
-  // Assumes the AudioStream lock is held and thus calls Unlocked versions
-  // of AudioStream funcs.
-  void SetPlaybackRateUnlocked(double aPlaybackRate);
+  void SetPlaybackRate(double aPlaybackRate);
   // Get the current playback rate.
   // Called on the audio thread.
   double GetPlaybackRate() const;
@@ -64,10 +71,8 @@ public:
   // Get the current pitch preservation state.
   // Called on the audio thread.
   bool GetPreservesPitch() const;
+
 private:
-  // This AudioStream holds a strong reference to this AudioClock. This
-  // pointer is garanteed to always be valid.
-  AudioStream* const mAudioStream;
   // Output rate in Hz (characteristic of the playback rate)
   uint32_t mOutRate;
   // Input rate in Hz (characteristic of the media being played)
@@ -210,9 +215,6 @@ public:
   // Return the position, measured in audio frames played since the stream
   // was opened, of the audio hardware.  Thread-safe.
   int64_t GetPositionInFrames();
-
-  // Returns true when the audio stream is paused.
-  bool IsPaused();
 
   static uint32_t GetPreferredRate()
   {

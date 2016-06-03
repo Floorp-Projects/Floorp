@@ -684,6 +684,12 @@ DXGITextureHostD3D11::SetCompositor(Compositor* aCompositor)
   }
 }
 
+Compositor*
+DXGITextureHostD3D11::GetCompositor()
+{
+  return mCompositor;
+}
+
 bool
 DXGITextureHostD3D11::Lock()
 {
@@ -805,6 +811,12 @@ DXGIYCbCrTextureHostD3D11::SetCompositor(Compositor* aCompositor)
   if (mTextureSources[0]) {
     mTextureSources[0]->SetCompositor(aCompositor);
   }
+}
+
+Compositor*
+DXGIYCbCrTextureHostD3D11::GetCompositor()
+{
+  return mCompositor;
 }
 
 bool

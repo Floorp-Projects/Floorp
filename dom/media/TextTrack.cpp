@@ -92,6 +92,10 @@ TextTrack::SetMode(TextTrackMode aValue)
 {
   if (mMode != aValue) {
     mMode = aValue;
+    if (aValue == TextTrackMode::Disabled) {
+      SetCuesInactive();
+      //TODO: Apply the rules for text track cue rendering Bug 865407
+    }
     if (mTextTrackList) {
       mTextTrackList->CreateAndDispatchChangeEvent();
     }
@@ -125,7 +129,15 @@ TextTrack::AddCue(TextTrackCue& aCue)
 void
 TextTrack::RemoveCue(TextTrackCue& aCue, ErrorResult& aRv)
 {
+  aCue.SetActive(false);
+
   mCueList->RemoveCue(aCue, aRv);
+  if (mTextTrackList) {
+    HTMLMediaElement* mediaElement = mTextTrackList->GetMediaElement();
+    if (mediaElement) {
+      mediaElement->NotifyCueRemoved(aCue);
+    }
+  }
   SetDirty();
 }
 
@@ -149,10 +161,6 @@ TextTrack::UpdateActiveCueList()
     return;
   }
 
-  // Flag that indicates whether or not this call of UpdateActiveCueList has
-  // changed the activeCueList.
-  bool hasChanged = false;
-
   // If we are dirty, i.e. an event happened that may cause the sorted mCueList
   // to have changed like a seek or an insert for a cue, than we need to rebuild
   // the active cue list from scratch.
@@ -168,7 +176,6 @@ TextTrack::UpdateActiveCueList()
   for (uint32_t i = mActiveCueList->Length(); i > 0; i--) {
     if ((*mActiveCueList)[i - 1]->EndTime() < playbackTime) {
       mActiveCueList->RemoveCueAt(i - 1);
-      hasChanged = true;
     }
   }
   // Add all the cues, starting from the position of the last cue that was
@@ -179,16 +186,6 @@ TextTrack::UpdateActiveCueList()
          (*mCueList)[mCuePos]->StartTime() <= playbackTime; mCuePos++) {
     if ((*mCueList)[mCuePos]->EndTime() >= playbackTime) {
       mActiveCueList->AddCue(*(*mCueList)[mCuePos]);
-      hasChanged = true;
-      }
-    }
-
-    if (hasChanged) {
-      RefPtr<AsyncEventDispatcher> asyncDispatcher =
-        new AsyncEventDispatcher(this, NS_LITERAL_STRING("cuechange"), false);
-      asyncDispatcher->PostDOMEvent();
-      if (mTrackElement) {
-        mTrackElement->DispatchTrackRunnable(NS_LITERAL_STRING("cuechange"));
     }
   }
 }
@@ -261,6 +258,12 @@ TextTrack::GetTrackElement() {
 void
 TextTrack::SetTrackElement(HTMLTrackElement* aTrackElement) {
   mTrackElement = aTrackElement;
+}
+
+void
+TextTrack::SetCuesInactive()
+{
+  mCueList->SetCuesInactive();
 }
 
 } // namespace dom

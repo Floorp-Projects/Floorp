@@ -61,10 +61,10 @@ dictionary MutationObserverInit {
   boolean subtree = false;
   boolean attributeOldValue;
   boolean characterDataOldValue;
-  // [ChromeOnly]
+  [ChromeOnly]
   boolean nativeAnonymousChildList = false;
-  // [ChromeOnly]
-  boolean animations;
+  [ChromeOnly]
+  boolean animations = false;
   sequence<DOMString> attributeFilter;
 };
 

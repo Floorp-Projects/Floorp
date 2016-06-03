@@ -158,17 +158,17 @@ TextureClientPool::ReturnTextureClient(TextureClient *aClient)
 }
 
 void
-TextureClientPool::ReturnTextureClientDeferred(TextureClient *aClient, gfxSharedReadLock* aLock)
+TextureClientPool::ReturnTextureClientDeferred(TextureClient* aClient)
 {
   if (!aClient) {
     return;
   }
-  MOZ_ASSERT(aLock);
+  MOZ_ASSERT(aClient->GetReadLock());
 #ifdef GFX_DEBUG_TRACK_CLIENTS_IN_POOL
   DebugOnly<bool> ok = TestClientPool("defer", aClient, this);
   MOZ_ASSERT(ok);
 #endif
-  mTextureClientsDeferred.push_back(TextureClientHolder(aClient, aLock));
+  mTextureClientsDeferred.push_back(aClient);
   TCP_LOG("TexturePool %p had client %p defer-returned, size %u outstanding %u\n",
       this, aClient, mTextureClientsDeferred.size(), mOutstandingClients);
   ShrinkToMaximumSize();
@@ -190,7 +190,7 @@ TextureClientPool::ShrinkToMaximumSize()
       MOZ_ASSERT(mOutstandingClients > 0);
       mOutstandingClients--;
       TCP_LOG("TexturePool %p dropped deferred client %p; %u remaining\n",
-          this, mTextureClientsDeferred.front().mTextureClient.get(),
+          this, mTextureClientsDeferred.front().get(),
           mTextureClientsDeferred.size() - 1);
       mTextureClientsDeferred.pop_front();
     } else {
@@ -219,7 +219,7 @@ TextureClientPool::ShrinkToMinimumSize()
     MOZ_ASSERT(mOutstandingClients > 0);
     mOutstandingClients--;
     TCP_LOG("TexturePool %p releasing deferred client %p\n",
-        this, mTextureClientsDeferred.front().mTextureClient.get());
+        this, mTextureClientsDeferred.front().get());
     mTextureClientsDeferred.pop_front();
   }
 
@@ -257,10 +257,10 @@ void
 TextureClientPool::ReturnUnlockedClients()
 {
   for (auto it = mTextureClientsDeferred.begin(); it != mTextureClientsDeferred.end();) {
-    MOZ_ASSERT((*it).mLock->GetReadCount() >= 1);
+    MOZ_ASSERT((*it)->GetReadLock()->GetReadCount() >= 1);
     // Last count is held by the lock itself.
-    if ((*it).mLock->GetReadCount() == 1) {
-      mTextureClients.push((*it).mTextureClient);
+    if (!(*it)->IsReadLocked()) {
+      mTextureClients.push(*it);
       it = mTextureClientsDeferred.erase(it);
 
       MOZ_ASSERT(mOutstandingClients > 0);
@@ -293,7 +293,7 @@ TextureClientPool::Clear()
     MOZ_ASSERT(mOutstandingClients > 0);
     mOutstandingClients--;
     TCP_LOG("TexturePool %p releasing deferred client %p\n",
-        this, mTextureClientsDeferred.front().mTextureClient.get());
+        this, mTextureClientsDeferred.front().get());
     mTextureClientsDeferred.pop_front();
   }
 }
