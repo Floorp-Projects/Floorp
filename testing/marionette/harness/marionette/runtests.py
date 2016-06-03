@@ -31,9 +31,11 @@ class MarionetteHarness(object):
     def __init__(self,
                  runner_class=MarionetteTestRunner,
                  parser_class=MarionetteArguments,
+                 testcase_class=MarionetteTestCase,
                  args=None):
         self._runner_class = runner_class
         self._parser_class = parser_class
+        self._testcase_class = testcase_class
         self.args = args or self.parse_args()
 
     def parse_args(self, logger_defaults=None):
@@ -57,7 +59,7 @@ class MarionetteHarness(object):
 
     def process_args(self):
         if self.args.get('pydebugger'):
-            MarionetteTestCase.pydebugger = __import__(self.args['pydebugger'])
+            self._testcase_class.pydebugger = __import__(self.args['pydebugger'])
 
     def run(self):
         try:
@@ -75,7 +77,7 @@ class MarionetteHarness(object):
 
 
 def cli(runner_class=MarionetteTestRunner, parser_class=MarionetteArguments,
-        harness_class=MarionetteHarness, args=None):
+        harness_class=MarionetteHarness, testcase_class=MarionetteTestCase, args=None):
     """
     Call the harness to parse args and run tests.
 
@@ -86,7 +88,7 @@ def cli(runner_class=MarionetteTestRunner, parser_class=MarionetteArguments,
     """
     logger = mozlog.commandline.setup_logging('Marionette test runner', {})
     try:
-        failed = harness_class(runner_class, parser_class, args=args).run()
+        failed = harness_class(runner_class, parser_class, testcase_class, args=args).run()
         if failed > 0:
             sys.exit(10)
     except Exception:

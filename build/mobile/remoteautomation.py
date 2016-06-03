@@ -86,17 +86,12 @@ class RemoteAutomation(Automation):
         # Don't override the user's choice here.  See bug 1049688.
         env.setdefault('MOZ_DISABLE_NONLOCAL_CONNECTIONS', '1')
 
-        # Disable Switchboard by default. This will prevent nonlocal
-        # network connections to the Switchboard server.
-        # Passing any value expect the empty string will disable it so to
-        # enable, don't pass a value.
-        env.setdefault('MOZ_DISABLE_SWITCHBOARD', '1')
-
-        # Disable Java telemetry by default to
-        # prevent network connections during testing.
-        # Passing any value expect the empty string will disable it so to
-        # enable, don't pass a value.
-        env.setdefault('MOZ_DISABLE_TELEMETRY', '1')
+        # Send an env var noting that we are in automation. Passing any
+        # value except the empty string will declare the value to exist.
+        #
+        # This may be used to disabled network connections during testing, e.g.
+        # Switchboard & telemetry uploads.
+        env.setdefault('MOZ_IN_AUTOMATION', '1')
 
         # Set WebRTC logging in case it is not set yet.
         # On Android, environment variables cannot contain ',' so the

@@ -39,18 +39,6 @@
           aria-label="&helpButton.label;"/>
 </hbox>
 
-<vbox id="syncStatusMessage-container" data-category="paneSync" hidden="true">
-  <hbox id="syncStatusMessage">
-    <vbox id="syncStatusMessageWrapper">
-      <label id="syncStatusMessageTitle"></label>
-      <description id="syncStatusMessageDescription"></description>
-    </vbox>
-    <vbox>
-      <button id="syncStatusMessageClose" class="close-icon"/>
-    </vbox>
-  </hbox>
-</vbox>
-
 <deck id="weavePrefsDeck" data-category="paneSync" hidden="true">
   <!-- These panels are for the "legacy" sync provider -->
   <vbox id="noAccount" align="center">

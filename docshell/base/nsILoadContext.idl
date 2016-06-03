@@ -146,4 +146,20 @@ interface nsILoadContext : nsISupports
   bool GetOriginAttributes(mozilla::DocShellOriginAttributes& aAttrs);
 #endif
 %}
+
+  /**
+   * Returns true if tracking protection is enabled for the load context.
+   */
+  boolean IsTrackingProtectionOn();
+
+%{C++
+  /**
+   * De-XPCOMed getter to make call-sites cleaner.
+   */
+  bool UseTrackingProtection() {
+    bool usingTP;
+    IsTrackingProtectionOn(&usingTP);
+    return usingTP;
+  }
+%}
 };

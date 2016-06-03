@@ -85,7 +85,7 @@ mgjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'mozglue/JNIObject.java',
     'mozglue/NativeReference.java',
     'mozglue/NativeZip.java',
-    'mozglue/SafeIntentUtils.java',
+    'mozglue/SafeIntent.java',
 ]]
 mgjar.generated_sources = [] # Keep it this way.
 mgjar.extra_jars += [
