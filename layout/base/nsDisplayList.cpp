@@ -5727,17 +5727,7 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     // This is a simplification of the following |else| block, the
     // simplification being possible because we don't need to apply
     // mToTransformOrigin between two transforms.
-    if ((aFlags & OFFSET_BY_ORIGIN) &&
-        !hasPerspective) {
-      // We can fold the final translation by roundedOrigin into the first matrix
-      // basis change translation. This is more stable against variation due to
-      // insufficient floating point precision than reversing the translation
-      // afterwards.
-      result.PreTranslate(-aProperties.mToTransformOrigin);
-      result.PostTranslate(roundedOrigin + aProperties.mToTransformOrigin);
-    } else {
-      result.ChangeBasis(aProperties.mToTransformOrigin);
-    }
+    result.ChangeBasis(aProperties.mToTransformOrigin);
   } else {
     Point3D refBoxOffset(NSAppUnitsToFloatPixels(refBox.X(), aAppUnitsPerPixel),
                          NSAppUnitsToFloatPixels(refBox.Y(), aAppUnitsPerPixel),
@@ -5761,24 +5751,16 @@ nsDisplayTransform::GetResultingTransformMatrixInternal(const FrameTransformProp
     // Similar to the code in the |if| block above, but since we've accounted
     // for mToTransformOrigin so we don't include that. We also need to reapply
     // refBoxOffset.
-    if ((aFlags & OFFSET_BY_ORIGIN) &&
-        !hasPerspective) {
-      result.PreTranslate(-refBoxOffset);
-      result.PostTranslate(roundedOrigin + refBoxOffset);
-    } else {
-      result.ChangeBasis(refBoxOffset);
-    }
+    result.ChangeBasis(refBoxOffset);
   }
 
   if (hasPerspective) {
     result = result * perspectiveMatrix;
-
-    if (aFlags & OFFSET_BY_ORIGIN) {
-      result.PostTranslate(roundedOrigin);
-    }
   }
 
-  if (aFlags & BASIS_AT_ORIGIN) {
+  if (aFlags & OFFSET_BY_ORIGIN) {
+    result.PostTranslate(roundedOrigin);
+  } else  if (aFlags & BASIS_AT_ORIGIN) {
     result.ChangeBasis(roundedOrigin);
   }
 
