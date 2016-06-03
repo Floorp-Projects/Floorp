@@ -244,6 +244,13 @@ const SIGNED_TYPES = new Set([
   "experiment",
 ]);
 
+// This is a random number array that can be used as "salt" when generating
+// an automatic ID based on the directory path of an add-on. It will prevent
+// someone from creating an ID for a permanent add-on that could be replaced
+// by a temporary add-on (because that would be confusing, I guess).
+const TEMP_INSTALL_ID_GEN_SESSION =
+  new Uint8Array(Float64Array.of(Math.random()).buffer);
+
 // Whether add-on signing is required.
 function mustSign(aType) {
   if (!SIGNED_TYPES.has(aType))
@@ -1329,11 +1336,19 @@ var loadManifestFromDir = Task.async(function*(aDir, aInstallLocation) {
     addon = yield loadManifestFromWebManifest(uri);
     if (!addon.id) {
       if (aInstallLocation == TemporaryInstallLocation) {
-        let id = Cc["@mozilla.org/uuid-generator;1"]
-            .getService(Ci.nsIUUIDGenerator)
-            .generateUUID().toString();
-        logger.info(`Generated temporary id ${id} for ${aDir.path}`);
-        addon.id = id;
+        // Generate a unique ID based on the directory path of
+        // this temporary add-on location.
+        const hasher = Cc["@mozilla.org/security/hash;1"]
+          .createInstance(Ci.nsICryptoHash);
+        hasher.init(hasher.SHA1);
+        const data = new TextEncoder().encode(aDir.path);
+        // Make it so this ID cannot be guessed.
+        const sess = TEMP_INSTALL_ID_GEN_SESSION;
+        hasher.update(sess, sess.length);
+        hasher.update(data, data.length);
+        addon.id = `${getHashStringForCrypto(hasher)}@temporary-addon`;
+        logger.info(
+          `Generated temp id ${addon.id} (${sess.join("")}) for ${aDir.path}`);
       } else {
         addon.id = aDir.leafName;
       }
