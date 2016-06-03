@@ -20,7 +20,7 @@ from mach.decorators import (
 )
 
 
-def setup_argument_parser():
+def setup_marionette_argument_parser():
     from marionette.runner.base import BaseMarionetteArguments
     return BaseMarionetteArguments()
 
@@ -43,7 +43,6 @@ def run_marionette(tests, testtype=None, address=None, binary=None, topsrcdir=No
     args = parser.parse_args(args=tests)
 
     args.binary = binary
-    path, exe = os.path.split(args.binary)
 
     for k, v in kwargs.iteritems():
         setattr(args, k, v)
@@ -54,6 +53,50 @@ def run_marionette(tests, testtype=None, address=None, binary=None, topsrcdir=No
                                             args,
                                             {"mach": sys.stdout})
     failed = MarionetteHarness(MarionetteTestRunner, args=vars(args)).run()
+    if failed > 0:
+        return 1
+    else:
+        return 0
+
+def setup_session_argument_parser():
+    from session.runner.base import BaseSessionArguments
+    return BaseSessionArguments()
+
+def run_session(tests, testtype=None, address=None, binary=None, topsrcdir=None, **kwargs):
+    from mozlog.structured import commandline
+
+    from marionette.runtests import (
+        MarionetteHarness
+    )
+
+    from session.runtests import (
+        SessionTestRunner,
+        BaseSessionArguments,
+        SessionArguments,
+        SessionTestCase,
+    )
+
+    parser = BaseSessionArguments()
+    commandline.add_logging_group(parser)
+
+    if not tests:
+        tests = [os.path.join(topsrcdir,
+                 'testing/marionette/harness/session/tests/unit-tests.ini')]
+
+    args = parser.parse_args(args=tests)
+
+    args.binary = binary
+
+    for k, v in kwargs.iteritems():
+        setattr(args, k, v)
+
+    parser.verify_usage(args)
+
+    args.logger = commandline.setup_logging("Session Unit Tests",
+                                            args,
+                                            {"mach": sys.stdout})
+    failed = MarionetteHarness(runner_class=SessionTestRunner, parser_class=SessionArguments,
+                               testcase_class=SessionTestCase, args=vars(args)).run()
     if failed > 0:
         return 1
     else:
@@ -95,7 +138,7 @@ class MachCommands(MachCommandBase):
     @Command('marionette-test', category='testing',
         description='Run a Marionette test (Check UI or the internal JavaScript using marionette).',
         conditions=[conditions.is_firefox],
-        parser=setup_argument_parser,
+        parser=setup_marionette_argument_parser,
     )
     def run_marionette_test(self, tests, **kwargs):
         if 'test_objects' in kwargs:
@@ -106,3 +149,18 @@ class MachCommands(MachCommandBase):
 
         kwargs['binary'] = self.get_binary_path('app')
         return run_marionette(tests, topsrcdir=self.topsrcdir, **kwargs)
+
+    @Command('session-test', category='testing',
+        description='Run a Session test (Check Telemetry using marionette).',
+        conditions=[conditions.is_firefox],
+        parser=setup_session_argument_parser,
+    )
+    def run_session_test(self, tests, **kwargs):
+        if 'test_objects' in kwargs:
+            tests = []
+            for obj in kwargs['test_objects']:
+                tests.append(obj['file_relpath'])
+            del kwargs['test_objects']
+
+        kwargs['binary'] = self.get_binary_path('app')
+        return run_session(tests, topsrcdir=self.topsrcdir, **kwargs)

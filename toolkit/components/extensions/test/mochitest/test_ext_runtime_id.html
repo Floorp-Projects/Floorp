@@ -1,0 +1,60 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for browser.runtime.id</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* test_runtime_id() {
+  function background() {
+    browser.test.sendMessage("background-id", browser.runtime.id);
+  }
+
+  function content() {
+    browser.test.sendMessage("content-id", browser.runtime.id);
+  }
+
+  let uuidGenerator = SpecialPowers.Cc["@mozilla.org/uuid-generator;1"].getService(SpecialPowers.Ci.nsIUUIDGenerator);
+  let id = uuidGenerator.generateUUID().number;
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "content_scripts": [{
+        "matches": ["http://mochi.test/*/file_sample.html"],
+        "run_at": "document_start",
+        "js": ["content_script.js"],
+      }],
+    },
+
+    background: `(${background})()`,
+
+    files: {
+      "content_script.js": `(${content})()`,
+    },
+  }, id);
+
+  yield extension.startup();
+
+  let backgroundId = yield extension.awaitMessage("background-id");
+  is(backgroundId, id, "runtime.id from background script is correct");
+  let win = window.open("file_sample.html");
+  let contentId = yield extension.awaitMessage("content-id");
+  is(contentId, id, "runtime.id from content script is correct");
+
+  win.close();
+  yield extension.unload();
+});
+
+</script>
+
+</body>
+</html>

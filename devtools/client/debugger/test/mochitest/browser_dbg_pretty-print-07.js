@@ -12,7 +12,7 @@ const TAB_URL = EXAMPLE_URL + "doc_pretty-print-2.html";
 
 function test() {
   let options = {
-    source: "code_ugly-2.js",
+    source: EXAMPLE_URL + "code_ugly-2.js",
     line: 1
   };
   initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {

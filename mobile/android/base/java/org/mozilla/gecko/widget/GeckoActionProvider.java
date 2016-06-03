@@ -16,10 +16,10 @@ import org.mozilla.gecko.R;
 import org.mozilla.gecko.SnackbarHelper;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
-import org.mozilla.gecko.mozglue.SafeIntentUtils;
 import org.mozilla.gecko.overlays.ui.ShareDialog;
 import org.mozilla.gecko.menu.MenuItemSwitcherLayout;
 import org.mozilla.gecko.util.IOUtils;
+import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.Context;
@@ -289,7 +289,7 @@ public class GeckoActionProvider {
      * @param intent share intent to alter in place.
      */
     public void downloadImageForIntent(final Intent intent) {
-        final String src = SafeIntentUtils.getStringExtra(intent, Intent.EXTRA_TEXT);
+        final String src = IntentUtils.getStringExtraSafe(intent, Intent.EXTRA_TEXT);
         final File dir = GeckoApp.getTempDirectory();
 
         if (src == null || dir == null) {
