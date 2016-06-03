@@ -130,7 +130,7 @@ struct TextRangeStyle
 
 enum class TextRangeType : RawTextRangeType
 {
-  NS_TEXTRANGE_UNDEFINED = 0x00,
+  eUninitialized = 0x00,
   NS_TEXTRANGE_CARETPOSITION = 0x01,
   NS_TEXTRANGE_RAWINPUT =
     nsITextInputProcessor::ATTR_RAW_CLAUSE,
@@ -152,7 +152,7 @@ struct TextRange
   TextRange()
     : mStartOffset(0)
     , mEndOffset(0)
-    , mRangeType(TextRangeType::NS_TEXTRANGE_UNDEFINED)
+    , mRangeType(TextRangeType::eUninitialized)
   {
   }
 
