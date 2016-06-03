@@ -6170,7 +6170,7 @@ PresShell::MarkFramesInSubtreeApproximatelyVisible(nsIFrame* aFrame,
         if (!preserves3DChildren || !child->Combines3DTransformWithAncestors()) {
           const nsRect overflow = child->GetVisualOverflowRectRelativeToSelf();
           nsRect out;
-          if (nsDisplayTransform::UntransformRect(r, overflow, child, nsPoint(0,0), &out)) {
+          if (nsDisplayTransform::UntransformRect(r, overflow, child, &out)) {
             r = out;
           } else {
             r.SetEmpty();

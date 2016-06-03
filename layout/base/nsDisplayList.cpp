@@ -6387,41 +6387,31 @@ nsDisplayTransform::TryMerge(nsDisplayItem *aItem)
  */
 nsRect nsDisplayTransform::TransformRect(const nsRect &aUntransformedBounds,
                                          const nsIFrame* aFrame,
-                                         const nsPoint &aOrigin,
-                                         const nsRect* aBoundsOverride,
-                                         bool aPreserves3D)
+                                         const nsRect* aBoundsOverride)
 {
   NS_PRECONDITION(aFrame, "Can't take the transform based on a null frame!");
 
   float factor = aFrame->PresContext()->AppUnitsPerDevPixel();
 
-  uint32_t flags = INCLUDE_PERSPECTIVE|BASIS_AT_ORIGIN;
-  if (aPreserves3D) {
-    flags |= INCLUDE_PRESERVE3D_ANCESTORS;
-  }
+  uint32_t flags = INCLUDE_PERSPECTIVE|OFFSET_BY_ORIGIN|INCLUDE_PRESERVE3D_ANCESTORS;
   return nsLayoutUtils::MatrixTransformRect
     (aUntransformedBounds,
-     GetResultingTransformMatrix(aFrame, aOrigin, factor, flags, aBoundsOverride),
+     GetResultingTransformMatrix(aFrame, nsPoint(0, 0), factor, flags, aBoundsOverride),
      factor);
 }
 
 bool nsDisplayTransform::UntransformRect(const nsRect &aTransformedBounds,
                                          const nsRect &aChildBounds,
                                          const nsIFrame* aFrame,
-                                         const nsPoint &aOrigin,
-                                         nsRect *aOutRect,
-                                         bool aPreserves3D)
+                                         nsRect *aOutRect)
 {
   NS_PRECONDITION(aFrame, "Can't take the transform based on a null frame!");
 
   float factor = aFrame->PresContext()->AppUnitsPerDevPixel();
 
-  uint32_t flags = INCLUDE_PERSPECTIVE|BASIS_AT_ORIGIN;
-  if (aPreserves3D) {
-    flags |= INCLUDE_PRESERVE3D_ANCESTORS;
-  }
+  uint32_t flags = INCLUDE_PERSPECTIVE|OFFSET_BY_ORIGIN|INCLUDE_PRESERVE3D_ANCESTORS;
 
-  Matrix4x4 transform = GetResultingTransformMatrix(aFrame, aOrigin, factor, flags);
+  Matrix4x4 transform = GetResultingTransformMatrix(aFrame, nsPoint(0, 0), factor, flags);
   if (transform.IsSingular()) {
     return false;
   }
