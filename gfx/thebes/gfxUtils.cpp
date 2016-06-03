@@ -604,7 +604,9 @@ PrescaleAndTileDrawable(gfxDrawable* aDrawable,
 
   scaledDT->SetTransform(ToMatrix(scaleMatrix));
   gfxRect gfxImageRect(aImageRect.x, aImageRect.y, aImageRect.width, aImageRect.height);
-  aDrawable->Draw(tmpCtx, gfxImageRect, aExtendMode, aSamplingFilter, 1.0, gfxMatrix());
+
+  // Since this is just the scaled image, we don't want to repeat anything yet.
+  aDrawable->Draw(tmpCtx, gfxImageRect, ExtendMode::CLAMP, aSamplingFilter, 1.0, gfxMatrix());
 
   RefPtr<SourceSurface> scaledImage = scaledDT->Snapshot();
 
