@@ -1,20 +1,33 @@
 #!/bin/bash -ex
 
+function usage() {
+    echo "Usage: $0 [--project <shell|browser>] <workspace-dir> flags..."
+    echo "flags are treated the same way as a commit message would be"
+    echo "(as in, they are scanned for directives just like a try: ... line)"
+}
+
 PROJECT=shell
-if [[ "$1" == "--project" ]]; then
-    shift
-    PROJECT="$1"
-    shift
-fi
+WORKSPACE=
+while [[ $# -gt 0 ]]; do
+    if [[ "$1" == "-h" ]] || [[ "$1" == "--help" ]]; then
+        usage
+        exit 0
+    elif [[ "$1" == "--project" ]]; then
+        shift
+        PROJECT="$1"
+        shift
+    elif [[ -z "$WORKSPACE" ]]; then
+        WORKSPACE=$( cd "$1" && pwd )
+        shift
+        break
+    fi
+done
+
+SCRIPT_FLAGS="$@"
 
 # Ensure all the scripts in this dir are on the path....
 DIRNAME=$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )
 PATH=$DIRNAME:$PATH
-
-WORKSPACE=$( cd "$1" && pwd )
-shift
-
-SCRIPT_FLAGS="$*"
 
 # Use GECKO_BASE_REPOSITORY as a signal for whether we are running in automation.
 export AUTOMATION=${GECKO_BASE_REPOSITORY:+1}
@@ -39,6 +52,8 @@ mkdir -p "$MOZ_OBJDIR"
 
 tc-vcs checkout --force-clone $WORKSPACE/tooltool $TOOLTOOL_REPO $TOOLTOOL_REPO $TOOLTOOL_REV
 ( cd $TOOLTOOL_DIR; python $WORKSPACE/tooltool/tooltool.py --url https://api.pub.build.mozilla.org/tooltool/ -m $GECKO_DIR/$TOOLTOOL_MANIFEST fetch -c $TOOLTOOL_CACHE )
+
+export NO_MERCURIAL_SETUP_CHECK=1
 
 if [[ "$PROJECT" = "browser" ]]; then (
     cd "$WORKSPACE"
