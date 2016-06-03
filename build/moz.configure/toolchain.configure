@@ -604,25 +604,3 @@ host_c_compiler = compiler('C', host, other_compiler=c_compiler)
 host_cxx_compiler = compiler('C++', host, c_compiler=host_c_compiler,
                              other_compiler=cxx_compiler,
                              other_c_compiler=c_compiler)
-
-
-option('--enable-strip',
-       help='Enable stripping of libs & executables')
-
-@depends('--enable-strip')
-def enable_strip(value):
-    if value:
-        return True
-
-set_config('ENABLE_STRIP', enable_strip)
-
-
-option('--enable-install-strip',
-       help='Enable stripping of libs & executables when packaging')
-
-@depends('--enable-install-strip')
-def disable_install_strip(value):
-    if not value:
-        return True
-
-set_config('PKG_SKIP_STRIP', disable_install_strip)
