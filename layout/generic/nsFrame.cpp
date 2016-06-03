@@ -2261,7 +2261,7 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
 
       nsRect untransformedDirtyRect;
       if (nsDisplayTransform::UntransformRect(dirtyRect, overflow, this,
-            nsPoint(0,0), &untransformedDirtyRect, true)) {
+            &untransformedDirtyRect)) {
         dirtyRect = untransformedDirtyRect;
       } else {
         NS_WARNING("Unable to untransform dirty rect!");
@@ -5356,15 +5356,15 @@ nsIFrame::GetTransformMatrix(const nsIFrame* aStopAtAncestor,
     int32_t scaleFactor = PresContext()->AppUnitsPerDevPixel();
 
     Matrix4x4 result = nsDisplayTransform::GetResultingTransformMatrix(this,
-                         nsPoint(0, 0), scaleFactor,
-                         nsDisplayTransform::INCLUDE_PERSPECTIVE|nsDisplayTransform::BASIS_AT_ORIGIN,
+                         nsPoint(0,0), scaleFactor,
+                         nsDisplayTransform::INCLUDE_PERSPECTIVE|nsDisplayTransform::OFFSET_BY_ORIGIN,
                          nullptr, aOutAncestor);
-    // XXXjwatt: seems like this will double count offsets in the face of preserve-3d:
     nsPoint delta = GetOffsetToCrossDoc(*aOutAncestor);
     /* Combine the raw transform with a translation to our parent. */
     result.PostTranslate(NSAppUnitsToFloatPixels(delta.x, scaleFactor),
                          NSAppUnitsToFloatPixels(delta.y, scaleFactor),
                          0.0f);
+
     return result;
   }
 
@@ -7830,8 +7830,7 @@ UnionBorderBoxes(nsIFrame* aFrame, bool aApplyTransform,
   nsRect u;
   bool doTransform = aApplyTransform && aFrame->IsTransformed();
   if (doTransform) {
-    u = nsDisplayTransform::TransformRect(bounds, aFrame,
-                                          nsPoint(0, 0), &bounds);
+    u = nsDisplayTransform::TransformRect(bounds, aFrame, &bounds);
   } else {
     u = bounds;
   }
@@ -7903,8 +7902,7 @@ UnionBorderBoxes(nsIFrame* aFrame, bool aApplyTransform,
       // with 2-D transforms, though it does match the way we handle
       // overflow areas in preserve-3d 3-D scenes.
       if (doTransform && !child->Combines3DTransformWithAncestors()) {
-        childRect = nsDisplayTransform::TransformRect(childRect, aFrame,
-                                                      nsPoint(0, 0), &bounds);
+        childRect = nsDisplayTransform::TransformRect(childRect, aFrame, &bounds);
       }
       u.UnionRectEdges(u, childRect);
     }
@@ -7970,7 +7968,7 @@ ComputeAndIncludeOutlineArea(nsIFrame* aFrame, nsOverflowAreas& aOverflowAreas,
           break;
         }
         if (parent->IsTransformed() && !f->Combines3DTransformWithAncestors()) {
-          r = nsDisplayTransform::TransformRect(r, parent, nsPoint(0, 0));
+          r = nsDisplayTransform::TransformRect(r, parent);
         }
       }
 
@@ -8130,7 +8128,7 @@ nsIFrame::FinishAndStoreOverflow(nsOverflowAreas& aOverflowAreas,
     // Transform affects both overflow areas.
     NS_FOR_FRAME_OVERFLOW_TYPES(otype) {
       nsRect& o = aOverflowAreas.Overflow(otype);
-      o = nsDisplayTransform::TransformRect(o, this, nsPoint(0, 0), &newBounds);
+      o = nsDisplayTransform::TransformRect(o, this, &newBounds);
     }
     if (Extend3DContext()) {
       ComputePreserve3DChildrenOverflow(aOverflowAreas, newBounds);
@@ -8292,10 +8290,10 @@ nsIFrame::ComputePreserve3DChildrenOverflow(nsOverflowAreas& aOverflowAreas, con
       } else {
         childVisual = 
           childVisual.Union(nsDisplayTransform::TransformRect(visual, 
-                            this, nsPoint(0,0), &aBounds));
+                            this, &aBounds));
         childScrollable = 
           childScrollable.Union(nsDisplayTransform::TransformRect(scrollable,
-                                this, nsPoint(0,0), &aBounds));
+                                this, &aBounds));
       }
     }
   }

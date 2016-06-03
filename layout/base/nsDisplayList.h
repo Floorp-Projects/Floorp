@@ -4013,9 +4013,7 @@ public:
    */
   static nsRect TransformRect(const nsRect &aUntransformedBounds, 
                               const nsIFrame* aFrame,
-                              const nsPoint &aOrigin,
-                              const nsRect* aBoundsOverride = nullptr,
-                              bool aPreserves3D = true);
+                              const nsRect* aBoundsOverride = nullptr);
 
   /* UntransformRect is like TransformRect, except that it inverts the
    * transform.
@@ -4023,9 +4021,7 @@ public:
   static bool UntransformRect(const nsRect &aTransformedBounds,
                               const nsRect &aChildBounds,
                               const nsIFrame* aFrame,
-                              const nsPoint &aOrigin,
-                              nsRect *aOutRect,
-                              bool aPreserves3D = true);
+                              nsRect *aOutRect);
 
   bool UntransformVisibleRect(nsDisplayListBuilder* aBuilder,
                               nsRect* aOutRect);
