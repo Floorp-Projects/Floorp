@@ -6,7 +6,7 @@
  */
 
 const acorn = require("acorn/acorn");
-Cu.import("resource://gre/modules/reflect.jsm");
+const { Reflect } = require("resource://gre/modules/reflect.jsm");
 
 const testCode = "" + function main () {
   function makeAcc(n) {

@@ -2,11 +2,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Cc, Ci, Cu} = require("chrome");
+"use strict";
+
+const {Cc, Ci} = require("chrome");
 const {rgbToHsl, rgbToColorName} =
       require("devtools/client/shared/css-color").colorUtils;
 const Telemetry = require("devtools/client/shared/telemetry");
-const {EventEmitter} = Cu.import("resource://devtools/shared/event-emitter.js");
+const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
 const Services = require("Services");
 
@@ -182,7 +184,8 @@ Eyedropper.prototype = {
    * Get color of center cell in the grid.
    */
   get centerColor() {
-    let x = y = (this.centerCell * this.cellSize) + (this.cellSize / 2);
+    let x, y;
+    x = y = (this.centerCell * this.cellSize) + (this.cellSize / 2);
     let rgb = this._ctx.getImageData(x, y, 1, 1).data;
     return rgb;
   },
@@ -727,7 +730,8 @@ Eyedropper.prototype = {
    * Draw a box on the canvas to highlight the center cell.
    */
   _drawCrosshair: function () {
-    let x = y = this.centerCell * this.cellSize;
+    let x, y;
+    x = y = this.centerCell * this.cellSize;
 
     this._ctx.lineWidth = 1;
     this._ctx.lineJoin = "miter";

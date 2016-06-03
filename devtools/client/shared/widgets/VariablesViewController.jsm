@@ -5,11 +5,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { classes: Cc, interfaces: Ci, utils: Cu } = Components;
+const { utils: Cu } = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://devtools/client/shared/widgets/VariablesView.jsm");
 var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+var {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
+var {VariablesView} = require("resource://devtools/client/shared/widgets/VariablesView.jsm");
 var Services = require("Services");
 var promise = require("promise");
 var {LocalizationHelper} = require("devtools/client/shared/l10n");

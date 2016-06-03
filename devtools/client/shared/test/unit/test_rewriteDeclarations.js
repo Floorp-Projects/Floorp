@@ -1,13 +1,11 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80: */
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 "use strict";
 
 var Cu = Components.utils;
-Cu.import("resource://devtools/shared/Loader.jsm");
-const {RuleRewriter} = devtools.require("devtools/shared/css-parsing-utils");
+const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const {RuleRewriter} = require("devtools/shared/css-parsing-utils");
 const {isCssPropertyKnown} = require("devtools/server/actors/css-properties");
 
 const TEST_DATA = [

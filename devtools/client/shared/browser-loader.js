@@ -9,7 +9,7 @@ const { devtools } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const { joinURI } = devtools.require("devtools/shared/path");
 const { assert } = devtools.require("devtools/shared/DevToolsUtils");
 const Services = devtools.require("Services");
-Cu.import("resource://gre/modules/AppConstants.jsm");
+const { AppConstants } = devtools.require("resource://gre/modules/AppConstants.jsm");
 
 const BROWSER_BASED_DIRS = [
   "resource://devtools/client/jsonview",

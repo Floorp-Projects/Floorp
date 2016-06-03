@@ -2,9 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Cu} = require("chrome");
+"use strict";
+
 const promise = require("promise");
-const {AddonManager} = Cu.import("resource://gre/modules/AddonManager.jsm");
+const {AddonManager} = require("resource://gre/modules/AddonManager.jsm");
 const Services = require("Services");
 const {getJSON} = require("devtools/client/shared/getjson");
 const EventEmitter = require("devtools/shared/event-emitter");

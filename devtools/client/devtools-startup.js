@@ -2,10 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-/* FIXME: remove this globals comment and replace with import-globals-from when
-   bug 1242893 is fixed */
-/* globals BrowserToolboxProcess */
-
 /**
  * This XPCOM component is loaded very early.
  * It handles command line arguments like -jsconsole, but also ensures starting
@@ -22,7 +18,7 @@ const kDebuggerPrefs = [
   "devtools.debugger.remote-enabled",
   "devtools.chrome.enabled"
 ];
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 XPCOMUtils.defineLazyModuleGetter(this, "Services", "resource://gre/modules/Services.jsm");
 
 function DevToolsStartup() {}
@@ -126,7 +122,7 @@ DevToolsStartup.prototype = {
     if (!this._isRemoteDebuggingEnabled()) {
       return;
     }
-    Cu.import("resource://devtools/client/framework/ToolboxProcess.jsm");
+    const { BrowserToolboxProcess } = Cu.import("resource://devtools/client/framework/ToolboxProcess.jsm", {});
     BrowserToolboxProcess.init();
 
     if (cmdLine.state == Ci.nsICommandLine.STATE_REMOTE_AUTO) {
