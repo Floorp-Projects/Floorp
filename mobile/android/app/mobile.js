@@ -913,7 +913,7 @@ pref("identity.fxaccounts.remote.oauth.uri", "https://oauth.accounts.firefox.com
 pref("identity.sync.tokenserver.uri", "https://token.services.mozilla.com/1.0/sync/1.5");
 
 // Enable Presentation API
-pref("dom.presentation.enabled", true);
+pref("dom.presentation.enabled", false);
 pref("dom.presentation.discovery.enabled", true);
 pref("dom.presentation.discovery.legacy.enabled", true); // for TV 2.5 backward capability
 

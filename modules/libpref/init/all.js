@@ -5256,6 +5256,10 @@ pref("dom.beforeAfterKeyboardEvent.enabled", false);
 
 // Presentation API
 pref("dom.presentation.enabled", false);
+pref("dom.presentation.controller.enabled", false);
+pref("dom.presentation.receiver.enabled", false);
+
+// Presentation Device
 pref("dom.presentation.tcp_server.debug", false);
 pref("dom.presentation.discovery.enabled", false);
 pref("dom.presentation.discovery.legacy.enabled", false);
