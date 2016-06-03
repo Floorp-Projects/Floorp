@@ -1129,12 +1129,6 @@ js::DumpHeap(JSRuntime* rt, FILE* fp, js::DumpHeapNurseryBehaviour nurseryBehavi
     fflush(dtrc.output);
 }
 
-JS_FRIEND_API(bool)
-js::ContextHasOutstandingRequests(const JSContext* cx)
-{
-    return cx->outstandingRequests > 0;
-}
-
 JS_FRIEND_API(void)
 js::SetActivityCallback(JSRuntime* rt, ActivityCallback cb, void* arg)
 {
