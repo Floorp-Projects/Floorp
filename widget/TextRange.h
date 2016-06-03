@@ -133,8 +133,7 @@ enum class TextRangeType : RawTextRangeType
   eUninitialized = 0x00,
   eCaret = 0x01,
   eRawClause = nsITextInputProcessor::ATTR_RAW_CLAUSE,
-  NS_TEXTRANGE_SELECTEDRAWTEXT =
-    nsITextInputProcessor::ATTR_SELECTED_RAW_CLAUSE,
+  eSelectedRawClause = nsITextInputProcessor::ATTR_SELECTED_RAW_CLAUSE,
   NS_TEXTRANGE_CONVERTEDTEXT =
     nsITextInputProcessor::ATTR_CONVERTED_CLAUSE,
   NS_TEXTRANGE_SELECTEDCONVERTEDTEXT =
@@ -205,7 +204,7 @@ class TextRangeArray final : public AutoTArray<TextRange, 10>
   {
     for (uint32_t i = 0; i < Length(); ++i) {
       const TextRange& range = ElementAt(i);
-      if (range.mRangeType == TextRangeType::NS_TEXTRANGE_SELECTEDRAWTEXT ||
+      if (range.mRangeType == TextRangeType::eSelectedRawClause ||
           range.mRangeType == TextRangeType::NS_TEXTRANGE_SELECTEDCONVERTEDTEXT) {
         return &range;
       }
