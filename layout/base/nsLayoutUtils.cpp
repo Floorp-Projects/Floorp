@@ -2558,6 +2558,20 @@ nsLayoutUtils::MatrixTransformPoint(const nsPoint &aPoint,
                  NSFloatPixelsToAppUnits(float(image.y), aFactor));
 }
 
+void
+nsLayoutUtils::PostTranslate(Matrix4x4& aTransform, const nsPoint& aOrigin, float aAppUnitsPerPixel, bool aRounded)
+{
+  Point3D gfxOrigin =
+    Point3D(NSAppUnitsToFloatPixels(aOrigin.x, aAppUnitsPerPixel),
+            NSAppUnitsToFloatPixels(aOrigin.y, aAppUnitsPerPixel),
+            0.0f);
+  if (aRounded) {
+    gfxOrigin.x = NS_round(gfxOrigin.x);
+    gfxOrigin.y = NS_round(gfxOrigin.y);
+  }
+  aTransform.PostTranslate(gfxOrigin);
+}
+
 Matrix4x4
 nsLayoutUtils::GetTransformToAncestor(nsIFrame *aFrame, const nsIFrame *aAncestor)
 {
