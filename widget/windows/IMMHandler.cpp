@@ -1898,7 +1898,7 @@ PlatformToNSAttr(uint8_t aAttr)
     case ATTR_INPUT:
       return TextRangeType::eRawClause;
     case ATTR_CONVERTED:
-      return TextRangeType::NS_TEXTRANGE_CONVERTEDTEXT;
+      return TextRangeType::eConvertedClause;
     case ATTR_TARGET_NOTCONVERTED:
       return TextRangeType::eSelectedRawClause;
     case ATTR_TARGET_CONVERTED:

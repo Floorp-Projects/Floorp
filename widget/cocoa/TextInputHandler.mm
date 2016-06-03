@@ -2751,7 +2751,7 @@ IMEInputHandler::ConvertToTextRangeType(uint32_t aUnderlineStyle,
 
   switch (aUnderlineStyle) {
     case NSUnderlineStyleSingle:
-      return TextRangeType::NS_TEXTRANGE_CONVERTEDTEXT;
+      return TextRangeType::eConvertedClause;
     case NSUnderlineStyleThick:
       return TextRangeType::NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
     default:
