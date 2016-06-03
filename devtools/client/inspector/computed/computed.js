@@ -24,6 +24,8 @@ loader.lazyRequireGetter(this, "overlays",
   "devtools/client/inspector/shared/style-inspector-overlays");
 loader.lazyRequireGetter(this, "StyleInspectorMenu",
   "devtools/client/inspector/shared/style-inspector-menu");
+loader.lazyRequireGetter(this, "KeyShortcuts",
+  "devtools/client/shared/key-shortcuts", true);
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -155,12 +157,10 @@ function CssComputedView(inspector, document, pageStyle) {
 
   // Create bound methods.
   this.focusWindow = this.focusWindow.bind(this);
-  this._onKeypress = this._onKeypress.bind(this);
   this._onContextMenu = this._onContextMenu.bind(this);
   this._onClick = this._onClick.bind(this);
   this._onCopy = this._onCopy.bind(this);
   this._onFilterStyles = this._onFilterStyles.bind(this);
-  this._onFilterKeyPress = this._onFilterKeyPress.bind(this);
   this._onClearSearch = this._onClearSearch.bind(this);
   this._onIncludeBrowserStyles = this._onIncludeBrowserStyles.bind(this);
   this._onFilterTextboxContextMenu =
@@ -174,13 +174,15 @@ function CssComputedView(inspector, document, pageStyle) {
   this.includeBrowserStylesCheckbox =
     doc.getElementById("browser-style-checkbox");
 
-  this.styleDocument.addEventListener("keypress", this._onKeypress);
+  this.shortcuts = new KeyShortcuts({ window: this.styleWindow });
+  this._onShortcut = this._onShortcut.bind(this);
+  this.shortcuts.on("CmdOrCtrl+F", this._onShortcut);
+  this.shortcuts.on("Escape", this._onShortcut);
   this.styleDocument.addEventListener("mousedown", this.focusWindow);
   this.element.addEventListener("click", this._onClick);
   this.element.addEventListener("copy", this._onCopy);
   this.element.addEventListener("contextmenu", this._onContextMenu);
   this.searchField.addEventListener("input", this._onFilterStyles);
-  this.searchField.addEventListener("keypress", this._onFilterKeyPress);
   this.searchField.addEventListener("contextmenu",
                                     this._onFilterTextboxContextMenu);
   this.searchClearButton.addEventListener("click", this._onClearSearch);
@@ -502,17 +504,19 @@ CssComputedView.prototype = {
   },
 
   /**
-   * Handle the keypress event in the computed view.
+   * Handle the shortcut events in the computed view.
    */
-  _onKeypress: function (event) {
+  _onShortcut: function (name, event) {
     if (!event.target.closest("#sidebar-panel-computedview")) {
       return;
     }
-    let isOSX = Services.appinfo.OS === "Darwin";
-
-    if (((isOSX && event.metaKey && !event.ctrlKey && !event.altKey) ||
-        (!isOSX && event.ctrlKey && !event.metaKey && !event.altKey)) &&
-        event.key === "f") {
+    // Handle the search box's keypress event. If the escape key is pressed,
+    // clear the search box field.
+    if (name === "Escape" && event.target === this.searchField &&
+        this._onClearSearch()) {
+      event.preventDefault();
+      event.stopPropagation();
+    } else if (name === "CmdOrCtrl+F") {
       this.searchField.focus();
       event.preventDefault();
     }
@@ -551,18 +555,6 @@ CssComputedView.prototype = {
       this.refreshPanel();
       this._filterChangeTimeout = null;
     }, filterTimeout);
-  },
-
-  /**
-   * Handle the search box's keypress event. If the escape key is pressed,
-   * clear the search box field.
-   */
-  _onFilterKeyPress: function (event) {
-    if (event.keyCode === Ci.nsIDOMKeyEvent.DOM_VK_ESCAPE &&
-        this._onClearSearch()) {
-      event.preventDefault();
-      event.stopPropagation();
-    }
   },
 
   /**
@@ -776,7 +768,6 @@ CssComputedView.prototype = {
     this.element.removeEventListener("copy", this._onCopy);
     this.element.removeEventListener("contextmenu", this._onContextMenu);
     this.searchField.removeEventListener("input", this._onFilterStyles);
-    this.searchField.removeEventListener("keypress", this._onFilterKeyPress);
     this.searchField.removeEventListener("contextmenu",
                                          this._onFilterTextboxContextMenu);
     this.searchClearButton.removeEventListener("click", this._onClearSearch);
@@ -957,18 +948,15 @@ PropertyView.prototype = {
 
     // Make it keyboard navigable
     this.element.setAttribute("tabindex", "0");
-    this.onKeyDown = (event) => {
-      let keyEvent = Ci.nsIDOMKeyEvent;
-      if (event.keyCode === keyEvent.DOM_VK_F1) {
-        this.mdnLinkClick();
-        event.preventDefault();
-      }
-      if (event.keyCode === keyEvent.DOM_VK_RETURN ||
-        event.keyCode === keyEvent.DOM_VK_SPACE) {
-        this.onMatchedToggle(event);
-      }
-    };
-    this.element.addEventListener("keydown", this.onKeyDown, false);
+    this.shortcuts = new KeyShortcuts({
+      window: this.tree.styleWindow,
+      target: this.element
+    });
+    this.shortcuts.on("F1", (name, event) => {
+      this.mdnLinkClick(event);
+    });
+    this.shortcuts.on("Return", (name, event) => this.onMatchedToggle(event));
+    this.shortcuts.on("Space", (name, event) => this.onMatchedToggle(event));
 
     let nameContainer = doc.createElementNS(HTML_NS, "div");
     nameContainer.className = "property-name-container";
@@ -1116,7 +1104,11 @@ PropertyView.prototype = {
         textContent: selector.source
       });
       link.addEventListener("click", selector.openStyleEditor, false);
-      link.addEventListener("keydown", selector.maybeOpenStyleEditor, false);
+      let shortcuts = new KeyShortcuts({
+        window: this.tree.styleWindow,
+        target: link
+      });
+      shortcuts.on("Return", () => selector.openStyleEditor());
 
       let status = createChild(p, "span", {
         dir: "ltr",
@@ -1191,6 +1183,7 @@ PropertyView.prototype = {
       browserWin.openUILinkIn(this.link, "tab");
     }
     event.preventDefault();
+    event.stopPropagation();
   },
 
   /**
@@ -1198,7 +1191,7 @@ PropertyView.prototype = {
    */
   destroy: function () {
     this.element.removeEventListener("dblclick", this.onMatchedToggle, false);
-    this.element.removeEventListener("keydown", this.onKeyDown, false);
+    this.shortcuts.destroy();
     this.element = null;
 
     this.matchedExpander.removeEventListener("click", this.onMatchedToggle,
@@ -1226,7 +1219,6 @@ function SelectorView(tree, selectorInfo) {
   this._cacheStatusNames();
 
   this.openStyleEditor = this.openStyleEditor.bind(this);
-  this.maybeOpenStyleEditor = this.maybeOpenStyleEditor.bind(this);
 
   this.ready = this.updateSourceLink();
 }
@@ -1366,16 +1358,6 @@ SelectorView.prototype = {
     let oldSource = this.source;
     this.source = CssLogic.shortSource(this.sheet) + ":" + rule.line;
     return promise.resolve(oldSource);
-  },
-
-  /**
-   * Open the style editor if the RETURN key was pressed.
-   */
-  maybeOpenStyleEditor: function (event) {
-    let keyEvent = Ci.nsIDOMKeyEvent;
-    if (event.keyCode === keyEvent.DOM_VK_RETURN) {
-      this.openStyleEditor();
-    }
   },
 
   /**
