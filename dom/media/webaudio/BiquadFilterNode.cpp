@@ -77,7 +77,9 @@ SetParamsOnBiquad(WebCore::Biquad& aBiquad,
 class BiquadFilterNodeEngine final : public AudioNodeEngine
 {
 public:
-  BiquadFilterNodeEngine(AudioNode* aNode, AudioDestinationNode* aDestination)
+  BiquadFilterNodeEngine(AudioNode* aNode,
+                         AudioDestinationNode* aDestination,
+                         uint64_t aWindowID)
     : AudioNodeEngine(aNode)
     , mDestination(aDestination->Stream())
     // Keep the default values in sync with the default values in
@@ -87,6 +89,7 @@ public:
     , mDetune(0.f)
     , mQ(1.f)
     , mGain(0.f)
+    , mWindowID(aWindowID)
   {
   }
 
@@ -173,7 +176,8 @@ public:
         aStream->Graph()->
           DispatchToMainThreadAfterStreamStateUpdate(refchanged.forget());
       } else { // Help people diagnose bug 924718
-        NS_WARNING("BiquadFilterNode channel count changes may produce audio glitches");
+        WebAudioUtils::LogToDeveloperConsole(mWindowID,
+                                             "BiquadFilterChannelCountChangeWarning");
       }
 
       // Adjust the number of biquads based on the number of channels
@@ -237,6 +241,7 @@ private:
   AudioParamTimeline mQ;
   AudioParamTimeline mGain;
   nsTArray<WebCore::Biquad> mBiquads;
+  uint64_t mWindowID;
 };
 
 BiquadFilterNode::BiquadFilterNode(AudioContext* aContext)
@@ -251,7 +256,8 @@ BiquadFilterNode::BiquadFilterNode(AudioContext* aContext)
   , mQ(new AudioParam(this, BiquadFilterNodeEngine::Q, 1.f, "Q"))
   , mGain(new AudioParam(this, BiquadFilterNodeEngine::GAIN, 0.f, "gain"))
 {
-  BiquadFilterNodeEngine* engine = new BiquadFilterNodeEngine(this, aContext->Destination());
+  uint64_t windowID = aContext->GetParentObject()->WindowID();
+  BiquadFilterNodeEngine* engine = new BiquadFilterNodeEngine(this, aContext->Destination(), windowID);
   mStream = AudioNodeStream::Create(aContext, engine,
                                     AudioNodeStream::NO_STREAM_FLAGS);
 }
