@@ -1,0 +1,31 @@
+$inherits:
+  from: 'tasks/builds/base_linux64.yml'
+  variables:
+    build_name: 'linux64-valgrind'
+    build_type: 'opt'
+task:
+  metadata:
+      name: '[TC] Linux64 Valgrind Opt'
+      description: 'Linux64 Valgrind Opt'
+
+  routes:
+    - 'index.buildbot.branches.{{project}}.linux64-valgrind'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux64-valgrind'
+
+  workerType: opt-linux64
+
+  payload:
+    env:
+      MH_CUSTOM_BUILD_VARIANT_CFG: 'valgrind'
+      MOZHARNESS_ACTIONS: 'get-secrets build valgrind-test generate-build-stats'
+
+    maxRunTime: 72000
+
+  extra:
+    treeherder:
+      groupSymbol: tc
+      groupName: Submitted by taskcluster
+      symbol: V
+      machine:
+        # see https://github.com/mozilla/treeherder/blob/master/ui/js/values.js
+        platform: linux64
