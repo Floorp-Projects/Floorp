@@ -30,10 +30,7 @@ function* test(testDriver) {
     flushApzRepaints(testDriver);
   });
   scrollPos = fpos.scrollTop;
-  // The mouse is already at the right position. If we call moveMouseAndScrollWheelOver it
-  // hangs on windows waiting for the mouse-move, so instead we just synthesize
-  // the wheel directly.
-  yield synthesizeNativeWheelAndWaitForScrollEvent(fpos, 50, 150, 0, -10, testDriver);
+  yield moveMouseAndScrollWheelOver(fpos, 50, 150, testDriver);
   ok(fpos.scrollTop > scrollPos, "scrollable item inside fixed-pos element scrolled after layerization");
 
   // same, but using the top-level window's position:sticky element
