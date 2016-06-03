@@ -3390,6 +3390,11 @@ public:
   {
     mParticipatesInPreserve3D = aParticipatesInPreserve3D;
   }
+
+  virtual bool ShouldBuildLayerEvenIfInvisible(nsDisplayListBuilder* aBuilder) override
+  {
+    return mParticipatesInPreserve3D;
+  }
 private:
   float mOpacity;
   bool mForEventsOnly;
