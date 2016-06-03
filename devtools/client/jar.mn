@@ -153,6 +153,7 @@ devtools.jar:
     skin/light-theme.css (themes/light-theme.css)
     skin/firebug-theme.css (themes/firebug-theme.css)
     skin/toolbars.css (themes/toolbars.css)
+    skin/tooltips.css (themes/tooltips.css)
     skin/variables.css (themes/variables.css)
     skin/images/add.svg (themes/images/add.svg)
     skin/images/filters.svg (themes/images/filters.svg)
