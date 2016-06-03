@@ -87,6 +87,8 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
      *   * Assert the client IDs are the same
      */
     private void testJavaCreatesClientId() throws Exception {
+        Log.d(LOGTAG, "testJavaCreatesClientId: start");
+
         fAssertFalse("Client id file does not exist yet", getClientIdFile().exists());
 
         final String clientIdFromJava = getClientIdFromJava();
@@ -110,6 +112,8 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
      *   * Assert the client IDs are the same
      */
     private void testJsCreatesClientId() throws Exception {
+        Log.d(LOGTAG, "testJsCreatesClientId: start");
+
         fAssertFalse("Client id file does not exist yet", getClientIdFile().exists());
 
         final String clientIdFromJS = getClientIdFromJS();
@@ -134,6 +138,8 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
      *   * Assert the client IDs are the same
      */
     private void testJavaMigratesFromHealthReport() throws Exception {
+        Log.d(LOGTAG, "testJavaMigratesFromHealthReport: start");
+
         fAssertFalse("Client id file does not exist yet", getClientIdFile().exists());
         fAssertFalse("Health report file does not exist yet", getFHRClientIdFile().exists());
 
@@ -163,6 +169,8 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
      *   * Assert the client IDs are the same
      */
     private void testJsMigratesFromHealthReport() throws Exception {
+        Log.d(LOGTAG, "testJsMigratesFromHealthReport: start");
+
         fAssertFalse("Client id file does not exist yet", getClientIdFile().exists());
         fAssertFalse("Health report file does not exist yet", getFHRClientIdFile().exists());
 
@@ -181,7 +189,6 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
         fAssertEquals("Same client ID retrieved from Java", expectedClientId, clientIdFromJavaAgain);
         fAssertEquals("Same client ID retrieved from JS cache", expectedClientId, clientIdFromJSCache);
         fAssertEquals("Same client ID retrieved from JS file", expectedClientId, clientIdFromJSFileAgain);
-
     }
 
     private String getClientIdFromJava() throws IOException {
