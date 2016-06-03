@@ -6,6 +6,8 @@
 #ifndef MOZILLA_GFX_BASEMARGIN_H_
 #define MOZILLA_GFX_BASEMARGIN_H_
 
+#include <ostream>
+
 #include "Types.h"
 
 namespace mozilla {
@@ -135,6 +137,12 @@ struct BaseMargin {
     bottom += aMargin.bottom;
     left += aMargin.left;
     return *static_cast<Sub*>(this);
+  }
+
+  friend std::ostream& operator<<(std::ostream& aStream,
+      const BaseMargin& aMargin) {
+    return aStream << '(' << aMargin.top << ',' << aMargin.right << ','
+                  << aMargin.bottom << ',' << aMargin.left << ')';
   }
 };
 
