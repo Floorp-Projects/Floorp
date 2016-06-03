@@ -217,4 +217,6 @@
 
     <item name="tab_strip_content_start" type="dimen">12dp</item>
     <item name="firstrun_tab_strip_content_start" type="dimen">15dp</item>
+
+    <item name="notification_media_cover" type="dimen">128dp</item>
 </resources>
