@@ -210,6 +210,16 @@ static DllBlockInfo sWindowsDllBlocklist[] = {
   { "nhasusstrixosd.dll", ALL_VERSIONS },
   { "nhasusstrixdevprops.dll", ALL_VERSIONS },
 
+  // Crashes with PremierOpinion/RelevantKnowledge, bug 1277846
+  { "opls.dll", ALL_VERSIONS },
+  { "opls64.dll", ALL_VERSIONS },
+  { "pmls.dll", ALL_VERSIONS },
+  { "pmls64.dll", ALL_VERSIONS },
+  { "prls.dll", ALL_VERSIONS },
+  { "prls64.dll", ALL_VERSIONS },
+  { "rlls.dll", ALL_VERSIONS },
+  { "rlls64.dll", ALL_VERSIONS },
+
   { nullptr, 0 }
 };
 
