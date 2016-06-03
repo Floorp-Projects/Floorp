@@ -2906,5 +2906,15 @@ SetProfileDir(nsIFile* aProfD)
   sTelemetryIOObserver->AddPath(profDirPath, NS_LITERAL_STRING("{profile}"));
 }
 
+void CreateStatisticsRecorder()
+{
+  TelemetryHistogram::CreateStatisticsRecorder();
+}
+
+void DestroyStatisticsRecorder()
+{
+  TelemetryHistogram::DestroyStatisticsRecorder();
+}
+
 } // namespace Telemetry
 } // namespace mozilla
