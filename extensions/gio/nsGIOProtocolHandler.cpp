@@ -826,11 +826,11 @@ mount_operation_ask_password (GMountOperation   *mount_op,
     if (flags & G_ASK_PASSWORD_NEED_USERNAME) {
       if (!realm.IsEmpty()) {
         const char16_t *strings[] = { realm.get(), dispHost.get() };
-        bundle->FormatStringFromName(MOZ_UTF16("EnterLoginForRealm"),
+        bundle->FormatStringFromName(MOZ_UTF16("EnterLoginForRealm2"),
                                      strings, 2, getter_Copies(nsmessage));
       } else {
         const char16_t *strings[] = { dispHost.get() };
-        bundle->FormatStringFromName(MOZ_UTF16("EnterUserPasswordFor"),
+        bundle->FormatStringFromName(MOZ_UTF16("EnterUserPasswordFor2"),
                                      strings, 1, getter_Copies(nsmessage));
       }
     } else {
