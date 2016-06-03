@@ -3680,6 +3680,21 @@ nsDisplayLayerEventRegions::AddInactiveScrollPort(const nsRect& aRect)
   mDispatchToContentHitRegion.Or(mDispatchToContentHitRegion, aRect);
 }
 
+bool
+nsDisplayLayerEventRegions::IsEmpty() const
+{
+  // If the hit region and maybe-hit region are empty, then the rest
+  // must be empty too.
+  if (mHitRegion.IsEmpty() && mMaybeHitRegion.IsEmpty()) {
+    MOZ_ASSERT(mDispatchToContentHitRegion.IsEmpty());
+    MOZ_ASSERT(mNoActionRegion.IsEmpty());
+    MOZ_ASSERT(mHorizontalPanRegion.IsEmpty());
+    MOZ_ASSERT(mVerticalPanRegion.IsEmpty());
+    return true;
+  }
+  return false;
+}
+
 void
 nsDisplayLayerEventRegions::WriteDebugInfo(std::stringstream& aStream)
 {
