@@ -20,8 +20,7 @@ enum PresentationConnectionClosedReason
 
 [Constructor(DOMString type,
              PresentationConnectionClosedEventInit eventInitDict),
- Pref="dom.presentation.enabled",
- Func="Navigator::HasPresentationSupport"]
+ Pref="dom.presentation.enabled"]
 interface PresentationConnectionClosedEvent : Event
 {
   readonly attribute PresentationConnectionClosedReason reason;

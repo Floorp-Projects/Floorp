@@ -2,7 +2,7 @@
 <html>
 <head>
   <meta charset="utf-8">
-  <title>Test for B2G PresentationReceiver at receiver side (OOP)</title>
+  <title>Test for B2G PresentationReceiver at receiver side</title>
 </head>
 <body>
 <div id="content"></div>
@@ -34,8 +34,8 @@ var connection;
 
 function testConnectionAvailable() {
   return new Promise(function(aResolve, aReject) {
-    ok(navigator.presentation, "navigator.presentation should be available in OOP receiving pages.");
-    ok(navigator.presentation.receiver, "navigator.presentation.receiver should be available in OOP receiving pages.");
+    ok(navigator.presentation, "navigator.presentation should be available in receiving pages.");
+    ok(navigator.presentation.receiver, "navigator.presentation.receiver should be available in receiving pages.");
 
     navigator.presentation.receiver.connectionList.then(
       function(aList) {
