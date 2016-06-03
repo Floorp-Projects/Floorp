@@ -20,7 +20,6 @@ const getAnchor = function (position) {
 
 const TEST_URI = `data:text/xml;charset=UTF-8,<?xml version="1.0"?>
   <?xml-stylesheet href="chrome://global/skin/global.css"?>
-  <?xml-stylesheet href="chrome://devtools/skin/common.css"?>
   <?xml-stylesheet href="chrome://devtools/skin/light-theme.css"?>
 
   <window class="theme-light"
