@@ -913,6 +913,12 @@ public:
                                        nsRect& aRect);
 
   /**
+   * Converts app units to pixels (with optional snapping) and appends as a
+   * translation to aTransform.
+   */
+  static void PostTranslate(Matrix4x4& aTransform, const nsPoint& aOrigin, float aAppUnitsPerPixel, bool aRounded);
+
+  /**
    * Get the border-box of aElement's primary frame, transformed it to be
    * relative to aFrame.
    */
