@@ -800,16 +800,18 @@ this.PushService = {
       if (!record) {
         throw new Error("Ignoring update for key ID " + keyID);
       }
-      // Update quota after the delay, at which point
-      // we check for visible notifications.
-      let timeoutID = setTimeout(_ =>
-        {
-          this._updateQuota(keyID);
-          if (!this._updateQuotaTimeouts.delete(timeoutID)) {
-            console.debug("receivedPushMessage: quota update timeout missing?");
-          }
-        }, prefs.get("quotaUpdateDelay"));
-      this._updateQuotaTimeouts.add(timeoutID);
+      if (record.quotaApplies()) {
+        // Update quota after the delay, at which point
+        // we check for visible notifications.
+        let timeoutID = setTimeout(_ =>
+          {
+            this._updateQuota(keyID);
+            if (!this._updateQuotaTimeouts.delete(timeoutID)) {
+              console.debug("receivedPushMessage: quota update timeout missing?");
+            }
+          }, prefs.get("quotaUpdateDelay"));
+        this._updateQuotaTimeouts.add(timeoutID);
+      }
       return this._decryptAndNotifyApp(record, messageID, data, cryptoParams);
     }).catch(error => {
       console.error("receivedPushMessage: Error notifying app", error);
