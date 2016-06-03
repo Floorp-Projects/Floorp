@@ -38,11 +38,10 @@ BackgroundPage.prototype = {
       url = this.extension.baseURI.resolve("_blank.html");
     }
 
-    let uri = Services.io.newURI(url, null, null);
-
     let system = Services.scriptSecurityManager.getSystemPrincipal();
-    let interfaceRequestor = chromeWebNav.QueryInterface(Ci.nsIInterfaceRequestor);
-    let chromeShell = interfaceRequestor.getInterface(Ci.nsIDocShell);
+
+    let chromeShell = chromeWebNav.QueryInterface(Ci.nsIInterfaceRequestor)
+                                  .getInterface(Ci.nsIDocShell);
     chromeShell.createAboutBlankContentViewer(system);
 
     let chromeDoc = chromeWebNav.document;
@@ -50,13 +49,11 @@ BackgroundPage.prototype = {
     let browser = chromeDoc.createElementNS(XUL_NS, "browser");
     browser.setAttribute("type", "content");
     browser.setAttribute("disableglobalhistory", "true");
+    browser.setAttribute("webextension-view-type", "background");
     chromeDoc.body.appendChild(browser);
 
     let frameLoader = browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader;
     let docShell = frameLoader.docShell;
-
-    this.context = new ExtensionContext(this.extension, {type: "background", docShell, uri});
-    GlobalManager.injectInDocShell(docShell, this.extension, this.context);
 
     let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
     this.webNav = webNav;
@@ -65,7 +62,6 @@ BackgroundPage.prototype = {
 
     let window = webNav.document.defaultView;
     this.contentWindow = window;
-    this.context.contentWindow = window;
 
     if (this.extension.addonData.instanceID) {
       AddonManager.getAddonByInstanceID(this.extension.addonData.instanceID)
@@ -92,7 +88,7 @@ BackgroundPage.prototype = {
             consoleWindow.focus();
           }
 
-          this.context.contentWindow.console.warn("alert() is not supported in background windows; please use console.log instead.");
+          this.contentWindow.console.warn("alert() is not supported in background windows; please use console.log instead.");
 
           alertDisplayedWarning = true;
         }
