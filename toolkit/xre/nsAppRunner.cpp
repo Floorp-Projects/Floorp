@@ -93,8 +93,6 @@
 #include "mozilla/scache/StartupCache.h"
 #include "gfxPrefs.h"
 
-#include "base/histogram.h"
-
 #include "mozilla/unused.h"
 
 #ifdef XP_WIN
@@ -4569,12 +4567,9 @@ XRE_StopLateWriteChecks(void) {
 void
 XRE_CreateStatsObject()
 {
-  // A initializer to initialize histogram collection, a chromium
-  // thing used by Telemetry (and effectively a global; it's all static).
-  // Note: purposely leaked
-  base::StatisticsRecorder* statistics_recorder = new base::StatisticsRecorder();
-  MOZ_LSAN_INTENTIONALLY_LEAK_OBJECT(statistics_recorder);
-  Unused << statistics_recorder;
+  // Initialize global variables used by histogram collection
+  // machinery that is used by by Telemetry.  Note: is never de-initialised.
+  Telemetry::CreateStatisticsRecorder();
 }
 
 int
