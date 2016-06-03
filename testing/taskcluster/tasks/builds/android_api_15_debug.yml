@@ -2,27 +2,27 @@ $inherits:
   from: 'tasks/builds/mobile_base.yml'
   variables:
     build_name: 'android'
-    build_type: 'opt'
+    build_type: 'debug'
 task:
   metadata:
-      name: '[TC] Android armv7 API 15+'
-      description: 'Android armv7 API 15+'
+      name: '[TC] Android armv7 API 15+ Dbg'
+      description: 'Android armv7 API 15+ Dbg'
 
   workerType: android-api-15
 
   routes:
-    - 'index.buildbot.branches.{{project}}.android-api-15'
-    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.android-api-15'
+    - 'index.buildbot.branches.{{project}}.android-api-15-dbg'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.android-api-15-dbg'
 
   scopes:
-    - 'docker-worker:cache:level-{{level}}-{{project}}-build-android-api-15-workspace'
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-android-api-15-dbg-workspace'
     - 'docker-worker:cache:tooltool-cache'
     - 'docker-worker:relengapi-proxy:tooltool.download.internal'
     - 'docker-worker:relengapi-proxy:tooltool.download.public'
 
   payload:
     cache:
-      level-{{level}}-{{project}}-build-android-api-15-workspace: '/home/worker/workspace'
+      level-{{level}}-{{project}}-build-android-api-15-dbg-workspace: '/home/worker/workspace'
       tooltool-cache: '/home/worker/tooltool-cache'
 
     features:
@@ -37,7 +37,7 @@ task:
           disable_signing.py
           platform_supports_post_upload_to_latest.py
       MOZHARNESS_ACTIONS: "get-secrets build multi-l10n update"
-      MH_CUSTOM_BUILD_VARIANT_CFG: api-15
+      MH_CUSTOM_BUILD_VARIANT_CFG: api-15-debug
       MH_BRANCH: {{project}}
       MH_BUILD_POOL: taskcluster
 
@@ -55,6 +55,8 @@ task:
       groupName: Submitted by taskcluster
       symbol: B
       tier: 2
+      collection:
+        debug: true
     # Rather then enforcing particular conventions we require that all build
     # tasks provide the "build" extra field to specify where the build and tests
     # files are located.
