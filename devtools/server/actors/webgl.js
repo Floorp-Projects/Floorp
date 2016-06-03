@@ -10,6 +10,11 @@ const protocol = require("devtools/shared/protocol");
 const { ContentObserver } = require("devtools/shared/content-observer");
 const { on, once, off, emit } = events;
 const { method, Arg, Option, RetVal } = protocol;
+const {
+  shaderSpec,
+  programSpec,
+  webGLSpec,
+} = require("devtools/shared/specs/webgl");
 
 const WEBGL_CONTEXT_NAMES = ["webgl", "experimental-webgl", "moz-webgl"];
 
@@ -23,9 +28,7 @@ const PROGRAM_HIGHLIGHT_TRAIT = 2;
  * You can either retrieve, or compile the source of a shader, which will
  * automatically inflict the necessary changes to the WebGL state.
  */
-var ShaderActor = protocol.ActorClass({
-  typeName: "gl-shader",
-
+var ShaderActor = protocol.ActorClassWithSpec(shaderSpec, {
   /**
    * Create the shader actor.
    *
@@ -49,16 +52,14 @@ var ShaderActor = protocol.ActorClass({
   /**
    * Gets the source code for this shader.
    */
-  getText: method(function () {
+  getText: function () {
     return this.text;
-  }, {
-    response: { text: RetVal("string") }
-  }),
+  },
 
   /**
    * Sets and compiles new source code for this shader.
    */
-  compile: method(function (text) {
+  compile: function (text) {
     // Get the shader and corresponding program to change via the WebGL proxy.
     let { linkedProxy: proxy, shader, program } = this;
 
@@ -75,18 +76,6 @@ var ShaderActor = protocol.ActorClass({
       return error;
     }
     return undefined;
-  }, {
-    request: { text: Arg(0, "string") },
-    response: { error: RetVal("nullable:json") }
-  })
-});
-
-/**
- * The corresponding Front object for the ShaderActor.
- */
-var ShaderFront = protocol.FrontClass(ShaderActor, {
-  initialize: function (client, form) {
-    protocol.Front.prototype.initialize.call(this, client, form);
   }
 });
 
@@ -94,9 +83,7 @@ var ShaderFront = protocol.FrontClass(ShaderActor, {
  * A WebGL program is composed (at the moment, analogue to OpenGL ES 2.0)
  * of two shaders: a vertex shader and a fragment shader.
  */
-var ProgramActor = protocol.ActorClass({
-  typeName: "gl-program",
-
+var ProgramActor = protocol.ActorClassWithSpec(programSpec, {
   /**
    * Create the program actor.
    *
@@ -132,59 +119,46 @@ var ProgramActor = protocol.ActorClass({
    * Gets the vertex shader linked to this program. This method guarantees
    * a single actor instance per shader.
    */
-  getVertexShader: method(function () {
+  getVertexShader: function () {
     return this._getShaderActor("vertex");
-  }, {
-    response: { shader: RetVal("gl-shader") }
-  }),
+  },
 
   /**
    * Gets the fragment shader linked to this program. This method guarantees
    * a single actor instance per shader.
    */
-  getFragmentShader: method(function () {
+  getFragmentShader: function () {
     return this._getShaderActor("fragment");
-  }, {
-    response: { shader: RetVal("gl-shader") }
-  }),
+  },
 
   /**
    * Highlights any geometry rendered using this program.
    */
-  highlight: method(function (tint) {
+  highlight: function (tint) {
     this.linkedProxy.highlightTint = tint;
     this.linkedCache.setProgramTrait(this.program, PROGRAM_HIGHLIGHT_TRAIT);
-  }, {
-    request: { tint: Arg(0, "array:number") },
-    oneway: true
-  }),
+  },
 
   /**
    * Allows geometry to be rendered normally using this program.
    */
-  unhighlight: method(function () {
+  unhighlight: function () {
     this.linkedCache.unsetProgramTrait(this.program, PROGRAM_HIGHLIGHT_TRAIT);
-  }, {
-    oneway: true
-  }),
+  },
 
   /**
    * Prevents any geometry from being rendered using this program.
    */
-  blackbox: method(function () {
+  blackbox: function () {
     this.linkedCache.setProgramTrait(this.program, PROGRAM_BLACKBOX_TRAIT);
-  }, {
-    oneway: true
-  }),
+  },
 
   /**
    * Allows geometry to be rendered using this program.
    */
-  unblackbox: method(function () {
+  unblackbox: function () {
     this.linkedCache.unsetProgramTrait(this.program, PROGRAM_BLACKBOX_TRAIT);
-  }, {
-    oneway: true
-  }),
+  },
 
   /**
    * Returns a cached ShaderActor instance based on the required shader type.
@@ -206,21 +180,11 @@ var ProgramActor = protocol.ActorClass({
 });
 
 /**
- * The corresponding Front object for the ProgramActor.
- */
-var ProgramFront = protocol.FrontClass(ProgramActor, {
-  initialize: function (client, form) {
-    protocol.Front.prototype.initialize.call(this, client, form);
-  }
-});
-
-/**
  * The WebGL Actor handles simple interaction with a WebGL context via a few
  * high-level methods. After instantiating this actor, you'll need to set it
  * up by calling setup().
  */
-var WebGLActor = exports.WebGLActor = protocol.ActorClass({
-  typeName: "webgl",
+var WebGLActor = exports.WebGLActor = protocol.ActorClassWithSpec(webGLSpec, {
   initialize: function (conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
     this.tabActor = tabActor;
@@ -240,7 +204,7 @@ var WebGLActor = exports.WebGLActor = protocol.ActorClass({
    *
    * See ContentObserver and WebGLInstrumenter for more details.
    */
-  setup: method(function ({ reload }) {
+  setup: function ({ reload }) {
     if (this._initialized) {
       return;
     }
@@ -256,17 +220,14 @@ var WebGLActor = exports.WebGLActor = protocol.ActorClass({
     if (reload) {
       this.tabActor.window.location.reload();
     }
-  }, {
-    request: { reload: Option(0, "boolean") },
-    oneway: true
-  }),
+  },
 
   /**
    * Stops listening for document global changes and puts this actor
    * to hibernation. This method is called automatically just before the
    * actor is destroyed.
    */
-  finalize: method(function () {
+  finalize: function () {
     if (!this._initialized) {
       return;
     }
@@ -279,32 +240,26 @@ var WebGLActor = exports.WebGLActor = protocol.ActorClass({
     this._programActorsCache = null;
     this._contentObserver = null;
     this._webglObserver = null;
-  }, {
-    oneway: true
-  }),
+  },
 
   /**
    * Gets an array of cached program actors for the current tab actor's window.
    * This is useful for dealing with bfcache, when no new programs are linked.
    */
-  getPrograms: method(function () {
+  getPrograms: function () {
     let id = ContentObserver.GetInnerWindowID(this.tabActor.window);
     return this._programActorsCache.filter(e => e.ownerWindow == id);
-  }, {
-    response: { programs: RetVal("array:gl-program") }
-  }),
+  },
 
   /**
    * Waits for one frame via `requestAnimationFrame` on the tab actor's window.
    * Used in tests.
    */
-  waitForFrame: method(function () {
+  waitForFrame: function () {
     let deferred = promise.defer();
     this.tabActor.window.requestAnimationFrame(deferred.resolve);
     return deferred.promise;
-  }, {
-    response: { success: RetVal("nullable:json") }
-  }),
+  },
 
   /**
    * Gets a pixel's RGBA value from a context specified by selector
@@ -318,7 +273,7 @@ var WebGLActor = exports.WebGLActor = protocol.ActorClass({
    * @return Object
    *        An object containing `r`, `g`, `b`, and `a` properties of the pixel.
    */
-  getPixel: method(function ({ selector, position }) {
+  getPixel: function ({ selector, position }) {
     let { x, y } = position;
     let canvas = this.tabActor.window.document.querySelector(selector);
     let context = XPCNativeWrapper.unwrap(canvas.getContext("webgl"));
@@ -331,42 +286,15 @@ var WebGLActor = exports.WebGLActor = protocol.ActorClass({
     proxy.readPixels(x, height - y - 1, 1, 1, context.RGBA, context.UNSIGNED_BYTE, buffer);
 
     return { r: buffer[0], g: buffer[1], b: buffer[2], a: buffer[3] };
-  }, {
-    request: {
-      selector: Option(0, "string"),
-      position: Option(0, "json")
-    },
-    response: { pixels: RetVal("json") }
-  }),
-
-  /**
-   * Events emitted by this actor. The "program-linked" event is fired
-   * every time a WebGL program was linked with its respective two shaders.
-   */
-  events: {
-    "program-linked": {
-      type: "programLinked",
-      program: Arg(0, "gl-program")
-    },
-    "global-destroyed": {
-      type: "globalDestroyed",
-      program: Arg(0, "number")
-    },
-    "global-created": {
-      type: "globalCreated",
-      program: Arg(0, "number")
-    }
   },
 
   /**
    * Gets an array of all cached program actors belonging to all windows.
    * This should only be used for tests.
    */
-  _getAllPrograms: method(function () {
+  _getAllPrograms: function () {
     return this._programActorsCache;
-  }, {
-    response: { programs: RetVal("array:gl-program") }
-  }),
+  },
 
 
   /**
@@ -397,16 +325,6 @@ var WebGLActor = exports.WebGLActor = protocol.ActorClass({
     let programActor = new ProgramActor(this.conn, args);
     this._programActorsCache.push(programActor);
     events.emit(this, "program-linked", programActor);
-  }
-});
-
-/**
- * The corresponding Front object for the WebGLActor.
- */
-var WebGLFront = exports.WebGLFront = protocol.FrontClass(WebGLActor, {
-  initialize: function (client, { webglActor }) {
-    protocol.Front.prototype.initialize.call(this, client, { actor: webglActor });
-    this.manage(this);
   }
 });
 

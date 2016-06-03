@@ -6,6 +6,7 @@ const {Cc, Ci, Cu, CC} = require("chrome");
 const protocol = require("devtools/shared/protocol");
 const {Arg, method, RetVal} = protocol;
 const Services = require("Services");
+const {preferenceSpec} = require("devtools/shared/specs/preference");
 
 exports.register = function (handle) {
   handle.addGlobalActor(PreferenceActor, "preferenceActor");
@@ -14,31 +15,22 @@ exports.register = function (handle) {
 exports.unregister = function (handle) {
 };
 
-var PreferenceActor = exports.PreferenceActor = protocol.ActorClass({
+var PreferenceActor = exports.PreferenceActor = protocol.ActorClassWithSpec(preferenceSpec, {
   typeName: "preference",
 
-  getBoolPref: method(function (name) {
+  getBoolPref: function (name) {
     return Services.prefs.getBoolPref(name);
-  }, {
-    request: { value: Arg(0) },
-    response: { value: RetVal("boolean") }
-  }),
+  },
 
-  getCharPref: method(function (name) {
+  getCharPref: function (name) {
     return Services.prefs.getCharPref(name);
-  }, {
-    request: { value: Arg(0) },
-    response: { value: RetVal("string") }
-  }),
+  },
 
-  getIntPref: method(function (name) {
+  getIntPref: function (name) {
     return Services.prefs.getIntPref(name);
-  }, {
-    request: { value: Arg(0) },
-    response: { value: RetVal("number") }
-  }),
+  },
 
-  getAllPrefs: method(function () {
+  getAllPrefs: function () {
     let prefs = {};
     Services.prefs.getChildList("").forEach(function (name, index) {
       // append all key/value pairs into a huge json object.
@@ -65,64 +57,25 @@ var PreferenceActor = exports.PreferenceActor = protocol.ActorClass({
       }
     });
     return prefs;
-  }, {
-    request: {},
-    response: { value: RetVal("json") }
-  }),
+  },
 
-  setBoolPref: method(function (name, value) {
+  setBoolPref: function (name, value) {
     Services.prefs.setBoolPref(name, value);
     Services.prefs.savePrefFile(null);
-  }, {
-    request: { name: Arg(0), value: Arg(1) },
-    response: {}
-  }),
+  },
 
-  setCharPref: method(function (name, value) {
+  setCharPref: function (name, value) {
     Services.prefs.setCharPref(name, value);
     Services.prefs.savePrefFile(null);
-  }, {
-    request: { name: Arg(0), value: Arg(1) },
-    response: {}
-  }),
+  },
 
-  setIntPref: method(function (name, value) {
+  setIntPref: function (name, value) {
     Services.prefs.setIntPref(name, value);
     Services.prefs.savePrefFile(null);
-  }, {
-    request: { name: Arg(0), value: Arg(1) },
-    response: {}
-  }),
+  },
 
-  clearUserPref: method(function (name) {
+  clearUserPref: function (name) {
     Services.prefs.clearUserPref(name);
     Services.prefs.savePrefFile(null);
-  }, {
-    request: { name: Arg(0) },
-    response: {}
-  }),
-});
-
-var PreferenceFront = protocol.FrontClass(PreferenceActor, {
-  initialize: function (client, form) {
-    protocol.Front.prototype.initialize.call(this, client);
-    this.actorID = form.preferenceActor;
-    this.manage(this);
   },
 });
-
-const _knownPreferenceFronts = new WeakMap();
-
-exports.getPreferenceFront = function (client, form) {
-  if (!form.preferenceActor) {
-    return null;
-  }
-
-  if (_knownPreferenceFronts.has(client)) {
-    return _knownPreferenceFronts.get(client);
-  }
-
-  let front = new PreferenceFront(client, form);
-  _knownPreferenceFronts.set(client, front);
-  return front;
-};
