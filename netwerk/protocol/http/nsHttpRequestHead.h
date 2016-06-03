@@ -9,7 +9,7 @@
 #include "nsHttp.h"
 #include "nsHttpHeaderArray.h"
 #include "nsString.h"
-#include "mozilla/Mutex.h"
+#include "mozilla/ReentrantMonitor.h"
 
 class nsIHttpHeaderVisitor;
 
@@ -30,8 +30,8 @@ public:
     // copying headers. If you use it be careful to do it only under
     // nsHttpRequestHead lock!!!
     const nsHttpHeaderArray &Headers() const;
-    void Lock() { mLock.Lock(); }
-    void Unlock() { mLock.Unlock(); }
+    void Enter() { mReentrantMonitor.Enter(); }
+    void Exit() { mReentrantMonitor.Exit(); }
 
     void SetHeaders(const nsHttpHeaderArray& aHeaders);
 
@@ -63,7 +63,7 @@ public:
     nsresult SetEmptyHeader(nsHttpAtom h);
     nsresult GetHeader(nsHttpAtom h, nsACString &v);
 
-    void ClearHeader(nsHttpAtom h);
+    nsresult ClearHeader(nsHttpAtom h);
     void ClearHeaders();
 
     bool HasHeaderValue(nsHttpAtom h, const char *v);
@@ -114,7 +114,12 @@ private:
     ParsedMethodType  mParsedMethod;
     bool              mHTTPS;
 
-    Mutex             mLock;
+    // We are using ReentrantMonitor instead of a Mutex because VisitHeader
+    // function calls nsIHttpHeaderVisitor::VisitHeader while under lock. 
+    ReentrantMonitor  mReentrantMonitor;
+
+    // During VisitHeader we sould not allow cal to SetHeader.
+    bool mInVisitHeaders;
 };
 
 } // namespace net
