@@ -519,8 +519,30 @@ AudioContext::CreateIIRFilter(const mozilla::dom::binding_detail::AutoSequence<d
     return nullptr;
   }
 
+  if (aFeedforward.Length() == 0 || aFeedforward.Length() > 20) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+
+  if (aFeedback.Length() == 0 || aFeedback.Length() > 20) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+
+  bool feedforwardAllZeros = true;
+  for (size_t i = 0; i < aFeedforward.Length(); ++i) {
+    if (aFeedforward.Elements()[i] != 0.0) {
+      feedforwardAllZeros = false;
+    }
+  }
+
+  if (feedforwardAllZeros || aFeedback.Elements()[0] == 0.0) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
   RefPtr<IIRFilterNode> filterNode =
-    new IIRFilterNode(this);
+    new IIRFilterNode(this, aFeedforward, aFeedback);
   return filterNode.forget();
 }
 
