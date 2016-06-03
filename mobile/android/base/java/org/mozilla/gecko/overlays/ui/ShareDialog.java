@@ -20,7 +20,7 @@ import org.mozilla.gecko.overlays.service.OverlayActionService;
 import org.mozilla.gecko.overlays.service.sharemethods.SendTab;
 import org.mozilla.gecko.overlays.service.sharemethods.ShareMethod;
 import org.mozilla.gecko.sync.setup.activities.WebURLFinder;
-import org.mozilla.gecko.mozglue.SafeIntentUtils;
+import org.mozilla.gecko.util.IntentUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UIAsyncTask;
 
@@ -208,7 +208,7 @@ public class ShareDialog extends Locales.LocaleAwareActivity implements SendTabT
         bookmarkButton.setBackgroundDrawable(bookmarkButtonDrawable);
 
         // The URL is usually hiding somewhere in the extra text. Extract it.
-        final String extraText = SafeIntentUtils.getStringExtra(intent, Intent.EXTRA_TEXT);
+        final String extraText = IntentUtils.getStringExtraSafe(intent, Intent.EXTRA_TEXT);
         if (TextUtils.isEmpty(extraText)) {
             abortDueToNoURL();
             return;

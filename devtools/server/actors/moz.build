@@ -38,7 +38,6 @@ DevToolsModules(
     'inspector.js',
     'layout.js',
     'memory.js',
-    'memprof.js',
     'monitor.js',
     'object.js',
     'performance-entries.js',

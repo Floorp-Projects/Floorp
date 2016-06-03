@@ -18,11 +18,12 @@ Cu.import("resource://gre/modules/Log.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://services-common/async.js");
 Cu.import("resource://services-sync/constants.js");
 Cu.import("resource://services-sync/main.js");
 Cu.import("resource://services-sync/util.js");
-
+Cu.import("resource://services-sync/bookmark_validator.js");
 // TPS modules
 Cu.import("resource://tps/logger.jsm");
 
@@ -111,6 +112,7 @@ var TPS = {
   _triggeredSync: false,
   _usSinceEpoch: 0,
   _requestedQuit: false,
+  shouldValidateBookmarks: false,
 
   _init: function TPS__init() {
     // Check if Firefox Accounts is enabled
@@ -492,6 +494,7 @@ var TPS = {
   },
 
   HandleBookmarks: function (bookmarks, action) {
+    this.shouldValidateBookmarks = true;
     try {
       let items = [];
       for (let folder in bookmarks) {
@@ -583,10 +586,81 @@ var TPS = {
     Logger.logInfo("mozmill setTest: " + obj.name);
   },
 
+
+
+  /**
+   * Use Sync's bookmark validation code to see if we've corrupted the tree.
+   */
+  ValidateBookmarks() {
+
+    let getServerBookmarkState = () => {
+      let bookmarkEngine = Weave.Service.engineManager.get('bookmarks');
+      let collection = bookmarkEngine._itemSource();
+      let collectionKey = bookmarkEngine.service.collectionKeys.keyForCollection(bookmarkEngine.name);
+      collection.full = true;
+      let items = [];
+      collection.recordHandler = function(item) {
+        item.decrypt(collectionKey);
+        items.push(item.cleartext);
+      };
+      collection.get();
+      return items;
+    };
+    let serverRecordDumpStr;
+    try {
+      Logger.logInfo("About to perform bookmark validation");
+      let clientTree = Async.promiseSpinningly(PlacesUtils.promiseBookmarksTree("", {
+        includeItemIds: true
+      }));
+      let serverRecords = getServerBookmarkState();
+      // We can't wait until catch to stringify this, since at that point it will have cycles.
+      serverRecordDumpStr = JSON.stringify(serverRecords);
+
+      let validator = new BookmarkValidator();
+      let {problemData} = validator.compareServerWithClient(serverRecords, clientTree);
+
+      for (let {name, count} of problemData.getSummary()) {
+        // Exclude mobile showing up on the server hackily so that we don't
+        // report it every time, see bug 1273234 and 1274394 for more information.
+        if (name === "serverUnexpected" && problemData.serverUnexpected.indexOf("mobile") >= 0) {
+          --count;
+        } else if (name === "differences") {
+          // Also exclude errors in parentName/wrongParentName (bug 1276969) for
+          // the same reason.
+          let newCount = problemData.differences.filter(diffInfo =>
+            !diffInfo.differences.every(diff =>
+              diff === "parentName")).length
+          count = newCount;
+        } else if (name === "wrongParentName") {
+          continue;
+        }
+        if (count) {
+          // Log this out before we assert. This is useful in the context of TPS logs, since we
+          // can see the IDs in the test files.
+          Logger.logInfo(`Validation problem: "${name}": ${JSON.stringify(problemData[name])}`);
+        }
+        Logger.AssertEqual(count, 0, `Bookmark validation error of type ${name}`);
+      }
+    } catch (e) {
+      // Dump the client records (should always be doable)
+      DumpBookmarks();
+      // Dump the server records if gotten them already.
+      if (serverRecordDumpStr) {
+        Logger.logInfo("Server bookmark records:\n" + serverRecordDumpStr + "\n");
+      }
+      this.DumpError("Bookmark validation failed", e);
+    }
+    Logger.logInfo("Bookmark validation finished");
+  },
+
   RunNextTestAction: function() {
     try {
       if (this._currentAction >=
           this._phaselist["phase" + this._currentPhase].length) {
+        if (this.shouldValidateBookmarks) {
+          // Run bookmark validation and then finish up
+          this.ValidateBookmarks();
+        }
         // we're all done
         Logger.logInfo("test phase " + this._currentPhase + ": " +
                        (this._errors ? "FAIL" : "PASS"));
@@ -675,6 +749,9 @@ var TPS = {
       if (!Weave.Status.ready) {
         this.waitForEvent("weave:service:ready");
       }
+
+      // We only want to do this if we modified the bookmarks this phase.
+      this.shouldValidateBookmarks = false;
 
       // Always give Sync an extra tick to initialize. If we waited for the
       // service:ready event, this is required to ensure all handlers have
@@ -974,6 +1051,9 @@ var Bookmarks = {
   },
   verifyNot: function Bookmarks__verifyNot(bookmarks) {
     TPS.HandleBookmarks(bookmarks, ACTION_VERIFY_NOT);
+  },
+  skipValidation() {
+    TPS.shouldValidateBookmarks = false;
   }
 };
 

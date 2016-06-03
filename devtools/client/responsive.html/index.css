@@ -9,8 +9,12 @@
   --rdm-box-shadow: 0 4px 4px 0 rgba(155, 155, 155, 0.26);
   --submit-button-active-background-color: rgba(0,0,0,0.12);
   --submit-button-active-color: var(--theme-body-color);
-  --viewport-active-color: var(--theme-body-color);
+  --viewport-color: #999797;
+  --viewport-hover-color: var(--theme-body-color);
+  --viewport-active-color: #3b3b3b;
   --viewport-selection-arrow: url("./images/select-arrow.svg#light");
+  --viewport-selection-arrow-hovered:
+    url("./images/select-arrow.svg#light-hovered");
   --viewport-selection-arrow-selected:
     url("./images/select-arrow.svg#light-selected");
 }
@@ -19,8 +23,12 @@
   --rdm-box-shadow: 0 4px 4px 0 rgba(105, 105, 105, 0.26);
   --submit-button-active-background-color: var(--toolbar-tab-hover-active);
   --submit-button-active-color: var(--theme-selection-color);
-  --viewport-active-color: var(--theme-selection-color);
+  --viewport-color: #c6ccd0;
+  --viewport-hover-color: #dde1e4;
+  --viewport-active-color: #fcfcfc;
   --viewport-selection-arrow: url("./images/select-arrow.svg#dark");
+  --viewport-selection-arrow-hovered:
+    url("./images/select-arrow.svg#dark-hovered");
   --viewport-selection-arrow-selected:
     url("./images/select-arrow.svg#dark-selected");
 }
@@ -173,7 +181,7 @@ html, body {
   background-repeat: no-repeat;
   background-size: 7px;
   border: none;
-  color: var(--theme-body-color-inactive);
+  color: var(--viewport-color);
   height: 100%;
   padding: 0 16px 0 0;
   text-align: center;
@@ -186,18 +194,25 @@ html, body {
   color: var(--viewport-active-color);
 }
 
+.viewport-device-selector:hover {
+  background-image: var(--viewport-selection-arrow-hovered);
+  color: var(--viewport-hover-color);
+}
+
 .viewport-device-selector:focus {
   background-image: var(--viewport-selection-arrow-selected);
-  /* Remove the outline from the select box */
-  color: transparent;
-  text-shadow: 0 0 0 var(--viewport-active-color);
+  color: var(--viewport-active-color);
 }
 
 .viewport-device-selector > option {
-  background-color: var(--theme-toolbar-background);
-  color: var(--viewport-active-color);
   text-align: left;
   padding: 5px 10px;
+}
+
+.viewport-device-selector > option,
+.viewport-device-selector > option:hover,
+.viewport-device-selector:hover > option:hover {
+  color: var(--viewport-active-color);
 }
 
 .viewport-rotate-button {

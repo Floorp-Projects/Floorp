@@ -290,5 +290,11 @@ OfflineCacheUpdateParent::GetOriginAttributes(JS::MutableHandleValue aAttrs)
     return NS_OK;
 }
 
+NS_IMETHODIMP
+OfflineCacheUpdateParent::IsTrackingProtectionOn(bool* aIsTrackingProtectionOn)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 } // namespace docshell
 } // namespace mozilla

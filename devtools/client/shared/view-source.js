@@ -8,6 +8,7 @@ var { Task } = require("devtools/shared/task");
 
 var Services = require("Services");
 var {gDevTools} = require("devtools/client/framework/devtools");
+var { getSourceText } = require("devtools/client/debugger/content/queries");
 
 /**
  * Tries to open a Stylesheet file in the Style Editor. If the file is not
@@ -67,12 +68,35 @@ exports.viewSourceInDebugger = Task.async(function* (toolbox, sourceURL,
   let item = Sources.getItemForAttachment(a => a.source.url === sourceURL);
   if (item) {
     yield toolbox.selectTool("jsdebugger");
-    const isLoading = dbg.DebuggerController.getState().sources.selectedSource
-                      !== item.attachment.source.actor;
-    DebuggerView.setEditorLocation(item.attachment.source.actor, sourceLine, {
-      noDebug: true
-    });
-    if (isLoading) {
+
+    // Determine if the source has already finished loading. There's two cases
+    // in which we need to wait for the source to be shown:
+    // 1) The requested source is not yet selected and will be shown once it is
+    //    selected and loaded
+    // 2) The requested source is selected BUT the source text is still loading.
+    const { actor } = item.attachment.source;
+    const state = dbg.DebuggerController.getState();
+
+    // (1) Is the source selected?
+    const selected = state.sources.selectedSource;
+    const isSelected = selected === actor;
+
+    // (2) Has the source text finished loading?
+    let isLoading = false;
+
+    // Only check if the source is loading when the source is already selected.
+    // If the source is not selected, we will select it below and the already
+    // pending load will be cancelled and this check is useless.
+    if (isSelected) {
+      const sourceTextInfo = getSourceText(state, selected);
+      isLoading = sourceTextInfo && sourceTextInfo.loading;
+    }
+
+    // Select the requested source
+    DebuggerView.setEditorLocation(actor, sourceLine, { noDebug: true });
+
+    // Wait for it to load
+    if (!isSelected || isLoading) {
       yield dbg.DebuggerController.waitForSourceShown(sourceURL);
     }
     return true;

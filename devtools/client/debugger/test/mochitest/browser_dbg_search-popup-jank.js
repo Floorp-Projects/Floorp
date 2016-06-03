@@ -14,7 +14,7 @@ var gSearchBox;
 
 function test() {
   let options = {
-    source: "-01.js",
+    source: EXAMPLE_URL + "code_script-switching-01.js?a=b",
     line: 1
   };
   initDebugger(TAB_URL, options).then(([aTab,, aPanel]) => {

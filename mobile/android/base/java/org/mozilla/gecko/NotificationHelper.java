@@ -12,7 +12,7 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.gfx.BitmapUtils;
-import org.mozilla.gecko.mozglue.SafeIntentUtils.SafeIntent;
+import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.util.GeckoEventListener;
 
 import android.app.PendingIntent;

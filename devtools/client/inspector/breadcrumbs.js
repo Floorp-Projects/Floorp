@@ -332,6 +332,7 @@ HTMLBreadcrumbs.prototype = {
         this.outer);
 
     this.container = this.arrowScrollBox.inner;
+    this.scroll = this.scroll.bind(this);
     this.arrowScrollBox.on("overflow", this.scroll);
 
     // These separators are used for CSS purposes only, and are positioned

@@ -5,7 +5,10 @@
 
 const { ShortLongString } = require("devtools/server/actors/string");
 const { Front, FrontClassWithSpec } = require("devtools/shared/protocol");
-const { oldStyleSheetSpec } = require("devtools/shared/specs/styleeditor");
+const {
+  oldStyleSheetSpec,
+  styleEditorSpec
+} = require("devtools/shared/specs/styleeditor");
 const promise = require("promise");
 const events = require("sdk/event/core");
 
@@ -79,3 +82,31 @@ const OldStyleSheetFront = FrontClassWithSpec(oldStyleSheetSpec, {
 });
 
 exports.OldStyleSheetFront = OldStyleSheetFront;
+
+/**
+ * The corresponding Front object for the StyleEditorActor.
+ */
+const StyleEditorFront = FrontClassWithSpec(styleEditorSpec, {
+  initialize: function (client, tabForm) {
+    Front.prototype.initialize.call(this, client);
+    this.actorID = tabForm.styleEditorActor;
+    this.manage(this);
+  },
+
+  getStyleSheets: function () {
+    let deferred = promise.defer();
+
+    events.once(this, "document-load", (styleSheets) => {
+      deferred.resolve(styleSheets);
+    });
+    this.newDocument();
+
+    return deferred.promise;
+  },
+
+  addStyleSheet: function (text) {
+    return this.newStyleSheet(text);
+  }
+});
+
+exports.StyleEditorFront = StyleEditorFront;
