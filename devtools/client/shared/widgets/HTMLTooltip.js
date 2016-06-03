@@ -191,6 +191,7 @@ HTMLTooltip.prototype = {
       this.container.classList.add("tooltip-visible");
 
       this.attachEventsTimer = this.doc.defaultView.setTimeout(() => {
+        this._focusedElement = this.doc.activeElement;
         if (this.autofocus) {
           this.frame.focus();
         }
@@ -211,6 +212,11 @@ HTMLTooltip.prototype = {
       this.topWindow.removeEventListener("click", this._onClick, true);
       this.container.classList.remove("tooltip-visible");
       this.emit("hidden");
+
+      if (this.container.contains(this.doc.activeElement) && this._focusedElement) {
+        this._focusedElement.focus();
+        this._focusedElement = null;
+      }
     }
   },
 
