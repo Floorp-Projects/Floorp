@@ -2,8 +2,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/RefPtr.h"
 #include "nsDeviceContextAndroid.h"
+
+#include "mozilla/gfx/PrintTargetThebes.h"
+#include "mozilla/RefPtr.h"
 #include "nsString.h"
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
@@ -11,35 +13,33 @@
 #include "nsIPrintSettings.h"
 #include "nsDirectoryServiceDefs.h"
 
+using namespace mozilla;
+using namespace mozilla::gfx;
+
 NS_IMPL_ISUPPORTS(nsDeviceContextSpecAndroid, nsIDeviceContextSpec)
 
-NS_IMETHODIMP
-nsDeviceContextSpecAndroid::GetSurfaceForPrinter(gfxASurface** aSurface)
+already_AddRefed<PrintTarget>
+nsDeviceContextSpecAndroid::MakePrintTarget()
 {
   nsresult rv =
     NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(mTempFile));
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   nsAutoCString filename("tmp-printing.pdf");
   mTempFile->AppendNative(filename);
   rv = mTempFile->CreateUnique(nsIFile::NORMAL_FILE_TYPE, 0660);
-  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   nsCOMPtr<nsIFileOutputStream> stream = do_CreateInstance("@mozilla.org/network/file-output-stream;1");
   rv = stream->Init(mTempFile, -1, -1, 0);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  RefPtr<gfxASurface> surface;
+  NS_ENSURE_SUCCESS(rv, nullptr);
 
   // XXX: what should we do here for size? screen size?
-  gfxSize surfaceSize(480, 800);
+  gfxSize size(480, 800);
 
-  surface = new gfxPDFSurface(stream, surfaceSize);
+  RefPtr<gfxASurface> surface = new gfxPDFSurface(stream, size);
 
-
-  MOZ_ASSERT(surface, "valid address expected");
-  surface.swap(*aSurface);
-  return NS_OK;
+  return PrintTargetThebes::CreateOrNull(surface);
 }
 
 NS_IMETHODIMP
