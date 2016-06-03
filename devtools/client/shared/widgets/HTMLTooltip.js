@@ -111,7 +111,9 @@ HTMLTooltip.prototype = {
    * @param {Number} width
    *        Preferred width for the tooltip container
    * @param {Number} height
-   *        Preferred height for the tooltip container
+   *        Preferred height for the tooltip container. If the content height is
+   *        smaller than the container's height, the tooltip will automatically
+   *        shrink around the content.
    * @return {Promise} a promise that will resolve when the content has been
    *         added in the tooltip container.
    */
@@ -207,7 +209,8 @@ HTMLTooltip.prototype = {
     container.setAttribute("type", this.type);
     container.classList.add("tooltip-container");
 
-    let html = '<div class="tooltip-panel"></div>';
+    let html = '<div class="tooltip-filler"></div>';
+    html += '<div class="tooltip-panel"></div>';
 
     if (this.type === TYPE.ARROW) {
       html += '<div class="tooltip-arrow"></div>';
