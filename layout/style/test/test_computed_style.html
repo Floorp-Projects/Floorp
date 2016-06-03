@@ -242,6 +242,104 @@ var noframe_container = document.getElementById("content");
 
   p.parentNode.removeChild(p);
 })();
+
+(function test_bug_1235015() {
+  if (!("maskImage" in document.documentElement.style)) {
+    return;
+  }
+
+  // "masks" object contains non-initial mask longhand values.
+  var emptyMasks = {
+    // More then one <mask-reference>, or any mask-image value other then
+    // <mask-source>,
+    "mask-image": [
+      "url(#mask1), url(#mask2)",
+      "linear-gradient(red, yellow)",
+      "-moz-element(#test)"
+    ],
+    // any mask-clip value other than "border-box".
+    "mask-clip": [
+      "content-box", "padding-box", "margin-box", "fill-box", "stroke-box",
+      "view-box", "no-clip"
+    ],
+    // any mask-origin  value other than "border-box".
+    "mask-origin": [
+      "content-box", "padding-box", "margin-box", "fill-box", "stroke-box",
+      "view-box"
+    ],
+    // any mask-composite value other than "add".
+    "mask-composite": [
+      "subtract", "intersect", "exclude"
+    ],
+    // any mask-mode value other than "match-source".
+    "mask-mode": [
+      "alpha", "luminance"
+    ],
+    // any mask-position value other then "50%" "50% 50%" "center"
+    // "center center".
+    "mask-position": [
+      "left", "right", "top", "bottom", "0%", "100%"
+    ],
+    // any mask-repeat value other then "no-repeat" "no-repeat no-repeat".
+    "mask-repeat": [
+      "repeat-x", "repeat-y", "repeat", "space", "round"
+    ],
+    // any mask-size value other then "auto" "auto auto".
+    "mask-size": [
+      "10px", "100%", "cover", "contain", "auto 5px"
+    ],
+  };
+
+  // "masks" object contains initial mask longhand values.
+  var nonEmptyMasks = {
+    "mask-image": [
+      "url(#mask1)", "none"
+    ],
+    "mask-clip": [
+      "border-box"
+    ],
+    "mask-origin": [
+      "border-box"
+    ],
+    "mask-composite": [
+      "add"
+    ],
+    "mask-mode": [
+      "match-source"
+    ],
+    "mask-position": [
+      "50%", "50% 50%", "center"
+    ],
+    "mask-repeat": [
+      "no-repeat", "no-repeat no-repeat"
+    ],
+    "mask-size": [
+      "auto", "auto auto"
+    ],
+  };
+
+  var p = document.createElement("p");
+  var cs = getComputedStyle(p, "");
+  frame_container.appendChild(p);
+
+  for (var prop in emptyMasks) {
+    var subProp = emptyMasks[prop];
+    for (var i = 0; i < subProp.length; i++) {
+      p.style.mask = subProp[i];
+      is(cs.mask, "", "computed value of " + subProp[i] + " mask");
+    }
+  }
+
+  for (var prop in nonEmptyMasks) {
+    var subProp = nonEmptyMasks[prop];
+    for (var i = 0; i < subProp.length; i++) {
+      p.style.mask = subProp[i];
+      isnot(cs.mask, "", "computed value of " + subProp[i] + " mask");
+    }
+  }
+  p.parentNode.removeChild(p);
+})();
+
 </script>
 </pre>
 </body>
