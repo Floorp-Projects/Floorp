@@ -15,44 +15,24 @@
     <p>Status codes test</p>
 
     <script type="text/javascript">
-      let swRegistration;
-
-      function registerServiceWorker() {
-        let sw = navigator.serviceWorker;
-        return sw.register("status-codes-service-worker.js")
-          .then(registration => {
-            swRegistration = registration;
-            console.log("Registered, scope is:", registration.scope);
-            return sw.ready;
-          }).then(() => {
-            // wait until the page is controlled
-            return new Promise(resolve => {
-              if (sw.controller) {
-                resolve();
-              } else {
-                sw.addEventListener('controllerchange', function onControllerChange() {
-                  sw.removeEventListener('controllerchange', onControllerChange);
-                  resolve();
-                });
-              }
-            });
-          }).catch(err => {
-            console.error("Registration failed");
-          });
+      function get(url) {
+        return new Promise(done => {
+          let iframe = document.createElement("iframe");
+          iframe.setAttribute("src", url);
+          document.documentElement.appendChild(iframe);
+          iframe.contentWindow.onload = done;
+        });
       }
 
-      function unregisterServiceWorker() {
-        return swRegistration.unregister();
+      function registerServiceWorker() {
+        return navigator.serviceWorker.register("status-codes-service-worker.js")
+                        .then(() => navigator.serviceWorker.ready);
       }
 
       function performRequests() {
-        return new Promise(function doXHR(done) {
-          let xhr = new XMLHttpRequest();
-          xhr.open("GET", "test/200", true);
-          xhr.onreadystatechange = done;
-          xhr.send(null);
-        });
+        return get("test/200");
       }
+
     </script>
   </body>
 

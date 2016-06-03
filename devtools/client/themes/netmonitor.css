@@ -246,25 +246,6 @@
   width: 8vw;
 }
 
-.requests-menu-cause {
-  max-width: 8em;
-  width: 8vw;
-}
-
-.requests-menu-cause-stack {
-  background-color: var(--theme-body-color-alt);
-  color: var(--theme-body-background);
-  font-size: 8px;
-  font-weight: bold;
-  line-height: 10px;
-  border-radius: 3px;
-  padding: 0 2px;
-  margin: 0;
-  margin-inline-end: 3px;
-  -moz-user-select: none;
-  cursor: pointer;
-}
-
 .requests-menu-transferred {
   max-width: 8em;
   text-align: center;
@@ -693,40 +674,6 @@
 .requests-menu-filter-button:not(:active)[checked] {
   background-color: var(--theme-selection-background);
   color: var(--theme-selection-color);
-}
-
-/* Requests menu stacktrace tooltip */
-.requests-menu-stack-trace {
-  max-height: 400px;
-  width: 586px;
-  overflow-y: auto;
-}
-
-.requests-menu-stack-frame {
-  color: var(--theme-body-color-alt);
-  cursor: pointer;
-  display: flex;
-}
-
-.requests-menu-stack-frame:hover {
-  background-color: var(--theme-selection-background-semitransparent);
-}
-
-.requests-menu-stack-frame-function-name {
-  color: var(--theme-highlight-blue);
-  cursor: inherit;
-  flex-grow: 1;
-}
-
-.requests-menu-stack-frame-file-name {
-  cursor: inherit;
-  margin-inline-end: 0;
-}
-
-.requests-menu-stack-frame-line {
-  color: var(--theme-highlight-orange);
-  cursor: inherit;
-  margin-inline-start: 0;
 }
 
 /* Performance analysis buttons */

@@ -23,7 +23,7 @@ add_task(function* test() {
   yield onThumbnail;
 
   info("Checking the image thumbnail after a few requests were made...");
-  yield showTooltipAndVerify(RequestsMenu.tooltip, RequestsMenu.items[5]);
+  yield showTooltipAndVerify(RequestsMenu.items[5]);
 
   // 7 XHRs as before + 1 extra document reload
   onEvents = waitForNetworkEvents(monitor, 8);
@@ -36,7 +36,7 @@ add_task(function* test() {
   yield onThumbnail;
 
   info("Checking the image thumbnail after a reload.");
-  yield showTooltipAndVerify(RequestsMenu.tooltip, RequestsMenu.items[6]);
+  yield showTooltipAndVerify(RequestsMenu.items[6]);
 
   yield teardown(monitor);
   finish();
@@ -45,7 +45,10 @@ add_task(function* test() {
    * Show a tooltip on the {requestItem} and verify that it was displayed
    * with the expected content.
    */
-  function* showTooltipAndVerify(tooltip, requestItem) {
+  function* showTooltipAndVerify(requestItem) {
+    let { tooltip } = requestItem.attachment;
+    ok(tooltip, "There should be a tooltip instance for the image request.");
+
     let anchor = $(".requests-menu-file", requestItem.target);
     yield showTooltipOn(tooltip, anchor);
 
