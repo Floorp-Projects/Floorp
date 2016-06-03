@@ -14,15 +14,9 @@ DevToolsModules(
     'heap-snapshot-file.js',
     'highlighters.js',
     'inspector.js',
-<<<<<<< HEAD
-<<<<<<< HEAD
     'node.js',
-=======
-=======
     'preference.js',
->>>>>>> 2b386d5... Bug 1277717 - Decouple the PreferenceFront from the PreferenceActor; r=ejpbruel
     'settings.js',
->>>>>>> e4a75c4... Bug 1277715 - Decouple the SettingsFront from the SettingsActor; r=ejpbruel
     'storage.js',
     'styleeditor.js',
     'styles.js',
