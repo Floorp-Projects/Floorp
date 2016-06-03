@@ -1,0 +1,13 @@
+---
+- task:
+    metadata:
+      name: Tools tests
+      description: Tools tests
+
+    payload:
+      env:
+        NSS_TESTS: tools
+
+    extra:
+      treeherder:
+        symbol: Tools

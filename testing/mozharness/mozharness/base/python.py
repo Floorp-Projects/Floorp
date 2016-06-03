@@ -14,6 +14,7 @@ import time
 import json
 import traceback
 
+import mozharness
 from mozharness.base.script import (
     PostScriptAction,
     PostScriptRun,
@@ -23,6 +24,11 @@ from mozharness.base.script import (
 from mozharness.base.errors import VirtualenvErrorList
 from mozharness.base.log import WARNING, FATAL
 from mozharness.mozilla.proxxy import Proxxy
+
+external_tools_path = os.path.join(
+    os.path.abspath(os.path.dirname(os.path.dirname(mozharness.__file__))),
+    'external_tools',
+)
 
 def get_tlsv1_post():
     # Monkeypatch to work around SSL errors in non-bleeding-edge Python.
@@ -458,7 +464,14 @@ class ResourceMonitoringMixin(object):
                                         optional=True)
         self.register_virtualenv_module('mozsystemmonitor==0.3',
                                         method='pip', optional=True)
+        self.register_virtualenv_module('jsonschema==2.5.1',
+                                        method='pip')
         self._resource_monitor = None
+
+        # 2-tuple of (name, options) to assign Perfherder resource monitor
+        # metrics to. This needs to be assigned by a script in order for
+        # Perfherder metrics to be reported.
+        self.resource_monitor_perfherder_id = None
 
     @PostScriptAction('create-virtualenv')
     def _start_resource_monitoring(self, action, success=None):
@@ -522,6 +535,9 @@ class ResourceMonitoringMixin(object):
                          traceback.format_exc())
 
     def _log_resource_usage(self):
+        # Delay import because not available until virtualenv is populated.
+        import jsonschema
+
         rm = self._resource_monitor
 
         if rm.start_time is None:
@@ -564,6 +580,72 @@ class ResourceMonitoringMixin(object):
 
         cpu_percent, cpu_times, io, (swap_in, swap_out) = resources(None)
         duration = rm.end_time - rm.start_time
+
+        # Write out Perfherder data if configured.
+        if self.resource_monitor_perfherder_id:
+            perfherder_name, perfherder_options = self.resource_monitor_perfherder_id
+
+            suites = []
+            overall = []
+
+            if cpu_percent:
+                overall.append({
+                    'name': 'cpu_percent',
+                    'value': cpu_percent,
+                })
+
+            overall.extend([
+                {'name': 'io_write_bytes', 'value': io.write_bytes},
+                {'name': 'io.read_bytes', 'value': io.read_bytes},
+                {'name': 'io_write_time', 'value': io.write_time},
+                {'name': 'io_read_time', 'value': io.read_time},
+            ])
+
+            suites.append({
+                'name': '%s.overall' % perfherder_name,
+                'extraOptions': perfherder_options,
+                'subtests': overall,
+
+            })
+
+            for phase in rm.phases.keys():
+                phase_duration = rm.phases[phase][1] - rm.phases[phase][0]
+                subtests = [
+                    {
+                        'name': 'time',
+                        'value': phase_duration,
+                    },
+                    {
+                        'name': 'cpu_percent',
+                        'value': rm.aggregate_cpu_percent(phase=phase,
+                                                          per_cpu=False),
+                    }
+                ]
+                # We don't report I/O during each step because measured I/O
+                # is system I/O and that I/O can be delayed (e.g. writes will
+                # buffer before being flushed and recorded in our metrics).
+                suites.append({
+                    'name': '%s.%s' % (perfherder_name, phase),
+                    'subtests': subtests,
+                })
+
+            data = {
+                'framework': {'name': 'job_resource_usage'},
+                'suites': suites,
+            }
+
+            try:
+                schema_path = os.path.join(external_tools_path,
+                                           'performance-artifact-schema.json')
+                with open(schema_path, 'rb') as fh:
+                    schema = json.load(fh)
+
+                self.info('Validating Perfherder data against %s' % schema_path)
+                jsonschema.validate(data, schema)
+            except Exception:
+                self.exception('error while validating Perfherder data; ignoring')
+            else:
+                self.info('PERFHERDER_DATA: %s' % json.dumps(data))
 
         log_usage('Total resource usage', duration, cpu_percent, cpu_times, io)
 

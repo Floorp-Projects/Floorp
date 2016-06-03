@@ -112,8 +112,8 @@ add_task(function*() {
 
     // when the preference is on, the malware table should include these ids
     let malwareTable = Services.prefs.getCharPref("urlclassifier.malwareTable").split(",");
-    is(malwareTable.includes("goog-unwanted-simple"), !checked,
-       "malware table doesn't include goog-unwanted-simple");
+    is(malwareTable.includes("goog-unwanted-shavar"), !checked,
+       "malware table doesn't include goog-unwanted-shavar");
     is(malwareTable.includes("test-unwanted-simple"), !checked,
        "malware table doesn't include test-unwanted-simple");
     let sortedMalware = malwareTable.slice(0);

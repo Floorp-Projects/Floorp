@@ -97,7 +97,10 @@ tls13_HkdfExpandLabel(PK11SymKey *prk, SSLHashType baseHash,
 {
     CK_NSS_HKDFParams params;
     SECItem paramsi = { siBuffer, NULL, 0 };
-    PRUint8 info[100];
+    /* Size of info array needs to be big enough to hold the maximum Prefix,
+     * Label, plus HandshakeHash. If it's ever to small, the code will abort.
+     */
+    PRUint8 info[110];
     PRUint8 *ptr = info;
     unsigned int infoLen;
     PK11SymKey *derived;

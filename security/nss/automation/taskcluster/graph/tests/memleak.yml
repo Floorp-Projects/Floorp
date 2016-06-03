@@ -1,0 +1,205 @@
+---
+- task:
+    metadata:
+      name: "MemLeak tests (ocsp)"
+      description: "MemLeak tests (ocsp)"
+
+    payload:
+      env:
+        NSS_MEMLEAK_TESTS: ocsp
+
+    extra:
+      treeherder:
+        symbol: ocsp
+
+- task:
+    metadata:
+      name: "MemLeak tests (ssl_server, standard)"
+      description: "MemLeak tests (ssl_server, standard)"
+
+    payload:
+      env:
+        NSS_MEMLEAK_TESTS: "ssl_server"
+        NSS_CYCLES: "standard"
+
+    extra:
+      treeherder:
+        groupSymbol: Server
+        groupName: MemLeak tests (ssl_server)
+        symbol: standard
+
+- task:
+    metadata:
+      name: "MemLeak tests (ssl_server, pkix)"
+      description: "MemLeak tests (ssl_server, pkix)"
+
+    payload:
+      env:
+        NSS_MEMLEAK_TESTS: "ssl_server"
+        NSS_CYCLES: "pkix"
+
+    extra:
+      treeherder:
+        groupSymbol: Server
+        groupName: MemLeak tests (ssl_server)
+        symbol: pkix
+
+- task:
+    metadata:
+      name: "MemLeak tests (ssl_server, sharedb)"
+      description: "MemLeak tests (ssl_server, sharedb)"
+
+    payload:
+      env:
+        NSS_MEMLEAK_TESTS: "ssl_server"
+        NSS_CYCLES: "sharedb"
+
+    extra:
+      treeherder:
+        groupSymbol: Server
+        groupName: MemLeak tests (ssl_server)
+        symbol: sharedb
+
+- task:
+    metadata:
+      name: "MemLeak tests (ssl_server, upgradedb)"
+      description: "MemLeak tests (ssl_server, upgradedb)"
+
+    payload:
+      env:
+        NSS_MEMLEAK_TESTS: "ssl_server"
+        NSS_CYCLES: "upgradedb"
+
+    extra:
+      treeherder:
+        groupSymbol: Server
+        groupName: MemLeak tests (ssl_server)
+        symbol: upgradedb
+
+- task:
+    metadata:
+      name: "MemLeak tests (ssl_client, standard)"
+      description: "MemLeak tests (ssl_client, standard)"
+
+    payload:
+      env:
+        NSS_MEMLEAK_TESTS: "ssl_client"
+        NSS_CYCLES: "standard"
+
+    extra:
+      treeherder:
+        groupSymbol: Client
+        groupName: MemLeak tests (ssl_client)
+        symbol: standard
+
+- task:
+    metadata:
+      name: "MemLeak tests (ssl_client, pkix)"
+      description: "MemLeak tests (ssl_client, pkix)"
+
+    payload:
+      env:
+        NSS_MEMLEAK_TESTS: "ssl_client"
+        NSS_CYCLES: "pkix"
+
+    extra:
+      treeherder:
+        groupSymbol: Client
+        groupName: MemLeak tests (ssl_client)
+        symbol: pkix
+
+- task:
+    metadata:
+      name: "MemLeak tests (ssl_client, sharedb)"
+      description: "MemLeak tests (ssl_client, sharedb)"
+
+    payload:
+      env:
+        NSS_MEMLEAK_TESTS: "ssl_client"
+        NSS_CYCLES: "sharedb"
+
+    extra:
+      treeherder:
+        groupSymbol: Client
+        groupName: MemLeak tests (ssl_client)
+        symbol: sharedb
+
+- task:
+    metadata:
+      name: "MemLeak tests (ssl_client, upgradedb)"
+      description: "MemLeak tests (ssl_client, upgradedb)"
+
+    payload:
+      env:
+        NSS_MEMLEAK_TESTS: "ssl_client"
+        NSS_CYCLES: "upgradedb"
+
+    extra:
+      treeherder:
+        groupSymbol: Client
+        groupName: MemLeak tests (ssl_client)
+        symbol: upgradedb
+
+- task:
+    metadata:
+      name: "MemLeak tests (chains, standard)"
+      description: "MemLeak tests (chains, standard)"
+
+    payload:
+      env:
+        NSS_MEMLEAK_TESTS: "chains"
+        NSS_CYCLES: "standard"
+
+    extra:
+      treeherder:
+        groupSymbol: Chains
+        groupName: MemLeak tests (chains)
+        symbol: standard
+
+- task:
+    metadata:
+      name: "MemLeak tests (chains, pkix)"
+      description: "MemLeak tests (chains, pkix)"
+
+    payload:
+      env:
+        NSS_MEMLEAK_TESTS: "chains"
+        NSS_CYCLES: "pkix"
+
+    extra:
+      treeherder:
+        groupSymbol: Chains
+        groupName: MemLeak tests (chains)
+        symbol: pkix
+
+- task:
+    metadata:
+      name: "MemLeak tests (chains, sharedb)"
+      description: "MemLeak tests (chains, sharedb)"
+
+    payload:
+      env:
+        NSS_MEMLEAK_TESTS: "chains"
+        NSS_CYCLES: "sharedb"
+
+    extra:
+      treeherder:
+        groupSymbol: Chains
+        groupName: MemLeak tests (chains)
+        symbol: sharedb
+
+- task:
+    metadata:
+      name: "MemLeak tests (chains, upgradedb)"
+      description: "MemLeak tests (chains, upgradedb)"
+
+    payload:
+      env:
+        NSS_MEMLEAK_TESTS: "chains"
+        NSS_CYCLES: "upgradedb"
+
+    extra:
+      treeherder:
+        groupSymbol: Chains
+        groupName: MemLeak tests (chains)
+        symbol: upgradedb

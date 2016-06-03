@@ -515,6 +515,20 @@ static const dom::ConstantSpec gLibcProperties[] =
   INT_CONSTANT(F_RDLCK),
   INT_CONSTANT(F_WRLCK),
   INT_CONSTANT(F_UNLCK),
+
+  // splice
+#if defined(SPLICE_F_MOVE)
+  INT_CONSTANT(SPLICE_F_MOVE),
+#endif // defined(SPLICE_F_MOVE)
+#if defined(SPLICE_F_NONBLOCK)
+  INT_CONSTANT(SPLICE_F_NONBLOCK),
+#endif // defined(SPLICE_F_NONBLOCK)
+#if defined(SPLICE_F_MORE)
+  INT_CONSTANT(SPLICE_F_MORE),
+#endif // defined(SPLICE_F_MORE)
+#if defined(SPLICE_F_GIFT)
+  INT_CONSTANT(SPLICE_F_GIFT),
+#endif // defined(SPLICE_F_GIFT)
 #endif // defined(XP_UNIX)
   // copyfile
 #if defined(COPYFILE_DATA)

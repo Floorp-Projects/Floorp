@@ -170,6 +170,7 @@ private:
   media::TimeIntervals GetBuffered();
   nsresult SeekInternal(TrackInfo::TrackType aType,
                         const media::TimeUnit& aTarget);
+  CryptoTrack GetTrackCrypto(TrackInfo::TrackType aType, size_t aTrackNumber);
 
   // Read a packet from the nestegg file. Returns nullptr if all packets for
   // the particular track have been read. Pass TrackInfo::kVideoTrack or
@@ -244,6 +245,8 @@ private:
   // This will be populated only if a resolution change occurs, otherwise it
   // will be left as null so the original metadata is used
   RefPtr<SharedTrackInfo> mSharedVideoTrackInfo;
+
+  EncryptionInfo mCrypto;
 };
 
 class WebMTrackDemuxer : public MediaTrackDemuxer

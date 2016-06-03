@@ -109,7 +109,7 @@ ZoomConstraintsClient::Init(nsIPresShell* aPresShell, nsIDocument* aDocument)
   mDocument = aDocument;
 
   if (nsCOMPtr<nsPIDOMWindowOuter> window = mDocument->GetWindow()) {
-    mEventTarget = window->GetChromeEventHandler();
+    mEventTarget = window->GetParentTarget();
   }
   if (mEventTarget) {
     mEventTarget->AddEventListener(DOM_META_ADDED, this, false);

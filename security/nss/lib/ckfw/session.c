@@ -25,6 +25,7 @@
  *  NSSCKFWSession_CallNotification
  *  NSSCKFWSession_IsRWSession
  *  NSSCKFWSession_IsSO
+ *  NSSCKFWSession_GetFWSlot
  *
  *  -- implement public accessors --
  *  nssCKFWSession_GetMDSession
@@ -32,9 +33,9 @@
  *  nssCKFWSession_CallNotification
  *  nssCKFWSession_IsRWSession
  *  nssCKFWSession_IsSO
+ *  nssCKFWSession_GetFWSlot
  *
  *  -- private accessors --
- *  nssCKFWSession_GetSlot
  *  nssCKFWSession_GetSessionState
  *  nssCKFWSession_SetFWFindObjects
  *  nssCKFWSession_GetFWFindObjects
@@ -2374,4 +2375,16 @@ NSSCKFWSession_GetCurrentCryptoOperation(
     }
 #endif /* DEBUG */
     return nssCKFWSession_GetCurrentCryptoOperation(fwSession, state);
+}
+
+/*
+ * NSSCKFWSession_GetFWSlot
+ *
+ */
+
+NSS_IMPLEMENT NSSCKFWSlot *
+NSSCKFWSession_GetFWSlot(
+    NSSCKFWSession *fwSession)
+{
+    return nssCKFWSession_GetFWSlot(fwSession);
 }

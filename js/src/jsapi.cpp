@@ -6153,9 +6153,9 @@ JS_GetGCZealBits(JSContext* cx, uint32_t* zealBits, uint32_t* frequency, uint32_
 }
 
 JS_PUBLIC_API(void)
-JS_SetGCZeal(JSContext* cx, uint8_t zeal, uint32_t frequency)
+JS_SetGCZeal(JSRuntime* rt, uint8_t zeal, uint32_t frequency)
 {
-    cx->runtime()->gc.setZeal(zeal, frequency);
+    rt->gc.setZeal(zeal, frequency);
 }
 
 JS_PUBLIC_API(void)

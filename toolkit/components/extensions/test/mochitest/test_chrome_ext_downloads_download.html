@@ -51,13 +51,29 @@ function setup() {
 }
 
 function backgroundScript() {
-  browser.test.onMessage.addListener(function(msg) {
+  let blobUrl;
+  browser.test.onMessage.addListener((msg, ...args) => {
     if (msg == "download.request") {
+      let options = args[0];
+
+      if (options.blobme) {
+        let blob = new Blob(options.blobme);
+        delete options.blobme;
+        blobUrl = options.url = window.URL.createObjectURL(blob);
+      }
+
       // download() throws on bad arguments, we can remove the extra
       // promise when bug 1250223 is fixed.
-      return Promise.resolve().then(() => browser.downloads.download(arguments[1]))
-             .then((id) => browser.test.sendMessage("download.done", {status: "success", id}))
-             .catch(error => browser.test.sendMessage("download.done", {status: "error", errmsg: error.message}));
+      return Promise.resolve().then(() => browser.downloads.download(options))
+                    .then(id => {
+                      browser.test.sendMessage("download.done", {status: "success", id});
+                    })
+                    .catch(error => {
+                      browser.test.sendMessage("download.done", {status: "error", errmsg: error.message});
+                    });
+    } else if (msg == "killTheBlob") {
+      window.URL.revokeObjectURL(blobUrl);
+      blobUrl = null;
     }
   });
 
@@ -199,6 +215,20 @@ add_task(function* test_downloads() {
     is(msg.status, "error", "downloads.download() fails with back-references");
     is(msg.errmsg, "filename must not contain back-references (..)", "error message for back-references is correct");
   });
+
+  // Try to download a blob url
+  const BLOB_STRING = "Hello, world";
+  yield testDownload({
+    blobme: [BLOB_STRING],
+    filename: FILE_NAME,
+  }, FILE_NAME, BLOB_STRING.length, "blob url");
+  extension.sendMessage("killTheBlob");
+
+  // Try to download a blob url without a given filename
+  yield testDownload({
+    blobme: [BLOB_STRING],
+  }, "download", BLOB_STRING.length, "blob url with no filename");
+  extension.sendMessage("killTheBlob");
 
   yield extension.unload();
 });

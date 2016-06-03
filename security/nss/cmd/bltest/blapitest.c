@@ -982,6 +982,9 @@ setupIO(PLArenaPool *arena, bltestIO *input, PRFileDesc *file,
             if (in->data[in->len - 1] == '\r')
                 --in->len;
             SECITEM_CopyItem(arena, &input->buf, in);
+            if (rv != SECSuccess) {
+                return SECFailure;
+            }
             break;
         case bltestHexSpaceDelim:
             SECITEM_AllocItem(arena, &input->buf, in->len / 5);
@@ -1061,16 +1064,20 @@ finishIO(bltestIO *output, PRFileDesc *file)
     return rv;
 }
 
-void
+SECStatus
 bltestCopyIO(PLArenaPool *arena, bltestIO *dest, bltestIO *src)
 {
-    SECITEM_CopyItem(arena, &dest->buf, &src->buf);
+    if (SECITEM_CopyItem(arena, &dest->buf, &src->buf) != SECSuccess) {
+        return SECFailure;
+    }
     if (src->pBuf.len > 0) {
         dest->pBuf.len = src->pBuf.len;
         dest->pBuf.data = dest->buf.data + (src->pBuf.data - src->buf.data);
     }
     dest->mode = src->mode;
     dest->file = src->file;
+
+    return SECSuccess;
 }
 
 void
@@ -3238,7 +3245,7 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
             ** then perform operation and compare to ciphertext
             */
             if (encrypt) {
-                bltestCopyIO(arena, &cipherInfo.input, &pt);
+                rv |= bltestCopyIO(arena, &cipherInfo.input, &pt);
                 misalignBuffer(arena, &cipherInfo.input, inoff);
                 memset(&cipherInfo.output.buf, 0, sizeof cipherInfo.output.buf);
                 rv |= cipherInit(&cipherInfo, PR_TRUE);
@@ -3260,7 +3267,7 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
                     ** verify-only operations, this ensures that the output
                     ** buffer is properly configured
                     */
-                    bltestCopyIO(arena, &params->asymk.sig, &cipherInfo.output);
+                    rv |= bltestCopyIO(arena, &params->asymk.sig, &cipherInfo.output);
                 }
             }
             if (!decrypt)
@@ -3270,10 +3277,10 @@ blapi_selftest(bltestCipherMode *modes, int numModes, int inoff, int outoff,
             ** then perform operation and compare to plaintext
             */
             if (is_sigCipher(mode)) {
-                bltestCopyIO(arena, &cipherInfo.input, &pt);
-                bltestCopyIO(arena, &cipherInfo.output, &params->asymk.sig);
+                rv |= bltestCopyIO(arena, &cipherInfo.input, &pt);
+                rv |= bltestCopyIO(arena, &cipherInfo.output, &params->asymk.sig);
             } else {
-                bltestCopyIO(arena, &cipherInfo.input, &ct);
+                rv |= bltestCopyIO(arena, &cipherInfo.input, &ct);
                 memset(&cipherInfo.output.buf, 0, sizeof cipherInfo.output.buf);
             }
             misalignBuffer(arena, &cipherInfo.input, inoff);

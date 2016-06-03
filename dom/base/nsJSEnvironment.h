@@ -50,7 +50,6 @@ public:
   virtual nsIScriptGlobalObject *GetGlobalObject() override;
   inline nsIScriptGlobalObject *GetGlobalObjectRef() { return mGlobalObjectRef; }
 
-  virtual JSContext* GetNativeContext() override;
   virtual nsresult InitContext() override;
   virtual bool IsContextInitialized() override;
 
@@ -150,11 +149,8 @@ protected:
   nsresult AddSupportsPrimitiveTojsvals(nsISupports *aArg, JS::Value *aArgv);
 
 private:
-  void DestroyJSContext();
+  void Destroy();
 
-  nsrefcnt GetCCRefcnt();
-
-  JSContext *mContext;
   JS::Heap<JSObject*> mWindowProxy;
 
   bool mIsInitialized;
@@ -167,8 +163,6 @@ private:
   // mGlobalObjectRef ensures that the outer window stays alive as long as the
   // context does. It is eventually collected by the cycle collector.
   nsCOMPtr<nsIScriptGlobalObject> mGlobalObjectRef;
-
-  static void JSOptionChangedCallback(const char *pref, void *data);
 
   static bool DOMOperationCallback(JSContext *cx);
 };

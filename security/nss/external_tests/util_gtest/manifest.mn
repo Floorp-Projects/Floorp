@@ -7,7 +7,6 @@ DEPTH      = ../..
 MODULE = nss
 
 CPPSRCS = \
-	util_gtest.cc \
 	util_utf8_unittest.cc \
 	$(NULL)
 
@@ -19,7 +18,9 @@ INCLUDES += \
 REQUIRES = nspr gtest
 
 PROGRAM = util_gtest
+
 EXTRA_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)gtest.$(LIB_SUFFIX) \
 	$(DIST)/lib/$(LIB_PREFIX)nssutil.$(LIB_SUFFIX) \
+	../common/$(OBJDIR)/gtests$(OBJ_SUFFIX) \
 	$(NULL)

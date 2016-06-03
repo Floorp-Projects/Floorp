@@ -135,33 +135,6 @@ GetIMEStateSetOpenName(IMEState::Open aOpen)
   }
 }
 
-static const char*
-GetNotifyIMEMessageName(IMEMessage aMessage)
-{
-  switch (aMessage) {
-    case NOTIFY_IME_OF_FOCUS:
-      return "NOTIFY_IME_OF_FOCUS";
-    case NOTIFY_IME_OF_BLUR:
-      return "NOTIFY_IME_OF_BLUR";
-    case NOTIFY_IME_OF_SELECTION_CHANGE:
-      return "NOTIFY_IME_OF_SELECTION_CHANGE";
-    case NOTIFY_IME_OF_TEXT_CHANGE:
-      return "NOTIFY_IME_OF_TEXT_CHANGE";
-    case NOTIFY_IME_OF_COMPOSITION_UPDATE:
-      return "NOTIFY_IME_OF_COMPOSITION_UPDATE";
-    case NOTIFY_IME_OF_POSITION_CHANGE:
-      return "NOTIFY_IME_OF_POSITION_CHANGE";
-    case NOTIFY_IME_OF_MOUSE_BUTTON_EVENT:
-      return "NOTIFY_IME_OF_MOUSE_BUTTON_EVENT";
-    case REQUEST_TO_COMMIT_COMPOSITION:
-      return "REQUEST_TO_COMMIT_COMPOSITION";
-    case REQUEST_TO_CANCEL_COMPOSITION:
-      return "REQUEST_TO_CANCEL_COMPOSITION";
-    default:
-      return "unacceptable IME notification message";
-  }
-}
-
 StaticRefPtr<nsIContent> IMEStateManager::sContent;
 nsPresContext* IMEStateManager::sPresContext = nullptr;
 nsIWidget* IMEStateManager::sFocusedIMEWidget = nullptr;
@@ -1235,6 +1208,13 @@ IMEStateManager::DispatchCompositionEvent(
 }
 
 // static
+IMEContentObserver*
+IMEStateManager::GetActiveContentObserver()
+{
+  return sActiveIMEContentObserver;
+}
+
+// static
 nsIContent*
 IMEStateManager::GetRootContent(nsPresContext* aPresContext)
 {
@@ -1353,7 +1333,7 @@ IMEStateManager::NotifyIME(const IMENotification& aNotification,
     ("ISM: IMEStateManager::NotifyIME(aNotification={ mMessage=%s }, "
      "aWidget=0x%p, aOriginIsRemote=%s), sFocusedIMEWidget=0x%p, "
      "sRemoteHasFocus=%s",
-     GetNotifyIMEMessageName(aNotification.mMessage), aWidget,
+     ToChar(aNotification.mMessage), aWidget,
      GetBoolName(aOriginIsRemote), sFocusedIMEWidget,
      GetBoolName(sRemoteHasFocus)));
 
@@ -1477,7 +1457,7 @@ IMEStateManager::NotifyIME(const IMENotification& aNotification,
     case REQUEST_TO_CANCEL_COMPOSITION:
       return composition ?
         composition->RequestToCommit(aWidget, true) : NS_OK;
-    case NOTIFY_IME_OF_COMPOSITION_UPDATE:
+    case NOTIFY_IME_OF_COMPOSITION_EVENT_HANDLED:
       if (!aOriginIsRemote && (!composition || isSynthesizedForTests)) {
         MOZ_LOG(sISMLog, LogLevel::Info,
           ("ISM:   IMEStateManager::NotifyIME(), FAILED, received content "
@@ -1508,8 +1488,7 @@ IMEStateManager::NotifyIME(IMEMessage aMessage,
   MOZ_LOG(sISMLog, LogLevel::Info,
     ("ISM: IMEStateManager::NotifyIME(aMessage=%s, aPresContext=0x%p, "
      "aOriginIsRemote=%s)",
-     GetNotifyIMEMessageName(aMessage), aPresContext,
-     GetBoolName(aOriginIsRemote)));
+     ToChar(aMessage), aPresContext, GetBoolName(aOriginIsRemote)));
 
   NS_ENSURE_TRUE(aPresContext, NS_ERROR_INVALID_ARG);
 

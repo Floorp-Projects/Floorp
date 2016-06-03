@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "tls_agent.h"
-
+#include "tls_parser.h"
 #include "pk11func.h"
 #include "ssl.h"
 #include "sslerr.h"
@@ -22,8 +22,9 @@ extern "C" {
 #include "gtest/gtest.h"
 #include "scoped_ptrs.h"
 
-namespace nss_test {
+extern std::string g_working_dir_path;
 
+namespace nss_test {
 
 const char* TlsAgent::states[] = {"INIT", "CONNECTING", "CONNECTED", "ERROR"};
 
@@ -32,8 +33,9 @@ const std::string TlsAgent::kServerRsa = "rsa"; // both sign and encrypt
 const std::string TlsAgent::kServerRsaSign = "rsa_sign";
 const std::string TlsAgent::kServerRsaDecrypt = "rsa_decrypt";
 const std::string TlsAgent::kServerEcdsa = "ecdsa";
-const std::string TlsAgent::kServerEcdhRsa = "ecdh_rsa"; // not supported yet
+// TODO: const std::string TlsAgent::kServerEcdhRsa = "ecdh_rsa";
 const std::string TlsAgent::kServerEcdhEcdsa = "ecdh_ecdsa";
+const std::string TlsAgent::kServerDsa = "dsa";
 
 TlsAgent::TlsAgent(const std::string& name, Role role, Mode mode)
   : name_(name),
@@ -49,6 +51,7 @@ TlsAgent::TlsAgent(const std::string& name, Role role, Mode mode)
     expected_version_(0),
     expected_cipher_suite_(0),
     expect_resumption_(false),
+    expect_client_auth_(false),
     can_falsestart_hook_called_(false),
     sni_hook_called_(false),
     auth_certificate_hook_called_(false),
@@ -72,6 +75,7 @@ TlsAgent::TlsAgent(const std::string& name, Role role, Mode mode)
 TlsAgent::~TlsAgent() {
   if (adapter_) {
     Poller::Instance()->Cancel(READABLE_EVENT, adapter_);
+    // The adapter is closed when the FD closes.
   }
   if (timer_handle_) {
     timer_handle_->Cancel();
@@ -497,6 +501,7 @@ void TlsAgent::CheckCallbacks() const {
 
 void TlsAgent::Connected() {
   LOG("Handshake success");
+  CheckPreliminaryInfo();
   CheckCallbacks();
 
   SECStatus rv = SSL_GetChannelInfo(ssl_fd_, &info_, sizeof(info_));
@@ -580,6 +585,7 @@ void TlsAgent::Handshake() {
       if (mode_ == DGRAM) {
         if (timer_handle_) {
           timer_handle_->Cancel();
+          timer_handle_ = nullptr;
         }
 
         PRIntervalTime timeout;
@@ -653,6 +659,7 @@ void TlsAgent::ReadBytes() {
 
   int32_t rv = PR_Read(ssl_fd_, block, sizeof(block));
   LOG("ReadBytes " << rv);
+  int32_t err;
 
   if (rv >= 0) {
     size_t count = static_cast<size_t>(rv);
@@ -661,7 +668,7 @@ void TlsAgent::ReadBytes() {
       recv_ctr_++;
     }
   } else {
-    int32_t err = PR_GetError();
+    err = PR_GetError();
     LOG("Read error " << err << ": " << PORT_ErrorToString(err));
     if (err != PR_WOULD_BLOCK_ERROR && expected_read_error_) {
       error_code_ = err;
@@ -669,7 +676,8 @@ void TlsAgent::ReadBytes() {
   }
 
   // If closed, then don't bother waiting around.
-  if (rv) {
+  if (rv > 0 || (rv < 0 && err == PR_WOULD_BLOCK_ERROR)) {
+    LOG("Re-arming");
     Poller::Instance()->Wait(READABLE_EVENT, adapter_, this,
                              &TlsAgent::ReadableCallback);
   }
@@ -699,6 +707,16 @@ static const std::string kTlsRolesAllArr[] = {"CLIENT", "SERVER"};
 ::testing::internal::ParamGenerator<std::string>
   TlsAgentTestBase::kTlsRolesAll = ::testing::ValuesIn(kTlsRolesAllArr);
 
+void TlsAgentTestBase::SetUp() {
+  SSL_ConfigServerSessionIDCache(1024, 0, 0, g_working_dir_path.c_str());
+}
+
+void TlsAgentTestBase::TearDown() {
+  delete agent_;
+  SSL_ClearSessionCache();
+  SSL_ShutdownServerSessionIDCache();
+}
+
 void TlsAgentTestBase::Init() {
   agent_ = new TlsAgent(
       role_ == TlsAgent::CLIENT ? TlsAgent::kClient : TlsAgent::kServerRsa,
@@ -727,6 +745,74 @@ void TlsAgentTestBase::ProcessMessage(const DataBuffer& buffer,
 
   if (expected_state == TlsAgent::STATE_ERROR) {
     ASSERT_EQ(error_code, agent_->error_code());
+  }
+}
+
+void TlsAgentTestBase::MakeRecord(uint8_t type, uint16_t version,
+                                  const uint8_t *buf, size_t len,
+                                  DataBuffer* out, uint32_t seq_num)
+{
+  size_t index = 0;
+  index = out->Write(index, type, 1);; // Content Type
+  index = out->Write(index,
+             mode_ == STREAM ? version :
+             TlsVersionToDtlsVersion(version),
+             2); // Version
+  if (mode_ == DGRAM) {
+    index = out->Write(index, 0U, 4);
+    index = out->Write(index, seq_num, 4);
+  }
+  index = out->Write(index, len, 2); // Length
+  out->Write(index, buf, len);
+}
+
+void TlsAgentTestBase::MakeHandshakeMessage(uint8_t hs_type,
+                                            const uint8_t *data,
+                                            size_t hs_len,
+                                            DataBuffer* out,
+                                            uint32_t seq_num) {
+  return MakeHandshakeMessageFragment(
+      hs_type, data, hs_len, out, seq_num, 0, 0);
+}
+void TlsAgentTestBase::MakeHandshakeMessageFragment(uint8_t hs_type,
+                                                    const uint8_t *data,
+                                                    size_t hs_len,
+                                                    DataBuffer* out,
+                                                    uint32_t seq_num,
+                                                    uint32_t fragment_offset,
+                                                    uint32_t fragment_length) {
+  size_t index = 0;
+  if (!fragment_length)
+    fragment_length = hs_len;
+  index = out->Write(index, hs_type, 1); // Handshake record type.
+  index = out->Write(index, hs_len, 3); // Handshake length
+  if (mode_ == DGRAM) {
+    index = out->Write(index, seq_num, 2);
+    index = out->Write(index, fragment_offset, 3);
+    index = out->Write(index, fragment_length, 3);
+  }
+  if (data) {
+    index = out->Write(index, data, fragment_length);
+  } else {
+    for (size_t i = 0; i < fragment_length; ++i) {
+      index = out->Write(index, 1, 1);
+    }
+  }
+}
+
+void TlsAgentTestBase::MakeTrivialHandshakeRecord(uint8_t hs_type,
+                                                  size_t hs_len,
+                                                  DataBuffer* out) {
+  size_t index = 0;
+  index = out->Write(index, kTlsHandshakeType, 1); // Content Type
+  index = out->Write(index, 3, 1); // Version high
+  index = out->Write(index, 1, 1); // Version low
+  index =out->Write(index, 4 + hs_len, 2); // Length
+
+  index = out->Write(index, hs_type, 1); // Handshake record type.
+  index = out->Write(index, hs_len, 3); // Handshake length
+  for (size_t i = 0; i < hs_len; ++i) {
+    index = out->Write(index, 1, 1);
   }
 }
 

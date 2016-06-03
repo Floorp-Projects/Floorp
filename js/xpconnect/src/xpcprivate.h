@@ -3762,9 +3762,7 @@ bool EnableUniversalXPConnect(JSContext* cx);
 inline void
 CrashIfNotInAutomation()
 {
-    const char* prefName =
-      "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer";
-    MOZ_RELEASE_ASSERT(mozilla::Preferences::GetBool(prefName));
+    MOZ_RELEASE_ASSERT(IsInAutomation());
 }
 
 inline XPCWrappedNativeScope*

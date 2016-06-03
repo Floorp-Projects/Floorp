@@ -99,7 +99,7 @@ BEGIN_TEST(testGCFinalizeCallback)
     /* Full GC with reset due to new compartment, becoming compartment GC. */
 
     FinalizeCalls = 0;
-    JS_SetGCZeal(cx, 9, 1000000);
+    JS_SetGCZeal(rt, 9, 1000000);
     JS::PrepareForFullGC(rt);
     js::SliceBudget budget(js::WorkBudget(1));
     rt->gc.startDebugGC(GC_NORMAL, budget);
@@ -120,7 +120,7 @@ BEGIN_TEST(testGCFinalizeCallback)
         CHECK(!IsCompartmentGCBuffer[i]);
     CHECK(IsCompartmentGCBuffer[FinalizeCalls - 1]);
 
-    JS_SetGCZeal(cx, 0, 0);
+    JS_SetGCZeal(rt, 0, 0);
 
 #endif
 

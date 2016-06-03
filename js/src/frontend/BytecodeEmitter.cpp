@@ -330,7 +330,16 @@ BytecodeEmitter::emitN(JSOp op, size_t extra, ptrdiff_t* offset)
 bool
 BytecodeEmitter::emitJumpTarget(JumpTarget* target)
 {
-    target->offset = offset();
+    ptrdiff_t off = offset();
+
+    // Alias consecutive jump targets.
+    if (off == current->lastTarget.offset + ptrdiff_t(JSOP_JUMPTARGET_LENGTH)) {
+        target->offset = current->lastTarget.offset;
+        return true;
+    }
+
+    target->offset = off;
+    current->lastTarget.offset = off;
     if (!emit1(JSOP_JUMPTARGET))
         return false;
     return true;
@@ -1018,17 +1027,9 @@ BytecodeEmitter::enterNestedScope(StmtInfoBCE* stmt, ObjectBox* objbox, StmtType
 bool
 BytecodeEmitter::popStatement()
 {
-    JumpTarget brk{ -1 };
-    return popStatement(brk);
-}
-
-bool
-BytecodeEmitter::popStatement(JumpTarget brk)
-{
     if (!innermostStmt()->isTrying()) {
-        if (brk.offset == -1 && !emitJumpTarget(&brk))
+        if (!emitJumpTargetAndPatch(innermostStmt()->breaks))
             return false;
-        patchJumpsToTarget(innermostStmt()->breaks, brk);
         patchJumpsToTarget(innermostStmt()->continues, innermostStmt()->update);
     }
 
@@ -3501,7 +3502,7 @@ BytecodeEmitter::emitSwitch(ParseNode* pn)
     }
 
     // Set the SRC_SWITCH note's offset operand to tell end of switch.
-    if (!setSrcNoteOffset(noteIndex, 0, offset() - top.offset))
+    if (!setSrcNoteOffset(noteIndex, 0, lastNonJumpTargetOffset() - top.offset))
         return false;
 
     if (switchOp == JSOP_TABLESWITCH) {
@@ -5748,7 +5749,7 @@ BytecodeEmitter::emitSpread(bool allowSelfHosted)
     if (!setSrcNoteOffset(noteIndex, 0, beq.offset - initialJump.offset))
         return false;
 
-    if (!popStatement(brk))
+    if (!popStatement())
         return false;
 
     if (!tryNoteList.append(JSTRY_FOR_OF, stackDepth, top.offset, brk.offset))
@@ -5859,7 +5860,7 @@ BytecodeEmitter::emitForOf(ParseNode* pn)
 
     // Fixup breaks and continues.
     // For StmtType::SPREAD, just pop innermostStmt().
-    if (!popStatement(brk))
+    if (!popStatement())
         return false;
 
     if (!tryNoteList.append(JSTRY_FOR_OF, stackDepth, top.offset, brk.offset))
@@ -5955,7 +5956,7 @@ BytecodeEmitter::emitForIn(ParseNode* pn)
         return false;
 
     // Fix up breaks and continues.
-    if (!popStatement(brk))
+    if (!popStatement())
         return false;
 
     // Pop the enumeration value.
@@ -6139,7 +6140,7 @@ BytecodeEmitter::emitCStyleFor(ParseNode* pn)
         return false;
 
     /* Now fixup all breaks and continues. */
-    if (!popStatement(brk))
+    if (!popStatement())
         return false;
     return true;
 }
@@ -6302,7 +6303,7 @@ BytecodeEmitter::emitComprehensionForOf(ParseNode* pn)
         return false;
 
     // Fixup breaks and continues.
-    if (!popStatement(brk))
+    if (!popStatement())
         return false;
 
     if (!tryNoteList.append(JSTRY_FOR_OF, stackDepth, top.offset, brk.offset))
@@ -6418,7 +6419,7 @@ BytecodeEmitter::emitComprehensionForIn(ParseNode* pn)
         return false;
 
     // Fix up breaks and continues.
-    if (!popStatement(brk))
+    if (!popStatement())
         return false;
 
     // Pop the enumeration value.
@@ -6716,7 +6717,7 @@ BytecodeEmitter::emitDo(ParseNode* pn)
     if (!setSrcNoteOffset(noteIndex, 0, 1 + (continues.offset - top.offset)))
         return false;
 
-    if (!popStatement(brk))
+    if (!popStatement())
         return false;
     return true;
 }
@@ -6787,7 +6788,7 @@ BytecodeEmitter::emitWhile(ParseNode* pn)
     if (!setSrcNoteOffset(noteIndex, 0, beq.offset - jmp.offset))
         return false;
 
-    if (!popStatement(brk))
+    if (!popStatement())
         return false;
     return true;
 }
@@ -7980,7 +7981,7 @@ BytecodeEmitter::emitLabeledStatement(const LabeledStatement* pn)
         return false;
 
     /* Patch the JSOP_LABEL offset. */
-    JumpTarget brk{ offset() };
+    JumpTarget brk{ lastNonJumpTargetOffset() };
     patchJumpsToTarget(top, brk);
 
     if (!popStatement())

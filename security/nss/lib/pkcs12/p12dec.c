@@ -62,8 +62,18 @@ sec_pkcs12_decode_pfx(SECItem *der_pfx)
 	    return NULL;
 	}
 	pfx->old = PR_TRUE;
-	SGN_CopyDigestInfo(pfx->poolp, &pfx->macData.safeMac, &pfx->old_safeMac);
-	SECITEM_CopyItem(pfx->poolp, &pfx->macData.macSalt, &pfx->old_macSalt);
+	rv = SGN_CopyDigestInfo(pfx->poolp, &pfx->macData.safeMac, &pfx->old_safeMac);
+	if(rv != SECSuccess) {
+	    PORT_SetError(SEC_ERROR_NO_MEMORY);
+	    PORT_FreeArena(pfx->poolp, PR_TRUE);
+	    return NULL;
+	}
+	rv = SECITEM_CopyItem(pfx->poolp, &pfx->macData.macSalt, &pfx->old_macSalt);
+	if(rv != SECSuccess) {
+	    PORT_SetError(SEC_ERROR_NO_MEMORY);
+	    PORT_FreeArena(pfx->poolp, PR_TRUE);
+	    return NULL;
+	}
     } else {
 	pfx->old = PR_FALSE;
     }

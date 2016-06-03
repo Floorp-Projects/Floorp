@@ -138,7 +138,11 @@ function onMessageReceived(event, aWindow) {
       // Just fall through...
     // Indication of successfully finished step of a test
     case "perf":
-      slave.postMessage("step", slaveOrigin);
+      // postMessage should send to the slaveOrigin. However with the addition of private
+      // browsing flags in origin attributes this will cause postMessage to fail. The origin of this
+      // window has false privatebrowsing, while the recipient is in a private window.
+      // To fix this issue and preserve the integrity of the test a * is passed to get around origin equality.
+      slave.postMessage("step", "*");
       break;
     // Indication of all test parts finish (from any of the frames)
     case "done":

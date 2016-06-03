@@ -86,7 +86,7 @@ BEGIN_TEST(testIncrementalRoots)
 
 #ifdef JS_GC_ZEAL
     // Disable zeal modes because this test needs to control exactly when the GC happens.
-    JS_SetGCZeal(cx, 0, 100);
+    JS_SetGCZeal(rt, 0, 100);
 #endif
 
     // Construct a big object graph to mark. In JS, the resulting object graph
@@ -129,7 +129,8 @@ BEGIN_TEST(testIncrementalRoots)
 
     // This is marked during markRuntime
     JS::AutoObjectVector vec(cx);
-    vec.append(root);
+    if (!vec.append(root))
+        return false;
 
     // Tenure everything so intentionally unrooted objects don't move before we
     // can use them.

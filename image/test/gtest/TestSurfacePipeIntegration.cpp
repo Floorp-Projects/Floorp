@@ -42,6 +42,93 @@ private:
 } // namespace image
 } // namespace mozilla
 
+void
+CheckSurfacePipeMethodResults(SurfacePipe* aPipe,
+                              Decoder* aDecoder,
+                              const IntRect& aRect = IntRect(0, 0, 100, 100))
+{
+  // Check that the pipeline ended up in the state we expect.  Note that we're
+  // explicitly testing the SurfacePipe versions of these methods, so we don't
+  // want to use AssertCorrectPipelineFinalState() here.
+  EXPECT_TRUE(aPipe->IsSurfaceFinished());
+  Maybe<SurfaceInvalidRect> invalidRect = aPipe->TakeInvalidRect();
+  EXPECT_TRUE(invalidRect.isSome());
+  EXPECT_EQ(IntRect(0, 0, 100, 100), invalidRect->mInputSpaceRect);
+  EXPECT_EQ(IntRect(0, 0, 100, 100), invalidRect->mOutputSpaceRect);
+
+  // Check the generated image.
+  CheckGeneratedImage(aDecoder, aRect);
+
+  // Reset and clear the image before the next test.
+  aPipe->ResetToFirstRow();
+  EXPECT_FALSE(aPipe->IsSurfaceFinished());
+  invalidRect = aPipe->TakeInvalidRect();
+  EXPECT_TRUE(invalidRect.isNothing());
+
+  uint32_t count = 0;
+  auto result = aPipe->WritePixels<uint32_t>([&]() {
+    ++count;
+    return AsVariant(BGRAColor::Transparent().AsPixel());
+  });
+  EXPECT_EQ(WriteState::FINISHED, result);
+  EXPECT_EQ(100u * 100u, count);
+
+  EXPECT_TRUE(aPipe->IsSurfaceFinished());
+  invalidRect = aPipe->TakeInvalidRect();
+  EXPECT_TRUE(invalidRect.isSome());
+  EXPECT_EQ(IntRect(0, 0, 100, 100), invalidRect->mInputSpaceRect);
+  EXPECT_EQ(IntRect(0, 0, 100, 100), invalidRect->mOutputSpaceRect);
+
+  aPipe->ResetToFirstRow();
+  EXPECT_FALSE(aPipe->IsSurfaceFinished());
+  invalidRect = aPipe->TakeInvalidRect();
+  EXPECT_TRUE(invalidRect.isNothing());
+}
+
+void
+CheckPalettedSurfacePipeMethodResults(SurfacePipe* aPipe,
+                                      Decoder* aDecoder,
+                                      const IntRect& aRect
+                                        = IntRect(0, 0, 100, 100))
+{
+  // Check that the pipeline ended up in the state we expect.  Note that we're
+  // explicitly testing the SurfacePipe versions of these methods, so we don't
+  // want to use AssertCorrectPipelineFinalState() here.
+  EXPECT_TRUE(aPipe->IsSurfaceFinished());
+  Maybe<SurfaceInvalidRect> invalidRect = aPipe->TakeInvalidRect();
+  EXPECT_TRUE(invalidRect.isSome());
+  EXPECT_EQ(IntRect(0, 0, 100, 100), invalidRect->mInputSpaceRect);
+  EXPECT_EQ(IntRect(0, 0, 100, 100), invalidRect->mOutputSpaceRect);
+
+  // Check the generated image.
+  CheckGeneratedPalettedImage(aDecoder, aRect);
+
+  // Reset and clear the image before the next test.
+  aPipe->ResetToFirstRow();
+  EXPECT_FALSE(aPipe->IsSurfaceFinished());
+  invalidRect = aPipe->TakeInvalidRect();
+  EXPECT_TRUE(invalidRect.isNothing());
+
+  uint32_t count = 0;
+  auto result = aPipe->WritePixels<uint8_t>([&]() {
+    ++count;
+    return AsVariant(uint8_t(0));
+  });
+  EXPECT_EQ(WriteState::FINISHED, result);
+  EXPECT_EQ(100u * 100u, count);
+
+  EXPECT_TRUE(aPipe->IsSurfaceFinished());
+  invalidRect = aPipe->TakeInvalidRect();
+  EXPECT_TRUE(invalidRect.isSome());
+  EXPECT_EQ(IntRect(0, 0, 100, 100), invalidRect->mInputSpaceRect);
+  EXPECT_EQ(IntRect(0, 0, 100, 100), invalidRect->mOutputSpaceRect);
+
+  aPipe->ResetToFirstRow();
+  EXPECT_FALSE(aPipe->IsSurfaceFinished());
+  invalidRect = aPipe->TakeInvalidRect();
+  EXPECT_TRUE(invalidRect.isNothing());
+}
+
 TEST(ImageSurfacePipeIntegration, SurfacePipe)
 {
   // Test that SurfacePipe objects can be initialized and move constructed.
@@ -56,34 +143,152 @@ TEST(ImageSurfacePipeIntegration, SurfacePipe)
 
   auto sink = MakeUnique<SurfaceSink>();
   nsresult rv =
-    sink->Configure(SurfaceConfig { decoder.get(), 0, IntSize(100, 100),
+    sink->Configure(SurfaceConfig { decoder, 0, IntSize(100, 100),
                                     SurfaceFormat::B8G8R8A8, false });
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   pipe = TestSurfacePipeFactory::SurfacePipeFromPipeline(sink);
 
-  // Test that SurfacePipe passes through method calls to the underlying pipeline.
-  int32_t count = 0;
-  auto result = pipe.WritePixels<uint32_t>([&]() {
-    ++count;
-    return AsVariant(BGRAColor::Green().AsPixel());
-  });
-  EXPECT_EQ(WriteState::FINISHED, result);
-  EXPECT_EQ(100 * 100, count);
+  // Test that WritePixels() gets passed through to the underlying pipeline.
+  {
+    uint32_t count = 0;
+    auto result = pipe.WritePixels<uint32_t>([&]() {
+      ++count;
+      return AsVariant(BGRAColor::Green().AsPixel());
+    });
+    EXPECT_EQ(WriteState::FINISHED, result);
+    EXPECT_EQ(100u * 100u, count);
+    CheckSurfacePipeMethodResults(&pipe, decoder);
+  }
 
-  // Note that we're explicitly testing the SurfacePipe versions of these
-  // methods, so we don't want to use AssertCorrectPipelineFinalState() here.
-  EXPECT_TRUE(pipe.IsSurfaceFinished());
-  Maybe<SurfaceInvalidRect> invalidRect = pipe.TakeInvalidRect();
-  EXPECT_TRUE(invalidRect.isSome());
-  EXPECT_EQ(IntRect(0, 0, 100, 100), invalidRect->mInputSpaceRect);
-  EXPECT_EQ(IntRect(0, 0, 100, 100), invalidRect->mOutputSpaceRect);
+  // Create a buffer the same size as one row of the surface, containing all
+  // green pixels. We'll use this for the WriteBuffer() tests.
+  uint32_t buffer[100];
+  for (int i = 0; i < 100; ++i) {
+    buffer[i] = BGRAColor::Green().AsPixel();
+  }
 
-  CheckGeneratedImage(decoder, IntRect(0, 0, 100, 100));
+  // Test that WriteBuffer() gets passed through to the underlying pipeline.
+  {
+    uint32_t count = 0;
+    WriteState result = WriteState::NEED_MORE_DATA;
+    while (result == WriteState::NEED_MORE_DATA) {
+      result = pipe.WriteBuffer(buffer);
+      ++count;
+    }
+    EXPECT_EQ(WriteState::FINISHED, result);
+    EXPECT_EQ(100u, count);
+    CheckSurfacePipeMethodResults(&pipe, decoder);
+  }
 
-  pipe.ResetToFirstRow();
-  EXPECT_FALSE(pipe.IsSurfaceFinished());
+  // Test that the 3 argument version of WriteBuffer() gets passed through to
+  // the underlying pipeline.
+  {
+    uint32_t count = 0;
+    WriteState result = WriteState::NEED_MORE_DATA;
+    while (result == WriteState::NEED_MORE_DATA) {
+      result = pipe.WriteBuffer(buffer, 0, 100);
+      ++count;
+    }
+    EXPECT_EQ(WriteState::FINISHED, result);
+    EXPECT_EQ(100u, count);
+    CheckSurfacePipeMethodResults(&pipe, decoder);
+  }
 
+  // Test that WriteEmptyRow() gets passed through to the underlying pipeline.
+  {
+    uint32_t count = 0;
+    WriteState result = WriteState::NEED_MORE_DATA;
+    while (result == WriteState::NEED_MORE_DATA) {
+      result = pipe.WriteEmptyRow();
+      ++count;
+    }
+    EXPECT_EQ(WriteState::FINISHED, result);
+    EXPECT_EQ(100u, count);
+    CheckSurfacePipeMethodResults(&pipe, decoder, IntRect(0, 0, 0, 0));
+  }
+
+  // Mark the frame as finished so we don't get an assertion.
+  RawAccessFrameRef currentFrame = decoder->GetCurrentFrameRef();
+  currentFrame->Finish();
+}
+
+TEST(ImageSurfacePipeIntegration, PalettedSurfacePipe)
+{
+  // Create a SurfacePipe containing a PalettedSurfaceSink.
+  RefPtr<Decoder> decoder = CreateTrivialDecoder();
+  ASSERT_TRUE(decoder != nullptr);
+
+  auto sink = MakeUnique<PalettedSurfaceSink>();
+  nsresult rv =
+    sink->Configure(PalettedSurfaceConfig { decoder, 0, IntSize(100, 100),
+                                            IntRect(0, 0, 100, 100),
+                                            SurfaceFormat::B8G8R8A8,
+                                            8, false });
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  SurfacePipe pipe = TestSurfacePipeFactory::SurfacePipeFromPipeline(sink);
+
+  // Test that WritePixels() gets passed through to the underlying pipeline.
+  {
+    uint32_t count = 0;
+    auto result = pipe.WritePixels<uint8_t>([&]() {
+      ++count;
+      return AsVariant(uint8_t(255));
+    });
+    EXPECT_EQ(WriteState::FINISHED, result);
+    EXPECT_EQ(100u * 100u, count);
+    CheckPalettedSurfacePipeMethodResults(&pipe, decoder);
+  }
+
+  // Create a buffer the same size as one row of the surface, containing all
+  // 255 pixels. We'll use this for the WriteBuffer() tests.
+  uint8_t buffer[100];
+  for (int i = 0; i < 100; ++i) {
+    buffer[i] = 255;
+  }
+
+  // Test that WriteBuffer() gets passed through to the underlying pipeline.
+  {
+    uint32_t count = 0;
+    WriteState result = WriteState::NEED_MORE_DATA;
+    while (result == WriteState::NEED_MORE_DATA) {
+      result = pipe.WriteBuffer(buffer);
+      ++count;
+    }
+    EXPECT_EQ(WriteState::FINISHED, result);
+    EXPECT_EQ(100u, count);
+    CheckPalettedSurfacePipeMethodResults(&pipe, decoder);
+  }
+
+  // Test that the 3 argument version of WriteBuffer() gets passed through to
+  // the underlying pipeline.
+  {
+    uint32_t count = 0;
+    WriteState result = WriteState::NEED_MORE_DATA;
+    while (result == WriteState::NEED_MORE_DATA) {
+      result = pipe.WriteBuffer(buffer, 0, 100);
+      ++count;
+    }
+    EXPECT_EQ(WriteState::FINISHED, result);
+    EXPECT_EQ(100u, count);
+    CheckPalettedSurfacePipeMethodResults(&pipe, decoder);
+  }
+
+  // Test that WriteEmptyRow() gets passed through to the underlying pipeline.
+  {
+    uint32_t count = 0;
+    WriteState result = WriteState::NEED_MORE_DATA;
+    while (result == WriteState::NEED_MORE_DATA) {
+      result = pipe.WriteEmptyRow();
+      ++count;
+    }
+    EXPECT_EQ(WriteState::FINISHED, result);
+    EXPECT_EQ(100u, count);
+    CheckPalettedSurfacePipeMethodResults(&pipe, decoder, IntRect(0, 0, 0, 0));
+  }
+
+  // Mark the frame as finished so we don't get an assertion.
   RawAccessFrameRef currentFrame = decoder->GetCurrentFrameRef();
   currentFrame->Finish();
 }
@@ -96,24 +301,6 @@ TEST(ImageSurfacePipeIntegration, DeinterlaceDownscaleWritePixels)
   auto test = [](Decoder* aDecoder, SurfaceFilter* aFilter) {
     CheckWritePixels(aDecoder, aFilter,
                      /* aOutputRect = */ Some(IntRect(0, 0, 25, 25)));
-  };
-
-  WithFilterPipeline(decoder, test,
-                     DeinterlacingConfig<uint32_t> { /* mProgressiveDisplay = */ true },
-                     DownscalingConfig { IntSize(100, 100),
-                                         SurfaceFormat::B8G8R8A8 },
-                     SurfaceConfig { decoder, 0, IntSize(25, 25),
-                                     SurfaceFormat::B8G8R8A8, false });
-}
-
-TEST(ImageSurfacePipeIntegration, DeinterlaceDownscaleWriteRows)
-{
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
-  ASSERT_TRUE(decoder != nullptr);
-
-  auto test = [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 25, 25)));
   };
 
   WithFilterPipeline(decoder, test,
@@ -180,31 +367,6 @@ TEST(ImageSurfacePipeIntegration, RemoveFrameRectBottomRightDownscaleWritePixels
                                      SurfaceFormat::B8G8R8A8, false });
 }
 
-TEST(ImageSurfacePipeIntegration, RemoveFrameRectBottomRightDownscaleWriteRows)
-{
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
-  ASSERT_TRUE(decoder != nullptr);
-
-  // See the WritePixels version of this test for a discussion of where the
-  // numbers below come from.
-
-  auto test = [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 20, 20)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(50, 50, 100, 50)),
-                   /* aOutputWriteRect = */ Some(IntRect(10, 10, 10, 10)),
-                   /* aFuzz = */ 0x33);
-  };
-
-  WithFilterPipeline(decoder, test,
-                     RemoveFrameRectConfig { IntRect(50, 50, 100, 100) },
-                     DownscalingConfig { IntSize(100, 100),
-                                         SurfaceFormat::B8G8R8A8 },
-                     SurfaceConfig { decoder, 0, IntSize(20, 20),
-                                     SurfaceFormat::B8G8R8A8, false });
-}
-
 TEST(ImageSurfacePipeIntegration, RemoveFrameRectTopLeftDownscaleWritePixels)
 {
   // This test case uses a frame rect that extends beyond the borders of the
@@ -239,29 +401,6 @@ TEST(ImageSurfacePipeIntegration, RemoveFrameRectTopLeftDownscaleWritePixels)
                                      SurfaceFormat::B8G8R8A8, false });
 }
 
-TEST(ImageSurfacePipeIntegration, RemoveFrameRectTopLeftDownscaleWriteRows)
-{
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
-  ASSERT_TRUE(decoder != nullptr);
-
-  auto test = [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 20, 20)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aOutputWriteRect = */ Some(IntRect(0, 0, 10, 10)),
-                   /* aFuzz = */ 0x21);
-  };
-
-  WithFilterPipeline(decoder, test,
-                     RemoveFrameRectConfig { IntRect(-50, -50, 100, 100) },
-                     DownscalingConfig { IntSize(100, 100),
-                                         SurfaceFormat::B8G8R8A8 },
-                     SurfaceConfig { decoder, 0, IntSize(20, 20),
-                                     SurfaceFormat::B8G8R8A8, false });
-}
-
-
 TEST(ImageSurfacePipeIntegration, DeinterlaceRemoveFrameRectWritePixels)
 {
   RefPtr<Decoder> decoder = CreateTrivialDecoder();
@@ -286,30 +425,6 @@ TEST(ImageSurfacePipeIntegration, DeinterlaceRemoveFrameRectWritePixels)
                                      SurfaceFormat::B8G8R8A8, false });
 }
 
-TEST(ImageSurfacePipeIntegration, DeinterlaceRemoveFrameRectWriteRows)
-{
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
-  ASSERT_TRUE(decoder != nullptr);
-
-  // Note that aInputRect is the full 100x100 size even though
-  // RemoveFrameRectFilter is part of this pipeline, because deinterlacing
-  // requires reading every row.
-
-  auto test = [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(50, 50, 100, 100)),
-                   /* aOutputWriteRect = */ Some(IntRect(50, 50, 50, 50)));
-  };
-
-  WithFilterPipeline(decoder, test,
-                     DeinterlacingConfig<uint32_t> { /* mProgressiveDisplay = */ true },
-                     RemoveFrameRectConfig { IntRect(50, 50, 100, 100) },
-                     SurfaceConfig { decoder, 0, IntSize(100, 100),
-                                     SurfaceFormat::B8G8R8A8, false });
-}
-
 TEST(ImageSurfacePipeIntegration, DeinterlaceRemoveFrameRectDownscaleWritePixels)
 {
   RefPtr<Decoder> decoder = CreateTrivialDecoder();
@@ -322,29 +437,6 @@ TEST(ImageSurfacePipeIntegration, DeinterlaceRemoveFrameRectDownscaleWritePixels
                      /* aInputWriteRect = */ Some(IntRect(50, 50, 100, 100)),
                      /* aOutputWriteRect = */ Some(IntRect(10, 10, 10, 10)),
                      /* aFuzz = */ 33);
-  };
-
-  WithFilterPipeline(decoder, test,
-                     DeinterlacingConfig<uint32_t> { /* mProgressiveDisplay = */ true },
-                     RemoveFrameRectConfig { IntRect(50, 50, 100, 100) },
-                     DownscalingConfig { IntSize(100, 100),
-                                         SurfaceFormat::B8G8R8A8 },
-                     SurfaceConfig { decoder, 0, IntSize(20, 20),
-                                     SurfaceFormat::B8G8R8A8, false });
-}
-
-TEST(ImageSurfacePipeIntegration, DeinterlaceRemoveFrameRectDownscaleWriteRows)
-{
-  RefPtr<Decoder> decoder = CreateTrivialDecoder();
-  ASSERT_TRUE(decoder != nullptr);
-
-  auto test = [](Decoder* aDecoder, SurfaceFilter* aFilter) {
-    CheckWriteRows(aDecoder, aFilter,
-                   /* aOutputRect = */ Some(IntRect(0, 0, 20, 20)),
-                   /* aInputRect = */ Some(IntRect(0, 0, 100, 100)),
-                   /* aInputWriteRect = */ Some(IntRect(50, 50, 100, 100)),
-                   /* aOutputWriteRect = */ Some(IntRect(10, 10, 10, 10)),
-                   /* aFuzz = */ 33);
   };
 
   WithFilterPipeline(decoder, test,

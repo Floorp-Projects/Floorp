@@ -43,6 +43,7 @@ void tls13_FatalError(sslSocket *ss, PRErrorCode prError,
 SECStatus tls13_SetupClientHello(sslSocket *ss);
 PRBool tls13_AllowPskCipher(const sslSocket *ss,
                             const ssl3CipherSuiteDef *cipher_def);
+PRBool tls13_PskSuiteEnabled(sslSocket *ss);
 SECStatus tls13_HandleClientHelloPart2(sslSocket *ss,
                                        const SECItem *suites,
                                        sslSessionID *sid);

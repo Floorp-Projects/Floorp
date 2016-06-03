@@ -1014,8 +1014,7 @@ KEY_MAP_WIN_CMD           (AudioVolumeDown, APPCOMMAND_VOLUME_DOWN)
 KEY_MAP_COCOA             (AudioVolumeDown, kVK_VolumeDown)
 KEY_MAP_GTK               (AudioVolumeDown, GDK_AudioLowerVolume)
 KEY_MAP_QT                (AudioVolumeDown, Qt::Key_VolumeDown)
-KEY_MAP_ANDROID_EXCEPT_B2G(AudioVolumeDown, AKEYCODE_VOLUME_DOWN)
-KEY_MAP_B2G               (VolumeDown,      AKEYCODE_VOLUME_DOWN)
+KEY_MAP_ANDROID           (AudioVolumeDown, AKEYCODE_VOLUME_DOWN)
 
 // AudioVolumeUp
 KEY_MAP_WIN               (AudioVolumeUp, VK_VOLUME_UP)
@@ -1023,8 +1022,7 @@ KEY_MAP_WIN_CMD           (AudioVolumeUp, APPCOMMAND_VOLUME_UP)
 KEY_MAP_COCOA             (AudioVolumeUp, kVK_VolumeUp)
 KEY_MAP_GTK               (AudioVolumeUp, GDK_AudioRaiseVolume)
 KEY_MAP_QT                (AudioVolumeUp, Qt::Key_VolumeUp)
-KEY_MAP_ANDROID_EXCEPT_B2G(AudioVolumeUp, AKEYCODE_VOLUME_UP)
-KEY_MAP_B2G               (VolumeUp,      AKEYCODE_VOLUME_UP)
+KEY_MAP_ANDROID           (AudioVolumeUp, AKEYCODE_VOLUME_UP)
 
 // AudioVolumeMute
 KEY_MAP_WIN               (AudioVolumeMute, VK_VOLUME_MUTE)
@@ -1032,8 +1030,7 @@ KEY_MAP_WIN_CMD           (AudioVolumeMute, APPCOMMAND_VOLUME_MUTE)
 KEY_MAP_COCOA             (AudioVolumeMute, kVK_Mute)
 KEY_MAP_GTK               (AudioVolumeMute, GDK_AudioMute)
 KEY_MAP_QT                (AudioVolumeMute, Qt::Key_VolumeMute)
-KEY_MAP_ANDROID_EXCEPT_B2G(AudioVolumeMute, AKEYCODE_VOLUME_MUTE)
-KEY_MAP_B2G               (VolumeMute,      AKEYCODE_VOLUME_MUTE)
+KEY_MAP_ANDROID           (AudioVolumeMute, AKEYCODE_VOLUME_MUTE)
 
 /******************************************************************************
  * Application Keys

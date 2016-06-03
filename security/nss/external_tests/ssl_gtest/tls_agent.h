@@ -55,7 +55,8 @@ class TlsAgent : public PollTarget {
   static const std::string kServerRsaDecrypt;
   static const std::string kServerEcdsa;
   static const std::string kServerEcdhEcdsa;
-  static const std::string kServerEcdhRsa; // not supported yet
+  // TODO: static const std::string kServerEcdhRsa;
+  static const std::string kServerDsa;
 
   TlsAgent(const std::string& name, Role role, Mode mode);
   virtual ~TlsAgent();
@@ -280,8 +281,8 @@ class TlsAgent : public PollTarget {
 
   static void HandshakeCallback(PRFileDesc *fd, void *arg) {
     TlsAgent* agent = reinterpret_cast<TlsAgent*>(arg);
-    agent->CheckPreliminaryInfo();
     agent->handshake_callback_called_ = true;
+    agent->Connected();
     if (agent->handshake_callback_) {
       agent->handshake_callback_(*agent);
     }
@@ -330,12 +331,32 @@ class TlsAgentTestBase : public ::testing::Test {
                                 role_(role),
                                 mode_(mode) {}
   ~TlsAgentTestBase() {
-    delete agent_;
     if (fd_) {
       PR_Close(fd_);
     }
   }
 
+  void SetUp();
+  void TearDown();
+
+  void MakeRecord(uint8_t type, uint16_t version,
+                  const uint8_t *buf, size_t len,
+                  DataBuffer* out, uint32_t seq_num = 0);
+  void MakeHandshakeMessage(uint8_t hs_type,
+                            const uint8_t *data,
+                            size_t hs_len,
+                            DataBuffer* out,
+                            uint32_t seq_num = 0);
+  void MakeHandshakeMessageFragment(uint8_t hs_type,
+                                    const uint8_t *data,
+                                    size_t hs_len,
+                                    DataBuffer* out,
+                                    uint32_t seq_num,
+                                    uint32_t fragment_offset,
+                                    uint32_t fragment_length);
+  void MakeTrivialHandshakeRecord(uint8_t hs_type,
+                                  size_t hs_len,
+                                  DataBuffer* out);
   static inline TlsAgent::Role ToRole(const std::string& str) {
     return str == "CLIENT" ? TlsAgent::CLIENT : TlsAgent::SERVER;
   }
@@ -357,7 +378,6 @@ class TlsAgentTestBase : public ::testing::Test {
   PRFileDesc* fd_;
   TlsAgent::Role role_;
   Mode mode_;
-  SSLKEAType kea_;
 };
 
 class TlsAgentTest :
@@ -370,6 +390,23 @@ class TlsAgentTest :
                        ToMode(std::get<1>(GetParam()))) {}
 };
 
-}  // namespace nss_test
+class TlsAgentTestClient : public TlsAgentTestBase,
+                           public ::testing::WithParamInterface<std::string> {
+ public:
+  TlsAgentTestClient() : TlsAgentTestBase(TlsAgent::CLIENT,
+                                          ToMode(GetParam())) {}
+};
+
+class TlsAgentStreamTestClient : public TlsAgentTestBase {
+ public:
+  TlsAgentStreamTestClient() : TlsAgentTestBase(TlsAgent::CLIENT, STREAM) {}
+};
+
+class TlsAgentDgramTestClient : public TlsAgentTestBase {
+ public:
+  TlsAgentDgramTestClient() : TlsAgentTestBase(TlsAgent::CLIENT, DGRAM) {}
+};
+
+} // namespace nss_test
 
 #endif

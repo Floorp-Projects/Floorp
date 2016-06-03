@@ -574,27 +574,6 @@ DumpString(const nsAString &str)
 #define JS_OPTIONS_DOT_STR "javascript.options."
 
 static const char js_options_dot_str[]   = JS_OPTIONS_DOT_STR;
-#ifdef JS_GC_ZEAL
-static const char js_zeal_option_str[]        = JS_OPTIONS_DOT_STR "gczeal";
-static const char js_zeal_frequency_str[]     = JS_OPTIONS_DOT_STR "gczeal.frequency";
-#endif
-static const char js_memlog_option_str[]      = JS_OPTIONS_DOT_STR "mem.log";
-static const char js_memnotify_option_str[]   = JS_OPTIONS_DOT_STR "mem.notify";
-
-void
-nsJSContext::JSOptionChangedCallback(const char *pref, void *data)
-{
-  sPostGCEventsToConsole = Preferences::GetBool(js_memlog_option_str);
-  sPostGCEventsToObserver = Preferences::GetBool(js_memnotify_option_str);
-
-#ifdef JS_GC_ZEAL
-  nsJSContext *context = reinterpret_cast<nsJSContext *>(data);
-  int32_t zeal = Preferences::GetInt(js_zeal_option_str, -1);
-  int32_t frequency = Preferences::GetInt(js_zeal_frequency_str, JS_DEFAULT_ZEAL_FREQ);
-  if (zeal >= 0)
-    ::JS_SetGCZeal(context->mContext, (uint8_t)zeal, frequency);
-#endif
-}
 
 nsJSContext::nsJSContext(bool aGCOnDestruction,
                          nsIScriptGlobalObject* aGlobalObject)
@@ -606,17 +585,6 @@ nsJSContext::nsJSContext(bool aGCOnDestruction,
 
   ++sContextCount;
 
-  mContext = ::JS_NewContext(sRuntime, gStackSize);
-  if (mContext) {
-    ::JS_SetContextPrivate(mContext, static_cast<nsIScriptContext *>(this));
-
-    // Make sure the new context gets the default context options
-    JS::ContextOptionsRef(mContext).setPrivateIsNSISupports(true);
-
-    // Watch for the JS boolean options
-    Preferences::RegisterCallback(JSOptionChangedCallback,
-                                  js_options_dot_str, this);
-  }
   mIsInitialized = false;
   mProcessingScriptTag = false;
   HoldJSObjects(this);
@@ -626,7 +594,7 @@ nsJSContext::~nsJSContext()
 {
   mGlobalObjectRef = nullptr;
 
-  DestroyJSContext();
+  Destroy();
 
   --sContextCount;
 
@@ -638,31 +606,13 @@ nsJSContext::~nsJSContext()
   }
 }
 
-// This function is called either by the destructor or unlink, which means that
-// it can never be called when there is an outstanding ref to the
-// nsIScriptContext on the stack. Our stack-scoped cx pushers hold such a ref,
-// so we can assume here that mContext is not on the stack (and therefore not
-// in use).
 void
-nsJSContext::DestroyJSContext()
+nsJSContext::Destroy()
 {
-  if (!mContext) {
-    return;
-  }
-
-  // Clear our entry in the JSContext, bugzilla bug 66413
-  ::JS_SetContextPrivate(mContext, nullptr);
-
-  // Unregister our "javascript.options.*" pref-changed callback.
-  Preferences::UnregisterCallback(JSOptionChangedCallback,
-                                  js_options_dot_str, this);
-
   if (mGCOnDestruction) {
     PokeGC(JS::gcreason::NSJSCONTEXT_DESTROY);
   }
 
-  JS_DestroyContextNoGC(mContext);
-  mContext = nullptr;
   DropJSObjects(this);
 }
 
@@ -674,16 +624,13 @@ NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN(nsJSContext)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsJSContext)
-  NS_ASSERTION(!tmp->mContext || !js::ContextHasOutstandingRequests(tmp->mContext),
-               "Trying to unlink a context with outstanding requests.");
   tmp->mIsInitialized = false;
   tmp->mGCOnDestruction = false;
   tmp->mWindowProxy = nullptr;
-  tmp->DestroyJSContext();
+  tmp->Destroy();
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mGlobalObjectRef)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INTERNAL(nsJSContext)
-  NS_IMPL_CYCLE_COLLECTION_DESCRIBE(nsJSContext, tmp->GetCCRefcnt())
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsJSContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mGlobalObjectRef)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE_SCRIPT_OBJECTS
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
@@ -696,21 +643,6 @@ NS_INTERFACE_MAP_END
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(nsJSContext)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(nsJSContext)
-
-nsrefcnt
-nsJSContext::GetCCRefcnt()
-{
-  nsrefcnt refcnt = mRefCnt.get();
-
-  // In the (abnormal) case of synchronous cycle-collection, the context may be
-  // actively running JS code in which case we must keep it alive by adding an
-  // extra refcount.
-  if (mContext && js::ContextHasOutstandingRequests(mContext)) {
-    refcnt++;
-  }
-
-  return refcnt;
-}
 
 #ifdef DEBUG
 bool
@@ -744,12 +676,6 @@ nsJSContext::GetGlobalObject()
   return mGlobalObjectRef;
 }
 
-JSContext*
-nsJSContext::GetNativeContext()
-{
-  return mContext;
-}
-
 nsresult
 nsJSContext::InitContext()
 {
@@ -757,11 +683,7 @@ nsJSContext::InitContext()
   // WillInitializeContext/DidInitializeContext around this call.
   NS_ENSURE_TRUE(!mIsInitialized, NS_ERROR_ALREADY_INITIALIZED);
 
-  if (!mContext)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  JSOptionChangedCallback(js_options_dot_str, this);
-
+  // XXXbz Is there still a point to this function?
   return NS_OK;
 }
 
@@ -1197,7 +1119,6 @@ static const JSFunctionSpec JProfFunctions[] = {
 nsresult
 nsJSContext::InitClasses(JS::Handle<JSObject*> aGlobalObj)
 {
-  JSOptionChangedCallback(js_options_dot_str, this);
   AutoJSAPI jsapi;
   jsapi.Init();
   JSContext* cx = jsapi.cx();
@@ -2622,6 +2543,11 @@ nsJSContext::EnsureStatics()
   Preferences::AddUintVarCache(&sCompactOnUserInactiveDelay,
                                "javascript.options.compact_on_user_inactive_delay",
                                NS_DEAULT_INACTIVE_GC_DELAY);
+
+  Preferences::AddBoolVarCache(&sPostGCEventsToConsole,
+                               JS_OPTIONS_DOT_STR "mem.log");
+  Preferences::AddBoolVarCache(&sPostGCEventsToObserver,
+                               JS_OPTIONS_DOT_STR "mem.notify");
 
   nsIObserver* observer = new nsJSEnvironmentObserver();
   obs->AddObserver(observer, "memory-pressure", false);

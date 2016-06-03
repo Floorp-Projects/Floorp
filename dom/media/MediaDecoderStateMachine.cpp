@@ -46,6 +46,7 @@
 #include "MediaDecoderReaderWrapper.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaShutdownManager.h"
+#include "MediaPrefs.h"
 #include "MediaTimer.h"
 #include "NextFrameSeekTask.h"
 #include "TimeUnits.h"
@@ -203,19 +204,17 @@ static void InitVideoQueuePrefs() {
   }
 }
 
-static bool sSuspendBackgroundVideos = true;
+// Delay, in milliseconds, that tabs needs to be in background before video
+// decoding is suspended.
+static TimeDuration sSuspendBackgroundVideoDelay;
 
 static void
 InitSuspendBackgroundPref()
 {
   MOZ_ASSERT(NS_IsMainThread(), "Must be on main thread.");
 
-  static bool sSetupPrefCache = false;
-  if (!sSetupPrefCache) {
-    sSetupPrefCache = true;
-    Preferences::AddBoolVarCache(&sSuspendBackgroundVideos,
-                                 "media.suspend-bkgnd-video.enabled", false);
-  }
+  sSuspendBackgroundVideoDelay = TimeDuration::FromMilliseconds(
+      MediaPrefs::MDSMSuspendBackgroundVideoDelay());
 }
 
 MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
@@ -256,6 +255,8 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mSentLoadedMetadataEvent(false),
   mSentFirstFrameLoadedEvent(false),
   mSentPlaybackEndedEvent(false),
+  mVideoDecodeSuspended(false),
+  mVideoDecodeSuspendTimer(mTaskQueue),
   mOutputStreamManager(new OutputStreamManager()),
   mResource(aDecoder->GetResource()),
   mAudioOffloading(false),
@@ -1226,6 +1227,10 @@ MediaDecoderStateMachine::Shutdown()
 
   DiscardSeekTaskIfExist();
 
+  // Shutdown happens will decode timer is active, we need to disconnect and
+  // dispose of the timer.
+  mVideoDecodeSuspendTimer.Reset();
+
 #ifdef MOZ_EME
   mCDMProxyPromise.DisconnectIfExists();
 #endif
@@ -1301,10 +1306,8 @@ void MediaDecoderStateMachine::PlayStateChanged()
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  // This method used to be a Play() method invoked by MediaDecoder when the
-  // play state became PLAY_STATE_PLAYING. As such, it doesn't have any work to
-  // do for other state changes. That could change.
   if (mPlayState != MediaDecoder::PLAY_STATE_PLAYING) {
+    mVideoDecodeSuspendTimer.Reset();
     return;
   }
 
@@ -1343,10 +1346,11 @@ void MediaDecoderStateMachine::PlayStateChanged()
 void MediaDecoderStateMachine::VisibilityChanged()
 {
   MOZ_ASSERT(OnTaskQueue());
-  DECODER_LOG("VisibilityChanged: is visible = %d", mIsVisible.Ref());
+  DECODER_LOG("VisibilityChanged: is visible = %d, video decode suspended = %d",
+              mIsVisible.Ref(), mVideoDecodeSuspended);
 
   // Not suspending background videos so there's nothing to do.
-  if (!sSuspendBackgroundVideos) {
+  if (!MediaPrefs::MDSMSuspendBackgroundVideoEnabled()) {
     return;
   }
 
@@ -1354,20 +1358,39 @@ void MediaDecoderStateMachine::VisibilityChanged()
     return;
   }
 
-  // If not transitioning to visible and not playing then there's
-  // nothing to do.
-  if (!mIsVisible || mPlayState != MediaDecoder::PLAY_STATE_PLAYING) {
+  // If not playing then there's nothing to do.
+  if (mPlayState != MediaDecoder::PLAY_STATE_PLAYING) {
     return;
   }
 
-  // If an existing seek is in flight don't bother creating a new one to catch
-  // up.
-  if (mSeekTask || mQueuedSeek.Exists()) {
+  // Start timer to trigger suspended decoding state when going invisible.
+  if (!mIsVisible) {
+    TimeStamp target = TimeStamp::Now() + sSuspendBackgroundVideoDelay;
+
+    RefPtr<MediaDecoderStateMachine> self = this;
+    mVideoDecodeSuspendTimer.Ensure(target,
+                                    [=]() { self->OnSuspendTimerResolved(); },
+                                    [=]() { self->OnSuspendTimerRejected(); });
     return;
   }
 
-  // Start video-only seek to the current time...
-  InitiateVideoDecodeRecoverySeek();
+  // Resuming from suspended decoding
+
+  // If suspend timer exists, destroy it.
+  mVideoDecodeSuspendTimer.Reset();
+
+  if (mVideoDecodeSuspended) {
+    mVideoDecodeSuspended = false;
+
+    // If an existing seek is in flight don't bother creating a new
+    // one to catch up.
+    if (mSeekTask || mQueuedSeek.Exists()) {
+      return;
+    }
+
+    // Start video-only seek to the current time...
+    InitiateVideoDecodeRecoverySeek();
+  }
 }
 
 // InitiateVideoDecodeRecoverySeek is responsible for setting up a video-only
@@ -2605,7 +2628,7 @@ bool MediaDecoderStateMachine::IsStateMachineScheduled() const
 bool MediaDecoderStateMachine::IsVideoDecodeSuspended() const
 {
   MOZ_ASSERT(OnTaskQueue());
-  return sSuspendBackgroundVideos && !mIsVisible;
+  return MediaPrefs::MDSMSuspendBackgroundVideoEnabled() && mVideoDecodeSuspended;
 }
 
 void
@@ -2889,6 +2912,23 @@ MediaDecoderStateMachine::VideoRequestStatus() const
     return "waiting";
   }
   return "idle";
+}
+
+void
+MediaDecoderStateMachine::OnSuspendTimerResolved()
+{
+  DECODER_LOG("OnSuspendTimerResolved");
+  mVideoDecodeSuspendTimer.CompleteRequest();
+  mVideoDecodeSuspended = true;
+}
+
+void
+MediaDecoderStateMachine::OnSuspendTimerRejected()
+{
+  DECODER_LOG("OnSuspendTimerRejected");
+  MOZ_ASSERT(OnTaskQueue());
+  MOZ_ASSERT(!mVideoDecodeSuspended);
+  mVideoDecodeSuspendTimer.CompleteRequest();
 }
 
 } // namespace mozilla

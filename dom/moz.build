@@ -60,6 +60,7 @@ DIRS += [
     'fetch',
     'filehandle',
     'filesystem',
+    'flyweb',
     'fmradio',
     'geolocation',
     'html',

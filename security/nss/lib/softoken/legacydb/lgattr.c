@@ -136,7 +136,9 @@ lg_CopyAttribute(CK_ATTRIBUTE *attr, CK_ATTRIBUTE_TYPE type,
 	attr->ulValueLen = (CK_ULONG) -1;
 	return CKR_BUFFER_TOO_SMALL;
     }
-    PORT_Memcpy(attr->pValue,value,len);
+    if (value != NULL) {
+	PORT_Memcpy(attr->pValue,value,len);
+    }
     attr->ulValueLen = len;
     return CKR_OK;
 }

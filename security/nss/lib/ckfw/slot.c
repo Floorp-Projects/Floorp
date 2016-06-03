@@ -23,14 +23,15 @@
  *  NSSCKFWSlot_GetMDSlot
  *  NSSCKFWSlot_GetFWInstance
  *  NSSCKFWSlot_GetMDInstance
+ *  NSSCKFWSlot_GetSlotID
  *
  *  -- implement public accessors --
  *  nssCKFWSlot_GetMDSlot
  *  nssCKFWSlot_GetFWInstance
  *  nssCKFWSlot_GetMDInstance
+ *  nssCKFWSlot_GetSlotID
  *
  *  -- private accessors --
- *  nssCKFWSlot_GetSlotID
  *  nssCKFWSlot_ClearToken
  *
  *  -- module fronts --
@@ -678,4 +679,16 @@ NSSCKFWSlot_GetMDInstance(
 #endif /* DEBUG */
 
     return nssCKFWSlot_GetMDInstance(fwSlot);
+}
+
+/*
+ * NSSCKFWSlot_GetSlotID
+ *
+ */
+
+NSS_IMPLEMENT CK_SLOT_ID
+NSSCKFWSlot_GetSlotID(
+    NSSCKFWSlot *fwSlot)
+{
+    return nssCKFWSlot_GetSlotID(fwSlot);
 }
