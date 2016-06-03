@@ -297,10 +297,11 @@ SpdyStream31::ParseHttpRequestHeaders(const char *buf,
   nsAutoCString hostHeader;
   nsAutoCString hashkey;
   mTransaction->RequestHead()->GetHeader(nsHttp::Host, hostHeader);
-
+  nsAutoCString requestURI;
+  mTransaction->RequestHead()->RequestURI(requestURI);
   CreatePushHashKey(nsDependentCString(mTransaction->RequestHead()->IsHTTPS() ? "https" : "http"),
                     hostHeader, mSession->Serial(),
-                    mTransaction->RequestHead()->RequestURI(),
+                    requestURI,
                     mOrigin, hashkey);
 
   // check the push cache for GET
@@ -419,7 +420,7 @@ SpdyStream31::GenerateSynFrame()
   // even though we are parsing the actual text stream because
   // it is legit to append headers.
   nsClassHashtable<nsCStringHashKey, nsCString>
-    hdrHash(mTransaction->RequestHead()->Headers().Count());
+    hdrHash(mTransaction->RequestHead()->HeaderCount());
 
   const char *beginBuffer = mFlatHttpRequestHeaders.BeginReading();
 
@@ -483,8 +484,9 @@ SpdyStream31::GenerateSynFrame()
   // contain auth. The http transaction already logs the sanitized request
   // headers at this same level so it is not necessary to do so here.
 
-  const char *methodHeader = mTransaction->RequestHead()->Method().get();
-  LOG3(("Stream method %p 0x%X %s\n", this, mStreamID, methodHeader));
+  nsAutoCString method;
+  mTransaction->RequestHead()->Method(method);
+  LOG3(("Stream method %p 0x%X %s\n", this, mStreamID, method.get()));
 
   // The header block length
   uint16_t count = hdrHash.Count() + 4; /* :method, :path, :version, :host */
@@ -498,11 +500,13 @@ SpdyStream31::GenerateSynFrame()
   // :method, :path, :version comprise a HTTP/1 request line, so send those first
   // to make life easy for any gateways
   CompressToFrame(NS_LITERAL_CSTRING(":method"));
-  CompressToFrame(methodHeader, strlen(methodHeader));
+  CompressToFrame(method);
 
   CompressToFrame(NS_LITERAL_CSTRING(":path"));
   if (!mTransaction->RequestHead()->IsConnect()) {
-    CompressToFrame(mTransaction->RequestHead()->Path());
+    nsAutoCString path;
+    mTransaction->RequestHead()->Path(path);
+    CompressToFrame(path);
   } else {
     MOZ_ASSERT(mTransaction->QuerySpdyConnectTransaction());
     mIsTunnel = true;
@@ -571,11 +575,12 @@ SpdyStream31::GenerateSynFrame()
 
   Telemetry::Accumulate(Telemetry::SPDY_SYN_SIZE, mTxInlineFrameUsed - 18);
 
+  nsAutoCString requestURI;
+  mTransaction->RequestHead()->RequestURI(requestURI);
   // The size of the input headers is approximate
   uint32_t ratio =
     (mTxInlineFrameUsed - 18) * 100 /
-    (11 + mTransaction->RequestHead()->RequestURI().Length() +
-     mFlatHttpRequestHeaders.Length());
+    (11 + requestURI.Length() + mFlatHttpRequestHeaders.Length());
 
   Telemetry::Accumulate(Telemetry::SPDY_SYN_RATIO, ratio);
   return NS_OK;
