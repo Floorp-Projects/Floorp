@@ -211,6 +211,8 @@ appUpdater.prototype =
       return;
     }
 
+    gAppUpdater.selectPanel("restarting");
+
     // Notify all windows that an application quit has been requested.
     let cancelQuit = Components.classes["@mozilla.org/supports-PRBool;1"].
                      createInstance(Components.interfaces.nsISupportsPRBool);
@@ -218,6 +220,7 @@ appUpdater.prototype =
 
     // Something aborted the quit process.
     if (cancelQuit.data) {
+      gAppUpdater.selectPanel("apply");
       return;
     }
 
