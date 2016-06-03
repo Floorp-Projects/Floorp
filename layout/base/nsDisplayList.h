@@ -3140,6 +3140,7 @@ public:
   // displayport.
   void AddInactiveScrollPort(const nsRect& aRect);
 
+  bool IsEmpty() const;
   const nsRegion& HitRegion() { return mHitRegion; }
   const nsRegion& MaybeHitRegion() { return mMaybeHitRegion; }
   const nsRegion& DispatchToContentHitRegion() { return mDispatchToContentHitRegion; }

@@ -2336,15 +2336,25 @@ nsIFrame::BuildDisplayListForStackingContext(nsDisplayListBuilder* aBuilder,
       aBuilder->MarkPreserve3DFramesForDisplayList(this);
     }
 
+    nsDisplayLayerEventRegions* eventRegions = nullptr;
     if (aBuilder->IsBuildingLayerEventRegions()) {
-      nsDisplayLayerEventRegions* eventRegions =
-        new (aBuilder) nsDisplayLayerEventRegions(aBuilder, this);
+      eventRegions = new (aBuilder) nsDisplayLayerEventRegions(aBuilder, this);
       eventRegions->AddFrame(aBuilder, this);
       aBuilder->SetLayerEventRegions(eventRegions);
-      set.BorderBackground()->AppendNewToTop(eventRegions);
     }
     aBuilder->AdjustWindowDraggingRegion(this);
     BuildDisplayList(aBuilder, dirtyRect, set);
+    if (eventRegions) {
+      // If the event regions item ended up empty, throw it away rather than
+      // adding it to the display list.
+      if (!eventRegions->IsEmpty()) {
+        set.BorderBackground()->AppendToBottom(eventRegions);
+      } else {
+        aBuilder->SetLayerEventRegions(nullptr);
+        eventRegions->~nsDisplayLayerEventRegions();
+        eventRegions = nullptr;
+      }
+    }
   }
 
   if (aBuilder->IsBackgroundOnly()) {
