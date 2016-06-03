@@ -77,6 +77,11 @@ public:
     mDevice = aDevice;
   }
 
+  void SetBuilder(nsIPresentationSessionTransportBuilder* aBuilder)
+  {
+    mBuilder = aBuilder;
+  }
+
   already_AddRefed<nsIPresentationDevice> GetDevice() const
   {
     nsCOMPtr<nsIPresentationDevice> device = mDevice;
@@ -114,7 +119,10 @@ protected:
 
   nsresult ReplySuccess();
 
-  virtual bool IsSessionReady() = 0;
+  bool IsSessionReady()
+  {
+    return mIsResponderReady && mIsTransportReady;
+  }
 
   virtual nsresult UntrackFromService();
 
@@ -186,18 +194,6 @@ private:
   nsresult OnGetAddress(const nsACString& aAddress);
 
   nsCOMPtr<nsIServerSocket> mServerSocket;
-
-protected:
-  bool IsSessionReady() override
-  {
-    if (mTransportType == nsIPresentationChannelDescription::TYPE_TCP) {
-      return mIsResponderReady && mIsTransportReady;
-    } else if (mTransportType == nsIPresentationChannelDescription::TYPE_DATACHANNEL) {
-      // Established RTCDataChannel implies responder is ready.
-      return mIsTransportReady;
-    }
-    return false;
-  }
 };
 
 // Session info with presenting browsing context (receiver side) behaviors.
@@ -251,20 +247,19 @@ private:
 
   nsresult UntrackFromService() override;
 
+  NS_IMETHODIMP
+  FlushPendingEvents(nsIPresentationDataChannelSessionTransportBuilder* builder);
+
+  bool mHasFlushPendingEvents = false;
   RefPtr<PresentationResponderLoadingCallback> mLoadingCallback;
   nsCOMPtr<nsITimer> mTimer;
   nsCOMPtr<nsIPresentationChannelDescription> mRequesterDescription;
+  nsTArray<nsString> mPendingCandidates;
   RefPtr<Promise> mPromise;
 
   // The content parent communicating with the content process which the OOP
   // receiver page belongs to.
   nsCOMPtr<nsIContentParent> mContentParent;
-
-protected:
-  bool IsSessionReady() override
-  {
-    return mIsResponderReady && mIsTransportReady;
-  }
 };
 
 } // namespace dom
