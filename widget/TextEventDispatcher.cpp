@@ -648,7 +648,7 @@ TextEventDispatcher::PendingComposition::SetCaret(uint32_t aOffset,
 {
   mCaret.mStartOffset = aOffset;
   mCaret.mEndOffset = mCaret.mStartOffset + aLength;
-  mCaret.mRangeType = TextRangeType::NS_TEXTRANGE_CARETPOSITION;
+  mCaret.mRangeType = TextRangeType::eCaret;
   return NS_OK;
 }
 
@@ -699,7 +699,7 @@ TextEventDispatcher::PendingComposition::Set(const nsAString& aString,
                               NS_LITERAL_STRING("\n"));
       range.mEndOffset = range.mStartOffset + clause.Length();
     }
-    if (range.mRangeType == TextRangeType::NS_TEXTRANGE_CARETPOSITION) {
+    if (range.mRangeType == TextRangeType::eCaret) {
       mCaret = range;
     } else {
       EnsureClauseArray();
@@ -729,7 +729,7 @@ TextEventDispatcher::PendingComposition::Flush(
     Clear();
     return NS_ERROR_ILLEGAL_VALUE;
   }
-  if (mCaret.mRangeType == TextRangeType::NS_TEXTRANGE_CARETPOSITION) {
+  if (mCaret.mRangeType == TextRangeType::eCaret) {
     if (mCaret.mEndOffset > mString.Length()) {
       NS_WARNING("Caret position is out of the composition string");
       Clear();

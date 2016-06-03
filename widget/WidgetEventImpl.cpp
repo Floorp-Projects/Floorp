@@ -62,7 +62,7 @@ IsValidRawTextRangeValue(RawTextRangeType aRawTextRangeType)
 {
   switch (static_cast<TextRangeType>(aRawTextRangeType)) {
     case TextRangeType::eUninitialized:
-    case TextRangeType::NS_TEXTRANGE_CARETPOSITION:
+    case TextRangeType::eCaret:
     case TextRangeType::NS_TEXTRANGE_RAWINPUT:
     case TextRangeType::NS_TEXTRANGE_SELECTEDRAWTEXT:
     case TextRangeType::NS_TEXTRANGE_CONVERTEDTEXT:
@@ -92,8 +92,8 @@ ToChar(TextRangeType aTextRangeType)
   switch (aTextRangeType) {
     case TextRangeType::eUninitialized:
       return "TextRangeType::eUninitialized";
-    case TextRangeType::NS_TEXTRANGE_CARETPOSITION:
-      return "NS_TEXTRANGE_CARETPOSITION";
+    case TextRangeType::eCaret:
+      return "TextRangeType::eCaret";
     case TextRangeType::NS_TEXTRANGE_RAWINPUT:
       return "NS_TEXTRANGE_RAWINPUT";
     case TextRangeType::NS_TEXTRANGE_SELECTEDRAWTEXT:
