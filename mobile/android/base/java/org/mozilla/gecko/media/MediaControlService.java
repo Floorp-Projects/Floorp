@@ -1,27 +1,33 @@
 package org.mozilla.gecko.media;
 
-import org.mozilla.gecko.BrowserApp;
-import org.mozilla.gecko.EventDispatcher;
-import org.mozilla.gecko.GeckoAppShell;
-import org.mozilla.gecko.GeckoEvent;
-import org.mozilla.gecko.PrefsHelper;
-
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
-import android.content.Context;
 import android.content.Intent;
-import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Paint;
+import android.graphics.Rect;
 import android.media.session.MediaController;
 import android.media.session.MediaSession;
-import android.media.session.MediaSessionManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.support.v4.app.NotificationManagerCompat;
 import android.util.Log;
 
-public class MediaControlService extends Service {
+import org.mozilla.gecko.BrowserApp;
+import org.mozilla.gecko.GeckoAppShell;
+import org.mozilla.gecko.PrefsHelper;
+import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
+import org.mozilla.gecko.util.ThreadUtils;
+
+import java.lang.ref.WeakReference;
+
+public class MediaControlService extends Service implements Tabs.OnTabsChangedListener {
     private static final String LOGTAG = "MediaControlService";
 
     public static final String ACTION_START          = "action_start";
@@ -44,16 +50,28 @@ public class MediaControlService extends Service {
     private boolean mIsInitMediaSession = false;
     private boolean mIsMediaControlPrefOn = true;
 
+    private static WeakReference<Tab> mTabReference = null;
+
+    private int coverSize;
+
     @Override
     public void onCreate() {
+        mTabReference = new WeakReference<>(null);
+
         getGeckoPreference();
         initMediaSession();
+
+        coverSize = (int) getResources().getDimension(R.dimen.notification_media_cover);
+
+        Tabs.registerOnTabsChangedListener(this);
     }
 
     @Override
     public void onDestroy() {
         notifyControlInterfaceChanged(ACTION_REMOVE_CONTROL);
         PrefsHelper.removeObserver(mPrefsObserver);
+
+        Tabs.unregisterOnTabsChangedListener(this);
     }
 
     @Override
@@ -76,6 +94,22 @@ public class MediaControlService extends Service {
     @Override
     public void onTaskRemoved(Intent rootIntent) {
         stopSelf();
+    }
+
+    @Override
+    public void onTabChanged(Tab tab, Tabs.TabEvents msg, String data) {
+        if (!mIsInitMediaSession) {
+            return;
+        }
+
+        if (tab == mTabReference.get()) {
+            return;
+        }
+
+        if (msg == Tabs.TabEvents.AUDIO_PLAYING_CHANGE && tab.isAudioPlaying()) {
+            mTabReference = new WeakReference<Tab>(tab);
+            notifyControlInterfaceChanged(ACTION_PAUSE);
+        }
     }
 
     private boolean isAndroidVersionLollopopOrHigher() {
@@ -201,13 +235,11 @@ public class MediaControlService extends Service {
                 action.equals(ACTION_REMOVE_CONTROL));
     }
 
-    private void notifyControlInterfaceChanged(String action) {
+    private void notifyControlInterfaceChanged(final String action) {
         Log.d(LOGTAG, "notifyControlInterfaceChanged, action = " + action);
-        NotificationManager notificationManager = (NotificationManager)
-            getSystemService(Context.NOTIFICATION_SERVICE);
 
         if (isNeedToRemoveControlInterface(action)) {
-            notificationManager.cancel(MEDIA_CONTROL_ID);
+            NotificationManagerCompat.from(this).cancel(MEDIA_CONTROL_ID);
             return;
         }
 
@@ -215,69 +247,100 @@ public class MediaControlService extends Service {
             return;
         }
 
-        notificationManager.notify(MEDIA_CONTROL_ID, getNotification(action));
+        final Tab tab = mTabReference.get();
+
+        if (tab == null) {
+            return;
+        }
+
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                updateNotification(tab, action);
+            }
+        });
     }
 
-    private Notification getNotification(String action) {
-        // TODO : use website name, content and favicon in bug1264901.
-        return new Notification.Builder(this)
-            .setSmallIcon(android.R.drawable.ic_media_play)
-            .setContentTitle("Media Title")
-            .setContentText("Media Artist")
-            .setDeleteIntent(getDeletePendingIntent())
-            .setContentIntent(getClickPendingIntent())
-            .setStyle(getMediaStyle())
-            .addAction(getAction(action))
+    private void updateNotification(Tab tab, String action) {
+        ThreadUtils.assertNotOnUiThread();
+
+        final Notification.MediaStyle style = new Notification.MediaStyle();
+        style.setShowActionsInCompactView(0);
+
+        final Notification notification = new Notification.Builder(this)
+            .setSmallIcon(R.drawable.flat_icon)
+            .setLargeIcon(generateCoverArt(tab))
+            .setContentTitle(tab.getTitle())
+            .setContentText(tab.getURL())
+            .setContentIntent(createContentIntent())
+            .setDeleteIntent(createDeleteIntent())
+            .setStyle(style)
+            .addAction(createNotificationAction(action))
             .setOngoing(action.equals(ACTION_PAUSE))
+            .setShowWhen(false)
+            .setWhen(0)
             .build();
+
+        NotificationManagerCompat.from(this)
+                .notify(MEDIA_CONTROL_ID, notification);
     }
 
-    private Notification.Action getAction(String action) {
-        int icon = getActionIcon(action);
-        String title = getActionTitle(action);
+    private Notification.Action createNotificationAction(String action) {
+        boolean isPlayAction = action.equals(ACTION_PLAY);
 
-        Intent intent = new Intent(getApplicationContext(), MediaControlService.class);
+        int icon = isPlayAction ? R.drawable.ic_media_play : R.drawable.ic_media_pause;
+        String title = getString(isPlayAction ? R.string.media_pause : R.string.media_pause);
+
+        final Intent intent = new Intent(getApplicationContext(), MediaControlService.class);
         intent.setAction(action);
-        PendingIntent pendingIntent = PendingIntent.getService(getApplicationContext(), 1, intent, 0);
+        final PendingIntent pendingIntent = PendingIntent.getService(getApplicationContext(), 1, intent, 0);
+
+        //noinspection deprecation - The new constructor is only for API > 23
         return new Notification.Action.Builder(icon, title, pendingIntent).build();
     }
 
-    private int getActionIcon(String action) {
-        switch (action) {
-            case ACTION_PLAY :
-                return android.R.drawable.ic_media_play;
-            case ACTION_PAUSE :
-                return android.R.drawable.ic_media_pause;
-            default:
-                return 0;
-        }
-    }
-
-    private String getActionTitle(String action) {
-        switch (action) {
-            case ACTION_PLAY :
-                return "Play";
-            case ACTION_PAUSE :
-                return "Pause";
-            default:
-                return null;
-        }
-    }
-
-    private PendingIntent getDeletePendingIntent() {
-        Intent intent = new Intent(getApplicationContext(), MediaControlService.class);
-        intent.setAction(ACTION_REMOVE_CONTROL);
-        return PendingIntent.getService(getApplicationContext(), 1, intent, 0);
-    }
-
-    private PendingIntent getClickPendingIntent() {
+    private PendingIntent createContentIntent() {
         Intent intent = new Intent(getApplicationContext(), BrowserApp.class);
         return PendingIntent.getActivity(getApplicationContext(), 0, intent, 0);
     }
 
-    private Notification.MediaStyle getMediaStyle() {
-        Notification.MediaStyle style = new Notification.MediaStyle();
-        style.setShowActionsInCompactView(0);
-        return style;
+    private PendingIntent createDeleteIntent() {
+        Intent intent = new Intent(getApplicationContext(), MediaControlService.class);
+        intent.setAction(ACTION_REMOVE_CONTROL);
+        return  PendingIntent.getService(getApplicationContext(), 1, intent, 0);
+    }
+
+    private Bitmap generateCoverArt(Tab tab) {
+        final Bitmap favicon = tab.getFavicon();
+
+        // If we do not have a favicon or if it's smaller than 72 pixels then just use the default icon.
+        if (favicon == null || favicon.getWidth() < 72 || favicon.getHeight() < 72) {
+            // Use the launcher icon as fallback
+            return BitmapFactory.decodeResource(getResources(), R.drawable.notification_media);
+        }
+
+        // Favicon should at least have half of the size of the cover
+        int width = Math.max(favicon.getWidth(), coverSize / 2);
+        int height = Math.max(favicon.getHeight(), coverSize / 2);
+
+        final Bitmap coverArt = Bitmap.createBitmap(coverSize, coverSize, Bitmap.Config.ARGB_8888);
+        final Canvas canvas = new Canvas(coverArt);
+        canvas.drawColor(0xFF777777);
+
+        int left = Math.max(0, (coverArt.getWidth() / 2) - (width / 2));
+        int right = Math.min(coverSize, left + width);
+        int top = Math.max(0, (coverArt.getHeight() / 2) - (height / 2));
+        int bottom = Math.min(coverSize, top + height);
+
+        final Paint paint = new Paint();
+        paint.setAntiAlias(true);
+
+        canvas.drawBitmap(favicon,
+                new Rect(0, 0, favicon.getWidth(), favicon.getHeight()),
+                new Rect(left, top, right, bottom),
+                paint);
+
+        return coverArt;
+
     }
 }
