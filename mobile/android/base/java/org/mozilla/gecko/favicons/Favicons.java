@@ -17,6 +17,7 @@ import org.mozilla.gecko.db.URLMetadataTable;
 import org.mozilla.gecko.favicons.cache.FaviconCache;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.gecko.util.NonEvictingLruCache;
+import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.ContentResolver;
@@ -629,13 +630,15 @@ public class Favicons {
 
         final BrowserDB db = GeckoProfile.get(context).getDB();
 
+        final String metadataQueryURL = StringUtils.stripRef(url);
+
         final ContentResolver cr = context.getContentResolver();
         final Map<String, Map<String, Object>> metadata = db.getURLMetadata().getForURLs(cr,
-                Collections.singletonList(url),
+                Collections.singletonList(metadataQueryURL),
                 Collections.singletonList(URLMetadataTable.TOUCH_ICON_COLUMN)
         );
 
-        final Map<String, Object> row = metadata.get(url);
+        final Map<String, Object> row = metadata.get(metadataQueryURL);
 
         String touchIconURL = null;
 
