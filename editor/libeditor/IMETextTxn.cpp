@@ -142,7 +142,7 @@ ToSelectionType(TextRangeType aTextRangeType)
       return nsISelectionController::SELECTION_IME_RAWINPUT;
     case TextRangeType::eSelectedRawClause:
       return nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT;
-    case TextRangeType::NS_TEXTRANGE_CONVERTEDTEXT:
+    case TextRangeType::eConvertedClause:
       return nsISelectionController::SELECTION_IME_CONVERTEDTEXT;
     case TextRangeType::NS_TEXTRANGE_SELECTEDCONVERTEDTEXT:
       return nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT;

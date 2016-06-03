@@ -1826,7 +1826,7 @@ IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
      *   1: If attrUnderline and attrForground are specified, we assumed the
      *      clause is NS_TEXTRANGE_SELECTEDCONVERTEDTEXT.
      *   2: If only attrUnderline is specified, we assumed the clause is
-     *      NS_TEXTRANGE_CONVERTEDTEXT.
+     *      TextRangeType::eConvertedClause.
      *   3: If only attrForground is specified, we assumed the clause is
      *      TextRangeType::eSelectedRawClause.
      *   4: If neither attrUnderline nor attrForeground is specified, we assumed
@@ -1864,7 +1864,7 @@ IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
     // Otherwise, we should assume that the clause is converted but not
     // selected.
     else {
-        aTextRange.mRangeType = TextRangeType::NS_TEXTRANGE_CONVERTEDTEXT;
+        aTextRange.mRangeType = TextRangeType::eConvertedClause;
     }
 
     MOZ_LOG(gGtkIMLog, LogLevel::Debug,

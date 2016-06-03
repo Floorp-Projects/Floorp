@@ -626,7 +626,7 @@ TextEventDispatcher::PendingComposition::AppendClause(
   switch (aTextRangeType) {
     case TextRangeType::eRawClause:
     case TextRangeType::eSelectedRawClause:
-    case TextRangeType::NS_TEXTRANGE_CONVERTEDTEXT:
+    case TextRangeType::eConvertedClause:
     case TextRangeType::NS_TEXTRANGE_SELECTEDCONVERTEDTEXT: {
       EnsureClauseArray();
       TextRange textRange;

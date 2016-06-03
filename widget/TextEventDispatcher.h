@@ -154,7 +154,7 @@ public:
    * @param aLength         Length of the clause.
    * @param aTextRangeType  One of TextRangeType::eRawClause,
    *                        TextRangeType::eSelectedRawClause,
-   *                        NS_TEXTRANGE_CONVERTEDTEXT or
+   *                        TextRangeType::eConvertedClause or
    *                        NS_TEXTRANGE_SELECTEDCONVERTEDTEXT.
    */
   nsresult AppendClauseToPendingComposition(uint32_t aLength,
