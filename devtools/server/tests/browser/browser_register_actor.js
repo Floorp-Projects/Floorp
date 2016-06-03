@@ -2,7 +2,7 @@ var gClient;
 
 function test() {
   waitForExplicitFinish();
-  var {ActorRegistryFront} = require("devtools/server/actors/actor-registry");
+  var {ActorRegistryFront} = require("devtools/shared/fronts/actor-registry");
   var actorURL = "chrome://mochitests/content/chrome/devtools/server/tests/mochitest/hello-actor.js";
 
   if (!DebuggerServer.initialized) {
