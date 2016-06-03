@@ -7,6 +7,7 @@
 "use strict";
 
 const { Cc, Ci } = require("chrome");
+const Services = require("Services");
 const { BreakpointActor, setBreakpointAtEntryPoints } = require("devtools/server/actors/breakpoint");
 const { OriginalLocation, GeneratedLocation } = require("devtools/server/actors/common");
 const { createValueGrip } = require("devtools/server/actors/object");
