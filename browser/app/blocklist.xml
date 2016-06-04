@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1464091834000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1464967719000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -364,6 +364,15 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i1227" id="{A34CAF42-A3E3-11E5-945F-18C31D5D46B0}">
+                        <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+                  <pref>security.csp.enable</pref>
+                  <pref>security.fileuri.strict_origin_policy</pref>
+                  <pref>security.mixed_content.block_active_content</pref>
+              </prefs>
+    </emItem>
       <emItem  blockID="i1129" id="youtubeunblocker__web@unblocker.yt">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
@@ -481,6 +490,12 @@
     </emItem>
       <emItem  blockID="i748" id="{32da2f20-827d-40aa-a3b4-2fc4a294352e}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i1229" id="/^.*@unblocker\.yt$/">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -978,7 +993,9 @@
               </prefs>
     </emItem>
       <emItem  blockID="i1222" id="tmbepff@trendmicro.com">
-                        <versionRange  minVersion="0" maxVersion="9.2.0.1024" severity="1">
+                        <versionRange  minVersion="0" maxVersion="9.1.0.1035" severity="1">
+                    </versionRange>
+                                <versionRange  minVersion="9.2" maxVersion="9.2.0.1023" severity="1">
                     </versionRange>
                     <prefs>
               </prefs>
@@ -1648,6 +1665,12 @@
               </prefs>
     </emItem>
       <emItem  blockID="i1012" id="wxtui502n2xce9j@no14">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i1228" id="unblocker30__web@unblocker.yt">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
                     <prefs>
@@ -3477,6 +3500,18 @@
       <pluginItem  blockID="p1151">
                   <match name="filename" exp="npqtplugin\.dll" />                      <versionRange  minVersion="0" maxVersion="*" severity="0" vulnerabilitystatus="2"></versionRange>
                             <infoURL>https://support.apple.com/en-us/HT205771</infoURL>
+          </pluginItem>
+      <pluginItem  os="Linux" blockID="p1224">
+                  <match name="filename" exp="libflashplayer\.so" />                      <versionRange  minVersion="11.2.202.577" maxVersion="11.2.202.616" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1225">
+                  <match name="filename" exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" />                      <versionRange  minVersion="18.0.0.333" maxVersion="18.0.0.343" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
+          </pluginItem>
+      <pluginItem  blockID="p1226">
+                  <match name="filename" exp="(NPSWF32.*\.dll)|(NPSWF64.*\.dll)|(Flash\ Player\.plugin)" />                      <versionRange  minVersion="21.0.0.197" maxVersion="21.0.0.226" severity="0" vulnerabilitystatus="1"></versionRange>
+                            <infoURL>https://get.adobe.com/flashplayer/</infoURL>
           </pluginItem>
     </pluginItems>
 
