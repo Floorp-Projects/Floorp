@@ -754,7 +754,7 @@ protected:
   virtual void ThemeChanged() override { mPresContext->ThemeChanged(); }
   virtual void BackingScaleFactorChanged() override { mPresContext->UIResolutionChanged(); }
 #ifdef ANDROID
-  virtual nsIDocument* GetTouchEventTargetDocument();
+  virtual nsIDocument* GetTouchEventTargetDocument() override;
 #endif
 
   virtual void PausePainting() override;

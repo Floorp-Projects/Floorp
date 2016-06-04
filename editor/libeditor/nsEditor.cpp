@@ -2422,7 +2422,7 @@ nsEditor::InsertTextIntoTextNodeImpl(const nsAString& aStringToInsert,
     for (uint32_t i = 0; i < (ranges ? ranges->Length() : 0); ++i) {
       const TextRange& textRange = ranges->ElementAt(i);
       if (!textRange.Length() ||
-          textRange.mRangeType != NS_TEXTRANGE_RAWINPUT) {
+          textRange.mRangeType != TextRangeType::eRawClause) {
         continue;
       }
       if (!mPhonetic) {

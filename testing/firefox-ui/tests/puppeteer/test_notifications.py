@@ -8,6 +8,7 @@ from marionette_driver.errors import TimeoutException
 from firefox_ui_harness.testcases import FirefoxTestCase
 from firefox_puppeteer.ui.browser.notifications import (
     AddOnInstallFailedNotification,
+    AddOnInstallConfirmationNotification
 )
 
 
@@ -33,7 +34,7 @@ class TestNotifications(FirefoxTestCase):
     def test_open_close_notification(self):
         """Trigger and dismiss a notification"""
         self.assertIsNone(self.browser.notification)
-        self.trigger_addon_notification('restartless_addon_unsigned.xpi')
+        self.trigger_addon_notification('restartless_addon_signed.xpi')
         self.browser.notification.close()
         self.assertIsNone(self.browser.notification)
 
@@ -52,7 +53,7 @@ class TestNotifications(FirefoxTestCase):
     def test_wait_for_no_notification_timeout(self):
         """Wait for no notification when one is shown"""
         message = 'Unexpected notification shown'
-        self.trigger_addon_notification('restartless_addon_unsigned.xpi')
+        self.trigger_addon_notification('restartless_addon_signed.xpi')
         with self.assertRaisesRegexp(TimeoutException, message):
             self.browser.wait_for_notification(None)
 
@@ -61,20 +62,18 @@ class TestNotifications(FirefoxTestCase):
         self.trigger_addon_notification('restartless_addon_signed.xpi')
         self.assertIn(self.browser.notification.origin, self.marionette.baseurl)
         self.assertIsNotNone(self.browser.notification.label)
-        self.browser.notification.close()
 
     def test_addon_install_failed_notification(self):
         """Trigger add-on blocked notification using an unsigned add-on"""
         # Ensure that installing unsigned extensions will fail
         self.prefs.set_pref('xpinstall.signatures.required', True)
 
-        self.trigger_addon_notification('restartless_addon_unsigned.xpi')
-        self.assertIsInstance(self.browser.notification,
-                              AddOnInstallFailedNotification)
-        self.browser.notification.close()
+        self.trigger_addon_notification(
+            'restartless_addon_unsigned.xpi',
+            notification=AddOnInstallFailedNotification)
 
-    def trigger_addon_notification(self, addon):
+    def trigger_addon_notification(self, addon, notification=AddOnInstallConfirmationNotification):
         with self.marionette.using_context('content'):
             self.marionette.navigate(self.addons_url)
             self.marionette.find_element(By.LINK_TEXT, addon).click()
-        self.browser.wait_for_notification()
+        self.browser.wait_for_notification(notification)

@@ -15,7 +15,6 @@
 #include "nsHashKeys.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
-#include "nsWrapperCache.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsPIDOMWindow.h"
 
@@ -33,7 +32,6 @@ class ConsoleProfileRunnable;
 struct ConsoleStackEntry;
 
 class Console final : public nsIObserver
-                    , public nsWrapperCache
                     , public nsSupportsWeakReference
 {
 public:
@@ -50,74 +48,72 @@ public:
     return mWindow;
   }
 
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+  static void
+  Log(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
-  void
-  Log(JSContext* aCx, const Sequence<JS::Value>& aData);
+  static void
+  Info(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
-  void
-  Info(JSContext* aCx, const Sequence<JS::Value>& aData);
+  static void
+  Warn(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
-  void
-  Warn(JSContext* aCx, const Sequence<JS::Value>& aData);
+  static void
+  Error(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
-  void
-  Error(JSContext* aCx, const Sequence<JS::Value>& aData);
+  static void
+  Exception(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
-  void
-  Exception(JSContext* aCx, const Sequence<JS::Value>& aData);
+  static void
+  Debug(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
-  void
-  Debug(JSContext* aCx, const Sequence<JS::Value>& aData);
+  static void
+  Table(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
-  void
-  Table(JSContext* aCx, const Sequence<JS::Value>& aData);
+  static void
+  Trace(const GlobalObject& aGlobal);
 
-  void
-  Trace(JSContext* aCx);
+  static void
+  Dir(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
-  void
-  Dir(JSContext* aCx, const Sequence<JS::Value>& aData);
+  static void
+  Dirxml(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
-  void
-  Dirxml(JSContext* aCx, const Sequence<JS::Value>& aData);
+  static void
+  Group(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
-  void
-  Group(JSContext* aCx, const Sequence<JS::Value>& aData);
+  static void
+  GroupCollapsed(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
-  void
-  GroupCollapsed(JSContext* aCx, const Sequence<JS::Value>& aData);
+  static void
+  GroupEnd(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
-  void
-  GroupEnd(JSContext* aCx, const Sequence<JS::Value>& aData);
+  static void
+  Time(const GlobalObject& aGlobal, const JS::Handle<JS::Value> aTime);
 
-  void
-  Time(JSContext* aCx, const JS::Handle<JS::Value> aTime);
+  static void
+  TimeEnd(const GlobalObject& aGlobal, const JS::Handle<JS::Value> aTime);
 
-  void
-  TimeEnd(JSContext* aCx, const JS::Handle<JS::Value> aTime);
+  static void
+  TimeStamp(const GlobalObject& aGlobal, const JS::Handle<JS::Value> aData);
 
-  void
-  TimeStamp(JSContext* aCx, const JS::Handle<JS::Value> aData);
+  static void
+  Profile(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
-  void
-  Profile(JSContext* aCx, const Sequence<JS::Value>& aData);
+  static void
+  ProfileEnd(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
-  void
-  ProfileEnd(JSContext* aCx, const Sequence<JS::Value>& aData);
+  static void
+  Assert(const GlobalObject& aGlobal, bool aCondition,
+         const Sequence<JS::Value>& aData);
 
-  void
-  Assert(JSContext* aCx, bool aCondition, const Sequence<JS::Value>& aData);
+  static void
+  Count(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
-  void
-  Count(JSContext* aCx, const Sequence<JS::Value>& aData);
+  static void
+  Clear(const GlobalObject& aGlobal, const Sequence<JS::Value>& aData);
 
-  void
-  Clear(JSContext* aCx, const Sequence<JS::Value>& aData);
-
-  void
-  NoopMethod();
+  static void
+  NoopMethod(const GlobalObject& aGlobal);
 
   void
   ClearStorage();
@@ -162,9 +158,24 @@ private:
     MethodClear
   };
 
+  static already_AddRefed<Console>
+  GetConsole(const GlobalObject& aGlobal);
+
+  static void
+  ProfileMethod(const GlobalObject& aGlobal, const nsAString& aAction,
+                const Sequence<JS::Value>& aData);
+
   void
-  Method(JSContext* aCx, MethodName aName, const nsAString& aString,
-         const Sequence<JS::Value>& aData);
+  ProfileMethodInternal(JSContext* aCx, const nsAString& aAction,
+                        const Sequence<JS::Value>& aData);
+
+  static void
+  Method(const GlobalObject& aGlobal, MethodName aName,
+         const nsAString& aString, const Sequence<JS::Value>& aData);
+
+  void
+  MethodInternal(JSContext* aCx, MethodName aName,
+         const nsAString& aString, const Sequence<JS::Value>& aData);
 
   // This method must receive aCx and aArguments in the same JSCompartment.
   void
@@ -304,10 +315,6 @@ private:
   bool
   ArgumentsToValueList(const Sequence<JS::Value>& aData,
                        Sequence<JS::Value>& aSequence) const;
-
-  void
-  ProfileMethod(JSContext* aCx, const nsAString& aAction,
-                const Sequence<JS::Value>& aData);
 
   // This method follows the same pattern as StartTimer: its runs on the owning
   // thread and populate aCountLabel, used by CreateCounterValue. Returns

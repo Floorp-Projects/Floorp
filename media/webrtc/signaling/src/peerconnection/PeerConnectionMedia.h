@@ -85,7 +85,7 @@ public:
   {
     mTracks.insert(std::make_pair(trackId, aTrack));
   }
-  void RemoveTrack(const std::string& trackId);
+  virtual void RemoveTrack(const std::string& trackId);
   bool HasTrack(const std::string& trackId) const
   {
     return !!mTracks.count(trackId);
@@ -101,7 +101,7 @@ public:
   // PrincipalChangeObserver from each track.
   const std::map<std::string, RefPtr<dom::MediaStreamTrack>>&
   GetMediaStreamTracks() const { return mTracks; }
-  dom::MediaStreamTrack* GetTrackById(const std::string& trackId)
+  dom::MediaStreamTrack* GetTrackById(const std::string& trackId) const
   {
     auto it = mTracks.find(trackId);
     if (it == mTracks.end()) {
@@ -113,9 +113,10 @@ public:
   const std::string& GetId() const { return mId; }
 
   void DetachTransport_s();
-  void DetachMedia_m();
+  virtual void DetachMedia_m();
   bool AnyCodecHasPluginID(uint64_t aPluginID);
 protected:
+  void EndTrack(MediaStream* stream, dom::MediaStreamTrack* track);
   RefPtr<DOMMediaStream> mMediaStream;
   PeerConnectionMedia *mParent;
   const std::string mId;
@@ -200,6 +201,8 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
   {
   }
 
+  void DetachMedia_m() override;
+  void RemoveTrack(const std::string& trackId) override;
   void SyncPipeline(RefPtr<MediaPipelineReceive> aPipeline);
 
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
@@ -211,60 +214,21 @@ class RemoteSourceStreamInfo : public SourceStreamInfo {
   void AddTrack(const std::string& trackId,
                 const RefPtr<dom::MediaStreamTrack>& aTrack) override
   {
-    mTrackIdMap.push_back(trackId);
-    MOZ_RELEASE_ASSERT(GetNumericTrackId(trackId) == aTrack->mTrackID);
     SourceStreamInfo::AddTrack(trackId, aTrack);
-  }
-
-  TrackID GetNextAvailableNumericTrackId() const
-  {
-    return mTrackIdMap.size() + 1;
   }
 
   TrackID GetNumericTrackId(const std::string& trackId) const
   {
-    for (size_t i = 0; i < mTrackIdMap.size(); ++i) {
-      if (mTrackIdMap[i] == trackId) {
-        return static_cast<TrackID>(i + 1);
-      }
+    dom::MediaStreamTrack* track = GetTrackById(trackId);
+    if (!track) {
+      return TRACK_INVALID;
     }
-    return TRACK_INVALID;
-  }
-
-  nsresult GetTrackId(const dom::MediaStreamTrack& track, std::string* trackId) const
-  {
-    TrackID numericTrackId = track.mTrackID;
-
-    if (numericTrackId <= 0 ||
-        static_cast<size_t>(numericTrackId) > mTrackIdMap.size()) {
-      return NS_ERROR_INVALID_ARG;;
-    }
-
-    *trackId = mTrackIdMap[numericTrackId - 1];
-    return NS_OK;
+    return track->mTrackID;
   }
 
   void StartReceiving();
 
-  /**
-   * Returns true if a |MediaPipeline| should be queueing its track instead of
-   * adding it to the |SourceMediaStream| directly.
-   */
-  bool ShouldQueueTracks() const
-  {
-    return !mReceiving;
-  }
-
  private:
-  // For remote streams, the MediaStreamGraph API forces us to select a
-  // numeric track id before creation of the MediaStreamTrack, and does not
-  // allow us to specify a string-based id until later. We cannot simply use
-  // something based on mline index, since renegotiation can move tracks
-  // around. Hopefully someday we'll be able to specify the string id up-front,
-  // and have the numeric track id selected for us, in which case this variable
-  // and its dependencies can go away.
-  std::vector<std::string> mTrackIdMap;
-
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   // MediaStreamTrackSources associated with this remote stream.
   // We use them for updating their principal if that's needed.
@@ -348,10 +312,6 @@ class PeerConnectionMedia : public sigslot::has_slots<> {
                             const std::string& trackId);
   nsresult RemoveRemoteTrack(const std::string& streamId,
                             const std::string& trackId);
-
-  nsresult GetRemoteTrackId(const std::string streamId,
-                            const dom::MediaStreamTrack& track,
-                            std::string* trackId) const;
 
   // Get a specific local stream
   uint32_t LocalStreamsLength()

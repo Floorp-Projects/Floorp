@@ -43,20 +43,18 @@ enum PrintOperatorPrecedence
     ExpressionPrecedence = 0,
     AssignmentPrecedence = 1,
     StoreOperatorPrecedence = 1,
-    SelectPrecedence = 2,
-    BitwiseOrPrecedence = 3,
-    BitwiseXorPrecedence = 4,
-    BitwiseAndPrecedence = 5,
-    EqualityPrecedence = 6,
-    ComparisonPrecedence = 7,
-    BitwiseShiftPrecedence = 8,
-    MinMaxPrecedence = 9,
+    BitwiseOrPrecedence = 4,
+    BitwiseXorPrecedence = 5,
+    BitwiseAndPrecedence = 6,
+    EqualityPrecedence = 7,
+    ComparisonPrecedence = 8,
+    BitwiseShiftPrecedence = 9,
     AdditionPrecedence = 10,
     MultiplicationPrecedence = 11,
-    CopySignPrecedence = 12,
-    ConversionPrecedence = 13,
-    UnaryOperatorPrecedence = 13,
-    LoadOperatorPrecedence = 14,
+    NegatePrecedence = 12,
+    EqzPrecedence = 12,
+    OperatorPrecedence = 15,
+    LoadOperatorPrecedence = 15,
     CallPrecedence = 15,
     GroupPrecedence = 16,
 };
@@ -85,6 +83,28 @@ struct WasmPrintContext
 
 /*****************************************************************************/
 // utilities
+
+static bool
+IsDropValueExpr(AstExpr& expr)
+{
+    // Based on AST information, determines if the expression does not return a value.
+    // TODO infer presence of a return value for rest kinds of expressions from
+    // the function return type.
+    switch (expr.kind()) {
+      case AstExprKind::Branch:
+        return !expr.as<AstBranch>().maybeValue();
+      case AstExprKind::BranchTable:
+        return !expr.as<AstBranchTable>().maybeValue();
+      case AstExprKind::If:
+        return !expr.as<AstIf>().hasElse();
+      case AstExprKind::Nop:
+      case AstExprKind::Unreachable:
+      case AstExprKind::Return:
+        return true;
+      default:
+        return false;
+    }
+}
 
 static bool
 PrintIndent(WasmPrintContext& c)
@@ -261,12 +281,16 @@ static bool
 PrintExpr(WasmPrintContext& c, AstExpr& expr);
 
 static bool
-PrintFullLine(WasmPrintContext& c, AstExpr& expr)
+PrintBlockLevelExpr(WasmPrintContext& c, AstExpr& expr, bool isLast)
 {
     if (!PrintIndent(c))
         return false;
     if (!PrintExpr(c, expr))
         return false;
+    if (!isLast || IsDropValueExpr(expr)) {
+        if (!c.buffer.append(';'))
+            return false;
+    }
     return c.buffer.append('\n');
 }
 
@@ -298,7 +322,7 @@ PrintCallArgs(WasmPrintContext& c, const AstExprVector& args)
             return false;
         if (i + 1 == args.length())
             break;
-        if (!c.buffer.append(","))
+        if (!c.buffer.append(", "))
             return false;
     }
     if (!c.buffer.append(")"))
@@ -344,8 +368,13 @@ PrintCallIndirect(WasmPrintContext& c, AstCallIndirect& call)
     if (!c.buffer.append(" ["))
         return false;
 
+    PrintOperatorPrecedence lastPrecedence = c.currentPrecedence;
+    c.currentPrecedence = ExpressionPrecedence;
+
     if (!PrintExpr(c, *call.index()))
         return false;
+
+    c.currentPrecedence = lastPrecedence;
 
     if (!c.buffer.append("] "))
         return false;
@@ -399,9 +428,9 @@ PrintSetLocal(WasmPrintContext& c, AstSetLocal& sl)
 {
     PrintOperatorPrecedence lastPrecedence = c.currentPrecedence;
 
-    if (c.f.reduceParens ? lastPrecedence > AssignmentPrecedence : lastPrecedence != ExpressionPrecedence) {
-      if (!c.buffer.append("("))
-          return false;
+    if (!c.f.reduceParens || lastPrecedence > AssignmentPrecedence) {
+        if (!c.buffer.append("("))
+            return false;
     }
 
     if (!PrintRef(c, sl.local()))
@@ -414,9 +443,9 @@ PrintSetLocal(WasmPrintContext& c, AstSetLocal& sl)
     if (!PrintExpr(c, sl.value()))
         return false;
 
-    if (c.f.reduceParens ? lastPrecedence > AssignmentPrecedence : lastPrecedence != ExpressionPrecedence) {
-      if (!c.buffer.append(")"))
-          return false;
+    if (!c.f.reduceParens || lastPrecedence > AssignmentPrecedence) {
+        if (!c.buffer.append(")"))
+            return false;
     }
 
     c.currentPrecedence = lastPrecedence;
@@ -427,7 +456,7 @@ static bool
 PrintExprList(WasmPrintContext& c, const AstExprVector& exprs, uint32_t startFrom = 0)
 {
     for (uint32_t i = startFrom; i < exprs.length(); i++) {
-        if (!PrintFullLine(c, *exprs[i]))
+        if (!PrintBlockLevelExpr(c, *exprs[i], i + 1 == exprs.length()))
             return false;
     }
     return true;
@@ -449,6 +478,11 @@ PrintGroupedBlock(WasmPrintContext& c, AstBlock& block)
     c.indent--;
     if (!PrintIndent(c))
         return false;
+
+    // If no br/br_if/br_table refer this block, use some non-existent label.
+    if (block.breakName().empty())
+        return c.buffer.append("$label:\n");
+
     if (!PrintName(c, block.breakName()))
         return false;
     if (!c.buffer.append(":\n"))
@@ -528,53 +562,57 @@ PrintUnaryOperator(WasmPrintContext& c, AstUnaryOperator& op)
 
     const char* opStr;
     const char* prefixStr = nullptr;
+    PrintOperatorPrecedence precedence = OperatorPrecedence;
     switch (op.expr()) {
-      case Expr::I32Eqz:     opStr = "i32.eqz"; prefixStr = "!"; break;
       case Expr::I32Clz:     opStr = "i32.clz"; break;
       case Expr::I32Ctz:     opStr = "i32.ctz"; break;
       case Expr::I32Popcnt:  opStr = "i32.popcnt"; break;
-      case Expr::I64Eqz:     opStr = "i64.eqz"; prefixStr = "!"; break;
       case Expr::I64Clz:     opStr = "i64.clz"; break;
       case Expr::I64Ctz:     opStr = "i64.ctz"; break;
       case Expr::I64Popcnt:  opStr = "i64.popcnt"; break;
       case Expr::F32Abs:     opStr = "f32.abs"; break;
-      case Expr::F32Neg:     opStr = "f32.neg"; prefixStr = "-"; break;
+      case Expr::F32Neg:     opStr = "f32.neg"; prefixStr = "-"; precedence = NegatePrecedence; break;
       case Expr::F32Ceil:    opStr = "f32.ceil"; break;
       case Expr::F32Floor:   opStr = "f32.floor"; break;
       case Expr::F32Sqrt:    opStr = "f32.sqrt"; break;
       case Expr::F32Trunc:   opStr = "f32.trunc"; break;
       case Expr::F32Nearest: opStr = "f32.nearest"; break;
       case Expr::F64Abs:     opStr = "f64.abs"; break;
-      case Expr::F64Neg:     opStr = "f64.neg"; prefixStr = "-"; break;
+      case Expr::F64Neg:     opStr = "f64.neg"; prefixStr = "-"; precedence = NegatePrecedence; break;
       case Expr::F64Ceil:    opStr = "f64.ceil"; break;
       case Expr::F64Floor:   opStr = "f64.floor"; break;
       case Expr::F64Sqrt:    opStr = "f64.sqrt"; break;
       default: return false;
     }
 
-    if (c.f.reduceParens && lastPrecedence > UnaryOperatorPrecedence) {
-      if (!c.buffer.append("("))
-          return false;
-    }
-
-    c.currentPrecedence = UnaryOperatorPrecedence;
     if (c.f.allowAsciiOperators && prefixStr) {
-      if (!c.buffer.append(prefixStr, strlen(prefixStr)))
-          return false;
+        if (!c.f.reduceParens || lastPrecedence > precedence) {
+            if (!c.buffer.append("("))
+                return false;
+        }
+
+        c.currentPrecedence = precedence;
+        if (!c.buffer.append(prefixStr, strlen(prefixStr)))
+            return false;
+        if (!PrintExpr(c, *op.op()))
+            return false;
+
+        if (!c.f.reduceParens || lastPrecedence > precedence) {
+          if (!c.buffer.append(")"))
+              return false;
+        }
     } else {
         if (!c.buffer.append(opStr, strlen(opStr)))
             return false;
-
-        if (!c.buffer.append(" "))
+        if (!c.buffer.append("("))
             return false;
-    }
 
-    if (!PrintExpr(c, *op.op()))
-        return false;
+        c.currentPrecedence = ExpressionPrecedence;
+        if (!PrintExpr(c, *op.op()))
+            return false;
 
-    if (c.f.reduceParens && lastPrecedence > UnaryOperatorPrecedence) {
-      if (!c.buffer.append(")"))
-          return false;
+        if (!c.buffer.append(")"))
+            return false;
     }
     c.currentPrecedence = lastPrecedence;
 
@@ -620,50 +658,59 @@ PrintBinaryOperator(WasmPrintContext& c, AstBinaryOperator& op)
       case Expr::F32Sub:      opStr = "f32.sub"; infixStr = "-"; precedence = AdditionPrecedence; break;
       case Expr::F32Mul:      opStr = "f32.mul"; infixStr = "*"; precedence = MultiplicationPrecedence; break;
       case Expr::F32Div:      opStr = "f32.div"; infixStr = "/"; precedence = MultiplicationPrecedence; break;
-      case Expr::F32Min:      opStr = "f32.min"; precedence = MinMaxPrecedence; break;
-      case Expr::F32Max:      opStr = "f32.max"; precedence = MinMaxPrecedence; break;
-      case Expr::F32CopySign: opStr = "f32.copysign"; precedence = CopySignPrecedence; break;
+      case Expr::F32Min:      opStr = "f32.min"; precedence = OperatorPrecedence; break;
+      case Expr::F32Max:      opStr = "f32.max"; precedence = OperatorPrecedence; break;
+      case Expr::F32CopySign: opStr = "f32.copysign"; precedence = OperatorPrecedence; break;
       case Expr::F64Add:      opStr = "f64.add"; infixStr = "+"; precedence = AdditionPrecedence; break;
       case Expr::F64Sub:      opStr = "f64.sub"; infixStr = "-"; precedence = AdditionPrecedence; break;
       case Expr::F64Mul:      opStr = "f64.mul"; infixStr = "*"; precedence = MultiplicationPrecedence; break;
       case Expr::F64Div:      opStr = "f64.div"; infixStr = "/"; precedence = MultiplicationPrecedence; break;
-      case Expr::F64Min:      opStr = "f64.min"; precedence = MinMaxPrecedence; break;
-      case Expr::F64Max:      opStr = "f64.max"; precedence = MinMaxPrecedence; break;
-      case Expr::F64CopySign: opStr = "f64.copysign"; precedence = CopySignPrecedence; break;
+      case Expr::F64Min:      opStr = "f64.min"; precedence = OperatorPrecedence; break;
+      case Expr::F64Max:      opStr = "f64.max"; precedence = OperatorPrecedence; break;
+      case Expr::F64CopySign: opStr = "f64.copysign"; precedence = OperatorPrecedence; break;
       default: return false;
     }
 
-    c.currentPrecedence = precedence;
-    if (c.f.reduceParens && lastPrecedence > AdditionPrecedence) {
-      if (!c.buffer.append("("))
-          return false;
-    }
-
-    if (!c.f.allowAsciiOperators || !infixStr) {
-      if (!c.buffer.append(opStr, strlen(opStr)))
-          return false;
-      if (!c.buffer.append(" "))
-          return false;
-    }
-    if (!PrintExpr(c, *op.lhs()))
-        return false;
-    if (!c.buffer.append(" "))
-        return false;
     if (c.f.allowAsciiOperators && infixStr) {
-      // case of  A / (B / C)
-      c.currentPrecedence = (PrintOperatorPrecedence)(precedence + 1);
+        if (!c.f.reduceParens || lastPrecedence > precedence) {
+            if (!c.buffer.append("("))
+                return false;
+        }
 
-      if (!c.buffer.append(infixStr, strlen(infixStr)))
-          return false;
-      if (!c.buffer.append(" "))
-          return false;
-    }
-    if (!PrintExpr(c, *op.rhs()))
-        return false;
+        c.currentPrecedence = precedence;
+        if (!PrintExpr(c, *op.lhs()))
+            return false;
+        if (!c.buffer.append(" "))
+            return false;
+        if (!c.buffer.append(infixStr, strlen(infixStr)))
+            return false;
+        if (!c.buffer.append(" "))
+            return false;
+        // case of  A / (B / C)
+        c.currentPrecedence = (PrintOperatorPrecedence)(precedence + 1);
 
-    if (c.f.reduceParens && lastPrecedence > AdditionPrecedence) {
-      if (!c.buffer.append(")"))
-          return false;
+        if (!PrintExpr(c, *op.rhs()))
+            return false;
+        if (!c.f.reduceParens || lastPrecedence > precedence) {
+            if (!c.buffer.append(")"))
+                return false;
+        }
+    } else {
+        if (!c.buffer.append(opStr, strlen(opStr)))
+            return false;
+        if (!c.buffer.append("("))
+            return false;
+
+        c.currentPrecedence = ExpressionPrecedence;
+        if (!PrintExpr(c, *op.lhs()))
+            return false;
+        if (!c.buffer.append(", "))
+            return false;
+        if (!PrintExpr(c, *op.rhs()))
+            return false;
+
+        if (!c.buffer.append(")"))
+            return false;
     }
     c.currentPrecedence = lastPrecedence;
 
@@ -681,32 +728,25 @@ PrintTernaryOperator(WasmPrintContext& c, AstTernaryOperator& op)
       default: return false;
     }
 
-    c.currentPrecedence = SelectPrecedence;
-    if (c.f.reduceParens && lastPrecedence > SelectPrecedence) {
-      if (!c.buffer.append("("))
-          return false;
-    }
-
     if (!c.buffer.append(opStr, strlen(opStr)))
         return false;
-
-    if (!c.buffer.append(" "))
+    if (!c.buffer.append("("))
         return false;
+
+    c.currentPrecedence = ExpressionPrecedence;
     if (!PrintExpr(c, *op.op0()))
         return false;
-    if (!c.buffer.append(","))
+    if (!c.buffer.append(", "))
         return false;
     if (!PrintExpr(c, *op.op1()))
         return false;
-    if (!c.buffer.append(" ? "))
+    if (!c.buffer.append(", "))
         return false;
     if (!PrintExpr(c, *op.op2()))
         return false;
 
-    if (c.f.reduceParens && lastPrecedence > SelectPrecedence) {
-      if (!c.buffer.append(")"))
-          return false;
-    }
+    if (!c.buffer.append(")"))
+        return false;
     c.currentPrecedence = lastPrecedence;
 
     return true;
@@ -719,70 +759,79 @@ PrintComparisonOperator(WasmPrintContext& c, AstComparisonOperator& op)
 
     const char* opStr;
     const char* infixStr = nullptr;
+    PrintOperatorPrecedence precedence;
     switch (op.expr()) {
-      case Expr::I32Eq:  opStr = "i32.eq"; infixStr = "=="; break;
-      case Expr::I32Ne:  opStr = "i32.ne"; infixStr = "!="; break;
-      case Expr::I32LtS: opStr = "i32.lt_s"; infixStr = "<s"; break;
-      case Expr::I32LtU: opStr = "i32.lt_u"; infixStr = "<u"; break;
-      case Expr::I32LeS: opStr = "i32.le_s"; infixStr = "<=s"; break;
-      case Expr::I32LeU: opStr = "i32.le_u"; infixStr = "<=u"; break;
-      case Expr::I32GtS: opStr = "i32.gt_s"; infixStr = ">s"; break;
-      case Expr::I32GtU: opStr = "i32.gt_u"; infixStr = ">u"; break;
-      case Expr::I32GeS: opStr = "i32.ge_s"; infixStr = ">=s"; break;
-      case Expr::I32GeU: opStr = "i32.ge_u"; infixStr = ">=u"; break;
-      case Expr::I64Eq:  opStr = "i64.eq"; infixStr = "=="; break;
-      case Expr::I64Ne:  opStr = "i64.ne"; infixStr = "!="; break;
-      case Expr::I64LtS: opStr = "i64.lt_s"; infixStr = "<s"; break;
-      case Expr::I64LtU: opStr = "i64.lt_u"; infixStr = "<u"; break;
-      case Expr::I64LeS: opStr = "i64.le_s"; infixStr = "<=s"; break;
-      case Expr::I64LeU: opStr = "i64.le_u"; infixStr = "<=u"; break;
-      case Expr::I64GtS: opStr = "i64.gt_s"; infixStr = ">s"; break;
-      case Expr::I64GtU: opStr = "i64.gt_u"; infixStr = ">u"; break;
-      case Expr::I64GeS: opStr = "i64.ge_s"; infixStr = ">=s"; break;
-      case Expr::I64GeU: opStr = "i64.ge_u"; infixStr = ">=u"; break;
-      case Expr::F32Eq:  opStr = "f32.eq"; infixStr = "=="; break;
-      case Expr::F32Ne:  opStr = "f32.ne"; infixStr = "!="; break;
-      case Expr::F32Lt:  opStr = "f32.lt"; infixStr = "<"; break;
-      case Expr::F32Le:  opStr = "f32.le"; infixStr = "<="; break;
-      case Expr::F32Gt:  opStr = "f32.gt"; infixStr = ">"; break;
-      case Expr::F32Ge:  opStr = "f32.ge"; infixStr = ">="; break;
-      case Expr::F64Eq:  opStr = "f64.eq"; infixStr = "=="; break;
-      case Expr::F64Ne:  opStr = "f64.ne"; infixStr = "!="; break;
-      case Expr::F64Lt:  opStr = "f64.lt"; infixStr = "<"; break;
-      case Expr::F64Le:  opStr = "f64.le"; infixStr = "<="; break;
-      case Expr::F64Gt:  opStr = "f64.gt"; infixStr = ">"; break;
-      case Expr::F64Ge:  opStr = "f64.ge"; infixStr = ">="; break;
+      case Expr::I32Eq:  opStr = "i32.eq"; infixStr = "=="; precedence = EqualityPrecedence; break;
+      case Expr::I32Ne:  opStr = "i32.ne"; infixStr = "!="; precedence = EqualityPrecedence; break;
+      case Expr::I32LtS: opStr = "i32.lt_s"; infixStr = "<s"; precedence = ComparisonPrecedence; break;
+      case Expr::I32LtU: opStr = "i32.lt_u"; infixStr = "<u"; precedence = ComparisonPrecedence; break;
+      case Expr::I32LeS: opStr = "i32.le_s"; infixStr = "<=s"; precedence = ComparisonPrecedence; break;
+      case Expr::I32LeU: opStr = "i32.le_u"; infixStr = "<=u"; precedence = ComparisonPrecedence; break;
+      case Expr::I32GtS: opStr = "i32.gt_s"; infixStr = ">s"; precedence = ComparisonPrecedence; break;
+      case Expr::I32GtU: opStr = "i32.gt_u"; infixStr = ">u"; precedence = ComparisonPrecedence; break;
+      case Expr::I32GeS: opStr = "i32.ge_s"; infixStr = ">=s"; precedence = ComparisonPrecedence; break;
+      case Expr::I32GeU: opStr = "i32.ge_u"; infixStr = ">=u"; precedence = ComparisonPrecedence; break;
+      case Expr::I64Eq:  opStr = "i64.eq"; infixStr = "=="; precedence = EqualityPrecedence; break;
+      case Expr::I64Ne:  opStr = "i64.ne"; infixStr = "!="; precedence = EqualityPrecedence; break;
+      case Expr::I64LtS: opStr = "i64.lt_s"; infixStr = "<s"; precedence = ComparisonPrecedence; break;
+      case Expr::I64LtU: opStr = "i64.lt_u"; infixStr = "<u"; precedence = ComparisonPrecedence; break;
+      case Expr::I64LeS: opStr = "i64.le_s"; infixStr = "<=s"; precedence = ComparisonPrecedence; break;
+      case Expr::I64LeU: opStr = "i64.le_u"; infixStr = "<=u"; precedence = ComparisonPrecedence; break;
+      case Expr::I64GtS: opStr = "i64.gt_s"; infixStr = ">s"; precedence = ComparisonPrecedence; break;
+      case Expr::I64GtU: opStr = "i64.gt_u"; infixStr = ">u"; precedence = ComparisonPrecedence; break;
+      case Expr::I64GeS: opStr = "i64.ge_s"; infixStr = ">=s"; precedence = ComparisonPrecedence; break;
+      case Expr::I64GeU: opStr = "i64.ge_u"; infixStr = ">=u"; precedence = ComparisonPrecedence; break;
+      case Expr::F32Eq:  opStr = "f32.eq"; infixStr = "=="; precedence = EqualityPrecedence; break;
+      case Expr::F32Ne:  opStr = "f32.ne"; infixStr = "!="; precedence = EqualityPrecedence; break;
+      case Expr::F32Lt:  opStr = "f32.lt"; infixStr = "<"; precedence = ComparisonPrecedence; break;
+      case Expr::F32Le:  opStr = "f32.le"; infixStr = "<="; precedence = ComparisonPrecedence; break;
+      case Expr::F32Gt:  opStr = "f32.gt"; infixStr = ">"; precedence = ComparisonPrecedence; break;
+      case Expr::F32Ge:  opStr = "f32.ge"; infixStr = ">="; precedence = ComparisonPrecedence; break;
+      case Expr::F64Eq:  opStr = "f64.eq"; infixStr = "=="; precedence = ComparisonPrecedence; break;
+      case Expr::F64Ne:  opStr = "f64.ne"; infixStr = "!="; precedence = EqualityPrecedence; break;
+      case Expr::F64Lt:  opStr = "f64.lt"; infixStr = "<"; precedence = EqualityPrecedence; break;
+      case Expr::F64Le:  opStr = "f64.le"; infixStr = "<="; precedence = ComparisonPrecedence; break;
+      case Expr::F64Gt:  opStr = "f64.gt"; infixStr = ">"; precedence = ComparisonPrecedence; break;
+      case Expr::F64Ge:  opStr = "f64.ge"; infixStr = ">="; precedence = ComparisonPrecedence; break;
       default: return false;
     }
 
-    c.currentPrecedence = ComparisonPrecedence;
-    if (c.f.reduceParens && lastPrecedence > ComparisonPrecedence) {
-      if (!c.buffer.append("("))
-          return false;
-    }
-
-    if (!c.f.allowAsciiOperators || !infixStr) {
-        if (!c.buffer.append(opStr, strlen(opStr)))
+    if (c.f.allowAsciiOperators && infixStr) {
+        if (!c.f.reduceParens || lastPrecedence > precedence) {
+            if (!c.buffer.append("("))
+                return false;
+        }
+        c.currentPrecedence = precedence;
+        if (!PrintExpr(c, *op.lhs()))
             return false;
         if (!c.buffer.append(" "))
             return false;
-    }
-    if (!PrintExpr(c, *op.lhs()))
-        return false;
-    if (!c.buffer.append(" "))
-        return false;
-    if (c.f.allowAsciiOperators && infixStr) {
         if (!c.buffer.append(infixStr, strlen(infixStr)))
             return false;
         if (!c.buffer.append(" "))
             return false;
-    }
-    if (!PrintExpr(c, *op.rhs()))
-        return false;
-
-    if (c.f.reduceParens && lastPrecedence > ComparisonPrecedence) {
-      if (!c.buffer.append(")"))
-          return false;
+        // case of  A == (B == C)
+        c.currentPrecedence = (PrintOperatorPrecedence)(precedence + 1);
+        if (!PrintExpr(c, *op.rhs()))
+            return false;
+        if (!c.f.reduceParens || lastPrecedence > precedence) {
+            if (!c.buffer.append(")"))
+                return false;
+        }
+    } else {
+        if (!c.buffer.append(opStr, strlen(opStr)))
+            return false;
+        c.currentPrecedence = ExpressionPrecedence;
+        if (!c.buffer.append("("))
+            return false;
+        if (!PrintExpr(c, *op.lhs()))
+            return false;
+        if (!c.buffer.append(", "))
+            return false;
+        if (!PrintExpr(c, *op.rhs()))
+            return false;
+        if (!c.buffer.append(")"))
+            return false;
     }
     c.currentPrecedence = lastPrecedence;
 
@@ -795,13 +844,17 @@ PrintConversionOperator(WasmPrintContext& c, AstConversionOperator& op)
     PrintOperatorPrecedence lastPrecedence = c.currentPrecedence;
 
     const char* opStr;
+    const char* prefixStr = nullptr;
+    PrintOperatorPrecedence precedence = ExpressionPrecedence;
     switch (op.expr()) {
+      case Expr::I32Eqz:            opStr = "i32.eqz"; prefixStr = "!"; precedence = EqzPrecedence; break;
       case Expr::I32WrapI64:        opStr = "i32.wrap/i64"; break;
       case Expr::I32TruncSF32:      opStr = "i32.trunc_s/f32"; break;
       case Expr::I32TruncUF32:      opStr = "i32.trunc_u/f32"; break;
       case Expr::I32ReinterpretF32: opStr = "i32.reinterpret/f32"; break;
       case Expr::I32TruncSF64:      opStr = "i32.trunc_s/f64"; break;
       case Expr::I32TruncUF64:      opStr = "i32.trunc_u/f64"; break;
+      case Expr::I64Eqz:            opStr = "i64.eqz"; prefixStr = "!"; precedence = EqzPrecedence; break;
       case Expr::I64ExtendSI32:     opStr = "i64.extend_s/i32"; break;
       case Expr::I64ExtendUI32:     opStr = "i64.extend_u/i32"; break;
       case Expr::I64TruncSF32:      opStr = "i64.trunc_s/f32"; break;
@@ -824,24 +877,34 @@ PrintConversionOperator(WasmPrintContext& c, AstConversionOperator& op)
       default: return false;
     }
 
-    c.currentPrecedence = ConversionPrecedence;
-    if (c.f.reduceParens && lastPrecedence > ConversionPrecedence) {
-      if (!c.buffer.append("("))
-          return false;
-    }
+    if (c.f.allowAsciiOperators && prefixStr) {
+        if (!c.f.reduceParens || lastPrecedence > precedence) {
+            if (!c.buffer.append("("))
+                return false;
+        }
 
-    if (!c.buffer.append(opStr, strlen(opStr)))
-        return false;
+        c.currentPrecedence = precedence;
+        if (!c.buffer.append(prefixStr, strlen(prefixStr)))
+            return false;
+        if (!PrintExpr(c, *op.op()))
+            return false;
 
-    if (!c.buffer.append(" "))
-        return false;
+        if (!c.f.reduceParens || lastPrecedence > precedence) {
+          if (!c.buffer.append(")"))
+              return false;
+        }
+    } else {
+        if (!c.buffer.append(opStr, strlen(opStr)))
+            return false;
+        if (!c.buffer.append("("))
+            return false;
 
-    if (!PrintExpr(c, *op.op()))
-        return false;
+        c.currentPrecedence = ExpressionPrecedence;
+        if (!PrintExpr(c, *op.op()))
+            return false;
 
-    if (c.f.reduceParens && lastPrecedence > ConversionPrecedence) {
-      if (!c.buffer.append(")"))
-          return false;
+        if (!c.buffer.append(")"))
+            return false;
     }
     c.currentPrecedence = lastPrecedence;
 
@@ -899,26 +962,26 @@ PrintLoadStoreAddress(WasmPrintContext& c, const AstLoadStoreAddress& lsa, uint3
 
     c.currentPrecedence = ExpressionPrecedence;
 
-    if (!c.buffer.append(" ["))
+    if (!c.buffer.append("["))
         return false;
     if (!PrintExpr(c, lsa.base()))
         return false;
 
     if (lsa.offset() != 0) {
-      if (!c.buffer.append(","))
-          return false;
-      if (!PrintInt32(c, lsa.offset(), true))
-          return false;
+        if (!c.buffer.append(", "))
+            return false;
+        if (!PrintInt32(c, lsa.offset(), true))
+            return false;
     }
     if (!c.buffer.append("]"))
         return false;
 
     uint32_t alignLog2 = lsa.flags();
     if (defaultAlignLog2 != alignLog2) {
-      if (!c.buffer.append(":align="))
-          return false;
-      if (!PrintInt32(c, 1 << alignLog2))
-          return false;
+        if (!c.buffer.append(", align="))
+            return false;
+        if (!PrintInt32(c, 1 << alignLog2))
+            return false;
     }
 
     c.currentPrecedence = lastPrecedence;
@@ -931,80 +994,80 @@ PrintLoad(WasmPrintContext& c, AstLoad& load)
     PrintOperatorPrecedence lastPrecedence = c.currentPrecedence;
 
     c.currentPrecedence = LoadOperatorPrecedence;
-    if (c.f.reduceParens && lastPrecedence > LoadOperatorPrecedence) {
-      if (!c.buffer.append("("))
-          return false;
+    if (!c.f.reduceParens || lastPrecedence > LoadOperatorPrecedence) {
+        if (!c.buffer.append("("))
+            return false;
     }
 
     uint32_t defaultAlignLog2;
     switch (load.expr()) {
       case Expr::I32Load8S:
-        if (!c.buffer.append("i32.load8_s"))
+        if (!c.buffer.append("i32:8s"))
             return false;
         defaultAlignLog2 = 0;
         break;
       case Expr::I64Load8S:
-        if (!c.buffer.append("i64.load8_s"))
+        if (!c.buffer.append("i64:8s"))
             return false;
         defaultAlignLog2 = 0;
         break;
       case Expr::I32Load8U:
-        if (!c.buffer.append("i32.load8_u"))
+        if (!c.buffer.append("i32:8u"))
             return false;
         defaultAlignLog2 = 0;
         break;
       case Expr::I64Load8U:
-        if (!c.buffer.append("i64.load8_u"))
+        if (!c.buffer.append("i64:8u"))
             return false;
         defaultAlignLog2 = 0;
         break;
       case Expr::I32Load16S:
-        if (!c.buffer.append("i32.load16_s"))
+        if (!c.buffer.append("i32:16s"))
             return false;
         defaultAlignLog2 = 1;
         break;
       case Expr::I64Load16S:
-        if (!c.buffer.append("i64.load16_s"))
+        if (!c.buffer.append("i64:16s"))
             return false;
         defaultAlignLog2 = 1;
         break;
       case Expr::I32Load16U:
-        if (!c.buffer.append("i32.load16_u"))
+        if (!c.buffer.append("i32:16u"))
             return false;
         defaultAlignLog2 = 1;
         break;
       case Expr::I64Load16U:
-        if (!c.buffer.append("i64.load16_u"))
+        if (!c.buffer.append("i64:16u"))
             return false;
         defaultAlignLog2 = 1;
         break;
       case Expr::I64Load32S:
-        if (!c.buffer.append("i64.load32_s"))
+        if (!c.buffer.append("i64:32s"))
             return false;
         defaultAlignLog2 = 2;
         break;
       case Expr::I64Load32U:
-        if (!c.buffer.append("i64.load32_u"))
+        if (!c.buffer.append("i64:32u"))
             return false;
         defaultAlignLog2 = 2;
         break;
       case Expr::I32Load:
-        if (!c.buffer.append("i32.load"))
+        if (!c.buffer.append("i32"))
             return false;
         defaultAlignLog2 = 2;
         break;
       case Expr::I64Load:
-        if (!c.buffer.append("i64.load"))
+        if (!c.buffer.append("i64"))
             return false;
         defaultAlignLog2 = 3;
         break;
       case Expr::F32Load:
-        if (!c.buffer.append("f32.load"))
+        if (!c.buffer.append("f32"))
             return false;
         defaultAlignLog2 = 2;
         break;
       case Expr::F64Load:
-        if (!c.buffer.append("f64.load"))
+        if (!c.buffer.append("f64"))
             return false;
         defaultAlignLog2 = 3;
         break;
@@ -1015,9 +1078,9 @@ PrintLoad(WasmPrintContext& c, AstLoad& load)
     if (!PrintLoadStoreAddress(c, load.address(), defaultAlignLog2))
         return false;
 
-    if (c.f.reduceParens && lastPrecedence > LoadOperatorPrecedence) {
-      if (!c.buffer.append(")"))
-          return false;
+    if (!c.f.reduceParens || lastPrecedence > LoadOperatorPrecedence) {
+        if (!c.buffer.append(")"))
+            return false;
     }
     c.currentPrecedence = lastPrecedence;
 
@@ -1030,55 +1093,55 @@ PrintStore(WasmPrintContext& c, AstStore& store)
     PrintOperatorPrecedence lastPrecedence = c.currentPrecedence;
 
     c.currentPrecedence = StoreOperatorPrecedence;
-    if (c.f.reduceParens ? lastPrecedence > StoreOperatorPrecedence : lastPrecedence != ExpressionPrecedence) {
-      if (!c.buffer.append("("))
-          return false;
+    if (!c.f.reduceParens || lastPrecedence > StoreOperatorPrecedence) {
+        if (!c.buffer.append("("))
+            return false;
     }
 
     uint32_t defaultAlignLog2;
     switch (store.expr()) {
       case Expr::I32Store8:
-        if (!c.buffer.append("i32.store8"))
+        if (!c.buffer.append("i32:8"))
             return false;
         defaultAlignLog2 = 0;
         break;
       case Expr::I64Store8:
-        if (!c.buffer.append("i64.store8"))
+        if (!c.buffer.append("i64:8"))
             return false;
         defaultAlignLog2 = 0;
         break;
       case Expr::I32Store16:
-        if (!c.buffer.append("i32.store16"))
+        if (!c.buffer.append("i32:16"))
             return false;
         defaultAlignLog2 = 1;
         break;
       case Expr::I64Store16:
-        if (!c.buffer.append("i64.store16"))
+        if (!c.buffer.append("i64:16"))
             return false;
         defaultAlignLog2 = 1;
         break;
       case Expr::I64Store32:
-        if (!c.buffer.append("i64.store32"))
+        if (!c.buffer.append("i64:32"))
             return false;
         defaultAlignLog2 = 2;
         break;
       case Expr::I32Store:
-        if (!c.buffer.append("i32.store"))
+        if (!c.buffer.append("i32"))
             return false;
         defaultAlignLog2 = 2;
         break;
       case Expr::I64Store:
-        if (!c.buffer.append("i64.store"))
+        if (!c.buffer.append("i64"))
             return false;
         defaultAlignLog2 = 3;
         break;
       case Expr::F32Store:
-        if (!c.buffer.append("f32.store"))
+        if (!c.buffer.append("f32"))
             return false;
         defaultAlignLog2 = 2;
         break;
       case Expr::F64Store:
-        if (!c.buffer.append("f64.store"))
+        if (!c.buffer.append("f64"))
             return false;
         defaultAlignLog2 = 3;
         break;
@@ -1089,15 +1152,15 @@ PrintStore(WasmPrintContext& c, AstStore& store)
     if (!PrintLoadStoreAddress(c, store.address(), defaultAlignLog2))
         return false;
 
-    if (!c.buffer.append(","))
+    if (!c.buffer.append(" = "))
         return false;
 
     if (!PrintExpr(c, store.value()))
         return false;
 
-    if (c.f.reduceParens ? lastPrecedence > StoreOperatorPrecedence : lastPrecedence != ExpressionPrecedence) {
-      if (!c.buffer.append(")"))
-          return false;
+    if (!c.f.reduceParens || lastPrecedence > StoreOperatorPrecedence) {
+        if (!c.buffer.append(")"))
+            return false;
     }
 
     c.currentPrecedence = lastPrecedence;
@@ -1113,17 +1176,26 @@ PrintBranch(WasmPrintContext& c, AstBranch& branch)
     if (expr == Expr::BrIf ? !c.buffer.append("br_if ") : !c.buffer.append("br "))
         return false;
 
+    if (expr == Expr::BrIf || branch.maybeValue()) {
+        if (!c.buffer.append('('))
+            return false;
+    }
+
     if (expr == Expr::BrIf) {
         if (!PrintExpr(c, branch.cond()))
-            return false;
-        if (!c.buffer.append(","))
             return false;
     }
 
     if (branch.maybeValue()) {
+        if (!c.buffer.append(", "))
+            return false;
+
         if (!PrintExpr(c, *(branch.maybeValue())))
             return false;
-        if (!c.buffer.append(","))
+    }
+
+    if (expr == Expr::BrIf || branch.maybeValue()) {
+        if (!c.buffer.append(") "))
             return false;
     }
 
@@ -1139,19 +1211,23 @@ PrintBrTable(WasmPrintContext& c, AstBranchTable& table)
     if (!c.buffer.append("br_table "))
         return false;
 
+    if (!c.buffer.append('('))
+        return false;
+
     // Index
     if (!PrintExpr(c, table.index()))
         return false;
 
-    if (!c.buffer.append(","))
-        return false;
-
     if (table.maybeValue()) {
+      if (!c.buffer.append(", "))
+          return false;
+
       if (!PrintExpr(c, *(table.maybeValue())))
           return false;
-      if (!c.buffer.append(","))
-          return false;
     }
+
+    if (!c.buffer.append(") "))
+        return false;
 
     uint32_t tableLength = table.table().length();
     if (tableLength > 0) {
@@ -1162,10 +1238,10 @@ PrintBrTable(WasmPrintContext& c, AstBranchTable& table)
                 return false;
             if (i + 1 == tableLength)
                 break;
-            if (!c.buffer.append(","))
+            if (!c.buffer.append(", "))
                 return false;
         }
-        if (!c.buffer.append("],"))
+        if (!c.buffer.append("], "))
             return false;
     }
 
@@ -1255,7 +1331,7 @@ PrintSignature(WasmPrintContext& c, const AstSig& sig, const AstNameVector* mayb
           if (!name.empty()) {
               if (!PrintName(c, name))
                   return false;
-              if (!c.buffer.append(":"))
+              if (!c.buffer.append(": "))
                   return false;
           }
           ValType arg = sig.args()[i];
@@ -1263,7 +1339,7 @@ PrintSignature(WasmPrintContext& c, const AstSig& sig, const AstNameVector* mayb
               return false;
           if (i + 1 == paramsNum)
               break;
-          if (!c.buffer.append(","))
+          if (!c.buffer.append(", "))
               return false;
       }
     } else if (paramsNum > 0) {
@@ -1273,7 +1349,7 @@ PrintSignature(WasmPrintContext& c, const AstSig& sig, const AstNameVector* mayb
               return false;
           if (i + 1 == paramsNum)
               break;
-          if (!c.buffer.append(","))
+          if (!c.buffer.append(", "))
               return false;
       }
     }
@@ -1311,7 +1387,7 @@ PrintTypeSection(WasmPrintContext& c, const AstModule::SigVector& sigs)
             return false;
         if (!PrintSignature(c, *sig))
             return false;
-        if (!c.buffer.append("\n"))
+        if (!c.buffer.append(";\n"))
             return false;
     }
 
@@ -1344,11 +1420,11 @@ PrintTableSection(WasmPrintContext& c, AstTable* maybeTable, const AstModule::Fu
         }
         if (i + 1 == numTableElems)
             break;
-        if (!c.buffer.append(","))
+        if (!c.buffer.append(", "))
             return false;
     }
 
-    if (!c.buffer.append("]\n\n"))
+    if (!c.buffer.append("];\n\n"))
         return false;
 
     return true;
@@ -1387,7 +1463,7 @@ PrintImport(WasmPrintContext& c, AstImport& import, const AstModule::SigVector& 
 
     if (!PrintSignature(c, *sig))
         return false;
-    if (!c.buffer.append("\n"))
+    if (!c.buffer.append(";\n"))
         return false;
 
     return true;
@@ -1436,7 +1512,7 @@ PrintExport(WasmPrintContext& c, AstExport& export_, const AstModule::FuncVector
         return false;
     if (!PrintEscapedString(c, export_.name()))
         return false;
-    if (!c.buffer.append("\"\n"))
+    if (!c.buffer.append("\";\n"))
         return false;
 
     return true;
@@ -1475,7 +1551,7 @@ PrintFunctionBody(WasmPrintContext& c, AstFunc& func, const AstModule::SigVector
             if (!name.empty()) {
               if (!PrintName(c, name))
                   return false;
-              if (!c.buffer.append(":"))
+              if (!c.buffer.append(": "))
                   return false;
             }
             ValType local = func.vars()[i];
@@ -1483,17 +1559,17 @@ PrintFunctionBody(WasmPrintContext& c, AstFunc& func, const AstModule::SigVector
                 return false;
             if (i + 1 == localsNum)
                 break;
-            if (!c.buffer.append(","))
+            if (!c.buffer.append(", "))
                 return false;
         }
-        if (!c.buffer.append("\n"))
+        if (!c.buffer.append(";\n"))
             return false;
     }
 
 
     uint32_t exprsNum = func.body().length();
     for (uint32_t i = 0; i < exprsNum; i++) {
-      if (!PrintFullLine(c, *func.body()[i]))
+      if (!PrintBlockLevelExpr(c, *func.body()[i], i + 1 == exprsNum))
           return false;
     }
 
@@ -1554,7 +1630,7 @@ PrintDataSection(WasmPrintContext& c, AstMemory* maybeMemory)
        return false;
     Maybe<uint32_t> memMax = maybeMemory->maxSize();
     if (memMax) {
-        if (!c.buffer.append(","))
+        if (!c.buffer.append(", "))
             return false;
         if (!PrintInt32(c, *memMax))
             return false;
@@ -1585,7 +1661,7 @@ PrintDataSection(WasmPrintContext& c, AstMemory* maybeMemory)
 
         PrintEscapedString(c, segment->text());
 
-        if (!c.buffer.append("\"\n"))
+        if (!c.buffer.append("\";\n"))
            return false;
     }
 

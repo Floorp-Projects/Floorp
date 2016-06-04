@@ -2,6 +2,7 @@ import os
 
 ABS_WORK_DIR = os.path.join(os.getcwd(), "build")
 config = {
+    "use_vcs_unique_share": True,
     "vcs_share_base": os.path.join(ABS_WORK_DIR, 'hg-shared'),
     "log_name": "bump_esr",
     "version_files": [

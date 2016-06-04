@@ -30,25 +30,6 @@ ToChar(bool aBool)
 }
 
 static const char*
-GetRangeTypeName(uint32_t aRangeType)
-{
-    switch (aRangeType) {
-        case NS_TEXTRANGE_RAWINPUT:
-            return "NS_TEXTRANGE_RAWINPUT";
-        case NS_TEXTRANGE_CONVERTEDTEXT:
-            return "NS_TEXTRANGE_CONVERTEDTEXT";
-        case NS_TEXTRANGE_SELECTEDRAWTEXT:
-            return "NS_TEXTRANGE_SELECTEDRAWTEXT";
-        case NS_TEXTRANGE_SELECTEDCONVERTEDTEXT:
-            return "NS_TEXTRANGE_SELECTEDCONVERTEDTEXT";
-        case NS_TEXTRANGE_CARETPOSITION:
-            return "NS_TEXTRANGE_CARETPOSITION";
-        default:
-            return "UNKNOWN SELECTION TYPE!!";
-    }
-}
-
-static const char*
 GetEnabledStateName(uint32_t aState)
 {
     switch (aState) {
@@ -1691,13 +1672,13 @@ IMContextWrapper::CreateTextRangeArray(GtkIMContext* aContext,
 
     TextRange range;
     range.mStartOffset = range.mEndOffset = caretOffsetInUTF16;
-    range.mRangeType = NS_TEXTRANGE_CARETPOSITION;
+    range.mRangeType = TextRangeType::eCaret;
     textRangeArray->AppendElement(range);
     MOZ_LOG(gGtkIMLog, LogLevel::Debug,
         ("GTKIM: %p   CreateTextRangeArray(), mStartOffset=%u, "
          "mEndOffset=%u, mRangeType=%s",
          this, range.mStartOffset, range.mEndOffset,
-         GetRangeTypeName(range.mRangeType)));
+         ToChar(range.mRangeType)));
 
     pango_attr_iterator_destroy(iter);
     pango_attr_list_unref(feedback_list);
@@ -1843,13 +1824,13 @@ IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
      * IME specific composition string style, we used following rules:
      *
      *   1: If attrUnderline and attrForground are specified, we assumed the
-     *      clause is NS_TEXTRANGE_SELECTEDCONVERTEDTEXT.
+     *      clause is TextRangeType::eSelectedClause.
      *   2: If only attrUnderline is specified, we assumed the clause is
-     *      NS_TEXTRANGE_CONVERTEDTEXT.
+     *      TextRangeType::eConvertedClause.
      *   3: If only attrForground is specified, we assumed the clause is
-     *      NS_TEXTRANGE_SELECTEDRAWTEXT.
+     *      TextRangeType::eSelectedRawClause.
      *   4: If neither attrUnderline nor attrForeground is specified, we assumed
-     *      the clause is NS_TEXTRANGE_RAWINPUT.
+     *      the clause is TextRangeType::eRawClause.
      *
      * However, this rules are odd since there can be two or more selected
      * clauses.  Additionally, our old rules caused that IME developers/users
@@ -1871,26 +1852,26 @@ IMContextWrapper::SetTextRange(PangoAttrIterator* aPangoAttrIter,
     if (!utf8ClauseStart &&
         utf8ClauseEnd == static_cast<gint>(strlen(aUTF8CompositionString)) &&
         aTextRange.mEndOffset == aUTF16CaretOffset) {
-        aTextRange.mRangeType = NS_TEXTRANGE_RAWINPUT;
+        aTextRange.mRangeType = TextRangeType::eRawClause;
     }
     // Typically, the caret is set at the start of the selected clause.
     // So, if the caret is in the clause, we can assume that the clause is
     // selected.
     else if (aTextRange.mStartOffset <= aUTF16CaretOffset &&
              aTextRange.mEndOffset > aUTF16CaretOffset) {
-        aTextRange.mRangeType = NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
+        aTextRange.mRangeType = TextRangeType::eSelectedClause;
     }
     // Otherwise, we should assume that the clause is converted but not
     // selected.
     else {
-        aTextRange.mRangeType = NS_TEXTRANGE_CONVERTEDTEXT;
+        aTextRange.mRangeType = TextRangeType::eConvertedClause;
     }
 
     MOZ_LOG(gGtkIMLog, LogLevel::Debug,
         ("GTKIM: %p   SetTextRange(), succeeded, aTextRange= { "
          "mStartOffset=%u, mEndOffset=%u, mRangeType=%s, mRangeStyle=%s }",
          this, aTextRange.mStartOffset, aTextRange.mEndOffset,
-         GetRangeTypeName(aTextRange.mRangeType),
+         ToChar(aTextRange.mRangeType),
          GetTextRangeStyleText(aTextRange.mRangeStyle).get()));
 
     return true;

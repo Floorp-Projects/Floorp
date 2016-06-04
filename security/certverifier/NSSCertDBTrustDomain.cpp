@@ -1099,6 +1099,15 @@ DefaultServerNicknameForCert(const CERTCertificate* cert,
   return NS_ERROR_FAILURE;
 }
 
+/**
+ * Given a list of certificates representing a verified certificate path from an
+ * end-entity certificate to a trust anchor, imports the intermediate
+ * certificates into the permanent certificate database. This is an attempt to
+ * cope with misconfigured servers that don't include the appropriate
+ * intermediate certificates in the TLS handshake.
+ *
+ * @param certList the verified certificate list
+ */
 void
 SaveIntermediateCerts(const UniqueCERTCertList& certList)
 {
@@ -1128,6 +1137,16 @@ SaveIntermediateCerts(const UniqueCERTCertList& certList)
 
     if (node->cert->isperm) {
       // We don't need to remember certs already stored in perm db.
+      continue;
+    }
+
+    // No need to save the trust anchor - it's either already a permanent
+    // certificate or it's the Microsoft Family Safety root or an enterprise
+    // root temporarily imported via the child mode or enterprise root features.
+    // We don't want to import these because they're intended to be temporary
+    // (and because importing them happens to reset their trust settings, which
+    // breaks these features).
+    if (node == CERT_LIST_TAIL(certList)) {
       continue;
     }
 

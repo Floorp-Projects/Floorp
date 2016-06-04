@@ -3,21 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 /* Webconsole specific theme variables */
-
-.theme-dark {
-  --command-line-image: -moz-image-rect(url("chrome://devtools/skin/images/commandline-icon.png"), 0, 32, 16, 16);
-  --command-line-image-2x: -moz-image-rect(url('chrome://devtools/skin/images/commandline-icon@2x.png'), 0, 64, 32, 32);
-}
-
-.theme-light {
-  --command-line-image: -moz-image-rect(url("chrome://devtools/skin/images/commandline-icon.png"), 0, 32, 16, 16);
-  --command-line-image-2x: -moz-image-rect(url('chrome://devtools/skin/images/commandline-icon@2x.png'), 0, 64, 32, 32);
-}
-
 .theme-firebug {
-  --command-line-image: url(chrome://devtools/skin/images/firebug/commandline-icon.svg);
-  --command-line-image-2x: url(chrome://devtools/skin/images/firebug/commandline-icon.svg);
-
   --error-color: #FF0000;
   --error-background-color: #FFEBEB;
   --warning-background-color: #FFFFC8;
@@ -414,9 +400,7 @@ a {
 }
 
 .jsterm-input-node[focused="true"] {
-  outline: var(--theme-focus-outline);
-  outline-offset: -1px;
-  transition: none;
+  background-image: var(--theme-command-line-image-focus);
   box-shadow: none;
 }
 
@@ -428,17 +412,11 @@ a {
   /* Always allow scrolling on input - it auto expands in js by setting height,
      but don't want it to get bigger than the window. 24px = toolbar height. */
   max-height: calc(90vh - 24px);
-  background-image: var(--command-line-image);
+  background-image: var(--theme-command-line-image);
   background-repeat: no-repeat;
   background-size: 16px 16px;
   background-position: 4px 50%;
   color: var(--theme-content-color1);
-}
-
-@media (min-resolution: 1.1dppx) {
-  .jsterm-input-node {
-    background-image: var(--command-line-image-2x);
-  }
 }
 
 :-moz-any(.jsterm-input-node,

@@ -62,7 +62,7 @@ public:
   bool ANativeWindow_setBuffersGeometry(void* aWindow, int32_t aWidth, int32_t aHeight, int32_t aFormat) {
     ALOG("%s: window=%p, width=%d, height=%d, format=%d\n", __PRETTY_FUNCTION__, aWindow, aWidth, aHeight, aFormat);
     if (!Initialized()) {
-      return nullptr;
+      return false;
     }
 
     return fANativeWindow_setBuffersGeometry(aWindow, aWidth, aHeight, (int32_t)aFormat) == 0;

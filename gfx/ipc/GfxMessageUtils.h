@@ -206,11 +206,11 @@ struct ParamTraits<gfxSurfaceType>
 {};
 
 template <>
-struct ParamTraits<mozilla::gfx::Filter>
+struct ParamTraits<mozilla::gfx::SamplingFilter>
   : public ContiguousEnumSerializer<
-             mozilla::gfx::Filter,
-             mozilla::gfx::Filter::GOOD,
-             mozilla::gfx::Filter::SENTINEL>
+             mozilla::gfx::SamplingFilter,
+             mozilla::gfx::SamplingFilter::GOOD,
+             mozilla::gfx::SamplingFilter::SENTINEL>
 {};
 
 template <>

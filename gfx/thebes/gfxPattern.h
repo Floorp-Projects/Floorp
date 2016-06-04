@@ -56,8 +56,8 @@ public:
 
     int CairoStatus();
 
-    void SetFilter(mozilla::gfx::Filter filter);
-    mozilla::gfx::Filter Filter() const;
+    void SetSamplingFilter(mozilla::gfx::SamplingFilter aSamplingFilter);
+    mozilla::gfx::SamplingFilter SamplingFilter() const;
 
     /* returns TRUE if it succeeded */
     bool GetSolidColor(mozilla::gfx::Color& aColorOut);

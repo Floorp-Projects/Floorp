@@ -401,7 +401,7 @@ nsImageBoxFrame::PaintImage(nsRenderingContext& aRenderingContext,
   return nsLayoutUtils::DrawSingleImage(
            *aRenderingContext.ThebesContext(),
            PresContext(), imgCon,
-           nsLayoutUtils::GetGraphicsFilterForFrame(this),
+           nsLayoutUtils::GetSamplingFilterForFrame(this),
            dest, dirty, nullptr, aFlags,
            anchorPoint.ptrOr(nullptr),
            hasSubRect ? &mSubRect : nullptr);

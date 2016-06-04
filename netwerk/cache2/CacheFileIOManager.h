@@ -91,7 +91,6 @@ private:
                                         // but it can be still deleted by OS/user
                                         // and then a subsequent OpenNSPRFileDesc()
                                         // will fail.
-  bool                 mLeakIt : 1; // Don't close the file descriptor of this handle.
 
   // Both initially false.  Can be raised to true only when this handle is to be doomed
   // during the period when the pinning status is unknown.  After the pinning status
@@ -387,7 +386,7 @@ private:
   nsresult DoomFileInternal(CacheFileHandle *aHandle,
                             PinningDoomRestriction aPinningStatusRestriction = NO_RESTRICTION);
   nsresult DoomFileByKeyInternal(const SHA1Sum::Hash *aHash);
-  nsresult ReleaseNSPRHandleInternal(CacheFileHandle *aHandle,
+  nsresult MaybeReleaseNSPRHandleInternal(CacheFileHandle *aHandle,
                                      bool aIgnoreShutdownLag = false);
   nsresult TruncateSeekSetEOFInternal(CacheFileHandle *aHandle,
                                       int64_t aTruncatePos, int64_t aEOFPos);
