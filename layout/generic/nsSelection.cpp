@@ -1703,22 +1703,22 @@ nsFrameSelection::TakeFocus(nsIContent*        aNewFocus,
     // BUT only do this in an editor
 
     NS_ENSURE_STATE(mShell);
-    bool editable = false;
+    bool editableCell = false;
     RefPtr<nsPresContext> context = mShell->GetPresContext();
     if (context) {
       nsCOMPtr<nsIHTMLEditor> editor = do_QueryInterface(nsContentUtils::GetHTMLEditor(context));
       if (editor) {
+        nsINode* cellparent = GetCellParent(aNewFocus);
         nsCOMPtr<nsINode> editorHostNode = editor->GetActiveEditingHost();
-        editable = editorHostNode && nsContentUtils::ContentIsDescendantOf(aNewFocus, editorHostNode);
-      }
-    }
-
-    if (editable) {
-      mCellParent = GetCellParent(aNewFocus);
+        editableCell = cellparent && editorHostNode && 
+                   nsContentUtils::ContentIsDescendantOf(cellparent, editorHostNode);
+        if (editableCell) {
+          mCellParent = cellparent;
 #ifdef DEBUG_TABLE_SELECTION
-      if (mCellParent)
-        printf(" * TakeFocus - Collapsing into new cell\n");
+          printf(" * TakeFocus - Collapsing into new cell\n");
 #endif
+        }
+      }
     }
   }
   else {
