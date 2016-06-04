@@ -24,7 +24,7 @@ TexturedEffect::PrintInfo(std::stringstream& aStream, const char* aPrefix)
     aStream << " [not-premultiplied]";
   }
 
-  AppendToString(aStream, mFilter, " [filter=", "]");
+  AppendToString(aStream, mSamplingFilter, " [filter=", "]");
 }
 
 void

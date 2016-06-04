@@ -58,8 +58,11 @@
 
 #include "logging.h"
 
-// Should come from MediaEngineWebRTC.h, but that's a pain to include here
-#define DEFAULT_SAMPLE_RATE 32000
+// Max size given stereo is 480*2*2 = 1920 (48KHz)
+#define AUDIO_SAMPLE_BUFFER_MAX 480*2*2
+static_assert((WEBRTC_DEFAULT_SAMPLE_RATE/100)*sizeof(uint16_t) * 2
+               <= AUDIO_SAMPLE_BUFFER_MAX,
+               "AUDIO_SAMPLE_BUFFER_MAX is not large enough");
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -1713,9 +1716,6 @@ void MediaPipelineTransmit::PipelineListener::ProcessAudioChunk(
 
     // We know that webrtc.org's code going to copy the samples down the line,
     // so we can just use a stack buffer here instead of malloc-ing.
-    // Max size given stereo is 480*2*2 = 1920 (10ms of 16-bits stereo audio at
-    // 48KHz)
-    const size_t AUDIO_SAMPLE_BUFFER_MAX = 1920;
     int16_t packet[AUDIO_SAMPLE_BUFFER_MAX];
 
     packetizer_->Output(packet);
@@ -1749,117 +1749,44 @@ class GenericReceiveCallback : public TrackAddedCallback
   RefPtr<GenericReceiveListener> listener_;
 };
 
-// Add a track and listener on the MSG thread using the MSG command queue
-static void AddTrackAndListener(MediaStream* source,
-                                TrackID track_id, TrackRate track_rate,
-                                MediaStreamListener* listener, MediaSegment* segment,
-                                const RefPtr<TrackAddedCallback>& completed,
-                                bool queue_track) {
-  // This both adds the listener and the track
+// Add a listener on the MSG thread using the MSG command queue
+static void AddListener(MediaStream* source, MediaStreamListener* listener) {
 #if !defined(MOZILLA_EXTERNAL_LINKAGE)
   class Message : public ControlMessage {
    public:
-    Message(MediaStream* stream, TrackID track, TrackRate rate,
-            MediaSegment* segment, MediaStreamListener* listener,
-            const RefPtr<TrackAddedCallback>& completed)
+    Message(MediaStream* stream, MediaStreamListener* listener)
       : ControlMessage(stream),
-        track_id_(track),
-        track_rate_(rate),
-        segment_(segment),
-        listener_(listener),
-        completed_(completed) {}
+        listener_(listener) {}
 
     virtual void Run() override {
-      StreamTime current_end = mStream->GetTracksEnd();
-      TrackTicks current_ticks =
-        mStream->TimeToTicksRoundUp(track_rate_, current_end);
-
       mStream->AddListenerImpl(listener_.forget());
-
-      // Add a track 'now' to avoid possible underrun, especially if we add
-      // a track "later".
-
-      if (current_end != 0L) {
-        MOZ_MTLOG(ML_DEBUG, "added track @ " << current_end <<
-                  " -> " << mStream->StreamTimeToSeconds(current_end));
-      }
-
-      // To avoid assertions, we need to insert a dummy segment that covers up
-      // to the "start" time for the track
-      segment_->AppendNullData(current_ticks);
-      if (segment_->GetType() == MediaSegment::AUDIO) {
-        mStream->AsSourceStream()->AddAudioTrack(track_id_, track_rate_, 0,
-                                                 static_cast<AudioSegment*>(segment_.forget()));
-      } else {
-        NS_ASSERTION(mStream->GraphRate() == track_rate_, "Rate mismatch");
-        mStream->AsSourceStream()->AddTrack(track_id_, 0, segment_.forget());
-      }
-
-      // We need to know how much has been "inserted" because we're given absolute
-      // times in NotifyPull.
-      completed_->TrackAdded(current_ticks);
     }
    private:
-    TrackID track_id_;
-    TrackRate track_rate_;
-    nsAutoPtr<MediaSegment> segment_;
     RefPtr<MediaStreamListener> listener_;
-    const RefPtr<TrackAddedCallback> completed_;
   };
 
   MOZ_ASSERT(listener);
 
-  if (!queue_track) {
-    // We're only queueing the initial set of tracks since they are added
-    // atomically and have start time 0. When not queueing we have to add
-    // the track on the MediaStreamGraph thread so it can be added with the
-    // appropriate start time.
-    source->GraphImpl()->AppendMessage(MakeUnique<Message>(source, track_id, track_rate, segment, listener, completed));
-    MOZ_MTLOG(ML_INFO, "Dispatched track-add for track id " << track_id <<
-                       " on stream " << source);
-    return;
-  }
-#endif
+  source->GraphImpl()->AppendMessage(MakeUnique<Message>(source, listener));
+#else
   source->AddListener(listener);
-  if (segment->GetType() == MediaSegment::AUDIO) {
-    source->AsSourceStream()->AddAudioTrack(track_id, track_rate, 0,
-                                            static_cast<AudioSegment*>(segment),
-                                            SourceMediaStream::ADDTRACK_QUEUED);
-  } else {
-    source->AsSourceStream()->AddTrack(track_id, 0, segment,
-                                       SourceMediaStream::ADDTRACK_QUEUED);
-  }
-  MOZ_MTLOG(ML_INFO, "Queued track-add for track id " << track_id <<
-                     " on MediaStream " << source);
+#endif
 }
 
 class GenericReceiveListener : public MediaStreamListener
 {
  public:
-  GenericReceiveListener(SourceMediaStream *source, TrackID track_id,
-                         TrackRate track_rate, bool queue_track)
+  GenericReceiveListener(SourceMediaStream *source, TrackID track_id)
     : source_(source),
       track_id_(track_id),
-      track_rate_(track_rate),
       played_ticks_(0),
-      queue_track_(queue_track),
       principal_handle_(PRINCIPAL_HANDLE_NONE) {}
 
   virtual ~GenericReceiveListener() {}
 
-  void AddSelf(MediaSegment* segment)
+  void AddSelf()
   {
-    RefPtr<TrackAddedCallback> callback = new GenericReceiveCallback(this);
-    AddTrackAndListener(source_, track_id_, track_rate_, this, segment, callback,
-                        queue_track_);
-  }
-
-  void SetPlayedTicks(TrackTicks time) {
-    played_ticks_ = time;
-  }
-
-  void EndTrack() {
-    source_->EndTrack(track_id_);
+    AddListener(source_, this);
   }
 
 #ifndef USE_FAKE_MEDIA_STREAMS
@@ -1898,16 +1825,9 @@ class GenericReceiveListener : public MediaStreamListener
  protected:
   SourceMediaStream *source_;
   TrackID track_id_;
-  TrackRate track_rate_;
   TrackTicks played_ticks_;
-  bool queue_track_;
   PrincipalHandle principal_handle_;
 };
-
-void GenericReceiveCallback::TrackAdded(TrackTicks time)
-{
-  listener_->SetPlayedTicks(time);
-}
 
 MediaPipelineReceive::MediaPipelineReceive(
     const std::string& pc,
@@ -1939,12 +1859,10 @@ class MediaPipelineReceiveAudio::PipelineListener
 {
 public:
   PipelineListener(SourceMediaStream * source, TrackID track_id,
-                   const RefPtr<MediaSessionConduit>& conduit,
-                   bool queue_track)
-    : GenericReceiveListener(source, track_id, DEFAULT_SAMPLE_RATE, queue_track), // XXX rate assumption
+                   const RefPtr<MediaSessionConduit>& conduit)
+    : GenericReceiveListener(source, track_id),
       conduit_(conduit)
   {
-    MOZ_ASSERT(track_rate_%100 == 0);
   }
 
   ~PipelineListener()
@@ -1972,12 +1890,8 @@ public:
     }
 
     // This comparison is done in total time to avoid accumulated roundoff errors.
-    while (source_->TicksToTimeRoundDown(track_rate_, played_ticks_) <
-           desired_time) {
-      // Max size given stereo is 480*2*2 = 1920 (48KHz)
-      const size_t AUDIO_SAMPLE_BUFFER_MAX = 1920;
-      MOZ_ASSERT((track_rate_/100)*sizeof(uint16_t) * 2 <= AUDIO_SAMPLE_BUFFER_MAX);
-
+    while (source_->TicksToTimeRoundDown(WEBRTC_DEFAULT_SAMPLE_RATE,
+                                         played_ticks_) < desired_time) {
       int16_t scratch_buffer[AUDIO_SAMPLE_BUFFER_MAX];
 
       int samples_length;
@@ -1986,7 +1900,7 @@ public:
       MediaConduitErrorCode err =
           static_cast<AudioSessionConduit*>(conduit_.get())->GetAudioFrame(
               scratch_buffer,
-              track_rate_,
+              WEBRTC_DEFAULT_SAMPLE_RATE,
               0,  // TODO(ekr@rtfm.com): better estimate of "capture" (really playout) delay
               samples_length);
 
@@ -1996,7 +1910,8 @@ public:
                   << ") to return data @ " << played_ticks_
                   << " (desired " << desired_time << " -> "
                   << source_->StreamTimeToSeconds(desired_time) << ")");
-        samples_length = track_rate_/100; // if this is not enough we'll loop and provide more
+        // if this is not enough we'll loop and provide more
+        samples_length = WEBRTC_DEFAULT_SAMPLE_RATE/100;
         PodArrayZero(scratch_buffer);
       }
 
@@ -2011,7 +1926,7 @@ public:
       // We derive the number of channels of the stream from the number of samples
       // the AudioConduit gives us, considering it gives us packets of 10ms and we
       // know the rate.
-      uint32_t channelCount = samples_length / (track_rate_ / 100);
+      uint32_t channelCount = samples_length / (WEBRTC_DEFAULT_SAMPLE_RATE / 100);
       AutoTArray<int16_t*,2> channels;
       AutoTArray<const int16_t*,2> outputChannels;
       size_t frames = samples_length / channelCount;
@@ -2061,13 +1976,11 @@ MediaPipelineReceiveAudio::MediaPipelineReceiveAudio(
     RefPtr<AudioSessionConduit> conduit,
     RefPtr<TransportFlow> rtp_transport,
     RefPtr<TransportFlow> rtcp_transport,
-    nsAutoPtr<MediaPipelineFilter> filter,
-    bool queue_track) :
+    nsAutoPtr<MediaPipelineFilter> filter) :
   MediaPipelineReceive(pc, main_thread, sts_thread,
                        stream, media_stream_track_id, level, conduit,
                        rtp_transport, rtcp_transport, filter),
-  listener_(new PipelineListener(stream, numeric_track_id, conduit,
-                                 queue_track))
+  listener_(new PipelineListener(stream, numeric_track_id, conduit))
 {}
 
 void MediaPipelineReceiveAudio::DetachMedia()
@@ -2087,7 +2000,7 @@ nsresult MediaPipelineReceiveAudio::Init() {
   description_ += track_id_;
   description_ += "]";
 
-  listener_->AddSelf(new AudioSegment());
+  listener_->AddSelf();
 
   return MediaPipelineReceive::Init();
 }
@@ -2102,9 +2015,8 @@ void MediaPipelineReceiveAudio::SetPrincipalHandle_m(const PrincipalHandle& prin
 class MediaPipelineReceiveVideo::PipelineListener
   : public GenericReceiveListener {
 public:
-  PipelineListener(SourceMediaStream * source, TrackID track_id,
-                   bool queue_track)
-    : GenericReceiveListener(source, track_id, source->GraphRate(), queue_track),
+  PipelineListener(SourceMediaStream * source, TrackID track_id)
+    : GenericReceiveListener(source, track_id),
       width_(0),
       height_(0),
 #if defined(MOZILLA_INTERNAL_API)
@@ -2122,15 +2034,10 @@ public:
   // Implement MediaStreamListener
   void NotifyPull(MediaStreamGraph* graph, StreamTime desired_time) override
   {
+  #if defined(MOZILLA_INTERNAL_API)
     ReentrantMonitorAutoEnter enter(monitor_);
 
-  #if defined(MOZILLA_INTERNAL_API)
     RefPtr<Image> image = image_;
-    // our constructor sets track_rate_ to the graph rate
-    MOZ_ASSERT(track_rate_ == source_->GraphRate());
-  #endif
-
-  #if defined(MOZILLA_INTERNAL_API)
     StreamTime delta = desired_time - played_ticks_;
 
     // Don't append if we've already provided a frame that supposedly
@@ -2293,20 +2200,18 @@ MediaPipelineReceiveVideo::MediaPipelineReceiveVideo(
     RefPtr<VideoSessionConduit> conduit,
     RefPtr<TransportFlow> rtp_transport,
     RefPtr<TransportFlow> rtcp_transport,
-    nsAutoPtr<MediaPipelineFilter> filter,
-    bool queue_track) :
+    nsAutoPtr<MediaPipelineFilter> filter) :
   MediaPipelineReceive(pc, main_thread, sts_thread,
                        stream, media_stream_track_id, level, conduit,
                        rtp_transport, rtcp_transport, filter),
   renderer_(new PipelineRenderer(this)),
-  listener_(new PipelineListener(stream, numeric_track_id, queue_track))
+  listener_(new PipelineListener(stream, numeric_track_id))
 {}
 
 void MediaPipelineReceiveVideo::DetachMedia()
 {
   ASSERT_ON_THREAD(main_thread_);
 
-  listener_->EndTrack();
   // stop generating video and thus stop invoking the PipelineRenderer
   // and PipelineListener - the renderer has a raw ptr to the Pipeline to
   // avoid cycles, and the render callbacks are invoked from a different
@@ -2327,7 +2232,7 @@ nsresult MediaPipelineReceiveVideo::Init() {
   description_ += "]";
 
 #if defined(MOZILLA_INTERNAL_API)
-  listener_->AddSelf(new VideoSegment());
+  listener_->AddSelf();
 #endif
 
   // Always happens before we can DetachMedia()

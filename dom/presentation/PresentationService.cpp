@@ -453,7 +453,7 @@ PresentationService::StartSession(const nsAString& aUrl,
 
   NS_ConvertUTF16toUTF8 utf8DeviceId(aDeviceId);
   bool hasMore;
-  while(NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore){
+  while (NS_SUCCEEDED(enumerator->HasMoreElements(&hasMore)) && hasMore) {
     nsCOMPtr<nsISupports> isupports;
     rv = enumerator->GetNext(getter_AddRefs(isupports));
 
@@ -618,6 +618,25 @@ PresentationService::UnregisterSessionListener(const nsAString& aSessionId,
   return NS_OK;
 }
 
+nsresult
+PresentationService::RegisterTransportBuilder(const nsAString& aSessionId,
+                                              uint8_t aRole,
+                                              nsIPresentationSessionTransportBuilder* aBuilder)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aBuilder);
+  MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
+             aRole == nsIPresentationService::ROLE_RECEIVER);
+
+  RefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId, aRole);
+  if (NS_WARN_IF(!info)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  info->SetBuilder(aBuilder);
+  return NS_OK;
+}
+
 NS_IMETHODIMP
 PresentationService::RegisterRespondingListener(
   uint64_t aWindowId,
@@ -681,6 +700,23 @@ PresentationService::NotifyReceiverReady(const nsAString& aSessionId,
   }
 
   return static_cast<PresentationPresentingInfo*>(info.get())->NotifyResponderReady();
+}
+
+nsresult
+PresentationService::NotifyTransportClosed(const nsAString& aSessionId,
+                                           uint8_t aRole,
+                                           nsresult aReason) {
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(!aSessionId.IsEmpty());
+  MOZ_ASSERT(aRole == nsIPresentationService::ROLE_CONTROLLER ||
+             aRole == nsIPresentationService::ROLE_RECEIVER);
+
+  RefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId, aRole);
+  if (NS_WARN_IF(!info)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+
+  return info->NotifyTransportClosed(aReason);
 }
 
 NS_IMETHODIMP

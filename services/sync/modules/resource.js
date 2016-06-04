@@ -74,20 +74,6 @@ AsyncResource.prototype = {
    */
   authenticator: null,
 
-  // The string to use as the base User-Agent in Sync requests.
-  // These strings will look something like
-  //
-  //   Firefox/4.0 FxSync/1.8.0.20100101.mobile
-  //
-  // or
-  //
-  //   Firefox Aurora/5.0a1 FxSync/1.9.0.20110409.desktop
-  //
-  _userAgent:
-    Services.appinfo.name + "/" + Services.appinfo.version +  // Product.
-    " FxSync/" + WEAVE_VERSION + "." +                        // Sync.
-    Services.appinfo.appBuildID + ".",                        // Build.
-
   // Wait 5 minutes before killing a request.
   ABORT_TIMEOUT: 300000,
 
@@ -161,8 +147,7 @@ AsyncResource.prototype = {
 
     // Compose a UA string fragment from the various available identifiers.
     if (Svc.Prefs.get("sendVersionInfo", true)) {
-      let ua = this._userAgent + Svc.Prefs.get("client.type", "desktop");
-      channel.setRequestHeader("user-agent", ua, false);
+      channel.setRequestHeader("user-agent", Utils.userAgent, false);
     }
 
     let headers = this.headers;

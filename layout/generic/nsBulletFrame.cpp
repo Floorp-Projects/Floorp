@@ -309,7 +309,7 @@ nsBulletFrame::PaintBullet(nsRenderingContext& aRenderingContext, nsPoint aPt,
         return
           nsLayoutUtils::DrawSingleImage(*aRenderingContext.ThebesContext(),
              PresContext(),
-             imageCon, nsLayoutUtils::GetGraphicsFilterForFrame(this),
+             imageCon, nsLayoutUtils::GetSamplingFilterForFrame(this),
              dest + aPt, aDirtyRect, nullptr, aFlags);
       }
     }

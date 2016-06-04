@@ -12,6 +12,7 @@ import re
 import subprocess
 from collections import namedtuple
 from urlparse import urlsplit
+import hashlib
 
 import sys
 sys.path.insert(1, os.path.dirname(os.path.dirname(os.path.dirname(sys.path[0]))))
@@ -354,6 +355,10 @@ class MercurialVCS(ScriptMixin, LogMixin, TransferMixin):
             branch = 'default'
 
         share_base = c.get('vcs_share_base', os.environ.get('HG_SHARE_BASE_DIR', None))
+        if share_base and c.get('use_vcs_unique_share'):
+            # Bug 1277041 - update migration scripts to support robustcheckout
+            # fake a share but don't really share
+            share_base = os.path.join(share_base, hashlib.md5(dest).hexdigest())
 
         # We require shared storage is configured because it guarantees we
         # only have 1 local copy of logical repo stores.

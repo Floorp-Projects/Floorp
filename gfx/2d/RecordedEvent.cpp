@@ -279,7 +279,7 @@ RecordedEvent::StorePattern(PatternStorage &aDestination, const Pattern &aSource
       const SurfacePattern *pat =
         static_cast<const SurfacePattern*>(&aSource);
       store->mExtend = pat->mExtendMode;
-      store->mFilter = pat->mFilter;
+      store->mSamplingFilter = pat->mSamplingFilter;
       store->mMatrix = pat->mMatrix;
       store->mSurface = pat->mSurface;
       return;
@@ -533,7 +533,8 @@ struct GenericPattern
         SurfacePatternStorage *storage = reinterpret_cast<SurfacePatternStorage*>(&mStorage->mStorage);
         mPattern =
           new (mSurfPat) SurfacePattern(mTranslator->LookupSourceSurface(storage->mSurface),
-                                        storage->mExtend, storage->mMatrix, storage->mFilter);
+                                        storage->mExtend, storage->mMatrix,
+                                        storage->mSamplingFilter);
         return mPattern;
       }
     case PatternType::LINEAR_GRADIENT:

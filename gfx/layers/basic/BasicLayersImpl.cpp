@@ -115,7 +115,7 @@ void
 FillRectWithMask(DrawTarget* aDT,
                  const Rect& aRect,
                  SourceSurface* aSurface,
-                 Filter aFilter,
+                 SamplingFilter aSamplingFilter,
                  const DrawOptions& aOptions,
                  ExtendMode aExtendMode,
                  SourceSurface* aMaskSource,
@@ -134,7 +134,7 @@ FillRectWithMask(DrawTarget* aDT,
       transform = (*aSurfaceTransform) * transform;
     }
 
-    SurfacePattern source(aSurface, aExtendMode, transform, aFilter);
+    SurfacePattern source(aSurface, aExtendMode, transform, aSamplingFilter);
 
     aDT->SetTransform(*aMaskTransform);
     aDT->MaskSurface(source, aMaskSource, Point(0, 0), aOptions);
@@ -146,7 +146,7 @@ FillRectWithMask(DrawTarget* aDT,
   aDT->FillRect(aRect,
                 SurfacePattern(aSurface, aExtendMode,
                                aSurfaceTransform ? (*aSurfaceTransform) : Matrix(),
-                               aFilter), aOptions);
+                               aSamplingFilter), aOptions);
 }
 
 void
@@ -154,19 +154,21 @@ FillRectWithMask(DrawTarget* aDT,
                  const gfx::Point& aDeviceOffset,
                  const Rect& aRect,
                  SourceSurface* aSurface,
-                 Filter aFilter,
+                 SamplingFilter aSamplingFilter,
                  const DrawOptions& aOptions,
                  Layer* aMaskLayer)
 {
   AutoMoz2DMaskData mask;
   if (GetMaskData(aMaskLayer, aDeviceOffset, &mask)) {
     const Matrix& maskTransform = mask.GetTransform();
-    FillRectWithMask(aDT, aRect, aSurface, aFilter, aOptions, ExtendMode::CLAMP,
+    FillRectWithMask(aDT, aRect, aSurface, aSamplingFilter, aOptions,
+                     ExtendMode::CLAMP,
                      mask.GetSurface(), &maskTransform);
     return;
   }
 
-  FillRectWithMask(aDT, aRect, aSurface, aFilter, aOptions, ExtendMode::CLAMP);
+  FillRectWithMask(aDT, aRect, aSurface, aSamplingFilter, aOptions,
+                   ExtendMode::CLAMP);
 }
 
 BasicImplData*

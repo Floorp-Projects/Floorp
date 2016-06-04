@@ -1,0 +1,42 @@
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+<svg width="16px" height="16px" viewBox="0 0 16 16" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      g {
+        display: none;
+      }
+
+      #light-theme:target,
+      #light-theme-focus:target ~ #light-theme,
+      #dark-theme:target,
+      #dark-theme-focus:target ~ #dark-theme {
+        display: inline;
+      }
+
+      #light-theme-focus:target ~ #light-theme {
+        fill: #4A90E2;
+      }
+      #dark-theme-focus:target ~ #dark-theme {
+        fill: #00FF7F;
+      }
+
+      /* Unfocused states */
+      #light-theme,
+      #dark-theme {
+        fill: rgba(128, 128, 128, .5);
+      }
+    </style>
+  </defs>
+  <g id="light-theme-focus"/>
+  <g id="light-theme">
+    <path d="M7.29 13.907l7-5a.5.5 0 0 0 .033-.789l-6.5-5.5a.5.5 0 1 0-.646.764l6.5 5.5.032-.789-7 5a.5.5 0 1 0 .582.814z"/>
+    <path d="M2.29 13.907l7-5a.5.5 0 0 0 .033-.789l-6.5-5.5a.5.5 0 1 0-.646.764l6.5 5.5.032-.789-7 5a.5.5 0 1 0 .582.814z"/>
+  </g>
+  <g id="dark-theme-focus"/>
+  <g id="dark-theme">
+    <path d="M7.29 13.907l7-5a.5.5 0 0 0 .033-.789l-6.5-5.5a.5.5 0 1 0-.646.764l6.5 5.5.032-.789-7 5a.5.5 0 1 0 .582.814z"/>
+    <path d="M2.29 13.907l7-5a.5.5 0 0 0 .033-.789l-6.5-5.5a.5.5 0 1 0-.646.764l6.5 5.5.032-.789-7 5a.5.5 0 1 0 .582.814z"/>
+  </g>
+</svg>

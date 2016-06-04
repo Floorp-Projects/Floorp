@@ -571,10 +571,9 @@ class TransportConduitTest : public ::testing::Test
     ASSERT_EQ(mozilla::kMediaConduitNoError, err);
 
     //configure send and recv codecs on the audio-conduit
-    //mozilla::AudioCodecConfig cinst1(124,"PCMU",8000,80,1,64000);
-    mozilla::AudioCodecConfig cinst1(124,"opus",48000,960,1,64000);
-    mozilla::AudioCodecConfig cinst2(125,"L16",16000,320,1,256000);
-
+    //mozilla::AudioCodecConfig cinst1(124, "PCMU", 8000, 80, 1, 64000, false);
+    mozilla::AudioCodecConfig cinst1(124, "opus", 48000, 960, 1, 64000, false);
+    mozilla::AudioCodecConfig cinst2(125, "L16", 16000, 320, 1, 256000, false);
 
     std::vector<mozilla::AudioCodecConfig*> rcvCodecList;
     rcvCodecList.push_back(&cinst1);

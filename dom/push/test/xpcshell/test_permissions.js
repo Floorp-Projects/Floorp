@@ -23,18 +23,8 @@ function run_test() {
 
 let unregisterDefers = {};
 
-function putRecord(channelID, scope, quota) {
-  return db.put({
-    channelID: channelID,
-    pushEndpoint: 'https://example.org/push/' + channelID,
-    scope: scope,
-    pushCount: 0,
-    lastPush: 0,
-    version: null,
-    originAttributes: '',
-    quota: quota,
-    systemRecord: quota == Infinity,
-  });
+function promiseUnregister(keyID) {
+  return new Promise(r => unregisterDefers[keyID] = r);
 }
 
 function makePushPermission(url, capability) {
@@ -80,32 +70,32 @@ function allExpired(...keyIDs) {
 add_task(function* setUp() {
   // Active registration; quota should be reset to 16. Since the quota isn't
   // exposed to content, we shouldn't receive a subscription change event.
-  yield putRecord('active-allow', 'https://example.info/page/1', 8);
+  yield putTestRecord(db, 'active-allow', 'https://example.info/page/1', 8);
 
   // Expired registration; should be dropped.
-  yield putRecord('expired-allow', 'https://example.info/page/2', 0);
+  yield putTestRecord(db, 'expired-allow', 'https://example.info/page/2', 0);
 
   // Active registration; should be expired when we change the permission
   // to "deny".
-  yield putRecord('active-deny-changed', 'https://example.xyz/page/1', 16);
+  yield putTestRecord(db, 'active-deny-changed', 'https://example.xyz/page/1', 16);
 
   // Two active registrations for a visited site. These will expire when we
   // add a "deny" permission.
-  yield putRecord('active-deny-added-1', 'https://example.net/ham', 16);
-  yield putRecord('active-deny-added-2', 'https://example.net/green', 8);
+  yield putTestRecord(db, 'active-deny-added-1', 'https://example.net/ham', 16);
+  yield putTestRecord(db, 'active-deny-added-2', 'https://example.net/green', 8);
 
   // An already-expired registration for a visited site. We shouldn't send an
   // `unregister` request for this one, but still receive an observer
   // notification when we restore permissions.
-  yield putRecord('expired-deny-added', 'https://example.net/eggs', 0);
+  yield putTestRecord(db, 'expired-deny-added', 'https://example.net/eggs', 0);
 
   // A registration that should not be affected by permission list changes
   // because its quota is set to `Infinity`.
-  yield putRecord('never-expires', 'app://chrome/only', Infinity);
+  yield putTestRecord(db, 'never-expires', 'app://chrome/only', Infinity);
 
   // A registration that should be dropped when we clear the permission
   // list.
-  yield putRecord('drop-on-clear', 'https://example.edu/lonely', 16);
+  yield putTestRecord(db, 'drop-on-clear', 'https://example.edu/lonely', 16);
 
   let handshakeDone;
   let handshakePromise = new Promise(resolve => handshakeDone = resolve);
@@ -162,8 +152,7 @@ add_task(function* test_permissions_allow_added() {
 add_task(function* test_permissions_allow_deleted() {
   let subModifiedPromise = promiseSubscriptionModifications(1);
 
-  let unregisterPromise = new Promise(resolve => unregisterDefers[
-    'active-allow'] = resolve);
+  let unregisterPromise = promiseUnregister('active-allow');
 
   yield PushService._onPermissionChange(
     makePushPermission('https://example.info', 'ALLOW_ACTION'),
@@ -186,10 +175,8 @@ add_task(function* test_permissions_deny_added() {
   let subModifiedPromise = promiseSubscriptionModifications(2);
 
   let unregisterPromise = Promise.all([
-    new Promise(resolve => unregisterDefers[
-      'active-deny-added-1'] = resolve),
-    new Promise(resolve => unregisterDefers[
-      'active-deny-added-2'] = resolve),
+    promiseUnregister('active-deny-added-1'),
+    promiseUnregister('active-deny-added-2'),
   ]);
 
   yield PushService._onPermissionChange(
@@ -252,8 +239,7 @@ add_task(function* test_permissions_allow_changed() {
 add_task(function* test_permissions_deny_changed() {
   let subModifiedPromise = promiseSubscriptionModifications(1);
 
-  let unregisterPromise = new Promise(resolve => unregisterDefers[
-    'active-deny-changed'] = resolve);
+  let unregisterPromise = promiseUnregister('active-deny-changed');
 
   yield PushService._onPermissionChange(
     makePushPermission('https://example.xyz', 'DENY_ACTION'),
@@ -275,16 +261,18 @@ add_task(function* test_permissions_deny_changed() {
 add_task(function* test_permissions_clear() {
   let subModifiedPromise = promiseSubscriptionModifications(3);
 
-  let records = yield db.getAllKeyIDs();
-  deepEqual(records.map(record => record.keyID).sort(), [
+  deepEqual(yield getAllKeyIDs(db), [
     'active-allow',
     'active-deny-changed',
     'drop-on-clear',
     'never-expires',
   ], 'Wrong records in database before clearing');
 
-  let unregisterPromise = new Promise(resolve => unregisterDefers[
-      'drop-on-clear'] = resolve);
+  let unregisterPromise = Promise.all([
+    promiseUnregister('active-allow'),
+    promiseUnregister('active-deny-changed'),
+    promiseUnregister('drop-on-clear'),
+  ]);
 
   yield PushService._onPermissionChange(null, 'cleared');
 
@@ -297,8 +285,7 @@ add_task(function* test_permissions_clear() {
     'https://example.xyz/page/1',
   ], 'Wrong scopes modified after clearing registrations');
 
-  records = yield db.getAllKeyIDs();
-  deepEqual(records.map(record => record.keyID).sort(), [
+  deepEqual(yield getAllKeyIDs(db), [
     'never-expires',
   ], 'Unrestricted registrations should not be dropped');
 });

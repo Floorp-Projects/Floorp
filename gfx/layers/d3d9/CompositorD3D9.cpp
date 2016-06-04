@@ -363,7 +363,7 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
                                              textureCoords.height),
                                            1);
 
-      SetSamplerForFilter(texturedEffect->mFilter);
+      SetSamplerForSamplingFilter(texturedEffect->mSamplingFilter);
 
       TextureSourceD3D9* source = texturedEffect->mTexture->AsSourceD3D9();
       d3d9Device->SetTexture(0, source->GetD3D9Texture());
@@ -381,7 +381,7 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
       EffectYCbCr* ycbcrEffect =
         static_cast<EffectYCbCr*>(aEffectChain.mPrimaryEffect.get());
 
-      SetSamplerForFilter(Filter::LINEAR);
+      SetSamplerForSamplingFilter(SamplingFilter::LINEAR);
 
       Rect textureCoords = ycbcrEffect->mTextureCoords;
       d3d9Device->SetVertexShaderConstantF(CBvTextureCoords,
@@ -479,7 +479,7 @@ CompositorD3D9::DrawQuad(const gfx::Rect &aRect,
                                              textureCoords.height),
                                            1);
 
-      SetSamplerForFilter(effectComponentAlpha->mFilter);
+      SetSamplerForSamplingFilter(effectComponentAlpha->mSamplingFilter);
 
       maskTexture = mDeviceManager->SetShaderMode(DeviceManagerD3D9::COMPONENTLAYERPASS1, maskType);
       SetMask(aEffectChain, maskTexture);
@@ -764,14 +764,14 @@ CompositorD3D9::EnsureSize()
 }
 
 void
-CompositorD3D9::SetSamplerForFilter(Filter aFilter)
+CompositorD3D9::SetSamplerForSamplingFilter(SamplingFilter aSamplingFilter)
 {
-  switch (aFilter) {
-  case Filter::LINEAR:
+  switch (aSamplingFilter) {
+  case SamplingFilter::LINEAR:
     device()->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
     device()->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
     return;
-  case Filter::POINT:
+  case SamplingFilter::POINT:
     device()->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_POINT);
     device()->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_POINT);
     return;

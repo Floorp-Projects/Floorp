@@ -150,9 +150,12 @@ class ProcessHandlerMixin(object):
                         try:
                             os.killpg(self.pid, sig)
                         except BaseException as e:
+                            # Error 3 is a "no such process" failure, which is fine because the
+                            # application might already have been terminated itself. Any other
+                            # error would indicate a problem in killing the process.
                             if getattr(e, "errno", None) != 3:
-                                # Error 3 is "no such process", which is ok
-                                print >> sys.stdout, "Could not kill process, could not find pid: %s, assuming it's already dead" % self.pid
+                                print >> sys.stderr, "Could not terminate process: %s" % self.pid
+                                raise
                     else:
                         os.kill(self.pid, sig)
 
