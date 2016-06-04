@@ -53,7 +53,7 @@ include ruby/reftest.list
 # include selectors3/reftest.list
 
 # Selectors Level 4
-# include selectors4/reftest.list
+include selectors4/reftest.list
 
 # Text Level 3
 include text3/reftest.list
