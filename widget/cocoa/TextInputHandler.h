@@ -966,8 +966,8 @@ private:
    * @param aSelectedRange        Current selected range (or caret position).
    * @return                      NS_TEXTRANGE_*.
    */
-  uint32_t ConvertToTextRangeType(uint32_t aUnderlineStyle,
-                                  NSRange& aSelectedRange);
+  TextRangeType ConvertToTextRangeType(uint32_t aUnderlineStyle,
+                                       NSRange& aSelectedRange);
 
   /**
    * GetRangeCount() computes the range count of aAttrString.
