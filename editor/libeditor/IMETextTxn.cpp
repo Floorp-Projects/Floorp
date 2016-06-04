@@ -135,16 +135,16 @@ IMETextTxn::GetTxnDescription(nsAString& aString)
 
 /* ============ private methods ================== */
 static SelectionType
-ToSelectionType(uint32_t aTextRangeType)
+ToSelectionType(TextRangeType aTextRangeType)
 {
-  switch(aTextRangeType) {
-    case NS_TEXTRANGE_RAWINPUT:
+  switch (aTextRangeType) {
+    case TextRangeType::NS_TEXTRANGE_RAWINPUT:
       return nsISelectionController::SELECTION_IME_RAWINPUT;
-    case NS_TEXTRANGE_SELECTEDRAWTEXT:
+    case TextRangeType::NS_TEXTRANGE_SELECTEDRAWTEXT:
       return nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT;
-    case NS_TEXTRANGE_CONVERTEDTEXT:
+    case TextRangeType::NS_TEXTRANGE_CONVERTEDTEXT:
       return nsISelectionController::SELECTION_IME_CONVERTEDTEXT;
-    case NS_TEXTRANGE_SELECTEDCONVERTEDTEXT:
+    case TextRangeType::NS_TEXTRANGE_SELECTEDCONVERTEDTEXT:
       return nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT;
     default:
       MOZ_CRASH("Selection type is invalid");
@@ -213,7 +213,7 @@ IMETextTxn::SetIMESelection(nsEditor& aEditor,
 
     // Caret needs special handling since its length may be 0 and if it's not
     // specified explicitly, we need to handle it ourselves later.
-    if (textRange.mRangeType == NS_TEXTRANGE_CARETPOSITION) {
+    if (textRange.mRangeType == TextRangeType::NS_TEXTRANGE_CARETPOSITION) {
       NS_ASSERTION(!setCaret, "The ranges already has caret position");
       NS_ASSERTION(!textRange.Length(), "nsEditor doesn't support wide caret");
       int32_t caretOffset = static_cast<int32_t>(

@@ -57,6 +57,56 @@ ToChar(EventClassID aEventClassID)
   }
 }
 
+bool
+IsValidRawTextRangeValue(RawTextRangeType aRawTextRangeType)
+{
+  switch (static_cast<TextRangeType>(aRawTextRangeType)) {
+    case TextRangeType::NS_TEXTRANGE_UNDEFINED:
+    case TextRangeType::NS_TEXTRANGE_CARETPOSITION:
+    case TextRangeType::NS_TEXTRANGE_RAWINPUT:
+    case TextRangeType::NS_TEXTRANGE_SELECTEDRAWTEXT:
+    case TextRangeType::NS_TEXTRANGE_CONVERTEDTEXT:
+    case TextRangeType::NS_TEXTRANGE_SELECTEDCONVERTEDTEXT:
+      return true;
+    default:
+      return false;
+  }
+}
+
+RawTextRangeType
+ToRawTextRangeType(TextRangeType aTextRangeType)
+{
+  return static_cast<RawTextRangeType>(aTextRangeType);
+}
+
+TextRangeType
+ToTextRangeType(RawTextRangeType aRawTextRangeType)
+{
+  MOZ_ASSERT(IsValidRawTextRangeValue(aRawTextRangeType));
+  return static_cast<TextRangeType>(aRawTextRangeType);
+}
+
+const char*
+ToChar(TextRangeType aTextRangeType)
+{
+  switch (aTextRangeType) {
+    case TextRangeType::NS_TEXTRANGE_UNDEFINED:
+      return "NS_TEXTRANGE_UNDEFINED";
+    case TextRangeType::NS_TEXTRANGE_CARETPOSITION:
+      return "NS_TEXTRANGE_CARETPOSITION";
+    case TextRangeType::NS_TEXTRANGE_RAWINPUT:
+      return "NS_TEXTRANGE_RAWINPUT";
+    case TextRangeType::NS_TEXTRANGE_SELECTEDRAWTEXT:
+      return "NS_TEXTRANGE_SELECTEDRAWTEXT";
+    case TextRangeType::NS_TEXTRANGE_CONVERTEDTEXT:
+      return "NS_TEXTRANGE_CONVERTEDTEXT";
+    case TextRangeType::NS_TEXTRANGE_SELECTEDCONVERTEDTEXT:
+      return "NS_TEXTRANGE_SELECTEDCONVERTEDTEXT";
+    default:
+      return "Invalid TextRangeType";
+  }
+}
+
 /******************************************************************************
  * As*Event() implementation
  ******************************************************************************/
