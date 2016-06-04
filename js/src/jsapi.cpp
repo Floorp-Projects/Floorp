@@ -432,6 +432,19 @@ JS_IsBuiltinFunctionConstructor(JSFunction* fun)
     return fun->isBuiltinFunctionConstructor();
 }
 
+JS_PUBLIC_API(bool)
+JS_IsFunctionBound(JSFunction* fun)
+{
+    return fun->isBoundFunction();
+}
+
+JS_PUBLIC_API(JSObject*)
+JS_GetBoundFunctionTarget(JSFunction* fun)
+{
+    return fun->isBoundFunction() ?
+               fun->getBoundFunctionTarget() : nullptr;
+}
+
 /************************************************************************/
 
 #ifdef DEBUG
