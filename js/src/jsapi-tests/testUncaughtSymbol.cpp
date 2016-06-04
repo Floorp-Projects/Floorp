@@ -33,7 +33,7 @@ BEGIN_TEST(testUncaughtSymbol)
 static SymbolExceptionType
 GetSymbolExceptionType(JSContext* cx)
 {
-    RootedValue exn(cx);
+    JS::RootedValue exn(cx);
     MOZ_RELEASE_ASSERT(JS_GetPendingException(cx, &exn));
     MOZ_RELEASE_ASSERT(exn.isSymbol());
     JS_ClearPendingException(cx);
