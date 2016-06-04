@@ -4711,6 +4711,10 @@ pref("dom.push.userAgentID", "");
 // without user interaction.
 pref("dom.push.maxQuotaPerSubscription", 16);
 
+// The maximum number of recent message IDs to store for each push
+// subscription, to avoid duplicates for unacknowledged messages.
+pref("dom.push.maxRecentMessageIDsPerSubscription", 10);
+
 // The delay between receiving a push message and updating the quota for a
 // subscription.
 pref("dom.push.quotaUpdateDelay", 3000); // 3 seconds
