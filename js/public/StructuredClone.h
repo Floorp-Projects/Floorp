@@ -259,6 +259,7 @@ class JS_PUBLIC_API(JSAutoStructuredCloneBuffer) {
 #define JS_SCERR_RECURSION 0
 #define JS_SCERR_TRANSFERABLE 1
 #define JS_SCERR_DUP_TRANSFERABLE 2
+#define JS_SCERR_UNSUPPORTED_TYPE 3
 
 JS_PUBLIC_API(bool)
 JS_ReadUint32Pair(JSStructuredCloneReader* r, uint32_t* p1, uint32_t* p2);
