@@ -209,7 +209,7 @@ public class LocalURLMetadata implements URLMetadata {
      * Must not be called from UI or Gecko threads.
      */
     @Override
-    public void save(final ContentResolver cr, final Map<String, Object> data) {
+    public void save(final ContentResolver cr, final String url, final Map<String, Object> data) {
         ThreadUtils.assertNotOnUiThread();
         ThreadUtils.assertNotOnGeckoThread();
 
