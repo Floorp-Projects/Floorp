@@ -2,12 +2,13 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this file,
 # You can obtain one at http://mozilla.org/MPL/2.0/.
 
+# This commit parser is used by the legacy kind; once that is gone, it can be
+# removed.
 
 import argparse
 import copy
 import re
 import shlex
-from try_test_parser import parse_test_opts
 
 TRY_DELIMITER = 'try:'
 TEST_CHUNK_SUFFIX = re.compile('(.*)-([0-9]+)$')
@@ -18,6 +19,62 @@ BUILD_TYPE_ALIASES = {
     'o': 'opt',
     'd': 'debug'
 }
+
+def parse_test_opts(input_str):
+    '''Test argument parsing is surprisingly complicated with the "restrictions"
+    logic this function is responsible for parsing this out into a easier to
+    work with structure like { test: '..', platforms: ['..'] }'''
+
+    # Final results which we will return.
+    tests = []
+
+    cur_test = {}
+    token = ''
+    in_platforms = False
+
+    def add_test(value):
+        cur_test['test'] = value.strip()
+        tests.insert(0, cur_test)
+
+    def add_platform(value):
+        # Ensure platforms exists...
+        cur_test['platforms'] = cur_test.get('platforms', [])
+        cur_test['platforms'].insert(0, value.strip())
+
+    # This might be somewhat confusing but we parse the string _backwards_ so
+    # there is no ambiguity over what state we are in.
+    for char in reversed(input_str):
+        # , indicates exiting a state
+        if char == ',':
+            # Exit a particular platform.
+            if in_platforms:
+                add_platform(token)
+
+            # Exit a particular test.
+            else:
+                add_test(token)
+                cur_test = {}
+
+            # Token must always be reset after we exit a state
+            token = ''
+        elif char == '[':
+            # Exiting platform state entering test state.
+            add_platform(token)
+            token = ''
+            in_platforms = False
+        elif char == ']':
+            # Entering platform state.
+            in_platforms = True
+        else:
+            # Accumulator.
+            token = char + token
+
+    # Handle any left over tokens.
+    if token:
+        add_test(token)
+
+    return tests
+
 
 def escape_whitespace_in_brackets(input_str):
     '''
