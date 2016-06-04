@@ -18,7 +18,7 @@ from ..types import Task
 from functools import partial
 from mozpack.path import match as mozpackmatch
 from slugid import nice as slugid
-from taskcluster_graph.commit_parser import parse_commit
+from taskgraph.util.legacy_commit_parser import parse_commit
 from taskgraph.util.time import (
     json_time_from_now,
     current_json_time,
