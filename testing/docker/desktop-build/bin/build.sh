@@ -3,7 +3,7 @@
 set -x -e -v
 
 # Relative path to in-tree script
-: JOB_SCRIPT                ${JOB_SCRIPT:=testing/taskcluster/scripts/builder/build-linux.sh}
+: JOB_SCRIPT                ${JOB_SCRIPT:=taskcluster/scripts/builder/build-linux.sh}
 
 script_args="${@}"
 

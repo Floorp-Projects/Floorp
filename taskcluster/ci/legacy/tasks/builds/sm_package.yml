@@ -8,7 +8,7 @@ task:
     env:
       SPIDERMONKEY_VARIANT: 'plain'
 
-    command: [ "/bin/bash", "-c", "cd /home/worker/ && ./bin/checkout-sources.sh && ./workspace/build/src/testing/taskcluster/scripts/builder/build-sm-package.sh" ]
+    command: [ "/bin/bash", "-c", "cd /home/worker/ && ./bin/checkout-sources.sh && ./workspace/build/src/taskcluster/scripts/builder/build-sm-package.sh" ]
 
   metadata:
     name: '[TC] Spidermonkey Package'

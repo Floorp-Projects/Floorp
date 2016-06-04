@@ -28,7 +28,7 @@ task:
 
     maxRunTime: 36000
 
-    command: ["/bin/bash", "-c", "cd /home/worker/ && ./bin/checkout-sources.sh && ./workspace/build/src/testing/taskcluster/scripts/misc/build-clang-linux.sh" ]
+    command: ["/bin/bash", "-c", "cd /home/worker/ && ./bin/checkout-sources.sh && ./workspace/build/src/taskcluster/scripts/misc/build-clang-linux.sh" ]
 
     artifacts:
       'public/clang.tar.xz':

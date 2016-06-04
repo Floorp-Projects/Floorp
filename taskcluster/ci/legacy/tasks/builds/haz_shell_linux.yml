@@ -34,7 +34,7 @@ task:
       - -c
       - >
         tc-vcs checkout workspace/gecko "$GECKO_BASE_REPOSITORY" "$GECKO_HEAD_REPOSITORY" "$GECKO_HEAD_REV" "$GECKO_HEAD_REF" &&
-        cd ./workspace/gecko/testing/taskcluster/scripts/builder &&
+        cd ./workspace/gecko/taskcluster/scripts/builder &&
         ./build-haz-linux.sh --project shell $HOME/workspace
 
   extra:

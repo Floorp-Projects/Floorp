@@ -23,7 +23,7 @@ fi
 [ -d $WORKSPACE ] || mkdir -p $WORKSPACE
 cd $WORKSPACE
 
-script=testing/taskcluster/scripts/tester/test-b2g.sh
+script=taskcluster/scripts/tester/test-b2g.sh
 url=${GECKO_HEAD_REPOSITORY}/raw-file/${GECKO_HEAD_REV}/${script}
 curl --fail -o ./test-b2g.sh --retry 10 $url
 chmod +x ./test-b2g.sh
