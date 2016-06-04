@@ -38,7 +38,7 @@ task:
       - -c
       - >
         checkout-gecko workspace &&
-        cd ./workspace/gecko/testing/taskcluster/scripts/builder &&
+        cd ./workspace/gecko/taskcluster/scripts/builder &&
         buildbot_step 'Build' ./build-mulet-haz-linux.sh $HOME/workspace
 
   extra:

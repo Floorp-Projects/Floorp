@@ -21,7 +21,7 @@ task:
 
     maxRunTime: 36000
 
-    command: ["/bin/bash", "-c", "cd /home/worker/ && ./bin/checkout-sources.sh && ./workspace/build/src/testing/taskcluster/scripts/misc/build-gcc-linux.sh" ]
+    command: ["/bin/bash", "-c", "cd /home/worker/ && ./bin/checkout-sources.sh && ./workspace/build/src/taskcluster/scripts/misc/build-gcc-linux.sh" ]
 
     artifacts:
       'public/gcc.tar.xz':

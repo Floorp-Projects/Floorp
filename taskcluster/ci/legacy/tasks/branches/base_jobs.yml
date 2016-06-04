@@ -597,11 +597,11 @@ tasks:
     when:
         file_patterns:
           - 'build/unix/build-gcc/**'
-          - 'testing/taskcluster/scripts/misc/build-gcc-linux.sh'
+          - 'taskcluster/scripts/misc/build-gcc-linux.sh'
   linux64-clang:
     task: tasks/builds/linux64_clang.yml
     root: true
     when:
         file_patterns:
           - 'build/build-clang/**'
-          - 'testing/taskcluster/scripts/misc/build-clang-linux.sh'
+          - 'taskcluster/scripts/misc/build-clang-linux.sh'
