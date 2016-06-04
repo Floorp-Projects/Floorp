@@ -1,0 +1,64 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1268736
+-->
+<head>
+  <title>Test for Bug 1268736</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="text/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1268736">Mozilla Bug 1268736</a>
+<table id="table" border="1" width="100%">
+  <tbody>
+    <tr>
+      <td>a</td>
+      <td>b</td>
+      <td>c</td>
+    </tr>
+    <tr>
+      <td>d</td>
+      <td id="cell_readonly">e</td>
+      <td contenteditable="true" id="cell_writable">f</td>
+    </tr>
+  </tbody>
+</table>
+
+<script type="application/javascript">
+
+/**
+ * Test for Bug 1268736
+ *
+ * Tests for editing a table cell's contents when the table cell is or isn't a child of a contenteditable node.
+ *
+ */
+
+function getEditor() {
+  const Ci = SpecialPowers.Ci;
+  var editingSession = SpecialPowers.wrap(window)
+                                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                                    .getInterface(Ci.nsIWebNavigation)
+                                    .QueryInterface(Ci.nsIInterfaceRequestor)
+                                    .getInterface(Ci.nsIEditingSession);
+  return editingSession.getEditorForWindow(window).QueryInterface(Ci.nsITableEditor);
+}
+
+var table = document.getElementById("table");
+var tableHTML = table.innerHTML;
+var editor = getEditor();
+
+var cell = document.getElementById("cell_readonly");
+cell.focus();
+editor.deleteTableCellContents();
+is(table.innerHTML == tableHTML, true, "editor should not modify non-editable table cell" );
+
+cell = document.getElementById("cell_writable");
+cell.focus();
+editor.deleteTableCellContents();
+is(cell.innerHTML == "<br>", true, "editor can modify editable table cells" );
+
+</script>
+</body>
+</html>
