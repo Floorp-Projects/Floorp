@@ -44,7 +44,6 @@ mailing address.
 #include "nsGIFDecoder2.h"
 #include "nsIInputStream.h"
 #include "RasterImage.h"
-#include "SurfaceFilters.h"
 #include "SurfacePipeFactory.h"
 
 #include "gfxColor.h"
