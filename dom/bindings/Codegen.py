@@ -2286,6 +2286,10 @@ class MethodDefiner(PropertyDefiner):
                 "returnsPromise": m.returnsPromise(),
                 "hasIteratorAlias": "@@iterator" in m.aliases
             }
+
+            if m.isStatic():
+                method["nativeName"] = CppKeywords.checkMethodName(IDLToCIdentifier(m.identifier.name))
+
             if isChromeOnly(m):
                 self.chrome.append(method)
             else:
@@ -6061,7 +6065,7 @@ def convertConstIDLValueToJSVal(value):
     if tag in [IDLType.Tags.int64, IDLType.Tags.uint64]:
         return "JS::CanonicalizedDoubleValue(%s)" % numericValue(tag, value.value)
     if tag == IDLType.Tags.bool:
-        return "JSVAL_TRUE" if value.value else "JSVAL_FALSE"
+        return "JS::BooleanValue(true)" if value.value else "JS::BooleanValue(false)"
     if tag in [IDLType.Tags.float, IDLType.Tags.double]:
         return "JS::CanonicalizedDoubleValue(%s)" % (value.value)
     raise TypeError("Const value of unhandled type: %s" % value.type)
@@ -8613,7 +8617,7 @@ class CGStaticMethod(CGAbstractStaticBindingMethod):
     """
     def __init__(self, descriptor, method):
         self.method = method
-        name = IDLToCIdentifier(method.identifier.name)
+        name = CppKeywords.checkMethodName(IDLToCIdentifier(method.identifier.name))
         CGAbstractStaticBindingMethod.__init__(self, descriptor, name)
 
     def generate_code(self):
