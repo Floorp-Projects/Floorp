@@ -28,7 +28,7 @@ from taskcluster_graph.mach_util import (
 import taskcluster_graph.transform.routes as routes_transform
 import taskcluster_graph.transform.treeherder as treeherder_transform
 from taskcluster_graph.commit_parser import parse_commit
-from taskcluster_graph.from_now import (
+from taskgraph.util.time import (
     json_time_from_now,
     current_json_time,
 )

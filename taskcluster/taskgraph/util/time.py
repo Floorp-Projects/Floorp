@@ -1,3 +1,7 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
 # Python port of the ms.js node module this is not a direct port some things are
 # more complicated or less precise and we lean on time delta here.
 
@@ -88,3 +92,4 @@ def current_json_time():
     '''
 
     return datetime.datetime.utcnow().isoformat() + 'Z'
+
