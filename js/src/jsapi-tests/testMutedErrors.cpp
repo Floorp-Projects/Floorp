@@ -5,7 +5,6 @@
 #include "jsfriendapi.h"
 #include "jsapi-tests/tests.h"
 
-static bool sErrorReportMuted = false;
 BEGIN_TEST(testMutedErrors)
 {
     CHECK(testOuter("function f() {return 1}; f;"));
@@ -20,7 +19,6 @@ BEGIN_TEST(testMutedErrors)
     CHECK(testOuter("(function(){return function(){return 10}}).bind()()"));
     CHECK(testOuter("var e = eval; (function() { return e('(function(){return 11})') })()"));
 
-    JS_SetErrorReporter(rt, ErrorReporter);
     CHECK(testError("eval(-)"));
     CHECK(testError("-"));
     CHECK(testError("new Function('x', '-')"));
@@ -33,12 +31,6 @@ BEGIN_TEST(testMutedErrors)
      *   CHECK(testError("throw 3"));
      */
     return true;
-}
-
-static void
-ErrorReporter(JSContext* cx, const char* message, JSErrorReport* report)
-{
-    sErrorReportMuted = report->isMuted;
 }
 
 bool
@@ -91,8 +83,14 @@ testError(const char* asciiChars)
 {
     JS::RootedValue rval(cx);
     CHECK(!eval(asciiChars, true, &rval));
-    CHECK(JS_ReportPendingException(cx));
-    CHECK(sErrorReportMuted == true);
+
+    JS::RootedValue exn(cx);
+    CHECK(JS_GetPendingException(cx, &exn));
+    JS_ClearPendingException(cx);
+
+    js::ErrorReport report(cx);
+    CHECK(report.init(cx, exn, js::ErrorReport::WithSideEffects));
+    CHECK(report.report()->isMuted == true);
     return true;
 }
 END_TEST(testMutedErrors)
