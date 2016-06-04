@@ -358,7 +358,7 @@ this.PushService = {
 
               delete this._pendingRequests[channelID];
               for (let i = this._requestQueue.length - 1; i >= 0; --i)
-                if (this._requestQueue[i].channelID == channelID)
+                if (this._requestQueue[i][1].channelID == channelID)
                   this._requestQueue.splice(i, 1);
             }
           }
