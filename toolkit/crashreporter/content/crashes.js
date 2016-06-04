@@ -50,6 +50,9 @@ function submitPendingReport(event) {
 }
 
 function populateReportList() {
+
+  Services.telemetry.getHistogramById("ABOUTCRASHES_OPENED_COUNT").add(1);
+
   var prefService = Cc["@mozilla.org/preferences-service;1"].
                     getService(Ci.nsIPrefBranch);
 

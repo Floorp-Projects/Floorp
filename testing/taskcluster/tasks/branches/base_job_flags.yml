@@ -99,6 +99,7 @@ flags:
     - linux64-artifact
     - linux64-asan
     - linux64-pgo
+    - linux64-valgrind
     - macosx64
     - macosx64-st-an
 

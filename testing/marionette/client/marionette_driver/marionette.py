@@ -7,7 +7,6 @@ import ConfigParser
 import json
 import os
 import socket
-import StringIO
 import traceback
 import warnings
 
@@ -228,7 +227,7 @@ class Actions(object):
         :param y: Optional, y-coordinate to tap, relative to the top-left
          corner of the element.
         '''
-        element=element.id
+        element = element.id
         self.action_chain.append(['press', element, x, y])
         return self
 
@@ -257,13 +256,14 @@ class Actions(object):
 
         May only be called if press() has already be called.
         '''
-        element=element.id
+        element = element.id
         self.action_chain.append(['move', element])
         return self
 
     def move_by_offset(self, x, y):
         '''
-        Sends 'touchmove' event to the given x, y coordinates relative to the top-left of the currently touched element.
+        Sends 'touchmove' event to the given x, y coordinates relative to the
+        top-left of the currently touched element.
 
         May only be called if press() has already be called.
 
@@ -279,7 +279,10 @@ class Actions(object):
         '''
         Waits for specified time period.
 
-        :param time: Time in seconds to wait. If time is None then this has no effect for a single action chain. If used inside a multi-action chain, then time being None indicates that we should wait for all other currently executing actions that are part of the chain to complete.
+        :param time: Time in seconds to wait. If time is None then this has no effect
+                     for a single action chain. If used inside a multi-action chain,
+                     then time being None indicates that we should wait for all other
+                     currently executing actions that are part of the chain to complete.
         '''
         self.action_chain.append(['wait', time])
         return self
@@ -311,7 +314,7 @@ class Actions(object):
 
           action.press(element, x, y).release()
         '''
-        element=element.id
+        element = element.id
         self.action_chain.append(['press', element, x, y])
         self.action_chain.append(['release'])
         return self
@@ -326,7 +329,7 @@ class Actions(object):
         :param y: Optional, y-coordinate of double tap, relative to the
          top-left corner of the element.
         '''
-        element=element.id
+        element = element.id
         self.action_chain.append(['press', element, x, y])
         self.action_chain.append(['release'])
         self.action_chain.append(['press', element, x, y])
@@ -453,6 +456,7 @@ class Actions(object):
         self.action_chain = []
         return self
 
+
 class MultiActions(object):
     '''
     A MultiActions object represents a sequence of actions that may be
@@ -487,7 +491,7 @@ class MultiActions(object):
         '''
         self.multi_actions.append(action.action_chain)
         if len(action.action_chain) > self.max_length:
-          self.max_length = len(action.action_chain)
+            self.max_length = len(action.action_chain)
         return self
 
     def perform(self):
@@ -531,8 +535,8 @@ class Alert(object):
 class Marionette(object):
     """Represents a Marionette connection to a browser or device."""
 
-    CONTEXT_CHROME = 'chrome' # non-browser content: windows, dialogs, etc.
-    CONTEXT_CONTENT = 'content' # browser content: iframes, divs, etc.
+    CONTEXT_CHROME = 'chrome'  # non-browser content: windows, dialogs, etc.
+    CONTEXT_CONTENT = 'content'  # browser content: iframes, divs, etc.
     TIMEOUT_SEARCH = 'implicit'
     TIMEOUT_SCRIPT = 'script'
     TIMEOUT_PAGE = 'page load'
@@ -638,7 +642,6 @@ class Marionette(object):
         if not port_obtained:
             raise IOError("Timed out waiting for port!")
 
-
     @do_crash_check
     def _send_message(self, name, params=None, key=None):
         """Send a blocking message to the server.
@@ -693,8 +696,8 @@ class Marionette(object):
             return self._unwrap_response(res)
 
     def _unwrap_response(self, value):
-        if isinstance(value, dict) and \
-        (WEBELEMENT_KEY in value or W3C_WEBELEMENT_KEY in value):
+        if isinstance(value, dict) and (WEBELEMENT_KEY in value or
+                                        W3C_WEBELEMENT_KEY in value):
             if value.get(WEBELEMENT_KEY):
                 return HTMLElement(self, value.get(WEBELEMENT_KEY))
             else:
@@ -738,7 +741,7 @@ class Marionette(object):
                 crashed = True
         if returncode is not None:
             print ('PROCESS-CRASH | %s | abnormal termination with exit code %d' %
-                (name, returncode))
+                   (name, returncode))
         return crashed
 
     @staticmethod
@@ -757,23 +760,24 @@ class Marionette(object):
         return typing
 
     def get_permission(self, perm):
+        script = """
+        let value = {
+          'url': document.nodePrincipal.URI.spec,
+          'appId': document.nodePrincipal.appId,
+          'isInIsolatedMozBrowserElement': document.nodePrincipal.isInIsolatedMozBrowserElement,
+          'type': arguments[0]
+        };
+        return value;"""
         with self.using_context('content'):
-            value = self.execute_script("""
-                let value = {
-                              'url': document.nodePrincipal.URI.spec,
-                              'appId': document.nodePrincipal.appId,
-                              'isInIsolatedMozBrowserElement': document.nodePrincipal.isInIsolatedMozBrowserElement,
-                              'type': arguments[0]
-                            };
-                return value;
-                """, script_args=[perm], sandbox='system')
+            value = self.execute_script(script, script_args=[perm], sandbox='system')
 
         with self.using_context('chrome'):
             permission = self.execute_script("""
                 Components.utils.import("resource://gre/modules/Services.jsm");
                 let perm = arguments[0];
                 let secMan = Services.scriptSecurityManager;
-                let attrs = {appId: perm.appId, inIsolatedMozBrowser: perm.isInIsolatedMozBrowserElement};
+                let attrs = {appId: perm.appId,
+                            inIsolatedMozBrowser: perm.isInIsolatedMozBrowserElement};
                 let principal = secMan.createCodebasePrincipal(
                                 Services.io.newURI(perm.url, null, null),
                                 attrs);
@@ -784,49 +788,52 @@ class Marionette(object):
         return permission
 
     def push_permission(self, perm, allow):
+        script = """
+        let allow = arguments[0];
+        if (typeof(allow) == "boolean") {
+            if (allow) {
+              allow = Components.interfaces.nsIPermissionManager.ALLOW_ACTION;
+            }
+            else {
+              allow = Components.interfaces.nsIPermissionManager.DENY_ACTION;
+            }
+        }
+        let perm_type = arguments[1];
+
+        Components.utils.import("resource://gre/modules/Services.jsm");
+        window.wrappedJSObject.permChanged = false;
+        window.wrappedJSObject.permObserver = function(subject, topic, data) {
+          if (topic == "perm-changed") {
+            let permission = subject.QueryInterface(Components.interfaces.nsIPermission);
+            if (perm_type == permission.type) {
+              Services.obs.removeObserver(window.wrappedJSObject.permObserver,
+                                          "perm-changed");
+              window.wrappedJSObject.permChanged = true;
+            }
+          }
+        };
+        Services.obs.addObserver(window.wrappedJSObject.permObserver,
+                                 "perm-changed", false);
+
+        let value = {
+          'url': document.nodePrincipal.URI.spec,
+          'appId': document.nodePrincipal.appId,
+          'isInIsolatedMozBrowserElement': document.nodePrincipal.isInIsolatedMozBrowserElement,
+          'type': perm_type,
+          'action': allow
+        };
+        return value;
+        """
         with self.using_context('content'):
-            perm = self.execute_script("""
-                let allow = arguments[0];
-                if (typeof(allow) == "boolean") {
-                    if (allow) {
-                      allow = Components.interfaces.nsIPermissionManager.ALLOW_ACTION;
-                    }
-                    else {
-                      allow = Components.interfaces.nsIPermissionManager.DENY_ACTION;
-                    }
-                }
-                let perm_type = arguments[1];
-
-                Components.utils.import("resource://gre/modules/Services.jsm");
-                window.wrappedJSObject.permChanged = false;
-                window.wrappedJSObject.permObserver = function(subject, topic, data) {
-                  if (topic == "perm-changed") {
-                    let permission = subject.QueryInterface(Components.interfaces.nsIPermission);
-                    if (perm_type == permission.type) {
-                      Services.obs.removeObserver(window.wrappedJSObject.permObserver, "perm-changed");
-                      window.wrappedJSObject.permChanged = true;
-                    }
-                  }
-                };
-                Services.obs.addObserver(window.wrappedJSObject.permObserver,
-                                         "perm-changed", false);
-
-                let value = {
-                              'url': document.nodePrincipal.URI.spec,
-                              'appId': document.nodePrincipal.appId,
-                              'isInIsolatedMozBrowserElement': document.nodePrincipal.isInIsolatedMozBrowserElement,
-                              'type': perm_type,
-                              'action': allow
-                            };
-                return value;
-                """, script_args=[allow, perm], sandbox='system')
+            perm = self.execute_script(script, script_args=[allow, perm], sandbox='system')
 
         current_perm = self.get_permission(perm['type'])
         if current_perm == perm['action']:
             with self.using_context('content'):
                 self.execute_script("""
                     Components.utils.import("resource://gre/modules/Services.jsm");
-                    Services.obs.removeObserver(window.wrappedJSObject.permObserver, "perm-changed");
+                    Services.obs.removeObserver(window.wrappedJSObject.permObserver,
+                                                "perm-changed");
                     """, sandbox='system')
             return
 
@@ -835,9 +842,11 @@ class Marionette(object):
                 Components.utils.import("resource://gre/modules/Services.jsm");
                 let perm = arguments[0];
                 let secMan = Services.scriptSecurityManager;
-                let attrs = {appId: perm.appId, inIsolatedMozBrowser: perm.isInIsolatedMozBrowserElement};
-                let principal = secMan.createCodebasePrincipal(Services.io.newURI(perm.url, null, null),
-                                                               attrs);
+                let attrs = {appId: perm.appId,
+                             inIsolatedMozBrowser: perm.isInIsolatedMozBrowserElement};
+                let principal = secMan.createCodebasePrincipal(Services.io.newURI(perm.url,
+                                                                                  null, null),
+                                                                                  attrs);
                 Services.perms.addFromPrincipal(principal, perm.type, perm.action);
                 return true;
                 """, script_args=[perm])
@@ -962,7 +971,7 @@ class Marionette(object):
         : param prefs: A dictionary whose keys are preference names.
         """
         if not self.instance:
-            raise errors.MarionetteException("enforce_gecko_prefs can only be called " \
+            raise errors.MarionetteException("enforce_gecko_prefs can only be called "
                                              "on gecko instances launched by Marionette")
         pref_exists = True
         self.set_context(self.CONTEXT_CHROME)
@@ -1009,14 +1018,14 @@ class Marionette(object):
                         by killing the process.
         """
         if not self.instance:
-            raise errors.MarionetteException("restart can only be called " \
+            raise errors.MarionetteException("restart can only be called "
                                              "on gecko instances launched by Marionette")
 
         if in_app:
             if clean:
                 raise ValueError
             # Values here correspond to constants in nsIAppStartup.
-            # See https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XPCOM/Reference/Interface/nsIAppStartup
+            # See http://mzl.la/1X0JZsC
             restart_flags = [
                 "eForceQuit",
                 "eRestart",
@@ -1561,7 +1570,7 @@ class Marionette(object):
             script_args = []
         args = self.wrapArguments(script_args)
         stack = traceback.extract_stack()
-        frame = stack[-2:-1][0] # grab the second-to-last frame
+        frame = stack[-2:-1][0]  # grab the second-to-last frame
         body = {"script": script,
                 "args": args,
                 "newSandbox": new_sandbox,
@@ -1611,7 +1620,7 @@ class Marionette(object):
             script_args = []
         args = self.wrapArguments(script_args)
         stack = traceback.extract_stack()
-        frame = stack[-2:-1][0] # grab the second-to-last frame
+        frame = stack[-2:-1][0]  # grab the second-to-last frame
         body = {"script": script,
                 "args": args,
                 "newSandbox": new_sandbox,

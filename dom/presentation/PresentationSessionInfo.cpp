@@ -237,7 +237,7 @@ PresentationSessionInfo::Shutdown(nsresult aReason)
 
   mIsResponderReady = false;
 
-  mBuilder = nullptr;
+  SetBuilder(nullptr);
 }
 
 nsresult
@@ -350,6 +350,11 @@ PresentationSessionInfo::NotifyTransportReady()
 
   mIsTransportReady = true;
 
+  // Established RTCDataChannel implies responder is ready.
+  if (mTransportType == nsIPresentationChannelDescription::TYPE_DATACHANNEL) {
+    mIsResponderReady = true;
+  }
+
   // At sender side, session might not be ready at this point (waiting for
   // receiver's answer). Yet at receiver side, session must be ready at this
   // point since the data transport channel is created after the receiver page
@@ -413,6 +418,13 @@ PresentationSessionInfo::NotifyData(const nsACString& aData)
 NS_IMETHODIMP
 PresentationSessionInfo::OnSessionTransport(nsIPresentationSessionTransport* transport)
 {
+  SetBuilder(nullptr);
+
+  // The session transport is managed by content process
+  if (!transport) {
+    return NS_OK;
+  }
+
   mTransport = transport;
 
   nsresult rv = mTransport->SetCallback(this);
@@ -430,7 +442,32 @@ PresentationSessionInfo::OnSessionTransport(nsIPresentationSessionTransport* tra
 NS_IMETHODIMP
 PresentationSessionInfo::OnError(nsresult reason)
 {
+  SetBuilder(nullptr);
   return ReplyError(reason);
+}
+
+NS_IMETHODIMP
+PresentationSessionInfo::SendOffer(nsIPresentationChannelDescription* aOffer)
+{
+  return mControlChannel->SendOffer(aOffer);
+}
+
+NS_IMETHODIMP
+PresentationSessionInfo::SendAnswer(nsIPresentationChannelDescription* aAnswer)
+{
+  return mControlChannel->SendAnswer(aAnswer);
+}
+
+NS_IMETHODIMP
+PresentationSessionInfo::SendIceCandidate(const nsAString& candidate)
+{
+  return mControlChannel->SendIceCandidate(candidate);
+}
+
+NS_IMETHODIMP
+PresentationSessionInfo::Close(nsresult reason)
+{
+  return mControlChannel->Close(reason);
 }
 
 /**
@@ -577,13 +614,6 @@ PresentationControllingInfo::GetAddress()
   return NS_OK;
 }
 
-NS_IMETHODIMP
-PresentationControllingInfo::OnIceCandidate(const nsAString& aCandidate)
-{
-  MOZ_ASSERT(false, "Should not receive ICE candidates.");
-  return NS_ERROR_FAILURE;
-}
-
 nsresult
 PresentationControllingInfo::OnGetAddress(const nsACString& aAddress)
 {
@@ -603,6 +633,23 @@ PresentationControllingInfo::OnGetAddress(const nsACString& aAddress)
 
 // nsIPresentationControlChannelListener
 NS_IMETHODIMP
+PresentationControllingInfo::OnIceCandidate(const nsAString& aCandidate)
+{
+  if (mTransportType != nsIPresentationChannelDescription::TYPE_DATACHANNEL) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIPresentationDataChannelSessionTransportBuilder>
+    builder = do_QueryInterface(mBuilder);
+
+  if (NS_WARN_IF(!builder)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  return builder->OnIceCandidate(aCandidate);
+}
+
+NS_IMETHODIMP
 PresentationControllingInfo::OnOffer(nsIPresentationChannelDescription* aDescription)
 {
   MOZ_ASSERT(false, "Sender side should not receive offer.");
@@ -612,6 +659,17 @@ PresentationControllingInfo::OnOffer(nsIPresentationChannelDescription* aDescrip
 NS_IMETHODIMP
 PresentationControllingInfo::OnAnswer(nsIPresentationChannelDescription* aDescription)
 {
+  if (mTransportType == nsIPresentationChannelDescription::TYPE_DATACHANNEL) {
+    nsCOMPtr<nsIPresentationDataChannelSessionTransportBuilder>
+      builder = do_QueryInterface(mBuilder);
+
+    if (NS_WARN_IF(!builder)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    return builder->OnAnswer(aDescription);
+  }
+
   mIsResponderReady = true;
 
   // Close the control channel since it's no longer needed.
@@ -639,27 +697,62 @@ PresentationControllingInfo::NotifyOpened()
     return GetAddress();
   }
 
-  nsCOMPtr<nsIPresentationDataChannelSessionTransportBuilder> builder =
-    do_CreateInstance("@mozilla.org/presentation/datachanneltransportbuilder;1");
-
-  if (NS_WARN_IF(!builder)) {
-    return NS_ERROR_NOT_AVAILABLE;
+  nsPIDOMWindowInner* window = nullptr;
+  /**
+   * Generally transport is maintained by the chrome process. However, data
+   * channel should be live with the DOM , which implies RTCDataChannel in an OOP
+   * page should be establish in the content process.
+   *
+   * In OOP data channel transport case, |mBuilder| is hooked when the content
+   * process is ready to build a data channel transport, trigger by:
+   * 1. PresentationIPCService::StartSession (sender)
+   * 2. PresentationIPCService::NotifyReceiverReady (receiver).
+   *
+   * In this case, |mBuilder| would be an object of |PresentationBuilderParent|
+   * and set previously. Therefore, |BuildDataChannelTransport| triggers an IPC
+   * call to make content process establish a RTCDataChannel transport.
+   */
+  // in-process case
+  if (!mBuilder) {
+    nsCOMPtr<nsIPresentationDataChannelSessionTransportBuilder> builder =
+      do_CreateInstance("@mozilla.org/presentation/datachanneltransportbuilder;1");
+    if (NS_WARN_IF(!builder)) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    SetBuilder(builder);
+    // OOP window would be set from content process
+    window = GetWindow();
   }
-
-  mBuilder = builder;
+  // OOP case
   mTransportType = nsIPresentationChannelDescription::TYPE_DATACHANNEL;
 
-  return builder->BuildDataChannelTransport(nsIPresentationService::ROLE_CONTROLLER,
-                                            GetWindow(),
-                                            mControlChannel,
+  nsCOMPtr<nsIPresentationDataChannelSessionTransportBuilder>
+    dataChannelBuilder(do_QueryInterface(mBuilder));
+  if (NS_WARN_IF(!dataChannelBuilder)) {
+    return NS_ERROR_NOT_AVAILABLE;
+  }
+  nsresult rv = dataChannelBuilder->
+                  BuildDataChannelTransport(nsIPresentationService::ROLE_CONTROLLER,
+                                            window,
                                             this);
-
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 PresentationControllingInfo::NotifyClosed(nsresult aReason)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (mTransportType == nsIPresentationChannelDescription::TYPE_DATACHANNEL) {
+    nsCOMPtr<nsIPresentationDataChannelSessionTransportBuilder>
+      builder = do_QueryInterface(mBuilder);
+    if (builder) {
+      NS_WARN_IF(NS_FAILED(builder->NotifyClosed(aReason)));
+    }
+  }
 
   // Unset control channel here so it won't try to re-close it in potential
   // subsequent |Shutdown| calls.
@@ -784,6 +877,7 @@ PresentationPresentingInfo::Shutdown(nsresult aReason)
   mDevice = nullptr;
   mLoadingCallback = nullptr;
   mRequesterDescription = nullptr;
+  mPendingCandidates.Clear();
   mPromise = nullptr;
 }
 
@@ -795,6 +889,11 @@ PresentationPresentingInfo::OnSessionTransport(nsIPresentationSessionTransport* 
 
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
+  }
+
+  // The session transport is managed by content process
+  if (!transport) {
+    return NS_OK;
   }
 
   // send answer for TCP session transport
@@ -823,10 +922,26 @@ PresentationPresentingInfo::OnSessionTransport(nsIPresentationSessionTransport* 
   return NS_OK;
 }
 
+// Delegate the pending offer and ICE candidates to builder.
 NS_IMETHODIMP
-PresentationPresentingInfo::OnError(nsresult reason)
+PresentationPresentingInfo::FlushPendingEvents(nsIPresentationDataChannelSessionTransportBuilder* builder)
 {
-  return PresentationSessionInfo::OnError(reason);
+  if (NS_WARN_IF(!builder)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  mHasFlushPendingEvents = true;
+
+  if (mRequesterDescription) {
+    builder->OnOffer(mRequesterDescription);
+  }
+  mRequesterDescription = nullptr;
+
+  for (size_t i = 0; i < mPendingCandidates.Length(); ++i) {
+    builder->OnIceCandidate(mPendingCandidates[i]);
+  }
+  mPendingCandidates.Clear();
+  return NS_OK;
 }
 
 nsresult
@@ -849,7 +964,7 @@ PresentationPresentingInfo::InitTransportAndSendAnswer()
       return NS_ERROR_NOT_AVAILABLE;
     }
 
-    mBuilder = builder;
+    SetBuilder(builder);
     mTransportType = nsIPresentationChannelDescription::TYPE_TCP;
     return builder->BuildTCPReceiverTransport(mRequesterDescription, this);
   }
@@ -858,31 +973,57 @@ PresentationPresentingInfo::InitTransportAndSendAnswer()
     if (!Preferences::GetBool("dom.presentation.session_transport.data_channel.enable")) {
       return NS_ERROR_NOT_IMPLEMENTED;
     }
-    nsCOMPtr<nsIPresentationDataChannelSessionTransportBuilder> builder =
-      do_CreateInstance("@mozilla.org/presentation/datachanneltransportbuilder;1");
+    nsPIDOMWindowInner* window = nullptr;
 
-    if (NS_WARN_IF(!builder)) {
+    /**
+     * Generally transport is maintained by the chrome process. However, data
+     * channel should be live with the DOM , which implies RTCDataChannel in an OOP
+     * page should be establish in the content process.
+     *
+     * In OOP data channel transport case, |mBuilder| is hooked when the content
+     * process is ready to build a data channel transport, trigger by:
+     * 1. PresentationIPCService::StartSession (sender)
+     * 2. PresentationIPCService::NotifyReceiverReady (receiver).
+     *
+     * In this case, |mBuilder| would be an object of |PresentationBuilderParent|
+     * and set previously. Therefore, |BuildDataChannelTransport| triggers an IPC
+     * call to make content process establish a RTCDataChannel transport.
+     */
+    // in-process case
+    if (!mBuilder) {
+      nsCOMPtr<nsIPresentationDataChannelSessionTransportBuilder> builder =
+        do_CreateInstance("@mozilla.org/presentation/datachanneltransportbuilder;1");
+
+      if (NS_WARN_IF(!builder)) {
+        return NS_ERROR_NOT_AVAILABLE;
+      }
+
+      SetBuilder(builder);
+
+      // OOP window would be set from content process
+      window = GetWindow();
+    }
+    mTransportType = nsIPresentationChannelDescription::TYPE_DATACHANNEL;
+
+    nsCOMPtr<nsIPresentationDataChannelSessionTransportBuilder>
+      dataChannelBuilder(do_QueryInterface(mBuilder));
+    if (NS_WARN_IF(!dataChannelBuilder)) {
       return NS_ERROR_NOT_AVAILABLE;
     }
-
-    mBuilder = builder;
-    mTransportType = nsIPresentationChannelDescription::TYPE_DATACHANNEL;
-    rv = builder->BuildDataChannelTransport(nsIPresentationService::ROLE_RECEIVER,
-                                            GetWindow(),
-                                            mControlChannel,
-                                            this);
+    rv = dataChannelBuilder->
+           BuildDataChannelTransport(nsIPresentationService::ROLE_RECEIVER,
+                                     window,
+                                     this);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    // delegate |onOffer| to builder
-    nsCOMPtr<nsIPresentationControlChannelListener> listener(do_QueryInterface(builder));
 
-    if (NS_WARN_IF(!listener)) {
-      return NS_ERROR_NOT_AVAILABLE;
+    rv = this->FlushPendingEvents(dataChannelBuilder);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
-
-    return listener->OnOffer(mRequesterDescription);
+    return NS_OK;
   }
 
   MOZ_ASSERT(false, "Unknown nsIPresentationChannelDescription type!");
@@ -943,6 +1084,10 @@ PresentationPresentingInfo::NotifyResponderReady()
 NS_IMETHODIMP
 PresentationPresentingInfo::OnOffer(nsIPresentationChannelDescription* aDescription)
 {
+  if (NS_WARN_IF(mHasFlushPendingEvents)) {
+    return ReplyError(NS_ERROR_DOM_OPERATION_ERR);
+  }
+
   if (NS_WARN_IF(!aDescription)) {
     return ReplyError(NS_ERROR_DOM_OPERATION_ERR);
   }
@@ -971,8 +1116,19 @@ PresentationPresentingInfo::OnAnswer(nsIPresentationChannelDescription* aDescrip
 NS_IMETHODIMP
 PresentationPresentingInfo::OnIceCandidate(const nsAString& aCandidate)
 {
-  MOZ_ASSERT(false, "Should not receive ICE candidates.");
-  return NS_ERROR_FAILURE;
+  if (!mBuilder && !mHasFlushPendingEvents) {
+    mPendingCandidates.AppendElement(nsString(aCandidate));
+    return NS_OK;
+  }
+
+  if (NS_WARN_IF(!mBuilder && mHasFlushPendingEvents)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsCOMPtr<nsIPresentationDataChannelSessionTransportBuilder>
+    builder = do_QueryInterface(mBuilder);
+
+  return builder->OnIceCandidate(aCandidate);
 }
 
 NS_IMETHODIMP
@@ -986,6 +1142,14 @@ NS_IMETHODIMP
 PresentationPresentingInfo::NotifyClosed(nsresult aReason)
 {
   MOZ_ASSERT(NS_IsMainThread());
+
+  if (mTransportType == nsIPresentationChannelDescription::TYPE_DATACHANNEL) {
+    nsCOMPtr<nsIPresentationDataChannelSessionTransportBuilder>
+      builder = do_QueryInterface(mBuilder);
+    if (builder) {
+      NS_WARN_IF(NS_FAILED(builder->NotifyClosed(aReason)));
+    }
+  }
 
   // Unset control channel here so it won't try to re-close it in potential
   // subsequent |Shutdown| calls.

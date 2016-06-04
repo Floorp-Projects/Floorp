@@ -78,6 +78,12 @@ builds:
     types:
       opt:
         task: tasks/builds/opt_linux64_pgo.yml
+  linux64-valgrind:
+    platforms:
+      - Linux64 Valgrind
+    types:
+      opt:
+        task: tasks/builds/opt_linux64_valgrind.yml
   macosx64:
     platforms:
       - MacOSX64

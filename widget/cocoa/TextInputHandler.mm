@@ -233,25 +233,6 @@ GetGeckoKeyEventType(const WidgetEvent& aEvent)
 }
 
 static const char*
-GetRangeTypeName(uint32_t aRangeType)
-{
-  switch (aRangeType) {
-    case NS_TEXTRANGE_RAWINPUT:
-      return "NS_TEXTRANGE_RAWINPUT";
-    case NS_TEXTRANGE_CONVERTEDTEXT:
-      return "NS_TEXTRANGE_CONVERTEDTEXT";
-    case NS_TEXTRANGE_SELECTEDRAWTEXT:
-      return "NS_TEXTRANGE_SELECTEDRAWTEXT";
-    case NS_TEXTRANGE_SELECTEDCONVERTEDTEXT:
-      return "NS_TEXTRANGE_SELECTEDCONVERTEDTEXT";
-    case NS_TEXTRANGE_CARETPOSITION:
-      return "NS_TEXTRANGE_CARETPOSITION";
-    default:
-      return "invalid range type";
-  }
-}
-
-static const char*
 GetWindowLevelName(NSInteger aWindowLevel)
 {
   switch (aWindowLevel) {
@@ -2743,7 +2724,7 @@ IMEInputHandler::ExecutePendingMethods()
  *
  ******************************************************************************/
 
-uint32_t
+TextRangeType
 IMEInputHandler::ConvertToTextRangeType(uint32_t aUnderlineStyle,
                                         NSRange& aSelectedRange)
 {
@@ -2759,23 +2740,23 @@ IMEInputHandler::ConvertToTextRangeType(uint32_t aUnderlineStyle,
   if (aSelectedRange.length == 0) {
     switch (aUnderlineStyle) {
       case NSUnderlineStyleSingle:
-        return NS_TEXTRANGE_RAWINPUT;
+        return TextRangeType::eRawClause;
       case NSUnderlineStyleThick:
-        return NS_TEXTRANGE_SELECTEDRAWTEXT;
+        return TextRangeType::eSelectedRawClause;
       default:
         NS_WARNING("Unexpected line style");
-        return NS_TEXTRANGE_SELECTEDRAWTEXT;
+        return TextRangeType::eSelectedRawClause;
     }
   }
 
   switch (aUnderlineStyle) {
     case NSUnderlineStyleSingle:
-      return NS_TEXTRANGE_CONVERTEDTEXT;
+      return TextRangeType::eConvertedClause;
     case NSUnderlineStyleThick:
-      return NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
+      return TextRangeType::eSelectedClause;
     default:
       NS_WARNING("Unexpected line style");
-      return NS_TEXTRANGE_SELECTEDCONVERTEDTEXT;
+      return TextRangeType::eSelectedClause;
   }
 }
 
@@ -2841,7 +2822,7 @@ IMEInputHandler::CreateTextRangeArray(NSAttributedString *aAttrString,
       ("%p IMEInputHandler::CreateTextRangeArray, "
        "range={ mStartOffset=%llu, mEndOffset=%llu, mRangeType=%s }",
        this, range.mStartOffset, range.mEndOffset,
-       GetRangeTypeName(range.mRangeType)));
+       ToChar(range.mRangeType)));
 
     limitRange =
       NSMakeRange(NSMaxRange(effectiveRange), 
@@ -2852,14 +2833,14 @@ IMEInputHandler::CreateTextRangeArray(NSAttributedString *aAttrString,
   TextRange range;
   range.mStartOffset = aSelectedRange.location + aSelectedRange.length;
   range.mEndOffset = range.mStartOffset;
-  range.mRangeType = NS_TEXTRANGE_CARETPOSITION;
+  range.mRangeType = TextRangeType::eCaret;
   textRangeArray->AppendElement(range);
 
   MOZ_LOG(gLog, LogLevel::Info,
     ("%p IMEInputHandler::CreateTextRangeArray, "
      "range={ mStartOffset=%llu, mEndOffset=%llu, mRangeType=%s }",
      this, range.mStartOffset, range.mEndOffset,
-     GetRangeTypeName(range.mRangeType)));
+     ToChar(range.mRangeType)));
 
   return textRangeArray.forget();
 

@@ -54,7 +54,8 @@ class Addons(object):
         """
         with self._mn.using_context('chrome'):
             addon_id, status = self._mn.execute_async_script("""
-              let FileUtils = Components.utils.import("resource://gre/modules/FileUtils.jsm").FileUtils;
+              let fileUtils = Components.utils.import("resource://gre/modules/FileUtils.jsm");
+              let FileUtils = fileUtils.FileUtils;
               Components.utils.import("resource://gre/modules/AddonManager.jsm");
               let listener = {
                 onInstallEnded: function(install, addon) {

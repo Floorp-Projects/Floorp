@@ -100,30 +100,26 @@ CallbackObject::CallSetup::CallSetup(CallbackObject* aCallback,
     // global to get a context. Everything here is simple getters that cannot
     // GC, so just paper over the necessary dataflow inversion.
     JS::AutoSuppressGCAnalysis nogc;
-    if (mIsMainThread) {
-      // Now get the global for this callback. Note that for the case of
-      // JS-implemented WebIDL we never have a window here.
-      nsGlobalWindow* win =
-        aIsJSImplementedWebIDL ? nullptr : xpc::WindowGlobalOrNull(realCallback);
-      if (win) {
-        MOZ_ASSERT(win->IsInnerWindow());
-        // We don't want to run script in windows that have been navigated away
-        // from.
-        if (!win->AsInner()->HasActiveDocument()) {
-          aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
-            NS_LITERAL_CSTRING("Refusing to execute function from window "
-                               "whose document is no longer active."));
-          return;
-        }
-        globalObject = win;
-      } else {
-        // No DOM Window. Store the global.
-        JSObject* glob = js::GetGlobalForObjectCrossCompartment(realCallback);
-        globalObject = xpc::NativeGlobal(glob);
-        MOZ_ASSERT(globalObject);
+
+    // Now get the global for this callback. Note that for the case of
+    // JS-implemented WebIDL we never have a window here.
+    nsGlobalWindow* win = mIsMainThread && !aIsJSImplementedWebIDL
+                        ? xpc::WindowGlobalOrNull(realCallback)
+                        : nullptr;
+    if (win) {
+      MOZ_ASSERT(win->IsInnerWindow());
+      // We don't want to run script in windows that have been navigated away
+      // from.
+      if (!win->AsInner()->HasActiveDocument()) {
+        aRv.ThrowDOMException(NS_ERROR_DOM_NOT_SUPPORTED_ERR,
+          NS_LITERAL_CSTRING("Refusing to execute function from window "
+                             "whose document is no longer active."));
+        return;
       }
+      globalObject = win;
     } else {
-      JSObject *global = js::GetGlobalForObjectCrossCompartment(realCallback);
+      // No DOM Window. Store the global.
+      JSObject* global = js::GetGlobalForObjectCrossCompartment(realCallback);
       globalObject = xpc::NativeGlobal(global);
       MOZ_ASSERT(globalObject);
     }

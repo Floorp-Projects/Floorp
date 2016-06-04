@@ -137,7 +137,7 @@ class TransportInfo {
 class TestAgent {
  public:
   TestAgent() :
-      audio_config_(109, "opus", 48000, 960, 2, 64000),
+      audio_config_(109, "opus", 48000, 960, 2, 64000, false),
       audio_conduit_(mozilla::AudioSessionConduit::Create()),
       audio_(),
       audio_pipeline_() {
@@ -334,8 +334,7 @@ class TestAgentReceive : public TestAgent {
         static_cast<mozilla::AudioSessionConduit *>(audio_conduit_.get()),
         audio_rtp_transport_.flow_,
         audio_rtcp_transport_.flow_,
-        bundle_filter_,
-        false);
+        bundle_filter_);
 
     audio_pipeline_->Init();
   }

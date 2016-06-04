@@ -112,6 +112,7 @@ using namespace mozilla::widget;
 #include "Layers.h"
 #include "GLContextProvider.h"
 #include "mozilla/gfx/2D.h"
+#include "mozilla/gfx/HelpersCairo.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
 
 #ifdef MOZ_X11
@@ -471,6 +472,8 @@ nsWindow::nsWindow()
 #if GTK_CHECK_VERSION(3,4,0)
     mLastScrollEventTime = GDK_CURRENT_TIME;
 #endif
+
+    mFallbackSurface = nullptr;
 }
 
 nsWindow::~nsWindow()
@@ -791,6 +794,11 @@ nsWindow::Destroy(void)
          mRootAccessible = nullptr;
      }
 #endif
+
+    if (mFallbackSurface) {
+        cairo_surface_destroy(mFallbackSurface);
+        mFallbackSurface = nullptr;
+    }
 
     // Save until last because OnDestroy() may cause us to be deleted.
     OnDestroy();
@@ -2240,7 +2248,7 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     }
 
     BufferMode layerBuffering = BufferMode::BUFFERED;
-    RefPtr<DrawTarget> dt = GetDrawTarget(region, &layerBuffering);
+    RefPtr<DrawTarget> dt = StartRemoteDrawingInRegion(region, &layerBuffering);
     if (!dt || !dt->IsValid()) {
         return FALSE;
     }
@@ -2326,7 +2334,8 @@ nsWindow::OnExposeEvent(cairo_t *cr)
                 UpdateAlpha(surf, boundsRect);
 
                 dt->DrawSurface(surf, Rect(boundsRect), Rect(0, 0, boundsRect.width, boundsRect.height),
-                                DrawSurfaceOptions(Filter::POINT), DrawOptions(1.0f, CompositionOp::OP_SOURCE));
+                                DrawSurfaceOptions(SamplingFilter::POINT),
+                                DrawOptions(1.0f, CompositionOp::OP_SOURCE));
             }
         }
     }
@@ -2334,12 +2343,9 @@ nsWindow::OnExposeEvent(cairo_t *cr)
     ctx = nullptr;
     dt->PopClip();
 
-#  ifdef MOZ_HAVE_SHMIMAGE
-    if (mBackShmImage && MOZ_LIKELY(!mIsDestroyed)) {
-      mBackShmImage->Put(region);
-    }
-#  endif  // MOZ_HAVE_SHMIMAGE
 #endif // MOZ_X11
+
+    EndRemoteDrawingInRegion(dt, region);
 
     listener->DidPaintWindow();
 
@@ -2381,7 +2387,8 @@ nsWindow::UpdateAlpha(SourceSurface* aSourceSurface, nsIntRect aBoundsRect)
         if (drawTarget) {
             drawTarget->DrawSurface(aSourceSurface, Rect(0, 0, aBoundsRect.width, aBoundsRect.height),
                                     Rect(0, 0, aSourceSurface->GetSize().width, aSourceSurface->GetSize().height),
-                                    DrawSurfaceOptions(Filter::POINT), DrawOptions(1.0f, CompositionOp::OP_SOURCE));
+                                    DrawSurfaceOptions(SamplingFilter::POINT),
+                                    DrawOptions(1.0f, CompositionOp::OP_SOURCE));
         }
     }
     UpdateTranslucentWindowAlphaInternal(aBoundsRect, imageBuffer.get(), stride);
@@ -6507,11 +6514,23 @@ nsWindow::GetDrawTarget(const LayoutDeviceIntRegion& aRegion, BufferMode* aBuffe
   RefPtr<DrawTarget> dt;
 
 #ifdef MOZ_X11
+  bool useXRender = false;
+#ifdef MOZ_WIDGET_GTK
+  useXRender = gfxPlatformGtk::GetPlatform()->UseXRender();
+#endif
+
+  if (useXRender) {
+    LayoutDeviceIntRect bounds = aRegion.GetBounds();
+    LayoutDeviceIntSize size(bounds.XMost(), bounds.YMost());
+    RefPtr<gfxXlibSurface> surf = new gfxXlibSurface(mXDisplay, mXWindow, mXVisual, size.ToUnknownSize());
+    if (!surf->CairoStatus()) {
+      dt = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surf.get(), surf->GetSize());
+      *aBufferMode = BufferMode::BUFFERED;
+    }
+  }
+
 #  ifdef MOZ_HAVE_SHMIMAGE
-#    ifdef MOZ_WIDGET_GTK
-  if (!gfxPlatformGtk::GetPlatform()->UseXRender())
-#    endif
-  if (nsShmImage::UseShm()) {
+  if (!dt && nsShmImage::UseShm()) {
     mBackShmImage.swap(mFrontShmImage);
     if (!mBackShmImage) {
       mBackShmImage = new nsShmImage(mXDisplay, mXWindow, mXVisual, mXDepth);
@@ -6523,16 +6542,54 @@ nsWindow::GetDrawTarget(const LayoutDeviceIntRegion& aRegion, BufferMode* aBuffe
     }
   }
 #  endif  // MOZ_HAVE_SHMIMAGE
-  if (!dt) {
-    LayoutDeviceIntRect bounds = aRegion.GetBounds();
-    LayoutDeviceIntSize size(bounds.XMost(), bounds.YMost());
-    RefPtr<gfxXlibSurface> surf = new gfxXlibSurface(mXDisplay, mXWindow, mXVisual, size.ToUnknownSize());
-    if (!surf->CairoStatus()) {
-      dt = gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surf.get(), surf->GetSize());
-      *aBufferMode = BufferMode::BUFFERED;
-    }
-  }
 #endif // MOZ_X11
+
+  // If MIT-SHM and XRender are unavailable, buffer to an image surface.
+  if (!dt) {
+    IntRect bounds = aRegion.GetBounds().ToUnknownRect();
+    IntSize size(bounds.XMost(), bounds.YMost());
+
+    // Recreate the fallback surface if there is unsufficient space to render.
+    if (!mFallbackSurface ||
+        cairo_image_surface_get_width(mFallbackSurface) < size.width ||
+        cairo_image_surface_get_height(mFallbackSurface) < size.height)
+    {
+      if (mFallbackSurface)
+        cairo_surface_destroy(mFallbackSurface);
+
+      GdkScreen* screen = gdk_screen_get_default();
+      bool argb = gdk_window_get_visual(mGdkWindow) ==
+                  gdk_screen_get_rgba_visual(screen);
+      cairo_format_t cairo_format = argb ? CAIRO_FORMAT_ARGB32
+                                         : CAIRO_FORMAT_RGB24;
+      mFallbackSurface = cairo_image_surface_create(cairo_format,
+                                                    bounds.XMost(),
+                                                    bounds.YMost());
+
+      // Set the appropriate device scale so that our surface can be used
+      // as a source without transforming to the GDK window's scale.
+      static auto sCairoSurfaceSetDeviceScale =
+          (void (*)(cairo_surface_t*, double, double))
+          dlsym(RTLD_DEFAULT, "cairo_surface_set_device_scale");
+      if (sCairoSurfaceSetDeviceScale) {
+        gint scale = GdkScaleFactor();
+        sCairoSurfaceSetDeviceScale(mFallbackSurface, scale, scale);
+      }
+
+      cairo_surface_flush(mFallbackSurface);
+    }
+
+    SurfaceFormat format = CairoFormatToGfxFormat(
+            cairo_image_surface_get_format(mFallbackSurface));
+    dt = gfxPlatform::GetPlatform()->CreateDrawTargetForData(
+            cairo_image_surface_get_data(mFallbackSurface)
+            + bounds.x * BytesPerPixel(format)
+            + bounds.y * cairo_image_surface_get_stride(mFallbackSurface),
+            bounds.Size(),
+            cairo_image_surface_get_stride(mFallbackSurface),
+            format);
+    *aBufferMode = BufferMode::BUFFER_NONE;
+  }
 
   return dt.forget();
 }
@@ -6549,13 +6606,32 @@ nsWindow::EndRemoteDrawingInRegion(DrawTarget* aDrawTarget,
 {
 #ifdef MOZ_X11
 #  ifdef MOZ_HAVE_SHMIMAGE
-  if (!mGdkWindow || !mBackShmImage) {
+  if (!mGdkWindow) {
     return;
   }
 
-  mBackShmImage->Put(aInvalidRegion);
+  if (mBackShmImage) {
+    mBackShmImage->Put(aInvalidRegion);
+  }
 #  endif // MOZ_HAVE_SHMIMAGE
 #endif // MOZ_X11
+
+  if (mFallbackSurface) {
+    cairo_t* cr = gdk_cairo_create(mGdkWindow);
+    cairo_surface_mark_dirty(mFallbackSurface);
+    cairo_set_source_surface(cr, mFallbackSurface, 0, 0);
+
+    for (auto iter = aInvalidRegion.RectIter(); !iter.Done(); iter.Next()) {
+      // Transform our path into the window's coordinate system.
+      const IntRectTyped<LayoutDevicePixel> & r = iter.Get();
+      cairo_rectangle(cr, DevicePixelsToGdkCoordRoundDown(r.x),
+                          DevicePixelsToGdkCoordRoundDown(r.y),
+                          DevicePixelsToGdkCoordRoundUp(r.width),
+                          DevicePixelsToGdkCoordRoundUp(r.height));
+    }
+    cairo_fill(cr);
+    cairo_destroy(cr);
+  }
 }
 
 // Code shared begin BeginMoveDrag and BeginResizeDrag

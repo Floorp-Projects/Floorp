@@ -117,7 +117,7 @@ OrientedImage::GetFrame(uint32_t aWhichFrame,
   MOZ_ASSERT(ctx); // already checked the draw target above
   ctx->Multiply(OrientationMatrix(size));
   gfxUtils::DrawPixelSnapped(ctx, drawable, size, ImageRegion::Create(size),
-                             surfaceFormat, Filter::LINEAR);
+                             surfaceFormat, SamplingFilter::LINEAR);
 
   return target->Snapshot();
 }
@@ -273,13 +273,14 @@ OrientedImage::Draw(gfxContext* aContext,
                     const nsIntSize& aSize,
                     const ImageRegion& aRegion,
                     uint32_t aWhichFrame,
-                    Filter aFilter,
+                    SamplingFilter aSamplingFilter,
                     const Maybe<SVGImageContext>& aSVGContext,
                     uint32_t aFlags)
 {
   if (mOrientation.IsIdentity()) {
     return InnerImage()->Draw(aContext, aSize, aRegion,
-                              aWhichFrame, aFilter, aSVGContext, aFlags);
+                              aWhichFrame, aSamplingFilter,
+                              aSVGContext, aFlags);
   }
 
   // Update the image size to match the image's coordinate system. (This could
@@ -302,7 +303,7 @@ OrientedImage::Draw(gfxContext* aContext,
   ImageRegion region(aRegion);
   region.TransformBoundsBy(inverseMatrix);
 
-  return InnerImage()->Draw(aContext, size, region, aWhichFrame, aFilter,
+  return InnerImage()->Draw(aContext, size, region, aWhichFrame, aSamplingFilter,
                             aSVGContext.map(OrientViewport, mOrientation),
                             aFlags);
 }
@@ -310,18 +311,19 @@ OrientedImage::Draw(gfxContext* aContext,
 nsIntSize
 OrientedImage::OptimalImageSizeForDest(const gfxSize& aDest,
                                        uint32_t aWhichFrame,
-                                       Filter aFilter, uint32_t aFlags)
+                                       SamplingFilter aSamplingFilter,
+                                       uint32_t aFlags)
 {
   if (!mOrientation.SwapsWidthAndHeight()) {
-    return InnerImage()->OptimalImageSizeForDest(aDest, aWhichFrame, aFilter,
-                                                 aFlags);
+    return InnerImage()->OptimalImageSizeForDest(aDest, aWhichFrame,
+                                                 aSamplingFilter, aFlags);
   }
 
   // Swap the size for the calculation, then swap it back for the caller.
   gfxSize destSize(aDest.height, aDest.width);
   nsIntSize innerImageSize(InnerImage()->OptimalImageSizeForDest(destSize,
                                                                  aWhichFrame,
-                                                                 aFilter,
+                                                                 aSamplingFilter,
                                                                  aFlags));
   return nsIntSize(innerImageSize.height, innerImageSize.width);
 }

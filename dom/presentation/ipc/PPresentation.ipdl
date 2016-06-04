@@ -6,6 +6,7 @@
 
 include protocol PContent;
 include protocol PPresentationRequest;
+include protocol PPresentationBuilder;
 
 include InputStreamParams;
 
@@ -52,6 +53,7 @@ union PresentationIPCRequest
 sync protocol PPresentation
 {
   manager PContent;
+  manages PPresentationBuilder;
   manages PPresentationRequest;
 
 child:
@@ -61,6 +63,8 @@ child:
                                  nsresult aReason);
   async NotifyMessage(nsString aSessionId, nsCString aData);
   async NotifySessionConnect(uint64_t aWindowId, nsString aSessionId);
+
+  async PPresentationBuilder(nsString aSessionId, uint8_t aRole);
 
 parent:
   async __delete__();
@@ -77,6 +81,7 @@ parent:
   async PPresentationRequest(PresentationIPCRequest aRequest);
 
   async NotifyReceiverReady(nsString aSessionId, uint64_t aWindowId);
+  async NotifyTransportClosed(nsString aSessionId, uint8_t aRole, nsresult aReason);
 };
 
 } // namespace dom

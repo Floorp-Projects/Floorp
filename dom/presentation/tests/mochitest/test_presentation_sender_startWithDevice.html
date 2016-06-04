@@ -165,6 +165,7 @@ SpecialPowers.pushPermissions([
   {type: 'presentation', allow: true, context: document},
 ], function() {
   SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
+                                      ["dom.presentation.session_transport.data_channel.enable", false],
                                       ["dom.presentation.test.enabled", true],
                                       ["dom.presentation.test.stage", 0]]},
                             runTests);

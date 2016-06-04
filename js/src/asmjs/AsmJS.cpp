@@ -8569,7 +8569,7 @@ BuildConsoleMessage(ExclusiveContext* cx, AsmJSModule& module, unsigned time,
             const SlowFunction& func = slowFuncs[i];
             slowText.reset(JS_smprintf("%s%s:%u (%ums)%s",
                                        slowText.get(),
-                                       module.prettyFuncName(func.index),
+                                       module.maybePrettyFuncName(func.index),
                                        func.lineOrBytecode,
                                        func.ms,
                                        i+1 < slowFuncs.length() ? ", " : ""));
