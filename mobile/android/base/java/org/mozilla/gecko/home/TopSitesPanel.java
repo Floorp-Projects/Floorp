@@ -17,6 +17,8 @@ import java.util.Map;
 
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.Tab;
+import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
 import org.mozilla.gecko.TelemetryContract;
 import org.mozilla.gecko.db.BrowserContract.Thumbnails;
@@ -810,31 +812,21 @@ public class TopSitesPanel extends HomeFragment {
                 return thumbnails;
             }
 
-            // We need to query metadata based on the URL without any refs, hence we create a new
-            // mapping and list of these URLs (we need to preserve the original URL for display purposes)
-            final Map<String, String> queryURLs = new HashMap<>();
-            for (final String pageURL : mUrls) {
-                queryURLs.put(pageURL, StringUtils.stripRef(pageURL));
-            }
-
             // Query the DB for tile images.
             final ContentResolver cr = getContext().getContentResolver();
-            // Use the stripped URLs for querying the DB
-            final Map<String, Map<String, Object>> metadata = mDB.getURLMetadata().getForURLs(cr, queryURLs.values(), COLUMNS);
+            final Map<String, Map<String, Object>> metadata = mDB.getURLMetadata().getForURLs(cr, mUrls, COLUMNS);
 
             // Keep a list of urls that don't have tiles images. We'll use thumbnails for them instead.
             final List<String> thumbnailUrls = new ArrayList<String>();
-            for (final String pageURL : mUrls) {
-                final String queryURL = queryURLs.get(pageURL);
-
-                ThumbnailInfo info = ThumbnailInfo.fromMetadata(metadata.get(queryURL));
+            for (String url : mUrls) {
+                ThumbnailInfo info = ThumbnailInfo.fromMetadata(metadata.get(url));
                 if (info == null) {
                     // If we didn't find metadata, we'll look for a thumbnail for this url.
-                    thumbnailUrls.add(pageURL);
+                    thumbnailUrls.add(url);
                     continue;
                 }
 
-                thumbnails.put(pageURL, info);
+                thumbnails.put(url, info);
             }
 
             if (thumbnailUrls.size() == 0) {
