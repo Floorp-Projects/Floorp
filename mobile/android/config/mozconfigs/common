@@ -56,6 +56,15 @@ if test "$MOZ_UPDATE_CHANNEL" = "release" ; then
     ac_add_options --with-adjust-sdk-keyfile=/builds/adjust-sdk.token
 elif test "$MOZ_UPDATE_CHANNEL" = "beta" ; then
     ac_add_options --with-adjust-sdk-keyfile=/builds/adjust-sdk-beta.token
+else
+    # (bug 1277553) In Aurora -> Beta simulation builds, no update channel is
+    # specified, causing an assertion to throw that MOZ_INSTALL_TRACKING is
+    # specified but the keyfile is not. In this case, we add a default keyfile.
+    # This has the disadvantage that if our beta/release checks above ever
+    # fail, we'll come to this default case and the compile-time check to
+    # specify a valid keyfile will be broken. I don't have any better
+    # alternatives.
+    ac_add_options --with-adjust-sdk-keyfile="$topsrcdir/mobile/android/base/adjust-sdk-sandbox.token"
 fi
 export SOCORRO_SYMBOL_UPLOAD_TOKEN_FILE=/builds/crash-stats-api.token
 
