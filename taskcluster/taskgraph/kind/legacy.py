@@ -4,27 +4,20 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import time
-import os
-import sys
-import json
 import copy
-import re
+import json
 import logging
+import os
+import re
+import sys
+import time
+from collections import defaultdict, namedtuple
 
 from . import base
 from ..types import Task
 from functools import partial
 from mozpack.path import match as mozpackmatch
 from slugid import nice as slugid
-from taskcluster_graph.mach_util import (
-    merge_dicts,
-    gaia_info,
-    configure_dependent_task,
-    set_interactive_task,
-    remove_caches_from_task,
-    query_vcs_info
-)
 from taskcluster_graph.commit_parser import parse_commit
 from taskgraph.util.time import (
     json_time_from_now,
@@ -34,6 +27,9 @@ from taskgraph.util.templates import Templates
 import taskcluster_graph.build_task
 from taskgraph.util.docker import docker_image
 
+
+ROOT = os.path.dirname(os.path.realpath(__file__))
+GECKO = os.path.realpath(os.path.join(ROOT, '..', '..', '..'))
 # TASKID_PLACEHOLDER is the "internal" form of a taskid; it is substituted with
 # actual taskIds at the very last minute, in get_task_definition
 TASKID_PLACEHOLDER = 'TaskLabel=={}'
@@ -57,6 +53,146 @@ logger = logging.getLogger(__name__)
 
 def mklabel():
     return TASKID_PLACEHOLDER.format(slugid())
+
+def merge_dicts(*dicts):
+    merged_dict = {}
+    for dictionary in dicts:
+        merged_dict.update(dictionary)
+    return merged_dict
+
+def gaia_info():
+    '''Fetch details from in tree gaia.json (which links this version of
+    gecko->gaia) and construct the usual base/head/ref/rev pairing...'''
+    gaia = json.load(open(os.path.join(GECKO, 'b2g', 'config', 'gaia.json')))
+
+    if gaia['git'] is None or \
+       gaia['git']['remote'] == '' or \
+       gaia['git']['git_revision'] == '' or \
+       gaia['git']['branch'] == '':
+
+       # Just use the hg params...
+       return {
+         'gaia_base_repository': 'https://hg.mozilla.org/{}'.format(gaia['repo_path']),
+         'gaia_head_repository': 'https://hg.mozilla.org/{}'.format(gaia['repo_path']),
+         'gaia_ref': gaia['revision'],
+         'gaia_rev': gaia['revision']
+       }
+
+    else:
+        # Use git
+        return {
+            'gaia_base_repository': gaia['git']['remote'],
+            'gaia_head_repository': gaia['git']['remote'],
+            'gaia_rev': gaia['git']['git_revision'],
+            'gaia_ref': gaia['git']['branch'],
+        }
+
+def configure_dependent_task(task_path, parameters, taskid, templates, build_treeherder_config):
+    """Configure a build dependent task. This is shared between post-build and test tasks.
+
+    :param task_path: location to the task yaml
+    :param parameters: parameters to load the template
+    :param taskid: taskid of the dependent task
+    :param templates: reference to the template builder
+    :param build_treeherder_config: parent treeherder config
+    :return: the configured task
+    """
+    task = templates.load(task_path, parameters)
+    task['taskId'] = taskid
+
+    if 'requires' not in task:
+        task['requires'] = []
+
+    task['requires'].append(parameters['build_slugid'])
+
+    if 'treeherder' not in task['task']['extra']:
+        task['task']['extra']['treeherder'] = {}
+
+    # Copy over any treeherder configuration from the build so
+    # tests show up under the same platform...
+    treeherder_config = task['task']['extra']['treeherder']
+
+    treeherder_config['collection'] = \
+        build_treeherder_config.get('collection', {})
+
+    treeherder_config['build'] = \
+        build_treeherder_config.get('build', {})
+
+    treeherder_config['machine'] = \
+        build_treeherder_config.get('machine', {})
+
+    if 'routes' not in task['task']:
+        task['task']['routes'] = []
+
+    if 'scopes' not in task['task']:
+        task['task']['scopes'] = []
+
+    return task
+
+def set_interactive_task(task, interactive):
+    r"""Make the task interactive.
+
+    :param task: task definition.
+    :param interactive: True if the task should be interactive.
+    """
+    if not interactive:
+        return
+
+    payload = task["task"]["payload"]
+    if "features" not in payload:
+        payload["features"] = {}
+    payload["features"]["interactive"] = True
+
+def remove_caches_from_task(task):
+    r"""Remove all caches but tc-vcs from the task.
+
+    :param task: task definition.
+    """
+    whitelist = [
+        re.compile("^level-[123]-.*-tc-vcs(-public-sources)?$"),
+        re.compile("^tooltool-cache$"),
+    ]
+    try:
+        caches = task["task"]["payload"]["cache"]
+        for cache in caches.keys():
+            if not any(pat.match(cache) for pat in whitelist):
+                caches.pop(cache)
+    except KeyError:
+        pass
+
+def query_vcs_info(repository, revision):
+    """Query the pushdate and pushid of a repository/revision.
+
+    This is intended to be used on hg.mozilla.org/mozilla-central and
+    similar. It may or may not work for other hg repositories.
+    """
+    if not repository or not revision:
+        logger.warning('cannot query vcs info because vcs info not provided')
+        return None
+
+    VCSInfo = namedtuple('VCSInfo', ['pushid', 'pushdate', 'changesets'])
+
+    try:
+        import requests
+        url = '%s/json-automationrelevance/%s' % (repository.rstrip('/'),
+                                                  revision)
+        logger.debug("Querying version control for metadata: %s", url)
+        contents = requests.get(url).json()
+
+        changesets = []
+        for c in contents['changesets']:
+            changesets.append({k: c[k] for k in ('desc', 'files', 'node')})
+
+        pushid = contents['changesets'][-1]['pushid']
+        pushdate = contents['changesets'][-1]['pushdate'][0]
+
+        return VCSInfo(pushid, pushdate, changesets)
+
+    except Exception:
+        logger.exception("Error querying VCS info for '%s' revision '%s'",
+                repository, revision)
+        return None
+
 
 def set_expiration(task, timestamp):
     task_def = task['task']
