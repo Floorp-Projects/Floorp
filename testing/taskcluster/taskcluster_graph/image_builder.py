@@ -5,8 +5,6 @@ import subprocess
 import tarfile
 import urllib2
 
-import taskcluster_graph.transform.routes as routes_transform
-import taskcluster_graph.transform.treeherder as treeherder_transform
 from slugid import nice as slugid
 from taskgraph.util.templates import Templates
 

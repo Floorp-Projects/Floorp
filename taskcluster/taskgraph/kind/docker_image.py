@@ -15,8 +15,6 @@ import time
 from . import base
 from ..types import Task
 from taskgraph.util.docker import docker_image
-import taskcluster_graph.transform.routes as routes_transform
-import taskcluster_graph.transform.treeherder as treeherder_transform
 from taskgraph.util.templates import Templates
 from taskgraph.util.time import (
     json_time_from_now,

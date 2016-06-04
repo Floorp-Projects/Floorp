@@ -25,8 +25,6 @@ from taskcluster_graph.mach_util import (
     remove_caches_from_task,
     query_vcs_info
 )
-import taskcluster_graph.transform.routes as routes_transform
-import taskcluster_graph.transform.treeherder as treeherder_transform
 from taskcluster_graph.commit_parser import parse_commit
 from taskgraph.util.time import (
     json_time_from_now,
@@ -45,6 +43,12 @@ DEFAULT_TRY = 'try: -b do -p all -u all -t all'
 DEFAULT_JOB_PATH = os.path.join(
     'tasks', 'branches', 'base_jobs.yml'
 )
+
+TREEHERDER_ROUTE_PREFIX = 'tc-treeherder-stage'
+TREEHERDER_ROUTES = {
+    'staging': 'tc-treeherder-stage',
+    'production': 'tc-treeherder'
+}
 
 # time after which a try build's results will expire
 TRY_EXPIRATION = "14 days"
@@ -72,6 +76,48 @@ def set_expiration(task, timestamp):
     for artifact in artifacts.values():
         artifact['expires'] = timestamp
 
+def add_treeherder_revision_info(task, revision, revision_hash):
+    # Only add treeherder information if task.extra.treeherder is present
+    if 'extra' not in task and 'treeherder' not in task.extra:
+        return
+
+    task['extra']['treeherder']['revision'] = revision
+    task['extra']['treeherder']['revision_hash'] = revision_hash
+
+
+def decorate_task_treeherder_routes(task, suffix):
+    """Decorate the given task with treeherder routes.
+
+    Uses task.extra.treeherderEnv if available otherwise defaults to only
+    staging.
+
+    :param dict task: task definition.
+    :param str suffix: The project/revision_hash portion of the route.
+    """
+
+    if 'extra' not in task:
+        return
+
+    if 'routes' not in task:
+        task['routes'] = []
+
+    treeheder_env = task['extra'].get('treeherderEnv', ['staging'])
+
+    for env in treeheder_env:
+        task['routes'].append('{}.{}'.format(TREEHERDER_ROUTES[env], suffix))
+
+def decorate_task_json_routes(task, json_routes, parameters):
+    """Decorate the given task with routes.json routes.
+
+    :param dict task: task definition.
+    :param json_routes: the list of routes to use from routes.json
+    :param parameters: dictionary of parameters to use in route templates
+    """
+    routes = task.get('routes', [])
+    for route in json_routes:
+        routes.append(route.format(**parameters))
+
+    task['routes'] = routes
 
 
 class LegacyKind(base.Kind):
@@ -159,9 +205,9 @@ class LegacyKind(base.Kind):
         }
 
         if params['revision_hash']:
-            for env in routes_transform.TREEHERDER_ROUTES:
+            for env in TREEHERDER_ROUTES:
                 route = 'queue:route:{}.{}'.format(
-                    routes_transform.TREEHERDER_ROUTES[env],
+                    TREEHERDER_ROUTES[env],
                     treeherder_route)
                 graph['scopes'].add(route)
 
@@ -235,14 +281,14 @@ class LegacyKind(base.Kind):
                 set_expiration(build_task, json_time_from_now(TRY_EXPIRATION))
 
             if params['revision_hash']:
-                treeherder_transform.add_treeherder_revision_info(build_task['task'],
-                                                                  params['head_rev'],
-                                                                  params['revision_hash'])
-                routes_transform.decorate_task_treeherder_routes(build_task['task'],
-                                                                 treeherder_route)
-                routes_transform.decorate_task_json_routes(build_task['task'],
-                                                           json_routes,
-                                                           build_parameters)
+                add_treeherder_revision_info(build_task['task'],
+                                             params['head_rev'],
+                                             params['revision_hash'])
+                decorate_task_treeherder_routes(build_task['task'],
+                                                treeherder_route)
+                decorate_task_json_routes(build_task['task'],
+                                          json_routes,
+                                          build_parameters)
 
             # Ensure each build graph is valid after construction.
             taskcluster_graph.build_task.validate(build_task)
@@ -311,9 +357,9 @@ class LegacyKind(base.Kind):
                                                      templates,
                                                      build_treeherder_config)
                 set_interactive_task(post_task, interactive)
-                treeherder_transform.add_treeherder_revision_info(post_task['task'],
-                                                                  params['head_rev'],
-                                                                  params['revision_hash'])
+                add_treeherder_revision_info(post_task['task'],
+                                             params['head_rev'],
+                                             params['revision_hash'])
 
                 if project == "try":
                     set_expiration(post_task, json_time_from_now(TRY_EXPIRATION))
@@ -362,10 +408,10 @@ class LegacyKind(base.Kind):
                     set_interactive_task(test_task, interactive)
 
                     if params['revision_hash']:
-                        treeherder_transform.add_treeherder_revision_info(test_task['task'],
-                                                                          params['head_rev'],
-                                                                          params['revision_hash'])
-                        routes_transform.decorate_task_treeherder_routes(
+                        add_treeherder_revision_info(test_task['task'],
+                                                     params['head_rev'],
+                                                     params['revision_hash'])
+                        decorate_task_treeherder_routes(
                             test_task['task'],
                             treeherder_route
                         )
