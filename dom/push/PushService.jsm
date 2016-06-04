@@ -860,7 +860,10 @@ this.PushService = {
         });
       });
     }).then(record => {
-      gPushNotifier.notifySubscriptionModified(record.scope, record.principal);
+      if (record) {
+        gPushNotifier.notifySubscriptionModified(record.scope,
+                                                 record.principal);
+      }
       return record;
     });
   },
