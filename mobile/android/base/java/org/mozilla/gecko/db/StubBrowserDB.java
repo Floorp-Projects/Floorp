@@ -44,7 +44,7 @@ class StubURLMetadata implements URLMetadata {
     }
 
     public Map<String, Map<String, Object>> getForURLs(final ContentResolver cr,
-                                                       final Collection<String> urls,
+                                                       final List<String> urls,
                                                        final List<String> columns) {
         return new HashMap<String, Map<String, Object>>();
     }

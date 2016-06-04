@@ -5,7 +5,6 @@
  */
 package org.mozilla.gecko.db;
 
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -16,7 +15,7 @@ import android.content.ContentResolver;
 public interface URLMetadata {
     public Map<String, Object> fromJSON(JSONObject obj);
     public Map<String, Map<String, Object>> getForURLs(final ContentResolver cr,
-                                                       final Collection<String> urls,
+                                                       final List<String> urls,
                                                        final List<String> columns);
     public void save(final ContentResolver cr, final Map<String, Object> data);
 }
