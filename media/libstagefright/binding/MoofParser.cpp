@@ -394,13 +394,13 @@ Moof::Moof(Box& aBox, Trex& aTrex, Mvhd& aMvhd, Mdhd& aMdhd, Edts& aEdts, Sinf& 
         aMdhd.ToMicroseconds((int64_t)*aDecodeTime - aEdts.mMediaStart)
         + aMvhd.ToMicroseconds(aEdts.mEmptyOffset);
       int64_t decodeDuration = endDecodeTime - mIndex[0].mDecodeTime;
-      float adjust = (float)decodeDuration / presentationDuration;
+      double adjust = (double)decodeDuration / presentationDuration;
       int64_t dtsOffset = mIndex[0].mDecodeTime;
       int64_t compositionDuration = 0;
       // Adjust the dts, ensuring that the new adjusted dts will never be greater
       // than decodeTime (the next moof's decode start time).
       for (auto& sample : mIndex) {
-        sample.mDecodeTime = dtsOffset + compositionDuration * adjust;
+        sample.mDecodeTime = dtsOffset + int64_t(compositionDuration * adjust);
         compositionDuration += sample.mCompositionRange.Length();
       }
       mTimeRange = Interval<Microseconds>(ctsOrder[0]->mCompositionRange.start,
