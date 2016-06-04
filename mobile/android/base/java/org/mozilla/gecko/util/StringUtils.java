@@ -62,26 +62,6 @@ public class StringUtils {
         return wasSearchQuery;
     }
 
-    /**
-     * Strip the ref from a URL, if present
-     *
-     * @return The base URL, without the ref. The original String is returned if it has no ref,
-     *         of if the input is malformed.
-     */
-    public static String stripRef(final String inputURL) {
-        if (inputURL == null) {
-            return null;
-        }
-
-        final int refIndex = inputURL.indexOf('#');
-
-        if (refIndex >= 0) {
-            return inputURL.substring(0, refIndex);
-        }
-
-        return inputURL;
-    }
-
     public static class UrlFlags {
         public static final int NONE = 0;
         public static final int STRIP_HTTPS = 1;

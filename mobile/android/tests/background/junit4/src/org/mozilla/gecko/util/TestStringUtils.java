@@ -11,8 +11,6 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.mozilla.gecko.background.testhelpers.TestRunner;
 
-import static org.junit.Assert.assertEquals;
-
 @RunWith(TestRunner.class)
 public class TestStringUtils {
     @Test
@@ -41,16 +39,5 @@ public class TestStringUtils {
         // No scheme
         Assert.assertFalse(StringUtils.isHttpOrHttps("google.com"));
         Assert.assertFalse(StringUtils.isHttpOrHttps("git@github.com:mozilla/gecko-dev.git"));
-    }
-
-    @Test
-    public void testStripRef() {
-        assertEquals(StringUtils.stripRef(null), null);
-        assertEquals(StringUtils.stripRef(""), "");
-
-        assertEquals(StringUtils.stripRef("??AAABBBCCC"), "??AAABBBCCC");
-        assertEquals(StringUtils.stripRef("https://mozilla.org"), "https://mozilla.org");
-        assertEquals(StringUtils.stripRef("https://mozilla.org#BBBB"), "https://mozilla.org");
-        assertEquals(StringUtils.stripRef("https://mozilla.org/#BBBB"), "https://mozilla.org/");
     }
 }
