@@ -347,10 +347,6 @@ public:
                     bool aInternal,
                     OpenDirectoryListener* aOpenListener);
 
-  static bool
-  MatchOriginScopes(const OriginScope& aOriginScope1,
-                    const OriginScope& aOriginScope2);
-
   void
   AssertIsOnOwningThread() const
 #ifdef DEBUG
@@ -1220,7 +1216,7 @@ class OriginClearOp final
   : public QuotaRequestBase
 {
   const RequestParams mParams;
-  const bool mApp;
+  const bool mMultiple;
 
 public:
   explicit OriginClearOp(const RequestParams& aParams);
@@ -1287,14 +1283,6 @@ AssertNoUnderflow(T aDest, U aArg)
   IntChecker<T>::Assert(aDest);
   IntChecker<T>::Assert(aArg);
   MOZ_ASSERT(uint64_t(aDest) >= uint64_t(aArg));
-}
-
-bool
-PatternMatchesOrigin(const nsACString& aPatternString,
-                     const nsACString& aOrigin)
-{
-  // Aren't we smart!
-  return StringBeginsWith(aOrigin, aPatternString);
 }
 
 } // namespace
@@ -2223,13 +2211,12 @@ DirectoryLockImpl::DirectoryLockImpl(QuotaManager* aQuotaManager,
 {
   AssertIsOnOwningThread();
   MOZ_ASSERT(aQuotaManager);
+  MOZ_ASSERT_IF(aOriginScope.IsOrigin(), !aOriginScope.GetOrigin().IsEmpty());
   MOZ_ASSERT_IF(!aInternal, !aPersistenceType.IsNull());
   MOZ_ASSERT_IF(!aInternal,
                 aPersistenceType.Value() != PERSISTENCE_TYPE_INVALID);
   MOZ_ASSERT_IF(!aInternal, !aGroup.IsEmpty());
-  MOZ_ASSERT_IF(aInternal, !aOriginScope.IsEmpty() || aOriginScope.IsNull());
   MOZ_ASSERT_IF(!aInternal, aOriginScope.IsOrigin());
-  MOZ_ASSERT_IF(!aInternal, !aOriginScope.IsEmpty());
   MOZ_ASSERT_IF(!aInternal, !aIsApp.IsNull());
   MOZ_ASSERT_IF(!aInternal, !aClientType.IsNull());
   MOZ_ASSERT_IF(!aInternal, aClientType.Value() != Client::TYPE_MAX);
@@ -2248,33 +2235,6 @@ DirectoryLockImpl::~DirectoryLockImpl()
   mBlocking.Clear();
 
   mQuotaManager->UnregisterDirectoryLock(this);
-}
-
-// static
-bool
-DirectoryLockImpl::MatchOriginScopes(const OriginScope& aOriginScope1,
-                                     const OriginScope& aOriginScope2)
-{
-  AssertIsOnBackgroundThread();
-
-  bool match;
-
-  if (aOriginScope2.IsNull() || aOriginScope1.IsNull()) {
-    match = true;
-  } else if (aOriginScope2.IsOrigin()) {
-    if (aOriginScope1.IsOrigin()) {
-      match = aOriginScope2.Equals(aOriginScope1);
-    } else {
-      match = PatternMatchesOrigin(aOriginScope1, aOriginScope2);
-    }
-  } else if (aOriginScope1.IsOrigin()) {
-    match = PatternMatchesOrigin(aOriginScope2, aOriginScope1);
-  } else {
-    match = PatternMatchesOrigin(aOriginScope1, aOriginScope2) ||
-            PatternMatchesOrigin(aOriginScope2, aOriginScope1);
-  }
-
-  return match;
 }
 
 #ifdef DEBUG
@@ -2305,7 +2265,7 @@ DirectoryLockImpl::MustWaitFor(const DirectoryLockImpl& aExistingLock)
   }
 
   // If the origin scopes don't overlap, the op can proceed.
-  bool match = MatchOriginScopes(mOriginScope, aExistingLock.mOriginScope);
+  bool match = aExistingLock.mOriginScope.Matches(mOriginScope);
   if (!match) {
     return false;
   }
@@ -2737,10 +2697,10 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
       for (RefPtr<DirectoryLockImpl>& lock : locks) {
         MOZ_ASSERT(!lock->GetPersistenceType().IsNull());
         MOZ_ASSERT(lock->GetOriginScope().IsOrigin());
-        MOZ_ASSERT(!lock->GetOriginScope().IsEmpty());
+        MOZ_ASSERT(!lock->GetOriginScope().GetOrigin().IsEmpty());
 
         quotaManager->DeleteFilesForOrigin(lock->GetPersistenceType().Value(),
-                                           lock->GetOriginScope());
+                                           lock->GetOriginScope().GetOrigin());
       }
     }
 
@@ -2752,14 +2712,14 @@ QuotaObject::MaybeUpdateSize(int64_t aSize, bool aTruncate)
       MOZ_ASSERT(!lock->GetPersistenceType().IsNull());
       MOZ_ASSERT(!lock->GetGroup().IsEmpty());
       MOZ_ASSERT(lock->GetOriginScope().IsOrigin());
-      MOZ_ASSERT(!lock->GetOriginScope().IsEmpty());
-      MOZ_ASSERT(lock->GetOriginScope() != mOriginInfo->mOrigin,
+      MOZ_ASSERT(!lock->GetOriginScope().GetOrigin().IsEmpty());
+      MOZ_ASSERT(lock->GetOriginScope().GetOrigin() != mOriginInfo->mOrigin,
                  "Deleted itself!");
 
       quotaManager->LockedRemoveQuotaForOrigin(
                                              lock->GetPersistenceType().Value(),
                                              lock->GetGroup(),
-                                             lock->GetOriginScope());
+                                             lock->GetOriginScope().GetOrigin());
     }
 
     // We unlocked and relocked several times so we need to recompute all the
@@ -2925,13 +2885,12 @@ QuotaManager::CreateDirectoryLock(Nullable<PersistenceType> aPersistenceType,
   -> already_AddRefed<DirectoryLockImpl>
 {
   AssertIsOnOwningThread();
+  MOZ_ASSERT_IF(aOriginScope.IsOrigin(), !aOriginScope.GetOrigin().IsEmpty());
   MOZ_ASSERT_IF(!aInternal, !aPersistenceType.IsNull());
   MOZ_ASSERT_IF(!aInternal,
                 aPersistenceType.Value() != PERSISTENCE_TYPE_INVALID);
   MOZ_ASSERT_IF(!aInternal, !aGroup.IsEmpty());
-  MOZ_ASSERT_IF(aInternal, !aOriginScope.IsEmpty() || aOriginScope.IsNull());
   MOZ_ASSERT_IF(!aInternal, aOriginScope.IsOrigin());
-  MOZ_ASSERT_IF(!aInternal, !aOriginScope.IsEmpty());
   MOZ_ASSERT_IF(!aInternal, !aIsApp.IsNull());
   MOZ_ASSERT_IF(!aInternal, !aClientType.IsNull());
   MOZ_ASSERT_IF(!aInternal, aClientType.Value() != Client::TYPE_MAX);
@@ -3020,20 +2979,20 @@ QuotaManager::RegisterDirectoryLock(DirectoryLockImpl* aLock)
     MOZ_ASSERT(!persistenceType.IsNull());
     MOZ_ASSERT(!aLock->GetGroup().IsEmpty());
     MOZ_ASSERT(originScope.IsOrigin());
-    MOZ_ASSERT(!originScope.IsEmpty());
+    MOZ_ASSERT(!originScope.GetOrigin().IsEmpty());
 
     DirectoryLockTable& directoryLockTable =
       GetDirectoryLockTable(persistenceType.Value());
 
     nsTArray<DirectoryLockImpl*>* array;
-    if (!directoryLockTable.Get(originScope, &array)) {
+    if (!directoryLockTable.Get(originScope.GetOrigin(), &array)) {
       array = new nsTArray<DirectoryLockImpl*>();
-      directoryLockTable.Put(originScope, array);
+      directoryLockTable.Put(originScope.GetOrigin(), array);
 
       if (!IsShuttingDown()) {
         UpdateOriginAccessTime(persistenceType.Value(),
                                aLock->GetGroup(),
-                               originScope);
+                               originScope.GetOrigin());
       }
     }
     array->AppendElement(aLock);
@@ -3055,22 +3014,22 @@ QuotaManager::UnregisterDirectoryLock(DirectoryLockImpl* aLock)
     MOZ_ASSERT(!persistenceType.IsNull());
     MOZ_ASSERT(!aLock->GetGroup().IsEmpty());
     MOZ_ASSERT(originScope.IsOrigin());
-    MOZ_ASSERT(!originScope.IsEmpty());
+    MOZ_ASSERT(!originScope.GetOrigin().IsEmpty());
 
     DirectoryLockTable& directoryLockTable =
       GetDirectoryLockTable(persistenceType.Value());
 
     nsTArray<DirectoryLockImpl*>* array;
-    MOZ_ALWAYS_TRUE(directoryLockTable.Get(originScope, &array));
+    MOZ_ALWAYS_TRUE(directoryLockTable.Get(originScope.GetOrigin(), &array));
 
     MOZ_ALWAYS_TRUE(array->RemoveElement(aLock));
     if (array->IsEmpty()) {
-      directoryLockTable.Remove(originScope);
+      directoryLockTable.Remove(originScope.GetOrigin());
 
       if (!IsShuttingDown()) {
         UpdateOriginAccessTime(persistenceType.Value(),
                                aLock->GetGroup(),
-                               originScope);
+                               originScope.GetOrigin());
       }
     }
   }
@@ -3109,8 +3068,7 @@ QuotaManager::CollectOriginsForEviction(
         bool match = false;
         for (uint32_t j = aLocks.Length(); j > 0; j--) {
           DirectoryLockImpl* lock = aLocks[j - 1];
-          if (DirectoryLockImpl::MatchOriginScopes(originScope,
-                                                   lock->GetOriginScope())) {
+          if (originScope.Matches(lock->GetOriginScope())) {
             match = true;
             break;
           }
@@ -4451,13 +4409,13 @@ QuotaManager::OpenDirectoryInternal(Nullable<PersistenceType> aPersistenceType,
 
       const OriginScope& originScope = blockedOnLock->GetOriginScope();
       MOZ_ASSERT(originScope.IsOrigin());
-      MOZ_ASSERT(!originScope.IsEmpty());
+      MOZ_ASSERT(!originScope.GetOrigin().IsEmpty());
 
       nsAutoPtr<nsTHashtable<nsCStringHashKey>>& origin = origins[clientType];
       if (!origin) {
         origin = new nsTHashtable<nsCStringHashKey>();
       }
-      origin->PutEntry(originScope);
+      origin->PutEntry(originScope.GetOrigin());
     }
   }
 
@@ -5148,48 +5106,6 @@ QuotaManager::FinalizeOriginEviction(
 }
 
 void
-QuotaManager::GetOriginPatternString(uint32_t aAppId,
-                                     MozBrowserPatternFlag aBrowserFlag,
-                                     const nsACString& aOrigin,
-                                     nsAutoCString& _retval)
-{
-  NS_ASSERTION(aAppId != kUnknownAppId, "Bad appId!");
-  NS_ASSERTION(aOrigin.IsEmpty() || aBrowserFlag != IgnoreMozBrowser,
-               "Bad args!");
-
-  if (aOrigin.IsEmpty()) {
-    _retval.Truncate();
-
-    _retval.AppendInt(aAppId);
-    _retval.Append('+');
-
-    if (aBrowserFlag != IgnoreMozBrowser) {
-      if (aBrowserFlag == MozBrowser) {
-        _retval.Append('t');
-      }
-      else {
-        _retval.Append('f');
-      }
-      _retval.Append('+');
-    }
-
-    return;
-  }
-
-#ifdef DEBUG
-  if (aAppId != nsIScriptSecurityManager::NO_APP_ID ||
-      aBrowserFlag == MozBrowser) {
-    nsAutoCString pattern;
-    GetOriginPatternString(aAppId, aBrowserFlag, EmptyCString(), pattern);
-    NS_ASSERTION(PatternMatchesOrigin(pattern, aOrigin),
-                 "Origin doesn't match parameters!");
-  }
-#endif
-
-  _retval = aOrigin;
-}
-
-void
 QuotaManager::ShutdownTimerCallback(nsITimer* aTimer, void* aClosure)
 {
   AssertIsOnBackgroundThread();
@@ -5629,7 +5545,7 @@ FinalizeOriginEvictionOp::DoDirectoryWork(QuotaManager* aQuotaManager)
 
   for (RefPtr<DirectoryLockImpl>& lock : mLocks) {
     aQuotaManager->OriginClearCompleted(lock->GetPersistenceType().Value(),
-                                        lock->GetOriginScope(),
+                                        lock->GetOriginScope().GetOrigin(),
                                         lock->GetIsApp().Value());
   }
 
@@ -5722,7 +5638,7 @@ SaveOriginAccessTimeOp::DoDirectoryWork(QuotaManager* aQuotaManager)
   nsCOMPtr<nsIFile> directory;
   nsresult rv =
     aQuotaManager->GetDirectoryForOrigin(mPersistenceType.Value(),
-                                         mOriginScope,
+                                         mOriginScope.GetOrigin(),
                                          getter_AddRefs(directory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -5841,7 +5757,7 @@ Quota::AllocPQuotaRequestParent(const RequestParams& aParams)
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(aParams.type() != RequestParams::T__None);
 
-  if (aParams.type() == RequestParams::TClearAppParams) {
+  if (aParams.type() == RequestParams::TClearOriginsParams) {
     PBackgroundParent* actor = Manager();
     MOZ_ASSERT(actor);
 
@@ -5855,7 +5771,7 @@ Quota::AllocPQuotaRequestParent(const RequestParams& aParams)
 
   switch (aParams.type()) {
     case RequestParams::TClearOriginParams:
-    case RequestParams::TClearAppParams:
+    case RequestParams::TClearOriginsParams:
       actor = new OriginClearOp(aParams);
       break;
 
@@ -6023,7 +5939,7 @@ GetUsageOp::AddToUsage(QuotaManager* aQuotaManager,
 
   nsCOMPtr<nsIFile> directory;
   nsresult rv = aQuotaManager->GetDirectoryForOrigin(aPersistenceType,
-                                                     mOriginScope,
+                                                     mOriginScope.GetOrigin(),
                                                      getter_AddRefs(directory));
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -6037,7 +5953,8 @@ GetUsageOp::AddToUsage(QuotaManager* aQuotaManager,
     bool initialized;
 
     if (IsTreatedAsPersistent(aPersistenceType, mIsApp)) {
-      nsCString originKey = OriginKey(aPersistenceType, mOriginScope);
+      nsCString originKey =
+        OriginKey(aPersistenceType, mOriginScope.GetOrigin());
       initialized = aQuotaManager->IsOriginInitialized(originKey);
     } else {
       initialized = aQuotaManager->IsTemporaryStorageInitialized();
@@ -6096,11 +6013,15 @@ GetUsageOp::AddToUsage(QuotaManager* aQuotaManager,
       MOZ_ASSERT(client);
 
       if (initialized) {
-        rv = client->GetUsageForOrigin(aPersistenceType, mGroup, mOriginScope,
+        rv = client->GetUsageForOrigin(aPersistenceType,
+                                       mGroup,
+                                       mOriginScope.GetOrigin(),
                                        &mUsageInfo);
       }
       else {
-        rv = client->InitOrigin(aPersistenceType, mGroup, mOriginScope,
+        rv = client->InitOrigin(aPersistenceType,
+                                mGroup,
+                                mOriginScope.GetOrigin(),
                                 &mUsageInfo);
       }
       NS_ENSURE_SUCCESS(rv, rv);
@@ -6306,10 +6227,10 @@ ResetOrClearOp::GetResponse(RequestResponse& aResponse)
 OriginClearOp::OriginClearOp(const RequestParams& aParams)
   : QuotaRequestBase(/* aExclusive */ true)
   , mParams(aParams)
-  , mApp(aParams.type() == RequestParams::TClearAppParams)
+  , mMultiple(aParams.type() == RequestParams::TClearOriginsParams)
 {
   MOZ_ASSERT(aParams.type() == RequestParams::TClearOriginParams ||
-             aParams.type() == RequestParams::TClearAppParams);
+             aParams.type() == RequestParams::TClearOriginsParams);
 }
 
 bool
@@ -6322,16 +6243,7 @@ OriginClearOp::Init(Quota* aQuota)
     return false;
   }
 
-  if (mApp) {
-    const ClearAppParams& params = mParams.get_ClearAppParams();
-
-    nsAutoCString pattern;
-    QuotaManager::GetOriginPatternStringMaybeIgnoreBrowser(params.appId(),
-                                                           params.browserOnly(),
-                                                           pattern);
-
-    mOriginScope.SetFromPattern(pattern);
-  } else {
+  if (!mMultiple) {
     const ClearOriginParams& params = mParams.get_ClearOriginParams();
 
     if (params.persistenceTypeIsExplicit()) {
@@ -6339,9 +6251,9 @@ OriginClearOp::Init(Quota* aQuota)
 
       mPersistenceType.SetValue(params.persistenceType());
     }
-
-    mNeedsMainThreadInit = true;
   }
+
+  mNeedsMainThreadInit = true;
 
   return true;
 }
@@ -6351,36 +6263,34 @@ OriginClearOp::DoInitOnMainThread()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(GetState() == State_Initializing);
-  MOZ_ASSERT(!mApp);
   MOZ_ASSERT(mNeedsMainThreadInit);
 
-  const ClearOriginParams& params = mParams.get_ClearOriginParams();
+  if (mMultiple) {
+    const ClearOriginsParams& params = mParams.get_ClearOriginsParams();
 
-  const PrincipalInfo& principalInfo = params.principalInfo();
+    mOriginScope.SetFromJSONPattern(params.pattern());
+  } else {
+    const ClearOriginParams& params = mParams.get_ClearOriginParams();
 
-  nsresult rv;
-  nsCOMPtr<nsIPrincipal> principal =
-    PrincipalInfoToPrincipal(principalInfo, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
+    const PrincipalInfo& principalInfo = params.principalInfo();
+
+    nsresult rv;
+    nsCOMPtr<nsIPrincipal> principal =
+      PrincipalInfoToPrincipal(principalInfo, &rv);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    // Figure out which origin we're dealing with.
+    nsCString origin;
+    rv = QuotaManager::GetInfoFromPrincipal(principal, nullptr, nullptr, &origin,
+                                            nullptr);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+
+    mOriginScope.SetFromOrigin(origin);
   }
-
-  // Figure out which origin we're dealing with.
-  nsCString origin;
-  rv = QuotaManager::GetInfoFromPrincipal(principal, nullptr, nullptr, &origin,
-                                          nullptr);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  const mozilla::PrincipalOriginAttributes& attrs =
-    mozilla::BasePrincipal::Cast(principal)->OriginAttributesRef();
-
-  nsAutoCString pattern;
-  QuotaManager::GetOriginPatternString(attrs.mAppId, attrs.mInIsolatedMozBrowser, origin,
-                                       pattern);
-
-  mOriginScope.SetFromPattern(pattern);
 
   return NS_OK;
 }
@@ -6411,8 +6321,12 @@ OriginClearOp::DeleteFiles(QuotaManager* aQuotaManager,
     return;
   }
 
-  nsCString originSanitized(mOriginScope);
-  SanitizeOriginString(originSanitized);
+  OriginScope originScope = mOriginScope.Clone();
+  if (originScope.IsOrigin()) {
+    nsCString originSanitized(originScope.GetOrigin());
+    SanitizeOriginString(originSanitized);
+    originScope.SetOrigin(originSanitized);
+  }
 
   bool hasMore;
   while (NS_SUCCEEDED((rv = entries->HasMoreElements(&hasMore))) && hasMore) {
@@ -6445,9 +6359,9 @@ OriginClearOp::DeleteFiles(QuotaManager* aQuotaManager,
       continue;
     }
 
-    // Skip storages for other apps.
-    if (!PatternMatchesOrigin(originSanitized,
-                              NS_ConvertUTF16toUTF8(leafName))) {
+    // Skip the origin directory if it doesn't match the pattern.
+    if (!originScope.MatchesOrigin(OriginScope::FromOrigin(
+                                     NS_ConvertUTF16toUTF8(leafName)))) {
       continue;
     }
 
@@ -6517,8 +6431,8 @@ OriginClearOp::GetResponse(RequestResponse& aResponse)
 {
   AssertIsOnOwningThread();
 
-  if (mApp) {
-    aResponse = ClearAppResponse();
+  if (mMultiple) {
+    aResponse = ClearOriginsResponse();
   } else {
     aResponse = ClearOriginResponse();
   }
