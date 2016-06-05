@@ -589,6 +589,7 @@ private:
 
   // State initialized during eInitial:
   quota::PersistenceType mPersistence;
+  nsCString mSuffix;
   nsCString mGroup;
   nsCString mOrigin;
   RefPtr<DirectoryLock> mDirectoryLock;
@@ -685,8 +686,8 @@ ParentRunnable::InitOnMainThread()
     return rv;
   }
 
-  rv = QuotaManager::GetInfoFromPrincipal(principal, &mGroup, &mOrigin,
-                                          &mIsApp);
+  rv = QuotaManager::GetInfoFromPrincipal(principal, &mSuffix, &mGroup,
+                                          &mOrigin, &mIsApp);
   NS_ENSURE_SUCCESS(rv, rv);
 
   InitPersistenceType();
@@ -727,8 +728,8 @@ ParentRunnable::ReadMetadata()
   MOZ_ASSERT(qm, "We are on the QuotaManager's IO thread");
 
   nsresult rv =
-    qm->EnsureOriginIsInitialized(mPersistence, mGroup, mOrigin, mIsApp,
-                                  getter_AddRefs(mDirectory));
+    qm->EnsureOriginIsInitialized(mPersistence, mSuffix, mGroup, mOrigin,
+                                  mIsApp, getter_AddRefs(mDirectory));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     mResult = JS::AsmJSCache_StorageInitFailure;
     return rv;

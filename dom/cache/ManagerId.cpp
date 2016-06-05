@@ -28,7 +28,8 @@ ManagerId::Create(nsIPrincipal* aPrincipal, ManagerId** aManagerIdOut)
   // order to interpret calls from QM correctly.
   nsCString quotaOrigin;
   nsresult rv = QuotaManager::GetInfoFromPrincipal(aPrincipal,
-                                                   nullptr,   //group
+                                                   nullptr,   // suffix
+                                                   nullptr,   // group
                                                    &quotaOrigin,
                                                    nullptr);  // is app
   if (NS_WARN_IF(NS_FAILED(rv))) { return rv; }
