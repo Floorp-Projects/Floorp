@@ -982,7 +982,7 @@ function* runTests() {
     // (promptAuth is only accessible from the prompt service)
     info("Starting test: promptAuth with empty realm");
     state = {
-        msg : 'http://example.com is requesting your username and password.',
+        msg : 'Enter username and password for http://example.com',
         title : "TestTitle",
         iconClass   : "authentication-icon question-icon",
         titleHidden : true,
@@ -1020,7 +1020,7 @@ function* runTests() {
     // (promptAuth is only accessible from the prompt service)
     info("Starting test: promptAuth with long realm");
     state = {
-        msg : 'http://example.com is requesting your username and password.\n\nThe site '  +
+        msg : 'A username and password are being requested by http://example.com. The site '  +
               'says: \u201cabcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi ' +
               'abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi abcdefghi '        +
               'abcdefghi \u2026\u201d',
@@ -1053,94 +1053,6 @@ function* runTests() {
         authinfo.realm = longString;
         authinfo.username = "";
         authinfo.password = "";
-        isOK = prompter.promptAuth(window, channel, level, authinfo, "Check me out!", checkVal);
-        is(isOK, true, "checked expected retval");
-        is(authinfo.username, "username", "checking filled username");
-        is(authinfo.password, "password", "checking filled password");
-        is(checkVal.value, true, "expected checkbox setting");
-
-        yield promptDone;
-    }
-
-    info("Starting test: promptAuth for a cross-origin and a empty realm");
-    authinfo = {
-        username : "",
-        password : "",
-        domain   : "",
-        flags    : Ci. nsIAuthInformation.AUTH_HOST |
-                   Ci.nsIAuthInformation.CROSS_ORIGIN_SUB_RESOURCE,
-        authenticationScheme : "basic",
-        realm : ""
-    }
-    state = {
-        msg : 'http://example.com is requesting your username and password.\n\n' +
-              'WARNING: Your password will not be sent to the website you are currently visiting!',
-        title : "TestTitle",
-        iconClass   : "authentication-icon question-icon",
-        titleHidden : true,
-        textHidden  : false,
-        passHidden  : false,
-        checkHidden : false,
-        textValue   : "",
-        passValue   : "",
-        checkMsg    : "Check me out!",
-        checked     : false,
-        focused     : "textField",
-        defButton   : "button0",
-    };
-    action = {
-        buttonClick : "ok",
-        setCheckbox : false,
-        textField   : "username",
-        passField   : "password",
-    };
-    if (usePromptService) {
-        promptDone = handlePrompt(state, action);
-        checkVal.value = false;
-        isOK = prompter.promptAuth(window, channel, level, authinfo, "Check me out!", checkVal);
-        is(isOK, true, "checked expected retval");
-        is(authinfo.username, "username", "checking filled username");
-        is(authinfo.password, "password", "checking filled password");
-        is(checkVal.value, true, "expected checkbox setting");
-
-        yield promptDone;
-    }
-
-    info("Starting test: promptAuth for a cross-origin with realm");
-    authinfo = {
-        username : "",
-        password : "",
-        domain   : "",
-        flags : Ci. nsIAuthInformation.AUTH_HOST | Ci.nsIAuthInformation.CROSS_ORIGIN_SUB_RESOURCE,
-        authenticationScheme : "basic",
-        realm : "Something!!!"
-    }
-    state = {
-        msg : 'http://example.com is requesting your username and password.\n\n' +
-              'WARNING: Your password will not be sent to the website you are currently visiting!',
-        title : "TestTitle",
-        iconClass   : "authentication-icon question-icon",
-        titleHidden : true,
-        textHidden  : false,
-        passHidden  : false,
-        checkHidden : false,
-        textValue   : "",
-        passValue   : "",
-        checkMsg    : "Check me out!",
-        checked     : false,
-        focused     : "textField",
-        defButton   : "button0",
-    };
-    action = {
-        buttonClick : "ok",
-        setCheckbox : false,
-        textField   : "username",
-        passField   : "password",
-    };
-    if (usePromptService) {
-        promptDone = handlePrompt(state, action);
-
-        checkVal.value = false;
         isOK = prompter.promptAuth(window, channel, level, authinfo, "Check me out!", checkVal);
         is(isOK, true, "checked expected retval");
         is(authinfo.username, "username", "checking filled username");

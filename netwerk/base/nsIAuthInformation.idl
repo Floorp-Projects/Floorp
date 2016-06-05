@@ -54,12 +54,6 @@ interface nsIAuthInformation : nsISupports
    * @see also RFC 2616, Section 10.4.2
    */
   const uint32_t PREVIOUS_FAILED = 16;
-
-  /**
-   * A cross-origin sub-resource requests an authentication.
-   * The message presented to users must reflect that.
-   */
-  const uint32_t CROSS_ORIGIN_SUB_RESOURCE = 32;
   /* @} */
 
   /**

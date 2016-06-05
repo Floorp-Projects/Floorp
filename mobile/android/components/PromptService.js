@@ -676,8 +676,6 @@ var PromptUtils = {
   makeDialogText: function pu_makeDialogText(aChannel, aAuthInfo) {
     let isProxy    = (aAuthInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY);
     let isPassOnly = (aAuthInfo.flags & Ci.nsIAuthInformation.ONLY_PASSWORD);
-    let isCrossOrig = (aAuthInfo.flags &
-                       Ci.nsIAuthInformation.CROSS_ORIGIN_SUB_RESOURCE);
 
     let username = aAuthInfo.username;
     let [displayHost, realm] = this.getAuthTarget(aChannel, aAuthInfo);
@@ -694,17 +692,14 @@ var PromptUtils = {
     }
 
     let text;
-    if (isProxy) {
-      text = this.bundle.formatStringFromName("EnterLoginForProxy2", [realm, displayHost], 2);
-    } else if (isPassOnly) {
+    if (isProxy)
+      text = this.bundle.formatStringFromName("EnterLoginForProxy", [realm, displayHost], 2);
+    else if (isPassOnly)
       text = this.bundle.formatStringFromName("EnterPasswordFor", [username, displayHost], 2);
-    } else if (isCrossOrig) {
-      text = this.bundle.formatStringFromName("EnterUserPasswordForCrossOrigin", [displayHost], 1);
-    } else if (!realm) {
-      text = this.bundle.formatStringFromName("EnterUserPasswordFor2", [displayHost], 1);
-    } else {
-      text = this.bundle.formatStringFromName("EnterLoginForRealm2", [realm, displayHost], 2);
-    }
+    else if (!realm)
+      text = this.bundle.formatStringFromName("EnterUserPasswordFor", [displayHost], 1);
+    else
+      text = this.bundle.formatStringFromName("EnterLoginForRealm", [realm, displayHost], 2);
 
     return text;
   },
