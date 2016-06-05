@@ -6,6 +6,7 @@ $inherits:
     build_name: 'flake8-gecko'
     build_type: 'opt'
 
+docker-image: lint
 task:
   metadata:
     name: '[TC] - Flake8'
@@ -14,7 +15,8 @@ task:
     image:
       type: 'task-image'
       path: 'public/image.tar'
-      taskId: '{{#task_id_for_image}}lint{{/task_id_for_image}}'
+      taskId:
+        task-reference: "<docker-image>"
     command:
       - bash
       - -cx

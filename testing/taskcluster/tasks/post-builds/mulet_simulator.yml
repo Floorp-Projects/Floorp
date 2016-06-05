@@ -1,7 +1,7 @@
 # This tasks takes a mulet build, pull gaia and craft a xpi file for FxOS simulator addon
 ---
-taskId: {{taskId}}
-
+taskId: {{build_slugid}}
+docker-image: builder
 task:
   created: '{{now}}'
   deadline: '{{#from_now}}24 hours{{/from_now}}'
@@ -27,7 +27,8 @@ task:
     image:
       type: 'task-image'
       path: 'public/image.tar'
-      taskId: '{{#task_id_for_image}}builder{{/task_id_for_image}}'
+      taskId:
+        task-reference: "<docker-image>"
 
     maxRunTime: 600
 
