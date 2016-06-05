@@ -120,15 +120,24 @@ namespace {
  * Constants
  ******************************************************************************/
 
-// The database schema version we store in the SQLite database is a (signed)
-// 32-bit integer.
-const int32_t kSQLiteSchemaVersion = 1;
-
 const uint32_t kSQLitePageSizeOverride = 512;
 
+// Major storage version. Bump for backwards-incompatible changes.
+const uint32_t kMajorStorageVersion = 1;
+
+// Minor storage version. Bump for backwards-compatible changes.
+const uint32_t kMinorStorageVersion = 0;
+
 // The storage version we store in the SQLite database is a (signed) 32-bit
-// integer.
-const int32_t kStorageVersion = 1;
+// integer. The major version is left-shifted 16 bits so the max value is
+// 0xFFFF. The minor version occupies the lower 16 bits and its max is 0xFFFF.
+static_assert(kMajorStorageVersion <= 0xFFFF,
+              "Major version needs to fit in 16 bits.");
+static_assert(kMinorStorageVersion <= 0xFFFF,
+              "Minor version needs to fit in 16 bits.");
+
+const int32_t kStorageVersion =
+  int32_t((kMajorStorageVersion << 16) + kMinorStorageVersion);
 
 static_assert(
   static_cast<uint32_t>(StorageType::Persistent) ==
@@ -174,145 +183,18 @@ enum AppId {
  ******************************************************************************/
 
 #if 0
-nsresult
-UpgradeSchemaFrom1To2(mozIStorageConnection* aConnection)
+int32_t
+MakeStorageVersion(uint32_t aMajorStorageVersion,
+                   uint32_t aMinorStorageVersion)
 {
-  AssertIsOnIOThread();
-  MOZ_ASSERT(aConnection);
-
-  nsresult rv = aConnection->SetSchemaVersion(2);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  return NS_OK;
+  return int32_t((aMajorStorageVersion << 16) + aMinorStorageVersion);
 }
 #endif
 
-nsresult
-CreateStorageConnection(nsIFile* aStorageFile,
-                        mozIStorageConnection** aConnection)
+uint32_t
+GetMajorStorageVersion(int32_t aStorageVersion)
 {
-  AssertIsOnIOThread();
-  MOZ_ASSERT(aStorageFile);
-  MOZ_ASSERT(aConnection);
-
-  nsresult rv;
-
-  nsCOMPtr<mozIStorageService> ss =
-    do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  nsCOMPtr<mozIStorageConnection> connection;
-  rv = ss->OpenUnsharedDatabase(aStorageFile, getter_AddRefs(connection));
-  if (rv == NS_ERROR_FILE_CORRUPTED) {
-    // Nuke the database file.
-    rv = aStorageFile->Remove(false);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    rv = ss->OpenUnsharedDatabase(aStorageFile, getter_AddRefs(connection));
-  }
-
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // We want extra durability for this important file.
-  rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "PRAGMA synchronous = EXTRA;"
-  ));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Check to make sure that the database schema is correct.
-  int32_t schemaVersion;
-  rv = connection->GetSchemaVersion(&schemaVersion);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  if (schemaVersion > kSQLiteSchemaVersion) {
-    NS_WARNING("Unable to open storage database, schema is too high!");
-    return NS_ERROR_FAILURE;
-  }
-
-  if (schemaVersion != kSQLiteSchemaVersion) {
-    const bool newDatabase = !schemaVersion;
-
-    if (newDatabase) {
-      // Set the page size first.
-      if (kSQLitePageSizeOverride) {
-        rv = connection->ExecuteSimpleSQL(
-          nsPrintfCString("PRAGMA page_size = %lu;", kSQLitePageSizeOverride)
-        );
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-      }
-    }
-
-    mozStorageTransaction transaction(connection, false,
-                                  mozIStorageConnection::TRANSACTION_IMMEDIATE);
-    if (newDatabase) {
-      rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-        "CREATE TABLE storage"
-          "( version INTEGER NOT NULL DEFAULT 0"
-          ");"
-      ));
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      rv = connection->SetSchemaVersion(kSQLiteSchemaVersion);
-      if (NS_WARN_IF(NS_FAILED(rv))) {
-        return rv;
-      }
-
-      MOZ_ASSERT(NS_SUCCEEDED(connection->GetSchemaVersion(&schemaVersion)));
-      MOZ_ASSERT(schemaVersion == kSQLiteSchemaVersion);
-
-    } else {
-      // This logic needs to change next time we change the schema!
-      static_assert(kSQLiteSchemaVersion == 1,
-                    "Upgrade function needed due to schema version increase.");
-
-#if 0
-      while (schemaVersion != kSQLiteSchemaVersion) {
-        if (schemaVersion == 1) {
-          rv = UpgradeSchemaFrom1To2(connection);
-        } else {
-          NS_WARNING("Unable to open storage database, no upgrade path is "
-                     "available!");
-          return NS_ERROR_FAILURE;
-        }
-
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-
-        rv = connection->GetSchemaVersion(&schemaVersion);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-      }
-
-      MOZ_ASSERT(schemaVersion == kSQLiteSchemaVersion);
-#endif
-    }
-
-    rv = transaction.Commit();
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-  }
-
-  connection.forget(aConnection);
-  return NS_OK;
+  return uint32_t(aStorageVersion >> 16);
 }
 
 /******************************************************************************
@@ -4201,7 +4083,7 @@ QuotaManager::MaybeRemoveOldDirectories()
 }
 
 nsresult
-QuotaManager::UpgradeStorageFrom0To1(mozIStorageConnection* aConnection)
+QuotaManager::UpgradeStorageFrom0ToCurrent(mozIStorageConnection* aConnection)
 {
   AssertIsOnIOThread();
   MOZ_ASSERT(aConnection);
@@ -4232,40 +4114,17 @@ QuotaManager::UpgradeStorageFrom0To1(mozIStorageConnection* aConnection)
 
 #ifdef DEBUG
   {
-    nsCOMPtr<mozIStorageStatement> stmt;
-    rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-      "SELECT version "
-      "FROM storage"
-    ), getter_AddRefs(stmt));
+    int32_t storageVersion;
+    rv = aConnection->GetSchemaVersion(&storageVersion);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
 
-    bool hasResult;
-    rv = stmt->ExecuteStep(&hasResult);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    MOZ_ASSERT(!hasResult);
+    MOZ_ASSERT(storageVersion == 0);
   }
 #endif
 
-  nsCOMPtr<mozIStorageStatement> stmt;
-  rv = aConnection->CreateStatement(NS_LITERAL_CSTRING(
-    "INSERT INTO storage (version) "
-    "VALUES (:version)"
-  ), getter_AddRefs(stmt));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("version"), kStorageVersion);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = stmt->Execute();
+  rv = aConnection->SetSchemaVersion(kStorageVersion);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4280,9 +4139,7 @@ QuotaManager::UpgradeStorageFrom1To2(mozIStorageConnection* aConnection)
   AssertIsOnIOThread();
   MOZ_ASSERT(aConnection);
 
-  nsresult rv = aConnection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
-    "UPDATE storage SET version = 2;"
-  ));
+  nsresult rv = aConnection->SetSchemaVersion(MakeStorageVersion(2, 0));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -4318,46 +4175,65 @@ QuotaManager::EnsureStorageIsInitialized()
     return rv;
   }
 
+  nsCOMPtr<mozIStorageService> ss =
+    do_GetService(MOZ_STORAGE_SERVICE_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   nsCOMPtr<mozIStorageConnection> connection;
-  rv = CreateStorageConnection(storageFile, getter_AddRefs(connection));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  // Load version information.
-  nsCOMPtr<mozIStorageStatement> stmt;
-  rv = connection->CreateStatement(NS_LITERAL_CSTRING(
-    "SELECT version "
-    "FROM storage"
-  ), getter_AddRefs(stmt));
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  bool hasResult;
-  rv = stmt->ExecuteStep(&hasResult);
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  int32_t storageVersion;
-  if (hasResult) {
-    rv = stmt->GetInt32(0, &storageVersion);
+  rv = ss->OpenUnsharedDatabase(storageFile, getter_AddRefs(connection));
+  if (rv == NS_ERROR_FILE_CORRUPTED) {
+    // Nuke the database file.
+    rv = storageFile->Remove(false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }
-  } else {
-    storageVersion = 0;
+
+    rv = ss->OpenUnsharedDatabase(storageFile, getter_AddRefs(connection));
   }
 
-  if (storageVersion > kStorageVersion) {
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // We want extra durability for this important file.
+  rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "PRAGMA synchronous = EXTRA;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  // Check to make sure that the storage version is correct.
+  int32_t storageVersion;
+  rv = connection->GetSchemaVersion(&storageVersion);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (GetMajorStorageVersion(storageVersion) > kMajorStorageVersion) {
     NS_WARNING("Unable to initialize storage, version is too high!");
     return NS_ERROR_FAILURE;
   }
 
-  if (storageVersion != kStorageVersion) {
+  if (storageVersion < kStorageVersion) {
     const bool newDatabase = !storageVersion;
 
+    if (newDatabase) {
+      // Set the page size first.
+      if (kSQLitePageSizeOverride) {
+        rv = connection->ExecuteSimpleSQL(
+          nsPrintfCString("PRAGMA page_size = %lu;", kSQLitePageSizeOverride)
+        );
+        if (NS_WARN_IF(NS_FAILED(rv))) {
+          return rv;
+        }
+      }
+    }
+
+    mozStorageTransaction transaction(connection, false,
+                                  mozIStorageConnection::TRANSACTION_IMMEDIATE);
     if (newDatabase) {
       rv = MaybeUpgradeIndexedDBDirectory();
       if (NS_WARN_IF(NS_FAILED(rv))) {
@@ -4374,20 +4250,22 @@ QuotaManager::EnsureStorageIsInitialized()
         return rv;
       }
 
-      rv = UpgradeStorageFrom0To1(connection);
+      rv = UpgradeStorageFrom0ToCurrent(connection);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
+
+      MOZ_ASSERT(NS_SUCCEEDED(connection->GetSchemaVersion(&storageVersion)));
+      MOZ_ASSERT(storageVersion == kStorageVersion);
     } else {
-      // This logic needs to change next time we change the schema!
-      static_assert(kStorageVersion == 1,
+      // This logic needs to change next time we change the storage!
+      static_assert(kStorageVersion == int32_t((1 << 16) + 0),
                     "Upgrade function needed due to storage version increase.");
 
-#if 0
       while (storageVersion != kStorageVersion) {
-        if (storageVersion == 1) {
+        /* if (storageVersion == MakeStorageVersion(1, 0)) {
           rv = UpgradeStorageFrom1To2(connection);
-        } else {
+        } else */ {
           NS_WARNING("Unable to initialize storage, no upgrade path is "
                      "available!");
           return NS_ERROR_FAILURE;
@@ -4397,25 +4275,18 @@ QuotaManager::EnsureStorageIsInitialized()
           return rv;
         }
 
-        stmt->Reset();
-
-        rv = stmt->ExecuteStep(&hasResult);
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-
-        if (NS_WARN_IF(!hasResult)) {
-          return NS_ERROR_FILE_CORRUPTED;
-        }
-
-        rv = stmt->GetInt32(1, &storageVersion);
+        rv = connection->GetSchemaVersion(&storageVersion);
         if (NS_WARN_IF(NS_FAILED(rv))) {
           return rv;
         }
       }
 
       MOZ_ASSERT(storageVersion == kStorageVersion);
-#endif
+    }
+
+    rv = transaction.Commit();
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
     }
   }
 
