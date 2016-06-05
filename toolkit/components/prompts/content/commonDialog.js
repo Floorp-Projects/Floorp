@@ -50,8 +50,6 @@ function commonDialogOnLoad() {
 
     Dialog = new CommonDialog(args, ui);
     Dialog.onLoad(dialog);
-    // resize the window to the content
-    window.sizeToContent();
     window.getAttention();
 }
 
