@@ -37,18 +37,19 @@ class TestCreate(unittest.TestCase):
     def test_create_tasks(self):
         kind = FakeKind()
         tasks = {
-            'a': Task(kind=kind, label='a'),
-            'b': Task(kind=kind, label='b'),
+            'tid-a': Task(kind=kind, label='a', task={'payload': 'hello world'}),
+            'tid-b': Task(kind=kind, label='b', task={'payload': 'hello world'}),
         }
-        graph = Graph(nodes=set('ab'), edges={('a', 'b', 'edge')})
+        label_to_taskid = {'a': 'tid-a', 'b': 'tid-b'}
+        graph = Graph(nodes={'tid-a', 'tid-b'}, edges={('tid-a', 'tid-b', 'edge')})
         taskgraph = TaskGraph(tasks, graph)
 
-        create.create_tasks(taskgraph)
+        create.create_tasks(taskgraph, label_to_taskid)
 
         for tid, task in self.created_tasks.iteritems():
             self.assertEqual(task['payload'], 'hello world')
             # make sure the dependencies exist, at least
-            for depid in task['dependencies']:
+            for depid in task.get('dependencies', []):
                 self.assertIn(depid, self.created_tasks)
 
 

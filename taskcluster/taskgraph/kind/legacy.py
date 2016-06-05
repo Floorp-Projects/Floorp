@@ -44,7 +44,6 @@ import taskcluster_graph.build_task
 # actual taskIds at the very last minute, in get_task_definition
 TASKID_PLACEHOLDER = 'TaskLabel=={}'
 
-ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 DEFINE_TASK = 'queue:define-task:aws-provisioner-v1/{}'
 DEFAULT_TRY = 'try: -b do -p all -u all -t all'
 DEFAULT_JOB_PATH = os.path.join(
@@ -268,10 +267,7 @@ class LegacyKind(base.Kind):
             graph['tasks'].append(build_task)
 
             for location in build_task['task']['extra'].get('locations', {}):
-                build_parameters['{}_url'.format(location)] = ARTIFACT_URL.format(
-                    build_parameters['build_slugid'],
-                    build_task['task']['extra']['locations'][location]
-                )
+                build_parameters['{}_location'.format(location)] = build_task['task']['extra']['locations'][location]
 
             for url in build_task['task']['extra'].get('url', {}):
                 build_parameters['{}_url'.format(url)] = \
@@ -439,21 +435,7 @@ class LegacyKind(base.Kind):
         taskdict = self.tasks_by_label[task.label]
         return [(label, label) for label in taskdict.get('requires', [])]
 
-    def get_task_optimization_key(self, task, taskgraph):
-        pass
+    def optimize_task(self, task, taskgraph):
+        # no optimization for the moment
+        return False, None
 
-    def get_task_definition(self, task, dependent_taskids):
-        # Note that the keys for `dependent_taskids` are task labels in this
-        # case, since that's how get_task_dependencies set it up.
-        placeholder_pattern = re.compile(r'TaskLabel==[a-zA-Z0-9-_]{22}')
-        def repl(mo):
-            return dependent_taskids[mo.group(0)]
-
-        # this is a cheap but easy way to replace all placeholders with
-        # actual real taskIds now that they are known.  The placeholder
-        # may be embedded in a longer string, so traversing the data structure
-        # would still require regexp matching each string and not be
-        # appreciably faster.
-        task_def = json.dumps(task.task)
-        task_def = placeholder_pattern.sub(repl, task_def)
-        return json.loads(task_def)
