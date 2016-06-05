@@ -9,29 +9,38 @@
 <script>
 "use strict";
 
-/* globals privilegedXHR */
+/* globals privilegedFetch, privilegedXHR */
 /* eslint-disable mozilla/balanced-listeners */
 
 addEventListener("message", function rcv(event) {
   removeEventListener("message", rcv, false);
 
+  function assertTrue(condition, description) {
+    postMessage({msg: "assertTrue", condition, description}, "*");
+  }
+
   function passListener() {
-    postMessage(true, "*");
+    assertTrue(true, "Content XHR has no elevated privileges");
+    postMessage({"msg": "finish"}, "*");
   }
 
   function failListener() {
-    postMessage(false, "*");
+    assertTrue(false, "Content XHR has no elevated privileges");
+    postMessage({"msg": "finish"}, "*");
   }
 
-  let exc = null;
   try {
     new privilegedXHR();
+    assertTrue(false, "Content should not have access to privileged XHR constructor");
   } catch (e) {
-    exc = e;
+    assertTrue(/Permission denied to access object/.test(e), "Content should not have access to privileged XHR constructor");
   }
-  if (!/Permission denied to access object/.exec(exc)) {
-    postMessage(false, "*");
-    return;
+
+  try {
+    new privilegedFetch();
+    assertTrue(false, "Content should not have access to privileged fetch() constructor");
+  } catch (e) {
+    assertTrue(/Permission denied to access object/.test(e), "Content should not have access to privileged fetch() constructor");
   }
 
   let req = new XMLHttpRequest();
