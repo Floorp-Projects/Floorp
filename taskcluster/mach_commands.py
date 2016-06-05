@@ -129,10 +129,6 @@ class MachCommands(MachCommandBase):
     @CommandArgument('--level',
         required=True,
         help='SCM level of this repository')
-    @CommandArgument('--target-tasks-method',
-        required=False,
-        help='Method to use to determine the target task (e.g., `try_option_syntax`); '
-             'default is to run the full task graph')
     def taskgraph_decision(self, **options):
         """Run the decision task: generate a task graph and submit to
         TaskCluster.  This is only meant to be called within decision tasks,

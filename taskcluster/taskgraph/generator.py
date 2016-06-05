@@ -5,10 +5,12 @@
 from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import os
+import re
 import yaml
 
 from .graph import Graph
 from .types import TaskGraph
+from .optimize import optimize_task_graph
 
 logger = logging.getLogger(__name__)
 
@@ -99,6 +101,16 @@ class TaskGraphGenerator(object):
         """
         return self._run_until('optimized_task_graph')
 
+    @property
+    def label_to_taskid(self):
+        """
+        A dictionary mapping task label to assigned taskId.  This property helps
+        in interpreting `optimized_task_graph`.
+
+        @type: dictionary
+        """
+        return self._run_until('label_to_taskid')
+
     def _load_kinds(self):
         for path in os.listdir(self.root_dir):
             path = os.path.join(self.root_dir, path)
@@ -165,10 +177,13 @@ class TaskGraphGenerator(object):
             target_graph)
         yield 'target_task_graph', target_task_graph
 
-        # optimization is not yet implemented
-
         logger.info("Generating optimized task graph")
-        yield 'optimized_task_graph', target_task_graph
+        do_not_optimize = set()
+        if not self.parameters.get('optimize_target_tasks', True):
+            do_not_optimize = target_task_set.graph.nodes
+        optimized_task_graph, label_to_taskid = optimize_task_graph(target_task_graph, do_not_optimize)
+        yield 'label_to_taskid', label_to_taskid
+        yield 'optimized_task_graph', optimized_task_graph
 
     def _run_until(self, name):
         while name not in self._run_results:
