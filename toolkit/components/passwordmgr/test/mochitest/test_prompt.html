@@ -916,7 +916,7 @@ add_task(function* runTests() {
 
   // ===== test 500 =====
   state = {
-    msg         : "A username and password are being requested by http://example.com. The site says: “some realm”",
+    msg         : "http://example.com is requesting your username and password.\n\nThe site says: “some realm”",
     title       : "Authentication Required",
     textValue   : "inuser",
     passValue   : "inpass",
@@ -949,7 +949,7 @@ add_task(function* runTests() {
 
   // ===== test 501 =====
   state = {
-    msg         : "A username and password are being requested by http://example.com. The site says: “some realm”",
+    msg         : "http://example.com is requesting your username and password.\n\nThe site says: “some realm”",
     title       : "Authentication Required",
     textValue   : "outuser",
     passValue   : "outpass",
@@ -975,7 +975,7 @@ add_task(function* runTests() {
   // ===== test 502 =====
   // test filling in password-only login
   state = {
-    msg         : "A username and password are being requested by http://example.com. The site says: “http://example.com”",
+    msg         : "http://example.com is requesting your username and password.\n\nThe site says: “http://example.com”",
     title       : "Authentication Required",
     textValue   : "",
     passValue   : "examplepass",
@@ -1008,7 +1008,7 @@ add_task(function* runTests() {
   // test filling in existing login (undetermined from multiple selection)
   // user2name/user2pass would also be valid to fill here.
   state = {
-    msg         : "A username and password are being requested by http://example2.com. The site says: “http://example2.com”",
+    msg         : "http://example2.com is requesting your username and password.\n\nThe site says: “http://example2.com”",
     title       : "Authentication Required",
     textValue   : "user1name",
     passValue   : "user1pass",
@@ -1041,7 +1041,7 @@ add_task(function* runTests() {
   // test filling in existing login (undetermined --> user1)
   // user2name/user2pass would also be valid to fill here.
   state = {
-    msg         : "A username and password are being requested by http://example2.com. The site says: “http://example2.com”",
+    msg         : "http://example2.com is requesting your username and password.\n\nThe site says: “http://example2.com”",
     title       : "Authentication Required",
     textValue   : "user1name",
     passValue   : "user1pass",
@@ -1077,7 +1077,7 @@ add_task(function* runTests() {
   // test filling in existing login (undetermined --> user2)
   // user2name/user2pass would also be valid to fill here.
   state = {
-    msg         : "A username and password are being requested by http://example2.com. The site says: “http://example2.com”",
+    msg         : "http://example2.com is requesting your username and password.\n\nThe site says: “http://example2.com”",
     title       : "Authentication Required",
     textValue   : "user1name",
     passValue   : "user1pass",
@@ -1114,7 +1114,7 @@ add_task(function* runTests() {
   // test changing a password (undetermined --> user2 w/ newpass)
   // user2name/user2pass would also be valid to fill here.
   state = {
-    msg         : "A username and password are being requested by http://example2.com. The site says: “http://example2.com”",
+    msg         : "http://example2.com is requesting your username and password.\n\nThe site says: “http://example2.com”",
     title       : "Authentication Required",
     textValue   : "user1name",
     passValue   : "user1pass",
@@ -1151,7 +1151,7 @@ add_task(function* runTests() {
   // test changing a password (undetermined --> user2 w/ origpass)
   // user2name/user2pass would also be valid to fill here.
   state = {
-    msg         : "A username and password are being requested by http://example2.com. The site says: “http://example2.com”",
+    msg         : "http://example2.com is requesting your username and password.\n\nThe site says: “http://example2.com”",
     title       : "Authentication Required",
     textValue   : "user1name",
     passValue   : "user1pass",
@@ -1187,7 +1187,7 @@ add_task(function* runTests() {
   // ===== test 508 =====
   // test proxy login (default = no autologin), make sure it prompts.
   state = {
-    msg         : "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password. The site says: “Proxy Realm”",
+    msg         : "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password.\n\nThe site says: “Proxy Realm”",
     title       : "Authentication Required",
     textValue   : "proxuser",
     passValue   : "proxpass",
@@ -1244,7 +1244,7 @@ add_task(function* runTests() {
   // ===== test 510 =====
   // test proxy login (with autologin), ensure it prompts after a failed auth.
   state = {
-    msg         : "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password. The site says: “Proxy Realm”",
+    msg         : "The proxy moz-proxy://127.0.0.1:8888 is requesting a username and password.\n\nThe site says: “Proxy Realm”",
     title       : "Authentication Required",
     textValue   : "proxuser",
     passValue   : "proxpass",
@@ -1309,7 +1309,7 @@ add_task(function* runTests() {
 
   // ===== test 1000 =====
   state = {
-    msg         : "A username and password are being requested by http://mochi.test:8888. The site says: “mochitest”",
+    msg         : "http://mochi.test:8888 is requesting your username and password.\n\nThe site says: “mochitest”",
     title       : "Authentication Required",
     textValue   : "mochiuser1",
     passValue   : "mochipass1",
@@ -1330,25 +1330,15 @@ add_task(function* runTests() {
 
   // The following tests are driven by iframe loads
 
-  function checkEchoedAuthInfo(expectedState) {
-    // The server echos back the HTTP auth info it received.
-    let username = iframe.contentDocument.getElementById("user").textContent;
-    let password = iframe.contentDocument.getElementById("pass").textContent;
-    let authok = iframe.contentDocument.getElementById("ok").textContent;
-
-    is(authok, "PASS", "Checking for successful authentication");
-    is(username, expectedState.user, "Checking for echoed username");
-    is(password, expectedState.pass, "Checking for echoed password");
-  }
-
   var iframeLoaded = onloadPromiseFor("iframe");
   iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
   yield promptDone;
   yield iframeLoaded;
-  checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"});
+  checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"},
+                      iframe.contentDocument);
 
   state = {
-    msg         : "A username and password are being requested by http://mochi.test:8888. The site says: “mochitest2”",
+    msg         : "http://mochi.test:8888 is requesting your username and password.\n\nThe site says: “mochitest2”",
     title       : "Authentication Required",
     textValue   : "mochiuser2",
     passValue   : "mochipass2",
@@ -1373,7 +1363,8 @@ add_task(function* runTests() {
   iframe.src = "authenticate.sjs?user=mochiuser2&pass=mochipass2&realm=mochitest2";
   yield promptDone;
   yield iframeLoaded;
-  checkEchoedAuthInfo({user: "mochiuser2", pass: "mochipass2"});
+  checkEchoedAuthInfo({user: "mochiuser2", pass: "mochipass2"},
+                      iframe.contentDocument);
 
   // Now make a load that requests the realm from test 1000. It was
   // already provided there, so auth will *not* be prompted for -- the
@@ -1381,13 +1372,14 @@ add_task(function* runTests() {
   iframeLoaded = onloadPromiseFor("iframe");
   iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
   yield iframeLoaded;
-  checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"});
+  checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"},
+                      iframe.contentDocument);
 
   // Same realm we've already authenticated to, but with a different
   // expected password (to trigger an auth prompt, and change-password
   // popup notification).
   state = {
-    msg         : "A username and password are being requested by http://mochi.test:8888. The site says: “mochitest”",
+    msg         : "http://mochi.test:8888 is requesting your username and password.\n\nThe site says: “mochitest”",
     title       : "Authentication Required",
     textValue   : "mochiuser1",
     passValue   : "mochipass1",
@@ -1410,7 +1402,8 @@ add_task(function* runTests() {
   iframe.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1-new";
   yield promptDone;
   yield iframeLoaded;
-  checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1-new"});
+  checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1-new"},
+                      iframe.contentDocument);
 
   // Housekeeping: change it back
   var pwchanged = new Promise(resolve => {
@@ -1436,7 +1429,7 @@ add_task(function* runTests() {
   // to (but have an existing saved login for, so that we'll trigger
   // a change-password popup notification.
   state = {
-    msg         : "A username and password are being requested by http://mochi.test:8888. The site says: “mochitest3”",
+    msg         : "http://mochi.test:8888 is requesting your username and password.\n\nThe site says: “mochitest3”",
     title       : "Authentication Required",
     textValue   : "mochiuser3",
     passValue   : "mochipass3-old",
@@ -1459,7 +1452,8 @@ add_task(function* runTests() {
   iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-new&realm=mochitest3";
   yield promptDone;
   yield iframeLoaded;
-  checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-new"});
+  checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-new"},
+                      iframe.contentDocument);
 
   // Housekeeping: change it back to the original login4. Actually,
   // just delete it and we'll re-add it as the next test.
@@ -1490,7 +1484,7 @@ add_task(function* runTests() {
   ok(true, "authMgr cleared cached auth");
 
   state = {
-    msg         : "A username and password are being requested by http://mochi.test:8888. The site says: “mochitest3”",
+    msg         : "http://mochi.test:8888 is requesting your username and password.\n\nThe site says: “mochitest3”",
     title       : "Authentication Required",
     textValue   : "",
     passValue   : "",
@@ -1516,7 +1510,8 @@ add_task(function* runTests() {
   iframe.src = "authenticate.sjs?user=mochiuser3&pass=mochipass3-old&realm=mochitest3";
   yield promptDone;
   yield iframeLoaded;
-  checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-old"});
+  checkEchoedAuthInfo({user: "mochiuser3", pass: "mochipass3-old"},
+                      iframe.contentDocument);
 
   var pwsaved = new Promise(resolve => {
     function finishIt() {
