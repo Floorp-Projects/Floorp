@@ -442,6 +442,9 @@ private:
   MaybeUpgradePersistentStorageDirectory();
 
   nsresult
+  MaybeRemoveOldDirectories();
+
+  nsresult
   UpgradeStorageFrom0To1(mozIStorageConnection* aConnection);
 
 #if 0

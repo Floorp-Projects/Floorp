@@ -4127,6 +4127,72 @@ QuotaManager::MaybeUpgradePersistentStorageDirectory()
 }
 
 nsresult
+QuotaManager::MaybeRemoveOldDirectories()
+{
+  AssertIsOnIOThread();
+
+  nsresult rv;
+
+  nsCOMPtr<nsIFile> indexedDBDir =
+    do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = indexedDBDir->InitWithPath(mIndexedDBPath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  bool exists;
+  rv = indexedDBDir->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (exists) {
+    QM_WARNING("Deleting old <profile>/indexedDB directory!");
+
+    rv = indexedDBDir->Remove(/* aRecursive */ true);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  nsCOMPtr<nsIFile> persistentStorageDir =
+    do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = persistentStorageDir->InitWithPath(mStoragePath);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = persistentStorageDir->Append(NS_LITERAL_STRING(PERSISTENT_DIRECTORY_NAME));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  rv = persistentStorageDir->Exists(&exists);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
+  if (exists) {
+    QM_WARNING("Deleting old <profile>/storage/persistent directory!");
+
+    rv = persistentStorageDir->Remove(/* aRecursive */ true);
+    if (NS_WARN_IF(NS_FAILED(rv))) {
+      return rv;
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
 QuotaManager::UpgradeStorageFrom0To1(mozIStorageConnection* aConnection)
 {
   AssertIsOnIOThread();
@@ -4226,15 +4292,7 @@ QuotaManager::EnsureStorageIsInitialized()
     return NS_OK;
   }
 
-  nsresult rv = MaybeUpgradeIndexedDBDirectory();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
-
-  rv = MaybeUpgradePersistentStorageDirectory();
-  if (NS_WARN_IF(NS_FAILED(rv))) {
-    return rv;
-  }
+  nsresult rv;
 
   nsCOMPtr<nsIFile> storageFile =
     do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
@@ -4293,6 +4351,21 @@ QuotaManager::EnsureStorageIsInitialized()
     const bool newDatabase = !storageVersion;
 
     if (newDatabase) {
+      rv = MaybeUpgradeIndexedDBDirectory();
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = MaybeUpgradePersistentStorageDirectory();
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
+      rv = MaybeRemoveOldDirectories();
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return rv;
+      }
+
       rv = UpgradeStorageFrom0To1(connection);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
