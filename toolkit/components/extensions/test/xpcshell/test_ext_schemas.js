@@ -942,3 +942,142 @@ add_task(function* testDeprecation() {
   root.deprecated.onDeprecated.hasListener(() => {});
   checkErrors(["This event does not work"]);
 });
+
+
+let choicesJson = [
+  {namespace: "choices",
+
+   types: [
+   ],
+
+   functions: [
+     {
+       name: "meh",
+       type: "function",
+       parameters: [
+         {
+           name: "arg",
+           choices: [
+             {
+               type: "string",
+               enum: ["foo", "bar", "baz"],
+             },
+             {
+               type: "string",
+               pattern: "florg.*meh",
+             },
+             {
+               type: "integer",
+               minimum: 12,
+               maximum: 42,
+             },
+           ],
+         },
+       ],
+     },
+
+     {
+       name: "foo",
+       type: "function",
+       parameters: [
+         {
+           name: "arg",
+           choices: [
+             {
+               type: "object",
+               properties: {
+                 blurg: {
+                   type: "string",
+                   unsupported: true,
+                   optional: true,
+                 },
+               },
+               additionalProperties: {
+                 type: "string",
+               },
+             },
+             {
+               type: "string",
+             },
+             {
+               type: "array",
+               minItems: 2,
+               maxItems: 3,
+               items: {
+                 type: "integer",
+               },
+             },
+           ],
+         },
+       ],
+     },
+
+     {
+       name: "bar",
+       type: "function",
+       parameters: [
+         {
+           name: "arg",
+           choices: [
+             {
+               type: "object",
+               properties: {
+                 baz: {
+                   type: "string",
+                 },
+               },
+             },
+             {
+               type: "array",
+               items: {
+                 type: "integer",
+               },
+             },
+           ],
+         },
+       ],
+     },
+   ]},
+];
+
+add_task(function* testChoices() {
+  let url = "data:," + JSON.stringify(choicesJson);
+  yield Schemas.load(url);
+
+  let root = {};
+  Schemas.inject(root, wrapper);
+
+  talliedErrors.length = 0;
+
+  Assert.throws(() => root.choices.meh("frog"),
+                /Value must either: be one of \["foo", "bar", "baz"\], match the pattern \/florg\.\*meh\/, or be an integer value/);
+
+  Assert.throws(() => root.choices.meh(4),
+                /be a string value, or be at least 12/);
+
+  Assert.throws(() => root.choices.meh(43),
+                /be a string value, or be no greater than 42/);
+
+
+  Assert.throws(() => root.choices.foo([]),
+                /be an object value, be a string value, or have at least 2 items/);
+
+  Assert.throws(() => root.choices.foo([1, 2, 3, 4]),
+                /be an object value, be a string value, or have at most 3 items/);
+
+  Assert.throws(() => root.choices.foo({foo: 12}),
+                /.foo must be a string value, be a string value, or be an array value/);
+
+  Assert.throws(() => root.choices.foo({blurg: "foo"}),
+                /not contain an unsupported "blurg" property, be a string value, or be an array value/);
+
+
+  Assert.throws(() => root.choices.bar({}),
+                /contain the required "baz" property, or be an array value/);
+
+  Assert.throws(() => root.choices.bar({baz: "x", quux: "y"}),
+                /not contain an unexpected "quux" property, or be an array value/);
+
+  Assert.throws(() => root.choices.bar({baz: "x", quux: "y", foo: "z"}),
+                /not contain the unexpected properties \[foo, quux\], or be an array value/);
+});
