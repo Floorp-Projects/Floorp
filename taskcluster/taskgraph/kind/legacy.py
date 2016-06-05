@@ -28,17 +28,13 @@ from taskcluster_graph.mach_util import (
 import taskcluster_graph.transform.routes as routes_transform
 import taskcluster_graph.transform.treeherder as treeherder_transform
 from taskcluster_graph.commit_parser import parse_commit
-from taskcluster_graph.image_builder import (
-    docker_image,
-    normalize_image_details,
-    task_id_for_image
-)
 from taskcluster_graph.from_now import (
     json_time_from_now,
     current_json_time,
 )
 from taskcluster_graph.templates import Templates
 import taskcluster_graph.build_task
+from taskgraph.util import docker_image
 
 # TASKID_PLACEHOLDER is the "internal" form of a taskid; it is substituted with
 # actual taskIds at the very last minute, in get_task_definition
@@ -75,6 +71,8 @@ def set_expiration(task, timestamp):
 
     for artifact in artifacts.values():
         artifact['expires'] = timestamp
+
+
 
 class LegacyKind(base.Kind):
     """
@@ -121,13 +119,11 @@ class LegacyKind(base.Kind):
                 changed_files |= set(c['files'])
 
         # Template parameters used when expanding the graph
-        seen_images = {}
         parameters = dict(gaia_info().items() + {
             'index': 'index',
             'project': project,
             'pushlog_id': params.get('pushlog_id', 0),
             'docker_image': docker_image,
-            'task_id_for_image': partial(task_id_for_image, seen_images, project),
             'base_repository': params['base_repository'] or
             params['head_repository'],
             'head_repository': params['head_repository'],
@@ -231,11 +227,6 @@ class LegacyKind(base.Kind):
             build_parameters['build_type'] = task_extra['build_type']
             build_parameters['build_product'] = task_extra['build_product']
 
-            normalize_image_details(graph,
-                                    build_task,
-                                    seen_images,
-                                    build_parameters,
-                                    os.environ.get('TASK_ID', None))
             set_interactive_task(build_task, interactive)
 
             # try builds don't use cache
@@ -319,11 +310,6 @@ class LegacyKind(base.Kind):
                                                      mklabel(),
                                                      templates,
                                                      build_treeherder_config)
-                normalize_image_details(graph,
-                                        post_task,
-                                        seen_images,
-                                        build_parameters,
-                                        os.environ.get('TASK_ID', None))
                 set_interactive_task(post_task, interactive)
                 treeherder_transform.add_treeherder_revision_info(post_task['task'],
                                                                   params['head_rev'],
@@ -373,11 +359,6 @@ class LegacyKind(base.Kind):
                                                          mklabel(),
                                                          templates,
                                                          build_treeherder_config)
-                    normalize_image_details(graph,
-                                            test_task,
-                                            seen_images,
-                                            build_parameters,
-                                            os.environ.get('TASK_ID', None))
                     set_interactive_task(test_task, interactive)
 
                     if params['revision_hash']:
@@ -433,7 +414,13 @@ class LegacyKind(base.Kind):
     def get_task_dependencies(self, task, taskgraph):
         # fetch dependency information from the cached graph
         taskdict = self.tasks_by_label[task.label]
-        return [(label, label) for label in taskdict.get('requires', [])]
+        deps = [(label, label) for label in taskdict.get('requires', [])]
+
+        # add a dependency on an image task, if needed
+        if 'docker-image' in taskdict:
+            deps.append(('build-docker-image-{docker-image}'.format(**taskdict), 'docker-image'))
+
+        return deps
 
     def optimize_task(self, task, taskgraph):
         # no optimization for the moment
