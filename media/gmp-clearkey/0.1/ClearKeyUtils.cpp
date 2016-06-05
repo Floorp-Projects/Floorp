@@ -25,7 +25,7 @@
 #include "ArrayUtils.h"
 #include <assert.h>
 #include <memory.h>
-#include "Endian.h"
+#include "BigEndian.h"
 #include "openaes/oaes_lib.h"
 
 using namespace std;
