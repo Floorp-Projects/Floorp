@@ -36,7 +36,7 @@ var omtaEnabled = SpecialPowers.DOMWindowUtils.layerManagerRemote &&
                   opener.SpecialPowers.getBoolPref(OMTAPrefKey);
 window.addEventListener("load", function() {
   if (!omtaEnabled) {
-    info("Skipping the test since OMTA is disabled");
+    ok(true, "Skipping the test since OMTA is disabled");
     finish();
     return;
   }
