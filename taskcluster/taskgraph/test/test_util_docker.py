@@ -6,7 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
 
-from ..util import docker_image, DOCKER_ROOT
+from ..util.docker import docker_image, DOCKER_ROOT
 from mozunit import main, MockedOpen
 
 

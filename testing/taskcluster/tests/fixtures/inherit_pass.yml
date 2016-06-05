@@ -1,6 +1,0 @@
-$inherits:
-  from: 'child_pass.yml'
-  variables:
-    a: 'a'
-    b: 'b'
-    c: 'c'

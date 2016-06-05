@@ -6,12 +6,12 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import os
 
-GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..'))
+GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..', '..'))
 DOCKER_ROOT = os.path.join(GECKO, 'testing', 'docker')
 
 def docker_image(name):
-    ''' Determine the docker image name, including repository and tag, from an
-    in-tree docker file'''
+    '''Determine the docker image name, including repository and tag, from an
+    in-tree docker file.'''
     try:
         with open(os.path.join(DOCKER_ROOT, name, 'REGISTRY')) as f:
             registry = f.read().strip()
@@ -23,3 +23,4 @@ def docker_image(name):
         version = f.read().strip()
 
     return '{}/{}:{}'.format(registry, name, version)
+
