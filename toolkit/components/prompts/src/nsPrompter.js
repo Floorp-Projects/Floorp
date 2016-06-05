@@ -255,6 +255,8 @@ var PromptUtilsTemp = {
     makeAuthMessage : function (channel, authInfo) {
         let isProxy    = (authInfo.flags & Ci.nsIAuthInformation.AUTH_PROXY);
         let isPassOnly = (authInfo.flags & Ci.nsIAuthInformation.ONLY_PASSWORD);
+        let isCrossOrig = (authInfo.flags &
+                           Ci.nsIAuthInformation.CROSS_ORIGIN_SUB_RESOURCE);
 
         let username = authInfo.username;
         let [displayHost, realm] = this.getAuthTarget(channel, authInfo);
@@ -271,14 +273,17 @@ var PromptUtilsTemp = {
         }
 
         let text;
-        if (isProxy)
-            text = PromptUtils.getLocalizedString("EnterLoginForProxy", [realm, displayHost]);
-        else if (isPassOnly)
+        if (isProxy) {
+            text = PromptUtils.getLocalizedString("EnterLoginForProxy2", [realm, displayHost]);
+        } else if (isPassOnly) {
             text = PromptUtils.getLocalizedString("EnterPasswordFor", [username, displayHost]);
-        else if (!realm)
-            text = PromptUtils.getLocalizedString("EnterUserPasswordFor", [displayHost]);
-        else
-            text = PromptUtils.getLocalizedString("EnterLoginForRealm", [realm, displayHost]);
+        } else if (isCrossOrig) {
+            text = PromptUtils.getLocalizedString("EnterUserPasswordForCrossOrigin", [displayHost]);
+        } else if (!realm) {
+            text = PromptUtils.getLocalizedString("EnterUserPasswordFor2", [displayHost]);
+        } else {
+            text = PromptUtils.getLocalizedString("EnterLoginForRealm2", [realm, displayHost]);
+        }
 
         return text;
     },
