@@ -149,20 +149,42 @@ class MockedOpen(object):
         import __builtin__
         self.open = __builtin__.open
         self._orig_path_exists = os.path.exists
+        self._orig_path_isdir = os.path.isdir
+        self._orig_path_isfile = os.path.isfile
         __builtin__.open = self
         os.path.exists = self._wrapped_exists
+        os.path.isdir = self._wrapped_isdir
+        os.path.isfile = self._wrapped_isfile
 
     def __exit__(self, type, value, traceback):
         import __builtin__
         __builtin__.open = self.open
         os.path.exists = self._orig_path_exists
+        os.path.isdir = self._orig_path_isdir
+        os.path.isfile = self._orig_path_isfile
 
     def _wrapped_exists(self, p):
+        return (self._wrapped_isfile(p) or
+                self._wrapped_isdir(p) or
+                self._orig_path_exists(p))
+
+    def _wrapped_isfile(self, p):
         if p in self.files:
             return True
 
         abspath = os.path.abspath(p)
         if abspath in self.files:
+            return True
+
+        return self._orig_path_isfile(p)
+
+    def _wrapped_isdir(self, p):
+        p = p if p.endswith(('/', '\\')) else p + os.sep
+        if any(f.startswith(p) for f in self.files):
+            return True
+
+        abspath = os.path.abspath(p) + os.sep
+        if any(f.startswith(abspath) for f in self.files):
             return True
 
         return self._orig_path_exists(p)
