@@ -33,6 +33,9 @@ class FakeKind(object):
         else:
             return []
 
+    def optimize_task(self, task, dependencies):
+        return False, None
+
 
 class WithFakeKind(TaskGraphGenerator):
 
@@ -85,10 +88,14 @@ class TestGenerator(unittest.TestCase):
                          sorted(['t-0', 't-1']))
 
     def test_optimized_task_graph(self):
-        "The optimized task graph is the target task graph (for now)"
-        self.target_tasks = ['t-1']
+        "The optimized task graph contains task ids"
+        self.target_tasks = ['t-2']
+        tid = self.tgg.label_to_taskid
         self.assertEqual(self.tgg.optimized_task_graph.graph,
-                         self.tgg.target_task_graph.graph)
+             graph.Graph({tid['t-0'], tid['t-1'], tid['t-2']}, {
+                 (tid['t-1'], tid['t-0'], 'prev'),
+                 (tid['t-2'], tid['t-1'], 'prev'),
+             }))
 
 if __name__ == '__main__':
     main()

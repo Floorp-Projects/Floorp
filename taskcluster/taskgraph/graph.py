@@ -85,18 +85,28 @@ class Graph(object):
 
     def links_dict(self):
         """
-        Return a dictionary mapping each node to a set of its downstream
-        nodes (omitting edge names)
+        Return a dictionary mapping each node to a set of the nodes it links to
+        (omitting edge names)
         """
         links = collections.defaultdict(set)
         for left, right, _ in self.edges:
             links[left].add(right)
         return links
 
+    def named_links_dict(self):
+        """
+        Return a two-level dictionary mapping each node to a dictionary mapping
+        edge names to labels.
+        """
+        links = collections.defaultdict(dict)
+        for left, right, name in self.edges:
+            links[left][name] = right
+        return links
+
     def reverse_links_dict(self):
         """
-        Return a dictionary mapping each node to a set of its upstream
-        nodes (omitting edge names)
+        Return a dictionary mapping each node to a set of the nodes linking to
+        it (omitting edge names)
         """
         links = collections.defaultdict(set)
         for left, right, _ in self.edges:
