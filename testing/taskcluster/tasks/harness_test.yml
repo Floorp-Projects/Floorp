@@ -4,7 +4,7 @@
 # checking out the source tree.
 ---
 taskId: {{build_slugid}}
-
+docker-image: desktop-build
 task:
   created: '{{now}}'
   deadline: '{{#from_now}}24 hours{{/from_now}}'
@@ -28,7 +28,8 @@ task:
     image:
       type: 'task-image'
       path: 'public/image.tar'
-      taskId: '{{#task_id_for_image}}desktop-build{{/task_id_for_image}}'
+      taskId:
+        task-reference: "<docker-image>"
     cache:
       # The taskcluster-vcs tooling stores the large clone caches in this
       # directory and will reuse them for new requests this saves about 20s~

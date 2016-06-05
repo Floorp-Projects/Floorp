@@ -14,10 +14,5 @@
         "{index}.gecko.v2.{project}.revision.{head_rev}.{build_product}-l10n.{build_name}-{build_type}.{locale}",
         "{index}.gecko.v2.{project}.pushdate.{year}.{month}.{day}.{pushdate}.{build_product}-l10n.{build_name}-{build_type}.{locale}",
         "{index}.gecko.v2.{project}.latest.{build_product}-l10n.{build_name}-{build_type}.{locale}"
-    ],
-    "docker_images": [
-        "{index}.docker.images.v1.{project}.{image_name}.latest",
-        "{index}.docker.images.v1.{project}.{image_name}.pushdate.{year}.{month}-{day}-{pushtime}",
-        "{index}.docker.images.v1.{project}.{image_name}.hash.{context_hash}"
     ]
 }
