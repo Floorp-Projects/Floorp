@@ -1427,8 +1427,8 @@
   "HTTP_AUTH_DIALOG_STATS": {
     "expires_in_version": "never",
     "kind": "enumerated",
-    "n_values": 4,
-    "description": "Stats about what kind of resource requested http authentication. (0=top-level doc, 1=same origin subresources, 2=cross-origin subresources, 3=xhr)"
+    "n_values": 3,
+    "description": "Stats about what kind of resource requested http authentication. (0=top-level doc, 1=same origin subresources 2=cross-origin subresources)"
   },
   "HTTP_AUTH_TYPE_STATS": {
     "alert_emails": ["rbarnes@mozilla.com"],

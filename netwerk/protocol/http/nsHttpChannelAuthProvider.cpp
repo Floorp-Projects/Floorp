@@ -40,7 +40,6 @@ namespace net {
 #define HTTP_AUTH_DIALOG_TOP_LEVEL_DOC 0
 #define HTTP_AUTH_DIALOG_SAME_ORIGIN_SUBRESOURCE 1
 #define HTTP_AUTH_DIALOG_CROSS_ORIGIN_SUBRESOURCE 2
-#define HTTP_AUTH_DIALOG_XHR 3
 
 #define HTTP_AUTH_BASIC_INSECURE 0
 #define HTTP_AUTH_BASIC_SECURE 1
@@ -73,7 +72,6 @@ nsHttpChannelAuthProvider::nsHttpChannelAuthProvider()
     , mTriedProxyAuth(false)
     , mTriedHostAuth(false)
     , mSuppressDefensiveAuth(false)
-    , mCrossOrigin(false)
     , mHttpHandler(gHttpHandler)
 {
 }
@@ -797,12 +795,8 @@ nsHttpChannelAuthProvider::GetCredentialsForChallenge(const char *challenge,
             // blocked for all sub-resources, blocked for cross-origin
             // sub-resources, or always allowed for sub-resources.
             // For more details look at the bug 647010.
-            // BlockPrompt will set mCrossOrigin parameter as well.
             if (BlockPrompt()) {
-                LOG(("nsHttpChannelAuthProvider::GetCredentialsForChallenge: "
-                     "Prompt is blocked [this=%p pref=%d]\n",
-                      this, sAuthAllowPref));
-                return NS_ERROR_ABORT;
+              return NS_ERROR_ABORT;
             }
 
             // at this point we are forced to interact with the user to get
@@ -858,72 +852,61 @@ nsHttpChannelAuthProvider::BlockPrompt()
     MOZ_ASSERT(chanInternal);
 
     if (chanInternal->GetBlockAuthPrompt()) {
-        LOG(("nsHttpChannelAuthProvider::BlockPrompt: Prompt is blocked "
-             "[this=%p channel=%p]\n", this, mAuthChannel));
         return true;
     }
 
     nsCOMPtr<nsIChannel> chan = do_QueryInterface(mAuthChannel);
     nsCOMPtr<nsILoadInfo> loadInfo;
     chan->GetLoadInfo(getter_AddRefs(loadInfo));
-
-    // We will treat loads w/o loadInfo as a top level document.
-    bool topDoc = true;
-    bool xhr = false;
-
-    if (loadInfo) {
-        if (loadInfo->GetExternalContentPolicyType() !=
-            nsIContentPolicy::TYPE_DOCUMENT) {
-            topDoc = false;
-        }
-        if (loadInfo->GetExternalContentPolicyType() ==
-            nsIContentPolicy::TYPE_XMLHTTPREQUEST) {
-            xhr = true;
-        }
-
-        if (!topDoc && !xhr) {
-            nsCOMPtr<nsIURI> topURI;
-            chanInternal->GetTopWindowURI(getter_AddRefs(topURI));
-
-            if (!topURI) {
-                // If we do not have topURI try the loadingPrincipal.
-                nsCOMPtr<nsIPrincipal> loadingPrinc = loadInfo->LoadingPrincipal();
-                if (loadingPrinc) {
-                    loadingPrinc->GetURI(getter_AddRefs(topURI));
-                }
-            }
-
-            if (!NS_SecurityCompareURIs(topURI, mURI, true)) {
-                mCrossOrigin = true;
-            }
-        }
+    if (!loadInfo) {
+        return false;
     }
 
     if (gHttpHandler->IsTelemetryEnabled()) {
-        if (topDoc) {
+      if (loadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) {
+        Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS,
+                              HTTP_AUTH_DIALOG_TOP_LEVEL_DOC);
+      } else {
+        nsCOMPtr<nsIPrincipal> loadingPrincipal = loadInfo->LoadingPrincipal();
+        if (loadingPrincipal) {
+          if (NS_SUCCEEDED(loadingPrincipal->CheckMayLoad(mURI, false, false))) {
             Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS,
-                                  HTTP_AUTH_DIALOG_TOP_LEVEL_DOC);
-        } else if (xhr) {
+              HTTP_AUTH_DIALOG_SAME_ORIGIN_SUBRESOURCE);
+          } else {
             Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS,
-                                  HTTP_AUTH_DIALOG_XHR);
-        } else if (!mCrossOrigin) {
-            Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS,
-                                  HTTP_AUTH_DIALOG_SAME_ORIGIN_SUBRESOURCE);
-        } else {
-            Telemetry::Accumulate(Telemetry::HTTP_AUTH_DIALOG_STATS,
-                                  HTTP_AUTH_DIALOG_CROSS_ORIGIN_SUBRESOURCE);
+              HTTP_AUTH_DIALOG_CROSS_ORIGIN_SUBRESOURCE);
+          }
         }
+      }
+    }
+
+    // Allow if it is the top-level document or xhr.
+    if ((loadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_DOCUMENT) ||
+        (loadInfo->GetExternalContentPolicyType() == nsIContentPolicy::TYPE_XMLHTTPREQUEST)) {
+        return false;
     }
 
     switch (sAuthAllowPref) {
     case SUBRESOURCE_AUTH_DIALOG_DISALLOW_ALL:
         // Do not open the http-authentication credentials dialog for
         // the sub-resources.
-        return !topDoc && !xhr;
+        return true;
+        break;
     case SUBRESOURCE_AUTH_DIALOG_DISALLOW_CROSS_ORIGIN:
-        // Open the http-authentication credentials dialog for
+        // Do not open the http-authentication credentials dialog for
         // the sub-resources only if they are not cross-origin.
-        return !topDoc && !xhr && mCrossOrigin;
+        {
+            nsCOMPtr<nsIPrincipal> loadingPrincipal =
+                loadInfo->LoadingPrincipal();
+            if (!loadingPrincipal) {
+                return false;
+            }
+
+            if (NS_FAILED(loadingPrincipal->CheckMayLoad(mURI, false, false))) {
+                return true;
+            }
+        }
+        break;
     case SUBRESOURCE_AUTH_DIALOG_ALLOW_ALL:
         // Allow the http-authentication dialog.
         return false;
@@ -1116,10 +1099,6 @@ nsHttpChannelAuthProvider::PromptForIdentity(uint32_t            level,
 
     if (authFlags & nsIHttpAuthenticator::IDENTITY_INCLUDES_DOMAIN)
         promptFlags |= nsIAuthInformation::NEED_DOMAIN;
-
-    if (mCrossOrigin) {
-        promptFlags |= nsIAuthInformation::CROSS_ORIGIN_SUB_RESOURCE;
-    }
 
     RefPtr<nsHTTPAuthInformation> holder =
         new nsHTTPAuthInformation(promptFlags, realmU,

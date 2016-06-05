@@ -1,6 +1,6 @@
 <html>
 <head>
-  <title>Test subresources prompts (Bug 625187 and bug 1230462)</title>
+  <title>Test for Bug 625187</title>
   <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
@@ -17,7 +17,6 @@
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=625187">Mozilla Bug 625187</a>
-<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1230462">Mozilla Bug 1230462</a>
 
 <p><button onclick="alert('hello world')">Button</button></p>
 
@@ -25,14 +24,11 @@
 
 <iframe id="iframe_same_origin" src="bug625187_iframe.html"></iframe>
 
-<iframe id="iframe_prompt"></iframe>
-
 <pre id="test"></pre>
 
 <script class="testbody" type="text/javascript">
 var iframe1Loaded = onloadPromiseFor("iframe_diff_origin");
 var iframe2Loaded = onloadPromiseFor("iframe_same_origin");
-var iframe_prompt = document.getElementById("iframe_prompt");
 
 add_task(function* runTest()
 {
@@ -106,96 +102,6 @@ add_task(function* runTest()
   dispatchMouseEvent(button, "click");
 
   yield promptDone;
-});
-
-add_task(function* runTestAuth()
-{
-  // Following tests chack prompt message for a cross-origin and not
-  // cross-origin subresources load
-
-  // Force parent to not look for tab-modal prompts, as they're not
-  // used for auth prompts.
-  isTabModal = false;
-
-  state = {
-    msg         : "http://mochi.test:8888 is requesting your username " +
-                  "and password.\n\nThe site says: “mochitest”",
-    title       : "Authentication Required",
-    textValue   : "",
-    passValue   : "",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
-  };
-
-  if (isE10S) {
-    state.checkHidden = false;
-    state.checkMsg = "Use Password Manager to remember this password."
-  }
-
-  action = {
-    buttonClick : "ok",
-    setCheckbox : false,
-    textField   : "mochiuser1",
-    passField   : "mochipass1",
-  };
-
-  promptDone = handlePrompt(state, action);
-
-  var iframe3Loaded = onloadPromiseFor("iframe_prompt");
-  iframe_prompt.src = "authenticate.sjs?user=mochiuser1&pass=mochipass1";
-  yield promptDone;
-  yield iframe3Loaded;
-  checkEchoedAuthInfo({user: "mochiuser1", pass: "mochipass1"},
-                      iframe_prompt.contentDocument);
-
-  // Cross-origin subresourse test.
-
-  // Force parent to not look for tab-modal prompts, as they're not used for auth prompts.
-  isTabModal =false;
-  state = {
-    msg         : "http://example.com is requesting your username and password.\n\n" +
-                  "WARNING: Your password will not be sent to the website you are currently visiting!",
-    title       : "Authentication Required",
-    textValue   : "",
-    passValue   : "",
-    iconClass   : "authentication-icon question-icon",
-    titleHidden : true,
-    textHidden  : false,
-    passHidden  : false,
-    checkHidden : true,
-    checkMsg    : "",
-    checked     : false,
-    focused     : "textField",
-    defButton   : "button0",
-  };
-
-  if (isE10S) {
-    state.checkHidden = false;
-    state.checkMsg = "Use Password Manager to remember this password."
-  }
-
-  action = {
-    buttonClick : "ok",
-    setCheckbox : false,
-    textField   : "mochiuser2",
-    passField   : "mochipass2",
-  };
-
-  promptDone = handlePrompt(state, action);
-
-  iframe3Loaded = onloadPromiseFor("iframe_prompt");
-  iframe_prompt.src = "http://example.com/tests/toolkit/components/prompts/test/authenticate.sjs?user=mochiuser2&pass=mochipass2&realm=mochitest";
-  yield promptDone;
-  yield iframe3Loaded;
-  checkEchoedAuthInfo({user: "mochiuser2", pass: "mochipass2"},
-                      SpecialPowers.wrap(iframe_prompt.contentWindow).document);
 });
 
 function dispatchMouseEvent(target, type)
