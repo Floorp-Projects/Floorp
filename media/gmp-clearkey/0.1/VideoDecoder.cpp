@@ -18,10 +18,10 @@
 #include <limits>
 
 #include "AnnexB.h"
+#include "BigEndian.h"
 #include "ClearKeyDecryptionManager.h"
 #include "ClearKeyUtils.h"
 #include "gmp-task-utils.h"
-#include "Endian.h"
 #include "VideoDecoder.h"
 
 using namespace wmf;
