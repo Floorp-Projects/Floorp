@@ -13,8 +13,8 @@ include css21/reftest.list
 # Animations
 # include animations/reftest.list
 
-# Backgrounds and Borders Level 3
-# include background3/reftest.list
+# Backgrounds and Borders
+include background/reftest.list
 
 # Conditional Rules Level 3
 include conditional3/reftest.list
