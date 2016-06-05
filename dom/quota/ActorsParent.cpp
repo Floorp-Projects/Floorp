@@ -221,6 +221,14 @@ CreateStorageConnection(nsIFile* aStorageFile,
     return rv;
   }
 
+  // We want extra durability for this important file.
+  rv = connection->ExecuteSimpleSQL(NS_LITERAL_CSTRING(
+    "PRAGMA synchronous = EXTRA;"
+  ));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
+
   // Check to make sure that the database schema is correct.
   int32_t schemaVersion;
   rv = connection->GetSchemaVersion(&schemaVersion);
