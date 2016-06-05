@@ -32,9 +32,9 @@ from taskcluster_graph.from_now import (
     json_time_from_now,
     current_json_time,
 )
-from taskcluster_graph.templates import Templates
+from taskgraph.util.templates import Templates
 import taskcluster_graph.build_task
-from taskgraph.util import docker_image
+from taskgraph.util.docker import docker_image
 
 # TASKID_PLACEHOLDER is the "internal" form of a taskid; it is substituted with
 # actual taskIds at the very last minute, in get_task_definition

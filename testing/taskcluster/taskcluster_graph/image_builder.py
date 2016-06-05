@@ -8,7 +8,7 @@ import urllib2
 import taskcluster_graph.transform.routes as routes_transform
 import taskcluster_graph.transform.treeherder as treeherder_transform
 from slugid import nice as slugid
-from taskcluster_graph.templates import Templates
+from taskgraph.util.templates import Templates
 
 TASKCLUSTER_ROOT = os.path.abspath(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..'))
 IMAGE_BUILD_TASK = os.path.join(TASKCLUSTER_ROOT, 'tasks', 'image.yml')
