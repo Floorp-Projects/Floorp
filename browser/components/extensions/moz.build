@@ -9,3 +9,4 @@ JAR_MANIFESTS += ['jar.mn']
 DIRS += ['schemas']
 
 BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
+XPCSHELL_TESTS_MANIFESTS += ['test/xpcshell/xpcshell.ini']
