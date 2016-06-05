@@ -350,8 +350,9 @@ class ExtensionContext extends BaseContext {
         isWebExtensionContentScript: true,
       });
     } else {
-      // sandbox metadata is needed to be recognized and supported in
-      // the Developer Tools of the tab where the content script is running.
+      // This metadata is required by the Developer Tools, in order for
+      // the content script to be associated with both the extension and
+      // the tab holding the content page.
       let metadata = {
         "inner-window-id": getInnerWindowID(contentWindow),
         addonId: attrs.addonId,
@@ -362,7 +363,7 @@ class ExtensionContext extends BaseContext {
         sandboxPrototype: contentWindow,
         wantXrays: true,
         isWebExtensionContentScript: true,
-        wantGlobalProperties: ["XMLHttpRequest"],
+        wantGlobalProperties: ["XMLHttpRequest", "fetch"],
       });
     }
 
