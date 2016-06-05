@@ -93,6 +93,9 @@ class Context {
       },
     };
 
+    this.currentChoices = new Set();
+    this.choicePathIndex = 0;
+
     let methods = ["addListener", "callFunction",
                    "callFunctionNoReturn", "callAsyncFunction",
                    "hasListener", "removeListener",
@@ -114,6 +117,11 @@ class Context {
         }
       }
     }
+  }
+
+  get choicePath() {
+    let path = this.path.slice(this.choicePathIndex);
+    return path.join(".");
   }
 
   get cloneScope() {
@@ -146,14 +154,33 @@ class Context {
    * If the context has a `currentTarget` value, this is prepended to
    * the message to indicate the location of the error.
    *
-   * @param {string} message
+   * @param {string} errorMessage
+   *        The error message which will be displayed when this is the
+   *        only possible matching schema.
+   * @param {string} choicesMessage
+   *        The message describing the valid what constitutes a valid
+   *        value for this schema, which will be displayed when multiple
+   *        schema choices are available and none match.
+   *
+   *        A caller may pass `null` to prevent a choice from being
+   *        added, but this should *only* be done from code processing a
+   *        choices type.
    * @returns {object}
    */
-  error(message) {
-    if (this.currentTarget) {
-      return {error: `Error processing ${this.currentTarget}: ${message}`};
+  error(errorMessage, choicesMessage = undefined) {
+    if (choicesMessage !== null) {
+      let {choicePath} = this;
+      if (choicePath) {
+        choicesMessage = `.${choicePath} must ${choicesMessage}`;
+      }
+
+      this.currentChoices.add(choicesMessage);
     }
-    return {error: message};
+
+    if (this.currentTarget) {
+      return {error: `Error processing ${this.currentTarget}: ${errorMessage}`};
+    }
+    return {error: errorMessage};
   }
 
   /**
@@ -197,6 +224,43 @@ class Context {
    */
   get currentTarget() {
     return this.path.join(".");
+  }
+
+  /**
+   * Executes the given callback, and returns an array of choice strings
+   * passed to {@see #error} during its execution.
+   *
+   * @param {function} callback
+   * @returns {object}
+   *          An object with a `result` property containing the return
+   *          value of the callback, and a `choice` property containing
+   *          an array of choices.
+   */
+  withChoices(callback) {
+    let {currentChoices, choicePathIndex} = this;
+
+    let choices = new Set();
+    this.currentChoices = choices;
+    this.choicePathIndex = this.path.length;
+
+    try {
+      let result = callback();
+
+      return {result, choices: Array.from(choices)};
+    } finally {
+      this.currentChoices = currentChoices;
+      this.choicePathIndex = choicePathIndex;
+
+      choices = Array.from(choices);
+      if (choices.length == 1) {
+        currentChoices.add(choices[0]);
+      } else if (choices.length) {
+        let n = choices.length - 1;
+        choices[n] = `or ${choices[n]}`;
+
+        this.error(null, `must either [${choices.join(", ")}]`);
+      }
+    }
   }
 
   /**
@@ -418,7 +482,16 @@ class Type extends Entry {
       this.checkDeprecated(context, value);
       return {value: this.preprocess(value, context)};
     }
-    return context.error(`Expected ${type} instead of ${JSON.stringify(value)}`);
+
+    let choice;
+    if (/^[aeiou]/.test(type)) {
+      choice = `be an ${type} value`;
+    } else {
+      choice = `be a ${type} value`;
+    }
+
+    return context.error(`Expected ${type} instead of ${JSON.stringify(value)}`,
+                         choice);
   }
 }
 
@@ -451,19 +524,30 @@ class ChoiceType extends Type {
     this.checkDeprecated(context, value);
 
     let error;
-
-    let baseType = getValueBaseType(value);
-    for (let choice of this.choices) {
-      if (choice.checkBaseType(baseType)) {
+    let {choices, result} = context.withChoices(() => {
+      for (let choice of this.choices) {
         let r = choice.normalize(value, context);
         if (!r.error) {
           return r;
         }
-        error = r.error;
+
+        error = r;
       }
+    });
+
+    if (result) {
+      return result;
+    }
+    if (choices.length <= 1) {
+      return error;
     }
 
-    return context.error(error || `Unexpected value ${JSON.stringify(value)}`);
+    let n = choices.length - 1;
+    choices[n] = `or ${choices[n]}`;
+
+    let message = `Value must either: ${choices.join(", ")}`;
+
+    return context.error(message, null);
   }
 
   checkBaseType(baseType) {
@@ -521,25 +605,32 @@ class StringType extends Type {
       if (this.enumeration.includes(value)) {
         return {value};
       }
-      return context.error(`Invalid enumeration value ${JSON.stringify(value)}`);
+
+      let choices = this.enumeration.map(JSON.stringify).join(", ");
+
+      return context.error(`Invalid enumeration value ${JSON.stringify(value)}`,
+                           `be one of [${choices}]`);
     }
 
     if (value.length < this.minLength) {
-      return context.error(`String ${JSON.stringify(value)} is too short (must be ${this.minLength})`);
+      return context.error(`String ${JSON.stringify(value)} is too short (must be ${this.minLength})`,
+                           `be longer than ${this.minLength}`);
     }
     if (value.length > this.maxLength) {
-      return context.error(`String ${JSON.stringify(value)} is too long (must be ${this.maxLength})`);
+      return context.error(`String ${JSON.stringify(value)} is too long (must be ${this.maxLength})`,
+                           `be shorter than ${this.maxLength}`);
     }
 
     if (this.pattern && !this.pattern.test(value)) {
-      return context.error(`String ${JSON.stringify(value)} must match ${this.pattern}`);
+      return context.error(`String ${JSON.stringify(value)} must match ${this.pattern}`,
+                           `match the pattern ${this.pattern.toSource()}`);
     }
 
     if (this.format) {
       try {
         r.value = this.format(r.value, context);
       } catch (e) {
-        return context.error(String(e));
+        return context.error(String(e), `match the format "${this.format.name}"`);
       }
     }
 
@@ -603,7 +694,8 @@ class ObjectType extends Type {
       }
 
       if (!instanceOf(value, this.isInstanceOf)) {
-        return context.error(`Object must be an instance of ${this.isInstanceOf}`);
+        return context.error(`Object must be an instance of ${this.isInstanceOf}`,
+                             `be an instance of ${this.isInstanceOf}`);
       }
 
       // This is kind of a hack, but we can't normalize things that
@@ -621,7 +713,8 @@ class ObjectType extends Type {
 
     let klass = Cu.getClassName(value, true);
     if (klass != "Object") {
-      return context.error(`Expected a plain JavaScript object, got a ${klass}`);
+      return context.error(`Expected a plain JavaScript object, got a ${klass}`,
+                           `be a plain JavaScript object`);
     }
 
     let properties = Object.create(null);
@@ -632,7 +725,8 @@ class ObjectType extends Type {
       for (let prop of Object.getOwnPropertyNames(waived)) {
         let desc = Object.getOwnPropertyDescriptor(waived, prop);
         if (desc.get || desc.set) {
-          return context.error("Objects cannot have getters or setters on properties");
+          return context.error("Objects cannot have getters or setters on properties",
+                               "contain no getter or setter properties");
         }
         if (!desc.enumerable) {
           // Chrome ignores non-enumerable properties.
@@ -648,7 +742,8 @@ class ObjectType extends Type {
       let {type, optional, unsupported} = propType;
       if (unsupported) {
         if (prop in properties) {
-          return context.error(`Property "${prop}" is unsupported by Firefox`);
+          return context.error(`Property "${prop}" is unsupported by Firefox`,
+                               `not contain an unsupported "${prop}" property`);
         }
       } else if (prop in properties) {
         if (optional && (properties[prop] === null || properties[prop] === undefined)) {
@@ -663,7 +758,8 @@ class ObjectType extends Type {
         }
         remainingProps.delete(prop);
       } else if (!optional) {
-        return context.error(`Property "${prop}" is required`);
+        return context.error(`Property "${prop}" is required`,
+                             `contain the required "${prop}" property`);
       } else {
         result[prop] = null;
       }
@@ -706,9 +802,12 @@ class ObjectType extends Type {
         result[prop] = r.value;
       }
     } else if (remainingProps.size == 1) {
-      return context.error(`Unexpected property "${[...remainingProps]}"`);
+      return context.error(`Unexpected property "${[...remainingProps]}"`,
+                           `not contain an unexpected "${[...remainingProps]}" property`);
     } else if (remainingProps.size) {
-      return context.error(`Unexpected properties: ${[...remainingProps]}`);
+      let props = [...remainingProps].sort().join(", ");
+      return context.error(`Unexpected properties: ${props}`,
+                           `not contain the unexpected properties [${props}]`);
     }
 
     return {value: result};
@@ -732,7 +831,8 @@ class NumberType extends Type {
     }
 
     if (isNaN(r.value) || !Number.isFinite(r.value)) {
-      return context.error("NaN or infinity are not valid");
+      return context.error("NaN and infinity are not valid",
+                           "be a finite number");
     }
 
     return r;
@@ -759,14 +859,17 @@ class IntegerType extends Type {
 
     // Ensure it's between -2**31 and 2**31-1
     if (!Number.isSafeInteger(value)) {
-      return context.error("Integer is out of range");
+      return context.error("Integer is out of range",
+                           "be a valid 32 bit signed integer");
     }
 
     if (value < this.minimum) {
-      return context.error(`Integer ${value} is too small (must be at least ${this.minimum})`);
+      return context.error(`Integer ${value} is too small (must be at least ${this.minimum})`,
+                           `be at least ${this.minimum}`);
     }
     if (value > this.maximum) {
-      return context.error(`Integer ${value} is too big (must be at most ${this.maximum})`);
+      return context.error(`Integer ${value} is too big (must be at most ${this.maximum})`,
+                           `be no greater than ${this.maximum}`);
     }
 
     return r;
@@ -812,11 +915,13 @@ class ArrayType extends Type {
     }
 
     if (result.length < this.minItems) {
-      return context.error(`Array requires at least ${this.minItems} items; you have ${result.length}`);
+      return context.error(`Array requires at least ${this.minItems} items; you have ${result.length}`,
+                           `have at least ${this.minItems} items`);
     }
 
     if (result.length > this.maxItems) {
-      return context.error(`Array requires at most ${this.maxItems} items; you have ${result.length}`);
+      return context.error(`Array requires at most ${this.maxItems} items; you have ${result.length}`,
+                           `have at most ${this.maxItems} items`);
     }
 
     return {value: result};
