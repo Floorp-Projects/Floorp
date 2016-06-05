@@ -45,7 +45,8 @@ function SpecialPowers(window) {
                             "SPLoadExtension",
                             "SPStartupExtension",
                             "SPUnloadExtension",
-                            "SPExtensionMessage"];
+                            "SPExtensionMessage",
+                            "SPClearAppPrivateData"];
   addMessageListener("SPPingService", this._messageListener);
   addMessageListener("SpecialPowers.FilesCreated", this._messageListener);
   addMessageListener("SpecialPowers.FilesError", this._messageListener);
