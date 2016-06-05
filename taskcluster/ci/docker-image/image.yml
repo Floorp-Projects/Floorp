@@ -12,6 +12,7 @@ task:
 
   workerType: taskcluster-images
   provisionerId: aws-provisioner-v1
+  schedulerId: task-graph-scheduler
 
   routes:
       - index.docker.images.v1.{{project}}.{{image_name}}.latest
