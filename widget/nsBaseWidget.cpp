@@ -171,7 +171,7 @@ nsBaseWidget::nsBaseWidget()
 , mUpdateCursor(true)
 , mUseAttachedEvents(false)
 , mIMEHasFocus(false)
-#if defined(XP_WIN) || defined(XP_MACOSX)
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
 , mAccessibilityInUseFlag(false)
 #endif
 {
@@ -239,7 +239,7 @@ WidgetShutdownObserver::Unregister()
   }
 }
 
-#if defined(XP_WIN) || defined(XP_MACOSX)
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
 // defined in nsAppRunner.cpp
 extern const char* kAccessibilityLastRunDatePref;
 
@@ -1899,7 +1899,7 @@ nsBaseWidget::GetRootAccessible()
   nsCOMPtr<nsIAccessibilityService> accService =
     services::GetAccessibilityService();
   if (accService) {
-#if defined(XP_WIN) || defined(XP_MACOSX)
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
     if (!mAccessibilityInUseFlag) {
       mAccessibilityInUseFlag = true;
       uint32_t now = PRTimeToSeconds(PR_Now());
