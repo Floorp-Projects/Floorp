@@ -100,13 +100,6 @@ class QuotaManager final
   friend class OriginInfo;
   friend class QuotaObject;
 
-  enum MozBrowserPatternFlag
-  {
-    MozBrowser = 0,
-    NotMozBrowser,
-    IgnoreMozBrowser
-  };
-
   typedef nsClassHashtable<nsCStringHashKey,
                            nsTArray<DirectoryLockImpl*>> DirectoryLockTable;
 
@@ -396,24 +389,6 @@ public:
   static void
   ChromeOrigin(nsACString& aOrigin);
 
-  static void
-  GetOriginPatternString(uint32_t aAppId, bool aBrowserOnly,
-                         const nsACString& aOrigin, nsAutoCString& _retval)
-  {
-    return GetOriginPatternString(aAppId,
-                                  aBrowserOnly ? MozBrowser : NotMozBrowser,
-                                  aOrigin, _retval);
-  }
-
-  static void
-  GetOriginPatternStringMaybeIgnoreBrowser(uint32_t aAppId, bool aBrowserOnly,
-                                           nsAutoCString& _retval)
-  {
-    return GetOriginPatternString(aAppId,
-                                  aBrowserOnly ? MozBrowser : IgnoreMozBrowser,
-                                  EmptyCString(), _retval);
-  }
-
 private:
   QuotaManager();
 
@@ -507,12 +482,6 @@ private:
 
   DirectoryLockTable&
   GetDirectoryLockTable(PersistenceType aPersistenceType);
-
-  static void
-  GetOriginPatternString(uint32_t aAppId,
-                         MozBrowserPatternFlag aBrowserFlag,
-                         const nsACString& aOrigin,
-                         nsAutoCString& _retval);
 
   static void
   ShutdownTimerCallback(nsITimer* aTimer, void* aClosure);
