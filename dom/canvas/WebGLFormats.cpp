@@ -125,9 +125,16 @@ InitCompressedFormatInfo()
 
 static void
 AddFormatInfo(EffectiveFormat format, const char* name, GLenum sizedFormat,
-              uint8_t bytesPerPixel, UnsizedFormat unsizedFormat, bool isSRGB,
+              uint8_t bytesPerPixel, uint8_t r, uint8_t g, uint8_t b, uint8_t a,
+              uint8_t d, uint8_t s, UnsizedFormat unsizedFormat, bool isSRGB,
               ComponentType componentType)
 {
+    uint8_t totalBits = r + g + b + a + d + s;
+    if (format == EffectiveFormat::RGB9_E5) {
+        totalBits = 9 + 9 + 9 + 5;
+    }
+    MOZ_ASSERT(totalBits == bytesPerPixel*8);
+
     bool isColorFormat = false;
     bool hasAlpha = false;
     bool hasDepth = false;
@@ -169,8 +176,8 @@ AddFormatInfo(EffectiveFormat format, const char* name, GLenum sizedFormat,
     MOZ_ASSERT(!bytesPerPixel == bool(compressedFormatInfo));
 
     const FormatInfo info = { format, name, sizedFormat, unsizedFormat, componentType,
-                              bytesPerPixel, isColorFormat, isSRGB, hasAlpha, hasDepth,
-                              hasStencil, compressedFormatInfo };
+                              bytesPerPixel, r,g,b,a, isColorFormat, isSRGB, hasAlpha,
+                              hasDepth, hasStencil, compressedFormatInfo };
     AlwaysInsert(gFormatInfoMap, format, info);
 }
 
@@ -180,105 +187,105 @@ InitFormatInfo()
 #define FOO(x) EffectiveFormat::x, #x, LOCAL_GL_ ## x
 
     // GLES 3.0.4, p130-132, table 3.13
-    AddFormatInfo(FOO(R8            ),  1, UnsizedFormat::R   , false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(R8_SNORM      ),  1, UnsizedFormat::R   , false, ComponentType::NormInt );
-    AddFormatInfo(FOO(RG8           ),  2, UnsizedFormat::RG  , false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(RG8_SNORM     ),  2, UnsizedFormat::RG  , false, ComponentType::NormInt );
-    AddFormatInfo(FOO(RGB8          ),  3, UnsizedFormat::RGB , false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(RGB8_SNORM    ),  3, UnsizedFormat::RGB , false, ComponentType::NormInt );
-    AddFormatInfo(FOO(RGB565        ),  2, UnsizedFormat::RGB , false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(RGBA4         ),  2, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(RGB5_A1       ),  2, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(RGBA8         ),  4, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(RGBA8_SNORM   ),  4, UnsizedFormat::RGBA, false, ComponentType::NormInt );
-    AddFormatInfo(FOO(RGB10_A2      ),  4, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(RGB10_A2UI    ),  4, UnsizedFormat::RGBA, false, ComponentType::UInt    );
+    AddFormatInfo(FOO(R8            ),  1,  8, 0, 0, 0,  0,0, UnsizedFormat::R   , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(R8_SNORM      ),  1,  8, 0, 0, 0,  0,0, UnsizedFormat::R   , false, ComponentType::NormInt );
+    AddFormatInfo(FOO(RG8           ),  2,  8, 8, 0, 0,  0,0, UnsizedFormat::RG  , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(RG8_SNORM     ),  2,  8, 8, 0, 0,  0,0, UnsizedFormat::RG  , false, ComponentType::NormInt );
+    AddFormatInfo(FOO(RGB8          ),  3,  8, 8, 8, 0,  0,0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(RGB8_SNORM    ),  3,  8, 8, 8, 0,  0,0, UnsizedFormat::RGB , false, ComponentType::NormInt );
+    AddFormatInfo(FOO(RGB565        ),  2,  5, 6, 5, 0,  0,0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(RGBA4         ),  2,  4, 4, 4, 4,  0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(RGB5_A1       ),  2,  5, 5, 5, 1,  0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(RGBA8         ),  4,  8, 8, 8, 8,  0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(RGBA8_SNORM   ),  4,  8, 8, 8, 8,  0,0, UnsizedFormat::RGBA, false, ComponentType::NormInt );
+    AddFormatInfo(FOO(RGB10_A2      ),  4, 10,10,10, 2,  0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(RGB10_A2UI    ),  4, 10,10,10, 2,  0,0, UnsizedFormat::RGBA, false, ComponentType::UInt    );
 
-    AddFormatInfo(FOO(SRGB8         ),  3, UnsizedFormat::RGB , true , ComponentType::NormUInt);
-    AddFormatInfo(FOO(SRGB8_ALPHA8  ),  4, UnsizedFormat::RGBA, true , ComponentType::NormUInt);
+    AddFormatInfo(FOO(SRGB8         ),  3,  8, 8, 8, 0,  0,0, UnsizedFormat::RGB , true , ComponentType::NormUInt);
+    AddFormatInfo(FOO(SRGB8_ALPHA8  ),  4,  8, 8, 8, 8,  0,0, UnsizedFormat::RGBA, true , ComponentType::NormUInt);
 
-    AddFormatInfo(FOO(R16F          ),  2, UnsizedFormat::R   , false, ComponentType::Float   );
-    AddFormatInfo(FOO(RG16F         ),  4, UnsizedFormat::RG  , false, ComponentType::Float   );
-    AddFormatInfo(FOO(RGB16F        ),  6, UnsizedFormat::RGB , false, ComponentType::Float   );
-    AddFormatInfo(FOO(RGBA16F       ),  8, UnsizedFormat::RGBA, false, ComponentType::Float   );
-    AddFormatInfo(FOO(R32F          ),  4, UnsizedFormat::R   , false, ComponentType::Float   );
-    AddFormatInfo(FOO(RG32F         ),  8, UnsizedFormat::RG  , false, ComponentType::Float   );
-    AddFormatInfo(FOO(RGB32F        ), 12, UnsizedFormat::RGB , false, ComponentType::Float   );
-    AddFormatInfo(FOO(RGBA32F       ), 16, UnsizedFormat::RGBA, false, ComponentType::Float   );
+    AddFormatInfo(FOO(R16F          ),  2, 16, 0, 0, 0,  0,0, UnsizedFormat::R   , false, ComponentType::Float   );
+    AddFormatInfo(FOO(RG16F         ),  4, 16,16, 0, 0,  0,0, UnsizedFormat::RG  , false, ComponentType::Float   );
+    AddFormatInfo(FOO(RGB16F        ),  6, 16,16,16, 0,  0,0, UnsizedFormat::RGB , false, ComponentType::Float   );
+    AddFormatInfo(FOO(RGBA16F       ),  8, 16,16,16,16,  0,0, UnsizedFormat::RGBA, false, ComponentType::Float   );
+    AddFormatInfo(FOO(R32F          ),  4, 32, 0, 0, 0,  0,0, UnsizedFormat::R   , false, ComponentType::Float   );
+    AddFormatInfo(FOO(RG32F         ),  8, 32,32, 0, 0,  0,0, UnsizedFormat::RG  , false, ComponentType::Float   );
+    AddFormatInfo(FOO(RGB32F        ), 12, 32,32,32, 0,  0,0, UnsizedFormat::RGB , false, ComponentType::Float   );
+    AddFormatInfo(FOO(RGBA32F       ), 16, 32,32,32,32,  0,0, UnsizedFormat::RGBA, false, ComponentType::Float   );
 
-    AddFormatInfo(FOO(R11F_G11F_B10F),  4, UnsizedFormat::RGB , false, ComponentType::Float   );
-    AddFormatInfo(FOO(RGB9_E5       ),  4, UnsizedFormat::RGB , false, ComponentType::Float   );
+    AddFormatInfo(FOO(R11F_G11F_B10F),  4, 11,11,10, 0,  0,0, UnsizedFormat::RGB , false, ComponentType::Float   );
+    AddFormatInfo(FOO(RGB9_E5       ),  4, 14,14,14, 0,  0,0, UnsizedFormat::RGB , false, ComponentType::Float   );
 
-    AddFormatInfo(FOO(R8I           ),  1, UnsizedFormat::R   , false, ComponentType::Int     );
-    AddFormatInfo(FOO(R8UI          ),  1, UnsizedFormat::R   , false, ComponentType::UInt    );
-    AddFormatInfo(FOO(R16I          ),  2, UnsizedFormat::R   , false, ComponentType::Int     );
-    AddFormatInfo(FOO(R16UI         ),  2, UnsizedFormat::R   , false, ComponentType::UInt    );
-    AddFormatInfo(FOO(R32I          ),  4, UnsizedFormat::R   , false, ComponentType::Int     );
-    AddFormatInfo(FOO(R32UI         ),  4, UnsizedFormat::R   , false, ComponentType::UInt    );
+    AddFormatInfo(FOO(R8I           ),  1,  8, 0, 0, 0,  0,0, UnsizedFormat::R   , false, ComponentType::Int     );
+    AddFormatInfo(FOO(R8UI          ),  1,  8, 0, 0, 0,  0,0, UnsizedFormat::R   , false, ComponentType::UInt    );
+    AddFormatInfo(FOO(R16I          ),  2, 16, 0, 0, 0,  0,0, UnsizedFormat::R   , false, ComponentType::Int     );
+    AddFormatInfo(FOO(R16UI         ),  2, 16, 0, 0, 0,  0,0, UnsizedFormat::R   , false, ComponentType::UInt    );
+    AddFormatInfo(FOO(R32I          ),  4, 32, 0, 0, 0,  0,0, UnsizedFormat::R   , false, ComponentType::Int     );
+    AddFormatInfo(FOO(R32UI         ),  4, 32, 0, 0, 0,  0,0, UnsizedFormat::R   , false, ComponentType::UInt    );
 
-    AddFormatInfo(FOO(RG8I          ),  2, UnsizedFormat::RG  , false, ComponentType::Int     );
-    AddFormatInfo(FOO(RG8UI         ),  2, UnsizedFormat::RG  , false, ComponentType::UInt    );
-    AddFormatInfo(FOO(RG16I         ),  4, UnsizedFormat::RG  , false, ComponentType::Int     );
-    AddFormatInfo(FOO(RG16UI        ),  4, UnsizedFormat::RG  , false, ComponentType::UInt    );
-    AddFormatInfo(FOO(RG32I         ),  8, UnsizedFormat::RG  , false, ComponentType::Int     );
-    AddFormatInfo(FOO(RG32UI        ),  8, UnsizedFormat::RG  , false, ComponentType::UInt    );
+    AddFormatInfo(FOO(RG8I          ),  2,  8, 8, 0, 0,  0,0, UnsizedFormat::RG  , false, ComponentType::Int     );
+    AddFormatInfo(FOO(RG8UI         ),  2,  8, 8, 0, 0,  0,0, UnsizedFormat::RG  , false, ComponentType::UInt    );
+    AddFormatInfo(FOO(RG16I         ),  4, 16,16, 0, 0,  0,0, UnsizedFormat::RG  , false, ComponentType::Int     );
+    AddFormatInfo(FOO(RG16UI        ),  4, 16,16, 0, 0,  0,0, UnsizedFormat::RG  , false, ComponentType::UInt    );
+    AddFormatInfo(FOO(RG32I         ),  8, 32,32, 0, 0,  0,0, UnsizedFormat::RG  , false, ComponentType::Int     );
+    AddFormatInfo(FOO(RG32UI        ),  8, 32,32, 0, 0,  0,0, UnsizedFormat::RG  , false, ComponentType::UInt    );
 
-    AddFormatInfo(FOO(RGB8I         ),  3, UnsizedFormat::RGB , false, ComponentType::Int     );
-    AddFormatInfo(FOO(RGB8UI        ),  3, UnsizedFormat::RGB , false, ComponentType::UInt    );
-    AddFormatInfo(FOO(RGB16I        ),  6, UnsizedFormat::RGB , false, ComponentType::Int     );
-    AddFormatInfo(FOO(RGB16UI       ),  6, UnsizedFormat::RGB , false, ComponentType::UInt    );
-    AddFormatInfo(FOO(RGB32I        ), 12, UnsizedFormat::RGB , false, ComponentType::Int     );
-    AddFormatInfo(FOO(RGB32UI       ), 12, UnsizedFormat::RGB , false, ComponentType::UInt    );
+    AddFormatInfo(FOO(RGB8I         ),  3,  8, 8, 8, 0,  0,0, UnsizedFormat::RGB , false, ComponentType::Int     );
+    AddFormatInfo(FOO(RGB8UI        ),  3,  8, 8, 8, 0,  0,0, UnsizedFormat::RGB , false, ComponentType::UInt    );
+    AddFormatInfo(FOO(RGB16I        ),  6, 16,16,16, 0,  0,0, UnsizedFormat::RGB , false, ComponentType::Int     );
+    AddFormatInfo(FOO(RGB16UI       ),  6, 16,16,16, 0,  0,0, UnsizedFormat::RGB , false, ComponentType::UInt    );
+    AddFormatInfo(FOO(RGB32I        ), 12, 32,32,32, 0,  0,0, UnsizedFormat::RGB , false, ComponentType::Int     );
+    AddFormatInfo(FOO(RGB32UI       ), 12, 32,32,32, 0,  0,0, UnsizedFormat::RGB , false, ComponentType::UInt    );
 
-    AddFormatInfo(FOO(RGBA8I        ),  4, UnsizedFormat::RGBA, false, ComponentType::Int     );
-    AddFormatInfo(FOO(RGBA8UI       ),  4, UnsizedFormat::RGBA, false, ComponentType::UInt    );
-    AddFormatInfo(FOO(RGBA16I       ),  8, UnsizedFormat::RGBA, false, ComponentType::Int     );
-    AddFormatInfo(FOO(RGBA16UI      ),  8, UnsizedFormat::RGBA, false, ComponentType::UInt    );
-    AddFormatInfo(FOO(RGBA32I       ), 16, UnsizedFormat::RGBA, false, ComponentType::Int     );
-    AddFormatInfo(FOO(RGBA32UI      ), 16, UnsizedFormat::RGBA, false, ComponentType::UInt    );
+    AddFormatInfo(FOO(RGBA8I        ),  4,  8, 8, 8, 8,  0,0, UnsizedFormat::RGBA, false, ComponentType::Int     );
+    AddFormatInfo(FOO(RGBA8UI       ),  4,  8, 8, 8, 8,  0,0, UnsizedFormat::RGBA, false, ComponentType::UInt    );
+    AddFormatInfo(FOO(RGBA16I       ),  8, 16,16,16,16,  0,0, UnsizedFormat::RGBA, false, ComponentType::Int     );
+    AddFormatInfo(FOO(RGBA16UI      ),  8, 16,16,16,16,  0,0, UnsizedFormat::RGBA, false, ComponentType::UInt    );
+    AddFormatInfo(FOO(RGBA32I       ), 16, 32,32,32,32,  0,0, UnsizedFormat::RGBA, false, ComponentType::Int     );
+    AddFormatInfo(FOO(RGBA32UI      ), 16, 32,32,32,32,  0,0, UnsizedFormat::RGBA, false, ComponentType::UInt    );
 
     // GLES 3.0.4, p133, table 3.14
-    AddFormatInfo(FOO(DEPTH_COMPONENT16 ), 2, UnsizedFormat::D , false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(DEPTH_COMPONENT24 ), 3, UnsizedFormat::D , false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(DEPTH_COMPONENT32F), 4, UnsizedFormat::D , false, ComponentType::Float);
-    AddFormatInfo(FOO(DEPTH24_STENCIL8  ), 4, UnsizedFormat::DS, false, ComponentType::Special);
-    AddFormatInfo(FOO(DEPTH32F_STENCIL8 ), 5, UnsizedFormat::DS, false, ComponentType::Special);
+    AddFormatInfo(FOO(DEPTH_COMPONENT16 ), 2, 0,0,0,0, 16,0, UnsizedFormat::D , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(DEPTH_COMPONENT24 ), 3, 0,0,0,0, 24,0, UnsizedFormat::D , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(DEPTH_COMPONENT32F), 4, 0,0,0,0, 32,0, UnsizedFormat::D , false, ComponentType::Float);
+    AddFormatInfo(FOO(DEPTH24_STENCIL8  ), 4, 0,0,0,0, 24,8, UnsizedFormat::DS, false, ComponentType::Special);
+    AddFormatInfo(FOO(DEPTH32F_STENCIL8 ), 5, 0,0,0,0, 32,8, UnsizedFormat::DS, false, ComponentType::Special);
 
     // GLES 3.0.4, p205-206, "Required Renderbuffer Formats"
-    AddFormatInfo(FOO(STENCIL_INDEX8), 1, UnsizedFormat::S, false, ComponentType::UInt);
+    AddFormatInfo(FOO(STENCIL_INDEX8), 1, 0,0,0,0, 0,8, UnsizedFormat::S, false, ComponentType::UInt);
 
     // GLES 3.0.4, p147, table 3.19
     // GLES 3.0.4  p286+  $C.1 "ETC Compressed Texture Image Formats"
-    AddFormatInfo(FOO(COMPRESSED_RGB8_ETC2                     ), 0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_SRGB8_ETC2                    ), 0, UnsizedFormat::RGB , true , ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_RGBA8_ETC2_EAC                ), 0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_SRGB8_ALPHA8_ETC2_EAC         ), 0, UnsizedFormat::RGBA, true , ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_R11_EAC                       ), 0, UnsizedFormat::R   , false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_RG11_EAC                      ), 0, UnsizedFormat::RG  , false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_SIGNED_R11_EAC                ), 0, UnsizedFormat::R   , false, ComponentType::NormInt );
-    AddFormatInfo(FOO(COMPRESSED_SIGNED_RG11_EAC               ), 0, UnsizedFormat::RG  , false, ComponentType::NormInt );
-    AddFormatInfo(FOO(COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2 ), 0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2), 0, UnsizedFormat::RGBA, true , ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_RGB8_ETC2                     ), 0, 0,0,0,0, 0,0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_SRGB8_ETC2                    ), 0, 0,0,0,0, 0,0, UnsizedFormat::RGB , true , ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_RGBA8_ETC2_EAC                ), 0, 0,0,0,0, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_SRGB8_ALPHA8_ETC2_EAC         ), 0, 0,0,0,0, 0,0, UnsizedFormat::RGBA, true , ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_R11_EAC                       ), 0, 0,0,0,0, 0,0, UnsizedFormat::R   , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_RG11_EAC                      ), 0, 0,0,0,0, 0,0, UnsizedFormat::RG  , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_SIGNED_R11_EAC                ), 0, 0,0,0,0, 0,0, UnsizedFormat::R   , false, ComponentType::NormInt );
+    AddFormatInfo(FOO(COMPRESSED_SIGNED_RG11_EAC               ), 0, 0,0,0,0, 0,0, UnsizedFormat::RG  , false, ComponentType::NormInt );
+    AddFormatInfo(FOO(COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2 ), 0, 0,0,0,0, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2), 0, 0,0,0,0, 0,0, UnsizedFormat::RGBA, true , ComponentType::NormUInt);
 
     // AMD_compressed_ATC_texture
-    AddFormatInfo(FOO(ATC_RGB_AMD                    ), 0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(ATC_RGBA_EXPLICIT_ALPHA_AMD    ), 0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(ATC_RGBA_INTERPOLATED_ALPHA_AMD), 0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(ATC_RGB_AMD                    ), 0, 0,0,0,0, 0,0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(ATC_RGBA_EXPLICIT_ALPHA_AMD    ), 0, 0,0,0,0, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(ATC_RGBA_INTERPOLATED_ALPHA_AMD), 0, 0,0,0,0, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
 
     // EXT_texture_compression_s3tc
-    AddFormatInfo(FOO(COMPRESSED_RGB_S3TC_DXT1_EXT ), 0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_RGBA_S3TC_DXT1_EXT), 0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_RGBA_S3TC_DXT3_EXT), 0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_RGBA_S3TC_DXT5_EXT), 0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_RGB_S3TC_DXT1_EXT ), 0, 0,0,0,0, 0,0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_RGBA_S3TC_DXT1_EXT), 0, 0,0,0,0, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_RGBA_S3TC_DXT3_EXT), 0, 0,0,0,0, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_RGBA_S3TC_DXT5_EXT), 0, 0,0,0,0, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
 
     // IMG_texture_compression_pvrtc
-    AddFormatInfo(FOO(COMPRESSED_RGB_PVRTC_4BPPV1 ), 0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_RGBA_PVRTC_4BPPV1), 0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_RGB_PVRTC_2BPPV1 ), 0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(COMPRESSED_RGBA_PVRTC_2BPPV1), 0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_RGB_PVRTC_4BPPV1 ), 0, 0,0,0,0, 0,0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_RGBA_PVRTC_4BPPV1), 0, 0,0,0,0, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_RGB_PVRTC_2BPPV1 ), 0, 0,0,0,0, 0,0, UnsizedFormat::RGB , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(COMPRESSED_RGBA_PVRTC_2BPPV1), 0, 0,0,0,0, 0,0, UnsizedFormat::RGBA, false, ComponentType::NormUInt);
 
     // OES_compressed_ETC1_RGB8_texture
-    AddFormatInfo(FOO(ETC1_RGB8_OES), 0, UnsizedFormat::RGB, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(ETC1_RGB8_OES), 0, 0,0,0,0, 0,0, UnsizedFormat::RGB, false, ComponentType::NormUInt);
 
 #undef FOO
 
@@ -286,19 +293,19 @@ InitFormatInfo()
 #define FOO(x) EffectiveFormat::x, #x, 0
 
     // GLES 3.0.4, p128, table 3.12.
-    AddFormatInfo(FOO(Luminance8Alpha8), 2, UnsizedFormat::LA, false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(Luminance8      ), 1, UnsizedFormat::L , false, ComponentType::NormUInt);
-    AddFormatInfo(FOO(Alpha8          ), 1, UnsizedFormat::A , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(Luminance8Alpha8), 2, 8,0,0,8, 0,0, UnsizedFormat::LA, false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(Luminance8      ), 1, 8,0,0,0, 0,0, UnsizedFormat::L , false, ComponentType::NormUInt);
+    AddFormatInfo(FOO(Alpha8          ), 1, 0,0,0,8, 0,0, UnsizedFormat::A , false, ComponentType::NormUInt);
 
     // OES_texture_float
-    AddFormatInfo(FOO(Luminance32FAlpha32F), 8, UnsizedFormat::LA, false, ComponentType::Float);
-    AddFormatInfo(FOO(Luminance32F        ), 4, UnsizedFormat::L , false, ComponentType::Float);
-    AddFormatInfo(FOO(Alpha32F            ), 4, UnsizedFormat::A , false, ComponentType::Float);
+    AddFormatInfo(FOO(Luminance32FAlpha32F), 8, 32,0,0,32, 0,0, UnsizedFormat::LA, false, ComponentType::Float);
+    AddFormatInfo(FOO(Luminance32F        ), 4, 32,0,0, 0, 0,0, UnsizedFormat::L , false, ComponentType::Float);
+    AddFormatInfo(FOO(Alpha32F            ), 4,  0,0,0,32, 0,0, UnsizedFormat::A , false, ComponentType::Float);
 
     // OES_texture_half_float
-    AddFormatInfo(FOO(Luminance16FAlpha16F), 4, UnsizedFormat::LA, false, ComponentType::Float);
-    AddFormatInfo(FOO(Luminance16F        ), 2, UnsizedFormat::L , false, ComponentType::Float);
-    AddFormatInfo(FOO(Alpha16F            ), 2, UnsizedFormat::A , false, ComponentType::Float);
+    AddFormatInfo(FOO(Luminance16FAlpha16F), 4, 16,0,0,16, 0,0, UnsizedFormat::LA, false, ComponentType::Float);
+    AddFormatInfo(FOO(Luminance16F        ), 2, 16,0,0, 0, 0,0, UnsizedFormat::L , false, ComponentType::Float);
+    AddFormatInfo(FOO(Alpha16F            ), 2,  0,0,0,16, 0,0, UnsizedFormat::A , false, ComponentType::Float);
 
 #undef FOO
 }
