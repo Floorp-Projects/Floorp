@@ -39,11 +39,7 @@ public:
   GetFullPath(nsAString& aFullPath, ErrorResult& aRv) const override;
 
   already_AddRefed<DirectoryReader>
-  CreateReader(ErrorResult& aRv) const
-  {
-    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-    return nullptr;
-  }
+  CreateReader() const;
 
   void
   GetFile(const nsAString& aPath, const FileSystemFlags& aFlag,

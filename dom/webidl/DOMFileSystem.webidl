@@ -43,7 +43,6 @@ callback interface VoidCallback {
 
 [NoInterfaceObject]
 interface DirectoryEntry : Entry {
-    [Throws]
     DirectoryReader createReader();
 
     [Throws]
@@ -68,6 +67,9 @@ callback interface ErrorCallback {
 
 [NoInterfaceObject]
 interface DirectoryReader {
+
+    // readEntries can be called just once. The second time it returns no data.
+
     [Throws]
     void readEntries (EntriesCallback successCallback, optional ErrorCallback errorCallback);
 };
