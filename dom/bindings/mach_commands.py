@@ -42,6 +42,9 @@ class WebIDLProvider(MachCommandBase):
         # wherever we happen to be running from.
         os.chdir(self.topobjdir)
 
+        if kwargs["verbose"] is None:
+            kwargs["verbose"] = False
+
         # Now we're going to create the cached grammar file in the
         # objdir.  But we're going to try loading it as a python
         # module, so we need to make sure the objdir is in our search
