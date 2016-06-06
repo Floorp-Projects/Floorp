@@ -104,6 +104,6 @@ function test() {
     waitForFocus(createDocument, content);
   }, true);
 
-  content.location = "data:text/html;charset=utf-8,test for highlighter " +
-                     "helper in web console";
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser,
+    "data:text/html;charset=utf-8,test for highlighter helper in web console");
 }

@@ -26,7 +26,7 @@ function test() {
     const {tab} = yield loadTab("data:text/html;charset=utf8,<p>hello</p>");
     const hud = yield openConsole(tab);
 
-    content.location = TEST_PAGE_URI;
+    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_PAGE_URI);
 
     let messages = yield waitForMessages({
       webconsole: hud,

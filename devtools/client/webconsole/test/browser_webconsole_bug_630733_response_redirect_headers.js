@@ -37,7 +37,7 @@ function consoleOpened(hud) {
       deferred.resolve();
     }
   };
-  content.location = TEST_URI2;
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URI2);
 
   return deferred.promise;
 }
