@@ -3439,13 +3439,14 @@ Tab.prototype = {
     BrowserApp.deck.insertBefore(this.browser, aParams.sibling || null);
     BrowserApp.deck.selectedPanel = selectedPanel;
 
+    let attrs = {};
     if (BrowserApp.manifestUrl) {
       let appsService = Cc["@mozilla.org/AppsService;1"].getService(Ci.nsIAppsService);
       let manifest = appsService.getAppByManifestURL(BrowserApp.manifestUrl);
       if (manifest) {
         let app = manifest.QueryInterface(Ci.mozIApplication);
         this.browser.docShell.frameType = Ci.nsIDocShell.FRAME_TYPE_APP;
-        this.browser.docShell.setOriginAttributes({appId: app.localId});
+        attrs['appId'] = app.localId;
       }
     }
 
@@ -3454,8 +3455,10 @@ Tab.prototype = {
 
     let isPrivate = ("isPrivate" in aParams) && aParams.isPrivate;
     if (isPrivate) {
-      this.browser.docShell.QueryInterface(Ci.nsILoadContext).usePrivateBrowsing = true;
+      attrs['privateBrowsingId'] = 1;
     }
+
+    this.browser.docShell.setOriginAttributes(attrs);
 
     // Set the new docShell load flags based on network state.
     if (Tabs.useCache) {

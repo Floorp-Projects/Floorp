@@ -14147,6 +14147,7 @@ nsDocShell::SetOriginAttributes(const DocShellOriginAttributes& aAttrs)
   }
 
   mOriginAttributes = aAttrs;
+  SetPrivateBrowsing(mOriginAttributes.mPrivateBrowsingId > 0);
 }
 
 NS_IMETHODIMP
