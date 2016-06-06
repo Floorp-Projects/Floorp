@@ -15,13 +15,14 @@ namespace dom {
 
 class Directory;
 
-class DirectoryEntry final : public Entry
+class DirectoryEntry : public Entry
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DirectoryEntry, Entry)
 
-  DirectoryEntry(nsIGlobalObject* aGlobalObject, Directory* aDirectory);
+  DirectoryEntry(nsIGlobalObject* aGlobalObject, Directory* aDirectory,
+                 DOMFileSystem* aFileSystem);
 
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
@@ -38,7 +39,7 @@ public:
   virtual void
   GetFullPath(nsAString& aFullPath, ErrorResult& aRv) const override;
 
-  already_AddRefed<DirectoryReader>
+  virtual already_AddRefed<DirectoryReader>
   CreateReader() const;
 
   void
@@ -63,9 +64,10 @@ public:
   RemoveRecursively(VoidCallback& aSuccessCallback,
                     const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const;
 
-private:
-  ~DirectoryEntry();
+protected:
+  virtual ~DirectoryEntry();
 
+private:
   RefPtr<Directory> mDirectory;
 };
 

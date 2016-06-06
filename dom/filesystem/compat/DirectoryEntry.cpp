@@ -5,8 +5,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DirectoryEntry.h"
+#include "CallbackRunnables.h"
 #include "DirectoryReader.h"
-#include "ErrorCallbackRunnable.h"
 #include "mozilla/dom/Directory.h"
 
 namespace mozilla {
@@ -21,12 +21,12 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DirectoryEntry)
 NS_INTERFACE_MAP_END_INHERITING(Entry)
 
 DirectoryEntry::DirectoryEntry(nsIGlobalObject* aGlobal,
-                               Directory* aDirectory)
-  : Entry(aGlobal)
+                               Directory* aDirectory,
+                               DOMFileSystem* aFileSystem)
+  : Entry(aGlobal, aFileSystem)
   , mDirectory(aDirectory)
 {
   MOZ_ASSERT(aGlobal);
-  MOZ_ASSERT(mDirectory);
 }
 
 DirectoryEntry::~DirectoryEntry()
@@ -41,20 +41,24 @@ DirectoryEntry::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 void
 DirectoryEntry::GetName(nsAString& aName, ErrorResult& aRv) const
 {
+  MOZ_ASSERT(mDirectory);
   mDirectory->GetName(aName, aRv);
 }
 
 void
 DirectoryEntry::GetFullPath(nsAString& aPath, ErrorResult& aRv) const
 {
+  MOZ_ASSERT(mDirectory);
   mDirectory->GetPath(aPath, aRv);
 }
 
 already_AddRefed<DirectoryReader>
 DirectoryEntry::CreateReader() const
 {
+  MOZ_ASSERT(mDirectory);
+
   RefPtr<DirectoryReader> reader =
-    new DirectoryReader(GetParentObject(), mDirectory);
+    new DirectoryReader(GetParentObject(), Filesystem(), mDirectory);
   return reader.forget();
 }
 

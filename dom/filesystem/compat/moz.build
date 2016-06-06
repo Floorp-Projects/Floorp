@@ -20,6 +20,8 @@ UNIFIED_SOURCES += [
     'DOMFileSystem.cpp',
     'Entry.cpp',
     'FileEntry.cpp',
+    'RootDirectoryEntry.cpp',
+    'RootDirectoryReader.cpp',
 ]
 
 FINAL_LIBRARY = 'xul'

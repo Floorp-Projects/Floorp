@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace dom {
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Entry, mParent)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(Entry, mParent, mFileSystem)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(Entry)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(Entry)
@@ -24,26 +24,33 @@ NS_INTERFACE_MAP_END
 
 /* static */ already_AddRefed<Entry>
 Entry::Create(nsIGlobalObject* aGlobalObject,
-              const OwningFileOrDirectory& aFileOrDirectory)
+              const OwningFileOrDirectory& aFileOrDirectory,
+              DOMFileSystem* aFileSystem)
 {
   MOZ_ASSERT(aGlobalObject);
+  MOZ_ASSERT(aFileSystem);
 
   RefPtr<Entry> entry;
   if (aFileOrDirectory.IsFile()) {
-    entry = new FileEntry(aGlobalObject, aFileOrDirectory.GetAsFile());
+    entry = new FileEntry(aGlobalObject,
+                          aFileOrDirectory.GetAsFile(),
+                          aFileSystem);
   } else {
     MOZ_ASSERT(aFileOrDirectory.IsDirectory());
     entry = new DirectoryEntry(aGlobalObject,
-                               aFileOrDirectory.GetAsDirectory());
+                               aFileOrDirectory.GetAsDirectory(),
+                               aFileSystem);
   }
 
   return entry.forget();
 }
 
-Entry::Entry(nsIGlobalObject* aGlobal)
+Entry::Entry(nsIGlobalObject* aGlobal, DOMFileSystem* aFileSystem)
   : mParent(aGlobal)
+  , mFileSystem(aFileSystem)
 {
   MOZ_ASSERT(aGlobal);
+  MOZ_ASSERT(aFileSystem);
 }
 
 Entry::~Entry()
