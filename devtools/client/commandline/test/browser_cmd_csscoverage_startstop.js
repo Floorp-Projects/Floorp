@@ -3,7 +3,7 @@
 
 // Tests that the addon commands works as they should
 
-const csscoverage = require("devtools/server/actors/csscoverage");
+const csscoverage = require("devtools/shared/fronts/csscoverage");
 
 const PAGE_1 = TEST_BASE_HTTPS + "browser_cmd_csscoverage_page1.html";
 const PAGE_2 = TEST_BASE_HTTPS + "browser_cmd_csscoverage_page2.html";
@@ -64,7 +64,7 @@ function* navigate(usage, options) {
 function* checkPages(usage) {
   // 'load' event order. '' is for the initial location
   let expectedVisited = [ "", PAGE_2, PAGE_1, PAGE_3 ];
-  let actualVisited = yield usage._testOnly_visitedPages();
+  let actualVisited = yield usage._testOnlyVisitedPages();
   isEqualJson(actualVisited, expectedVisited, "Visited");
 }
 

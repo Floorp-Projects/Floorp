@@ -24,7 +24,7 @@ const {StyleSheetEditor} = Cu.import("resource://devtools/client/styleeditor/Sty
 loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 const {PrefObserver, PREF_ORIG_SOURCES} =
       require("devtools/client/styleeditor/utils");
-const csscoverage = require("devtools/server/actors/csscoverage");
+const csscoverage = require("devtools/shared/fronts/csscoverage");
 const {console} = require("resource://gre/modules/Console.jsm");
 const promise = require("promise");
 const {ResponsiveUIManager} =
