@@ -26,8 +26,6 @@ var clientBuilder;
 var serverBuilder;
 var clientTransport;
 var serverTransport;
-var clientControlChannel;
-var serverControlChannel;
 
 const clientMessage = "Client Message";
 const serverMessage = "Server Message";
@@ -35,36 +33,6 @@ const serverMessage = "Server Message";
 const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 const { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 const { Services } = Cu.import("resource://gre/modules/Services.jsm");
-
-function TestControlChannel() {
-  this._listener = null;
-}
-
-TestControlChannel.prototype = {
-  QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationControlChannel]),
-  set listener(aListener) {
-    this._listener = aListener;
-  },
-  get listener() {
-    return this._listener;
-  },
-  sendOffer: function(aOffer) {
-    setTimeout(()=>this._remote.listener.onOffer(aOffer), 0);
-  },
-  sendAnswer: function(aAnswer) {
-    setTimeout(()=>this._remote.listener.onAnswer(aAnswer), 0);
-  },
-  sendIceCandidate: function(aCandidate) {
-    setTimeout(()=>this._remote.listener.onIceCandidate(aCandidate), 0);
-  },
-  close: function(aReason) {
-    setTimeout(()=>this._listener.notifyClosed(aReason), 0);
-    setTimeout(()=>this._remote.listener.notifyClosed(aReason), 0);
-  },
-  set remote(aRemote) {
-    this._remote = aRemote;
-  },
-};
 
 var isClientReady = false;
 var isServerReady = false;
@@ -131,7 +99,26 @@ const clientListener = {
   },
   onError: function(aError)  {
     ok(false, "client's builder reports error " + aError);
-  }
+  },
+  sendOffer: function(aOffer) {
+    setTimeout(()=>this._remoteBuilder.onOffer(aOffer), 0);
+  },
+  sendAnswer: function(aAnswer) {
+    setTimeout(()=>this._remoteBuilder.onAnswer(aAnswer), 0);
+  },
+  sendIceCandidate: function(aCandidate) {
+    setTimeout(()=>this._remoteBuilder.onIceCandidate(aCandidate), 0);
+  },
+  close: function(aReason) {
+    setTimeout(()=>this._localBuilder.notifyClosed(aReason), 0);
+    setTimeout(()=>this._remoteBuilder.notifyClosed(aReason), 0);
+  },
+  set remoteBuilder(aRemoteBuilder) {
+    this._remoteBuilder = aRemoteBuilder;
+  },
+  set localBuilder(aLocalBuilder) {
+    this._localBuilder = aLocalBuilder;
+  },
 }
 
 const serverListener = {
@@ -144,7 +131,26 @@ const serverListener = {
   },
   onError: function(aError)  {
     ok(false, "server's builder reports error " + aError);
-  }
+  },
+  sendOffer: function(aOffer) {
+    setTimeout(()=>this._remoteBuilder.onOffer(aOffer), 0);
+  },
+  sendAnswer: function(aAnswer) {
+    setTimeout(()=>this._remoteBuilder.onAnswer(aAnswer), 0);
+  },
+  sendIceCandidate: function(aCandidate) {
+    setTimeout(()=>this._remoteBuilder.onIceCandidate(aCandidate), 0);
+  },
+  close: function(aReason) {
+    setTimeout(()=>this._localBuilder.notifyClosed(aReason), 0);
+    setTimeout(()=>this._remoteBuilder.notifyClosed(aReason), 0);
+  },
+  set remoteBuilder(aRemoteBuilder) {
+    this._remoteBuilder = aRemoteBuilder;
+  },
+  set localBuilder(aLocalBuilder) {
+    this._localBuilder = aLocalBuilder;
+  },
 }
 
 function testBuilder() {
@@ -152,26 +158,24 @@ function testBuilder() {
     gResolve = aResolve;
     gReject = aReject;
 
-    clientControlChannel = new TestControlChannel();
-    serverControlChannel = new TestControlChannel();
-    clientControlChannel.remote = serverControlChannel;
-    serverControlChannel.remote = clientControlChannel;
-
     clientBuilder = Cc["@mozilla.org/presentation/datachanneltransportbuilder;1"]
                       .createInstance(Ci.nsIPresentationDataChannelSessionTransportBuilder);
     serverBuilder = Cc["@mozilla.org/presentation/datachanneltransportbuilder;1"]
                       .createInstance(Ci.nsIPresentationDataChannelSessionTransportBuilder);
 
+    clientListener.localBuilder = clientBuilder;
+    clientListener.remoteBuilder = serverBuilder;
+    serverListener.localBuilder = serverBuilder;
+    serverListener.remoteBuilder = clientBuilder;
+
     clientBuilder
       .buildDataChannelTransport(Ci.nsIPresentationService.ROLE_CONTROLLER,
                                  window,
-                                 clientControlChannel,
                                  clientListener);
 
     serverBuilder
       .buildDataChannelTransport(Ci.nsIPresentationService.ROLE_RECEIVER,
                                  window,
-                                 serverControlChannel,
                                  serverListener);
   });
 }

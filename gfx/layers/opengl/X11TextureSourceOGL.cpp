@@ -40,7 +40,8 @@ X11TextureSourceOGL::DeallocateDeviceData()
 }
 
 void
-X11TextureSourceOGL::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
+X11TextureSourceOGL::BindTexture(GLenum aTextureUnit,
+                                 gfx::SamplingFilter aSamplingFilter)
 {
   gl()->fActiveTexture(aTextureUnit);
 
@@ -58,7 +59,7 @@ X11TextureSourceOGL::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
     }
   }
 
-  ApplyFilterToBoundTexture(gl(), aFilter, LOCAL_GL_TEXTURE_2D);
+  ApplySamplingFilterToBoundTexture(gl(), aSamplingFilter, LOCAL_GL_TEXTURE_2D);
 }
 
 IntSize

@@ -377,6 +377,7 @@ Context::QuotaInitRunnable::Run()
       RefPtr<ManagerId> managerId = mManager->GetManagerId();
       nsCOMPtr<nsIPrincipal> principal = managerId->Principal();
       nsresult rv = QuotaManager::GetInfoFromPrincipal(principal,
+                                                       &mQuotaInfo.mSuffix,
                                                        &mQuotaInfo.mGroup,
                                                        &mQuotaInfo.mOrigin,
                                                        &mQuotaInfo.mIsApp);
@@ -435,6 +436,7 @@ Context::QuotaInitRunnable::Run()
       QuotaManager* qm = QuotaManager::Get();
       MOZ_ASSERT(qm);
       nsresult rv = qm->EnsureOriginIsInitialized(PERSISTENCE_TYPE_DEFAULT,
+                                                  mQuotaInfo.mSuffix,
                                                   mQuotaInfo.mGroup,
                                                   mQuotaInfo.mOrigin,
                                                   mQuotaInfo.mIsApp,

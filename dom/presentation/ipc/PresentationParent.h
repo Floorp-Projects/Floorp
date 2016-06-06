@@ -7,10 +7,12 @@
 #ifndef mozilla_dom_PresentationParent_h__
 #define mozilla_dom_PresentationParent_h__
 
+#include "mozilla/dom/PPresentationBuilderParent.h"
 #include "mozilla/dom/PPresentationParent.h"
 #include "mozilla/dom/PPresentationRequestParent.h"
 #include "nsIPresentationListener.h"
 #include "nsIPresentationService.h"
+#include "nsIPresentationSessionTransportBuilder.h"
 
 namespace mozilla {
 namespace dom {
@@ -30,6 +32,8 @@ public:
 
   bool Init();
 
+  bool RegisterTransportBuilder(const nsString& aSessionId, const uint8_t& aRole);
+
   virtual void ActorDestroy(ActorDestroyReason aWhy) override;
 
   virtual bool
@@ -41,6 +45,14 @@ public:
 
   virtual bool
   DeallocPPresentationRequestParent(PPresentationRequestParent* aActor) override;
+
+  virtual PPresentationBuilderParent*
+  AllocPPresentationBuilderParent(const nsString& aSessionId,
+                                  const uint8_t& aRole) override;
+
+  virtual bool
+  DeallocPPresentationBuilderParent(
+    PPresentationBuilderParent* aActor) override;
 
   virtual bool Recv__delete__() override;
 
@@ -61,10 +73,14 @@ public:
   virtual bool RecvNotifyReceiverReady(const nsString& aSessionId,
                                        const uint64_t& aWindowId) override;
 
+  virtual bool RecvNotifyTransportClosed(const nsString& aSessionId,
+                                         const uint8_t& aRole,
+                                         const nsresult& aReason) override;
+
 private:
   virtual ~PresentationParent();
 
-  bool mActorDestroyed;
+  bool mActorDestroyed = false;
   nsCOMPtr<nsIPresentationService> mService;
   nsTArray<nsString> mSessionIdsAtController;
   nsTArray<nsString> mSessionIdsAtReceiver;
@@ -97,7 +113,9 @@ private:
 
   nsresult DoRequest(const TerminateSessionRequest& aRequest);
 
-  bool mActorDestroyed;
+  bool mActorDestroyed = false;
+  bool mNeedRegisterBuilder = false;
+  nsString mSessionId;
   nsCOMPtr<nsIPresentationService> mService;
 };
 

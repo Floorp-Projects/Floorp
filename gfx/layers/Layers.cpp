@@ -2236,7 +2236,7 @@ CanvasLayer::CanvasLayer(LayerManager* aManager, void* aImplData)
   , mPreTransCallbackData(nullptr)
   , mPostTransCallback(nullptr)
   , mPostTransCallbackData(nullptr)
-  , mFilter(gfx::Filter::GOOD)
+  , mSamplingFilter(gfx::SamplingFilter::GOOD)
   , mDirty(false)
 {}
 
@@ -2247,25 +2247,26 @@ void
 CanvasLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
   Layer::PrintInfo(aStream, aPrefix);
-  if (mFilter != Filter::GOOD) {
-    AppendToString(aStream, mFilter, " [filter=", "]");
+  if (mSamplingFilter != SamplingFilter::GOOD) {
+    AppendToString(aStream, mSamplingFilter, " [filter=", "]");
   }
 }
 
 // This help function is used to assign the correct enum value
 // to the packet
 static void
-DumpFilter(layerscope::LayersPacket::Layer* aLayer, const Filter& aFilter)
+DumpFilter(layerscope::LayersPacket::Layer* aLayer,
+           const SamplingFilter& aSamplingFilter)
 {
   using namespace layerscope;
-  switch (aFilter) {
-    case Filter::GOOD:
+  switch (aSamplingFilter) {
+    case SamplingFilter::GOOD:
       aLayer->set_filter(LayersPacket::Layer::FILTER_GOOD);
       break;
-    case Filter::LINEAR:
+    case SamplingFilter::LINEAR:
       aLayer->set_filter(LayersPacket::Layer::FILTER_LINEAR);
       break;
-    case Filter::POINT:
+    case SamplingFilter::POINT:
       aLayer->set_filter(LayersPacket::Layer::FILTER_POINT);
       break;
     default:
@@ -2282,15 +2283,15 @@ CanvasLayer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
   using namespace layerscope;
   LayersPacket::Layer* layer = aPacket->mutable_layer(aPacket->layer_size()-1);
   layer->set_type(LayersPacket::Layer::CanvasLayer);
-  DumpFilter(layer, mFilter);
+  DumpFilter(layer, mSamplingFilter);
 }
 
 void
 ImageLayer::PrintInfo(std::stringstream& aStream, const char* aPrefix)
 {
   Layer::PrintInfo(aStream, aPrefix);
-  if (mFilter != Filter::GOOD) {
-    AppendToString(aStream, mFilter, " [filter=", "]");
+  if (mSamplingFilter != SamplingFilter::GOOD) {
+    AppendToString(aStream, mSamplingFilter, " [filter=", "]");
   }
 }
 
@@ -2302,7 +2303,7 @@ ImageLayer::DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent)
   using namespace layerscope;
   LayersPacket::Layer* layer = aPacket->mutable_layer(aPacket->layer_size()-1);
   layer->set_type(LayersPacket::Layer::ImageLayer);
-  DumpFilter(layer, mFilter);
+  DumpFilter(layer, mSamplingFilter);
 }
 
 void

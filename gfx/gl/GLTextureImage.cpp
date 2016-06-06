@@ -293,7 +293,7 @@ TextureImage::TextureImage(const gfx::IntSize& aSize,
     , mWrapMode(aWrapMode)
     , mContentType(aContentType)
     , mTextureFormat(gfx::SurfaceFormat::UNKNOWN)
-    , mFilter(Filter::GOOD)
+    , mSamplingFilter(SamplingFilter::GOOD)
     , mFlags(aFlags)
     , mUploadSize(0)
 {}

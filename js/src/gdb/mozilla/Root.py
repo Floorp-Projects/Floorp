@@ -84,5 +84,7 @@ def deref(root):
         return root['ptr']
     elif tag.startswith('JS::Handle<'):
         return root['ptr']
+    elif tag.startswith('js::GCPtr<'):
+        return root['value']
     else:
-        raise NotImplementedError
+        raise NotImplementedError("Unrecognized tag: " + tag)

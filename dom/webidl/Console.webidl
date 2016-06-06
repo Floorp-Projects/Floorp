@@ -4,9 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-[ChromeOnly,
- Exposed=(Window,Worker,WorkerDebugger)]
-interface Console {
+[Exposed=(Window,Worker,WorkerDebugger),
+ ClassString="Console",
+ ProtoObjectHack]
+namespace console {
   void log(any... data);
   void info(any... data);
   void warn(any... data);
@@ -38,6 +39,9 @@ interface Console {
   void timeline();
   [BinaryName="noopMethod"]
   void timelineEnd();
+
+  [ChromeOnly]
+  const boolean IS_NATIVE_CONSOLE = true;
 };
 
 // This is used to propagate console events to the observers.

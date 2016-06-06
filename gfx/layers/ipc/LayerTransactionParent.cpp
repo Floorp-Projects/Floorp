@@ -454,7 +454,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
         if (!canvasLayer) {
           return false;
         }
-        canvasLayer->SetFilter(specific.get_CanvasLayerAttributes().filter());
+        canvasLayer->SetSamplingFilter(specific.get_CanvasLayerAttributes().samplingFilter());
         canvasLayer->SetBounds(specific.get_CanvasLayerAttributes().bounds());
         break;
       }
@@ -477,7 +477,7 @@ LayerTransactionParent::RecvUpdate(InfallibleTArray<Edit>&& cset,
           return false;
         }
         const ImageLayerAttributes& attrs = specific.get_ImageLayerAttributes();
-        imageLayer->SetFilter(attrs.filter());
+        imageLayer->SetSamplingFilter(attrs.samplingFilter());
         imageLayer->SetScaleToSize(attrs.scaleToSize(), attrs.scaleMode());
         break;
       }

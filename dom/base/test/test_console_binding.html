@@ -1,0 +1,42 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test Console binding</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <script type="application/javascript">
+
+function consoleListener() {
+  SpecialPowers.addObserver(this, "console-api-log-event", false);
+}
+
+var order = 0;
+consoleListener.prototype  = {
+  observe: function(aSubject, aTopic, aData) {
+    if (aTopic == "console-api-log-event") {
+      var obj = aSubject.wrappedJSObject;
+      if (order+1 == parseInt(obj.arguments[0])) {
+        ok(true, "Message received: " + obj.arguments[0]);
+        order++;
+      }
+
+      if (order == 3) {
+        SpecialPowers.removeObserver(this, "console-api-log-event");
+        SimpleTest.finish();
+        return;
+      }
+    }
+  }
+}
+
+var cl = new consoleListener();
+SimpleTest.waitForExplicitFinish();
+
+[1,2,3].forEach(console.log);
+
+  </script>
+</body>
+</html>

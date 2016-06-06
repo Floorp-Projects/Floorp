@@ -7,6 +7,7 @@
   <title>Test for B2G Presentation API at sender side</title>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="PresentationSessionFrameScript.js"></script>
 </head>
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1148307">Test for B2G Presentation API at sender side</a>
@@ -15,6 +16,7 @@
 'use strict';
 
 var gScript = SpecialPowers.loadChromeScript(SimpleTest.getTestFileURL('PresentationSessionChromeScript.js'));
+var frameScript = SpecialPowers.isMainProcess() ? gScript : contentScript;
 var request;
 var connection;
 
@@ -65,15 +67,15 @@ function testStartConnection() {
       info("The control channel is closed. " + aReason);
     });
 
-    gScript.addMessageListener('check-navigator', function checknavigatorHandler(aSuccess) {
-      gScript.removeMessageListener('check-navigator', checknavigatorHandler);
+    frameScript.addMessageListener('check-navigator', function checknavigatorHandler(aSuccess) {
+      frameScript.removeMessageListener('check-navigator', checknavigatorHandler);
       ok(aSuccess, "buildDataChannel get correct window object");
     });
 
     gScript.addMessageListener('offer-sent', function offerSentHandler(aIsValid) {
       gScript.removeMessageListener('offer-sent', offerSentHandler);
       ok(aIsValid, "A valid offer is sent out.");
-      gScript.sendAsyncMessage('trigger-incoming-transport');
+      gScript.sendAsyncMessage('trigger-incoming-answer');
     });
 
     gScript.addMessageListener('answer-received', function answerReceivedHandler() {
@@ -81,14 +83,13 @@ function testStartConnection() {
       info("An answer is received.");
     });
 
-    gScript.addMessageListener('data-transport-initialized', function dataTransportInitializedHandler() {
-      gScript.removeMessageListener('data-transport-initialized', dataTransportInitializedHandler);
+    frameScript.addMessageListener('data-transport-initialized', function dataTransportInitializedHandler() {
+      frameScript.removeMessageListener('data-transport-initialized', dataTransportInitializedHandler);
       info("Data transport channel is initialized.");
-      gScript.sendAsyncMessage('trigger-incoming-answer');
     });
 
-    gScript.addMessageListener('data-transport-notification-enabled', function dataTransportNotificationEnabledHandler() {
-      gScript.removeMessageListener('data-transport-notification-enabled', dataTransportNotificationEnabledHandler);
+    frameScript.addMessageListener('data-transport-notification-enabled', function dataTransportNotificationEnabledHandler() {
+      frameScript.removeMessageListener('data-transport-notification-enabled', dataTransportNotificationEnabledHandler);
       info("Data notification is enabled for data transport channel.");
     });
 
@@ -132,8 +133,8 @@ function testSend() {
   return new Promise(function(aResolve, aReject) {
     const outgoingMessage = "test outgoing message";
 
-    gScript.addMessageListener('message-sent', function messageSentHandler(aMessage) {
-      gScript.removeMessageListener('message-sent', messageSentHandler);
+    frameScript.addMessageListener('message-sent', function messageSentHandler(aMessage) {
+      frameScript.removeMessageListener('message-sent', messageSentHandler);
       is(aMessage, outgoingMessage, "The message is sent out.");
       aResolve();
     });
@@ -152,14 +153,14 @@ function testIncomingMessage() {
       aResolve();
     });
 
-    gScript.sendAsyncMessage('trigger-incoming-message', incomingMessage);
+    frameScript.sendAsyncMessage('trigger-incoming-message', incomingMessage);
   });
 }
 
 function testTerminateConnection() {
   return new Promise(function(aResolve, aReject) {
-    gScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
-      gScript.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
+    frameScript.addMessageListener('data-transport-closed', function dataTransportClosedHandler(aReason) {
+      frameScript.removeMessageListener('data-transport-closed', dataTransportClosedHandler);
       info("The data transport is closed. " + aReason);
     });
 
@@ -195,7 +196,6 @@ function runTests() {
   then(teardown);
 }
 
-SimpleTest.expectAssertions(0, 5);
 SimpleTest.waitForExplicitFinish();
 SpecialPowers.pushPermissions([
   {type: 'presentation-device-manage', allow: false, context: document},

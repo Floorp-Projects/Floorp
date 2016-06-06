@@ -83,6 +83,9 @@ class JSAPITest
 
     bool exec(const char* bytes, const char* filename, int lineno);
 
+    // Like exec(), but doesn't call fail() if JS::Evaluate returns false.
+    bool execDontReport(const char* bytes, const char* filename, int lineno);
+
 #define EVAL(s, vp) do { if (!evaluate(s, __FILE__, __LINE__, vp)) return false; } while (false)
 
     bool evaluate(const char* bytes, const char* filename, int lineno, JS::MutableHandleValue vp);
@@ -286,7 +289,7 @@ class JSAPITest
         JSRuntime* rt = JS_NewRuntime(8L * 1024 * 1024);
         if (!rt)
             return nullptr;
-        JS_SetErrorReporter(rt, &reportError);
+        JS_SetErrorReporter(rt, &reportWarning);
         setNativeStackQuota(rt);
         return rt;
     }
@@ -298,15 +301,24 @@ class JSAPITest
         rt = nullptr;
     }
 
-    static void reportError(JSContext* cx, const char* message, JSErrorReport* report) {
+    static void reportWarning(JSContext* cx, const char* message, JSErrorReport* report) {
+        MOZ_RELEASE_ASSERT(report);
+        MOZ_RELEASE_ASSERT(JSREPORT_IS_WARNING(report->flags));
+
         fprintf(stderr, "%s:%u:%s\n",
                 report->filename ? report->filename : "<no filename>",
                 (unsigned int) report->lineno,
                 message);
     }
 
-    virtual JSContext * createContext() {
-        return JS_NewContext(rt, 8192);
+    virtual JSContext* createContext() {
+        JSContext* cx = JS_NewContext(rt, 8192);
+        if (!cx)
+            return nullptr;
+
+        JS::ContextOptionsRef(cx).setDontReportUncaught(true);
+        JS::ContextOptionsRef(cx).setAutoJSAPIOwnsErrorReporting(true);
+        return cx;
     }
 
     virtual const JSClass * getGlobalClass() {

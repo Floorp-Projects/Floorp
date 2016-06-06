@@ -60,6 +60,14 @@ bool JSAPITest::exec(const char* bytes, const char* filename, int lineno)
         fail(JSAPITestString(bytes), filename, lineno);
 }
 
+bool JSAPITest::execDontReport(const char* bytes, const char* filename, int lineno)
+{
+    JS::RootedValue v(cx);
+    JS::CompileOptions opts(cx);
+    opts.setFileAndLine(filename, lineno);
+    return JS::Evaluate(cx, opts, bytes, strlen(bytes), &v);
+}
+
 bool JSAPITest::evaluate(const char* bytes, const char* filename, int lineno,
                          JS::MutableHandleValue vp)
 {

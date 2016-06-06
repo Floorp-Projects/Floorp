@@ -488,7 +488,7 @@ typedef void
 // The special treatment of |finalize| and |trace| is necessary because if we
 // assign either of those hooks to a local variable and then call it -- as is
 // done with the other hooks -- the GC hazard analysis gets confused.
-#define JS_CLASS_MEMBERS(ClassOpsType, FinalizeOpType, FreeOpType) \
+#define JS_CLASS_MEMBERS(ClassOpsType, FreeOpType) \
     const char* name; \
     uint32_t flags; \
     const ClassOpsType* cOps; \
@@ -705,7 +705,7 @@ struct JSClassOps
 #define JS_NULL_CLASS_OPS nullptr
 
 struct JSClass {
-    JS_CLASS_MEMBERS(JSClassOps, JSFinalizeOp, JSFreeOp);
+    JS_CLASS_MEMBERS(JSClassOps, JSFreeOp);
 
     void* reserved[3];
 };
@@ -812,7 +812,7 @@ namespace js {
 
 struct Class
 {
-    JS_CLASS_MEMBERS(js::ClassOps, FinalizeOp, FreeOp);
+    JS_CLASS_MEMBERS(js::ClassOps, FreeOp);
     const ClassSpec* spec;
     const ClassExtension* ext;
     const ObjectOps* oOps;

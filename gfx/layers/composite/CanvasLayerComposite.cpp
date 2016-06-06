@@ -99,7 +99,7 @@ CanvasLayerComposite::RenderLayer(const IntRect& aClipRect)
     mCompositableHost->Composite(this, effectChain,
                           GetEffectiveOpacity(),
                           GetEffectiveTransform(),
-                          GetEffectFilter(),
+                          GetSamplingFilter(),
                           clipRect);
   });
 
@@ -125,10 +125,10 @@ CanvasLayerComposite::CleanupResources()
   mCompositableHost = nullptr;
 }
 
-gfx::Filter
-CanvasLayerComposite::GetEffectFilter()
+gfx::SamplingFilter
+CanvasLayerComposite::GetSamplingFilter()
 {
-  gfx::Filter filter = mFilter;
+  gfx::SamplingFilter filter = mSamplingFilter;
 #ifdef ANDROID
   // Bug 691354
   // Using the LINEAR filter we get unexplained artifacts.
@@ -136,7 +136,7 @@ CanvasLayerComposite::GetEffectFilter()
   Matrix matrix;
   bool is2D = GetEffectiveTransform().Is2D(&matrix);
   if (is2D && !ThebesMatrix(matrix).HasNonTranslationOrFlip()) {
-    filter = Filter::POINT;
+    filter = SamplingFilter::POINT;
   }
 #endif
   return filter;
@@ -146,7 +146,7 @@ void
 CanvasLayerComposite::GenEffectChain(EffectChain& aEffect)
 {
   aEffect.mLayerRef = this;
-  aEffect.mPrimaryEffect = mCompositableHost->GenEffect(GetEffectFilter());
+  aEffect.mPrimaryEffect = mCompositableHost->GenEffect(GetSamplingFilter());
 }
 
 void

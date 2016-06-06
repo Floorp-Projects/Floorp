@@ -34,10 +34,9 @@ struct ClearOriginParams
   bool persistenceTypeIsExplicit;
 };
 
-struct ClearAppParams
+struct ClearOriginsParams
 {
-  uint32_t appId;
-  bool browserOnly;
+  nsString pattern;
 };
 
 struct ClearAllParams
@@ -51,7 +50,7 @@ struct ResetAllParams
 union RequestParams
 {
   ClearOriginParams;
-  ClearAppParams;
+  ClearOriginsParams;
   ClearAllParams;
   ResetAllParams;
 };
