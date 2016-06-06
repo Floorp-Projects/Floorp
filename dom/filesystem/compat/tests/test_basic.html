@@ -1,0 +1,97 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Blink FileSystem API - subset</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<input id="entries" type="file"></input>
+<script type="application/javascript;version=1.7">
+
+var fileEntry;
+var directoryEntry;
+
+function setup_tests() {
+  SpecialPowers.pushPrefEnv({"set": [["dom.webkitBlink.dirPicker.enabled", true],
+                                     ["dom.webkitBlink.filesystem.enabled", true]]}, next);
+}
+
+function populate_entries() {
+  var url = SimpleTest.getTestFileURL("script_entries.js");
+  var script = SpecialPowers.loadChromeScript(url);
+
+  function onOpened(message) {
+    var entries = document.getElementById('entries');
+    SpecialPowers.wrap(entries).mozSetDndFilesAndDirectories(message.data);
+
+    script.destroy();
+    next();
+  }
+
+  script.addMessageListener("entries.opened", onOpened);
+  script.sendAsyncMessage("entries.open");
+}
+
+function test_entries() {
+  var entries = document.getElementById('entries');
+  ok("webkitEntries" in entries, "HTMLInputElement.webkitEntries");
+  is(entries.webkitEntries.length, 2, "HTMLInputElement.webkitEntries.length == 2");
+  is(entries.files.length, 1, "HTMLInputElement.files is still populated");
+
+  for (var i = 0; i < entries.webkitEntries.length; ++i) {
+    if (entries.webkitEntries[i].isFile) {
+      ok(!fileEntry, "We just want 1 fileEntry");
+      fileEntry = entries.webkitEntries[i];
+    } else {
+      ok(entries.webkitEntries[i].isDirectory, "If not a file, we have a directory.");
+      ok(!directoryEntry, "We just want 1 directoryEntry");
+      directoryEntry = entries.webkitEntries[i];
+    }
+  }
+
+  next();
+}
+
+function test_fileEntry() {
+  ok("name" in fileEntry, "We have a name.");
+  ok("fullPath" in fileEntry, "We have a fullPath.");
+  ok("filesystem" in fileEntry, "We have a filesystem.");
+
+  next();
+}
+
+function test_directoryEntry() {
+  ok("name" in directoryEntry, "We have a name.");
+  ok("fullPath" in directoryEntry, "We have a fullPath.");
+  ok("filesystem" in directoryEntry, "We have a filesystem.");
+
+  next();
+}
+
+var tests = [
+  setup_tests,
+  populate_entries,
+
+  test_entries,
+
+  test_fileEntry,
+  test_directoryEntry,
+];
+
+function next() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+SimpleTest.waitForExplicitFinish();
+next();
+</script>
+</body>
+</html>
