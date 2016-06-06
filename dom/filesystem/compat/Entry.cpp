@@ -7,7 +7,6 @@
 #include "Entry.h"
 #include "DirectoryEntry.h"
 #include "FileEntry.h"
-
 #include "mozilla/dom/UnionTypes.h"
 
 namespace mozilla {

@@ -52,7 +52,8 @@ interface DirectoryEntry : Entry {
     [Throws]
     void getDirectory(DOMString? path, optional FileSystemFlags options, optional EntryCallback successCallback, optional ErrorCallback errorCallback);
 
-    [Throws]
+    // This method is not implemented. ErrorCallback will be called with
+    // NS_ERROR_DOM_NOT_SUPPORTED_ERR.
     void removeRecursively(VoidCallback successCallback, optional ErrorCallback errorCallback);
 };
 
@@ -78,11 +79,11 @@ callback interface BlobCallback {
 [NoInterfaceObject]
 interface FileEntry : Entry {
     // the successCallback should be a FileWriteCallback but this method is not
-    // implemented.
-    [Throws]
+    // implemented. ErrorCallback will be called with
+    // NS_ERROR_DOM_NOT_SUPPORTED_ERR.
     void createWriter (VoidCallback successCallback, optional ErrorCallback errorCallback);
 
-    [Throws,BinaryName="GetFile"]
+    [BinaryName="GetFile"]
     void file (BlobCallback successCallback, optional ErrorCallback errorCallback);
 };
 
