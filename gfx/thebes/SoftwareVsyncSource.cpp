@@ -20,7 +20,6 @@ SoftwareVsyncSource::SoftwareVsyncSource()
 SoftwareVsyncSource::~SoftwareVsyncSource()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  mGlobalDisplay->Shutdown();
   mGlobalDisplay = nullptr;
 }
 
