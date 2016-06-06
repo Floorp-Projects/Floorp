@@ -7,7 +7,7 @@
 // `actorHasMethod` and `getTrait`.
 
 var { WebAudioFront } =
-  require("devtools/server/actors/webaudio");
+  require("devtools/shared/fronts/webaudio");
 
 function* testTarget(client, target) {
   yield target.makeRemote();

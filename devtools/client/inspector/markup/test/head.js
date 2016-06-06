@@ -12,7 +12,7 @@ Services.scriptloader.loadSubScript(
 
 var {getInplaceEditorForSpan: inplaceEditor} = require("devtools/client/shared/inplace-editor");
 var clipboard = require("sdk/clipboard");
-var {ActorRegistryFront} = require("devtools/server/actors/actor-registry");
+var {ActorRegistryFront} = require("devtools/shared/fronts/actor-registry");
 
 // If a test times out we want to see the complete log and not just the last few
 // lines.
@@ -88,6 +88,20 @@ var getContainerForSelector = Task.async(function* (selector, inspector) {
   info("Found markup-container " + container);
   return container;
 });
+
+/**
+ * Retrieve the nodeValue for the firstChild of a provided selector on the content page.
+ *
+ * @param {String} selector
+ * @param {TestActorFront} testActor The current TestActorFront instance.
+ * @return {String} the nodeValue of the first
+ */
+function* getFirstChildNodeValue(selector, testActor) {
+  let nodeValue = yield testActor.eval(`
+    content.document.querySelector("${selector}").firstChild.nodeValue;
+  `);
+  return nodeValue;
+}
 
 /**
  * Using the markupview's _waitForChildren function, wait for all queued

@@ -30,13 +30,17 @@ add_task(function* () {
   is(getTitle(), `Developer Tools - Page title - ${URL}`,
     "Devtools title correct after switching to detached window host");
 
+  // Wait for tick to avoid unexpected 'popuphidden' event, which
+  // blocks the frame popup menu opened below. See also bug 1276873
+  yield waitForTick();
+
   // Open frame menu and wait till it's available on the screen.
   let btn = toolbox.doc.getElementById("command-button-frames");
   let menu = toolbox.showFramesMenu({target: btn});
   yield once(menu, "open");
 
   // Verify that the frame list menu is populated
-  let frames = menu.menuitems;
+  let frames = menu.items;
   is(frames.length, 2, "We have both frames in the list");
 
   let topFrameBtn = frames.filter(b => b.label == URL)[0];

@@ -454,12 +454,12 @@ OutputParser.prototype = {
   },
 
   _onColorSwatchMouseDown: function (event) {
-    // Prevent text selection in the case of shift-click or double-click.
-    event.preventDefault();
-
     if (!event.shiftKey) {
       return;
     }
+
+    // Prevent click event to be fired to not show the tooltip
+    event.stopPropagation();
 
     let swatch = event.target;
     let color = this.colorSwatches.get(swatch);
@@ -470,12 +470,11 @@ OutputParser.prototype = {
   },
 
   _onAngleSwatchMouseDown: function (event) {
-    // Prevent text selection in the case of shift-click or double-click.
-    event.preventDefault();
-
     if (!event.shiftKey) {
       return;
     }
+
+    event.stopPropagation();
 
     let swatch = event.target;
     let angle = this.angleSwatches.get(swatch);

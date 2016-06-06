@@ -5,16 +5,6 @@ const protocol = require("devtools/shared/protocol");
 const {AddonsActor} = require("devtools/server/actors/addons");
 const {AddonsFront} = require("devtools/shared/fronts/addons");
 
-function startupAddonsManager() {
-  const internalManager = Cc["@mozilla.org/addons/integration;1"]
-    .getService(Ci.nsIObserver)
-    .QueryInterface(Ci.nsITimerCallback);
-
-  internalManager.observe(null, "addons-startup", null);
-}
-
-const profileDir = do_get_profile().clone();
-profileDir.append("extensions");
 startupAddonsManager();
 
 function* connect() {
@@ -34,7 +24,7 @@ add_task(function* testSuccessfulInstall() {
 
   const allowMissing = false;
   const usePlatformSeparator = true;
-  const addonPath = getFilePath("test_addons_actor/web-extension",
+  const addonPath = getFilePath("addons/web-extension",
                                 allowMissing, usePlatformSeparator);
   const installedAddon = yield addons.installTemporaryAddon(addonPath);
   equal(installedAddon.id, "test-addons-actor@mozilla.org");
