@@ -107,9 +107,10 @@ elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
         'gfxGdkNativeRenderer.h',
         'gfxPDFSurface.h',
         'gfxPlatformGtk.h',
-        'gfxPSSurface.h',
     ]
-
+    EXPORTS.mozilla.gfx += [
+        'PrintTargetPS.h',
+    ]
     SOURCES += [
         'gfxFcPlatformFontList.cpp',
         'gfxFontconfigFonts.cpp',
@@ -119,7 +120,7 @@ elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
         'gfxGdkNativeRenderer.cpp',
         'gfxPDFSurface.cpp',
         'gfxPlatformGtk.cpp',
-        'gfxPSSurface.cpp',
+        'PrintTargetPS.cpp',
     ]
 
     if CONFIG['MOZ_X11']:

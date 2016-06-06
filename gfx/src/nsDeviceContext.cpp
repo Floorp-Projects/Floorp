@@ -42,14 +42,6 @@
 #include "gfxPDFSurface.h"
 #endif
 
-#ifdef MOZ_WIDGET_GTK
-#include "gfxPSSurface.h"
-#elif XP_WIN
-#include "gfxWindowsSurface.h"
-#elif XP_MACOSX
-#include "gfxQuartzSurface.h"
-#endif
-
 using namespace mozilla;
 using namespace mozilla::gfx;
 using mozilla::services::GetObserverService;

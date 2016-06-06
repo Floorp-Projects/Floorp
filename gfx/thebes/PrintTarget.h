@@ -109,12 +109,12 @@ public:
    */
   virtual already_AddRefed<DrawTarget>
   MakeDrawTarget(const IntSize& aSize,
-                 DrawEventRecorder* aRecorder = nullptr) = 0;
+                 DrawEventRecorder* aRecorder = nullptr);
 
 protected:
 
   // Only created via subclass's constructors
-  explicit PrintTarget(const IntSize& aSize);
+  explicit PrintTarget(cairo_surface_t* aCairoSurface, const IntSize& aSize);
 
   // Protected because we're refcounted
   virtual ~PrintTarget();
@@ -123,6 +123,7 @@ protected:
   CreateRecordingDrawTarget(DrawEventRecorder* aRecorder,
                             DrawTarget* aDrawTarget);
 
+  cairo_surface_t* mCairoSurface;
   IntSize mSize;
   bool mIsFinished;
 };
