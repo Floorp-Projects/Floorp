@@ -6,7 +6,8 @@
 
 "use strict";
 
-const { ActorClass, method } = require("devtools/shared/protocol");
+const { ActorClassWithSpec } = require("devtools/shared/protocol");
+const { breakpointSpec } = require("devtools/shared/specs/breakpoint");
 
 /**
  * Set breakpoints on all the given entry points with the given
@@ -33,9 +34,7 @@ exports.setBreakpointAtEntryPoints = setBreakpointAtEntryPoints;
  * responsible for deleting breakpoints, handling breakpoint hits and
  * associating breakpoints with scripts.
  */
-let BreakpointActor = ActorClass({
-  typeName: "breakpoint",
-
+let BreakpointActor = ActorClassWithSpec(breakpointSpec, {
   /**
    * Create a Breakpoint actor.
    *
@@ -176,7 +175,7 @@ let BreakpointActor = ActorClass({
   /**
    * Handle a protocol request to remove this breakpoint.
    */
-  delete: method(function () {
+  delete: function () {
     // Remove from the breakpoint store.
     if (this.originalLocation) {
       this.threadActor.breakpointActorMap.deleteActor(this.originalLocation);
@@ -184,7 +183,7 @@ let BreakpointActor = ActorClass({
     this.threadActor.threadLifetimePool.removeActor(this);
     // Remove the actual breakpoint from the associated scripts.
     this.removeScripts();
-  })
+  }
 });
 
 exports.BreakpointActor = BreakpointActor;
