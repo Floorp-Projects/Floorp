@@ -8,6 +8,7 @@ var names = [
     "replace",
     "search",
     "species",
+    "hasInstance",
     "split",
     "toPrimitive",
     "unscopables"
