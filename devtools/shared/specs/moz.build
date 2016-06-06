@@ -12,6 +12,7 @@ DevToolsModules(
     'call-watcher.js',
     'canvas.js',
     'css-properties.js',
+    'environment.js',
     'frame.js',
     'heap-snapshot-file.js',
     'highlighters.js',
