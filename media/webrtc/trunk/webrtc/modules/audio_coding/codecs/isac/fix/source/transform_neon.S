@@ -43,7 +43,7 @@ DEFINE_FUNCTION WebRtcIsacfix_Time2SpecNeon
   add r5, sp, #(16 + FRAMESAMPLES * 2)  @ tmpimQ16;
 
   adr r9, WebRtcIsacfix_kCosTab1
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__clang__)
   mov r6, #:lower16:(WebRtcIsacfix_kSinTab1 - WebRtcIsacfix_kCosTab1)
 #else
   mov r6, #(WebRtcIsacfix_kSinTab1 - WebRtcIsacfix_kCosTab1)
@@ -461,7 +461,7 @@ TransformAndFindMax:
   bgt TransformAndFindMax
 
   adr r10, WebRtcIsacfix_kSinTab1
-#if defined(__APPLE__)
+#if defined(__APPLE__) || defined(__clang__)
   mov r2, #:lower16:(WebRtcIsacfix_kSinTab1 - WebRtcIsacfix_kCosTab1)
 #else
   mov r2, #(WebRtcIsacfix_kSinTab1 - WebRtcIsacfix_kCosTab1)
