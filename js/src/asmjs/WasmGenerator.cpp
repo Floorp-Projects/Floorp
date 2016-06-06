@@ -138,7 +138,6 @@ ModuleGenerator::init(UniqueModuleGeneratorData shared, UniqueChars filename)
 
     if (module_->kind == ModuleKind::Wasm) {
         numSigs_ = shared_->sigs.length();
-        module_->numFuncs = shared_->funcSigs.length();
         module_->globalBytes = AlignBytes(module_->globalBytes, sizeof(void*));
 
         for (ImportModuleGeneratorData& import : shared_->imports) {
@@ -634,10 +633,8 @@ void
 ModuleGenerator::initFuncSig(uint32_t funcIndex, uint32_t sigIndex)
 {
     MOZ_ASSERT(isAsmJS());
-    MOZ_ASSERT(funcIndex == module_->numFuncs);
     MOZ_ASSERT(!shared_->funcSigs[funcIndex]);
 
-    module_->numFuncs++;
     shared_->funcSigs[funcIndex] = &shared_->sigs[sigIndex];
 }
 
