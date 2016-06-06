@@ -7906,44 +7906,42 @@ DebuggerObject_getCallable(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerObject_getName(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get name", args, dbg, obj);
-    if (!obj->is<JSFunction>()) {
+    THIS_DEBUGOBJECT(cx, argc, vp, "get name", args, object)
+
+    if (!DebuggerObject::isFunction(cx, object)) {
         args.rval().setUndefined();
         return true;
     }
 
-    JSString* name = obj->as<JSFunction>().name();
-    if (!name) {
-        args.rval().setUndefined();
-        return true;
-    }
-
-    RootedValue namev(cx, StringValue(name));
-    if (!dbg->wrapDebuggeeValue(cx, &namev))
+    RootedString result(cx);
+    if (!DebuggerObject::name(cx, object, &result))
         return false;
-    args.rval().set(namev);
+
+    if (result)
+        args.rval().setString(result);
+    else
+        args.rval().setUndefined();
     return true;
 }
 
 static bool
 DebuggerObject_getDisplayName(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get display name", args, dbg, obj);
-    if (!obj->is<JSFunction>()) {
+    THIS_DEBUGOBJECT(cx, argc, vp, "get displayName", args, object)
+
+    if (!DebuggerObject::isFunction(cx, object)) {
         args.rval().setUndefined();
         return true;
     }
 
-    JSString* name = obj->as<JSFunction>().displayAtom();
-    if (!name) {
-        args.rval().setUndefined();
-        return true;
-    }
-
-    RootedValue namev(cx, StringValue(name));
-    if (!dbg->wrapDebuggeeValue(cx, &namev))
+    RootedString result(cx);
+    if (!DebuggerObject::displayName(cx, object, &result))
         return false;
-    args.rval().set(namev);
+
+    if (result)
+        args.rval().setString(result);
+    else
+        args.rval().setUndefined();
     return true;
 }
 
@@ -8845,6 +8843,14 @@ DebuggerObject::create(JSContext* cx, HandleObject proto, HandleObject referent,
 }
 
 /* static */ bool
+DebuggerObject::isFunction(JSContext* cx, Handle<DebuggerObject*> object)
+{
+    RootedObject referent(cx, object->referent());
+
+    return referent->is<JSFunction>();
+}
+
+/* static */ bool
 DebuggerObject::className(JSContext* cx, Handle<DebuggerObject*> object,
                           MutableHandleString result)
 {
@@ -8861,6 +8867,29 @@ DebuggerObject::className(JSContext* cx, Handle<DebuggerObject*> object,
         return false;
 
     result.set(str);
+    return true;
+}
+
+/* static */ bool
+DebuggerObject::name(JSContext* cx, Handle<DebuggerObject*> object, MutableHandleString result)
+{
+    MOZ_ASSERT(DebuggerObject::isFunction(cx, object));
+
+    RootedFunction referent(cx, &object->referent()->as<JSFunction>());
+
+    result.set(referent->name());
+    return true;
+}
+
+/* static */ bool
+DebuggerObject::displayName(JSContext* cx, Handle<DebuggerObject*> object,
+                            MutableHandleString result)
+{
+    MOZ_ASSERT(DebuggerObject::isFunction(cx, object));
+
+    RootedFunction referent(cx, &object->referent()->as<JSFunction>());
+
+    result.set(referent->displayAtom());
     return true;
 }
 
