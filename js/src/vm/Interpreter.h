@@ -323,6 +323,9 @@ extern JSType
 TypeOfValue(const Value& v);
 
 extern bool
+InstanceOfOperator(JSContext* cx, HandleObject obj, MutableHandleValue v, bool* bp);
+
+extern bool
 HasInstance(JSContext* cx, HandleObject obj, HandleValue v, bool* bp);
 
 // Unwind scope chain and iterator to match the static scope corresponding to

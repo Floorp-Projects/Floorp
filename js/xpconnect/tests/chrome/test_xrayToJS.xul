@@ -214,7 +214,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
 
   gPrototypeProperties['Function'] =
     ["constructor", "toSource", "toString", "apply", "call", "bind",
-     "isGenerator", "length", "name", "arguments", "caller"];
+     "isGenerator", "length", "name", "arguments", "caller", Symbol.hasInstance];
   gConstructorProperties['Function'] = constructorProps([])
 
   gPrototypeProperties['RegExp'] =
@@ -579,7 +579,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
     trickyArray[1] = "hi";
     is(trickyArray.length, 0, "Length remains non-writable");
     is(trickyArray[1], undefined, "Frozen length forbids new properties");
-
+    is(trickyArray instanceof iwin.Array, true, "instanceof should work across xray wrappers.");
     testTrickyObject(trickyArray);
 
     testArrayIterators(new iwin.Array(1, 1, 2, 3, 5), [1, 1, 2, 3, 5]);
