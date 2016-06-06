@@ -720,11 +720,12 @@ private:
     void BeforeGLCall(const char* funcName) {
         MOZ_ASSERT(IsCurrent());
 
-        if (DebugMode()) {
+        if (mDebugFlags) {
             FlushErrors();
 
-            if (DebugMode() & DebugTrace)
+            if (mDebugFlags & DebugFlagTrace) {
                 printf_stderr("[gl:%p] > %s\n", this, funcName);
+            }
 
             GLContext* tlsContext = (GLContext*)PR_GetThreadPrivate(sCurrentGLContextTLS);
             if (this != tlsContext) {
@@ -737,14 +738,14 @@ private:
     }
 
     void AfterGLCall(const char* funcName) {
-        if (DebugMode()) {
+        if (mDebugFlags) {
             // calling fFinish() immediately after every GL call makes sure that if this GL command crashes,
             // the stack trace will actually point to it. Otherwise, OpenGL being an asynchronous API, stack traces
             // tend to be meaningless
             mSymbols.fFinish();
             GLenum err = FlushErrors();
 
-            if (DebugMode() & DebugTrace) {
+            if (mDebugFlags & DebugFlagTrace) {
                 printf_stderr("[gl:%p] < %s [%s (0x%04x)]\n", this, funcName,
                               GLErrorToString(err), err);
             }
@@ -756,7 +757,7 @@ private:
                               " (0x%04x)\n", this, funcName,
                               GLErrorToString(err), err);
 
-                if (DebugMode() & DebugAbortOnError)
+                if (mDebugFlags & DebugFlagAbortOnError)
                     MOZ_CRASH("MOZ_GL_DEBUG_ABORT_ON_ERROR");
             }
         }
@@ -3351,20 +3352,12 @@ public:
     std::map<GLuint, SharedSurface*> mFBOMapping;
 
     enum {
-        DebugEnabled = 1 << 0,
-        DebugTrace = 1 << 1,
-        DebugAbortOnError = 1 << 2
+        DebugFlagEnabled = 1 << 0,
+        DebugFlagTrace = 1 << 1,
+        DebugFlagAbortOnError = 1 << 2
     };
 
-    static uint32_t sDebugMode;
-
-    static uint32_t DebugMode() {
-#ifdef MOZ_GL_DEBUG
-        return sDebugMode;
-#else
-        return 0;
-#endif
-    }
+    const uint8_t mDebugFlags;
 
 protected:
     RefPtr<GLContext> mSharedContext;
@@ -3375,11 +3368,11 @@ protected:
     GLContextSymbols mSymbols;
 
 #ifdef MOZ_GL_DEBUG
-    // GLDebugMode will check that we don't send call
+    // Non-zero debug flags will check that we don't send call
     // to a GLContext that isn't current on the current
     // thread.
     // Store the current context when binding to thread local
-    // storage to support DebugMode on an arbitrary thread.
+    // storage to support debug flags on an arbitrary thread.
     static unsigned sCurrentGLContextTLS;
 #endif
 
