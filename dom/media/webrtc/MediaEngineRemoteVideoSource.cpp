@@ -113,17 +113,23 @@ MediaEngineRemoteVideoSource::Allocate(
     return NS_ERROR_FAILURE;
   }
 
+  AutoTArray<const NormalizedConstraints*, 10> allConstraints;
+  for (auto& registered : mRegisteredHandles) {
+    allConstraints.AppendElement(&registered->mConstraints);
+  }
   RefPtr<AllocationHandle> handle = new AllocationHandle(aConstraints);
-  mRegisteredHandles.AppendElement(handle);
+  allConstraints.AppendElement(&handle->mConstraints);
+
+  NormalizedConstraints netConstraints(allConstraints);
+  if (netConstraints.mOverconstrained) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!ChooseCapability(netConstraints, aPrefs, aDeviceId)) {
+    return NS_ERROR_FAILURE;
+  }
 
   if (mState == kReleased) {
-    // Note: if shared, we don't allow a later opener to affect the resolution.
-    // (This may change depending on spec changes for Constraints/settings)
-
-    if (!ChooseCapability(handle->mConstraints, aPrefs, aDeviceId)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
     if (mozilla::camera::GetChildAndCall(
       &mozilla::camera::CamerasChild::AllocateCaptureDevice,
       mCapEngine, GetUUID().get(), kMaxUniqueIdLength, mCaptureIndex, aOrigin)) {
@@ -132,16 +138,26 @@ MediaEngineRemoteVideoSource::Allocate(
     mState = kAllocated;
     LOG(("Video device %d allocated for %s", mCaptureIndex,
          PromiseFlatCString(aOrigin).get()));
-  } else if (MOZ_LOG_TEST(GetMediaManagerLog(), mozilla::LogLevel::Debug)) {
-    MonitorAutoLock lock(mMonitor);
-    if (mSources.IsEmpty()) {
-      MOZ_ASSERT(mPrincipalHandles.IsEmpty());
-      LOG(("Video device %d reallocated", mCaptureIndex));
-    } else {
-      LOG(("Video device %d allocated shared", mCaptureIndex));
+  } else {
+    camera::GetChildAndCall(&camera::CamerasChild::StopCapture, mCapEngine,
+                            mCaptureIndex);
+    if (camera::GetChildAndCall(&camera::CamerasChild::StartCapture, mCapEngine,
+                                mCaptureIndex, mCapability, this)) {
+      LOG(("StartCapture failed"));
+      return NS_ERROR_FAILURE;
+    }
+    if (MOZ_LOG_TEST(GetMediaManagerLog(), mozilla::LogLevel::Debug)) {
+      MonitorAutoLock lock(mMonitor);
+      if (mSources.IsEmpty()) {
+        MOZ_ASSERT(mPrincipalHandles.IsEmpty());
+        LOG(("Video device %d reallocated", mCaptureIndex));
+      } else {
+        LOG(("Video device %d allocated shared", mCaptureIndex));
+      }
     }
   }
 
+  mRegisteredHandles.AppendElement(handle);
   ++mNrAllocations;
   handle.forget(aOutHandle);
   return NS_OK;
@@ -276,9 +292,25 @@ MediaEngineRemoteVideoSource::Restart(BaseAllocationHandle* aHandle,
   }
   MOZ_ASSERT(aHandle);
   auto handle = static_cast<AllocationHandle*>(aHandle);
-  handle->mConstraints = NormalizedConstraints(aConstraints);
-  if (!ChooseCapability(handle->mConstraints, aPrefs, aDeviceId)) {
-    return NS_ERROR_NOT_AVAILABLE;
+  RefPtr<AllocationHandle> temp = new AllocationHandle(aConstraints);
+  temp->mConstraints = NormalizedConstraints(aConstraints);
+
+  AutoTArray<const NormalizedConstraints*, 10> allConstraints;
+  for (auto& registered : mRegisteredHandles) {
+    if (registered.get() == handle) {
+      continue; // Don't count old constraints
+    }
+    allConstraints.AppendElement(&registered->mConstraints);
+  }
+  allConstraints.AppendElement(&temp->mConstraints);
+
+  NormalizedConstraints netConstraints(allConstraints);
+  if (netConstraints.mOverconstrained) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!ChooseCapability(netConstraints, aPrefs, aDeviceId)) {
+    return NS_ERROR_FAILURE;
   }
   if (mState != kStarted) {
     return NS_OK;
@@ -293,6 +325,7 @@ MediaEngineRemoteVideoSource::Restart(BaseAllocationHandle* aHandle,
     LOG(("StartCapture failed"));
     return NS_ERROR_FAILURE;
   }
+  handle->mConstraints = temp->mConstraints;
   return NS_OK;
 }
 
