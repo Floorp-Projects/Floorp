@@ -39,7 +39,7 @@ TextTrackCue::SetDefaultCueSettings()
   mSnapToLines = true;
   mLineIsAutoKeyword = true;
   mAlign = AlignSetting::Middle;
-  mLineAlign = AlignSetting::Start;
+  mLineAlign = LineAlignSetting::Start;
   mVertical = DirectionSetting::_empty;
   mActive = false;
 }
