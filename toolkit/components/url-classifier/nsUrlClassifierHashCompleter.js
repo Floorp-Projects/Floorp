@@ -13,18 +13,6 @@ const Cu = Components.utils;
 const COMPLETE_LENGTH = 32;
 const PARTIAL_LENGTH = 4;
 
-// These backoff related constants are taken from v2 of the Google Safe Browsing
-// API. All times are in milliseconds.
-// BACKOFF_ERRORS: the number of errors incurred until we start to back off.
-// BACKOFF_INTERVAL: the initial time to wait once we start backing
-//                   off.
-// BACKOFF_MAX: as the backoff time doubles after each failure, this is a
-//              ceiling on the time to wait.
-
-const BACKOFF_ERRORS = 2;
-const BACKOFF_INTERVAL = 30 * 60 * 1000;
-const BACKOFF_MAX = 8 * 60 * 60 * 1000;
-
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
@@ -208,13 +196,11 @@ HashCompleter.prototype = {
       // after they are dispatched.
       var jslib = Cc["@mozilla.org/url-classifier/jslib;1"]
                   .getService().wrappedJSObject;
-      this._backoffs[aGethashUrl] = new jslib.RequestBackoff(
-        BACKOFF_ERRORS /* max errors */,
-        60*1000 /* retry interval, 1 min */,
+
+      // Using the V4 backoff algorithm for both V2 and V4. See bug 1273398.
+      this._backoffs[aGethashUrl] = new jslib.RequestBackoffV4(
         10 /* keep track of max requests */,
-        0 /* don't throttle on successful requests per time period */,
-        BACKOFF_INTERVAL /* backoff interval, 60 min */,
-        BACKOFF_MAX /* max backoff, 8hr */);
+        0  /* don't throttle on successful requests per time period */);
     }
     // Start off this request. Without dispatching to a thread, every call to
     // complete makes an individual HTTP request.
