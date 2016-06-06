@@ -8073,11 +8073,6 @@ DebuggerObject_getIsBoundFunction(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "get isBoundFunction", args, object)
 
-    if (!DebuggerObject::isDebuggeeFunction(cx, object)) {
-        args.rval().setUndefined();
-        return true;
-    }
-
     args.rval().setBoolean(DebuggerObject::isBoundFunction(cx, object));
     return true;
 }
@@ -8087,9 +8082,7 @@ DebuggerObject_getBoundTargetFunction(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "get boundTargetFunction", args, object)
 
-    if (!DebuggerObject::isDebuggeeFunction(cx, object) ||
-        !DebuggerObject::isBoundFunction(cx, object))
-    {
+    if (!DebuggerObject::isBoundFunction(cx, object)) {
         args.rval().setUndefined();
         return true;
     }
@@ -8107,9 +8100,7 @@ DebuggerObject_getBoundThis(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "get boundThis", args, object)
 
-    if (!DebuggerObject::isDebuggeeFunction(cx, object) ||
-        !DebuggerObject::isBoundFunction(cx, object))
-    {
+    if (!DebuggerObject::isBoundFunction(cx, object)) {
         args.rval().setUndefined();
         return true;
     }
@@ -8122,9 +8113,7 @@ DebuggerObject_getBoundArguments(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "get boundArguments", args, object)
 
-    if (!DebuggerObject::isDebuggeeFunction(cx, object) ||
-        !DebuggerObject::isBoundFunction(cx, object))
-    {
+    if (!DebuggerObject::isBoundFunction(cx, object)) {
         args.rval().setUndefined();
         return true;
     }
@@ -8662,9 +8651,6 @@ DebuggerObject_forceLexicalInitializationByName(JSContext *cx, unsigned argc, Va
     if (!args.requireAtLeast(cx, "Debugger.Object.prototype.forceLexicalInitializationByName", 1))
         return false;
 
-    if (!DebuggerObject::requireGlobal(cx, object))
-        return false;
-
     RootedId id(cx);
     if (!ValueToIdentifier(cx, args[0], &id))
         return false;
@@ -8682,9 +8668,6 @@ DebuggerObject_executeInGlobal(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "executeInGlobal", args, object);
     if (!args.requireAtLeast(cx, "Debugger.Object.prototype.executeInGlobal", 1))
-        return false;
-
-    if (!DebuggerObject::requireGlobal(cx, object))
         return false;
 
     AutoStableStringChars stableChars(cx);
@@ -8707,9 +8690,6 @@ DebuggerObject_executeInGlobalWithBindings(JSContext* cx, unsigned argc, Value* 
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "executeInGlobalWithBindings", args, object);
     if (!args.requireAtLeast(cx, "Debugger.Object.prototype.executeInGlobalWithBindings", 2))
-        return false;
-
-    if (!DebuggerObject::requireGlobal(cx, object))
         return false;
 
     AutoStableStringChars stableChars(cx);
@@ -8871,24 +8851,6 @@ DebuggerObject::isFunction(JSContext* cx, Handle<DebuggerObject*> object)
 }
 
 /* static */ bool
-DebuggerObject::isDebuggeeFunction(JSContext* cx, Handle<DebuggerObject*> object)
-{
-    RootedObject referent(cx, object->referent());
-    Debugger* dbg = object->owner();
-
-    return referent->is<JSFunction>() &&
-           dbg->observesGlobal(&referent->as<JSFunction>().global());
-}
-
-/* static */ bool
-DebuggerObject::isGlobal(JSContext* cx, Handle<DebuggerObject*> object)
-{
-    RootedObject referent(cx, object->referent());
-
-    return referent->is<GlobalObject>();
-}
-
-/* static */ bool
 DebuggerObject::className(JSContext* cx, Handle<DebuggerObject*> object,
                           MutableHandleString result)
 {
@@ -8911,7 +8873,7 @@ DebuggerObject::className(JSContext* cx, Handle<DebuggerObject*> object,
 /* static */ bool
 DebuggerObject::name(JSContext* cx, Handle<DebuggerObject*> object, MutableHandleString result)
 {
-    MOZ_ASSERT(isFunction(cx, object));
+    MOZ_ASSERT(DebuggerObject::isFunction(cx, object));
 
     RootedFunction referent(cx, &object->referent()->as<JSFunction>());
 
@@ -8923,7 +8885,7 @@ DebuggerObject::name(JSContext* cx, Handle<DebuggerObject*> object, MutableHandl
 DebuggerObject::displayName(JSContext* cx, Handle<DebuggerObject*> object,
                             MutableHandleString result)
 {
-    MOZ_ASSERT(isFunction(cx, object));
+    MOZ_ASSERT(DebuggerObject::isFunction(cx, object));
 
     RootedFunction referent(cx, &object->referent()->as<JSFunction>());
 
@@ -8934,8 +8896,6 @@ DebuggerObject::displayName(JSContext* cx, Handle<DebuggerObject*> object,
 /* static */ bool
 DebuggerObject::isBoundFunction(JSContext* cx, Handle<DebuggerObject*> object)
 {
-    MOZ_ASSERT(isDebuggeeFunction(cx, object));
-
     RootedObject referent(cx, object->referent());
 
     return referent->isBoundFunction();
@@ -8945,12 +8905,12 @@ DebuggerObject::isBoundFunction(JSContext* cx, Handle<DebuggerObject*> object)
 DebuggerObject::boundTargetFunction(JSContext* cx, Handle<DebuggerObject*> object,
                                     MutableHandleObject result)
 {
-    MOZ_ASSERT(isBoundFunction(cx, object));
-
-    RootedFunction referent(cx, &object->referent()->as<JSFunction>());
+    RootedObject referent(cx, object->referent());
     Debugger* dbg = object->owner();
 
-    result.set(referent->getBoundFunctionTarget());
+    MOZ_ASSERT(referent->isBoundFunction());
+
+    result.set(referent->as<JSFunction>().getBoundFunctionTarget());
     return dbg->wrapDebuggeeObject(cx, result);
 }
 
@@ -8958,12 +8918,12 @@ DebuggerObject::boundTargetFunction(JSContext* cx, Handle<DebuggerObject*> objec
 DebuggerObject::boundThis(JSContext* cx, Handle<DebuggerObject*> object,
                           MutableHandleValue result)
 {
-    MOZ_ASSERT(isBoundFunction(cx, object));
-
-    RootedFunction referent(cx, &object->referent()->as<JSFunction>());
+    RootedObject referent(cx, object->referent());
     Debugger* dbg = object->owner();
 
-    result.set(referent->getBoundFunctionThis());
+    MOZ_ASSERT(referent->isBoundFunction());
+
+    result.set(referent->as<JSFunction>().getBoundFunctionThis());
     return dbg->wrapDebuggeeValue(cx, result);
 }
 
@@ -8971,16 +8931,17 @@ DebuggerObject::boundThis(JSContext* cx, Handle<DebuggerObject*> object,
 DebuggerObject::boundArguments(JSContext* cx, Handle<DebuggerObject*> object,
                                MutableHandle<ValueVector> result)
 {
-    MOZ_ASSERT(isBoundFunction(cx, object));
-
-    RootedFunction referent(cx, &object->referent()->as<JSFunction>());
+    RootedObject referent(cx, object->referent());
     Debugger* dbg = object->owner();
 
-    size_t length = referent->getBoundFunctionArgumentCount();
+    MOZ_ASSERT(referent->isBoundFunction());
+
+    Rooted<JSFunction*> fun(cx, &referent->as<JSFunction>());
+    size_t length = fun->getBoundFunctionArgumentCount();
     if (!result.resize(length))
         return false;
     for (size_t i = 0; i < length; i++) {
-        result[i].set(referent->getBoundFunctionArgument(cx, i));
+        result[i].set(fun->getBoundFunctionArgument(cx, i));
         if (!dbg->wrapDebuggeeValue(cx, result[i]))
             return false;
     }
@@ -9299,6 +9260,9 @@ DebuggerObject::call(JSContext* cx, Handle<DebuggerObject*> object, HandleValue 
 DebuggerObject::forceLexicalInitializationByName(JSContext* cx, Handle<DebuggerObject*> object,
                                                  HandleId id, bool& result)
 {
+    if (!DebuggerObject::requireGlobalObject(cx, object))
+        return false;
+
     if (!JSID_IS_STRING(id)) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                              JSMSG_NOT_EXPECTED_TYPE, "Debugger.Object.prototype.forceLexicalInitializationByName",
@@ -9306,11 +9270,11 @@ DebuggerObject::forceLexicalInitializationByName(JSContext* cx, Handle<DebuggerO
         return false;
     }
 
-    MOZ_ASSERT(isGlobal(cx, object));
 
-    Rooted<GlobalObject*> referent(cx, &object->referent()->as<GlobalObject>());
+    RootedObject referent(cx, object->referent());
 
-    RootedObject globalLexical(cx, &referent->lexicalScope());
+    RootedObject globalLexical(cx, &referent->as<GlobalObject>().lexicalScope());
+
     RootedObject pobj(cx);
     RootedShape shape(cx);
     if (!LookupProperty(cx, globalLexical, id, &pobj, &shape))
@@ -9333,12 +9297,14 @@ DebuggerObject::executeInGlobal(JSContext* cx, Handle<DebuggerObject*> object,
                                 mozilla::Range<const char16_t> chars, HandleObject bindings,
                                 const EvalOptions& options, MutableHandleValue result)
 {
-    MOZ_ASSERT(isGlobal(cx, object));
+    if (!DebuggerObject::requireGlobalObject(cx, object))
+        return false;
 
-    Rooted<GlobalObject*> referent(cx, &object->referent()->as<GlobalObject>());
+    RootedObject referent(cx, object->referent());
     Debugger* dbg = object->owner();
 
-    RootedObject globalLexical(cx, &referent->lexicalScope());
+    RootedObject globalLexical(cx, &referent->as<GlobalObject>().lexicalScope());
+
     return DebuggerGenericEval(cx, chars, bindings, options, result, dbg, globalLexical,
                                nullptr);
 }
@@ -9419,11 +9385,11 @@ DebuggerObject::unwrap(JSContext* cx, Handle<DebuggerObject*> object,
 }
 
 /* static */ bool
-DebuggerObject::requireGlobal(JSContext* cx, Handle<DebuggerObject*> object)
+DebuggerObject::requireGlobalObject(JSContext* cx, Handle<DebuggerObject*> object)
 {
-    if (!DebuggerObject::isGlobal(cx, object)) {
-        RootedObject referent(cx, object->referent());
+    RootedObject referent(cx, object->referent());
 
+    if (!referent->is<GlobalObject>()) {
         const char* isWrapper = "";
         const char* isWindowProxy = "";
 
