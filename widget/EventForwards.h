@@ -151,6 +151,9 @@ typedef nsTArray<ShortcutKeyCandidate> ShortcutKeyCandidateArray;
 typedef AutoTArray<ShortcutKeyCandidate, 10> AutoShortcutKeyCandidateArray;
 
 // TextRange.h
+typedef uint8_t RawTextRangeType;
+enum class TextRangeType : RawTextRangeType;
+
 struct TextRangeStyle;
 struct TextRange;
 

@@ -31,6 +31,7 @@ struct QuotaInfo
 {
   QuotaInfo() : mIsApp(false) { }
   nsCOMPtr<nsIFile> mDir;
+  nsCString mSuffix;
   nsCString mGroup;
   nsCString mOrigin;
   bool mIsApp;

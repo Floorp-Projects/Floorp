@@ -106,7 +106,7 @@ void
 FillRectWithMask(gfx::DrawTarget* aDT,
                  const gfx::Rect& aRect,
                  gfx::SourceSurface* aSurface,
-                 gfx::Filter aFilter,
+                 gfx::SamplingFilter aSamplingFilter,
                  const gfx::DrawOptions& aOptions,
                  gfx::ExtendMode aExtendMode,
                  gfx::SourceSurface* aMaskSource = nullptr,
@@ -117,7 +117,7 @@ FillRectWithMask(gfx::DrawTarget* aDT,
                  const gfx::Point& aDeviceOffset,
                  const gfx::Rect& aRect,
                  gfx::SourceSurface* aSurface,
-                 gfx::Filter aFilter,
+                 gfx::SamplingFilter aSamplingFilter,
                  const gfx::DrawOptions& aOptions,
                  Layer* aMaskLayer);
 void

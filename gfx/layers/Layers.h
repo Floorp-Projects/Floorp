@@ -2471,15 +2471,15 @@ public:
    * CONSTRUCTION PHASE ONLY
    * Set the filter used to resample this image (if necessary).
    */
-  void SetFilter(gfx::Filter aFilter)
+  void SetSamplingFilter(gfx::SamplingFilter aSamplingFilter)
   {
-    if (mFilter != aFilter) {
+    if (mSamplingFilter != aSamplingFilter) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) Filter", this));
-      mFilter = aFilter;
+      mSamplingFilter = aSamplingFilter;
       Mutated();
     }
   }
-  gfx::Filter GetFilter() const { return mFilter; }
+  gfx::SamplingFilter GetSamplingFilter() const { return mSamplingFilter; }
 
   MOZ_LAYER_DECL_NAME("CanvasLayer", TYPE_CANVAS)
 
@@ -2524,7 +2524,7 @@ protected:
   void* mPreTransCallbackData;
   DidTransactionCallback mPostTransCallback;
   void* mPostTransCallbackData;
-  gfx::Filter mFilter;
+  gfx::SamplingFilter mSamplingFilter;
   RefPtr<AsyncCanvasRenderer> mAsyncRenderer;
 
 private:

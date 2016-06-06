@@ -50,7 +50,7 @@ native DrawResult(mozilla::image::DrawResult);
 [ref] native gfxMatrix(gfxMatrix);
 [ref] native gfxRect(gfxRect);
 [ref] native gfxSize(gfxSize);
-native Filter(mozilla::gfx::Filter);
+native SamplingFilter(mozilla::gfx::SamplingFilter);
 [ref] native nsIntRect(nsIntRect);
 native nsIntRectByVal(nsIntRect);
 [ref] native nsIntSize(nsIntSize);
@@ -116,12 +116,12 @@ interface imgIContainer : nsISupports
    * @param aDest The size of the destination rect into which this image will be
    *              drawn, in device pixels.
    * @param aWhichFrame Frame specifier of the FRAME_* variety.
-   * @param aFilter The filter to be used if we're scaling the image.
+   * @param aSamplingFilter The filter to be used if we're scaling the image.
    * @param aFlags Flags of the FLAG_* variety
    */
   [notxpcom, nostdcall] nsIntSizeByVal
   optimalImageSizeForDest([const] in gfxSize aDest, in uint32_t aWhichFrame,
-                          in Filter aFilter, in uint32_t aFlags);
+                          in SamplingFilter aSamplingFilter, in uint32_t aFlags);
 
   /**
     * Enumerated values for the 'type' attribute (below).
@@ -378,7 +378,7 @@ interface imgIContainer : nsISupports
    *                is only of use to callers which need to draw with pixel
    *                snapping.
    * @param aWhichFrame Frame specifier of the FRAME_* variety.
-   * @param aFilter The filter to be used if we're scaling the image.
+   * @param aSamplingFilter The filter to be used if we're scaling the image.
    * @param aSVGContext If specified, SVG-related rendering context, such as
    *                    overridden attributes on the image document's root <svg>
    *                    node, and the size of the viewport that the full image
@@ -392,7 +392,7 @@ interface imgIContainer : nsISupports
        [const] in nsIntSize aSize,
        [const] in ImageRegion aRegion,
        in uint32_t aWhichFrame,
-       in Filter aFilter,
+       in SamplingFilter aSamplingFilter,
        [const] in MaybeSVGImageContext aSVGContext,
        in uint32_t aFlags);
 

@@ -29,6 +29,8 @@ struct AudioCodecConfig
   int mChannels;
   int mRate;
 
+  bool mFECEnabled;
+
   // OPUS-specific
   int mMaxPlaybackRate;
 
@@ -36,14 +38,15 @@ struct AudioCodecConfig
    * can't decide the default configuration for the codec
    */
   explicit AudioCodecConfig(int type, std::string name,
-                            int freq,int pacSize,
-                            int channels, int rate)
+                            int freq, int pacSize,
+                            int channels, int rate, bool FECEnabled)
                                                    : mType(type),
                                                      mName(name),
                                                      mFreq(freq),
                                                      mPacSize(pacSize),
                                                      mChannels(channels),
                                                      mRate(rate),
+                                                     mFECEnabled(FECEnabled),
                                                      mMaxPlaybackRate(0)
   {
   }

@@ -170,7 +170,7 @@ private:
   bool VerifyBufferSize();
   bool UpdateRenderTarget();
   bool UpdateConstantBuffers();
-  void SetSamplerForFilter(gfx::Filter aFilter);
+  void SetSamplerForSamplingFilter(gfx::SamplingFilter aSamplingFilter);
   ID3D11PixelShader* GetPSForEffect(Effect *aEffect, MaskType aMaskType);
   void PaintToTarget();
   RefPtr<ID3D11Texture2D> CreateTexture(const gfx::IntRect& aRect,

@@ -8,6 +8,8 @@
 
 #include <stdint.h>
 
+#include "mozilla/EventForwards.h"
+
 #include "nsColor.h"
 #include "nsITextInputProcessor.h"
 #include "nsStyleConsts.h"
@@ -126,25 +128,27 @@ struct TextRangeStyle
  * mozilla::TextRange
  ******************************************************************************/
 
-// XXX NS_TEXTRANGE_* should be moved into TextRange as an typed enum.
-enum
+enum class TextRangeType : RawTextRangeType
 {
-  NS_TEXTRANGE_UNDEFINED = 0x00,
-  NS_TEXTRANGE_CARETPOSITION = 0x01,
-  NS_TEXTRANGE_RAWINPUT =
-    nsITextInputProcessor::ATTR_RAW_CLAUSE,
-  NS_TEXTRANGE_SELECTEDRAWTEXT =
-    nsITextInputProcessor::ATTR_SELECTED_RAW_CLAUSE,
-  NS_TEXTRANGE_CONVERTEDTEXT =
-    nsITextInputProcessor::ATTR_CONVERTED_CLAUSE,
-  NS_TEXTRANGE_SELECTEDCONVERTEDTEXT =
-    nsITextInputProcessor::ATTR_SELECTED_CLAUSE
+  eUninitialized     = 0x00,
+  eCaret             = 0x01,
+  eRawClause         = nsITextInputProcessor::ATTR_RAW_CLAUSE,
+  eSelectedRawClause = nsITextInputProcessor::ATTR_SELECTED_RAW_CLAUSE,
+  eConvertedClause   = nsITextInputProcessor::ATTR_CONVERTED_CLAUSE,
+  eSelectedClause    = nsITextInputProcessor::ATTR_SELECTED_CLAUSE
 };
+
+bool IsValidRawTextRangeValue(RawTextRangeType aRawTextRangeValue);
+RawTextRangeType ToRawTextRangeType(TextRangeType aTextRangeType);
+TextRangeType ToTextRangeType(RawTextRangeType aRawTextRangeType);
+const char* ToChar(TextRangeType aTextRangeType);
 
 struct TextRange
 {
-  TextRange() :
-    mStartOffset(0), mEndOffset(0), mRangeType(NS_TEXTRANGE_UNDEFINED)
+  TextRange()
+    : mStartOffset(0)
+    , mEndOffset(0)
+    , mRangeType(TextRangeType::eUninitialized)
   {
   }
 
@@ -152,18 +156,16 @@ struct TextRange
   // XXX Storing end offset makes the initializing code very complicated.
   //     We should replace it with mLength.
   uint32_t mEndOffset;
-  uint32_t mRangeType;
 
   TextRangeStyle mRangeStyle;
+
+  TextRangeType mRangeType;
 
   uint32_t Length() const { return mEndOffset - mStartOffset; }
 
   bool IsClause() const
   {
-    MOZ_ASSERT(mRangeType >= NS_TEXTRANGE_CARETPOSITION &&
-                 mRangeType <= NS_TEXTRANGE_SELECTEDCONVERTEDTEXT,
-               "Invalid range type");
-    return mRangeType != NS_TEXTRANGE_CARETPOSITION;
+    return mRangeType != TextRangeType::eCaret;
   }
 
   bool Equals(const TextRange& aOther) const
@@ -200,8 +202,8 @@ class TextRangeArray final : public AutoTArray<TextRange, 10>
   {
     for (uint32_t i = 0; i < Length(); ++i) {
       const TextRange& range = ElementAt(i);
-      if (range.mRangeType == NS_TEXTRANGE_SELECTEDRAWTEXT ||
-          range.mRangeType == NS_TEXTRANGE_SELECTEDCONVERTEDTEXT) {
+      if (range.mRangeType == TextRangeType::eSelectedRawClause ||
+          range.mRangeType == TextRangeType::eSelectedClause) {
         return &range;
       }
     }
@@ -259,7 +261,7 @@ public:
   bool HasCaret() const
   {
     for (const TextRange& range : *this) {
-      if (range.mRangeType == NS_TEXTRANGE_CARETPOSITION) {
+      if (range.mRangeType == TextRangeType::eCaret) {
         return true;
       }
     }
@@ -269,7 +271,7 @@ public:
   uint32_t GetCaretPosition() const
   {
     for (const TextRange& range : *this) {
-      if (range.mRangeType == NS_TEXTRANGE_CARETPOSITION) {
+      if (range.mRangeType == TextRangeType::eCaret) {
         return range.mStartOffset;
       }
     }

@@ -54,7 +54,8 @@ interface nsIPresentationControlChannelListener: nsISupports
   void onIceCandidate(in DOMString candidate);
 
   /*
-   * The callback for notifying channel opened.
+   * The callback for notifying channel opened. This should be async called
+   * after nsIPresentationDevice::establishControlChannel.
    */
   void notifyOpened();
 

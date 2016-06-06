@@ -37,7 +37,4 @@ interface WorkerDebuggerGlobalScope : EventTarget {
 // So you can debug while you debug
 partial interface WorkerDebuggerGlobalScope {
   void dump(optional DOMString string);
-
-  [Throws, Replaceable]
-  readonly attribute Console console;
 };

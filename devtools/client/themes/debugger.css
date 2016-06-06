@@ -350,19 +350,10 @@
 }
 
 .dbg-expression-arrow {
-  background-image: url(images/commandline-icon.png);
-  background-position: -16px 0;
-  background-repeat: no-repeat;
-  background-size: 32px 16px;
+  background-image: var(--theme-command-line-image-focus);
   width: 16px;
   height: 16px;
   margin: 2px;
-}
-
-@media (min-resolution: 1.1dppx) {
-  .dbg-expression-arrow {
-    background-image: url(images/commandline-icon@2x.png);
-  }
 }
 
 .dbg-expression-input {

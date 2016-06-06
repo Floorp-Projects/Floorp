@@ -7,7 +7,6 @@ import errno
 import json
 import socket
 import time
-import types
 
 
 class SocketTimeout(object):
@@ -67,8 +66,8 @@ class Response(Message):
         return "<Response id=%s, error=%s, result=%s>" % (self.id, self.error, self.result)
 
     def to_msg(self):
-       msg = [Response.TYPE, self.id, self.error, self.result]
-       return json.dumps(msg)
+        msg = [Response.TYPE, self.id, self.error, self.result]
+        return json.dumps(msg)
 
     @staticmethod
     def from_msg(payload):
@@ -117,7 +116,7 @@ class TcpTransport(object):
     Supported protocol levels are 1 and above.
     """
     max_packet_length = 4096
-    connection_lost_msg = "Connection to Marionette server is lost. Check gecko.log (desktop firefox) or logcat (b2g) for errors."
+    connection_lost_msg = "Connection to Marionette server is lost. Check gecko.log for errors."
 
     def __init__(self, addr, port, socket_timeout=360.0):
         """If `socket_timeout` is `0` or `0.0`, non-blocking socket mode
@@ -243,8 +242,8 @@ class TcpTransport(object):
             try:
                 sent = self.sock.send(payload[totalsent:])
                 if sent == 0:
-                    raise IOError("socket error after sending %d of %d bytes" % \
-                            (totalsent, len(payload)))
+                    raise IOError("socket error after sending %d of %d bytes" %
+                                  (totalsent, len(payload)))
                 else:
                     totalsent += sent
 
@@ -253,6 +252,7 @@ class TcpTransport(object):
                     raise IOError("%s: %s" % (str(e), self.connection_lost_msg))
                 else:
                     raise e
+
     def respond(self, obj):
         """Send a response to a command.  This can be an arbitrary JSON
         serialisable object or an ``Exception``.

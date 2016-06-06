@@ -9,9 +9,11 @@
 
 #include "mozilla/dom/quota/QuotaCommon.h"
 
+#include "mozilla/BasePrincipal.h"
+
 BEGIN_QUOTA_NAMESPACE
 
-class OriginScope : public nsCString
+class OriginScope
 {
 public:
   enum Type
@@ -24,19 +26,25 @@ public:
   static OriginScope
   FromOrigin(const nsACString& aOrigin)
   {
-    return OriginScope(aOrigin, eOrigin);
+    return OriginScope(aOrigin);
   }
 
   static OriginScope
-  FromPattern(const nsACString& aPattern)
+  FromPattern(const mozilla::OriginAttributesPattern& aPattern)
   {
-    return OriginScope(aPattern, ePattern);
+    return OriginScope(aPattern);
+  }
+
+  static OriginScope
+  FromJSONPattern(const nsAString& aJSONPattern)
+  {
+    return OriginScope(aJSONPattern);
   }
 
   static OriginScope
   FromNull()
   {
-    return OriginScope(NullCString(), eNull);
+    return OriginScope();
   }
 
   bool
@@ -66,32 +74,157 @@ public:
   void
   SetFromOrigin(const nsACString& aOrigin)
   {
-    Assign(aOrigin);
+    mOrigin = aOrigin;
     mType = eOrigin;
+
+    nsCString originNoSuffix;
+    MOZ_ALWAYS_TRUE(mOriginAttributes.PopulateFromOrigin(aOrigin,
+                                                         originNoSuffix));
   }
 
   void
-  SetFromPattern(const nsACString& aPattern)
+  SetFromPattern(const mozilla::OriginAttributesPattern& aPattern)
   {
-    Assign(aPattern);
+    mPattern = aPattern;
+    mType = ePattern;
+  }
+
+  void
+  SetFromJSONPattern(const nsAString& aJSONPattern)
+  {
+    MOZ_ALWAYS_TRUE(mPattern.Init(aJSONPattern));
     mType = ePattern;
   }
 
   void
   SetFromNull()
   {
-    SetIsVoid(true);
     mType = eNull;
   }
 
+  const nsACString&
+  GetOrigin() const
+  {
+    MOZ_ASSERT(IsOrigin());
+    return mOrigin;
+  }
+
+  void
+  SetOrigin(const nsACString& aOrigin)
+  {
+    MOZ_ASSERT(IsOrigin());
+    mOrigin = aOrigin;
+  }
+
+  const mozilla::OriginAttributes&
+  GetOriginAttributes() const
+  {
+    MOZ_ASSERT(IsOrigin());
+    return mOriginAttributes;
+  }
+
+  const mozilla::OriginAttributesPattern&
+  GetPattern() const
+  {
+    MOZ_ASSERT(IsPattern());
+    return mPattern;
+  }
+
+  bool MatchesOrigin(const OriginScope& aOther) const
+  {
+    MOZ_ASSERT(aOther.IsOrigin());
+
+    bool match;
+
+    if (IsOrigin()) {
+      match = mOrigin.Equals(aOther.mOrigin);
+    } else if (IsPattern()) {
+      match = mPattern.Matches(aOther.mOriginAttributes);
+    } else {
+      match = true;
+    }
+
+    return match;
+  }
+
+  bool MatchesPattern(const OriginScope& aOther) const
+  {
+    MOZ_ASSERT(aOther.IsPattern());
+
+    bool match;
+
+    if (IsOrigin()) {
+      match = aOther.mPattern.Matches(mOriginAttributes);
+    } else if (IsPattern()) {
+      match = mPattern.Overlaps(aOther.mPattern);
+    } else {
+      match = true;
+    }
+
+    return match;
+  }
+
+  bool Matches(const OriginScope& aOther) const
+  {
+    bool match;
+
+    if (aOther.IsOrigin()) {
+      match = MatchesOrigin(aOther);
+    } else if (aOther.IsPattern()) {
+      match = MatchesPattern(aOther);
+    } else {
+      match = true;
+    }
+
+    return match;
+  }
+
+  OriginScope
+  Clone()
+  {
+    if (IsOrigin()) {
+      return OriginScope(mOrigin);
+    }
+
+    if (IsPattern()) {
+      return OriginScope(mPattern);
+    }
+
+    MOZ_ASSERT(IsNull());
+    return OriginScope();
+  }
+
 private:
-  OriginScope(const nsACString& aString, Type aType)
-  : nsCString(aString), mType(aType)
+  explicit OriginScope(const nsACString& aOrigin)
+    : mOrigin(aOrigin)
+    , mType(eOrigin)
+  {
+    nsCString originNoSuffix;
+    MOZ_ALWAYS_TRUE(mOriginAttributes.PopulateFromOrigin(aOrigin,
+                                                         originNoSuffix));
+  }
+
+  explicit OriginScope(const mozilla::OriginAttributesPattern& aPattern)
+    : mPattern(aPattern)
+    , mType(ePattern)
+  { }
+
+  explicit OriginScope(const nsAString& aJSONPattern)
+    : mType(ePattern)
+  {
+    MOZ_ALWAYS_TRUE(mPattern.Init(aJSONPattern));
+  }
+
+  OriginScope()
+    : mType(eNull)
   { }
 
   bool
   operator==(const OriginScope& aOther) = delete;
 
+  nsCString mOrigin;
+  PrincipalOriginAttributes mOriginAttributes;
+  mozilla::OriginAttributesPattern mPattern;
   Type mType;
 };
 

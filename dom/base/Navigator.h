@@ -403,6 +403,8 @@ private:
 
   nsTArray<RefPtr<Promise> > mVRGetDevicesPromises;
   nsTArray<uint32_t> mRequestedVibrationPattern;
+
+  bool mBatteryTelemetryReported;
 };
 
 } // namespace dom

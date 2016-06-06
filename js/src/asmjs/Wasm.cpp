@@ -19,6 +19,7 @@
 #include "asmjs/Wasm.h"
 
 #include "mozilla/CheckedInt.h"
+#include "mozilla/unused.h"
 
 #include "jsprf.h"
 
@@ -38,6 +39,7 @@ using namespace js::wasm;
 
 using mozilla::CheckedInt;
 using mozilla::IsNaN;
+using mozilla::Unused;
 
 typedef Handle<WasmModuleObject*> HandleWasmModule;
 typedef MutableHandle<WasmModuleObject*> MutableHandleWasmModule;
@@ -673,12 +675,33 @@ CheckTypeForJS(JSContext* cx, Decoder& d, const Sig& sig)
     return true;
 }
 
+static UniqueChars
+MaybeDecodeName(JSContext* cx, Decoder& d)
+{
+    Bytes bytes;
+    if (!d.readBytes(&bytes))
+        return nullptr;
+
+    // Rejecting a name if null or non-ascii character was found.
+    // TODO Relax the requirement and allow valid non-null valid UTF8 characters.
+    for (size_t i = 0; i < bytes.length(); i++) {
+        const uint8_t ch = bytes[i];
+        if (ch == 0 || ch >= 128)
+            return nullptr;
+    }
+
+    if (!bytes.append(0))
+        return nullptr;
+
+    return UniqueChars((char*)bytes.extractOrCopyRawBuffer());
+}
+
 struct ImportName
 {
-    Bytes module;
-    Bytes func;
+    UniqueChars module;
+    UniqueChars func;
 
-    ImportName(Bytes&& module, Bytes&& func)
+    ImportName(UniqueChars&& module, UniqueChars&& func)
       : module(Move(module)), func(Move(func))
     {}
     ImportName(ImportName&& rhs)
@@ -701,16 +724,16 @@ DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVec
     if (!CheckTypeForJS(cx, d, *sig))
         return false;
 
-    Bytes moduleName;
-    if (!d.readBytes(&moduleName))
-        return Fail(cx, d, "expected import module name");
+    UniqueChars moduleName = MaybeDecodeName(cx, d);
+    if (!moduleName)
+        return Fail(cx, d, "expected valid import module name");
 
-    if (moduleName.empty())
+    if (!strlen(moduleName.get()))
         return Fail(cx, d, "module name cannot be empty");
 
-    Bytes funcName;
-    if (!d.readBytes(&funcName))
-        return Fail(cx, d, "expected import func name");
+    UniqueChars funcName = MaybeDecodeName(cx, d);
+    if (!funcName)
+        return Fail(cx, d, "expected valid import func name");
 
     return importNames->emplaceBack(Move(moduleName), Move(funcName));
 }
@@ -800,34 +823,22 @@ typedef HashSet<const char*, CStringHasher> CStringSet;
 static UniqueChars
 DecodeExportName(JSContext* cx, Decoder& d, CStringSet* dupSet)
 {
-    Bytes fieldBytes;
-    if (!d.readBytes(&fieldBytes)) {
-        Fail(cx, d, "expected export name");
+    UniqueChars exportName = MaybeDecodeName(cx, d);
+    if (!exportName) {
+        Fail(cx, d, "expected valid export name");
         return nullptr;
     }
 
-    if (memchr(fieldBytes.begin(), 0, fieldBytes.length())) {
-        Fail(cx, d, "null in export names not yet supported");
-        return nullptr;
-    }
-
-    if (!fieldBytes.append(0))
-        return nullptr;
-
-    UniqueChars fieldName((char*)fieldBytes.extractOrCopyRawBuffer());
-    if (!fieldName)
-        return nullptr;
-
-    CStringSet::AddPtr p = dupSet->lookupForAdd(fieldName.get());
+    CStringSet::AddPtr p = dupSet->lookupForAdd(exportName.get());
     if (p) {
         Fail(cx, d, "duplicate export");
         return nullptr;
     }
 
-    if (!dupSet->add(p, fieldName.get()))
+    if (!dupSet->add(p, exportName.get()))
         return nullptr;
 
-    return Move(fieldName);
+    return Move(exportName);
 }
 
 static bool
@@ -1025,6 +1036,71 @@ DecodeDataSection(JSContext* cx, Decoder& d, Handle<ArrayBufferObject*> heap)
 }
 
 static bool
+MaybeDecodeNameSectionBody(JSContext* cx, Decoder& d, uint32_t sectionStart,
+                           uint32_t sectionSize, CacheableCharsVector* funcNames)
+{
+    uint32_t numFuncNames;
+    if (!d.readVarU32(&numFuncNames))
+        return false;
+
+    if (numFuncNames > MaxFuncs)
+        return false;
+
+    CacheableCharsVector result;
+    if (!result.resize(numFuncNames))
+        return false;
+
+    for (uint32_t i = 0; i < numFuncNames; i++) {
+        UniqueChars funcName = MaybeDecodeName(cx, d);
+        if (!funcName)
+            return false;
+
+        result[i] = strlen(funcName.get()) ? Move(funcName) : nullptr;
+
+        // Skipping local names for a function.
+        uint32_t numLocals;
+        if (!d.readVarU32(&numLocals))
+            return false;
+
+        for (uint32_t j = 0; j < numLocals; j++) {
+            UniqueChars localName = MaybeDecodeName(cx, d);
+            if (!localName) {
+                cx->clearPendingException();
+                return false;
+            }
+
+            Unused << localName;
+        }
+    }
+
+    *funcNames = Move(result);
+    return true;
+}
+
+static bool
+DecodeNameSection(JSContext* cx, Decoder& d, CacheableCharsVector* funcNames)
+{
+    uint32_t sectionStart, sectionSize;
+    if (!d.startSection(NameSectionId, &sectionStart, &sectionSize))
+        return Fail(cx, d, "failed to start section");
+    if (sectionStart == Decoder::NotStarted)
+        return true;
+
+    if (!MaybeDecodeNameSectionBody(cx, d, sectionStart, sectionSize, funcNames)) {
+        // This section does not cause validation for the whole module to fail and
+        // is instead treated as if the section was absent.
+        d.ignoreSection(sectionStart, sectionSize);
+        return true;
+    }
+
+    if (!d.finishSection(sectionStart, sectionSize))
+        return Fail(cx, d, "names section byte size mismatch");
+
+    return true;
+}
+
+
+static bool
 DecodeModule(JSContext* cx, UniqueChars file, const uint8_t* bytes, uint32_t length,
              ImportNameVector* importNames, UniqueExportMap* exportMap,
              MutableHandle<ArrayBufferObject*> heap, MutableHandle<WasmModuleObject*> moduleObj)
@@ -1071,6 +1147,8 @@ DecodeModule(JSContext* cx, UniqueChars file, const uint8_t* bytes, uint32_t len
         return false;
 
     CacheableCharsVector funcNames;
+    if (!DecodeNameSection(cx, d, &funcNames))
+        return false;
 
     while (!d.done()) {
         if (!d.skipSection())
@@ -1123,9 +1201,9 @@ CheckCompilerSupport(JSContext* cx)
 }
 
 static bool
-GetProperty(JSContext* cx, HandleObject obj, const Bytes& bytes, MutableHandleValue v)
+GetProperty(JSContext* cx, HandleObject obj, const char* chars, MutableHandleValue v)
 {
-    JSAtom* atom = AtomizeUTF8Chars(cx, (char*)bytes.begin(), bytes.length());
+    JSAtom* atom = AtomizeUTF8Chars(cx, chars, strlen(chars));
     if (!atom)
         return false;
 
@@ -1142,15 +1220,15 @@ ImportFunctions(JSContext* cx, HandleObject importObj, const ImportNameVector& i
 
     for (const ImportName& name : importNames) {
         RootedValue v(cx);
-        if (!GetProperty(cx, importObj, name.module, &v))
+        if (!GetProperty(cx, importObj, name.module.get(), &v))
             return false;
 
-        if (!name.func.empty()) {
+        if (strlen(name.func.get()) > 0) {
             if (!v.isObject())
                 return Fail(cx, "import object field is not an Object");
 
             RootedObject obj(cx, &v.toObject());
-            if (!GetProperty(cx, obj, name.func, &v))
+            if (!GetProperty(cx, obj, name.func.get(), &v))
                 return false;
         }
 

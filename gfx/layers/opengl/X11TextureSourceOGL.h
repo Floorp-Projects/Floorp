@@ -29,7 +29,7 @@ public:
 
   virtual bool IsValid() const override { return !!gl(); } ;
 
-  virtual void BindTexture(GLenum aTextureUnit, gfx::Filter aFilter) override;
+  virtual void BindTexture(GLenum aTextureUnit, gfx::SamplingFilter aSamplingFilter) override;
 
   virtual gfx::IntSize GetSize() const override;
 

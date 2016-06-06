@@ -507,6 +507,9 @@ XRE_API(void,
                                 const nsXREAppData* aAppData));
 #endif // MOZ_B2G_LOADER
 
+XRE_API(void,
+        XRE_EnableSameExecutableForContentProc, ())
+
 XRE_API(int,
         XRE_XPCShellMain, (int argc, char** argv, char** envp,
                            const XREShellData* aShellData))

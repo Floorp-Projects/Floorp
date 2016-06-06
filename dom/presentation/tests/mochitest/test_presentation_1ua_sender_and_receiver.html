@@ -215,6 +215,8 @@ SpecialPowers.pushPermissions([
   {type: "browser", allow: true, context: document},
 ], () => {
   SpecialPowers.pushPrefEnv({ 'set': [["dom.presentation.enabled", true],
+                                      /* Mocked TCP session transport builder in the test */
+                                      ["dom.presentation.session_transport.data_channel.enable", false],
                                       ["dom.presentation.test.enabled", true],
                                       ["dom.presentation.test.stage", 0],
                                       ["dom.mozBrowserFramesEnabled", true]]},

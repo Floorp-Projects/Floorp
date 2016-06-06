@@ -605,7 +605,7 @@ RepeatOrStretchSurface(DrawTarget& aDT, SourceSurface* aSurface,
 
   SurfacePattern pattern(aSurface, ExtendMode::REPEAT,
                          Matrix::Translation(aDest.TopLeft() - aSrc.TopLeft()),
-                         Filter::GOOD, RoundedToInt(aSrc));
+                         SamplingFilter::GOOD, RoundedToInt(aSrc));
   aDT.FillRect(aDest, pattern);
 }
 

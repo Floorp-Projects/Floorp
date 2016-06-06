@@ -177,11 +177,7 @@ class GeckoMigration(MercurialScript, BalrogMixin, VirtualenvMixin,
         return dirs.get('abs_from_dir'), dirs.get('abs_to_dir')
 
     def query_push_args(self, cwd):
-        if cwd == self.query_abs_dirs()['abs_to_dir'] and \
-                self.config['migration_behavior'] == 'beta_to_release':
-            return ['--new-branch']
-        else:
-            return []
+        return ['-r', '.']
 
     def query_from_revision(self):
         """ Shortcut to get the revision for the from repo

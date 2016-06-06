@@ -35,6 +35,7 @@ static const char MemorySectionId[]      = "memory";
 static const char ExportSectionId[]      = "export";
 static const char CodeSectionId[]        = "code";
 static const char DataSectionId[]        = "data";
+static const char NameSectionId[]        = "name";
 
 enum class ValType
 {
@@ -796,6 +797,10 @@ class Decoder
     }
     MOZ_MUST_USE bool finishSection(uint32_t startOffset, uint32_t size) {
         return size == (cur_ - beg_) - startOffset;
+    }
+    void ignoreSection(uint32_t startOffset, uint32_t size) {
+        cur_ = (beg_ + startOffset) + size;
+        MOZ_ASSERT(cur_ <= end_);
     }
     MOZ_MUST_USE bool skipSection() {
         uint32_t idSize;
