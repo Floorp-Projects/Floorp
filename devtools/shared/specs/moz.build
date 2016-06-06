@@ -18,6 +18,7 @@ DevToolsModules(
     'node.js',
     'preference.js',
     'settings.js',
+    'source.js',
     'storage.js',
     'styleeditor.js',
     'styles.js',
