@@ -1,0 +1,72 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Blink FileSystem API - no DND == no webkitEntries</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+
+<body>
+<input id="entries" type="file"></input>
+<script type="application/javascript;version=1.7">
+
+var fileEntry;
+var directoryEntry;
+
+function setup_tests() {
+  SpecialPowers.pushPrefEnv({"set": [["dom.webkitBlink.dirPicker.enabled", true],
+                                     ["dom.webkitBlink.filesystem.enabled", true]]}, next);
+}
+
+function populate_entries() {
+  var url = SimpleTest.getTestFileURL("script_entries.js");
+  var script = SpecialPowers.loadChromeScript(url);
+
+  function onOpened(message) {
+    var entries = document.getElementById('entries');
+
+    for (var i = 0 ; i < message.data.length; ++i) {
+      if (message.data[i] instanceof File) {
+        SpecialPowers.wrap(entries).mozSetFileArray([message.data[i]]);
+        next();
+      }
+    }
+
+    script.destroy();
+  }
+
+  script.addMessageListener("entries.opened", onOpened);
+  script.sendAsyncMessage("entries.open");
+}
+
+function test_entries() {
+  var entries = document.getElementById('entries');
+  ok("webkitEntries" in entries, "HTMLInputElement.webkitEntries");
+  is(entries.webkitEntries.length, 0, "HTMLInputElement.webkitEntries.length == 0");
+  is(entries.files.length, 1, "HTMLInputElement.files is still populated");
+
+  next();
+}
+
+var tests = [
+  setup_tests,
+  populate_entries,
+
+  test_entries,
+];
+
+function next() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+SimpleTest.waitForExplicitFinish();
+next();
+</script>
+</body>
+</html>
