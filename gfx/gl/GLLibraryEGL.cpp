@@ -142,9 +142,10 @@ GetAndInitWARPDisplay(GLLibraryEGL& egl, void* displayType)
 }
 
 static bool
-IsAccelAngleSupported(const nsCOMPtr<nsIGfxInfo>& gfxInfo, nsACString& aFailureId)
+IsAccelAngleSupported(const nsCOMPtr<nsIGfxInfo>& gfxInfo)
 {
     int32_t angleSupport;
+    nsCString failureId;
     gfxUtils::ThreadSafeGetFeatureStatus(gfxInfo,
                                          nsIGfxInfo::FEATURE_WEBGL_ANGLE,
                                          failureId,
@@ -200,9 +201,7 @@ GLLibraryEGL::ReadbackEGLImage(EGLImage image, gfx::DataSourceSurface* out_surfa
 {
     StaticMutexAutoUnlock lock(sMutex);
     if (!mReadbackGL) {
-        nsCString discardFailureId;
-        mReadbackGL = gl::GLContextProvider::CreateHeadless(gl::CreateContextFlags::NONE,
-                                                            discardFailureId);
+        mReadbackGL = gl::GLContextProvider::CreateHeadless(gl::CreateContextFlags::NONE);
     }
 
     ScopedTexture destTex(mReadbackGL);
@@ -224,7 +223,7 @@ GLLibraryEGL::ReadbackEGLImage(EGLImage image, gfx::DataSourceSurface* out_surfa
 }
 
 bool
-GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString& aFailureId)
+GLLibraryEGL::EnsureInitialized(bool forceAccel)
 {
     if (mInitialized) {
         return true;
@@ -390,7 +389,7 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString& aFailureId)
     EGLDisplay chosenDisplay = nullptr;
 
     if (IsExtensionSupported(ANGLE_platform_angle_d3d)) {
-        bool accelAngleSupport = IsAccelAngleSupported(gfxInfo, aFailureId);
+        bool accelAngleSupport = IsAccelAngleSupported(gfxInfo);
 
         bool shouldTryAccel = forceAccel || accelAngleSupport;
         bool shouldTryWARP = !shouldTryAccel;
@@ -411,9 +410,6 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString& aFailureId)
             // If falling back to WARP did not work and we don't want to try
             // using HW accelerated ANGLE, then fail.
             if (!shouldTryAccel) {
-                if (aFailureId.IsEmpty()) {
-                    aFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_WARP_FALLBACK");
-                }
                 NS_ERROR("Fallback WARP ANGLE context failed to initialize.");
                 return false;
             }
@@ -426,9 +422,6 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString& aFailureId)
     }
 
     if (!chosenDisplay) {
-        if (aFailureId.IsEmpty()) {
-            aFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_DISPLAY");
-        }
         NS_WARNING("Failed to initialize a display.");
         return false;
     }

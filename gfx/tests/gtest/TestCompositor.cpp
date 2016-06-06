@@ -48,11 +48,9 @@ public:
       mozilla::gl::SurfaceCaps caps = mozilla::gl::SurfaceCaps::ForRGB();
       caps.preserve = false;
       caps.bpp16 = false;
-      nsCString discardFailureId;
       RefPtr<GLContext> context = GLContextProvider::CreateOffscreen(
         IntSize(gCompWidth, gCompHeight), caps,
-        CreateContextFlags::REQUIRE_COMPAT_PROFILE,
-        discardFailureId);
+        CreateContextFlags::REQUIRE_COMPAT_PROFILE);
       return context.forget().take();
     }
     return nullptr;
