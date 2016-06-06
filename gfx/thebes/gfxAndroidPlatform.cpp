@@ -383,6 +383,12 @@ public:
 
     ~GonkDisplay()
     {
+      MOZ_ASSERT(NS_IsMainThread());
+    }
+
+    virtual void Shutdown() override
+    {
+      MOZ_ASSERT(NS_IsMainThread());
       DisableVsync();
     }
 

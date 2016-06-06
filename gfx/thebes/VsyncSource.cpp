@@ -143,5 +143,11 @@ VsyncSource::Display::GetRefreshTimerVsyncDispatcher()
   return mRefreshTimerVsyncDispatcher;
 }
 
+void
+VsyncSource::Shutdown()
+{
+  GetGlobalDisplay().Shutdown();
+}
+
 } //namespace gfx
 } //namespace mozilla
