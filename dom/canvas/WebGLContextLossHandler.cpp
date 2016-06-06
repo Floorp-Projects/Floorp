@@ -209,7 +209,7 @@ WebGLContextLossHandler::DisableTimer()
     if (mFeatureAdded) {
         dom::workers::WorkerPrivate* workerPrivate =
             dom::workers::GetCurrentThreadWorkerPrivate();
-        MOZ_RELEASE_ASSERT(workerPrivate);
+        MOZ_RELEASE_ASSERT(workerPrivate, "GFX: No private worker created.");
         workerPrivate->RemoveFeature(this);
         mFeatureAdded = false;
     }

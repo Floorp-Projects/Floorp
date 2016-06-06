@@ -72,7 +72,7 @@ WebGLContext::GetQuerySlotByTarget(GLenum target)
         return mActiveTransformFeedbackQuery;
 
     default:
-        MOZ_CRASH("Should not get here.");
+        MOZ_CRASH("GFX: Should not get here.");
     }
 }
 

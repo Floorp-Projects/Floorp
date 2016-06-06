@@ -370,7 +370,7 @@ struct RegionParamTraits
 
     for (auto iter = param.RectIter(); !iter.Done(); iter.Next()) {
       const Rect& r = iter.Get();
-      MOZ_RELEASE_ASSERT(!r.IsEmpty());
+      MOZ_RELEASE_ASSERT(!r.IsEmpty(), "GFX: rect is empty.");
       WriteParam(msg, r);
     }
     // empty rects are sentinel values because nsRegions will never
