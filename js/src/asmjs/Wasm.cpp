@@ -1322,7 +1322,7 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     if (!CreateInstance(cx, exportObj, instance))
         return false;
 
-    if (cx->compartment()->debuggerObservesAsmJS()) {
+    if (cx->compartment()->isDebuggee()) {
         Bytes source;
         if (!source.append(bytes, length))
             return false;
