@@ -2922,21 +2922,15 @@ PresShell::CreateReferenceRenderingContext()
   nsDeviceContext* devCtx = mPresContext->DeviceContext();
   RefPtr<gfxContext> rc;
   if (mPresContext->IsScreen()) {
-    rc = gfxContext::ForDrawTarget(gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
-    if (!rc) {
-      return nullptr;
-    }
+    rc = gfxContext::CreateOrNull(gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
   } else {
     // We assume the devCtx has positive width and height for this call.
     // However, width and height, may be outside of the reasonable range
     // so rc may still be null.
     rc = devCtx->CreateRenderingContext();
-    if (!rc) {
-      return nullptr;
-    }
   }
 
-  return rc.forget();
+  return rc ? rc.forget() : nullptr;
 }
 
 nsresult
@@ -5194,7 +5188,7 @@ PresShell::PaintRangePaintInfo(const nsTArray<UniquePtr<RangePaintInfo>>& aItems
     return nullptr;
   }
 
-  RefPtr<gfxContext> ctx = gfxContext::ForDrawTarget(dt);
+  RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(dt);
   MOZ_ASSERT(ctx); // already checked the draw target above
 
   if (aRegion) {
