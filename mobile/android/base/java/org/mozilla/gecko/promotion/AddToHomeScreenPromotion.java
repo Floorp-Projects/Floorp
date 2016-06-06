@@ -109,6 +109,11 @@ public class AddToHomeScreenPromotion implements Tabs.OnTabsChangedListener {
             return;
         }
 
+        if (tab.isPrivate()) {
+            // Never show the prompt for private browsing tabs.
+            return;
+        }
+
         if (Tabs.TabEvents.LOADED == msg) {
             ThreadUtils.postToBackgroundThread(new Runnable() {
                 @Override
