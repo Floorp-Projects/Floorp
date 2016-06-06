@@ -16,9 +16,9 @@ namespace dom {
 class ErrorCallbackRunnable final : public Runnable
 {
 public:
-  explicit ErrorCallbackRunnable(nsIGlobalObject* aGlobalObject,
-                                 ErrorCallback* aCallback,
-                                 nsresult aError = NS_ERROR_DOM_NOT_SUPPORTED_ERR)
+  ErrorCallbackRunnable(nsIGlobalObject* aGlobalObject,
+                        ErrorCallback* aCallback,
+                        nsresult aError = NS_ERROR_DOM_NOT_SUPPORTED_ERR)
     : mGlobal(aGlobalObject)
     , mCallback(aCallback)
     , mError(aError)
@@ -47,7 +47,28 @@ private:
   nsresult mError;
 };
 
+class EmptyEntriesCallbackRunnable final : public Runnable
+{
+public:
+  explicit EmptyEntriesCallbackRunnable(EntriesCallback* aCallback)
+    : mCallback(aCallback)
+  {
+    MOZ_ASSERT(aCallback);
+  }
+
+  NS_IMETHOD
+  Run() override
+  {
+    Sequence<OwningNonNull<Entry>> sequence;
+    mCallback->HandleEvent(sequence);
+    return NS_OK;
+  }
+
+private:
+  RefPtr<EntriesCallback> mCallback;
+};
+
 } // dom namespace
 } // mozilla namespace
 
-#endif // mozilla_dom_ErrorCallbackRunnable_h
+#endif // mozilla_dom_CallbackRunnables_h

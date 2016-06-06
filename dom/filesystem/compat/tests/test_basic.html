@@ -116,6 +116,26 @@ function test_directoryEntry_createReader() {
   });
 }
 
+function test_filesystem() {
+  is(fileEntry.filesystem, directoryEntry.filesystem, "FileSystem object is shared.");
+
+  var fs = fileEntry.filesystem;
+  ok(fs.name, "FileSystem.name exists.");
+  ok(fs.root, "FileSystem has a root.");
+
+  is(fs.root.name, "", "FileSystem.root.name must be an empty string.");
+  is(fs.root.fullPath, "/", "FileSystem.root.fullPath must be '/'");
+
+  reader = fs.root.createReader();
+  reader.readEntries(function(a) {
+    ok(Array.isArray(a), "We want an array.");
+    is(a.length, 2, "reader.readyEntries returns 2 elements.");
+    next();
+  }, function() {
+    ok(false, "Something when wrong!");
+  });
+}
+
 var tests = [
   setup_tests,
   populate_entries,
@@ -128,6 +148,8 @@ var tests = [
 
   test_directoryEntry,
   test_directoryEntry_createReader,
+
+  test_filesystem,
 ];
 
 function next() {

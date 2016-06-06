@@ -15,7 +15,6 @@ interface Entry {
     [GetterThrows]
     readonly attribute DOMString fullPath;
 
-    [GetterThrows]
     readonly attribute DOMFileSystem filesystem;
 
 /** Not implemented:
@@ -91,9 +90,6 @@ interface FileEntry : Entry {
 
 [NoInterfaceObject]
 interface DOMFileSystem {
-    [GetterThrows]
     readonly    attribute DOMString      name;
-
-    [GetterThrows]
     readonly    attribute DirectoryEntry root;
 };

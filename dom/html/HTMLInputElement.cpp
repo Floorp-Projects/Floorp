@@ -80,6 +80,7 @@
 
 // input type=file
 #include "mozilla/dom/Entry.h"
+#include "mozilla/dom/DOMFileSystem.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileList.h"
 #include "nsIFile.h"
@@ -8204,14 +8205,26 @@ HTMLInputElement::UpdateEntries(const nsTArray<OwningFileOrDirectory>& aFilesOrD
   nsCOMPtr<nsIGlobalObject> global = OwnerDoc()->GetScopeObject();
   MOZ_ASSERT(global);
 
+  RefPtr<DOMFileSystem> fs = DOMFileSystem::Create(global);
+  if (NS_WARN_IF(!fs)) {
+    return;
+  }
+
+  Sequence<RefPtr<Entry>> entries;
   for (uint32_t i = 0; i < aFilesOrDirectories.Length(); ++i) {
-    RefPtr<Entry> entry = Entry::Create(global, aFilesOrDirectories[i]);
+    RefPtr<Entry> entry = Entry::Create(global, aFilesOrDirectories[i], fs);
     MOZ_ASSERT(entry);
 
-    if (!mEntries.AppendElement(entry, fallible)) {
+    if (!entries.AppendElement(entry, fallible)) {
       return;
     }
   }
+
+  // The root fileSystem is a DirectoryEntry object that contains only the
+  // dropped fileEntry and directoryEntry objects.
+  fs->CreateRoot(entries);
+
+  mEntries.SwapElements(entries);
 }
 
 void
