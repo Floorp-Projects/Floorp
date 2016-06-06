@@ -33,7 +33,7 @@ add_task(function* () {
     expectUncaughtException();
   }
 
-  content.location = TEST_URI;
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_URI);
   yield loaded;
 
   yield testWebDevLimits();
