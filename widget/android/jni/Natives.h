@@ -217,6 +217,13 @@ struct UsesNativeCallProxy
     }
 };
 
+namespace detail {
+
+template<class Traits, class Impl, class Args, bool IsStatic, bool IsVoid>
+class NativeStubImpl;
+
+}
+
 namespace {
 
 // ProxyArg is used to handle JNI ref arguments for proxies. Because a proxied
@@ -266,7 +273,7 @@ template<class Impl, class Owner, bool IsStatic,
 class ProxyNativeCall
 {
     template<class T, class I, class A, bool S, bool V>
-    friend class NativeStubImpl;
+    friend class detail::NativeStubImpl;
 
     // "this arg" refers to the Class::LocalRef (for static methods) or
     // Owner::LocalRef (for instance methods) that we optionally (as indicated
@@ -424,9 +431,6 @@ namespace detail {
 // signatures (jobject vs jclass and Impl::*Method vs *Method).
 // We need specialization for return type, because void return type requires
 // us to not deal with the return value.
-
-template<class Traits, class Impl, class Args, bool IsStatic, bool IsVoid>
-class NativeStubImpl;
 
 // Bug 1207642 - Work around Dalvik bug by realigning stack on JNI entry
 #ifdef __i386__
