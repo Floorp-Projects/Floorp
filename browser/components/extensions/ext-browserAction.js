@@ -146,9 +146,25 @@ BrowserAction.prototype = {
       badgeNode.style.backgroundColor = color || "";
     }
 
-    let iconURL = IconDetails.getURL(
-      tabData.icon, node.ownerDocument.defaultView, this.extension);
-    node.setAttribute("image", iconURL);
+    const LEGACY_CLASS = "toolbarbutton-legacy-addon";
+    node.classList.remove(LEGACY_CLASS);
+
+
+    let win = node.ownerDocument.defaultView;
+    let {icon, size} = IconDetails.getURL(tabData.icon, win, this.extension);
+
+    // If the best available icon size is not divisible by 16, check if we have
+    // an 18px icon to fall back to, and trim off the padding instead.
+    if (size % 16 && !icon.endsWith(".svg")) {
+      let result = IconDetails.getURL(tabData.icon, win, this.extension, 18);
+
+      if (result.size % 18 == 0) {
+        icon = result.icon;
+        node.classList.add(LEGACY_CLASS);
+      }
+    }
+
+    node.setAttribute("image", icon);
   },
 
   // Update the toolbar button for a given window.

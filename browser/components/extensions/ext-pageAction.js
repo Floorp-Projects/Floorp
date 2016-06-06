@@ -91,7 +91,7 @@ PageAction.prototype = {
       button.setAttribute("tooltiptext", title);
       button.setAttribute("aria-label", title);
 
-      let icon = IconDetails.getURL(tabData.icon, window, this.extension);
+      let {icon} = IconDetails.getURL(tabData.icon, window, this.extension);
       button.setAttribute("src", icon);
     }
 
