@@ -209,9 +209,6 @@ partial interface HTMLInputElement {
 
   [Throws, Pref="dom.input.dirpicker"]
   void chooseDirectory();
-
-  [Pref="dom.webkitBlink.dirPicker.enabled", BinaryName="WebkitDirectoryAttr", SetterThrows]
-  attribute boolean webkitdirectory;
 };
 
 [NoInterfaceObject]
@@ -222,3 +219,12 @@ interface MozPhonetic {
 
 HTMLInputElement implements MozImageLoadingContent;
 HTMLInputElement implements MozPhonetic;
+
+// Webkit/Blink
+partial interface HTMLInputElement {
+  [Pref="dom.webkitBlink.filesystem.enabled", Cached, Constant, GetterThrows]
+  readonly attribute sequence<Entry> webkitEntries;
+
+  [Pref="dom.webkitBlink.dirPicker.enabled", BinaryName="WebkitDirectoryAttr", SetterThrows]
+          attribute boolean webkitdirectory;
+};
