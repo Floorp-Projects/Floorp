@@ -27,7 +27,7 @@ PrintTargetThebes::CreateOrNull(gfxASurface* aSurface)
 }
 
 PrintTargetThebes::PrintTargetThebes(gfxASurface* aSurface)
-  : PrintTarget(aSurface->GetSize())
+  : PrintTarget(nullptr, aSurface->GetSize())
   , mGfxSurface(aSurface)
 {
 }
@@ -87,12 +87,6 @@ void
 PrintTargetThebes::Finish()
 {
   return mGfxSurface->Finish();
-}
-
-bool
-PrintTargetThebes::RotateNeededForLandscape() const
-{
-  return mGfxSurface->GetRotateForLandscape();
 }
 
 } // namespace gfx
