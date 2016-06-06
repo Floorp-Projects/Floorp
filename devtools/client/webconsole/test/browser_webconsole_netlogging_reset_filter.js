@@ -26,7 +26,7 @@ add_task(function* () {
   HUDService.lastFinishedRequest.callback = request => requests.push(request);
 
   let loaded = loadBrowser(browser);
-  content.location = TEST_FILE_URI;
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_FILE_URI);
   yield loaded;
 
   yield testMessages();

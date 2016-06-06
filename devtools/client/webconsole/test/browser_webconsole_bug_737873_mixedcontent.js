@@ -30,7 +30,7 @@ add_task(function* () {
 });
 
 var testMixedContent = Task.async(function* (hud) {
-  content.location = TEST_HTTPS_URI;
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_HTTPS_URI);
 
   let results = yield waitForMessages({
     webconsole: hud,

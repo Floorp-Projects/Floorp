@@ -179,7 +179,7 @@ function testNext() {
       startNextTest();
     }, true);
 
-    content.location = testLocation;
+    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, testLocation);
   } else {
     testEnded = true;
     finishTest();
