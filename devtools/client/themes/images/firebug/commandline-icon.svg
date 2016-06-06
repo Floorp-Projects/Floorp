@@ -3,6 +3,14 @@
    - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
 <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="14" height="14">
   <defs>
+    <style>
+      path {
+        opacity: 0.5;
+      }
+      path:target {
+        opacity: 1;
+      }
+    </style>
     <linearGradient id="b">
       <stop offset="0" stop-color="#234ccd"/>
       <stop offset="1" stop-color="#5d7de3"/>
@@ -14,5 +22,5 @@
     <linearGradient x1="2.002" y1="12.252" x2="-.099" y2="6.755" id="d" xlink:href="#a" gradientUnits="userSpaceOnUse" gradientTransform="translate(5.841 1034.646)"/>
     <linearGradient x1="3.309" y1="11.177" x2="1.468" y2="6.456" id="c" xlink:href="#b" gradientUnits="userSpaceOnUse" gradientTransform="translate(5.841 1034.646)"/>
   </defs>
-  <path d="M6.841 1040.052l-.437.406 2.469 3.688-2.47 3.687.438.407 3.438-4.094z" fill="url(#c)" stroke="url(#d)" stroke-width=".4" stroke-linecap="round" stroke-linejoin="round" transform="translate(-1.341 -1037.146)"/>
+  <path id="focus" d="M6.841 1040.052l-.437.406 2.469 3.688-2.47 3.687.438.407 3.438-4.094z" fill="url(#c)" stroke="url(#d)" stroke-width=".4" stroke-linecap="round" stroke-linejoin="round" transform="translate(-1.341 -1037.146)"/>
 </svg>

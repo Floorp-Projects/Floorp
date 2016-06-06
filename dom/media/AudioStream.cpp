@@ -663,9 +663,10 @@ void AudioClock::UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun)
   mFrameHistory->Append(aServiced, aUnderrun, mOutRate);
 }
 
-int64_t AudioClock::GetPositionInFrames(int64_t frames) const
+int64_t AudioClock::GetPositionInFrames(int64_t aFrames) const
 {
-  return (GetPosition(frames) * mInRate) / USECS_PER_S;
+  CheckedInt64 v = UsecsToFrames(GetPosition(aFrames), mInRate);
+  return v.isValid() ? v.value() : -1;
 }
 
 int64_t AudioClock::GetPosition(int64_t frames) const

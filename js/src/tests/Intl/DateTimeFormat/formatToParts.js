@@ -57,9 +57,9 @@ var DateTimeFormat =
 format = new DateTimeFormat("en-us", {timeZone: "UTC"});
 assertEq(deepEqual(format.formatToParts(date), [
   { type: 'month', value: '12' },
-  { type: 'separator', value: '/' },
+  { type: 'literal', value: '/' },
   { type: 'day', value: '17' },
-  { type: 'separator', value: '/' },
+  { type: 'literal', value: '/' },
   { type: 'year', value: '2012' }
 ]), true);
 
@@ -71,9 +71,9 @@ format = new DateTimeFormat("en-us", {
   timeZone: "UTC"});
 assertEq(deepEqual(format.formatToParts(date), [
   { type: 'month', value: '12' },
-  { type: 'separator', value: '/' },
+  { type: 'literal', value: '/' },
   { type: 'day', value: '17' },
-  { type: 'separator', value: '/' },
+  { type: 'literal', value: '/' },
   { type: 'year', value: '2012' }
 ]), true);
 assertEq(composeDate(format.formatToParts(date)), format.format(date));
@@ -87,9 +87,9 @@ format = new DateTimeFormat("en-us", {
   timeZone: "UTC"});
 assertEq(deepEqual(format.formatToParts(date), [
   { type: 'hour', value: '03' },
-  { type: 'separator', value: ':' },
+  { type: 'literal', value: ':' },
   { type: 'minute', value: '00' },
-  { type: 'separator', value: ':' },
+  { type: 'literal', value: ':' },
   { type: 'second', value: '42' }
 ]), true);
 assertEq(composeDate(format.formatToParts(date)), format.format(date));
@@ -103,12 +103,12 @@ format = new DateTimeFormat("en-us", {
   timeZone: "UTC"});
 assertEq(deepEqual(format.formatToParts(date), [
   { type: 'hour', value: '3' },
-  { type: 'separator', value: ':' },
+  { type: 'literal', value: ':' },
   { type: 'minute', value: '00' },
-  { type: 'separator', value: ':' },
+  { type: 'literal', value: ':' },
   { type: 'second', value: '42' },
-  { type: 'separator', value: ' ' },
-  { type: 'dayperiod', value: 'AM' }
+  { type: 'literal', value: ' ' },
+  { type: 'dayPeriod', value: 'AM' }
 ]), true);
 assertEq(composeDate(format.formatToParts(date)), format.format(date));
 
@@ -137,7 +137,7 @@ format = new DateTimeFormat("en-us", {
   timeZone: "UTC"});
 assertEq(deepEqual(format.formatToParts(date), [
   { type: 'year', value: '2012' },
-  { type: 'separator', value: ' ' },
+  { type: 'literal', value: ' ' },
   { type: 'era', value: 'AD' }
 ]), true);
 assertEq(composeDate(format.formatToParts(date)), format.format(date));
@@ -155,20 +155,20 @@ format = new DateTimeFormat("en-us", {
   timeZone: "UTC"});
 assertEq(deepEqual(format.formatToParts(date), [
   { type: 'weekday', value: 'Monday' },
-  { type: 'separator', value: ', ' },
+  { type: 'literal', value: ', ' },
   { type: 'month', value: '12' },
-  { type: 'separator', value: '/' },
+  { type: 'literal', value: '/' },
   { type: 'day', value: '17' },
-  { type: 'separator', value: '/' },
+  { type: 'literal', value: '/' },
   { type: 'year', value: '2012' },
-  { type: 'separator', value: ', ' },
+  { type: 'literal', value: ', ' },
   { type: 'hour', value: '3' },
-  { type: 'separator', value: ':' },
+  { type: 'literal', value: ':' },
   { type: 'minute', value: '00' },
-  { type: 'separator', value: ':' },
+  { type: 'literal', value: ':' },
   { type: 'second', value: '42' },
-  { type: 'separator', value: ' ' },
-  { type: 'dayperiod', value: 'AM' }
+  { type: 'literal', value: ' ' },
+  { type: 'dayPeriod', value: 'AM' }
 ]), true);
 assertEq(composeDate(format.formatToParts(date)), format.format(date));
 

@@ -640,7 +640,7 @@ class Module : public mozilla::LinkedListElement<Module>
     // name given by the asm.js function name or wasm symbols or something
     // generated from the function index.
 
-    const char* prettyFuncName(uint32_t funcIndex) const;
+    const char* maybePrettyFuncName(uint32_t funcIndex) const;
     const char* getFuncName(JSContext* cx, uint32_t funcIndex, UniqueChars* owner) const;
     JSAtom* getFuncAtom(JSContext* cx, uint32_t funcIndex) const;
 

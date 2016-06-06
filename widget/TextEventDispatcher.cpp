@@ -595,7 +595,7 @@ TextEventDispatcher::PendingComposition::Clear()
 {
   mString.Truncate();
   mClauses = nullptr;
-  mCaret.mRangeType = 0;
+  mCaret.mRangeType = TextRangeType::eUninitialized;
 }
 
 void
@@ -615,24 +615,25 @@ TextEventDispatcher::PendingComposition::SetString(const nsAString& aString)
 }
 
 nsresult
-TextEventDispatcher::PendingComposition::AppendClause(uint32_t aLength,
-                                                      uint32_t aAttribute)
+TextEventDispatcher::PendingComposition::AppendClause(
+                                           uint32_t aLength,
+                                           TextRangeType aTextRangeType)
 {
   if (NS_WARN_IF(!aLength)) {
     return NS_ERROR_INVALID_ARG;
   }
 
-  switch (aAttribute) {
-    case NS_TEXTRANGE_RAWINPUT:
-    case NS_TEXTRANGE_SELECTEDRAWTEXT:
-    case NS_TEXTRANGE_CONVERTEDTEXT:
-    case NS_TEXTRANGE_SELECTEDCONVERTEDTEXT: {
+  switch (aTextRangeType) {
+    case TextRangeType::eRawClause:
+    case TextRangeType::eSelectedRawClause:
+    case TextRangeType::eConvertedClause:
+    case TextRangeType::eSelectedClause: {
       EnsureClauseArray();
       TextRange textRange;
       textRange.mStartOffset =
         mClauses->IsEmpty() ? 0 : mClauses->LastElement().mEndOffset;
       textRange.mEndOffset = textRange.mStartOffset + aLength;
-      textRange.mRangeType = aAttribute;
+      textRange.mRangeType = aTextRangeType;
       mClauses->AppendElement(textRange);
       return NS_OK;
     }
@@ -647,7 +648,7 @@ TextEventDispatcher::PendingComposition::SetCaret(uint32_t aOffset,
 {
   mCaret.mStartOffset = aOffset;
   mCaret.mEndOffset = mCaret.mStartOffset + aLength;
-  mCaret.mRangeType = NS_TEXTRANGE_CARETPOSITION;
+  mCaret.mRangeType = TextRangeType::eCaret;
   return NS_OK;
 }
 
@@ -668,7 +669,7 @@ TextEventDispatcher::PendingComposition::Set(const nsAString& aString,
   if (!aRanges || aRanges->IsEmpty()) {
     // Create dummy range if aString isn't empty.
     if (!aString.IsEmpty()) {
-      rv = AppendClause(str.Length(), NS_TEXTRANGE_RAWINPUT);
+      rv = AppendClause(str.Length(), TextRangeType::eRawClause);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
       }
@@ -698,7 +699,7 @@ TextEventDispatcher::PendingComposition::Set(const nsAString& aString,
                               NS_LITERAL_STRING("\n"));
       range.mEndOffset = range.mStartOffset + clause.Length();
     }
-    if (range.mRangeType == NS_TEXTRANGE_CARETPOSITION) {
+    if (range.mRangeType == TextRangeType::eCaret) {
       mCaret = range;
     } else {
       EnsureClauseArray();
@@ -728,7 +729,7 @@ TextEventDispatcher::PendingComposition::Flush(
     Clear();
     return NS_ERROR_ILLEGAL_VALUE;
   }
-  if (mCaret.mRangeType == NS_TEXTRANGE_CARETPOSITION) {
+  if (mCaret.mRangeType == TextRangeType::eCaret) {
     if (mCaret.mEndOffset > mString.Length()) {
       NS_WARNING("Caret position is out of the composition string");
       Clear();

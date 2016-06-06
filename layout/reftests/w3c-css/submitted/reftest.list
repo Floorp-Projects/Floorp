@@ -10,11 +10,8 @@
 # CSS2.1
 include css21/reftest.list
 
-# Animations
-# include animations/reftest.list
-
-# Backgrounds and Borders Level 3
-# include background3/reftest.list
+# Backgrounds and Borders
+include background/reftest.list
 
 # Conditional Rules Level 3
 include conditional3/reftest.list
@@ -40,20 +37,14 @@ include lists-3/reftest.list
 # Masking Level 1
 include masking/reftest.list
 
-# Media Queries Level 3
-# include mediaqueries3/reftest.list
-
 # Multi-column Layout 3
 include multicol3/reftest.list
 
 # Ruby Layout Module
 include ruby/reftest.list
 
-# Selectors Level 3
-# include selectors3/reftest.list
-
 # Selectors Level 4
-# include selectors4/reftest.list
+include selectors4/reftest.list
 
 # Text Level 3
 include text3/reftest.list
@@ -63,9 +54,6 @@ include text-decor-3/reftest.list
 
 # Transforms
 include transforms/reftest.list
-
-# Transitions
-# include transitions/reftest.list
 
 # User Interface Level 3
 include ui3/reftest.list

@@ -38,11 +38,11 @@ public:
    * CONSTRUCTION PHASE ONLY
    * Set the filter used to resample this image if necessary.
    */
-  void SetFilter(gfx::Filter aFilter)
+  void SetSamplingFilter(gfx::SamplingFilter aSamplingFilter)
   {
-    if (mFilter != aFilter) {
+    if (mSamplingFilter != aSamplingFilter) {
       MOZ_LAYERS_LOG_IF_SHADOWABLE(this, ("Layer::Mutated(%p) Filter", this));
-      mFilter = aFilter;
+      mSamplingFilter = aSamplingFilter;
       Mutated();
     }
   }
@@ -62,7 +62,7 @@ public:
 
 
   ImageContainer* GetContainer() { return mContainer; }
-  gfx::Filter GetFilter() { return mFilter; }
+  gfx::SamplingFilter GetSamplingFilter() { return mSamplingFilter; }
   const gfx::IntSize& GetScaleToSize() { return mScaleToSize; }
   ScaleMode GetScaleMode() { return mScaleMode; }
 
@@ -94,7 +94,7 @@ protected:
   virtual void DumpPacket(layerscope::LayersPacket* aPacket, const void* aParent) override;
 
   RefPtr<ImageContainer> mContainer;
-  gfx::Filter mFilter;
+  gfx::SamplingFilter mSamplingFilter;
   gfx::IntSize mScaleToSize;
   ScaleMode mScaleMode;
   bool mDisallowBigImage;

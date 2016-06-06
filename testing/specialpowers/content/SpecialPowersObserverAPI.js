@@ -236,6 +236,57 @@ SpecialPowersObserverAPI.prototype = {
     mm.sendAsyncMessage(aReplyName, aReplyMsg);
   },
 
+  _notifyCategoryAndObservers: function(subject, topic, data) {
+    const serviceMarker = "service,";
+
+    // First create observers from the category manager.
+    let cm =
+      Cc["@mozilla.org/categorymanager;1"].getService(Ci.nsICategoryManager);
+    let enumerator = cm.enumerateCategory(topic);
+
+    let observers = [];
+
+    while (enumerator.hasMoreElements()) {
+      let entry =
+        enumerator.getNext().QueryInterface(Ci.nsISupportsCString).data;
+      let contractID = cm.getCategoryEntry(topic, entry);
+
+      let factoryFunction;
+      if (contractID.substring(0, serviceMarker.length) == serviceMarker) {
+        contractID = contractID.substring(serviceMarker.length);
+        factoryFunction = "getService";
+      }
+      else {
+        factoryFunction = "createInstance";
+      }
+
+      try {
+        let handler = Cc[contractID][factoryFunction]();
+        if (handler) {
+          let observer = handler.QueryInterface(Ci.nsIObserver);
+          observers.push(observer);
+        }
+      } catch(e) { }
+    }
+
+    // Next enumerate the registered observers.
+    enumerator = Services.obs.enumerateObservers(topic);
+    while (enumerator.hasMoreElements()) {
+      try {
+        let observer = enumerator.getNext().QueryInterface(Ci.nsIObserver);
+        if (observers.indexOf(observer) == -1) {
+          observers.push(observer);
+        }
+      } catch (e) { }
+    }
+
+    observers.forEach(function (observer) {
+      try {
+        observer.observe(subject, topic, data);
+      } catch(e) { }
+    });
+  },
+
   /**
    * messageManager callback function
    * This will get requests from our API in the window and process them in chrome for it
@@ -594,6 +645,28 @@ SpecialPowersObserverAPI.prototype = {
         this._extensions.delete(id);
         extension.shutdown();
         this._sendReply(aMessage, "SPExtensionMessage", {id, type: "extensionUnloaded", args: []});
+        return undefined;
+      }
+
+      case "SPClearAppPrivateData": {
+        let appId = aMessage.data.appId;
+        let browserOnly = aMessage.data.browserOnly;
+
+        let attributes = { appId: appId };
+        if (browserOnly) {
+          attributes.inIsolatedMozBrowser = true;
+        }
+        this._notifyCategoryAndObservers(null,
+                                         "clear-origin-data",
+                                         JSON.stringify(attributes));
+
+        let subject = {
+          appId: appId,
+          browserOnly: browserOnly,
+          QueryInterface: XPCOMUtils.generateQI([Ci.mozIApplicationClearPrivateDataParams])
+        };
+        this._notifyCategoryAndObservers(subject, "webapps-clear-data", null);
+
         return undefined;
       }
 

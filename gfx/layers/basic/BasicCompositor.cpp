@@ -226,7 +226,7 @@ DrawSurfaceWithTextureCoords(DrawTarget *aDest,
                              const gfx::Rect& aDestRect,
                              SourceSurface *aSource,
                              const gfx::Rect& aTextureCoords,
-                             gfx::Filter aFilter,
+                             gfx::SamplingFilter aSamplingFilter,
                              const DrawOptions& aOptions,
                              SourceSurface *aMask,
                              const Matrix* aMaskTransform)
@@ -257,7 +257,7 @@ DrawSurfaceWithTextureCoords(DrawTarget *aDest,
   gfx::Rect unitRect(0, 0, 1, 1);
   ExtendMode mode = unitRect.Contains(aTextureCoords) ? ExtendMode::CLAMP : ExtendMode::REPEAT;
 
-  FillRectWithMask(aDest, aDestRect, aSource, aFilter, aOptions,
+  FillRectWithMask(aDest, aDestRect, aSource, aSamplingFilter, aOptions,
                    mode, aMask, aMaskTransform, &matrix);
 }
 
@@ -285,10 +285,10 @@ AttemptVideoScale(TextureSourceBasic* aSource, const SourceSurface* aSourceMask,
                        gfx::Float aOpacity, CompositionOp aBlendMode,
                        const TexturedEffect* aTexturedEffect,
                        const Matrix& aNewTransform, const gfx::Rect& aRect,
-                       const gfx::IntRect& aClipRect,
+                       const gfx::Rect& aClipRect,
                        DrawTarget* aDest, const DrawTarget* aBuffer)
 {
-  if (true || !mozilla::supports_ssse3())
+  if (!mozilla::supports_ssse3())
       return false;
   if (aNewTransform.IsTranslation()) // unscaled painting should take the regular path
       return false;
@@ -303,6 +303,10 @@ AttemptVideoScale(TextureSourceBasic* aSource, const SourceSurface* aSourceMask,
   // the compiler should know a lot about aNewTransform at this point
   // maybe it can do some sophisticated optimization of the following
   if (!aNewTransform.TransformBounds(aRect).ToIntRect(&dstRect))
+      return false;
+
+  IntRect clipRect;
+  if (!aClipRect.ToIntRect(&clipRect))
       return false;
 
   if (!(aTexturedEffect->mTextureCoords == Rect(0.0f, 0.0f, 1.0f, 1.0f)))
@@ -320,7 +324,7 @@ AttemptVideoScale(TextureSourceBasic* aSource, const SourceSurface* aSourceMask,
     IntRect fillRect = dstRect;
     if (aDest == aBuffer) {
       // we need to clip fillRect because LockBits ignores the clip on the aDest
-      fillRect = fillRect.Intersect(aClipRect);
+      fillRect = fillRect.Intersect(clipRect);
     }
 
     fillRect = fillRect.Intersect(IntRect(IntPoint(0, 0), aDest->GetSize()));
@@ -391,6 +395,10 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
     new3DTransform.PreTranslate(aRect.x, aRect.y, 0);
   }
 
+  // XXX the transform is probably just an integer offset so this whole
+  // business here is a bit silly.
+  Rect transformedClipRect = buffer->GetTransform().TransformBounds(Rect(aClipRect));
+
   buffer->PushClipRect(Rect(aClipRect));
 
   newTransform.PostTranslate(-offset.x, -offset.y);
@@ -435,14 +443,14 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
         if (source->mFromYCBCR &&
             AttemptVideoScale(source, sourceMask, aOpacity, blendMode,
                               texturedEffect,
-                              newTransform, aRect, aClipRect - offset,
+                              newTransform, aRect, transformedClipRect,
                               dest, buffer)) {
           // we succeeded in scaling
         } else {
           DrawSurfaceWithTextureCoords(dest, aRect,
                                        source->GetSurface(dest),
                                        texturedEffect->mTextureCoords,
-                                       texturedEffect->mFilter,
+                                       texturedEffect->mSamplingFilter,
                                        DrawOptions(aOpacity, blendMode),
                                        sourceMask, &maskTransform);
         }
@@ -458,7 +466,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
           DrawSurfaceWithTextureCoords(dest, aRect,
                                        premultData,
                                        texturedEffect->mTextureCoords,
-                                       texturedEffect->mFilter,
+                                       texturedEffect->mSamplingFilter,
                                        DrawOptions(aOpacity, blendMode),
                                        sourceMask, &maskTransform);
         }
@@ -482,7 +490,7 @@ BasicCompositor::DrawQuad(const gfx::Rect& aRect,
       DrawSurfaceWithTextureCoords(dest, aRect,
                                    sourceSurf,
                                    effectRenderTarget->mTextureCoords,
-                                   effectRenderTarget->mFilter,
+                                   effectRenderTarget->mSamplingFilter,
                                    DrawOptions(aOpacity, blendMode),
                                    sourceMask, &maskTransform);
       break;

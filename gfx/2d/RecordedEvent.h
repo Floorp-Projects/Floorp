@@ -138,7 +138,7 @@ struct RadialGradientPatternStorage
 struct SurfacePatternStorage
 {
   ExtendMode mExtend;
-  Filter mFilter;
+  SamplingFilter mSamplingFilter;
   ReferencePtr mSurface;
   Matrix mMatrix;
 };

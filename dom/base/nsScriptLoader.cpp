@@ -866,8 +866,6 @@ ResolveRequestedModules(nsModuleLoadRequest* aRequest, nsCOMArray<nsIURI> &aUrls
     return NS_ERROR_FAILURE;
   }
 
-  nsCOMArray<nsIURI> uris(length);
-  MOZ_ASSERT(uris.Length() == 0);
   JS::Rooted<JS::Value> arrayValue(cx, JS::ObjectValue(*specifiers));
   JS::ForOfIterator iter(cx);
   if (!iter.init(arrayValue)) {

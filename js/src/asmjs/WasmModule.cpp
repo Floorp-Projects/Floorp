@@ -1623,16 +1623,18 @@ Module::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const uin
 }
 
 const char*
-Module::prettyFuncName(uint32_t funcIndex) const
+Module::maybePrettyFuncName(uint32_t funcIndex) const
 {
+    if (funcIndex >= module_->prettyFuncNames.length())
+        return nullptr;
     return module_->prettyFuncNames[funcIndex].get();
 }
 
 const char*
 Module::getFuncName(JSContext* cx, uint32_t funcIndex, UniqueChars* owner) const
 {
-    if (!module_->prettyFuncNames.empty())
-        return prettyFuncName(funcIndex);
+    if (const char* prettyName = maybePrettyFuncName(funcIndex))
+        return prettyName;
 
     char* chars = JS_smprintf("wasm-function[%u]", funcIndex);
     if (!chars) {

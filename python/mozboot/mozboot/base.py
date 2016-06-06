@@ -299,7 +299,8 @@ class BaseBootstrapper(object):
         making it suitable for use in scripts.
         """
         env = os.environ.copy()
-        env['HGPLAIN'] = '1'
+        env[b'HGPLAIN'] = b'1'
+
         return env
 
     def is_mercurial_modern(self):

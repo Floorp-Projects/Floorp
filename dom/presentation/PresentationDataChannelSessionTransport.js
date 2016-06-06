@@ -49,11 +49,10 @@ PresentationTransportBuilder.prototype = {
   classID: PRESENTATIONTRANSPORTBUILDER_CID,
   contractID: PRESENTATIONTRANSPORTBUILDER_CONTRACTID,
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIPresentationDataChannelSessionTransportBuilder,
-                                         Ci.nsIPresentationControlChannelListener,
                                          Ci.nsITimerCallback]),
 
-  buildDataChannelTransport: function(aRole, aWindow, aControlChannel, aListener) {
-    if (!aRole || !aWindow || !aControlChannel || !aListener) {
+  buildDataChannelTransport: function(aRole, aWindow, aListener) {
+    if (!aRole || !aWindow || !aListener) {
       log("buildDataChannelTransport with illegal parameters");
       throw Cr.NS_ERROR_ILLEGAL_VALUE;
     }
@@ -66,23 +65,21 @@ PresentationTransportBuilder.prototype = {
     log("buildDataChannelTransport with role " + aRole);
     this._role = aRole;
     this._window = aWindow;
-    this._controlChannel = aControlChannel.QueryInterface(Ci.nsIPresentationControlChannel);
-    this._controlChannel.listener = this;
     this._listener = aListener.QueryInterface(Ci.nsIPresentationSessionTransportBuilderListener);
 
     // TODO bug 1227053 set iceServers from |nsIPresentationDevice|
     this._peerConnection = new this._window.RTCPeerConnection();
 
-    // |this._controlChannel == null| will throw since the control channel is
+    // |this._listener == null| will throw since the control channel is
     // abnormally closed.
     this._peerConnection.onicecandidate = aEvent => aEvent.candidate &&
-      this._controlChannel.sendIceCandidate(JSON.stringify(aEvent.candidate));
+      this._listener.sendIceCandidate(JSON.stringify(aEvent.candidate));
 
     this._peerConnection.onnegotiationneeded = () => {
       log("onnegotiationneeded with role " + this._role);
       this._peerConnection.createOffer()
           .then(aOffer => this._peerConnection.setLocalDescription(aOffer))
-          .then(() => this._controlChannel
+          .then(() => this._listener
                           .sendOffer(new PresentationDataChannelDescription(this._peerConnection.localDescription)))
           .catch(e => this._reportError(e));
     }
@@ -169,11 +166,6 @@ PresentationTransportBuilder.prototype = {
     this._role = null;
     this._window = null;
 
-    if (this._controlChannel) {
-      this._controlChannel.close(aReason);
-      this._controlChannel = null;
-    }
-
     this._listener = null;
     this._sessionTransport = null;
 
@@ -202,7 +194,7 @@ PresentationTransportBuilder.prototype = {
         .then(aAnswer => this._peerConnection.setLocalDescription(aAnswer))
         .then(() => {
           this._isControlChannelNeeded = false;
-          this._controlChannel
+          this._listener
               .sendAnswer(new PresentationDataChannelDescription(this._peerConnection.localDescription))
         }).catch(e => this._reportError(e));
   },
@@ -229,10 +221,6 @@ PresentationTransportBuilder.prototype = {
     this._peerConnection.addIceCandidate(candidate).catch(e => this._reportError(e));
   },
 
-  notifyOpened: function() {
-    log("notifyOpened, should be opened beforehand");
-  },
-
   notifyClosed: function(aReason) {
     log("notifyClosed reason: " + aReason);
 
@@ -241,7 +229,6 @@ PresentationTransportBuilder.prototype = {
     } else if (this._isControlChannelNeeded) {
       this._cleanup(Cr.NS_ERROR_FAILURE);
     }
-    this._controlChannel = null;
   },
 };
 

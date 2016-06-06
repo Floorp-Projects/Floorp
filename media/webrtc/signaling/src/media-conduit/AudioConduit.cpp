@@ -396,6 +396,13 @@ WebrtcAudioConduit::ConfigureSendMediaCodec(const AudioCodecConfig* codecConfig)
     return kMediaConduitUnknownError;
   }
 
+  // This must be called after SetSendCodec
+  if (mPtrVoECodec->SetFECStatus(mChannel, codecConfig->mFECEnabled) == -1) {
+    CSFLogError(logTag, "%s SetFECStatus Failed %d ", __FUNCTION__,
+                mPtrVoEBase->LastError());
+    return kMediaConduitFECStatusError;
+  }
+
   if (codecConfig->mName == "opus" && codecConfig->mMaxPlaybackRate) {
     if (mPtrVoECodec->SetOpusMaxPlaybackRate(
           mChannel,
@@ -433,7 +440,8 @@ WebrtcAudioConduit::ConfigureSendMediaCodec(const AudioCodecConfig* codecConfig)
                                                codecConfig->mFreq,
                                                codecConfig->mPacSize,
                                                codecConfig->mChannels,
-                                               codecConfig->mRate);
+                                               codecConfig->mRate,
+                                               codecConfig->mFECEnabled);
   }
   return kMediaConduitNoError;
 }
@@ -976,7 +984,8 @@ WebrtcAudioConduit::CopyCodecToDB(const AudioCodecConfig* codecInfo)
                                                      codecInfo->mFreq,
                                                      codecInfo->mPacSize,
                                                      codecInfo->mChannels,
-                                                     codecInfo->mRate);
+                                                     codecInfo->mRate,
+                                                     codecInfo->mFECEnabled);
   mRecvCodecList.push_back(cdcConfig);
   return true;
 }

@@ -7,7 +7,6 @@
 #include "QuotaManagerService.h"
 
 #include "ActorsChild.h"
-#include "mozIApplicationClearPrivateDataParams.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/Hal.h"
@@ -643,34 +642,15 @@ QuotaManagerService::Observe(nsISupports* aSubject,
     return NS_OK;
   }
 
-  if (!strcmp(aTopic, TOPIC_WEB_APP_CLEAR_DATA)) {
-    nsCOMPtr<mozIApplicationClearPrivateDataParams> params =
-      do_QueryInterface(aSubject);
-    if (NS_WARN_IF(!params)) {
-      return NS_ERROR_UNEXPECTED;
-    }
-
-    uint32_t appId;
-    nsresult rv = params->GetAppId(&appId);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
-    bool browserOnly;
-    rv = params->GetBrowserOnly(&browserOnly);
-    if (NS_WARN_IF(NS_FAILED(rv))) {
-      return rv;
-    }
-
+  if (!strcmp(aTopic, "clear-origin-data")) {
     RefPtr<Request> request = new Request();
 
-    ClearAppParams requestParams;
-    requestParams.appId() = appId;
-    requestParams.browserOnly() = browserOnly;
+    ClearOriginsParams requestParams;
+    requestParams.pattern() = nsDependentString(aData);
 
     nsAutoPtr<PendingRequestInfo> info(new RequestInfo(request, requestParams));
 
-    rv = InitiateRequest(info);
+    nsresult rv = InitiateRequest(info);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
     }

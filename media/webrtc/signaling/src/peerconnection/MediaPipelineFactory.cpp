@@ -74,7 +74,8 @@ JsepCodecDescToCodecConfig(const JsepCodecDescription& aCodec,
                                   desc.mClock,
                                   desc.mPacketSize,
                                   desc.mForceMono ? 1 : desc.mChannels,
-                                  desc.mBitrate);
+                                  desc.mBitrate,
+                                  desc.mFECEnabled);
   (*aConfig)->mMaxPlaybackRate = desc.mMaxPlaybackRate;
 
   return NS_OK;
@@ -535,8 +536,6 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
   TrackID numericTrackId = stream->GetNumericTrackId(aTrack.GetTrackId());
   MOZ_ASSERT(IsTrackIDExplicit(numericTrackId));
 
-  bool queue_track = stream->ShouldQueueTracks();
-
   MOZ_MTLOG(ML_DEBUG, __FUNCTION__ << ": Creating pipeline for "
             << numericTrackId << " -> " << aTrack.GetTrackId());
 
@@ -552,8 +551,7 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
         static_cast<AudioSessionConduit*>(aConduit.get()), // Ugly downcast.
         aRtpFlow,
         aRtcpFlow,
-        aFilter,
-        queue_track);
+        aFilter);
   } else if (aTrack.GetMediaType() == SdpMediaSection::kVideo) {
     pipeline = new MediaPipelineReceiveVideo(
         mPC->GetHandle(),
@@ -566,8 +564,7 @@ MediaPipelineFactory::CreateMediaPipelineReceiving(
         static_cast<VideoSessionConduit*>(aConduit.get()), // Ugly downcast.
         aRtpFlow,
         aRtcpFlow,
-        aFilter,
-        queue_track);
+        aFilter);
   } else {
     MOZ_ASSERT(false);
     MOZ_MTLOG(ML_ERROR, "Invalid media type in CreateMediaPipelineReceiving");

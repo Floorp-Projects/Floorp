@@ -526,16 +526,21 @@ struct ParamTraits<mozilla::TextRange>
   {
     WriteParam(aMsg, aParam.mStartOffset);
     WriteParam(aMsg, aParam.mEndOffset);
-    WriteParam(aMsg, aParam.mRangeType);
+    WriteParam(aMsg, mozilla::ToRawTextRangeType(aParam.mRangeType));
     WriteParam(aMsg, aParam.mRangeStyle);
   }
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
-    return ReadParam(aMsg, aIter, &aResult->mStartOffset) &&
-           ReadParam(aMsg, aIter, &aResult->mEndOffset) &&
-           ReadParam(aMsg, aIter, &aResult->mRangeType) &&
-           ReadParam(aMsg, aIter, &aResult->mRangeStyle);
+    mozilla::RawTextRangeType rawTextRangeType;
+    if (ReadParam(aMsg, aIter, &aResult->mStartOffset) &&
+        ReadParam(aMsg, aIter, &aResult->mEndOffset) &&
+        ReadParam(aMsg, aIter, &rawTextRangeType) &&
+        ReadParam(aMsg, aIter, &aResult->mRangeStyle)) {
+      aResult->mRangeType = mozilla::ToTextRangeType(rawTextRangeType);
+      return true;
+    }
+    return false;
   }
 };
 

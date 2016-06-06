@@ -47,14 +47,14 @@ public:
                                const nsIntSize& aSize,
                                const ImageRegion& aRegion,
                                uint32_t aWhichFrame,
-                               gfx::Filter aFilter,
+                               gfx::SamplingFilter aSamplingFilter,
                                const Maybe<SVGImageContext>& aSVGContext,
                                uint32_t aFlags) override;
   NS_IMETHOD_(nsIntRect) GetImageSpaceInvalidationRect(
                                            const nsIntRect& aRect) override;
   nsIntSize OptimalImageSizeForDest(const gfxSize& aDest,
                                     uint32_t aWhichFrame,
-                                    gfx::Filter aFilter,
+                                    gfx::SamplingFilter aSamplingFilter,
                                     uint32_t aFlags) override;
 
 protected:

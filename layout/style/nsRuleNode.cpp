@@ -7120,7 +7120,7 @@ nsRuleNode::ComputeBackgroundData(void* aStartStruct,
 
   // background-repeat: enum, inherit, initial [pair list]
   nsStyleImageLayers::Repeat initialRepeat;
-  initialRepeat.SetInitialValues();
+  initialRepeat.SetInitialValues(nsStyleImageLayers::LayerType::Background);
   SetImageLayerPairList(aContext, *aRuleData->ValueForBackgroundRepeat(),
                         bg->mImage.mLayers,
                         parentBG->mImage.mLayers,
@@ -9922,7 +9922,7 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
 
   // mask-repeat: enum, inherit, initial [pair list]
   nsStyleImageLayers::Repeat initialRepeat;
-  initialRepeat.SetInitialValues();
+  initialRepeat.SetInitialValues(nsStyleImageLayers::LayerType::Mask);
   SetImageLayerPairList(aContext, *aRuleData->ValueForMaskRepeat(),
                         svgReset->mMask.mLayers,
                         parentSVGReset->mMask.mLayers,
@@ -9946,7 +9946,7 @@ nsRuleNode::ComputeSVGResetData(void* aStartStruct,
                     svgReset->mMask.mLayers,
                     parentSVGReset->mMask.mLayers,
                     &nsStyleImageLayers::Layer::mOrigin,
-                    uint8_t(NS_STYLE_IMAGELAYER_ORIGIN_PADDING),
+                    uint8_t(NS_STYLE_IMAGELAYER_ORIGIN_BORDER),
                     parentSVGReset->mMask.mOriginCount,
                     svgReset->mMask.mOriginCount, maxItemCount, rebuild,
                     conditions);

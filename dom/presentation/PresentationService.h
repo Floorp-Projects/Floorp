@@ -15,6 +15,7 @@
 
 class nsIPresentationSessionRequest;
 class nsIURI;
+class nsIPresentationSessionTransportBuilder;
 
 namespace mozilla {
 namespace dom {
@@ -53,6 +54,10 @@ public:
   bool IsSessionAccessible(const nsAString& aSessionId,
                            const uint8_t aRole,
                            base::ProcessId aProcessId);
+
+  nsresult RegisterTransportBuilder(const nsAString& aSessionId,
+                                    uint8_t aRole,
+                                    nsIPresentationSessionTransportBuilder* aBuilder);
 
 private:
   friend class PresentationDeviceRequest;

@@ -33,6 +33,10 @@
 #endif
 #endif
 
+#ifndef USE_FAKE_MEDIA_STREAMS
+#include "MediaStreamGraphImpl.h"
+#endif
+
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIURI.h"
@@ -111,9 +115,37 @@ PipelineDetachTransport_s(RefPtr<MediaPipeline> pipeline,
 }
 
 void
+SourceStreamInfo::EndTrack(MediaStream* stream, dom::MediaStreamTrack* track)
+{
+  if (!stream || !stream->AsSourceStream()) {
+    return;
+  }
+
+#if !defined(MOZILLA_EXTERNAL_LINKAGE)
+  class Message : public ControlMessage {
+   public:
+    Message(MediaStream* stream, TrackID track)
+      : ControlMessage(stream),
+        track_id_(track) {}
+
+    virtual void Run() override {
+      mStream->AsSourceStream()->EndTrack(track_id_);
+    }
+   private:
+    TrackID track_id_;
+  };
+
+  stream->GraphImpl()->AppendMessage(
+      MakeUnique<Message>(stream, track->mTrackID));
+#endif
+
+}
+
+void
 SourceStreamInfo::RemoveTrack(const std::string& trackId)
 {
   mTracks.erase(trackId);
+
   RefPtr<MediaPipeline> pipeline = GetPipelineByTrackId_m(trackId);
   if (pipeline) {
     mPipelines.erase(trackId);
@@ -945,23 +977,6 @@ PeerConnectionMedia::RemoveRemoteTrack(const std::string& streamId,
   return NS_OK;
 }
 
-nsresult
-PeerConnectionMedia::GetRemoteTrackId(const std::string streamId,
-                                      const MediaStreamTrack& track,
-                                      std::string* trackId) const
-{
-  auto* ncThis = const_cast<PeerConnectionMedia*>(this);
-  const RemoteSourceStreamInfo* info =
-    ncThis->GetRemoteStreamById(streamId);
-
-  if (!info) {
-    CSFLogError(logTag, "%s: Could not find stream info", __FUNCTION__);
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  return info->GetTrackId(track, trackId);
-}
-
 void
 PeerConnectionMedia::SelfDestruct()
 {
@@ -1513,6 +1528,26 @@ SourceStreamInfo::StorePipeline(
 }
 
 void
+RemoteSourceStreamInfo::DetachMedia_m()
+{
+  for (auto& webrtcIdAndTrack : mTracks) {
+    EndTrack(mMediaStream->GetInputStream(), webrtcIdAndTrack.second);
+  }
+  SourceStreamInfo::DetachMedia_m();
+}
+
+void
+RemoteSourceStreamInfo::RemoveTrack(const std::string& trackId)
+{
+  auto it = mTracks.find(trackId);
+  if (it != mTracks.end()) {
+    EndTrack(mMediaStream->GetInputStream(), it->second);
+  }
+
+  SourceStreamInfo::RemoveTrack(trackId);
+}
+
+void
 RemoteSourceStreamInfo::SyncPipeline(
   RefPtr<MediaPipelineReceive> aPipeline)
 {
@@ -1550,7 +1585,6 @@ RemoteSourceStreamInfo::StartReceiving()
   mReceiving = true;
 
   SourceMediaStream* source = GetMediaStream()->GetInputStream()->AsSourceStream();
-  source->FinishAddTracks();
   source->SetPullEnabled(true);
   // AdvanceKnownTracksTicksTime(HEAT_DEATH_OF_UNIVERSE) means that in
   // theory per the API, we can't add more tracks before that
