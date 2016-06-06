@@ -10,5 +10,11 @@ var locs = { get length() { if (count++ > 0) throw 42; return 0; } };
 var locales = Intl.getCanonicalLocales(locs); // shouldn't throw 42
 assertEq(locales.length, 0);
 
+
+var obj = { get 0() { throw new Error("must not be gotten!"); },
+            length: -Math.pow(2, 32) + 1 };
+
+assertEq(Intl.getCanonicalLocales(obj).length, 0);
+
 if (typeof reportCompare === 'function')
     reportCompare(0, 0);

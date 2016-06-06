@@ -198,7 +198,9 @@ public:
     virtual bool InUpdate() const = 0;
     GLenum GetWrapMode() const { return mWrapMode; }
 
-    void SetFilter(gfx::Filter aFilter) { mFilter = aFilter; }
+    void SetSamplingFilter(gfx::SamplingFilter aSamplingFilter) {
+      mSamplingFilter = aSamplingFilter;
+    }
 
 protected:
     friend class GLContext;
@@ -226,7 +228,7 @@ protected:
     GLenum mWrapMode;
     ContentType mContentType;
     gfx::SurfaceFormat mTextureFormat;
-    gfx::Filter mFilter;
+    gfx::SamplingFilter mSamplingFilter;
     Flags mFlags;
     size_t mUploadSize;
 };

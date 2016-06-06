@@ -422,11 +422,13 @@ TextInputProcessor::AppendClauseToPendingComposition(uint32_t aLength,
 {
   MOZ_RELEASE_ASSERT(nsContentUtils::IsCallerChrome());
   RefPtr<TextEventDispatcher> kungfuDeathGrip(mDispatcher);
+  TextRangeType textRangeType;
   switch (aAttribute) {
     case ATTR_RAW_CLAUSE:
     case ATTR_SELECTED_RAW_CLAUSE:
     case ATTR_CONVERTED_CLAUSE:
     case ATTR_SELECTED_CLAUSE:
+      textRangeType = ToTextRangeType(aAttribute);
       break;
     default:
       return NS_ERROR_INVALID_ARG;
@@ -435,7 +437,7 @@ TextInputProcessor::AppendClauseToPendingComposition(uint32_t aLength,
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  return mDispatcher->AppendClauseToPendingComposition(aLength, aAttribute);
+  return mDispatcher->AppendClauseToPendingComposition(aLength, textRangeType);
 }
 
 NS_IMETHODIMP

@@ -706,8 +706,12 @@ Dashboard::GetDNSCacheEntries(DnsData *dnsData)
         entry.mExpiration = dnsData->mData[i].expiration;
 
         for (uint32_t j = 0; j < dnsData->mData[i].hostaddr.Length(); j++) {
-            CopyASCIItoUTF16(dnsData->mData[i].hostaddr[j],
-                             *addrs.AppendElement(fallible));
+            nsString* addr = addrs.AppendElement(fallible);
+            if (!addr) {
+                JS_ReportOutOfMemory(cx);
+                return NS_ERROR_OUT_OF_MEMORY;
+            }
+            CopyASCIItoUTF16(dnsData->mData[i].hostaddr[j], *addr);
         }
 
         if (dnsData->mData[i].family == PR_AF_INET6) {

@@ -169,6 +169,17 @@ interface nsIPresentationService : nsISupports
                            [optional] in unsigned long long windowId);
 
   /*
+   * Notify the transport is closed
+   *
+   * @param sessionId: An ID to identify presentation session.
+   * @param role: Identify the function called by controller or receiver.
+   * @param reason: the error message. NS_OK indicates it is closed normally.
+   */
+  void NotifyTransportClosed(in DOMString sessionId,
+                             in uint8_t role,
+                             in nsresult reason);
+
+  /*
    * Untrack the relevant info about the presentation session if there's any.
    *
    * @param sessionId: An ID to identify presentation session.

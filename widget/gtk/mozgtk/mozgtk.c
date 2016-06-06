@@ -7,6 +7,7 @@
 STUB(gdk_atom_intern)
 STUB(gdk_atom_name)
 STUB(gdk_beep)
+STUB(gdk_cairo_create)
 STUB(gdk_color_free)
 STUB(gdk_cursor_new_for_display)
 STUB(gdk_cursor_new_from_name)

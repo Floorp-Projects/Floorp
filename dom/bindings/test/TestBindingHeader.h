@@ -795,6 +795,7 @@ public:
   static void StaticMethodWithContext(const GlobalObject&, JS::Value);
   static bool StaticAttribute(const GlobalObject&);
   static void SetStaticAttribute(const GlobalObject&, bool);
+  static void Assert(const GlobalObject&, bool);
 
   // Deprecated static methods and attributes
   static int8_t StaticDeprecatedAttribute(const GlobalObject&);

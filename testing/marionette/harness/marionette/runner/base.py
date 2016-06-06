@@ -437,6 +437,7 @@ class BaseMarionetteArguments(ArgumentParser):
         if args.e10s:
             args.prefs.update({
                 'browser.tabs.remote.autostart': True,
+                'browser.tabs.remote.force-enable': True,
                 'extensions.e10sBlocksEnabling': False
             })
 

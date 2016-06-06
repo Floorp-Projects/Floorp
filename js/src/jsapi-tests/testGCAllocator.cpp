@@ -347,7 +347,7 @@ mapMemory(size_t length)
 #elif defined(__aarch64__)
     const uintptr_t start = UINT64_C(0x0000070000000000);
     const uintptr_t end   = UINT64_C(0x0000800000000000);
-    const uintptr_t step  = ChunkSize;
+    const uintptr_t step  = js::gc::ChunkSize;
     uintptr_t hint;
     void* region = MAP_FAILED;
     for (hint = start; region == MAP_FAILED && hint + length <= end; hint += step) {

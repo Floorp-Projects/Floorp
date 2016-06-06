@@ -248,17 +248,17 @@ AppendToString(std::stringstream& aStream, const Matrix5x4& m,
 }
 
 void
-AppendToString(std::stringstream& aStream, const Filter filter,
+AppendToString(std::stringstream& aStream, const SamplingFilter filter,
                const char* pfx, const char* sfx)
 {
   aStream << pfx;
 
   switch (filter) {
-    case Filter::GOOD: aStream << "Filter::GOOD"; break;
-    case Filter::LINEAR: aStream << "Filter::LINEAR"; break;
-    case Filter::POINT: aStream << "Filter::POINT"; break;
+    case SamplingFilter::GOOD: aStream << "SamplingFilter::GOOD"; break;
+    case SamplingFilter::LINEAR: aStream << "SamplingFilter::LINEAR"; break;
+    case SamplingFilter::POINT: aStream << "SamplingFilter::POINT"; break;
     default:
-      NS_ERROR("unknown filter type");
+      NS_ERROR("unknown SamplingFilter type");
       aStream << "???";
   }
   aStream << sfx;

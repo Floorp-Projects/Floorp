@@ -230,10 +230,10 @@ SVGFEImageElement::GetPrimitiveDescription(nsSVGFilterInstance* aInstance,
   Matrix TM = viewBoxTM;
   TM.PostTranslate(aFilterSubregion.x, aFilterSubregion.y);
 
-  Filter filter = nsLayoutUtils::GetGraphicsFilterForFrame(frame);
+  SamplingFilter samplingFilter = nsLayoutUtils::GetSamplingFilterForFrame(frame);
 
   FilterPrimitiveDescription descr(PrimitiveType::Image);
-  descr.Attributes().Set(eImageFilter, (uint32_t)filter);
+  descr.Attributes().Set(eImageFilter, (uint32_t)samplingFilter);
   descr.Attributes().Set(eImageTransform, TM);
 
   // Append the image to aInputImages and store its index in the description.

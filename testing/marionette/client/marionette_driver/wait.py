@@ -10,6 +10,7 @@ import time
 DEFAULT_TIMEOUT = 5
 DEFAULT_INTERVAL = 0.1
 
+
 class Wait(object):
     """An explicit conditional utility class for waiting until a condition
     evaluates to true or not null.
@@ -142,8 +143,10 @@ class Wait(object):
             (round((self.clock.now - start), 1), message if message else ""),
             cause=last_exc)
 
+
 def until_pred(clock, end):
     return clock.now >= end
+
 
 class SystemClock(object):
     def __init__(self):

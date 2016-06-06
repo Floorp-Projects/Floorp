@@ -576,15 +576,20 @@ Sanitizer.prototype = {
 
         // Clear all push notification subscriptions
         try {
-          let push = Cc["@mozilla.org/push/Service;1"]
-                       .getService(Ci.nsIPushService);
-          push.clearForDomain("*", status => {
-            if (!Components.isSuccessCode(status)) {
-              dump("Error clearing Web Push data: " + status + "\n");
-            }
+          yield new Promise((resolve, reject) => {
+            let push = Cc["@mozilla.org/push/Service;1"]
+                         .getService(Ci.nsIPushService);
+            push.clearForDomain("*", status => {
+              if (Components.isSuccessCode(status)) {
+                resolve();
+              } else {
+                reject(new Error("Error clearing push subscriptions: " +
+                                 status));
+              }
+            });
           });
-        } catch (e) {
-          dump("Web Push may not be available.\n");
+        } catch (ex) {
+          seenException = ex;
         }
 
         TelemetryStopwatch.finish("FX_SANITIZE_SITESETTINGS", refObj);

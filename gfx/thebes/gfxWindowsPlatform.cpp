@@ -560,7 +560,8 @@ gfxWindowsPlatform::CreatePlatformFontList()
         // but apparently it can - see bug 594865.
         // So we're going to fall back to GDI fonts & rendering.
         gfxPlatformFontList::Shutdown();
-        DisableD2D(FeatureStatus::Failed, "Failed to initialize fonts");
+        DisableD2D(FeatureStatus::Failed, "Failed to initialize fonts",
+                   NS_LITERAL_CSTRING("FEATURE_FAILURE_FONT_FAIL"));
     }
 
     pfl = new gfxGDIFontList();
@@ -580,9 +581,10 @@ gfxWindowsPlatform::CreatePlatformFontList()
 // This is called during gfxPlatform::Init() so at this point there should be no
 // DrawTargetD2D/1 instances.
 void
-gfxWindowsPlatform::DisableD2D(FeatureStatus aStatus, const char* aMessage)
+gfxWindowsPlatform::DisableD2D(FeatureStatus aStatus, const char* aMessage,
+                               const nsACString& aFailureId)
 {
-  gfxConfig::SetFailed(Feature::DIRECT2D, aStatus, aMessage);
+  gfxConfig::SetFailed(Feature::DIRECT2D, aStatus, aMessage, aFailureId);
   Factory::SetDirect3D11Device(nullptr);
   UpdateBackendPrefs();
 }
@@ -1893,7 +1895,7 @@ bool DoesD3D11AlphaTextureSharingWork(ID3D11Device *device)
 }
 
 static inline bool
-IsGfxInfoStatusOkay(int32_t aFeature, nsCString* aOutMessage)
+IsGfxInfoStatusOkay(int32_t aFeature, nsCString* aOutMessage, nsCString& aFailureId)
 {
   nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
   if (!gfxInfo) {
@@ -1901,12 +1903,11 @@ IsGfxInfoStatusOkay(int32_t aFeature, nsCString* aOutMessage)
   }
 
   int32_t status;
-  nsCString failureId;
-  if (SUCCEEDED(gfxInfo->GetFeatureStatus(aFeature, failureId, &status)) &&
+  if (SUCCEEDED(gfxInfo->GetFeatureStatus(aFeature, aFailureId, &status)) &&
       status != nsIGfxInfo::FEATURE_STATUS_OK)
   {
     aOutMessage->AssignLiteral("#BLOCKLIST_");
-    aOutMessage->AppendASCII(failureId.get());
+    aOutMessage->AppendASCII(aFailureId.get());
     return false;
   }
 
@@ -1929,15 +1930,18 @@ InitializeANGLEConfig()
   FeatureState& d3d11ANGLE = gfxConfig::GetFeature(Feature::D3D11_HW_ANGLE);
 
   if (!gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
-    d3d11ANGLE.DisableByDefault(FeatureStatus::Unavailable, "D3D11 compositing is disabled");
+    d3d11ANGLE.DisableByDefault(FeatureStatus::Unavailable, "D3D11 compositing is disabled",
+                                NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_DISABLED"));
     return;
   }
 
   d3d11ANGLE.EnableByDefault();
 
   nsCString message;
-  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT3D_11_ANGLE, &message)) {
-    d3d11ANGLE.Disable(FeatureStatus::Blacklisted, message.get());
+  nsCString failureId;
+  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT3D_11_ANGLE, &message,
+                           failureId)) {
+    d3d11ANGLE.Disable(FeatureStatus::Blacklisted, message.get(), failureId);
   }
 
 }
@@ -1964,7 +1968,8 @@ gfxWindowsPlatform::InitializeD3D9Config()
   FeatureState& d3d9 = gfxConfig::GetFeature(Feature::D3D9_COMPOSITING);
 
   if (!gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
-    d3d9.DisableByDefault(FeatureStatus::Unavailable, "Hardware compositing is disabled");
+    d3d9.DisableByDefault(FeatureStatus::Unavailable, "Hardware compositing is disabled",
+                          NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D9_NEED_HWCOMP"));
     return;
   }
 
@@ -1982,8 +1987,10 @@ gfxWindowsPlatform::InitializeD3D9Config()
   }
 
   nsCString message;
-  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, &message)) {
-    d3d9.Disable(FeatureStatus::Blacklisted, message.get());
+  nsCString failureId;
+  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, &message,
+                           failureId)) {
+    d3d9.Disable(FeatureStatus::Blacklisted, message.get(), failureId);
   }
 
   if (gfxConfig::IsForcedOnByUser(Feature::HW_COMPOSITING)) {
@@ -1999,7 +2006,8 @@ gfxWindowsPlatform::InitializeD3D11Config()
   FeatureState& d3d11 = gfxConfig::GetFeature(Feature::D3D11_COMPOSITING);
 
   if (!gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
-    d3d11.DisableByDefault(FeatureStatus::Unavailable, "Hardware compositing is disabled");
+    d3d11.DisableByDefault(FeatureStatus::Unavailable, "Hardware compositing is disabled",
+                           NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_NEED_HWCOMP"));
     return;
   }
 
@@ -2007,18 +2015,21 @@ gfxWindowsPlatform::InitializeD3D11Config()
 
   // If the user prefers D3D9, act as though they disabled D3D11.
   if (gfxPrefs::LayersPreferD3D9()) {
-    d3d11.UserDisable("Disabled due to user preference for Direct3D 9");
+    d3d11.UserDisable("Disabled due to user preference for Direct3D 9",
+                      NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_PREF"));
     return;
   }
 
   nsCString message;
-  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS, &message)) {
+  nsCString failureId;
+  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS, &message, failureId)) {
     if (IsWARPStable() && !gfxPrefs::LayersD3D11DisableWARP()) {
       // We do not expect hardware D3D11 to work, so we'll try WARP.
       gfxConfig::EnableFallback(Fallback::USE_D3D11_WARP_COMPOSITOR, message.get());
     } else {
       // There is little to no chance of D3D11 working, so just disable it.
-      d3d11.Disable(FeatureStatus::Blacklisted, message.get());
+      d3d11.Disable(FeatureStatus::Blacklisted, message.get(),
+                    failureId);
     }
   }
 
@@ -2091,7 +2102,8 @@ gfxWindowsPlatform::AttemptD3D11DeviceCreation(FeatureState& d3d11)
 {
   RefPtr<IDXGIAdapter1> adapter = GetDXGIAdapter();
   if (!adapter) {
-    d3d11.SetFailed(FeatureStatus::Unavailable, "Failed to acquire a DXGI adapter");
+    d3d11.SetFailed(FeatureStatus::Unavailable, "Failed to acquire a DXGI adapter",
+                    NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_DXGI"));
     return;
   }
 
@@ -2099,17 +2111,20 @@ gfxWindowsPlatform::AttemptD3D11DeviceCreation(FeatureState& d3d11)
   RefPtr<ID3D11Device> device;
   if (!AttemptD3D11DeviceCreationHelper(adapter, device, hr)) {
     gfxCriticalError() << "Crash during D3D11 device creation";
-    d3d11.SetFailed(FeatureStatus::CrashedInHandler, "Crashed trying to acquire a D3D11 device");
+    d3d11.SetFailed(FeatureStatus::CrashedInHandler, "Crashed trying to acquire a D3D11 device",
+                    NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_DEVICE1"));
     return;
   }
 
   if (FAILED(hr) || !device) {
     gfxCriticalError() << "D3D11 device creation failed: " << hexa(hr);
-    d3d11.SetFailed(FeatureStatus::Failed, "Failed to acquire a D3D11 device");
+    d3d11.SetFailed(FeatureStatus::Failed, "Failed to acquire a D3D11 device",
+                    NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_DEVICE2"));
     return;
   }
   if (!DoesD3D11DeviceWork()) {
-    d3d11.SetFailed(FeatureStatus::Broken, "Direct3D11 device was determined to be broken");
+    d3d11.SetFailed(FeatureStatus::Broken, "Direct3D11 device was determined to be broken",
+                    NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_BROKEN"));
     return;
   }
 
@@ -2171,14 +2186,16 @@ gfxWindowsPlatform::AttemptWARPDeviceCreation()
   RefPtr<ID3D11Device> device;
   if (!AttemptWARPDeviceCreationHelper(reporterWARP, device, hr)) {
     gfxCriticalError() << "Exception occurred initializing WARP D3D11 device!";
-    d3d11.SetFailed(FeatureStatus::CrashedInHandler, "Crashed creating a D3D11 WARP device");
+    d3d11.SetFailed(FeatureStatus::CrashedInHandler, "Crashed creating a D3D11 WARP device",
+                     NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_WARP_DEVICE"));
     return;
   }
 
   if (FAILED(hr) || !device) {
     // This should always succeed... in theory.
     gfxCriticalError() << "Failed to initialize WARP D3D11 device! " << hexa(hr);
-    d3d11.SetFailed(FeatureStatus::Failed, "Failed to create a D3D11 WARP device");
+    d3d11.SetFailed(FeatureStatus::Failed, "Failed to create a D3D11 WARP device",
+                    NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_WARP_DEVICE2"));
     return;
   }
 
@@ -2425,13 +2442,15 @@ gfxWindowsPlatform::InitializeD3D11()
     (decltype(D3D11CreateDevice)*)GetProcAddress(d3d11Module, "D3D11CreateDevice");
   if (!sD3D11CreateDeviceFn) {
     // We should just be on Windows Vista or XP in this case.
-    d3d11.SetFailed(FeatureStatus::Unavailable, "Direct3D11 not available on this computer");
+    d3d11.SetFailed(FeatureStatus::Unavailable, "Direct3D11 not available on this computer",
+                    NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_LIB"));
     return;
   }
 
   // Check if a failure was injected for testing.
   if (gfxPrefs::DeviceFailForTesting()) {
-    d3d11.SetFailed(FeatureStatus::Failed, "Direct3D11 device failure simulated by preference");
+    d3d11.SetFailed(FeatureStatus::Failed, "Direct3D11 device failure simulated by preference",
+                    NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_SIM"));
     return;
   }
 
@@ -2500,7 +2519,8 @@ gfxWindowsPlatform::DisableD3D11AfterCrash()
 {
   gfxConfig::Disable(Feature::D3D11_COMPOSITING,
     FeatureStatus::CrashedInHandler,
-    "Crashed while acquiring a Direct3D11 device");
+    "Crashed while acquiring a Direct3D11 device",
+    NS_LITERAL_CSTRING("FEATURE_FAILURE_D3D11_CRASH"));
   ResetD3D11Devices();
 }
 
@@ -2521,11 +2541,13 @@ gfxWindowsPlatform::InitializeD2DConfig()
   FeatureState& d2d1 = gfxConfig::GetFeature(Feature::DIRECT2D);
 
   if (!gfxConfig::IsEnabled(Feature::D3D11_COMPOSITING)) {
-    d2d1.DisableByDefault(FeatureStatus::Unavailable, "Direct2D requires Direct3D 11 compositing");
+    d2d1.DisableByDefault(FeatureStatus::Unavailable, "Direct2D requires Direct3D 11 compositing",
+                          NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_D3D11_COMP"));
     return;
   }
   if (!IsVistaOrLater()) {
-    d2d1.DisableByDefault(FeatureStatus::Unavailable, "Direct2D is not available on Windows XP");
+    d2d1.DisableByDefault(FeatureStatus::Unavailable, "Direct2D is not available on Windows XP",
+                          NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_XP"));
     return;
   }
 
@@ -2535,8 +2557,9 @@ gfxWindowsPlatform::InitializeD2DConfig()
     gfxPrefs::GetDirect2DDisabledPrefDefault());
 
   nsCString message;
-  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT2D, &message)) {
-    d2d1.Disable(FeatureStatus::Blacklisted, message.get());
+  nsCString failureId;
+  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT2D, &message, failureId)) {
+    d2d1.Disable(FeatureStatus::Blacklisted, message.get(), failureId);
   }
 
   if (!d2d1.IsEnabled() && gfxPrefs::Direct2DForceEnabled()) {
@@ -2554,7 +2577,8 @@ gfxWindowsPlatform::InitializeD2D()
   // We don't know this value ahead of time, but the user can force-override
   // it, so we use Disable instead of SetFailed.
   if (mIsWARP) {
-    d2d1.Disable(FeatureStatus::Blocked, "Direct2D is not compatible with Direct3D11 WARP");
+    d2d1.Disable(FeatureStatus::Blocked, "Direct2D is not compatible with Direct3D11 WARP",
+                 NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_WARP_BLOCK"));
   }
 
   // If we pass all the initial checks, we can proceed to runtime decisions.
@@ -2563,29 +2587,34 @@ gfxWindowsPlatform::InitializeD2D()
   }
 
   if (!Factory::SupportsD2D1()) {
-    d2d1.SetFailed(FeatureStatus::Unavailable, "Failed to acquire a Direct2D 1.1 factory");
+    d2d1.SetFailed(FeatureStatus::Unavailable, "Failed to acquire a Direct2D 1.1 factory",
+                   NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_FACTORY"));
     return;
   }
 
   if (!mD3D11ContentDevice) {
-    d2d1.SetFailed(FeatureStatus::Failed, "Failed to acquire a Direct3D 11 content device");
+    d2d1.SetFailed(FeatureStatus::Failed, "Failed to acquire a Direct3D 11 content device",
+                   NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_DEVICE"));
     return;
   }
 
   if (!mCompositorD3D11TextureSharingWorks) {
-    d2d1.SetFailed(FeatureStatus::Failed, "Direct3D11 device does not support texture sharing");
+    d2d1.SetFailed(FeatureStatus::Failed, "Direct3D11 device does not support texture sharing",
+                   NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_TXT_SHARING"));
     return;
   }
 
   // Using Direct2D depends on DWrite support.
   if (!mDWriteFactory && !InitDWriteSupport()) {
-    d2d1.SetFailed(FeatureStatus::Failed, "Failed to initialize DirectWrite support");
+    d2d1.SetFailed(FeatureStatus::Failed, "Failed to initialize DirectWrite support",
+                   NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_DWRITE"));
     return;
   }
 
   // Verify that Direct2D device creation succeeded.
   if (!Factory::SetDirect3D11Device(mD3D11ContentDevice)) {
-    d2d1.SetFailed(FeatureStatus::Failed, "Failed to create a Direct2D device");
+    d2d1.SetFailed(FeatureStatus::Failed, "Failed to create a Direct2D device",
+                   NS_LITERAL_CSTRING("FEATURE_FAILURE_D2D_CREATE_FAILED"));
     return;
   }
 

@@ -131,7 +131,7 @@ TextRenderer::RenderText(const string& aText, const IntPoint& aOrigin,
     return;
   }
 
-  RefPtr<EffectRGB> effect = new EffectRGB(src, true, Filter::LINEAR);
+  RefPtr<EffectRGB> effect = new EffectRGB(src, true, SamplingFilter::LINEAR);
   EffectChain chain;
   chain.mPrimaryEffect = effect;
 

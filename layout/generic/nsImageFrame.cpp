@@ -748,13 +748,14 @@ nsImageFrame::MaybeDecodeForPredictedSize()
   // Determine the optimal image size to use.
   uint32_t flags = imgIContainer::FLAG_HIGH_QUALITY_SCALING
                  | imgIContainer::FLAG_ASYNC_NOTIFY;
-  Filter filter = nsLayoutUtils::GetGraphicsFilterForFrame(this);
+  SamplingFilter samplingFilter =
+    nsLayoutUtils::GetSamplingFilterForFrame(this);
   gfxSize gfxPredictedScreenSize = gfxSize(predictedScreenIntSize.width,
                                            predictedScreenIntSize.height);
   nsIntSize predictedImageSize =
     mImage->OptimalImageSizeForDest(gfxPredictedScreenSize,
                                     imgIContainer::FRAME_CURRENT,
-                                    filter, flags);
+                                    samplingFilter, flags);
 
   // Request a decode.
   mImage->RequestDecodeForSize(predictedImageSize, flags);
@@ -1426,7 +1427,7 @@ nsImageFrame::DisplayAltFeedback(nsRenderingContext& aRenderingContext,
       nsRect dest(flushRight ? inner.XMost() - size : inner.x,
                   inner.y, size, size);
       result = nsLayoutUtils::DrawSingleImage(*gfx, PresContext(), imgCon,
-        nsLayoutUtils::GetGraphicsFilterForFrame(this), dest, aDirtyRect,
+        nsLayoutUtils::GetSamplingFilterForFrame(this), dest, aDirtyRect,
         nullptr, aFlags);
     }
 
@@ -1700,7 +1701,7 @@ nsImageFrame::PaintImage(nsRenderingContext& aRenderingContext, nsPoint aPt,
   DrawResult result =
     nsLayoutUtils::DrawSingleImage(*aRenderingContext.ThebesContext(),
       PresContext(), aImage,
-      nsLayoutUtils::GetGraphicsFilterForFrame(this), dest, aDirtyRect,
+      nsLayoutUtils::GetSamplingFilterForFrame(this), dest, aDirtyRect,
       nullptr, flags, &anchorPoint);
 
   nsImageMap* map = GetImageMap();

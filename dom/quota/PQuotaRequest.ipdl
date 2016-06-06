@@ -12,7 +12,7 @@ struct ClearOriginResponse
 {
 };
 
-struct ClearAppResponse
+struct ClearOriginsResponse
 {
 };
 
@@ -28,7 +28,7 @@ union RequestResponse
 {
   nsresult;
   ClearOriginResponse;
-  ClearAppResponse;
+  ClearOriginsResponse;
   ClearAllResponse;
   ResetAllResponse;
 };

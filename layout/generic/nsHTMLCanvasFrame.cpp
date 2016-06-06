@@ -360,10 +360,10 @@ nsHTMLCanvasFrame::BuildLayer(nsDisplayListBuilder* aBuilder,
   layer->SetBaseTransform(gfx::Matrix4x4::From2D(transform));
   if (layer->GetType() == layers::Layer::TYPE_CANVAS) {
     RefPtr<CanvasLayer> canvasLayer = static_cast<CanvasLayer*>(layer.get());
-    canvasLayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(this));
+    canvasLayer->SetSamplingFilter(nsLayoutUtils::GetSamplingFilterForFrame(this));
   } else if (layer->GetType() == layers::Layer::TYPE_IMAGE) {
     RefPtr<ImageLayer> imageLayer = static_cast<ImageLayer*>(layer.get());
-    imageLayer->SetFilter(nsLayoutUtils::GetGraphicsFilterForFrame(this));
+    imageLayer->SetSamplingFilter(nsLayoutUtils::GetSamplingFilterForFrame(this));
   }
 
   return layer.forget();
