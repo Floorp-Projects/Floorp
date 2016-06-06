@@ -1021,10 +1021,8 @@ this.PushService = {
   _sendRequest(action, ...params) {
     if (this._state == PUSH_SERVICE_CONNECTION_DISABLE) {
       return Promise.reject(new Error("Push service disabled"));
-    } else if (this._state == PUSH_SERVICE_ACTIVE_OFFLINE) {
-      if (this._service.serviceType() == "WebSocket" && action == "unregister") {
-        return Promise.resolve();
-      }
+    }
+    if (this._state == PUSH_SERVICE_ACTIVE_OFFLINE) {
       return Promise.reject(new Error("Push service offline"));
     }
     // Ensure the backend is ready. `getByPageRecord` already checks this, but
@@ -1201,12 +1199,13 @@ this.PushService = {
         let reason = Ci.nsIPushErrorReporter.UNSUBSCRIBE_MANUAL;
         return Promise.all([
           this._sendUnregister(record, reason),
-          this._db.delete(record.keyID),
-        ]).then(() => {
-          gPushNotifier.notifySubscriptionModified(record.scope,
-                                                   record.principal);
-          return true;
-        });
+          this._db.delete(record.keyID).then(record => {
+            if (record) {
+              gPushNotifier.notifySubscriptionModified(record.scope,
+                                                       record.principal);
+            }
+          }),
+        ]).then(([success]) => success);
       });
   },
 

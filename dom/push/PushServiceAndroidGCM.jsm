@@ -59,10 +59,6 @@ this.PushServiceAndroidGCM = {
                       PushRecordAndroidGCM);
   },
 
-  serviceType: function() {
-    return "AndroidGCM";
-  },
-
   validServerURI: function(serverURI) {
     if (!serverURI) {
       return false;
