@@ -18,7 +18,6 @@ UNIFIED_SOURCES += [
     'testChromeBuffer.cpp',
     'testClassGetter.cpp',
     'testCloneScript.cpp',
-    'testContexts.cpp',
     'testDateToLocaleString.cpp',
     'testDebugger.cpp',
     'testDeepFreeze.cpp',
