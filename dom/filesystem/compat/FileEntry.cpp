@@ -5,10 +5,38 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FileEntry.h"
+#include "ErrorCallbackRunnable.h"
 #include "mozilla/dom/File.h"
 
 namespace mozilla {
 namespace dom {
+
+namespace {
+
+class BlobCallbackRunnable final : public Runnable
+{
+public:
+  BlobCallbackRunnable(BlobCallback* aCallback, File* aFile)
+    : mCallback(aCallback)
+    , mFile(aFile)
+  {
+    MOZ_ASSERT(aCallback);
+    MOZ_ASSERT(aFile);
+  }
+
+  NS_IMETHOD
+  Run() override
+  {
+    mCallback->HandleEvent(mFile);
+    return NS_OK;
+  }
+
+private:
+  RefPtr<BlobCallback> mCallback;
+  RefPtr<File> mFile;
+};
+
+} // anonymous namespace
 
 NS_IMPL_CYCLE_COLLECTION_INHERITED(FileEntry, Entry, mFile)
 
@@ -46,6 +74,29 @@ void
 FileEntry::GetFullPath(nsAString& aPath, ErrorResult& aRv) const
 {
   mFile->GetPath(aPath);
+}
+
+void
+FileEntry::CreateWriter(VoidCallback& aSuccessCallback,
+                        const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
+{
+  if (aErrorCallback.WasPassed()) {
+    RefPtr<ErrorCallbackRunnable> runnable =
+      new ErrorCallbackRunnable(GetParentObject(),
+                                &aErrorCallback.Value());
+    nsresult rv = NS_DispatchToMainThread(runnable);
+    NS_WARN_IF(NS_FAILED(rv));
+  }
+}
+
+void
+FileEntry::GetFile(BlobCallback& aSuccessCallback,
+                   const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
+{
+  RefPtr<BlobCallbackRunnable> runnable =
+    new BlobCallbackRunnable(&aSuccessCallback, mFile);
+  nsresult rv = NS_DispatchToMainThread(runnable);
+  NS_WARN_IF(NS_FAILED(rv));
 }
 
 } // dom namespace

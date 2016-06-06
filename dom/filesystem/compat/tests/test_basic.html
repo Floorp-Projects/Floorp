@@ -62,6 +62,25 @@ function test_fileEntry() {
   next();
 }
 
+function test_fileEntry_file() {
+  fileEntry.file(function(file) {
+    ok(file, "We have a file here!");
+    is(file.name, fileEntry.name, "Same file name.");
+    next();
+  }, function() {
+    ok(false, "Something when wrong!");
+  });
+}
+
+function test_fileEntry_createWriter() {
+  fileEntry.createWriter(function(file) {
+    ok(false, "Something when wrong!");
+  }, function() {
+    ok(true, "We don't support createWrite");
+    next();
+  });
+}
+
 function test_directoryEntry() {
   ok("name" in directoryEntry, "We have a name.");
   ok("fullPath" in directoryEntry, "We have a fullPath.");
@@ -77,6 +96,9 @@ var tests = [
   test_entries,
 
   test_fileEntry,
+  test_fileEntry_file,
+  test_fileEntry_createWriter,
+
   test_directoryEntry,
 ];
 
