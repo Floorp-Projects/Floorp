@@ -28,8 +28,8 @@ factory((root.pdfjsDistBuildPdfWorker = {}));
   // Use strict in our context only - users might not want it
   'use strict';
 
-var pdfjsVersion = '1.5.276';
-var pdfjsBuild = '41f978c';
+var pdfjsVersion = '1.5.281';
+var pdfjsBuild = '5a5bb99';
 
   var pdfjsFilePath =
     typeof document !== 'undefined' && document.currentScript ?
@@ -37210,7 +37210,7 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
             case OPS.setFont:
               flushTextContentItem();
               textState.fontSize = args[1];
-              next(handleSetFont(args[0].name));
+              next(handleSetFont(args[0].name, null));
               return;
             case OPS.setTextRise:
               flushTextContentItem();
@@ -37416,21 +37416,17 @@ var PartialEvaluator = (function PartialEvaluatorClosure() {
               var dictName = args[0];
               var extGState = resources.get('ExtGState');
 
-              if (!isDict(extGState) || !extGState.has(dictName.name)) {
+              if (!isDict(extGState) || !isName(dictName)) {
                 break;
               }
-
-              var gsStateMap = extGState.get(dictName.name);
-              var gsStateFont = null;
-              for (var key in gsStateMap) {
-                if (key === 'Font') {
-                  assert(!gsStateFont);
-                  gsStateFont = gsStateMap[key];
-                }
+              var gState = extGState.get(dictName.name);
+              if (!isDict(gState)) {
+                break;
               }
-              if (gsStateFont) {
-                textState.fontSize = gsStateFont[1];
-                next(handleSetFont(gsStateFont[0]));
+              var gStateFont = gState.get('Font');
+              if (gStateFont) {
+                textState.fontSize = gStateFont[1];
+                next(handleSetFont(null, gStateFont[0]));
                 return;
               }
               break;

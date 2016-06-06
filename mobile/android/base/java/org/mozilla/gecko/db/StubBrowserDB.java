@@ -44,12 +44,12 @@ class StubURLMetadata implements URLMetadata {
     }
 
     public Map<String, Map<String, Object>> getForURLs(final ContentResolver cr,
-                                                       final List<String> urls,
+                                                       final Collection<String> urls,
                                                        final List<String> columns) {
         return new HashMap<String, Map<String, Object>>();
     }
 
-    public void save(final ContentResolver cr, final String url, final Map<String, Object> data) {
+    public void save(final ContentResolver cr, final Map<String, Object> data) {
     }
 }
 

@@ -45,7 +45,7 @@ function* testComputedViewUrls(inspector) {
  */
 function* performChecks(view, propertyValue) {
   function checkTooltip(panel, imageSrc) {
-    let images = panel.getElementsByTagName("image");
+    let images = panel.getElementsByTagName("img");
     is(images.length, 1, "Tooltip contains an image");
     is(images[0].getAttribute("src"), imageSrc, "The image URL is correct");
   }

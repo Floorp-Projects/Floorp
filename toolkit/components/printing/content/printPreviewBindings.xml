@@ -88,6 +88,12 @@
       </xul:hbox>
 
       <xul:toolbarseparator class="toolbarseparator-primary"/>
+      <xul:checkbox label="&simplifyPage.label;" checked="false" disabled="true"
+        tooltiptext-disabled="&simplifyPage.disabled.tooltip;"
+        tooltiptext-enabled="&simplifyPage.enabled.tooltip;"
+        oncommand="this.parentNode.simplify();"/>
+
+      <xul:toolbarseparator class="toolbarseparator-primary"/>
       <xul:button label="&close.label;" accesskey="&close.accesskey;"
         oncommand="PrintUtils.exitPrintPreview();" icon="close"/>
       <xul:data value="&customPrompt.title;"/>
@@ -118,8 +124,14 @@
       <field name="mLandscapeButton">
         this.mOrientButtonsBox.childNodes[1]
       </field>
+      <field name="mSimplifyPageCheckbox">
+        document.getAnonymousNodes(this)[14]
+      </field>
+      <field name="mSimplifyPageToolbarSeparator">
+        document.getAnonymousNodes(this)[15]
+      </field>
       <field name="mCustomTitle">
-        document.getAnonymousNodes(this)[15].firstChild
+        document.getAnonymousNodes(this)[17].firstChild
       </field>
       <field name="mPrintPreviewObs">
       </field>
@@ -136,6 +148,11 @@
         <parameter name="aPPBrowser"/>
         <body>
         <![CDATA[
+          let {Services} = Components.utils.import("resource://gre/modules/Services.jsm", {});
+          if (!Services.prefs.getBoolPref("print.use_simplify_page")) {
+            this.mSimplifyPageCheckbox.hidden = true;
+            this.mSimplifyPageToolbarSeparator.hidden = true;
+          }
           this.mPPBrowser = aPPBrowser;
           this.mMessageManager = aPPBrowser.messageManager;
           this.mMessageManager.addMessageListener("Printing:Preview:UpdatePageCount", this);
@@ -299,6 +316,35 @@
             this.savePrintSettings(settings, settings.kInitSaveOrientation);
             PrintUtils.printPreview();
           }
+        ]]>
+        </body>
+      </method>
+
+      <method name="simplify">
+        <body>
+        <![CDATA[
+          PrintUtils.setSimplifiedMode(this.mSimplifyPageCheckbox.checked);
+          PrintUtils.printPreview();
+        ]]>
+        </body>
+      </method>
+
+      <method name="enableSimplifyPage">
+        <body>
+        <![CDATA[
+          this.mSimplifyPageCheckbox.disabled = false;
+          this.mSimplifyPageCheckbox.setAttribute("tooltiptext",
+               this.mSimplifyPageCheckbox.getAttribute("tooltiptext-enabled"));
+        ]]>
+        </body>
+      </method>
+
+      <method name="disableSimplifyPage">
+        <body>
+        <![CDATA[
+          this.mSimplifyPageCheckbox.disabled = true;
+          this.mSimplifyPageCheckbox.setAttribute("tooltiptext",
+               this.mSimplifyPageCheckbox.getAttribute("tooltiptext-disabled"));
         ]]>
         </body>
       </method>

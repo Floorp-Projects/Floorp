@@ -14,7 +14,7 @@ var { generateUUID } = Cc["@mozilla.org/uuid-generator;1"].getService(Ci.nsIUUID
 
 var Promise = require("promise");
 var Services = require("Services");
-var { WebAudioFront } = require("devtools/server/actors/webaudio");
+var { WebAudioFront } = require("devtools/shared/fronts/webaudio");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var audioNodes = require("devtools/server/actors/utils/audionodes.json");
 var mm = null;

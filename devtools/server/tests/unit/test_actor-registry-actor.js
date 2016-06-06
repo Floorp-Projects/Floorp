@@ -10,7 +10,7 @@ var gRegistryFront;
 var gActorFront;
 var gOldPref;
 
-const { ActorRegistryFront } = require("devtools/server/actors/actor-registry");
+const { ActorRegistryFront } = require("devtools/shared/fronts/actor-registry");
 
 function run_test()
 {

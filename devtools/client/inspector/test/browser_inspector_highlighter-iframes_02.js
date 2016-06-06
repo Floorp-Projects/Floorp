@@ -50,7 +50,7 @@ function* switchToFrameContext(frameIndex, toolbox, inspector) {
   info("Select the iframe in the frame list.");
   let newRoot = inspector.once("new-root");
 
-  menu.menuitems[frameIndex].click();
+  menu.items[frameIndex].click();
 
   yield newRoot;
   yield inspector.once("inspector-updated");
