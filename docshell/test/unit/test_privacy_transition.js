@@ -17,7 +17,7 @@ var observer = {
 function run_test() {
   var docshell = Cc["@mozilla.org/docshell;1"].createInstance(Ci.nsIDocShell);
   docshell.addWeakPrivacyTransitionObserver(observer);
-  docshell.QueryInterface(Ci.nsILoadContext).usePrivateBrowsing = true;
-  docshell.QueryInterface(Ci.nsILoadContext).usePrivateBrowsing = false;
+  docshell.setOriginAttributes({ privateBrowsingId : 1 });
+  docshell.setOriginAttributes({ privateBrowsingId : 0 });
   do_check_eq(gNotifications, 2);
 }
