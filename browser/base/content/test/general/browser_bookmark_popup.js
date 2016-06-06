@@ -42,7 +42,6 @@ function* test_bookmarks_popup({isNewBookmark, popupShowFn, popupEditFn,
     yield PlacesUtils.bookmarks.fetch({url: "about:home"}, bm => bookmarks.push(bm));
     is(bookmarks.length, 1, "Only one bookmark should exist");
     is(bookmarkStar.getAttribute("starred"), "true", "Page is starred");
-    is(bookmarkPanel.state, "open", "Check that panel state is 'open'");
     is(bookmarkPanelTitle.value,
       isNewBookmark ?
         gNavigatorBundle.getString("editBookmarkPanel.pageBookmarkedTitle") :

@@ -47,7 +47,7 @@ function* testRuleView(ruleView, nodeFront) {
   // And verify that the tooltip gets shown on this property
   yield assertHoverTooltipOn(tooltip, valueSpan);
 
-  let images = panel.getElementsByTagName("image");
+  let images = panel.getElementsByTagName("img");
   is(images.length, 1, "Tooltip contains an image");
   ok(images[0].getAttribute("src")
     .startsWith("data:"), "Tooltip contains a data-uri image as expected");

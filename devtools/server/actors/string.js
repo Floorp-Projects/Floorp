@@ -4,14 +4,13 @@
 
 "use strict";
 
-var {Cu} = require("chrome");
 var {DebuggerServer} = require("devtools/server/main");
 
 var promise = require("promise");
 var {Class} = require("sdk/core/heritage");
 
 var protocol = require("devtools/shared/protocol");
-var {method, Arg, Option, RetVal} = protocol;
+var {method, Arg, RetVal} = protocol;
 
 exports.LongStringActor = protocol.ActorClass({
   typeName: "longstractor",
@@ -53,20 +52,26 @@ exports.LongStringActor = protocol.ActorClass({
 });
 
 /**
- * When a LongString on the server is short enough to be passed
- * as a full string, the client will get a ShortLongString instead of
- * a LongStringFront.  Its API should match.
- *
- * I'm very proud of this name.
+ * When a caller is expecting a LongString actor but the string is already available on
+ * client, the SimpleStringFront can be used as it shares the same API as a
+ * LongStringFront but will not make unnecessary trips to the server.
  */
-exports.ShortLongString = Class({
+exports.SimpleStringFront = Class({
   initialize: function (str) {
     this.str = str;
   },
 
-  get length() { return this.str.length; },
-  get initial() { return this.str; },
-  string: function () { return promise.resolve(this.str); },
+  get length() {
+    return this.str.length;
+  },
+
+  get initial() {
+    return this.str;
+  },
+
+  string: function () {
+    return promise.resolve(this.str);
+  },
 
   substring: function (start, end) {
     return promise.resolve(this.str.substring(start, end));
@@ -99,13 +104,12 @@ exports.LongStringFront = protocol.FrontClass(exports.LongStringActor, {
   string: function () {
     if (!this.strPromise) {
       let promiseRest = (thusFar) => {
-        if (thusFar.length === this.length)
+        if (thusFar.length === this.length) {
           return promise.resolve(thusFar);
-        else {
-          return this.substring(thusFar.length,
-                                thusFar.length + DebuggerServer.LONG_STRING_READ_LENGTH)
-            .then((next) => promiseRest(thusFar + next));
         }
+        return this.substring(thusFar.length,
+          thusFar.length + DebuggerServer.LONG_STRING_READ_LENGTH)
+          .then((next) => promiseRest(thusFar + next));
       };
 
       this.strPromise = promiseRest(this.initial);
@@ -124,18 +128,18 @@ protocol.types.addType("longstring", {
     if (!(context instanceof protocol.Actor)) {
       throw Error("Passing a longstring as an argument isn't supported.");
     }
+
     if (value.short) {
       return value.str;
-    } else {
-      return stringActorType.write(value, context, detail);
     }
+    return stringActorType.write(value, context, detail);
   },
   read: (value, context, detail) => {
     if (context instanceof protocol.Actor) {
       throw Error("Passing a longstring as an argument isn't supported.");
     }
     if (typeof (value) === "string") {
-      return exports.ShortLongString(value);
+      return exports.SimpleStringFront(value);
     }
     return stringActorType.read(value, context, detail);
   }

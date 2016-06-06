@@ -1,0 +1,22 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+/* This file defines specific rules for print preview when using simplify mode.
+ * These rules already exist on aboutReaderControls.css, however, we decoupled it
+ * from the original file so we don't need to load a bunch of extra queries that
+ * will not take effect when using the simplify page checkbox. This file defines
+ * styling for title and author on the header element. */
+
+.header > h1 {
+  font-size: 1.6em;
+  line-height: 1.25em;
+  margin: 30px 0;
+}
+
+.header > .credits {
+  font-size: 0.9em;
+  line-height: 1.48em;
+  margin: 0 0 30px 0;
+  font-style: italic;
+}

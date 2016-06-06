@@ -299,6 +299,7 @@ var PrintUtils = {
   _sourceBrowser: null,
   _originalTitle: "",
   _originalURL: "",
+  _shouldSimplify: false,
 
   get usingRemoteTabs() {
     // We memoize this, since it's highly unlikely to change over the lifetime
@@ -479,6 +480,11 @@ var PrintUtils = {
     }
   },
 
+  setSimplifiedMode: function (shouldSimplify)
+  {
+    this._shouldSimplify = shouldSimplify;
+  },
+
   enterPrintPreview: function ()
   {
     // Send a message to the print preview browser to initialize
@@ -488,9 +494,46 @@ var PrintUtils = {
     // listener.
     let ppBrowser = this._listener.getPrintPreviewBrowser();
     let mm = ppBrowser.messageManager;
-    mm.sendAsyncMessage("Printing:Preview:Enter", {
-      windowID: this._sourceBrowser.outerWindowID,
-    });
+
+    let sendEnterPreviewMessage = function (browser, simplified) {
+      mm.sendAsyncMessage("Printing:Preview:Enter", {
+        windowID: browser.outerWindowID,
+        simplifiedMode: simplified,
+      });
+    };
+
+    // If we happen to have gotten simplify page checked, we will lazily
+    // instantiate a new tab that parses the original page using ReaderMode
+    // primitives. When it's ready, and in order to enter on preview, we send
+    // over a message to print preview browser passing up the simplified tab as
+    // reference. If not, we pass the original tab instead as content source.
+    if (this._shouldSimplify) {
+      let simplifiedBrowser = this._listener.getSimplifiedSourceBrowser();
+      if (simplifiedBrowser) {
+        sendEnterPreviewMessage(simplifiedBrowser, true);
+      } else {
+        simplifiedBrowser = this._listener.createSimplifiedBrowser();
+
+        // After instantiating the simplified tab, we attach a listener as
+        // callback. Once we discover reader mode has been loaded, we fire
+        // up a message to enter on print preview.
+        let spMM = simplifiedBrowser.messageManager;
+        spMM.addMessageListener("Printing:Preview:ReaderModeReady", function onReaderReady() {
+          spMM.removeMessageListener("Printing:Preview:ReaderModeReady", onReaderReady);
+          sendEnterPreviewMessage(simplifiedBrowser, true);
+        });
+
+        // Here, we send down a message to simplified browser in order to parse
+        // the original page. After we have parsed it, content will tell parent
+        // that the document is ready for print previewing.
+        spMM.sendAsyncMessage("Printing:Preview:ParseDocument", {
+          URL: this._listener.getSourceBrowser().currentURI.spec,
+          windowID: this._listener.getSourceBrowser().outerWindowID,
+        });
+      }
+    } else {
+      sendEnterPreviewMessage(this._listener.getSourceBrowser(), false);
+    }
 
     if (this._webProgressPP.value) {
       mm.addMessageListener("Printing:Preview:StateChange", this);
@@ -537,6 +580,12 @@ var PrintUtils = {
       navToolbox.parentNode.insertBefore(printPreviewTB, navToolbox);
       printPreviewTB.initialize(ppBrowser);
 
+      // Enable simplify page checkbox when the page is an article
+      if (this._sourceBrowser.isArticle)
+        printPreviewTB.enableSimplifyPage();
+      else
+        printPreviewTB.disableSimplifyPage();
+
       // copy the window close handler
       if (document.documentElement.hasAttribute("onclose"))
         this._closeHandlerPP = document.documentElement.getAttribute("onclose");
@@ -580,6 +629,8 @@ var PrintUtils = {
     else
       this._sourceBrowser.focus();
     gFocusedElement = null;
+
+    this.setSimplifiedMode(false);
 
     this._listener.onExit();
   },

@@ -33,7 +33,7 @@ add_task(function* () {
   yield once(menu, "open");
 
   // Verify that the menu is popuplated.
-  let frames = menu.menuitems.slice();
+  let frames = menu.items.slice();
   is(frames.length, 2, "We have both frames in the menu");
 
   frames.sort(function (a, b) {

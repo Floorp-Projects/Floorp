@@ -37,7 +37,7 @@ function* testTabsUpdateURL(existentTabURL, tabsUpdateURL, isErrorExpected) {
           if (!isErrorExpected) {
             browser.test.fails(`tabs.update with URL ${tabsUpdateURL} should not be rejected`);
           } else {
-            browser.test.assertTrue(/^URL not allowed/.test(error.message),
+            browser.test.assertTrue(/^Illegal URL/.test(error.message),
                                     "tabs.update should be rejected with the expected error message");
           }
         };

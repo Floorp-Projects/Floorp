@@ -16,7 +16,7 @@ const {Task} = require("devtools/shared/task");
 const events = require("sdk/event/core");
 const protocol = require("devtools/shared/protocol");
 const {Arg, Option, method, RetVal, types} = protocol;
-const {LongStringActor, ShortLongString} = require("devtools/server/actors/string");
+const {LongStringActor} = require("devtools/server/actors/string");
 const {fetch} = require("devtools/shared/DevToolsUtils");
 const {listenOnce} = require("devtools/shared/async-utils");
 const {originalSourceSpec, mediaRuleSpec, styleSheetSpec,
