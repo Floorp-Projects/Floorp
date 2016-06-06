@@ -1850,6 +1850,91 @@ ScopedCopyTexImageSource::~ScopedCopyTexImageSource()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool
+GetUnsizedFormatForCopy(GLenum internalFormat, webgl::UnsizedFormat* const out)
+{
+    switch (internalFormat) {
+    case LOCAL_GL_RED:             *out = webgl::UnsizedFormat::R;    break;
+    case LOCAL_GL_RG:              *out = webgl::UnsizedFormat::RG;   break;
+    case LOCAL_GL_RGB:             *out = webgl::UnsizedFormat::RGB;  break;
+    case LOCAL_GL_RGBA:            *out = webgl::UnsizedFormat::RGBA; break;
+    case LOCAL_GL_LUMINANCE:       *out = webgl::UnsizedFormat::L;    break;
+    case LOCAL_GL_ALPHA:           *out = webgl::UnsizedFormat::A;    break;
+    case LOCAL_GL_LUMINANCE_ALPHA: *out = webgl::UnsizedFormat::LA;   break;
+
+    default:
+        return false;
+    }
+
+    return true;
+}
+
+static const webgl::FormatUsageInfo*
+ValidateCopyDestUsage(const char* funcName, WebGLContext* webgl,
+                      const webgl::FormatInfo* srcFormat, GLenum internalFormat)
+{
+    const auto& fua = webgl->mFormatUsage;
+
+    auto dstUsage = fua->GetSizedTexUsage(internalFormat);
+    if (!dstUsage) {
+        // Ok, maybe it's unsized.
+        webgl::UnsizedFormat unsizedFormat;
+        if (!GetUnsizedFormatForCopy(internalFormat, &unsizedFormat)) {
+            webgl->ErrorInvalidEnum("%s: Unrecongnized internalFormat 0x%04x.", funcName,
+                                    internalFormat);
+            return nullptr;
+        }
+
+        const auto dstFormat = srcFormat->GetCopyDecayFormat(unsizedFormat);
+        if (dstFormat) {
+            dstUsage = fua->GetUsage(dstFormat->effectiveFormat);
+        }
+        if (!dstUsage) {
+            webgl->ErrorInvalidOperation("%s: 0x%04x is not a valid unsized format for"
+                                         " source format %s.",
+                                         funcName, internalFormat, srcFormat->name);
+            return nullptr;
+        }
+
+        return dstUsage;
+    }
+    // Alright, it's sized.
+
+    const auto dstFormat = dstUsage->format;
+
+    if (dstFormat->componentType != srcFormat->componentType) {
+        webgl->ErrorInvalidOperation("%s: For sized internalFormats, source and dest"
+                                     " component types must match. (source: %s, dest:"
+                                     " %s)",
+                                     funcName, srcFormat->name, dstFormat->name);
+        return nullptr;
+    }
+
+    bool componentSizesMatch = true;
+    if (dstFormat->r) {
+        componentSizesMatch &= (dstFormat->r == srcFormat->r);
+    }
+    if (dstFormat->g) {
+        componentSizesMatch &= (dstFormat->g == srcFormat->g);
+    }
+    if (dstFormat->b) {
+        componentSizesMatch &= (dstFormat->b == srcFormat->b);
+    }
+    if (dstFormat->a) {
+        componentSizesMatch &= (dstFormat->a == srcFormat->a);
+    }
+
+    if (!componentSizesMatch) {
+        webgl->ErrorInvalidOperation("%s: For sized internalFormats, source and dest"
+                                     " component sizes must match exactly. (source: %s,"
+                                     " dest: %s)",
+                                     funcName, srcFormat->name, dstFormat->name);
+        return nullptr;
+    }
+
+    return dstUsage;
+}
+
 // There is no CopyTexImage3D.
 void
 WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internalFormat,
@@ -1900,35 +1985,12 @@ WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internal
     ////////////////////////////////////
     // Check that source and dest info are compatible
 
-    const auto& fua = mContext->mFormatUsage;
-
-    auto dstUsage = fua->GetSizedTexUsage(internalFormat);
-    if (!dstUsage) {
-        // It must be an unsized format then...
-        webgl::PackingInfo pi = {internalFormat, 0};
-
-        switch (srcFormat->componentType) {
-        case webgl::ComponentType::NormUInt:
-            pi.type = LOCAL_GL_UNSIGNED_BYTE;
-            break;
-
-        case webgl::ComponentType::Float:
-            pi.type = LOCAL_GL_FLOAT;
-            break;
-
-        default:
-            break;
-        }
-
-        dstUsage = fua->GetUnsizedTexUsage(pi);
-    }
-
-    if (!dstUsage) {
-        mContext->ErrorInvalidEnum("%s: Invalid internalFormat 0x%04x for FB format %s.",
-                                   funcName, internalFormat, srcFormat->name);
+    const auto dstUsage = ValidateCopyDestUsage(funcName, mContext, srcFormat,
+                                                internalFormat);
+    if (!dstUsage)
         return;
-    }
-    auto dstFormat = dstUsage->format;
+
+    const auto dstFormat = dstUsage->format;
 
     if (!ValidateTargetForFormat(funcName, mContext, target, dstFormat))
         return;
@@ -1959,9 +2021,7 @@ WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internal
 
     GLenum error;
     if (rwWidth == uint32_t(width) && rwHeight == uint32_t(height)) {
-        MOZ_ASSERT(dstUsage->idealUnpack);
-        error = DoCopyTexImage2D(gl, target, level, dstUsage->idealUnpack->internalFormat,
-                                 x, y, width, height);
+        error = DoCopyTexImage2D(gl, target, level, internalFormat, x, y, width, height);
     } else {
         // 1. Zero the texture data.
         // 2. CopyTexSubImage the subrect.
