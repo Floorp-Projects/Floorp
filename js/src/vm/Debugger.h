@@ -1051,6 +1051,8 @@ class DebuggerObject : public NativeObject
     static DebuggerObject* create(JSContext* cx, HandleObject proto, HandleObject obj,
                                   HandleNativeObject debugger);
 
+    static bool className(JSContext* cx, Handle<DebuggerObject*> object,
+                          MutableHandleString result);
     static bool isBoundFunction(JSContext* cx, Handle<DebuggerObject*> object);
     static bool boundTargetFunction(JSContext* cx, Handle<DebuggerObject*> object,
                                     MutableHandleObject result);
@@ -1062,6 +1064,8 @@ class DebuggerObject : public NativeObject
     static bool isExtensible(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
     static bool isSealed(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
     static bool isFrozen(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
+    static bool getPrototypeOf(JSContext* cx, Handle<DebuggerObject*> object,
+                               MutableHandleObject result);
     static bool getOwnPropertyNames(JSContext* cx, Handle<DebuggerObject*> object,
                                     MutableHandle<IdVector> result);
     static bool getOwnPropertySymbols(JSContext* cx, Handle<DebuggerObject*> object,
