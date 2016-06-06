@@ -10,7 +10,7 @@
 #define SET_PRINTER_FEATURES_VIA_PREFS 1
 #define PRINTERFEATURES_PREF "print.tmp.printerfeatures"
 
-#include "mozilla/gfx/PrintTargetThebes.h"
+#include "mozilla/gfx/PrintTargetPDF.h"
 #include "mozilla/Logging.h"
 
 #include "plstr.h"
@@ -30,8 +30,6 @@
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-
-#include "gfxPDFSurface.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;
@@ -104,9 +102,6 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecQt::MakePrintTarget()
     int16_t format;
     mPrintSettings->GetOutputFormat(&format);
 
-    RefPtr<gfxASurface> surface;
-    gfxSize surfaceSize(width, height);
-
     if (format == nsIPrintSettings::kOutputFormatNative) {
         if (mIsPPreview) {
             // There is nothing to detect on Print Preview, use PS.
@@ -116,13 +111,12 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecQt::MakePrintTarget()
         }
         format = nsIPrintSettings::kOutputFormatPDF;
     }
+
     if (format == nsIPrintSettings::kOutputFormatPDF) {
-        surface = new gfxPDFSurface(stream, surfaceSize);
-    } else {
-        return nullptr;
+        return PrintTargetPDF::CreateOrNull(stream, IntSize(width, height));
     }
 
-    return PrintTargetThebes::CreateOrNull(surface);
+    return nullptr;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecQt::Init(nsIWidget* aWidget,
