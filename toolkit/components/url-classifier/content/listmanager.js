@@ -114,18 +114,11 @@ PROT_ListManager.prototype.registerTable = function(tableName,
   // Keep track of all of our update URLs.
   if (!this.needsUpdate_[updateUrl]) {
     this.needsUpdate_[updateUrl] = {};
-    /* Backoff interval should be between 30 and 60 minutes. */
-    var backoffInterval = 30 * 60 * 1000;
-    backoffInterval += Math.floor(Math.random() * (30 * 60 * 1000));
 
-    log("Creating request backoff for " + updateUrl);
-    this.requestBackoffs_[updateUrl] = new RequestBackoff(2 /* max errors */,
-                                      60*1000 /* retry interval, 1 min */,
+    // Using the V4 backoff algorithm for both V2 and V4. See bug 1273398.
+    this.requestBackoffs_[updateUrl] = new RequestBackoffV4(
                                             4 /* num requests */,
-                                   60*60*1000 /* request time, 60 min */,
-                              backoffInterval /* backoff interval, 60 min */,
-                                 8*60*60*1000 /* max backoff, 8hr */);
-
+                                   60*60*1000 /* request time, 60 min */);
   }
   this.needsUpdate_[updateUrl][tableName] = false;
 
