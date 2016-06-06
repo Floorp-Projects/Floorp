@@ -2845,13 +2845,7 @@ MaxZIndexInListOfItemsContainedInFrame(nsDisplayList* aList, nsIFrame* aFrame)
 {
   int32_t maxZIndex = -1;
   for (nsDisplayItem* item = aList->GetBottom(); item; item = item->GetAbove()) {
-    nsIFrame* itemFrame = item->Frame();
-    // Perspective items return the scroll frame as their Frame(), so consider
-    // their TransformFrame() instead.
-    if (item->GetType() == nsDisplayItem::TYPE_PERSPECTIVE) {
-      itemFrame = static_cast<nsDisplayPerspective*>(item)->TransformFrame();
-    }
-    if (nsLayoutUtils::IsProperAncestorFrame(aFrame, itemFrame)) {
+    if (nsLayoutUtils::IsProperAncestorFrame(aFrame, item->Frame())) {
       maxZIndex = std::max(maxZIndex, item->ZIndex());
     }
   }
@@ -3463,7 +3457,6 @@ ScrollFrameHelper::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
         MaxZIndexInListOfItemsContainedInFrame(positionedDescendants, mOuter);
       if (zindex >= 0) {
         destinationList = positionedDescendants;
-        inactiveRegionItem->SetOverrideZIndex(zindex);
       } else {
         destinationList = scrolledContent.Outlines();
       }

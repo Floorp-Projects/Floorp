@@ -148,10 +148,6 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
     var testIndex = -1;
     var w = null;
 
-    // Some state that persists across subtests. This is made available to
-    // subtests to put things into / read things out of.
-    var statePersistentAcrossSubtests = {};
-
     function advanceSubtestExecution() {
       var test = aSubtests[testIndex];
       if (w) {
@@ -193,7 +189,6 @@ function runSubtestsSeriallyInFreshWindows(aSubtests) {
         w = window.open('', "_blank");
         w.subtestDone = advanceSubtestExecution;
         w.SimpleTest = SimpleTest;
-        w.statePersistentAcrossSubtests = statePersistentAcrossSubtests;
         w.is = function(a, b, msg) { return is(a, b, aFile + " | " + msg); };
         w.ok = function(cond, name, diag) { return ok(cond, aFile + " | " + name, diag); };
         w.location = location.href.substring(0, location.href.lastIndexOf('/') + 1) + aFile;
