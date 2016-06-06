@@ -7,6 +7,8 @@
 #ifndef vm_Printer_h
 #define vm_Printer_h
 
+#include "mozilla/Attributes.h"
+
 #include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
