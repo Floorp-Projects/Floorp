@@ -248,6 +248,7 @@ protected:
 
   bool     Init(nsWindowBase* aWidget);
   bool     Destroy();
+  void     ReleaseTSFObjects();
 
   bool     IsReadLock(DWORD aLock) const
   {
@@ -347,6 +348,21 @@ protected:
   DWORD                        mLock;
   // 0 if no lock is queued, otherwise TS_LF_* indicating the queue lock
   DWORD                        mLockQueued;
+
+  uint32_t mHandlingKeyMessage;
+  void OnStartToHandleKeyMessage() { ++mHandlingKeyMessage; }
+  void OnEndHandlingKeyMessage()
+  {
+    MOZ_ASSERT(mHandlingKeyMessage);
+    if (--mHandlingKeyMessage) {
+      return;
+    }
+    // If TSFTextStore instance is destroyed during handling key message(s),
+    // release all TSF objects when all nested key messages have been handled.
+    if (mDestroyed) {
+      ReleaseTSFObjects();
+    }
+  }
 
   class Composition final
   {
