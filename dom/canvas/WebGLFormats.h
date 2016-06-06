@@ -211,7 +211,9 @@ struct FormatInfo
 
     const CompressedFormatInfo* const compression;
 
-    map<GLenum, const FormatInfo*> copyFormats;
+    std::map<UnsizedFormat, const FormatInfo*> copyDecayFormats;
+
+    const FormatInfo* GetCopyDecayFormat(UnsizedFormat) const;
 };
 
 struct PackingInfo
@@ -252,7 +254,9 @@ GLenum ComponentType(const FormatInfo* format);
 struct FormatUsageInfo
 {
     const FormatInfo* const format;
+private:
     bool isRenderable;
+public:
     bool isFilterable;
 
     std::map<PackingInfo, DriverUnpackInfo> validUnpacks;
@@ -276,6 +280,9 @@ struct FormatUsageInfo
         , maxSamplesKnown(false)
         , maxSamples(0)
     { }
+
+    bool IsRenderable() const { return isRenderable; }
+    void SetRenderable();
 
     bool IsUnpackValid(const PackingInfo& key,
                        const DriverUnpackInfo** const out_value) const;

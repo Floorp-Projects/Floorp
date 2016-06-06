@@ -39,7 +39,7 @@ FindOrNull(const std::map<K,V*>& dest, const K2& key)
 // Returns a pointer to the in-place value for `key`.
 template<typename K, typename V, typename K2>
 static inline V*
-FindPtrOrNull(const std::map<K,V>& dest, const K2& key)
+FindPtrOrNull(std::map<K,V>& dest, const K2& key)
 {
     auto itr = dest.find(key);
     if (itr == dest.end())
@@ -51,7 +51,7 @@ FindPtrOrNull(const std::map<K,V>& dest, const K2& key)
 //////////////////////////////////////////////////////////////////////////////////////////
 
 std::map<EffectiveFormat, const CompressedFormatInfo> gCompressedFormatInfoMap;
-std::map<EffectiveFormat, const FormatInfo> gFormatInfoMap;
+std::map<EffectiveFormat, FormatInfo> gFormatInfoMap;
 
 static inline const CompressedFormatInfo*
 GetCompressedFormatInfo(EffectiveFormat format)
@@ -60,7 +60,7 @@ GetCompressedFormatInfo(EffectiveFormat format)
     return FindPtrOrNull(gCompressedFormatInfoMap, format);
 }
 
-static inline const FormatInfo*
+static inline FormatInfo*
 GetFormatInfo_NoLock(EffectiveFormat format)
 {
     MOZ_ASSERT(!gFormatInfoMap.empty());
@@ -308,6 +308,85 @@ InitFormatInfo()
     AddFormatInfo(FOO(Alpha16F            ), 2,  0,0,0,16, 0,0, UnsizedFormat::A , false, ComponentType::Float);
 
 #undef FOO
+
+    ////////////////////////////////////////////////////////////////////////////
+
+    const auto fnSetCopyDecay = [](EffectiveFormat src, EffectiveFormat asR,
+                                   EffectiveFormat asRG, EffectiveFormat asRGB,
+                                   EffectiveFormat asRGBA, EffectiveFormat asL,
+                                   EffectiveFormat asA, EffectiveFormat asLA)
+    {
+        auto& map = GetFormatInfo_NoLock(src)->copyDecayFormats;
+
+        const auto fnSet = [&map](UnsizedFormat uf, EffectiveFormat ef) {
+            if (ef == EffectiveFormat::MAX)
+                return;
+
+            const auto* format = GetFormatInfo_NoLock(ef);
+            MOZ_ASSERT(format->unsizedFormat == uf);
+            AlwaysInsert(map, uf, format);
+        };
+
+        fnSet(UnsizedFormat::R   , asR);
+        fnSet(UnsizedFormat::RG  , asRG);
+        fnSet(UnsizedFormat::RGB , asRGB);
+        fnSet(UnsizedFormat::RGBA, asRGBA);
+        fnSet(UnsizedFormat::L   , asL);
+        fnSet(UnsizedFormat::A   , asA);
+        fnSet(UnsizedFormat::LA  , asLA);
+    };
+
+#define SET_COPY_DECAY(src,asR,asRG,asRGB,asRGBA,asL,asA,asLA) \
+    fnSetCopyDecay(EffectiveFormat::src, EffectiveFormat::asR, EffectiveFormat::asRG,     \
+                   EffectiveFormat::asRGB, EffectiveFormat::asRGBA, EffectiveFormat::asL, \
+                   EffectiveFormat::asA, EffectiveFormat::asLA);
+
+    //////
+
+#define SET_BY_SUFFIX(X) \
+        SET_COPY_DECAY(   R##X, R##X,   MAX,    MAX,     MAX, Luminance##X,      MAX,                    MAX) \
+        SET_COPY_DECAY(  RG##X, R##X, RG##X,    MAX,     MAX, Luminance##X,      MAX,                    MAX) \
+        SET_COPY_DECAY(RGBA##X, R##X, RG##X, RGB##X, RGBA##X, Luminance##X, Alpha##X, Luminance##X##Alpha##X)
+
+    SET_BY_SUFFIX(8)
+    SET_BY_SUFFIX(16F)
+    SET_BY_SUFFIX(32F)
+
+#undef SET_BY_SUFFIX
+
+    //////
+
+#define SET_BY_SUFFIX(X) \
+        SET_COPY_DECAY(   R##X, R##X,   MAX,    MAX,     MAX, MAX, MAX, MAX) \
+        SET_COPY_DECAY(  RG##X, R##X, RG##X,    MAX,     MAX, MAX, MAX, MAX) \
+        SET_COPY_DECAY(RGBA##X, R##X, RG##X, RGB##X, RGBA##X, MAX, MAX, MAX)
+
+    SET_BY_SUFFIX(8I)
+    SET_BY_SUFFIX(8UI)
+
+    SET_BY_SUFFIX(16I)
+    SET_BY_SUFFIX(16UI)
+
+    SET_BY_SUFFIX(32I)
+    SET_BY_SUFFIX(32UI)
+
+#undef SET_BY_SUFFIX
+
+    //////
+
+    SET_COPY_DECAY(      RGB8, R8, RG8,   RGB8,      MAX, Luminance8,    MAX,              MAX)
+    SET_COPY_DECAY(    RGB565, R8, RG8, RGB565,      MAX, Luminance8,    MAX,              MAX)
+    SET_COPY_DECAY(     RGBA4, R8, RG8, RGB565,    RGBA4, Luminance8, Alpha8, Luminance8Alpha8)
+    SET_COPY_DECAY(   RGB5_A1, R8, RG8, RGB565,  RGB5_A1, Luminance8, Alpha8, Luminance8Alpha8)
+    SET_COPY_DECAY(  RGB10_A2, R8, RG8,   RGB8, RGB10_A2, Luminance8, Alpha8,              MAX)
+
+    SET_COPY_DECAY(RGB10_A2UI, R8UI, RG8UI, RGB8UI, RGB10_A2UI, MAX, MAX, MAX)
+
+    SET_COPY_DECAY(SRGB8_ALPHA8, MAX, MAX, MAX, SRGB8_ALPHA8, MAX, Alpha8, MAX)
+
+    SET_COPY_DECAY(R11F_G11F_B10F, R16F, RG16F, R11F_G11F_B10F, MAX, Luminance16F, MAX, MAX)
+
+#undef SET_COPY_DECAY
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
@@ -341,6 +420,12 @@ GetFormat(EffectiveFormat format)
 }
 
 //////////////////////////////////////////////////////////////////////////////////////////
+
+const FormatInfo*
+FormatInfo::GetCopyDecayFormat(UnsizedFormat uf) const
+{
+    return FindOrNull(this->copyDecayFormats, uf);
+}
 
 uint8_t
 BytesPerPixel(const PackingInfo& packing)
@@ -544,6 +629,22 @@ AddUnsizedFormats(FormatUsageAuthority* fua, gl::GLContext* gl)
     return AddLegacyFormats_LA8(fua, gl);
 }
 
+void
+FormatUsageInfo::SetRenderable()
+{
+    this->isRenderable = true;
+
+#ifdef DEBUG
+    const auto format = this->format;
+    if (format->isColorFormat) {
+        const auto& map = format->copyDecayFormats;
+        const auto itr = map.find(format->unsizedFormat);
+        MOZ_ASSERT(itr != map.end());
+        MOZ_ASSERT(itr->second == format);
+    }
+#endif
+}
+
 UniquePtr<FormatUsageAuthority>
 FormatUsageAuthority::CreateForWebGL1(gl::GLContext* gl)
 {
@@ -559,8 +660,11 @@ FormatUsageAuthority::CreateForWebGL1(gl::GLContext* gl)
         MOZ_ASSERT(!ptr->GetUsage(effFormat));
 
         auto usage = ptr->EditUsage(effFormat);
-        usage->isRenderable = isRenderable;
         usage->isFilterable = isFilterable;
+
+        if (isRenderable) {
+            usage->SetRenderable();
+        }
     };
 
     // GLES 2.0.25, p117, Table 4.5
@@ -730,8 +834,11 @@ FormatUsageAuthority::CreateForWebGL2(gl::GLContext* gl)
                                            bool isRenderable, bool isFilterable)
     {
         auto usage = ptr->EditUsage(effFormat);
-        usage->isRenderable = isRenderable;
         usage->isFilterable = isFilterable;
+
+        if (isRenderable) {
+            usage->SetRenderable();
+        }
 
         ptr->AllowSizedTexFormat(sizedFormat, usage);
 
@@ -841,7 +948,7 @@ FormatUsageAuthority::CreateForWebGL2(gl::GLContext* gl)
     //  internal format for a renderbuffer will allocate at least 8 stencil bit planes."
 
     auto usage = ptr->EditUsage(EffectiveFormat::STENCIL_INDEX8);
-    usage->isRenderable = true;
+    usage->SetRenderable();
     ptr->AllowRBFormat(LOCAL_GL_STENCIL_INDEX8, usage);
 
     ////////////////
@@ -860,6 +967,8 @@ FormatUsageAuthority::CreateForWebGL2(gl::GLContext* gl)
         AddSimpleUnsized(ptr, LOCAL_GL_RGBA, LOCAL_GL_HALF_FLOAT_OES, EffectiveFormat::RGBA16F);
         AddSimpleUnsized(ptr, LOCAL_GL_RGB , LOCAL_GL_HALF_FLOAT_OES, EffectiveFormat::RGB16F );
     }
+
+    ////////////////////////////////////
 
     return Move(ret);
 }
@@ -909,7 +1018,7 @@ FormatUsageAuthority::AllowRBFormat(GLenum sizedFormat, const FormatUsageInfo* u
 {
     MOZ_ASSERT(!usage->format->compression);
     MOZ_ASSERT(usage->format->sizedFormat);
-    MOZ_ASSERT(usage->isRenderable);
+    MOZ_ASSERT(usage->IsRenderable());
 
     AlwaysInsert(mRBFormatMap, sizedFormat, usage);
 }
