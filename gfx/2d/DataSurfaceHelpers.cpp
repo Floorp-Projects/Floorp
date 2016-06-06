@@ -299,11 +299,11 @@ CopyRect(DataSourceSurface* aSrc, DataSourceSurface* aDest,
   }
 
   MOZ_RELEASE_ASSERT(aSrc->GetFormat() == aDest->GetFormat(),
-                     "different surface formats");
+                     "GFX: different surface formats");
   MOZ_RELEASE_ASSERT(IntRect(IntPoint(), aSrc->GetSize()).Contains(aSrcRect),
-                     "source rect too big for source surface");
+                     "GFX: source rect too big for source surface");
   MOZ_RELEASE_ASSERT(IntRect(IntPoint(), aDest->GetSize()).Contains(IntRect(aDestPoint, aSrcRect.Size())),
-                     "dest surface too small");
+                     "GFX: dest surface too small");
 
   if (aSrcRect.IsEmpty()) {
     return false;

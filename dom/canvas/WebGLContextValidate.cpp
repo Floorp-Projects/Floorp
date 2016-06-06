@@ -650,7 +650,7 @@ FloorPOT(int32_t x)
 bool
 WebGLContext::InitAndValidateGL(nsACString* const out_failReason, nsACString* const out_failureId)
 {
-    MOZ_RELEASE_ASSERT(gl);
+    MOZ_RELEASE_ASSERT(gl, "GFX: GL not initialized");
 
     // Unconditionally create a new format usage authority. This is
     // important when restoring contexts and extensions need to add

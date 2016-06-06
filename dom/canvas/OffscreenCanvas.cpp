@@ -90,10 +90,10 @@ OffscreenCanvas::ClearResources()
 
     if (mCanvasRenderer) {
       nsCOMPtr<nsIThread> activeThread = mCanvasRenderer->GetActiveThread();
-      MOZ_RELEASE_ASSERT(activeThread);
+      MOZ_RELEASE_ASSERT(activeThread, "GFX: failed to get active thread.");
       bool current;
       activeThread->IsOnCurrentThread(&current);
-      MOZ_RELEASE_ASSERT(current);
+      MOZ_RELEASE_ASSERT(current, "GFX: active thread is not current thread.");
       mCanvasRenderer->SetCanvasClient(nullptr);
       mCanvasRenderer->mContext = nullptr;
       mCanvasRenderer->mGLContext = nullptr;

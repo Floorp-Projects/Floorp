@@ -66,12 +66,12 @@ struct JoinTestSanityCheck : public SanityChecker {
   {
     // Job 0 is the special task executed when everything is joined after task 1
     if (aCmdId == 0) {
-      MOZ_RELEASE_ASSERT(!mSpecialJobHasRun);
+      MOZ_RELEASE_ASSERT(!mSpecialJobHasRun, "GFX: A special task has been executed.");
       mSpecialJobHasRun = true;
       for (auto advancement : mAdvancements) {
         // Because of the synchronization point (beforeFilter), all
         // task buffers should have run task 1 when task 0 is run.
-        MOZ_RELEASE_ASSERT(advancement == 1);
+        MOZ_RELEASE_ASSERT(advancement == 1, "GFX: task buffer has not run task 1.");
       }
     } else {
       // This check does not apply to task 0.
@@ -79,7 +79,7 @@ struct JoinTestSanityCheck : public SanityChecker {
     }
 
     if (aCmdId == 2) {
-      MOZ_RELEASE_ASSERT(mSpecialJobHasRun);
+      MOZ_RELEASE_ASSERT(mSpecialJobHasRun, "GFX: Special job has not run.");
     }
   }
 };
