@@ -1223,8 +1223,7 @@ GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
 }
 
 static already_AddRefed<GLContextGLX>
-CreateOffscreenPixmapContext(const IntSize& size, const SurfaceCaps& minCaps, nsACString& aFailureId,
-                             ContextProfile profile = ContextProfile::OpenGLCompatibility)
+CreateOffscreenPixmapContext(const IntSize& size, const SurfaceCaps& minCaps, ContextProfile profile = ContextProfile::OpenGLCompatibility)
 {
     GLXLibrary* glx = &sGLXLibrary;
     if (!glx->EnsureInitialized())
@@ -1286,18 +1285,17 @@ DONE_CREATING_PIXMAP:
 }
 
 /*static*/ already_AddRefed<GLContext>
-GLContextProviderGLX::CreateHeadless(CreateContextFlags, nsACString& aFailureId)
+GLContextProviderGLX::CreateHeadless(CreateContextFlags)
 {
     IntSize dummySize = IntSize(16, 16);
     SurfaceCaps dummyCaps = SurfaceCaps::Any();
-    return CreateOffscreenPixmapContext(dummySize, dummyCaps, aFailureId);
+    return CreateOffscreenPixmapContext(dummySize, dummyCaps);
 }
 
 /*static*/ already_AddRefed<GLContext>
 GLContextProviderGLX::CreateOffscreen(const IntSize& size,
                                       const SurfaceCaps& minCaps,
-                                      CreateContextFlags flags,
-                                      nsACString& aFailureId)
+                                      CreateContextFlags flags)
 {
     SurfaceCaps minBackbufferCaps = minCaps;
     if (minCaps.antialias) {
@@ -1312,14 +1310,12 @@ GLContextProviderGLX::CreateOffscreen(const IntSize& size,
     }
 
     RefPtr<GLContext> gl;
-    gl = CreateOffscreenPixmapContext(size, minBackbufferCaps, aFailureId, profile);
+    gl = CreateOffscreenPixmapContext(size, minBackbufferCaps, profile);
     if (!gl)
         return nullptr;
 
-    if (!gl->InitOffscreen(size, minCaps)) {
-        aFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_GLX_INIT");
+    if (!gl->InitOffscreen(size, minCaps))
         return nullptr;
-    }
 
     return gl.forget();
 }
@@ -1336,8 +1332,7 @@ GLContextProviderGLX::GetGlobalContext()
         triedToCreateContext = true;
 
         MOZ_RELEASE_ASSERT(!gGlobalContext);
-        nsCString discardFailureId;
-        RefPtr<GLContext> temp = CreateHeadless(CreateContextFlags::NONE, discardFailureId);
+        RefPtr<GLContext> temp = CreateHeadless(CreateContextFlags::NONE);
         gGlobalContext = temp;
     }
 

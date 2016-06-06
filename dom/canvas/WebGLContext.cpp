@@ -587,7 +587,7 @@ CreateGLWithEGL(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
 {
     const gfx::IntSize dummySize(16, 16);
     RefPtr<GLContext> gl = gl::GLContextProviderEGL::CreateOffscreen(dummySize, caps,
-                                                                     flags, *out_failureId);
+                                                                     flags);
     if (gl && gl->IsANGLE()) {
         gl = nullptr;
     }
@@ -611,7 +611,7 @@ CreateGLWithANGLE(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
 {
     const gfx::IntSize dummySize(16, 16);
     RefPtr<GLContext> gl = gl::GLContextProviderEGL::CreateOffscreen(dummySize, caps,
-                                                                     flags, *out_failureId);
+                                                                     flags);
     if (gl && !gl->IsANGLE()) {
         gl = nullptr;
     }
@@ -647,8 +647,7 @@ CreateGLWithDefault(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
     }
 
     const gfx::IntSize dummySize(16, 16);
-    RefPtr<GLContext> gl = gl::GLContextProvider::CreateOffscreen(dummySize, caps,
-                                                                  flags, *out_failureId);
+    RefPtr<GLContext> gl = gl::GLContextProvider::CreateOffscreen(dummySize, caps, flags);
 
     if (gl && gl->IsANGLE()) {
         gl = nullptr;

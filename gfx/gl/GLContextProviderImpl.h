@@ -67,12 +67,11 @@ public:
     static already_AddRefed<GLContext>
     CreateOffscreen(const mozilla::gfx::IntSize& size,
                     const SurfaceCaps& minCaps,
-                    CreateContextFlags flags,
-                    nsACString& failureId);
+                    CreateContextFlags flags);
 
     // Just create a context. We'll add offscreen stuff ourselves.
     static already_AddRefed<GLContext>
-    CreateHeadless(CreateContextFlags flags, nsACString& aFailureId);
+    CreateHeadless(CreateContextFlags flags);
 
     /**
      * Create wrapping Gecko GLContext for external gl context.

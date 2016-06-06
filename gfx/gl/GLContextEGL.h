@@ -23,8 +23,7 @@ class GLContextEGL : public GLContext
                     GLContextEGL *shareContext,
                     bool isOffscreen,
                     EGLConfig config,
-                    EGLSurface surface,
-                    nsACString& aFailureId);
+                    EGLSurface surface);
 
 public:
     MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextEGL, override)
@@ -107,8 +106,7 @@ public:
     static already_AddRefed<GLContextEGL>
     CreateEGLPBufferOffscreenContext(CreateContextFlags flags,
                                      const gfx::IntSize& size,
-                                     const SurfaceCaps& minCaps,
-                                     nsACString& aFailureId);
+                                     const SurfaceCaps& minCaps);
 
 protected:
     friend class GLContextProviderEGL;
