@@ -514,6 +514,8 @@ child:
                          OverrideMapping[] overrides, nsCString locale, bool reset);
     async RegisterChromeItem(ChromeRegistryItem item);
 
+    async ClearImageCache(bool privateLoader, bool chrome);
+
     async SetOffline(bool offline);
     async SetConnectivity(bool connectivity);
 
