@@ -785,6 +785,8 @@ static bool sLayersIPCIsUp = false;
 void
 gfxPlatform::Shutdown()
 {
+    // In some cases, gPlatform may not be created but Shutdown() called,
+    // e.g., during xpcshell tests.
     if (!gPlatform) {
       return;
     }
@@ -804,28 +806,29 @@ gfxPlatform::Shutdown()
     // Free the various non-null transforms and loaded profiles
     ShutdownCMS();
 
-    // In some cases, gPlatform may not be created but Shutdown() called,
-    // e.g., during xpcshell tests.
-    if (gPlatform) {
-        /* Unregister our CMS Override callback. */
-        NS_ASSERTION(gPlatform->mSRGBOverrideObserver, "mSRGBOverrideObserver has alreay gone");
-        Preferences::RemoveObserver(gPlatform->mSRGBOverrideObserver, GFX_PREF_CMS_FORCE_SRGB);
-        gPlatform->mSRGBOverrideObserver = nullptr;
+    /* Unregister our CMS Override callback. */
+    NS_ASSERTION(gPlatform->mSRGBOverrideObserver, "mSRGBOverrideObserver has alreay gone");
+    Preferences::RemoveObserver(gPlatform->mSRGBOverrideObserver, GFX_PREF_CMS_FORCE_SRGB);
+    gPlatform->mSRGBOverrideObserver = nullptr;
 
-        NS_ASSERTION(gPlatform->mFontPrefsObserver, "mFontPrefsObserver has alreay gone");
-        Preferences::RemoveObservers(gPlatform->mFontPrefsObserver, kObservedPrefs);
-        gPlatform->mFontPrefsObserver = nullptr;
+    NS_ASSERTION(gPlatform->mFontPrefsObserver, "mFontPrefsObserver has alreay gone");
+    Preferences::RemoveObservers(gPlatform->mFontPrefsObserver, kObservedPrefs);
+    gPlatform->mFontPrefsObserver = nullptr;
 
-        NS_ASSERTION(gPlatform->mMemoryPressureObserver, "mMemoryPressureObserver has already gone");
-        nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
-        if (obs) {
-            obs->RemoveObserver(gPlatform->mMemoryPressureObserver, "memory-pressure");
-        }
-
-        gPlatform->mMemoryPressureObserver = nullptr;
-        gPlatform->mSkiaGlue = nullptr;
-        gPlatform->mVsyncSource = nullptr;
+    NS_ASSERTION(gPlatform->mMemoryPressureObserver, "mMemoryPressureObserver has already gone");
+    nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
+    if (obs) {
+        obs->RemoveObserver(gPlatform->mMemoryPressureObserver, "memory-pressure");
     }
+
+    gPlatform->mMemoryPressureObserver = nullptr;
+    gPlatform->mSkiaGlue = nullptr;
+
+    if (XRE_IsParentProcess()) {
+      gPlatform->mVsyncSource->Shutdown();
+    }
+
+    gPlatform->mVsyncSource = nullptr;
 
 #ifdef MOZ_WIDGET_ANDROID
     // Shut down the texture pool
