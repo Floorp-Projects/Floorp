@@ -39,19 +39,11 @@ public:
 
   void
   CreateWriter(VoidCallback& aSuccessCallback,
-               const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
-               ErrorResult& aRv) const
-  {
-    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  }
+               const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const;
 
   void
   GetFile(BlobCallback& aSuccessCallback,
-          const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
-          ErrorResult& aRv) const
-  {
-    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  }
+          const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const;
 
 private:
   ~FileEntry();

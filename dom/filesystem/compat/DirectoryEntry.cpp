@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DirectoryEntry.h"
+#include "ErrorCallbackRunnable.h"
 #include "mozilla/dom/Directory.h"
 
 namespace mozilla {
@@ -46,6 +47,19 @@ void
 DirectoryEntry::GetFullPath(nsAString& aPath, ErrorResult& aRv) const
 {
   mDirectory->GetPath(aPath, aRv);
+}
+
+void
+DirectoryEntry::RemoveRecursively(VoidCallback& aSuccessCallback,
+                                  const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
+{
+  if (aErrorCallback.WasPassed()) {
+    RefPtr<ErrorCallbackRunnable> runnable =
+      new ErrorCallbackRunnable(GetParentObject(),
+                                &aErrorCallback.Value());
+    nsresult rv = NS_DispatchToMainThread(runnable);
+    NS_WARN_IF(NS_FAILED(rv));
+  }
 }
 
 } // dom namespace
