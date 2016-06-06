@@ -44,13 +44,12 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const Heritage = require("sdk/core/heritage");
 const {parseAttribute} =
       require("devtools/client/shared/node-attribute-parser");
-const ELLIPSIS = Services.prefs.getComplexValue("intl.ellipsis",
-      Ci.nsIPrefLocalizedString).data;
 const {Task} = require("devtools/shared/task");
 const {scrollIntoViewIfNeeded} = require("devtools/shared/layout/utils");
 const {PrefObserver} = require("devtools/client/styleeditor/utils");
 const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
 const {template} = require("devtools/shared/gcli/templater");
+const nodeConstants = require("devtools/shared/dom-node-constants");
 
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -219,7 +218,7 @@ MarkupView.prototype = {
 
     let container = target.container;
     if (this._hoveredNode !== container.node) {
-      if (container.node.nodeType !== Ci.nsIDOMNode.TEXT_NODE) {
+      if (container.node.nodeType !== nodeConstants.TEXT_NODE) {
         this._showBoxModel(container.node);
       } else {
         this._hideBoxModel();
@@ -843,7 +842,7 @@ MarkupView.prototype = {
    */
   deleteNode: function (node, moveBackward) {
     if (node.isDocumentElement ||
-        node.nodeType == Ci.nsIDOMNode.DOCUMENT_TYPE_NODE ||
+        node.nodeType == nodeConstants.DOCUMENT_TYPE_NODE ||
         node.isAnonymous) {
       return;
     }
@@ -870,6 +869,8 @@ MarkupView.prototype = {
           }
         });
       }, () => {
+        let isValidSibling = nextSibling && !nextSibling.isPseudoElement;
+        nextSibling = isValidSibling ? nextSibling : null;
         this.walker.insertBefore(node, parent, nextSibling);
       });
     }).then(null, console.error);
@@ -928,10 +929,10 @@ MarkupView.prototype = {
       container = new RootContainer(this, node);
       this._elt.appendChild(container.elt);
       this._rootNode = node;
-    } else if (nodeType == Ci.nsIDOMNode.ELEMENT_NODE && !isPseudoElement) {
+    } else if (nodeType == nodeConstants.ELEMENT_NODE && !isPseudoElement) {
       container = new MarkupElementContainer(this, node, this._inspector);
-    } else if (nodeType == Ci.nsIDOMNode.COMMENT_NODE ||
-               nodeType == Ci.nsIDOMNode.TEXT_NODE) {
+    } else if (nodeType == nodeConstants.COMMENT_NODE ||
+               nodeType == nodeConstants.TEXT_NODE) {
       container = new MarkupTextContainer(this, node, this._inspector);
     } else {
       container = new MarkupReadOnlyContainer(this, node, this._inspector);
@@ -989,6 +990,10 @@ MarkupView.prototype = {
         // accessibility where necessary.
         this._updateChildren(container, {flash: true}).then(() =>
           container.updateLevel());
+      } else if (type === "inlineTextChild") {
+        container.childrenDirty = true;
+        this._updateChildren(container, {flash: true});
+        container.update();
       }
     }
 
@@ -1549,19 +1554,19 @@ MarkupView.prototype = {
       return promise.resolve(container);
     }
 
-    if (container.singleTextChild
-        && container.singleTextChild != container.node.singleTextChild) {
+    if (container.inlineTextChild
+        && container.inlineTextChild != container.node.inlineTextChild) {
       // This container was doing double duty as a container for a single
       // text child, back that out.
-      this._containers.delete(container.singleTextChild);
-      container.clearSingleTextChild();
+      this._containers.delete(container.inlineTextChild);
+      container.clearInlineTextChild();
 
       if (container.hasChildren && container.selected) {
         container.setExpanded(true);
       }
     }
 
-    if (container.node.singleTextChild) {
+    if (container.node.inlineTextChild) {
       container.setExpanded(false);
       // this container will do double duty as the container for the single
       // text child.
@@ -1569,9 +1574,9 @@ MarkupView.prototype = {
         container.children.removeChild(container.children.firstChild);
       }
 
-      container.setSingleTextChild(container.node.singleTextChild);
+      container.setInlineTextChild(container.node.inlineTextChild);
 
-      this._containers.set(container.node.singleTextChild, container);
+      this._containers.set(container.node.inlineTextChild, container);
       container.childrenDirty = false;
       return promise.resolve(container);
     }
@@ -1824,7 +1829,7 @@ MarkupView.prototype = {
       nextSibling = null;
     }
 
-    if (parent.nodeType !== Ci.nsIDOMNode.ELEMENT_NODE) {
+    if (parent.nodeType !== nodeConstants.ELEMENT_NODE) {
       return null;
     }
 
@@ -2008,7 +2013,7 @@ MarkupContainer.prototype = {
    * True if the current node can be expanded.
    */
   get canExpand() {
-    return this._hasChildren && !this.node.singleTextChild;
+    return this._hasChildren && !this.node.inlineTextChild;
   },
 
   /**
@@ -2568,9 +2573,9 @@ function MarkupTextContainer(markupView, node) {
   MarkupContainer.prototype.initialize.call(this, markupView, node,
     "textcontainer");
 
-  if (node.nodeType == Ci.nsIDOMNode.TEXT_NODE) {
+  if (node.nodeType == nodeConstants.TEXT_NODE) {
     this.editor = new TextEditor(this, node, "text");
-  } else if (node.nodeType == Ci.nsIDOMNode.COMMENT_NODE) {
+  } else if (node.nodeType == nodeConstants.COMMENT_NODE) {
     this.editor = new TextEditor(this, node, "comment");
   } else {
     throw new Error("Invalid node for MarkupTextContainer");
@@ -2595,7 +2600,7 @@ function MarkupElementContainer(markupView, node) {
   MarkupContainer.prototype.initialize.call(this, markupView, node,
     "elementcontainer");
 
-  if (node.nodeType === Ci.nsIDOMNode.ELEMENT_NODE) {
+  if (node.nodeType === nodeConstants.ELEMENT_NODE) {
     this.editor = new ElementEditor(this, node);
   } else {
     throw new Error("Invalid node for MarkupElementContainer");
@@ -2717,13 +2722,13 @@ MarkupElementContainer.prototype = Heritage.extend(MarkupContainer.prototype, {
     });
   },
 
-  setSingleTextChild: function (singleTextChild) {
-    this.singleTextChild = singleTextChild;
+  setInlineTextChild: function (inlineTextChild) {
+    this.inlineTextChild = inlineTextChild;
     this.editor.updateTextEditor();
   },
 
-  clearSingleTextChild: function () {
-    this.singleTextChild = undefined;
+  clearInlineTextChild: function () {
+    this.inlineTextChild = undefined;
     this.editor.updateTextEditor();
   },
 
@@ -2818,7 +2823,7 @@ function GenericEditor(container, node) {
   if (node.isPseudoElement) {
     this.tag.classList.add("theme-fg-color5");
     this.tag.textContent = node.isBeforePseudoElement ? "::before" : "::after";
-  } else if (node.nodeType == Ci.nsIDOMNode.DOCUMENT_TYPE_NODE) {
+  } else if (node.nodeType == nodeConstants.DOCUMENT_TYPE_NODE) {
     this.elt.classList.add("comment");
     this.tag.textContent = node.doctypeString;
   } else {
@@ -2905,25 +2910,14 @@ TextEditor.prototype = {
   },
 
   update: function () {
-    if (!this.selected || !this.node.incompleteValue) {
-      let text = this.node.shortValue;
-      if (this.node.incompleteValue) {
-        text += ELLIPSIS;
-      }
-      this.value.textContent = text;
-    } else {
-      let longstr = null;
-      this.node.getNodeValue().then(ret => {
-        longstr = ret;
-        return longstr.string();
-      }).then(str => {
-        longstr.release().then(null, console.error);
-        if (this.selected) {
-          this.value.textContent = str;
-          this.markup.emit("text-expand");
-        }
-      }).then(null, console.error);
-    }
+    let longstr = null;
+    this.node.getNodeValue().then(ret => {
+      longstr = ret;
+      return longstr.string();
+    }).then(str => {
+      longstr.release().then(null, console.error);
+      this.value.textContent = str;
+    }).then(null, console.error);
   },
 
   destroy: function () {},
@@ -3114,7 +3108,7 @@ ElementEditor.prototype = {
    * Update the inline text editor in case of a single text child node.
    */
   updateTextEditor: function () {
-    let node = this.node.singleTextChild;
+    let node = this.node.inlineTextChild;
 
     if (this.textEditor && this.textEditor.node != node) {
       this.elt.removeChild(this.textEditor.elt);

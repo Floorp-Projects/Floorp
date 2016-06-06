@@ -17,6 +17,7 @@ import org.mozilla.gecko.db.URLMetadataTable;
 import org.mozilla.gecko.favicons.cache.FaviconCache;
 import org.mozilla.gecko.util.GeckoJarReader;
 import org.mozilla.gecko.util.NonEvictingLruCache;
+import org.mozilla.gecko.util.StringUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import android.content.ContentResolver;
@@ -306,7 +307,17 @@ public class Favicons {
         }
 
         // No joy using in-memory resources. Go to background thread and ask the database.
-        return loadUncachedFavicon(context, pageURL, targetURL, 0, targetSize, callback);
+        // Note: this is a near duplicate of loadUncachedFavicon, however loadUncachedFavicon
+        // can download favicons, whereas we want to restrict ourselves to the cache.
+        final LoadFaviconTask task =
+            new LoadFaviconTask(context, pageURL, targetURL, 0, callback, targetSize, /* onlyFromLocal: */ true);
+        final int taskId = task.getId();
+        synchronized (loadTasks) {
+            loadTasks.put(taskId, task);
+        }
+        task.execute();
+
+        return taskId;
     }
 
     public static int getSizedFaviconForPageFromLocal(Context context, final String pageURL, final OnFaviconLoadedListener callback) {
@@ -619,13 +630,15 @@ public class Favicons {
 
         final BrowserDB db = GeckoProfile.get(context).getDB();
 
+        final String metadataQueryURL = StringUtils.stripRef(url);
+
         final ContentResolver cr = context.getContentResolver();
         final Map<String, Map<String, Object>> metadata = db.getURLMetadata().getForURLs(cr,
-                Collections.singletonList(url),
+                Collections.singletonList(metadataQueryURL),
                 Collections.singletonList(URLMetadataTable.TOUCH_ICON_COLUMN)
         );
 
-        final Map<String, Object> row = metadata.get(url);
+        final Map<String, Object> row = metadata.get(metadataQueryURL);
 
         String touchIconURL = null;
 

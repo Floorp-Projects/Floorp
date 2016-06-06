@@ -8,10 +8,20 @@
 // Also checks that after deletion the correct element is highlighted.
 // The next sibling is preferred, but the parent is a fallback.
 
-const HTML = `<div id="parent">
+const HTML = `<style type="text/css">
+                #pseudo::before { content: 'before'; }
+                #pseudo::after { content: 'after'; }
+              </style>
+              <div id="parent">
                 <div id="first"></div>
                 <div id="second"></div>
                 <div id="third"></div>
+              </div>
+              <div id="only-child">
+                <div id="fourth"></div>
+              </div>
+              <div id="pseudo">
+                <div id="fifth"></div>
               </div>`;
 const TEST_URL = "data:text/html;charset=utf-8," + encodeURIComponent(HTML);
 
@@ -20,8 +30,8 @@ const TEST_URL = "data:text/html;charset=utf-8," + encodeURIComponent(HTML);
 // - key: the key to press to delete the node (delete or back_space)
 // - focusedSelector: the css selector of the node we expect to be selected as
 //   a result of the deletion
-// - setup: an optional function that will be run before selecting and deleting
-//   the node
+// - pseudo: (optional) if the focused node is actually supposed to be a pseudo element
+//   of the specified selector.
 // Note that after each test case, undo is called.
 const TEST_DATA = [{
   selector: "#first",
@@ -36,6 +46,15 @@ const TEST_DATA = [{
   key: "delete",
   focusedSelector: "#second"
 }, {
+  selector: "#fourth",
+  key: "delete",
+  focusedSelector: "#only-child"
+}, {
+  selector: "#fifth",
+  key: "delete",
+  focusedSelector: "#pseudo",
+  pseudo: "after"
+}, {
   selector: "#first",
   key: "back_space",
   focusedSelector: "#second"
@@ -48,38 +67,25 @@ const TEST_DATA = [{
   key: "back_space",
   focusedSelector: "#second"
 }, {
-  setup: function* (inspector, testActor) {
-    // Removing the siblings of #first in order to test with an only child.
-    let mutated = inspector.once("markupmutation");
-    yield testActor.eval(`
-      for (let node of content.document.querySelectorAll("#second, #third")) {
-        node.remove();
-      }
-    `);
-    yield mutated;
-  },
-  selector: "#first",
-  key: "delete",
-  focusedSelector: "#parent"
-}, {
-  selector: "#first",
+  selector: "#fourth",
   key: "back_space",
-  focusedSelector: "#parent"
+  focusedSelector: "#only-child"
+}, {
+  selector: "#fifth",
+  key: "back_space",
+  focusedSelector: "#pseudo",
+  pseudo: "before"
 }];
 
 add_task(function* () {
-  let {inspector, testActor} = yield openInspectorForURL(TEST_URL);
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
-  for (let {setup, selector, key, focusedSelector} of TEST_DATA) {
-    if (setup) {
-      yield setup(inspector, testActor);
-    }
-
-    yield checkDeleteAndSelection(inspector, key, selector, focusedSelector);
+  for (let data of TEST_DATA) {
+    yield checkDeleteAndSelection(inspector, data);
   }
 });
 
-function* checkDeleteAndSelection(inspector, key, selector, focusedSelector) {
+function* checkDeleteAndSelection(inspector, {key, selector, focusedSelector, pseudo}) {
   info("Test deleting node " + selector + " with " + key + ", " +
        "expecting " + focusedSelector + " to be focused");
 
@@ -93,6 +99,14 @@ function* checkDeleteAndSelection(inspector, key, selector, focusedSelector) {
   yield Promise.all([mutated, inspector.once("inspector-updated")]);
 
   let nodeFront = yield getNodeFront(focusedSelector, inspector);
+  if (pseudo) {
+    // Update the selector for logging in case of failure.
+    focusedSelector = focusedSelector + "::" + pseudo;
+    // Retrieve the :before or :after pseudo element of the nodeFront.
+    let {nodes} = yield inspector.walker.children(nodeFront);
+    nodeFront = pseudo === "before" ? nodes[0] : nodes[nodes.length - 1];
+  }
+
   is(inspector.selection.nodeFront, nodeFront,
      focusedSelector + " is selected after deletion");
 

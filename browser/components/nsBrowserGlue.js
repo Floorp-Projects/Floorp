@@ -309,6 +309,9 @@ BrowserGlue.prototype = {
       case "weave:service:ready":
         this._setSyncAutoconnectDelay();
         break;
+      case "fxaccounts:onverified":
+        this._showSyncStartedDoorhanger();
+        break;
       case "weave:engine:clients:display-uri":
         this._onDisplaySyncURI(subject);
         break;
@@ -526,6 +529,7 @@ BrowserGlue.prototype = {
       os.addObserver(this, "browser-lastwindow-close-granted", false);
     }
     os.addObserver(this, "weave:service:ready", false);
+    os.addObserver(this, "fxaccounts:onverified", false);
     os.addObserver(this, "weave:engine:clients:display-uri", false);
     os.addObserver(this, "session-save", false);
     os.addObserver(this, "places-init-complete", false);
@@ -591,6 +595,7 @@ BrowserGlue.prototype = {
       os.removeObserver(this, "browser-lastwindow-close-granted");
     }
     os.removeObserver(this, "weave:service:ready");
+    os.removeObserver(this, "fxaccounts:onverified");
     os.removeObserver(this, "weave:engine:clients:display-uri");
     os.removeObserver(this, "session-save");
     if (this._bookmarksBackupIdleTime) {
@@ -1893,6 +1898,19 @@ BrowserGlue.prototype = {
                                                     notifyBox.PRIORITY_CRITICAL_MEDIUM,
                                                     buttons);
     notification.persistence = -1; // Until user closes it
+  },
+
+  _showSyncStartedDoorhanger: function () {
+    let bundle = Services.strings.createBundle("chrome://browser/locale/accounts.properties");
+    let title = bundle.GetStringFromName("syncStartNotification.title");
+    let body = bundle.GetStringFromName("syncStartNotification.body");
+
+    let clickCallback = (subject, topic, data) => {
+      if (topic != "alertclickcallback")
+        return;
+      this._openPreferences("sync");
+    }
+    AlertsService.showAlertNotification(null, title, body, true, null, clickCallback);
   },
 
   _migrateUI: function BG__migrateUI() {

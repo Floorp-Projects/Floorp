@@ -14,6 +14,11 @@ add_task(function* testPermissionsListing() {
 });
 
 add_task(function* testHasGrantedPermissions() {
+  // check that it returns false on an invalid URI
+  // like a file URI, which doesn't support site permissions
+  let wrongURI = Services.io.newURI("file:///example.js", null, null)
+  Assert.equal(SitePermissions.hasGrantedPermissions(wrongURI), false);
+
   let uri = Services.io.newURI("https://example.com", null, null)
   Assert.equal(SitePermissions.hasGrantedPermissions(uri), false);
 
@@ -48,4 +53,66 @@ add_task(function* testHasGrantedPermissions() {
   Assert.equal(SitePermissions.hasGrantedPermissions(uri), false);
 
   SitePermissions.remove(uri, "pointerLock");
+});
+
+add_task(function* testGetPermissionsByURI() {
+  // check that it returns an empty array on an invalid URI
+  // like a file URI, which doesn't support site permissions
+  let wrongURI = Services.io.newURI("file:///example.js", null, null)
+  Assert.deepEqual(SitePermissions.getPermissionsByURI(wrongURI), []);
+
+  let uri = Services.io.newURI("https://example.com", null, null)
+
+  SitePermissions.set(uri, "camera", SitePermissions.ALLOW);
+  SitePermissions.set(uri, "cookie", SitePermissions.SESSION);
+  SitePermissions.set(uri, "popup", SitePermissions.BLOCK);
+
+  let permissions = SitePermissions.getPermissionsByURI(uri);
+
+  let camera = permissions.find(({id}) => id === "camera");
+  Assert.deepEqual(camera, {
+    id: "camera",
+    label: "Use the Camera",
+    state: SitePermissions.ALLOW,
+    availableStates: [
+      { id: SitePermissions.UNKNOWN, label: "Always Ask" },
+      { id: SitePermissions.ALLOW, label: "Allow" },
+      { id: SitePermissions.BLOCK, label: "Block" },
+    ]
+  });
+
+  // check that removed permissions (State.UNKNOWN) are skipped
+  SitePermissions.remove(uri, "camera");
+  permissions = SitePermissions.getPermissionsByURI(uri);
+
+  camera = permissions.find(({id}) => id === "camera");
+  Assert.equal(camera, undefined);
+
+  // check that different available state values are represented
+
+  let cookie = permissions.find(({id}) => id === "cookie");
+  Assert.deepEqual(cookie, {
+    id: "cookie",
+    label: "Set Cookies",
+    state: SitePermissions.SESSION,
+    availableStates: [
+      { id: SitePermissions.ALLOW, label: "Allow" },
+      { id: SitePermissions.SESSION, label: "Allow for Session" },
+      { id: SitePermissions.BLOCK, label: "Block" },
+    ]
+  });
+
+  let popup = permissions.find(({id}) => id === "popup");
+  Assert.deepEqual(popup, {
+    id: "popup",
+    label: "Open Pop-up Windows",
+    state: SitePermissions.BLOCK,
+    availableStates: [
+      { id: SitePermissions.ALLOW, label: "Allow" },
+      { id: SitePermissions.BLOCK, label: "Block" },
+    ]
+  });
+
+  SitePermissions.remove(uri, "cookie");
+  SitePermissions.remove(uri, "popup");
 });

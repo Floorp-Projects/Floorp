@@ -2316,11 +2316,7 @@ Object.defineProperty(BrowserAddonList.prototype, "onListChanged", {
         "onListChanged property may only be set to 'null' or a function");
     }
     this._onListChanged = v;
-    if (this._onListChanged) {
-      AddonManager.addAddonListener(this);
-    } else {
-      AddonManager.removeAddonListener(this);
-    }
+    this._adjustListener();
   }
 });
 
@@ -2330,12 +2326,34 @@ BrowserAddonList.prototype.onInstalled = function (addon) {
     // so this step is necessary to clear the cache.
     this._actorByAddonId.delete(addon.id);
   }
-  this._onListChanged();
+  this._notifyListChanged();
+  this._adjustListener();
 };
 
 BrowserAddonList.prototype.onUninstalled = function (addon) {
   this._actorByAddonId.delete(addon.id);
-  this._onListChanged();
+  this._notifyListChanged();
+  this._adjustListener();
+};
+
+BrowserAddonList.prototype._notifyListChanged = function () {
+  if (this._onListChanged) {
+    this._onListChanged();
+  }
+};
+
+BrowserAddonList.prototype._adjustListener = function () {
+  if (this._onListChanged) {
+    // As long as the callback exists, we need to listen for changes
+    // so we can notify about add-on changes.
+    AddonManager.addAddonListener(this);
+  } else {
+    // When the callback does not exist, we only need to keep listening
+    // if the actor cache will need adjusting when add-ons change.
+    if (this._actorByAddonId.size === 0) {
+      AddonManager.removeAddonListener(this);
+    }
+  }
 };
 
 exports.BrowserAddonList = BrowserAddonList;

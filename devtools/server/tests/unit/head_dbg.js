@@ -47,6 +47,21 @@ var loadSubScript = Cc[
 ].getService(Ci.mozIJSSubScriptLoader).loadSubScript;
 
 /**
+ * Initializes any test that needs to work with add-ons.
+ */
+function startupAddonsManager() {
+  // Create a directory for extensions.
+  const profileDir = do_get_profile().clone();
+  profileDir.append("extensions");
+
+  const internalManager = Cc["@mozilla.org/addons/integration;1"]
+    .getService(Ci.nsIObserver)
+    .QueryInterface(Ci.nsITimerCallback);
+
+  internalManager.observe(null, "addons-startup", null);
+}
+
+/**
  * Create a `run_test` function that runs the given generator in a task after
  * having attached to a memory actor. When done, the memory actor is detached
  * from, the client is finished, and the test is finished.
