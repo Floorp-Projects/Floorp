@@ -1052,6 +1052,7 @@ class DebuggerObject : public NativeObject
                                   HandleNativeObject debugger);
 
     static bool isFunction(JSContext* cx, Handle<DebuggerObject*> object);
+    static bool isDebuggeeFunction(JSContext* cx, Handle<DebuggerObject*> object);
     static bool className(JSContext* cx, Handle<DebuggerObject*> object,
                           MutableHandleString result);
     static bool name(JSContext* cx, Handle<DebuggerObject*> object, MutableHandleString result);
