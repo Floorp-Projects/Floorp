@@ -22,7 +22,7 @@
     factory.call(this, require, this);
   }
 }).call(this, function (require, exports) {
-  const { Cc, Ci, Cr, CC } = require("chrome");
+  const { Cc, Cr, CC } = require("chrome");
   const DevToolsUtils = require("devtools/shared/DevToolsUtils");
   const { dumpn, dumpv } = DevToolsUtils;
   const StreamUtils = require("devtools/shared/transport/stream-utils");
@@ -714,7 +714,7 @@
   function ChildDebuggerTransport(sender, prefix) {
     EventEmitter.decorate(this);
 
-    this._sender = sender.QueryInterface(Ci.nsIMessageSender);
+    this._sender = sender;
     this._messageName = "debug:" + prefix + ":packet";
   }
 
