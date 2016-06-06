@@ -104,27 +104,56 @@ add_task(function* testDetailsObjects() {
           "2": browser.runtime.getURL("data/a.png")}},
 
       // Various resolutions
-      {details: {"path": {"18": "a.png", "32": "a-x2.png"}},
+      {details: {"path": {"18": "a.png", "36": "a-x2.png"}},
+        legacy: true,
+        resolutions: {
+          "1": browser.runtime.getURL("data/a.png"),
+          "2": browser.runtime.getURL("data/a-x2.png")}},
+      {details: {"path": {"16": "a.png", "30": "a-x2.png"}},
         resolutions: {
           "1": browser.runtime.getURL("data/a.png"),
           "2": browser.runtime.getURL("data/a-x2.png")}},
       {details: {"path": {"16": "16.png", "100": "100.png"}},
         resolutions: {
-          "1": browser.runtime.getURL("data/100.png"),
+          "1": browser.runtime.getURL("data/16.png"),
           "2": browser.runtime.getURL("data/100.png")}},
       {details: {"path": {"2": "2.png"}},
         resolutions: {
           "1": browser.runtime.getURL("data/2.png"),
           "2": browser.runtime.getURL("data/2.png")}},
       {details: {"path": {
+        "16": "16.svg",
+        "18": "18.svg"}},
+        resolutions: {
+          "1": browser.runtime.getURL("data/16.svg"),
+          "2": browser.runtime.getURL("data/18.svg")}},
+      {details: {"path": {
         "6": "6.png",
+        "18": "18.png",
+        "36": "36.png",
+        "48": "48.png",
+        "128": "128.png"}},
+        legacy: true,
+        resolutions: {
+          "1": browser.runtime.getURL("data/18.png"),
+          "2": browser.runtime.getURL("data/36.png")}},
+      {details: {"path": {
+        "16": "16.png",
         "18": "18.png",
         "32": "32.png",
         "48": "48.png",
         "128": "128.png"}},
         resolutions: {
-          "1": browser.runtime.getURL("data/18.png"),
-          "2": browser.runtime.getURL("data/48.png")}},
+          "1": browser.runtime.getURL("data/16.png"),
+          "2": browser.runtime.getURL("data/32.png")}},
+      {details: {"path": {
+        "18": "18.png",
+        "32": "32.png",
+        "48": "48.png",
+        "128": "128.png"}},
+        resolutions: {
+          "1": browser.runtime.getURL("data/32.png"),
+          "2": browser.runtime.getURL("data/32.png")}},
     ];
 
     // Allow serializing ImageData objects for logging.
@@ -146,7 +175,7 @@ add_task(function* testDetailsObjects() {
       browser.browserAction.setIcon(Object.assign({tabId}, details.details));
       browser.pageAction.setIcon(Object.assign({tabId}, details.details));
 
-      browser.test.sendMessage("imageURL", expectedURL);
+      browser.test.sendMessage("imageURL", [expectedURL, !!details.legacy]);
     });
 
     // Generate a list of tests and resolutions to send back to the test
@@ -209,10 +238,13 @@ add_task(function* testDetailsObjects() {
 
     extension.sendMessage("setIcon", test);
 
-    let imageURL = yield extension.awaitMessage("imageURL");
+    let [imageURL, legacy] = yield extension.awaitMessage("imageURL");
 
     let browserActionButton = document.getElementById(browserActionId);
     is(browserActionButton.getAttribute("image"), imageURL, "browser action has the correct image");
+
+    let isLegacy = browserActionButton.classList.contains("toolbarbutton-legacy-addon");
+    is(isLegacy, legacy, "Legacy class should be present?");
 
     let pageActionImage = document.getElementById(pageActionId);
     is(pageActionImage.src, imageURL, "page action has the correct image");
