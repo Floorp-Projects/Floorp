@@ -639,7 +639,7 @@ nsSVGUtils::PaintFrameWithEffects(nsIFrame *aFrame,
       IntRect drawRect = RoundedOut(ToRect(clipRect));
 
       RefPtr<DrawTarget> targetDT = aContext.GetDrawTarget()->CreateSimilarDrawTarget(drawRect.Size(), SurfaceFormat::B8G8R8A8);
-      target = gfxContext::ForDrawTarget(targetDT);
+      target = gfxContext::CreateOrNull(targetDT);
       if (!target) {
         gfxDevCrash(LogReason::InvalidContext) << "SVGPaintWithEffects context problem " << gfx::hexa(targetDT);
         return;

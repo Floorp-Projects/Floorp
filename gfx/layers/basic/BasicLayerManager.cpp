@@ -110,7 +110,8 @@ BasicLayerManager::PushGroupForLayer(gfxContext* aContext, Layer* aLayer, const 
     if (!surfRect.IsEmpty()) {
       RefPtr<DrawTarget> dt = aContext->GetDrawTarget()->CreateSimilarDrawTarget(surfRect.Size(), SurfaceFormat::B8G8R8A8);
 
-      RefPtr<gfxContext> ctx = gfxContext::ForDrawTarget(dt, ToRect(rect).TopLeft());
+      RefPtr<gfxContext> ctx =
+        gfxContext::CreateOrNull(dt, ToRect(rect).TopLeft());
       if (!ctx) {
         gfxDevCrash(LogReason::InvalidContext) << "BasicLayerManager context problem " << gfx::hexa(dt);
         return group;
@@ -923,8 +924,8 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
       return;
     }
 
-    RefPtr<gfxContext> groupTarget = gfxContext::ForDrawTarget(untransformedDT,
-                                                               Point(bounds.x, bounds.y));
+    RefPtr<gfxContext> groupTarget = gfxContext::CreateOrNull(untransformedDT,
+                                                              Point(bounds.x, bounds.y));
     MOZ_ASSERT(groupTarget); // already checked the target above
 
     PaintSelfOrChildren(paintLayerContext, groupTarget);
@@ -939,8 +940,8 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
                   (aLayer->GetDebugColorIndex() & 2) ? 1.f : 0.f,
                   (aLayer->GetDebugColorIndex() & 4) ? 1.f : 0.f);
 
-      RefPtr<gfxContext> temp = gfxContext::ForDrawTarget(untransformedDT,
-                                                          Point(bounds.x, bounds.y));
+      RefPtr<gfxContext> temp =
+        gfxContext::CreateOrNull(untransformedDT, Point(bounds.x, bounds.y));
       MOZ_ASSERT(temp); // already checked for target above
       temp->SetColor(color);
       temp->Paint();
