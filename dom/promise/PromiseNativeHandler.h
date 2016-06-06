@@ -32,7 +32,7 @@ public:
   RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) = 0;
 
 #ifdef SPIDERMONKEY_PROMISE
-    bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
+  bool WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto,
                   JS::MutableHandle<JSObject*> aWrapper);
 #endif // SPIDERMONKEY_PROMISE
 

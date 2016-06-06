@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DirectoryEntry.h"
+#include "DirectoryReader.h"
 #include "ErrorCallbackRunnable.h"
 #include "mozilla/dom/Directory.h"
 
@@ -47,6 +48,14 @@ void
 DirectoryEntry::GetFullPath(nsAString& aPath, ErrorResult& aRv) const
 {
   mDirectory->GetPath(aPath, aRv);
+}
+
+already_AddRefed<DirectoryReader>
+DirectoryEntry::CreateReader() const
+{
+  RefPtr<DirectoryReader> reader =
+    new DirectoryReader(GetParentObject(), mDirectory);
+  return reader.forget();
 }
 
 void

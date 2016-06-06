@@ -17,12 +17,15 @@ class ErrorCallbackRunnable final : public Runnable
 {
 public:
   explicit ErrorCallbackRunnable(nsIGlobalObject* aGlobalObject,
-                                 ErrorCallback* aCallback)
+                                 ErrorCallback* aCallback,
+                                 nsresult aError = NS_ERROR_DOM_NOT_SUPPORTED_ERR)
     : mGlobal(aGlobalObject)
     , mCallback(aCallback)
+    , mError(aError)
   {
     MOZ_ASSERT(aGlobalObject);
     MOZ_ASSERT(aCallback);
+    MOZ_ASSERT(NS_FAILED(aError));
   }
 
   NS_IMETHOD
@@ -33,8 +36,7 @@ public:
       return NS_ERROR_FAILURE;
     }
 
-    RefPtr<DOMError> error =
-      new DOMError(window, NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    RefPtr<DOMError> error = new DOMError(window, mError);
     mCallback->HandleEvent(*error);
     return NS_OK;
   }
@@ -42,6 +44,7 @@ public:
 private:
   nsCOMPtr<nsIGlobalObject> mGlobal;
   RefPtr<ErrorCallback> mCallback;
+  nsresult mError;
 };
 
 } // dom namespace
