@@ -110,11 +110,7 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
         mBuffer.Truncate();
     }
 
-#ifndef DEBUG_dougt
     MOZ_LOG(gFTPDirListConvLog, LogLevel::Debug, ("::OnData() received the following %d bytes...\n\n%s\n\n", streamLen, buffer.get()) );
-#else
-    printf("::OnData() received the following %d bytes...\n\n%s\n\n", streamLen, buffer.get());
-#endif // DEBUG_dougt
 
     nsAutoCString indexFormat;
     if (!mSentHeading) {
@@ -132,17 +128,8 @@ nsFTPDirListingConv::OnDataAvailable(nsIRequest* request, nsISupports *ctxt,
     char *line = buffer.get();
     line = DigestBufferLines(line, indexFormat);
 
-#ifndef DEBUG_dougt
     MOZ_LOG(gFTPDirListConvLog, LogLevel::Debug, ("::OnData() sending the following %d bytes...\n\n%s\n\n", 
         indexFormat.Length(), indexFormat.get()) );
-#else
-    char *unescData = ToNewCString(indexFormat);
-    NS_ENSURE_TRUE(unescData, NS_ERROR_OUT_OF_MEMORY);
-    
-    nsUnescape(unescData);
-    printf("::OnData() sending the following %d bytes...\n\n%s\n\n", indexFormat.Length(), unescData);
-    free(unescData);
-#endif // DEBUG_dougt
 
     // if there's any data left over, buffer it.
     if (line && *line) {
