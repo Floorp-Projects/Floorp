@@ -5,6 +5,10 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Entry.h"
+#include "DirectoryEntry.h"
+#include "FileEntry.h"
+
+#include "mozilla/dom/UnionTypes.h"
 
 namespace mozilla {
 namespace dom {
@@ -19,9 +23,29 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(Entry)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
 NS_INTERFACE_MAP_END
 
+/* static */ already_AddRefed<Entry>
+Entry::Create(nsIGlobalObject* aGlobalObject,
+              const OwningFileOrDirectory& aFileOrDirectory)
+{
+  MOZ_ASSERT(aGlobalObject);
+
+  RefPtr<Entry> entry;
+  if (aFileOrDirectory.IsFile()) {
+    entry = new FileEntry(aGlobalObject, aFileOrDirectory.GetAsFile());
+  } else {
+    MOZ_ASSERT(aFileOrDirectory.IsDirectory());
+    entry = new DirectoryEntry(aGlobalObject,
+                               aFileOrDirectory.GetAsDirectory());
+  }
+
+  return entry.forget();
+}
+
 Entry::Entry(nsIGlobalObject* aGlobal)
   : mParent(aGlobal)
-{}
+{
+  MOZ_ASSERT(aGlobal);
+}
 
 Entry::~Entry()
 {}

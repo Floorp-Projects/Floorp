@@ -5,13 +5,27 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DirectoryEntry.h"
+#include "mozilla/dom/Directory.h"
 
 namespace mozilla {
 namespace dom {
 
-DirectoryEntry::DirectoryEntry(nsIGlobalObject* aGlobal)
+NS_IMPL_CYCLE_COLLECTION_INHERITED(DirectoryEntry, Entry, mDirectory)
+
+NS_IMPL_ADDREF_INHERITED(DirectoryEntry, Entry)
+NS_IMPL_RELEASE_INHERITED(DirectoryEntry, Entry)
+
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(DirectoryEntry)
+NS_INTERFACE_MAP_END_INHERITING(Entry)
+
+DirectoryEntry::DirectoryEntry(nsIGlobalObject* aGlobal,
+                               Directory* aDirectory)
   : Entry(aGlobal)
-{}
+  , mDirectory(aDirectory)
+{
+  MOZ_ASSERT(aGlobal);
+  MOZ_ASSERT(mDirectory);
+}
 
 DirectoryEntry::~DirectoryEntry()
 {}
@@ -20,6 +34,18 @@ JSObject*
 DirectoryEntry::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return DirectoryEntryBinding::Wrap(aCx, this, aGivenProto);
+}
+
+void
+DirectoryEntry::GetName(nsAString& aName, ErrorResult& aRv) const
+{
+  mDirectory->GetName(aName, aRv);
+}
+
+void
+DirectoryEntry::GetFullPath(nsAString& aPath, ErrorResult& aRv) const
+{
+  mDirectory->GetPath(aPath, aRv);
 }
 
 } // dom namespace

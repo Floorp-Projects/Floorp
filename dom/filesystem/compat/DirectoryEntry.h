@@ -13,13 +13,30 @@
 namespace mozilla {
 namespace dom {
 
+class Directory;
+
 class DirectoryEntry final : public Entry
 {
 public:
-  explicit DirectoryEntry(nsIGlobalObject* aGlobalObject);
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(DirectoryEntry, Entry)
+
+  DirectoryEntry(nsIGlobalObject* aGlobalObject, Directory* aDirectory);
 
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+
+  virtual bool
+  IsDirectory() const override
+  {
+    return true;
+  }
+
+  virtual void
+  GetName(nsAString& aName, ErrorResult& aRv) const override;
+
+  virtual void
+  GetFullPath(nsAString& aFullPath, ErrorResult& aRv) const override;
 
   already_AddRefed<DirectoryReader>
   CreateReader(ErrorResult& aRv) const
@@ -56,6 +73,8 @@ public:
 
 private:
   ~DirectoryEntry();
+
+  RefPtr<Directory> mDirectory;
 };
 
 } // namespace dom

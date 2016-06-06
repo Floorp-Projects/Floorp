@@ -3333,6 +3333,7 @@ struct GlobalProperties {
     bool atob : 1;
     bool btoa : 1;
     bool Blob : 1;
+    bool Directory : 1;
     bool File : 1;
     bool crypto : 1;
     bool rtcIdentityProvider : 1;
