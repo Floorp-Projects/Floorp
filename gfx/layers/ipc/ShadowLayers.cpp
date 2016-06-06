@@ -1161,7 +1161,7 @@ uint8_t*
 GetAddressFromDescriptor(const SurfaceDescriptor& aDescriptor)
 {
   MOZ_ASSERT(IsSurfaceDescriptorValid(aDescriptor));
-  MOZ_RELEASE_ASSERT(aDescriptor.type() == SurfaceDescriptor::TSurfaceDescriptorBuffer);
+  MOZ_RELEASE_ASSERT(aDescriptor.type() == SurfaceDescriptor::TSurfaceDescriptorBuffer, "GFX: surface descriptor is not the right type.");
 
   auto memOrShmem = aDescriptor.get_SurfaceDescriptorBuffer().data();
   if (memOrShmem.type() == MemoryOrShmem::TShmem) {

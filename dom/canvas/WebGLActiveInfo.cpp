@@ -72,7 +72,7 @@ ElemSizeFromType(GLenum elemType)
         return 16;
 
     default:
-        MOZ_CRASH("Bad `elemType`.");
+        MOZ_CRASH("GFX: Bad `elemType`.");
     }
 }
 

@@ -360,7 +360,7 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString& aFailureId)
 
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 18
     MOZ_RELEASE_ASSERT(mSymbols.fQueryStringImplementationANDROID,
-                       "Couldn't find eglQueryStringImplementationANDROID");
+                       "GFX: Couldn't find eglQueryStringImplementationANDROID");
 #endif
 
     InitClientExtensions();

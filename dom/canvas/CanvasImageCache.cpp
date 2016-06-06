@@ -268,7 +268,7 @@ ImageCache::ImageCache()
     Preferences::AddIntVarCache(&sCanvasImageCacheLimit, "canvas.image.cache.limit", 0);
   }
   mImageCacheObserver = new ImageCacheObserver(this);
-  MOZ_RELEASE_ASSERT(mImageCacheObserver, "Can't alloc ImageCacheObserver");
+  MOZ_RELEASE_ASSERT(mImageCacheObserver, "GFX: Can't alloc ImageCacheObserver");
 }
 
 ImageCache::~ImageCache() {

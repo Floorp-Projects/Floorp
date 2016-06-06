@@ -564,7 +564,7 @@ WebGLContext::GetBufferSlotByTarget(GLenum target)
         return mBoundUniformBuffer;
 
     default:
-        MOZ_CRASH("Should not get here.");
+        MOZ_CRASH("GFX: Should not get here.");
     }
 }
 
@@ -582,7 +582,7 @@ WebGLContext::GetBufferSlotByTargetIndexed(GLenum target, GLuint index)
         return mBoundUniformBuffers[index];
 
     default:
-        MOZ_CRASH("Should not get here.");
+        MOZ_CRASH("GFX: Should not get here.");
     }
 }
 

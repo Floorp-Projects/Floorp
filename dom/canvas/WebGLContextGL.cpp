@@ -269,7 +269,7 @@ WebGLContext::CheckFramebufferStatus(GLenum target)
         break;
 
     default:
-        MOZ_CRASH("Bad target.");
+        MOZ_CRASH("GFX: Bad target.");
     }
 
     if (!fb)
@@ -501,7 +501,7 @@ WebGLContext::FramebufferRenderbuffer(GLenum target, GLenum attachment,
         break;
 
     default:
-        MOZ_CRASH("Bad target.");
+        MOZ_CRASH("GFX: Bad target.");
     }
 
     if (!fb) {
@@ -590,7 +590,7 @@ WebGLContext::FramebufferTexture2D(GLenum target,
         break;
 
     default:
-        MOZ_CRASH("Bad target.");
+        MOZ_CRASH("GFX: Bad target.");
     }
 
     if (!fb) {
@@ -743,7 +743,7 @@ WebGLContext::GetFramebufferAttachmentParameter(JSContext* cx,
         break;
 
     default:
-        MOZ_CRASH("Bad target.");
+        MOZ_CRASH("GFX: Bad target.");
     }
 
     MakeContextCurrent();
@@ -1264,7 +1264,7 @@ WebGLContext::DoReadPixelsAndConvert(GLint x, GLint y, GLsizei width, GLsizei he
         }
 
         if (error) {
-            MOZ_RELEASE_ASSERT(false, "Unexpected driver error.");
+            MOZ_RELEASE_ASSERT(false, "GFX: Unexpected driver error.");
             return false;
         }
 
@@ -1475,7 +1475,7 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
         channels = 4;
         break;
     default:
-        MOZ_CRASH("bad `format`");
+        MOZ_CRASH("GFX: bad `format`");
     }
 
 
@@ -1536,7 +1536,7 @@ WebGLContext::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum
         break;
 
     default:
-        MOZ_CRASH("bad `type`");
+        MOZ_CRASH("GFX: bad `type`");
     }
 
     const auto& view = pixels.Value();
