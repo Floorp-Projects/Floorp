@@ -275,48 +275,50 @@
         </tabpanel>
 
         <tabpanel id="sidebar-panel-layoutview" class="devtools-monospace theme-sidebar inspector-tabpanel">
-          <html:div id="layout-container">
-            <html:p id="layout-header">
-              <html:span id="layout-element-size"></html:span>
-              <html:section id="layout-position-group">
-                <html:button class="devtools-button" id="layout-geometry-editor" title="&geometry.button.tooltip;"></html:button>
-                <html:span id="layout-element-position"></html:span>
-              </html:section>
-            </html:p>
+          <html:div id="layout-wrapper">
+            <html:div id="layout-container">
+              <html:p id="layout-header">
+                <html:span id="layout-element-size"></html:span>
+                <html:section id="layout-position-group">
+                  <html:button class="devtools-button" id="layout-geometry-editor" title="&geometry.button.tooltip;"></html:button>
+                  <html:span id="layout-element-position"></html:span>
+                </html:section>
+              </html:p>
 
-            <html:div id="layout-main">
-              <html:span class="layout-legend" data-box="margin" title="&margin.tooltip;">&margin.tooltip;</html:span>
-              <html:div id="layout-margins" data-box="margin" title="&margin.tooltip;">
-                <html:span class="layout-legend" data-box="border" title="&border.tooltip;">&border.tooltip;</html:span>
-                <html:div id="layout-borders" data-box="border" title="&border.tooltip;">
-                  <html:span class="layout-legend" data-box="padding" title="&padding.tooltip;">&padding.tooltip;</html:span>
-                  <html:div id="layout-padding" data-box="padding" title="&padding.tooltip;">
-                    <html:div id="layout-content" data-box="content" title="&content.tooltip;">
+              <html:div id="layout-main">
+                <html:span class="layout-legend" data-box="margin" title="&margin.tooltip;">&margin.tooltip;</html:span>
+                <html:div id="layout-margins" data-box="margin" title="&margin.tooltip;">
+                  <html:span class="layout-legend" data-box="border" title="&border.tooltip;">&border.tooltip;</html:span>
+                  <html:div id="layout-borders" data-box="border" title="&border.tooltip;">
+                    <html:span class="layout-legend" data-box="padding" title="&padding.tooltip;">&padding.tooltip;</html:span>
+                    <html:div id="layout-padding" data-box="padding" title="&padding.tooltip;">
+                      <html:div id="layout-content" data-box="content" title="&content.tooltip;">
+                      </html:div>
                     </html:div>
                   </html:div>
                 </html:div>
+
+                <html:p class="layout-border layout-top"><html:span data-box="border" class="layout-editable" title="border-top"></html:span></html:p>
+                <html:p class="layout-border layout-right"><html:span data-box="border" class="layout-editable" title="border-right"></html:span></html:p>
+                <html:p class="layout-border layout-bottom"><html:span data-box="border" class="layout-editable" title="border-bottom"></html:span></html:p>
+                <html:p class="layout-border layout-left"><html:span data-box="border" class="layout-editable" title="border-left"></html:span></html:p>
+
+                <html:p class="layout-margin layout-top"><html:span data-box="margin" class="layout-editable" title="margin-top"></html:span></html:p>
+                <html:p class="layout-margin layout-right"><html:span data-box="margin" class="layout-editable" title="margin-right"></html:span></html:p>
+                <html:p class="layout-margin layout-bottom"><html:span data-box="margin" class="layout-editable" title="margin-bottom"></html:span></html:p>
+                <html:p class="layout-margin layout-left"><html:span data-box="margin" class="layout-editable" title="margin-left"></html:span></html:p>
+
+                <html:p class="layout-padding layout-top"><html:span data-box="padding" class="layout-editable" title="padding-top"></html:span></html:p>
+                <html:p class="layout-padding layout-right"><html:span data-box="padding" class="layout-editable" title="padding-right"></html:span></html:p>
+                <html:p class="layout-padding layout-bottom"><html:span data-box="padding" class="layout-editable" title="padding-bottom"></html:span></html:p>
+                <html:p class="layout-padding layout-left"><html:span data-box="padding" class="layout-editable" title="padding-left"></html:span></html:p>
+
+                <html:p class="layout-size"><html:span data-box="content" title="&content.tooltip;"></html:span></html:p>
               </html:div>
 
-              <html:p class="layout-border layout-top"><html:span data-box="border" class="layout-editable" title="border-top"></html:span></html:p>
-              <html:p class="layout-border layout-right"><html:span data-box="border" class="layout-editable" title="border-right"></html:span></html:p>
-              <html:p class="layout-border layout-bottom"><html:span data-box="border" class="layout-editable" title="border-bottom"></html:span></html:p>
-              <html:p class="layout-border layout-left"><html:span data-box="border" class="layout-editable" title="border-left"></html:span></html:p>
-
-              <html:p class="layout-margin layout-top"><html:span data-box="margin" class="layout-editable" title="margin-top"></html:span></html:p>
-              <html:p class="layout-margin layout-right"><html:span data-box="margin" class="layout-editable" title="margin-right"></html:span></html:p>
-              <html:p class="layout-margin layout-bottom"><html:span data-box="margin" class="layout-editable" title="margin-bottom"></html:span></html:p>
-              <html:p class="layout-margin layout-left"><html:span data-box="margin" class="layout-editable" title="margin-left"></html:span></html:p>
-
-              <html:p class="layout-padding layout-top"><html:span data-box="padding" class="layout-editable" title="padding-top"></html:span></html:p>
-              <html:p class="layout-padding layout-right"><html:span data-box="padding" class="layout-editable" title="padding-right"></html:span></html:p>
-              <html:p class="layout-padding layout-bottom"><html:span data-box="padding" class="layout-editable" title="padding-bottom"></html:span></html:p>
-              <html:p class="layout-padding layout-left"><html:span data-box="padding" class="layout-editable" title="padding-left"></html:span></html:p>
-
-              <html:p class="layout-size"><html:span data-box="content" title="&content.tooltip;"></html:span></html:p>
-            </html:div>
-
-            <html:div style="display: none">
-              <html:p id="layout-dummy"></html:p>
+              <html:div style="display: none">
+                <html:p id="layout-dummy"></html:p>
+              </html:div>
             </html:div>
           </html:div>
         </tabpanel>

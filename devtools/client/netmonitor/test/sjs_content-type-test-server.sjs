@@ -78,7 +78,7 @@ function handleRequest(request, response) {
         break;
       }
       case "html": {
-        let content = params.filter((s) => s.includes("res="))[0].split("=")[1];
+        let content = (params.filter((s) => s.includes("res="))[0] || "").split("=")[1];
         response.setStatusLine(request.httpVersion, status, "OK");
         response.setHeader("Content-Type", "text/html; charset=utf-8", false);
         setCacheHeaders();
@@ -120,7 +120,7 @@ function handleRequest(request, response) {
         break;
       }
       case "jsonp": {
-        let fun = params.filter((s) => s.includes("jsonp="))[0].split("=")[1];
+        let fun = (params.filter((s) => s.includes("jsonp="))[0] || "").split("=")[1];
         response.setStatusLine(request.httpVersion, status, "OK");
         response.setHeader("Content-Type", "text/json; charset=utf-8", false);
         setCacheHeaders();
@@ -129,7 +129,7 @@ function handleRequest(request, response) {
         break;
       }
       case "jsonp2": {
-        let fun = params.filter((s) => s.includes("jsonp="))[0].split("=")[1];
+        let fun = (params.filter((s) => s.includes("jsonp="))[0] || "").split("=")[1];
         response.setStatusLine(request.httpVersion, status, "OK");
         response.setHeader("Content-Type", "text/json; charset=utf-8", false);
         setCacheHeaders();
