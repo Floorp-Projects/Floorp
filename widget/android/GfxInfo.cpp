@@ -75,7 +75,9 @@ public:
     }
 
     RefPtr<gl::GLContext> gl;
-    gl = gl::GLContextProvider::CreateHeadless(gl::CreateContextFlags::REQUIRE_COMPAT_PROFILE);
+    nsCString discardFailureId;
+    gl = gl::GLContextProvider::CreateHeadless(gl::CreateContextFlags::REQUIRE_COMPAT_PROFILE,
+                                               discardFailureId);
 
     if (!gl) {
       // Setting mReady to true here means that we won't retry. Everything will
