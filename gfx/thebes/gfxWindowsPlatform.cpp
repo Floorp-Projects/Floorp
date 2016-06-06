@@ -2654,6 +2654,14 @@ public:
         }
       }
 
+      virtual void Shutdown() override
+      {
+        MOZ_ASSERT(NS_IsMainThread());
+        DisableVsync();
+        mVsyncThread->Stop();
+        delete mVsyncThread;
+      }
+
       virtual void EnableVsync() override
       {
         MOZ_ASSERT(NS_IsMainThread());
@@ -2817,9 +2825,6 @@ public:
       virtual ~D3DVsyncDisplay()
       {
         MOZ_ASSERT(NS_IsMainThread());
-        DisableVsync();
-        mVsyncThread->Stop();
-        delete mVsyncThread;
       }
 
       bool IsInVsyncThread()
