@@ -5,7 +5,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    'nsGeolocationSettings.h',
     'nsGeoPosition.h',
     'nsGeoPositionIPCSerialiser.h',
 ]
@@ -16,8 +15,6 @@ SOURCES += [
 
 UNIFIED_SOURCES += [
     'MLSFallback.cpp',
-    'nsGeoGridFuzzer.cpp',
-    'nsGeolocationSettings.cpp',
     'nsGeoPosition.cpp',
 ]
 

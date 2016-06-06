@@ -118,7 +118,6 @@
 #include "nsContentUtils.h"
 #include "nsDebugImpl.h"
 #include "nsFrameMessageManager.h"
-#include "nsGeolocationSettings.h"
 #include "nsHashPropertyBag.h"
 #include "nsIAlertsService.h"
 #include "nsIAppsService.h"
@@ -4570,19 +4569,6 @@ ContentParent::RecvAddGeolocationListener(const IPC::Principal& aPrincipal,
   // creation of a new listener.
   RecvRemoveGeolocationListener();
   mGeolocationWatchID = AddGeolocationListener(this, this, aHighAccuracy);
-
-  // let the the settings cache know the origin of the new listener
-  nsAutoCString origin;
-  // hint to the compiler to use the conversion operator to nsIPrincipal*
-  nsCOMPtr<nsIPrincipal> principal = static_cast<nsIPrincipal*>(aPrincipal);
-  if (!principal) {
-    return true;
-  }
-  principal->GetOrigin(origin);
-  RefPtr<nsGeolocationSettings> gs = nsGeolocationSettings::GetGeolocationSettings();
-  if (gs) {
-    gs->PutWatchOrigin(mGeolocationWatchID, origin);
-  }
   return true;
 }
 
@@ -4595,11 +4581,6 @@ ContentParent::RecvRemoveGeolocationListener()
       return true;
     }
     geo->ClearWatch(mGeolocationWatchID);
-
-    RefPtr<nsGeolocationSettings> gs = nsGeolocationSettings::GetGeolocationSettings();
-    if (gs) {
-      gs->RemoveWatchOrigin(mGeolocationWatchID);
-    }
     mGeolocationWatchID = -1;
   }
   return true;
@@ -4611,21 +4592,8 @@ ContentParent::RecvSetGeolocationHigherAccuracy(const bool& aEnable)
   // This should never be called without a listener already present,
   // so this check allows us to forgo securing privileges.
   if (mGeolocationWatchID != -1) {
-    nsCString origin;
-    RefPtr<nsGeolocationSettings> gs = nsGeolocationSettings::GetGeolocationSettings();
-    // get the origin stored for the curent watch ID
-    if (gs) {
-      gs->GetWatchOrigin(mGeolocationWatchID, origin);
-    }
-
-    // remove and recreate a new, high-accuracy listener
     RecvRemoveGeolocationListener();
     mGeolocationWatchID = AddGeolocationListener(this, this, aEnable);
-
-    // map the new watch ID to the origin
-    if (gs) {
-      gs->PutWatchOrigin(mGeolocationWatchID, origin);
-    }
   }
   return true;
 }
