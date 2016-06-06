@@ -35,19 +35,6 @@ namespace jit { struct BaselineScript; }
 
 namespace wasm {
 
-// A wasm Module and everything it contains must support serialization,
-// deserialization and cloning. Some data can be simply copied as raw bytes and,
-// as a convention, is stored in an inline CacheablePod struct. Everything else
-// should implement the below methods which are called recusively by the
-// containing Module. See comments for these methods in wasm::Module.
-
-#define WASM_DECLARE_SERIALIZABLE(Type)                                         \
-    size_t serializedSize() const;                                              \
-    uint8_t* serialize(uint8_t* cursor) const;                                  \
-    const uint8_t* deserialize(ExclusiveContext* cx, const uint8_t* cursor);    \
-    MOZ_MUST_USE bool clone(JSContext* cx, Type* out) const;                    \
-    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
-
 // The StaticLinkData contains all the metadata necessary to perform
 // Module::staticallyLink but is not necessary afterwards.
 
@@ -301,15 +288,7 @@ class CodeRange
     };
 };
 
-} // namespace wasm
-} // namespace js
-namespace mozilla {
-template <> struct IsPod<js::wasm::CodeRange> : TrueType {};
-}
-namespace js {
-namespace wasm {
-
-typedef Vector<CodeRange, 0, SystemAllocPolicy> CodeRangeVector;
+WASM_DECLARE_POD_VECTOR(CodeRange, CodeRangeVector)
 
 // A CallThunk describes the offset and target of thunks so that they may be
 // patched at runtime when profiling is toggled. Thunks are emitted to connect
@@ -328,15 +307,7 @@ struct CallThunk
     CallThunk() = default;
 };
 
-typedef Vector<CallThunk, 0, SystemAllocPolicy> CallThunkVector;
-
-} // namespace wasm
-} // namespace js
-namespace mozilla {
-template <> struct IsPod<js::wasm::CallThunk> : TrueType {};
-}
-namespace js {
-namespace wasm {
+WASM_DECLARE_POD_VECTOR(CallThunk, CallThunkVector)
 
 // CacheableChars is used to cacheably store UniqueChars.
 

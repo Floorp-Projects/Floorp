@@ -47,6 +47,29 @@ using mozilla::MallocSizeOf;
 
 typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
 
+// To call Vector::podResizeToFit, a type must specialize mozilla::IsPod
+// which is pretty verbose to do within js::wasm, so factor that process out
+// into a macro.
+
+#define WASM_DECLARE_POD_VECTOR(Type, VectorName)                               \
+} } namespace mozilla {                                                         \
+template <> struct IsPod<js::wasm::Type> : TrueType {};                         \
+} namespace js { namespace wasm {                                               \
+typedef Vector<Type, 0, SystemAllocPolicy> VectorName;
+
+// A wasm Module and everything it contains must support serialization,
+// deserialization and cloning. Some data can be simply copied as raw bytes and,
+// as a convention, is stored in an inline CacheablePod struct. Everything else
+// should implement the below methods which are called recusively by the
+// containing Module. See comments for these methods in wasm::Module.
+
+#define WASM_DECLARE_SERIALIZABLE(Type)                                         \
+    size_t serializedSize() const;                                              \
+    uint8_t* serialize(uint8_t* cursor) const;                                  \
+    const uint8_t* deserialize(ExclusiveContext* cx, const uint8_t* cursor);    \
+    MOZ_MUST_USE bool clone(JSContext* cx, Type* out) const;                    \
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+
 // ValType/ExprType utilities
 
 // ExprType::Limit is an out-of-band value and has no wasm-semantic meaning. For
@@ -513,6 +536,8 @@ class CallSite : public CallSiteDesc
     uint32_t stackDepth() const { return stackDepth_; }
 };
 
+WASM_DECLARE_POD_VECTOR(CallSite, CallSiteVector)
+
 class CallSiteAndTarget : public CallSite
 {
     uint32_t targetIndex_;
@@ -528,16 +553,6 @@ class CallSiteAndTarget : public CallSite
     uint32_t targetIndex() const { MOZ_ASSERT(isInternal()); return targetIndex_; }
 };
 
-} // namespace wasm
-} // namespace js
-namespace mozilla {
-template <> struct IsPod<js::wasm::CallSite>          : TrueType {};
-template <> struct IsPod<js::wasm::CallSiteAndTarget> : TrueType {};
-}
-namespace js {
-namespace wasm {
-
-typedef Vector<CallSite, 0, SystemAllocPolicy> CallSiteVector;
 typedef Vector<CallSiteAndTarget, 0, SystemAllocPolicy> CallSiteAndTargetVector;
 
 // Summarizes a heap access made by wasm code that needs to be patched later
@@ -639,15 +654,7 @@ class HeapAccess {
 };
 #endif
 
-} // namespace wasm
-} // namespace js
-namespace mozilla {
-template <> struct IsPod<js::wasm::HeapAccess> : TrueType {};
-}
-namespace js {
-namespace wasm {
-
-typedef Vector<HeapAccess, 0, SystemAllocPolicy> HeapAccessVector;
+WASM_DECLARE_POD_VECTOR(HeapAccess, HeapAccessVector)
 
 // A wasm::SymbolicAddress represents a pointer to a well-known function or
 // object that is embedded in wasm code. Since wasm code is serialized and
