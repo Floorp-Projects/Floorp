@@ -270,7 +270,8 @@ void nsNetworkLinkService::calculateNetworkId(void)
         sha1.finish(digest);
         nsCString newString(reinterpret_cast<char*>(digest),
                             SHA1Sum::kHashSize);
-        Base64Encode(newString, output);
+        nsresult rv = Base64Encode(newString, output);
+        MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
         LOG(("networkid: id %s\n", output.get()));
         mNetworkId = output;
     }
