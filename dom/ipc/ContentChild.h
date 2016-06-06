@@ -388,6 +388,9 @@ public:
                                   const bool& reset) override;
   virtual bool RecvRegisterChromeItem(const ChromeRegistryItem& item) override;
 
+  virtual bool RecvClearImageCache(const bool& privateLoader,
+                                   const bool& chrome) override;
+
   virtual mozilla::jsipc::PJavaScriptChild* AllocPJavaScriptChild() override;
 
   virtual bool DeallocPJavaScriptChild(mozilla::jsipc::PJavaScriptChild*) override;
