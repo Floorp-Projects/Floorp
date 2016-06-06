@@ -69,9 +69,12 @@ add_task(function* test_reader_button() {
     }, resolve, reject);
   });
 
+  info("Got correct URL when copying");
+
   // Switch page back out of reader mode.
+  let promisePageShow = BrowserTestUtils.waitForContentEvent(tab.linkedBrowser, "pageshow");
   readerButton.click();
-  yield BrowserTestUtils.waitForContentEvent(tab.linkedBrowser, "pageshow");
+  yield promisePageShow;
   is(gBrowser.selectedBrowser.currentURI.spec, url,
     "Back to the original page after clicking active reader mode button");
   ok(gBrowser.selectedBrowser.canGoForward,
