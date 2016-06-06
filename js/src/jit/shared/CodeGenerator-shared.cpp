@@ -1398,11 +1398,11 @@ class OutOfLineTruncateSlow : public OutOfLineCodeBase<CodeGeneratorShared>
 {
     FloatRegister src_;
     Register dest_;
-    bool needFloat32Conversion_;
+    bool widenFloatToDouble_;
 
   public:
-    OutOfLineTruncateSlow(FloatRegister src, Register dest, bool needFloat32Conversion = false)
-      : src_(src), dest_(dest), needFloat32Conversion_(needFloat32Conversion)
+    OutOfLineTruncateSlow(FloatRegister src, Register dest, bool widenFloatToDouble = false)
+      : src_(src), dest_(dest), widenFloatToDouble_(widenFloatToDouble)
     { }
 
     void accept(CodeGeneratorShared* codegen) {
@@ -1414,8 +1414,8 @@ class OutOfLineTruncateSlow : public OutOfLineCodeBase<CodeGeneratorShared>
     Register dest() const {
         return dest_;
     }
-    bool needFloat32Conversion() const {
-        return needFloat32Conversion_;
+    bool widenFloatToDouble() const {
+        return widenFloatToDouble_;
     }
 
 };
@@ -1454,36 +1454,9 @@ CodeGeneratorShared::visitOutOfLineTruncateSlow(OutOfLineTruncateSlow* ool)
     Register dest = ool->dest();
 
     saveVolatile(dest);
-
-#if defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64)
-    if (ool->needFloat32Conversion()) {
-        masm.convertFloat32ToDouble(src, ScratchDoubleReg);
-        src = ScratchDoubleReg;
-    }
-#else
-    FloatRegister srcSingle = src.asSingle();
-    if (ool->needFloat32Conversion()) {
-        MOZ_ASSERT(src.isSingle());
-        masm.push(src);
-        masm.convertFloat32ToDouble(src, src);
-        src = src.asDouble();
-    }
-#endif
-
-    masm.setupUnalignedABICall(dest);
-    masm.passABIArg(src, MoveOp::DOUBLE);
-    if (gen->compilingAsmJS())
-        masm.callWithABI(wasm::SymbolicAddress::ToInt32);
-    else
-        masm.callWithABI(BitwiseCast<void*, int32_t(*)(double)>(JS::ToInt32));
-    masm.storeCallResult(dest);
-
-#if !defined(JS_CODEGEN_ARM) && !defined(JS_CODEGEN_ARM64)
-    if (ool->needFloat32Conversion())
-        masm.pop(srcSingle);
-#endif
-
+    masm.outOfLineTruncateSlow(src, dest, ool->widenFloatToDouble(), gen->compilingAsmJS());
     restoreVolatile(dest);
+
     masm.jump(ool->rejoin());
 }
 
