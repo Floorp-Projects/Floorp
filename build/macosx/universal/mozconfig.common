@@ -4,6 +4,8 @@
 
 mk_add_options MOZ_UNIFY_BDATE=1
 
+mk_add_options MOZ_POSTFLIGHT_ALL+=build/macosx/universal/flight.mk
+
 DARWIN_VERSION=`uname -r`
 ac_add_app_options i386 --target=i386-apple-darwin$DARWIN_VERSION
 ac_add_app_options x86_64 --target=x86_64-apple-darwin$DARWIN_VERSION
