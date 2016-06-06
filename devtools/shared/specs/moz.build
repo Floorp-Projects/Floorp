@@ -25,5 +25,6 @@ DevToolsModules(
     'styles.js',
     'stylesheets.js',
     'webaudio.js',
-    'webgl.js'
+    'webgl.js',
+    'worker.js'
 )
