@@ -54,13 +54,13 @@ const EXTRA_BORDER = {
  *        - {String} type
  *          Display type of the tooltip. Possible values: "normal", "arrow"
  *        - {Boolean} autofocus
- *          Defaults to true. Should the tooltip be focused when opening it.
+ *          Defaults to false. Should the tooltip be focused when opening it.
  *        - {Boolean} consumeOutsideClicks
  *          Defaults to true. The tooltip is closed when clicking outside.
  *          Should this event be stopped and consumed or not.
  */
 function HTMLTooltip(toolbox,
-  {type = "normal", autofocus = true, consumeOutsideClicks = true} = {}) {
+  {type = "normal", autofocus = false, consumeOutsideClicks = true} = {}) {
   EventEmitter.decorate(this);
 
   this.doc = toolbox.doc;
@@ -191,6 +191,7 @@ HTMLTooltip.prototype = {
       this.container.classList.add("tooltip-visible");
 
       this.attachEventsTimer = this.doc.defaultView.setTimeout(() => {
+        this._focusedElement = this.doc.activeElement;
         if (this.autofocus) {
           this.frame.focus();
         }
@@ -211,6 +212,11 @@ HTMLTooltip.prototype = {
       this.topWindow.removeEventListener("click", this._onClick, true);
       this.container.classList.remove("tooltip-visible");
       this.emit("hidden");
+
+      if (this.container.contains(this.doc.activeElement) && this._focusedElement) {
+        this._focusedElement.focus();
+        this._focusedElement = null;
+      }
     }
   },
 

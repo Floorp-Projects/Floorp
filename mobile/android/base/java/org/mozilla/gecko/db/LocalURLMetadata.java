@@ -6,6 +6,7 @@
 package org.mozilla.gecko.db;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -124,7 +125,7 @@ public class LocalURLMetadata implements URLMetadata {
      */
     @Override
     public Map<String, Map<String, Object>> getForURLs(final ContentResolver cr,
-                                                       final List<String> urls,
+                                                       final Collection<String> urls,
                                                        final List<String> requestedColumns) {
         ThreadUtils.assertNotOnUiThread();
         ThreadUtils.assertNotOnGeckoThread();
@@ -209,7 +210,7 @@ public class LocalURLMetadata implements URLMetadata {
      * Must not be called from UI or Gecko threads.
      */
     @Override
-    public void save(final ContentResolver cr, final String url, final Map<String, Object> data) {
+    public void save(final ContentResolver cr, final Map<String, Object> data) {
         ThreadUtils.assertNotOnUiThread();
         ThreadUtils.assertNotOnGeckoThread();
 

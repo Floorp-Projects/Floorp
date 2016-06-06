@@ -19,3 +19,4 @@ toolkit.jar:
    content/global/printProgress.js                  (content/printProgress.js)
    content/global/printProgress.xul                 (content/printProgress.xul)
    content/global/printUtils.js                     (content/printUtils.js)
+   content/global/simplifyMode.css                  (content/simplifyMode.css)

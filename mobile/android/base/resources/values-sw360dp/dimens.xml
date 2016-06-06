@@ -7,4 +7,7 @@
     <dimen name="tab_panel_column_width">156dip</dimen>
     <dimen name="tab_thumbnail_height">110dip</dimen>
     <dimen name="tab_thumbnail_width">148dip</dimen>
+
+    <dimen name="firstrun_background_height">180dp</dimen>
+    <dimen name="firstrun_min_height">180dp</dimen>
 </resources>

@@ -13,6 +13,7 @@ loader.lazyGetter(this, "DOMUtils", () => {
 const protocol = require("devtools/shared/protocol");
 const { ActorClassWithSpec, Actor } = protocol;
 const { cssPropertiesSpec } = require("devtools/shared/specs/css-properties");
+const clientCssDatabase = require("devtools/shared/css-properties-db")
 
 var CssPropertiesActor = exports.CssPropertiesActor = ActorClassWithSpec(cssPropertiesSpec, {
   typeName: "cssProperties",
@@ -27,8 +28,22 @@ var CssPropertiesActor = exports.CssPropertiesActor = ActorClassWithSpec(cssProp
   },
 
   getCSSDatabase: function() {
-    const propertiesList = DOMUtils.getCSSPropertyNames(DOMUtils.INCLUDE_ALIASES);
-    return { propertiesList };
+    const db = {};
+    const properties = DOMUtils.getCSSPropertyNames(DOMUtils.INCLUDE_ALIASES);
+
+    properties.forEach(name => {
+      // In order to maintain any backwards compatible changes when debugging
+      // older clients, take the definition from the static database in the
+      // devtools client, and fill it in with the most recent property
+      // definition from the server.
+      const clientDefinition = clientCssDatabase[name] || {};
+      const serverDefinition = {
+        isInherited: DOMUtils.isInheritedProperty(name)
+      };
+      db[name] = Object.assign(clientDefinition, serverDefinition);
+    });
+
+    return db;
   }
 });
 

@@ -5,12 +5,19 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 DevToolsModules(
+    'actor-registry.js',
     'addons.js',
     'animation.js',
+    'call-watcher.js',
+    'canvas.js',
     'css-properties.js',
     'highlighters.js',
     'inspector.js',
+    'preference.js',
+    'settings.js',
     'storage.js',
     'styles.js',
-    'stylesheets.js'
+    'stylesheets.js',
+    'webaudio.js',
+    'webgl.js'
 )

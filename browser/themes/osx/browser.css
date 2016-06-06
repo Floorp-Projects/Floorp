@@ -3260,55 +3260,6 @@ menulist.translate-infobar-element > .menulist-dropmarker {
   margin-top: .5em;
 }
 
-/* Sync Panels */
-
-.sync-panel-icon {
-  height:32px;
-  width: 32px;
-  background: url("chrome://browser/content/abouthome/sync.png") top left no-repeat;
-}
-
-@media (min-resolution: 2dppx) {
-  .sync-panel-icon {
-    background: url("chrome://browser/content/abouthome/sync@2x.png") top left no-repeat;
-    background-size: 32px 32px;
-  }
-}
-
-.sync-panel-inner {
-  width: 0;
-  padding-left: 10px;
-}
-
-.sync-panel-button-box {
-  margin-top: 1em;
-}
-
-.sync-panel-button {
-  @hudButton@
-  margin: 0;
-  min-width: 72px;
-  min-height: 22px;
-}
-
-.sync-panel-button:hover:active {
-  @hudButtonPressed@
-}
-
-.sync-panel-button:-moz-focusring {
-  @hudButtonFocused@
-}
-
-#sync-start-panel-title {
-  font-size: 120%;
-  font-weight: bold;
-  margin-bottom: 5px;
-}
-
-#sync-start-panel-subtitle {
-  margin-bottom: 0;
-}
-
 /* Status panel */
 
 .statuspanel-label {

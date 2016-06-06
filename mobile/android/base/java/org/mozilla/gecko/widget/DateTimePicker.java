@@ -21,6 +21,7 @@ import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Locale;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.R;
 
@@ -29,6 +30,7 @@ import android.text.format.DateFormat;
 import android.text.format.DateUtils;
 import android.util.DisplayMetrics;
 import android.util.Log;
+import android.util.TypedValue;
 import android.view.Display;
 import android.view.LayoutInflater;
 import android.view.WindowManager;
@@ -45,8 +47,6 @@ public class DateTimePicker extends FrameLayout {
     private static final String LOGTAG = "GeckoDateTimePicker";
     private static final int DEFAULT_START_YEAR = 1;
     private static final int DEFAULT_END_YEAR = 9999;
-    // Minimal screen width (in inches) for which we can show the calendar;
-    private static final int SCREEN_SIZE_THRESHOLD = 5;
     private static final char DATE_FORMAT_DAY = 'd';
     private static final char DATE_FORMAT_MONTH = 'M';
     private static final char DATE_FORMAT_YEAR = 'y';
@@ -320,19 +320,10 @@ public class DateTimePicker extends FrameLayout {
         // If we're displaying a date, the screen is wide enough
         // (and if we're using an SDK where the calendar view exists)
         // then display a calendar.
-        if (Versions.feature11Plus &&
-            (mState == PickersState.DATE || mState == PickersState.DATETIME) &&
-            mScreenWidth >= SCREEN_SIZE_THRESHOLD) {
-
-            if (DEBUG) {
-                Log.d(LOGTAG, "SDK > 10 and screen wide enough, displaying calendar");
-            }
-
+        if (mState == PickersState.DATE || mState == PickersState.DATETIME) {
             mCalendar = new CalendarView(context);
             mCalendar.setVisibility(GONE);
 
-            LayoutParams layoutParams = new LayoutParams(250, 280);
-            mCalendar.setLayoutParams(layoutParams);
             mCalendar.setFocusable(true);
             mCalendar.setFocusableInTouchMode(true);
             mCalendar.setMaxDate(mMaxDate.getTimeInMillis());
@@ -349,7 +340,17 @@ public class DateTimePicker extends FrameLayout {
                 }
             });
 
-            mPickers.addView(mCalendar);
+            final int height;
+            if (Versions.preLollipop) {
+                // The 4.X version of CalendarView doesn't request any height, resulting in
+                // the whole dialog not appearing unless we manually request height.
+                height =  (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP, 200, getResources().getDisplayMetrics());;
+            } else {
+                height = LayoutParams.WRAP_CONTENT;
+            }
+
+            mPickers.addView(mCalendar, LayoutParams.MATCH_PARENT, height);
+
         } else {
             // If the screen is more wide than high, we are displaying day and
             // time spinners, and if there is no calendar displayed, we should
@@ -552,12 +553,7 @@ public class DateTimePicker extends FrameLayout {
     }
 
     public void toggleCalendar(boolean shown) {
-        if ((mState != PickersState.DATE && mState != PickersState.DATETIME) ||
-            mScreenWidth < SCREEN_SIZE_THRESHOLD) {
-            if (DEBUG) {
-                Log.d(LOGTAG, "Cannot display calendar on this device, in this state" +
-                              ": screen width :" + mScreenWidth);
-            }
+        if ((mState != PickersState.DATE && mState != PickersState.DATETIME)) {
             return;
         }
 

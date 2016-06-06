@@ -261,7 +261,7 @@ addTest(function testFrameTraversal() {
     return gWalker.children(childFrame);
   }).then(children => {
     let nodes = children.nodes;
-    ok(nodes.length, 1, "There should be only one child of the iframe");
+    is(nodes.length, 1, "There should be only one child of the iframe");
     is(nodes[0].nodeType, Node.DOCUMENT_NODE, "iframe child should be a document node");
     return gWalker.querySelector(nodes[0], "#z");
   }).then(childDocumentZ => {
@@ -286,13 +286,12 @@ addTest(function testLongValue() {
   let longstringText = gInspectee.getElementById("longstring").firstChild.nodeValue;
 
   promiseDone(gWalker.querySelector(gWalker.rootNode, "#longstring").then(node => {
+    ok(!node.inlineTextChild, "Text is too long to be inlined");
     // Now we need to get the text node child...
     return gWalker.children(node, { maxNodes: 1 });
   }).then(children => {
     let textNode = children.nodes[0];
     is(textNode.nodeType, Node.TEXT_NODE, "Value should be a text node");
-    is(textNode.shortValue.length, 10, "Value summary should be limited to the summary value length");
-    ok(textNode.incompleteValue, "Value should be incomplete");
     return textNode;
   }).then(textNode => {
     return textNode.getNodeValue();
@@ -307,13 +306,12 @@ addTest(function testShortValue() {
   let shortstringText = gInspectee.getElementById("shortstring").firstChild.nodeValue;
 
   promiseDone(gWalker.querySelector(gWalker.rootNode, "#shortstring").then(node => {
+    ok(!!node.inlineTextChild, "Text is short enough to be inlined");
     // Now we need to get the text node child...
     return gWalker.children(node, { maxNodes: 1 });
   }).then(children => {
     let textNode = children.nodes[0];
     is(textNode.nodeType, Node.TEXT_NODE, "Value should be a text node");
-    is(textNode.shortValue, shortstringText, "Value should be complete");
-    ok(!textNode.incompleteValue, "Value should be complete");
     return textNode;
   }).then(textNode => {
     return textNode.getNodeValue();

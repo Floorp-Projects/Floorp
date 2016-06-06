@@ -82,6 +82,12 @@ this.SafeBrowsing = {
     let providerName = this.listToProvider[listname];
     let provider = this.providers[providerName];
 
+    if (!providerName || !provider) {
+      log("No provider info found for " + listname);
+      log("Check browser.safebrowsing.provider.[google/mozilla].lists");
+      return;
+    }
+
     listManager.registerTable(listname, providerName, provider.updateURL, provider.gethashURL);
   },
 

@@ -19,6 +19,8 @@ add_task(function* () {
   yield testCommandOrControlModifier(shortcuts);
   yield testCtrlModifier(shortcuts);
   shortcuts.destroy();
+
+  yield testTarget();
 });
 
 // Test helper to listen to the next key press for a given key,
@@ -335,4 +337,28 @@ function testCtrlModifier(shortcuts) {
     window);
   yield onKey;
   yield onKeyAlias;
+}
+
+function testTarget() {
+  info("Test KeyShortcuts with target argument");
+
+  let target = document.createElementNS("http://www.w3.org/1999/xhtml",
+    "input");
+  document.documentElement.appendChild(target);
+  target.focus();
+
+  let shortcuts = new KeyShortcuts({
+    window,
+    target
+  });
+  let onKey = once(shortcuts, "0", (key, event) => {
+    is(event.key, "0");
+    is(event.target, target);
+  });
+  EventUtils.synthesizeKey("0", {}, window);
+  yield onKey;
+
+  target.remove();
+
+  shortcuts.destroy();
 }
