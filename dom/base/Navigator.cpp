@@ -1624,6 +1624,13 @@ Navigator::GetDeprecatedBattery(ErrorResult& aRv)
     doc->WarnOnceAbout(nsIDocument::eNavigatorBattery);
   }
 
+  // Is this the first time this page has accessed navigator.battery?
+  if (!mBatteryTelemetryReported) {
+    // sample value 0 = navigator.battery
+    Telemetry::Accumulate(Telemetry::BATTERY_STATUS_COUNT, 0);
+    mBatteryTelemetryReported = true;
+  }
+
   return mBatteryManager;
 }
 
