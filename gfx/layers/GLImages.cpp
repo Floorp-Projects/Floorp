@@ -51,9 +51,7 @@ GLImage::GetAsSourceSurface()
   MOZ_ASSERT(NS_IsMainThread(), "Should be on the main thread");
 
   if (!sSnapshotContext) {
-    nsCString discardFailureId;
-    sSnapshotContext = GLContextProvider::CreateHeadless(CreateContextFlags::NONE,
-                                                         discardFailureId);
+    sSnapshotContext = GLContextProvider::CreateHeadless(CreateContextFlags::NONE);
     if (!sSnapshotContext) {
       NS_WARNING("Failed to create snapshot GLContext");
       return nullptr;
