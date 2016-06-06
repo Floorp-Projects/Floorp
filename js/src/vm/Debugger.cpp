@@ -8078,64 +8078,62 @@ DebuggerObject_getIsArrowFunction(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerObject_getIsBoundFunction(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "get isBoundFunction", args, refobj);
+    THIS_DEBUGOBJECT(cx, argc, vp, "get isBoundFunction", args, object)
 
-    args.rval().setBoolean(refobj->isBoundFunction());
+    args.rval().setBoolean(DebuggerObject::isBoundFunction(cx, object));
     return true;
 }
 
 static bool
 DebuggerObject_getBoundTargetFunction(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get boundFunctionTarget", args, dbg, refobj);
+    THIS_DEBUGOBJECT(cx, argc, vp, "get boundTargetFunction", args, object)
 
-    if (!refobj->isBoundFunction()) {
+    if (!DebuggerObject::isBoundFunction(cx, object)) {
         args.rval().setUndefined();
         return true;
     }
 
-    args.rval().setObject(*refobj->as<JSFunction>().getBoundFunctionTarget());
-    return dbg->wrapDebuggeeValue(cx, args.rval());
+    RootedObject result(cx);
+    if (!DebuggerObject::boundTargetFunction(cx, object, &result))
+        return false;
+
+    args.rval().setObjectOrNull(result);
+    return true;
 }
 
 static bool
 DebuggerObject_getBoundThis(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get boundThis", args, dbg, refobj);
+    THIS_DEBUGOBJECT(cx, argc, vp, "get boundThis", args, object)
 
-    if (!refobj->isBoundFunction()) {
+    if (!DebuggerObject::isBoundFunction(cx, object)) {
         args.rval().setUndefined();
         return true;
     }
-    args.rval().set(refobj->as<JSFunction>().getBoundFunctionThis());
-    return dbg->wrapDebuggeeValue(cx, args.rval());
+
+    return DebuggerObject::boundThis(cx, object, args.rval());
 }
 
 static bool
 DebuggerObject_getBoundArguments(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get boundArguments", args, dbg, refobj);
+    THIS_DEBUGOBJECT(cx, argc, vp, "get boundArguments", args, object)
 
-    if (!refobj->isBoundFunction()) {
+    if (!DebuggerObject::isBoundFunction(cx, object)) {
         args.rval().setUndefined();
         return true;
     }
 
-    Rooted<JSFunction*> fun(cx, &refobj->as<JSFunction>());
-    size_t length = fun->getBoundFunctionArgumentCount();
-    AutoValueVector boundArgs(cx);
-    if (!boundArgs.resize(length))
+    Rooted<ValueVector> result(cx, ValueVector(cx));
+    if (!DebuggerObject::boundArguments(cx, object, &result))
         return false;
-    for (size_t i = 0; i < length; i++) {
-        boundArgs[i].set(fun->getBoundFunctionArgument(cx, i));
-        if (!dbg->wrapDebuggeeValue(cx, boundArgs[i]))
-            return false;
-    }
 
-    JSObject* aobj = NewDenseCopiedArray(cx, boundArgs.length(), boundArgs.begin());
-    if (!aobj)
+    RootedObject obj(cx, NewDenseCopiedArray(cx, result.length(), result.begin()));
+    if (!obj)
         return false;
-    args.rval().setObject(*aobj);
+
+    args.rval().setObject(*obj);
     return true;
 }
 
@@ -8849,6 +8847,61 @@ DebuggerObject::create(JSContext* cx, HandleObject proto, HandleObject referent,
   object.setReservedSlot(JSSLOT_DEBUGOBJECT_OWNER, ObjectValue(*debugger));
 
   return &object;
+}
+
+/* static */ bool
+DebuggerObject::isBoundFunction(JSContext* cx, Handle<DebuggerObject*> object)
+{
+    RootedObject referent(cx, object->referent());
+
+    return referent->isBoundFunction();
+}
+
+/* static */ bool
+DebuggerObject::boundTargetFunction(JSContext* cx, Handle<DebuggerObject*> object,
+                                    MutableHandleObject result)
+{
+    RootedObject referent(cx, object->referent());
+    Debugger* dbg = object->owner();
+
+    MOZ_ASSERT(referent->isBoundFunction());
+
+    result.set(referent->as<JSFunction>().getBoundFunctionTarget());
+    return dbg->wrapDebuggeeObject(cx, result);
+}
+
+/* static */ bool
+DebuggerObject::boundThis(JSContext* cx, Handle<DebuggerObject*> object,
+                          MutableHandleValue result)
+{
+    RootedObject referent(cx, object->referent());
+    Debugger* dbg = object->owner();
+
+    MOZ_ASSERT(referent->isBoundFunction());
+
+    result.set(referent->as<JSFunction>().getBoundFunctionThis());
+    return dbg->wrapDebuggeeValue(cx, result);
+}
+
+/* static */ bool
+DebuggerObject::boundArguments(JSContext* cx, Handle<DebuggerObject*> object,
+                               MutableHandle<ValueVector> result)
+{
+    RootedObject referent(cx, object->referent());
+    Debugger* dbg = object->owner();
+
+    MOZ_ASSERT(referent->isBoundFunction());
+
+    Rooted<JSFunction*> fun(cx, &referent->as<JSFunction>());
+    size_t length = fun->getBoundFunctionArgumentCount();
+    if (!result.resize(length))
+        return false;
+    for (size_t i = 0; i < length; i++) {
+        result[i].set(fun->getBoundFunctionArgument(cx, i));
+        if (!dbg->wrapDebuggeeValue(cx, result[i]))
+            return false;
+    }
+    return true;
 }
 
 /* static */ bool
