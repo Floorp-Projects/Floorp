@@ -199,6 +199,10 @@ struct FormatInfo
     const UnsizedFormat unsizedFormat;
     const ComponentType componentType;
     const uint8_t estimatedBytesPerPixel; // 0 iff `!!compression`. Only use this for
+    const uint8_t r;
+    const uint8_t g;
+    const uint8_t b;
+    const uint8_t a;
     const bool isColorFormat;             // memory usage estimation. Use
     const bool isSRGB;                    // BytesPerPixel(packingFormat, packingType) for
     const bool hasAlpha;                  // calculating pack/unpack byte count.
@@ -206,6 +210,8 @@ struct FormatInfo
     const bool hasStencil;
 
     const CompressedFormatInfo* const compression;
+
+    map<GLenum, const FormatInfo*> copyFormats;
 };
 
 struct PackingInfo
