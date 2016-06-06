@@ -131,101 +131,6 @@ CoerceInPlace_ToNumber(MutableHandleValue val)
     return true;
 }
 
-// Use an int32_t return type instead of bool since bool does not have a
-// specified width and the caller is assuming a word-sized return.
-static int32_t
-InvokeImport_Void(int32_t importIndex, int32_t argc, uint64_t* argv)
-{
-    WasmActivation* activation = JSRuntime::innermostWasmActivation();
-    JSContext* cx = activation->cx();
-
-    RootedValue rval(cx);
-    return activation->module().callImport(cx, importIndex, argc, argv, &rval);
-}
-
-// Use an int32_t return type instead of bool since bool does not have a
-// specified width and the caller is assuming a word-sized return.
-static int32_t
-InvokeImport_I32(int32_t importIndex, int32_t argc, uint64_t* argv)
-{
-    WasmActivation* activation = JSRuntime::innermostWasmActivation();
-    JSContext* cx = activation->cx();
-
-    RootedValue rval(cx);
-    if (!activation->module().callImport(cx, importIndex, argc, argv, &rval))
-        return false;
-
-    int32_t i32;
-    if (!ToInt32(cx, rval, &i32))
-        return false;
-
-    argv[0] = i32;
-    return true;
-}
-
-bool
-js::wasm::ReadI64Object(JSContext* cx, HandleValue v, int64_t* i64)
-{
-    if (!v.isObject()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL,
-                             "i64 JS value must be an object");
-        return false;
-    }
-
-    RootedObject obj(cx, &v.toObject());
-
-    int32_t* i32 = (int32_t*)i64;
-
-    RootedValue val(cx);
-    if (!JS_GetProperty(cx, obj, "low", &val))
-        return false;
-    if (!ToInt32(cx, val, &i32[0]))
-        return false;
-
-    if (!JS_GetProperty(cx, obj, "high", &val))
-        return false;
-    if (!ToInt32(cx, val, &i32[1]))
-        return false;
-
-    return true;
-}
-
-static int32_t
-InvokeImport_I64(int32_t importIndex, int32_t argc, uint64_t* argv)
-{
-    WasmActivation* activation = JSRuntime::innermostWasmActivation();
-    JSContext* cx = activation->cx();
-
-    RootedValue rval(cx);
-    if (!activation->module().callImport(cx, importIndex, argc, argv, &rval))
-        return false;
-
-    if (!ReadI64Object(cx, rval, (int64_t*)argv))
-        return false;
-
-    return true;
-}
-
-// Use an int32_t return type instead of bool since bool does not have a
-// specified width and the caller is assuming a word-sized return.
-static int32_t
-InvokeImport_F64(int32_t importIndex, int32_t argc, uint64_t* argv)
-{
-    WasmActivation* activation = JSRuntime::innermostWasmActivation();
-    JSContext* cx = activation->cx();
-
-    RootedValue rval(cx);
-    if (!activation->module().callImport(cx, importIndex, argc, argv, &rval))
-        return false;
-
-    double dbl;
-    if (!ToNumber(cx, rval, &dbl))
-        return false;
-
-    ((double*)argv)[0] = dbl;
-    return true;
-}
-
 template <class F>
 static inline void*
 FuncCast(F* pf, ABIFunctionType type)
@@ -253,14 +158,14 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
         return FuncCast(WasmHandleExecutionInterrupt, Args_General0);
       case SymbolicAddress::HandleTrap:
         return FuncCast(HandleTrap, Args_General1);
-      case SymbolicAddress::InvokeImport_Void:
-        return FuncCast(InvokeImport_Void, Args_General3);
-      case SymbolicAddress::InvokeImport_I32:
-        return FuncCast(InvokeImport_I32, Args_General3);
-      case SymbolicAddress::InvokeImport_I64:
-        return FuncCast(InvokeImport_I64, Args_General3);
-      case SymbolicAddress::InvokeImport_F64:
-        return FuncCast(InvokeImport_F64, Args_General3);
+      case SymbolicAddress::CallImport_Void:
+        return FuncCast(Module::callImport_void, Args_General3);
+      case SymbolicAddress::CallImport_I32:
+        return FuncCast(Module::callImport_i32, Args_General3);
+      case SymbolicAddress::CallImport_I64:
+        return FuncCast(Module::callImport_i64, Args_General3);
+      case SymbolicAddress::CallImport_F64:
+        return FuncCast(Module::callImport_f64, Args_General3);
       case SymbolicAddress::CoerceInPlace_ToInt32:
         return FuncCast(CoerceInPlace_ToInt32, Args_General1);
       case SymbolicAddress::CoerceInPlace_ToNumber:

@@ -702,10 +702,10 @@ enum class SymbolicAddress
     ReportOverRecursed,
     HandleExecutionInterrupt,
     HandleTrap,
-    InvokeImport_Void,
-    InvokeImport_I32,
-    InvokeImport_I64,
-    InvokeImport_F64,
+    CallImport_Void,
+    CallImport_I32,
+    CallImport_I64,
+    CallImport_F64,
     CoerceInPlace_ToInt32,
     CoerceInPlace_ToNumber,
     Limit
@@ -713,10 +713,6 @@ enum class SymbolicAddress
 
 void*
 AddressOf(SymbolicAddress imm, ExclusiveContext* cx);
-
-// Extracts low and high from an int64 object {low: int32, high: int32}, for
-// testing purposes mainly.
-MOZ_MUST_USE bool ReadI64Object(JSContext* cx, HandleValue v, int64_t* val);
 
 // A wasm::Trap is a reason for why we reached a trap in executed code. Each
 // different trap is mapped to a different error message.
