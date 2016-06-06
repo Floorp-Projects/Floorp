@@ -37,8 +37,6 @@ public:
   virtual nsresult EndPage() override;
   virtual void Finish() override;
 
-  virtual bool RotateNeededForLandscape() const override;
-
   virtual already_AddRefed<DrawTarget>
   MakeDrawTarget(const IntSize& aSize,
                  DrawEventRecorder* aRecorder = nullptr) override;
