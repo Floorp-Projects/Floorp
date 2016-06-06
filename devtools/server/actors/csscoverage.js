@@ -697,6 +697,7 @@ exports.SEL_ALL = [
 
 /**
  * Find a URL for a given stylesheet
+ * @param stylesheet {StyleSheet|StyleSheetActor}
  */
 const sheetToUrl = exports.sheetToUrl = function (stylesheet) {
   // For <link> elements
@@ -710,6 +711,11 @@ const sheetToUrl = exports.sheetToUrl = function (stylesheet) {
     let sheets = [...document.querySelectorAll("style")];
     let index = sheets.indexOf(stylesheet.ownerNode);
     return getURL(document) + " → <style> index " + index;
+  }
+
+  // When `stylesheet` is a StyleSheetActor, we don't have access to ownerNode
+  if (stylesheet.nodeHref) {
+    return stylesheet.nodeHref + " → <style> index " + stylesheet.styleSheetIndex;
   }
 
   throw new Error("Unknown sheet source");
