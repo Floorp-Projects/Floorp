@@ -18,7 +18,9 @@ flags:
     - android-api-15-frontend
     - android-partner-sample1
     - linux
+    - linux-l10n    # Desktop l10n
     - linux64
+    - linux64-l10n  # Desktop l10n
     - linux64-st-an
     - linux64-artifact
     - linux64-asan

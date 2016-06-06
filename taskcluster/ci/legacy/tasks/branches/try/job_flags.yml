@@ -31,6 +31,21 @@ builds:
         task: tasks/builds/opt_linux32.yml
       debug:
         task: tasks/builds/dbg_linux32.yml
+  linux-l10n:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/firefox_l10n_linux32.yml
+    when:
+      file_patterns:
+        - browser/locales/all-locales
+        - python/compare-locales/**
+        - testing/mozharness/configs/single_locale/**
+        - testing/mozharness/mozharness/mozilla/l10n/locales.py
+        - testing/mozharness/scripts/desktop_l10n.py
+        - toolkit/locales/**
+        - toolkit/mozapps/installer/**
   linux64:
     platforms:
       - Linux64
@@ -39,6 +54,21 @@ builds:
         task: tasks/builds/opt_linux64.yml
       debug:
         task: tasks/builds/dbg_linux64.yml
+  linux64-l10n:
+    platforms:
+      - Linux64
+    types:
+      opt:
+        task: tasks/builds/firefox_l10n_linux64.yml
+    when:
+      file_patterns:
+        - browser/locales/all-locales
+        - python/compare-locales/**
+        - testing/mozharness/configs/single_locale/**
+        - testing/mozharness/mozharness/mozilla/l10n/locales.py
+        - testing/mozharness/scripts/desktop_l10n.py
+        - toolkit/locales/**
+        - toolkit/mozapps/installer/**
   linux64-st-an:
     platforms:
       - Linux64 Static Analysis
