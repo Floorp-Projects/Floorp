@@ -289,7 +289,7 @@ public class MediaControlService extends Service implements Tabs.OnTabsChangedLi
         boolean isPlayAction = action.equals(ACTION_PLAY);
 
         int icon = isPlayAction ? R.drawable.ic_media_play : R.drawable.ic_media_pause;
-        String title = getString(isPlayAction ? R.string.media_pause : R.string.media_pause);
+        String title = getString(isPlayAction ? R.string.media_play : R.string.media_pause);
 
         final Intent intent = new Intent(getApplicationContext(), MediaControlService.class);
         intent.setAction(action);
