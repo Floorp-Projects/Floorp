@@ -28,7 +28,8 @@ class GLContextEGL : public GLContext
 
 public:
     MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(GLContextEGL, override)
-    GLContextEGL(const SurfaceCaps& caps,
+    GLContextEGL(CreateContextFlags flags,
+                 const SurfaceCaps& caps,
                  GLContext* shareContext,
                  bool isOffscreen,
                  EGLConfig config,
