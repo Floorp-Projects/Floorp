@@ -62,7 +62,9 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         'gfxAndroidPlatform.h',
         'gfxFT2FontBase.h',
         'gfxFT2Fonts.h',
-        'gfxPDFSurface.h',
+    ]
+    EXPORTS.mozilla.gfx += [
+        'PrintTargetPDF.h',
     ]
     SOURCES += [
         'gfxAndroidPlatform.cpp',
@@ -70,14 +72,16 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         'gfxFT2FontList.cpp',
         'gfxFT2Fonts.cpp',
         'gfxFT2Utils.cpp',
-        'gfxPDFSurface.cpp',
+        'PrintTargetPDF.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
     EXPORTS += [
         'gfxAndroidPlatform.h',
         'gfxFT2FontBase.h',
         'gfxFT2Fonts.h',
-        'gfxPDFSurface.h',
+    ]
+    EXPORTS.mozilla.gfx += [
+        'PrintTargetPDF.h',
     ]
     SOURCES += [
         'gfxAndroidPlatform.cpp',
@@ -85,7 +89,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
         'gfxFT2FontList.cpp',
         'gfxFT2Fonts.cpp',
         'gfxFT2Utils.cpp',
-        'gfxPDFSurface.cpp',
+        'PrintTargetPDF.cpp',
     ]
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS += [
@@ -105,10 +109,10 @@ elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
         'gfxFontconfigFonts.h',
         'gfxFT2FontBase.h',
         'gfxGdkNativeRenderer.h',
-        'gfxPDFSurface.h',
         'gfxPlatformGtk.h',
     ]
     EXPORTS.mozilla.gfx += [
+        'PrintTargetPDF.h',
         'PrintTargetPS.h',
     ]
     SOURCES += [
@@ -118,8 +122,8 @@ elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
         'gfxFT2FontBase.cpp',
         'gfxFT2Utils.cpp',
         'gfxGdkNativeRenderer.cpp',
-        'gfxPDFSurface.cpp',
         'gfxPlatformGtk.cpp',
+        'PrintTargetPDF.cpp',
         'PrintTargetPS.cpp',
     ]
 
@@ -137,19 +141,21 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
     EXPORTS += [
         'gfxFontconfigFonts.h',
         'gfxFT2FontBase.h',
-        'gfxPDFSurface.h',
         'gfxQPainterSurface.h',
         'gfxQtNativeRenderer.h',
         'gfxQtPlatform.h',
+    ]
+    EXPORTS.mozilla.gfx += [
+        'PrintTargetPDF.h',
     ]
     SOURCES += [
         'gfxFontconfigFonts.cpp',
         'gfxFontconfigUtils.cpp',
         'gfxFT2FontBase.cpp',
         'gfxFT2Utils.cpp',
-        'gfxPDFSurface.cpp',
         'gfxQPainterSurface.cpp',
         'gfxQtPlatform.cpp',
+        'PrintTargetPDF.cpp',
     ]
 
     if CONFIG['MOZ_X11']:
@@ -166,19 +172,21 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'gfxDWriteFonts.h',
         'gfxGDIFont.h',
         'gfxGDIFontList.h',
-        'gfxPDFSurface.h',
         'gfxPlatformFontList.h',
         'gfxWindowsNativeDrawing.h',
         'gfxWindowsPlatform.h',
         'gfxWindowsSurface.h',
     ]
+    EXPORTS.mozilla.gfx += [
+        'PrintTargetPDF.h',
+    ]
     SOURCES += [
         'gfxGDIFont.cpp',
         'gfxGDIFontList.cpp',
-        'gfxPDFSurface.cpp',
         'gfxWindowsNativeDrawing.cpp',
         'gfxWindowsPlatform.cpp',
         'gfxWindowsSurface.cpp',
+        'PrintTargetPDF.cpp',
     ]
     if CONFIG['MOZ_ENABLE_DWRITE_FONT']:
         UNIFIED_SOURCES += [
