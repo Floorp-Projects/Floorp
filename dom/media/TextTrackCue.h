@@ -172,19 +172,15 @@ public:
     }
   }
 
-  AlignSetting LineAlign() const
+  LineAlignSetting LineAlign() const
   {
     return mLineAlign;
   }
 
-  void SetLineAlign(AlignSetting& aLineAlign, ErrorResult& aRv)
+  void SetLineAlign(LineAlignSetting& aLineAlign, ErrorResult& aRv)
   {
-    if (mLineAlign == aLineAlign)
+    if (mLineAlign == aLineAlign) {
       return;
-
-    if (aLineAlign == AlignSetting::Left ||
-        aLineAlign == AlignSetting::Right) {
-      return aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     }
 
     mReset = true;
@@ -364,7 +360,7 @@ private:
   bool mLineIsAutoKeyword;
   long mLineLong;
   AlignSetting mAlign;
-  AlignSetting mLineAlign;
+  LineAlignSetting mLineAlign;
 
   // Holds the computed DOM elements that represent the parsed cue text.
   // http://www.whatwg.org/specs/web-apps/current-work/#text-track-cue-display-state
