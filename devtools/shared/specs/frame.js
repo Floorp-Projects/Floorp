@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const {Arg, RetVal, generateActorSpec} = require("devtools/shared/protocol");
+const {generateActorSpec} = require("devtools/shared/protocol");
 
 const frameSpec = generateActorSpec({
   typeName: "frame",
