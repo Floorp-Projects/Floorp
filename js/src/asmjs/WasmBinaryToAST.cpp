@@ -94,7 +94,8 @@ class AstDecodeContext
        funcSigs_(lifo),
        iter_(nullptr),
        locals_(nullptr),
-       blockLabels_(lifo)
+       blockLabels_(lifo),
+       currentLabelIndex_(0)
     {}
 
     AstModule& module() { return module_; }
