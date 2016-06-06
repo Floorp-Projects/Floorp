@@ -89,6 +89,33 @@ function test_directoryEntry() {
   next();
 }
 
+function test_directoryEntry_createReader() {
+  var reader = directoryEntry.createReader();
+  ok(reader, "We have a DirectoryReader");
+
+  reader.readEntries(function(a) {
+    ok(Array.isArray(a), "We want an array.");
+    is(a.length, 2, "reader.readyEntries returns 2 elements.");
+
+    for (var i = 0; i < 2; ++i) {
+      ok(a[i].name == "subdir" || a[i].name == "foo.txt", "Correct names");
+      is(a[i].fullPath, directoryEntry.fullPath + "/" + a[i].name, "FullPath is correct");
+    }
+
+    // Called twice:
+    reader.readEntries(function(a) {
+      ok(Array.isArray(a), "We want an array.");
+      is(a.length, 0, "reader.readyEntries returns 0 elements.");
+      next();
+    }, function() {
+      ok(false, "Something when wrong!");
+    });
+
+  }, function() {
+    ok(false, "Something when wrong!");
+  });
+}
+
 var tests = [
   setup_tests,
   populate_entries,
@@ -100,6 +127,7 @@ var tests = [
   test_fileEntry_createWriter,
 
   test_directoryEntry,
+  test_directoryEntry_createReader,
 ];
 
 function next() {
