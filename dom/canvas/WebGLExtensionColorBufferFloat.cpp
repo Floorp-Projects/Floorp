@@ -24,7 +24,7 @@ WebGLExtensionColorBufferFloat::WebGLExtensionColorBufferFloat(WebGLContext* web
 
     auto fnUpdateUsage = [&fua](GLenum sizedFormat, webgl::EffectiveFormat effFormat) {
         auto usage = fua->EditUsage(effFormat);
-        usage->isRenderable = true;
+        usage->SetRenderable();
         fua->AllowRBFormat(sizedFormat, usage);
     };
 
