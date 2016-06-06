@@ -1053,6 +1053,7 @@ class DebuggerObject : public NativeObject
 
     static bool isFunction(JSContext* cx, Handle<DebuggerObject*> object);
     static bool isDebuggeeFunction(JSContext* cx, Handle<DebuggerObject*> object);
+    static bool isGlobal(JSContext* cx, Handle<DebuggerObject*> object);
     static bool className(JSContext* cx, Handle<DebuggerObject*> object,
                           MutableHandleString result);
     static bool name(JSContext* cx, Handle<DebuggerObject*> object, MutableHandleString result);
@@ -1101,6 +1102,8 @@ class DebuggerObject : public NativeObject
     static bool unwrap(JSContext* cx, Handle<DebuggerObject*> object,
                        MutableHandle<DebuggerObject*> result);
 
+    static bool requireGlobal(JSContext* cx, Handle<DebuggerObject*> object);
+
   private:
     enum {
         OWNER_SLOT
@@ -1113,8 +1116,6 @@ class DebuggerObject : public NativeObject
     static const JSPropertySpec promiseProperties_[];
 #endif // SPIDERMONKEY_PROMISE
     static const JSFunctionSpec methods_[];
-
-    static bool requireGlobalObject(JSContext* cx, Handle<DebuggerObject*> object);
 
     JSObject* referent() const {
         JSObject* obj = (JSObject*) getPrivate();
