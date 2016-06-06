@@ -93,7 +93,6 @@ public:
   virtual bool
   IsSafeFile(nsIFile* aFile) const override
   {
-    MOZ_CRASH("This should not be called on the PBackground thread.");
     return true;
   }
 

@@ -168,15 +168,8 @@ DirectoryReader::ReadEntries(EntriesCallback& aSuccessCallback,
   ErrorResult rv;
   RefPtr<Promise> promise = mDirectory->GetFilesAndDirectories(rv);
   if (NS_WARN_IF(rv.Failed())) {
-    if (aErrorCallback.WasPassed()) {
-      RefPtr<ErrorCallbackRunnable> runnable =
-        new ErrorCallbackRunnable(GetParentObject(),
-                                  &aErrorCallback.Value(),
-                                  rv.StealNSResult());
-      aRv = NS_DispatchToMainThread(runnable);
-      NS_WARN_IF(aRv.Failed());
-    }
-
+    ErrorCallbackHelper::Call(GetParentObject(), aErrorCallback,
+                              rv.StealNSResult());
     return;
   }
 

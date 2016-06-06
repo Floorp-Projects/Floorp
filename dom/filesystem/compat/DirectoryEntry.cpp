@@ -8,6 +8,7 @@
 #include "CallbackRunnables.h"
 #include "DirectoryReader.h"
 #include "mozilla/dom/Directory.h"
+#include "mozilla/dom/FileSystemUtils.h"
 
 namespace mozilla {
 namespace dom {
@@ -63,16 +64,54 @@ DirectoryEntry::CreateReader() const
 }
 
 void
+DirectoryEntry::GetInternal(const nsAString& aPath, const FileSystemFlags& aFlag,
+                            const Optional<OwningNonNull<EntryCallback>>& aSuccessCallback,
+                            const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
+                            GetInternalType aType) const
+{
+  MOZ_ASSERT(mDirectory);
+
+  if (!aSuccessCallback.WasPassed() && !aErrorCallback.WasPassed()) {
+    return;
+  }
+
+  if (aFlag.mCreate) {
+    ErrorCallbackHelper::Call(GetParentObject(), aErrorCallback,
+                              NS_ERROR_DOM_SECURITY_ERR);
+    return;
+  }
+
+  nsTArray<nsString> parts;
+  if (!FileSystemUtils::IsValidRelativeDOMPath(aPath, parts)) {
+    ErrorCallbackHelper::Call(GetParentObject(), aErrorCallback,
+                              NS_ERROR_DOM_NOT_FOUND_ERR);
+    return;
+  }
+
+  ErrorResult error;
+  RefPtr<Promise> promise = mDirectory->Get(aPath, error);
+  if (NS_WARN_IF(error.Failed())) {
+    ErrorCallbackHelper::Call(GetParentObject(), aErrorCallback,
+                              error.StealNSResult());
+    return;
+  }
+
+  RefPtr<GetEntryHelper> handler =
+    new GetEntryHelper(GetParentObject(), Filesystem(),
+                       aSuccessCallback.WasPassed()
+                         ? &aSuccessCallback.Value() : nullptr,
+                       aErrorCallback.WasPassed()
+                         ? &aErrorCallback.Value() : nullptr,
+                       aType);
+  promise->AppendNativeHandler(handler);
+}
+
+void
 DirectoryEntry::RemoveRecursively(VoidCallback& aSuccessCallback,
                                   const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
 {
-  if (aErrorCallback.WasPassed()) {
-    RefPtr<ErrorCallbackRunnable> runnable =
-      new ErrorCallbackRunnable(GetParentObject(),
-                                &aErrorCallback.Value());
-    nsresult rv = NS_DispatchToMainThread(runnable);
-    NS_WARN_IF(NS_FAILED(rv));
-  }
+  ErrorCallbackHelper::Call(GetParentObject(), aErrorCallback,
+                            NS_ERROR_DOM_SECURITY_ERR);
 }
 
 } // dom namespace

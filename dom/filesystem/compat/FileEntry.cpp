@@ -81,13 +81,8 @@ void
 FileEntry::CreateWriter(VoidCallback& aSuccessCallback,
                         const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
 {
-  if (aErrorCallback.WasPassed()) {
-    RefPtr<ErrorCallbackRunnable> runnable =
-      new ErrorCallbackRunnable(GetParentObject(),
-                                &aErrorCallback.Value());
-    nsresult rv = NS_DispatchToMainThread(runnable);
-    NS_WARN_IF(NS_FAILED(rv));
-  }
+  ErrorCallbackHelper::Call(GetParentObject(), aErrorCallback,
+                            NS_ERROR_DOM_SECURITY_ERR);
 }
 
 void
