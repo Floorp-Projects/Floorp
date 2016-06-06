@@ -330,14 +330,7 @@ nsPresContext::Destroy()
                                   "nglayout.debug.paint_flashing_chrome",
                                   this);
 
-  // Disconnect the refresh driver *after* the transition manager, which
-  // needs it.
-  if (mRefreshDriver) {
-    if (mRefreshDriver->PresContext() == this) {
-      mRefreshDriver->Disconnect();
-    }
-    mRefreshDriver = nullptr;
-  }
+  mRefreshDriver = nullptr;
 }
 
 nsPresContext::~nsPresContext()
@@ -981,6 +974,10 @@ nsPresContext::SetShell(nsIPresShell* aShell)
     if (mRestyleManager) {
       mRestyleManager->Disconnect();
       mRestyleManager = nullptr;
+    }
+    if (mRefreshDriver && mRefreshDriver->PresContext() == this) {
+      mRefreshDriver->Disconnect();
+      // Can't null out the refresh driver here.
     }
 
     if (IsRoot()) {
