@@ -5,6 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DirectoryReader.h"
+#include "CallbackRunnables.h"
 #include "FileEntry.h"
 #include "mozilla/dom/FileBinding.h"
 #include "mozilla/dom/Directory.h"
@@ -18,40 +19,22 @@ namespace dom {
 
 namespace {
 
-class EmptyEntriesCallbackRunnable final : public Runnable
-{
-public:
-  EmptyEntriesCallbackRunnable(EntriesCallback* aCallback)
-    : mCallback(aCallback)
-  {
-    MOZ_ASSERT(aCallback);
-  }
-
-  NS_IMETHOD
-  Run() override
-  {
-    Sequence<OwningNonNull<Entry>> sequence;
-    mCallback->HandleEvent(sequence);
-    return NS_OK;
-  }
-
-private:
-  RefPtr<EntriesCallback> mCallback;
-};
-
 class PromiseHandler final : public PromiseNativeHandler
 {
 public:
   NS_DECL_ISUPPORTS
 
   PromiseHandler(nsIGlobalObject* aGlobalObject,
+                 DOMFileSystem* aFileSystem,
                  EntriesCallback* aSuccessCallback,
                  ErrorCallback* aErrorCallback)
     : mGlobal(aGlobalObject)
+    , mFileSystem(aFileSystem)
     , mSuccessCallback(aSuccessCallback)
     , mErrorCallback(aErrorCallback)
   {
     MOZ_ASSERT(aGlobalObject);
+    MOZ_ASSERT(aFileSystem);
     MOZ_ASSERT(aSuccessCallback);
   }
 
@@ -88,7 +71,7 @@ public:
 
       RefPtr<File> file;
       if (NS_SUCCEEDED(UNWRAP_OBJECT(File, valueObj, file))) {
-        RefPtr<FileEntry> entry = new FileEntry(mGlobal, file);
+        RefPtr<FileEntry> entry = new FileEntry(mGlobal, file, mFileSystem);
         sequence[i] = entry;
         continue;
       }
@@ -99,7 +82,8 @@ public:
         return;
       }
 
-      RefPtr<DirectoryEntry> entry = new DirectoryEntry(mGlobal, directory);
+      RefPtr<DirectoryEntry> entry =
+        new DirectoryEntry(mGlobal, directory, mFileSystem);
       sequence[i] = entry;
     }
 
@@ -122,6 +106,7 @@ private:
   ~PromiseHandler() {}
 
   nsCOMPtr<nsIGlobalObject> mGlobal;
+  RefPtr<DOMFileSystem> mFileSystem;
   RefPtr<EntriesCallback> mSuccessCallback;
   RefPtr<ErrorCallback> mErrorCallback;
 };
@@ -130,7 +115,8 @@ NS_IMPL_ISUPPORTS0(PromiseHandler);
 
 } // anonymous namespace
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DirectoryReader, mParent, mDirectory)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(DirectoryReader, mParent, mDirectory,
+                                      mFileSystem)
 
 NS_IMPL_CYCLE_COLLECTING_ADDREF(DirectoryReader)
 NS_IMPL_CYCLE_COLLECTING_RELEASE(DirectoryReader)
@@ -141,13 +127,15 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(DirectoryReader)
 NS_INTERFACE_MAP_END
 
 DirectoryReader::DirectoryReader(nsIGlobalObject* aGlobal,
+                                 DOMFileSystem* aFileSystem,
                                  Directory* aDirectory)
   : mParent(aGlobal)
+  , mFileSystem(aFileSystem)
   , mDirectory(aDirectory)
   , mAlreadyRead(false)
 {
   MOZ_ASSERT(aGlobal);
-  MOZ_ASSERT(aDirectory);
+  MOZ_ASSERT(aFileSystem);
 }
 
 DirectoryReader::~DirectoryReader()
@@ -164,6 +152,8 @@ DirectoryReader::ReadEntries(EntriesCallback& aSuccessCallback,
                              const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
                              ErrorResult& aRv)
 {
+  MOZ_ASSERT(mDirectory);
+
   if (mAlreadyRead) {
     RefPtr<EmptyEntriesCallbackRunnable> runnable =
       new EmptyEntriesCallbackRunnable(&aSuccessCallback);
@@ -191,7 +181,7 @@ DirectoryReader::ReadEntries(EntriesCallback& aSuccessCallback,
   }
 
   RefPtr<PromiseHandler> handler =
-    new PromiseHandler(GetParentObject(), &aSuccessCallback,
+    new PromiseHandler(GetParentObject(), mFileSystem, &aSuccessCallback,
                        aErrorCallback.WasPassed()
                          ? &aErrorCallback.Value() : nullptr);
   promise->AppendNativeHandler(handler);

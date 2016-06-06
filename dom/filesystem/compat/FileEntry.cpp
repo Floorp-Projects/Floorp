@@ -5,7 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "FileEntry.h"
-#include "ErrorCallbackRunnable.h"
+#include "CallbackRunnables.h"
 #include "mozilla/dom/File.h"
 
 namespace mozilla {
@@ -47,8 +47,9 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(FileEntry)
 NS_INTERFACE_MAP_END_INHERITING(Entry)
 
 FileEntry::FileEntry(nsIGlobalObject* aGlobal,
-                     File* aFile)
-  : Entry(aGlobal)
+                     File* aFile,
+                     DOMFileSystem* aFileSystem)
+  : Entry(aGlobal, aFileSystem)
   , mFile(aFile)
 {
   MOZ_ASSERT(aGlobal);

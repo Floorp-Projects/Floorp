@@ -19,6 +19,8 @@ namespace mozilla {
 namespace dom {
 
 class DirectoryEntry;
+class Entry;
+class OwningFileOrDirectory;
 
 class DOMFileSystem final
   : public nsISupports
@@ -28,7 +30,8 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(DOMFileSystem)
 
-  explicit DOMFileSystem(nsIGlobalObject* aGlobalObject);
+  static already_AddRefed<DOMFileSystem>
+  Create(nsIGlobalObject* aGlobalObject);
 
   nsIGlobalObject*
   GetParentObject() const
@@ -40,22 +43,28 @@ public:
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   void
-  GetName(nsAString& aName, ErrorResult& aRv) const
+  GetName(nsAString& aName) const
   {
-    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    aName = mName;
   }
 
-  already_AddRefed<DirectoryEntry>
-  GetRoot(ErrorResult& aRv) const
+  DirectoryEntry*
+  Root() const
   {
-    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-    return nullptr;
+    return mRoot;
   }
+
+  void
+  CreateRoot(const Sequence<RefPtr<Entry>>& aEntries);
 
 private:
+  explicit DOMFileSystem(nsIGlobalObject* aGlobalObject,
+                         const nsAString& aName);
   ~DOMFileSystem();
 
   nsCOMPtr<nsIGlobalObject> mParent;
+  RefPtr<DirectoryEntry> mRoot;
+  nsString mName;
 };
 
 } // namespace dom
