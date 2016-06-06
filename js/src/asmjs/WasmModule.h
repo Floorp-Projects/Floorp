@@ -498,7 +498,15 @@ class Module : public mozilla::LinkedListElement<Module>
     MOZ_MUST_USE bool setProfilingEnabled(JSContext* cx, bool enabled);
     ImportExit& importToExit(const Import& import);
 
+    bool callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const uint64_t* argv,
+                    MutableHandleValue rval);
+    static int32_t callImport_void(int32_t importIndex, int32_t argc, uint64_t* argv);
+    static int32_t callImport_i32(int32_t importIndex, int32_t argc, uint64_t* argv);
+    static int32_t callImport_i64(int32_t importIndex, int32_t argc, uint64_t* argv);
+    static int32_t callImport_f64(int32_t importIndex, int32_t argc, uint64_t* argv);
+
     friend class js::WasmActivation;
+    friend void* wasm::AddressOf(SymbolicAddress, ExclusiveContext*);
 
   protected:
     const ModuleData& base() const { return *module_; }
@@ -595,8 +603,6 @@ class Module : public mozilla::LinkedListElement<Module>
     // directly into the JIT code. If the JIT code is released, the Module must
     // be notified so it can go back to the generic callImport.
 
-    MOZ_MUST_USE bool callImport(JSContext* cx, uint32_t importIndex, unsigned argc,
-                                 const uint64_t* argv, MutableHandleValue rval);
     void deoptimizeImportExit(uint32_t importIndex);
 
     // At runtime, when $pc is in wasm function code (containsFunctionPC($pc)),

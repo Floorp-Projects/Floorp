@@ -1283,6 +1283,33 @@ Module::deoptimizeImportExit(uint32_t importIndex)
     exit.baselineScript = nullptr;
 }
 
+static bool
+ReadI64Object(JSContext* cx, HandleValue v, int64_t* i64)
+{
+    if (!v.isObject()) {
+        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_FAIL,
+                             "i64 JS value must be an object");
+        return false;
+    }
+
+    RootedObject obj(cx, &v.toObject());
+
+    int32_t* i32 = (int32_t*)i64;
+
+    RootedValue val(cx);
+    if (!JS_GetProperty(cx, obj, "low", &val))
+        return false;
+    if (!ToInt32(cx, val, &i32[0]))
+        return false;
+
+    if (!JS_GetProperty(cx, obj, "high", &val))
+        return false;
+    if (!ToInt32(cx, val, &i32[1]))
+        return false;
+
+    return true;
+}
+
 static JSObject*
 CreateI64Object(JSContext* cx, int64_t i64)
 {
@@ -1620,6 +1647,55 @@ Module::callImport(JSContext* cx, uint32_t importIndex, unsigned argc, const uin
     exit.code = jitExitCode;
     exit.baselineScript = script->baselineScript();
     return true;
+}
+
+/* static */ int32_t
+Module::callImport_void(int32_t importIndex, int32_t argc, uint64_t* argv)
+{
+    WasmActivation* activation = JSRuntime::innermostWasmActivation();
+    JSContext* cx = activation->cx();
+
+    RootedValue rval(cx);
+    return activation->module().callImport(cx, importIndex, argc, argv, &rval);
+}
+
+/* static */ int32_t
+Module::callImport_i32(int32_t importIndex, int32_t argc, uint64_t* argv)
+{
+    WasmActivation* activation = JSRuntime::innermostWasmActivation();
+    JSContext* cx = activation->cx();
+
+    RootedValue rval(cx);
+    if (!activation->module().callImport(cx, importIndex, argc, argv, &rval))
+        return false;
+
+    return ToInt32(cx, rval, (int32_t*)argv);
+}
+
+/* static */ int32_t
+Module::callImport_i64(int32_t importIndex, int32_t argc, uint64_t* argv)
+{
+    WasmActivation* activation = JSRuntime::innermostWasmActivation();
+    JSContext* cx = activation->cx();
+
+    RootedValue rval(cx);
+    if (!activation->module().callImport(cx, importIndex, argc, argv, &rval))
+        return false;
+
+    return ReadI64Object(cx, rval, (int64_t*)argv);
+}
+
+/* static */ int32_t
+Module::callImport_f64(int32_t importIndex, int32_t argc, uint64_t* argv)
+{
+    WasmActivation* activation = JSRuntime::innermostWasmActivation();
+    JSContext* cx = activation->cx();
+
+    RootedValue rval(cx);
+    if (!activation->module().callImport(cx, importIndex, argc, argv, &rval))
+        return false;
+
+    return ToNumber(cx, rval, (double*)argv);
 }
 
 const char*
