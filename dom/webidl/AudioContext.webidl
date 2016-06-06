@@ -75,8 +75,6 @@ interface AudioContext : EventTarget {
     [NewObject, Throws]
     BiquadFilterNode createBiquadFilter();
     [NewObject, Throws]
-    IIRFilterNode createIIRFilter(sequence<double> feedforward, sequence<double> feedback);
-    [NewObject, Throws]
     WaveShaperNode createWaveShaper();
     [NewObject, Throws]
     PannerNode createPanner();
