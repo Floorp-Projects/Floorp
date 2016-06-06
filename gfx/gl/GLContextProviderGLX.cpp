@@ -779,7 +779,7 @@ GLXLibrary::xWaitVideoSync(int divisor, int remainder, unsigned int* count)
 }
 
 already_AddRefed<GLContextGLX>
-GLContextGLX::CreateGLContext(
+GLContextGLX::CreateGLContext(CreateContextFlags flags,
                   const SurfaceCaps& caps,
                   GLContextGLX* shareContext,
                   bool isOffscreen,
@@ -849,7 +849,7 @@ TRY_AGAIN_NO_SHARING:
     }
 
     if (context) {
-        glContext = new GLContextGLX(caps,
+        glContext = new GLContextGLX(flags, caps,
                                       shareContext,
                                       isOffscreen,
                                       display,
@@ -1006,6 +1006,7 @@ GLContextGLX::RestoreDrawable()
 }
 
 GLContextGLX::GLContextGLX(
+                  CreateContextFlags flags,
                   const SurfaceCaps& caps,
                   GLContext* shareContext,
                   bool isOffscreen,
@@ -1016,7 +1017,7 @@ GLContextGLX::GLContextGLX(
                   bool aDoubleBuffered,
                   gfxXlibSurface *aPixmap,
                   ContextProfile profile)
-    : GLContext(caps, shareContext, isOffscreen),//aDeleteDrawable ? true : false, aShareContext, ),
+    : GLContext(flags, caps, shareContext, isOffscreen),
       mContext(aContext),
       mDisplay(aDisplay),
       mDrawable(aDrawable),
@@ -1070,7 +1071,7 @@ GLContextProviderGLX::CreateWrappingExisting(void* aContext, void* aSurface)
     if (aContext && aSurface) {
         SurfaceCaps caps = SurfaceCaps::Any();
         RefPtr<GLContextGLX> glContext =
-            new GLContextGLX(caps,
+            new GLContextGLX(CreateContextFlags::NONE, caps,
                              nullptr, // SharedContext
                              false, // Offscreen
                              (Display*)DefaultXDisplay(), // Display
@@ -1124,7 +1125,8 @@ GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget, bool aForceAccelerated
     GLContextGLX *shareContext = GetGlobalContextGLX();
 
     SurfaceCaps caps = SurfaceCaps::Any();
-    RefPtr<GLContextGLX> glContext = GLContextGLX::CreateGLContext(caps,
+    RefPtr<GLContextGLX> glContext = GLContextGLX::CreateGLContext(CreateContextFlags::NONE,
+                                                                   caps,
                                                                    shareContext,
                                                                    false,
                                                                    display,
@@ -1264,7 +1266,8 @@ GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
 }
 
 static already_AddRefed<GLContextGLX>
-CreateOffscreenPixmapContext(const IntSize& size, const SurfaceCaps& minCaps, nsACString& aFailureId,
+CreateOffscreenPixmapContext(CreateContextFlags flags, const IntSize& size,
+                             const SurfaceCaps& minCaps, nsACString& aFailureId,
                              ContextProfile profile = ContextProfile::OpenGLCompatibility)
 {
     GLXLibrary* glx = &sGLXLibrary;
@@ -1322,16 +1325,16 @@ DONE_CREATING_PIXMAP:
         return nullptr;
 
     GLContextGLX* shareContext = GetGlobalContextGLX();
-    return GLContextGLX::CreateGLContext(minCaps, shareContext, true, display, pixmap,
-                                         config, true, surface, profile);
+    return GLContextGLX::CreateGLContext(flags, minCaps, shareContext, true, display,
+                                         pixmap, config, true, surface, profile);
 }
 
 /*static*/ already_AddRefed<GLContext>
-GLContextProviderGLX::CreateHeadless(CreateContextFlags, nsACString& aFailureId)
+GLContextProviderGLX::CreateHeadless(CreateContextFlags flags, nsACString& aFailureId)
 {
     IntSize dummySize = IntSize(16, 16);
     SurfaceCaps dummyCaps = SurfaceCaps::Any();
-    return CreateOffscreenPixmapContext(dummySize, dummyCaps, aFailureId);
+    return CreateOffscreenPixmapContext(flags, dummySize, dummyCaps, aFailureId);
 }
 
 /*static*/ already_AddRefed<GLContext>
@@ -1353,7 +1356,8 @@ GLContextProviderGLX::CreateOffscreen(const IntSize& size,
     }
 
     RefPtr<GLContext> gl;
-    gl = CreateOffscreenPixmapContext(size, minBackbufferCaps, aFailureId, profile);
+    gl = CreateOffscreenPixmapContext(flags, size, minBackbufferCaps, aFailureId,
+                                      profile);
     if (!gl)
         return nullptr;
 

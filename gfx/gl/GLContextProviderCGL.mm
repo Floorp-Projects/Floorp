@@ -70,9 +70,10 @@ private:
 
 CGLLibrary sCGLLibrary;
 
-GLContextCGL::GLContextCGL(const SurfaceCaps& caps, NSOpenGLContext* context,
-                           bool isOffscreen, ContextProfile profile)
-    : GLContext(caps, nullptr, isOffscreen)
+GLContextCGL::GLContextCGL(CreateContextFlags flags, const SurfaceCaps& caps,
+                           NSOpenGLContext* context, bool isOffscreen,
+                           ContextProfile profile)
+    : GLContext(flags, caps, nullptr, isOffscreen)
     , mContext(context)
 {
     SetProfileVersion(profile, 210);
@@ -263,8 +264,8 @@ GLContextProviderCGL::CreateForWindow(nsIWidget *aWidget, bool aForceAccelerated
 
     SurfaceCaps caps = SurfaceCaps::ForRGBA();
     ContextProfile profile = ContextProfile::OpenGLCompatibility;
-    RefPtr<GLContextCGL> glContext = new GLContextCGL(caps, context, false,
-                                                        profile);
+    RefPtr<GLContextCGL> glContext = new GLContextCGL(CreateContextFlags::NONE, caps,
+                                                      context, false, profile);
 
     if (!glContext->Init()) {
         glContext = nullptr;
@@ -311,8 +312,8 @@ CreateOffscreenFBOContext(CreateContextFlags flags)
     }
 
     SurfaceCaps dummyCaps = SurfaceCaps::Any();
-    RefPtr<GLContextCGL> glContext = new GLContextCGL(dummyCaps, context,
-                                                        true, profile);
+    RefPtr<GLContextCGL> glContext = new GLContextCGL(flags, dummyCaps, context, true,
+                                                      profile);
 
     if (gfxPrefs::GLMultithreaded()) {
         CGLEnable(glContext->GetCGLContext(), kCGLCEMPEngine);

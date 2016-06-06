@@ -194,13 +194,14 @@ CreateSurfaceForWindow(nsIWidget* widget, const EGLConfig& config) {
 }
 
 GLContextEGL::GLContextEGL(
+                  CreateContextFlags flags,
                   const SurfaceCaps& caps,
                   GLContext* shareContext,
                   bool isOffscreen,
                   EGLConfig config,
                   EGLSurface surface,
                   EGLContext context)
-    : GLContext(caps, shareContext, isOffscreen)
+    : GLContext(flags, caps, shareContext, isOffscreen)
     , mConfig(config)
     , mSurface(surface)
     , mContext(context)
@@ -539,7 +540,7 @@ GLContextEGL::CreateGLContext(CreateContextFlags flags,
         return nullptr;
     }
 
-    RefPtr<GLContextEGL> glContext = new GLContextEGL(caps,
+    RefPtr<GLContextEGL> glContext = new GLContextEGL(flags, caps,
                                                         shareContext,
                                                         isOffscreen,
                                                         config,
@@ -758,7 +759,7 @@ GLContextProviderEGL::CreateWrappingExisting(void* aContext, void* aSurface)
         SurfaceCaps caps = SurfaceCaps::Any();
         EGLConfig config = EGL_NO_CONFIG;
         RefPtr<GLContextEGL> glContext =
-            new GLContextEGL(caps,
+            new GLContextEGL(CreateContextFlags::NONE, caps,
                              nullptr, false,
                              config, (EGLSurface)aSurface, (EGLContext)aContext);
 

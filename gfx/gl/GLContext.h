@@ -3174,7 +3174,7 @@ public:
 // -----------------------------------------------------------------------------
 // Constructor
 protected:
-    explicit GLContext(const SurfaceCaps& caps,
+    explicit GLContext(CreateContextFlags flags, const SurfaceCaps& caps,
                        GLContext* sharedContext = nullptr,
                        bool isOffscreen = false);
 

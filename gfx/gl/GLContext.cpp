@@ -400,9 +400,8 @@ ParseGLVersion(GLContext* gl, uint32_t* out_version)
     return true;
 }
 
-GLContext::GLContext(const SurfaceCaps& caps,
-                     GLContext* sharedContext,
-                     bool isOffscreen)
+GLContext::GLContext(CreateContextFlags flags, const SurfaceCaps& caps,
+                     GLContext* sharedContext, bool isOffscreen)
   : mIsOffscreen(isOffscreen),
     mContextLost(false),
     mVersion(0),
