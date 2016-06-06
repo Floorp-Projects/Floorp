@@ -15,11 +15,11 @@ assertEq(fw.boundTargetFunction, undefined);
 var nw = gw.executeInGlobal("var n = Math.max; n").return;
 assertEq(nw.isBoundFunction, false);
 assertEq(nw.boundThis, undefined);
-assertEq(nw.boundArguments, undefined);
+assertEq(fw.boundArguments, undefined);
 assertEq(nw.boundTargetFunction, undefined);
 
 var ow = gw.executeInGlobal("var o = {}; o").return;
 assertEq(ow.isBoundFunction, false);
 assertEq(ow.boundThis, undefined);
-assertEq(ow.boundArguments, undefined);
+assertEq(fw.boundArguments, undefined);
 assertEq(ow.boundTargetFunction, undefined);
