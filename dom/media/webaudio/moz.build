@@ -12,7 +12,6 @@ DIRS += ['blink']
 TEST_DIRS += ['compiledtest']
 
 MOCHITEST_MANIFESTS += [
-    'test/blink/mochitest.ini',
     'test/mochitest.ini',
 ]
 
@@ -57,7 +56,6 @@ EXPORTS.mozilla.dom += [
     'DelayNode.h',
     'DynamicsCompressorNode.h',
     'GainNode.h',
-    'IIRFilterNode.h',
     'MediaElementAudioSourceNode.h',
     'MediaStreamAudioDestinationNode.h',
     'MediaStreamAudioSourceNode.h',
@@ -94,7 +92,6 @@ UNIFIED_SOURCES += [
     'DynamicsCompressorNode.cpp',
     'FFTBlock.cpp',
     'GainNode.cpp',
-    'IIRFilterNode.cpp',
     'MediaBufferDecoder.cpp',
     'MediaElementAudioSourceNode.cpp',
     'MediaStreamAudioDestinationNode.cpp',

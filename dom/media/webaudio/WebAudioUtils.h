@@ -225,10 +225,6 @@ namespace WebAudioUtils {
                         uint32_t aChannel,
                         const int16_t* aIn, uint32_t* aInLen,
                         int16_t* aOut, uint32_t* aOutLen);
-
-  void
-  LogToDeveloperConsole(uint64_t aWindowID, const char* aKey);
-
   } // namespace WebAudioUtils
 
 } // namespace dom
