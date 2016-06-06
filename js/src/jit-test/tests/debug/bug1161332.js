@@ -1,7 +1,7 @@
 // |jit-test| error: Error
 
 var g = newGlobal();
-g.eval('function f(a) { if (a == 1) debugger; evaluate("f(" + a + " - 1);", {newContext: true}); }');
+g.eval('function f(a) { if (a == 1) debugger; evaluate("f(" + a + " - 1);"); }');
 var N = 2;
 var dbg = new Debugger(g);
 var frames = [];
