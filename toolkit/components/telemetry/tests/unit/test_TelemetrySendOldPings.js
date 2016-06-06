@@ -149,6 +149,8 @@ function run_test() {
   PingServer.registerPingHandler(pingHandler);
   do_get_profile();
   loadAddonManager("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
+  // Make sure we don't generate unexpected pings due to pref changes.
+  setEmptyPrefWatchlist();
 
   Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
   Services.prefs.setCharPref(TelemetryController.Constants.PREF_SERVER,
