@@ -10,12 +10,18 @@ function test() {
 
   let { CustomizableUI, BrowserUITelemetry } = s;
 
-  Assert.ok(CustomizableUI.inDefaultState,
-            "No other test should have left CUI in a dirty state.");
+  // Bug 1278176 - DevEdition never has the UI in a default state by default.
+  if (!AppConstants.MOZ_DEV_EDITION) {
+    Assert.ok(CustomizableUI.inDefaultState,
+              "No other test should have left CUI in a dirty state.");
+  }
 
   let result = BrowserUITelemetry._getWindowMeasurements(window, 0);
 
-  Assert.deepEqual(result.defaultMoved, []);
+  // Bug 1278176 - DevEdition always reports the developer-button is moved.
+  if (!AppConstants.MOZ_DEV_EDITION) {
+    Assert.deepEqual(result.defaultMoved, []);
+  }
   Assert.deepEqual(result.nondefaultAdded, []);
   // This one is a bit weird - the "social-share-button" is dynamically added
   // to the toolbar as the feature is first used - but it's listed as being in
