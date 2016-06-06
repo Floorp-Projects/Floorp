@@ -1477,10 +1477,8 @@ LayerScopeWebSocketManager::SocketHandler::WebSocketHandshake(nsTArray<nsCString
     uint8_t digest[SHA1Sum::kHashSize]; // SHA1 digests are 20 bytes long.
     sha1.finish(digest);
     nsCString newString(reinterpret_cast<char*>(digest), SHA1Sum::kHashSize);
-    rv = Base64Encode(newString, res);
-    if (NS_FAILED(rv)) {
-        return false;
-    }
+    Base64Encode(newString, res);
+
     nsCString response("HTTP/1.1 101 Switching Protocols\r\n");
     response.AppendLiteral("Upgrade: websocket\r\n");
     response.AppendLiteral("Connection: Upgrade\r\n");
