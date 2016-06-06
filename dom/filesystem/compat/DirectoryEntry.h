@@ -45,24 +45,30 @@ public:
   void
   GetFile(const nsAString& aPath, const FileSystemFlags& aFlag,
           const Optional<OwningNonNull<EntryCallback>>& aSuccessCallback,
-          const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
-          ErrorResult& aRv) const
+          const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
   {
-    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    GetInternal(aPath, aFlag, aSuccessCallback, aErrorCallback, eGetFile);
   }
 
   void
   GetDirectory(const nsAString& aPath, const FileSystemFlags& aFlag,
                const Optional<OwningNonNull<EntryCallback>>& aSuccessCallback,
-               const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
-               ErrorResult& aRv) const
+               const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const
   {
-    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+    GetInternal(aPath, aFlag, aSuccessCallback, aErrorCallback, eGetDirectory);
   }
 
   void
   RemoveRecursively(VoidCallback& aSuccessCallback,
                     const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback) const;
+
+  enum GetInternalType { eGetFile, eGetDirectory };
+
+  virtual void
+  GetInternal(const nsAString& aPath, const FileSystemFlags& aFlag,
+              const Optional<OwningNonNull<EntryCallback>>& aSuccessCallback,
+              const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
+              GetInternalType aType) const;
 
 protected:
   virtual ~DirectoryEntry();
