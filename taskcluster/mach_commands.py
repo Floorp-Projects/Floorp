@@ -218,24 +218,17 @@ class LoadImage(object):
         help="Load the image of this name based on the current contents of the tree "
              "(as built for mozilla-central or mozilla-inbound)")
     def load_image(self, image_name, task_id):
-        from taskcluster_graph.image_builder import (
-            task_id_for_image,
-            docker_load_from_url
-        )
-
+        from taskgraph.docker import load_image_by_name, load_image_by_task_id
         if not image_name and not task_id:
             print("Specify either IMAGE-NAME or TASK-ID")
             sys.exit(1)
-
-        if not task_id:
-            task_id = task_id_for_image({}, 'mozilla-inbound', image_name, create=False)
-            if not task_id:
-                print("No task found in the TaskCluster index for", image_name)
+        try:
+            if task_id:
+                ok = load_image_by_task_id(task_id)
+            else:
+                ok = load_image_by_name(image_name)
+            if not ok:
                 sys.exit(1)
-
-        print("Task ID:", task_id)
-
-        ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
-        image_name = docker_load_from_url(ARTIFACT_URL.format(task_id, 'public/image.tar'))
-
-        print("Loaded image is named", image_name)
+        except Exception as e:
+            traceback.print_exc()
+            sys.exit(1)

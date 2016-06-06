@@ -58,10 +58,6 @@ logger = logging.getLogger(__name__)
 def mklabel():
     return TASKID_PLACEHOLDER.format(slugid())
 
-# monkey-patch mklabel into image_builder, as well
-from taskcluster_graph import image_builder
-image_builder.mklabel = mklabel
-
 def set_expiration(task, timestamp):
     task_def = task['task']
     task_def['expires'] = timestamp
