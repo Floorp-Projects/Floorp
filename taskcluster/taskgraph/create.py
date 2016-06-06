@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import requests
 import json
 import collections
+import os
 import logging
 
 from slugid import nice as slugid
@@ -20,8 +21,17 @@ def create_tasks(taskgraph, label_to_taskid):
 
     session = requests.Session()
 
+    decision_task_id = os.environ.get('TASK_ID')
+
     for task_id in taskgraph.graph.visit_postorder():
         task_def = taskgraph.tasks[task_id].task
+
+        # if this task has no dependencies, make it depend on this decision
+        # task so that it does not start immediately; and so that if this loop
+        # fails halfway through, none of the already-created tasks run.
+        if decision_task_id and not task_def.get('dependencies'):
+            task_def['dependencies'] = [decision_task_id]
+
         task_def['taskGroupId'] = task_group_id
         _create_task(session, task_id, taskid_to_label[task_id], task_def)
 
