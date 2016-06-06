@@ -386,7 +386,6 @@ struct ModuleCacheablePod
     uint32_t              functionBytes;
     uint32_t              codeBytes;
     uint32_t              globalBytes;
-    uint32_t              numFuncs;
     ModuleKind            kind;
     HeapUsage             heapUsage;
     CompileArgs           compileArgs;

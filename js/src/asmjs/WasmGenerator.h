@@ -175,7 +175,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     const DeclaredSig& sig(uint32_t sigIndex) const;
 
     // Function declarations:
-    uint32_t numFuncSigs() const { return module_->numFuncs; }
+    uint32_t numFuncSigs() const { return shared_->funcSigs.length(); }
     const DeclaredSig& funcSig(uint32_t funcIndex) const;
 
     // Globals:

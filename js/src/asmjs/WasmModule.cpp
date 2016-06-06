@@ -775,10 +775,6 @@ Module::setProfilingEnabled(JSContext* cx, bool enabled)
     // do it now since, once we start sampling, we'll be in a signal-handing
     // context where we cannot malloc.
     if (enabled) {
-        if (!funcLabels_.resize(module_->numFuncs)) {
-            ReportOutOfMemory(cx);
-            return false;
-        }
         for (const CodeRange& codeRange : module_->codeRanges) {
             if (!codeRange.isFunction())
                 continue;
@@ -797,6 +793,10 @@ Module::setProfilingEnabled(JSContext* cx, bool enabled)
                 return false;
             }
 
+            if (codeRange.funcIndex() >= funcLabels_.length()) {
+                if (!funcLabels_.resize(codeRange.funcIndex() + 1))
+                    return false;
+            }
             funcLabels_[codeRange.funcIndex()] = Move(label);
         }
     } else {
