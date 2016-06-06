@@ -48,9 +48,9 @@ struct DevTools : public ::testing::Test {
     if (!rt)
       return;
 
-    cx = createContext();
-    if (!cx)
-      return;
+    MOZ_RELEASE_ASSERT(!cx);
+    MOZ_RELEASE_ASSERT(JS_ContextIterator(rt, &cx));
+
     JS_BeginRequest(cx);
 
     global.init(rt, createGlobal());
@@ -91,10 +91,6 @@ struct DevTools : public ::testing::Test {
             report->filename ? report->filename : "<no filename>",
             (unsigned int) report->lineno,
             message);
-  }
-
-  JSContext* createContext() {
-    return JS_NewContext(rt, 8192);
   }
 
   static const JSClass* getGlobalClass() {
@@ -139,11 +135,8 @@ struct DevTools : public ::testing::Test {
       JS_LeaveCompartment(cx, nullptr);
       global = nullptr;
     }
-    if (cx) {
+    if (cx)
       JS_EndRequest(cx);
-      JS_DestroyContext(cx);
-      cx = nullptr;
-    }
   }
 };
 
