@@ -55,8 +55,6 @@ using namespace mozilla::layers;
 unsigned GLContext::sCurrentGLContextTLS = -1;
 #endif
 
-uint32_t GLContext::sDebugMode = 0;
-
 // If adding defines, don't forget to undefine symbols. See #undef block below.
 #define CORE_SYMBOL(x) { (PRFuncPtr*) &mSymbols.f##x, { #x, nullptr } }
 #define CORE_EXT_SYMBOL2(x,y,z) { (PRFuncPtr*) &mSymbols.f##x, { #x, #x #y, #x #z, nullptr } }
@@ -400,6 +398,47 @@ ParseGLVersion(GLContext* gl, uint32_t* out_version)
     return true;
 }
 
+static uint8_t
+ChooseDebugFlags(CreateContextFlags createFlags)
+{
+    uint8_t debugFlags = 0;
+
+#ifdef MOZ_GL_DEBUG
+    if (gfxEnv::GlDebug()) {
+        debugFlags |= GLContext::DebugFlagEnabled;
+    }
+
+    // Enables extra verbose output, informing of the start and finish of every GL call.
+    // Useful e.g. to record information to investigate graphics system crashes/lockups
+    if (gfxEnv::GlDebugVerbose()) {
+        debugFlags |= GLContext::DebugFlagTrace;
+    }
+
+    // Aborts on GL error. Can be useful to debug quicker code that is known not to
+    // generate any GL error in principle.
+    bool abortOnError = false;
+
+    if (createFlags & CreateContextFlags::NO_VALIDATION) {
+        abortOnError = true;
+
+        const auto fnStringsMatch = [](const char* a, const char* b) {
+            return strcmp(a, b) == 0;
+        };
+
+        const char* envAbortOnError = PR_GetEnv("MOZ_GL_DEBUG_ABORT_ON_ERROR");
+        if (envAbortOnError && fnStringsMatch(envAbortOnError, "0")) {
+           abortOnError = false;
+        }
+    }
+
+    if (abortOnError) {
+        debugFlags |= GLContext::DebugFlagAbortOnError;
+    }
+#endif
+
+    return debugFlags;
+}
+
 GLContext::GLContext(CreateContextFlags flags, const SurfaceCaps& caps,
                      GLContext* sharedContext, bool isOffscreen)
   : mIsOffscreen(isOffscreen),
@@ -410,6 +449,7 @@ GLContext::GLContext(CreateContextFlags flags, const SurfaceCaps& caps,
     mVendor(GLVendor::Other),
     mRenderer(GLRenderer::Other),
     mTopError(LOCAL_GL_NO_ERROR),
+    mDebugFlags(ChooseDebugFlags(flags)),
     mSharedContext(sharedContext),
     mCaps(caps),
     mScreen(nullptr),
@@ -529,20 +569,6 @@ bool
 GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
 {
     mWorkAroundDriverBugs = gfxPrefs::WorkAroundDriverBugs();
-
-#ifdef MOZ_GL_DEBUG
-    if (gfxEnv::GlDebug())
-        sDebugMode |= DebugEnabled;
-
-    // enables extra verbose output, informing of the start and finish of every GL call.
-    // useful e.g. to record information to investigate graphics system crashes/lockups
-    if (gfxEnv::GlDebugVerbose())
-        sDebugMode |= DebugTrace;
-
-    // aborts on GL error. Can be useful to debug quicker code that is known not to generate any GL error in principle.
-    if (gfxEnv::GlDebugAbortOnError())
-        sDebugMode |= DebugAbortOnError;
-#endif
 
     const SymLoadStruct coreSymbols[] = {
         { (PRFuncPtr*) &mSymbols.fActiveTexture, { "ActiveTexture", "ActiveTextureARB", nullptr } },
@@ -1050,7 +1076,7 @@ GLContext::InitWithPrefixImpl(const char* prefix, bool trygl)
 
     MOZ_ASSERT(IsCurrent());
 
-    if (DebugMode() && IsExtensionSupported(KHR_debug)) {
+    if (ShouldSpew() && IsExtensionSupported(KHR_debug)) {
         fEnable(LOCAL_GL_DEBUG_OUTPUT);
         fDisable(LOCAL_GL_DEBUG_OUTPUT_SYNCHRONOUS);
         fDebugMessageCallback(&StaticDebugCallback, (void*)this);
@@ -1591,7 +1617,7 @@ GLContext::LoadMoreSymbols(const char* prefix, bool trygl)
             { (PRFuncPtr*) &mSymbols.fGetTexLevelParameteriv, { "GetTexLevelParameteriv", nullptr } },
             END_SYMBOLS
     };
-    const bool warnOnFailures = DebugMode();
+    const bool warnOnFailures = ShouldSpew();
     LoadSymbols(devSymbols, trygl, prefix, warnOnFailures);
 }
 
@@ -2043,7 +2069,7 @@ GLContext::AssembleOffscreenFBs(const GLuint colorMSRB,
     if (!IsFramebufferComplete(drawFB, &status)) {
         NS_WARNING("DrawFBO: Incomplete");
   #ifdef MOZ_GL_DEBUG
-        if (DebugMode()) {
+        if (ShouldSpew()) {
             printf_stderr("Framebuffer status: %X\n", status);
         }
   #endif
@@ -2053,7 +2079,7 @@ GLContext::AssembleOffscreenFBs(const GLuint colorMSRB,
     if (!IsFramebufferComplete(readFB, &status)) {
         NS_WARNING("ReadFBO: Incomplete");
   #ifdef MOZ_GL_DEBUG
-        if (DebugMode()) {
+        if (ShouldSpew()) {
             printf_stderr("Framebuffer status: %X\n", status);
         }
   #endif

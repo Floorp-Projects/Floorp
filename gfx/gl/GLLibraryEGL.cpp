@@ -676,7 +676,7 @@ GLLibraryEGL::DumpEGLConfigs()
     fGetConfigs(mEGLDisplay, ec, nc, &nc);
 
     for (int i = 0; i < nc; ++i) {
-        printf_stderr ("========= EGL Config %d ========\n", i);
+        printf_stderr("========= EGL Config %d ========\n", i);
         DumpEGLConfig(ec[i]);
     }
 
@@ -684,19 +684,25 @@ GLLibraryEGL::DumpEGLConfigs()
 }
 
 #ifdef DEBUG
+static bool
+ShouldTrace()
+{
+    static bool ret = gfxEnv::GlDebugVerbose();
+    return ret;
+}
+
 /*static*/ void
 GLLibraryEGL::BeforeGLCall(const char* glFunction)
 {
-    if (GLContext::DebugMode()) {
-        if (GLContext::DebugMode() & GLContext::DebugTrace)
-            printf_stderr("[egl] > %s\n", glFunction);
+    if (ShouldTrace()) {
+        printf_stderr("[egl] > %s\n", glFunction);
     }
 }
 
 /*static*/ void
 GLLibraryEGL::AfterGLCall(const char* glFunction)
 {
-    if (GLContext::DebugMode() & GLContext::DebugTrace) {
+    if (ShouldTrace()) {
         printf_stderr("[egl] < %s\n", glFunction);
     }
 }
