@@ -15,7 +15,7 @@ const { FrameActor } = require("devtools/server/actors/frame");
 const { ObjectActor, createValueGrip, longStringGrip } = require("devtools/server/actors/object");
 const { SourceActor, getSourceURL } = require("devtools/server/actors/source");
 const { DebuggerServer } = require("devtools/server/main");
-const { ActorClass } = require("devtools/shared/protocol");
+const { ActorClassWithSpec } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert, dumpn, update, fetch } = DevToolsUtils;
 const promise = require("promise");
@@ -24,6 +24,7 @@ const xpcInspector = require("xpcInspector");
 const ScriptStore = require("./utils/ScriptStore");
 const { DevToolsWorker } = require("devtools/shared/worker/worker");
 const object = require("sdk/util/object");
+const { threadSpec } = require("devtools/shared/specs/script");
 
 const { defer, resolve, reject, all } = promise;
 
@@ -408,9 +409,7 @@ EventLoop.prototype = {
  *        An optional (for content debugging only) reference to the content
  *        window.
  */
-const ThreadActor = ActorClass({
-  typeName: "context",
-
+const ThreadActor = ActorClassWithSpec(threadSpec, {
   initialize: function (aParent, aGlobal) {
     this._state = "detached";
     this._frameActors = [];
