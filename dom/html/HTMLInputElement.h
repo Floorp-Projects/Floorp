@@ -40,6 +40,7 @@ namespace dom {
 class AfterSetFilesOrDirectoriesRunnable;
 class Date;
 class DispatchChangeEventCallback;
+class Entry;
 class File;
 class FileList;
 class GetFilesHelper;
@@ -713,6 +714,11 @@ public:
   void SetWebkitDirectoryAttr(bool aValue, ErrorResult& aRv)
   {
     SetHTMLBoolAttr(nsGkAtoms::webkitdirectory, aValue, aRv);
+  }
+
+  void GetWebkitEntries(nsTArray<RefPtr<Entry>>& aSequence, ErrorResult& aRv)
+  {
+    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   }
 
   bool IsFilesAndDirectoriesSupported() const;
