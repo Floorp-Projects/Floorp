@@ -1,104 +1,53 @@
 //Used by JSHint:
-/*global requestLongerTimeout, Cu, BrowserTestUtils, add_task, SpecialPowers, gBrowser, Assert*/ 'use strict';
-const {
-  ManifestObtainer
-} = Cu.import('resource://gre/modules/ManifestObtainer.jsm', {});
+/*global is, Cu, BrowserTestUtils, add_task, gBrowser, makeTestURL*/
+'use strict';
+const { ManifestObtainer } = Cu.import('resource://gre/modules/ManifestObtainer.jsm', {});
+const remoteURL = 'http://mochi.test:8888/browser/dom/manifest/test/resource.sjs';
+const defaultURL = new URL('http://example.org/browser/dom/manifest/test/resource.sjs');
+defaultURL.searchParams.set('Content-Type', 'text/html; charset=utf-8');
 
-requestLongerTimeout(4); // e10s tests take time.
-const defaultURL =
-  'http://example.org/tests/dom/manifest/test/resource.sjs';
-const remoteURL =
-  'http://mochi.test:8888/tests/dom/manifest/test/resource.sjs';
 const tests = [
   // Fetch tests.
   {
-    expected: 'Manifest is first `link` where @rel contains token manifest.',
-    get tabURL() {
-      let query = [
-        `body=<h1>${this.expected}</h1>`,
-        'Content-Type=text/html; charset=utf-8',
-      ];
-      const URL = `${defaultURL}?${query.join('&')}`;
-      return URL;
-    },
+    body: `
+      <link rel="manifesto" href='resource.sjs?body={"name":"fail"}'>
+      <link rel="foo bar manifest bar test" href='resource.sjs?body={"name":"pass-1"}'>
+      <link rel="manifest" href='resource.sjs?body={"name":"fail"}'>`,
     run(manifest) {
-      Assert.strictEqual(manifest.name, 'pass-1', this.expected);
-    },
-    testData: `
-      <link rel="manifesto" href='${defaultURL}?body={"name":"fail"}'>
-      <link rel="foo bar manifest bar test" href='${defaultURL}?body={"name":"pass-1"}'>
-      <link rel="manifest" href='${defaultURL}?body={"name":"fail"}'>`
+      is(manifest.name, 'pass-1', 'Manifest is first `link` where @rel contains token manifest.');
+    }
   }, {
-    expected: 'Manifest is first `link` where @rel contains token manifest.',
-    get tabURL() {
-      let query = [
-        `body=<h1>${this.expected}</h1>`,
-        'Content-Type=text/html; charset=utf-8',
-      ];
-      const URL = `${defaultURL}?${query.join('&')}`;
-      return URL;
-    },
-    run(manifest) {
-      Assert.strictEqual(manifest.name, 'pass-2', this.expected);
-    },
-    testData: `
+    body: `
       <link rel="foo bar manifest bar test" href='resource.sjs?body={"name":"pass-2"}'>
       <link rel="manifest" href='resource.sjs?body={"name":"fail"}'>
-      <link rel="manifest foo bar test" href='resource.sjs?body={"name":"fail"}'>`
+      <link rel="manifest foo bar test" href='resource.sjs?body={"name":"fail"}'>`,
+    run(manifest) {
+      is(manifest.name, 'pass-2', 'Manifest is first `link` where @rel contains token manifest.');
+    },
   }, {
-    expected: 'By default, manifest cannot load cross-origin.',
-    get tabURL() {
-      let query = [
-        `body=<h1>${this.expected}</h1>`,
-        'Content-Type=text/html; charset=utf-8',
-      ];
-      const URL = `${defaultURL}?${query.join('&')}`;
-      return URL;
-    },
+    body: `<link rel="manifest" href='${remoteURL}?body={"name":"pass-3"}'>`,
     run(err) {
-      Assert.strictEqual(err.name, 'TypeError', this.expected);
+      is(err.name, 'TypeError', 'By default, manifest cannot load cross-origin.');
     },
-    testData: `<link rel="manifest" href='${remoteURL}?body={"name":"pass-3"}'>`
   },
   // CORS Tests.
   {
-    expected: 'CORS enabled, manifest must be fetched.',
-    get tabURL() {
-      let query = [
-        `body=<h1>${this.expected}</h1>`,
-        'Content-Type=text/html; charset=utf-8',
-      ];
-      const URL = `${defaultURL}?${query.join('&')}`;
-      return URL;
-    },
-    run(manifest) {
-      Assert.strictEqual(manifest.name, 'pass-4', this.expected);
-    },
-    get testData() {
+    get body() {
       const body = 'body={"name": "pass-4"}';
       const CORS =
-        `Access-Control-Allow-Origin=${new URL(this.tabURL).origin}`;
+        `Access-Control-Allow-Origin=${defaultURL.origin}`;
       const link =
         `<link
         crossorigin=anonymous
         rel="manifest"
         href='${remoteURL}?${body}&${CORS}'>`;
       return link;
-    }
+    },
+    run(manifest) {
+      is(manifest.name, 'pass-4', 'CORS enabled, manifest must be fetched.');
+    },
   }, {
-    expected: 'Fetch blocked by CORS - origin does not match.',
-    get tabURL() {
-      let query = [
-        `body=<h1>${this.expected}</h1>`,
-        'Content-Type=text/html; charset=utf-8',
-      ];
-      const URL = `${defaultURL}?${query.join('&')}`;
-      return URL;
-    },
-    run(err) {
-      Assert.strictEqual(err.name, 'TypeError', this.expected);
-    },
-    get testData() {
+    get body() {
       const body = 'body={"name": "fail"}';
       const CORS = 'Access-Control-Allow-Origin=http://not-here';
       const link =
@@ -107,82 +56,60 @@ const tests = [
         rel="manifest"
         href='${remoteURL}?${body}&${CORS}'>`;
       return link;
-    }
-  },{
-    expected: 'Trying to load from about:whatever is a TypeError.',
-    get tabURL() {
-      let query = [
-        `body=<h1>${this.expected}</h1>`,
-        'Content-Type=text/html; charset=utf-8',
-      ];
-      const URL = `${defaultURL}?${query.join('&')}`;
-      return URL;
     },
     run(err) {
-      Assert.strictEqual(err.name, 'TypeError', this.expected);
+      is(err.name, 'TypeError', 'Fetch blocked by CORS - origin does not match.');
     },
-    testData: `<link rel="manifest" href='about:whatever'>`
-  },
-  {
-    expected: 'Trying to load from file://whatever is a TypeError.',
-    get tabURL() {
-      let query = [
-        `body=<h1>${this.expected}</h1>`,
-        'Content-Type=text/html; charset=utf-8',
-      ];
-      const URL = `${defaultURL}?${query.join('&')}`;
-      return URL;
-    },
+  }, {
+    body: `<link rel="manifest" href='about:whatever'>`,
     run(err) {
-      Assert.strictEqual(err.name, 'TypeError', this.expected);
+      is(err.name, 'TypeError', 'Trying to load from about:whatever is TypeError.');
     },
-    testData: `<link rel="manifest" href='file://manifest'>`
+  }, {
+    body: `<link rel="manifest" href='file://manifest'>`,
+    run(err) {
+      is(err.name, 'TypeError', 'Trying to load from file://whatever is a TypeError.');
+    },
   },
   //URL parsing tests
   {
-    expected: 'Trying to load invalid URL is a TypeError.',
-    get tabURL() {
-      let query = [
-        `body=<h1>${this.expected}</h1>`,
-        'Content-Type=text/html; charset=utf-8',
-      ];
-      const URL = `${defaultURL}?${query.join('&')}`;
-      return URL;
-    },
+    body: `<link rel="manifest" href='http://[12.1212.21.21.12.21.12]'>`,
     run(err) {
-      Assert.strictEqual(err.name, 'TypeError', this.expected);
+      is(err.name, 'TypeError', 'Trying to load invalid URL is a TypeError.');
     },
-    testData: `<link rel="manifest" href='http://[12.1212.21.21.12.21.12]'>`
   },
 ];
 
-add_task(function*() {
-  yield new Promise(resolve => {
-    SpecialPowers.pushPrefEnv({
-      'set': [
-        ['dom.fetch.enabled', true]
-      ]
-    }, resolve);
-  });
-  for (let test of tests) {
-    let tabOptions = {
-      gBrowser: gBrowser,
-      url: test.tabURL,
-    };
-    yield BrowserTestUtils.withNewTab(
-      tabOptions,
-      browser => testObtainingManifest(browser, test)
-    );
-  }
+function makeTestURL({ body }) {
+  const url = new URL(defaultURL);
+  url.searchParams.set("body", encodeURIComponent(body));
+  return url.href;
+}
 
-  function* testObtainingManifest(aBrowser, aTest) {
-    aBrowser.contentWindowAsCPOW.document.head.innerHTML = aTest.testData;
-    try {
-      const manifest = yield ManifestObtainer.browserObtainManifest(aBrowser);
-      aTest.run(manifest);
-    } catch (e) {
-      aTest.run(e);
-    }
+add_task(function*() {
+  const promises = tests
+    .map(test => ({
+      gBrowser,
+      testRunner: testObtainingManifest(test),
+      url: makeTestURL(test)
+    }))
+    .reduce((collector, tabOpts) => {
+      const promise = BrowserTestUtils.withNewTab(tabOpts, tabOpts.testRunner);
+      collector.push(promise);
+      return collector;
+    }, []);
+
+  const results = yield Promise.all(promises);
+
+  function testObtainingManifest(aTest) {
+    return function*(aBrowser) {
+      try {
+        const manifest = yield ManifestObtainer.browserObtainManifest(aBrowser);
+        aTest.run(manifest);
+      } catch (e) {
+        aTest.run(e);
+      }
+    };
   }
 });
 
@@ -192,36 +119,36 @@ add_task(function*() {
  * in each tab. They should all return pass.
  */
 add_task(function*() {
-  const defaultPath = '/tests/dom/manifest/test/manifestLoader.html';
+  const defaultPath = '/browser/dom/manifest/test/manifestLoader.html';
   const tabURLs = [
-    `http://test:80${defaultPath}`,
-    `http://mochi.test:8888${defaultPath}`,
-    `http://test1.mochi.test:8888${defaultPath}`,
-    `http://sub1.test1.mochi.test:8888${defaultPath}`,
-    `http://sub2.xn--lt-uia.mochi.test:8888${defaultPath}`,
-    `http://test2.mochi.test:8888${defaultPath}`,
-    `http://example.org:80${defaultPath}`,
-    `http://test1.example.org:80${defaultPath}`,
-    `http://test2.example.org:80${defaultPath}`,
-    `http://sub1.test1.example.org:80${defaultPath}`,
-    `http://sub1.test2.example.org:80${defaultPath}`,
-    `http://sub2.test1.example.org:80${defaultPath}`,
-    `http://sub2.test2.example.org:80${defaultPath}`,
-    `http://example.org:8000${defaultPath}`,
-    `http://test1.example.org:8000${defaultPath}`,
-    `http://test2.example.org:8000${defaultPath}`,
-    `http://sub1.test1.example.org:8000${defaultPath}`,
-    `http://sub1.test2.example.org:8000${defaultPath}`,
-    `http://sub2.test1.example.org:8000${defaultPath}`,
-    `http://sub2.test2.example.org:8000${defaultPath}`,
     `http://example.com:80${defaultPath}`,
-    `http://www.example.com:80${defaultPath}`,
-    `http://test1.example.com:80${defaultPath}`,
-    `http://test2.example.com:80${defaultPath}`,
+    `http://example.org:80${defaultPath}`,
+    `http://example.org:8000${defaultPath}`,
+    `http://mochi.test:8888${defaultPath}`,
     `http://sub1.test1.example.com:80${defaultPath}`,
+    `http://sub1.test1.example.org:80${defaultPath}`,
+    `http://sub1.test1.example.org:8000${defaultPath}`,
+    `http://sub1.test1.mochi.test:8888${defaultPath}`,
     `http://sub1.test2.example.com:80${defaultPath}`,
+    `http://sub1.test2.example.org:80${defaultPath}`,
+    `http://sub1.test2.example.org:8000${defaultPath}`,
     `http://sub2.test1.example.com:80${defaultPath}`,
+    `http://sub2.test1.example.org:80${defaultPath}`,
+    `http://sub2.test1.example.org:8000${defaultPath}`,
     `http://sub2.test2.example.com:80${defaultPath}`,
+    `http://sub2.test2.example.org:80${defaultPath}`,
+    `http://sub2.test2.example.org:8000${defaultPath}`,
+    `http://sub2.xn--lt-uia.mochi.test:8888${defaultPath}`,
+    `http://test1.example.com:80${defaultPath}`,
+    `http://test1.example.org:80${defaultPath}`,
+    `http://test1.example.org:8000${defaultPath}`,
+    `http://test1.mochi.test:8888${defaultPath}`,
+    `http://test2.example.com:80${defaultPath}`,
+    `http://test2.example.org:80${defaultPath}`,
+    `http://test2.example.org:8000${defaultPath}`,
+    `http://test2.mochi.test:8888${defaultPath}`,
+    `http://test:80${defaultPath}`,
+    `http://www.example.com:80${defaultPath}`,
   ];
   // Open tabs an collect corresponding browsers
   let browsers = [
@@ -236,9 +163,8 @@ add_task(function*() {
   const results = yield Promise.all((
     for (browser of randBrowsers(browsers, 100)) ManifestObtainer.browserObtainManifest(browser)
   ));
-  const expected = 'Expect every manifest to have name equal to `pass`.';
   const pass = results.every(manifest => manifest.name === 'pass');
-  Assert.ok(pass, expected);
+  ok(pass, 'Expect every manifest to have name equal to `pass`.');
   //cleanup
   browsers
     .map(browser => gBrowser.getTabForBrowser(browser))
