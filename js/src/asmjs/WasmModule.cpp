@@ -1377,7 +1377,7 @@ const char experimentalWarning[] =
     "text support (Work In Progress):\n\n";
 
 const char enabledMessage[] =
-    "Restart with debugger open to view WebAssembly source";
+    "Restart with developer tools open to view WebAssembly source";
 
 JSString*
 Module::createText(JSContext* cx)
