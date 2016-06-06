@@ -67,6 +67,7 @@
 #include "WebGLQuery.h"
 #include "WebGLSampler.h"
 #include "WebGLShader.h"
+#include "WebGLTimerQuery.h"
 #include "WebGLTransformFeedback.h"
 #include "WebGLVertexArray.h"
 #include "WebGLVertexAttribData.h"
@@ -213,6 +214,15 @@ WebGLContext::~WebGLContext()
     mContextLossHandler = nullptr;
 }
 
+template<typename T>
+static void
+ClearLinkedList(LinkedList<T>& list)
+{
+    while (!list.isEmpty()) {
+        list.getLast()->DeleteOnce();
+    }
+}
+
 void
 WebGLContext::DestroyResourcesAndContext()
 {
@@ -247,26 +257,21 @@ WebGLContext::DestroyResourcesAndContext()
     mBoundTransformFeedbackBuffers.Clear();
     mBoundUniformBuffers.Clear();
 
-    while (!mTextures.isEmpty())
-        mTextures.getLast()->DeleteOnce();
-    while (!mVertexArrays.isEmpty())
-        mVertexArrays.getLast()->DeleteOnce();
-    while (!mBuffers.isEmpty())
-        mBuffers.getLast()->DeleteOnce();
-    while (!mRenderbuffers.isEmpty())
-        mRenderbuffers.getLast()->DeleteOnce();
-    while (!mFramebuffers.isEmpty())
-        mFramebuffers.getLast()->DeleteOnce();
-    while (!mShaders.isEmpty())
-        mShaders.getLast()->DeleteOnce();
-    while (!mPrograms.isEmpty())
-        mPrograms.getLast()->DeleteOnce();
-    while (!mQueries.isEmpty())
-        mQueries.getLast()->DeleteOnce();
-    while (!mSamplers.isEmpty())
-        mSamplers.getLast()->DeleteOnce();
-    while (!mTransformFeedbacks.isEmpty())
-        mTransformFeedbacks.getLast()->DeleteOnce();
+    //////
+
+    ClearLinkedList(mBuffers);
+    ClearLinkedList(mFramebuffers);
+    ClearLinkedList(mPrograms);
+    ClearLinkedList(mQueries);
+    ClearLinkedList(mRenderbuffers);
+    ClearLinkedList(mSamplers);
+    ClearLinkedList(mShaders);
+    ClearLinkedList(mTextures);
+    ClearLinkedList(mTimerQueries);
+    ClearLinkedList(mTransformFeedbacks);
+    ClearLinkedList(mVertexArrays);
+
+    //////
 
     mFakeBlack_2D_0000       = nullptr;
     mFakeBlack_2D_0001       = nullptr;

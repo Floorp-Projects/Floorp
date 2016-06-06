@@ -283,7 +283,8 @@ private:
     void InitializeD2D();
     bool InitDWriteSupport();
 
-    void DisableD2D(mozilla::gfx::FeatureStatus aStatus, const char* aMessage);
+    void DisableD2D(mozilla::gfx::FeatureStatus aStatus, const char* aMessage,
+                    const nsACString& aFailureId);
 
     void InitializeConfig();
     void InitializeD3D9Config();

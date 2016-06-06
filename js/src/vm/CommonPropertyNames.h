@@ -66,9 +66,9 @@
     macro(currencyDisplay, currencyDisplay, "currencyDisplay") \
     macro(DateTimeFormat, DateTimeFormat, "DateTimeFormat") \
     macro(DateTimeFormatFormatGet, DateTimeFormatFormatGet, "Intl_DateTimeFormat_format_get") \
-    macro(DateTimeFormatFormatToPartsGet, DateTimeFormatFormatToPartsGet, "Intl_DateTimeFormat_formatToParts_get") \
+    macro(DateTimeFormatFormatToParts, DateTimeFormatFormatToParts, "Intl_DateTimeFormat_formatToParts") \
     macro(day, day, "day") \
-    macro(dayperiod, dayperiod, "dayperiod") \
+    macro(dayPeriod, dayPeriod, "dayPeriod") \
     macro(decodeURI, decodeURI, "decodeURI") \
     macro(decodeURIComponent, decodeURIComponent, "decodeURIComponent") \
     macro(default_, default_, "default") \
@@ -169,6 +169,7 @@
     macro(let, let, "let") \
     macro(line, line, "line") \
     macro(lineNumber, lineNumber, "lineNumber") \
+    macro(literal, literal, "literal") \
     macro(loc, loc, "loc") \
     macro(locale, locale, "locale") \
     macro(lookupGetter, lookupGetter, "__lookupGetter__") \
@@ -238,7 +239,6 @@
     macro(scripts, scripts, "scripts") \
     macro(second, second, "second") \
     macro(sensitivity, sensitivity, "sensitivity") \
-    macro(separator, separator, "separator") \
     macro(set, set, "set") \
     macro(setPrefix, setPrefix, "set ") \
     macro(setPrototypeOf, setPrototypeOf, "setPrototypeOf") \

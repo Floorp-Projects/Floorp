@@ -516,7 +516,7 @@ GfxPatternToCairoPattern(const Pattern& aPattern,
 
       matrix = &pattern.mMatrix;
 
-      cairo_pattern_set_filter(pat, GfxFilterToCairoFilter(pattern.mFilter));
+      cairo_pattern_set_filter(pat, GfxSamplingFilterToCairoFilter(pattern.mSamplingFilter));
       cairo_pattern_set_extend(pat, GfxExtendToCairoExtend(pattern.mExtendMode));
 
       cairo_surface_destroy(surf);
@@ -853,7 +853,7 @@ DrawTargetCairo::DrawSurface(SourceSurface *aSurface,
   cairo_surface_destroy(surf);
 
   cairo_pattern_set_matrix(pat, &src_mat);
-  cairo_pattern_set_filter(pat, GfxFilterToCairoFilter(aSurfOptions.mFilter));
+  cairo_pattern_set_filter(pat, GfxSamplingFilterToCairoFilter(aSurfOptions.mSamplingFilter));
   cairo_pattern_set_extend(pat, CAIRO_EXTEND_PAD);
 
   cairo_set_antialias(mContext, GfxAntialiasToCairoAntialias(aOptions.mAntialiasMode));

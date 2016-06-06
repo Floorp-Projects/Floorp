@@ -197,7 +197,7 @@ BasicLayerManager::PopGroupForLayer(PushedGroup &group)
     // always become null.
     dt->SetTransform(Matrix::Translation(-group.mFinalTarget->GetDeviceOffset()));
     dt->DrawSurface(src, Rect(group.mGroupOffset.x, group.mGroupOffset.y, src->GetSize().width, src->GetSize().height),
-                    Rect(0, 0, src->GetSize().width, src->GetSize().height), DrawSurfaceOptions(Filter::POINT), DrawOptions(group.mOpacity, group.mOperator));
+                    Rect(0, 0, src->GetSize().width, src->GetSize().height), DrawSurfaceOptions(SamplingFilter::POINT), DrawOptions(group.mOpacity, group.mOperator));
   }
 
   if (group.mNeedsClipToVisibleRegion) {

@@ -10,6 +10,7 @@
 
 #include "nsIAtom.h"
 #include "mozilla/CSSEnabledState.h"
+#include "mozilla/Compiler.h"
 
 // Is this pseudo-element a CSS2 pseudo-element that can be specified
 // with the single colon syntax (in addition to the double-colon syntax,
@@ -105,6 +106,16 @@ public:
 
 private:
   // Does the given pseudo-element have all of the flags given?
+
+  // Work around https://gcc.gnu.org/bugzilla/show_bug.cgi?id=64037 ,
+  // which is a general gcc bug that we seem to have hit only on Android/x86.
+#if defined(ANDROID) && defined(__i386__) && defined(__GNUC__) && \
+    !defined(__clang__)
+#if (MOZ_GCC_VERSION_AT_LEAST(4,8,0) && MOZ_GCC_VERSION_AT_MOST(4,8,4)) || \
+    (MOZ_GCC_VERSION_AT_LEAST(4,9,0) && MOZ_GCC_VERSION_AT_MOST(4,9,2))
+   __attribute__((noinline))
+#endif
+#endif
   static bool PseudoElementHasFlags(const Type aType, uint32_t aFlags)
   {
     MOZ_ASSERT(aType < Type::Count);

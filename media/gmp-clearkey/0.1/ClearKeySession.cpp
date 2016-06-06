@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
+#include "BigEndian.h"
 #include "ClearKeyDecryptionManager.h"
 #include "ClearKeySession.h"
 #include "ClearKeyUtils.h"
 #include "ClearKeyStorage.h"
 #include "gmp-task-utils.h"
 #include "gmp-api/gmp-decryption.h"
-#include "Endian.h"
 #include <assert.h>
 #include <string.h>
 

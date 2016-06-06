@@ -18,6 +18,7 @@ from mozboot.gentoo import GentooBootstrapper
 from mozboot.osx import OSXBootstrapper
 from mozboot.openbsd import OpenBSDBootstrapper
 from mozboot.archlinux import ArchlinuxBootstrapper
+from mozboot.windows import WindowsBootstrapper
 
 APPLICATION_CHOICE = '''
 Please choose the version of Firefox you want to build:
@@ -138,6 +139,9 @@ class Bootstrapper(object):
             cls = FreeBSDBootstrapper
             args['version'] = platform.release()
             args['flavor'] = platform.system()
+
+        elif sys.platform.startswith('win32') or sys.platform.startswith('msys'):
+            cls = WindowsBootstrapper
 
         if cls is None:
             raise NotImplementedError('Bootstrap support is not yet available '

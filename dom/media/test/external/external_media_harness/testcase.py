@@ -212,21 +212,34 @@ navigator.requestMediaKeySystemAccess('com.adobe.primetime',
 """
 
 
+reset_widevine_gmp_script = """
+navigator.requestMediaKeySystemAccess('com.widevine.alpha',
+[{initDataTypes: ['cenc']}]).then(
+    function(access) {
+        marionetteScriptFinished('success');
+    },
+    function(ex) {
+        marionetteScriptFinished(ex);
+    }
+);
+"""
+
+
 class EMESetupMixin(object):
 
     """
-    An object that needs to use the Adobe GMP system must inherit from this
-    class, and then call check_eme_system() to insure that everything is
-    setup correctly.
+    An object that needs to use the Adobe or Widevine GMP system must inherit
+    from this class, and then call check_eme_system() to insure that everything
+    is setup correctly.
     """
 
     version_needs_reset = True
 
     def check_eme_system(self):
         """
-        Download the most current version of the Adobe GMP Plugin. Verify
-        that all MSE and EME prefs are set correctly. Raises if things
-        are not OK.
+        Download the most current version of the Adobe and Widevine GMP
+        Plugins. Verify that all MSE and EME prefs are set correctly. Raises
+        if things are not OK.
         """
         self.set_eme_prefs()
         self.reset_GMP_version()
@@ -244,13 +257,21 @@ class EMESetupMixin(object):
             with self.marionette.using_context('chrome'):
                 if self.prefs.get_pref('media.gmp-eme-adobe.version'):
                     self.prefs.reset_pref('media.gmp-eme-adobe.version')
+                if self.prefs.get_pref('media.gmp-widevinecdm.version'):
+                    self.prefs.reset_pref('media.gmp-widevinecdm.version')
             with self.marionette.using_context('content'):
-                result = self.marionette.execute_async_script(
+                adobe_result = self.marionette.execute_async_script(
                     reset_adobe_gmp_script,
                     script_timeout=60000)
-                if not result == 'success':
+                widevine_result = self.marionette.execute_async_script(
+                    reset_widevine_gmp_script,
+                    script_timeout=60000)
+                if not adobe_result == 'success':
                     raise VideoException(
                         'ERROR: Resetting Adobe GMP failed % s' % result)
+                if not widevine_result == 'success':
+                    raise VideoException(
+                        'ERROR: Resetting Widevine GMP failed % s' % result)
 
             EMESetupMixin.version_needs_reset = False
 
@@ -287,20 +308,50 @@ class EMESetupMixin(object):
 
             return pref_value >= minimum_value
 
+    def chceck_and_log_version_string_pref(self, pref_name, minimum_value='0'):
+        """
+        Compare a pref made up of integers separated by stops .s, with a
+        version string of the same format. The number of integers in each string
+        does not need to match. The comparison is done by converting each to an
+        integer array and comparing those. Both version strings must be made
+        up of only integers, or this method will raise an unhandled exception
+        of type ValueError when the conversion to int fails.
+        """
+        with self.marionette.using_context('chrome'):
+            pref_value = self.prefs.get_pref(pref_name)
+
+            if pref_value is None:
+                self.logger.info('Pref %s has no value.' % pref_name)
+                return False
+            else:
+                self.logger.info('Pref %s = %s' % (pref_name, pref_value))
+
+                match = re.search('^\d(.\d+)*$', pref_value)
+                if not match:
+                    self.logger.info('Pref %s is not a version string' % pref_name)
+                    return False
+
+            pref_ints = [int(n) for n in pref_value.split('.')]
+            minumum_ints = [int(n) for n in minimum_value.split('.')]
+
+            return pref_ints >= minumum_ints
+
+
     def check_eme_prefs(self):
         with self.marionette.using_context('chrome'):
-            prefs_ok = self.check_and_log_boolean_pref(
-                'media.mediasource.enabled', True)
-            prefs_ok = self.check_and_log_boolean_pref(
-                'media.eme.enabled', True) and prefs_ok
-            prefs_ok = self.check_and_log_boolean_pref(
-                'media.mediasource.mp4.enabled', True) and prefs_ok
-            prefs_ok = self.check_and_log_boolean_pref(
-                'media.gmp-eme-adobe.enabled', True) and prefs_ok
-            prefs_ok = self.check_and_log_integer_pref(
-                'media.gmp-eme-adobe.version', 1) and prefs_ok
-
-        return prefs_ok
-
-
-
+            return all([
+                self.check_and_log_boolean_pref(
+                    'media.mediasource.enabled', True),
+                self.check_and_log_boolean_pref(
+                    'media.eme.enabled', True),
+                self.check_and_log_boolean_pref(
+                    'media.mediasource.mp4.enabled', True),
+                self.check_and_log_boolean_pref(
+                    'media.gmp-eme-adobe.enabled', True),
+                self.check_and_log_integer_pref(
+                    'media.gmp-eme-adobe.version', 1),
+                self.check_and_log_boolean_pref(
+                    'media.gmp-widevinecdm.enabled', True),
+                self.chceck_and_log_version_string_pref(
+                    'media.gmp-widevinecdm.version', '1.0.0.0')
+            ])

@@ -132,7 +132,8 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
         mPacketSize(packetSize),
         mBitrate(bitRate),
         mMaxPlaybackRate(0),
-        mForceMono(false)
+        mForceMono(false),
+        mFECEnabled(false)
   {
   }
 
@@ -195,6 +196,7 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
   uint32_t mBitrate;
   uint32_t mMaxPlaybackRate;
   bool mForceMono;
+  bool mFECEnabled;
 };
 
 class JsepVideoCodecDescription : public JsepCodecDescription {

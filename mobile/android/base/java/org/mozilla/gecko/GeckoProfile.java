@@ -39,9 +39,9 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.Enumeration;
-import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -79,7 +79,9 @@ public final class GeckoProfile {
 
     private boolean mOldSessionDataProcessed = false;
 
-    private static final HashMap<String, GeckoProfile> sProfileCache = new HashMap<String, GeckoProfile>();
+    private static final ConcurrentHashMap<String, GeckoProfile> sProfileCache =
+            new ConcurrentHashMap<String, GeckoProfile>(
+                    /* capacity */ 4, /* load factor */ 0.75f, /* concurrency */ 2);
     private static String sDefaultProfileName;
 
     private final String mName;
@@ -162,7 +164,7 @@ public final class GeckoProfile {
     }
 
     public static GeckoProfile get(Context context, String profileName) {
-        synchronized (sProfileCache) {
+        if (profileName != null) {
             GeckoProfile profile = sProfileCache.get(profileName);
             if (profile != null)
                 return profile;
@@ -242,51 +244,56 @@ public final class GeckoProfile {
             Log.v(LOGTAG, "Fetching profile: '" + profileName + "', '" + profileDir + "'");
         }
 
+        // We require the profile dir to exist if specified, so create it here if needed.
+        final boolean init = profileDir != null && profileDir.mkdirs();
+
         // Actually try to look up the profile.
-        synchronized (sProfileCache) {
-            // We require the profile dir to exist if specified, so create it here if needed.
-            final boolean init = profileDir != null && profileDir.mkdirs();
+        GeckoProfile profile = sProfileCache.get(profileName);
+        GeckoProfile newProfile = null;
 
-            GeckoProfile profile = sProfileCache.get(profileName);
-            if (profile == null) {
-                try {
-                    profile = new GeckoProfile(context, profileName, profileDir, dbFactory);
-                } catch (NoMozillaDirectoryException e) {
-                    // We're unable to do anything sane here.
-                    throw new RuntimeException(e);
-                }
-                sProfileCache.put(profileName, profile);
-
-            } else if (profileDir != null) {
-                // We have an existing profile but was given an alternate directory.
-                boolean consistent = false;
-                try {
-                    consistent = profile.getDir().getCanonicalPath().equals(
-                            profileDir.getCanonicalPath());
-                } catch (final IOException e) {
-                }
-
-                if (!consistent) {
-                    if (!sAcceptDirectoryChanges || !profileDir.isDirectory()) {
-                        throw new IllegalStateException(
-                                "Refusing to reuse profile with a different directory.");
-                    }
-
-                    if (AppConstants.RELEASE_BUILD) {
-                        Log.e(LOGTAG, "Release build trying to switch out profile dir. " +
-                                      "This is an error, but let's do what we can.");
-                    }
-                    profile.setDir(profileDir);
-                }
+        if (profile == null) {
+            try {
+                newProfile = new GeckoProfile(context, profileName, profileDir, dbFactory);
+            } catch (NoMozillaDirectoryException e) {
+                // We're unable to do anything sane here.
+                throw new RuntimeException(e);
             }
 
-            if (init) {
-                // Initialize the profile directory if we had to create it.
-                profile.enqueueInitialization(profileDir);
-            }
-
-            return profile;
+            profile = sProfileCache.putIfAbsent(profileName, newProfile);
         }
+
+        if (profile == null) {
+            profile = newProfile;
+
+        } else if (profileDir != null) {
+            // We have an existing profile but was given an alternate directory.
+            boolean consistent = false;
+            try {
+                consistent = profile.mProfileDir != null &&
+                        profile.mProfileDir.getCanonicalPath().equals(profileDir.getCanonicalPath());
+            } catch (final IOException e) {
+            }
+
+            if (!consistent) {
+                if (!sAcceptDirectoryChanges || !profileDir.isDirectory()) {
+                    throw new IllegalStateException(
+                            "Refusing to reuse profile with a different directory.");
+                }
+
+                if (AppConstants.RELEASE_BUILD) {
+                    Log.e(LOGTAG, "Release build trying to switch out profile dir. " +
+                                  "This is an error, but let's do what we can.");
+                }
+                profile.setDir(profileDir);
+            }
+        }
+
+        if (init) {
+            // Initialize the profile directory if we had to create it.
+            profile.enqueueInitialization(profileDir);
+        }
+
+        return profile;
     }
 
     // Currently unused outside of testing.

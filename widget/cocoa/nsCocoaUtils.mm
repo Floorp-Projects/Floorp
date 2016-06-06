@@ -35,7 +35,7 @@ using mozilla::gfx::BackendType;
 using mozilla::gfx::DataSourceSurface;
 using mozilla::gfx::DrawTarget;
 using mozilla::gfx::Factory;
-using mozilla::gfx::Filter;
+using mozilla::gfx::SamplingFilter;
 using mozilla::gfx::IntPoint;
 using mozilla::gfx::IntRect;
 using mozilla::gfx::IntSize;
@@ -494,7 +494,7 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, ui
 
     mozilla::image::DrawResult res =
       aImage->Draw(context, scaledSize, ImageRegion::Create(scaledSize),
-                   aWhichFrame, Filter::POINT,
+                   aWhichFrame, SamplingFilter::POINT,
                    /* no SVGImageContext */ Nothing(),
                    imgIContainer::FLAG_SYNC_DECODE);
 

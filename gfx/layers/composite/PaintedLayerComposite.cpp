@@ -12,7 +12,7 @@
 #include "mozilla/gfx/Matrix.h"         // for Matrix4x4
 #include "mozilla/gfx/Point.h"          // for Point
 #include "mozilla/gfx/Rect.h"           // for RoundedToInt, Rect
-#include "mozilla/gfx/Types.h"          // for Filter::Filter::LINEAR
+#include "mozilla/gfx/Types.h"          // for SamplingFilter::LINEAR
 #include "mozilla/layers/Compositor.h"  // for Compositor
 #include "mozilla/layers/ContentHost.h"  // for ContentHost
 #include "mozilla/layers/Effects.h"     // for EffectChain
@@ -131,7 +131,7 @@ PaintedLayerComposite::RenderLayer(const gfx::IntRect& aClipRect)
     mBuffer->Composite(this, effectChain,
                        GetEffectiveOpacity(),
                        GetEffectiveTransform(),
-                       GetEffectFilter(),
+                       GetSamplingFilter(),
                        clipRect,
                        &visibleRegion);
   });
@@ -164,7 +164,7 @@ void
 PaintedLayerComposite::GenEffectChain(EffectChain& aEffect)
 {
   aEffect.mLayerRef = this;
-  aEffect.mPrimaryEffect = mBuffer->GenEffect(GetEffectFilter());
+  aEffect.mPrimaryEffect = mBuffer->GenEffect(GetSamplingFilter());
 }
 
 void

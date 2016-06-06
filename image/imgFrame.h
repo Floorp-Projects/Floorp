@@ -82,7 +82,7 @@ class imgFrame
   typedef gfx::Color Color;
   typedef gfx::DataSourceSurface DataSourceSurface;
   typedef gfx::DrawTarget DrawTarget;
-  typedef gfx::Filter Filter;
+  typedef gfx::SamplingFilter SamplingFilter;
   typedef gfx::IntPoint IntPoint;
   typedef gfx::IntRect IntRect;
   typedef gfx::IntSize IntSize;
@@ -131,7 +131,7 @@ public:
   nsresult InitWithDrawable(gfxDrawable* aDrawable,
                             const nsIntSize& aSize,
                             const SurfaceFormat aFormat,
-                            Filter aFilter,
+                            SamplingFilter aSamplingFilter,
                             uint32_t aImageFlags);
 
   DrawableFrameRef DrawableRef();
@@ -150,7 +150,7 @@ public:
   void SetRawAccessOnly();
 
   bool Draw(gfxContext* aContext, const ImageRegion& aRegion,
-            Filter aFilter, uint32_t aImageFlags);
+            SamplingFilter aSamplingFilter, uint32_t aImageFlags);
 
   nsresult ImageUpdated(const nsIntRect& aUpdateRect);
 

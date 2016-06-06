@@ -204,7 +204,7 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
           settings.percent(k, vals0) ? settings.set("snapToLines", false) : null;
           settings.alt(k, vals0, ["auto"]);
           if (vals.length === 2) {
-            settings.alt("lineAlign", vals[1], ["start", "middle", "end"]);
+            settings.alt("lineAlign", vals[1], ["start", "center", "end"]);
           }
           break;
         case "position":
@@ -1076,7 +1076,7 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
       var calculatedPercentage = (boxPosition.lineHeight / containerBox.height) * 100;
 
       switch (cue.lineAlign) {
-      case "middle":
+      case "center":
         linePos -= (calculatedPercentage / 2);
         break;
       case "end":

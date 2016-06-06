@@ -875,7 +875,7 @@ ParseISOStyleDate(const CharT* s, size_t length, ClippedTime* result)
         || (month == 0 || month > 12)
         || (day == 0 || day > size_t(DaysInMonth(year,month)))
         || hour > 24
-        || ((hour == 24) && (min > 0 || sec > 0))
+        || ((hour == 24) && (min > 0 || sec > 0 || frac > 0))
         || min > 59
         || sec > 59
         || tzHour > 23

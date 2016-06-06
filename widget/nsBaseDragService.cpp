@@ -732,7 +732,7 @@ nsBaseDragService::DrawDragForImage(nsIImageLoadingContent* aImageLoader,
     DrawResult res =
       imgContainer->Draw(ctx, destSize, ImageRegion::Create(destSize),
                          imgIContainer::FRAME_CURRENT,
-                         Filter::GOOD, /* no SVGImageContext */ Nothing(),
+                         SamplingFilter::GOOD, /* no SVGImageContext */ Nothing(),
                          imgIContainer::FLAG_SYNC_DECODE);
     if (res == DrawResult::BAD_IMAGE || res == DrawResult::BAD_ARGS) {
       return NS_ERROR_FAILURE;

@@ -9,6 +9,12 @@
 
 enum AutoKeyword { "auto" };
 
+enum LineAlignSetting {
+  "start",
+  "center",
+  "end"
+};
+
 enum PositionAlignSetting {
   "line-left",
   "center",
@@ -39,7 +45,7 @@ interface VTTCue : TextTrackCue {
   attribute boolean snapToLines;
   attribute (long or AutoKeyword) line;
   [SetterThrows]
-  attribute AlignSetting lineAlign;
+  attribute LineAlignSetting lineAlign;
   [SetterThrows]
   attribute long position;
   [SetterThrows]

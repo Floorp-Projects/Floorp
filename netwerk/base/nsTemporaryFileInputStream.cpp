@@ -59,7 +59,10 @@ nsTemporaryFileInputStream::ReadSegments(nsWriteSegmentFun writer,
   }
 
   mozilla::MutexAutoLock lock(mFileDescOwner->FileMutex());
-  PR_Seek64(mFileDescOwner->mFD, mCurPos, PR_SEEK_SET);
+  int64_t offset = PR_Seek64(mFileDescOwner->mFD, mCurPos, PR_SEEK_SET);
+  if (offset == -1) {
+    return NS_ErrorAccordingToNSPR();
+  }
 
   // Limit requested count to the amount remaining in our section of the file.
   count = std::min(count, uint32_t(mEndPos - mCurPos));

@@ -1,4 +1,4 @@
-# mask-repeat round/space test cases
+# background-repeat round/space test cases
 == background-repeat-space-1a.html background-repeat-space-1-ref.html
 == background-repeat-space-1b.html background-repeat-space-1-ref.html
 == background-repeat-space-1c.html background-repeat-space-1-ref.html
@@ -19,3 +19,7 @@
 == background-repeat-round-2.html background-repeat-round-2-ref.html
 == background-repeat-round-3.html background-repeat-round-3-ref.html
 == background-repeat-round-4.html background-repeat-round-4-ref.html
+
+#border-image test cases
+== border-image-repeat-round-1.html border-image-repeat-round-1-ref.html
+== border-image-repeat-round-2.html border-image-repeat-round-2-ref.html
