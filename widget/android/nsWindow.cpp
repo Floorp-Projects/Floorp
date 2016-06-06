@@ -3147,7 +3147,7 @@ nsWindow::GeckoViewSupport::OnImeReplaceText(int32_t aStart, int32_t aEnd,
             TextRange range;
             range.mStartOffset = 0;
             range.mEndOffset = event.mData.Length();
-            range.mRangeType = NS_TEXTRANGE_RAWINPUT;
+            range.mRangeType = TextRangeType::eRawClause;
             event.mRanges = new TextRangeArray();
             event.mRanges->AppendElement(range);
         }
@@ -3183,7 +3183,7 @@ nsWindow::GeckoViewSupport::OnImeAddCompositionRange(
     TextRange range;
     range.mStartOffset = aStart;
     range.mEndOffset = aEnd;
-    range.mRangeType = aRangeType;
+    range.mRangeType = ToTextRangeType(aRangeType);
     range.mRangeStyle.mDefinedStyles = aRangeStyle;
     range.mRangeStyle.mLineStyle = aRangeLineStyle;
     range.mRangeStyle.mIsBoldLine = aRangeBoldLine;

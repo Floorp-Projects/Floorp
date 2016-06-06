@@ -136,14 +136,14 @@ public:
     return *this;
   }
 
-  RangedPtr<T> operator+(size_t aInc)
+  RangedPtr<T> operator+(size_t aInc) const
   {
     MOZ_ASSERT(aInc <= size_t(-1) / sizeof(T));
     MOZ_ASSERT(asUintptr() + aInc * sizeof(T) >= asUintptr());
     return create(mPtr + aInc);
   }
 
-  RangedPtr<T> operator-(size_t aDec)
+  RangedPtr<T> operator-(size_t aDec) const
   {
     MOZ_ASSERT(aDec <= size_t(-1) / sizeof(T));
     MOZ_ASSERT(asUintptr() - aDec * sizeof(T) <= asUintptr());

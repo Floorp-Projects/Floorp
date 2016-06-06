@@ -2923,8 +2923,9 @@ PresShell::CreateReferenceRenderingContext()
   RefPtr<gfxContext> rc;
   if (mPresContext->IsScreen()) {
     rc = gfxContext::ForDrawTarget(gfxPlatform::GetPlatform()->ScreenReferenceDrawTarget());
-    MOZ_RELEASE_ASSERT(rc, "ScreenReferenceDrawTarget never returns null and "
-                           "ForDrawTarget always succeeds with it");
+    if (!rc) {
+      return nullptr;
+    }
   } else {
     // We assume the devCtx has positive width and height for this call.
     // However, width and height, may be outside of the reasonable range
@@ -6170,7 +6171,7 @@ PresShell::MarkFramesInSubtreeApproximatelyVisible(nsIFrame* aFrame,
         if (!preserves3DChildren || !child->Combines3DTransformWithAncestors()) {
           const nsRect overflow = child->GetVisualOverflowRectRelativeToSelf();
           nsRect out;
-          if (nsDisplayTransform::UntransformRect(r, overflow, child, nsPoint(0,0), &out)) {
+          if (nsDisplayTransform::UntransformRect(r, overflow, child, &out)) {
             r = out;
           } else {
             r.SetEmpty();

@@ -15,8 +15,12 @@ interface nsIPresentationSessionTransportBuilderListener : nsISupports
 {
   // Should set |transport.callback| in |onSessionTransport|.
   void onSessionTransport(in nsIPresentationSessionTransport transport);
-
   void onError(in nsresult reason);
+
+  void sendOffer(in nsIPresentationChannelDescription offer);
+  void sendAnswer(in nsIPresentationChannelDescription answer);
+  void sendIceCandidate(in DOMString candidate);
+  void close(in nsresult reason);
 };
 
 [scriptable, uuid(2fdbe67d-80f9-48dc-8237-5bef8fa19801)]
@@ -55,8 +59,13 @@ interface nsIPresentationDataChannelSessionTransportBuilder : nsIPresentationSes
    * |aControlChannel| should be called before calling
    * |buildDataChannelTransport|.
    */
-  void buildDataChannelTransport(in uint8_t aType,
+  void buildDataChannelTransport(in uint8_t aRole,
                                  in mozIDOMWindow aWindow,
-                                 in nsIPresentationControlChannel aControlChannel,
                                  in nsIPresentationSessionTransportBuilderListener aListener);
+
+  // Bug 1275150 - Merge TCP builder with the following APIs
+  void onOffer(in nsIPresentationChannelDescription offer);
+  void onAnswer(in nsIPresentationChannelDescription answer);
+  void onIceCandidate(in DOMString candidate);
+  void notifyClosed(in nsresult reason);
 };

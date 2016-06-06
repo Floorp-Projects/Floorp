@@ -648,9 +648,6 @@ public:
   // PeerConnectionMedia can't do it because it doesn't know about principals
   virtual void PrincipalChanged(dom::MediaStreamTrack* aTrack) override;
 
-  nsresult GetRemoteTrackId(const std::string streamId,
-                            const dom::MediaStreamTrack& track,
-                            std::string* trackId) const;
 #endif
 
   static std::string GetStreamId(const DOMMediaStream& aStream);

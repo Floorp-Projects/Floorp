@@ -1762,19 +1762,17 @@ InitDateTimeFormatClass(JSContext* cx, HandleObject Intl, Handle<GlobalObject*> 
     }
 
     // If the still-experimental DateTimeFormat.prototype.formatToParts method
-    // is enabled, also add its getter.
+    // is enabled, also add it.
     if (cx->compartment()->creationOptions().experimentalDateTimeFormatFormatToPartsEnabled()) {
+        RootedValue ftp(cx);
         if (!GlobalObject::getIntrinsicValue(cx, cx->global(),
-                                             cx->names().DateTimeFormatFormatToPartsGet, &getter))
+                                             cx->names().DateTimeFormatFormatToParts, &ftp))
         {
             return nullptr;
         }
-        if (!DefineProperty(cx, proto, cx->names().formatToParts, UndefinedHandleValue,
-                            JS_DATA_TO_FUNC_PTR(JSGetterOp, &getter.toObject()),
-                            nullptr, JSPROP_GETTER | JSPROP_SHARED))
-        {
+
+        if (!DefineProperty(cx, proto, cx->names().formatToParts, ftp, nullptr, nullptr, 0))
             return nullptr;
-        }
     }
 
     RootedValue options(cx);
@@ -2127,7 +2125,7 @@ GetFieldTypeForFormatField(UDateFormatField fieldName)
         return &JSAtomState::weekday;
 
       case UDAT_AM_PM_FIELD:
-        return &JSAtomState::dayperiod;
+        return &JSAtomState::dayPeriod;
 
       case UDAT_TIMEZONE_FIELD:
         return &JSAtomState::timeZoneName;
@@ -2264,7 +2262,7 @@ intl_FormatToPartsDateTime(JSContext* cx, UDateFormat* df, double x, MutableHand
 
         if (FieldType type = GetFieldTypeForFormatField(static_cast<UDateFormatField>(fieldInt))) {
             if (lastEndIndex < beginIndex) {
-                if (!AppendPart(&JSAtomState::separator, lastEndIndex, beginIndex))
+                if (!AppendPart(&JSAtomState::literal, lastEndIndex, beginIndex))
                     return false;
             }
 
@@ -2273,9 +2271,9 @@ intl_FormatToPartsDateTime(JSContext* cx, UDateFormat* df, double x, MutableHand
         }
     }
 
-    // Append any final separator.
+    // Append any final literal.
     if (lastEndIndex < overallResult->length()) {
-        if (!AppendPart(&JSAtomState::separator, lastEndIndex, overallResult->length()))
+        if (!AppendPart(&JSAtomState::literal, lastEndIndex, overallResult->length()))
             return false;
     }
 

@@ -281,12 +281,13 @@ gfx::IntRect TextureImageTextureSourceOGL::GetTileRect()
 }
 
 void
-TextureImageTextureSourceOGL::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
+TextureImageTextureSourceOGL::BindTexture(GLenum aTextureUnit,
+                                          gfx::SamplingFilter aSamplingFilter)
 {
   MOZ_ASSERT(mTexImage,
     "Trying to bind a TextureSource that does not have an underlying GL texture.");
   mTexImage->BindTexture(aTextureUnit);
-  SetFilter(mCompositor->gl(), aFilter);
+  SetSamplingFilter(mCompositor->gl(), aSamplingFilter);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -335,7 +336,8 @@ GLTextureSource::DeleteTextureHandle()
 }
 
 void
-GLTextureSource::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
+GLTextureSource::BindTexture(GLenum aTextureUnit,
+                             gfx::SamplingFilter aSamplingFilter)
 {
   MOZ_ASSERT(mTextureHandle != 0);
   GLContext* gl = this->gl();
@@ -344,7 +346,7 @@ GLTextureSource::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
   }
   gl->fActiveTexture(aTextureUnit);
   gl->fBindTexture(mTextureTarget, mTextureHandle);
-  ApplyFilterToBoundTexture(gl, aFilter, mTextureTarget);
+  ApplySamplingFilterToBoundTexture(gl, aSamplingFilter, mTextureTarget);
 }
 
 void
@@ -399,7 +401,8 @@ SurfaceTextureSource::SurfaceTextureSource(CompositorOGL* aCompositor,
 }
 
 void
-SurfaceTextureSource::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
+SurfaceTextureSource::BindTexture(GLenum aTextureUnit,
+                                  gfx::SamplingFilter aSamplingFilter)
 {
   MOZ_ASSERT(mSurfTex);
   GLContext* gl = this->gl();
@@ -416,7 +419,7 @@ SurfaceTextureSource::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
 
   mSurfTex->UpdateTexImage();
 
-  ApplyFilterToBoundTexture(gl, aFilter, mTextureTarget);
+  ApplySamplingFilterToBoundTexture(gl, aSamplingFilter, mTextureTarget);
 }
 
 void
@@ -569,7 +572,8 @@ EGLImageTextureSource::EGLImageTextureSource(CompositorOGL* aCompositor,
 }
 
 void
-EGLImageTextureSource::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
+EGLImageTextureSource::BindTexture(GLenum aTextureUnit,
+                                   gfx::SamplingFilter aSamplingFilter)
 {
   GLContext* gl = this->gl();
   if (!gl || !gl->MakeCurrent()) {
@@ -587,7 +591,7 @@ EGLImageTextureSource::BindTexture(GLenum aTextureUnit, gfx::Filter aFilter)
 
   gl->fEGLImageTargetTexture2D(mTextureTarget, mImage);
 
-  ApplyFilterToBoundTexture(gl, aFilter, mTextureTarget);
+  ApplySamplingFilterToBoundTexture(gl, aSamplingFilter, mTextureTarget);
 }
 
 void

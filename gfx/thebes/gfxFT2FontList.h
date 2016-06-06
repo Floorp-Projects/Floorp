@@ -63,7 +63,7 @@ public:
                     const uint8_t* aFontData = nullptr);
 
     virtual gfxFont *CreateFontInstance(const gfxFontStyle *aFontStyle,
-                                        bool aNeedsBold);
+                                        bool aNeedsBold) override;
 
     // Create (if necessary) and return the cairo_font_face for this font.
     // This may fail and return null, so caller must be prepared to handle this.
@@ -73,7 +73,7 @@ public:
     // This may fail and return null, so caller must be prepared to handle this.
     cairo_scaled_font_t *CreateScaledFont(const gfxFontStyle *aStyle);
 
-    nsresult ReadCMAP(FontInfoData *aFontInfoData = nullptr);
+    nsresult ReadCMAP(FontInfoData *aFontInfoData = nullptr) override;
 
     virtual hb_blob_t* GetFontTable(uint32_t aTableTag) override;
 
@@ -85,9 +85,9 @@ public:
     void CheckForBrokenFont(gfxFontFamily *aFamily);
 
     virtual void AddSizeOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                        FontListSizes* aSizes) const;
+                                        FontListSizes* aSizes) const override;
     virtual void AddSizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf,
-                                        FontListSizes* aSizes) const;
+                                        FontListSizes* aSizes) const override;
 
     FT_Face mFTFace;
     cairo_font_face_t *mFontFace;

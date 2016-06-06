@@ -60,6 +60,25 @@ this.Utils = {
   getHTTPMACSHA1Header: CryptoUtils.getHTTPMACSHA1Header,
 
   /**
+   * The string to use as the base User-Agent in Sync requests.
+   * This string will look something like
+   *
+   *   Firefox/49.0a1 (Windows NT 6.1; WOW64; rv:46.0) FxSync/1.51.0.20160516142357.desktop
+   */
+  _userAgent: null,
+  get userAgent() {
+    if (!this._userAgent) {
+      let hph = Cc["@mozilla.org/network/protocol;1?name=http"].getService(Ci.nsIHttpProtocolHandler);
+      this._userAgent =
+        Services.appinfo.name + "/" + Services.appinfo.version +  // Product.
+        " (" + hph.oscpu + ")" +                                  // (oscpu)
+        " FxSync/" + WEAVE_VERSION + "." +                        // Sync.
+        Services.appinfo.appBuildID + ".";                        // Build.
+    }
+    return this._userAgent + Svc.Prefs.get("client.type", "desktop");
+  },
+
+  /**
    * Wrap a function to catch all exceptions and log them
    *
    * @usage MyObj._catch = Utils.catch;

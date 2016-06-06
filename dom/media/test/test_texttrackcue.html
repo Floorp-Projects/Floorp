@@ -128,33 +128,13 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
       }
 
       checkEnumValue("align", "middle", [ "start", "left", "middle", "right", "end" ]);
+      checkEnumValue("lineAlign", "start", [ "start", "center", "end" ]);
       checkEnumValue("vertical", "", [ "", "lr", "rl" ]);
 
-      // Check that cue line align works properly
-      is(cue.lineAlign, "start", "Cue's default line alignment should be start.");
-
-      exceptionHappened = false;
-      try {
-        cue.lineAlign = "left";
-      } catch(e) {
-        exceptionHappened = true;
-        is(e.name, "SyntaxError", "Should have thrown SyntaxError.");
-      }
-      ok(exceptionHappened, "Exception should have happened.");
-
-      exceptionHappened = false;
-      try {
-        cue.lineAlign = "right";
-      } catch(e) {
-        exceptionHappened = true;
-        is(e.name, "SyntaxError", "Should have thrown SyntaxError.");
-      }
-      ok(exceptionHappened, "Exception should have happened.");
-
-      cue.lineAlign = "middle";
-      is(cue.lineAlign, "middle", "Cue's line align should be middle.");
+      cue.lineAlign = "center";
+      is(cue.lineAlign, "center", "Cue's line align should be center.");
       cue.lineAlign = "START";
-      is(cue.lineAlign, "middle", "Cue's line align should be middle.");
+      is(cue.lineAlign, "center", "Cue's line align should be center.");
       cue.lineAlign = "end";
       is(cue.lineAlign, "end", "Cue's line align should be end.");
 

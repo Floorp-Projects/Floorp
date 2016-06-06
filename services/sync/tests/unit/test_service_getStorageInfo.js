@@ -7,6 +7,9 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
+var httpProtocolHandler = Cc["@mozilla.org/network/protocol;1?name=http"]
+                          .getService(Ci.nsIHttpProtocolHandler);
+
 var collections = {steam:  65.11328,
                    petrol: 82.488281,
                    diesel: 2.25488281};
@@ -37,6 +40,7 @@ add_test(function test_success() {
                                      Service.identity.username,
                                      Service.identity.basicPassword));
     let expectedUA = Services.appinfo.name + "/" + Services.appinfo.version +
+                     " (" + httpProtocolHandler.oscpu + ")" +
                      " FxSync/" + WEAVE_VERSION + "." +
                      Services.appinfo.appBuildID + ".desktop";
     do_check_eq(handler.request.getHeader("User-Agent"), expectedUA);

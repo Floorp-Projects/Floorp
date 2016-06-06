@@ -140,7 +140,7 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
     transform *= inverseMask;
 
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
-    SurfacePattern source(snapshot, ExtendMode::CLAMP, transform, Filter::POINT);
+    SurfacePattern source(snapshot, ExtendMode::CLAMP, transform, SamplingFilter::POINT);
 #else
     SurfacePattern source(snapshot, ExtendMode::CLAMP, transform);
 #endif
@@ -150,7 +150,7 @@ RotatedBuffer::DrawBufferQuadrant(gfx::DrawTarget* aTarget,
     aTarget->SetTransform(oldTransform);
   } else {
 #ifdef MOZ_GFX_OPTIMIZE_MOBILE
-    DrawSurfaceOptions options(Filter::POINT);
+    DrawSurfaceOptions options(SamplingFilter::POINT);
 #else
     DrawSurfaceOptions options;
 #endif

@@ -17,7 +17,7 @@ include "gfxipc/ShadowLayerUtils.h";
 include "mozilla/GfxMessageUtils.h";
 include "ImageLayers.h";
 
-using mozilla::gfx::Filter from "mozilla/gfx/2D.h";
+using mozilla::gfx::SamplingFilter from "mozilla/gfx/2D.h";
 using struct mozilla::gfx::Color from "mozilla/gfx/2D.h";
 using struct mozilla::gfx::Point3D from "mozilla/gfx/Point.h";
 using mozilla::gfx::IntPoint from "mozilla/gfx/Point.h";
@@ -258,14 +258,14 @@ struct ContainerLayerAttributes {
   int32_t inputFrameID;
 };
 struct ColorLayerAttributes     { LayerColor color; IntRect bounds; };
-struct CanvasLayerAttributes    { Filter filter; IntRect bounds; };
+struct CanvasLayerAttributes    { SamplingFilter samplingFilter; IntRect bounds; };
 struct RefLayerAttributes {
   int64_t id;
   // TODO: Once bug 1132895 is fixed we shouldn't need to propagate the override
   // explicitly here.
   EventRegionsOverride eventRegionsOverride;
 };
-struct ImageLayerAttributes     { Filter filter; IntSize scaleToSize; ScaleMode scaleMode; };
+struct ImageLayerAttributes     { SamplingFilter samplingFilter; IntSize scaleToSize; ScaleMode scaleMode; };
 
 union SpecificLayerAttributes {
   null_t;

@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_PresentationServiceBase_h
 #define mozilla_dom_PresentationServiceBase_h
 
+#include "nsClassHashtable.h"
 #include "nsRefPtrHashtable.h"
 #include "nsTArray.h"
 

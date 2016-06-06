@@ -793,7 +793,7 @@ pref("ui.scrollToClick", 0);
 pref("canvas.focusring.enabled", true);
 pref("canvas.customfocusring.enabled", false);
 pref("canvas.hitregions.enabled", false);
-pref("canvas.filters.enabled", false);
+pref("canvas.filters.enabled", true);
 // Add support for canvas path objects
 pref("canvas.path.enabled", true);
 pref("canvas.capturestream.enabled", true);
@@ -1387,7 +1387,7 @@ pref("network.http.max-persistent-connections-per-proxy", 32);
 pref("network.http.request.max-start-delay", 10);
 
 // If a connection is reset, we will retry it max-attempts times.
-pref("network.http.request.max-attempts", 6);
+pref("network.http.request.max-attempts", 10);
 
 // Headers
 pref("network.http.accept.default", "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8");

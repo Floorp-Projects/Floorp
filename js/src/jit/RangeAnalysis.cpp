@@ -1935,7 +1935,8 @@ RangeAnalysis::analyzeLoop(MBasicBlock* header)
 #ifdef DEBUG
     if (JitSpewEnabled(JitSpew_Range)) {
         Sprinter sp(GetJitContext()->cx);
-        sp.init();
+        if (!sp.init())
+            return false;
         iterationBound->boundSum.dump(sp);
         JitSpew(JitSpew_Range, "computed symbolic bound on backedges: %s",
                 sp.string());

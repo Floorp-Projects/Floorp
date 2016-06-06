@@ -3,7 +3,6 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 import traceback
-import types
 
 
 class InstallGeckoError(Exception):
@@ -64,6 +63,7 @@ class InvalidArgumentException(MarionetteException):
 class InvalidSessionIdException(MarionetteException):
     status = "invalid session id"
 
+
 class TimeoutException(MarionetteException):
     code = (21,)
     status = "timeout"
@@ -98,8 +98,8 @@ class ElementNotVisibleException(MarionetteException):
     code = (11,)
     status = "element not visible"
 
-    def __init__(
-        self, message="Element is not currently visible and may not be manipulated",
+    def __init__(self,
+                 message="Element is not currently visible and may not be manipulated",
                  stacktrace=None, cause=None):
         super(ElementNotVisibleException, self).__init__(
             message, cause=cause, stacktrace=stacktrace)

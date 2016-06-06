@@ -186,6 +186,42 @@ public:
 
     return true;
   }
+
+  bool Overlaps(const OriginAttributesPattern& aOther) const
+  {
+    if (mAppId.WasPassed() && aOther.mAppId.WasPassed() &&
+        mAppId.Value() != aOther.mAppId.Value()) {
+      return false;
+    }
+
+    if (mInIsolatedMozBrowser.WasPassed() &&
+        aOther.mInIsolatedMozBrowser.WasPassed() &&
+        mInIsolatedMozBrowser.Value() != aOther.mInIsolatedMozBrowser.Value()) {
+      return false;
+    }
+
+    if (mAddonId.WasPassed() && aOther.mAddonId.WasPassed() &&
+        mAddonId.Value() != aOther.mAddonId.Value()) {
+      return false;
+    }
+
+    if (mUserContextId.WasPassed() && aOther.mUserContextId.WasPassed() &&
+        mUserContextId.Value() != aOther.mUserContextId.Value()) {
+      return false;
+    }
+
+    if (mSignedPkg.WasPassed() && aOther.mSignedPkg.WasPassed() &&
+        mSignedPkg.Value() != aOther.mSignedPkg.Value()) {
+      return false;
+    }
+
+    if (mPrivateBrowsingId.WasPassed() && aOther.mPrivateBrowsingId.WasPassed() &&
+        mPrivateBrowsingId.Value() != aOther.mPrivateBrowsingId.Value()) {
+      return false;
+    }
+
+    return true;
+  }
 };
 
 /*

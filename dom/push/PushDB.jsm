@@ -216,18 +216,17 @@ this.PushDB.prototype = {
   },
 
   /**
-   * Reduces all records associated with an origin to a single value.
+   * Iterates over all records associated with an origin.
    *
    * @param {String} origin The origin, matched as a prefix against the scope.
    * @param {String} originAttributes Additional origin attributes. Requires
    *  an exact match.
-   * @param {Function} callback A function with the signature `(result,
-   *  record, cursor)`, where `result` is the value returned by the previous
-   *  invocation, `record` is the registration, and `cursor` is an `IDBCursor`.
-   * @param {Object} [initialValue] The value to use for the first invocation.
-   * @returns {Promise} Resolves with the value of the last invocation.
+   * @param {Function} callback A function with the signature `(record,
+   *  cursor)`, called for each record. `record` is the registration, and
+   *  `cursor` is an `IDBCursor`.
+   * @returns {Promise} Resolves once all records have been processed.
    */
-  reduceByOrigin: function(origin, originAttributes, callback, initialValue) {
+  forEachOrigin: function(origin, originAttributes, callback) {
     console.debug("forEachOrigin()");
 
     return new Promise((resolve, reject) =>
@@ -235,7 +234,7 @@ this.PushDB.prototype = {
         "readwrite",
         this._dbStoreName,
         (aTxn, aStore) => {
-          aTxn.result = initialValue;
+          aTxn.result = undefined;
 
           let index = aStore.index("identifiers");
           let range = IDBKeyRange.bound(
@@ -247,8 +246,7 @@ this.PushDB.prototype = {
             if (!cursor) {
               return;
             }
-            let record = this.toPushRecord(cursor.value);
-            aTxn.result = callback(aTxn.result, record, cursor);
+            callback(this.toPushRecord(cursor.value), cursor);
             cursor.continue();
           };
         },

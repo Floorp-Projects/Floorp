@@ -9,43 +9,45 @@ using JS::Rooted;
 using JS::ObjectValue;
 using JS::Value;
 
-static enum {
+enum SymbolExceptionType {
     NONE,
     SYMBOL_ITERATOR,
     SYMBOL_FOO,
     SYMBOL_EMPTY,
-} uncaughtType = NONE;
+};
 
 BEGIN_TEST(testUncaughtSymbol)
 {
-    JSErrorReporter old = JS_SetErrorReporter(rt, UncaughtSymbolReporter);
+    CHECK(!execDontReport("throw Symbol.iterator;", __FILE__, __LINE__));
+    CHECK(GetSymbolExceptionType(cx) == SYMBOL_ITERATOR);
 
-    CHECK(uncaughtType == NONE);
-    exec("throw Symbol.iterator;", __FILE__, __LINE__);
-    CHECK(uncaughtType == SYMBOL_ITERATOR);
+    CHECK(!execDontReport("throw Symbol('foo');", __FILE__, __LINE__));
+    CHECK(GetSymbolExceptionType(cx) == SYMBOL_FOO);
 
-    uncaughtType = NONE;
-    exec("throw Symbol('foo');", __FILE__, __LINE__);
-    CHECK(uncaughtType == SYMBOL_FOO);
-
-    uncaughtType = NONE;
-    exec("throw Symbol();", __FILE__, __LINE__);
-    CHECK(uncaughtType == SYMBOL_EMPTY);
-
-    JS_SetErrorReporter(rt, old);
+    CHECK(!execDontReport("throw Symbol();", __FILE__, __LINE__));
+    CHECK(GetSymbolExceptionType(cx) == SYMBOL_EMPTY);
 
     return true;
 }
 
-static void
-UncaughtSymbolReporter(JSContext* cx, const char* message, JSErrorReport* report)
+static SymbolExceptionType
+GetSymbolExceptionType(JSContext* cx)
 {
-    if (strcmp(message, "uncaught exception: Symbol(Symbol.iterator)") == 0)
-        uncaughtType = SYMBOL_ITERATOR;
-    else if (strcmp(message, "uncaught exception: Symbol(foo)") == 0)
-        uncaughtType = SYMBOL_FOO;
-    else if (strcmp(message, "uncaught exception: Symbol()") == 0)
-        uncaughtType = SYMBOL_EMPTY;
+    JS::RootedValue exn(cx);
+    MOZ_RELEASE_ASSERT(JS_GetPendingException(cx, &exn));
+    MOZ_RELEASE_ASSERT(exn.isSymbol());
+    JS_ClearPendingException(cx);
+
+    js::ErrorReport report(cx);
+    MOZ_RELEASE_ASSERT(report.init(cx, exn, js::ErrorReport::WithSideEffects));
+
+    if (strcmp(report.message(), "uncaught exception: Symbol(Symbol.iterator)") == 0)
+        return SYMBOL_ITERATOR;
+    if (strcmp(report.message(), "uncaught exception: Symbol(foo)") == 0)
+        return SYMBOL_FOO;
+    if (strcmp(report.message(), "uncaught exception: Symbol()") == 0)
+        return SYMBOL_EMPTY;
+    MOZ_CRASH("Unexpected symbol");
 }
 
 END_TEST(testUncaughtSymbol)

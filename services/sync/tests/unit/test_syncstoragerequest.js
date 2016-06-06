@@ -8,6 +8,9 @@ Cu.import("resource://services-sync/service.js");
 Cu.import("resource://services-sync/util.js");
 Cu.import("resource://testing-common/services/sync/utils.js");
 
+var httpProtocolHandler = Cc["@mozilla.org/network/protocol;1?name=http"]
+                          .getService(Ci.nsIHttpProtocolHandler);
+
 function run_test() {
   Log.repository.getLogger("Sync.RESTRequest").level = Log.Level.Trace;
   initTestLogging();
@@ -22,6 +25,7 @@ add_test(function test_user_agent_desktop() {
   let server = httpd_setup({"/resource": handler});
 
   let expectedUA = Services.appinfo.name + "/" + Services.appinfo.version +
+                   " (" + httpProtocolHandler.oscpu + ")" +
                    " FxSync/" + WEAVE_VERSION + "." +
                    Services.appinfo.appBuildID + ".desktop";
 
@@ -41,6 +45,7 @@ add_test(function test_user_agent_mobile() {
 
   Svc.Prefs.set("client.type", "mobile");
   let expectedUA = Services.appinfo.name + "/" + Services.appinfo.version +
+                   " (" + httpProtocolHandler.oscpu + ")" +
                    " FxSync/" + WEAVE_VERSION + "." +
                    Services.appinfo.appBuildID + ".mobile";
 
