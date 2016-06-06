@@ -558,7 +558,7 @@ global.TabManager = {
   },
 
   handleWindowOpen(window) {
-    if (window.arguments[0] instanceof window.XULElement) {
+    if (window.arguments && window.arguments[0] instanceof window.XULElement) {
       // If the first window argument is a XUL element, it means the
       // window is about to adopt a tab from another window to replace its
       // initial tab.

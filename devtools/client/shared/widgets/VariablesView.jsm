@@ -27,6 +27,7 @@ const promise = require("promise");
 const { Heritage, ViewHelpers, setNamedTimeout } =
   require("devtools/client/shared/widgets/view-helpers");
 const { Task } = require("devtools/shared/task");
+const nodeConstants = require("devtools/shared/dom-node-constants");
 
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
   "resource://gre/modules/PluralForm.jsm");
@@ -3758,7 +3759,7 @@ VariablesView.stringifiers.byObjectKind = {
     let {preview} = aGrip;
 
     switch (preview.nodeType) {
-      case Ci.nsIDOMNode.DOCUMENT_NODE: {
+      case nodeConstants.DOCUMENT_NODE: {
         let result = aGrip.class;
         if (preview.location) {
           result += ` \u2192 ${getSourceNames(preview.location)[concise ? "short" : "long"]}`;
@@ -3767,22 +3768,22 @@ VariablesView.stringifiers.byObjectKind = {
         return result;
       }
 
-      case Ci.nsIDOMNode.ATTRIBUTE_NODE: {
+      case nodeConstants.ATTRIBUTE_NODE: {
         let value = VariablesView.getString(preview.value, { noStringQuotes: true });
         return preview.nodeName + '="' + escapeHTML(value) + '"';
       }
 
-      case Ci.nsIDOMNode.TEXT_NODE:
+      case nodeConstants.TEXT_NODE:
         return preview.nodeName + " " +
                VariablesView.getString(preview.textContent);
 
-      case Ci.nsIDOMNode.COMMENT_NODE: {
+      case nodeConstants.COMMENT_NODE: {
         let comment = VariablesView.getString(preview.textContent,
                                               { noStringQuotes: true });
         return "<!--" + comment + "-->";
       }
 
-      case Ci.nsIDOMNode.DOCUMENT_FRAGMENT_NODE: {
+      case nodeConstants.DOCUMENT_FRAGMENT_NODE: {
         if (concise || !preview.childNodes) {
           return aGrip.class + "[" + preview.childNodesLength + "]";
         }
@@ -3797,7 +3798,7 @@ VariablesView.stringifiers.byObjectKind = {
         return aGrip.class + " [" + nodes.join(", ") + "]";
       }
 
-      case Ci.nsIDOMNode.ELEMENT_NODE: {
+      case nodeConstants.ELEMENT_NODE: {
         let attrs = preview.attributes;
         if (!concise) {
           let n = 0, result = "<" + preview.nodeName;

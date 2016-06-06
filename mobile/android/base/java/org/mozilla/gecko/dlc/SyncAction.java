@@ -9,6 +9,7 @@ import android.content.Context;
 import android.net.Uri;
 import android.util.Log;
 
+import com.keepsafe.switchboard.SwitchBoard;
 import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
@@ -234,7 +235,7 @@ public class SyncAction extends BaseAction {
 
     protected boolean isSyncEnabledForClient(Context context) {
         // Sync action is behind a switchboard flag for staged rollout.
-        return Experiments.isInExperimentLocal(context, Experiments.DOWNLOAD_CONTENT_CATALOG_SYNC);
+        return SwitchBoard.isInExperiment(context, Experiments.DOWNLOAD_CONTENT_CATALOG_SYNC);
     }
 
     private void logErrorResponse(HttpURLConnection connection) {

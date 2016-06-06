@@ -13,16 +13,19 @@
 <script type="text/javascript">
 "use strict";
 
-const {
-  classes: Cc,
-  interfaces: Ci,
-  utils: Cu,
-} = Components;
-const Services = SpecialPowers.Services;
+const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
+
+Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://testing-common/TestUtils.jsm");
+
+/* eslint-disable mozilla/balanced-listeners */
 
 add_task(function* testAlertNotShownInBackgroundWindow() {
   ok(!Services.wm.getEnumerator("alert:alert").hasMoreElements(),
      "Alerts should not be present at the start of the test.");
+
+  let consoleOpened = TestUtils.topicObserved("web-console-created");
+
 
   let extension = ExtensionTestUtils.loadExtension({
     background: "new " + function() {
@@ -40,29 +43,34 @@ add_task(function* testAlertNotShownInBackgroundWindow() {
 
   yield extension.awaitFinish("alertCalled");
 
+
   let alertWindows = Services.wm.getEnumerator("alert:alert");
   ok(!alertWindows.hasMoreElements(), "Should not show alert");
+
 
   // Make sure the message we output to the console is seen.
   // This message is in ext-backgroundPage.js
   let events = Cc["@mozilla.org/consoleAPI-storage;1"]
     .getService(Ci.nsIConsoleAPIStorage).getEvents();
+
   // This is the warning that is output after the first `alert()` call is made.
   let alertWarningEvent = events[events.length - 2];
   is(alertWarningEvent.arguments[0], "alert() is not supported in background windows; please use console.log instead.");
+
   // This is the actual alert text that should be present in the console
   // instead of as an `alert`.
   let alertEvent = events[events.length - 1];
   is(alertEvent.arguments[0], "I am an alert in the background.");
 
+
+  // Wait for the browser console window to open.
+  yield consoleOpened;
+
   let {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
   require("devtools/client/framework/devtools-browser");
   let hudservice = require("devtools/client/webconsole/hudservice");
 
-  while (!hudservice.getBrowserConsole()) {
-    // Setting this to 0 fails, but 200 seems to do the trick.
-    yield new Promise(resolve => setTimeout(resolve, 200));
-  }
+  // And then double check that we have an actual browser console.
   let haveConsole = !!hudservice.getBrowserConsole();
   ok(haveConsole, "Expected browser console to be open");
 

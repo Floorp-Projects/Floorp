@@ -60,8 +60,8 @@
     <dimen name="favicon_largest_interesting_size">32dp</dimen>
 
     <dimen name="firstrun_content_width">300dp</dimen>
-    <dimen name="firstrun_min_height">180dp</dimen>
-    <dimen name="firstrun_background_height">180dp</dimen>
+    <dimen name="firstrun_min_height">120dp</dimen>
+    <dimen name="firstrun_background_height">120dp</dimen>
 
     <dimen name="overlay_prompt_content_width">260dp</dimen>
     <dimen name="overlay_prompt_button_width">148dp</dimen>

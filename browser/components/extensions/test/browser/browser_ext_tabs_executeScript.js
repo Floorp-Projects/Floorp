@@ -118,6 +118,14 @@ add_task(function* testExecuteScript() {
           browser.test.assertEq("http://mochi.test:8888/", result, "Result for frameId[1] is correct");
         }),
 
+        browser.tabs.create({url: "http://example.com/"}).then(tab => {
+          return browser.tabs.executeScript(tab.id, {code: "location.href"}).then(result => {
+            browser.test.assertEq("http://example.com/", result, "Script executed correctly in new tab");
+
+            return browser.tabs.remove(tab.id);
+          });
+        }),
+
         new Promise(resolve => {
           browser.runtime.onMessage.addListener(message => {
             browser.test.assertEq("script ran", message, "Expected runtime message");
@@ -135,7 +143,7 @@ add_task(function* testExecuteScript() {
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
-      "permissions": ["http://mochi.test/", "webNavigation"],
+      "permissions": ["http://mochi.test/", "http://example.com/", "webNavigation"],
     },
 
     background,

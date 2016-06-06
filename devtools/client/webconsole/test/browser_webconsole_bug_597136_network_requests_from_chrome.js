@@ -16,7 +16,7 @@ var listener = {
   observe: function (subject) {
     if (subject instanceof Ci.nsIScriptError &&
         subject.category === "XPConnect JavaScript" &&
-        subject.sourceName.contains("webconsole")) {
+        subject.sourceName.includes("webconsole")) {
       good = false;
     }
   }
