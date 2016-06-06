@@ -9813,7 +9813,8 @@ IonBuilder::jsop_getelem_dense(MDefinition* obj, MDefinition* index, JSValueType
     }
 
     if (knownType != MIRType::Value) {
-        load->setResultType(knownType);
+        if (unboxedType == JSVAL_TYPE_MAGIC)
+            load->setResultType(knownType);
         load->setResultTypeSet(types);
     }
 
