@@ -1512,7 +1512,9 @@ class PackageFrontend(MachCommandBase):
 
         # Absolutely must come after the virtualenv is populated!
         from mozbuild.artifacts import Artifacts
-        artifacts = Artifacts(tree, job, log=self.log, cache_dir=cache_dir, skip_cache=skip_cache, hg=hg, git=git)
+        artifacts = Artifacts(tree, self.substs, self.defines, job,
+                              log=self.log, cache_dir=cache_dir,
+                              skip_cache=skip_cache, hg=hg, git=git)
         return artifacts
 
     @ArtifactSubCommand('artifact', 'install',
