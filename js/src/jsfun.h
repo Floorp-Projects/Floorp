@@ -677,6 +677,12 @@ FunctionHasResolveHook(const JSAtomState& atomState, jsid id);
 extern bool
 fun_toString(JSContext* cx, unsigned argc, Value* vp);
 
+extern bool
+fun_symbolHasInstance(JSContext* cx, unsigned argc, Value* vp);
+
+extern bool
+OrdinaryHasInstance(JSContext* cx, HandleObject objArg, MutableHandleValue v, bool* bp);
+
 /*
  * Function extended with reserved slots for use by various kinds of functions.
  * Most functions do not have these extensions, but enough do that efficient
