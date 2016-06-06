@@ -305,7 +305,17 @@ ANNOTATION_PROCESSOR_JAR_FILES := $(DEPTH)/build/annotationProcessors/annotation
 # GeneratedJNIWrappers.h and GeneratedJNINatives.h
 GeneratedJNIWrappers.cpp: $(ANNOTATION_PROCESSOR_JAR_FILES)
 GeneratedJNIWrappers.cpp: $(ALL_JARS)
-	$(JAVA) -classpath constants.jar:$(JAVA_BOOTCLASSPATH):$(JAVA_CLASSPATH):$(ANNOTATION_PROCESSOR_JAR_FILES) org.mozilla.gecko.annotationProcessors.AnnotationProcessor $(ALL_JARS)
+	# (bug 1278008) I added all_jars_classpath here but I'm not certain
+	# this is optimal. The annotation processor throws NoClassDefFoundError
+	# because it is missing the adjust SDK on its classpath so ideally,
+	# we'd just add that. However, another NoClassDefFoundError is thrown
+	# for HttpClient and I could not fix that.
+	#
+	# I don't want to spend too much time on this & it seems harmless to
+	# add the sources we're actively compiling to classpath of the
+	# annotation processor, which includes adjust & whatever lib we're
+	# missing for HttpClient, so I opted for this solution.
+	$(JAVA) -classpath $(all_jars_classpath):constants.jar:$(JAVA_BOOTCLASSPATH):$(JAVA_CLASSPATH):$(ANNOTATION_PROCESSOR_JAR_FILES) org.mozilla.gecko.annotationProcessors.AnnotationProcessor $(ALL_JARS)
 
 # Certain source files need to be preprocessed.  This special rule
 # generates these files into generated/org/mozilla/gecko for
