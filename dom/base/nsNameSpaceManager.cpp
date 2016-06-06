@@ -139,12 +139,13 @@ nsNameSpaceManager::GetNameSpaceID(nsIAtom* aURI)
 nsresult
 NS_NewElement(Element** aResult,
               already_AddRefed<mozilla::dom::NodeInfo>&& aNodeInfo,
-              FromParser aFromParser)
+              FromParser aFromParser,
+              nsAString* aIs)
 {
   RefPtr<mozilla::dom::NodeInfo> ni = aNodeInfo;
   int32_t ns = ni->NamespaceID();
   if (ns == kNameSpaceID_XHTML) {
-    return NS_NewHTMLElement(aResult, ni.forget(), aFromParser);
+    return NS_NewHTMLElement(aResult, ni.forget(), aFromParser, aIs);
   }
 #ifdef MOZ_XUL
   if (ns == kNameSpaceID_XUL) {
