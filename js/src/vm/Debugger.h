@@ -1051,14 +1051,6 @@ class DebuggerObject : public NativeObject
     static DebuggerObject* create(JSContext* cx, HandleObject proto, HandleObject obj,
                                   HandleNativeObject debugger);
 
-    static bool isBoundFunction(JSContext* cx, Handle<DebuggerObject*> object);
-    static bool boundTargetFunction(JSContext* cx, Handle<DebuggerObject*> object,
-                                    MutableHandleObject result);
-    static bool boundThis(JSContext* cx, Handle<DebuggerObject*> object,
-                          MutableHandleValue result);
-    static bool boundArguments(JSContext* cx, Handle<DebuggerObject*> object,
-                               MutableHandle<ValueVector> result);
-
     static bool isExtensible(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
     static bool isSealed(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
     static bool isFrozen(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
