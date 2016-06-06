@@ -17,6 +17,7 @@ namespace mozilla {
 namespace dom {
 
 class DOMFileSystem;
+class OwningFileOrDirectory;
 
 class Entry
   : public nsISupports
@@ -26,7 +27,9 @@ public:
   NS_DECL_CYCLE_COLLECTING_ISUPPORTS
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS(Entry)
 
-  explicit Entry(nsIGlobalObject* aGlobalObject);
+  static already_AddRefed<Entry>
+  Create(nsIGlobalObject* aGlobalObject,
+         const OwningFileOrDirectory& aFileOrDirectory);
 
   nsIGlobalObject*
   GetParentObject() const
@@ -37,31 +40,23 @@ public:
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
-  bool
-  GetIsFile(ErrorResult& aRv) const
+  virtual bool
+  IsFile() const
   {
-    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
     return false;
   }
 
-  bool
-  GetIsDirectory(ErrorResult& aRv) const
+  virtual bool
+  IsDirectory() const
   {
-    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
     return false;
   }
 
-  void
-  GetName(nsAString& aName, ErrorResult& aRv) const
-  {
-    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  }
+  virtual void
+  GetName(nsAString& aName, ErrorResult& aRv) const = 0;
 
-  void
-  GetFullPath(nsAString& aFullPath, ErrorResult& aRv) const
-  {
-    aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  }
+  virtual void
+  GetFullPath(nsAString& aFullPath, ErrorResult& aRv) const = 0;
 
   DOMFileSystem*
   GetFilesystem(ErrorResult& aRv) const
@@ -71,6 +66,7 @@ public:
   }
 
 protected:
+  Entry(nsIGlobalObject* aGlobalObject);
   virtual ~Entry();
 
 private:

@@ -6,10 +6,7 @@
 
 [NoInterfaceObject]
 interface Entry {
-    [GetterThrows]
     readonly attribute boolean isFile;
-
-    [GetterThrows]
     readonly attribute boolean isDirectory;
 
     [GetterThrows]
@@ -85,7 +82,7 @@ interface FileEntry : Entry {
     [Throws]
     void createWriter (VoidCallback successCallback, optional ErrorCallback errorCallback);
 
-    [Throws]
+    [Throws,BinaryName="GetFile"]
     void file (BlobCallback successCallback, optional ErrorCallback errorCallback);
 };
 

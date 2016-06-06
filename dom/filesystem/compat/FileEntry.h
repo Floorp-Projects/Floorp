@@ -7,22 +7,35 @@
 #ifndef mozilla_dom_FileEntry_h
 #define mozilla_dom_FileEntry_h
 
-#include "mozilla/Attributes.h"
-#include "mozilla/ErrorResult.h"
-#include "mozilla/dom/BindingDeclarations.h"
-#include "nsCycleCollectionParticipant.h"
-#include "nsWrapperCache.h"
+#include "mozilla/dom/Entry.h"
 
 namespace mozilla {
 namespace dom {
 
+class File;
+
 class FileEntry final : public Entry
 {
 public:
-  explicit FileEntry(nsIGlobalObject* aGlobalObject);
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(FileEntry, Entry)
+
+  FileEntry(nsIGlobalObject* aGlobalObject, File* aFile);
 
   virtual JSObject*
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
+
+  virtual bool
+  IsFile() const override
+  {
+    return true;
+  }
+
+  virtual void
+  GetName(nsAString& aName, ErrorResult& aRv) const override;
+
+  virtual void
+  GetFullPath(nsAString& aFullPath, ErrorResult& aRv) const override;
 
   void
   CreateWriter(VoidCallback& aSuccessCallback,
@@ -33,15 +46,17 @@ public:
   }
 
   void
-  File(BlobCallback& aSuccessCallback,
-       const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
-       ErrorResult& aRv) const
+  GetFile(BlobCallback& aSuccessCallback,
+          const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
+          ErrorResult& aRv) const
   {
     aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
   }
 
 private:
   ~FileEntry();
+
+  RefPtr<File> mFile;
 };
 
 } // namespace dom
