@@ -380,18 +380,35 @@ fn unzip_buffer(buf: &[u8], dest_dir: &Path) -> WebDriverResult<()> {
                 "Processing zip file failed")
         }));
         let unzip_path = {
-            let rel_path = Path::new(file.name());
-            let unzip_path = dest_dir.join(rel_path);
-            if let Some(dir) = unzip_path.parent() {
-                if !dir.exists() {
-                    try!(fs::create_dir_all(dir));
+            let name = file.name();
+            let is_dir = name.ends_with("/");
+            let rel_path = Path::new(name);
+            let dest_path = dest_dir.join(rel_path);
+            {
+                let create_dir = if is_dir {
+                    Some(dest_path.as_path())
+                } else {
+                    dest_path.parent()
+                };
+                if let Some(dir) = create_dir {
+                    if !dir.exists() {
+                        debug!("Profile creating directory {:?}", dir);
+                        try!(fs::create_dir_all(dir));
+                    }
                 }
             }
-            unzip_path
+            if is_dir {
+                None
+            } else {
+                Some(dest_path)
+            }
         };
-        let dest = try!(fs::File::create(unzip_path));
-        let mut writer = BufWriter::new(dest);
-        try!(io::copy(&mut file, &mut writer));
+        if let Some(unzip_path) = unzip_path {
+            debug!("Profile copying file {:?}", unzip_path);
+            let dest = try!(fs::File::create(unzip_path));
+            let mut writer = BufWriter::new(dest);
+            try!(io::copy(&mut file, &mut writer));
+        }
     }
     Ok(())
 }
