@@ -40,7 +40,6 @@ extern "C" void sandbox_free_error(char *errorbuf);
 
 class OSXVersion {
 public:
-  static bool OnLionOrLater();
   static int32_t OSXVersionMinor();
 
 private:
@@ -50,11 +49,6 @@ private:
 };
 
 int32_t OSXVersion::mOSXVersion = -1;
-
-bool OSXVersion::OnLionOrLater()
-{
-  return (GetVersionNumber() >= MAC_OS_X_VERSION_10_7_HEX);
-}
 
 int32_t OSXVersion::OSXVersionMinor()
 {
@@ -129,10 +123,7 @@ static const char pluginSandboxRules[] =
   "(deny default)\n"
   "(allow signal (target self))\n"
   "(allow sysctl-read)\n"
-  // Illegal syntax on OS X 10.6, needed on 10.7 and up.
-  "%s(allow iokit-open (iokit-user-client-class \"IOHIDParamUserClient\"))\n"
-  // Needed only on OS X 10.6
-  "%s(allow file-read-data (literal \"%s\"))\n"
+  "(allow iokit-open (iokit-user-client-class \"IOHIDParamUserClient\"))\n"
   "(allow mach-lookup\n"
   "    (global-name \"com.apple.cfprefsd.agent\")\n"
   "    (global-name \"com.apple.cfprefsd.daemon\")\n"
@@ -218,11 +209,6 @@ static const char contentSandboxRules[] =
   "; Used to read hw.ncpu, hw.physicalcpu_max, kern.ostype, and others\n"
   "(allow sysctl-read)\n"
   "\n"
-  "(if \n"
-  "  (or\n"
-  "    (< macosMinorVersion 9)\n"
-  "    (< sandbox-level 1))\n"
-  "  (allow default)\n"
   "  (begin\n"
   "    (deny default)\n"
   "    (debug deny)\n"
@@ -483,26 +469,16 @@ static const char contentSandboxRules[] =
   "        (subpath appTempDir))\n"
   "    (allow file-write*\n"
   "        (subpath appTempDir))\n"
-  "  )\n"
-  ")\n";
+  "  )\n";
 
 bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
 {
   char *profile = NULL;
   if (aInfo.type == MacSandboxType_Plugin) {
-    if (OSXVersion::OnLionOrLater()) {
-      asprintf(&profile, pluginSandboxRules, "", ";",
-               aInfo.pluginInfo.pluginPath.c_str(),
-               aInfo.pluginInfo.pluginBinaryPath.c_str(),
-               aInfo.appPath.c_str(),
-               aInfo.appBinaryPath.c_str());
-    } else {
-      asprintf(&profile, pluginSandboxRules, ";", "",
-               aInfo.pluginInfo.pluginPath.c_str(),
-               aInfo.pluginInfo.pluginBinaryPath.c_str(),
-               aInfo.appPath.c_str(),
-               aInfo.appBinaryPath.c_str());
-    }
+    asprintf(&profile, pluginSandboxRules,
+             aInfo.pluginInfo.pluginBinaryPath.c_str(),
+             aInfo.appPath.c_str(),
+             aInfo.appBinaryPath.c_str());
 
     if (profile &&
       aInfo.pluginInfo.type == MacSandboxPluginType_GMPlugin_EME_Widevine) {
@@ -514,13 +490,19 @@ bool StartMacSandbox(MacSandboxInfo aInfo, std::string &aErrorMessage)
     }
   }
   else if (aInfo.type == MacSandboxType_Content) {
-    asprintf(&profile, contentSandboxRules, aInfo.level,
-             OSXVersion::OSXVersionMinor(),
-             aInfo.appPath.c_str(),
-             aInfo.appBinaryPath.c_str(),
-             aInfo.appDir.c_str(),
-             aInfo.appTempDir.c_str(),
-             getenv("HOME"));
+    if (aInfo.level >= 1) {
+      asprintf(&profile, contentSandboxRules, aInfo.level,
+               OSXVersion::OSXVersionMinor(),
+               aInfo.appPath.c_str(),
+               aInfo.appBinaryPath.c_str(),
+               aInfo.appDir.c_str(),
+               aInfo.appTempDir.c_str(),
+               getenv("HOME"));
+    } else {
+      fprintf(stderr,
+        "Content sandbox disabled due to sandbox level setting\n");
+      return (true);
+    }
   }
   else {
     char *msg = NULL;
