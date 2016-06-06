@@ -3,8 +3,6 @@
 
 "use strict";
 
-var {Loader} = Cu.import("resource://gre/modules/commonjs/toolkit/loader.js",
-                         {});
 var {OutputParser} = require("devtools/client/shared/output-parser");
 
 add_task(function* () {
@@ -216,6 +214,13 @@ function testParseURL(doc, parser) {
       expectedTrailer: ")"
     },
     {
+      desc: "bad url, missing paren, with baseURI",
+      baseURI: "data:text/html,<style></style>",
+      leader: "url(",
+      trailer: "",
+      expectedTrailer: ")"
+    },
+    {
       desc: "bad url, double quote, missing paren",
       leader: "url(\"",
       trailer: "\"",
@@ -232,7 +237,8 @@ function testParseURL(doc, parser) {
   for (let test of tests) {
     let url = test.leader + "something.jpg" + test.trailer;
     let frag = parser.parseCssProperty("background", url, {
-      urlClass: "test-urlclass"
+      urlClass: "test-urlclass",
+      baseURI: test.baseURI,
     });
 
     let target = doc.querySelector("div");
