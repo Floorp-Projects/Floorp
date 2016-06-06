@@ -7,39 +7,38 @@
 #ifndef mozilla_dom_ErrorCallbackRunnable_h
 #define mozilla_dom_ErrorCallbackRunnable_h
 
-#include "mozilla/dom/DOMError.h"
-#include "nsPIDOMWindow.h"
+#include "DirectoryEntry.h"
+#include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/PromiseNativeHandler.h"
+
+class nsIGlobalObject;
 
 namespace mozilla {
 namespace dom {
+
+class EntryCallbackRunnable final : public Runnable
+{
+public:
+  EntryCallbackRunnable(EntryCallback* aCallback,
+                        Entry* aEntry);
+
+  NS_IMETHOD
+  Run() override;
+
+private:
+  RefPtr<EntryCallback> mCallback;
+  RefPtr<Entry> mEntry;
+};
 
 class ErrorCallbackRunnable final : public Runnable
 {
 public:
   ErrorCallbackRunnable(nsIGlobalObject* aGlobalObject,
                         ErrorCallback* aCallback,
-                        nsresult aError = NS_ERROR_DOM_NOT_SUPPORTED_ERR)
-    : mGlobal(aGlobalObject)
-    , mCallback(aCallback)
-    , mError(aError)
-  {
-    MOZ_ASSERT(aGlobalObject);
-    MOZ_ASSERT(aCallback);
-    MOZ_ASSERT(NS_FAILED(aError));
-  }
+                        nsresult aError);
 
   NS_IMETHOD
-  Run() override
-  {
-    nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(mGlobal);
-    if (NS_WARN_IF(!window)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    RefPtr<DOMError> error = new DOMError(window, mError);
-    mCallback->HandleEvent(*error);
-    return NS_OK;
-  }
+  Run() override;
 
 private:
   nsCOMPtr<nsIGlobalObject> mGlobal;
@@ -50,22 +49,52 @@ private:
 class EmptyEntriesCallbackRunnable final : public Runnable
 {
 public:
-  explicit EmptyEntriesCallbackRunnable(EntriesCallback* aCallback)
-    : mCallback(aCallback)
-  {
-    MOZ_ASSERT(aCallback);
-  }
+  explicit EmptyEntriesCallbackRunnable(EntriesCallback* aCallback);
 
   NS_IMETHOD
-  Run() override
-  {
-    Sequence<OwningNonNull<Entry>> sequence;
-    mCallback->HandleEvent(sequence);
-    return NS_OK;
-  }
+  Run() override;
 
 private:
   RefPtr<EntriesCallback> mCallback;
+};
+
+class GetEntryHelper final : public PromiseNativeHandler
+{
+public:
+  NS_DECL_ISUPPORTS
+
+  GetEntryHelper(nsIGlobalObject* aGlobalObject,
+                 DOMFileSystem* aFileSystem,
+                 EntryCallback* aSuccessCallback,
+                 ErrorCallback* aErrorCallback,
+                 DirectoryEntry::GetInternalType aType);
+
+  virtual void
+  ResolvedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+
+  virtual void
+  RejectedCallback(JSContext* aCx, JS::Handle<JS::Value> aValue) override;
+
+private:
+  ~GetEntryHelper();
+
+  void
+  Error(nsresult aError);
+
+  nsCOMPtr<nsIGlobalObject> mGlobal;
+  RefPtr<DOMFileSystem> mFileSystem;
+  RefPtr<EntryCallback> mSuccessCallback;
+  RefPtr<ErrorCallback> mErrorCallback;
+  DirectoryEntry::GetInternalType mType;
+};
+
+class ErrorCallbackHelper
+{
+public:
+  static void
+  Call(nsIGlobalObject* aGlobal,
+       const Optional<OwningNonNull<ErrorCallback>>& aErrorCallback,
+       nsresult aError);
 };
 
 } // dom namespace

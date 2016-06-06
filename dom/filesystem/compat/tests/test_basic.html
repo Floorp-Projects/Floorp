@@ -116,6 +116,126 @@ function test_directoryEntry_createReader() {
   });
 }
 
+function test_directoryEntry_getFile_securityError() {
+  directoryEntry.getFile("foo", { create: true },
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "SecurityError", "This must generate a SecurityError.");
+    next();
+  });
+}
+
+function test_directoryEntry_getFile_typeMismatchError() {
+  directoryEntry.getFile("subdir", {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "TypeMismatchError", "This must generate a TypeMismatchError.");
+    next();
+  });
+}
+
+function test_directoryEntry_getFile_nonValidPath() {
+  directoryEntry.getFile("../../", {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "NotFoundError", "This must generate a NotFoundError.");
+    next();
+  });
+}
+
+function test_directoryEntry_getFile_nonExistingPath() {
+  directoryEntry.getFile("foo_bar.txt", {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "NotFoundError", "This must generate a NotFoundError.");
+    next();
+  });
+}
+
+function test_directoryEntry_getFile_simple() {
+  directoryEntry.getFile("foo.txt", {},
+  function(e) {
+    is(e.name, "foo.txt", "We have the right FileEntry.");
+    next();
+  }, function(e) {
+    ok(false, "This should not happen.");
+  });
+}
+
+function test_directoryEntry_getFile_deep() {
+  directoryEntry.getFile("subdir/bar.txt", {},
+  function(e) {
+    is(e.name, "bar.txt", "We have the right FileEntry.");
+    next();
+  }, function(e) {
+    ok(false, "This should not happen.");
+  });
+}
+
+function test_directoryEntry_getDirectory_securityError() {
+  directoryEntry.getDirectory("foo", { create: true },
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "SecurityError", "This must generate a SecurityError.");
+    next();
+  });
+}
+
+function test_directoryEntry_getDirectory_typeMismatchError() {
+  directoryEntry.getDirectory("foo.txt", {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "TypeMismatchError", "This must generate a TypeMismatchError.");
+    next();
+  });
+}
+
+function test_directoryEntry_getDirectory_nonValidPath() {
+  directoryEntry.getDirectory("../../", {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "NotFoundError", "This must generate a NotFoundError.");
+    next();
+  });
+}
+
+function test_directoryEntry_getDirectory_nonExistingPath() {
+  directoryEntry.getDirectory("non_existing_dir", {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "NotFoundError", "This must generate a NotFoundError.");
+    next();
+  });
+}
+
+function test_directoryEntry_getDirectory_simple() {
+  directoryEntry.getDirectory("subdir", {},
+  function(e) {
+    is(e.name, "subdir", "We have the right DirectoryEntry.");
+    next();
+  }, function(e) {
+    ok(false, "This should not happen.");
+  });
+}
+
+function test_directoryEntry_getDirectory_deep() {
+  directoryEntry.getDirectory("subdir/subsubdir", {},
+  function(e) {
+    is(e.name, "subsubdir", "We have the right DirectoryEntry.");
+    next();
+  }, function(e) {
+    ok(false, "This should not happen.");
+  });
+}
+
 function test_filesystem() {
   is(fileEntry.filesystem, directoryEntry.filesystem, "FileSystem object is shared.");
 
@@ -136,6 +256,126 @@ function test_filesystem() {
   });
 }
 
+function test_root_getFile_securityError() {
+  fileEntry.filesystem.root.getFile("foo", { create: true },
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "SecurityError", "This must generate a SecurityError.");
+    next();
+  });
+}
+
+function test_root_getFile_typeMismatchError() {
+  fileEntry.filesystem.root.getFile(directoryEntry.name, {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "TypeMismatchError", "This must generate a TypeMismatchError.");
+    next();
+  });
+}
+
+function test_root_getFile_nonValidPath() {
+  fileEntry.filesystem.root.getFile("../../", {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "NotFoundError", "This must generate a NotFoundError.");
+    next();
+  });
+}
+
+function test_root_getFile_nonExistingPath() {
+  fileEntry.filesystem.root.getFile("existing.txt", {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "NotFoundError", "This must generate a NotFoundError.");
+    next();
+  });
+}
+
+function test_root_getFile_simple() {
+  fileEntry.filesystem.root.getFile(fileEntry.name, {},
+  function(e) {
+    is(e.name, fileEntry.name, "We have the right FileEntry.");
+    next();
+  }, function(e) {
+    ok(false, "This should not happen.");
+  });
+}
+
+function test_root_getFile_deep() {
+  fileEntry.filesystem.root.getFile(directoryEntry.name + "/subdir/bar.txt", {},
+  function(e) {
+    is(e.name, "bar.txt", "We have the right FileEntry.");
+    next();
+  }, function(e) {
+    ok(false, "This should not happen.");
+  });
+}
+
+function test_root_getDirectory_securityError() {
+  fileEntry.filesystem.root.getDirectory("foo", { create: true },
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "SecurityError", "This must generate a SecurityError.");
+    next();
+  });
+}
+
+function test_root_getDirectory_typeMismatchError() {
+  fileEntry.filesystem.root.getDirectory(fileEntry.name, {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "TypeMismatchError", "This must generate a TypeMismatchError.");
+    next();
+  });
+}
+
+function test_root_getDirectory_nonValidPath() {
+  fileEntry.filesystem.root.getDirectory("../../", {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "NotFoundError", "This must generate a NotFoundError.");
+    next();
+  });
+}
+
+function test_root_getDirectory_nonExistingPath() {
+  fileEntry.filesystem.root.getDirectory("404", {},
+  function() {
+    ok(false, "This should not happen.");
+  }, function(e) {
+    is(e.name, "NotFoundError", "This must generate a NotFoundError.");
+    next();
+  });
+}
+
+function test_root_getDirectory_simple() {
+  fileEntry.filesystem.root.getDirectory(directoryEntry.name, {},
+  function(e) {
+    is(e.name, directoryEntry.name, "We have the right DirectoryEntry.");
+    next();
+  }, function(e) {
+    ok(false, "This should not happen.");
+  });
+}
+
+function test_root_getDirectory_deep() {
+  fileEntry.filesystem.root.getDirectory(directoryEntry.name + "/subdir/subsubdir", {},
+  function(e) {
+    is(e.name, "subsubdir", "We have the right DirectoryEntry.");
+    next();
+  }, function(e) {
+    ok(false, "This should not happen.");
+  });
+}
+
 var tests = [
   setup_tests,
   populate_entries,
@@ -149,7 +389,35 @@ var tests = [
   test_directoryEntry,
   test_directoryEntry_createReader,
 
+  test_directoryEntry_getFile_securityError,
+  test_directoryEntry_getFile_typeMismatchError,
+  test_directoryEntry_getFile_nonValidPath,
+  test_directoryEntry_getFile_nonExistingPath,
+  test_directoryEntry_getFile_simple,
+  test_directoryEntry_getFile_deep,
+
+  test_directoryEntry_getDirectory_securityError,
+  test_directoryEntry_getDirectory_typeMismatchError,
+  test_directoryEntry_getDirectory_nonValidPath,
+  test_directoryEntry_getDirectory_nonExistingPath,
+  test_directoryEntry_getDirectory_simple,
+  test_directoryEntry_getDirectory_deep,
+
   test_filesystem,
+
+  test_root_getFile_securityError,
+  test_root_getFile_typeMismatchError,
+  test_root_getFile_nonValidPath,
+  test_root_getFile_nonExistingPath,
+  test_root_getFile_simple,
+  test_root_getFile_deep,
+
+  test_root_getDirectory_securityError,
+  test_root_getDirectory_typeMismatchError,
+  test_root_getDirectory_nonValidPath,
+  test_root_getDirectory_nonExistingPath,
+  test_root_getDirectory_simple,
+  test_root_getDirectory_deep,
 ];
 
 function next() {

@@ -27,6 +27,14 @@ public:
    */
   static bool
   IsDescendantPath(nsIFile* aPath, nsIFile* aDescendantPath);
+
+  /**
+   * Return true if this is valid DOMPath. It also splits the path in
+   * subdirectories and stores them in aParts.
+   */
+  static bool
+  IsValidRelativeDOMPath(const nsAString& aPath,
+                         nsTArray<nsString>& aParts);
 };
 
 } // namespace dom

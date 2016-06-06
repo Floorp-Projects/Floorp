@@ -44,10 +44,8 @@ callback interface VoidCallback {
 interface DirectoryEntry : Entry {
     DirectoryReader createReader();
 
-    [Throws]
     void getFile(DOMString? path, optional FileSystemFlags options, optional EntryCallback successCallback, optional ErrorCallback errorCallback);
 
-    [Throws]
     void getDirectory(DOMString? path, optional FileSystemFlags options, optional EntryCallback successCallback, optional ErrorCallback errorCallback);
 
     // This method is not implemented. ErrorCallback will be called with

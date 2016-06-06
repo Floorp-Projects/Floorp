@@ -15,6 +15,7 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
+    'CallbackRunnables.cpp',
     'DirectoryEntry.cpp',
     'DirectoryReader.cpp',
     'DOMFileSystem.cpp',

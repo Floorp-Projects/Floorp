@@ -21,13 +21,17 @@ addMessageListener("entries.open", function (e) {
   file1.append('foo.txt');
   file1.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0o600);
 
-  var dir = tmpDir.clone();
-  dir.append('subdir');
-  dir.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o700);
+  var dir1 = tmpDir.clone();
+  dir1.append('subdir');
+  dir1.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o700);
 
-  var file2 = dir.clone();
+  var file2 = dir1.clone();
   file2.append('bar.txt');
   file2.create(Components.interfaces.nsIFile.NORMAL_FILE_TYPE, 0o600);
+
+  var dir2 = dir1.clone();
+  dir2.append('subsubdir');
+  dir2.create(Components.interfaces.nsIFile.DIRECTORY_TYPE, 0o700);
 
   sendAsyncMessage("entries.opened", {
     data: [ new Directory(tmpDir.path), new File(tmpFile) ]
