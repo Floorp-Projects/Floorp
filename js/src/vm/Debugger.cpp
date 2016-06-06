@@ -1118,8 +1118,6 @@ Debugger::wrapDebuggeeValue(JSContext* cx, MutableHandleValue vp)
 bool
 Debugger::wrapDebuggeeObject(JSContext* cx, MutableHandleObject obj)
 {
-    MOZ_ASSERT(obj);
-
     if (obj->is<JSFunction>()) {
         MOZ_ASSERT(!IsInternalFunctionObject(*obj));
         RootedFunction fun(cx, &obj->as<JSFunction>());
@@ -7872,26 +7870,33 @@ DebuggerObject_construct(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerObject_getProto(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT(cx, argc, vp, "get proto", args, object)
-
-    RootedObject result(cx);
-    if (!DebuggerObject::getPrototypeOf(cx, object, &result))
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get proto", args, dbg, refobj);
+    RootedObject proto(cx);
+    {
+        AutoCompartment ac(cx, refobj);
+        if (!GetPrototype(cx, refobj, &proto))
+            return false;
+    }
+    RootedValue protov(cx, ObjectOrNullValue(proto));
+    if (!dbg->wrapDebuggeeValue(cx, &protov))
         return false;
-
-    args.rval().setObjectOrNull(result);
+    args.rval().set(protov);
     return true;
 }
 
 static bool
 DebuggerObject_getClass(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT(cx, argc, vp, "get class", args, object)
-
-    RootedString result(cx);
-    if (!DebuggerObject::className(cx, object, &result))
+    THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "get class", args, refobj);
+    const char* className;
+    {
+        AutoCompartment ac(cx, refobj);
+        className = GetObjectClassName(cx, refobj);
+    }
+    JSAtom* str = Atomize(cx, className, strlen(className));
+    if (!str)
         return false;
-
-    args.rval().setString(result);
+    args.rval().setString(str);
     return true;
 }
 
@@ -8845,26 +8850,6 @@ DebuggerObject::create(JSContext* cx, HandleObject proto, HandleObject referent,
 }
 
 /* static */ bool
-DebuggerObject::className(JSContext* cx, Handle<DebuggerObject*> object,
-                          MutableHandleString result)
-{
-    RootedObject referent(cx, object->referent());
-
-    const char* className;
-    {
-        AutoCompartment ac(cx, referent);
-        className = GetObjectClassName(cx, referent);
-    }
-
-    JSAtom* str = Atomize(cx, className, strlen(className));
-    if (!str)
-        return false;
-
-    result.set(str);
-    return true;
-}
-
-/* static */ bool
 DebuggerObject::isBoundFunction(JSContext* cx, Handle<DebuggerObject*> object)
 {
     RootedObject referent(cx, object->referent());
@@ -8952,24 +8937,6 @@ DebuggerObject::isFrozen(JSContext* cx, Handle<DebuggerObject*> object, bool& re
 
     ErrorCopier ec(ac);
     return TestIntegrityLevel(cx, referent, IntegrityLevel::Frozen, &result);
-}
-
-/* static */ bool
-DebuggerObject::getPrototypeOf(JSContext* cx, Handle<DebuggerObject*> object,
-                               MutableHandleObject result)
-{
-    RootedObject referent(cx, object->referent());
-    Debugger* dbg = object->owner();
-
-    RootedObject proto(cx);
-    {
-        AutoCompartment ac(cx, referent);
-        if (!GetPrototype(cx, referent, &proto))
-            return false;
-    }
-
-    result.set(proto);
-    return !result || dbg->wrapDebuggeeObject(cx, result);
 }
 
 /* static */ bool
