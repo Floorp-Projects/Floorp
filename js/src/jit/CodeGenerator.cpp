@@ -3478,6 +3478,24 @@ CodeGenerator::visitOutOfLineCallPostWriteBarrier(OutOfLineCallPostWriteBarrier*
     masm.jump(ool->rejoin());
 }
 
+void
+CodeGenerator::maybeEmitGlobalBarrierCheck(const LAllocation* maybeGlobal, OutOfLineCode* ool)
+{
+    // Check whether an object is a global that we have already barriered before
+    // calling into the VM.
+
+    if (!maybeGlobal->isConstant())
+        return;
+
+    JSObject* obj = &maybeGlobal->toConstant()->toObject();
+    if (!obj->is<GlobalObject>())
+        return;
+
+    JSCompartment* comp = obj->compartment();
+    auto addr = AbsoluteAddress(&comp->globalWriteBarriered);
+    masm.branch32(Assembler::NotEqual, addr, Imm32(0), ool->rejoin());
+}
+
 template <class LPostBarrierType>
 void
 CodeGenerator::visitPostWriteBarrierCommonO(LPostBarrierType* lir, OutOfLineCode* ool)
@@ -3493,6 +3511,8 @@ CodeGenerator::visitPostWriteBarrierCommonO(LPostBarrierType* lir, OutOfLineCode
         masm.branchPtrInNurseryRange(Assembler::Equal, ToRegister(lir->object()), temp,
                                      ool->rejoin());
     }
+
+    maybeEmitGlobalBarrierCheck(lir->object(), ool);
 
     masm.branchPtrInNurseryRange(Assembler::Equal, ToRegister(lir->value()), temp, ool->entry());
 
@@ -3514,6 +3534,8 @@ CodeGenerator::visitPostWriteBarrierCommonV(LPostBarrierType* lir, OutOfLineCode
         masm.branchPtrInNurseryRange(Assembler::Equal, ToRegister(lir->object()), temp,
                                      ool->rejoin());
     }
+
+    maybeEmitGlobalBarrierCheck(lir->object(), ool);
 
     ValueOperand value = ToValue(lir, LPostBarrierType::Input);
     masm.branchValueIsNurseryObject(Assembler::Equal, value, temp, ool->entry());
