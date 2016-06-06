@@ -46,11 +46,11 @@ public:
   void UpdateFrameHistory(uint32_t aServiced, uint32_t aUnderrun);
 
   /**
-   * @param frames The playback position in frames of the audio engine.
+   * @param aFrames The playback position in frames of the audio engine.
    * @return The playback position in frames of the stream,
    *         adjusted by playback rate changes and underrun frames.
    */
-  int64_t GetPositionInFrames(int64_t frames) const;
+  int64_t GetPositionInFrames(int64_t aFrames) const;
 
   /**
    * @param frames The playback position in frames of the audio engine.
