@@ -556,7 +556,7 @@ nsFrame::Init(nsIContent*       aContent,
   }
   const nsStyleDisplay *disp = StyleDisplay();
   if (disp->HasTransform(this) ||
-      EffectCompositor::HasAnimationsForCompositor(this,
+      nsLayoutUtils::HasCurrentAnimationOfProperty(this,
                                                    eCSSProperty_transform)) {
     // The frame gets reconstructed if we toggle the -moz-transform
     // property, so we can set this bit here and then ignore it.

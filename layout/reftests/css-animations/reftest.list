@@ -9,3 +9,5 @@ fails != print-no-animations.html print-no-animations-notref.html # reftest harn
 == partially-out-of-view-animation.html partially-out-of-view-animation-ref.html
 == animate-display-table-opacity.html animate-display-table-opacity-ref.html
 == stacking-context-transform-none-animation.html  stacking-context-transform-animation-ref.html
+== stacking-context-transform-none-animation-on-svg.html  stacking-context-transform-animation-ref.html
+== stacking-context-transform-none-animation-with-preserve-3d.html  stacking-context-transform-animation-ref.html
