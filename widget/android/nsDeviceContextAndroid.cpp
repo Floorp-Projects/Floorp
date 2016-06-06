@@ -4,12 +4,11 @@
 
 #include "nsDeviceContextAndroid.h"
 
-#include "mozilla/gfx/PrintTargetThebes.h"
+#include "mozilla/gfx/PrintTargetPDF.h"
 #include "mozilla/RefPtr.h"
 #include "nsString.h"
 #include "nsIFile.h"
 #include "nsIFileStreams.h"
-#include "gfxPDFSurface.h"
 #include "nsIPrintSettings.h"
 #include "nsDirectoryServiceDefs.h"
 
@@ -35,11 +34,9 @@ nsDeviceContextSpecAndroid::MakePrintTarget()
   NS_ENSURE_SUCCESS(rv, nullptr);
 
   // XXX: what should we do here for size? screen size?
-  gfxSize size(480, 800);
+  IntSize size(480, 800);
 
-  RefPtr<gfxASurface> surface = new gfxPDFSurface(stream, size);
-
-  return PrintTargetThebes::CreateOrNull(surface);
+  return PrintTargetPDF::CreateOrNull(stream, size);
 }
 
 NS_IMETHODIMP

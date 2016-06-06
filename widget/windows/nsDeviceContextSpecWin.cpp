@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/gfx/PrintTargetPDF.h"
 #include "mozilla/gfx/PrintTargetThebes.h"
 #include "mozilla/RefPtr.h"
 
@@ -25,7 +26,6 @@
 #include "nsReadableUtils.h"
 #include "nsStringEnumerator.h"
 
-#include "gfxPDFSurface.h"
 #include "gfxWindowsSurface.h"
 
 #include "nsIFileStreams.h"
@@ -226,8 +226,6 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget()
 {
   NS_ASSERTION(mDevMode, "DevMode can't be NULL here");
 
-  RefPtr<gfxASurface> newSurface;
-
   if (mOutputFormat == nsIPrintSettings::kOutputFormatPDF) {
     nsXPIDLString filename;
     mPrintSettings->GetToFileName(getter_Copies(filename));
@@ -254,30 +252,31 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget()
       return nullptr;
     }
 
-    newSurface = new gfxPDFSurface(stream, gfxSize(width, height));
-  } else {
-    if (mDevMode) {
-      NS_WARN_IF_FALSE(mDriverName, "No driver!");
-      HDC dc = ::CreateDCW(mDriverName, mDeviceName, nullptr, mDevMode);
-      if (!dc) {
-        gfxCriticalError(gfxCriticalError::DefaultOptions(false)) << "Failed to create device context in GetSurfaceForPrinter";
-        return nullptr;
-      }
+    return PrintTargetPDF::CreateOrNull(stream, IntSize(width, height));
+  }
 
-      // have this surface take over ownership of this DC
-      newSurface = new gfxWindowsSurface(dc, gfxWindowsSurface::FLAG_TAKE_DC | gfxWindowsSurface::FLAG_FOR_PRINTING);
-      if (newSurface->GetType() == (gfxSurfaceType)-1) {
-        gfxCriticalError() << "Invalid windows surface from " << gfx::hexa(dc);
-        return nullptr;
-      }
+  if (mDevMode) {
+    NS_WARN_IF_FALSE(mDriverName, "No driver!");
+    HDC dc = ::CreateDCW(mDriverName, mDeviceName, nullptr, mDevMode);
+    if (!dc) {
+      gfxCriticalError(gfxCriticalError::DefaultOptions(false))
+        << "Failed to create device context in GetSurfaceForPrinter";
+      return nullptr;
     }
+
+    // have this surface take over ownership of this DC
+    RefPtr<gfxASurface> newSurface =
+      new gfxWindowsSurface(dc, gfxWindowsSurface::FLAG_TAKE_DC |
+                                gfxWindowsSurface::FLAG_FOR_PRINTING);
+    if (newSurface->GetType() == (gfxSurfaceType)-1) {
+      gfxCriticalError() << "Invalid windows surface from " << gfx::hexa(dc);
+      return nullptr;
+    }
+
+    return PrintTargetThebes::CreateOrNull(newSurface);
   }
 
-  if (!newSurface) {
-    return nullptr;
-  }
-
-  return PrintTargetThebes::CreateOrNull(newSurface);
+  return nullptr;
 }
 
 float

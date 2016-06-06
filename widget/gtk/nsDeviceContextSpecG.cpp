@@ -5,8 +5,8 @@
 
 #include "nsDeviceContextSpecG.h"
 
+#include "mozilla/gfx/PrintTargetPDF.h"
 #include "mozilla/gfx/PrintTargetPS.h"
-#include "mozilla/gfx/PrintTargetThebes.h"
 #include "mozilla/Logging.h"
 
 #include "plstr.h"
@@ -36,8 +36,8 @@ using namespace mozilla;
 
 using mozilla::gfx::IntSize;
 using mozilla::gfx::PrintTarget;
+using mozilla::gfx::PrintTargetPDF;
 using mozilla::gfx::PrintTargetPS;
-using mozilla::gfx::PrintTargetThebes;
 
 static PRLogModuleInfo *
 GetDeviceContextSpecGTKLog()
@@ -106,7 +106,6 @@ nsDeviceContextSpecGTK::~nsDeviceContextSpecGTK()
 NS_IMPL_ISUPPORTS(nsDeviceContextSpecGTK,
                   nsIDeviceContextSpec)
 
-#include "gfxPDFSurface.h"
 already_AddRefed<PrintTarget> nsDeviceContextSpecGTK::MakePrintTarget()
 {
   double width, height;
@@ -164,12 +163,7 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecGTK::MakePrintTarget()
   IntSize size(width, height);
 
   if (format == nsIPrintSettings::kOutputFormatPDF) {
-    RefPtr<gfxASurface> surface = new gfxPDFSurface(stream,
-                                                    gfxSize(width, height));
-    if (!surface) {
-      return nullptr;
-    }
-    return PrintTargetThebes::CreateOrNull(surface);
+    return PrintTargetPDF::CreateOrNull(stream, size);
   }
 
   int32_t orientation;
