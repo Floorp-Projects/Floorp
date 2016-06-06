@@ -180,8 +180,7 @@ void nsNotifyAddrListener::calculateNetworkId(void)
                                 sha1.finish(digest);
                                 nsCString newString(reinterpret_cast<char*>(digest),
                                                     SHA1Sum::kHashSize);
-                                nsresult rv = Base64Encode(newString, output);
-                                MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+                                Base64Encode(newString, output);
                                 LOG(("networkid: id %s\n", output.get()));
                                 if (mNetworkId != output) {
                                     // new id
