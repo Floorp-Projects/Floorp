@@ -33,7 +33,6 @@ config = {
     'default_actions': [
         "clobber",
         "pull",
-        "clone-locales",
         "list-locales",
         "setup",
         "repack",
