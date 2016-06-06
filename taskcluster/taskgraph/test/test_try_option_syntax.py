@@ -120,24 +120,28 @@ class TestTryOptionSyntax(unittest.TestCase):
         self.assertEqual(tos.platforms, None)
 
     def test_p_linux(self):
-        "-p linux sets platforms=['linux']"
+        "-p linux sets platforms=['linux', 'linux-l10n']"
         tos = TryOptionSyntax('try: -p linux', empty_graph)
-        self.assertEqual(tos.platforms, ['linux'])
+        self.assertEqual(tos.platforms, ['linux', 'linux-l10n'])
 
     def test_p_linux_win32(self):
-        "-p linux,win32 sets platforms=['linux', 'win32']"
+        "-p linux,win32 sets platforms=['linux', 'linux-l10n', 'win32']"
         tos = TryOptionSyntax('try: -p linux,win32', empty_graph)
-        self.assertEqual(sorted(tos.platforms), ['linux', 'win32'])
+        self.assertEqual(sorted(tos.platforms), ['linux', 'linux-l10n', 'win32'])
 
     def test_p_expands_ridealongs(self):
         "-p linux,linux64 includes the RIDEALONG_BUILDS"
         tos = TryOptionSyntax('try: -p linux,linux64', empty_graph)
         self.assertEqual(sorted(tos.platforms), [
             'linux',
+            'linux-l10n',
             'linux64',
+            'linux64-l10n',
             'sm-arm-sim',
             'sm-arm64-sim',
             'sm-compacting',
+            'sm-nonunified',
+            'sm-package',
             'sm-plain',
             'sm-rootanalysis',
         ])
