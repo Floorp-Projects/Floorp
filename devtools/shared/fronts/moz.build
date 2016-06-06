@@ -11,6 +11,7 @@ DevToolsModules(
     'call-watcher.js',
     'canvas.js',
     'css-properties.js',
+    'csscoverage.js',
     'highlighters.js',
     'inspector.js',
     'preference.js',

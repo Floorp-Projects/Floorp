@@ -7,7 +7,7 @@
 const { Cc, Ci } = require("chrome");
 
 const domtemplate = require("gcli/util/domtemplate");
-const csscoverage = require("devtools/server/actors/csscoverage");
+const csscoverage = require("devtools/shared/fronts/csscoverage");
 const l10n = csscoverage.l10n;
 
 loader.lazyRequireGetter(this, "gDevTools", "devtools/client/framework/devtools", true);
