@@ -1195,7 +1195,17 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
     MOZ_ASSERT(mutex);
     HRESULT hr = mutex->AcquireSync(0, 10000);
     if (hr == WAIT_TIMEOUT) {
-      MOZ_CRASH("GFX: D3D11 timeout");
+      hr = mDevice->GetDeviceRemovedReason();
+      if (hr == S_OK) {
+        // There is no driver-removed event. Crash with this timeout.
+        MOZ_CRASH("GFX: D3D11 normal status timeout");
+      }
+
+      // Since the timeout is related to the driver-removed, clear the
+      // render-bounding size to skip this frame.
+      gfxCriticalNote << "GFX: D3D11 timeout with device-removed:" << gfx::hexa(hr);
+      *aRenderBoundsOut = IntRect();
+      return;
     }
 
     mutex->ReleaseSync(0);
