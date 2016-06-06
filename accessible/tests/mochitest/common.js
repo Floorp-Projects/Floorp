@@ -291,6 +291,9 @@ function getAccessible(aAccOrElmOrID, aInterfaces, aElmObj, aDoNotFailIf)
     aInterfaces = [ aInterfaces ];
 
   for (var index = 0; index < aInterfaces.length; index++) {
+    if (acc instanceof aInterfaces[index]) {
+      continue;
+    }
     try {
       acc.QueryInterface(aInterfaces[index]);
     } catch (e) {
