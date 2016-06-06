@@ -86,7 +86,7 @@ public:
   // Very noisy GLContext and GLContextProviderELG
   DECL_GFX_ENV("MOZ_GL_SPEW", GlSpew);
 
-  // Do extra work before and after each GLX call in GLContextProviderGLX 
+  // Do extra work before and after each GLX call in GLContextProviderGLX
   DECL_GFX_ENV("MOZ_GLX_DEBUG", GlxDebug);
 
   // Use X compositing
@@ -108,7 +108,7 @@ public:
 private:
   // Helper function, can be re-used in the other macros
   static bool IsEnvSet(const char* aName) {
-    char* val = PR_GetEnv(aName);
+    const char* val = PR_GetEnv(aName);
     return (val != 0 && *val != '\0');
   }
 
