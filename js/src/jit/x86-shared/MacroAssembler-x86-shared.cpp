@@ -403,6 +403,70 @@ MacroAssemblerX86Shared::minMaxFloat32(FloatRegister first, FloatRegister second
     bind(&done);
 }
 
+void
+MacroAssemblerX86Shared::outOfLineWasmTruncateCheck(FloatRegister input, MIRType fromType,
+                                                    MIRType toType, bool isUnsigned,
+                                                    Label* rejoin)
+{
+    // Eagerly take care of NaNs.
+    Label inputIsNaN;
+    if (fromType == MIRType::Double)
+        asMasm().branchDouble(Assembler::DoubleUnordered, input, input, &inputIsNaN);
+    else if (fromType == MIRType::Float32)
+        asMasm().branchFloat(Assembler::DoubleUnordered, input, input, &inputIsNaN);
+    else
+        MOZ_CRASH("unexpected type in visitOutOfLineWasmTruncateCheck");
+
+    Label fail;
+
+    // Handle special values (not needed for unsigned values).
+    if (!isUnsigned) {
+        if (toType == MIRType::Int32) {
+            // MWasmTruncateToInt32
+            if (fromType == MIRType::Double) {
+                // We've used vcvttsd2si. The only valid double values that can
+                // truncate to INT32_MIN are in ]INT32_MIN - 1; INT32_MIN].
+                asMasm().loadConstantDouble(double(INT32_MIN) - 1.0, ScratchDoubleReg);
+                asMasm().branchDouble(Assembler::DoubleLessThanOrEqual, input, ScratchDoubleReg, &fail);
+
+                asMasm().loadConstantDouble(double(INT32_MIN), ScratchDoubleReg);
+                asMasm().branchDouble(Assembler::DoubleGreaterThan, input, ScratchDoubleReg, &fail);
+            } else {
+                MOZ_ASSERT(fromType == MIRType::Float32);
+
+                // We've used vcvttss2si. Check that the input wasn't
+                // float(INT32_MIN), which is the only legimitate input that
+                // would truncate to INT32_MIN.
+                asMasm().loadConstantFloat32(float(INT32_MIN), ScratchFloat32Reg);
+                asMasm().branchFloat(Assembler::DoubleNotEqual, input, ScratchFloat32Reg, &fail);
+            }
+        } else {
+            // MWasmTruncateToInt64
+            MOZ_ASSERT(toType == MIRType::Int64);
+            if (fromType == MIRType::Double) {
+                // We've used vcvtsd2sq. The only legit value whose i64
+                // truncation is INT64_MIN is double(INT64_MIN): exponent is so
+                // high that the highest resolution around is much more than 1.
+                asMasm().loadConstantDouble(double(int64_t(INT64_MIN)), ScratchDoubleReg);
+                asMasm().branchDouble(Assembler::DoubleNotEqual, input, ScratchDoubleReg, &fail);
+            } else {
+                // We've used vcvtss2sq. Same comment applies.
+                MOZ_ASSERT(fromType == MIRType::Float32);
+                asMasm().loadConstantFloat32(float(int64_t(INT64_MIN)), ScratchFloat32Reg);
+                asMasm().branchFloat(Assembler::DoubleNotEqual, input, ScratchFloat32Reg, &fail);
+            }
+        }
+        jump(rejoin);
+    }
+
+    // Handle errors.
+    bind(&fail);
+    jump(wasm::JumpTarget::IntegerOverflow);
+
+    bind(&inputIsNaN);
+    jump(wasm::JumpTarget::InvalidConversionToInteger);
+}
+
 //{{{ check_macroassembler_style
 // ===============================================================
 // MacroAssembler high-level usage.
