@@ -2262,8 +2262,10 @@ RemoteBrowserTabActor.prototype = {
   },
 
   get _mm() {
-    return this._browser.QueryInterface(Ci.nsIFrameLoaderOwner).frameLoader
-           .messageManager;
+    // Get messageManager from XUL browser (which might be a specialized tunnel for RDM)
+    // or else fallback to asking the frameLoader itself.
+    return this._browser.messageManager ||
+           this._browser.frameLoader.messageManager;
   },
 
   update() {
