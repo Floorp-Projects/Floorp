@@ -1130,7 +1130,13 @@ def install_python(home_dir, lib_dir, inc_dir, bin_dir, site_packages, clear, sy
         site_filename = site_filename.replace('$py.class', '.py')
     site_filename_dst = change_prefix(site_filename, home_dir)
     site_dir = os.path.dirname(site_filename_dst)
-    writefile(site_filename_dst, SITE_PY)
+    # MOZ: Copies a site.py if it exists instead of using the one hex encoded in
+    # this file. Necessary for some site.py fixes for MinGW64 version of python
+    site_py_src_path = os.path.join(os.path.dirname(__file__), 'site.py')
+    if os.path.isfile(site_py_src_path):
+        shutil.copy(site_py_src_path, site_filename_dst)
+    else:
+        writefile(site_filename_dst, SITE_PY)
     writefile(join(site_dir, 'orig-prefix.txt'), prefix)
     site_packages_filename = join(site_dir, 'no-global-site-packages.txt')
     if not site_packages:
