@@ -3695,18 +3695,6 @@ nsDisplayLayerEventRegions::IsEmpty() const
   return false;
 }
 
-int32_t
-nsDisplayLayerEventRegions::ZIndex() const
-{
-  return mOverrideZIndex ? *mOverrideZIndex : nsDisplayItem::ZIndex();
-}
-
-void
-nsDisplayLayerEventRegions::SetOverrideZIndex(int32_t aZIndex)
-{
-  mOverrideZIndex = Some(aZIndex);
-}
-
 void
 nsDisplayLayerEventRegions::WriteDebugInfo(std::stringstream& aStream)
 {
