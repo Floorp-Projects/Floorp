@@ -804,7 +804,11 @@ impl MarionetteCommand {
                 debug!("Creating NewSession message");
                 (Some("newSession"), Some(Ok(data)))
             },
-            DeleteSession => (Some("deleteSession"), None),
+            DeleteSession => {
+                let mut body = BTreeMap::new();
+                body.insert("flags".to_owned(), vec!["eForceQuit".to_json()].to_json());
+                (Some("quitApplication"), Some(Ok(body)))
+            },
             Get(ref x) => (Some("get"), Some(x.to_marionette())),
             GetCurrentUrl => (Some("getCurrentUrl"), None),
             GoBack => (Some("goBack"), None),
