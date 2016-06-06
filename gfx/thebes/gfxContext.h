@@ -65,9 +65,9 @@ public:
      * is responsible for handling this scenario as appropriate.
      */
     static already_AddRefed<gfxContext>
-        ForDrawTarget(mozilla::gfx::DrawTarget* aTarget,
-                      const mozilla::gfx::Point& aDeviceOffset = mozilla::gfx::Point());
-    
+        CreateOrNull(mozilla::gfx::DrawTarget* aTarget,
+                     const mozilla::gfx::Point& aDeviceOffset = mozilla::gfx::Point());
+
     /**
      * Create a new gfxContext wrapping aTarget and preserving aTarget's
      * transform. Note that the transform is moved from aTarget to the resulting
@@ -76,7 +76,7 @@ public:
      * is responsible for handling this scenario as appropriate.
      */
     static already_AddRefed<gfxContext>
-        ForDrawTargetWithTransform(mozilla::gfx::DrawTarget* aTarget);
+        CreatePreservingTransformOrNull(mozilla::gfx::DrawTarget* aTarget);
 
     mozilla::gfx::DrawTarget *GetDrawTarget() { return mDT; }
 

@@ -260,7 +260,7 @@ nsSVGMaskFrame::GetMaskForMaskedFrame(gfxContext* aContext,
   gfxMatrix maskSurfaceMatrix =
     aContext->CurrentMatrix() * gfxMatrix::Translation(-maskSurfaceRect.TopLeft());
 
-  RefPtr<gfxContext> tmpCtx = gfxContext::ForDrawTarget(maskDT);
+  RefPtr<gfxContext> tmpCtx = gfxContext::CreateOrNull(maskDT);
   MOZ_ASSERT(tmpCtx); // already checked the draw target above
   tmpCtx->SetMatrix(maskSurfaceMatrix);
 

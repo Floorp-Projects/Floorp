@@ -1903,7 +1903,7 @@ AndroidBridge::CaptureZoomedView(mozIDOMWindowProxy *window, nsIntRect zoomedVie
         ALOG_BRIDGE("Error creating DrawTarget");
         return NS_ERROR_FAILURE;
     }
-    RefPtr<gfxContext> context = gfxContext::ForDrawTarget(dt);
+    RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
     MOZ_ASSERT(context); // already checked the draw target above
     context->SetMatrix(context->CurrentMatrix().Scale(zoomFactor, zoomFactor));
 
@@ -2009,7 +2009,7 @@ nsresult AndroidBridge::CaptureThumbnail(mozIDOMWindowProxy *window, int32_t buf
         ALOG_BRIDGE("Error creating DrawTarget");
         return NS_ERROR_FAILURE;
     }
-    RefPtr<gfxContext> context = gfxContext::ForDrawTarget(dt);
+    RefPtr<gfxContext> context = gfxContext::CreateOrNull(dt);
     MOZ_ASSERT(context); // checked the draw target above
 
     context->SetMatrix(

@@ -362,7 +362,7 @@ private:
         return;
     }
     dt->AddUserData(&gfxContext::sDontUseAsSourceKey, dt, nullptr);
-    targetContext = gfxContext::ForDrawTarget(dt);
+    targetContext = gfxContext::CreateOrNull(dt);
   } else if (gfxPlatform::GetPlatform()->SupportsAzureContentForType(gfx::BackendType::CAIRO)) {
     // This is dead code unless you mess with prefs, but keep it around for
     // debugging.
@@ -376,7 +376,7 @@ private:
         return;
     }
     dt->AddUserData(&gfxContext::sDontUseAsSourceKey, dt, nullptr);
-    targetContext = gfxContext::ForDrawTarget(dt);
+    targetContext = gfxContext::CreateOrNull(dt);
   } else {
     MOZ_ASSERT_UNREACHABLE("COREGRAPHICS is the only supported backend");
   }

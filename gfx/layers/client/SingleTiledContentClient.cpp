@@ -178,7 +178,7 @@ ClientSingleTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
   }
 
   {
-    RefPtr<gfxContext> ctx = gfxContext::ForDrawTarget(dt);
+    RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(dt);
     if (!ctx) {
       gfxDevCrash(gfx::LogReason::InvalidContext) << "SingleTiledContextClient context problem " << gfx::hexa(dt);
       return;

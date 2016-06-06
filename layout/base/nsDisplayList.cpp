@@ -568,7 +568,7 @@ GenerateAndPushTextMask(nsIFrame* aFrame, nsRenderingContext* aContext,
   if (!maskDT) {
     NS_ABORT_OOM(drawRect.width * drawRect.height);
   }
-  RefPtr<gfxContext> maskCtx = gfxContext::ForDrawTargetWithTransform(maskDT);
+  RefPtr<gfxContext> maskCtx = gfxContext::CreatePreservingTransformOrNull(maskDT);
   gfxMatrix currentMatrix = sourceCtx->CurrentMatrix();
   maskCtx->SetMatrix(gfxMatrix::Translation(bounds.TopLeft()) *
                      currentMatrix *

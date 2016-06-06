@@ -811,7 +811,7 @@ ClientMultiTiledLayerBuffer::PaintThebes(const nsIntRegion& aNewValidRegion,
           return;
         }
 
-        ctxt = gfxContext::ForDrawTarget(mSinglePaintDrawTarget);
+        ctxt = gfxContext::CreateOrNull(mSinglePaintDrawTarget);
         MOZ_ASSERT(ctxt); // already checked draw target above
 
         mSinglePaintBufferOffset = nsIntPoint(bounds.x, bounds.y);
@@ -1039,7 +1039,7 @@ void ClientMultiTiledLayerBuffer::Update(const nsIntRegion& newValidRegion,
       }
       drawTarget->SetTransform(Matrix());
 
-      RefPtr<gfxContext> ctx = gfxContext::ForDrawTarget(drawTarget);
+      RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(drawTarget);
       MOZ_ASSERT(ctx); // already checked the draw target above
       ctx->SetMatrix(
         ctx->CurrentMatrix().Scale(mResolution, mResolution).Translate(ThebesPoint(-mTilingOrigin)));

@@ -368,7 +368,7 @@ nsDeviceContext::CreateRenderingContext()
 #endif
     dt->AddUserData(&sDisablePixelSnapping, (void*)0x1, nullptr);
 
-    RefPtr<gfxContext> pContext = gfxContext::ForDrawTarget(dt);
+    RefPtr<gfxContext> pContext = gfxContext::CreateOrNull(dt);
     MOZ_ASSERT(pContext); // already checked draw target above
 
     gfxMatrix transform;
