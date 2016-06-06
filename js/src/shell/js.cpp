@@ -3054,9 +3054,12 @@ Sleep_fn(JSContext* cx, unsigned argc, Value* vp)
         double t_secs;
         if (!ToNumber(cx, args[0], &t_secs))
             return false;
-        duration = TimeDuration::FromSeconds(Max(0.0, t_secs));
+        if (mozilla::IsNaN(t_secs)) {
+            JS_ReportError(cx, "sleep interval is not a number");
+            return false;
+        }
 
-        /* NB: The next condition also filter out NaNs. */
+        duration = TimeDuration::FromSeconds(Max(0.0, t_secs));
         if (duration > MAX_TIMEOUT_INTERVAL) {
             JS_ReportError(cx, "Excessive sleep interval");
             return false;
@@ -3207,7 +3210,10 @@ CancelExecution(JSRuntime* rt)
 static bool
 SetTimeoutValue(JSContext* cx, double t)
 {
-    /* NB: The next condition also filter out NaNs. */
+    if (mozilla::IsNaN(t)) {
+        JS_ReportError(cx, "timeout is not a number");
+        return false;
+    }
     if (TimeDuration::FromSeconds(t) > MAX_TIMEOUT_INTERVAL) {
         JS_ReportError(cx, "Excessive timeout value");
         return false;
