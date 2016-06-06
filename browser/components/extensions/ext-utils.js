@@ -103,10 +103,29 @@ global.IconDetails = {
 
   // Returns the appropriate icon URL for the given icons object and the
   // screen resolution of the given window.
-  getURL(icons, window, extension, size = 18) {
+  getURL(icons, window, extension, size = 16) {
     const DEFAULT = "chrome://browser/content/extension.svg";
 
-    return AddonManager.getPreferredIconURL({icons: icons}, size, window) || DEFAULT;
+    size *= window.devicePixelRatio;
+
+    let bestSize = null;
+    if (icons[size]) {
+      bestSize = size;
+    } else if (icons[2 * size]) {
+      bestSize = 2 * size;
+    } else {
+      let sizes = Object.keys(icons)
+                        .map(key => parseInt(key, 10))
+                        .sort((a, b) => a - b);
+
+      bestSize = sizes.find(candidate => candidate > size) || sizes.pop();
+    }
+
+    if (bestSize) {
+      return {size: bestSize, icon: icons[bestSize]};
+    }
+
+    return {size, icon: DEFAULT};
   },
 
   convertImageDataToPNG(imageData, context) {
