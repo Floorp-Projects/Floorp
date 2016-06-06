@@ -21,5 +21,5 @@ assertEq(nw.boundTargetFunction, undefined);
 var ow = gw.executeInGlobal("var o = {}; o").return;
 assertEq(ow.isBoundFunction, false);
 assertEq(ow.boundThis, undefined);
-assertEq(nw.boundArguments, undefined);
+assertEq(ow.boundArguments, undefined);
 assertEq(ow.boundTargetFunction, undefined);
