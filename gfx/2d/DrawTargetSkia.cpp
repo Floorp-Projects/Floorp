@@ -1072,6 +1072,14 @@ DrawTargetSkia::FillGlyphs(ScaledFont *aFont,
     }
   }
 
+  if (!shouldLCDRenderText && aFont->GetType() == FontType::GDI) {
+    // If we have non LCD GDI text, Cairo currently always uses cleartype fonts and
+    // converts them to grayscale. Force Skia to do the same, otherwise we use
+    // GDI fonts with the ANTIALIASED_QUALITY which is generally bolder than
+    // Cleartype fonts.
+    paint.mPaint.setFlags(paint.mPaint.getFlags() | SkPaint::kGenA8FromLCD_Flag);
+  }
+
   std::vector<uint16_t> indices;
   std::vector<SkPoint> offsets;
   indices.resize(aBuffer.mNumGlyphs);
