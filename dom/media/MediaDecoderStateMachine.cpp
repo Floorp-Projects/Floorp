@@ -598,9 +598,7 @@ MediaDecoderStateMachine::OnAudioDecoded(MediaData* aAudioSample)
   mDecodedAudioEndTime = std::max(audio->GetEndTime(), mDecodedAudioEndTime);
 
   SAMPLE_LOG("OnAudioDecoded [%lld,%lld] disc=%d",
-             (audio ? audio->mTime : -1),
-             (audio ? audio->GetEndTime() : -1),
-             (audio ? audio->mDiscontinuity : 0));
+             audio->mTime, audio->GetEndTime(), audio->mDiscontinuity);
 
   switch (mState) {
     case DECODER_STATE_BUFFERING: {
@@ -788,9 +786,7 @@ MediaDecoderStateMachine::OnVideoDecoded(MediaData* aVideoSample,
   mDecodedVideoEndTime = std::max(mDecodedVideoEndTime, video->GetEndTime());
 
   SAMPLE_LOG("OnVideoDecoded [%lld,%lld] disc=%d",
-             (video ? video->mTime : -1),
-             (video ? video->GetEndTime() : -1),
-             (video ? video->mDiscontinuity : 0));
+             video->mTime, video->GetEndTime(), video->mDiscontinuity);
 
   switch (mState) {
     case DECODER_STATE_BUFFERING: {
