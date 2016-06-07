@@ -65,12 +65,16 @@ public:
 
   virtual void OnFetchResponse(InternalRequest* aRequest,
                                InternalResponse* aResponse) = 0;
-  virtual already_AddRefed<WebSocket>
+  already_AddRefed<WebSocket>
     OnWebSocketAccept(InternalRequest* aConnectRequest,
                       const Optional<nsAString>& aProtocol,
-                      ErrorResult& aRv) = 0;
+                      ErrorResult& aRv);
   virtual void OnWebSocketResponse(InternalRequest* aConnectRequest,
                                    InternalResponse* aResponse) = 0;
+  virtual already_AddRefed<nsITransportProvider>
+    OnWebSocketAcceptInternal(InternalRequest* aConnectRequest,
+                              const Optional<nsAString>& aProtocol,
+                              ErrorResult& aRv) = 0;
 
   virtual void Close();
 
@@ -89,7 +93,6 @@ public:
   }
 
 protected:
-
   virtual ~FlyWebPublishedServer()
   {
     MOZ_ASSERT(!mIsRegistered, "Subclass dtor forgot to call Close()");
@@ -128,12 +131,12 @@ public:
 
   virtual void OnFetchResponse(InternalRequest* aRequest,
                                InternalResponse* aResponse) override;
-  virtual already_AddRefed<WebSocket>
-    OnWebSocketAccept(InternalRequest* aConnectRequest,
-                      const Optional<nsAString>& aProtocol,
-                      ErrorResult& aRv) override;
   virtual void OnWebSocketResponse(InternalRequest* aConnectRequest,
                                    InternalResponse* aResponse) override;
+  virtual already_AddRefed<nsITransportProvider>
+    OnWebSocketAcceptInternal(InternalRequest* aConnectRequest,
+                              const Optional<nsAString>& aProtocol,
+                              ErrorResult& aRv) override;
 
   void SetCancelRegister(nsICancelable* aCancelRegister)
   {
@@ -181,12 +184,12 @@ public:
 
   virtual void OnFetchResponse(InternalRequest* aRequest,
                                InternalResponse* aResponse) override;
-  virtual already_AddRefed<WebSocket>
-    OnWebSocketAccept(InternalRequest* aConnectRequest,
-                      const Optional<nsAString>& aProtocol,
-                      ErrorResult& aRv) override;
   virtual void OnWebSocketResponse(InternalRequest* aConnectRequest,
                                    InternalResponse* aResponse) override;
+  virtual already_AddRefed<nsITransportProvider>
+    OnWebSocketAcceptInternal(InternalRequest* aConnectRequest,
+                              const Optional<nsAString>& aProtocol,
+                              ErrorResult& aRv) override;
 
   virtual void Close() override;
 
