@@ -126,6 +126,14 @@
       finish();
     }, 60000);
 
+    var mustNotSettle = (p, ms, msg) => Promise.race([
+      p.then(() => ok(false, msg + " must not settle"),
+             e => ok(false, msg + " must not settle. Got " + e.name)),
+      wait(ms).then(() => ok(true, msg + " must not settle"))
+    ]);
+
+    var silence = mustNotSettle(pc.createOffer(), 1000,
+                                "createOffer immediately followed by close");
     try {
       pc.close();
     } catch (e) {
@@ -135,7 +143,7 @@
     is(pc.signalingState, "closed", "Final signalingState is 'closed'");
     is(pc.iceConnectionState, "closed", "Final iceConnectionState is 'closed'");
 
-    finished.then(networkTestFinished);
+    Promise.all([finished, silence]).then(networkTestFinished);
   });
 </script>
 </pre>
