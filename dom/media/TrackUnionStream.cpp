@@ -107,7 +107,7 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
             break;
           }
         }
-        if (!found && mInputs[i]->PassTrackThrough(tracks->GetID())) {
+        if (!found && mInputs[i]->AllowCreationOf(tracks->GetID())) {
           bool trackFinished = false;
           trackAdded = true;
           uint32_t mapIndex = AddTrack(mInputs[i], tracks.get(), aFrom);
