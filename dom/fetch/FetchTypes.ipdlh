@@ -52,8 +52,6 @@ struct IPCInternalResponse
   HeadersGuardEnum headersGuard;
   IPCChannelInfo channelInfo;
   OptionalPrincipalInfo principalInfo;
-  OptionalIPCStream body;
-  int64_t bodySize;
 };
 
 
