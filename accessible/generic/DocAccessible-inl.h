@@ -91,19 +91,6 @@ DocAccessible::UpdateText(nsIContent* aTextNode)
 }
 
 inline void
-DocAccessible::UpdateRootElIfNeeded()
-{
-  dom::Element* rootEl = mDocumentNode->GetBodyElement();
-  if (!rootEl) {
-    rootEl = mDocumentNode->GetRootElement();
-  }
-  if (rootEl != mContent) {
-    mContent = rootEl;
-    SetRoleMapEntry(aria::GetRoleMap(rootEl));
-  }
-}
-
-inline void
 DocAccessible::AddScrollListener()
 {
   // Delay scroll initializing until the document has a root frame.
