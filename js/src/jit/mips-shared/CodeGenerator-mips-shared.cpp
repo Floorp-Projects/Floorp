@@ -483,8 +483,7 @@ CodeGeneratorMIPSShared::visitMulI(LMulI* ins)
 
                 bailoutFrom(&mulConstOverflow, ins->snapshot());
             } else {
-                masm.ma_mult(src, Imm32(ToInt32(rhs)));
-                masm.as_mflo(dest);
+                masm.ma_mul(dest, src, Imm32(ToInt32(rhs)));
             }
             break;
         }
@@ -495,8 +494,7 @@ CodeGeneratorMIPSShared::visitMulI(LMulI* ins)
             masm.ma_mul_branch_overflow(dest, ToRegister(lhs), ToRegister(rhs), &multRegOverflow);
             bailoutFrom(&multRegOverflow, ins->snapshot());
         } else {
-            masm.as_mult(ToRegister(lhs), ToRegister(rhs));
-            masm.as_mflo(dest);
+            masm.as_mul(dest, ToRegister(lhs), ToRegister(rhs));
         }
 
         if (mul->canBeNegativeZero()) {

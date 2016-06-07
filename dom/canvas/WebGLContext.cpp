@@ -587,7 +587,7 @@ CreateGLWithEGL(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
 {
     const gfx::IntSize dummySize(16, 16);
     RefPtr<GLContext> gl = gl::GLContextProviderEGL::CreateOffscreen(dummySize, caps,
-                                                                     flags);
+                                                                     flags, *out_failureId);
     if (gl && gl->IsANGLE()) {
         gl = nullptr;
     }
@@ -611,7 +611,7 @@ CreateGLWithANGLE(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
 {
     const gfx::IntSize dummySize(16, 16);
     RefPtr<GLContext> gl = gl::GLContextProviderEGL::CreateOffscreen(dummySize, caps,
-                                                                     flags);
+                                                                     flags, *out_failureId);
     if (gl && !gl->IsANGLE()) {
         gl = nullptr;
     }
@@ -647,7 +647,8 @@ CreateGLWithDefault(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
     }
 
     const gfx::IntSize dummySize(16, 16);
-    RefPtr<GLContext> gl = gl::GLContextProvider::CreateOffscreen(dummySize, caps, flags);
+    RefPtr<GLContext> gl = gl::GLContextProvider::CreateOffscreen(dummySize, caps,
+                                                                  flags, *out_failureId);
 
     if (gl && gl->IsANGLE()) {
         gl = nullptr;
@@ -937,6 +938,8 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
 
     if (mOptions.failIfMajorPerformanceCaveat) {
         if (gl->IsWARP()) {
+            Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_FAILURE_ID,
+                                  NS_LITERAL_CSTRING("FEATURE_FAILURE_PERF_WARP"));
             const nsLiteralCString text("failIfMajorPerformanceCaveat: Driver is not"
                                         " hardware-accelerated.");
             ThrowEvent_WebGLContextCreationError(text);

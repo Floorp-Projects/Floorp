@@ -439,10 +439,8 @@ nsCacheEntryHashTable::AddEntry( nsCacheEntry *cacheEntry)
 
     if (!hashEntry)
         return NS_ERROR_FAILURE;
-#ifndef DEBUG_dougt
     NS_ASSERTION(((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry == 0,
                  "### nsCacheEntryHashTable::AddEntry - entry already used");
-#endif
     ((nsCacheEntryHashTableEntry *)hashEntry)->cacheEntry = cacheEntry;
 
     return NS_OK;

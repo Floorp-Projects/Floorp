@@ -146,6 +146,12 @@ nsCOMArray_base::InsertElementAt(uint32_t aIndex, nsISupports* aElement)
   NS_IF_ADDREF(aElement);
 }
 
+void
+nsCOMArray_base::InsertElementAt(uint32_t aIndex, already_AddRefed<nsISupports> aElement)
+{
+  mArray.InsertElementAt(aIndex, aElement.take());
+}
+
 bool
 nsCOMArray_base::InsertObjectsAt(const nsCOMArray_base& aObjects, int32_t aIndex)
 {

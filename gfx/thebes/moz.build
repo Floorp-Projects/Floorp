@@ -85,7 +85,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
 elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
     EXPORTS += [
         'gfxPlatformMac.h',
-        'gfxQuartzImageSurface.h',
         'gfxQuartzNativeDrawing.h',
         'gfxQuartzSurface.h',
     ]
@@ -93,7 +92,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'gfxCoreTextShaper.cpp',
         'gfxMacFont.cpp',
         'gfxPlatformMac.cpp',
-        'gfxQuartzImageSurface.cpp',
         'gfxQuartzNativeDrawing.cpp',
         'gfxQuartzSurface.cpp',
     ]

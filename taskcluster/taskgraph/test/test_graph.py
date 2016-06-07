@@ -137,6 +137,14 @@ class TestGraph(unittest.TestCase):
             '4': set(['3']),
         })
 
+    def test_named_links_dict(self):
+        "named link dict for a graph with multiple edges is correct"
+        self.assertEqual(self.multi_edges.named_links_dict(), {
+            '2': dict(red='1', blue='1'),
+            '3': dict(red='1', blue='2', green='2'),
+            '4': dict(green='3'),
+        })
+
     def test_reverse_links_dict(self):
         "reverse link dict for a graph with multiple edges is correct"
         self.assertEqual(self.multi_edges.reverse_links_dict(), {

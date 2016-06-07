@@ -109,7 +109,6 @@ using namespace mozilla::system;
 #include "nsJSEnvironment.h"
 #include "nsContentSink.h"
 #include "nsFrameMessageManager.h"
-#include "nsRefreshDriver.h"
 #include "nsDOMMutationObserver.h"
 #include "nsHyphenationManager.h"
 #include "nsEditorSpellCheck.h"
@@ -271,7 +270,6 @@ nsLayoutStatics::Initialize()
   nsLayoutUtils::Initialize();
   nsIPresShell::InitializeStatics();
   TouchManager::InitializeStatics();
-  nsRefreshDriver::InitializeStatics();
   nsPrincipal::InitializeStatics();
 
   nsCORSListenerProxy::Startup();
@@ -433,8 +431,6 @@ nsLayoutStatics::Shutdown()
   nsDOMMutationObserver::Shutdown();
 
   ContentParent::ShutDown();
-
-  nsRefreshDriver::Shutdown();
 
   DisplayItemClip::Shutdown();
 

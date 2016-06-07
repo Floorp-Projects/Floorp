@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<title>
+Transform animation creates a stacking context even though it has only
+'transform:none' keyframes and with a style which prevents performning
+the animation on the compositor.
+</title>
+<style>
+span {
+  height: 100px;
+  width: 100px;
+  position: fixed;
+  background: green;
+  top: 50px;
+}
+@keyframes TransformNone {
+  from, to { transform: none }
+}
+#test {
+  width: 100px; height: 100px;
+  background: blue;
+  transform-style: preserve-3d;
+  animation: TransformNone 100s infinite;
+}
+</style>
+<span></span>
+<div id="test"></div>

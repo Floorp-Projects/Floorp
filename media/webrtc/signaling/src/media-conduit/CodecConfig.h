@@ -86,6 +86,7 @@ public:
   // Don't pass mOtherFbTypes from JsepVideoCodecDescription because we'd have
   // to drag SdpRtcpFbAttributeList::Feedback along too.
   bool mRembFbSet;
+  bool mFECFbSet;
 
   EncodingConstraints mEncodingConstraints;
   struct SimulcastEncoding {
@@ -106,6 +107,7 @@ public:
                    const struct VideoCodecConfigH264 *h264 = nullptr) :
     mType(type),
     mName(name),
+    mFECFbSet(false),
     mEncodingConstraints(constraints),
     mProfile(0x42),
     mConstraints(0xE0),
@@ -154,6 +156,8 @@ public:
   }
 
   bool RtcpFbRembIsSet() const { return mRembFbSet; }
+
+  bool RtcpFbFECIsSet() const { return mFECFbSet; }
 
 };
 }
