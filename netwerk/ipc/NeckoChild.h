@@ -75,10 +75,6 @@ protected:
   AllocPChannelDiverterChild(const ChannelDiverterArgs& channel) override;
   virtual bool
   DeallocPChannelDiverterChild(PChannelDiverterChild* actor) override;
-  virtual PTransportProviderChild*
-  AllocPTransportProviderChild() override;
-  virtual bool
-  DeallocPTransportProviderChild(PTransportProviderChild* aActor) override;
   virtual bool RecvAsyncAuthPromptForNestedFrame(const TabId& aNestedFrameId,
                                                  const nsCString& aUri,
                                                  const nsString& aRealm,
