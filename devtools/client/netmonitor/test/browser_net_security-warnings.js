@@ -13,11 +13,6 @@ const TEST_CASES = [
     uri: "https://example.com" + CORS_SJS_PATH,
     warnCipher: false,
   },
-  {
-    desc: "cipher warning",
-    uri: "https://rc4.example.com" + CORS_SJS_PATH,
-    warnCipher: true,
-  },
 ];
 
 add_task(function* () {
@@ -25,13 +20,6 @@ add_task(function* () {
   let { $, EVENTS, NetMonitorView } = monitor.panelWin;
   let { RequestsMenu, NetworkDetails } = NetMonitorView;
   RequestsMenu.lazyUpdate = false;
-
-  info("Enabling RC4 for the test.");
-  yield new promise(resolve => {
-    SpecialPowers.pushPrefEnv({"set": [
-      ["security.tls.insecure_fallback_hosts", "rc4.example.com"]
-    ]}, resolve);
-  });
 
   let cipher = $("#security-warning-cipher");
 
