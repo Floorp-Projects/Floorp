@@ -49,7 +49,7 @@ let mockLog = {
 
 add_task(function* initialize() {
   let pushService = new FxAccountsPushService();
-  equal(pushService.initialize(), false);
+  do_check_eq(pushService.initialize(), false);
 });
 
 add_task(function* registerPushEndpointSuccess() {
@@ -59,7 +59,7 @@ add_task(function* registerPushEndpointSuccess() {
   });
 
   let subscription = yield pushService.registerPushEndpoint();
-  equal(subscription.endpoint, MOCK_ENDPOINT);
+  do_check_eq(subscription.endpoint, MOCK_ENDPOINT);
 });
 
 add_task(function* registerPushEndpointFailure() {
@@ -75,7 +75,7 @@ add_task(function* registerPushEndpointFailure() {
   });
 
   let subscription = yield pushService.registerPushEndpoint();
-  equal(subscription, null);
+  do_check_eq(subscription, null);
 });
 
 add_task(function* unsubscribeSuccess() {
@@ -85,7 +85,7 @@ add_task(function* unsubscribeSuccess() {
   });
 
   let result = yield pushService.unsubscribe();
-  equal(result, true);
+  do_check_eq(result, true);
 });
 
 add_task(function* unsubscribeFailure() {
@@ -101,7 +101,7 @@ add_task(function* unsubscribeFailure() {
   });
 
   let result = yield pushService.unsubscribe();
-  equal(result, null);
+  do_check_eq(result, null);
 });
 
 add_test(function observeLogout() {
@@ -122,15 +122,10 @@ add_test(function observeLogout() {
   pushService.observe(null, ONLOGOUT_NOTIFICATION);
 });
 
-add_test(function observePushTopicVerify() {
-  let emptyMsg = {
-    QueryInterface: function() {
-      return this;
-    }
-  };
+add_test(function observePushTopic() {
   let customAccounts = Object.assign(mockFxAccounts, {
     checkVerificationStatus: function () {
-      // checking verification status on push messages without data
+      // checking verification status on push messages
       run_next_test();
     }
   });
@@ -140,7 +135,7 @@ add_test(function observePushTopicVerify() {
     fxAccounts: customAccounts,
   });
 
-  pushService.observe(emptyMsg, mockPushService.pushTopic, FXA_PUSH_SCOPE_ACCOUNT_UPDATE);
+  pushService.observe(null, mockPushService.pushTopic, FXA_PUSH_SCOPE_ACCOUNT_UPDATE);
 });
 
 add_test(function observeSubscriptionChangeTopic() {
@@ -158,3 +153,8 @@ add_test(function observeSubscriptionChangeTopic() {
 
   pushService.observe(null, mockPushService.subscriptionChangeTopic, FXA_PUSH_SCOPE_ACCOUNT_UPDATE);
 });
+
+
+function run_test() {
+  run_next_test();
+}
