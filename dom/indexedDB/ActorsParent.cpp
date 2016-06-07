@@ -14819,7 +14819,7 @@ TransactionBase::VerifyRequestParams(const ObjectStoreAddPutParams& aParams)
     return false;
   }
 
-  if (NS_WARN_IF(aParams.cloneInfo().data().IsEmpty())) {
+  if (NS_WARN_IF(!aParams.cloneInfo().data().data.Size())) {
     ASSERT_UNLESS_FUZZING();
     return false;
   }
@@ -14834,13 +14834,13 @@ TransactionBase::VerifyRequestParams(const ObjectStoreAddPutParams& aParams)
       return false;
     }
 
-    if (NS_WARN_IF(cloneInfo.data().Length() < sizeof(uint64_t))) {
+    if (NS_WARN_IF(cloneInfo.data().data.Size() < sizeof(uint64_t))) {
       ASSERT_UNLESS_FUZZING();
       return false;
     }
 
     if (NS_WARN_IF(cloneInfo.offsetToKeyProp() >
-                   (cloneInfo.data().Length() - sizeof(uint64_t)))) {
+                   (cloneInfo.data().data.Size() - sizeof(uint64_t)))) {
       ASSERT_UNLESS_FUZZING();
       return false;
     }
@@ -19044,7 +19044,9 @@ DatabaseOperationBase::GetStructuredCloneReadInfoFromBlob(
     return NS_ERROR_FILE_CORRUPTED;
   }
 
-  aInfo->mData.SwapElements(uncompressed);
+  if (!aInfo->mData.WriteBytes(uncompressedBuffer, uncompressed.Length())) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
 
   if (!aFileIds.IsVoid()) {
     AutoTArray<int64_t, 10> array;
@@ -25406,6 +25408,15 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
   MOZ_ASSERT(!keyUnset || mMetadata->mCommonMetadata.autoIncrement(),
              "Should have key unless autoIncrement");
 
+  JSStructuredCloneData& data =
+    const_cast<JSStructuredCloneData&>(mParams.cloneInfo().data().data);
+  const char* cloneData;
+  size_t cloneDataSize = data.Size();
+  auto iter = data.Iter();
+  if (NS_WARN_IF(!data.FlattenBytes(iter, &cloneData, cloneDataSize))) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+
   int64_t autoIncrementNum = 0;
 
   if (mMetadata->mCommonMetadata.autoIncrement()) {
@@ -25427,16 +25438,14 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
     if (keyUnset && keyPath.IsValid()) {
       const SerializedStructuredCloneWriteInfo& cloneInfo = mParams.cloneInfo();
       MOZ_ASSERT(cloneInfo.offsetToKeyProp());
-      MOZ_ASSERT(cloneInfo.data().Length() > sizeof(uint64_t));
+      MOZ_ASSERT(cloneDataSize > sizeof(uint64_t));
       MOZ_ASSERT(cloneInfo.offsetToKeyProp() <=
-                 (cloneInfo.data().Length() - sizeof(uint64_t)));
+                 (cloneDataSize - sizeof(uint64_t)));
 
       // Special case where someone put an object into an autoIncrement'ing
       // objectStore with no key in its keyPath set. We needed to figure out
       // which row id we would get above before we could set that properly.
-      uint8_t* keyPropPointer =
-        const_cast<uint8_t*>(cloneInfo.data().Elements() +
-                             cloneInfo.offsetToKeyProp());
+      char* keyPropPointer = const_cast<char*>(cloneData + cloneInfo.offsetToKeyProp());
       uint64_t keyPropValue =
         ReinterpretDoubleAsUInt64(static_cast<double>(autoIncrementNum));
 
@@ -25447,9 +25456,8 @@ ObjectStoreAddOrPutRequestOp::DoDatabaseWork(DatabaseConnection* aConnection)
   key.BindToStatement(stmt, NS_LITERAL_CSTRING("key"));
 
   // Compress the bytes before adding into the database.
-  const char* uncompressed =
-    reinterpret_cast<const char*>(mParams.cloneInfo().data().Elements());
-  size_t uncompressedLength = mParams.cloneInfo().data().Length();
+  const char* uncompressed = cloneData;
+  size_t uncompressedLength = cloneDataSize;
 
   // We don't have a smart pointer class that calls free, so we need to
   // manage | compressed | manually.
@@ -25781,7 +25789,7 @@ ObjectStoreGetRequestOp::ConvertResponse(
 
   StructuredCloneReadInfo& info = mResponse[aIndex];
 
-  info.mData.SwapElements(aSerializedInfo.data());
+  aSerializedInfo.data().data = Move(info.mData);
 
   FallibleTArray<BlobOrMutableFile> blobs;
   nsresult rv = ConvertBlobsToActors(mBackgroundParent,
@@ -26504,7 +26512,7 @@ IndexGetRequestOp::GetResponse(RequestResponse& aResponse)
         SerializedStructuredCloneReadInfo& serializedInfo =
           fallibleCloneInfos[index];
 
-        info.mData.SwapElements(serializedInfo.data());
+        serializedInfo.data().data = Move(info.mData);
 
         FallibleTArray<BlobOrMutableFile> blobs;
         nsresult rv = ConvertBlobsToActors(mBackgroundParent,
@@ -26538,7 +26546,7 @@ IndexGetRequestOp::GetResponse(RequestResponse& aResponse)
     SerializedStructuredCloneReadInfo& serializedInfo =
       aResponse.get_IndexGetResponse().cloneInfo();
 
-    info.mData.SwapElements(serializedInfo.data());
+    serializedInfo.data().data = Move(info.mData);
 
     FallibleTArray<BlobOrMutableFile> blobs;
     nsresult rv =
@@ -26852,7 +26860,7 @@ CursorOpBase::PopulateResponseFromStatement(
 
       auto& responses = mResponse.get_ArrayOfObjectStoreCursorResponse();
       auto& response = *responses.AppendElement();
-      response.cloneInfo().data().SwapElements(cloneInfo.mData);
+      response.cloneInfo().data().data = Move(cloneInfo.mData);
       response.key() = mCursor->mKey;
 
       mFiles.AppendElement(Move(cloneInfo.mFiles));
@@ -26890,7 +26898,7 @@ CursorOpBase::PopulateResponseFromStatement(
       mResponse = IndexCursorResponse();
 
       auto& response = mResponse.get_IndexCursorResponse();
-      response.cloneInfo().data().SwapElements(cloneInfo.mData);
+      response.cloneInfo().data().data = Move(cloneInfo.mData);
       response.key() = mCursor->mKey;
       response.sortKey() = mCursor->mSortKey;
       response.objectKey() = mCursor->mObjectKey;
