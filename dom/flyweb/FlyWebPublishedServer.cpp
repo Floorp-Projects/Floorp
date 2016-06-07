@@ -10,6 +10,8 @@
 #include "mozilla/dom/Request.h"
 #include "mozilla/dom/FlyWebServerEvents.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ContentParent.h"
+#include "mozilla/dom/InternalResponse.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/unused.h"
 #include "nsGlobalWindow.h"
@@ -261,6 +263,19 @@ FlyWebPublishedServerChild::RecvServerClose()
   return true;
 }
 
+bool
+FlyWebPublishedServerChild::RecvFetchRequest(const IPCInternalRequest& aRequest,
+                                             const uint64_t& aRequestId)
+{
+  LOG_I("FlyWebPublishedServerChild::RecvFetchRequest(%p)", this);
+
+  RefPtr<InternalRequest> request = new InternalRequest(aRequest);
+  mPendingRequests.Put(request, aRequestId);
+  FireFetchEvent(request);
+
+  return true;
+}
+
 void
 FlyWebPublishedServerChild::ActorDestroy(ActorDestroyReason aWhy)
 {
@@ -273,7 +288,20 @@ void
 FlyWebPublishedServerChild::OnFetchResponse(InternalRequest* aRequest,
                                             InternalResponse* aResponse)
 {
-  // Send ipdl message to parent
+  LOG_I("FlyWebPublishedServerChild::OnFetchResponse(%p)", this);
+
+  if (mActorDestroyed) {
+    LOG_I("FlyWebPublishedServerChild::OnFetchResponse(%p) - No actor!", this);
+    return;
+  }
+
+  uint64_t id = mPendingRequests.Get(aRequest);
+  MOZ_ASSERT(id);
+  mPendingRequests.Remove(aRequest);
+
+  IPCInternalResponse ipcResp;
+  aResponse->ToIPC(&ipcResp);
+  Unused << SendFetchResponse(ipcResp, id);
 }
 
 already_AddRefed<WebSocket>
@@ -308,9 +336,12 @@ FlyWebPublishedServerChild::Close()
 
 /******** FlyWebPublishedServerParent ********/
 
+NS_IMPL_ISUPPORTS(FlyWebPublishedServerParent, nsIDOMEventListener)
+
 FlyWebPublishedServerParent::FlyWebPublishedServerParent(const nsAString& aName,
                                                          const FlyWebPublishOptions& aOptions)
   : mActorDestroyed(false)
+  , mNextRequestId(1)
 {
   LOG_I("FlyWebPublishedServerParent::FlyWebPublishedServerParent(%p)", this);
 
@@ -329,19 +360,77 @@ FlyWebPublishedServerParent::FlyWebPublishedServerParent(const nsAString& aName,
 
   RefPtr<FlyWebPublishedServerParent> self = this;
 
-  mozPromise->Then(AbstractThread::MainThread(),
-                   __func__,
-                   [this, self] (FlyWebPublishedServer* aServer) {
-                     mPublishedServer = static_cast<FlyWebPublishedServerImpl*>(aServer);
-                     if (!mActorDestroyed) {
-                       Unused << SendServerReady(NS_OK);
-                     }
-                   },
-                   [this, self] (nsresult aStatus) {
-                     if (!mActorDestroyed) {
-                       Unused << SendServerReady(aStatus);
-                     }
-                   });
+  mozPromise->Then(
+    AbstractThread::MainThread(),
+    __func__,
+    [this, self] (FlyWebPublishedServer* aServer) {
+      mPublishedServer = static_cast<FlyWebPublishedServerImpl*>(aServer);
+      if (mActorDestroyed) {
+        mPublishedServer->Close();
+        return;
+      }
+
+      mPublishedServer->AddEventListener(NS_LITERAL_STRING("fetch"),
+                                         this, false, false, 2);
+      mPublishedServer->AddEventListener(NS_LITERAL_STRING("close"),
+                                         this, false, false, 2);
+      Unused << SendServerReady(NS_OK);
+    },
+    [this, self] (nsresult aStatus) {
+      MOZ_ASSERT(NS_FAILED(aStatus));
+      if (!mActorDestroyed) {
+        Unused << SendServerReady(aStatus);
+      }
+    });
+}
+
+NS_IMETHODIMP
+FlyWebPublishedServerParent::HandleEvent(nsIDOMEvent* aEvent)
+{
+  if (mActorDestroyed) {
+    return NS_OK;
+  }
+
+  nsAutoString type;
+  aEvent->GetType(type);
+  if (type.EqualsLiteral("close")) {
+    Unused << SendServerClose();
+    return NS_OK;
+  }
+
+  if (type.EqualsLiteral("fetch")) {
+    RefPtr<InternalRequest> request =
+      static_cast<FlyWebFetchEvent*>(aEvent)->Request()->GetInternalRequest();
+    uint64_t id = mNextRequestId++;
+    mPendingRequests.Put(id, request);
+
+    IPCInternalRequest ipcReq;
+    request->ToIPC(&ipcReq);
+    Unused << SendFetchRequest(ipcReq, id);
+    return NS_OK;
+  }
+
+  MOZ_MAKE_COMPILER_ASSUME_IS_UNREACHABLE();
+
+  return NS_OK;
+}
+
+bool
+FlyWebPublishedServerParent::RecvFetchResponse(const IPCInternalResponse& aResponse,
+                                               const uint64_t& aRequestId)
+{
+  RefPtr<InternalRequest> request = mPendingRequests.GetWeak(aRequestId);
+  mPendingRequests.Remove(aRequestId);
+  if (!request) {
+     static_cast<ContentParent*>(Manager())->KillHard("unknown request id");
+     return false;
+  }
+
+  RefPtr<InternalResponse> response = InternalResponse::FromIPC(aResponse);
+
+  mPublishedServer->OnFetchResponse(request, response);
+
+  return true;
 }
 
 void
@@ -358,6 +447,10 @@ FlyWebPublishedServerParent::Recv__delete__()
   LOG_I("FlyWebPublishedServerParent::Recv__delete__(%p)", this);
 
   if (mPublishedServer) {
+    mPublishedServer->RemoveEventListener(NS_LITERAL_STRING("fetch"),
+                                          this, false);
+    mPublishedServer->RemoveEventListener(NS_LITERAL_STRING("close"),
+                                          this, false);
     mPublishedServer->Close();
     mPublishedServer = nullptr;
   }

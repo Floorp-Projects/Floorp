@@ -912,7 +912,7 @@ HttpServer::Connection::QueueResponse(InternalResponse* aResponse)
               aResponse->GetStatusText() +
               NS_LITERAL_CSTRING("\r\n"));
 
-  nsTArray<InternalHeaders::Entry> entries;
+  AutoTArray<InternalHeaders::Entry, 16> entries;
   headers->GetEntries(entries);
 
   for (auto header : entries) {

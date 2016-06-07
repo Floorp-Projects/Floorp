@@ -22,6 +22,7 @@ class PrincipalInfo;
 namespace dom {
 
 class InternalHeaders;
+class IPCInternalResponse;
 
 class InternalResponse final
 {
@@ -31,6 +32,11 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(InternalResponse)
 
   InternalResponse(uint16_t aStatus, const nsACString& aStatusText);
+
+  static already_AddRefed<InternalResponse>
+  FromIPC(const IPCInternalResponse& aIPCResponse);
+
+  void ToIPC(IPCInternalResponse* aIPCResponse);
 
   already_AddRefed<InternalResponse> Clone();
 
