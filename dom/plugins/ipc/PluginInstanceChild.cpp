@@ -129,7 +129,6 @@ CreateDrawTargetForSurface(gfxASurface *aSurface)
   if (!drawTarget) {
     NS_RUNTIMEABORT("CreateDrawTargetForSurface failed in plugin");
   }
-  aSurface->SetData(&kDrawTarget, drawTarget, nullptr);
   return drawTarget;
 }
 

@@ -67,10 +67,11 @@ public:
 
   uint32_t Release() {
     CHECK(mRefCnt > 0);
-    if (mRefCnt == 1) {
-      delete this;
-    }
     mRefCnt--;
+    if (mRefCnt == 0) {
+      delete this;
+      return 0;
+    }
     return mRefCnt;
   }
 };

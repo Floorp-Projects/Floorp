@@ -12,6 +12,7 @@ toolkit.jar:
     content/extensions/schemas/i18n.json
     content/extensions/schemas/idle.json
     content/extensions/schemas/manifest.json
+    content/extensions/schemas/native_host_manifest.json
     content/extensions/schemas/notifications.json
     content/extensions/schemas/runtime.json
     content/extensions/schemas/storage.json

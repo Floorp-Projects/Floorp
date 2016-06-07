@@ -1967,8 +1967,11 @@
               t.setAttribute("label", aURI);
             }
 
-            if (aUserContextId)
+            if (aUserContextId) {
               t.setAttribute("usercontextid", aUserContextId);
+              ContextualIdentityService.setTabStyle(t);
+            }
+
             t.setAttribute("crop", "end");
             t.setAttribute("onerror", "this.removeAttribute('image');");
             t.className = "tabbrowser-tab";
@@ -2615,6 +2618,7 @@
             }
             if (aOtherTab.hasAttribute("usercontextid")) {
               aOurTab.setAttribute("usercontextid", aOtherTab.getAttribute("usercontextid"));
+              ContextualIdentityService.setTabStyle(aOurTab);
               modifiedAttrs.push("usercontextid");
             }
 

@@ -30,11 +30,6 @@ interface nsIDocShellLoadInfo : nsISupports
      */
     attribute nsIURI originalURI;
 
-    /**
-     * loadReplace flag to be passed to nsIDocShell.internalLoad.
-     */
-    attribute boolean loadReplace;
-
     /** The owner of the load, that is, the entity responsible for 
      *  causing the load to occur. This should be a nsIPrincipal typically.
      */

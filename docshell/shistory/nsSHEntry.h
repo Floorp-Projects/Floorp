@@ -50,7 +50,6 @@ private:
   // See nsSHEntry.idl for comments on these members.
   nsCOMPtr<nsIURI> mURI;
   nsCOMPtr<nsIURI> mOriginalURI;
-  bool mLoadReplace;
   nsCOMPtr<nsIURI> mReferrerURI;
   uint32_t mReferrerPolicy;
   nsString mTitle;

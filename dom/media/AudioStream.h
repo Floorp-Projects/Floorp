@@ -72,6 +72,9 @@ public:
   // Called on the audio thread.
   bool GetPreservesPitch() const;
 
+  uint32_t GetInputRate() const { return mInRate; }
+  uint32_t GetOutputRate() const { return mOutRate; }
+
 private:
   // Output rate in Hz (characteristic of the playback rate)
   uint32_t mOutRate;
@@ -221,8 +224,7 @@ public:
     CubebUtils::InitPreferredSampleRate();
     return CubebUtils::PreferredSampleRate();
   }
-  uint32_t GetRate() { return mOutRate; }
-  uint32_t GetChannels() { return mChannels; }
+
   uint32_t GetOutChannels() { return mOutChannels; }
 
   // Set playback rate as a multiple of the intrinsic playback rate. This is to
@@ -277,10 +279,6 @@ private:
   // The monitor is held to protect all access to member variables.
   Monitor mMonitor;
 
-  // Input rate in Hz (characteristic of the media being played)
-  uint32_t mInRate;
-  // Output rate in Hz (characteristic of the playback rate)
-  uint32_t mOutRate;
   uint32_t mChannels;
   uint32_t mOutChannels;
   AudioClock mAudioClock;

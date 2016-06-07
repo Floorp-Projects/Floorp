@@ -1,7 +1,7 @@
 # This tasks takes a mulet build, pull gaia and craft a xpi file for FxOS simulator addon
 ---
-taskId: {{taskId}}
-
+taskId: {{build_slugid}}
+docker-image: builder
 task:
   created: '{{now}}'
   deadline: '{{#from_now}}24 hours{{/from_now}}'
@@ -27,17 +27,19 @@ task:
     image:
       type: 'task-image'
       path: 'public/image.tar'
-      taskId: '{{#task_id_for_image}}builder{{/task_id_for_image}}'
+      taskId:
+        task-reference: "<docker-image>"
 
     maxRunTime: 600
 
     command:
       - /bin/bash
       - -exc
-      - >
+      - task-reference: >
         tc-vcs checkout ./gecko {{base_repository}} {{head_repository}} {{head_rev}} {{head_ref}} &&
         ./gecko/testing/taskcluster/scripts/builder/pull-gaia.sh ./gecko ./gaia gaia_props.py &&
-        ./gecko/testing/taskcluster/scripts/builder/build-simulator.sh ./gecko ./gaia {{build_url}}
+        ./gecko/testing/taskcluster/scripts/builder/build-simulator.sh ./gecko ./gaia
+          https://queue.taskcluster.net/v1/task/<{{build_slugid}}>/artifacts/{{build_location}}
 
     artifacts:
       'public/build':

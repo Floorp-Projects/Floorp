@@ -1,6 +1,7 @@
 ---
 $inherits:
   from: 'tasks/test.yml'
+docker-image: desktop-test
 task:
   workerType: desktop-test
   scopes:
@@ -9,7 +10,9 @@ task:
     image:
       type: 'task-image'
       path: 'public/image.tar'
-      taskId: '{{#task_id_for_image}}desktop-test{{/task_id_for_image}}'
+      taskId:
+        task-reference: "<docker-image>"
+
     env:
         NEED_WINDOW_MANAGER: true
         NEED_PULSEAUDIO: true

@@ -3428,10 +3428,13 @@ IonBuilder::inlineConstructSimdObject(CallInfo& callInfo, SimdTypeDescr* descr)
     MIRType laneType = SimdTypeToLaneType(simdType);
     unsigned lanes = SimdTypeToLength(simdType);
     if (lanes != 4 || callInfo.argc() < lanes) {
-        if (laneType == MIRType::Int32) {
+        if (laneType == MIRType::Int32 || laneType == MIRType::Boolean) {
+            // The default lane for a boolean vector is |false|, but
+            // |MSimdSplat|, |MSimdValueX4|, and |MSimdInsertElement| all
+            // require an Int32 argument with the value 0 or 01 to initialize a
+            // boolean lane. See also convertToBooleanSimdLane() which is
+            // idempotent with a 0 argument after constant folding.
             defVal = constant(Int32Value(0));
-        } else if (laneType == MIRType::Boolean) {
-            defVal = constant(BooleanValue(false));
         } else if (laneType == MIRType::Double) {
             defVal = constant(DoubleNaNValue());
         } else {

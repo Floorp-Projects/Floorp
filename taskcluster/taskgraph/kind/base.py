@@ -41,35 +41,17 @@ class Kind(object):
         dependencies.
         """
 
-    @abc.abstractmethod
-    def get_task_optimization_key(self, task, taskgraph):
+    def optimize_task(self, task):
         """
-        Get the *optimization key* for the given task.  When called, all
-        dependencies of this task will already have their `optimization_key`
-        attribute set.
+        Determine whether this task can be optimized, and if it can, what taskId
+        it should be replaced with.
 
-        The optimization key is a unique identifier covering all inputs to this
-        task.  If another task with the same optimization key has already been
-        performed, it will be used directly instead of executing the task
-        again.
+        The return value is a tuple `(optimized, taskId)`.  If `optimized` is
+        true, then the task will be optimized (in other words, not included in
+        the task graph).  If the second argument is a taskid, then any
+        dependencies on this task will isntead depend on that taskId.  It is an
+        error to return no taskId for a task on which other tasks depend.
 
-        Returns a string suitable for inclusion in a TaskCluster index
-        namespace (generally of the form `<optimizationName>.<hash>`), or None
-        if this task cannot be optimized.
+        The default never optimizes.
         """
-
-    @abc.abstractmethod
-    def get_task_definition(self, task, dependent_taskids):
-        """
-        Get the final task definition for the given task.  This is the time to
-        substitute actual taskIds for dependent tasks into the task definition.
-        Note that this method is only used in the decision tasks, so it should
-        not perform any processing that users might want to test or see in
-        other `mach taskgraph` commands.
-
-        The `dependent_taskids` parameter is a dictionary mapping dependency
-        name to assigned taskId.
-
-        The returned task definition will be modified before being passed to
-        `queue.createTask`.
-        """
+        return False, None

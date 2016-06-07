@@ -23,6 +23,7 @@
 #include "nsThreadUtils.h"
 
 using mozilla::Maybe;
+using mozilla::Move;
 using mozilla::NonOwningAnimationTarget;
 using mozilla::dom::TreeOrderComparator;
 using mozilla::dom::Animation;
@@ -685,8 +686,7 @@ nsDOMMutationObserver::Observe(nsINode& aTarget,
     filters.SetCapacity(len);
 
     for (uint32_t i = 0; i < len; ++i) {
-      nsCOMPtr<nsIAtom> a = NS_Atomize(filtersAsString[i]);
-      filters.AppendObject(a);
+      filters.AppendElement(NS_Atomize(filtersAsString[i]));
     }
   }
 
@@ -698,7 +698,7 @@ nsDOMMutationObserver::Observe(nsINode& aTarget,
   r->SetAttributeOldValue(attributeOldValue);
   r->SetCharacterDataOldValue(characterDataOldValue);
   r->SetNativeAnonymousChildList(nativeAnonymousChildList);
-  r->SetAttributeFilter(filters);
+  r->SetAttributeFilter(Move(filters));
   r->SetAllAttributes(allAttrs);
   r->SetAnimations(animations);
   r->RemoveClones();

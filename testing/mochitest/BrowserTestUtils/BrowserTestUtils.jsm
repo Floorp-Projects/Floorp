@@ -411,7 +411,7 @@ this.BrowserTestUtils = {
    * @return {Promise}
    *         Resolves with the new window once it is loaded.
    */
-  openNewBrowserWindow(options={}) {
+  openNewBrowserWindow: Task.async(function*(options={}) {
     let argString = Cc["@mozilla.org/supports-string;1"].
                     createInstance(Ci.nsISupportsString);
     argString.data = "";
@@ -433,9 +433,17 @@ this.BrowserTestUtils = {
     // Wait for browser-delayed-startup-finished notification, it indicates
     // that the window has loaded completely and is ready to be used for
     // testing.
-    return TestUtils.topicObserved("browser-delayed-startup-finished",
-                                   subject => subject == win).then(() => win);
-  },
+    yield this.waitForEvent(win, "load");
+    let startupPromise =
+      TestUtils.topicObserved("browser-delayed-startup-finished",
+                              subject => subject == win).then(() => win);
+    let loadPromise = this.browserLoaded(win.gBrowser.selectedBrowser);
+
+    yield startupPromise;
+    yield loadPromise;
+
+    return win;
+  }),
 
   /**
    * Closes a window.

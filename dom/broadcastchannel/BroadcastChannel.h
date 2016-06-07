@@ -105,11 +105,6 @@ private:
     return mIsKeptAlive;
   }
 
-  bool IsClosed() const
-  {
-    return mState != StateActive;
-  }
-
   void RemoveDocFromBFCache();
 
   RefPtr<BroadcastChannelChild> mActor;

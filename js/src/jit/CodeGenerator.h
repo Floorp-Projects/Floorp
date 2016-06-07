@@ -519,6 +519,8 @@ class CodeGenerator : public CodeGeneratorSpecific
     void emitAssertRangeI(const Range* r, Register input);
     void emitAssertRangeD(const Range* r, FloatRegister input, FloatRegister temp);
 
+    void maybeEmitGlobalBarrierCheck(const LAllocation* maybeGlobal, OutOfLineCode* ool);
+
     Vector<CodeOffset, 0, JitAllocPolicy> ionScriptLabels_;
 
     struct SharedStub {
