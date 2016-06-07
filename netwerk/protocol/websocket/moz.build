@@ -15,6 +15,7 @@ XPIDL_MODULE = 'necko_websocket'
 
 EXPORTS.mozilla.net += [
     'BaseWebSocketChannel.h',
+    'IPCTransportProvider.h',
     'WebSocketChannel.h',
     'WebSocketChannelChild.h',
     'WebSocketChannelParent.h',
@@ -26,6 +27,7 @@ EXPORTS.mozilla.net += [
 
 UNIFIED_SOURCES += [
     'BaseWebSocketChannel.cpp',
+    'IPCTransportProvider.cpp',
     'WebSocketChannel.cpp',
     'WebSocketChannelChild.cpp',
     'WebSocketChannelParent.cpp',
@@ -36,6 +38,7 @@ UNIFIED_SOURCES += [
 ]
 
 IPDL_SOURCES += [
+    'PTransportProvider.ipdl',
     'PWebSocket.ipdl',
     'PWebSocketEventListener.ipdl',
 ]

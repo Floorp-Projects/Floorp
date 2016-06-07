@@ -8,12 +8,29 @@ interface nsIHttpUpgradeListener;
 
 #include "nsISupports.idl"
 
+%{C++
+namespace mozilla {
+namespace net {
+class PTransportProviderChild;
+}
+}
+%}
+
+[ptr] native PTransportProviderChild(mozilla::net::PTransportProviderChild);
+
 /**
  * An interface which can be used to asynchronously request a nsITransport
  * together with the input and output streams that go together with it.
  */
-[scriptable, uuid(6fcec704-cfd2-46ef-a394-a64d5cb1475c)]
+[uuid(6fcec704-cfd2-46ef-a394-a64d5cb1475c)]
 interface nsITransportProvider : nsISupports
 {
+    // This must not be called in a child process since transport
+    // objects are not accessible there. Call getIPCChild instead.
     void setListener(in nsIHttpUpgradeListener listener);
+
+    // This must be implemented by nsITransportProvider objects running
+    // in the child process. It must return null when called in the parent
+    // process.
+    [noscript, notxpcom] PTransportProviderChild getIPCChild();
 };

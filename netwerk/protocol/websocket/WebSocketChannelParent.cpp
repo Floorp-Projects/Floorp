@@ -58,7 +58,7 @@ WebSocketChannelParent::RecvDeleteSelf()
 }
 
 bool
-WebSocketChannelParent::RecvAsyncOpen(const URIParams& aURI,
+WebSocketChannelParent::RecvAsyncOpen(const OptionalURIParams& aURI,
                                       const nsCString& aOrigin,
                                       const uint64_t& aInnerWindowID,
                                       const nsCString& aProtocol,
@@ -67,7 +67,9 @@ WebSocketChannelParent::RecvAsyncOpen(const URIParams& aURI,
                                       const bool& aClientSetPingInterval,
                                       const uint32_t& aPingTimeout,
                                       const bool& aClientSetPingTimeout,
-                                      const OptionalLoadInfoArgs& aLoadInfoArgs)
+                                      const OptionalLoadInfoArgs& aLoadInfoArgs,
+                                      const OptionalTransportProvider& aTransportProvider,
+                                      const nsCString& aNegotiatedExtensions)
 {
   LOG(("WebSocketChannelParent::RecvAsyncOpen() %p\n", this));
 
@@ -117,10 +119,20 @@ WebSocketChannelParent::RecvAsyncOpen(const URIParams& aURI,
   if (NS_FAILED(rv))
     goto fail;
 
-  uri = DeserializeURI(aURI);
-  if (!uri) {
-    rv = NS_ERROR_FAILURE;
-    goto fail;
+  if (aTransportProvider.type() != OptionalTransportProvider::Tvoid_t) {
+    RefPtr<TransportProviderParent> provider =
+      static_cast<TransportProviderParent*>(
+        aTransportProvider.get_PTransportProviderParent());
+    rv = mChannel->SetServerParameters(provider, aNegotiatedExtensions);
+    if (NS_FAILED(rv)) {
+      goto fail;
+    }
+  } else {
+    uri = DeserializeURI(aURI);
+    if (!uri) {
+      rv = NS_ERROR_FAILURE;
+      goto fail;
+    }
   }
 
   // only use ping values from child if they were overridden by client code.
