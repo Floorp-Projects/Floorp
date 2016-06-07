@@ -8662,6 +8662,9 @@ DebuggerObject_forceLexicalInitializationByName(JSContext *cx, unsigned argc, Va
     if (!args.requireAtLeast(cx, "Debugger.Object.prototype.forceLexicalInitializationByName", 1))
         return false;
 
+    if (!DebuggerObject::requireGlobal(cx, object))
+        return false;
+
     RootedId id(cx);
     if (!ValueToIdentifier(cx, args[0], &id))
         return false;
@@ -8679,6 +8682,9 @@ DebuggerObject_executeInGlobal(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "executeInGlobal", args, object);
     if (!args.requireAtLeast(cx, "Debugger.Object.prototype.executeInGlobal", 1))
+        return false;
+
+    if (!DebuggerObject::requireGlobal(cx, object))
         return false;
 
     AutoStableStringChars stableChars(cx);
@@ -8701,6 +8707,9 @@ DebuggerObject_executeInGlobalWithBindings(JSContext* cx, unsigned argc, Value* 
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "executeInGlobalWithBindings", args, object);
     if (!args.requireAtLeast(cx, "Debugger.Object.prototype.executeInGlobalWithBindings", 2))
+        return false;
+
+    if (!DebuggerObject::requireGlobal(cx, object))
         return false;
 
     AutoStableStringChars stableChars(cx);
@@ -8869,6 +8878,14 @@ DebuggerObject::isDebuggeeFunction(JSContext* cx, Handle<DebuggerObject*> object
 
     return referent->is<JSFunction>() &&
            dbg->observesGlobal(&referent->as<JSFunction>().global());
+}
+
+/* static */ bool
+DebuggerObject::isGlobal(JSContext* cx, Handle<DebuggerObject*> object)
+{
+    RootedObject referent(cx, object->referent());
+
+    return referent->is<GlobalObject>();
 }
 
 /* static */ bool
@@ -9282,9 +9299,6 @@ DebuggerObject::call(JSContext* cx, Handle<DebuggerObject*> object, HandleValue 
 DebuggerObject::forceLexicalInitializationByName(JSContext* cx, Handle<DebuggerObject*> object,
                                                  HandleId id, bool& result)
 {
-    if (!DebuggerObject::requireGlobalObject(cx, object))
-        return false;
-
     if (!JSID_IS_STRING(id)) {
         JS_ReportErrorNumber(cx, GetErrorMessage, nullptr,
                              JSMSG_NOT_EXPECTED_TYPE, "Debugger.Object.prototype.forceLexicalInitializationByName",
@@ -9292,11 +9306,11 @@ DebuggerObject::forceLexicalInitializationByName(JSContext* cx, Handle<DebuggerO
         return false;
     }
 
+    MOZ_ASSERT(isGlobal(cx, object));
 
-    RootedObject referent(cx, object->referent());
+    Rooted<GlobalObject*> referent(cx, &object->referent()->as<GlobalObject>());
 
-    RootedObject globalLexical(cx, &referent->as<GlobalObject>().lexicalScope());
-
+    RootedObject globalLexical(cx, &referent->lexicalScope());
     RootedObject pobj(cx);
     RootedShape shape(cx);
     if (!LookupProperty(cx, globalLexical, id, &pobj, &shape))
@@ -9319,14 +9333,12 @@ DebuggerObject::executeInGlobal(JSContext* cx, Handle<DebuggerObject*> object,
                                 mozilla::Range<const char16_t> chars, HandleObject bindings,
                                 const EvalOptions& options, MutableHandleValue result)
 {
-    if (!DebuggerObject::requireGlobalObject(cx, object))
-        return false;
+    MOZ_ASSERT(isGlobal(cx, object));
 
-    RootedObject referent(cx, object->referent());
+    Rooted<GlobalObject*> referent(cx, &object->referent()->as<GlobalObject>());
     Debugger* dbg = object->owner();
 
-    RootedObject globalLexical(cx, &referent->as<GlobalObject>().lexicalScope());
-
+    RootedObject globalLexical(cx, &referent->lexicalScope());
     return DebuggerGenericEval(cx, chars, bindings, options, result, dbg, globalLexical,
                                nullptr);
 }
@@ -9407,11 +9419,11 @@ DebuggerObject::unwrap(JSContext* cx, Handle<DebuggerObject*> object,
 }
 
 /* static */ bool
-DebuggerObject::requireGlobalObject(JSContext* cx, Handle<DebuggerObject*> object)
+DebuggerObject::requireGlobal(JSContext* cx, Handle<DebuggerObject*> object)
 {
-    RootedObject referent(cx, object->referent());
+    if (!DebuggerObject::isGlobal(cx, object)) {
+        RootedObject referent(cx, object->referent());
 
-    if (!referent->is<GlobalObject>()) {
         const char* isWrapper = "";
         const char* isWindowProxy = "";
 
