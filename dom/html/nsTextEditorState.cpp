@@ -231,7 +231,8 @@ public:
   NS_IMETHOD GetSelection(int16_t type, nsISelection** _retval) override;
   NS_IMETHOD ScrollSelectionIntoView(int16_t aType, int16_t aRegion, int16_t aFlags) override;
   NS_IMETHOD RepaintSelection(int16_t type) override;
-  NS_IMETHOD RepaintSelection(nsPresContext* aPresContext, SelectionType aSelectionType);
+  NS_IMETHOD RepaintSelection(nsPresContext* aPresContext,
+                              RawSelectionType aRawSelectionType);
   NS_IMETHOD SetCaretEnabled(bool enabled) override;
   NS_IMETHOD SetCaretReadOnly(bool aReadOnly) override;
   NS_IMETHOD GetCaretEnabled(bool* _retval) override;
@@ -368,12 +369,13 @@ nsTextInputSelectionImpl::RepaintSelection(int16_t type)
 }
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::RepaintSelection(nsPresContext* aPresContext, SelectionType aSelectionType)
+nsTextInputSelectionImpl::RepaintSelection(nsPresContext* aPresContext,
+                                           RawSelectionType aRawSelectionType)
 {
   if (!mFrameSelection)
     return NS_ERROR_FAILURE;
 
-  return mFrameSelection->RepaintSelection(aSelectionType);
+  return mFrameSelection->RepaintSelection(aRawSelectionType);
 }
 
 NS_IMETHODIMP

@@ -1531,12 +1531,13 @@ PresShell::GetDisplaySelection(int16_t *aToggle)
 }
 
 NS_IMETHODIMP
-PresShell::GetSelection(SelectionType aType, nsISelection **aSelection)
+PresShell::GetSelection(RawSelectionType aRawSelectionType,
+                        nsISelection **aSelection)
 {
   if (!aSelection || !mSelection)
     return NS_ERROR_NULL_POINTER;
 
-  *aSelection = mSelection->GetSelection(aType);
+  *aSelection = mSelection->GetSelection(aRawSelectionType);
 
   if (!(*aSelection))
     return NS_ERROR_INVALID_ARG;
@@ -1547,31 +1548,33 @@ PresShell::GetSelection(SelectionType aType, nsISelection **aSelection)
 }
 
 Selection*
-PresShell::GetCurrentSelection(SelectionType aType)
+PresShell::GetCurrentSelection(RawSelectionType aRawSelectionType)
 {
   if (!mSelection)
     return nullptr;
 
-  return mSelection->GetSelection(aType);
+  return mSelection->GetSelection(aRawSelectionType);
 }
 
 NS_IMETHODIMP
-PresShell::ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion,
+PresShell::ScrollSelectionIntoView(RawSelectionType aRawSelectionType,
+                                   SelectionRegion aRegion,
                                    int16_t aFlags)
 {
   if (!mSelection)
     return NS_ERROR_NULL_POINTER;
 
-  return mSelection->ScrollSelectionIntoView(aType, aRegion, aFlags);
+  return mSelection->ScrollSelectionIntoView(aRawSelectionType, aRegion,
+                                             aFlags);
 }
 
 NS_IMETHODIMP
-PresShell::RepaintSelection(SelectionType aType)
+PresShell::RepaintSelection(RawSelectionType aRawSelectionType)
 {
   if (!mSelection)
     return NS_ERROR_NULL_POINTER;
 
-  return mSelection->RepaintSelection(aType);
+  return mSelection->RepaintSelection(aRawSelectionType);
 }
 
 // Make shell be a document observer

@@ -2670,7 +2670,7 @@ nsEditor::SplitNodeImpl(nsIContent& aExistingRightNode,
   // Remember all selection points.
   AutoTArray<SavedRange, 10> savedRanges;
   for (size_t i = 0; i < nsISelectionController::NUM_SELECTIONTYPES - 1; ++i) {
-    SelectionType type(1 << i);
+    RawSelectionType type(1 << i);
     SavedRange range;
     range.mSelection = GetSelection(type);
     if (type == nsISelectionController::SELECTION_NORMAL) {
@@ -2817,7 +2817,7 @@ nsEditor::JoinNodesImpl(nsINode* aNodeToKeep,
   // Remember all selection points.
   AutoTArray<SavedRange, 10> savedRanges;
   for (size_t i = 0; i < nsISelectionController::NUM_SELECTIONTYPES - 1; ++i) {
-    SelectionType type(1 << i);
+    RawSelectionType type(1 << i);
     SavedRange range;
     range.mSelection = GetSelection(type);
     if (type == nsISelectionController::SELECTION_NORMAL) {
@@ -5147,14 +5147,14 @@ nsEditor::GetIMESelectionStartOffsetIn(nsINode* aTextNode)
   NS_ENSURE_TRUE(selectionController, -1);
 
   int32_t minOffset = INT32_MAX;
-  static const SelectionType kIMESelectionTypes[] = {
+  static const RawSelectionType kIMERawSelectionTypes[] = {
     nsISelectionController::SELECTION_IME_RAWINPUT,
     nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT,
     nsISelectionController::SELECTION_IME_CONVERTEDTEXT,
     nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT
   };
-  for (auto selectionType : kIMESelectionTypes) {
-    RefPtr<Selection> selection = GetSelection(selectionType);
+  for (auto rawSelectionType : kIMERawSelectionTypes) {
+    RefPtr<Selection> selection = GetSelection(rawSelectionType);
     if (!selection) {
       continue;
     }
