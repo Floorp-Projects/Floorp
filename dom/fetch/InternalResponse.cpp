@@ -10,9 +10,9 @@
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "mozilla/ipc/IPCStreamUtils.h"
 #include "nsIURI.h"
 #include "nsStreamUtils.h"
-#include "mozilla/dom/FetchTypes.h"
 
 namespace mozilla {
 namespace dom {
@@ -50,6 +50,9 @@ InternalResponse::FromIPC(const IPCInternalResponse& aIPCResponse)
     response->SetPrincipalInfo(Move(info));
   }
 
+  nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(aIPCResponse.body());
+  response->SetBody(stream, aIPCResponse.bodySize());
+
   switch (aIPCResponse.type())
   {
     case ResponseType::Basic:
@@ -78,8 +81,32 @@ InternalResponse::~InternalResponse()
 {
 }
 
+template void
+InternalResponse::ToIPC<PContentParent>
+  (IPCInternalResponse* aIPCResponse,
+   PContentParent* aManager,
+   UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoStream);
+template void
+InternalResponse::ToIPC<PContentChild>
+  (IPCInternalResponse* aIPCResponse,
+   PContentChild* aManager,
+   UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoStream);
+template void
+InternalResponse::ToIPC<mozilla::ipc::PBackgroundParent>
+  (IPCInternalResponse* aIPCResponse,
+   mozilla::ipc::PBackgroundParent* aManager,
+   UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoStream);
+template void
+InternalResponse::ToIPC<mozilla::ipc::PBackgroundChild>
+  (IPCInternalResponse* aIPCResponse,
+   mozilla::ipc::PBackgroundChild* aManager,
+   UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoStream);
+
+template<typename M>
 void
-InternalResponse::ToIPC(IPCInternalResponse* aIPCResponse)
+InternalResponse::ToIPC(IPCInternalResponse* aIPCResponse,
+                        M* aManager,
+                        UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoStream)
 {
   MOZ_ASSERT(aIPCResponse);
   MOZ_ASSERT(!mURLList.IsEmpty());
@@ -96,6 +123,19 @@ InternalResponse::ToIPC(IPCInternalResponse* aIPCResponse)
   } else {
     aIPCResponse->principalInfo() = void_t();
   }
+
+  nsCOMPtr<nsIInputStream> body;
+  int64_t bodySize;
+  GetUnfilteredBody(getter_AddRefs(body), &bodySize);
+
+  if (body) {
+    aAutoStream.reset(new mozilla::ipc::AutoIPCStream(aIPCResponse->body()));
+    aAutoStream->Serialize(body, aManager);
+  } else {
+    aIPCResponse->body() = void_t();
+  }
+
+  aIPCResponse->bodySize() = bodySize;
 }
 
 already_AddRefed<InternalResponse>
