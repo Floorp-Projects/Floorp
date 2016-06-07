@@ -255,7 +255,8 @@ nsFrameManager::SetStyleContextInMap(UndisplayedMap* aMap,
   NS_ASSERTION(!GetStyleContextInMap(aMap, aContent),
                "Already have an entry for aContent");
 
-  nsIContent* parent = aContent->GetParent();
+  nsIContent* parent = aContent->GetParentElementCrossingShadowRoot();
+  MOZ_ASSERT(parent || !aContent->GetParent(), "no non-elements");
 #ifdef DEBUG
   nsIPresShell* shell = aStyleContext->PresContext()->PresShell();
   NS_ASSERTION(parent || (shell && shell->GetDocument() &&
