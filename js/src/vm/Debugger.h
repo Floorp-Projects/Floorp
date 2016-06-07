@@ -1059,7 +1059,6 @@ class DebuggerObject : public NativeObject
     static bool isGlobal(JSContext* cx, Handle<DebuggerObject*> object);
     static bool className(JSContext* cx, Handle<DebuggerObject*> object,
                           MutableHandleString result);
-    static bool global(JSContext* cx, Handle<DebuggerObject*> object, MutableHandleObject result);
     static bool name(JSContext* cx, Handle<DebuggerObject*> object, MutableHandleString result);
     static bool displayName(JSContext* cx, Handle<DebuggerObject*> object,
                             MutableHandleString result);
@@ -1072,10 +1071,6 @@ class DebuggerObject : public NativeObject
                           MutableHandleValue result);
     static bool boundArguments(JSContext* cx, Handle<DebuggerObject*> object,
                                MutableHandle<ValueVector> result);
-    static bool allocationSite(JSContext* cx, Handle<DebuggerObject*> object,
-                               MutableHandleObject result);
-    static bool errorMessageName(JSContext* cx, Handle<DebuggerObject*> object,
-                                 MutableHandleString result);
 
     static bool isExtensible(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
     static bool isSealed(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
