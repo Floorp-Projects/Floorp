@@ -18,6 +18,8 @@
 
 #include "yuv_convert.h"
 
+#include "gfxPrefs.h"
+#include "libyuv.h"
 // Header for low level row functions.
 #include "yuv_row.h"
 #include "mozilla/SSE.h"
@@ -60,6 +62,72 @@ void ConvertYCbCrToRGB32(const uint8* y_buf,
                          int uv_pitch,
                          int rgb_pitch,
                          YUVType yuv_type) {
+
+
+  // Deprecated function's conversion is accurate.
+  // libyuv converion is a bit inaccurate to get performance. It dynamically
+  // calculates RGB from YUV to use simd. In it, signed byte is used for conversion's
+  // coefficient, but it requests 129. libyuv cut 129 to 127. And only 6 bits are
+  // used for a decimal part during the dynamic calculation.
+  //
+  // The function is still fast on some old intel chips.
+  // See Bug 1256475.
+  bool use_deprecated = gfxPrefs::YCbCrAccurateConversion() ||
+                        (supports_mmx() && supports_sse() && !supports_sse3());
+  if (use_deprecated) {
+    ConvertYCbCrToRGB32_deprecated(y_buf, u_buf, v_buf, rgb_buf,
+                                   pic_x, pic_y, pic_width, pic_height,
+                                   y_pitch, uv_pitch, rgb_pitch, yuv_type);
+    return;
+  }
+                                    
+  if (yuv_type == YV24) {
+    const uint8* src_y = y_buf + y_pitch * pic_y + pic_x;
+    const uint8* src_u = u_buf + uv_pitch * pic_y + pic_x;
+    const uint8* src_v = v_buf + uv_pitch * pic_y + pic_x;
+    DebugOnly<int> err = libyuv::I444ToARGB(src_y, y_pitch,
+                                            src_u, uv_pitch,
+                                            src_v, uv_pitch,
+                                            rgb_buf, rgb_pitch,
+                                            pic_width, pic_height);
+    MOZ_ASSERT(!err);
+  } else if (yuv_type == YV16) {
+    const uint8* src_y = y_buf + y_pitch * pic_y + pic_x;
+    const uint8* src_u = u_buf + uv_pitch * pic_y + pic_x / 2;
+    const uint8* src_v = v_buf + uv_pitch * pic_y + pic_x / 2;
+    DebugOnly<int> err = libyuv::I422ToARGB(src_y, y_pitch,
+                                            src_u, uv_pitch,
+                                            src_v, uv_pitch,
+                                            rgb_buf, rgb_pitch,
+                                            pic_width, pic_height);
+    MOZ_ASSERT(!err);
+  } else {
+    MOZ_ASSERT(yuv_type == YV12);
+    const uint8* src_y = y_buf + y_pitch * pic_y + pic_x;
+    const uint8* src_u = u_buf + (uv_pitch * pic_y + pic_x) / 2;
+    const uint8* src_v = v_buf + (uv_pitch * pic_y + pic_x) / 2;
+    DebugOnly<int> err = libyuv::I420ToARGB(src_y, y_pitch,
+                                            src_u, uv_pitch,
+                                            src_v, uv_pitch,
+                                            rgb_buf, rgb_pitch,
+                                            pic_width, pic_height);
+    MOZ_ASSERT(!err);
+  }
+}
+
+// Convert a frame of YUV to 32 bit ARGB.
+void ConvertYCbCrToRGB32_deprecated(const uint8* y_buf,
+                                    const uint8* u_buf,
+                                    const uint8* v_buf,
+                                    uint8* rgb_buf,
+                                    int pic_x,
+                                    int pic_y,
+                                    int pic_width,
+                                    int pic_height,
+                                    int y_pitch,
+                                    int uv_pitch,
+                                    int rgb_pitch,
+                                    YUVType yuv_type) {
   unsigned int y_shift = yuv_type == YV12 ? 1 : 0;
   unsigned int x_shift = yuv_type == YV24 ? 0 : 1;
   // Test for SSE because the optimized code uses movntq, which is not part of MMX.
