@@ -967,15 +967,13 @@ LoginManagerPrompter.prototype = {
                        .addEventListener("input", onInput);
               chromeDoc.getElementById("password-notification-password")
                        .addEventListener("input", onInput);
+              let toggleBtn = chromeDoc.getElementById("password-notification-visibilityToggle");
+
               if (Services.prefs.getBoolPref("signon.rememberSignons.visibilityToggle")) {
-                chromeDoc.getElementById("password-notification-visibilityToggle")
-                         .addEventListener("command", onVisibilityToggle);
-                chromeDoc.getElementById("password-notification-visibilityToggle")
-                         .setAttribute("label", togglePasswordLabel);
-                chromeDoc.getElementById("password-notification-visibilityToggle")
-                         .setAttribute("accesskey", togglePasswordAccessKey);
-                chromeDoc.getElementById("password-notification-visibilityToggle")
-                         .removeAttribute("hidden");
+                toggleBtn.addEventListener("command", onVisibilityToggle);
+                toggleBtn.setAttribute("label", togglePasswordLabel);
+                toggleBtn.setAttribute("accesskey", togglePasswordAccessKey);
+                toggleBtn.setAttribute("hidden", LoginHelper.isMasterPasswordSet());
               }
               break;
             case "shown":

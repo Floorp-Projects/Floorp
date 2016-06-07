@@ -36,18 +36,6 @@
   --downloads-item-details-opacity: 0.6;
 }
 
-.blockedIcon {
-  list-style-image: url("moz-icon://stock/gtk-dialog-error?size=32");
-}
-
-@item@[verdict="PotentiallyUnwanted"] .blockedIcon {
-  list-style-image: url("moz-icon://stock/gtk-dialog-warning?size=32");
-}
-
-@item@[verdict="Uncommon"] .blockedIcon {
-  list-style-image: url("moz-icon://stock/gtk-dialog-info?size=32");
-}
-
 .downloadButton:focus > .button-box {
   outline: 1px -moz-dialogtext dotted;
 }

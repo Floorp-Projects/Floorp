@@ -249,3 +249,47 @@ this.LoginTestUtils.recipes = {
     });
   },
 };
+
+this.LoginTestUtils.masterPassword = {
+  masterPassword: "omgsecret!",
+
+  _set(enable) {
+    let oldPW, newPW;
+    if (enable) {
+      oldPW = "";
+      newPW = this.masterPassword;
+    } else {
+      oldPW = this.masterPassword;
+      newPW = "";
+    }
+
+    let secmodDB = Cc["@mozilla.org/security/pkcs11moduledb;1"]
+                     .getService(Ci.nsIPKCS11ModuleDB);
+    let slot = secmodDB.findSlotByName("");
+    if (!slot) {
+      throw new Error("Can't find slot");
+    }
+
+    // Set master password. Note that this does not log you in, so the next
+    // invocation of pwmgr can trigger a MP prompt.
+    let pk11db = Cc["@mozilla.org/security/pk11tokendb;1"]
+                   .getService(Ci.nsIPK11TokenDB);
+    let token = pk11db.findTokenByName("");
+    if (slot.status == Ci.nsIPKCS11Slot.SLOT_UNINITIALIZED) {
+      dump("MP initialized to " + newPW + "\n");
+      token.initPassword(newPW);
+    } else {
+      token.checkPassword(oldPW);
+      dump("MP change from " + oldPW + " to " + newPW + "\n");
+      token.changePassword(oldPW, newPW);
+    }
+  },
+
+  enable() {
+    this._set(true);
+  },
+
+  disable() {
+    this._set(false);
+  },
+};

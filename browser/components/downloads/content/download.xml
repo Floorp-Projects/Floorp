@@ -18,10 +18,12 @@
     <content orient="horizontal"
              align="center"
              onclick="DownloadsView.onDownloadClick(event);">
-      <xul:image class="downloadTypeIcon"
-                 validate="always"
-                 xbl:inherits="src=image"/>
-      <xul:image class="downloadTypeIcon blockedIcon"/>
+      <xul:stack class="downloadStackIcon">
+        <xul:image class="downloadTypeIcon"
+                   validate="always"
+                   xbl:inherits="src=image"/>
+        <xul:image class="downloadTypeIcon blockedIcon" />
+      </xul:stack>
       <xul:vbox pack="center"
                 flex="1"
                 class="downloadContainer"

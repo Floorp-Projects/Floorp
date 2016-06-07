@@ -11,12 +11,13 @@ const Services = require("Services");
 const { BreakpointActor, setBreakpointAtEntryPoints } = require("devtools/server/actors/breakpoint");
 const { OriginalLocation, GeneratedLocation } = require("devtools/server/actors/common");
 const { createValueGrip } = require("devtools/server/actors/object");
-const { ActorClass, Arg, RetVal, method } = require("devtools/shared/protocol");
+const { ActorClassWithSpec, Arg, RetVal, method } = require("devtools/shared/protocol");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { assert, fetch } = DevToolsUtils;
 const { joinURI } = require("devtools/shared/path");
 const promise = require("promise");
 const { defer, resolve, reject, all } = promise;
+const { sourceSpec } = require("devtools/shared/specs/source");
 
 loader.lazyRequireGetter(this, "SourceMapConsumer", "source-map", true);
 loader.lazyRequireGetter(this, "SourceMapGenerator", "source-map", true);
@@ -140,7 +141,7 @@ function resolveURIToLocalPath(aURI) {
  * @param String contentType
  *        Optional. The content type of this source, if immediately available.
  */
-let SourceActor = ActorClass({
+let SourceActor = ActorClassWithSpec(sourceSpec, {
   typeName: "source",
 
   initialize: function ({ source, thread, originalUrl, generatedSource,
@@ -399,7 +400,7 @@ let SourceActor = ActorClass({
    * Get all executable lines from the current source
    * @return Array - Executable lines of the current script
    **/
-  getExecutableLines: method(function () {
+  getExecutableLines: function () {
     function sortLines(lines) {
       // Converting the Set into an array
       lines = [...lines];
@@ -432,7 +433,7 @@ let SourceActor = ActorClass({
 
     let lines = this.getExecutableOffsets(this.source, true);
     return sortLines(lines);
-  }, { response: { lines: RetVal("json") } }),
+  },
 
   /**
    * Extract all executable offsets from the given script
@@ -454,7 +455,7 @@ let SourceActor = ActorClass({
   /**
    * Handler for the "source" packet.
    */
-  onSource: method(function () {
+  onSource: function () {
     return resolve(this._init)
       .then(this._getSourceText)
       .then(({ content, contentType }) => {
@@ -469,15 +470,12 @@ let SourceActor = ActorClass({
         throw new Error("Could not load the source for " + this.url + ".\n" +
                         DevToolsUtils.safeErrorString(aError));
       });
-  }, {
-    request: { type: "source" },
-    response: RetVal("json")
-  }),
+  },
 
   /**
    * Handler for the "prettyPrint" packet.
    */
-  prettyPrint: method(function (indent) {
+  prettyPrint: function (indent) {
     this.threadActor.sources.prettyPrint(this.url, indent);
     return this._getSourceText()
       .then(this._sendToPrettyPrintWorker(indent))
@@ -494,10 +492,7 @@ let SourceActor = ActorClass({
         this.disablePrettyPrint();
         throw new Error(DevToolsUtils.safeErrorString(error));
       });
-  }, {
-    request: { indent: Arg(0, "number") },
-    response: RetVal("json")
-  }),
+  },
 
   /**
    * Return a function that sends a request to the pretty print worker, waits on
@@ -590,7 +585,7 @@ let SourceActor = ActorClass({
   /**
    * Handler for the "disablePrettyPrint" packet.
    */
-  disablePrettyPrint: method(function () {
+  disablePrettyPrint: function () {
     let source = this.generatedSource || this.source;
     let sources = this.threadActor.sources;
     let sm = sources.getSourceMap(source);
@@ -606,14 +601,12 @@ let SourceActor = ActorClass({
 
     this.threadActor.sources.disablePrettyPrint(this.url);
     return this.onSource();
-  }, {
-    response: RetVal("json")
-  }),
+  },
 
   /**
    * Handler for the "blackbox" packet.
    */
-  blackbox: method(function () {
+  blackbox: function () {
     this.threadActor.sources.blackBox(this.url);
     if (this.threadActor.state == "paused"
         && this.threadActor.youngestFrame
@@ -621,14 +614,14 @@ let SourceActor = ActorClass({
       return true;
     }
     return false;
-  }, { response: { pausedInSource: RetVal("boolean") } }),
+  },
 
   /**
    * Handler for the "unblackbox" packet.
    */
-  unblackbox: method(function () {
+  unblackbox: function () {
     this.threadActor.sources.unblackBox(this.url);
-  }),
+  },
 
   /**
    * Handle a request to set a breakpoint.
@@ -640,7 +633,7 @@ let SourceActor = ActorClass({
    *          A promise that resolves to a JSON object representing the
    *          response.
    */
-  setBreakpoint: method(function (line, column, condition) {
+  setBreakpoint: function (line, column, condition) {
     if (this.threadActor.state !== "paused") {
       throw {
         error: "wrongState",
@@ -665,16 +658,7 @@ let SourceActor = ActorClass({
 
       return response;
     });
-  }, {
-    request: {
-      location: {
-        line: Arg(0, "number"),
-        column: Arg(1, "nullable:number")
-      },
-      condition: Arg(2, "nullable:string")
-    },
-    response: RetVal("json")
-  }),
+  },
 
   /**
    * Get or create a BreakpointActor for the given location in the original

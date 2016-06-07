@@ -133,6 +133,7 @@ devtools/shared/tests/**
 !devtools/shared/tests/unit/test_csslexer.js
 devtools/shared/touch/**
 devtools/shared/transport/**
+!devtools/shared/transport/transport.js
 devtools/shared/webconsole/test/**
 devtools/shared/worker/**
 

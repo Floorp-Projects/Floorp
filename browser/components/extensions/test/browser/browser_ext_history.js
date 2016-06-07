@@ -11,6 +11,18 @@ XPCOMUtils.defineLazyModuleGetter(this, "ExtensionUtils",
 
 add_task(function* test_delete() {
   function background() {
+    let historyClearedCount = 0;
+    let removedUrls = [];
+
+    browser.history.onVisitRemoved.addListener(data => {
+      if (data.allHistory) {
+        historyClearedCount++;
+      } else {
+        browser.test.assertEq(1, data.urls.length, "onVisitRemoved received one URL");
+        removedUrls.push(data.urls[0]);
+      }
+    });
+
     browser.test.onMessage.addListener((msg, arg) => {
       if (msg === "delete-url") {
         browser.history.deleteUrl({url: arg}).then(result => {
@@ -19,13 +31,13 @@ add_task(function* test_delete() {
         });
       } else if (msg === "delete-range") {
         browser.history.deleteRange(arg).then(result => {
-          browser.test.assertEq(undefined, result, "browser.history.deleteUrl returns nothing");
-          browser.test.sendMessage("range-deleted");
+          browser.test.assertEq(undefined, result, "browser.history.deleteRange returns nothing");
+          browser.test.sendMessage("range-deleted", removedUrls);
         });
       } else if (msg === "delete-all") {
         browser.history.deleteAll().then(result => {
-          browser.test.assertEq(undefined, result, "browser.history.deleteUrl returns nothing");
-          browser.test.sendMessage("urls-deleted");
+          browser.test.assertEq(undefined, result, "browser.history.deleteAll returns nothing");
+          browser.test.sendMessage("history-cleared", [historyClearedCount, removedUrls]);
         });
       }
     });
@@ -43,9 +55,10 @@ add_task(function* test_delete() {
   });
 
   yield extension.startup();
-  yield PlacesTestUtils.clearHistory();
   yield extension.awaitMessage("ready");
+  yield PlacesTestUtils.clearHistory();
 
+  let historyClearedCount;
   let visits = [];
 
   // Add 5 visits for one uri and 3 visits for 3 others
@@ -63,7 +76,6 @@ add_task(function* test_delete() {
   }
 
   yield PlacesTestUtils.addVisits(visits);
-
   is(yield PlacesTestUtils.visitsInDB(visits[0].uri), 5, "5 visits for uri found in history database");
 
   let testUrl = visits[6].uri.spec;
@@ -79,7 +91,8 @@ add_task(function* test_delete() {
   };
 
   extension.sendMessage("delete-range", filter);
-  yield extension.awaitMessage("range-deleted");
+  let removedUrls = yield extension.awaitMessage("range-deleted");
+  ok(!removedUrls.includes(visits[0].uri.spec), `${visits[0].uri.spec} received by onVisitRemoved`);
 
   ok(yield PlacesTestUtils.isPageInDB(visits[0].uri), "expected uri found in history database");
   is(yield PlacesTestUtils.visitsInDB(visits[0].uri), 2, "2 visits for uri found in history database");
@@ -100,9 +113,14 @@ add_task(function* test_delete() {
   ok(yield PlacesTestUtils.isPageInDB(visits[7].uri), "expected uri found in history database");
 
   extension.sendMessage("delete-all");
-  yield extension.awaitMessage("urls-deleted");
+  [historyClearedCount, removedUrls] = yield extension.awaitMessage("history-cleared");
   is(PlacesUtils.history.hasHistoryEntries, false, "history is empty");
-
+  is(historyClearedCount, 2, "onVisitRemoved called for each clearing of history");
+  is(removedUrls.length, 3, "onVisitRemoved called the expected number of times");
+  for (let index of [0, 5, 6]) {
+    let url = visits[index].uri.spec;
+    ok(removedUrls.includes(url), `${url} received by onVisitRemoved`);
+  }
   yield extension.unload();
 });
 

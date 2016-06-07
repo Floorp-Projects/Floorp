@@ -227,6 +227,21 @@ interface nsIFrameLoader : nsISupports
    */
   readonly attribute boolean ownerIsWidget;
 
+  /**
+   * The last known width of the frame. Reading this property will not trigger
+   * a reflow, and therefore may not reflect the current state of things. It
+   * should only be used in asynchronous APIs where values are not guaranteed
+   * to be up-to-date when received.
+   */
+  readonly attribute unsigned long lazyWidth;
+
+  /**
+   * The last known height of the frame. Reading this property will not trigger
+   * a reflow, and therefore may not reflect the current state of things. It
+   * should only be used in asynchronous APIs where values are not guaranteed
+   * to be up-to-date when received.
+   */
+  readonly attribute unsigned long lazyHeight;
 };
 
 %{C++
