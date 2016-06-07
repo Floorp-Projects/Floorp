@@ -5,7 +5,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PContent;
-include FetchTypes;
 
 namespace mozilla {
 namespace dom {
@@ -16,13 +15,10 @@ async protocol PFlyWebPublishedServer
 
 child:
   async ServerReady(nsresult aStatus);
-  async FetchRequest(IPCInternalRequest aRequest, uint64_t aRequestId);
   async ServerClose();
 
 parent:
   async __delete__();
-
-  async FetchResponse(IPCInternalResponse aResponse, uint64_t aRequestId);
 };
 
 } // namespace dom
