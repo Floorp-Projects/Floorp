@@ -9,7 +9,6 @@
 #include "nsIWebVTTListener.h"
 #include "nsIStreamListener.h"
 #include "nsIChannelEventSink.h"
-#include "nsAutoPtr.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsCycleCollectionParticipant.h"
 

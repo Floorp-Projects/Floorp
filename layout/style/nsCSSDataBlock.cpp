@@ -16,6 +16,7 @@
 #include "mozilla/css/ImageLoader.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/WritingModes.h"
+#include "nsAutoPtr.h"
 #include "nsIDocument.h"
 #include "nsRuleData.h"
 #include "nsStyleContext.h"

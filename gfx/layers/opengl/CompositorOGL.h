@@ -24,7 +24,6 @@
 #include "mozilla/layers/Compositor.h"  // for SurfaceInitMode, Compositor, etc
 #include "mozilla/layers/CompositorTypes.h"  // for MaskType::MaskType::NumMaskTypes, etc
 #include "mozilla/layers/LayersTypes.h"
-#include "nsAutoPtr.h"                  // for nsRefPtr, nsAutoPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_ASSERTION, NS_WARNING
 #include "nsISupportsImpl.h"            // for MOZ_COUNT_CTOR, etc

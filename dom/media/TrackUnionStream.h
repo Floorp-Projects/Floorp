@@ -7,6 +7,7 @@
 #define MOZILLA_TRACKUNIONSTREAM_H_
 
 #include "MediaStreamGraph.h"
+#include "nsAutoPtr.h"
 #include <algorithm>
 
 namespace mozilla {

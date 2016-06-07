@@ -11,6 +11,7 @@
 #include "MediaDataDecoderProxy.h"
 #include "PlatformDecoderModule.h"
 #include "mozIGeckoMediaPluginService.h"
+#include "nsAutoPtr.h"
 
 namespace mozilla {
 

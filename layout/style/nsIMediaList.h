@@ -12,6 +12,7 @@
 #ifndef nsIMediaList_h_
 #define nsIMediaList_h_
 
+#include "nsAutoPtr.h"
 #include "nsIDOMMediaList.h"
 #include "nsTArray.h"
 #include "nsIAtom.h"

@@ -4,7 +4,6 @@
 
 #include "mozilla/ModuleUtils.h"
 #include "nsAuth.h"
-#include "nsAutoPtr.h"
 
 //-----------------------------------------------------------------------------
 

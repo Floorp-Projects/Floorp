@@ -9,7 +9,6 @@
 
 #include "xpcObjectHelper.h"
 
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsWrapperCache.h"
 #include "mozilla/TypeTraits.h"

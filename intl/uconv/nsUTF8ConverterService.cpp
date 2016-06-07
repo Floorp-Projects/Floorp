@@ -7,7 +7,6 @@
 #include "nsString.h"
 #include "nsUTF8ConverterService.h"
 #include "nsEscape.h"
-#include "nsAutoPtr.h"
 #include "nsIUnicodeDecoder.h"
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/UniquePtr.h"

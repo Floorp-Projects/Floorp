@@ -6,7 +6,6 @@
 #ifndef GLTEXTUREIMAGE_H_
 #define GLTEXTUREIMAGE_H_
 
-#include "nsAutoPtr.h"
 #include "nsRegion.h"
 #include "nsTArray.h"
 #include "gfxTypes.h"

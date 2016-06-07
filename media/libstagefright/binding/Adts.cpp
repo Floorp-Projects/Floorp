@@ -6,6 +6,7 @@
 #include "MediaData.h"
 #include "mozilla/Array.h"
 #include "mozilla/ArrayUtils.h"
+#include "nsAutoPtr.h"
 
 using namespace mozilla;
 

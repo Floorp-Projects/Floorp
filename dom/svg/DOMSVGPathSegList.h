@@ -7,7 +7,6 @@
 #ifndef MOZILLA_DOMSVGPATHSEGLIST_H__
 #define MOZILLA_DOMSVGPATHSEGLIST_H__
 
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"

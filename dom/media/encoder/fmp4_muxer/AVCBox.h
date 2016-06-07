@@ -7,7 +7,6 @@
 #define AVCBox_h_
 
 #include "nsTArray.h"
-#include "nsAutoPtr.h"
 #include "ISOMediaBoxes.h"
 
 namespace mozilla {

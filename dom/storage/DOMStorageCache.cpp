@@ -11,6 +11,7 @@
 #include "DOMStorageIPC.h"
 #include "DOMStorageManager.h"
 
+#include "nsAutoPtr.h"
 #include "nsDOMString.h"
 #include "nsXULAppAPI.h"
 #include "mozilla/unused.h"

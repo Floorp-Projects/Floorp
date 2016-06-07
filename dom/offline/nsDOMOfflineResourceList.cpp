@@ -16,7 +16,6 @@
 #include "nsServiceManagerUtils.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIOfflineCacheUpdate.h"
-#include "nsAutoPtr.h"
 #include "nsContentUtils.h"
 #include "nsIObserverService.h"
 #include "nsIScriptGlobalObject.h"

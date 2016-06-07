@@ -17,6 +17,7 @@
 #include "mozilla/Snprintf.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Logging.h"
+#include "nsAutoPtr.h"
 #include "nsDebug.h"
 #include "nsISupportsImpl.h"
 #include "nsContentUtils.h"

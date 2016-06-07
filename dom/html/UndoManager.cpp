@@ -28,7 +28,6 @@
 // Includes for mutation observer.
 #include "nsIDOMHTMLElement.h"
 #include "nsStubMutationObserver.h"
-#include "nsAutoPtr.h"
 #include "nsTransactionManager.h"
 
 // Includes for attribute changed transaction.

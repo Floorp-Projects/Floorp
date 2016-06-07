@@ -11,7 +11,6 @@
 #include "mozilla/dom/UIEvent.h"
 #include "mozilla/dom/SVGZoomEventBinding.h"
 #include "mozilla/EventForwards.h"
-#include "nsAutoPtr.h"
 
 class nsPresContext;
 

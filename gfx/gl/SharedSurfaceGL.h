@@ -10,7 +10,6 @@
 #include "SharedSurface.h"
 #include "SurfaceTypes.h"
 #include "GLContextTypes.h"
-#include "nsAutoPtr.h"
 #include "gfxTypes.h"
 #include "mozilla/Mutex.h"
 

@@ -39,7 +39,6 @@
 #include "nsIScriptError.h"
 #include "nsFrameManager.h"
 #include "nsError.h"
-#include "nsAutoPtr.h"
 #include "nsCSSFrameConstructor.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"

@@ -8,7 +8,6 @@
 #define nsIConstraintValidition_h___
 
 #include "nsISupports.h"
-#include "nsAutoPtr.h"
 #include "nsString.h"
 
 class nsIDOMValidityState;

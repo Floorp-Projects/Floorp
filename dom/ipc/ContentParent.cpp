@@ -109,7 +109,6 @@
 #include "mozilla/unused.h"
 #include "nsAnonymousTemporaryFile.h"
 #include "nsAppRunner.h"
-#include "nsAutoPtr.h"
 #include "nsCDefaultURIFixup.h"
 #include "nsCExternalHandlerService.h"
 #include "nsCOMPtr.h"

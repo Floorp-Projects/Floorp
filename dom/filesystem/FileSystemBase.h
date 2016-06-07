@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_FileSystemBase_h
 #define mozilla_dom_FileSystemBase_h
 
-#include "nsAutoPtr.h"
 #include "nsString.h"
 #include "Directory.h"
 

@@ -18,7 +18,6 @@
 #include "mozilla/dom/SourceBufferBinding.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/mozalloc.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionNoteChild.h"
 #include "nsCycleCollectionParticipant.h"

@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
+#include "nsAutoPtr.h"
 #include "nsIIPCBackgroundChildCreateCallback.h"
 #include "nsTArray.h"
 

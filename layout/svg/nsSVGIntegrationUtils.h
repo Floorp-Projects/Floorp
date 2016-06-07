@@ -8,7 +8,6 @@
 
 #include "gfxMatrix.h"
 #include "gfxRect.h"
-#include "nsAutoPtr.h"
 #include "nsRegionFwd.h"
 
 class gfxContext;

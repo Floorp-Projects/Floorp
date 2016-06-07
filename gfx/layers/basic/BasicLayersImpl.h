@@ -12,7 +12,6 @@
 #include "gfxContext.h"                 // for gfxContext, etc
 #include "mozilla/Attributes.h"         // for MOZ_STACK_CLASS
 #include "mozilla/Maybe.h"              // for Maybe
-#include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsDebug.h"                    // for NS_ASSERTION
 #include "nsISupportsImpl.h"            // for gfxContext::Release, etc
 #include "nsRegion.h"                   // for nsIntRegion

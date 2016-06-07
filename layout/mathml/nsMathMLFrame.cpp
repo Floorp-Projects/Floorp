@@ -16,7 +16,6 @@
 // used to map attributes into CSS rules
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
-#include "nsAutoPtr.h"
 #include "nsDisplayList.h"
 #include "nsRenderingContext.h"
 

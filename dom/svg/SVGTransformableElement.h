@@ -8,6 +8,7 @@
 #define SVGTransformableElement_h
 
 #include "mozilla/Attributes.h"
+#include "nsAutoPtr.h"
 #include "nsSVGAnimatedTransformList.h"
 #include "nsSVGElement.h"
 #include "gfxMatrix.h"

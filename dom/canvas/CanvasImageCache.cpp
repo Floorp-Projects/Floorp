@@ -4,6 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "CanvasImageCache.h"
+#include "nsAutoPtr.h"
 #include "nsIImageLoadingContent.h"
 #include "nsExpirationTracker.h"
 #include "imgIRequest.h"

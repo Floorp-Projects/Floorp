@@ -35,7 +35,6 @@
 #include "nsIWebBrowserPersist.h"
 #include "nsCWebBrowserPersist.h"
 #include "nsIServiceManager.h"
-#include "nsAutoPtr.h"
 #include "nsFocusManager.h"
 #include "Layers.h"
 #include "gfxContext.h"

@@ -8,7 +8,6 @@
 #define mozilla_dom_CreateFileTask_h
 
 #include "mozilla/dom/FileSystemTaskBase.h"
-#include "nsAutoPtr.h"
 #include "mozilla/ErrorResult.h"
 
 class nsIInputStream;
