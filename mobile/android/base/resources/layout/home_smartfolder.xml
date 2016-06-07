@@ -18,10 +18,9 @@
         android:id="@+id/device_type"
         android:layout_width="@dimen/favicon_bg"
         android:layout_height="@dimen/favicon_bg"
-        android:layout_marginLeft="16dp"
-        android:layout_marginRight="16dp"
+        android:layout_margin="16dp"
+        android:padding="2dp"
         android:layout_gravity="center_vertical"
-        android:scaleType="fitCenter"
         tools:src="@drawable/cloud"/>
 
     <LinearLayout
