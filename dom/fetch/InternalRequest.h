@@ -78,7 +78,6 @@ namespace dom {
  */
 
 class Request;
-class IPCInternalRequest;
 
 #define kFETCH_CLIENT_REFERRER_STR "about:client"
 
@@ -150,10 +149,6 @@ public:
     MOZ_ASSERT(!aURL.IsEmpty());
     AddURL(aURL);
   }
-
-  InternalRequest(const IPCInternalRequest& aIPCRequest);
-
-  void ToIPC(IPCInternalRequest* aIPCRequest);
 
   already_AddRefed<InternalRequest> Clone();
 

@@ -8,7 +8,6 @@ EXPORTS.mozilla.dom += [
     'ChannelInfo.h',
     'Fetch.h',
     'FetchDriver.h',
-    'FetchIPCTypes.h',
     'FetchUtil.h',
     'Headers.h',
     'InternalHeaders.h',
@@ -33,7 +32,6 @@ UNIFIED_SOURCES += [
 
 IPDL_SOURCES += [
     'ChannelInfo.ipdlh',
-    'FetchTypes.ipdlh',
 ]
 
 LOCAL_INCLUDES += [
