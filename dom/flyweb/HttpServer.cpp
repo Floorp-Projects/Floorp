@@ -260,6 +260,12 @@ HttpServer::TransportProvider::SetListener(nsIHttpUpgradeListener* aListener)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(PTransportProviderChild*)
+HttpServer::TransportProvider::GetIPCChild()
+{
+  return nullptr;
+}
+
 void
 HttpServer::TransportProvider::SetTransport(nsISocketTransport* aTransport,
                                             nsIAsyncInputStream* aInput,
@@ -492,7 +498,7 @@ HttpServer::Connection::ConsumeInput(const char*& aBuffer,
   return NS_OK;
 }
 
-static bool
+bool
 ContainsToken(const nsCString& aList, const nsCString& aToken)
 {
   nsCCharSeparatedTokenizer tokens(aList, ',');
