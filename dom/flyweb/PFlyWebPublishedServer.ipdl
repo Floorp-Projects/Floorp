@@ -5,11 +5,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 include protocol PContent;
-include protocol PSendStream;
-include protocol PFileDescriptorSet;
 include FetchTypes;
-include ChannelInfo;
-include PBackgroundSharedTypes;
 
 namespace mozilla {
 namespace dom {
