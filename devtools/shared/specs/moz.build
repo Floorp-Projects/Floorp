@@ -15,6 +15,7 @@ DevToolsModules(
     'csscoverage.js',
     'device.js',
     'director-manager.js',
+    'director-registry.js',
     'environment.js',
     'frame.js',
     'heap-snapshot-file.js',
