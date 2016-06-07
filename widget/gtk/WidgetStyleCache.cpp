@@ -106,6 +106,17 @@ CreateProgressWidget()
 }
 
 static GtkWidget*
+CreateTooltipWidget()
+{
+  MOZ_ASSERT(gtk_check_version(3, 20, 0) != nullptr,
+             "CreateTooltipWidget should be used for Gtk < 3.20 only.");
+  GtkWidget* widget = CreateWindowWidget();
+  GtkStyleContext* style = gtk_widget_get_style_context(widget);
+  gtk_style_context_add_class(style, GTK_STYLE_CLASS_TOOLTIP);
+  return widget;
+}
+
+static GtkWidget*
 CreateWidget(WidgetNodeType aWidgetType)
 {
   switch (aWidgetType) {
@@ -133,6 +144,8 @@ CreateWidget(WidgetNodeType aWidgetType)
       return CreateMenuItemWidget(MOZ_GTK_MENUBAR);
     case MOZ_GTK_MENUITEM:
       return CreateMenuItemWidget(MOZ_GTK_MENUPOPUP);
+    case MOZ_GTK_TOOLTIP:
+      return CreateTooltipWidget();
     default:
       /* Not implemented */
       return nullptr;
@@ -221,6 +234,11 @@ GetCssNodeStyleInternal(WidgetNodeType aNodeType)
       style = CreateChildCSSNode("progress",
                                  MOZ_GTK_PROGRESS_TROUGH);
       break;
+    case MOZ_GTK_TOOLTIP:
+      // We create this from the path because GtkTooltipWindow is not public.
+      style = CreateCSSNode("tooltip", nullptr, GTK_TYPE_TOOLTIP);
+      gtk_style_context_add_class(style, GTK_STYLE_CLASS_BACKGROUND);
+      break; 
     default:
       // TODO - create style from style path
       GtkWidget* widget = GetWidget(aNodeType);
