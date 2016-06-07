@@ -4785,7 +4785,14 @@ MultiprocessBlockPolicy() {
     }
   }
 
-  if (disabledForA11y) {
+  // For linux nightly and aurora builds skip accessibility
+  // checks.
+  bool doAccessibilityCheck = true;
+#if defined(MOZ_WIDGET_GTK) && !defined(RELEASE_BUILD)
+  doAccessibilityCheck = false;
+#endif
+
+  if (doAccessibilityCheck && disabledForA11y) {
     gMultiprocessBlockPolicy = kE10sDisabledForAccessibility;
     return gMultiprocessBlockPolicy;
   }
