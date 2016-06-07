@@ -2955,12 +2955,6 @@ var BrowserOnClick = {
           this.ignoreWarningButton(reason);
         }
         break;
-
-      case "whyForbiddenButton":
-        // This is the "Why is this site blocked" button for family friendly browsing
-        // for Fennec. There's no desktop focused support page yet.
-        gBrowser.loadURI("https://support.mozilla.org/kb/controlledaccess");
-        break;
     }
   },
 
@@ -3027,8 +3021,6 @@ var BrowserOnClick = {
       title = gNavigatorBundle.getString("safebrowsing.reportedUnwantedSite");
       // There is no button for reporting errors since Google doesn't currently
       // provide a URL endpoint for these reports.
-    } else {
-      return; // no notifications for forbidden sites
     }
 
     let notificationBox = gBrowser.getNotificationBox();

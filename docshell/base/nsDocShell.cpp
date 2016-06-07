@@ -4986,8 +4986,7 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
     }
   } else if (NS_ERROR_PHISHING_URI == aError ||
              NS_ERROR_MALWARE_URI == aError ||
-             NS_ERROR_UNWANTED_URI == aError ||
-             NS_ERROR_FORBIDDEN_URI == aError) {
+             NS_ERROR_UNWANTED_URI == aError) {
     nsAutoCString host;
     aURI->GetHost(host);
     CopyUTF8toUTF16(host, formatStrs[0]);
@@ -5018,8 +5017,6 @@ nsDocShell::DisplayLoadError(nsresult aError, nsIURI* aURI,
       error.AssignLiteral("unwantedBlocked");
       bucketId = IsFrame() ? nsISecurityUITelemetry::WARNING_UNWANTED_PAGE_FRAME
                            : nsISecurityUITelemetry::WARNING_UNWANTED_PAGE_TOP;
-    } else if (NS_ERROR_FORBIDDEN_URI == aError) {
-      error.AssignLiteral("forbiddenBlocked");
     }
 
     if (sendTelemetry && errorPage.EqualsIgnoreCase("blocked")) {
@@ -7876,7 +7873,6 @@ nsDocShell::EndPageLoad(nsIWebProgress* aProgress,
                aStatus == NS_ERROR_MALWARE_URI ||
                aStatus == NS_ERROR_PHISHING_URI ||
                aStatus == NS_ERROR_UNWANTED_URI ||
-               aStatus == NS_ERROR_FORBIDDEN_URI ||
                aStatus == NS_ERROR_UNSAFE_CONTENT_TYPE ||
                aStatus == NS_ERROR_REMOTE_XUL ||
                aStatus == NS_ERROR_INTERCEPTION_FAILED ||
