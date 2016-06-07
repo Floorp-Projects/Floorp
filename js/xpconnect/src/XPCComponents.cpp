@@ -3359,6 +3359,20 @@ nsXPCComponents_Utils::SetAddonCallInterposition(HandleValue target,
 }
 
 NS_IMETHODIMP
+nsXPCComponents_Utils::AllowCPOWsInAddon(const nsACString& addonIdStr,
+                                         bool allow,
+                                         JSContext* cx)
+{
+    JSAddonId* addonId = xpc::NewAddonId(cx, addonIdStr);
+    if (!addonId)
+        return NS_ERROR_FAILURE;
+    if (!XPCWrappedNativeScope::AllowCPOWsInAddon(cx, addonId, allow))
+        return NS_ERROR_FAILURE;
+
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsXPCComponents_Utils::Now(double* aRetval)
 {
     bool isInconsistent = false;

@@ -679,6 +679,9 @@ interface nsIXPCComponents_Utils : nsISupports
     [implicit_jscontext]
     void setAddonCallInterposition(in jsval target);
 
+    [implicit_jscontext]
+    void allowCPOWsInAddon(in ACString addonId, in bool allow);
+
     /*
      * Return a fractional number of milliseconds from process
      * startup, measured with a monotonic clock.
