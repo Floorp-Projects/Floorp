@@ -12,6 +12,7 @@
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
 #include "nsIURI.h"
 #include "nsStreamUtils.h"
+#include "mozilla/dom/FetchTypes.h"
 
 namespace mozilla {
 namespace dom {
@@ -25,8 +26,76 @@ InternalResponse::InternalResponse(uint16_t aStatus, const nsACString& aStatusTe
 {
 }
 
+already_AddRefed<InternalResponse>
+InternalResponse::FromIPC(const IPCInternalResponse& aIPCResponse)
+{
+  MOZ_ASSERT(!aIPCResponse.urlList().IsEmpty());
+
+  if (aIPCResponse.type() == ResponseType::Error) {
+    return InternalResponse::NetworkError();
+  }
+
+  RefPtr<InternalResponse> response =
+    new InternalResponse(aIPCResponse.status(),
+                         aIPCResponse.statusText());
+
+  response->SetURLList(aIPCResponse.urlList());
+
+  response->mHeaders = new InternalHeaders(aIPCResponse.headers(),
+                                           aIPCResponse.headersGuard());
+
+  response->InitChannelInfo(aIPCResponse.channelInfo());
+  if (aIPCResponse.principalInfo().type() == mozilla::ipc::OptionalPrincipalInfo::TPrincipalInfo) {
+    UniquePtr<mozilla::ipc::PrincipalInfo> info(new mozilla::ipc::PrincipalInfo(aIPCResponse.principalInfo().get_PrincipalInfo()));
+    response->SetPrincipalInfo(Move(info));
+  }
+
+  switch (aIPCResponse.type())
+  {
+    case ResponseType::Basic:
+      response = response->BasicResponse();
+      break;
+    case ResponseType::Cors:
+      response = response->CORSResponse();
+      break;
+    case ResponseType::Default:
+      break;
+    case ResponseType::Opaque:
+      response = response->OpaqueResponse();
+      break;
+    case ResponseType::Opaqueredirect:
+      response = response->OpaqueRedirectResponse();
+      break;
+    default:
+      MOZ_CRASH("Unexpected ResponseType!");
+  }
+  MOZ_ASSERT(response);
+
+  return response.forget();
+}
+
 InternalResponse::~InternalResponse()
 {
+}
+
+void
+InternalResponse::ToIPC(IPCInternalResponse* aIPCResponse)
+{
+  MOZ_ASSERT(aIPCResponse);
+  MOZ_ASSERT(!mURLList.IsEmpty());
+  aIPCResponse->type() = mType;
+  aIPCResponse->urlList() = mURLList;
+  aIPCResponse->status() = GetUnfilteredStatus();
+  aIPCResponse->statusText() = GetUnfilteredStatusText();
+
+  mHeaders->ToIPC(aIPCResponse->headers(), aIPCResponse->headersGuard());
+
+  aIPCResponse->channelInfo() = mChannelInfo.AsIPCChannelInfo();
+  if (mPrincipalInfo) {
+    aIPCResponse->principalInfo() = *mPrincipalInfo;
+  } else {
+    aIPCResponse->principalInfo() = void_t();
+  }
 }
 
 already_AddRefed<InternalResponse>
