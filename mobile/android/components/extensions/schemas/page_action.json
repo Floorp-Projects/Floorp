@@ -24,6 +24,7 @@
                 "optional": true
               },
               "default_popup": {
+                "unsupported": true,
                 "type": "string",
                 "format": "relativeUrl",
                 "optional": true,
