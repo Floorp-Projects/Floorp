@@ -12,7 +12,7 @@
 if test -d $topsrcdir/gcc/bin; then
     HOST_CC="$topsrcdir/gcc/bin/gcc"
     HOST_CXX="$topsrcdir/gcc/bin/g++"
-    ac_add_options --enable-stdcxx-compat
+    . "$topsrcdir/build/unix/mozconfig.stdcxx"
 fi
 
 # Allow overriding this from the environment, and don't
