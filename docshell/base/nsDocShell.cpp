@@ -14,6 +14,7 @@
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/Casting.h"
 #include "mozilla/dom/ContentChild.h"
+#include "mozilla/dom/ChromeUtils.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/TabChild.h"
 #include "mozilla/dom/ProfileTimelineMarkerBinding.h"
@@ -3664,7 +3665,7 @@ nsDocShell::FindItemWithName(const char16_t* aName,
 }
 
 void
-nsDocShell::AssertOriginAttributesMatchPrivateBrowsing(){
+nsDocShell::AssertOriginAttributesMatchPrivateBrowsing() {
   MOZ_ASSERT((mOriginAttributes.mPrivateBrowsingId != 0) == mInPrivateBrowsing);
 }
 
@@ -7935,6 +7936,13 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
   // mContentViewer->PermitUnload may release |this| docshell.
   nsCOMPtr<nsIDocShell> kungFuDeathGrip(this);
 
+  if (aPrincipal && !nsContentUtils::IsSystemPrincipal(aPrincipal) &&
+      mItemType != typeChrome) {
+    MOZ_ASSERT(ChromeUtils::IsOriginAttributesEqualIgnoringAddonId(
+      BasePrincipal::Cast(aPrincipal)->OriginAttributesRef(),
+      mOriginAttributes));
+  }
+
   // Make sure timing is created.  But first record whether we had it
   // already, so we don't clobber the timing for an in-progress load.
   bool hadTiming = mTiming;
@@ -10752,7 +10760,10 @@ nsDocShell::DoURILoad(nsIURI* aURI,
   // parent document.
   NeckoOriginAttributes neckoAttrs;
   neckoAttrs.InheritFromDocShellToNecko(GetOriginAttributes());
-  loadInfo->SetOriginAttributes(neckoAttrs);
+  rv = loadInfo->SetOriginAttributes(neckoAttrs);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return rv;
+  }
 
   if (!isSrcdoc) {
     rv = NS_NewChannelInternal(getter_AddRefs(channel),
@@ -14126,10 +14137,13 @@ nsDocShell::GetOriginAttributes(JSContext* aCx,
   return NS_OK;
 }
 
-void
+nsresult
 nsDocShell::SetOriginAttributes(const DocShellOriginAttributes& aAttrs)
 {
-  MOZ_ASSERT(mChildList.Length() == 0);
+  MOZ_ASSERT(mChildList.IsEmpty());
+  if (!mChildList.IsEmpty()) {
+    return NS_ERROR_FAILURE;
+  }
 
   // TODO: Bug 1273058 - mContentViewer should be null when setting origin
   // attributes.
@@ -14137,17 +14151,43 @@ nsDocShell::SetOriginAttributes(const DocShellOriginAttributes& aAttrs)
     nsIDocument* doc = mContentViewer->GetDocument();
     if (doc) {
       nsIURI* uri = doc->GetDocumentURI();
-      MOZ_ASSERT(uri);
-      if (uri) {
-        nsAutoCString uriSpec;
-        uri->GetSpec(uriSpec);
-        MOZ_ASSERT(uriSpec.EqualsLiteral("about:blank"));
+      if (!uri) {
+        return NS_ERROR_FAILURE;
+      }
+      nsAutoCString uriSpec;
+      uri->GetSpec(uriSpec);
+      MOZ_ASSERT(uriSpec.EqualsLiteral("about:blank"));
+      if (!uriSpec.EqualsLiteral("about:blank")) {
+        return NS_ERROR_FAILURE;
       }
     }
   }
 
   mOriginAttributes = aAttrs;
   SetPrivateBrowsing(mOriginAttributes.mPrivateBrowsingId > 0);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDocShell::SetOriginAttributesBeforeLoading(JS::Handle<JS::Value> aOriginAttributes)
+{
+  if (!aOriginAttributes.isObject()) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  AutoJSAPI jsapi;
+  jsapi.Init(&aOriginAttributes.toObject());
+  JSContext* cx = jsapi.cx();
+  if (NS_WARN_IF(!cx)) {
+    return NS_ERROR_FAILURE;
+  }
+
+  DocShellOriginAttributes attrs;
+  if (!aOriginAttributes.isObject() || !attrs.Init(cx, aOriginAttributes)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  return SetOriginAttributes(attrs);
 }
 
 NS_IMETHODIMP
@@ -14159,8 +14199,7 @@ nsDocShell::SetOriginAttributes(JS::Handle<JS::Value> aOriginAttributes,
     return NS_ERROR_INVALID_ARG;
   }
 
-  SetOriginAttributes(attrs);
-  return NS_OK;
+  return SetOriginAttributes(attrs);
 }
 
 NS_IMETHODIMP

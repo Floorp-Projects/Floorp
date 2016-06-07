@@ -887,7 +887,12 @@ var UserContextIdNotifier = {
     // Just because we cannot change the userContextId from an active docShell,
     // we don't need to check DOMContentLoaded again.
     this.uninit();
-    let userContextId = content.document.nodePrincipal.originAttributes.userContextId;
+
+    // We use the docShell because content.document can have been loaded before
+    // setting the originAttributes.
+    let loadContext = docShell.QueryInterface(Ci.nsILoadContext);
+    let userContextId = loadContext.originAttributes.userContextId;
+
     sendAsyncMessage("Browser:WindowCreated", { userContextId });
   }
 };
