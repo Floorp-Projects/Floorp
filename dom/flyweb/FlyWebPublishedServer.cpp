@@ -16,7 +16,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/unused.h"
 #include "nsGlobalWindow.h"
-#include "WebSocketChannel.h"
 
 namespace mozilla {
 namespace dom {
@@ -111,51 +110,6 @@ FlyWebPublishedServer::PublishedServerStarted(nsresult aStatus)
   }
 }
 
-already_AddRefed<WebSocket>
-FlyWebPublishedServer::OnWebSocketAccept(InternalRequest* aConnectRequest,
-                                         const Optional<nsAString>& aProtocol,
-                                         ErrorResult& aRv)
-{
-  MOZ_ASSERT(aConnectRequest);
-
-  LOG_I("FlyWebPublishedServer::OnWebSocketAccept(%p)", this);
-
-  nsCOMPtr<nsITransportProvider> provider =
-    OnWebSocketAcceptInternal(aConnectRequest,
-                              aProtocol,
-                              aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-  MOZ_ASSERT(provider);
-
-  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetOwner());
-  AutoJSContext cx;
-  GlobalObject global(cx, nsGlobalWindow::Cast(window)->FastGetGlobalJSObject());
-
-  nsAutoCString extensions, negotiatedExtensions;
-  aConnectRequest->Headers()->
-    Get(NS_LITERAL_CSTRING("Sec-WebSocket-Extensions"), extensions, aRv);
-  mozilla::net::ProcessServerWebSocketExtensions(extensions,
-                                                 negotiatedExtensions);
-
-  nsCString url;
-  aConnectRequest->GetURL(url);
-  Sequence<nsString> protocols;
-  if (aProtocol.WasPassed() &&
-      !protocols.AppendElement(aProtocol.Value(), fallible)) {
-    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
-    return nullptr;
-  }
-
-  return WebSocket::ConstructorCommon(global,
-                                      NS_ConvertUTF8toUTF16(url),
-                                      protocols,
-                                      provider,
-                                      negotiatedExtensions,
-                                      aRv);
-}
-
 /******** FlyWebPublishedServerImpl ********/
 
 NS_IMPL_ISUPPORTS_INHERITED0(FlyWebPublishedServerImpl, mozilla::DOMEventTargetHelper)
@@ -211,6 +165,52 @@ FlyWebPublishedServerImpl::OnFetchResponse(InternalRequest* aRequest,
   }
 }
 
+already_AddRefed<WebSocket>
+FlyWebPublishedServerImpl::OnWebSocketAccept(InternalRequest* aConnectRequest,
+                                             const Optional<nsAString>& aProtocol,
+                                             ErrorResult& aRv)
+{
+  MOZ_ASSERT(aConnectRequest);
+
+  LOG_I("FlyWebPublishedMDNSServer::OnWebSocketAccept(%p)", this);
+
+  if (!mHttpServer) {
+    aRv.Throw(NS_ERROR_UNEXPECTED);
+    return nullptr;
+  }
+
+  nsAutoCString negotiatedExtensions;
+  nsCOMPtr<nsITransportProvider> provider =
+    mHttpServer->AcceptWebSocket(aConnectRequest,
+                                 aProtocol,
+                                 negotiatedExtensions,
+                                 aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+  MOZ_ASSERT(provider);
+
+  nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(GetOwner());
+  AutoJSContext cx;
+  GlobalObject global(cx, nsGlobalWindow::Cast(window)->FastGetGlobalJSObject());
+
+  nsCString url;
+  aConnectRequest->GetURL(url);
+  Sequence<nsString> protocols;
+  if (aProtocol.WasPassed() &&
+      !protocols.AppendElement(aProtocol.Value(), fallible)) {
+    aRv.Throw(NS_ERROR_OUT_OF_MEMORY);
+    return nullptr;
+  }
+
+  return WebSocket::ConstructorCommon(global,
+                                      NS_ConvertUTF8toUTF16(url),
+                                      protocols,
+                                      provider,
+                                      negotiatedExtensions,
+                                      aRv);
+}
+
 void
 FlyWebPublishedServerImpl::OnWebSocketResponse(InternalRequest* aConnectRequest,
                                                InternalResponse* aResponse)
@@ -223,23 +223,6 @@ FlyWebPublishedServerImpl::OnWebSocketResponse(InternalRequest* aConnectRequest,
   if (mHttpServer) {
     mHttpServer->SendWebSocketResponse(aConnectRequest, aResponse);
   }
-}
-
-already_AddRefed<nsITransportProvider>
-FlyWebPublishedServerImpl::OnWebSocketAcceptInternal(InternalRequest* aConnectRequest,
-                                                     const Optional<nsAString>& aProtocol,
-                                                     ErrorResult& aRv)
-{
-  LOG_I("FlyWebPublishedServerImpl::OnWebSocketAcceptInternal(%p)", this);
-
-  if (!mHttpServer) {
-    aRv.Throw(NS_ERROR_UNEXPECTED);
-    return nullptr;
-  }
-
-  return mHttpServer->AcceptWebSocket(aConnectRequest,
-                                      aProtocol,
-                                      aRv);
 }
 
 /******** FlyWebPublishedServerChild ********/
@@ -326,14 +309,12 @@ FlyWebPublishedServerChild::OnFetchResponse(InternalRequest* aRequest,
   }
 }
 
-already_AddRefed<nsITransportProvider>
-FlyWebPublishedServerChild::OnWebSocketAcceptInternal(InternalRequest* aConnectRequest,
-                                                      const Optional<nsAString>& aProtocol,
-                                                      ErrorResult& aRv)
+already_AddRefed<WebSocket>
+FlyWebPublishedServerChild::OnWebSocketAccept(InternalRequest* aConnectRequest,
+                                              const Optional<nsAString>& aProtocol,
+                                              ErrorResult& aRv)
 {
-  LOG_I("FlyWebPublishedServerChild::OnWebSocketAcceptInternal(%p)", this);
-
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
+  // Send ipdl message to parent
   return nullptr;
 }
 
