@@ -16,7 +16,7 @@ MOZ_AUTOMATION_SDK=0
 if test -d $topsrcdir/../gcc/bin; then
     HOST_CC="$topsrcdir/../gcc/bin/gcc"
     HOST_CXX="$topsrcdir/../gcc/bin/g++"
-    ac_add_options --enable-stdcxx-compat
+    . "$topsrcdir/build/unix/mozconfig.stdcxx"
 fi
 
 MOZ_HORIZON=1

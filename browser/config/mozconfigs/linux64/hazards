@@ -9,7 +9,8 @@
 
 . "$topsrcdir/build/mozconfig.common"
 ac_add_options --enable-elf-hack
-ac_add_options --enable-stdcxx-compat
+
+. "$topsrcdir/build/unix/mozconfig.stdcxx"
 
 # The objdir must be at a known location so its path can be stripped from the
 # filenames stored by the analysis

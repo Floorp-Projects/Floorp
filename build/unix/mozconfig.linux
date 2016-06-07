@@ -28,8 +28,7 @@ fi
 
 ac_add_options --enable-elf-hack
 
-# Avoid dependency on libstdc++ 4.7
-ac_add_options --enable-stdcxx-compat
+. "$topsrcdir/build/unix/mozconfig.stdcxx"
 
 # PKG_CONFIG_LIBDIR is appropriately overridden in mozconfig.linux32
 export PKG_CONFIG_LIBDIR=/usr/lib64/pkgconfig:/usr/share/pkgconfig

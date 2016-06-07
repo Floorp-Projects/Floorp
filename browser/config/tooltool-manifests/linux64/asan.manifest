@@ -1,5 +1,13 @@
 [
 {
+"version": "gcc 4.8.5 + PR64905",
+"size": 80160264,
+"digest": "c1a9dc9da289b8528874d16300b9d13a997cec99195bb0bc46ff665216d8535d6d6cb5af6b4b1f2749af6815dab12e703fdb3849014e5c23a70eff351a0baf4e",
+"algorithm": "sha512",
+"filename": "gcc.tar.xz",
+"unpack": true
+},
+{
 "version": "clang 3.5/r200213",
 "size": 71282740, 
 "digest": "ee9edb1ef3afd9ab29e39565145545ad57e8d8d2538be4d822d7dbd64038f4529b0b287cecf48bf83def52a26ac2c6faa331686c3ad5e8b4ba4c22686ee0808f", 
