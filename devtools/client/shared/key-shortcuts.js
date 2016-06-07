@@ -50,6 +50,7 @@ const ElectronKeysMapping = {
   "PageDown": "DOM_VK_PAGE_DOWN",
   "Escape": "DOM_VK_ESCAPE",
   "Esc": "DOM_VK_ESCAPE",
+  "Tab": "DOM_VK_TAB",
   "VolumeUp": "DOM_VK_VOLUME_UP",
   "VolumeDown": "DOM_VK_VOLUME_DOWN",
   "VolumeMute": "DOM_VK_VOLUME_MUTE",
