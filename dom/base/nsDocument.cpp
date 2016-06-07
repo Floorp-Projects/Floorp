@@ -13653,14 +13653,27 @@ nsIDocument::ReportHasScrollLinkedEffect()
                                   "ScrollLinkedEffectFound2");
 }
 
-mozilla::StyleBackendType
-nsIDocument::GetStyleBackendType() const
+void
+nsIDocument::UpdateStyleBackendType()
 {
-  if (!mPresShell) {
+  MOZ_ASSERT(mStyleBackendType == StyleBackendType(0),
+             "no need to call UpdateStyleBackendType now");
 #ifdef MOZ_STYLO
-    NS_WARNING("GetStyleBackendType() called on document without a pres shell");
+  // XXX For now we use a Servo-backed style set only for (X)HTML documents
+  // in content docshells.  This should let us avoid implementing XUL-specific
+  // CSS features.  And apart from not supporting SVG properties in Servo
+  // yet, the root SVG element likes to create a style sheet for an SVG
+  // document before we have a pres shell (i.e. before we make the decision
+  // here about whether to use a Gecko- or Servo-backed style system), so
+  // we avoid Servo-backed style sets for SVG documents.
+  NS_ASSERTION(mDocumentContainer, "stylo: calling UpdateStyleBackendType "
+                                   "before we have a docshell");
+  mStyleBackendType =
+    nsLayoutUtils::SupportsServoStyleBackend(this) &&
+    mDocumentContainer ?
+      StyleBackendType::Servo :
+      StyleBackendType::Gecko;
+#else
+  mStyleBackendType = StyleBackendType::Gecko;
 #endif
-    return StyleBackendType::Gecko;
-  }
-  return mPresShell->StyleSet()->BackendType();
 }
