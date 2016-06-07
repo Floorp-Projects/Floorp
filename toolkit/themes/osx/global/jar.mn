@@ -147,6 +147,8 @@ toolkit.jar:
   skin/classic/global/media/unmuteButton@2x.png                      (media/unmuteButton@2x.png)
   skin/classic/global/media/noAudio.png                              (media/noAudio.png)
   skin/classic/global/media/noAudio@2x.png                           (media/noAudio@2x.png)
+  skin/classic/global/media/closeCaptionButton.png                   (media/closeCaptionButton.png)
+  skin/classic/global/media/closeCaptionButton@2x.png                (media/closeCaptionButton@2x.png)
   skin/classic/global/media/fullscreenButton.png                     (media/fullscreenButton.png)
   skin/classic/global/media/fullscreenButton@2x.png                  (media/fullscreenButton@2x.png)
   skin/classic/global/media/scrubberThumb.png                        (media/scrubberThumb.png)
