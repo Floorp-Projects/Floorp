@@ -433,6 +433,12 @@ SafeInstallOperation.prototype = {
   },
 
   _installDirectory: function(aDirectory, aTargetDirectory, aCopy) {
+    if (aDirectory.contains(aTargetDirectory)) {
+      let err = new Error(`Not installing ${aDirectory} into its own descendent ${aTargetDirectory}`);
+      logger.error(err);
+      throw err;
+    }
+
     let newDir = aTargetDirectory.clone();
     newDir.append(aDirectory.leafName);
     try {
@@ -5633,6 +5639,13 @@ AddonInstall.prototype = {
     catch (e) {
       zipreader.close();
       return Promise.reject([AddonManager.ERROR_CORRUPT_FILE, e]);
+    }
+
+    // A multi-package XPI is a container, the add-ons it holds each
+    // have their own id.  Everything else had better have an id here.
+    if (!this.addon.id && this.addon.type != "multipackage") {
+      let err = new Error(`Cannot find id for addon ${file.path}`);
+      return Promise.reject([AddonManager.ERROR_CORRUPT_FILE, err]);
     }
 
     if (mustSign(this.addon.type)) {
