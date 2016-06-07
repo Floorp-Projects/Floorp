@@ -64,7 +64,6 @@ class ITextureClientRecycleAllocator;
 #ifdef GFX_DEBUG_TRACK_CLIENTS_IN_POOL
 class TextureClientPool;
 #endif
-class TextureForwarder;
 class KeepAlive;
 
 /**
@@ -337,7 +336,7 @@ public:
 
   // Creates and allocates a TextureClient usable with Moz2D.
   static already_AddRefed<TextureClient>
-  CreateForDrawing(TextureForwarder* aAllocator,
+  CreateForDrawing(CompositableForwarder* aAllocator,
                    gfx::SurfaceFormat aFormat,
                    gfx::IntSize aSize,
                    BackendSelector aSelector,
