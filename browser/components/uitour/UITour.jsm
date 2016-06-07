@@ -1256,9 +1256,26 @@ this.UITour = {
         },
       }];
     }
+
+    let defaultIcon = "chrome://browser/skin/heartbeat-icon.svg";
+    let iconURL = defaultIcon;
+    try {
+      // Take the optional icon URL if specified
+      if (aOptions.iconURL) {
+        iconURL = new URL(aOptions.iconURL);
+        // For now, only allow chrome URIs.
+        if (iconURL.protocol != "chrome:") {
+          iconURL = defaultIcon;
+          throw new Error("Invalid protocol");
+        }
+      }
+    } catch (error) {
+      log.error("showHeartbeat: Invalid icon URL specified.");
+    }
+
     // Create the notification. Prefix its ID to decrease the chances of collisions.
     let notice = nb.appendNotification(aOptions.message, "heartbeat-" + aOptions.flowId,
-                                       "chrome://browser/skin/heartbeat-icon.svg",
+                                       iconURL,
                                        nb.PRIORITY_INFO_HIGH, buttons,
                                        (aEventType) => {
                                          if (aEventType != "removed") {
