@@ -87,11 +87,6 @@ RemoteWebNavigation.prototype = {
       baseURI: aBaseURI ? aBaseURI.spec : null,
     });
   },
-  setOriginAttributesBeforeLoading: function(aOriginAttributes) {
-    this._sendMessage("WebNavigation:SetOriginAttributes", {
-      originAttributes: aOriginAttributes,
-    });
-  },
   reload: function(aReloadFlags) {
     this._sendMessage("WebNavigation:Reload", {flags: aReloadFlags});
   },

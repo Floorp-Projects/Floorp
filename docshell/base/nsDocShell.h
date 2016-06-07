@@ -277,7 +277,7 @@ public:
     return mOriginAttributes;
   }
 
-  nsresult SetOriginAttributes(const mozilla::DocShellOriginAttributes& aAttrs);
+  void SetOriginAttributes(const mozilla::DocShellOriginAttributes& aAttrs);
 
   void GetInterceptedDocumentId(nsAString& aId)
   {
