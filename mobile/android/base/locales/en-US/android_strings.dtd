@@ -381,6 +381,7 @@ size. -->
 <!ENTITY pref_private_data_syncedTabs "Synced tabs">
 
 <!ENTITY pref_default_browser "Make default browser">
+<!ENTITY pref_default_browser_mozilla_support_tablet "Visit Mozilla Support">
 <!ENTITY pref_about_firefox "About &brandShortName;">
 <!ENTITY pref_vendor_faqs "FAQs">
 <!ENTITY pref_vendor_feedback "Give feedback">
