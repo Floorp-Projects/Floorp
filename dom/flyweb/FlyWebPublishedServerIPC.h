@@ -19,6 +19,11 @@
 class nsPIDOMWindowInner;
 
 namespace mozilla {
+namespace net {
+class TransportProviderParent;
+class TransportProviderChild;
+}
+
 namespace dom {
 
 class FlyWebPublishedServerParent;
@@ -97,6 +102,9 @@ public:
   virtual bool RecvServerClose() override;
   virtual bool RecvFetchRequest(const IPCInternalRequest& aRequest,
                                 const uint64_t& aRequestId) override;
+  virtual bool RecvWebSocketRequest(const IPCInternalRequest& aRequest,
+                                    const uint64_t& aRequestId,
+                                    PTransportProviderChild* aProvider) override;
 
   virtual void OnFetchResponse(InternalRequest* aRequest,
                                InternalResponse* aResponse) override;
@@ -115,6 +123,8 @@ private:
   ~FlyWebPublishedServerChild() {}
 
   nsDataHashtable<nsRefPtrHashKey<InternalRequest>, uint64_t> mPendingRequests;
+  nsRefPtrHashtable<nsUint64HashKey, TransportProviderChild>
+    mPendingTransportProviders;
   bool mActorDestroyed;
 };
 
@@ -137,12 +147,20 @@ private:
   virtual bool
   RecvFetchResponse(const IPCInternalResponse& aResponse,
                     const uint64_t& aRequestId) override;
+  virtual bool
+  RecvWebSocketResponse(const IPCInternalResponse& aResponse,
+                        const uint64_t& aRequestId) override;
+  virtual bool
+  RecvWebSocketAccept(const nsString& aProtocol,
+                      const uint64_t& aRequestId) override;
 
   ~FlyWebPublishedServerParent() {}
 
   bool mActorDestroyed;
   uint64_t mNextRequestId;
   nsRefPtrHashtable<nsUint64HashKey, InternalRequest> mPendingRequests;
+  nsRefPtrHashtable<nsUint64HashKey, TransportProviderParent>
+    mPendingTransportProviders;
   RefPtr<FlyWebPublishedServerImpl> mPublishedServer;
 };
 
