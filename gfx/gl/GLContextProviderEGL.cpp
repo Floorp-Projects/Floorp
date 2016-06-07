@@ -193,14 +193,9 @@ CreateSurfaceForWindow(nsIWidget* widget, const EGLConfig& config) {
     return newSurface;
 }
 
-GLContextEGL::GLContextEGL(
-                  CreateContextFlags flags,
-                  const SurfaceCaps& caps,
-                  GLContext* shareContext,
-                  bool isOffscreen,
-                  EGLConfig config,
-                  EGLSurface surface,
-                  EGLContext context)
+GLContextEGL::GLContextEGL(CreateContextFlags flags, const SurfaceCaps& caps,
+                           GLContext* shareContext, bool isOffscreen, EGLConfig config,
+                           EGLSurface surface, EGLContext context)
     : GLContext(flags, caps, shareContext, isOffscreen)
     , mConfig(config)
     , mSurface(surface)
@@ -529,10 +524,8 @@ GLContextEGL::CreateGLContext(CreateContextFlags flags,
                                                     contextAttribs.Elements());
     if (!context && shareContext) {
         shareContext = nullptr;
-        context = sEGLLibrary.fCreateContext(EGL_DISPLAY(),
-                                              config,
-                                              EGL_NO_CONTEXT,
-                                              contextAttribs.Elements());
+        context = sEGLLibrary.fCreateContext(EGL_DISPLAY(), config, EGL_NO_CONTEXT,
+                                             contextAttribs.Elements());
     }
     if (!context) {
         aFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_CREATE");
@@ -540,12 +533,9 @@ GLContextEGL::CreateGLContext(CreateContextFlags flags,
         return nullptr;
     }
 
-    RefPtr<GLContextEGL> glContext = new GLContextEGL(flags, caps,
-                                                        shareContext,
-                                                        isOffscreen,
-                                                        config,
-                                                        surface,
-                                                        context);
+    RefPtr<GLContextEGL> glContext = new GLContextEGL(flags, caps, shareContext,
+                                                      isOffscreen, config, surface,
+                                                      context);
 
     if (!glContext->Init()) {
         aFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_INIT");
@@ -755,21 +745,18 @@ GLContextProviderEGL::CreateWrappingExisting(void* aContext, void* aSurface)
         return nullptr;
     }
 
-    if (aContext && aSurface) {
-        SurfaceCaps caps = SurfaceCaps::Any();
-        EGLConfig config = EGL_NO_CONFIG;
-        RefPtr<GLContextEGL> glContext =
-            new GLContextEGL(CreateContextFlags::NONE, caps,
-                             nullptr, false,
-                             config, (EGLSurface)aSurface, (EGLContext)aContext);
+    if (!aContext || !aSurface)
+        return nullptr;
 
-        glContext->SetIsDoubleBuffered(true);
-        glContext->mOwnsContext = false;
+    SurfaceCaps caps = SurfaceCaps::Any();
+    EGLConfig config = EGL_NO_CONFIG;
+    RefPtr<GLContextEGL> gl = new GLContextEGL(CreateContextFlags::NONE, caps, nullptr,
+                                               false, config, (EGLSurface)aSurface,
+                                               (EGLContext)aContext);
+    gl->SetIsDoubleBuffered(true);
+    gl->mOwnsContext = false;
 
-        return glContext.forget();
-    }
-
-    return nullptr;
+    return gl.forget();
 }
 
 already_AddRefed<GLContext>
@@ -796,21 +783,19 @@ GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget, bool aForceAccelerated
     }
 
     SurfaceCaps caps = SurfaceCaps::Any();
-    RefPtr<GLContextEGL> glContext =
-        GLContextEGL::CreateGLContext(CreateContextFlags::NONE, caps,
-                                      nullptr, false,
-                                      config, surface, discardFailureId);
-
-    if (!glContext) {
+    RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(CreateContextFlags::NONE,
+                                                            caps, nullptr, false, config,
+                                                            surface, discardFailureId);
+    if (!gl) {
         MOZ_CRASH("GFX: Failed to create EGLContext!\n");
         mozilla::gl::DestroySurface(surface);
         return nullptr;
     }
 
-    glContext->MakeCurrent();
-    glContext->SetIsDoubleBuffered(doubleBuffered);
+    gl->MakeCurrent();
+    gl->SetIsDoubleBuffered(doubleBuffered);
 
-    return glContext.forget();
+    return gl.forget();
 }
 
 #if defined(ANDROID)
@@ -829,8 +814,8 @@ GLContextProviderEGL::CreateEGLSurface(void* aWindow)
 
     MOZ_ASSERT(aWindow);
 
-    EGLSurface surface = sEGLLibrary.fCreateWindowSurface(EGL_DISPLAY(), config, aWindow, 0);
-
+    EGLSurface surface = sEGLLibrary.fCreateWindowSurface(EGL_DISPLAY(), config, aWindow,
+                                                          0);
     if (surface == EGL_NO_SURFACE) {
         MOZ_CRASH("GFX: Failed to create EGLSurface 2!\n");
     }
@@ -983,8 +968,9 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(CreateContextFlags flags,
         return nullptr;
     }
 
-    RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(flags, configCaps, nullptr, true,
-                                                            config, surface, aFailureId);
+    RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(flags, configCaps, nullptr,
+                                                            true, config, surface,
+                                                            aFailureId);
     if (!gl) {
         NS_WARNING("Failed to create GLContext from PBuffer");
         sEGLLibrary.fDestroySurface(sEGLLibrary.Display(), surface);
@@ -1039,11 +1025,11 @@ GLContextProviderEGL::CreateOffscreen(const mozilla::gfx::IntSize& size,
             minBackbufferCaps.stencil = false;
         }
 
-        gl = GLContextEGL::CreateEGLPBufferOffscreenContext(flags, size, minBackbufferCaps,
+        gl = GLContextEGL::CreateEGLPBufferOffscreenContext(flags, size,
+                                                            minBackbufferCaps,
                                                             aFailureId);
-        if (!gl) {
+        if (!gl)
             return nullptr;
-        }
 
         // Pull the actual resulting caps to ensure that our offscreen matches our
         // backbuffer.

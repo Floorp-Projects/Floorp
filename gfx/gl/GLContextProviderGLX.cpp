@@ -779,16 +779,11 @@ GLXLibrary::xWaitVideoSync(int divisor, int remainder, unsigned int* count)
 }
 
 already_AddRefed<GLContextGLX>
-GLContextGLX::CreateGLContext(CreateContextFlags flags,
-                  const SurfaceCaps& caps,
-                  GLContextGLX* shareContext,
-                  bool isOffscreen,
-                  Display* display,
-                  GLXDrawable drawable,
-                  GLXFBConfig cfg,
-                  bool deleteDrawable,
-                  gfxXlibSurface* pixmap,
-                  ContextProfile profile)
+GLContextGLX::CreateGLContext(CreateContextFlags flags, const SurfaceCaps& caps,
+                              GLContextGLX* shareContext, bool isOffscreen,
+                              Display* display, GLXDrawable drawable, GLXFBConfig cfg,
+                              bool deleteDrawable, gfxXlibSurface* pixmap,
+                              ContextProfile profile)
 {
     GLXLibrary& glx = sGLXLibrary;
 
@@ -847,16 +842,9 @@ TRY_AGAIN_NO_SHARING:
     }
 
     if (context) {
-        glContext = new GLContextGLX(flags, caps,
-                                      shareContext,
-                                      isOffscreen,
-                                      display,
-                                      drawable,
-                                      context,
-                                      deleteDrawable,
-                                      db,
-                                      pixmap,
-                                      profile);
+        glContext = new GLContextGLX(flags, caps, shareContext, isOffscreen, display,
+                                     drawable, context, deleteDrawable, db, pixmap,
+                                     profile);
         if (!glContext->Init())
             error = true;
     } else {
@@ -1120,19 +1108,13 @@ GLContextProviderGLX::CreateForWindow(nsIWidget *aWidget, bool aForceAccelerated
         return nullptr;
     }
 
-    GLContextGLX *shareContext = GetGlobalContextGLX();
-
     SurfaceCaps caps = SurfaceCaps::Any();
-    RefPtr<GLContextGLX> glContext = GLContextGLX::CreateGLContext(CreateContextFlags::NONE,
-                                                                   caps,
-                                                                   shareContext,
-                                                                   false,
-                                                                   display,
-                                                                   window,
-                                                                   config,
-                                                                   false);
-
-    return glContext.forget();
+    GLContextGLX* shareContext = GetGlobalContextGLX();
+    RefPtr<GLContextGLX> gl = GLContextGLX::CreateGLContext(CreateContextFlags::NONE,
+                                                            caps, shareContext, false,
+                                                            display, window, config,
+                                                            false);
+    return gl.forget();
 }
 
 static bool

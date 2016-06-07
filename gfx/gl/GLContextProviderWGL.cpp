@@ -266,13 +266,9 @@ WGLLibrary::EnsureInitialized()
     return true;
 }
 
-GLContextWGL::GLContextWGL(CreateContextFlags flags,
-                  const SurfaceCaps& caps,
-                  GLContext* sharedContext,
-                  bool isOffscreen,
-                  HDC aDC,
-                  HGLRC aContext,
-                  HWND aWindow)
+GLContextWGL::GLContextWGL(CreateContextFlags flags, const SurfaceCaps& caps,
+                           GLContext* sharedContext, bool isOffscreen, HDC aDC,
+                           HGLRC aContext, HWND aWindow)
     : GLContext(flags, caps, sharedContext, isOffscreen),
       mDC(aDC),
       mContext(aContext),
@@ -285,14 +281,9 @@ GLContextWGL::GLContextWGL(CreateContextFlags flags,
     SetProfileVersion(ContextProfile::OpenGLCompatibility, 200);
 }
 
-GLContextWGL::GLContextWGL(CreateContextFlags flags,
-                  const SurfaceCaps& caps,
-                  GLContext* sharedContext,
-                  bool isOffscreen,
-                  HANDLE aPbuffer,
-                  HDC aDC,
-                  HGLRC aContext,
-                  int aPixelFormat)
+GLContextWGL::GLContextWGL(CreateContextFlags flags, const SurfaceCaps& caps,
+                           GLContext* sharedContext, bool isOffscreen, HANDLE aPbuffer,
+                           HDC aDC, HGLRC aContext, int aPixelFormat)
     : GLContext(flags, caps, sharedContext, isOffscreen),
       mDC(aDC),
       mContext(aContext),
@@ -635,8 +626,8 @@ CreateWindowOffscreenContext()
 
     SurfaceCaps caps = SurfaceCaps::ForRGBA();
     RefPtr<GLContextWGL> glContext = new GLContextWGL(CreateContextFlags::NONE, caps,
-                                                        shareContext, true,
-                                                        dc, context, win);
+                                                      shareContext, true, dc, context,
+                                                      win);
 
     return glContext.forget();
 }
