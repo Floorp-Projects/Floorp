@@ -1,7 +1,7 @@
 [package]
 
 name = "webdriver"
-version = "0.10.2"
+version = "0.11.0"
 authors = ["Mozilla Tools and Automation <auto-tools@mozilla.com>"]
 description = "Library implementing the wire protocol for the W3C WebDriver specification."
 repository = "https://github.com/jgraham/webdriver-rust"
