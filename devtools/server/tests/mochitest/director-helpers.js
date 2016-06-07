@@ -13,8 +13,8 @@ SimpleTest.registerCleanupFunction(function () {
   Services.prefs.clearUserPref("dom.mozBrowserFramesEnabled");
 });
 
-const { DirectorRegistry,
-        DirectorRegistryFront } = require("devtools/server/actors/director-registry");
+const { DirectorRegistry } = require("devtools/server/actors/director-registry");
+const { DirectorRegistryFront } = require("devtools/shared/fronts/director-registry");
 
 const { DirectorManagerFront } = require("devtools/shared/fronts/director-manager");
 
