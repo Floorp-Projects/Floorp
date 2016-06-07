@@ -9414,7 +9414,7 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
   case eCSSUnit_Inherit:
   case eCSSUnit_Unset:
     conditions.SetUncacheable();
-    svg->SetStrokeDashoffsetFromObject(parentSVG->StrokeDashoffsetFromObject());
+    svg->SetStrokeDasharrayFromObject(parentSVG->StrokeDasharrayFromObject());
     svg->mStrokeDasharray = parentSVG->mStrokeDasharray;
     break;
 
@@ -9422,19 +9422,19 @@ nsRuleNode::ComputeSVGData(void* aStartStruct,
     MOZ_ASSERT(strokeDasharrayValue->GetIntValue() ==
                      NS_STYLE_STROKE_PROP_CONTEXT_VALUE,
                "Unknown keyword for stroke-dasharray");
-    svg->SetStrokeDashoffsetFromObject(true);
+    svg->SetStrokeDasharrayFromObject(true);
     svg->mStrokeDasharray.Clear();
     break;
 
   case eCSSUnit_Initial:
   case eCSSUnit_None:
-    svg->SetStrokeDashoffsetFromObject(false);
+    svg->SetStrokeDasharrayFromObject(false);
     svg->mStrokeDasharray.Clear();
     break;
 
   case eCSSUnit_List:
   case eCSSUnit_ListDep: {
-    svg->SetStrokeDashoffsetFromObject(false);
+    svg->SetStrokeDasharrayFromObject(false);
     svg->mStrokeDasharray.Clear();
 
     // count number of values
