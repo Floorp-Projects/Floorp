@@ -482,10 +482,6 @@ let UninstallObserver = {
     AddonManager.addAddonListener(this);
   },
 
-  uninit: function() {
-    AddonManager.removeAddonListener(this);
-  },
-
   onUninstalling: function(addon) {
     let extension = GlobalManager.extensionMap.get(addon.id);
     if (extension) {
@@ -496,30 +492,47 @@ let UninstallObserver = {
 
 // Responsible for loading extension APIs into the right globals.
 GlobalManager = {
+  // Number of extensions currently enabled.
+  count: 0,
+
+  // Map[docShell -> {extension, context}] where context is an ExtensionContext.
+  docShells: new Map(),
+
   // Map[extension ID -> Extension]. Determines which extension is
   // responsible for content under a particular extension ID.
   extensionMap: new Map(),
 
   init(extension) {
-    if (this.extensionMap.size == 0) {
+    if (this.count == 0) {
       Services.obs.addObserver(this, "content-document-global-created", false);
       UninstallObserver.init();
     }
+    this.count++;
 
     this.extensionMap.set(extension.id, extension);
   },
 
   uninit(extension) {
-    this.extensionMap.delete(extension.id);
-
-    if (this.extensionMap.size == 0) {
+    this.count--;
+    if (this.count == 0) {
       Services.obs.removeObserver(this, "content-document-global-created");
-      UninstallObserver.uninit();
     }
+
+    for (let [docShell, data] of this.docShells) {
+      if (extension == data.extension) {
+        this.docShells.delete(docShell);
+      }
+    }
+
+    this.extensionMap.delete(extension.id);
   },
 
   getExtension(extensionId) {
     return this.extensionMap.get(extensionId);
+  },
+
+  injectInDocShell(docShell, extension, context) {
+    this.docShells.set(docShell, {extension, context});
   },
 
   injectInObject(extension, context, defaultCallback, dest, namespaces = null) {
@@ -624,34 +637,37 @@ GlobalManager = {
       return;
     }
 
-
     let docShell = contentWindow.QueryInterface(Ci.nsIInterfaceRequestor)
-                                .getInterface(Ci.nsIDocShell);
+                                .getInterface(Ci.nsIWebNavigation)
+                                .QueryInterface(Ci.nsIDocShellTreeItem)
+                                .sameTypeRootTreeItem
+                                .QueryInterface(Ci.nsIDocShell);
 
-    let parentDocument = docShell.parent.QueryInterface(Ci.nsIDocShell)
-                                 .contentViewer.DOMDocument;
-
-    let browser = docShell.chromeEventHandler;
-    // If this is a sub-frame of the add-on manager, use that <browser>
-    // element rather than the top-level chrome event handler.
-    if (contentWindow.frameElement && parentDocument.documentURI == "about:addons") {
-      browser = contentWindow.frameElement;
+    if (this.docShells.has(docShell)) {
+      let {extension, context} = this.docShells.get(docShell);
+      if (context && extension.id == id) {
+        inject(extension, context);
+      }
+      return;
     }
-
-    let type = "tab";
-    if (browser.hasAttribute("webextension-view-type")) {
-      type = browser.getAttribute("webextension-view-type");
-    } else if (browser.classList.contains("inline-options-browser")) {
-      // Options pages are currently displayed inline, but in Chrome
-      // and in our UI mock-ups for a later milestone, they're
-      // pop-ups.
-      type = "popup";
-    }
-
 
     let extension = this.extensionMap.get(id);
     let uri = contentWindow.document.documentURIObject;
     let incognito = PrivateBrowsingUtils.isContentWindowPrivate(contentWindow);
+
+    let browser = docShell.chromeEventHandler;
+
+    let type = "tab";
+    if (browser instanceof Ci.nsIDOMElement) {
+      if (browser.hasAttribute("webextension-view-type")) {
+        type = browser.getAttribute("webextension-view-type");
+      } else if (browser.classList.contains("inline-options-browser")) {
+        // Options pages are currently displayed inline, but in Chrome
+        // and in our UI mock-ups for a later milestone, they're
+        // pop-ups.
+        type = "popup";
+      }
+    }
 
     let context = new ExtensionContext(extension, {type, contentWindow, uri, docShell, incognito});
     inject(extension, context);
