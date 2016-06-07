@@ -34,6 +34,8 @@ class MediaStreamDirectListener;
 class MediaStreamGraph;
 class ProcessedMediaStream;
 
+enum class BlockingMode;
+
 namespace dom {
 class AudioNode;
 class HTMLCanvasElement;
@@ -304,7 +306,8 @@ public:
      * destroyed. Returns a pledge that gets resolved when the MediaStreamGraph
      * has applied the block in the playback stream.
      */
-    already_AddRefed<media::Pledge<bool, nsresult>> BlockSourceTrackId(TrackID aTrackId);
+    already_AddRefed<media::Pledge<bool, nsresult>>
+    BlockSourceTrackId(TrackID aTrackId, BlockingMode aBlockingMode);
 
   private:
     RefPtr<MediaInputPort> mInputPort;
