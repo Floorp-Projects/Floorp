@@ -154,7 +154,8 @@ var api = context => {
 };
 
 // Represents a content script.
-function Script(options, deferred = PromiseUtils.defer()) {
+function Script(extension, options, deferred = PromiseUtils.defer()) {
+  this.extension = extension;
   this.options = options;
   this.run_at = this.options.run_at;
   this.js = this.options.js || [];
@@ -170,9 +171,26 @@ function Script(options, deferred = PromiseUtils.defer()) {
   this.matches_host_ = new MatchPattern(this.options.matchesHost || null);
   this.include_globs_ = new MatchGlobs(this.options.include_globs);
   this.exclude_globs_ = new MatchGlobs(this.options.exclude_globs);
+
+  this.requiresCleanup = !this.remove_css && (this.css.length > 0 || options.cssCode);
 }
 
 Script.prototype = {
+  get cssURLs() {
+    // We can handle CSS urls (css) and CSS code (cssCode).
+    let urls = [];
+    for (let url of this.css) {
+      urls.push(this.extension.baseURI.resolve(url));
+    }
+
+    if (this.options.cssCode) {
+      let url = "data:text/css;charset=utf-8," + encodeURIComponent(this.options.cssCode);
+      urls.push(url);
+    }
+
+    return urls;
+  },
+
   matches(window) {
     let uri = window.document.documentURIObject;
     if (!(this.matches_.matches(uri) || this.matches_host_.matchesIgnoringPath(uri))) {
@@ -206,7 +224,18 @@ Script.prototype = {
     return true;
   },
 
-  tryInject(extension, window, sandbox, shouldRun) {
+  cleanup(window) {
+    if (!this.remove_css) {
+      let winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
+                           .getInterface(Ci.nsIDOMWindowUtils);
+
+      for (let url of this.cssURLs) {
+        runSafeSyncWithoutClone(winUtils.removeSheetUsingURIString, url, winUtils.AUTHOR_SHEET);
+      }
+    }
+  },
+
+  tryInject(window, sandbox, shouldRun) {
     if (!this.matches(window)) {
       this.deferred.reject({message: "No matching window"});
       return;
@@ -216,25 +245,13 @@ Script.prototype = {
       let winUtils = window.QueryInterface(Ci.nsIInterfaceRequestor)
                            .getInterface(Ci.nsIDOMWindowUtils);
 
-      // We can handle CSS urls (css) and CSS code (cssCode).
-      let cssUrls = [];
-      for (let cssUrl of this.css) {
-        cssUrl = extension.baseURI.resolve(cssUrl);
-        cssUrls.push(cssUrl);
-      }
+      let {cssURLs} = this;
+      if (cssURLs.length > 0) {
+        let method = this.remove_css ? winUtils.removeSheetUsingURIString : winUtils.loadSheetUsingURIString;
+        for (let url of cssURLs) {
+          runSafeSyncWithoutClone(method, url, winUtils.AUTHOR_SHEET);
+        }
 
-      if (this.options.cssCode) {
-        let cssUrl = "data:text/css;charset=utf-8," + encodeURIComponent(this.options.cssCode);
-        cssUrls.push(cssUrl);
-      }
-
-      // We can insertCSS and removeCSS.
-      let method = this.remove_css ? winUtils.removeSheetUsingURIString : winUtils.loadSheetUsingURIString;
-      for (let cssUrl of cssUrls) {
-        runSafeSyncWithoutClone(method, cssUrl, winUtils.AUTHOR_SHEET);
-      }
-
-      if (cssUrls.length > 0) {
         this.deferred.resolve();
       }
     }
@@ -250,7 +267,7 @@ Script.prototype = {
           Cu.reportError(`Script injection: ignoring ${url} at ${scheduled}`);
           continue;
         }
-        url = extension.baseURI.resolve(url);
+        url = this.extension.baseURI.resolve(url);
 
         let options = {
           target: sandbox,
@@ -350,8 +367,9 @@ class ExtensionContext extends BaseContext {
         isWebExtensionContentScript: true,
       });
     } else {
-      // sandbox metadata is needed to be recognized and supported in
-      // the Developer Tools of the tab where the content script is running.
+      // This metadata is required by the Developer Tools, in order for
+      // the content script to be associated with both the extension and
+      // the tab holding the content page.
       let metadata = {
         "inner-window-id": getInnerWindowID(contentWindow),
         addonId: attrs.addonId,
@@ -362,7 +380,7 @@ class ExtensionContext extends BaseContext {
         sandboxPrototype: contentWindow,
         wantXrays: true,
         isWebExtensionContentScript: true,
-        wantGlobalProperties: ["XMLHttpRequest"],
+        wantGlobalProperties: ["XMLHttpRequest", "fetch"],
       });
     }
 
@@ -417,7 +435,7 @@ class ExtensionContext extends BaseContext {
   }
 
   execute(script, shouldRun) {
-    script.tryInject(this.extension, this.contentWindow, this.sandbox, shouldRun);
+    script.tryInject(this.contentWindow, this.sandbox, shouldRun);
   }
 
   addScript(script) {
@@ -425,8 +443,8 @@ class ExtensionContext extends BaseContext {
     this.execute(script, scheduled => isWhenBeforeOrSame(scheduled, state));
 
     // Save the script in case it has pending operations in later load
-    // states, but only if we're before document_idle.
-    if (state != "document_idle") {
+    // states, but only if we're before document_idle, or require cleanup.
+    if (state != "document_idle" || script.requiresCleanup) {
       this.scripts.push(script);
     }
   }
@@ -437,12 +455,18 @@ class ExtensionContext extends BaseContext {
     }
     if (documentState == "document_idle") {
       // Don't bother saving scripts after document_idle.
-      this.scripts.length = 0;
+      this.scripts = this.scripts.filter(script => script.requiresCleanup);
     }
   }
 
   close() {
     super.unload();
+
+    for (let script of this.scripts) {
+      if (script.requiresCleanup) {
+        script.cleanup(this.contentWindow);
+      }
+    }
 
     this.childManager.close();
 
@@ -565,9 +589,11 @@ DocumentManager = {
 
   // Used to executeScript, insertCSS and removeCSS.
   executeScript(global, extensionId, options) {
+    let extension = ExtensionManager.get(extensionId);
+
     let executeInWin = (window) => {
       let deferred = PromiseUtils.defer();
-      let script = new Script(options, deferred);
+      let script = new Script(extension, options, deferred);
 
       if (script.matches(window)) {
         let context = this.getContentScriptContext(extensionId, window);
@@ -715,7 +741,7 @@ function BrowserExtensionContent(data) {
   this.id = data.id;
   this.uuid = data.uuid;
   this.data = data;
-  this.scripts = data.content_scripts.map(scriptData => new Script(scriptData));
+  this.scripts = data.content_scripts.map(scriptData => new Script(this, scriptData));
   this.webAccessibleResources = new MatchGlobs(data.webAccessibleResources);
   this.whiteListedHosts = new MatchPattern(data.whiteListedHosts);
 

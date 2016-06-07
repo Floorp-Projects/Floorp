@@ -1,0 +1,48 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for content script</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+add_task(function* test_content_script_css() {
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      "content_scripts": [{
+        "matches": ["http://mochi.test/*/file_sample.html"],
+        "css": ["content.css"],
+      }],
+    },
+
+    files: {
+      "content.css": "body { max-width: 42px; }",
+    },
+  });
+
+  yield extension.startup();
+
+  let win = window.open("file_sample.html");
+  yield waitForLoad(win);
+
+  let style = win.getComputedStyle(win.document.body);
+  is(style.maxWidth, "42px", "Stylesheet correctly applied");
+
+  yield extension.unload();
+
+  style = win.getComputedStyle(win.document.body);
+  is(style.maxWidth, "none", "Stylesheet correctly removed");
+
+  win.close();
+});
+</script>
+
+</body>
+</html>

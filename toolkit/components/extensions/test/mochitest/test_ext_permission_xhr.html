@@ -16,46 +16,45 @@
 /* eslint-disable mozilla/balanced-listeners */
 
 add_task(function* test_simple() {
-  function runTests(cx, assertTrue, finish) {
-    function run(shouldFail, finish) {
+  function runTests(cx) {
+    function xhr(url) {
+      return new Promise((resolve, reject) => {
+        let req = new XMLHttpRequest();
+        req.open("GET", url);
+        req.addEventListener("load", resolve);
+        req.addEventListener("error", reject);
+        req.send();
+      });
+    }
+
+    function run(shouldFail, fetch) {
       function passListener() {
-        assertTrue(true, `${cx} pass listener`);
-        finish();
+        browser.test.succeed(`${cx}.${fetch.name} pass listener`);
       }
 
       function failListener() {
-        assertTrue(false, `${cx} fail listener`);
-        finish();
+        browser.test.fail(`${cx}.${fetch.name} fail listener`);
       }
 
-      let req = new XMLHttpRequest();
       if (shouldFail) {
-        req.addEventListener("load", failListener);
-        req.addEventListener("error", passListener);
-        req.open("GET", "http://example.org/example.txt");
+        return fetch("http://example.org/example.txt").then(failListener, passListener);
       } else {
-        req.addEventListener("load", passListener);
-        req.addEventListener("error", failListener);
-        req.open("GET", "http://example.com/example.txt");
+        return fetch("http://example.com/example.txt").then(passListener, failListener);
       }
-      req.send();
     }
 
-    run(true, function() {
-      run(false, finish);
-    });
+    return run(true, xhr)
+      .then(() => run(false, xhr))
+      .then(() => run(true, fetch))
+      .then(() => run(false, fetch))
+      .catch(err => {
+        browser.test.fail(`Error: ${err} :: ${err.stack}`);
+        browser.test.notifyFail("permission_xhr");
+      });
   }
 
   function background(runTests) {
-    browser.runtime.onMessage.addListener(([msg, ...args]) => {
-      if (msg == "assertTrue") {
-        browser.test.assertTrue(...args);
-      } else {
-        browser.test.sendMessage(msg, ...args);
-      }
-    });
-
-    runTests("bg", browser.test.assertTrue.bind(browser.test), () => {
+    runTests("bg").then(() => {
       browser.test.notifyPass("permission_xhr");
     });
   }
@@ -71,19 +70,24 @@ add_task(function* test_simple() {
     },
     files: {
       "content.js": "new " + function(runTests) {
-        function assertTrue(...args) {
-          browser.runtime.sendMessage(["assertTrue", ...args]);
-        }
-        runTests("content", assertTrue, () => {
+        runTests("content").then(() => {
+          window.wrappedJSObject.privilegedFetch = fetch;
           window.wrappedJSObject.privilegedXHR = XMLHttpRequest;
 
-          window.addEventListener("message", function rcv(event) {
-            if (event.data === "test") {
-              return;
+          window.addEventListener("message", function rcv({data}) {
+            switch (data.msg) {
+              case "test":
+                break;
+
+              case "assertTrue":
+                browser.test.assertTrue(data.condition, data.description);
+                break;
+
+              case "finish":
+                window.removeEventListener("message", rcv, false);
+                browser.test.sendMessage("content-script-finished");
+                break;
             }
-            window.removeEventListener("message", rcv, false);
-            browser.runtime.sendMessage(["assertTrue", event.data, "content page can't use XHR"]);
-            browser.runtime.sendMessage(["content-script-finished"]);
           }, false);
           window.postMessage("test", "*");
         });

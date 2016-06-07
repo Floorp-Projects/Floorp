@@ -47,7 +47,7 @@ var observer = {
                                           Ci.nsISupportsWeakReference]),
 
   // nsIFormSubmitObserver
-  notify : function (formElement, aWindow, actionURI) {
+  notify(formElement, aWindow, actionURI) {
     log("observer notified for form submission.");
 
     // We're invoked before the content's |onsubmit| handlers, so we
@@ -64,7 +64,7 @@ var observer = {
     return true; // Always return true, or form submit will be canceled.
   },
 
-  onPrefChange : function() {
+  onPrefChange() {
     gEnabled = Services.prefs.getBoolPref("signon.rememberSignons");
     gAutofillForms = Services.prefs.getBoolPref("signon.autofillForms");
     gStoreWhenAutocompleteOff = Services.prefs.getBoolPref("signon.storeWhenAutocompleteOff");
@@ -83,7 +83,7 @@ function messageManagerFromWindow(win) {
             .getInterface(Ci.nsIWebNavigation)
             .QueryInterface(Ci.nsIDocShell)
             .QueryInterface(Ci.nsIInterfaceRequestor)
-            .getInterface(Ci.nsIContentFrameMessageManager)
+            .getInterface(Ci.nsIContentFrameMessageManager);
 }
 
 // This object maps to the "child" process (even in the single-process case).
@@ -98,7 +98,7 @@ var LoginManagerContent = {
     return this.__formFillService;
   },
 
-  _getRandomId: function() {
+  _getRandomId() {
     return Cc["@mozilla.org/uuid-generator;1"]
              .getService(Ci.nsIUUIDGenerator).generateUUID().toString();
   },
@@ -136,7 +136,7 @@ var LoginManagerContent = {
   // Number of outstanding requests to each manager.
   _managers: new Map(),
 
-  _takeRequest: function(msg) {
+  _takeRequest(msg) {
     let data = msg.data;
     let request = this._requests.get(data.requestId);
 
@@ -155,7 +155,7 @@ var LoginManagerContent = {
     return request;
   },
 
-  _sendRequest: function(messageManager, requestData,
+  _sendRequest(messageManager, requestData,
                          name, messageData) {
     let count;
     if (!(count = this._managers.get(messageManager))) {
@@ -178,7 +178,7 @@ var LoginManagerContent = {
     return deferred.promise;
   },
 
-  receiveMessage: function (msg, window) {
+  receiveMessage(msg, window) {
     if (msg.name == "RemoteLogins:fillForm") {
       this.fillForm({
         topDocument: window.document,
@@ -224,7 +224,7 @@ var LoginManagerContent = {
    * @param {Object} options
    * @param {boolean} options.showMasterPassword - whether to show a master password prompt
    */
-  _getLoginDataFromParent: function(form, options) {
+  _getLoginDataFromParent(form, options) {
     let doc = form.ownerDocument;
     let win = doc.defaultView;
 
@@ -247,7 +247,7 @@ var LoginManagerContent = {
                              messageData);
   },
 
-  _autoCompleteSearchAsync: function(aSearchString, aPreviousResult,
+  _autoCompleteSearchAsync(aSearchString, aPreviousResult,
                                      aElement, aRect) {
     let doc = aElement.ownerDocument;
     let form = FormLikeFactory.createFromField(aElement);
@@ -501,7 +501,7 @@ var LoginManagerContent = {
     this._fillForm(form, true, clobberUsername, true, true, loginsFound, recipes, options);
   },
 
-  loginsFound: function({ form, loginsFound, recipes }) {
+  loginsFound({ form, loginsFound, recipes }) {
     let doc = form.ownerDocument;
     let autofillForm = gAutofillForms && !PrivateBrowsingUtils.isContentWindowPrivate(doc.defaultView);
 
@@ -513,7 +513,7 @@ var LoginManagerContent = {
    *
    * Listens for DOMAutoComplete and blur events on an input field.
    */
-  onUsernameInput : function(event) {
+  onUsernameInput(event) {
     if (!event.isTrusted)
       return;
 
@@ -624,7 +624,7 @@ var LoginManagerContent = {
    * this method will only return a non-null usernameField if the
    * FormLike has a password field.
    */
-  _getFormFields : function (form, isSubmission, recipes) {
+  _getFormFields(form, isSubmission, recipes) {
     var usernameField = null;
     var pwFields = null;
     var fieldOverrideRecipe = LoginRecipesContent.getFieldOverrides(recipes, form);
@@ -854,7 +854,7 @@ var LoginManagerContent = {
    * @param {Object} [options = {}] is a list of options for this method.
             - [inputElement] is an optional target input element we want to fill
    */
-  _fillForm : function (form, autofillForm, clobberUsername, clobberPassword,
+  _fillForm(form, autofillForm, clobberUsername, clobberPassword,
                         userTriggered, foundLogins, recipes, {inputElement} = {}) {
     let ignoreAutocomplete = true;
     const AUTOFILL_RESULT = {
@@ -1231,34 +1231,34 @@ UserAutoCompleteResult.prototype = {
   errorDescription : "",
   matchCount : 0,
 
-  getValueAt : function (index) {
+  getValueAt(index) {
     if (index < 0 || index >= this.logins.length)
       throw new Error("Index out of range.");
 
     return this.logins[index].username;
   },
 
-  getLabelAt: function(index) {
+  getLabelAt(index) {
     return this.getValueAt(index);
   },
 
-  getCommentAt : function (index) {
+  getCommentAt(index) {
     return "";
   },
 
-  getStyleAt : function (index) {
+  getStyleAt(index) {
     return "";
   },
 
-  getImageAt : function (index) {
+  getImageAt(index) {
     return "";
   },
 
-  getFinalCompleteValueAt : function (index) {
+  getFinalCompleteValueAt(index) {
     return this.getValueAt(index);
   },
 
-  removeValueAt : function (index, removeFromDB) {
+  removeValueAt(index, removeFromDB) {
     if (index < 0 || index >= this.logins.length)
         throw new Error("Index out of range.");
 

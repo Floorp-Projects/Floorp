@@ -7,11 +7,20 @@ package org.mozilla.gecko.toolbar;
 import android.content.Context;
 import android.util.AttributeSet;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.tabs.TabCurve;
 
 public class PhoneTabsButton extends ShapedButton {
     public PhoneTabsButton(Context context, AttributeSet attrs) {
         super(context, attrs);
+
+        if (!AppConstants.Versions.preLollipop) {
+            // The Android N preview has issues rendering our tabs button during animations
+            // unless we use hardware layers, see bug 1264783. For consistency we should
+            // try and set this across all devices, however on 4.X devices the background
+            // isn't drawn when we use hardware layers - hence we need to disable this there.
+            setLayerType(LAYER_TYPE_HARDWARE, null);
+        }
     }
 
     @Override

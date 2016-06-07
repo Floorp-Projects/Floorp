@@ -4452,6 +4452,13 @@
     "releaseChannelCollection": "opt-out",
     "description": "The browser that was the default on the initial profile migration. The values correspond to the internal browser ID (see MigrationUtils.jsm)"
   },
+  "FX_STARTUP_EXTERNAL_CONTENT_HANDLER": {
+    "bug_numbers": [1276027],
+    "alert_emails": ["jaws@mozilla.com"],
+    "expires_in_version": "53",
+    "kind": "count",
+    "description": "Count how often the browser is opened as an external app handler. This is generally used when the browser is set as the default browser."
+  },
   "INPUT_EVENT_RESPONSE_MS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
     "bug_numbers": [1235908],

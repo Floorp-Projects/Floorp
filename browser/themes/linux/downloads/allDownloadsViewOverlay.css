@@ -10,18 +10,6 @@
   --downloads-item-height: 5em;
 }
 
-.blockedIcon {
-  list-style-image: url("moz-icon://stock/gtk-dialog-error?size=32");
-}
-
-@item@[verdict="PotentiallyUnwanted"] .blockedIcon {
-  list-style-image: url("moz-icon://stock/gtk-dialog-warning?size=32");
-}
-
-@item@[verdict="Uncommon"] .blockedIcon {
-  list-style-image: url("moz-icon://stock/gtk-dialog-info?size=32");
-}
-
 /*** Button icons ***/
 
 .downloadButton.downloadIconCancel {
