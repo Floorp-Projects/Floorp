@@ -311,8 +311,6 @@ private:
   mozilla::Maybe<JSAutoNullableCompartment> mAutoNullableCompartment;
   JSContext *mCx;
 
-  // Track state between the old and new error reporting modes.
-  bool mOldAutoJSAPIOwnsErrorReporting;
   // Whether we're mainthread or not; set when we're initialized.
   bool mIsMainThread;
   Maybe<JSErrorReporter> mOldErrorReporter;

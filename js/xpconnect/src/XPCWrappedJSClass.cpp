@@ -239,7 +239,6 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
         // to eat all exceptions either.
 
         {
-            MOZ_ASSERT(JS::ContextOptionsRef(cx).autoJSAPIOwnsErrorReporting());
             RootedValue arg(cx, JS::ObjectValue(*id));
             success = JS_CallFunctionValue(cx, jsobj, fun, HandleValueArray(arg), &retval);
         }
@@ -274,8 +273,6 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(JSContext* cx,
                         JS_ClearPendingException(cx);
                 }
             }
-
-            MOZ_ASSERT(ContextOptionsRef(cx).autoJSAPIOwnsErrorReporting());
         } else if (!success) {
             NS_WARNING("QI hook ran OOMed - this is probably a bug!");
         }
@@ -1213,7 +1210,6 @@ pre_call_clean_up:
         success = JS_SetProperty(cx, obj, name, rval);
     } else {
         if (!fval.isPrimitive()) {
-            MOZ_ASSERT(JS::ContextOptionsRef(cx).autoJSAPIOwnsErrorReporting());
             success = JS_CallFunctionValue(cx, thisObj, fval, args, &rval);
         } else {
             // The property was not an object so can't be a function.

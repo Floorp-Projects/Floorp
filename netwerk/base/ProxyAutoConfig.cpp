@@ -687,8 +687,6 @@ private:
     mContext = JS_NewContext(mRuntime, 0);
     NS_ENSURE_TRUE(mContext, NS_ERROR_OUT_OF_MEMORY);
 
-    JS::ContextOptionsRef(mContext).setAutoJSAPIOwnsErrorReporting(true);
-
     JSAutoRequest ar(mContext);
 
     JS::CompartmentOptions options;

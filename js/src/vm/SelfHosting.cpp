@@ -2714,25 +2714,15 @@ MaybePrintAndClearPendingException(JSContext* cx, FILE* file)
 class MOZ_STACK_CLASS AutoSelfHostingErrorReporter
 {
     JSContext* cx_;
-    bool prevDontReportUncaught_;
-    bool prevAutoJSAPIOwnsErrorReporting_;
     JSErrorReporter oldReporter_;
 
   public:
     explicit AutoSelfHostingErrorReporter(JSContext* cx)
-      : cx_(cx),
-        prevDontReportUncaught_(cx_->options().dontReportUncaught()),
-        prevAutoJSAPIOwnsErrorReporting_(cx_->options().autoJSAPIOwnsErrorReporting())
+      : cx_(cx)
     {
-        cx_->options().setDontReportUncaught(true);
-        cx_->options().setAutoJSAPIOwnsErrorReporting(true);
-
         oldReporter_ = JS_SetErrorReporter(cx_->runtime(), selfHosting_WarningReporter);
     }
     ~AutoSelfHostingErrorReporter() {
-        cx_->options().setDontReportUncaught(prevDontReportUncaught_);
-        cx_->options().setAutoJSAPIOwnsErrorReporting(prevAutoJSAPIOwnsErrorReporting_);
-
         JS_SetErrorReporter(cx_->runtime(), oldReporter_);
 
         // Exceptions in self-hosted code will usually be printed to stderr in

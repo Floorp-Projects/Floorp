@@ -584,7 +584,7 @@ CompileError::throwError(JSContext* cx)
     // Like ReportError, don't call the error reporter if the embedding is
     // responsible for handling exceptions. In this case the error reporter
     // must only be used for warnings.
-    if (cx->options().autoJSAPIOwnsErrorReporting() && !JSREPORT_IS_WARNING(report.flags))
+    if (!JSREPORT_IS_WARNING(report.flags))
         return;
 
     CallErrorReporter(cx, message, &report);
