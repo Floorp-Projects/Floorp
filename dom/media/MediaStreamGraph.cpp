@@ -3147,24 +3147,26 @@ MediaInputPort::SetGraphImpl(MediaStreamGraphImpl* aGraph)
 }
 
 void
-MediaInputPort::BlockSourceTrackIdImpl(TrackID aTrackId)
+MediaInputPort::BlockSourceTrackIdImpl(TrackID aTrackId, BlockingMode aBlockingMode)
 {
-  mBlockedTracks.AppendElement(aTrackId);
+  mBlockedTracks.AppendElement(Pair<TrackID, BlockingMode>(aTrackId, aBlockingMode));
 }
 
 already_AddRefed<Pledge<bool>>
-MediaInputPort::BlockSourceTrackId(TrackID aTrackId)
+MediaInputPort::BlockSourceTrackId(TrackID aTrackId, BlockingMode aBlockingMode)
 {
   class Message : public ControlMessage {
   public:
     explicit Message(MediaInputPort* aPort,
                      TrackID aTrackId,
+                     BlockingMode aBlockingMode,
                      already_AddRefed<nsIRunnable> aRunnable)
       : ControlMessage(aPort->GetDestination()),
-        mPort(aPort), mTrackId(aTrackId), mRunnable(aRunnable) {}
+        mPort(aPort), mTrackId(aTrackId), mBlockingMode(aBlockingMode),
+        mRunnable(aRunnable) {}
     void Run() override
     {
-      mPort->BlockSourceTrackIdImpl(mTrackId);
+      mPort->BlockSourceTrackIdImpl(mTrackId, mBlockingMode);
       if (mRunnable) {
         mStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(mRunnable.forget());
       }
@@ -3175,6 +3177,7 @@ MediaInputPort::BlockSourceTrackId(TrackID aTrackId)
     }
     RefPtr<MediaInputPort> mPort;
     TrackID mTrackId;
+    BlockingMode mBlockingMode;
     nsCOMPtr<nsIRunnable> mRunnable;
   };
 
@@ -3187,7 +3190,7 @@ MediaInputPort::BlockSourceTrackId(TrackID aTrackId)
     pledge->Resolve(true);
     return NS_OK;
   });
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aTrackId, runnable.forget()));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aTrackId, aBlockingMode, runnable.forget()));
   return pledge.forget();
 }
 
@@ -3230,7 +3233,7 @@ ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, TrackID aTrackID,
                        aInputNumber, aOutputNumber);
   if (aBlockedTracks) {
     for (TrackID trackID : *aBlockedTracks) {
-      port->BlockSourceTrackIdImpl(trackID);
+      port->BlockSourceTrackIdImpl(trackID, BlockingMode::CREATION);
     }
   }
   port->SetGraphImpl(GraphImpl());
