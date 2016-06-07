@@ -59,7 +59,6 @@ var publicProperties = [
   "signOut",
   "updateUserAccountData",
   "updateDeviceRegistration",
-  "handleDeviceDisconnection",
   "whenVerified"
 ];
 
@@ -1490,20 +1489,6 @@ FxAccountsInternal.prototype = {
         return this._registerOrUpdateDevice(signedInUser);
       }
     }).catch(error => this._logErrorAndResetDeviceRegistrationVersion(error));
-  },
-
-  handleDeviceDisconnection(deviceId) {
-    return this.currentAccountState.getUserAccountData()
-      .then(data => data ? data.deviceId : null)
-      .then(localDeviceId => {
-        if (deviceId == localDeviceId) {
-          this.notifyObservers(ON_DEVICE_DISCONNECTED_NOTIFICATION, deviceId);
-          return this.signOut(true);
-        }
-        log.error(
-          "The device ID to disconnect doesn't match with the local device ID.\n"
-          + "Local: " + localDeviceId + ", ID to disconnect: " + deviceId);
-    });
   },
 
   // If you change what we send to the FxA servers during device registration,
