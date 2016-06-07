@@ -8281,26 +8281,39 @@ DebuggerObject_getPromiseDependentPromises(JSContext* cx, unsigned argc, Value* 
 static bool
 DebuggerObject_getGlobal(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT(cx, argc, vp, "get global", args, object)
+    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get global", args, dbg, obj);
 
-    RootedObject result(cx);
-    if (!DebuggerObject::global(cx, object, &result))
+    RootedValue v(cx, ObjectValue(obj->global()));
+    if (!dbg->wrapDebuggeeValue(cx, &v))
         return false;
-
-    args.rval().setObject(*result);
+    args.rval().set(v);
     return true;
+}
+
+/* static */ SavedFrame*
+Debugger::getObjectAllocationSite(JSObject& obj)
+{
+    JSObject* metadata = GetAllocationMetadata(&obj);
+    if (!metadata)
+        return nullptr;
+
+    MOZ_ASSERT(!metadata->is<WrapperObject>());
+    return SavedFrame::isSavedFrameAndNotProto(*metadata)
+        ? &metadata->as<SavedFrame>()
+        : nullptr;
 }
 
 static bool
 DebuggerObject_getAllocationSite(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT(cx, argc, vp, "get allocationSite", args, object)
+    THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "get allocationSite", args, obj);
 
-    RootedObject result(cx);
-    if (!DebuggerObject::allocationSite(cx, object, &result))
+    RootedObject allocSite(cx, Debugger::getObjectAllocationSite(*obj));
+    if (!allocSite)
+        return null(args);
+    if (!cx->compartment()->wrap(cx, &allocSite))
         return false;
-
-    args.rval().setObjectOrNull(result);
+    args.rval().setObject(*allocSite);
     return true;
 }
 
@@ -8310,16 +8323,33 @@ DebuggerObject_getAllocationSite(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerObject_getErrorMessageName(JSContext *cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT(cx, argc, vp, "get errorMessageName", args, object)
+    THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "get errorMessageName", args, referent);
 
-    RootedString result(cx);
-    if (!DebuggerObject::errorMessageName(cx, object, &result))
+    JSObject* obj = referent;
+    if (IsCrossCompartmentWrapper(obj))
+        obj = CheckedUnwrap(obj);
+
+    if (!obj) {
+        JS_ReportError(cx, "Permission denied to access object");
         return false;
+    }
 
-    if (result)
-        args.rval().setString(result);
-    else
-        args.rval().setUndefined();
+    JSErrorReport* report = nullptr;
+    if (obj->is<ErrorObject>())
+        report = obj->as<ErrorObject>().getErrorReport();
+
+    if (report) {
+        const JSErrorFormatString* efs = GetErrorMessage(nullptr, report->errorNumber);
+        if (efs) {
+            RootedString str(cx, JS_NewStringCopyZ(cx, efs->name));
+            if (!cx->compartment()->wrap(cx, &str))
+                return false;
+            args.rval().setString(str);
+            return true;
+        }
+    }
+
+    args.rval().setUndefined();
     return true;
 }
 
@@ -8894,16 +8924,6 @@ DebuggerObject::className(JSContext* cx, Handle<DebuggerObject*> object,
 }
 
 /* static */ bool
-DebuggerObject::global(JSContext* cx, Handle<DebuggerObject*> object, MutableHandleObject result)
-{
-    RootedObject referent(cx, object->referent());
-    Debugger* dbg = object->owner();
-
-    result.set(&referent->global());
-    return dbg->wrapDebuggeeObject(cx, result);
-}
-
-/* static */ bool
 DebuggerObject::name(JSContext* cx, Handle<DebuggerObject*> object, MutableHandleString result)
 {
     MOZ_ASSERT(isFunction(cx, object));
@@ -9005,67 +9025,6 @@ DebuggerObject::boundArguments(JSContext* cx, Handle<DebuggerObject*> object,
         if (!dbg->wrapDebuggeeValue(cx, result[i]))
             return false;
     }
-    return true;
-}
-
-/* static */ SavedFrame*
-Debugger::getObjectAllocationSite(JSObject& obj)
-{
-    JSObject* metadata = GetAllocationMetadata(&obj);
-    if (!metadata)
-        return nullptr;
-
-    MOZ_ASSERT(!metadata->is<WrapperObject>());
-    return SavedFrame::isSavedFrameAndNotProto(*metadata)
-        ? &metadata->as<SavedFrame>()
-        : nullptr;
-}
-
-/* static */ bool
-DebuggerObject::allocationSite(JSContext* cx, Handle<DebuggerObject*> object,
-                               MutableHandleObject result)
-{
-    RootedObject referent(cx, object->referent());
-
-    RootedObject allocSite(cx, Debugger::getObjectAllocationSite(*referent));
-    if (!cx->compartment()->wrap(cx, &allocSite))
-        return false;
-
-    result.set(allocSite);
-    return true;
-}
-
-/* static */ bool
-DebuggerObject::errorMessageName(JSContext* cx, Handle<DebuggerObject*> object,
-                                 MutableHandleString result)
-{
-    RootedObject referent(cx, object->referent());
-
-    JSObject* obj = referent;
-    if (IsCrossCompartmentWrapper(obj))
-        obj = CheckedUnwrap(obj);
-
-    if (!obj) {
-        JS_ReportError(cx, "Permission denied to access object");
-        return false;
-    }
-
-    if (obj->is<ErrorObject>()) {
-        JSErrorReport* report = obj->as<ErrorObject>().getErrorReport();
-        if (report) {
-            const JSErrorFormatString* efs = GetErrorMessage(nullptr, report->errorNumber);
-            if (efs) {
-                RootedString str(cx, JS_NewStringCopyZ(cx, efs->name));
-                if (!cx->compartment()->wrap(cx, &str))
-                    return false;
-
-                result.set(str);
-                return true;
-            }
-        }
-    }
-
-    result.set(nullptr);
     return true;
 }
 
