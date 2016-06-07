@@ -828,6 +828,11 @@ PluginInstanceParent::SetCurrentImage(Image* aImage)
     imageList.AppendElement(holder);
     mImageContainer->SetCurrentImages(imageList);
 
+    // Invalidate our area in the page so the image gets flushed.
+    gfx::IntRect rect = aImage->GetPictureRect();
+    NPRect nprect = {uint16_t(rect.x), uint16_t(rect.y), uint16_t(rect.width), uint16_t(rect.height)};
+    RecvNPN_InvalidateRect(nprect);
+
     RecordDrawingModel();
 }
 
