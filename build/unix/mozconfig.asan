@@ -13,6 +13,12 @@ export CFLAGS="$ASANFLAGS"
 export CXXFLAGS="$ASANFLAGS"
 export LDFLAGS="-fsanitize=address"
 
+# Use a newer binutils, from the tooltool gcc package, if it's there
+if [ -e "$topsrcdir/gcc/bin/ld" ]; then
+    export CC="$CC -B $topsrcdir/gcc/bin"
+    export CXX="$CXX -B $topsrcdir/gcc/bin"
+fi
+
 # Enable ASan specific code and build workarounds
 ac_add_options --enable-address-sanitizer
 
