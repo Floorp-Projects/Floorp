@@ -45,7 +45,7 @@ add_task(function* test_delete() {
     browser.test.sendMessage("ready");
   }
 
-  const REFERENCE_DATE = new Date(1999, 9, 9, 9, 9);
+  const BASE_URL = "http://mozilla.com/test_history/";
 
   let extension = ExtensionTestUtils.loadExtension({
     manifest: {
@@ -60,65 +60,75 @@ add_task(function* test_delete() {
 
   let historyClearedCount;
   let visits = [];
+  let visitDate = new Date(1999, 9, 9, 9, 9).getTime();
+
+  function pushVisit(visits) {
+    visitDate += 1000;
+    visits.push({date: new Date(visitDate)});
+  }
 
   // Add 5 visits for one uri and 3 visits for 3 others
-  for (let i = 0; i < 8; ++i) {
-    let baseUri = "http://mozilla.com/test_history/";
-    let uri = (i > 4) ? `${baseUri}${i}/` : baseUri;
-    let dbDate = PlacesUtils.toPRTime(Number(REFERENCE_DATE) + 3600 * 1000 * i);
-
+  for (let i = 0; i < 4; ++i) {
     let visit = {
-      uri,
+      url: `${BASE_URL}${i}`,
       title: "visit " + i,
-      visitDate: dbDate,
+      visits: [],
     };
+    if (i === 0) {
+      for (let j = 0; j < 5; ++j) {
+        pushVisit(visit.visits);
+      }
+    } else {
+      pushVisit(visit.visits);
+    }
     visits.push(visit);
   }
 
-  yield PlacesTestUtils.addVisits(visits);
-  is(yield PlacesTestUtils.visitsInDB(visits[0].uri), 5, "5 visits for uri found in history database");
+  yield PlacesUtils.history.insertMany(visits);
+  is(yield PlacesTestUtils.visitsInDB(visits[0].url), 5, "5 visits for uri found in history database");
 
-  let testUrl = visits[6].uri.spec;
+  let testUrl = visits[2].url;
   ok(yield PlacesTestUtils.isPageInDB(testUrl), "expected url found in history database");
 
   extension.sendMessage("delete-url", testUrl);
   yield extension.awaitMessage("url-deleted");
   is(yield PlacesTestUtils.isPageInDB(testUrl), false, "expected url not found in history database");
 
+  // delete 3 of the 5 visits for url 1
   let filter = {
-    startTime: PlacesUtils.toDate(visits[1].visitDate),
-    endTime: PlacesUtils.toDate(visits[3].visitDate),
+    startTime: visits[0].visits[0].date,
+    endTime: visits[0].visits[2].date,
   };
 
   extension.sendMessage("delete-range", filter);
   let removedUrls = yield extension.awaitMessage("range-deleted");
-  ok(!removedUrls.includes(visits[0].uri.spec), `${visits[0].uri.spec} received by onVisitRemoved`);
+  ok(!removedUrls.includes(visits[0].url), `${visits[0].url} not received by onVisitRemoved`);
+  ok(yield PlacesTestUtils.isPageInDB(visits[0].url), "expected uri found in history database");
+  is(yield PlacesTestUtils.visitsInDB(visits[0].url), 2, "2 visits for uri found in history database");
+  ok(yield PlacesTestUtils.isPageInDB(visits[1].url), "expected uri found in history database");
+  is(yield PlacesTestUtils.visitsInDB(visits[1].url), 1, "1 visit for uri found in history database");
 
-  ok(yield PlacesTestUtils.isPageInDB(visits[0].uri), "expected uri found in history database");
-  is(yield PlacesTestUtils.visitsInDB(visits[0].uri), 2, "2 visits for uri found in history database");
-  ok(yield PlacesTestUtils.isPageInDB(visits[5].uri), "expected uri found in history database");
-  is(yield PlacesTestUtils.visitsInDB(visits[5].uri), 1, "1 visit for uri found in history database");
-
-  filter.startTime = PlacesUtils.toDate(visits[0].visitDate);
-  filter.endTime = PlacesUtils.toDate(visits[5].visitDate);
+  // delete the rest of the visits for url 1, and the visit for url 2
+  filter.startTime = visits[0].visits[0].date;
+  filter.endTime = visits[1].visits[0].date;
 
   extension.sendMessage("delete-range", filter);
   yield extension.awaitMessage("range-deleted");
 
-  is(yield PlacesTestUtils.isPageInDB(visits[0].uri), false, "expected uri not found in history database");
-  is(yield PlacesTestUtils.visitsInDB(visits[0].uri), 0, "0 visits for uri found in history database");
-  is(yield PlacesTestUtils.isPageInDB(visits[5].uri), false, "expected uri not found in history database");
-  is(yield PlacesTestUtils.visitsInDB(visits[5].uri), 0, "0 visits for uri found in history database");
+  is(yield PlacesTestUtils.isPageInDB(visits[0].url), false, "expected uri not found in history database");
+  is(yield PlacesTestUtils.visitsInDB(visits[0].url), 0, "0 visits for uri found in history database");
+  is(yield PlacesTestUtils.isPageInDB(visits[1].url), false, "expected uri not found in history database");
+  is(yield PlacesTestUtils.visitsInDB(visits[1].url), 0, "0 visits for uri found in history database");
 
-  ok(yield PlacesTestUtils.isPageInDB(visits[7].uri), "expected uri found in history database");
+  ok(yield PlacesTestUtils.isPageInDB(visits[3].url), "expected uri found in history database");
 
   extension.sendMessage("delete-all");
   [historyClearedCount, removedUrls] = yield extension.awaitMessage("history-cleared");
   is(PlacesUtils.history.hasHistoryEntries, false, "history is empty");
   is(historyClearedCount, 2, "onVisitRemoved called for each clearing of history");
   is(removedUrls.length, 3, "onVisitRemoved called the expected number of times");
-  for (let index of [0, 5, 6]) {
-    let url = visits[index].uri.spec;
+  for (let i = 1; i < 3; ++i) {
+    let url = visits[i].url;
     ok(removedUrls.includes(url), `${url} received by onVisitRemoved`);
   }
   yield extension.unload();
