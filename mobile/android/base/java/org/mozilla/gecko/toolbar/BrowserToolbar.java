@@ -15,6 +15,7 @@ import org.mozilla.gecko.AppConstants.Versions;
 import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.GeckoAppShell;
 import org.mozilla.gecko.R;
+import org.mozilla.gecko.SiteIdentity;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.Telemetry;
@@ -804,6 +805,11 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
      * @return the url that was entered
      */
     public String commitEdit() {
+        Tab tab = Tabs.getInstance().getSelectedTab();
+        if (tab != null) {
+            tab.resetSiteIdentity();
+        }
+
         final String url = stopEditing();
         if (!TextUtils.isEmpty(url)) {
             setTitle(url);
