@@ -222,7 +222,6 @@ typedef AutoVectorRooter<JSObject*> AutoObjectVector;
 using ValueVector = JS::GCVector<JS::Value>;
 using IdVector = JS::GCVector<jsid>;
 using ScriptVector = JS::GCVector<JSScript*>;
-using StringVector = JS::GCVector<JSString*>;
 
 template<class Key, class Value>
 class MOZ_RAII AutoHashMapRooter : protected AutoGCRooter
