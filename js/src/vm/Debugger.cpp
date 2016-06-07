@@ -7898,8 +7898,9 @@ DebuggerObject_getClass(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerObject_getCallable(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "get callable", args, refobj);
-    args.rval().setBoolean(refobj->isCallable());
+    THIS_DEBUGOBJECT(cx, argc, vp, "get callable", args, object)
+
+    args.rval().setBoolean(DebuggerObject::isCallable(cx, object));
     return true;
 }
 
@@ -7948,50 +7949,32 @@ DebuggerObject_getDisplayName(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerObject_getParameterNames(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "get parameterNames", args, dbg, obj);
-    if (!obj->is<JSFunction>()) {
+    THIS_DEBUGOBJECT(cx, argc, vp, "get parameterNames", args, object)
+
+    if (!DebuggerObject::isDebuggeeFunction(cx, object)) {
         args.rval().setUndefined();
         return true;
     }
 
-    RootedFunction fun(cx, &obj->as<JSFunction>());
-
-    /* Only hand out parameter info for debuggee functions. */
-    if (!dbg->observesGlobal(&fun->global())) {
-        args.rval().setUndefined();
-        return true;
-    }
-
-    RootedArrayObject result(cx, NewDenseFullyAllocatedArray(cx, fun->nargs()));
-    if (!result)
+    Rooted<StringVector> names(cx, StringVector(cx));
+    if (!DebuggerObject::parameterNames(cx, object, &names))
         return false;
-    result->ensureDenseInitializedLength(cx, 0, fun->nargs());
 
-    if (fun->isInterpreted()) {
-        RootedScript script(cx, GetOrCreateFunctionScript(cx, fun));
-        if (!script)
-            return false;
+    RootedArrayObject obj(cx, NewDenseFullyAllocatedArray(cx, names.length()));
+    if (!obj)
+        return false;
 
-        MOZ_ASSERT(fun->nargs() == script->bindings.numArgs());
-
-        if (fun->nargs() > 0) {
-            BindingIter bi(script);
-            for (size_t i = 0; i < fun->nargs(); i++, bi++) {
-                MOZ_ASSERT(bi.argIndex() == i);
-                Value v;
-                if (bi->name()->length() == 0)
-                    v = UndefinedValue();
-                else
-                    v = StringValue(bi->name());
-                result->setDenseElement(i, v);
-            }
-        }
-    } else {
-        for (size_t i = 0; i < fun->nargs(); i++)
-            result->setDenseElement(i, UndefinedValue());
+    obj->ensureDenseInitializedLength(cx, 0, names.length());
+    for (size_t i = 0; i < names.length(); ++i) {
+        Value v;
+        if (names[i])
+            v = StringValue(names[i]);
+        else
+            v = UndefinedValue();
+        obj->setDenseElement(i, v);
     }
 
-    args.rval().setObject(*result);
+    args.rval().setObject(*obj);
     return true;
 }
 
@@ -8061,10 +8044,14 @@ DebuggerObject_getEnvironment(JSContext* cx, unsigned argc, Value* vp)
 static bool
 DebuggerObject_getIsArrowFunction(JSContext* cx, unsigned argc, Value* vp)
 {
-    THIS_DEBUGOBJECT_REFERENT(cx, argc, vp, "get isArrowFunction", args, refobj);
+    THIS_DEBUGOBJECT(cx, argc, vp, "get isArrowFunction", args, object)
 
-    args.rval().setBoolean(refobj->is<JSFunction>()
-                           && refobj->as<JSFunction>().isArrow());
+    if (!DebuggerObject::isDebuggeeFunction(cx, object)) {
+        args.rval().setUndefined();
+        return true;
+    }
+
+    args.rval().setBoolean(DebuggerObject::isArrowFunction(cx, object));
     return true;
 }
 
@@ -8863,6 +8850,14 @@ DebuggerObject::create(JSContext* cx, HandleObject proto, HandleObject referent,
 }
 
 /* static */ bool
+DebuggerObject::isCallable(JSContext* cx, Handle<DebuggerObject*> object)
+{
+    RootedObject referent(cx, object->referent());
+
+    return referent->isCallable();
+}
+
+/* static */ bool
 DebuggerObject::isFunction(JSContext* cx, Handle<DebuggerObject*> object)
 {
     RootedObject referent(cx, object->referent());
@@ -8878,6 +8873,26 @@ DebuggerObject::isDebuggeeFunction(JSContext* cx, Handle<DebuggerObject*> object
 
     return referent->is<JSFunction>() &&
            dbg->observesGlobal(&referent->as<JSFunction>().global());
+}
+
+/* static */ bool
+DebuggerObject::isBoundFunction(JSContext* cx, Handle<DebuggerObject*> object)
+{
+    MOZ_ASSERT(isDebuggeeFunction(cx, object));
+
+    RootedFunction referent(cx, &object->referent()->as<JSFunction>());
+
+    return referent->isBoundFunction();
+}
+
+/* static */ bool
+DebuggerObject::isArrowFunction(JSContext* cx, Handle<DebuggerObject*> object)
+{
+    MOZ_ASSERT(isDebuggeeFunction(cx, object));
+
+    RootedFunction referent(cx, &object->referent()->as<JSFunction>());
+
+    return referent->isArrow();
 }
 
 /* static */ bool
@@ -8932,13 +8947,38 @@ DebuggerObject::displayName(JSContext* cx, Handle<DebuggerObject*> object,
 }
 
 /* static */ bool
-DebuggerObject::isBoundFunction(JSContext* cx, Handle<DebuggerObject*> object)
+DebuggerObject::parameterNames(JSContext* cx, Handle<DebuggerObject*> object,
+                               MutableHandle<StringVector> result)
 {
     MOZ_ASSERT(isDebuggeeFunction(cx, object));
 
-    RootedObject referent(cx, object->referent());
+    RootedFunction referent(cx, &object->referent()->as<JSFunction>());
 
-    return referent->isBoundFunction();
+    if (!result.growBy(referent->nargs()))
+        return false;
+    if (referent->isInterpreted()) {
+        RootedScript script(cx, GetOrCreateFunctionScript(cx, referent));
+        if (!script)
+            return false;
+
+        MOZ_ASSERT(referent->nargs() == script->bindings.numArgs());
+
+        if (referent->nargs() > 0) {
+            BindingIter bi(script);
+            for (size_t i = 0; i < referent->nargs(); i++, bi++) {
+                MOZ_ASSERT(bi.argIndex() == i);
+                if (bi->name()->length() == 0)
+                    result[i].set(nullptr);
+                else
+                    result[i].set(bi->name());
+            }
+        }
+    } else {
+        for (size_t i = 0; i < referent->nargs(); i++)
+            result[i].set(nullptr);
+    }
+
+    return true;
 }
 
 /* static */ bool
