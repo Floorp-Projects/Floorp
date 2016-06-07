@@ -1368,6 +1368,8 @@ var BrowserApp = {
       return;
     }
 
+    Services.obs.notifyObservers(null, "quit-application-proceeding", null);
+
     // Tell session store to forget about this window
     if (aClear.dontSaveSession) {
       let ss = Cc["@mozilla.org/browser/sessionstore;1"].getService(Ci.nsISessionStore);
