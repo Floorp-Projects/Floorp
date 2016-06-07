@@ -18,6 +18,7 @@ const ErrorDocs = require("devtools/server/actors/errordocs");
 loader.lazyRequireGetter(this, "NetworkMonitor", "devtools/shared/webconsole/network-monitor", true);
 loader.lazyRequireGetter(this, "NetworkMonitorChild", "devtools/shared/webconsole/network-monitor", true);
 loader.lazyRequireGetter(this, "ConsoleProgressListener", "devtools/shared/webconsole/network-monitor", true);
+loader.lazyRequireGetter(this, "StackTraceCollector", "devtools/shared/webconsole/network-monitor", true);
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
 loader.lazyRequireGetter(this, "ServerLoggingListener", "devtools/shared/webconsole/server-logger", true);
 loader.lazyRequireGetter(this, "JSPropertyProvider", "devtools/shared/webconsole/js-property-provider", true);
@@ -598,6 +599,12 @@ WebConsoleActor.prototype =
           break;
         case "NetworkActivity":
           if (!this.networkMonitor) {
+            // Create a StackTraceCollector that's going to be shared both by the
+            // NetworkMonitorChild (getting messages about requests from parent) and
+            // by the NetworkMonitor that directly watches service workers requests.
+            this.stackTraceCollector = new StackTraceCollector({ window, appId });
+            this.stackTraceCollector.init();
+
             if (appId || messageManager) {
               // Start a network monitor in the parent process to listen to
               // most requests than happen in parent
@@ -606,12 +613,10 @@ WebConsoleActor.prototype =
                                         this.parentActor.actorID, this);
               this.networkMonitor.init();
               // Spawn also one in the child to listen to service workers
-              this.networkMonitorChild = new NetworkMonitor({ window: window },
-                                                            this);
+              this.networkMonitorChild = new NetworkMonitor({ window }, this);
               this.networkMonitorChild.init();
-            }
-            else {
-              this.networkMonitor = new NetworkMonitor({ window: window }, this);
+            } else {
+              this.networkMonitor = new NetworkMonitor({ window }, this);
               this.networkMonitor.init();
             }
           }
@@ -699,6 +704,10 @@ WebConsoleActor.prototype =
           if (this.networkMonitorChild) {
             this.networkMonitorChild.destroy();
             this.networkMonitorChild = null;
+          }
+          if (this.stackTraceCollector) {
+            this.stackTraceCollector.destroy();
+            this.stackTraceCollector = null;
           }
           stoppedListeners.push(listener);
           break;
@@ -1828,6 +1837,7 @@ NetworkEventActor.prototype =
       url: this._request.url,
       method: this._request.method,
       isXHR: this._isXHR,
+      cause: this._cause,
       fromCache: this._fromCache,
       fromServiceWorker: this._fromServiceWorker,
       private: this._private,
@@ -1873,6 +1883,7 @@ NetworkEventActor.prototype =
   {
     this._startedDateTime = aNetworkEvent.startedDateTime;
     this._isXHR = aNetworkEvent.isXHR;
+    this._cause = aNetworkEvent.cause;
     this._fromCache = aNetworkEvent.fromCache;
     this._fromServiceWorker = aNetworkEvent.fromServiceWorker;
 
