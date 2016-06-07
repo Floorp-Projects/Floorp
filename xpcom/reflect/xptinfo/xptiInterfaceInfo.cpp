@@ -14,34 +14,6 @@
 
 using namespace mozilla;
 
-/***************************************************************************/
-// Debug Instrumentation...
-
-#ifdef SHOW_INFO_COUNT_STATS
-static int DEBUG_TotalInfos = 0;
-static int DEBUG_CurrentInfos = 0;
-static int DEBUG_MaxInfos = 0;
-static int DEBUG_ReentrantMonitorEntryCount = 0;
-
-#define LOG_INFO_CREATE(t)                                                  \
-    DEBUG_TotalInfos++;                                                     \
-    DEBUG_CurrentInfos++;                                                   \
-    if(DEBUG_MaxInfos < DEBUG_CurrentInfos)                                 \
-        DEBUG_MaxInfos = DEBUG_CurrentInfos /* no ';' */
-
-#define LOG_INFO_DESTROY(t)                                                 \
-    DEBUG_CurrentInfos-- /* no ';' */
-
-#define LOG_INFO_MONITOR_ENTRY                                              \
-    DEBUG_ReentrantMonitorEntryCount++ /* no ';' */
-
-#else /* SHOW_INFO_COUNT_STATS */
-
-#define LOG_INFO_CREATE(t)     ((void)0)
-#define LOG_INFO_DESTROY(t)    ((void)0)
-#define LOG_INFO_MONITOR_ENTRY ((void)0)
-#endif /* SHOW_INFO_COUNT_STATS */
-
 /* static */ xptiInterfaceEntry*
 xptiInterfaceEntry::Create(const char* name, const nsID& iid,
                            XPTInterfaceDescriptor* aDescriptor,
@@ -663,7 +635,6 @@ xptiInterfaceEntry::InterfaceInfo()
     XPTInterfaceInfoManager::GetSingleton()->mWorkingSet.mTableReentrantMonitor.
         AssertCurrentThreadIn();
 #endif
-    LOG_INFO_MONITOR_ENTRY;
 
     if(!mInfo)
     {
@@ -705,12 +676,10 @@ NS_IMPL_QUERY_INTERFACE(xptiInterfaceInfo, nsIInterfaceInfo)
 xptiInterfaceInfo::xptiInterfaceInfo(xptiInterfaceEntry* entry)
     : mEntry(entry)
 {
-    LOG_INFO_CREATE(this);
 }
 
 xptiInterfaceInfo::~xptiInterfaceInfo() 
 {
-    LOG_INFO_DESTROY(this);
     NS_ASSERTION(!mEntry, "bad state in dtor");
 }
 
@@ -740,7 +709,6 @@ xptiInterfaceInfo::Release(void)
         mozilla::ReentrantMonitorAutoEnter monitor(XPTInterfaceInfoManager::
                                           GetSingleton()->mWorkingSet.
                                           mTableReentrantMonitor);
-        LOG_INFO_MONITOR_ENTRY;
 
         // If InterfaceInfo added and *released* a reference before we 
         // acquired the monitor then 'this' might already be dead. In that
