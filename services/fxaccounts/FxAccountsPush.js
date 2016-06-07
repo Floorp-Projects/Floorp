@@ -152,9 +152,6 @@ FxAccountsPushService.prototype = {
     }
     let payload = message.data.json();
     switch (payload.command) {
-      case ON_DEVICE_DISCONNECTED_NOTIFICATION:
-        this.fxAccounts.handleDeviceDisconnection(payload.data.id);
-        break;
       default:
         this.log.warn("FxA Push command unrecognized: " + payload.command);
     }
