@@ -54,19 +54,6 @@ CreateException(JSContext* aCx, nsresult aRv,
 already_AddRefed<nsIStackFrame>
 GetCurrentJSStack(int32_t aMaxDepth = -1);
 
-// Throwing a TypeError on an ErrorResult may result in SpiderMonkey using its
-// own error reporting mechanism instead of just setting the exception on the
-// context.  This happens if no script is running. Bug 1107777 adds a flag that
-// forcibly turns this behaviour off. This is a stack helper to set the flag.
-class MOZ_STACK_CLASS AutoForceSetExceptionOnContext {
-private:
-  JSContext* mCx;
-  bool mOldValue;
-public:
-  explicit AutoForceSetExceptionOnContext(JSContext* aCx);
-  ~AutoForceSetExceptionOnContext();
-};
-
 // Internal stuff not intended to be widely used.
 namespace exceptions {
 

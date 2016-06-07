@@ -225,17 +225,15 @@ ReportError(JSContext* cx, const char* message, JSErrorReport* reportp,
         reportp->flags |= JSREPORT_EXCEPTION;
     }
 
-    if (cx->options().autoJSAPIOwnsErrorReporting() || JS_IsRunning(cx)) {
-        if (ErrorToException(cx, message, reportp, callback, userRef))
-            return;
+    if (ErrorToException(cx, message, reportp, callback, userRef))
+        return;
 
-        /*
-         * The AutoJSAPI error reporter only allows warnings to be reported so
-         * just ignore this error rather than try to report it.
-         */
-        if (cx->options().autoJSAPIOwnsErrorReporting() && !JSREPORT_IS_WARNING(reportp->flags))
-            return;
-    }
+    /*
+     * The AutoJSAPI error reporter only allows warnings to be reported so
+     * just ignore this error rather than try to report it.
+     */
+    if (!JSREPORT_IS_WARNING(reportp->flags))
+        return;
 
     /*
      * Call the error reporter only if an exception wasn't raised.
@@ -304,36 +302,7 @@ js::ReportOutOfMemory(ExclusiveContext* cxArg)
     if (JS::OutOfMemoryCallback oomCallback = cx->runtime()->oomCallback)
         oomCallback(cx, cx->runtime()->oomCallbackData);
 
-    if (cx->options().autoJSAPIOwnsErrorReporting() || JS_IsRunning(cx)) {
-        cx->setPendingException(StringValue(cx->names().outOfMemory));
-        return;
-    }
-
-    /* Get the message for this error, but we don't expand any arguments. */
-    const JSErrorFormatString* efs = GetErrorMessage(nullptr, JSMSG_OUT_OF_MEMORY);
-    const char* msg = efs ? efs->format : "Out of memory";
-
-    /* Fill out the report, but don't do anything that requires allocation. */
-    JSErrorReport report;
-    report.flags = JSREPORT_ERROR;
-    report.errorNumber = JSMSG_OUT_OF_MEMORY;
-    PopulateReportBlame(cx, &report);
-
-    /* Report the error. */
-    if (JSErrorReporter onError = cx->runtime()->errorReporter)
-        onError(cx, msg, &report);
-
-    /*
-     * We would like to enforce the invariant that any exception reported
-     * during an OOM situation does not require wrapping. Besides avoiding
-     * allocation when memory is low, this reduces the number of places where
-     * we might need to GC.
-     *
-     * When JS code is running, we set the pending exception to an atom, which
-     * does not need wrapping. If no JS code is running, no exception should be
-     * set at all.
-     */
-    MOZ_ASSERT(!cx->isExceptionPending());
+    cx->setPendingException(StringValue(cx->names().outOfMemory));
 }
 
 void
@@ -964,7 +933,6 @@ JSContext::JSContext(JSRuntime* rt)
   : ExclusiveContext(rt, &rt->mainThread, Context_JS),
     throwing(false),
     unwrappedException_(this),
-    options_(),
     overRecursed_(false),
     propagatingForcedReturn_(false),
     liveVolatileJitFrameIterators_(nullptr),
