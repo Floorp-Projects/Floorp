@@ -22,7 +22,6 @@ include protocol PChannelDiverter;
 include protocol PBlob; //FIXME: bug #792908
 include protocol PFileDescriptorSet;
 include protocol PDataChannel;
-include protocol PTransportProvider;
 
 include protocol PRtspController;
 include protocol PRtspChannel;
@@ -57,7 +56,6 @@ prio(normal upto urgent) sync protocol PNecko
   manages PRtspController;
   manages PRtspChannel;
   manages PChannelDiverter;
-  manages PTransportProvider;
 
 parent:
   async __delete__();
@@ -133,8 +131,6 @@ child:
   async PredOnPredictDNS(URIParams uri);
 
   async SpeculativeConnectRequest(nsCString notificationData);
-
-  async PTransportProvider();
 
 both:
   // Actually we need PTCPSocket() for parent. But ipdl disallows us having different

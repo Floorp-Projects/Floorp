@@ -436,9 +436,7 @@ WebSocketChannelChild::AsyncOpen(nsIURI *aURI,
   LOG(("WebSocketChannelChild::AsyncOpen() %p\n", this));
 
   MOZ_ASSERT(NS_IsMainThread(), "not main thread");
-  MOZ_ASSERT((aURI && !mIsServerSide) || (!aURI && mIsServerSide),
-             "Invalid aURI for WebSocketChannelChild::AsyncOpen");
-  MOZ_ASSERT(aListener && !mListenerMT,
+  MOZ_ASSERT(aURI && aListener && !mListenerMT,
              "Invalid state for WebSocketChannelChild::AsyncOpen");
 
   mozilla::dom::TabChild* tabChild = nullptr;
@@ -453,40 +451,23 @@ WebSocketChannelChild::AsyncOpen(nsIURI *aURI,
     return NS_ERROR_ILLEGAL_VALUE;
   }
 
+  URIParams uri;
+  SerializeURI(aURI, uri);
+
   // Corresponding release in DeallocPWebSocket
   AddIPDLReference();
 
-  OptionalURIParams uri;
   OptionalLoadInfoArgs loadInfoArgs;
-  OptionalTransportProvider transportProvider;
-
-  if (!mIsServerSide) {
-    uri = URIParams();
-    SerializeURI(aURI, uri.get_URIParams());
-    nsresult rv = LoadInfoToLoadInfoArgs(mLoadInfo, &loadInfoArgs);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    transportProvider = void_t();
-  } else {
-    uri = void_t();
-    loadInfoArgs = void_t();
-
-    MOZ_ASSERT(mServerTransportProvider);
-    transportProvider = mServerTransportProvider->GetIPCChild();
-  }
+  nsresult rv = LoadInfoToLoadInfoArgs(mLoadInfo, &loadInfoArgs);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   gNeckoChild->SendPWebSocketConstructor(this, tabChild,
                                          IPC::SerializedLoadContext(this),
                                          mSerial);
   if (!SendAsyncOpen(uri, nsCString(aOrigin), aInnerWindowID, mProtocol,
                      mEncrypted, mPingInterval, mClientSetPingInterval,
-                     mPingResponseTimeout, mClientSetPingTimeout, loadInfoArgs,
-                     transportProvider, mNegotiatedExtensions)) {
+                     mPingResponseTimeout, mClientSetPingTimeout, loadInfoArgs)) {
     return NS_ERROR_UNEXPECTED;
-  }
-
-  if (mIsServerSide) {
-    mServerTransportProvider = nullptr;
   }
 
   mOriginalURI = aURI;

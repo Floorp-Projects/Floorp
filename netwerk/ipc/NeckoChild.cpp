@@ -19,7 +19,6 @@
 #include "mozilla/net/DNSRequestChild.h"
 #include "mozilla/net/RemoteOpenFileChild.h"
 #include "mozilla/net/ChannelDiverterChild.h"
-#include "mozilla/net/IPCTransportProvider.h"
 #include "mozilla/dom/network/TCPSocketChild.h"
 #include "mozilla/dom/network/TCPServerSocketChild.h"
 #include "mozilla/dom/network/UDPSocketChild.h"
@@ -325,22 +324,6 @@ bool
 NeckoChild::DeallocPChannelDiverterChild(PChannelDiverterChild* child)
 {
   delete static_cast<ChannelDiverterChild*>(child);
-  return true;
-}
-
-PTransportProviderChild*
-NeckoChild::AllocPTransportProviderChild()
-{
-  // This refcount is transferred to the receiver of the message that
-  // includes the PTransportProviderChild actor.
-  RefPtr<TransportProviderChild> res = new TransportProviderChild();
-
-  return res.forget().take();
-}
-
-bool
-NeckoChild::DeallocPTransportProviderChild(PTransportProviderChild* aActor)
-{
   return true;
 }
 

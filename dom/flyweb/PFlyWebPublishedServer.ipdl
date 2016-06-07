@@ -7,7 +7,6 @@
 include protocol PContent;
 include protocol PSendStream;
 include protocol PFileDescriptorSet;
-include protocol PTransportProvider;
 include FetchTypes;
 include ChannelInfo;
 include PBackgroundSharedTypes;
@@ -22,16 +21,12 @@ async protocol PFlyWebPublishedServer
 child:
   async ServerReady(nsresult aStatus);
   async FetchRequest(IPCInternalRequest aRequest, uint64_t aRequestId);
-  async WebSocketRequest(IPCInternalRequest aRequest, uint64_t aRequestId,
-                         PTransportProvider aProvider);
   async ServerClose();
 
 parent:
   async __delete__();
 
   async FetchResponse(IPCInternalResponse aResponse, uint64_t aRequestId);
-  async WebSocketResponse(IPCInternalResponse aResponse, uint64_t aRequestId);
-  async WebSocketAccept(nsString aProtocol, uint64_t aRequestId);
 };
 
 } // namespace dom
