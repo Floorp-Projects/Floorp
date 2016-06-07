@@ -230,7 +230,7 @@ public:
     return NS_OK;
   }
 private:
-  ThreadedDriver* mDriver;
+  RefPtr<ThreadedDriver> mDriver;
 };
 
 void
