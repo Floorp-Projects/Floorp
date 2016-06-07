@@ -313,7 +313,7 @@ private:
 
   // Whether we're mainthread or not; set when we're initialized.
   bool mIsMainThread;
-  Maybe<JSErrorReporter> mOldErrorReporter;
+  Maybe<JS::WarningReporter> mOldWarningReporter;
 
   void InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
                     JSContext* aCx, bool aIsMainThread);

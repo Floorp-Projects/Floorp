@@ -682,7 +682,7 @@ private:
      */
     JS_SetNativeStackQuota(mRuntime, 128 * sizeof(size_t) * 1024);
 
-    JS_SetErrorReporter(mRuntime, PACWarningReporter);
+    JS::SetWarningReporter(mRuntime, PACWarningReporter);
 
     mContext = JS_NewContext(mRuntime, 0);
     NS_ENSURE_TRUE(mContext, NS_ERROR_OUT_OF_MEMORY);
