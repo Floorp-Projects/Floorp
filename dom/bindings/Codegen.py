@@ -13511,8 +13511,6 @@ class CGBindingRoot(CGThing):
                     (desc.interface.isJSImplemented() and
                      any(clearableCachedAttrs(desc))))
 
-        bindingHeaders["nsContentUtils.h"] = any(
-            descriptorHasChromeOnly(d) for d in descriptors)
         # XXXkhuey ugly hack but this is going away soon.
         bindingHeaders['xpcprivate.h'] = webIDLFile.endswith("EventTarget.webidl")
         hasWorkerStuff = len(config.getDescriptors(webIDLFile=webIDLFile,
@@ -13523,6 +13521,17 @@ class CGBindingRoot(CGThing):
         bindingHeaders["nsThreadUtils.h"] = hasThreadChecks
 
         dictionaries = config.getDictionaries(webIDLFile=webIDLFile)
+
+        def dictionaryHasChromeOnly(dictionary):
+            while dictionary:
+                if (any(isChromeOnly(m) for m in dictionary.members)):
+                    return True
+                dictionary = dictionary.parent
+            return False
+
+        bindingHeaders["nsContentUtils.h"] = (
+            any(descriptorHasChromeOnly(d) for d in descriptors) or
+            any(dictionaryHasChromeOnly(d) for d in dictionaries))
         hasNonEmptyDictionaries = any(
             len(dict.members) > 0 for dict in dictionaries)
         mainCallbacks = config.getCallbacks(webIDLFile=webIDLFile,
