@@ -4,6 +4,11 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
+Cu.import("resource://gre/modules/ExtensionUtils.jsm");
+
+XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
+                                  "resource://devtools/shared/event-emitter.js");
+
 XPCOMUtils.defineLazyGetter(this, "History", () => {
   Cu.import("resource://gre/modules/PlacesUtils.jsm");
   return PlacesUtils.history;
@@ -12,6 +17,7 @@ XPCOMUtils.defineLazyGetter(this, "History", () => {
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 const {
   normalizeTime,
+  SingletonEventManager,
 } = ExtensionUtils;
 
 let historySvc = Ci.nsINavHistoryService;
@@ -62,6 +68,34 @@ function convertNavHistoryContainerResultNode(container) {
   }
   container.containerOpen = false;
   return results;
+}
+
+var _observer;
+
+function getObserver() {
+  if (!_observer) {
+    _observer = {
+      onDeleteURI: function(uri, guid, reason) {
+        this.emit("visitRemoved", {allHistory: false, urls: [uri.spec]});
+      },
+      onVisit: function() {},
+      onBeginUpdateBatch: function() {},
+      onEndUpdateBatch: function() {},
+      onTitleChanged: function() {},
+      onClearHistory: function() {
+        this.emit("visitRemoved", {allHistory: true});
+      },
+      onPageChanged: function() {},
+      onFrecencyChanged: function() {},
+      onManyFrecenciesChanged: function() {},
+      onDeleteVisits: function(uri, time, guid, reason) {
+        this.emit("visitRemoved", {allHistory: false, urls: [uri.spec]});
+      },
+    };
+    EventEmitter.decorate(_observer);
+    PlacesUtils.history.addObserver(_observer, false);
+  }
+  return _observer;
 }
 
 extensions.registerSchemaAPI("history", "history", (extension, context) => {
@@ -132,6 +166,17 @@ extensions.registerSchemaAPI("history", "history", (extension, context) => {
         let results = convertNavHistoryContainerResultNode(queryResult);
         return Promise.resolve(results);
       },
+
+      onVisitRemoved: new SingletonEventManager(context, "history.onVisitRemoved", fire => {
+        let listener = (event, data) => {
+          context.runSafe(fire, data);
+        };
+
+        getObserver().on("visitRemoved", listener);
+        return () => {
+          getObserver().off("visitRemoved", listener);
+        };
+      }).api(),
     },
   };
 });

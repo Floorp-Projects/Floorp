@@ -1,5 +1,3 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ts=2 et sw=2 tw=80 filetype=javascript: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -69,8 +67,7 @@ this.LoginHelper = {
    *
    * @throws String with English message in case validation failed.
    */
-  checkHostnameValue: function (aHostname)
-  {
+  checkHostnameValue(aHostname) {
     // Nulls are invalid, as they don't round-trip well.  Newlines are also
     // invalid for any field stored as plaintext, and a hostname made of a
     // single dot cannot be stored in the legacy format.
@@ -89,8 +86,7 @@ this.LoginHelper = {
    *
    * @throws String with English message in case validation failed.
    */
-  checkLoginValues: function (aLogin)
-  {
+  checkLoginValues(aLogin) {
     function badCharacterPresent(l, c)
     {
       return ((l.formSubmitURL && l.formSubmitURL.indexOf(c) != -1) ||
@@ -221,10 +217,8 @@ this.LoginHelper = {
    *
    * @throws String with English message in case validation failed.
    */
-  buildModifiedLogin: function (aOldStoredLogin, aNewLoginData)
-  {
-    function bagHasProperty(aPropName)
-    {
+  buildModifiedLogin(aOldStoredLogin, aNewLoginData) {
+    function bagHasProperty(aPropName) {
       try {
         aNewLoginData.getProperty(aPropName);
         return true;
@@ -645,6 +639,21 @@ this.LoginHelper = {
     for (let file of toDeletes) {
       File.remove(file);
     }
+  },
+
+  /**
+   * Returns true if the user has a master password set and false otherwise.
+   */
+  isMasterPasswordSet() {
+    let secmodDB = Cc["@mozilla.org/security/pkcs11moduledb;1"].
+                   getService(Ci.nsIPKCS11ModuleDB);
+    let slot = secmodDB.findSlotByName("");
+    if (!slot) {
+      return false;
+    }
+    let hasMP = slot.status != Ci.nsIPKCS11Slot.SLOT_UNINITIALIZED &&
+                slot.status != Ci.nsIPKCS11Slot.SLOT_READY;
+    return hasMP;
   }
 };
 
