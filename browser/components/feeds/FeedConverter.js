@@ -488,7 +488,13 @@ GenericProtocolHandler.prototype = {
   },
 
   get protocolFlags() {
-    return this._http.protocolFlags;
+    if (Services.prefs.getPrefType("browser.feeds.feeds_like_http") &&
+        Services.prefs.getBoolPref("browser.feeds.feeds_like_http")) {
+      return this._http.protocolFlags;
+    }
+    let {URI_DANGEROUS_TO_LOAD, ALLOWS_PROXY_HTTP, ALLOWS_PROXY} =
+      Ci.nsIProtocolHandler;
+    return URI_DANGEROUS_TO_LOAD | ALLOWS_PROXY | ALLOWS_PROXY_HTTP;
   },
 
   get defaultPort() {
