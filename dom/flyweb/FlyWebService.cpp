@@ -8,7 +8,7 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/ScopeExit.h"
 #include "mozilla/dom/Promise.h"
-#include "mozilla/dom/FlyWebPublishedServer.h"
+#include "mozilla/dom/FlyWebPublishedServerIPC.h"
 #include "nsISocketTransportService.h"
 #include "mdns/libmdns/nsDNSServiceInfo.h"
 #include "nsIUUIDGenerator.h"
@@ -77,7 +77,7 @@ private:
   nsresult PairWithService(const nsAString& aServiceId,
                            UniquePtr<FlyWebService::PairedInfo>& aInfo);
 
-  nsresult StartDiscoveryOf(FlyWebPublishedServer* aServer);
+  nsresult StartDiscoveryOf(FlyWebPublishedServerImpl* aServer);
 
   void EnsureDiscoveryStarted();
   void EnsureDiscoveryStopped();
@@ -442,7 +442,7 @@ FlyWebMDNSService::OnServiceRegistered(nsIDNSServiceInfo* aServiceInfo)
     return NS_ERROR_FAILURE;
   }
 
-  existingServer->DiscoveryStarted(NS_OK);
+  existingServer->PublishedServerStarted(NS_OK);
 
   return NS_OK;
 }
@@ -489,7 +489,7 @@ FlyWebMDNSService::OnRegistrationFailed(nsIDNSServiceInfo* aServiceInfo, int32_t
   LOG_I("OnServiceRegistered(MDNS): Registration of server with name %s failed.", cName.get());
 
   // Remove the nsICancelable from the published server.
-  existingServer->DiscoveryStarted(NS_ERROR_FAILURE);
+  existingServer->PublishedServerStarted(NS_ERROR_FAILURE);
   return NS_OK;
 }
 
@@ -696,7 +696,7 @@ FlyWebMDNSService::PairWithService(const nsAString& aServiceId,
 }
 
 nsresult
-FlyWebMDNSService::StartDiscoveryOf(FlyWebPublishedServer* aServer)
+FlyWebMDNSService::StartDiscoveryOf(FlyWebPublishedServerImpl* aServer)
 {
 
   RefPtr<FlyWebPublishedServer> existingServer =
@@ -805,6 +805,14 @@ FlyWebService::GetOrCreate()
 ErrorResult
 FlyWebService::Init()
 {
+  // Most functions of FlyWebService should not be started in the child.
+  // Instead FlyWebService in the child is mainly responsible for tracking
+  // publishedServer lifetimes. Other functions are handled by the
+  // FlyWebService running in the parent.
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    return ErrorResult(NS_OK);
+  }
+
   MOZ_ASSERT(NS_IsMainThread());
   if (!mMDNSHttpService) {
     mMDNSHttpService = new FlyWebMDNSService(this, NS_LITERAL_CSTRING("_http._tcp."));
@@ -833,19 +841,11 @@ FlyWebService::Init()
   return ErrorResult(NS_OK);
 }
 
-already_AddRefed<Promise>
+already_AddRefed<FlyWebPublishPromise>
 FlyWebService::PublishServer(const nsAString& aName,
                              const FlyWebPublishOptions& aOptions,
-                             nsPIDOMWindowInner* aWindow,
-                             ErrorResult& aRv)
+                             nsPIDOMWindowInner* aWindow)
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aWindow);
-  RefPtr<Promise> promise = Promise::Create(global, aRv);
-  if (aRv.Failed()) {
-    return nullptr;
-  }
-
   // Scan uiUrl for illegal characters
 
   RefPtr<FlyWebPublishedServer> existingServer =
@@ -853,16 +853,22 @@ FlyWebService::PublishServer(const nsAString& aName,
   if (existingServer) {
     LOG_I("PublishServer: Trying to publish server with already-existing name %s.",
           NS_ConvertUTF16toUTF8(aName).get());
-    promise->MaybeReject(NS_ERROR_FAILURE);
+    MozPromiseHolder<FlyWebPublishPromise> holder;
+    RefPtr<FlyWebPublishPromise> promise = holder.Ensure(__func__);
+    holder.Reject(NS_ERROR_FAILURE, __func__);
     return promise.forget();
   }
 
-  RefPtr<FlyWebPublishedServer> server =
-    new FlyWebPublishedServer(aWindow, aName, aOptions, promise);
+  RefPtr<FlyWebPublishedServer> server;
+  if (XRE_GetProcessType() == GeckoProcessType_Content) {
+    server = new FlyWebPublishedServerChild(aWindow, aName, aOptions);
+  } else {
+    server = new FlyWebPublishedServerImpl(aWindow, aName, aOptions);
+  }
 
   mServers.AppendElement(server);
 
-  return promise.forget();
+  return server->GetPublishPromise();
 }
 
 already_AddRefed<FlyWebPublishedServer>
@@ -1111,7 +1117,7 @@ FlyWebService::CreateTransportForHost(const char **types,
 }
 
 void
-FlyWebService::StartDiscoveryOf(FlyWebPublishedServer* aServer)
+FlyWebService::StartDiscoveryOf(FlyWebPublishedServerImpl* aServer)
 {
   MOZ_ASSERT(NS_IsMainThread());
   nsresult rv = mMDNSFlywebService ?
@@ -1119,7 +1125,7 @@ FlyWebService::StartDiscoveryOf(FlyWebPublishedServer* aServer)
     NS_ERROR_FAILURE;
 
   if (NS_FAILED(rv)) {
-    aServer->DiscoveryStarted(rv);
+    aServer->PublishedServerStarted(rv);
   }
 }
 
