@@ -86,32 +86,41 @@ Sanitizer.prototype = {
     },
 
     siteSettings: {
-      clear: function ()
-      {
-        return new Promise(function(resolve, reject) {
-          // Clear site-specific permissions like "Allow this site to open popups"
-          Services.perms.removeAll();
+      clear: Task.async(function* () {
+        // Clear site-specific permissions like "Allow this site to open popups"
+        Services.perms.removeAll();
 
-          // Clear site-specific settings like page-zoom level
-          Cc["@mozilla.org/content-pref/service;1"]
-            .getService(Ci.nsIContentPrefService2)
-            .removeAllDomains(null);
+        // Clear site-specific settings like page-zoom level
+        Cc["@mozilla.org/content-pref/service;1"]
+          .getService(Ci.nsIContentPrefService2)
+          .removeAllDomains(null);
 
-          // Clear "Never remember passwords for this site", which is not handled by
-          // the permission manager
-          var hosts = Services.logins.getAllDisabledHosts({})
-          for (var host of hosts) {
-            Services.logins.setLoginSavingEnabled(host, true);
-          }
+        // Clear "Never remember passwords for this site", which is not handled by
+        // the permission manager
+        var hosts = Services.logins.getAllDisabledHosts({})
+        for (var host of hosts) {
+          Services.logins.setLoginSavingEnabled(host, true);
+        }
 
-          // Clear site security settings
-          var sss = Cc["@mozilla.org/ssservice;1"]
-                      .getService(Ci.nsISiteSecurityService);
-          sss.clearAll();
+        // Clear site security settings
+        var sss = Cc["@mozilla.org/ssservice;1"]
+                    .getService(Ci.nsISiteSecurityService);
+        sss.clearAll();
 
-          resolve();
+        // Clear push subscriptions
+        yield new Promise((resolve, reject) => {
+          let push = Cc["@mozilla.org/push/Service;1"]
+                       .getService(Ci.nsIPushService);
+          push.clearForDomain("*", status => {
+            if (Components.isSuccessCode(status)) {
+              resolve();
+            } else {
+              reject(new Error("Error clearing push subscriptions: " +
+                               status));
+            }
+          });
         });
-      },
+      }),
 
       get canClear()
       {
