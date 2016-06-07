@@ -281,6 +281,7 @@ public:
     , mInputSource(aInputSource)
     , mButtons(aButtons)
     , mOrigin(aPoint)
+    , mHandledByAPZ(false)
   {}
 
   MouseInput()
@@ -289,6 +290,7 @@ public:
     , mButtonType(NONE)
     , mInputSource(0)
     , mButtons(0)
+    , mHandledByAPZ(false)
   {}
 
   explicit MouseInput(const WidgetMouseEventBase& aMouseEvent);
@@ -304,6 +306,7 @@ public:
   int16_t mButtons;
   ScreenPoint mOrigin;
   ParentLayerPoint mLocalOrigin;
+  bool mHandledByAPZ;
 };
 
 /**
