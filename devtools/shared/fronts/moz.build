@@ -13,6 +13,7 @@ DevToolsModules(
     'css-properties.js',
     'csscoverage.js',
     'device.js',
+    'director-manager.js',
     'highlighters.js',
     'inspector.js',
     'preference.js',

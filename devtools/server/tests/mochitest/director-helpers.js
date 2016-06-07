@@ -16,7 +16,7 @@ SimpleTest.registerCleanupFunction(function () {
 const { DirectorRegistry,
         DirectorRegistryFront } = require("devtools/server/actors/director-registry");
 
-const { DirectorManagerFront } = require("devtools/server/actors/director-manager");
+const { DirectorManagerFront } = require("devtools/shared/fronts/director-manager");
 
 const { Task } = require("devtools/shared/task");
 
