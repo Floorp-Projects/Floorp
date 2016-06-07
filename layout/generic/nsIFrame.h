@@ -1362,7 +1362,7 @@ public:
   /**
    * Returns true if this frame is transformed (e.g. has CSS or SVG transforms)
    * or if its parent is an SVG frame that has children-only transforms (e.g.
-   * an SVG viewBox attribute).
+   * an SVG viewBox attribute) or if its transform-style is preserve-3d.
    */
   bool IsTransformed() const;
 
