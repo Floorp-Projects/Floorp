@@ -5,7 +5,7 @@
 
 #include "gfxPlatform.h"
 #include "mozilla/layers/ISurfaceAllocator.h"
-#include "mozilla/layers/TextureForwarder.h"
+#include "mozilla/layers/CompositableForwarder.h"
 #include "TextureClientRecycleAllocator.h"
 
 namespace mozilla {
@@ -58,7 +58,7 @@ public:
     return true;
   }
 
-  already_AddRefed<TextureClient> Allocate(TextureForwarder* aAllocator) override
+  already_AddRefed<TextureClient> Allocate(CompositableForwarder* aAllocator) override
   {
     return mAllocator->Allocate(mFormat,
                                 mSize,
@@ -71,7 +71,7 @@ protected:
   TextureClientRecycleAllocator* mAllocator;
 };
 
-TextureClientRecycleAllocator::TextureClientRecycleAllocator(TextureForwarder* aAllocator)
+TextureClientRecycleAllocator::TextureClientRecycleAllocator(CompositableForwarder* aAllocator)
   : mSurfaceAllocator(aAllocator)
   , mMaxPooledSize(kMaxPooledSized)
   , mLock("TextureClientRecycleAllocatorImp.mLock")
