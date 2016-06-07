@@ -1133,8 +1133,22 @@ class CGHeaders(CGWrapper):
         # Now make sure we're not trying to include the header from inside itself
         declareIncludes.discard(prefix + ".h")
 
+        def addHeaderForFunc(func, desc):
+            if func is None:
+                return
+            # Include the right class header, which we can only do
+            # if this is a class member function.
+            if desc is not None and not desc.headerIsDefault:
+                # An explicit header file was provided, assume that we know
+                # what we're doing.
+                return
+
+            if "::" in func:
+                # Strip out the function name and convert "::" to "/"
+                bindingHeaders.add("/".join(func.split("::")[:-1]) + ".h")
+
         # Now for non-callback descriptors make sure we include any
-        # headers needed by Func declarations.
+        # headers needed by Func declarations and other things like that.
         for desc in descriptors:
             # If this is an iterator interface generated for a seperate
             # iterable interface, skip generating type includes, as we have
@@ -1142,29 +1156,15 @@ class CGHeaders(CGWrapper):
             if desc.interface.isExternal() or desc.interface.isIteratorInterface():
                 continue
 
-            def addHeaderForFunc(func):
-                if func is None:
-                    return
-                # Include the right class header, which we can only do
-                # if this is a class member function.
-                if not desc.headerIsDefault:
-                    # An explicit header file was provided, assume that we know
-                    # what we're doing.
-                    return
-
-                if "::" in func:
-                    # Strip out the function name and convert "::" to "/"
-                    bindingHeaders.add("/".join(func.split("::")[:-1]) + ".h")
-
             for m in desc.interface.members:
-                addHeaderForFunc(PropertyDefiner.getStringAttr(m, "Func"))
+                addHeaderForFunc(PropertyDefiner.getStringAttr(m, "Func"), desc)
                 staticTypeOverride = PropertyDefiner.getStringAttr(m, "StaticClassOverride")
                 if staticTypeOverride:
                     bindingHeaders.add("/".join(staticTypeOverride.split("::")) + ".h")
             # getExtendedAttribute() returns a list, extract the entry.
             funcList = desc.interface.getExtendedAttribute("Func")
             if funcList is not None:
-                addHeaderForFunc(funcList[0])
+                addHeaderForFunc(funcList[0], desc)
 
             if desc.interface.maplikeOrSetlikeOrIterable:
                 # We need ToJSValue.h for maplike/setlike type conversions
@@ -1183,6 +1183,12 @@ class CGHeaders(CGWrapper):
             if d.parent:
                 declareIncludes.add(self.getDeclarationFilename(d.parent))
             bindingHeaders.add(self.getDeclarationFilename(d))
+            for m in d.members:
+                addHeaderForFunc(PropertyDefiner.getStringAttr(m, "Func"),
+                                 None)
+            # No need to worry about Func on members of ancestors, because that
+            # will happen automatically in whatever files those ancestors live
+            # in.
 
         for c in callbacks:
             bindingHeaders.add(self.getDeclarationFilename(c))
