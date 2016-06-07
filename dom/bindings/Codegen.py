@@ -3323,6 +3323,32 @@ class CGDefineDOMInterfaceMethod(CGAbstractMethod):
         return getConstructor
 
 
+def getConditionList(idlobj, cxName, objName):
+    """
+    Get the list of conditions for idlobj (to be used in "is this enabled"
+    checks).  This will be returned as a CGList with " &&\n" as the separator,
+    for readability.
+
+    objName is the name of the object that we're working with, because some of
+    our test functions want that.
+    """
+    conditions = []
+    pref = idlobj.getExtendedAttribute("Pref")
+    if pref:
+        assert isinstance(pref, list) and len(pref) == 1
+        conditions.append('Preferences::GetBool("%s")' % pref[0])
+    if idlobj.getExtendedAttribute("ChromeOnly"):
+        conditions.append("nsContentUtils::ThreadsafeIsCallerChrome()")
+    func = idlobj.getExtendedAttribute("Func")
+    if func:
+        assert isinstance(func, list) and len(func) == 1
+        conditions.append("%s(%s, %s)" % (func[0], cxName, objName))
+    if idlobj.getExtendedAttribute("SecureContext"):
+        conditions.append("mozilla::dom::IsSecureContextOrObjectIsFromSecureContext(%s, %s)" % (cxName, objName))
+
+    return CGList((CGGeneric(cond) for cond in conditions), " &&\n")
+
+
 class CGConstructorEnabled(CGAbstractMethod):
     """
     A method for testing whether we should be exposing this interface
@@ -3338,7 +3364,6 @@ class CGConstructorEnabled(CGAbstractMethod):
     def definition_body(self):
         body = CGList([], "\n")
 
-        conditions = []
         iface = self.descriptor.interface
 
         if not iface.isExposedOnMainThread():
@@ -3365,34 +3390,23 @@ class CGConstructorEnabled(CGAbstractMethod):
                                                    "!NS_IsMainThread()")
             body.append(exposedInWorkerCheck)
 
-        pref = iface.getExtendedAttribute("Pref")
-        if pref:
-            assert isinstance(pref, list) and len(pref) == 1
-            conditions.append('Preferences::GetBool("%s")' % pref[0])
-        if iface.getExtendedAttribute("ChromeOnly"):
-            conditions.append("nsContentUtils::ThreadsafeIsCallerChrome()")
-        func = iface.getExtendedAttribute("Func")
-        if func:
-            assert isinstance(func, list) and len(func) == 1
-            conditions.append("%s(aCx, aObj)" % func[0])
-        if iface.getExtendedAttribute("SecureContext"):
-            conditions.append("mozilla::dom::IsSecureContextOrObjectIsFromSecureContext(aCx, aObj)")
+        conditions = getConditionList(iface, "aCx", "aObj")
         availableIn = getAvailableInTestFunc(iface)
         if availableIn:
-            conditions.append("%s(aCx, aObj)" % availableIn)
+            conditions.append(CGGeneric("%s(aCx, aObj)" % availableIn))
         checkAnyPermissions = self.descriptor.checkAnyPermissionsIndex
         if checkAnyPermissions is not None:
-            conditions.append("CheckAnyPermissions(aCx, aObj, anypermissions_%i)" % checkAnyPermissions)
+            conditions.append(CGGeneric("CheckAnyPermissions(aCx, aObj, anypermissions_%i)" % checkAnyPermissions))
         checkAllPermissions = self.descriptor.checkAllPermissionsIndex
         if checkAllPermissions is not None:
-            conditions.append("CheckAllPermissions(aCx, aObj, allpermissions_%i)" % checkAllPermissions)
+            conditions.append(CGGeneric("CheckAllPermissions(aCx, aObj, allpermissions_%i)" % checkAllPermissions))
+
         # We should really have some conditions
         assert len(body) or len(conditions)
 
         conditionsWrapper = ""
         if len(conditions):
-            conditionsWrapper = CGWrapper(CGList((CGGeneric(cond) for cond in conditions),
-                                                 " &&\n"),
+            conditionsWrapper = CGWrapper(conditions,
                                           pre="return ",
                                           post=";\n",
                                           reindent=True)
