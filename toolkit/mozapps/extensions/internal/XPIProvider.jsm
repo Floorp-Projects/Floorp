@@ -4707,13 +4707,11 @@ this.XPIProvider = {
         activeAddon = this.activeAddons.get(aAddon.id);
       }
 
-      if (aAddon.bootstrap) {
-        if (aMethod == "startup" || aMethod == "shutdown") {
-          if (!aExtraParams) {
-            aExtraParams = {};
-          }
-          aExtraParams["instanceID"] = this.activeAddons.get(aAddon.id).instanceID;
+      if (aMethod == "startup" || aMethod == "shutdown") {
+        if (!aExtraParams) {
+          aExtraParams = {};
         }
+        aExtraParams["instanceID"] = this.activeAddons.get(aAddon.id).instanceID;
       }
 
       // Nothing to call for locales
