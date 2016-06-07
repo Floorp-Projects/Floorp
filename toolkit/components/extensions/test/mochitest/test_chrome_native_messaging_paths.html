@@ -1,0 +1,61 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+
+/* global OS */
+
+Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/AppConstants.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+
+// Test that the default paths searched for native host manifests
+// are the ones we expect.
+add_task(function* test_default_paths() {
+  let expectUser, expectGlobal;
+  switch (AppConstants.platform) {
+    case "macosx": {
+      expectUser = OS.Path.join(OS.Constants.Path.homeDir,
+                                "Library/Application Support/Mozilla/NativeMessagingHosts");
+      expectGlobal = "/Library/Application Support/Mozilla/NativeMessagingHosts";
+
+      break;
+    }
+
+    case "linux": {
+      expectUser = OS.Path.join(OS.Constants.Path.homeDir, ".mozilla/native-messaging-hosts");
+
+      const libdir = AppConstants.HAVE_USR_LIB64_DIR ? "lib64" : "lib";
+      expectGlobal = OS.Path.join("/usr", libdir, "mozilla/native-messaging-hosts");
+      break;
+    }
+
+    default:
+      ok(false, `This test should be skipped on ${AppConstants.platform}`);
+      break;
+  }
+
+  let userDir = Services.dirsvc.get("XREUserNativeMessaging", Ci.nsIFile).path;
+  is(userDir, expectUser, "user-specific native messaging directory is correct");
+
+  let globalDir = Services.dirsvc.get("XRESysNativeMessaging", Ci.nsIFile).path;
+  is(globalDir, expectGlobal, "system-wide native messaing directory is correct");
+});
+
+</script>
+
+</body>
+</html>
+

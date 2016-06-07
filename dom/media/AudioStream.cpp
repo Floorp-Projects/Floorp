@@ -31,14 +31,6 @@ LazyLogModule gAudioStreamLog("AudioStream");
 #define LOGW(x, ...) MOZ_LOG(gAudioStreamLog, mozilla::LogLevel::Warning, ("%p " x, this, ##__VA_ARGS__))
 
 /**
- * When MOZ_DUMP_AUDIO is set in the environment (to anything),
- * we'll drop a series of files in the current working directory named
- * dumped-audio-<nnn>.wav, one per AudioStream created, containing
- * the audio for the stream including any skips due to underruns.
- */
-static int gDumpedAudioCount = 0;
-
-/**
  * Keep a list of frames sent to the audio engine in each DataCallback along
  * with the playback rate at the moment. Since the playback rate and number of
  * underrun frames can vary in each callback. We need to keep the whole history
@@ -121,8 +113,6 @@ private:
 
 AudioStream::AudioStream(DataSource& aSource)
   : mMonitor("AudioStream")
-  , mInRate(0)
-  , mOutRate(0)
   , mChannels(0)
   , mOutChannels(0)
   , mTimeStretcher(nullptr)
@@ -162,7 +152,7 @@ nsresult AudioStream::EnsureTimeStretcherInitializedUnlocked()
   mMonitor.AssertCurrentThreadOwns();
   if (!mTimeStretcher) {
     mTimeStretcher = soundtouch::createSoundTouchObj();
-    mTimeStretcher->setSampleRate(mInRate);
+    mTimeStretcher->setSampleRate(mAudioClock.GetInputRate());
     mTimeStretcher->setChannels(mOutChannels);
     mTimeStretcher->setPitch(1.0);
   }
@@ -188,7 +178,6 @@ nsresult AudioStream::SetPlaybackRate(double aPlaybackRate)
   }
 
   mAudioClock.SetPlaybackRate(aPlaybackRate);
-  mOutRate = mInRate / aPlaybackRate;
 
   if (mAudioClock.GetPreservesPitch()) {
     mTimeStretcher->setTempo(aPlaybackRate);
@@ -241,16 +230,23 @@ static void SetUint32LE(uint8_t* aDest, uint32_t aValue)
 }
 
 static FILE*
-OpenDumpFile(AudioStream* aStream)
+OpenDumpFile(uint32_t aChannels, uint32_t aRate)
 {
+  /**
+   * When MOZ_DUMP_AUDIO is set in the environment (to anything),
+   * we'll drop a series of files in the current working directory named
+   * dumped-audio-<nnn>.wav, one per AudioStream created, containing
+   * the audio for the stream including any skips due to underruns.
+   */
+  static Atomic<int> gDumpedAudioCount(0);
+
   if (!getenv("MOZ_DUMP_AUDIO"))
     return nullptr;
   char buf[100];
-  snprintf_literal(buf, "dumped-audio-%d.wav", gDumpedAudioCount);
+  snprintf_literal(buf, "dumped-audio-%d.wav", ++gDumpedAudioCount);
   FILE* f = fopen(buf, "wb");
   if (!f)
     return nullptr;
-  ++gDumpedAudioCount;
 
   uint8_t header[] = {
     // RIFF header
@@ -264,9 +260,9 @@ OpenDumpFile(AudioStream* aStream)
   static const int CHANNEL_OFFSET = 22;
   static const int SAMPLE_RATE_OFFSET = 24;
   static const int BLOCK_ALIGN_OFFSET = 32;
-  SetUint16LE(header + CHANNEL_OFFSET, aStream->GetChannels());
-  SetUint32LE(header + SAMPLE_RATE_OFFSET, aStream->GetRate());
-  SetUint16LE(header + BLOCK_ALIGN_OFFSET, aStream->GetChannels()*2);
+  SetUint16LE(header + CHANNEL_OFFSET, aChannels);
+  SetUint32LE(header + SAMPLE_RATE_OFFSET, aRate);
+  SetUint16LE(header + BLOCK_ALIGN_OFFSET, aChannels * 2);
   fwrite(header, sizeof(header), 1, f);
 
   return f;
@@ -329,11 +325,10 @@ AudioStream::Init(uint32_t aNumChannels, uint32_t aRate,
   auto isFirst = CubebUtils::GetFirstStream();
 
   LOG("%s channels: %d, rate: %d", __FUNCTION__, aNumChannels, aRate);
-  mInRate = mOutRate = aRate;
   mChannels = aNumChannels;
   mOutChannels = aNumChannels;
 
-  mDumpFile = OpenDumpFile(this);
+  mDumpFile = OpenDumpFile(aNumChannels, aRate);
 
   cubeb_stream_params params;
   params.rate = aRate;
@@ -503,8 +498,8 @@ AudioStream::GetPositionInFramesUnlocked()
 bool
 AudioStream::IsValidAudioFormat(Chunk* aChunk)
 {
-  if (aChunk->Rate() != mInRate) {
-    LOGW("mismatched sample %u, mInRate=%u", aChunk->Rate(), mInRate);
+  if (aChunk->Rate() != mAudioClock.GetInputRate()) {
+    LOGW("mismatched sample %u, mInRate=%u", aChunk->Rate(), mAudioClock.GetInputRate());
     return false;
   }
 
@@ -559,8 +554,8 @@ AudioStream::GetTimeStretched(AudioBufferWriter& aWriter)
     return;
   }
 
-  double playbackRate = static_cast<double>(mInRate) / mOutRate;
-  uint32_t toPopFrames = ceil(aWriter.Available() * playbackRate);
+  uint32_t toPopFrames =
+    ceil(aWriter.Available() * mAudioClock.GetPlaybackRate());
 
   while (mTimeStretcher->numSamples() < aWriter.Available()) {
     UniquePtr<Chunk> c = mDataSource.PopFrames(toPopFrames);
@@ -605,7 +600,7 @@ AudioStream::DataCallback(void* aBuffer, long aFrames)
   // NOTE: wasapi (others?) can call us back *after* stop()/Shutdown() (mState == SHUTDOWN)
   // Bug 996162
 
-  if (mInRate == mOutRate) {
+  if (mAudioClock.GetInputRate() == mAudioClock.GetOutputRate()) {
     GetUnprocessed(writer);
   } else {
     GetTimeStretched(writer);

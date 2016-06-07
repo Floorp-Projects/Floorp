@@ -83,3 +83,7 @@ with other ``mach taskgraph`` commands.
 ``target_tasks``
    (optional) The target set method ``from_parameters`` reads the target set, as
    a list of task labels, from this parameter.
+
+``optimize_target_tasks``
+   (optional; default True) If true, then target tasks are eligible for
+   optimization.

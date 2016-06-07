@@ -30,15 +30,16 @@ trackElement.kind = "subtitles";
 document.getElementById("content").appendChild(video);
 video.appendChild(trackElement);
 
-video.addEventListener("loadedmetadata", function run_tests() {
-  is(video.textTracks.length, 1, "Video should have one TextTrack.");
-  var parent = video.parentNode;
-  parent.removeChild(video);
-  is(video.textTracks.length, 1, "After unbind the video element, should have one TextTrack.");
-  parent.appendChild(video);
-  is(video.textTracks.length, 1, "After bind the video element, should have one TextTrack.");
-  SimpleTest.finish();
-});
+// Bug 1242599, access video.textTracks.length immediately after
+// the track element binds into the media element.
+is(video.textTracks.length, 1, "Video should have one TextTrack.");
+var parent = video.parentNode;
+parent.removeChild(video);
+is(video.textTracks.length, 1, "After unbind the video element, should have one TextTrack.");
+parent.appendChild(video);
+is(video.textTracks.length, 1, "After bind the video element, should have one TextTrack.");
+SimpleTest.finish();
+
 </script>
 </pre>
 </body>

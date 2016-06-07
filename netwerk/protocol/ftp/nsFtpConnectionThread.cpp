@@ -1828,10 +1828,6 @@ nsFtpState::StopProcessing()
 
     LOG_INFO(("FTP:(%x) nsFtpState stopping", this));
 
-#ifdef DEBUG_dougt
-    printf("FTP Stopped: [response code %d] [response msg follows:]\n%s\n", mResponseCode, mResponseMsg.get());
-#endif
-
     if (NS_FAILED(mInternalError) && !mResponseMsg.IsEmpty()) {
         // check to see if the control status is bad.
         // web shell wont throw an alert.  we better:

@@ -192,6 +192,12 @@ GrallocTextureHostBasic::SetCompositor(Compositor* aCompositor)
   }
 }
 
+Compositor*
+GrallocTextureHostBasic::GetCompositor()
+{
+  return mCompositor;
+}
+
 gfx::SurfaceFormat
 GrallocTextureHostBasic::GetFormat() const {
   return mFormat;

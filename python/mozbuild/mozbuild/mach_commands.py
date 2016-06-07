@@ -434,27 +434,6 @@ class Build(MachCommandBase):
                     allow_parallel=False, ensure_exit_code=False, num_jobs=jobs,
                     silent=not verbose)
 
-                make_extra = self.mozconfig['make_extra'] or []
-                make_extra = dict(m.split('=', 1) for m in make_extra)
-
-                # For universal builds, we need to run the automation steps in
-                # the first architecture from MOZ_BUILD_PROJECTS
-                projects = make_extra.get('MOZ_BUILD_PROJECTS')
-                append_env = None
-                if projects:
-                    project = projects.split()[0]
-                    append_env = {b'MOZ_CURRENT_PROJECT': project.encode('utf-8')}
-                    subdir = os.path.join(self.topobjdir, project)
-                else:
-                    subdir = self.topobjdir
-                moz_automation = os.getenv('MOZ_AUTOMATION') or make_extra.get('export MOZ_AUTOMATION', None)
-                if moz_automation and status == 0:
-                    status = self._run_make(target='automation/build', directory=subdir,
-                        line_handler=output.on_line, log=False, print_directory=False,
-                        ensure_exit_code=False, num_jobs=jobs, silent=not verbose,
-                        append_env=append_env
-                    )
-
                 self.log(logging.WARNING, 'warning_summary',
                     {'count': len(monitor.warnings_database)},
                     '{count} compiler warnings present.')
@@ -1533,7 +1512,9 @@ class PackageFrontend(MachCommandBase):
 
         # Absolutely must come after the virtualenv is populated!
         from mozbuild.artifacts import Artifacts
-        artifacts = Artifacts(tree, job, log=self.log, cache_dir=cache_dir, skip_cache=skip_cache, hg=hg, git=git)
+        artifacts = Artifacts(tree, self.substs, self.defines, job,
+                              log=self.log, cache_dir=cache_dir,
+                              skip_cache=skip_cache, hg=hg, git=git)
         return artifacts
 
     @ArtifactSubCommand('artifact', 'install',

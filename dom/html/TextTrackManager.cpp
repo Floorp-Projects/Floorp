@@ -252,10 +252,6 @@ TextTrackManager::UpdateCueDisplay()
   } else if (overlay->Length() > 0) {
     nsContentUtils::SetNodeTextContent(overlay, EmptyString(), true);
   }
-  // Call TimeMarchesOn() directly instead DispatchTimeMarchesOn()
-  // because we had render the new cue, so we must run
-  // TimeMarchesOn immediately.
-  TimeMarchesOn();
 }
 
 void
@@ -539,7 +535,7 @@ TextTrackManager::TimeMarchesOn()
   nsCOMPtr<nsPIDOMWindowInner> window = do_QueryInterface(parentObject);
 
   if (mMediaElement &&
-      (!(mMediaElement->GetPlayedOrSeeked())|| mMediaElement->Seeking())) {
+      (!(mMediaElement->GetPlayedOrSeeked()) || mMediaElement->Seeking())) {
     return;
   }
 
@@ -711,6 +707,9 @@ TextTrackManager::TimeMarchesOn()
 
   mLastTimeMarchesOnCalled = currentPlaybackTime;
   mLastActiveCues = currentCues;
+
+  // Step 18.
+  UpdateCueDisplay();
 }
 
 } // namespace dom

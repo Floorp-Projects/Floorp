@@ -1,0 +1,37 @@
+[
+  {
+    "namespace": "manifest",
+    "types": [
+      {
+        "id": "NativeHostManifest",
+        "type": "object",
+        "description": "Represents a native host manifest file",
+        "properties": {
+          "name": {
+            "type": "string",
+            "pattern": "^\\w+(\\.\\w+)*$"
+          },
+          "description": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "stdio"
+            ]
+          },
+          "allowed_extensions": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "manifest.ExtensionID"
+            }
+          }
+        }
+      }
+    ]
+  }
+]

@@ -9813,7 +9813,8 @@ IonBuilder::jsop_getelem_dense(MDefinition* obj, MDefinition* index, JSValueType
     }
 
     if (knownType != MIRType::Value) {
-        load->setResultType(knownType);
+        if (unboxedType == JSVAL_TYPE_MAGIC)
+            load->setResultType(knownType);
         load->setResultTypeSet(types);
     }
 
@@ -13886,8 +13887,34 @@ IonBuilder::jsop_instanceof()
         if (!rhsObject || !rhsObject->is<JSFunction>() || rhsObject->isBoundFunction())
             break;
 
+        // Refuse to optimize anything whose [[Prototype]] isn't Function.prototype
+        // since we can't guarantee that it uses the default @@hasInstance method.
+        if (rhsObject->hasUncacheableProto() || !rhsObject->hasStaticPrototype())
+            break;
+
+        Value funProto = script()->global().getPrototype(JSProto_Function);
+        if (!funProto.isObject() || rhsObject->staticPrototype() != &funProto.toObject())
+            break;
+
+        // If the user has supplied their own @@hasInstance method we shouldn't
+        // clobber it.
+        JSFunction* fun = &rhsObject->as<JSFunction>();
+        const WellKnownSymbols* symbols = &compartment->runtime()->wellKnownSymbols();
+        if (!js::FunctionHasDefaultHasInstance(fun, *symbols))
+            break;
+
+        // Ensure that we will bail if the @@hasInstance property or [[Prototype]]
+        // change.
         TypeSet::ObjectKey* rhsKey = TypeSet::ObjectKey::get(rhsObject);
+        if (!rhsKey->hasStableClassAndProto(constraints()))
+            break;
+
         if (rhsKey->unknownProperties())
+            break;
+
+        HeapTypeSetKey hasInstanceObject =
+            rhsKey->property(SYMBOL_TO_JSID(symbols->hasInstance));
+        if (hasInstanceObject.isOwnProperty(constraints()))
             break;
 
         HeapTypeSetKey protoProperty =

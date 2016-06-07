@@ -1304,8 +1304,6 @@ var gBrowserInit = {
 
     gMenuButtonUpdateBadge.init();
 
-    UserContextStyleManager.init();
-
     window.addEventListener("mousemove", MousePosTracker, false);
     window.addEventListener("dragover", MousePosTracker, false);
 
@@ -7953,34 +7951,5 @@ TabModalPromptBox.prototype = {
       throw "Stale promptbox! The associated browser is gone.";
     }
     return browser;
-  },
-};
-
-let UserContextStyleManager = {
-  init() {
-    for (let styleId in document.styleSheets) {
-      let styleSheet = document.styleSheets[styleId];
-      if (styleSheet.href != "chrome://browser/content/usercontext/usercontext.css") {
-        continue;
-      }
-
-      if (ContextualIdentityService.needsCssRule()) {
-        for (let ruleId in styleSheet.cssRules) {
-          let cssRule = styleSheet.cssRules[ruleId];
-          if (cssRule.selectorText != ":root") {
-            continue;
-          }
-
-          ContextualIdentityService.storeCssRule(cssRule.cssText);
-          break;
-        }
-      }
-
-      ContextualIdentityService.cssRules().forEach(rule => {
-        styleSheet.insertRule(rule, styleSheet.cssRules.length);
-      });
-
-      break;
-    }
   },
 };

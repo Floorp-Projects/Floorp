@@ -92,6 +92,9 @@ js::NewContext(JSRuntime* rt, size_t stackChunkSize)
 {
     JS_AbortIfWrongThread(rt);
 
+    MOZ_RELEASE_ASSERT(!rt->haveCreatedContext,
+                       "There must be at most 1 JSContext per runtime");
+
     JSContext* cx = js_new<JSContext>(rt);
     if (!cx)
         return nullptr;

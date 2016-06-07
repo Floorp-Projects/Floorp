@@ -284,10 +284,19 @@ function get_addon_file_url(aFilename) {
   }
 }
 
+function get_current_view(aManager) {
+  let view = aManager.document.getElementById("view-port").selectedPanel;
+  if (view.id == "headered-views") {
+    view = aManager.document.getElementById("headered-views-content").selectedPanel;
+  }
+  is(view, aManager.gViewController.displayedView, "view controller is tracking the displayed view correctly");
+  return view;
+}
+
 function get_test_items_in_list(aManager) {
   var tests = "@tests.mozilla.org";
 
-  let view = aManager.document.getElementById("view-port").selectedPanel;
+  let view = get_current_view(aManager);
   let listid = view.id == "search-view" ? "search-list" : "addon-list";
   let item = aManager.document.getElementById(listid).firstChild;
   let items = [];
@@ -308,7 +317,7 @@ function get_test_items_in_list(aManager) {
 
 function check_all_in_list(aManager, aIds, aIgnoreExtras) {
   var doc = aManager.document;
-  var view = doc.getElementById("view-port").selectedPanel;
+  var view = get_current_view(aManager);
   var listid = view.id == "search-view" ? "search-list" : "addon-list";
   var list = doc.getElementById(listid);
 
@@ -336,7 +345,7 @@ function check_all_in_list(aManager, aIds, aIgnoreExtras) {
 
 function get_addon_element(aManager, aId) {
   var doc = aManager.document;
-  var view = doc.getElementById("view-port").selectedPanel;
+  var view = get_current_view(aManager);
   var listid = "addon-list";
   if (view.id == "search-view")
     listid = "search-list";

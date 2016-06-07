@@ -2,12 +2,14 @@ $inherits:
   from: 'tasks/build.yml'
   variables:
     build_product: 'b2g'
+docker-image: builder
 task:
   payload:
     image:
       type: 'task-image'
       path: 'public/image.tar'
-      taskId: '{{#task_id_for_image}}builder{{/task_id_for_image}}'
+      taskId:
+        task-reference: "<docker-image>"
   extra:
     locations:
       test_packages: 'public/build/target.test_packages.json'

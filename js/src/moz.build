@@ -160,6 +160,7 @@ UNIFIED_SOURCES += [
     'asmjs/WasmBinaryToAST.cpp',
     'asmjs/WasmBinaryToExperimentalText.cpp',
     'asmjs/WasmBinaryToText.cpp',
+    'asmjs/WasmCode.cpp',
     'asmjs/WasmFrameIterator.cpp',
     'asmjs/WasmGenerator.cpp',
     'asmjs/WasmIonCompile.cpp',

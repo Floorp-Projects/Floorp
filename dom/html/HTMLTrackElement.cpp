@@ -202,13 +202,6 @@ HTMLTrackElement::LoadResource()
     mChannel = nullptr;
   }
 
-  // We may already have a TextTrack at this point if GetTrack() has already
-  // been called. This happens, for instance, if script tries to get the
-  // TextTrack before its mTrackElement has been bound to the DOM tree.
-  if (!mTrack) {
-    CreateTextTrack();
-  }
-
   nsCOMPtr<nsIChannel> channel;
   nsCOMPtr<nsILoadGroup> loadGroup = OwnerDoc()->GetDocumentLoadGroup();
   rv = NS_NewChannel(getter_AddRefs(channel),
@@ -259,11 +252,16 @@ HTMLTrackElement::BindToTree(nsIDocument* aDocument,
   if (!mMediaParent) {
     mMediaParent = static_cast<HTMLMediaElement*>(aParent);
 
-    HTMLMediaElement* media = static_cast<HTMLMediaElement*>(aParent);
     // TODO: separate notification for 'alternate' tracks?
-    media->NotifyAddedSource();
+    mMediaParent->NotifyAddedSource();
     LOG(LogLevel::Debug, ("Track element sent notification to parent."));
 
+    // We may already have a TextTrack at this point if GetTrack() has already
+    // been called. This happens, for instance, if script tries to get the
+    // TextTrack before its mTrackElement has been bound to the DOM tree.
+    if (!mTrack) {
+      CreateTextTrack();
+    }
     RefPtr<Runnable> r = NewRunnableMethod(this, &HTMLTrackElement::LoadResource);
     mMediaParent->RunInStableState(r);
   }
