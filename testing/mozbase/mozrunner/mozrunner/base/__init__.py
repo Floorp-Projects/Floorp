@@ -1,3 +1,3 @@
 from .runner import BaseRunner
-from .device import DeviceRunner
+from .device import DeviceRunner, FennecRunner
 from .browser import GeckoRuntimeRunner
