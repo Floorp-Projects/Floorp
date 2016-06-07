@@ -34,6 +34,7 @@ MouseInput::MouseInput(const WidgetMouseEventBase& aMouseEvent)
   , mType(MOUSE_NONE)
   , mButtonType(NONE)
   , mButtons(aMouseEvent.buttons)
+  , mHandledByAPZ(aMouseEvent.mFlags.mHandledByAPZ)
 {
   MOZ_ASSERT(NS_IsMainThread(),
              "Can only copy from WidgetTouchEvent on main thread");
@@ -158,6 +159,7 @@ MouseInput::ToWidgetMouseEvent(nsIWidget* aWidget) const
   event.mModifiers = modifiers;
   event.mTime = mTime;
   event.mTimeStamp = mTimeStamp;
+  event.mFlags.mHandledByAPZ = mHandledByAPZ;
   event.mRefPoint =
     RoundedToInt(ViewAs<LayoutDevicePixel>(mOrigin,
       PixelCastJustification::LayoutDeviceIsScreenForUntransformedEvent));
