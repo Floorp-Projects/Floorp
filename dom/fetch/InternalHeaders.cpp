@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/InternalHeaders.h"
 
+#include "mozilla/dom/FetchTypes.h"
 #include "mozilla/ErrorResult.h"
 
 #include "nsCharSeparatedTokenizer.h"
@@ -21,6 +22,27 @@ InternalHeaders::InternalHeaders(const nsTArray<Entry>&& aHeaders,
   : mGuard(aGuard)
   , mList(aHeaders)
 {
+}
+
+InternalHeaders::InternalHeaders(const nsTArray<HeadersEntry>& aHeadersEntryList,
+                                 HeadersGuardEnum aGuard)
+  : mGuard(aGuard)
+{
+  for (const HeadersEntry& headersEntry : aHeadersEntryList) {
+    mList.AppendElement(Entry(headersEntry.name(), headersEntry.value()));
+  }
+}
+
+void
+InternalHeaders::ToIPC(nsTArray<HeadersEntry>& aIPCHeaders,
+                       HeadersGuardEnum& aGuard)
+{
+  aGuard = mGuard;
+
+  aIPCHeaders.Clear();
+  for (Entry& entry : mList) {
+    aIPCHeaders.AppendElement(HeadersEntry(entry.mName, entry.mValue));
+  }
 }
 
 void
