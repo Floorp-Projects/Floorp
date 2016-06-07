@@ -2714,16 +2714,16 @@ MaybePrintAndClearPendingException(JSContext* cx, FILE* file)
 class MOZ_STACK_CLASS AutoSelfHostingErrorReporter
 {
     JSContext* cx_;
-    JSErrorReporter oldReporter_;
+    JS::WarningReporter oldReporter_;
 
   public:
     explicit AutoSelfHostingErrorReporter(JSContext* cx)
       : cx_(cx)
     {
-        oldReporter_ = JS_SetErrorReporter(cx_->runtime(), selfHosting_WarningReporter);
+        oldReporter_ = JS::SetWarningReporter(cx_->runtime(), selfHosting_WarningReporter);
     }
     ~AutoSelfHostingErrorReporter() {
-        JS_SetErrorReporter(cx_->runtime(), oldReporter_);
+        JS::SetWarningReporter(cx_->runtime(), oldReporter_);
 
         // Exceptions in self-hosted code will usually be printed to stderr in
         // ErrorToException, but not all exceptions are handled there. For
