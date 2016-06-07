@@ -1837,6 +1837,7 @@ fuzzy-if(d2d,1,125200) fuzzy-if(skiaContent,1,126000) == 1022612-1.html 1022612-
 == 1024473-1.html 1024473-1-ref.html
 fuzzy-if(skiaContent,1,24000) == 1025914-1.html 1025914-1-ref.html
 == 1042104-1.html 1042104-1-ref.html
+== 1043537-1.html 1043537-1-ref.html
 == 1044198-1.html 1044198-1-ref.html
 == 1049499-1.html 1049499-1-ref.html
 == 1050493-1.html 1050493-1-ref.html
