@@ -221,8 +221,8 @@ HttpServer::Close()
   }
 
   if (mListener) {
-    RefPtr<HttpServerListener> listener = mListener.forget();
-    listener->OnServerClose();
+    mListener->OnServerClose();
+    mListener = nullptr;
   }
 
   for (Connection* conn : mConnections) {

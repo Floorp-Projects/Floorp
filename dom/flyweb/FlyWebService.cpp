@@ -77,7 +77,7 @@ private:
   nsresult PairWithService(const nsAString& aServiceId,
                            UniquePtr<FlyWebService::PairedInfo>& aInfo);
 
-  nsresult StartDiscoveryOf(FlyWebPublishedServerImpl* aServer);
+  nsresult StartDiscoveryOf(FlyWebPublishedServer* aServer);
 
   void EnsureDiscoveryStarted();
   void EnsureDiscoveryStopped();
@@ -442,7 +442,7 @@ FlyWebMDNSService::OnServiceRegistered(nsIDNSServiceInfo* aServiceInfo)
     return NS_ERROR_FAILURE;
   }
 
-  existingServer->PublishedServerStarted(NS_OK);
+  existingServer->DiscoveryStarted(NS_OK);
 
   return NS_OK;
 }
@@ -489,7 +489,7 @@ FlyWebMDNSService::OnRegistrationFailed(nsIDNSServiceInfo* aServiceInfo, int32_t
   LOG_I("OnServiceRegistered(MDNS): Registration of server with name %s failed.", cName.get());
 
   // Remove the nsICancelable from the published server.
-  existingServer->PublishedServerStarted(NS_ERROR_FAILURE);
+  existingServer->DiscoveryStarted(NS_ERROR_FAILURE);
   return NS_OK;
 }
 
@@ -696,7 +696,7 @@ FlyWebMDNSService::PairWithService(const nsAString& aServiceId,
 }
 
 nsresult
-FlyWebMDNSService::StartDiscoveryOf(FlyWebPublishedServerImpl* aServer)
+FlyWebMDNSService::StartDiscoveryOf(FlyWebPublishedServer* aServer)
 {
 
   RefPtr<FlyWebPublishedServer> existingServer =
@@ -805,14 +805,6 @@ FlyWebService::GetOrCreate()
 ErrorResult
 FlyWebService::Init()
 {
-  // Most functions of FlyWebService should not be started in the child.
-  // Instead FlyWebService in the child is mainly responsible for tracking
-  // publishedServer lifetimes. Other functions are handled by the
-  // FlyWebService running in the parent.
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    return ErrorResult(NS_OK);
-  }
-
   MOZ_ASSERT(NS_IsMainThread());
   if (!mMDNSHttpService) {
     mMDNSHttpService = new FlyWebMDNSService(this, NS_LITERAL_CSTRING("_http._tcp."));
@@ -841,11 +833,19 @@ FlyWebService::Init()
   return ErrorResult(NS_OK);
 }
 
-already_AddRefed<FlyWebPublishPromise>
+already_AddRefed<Promise>
 FlyWebService::PublishServer(const nsAString& aName,
                              const FlyWebPublishOptions& aOptions,
-                             nsPIDOMWindowInner* aWindow)
+                             nsPIDOMWindowInner* aWindow,
+                             ErrorResult& aRv)
 {
+  MOZ_ASSERT(NS_IsMainThread());
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(aWindow);
+  RefPtr<Promise> promise = Promise::Create(global, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
   // Scan uiUrl for illegal characters
 
   RefPtr<FlyWebPublishedServer> existingServer =
@@ -853,22 +853,16 @@ FlyWebService::PublishServer(const nsAString& aName,
   if (existingServer) {
     LOG_I("PublishServer: Trying to publish server with already-existing name %s.",
           NS_ConvertUTF16toUTF8(aName).get());
-    MozPromiseHolder<FlyWebPublishPromise> holder;
-    RefPtr<FlyWebPublishPromise> promise = holder.Ensure(__func__);
-    holder.Reject(NS_ERROR_FAILURE, __func__);
+    promise->MaybeReject(NS_ERROR_FAILURE);
     return promise.forget();
   }
 
-  RefPtr<FlyWebPublishedServer> server;
-  if (XRE_GetProcessType() == GeckoProcessType_Content) {
-    server = new FlyWebPublishedServerChild(aWindow, aName, aOptions);
-  } else {
-    server = new FlyWebPublishedServerImpl(aWindow, aName, aOptions);
-  }
+  RefPtr<FlyWebPublishedServer> server =
+    new FlyWebPublishedServer(aWindow, aName, aOptions, promise);
 
   mServers.AppendElement(server);
 
-  return server->GetPublishPromise();
+  return promise.forget();
 }
 
 already_AddRefed<FlyWebPublishedServer>
@@ -1117,7 +1111,7 @@ FlyWebService::CreateTransportForHost(const char **types,
 }
 
 void
-FlyWebService::StartDiscoveryOf(FlyWebPublishedServerImpl* aServer)
+FlyWebService::StartDiscoveryOf(FlyWebPublishedServer* aServer)
 {
   MOZ_ASSERT(NS_IsMainThread());
   nsresult rv = mMDNSFlywebService ?
@@ -1125,7 +1119,7 @@ FlyWebService::StartDiscoveryOf(FlyWebPublishedServerImpl* aServer)
     NS_ERROR_FAILURE;
 
   if (NS_FAILED(rv)) {
-    aServer->PublishedServerStarted(rv);
+    aServer->DiscoveryStarted(rv);
   }
 }
 
