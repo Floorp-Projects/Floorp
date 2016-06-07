@@ -622,6 +622,7 @@ option('--disable-install-strip',
 
 @depends('--disable-install-strip')
 def disable_install_strip(value):
-    return not value
+    if not value:
+        return True
 
 set_config('PKG_SKIP_STRIP', disable_install_strip)
