@@ -57,8 +57,9 @@ extensions.on("page-load", (type, page, params, sender, delegate) => {
     let parentWindow = browser.ownerDocument.defaultView;
     page.windowId = WindowManager.getId(parentWindow);
 
-    let tab = parentWindow.gBrowser.getTabForBrowser(browser);
-    if (tab) {
+    let tab = null;
+    if (params.type == "tab") {
+      tab = parentWindow.gBrowser.getTabForBrowser(browser);
       sender.tabId = TabManager.getId(tab);
       page.tabId = TabManager.getId(tab);
     }

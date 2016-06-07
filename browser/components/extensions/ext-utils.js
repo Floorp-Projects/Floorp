@@ -191,10 +191,12 @@ class BasePopup {
 
       this.viewNode.removeEventListener(this.DESTROY_EVENT, this);
 
+      this.context.unload();
       this.browser.remove();
 
       this.browser = null;
       this.viewNode = null;
+      this.context = null;
     });
   }
 
@@ -250,7 +252,6 @@ class BasePopup {
     this.browser = document.createElementNS(XUL_NS, "browser");
     this.browser.setAttribute("type", "content");
     this.browser.setAttribute("disableglobalhistory", "true");
-    this.browser.setAttribute("webextension-view-type", "popup");
 
     // Note: When using noautohide panels, the popup manager will add width and
     // height attributes to the panel, breaking our resize code, if the browser
@@ -279,7 +280,15 @@ class BasePopup {
                    .getInterface(Ci.nsIDOMWindowUtils)
                    .allowScriptsToClose();
 
-      this.browser.setAttribute("src", popupURI.spec);
+      this.context = new ExtensionContext(this.extension, {
+        type: "popup",
+        contentWindow,
+        uri: popupURI,
+        docShell: this.browser.docShell,
+      });
+
+      GlobalManager.injectInDocShell(this.browser.docShell, this.extension, this.context);
+      this.browser.setAttribute("src", this.context.uri.spec);
 
       this.browser.addEventListener("DOMWindowCreated", this, true);
       this.browser.addEventListener("load", this, true);
