@@ -658,12 +658,6 @@ nsWebBrowser::LoadURIWithOptions(const char16_t* aURI, uint32_t aLoadFlags,
 }
 
 NS_IMETHODIMP
-nsWebBrowser::SetOriginAttributesBeforeLoading(JS::Handle<JS::Value> aOriginAttributes)
-{
-  return mDocShellAsNav->SetOriginAttributesBeforeLoading(aOriginAttributes);
-}
-
-NS_IMETHODIMP
 nsWebBrowser::LoadURI(const char16_t* aURI, uint32_t aLoadFlags,
                       nsIURI* aReferringURI,
                       nsIInputStream* aPostDataStream,
