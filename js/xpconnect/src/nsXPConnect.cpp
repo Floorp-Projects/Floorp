@@ -273,7 +273,7 @@ xpc::ErrorReport::LogToConsoleWithStack(JS::HandleObject aStack)
       errorObject = new nsScriptError();
     }
     errorObject->SetErrorMessageName(mErrorMsgName);
-    NS_ENSURE_TRUE_VOID(consoleService && errorObject);
+    NS_ENSURE_TRUE_VOID(consoleService);
 
     nsresult rv = errorObject->InitWithWindowID(mErrorMsg, mFileName, mSourceLine,
                                                 mLineNumber, mColumn, mFlags,
