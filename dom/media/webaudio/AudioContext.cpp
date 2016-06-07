@@ -30,6 +30,7 @@
 #include "DelayNode.h"
 #include "DynamicsCompressorNode.h"
 #include "GainNode.h"
+#include "IIRFilterNode.h"
 #include "MediaElementAudioSourceNode.h"
 #include "MediaStreamAudioDestinationNode.h"
 #include "MediaStreamAudioSourceNode.h"
@@ -506,6 +507,20 @@ AudioContext::CreateBiquadFilter(ErrorResult& aRv)
 
   RefPtr<BiquadFilterNode> filterNode =
     new BiquadFilterNode(this);
+  return filterNode.forget();
+}
+
+already_AddRefed<IIRFilterNode>
+AudioContext::CreateIIRFilter(const mozilla::dom::binding_detail::AutoSequence<double>& aFeedforward,
+                              const mozilla::dom::binding_detail::AutoSequence<double>& aFeedback,
+                              mozilla::ErrorResult& aRv)
+{
+  if (CheckClosed(aRv)) {
+    return nullptr;
+  }
+
+  RefPtr<IIRFilterNode> filterNode =
+    new IIRFilterNode(this);
   return filterNode.forget();
 }
 
