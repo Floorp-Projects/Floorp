@@ -95,9 +95,6 @@
           case "unwantedBlocked" :
             error = "unwanted";
             break;
-          case "forbiddenBlocked" :
-            error = "forbidden";
-            break;
           default:
             return;
         }
@@ -131,23 +128,6 @@
           el.parentNode.removeChild(el);
         }
 
-        if (error !== "forbidden") {
-          el = document.getElementById("errorTitleText_forbidden");
-          el.parentNode.removeChild(el);
-          el = document.getElementById("errorShortDescText_forbidden");
-          el.parentNode.removeChild(el);
-          el = document.getElementById("whyForbiddenButton");
-          el.parentNode.removeChild(el);
-        } else {
-          el = document.getElementById("ignoreWarningButton");
-          el.parentNode.removeChild(el);
-          el = document.getElementById("reportButton");
-          el.parentNode.removeChild(el);
-
-          // Remove red style: A "forbidden site" does not warrant the same level of anxiety as a security concern.
-          document.getElementById("errorPage").className = "";
-        }
-
         if (!getOverride()) {
           var btn = document.getElementById("ignoreWarningButton");
           if (btn) {
@@ -176,7 +156,6 @@
         <h1 id="errorTitleText_phishing" class="errorTitleText">&safeb.blocked.phishingPage.title3;</h1>
         <h1 id="errorTitleText_malware" class="errorTitleText">&safeb.blocked.malwarePage.title;</h1>
         <h1 id="errorTitleText_unwanted" class="errorTitleText">&safeb.blocked.unwantedPage.title;</h1>
-        <h1 id="errorTitleText_forbidden" class="errorTitleText">&safeb.blocked.forbiddenPage.title2;</h1>
       </div>
 
       <div id="errorLongContent">
@@ -186,7 +165,6 @@
           <p id="errorShortDescText_phishing">&safeb.blocked.phishingPage.shortDesc3;</p>
           <p id="errorShortDescText_malware">&safeb.blocked.malwarePage.shortDesc;</p>
           <p id="errorShortDescText_unwanted">&safeb.blocked.unwantedPage.shortDesc;</p>
-          <p id="errorShortDescText_forbidden">&safeb.blocked.forbiddenPage.shortDesc2;</p>
         </div>
 
         <!-- Long Description -->
@@ -201,7 +179,6 @@
           <!-- Commands handled in browser.js -->
           <button id="getMeOutButton">&safeb.palm.accept.label;</button>
           <button id="reportButton">&safeb.palm.reportPage.label;</button>
-          <button id="whyForbiddenButton">&safeb.palm.whyForbidden.label;</button>
         </div>
       </div>
       <div id="ignoreWarning">

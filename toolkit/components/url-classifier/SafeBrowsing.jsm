@@ -53,7 +53,6 @@ const downloadBlockLists = getLists("urlclassifier.downloadBlockTable");
 const downloadAllowLists = getLists("urlclassifier.downloadAllowTable");
 const trackingProtectionLists = getLists("urlclassifier.trackingTable");
 const trackingProtectionWhitelists = getLists("urlclassifier.trackingWhitelistTable");
-const forbiddenLists = getLists("urlclassifier.forbiddenTable");
 const blockedLists = getLists("urlclassifier.blockedTable");
 
 this.SafeBrowsing = {
@@ -110,9 +109,6 @@ this.SafeBrowsing = {
     for (let i = 0; i < trackingProtectionWhitelists.length; ++i) {
       this.registerTableWithURLs(trackingProtectionWhitelists[i]);
     }
-    for (let i = 0; i < forbiddenLists.length; ++i) {
-      this.registerTableWithURLs(forbiddenLists[i]);
-    }
     for (let i = 0; i < blockedLists.length; ++i) {
       this.registerTableWithURLs(blockedLists[i]);
     }
@@ -123,7 +119,6 @@ this.SafeBrowsing = {
   phishingEnabled:  false,
   malwareEnabled:   false,
   trackingEnabled:  false,
-  forbiddenEnabled: false,
   blockedEnabled:   false,
 
   updateURL:             null,
@@ -170,7 +165,6 @@ this.SafeBrowsing = {
     this.phishingEnabled = Services.prefs.getBoolPref("browser.safebrowsing.phishing.enabled");
     this.malwareEnabled = Services.prefs.getBoolPref("browser.safebrowsing.malware.enabled");
     this.trackingEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.enabled") || Services.prefs.getBoolPref("privacy.trackingprotection.pbmode.enabled");
-    this.forbiddenEnabled = Services.prefs.getBoolPref("browser.safebrowsing.forbiddenURIs.enabled");
     this.blockedEnabled = Services.prefs.getBoolPref("browser.safebrowsing.blockedURIs.enabled");
     this.updateProviderURLs();
     this.registerTables();
@@ -248,8 +242,7 @@ this.SafeBrowsing = {
   controlUpdateChecking: function() {
     log("phishingEnabled:", this.phishingEnabled, "malwareEnabled:",
         this.malwareEnabled, "trackingEnabled:", this.trackingEnabled,
-       "forbiddenEnabled:", this.forbiddenEnabled, "blockedEnabled:",
-        this.blockedEnabled);
+        "blockedEnabled:", this.blockedEnabled);
 
     let listManager = Cc["@mozilla.org/url-classifier/listmanager;1"].
                       getService(Ci.nsIUrlListManager);
@@ -296,13 +289,6 @@ this.SafeBrowsing = {
         listManager.disableUpdate(trackingProtectionWhitelists[i]);
       }
     }
-    for (let i = 0; i < forbiddenLists.length; ++i) {
-      if (this.forbiddenEnabled) {
-        listManager.enableUpdate(forbiddenLists[i]);
-      } else {
-        listManager.disableUpdate(forbiddenLists[i]);
-      }
-    }
     for (let i = 0; i < blockedLists.length; ++i) {
       if (this.blockedEnabled) {
         listManager.enableUpdate(blockedLists[i]);
@@ -325,7 +311,6 @@ this.SafeBrowsing = {
       "itisatracker.org/",
     ];
     const whitelistURL  = "itisatrap.org/?resource=itisatracker.org";
-    const forbiddenURL  = "itisatrap.org/firefox/forbidden.html";
     const blockedURL    = "itisatrap.org/firefox/blocked.html";
 
     let update = "n:1000\ni:test-malware-simple\nad:1\n" +
@@ -346,9 +331,6 @@ this.SafeBrowsing = {
     update += "n:1000\ni:test-trackwhite-simple\nad:1\n" +
               "a:1:32:" + whitelistURL.length + "\n" +
               whitelistURL;
-    update += "n:1000\ni:test-forbid-simple\nad:1\n" +
-              "a:1:32:" + forbiddenURL.length + "\n" +
-              forbiddenURL;
     update += "n:1000\ni:test-block-simple\nad:1\n" +
               "a:1:32:" + blockedURL.length + "\n" +
               blockedURL;
@@ -372,7 +354,7 @@ this.SafeBrowsing = {
     };
 
     try {
-      let tables = "test-malware-simple,test-phish-simple,test-unwanted-simple,test-track-simple,test-trackwhite-simple,test-forbid-simple,test-block-simple";
+      let tables = "test-malware-simple,test-phish-simple,test-unwanted-simple,test-track-simple,test-trackwhite-simple,test-block-simple";
       db.beginUpdate(dummyListener, tables, "");
       db.beginStream("", "");
       db.updateStream(update);

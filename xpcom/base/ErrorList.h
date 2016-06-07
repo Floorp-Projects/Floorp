@@ -726,7 +726,6 @@
   ERROR(NS_ERROR_PHISHING_URI,          FAILURE(31)),
   ERROR(NS_ERROR_TRACKING_URI,          FAILURE(34)),
   ERROR(NS_ERROR_UNWANTED_URI,          FAILURE(35)),
-  ERROR(NS_ERROR_FORBIDDEN_URI,         FAILURE(36)),
   ERROR(NS_ERROR_BLOCKED_URI,           FAILURE(37)),
   /* Used when "Save Link As..." doesn't see the headers quickly enough to
    * choose a filename.  See nsContextMenu.js. */
