@@ -25,124 +25,16 @@
    GLIBCXX_3.4.21 is from gcc 5.0 (210290)
 
 This file adds the necessary compatibility tricks to avoid symbols with
-version GLIBCXX_3.4.11 and bigger, keeping binary compatibility with
-libstdc++ 4.3.
+version GLIBCXX_3.4.16 and bigger, keeping binary compatibility with
+libstdc++ 4.6.1.
 
 */
 
 #define GLIBCXX_VERSION(a, b, c) (((a) << 16) | ((b) << 8) | (c))
 
-namespace std {
-#if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 14)
-    /* Instantiate these templates to avoid GLIBCXX_3.4.14 symbol versions
-     * depending on optimization level */
-    template char *string::_S_construct_aux_2(size_type, char, allocator<char> const&);
-#ifdef _GLIBCXX_USE_WCHAR_T
-    template wchar_t *wstring::_S_construct_aux_2(size_type, wchar_t, allocator<wchar_t> const&);
-#endif /* _GLIBCXX_USE_WCHAR_T */
-#ifdef __GXX_EXPERIMENTAL_CXX0X__
-    template string::basic_string(string&&);
-    template string& string::operator=(string&&);
-    template wstring::basic_string(wstring&&);
-    template wstring& wstring::operator=(wstring&&);
-    template string& string::assign(string&&);
-    template wstring& wstring::assign(wstring&&);
-#endif /* __GXX_EXPERIMENTAL_CXX0X__ */
-#endif /* (__GNUC__ == 4) && (__GNUC_MINOR__ >= 5) */
-#if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 16)
-    /* Instantiate these templates to avoid GLIBCXX_3.4.16 symbol versions
-     * depending on compiler optimizations */
-    template int string::_S_compare(size_type, size_type);
-#endif
-}
-
-namespace std MOZ_EXPORT {
-#if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 14)
-    /* Hack to avoid GLIBCXX_3.4.14 symbol versions */
-    struct _List_node_base
-    {
-        void hook(_List_node_base * const __position) throw ();
-
-        void unhook() throw ();
-
-        void transfer(_List_node_base * const __first,
-                      _List_node_base * const __last) throw();
-
-        void reverse() throw();
-
-/* Hack to avoid GLIBCXX_3.4.15 symbol versions */
-#if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 15)
-        static void swap(_List_node_base& __x, _List_node_base& __y) throw ();
-    };
-
-    namespace __detail {
-
-    struct _List_node_base
-    {
-#endif
-        void _M_hook(_List_node_base * const __position) throw ();
-
-        void _M_unhook() throw ();
-
-        void _M_transfer(_List_node_base * const __first,
-                         _List_node_base * const __last) throw();
-
-        void _M_reverse() throw();
-
-#if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 15)
-        static void swap(_List_node_base& __x, _List_node_base& __y) throw ();
-#endif
-    };
-
-    /* The functions actually have the same implementation */
-    void
-    _List_node_base::_M_hook(_List_node_base * const __position) throw ()
-    {
-        ((std::_List_node_base *)this)->hook((std::_List_node_base * const) __position);
-    }
-
-    void
-    _List_node_base::_M_unhook() throw ()
-    {
-        ((std::_List_node_base *)this)->unhook();
-    }
-
-    void
-    _List_node_base::_M_transfer(_List_node_base * const __first,
-                                 _List_node_base * const __last) throw ()
-    {
-        ((std::_List_node_base *)this)->transfer((std::_List_node_base * const)__first,
-                                                 (std::_List_node_base * const)__last);
-    }
-
-    void
-    _List_node_base::_M_reverse() throw ()
-    {
-        ((std::_List_node_base *)this)->reverse();
-    }
-
-#if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 15)
-    void
-    _List_node_base::swap(_List_node_base& __x, _List_node_base& __y) throw ()
-    {
-        std::_List_node_base::swap(*((std::_List_node_base *) &__x),
-                                   *((std::_List_node_base *) &__y));
-    }
-}
-#endif
-
-#endif /*MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 14)*/
-
-#if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 11)
-    /* Hack to avoid GLIBCXX_3.4.11 symbol versions
-       An inline definition of ctype<char>::_M_widen_init() used to be in
-       locale_facets.h before GCC 4.4, but moved out of headers in more
-       recent versions.
-       It is actually safe to make it do nothing. */
-    void ctype<char>::_M_widen_init() const {}
-#endif
-
 #if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 20)
+namespace std {
+
     /* We shouldn't be throwing exceptions at all, but it sadly turns out
        we call STL (inline) functions that do. */
     void __throw_out_of_range_fmt(char const* fmt, ...)
@@ -157,9 +49,9 @@ namespace std MOZ_EXPORT {
 
         __throw_range_error(buf);
     }
-#endif
 
 }
+#endif
 
 #if MOZ_LIBSTDCXX_VERSION >= GLIBCXX_VERSION(3, 4, 20)
 /* Technically, this symbol is not in GLIBCXX_3.4.20, but in CXXABI_1.3.8,
