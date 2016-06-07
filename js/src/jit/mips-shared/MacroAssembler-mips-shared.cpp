@@ -1246,21 +1246,21 @@ CodeOffset
 MacroAssembler::nopPatchableToNearJump()
 {
     CodeOffset offset(currentOffset());
-    masm.nop();
-    masm.nop();
+    as_nop();
+    as_nop();
     return offset;
 }
 
 void
 MacroAssembler::patchNopToNearJump(uint8_t* jump, uint8_t* target)
 {
-    ((InstImm*)jump)->setBOffImm16(BOffImm16(target - jump));
+    new (jump) InstImm(op_beq, zero, zero, BOffImm16(target - jump));
 }
 
 void
 MacroAssembler::patchNearJumpToNop(uint8_t* jump)
 {
-    ((InstImm*)jump)->makeNop();
+    new (jump) InstNOP();
 }
 
 void
