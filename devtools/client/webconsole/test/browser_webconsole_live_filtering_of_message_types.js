@@ -15,11 +15,11 @@ add_task(function* () {
   let hud = yield openConsole();
   hud.jsterm.clearOutput();
 
-  let console = content.console;
-
-  for (let i = 0; i < 50; i++) {
-    console.log("foobarz #" + i);
-  }
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+    for (let i = 0; i < 50; i++) {
+      content.console.log("foobarz #" + i);
+    }
+  });
 
   yield waitForMessages({
     webconsole: hud,
