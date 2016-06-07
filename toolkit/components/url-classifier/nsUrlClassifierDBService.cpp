@@ -72,9 +72,6 @@ LazyLogModule gUrlClassifierDbServiceLog("UrlClassifierDbService");
 #define CHECK_TRACKING_PB_PREF    "privacy.trackingprotection.pbmode.enabled"
 #define CHECK_TRACKING_PB_DEFAULT false
 
-#define CHECK_FORBIDDEN_PREF    "browser.safebrowsing.forbiddenURIs.enabled"
-#define CHECK_FORBIDDEN_DEFAULT false
-
 #define CHECK_BLOCKED_PREF    "browser.safebrowsing.blockedURIs.enabled"
 #define CHECK_BLOCKED_DEFAULT false
 
@@ -86,7 +83,6 @@ LazyLogModule gUrlClassifierDbServiceLog("UrlClassifierDbService");
 #define PHISH_TABLE_PREF                "urlclassifier.phishTable"
 #define TRACKING_TABLE_PREF             "urlclassifier.trackingTable"
 #define TRACKING_WHITELIST_TABLE_PREF   "urlclassifier.trackingWhitelistTable"
-#define FORBIDDEN_TABLE_PREF            "urlclassifier.forbiddenTable"
 #define BLOCKED_TABLE_PREF              "urlclassifier.blockedTable"
 #define DOWNLOAD_BLOCK_TABLE_PREF       "urlclassifier.downloadBlockTable"
 #define DOWNLOAD_ALLOW_TABLE_PREF       "urlclassifier.downloadAllowTable"
@@ -198,9 +194,6 @@ TablesToResponse(const nsACString& tables)
   }
   if (FindInReadable(NS_LITERAL_CSTRING("-unwanted-"), tables)) {
     return NS_ERROR_UNWANTED_URI;
-  }
-  if (FindInReadable(NS_LITERAL_CSTRING("-forbid-"), tables)) {
-    return NS_ERROR_FORBIDDEN_URI;
   }
   if (FindInReadable(NS_LITERAL_CSTRING("-block-"), tables)) {
     return NS_ERROR_BLOCKED_URI;
@@ -1044,7 +1037,6 @@ public:
                                   bool checkMalware,
                                   bool checkPhishing,
                                   bool checkTracking,
-                                  bool checkForbidden,
                                   bool checkBlocked)
     : mCallback(c)
     {}
@@ -1105,7 +1097,6 @@ nsUrlClassifierDBService::nsUrlClassifierDBService()
  : mCheckMalware(CHECK_MALWARE_DEFAULT)
  , mCheckPhishing(CHECK_PHISHING_DEFAULT)
  , mCheckTracking(CHECK_TRACKING_DEFAULT)
- , mCheckForbiddenURIs(CHECK_FORBIDDEN_DEFAULT)
  , mCheckBlockedURIs(CHECK_BLOCKED_DEFAULT)
  , mInUpdate(false)
 {
@@ -1153,12 +1144,6 @@ nsUrlClassifierDBService::ReadTablesFromPrefs()
     allTables.Append(tables);
   }
 
-  Preferences::GetCString(FORBIDDEN_TABLE_PREF, &tables);
-  if (!tables.IsEmpty()) {
-    allTables.Append(',');
-    allTables.Append(tables);
-  }
-
   Preferences::GetCString(BLOCKED_TABLE_PREF, &tables);
   if (!tables.IsEmpty()) {
     allTables.Append(',');
@@ -1194,8 +1179,6 @@ nsUrlClassifierDBService::Init()
   mCheckTracking =
     Preferences::GetBool(CHECK_TRACKING_PREF, CHECK_TRACKING_DEFAULT) ||
     Preferences::GetBool(CHECK_TRACKING_PB_PREF, CHECK_TRACKING_PB_DEFAULT);
-  mCheckForbiddenURIs = Preferences::GetBool(CHECK_FORBIDDEN_PREF,
-    CHECK_FORBIDDEN_DEFAULT);
   mCheckBlockedURIs = Preferences::GetBool(CHECK_BLOCKED_PREF,
     CHECK_BLOCKED_DEFAULT);
   uint32_t gethashNoise = Preferences::GetUint(GETHASH_NOISE_PREF,
@@ -1260,7 +1243,6 @@ nsUrlClassifierDBService::Init()
   Preferences::AddStrongObserver(this, CHECK_PHISHING_PREF);
   Preferences::AddStrongObserver(this, CHECK_TRACKING_PREF);
   Preferences::AddStrongObserver(this, CHECK_TRACKING_PB_PREF);
-  Preferences::AddStrongObserver(this, CHECK_FORBIDDEN_PREF);
   Preferences::AddStrongObserver(this, CHECK_BLOCKED_PREF);
   Preferences::AddStrongObserver(this, GETHASH_NOISE_PREF);
   Preferences::AddStrongObserver(this, CONFIRM_AGE_PREF);
@@ -1268,7 +1250,6 @@ nsUrlClassifierDBService::Init()
   Preferences::AddStrongObserver(this, MALWARE_TABLE_PREF);
   Preferences::AddStrongObserver(this, TRACKING_TABLE_PREF);
   Preferences::AddStrongObserver(this, TRACKING_WHITELIST_TABLE_PREF);
-  Preferences::AddStrongObserver(this, FORBIDDEN_TABLE_PREF);
   Preferences::AddStrongObserver(this, BLOCKED_TABLE_PREF);
   Preferences::AddStrongObserver(this, DOWNLOAD_BLOCK_TABLE_PREF);
   Preferences::AddStrongObserver(this, DOWNLOAD_ALLOW_TABLE_PREF);
@@ -1306,12 +1287,6 @@ nsUrlClassifierDBService::BuildTables(bool aTrackingProtectionEnabled,
       tables.Append(trackingWhitelist);
     }
   }
-  nsAutoCString forbidden;
-  Preferences::GetCString(FORBIDDEN_TABLE_PREF, &forbidden);
-  if (mCheckForbiddenURIs && !forbidden.IsEmpty()) {
-    tables.Append(',');
-    tables.Append(forbidden);
-  }
   nsAutoCString blocked;
   Preferences::GetCString(BLOCKED_TABLE_PREF, &blocked);
   if (mCheckBlockedURIs && !blocked.IsEmpty()) {
@@ -1335,15 +1310,14 @@ nsUrlClassifierDBService::Classify(nsIPrincipal* aPrincipal,
   NS_ENSURE_TRUE(gDbBackgroundThread, NS_ERROR_NOT_INITIALIZED);
 
   if (!(mCheckMalware || mCheckPhishing || aTrackingProtectionEnabled ||
-        mCheckForbiddenURIs || mCheckBlockedURIs)) {
+        mCheckBlockedURIs)) {
     *result = false;
     return NS_OK;
   }
 
   RefPtr<nsUrlClassifierClassifyCallback> callback =
     new nsUrlClassifierClassifyCallback(c, mCheckMalware, mCheckPhishing,
-                                        mCheckTracking, mCheckForbiddenURIs,
-                                        mCheckBlockedURIs);
+                                        mCheckTracking, mCheckBlockedURIs);
   if (!callback) return NS_ERROR_OUT_OF_MEMORY;
 
   nsAutoCString tables;
@@ -1654,9 +1628,6 @@ nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
       mCheckTracking =
         Preferences::GetBool(CHECK_TRACKING_PREF, CHECK_TRACKING_DEFAULT) ||
         Preferences::GetBool(CHECK_TRACKING_PB_PREF, CHECK_TRACKING_PB_DEFAULT);
-    } else if (NS_LITERAL_STRING(CHECK_FORBIDDEN_PREF).Equals(aData)) {
-      mCheckForbiddenURIs = Preferences::GetBool(CHECK_FORBIDDEN_PREF,
-        CHECK_FORBIDDEN_DEFAULT);
     } else if (NS_LITERAL_STRING(CHECK_BLOCKED_PREF).Equals(aData)) {
       mCheckBlockedURIs = Preferences::GetBool(CHECK_BLOCKED_PREF,
         CHECK_BLOCKED_DEFAULT);
@@ -1665,7 +1636,6 @@ nsUrlClassifierDBService::Observe(nsISupports *aSubject, const char *aTopic,
       NS_LITERAL_STRING(MALWARE_TABLE_PREF).Equals(aData) ||
       NS_LITERAL_STRING(TRACKING_TABLE_PREF).Equals(aData) ||
       NS_LITERAL_STRING(TRACKING_WHITELIST_TABLE_PREF).Equals(aData) ||
-      NS_LITERAL_STRING(FORBIDDEN_TABLE_PREF).Equals(aData) ||
       NS_LITERAL_STRING(BLOCKED_TABLE_PREF).Equals(aData) ||
       NS_LITERAL_STRING(DOWNLOAD_BLOCK_TABLE_PREF).Equals(aData) ||
       NS_LITERAL_STRING(DOWNLOAD_ALLOW_TABLE_PREF).Equals(aData) ||
@@ -1703,13 +1673,11 @@ nsUrlClassifierDBService::Shutdown()
     prefs->RemoveObserver(CHECK_PHISHING_PREF, this);
     prefs->RemoveObserver(CHECK_TRACKING_PREF, this);
     prefs->RemoveObserver(CHECK_TRACKING_PB_PREF, this);
-    prefs->RemoveObserver(CHECK_FORBIDDEN_PREF, this);
     prefs->RemoveObserver(CHECK_BLOCKED_PREF, this);
     prefs->RemoveObserver(PHISH_TABLE_PREF, this);
     prefs->RemoveObserver(MALWARE_TABLE_PREF, this);
     prefs->RemoveObserver(TRACKING_TABLE_PREF, this);
     prefs->RemoveObserver(TRACKING_WHITELIST_TABLE_PREF, this);
-    prefs->RemoveObserver(FORBIDDEN_TABLE_PREF, this);
     prefs->RemoveObserver(BLOCKED_TABLE_PREF, this);
     prefs->RemoveObserver(DOWNLOAD_BLOCK_TABLE_PREF, this);
     prefs->RemoveObserver(DOWNLOAD_ALLOW_TABLE_PREF, this);
