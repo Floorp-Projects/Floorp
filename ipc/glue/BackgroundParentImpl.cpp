@@ -467,8 +467,7 @@ mozilla::dom::PBroadcastChannelParent*
 BackgroundParentImpl::AllocPBroadcastChannelParent(
                                             const PrincipalInfo& aPrincipalInfo,
                                             const nsCString& aOrigin,
-                                            const nsString& aChannel,
-                                            const bool& aPrivateBrowsing)
+                                            const nsString& aChannel)
 {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
@@ -476,15 +475,11 @@ BackgroundParentImpl::AllocPBroadcastChannelParent(
   nsString originChannelKey;
 
   // The format of originChannelKey is:
-  //  <channelName>|pb={true,false}|<origin+OriginAttributes>
+  //  <channelName>|<origin+OriginAttributes>
 
   originChannelKey.Assign(aChannel);
 
-  if (aPrivateBrowsing) {
-    originChannelKey.AppendLiteral("|pb=true|");
-  } else {
-    originChannelKey.AppendLiteral("|pb=false|");
-  }
+  originChannelKey.AppendLiteral("|");
 
   originChannelKey.Append(NS_ConvertUTF8toUTF16(aOrigin));
 
@@ -648,8 +643,7 @@ BackgroundParentImpl::RecvPBroadcastChannelConstructor(
                                             PBroadcastChannelParent* actor,
                                             const PrincipalInfo& aPrincipalInfo,
                                             const nsCString& aOrigin,
-                                            const nsString& aChannel,
-                                            const bool& aPrivateBrowsing)
+                                            const nsString& aChannel)
 {
   AssertIsInMainProcess();
   AssertIsOnBackgroundThread();
