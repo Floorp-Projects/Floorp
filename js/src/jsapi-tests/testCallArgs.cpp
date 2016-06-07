@@ -42,16 +42,6 @@ BEGIN_TEST(testCallArgs_isConstructing_native)
 
     return true;
 }
-
-virtual bool init() override
-{
-    if (!JSAPITest::init())
-        return false;
-
-    JS::ContextOptionsRef(cx).setAutoJSAPIOwnsErrorReporting(true);
-
-    return true;
-}
 END_TEST(testCallArgs_isConstructing_native)
 
 static bool
@@ -90,16 +80,6 @@ BEGIN_TEST(testCallArgs_isConstructing_constructor)
 
     EVAL("customConstructor();", &result);
     CHECK(result.isUndefined());
-
-    return true;
-}
-
-virtual bool init() override
-{
-    if (!JSAPITest::init())
-        return false;
-
-    JS::ContextOptionsRef(cx).setAutoJSAPIOwnsErrorReporting(true);
 
     return true;
 }
