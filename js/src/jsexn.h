@@ -45,10 +45,9 @@ ComputeStackString(JSContext* cx);
  *     The original error described by *reportp typically won't be reported
  *     anywhere; instead OOM is reported.
  *
- *   - If *reportp is just a warning, or the error code is unrecognized, or if
- *     we decided to do nothing in order to avoid recursion, then return
- *     false. In those cases, this error is just being swept under the rug
- *     unless the caller decides to call CallErrorReporter explicitly.
+ *   - If the error code is unrecognized, or if we decided to do nothing in
+ *     order to avoid recursion, then return false. In those cases, this error
+ *     is just being swept under the rug.
  */
 extern bool
 ErrorToException(JSContext* cx, const char* message, JSErrorReport* reportp,

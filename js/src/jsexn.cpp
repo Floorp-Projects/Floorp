@@ -529,14 +529,12 @@ bool
 js::ErrorToException(JSContext* cx, const char* message, JSErrorReport* reportp,
                      JSErrorCallback callback, void* userRef)
 {
-    // Tell our caller to report immediately if this report is just a warning.
     MOZ_ASSERT(reportp);
-    if (JSREPORT_IS_WARNING(reportp->flags))
-        return false;
+    MOZ_ASSERT(!JSREPORT_IS_WARNING(reportp->flags));
 
-    // Similarly, we cannot throw a proper object inside the self-hosting
-    // compartment, as we cannot construct the Error constructor without
-    // self-hosted code. Just print the error to stderr to help debugging.
+    // We cannot throw a proper object inside the self-hosting compartment, as
+    // we cannot construct the Error constructor without self-hosted code. Just
+    // print the error to stderr to help debugging.
     if (cx->runtime()->isSelfHostingCompartment(cx->compartment())) {
         PrintError(cx, stderr, message, reportp, true);
         return false;
