@@ -1,6 +1,9 @@
 {
   "extends": "../../.eslintrc",
   "rules": {
+    // Require spacing around =>
+    "arrow-spacing": 2,
+
     // No space before always a space after a comma
     "comma-spacing": [2, {"before": false, "after": true}],
 
