@@ -20,7 +20,6 @@
  */
 //global handleRequest
 'use strict';
-Components.utils.importGlobalProperties(["URLSearchParams"]);
 const HTTPStatus = new Map([
   [100, 'Continue'],
   [101, 'Switching Protocol'],
@@ -67,7 +66,7 @@ const HTTPStatus = new Map([
 ]);
 
 function handleRequest(request, response) {
-  const queryMap = new URLSearchParams(request.queryString);
+  const queryMap = createQueryMap(request);
   if (queryMap.has('statusCode')) {
     let statusCode = parseInt(queryMap.get('statusCode'));
     let statusText = HTTPStatus.get(statusCode);
@@ -77,9 +76,18 @@ function handleRequest(request, response) {
   if (queryMap.has('body')) {
     let body = queryMap.get('body') || '';
     queryMap.delete('body');
-    response.write(decodeURIComponent(body));
+    response.write(body);
   }
-  for (let [key, value] of queryMap.entries()) {
+  for (let [key, value] of queryMap) {
     response.setHeader(key, value);
+  }
+
+  function createQueryMap(request) {
+    const queryMap = new Map();
+    request.queryString.split('&')
+      //split on first "="
+      .map((component) => component.split(/=(.+)?/))
+      .forEach(pair => queryMap.set(pair[0], decodeURIComponent(pair[1])));
+    return queryMap;
   }
 }
