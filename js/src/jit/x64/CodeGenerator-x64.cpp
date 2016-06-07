@@ -599,11 +599,11 @@ CodeGeneratorX64::loadSimd(Scalar::Type type, unsigned numElems, const Operand& 
         break;
       }
       case Scalar::Int8x16:
-        MOZ_ASSERT(numElems = 16, "unexpected partial load");
+        MOZ_ASSERT(numElems == 16, "unexpected partial load");
         masm.loadUnalignedSimd128Int(srcAddr, out);
         break;
       case Scalar::Int16x8:
-        MOZ_ASSERT(numElems = 8, "unexpected partial load");
+        MOZ_ASSERT(numElems == 8, "unexpected partial load");
         masm.loadUnalignedSimd128Int(srcAddr, out);
         break;
       case Scalar::Int8:

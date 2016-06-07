@@ -22,9 +22,6 @@
 #include "mozilla/gfx/Point.h"          // for IntSize
 #include "gfx2DGlue.h"
 #include "YCbCrUtils.h"                 // for YCbCr conversions
-#ifdef XP_MACOSX
-#include "gfxQuartzImageSurface.h"
-#endif
 
 namespace mozilla {
 namespace layers {

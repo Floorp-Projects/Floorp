@@ -56,6 +56,7 @@ public:
       virtual void EnableVsync() = 0;
       virtual void DisableVsync() = 0;
       virtual bool IsVsyncEnabled() = 0;
+      virtual void Shutdown() = 0;
 
     private:
       void UpdateVsyncStatus();
@@ -71,6 +72,7 @@ public:
 
   RefPtr<RefreshTimerVsyncDispatcher> GetRefreshTimerVsyncDispatcher();
   virtual Display& GetGlobalDisplay() = 0; // Works across all displays
+  void Shutdown();
 
 protected:
   virtual ~VsyncSource() {}

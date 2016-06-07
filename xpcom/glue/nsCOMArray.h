@@ -62,6 +62,7 @@ protected:
 
   bool InsertObjectAt(nsISupports* aObject, int32_t aIndex);
   void InsertElementAt(uint32_t aIndex, nsISupports* aElement);
+  void InsertElementAt(uint32_t aIndex, already_AddRefed<nsISupports> aElement);
   bool InsertObjectsAt(const nsCOMArray_base& aObjects, int32_t aIndex);
   void InsertElementsAt(uint32_t aIndex, const nsCOMArray_base& aElements);
   void InsertElementsAt(uint32_t aIndex, nsISupports* const* aElements,
@@ -81,6 +82,11 @@ protected:
   {
     InsertElementAt(Length(), aElement);
   }
+  void AppendElement(already_AddRefed<nsISupports> aElement)
+  {
+    InsertElementAt(Length(), mozilla::Move(aElement));
+  }
+
   bool AppendObjects(const nsCOMArray_base& aObjects)
   {
     return InsertObjectsAt(aObjects, Count());
@@ -365,6 +371,10 @@ public:
   void AppendElement(T* aElement)
   {
     nsCOMArray_base::AppendElement(aElement);
+  }
+  void AppendElement(already_AddRefed<T> aElement)
+  {
+    nsCOMArray_base::AppendElement(mozilla::Move(aElement));
   }
 
   // append objects, growing the array as necessary

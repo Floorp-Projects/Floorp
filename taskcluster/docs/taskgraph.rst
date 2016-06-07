@@ -87,6 +87,33 @@ Graph generation, as run via ``mach taskgraph decision``, proceeds as follows:
    task graph.
 #. Create tasks for all tasks in the optimized task graph.
 
+Optimization
+------------
+
+The objective of optimization to remove as many tasks from the graph as
+possible, as efficiently as possible, thereby delivering useful results as
+quickly as possible.  For example, ideally if only a test script is modified in
+a push, then the resulting graph contains only the corresponding test suite
+task.
+
+A task is said to be "optimized" when it is either replaced with an equivalent,
+already-existing task, or dropped from the graph entirely.
+
+A task can be optimized if all of its dependencies can be optimized and none of
+its inputs have changed.  For a task on which no other tasks depend (a "leaf
+task"), the optimizer can determine what has changed by looking at the
+version-control history of the push: if the relevant files are not modified in
+the push, then it considers the inputs unchanged.  For tasks on which other
+tasks depend ("non-leaf tasks"), the optimizer must replace the task with
+another, equivalent task, so it generates a hash of all of the inputs and uses
+that to search for a matching, existing task.
+
+In some cases, such as try pushes, tasks in the target task set have been
+explicitly requested and are thus excluded from optimization. In other cases,
+the target task set is almost the entire task graph, so targetted tasks are
+considered for optimization.  This behavior is controlled with the
+``optimize_target_tasks`` parameter.
+
 Mach commands
 -------------
 
@@ -120,3 +147,41 @@ Finally, the ``mach taskgraph decision`` subcommand performs the entire
 task-graph generation process, then creates the tasks.  This command should
 only be used within a decision task, as it assumes it is running in that
 context.
+
+Taskgraph JSON Format
+---------------------
+
+Each task graph artifact is represented as a JSON object.  The object's
+properties are the task labels or taskIds (see below), and the value of each
+property describes a task in an object with the following attributes:
+
+``label``
+   The task's label (never a taskId).
+
+``attributes``
+   The task's attributes
+
+``dependencies``
+   The task's in-graph dependencies, each represented as a pair ``[name, label]``
+   giving the dependency name and the label for the required task.
+
+``task``
+   The task's TaskCluster task definition.
+
+The task definition may contain "task references" of the form
+``{"task-reference": "string containing <task-label>"}``.  These will be
+replaced during the optimization step, with the appropriate taskId substituted
+for ``<task-label>`` in the string.  Multiple labels may be substituted in a
+single string, and ``<<>`` can be used to escape a literal ``<``.
+
+The results from each command are in the same format, but with some differences
+in the content:
+
+* The ``tasks`` and ``target`` subcommands both return graphs with no edges.
+  That is, just collections of tasks without any dependencies indicated.
+
+* The ``optimized`` subcommand returns a graph keyed by taskId rather than
+  label.  The dependencies array, too, contains taskIds instead of labels.
+  Dependencies on optimized tasks are omitted.  However, the
+  ``task.dependencies`` array is populated with the full list of dependency
+  taskIds.  All task references are resolved in the optimized graph.

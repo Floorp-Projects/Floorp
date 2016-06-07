@@ -3334,7 +3334,7 @@ static nscoord
 ComputeSpacedRepeatSize(nscoord aImageDimension,
                         nscoord aAvailableSpace,
                         bool& aRepeat) {
-  float ratio = aAvailableSpace / aImageDimension;
+  float ratio = static_cast<float>(aAvailableSpace) / aImageDimension;
 
   if (ratio < 2.0f) { // If you can't repeat at least twice, then don't repeat.
     aRepeat = false;

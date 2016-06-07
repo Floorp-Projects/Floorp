@@ -1190,6 +1190,16 @@ MSimdSplat::foldsTo(TempAllocator& alloc)
 
     SimdConstant cst;
     switch (type()) {
+      case MIRType::Bool8x16: {
+        int8_t v = op->toConstant()->valueToBooleanInfallible() ? -1 : 0;
+        cst = SimdConstant::SplatX16(v);
+        break;
+      }
+      case MIRType::Bool16x8: {
+        int16_t v = op->toConstant()->valueToBooleanInfallible() ? -1 : 0;
+        cst = SimdConstant::SplatX8(v);
+        break;
+      }
       case MIRType::Bool32x4: {
         int32_t v = op->toConstant()->valueToBooleanInfallible() ? -1 : 0;
         cst = SimdConstant::SplatX4(v);

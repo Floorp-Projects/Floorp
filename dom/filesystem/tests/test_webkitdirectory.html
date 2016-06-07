@@ -10,6 +10,7 @@
 <input id="inputFileWebkitDirectory" type="file" webkitdirectory></input>
 <input id="inputFileWebkitDirectoryAndDirectory" type="file" webkitdirectory directory></input>
 <input id="inputFileDirectory" type="file" directory></input>
+<input id="inputFileDirectoryChange" type="file" webkitdirectory></input>
 
 <script type="application/javascript;version=1.7">
 
@@ -24,7 +25,8 @@ function populateInputFile(aInputFile) {
     MockFilePicker.useDirectory(message.dir);
 
     var input = document.getElementById(aInputFile);
-    input.addEventListener('change', function() {
+    input.addEventListener('change', function change() {
+      input.removeEventListener('change', change);
       MockFilePicker.cleanup();
       script.destroy();
       next();
@@ -84,10 +86,76 @@ function test_webkitdirectory_attribute() {
   next();
 }
 
+function test_changeDataWhileWorking() {
+  var url = SimpleTest.getTestFileURL("script_fileList.js");
+  var script = SpecialPowers.loadChromeScript(url);
+
+  var MockFilePicker = SpecialPowers.MockFilePicker;
+  MockFilePicker.init(window, "A Mock File Picker", SpecialPowers.Ci.nsIFilePicker.modeOpen);
+
+  // Let's start retrieving the root nsIFile object
+  new Promise(function(resolve) {
+    function onOpened(message) {
+      script.removeMessageListener("dir.opened", onOpened);
+      resolve(message.dir);
+    }
+
+    script.addMessageListener("dir.opened", onOpened);
+    script.sendAsyncMessage("dir.open", { path: 'root' });
+  })
+
+  // input.click() pointing to the root dir
+  .then(function(aDir) {
+    MockFilePicker.cleanup();
+    MockFilePicker.init(window, "A Mock File Picker", SpecialPowers.Ci.nsIFilePicker.modeOpen);
+    MockFilePicker.useDirectory(aDir);
+    var input = document.getElementById("inputFileDirectoryChange");
+    input.click();
+  })
+
+  // Before onchange, let's take the 'test' directory
+  .then(function() {
+    return new Promise(function(resolve) {
+      function onOpened(message) {
+        script.removeMessageListener("dir.opened", onOpened);
+        script.destroy();
+        resolve(message.dir);
+      }
+
+      script.addMessageListener("dir.opened", onOpened);
+      script.sendAsyncMessage("dir.open", { path: 'test' });
+    });
+  })
+
+  // Now let's click again and wait for onchange.
+  .then(function(aDir) {
+    return new Promise(function(resolve) {
+      MockFilePicker.cleanup();
+      MockFilePicker.init(window, "A Mock File Picker", SpecialPowers.Ci.nsIFilePicker.modeOpen);
+      MockFilePicker.useDirectory(aDir);
+
+      var input = document.getElementById("inputFileDirectoryChange");
+      input.addEventListener('change', function() {
+        MockFilePicker.cleanup();
+        resolve();
+      });
+
+      input.click();
+    })
+  })
+
+  .then(function() {
+    test_fileList('inputFileWebkitDirectory', testDirData);
+  });
+}
+
 function test_setup() {
   SpecialPowers.pushPrefEnv({"set": [["dom.input.dirpicker", true],
                                      ["dom.webkitBlink.dirPicker.enabled", true]]}, next);
 }
+
+var testDirData = [ { name: 'foo.txt', path: '/foo.txt' },
+                    { name: 'bar.txt', path: '/subdir/bar.txt' }];
 
 var tests = [
   test_setup,
@@ -96,13 +164,13 @@ var tests = [
   function() { populateInputFile('inputFileWebkitDirectoryAndDirectory'); },
   function() { populateInputFile('inputFileDirectory'); },
 
-  function() { test_fileList('inputFileWebkitDirectory', [ { name: 'foo.txt', path: '/foo.txt' },
-                                                           { name: 'bar.txt', path: '/subdir/bar.txt' }]); },
-  function() { test_fileList('inputFileWebkitDirectoryAndDirectory', [ { name: 'foo.txt', path: '/foo.txt' },
-                                                                       { name: 'bar.txt', path: '/subdir/bar.txt' }]); },
+  function() { test_fileList('inputFileWebkitDirectory', testDirData) },
+  function() { test_fileList('inputFileWebkitDirectoryAndDirectory', testDirData) },
   function() { test_fileList('inputFileDirectory', null); },
 
   test_webkitdirectory_attribute,
+
+  test_changeDataWhileWorking,
 ];
 
 function next() {

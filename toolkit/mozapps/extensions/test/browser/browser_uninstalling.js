@@ -452,7 +452,7 @@ add_test(function() {
       EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
       EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
       wait_for_view_load(gManagerWindow, function() {
-        is(gDocument.getElementById("view-port").selectedPanel.id, "detail-view", "Should be in the detail view");
+        is(get_current_view(gManagerWindow).id, "detail-view", "Should be in the detail view");
 
         var button = gDocument.getElementById("detail-uninstall-btn");
         isnot(button, null, "Should have a remove button");
@@ -516,7 +516,7 @@ add_test(function() {
       EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
       EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
       wait_for_view_load(gManagerWindow, function() {
-        is(gDocument.getElementById("view-port").selectedPanel.id, "detail-view", "Should be in the detail view");
+        is(get_current_view(gManagerWindow).id, "detail-view", "Should be in the detail view");
 
         var button = gDocument.getElementById("detail-uninstall-btn");
         isnot(button, null, "Should have a remove button");
@@ -583,7 +583,7 @@ add_test(function() {
       EventUtils.synthesizeMouseAtCenter(item, { clickCount: 1 }, gManagerWindow);
       EventUtils.synthesizeMouseAtCenter(item, { clickCount: 2 }, gManagerWindow);
       wait_for_view_load(gManagerWindow, function() {
-        is(gDocument.getElementById("view-port").selectedPanel.id, "detail-view", "Should be in the detail view");
+        is(get_current_view(gManagerWindow).id, "detail-view", "Should be in the detail view");
 
         var button = gDocument.getElementById("detail-uninstall-btn");
         isnot(button, null, "Should have a remove button");
@@ -1068,7 +1068,7 @@ add_test(function() {
           is(aAddon, null, "Add-on should no longer be installed");
           is(aAddon2, null, "Second add-on should no longer be installed");
 
-          open_manager(null, function(aWindow) {
+          open_manager("addons://list/extension", function(aWindow) {
             gManagerWindow = aWindow;
             gDocument = gManagerWindow.document;
             gCategoryUtilities = new CategoryUtilities(gManagerWindow);

@@ -83,12 +83,6 @@ public:
    * Current rules are taken from revision on April 15, 2013.
    */
 
-  /**
-   * Converts the TextTrackCue's cuetext into a tree of DOM objects and attaches
-   * it to a div on it's owning TrackElement's MediaElement's caption overlay.
-   */
-  void UpdateCueDisplay();
-
   void PopulatePendingList();
 
   void AddListeners();
@@ -97,6 +91,7 @@ public:
   RefPtr<HTMLMediaElement> mMediaElement;
 
   void DispatchTimeMarchesOn();
+  void TimeMarchesOn();
 
   void NotifyShutdown()
   {
@@ -104,7 +99,12 @@ public:
   }
 
 private:
-  void TimeMarchesOn();
+  /**
+   * Converts the TextTrackCue's cuetext into a tree of DOM objects
+   * and attaches it to a div on its owning TrackElement's
+   * MediaElement's caption overlay.
+   */
+  void UpdateCueDisplay();
 
   // List of the TextTrackManager's owning HTMLMediaElement's TextTracks.
   RefPtr<TextTrackList> mTextTracks;

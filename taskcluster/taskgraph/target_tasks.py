@@ -33,8 +33,10 @@ def target_tasks_try_option_syntax(full_task_graph, parameters):
     return [t.label for t in full_task_graph.tasks.itervalues()
             if options.task_matches(t.attributes)]
 
-@_target_task('all_tasks')
-def target_tasks_all_tasks(full_task_graph, parameters):
-    """Trivially target all tasks."""
-    return full_task_graph.tasks.keys()
-
+@_target_task('all_builds_and_tests')
+def target_tasks_all_builds_and_tests(full_task_graph, parameters):
+    """Trivially target all build and test tasks.  This is used for
+    branches where we want to build "everyting", but "everything"
+    does not include uninteresting things like docker images"""
+    return [t.label for t in full_task_graph.tasks.itervalues()
+            if t.attributes.get('kind') == 'legacy']

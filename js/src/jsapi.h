@@ -4986,6 +4986,7 @@ GetSymbolDescription(HandleSymbol symbol);
     macro(replace) \
     macro(search) \
     macro(species) \
+    macro(hasInstance) \
     macro(split) \
     macro(toPrimitive) \
     macro(unscopables)

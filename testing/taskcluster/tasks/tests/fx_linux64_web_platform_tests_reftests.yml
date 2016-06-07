@@ -7,8 +7,8 @@ task:
     maxRunTime: 5400
     command:
       - --no-read-buildbot-config
-      - --installer-url={{build_url}}
-      - --test-packages-url={{test_packages_url}}
+      - {"task-reference": "--installer-url=https://queue.taskcluster.net/v1/task/<{{build_slugid}}>/artifacts/{{build_location}}"}
+      - {"task-reference": "--test-packages-url=https://queue.taskcluster.net/v1/task/<{{build_slugid}}>/artifacts/{{test_packages_location}}"}
       - --test-type=reftest
     env:
         MOZHARNESS_SCRIPT: 'mozharness/scripts/web_platform_tests.py'

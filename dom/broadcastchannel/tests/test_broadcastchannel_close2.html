@@ -1,0 +1,39 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for BroadcastChannel</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<div id="content"></div>
+
+<script type="application/javascript">
+
+function runTest() {
+  var c1 = new BroadcastChannel('foo');
+  var c2 = new BroadcastChannel('foo');
+
+  var status = [];
+  c2.onmessage = function(e) {
+    status.push(e.data);
+    if (status.length == 2) {
+      is (status[0], 'first', "First message has been received");
+      is (status[1], 'second', "Second message has been received");
+      SimpleTest.finish();
+    }
+
+    c2.close();
+  }
+
+  c1.postMessage('first');
+  c1.postMessage('second');
+}
+
+SimpleTest.waitForExplicitFinish();
+runTest();
+
+</script>
+</body>
+</html>

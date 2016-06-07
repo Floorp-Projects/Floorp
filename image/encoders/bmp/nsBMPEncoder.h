@@ -103,8 +103,8 @@ protected:
   };
 
   // See InitData in the cpp for valid parse options
-  nsresult ParseOptions(const nsAString& aOptions, Version* version,
-                        uint32_t* bpp);
+  nsresult ParseOptions(const nsAString& aOptions, Version& aVersionOut,
+                        uint32_t& aBppOut);
   // Obtains data with no alpha in machine-independent byte order
   void ConvertHostARGBRow(const uint8_t* aSrc,
                           const mozilla::UniquePtr<uint8_t[]>& aDest,
