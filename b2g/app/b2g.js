@@ -1061,6 +1061,14 @@ pref("dom.activities.developer_mode_only", "import-app");
 pref("dom.serviceWorkers.enabled", false);
 pref("dom.push.enabled", false);
 
+#if defined(RELEASE_BUILD)
+// Bug 1278848: Enable service worker notifications on release B2G once
+// they're ready.
+pref("dom.webnotifications.serviceworker.enabled", false);
+#else
+pref("dom.webnotifications.serviceworker.enabled", true);
+#endif
+
 // Retain at most 10 processes' layers buffers
 pref("layers.compositor-lru-size", 10);
 
