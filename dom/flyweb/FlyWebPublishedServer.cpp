@@ -12,6 +12,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/InternalResponse.h"
+#include "mozilla/ipc/IPCStreamUtils.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/unused.h"
@@ -301,8 +302,12 @@ FlyWebPublishedServerChild::OnFetchResponse(InternalRequest* aRequest,
   mPendingRequests.Remove(aRequest);
 
   IPCInternalResponse ipcResp;
-  aResponse->ToIPC(&ipcResp);
+  UniquePtr<mozilla::ipc::AutoIPCStream> autoStream;
+  aResponse->ToIPC(&ipcResp, Manager(), autoStream);
   Unused << SendFetchResponse(ipcResp, id);
+  if (autoStream) {
+    autoStream->TakeOptionalValue();
+  }
 }
 
 already_AddRefed<WebSocket>
