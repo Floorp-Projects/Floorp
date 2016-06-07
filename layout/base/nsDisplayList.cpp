@@ -565,10 +565,11 @@ GenerateAndPushTextMask(nsIFrame* aFrame, nsRenderingContext* aContext,
   RefPtr<DrawTarget> maskDT =
     sourceTarget->CreateSimilarDrawTarget(drawRect.Size(),
                                           SurfaceFormat::A8);
-  if (!maskDT) {
-    NS_ABORT_OOM(drawRect.width * drawRect.height);
+  if (!maskDT || !maskDT->IsValid()) {
+    return false;
   }
   RefPtr<gfxContext> maskCtx = gfxContext::CreatePreservingTransformOrNull(maskDT);
+  MOZ_ASSERT(maskCtx);
   gfxMatrix currentMatrix = sourceCtx->CurrentMatrix();
   maskCtx->SetMatrix(gfxMatrix::Translation(bounds.TopLeft()) *
                      currentMatrix *

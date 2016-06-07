@@ -3604,6 +3604,8 @@ struct MOZ_STACK_CLASS CanvasBidiProcessor : public nsBidiPresUtils::BidiProcess
     // not render well via the code below.
     if (mOp == CanvasRenderingContext2D::TextDrawOperation::FILL &&
         mState->StyleIsColor(CanvasRenderingContext2D::Style::FILL)) {
+      // TODO: determine if mCtx->mTarget is guaranteed to be non-null and valid
+      // here. If it's not, thebes will be null and we'll crash.
       RefPtr<gfxContext> thebes =
         gfxContext::CreatePreservingTransformOrNull(mCtx->mTarget);
       nscolor fill = mState->colorStyles[CanvasRenderingContext2D::Style::FILL];
@@ -4992,7 +4994,8 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& aWindow, double aX,
       UsedOperation() == CompositionOp::OP_OVER)
   {
     thebes = gfxContext::CreateOrNull(mTarget);
-    MOZ_ASSERT(thebes); // alrady checked the draw target above
+    MOZ_ASSERT(thebes); // already checked the draw target above
+                        // (in SupportsAzureContentForDrawTarget)
     thebes->SetMatrix(gfxMatrix(matrix._11, matrix._12, matrix._21,
                                 matrix._22, matrix._31, matrix._32));
   } else {
