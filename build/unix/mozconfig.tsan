@@ -30,5 +30,4 @@ ac_add_options --disable-install-strip
 # -gline-tables-only results in significantly smaller binaries.
 ac_add_options --enable-debug-symbols="-gline-tables-only"
 
-# Avoid dependency on libstdc++ 4.7
-ac_add_options --enable-stdcxx-compat
+. "$topsrcdir/build/unix/mozconfig.stdcxx"

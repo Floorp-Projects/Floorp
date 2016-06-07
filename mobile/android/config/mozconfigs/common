@@ -77,8 +77,7 @@ export MOZ_PACKAGE_JSSHELL=1
 HOST_CC="$topsrcdir/gcc/bin/gcc"
 HOST_CXX="$topsrcdir/gcc/bin/g++"
 
-# Avoid dependency on libstdc++ 4.7
-ac_add_options --enable-stdcxx-compat
+. "$topsrcdir/build/unix/mozconfig.stdcxx"
 
 # Use libc++ as our C++ standard library
 ac_add_options --with-android-cxx-stl=libc++

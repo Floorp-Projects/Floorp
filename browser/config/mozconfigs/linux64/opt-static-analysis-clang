@@ -16,8 +16,7 @@ ac_add_options --enable-clang-plugin
 # Treat warnings as errors (modulo ALLOW_COMPILER_WARNINGS).
 ac_add_options --enable-warnings-as-errors
 
-# Avoid dependency on libstdc++ 4.7
-ac_add_options --enable-stdcxx-compat
+. "$topsrcdir/build/unix/mozconfig.stdcxx"
 
 export PKG_CONFIG_LIBDIR=/usr/lib64/pkgconfig:/usr/share/pkgconfig
 . $topsrcdir/build/unix/mozconfig.gtk

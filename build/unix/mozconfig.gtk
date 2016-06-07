@@ -23,4 +23,6 @@ mk_add_options "export PANGO_SYSCONFDIR=$TOOLTOOL_DIR/gtk3/usr/local/etc"
 mk_add_options "export PANGO_LIBDIR=$TOOLTOOL_DIR/gtk3/usr/local/lib"
 mk_add_options "export GDK_PIXBUF_MODULE_FILE=$TOOLTOOL_DIR/gtk3/usr/local/lib/gdk-pixbuf-2.0/2.10.0/loaders.cache"
 mk_add_options "export GDK_PIXBUF_MODULEDIR=$TOOLTOOL_DIR/gtk3/usr/local/lib/gdk-pixbuf-2.0/2.10.0/loaders"
-mk_add_options "export LD_LIBRARY_PATH=$TOOLTOOL_DIR/gtk3/usr/local/lib"
+
+LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOOLTOOL_DIR/gtk3/usr/local/lib
+mk_add_options "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"

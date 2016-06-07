@@ -1,0 +1,15 @@
+# Avoid dependency on libstdc++ 4.7
+ac_add_options --enable-stdcxx-compat
+
+TOOLTOOL_DIR=${TOOLTOOL_DIR:-$topsrcdir}
+
+if [ -f "$TOOLTOOL_DIR/clang/lib/libstdc++.so" ]; then
+  LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOOLTOOL_DIR/clang/lib
+elif [ -f "$TOOLTOOL_DIR/gcc/lib/libstdc++.so" ]; then
+  # We put both 32-bits and 64-bits library path in LD_LIBRARY_PATH: ld.so
+  # will prefer the files in the 32-bits path when loading 32-bits executables,
+  # and the files in the 64-bits path when loading 64-bits executables.
+  LD_LIBRARY_PATH=${LD_LIBRARY_PATH:+$LD_LIBRARY_PATH:}$TOOLTOOL_DIR/gcc/lib64:$TOOLTOOL_DIR/gcc/lib
+fi
+
+mk_add_options "export LD_LIBRARY_PATH=$LD_LIBRARY_PATH"
