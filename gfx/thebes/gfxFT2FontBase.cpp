@@ -155,12 +155,14 @@ gfxFT2FontBase::GetGlyph(uint32_t unicode, uint32_t variation_selector)
     if (variation_selector) {
         uint32_t id =
             gfxFT2LockedFace(this).GetUVSGlyph(unicode, variation_selector);
-        if (id)
-            return id;
-        id = gfxFontUtils::GetUVSFallback(unicode, variation_selector);
         if (id) {
-            unicode = id;
+            return id;
         }
+        unicode = gfxFontUtils::GetUVSFallback(unicode, variation_selector);
+        if (unicode) {
+            return GetGlyph(unicode);
+        }
+        return 0;
     }
 
     return GetGlyph(unicode);
