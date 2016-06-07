@@ -38,13 +38,14 @@ mozEnglishWordUtils::~mozEnglishWordUtils()
 
 NS_IMETHODIMP mozEnglishWordUtils::GetLanguage(char16_t * *aLanguage)
 {
-  nsresult rv = NS_OK;
   NS_ENSURE_ARG_POINTER(aLanguage);
 
   *aLanguage = ToNewUnicode(mLanguage);
-  if(!aLanguage) rv = NS_ERROR_OUT_OF_MEMORY;
-  return rv;
- }
+  if (!*aLanguage) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  return NS_OK;
+}
 
 // return the possible root forms of aWord.
 NS_IMETHODIMP mozEnglishWordUtils::GetRootForm(const char16_t *aWord, uint32_t type, char16_t ***words, uint32_t *count)
