@@ -5,7 +5,7 @@
 
 require("devtools/shared/fronts/styles");
 require("devtools/shared/fronts/highlighters");
-const { SimpleStringFront } = require("devtools/server/actors/string");
+const { SimpleStringFront } = require("devtools/shared/fronts/string");
 const {
   Front,
   FrontClassWithSpec,
