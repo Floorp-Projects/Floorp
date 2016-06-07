@@ -21,6 +21,7 @@ class ErrorResult;
 namespace dom {
 
 template<typename T> class MozMap;
+class HeadersEntry;
 
 class InternalHeaders final
 {
@@ -63,6 +64,12 @@ public:
 
   explicit InternalHeaders(const nsTArray<Entry>&& aHeaders,
                            HeadersGuardEnum aGuard = HeadersGuardEnum::None);
+
+  InternalHeaders(const nsTArray<HeadersEntry>& aHeadersEntryList,
+                  HeadersGuardEnum aGuard);
+
+  void ToIPC(nsTArray<HeadersEntry>& aIPCHeaders,
+             HeadersGuardEnum& aGuard);
 
   void Append(const nsACString& aName, const nsACString& aValue,
               ErrorResult& aRv);
