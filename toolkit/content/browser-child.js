@@ -238,6 +238,7 @@ var WebNavigation =  {
     addMessageListener("WebNavigation:GoForward", this);
     addMessageListener("WebNavigation:GotoIndex", this);
     addMessageListener("WebNavigation:LoadURI", this);
+    addMessageListener("WebNavigation:SetOriginAttributes", this);
     addMessageListener("WebNavigation:Reload", this);
     addMessageListener("WebNavigation:Stop", this);
   },
@@ -268,6 +269,9 @@ var WebNavigation =  {
                      message.data.referrer, message.data.referrerPolicy,
                      message.data.postData, message.data.headers,
                      message.data.baseURI);
+        break;
+      case "WebNavigation:SetOriginAttributes":
+        this.setOriginAttributes(message.data.originAttributes);
         break;
       case "WebNavigation:Reload":
         this.reload(message.data.flags);
@@ -328,6 +332,12 @@ var WebNavigation =  {
       return this.webNavigation.loadURIWithOptions(uri, flags, referrer, referrerPolicy,
                                                    postData, headers, baseURI);
     });
+  },
+
+  setOriginAttributes: function(originAttributes) {
+    if (originAttributes) {
+      this.webNavigation.setOriginAttributesBeforeLoading(originAttributes);
+    }
   },
 
   reload: function(flags) {
