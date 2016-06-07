@@ -1029,9 +1029,10 @@ IMEStateManager::SetIMEState(const IMEState& aState,
         inputContent->IsHTMLElement(nsGkAtoms::input)) {
       bool willSubmit = false;
       nsCOMPtr<nsIFormControl> control(do_QueryInterface(inputContent));
-      mozilla::dom::Element* formElement = control->GetFormElement();
+      mozilla::dom::Element* formElement = nullptr;
       nsCOMPtr<nsIForm> form;
       if (control) {
+        formElement = control->GetFormElement();
         // is this a form and does it have a default submit element?
         if ((form = do_QueryInterface(formElement)) &&
             form->GetDefaultSubmitElement()) {
