@@ -413,6 +413,11 @@ ConvertGrallocImageToNV12(GrallocImage* aSource, uint8_t* aDestination)
 static nsresult
 ConvertSourceSurfaceToNV12(const RefPtr<SourceSurface>& aSurface, uint8_t* aDestination)
 {
+  if (!aSurface) {
+    CODEC_ERROR("Getting surface %s from image failed");
+    return NS_ERROR_FAILURE;
+  }
+
   uint32_t width = aSurface->GetSize().width;
   uint32_t height = aSurface->GetSize().height;
 
@@ -422,26 +427,19 @@ ConvertSourceSurfaceToNV12(const RefPtr<SourceSurface>& aSurface, uint8_t* aDest
   uint8_t* uv = y + (yStride * height);
   int uvStride = width / 2;
 
-  SurfaceFormat format = aSurface->GetFormat();
-
-  if (!aSurface) {
-    CODEC_ERROR("Getting surface %s from image failed", Stringify(format).c_str());
-    return NS_ERROR_FAILURE;
-  }
-
   RefPtr<DataSourceSurface> data = aSurface->GetDataSurface();
   if (!data) {
-    CODEC_ERROR("Getting data surface from %s image with %s (%s) surface failed",
-                Stringify(format).c_str(), Stringify(aSurface->GetType()).c_str(),
-                Stringify(aSurface->GetFormat()).c_str());
+    CODEC_ERROR("Getting data surface from %s image with %s surface failed",
+                Stringify(aSurface->GetFormat()).c_str(),
+                Stringify(aSurface->GetType()).c_str());
     return NS_ERROR_FAILURE;
   }
 
   DataSourceSurface::ScopedMap map(data, DataSourceSurface::READ);
   if (!map.IsMapped()) {
-    CODEC_ERROR("Reading DataSourceSurface from %s image with %s (%s) surface failed",
-                Stringify(format).c_str(), Stringify(aSurface->GetType()).c_str(),
-                Stringify(aSurface->GetFormat()).c_str());
+    CODEC_ERROR("Reading DataSourceSurface from %s image with %s surface failed",
+                Stringify(aSurface->GetFormat()).c_str(),
+                Stringify(aSurface->GetType()).c_str());
     return NS_ERROR_FAILURE;
   }
 
