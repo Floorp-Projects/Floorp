@@ -204,11 +204,6 @@ ContentRestoreInternal.prototype = {
             : Ci.nsIHttpChannel.REFERRER_POLICY_DEFAULT);
         let postData = loadArguments.postData ?
                        Utils.makeInputStream(loadArguments.postData) : null;
-
-        if (loadArguments.userContextId) {
-          webNavigation.setOriginAttributesBeforeLoading({ userContextId: loadArguments.userContextId });
-        }
-
         webNavigation.loadURIWithOptions(loadArguments.uri, loadArguments.flags,
                                          referrer, referrerPolicy, postData,
                                          null, null);

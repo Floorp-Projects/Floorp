@@ -87,10 +87,6 @@ public:
   IsOriginAttributesEqual(dom::GlobalObject& aGlobal,
                           const dom::OriginAttributesDictionary& aA,
                           const dom::OriginAttributesDictionary& aB);
-
-  static bool
-  IsOriginAttributesEqual(const dom::OriginAttributesDictionary& aA,
-                          const dom::OriginAttributesDictionary& aB);
 };
 
 } // namespace dom

@@ -175,13 +175,6 @@ ChromeUtils::IsOriginAttributesEqual(dom::GlobalObject& aGlobal,
                                      const dom::OriginAttributesDictionary& aA,
                                      const dom::OriginAttributesDictionary& aB)
 {
-  return IsOriginAttributesEqual(aA, aB);
-}
-
-/* static */ bool
-ChromeUtils::IsOriginAttributesEqual(const dom::OriginAttributesDictionary& aA,
-                                     const dom::OriginAttributesDictionary& aB)
-{
   return aA.mAddonId == aB.mAddonId &&
          aA.mAppId == aB.mAppId &&
          aA.mInIsolatedMozBrowser == aB.mInIsolatedMozBrowser &&
