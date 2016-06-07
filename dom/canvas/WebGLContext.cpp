@@ -718,7 +718,8 @@ WebGLContext::CreateAndInitGL(bool forceEnabled, nsACString* const out_failReaso
     useANGLE = !disableANGLE;
 #endif
 
-    gl::CreateContextFlags flags = gl::CreateContextFlags::NONE;
+    gl::CreateContextFlags flags = gl::CreateContextFlags::NO_VALIDATION;
+
     if (forceEnabled) flags |= gl::CreateContextFlags::FORCE_ENABLE_HARDWARE;
     if (!IsWebGL2())  flags |= gl::CreateContextFlags::REQUIRE_COMPAT_PROFILE;
     if (IsWebGL2())   flags |= gl::CreateContextFlags::PREFER_ES3;
