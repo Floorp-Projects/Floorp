@@ -55,7 +55,6 @@ public:
   already_AddRefed<nsITransportProvider>
     AcceptWebSocket(InternalRequest* aConnectRequest,
                     const Optional<nsAString>& aProtocol,
-                    nsACString& aNegotiatedExtensions,
                     ErrorResult& aRv);
   void SendWebSocketResponse(InternalRequest* aConnectRequest,
                              InternalResponse* aResponse);
@@ -113,7 +112,6 @@ private:
                            InternalResponse* aResponse);
     already_AddRefed<nsITransportProvider>
       HandleAcceptWebSocket(const Optional<nsAString>& aProtocol,
-                            nsACString& aNegotiatedExtensions,
                             ErrorResult& aRv);
     void HandleWebSocketResponse(InternalResponse* aResponse);
     bool HasPendingWebSocketRequest(InternalRequest* aRequest)
