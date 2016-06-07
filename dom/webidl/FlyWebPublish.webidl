@@ -7,6 +7,9 @@
 [Pref="dom.flyweb.enabled"]
 interface FlyWebPublishedServer : EventTarget {
   readonly attribute DOMString name;
+  readonly attribute DOMString? category;
+  readonly attribute boolean http;
+  readonly attribute boolean message;
   readonly attribute DOMString? uiUrl;
 
   void close();
@@ -17,6 +20,9 @@ interface FlyWebPublishedServer : EventTarget {
 };
 
 dictionary FlyWebPublishOptions {
+  DOMString category = "";
+  boolean http = false;
+  boolean message = false;
   DOMString? uiUrl = null; // URL to user interface. Can be different server. Makes
                            // endpoint show up in browser's "local services" UI.
                            // If relative, resolves against the root of the server.
