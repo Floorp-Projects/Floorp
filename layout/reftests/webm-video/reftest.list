@@ -39,7 +39,7 @@ random-if(winWidget) random-if(cocoaWidget) skip-if(Android||B2G||Mulet) == bug6
 # reftest directory. They live here because they use WebM video (VP9), and it
 # wouldn't be fair of us to make a W3C testsuite implicitly depend on any
 # particular (non-spec-mandated) video codec.
-default-preferences test-pref(layout.css.object-fit-and-position.enabled,true)
+default-preferences test-pref(layout.css.object-fit-and-position.enabled,true) test-pref(gfx.ycbcr.accurate-conversion,true)
 fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-contain-webm-001.html object-fit-contain-webm-001-ref.html # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures # Initial mulet triage: parity with B2G/B2G Desktop
 fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-contain-webm-002.html object-fit-contain-webm-002-ref.html # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures # Initial mulet triage: parity with B2G/B2G Desktop
 fails-if(layersGPUAccelerated) skip-if(Android||B2G||Mulet) == object-fit-cover-webm-001.html object-fit-cover-webm-001-ref.html # Bug 1083516 for layersGPUAccelerated failures, Bug 1084564 for Android/B2G failures # Initial mulet triage: parity with B2G/B2G Desktop
