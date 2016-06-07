@@ -225,11 +225,12 @@ ReportError(JSContext* cx, const char* message, JSErrorReport* reportp,
         reportp->flags |= JSREPORT_EXCEPTION;
     }
 
-    if (ErrorToException(cx, message, reportp, callback, userRef))
-        return;
-
-    if (JSREPORT_IS_WARNING(reportp->flags))
+    if (JSREPORT_IS_WARNING(reportp->flags)) {
         CallWarningReporter(cx, message, reportp);
+        return;
+    }
+
+    ErrorToException(cx, message, reportp, callback, userRef);
 }
 
 /*
