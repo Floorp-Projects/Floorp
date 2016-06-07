@@ -239,6 +239,45 @@ nsXREDirProvider::GetUserProfilesLocalDir(nsIFile** aResult,
   return NS_OK;
 }
 
+#if defined(XP_UNIX) || defined(XP_MACOSX)
+/**
+ * Get the directory that is the parent of the system-wide directories
+ * for extensions and native-messaing manifests.
+ *
+ * On OSX this is /Library/Application Support/Mozilla
+ * On Linux this is /usr/{lib,lib64}/mozilla
+ *   (for 32- and 64-bit systems respsectively)
+ */
+static nsresult
+GetSystemParentDirectory(nsIFile** aFile)
+{
+  nsresult rv;
+  nsCOMPtr<nsIFile> localDir;
+#if defined(XP_MACOSX)
+  rv = GetOSXFolderType(kOnSystemDisk, kApplicationSupportFolderType, getter_AddRefs(localDir));
+  if (NS_SUCCEEDED(rv)) {
+    rv = localDir->AppendNative(NS_LITERAL_CSTRING("Mozilla"));
+  }
+#else
+  NS_NAMED_LITERAL_CSTRING(dirname,
+#ifdef HAVE_USR_LIB64_DIR
+                           "/usr/lib64/mozilla"
+#elif defined(__OpenBSD__) || defined(__FreeBSD__)
+                           "/usr/local/lib/mozilla"
+#else
+                           "/usr/lib/mozilla"
+#endif
+                           );
+  rv = NS_NewNativeLocalFile(dirname, false, getter_AddRefs(localDir));
+#endif
+
+  if (NS_SUCCEEDED(rv)) {
+    localDir.forget(aFile);
+  }
+  return rv;
+}
+#endif
+
 NS_IMETHODIMP
 nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
                           nsIFile** aFile)
@@ -314,6 +353,46 @@ nsXREDirProvider::GetFile(const char* aProperty, bool* aPersistent,
            !strcmp(aProperty, XRE_USER_APP_DATA_DIR)) {
     rv = GetUserAppDataDirectory(getter_AddRefs(file));
   }
+#if defined(XP_UNIX) || defined(XP_MACOSX)
+  else if (!strcmp(aProperty, XRE_SYS_NATIVE_MESSAGING_MANIFESTS)) {
+    nsCOMPtr<nsIFile> localDir;
+
+    rv = ::GetSystemParentDirectory(getter_AddRefs(localDir));
+    if (NS_SUCCEEDED(rv)) {
+      NS_NAMED_LITERAL_CSTRING(dirname,
+#if defined(XP_MACOSX)
+                               "NativeMessagingHosts"
+#else
+                               "native-messaging-hosts"
+#endif
+                               );
+      rv = localDir->AppendNative(dirname);
+      if (NS_SUCCEEDED(rv)) {
+        localDir.swap(file);
+      }
+    }
+  }
+  else if (!strcmp(aProperty, XRE_USER_NATIVE_MESSAGING_MANIFESTS)) {
+    nsCOMPtr<nsIFile> localDir;
+    rv = GetUserDataDirectoryHome(getter_AddRefs(localDir), false);
+    if (NS_SUCCEEDED(rv)) {
+#if defined(XP_MACOSX)
+      rv = localDir->AppendNative(NS_LITERAL_CSTRING("Mozilla"));
+      if (NS_SUCCEEDED(rv)) {
+        rv = localDir->AppendNative(NS_LITERAL_CSTRING("NativeMessagingHosts"));
+      }
+#else
+      rv = localDir->AppendNative(NS_LITERAL_CSTRING(".mozilla"));
+      if (NS_SUCCEEDED(rv)) {
+        rv = localDir->AppendNative(NS_LITERAL_CSTRING("native-messaging-hosts"));
+      }
+#endif
+    }
+    if (NS_SUCCEEDED(rv)) {
+      localDir.swap(file);
+    }
+  }
+#endif
   else if (!strcmp(aProperty, XRE_UPDATE_ROOT_DIR)) {
     rv = GetUpdateRootDir(getter_AddRefs(file));
   }
@@ -1419,46 +1498,23 @@ nsXREDirProvider::GetSystemExtensionsDirectory(nsIFile** aFile)
 {
   nsresult rv;
   nsCOMPtr<nsIFile> localDir;
+
+  rv = GetSystemParentDirectory(getter_AddRefs(localDir));
+  if (NS_SUCCEEDED(rv)) {
+    NS_NAMED_LITERAL_CSTRING(sExtensions,
 #if defined(XP_MACOSX)
-  FSRef fsRef;
-  OSErr err = ::FSFindFolder(kOnSystemDisk, kApplicationSupportFolderType, kCreateFolder, &fsRef);
-  NS_ENSURE_FALSE(err, NS_ERROR_FAILURE);
-
-  rv = NS_NewNativeLocalFile(EmptyCString(), true, getter_AddRefs(localDir));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  nsCOMPtr<nsILocalFileMac> dirFileMac = do_QueryInterface(localDir);
-  NS_ENSURE_TRUE(dirFileMac, NS_ERROR_UNEXPECTED);
-
-  rv = dirFileMac->InitWithFSRef(&fsRef);
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  localDir = do_QueryInterface(dirFileMac, &rv);
-
-  static const char* const sXR = "Mozilla";
-  rv = localDir->AppendNative(nsDependentCString(sXR));
-  NS_ENSURE_SUCCESS(rv, rv);
-
-  static const char* const sExtensions = "Extensions";
-  rv = localDir->AppendNative(nsDependentCString(sExtensions));
-  NS_ENSURE_SUCCESS(rv, rv);
-#elif defined(XP_UNIX)
-  static const char *const sysSExtDir = 
-#ifdef HAVE_USR_LIB64_DIR
-    "/usr/lib64/mozilla/extensions";
-#elif defined(__OpenBSD__) || defined(__FreeBSD__)
-    "/usr/local/lib/mozilla/extensions";
+                             "Extensions"
 #else
-    "/usr/lib/mozilla/extensions";
+                             "extensions"
 #endif
+                             );
 
-  rv = NS_NewNativeLocalFile(nsDependentCString(sysSExtDir), false,
-                             getter_AddRefs(localDir));
-  NS_ENSURE_SUCCESS(rv, rv);
-#endif
-
-  localDir.forget(aFile);
-  return NS_OK;
+    rv = localDir->AppendNative(sExtensions);
+    if (NS_SUCCEEDED(rv)) {
+      localDir.forget(aFile);
+    }
+  }
+  return rv;
 }
 #endif
 

@@ -93,3 +93,7 @@ post_build
 (deprecated) The name of the post-build activity.  This is valid only for the
 ``legacy`` kind.
 
+image_name
+==========
+
+For the ``docker_image`` kind, this attribute contains the docker image name.

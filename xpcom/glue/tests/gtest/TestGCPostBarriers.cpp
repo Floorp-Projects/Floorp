@@ -132,12 +132,12 @@ TEST(GCPostBarriers, nsTArray) {
   JSRuntime* rt = ccrt->Runtime();
   ASSERT_TRUE(rt != nullptr);
 
-  JSContext *cx = JS_NewContext(rt, 8192);
-  ASSERT_TRUE(cx != nullptr);
+  JSContext* cx = nullptr;
+  MOZ_RELEASE_ASSERT(JS_ContextIterator(rt, &cx));
+
   JS_BeginRequest(cx);
 
   CreateGlobalAndRunTest(rt, cx);
 
   JS_EndRequest(cx);
-  JS_DestroyContext(cx);
 }

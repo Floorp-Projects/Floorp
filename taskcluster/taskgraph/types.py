@@ -29,7 +29,6 @@ class Task(object):
         self.task = task or {}
         self.extra = extra
 
-        self.optimization_key = None
         self.task_id = None
 
         if not (all(isinstance(x, basestring) for x in self.attributes.iterkeys()) and

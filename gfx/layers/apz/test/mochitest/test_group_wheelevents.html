@@ -8,21 +8,22 @@
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
   <script type="application/javascript">
 
+var prefs = [
+  // turn off smooth scrolling so that we don't have to wait for
+  // APZ animations to finish before sampling the scroll offset
+  ['general.smoothScroll', false],
+  // ensure that any mouse movement will trigger a new wheel transaction,
+  // because in this test we move the mouse a bunch and want to recalculate
+  // the target APZC after each such movement.
+  ['mousewheel.transaction.ignoremovedelay', 0],
+  ['mousewheel.transaction.timeout', 0]
+]
+
 var subtests = [
-  {'file': 'helper_scroll_on_position_fixed.html', 'prefs': [
-        // turn off smooth scrolling so that we don't have to wait for
-        // APZ animations to finish before sampling the scroll offset
-        ['general.smoothScroll', false],
-        // ensure that any mouse movement will trigger a new wheel transaction,
-        // because in this test we move the mouse a bunch and want to recalculate
-        // the target APZC after each such movement.
-        ['mousewheel.transaction.ignoremovedelay', 0],
-        ['mousewheel.transaction.timeout', 0]]},
-  {'file': 'helper_bug1271432.html', 'prefs': [
-        // same prefs as in the previous test, for the same reasons.
-        ['general.smoothScroll', false],
-        ['mousewheel.transaction.ignoremovedelay', 0],
-        ['mousewheel.transaction.timeout', 0]]}
+  {'file': 'helper_scroll_on_position_fixed.html', 'prefs': prefs},
+  {'file': 'helper_bug1271432.html', 'prefs': prefs},
+  {'file': 'helper_scroll_inactive_perspective.html', 'prefs': prefs},
+  {'file': 'helper_scroll_inactive_zindex.html', 'prefs': prefs}
 ];
 
 if (isApzEnabled()) {

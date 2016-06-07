@@ -9,7 +9,6 @@ f("\
     Object.defineProperty(this,\"x\",{\
         get: function(){\
             evaluate(\"Array(x)\",{\
-                newContext:true,\
                 catchTermination:(function(){})\
             })\
         }\

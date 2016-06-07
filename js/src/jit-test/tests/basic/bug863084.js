@@ -10,7 +10,7 @@ f("\
     gc();\
     z.toString=(function(){\
         v=evaluate(\"(Math.atan2(\\\"\\\",this))\",{\
-            global:z,newContext:7,catchTermination:this\
+            global:z,catchTermination:this\
         });\
     });\
     String(z)\

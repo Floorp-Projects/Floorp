@@ -97,9 +97,11 @@ public class SearchEngineBar extends RecyclerView
                 // All search engines fit int: So let's just display all.
                 searchEnginesToDisplay = searchEngineCount;
             } else {
-                // If only (n) search engines fit into the available space then display (n - 0.5): The last search
-                // engine will be cut-off to show ability to scroll this view
-                searchEnginesToDisplay = Math.floor(availableWidth / mMinIconContainerWidth) - 0.5;
+                // If only (n) search engines fit into the available space then display only (x) search
+                // engines with (x) picked so that the last search engine will be cut-off (we only display
+                // half of it) to show the ability to scroll this view.
+
+                searchEnginesToDisplay = Math.floor((availableWidth / mMinIconContainerWidth) - 0.5) + 0.5;
             }
 
             // Use all available width and spread search engine icons

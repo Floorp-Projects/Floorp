@@ -1,0 +1,57 @@
+---
+task:
+  created: '{{now}}'
+  deadline: '{{#from_now}}24 hours{{/from_now}}'
+  metadata:
+    name: 'Docker Image Build: {{image_name}}'
+    description: 'Build the docker image {{image_name}} for use by dependent tasks'
+    source: '{{source}}'
+    owner: mozilla-taskcluster-maintenance@mozilla.com
+  tags:
+    createdForUser: {{owner}}
+
+  workerType: taskcluster-images
+  provisionerId: aws-provisioner-v1
+  schedulerId: task-graph-scheduler
+
+  routes:
+      - index.docker.images.v1.{{project}}.{{image_name}}.latest
+      - index.docker.images.v1.{{project}}.{{image_name}}.pushdate.{{year}}.{{month}}-{{day}}-{{pushtime}}
+      - index.docker.images.v1.{{project}}.{{image_name}}.hash.{{context_hash}}
+      - tc-treeherder.{{project}}.{{revision_hash}}
+      - tc-treeherder-stage.{{project}}.{{revision_hash}}
+
+  payload:
+    env:
+      HASH: '{{context_hash}}'
+      PROJECT: '{{project}}'
+      CONTEXT_URL: '{{context_url}}'
+      CONTEXT_PATH: '{{context_path}}'
+      BASE_REPOSITORY: '{{base_repository}}'
+      HEAD_REPOSITORY: '{{head_repository}}'
+      HEAD_REV: '{{head_rev}}'
+      HEAD_REF: '{{head_ref}}'
+    features:
+      dind: true
+    image: '{{#docker_image}}image_builder{{/docker_image}}'
+    command:
+      - /bin/bash
+      - -c
+      - /home/worker/bin/build_image.sh
+    maxRunTime: 3600
+    artifacts:
+      '{{artifact_path}}':
+        type: 'file'
+        path: '/artifacts/image.tar'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+  extra:
+    treeherderEnv:
+      - staging
+      - production
+    treeherder:
+      revision: {{head_rev}}
+      revision_hash: {{revision_hash}}
+      build:
+        platform: 'taskcluster-images'
+      symbol: 'I'
+

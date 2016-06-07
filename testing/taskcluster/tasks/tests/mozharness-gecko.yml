@@ -6,6 +6,7 @@ $inherits:
       build_name: 'mozharness-tox'
       build_type: 'opt'
 
+docker-image: desktop-test
 task:
   metadata:
     name: '[TC] - Mozharness Tox'
@@ -18,7 +19,8 @@ task:
     image:
       type: 'task-image'
       path: 'public/image.tar'
-      taskId: '{{#task_id_for_image}}desktop-test{{/task_id_for_image}}'
+      taskId:
+        task-reference: "<docker-image>"
 
     cache:
       level-{{level}}-{{project}}-dotcache: '/home/worker/.cache'

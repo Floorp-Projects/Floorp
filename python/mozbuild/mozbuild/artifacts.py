@@ -63,7 +63,6 @@ import zipfile
 import pylru
 import taskcluster
 
-import buildconfig
 from mozbuild.util import (
     ensureParentDir,
     FileAvoidWrite,
@@ -725,10 +724,12 @@ class ArtifactCache(CacheManager):
 class Artifacts(object):
     '''Maintain state to efficiently fetch build artifacts from a Firefox tree.'''
 
-    def __init__(self, tree, job=None, log=None, cache_dir='.', hg=None, git=None, skip_cache=False):
+    def __init__(self, tree, substs, defines, job=None, log=None, cache_dir='.', hg=None, git=None, skip_cache=False):
         if (hg and git) or (not hg and not git):
             raise ValueError("Must provide path to exactly one of hg and git")
 
+        self._substs = substs
+        self._defines = defines
         self._tree = tree
         self._job = job or self._guess_artifact_job()
         self._log = log
@@ -755,27 +756,27 @@ class Artifacts(object):
             self._log(*args, **kwargs)
 
     def _guess_artifact_job(self):
-        if buildconfig.substs.get('MOZ_BUILD_APP', '') == 'mobile/android':
-            if buildconfig.substs['ANDROID_CPU_ARCH'] == 'x86':
+        if self._substs.get('MOZ_BUILD_APP', '') == 'mobile/android':
+            if self._substs['ANDROID_CPU_ARCH'] == 'x86':
                 return 'android-x86'
             return 'android-api-15'
 
         target_64bit = False
-        if buildconfig.substs['target_cpu'] == 'x86_64':
+        if self._substs['target_cpu'] == 'x86_64':
             target_64bit = True
 
         target_suffix = ''
 
         # Add the "-debug" suffix to the guessed artifact job name
         # if MOZ_DEBUG is enabled.
-        if buildconfig.substs.get('MOZ_DEBUG'):
+        if self._substs.get('MOZ_DEBUG'):
             target_suffix = '-debug'
 
-        if buildconfig.defines.get('XP_LINUX', False):
+        if self._defines.get('XP_LINUX', False):
             return ('linux64' if target_64bit else 'linux') + target_suffix
-        if buildconfig.defines.get('XP_WIN', False):
+        if self._defines.get('XP_WIN', False):
             return ('win64' if target_64bit else 'win32') + target_suffix
-        if buildconfig.defines.get('XP_MACOSX', False):
+        if self._defines.get('XP_MACOSX', False):
             # We only produce unified builds in automation, so the target_cpu
             # check is not relevant.
             return 'macosx64' + target_suffix

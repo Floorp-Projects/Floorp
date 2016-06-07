@@ -15,8 +15,8 @@ task:
     command:
       - bash
       - /home/worker/bin/test.sh
-      - --installer-url={{build_url}}
-      - --test-packages-url={{test_packages_url}}
+      - {"task-reference": "--installer-url=https://queue.taskcluster.net/v1/task/<{{build_slugid}}>/artifacts/{{build_location}}"}
+      - {"task-reference": "--test-packages-url=https://queue.taskcluster.net/v1/task/<{{build_slugid}}>/artifacts/{{test_packages_location}}"}
       - --test-suite=reftest
       - --test-manifest=tests/layout/reftests/reftest.list
       - --this-chunk={{chunk}}

@@ -28,23 +28,18 @@ from taskcluster_graph.mach_util import (
 import taskcluster_graph.transform.routes as routes_transform
 import taskcluster_graph.transform.treeherder as treeherder_transform
 from taskcluster_graph.commit_parser import parse_commit
-from taskcluster_graph.image_builder import (
-    docker_image,
-    normalize_image_details,
-    task_id_for_image
-)
 from taskcluster_graph.from_now import (
     json_time_from_now,
     current_json_time,
 )
 from taskcluster_graph.templates import Templates
 import taskcluster_graph.build_task
+from taskgraph.util import docker_image
 
 # TASKID_PLACEHOLDER is the "internal" form of a taskid; it is substituted with
 # actual taskIds at the very last minute, in get_task_definition
 TASKID_PLACEHOLDER = 'TaskLabel=={}'
 
-ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 DEFINE_TASK = 'queue:define-task:aws-provisioner-v1/{}'
 DEFAULT_TRY = 'try: -b do -p all -u all -t all'
 DEFAULT_JOB_PATH = os.path.join(
@@ -76,6 +71,8 @@ def set_expiration(task, timestamp):
 
     for artifact in artifacts.values():
         artifact['expires'] = timestamp
+
+
 
 class LegacyKind(base.Kind):
     """
@@ -122,13 +119,11 @@ class LegacyKind(base.Kind):
                 changed_files |= set(c['files'])
 
         # Template parameters used when expanding the graph
-        seen_images = {}
         parameters = dict(gaia_info().items() + {
             'index': 'index',
             'project': project,
             'pushlog_id': params.get('pushlog_id', 0),
             'docker_image': docker_image,
-            'task_id_for_image': partial(task_id_for_image, seen_images, project),
             'base_repository': params['base_repository'] or
             params['head_repository'],
             'head_repository': params['head_repository'],
@@ -232,11 +227,6 @@ class LegacyKind(base.Kind):
             build_parameters['build_type'] = task_extra['build_type']
             build_parameters['build_product'] = task_extra['build_product']
 
-            normalize_image_details(graph,
-                                    build_task,
-                                    seen_images,
-                                    build_parameters,
-                                    os.environ.get('TASK_ID', None))
             set_interactive_task(build_task, interactive)
 
             # try builds don't use cache
@@ -268,10 +258,7 @@ class LegacyKind(base.Kind):
             graph['tasks'].append(build_task)
 
             for location in build_task['task']['extra'].get('locations', {}):
-                build_parameters['{}_url'.format(location)] = ARTIFACT_URL.format(
-                    build_parameters['build_slugid'],
-                    build_task['task']['extra']['locations'][location]
-                )
+                build_parameters['{}_location'.format(location)] = build_task['task']['extra']['locations'][location]
 
             for url in build_task['task']['extra'].get('url', {}):
                 build_parameters['{}_url'.format(url)] = \
@@ -323,11 +310,6 @@ class LegacyKind(base.Kind):
                                                      mklabel(),
                                                      templates,
                                                      build_treeherder_config)
-                normalize_image_details(graph,
-                                        post_task,
-                                        seen_images,
-                                        build_parameters,
-                                        os.environ.get('TASK_ID', None))
                 set_interactive_task(post_task, interactive)
                 treeherder_transform.add_treeherder_revision_info(post_task['task'],
                                                                   params['head_rev'],
@@ -377,11 +359,6 @@ class LegacyKind(base.Kind):
                                                          mklabel(),
                                                          templates,
                                                          build_treeherder_config)
-                    normalize_image_details(graph,
-                                            test_task,
-                                            seen_images,
-                                            build_parameters,
-                                            os.environ.get('TASK_ID', None))
                     set_interactive_task(test_task, interactive)
 
                     if params['revision_hash']:
@@ -437,23 +414,15 @@ class LegacyKind(base.Kind):
     def get_task_dependencies(self, task, taskgraph):
         # fetch dependency information from the cached graph
         taskdict = self.tasks_by_label[task.label]
-        return [(label, label) for label in taskdict.get('requires', [])]
+        deps = [(label, label) for label in taskdict.get('requires', [])]
 
-    def get_task_optimization_key(self, task, taskgraph):
-        pass
+        # add a dependency on an image task, if needed
+        if 'docker-image' in taskdict:
+            deps.append(('build-docker-image-{docker-image}'.format(**taskdict), 'docker-image'))
 
-    def get_task_definition(self, task, dependent_taskids):
-        # Note that the keys for `dependent_taskids` are task labels in this
-        # case, since that's how get_task_dependencies set it up.
-        placeholder_pattern = re.compile(r'TaskLabel==[a-zA-Z0-9-_]{22}')
-        def repl(mo):
-            return dependent_taskids[mo.group(0)]
+        return deps
 
-        # this is a cheap but easy way to replace all placeholders with
-        # actual real taskIds now that they are known.  The placeholder
-        # may be embedded in a longer string, so traversing the data structure
-        # would still require regexp matching each string and not be
-        # appreciably faster.
-        task_def = json.dumps(task.task)
-        task_def = placeholder_pattern.sub(repl, task_def)
-        return json.loads(task_def)
+    def optimize_task(self, task, taskgraph):
+        # no optimization for the moment
+        return False, None
+

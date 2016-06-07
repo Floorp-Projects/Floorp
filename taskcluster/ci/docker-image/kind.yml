@@ -1,0 +1,19 @@
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+implementation: 'taskgraph.kind.docker_image:DockerImageKind'
+images_path: '../../../testing/docker'
+
+# make a task for each docker-image we might want.  For the moment, since we
+# write artifacts for each, these are whitelisted, but ideally that will change
+# (to use subdirectory clones of the proper directory), at which point we can
+# generate tasks for every docker image in the directory, secure in the
+# knowledge that unnecessary images will be omitted from the target task graph
+images:
+  - desktop-test
+  - desktop-build
+  - builder
+  - tester
+  - lint
+  - android-gradle-build

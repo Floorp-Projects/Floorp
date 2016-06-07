@@ -328,6 +328,10 @@ public:
     mGlobal = nullptr;
     mFiles.Clear();
     mPromises.Clear();
+    mCallbacks.Clear();
+
+    MutexAutoLock lock(mMutex);
+    mCanceled = true;
   }
 
   void Traverse(nsCycleCollectionTraversalCallback &cb)
@@ -344,6 +348,8 @@ private:
     , mRecursiveFlag(aRecursiveFlag)
     , mListingCompleted(false)
     , mErrorResult(NS_OK)
+    , mMutex("GetFilesHelper::mMutex")
+    , mCanceled(false)
   {
     MOZ_ASSERT(aGlobal);
   }
@@ -352,6 +358,13 @@ private:
   SetDirectoryPath(const nsAString& aDirectoryPath)
   {
     mDirectoryPath = aDirectoryPath;
+  }
+
+  bool
+  IsCanceled()
+  {
+    MutexAutoLock lock(mMutex);
+    return mCanceled;
   }
 
   NS_IMETHOD
@@ -364,7 +377,20 @@ private:
     // This happens in the I/O thread.
     if (!NS_IsMainThread()) {
       RunIO();
+
+      // If this operation has been canceled, we don't have to go back to
+      // main-thread.
+      if (IsCanceled()) {
+        return NS_OK;
+      }
+
       return NS_DispatchToMainThread(this);
+    }
+
+    // We are here, but we should not do anything on this thread because, in the
+    // meantime, the operation has been canceled.
+    if (IsCanceled()) {
+      return NS_OK;
     }
 
     RunMainThread();
@@ -453,6 +479,11 @@ private:
   {
     MOZ_ASSERT(!NS_IsMainThread());
     MOZ_ASSERT(aFile);
+
+    // We check if this operation has to be terminated at each recursion.
+    if (IsCanceled()) {
+      return NS_OK;
+    }
 
     nsCOMPtr<nsISimpleEnumerator> entries;
     nsresult rv = aFile->GetDirectoryEntries(getter_AddRefs(entries));
@@ -577,6 +608,11 @@ private:
 
   nsTArray<RefPtr<Promise>> mPromises;
   nsTArray<RefPtr<GetFilesCallback>> mCallbacks;
+
+  Mutex mMutex;
+
+  // This variable is protected by mutex.
+  bool mCanceled;
 };
 
 // An helper class for the dispatching of the 'change' event.

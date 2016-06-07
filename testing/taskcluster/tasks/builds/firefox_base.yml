@@ -2,6 +2,7 @@ $inherits:
   from: 'tasks/build.yml'
   variables:
     build_product: 'firefox'
+docker-image: desktop-build
 task:
   scopes:
     - "secrets:get:project/releng/gecko/build/level-{{level}}/*"
@@ -13,6 +14,7 @@ task:
     image:
       type: 'task-image'
       path: 'public/image.tar'
-      taskId: '{{#task_id_for_image}}desktop-build{{/task_id_for_image}}'
+      taskId:
+        task-reference: "<docker-image>"
     features:
       taskclusterProxy: true

@@ -395,11 +395,11 @@ public:
       new nsMainThreadPtrHolder<KeepAliveToken>(aKeepAliveToken);
   }
 
-  void
+  bool
   DispatchExtendableEventOnWorkerScope(JSContext* aCx,
                                        WorkerGlobalScope* aWorkerScope,
                                        ExtendableEvent* aEvent,
-                                       Promise** aWaitUntilPromise)
+                                       PromiseNativeHandler* aPromiseHandler)
   {
     MOZ_ASSERT(aWorkerScope);
     MOZ_ASSERT(aEvent);
@@ -410,7 +410,7 @@ public:
     result = aWorkerScope->DispatchDOMEvent(nullptr, aEvent, nullptr, nullptr);
     if (NS_WARN_IF(result.Failed()) || internalEvent->mFlags.mExceptionWasRaised) {
       result.SuppressException();
-      return;
+      return false;
     }
 
     RefPtr<Promise> waitUntilPromise = aEvent->GetPromise();
@@ -421,12 +421,20 @@ public:
     }
 
     MOZ_ASSERT(waitUntilPromise);
+
+    // Make sure to append the caller's promise handler before attaching
+    // our keep alive handler.  This can avoid terminating the worker
+    // before a success result is delivered to the caller in cases where
+    // the idle timeout has been set to zero.  This low timeout value is
+    // sometimes set in tests.
+    if (aPromiseHandler) {
+      waitUntilPromise->AppendNativeHandler(aPromiseHandler);
+    }
+
     KeepAliveHandler::CreateAndAttachToPromise(mKeepAliveToken,
                                                waitUntilPromise);
 
-    if (aWaitUntilPromise) {
-      waitUntilPromise.forget(aWaitUntilPromise);
-    }
+    return true;
   }
 };
 
@@ -654,12 +662,8 @@ LifecycleEventWorkerRunnable::DispatchLifecycleEvent(JSContext* aCx,
     return true;
   }
 
-  RefPtr<Promise> waitUntil;
-  DispatchExtendableEventOnWorkerScope(aCx, aWorkerPrivate->GlobalScope(),
-                                       event, getter_AddRefs(waitUntil));
-  if (waitUntil) {
-    waitUntil->AppendNativeHandler(watcher);
-  } else {
+  if (!DispatchExtendableEventOnWorkerScope(aCx, aWorkerPrivate->GlobalScope(),
+                                       event, watcher)) {
     watcher->ReportResult(false);
   }
 
@@ -806,12 +810,8 @@ public:
     }
     event->SetTrusted(true);
 
-    RefPtr<Promise> waitUntil;
-    DispatchExtendableEventOnWorkerScope(aCx, aWorkerPrivate->GlobalScope(),
-                                         event, getter_AddRefs(waitUntil));
-    if (waitUntil) {
-      waitUntil->AppendNativeHandler(errorReporter);
-    } else {
+    if (!DispatchExtendableEventOnWorkerScope(aCx, aWorkerPrivate->GlobalScope(),
+                                              event, errorReporter)) {
       errorReporter->Report(nsIPushErrorReporter::DELIVERY_UNCAUGHT_EXCEPTION);
     }
 
@@ -1154,16 +1154,14 @@ public:
     }
 
     event->SetTrusted(true);
-    RefPtr<Promise> waitUntil;
     aWorkerPrivate->GlobalScope()->AllowWindowInteraction();
-    DispatchExtendableEventOnWorkerScope(aCx, aWorkerPrivate->GlobalScope(),
-                                         event, getter_AddRefs(waitUntil));
-      aWorkerPrivate->GlobalScope()->ConsumeWindowInteraction();
-    if (waitUntil) {
-      RefPtr<AllowWindowInteractionHandler> allowWindowInteraction =
-        new AllowWindowInteractionHandler(aWorkerPrivate);
-      waitUntil->AppendNativeHandler(allowWindowInteraction);
+    RefPtr<AllowWindowInteractionHandler> allowWindowInteraction =
+      new AllowWindowInteractionHandler(aWorkerPrivate);
+    if (!DispatchExtendableEventOnWorkerScope(aCx, aWorkerPrivate->GlobalScope(),
+                                              event, allowWindowInteraction)) {
+      allowWindowInteraction->RejectedCallback(aCx, JS::UndefinedHandleValue);
     }
+    aWorkerPrivate->GlobalScope()->ConsumeWindowInteraction();
 
     return true;
   }

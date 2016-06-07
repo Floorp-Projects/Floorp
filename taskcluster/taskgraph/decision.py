@@ -26,11 +26,15 @@ logger = logging.getLogger(__name__)
 PER_PROJECT_PARAMETERS = {
     'try': {
         'target_tasks_method': 'try_option_syntax',
+        # for try, if a task was specified as a target, it should
+        # not be optimized away
+        'optimize_target_tasks': False,
     },
 
     # the default parameters are used for projects that do not match above.
     'default': {
-        'target_tasks_method': 'all_tasks',
+        'target_tasks_method': 'all_builds_and_tests',
+        'optimize_target_tasks': True,
     }
 }
 
@@ -65,15 +69,17 @@ def taskgraph_decision(options):
                    taskgraph_to_json(tgg.full_task_graph))
 
     # write out the target task set to allow reproducing this as input
-    write_artifact('target_tasks.json',
+    write_artifact('target-tasks.json',
                    tgg.target_task_set.tasks.keys())
 
-    # write out the optimized task graph to describe what will happen
+    # write out the optimized task graph to describe what will actually happen,
+    # and the map of labels to taskids
     write_artifact('task-graph.json',
                    taskgraph_to_json(tgg.optimized_task_graph))
+    write_artifact('label-to-taskid.json', tgg.label_to_taskid)
 
     # actually create the graph
-    create_tasks(tgg.optimized_task_graph)
+    create_tasks(tgg.optimized_task_graph, tgg.label_to_taskid)
 
 
 def get_decision_parameters(options):
@@ -113,6 +119,7 @@ def taskgraph_to_json(taskgraph):
 
     def tojson(task):
         return {
+            'label': task.label,
             'task': task.task,
             'attributes': task.attributes,
             'dependencies': []

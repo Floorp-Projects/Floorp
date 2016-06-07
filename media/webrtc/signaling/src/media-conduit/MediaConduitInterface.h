@@ -278,7 +278,8 @@ public:
 
   VideoSessionConduit() : mFrameRequestMethod(FrameRequestNone),
                           mUsingNackBasic(false),
-                          mUsingTmmbr(false) {}
+                          mUsingTmmbr(false),
+                          mUsingFEC(false) {}
 
   virtual ~VideoSessionConduit() {}
 
@@ -377,11 +378,17 @@ public:
     bool UsingTmmbr() const {
       return mUsingTmmbr;
     }
+
+    bool UsingFEC() const {
+      return mUsingFEC;
+    }
+
    protected:
      /* RTCP feedback settings, for unit testing purposes */
      FrameRequestType mFrameRequestMethod;
      bool mUsingNackBasic;
      bool mUsingTmmbr;
+     bool mUsingFEC;
 };
 
 /**

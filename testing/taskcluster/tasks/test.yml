@@ -1,4 +1,5 @@
 # This task is the base for most tests in gecko.
+docker-image: tester
 task:
   created: '{{now}}'
   deadline: '{{#from_now}}24 hours{{/from_now}}'
@@ -15,11 +16,16 @@ task:
     - 'docker-worker:feature:allowPtrace'
 
   payload:
-    image: '{{#docker_image}}tester{{/docker_image}}'
+    image:
+      type: 'task-image'
+      path: 'public/image.tar'
+      taskId:
+        task-reference: "<docker-image>"
+
     maxRunTime: 3600
     env:
-      MOZILLA_BUILD_URL: '{{build_url}}'
-      MOZHARNESS_URL: '{{mozharness_url}}'
+      MOZILLA_BUILD_URL: {"task-reference": "https://queue.taskcluster.net/v1/task/<{{build_slugid}}>/artifacts/{{build_location}}"}
+      MOZHARNESS_URL: {"task-reference": "https://queue.taskcluster.net/v1/task/<{{build_slugid}}>/artifacts/{{mozharness_location}}"}
 
     # All builds share a common artifact directory for ease of uploading.
     artifacts:
