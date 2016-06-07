@@ -268,10 +268,11 @@ class EMESetupMixin(object):
                     script_timeout=60000)
                 if not adobe_result == 'success':
                     raise VideoException(
-                        'ERROR: Resetting Adobe GMP failed % s' % result)
+                        'ERROR: Resetting Adobe GMP failed % s' % adobe_result)
                 if not widevine_result == 'success':
                     raise VideoException(
-                        'ERROR: Resetting Widevine GMP failed % s' % result)
+                        'ERROR: Resetting Widevine GMP failed % s'
+                        % widevine_result)
 
             EMESetupMixin.version_needs_reset = False
 
@@ -311,11 +312,12 @@ class EMESetupMixin(object):
     def chceck_and_log_version_string_pref(self, pref_name, minimum_value='0'):
         """
         Compare a pref made up of integers separated by stops .s, with a
-        version string of the same format. The number of integers in each string
-        does not need to match. The comparison is done by converting each to an
-        integer array and comparing those. Both version strings must be made
-        up of only integers, or this method will raise an unhandled exception
-        of type ValueError when the conversion to int fails.
+        version string of the same format. The number of integers in each
+        string does not need to match. The comparison is done by converting
+        each to an integer array and comparing those. Both version strings
+        must be made up of only integers, or this method will raise an
+        unhandled exception of type ValueError when the conversion to int
+        fails.
         """
         with self.marionette.using_context('chrome'):
             pref_value = self.prefs.get_pref(pref_name)
@@ -328,14 +330,14 @@ class EMESetupMixin(object):
 
                 match = re.search('^\d(.\d+)*$', pref_value)
                 if not match:
-                    self.logger.info('Pref %s is not a version string' % pref_name)
+                    self.logger.info('Pref %s is not a version string'
+                                     % pref_name)
                     return False
 
             pref_ints = [int(n) for n in pref_value.split('.')]
             minumum_ints = [int(n) for n in minimum_value.split('.')]
 
             return pref_ints >= minumum_ints
-
 
     def check_eme_prefs(self):
         with self.marionette.using_context('chrome'):
