@@ -12,6 +12,7 @@ DevToolsModules(
     'canvas.js',
     'css-properties.js',
     'csscoverage.js',
+    'device.js',
     'highlighters.js',
     'inspector.js',
     'preference.js',
