@@ -1909,6 +1909,13 @@ TabChild::RecvRealMouseButtonEvent(const WidgetMouseEvent& aEvent,
                                    const ScrollableLayerGuid& aGuid,
                                    const uint64_t& aInputBlockId)
 {
+  if (aInputBlockId) {
+    MOZ_ASSERT(aEvent.mFlags.mHandledByAPZ);
+    nsCOMPtr<nsIDocument> document(GetDocument());
+    APZCCallbackHelper::SendSetTargetAPZCNotification(
+      mPuppetWidget, document, aEvent, aGuid, aInputBlockId);
+  }
+
   nsEventStatus unused;
   InputAPZContext context(aGuid, aInputBlockId, unused);
 
@@ -1918,7 +1925,8 @@ TabChild::RecvRealMouseButtonEvent(const WidgetMouseEvent& aEvent,
       mPuppetWidget->GetDefaultScale());
   APZCCallbackHelper::DispatchWidgetEvent(localEvent);
 
-  if (aEvent.mFlags.mHandledByAPZ) {
+  if (aInputBlockId) {
+    MOZ_ASSERT(aEvent.mFlags.mHandledByAPZ);
     mAPZEventState->ProcessMouseEvent(aEvent, aGuid, aInputBlockId);
   }
   return true;
@@ -1929,7 +1937,8 @@ TabChild::RecvMouseWheelEvent(const WidgetWheelEvent& aEvent,
                               const ScrollableLayerGuid& aGuid,
                               const uint64_t& aInputBlockId)
 {
-  if (aEvent.mFlags.mHandledByAPZ) {
+  if (aInputBlockId) {
+    MOZ_ASSERT(aEvent.mFlags.mHandledByAPZ);
     nsCOMPtr<nsIDocument> document(GetDocument());
     APZCCallbackHelper::SendSetTargetAPZCNotification(
       mPuppetWidget, document, aEvent, aGuid, aInputBlockId);
@@ -1945,7 +1954,8 @@ TabChild::RecvMouseWheelEvent(const WidgetWheelEvent& aEvent,
     SendRespondStartSwipeEvent(aInputBlockId, localEvent.TriggersSwipe());
   }
 
-  if (aEvent.mFlags.mHandledByAPZ) {
+  if (aInputBlockId) {
+    MOZ_ASSERT(aEvent.mFlags.mHandledByAPZ);
     mAPZEventState->ProcessWheelEvent(localEvent, aGuid, aInputBlockId);
   }
   return true;
