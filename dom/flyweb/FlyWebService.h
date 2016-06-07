@@ -13,6 +13,7 @@
 #include "nsDataHashtable.h"
 #include "nsClassHashtable.h"
 #include "nsIObserver.h"
+#include "mozilla/MozPromise.h"
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/dom/FlyWebDiscoveryManagerBinding.h"
 #include "nsITimer.h"
@@ -30,9 +31,14 @@ class Promise;
 struct FlyWebPublishOptions;
 struct FlyWebFilter;
 class FlyWebPublishedServer;
+class FlyWebPublishedServerImpl;
+class FlyWebPublishedServerParent;
 class FlyWebPairingCallback;
 class FlyWebDiscoveryManager;
 class FlyWebMDNSService;
+
+typedef MozPromise<RefPtr<FlyWebPublishedServer>, nsresult, false>
+  FlyWebPublishPromise;
 
 class FlyWebService final : public nsIObserver
 {
@@ -48,10 +54,10 @@ public:
     return do_AddRef(GetOrCreate());
   }
 
-  already_AddRefed<Promise> PublishServer(const nsAString& aName,
-                                          const FlyWebPublishOptions& aOptions,
-                                          nsPIDOMWindowInner* aWindow,
-                                          ErrorResult& aRv);
+  already_AddRefed<FlyWebPublishPromise>
+    PublishServer(const nsAString& aName,
+                  const FlyWebPublishOptions& aOptions,
+                  nsPIDOMWindowInner* aWindow);
 
   void UnregisterServer(FlyWebPublishedServer* aServer);
 
@@ -74,8 +80,8 @@ public:
   void RegisterDiscoveryManager(FlyWebDiscoveryManager* aDiscoveryManager);
   void UnregisterDiscoveryManager(FlyWebDiscoveryManager* aDiscoveryManager);
 
-  // Should only be called by FlyWebPublishedServer
-  void StartDiscoveryOf(FlyWebPublishedServer* aServer);
+  // Should only be called by FlyWebPublishedServerImpl
+  void StartDiscoveryOf(FlyWebPublishedServerImpl* aServer);
 
 private:
   FlyWebService();
