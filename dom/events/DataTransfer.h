@@ -16,7 +16,6 @@
 #include "nsIDragService.h"
 #include "nsCycleCollectionParticipant.h"
 
-#include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
 #include "mozilla/dom/File.h"

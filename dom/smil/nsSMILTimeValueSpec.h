@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "nsSMILTimeValueSpecParams.h"
 #include "nsReferencedElement.h"
-#include "nsAutoPtr.h"
 #include "nsIDOMEventListener.h"
 
 class nsAString;

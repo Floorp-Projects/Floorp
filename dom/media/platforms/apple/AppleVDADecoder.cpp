@@ -16,7 +16,6 @@
 #include "MediaData.h"
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/SyncRunnable.h"
-#include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "mozilla/Logging.h"
 #include "VideoUtils.h"

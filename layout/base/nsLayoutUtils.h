@@ -12,7 +12,6 @@
 #include "mozilla/TypedEnumBits.h"
 #include "nsBoundingMetrics.h"
 #include "nsChangeHint.h"
-#include "nsAutoPtr.h"
 #include "nsFrameList.h"
 #include "mozilla/layout/FrameChildList.h"
 #include "nsThreadUtils.h"

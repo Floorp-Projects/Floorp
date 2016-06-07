@@ -10,6 +10,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/EventForwards.h"
+#include "nsAutoPtr.h"
 #include "nsIObjectFrame.h"
 #include "nsFrame.h"
 #include "nsRegion.h"

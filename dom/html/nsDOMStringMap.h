@@ -8,7 +8,6 @@
 #define nsDOMStringMap_h
 
 #include "nsCycleCollectionParticipant.h"
-#include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "nsString.h"
 #include "nsWrapperCache.h"

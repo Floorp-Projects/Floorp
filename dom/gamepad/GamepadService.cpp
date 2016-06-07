@@ -16,7 +16,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticPtr.h"
 
-#include "nsAutoPtr.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMWindow.h"

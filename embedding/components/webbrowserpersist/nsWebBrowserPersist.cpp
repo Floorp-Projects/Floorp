@@ -10,6 +10,7 @@
 #include "nsIFileStreams.h"       // New Necko file streams
 #include <algorithm>
 
+#include "nsAutoPtr.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"
 #include "nsIInterfaceRequestorUtils.h"

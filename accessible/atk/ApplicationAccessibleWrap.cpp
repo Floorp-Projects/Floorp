@@ -8,7 +8,6 @@
 
 #include "nsCOMPtr.h"
 #include "nsMai.h"
-#include "nsAutoPtr.h"
 #include "nsAccessibilityService.h"
 
 #include <gtk/gtk.h>

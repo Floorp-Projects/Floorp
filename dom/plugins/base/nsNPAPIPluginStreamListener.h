@@ -10,7 +10,6 @@
 #include "nsIHTTPHeaderListener.h"
 #include "nsIRequest.h"
 #include "nsITimer.h"
-#include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsIOutputStream.h"
 #include "nsIPluginInstanceOwner.h"

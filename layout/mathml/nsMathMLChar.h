@@ -6,7 +6,6 @@
 #ifndef nsMathMLChar_h___
 #define nsMathMLChar_h___
 
-#include "nsAutoPtr.h"
 #include "nsColor.h"
 #include "nsMathMLOperators.h"
 #include "nsPoint.h"

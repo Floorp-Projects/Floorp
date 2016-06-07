@@ -11,7 +11,6 @@
 #include "gfxRect.h"                    // for gfxRect
 #include "gfx2DGlue.h"
 #include "mozilla/mozalloc.h"           // for operator new
-#include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_ASSERTION
 #include "nsISupportsImpl.h"            // for Layer::AddRef, etc

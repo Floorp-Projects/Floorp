@@ -17,7 +17,6 @@
 #include "nsTArray.h"
 #include "nsTreeStyleCache.h"
 #include "nsTreeColumns.h"
-#include "nsAutoPtr.h"
 #include "nsDataHashtable.h"
 #include "imgIRequest.h"
 #include "imgINotificationObserver.h"

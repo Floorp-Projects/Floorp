@@ -22,7 +22,6 @@
 #include "mozilla/dom/cache/Types.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozStorageHelper.h"
-#include "nsAutoPtr.h"
 #include "nsIInputStream.h"
 #include "nsID.h"
 #include "nsIFile.h"

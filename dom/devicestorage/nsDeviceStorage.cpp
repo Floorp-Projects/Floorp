@@ -29,7 +29,6 @@
 #include "mozilla/ipc/BackgroundUtils.h" // for PrincipalInfoToPrincipal
 
 #include "nsArrayUtils.h"
-#include "nsAutoPtr.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsGlobalWindow.h"
 #include "nsServiceManagerUtils.h"

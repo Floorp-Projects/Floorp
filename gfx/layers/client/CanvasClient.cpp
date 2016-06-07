@@ -21,7 +21,6 @@
 #include "mozilla/layers/LayersTypes.h"
 #include "mozilla/layers/TextureClient.h"  // for TextureClient, etc
 #include "mozilla/layers/TextureClientOGL.h"
-#include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsDebug.h"                    // for printf_stderr, NS_ASSERTION
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType, etc
 #include "TextureClientSharedSurface.h"

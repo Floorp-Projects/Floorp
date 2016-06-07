@@ -6,6 +6,7 @@
 #ifndef MediaDecoderOwner_h_
 #define MediaDecoderOwner_h_
 #include "AbstractMediaDecoder.h"
+#include "nsAutoPtr.h"
 
 namespace mozilla {
 

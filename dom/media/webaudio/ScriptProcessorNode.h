@@ -8,7 +8,6 @@
 #define ScriptProcessorNode_h_
 
 #include "AudioNode.h"
-#include "nsAutoPtr.h"
 
 namespace mozilla {
 namespace dom {

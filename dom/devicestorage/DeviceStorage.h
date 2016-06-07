@@ -7,6 +7,7 @@
 #ifndef DeviceStorage_h
 #define DeviceStorage_h
 
+#include "nsAutoPtr.h"
 #include "nsIFile.h"
 #include "nsIPrincipal.h"
 #include "mozilla/DOMEventTargetHelper.h"

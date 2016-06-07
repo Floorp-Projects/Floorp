@@ -9,7 +9,6 @@
 #include "mozilla/Attributes.h"
 #include "nsIExpatSink.h"
 #include "nsIXMLContentSink.h"
-#include "nsAutoPtr.h"
 #include "nsNodeInfoManager.h"
 #include "nsWeakPtr.h"
 #include "nsXULElement.h"

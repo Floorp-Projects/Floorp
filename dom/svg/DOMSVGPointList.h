@@ -7,7 +7,6 @@
 #ifndef MOZILLA_DOMSVGPOINTLIST_H__
 #define MOZILLA_DOMSVGPOINTLIST_H__
 
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"

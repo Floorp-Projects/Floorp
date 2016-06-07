@@ -6,6 +6,7 @@
 #ifndef FRAMELAYERBUILDER_H_
 #define FRAMELAYERBUILDER_H_
 
+#include "nsAutoPtr.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 #include "nsTArray.h"

@@ -10,7 +10,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "nsString.h"
 #include "nsWrapperCache.h"
-#include "nsAutoPtr.h"
 #include "js/TypeDecls.h"
 
 #include "mozilla/Attributes.h"

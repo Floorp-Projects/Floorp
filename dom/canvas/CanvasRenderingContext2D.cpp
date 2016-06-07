@@ -8,6 +8,7 @@
 #include "mozilla/gfx/Helpers.h"
 #include "nsXULElement.h"
 
+#include "nsAutoPtr.h"
 #include "nsIServiceManager.h"
 #include "nsMathUtils.h"
 #include "SVGImageContext.h"

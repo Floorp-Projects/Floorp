@@ -25,7 +25,6 @@
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor
 #include "mozilla/mozalloc.h"           // for operator delete
 #include "mozilla/gfx/CriticalSection.h"
-#include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsISupportsImpl.h"            // for TextureImage::AddRef, etc
 #include "GfxTexturesReporter.h"

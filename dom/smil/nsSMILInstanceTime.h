@@ -8,7 +8,6 @@
 #define NS_SMILINSTANCETIME_H_
 
 #include "nsSMILTimeValue.h"
-#include "nsAutoPtr.h"
 
 class nsSMILInterval;
 class nsSMILTimeContainer;

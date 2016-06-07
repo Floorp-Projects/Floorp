@@ -16,7 +16,6 @@
 #include "mozilla/Attributes.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
-#include "nsAutoPtr.h"
 #include "nsPIDOMWindow.h"
 
 class nsGlobalWindow;

@@ -12,7 +12,6 @@
 #include "nsIMobileMessageCursorCallback.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 
 class nsICursorContinueCallback;
 

@@ -11,7 +11,6 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Promise.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsITelephonyService.h"

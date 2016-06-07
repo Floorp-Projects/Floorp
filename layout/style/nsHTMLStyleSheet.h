@@ -12,7 +12,6 @@
 #ifndef nsHTMLStyleSheet_h_
 #define nsHTMLStyleSheet_h_
 
-#include "nsAutoPtr.h"
 #include "nsColor.h"
 #include "nsCOMPtr.h"
 #include "nsIStyleRule.h"

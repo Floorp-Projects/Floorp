@@ -19,6 +19,7 @@
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "MediaDecoderStateMachine.h"
 #include "MediaDecoderReader.h"
+#include <nsAutoPtr.h>
 #include <nsAutoRef.h>
 #include <nsDeque.h>
 #include <nsTArray.h>

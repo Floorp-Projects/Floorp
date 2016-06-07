@@ -26,7 +26,6 @@
 #include "mozilla/layers/ShadowLayers.h"  // for ShadowLayerForwarder, etc
 #include "mozilla/mozalloc.h"           // for operator new
 #include "gfxEnv.h"
-#include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_ERROR
 

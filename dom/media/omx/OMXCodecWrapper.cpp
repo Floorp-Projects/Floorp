@@ -22,6 +22,7 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/layers/GrallocTextureClient.h"
+#include "nsAutoPtr.h"
 
 using namespace mozilla;
 using namespace mozilla::gfx;

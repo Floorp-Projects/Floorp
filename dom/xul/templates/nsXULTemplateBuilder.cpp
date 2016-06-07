@@ -17,6 +17,7 @@
 
  */
 
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsIContent.h"

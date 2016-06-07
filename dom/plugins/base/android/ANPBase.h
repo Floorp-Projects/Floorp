@@ -5,7 +5,6 @@
 
 #include <stdlib.h>
 #include "android_npapi.h"
-#include "nsAutoPtr.h"
 #include "nsISupportsImpl.h"
 
 #define NOT_IMPLEMENTED_FATAL() do {                                    \

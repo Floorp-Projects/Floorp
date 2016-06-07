@@ -22,7 +22,6 @@
 #include "nsIImageLoadingContent.h"
 #include "nsIRequest.h"
 #include "mozilla/ErrorResult.h"
-#include "nsAutoPtr.h"
 #include "nsIContentPolicy.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/net/ReferrerPolicy.h"

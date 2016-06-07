@@ -10,7 +10,6 @@
 #include "mozilla/OwningNonNull.h"      // for OwningNonNull
 #include "mozilla/StyleSheetHandle.h"   // for StyleSheetHandle
 #include "mozilla/dom/Text.h"
-#include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed, nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
 #include "nsGkAtoms.h"

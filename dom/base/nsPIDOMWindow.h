@@ -11,7 +11,6 @@
 #include "mozIDOMWindow.h"
 
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "mozilla/dom/EventTarget.h"
 #include "js/TypeDecls.h"

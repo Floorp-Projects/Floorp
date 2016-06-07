@@ -6,6 +6,7 @@
 #include "CrashReporterParent.h"
 #include "mozilla/Snprintf.h"
 #include "mozilla/dom/ContentParent.h"
+#include "nsAutoPtr.h"
 #include "nsXULAppAPI.h"
 #include <time.h>
 
