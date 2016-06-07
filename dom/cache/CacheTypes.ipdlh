@@ -9,13 +9,13 @@ include IPCStream;
 include ChannelInfo;
 include PBackgroundSharedTypes;
 
-using HeadersGuardEnum from "mozilla/dom/cache/IPCUtils.h";
-using ReferrerPolicy from "mozilla/dom/cache/IPCUtils.h";
-using RequestCredentials from "mozilla/dom/cache/IPCUtils.h";
-using RequestMode from "mozilla/dom/cache/IPCUtils.h";
-using RequestCache from "mozilla/dom/cache/IPCUtils.h";
-using RequestRedirect from "mozilla/dom/cache/IPCUtils.h";
-using ResponseType from "mozilla/dom/cache/IPCUtils.h";
+using HeadersGuardEnum from "mozilla/dom/FetchIPCTypes.h";
+using ReferrerPolicy from "mozilla/dom/FetchIPCTypes.h";
+using RequestCredentials from "mozilla/dom/FetchIPCTypes.h";
+using RequestMode from "mozilla/dom/FetchIPCTypes.h";
+using RequestCache from "mozilla/dom/FetchIPCTypes.h";
+using RequestRedirect from "mozilla/dom/FetchIPCTypes.h";
+using ResponseType from "mozilla/dom/FetchIPCTypes.h";
 using mozilla::void_t from "ipc/IPCMessageUtils.h";
 using struct nsID from "nsID.h";
 
