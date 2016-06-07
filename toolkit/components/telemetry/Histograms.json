@@ -5586,7 +5586,7 @@
   },
   "SEARCH_SERVICE_HAS_UPDATES": {
     "alert_emails": ["florian@mozilla.com"],
-    "expires_in_version": "50",
+    "expires_in_version": "55",
     "kind": "boolean",
     "bug_numbers": [1259510],
     "description": "Recorded once per session near startup: records true/false whether the search service has engines with update URLs.",
@@ -5594,7 +5594,7 @@
   },
   "SEARCH_SERVICE_HAS_ICON_UPDATES": {
     "alert_emails": ["florian@mozilla.com"],
-    "expires_in_version": "50",
+    "expires_in_version": "55",
     "kind": "boolean",
     "bug_numbers": [1259510],
     "description": "Recorded once per session near startup: records true/false whether the search service has engines with icon update URLs.",

@@ -13,11 +13,11 @@ const URL = EXAMPLE_URL.replace("http:", "https:");
 const TEST_URL = URL + "service-workers/status-codes.html";
 
 var test = Task.async(function* () {
-  let [tab, debuggee, monitor] = yield initNetMonitor(TEST_URL, null, true);
+  let [, debuggee, monitor] = yield initNetMonitor(TEST_URL, null, true);
   info("Starting test... ");
 
-  let { document, L10N, NetMonitorView } = monitor.panelWin;
-  let { RequestsMenu, NetworkDetails } = NetMonitorView;
+  let { NetMonitorView } = monitor.panelWin;
+  let { RequestsMenu } = NetMonitorView;
 
   const REQUEST_DATA = [
     {
@@ -29,7 +29,8 @@ var test = Task.async(function* () {
         displayedStatus: "service worker",
         type: "plain",
         fullMimeType: "text/plain; charset=UTF-8"
-      }
+      },
+      stackFunctions: ["doXHR", "performRequests"]
     },
   ];
 
@@ -44,11 +45,26 @@ var test = Task.async(function* () {
   for (let request of REQUEST_DATA) {
     let item = RequestsMenu.getItemAtIndex(index);
 
-    info("Verifying request #" + index);
+    info(`Verifying request #${index}`);
     yield verifyRequestItemTarget(item, request.method, request.uri, request.details);
+
+    let { stacktrace } = item.attachment.cause;
+    let stackLen = stacktrace ? stacktrace.length : 0;
+
+    ok(stacktrace, `Request #${index} has a stacktrace`);
+    ok(stackLen >= request.stackFunctions.length,
+      `Request #${index} has a stacktrace with enough (${stackLen}) items`);
+
+    request.stackFunctions.forEach((functionName, j) => {
+      is(stacktrace[j].functionName, functionName,
+      `Request #${index} has the correct function at position #${j} on the stack`);
+    });
 
     index++;
   }
+
+  info("Unregistering the service worker...");
+  yield debuggee.unregisterServiceWorker();
 
   yield teardown(monitor);
   finish();

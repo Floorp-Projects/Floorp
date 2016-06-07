@@ -72,6 +72,8 @@ var checkPingsSaved = Task.async(function* (pingIds) {
 function run_test() {
   // Trigger a proper telemetry init.
   do_get_profile(true);
+  // Make sure we don't generate unexpected pings due to pref changes.
+  setEmptyPrefWatchlist();
   Services.prefs.setBoolPref(PREF_TELEMETRY_ENABLED, true);
   run_next_test();
 }
