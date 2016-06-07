@@ -42,8 +42,8 @@ fuzzy-if(Android,7,4) skip-if(!asyncPan) == perspective-scrolling-3.html perspec
 fuzzy-if(Android,7,4) skip-if(!asyncPan) == perspective-scrolling-4.html perspective-scrolling-4-ref.html
 pref(apz.disable_for_scroll_linked_effects,true) skip-if(!asyncPan) == disable-apz-for-sle-pages.html disable-apz-for-sle-pages-ref.html
 fuzzy-if(browserIsRemote&&d2d,1,19) skip-if(!asyncPan) == background-blend-mode-1.html background-blend-mode-1-ref.html
-skip-if(!asyncPan) != opaque-fractional-displayport-1.html about:blank
-skip-if(!asyncPan) != opaque-fractional-displayport-2.html about:blank
+skip-if(Android||!asyncPan) != opaque-fractional-displayport-1.html about:blank
+skip-if(Android||!asyncPan) != opaque-fractional-displayport-2.html about:blank
 
 # for the following tests, we want to disable the low-precision buffer
 # as it will expand the displayport beyond what the test specifies in
