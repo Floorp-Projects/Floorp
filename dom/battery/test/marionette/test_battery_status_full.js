@@ -1,9 +1,11 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 MARIONETTE_TIMEOUT = 10000;
 
-var battery = window.navigator.battery;
+var battery;
 var fromStatus = "full";
 var fromCharging = true;
 
