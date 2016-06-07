@@ -2132,9 +2132,13 @@ static bool
 ItemParticipatesIn3DContext(nsIFrame* aAncestor, nsDisplayItem* aItem)
 {
   nsIFrame* transformFrame;
-  if (aItem->GetType() == nsDisplayItem::TYPE_TRANSFORM ||
-      aItem->GetType() == nsDisplayItem::TYPE_OPACITY) {
+  if (aItem->GetType() == nsDisplayItem::TYPE_TRANSFORM) {
     transformFrame = aItem->Frame();
+  } else if (aItem->GetType() == nsDisplayItem::TYPE_OPACITY) {
+    transformFrame = aItem->Frame();
+    if (!transformFrame->IsTransformed()) {
+      return false;
+    }
   } else if (aItem->GetType() == nsDisplayItem::TYPE_PERSPECTIVE) {
     transformFrame = static_cast<nsDisplayPerspective*>(aItem)->TransformFrame();
   } else {
