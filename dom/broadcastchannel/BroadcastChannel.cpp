@@ -71,14 +71,12 @@ class InitializeRunnable final : public WorkerMainThreadRunnable
 {
 public:
   InitializeRunnable(WorkerPrivate* aWorkerPrivate, nsACString& aOrigin,
-                     PrincipalInfo& aPrincipalInfo, bool& aPrivateBrowsing,
-                     ErrorResult& aRv)
+                     PrincipalInfo& aPrincipalInfo, ErrorResult& aRv)
     : WorkerMainThreadRunnable(aWorkerPrivate,
                                NS_LITERAL_CSTRING("BroadcastChannel :: Initialize"))
     , mWorkerPrivate(GetCurrentThreadWorkerPrivate())
     , mOrigin(aOrigin)
     , mPrincipalInfo(aPrincipalInfo)
-    , mPrivateBrowsing(aPrivateBrowsing)
     , mRv(aRv)
   {
     MOZ_ASSERT(mWorkerPrivate);
@@ -127,11 +125,6 @@ public:
       return true;
     }
 
-    nsIDocument* doc = window->GetExtantDoc();
-    if (doc) {
-      mPrivateBrowsing = nsContentUtils::IsInPrivateBrowsing(doc);
-    }
-
     return true;
   }
 
@@ -139,7 +132,6 @@ private:
   WorkerPrivate* mWorkerPrivate;
   nsACString& mOrigin;
   PrincipalInfo& mPrincipalInfo;
-  bool& mPrivateBrowsing;
   ErrorResult& mRv;
 };
 
@@ -306,14 +298,12 @@ private:
 BroadcastChannel::BroadcastChannel(nsPIDOMWindowInner* aWindow,
                                    const PrincipalInfo& aPrincipalInfo,
                                    const nsACString& aOrigin,
-                                   const nsAString& aChannel,
-                                   bool aPrivateBrowsing)
+                                   const nsAString& aChannel)
   : DOMEventTargetHelper(aWindow)
   , mWorkerFeature(nullptr)
   , mPrincipalInfo(new PrincipalInfo(aPrincipalInfo))
   , mOrigin(aOrigin)
   , mChannel(aChannel)
-  , mPrivateBrowsing(aPrivateBrowsing)
   , mIsKeptAlive(false)
   , mInnerID(0)
   , mState(StateActive)
@@ -344,7 +334,6 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
 
   nsAutoCString origin;
   PrincipalInfo principalInfo;
-  bool privateBrowsing = false;
   WorkerPrivate* workerPrivate = nullptr;
 
   if (NS_IsMainThread()) {
@@ -381,19 +370,13 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
     if (NS_WARN_IF(aRv.Failed())) {
       return nullptr;
     }
-
-    nsIDocument* doc = window->GetExtantDoc();
-    if (doc) {
-      privateBrowsing = nsContentUtils::IsInPrivateBrowsing(doc);
-    }
   } else {
     JSContext* cx = aGlobal.Context();
     workerPrivate = GetWorkerPrivateFromContext(cx);
     MOZ_ASSERT(workerPrivate);
 
     RefPtr<InitializeRunnable> runnable =
-      new InitializeRunnable(workerPrivate, origin, principalInfo,
-                             privateBrowsing, aRv);
+      new InitializeRunnable(workerPrivate, origin, principalInfo, aRv);
     runnable->Dispatch(aRv);
   }
 
@@ -402,8 +385,7 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
   }
 
   RefPtr<BroadcastChannel> bc =
-    new BroadcastChannel(window, principalInfo, origin, aChannel,
-                         privateBrowsing);
+    new BroadcastChannel(window, principalInfo, origin, aChannel);
 
   // Register this component to PBackground.
   PBackgroundChild* actor = BackgroundChild::GetForCurrentThread();
@@ -522,8 +504,7 @@ BroadcastChannel::ActorCreated(PBackgroundChild* aActor)
   }
 
   PBroadcastChannelChild* actor =
-    aActor->SendPBroadcastChannelConstructor(*mPrincipalInfo, mOrigin, mChannel,
-                                             mPrivateBrowsing);
+    aActor->SendPBroadcastChannelConstructor(*mPrincipalInfo, mOrigin, mChannel);
 
   mActor = static_cast<BroadcastChannelChild*>(actor);
   MOZ_ASSERT(mActor);
