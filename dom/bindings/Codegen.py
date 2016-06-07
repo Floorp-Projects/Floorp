@@ -12782,18 +12782,19 @@ class CGDictionary(CGThing):
         # by the author needs to get converted, so we can remember if we have any
         # members present here.
         conversionReplacements["convert"] += "mIsAnyMemberPresent = true;\n"
-        if isChromeOnly(member):
-            conversion = ("if (!isNull) {\n"
-                          "  if (!nsContentUtils::ThreadsafeIsCallerChrome()) {\n"
-                          "    temp->setUndefined();\n"
-                          "  } else if (!${propGet}) {\n"
-                          "    return false;\n"
-                          "  }\n"
-                          "}\n")
-        else:
-            conversion = ("if (!isNull && !${propGet}) {\n"
-                          "  return false;\n"
-                          "}\n")
+        setTempValue = CGGeneric(dedent(
+            """
+            if (!${propGet}) {
+              return false;
+            }
+            """))
+        conditions = getConditionList(member, "cx", "*object")
+        if len(conditions) != 0:
+            setTempValue = CGIfElseWrapper(conditions.define(),
+                                           setTempValue,
+                                           CGGeneric("temp->setUndefined();\n"))
+        setTempValue = CGIfWrapper(setTempValue, "!isNull")
+        conversion = setTempValue.define()
         if member.defaultValue:
             if (member.type.isUnion() and
                 (not member.type.nullable() or
@@ -12903,8 +12904,9 @@ class CGDictionary(CGThing):
         if member.canHaveMissingValue():
             # Only do the conversion if we have a value
             conversion = CGIfWrapper(conversion, "%s.WasPassed()" % memberLoc)
-        if isChromeOnly(member):
-            conversion = CGIfWrapper(conversion, "nsContentUtils::ThreadsafeIsCallerChrome()")
+        conditions = getConditionList(member, "cx", "obj")
+        if len(conditions) != 0:
+            conversion = CGIfWrapper(conversion, conditions.define())
         return conversion
 
     def getMemberTrace(self, member):
