@@ -584,14 +584,27 @@ void AddGCCallback(xpcGCCallback cb);
 void RemoveGCCallback(xpcGCCallback cb);
 
 inline bool
+AreNonLocalConnectionsDisabled()
+{
+    static int disabledForTest = -1;
+    if (disabledForTest == -1) {
+        char *s = getenv("MOZ_DISABLE_NONLOCAL_CONNECTIONS");
+        if (s) {
+            disabledForTest = *s != '0';
+        } else {
+            disabledForTest = 0;
+        }
+    }
+    return disabledForTest;
+}
+
+inline bool
 IsInAutomation()
 {
     const char* prefName =
       "security.turn_off_all_security_so_that_viruses_can_take_over_this_computer";
-    char *s;
     return mozilla::Preferences::GetBool(prefName) &&
-        (s = getenv("MOZ_DISABLE_NONLOCAL_CONNECTIONS")) &&
-        !!strncmp(s, "0", 1);
+        AreNonLocalConnectionsDisabled();
 }
 
 } // namespace xpc
