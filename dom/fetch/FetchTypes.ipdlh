@@ -1,0 +1,59 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include IPCStream;
+include ChannelInfo;
+include PBackgroundSharedTypes;
+
+using HeadersGuardEnum from "mozilla/dom/FetchIPCTypes.h";
+using ReferrerPolicy from "mozilla/dom/FetchIPCTypes.h";
+using RequestCredentials from "mozilla/dom/FetchIPCTypes.h";
+using RequestMode from "mozilla/dom/FetchIPCTypes.h";
+using ResponseType from "mozilla/dom/FetchIPCTypes.h";
+using RequestRedirect from "mozilla/dom/FetchIPCTypes.h";
+using RequestCache from "mozilla/dom/FetchIPCTypes.h";
+
+namespace mozilla {
+namespace dom {
+
+struct HeadersEntry
+{
+  nsCString name;
+  nsCString value;
+};
+
+// Note, this does not yet serialize *all* of InternalRequest
+// Make sure that it contains the fields that you care about
+struct IPCInternalRequest
+{
+  nsCString[] urls;
+  nsCString method;
+  HeadersEntry[] headers;
+  HeadersGuardEnum headersGuard;
+  nsString referrer;
+  ReferrerPolicy referrerPolicy;
+  RequestMode mode;
+  RequestCredentials credentials;
+  uint32_t contentPolicyType;
+  RequestCache requestCache;
+  RequestRedirect requestRedirect;
+};
+
+// Note, this does not yet serialize *all* of InternalResponse
+// Make sure that it contains the fields that you care about
+struct IPCInternalResponse
+{
+  ResponseType type;
+  nsCString[] urlList;
+  uint32_t status;
+  nsCString statusText;
+  HeadersEntry[] headers;
+  HeadersGuardEnum headersGuard;
+  IPCChannelInfo channelInfo;
+  OptionalPrincipalInfo principalInfo;
+};
+
+
+} // namespace ipc
+} // namespace mozilla

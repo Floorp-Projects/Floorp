@@ -16,6 +16,7 @@
 #include "mozilla/dom/PFlyWebPublishedServerParent.h"
 #include "mozilla/dom/PFlyWebPublishedServerChild.h"
 #include "mozilla/MozPromise.h"
+#include "nsIDOMEventListener.h"
 
 class nsPIDOMWindowInner;
 
@@ -175,6 +176,8 @@ public:
 
   virtual bool RecvServerReady(const nsresult& aStatus) override;
   virtual bool RecvServerClose() override;
+  virtual bool RecvFetchRequest(const IPCInternalRequest& aRequest,
+                                const uint64_t& aRequestId) override;
 
   virtual void OnFetchResponse(InternalRequest* aRequest,
                                InternalResponse* aResponse) override;
@@ -192,16 +195,19 @@ public:
 private:
   ~FlyWebPublishedServerChild() {}
 
+  nsDataHashtable<nsRefPtrHashKey<InternalRequest>, uint64_t> mPendingRequests;
   bool mActorDestroyed;
 };
 
 class FlyWebPublishedServerParent final : public PFlyWebPublishedServerParent
+                                        , public nsIDOMEventListener
 {
 public:
   FlyWebPublishedServerParent(const nsAString& aName,
                               const FlyWebPublishOptions& aOptions);
 
-  NS_INLINE_DECL_REFCOUNTING(FlyWebPublishedServerParent)
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDOMEVENTLISTENER
 
 private:
   virtual void
@@ -210,9 +216,15 @@ private:
   virtual bool
   Recv__delete__() override;
 
+  virtual bool
+  RecvFetchResponse(const IPCInternalResponse& aResponse,
+                    const uint64_t& aRequestId) override;
+
   ~FlyWebPublishedServerParent() {}
 
   bool mActorDestroyed;
+  uint64_t mNextRequestId;
+  nsRefPtrHashtable<nsUint64HashKey, InternalRequest> mPendingRequests;
   RefPtr<FlyWebPublishedServerImpl> mPublishedServer;
 };
 
