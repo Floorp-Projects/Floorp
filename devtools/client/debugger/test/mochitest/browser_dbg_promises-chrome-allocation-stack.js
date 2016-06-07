@@ -11,7 +11,7 @@
 "use strict";
 
 const SOURCE_URL = "browser_dbg_promises-chrome-allocation-stack.js";
-const { PromisesFront } = require("devtools/server/actors/promises");
+const PromisesFront = require("devtools/shared/fronts/promises");
 var events = require("sdk/event/core");
 
 const STACK_DATA = [

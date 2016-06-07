@@ -15,6 +15,7 @@ DevToolsModules(
     'highlighters.js',
     'inspector.js',
     'preference.js',
+    'promises.js',
     'settings.js',
     'storage.js',
     'styles.js',
