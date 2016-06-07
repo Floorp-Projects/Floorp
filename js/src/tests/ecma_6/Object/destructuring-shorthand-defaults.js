@@ -123,5 +123,14 @@ assertEq((({a = 0} = {}) => a)({a: 1}), 1);
     assertEq(j, 2);
 }
 
+// Default destructuring values, which are variables, should be defined
+// within closures (Bug 1255167).
+{
+    let f = function(a){
+        return (function({aa = a}){ return aa; })({});
+    };
+    assertEq(f(9999), 9999);
+}
+
 if (typeof reportCompare == "function")
     reportCompare(true, true);
