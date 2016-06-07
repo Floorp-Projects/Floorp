@@ -1856,8 +1856,16 @@ DocAccessible::UpdateTreeOnRemoval(Accessible* aContainer, nsIContent* aChildNod
   // If child node is not accessible then look for its accessible children.
   Accessible* child = GetAccessible(aChildNode);
 #ifdef A11Y_LOG
-    logging::TreeInfo("process content removal", 0,
-                      "container", aContainer, "child", aChildNode);
+  if (logging::IsEnabled(logging::eTree)) {
+    logging::MsgBegin("TREE", "process content removal");
+    logging::Node("container", aContainer->GetNode());
+    logging::Node("child", aChildNode);
+    if (child)
+      logging::Address("child", child);
+    else
+      logging::MsgEntry("child accessible: null");
+
+    logging::MsgEnd();
   }
 #endif
 

@@ -632,6 +632,7 @@ logging::TreeInfo(const char* aMsg, uint32_t aExtraFlags, ...)
       MsgBegin("TREE", aMsg);
     }
     va_end(vl);
+
     MsgEnd();
 
     if (aExtraFlags & eStack) {
@@ -645,7 +646,7 @@ logging::TreeInfo(const char* aMsg, uint32_t aExtraFlags,
                   const char* aMsg1, Accessible* aAcc,
                   const char* aMsg2, nsINode* aNode)
 {
-  if (IsEnabledAll(logging::eTree | logging::aExtraFlags)) {
+  if (IsEnabledAll(logging::eTree | logging::eVerbose)) {
     MsgBegin("TREE", "%s; doc: %p", aMsg, aAcc ? aAcc->Document() : nullptr);
     AccessibleInfo(aMsg1, aAcc);
     Accessible* acc = aAcc->Document()->GetAccessible(aNode);
