@@ -33,6 +33,7 @@ class nsDisplayText;
 
 class nsTextFrame : public nsFrame {
   typedef mozilla::LayoutDeviceRect LayoutDeviceRect;
+  typedef mozilla::RawSelectionType RawSelectionType;
   typedef mozilla::TextRangeStyle TextRangeStyle;
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::Point Point;
@@ -159,7 +160,7 @@ public:
    * @param aType the type of selection added or removed
    */
   void SetSelectedRange(uint32_t aStart, uint32_t aEnd, bool aSelected,
-                        SelectionType aType);
+                        RawSelectionType aRawSelectionType);
 
   virtual FrameSearchResult PeekOffsetNoAmount(bool aForward, int32_t* aOffset) override;
   virtual FrameSearchResult PeekOffsetCharacter(bool aForward, int32_t* aOffset,
@@ -448,14 +449,15 @@ public:
   // our text, returned in aAllTypes.
   // Return false if the text was not painted and we should continue with
   // the fast path.
-  bool PaintTextWithSelectionColors(const PaintTextSelectionParams& aParams,
-                                    SelectionDetails* aDetails,
-                                    SelectionType* aAllTypes,
-                                    const nsCharClipDisplayItem::ClipEdges& aClipEdges);
+  bool PaintTextWithSelectionColors(
+         const PaintTextSelectionParams& aParams,
+         SelectionDetails* aDetails,
+         RawSelectionType* aAllRawSelectionTypes,
+         const nsCharClipDisplayItem::ClipEdges& aClipEdges);
   // helper: paint text decorations for text selected by aSelectionType
   void PaintTextSelectionDecorations(const PaintTextSelectionParams& aParams,
                                      SelectionDetails* aDetails,
-                                     SelectionType aSelectionType);
+                                     RawSelectionType aRawSelectionType);
 
   void DrawEmphasisMarks(gfxContext* aContext,
                          mozilla::WritingMode aWM,
@@ -734,7 +736,7 @@ protected:
    */
   void DrawSelectionDecorations(gfxContext* aContext,
                                 const LayoutDeviceRect& aDirtyRect,
-                                SelectionType aType,
+                                mozilla::RawSelectionType aRawSelectionType,
                                 nsTextPaintStyle& aTextPaintStyle,
                                 const TextRangeStyle &aRangeStyle,
                                 const Point& aPt,
@@ -767,7 +769,7 @@ protected:
    *                    background should be painted
    * @return            true if the selection affects colors, false otherwise
    */
-  static bool GetSelectionTextColors(SelectionType aType,
+  static bool GetSelectionTextColors(RawSelectionType aRawSelectionType,
                                      nsTextPaintStyle& aTextPaintStyle,
                                      const TextRangeStyle &aRangeStyle,
                                      nscolor* aForeground,
@@ -779,7 +781,7 @@ protected:
   static gfxFloat ComputeSelectionUnderlineHeight(
                     nsPresContext* aPresContext,
                     const gfxFont::Metrics& aFontMetrics,
-                    SelectionType aSelectionType);
+                    RawSelectionType aRawSelectionType);
 
   ContentOffsets GetCharacterOffsetAtFramePointInternal(nsPoint aPoint,
                    bool aForInsertionPoint);
