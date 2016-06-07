@@ -1280,8 +1280,8 @@ struct JSRuntime : public JS::shadow::Runtime,
     JSDestroyPrincipalsOp destroyPrincipals;
     JSReadPrincipalsOp readPrincipals;
 
-    /* Optional error reporter. */
-    JSErrorReporter     errorReporter;
+    /* Optional warning reporter. */
+    JS::WarningReporter warningReporter;
 
     JS::BuildIdOp buildIdOp;
 

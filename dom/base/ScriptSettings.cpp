@@ -311,8 +311,8 @@ AutoJSAPI::~AutoJSAPI()
 
   ReportException();
 
-  if (mOldErrorReporter.isSome()) {
-    JS_SetErrorReporter(JS_GetRuntime(cx()), mOldErrorReporter.value());
+  if (mOldWarningReporter.isSome()) {
+    JS::SetWarningReporter(JS_GetRuntime(cx()), mOldWarningReporter.value());
   }
 }
 
@@ -348,9 +348,9 @@ AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
   }
 
   JSRuntime* rt = JS_GetRuntime(aCx);
-  mOldErrorReporter.emplace(JS_GetErrorReporter(rt));
+  mOldWarningReporter.emplace(JS::GetWarningReporter(rt));
 
-  JS_SetErrorReporter(rt, WarningOnlyErrorReporter);
+  JS::SetWarningReporter(rt, WarningOnlyErrorReporter);
 
 #ifdef DEBUG
   if (haveException) {

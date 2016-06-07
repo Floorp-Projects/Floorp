@@ -244,18 +244,18 @@ js::CopyErrorReport(JSContext* cx, JSErrorReport* report)
 struct SuppressErrorsGuard
 {
     JSContext* cx;
-    JSErrorReporter prevReporter;
+    JS::WarningReporter prevReporter;
     JS::AutoSaveExceptionState prevState;
 
     explicit SuppressErrorsGuard(JSContext* cx)
       : cx(cx),
-        prevReporter(JS_SetErrorReporter(cx->runtime(), nullptr)),
+        prevReporter(JS::SetWarningReporter(cx->runtime(), nullptr)),
         prevState(cx)
     {}
 
     ~SuppressErrorsGuard()
     {
-        JS_SetErrorReporter(cx->runtime(), prevReporter);
+        JS::SetWarningReporter(cx->runtime(), prevReporter);
     }
 };
 

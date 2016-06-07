@@ -581,13 +581,8 @@ CompileError::throwError(JSContext* cx)
     if (ErrorToException(cx, message, &report, nullptr, nullptr))
         return;
 
-    // Like ReportError, don't call the error reporter if the embedding is
-    // responsible for handling exceptions. In this case the error reporter
-    // must only be used for warnings.
-    if (!JSREPORT_IS_WARNING(report.flags))
-        return;
-
-    CallErrorReporter(cx, message, &report);
+    if (JSREPORT_IS_WARNING(report.flags))
+        CallWarningReporter(cx, message, &report);
 }
 
 CompileError::~CompileError()
