@@ -5928,18 +5928,6 @@ JS_ClearPendingException(JSContext* cx)
     cx->clearPendingException();
 }
 
-JS_PUBLIC_API(bool)
-JS_ReportPendingException(JSContext* cx)
-{
-    AssertHeapIsIdle(cx);
-    CHECK_REQUEST(cx);
-
-    // This can only fail due to oom.
-    bool ok = ReportUncaughtException(cx);
-    MOZ_ASSERT(!cx->isExceptionPending());
-    return ok;
-}
-
 JS::AutoSaveExceptionState::AutoSaveExceptionState(JSContext* cx)
   : context(cx),
     wasPropagatingForcedReturn(cx->propagatingForcedReturn_),

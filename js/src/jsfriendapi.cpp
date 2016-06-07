@@ -1210,23 +1210,10 @@ js::PrepareScriptEnvironmentAndInvoke(JSContext* cx, HandleObject scope, ScriptE
 {
     MOZ_ASSERT(!cx->isExceptionPending());
 
-    if (cx->runtime()->scriptEnvironmentPreparer) {
-        cx->runtime()->scriptEnvironmentPreparer->invoke(scope, closure);
-        return;
-    }
+    MOZ_RELEASE_ASSERT(cx->runtime()->scriptEnvironmentPreparer,
+                       "Embedding needs to set a scriptEnvironmentPreparer callback");
 
-    JSAutoCompartment ac(cx, scope);
-    bool ok = closure(cx);
-
-    MOZ_ASSERT_IF(ok, !cx->isExceptionPending());
-
-    // NB: This does not affect Gecko, which has a prepareScriptEnvironment
-    // callback.
-    if (!ok) {
-        JS_ReportPendingException(cx);
-    }
-
-    MOZ_ASSERT(!cx->isExceptionPending());
+    cx->runtime()->scriptEnvironmentPreparer->invoke(scope, closure);
 }
 
 JS_FRIEND_API(void)

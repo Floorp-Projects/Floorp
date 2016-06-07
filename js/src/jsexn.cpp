@@ -661,32 +661,6 @@ ErrorReportToString(JSContext* cx, JSErrorReport* reportp)
     return ConcatStrings<CanGC>(cx, str, message);
 }
 
-bool
-js::ReportUncaughtException(JSContext* cx)
-{
-    if (!cx->isExceptionPending())
-        return true;
-
-    RootedValue exn(cx);
-    if (!cx->getPendingException(&exn)) {
-        cx->clearPendingException();
-        return false;
-    }
-
-    cx->clearPendingException();
-
-    ErrorReport err(cx);
-    if (!err.init(cx, exn, js::ErrorReport::WithSideEffects)) {
-        cx->clearPendingException();
-        return false;
-    }
-
-    cx->setPendingException(exn);
-    CallErrorReporter(cx, err.message(), err.report());
-    cx->clearPendingException();
-    return true;
-}
-
 ErrorReport::ErrorReport(JSContext* cx)
   : reportp(nullptr),
     message_(nullptr),

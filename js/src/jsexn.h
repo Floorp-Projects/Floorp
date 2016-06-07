@@ -54,25 +54,6 @@ extern bool
 ErrorToException(JSContext* cx, const char* message, JSErrorReport* reportp,
                  JSErrorCallback callback, void* userRef);
 
-/*
- * Called if a JS API call to js_Execute or js_InternalCall fails; calls the
- * error reporter with the error report associated with any uncaught exception
- * that has been raised.  Returns true if there was an exception pending, and
- * the error reporter was actually called.
- *
- * The JSErrorReport * that the error reporter is called with is currently
- * associated with a JavaScript object, and is not guaranteed to persist after
- * the object is collected.  Any persistent uses of the JSErrorReport contents
- * should make their own copy.
- *
- * The flags field of the JSErrorReport will have the JSREPORT_EXCEPTION flag
- * set; embeddings that want to silently propagate JavaScript exceptions to
- * other contexts may want to use an error reporter that ignores errors with
- * this flag.
- */
-extern bool
-ReportUncaughtException(JSContext* cx);
-
 extern JSErrorReport*
 ErrorFromException(JSContext* cx, HandleObject obj);
 

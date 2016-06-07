@@ -5413,9 +5413,6 @@ JS_SetPendingException(JSContext* cx, JS::HandleValue v);
 extern JS_PUBLIC_API(void)
 JS_ClearPendingException(JSContext* cx);
 
-extern JS_PUBLIC_API(bool)
-JS_ReportPendingException(JSContext* cx);
-
 namespace JS {
 
 /**
