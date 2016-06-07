@@ -223,6 +223,7 @@ testing/web-platform/tests for tests that may be shared
         else:
             editor = None
 
+        proc = None
         if editor:
             proc = subprocess.Popen("%s %s" % (editor, path), shell=True)
 
@@ -231,7 +232,9 @@ testing/web-platform/tests for tests that may be shared
             wpt_kwargs = vars(p.parse_args(["--manifest-update", path]))
             context.commands.dispatch("web-platform-tests", context, **wpt_kwargs)
 
-        proc.wait()
+        if proc:
+            proc.wait()
+
 
 def create_parser_wpt():
     from wptrunner import wptcommandline
