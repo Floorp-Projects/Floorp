@@ -1618,7 +1618,10 @@ MediaDecoderStateMachine::InitiateSeek(SeekJob aSeekJob)
                                       Move(aSeekJob), mInfo, Duration(),
                                       GetMediaTime(), AudioQueue(), VideoQueue());
   } else {
-    MOZ_ASSERT(false, "Cannot handle this seek task.");
+    // Use MOZ_DIAGNOSTIC_ASSERT here to test if a "VideoOnly" seek task could
+    // reach here, may come from a dormant state. Once we confirm it, we could
+    // than handle it.
+    MOZ_DIAGNOSTIC_ASSERT(false, "Cannot handle this seek task.");
   }
 
   // Stop playback now to ensure that while we're outside the monitor
