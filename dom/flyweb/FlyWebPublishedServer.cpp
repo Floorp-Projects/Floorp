@@ -13,9 +13,12 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/InternalResponse.h"
 #include "mozilla/ipc/IPCStreamUtils.h"
+#include "mozilla/net/NeckoParent.h"
+#include "mozilla/net/IPCTransportProvider.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/unused.h"
+#include "nsCharSeparatedTokenizer.h"
 #include "nsGlobalWindow.h"
 #include "WebSocketChannel.h"
 
@@ -295,6 +298,26 @@ FlyWebPublishedServerChild::RecvFetchRequest(const IPCInternalRequest& aRequest,
   return true;
 }
 
+bool
+FlyWebPublishedServerChild::RecvWebSocketRequest(const IPCInternalRequest& aRequest,
+                                                 const uint64_t& aRequestId,
+                                                 PTransportProviderChild* aProvider)
+{
+  LOG_I("FlyWebPublishedServerChild::RecvWebSocketRequest(%p)", this);
+
+  RefPtr<InternalRequest> request = new InternalRequest(aRequest);
+  mPendingRequests.Put(request, aRequestId);
+
+  // Not addreffing here. The addref was already done when the
+  // PTransportProvider child constructor original ran.
+  mPendingTransportProviders.Put(aRequestId,
+    dont_AddRef(static_cast<TransportProviderChild*>(aProvider)));
+
+  FireWebsocketEvent(request);
+
+  return true;
+}
+
 void
 FlyWebPublishedServerChild::ActorDestroy(ActorDestroyReason aWhy)
 {
@@ -328,21 +351,70 @@ FlyWebPublishedServerChild::OnFetchResponse(InternalRequest* aRequest,
 }
 
 already_AddRefed<nsITransportProvider>
-FlyWebPublishedServerChild::OnWebSocketAcceptInternal(InternalRequest* aConnectRequest,
+FlyWebPublishedServerChild::OnWebSocketAcceptInternal(InternalRequest* aRequest,
                                                       const Optional<nsAString>& aProtocol,
                                                       ErrorResult& aRv)
 {
   LOG_I("FlyWebPublishedServerChild::OnWebSocketAcceptInternal(%p)", this);
 
-  aRv.Throw(NS_ERROR_NOT_IMPLEMENTED);
-  return nullptr;
+  if (mActorDestroyed) {
+    LOG_I("FlyWebPublishedServerChild::OnWebSocketAcceptInternal(%p) - No actor!", this);
+    return nullptr;
+  }
+
+  uint64_t id = mPendingRequests.Get(aRequest);
+  MOZ_ASSERT(id);
+  mPendingRequests.Remove(aRequest);
+
+  RefPtr<TransportProviderChild> provider;
+  mPendingTransportProviders.Remove(id, getter_AddRefs(provider));
+
+  nsString protocol;
+  if (aProtocol.WasPassed()) {
+    protocol = aProtocol.Value();
+
+    nsAutoCString reqProtocols;
+    aRequest->Headers()->
+      Get(NS_LITERAL_CSTRING("Sec-WebSocket-Protocol"), reqProtocols, aRv);
+    if (!ContainsToken(reqProtocols, NS_ConvertUTF16toUTF8(protocol))) {
+      // Should throw a better error here
+      aRv.Throw(NS_ERROR_FAILURE);
+      return nullptr;
+    }
+  } else {
+    protocol.SetIsVoid(true);
+  }
+
+  Unused << SendWebSocketAccept(protocol, id);
+
+  return provider.forget();
 }
 
 void
-FlyWebPublishedServerChild::OnWebSocketResponse(InternalRequest* aConnectRequest,
+FlyWebPublishedServerChild::OnWebSocketResponse(InternalRequest* aRequest,
                                                 InternalResponse* aResponse)
 {
-  // Send ipdl message to parent
+  LOG_I("FlyWebPublishedServerChild::OnFetchResponse(%p)", this);
+
+  if (mActorDestroyed) {
+    LOG_I("FlyWebPublishedServerChild::OnFetchResponse(%p) - No actor!", this);
+    return;
+  }
+
+  uint64_t id = mPendingRequests.Get(aRequest);
+  MOZ_ASSERT(id);
+  mPendingRequests.Remove(aRequest);
+
+  mPendingTransportProviders.Remove(id);
+
+  IPCInternalResponse ipcResp;
+  UniquePtr<mozilla::ipc::AutoIPCStream> autoStream;
+  aResponse->ToIPC(&ipcResp, Manager(), autoStream);
+
+  Unused << SendWebSocketResponse(ipcResp, id);
+  if (autoStream) {
+    autoStream->TakeOptionalValue();
+  }
 }
 
 void
@@ -397,6 +469,8 @@ FlyWebPublishedServerParent::FlyWebPublishedServerParent(const nsAString& aName,
 
       mPublishedServer->AddEventListener(NS_LITERAL_STRING("fetch"),
                                          this, false, false, 2);
+      mPublishedServer->AddEventListener(NS_LITERAL_STRING("websocket"),
+                                         this, false, false, 2);
       mPublishedServer->AddEventListener(NS_LITERAL_STRING("close"),
                                          this, false, false, 2);
       Unused << SendServerReady(NS_OK);
@@ -435,6 +509,24 @@ FlyWebPublishedServerParent::HandleEvent(nsIDOMEvent* aEvent)
     return NS_OK;
   }
 
+  if (type.EqualsLiteral("websocket")) {
+    RefPtr<InternalRequest> request =
+      static_cast<FlyWebWebSocketEvent*>(aEvent)->Request()->GetInternalRequest();
+    uint64_t id = mNextRequestId++;
+    mPendingRequests.Put(id, request);
+
+    RefPtr<TransportProviderParent> provider =
+      static_cast<TransportProviderParent*>(
+        mozilla::net::gNeckoParent->SendPTransportProviderConstructor());
+
+    IPCInternalRequest ipcReq;
+    request->ToIPC(&ipcReq);
+    Unused << SendWebSocketRequest(ipcReq, id, provider);
+
+    mPendingTransportProviders.Put(id, provider.forget());
+    return NS_OK;
+  }
+
   MOZ_CRASH("Unknown event type");
 
   return NS_OK;
@@ -444,8 +536,8 @@ bool
 FlyWebPublishedServerParent::RecvFetchResponse(const IPCInternalResponse& aResponse,
                                                const uint64_t& aRequestId)
 {
-  RefPtr<InternalRequest> request = mPendingRequests.GetWeak(aRequestId);
-  mPendingRequests.Remove(aRequestId);
+  RefPtr<InternalRequest> request;
+  mPendingRequests.Remove(aRequestId, getter_AddRefs(request));
   if (!request) {
      static_cast<ContentParent*>(Manager())->KillHard("unknown request id");
      return false;
@@ -454,6 +546,58 @@ FlyWebPublishedServerParent::RecvFetchResponse(const IPCInternalResponse& aRespo
   RefPtr<InternalResponse> response = InternalResponse::FromIPC(aResponse);
 
   mPublishedServer->OnFetchResponse(request, response);
+
+  return true;
+}
+
+bool
+FlyWebPublishedServerParent::RecvWebSocketResponse(const IPCInternalResponse& aResponse,
+                                                   const uint64_t& aRequestId)
+{
+  mPendingTransportProviders.Remove(aRequestId);
+
+  RefPtr<InternalRequest> request;
+  mPendingRequests.Remove(aRequestId, getter_AddRefs(request));
+  if (!request) {
+     static_cast<ContentParent*>(Manager())->KillHard("unknown websocket request id");
+     return false;
+  }
+
+  RefPtr<InternalResponse> response = InternalResponse::FromIPC(aResponse);
+
+  mPublishedServer->OnWebSocketResponse(request, response);
+
+  return true;
+}
+
+bool
+FlyWebPublishedServerParent::RecvWebSocketAccept(const nsString& aProtocol,
+                                                 const uint64_t& aRequestId)
+{
+  RefPtr<TransportProviderParent> providerIPC;
+  mPendingTransportProviders.Remove(aRequestId, getter_AddRefs(providerIPC));
+
+  RefPtr<InternalRequest> request;
+  mPendingRequests.Remove(aRequestId, getter_AddRefs(request));
+
+  if (!request || !providerIPC) {
+     static_cast<ContentParent*>(Manager())->KillHard("unknown websocket request id");
+     return false;
+  }
+
+  Optional<nsAString> protocol;
+  if (!aProtocol.IsVoid()) {
+    protocol = &aProtocol;
+  }
+
+  ErrorResult result;
+  nsCOMPtr<nsITransportProvider> providerServer =
+    mPublishedServer->OnWebSocketAcceptInternal(request, protocol, result);
+  if (result.Failed()) {
+    return false;
+  }
+
+  providerServer->SetListener(providerIPC);
 
   return true;
 }
@@ -473,6 +617,8 @@ FlyWebPublishedServerParent::Recv__delete__()
 
   if (mPublishedServer) {
     mPublishedServer->RemoveEventListener(NS_LITERAL_STRING("fetch"),
+                                          this, false);
+    mPublishedServer->RemoveEventListener(NS_LITERAL_STRING("websocket"),
                                           this, false);
     mPublishedServer->RemoveEventListener(NS_LITERAL_STRING("close"),
                                           this, false);
