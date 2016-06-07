@@ -297,6 +297,11 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
         'NetworkInfoServiceLinux.cpp',
         'nsNetworkInfoService.cpp',
     ]
+elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+    SOURCES += [
+        'NetworkInfoServiceLinux.cpp',
+        'nsNetworkInfoService.cpp',
+    ]
 
 if CONFIG['MOZ_ENABLE_QTNETWORK']:
     SOURCES += [
