@@ -63,6 +63,21 @@ public:
     return mName;
   }
 
+  void GetCategory(nsAString& aCategory)
+  {
+    aCategory = mCategory;
+  }
+
+  bool Http()
+  {
+    return mHttp;
+  }
+
+  bool Message()
+  {
+    return mMessage;
+  }
+
   void GetUiUrl(nsAString& aUiUrl)
   {
     aUiUrl = mUiUrl;
@@ -105,6 +120,9 @@ private:
   nsCOMPtr<nsICancelable> mMDNSCancelRegister;
 
   nsString mName;
+  nsString mCategory;
+  bool mHttp;
+  bool mMessage;
   nsString mUiUrl;
 
   bool mIsRegistered;
