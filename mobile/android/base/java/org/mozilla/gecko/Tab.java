@@ -305,6 +305,13 @@ public class Tab {
         return mSiteIdentity;
     }
 
+    public void resetSiteIdentity() {
+        if (mSiteIdentity != null) {
+            mSiteIdentity.reset();
+            Tabs.getInstance().notifyListeners(this, Tabs.TabEvents.SECURITY_CHANGE);
+        }
+    }
+
     public SiteLogins getSiteLogins() {
         return mSiteLogins;
     }
