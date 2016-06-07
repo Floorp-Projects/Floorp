@@ -14,6 +14,7 @@
 
 #include "MediaDataDemuxer.h"
 #include "MediaDecoderReader.h"
+#include "nsAutoPtr.h"
 #include "PDMFactory.h"
 
 namespace mozilla {

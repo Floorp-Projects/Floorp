@@ -28,7 +28,6 @@
 #include "nsIDOMHTMLTextAreaElement.h"
 #include "nsNodeInfoManager.h"
 #include "nsContentCreatorFunctions.h"
-#include "nsAutoPtr.h"
 #include "nsPresState.h"
 #include "nsIHTMLDocument.h"
 #include "nsContentUtils.h"

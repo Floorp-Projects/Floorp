@@ -11,6 +11,7 @@
 #include "mozilla/dom/TabParent.h"
 #include "mozilla/ipc/BackgroundParent.h"
 #include "mozilla/unused.h"
+#include "nsAutoPtr.h"
 
 namespace mozilla {
 

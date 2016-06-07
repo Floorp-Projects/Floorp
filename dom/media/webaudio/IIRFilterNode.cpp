@@ -9,6 +9,8 @@
 
 #include "blink/IIRFilter.h"
 
+#include "nsGkAtoms.h"
+
 namespace mozilla {
 namespace dom {
 

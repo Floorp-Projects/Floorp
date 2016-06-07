@@ -7,7 +7,6 @@
 #define InsertTextTxn_h__
 
 #include "EditTxn.h"                    // base class
-#include "nsAutoPtr.h"                  // nsRefPtr members
 #include "nsCycleCollectionParticipant.h" // various macros
 #include "nsID.h"                       // NS_DECLARE_STATIC_IID_ACCESSOR
 #include "nsISupportsImpl.h"            // NS_DECL_ISUPPORTS_INHERITED

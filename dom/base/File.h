@@ -15,7 +15,6 @@
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Date.h"
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMBlob.h"

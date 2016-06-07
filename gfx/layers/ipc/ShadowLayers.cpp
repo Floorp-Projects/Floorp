@@ -31,7 +31,6 @@
 #include "ShadowLayerUtils.h"
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
 #include "mozilla/mozalloc.h"           // for operator new, etc
-#include "nsAutoPtr.h"                  // for nsRefPtr, getter_AddRefs, etc
 #include "nsTArray.h"                   // for AutoTArray, nsTArray, etc
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType, etc
 #include "mozilla/ReentrantMonitor.h"

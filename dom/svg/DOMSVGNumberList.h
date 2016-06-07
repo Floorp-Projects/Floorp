@@ -8,7 +8,6 @@
 #define MOZILLA_DOMSVGNUMBERLIST_H__
 
 #include "DOMSVGAnimatedNumberList.h"
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
 #include "nsTArray.h"

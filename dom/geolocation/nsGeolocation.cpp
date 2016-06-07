@@ -9,6 +9,7 @@
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/Telemetry.h"
 
+#include "nsAutoPtr.h"
 #include "nsISettingsService.h"
 
 #include "nsGeolocation.h"

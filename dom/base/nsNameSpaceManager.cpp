@@ -12,7 +12,6 @@
 #include "nsNameSpaceManager.h"
 
 #include "nscore.h"
-#include "nsAutoPtr.h"
 #include "mozilla/dom/NodeInfo.h"
 #include "nsCOMArray.h"
 #include "nsContentCreatorFunctions.h"

@@ -11,6 +11,7 @@
 #include "mozIGeckoMediaPluginService.h"
 #include "mozilla/CDMProxy.h"
 #include "mozilla/unused.h"
+#include "nsAutoPtr.h"
 #include "nsServiceManagerUtils.h"
 #include "MediaInfo.h"
 #include "nsClassHashtable.h"

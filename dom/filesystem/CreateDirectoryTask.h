@@ -8,7 +8,6 @@
 #define mozilla_dom_CreateDirectoryTask_h
 
 #include "mozilla/dom/FileSystemTaskBase.h"
-#include "nsAutoPtr.h"
 #include "mozilla/ErrorResult.h"
 
 namespace mozilla {

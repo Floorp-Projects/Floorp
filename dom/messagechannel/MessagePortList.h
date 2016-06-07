@@ -12,7 +12,6 @@
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/dom/MessagePort.h"
 #include "nsWrapperCache.h"
-#include "nsAutoPtr.h"
 #include "nsTArray.h"
 
 namespace mozilla {

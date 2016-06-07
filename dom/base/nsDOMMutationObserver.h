@@ -15,7 +15,6 @@
 #include "nsStubAnimationObserver.h"
 #include "nsCOMArray.h"
 #include "nsTArray.h"
-#include "nsAutoPtr.h"
 #include "nsIVariant.h"
 #include "nsContentList.h"
 #include "mozilla/dom/Element.h"

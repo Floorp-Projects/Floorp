@@ -19,7 +19,6 @@
 #include "mozilla/gfx/Rect.h"           // for Rect, IntRect
 #include "mozilla/gfx/Types.h"          // for Float, etc
 #include "mozilla/layers/LayersTypes.h"
-#include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsISupportsImpl.h"            // for gfxContext::Release, etc
 #include "nsPoint.h"                    // for nsIntPoint

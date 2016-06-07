@@ -7,7 +7,6 @@
 #ifndef nsGeoPosition_h
 #define nsGeoPosition_h
 
-#include "nsAutoPtr.h"
 #include "nsIDOMGeoPositionCoords.h"
 #include "nsIDOMGeoPosition.h"
 #include "nsString.h"

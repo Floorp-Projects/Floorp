@@ -12,7 +12,6 @@
 #include "VPXDecoder.h"
 
 #include "nsThreadUtils.h"
-#include "nsAutoPtr.h"
 #include "nsPromiseFlatString.h"
 #include "nsIGfxInfo.h"
 

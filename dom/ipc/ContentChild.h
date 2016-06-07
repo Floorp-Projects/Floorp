@@ -12,6 +12,7 @@
 #include "mozilla/dom/nsIContentChild.h"
 #include "mozilla/dom/PBrowserOrId.h"
 #include "mozilla/dom/PContentChild.h"
+#include "nsAutoPtr.h"
 #include "nsHashKeys.h"
 #include "nsIObserver.h"
 #include "nsTHashtable.h"

@@ -11,6 +11,7 @@
 #include "mozilla/a11y/Role.h"
 #include "mozilla/a11y/States.h"
 
+#include "nsAutoPtr.h"
 #include "nsIContent.h"
 #include "nsString.h"
 #include "nsTArray.h"

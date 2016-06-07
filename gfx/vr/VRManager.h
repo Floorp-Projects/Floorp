@@ -6,7 +6,6 @@
 #ifndef GFX_VR_MANAGER_H
 #define GFX_VR_MANAGER_H
 
-#include "nsAutoPtr.h"
 #include "nsRefPtrHashtable.h"
 #include "nsTArray.h"
 #include "nsTHashtable.h"

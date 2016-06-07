@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/voicemail/PVoicemailParent.h"
 #include "mozilla/dom/voicemail/VoicemailParent.h"
-#include "nsAutoPtr.h"
 #include "nsIVoicemailService.h"
 #include "nsString.h"
 

@@ -28,7 +28,6 @@
 #include "nsBoxLayoutState.h"
 #include "nsIServiceManager.h"
 #include "nsContainerFrame.h"
-#include "nsAutoPtr.h"
 #include "nsContentCID.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"

@@ -16,7 +16,6 @@
 #include "mozilla/gfx/BasePoint.h"      // for BasePoint
 #include "mozilla/gfx/BaseRect.h"       // for BaseRect
 #include "mozilla/gfx/Point.h"          // for Intsize
-#include "nsAutoPtr.h"                  // for nsRefPtr, nsAutoPtr
 #include "nsDebug.h"                    // for NS_ASSERTION
 #include "nsISupportsImpl.h"            // for gfxContext::Release, etc
 #include "nsPoint.h"                    // for nsIntPoint

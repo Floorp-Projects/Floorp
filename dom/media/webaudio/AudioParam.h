@@ -10,7 +10,6 @@
 #include "AudioParamTimeline.h"
 #include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsAutoPtr.h"
 #include "AudioNode.h"
 #include "mozilla/dom/TypedArray.h"
 #include "WebAudioUtils.h"

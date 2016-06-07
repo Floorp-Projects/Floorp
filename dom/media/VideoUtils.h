@@ -13,6 +13,7 @@
 #include "mozilla/ReentrantMonitor.h"
 #include "mozilla/RefPtr.h"
 
+#include "nsAutoPtr.h"
 #include "nsIThread.h"
 #include "nsSize.h"
 #include "nsRect.h"
