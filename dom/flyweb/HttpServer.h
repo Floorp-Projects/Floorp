@@ -23,9 +23,6 @@ class nsIX509Cert;
 namespace mozilla {
 namespace dom {
 
-extern bool
-ContainsToken(const nsCString& aList, const nsCString& aToken);
-
 class InternalRequest;
 class InternalResponse;
 

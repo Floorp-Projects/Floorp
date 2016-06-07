@@ -39,7 +39,7 @@ class WebSocketChannelParent : public PWebSocketParent,
                          uint32_t aSerial);
 
  private:
-  bool RecvAsyncOpen(const OptionalURIParams& aURI,
+  bool RecvAsyncOpen(const URIParams& aURI,
                      const nsCString& aOrigin,
                      const uint64_t& aInnerWindowID,
                      const nsCString& aProtocol,
@@ -48,9 +48,7 @@ class WebSocketChannelParent : public PWebSocketParent,
                      const bool& aClientSetPingInterval,
                      const uint32_t& aPingTimeout,
                      const bool& aClientSetPingTimeout,
-                     const OptionalLoadInfoArgs& aLoadInfoArgs,
-                     const OptionalTransportProvider& aTransportProvider,
-                     const nsCString& aNegotiatedExtensions) override;
+                     const OptionalLoadInfoArgs& aLoadInfoArgs) override;
   bool RecvClose(const uint16_t & code, const nsCString & reason) override;
   bool RecvSendMsg(const nsCString& aMsg) override;
   bool RecvSendBinaryMsg(const nsCString& aMsg) override;
