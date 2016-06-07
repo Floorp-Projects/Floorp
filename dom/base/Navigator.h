@@ -167,7 +167,6 @@ public:
   // The XPCOM GetDoNotTrack is ok
   Geolocation* GetGeolocation(ErrorResult& aRv);
   Promise* GetBattery(ErrorResult& aRv);
-  battery::BatteryManager* GetDeprecatedBattery(ErrorResult& aRv);
 
   already_AddRefed<Promise> PublishServer(const nsAString& aName,
                                           const FlyWebPublishOptions& aOptions,
@@ -403,8 +402,6 @@ private:
 
   nsTArray<RefPtr<Promise> > mVRGetDevicesPromises;
   nsTArray<uint32_t> mRequestedVibrationPattern;
-
-  bool mBatteryTelemetryReported;
 };
 
 } // namespace dom
