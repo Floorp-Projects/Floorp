@@ -28,28 +28,17 @@ ComputeStackString(JSContext* cx);
  * Given a JSErrorReport, check to see if there is an exception associated with
  * the error number.  If there is, then create an appropriate exception object,
  * set it as the pending exception, and set the JSREPORT_EXCEPTION flag on the
- * error report.  Exception-aware host error reporters should probably ignore
- * error reports so flagged.
+ * error report.
  *
- * Return true if cx->throwing and cx->exception were set.
+ * It's possible we fail (due to OOM or some other error) and end up setting
+ * cx->exception to a different exception. The original error described by
+ * *reportp typically won't be reported anywhere in this case.
  *
- * This means that:
- *
- *   - If the error is successfully converted to an exception and stored in
- *     cx->exception, the return value is true. This is the "normal", happiest
- *     case for the caller.
- *
- *   - If we try to convert, but fail with OOM or some other error that ends up
- *     setting cx->throwing to true and setting cx->exception, then we also
- *     return true (because callers want to treat that case the same way).
- *     The original error described by *reportp typically won't be reported
- *     anywhere; instead OOM is reported.
- *
- *   - If the error code is unrecognized, or if we decided to do nothing in
- *     order to avoid recursion, then return false. In those cases, this error
- *     is just being swept under the rug.
+ * If the error code is unrecognized, or if we decided to do nothing in order to
+ * avoid recursion, we simply return and this error is just being swept under
+ * the rug.
  */
-extern bool
+extern void
 ErrorToException(JSContext* cx, const char* message, JSErrorReport* reportp,
                  JSErrorCallback callback, void* userRef);
 
