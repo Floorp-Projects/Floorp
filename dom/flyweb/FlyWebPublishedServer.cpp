@@ -269,6 +269,7 @@ bool
 FlyWebPublishedServerChild::RecvServerReady(const nsresult& aStatus)
 {
   LOG_I("FlyWebPublishedServerChild::RecvServerReady(%p)", this);
+  MOZ_ASSERT(!mActorDestroyed);
 
   PublishedServerStarted(aStatus);
   return true;
@@ -278,6 +279,7 @@ bool
 FlyWebPublishedServerChild::RecvServerClose()
 {
   LOG_I("FlyWebPublishedServerChild::RecvServerClose(%p)", this);
+  MOZ_ASSERT(!mActorDestroyed);
 
   Close();
 
@@ -289,6 +291,7 @@ FlyWebPublishedServerChild::RecvFetchRequest(const IPCInternalRequest& aRequest,
                                              const uint64_t& aRequestId)
 {
   LOG_I("FlyWebPublishedServerChild::RecvFetchRequest(%p)", this);
+  MOZ_ASSERT(!mActorDestroyed);
 
   RefPtr<InternalRequest> request = new InternalRequest(aRequest);
   mPendingRequests.Put(request, aRequestId);
@@ -303,6 +306,7 @@ FlyWebPublishedServerChild::RecvWebSocketRequest(const IPCInternalRequest& aRequ
                                                  PTransportProviderChild* aProvider)
 {
   LOG_I("FlyWebPublishedServerChild::RecvWebSocketRequest(%p)", this);
+  MOZ_ASSERT(!mActorDestroyed);
 
   RefPtr<InternalRequest> request = new InternalRequest(aRequest);
   mPendingRequests.Put(request, aRequestId);
@@ -535,6 +539,8 @@ bool
 FlyWebPublishedServerParent::RecvFetchResponse(const IPCInternalResponse& aResponse,
                                                const uint64_t& aRequestId)
 {
+  MOZ_ASSERT(!mActorDestroyed);
+
   RefPtr<InternalRequest> request;
   mPendingRequests.Remove(aRequestId, getter_AddRefs(request));
   if (!request) {
@@ -553,6 +559,8 @@ bool
 FlyWebPublishedServerParent::RecvWebSocketResponse(const IPCInternalResponse& aResponse,
                                                    const uint64_t& aRequestId)
 {
+  MOZ_ASSERT(!mActorDestroyed);
+
   mPendingTransportProviders.Remove(aRequestId);
 
   RefPtr<InternalRequest> request;
@@ -573,6 +581,8 @@ bool
 FlyWebPublishedServerParent::RecvWebSocketAccept(const nsString& aProtocol,
                                                  const uint64_t& aRequestId)
 {
+  MOZ_ASSERT(!mActorDestroyed);
+
   RefPtr<TransportProviderParent> providerIPC;
   mPendingTransportProviders.Remove(aRequestId, getter_AddRefs(providerIPC));
 
@@ -613,6 +623,7 @@ bool
 FlyWebPublishedServerParent::Recv__delete__()
 {
   LOG_I("FlyWebPublishedServerParent::Recv__delete__(%p)", this);
+  MOZ_ASSERT(!mActorDestroyed);
 
   if (mPublishedServer) {
     mPublishedServer->RemoveEventListener(NS_LITERAL_STRING("fetch"),
