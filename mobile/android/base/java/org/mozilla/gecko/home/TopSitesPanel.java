@@ -586,6 +586,25 @@ public class TopSitesPanel extends HomeFragment {
         }
 
         @Override
+        public long getItemId(int position) {
+            // We are trying to return stable ids so that Android can recycle views appropriately:
+            // * If we have a history id then we return it
+            // * If we only have a bookmark id then we negate it and return it. We negate it in order
+            //   to avoid clashing/conflicting with history ids.
+
+            final Cursor cursor = getCursor();
+            cursor.moveToPosition(position);
+
+            final long historyId = cursor.getLong(cursor.getColumnIndexOrThrow(TopSites.HISTORY_ID));
+            if (historyId != 0) {
+                return historyId;
+            }
+
+            final long bookmarkId = cursor.getLong(cursor.getColumnIndexOrThrow(TopSites.BOOKMARK_ID));
+            return -1 * bookmarkId;
+        }
+
+        @Override
         public void bindView(View bindView, Context context, Cursor cursor) {
             final String url = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.URL));
             final String title = cursor.getString(cursor.getColumnIndexOrThrow(TopSites.TITLE));
