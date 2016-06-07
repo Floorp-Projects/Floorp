@@ -512,16 +512,13 @@ GenericProtocolHandler.prototype = {
       throw Cr.NS_ERROR_MALFORMED_URI;
 
     let prefix = spec.substr(scheme.length, 2) == "//" ? "http:" : "";
-    let inner = Cc["@mozilla.org/network/io-service;1"].
-                getService(Ci.nsIIOService).newURI(spec.replace(scheme, prefix),
-                                                   originalCharset, baseURI);
-    let netutil = Cc["@mozilla.org/network/util;1"].getService(Ci.nsINetUtil);
-    const URI_INHERITS_SECURITY_CONTEXT = Ci.nsIProtocolHandler
-                                            .URI_INHERITS_SECURITY_CONTEXT;
-    if (netutil.URIChainHasFlags(inner, URI_INHERITS_SECURITY_CONTEXT))
+    let inner = Services.io.newURI(spec.replace(scheme, prefix),
+                                   originalCharset, baseURI);
+
+    if (!["http", "https"].includes(inner.scheme))
       throw Cr.NS_ERROR_MALFORMED_URI;
 
-    let uri = netutil.newSimpleNestedURI(inner);
+    let uri = Services.io.QueryInterface(Ci.nsINetUtil).newSimpleNestedURI(inner);
     uri.spec = inner.spec.replace(prefix, scheme);
     return uri;
   },
