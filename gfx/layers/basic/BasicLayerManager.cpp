@@ -932,8 +932,6 @@ BasicLayerManager::PaintLayer(gfxContext* aTarget,
 
     // Temporary fast fix for bug 725886
     // Revert these changes when 725886 is ready
-    MOZ_ASSERT(untransformedDT && untransformedDT->IsValid(),
-               "We should always allocate an untransformed surface with 3d transforms!");
 #ifdef DEBUG
     if (aLayer->GetDebugColorIndex() != 0) {
       Color color((aLayer->GetDebugColorIndex() & 1) ? 1.f : 0.f,

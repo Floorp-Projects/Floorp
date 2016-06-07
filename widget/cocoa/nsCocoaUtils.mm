@@ -481,16 +481,13 @@ nsresult nsCocoaUtils::CreateNSImageFromImageContainer(imgIContainer *aImage, ui
 
     RefPtr<DrawTarget> drawTarget = gfxPlatform::GetPlatform()->
       CreateOffscreenContentDrawTarget(scaledSize, SurfaceFormat::B8G8R8A8);
-    if (!drawTarget) {
-      NS_ERROR("Failed to create DrawTarget");
+    if (!drawTarget || !drawTarget->IsValid()) {
+      NS_ERROR("Failed to create valid DrawTarget");
       return NS_ERROR_FAILURE;
     }
 
     RefPtr<gfxContext> context = gfxContext::CreateOrNull(drawTarget);
-    if (!context) {
-      NS_ERROR("Failed to create gfxContext");
-      return NS_ERROR_FAILURE;
-    }
+    MOZ_ASSERT(context);
 
     mozilla::image::DrawResult res =
       aImage->Draw(context, scaledSize, ImageRegion::Create(scaledSize),
