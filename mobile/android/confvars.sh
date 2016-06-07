@@ -64,6 +64,3 @@ MOZ_ANDROID_PACKAGE_INSTALL_BOUNCER=1
 
 # Use the low-memory GC tuning.
 export JS_GC_SMALL_CHUNK_SIZE=1
-
-# Enable checking that add-ons are signed by the trusted root
-MOZ_ADDON_SIGNING=1
