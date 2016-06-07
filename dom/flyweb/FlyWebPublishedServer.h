@@ -7,51 +7,39 @@
 #ifndef mozilla_dom_FlyWebPublishedServer_h
 #define mozilla_dom_FlyWebPublishedServer_h
 
-#include "nsISupportsImpl.h"
-#include "nsICancelable.h"
 #include "mozilla/DOMEventTargetHelper.h"
-#include "mozilla/ErrorResult.h"
-#include "HttpServer.h"
-#include "mozilla/dom/WebSocket.h"
+#include "mozilla/MozPromise.h"
 
 class nsPIDOMWindowInner;
 
 namespace mozilla {
+
+class ErrorResult;
+
 namespace dom {
 
-class Promise;
 class InternalResponse;
 class InternalRequest;
+class WebSocket;
 struct FlyWebPublishOptions;
 class FlyWebPublishedServer;
 
-class FlyWebPublishedServer final : public mozilla::DOMEventTargetHelper
-                                  , public HttpServerListener
+typedef MozPromise<RefPtr<FlyWebPublishedServer>, nsresult, false>
+  FlyWebPublishPromise;
+
+class FlyWebPublishedServer : public mozilla::DOMEventTargetHelper
 {
 public:
   FlyWebPublishedServer(nsPIDOMWindowInner* aOwner,
                         const nsAString& aName,
-                        const FlyWebPublishOptions& aOptions,
-                        Promise* aPublishPromise);
+                        const FlyWebPublishOptions& aOptions);
+
+  virtual void LastRelease() override;
 
   virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
 
-  NS_DECL_ISUPPORTS_INHERITED
-
   uint64_t OwnerWindowID() const {
     return mOwnerWindowID;
-  }
-
-  int32_t Port()
-  {
-    return mHttpServer ? mHttpServer->GetPort() : 0;
-  }
-  void GetCertKey(nsACString& aKey) {
-    if (mHttpServer) {
-      mHttpServer->GetCertKey(aKey);
-    } else {
-      aKey.Truncate();
-    }
   }
 
   void GetName(nsAString& aName)
@@ -68,41 +56,40 @@ public:
     aUiUrl = mUiUrl;
   }
 
-  void OnFetchResponse(InternalRequest* aRequest,
-                       InternalResponse* aResponse);
-  already_AddRefed<WebSocket>
+  virtual void OnFetchResponse(InternalRequest* aRequest,
+                               InternalResponse* aResponse) = 0;
+  virtual already_AddRefed<WebSocket>
     OnWebSocketAccept(InternalRequest* aConnectRequest,
                       const Optional<nsAString>& aProtocol,
-                      ErrorResult& aRv);
-  void OnWebSocketResponse(InternalRequest* aConnectRequest,
-                           InternalResponse* aResponse);
+                      ErrorResult& aRv) = 0;
+  virtual void OnWebSocketResponse(InternalRequest* aConnectRequest,
+                                   InternalResponse* aResponse) = 0;
 
-  void SetCancelRegister(nsICancelable* aCancelRegister)
-  {
-    mMDNSCancelRegister = aCancelRegister;
-  }
+  virtual void Close();
 
-  void Close();
-
-  // HttpServerListener
-  virtual void OnServerStarted(nsresult aStatus) override;
-  virtual void OnRequest(InternalRequest* aRequest) override;
-  virtual void OnWebSocket(InternalRequest* aConnectRequest) override;
-  virtual void OnServerClose() override;
+  void FireFetchEvent(InternalRequest* aRequest);
+  void FireWebsocketEvent(InternalRequest* aConnectRequest);
+  void PublishedServerStarted(nsresult aStatus);
 
   IMPL_EVENT_HANDLER(fetch)
   IMPL_EVENT_HANDLER(websocket)
   IMPL_EVENT_HANDLER(close)
 
-  void DiscoveryStarted(nsresult aStatus);
+  already_AddRefed<FlyWebPublishPromise>
+  GetPublishPromise()
+  {
+    return mPublishPromise.Ensure(__func__);
+  }
 
-private:
-  ~FlyWebPublishedServer();
+protected:
+
+  virtual ~FlyWebPublishedServer()
+  {
+    MOZ_ASSERT(!mIsRegistered, "Subclass dtor forgot to call Close()");
+  }
 
   uint64_t mOwnerWindowID;
-  RefPtr<HttpServer> mHttpServer;
-  RefPtr<Promise> mPublishPromise;
-  nsCOMPtr<nsICancelable> mMDNSCancelRegister;
+  MozPromiseHolder<FlyWebPublishPromise> mPublishPromise;
 
   nsString mName;
   nsString mUiUrl;
