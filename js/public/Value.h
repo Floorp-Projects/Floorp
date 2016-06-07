@@ -565,7 +565,7 @@ static inline jsval_layout
 PRIVATE_PTR_TO_JSVAL_IMPL(void* ptr)
 {
     jsval_layout l;
-    MOZ_ASSERT(((uint32_t)ptr & 1) == 0);
+    MOZ_ASSERT((uintptr_t(ptr) & 1) == 0);
     l.s.tag = (JSValueTag)0;
     l.s.payload.ptr = ptr;
     MOZ_ASSERT(JSVAL_IS_DOUBLE_IMPL(l));
@@ -881,7 +881,7 @@ static inline jsval_layout
 PRIVATE_PTR_TO_JSVAL_IMPL(void* ptr)
 {
     jsval_layout l;
-    uint64_t ptrBits = (uint64_t)ptr;
+    uintptr_t ptrBits = uintptr_t(ptr);
     MOZ_ASSERT((ptrBits & 1) == 0);
     l.asBits = ptrBits >> 1;
     MOZ_ASSERT(JSVAL_IS_DOUBLE_IMPL(l));

@@ -48,11 +48,6 @@ interface nsISHEntry : nsISupports
     attribute nsIURI originalURI;
 
     /**
-     *  This flag remembers whether channel has LOAD_REPLACE set.
-     */
-    attribute boolean loadReplace;
-
-    /**
      * A readonly property that returns the title
      * of the current entry.  The object returned
      * is a encoded string

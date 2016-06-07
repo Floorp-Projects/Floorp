@@ -29,11 +29,14 @@ class TestTargetTasks(unittest.TestCase):
         self.assertEqual(method(None, {'target_tasks': ['a', 'b']}),
                          ['a', 'b'])
 
-    def test_all_tasks(self):
-        method = target_tasks.get_method('all_tasks')
-        graph = TaskGraph(tasks={'a': Task(kind=None, label='a')},
-                          graph=Graph(nodes={'a'}, edges=set()))
-        self.assertEqual(method(graph, {}), ['a'])
+    def test_all_builds_and_tests(self):
+        method = target_tasks.get_method('all_builds_and_tests')
+        graph = TaskGraph(tasks={
+            'a': Task(kind=None, label='a', attributes={'kind': 'legacy'}),
+            'b': Task(kind=None, label='b', attributes={'kind': 'legacy'}),
+            'boring': Task(kind=None, label='boring', attributes={'kind': 'docker-image'}),
+        }, graph=Graph(nodes={'a', 'b', 'boring'}, edges=set()))
+        self.assertEqual(sorted(method(graph, {})), sorted(['a', 'b']))
 
     def test_try_option_syntax(self):
         tasks = {

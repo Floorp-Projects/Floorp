@@ -395,7 +395,7 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
 }
 
 // Generate a stub that is called via the internal ABI derived from the
-// signature of the import and calls into an appropriate InvokeImport C++
+// signature of the import and calls into an appropriate callImport C++
 // function, having boxed all the ABI arguments into a homogeneous Value array.
 ProfilingOffsets
 wasm::GenerateInterpExit(MacroAssembler& masm, const Import& import, uint32_t importIndex)
@@ -404,7 +404,7 @@ wasm::GenerateInterpExit(MacroAssembler& masm, const Import& import, uint32_t im
 
     masm.setFramePushed(0);
 
-    // Argument types for InvokeImport_*:
+    // Argument types for Module::callImport_*:
     static const MIRType typeArray[] = { MIRType::Pointer,   // ImportExit
                                          MIRType::Int32,     // argc
                                          MIRType::Pointer }; // argv
@@ -427,7 +427,7 @@ wasm::GenerateInterpExit(MacroAssembler& masm, const Import& import, uint32_t im
     Register scratch = ABINonArgReturnReg0;
     FillArgumentArray(masm, sig.args(), argOffset, offsetToCallerStackArgs, scratch, ToValue(false));
 
-    // Prepare the arguments for the call to InvokeImport_*.
+    // Prepare the arguments for the call to Module::callImport_*.
     ABIArgMIRTypeIter i(invokeArgTypes);
 
     // argument 0: importIndex
@@ -460,28 +460,28 @@ wasm::GenerateInterpExit(MacroAssembler& masm, const Import& import, uint32_t im
     AssertStackAlignment(masm, ABIStackAlignment);
     switch (sig.ret()) {
       case ExprType::Void:
-        masm.call(SymbolicAddress::InvokeImport_Void);
+        masm.call(SymbolicAddress::CallImport_Void);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, JumpTarget::Throw);
         break;
       case ExprType::I32:
-        masm.call(SymbolicAddress::InvokeImport_I32);
+        masm.call(SymbolicAddress::CallImport_I32);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, JumpTarget::Throw);
         masm.load32(argv, ReturnReg);
         break;
       case ExprType::I64:
         MOZ_ASSERT(JitOptions.wasmTestMode);
-        masm.call(SymbolicAddress::InvokeImport_I64);
+        masm.call(SymbolicAddress::CallImport_I64);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, JumpTarget::Throw);
         masm.load64(argv, ReturnReg64);
         break;
       case ExprType::F32:
-        masm.call(SymbolicAddress::InvokeImport_F64);
+        masm.call(SymbolicAddress::CallImport_F64);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, JumpTarget::Throw);
         masm.loadDouble(argv, ReturnDoubleReg);
         masm.convertDoubleToFloat32(ReturnDoubleReg, ReturnFloat32Reg);
         break;
       case ExprType::F64:
-        masm.call(SymbolicAddress::InvokeImport_F64);
+        masm.call(SymbolicAddress::CallImport_F64);
         masm.branchTest32(Assembler::Zero, ReturnReg, ReturnReg, JumpTarget::Throw);
         masm.loadDouble(argv, ReturnDoubleReg);
         break;

@@ -13,27 +13,27 @@ class nsIInputStream;
 
 namespace mozilla {
 
-nsresult
+MOZ_MUST_USE nsresult
 Base64EncodeInputStream(nsIInputStream* aInputStream,
                         nsACString& aDest,
                         uint32_t aCount,
                         uint32_t aOffset = 0);
-nsresult
+MOZ_MUST_USE nsresult
 Base64EncodeInputStream(nsIInputStream* aInputStream,
                         nsAString& aDest,
                         uint32_t aCount,
                         uint32_t aOffset = 0);
 
-nsresult
+MOZ_MUST_USE nsresult
 Base64Encode(const char* aBinary, uint32_t aBinaryLen, char** aBase64);
-nsresult
+MOZ_MUST_USE nsresult
 Base64Encode(const nsACString& aBinary, nsACString& aBase64);
-nsresult
+MOZ_MUST_USE nsresult
 Base64Encode(const nsAString& aBinary, nsAString& aBase64);
 
-nsresult
+MOZ_MUST_USE nsresult
 Base64Decode(const nsACString& aBase64, nsACString& aBinary);
-nsresult
+MOZ_MUST_USE nsresult
 Base64Decode(const nsAString& aBase64, nsAString& aBinary);
 
 enum class Base64URLEncodePaddingPolicy {
@@ -46,7 +46,7 @@ enum class Base64URLEncodePaddingPolicy {
  * Aims to encode the data in constant time. The caller retains ownership
  * of |aBinary|.
  */
-nsresult
+MOZ_MUST_USE nsresult
 Base64URLEncode(uint32_t aBinaryLen, const uint8_t* aBinary,
                 Base64URLEncodePaddingPolicy aPaddingPolicy,
                 nsACString& aBase64);
@@ -60,7 +60,7 @@ enum class Base64URLDecodePaddingPolicy {
 /**
  * Decodes a Base64 URL-encoded |aBase64| into |aBinary|.
  */
-nsresult
+MOZ_MUST_USE nsresult
 Base64URLDecode(const nsACString& aBase64,
                 Base64URLDecodePaddingPolicy aPaddingPolicy,
                 FallibleTArray<uint8_t>& aBinary);

@@ -28,18 +28,6 @@ def is_docker_registry_image(registry_path):
 def mklabel():
     return slugid()
 
-def docker_image(name):
-    ''' Determine the docker tag/revision from an in tree docker file '''
-    repository_path = os.path.join(DOCKER_ROOT, name, 'REGISTRY')
-    repository = REGISTRY
-
-    version = open(os.path.join(DOCKER_ROOT, name, 'VERSION')).read().strip()
-
-    if os.path.isfile(repository_path):
-        repository = open(repository_path).read().strip()
-
-    return '{}/{}:{}'.format(repository, name, version)
-
 def task_id_for_image(seen_images, project, name, create=True):
     if name in seen_images:
         return seen_images[name]['taskId']
@@ -132,118 +120,6 @@ def generate_context_hash(image_path):
             context_hash.update(file_hash.hexdigest() + '\t' + relative_filename + '\n')
 
     return context_hash.hexdigest()
-
-def create_context_tar(context_dir, destination, image_name):
-    ''' Creates a tar file of a particular context directory '''
-    if not os.path.exists(os.path.dirname(destination)):
-        os.makedirs(os.path.dirname(destination))
-
-    with tarfile.open(destination, 'w:gz') as tar:
-        tar.add(context_dir, arcname=image_name)
-
-def image_requires_building(details):
-    ''' Returns true if an image task should be created for a particular image '''
-    if 'path' in details and 'hash' in details:
-        return True
-    else:
-        return False
-
-def create_image_task_parameters(params, name, details):
-    image_parameters = dict(params)
-    image_parameters['context_hash'] = details['hash']
-    image_parameters['context_path'] = details['path']
-    image_parameters['artifact_path'] = 'public/image.tar'
-    image_parameters['image_slugid'] =  details['taskId']
-    image_parameters['image_name'] = name
-
-    return image_parameters
-
-def get_image_details(seen_images, task_id):
-    '''
-    Based on a collection of image details, return the details
-    for an image matching the requested task_id.
-
-    Image details can include a path and hash indicating that the image requires
-    building.
-    '''
-    for name, details in seen_images.items():
-        if details['taskId'] == task_id:
-            return [name, details]
-    return None
-
-def get_json_routes():
-    ''' Returns routes that should be included in the image task. '''
-    routes_file = os.path.join(TASKCLUSTER_ROOT, 'routes.json')
-    with open(routes_file) as f:
-        contents = json.load(f)
-        json_routes = contents['docker_images']
-    return json_routes
-
-def normalize_image_details(graph, task, seen_images, params, decision_task_id):
-    '''
-    This takes a task-image payload and creates an image task to build that
-    image.
-
-    task-image payload is then converted to use a specific task ID of that
-    built image.  All tasks within the graph requiring this same image will have their
-    image details normalized and require the same image build task.
-    '''
-    image = task['task']['payload']['image']
-    if isinstance(image, str) or image.get('type', 'docker-image') == 'docker-image':
-        return
-
-    if 'requires' not in task:
-        task['requires'] = []
-
-    name, details = get_image_details(seen_images, image['taskId'])
-
-    if details.get('required', False) is True or image_requires_building(details) is False:
-        if 'required' in details:
-            task['requires'].append(details['taskId'])
-        return
-
-    image_parameters = create_image_task_parameters(params, name, details)
-
-    if decision_task_id:
-        image_artifact_path = "public/decision_task/image_contexts/{}/context.tar.gz".format(name)
-        destination = "/home/worker/artifacts/decision_task/image_contexts/{}/context.tar.gz".format(name)
-        image_parameters['context_url'] = ARTIFACT_URL.format(decision_task_id, image_artifact_path)
-
-        create_context_tar(image_parameters['context_path'], destination, name)
-
-    templates = Templates(TASKCLUSTER_ROOT)
-    image_task = templates.load(IMAGE_BUILD_TASK, image_parameters)
-    if params['revision_hash']:
-        treeherder_transform.add_treeherder_revision_info(
-            image_task['task'],
-            params['head_rev'],
-            params['revision_hash']
-        )
-        routes_transform.decorate_task_treeherder_routes(
-            image_task['task'],
-            "{}.{}".format(params['project'], params['revision_hash'])
-        )
-        routes_transform.decorate_task_json_routes(image_task['task'],
-                                                   get_json_routes(),
-                                                   image_parameters)
-
-    image_task['attributes'] = {
-        'kind': 'legacy',
-    }
-
-    graph['tasks'].append(image_task);
-    task['requires'].append(details['taskId'])
-
-    define_task = DEFINE_TASK.format(
-        image_task['task']['workerType']
-    )
-
-    graph['scopes'].add(define_task)
-    graph['scopes'] |= set(image_task['task'].get('scopes', []))
-    route_scopes = map(lambda route: 'queue:route:' + route, image_task['task'].get('routes', []))
-    graph['scopes'] |= set(route_scopes)
-
-    details['required'] = True
 
 def docker_load_from_url(url):
     """Get a docker image from a `docker save` tarball at the given URL,

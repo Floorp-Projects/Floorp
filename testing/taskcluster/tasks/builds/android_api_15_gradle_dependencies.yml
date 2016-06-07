@@ -6,6 +6,7 @@ $inherits:
   variables:
     build_name: 'android-api-15-gradle-dependencies'
     build_type: 'opt'
+docker-image: android-gradle-build
 task:
   metadata:
       name: '[TC] Android armv7 API 15+ gradle dependencies'
@@ -50,7 +51,8 @@ task:
     image:
       type: 'task-image'
       path: 'public/image.tar'
-      taskId: '{{#task_id_for_image}}android-gradle-build{{/task_id_for_image}}'
+      taskId:
+        task-reference: "<docker-image>"
 
     command:
       - /bin/bash

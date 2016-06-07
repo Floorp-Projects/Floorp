@@ -74,7 +74,6 @@ showbuild:
 		MKSHLIB \
 		MKCSHLIB \
 		RC \
-		MC \
 		CFLAGS \
 		OS_CFLAGS \
 		COMPILE_CFLAGS \

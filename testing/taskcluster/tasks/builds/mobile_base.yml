@@ -2,10 +2,12 @@ $inherits:
   from: 'tasks/build.yml'
   variables:
     build_product: 'mobile'
+docker-image: desktop-build
 task:
   payload:
     image:
       type: 'task-image'
       path: 'public/image.tar'
-      taskId: '{{#task_id_for_image}}desktop-build{{/task_id_for_image}}'
+      taskId:
+        task-reference: "<docker-image>"
 

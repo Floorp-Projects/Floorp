@@ -13,25 +13,17 @@ from slugid import nice as slugid
 
 logger = logging.getLogger(__name__)
 
-def create_tasks(taskgraph):
+def create_tasks(taskgraph, label_to_taskid):
     # TODO: use the taskGroupId of the decision task
     task_group_id = slugid()
-    label_to_taskid = collections.defaultdict(slugid)
+    taskid_to_label = {t: l for l, t in label_to_taskid.iteritems()}
 
     session = requests.Session()
 
-    for label in taskgraph.graph.visit_postorder():
-        task = taskgraph.tasks[label]
-        deps_by_name = {
-            n: label_to_taskid[r]
-            for (l, r, n) in taskgraph.graph.edges
-            if l == label}
-        task_def = task.kind.get_task_definition(task, deps_by_name)
+    for task_id in taskgraph.graph.visit_postorder():
+        task_def = taskgraph.tasks[task_id].task
         task_def['taskGroupId'] = task_group_id
-        task_def['dependencies'] = deps_by_name.values()
-        task_def['requires'] = 'all-completed'
-
-        _create_task(session, label_to_taskid[label], label, task_def)
+        _create_task(session, task_id, taskid_to_label[task_id], task_def)
 
 def _create_task(session, task_id, label, task_def):
     # create the task using 'http://taskcluster/queue', which is proxied to the queue service

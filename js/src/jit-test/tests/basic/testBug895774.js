@@ -1,6 +1,6 @@
 var g1 = newGlobal();
 var g2 = newGlobal();
-g1.eval("function f1() { debugger; evaluate('debugger', {newContext:true}) }");
+g1.eval("function f1() { debugger; evaluate('debugger') }");
 g2.eval("function f2() { f1(); assertEq(Number(this), 42) }");
 g2.f1 = g1.f1;
 

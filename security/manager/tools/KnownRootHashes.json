@@ -833,7 +833,47 @@
       "label": "CFCA_EV_ROOT",
       "binNumber": 165,
       "sha256Fingerprint": "XMPXjk4dXkVUegTmhz5k+Qz5U20czC74APNVxMX9cP0="
+    },
+    {
+      "label": "T_RKTRUST_Elektronik_Sertifika_Hizmet_Sa_lay_c_s__H5",
+      "binNumber": 166,
+      "sha256Fingerprint": "STUbkDREwYXM3FxpPSTYVVyyCNaoFBMHaZ9K8GMZnXg="
+    },
+    {
+      "label": "T_RKTRUST_Elektronik_Sertifika_Hizmet_Sa_lay_c_s__H6",
+      "binNumber": 167,
+      "sha256Fingerprint": "jeeGVeG+f3hHgAuT9pTSHTaMwG4DPn+rBLteuZ2mtwA="
+    },
+    {
+      "label": "Certinomis___Root_CA",
+      "binNumber": 168,
+      "sha256Fingerprint": "Kpn1vBF0tzy7HWIIhOAcNOUcyzl42hJfDjMmiIO/QVg="
+    },
+    {
+      "label": "OISTE_WISeKey_Global_Root_GB_CA",
+      "binNumber": 169,
+      "sha256Fingerprint": "a5wI6G6w92fPrWXNmLYhSeVJSmf1hF570e0Bnye4a9Y="
+    },
+    {
+      "label": "Certification_Authority_of_WoSign_G2",
+      "binNumber": 170,
+      "sha256Fingerprint": "1Ielb4OwdILoXpYzlMHswsnlHQkD7pRrAsMBWB7ZnhY="
+    },
+    {
+      "label": "CA_WoSign_ECC_Root",
+      "binNumber": 171,
+      "sha256Fingerprint": "i0XaHAb3kesMq/Jr5Yj1+yMWXC5hS/iFVi0NzlCymwI="
+    },
+    {
+      "label": "SZAFIR_ROOT_CA2",
+      "binNumber": 172,
+      "sha256Fingerprint": "oTOdMygaC1blV9PTKxzn+TZ+sJS9X6cqflAEyN7Xyv4="
+    },
+    {
+      "label": "Certum_Trusted_Network_CA_2",
+      "binNumber": 173,
+      "sha256Fingerprint": "tnby7drod1zTbLD2PNHUYDlh9J5iZboBOi8DB7bQuAQ="
     }
   ],
-  "maxBin": 165
+  "maxBin": 173
 }

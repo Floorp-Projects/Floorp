@@ -32,10 +32,9 @@ public:
 
   // Security levels for different types of processes
 #if defined(MOZ_CONTENT_SANDBOX)
-  bool SetSecurityLevelForContentProcess(int32_t aSandboxLevel);
+  void SetSecurityLevelForContentProcess(int32_t aSandboxLevel);
 #endif
   bool SetSecurityLevelForPluginProcess(int32_t aSandboxLevel);
-  bool SetSecurityLevelForIPDLUnitTestProcess();
   enum SandboxLevel {
     LockDown,
     Restricted

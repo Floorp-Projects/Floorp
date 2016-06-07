@@ -19,21 +19,6 @@ class TestLegacyKind(unittest.TestCase):
     def setUp(self):
         self.kind = LegacyKind('/root', {})
 
-    def test_get_task_definition_artifact_sub(self):
-        "get_task_definition correctly substiatutes artifact URLs"
-        task_def = {
-            'input_file': TASKID_PLACEHOLDER.format("G5BoWlCBTqOIhn3K3HyvWg"),
-            'embedded': 'TASK={} FETCH=lazy'.format(
-                TASKID_PLACEHOLDER.format('G5BoWlCBTqOIhn3K3HyvWg')),
-        }
-        task = Task(self.kind, 'label', task=task_def)
-        dep_taskids = {TASKID_PLACEHOLDER.format('G5BoWlCBTqOIhn3K3HyvWg'): 'parent-taskid'}
-        task_def = self.kind.get_task_definition(task, dep_taskids)
-        self.assertEqual(task_def, {
-            'input_file': 'parent-taskid',
-            'embedded': 'TASK=parent-taskid FETCH=lazy',
-        })
-
 
 if __name__ == '__main__':
     main()
