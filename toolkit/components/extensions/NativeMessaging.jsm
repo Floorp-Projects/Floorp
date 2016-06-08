@@ -374,4 +374,24 @@ this.NativeApp = class extends EventEmitter {
 
     return Cu.cloneInto(api, this.context.cloneScope, {cloneFunctions: true});
   }
+
+  sendMessage(msg) {
+    let responsePromise = new Promise((resolve, reject) => {
+      this.on("message", (what, msg) => { resolve(msg); });
+      this.on("disconnect", (what, err) => { reject(err); });
+    });
+
+    let result = this.startupPromise.then(() => {
+      this.send(msg);
+      return responsePromise;
+    });
+
+    result.then(() => {
+      this._cleanup();
+    }, () => {
+      this._cleanup();
+    });
+
+    return result;
+  }
 };
