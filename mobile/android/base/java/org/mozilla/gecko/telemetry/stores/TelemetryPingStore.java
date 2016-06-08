@@ -23,12 +23,24 @@ import java.util.Set;
  * The pings in {@link #getAllPings()} and {@link #maybePrunePings()} are returned in the
  * same order in order to guarantee consistent results.
  */
-public interface TelemetryPingStore extends Parcelable {
+public abstract class TelemetryPingStore implements Parcelable {
+    private final String profileName;
+
+    public TelemetryPingStore(final String profileName) {
+        this.profileName = profileName;
+    }
+
+    /**
+     * @return the profile name associated with this store.
+     */
+    public String getProfileName() {
+        return profileName;
+    }
 
     /**
      * @return a list of all the telemetry pings in the store that are ready for upload, ascending oldest to newest.
      */
-    List<TelemetryPing> getAllPings();
+    public abstract List<TelemetryPing> getAllPings();
 
     /**
      * Save a ping to the store.
@@ -36,13 +48,13 @@ public interface TelemetryPingStore extends Parcelable {
      * @param ping the ping to store
      * @throws IOException for underlying store access errors
      */
-    void storePing(TelemetryPing ping) throws IOException;
+    public abstract void storePing(TelemetryPing ping) throws IOException;
 
     /**
      * Removes telemetry pings from the store if there are too many pings or they take up too much space.
      * Pings should be removed from oldest to newest.
      */
-    void maybePrunePings();
+    public abstract void maybePrunePings();
 
     /**
      * Removes the successfully uploaded pings from the database and performs another other actions necessary
@@ -50,5 +62,5 @@ public interface TelemetryPingStore extends Parcelable {
      *
      * @param successfulRemoveIDs doc ids of pings that were successfully uploaded
      */
-    void onUploadAttemptComplete(Set<String> successfulRemoveIDs);
+    public abstract void onUploadAttemptComplete(Set<String> successfulRemoveIDs);
 }
