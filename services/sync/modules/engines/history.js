@@ -302,8 +302,8 @@ HistoryStore.prototype = {
         continue;
       }
 
-      if (!visit.type || !(visit.type >= PlacesUtils.history.TRANSITION_LINK &&
-                           visit.type <= PlacesUtils.history.TRANSITION_FRAMED_LINK)) {
+      if (!visit.type ||
+          !Object.values(PlacesUtils.history.TRANSITIONS).includes(visit.type)) {
         this._log.warn("Encountered record with invalid visit type: " +
                        visit.type + "; ignoring.");
         continue;

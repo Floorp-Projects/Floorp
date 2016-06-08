@@ -94,7 +94,7 @@ types.getType = function (type) {
 
   // Might be a lazily-loaded type
   if (type === "longstring") {
-    require("devtools/server/actors/string");
+    require("devtools/shared/specs/string");
     return registeredTypes.get("longstring");
   }
 

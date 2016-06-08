@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  ~ This Source Code Form is subject to the terms of the Mozilla Public
+  ~ License, v. 2.0. If a copy of the MPL was not distributed with this
+  ~ file, you can obtain one at http://mozilla.org/MPL/2.0/.
+  -->
+
+<resources>
+    <!-- Some devices use resources based on configuration (e.g. large, xlarge) that are inconsistent
+         with the configuration retrieved by HardwareUtils (e.g. some custom ROMs allow the user to
+         choose a phone or tablet version of the UI even though the hardware stays the same). This
+         can cause crashes when we branch on the value returned by HardwareUtils.
+
+         In order to work around this, we define the resource size in resources with the expectation that
+         we branch on that value, rather than HardwareUtils, so our code is consistent with the used resources.
+         See bug 1277379 for a initiative to move all of the HardwareUtils code over. -->
+    <bool name="is_large_resource">false</bool>
+</resources>

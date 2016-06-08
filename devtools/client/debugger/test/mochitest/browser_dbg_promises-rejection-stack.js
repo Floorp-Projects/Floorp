@@ -10,7 +10,7 @@
 "use strict";
 
 const TAB_URL = EXAMPLE_URL + "doc_promise-get-rejection-stack.html";
-const { PromisesFront } = require("devtools/server/actors/promises");
+const { PromisesFront } = require("devtools/shared/fronts/promises");
 var events = require("sdk/event/core");
 
 const TEST_DATA = [

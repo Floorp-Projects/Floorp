@@ -10,7 +10,7 @@
 
 Cu.import("resource://testing-common/PromiseTestUtils.jsm", this);
 
-const { PromisesFront } = require("devtools/server/actors/promises");
+const { PromisesFront } = require("devtools/shared/fronts/promises");
 
 var events = require("sdk/event/core");
 

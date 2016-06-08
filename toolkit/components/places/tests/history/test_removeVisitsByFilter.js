@@ -12,10 +12,8 @@ Cu.import("resource://gre/modules/PromiseUtils.jsm", this);
 add_task(function* test_removeVisitsByFilter() {
   let referenceDate = new Date(1999, 9, 9, 9, 9);
 
-  /**
-   * Populate a database with 20 entries, remove a subset of entries,
-   * ensure consistency.
-   */
+  // Populate a database with 20 entries, remove a subset of entries,
+  // ensure consistency.
   let remover = Task.async(function*(options) {
     do_print("Remover with options " + JSON.stringify(options));
     let SAMPLE_SIZE = options.sampleSize;
@@ -257,7 +255,21 @@ add_task(function* test_error_cases() {
   );
 });
 
+add_task(function* test_orphans() {
+  let uri = NetUtil.newURI("http://moz.org/");
+  yield PlacesTestUtils.addVisits({ uri });
 
-function run_test() {
-  run_next_test();
-}
+  PlacesUtils.favicons.setAndFetchFaviconForPage(
+    uri, SMALLPNG_DATA_URI, true,  PlacesUtils.favicons.FAVICON_LOAD_NON_PRIVATE,
+    null, Services.scriptSecurityManager.getSystemPrincipal());
+  PlacesUtils.annotations.setPageAnnotation(uri, "test", "restval", 0,
+                                            PlacesUtils.annotations.EXPIRE_NEVER);
+
+  yield PlacesUtils.history.removeVisitsByFilter({ beginDate: new Date(1999, 9, 9, 9, 9),
+                                                   endDate: new Date() });
+  Assert.ok(!(yield PlacesTestUtils.isPageInDB(uri)), "Page should have been removed");
+  let db = yield PlacesUtils.promiseDBConnection();
+  let rows = yield db.execute(`SELECT (SELECT count(*) FROM moz_annos) +
+                                      (SELECT count(*) FROM moz_favicons) AS count`);
+  Assert.equal(rows[0].getResultByName("count"), 0, "Should not find orphans");
+});
