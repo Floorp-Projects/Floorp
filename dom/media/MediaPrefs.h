@@ -120,7 +120,6 @@ private:
   DECL_MEDIA_PREF("media.webspeech.recognition.force_enable", WebSpeechRecognitionForceEnabled, bool, false);
 
   DECL_MEDIA_PREF("media.num-decode-threads",                 MediaThreadPoolDefaultCount, uint32_t, 4);
-  DECL_MEDIA_PREF("media.decoder.limit",                      MediaDecoderLimit, uint32_t, -1);
 
 public:
   // Manage the singleton:
