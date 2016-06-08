@@ -7,9 +7,10 @@
 "use strict";
 
 const protocol = require("devtools/shared/protocol");
-const { method, Arg, Option, RetVal } = protocol;
 
 const {DebuggerServer} = require("devtools/server/main");
+
+const {directorRegistrySpec} = require("devtools/shared/specs/director-registry");
 
 /**
  * Error Messages
@@ -199,9 +200,7 @@ function setupChildProcess() {
  * The DirectorRegistry Actor is a global actor which manages install/uninstall of
  * director scripts definitions.
  */
-const DirectorRegistryActor = exports.DirectorRegistryActor = protocol.ActorClass({
-  typeName: "director-registry",
-
+const DirectorRegistryActor = exports.DirectorRegistryActor = protocol.ActorClassWithSpec(directorRegistrySpec, {
   /* init & destroy methods */
   initialize: function (conn, parentActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
@@ -211,11 +210,9 @@ const DirectorRegistryActor = exports.DirectorRegistryActor = protocol.ActorClas
     this.finalize();
   },
 
-  finalize: method(function () {
+  finalize: function () {
     // nothing to cleanup
-  }, {
-    oneway: true
-  }),
+  },
 
   /**
    * Install a new director-script definition.
@@ -227,7 +224,7 @@ const DirectorRegistryActor = exports.DirectorRegistryActor = protocol.ActorClas
    * @param Object scriptOptions
    *        The director-script option object.
    */
-  install: method(function (id, { scriptCode, scriptOptions }) {
+  install: function (id, { scriptCode, scriptOptions }) {
     // TODO: add more checks on id format?
     if (!id || id.length === 0) {
       throw Error("director-script id is mandatory");
@@ -242,16 +239,7 @@ const DirectorRegistryActor = exports.DirectorRegistryActor = protocol.ActorClas
       scriptCode: scriptCode,
       scriptOptions: scriptOptions
     });
-  }, {
-    request: {
-      scriptId: Arg(0, "string"),
-      scriptCode: Option(1, "string"),
-      scriptOptions: Option(1, "nullable:json")
-    },
-    response: {
-      success: RetVal("boolean")
-    }
-  }),
+  },
 
   /**
    * Uninstall a director-script definition.
@@ -259,37 +247,14 @@ const DirectorRegistryActor = exports.DirectorRegistryActor = protocol.ActorClas
    * @param String id
    *        The identifier of the director-script definition to be removed
    */
-  uninstall: method(function (id) {
+  uninstall: function (id) {
     return DirectorRegistry.uninstall(id);
-  }, {
-    request: {
-      scritpId: Arg(0, "string")
-    },
-    response: {
-      success: RetVal("boolean")
-    }
-  }),
+  },
 
   /**
    * Retrieves the list of installed director-scripts.
    */
-  list: method(function () {
+  list: function () {
     return DirectorRegistry.list();
-  }, {
-    response: {
-      directorScripts: RetVal("array:string")
-    }
-  })
-});
-
-/**
- * The corresponding Front object for the DirectorRegistryActor.
- */
-exports.DirectorRegistryFront = protocol.FrontClass(DirectorRegistryActor, {
-  initialize: function (client, { directorRegistryActor }) {
-    protocol.Front.prototype.initialize.call(this, client, {
-      actor: directorRegistryActor
-    });
-    this.manage(this);
   }
 });

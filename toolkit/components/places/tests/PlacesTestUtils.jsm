@@ -120,23 +120,15 @@ this.PlacesTestUtils = Object.freeze({
    *       this is a problem only across different connections.
    */
   promiseAsyncUpdates() {
-    return new Promise(resolve => {
-      let db = PlacesUtils.history.DBConnection;
-      let begin = db.createAsyncStatement("BEGIN EXCLUSIVE");
-      begin.executeAsync();
-      begin.finalize();
-
-      let commit = db.createAsyncStatement("COMMIT");
-      commit.executeAsync({
-        handleResult: function () {},
-        handleError: function () {},
-        handleCompletion: function(aReason)
-        {
-          resolve();
-        }
-      });
-      commit.finalize();
-    });
+    return PlacesUtils.withConnectionWrapper("promiseAsyncUpdates", Task.async(function* (db) {
+      try {
+        yield db.executeCached("BEGIN EXCLUSIVE");
+        yield db.executeCached("COMMIT");
+      } catch (ex) {
+        // If we fail to start a transaction, it's because there is already one.
+        // In such a case we should not try to commit the existing transaction.
+      }
+    }));
   },
 
   /**

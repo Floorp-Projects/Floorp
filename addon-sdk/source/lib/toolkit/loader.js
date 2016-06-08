@@ -468,7 +468,25 @@ const nodeResolve = iced(function nodeResolve(id, requirer, { rootURI }) {
   // with `resolveURI` -- if during runtime, then `resolve` will throw.
   return void 0;
 });
-Loader.nodeResolve = nodeResolve;
+
+// String (`${rootURI}:${requirer}:${id}`) -> resolvedPath
+Loader.nodeResolverCache = new Map();
+
+const nodeResolveWithCache = iced(function cacheNodeResolutions(id, requirer, { rootURI }) {
+  // Compute the cache key based on current arguments.
+  let cacheKey = `${rootURI || ""}:${requirer}:${id}`;
+
+  // Try to get the result from the cache.
+  if (Loader.nodeResolverCache.has(cacheKey)) {
+    return Loader.nodeResolverCache.get(cacheKey);
+  }
+
+  // Resolve and cache if it is not in the cache yet.
+  let result = nodeResolve(id, requirer, { rootURI });
+  Loader.nodeResolverCache.set(cacheKey, result);
+  return result;
+});
+Loader.nodeResolve = nodeResolveWithCache;
 
 // Attempts to load `path` and then `path.js`
 // Returns `path` with valid file, or `undefined` otherwise
@@ -784,6 +802,9 @@ Loader.Module = Module;
 // Takes `loader`, and unload `reason` string and notifies all observers that
 // they should cleanup after them-self.
 const unload = iced(function unload(loader, reason) {
+  // Clear the nodeResolverCache when the loader is unloaded.
+  Loader.nodeResolverCache.clear();
+
   // subject is a unique object created per loader instance.
   // This allows any code to cleanup on loader unload regardless of how
   // it was loaded. To handle unload for specific loader subject may be

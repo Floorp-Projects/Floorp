@@ -3,7 +3,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-const { SimpleStringFront } = require("devtools/server/actors/string");
+const { SimpleStringFront } = require("devtools/shared/fronts/string");
 const { Front, FrontClassWithSpec } = require("devtools/shared/protocol");
 const {
   oldStyleSheetSpec,
