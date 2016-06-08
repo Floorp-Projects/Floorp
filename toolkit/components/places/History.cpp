@@ -618,7 +618,7 @@ NS_IMPL_ISUPPORTS_INHERITED(
 class NotifyVisitObservers : public Runnable
 {
 public:
-  NotifyVisitObservers(VisitData& aPlace)
+  explicit NotifyVisitObservers(VisitData& aPlace)
   : mPlace(aPlace)
   , mHistory(History::GetService())
   {
