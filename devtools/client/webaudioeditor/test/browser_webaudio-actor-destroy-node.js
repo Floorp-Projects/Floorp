@@ -8,20 +8,18 @@
 add_task(function* () {
   let { target, front } = yield initBackend(DESTROY_NODES_URL);
 
-  let waitUntilDestroyed = getN(front, "destroy-node", 10);
   let [, , created] = yield Promise.all([
     front.setup({ reload: true }),
     once(front, "start-context"),
-    // Should create 1 destination node and 10 disposable buffer nodes
+    // Should create dest, gain, and oscillator node and 10
+    // disposable buffer nodes
     getN(front, "create-node", 13)
   ]);
 
-  // Wait for a tick before gc to prevent this test from intermittent timeout
-  // where the node never get collected.
-  yield DevToolsUtils.waitForTick();
+  let waitUntilDestroyed = getN(front, "destroy-node", 10);
 
   // Force CC so we can ensure it's run to clear out dead AudioNodes
-  forceCC();
+  forceNodeCollection();
 
   let destroyed = yield waitUntilDestroyed;
 
