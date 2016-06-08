@@ -4,75 +4,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 %endif
 
-.popup-notification-icon {
-  width: 64px;
-  height: 64px;
-  margin-inline-end: 10px;
-}
-
-.popup-notification-icon[popupid="geolocation"] {
-%ifdef XP_MACOSX
-  list-style-image: url(chrome://browser/skin/glyphs.svg#geo-osx);
-%elif defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
-  list-style-image: url(chrome://browser/skin/glyphs.svg#geo-linux-detailed);
-%else
-  list-style-image: url(chrome://browser/skin/glyphs.svg#geo-windows-detailed);
-%endif
-}
-
-.popup-notification-icon[popupid="xpinstall-disabled"],
-.popup-notification-icon[popupid="addon-install-blocked"],
-.popup-notification-icon[popupid="addon-install-origin-blocked"] {
-  list-style-image: url(chrome://browser/skin/addons/addon-install-blocked.svg);
-}
-
-.popup-notification-icon[popupid="addon-progress"] {
-  list-style-image: url(chrome://browser/skin/addons/addon-install-downloading.svg);
-}
-
-.popup-notification-icon[popupid="addon-install-failed"] {
-  list-style-image: url(chrome://browser/skin/addons/addon-install-error.svg);
-}
-
-.popup-notification-icon[popupid="addon-install-confirmation"] {
-  list-style-image: url(chrome://browser/skin/addons/addon-install-confirm.svg);
-}
-
-#addon-install-confirmation-notification[warning] .popup-notification-icon[popupid="addon-install-confirmation"] {
-  list-style-image: url(chrome://browser/skin/addons/addon-install-warning.svg);
-}
-
-.popup-notification-icon[popupid="addon-install-complete"] {
-  list-style-image: url(chrome://browser/skin/addons/addon-install-installed.svg);
-}
-
-.popup-notification-icon[popupid="addon-install-restart"] {
-  list-style-image: url(chrome://browser/skin/addons/addon-install-restart.svg);
-}
-
-.popup-notification-icon[popupid="click-to-play-plugins"] {
-  list-style-image: url(chrome://mozapps/skin/plugins/pluginBlocked-64.png);
-}
-
-.popup-notification-icon[popupid*="offline-app-requested"],
-.popup-notification-icon[popupid="offline-app-usage"] {
-  list-style-image: url(chrome://global/skin/icons/question-64.png);
-}
-
-.popup-notification-icon[popupid="password"] {
-  list-style-image: url(chrome://browser/skin/glyphs.svg#login-detailed);
-}
-
-.popup-notification-icon[popupid="webRTC-sharingMicrophone"],
-.popup-notification-icon[popupid="webRTC-shareMicrophone"] {
-  list-style-image: url(chrome://browser/skin/glyphs.svg#microphone-detailed);
-}
-
-.popup-notification-icon[popupid="servicesInstall"] {
-  list-style-image: url(chrome://browser/skin/social/services-64.png);
-}
-
-/* Notification icon box */
 #notification-popup-box {
   position: relative;
   background-color: #fff;
@@ -82,6 +13,12 @@
   border-style: solid;
   border-image: url("chrome://browser/skin/urlbar-arrow.png") 0 8 0 0 fill;
   margin-inline-end: -8px;
+}
+
+@media (min-resolution: 1.1dppx) {
+  #notification-popup-box {
+    border-image: url("chrome://browser/skin/urlbar-arrow@2x.png") 0 16 0 0 fill;
+  }
 }
 
 @conditionalForwardWithUrlbar@ > #forward-button[disabled] + #urlbar > #notification-popup-box {
@@ -106,14 +43,14 @@
    type of icon displayed. This rule must be defined before the others in order
    for its list-style-image to be overridden. */
 .notification-anchor-icon {
+  width: 16px;
+  height: 16px;
+  margin: 0 2px;
 %ifdef MOZ_WIDGET_GTK
   list-style-image: url(moz-icon://stock/gtk-dialog-info?size=16);
 %else
   list-style-image: url(chrome://global/skin/icons/information-16.png);
 %endif
-  width: 16px;
-  height: 16px;
-  margin: 0 2px;
 }
 
 @media (min-resolution: 1.1dppx) {
@@ -125,6 +62,14 @@
 %endif
   }
 }
+
+.popup-notification-icon {
+  width: 64px;
+  height: 64px;
+  margin-inline-end: 10px;
+}
+
+/* INDIVIDUAL NOTIFICATIONS */
 
 /* For the moment we apply the color filter only on the icons listed here.
    The first two selectors are used by socialchat.xml (bug 1275558). */
@@ -171,6 +116,93 @@
 %endif
 }
 
+.popup-notification-icon[popupid="geolocation"] {
+%ifdef XP_MACOSX
+  list-style-image: url(chrome://browser/skin/glyphs.svg#geo-osx);
+%elif defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
+  list-style-image: url(chrome://browser/skin/glyphs.svg#geo-linux-detailed);
+%else
+  list-style-image: url(chrome://browser/skin/glyphs.svg#geo-windows-detailed);
+%endif
+}
+
+.popup-notification-icon[popupid="indexedDB-permissions-prompt"],
+.indexedDB-icon {
+  list-style-image: url(chrome://browser/skin/glyphs.svg#indexedDB);
+}
+
+.login-icon {
+  list-style-image: url(chrome://browser/skin/glyphs.svg#login);
+}
+
+.popup-notification-icon[popupid="password"] {
+  list-style-image: url(chrome://browser/skin/glyphs.svg#login-detailed);
+}
+
+#login-fill-notification-icon {
+  /* Temporary solution until the capture and fill doorhangers are unified. */
+  transform: scaleX(-1);
+}
+
+/* The first selector is used by socialchat.xml (bug 1275558). */
+.webRTC-sharingDevices-notification-icon,
+.camera-icon,
+.popup-notification-icon[popupid="webRTC-shareDevices"],
+.popup-notification-icon[popupid="webRTC-sharingDevices"] {
+  list-style-image: url(chrome://browser/skin/glyphs.svg#camera);
+}
+
+/* The first selector is used by socialchat.xml (bug 1275558). */
+.webRTC-sharingMicrophone-notification-icon,
+.microphone-icon {
+  list-style-image: url(chrome://browser/skin/glyphs.svg#microphone);
+}
+
+.popup-notification-icon[popupid="webRTC-shareMicrophone"],
+.popup-notification-icon[popupid="webRTC-sharingMicrophone"] {
+  list-style-image: url(chrome://browser/skin/glyphs.svg#microphone-detailed);
+}
+
+.popup-notification-icon[popupid="webRTC-shareScreen"],
+.popup-notification-icon[popupid="webRTC-sharingScreen"],
+.screen-icon {
+  list-style-image: url(chrome://browser/skin/glyphs.svg#screen);
+}
+
+.popup-notification-icon[popupid="web-notifications"],
+.web-notifications-icon {
+  list-style-image: url(chrome://browser/skin/glyphs.svg#web-notifications);
+}
+
+.popup-notification-icon[popupid="pointerLock"],
+.pointer-icon {
+  list-style-image: url(chrome://browser/skin/glyphs.svg#pointer);
+}
+
+/* EME */
+
+.popup-notification-icon[popupid="drmContentPlaying"],
+.drm-icon {
+  list-style-image: url("chrome://browser/skin/drm-icon.svg#chains");
+}
+
+.drm-icon:hover:active {
+  list-style-image: url("chrome://browser/skin/drm-icon.svg#chains-pressed");
+}
+
+#eme-notification-icon[firstplay=true] {
+  animation: emeTeachingMoment 0.2s linear 0s 5 normal;
+}
+
+@keyframes emeTeachingMoment {
+  0% {transform: translateX(0); }
+  25% {transform: translateX(3px) }
+  75% {transform: translateX(-3px) }
+  100% { transform: translateX(0); }
+}
+
+/* INSTALL ADDONS */
+
 .install-icon {
   list-style-image: url(chrome://browser/skin/addons/addon-install-anchor.svg#default);
 }
@@ -183,19 +215,48 @@
   list-style-image: url(chrome://browser/skin/addons/addon-install-anchor.svg#active);
 }
 
-.popup-notification-icon[popupid="indexedDB-permissions-prompt"],
-.indexedDB-icon {
-  list-style-image: url(chrome://browser/skin/glyphs.svg#indexedDB);
+.popup-notification-icon[popupid="xpinstall-disabled"],
+.popup-notification-icon[popupid="addon-install-blocked"],
+.popup-notification-icon[popupid="addon-install-origin-blocked"] {
+  list-style-image: url(chrome://browser/skin/addons/addon-install-blocked.svg);
 }
 
-.login-icon {
-  list-style-image: url(chrome://browser/skin/glyphs.svg#login);
+.popup-notification-icon[popupid="addon-progress"] {
+  list-style-image: url(chrome://browser/skin/addons/addon-install-downloading.svg);
 }
 
-#login-fill-notification-icon {
-  /* Temporary solution until the capture and fill doorhangers are unified. */
-  transform: scaleX(-1);
+.popup-notification-icon[popupid="addon-install-failed"] {
+  list-style-image: url(chrome://browser/skin/addons/addon-install-error.svg);
 }
+
+.popup-notification-icon[popupid="addon-install-confirmation"] {
+  list-style-image: url(chrome://browser/skin/addons/addon-install-confirm.svg);
+}
+
+#addon-install-confirmation-notification[warning] .popup-notification-icon[popupid="addon-install-confirmation"] {
+  list-style-image: url(chrome://browser/skin/addons/addon-install-warning.svg);
+}
+
+.popup-notification-icon[popupid="addon-install-complete"] {
+  list-style-image: url(chrome://browser/skin/addons/addon-install-installed.svg);
+}
+
+.popup-notification-icon[popupid="addon-install-restart"] {
+  list-style-image: url(chrome://browser/skin/addons/addon-install-restart.svg);
+}
+
+.popup-notification-icon[popupid="click-to-play-plugins"] {
+  list-style-image: url(chrome://mozapps/skin/plugins/pluginBlocked-64.png);
+}
+
+/* OFFLINE APPS */
+
+.popup-notification-icon[popupid*="offline-app-requested"],
+.popup-notification-icon[popupid="offline-app-usage"] {
+  list-style-image: url(chrome://global/skin/icons/question-64.png);
+}
+
+/* PLUGINS */
 
 .plugin-icon {
   list-style-image: url(chrome://browser/skin/notification-pluginNormal.png);
@@ -221,100 +282,8 @@
   -moz-image-region: rect(0, 48px, 16px, 32px);
 }
 
-#notification-popup-box[hidden] {
-  /* Override display:none to make the pluginBlockedNotification animation work
-     when showing the notification repeatedly. */
-  display: -moz-box;
-  visibility: collapse;
-}
-
-#plugins-notification-icon.plugin-blocked[showing] {
-  animation: pluginBlockedNotification 500ms ease 0s 5 alternate both;
-}
-
-@keyframes pluginBlockedNotification {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-/* The first selector is used by socialchat.xml (bug 1275558). */
-.webRTC-sharingDevices-notification-icon,
-.camera-icon,
-.popup-notification-icon[popupid="webRTC-shareDevices"],
-.popup-notification-icon[popupid="webRTC-sharingDevices"] {
-  list-style-image: url(chrome://browser/skin/glyphs.svg#camera);
-}
-
-/* The first selector is used by socialchat.xml (bug 1275558). */
-.webRTC-sharingMicrophone-notification-icon,
-.microphone-icon {
-  list-style-image: url(chrome://browser/skin/glyphs.svg#microphone);
-}
-
-.popup-notification-icon[popupid="webRTC-shareScreen"],
-.popup-notification-icon[popupid="webRTC-sharingScreen"],
-.screen-icon {
-  list-style-image: url(chrome://browser/skin/glyphs.svg#screen);
-}
-
-.popup-notification-icon[popupid="web-notifications"],
-.web-notifications-icon {
-  list-style-image: url(chrome://browser/skin/glyphs.svg#web-notifications);
-}
-
-.popup-notification-icon[popupid="pointerLock"],
-.pointer-icon {
-  list-style-image: url(chrome://browser/skin/glyphs.svg#pointer);
-}
-
-.service-icon {
-  list-style-image: url(chrome://browser/skin/social/services-16.png);
-}
-
-.translation-icon {
-  list-style-image: url(chrome://browser/skin/translation-16.png);
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
-}
-
-.translation-icon.in-use {
-  -moz-image-region: rect(0px, 32px, 16px, 16px);
-}
-
-/* EME notifications */
-
-.popup-notification-icon[popupid="drmContentPlaying"],
-.drm-icon {
-  list-style-image: url("chrome://browser/skin/drm-icon.svg#chains");
-}
-
-.drm-icon:hover:active {
-  list-style-image: url("chrome://browser/skin/drm-icon.svg#chains-pressed");
-}
-
-#eme-notification-icon[firstplay=true] {
-  animation: emeTeachingMoment 0.2s linear 0s 5 normal;
-}
-
-@keyframes emeTeachingMoment {
-  0% {transform: translateX(0); }
-  25% {transform: translateX(3px) }
-  75% {transform: translateX(-3px) }
-  100% { transform: translateX(0); }
-}
-
-/* HiDPI notification icons */
-@media (min-resolution: 1.1dppx) {
-  #notification-popup-box {
-    border-image: url("chrome://browser/skin/urlbar-arrow@2x.png") 0 16 0 0 fill;
-  }
-
-
 %ifdef XP_MACOSX
-/* OSX only until we have icons for Windows and Linux */
+@media (min-resolution: 1.1dppx) {
   .plugin-icon {
     list-style-image: url(chrome://browser/skin/notification-pluginNormal@2x.png);
   }
@@ -338,7 +307,64 @@
   .plugin-icon:active {
     -moz-image-region: rect(0, 96px, 32px, 64px);
   }
+}
+%endif
 
+#notification-popup-box[hidden] {
+  /* Override display:none to make the pluginBlockedNotification animation work
+     when showing the notification repeatedly. */
+  display: -moz-box;
+  visibility: collapse;
+}
+
+#plugins-notification-icon.plugin-blocked[showing] {
+  animation: pluginBlockedNotification 500ms ease 0s 5 alternate both;
+}
+
+@keyframes pluginBlockedNotification {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* SOCIAL API */
+
+.popup-notification-icon[popupid="servicesInstall"] {
+  list-style-image: url(chrome://browser/skin/social/services-64.png);
+}
+
+.service-icon {
+  list-style-image: url(chrome://browser/skin/social/services-16.png);
+}
+
+%ifdef XP_MACOSX
+@media (min-resolution: 1.1dppx) {
+  .popup-notification-icon[popupid="servicesInstall"] {
+    list-style-image: url(chrome://browser/skin/social/services-64@2x.png);
+  }
+
+  .service-icon {
+    list-style-image: url(chrome://browser/skin/social/services-16@2x.png);
+  }
+}
+%endif
+
+/* TRANSLATION */
+
+.translation-icon {
+  list-style-image: url(chrome://browser/skin/translation-16.png);
+  -moz-image-region: rect(0px, 16px, 16px, 0px);
+}
+
+.translation-icon.in-use {
+  -moz-image-region: rect(0px, 32px, 16px, 16px);
+}
+
+%ifdef XP_MACOSX
+@media (min-resolution: 1.1dppx) {
   .translation-icon {
     list-style-image: url(chrome://browser/skin/translation-16@2x.png);
     -moz-image-region: rect(0px, 32px, 32px, 0px);
@@ -347,13 +373,5 @@
   .translation-icon.in-use {
     -moz-image-region: rect(0px, 64px, 32px, 32px);
   }
-
-  .popup-notification-icon[popupid="servicesInstall"] {
-    list-style-image: url(chrome://browser/skin/social/services-64@2x.png);
-  }
-
-  .service-icon {
-    list-style-image: url(chrome://browser/skin/social/services-16@2x.png);
-  }
-%endif
 }
+%endif
