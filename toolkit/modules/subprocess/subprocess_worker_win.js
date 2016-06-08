@@ -382,6 +382,9 @@ class Process extends BaseProcess {
 
   /**
    * Creates a null-separated, null-terminated string list.
+   *
+   * @param {Array<string>} strings
+   * @returns {win32.WCHAR.array}
    */
   stringList(strings) {
     // Remove empty strings, which would terminate the list early.
@@ -397,6 +400,10 @@ class Process extends BaseProcess {
    * conventions.
    *
    * @see https://msdn.microsoft.com/en-us/library/17w5ykft(v=vs.85).aspx
+   *
+   * @param {string} str
+   *        The argument string to quote.
+   * @returns {string}
    */
   quoteString(str) {
     if (!/[\s"]/.test(str)) {
