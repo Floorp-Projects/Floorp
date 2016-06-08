@@ -292,7 +292,6 @@
     "events": [
       {
         "name": "onVisited",
-        "unsupported": true,
         "type": "function",
         "description": "Fired when a URL is visited, providing the HistoryItem data for that URL.  This event fires before the page has loaded.",
         "parameters": [
