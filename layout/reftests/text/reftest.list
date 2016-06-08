@@ -24,7 +24,7 @@ HTTP(..) load ligature-with-space-1.html
 == line-editing-1c.html line-editing-1-ref.html
 == line-editing-1d.html line-editing-1-ref.html
 == line-editing-1e.html line-editing-1-ref.html
-fails-if(cocoaWidget||(winWidget&&d2d&&layersGPUAccelerated)) HTTP(..) == lineheight-metrics-1.html lineheight-metrics-1-ref.html # bug 657864
+fails-if(cocoaWidget||(winWidget&&d2d&&layersGPUAccelerated)||(winWidget&&skiaContent)) HTTP(..) == lineheight-metrics-1.html lineheight-metrics-1-ref.html # bug 657864
 HTTP(..) == lineheight-metrics-2a.html lineheight-metrics-2-ref.html
 HTTP(..) == lineheight-metrics-2b.html lineheight-metrics-2-ref.html
 == lineheight-percentage-1.html lineheight-percentage-1-ref.html
@@ -44,10 +44,10 @@ fuzzy-if(Android,255,147) == pre-line-1.html pre-line-1-ref.html
 != soft-hyphen-in-table-1.html soft-hyphen-in-table-1-notref.html
 == soft-hyphen-in-table-1.html soft-hyphen-in-table-1-ref.html
 == soft-hyphen-in-table-2.html soft-hyphen-in-table-2-ref.html
-# Cairo's FreeType and GDI backends snap glyphs to pixels, while Mac (usually)
-# and D2D have subpixel positioning.  The tests for pixel-snapping assume that
+# Cairo's FreeType and GDI backends snap glyphs to pixels, while Mac (usually),
+# D2D, and Skia have subpixel positioning.  The tests for pixel-snapping assume that
 # 1 CSS pixel == 1 device pixel
-fails-if(Android) skip-if(d2d||cocoaWidget) == subpixel-glyphs-x-1a.html subpixel-glyphs-x-1b.html
+fails-if(Android) skip-if(d2d||cocoaWidget||skiaContent) == subpixel-glyphs-x-1a.html subpixel-glyphs-x-1b.html
 # Platforms with subpixel positioning already have inconsistent glyphs by
 # design, but that is considered more tolerable because they are subpixel
 # inconsistencies.  On those platforms we just test that glyph positions are

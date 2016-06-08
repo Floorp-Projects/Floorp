@@ -24,12 +24,12 @@ fuzzy-if(skiaContent,1,343) == percent-3.html percent-3-ref.html
 
 # more serious tests, using SVG reference
 == border-circle-2.html border-circle-2-ref.xhtml
-fuzzy-if(gtkWidget,14,280) fuzzy-if(cocoaWidget,4,582) fuzzy-if(Android||B2G,36,264) fuzzy-if(d2d,51,323) fuzzy-if(winWidget&&!d2d,16,377) fuzzy-if(skiaContent,52,80) == curved-stripe-border.html curved-stripe-border-ref.svg # bug 459945
+fuzzy-if(gtkWidget,14,280) fuzzy-if(cocoaWidget,4,582) fuzzy-if(Android||B2G,36,264) fuzzy-if(d2d,51,323) fuzzy-if(winWidget&&!d2d,16,377) fuzzy-if(skiaContent,52,377) == curved-stripe-border.html curved-stripe-border-ref.svg # bug 459945
 
 # Corners
 == corner-1.html corner-1-ref.svg # bottom corners different radius than top corners
 fuzzy-if(gtkWidget,23,5) fuzzy-if(winWidget&&!d2d,23,5) fuzzy-if(d2d,32,8) fuzzy-if(Android||B2G,10,8) == corner-2.html corner-2-ref.svg # right corners different radius than left corners; see bug 500804
-fuzzy-if(gtkWidget,3,10) fuzzy-if(winWidget&&!d2d,3,10) fuzzy-if(d2d,15,32) fuzzy-if(Android||B2G,3,15) fuzzy-if(skiaContent,1,100) == corner-3.html corner-3-ref.svg
+fuzzy-if(gtkWidget,3,10) fuzzy-if(winWidget&&!d2d,3,10) fuzzy-if(d2d,15,32) fuzzy-if(Android||B2G,3,15) fuzzy-if(skiaContent,3,100) == corner-3.html corner-3-ref.svg
 fuzzy-if(skiaContent,1,2728) == corner-4.html corner-4-ref.svg
 
 # Test that radii too long are reduced
@@ -87,7 +87,7 @@ skip-if(B2G||Mulet) fuzzy-if(/^Windows\x20NT\x2010\.0/.test(http.oscpu)||/^Windo
 == iframe-1.html iframe-1-ref.html
 
 # Test for antialiasing gaps between background and border
-fuzzy-if(gtkWidget,1,9) fuzzy-if(winWidget&&!d2d,1,9) fuzzy-if(d2d,5,40) fuzzy-if(Android||B2G||skiaContent,1,5) == curved-border-background-nogap.html curved-border-background-nogap-ref.html
+fuzzy-if(gtkWidget,1,9) fuzzy-if(winWidget&&!d2d,1,9) fuzzy-if(d2d,5,40) fuzzy-if(Android||B2G||skiaContent,1,9) == curved-border-background-nogap.html curved-border-background-nogap-ref.html
 
 == color-layer-1a.html color-layer-1-ref.html
 
