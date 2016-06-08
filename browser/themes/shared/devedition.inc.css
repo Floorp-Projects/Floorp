@@ -152,7 +152,7 @@
   color: var(--chrome-color);
 }
 
-#navigator-toolbox::after {
+#navigator-toolbox:-moz-lwtheme::after {
   background: var(--chrome-navigator-toolbox-separator-color);
 }
 

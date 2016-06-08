@@ -155,9 +155,12 @@ nsFileControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
     // Setting the 'directory' attribute is simply a means of allowing our
     // event handling code in HTMLInputElement.cpp to distinguish between a
     // click on the "Choose files" button from the "Choose a folder" button.
+    if (!mBrowseDirs) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
     mBrowseDirs->SetAttr(kNameSpaceID_None, nsGkAtoms::directory,
                          EmptyString(), false);
-    if (!mBrowseDirs || !aElements.AppendElement(mBrowseDirs)) {
+    if (!aElements.AppendElement(mBrowseDirs)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
   }
@@ -291,7 +294,12 @@ nsFileControlFrame::DnDListener::IsValidDropData(nsIDOMDataTransfer* aDOMDataTra
   NS_ENSURE_TRUE(dataTransfer, false);
 
   // We only support dropping files onto a file upload control
-  RefPtr<DOMStringList> types = dataTransfer->Types();
+  ErrorResult rv;
+  RefPtr<DOMStringList> types = dataTransfer->GetTypes(rv);
+  if (NS_WARN_IF(rv.Failed())) {
+    return false;
+  }
+
   return types->Contains(NS_LITERAL_STRING("Files"));
 }
 

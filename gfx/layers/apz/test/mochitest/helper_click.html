@@ -9,8 +9,16 @@
   <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
   <script type="application/javascript">
 
-function clickButton() {
+function* clickButton(testDriver) {
   document.addEventListener('click', clicked, false);
+
+  if (getQueryArgs()['dtc']) {
+    // force a dispatch-to-content region on the document
+    document.addEventListener('wheel', function() { /* no-op */ }, { passive: false });
+    yield waitForAllPaints(function() {
+      flushApzRepaints(testDriver);
+    });
+  }
 
   synthesizeNativeClick(document.getElementById('b'), 5, 5, function() {
     dump("Finished synthesizing click, waiting for button to be clicked...\n");
@@ -22,7 +30,8 @@ function clicked(e) {
   subtestDone();
 }
 
-waitUntilApzStable().then(clickButton);
+waitUntilApzStable()
+.then(runContinuation(clickButton));
 
   </script>
 </head>

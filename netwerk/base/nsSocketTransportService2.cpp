@@ -1146,7 +1146,7 @@ nsSocketTransportService::DoPollIteration(TimeDuration *pollDuration)
                     mPollableEvent = nullptr;
                 }
                 SOCKET_LOG(("running socket transport thread without "
-                            "a pollable event now valid=%d", mPollableEvent->Valid()));
+                            "a pollable event now valid=%d", !!mPollableEvent));
                 mPollList[0].fd = mPollableEvent ? mPollableEvent->PollableFD() : nullptr;
                 mPollList[0].in_flags = PR_POLL_READ | PR_POLL_EXCEPT;
                 mPollList[0].out_flags = 0;

@@ -57,9 +57,10 @@ class ConvolverNode;
 class DelayNode;
 class DynamicsCompressorNode;
 class GainNode;
-class HTMLMediaElement;
-class MediaElementAudioSourceNode;
 class GlobalObject;
+class HTMLMediaElement;
+class IIRFilterNode;
+class MediaElementAudioSourceNode;
 class MediaStreamAudioDestinationNode;
 class MediaStreamAudioSourceNode;
 class OscillatorNode;
@@ -251,6 +252,11 @@ public:
   already_AddRefed<BiquadFilterNode>
   CreateBiquadFilter(ErrorResult& aRv);
 
+  already_AddRefed<IIRFilterNode>
+  CreateIIRFilter(const mozilla::dom::binding_detail::AutoSequence<double>& aFeedforward,
+                  const mozilla::dom::binding_detail::AutoSequence<double>& aFeedback,
+                  mozilla::ErrorResult& aRv);
+
   already_AddRefed<OscillatorNode>
   CreateOscillator(ErrorResult& aRv);
 
@@ -293,6 +299,8 @@ public:
   void UpdatePannerSource();
 
   uint32_t MaxChannelCount() const;
+
+  uint32_t ActiveNodeCount() const;
 
   void Mute() const;
   void Unmute() const;

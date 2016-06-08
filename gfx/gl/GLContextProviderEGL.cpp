@@ -20,10 +20,6 @@
         #include "nsScreenManagerGonk.h"
     #endif
 
-    #ifdef MOZ_WIDGET_ANDROID
-        #include "AndroidBridge.h"
-    #endif
-
     #ifdef ANDROID
         #include <android/log.h>
         #define LOG(args...)  __android_log_print(ANDROID_LOG_INFO, "Gonk" , ## args)
@@ -173,15 +169,7 @@ CreateSurfaceForWindow(nsIWidget* widget, const EGLConfig& config) {
 
     MOZ_ASSERT(widget);
 #ifdef MOZ_WIDGET_ANDROID
-    void* javaSurface = GET_NATIVE_WINDOW(widget);
-    if (!javaSurface) {
-        MOZ_CRASH("GFX: Failed to get Java surface.\n");
-    }
-    JNIEnv* const env = jni::GetEnvForThread();
-    void* nativeWindow = AndroidBridge::Bridge()->AcquireNativeWindow(env, reinterpret_cast<jobject>(javaSurface));
-    newSurface = sEGLLibrary.fCreateWindowSurface(sEGLLibrary.fGetDisplay(EGL_DEFAULT_DISPLAY), config,
-                                                  nativeWindow, 0);
-    AndroidBridge::Bridge()->ReleaseNativeWindow(nativeWindow);
+    newSurface = EGLSurface(widget->GetNativeData(NS_NATIVE_NEW_EGL_SURFACE));
 #else
     newSurface = sEGLLibrary.fCreateWindowSurface(EGL_DISPLAY(), config,
                                                   GET_NATIVE_WINDOW(widget), 0);

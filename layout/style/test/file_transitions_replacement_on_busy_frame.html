@@ -47,7 +47,8 @@ window.addEventListener("load", function() {
 
   // Wait for a paint to ensure that the first transition has started.
   waitForAllPaints(function() {
-    var previousMatrix;
+    var previousPropertyValue;
+    var previousKeyframeValue;
     var anim;
     requestAnimationFrame(function() {
       // Start second transition
@@ -56,7 +57,8 @@ window.addEventListener("load", function() {
 
       anim = div.getAnimations()[0];
       var properties = SpecialPowers.wrap(anim.effect).getProperties();
-      previousMatrix = properties[0].values[0].value;
+      previousPropertyValue = properties[0].values[0].value;
+      previousKeyframeValue = anim.effect.getKeyframes()[0].transform;
     });
 
     requestAnimationFrame(function() {
@@ -73,9 +75,12 @@ window.addEventListener("load", function() {
       // process that we update the transition start point).
       waitForAllPaints(function() {
         var properties = SpecialPowers.wrap(anim.effect).getProperties();
-        var currentMatrix = properties[0].values[0].value;
-        isnot(currentMatrix, previousMatrix,
+        var currentPropertyValue = properties[0].values[0].value;
+        isnot(currentPropertyValue, previousPropertyValue,
               "From value of transition is updated since the moment when " +
+              "it was generated");
+        isnot(anim.effect.getKeyframes()[0].transform, previousKeyframeValue,
+              "Keyframe value of transition is updated since the moment when " +
               "it was generated");
         finish();
       });

@@ -581,7 +581,9 @@ nsDeleteCommand::IsCommandEnabled(const char *aCommandName,
   nsCOMPtr<nsIEditor> editor = do_QueryInterface(aCommandRefCon);
   *outCmdEnabled = false;
 
-  NS_ENSURE_TRUE(editor, NS_OK);
+  if (!editor) {
+    return NS_OK;
+  }
 
   // We can generally delete whenever the selection is editable.  However,
   // cmd_delete doesn't make sense if the selection is collapsed because it's

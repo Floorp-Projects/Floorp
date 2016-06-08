@@ -1133,8 +1133,22 @@ class CGHeaders(CGWrapper):
         # Now make sure we're not trying to include the header from inside itself
         declareIncludes.discard(prefix + ".h")
 
+        def addHeaderForFunc(func, desc):
+            if func is None:
+                return
+            # Include the right class header, which we can only do
+            # if this is a class member function.
+            if desc is not None and not desc.headerIsDefault:
+                # An explicit header file was provided, assume that we know
+                # what we're doing.
+                return
+
+            if "::" in func:
+                # Strip out the function name and convert "::" to "/"
+                bindingHeaders.add("/".join(func.split("::")[:-1]) + ".h")
+
         # Now for non-callback descriptors make sure we include any
-        # headers needed by Func declarations.
+        # headers needed by Func declarations and other things like that.
         for desc in descriptors:
             # If this is an iterator interface generated for a seperate
             # iterable interface, skip generating type includes, as we have
@@ -1142,29 +1156,15 @@ class CGHeaders(CGWrapper):
             if desc.interface.isExternal() or desc.interface.isIteratorInterface():
                 continue
 
-            def addHeaderForFunc(func):
-                if func is None:
-                    return
-                # Include the right class header, which we can only do
-                # if this is a class member function.
-                if not desc.headerIsDefault:
-                    # An explicit header file was provided, assume that we know
-                    # what we're doing.
-                    return
-
-                if "::" in func:
-                    # Strip out the function name and convert "::" to "/"
-                    bindingHeaders.add("/".join(func.split("::")[:-1]) + ".h")
-
             for m in desc.interface.members:
-                addHeaderForFunc(PropertyDefiner.getStringAttr(m, "Func"))
+                addHeaderForFunc(PropertyDefiner.getStringAttr(m, "Func"), desc)
                 staticTypeOverride = PropertyDefiner.getStringAttr(m, "StaticClassOverride")
                 if staticTypeOverride:
                     bindingHeaders.add("/".join(staticTypeOverride.split("::")) + ".h")
             # getExtendedAttribute() returns a list, extract the entry.
             funcList = desc.interface.getExtendedAttribute("Func")
             if funcList is not None:
-                addHeaderForFunc(funcList[0])
+                addHeaderForFunc(funcList[0], desc)
 
             if desc.interface.maplikeOrSetlikeOrIterable:
                 # We need ToJSValue.h for maplike/setlike type conversions
@@ -1183,6 +1183,12 @@ class CGHeaders(CGWrapper):
             if d.parent:
                 declareIncludes.add(self.getDeclarationFilename(d.parent))
             bindingHeaders.add(self.getDeclarationFilename(d))
+            for m in d.members:
+                addHeaderForFunc(PropertyDefiner.getStringAttr(m, "Func"),
+                                 None)
+            # No need to worry about Func on members of ancestors, because that
+            # will happen automatically in whatever files those ancestors live
+            # in.
 
         for c in callbacks:
             bindingHeaders.add(self.getDeclarationFilename(c))
@@ -3323,6 +3329,32 @@ class CGDefineDOMInterfaceMethod(CGAbstractMethod):
         return getConstructor
 
 
+def getConditionList(idlobj, cxName, objName):
+    """
+    Get the list of conditions for idlobj (to be used in "is this enabled"
+    checks).  This will be returned as a CGList with " &&\n" as the separator,
+    for readability.
+
+    objName is the name of the object that we're working with, because some of
+    our test functions want that.
+    """
+    conditions = []
+    pref = idlobj.getExtendedAttribute("Pref")
+    if pref:
+        assert isinstance(pref, list) and len(pref) == 1
+        conditions.append('Preferences::GetBool("%s")' % pref[0])
+    if idlobj.getExtendedAttribute("ChromeOnly"):
+        conditions.append("nsContentUtils::ThreadsafeIsCallerChrome()")
+    func = idlobj.getExtendedAttribute("Func")
+    if func:
+        assert isinstance(func, list) and len(func) == 1
+        conditions.append("%s(%s, %s)" % (func[0], cxName, objName))
+    if idlobj.getExtendedAttribute("SecureContext"):
+        conditions.append("mozilla::dom::IsSecureContextOrObjectIsFromSecureContext(%s, %s)" % (cxName, objName))
+
+    return CGList((CGGeneric(cond) for cond in conditions), " &&\n")
+
+
 class CGConstructorEnabled(CGAbstractMethod):
     """
     A method for testing whether we should be exposing this interface
@@ -3338,7 +3370,6 @@ class CGConstructorEnabled(CGAbstractMethod):
     def definition_body(self):
         body = CGList([], "\n")
 
-        conditions = []
         iface = self.descriptor.interface
 
         if not iface.isExposedOnMainThread():
@@ -3365,34 +3396,23 @@ class CGConstructorEnabled(CGAbstractMethod):
                                                    "!NS_IsMainThread()")
             body.append(exposedInWorkerCheck)
 
-        pref = iface.getExtendedAttribute("Pref")
-        if pref:
-            assert isinstance(pref, list) and len(pref) == 1
-            conditions.append('Preferences::GetBool("%s")' % pref[0])
-        if iface.getExtendedAttribute("ChromeOnly"):
-            conditions.append("nsContentUtils::ThreadsafeIsCallerChrome()")
-        func = iface.getExtendedAttribute("Func")
-        if func:
-            assert isinstance(func, list) and len(func) == 1
-            conditions.append("%s(aCx, aObj)" % func[0])
-        if iface.getExtendedAttribute("SecureContext"):
-            conditions.append("mozilla::dom::IsSecureContextOrObjectIsFromSecureContext(aCx, aObj)")
+        conditions = getConditionList(iface, "aCx", "aObj")
         availableIn = getAvailableInTestFunc(iface)
         if availableIn:
-            conditions.append("%s(aCx, aObj)" % availableIn)
+            conditions.append(CGGeneric("%s(aCx, aObj)" % availableIn))
         checkAnyPermissions = self.descriptor.checkAnyPermissionsIndex
         if checkAnyPermissions is not None:
-            conditions.append("CheckAnyPermissions(aCx, aObj, anypermissions_%i)" % checkAnyPermissions)
+            conditions.append(CGGeneric("CheckAnyPermissions(aCx, aObj, anypermissions_%i)" % checkAnyPermissions))
         checkAllPermissions = self.descriptor.checkAllPermissionsIndex
         if checkAllPermissions is not None:
-            conditions.append("CheckAllPermissions(aCx, aObj, allpermissions_%i)" % checkAllPermissions)
+            conditions.append(CGGeneric("CheckAllPermissions(aCx, aObj, allpermissions_%i)" % checkAllPermissions))
+
         # We should really have some conditions
         assert len(body) or len(conditions)
 
         conditionsWrapper = ""
         if len(conditions):
-            conditionsWrapper = CGWrapper(CGList((CGGeneric(cond) for cond in conditions),
-                                                 " &&\n"),
+            conditionsWrapper = CGWrapper(conditions,
                                           pre="return ",
                                           post=";\n",
                                           reindent=True)
@@ -12762,18 +12782,19 @@ class CGDictionary(CGThing):
         # by the author needs to get converted, so we can remember if we have any
         # members present here.
         conversionReplacements["convert"] += "mIsAnyMemberPresent = true;\n"
-        if isChromeOnly(member):
-            conversion = ("if (!isNull) {\n"
-                          "  if (!nsContentUtils::ThreadsafeIsCallerChrome()) {\n"
-                          "    temp->setUndefined();\n"
-                          "  } else if (!${propGet}) {\n"
-                          "    return false;\n"
-                          "  }\n"
-                          "}\n")
-        else:
-            conversion = ("if (!isNull && !${propGet}) {\n"
-                          "  return false;\n"
-                          "}\n")
+        setTempValue = CGGeneric(dedent(
+            """
+            if (!${propGet}) {
+              return false;
+            }
+            """))
+        conditions = getConditionList(member, "cx", "*object")
+        if len(conditions) != 0:
+            setTempValue = CGIfElseWrapper(conditions.define(),
+                                           setTempValue,
+                                           CGGeneric("temp->setUndefined();\n"))
+        setTempValue = CGIfWrapper(setTempValue, "!isNull")
+        conversion = setTempValue.define()
         if member.defaultValue:
             if (member.type.isUnion() and
                 (not member.type.nullable() or
@@ -12883,8 +12904,9 @@ class CGDictionary(CGThing):
         if member.canHaveMissingValue():
             # Only do the conversion if we have a value
             conversion = CGIfWrapper(conversion, "%s.WasPassed()" % memberLoc)
-        if isChromeOnly(member):
-            conversion = CGIfWrapper(conversion, "nsContentUtils::ThreadsafeIsCallerChrome()")
+        conditions = getConditionList(member, "cx", "obj")
+        if len(conditions) != 0:
+            conversion = CGIfWrapper(conversion, conditions.define())
         return conversion
 
     def getMemberTrace(self, member):
@@ -13497,8 +13519,6 @@ class CGBindingRoot(CGThing):
                     (desc.interface.isJSImplemented() and
                      any(clearableCachedAttrs(desc))))
 
-        bindingHeaders["nsContentUtils.h"] = any(
-            descriptorHasChromeOnly(d) for d in descriptors)
         # XXXkhuey ugly hack but this is going away soon.
         bindingHeaders['xpcprivate.h'] = webIDLFile.endswith("EventTarget.webidl")
         hasWorkerStuff = len(config.getDescriptors(webIDLFile=webIDLFile,
@@ -13509,6 +13529,17 @@ class CGBindingRoot(CGThing):
         bindingHeaders["nsThreadUtils.h"] = hasThreadChecks
 
         dictionaries = config.getDictionaries(webIDLFile=webIDLFile)
+
+        def dictionaryHasChromeOnly(dictionary):
+            while dictionary:
+                if (any(isChromeOnly(m) for m in dictionary.members)):
+                    return True
+                dictionary = dictionary.parent
+            return False
+
+        bindingHeaders["nsContentUtils.h"] = (
+            any(descriptorHasChromeOnly(d) for d in descriptors) or
+            any(dictionaryHasChromeOnly(d) for d in dictionaries))
         hasNonEmptyDictionaries = any(
             len(dict.members) > 0 for dict in dictionaries)
         mainCallbacks = config.getCallbacks(webIDLFile=webIDLFile,

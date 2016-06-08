@@ -65,17 +65,14 @@ def taskgraph_decision(options):
     write_artifact('parameters.yml', dict(**parameters))
 
     # write out the full graph for reference
-    write_artifact('full-task-graph.json',
-                   taskgraph_to_json(tgg.full_task_graph))
+    write_artifact('full-task-graph.json', tgg.full_task_graph.to_json())
 
     # write out the target task set to allow reproducing this as input
-    write_artifact('target-tasks.json',
-                   tgg.target_task_set.tasks.keys())
+    write_artifact('target-tasks.json', tgg.target_task_set.tasks.keys())
 
     # write out the optimized task graph to describe what will actually happen,
     # and the map of labels to taskids
-    write_artifact('task-graph.json',
-                   taskgraph_to_json(tgg.optimized_task_graph))
+    write_artifact('task-graph.json', tgg.optimized_task_graph.to_json())
     write_artifact('label-to-taskid.json', tgg.label_to_taskid)
 
     # actually create the graph
@@ -112,25 +109,6 @@ def get_decision_parameters(options):
         parameters.update(PER_PROJECT_PARAMETERS['default'])
 
     return Parameters(parameters)
-
-
-def taskgraph_to_json(taskgraph):
-    tasks = taskgraph.tasks
-
-    def tojson(task):
-        return {
-            'label': task.label,
-            'task': task.task,
-            'attributes': task.attributes,
-            'dependencies': []
-        }
-    rv = {label: tojson(tasks[label]) for label in taskgraph.graph.nodes}
-
-    # add dependencies with one trip through the graph edges
-    for (left, right, name) in taskgraph.graph.edges:
-        rv[left]['dependencies'].append((name, right))
-
-    return rv
 
 
 def write_artifact(filename, data):

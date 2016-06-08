@@ -93,9 +93,9 @@ def get_parser():
     usage = """%(prog)s [OPTIONS] [TESTS]
                Where TESTS are relative to the tests directory."""
     parser = argparse.ArgumentParser(usage=usage)
-    parser.add_argument('-q', '--quiet', action='store_false', dest='verbose', default=True,
-                        help="Don't print passing tests.")
-    parser.add_argument('-v', '--verbose', action='store_true', dest='verbose', default=True,
+    parser.add_argument('-q', '--quiet', action='store_false', dest='verbose',
+                        help="Don't print passing tests.", default=None)
+    parser.add_argument('-v', '--verbose', action='store_true', dest='verbose',
                         help="Run tests in verbose mode.")
     parser.add_argument('tests', nargs="*", help="Tests to run")
     return parser
@@ -103,4 +103,6 @@ def get_parser():
 if __name__ == '__main__':
     parser = get_parser()
     args = parser.parse_args()
+    if args.verbose is None:
+        args.verbose = True
     run_tests(args.tests, verbose=args.verbose)

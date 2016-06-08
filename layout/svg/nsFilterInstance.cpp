@@ -364,7 +364,7 @@ nsFilterInstance::BuildSourcePaint(SourceInfo *aSource,
   }
 
   if (!mPaintTransform.IsSingular()) {
-    RefPtr<gfxContext> gfx = gfxContext::ForDrawTarget(offscreenDT);
+    RefPtr<gfxContext> gfx = gfxContext::CreateOrNull(offscreenDT);
     MOZ_ASSERT(gfx); // already checked the draw target above
     gfx->Save();
     gfx->Multiply(mPaintTransform *
@@ -444,7 +444,7 @@ nsFilterInstance::BuildSourceImage(DrawTarget* aTargetDT)
   if (!deviceToFilterSpace.Invert()) {
     return NS_ERROR_FAILURE;
   }
-  RefPtr<gfxContext> ctx = gfxContext::ForDrawTarget(offscreenDT);
+  RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(offscreenDT);
   MOZ_ASSERT(ctx); // already checked the draw target above
   ctx->SetMatrix(
     ctx->CurrentMatrix().Translate(-neededRect.TopLeft()).

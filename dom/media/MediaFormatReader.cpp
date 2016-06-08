@@ -1343,7 +1343,7 @@ MediaFormatReader::WaitForData(MediaData::Type aType)
 }
 
 nsresult
-MediaFormatReader::ResetDecode(TargetQueues aQueues)
+MediaFormatReader::ResetDecode(TrackSet aTracks)
 {
   MOZ_ASSERT(OnTaskQueue());
   LOGV("");
@@ -1352,15 +1352,22 @@ MediaFormatReader::ResetDecode(TargetQueues aQueues)
   mSkipRequest.DisconnectIfExists();
 
   // Do the same for any data wait promises.
-  if (aQueues == AUDIO_VIDEO) {
-    mAudio.mWaitingPromise.RejectIfExists(WaitForDataRejectValue(MediaData::AUDIO_DATA, WaitForDataRejectValue::CANCELED), __func__);
+  if (aTracks.contains(TrackInfo::kAudioTrack)) {
+    mAudio.mWaitingPromise.RejectIfExists(
+        WaitForDataRejectValue(MediaData::AUDIO_DATA,
+                               WaitForDataRejectValue::CANCELED), __func__);
   }
-  mVideo.mWaitingPromise.RejectIfExists(WaitForDataRejectValue(MediaData::VIDEO_DATA, WaitForDataRejectValue::CANCELED), __func__);
+
+  if (aTracks.contains(TrackInfo::kVideoTrack)) {
+    mVideo.mWaitingPromise.RejectIfExists(
+        WaitForDataRejectValue(MediaData::VIDEO_DATA,
+                               WaitForDataRejectValue::CANCELED), __func__);
+  }
 
   // Reset miscellaneous seeking state.
   mPendingSeekTime.reset();
 
-  if (HasVideo()) {
+  if (HasVideo() && aTracks.contains(TrackInfo::kVideoTrack)) {
     mVideo.ResetDemuxer();
     Reset(TrackInfo::kVideoTrack);
     if (mVideo.HasPromise()) {
@@ -1368,14 +1375,15 @@ MediaFormatReader::ResetDecode(TargetQueues aQueues)
     }
   }
 
-  if (HasAudio() && aQueues == AUDIO_VIDEO) {
+  if (HasAudio() && aTracks.contains(TrackInfo::kAudioTrack)) {
     mAudio.ResetDemuxer();
     Reset(TrackInfo::kAudioTrack);
     if (mAudio.HasPromise()) {
       mAudio.RejectPromise(CANCELED, __func__);
     }
   }
-  return MediaDecoderReader::ResetDecode(aQueues);
+
+  return MediaDecoderReader::ResetDecode(aTracks);
 }
 
 void

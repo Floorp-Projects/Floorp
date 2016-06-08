@@ -45,6 +45,7 @@ class UnpackFinder(FileFinder):
         self.omnijar = None
         self.jarlogs = {}
         self.optimizedjars = False
+        self.compressed = True
 
         jars = set()
 
@@ -136,6 +137,8 @@ class UnpackFinder(FileFinder):
         jar = JarReader(fileobj=file.open())
         if jar.is_optimized:
             self.optimizedjars = True
+        if not any(f.compressed for f in jar):
+            self.compressed = False
         if jar.last_preloaded:
             jarlog = jar.entries.keys()
             self.jarlogs[path] = jarlog[:jarlog.index(jar.last_preloaded) + 1]

@@ -888,7 +888,7 @@ dosprintf(SprintfState* aState, const char16_t* aFmt, va_list aAp)
       }
 
       if (nas[i - 1].type == NumArgState::UNKNOWN) {
-        if (nas && (nas != nasArray)) {
+        if (nas != nasArray) {
           PR_DELETE(nas);
         }
         return -1;

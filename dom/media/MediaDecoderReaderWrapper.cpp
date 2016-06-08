@@ -393,21 +393,24 @@ MediaDecoderReaderWrapper::SetIdle()
 }
 
 void
-MediaDecoderReaderWrapper::ResetDecode(TargetQueues aQueues)
+MediaDecoderReaderWrapper::ResetDecode(TrackSet aTracks)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
 
-  if (aQueues == MediaDecoderReader::AUDIO_VIDEO) {
+  if (aTracks.contains(TrackInfo::kAudioTrack)) {
     mAudioDataRequest.DisconnectIfExists();
     mAudioWaitRequest.DisconnectIfExists();
   }
-  mVideoDataRequest.DisconnectIfExists();
-  mVideoWaitRequest.DisconnectIfExists();
+
+  if (aTracks.contains(TrackInfo::kVideoTrack)) {
+    mVideoDataRequest.DisconnectIfExists();
+    mVideoWaitRequest.DisconnectIfExists();
+  }
 
   nsCOMPtr<nsIRunnable> r =
-    NewRunnableMethod<TargetQueues>(mReader,
-                                    &MediaDecoderReader::ResetDecode,
-                                    aQueues);
+    NewRunnableMethod<TrackSet>(mReader,
+                                &MediaDecoderReader::ResetDecode,
+                                aTracks);
   mReader->OwnerThread()->Dispatch(r.forget());
 }
 

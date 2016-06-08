@@ -1,0 +1,108 @@
+#!/usr/bin/env python
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this,
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+from __future__ import print_function, unicode_literals
+
+import os
+import subprocess
+import sys
+from textwrap import wrap
+
+
+def call(cmd, **kwargs):
+    print(" ".join(cmd))
+    return subprocess.call(cmd, **kwargs)
+
+
+def resume():
+    call(['run-mozharness'])
+
+
+def setup():
+    call(['run-mozharness', '--no-run-tests'])
+    print("Mozharness has finished downloading the build and "
+          "tests to {}.".format(os.path.join(os.getcwd(), 'build')))
+
+
+def clone():
+    repo = os.environ['GECKO_HEAD_REPOSITORY']
+    rev = os.environ['GECKO_HEAD_REV']
+    clone_path = os.path.expanduser(os.path.join('~', 'gecko'))
+
+    # try is too large to clone, instead clone central and pull
+    # in changes from try
+    if "hg.mozilla.org/try" in repo:
+        central = 'http://hg.mozilla.org/mozilla-central'
+        call(['hg', 'clone', '-U', central, clone_path])
+        call(['hg', 'pull', '-u', '-r', rev, repo], cwd=clone_path)
+    else:
+        call(['hg', 'clone', '-u', rev, repo, clone_path])
+    print("Finished cloning to {} at revision {}.".format(
+                clone_path, rev))
+
+
+def exit():
+    pass
+
+
+OPTIONS = [
+    ('Resume task', resume,
+     "Resume the original task without modification. This can be useful for "
+     "passively monitoring it from another shell."),
+    ('Setup task', setup,
+     "Setup the task (download the application and tests) but don't run the "
+     "tests just yet. The tests can be run with a custom configuration later "
+     "(experimental)."),
+    ('Clone gecko', clone,
+     "Perform a clone of gecko using the task's repo and update it to the "
+     "task's revision."),
+    ('Exit', exit, "Exit this wizard and return to the shell.")
+]
+
+
+def _fmt_options():
+    max_line_len = 60
+    max_name_len = max(len(o[0]) for o in OPTIONS)
+
+    # TODO Pad will be off if there are more than 9 options.
+    pad = ' ' * (max_name_len+6)
+
+    msg = []
+    for i, (name, _, desc) in enumerate(OPTIONS):
+        desc = wrap(desc, width=max_line_len)
+        desc = [desc[0]] + [pad + l for l in desc[1:]]
+
+        optstr = '{}) {} - {}\n'.format(
+            i+1, name.ljust(max_name_len), '\n'.join(desc))
+        msg.append(optstr)
+    msg.append("Select one of the above options: ")
+    return '\n'.join(msg)
+
+
+def wizard():
+    print("This wizard can help you get started with some common debugging "
+          "workflows.\nWhat would you like to do?\n")
+    print(_fmt_options(), end="")
+    choice = None
+    while True:
+        choice = raw_input().decode('utf8')
+        try:
+            choice = int(choice)-1
+            if 0 <= choice < len(OPTIONS):
+                break
+        except ValueError:
+            pass
+
+        print("Must provide an integer from 1-{}:".format(len(OPTIONS)))
+
+    func = OPTIONS[choice][1]
+    ret = func()
+
+    print("Use the 'run-wizard' command to start this wizard again.")
+    return ret
+
+
+if __name__ == '__main__':
+    sys.exit(wizard())

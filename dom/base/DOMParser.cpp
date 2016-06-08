@@ -10,6 +10,7 @@
 #include "nsNetUtil.h"
 #include "nsIStreamListener.h"
 #include "nsStringStream.h"
+#include "nsIScriptError.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsCRT.h"
 #include "nsStreamUtils.h"
@@ -321,9 +322,7 @@ DOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
 {
   NS_ENSURE_STATE(!mAttemptedInit);
   mAttemptedInit = true;
-  
   NS_ENSURE_ARG(principal || documentURI);
-
   mDocumentURI = documentURI;
   
   if (!mDocumentURI) {
@@ -339,6 +338,18 @@ DOMParser::Init(nsIPrincipal* principal, nsIURI* documentURI,
   mPrincipal = principal;
   nsresult rv;
   if (!mPrincipal) {
+    // BUG 1237080 -- in this case we're getting a chrome privilege scripted
+    // DOMParser object creation without an explicit principal set.  This is
+    // now deprecated.
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    NS_LITERAL_CSTRING("DOM"),
+                                    nullptr,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "ChromeScriptedDOMParserWithoutPrincipal",
+                                    nullptr,
+                                    0,
+                                    documentURI);
+
     PrincipalOriginAttributes attrs;
     mPrincipal = BasePrincipal::CreateCodebasePrincipal(mDocumentURI, attrs);
     NS_ENSURE_TRUE(mPrincipal, NS_ERROR_FAILURE);

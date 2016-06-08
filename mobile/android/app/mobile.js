@@ -582,11 +582,7 @@ pref("apz.overscroll.enabled", true);
 #endif
 
 pref("layers.progressive-paint", true);
-#ifdef NIGHTLY_BUILD
-pref("layers.low-precision-buffer", false);
-#else
 pref("layers.low-precision-buffer", true);
-#endif
 pref("layers.low-precision-resolution", "0.25");
 pref("layers.low-precision-opacity", "1.0");
 // We want to limit layers for two reasons:
@@ -744,10 +740,6 @@ pref("layout.framevisibility.numscrollportwidths", 1);
 pref("layout.framevisibility.numscrollportheights", 1);
 
 pref("layers.enable-tiles", true);
-#ifdef NIGHTLY_BUILD
-pref("layers.tiles.fade-in.enabled", true);
-pref("layers.tiles.fade-in.duration-ms", 250);
-#endif
 
 // Enable the dynamic toolbar
 pref("browser.chrome.dynamictoolbar", true);
@@ -902,6 +894,7 @@ pref("dom.push.debug", false);
 // The upstream autopush endpoint must have the Google API key corresponding to
 // the App's sender ID; we bake this assumption directly into the URL.
 pref("dom.push.serverURL", "https://updates-autopush.stage.mozaws.net/v1/gcm/@MOZ_ANDROID_GCM_SENDERID@");
+pref("dom.push.maxRecentMessageIDsPerSubscription", 0);
 
 #ifdef MOZ_ANDROID_GCM
 pref("dom.push.enabled", true);

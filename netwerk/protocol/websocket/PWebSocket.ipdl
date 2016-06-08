@@ -7,6 +7,7 @@
 
 include protocol PNecko;
 include protocol PBrowser;
+include protocol PTransportProvider;
 include InputStreamParams;
 include URIParams;
 include NeckoChannelParams;
@@ -14,9 +15,16 @@ include NeckoChannelParams;
 include protocol PBlob; //FIXME: bug #792908
 
 using class IPC::SerializedLoadContext from "SerializedLoadContext.h";
+using struct mozilla::void_t from "ipc/IPCMessageUtils.h";
 
 namespace mozilla {
 namespace net {
+
+union OptionalTransportProvider
+{
+  PTransportProvider;
+  void_t;
+};
 
 async protocol PWebSocket
 {
@@ -24,7 +32,7 @@ async protocol PWebSocket
 
 parent:
   // Forwarded methods corresponding to methods on nsIWebSocketChannel
-  async AsyncOpen(URIParams aURI,
+  async AsyncOpen(OptionalURIParams aURI,
                   nsCString aOrigin,
                   uint64_t aInnerWindowID,
                   nsCString aProtocol,
@@ -34,7 +42,9 @@ parent:
                   bool aClientSetPingInterval,
                   uint32_t aPingTimeout,
                   bool aClientSetPingTimeout,
-                  OptionalLoadInfoArgs aLoadInfoArgs);
+                  OptionalLoadInfoArgs aLoadInfoArgs,
+                  OptionalTransportProvider aProvider,
+                  nsCString aNegotiatedExtensions);
   async Close(uint16_t code, nsCString reason);
   async SendMsg(nsCString aMsg);
   async SendBinaryMsg(nsCString aMsg);

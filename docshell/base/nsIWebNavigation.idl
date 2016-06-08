@@ -355,4 +355,10 @@ interface nsIWebNavigation : nsISupports
    * The session history object used by this web navigation instance.
    */
   attribute nsISHistory sessionHistory;
+
+  /**
+   * Set an OriginAttributes dictionary in the docShell. This can be done only
+   * before loading any content.
+   */
+  void setOriginAttributesBeforeLoading(in jsval originAttributes);
 };
