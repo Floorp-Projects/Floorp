@@ -96,7 +96,8 @@ RelatedAccIterator::Next()
     return nullptr;
 
   while (mIndex < mProviders->Length()) {
-    DocAccessible::AttrRelProvider* provider = (*mProviders)[mIndex++];
+    const std::unique_ptr<DocAccessible::AttrRelProvider>& provider =
+      (*mProviders)[mIndex++];
 
     // Return related accessible for the given attribute and if the provider
     // content is in the same binding in the case of XBL usage.
