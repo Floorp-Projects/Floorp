@@ -57,11 +57,11 @@ skip-if(B2G||Mulet) == canvas-drawImage-slice-1a.html lime100x100-ref.html # Ini
 # Simple <img> tests
 == img-simple-1.html  lime100x100-ref.html
 == img-simple-2.html  lime100x100-ref.html
-fuzzy-if(skiaContent,255,150) == img-simple-3.html  img-simple-3-ref.html
+fuzzy-if(skiaContent,255,350) == img-simple-3.html  img-simple-3-ref.html
 == img-simple-4.html  lime100x100-ref.html
-fuzzy-if(skiaContent,255,50) == img-simple-5.html  img-simple-5-ref.html
+fuzzy-if(skiaContent,255,90) == img-simple-5.html  img-simple-5-ref.html
 skip-if(B2G||Mulet) == img-simple-6.html  lime100x100-ref.html # bug 773482 # Initial mulet triage: parity with B2G/B2G Desktop
-== img-simple-7.html  img-simple-7-ref.html
+fuzzy-if(skiaContent,255,27) == img-simple-7.html  img-simple-7-ref.html
 
 # Test with mix of <html:img> and <svg:image> referring to the same images,
 # with a variety of preserveAspectRatio values in play.
