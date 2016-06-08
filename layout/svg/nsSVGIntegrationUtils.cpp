@@ -455,8 +455,12 @@ GenerateMaskSurface(const nsSVGIntegrationUtils::PaintFramesParams& aParams,
                                 SurfaceFormat::A8)
     : ctx.GetDrawTarget()->CreateSimilarDrawTarget(maskSurfaceRect.Size(),
                                                    SurfaceFormat::A8);
+  if (!maskDT || !maskDT->IsValid()) {
+    return;
+  }
 
-  RefPtr<gfxContext> maskContext = gfxContext::ForDrawTarget(maskDT);
+  RefPtr<gfxContext> maskContext = gfxContext::CreateOrNull(maskDT);
+  MOZ_ASSERT(maskContext);
 
   // Set ctx's matrix on maskContext, offset by the maskSurfaceRect's position.
   // This makes sure that we combine the masks in device space.
@@ -681,7 +685,7 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
         context.Restore();
         return;
       }
-      target = gfxContext::ForDrawTarget(targetDT);
+      target = gfxContext::CreateOrNull(targetDT);
       MOZ_ASSERT(target); // already checked the draw target above
       target->SetMatrix(context.CurrentMatrix() * gfxMatrix::Translation(-drawRect.TopLeft()));
       targetOffset = drawRect.TopLeft();

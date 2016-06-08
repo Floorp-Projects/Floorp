@@ -85,11 +85,11 @@ gfxContext::gfxContext(DrawTarget *aTarget, const Point& aDeviceOffset)
 }
 
 /* static */ already_AddRefed<gfxContext>
-gfxContext::ForDrawTarget(DrawTarget* aTarget,
-                          const mozilla::gfx::Point& aDeviceOffset)
+gfxContext::CreateOrNull(DrawTarget* aTarget,
+                         const mozilla::gfx::Point& aDeviceOffset)
 {
   if (!aTarget || !aTarget->IsValid()) {
-    gfxCriticalNote << "Invalid target in gfxContext::ForDrawTarget " << hexa(aTarget);
+    gfxCriticalNote << "Invalid target in gfxContext::CreateOrNull " << hexa(aTarget);
     return nullptr;
   }
 
@@ -98,10 +98,10 @@ gfxContext::ForDrawTarget(DrawTarget* aTarget,
 }
 
 /* static */ already_AddRefed<gfxContext>
-gfxContext::ForDrawTargetWithTransform(DrawTarget* aTarget)
+gfxContext::CreatePreservingTransformOrNull(DrawTarget* aTarget)
 {
   if (!aTarget || !aTarget->IsValid()) {
-    gfxCriticalNote << "Invalid target in gfxContext::ForDrawTargetWithTransform " << hexa(aTarget);
+    gfxCriticalNote << "Invalid target in gfxContext::CreatePreservingTransformOrNull " << hexa(aTarget);
     return nullptr;
   }
 

@@ -7,20 +7,8 @@ const testPageURL = "http://mochi.test:8888/browser/" +
   "dom/indexedDB/test/browser_permissionsPrompt.html";
 const notificationID = "indexedDB-permissions-prompt";
 
-function setUsePrivateBrowsing(browser, val) {
-  if (!browser.isRemoteBrowser) {
-    browser.docShell.QueryInterface(Ci.nsILoadContext).usePrivateBrowsing = val;
-    return;
-  }
-
-  return ContentTask.spawn(browser, val, function* (val) {
-    docShell.QueryInterface(Ci.nsILoadContext).usePrivateBrowsing = val;
-  });
-};
-
-
-function promiseMessage(aMessage) {
-  return ContentTask.spawn(gBrowser.selectedBrowser, aMessage, function* (aMessage) {
+function promiseMessage(aMessage, browser) {
+  return ContentTask.spawn(browser.selectedBrowser, aMessage, function* (aMessage) {
     yield new Promise((resolve, reject) => {
       content.addEventListener("message", function messageListener(event) {
         content.removeEventListener("message", messageListener);
@@ -55,7 +43,7 @@ add_task(function test1() {
     ok(true, "prompt hidden");
   });
 
-  yield promiseMessage("InvalidStateError");
+  yield promiseMessage("InvalidStateError", gBrowser);
 
   is(getPermission(testPageURL, "indexedDB"),
      Components.interfaces.nsIPermissionManager.DENY_ACTION,
@@ -64,14 +52,16 @@ add_task(function test1() {
 });
 
 add_task(function test2() {
+  info("creating private window");
+  let win = yield BrowserTestUtils.openNewBrowserWindow({ private : true });
+  
   info("creating private tab");
-  gBrowser.selectedTab = gBrowser.addTab();
-  yield setUsePrivateBrowsing(gBrowser.selectedBrowser, true);
+  win.gBrowser.selectedTab = win.gBrowser.addTab();
 
   info("loading test page: " + testPageURL);
-  gBrowser.selectedBrowser.loadURI(testPageURL);
-  yield BrowserTestUtils.browserLoaded(gBrowser.selectedBrowser);
-
+  win.gBrowser.selectedBrowser.loadURI(testPageURL);
+  yield BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
+  
   registerPopupEventHandler("popupshowing", function () {
     ok(false, "prompt showing");
   });
@@ -81,15 +71,14 @@ add_task(function test2() {
   registerPopupEventHandler("popuphidden", function () {
     ok(false, "prompt hidden");
   });
-
-  yield promiseMessage("InvalidStateError");
+  yield promiseMessage("InvalidStateError", win.gBrowser);
 
   is(getPermission(testPageURL, "indexedDB"),
      Components.interfaces.nsIPermissionManager.DENY_ACTION,
      "Correct permission set");
   unregisterAllPopupEventHandlers();
-  yield setUsePrivateBrowsing(gBrowser.selectedBrowser, false);
-  gBrowser.removeCurrentTab();
+  win.gBrowser.removeCurrentTab();
+  win.close();
 });
 
 add_task(function test3() {
@@ -110,7 +99,7 @@ add_task(function test3() {
     ok(false, "Shouldn't show a popup this time");
   });
 
-  yield promiseMessage("InvalidStateError");
+  yield promiseMessage("InvalidStateError", gBrowser);
 
   is(getPermission(testPageURL, "indexedDB"),
      Components.interfaces.nsIPermissionManager.DENY_ACTION,

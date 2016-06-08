@@ -20,8 +20,6 @@ public:
                  MediaDataDecoderCallback* aCallback,
                  layers::ImageContainer* aImageContainer);
 
-private:
-  virtual ~AppleVTDecoder();
   RefPtr<InitPromise> Init() override;
   bool IsHardwareAccelerated(nsACString& aFailureReason) const override
   {
@@ -35,6 +33,8 @@ private:
       : "apple software VT decoder";
   }
 
+private:
+  virtual ~AppleVTDecoder();
   void ProcessFlush() override;
   void ProcessDrain() override;
   void ProcessShutdown() override;

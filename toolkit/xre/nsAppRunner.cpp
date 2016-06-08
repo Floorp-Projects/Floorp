@@ -624,6 +624,22 @@ GetAndCleanTempDir()
     return nullptr;
   }
 
+  // If the NS_APP_CONTENT_PROCESS_TEMP_DIR is the real temp directory, don't
+  // attempt to delete it.
+  nsCOMPtr<nsIFile> realTempDir;
+  rv = NS_GetSpecialDirectory(NS_OS_TEMP_DIR, getter_AddRefs(realTempDir));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+  bool isRealTemp;
+  rv = tempDir->Equals(realTempDir, &isRealTemp);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return nullptr;
+  }
+  if (isRealTemp) {
+    return tempDir.forget();
+  }
+
   // Don't return an error if the directory doesn't exist.
   // Windows Remove() returns NS_ERROR_FILE_NOT_FOUND while
   // OS X returns NS_ERROR_FILE_TARGET_DOES_NOT_EXIST.

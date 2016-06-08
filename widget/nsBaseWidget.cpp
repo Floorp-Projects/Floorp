@@ -1102,15 +1102,17 @@ nsBaseWidget::ProcessUntransformedAPZEvent(WidgetInputEvent* aEvent,
       mAPZEventState->ProcessTouchEvent(*touchEvent, aGuid, aInputBlockId,
           aApzResponse, status);
     } else if (WidgetWheelEvent* wheelEvent = aEvent->AsWheelEvent()) {
-      if (wheelEvent->mFlags.mHandledByAPZ) {
-        APZCCallbackHelper::SendSetTargetAPZCNotification(this, GetDocument(),
-            *(original->AsWheelEvent()), aGuid, aInputBlockId);
-        if (wheelEvent->mCanTriggerSwipe) {
-          ReportSwipeStarted(aInputBlockId, wheelEvent->TriggersSwipe());
-        }
-        mAPZEventState->ProcessWheelEvent(*wheelEvent, aGuid, aInputBlockId);
+      MOZ_ASSERT(wheelEvent->mFlags.mHandledByAPZ);
+      APZCCallbackHelper::SendSetTargetAPZCNotification(this, GetDocument(),
+          *(original->AsWheelEvent()), aGuid, aInputBlockId);
+      if (wheelEvent->mCanTriggerSwipe) {
+        ReportSwipeStarted(aInputBlockId, wheelEvent->TriggersSwipe());
       }
+      mAPZEventState->ProcessWheelEvent(*wheelEvent, aGuid, aInputBlockId);
     } else if (WidgetMouseEvent* mouseEvent = aEvent->AsMouseEvent()) {
+      MOZ_ASSERT(mouseEvent->mFlags.mHandledByAPZ);
+      APZCCallbackHelper::SendSetTargetAPZCNotification(this, GetDocument(),
+          *(original->AsMouseEvent()), aGuid, aInputBlockId);
       mAPZEventState->ProcessMouseEvent(*mouseEvent, aGuid, aInputBlockId);
     }
   }

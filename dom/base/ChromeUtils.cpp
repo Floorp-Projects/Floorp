@@ -183,5 +183,16 @@ ChromeUtils::IsOriginAttributesEqual(dom::GlobalObject& aGlobal,
          aA.mPrivateBrowsingId == aB.mPrivateBrowsingId;
 }
 
+/* static */ bool
+ChromeUtils::IsOriginAttributesEqualIgnoringAddonId(const dom::OriginAttributesDictionary& aA,
+                                                    const dom::OriginAttributesDictionary& aB)
+{
+  return aA.mAppId == aB.mAppId &&
+         aA.mInIsolatedMozBrowser == aB.mInIsolatedMozBrowser &&
+         aA.mSignedPkg == aB.mSignedPkg &&
+         aA.mUserContextId == aB.mUserContextId &&
+         aA.mPrivateBrowsingId == aB.mPrivateBrowsingId;
+}
+
 } // namespace dom
 } // namespace mozilla

@@ -222,6 +222,7 @@ typedef AutoVectorRooter<JSObject*> AutoObjectVector;
 using ValueVector = JS::GCVector<JS::Value>;
 using IdVector = JS::GCVector<jsid>;
 using ScriptVector = JS::GCVector<JSScript*>;
+using StringVector = JS::GCVector<JSString*>;
 
 template<class Key, class Value>
 class MOZ_RAII AutoHashMapRooter : protected AutoGCRooter
@@ -617,9 +618,6 @@ typedef void
 
 typedef void
 (* JSProcessPromiseCallback)(JSContext* cx, JS::HandleObject promise);
-
-typedef void
-(* JSErrorReporter)(JSContext* cx, const char* message, JSErrorReport* report);
 
 /**
  * Possible exception types. These types are part of a JSErrorFormatString
@@ -1266,69 +1264,6 @@ RuntimeOptionsRef(JSRuntime* rt);
 
 JS_PUBLIC_API(RuntimeOptions&)
 RuntimeOptionsRef(JSContext* cx);
-
-class JS_PUBLIC_API(ContextOptions) {
-  public:
-    ContextOptions()
-      : dontReportUncaught_(false),
-        autoJSAPIOwnsErrorReporting_(false)
-    {
-    }
-
-    bool dontReportUncaught() const { return dontReportUncaught_; }
-    ContextOptions& setDontReportUncaught(bool flag) {
-        dontReportUncaught_ = flag;
-        return *this;
-    }
-    ContextOptions& toggleDontReportUncaught() {
-        dontReportUncaught_ = !dontReportUncaught_;
-        return *this;
-    }
-
-    bool autoJSAPIOwnsErrorReporting() const { return autoJSAPIOwnsErrorReporting_; }
-    ContextOptions& setAutoJSAPIOwnsErrorReporting(bool flag) {
-        autoJSAPIOwnsErrorReporting_ = flag;
-        return *this;
-    }
-    ContextOptions& toggleAutoJSAPIOwnsErrorReporting() {
-        autoJSAPIOwnsErrorReporting_ = !autoJSAPIOwnsErrorReporting_;
-        return *this;
-    }
-
-
-  private:
-    bool privateIsNSISupports_ : 1;
-    bool dontReportUncaught_ : 1;
-    // dontReportUncaught isn't respected by all JSAPI codepaths, particularly the
-    // JS_ReportError* functions that eventually report the error even when dontReportUncaught is
-    // set, if script is not running. We want a way to indicate that the embedder will always
-    // handle any exceptions, and that SpiderMonkey should just leave them on the context. This is
-    // the way we want to do all future error handling in Gecko - stealing the exception explicitly
-    // from the context and handling it as per the situation. This will eventually become the
-    // default and these 2 flags should go away.
-    bool autoJSAPIOwnsErrorReporting_ : 1;
-};
-
-JS_PUBLIC_API(ContextOptions&)
-ContextOptionsRef(JSContext* cx);
-
-class JS_PUBLIC_API(AutoSaveContextOptions) {
-  public:
-    explicit AutoSaveContextOptions(JSContext* cx)
-      : cx_(cx),
-        oldOptions_(ContextOptionsRef(cx_))
-    {
-    }
-
-    ~AutoSaveContextOptions()
-    {
-        ContextOptionsRef(cx_) = oldOptions_;
-    }
-
-  private:
-    JSContext* cx_;
-    JS::ContextOptions oldOptions_;
-};
 
 } /* namespace JS */
 
@@ -5157,8 +5092,7 @@ const uint16_t MaxNumErrorArguments = 10;
 
 /**
  * Report an exception represented by the sprintf-like conversion of format
- * and its arguments.  This exception message string is passed to a pre-set
- * JSErrorReporter function (set by JS_SetErrorReporter).
+ * and its arguments.
  */
 extern JS_PUBLIC_API(void)
 JS_ReportError(JSContext* cx, const char* format, ...);
@@ -5289,13 +5223,16 @@ class JSErrorReport
 #define JSREPORT_IS_STRICT(flags)       (((flags) & JSREPORT_STRICT) != 0)
 #define JSREPORT_IS_STRICT_MODE_ERROR(flags) (((flags) &                      \
                                               JSREPORT_STRICT_MODE_ERROR) != 0)
-extern JS_PUBLIC_API(JSErrorReporter)
-JS_GetErrorReporter(JSRuntime* rt);
-
-extern JS_PUBLIC_API(JSErrorReporter)
-JS_SetErrorReporter(JSRuntime* rt, JSErrorReporter er);
-
 namespace JS {
+
+typedef void
+(* WarningReporter)(JSContext* cx, const char* message, JSErrorReport* report);
+
+extern JS_PUBLIC_API(WarningReporter)
+SetWarningReporter(JSRuntime* rt, WarningReporter reporter);
+
+extern JS_PUBLIC_API(WarningReporter)
+GetWarningReporter(JSRuntime* rt);
 
 extern JS_PUBLIC_API(bool)
 CreateError(JSContext* cx, JSExnType type, HandleObject stack,
@@ -5474,9 +5411,6 @@ JS_SetPendingException(JSContext* cx, JS::HandleValue v);
 
 extern JS_PUBLIC_API(void)
 JS_ClearPendingException(JSContext* cx);
-
-extern JS_PUBLIC_API(bool)
-JS_ReportPendingException(JSContext* cx);
 
 namespace JS {
 

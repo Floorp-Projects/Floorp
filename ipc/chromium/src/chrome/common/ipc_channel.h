@@ -50,7 +50,7 @@ class Channel : public Message::Sender {
   enum {
     // The maximum message size in bytes. Attempting to receive a
     // message of this size or bigger results in a channel error.
-    kMaximumMessageSize = 128 * 1024 * 1024,
+    kMaximumMessageSize = 256 * 1024 * 1024,
 
     // Ammount of data to read at once from the pipe.
     kReadBufferSize = 4 * 1024,

@@ -135,25 +135,37 @@ JSString::dumpCharsNoNewline(FILE* fp)
 }
 
 void
-JSString::dump()
+JSString::dump(FILE* fp)
 {
     if (JSLinearString* linear = ensureLinear(nullptr)) {
         AutoCheckCannotGC nogc;
         if (hasLatin1Chars()) {
             const Latin1Char* chars = linear->latin1Chars(nogc);
-            fprintf(stderr, "JSString* (%p) = Latin1Char * (%p) = ", (void*) this,
+            fprintf(fp, "JSString* (%p) = Latin1Char * (%p) = ", (void*) this,
                     (void*) chars);
-            dumpChars(chars, length(), stderr);
+            dumpChars(chars, length(), fp);
         } else {
             const char16_t* chars = linear->twoByteChars(nogc);
-            fprintf(stderr, "JSString* (%p) = char16_t * (%p) = ", (void*) this,
+            fprintf(fp, "JSString* (%p) = char16_t * (%p) = ", (void*) this,
                     (void*) chars);
-            dumpChars(chars, length(), stderr);
+            dumpChars(chars, length(), fp);
         }
     } else {
-        fprintf(stderr, "(oom in JSString::dump)");
+        fprintf(fp, "(oom in JSString::dump)");
     }
-    fputc('\n', stderr);
+    fputc('\n', fp);
+}
+
+void
+JSString::dumpCharsNoNewline()
+{
+    dumpCharsNoNewline(stderr);
+}
+
+void
+JSString::dump()
+{
+    dump(stderr);
 }
 
 void
@@ -1011,10 +1023,16 @@ AutoStableStringChars::copyTwoByteChars(JSContext* cx, HandleLinearString linear
 
 #ifdef DEBUG
 void
+JSAtom::dump(FILE* fp)
+{
+    fprintf(fp, "JSAtom* (%p) = ", (void*) this);
+    this->JSString::dump(fp);
+}
+
+void
 JSAtom::dump()
 {
-    fprintf(stderr, "JSAtom* (%p) = ", (void*) this);
-    this->JSString::dump();
+    dump(stderr);
 }
 
 void

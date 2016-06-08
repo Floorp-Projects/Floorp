@@ -2623,7 +2623,6 @@ Promise::ResolveInternal(JSContext* aCx,
   mResolvePending = true;
 
   if (aValue.isObject()) {
-    MOZ_ASSERT(JS::ContextOptionsRef(aCx).autoJSAPIOwnsErrorReporting());
     JS::Rooted<JSObject*> valueObj(aCx, &aValue.toObject());
 
     // Thenables.

@@ -17,7 +17,6 @@ echo "running as" $(id)
 : NEED_WINDOW_MANAGER           ${NEED_WINDOW_MANAGER:=false}
 : NEED_PULSEAUDIO               ${NEED_PULSEAUDIO:=false}
 : START_VNC                     ${START_VNC:=false}
-: SKIP_MOZHARNESS_RUN           ${SKIP_MOZHARNESS_RUN:=false}
 : WORKSPACE                     ${WORKSPACE:=/home/worker/workspace}
 : mozharness args               "${@}"
 
@@ -44,7 +43,7 @@ cleanup() {
       cp /home/worker/.xsession-errors ~/artifacts/public/xsession-errors.log
     fi
     # When you call this script with START_VNC we make sure we
-    # don't kill xvfb so you don't loose your VNC connection
+    # don't kill xvfb so you don't lose your VNC connection
     if [ -n "$xvfb_pid" ] && [ $START_VNC == false ] ; then
         kill $xvfb_pid || true
     fi
@@ -130,18 +129,22 @@ export MOZ_SOURCE_CHANGESET="${GECKO_HEAD_REV}"
 # support multiple, space delimited, config files
 config_cmds=""
 for cfg in $MOZHARNESS_CONFIG; do
-  config_cmds="${config_cmds} --config-file ${cfg}"
+  config_cmds="${config_cmds} --config-file $WORKSPACE/${cfg}"
 done
 
-if [ ${SKIP_MOZHARNESS_RUN} == true ]; then
-  # Skipping Mozharness is to allow the developer start the window manager
-  # properly and letting them change the execution of Mozharness without
-  # exiting the container
-  echo "We skipped running Mozharness."
-  echo "Make sure you export DISPLAY=:0 before calling Mozharness."
-  echo "Don't forget to call it with 'sudo -E -u worker'."
-else
+mozharness_bin="/home/worker/bin/run-mozharness"
+
+# Save the computed mozharness command to a binary which is useful
+# for interactive mode.
+echo -e "#!/usr/bin/env bash
+cmd=\"python2.7 $WORKSPACE/${MOZHARNESS_SCRIPT} ${config_cmds} ${@} \${@}\"
+echo \"Running: \${cmd}\"
+exec \${cmd}" > ${mozharness_bin}
+chmod +x ${mozharness_bin}
+
+# In interactive mode, the user will be prompted with options for what to do.
+if [ "$TASKCLUSTER_INTERACTIVE" != "true" ]; then
   # run the given mozharness script and configs, but pass the rest of the
   # arguments in from our own invocation
-  python2.7 $WORKSPACE/${MOZHARNESS_SCRIPT} ${config_cmds} "${@}"
+  ${mozharness_bin};
 fi

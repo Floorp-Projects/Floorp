@@ -95,7 +95,6 @@ UNIFIED_SOURCES += [
     'testToIntWidth.cpp',
     'testTypedArrays.cpp',
     'testUbiNode.cpp',
-    'testUncaughtError.cpp',
     'testUncaughtSymbol.cpp',
     'testUTF8.cpp',
     'testWasmLEB128.cpp',

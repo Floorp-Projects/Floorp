@@ -1966,7 +1966,7 @@ ValueToScript(JSContext* cx, Value vArg, JSFunction** funp = nullptr)
     if (!script)
         return nullptr;
 
-    if (fun && funp)
+    if (funp)
         *funp = fun;
 
     return script;
@@ -2895,7 +2895,7 @@ WorkerMain(void* arg)
     sr->isWorker = true;
     JS_SetRuntimePrivate(rt, sr.get());
     JS_SetFutexCanWait(rt);
-    JS_SetErrorReporter(rt, WarningReporter);
+    JS::SetWarningReporter(rt, WarningReporter);
     JS_InitDestroyPrincipalsCallback(rt, ShellPrincipals::destroy);
     SetWorkerRuntimeOptions(rt);
 
@@ -6453,9 +6453,6 @@ NewContext(JSRuntime* rt)
     if (!cx)
         return nullptr;
 
-    JS::ContextOptionsRef(cx).setDontReportUncaught(true);
-    JS::ContextOptionsRef(cx).setAutoJSAPIOwnsErrorReporting(true);
-
     JSShellContextData* data = NewContextData();
     if (!data) {
         DestroyContext(cx, false);
@@ -7361,7 +7358,7 @@ main(int argc, char** argv, char** envp)
     JS_SetRuntimePrivate(rt, sr.get());
     // Waiting is allowed on the shell's main thread, for now.
     JS_SetFutexCanWait(rt);
-    JS_SetErrorReporter(rt, WarningReporter);
+    JS::SetWarningReporter(rt, WarningReporter);
     if (!SetRuntimeOptions(rt, op))
         return 1;
 

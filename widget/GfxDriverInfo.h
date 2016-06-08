@@ -38,26 +38,27 @@
 namespace mozilla {
 namespace widget {
 
-enum OperatingSystem {
-  DRIVER_OS_UNKNOWN = 0,
-  DRIVER_OS_WINDOWS_XP,
-  DRIVER_OS_WINDOWS_SERVER_2003,
-  DRIVER_OS_WINDOWS_VISTA,
-  DRIVER_OS_WINDOWS_7,
-  DRIVER_OS_WINDOWS_8,
-  DRIVER_OS_WINDOWS_8_1,
-  DRIVER_OS_WINDOWS_10,
-  DRIVER_OS_LINUX,
-  DRIVER_OS_OS_X_10_5,
-  DRIVER_OS_OS_X_10_6,
-  DRIVER_OS_OS_X_10_7,
-  DRIVER_OS_OS_X_10_8,
-  DRIVER_OS_OS_X_10_9,
-  DRIVER_OS_OS_X_10_10,
-  DRIVER_OS_OS_X_10_11,
-  DRIVER_OS_ANDROID,
-  DRIVER_OS_IOS,
-  DRIVER_OS_ALL
+enum class OperatingSystem {
+  Unknown,
+  Windows,
+  WindowsXP,
+  WindowsServer2003,
+  WindowsVista,
+  Windows7,
+  Windows8,
+  Windows8_1,
+  Windows10,
+  Linux,
+  OSX,
+  OSX10_5,
+  OSX10_6,
+  OSX10_7,
+  OSX10_8,
+  OSX10_9,
+  OSX10_10,
+  OSX10_11,
+  Android,
+  Ios
 };
 
 enum VersionComparisonOp {
@@ -277,11 +278,13 @@ ParseDriverVersion(const nsAString& aVersion, uint64_t *aNumericVersion)
   if (d < 0 || d > 0xffff) return false;
 
   *aNumericVersion = GFX_DRIVER_VERSION(a, b, c, d);
+  MOZ_ASSERT(*aNumericVersion != GfxDriverInfo::allDriverVersions);
   return true;
 #elif defined(ANDROID)
   // Can't use aVersion.ToInteger() because that's not compiled into our code
   // unless we have XPCOM_GLUE_AVOID_NSPR disabled.
   *aNumericVersion = atoi(NS_LossyConvertUTF16toASCII(aVersion).get());
+  MOZ_ASSERT(*aNumericVersion != GfxDriverInfo::allDriverVersions);
   return true;
 #else
   return false;
