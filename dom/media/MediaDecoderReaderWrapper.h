@@ -415,9 +415,6 @@ public:
   AbstractCanonical<media::TimeIntervals>* CanonicalBuffered() {
     return mReader->CanonicalBuffered();
   }
-  AbstractCanonical<bool>* CanonicalIsSuspended() {
-    return mReader->CanonicalIsSuspended();
-  }
 
 #ifdef MOZ_EME
   void SetCDMProxy(CDMProxy* aProxy) { mReader->SetCDMProxy(aProxy); }
