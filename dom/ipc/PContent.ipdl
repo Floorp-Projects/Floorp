@@ -1142,7 +1142,6 @@ parent:
                       bool aCalledFromJS,
                       bool aPositionSpecified,
                       bool aSizeSpecified,
-                      nsString aName,
                       nsCString aFeatures,
                       nsCString aBaseURI,
                       DocShellOriginAttributes aOpenerOriginAttributes,
