@@ -46,9 +46,10 @@ def check_and_get_mach(dir_path):
 def get_mach():
     # Check whether the current directory is within a mach src or obj dir.
     for dir_path in ancestors(os.getcwd()):
-        # If we find a "mozinfo.json" file, we are in the objdir.
+        # If we find a "config.status" and "mozinfo.json" file, we are in the objdir.
+        config_status_path = os.path.join(dir_path, 'config.status')
         mozinfo_path = os.path.join(dir_path, 'mozinfo.json')
-        if os.path.isfile(mozinfo_path):
+        if os.path.isfile(config_status_path) and os.path.isfile(mozinfo_path):
             import json
             info = json.load(open(mozinfo_path))
             if 'mozconfig' in info and 'MOZCONFIG' not in os.environ:
