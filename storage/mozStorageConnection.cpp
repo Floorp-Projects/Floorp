@@ -962,17 +962,19 @@ Connection::internalClose(sqlite3 *aNativeConnection)
                                 stmt);
       NS_WARNING(msg);
       ::PR_smprintf_free(msg);
+      msg = nullptr;
 #endif // DEBUG
 
       srv = ::sqlite3_finalize(stmt);
 
 #ifdef DEBUG
       if (srv != SQLITE_OK) {
-        char *msg = ::PR_smprintf("Could not finalize SQL statement '%s' (%x)",
-                                  ::sqlite3_sql(stmt),
-                                  stmt);
+        msg = ::PR_smprintf("Could not finalize SQL statement '%s' (%x)",
+                            ::sqlite3_sql(stmt),
+                            stmt);
         NS_WARNING(msg);
         ::PR_smprintf_free(msg);
+        msg = nullptr;
       }
 #endif // DEBUG
 
