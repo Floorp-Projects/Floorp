@@ -130,14 +130,16 @@ public:
     const nsRect& borderArea;
     nsDisplayListBuilder* builder;
     mozilla::layers::LayerManager* layerManager;
+    bool callerPaintsOpacity;
     explicit PaintFramesParams(gfxContext& aCtx, nsIFrame* aFrame,
                                const nsRect& aDirtyRect,
                                const nsRect& aBorderArea,
                                nsDisplayListBuilder* aBuilder,
-                               mozilla::layers::LayerManager* aLayerManager)
+                               mozilla::layers::LayerManager* aLayerManager,
+                               bool aCallerPaintsOpacity)
       : ctx(aCtx), frame(aFrame), dirtyRect(aDirtyRect),
         borderArea(aBorderArea), builder(aBuilder),
-        layerManager(aLayerManager)
+        layerManager(aLayerManager), callerPaintsOpacity(aCallerPaintsOpacity)
     { }
   };
 
