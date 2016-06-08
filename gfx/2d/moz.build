@@ -17,7 +17,6 @@ EXPORTS.mozilla.gfx += [
     'BasePoint4D.h',
     'BaseRect.h',
     'BaseSize.h',
-    'BezierUtils.h',
     'Blur.h',
     'BorrowedContext.h',
     'Coord.h',
@@ -139,7 +138,6 @@ elif CONFIG['CPU_ARCH'].startswith('mips'):
         ]
 
 UNIFIED_SOURCES += [
-    'BezierUtils.cpp',
     'Blur.cpp',
     'DataSourceSurface.cpp',
     'DataSurfaceHelpers.cpp',
