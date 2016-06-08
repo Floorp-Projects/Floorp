@@ -337,6 +337,11 @@
             case "findbar.highlightAll":
               this._self.toggleHighlight(prefsvc.getBoolPref(aPrefName), true);
               break;
+            case "findbar.modalHighlight":
+              this._self._useModalHighlight = prefsvc.getBoolPref(aPrefName);
+              if (this._self.browser.finder)
+                this._self.browser.finder.onModalHighlightChange(this._self._useModalHighlight);
+              break;
           }
         }
       })]]></field>
@@ -362,6 +367,7 @@
           prefsvc.getIntPref("accessibility.typeaheadfind.matchesCountTimeout");
         this._matchesCountLimit =
           prefsvc.getIntPref("accessibility.typeaheadfind.matchesCountLimit");
+        this._useModalHighlight = prefsvc.getBoolPref("findbar.modalHighlight");
 
         prefsvc.addObserver("accessibility.typeaheadfind",
                             this._observer, false);
@@ -370,6 +376,7 @@
         prefsvc.addObserver("accessibility.typeaheadfind.casesensitive",
                             this._observer, false);
         prefsvc.addObserver("findbar.highlightAll", this._observer, false);
+        prefsvc.addObserver("findbar.modalHighlight", this._observer, false);
 
         this._findAsYouType =
           prefsvc.getBoolPref("accessibility.typeaheadfind");
@@ -405,6 +412,9 @@
             return;
           this._destroyed = true;
 
+          if (this.browser.finder)
+            this.browser.finder.destroy();
+
           this.browser = null;
 
           let prefsvc = this._prefsvc;
@@ -415,6 +425,7 @@
           prefsvc.removeObserver("accessibility.typeaheadfind.casesensitive",
                                  this._observer);
           prefsvc.removeObserver("findbar.highlightAll", this._observer);
+          prefsvc.removeObserver("findbar.modalHighlight", this._observer);
 
           // Clear all timers that might still be running.
           this._cancelTimers();
@@ -688,8 +699,7 @@
             this.setAttribute("noanim", true);
           this.hidden = true;
 
-          this.browser.finder.focusContent();
-          this.browser.finder.enableSelection();
+          this.browser.finder.onFindbarClose();
 
           this._cancelTimers();
 
@@ -1152,10 +1162,16 @@
           this._findFailedString = null;
 
           // Ensure the stored SearchString is in sync with what we want to find
-          if (this._findField.value != this._browser.finder.searchString)
+          if (this._findField.value != this._browser.finder.searchString) {
             this._find(this._findField.value);
-          else
+          } else {
             this._findAgain(aFindPrevious);
+            if (this._useModalHighlight) {
+              this.open();
+              this._findField.select();
+              this._findField.focus();
+            }
+          }
 
           return undefined;
         ]]></body>
