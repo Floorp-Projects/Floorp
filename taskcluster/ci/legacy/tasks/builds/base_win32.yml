@@ -1,0 +1,5 @@
+$inherits:
+  from: 'tasks/builds/firefox_windows_base.yml'
+  variables:
+    build_name: 'win32'
+    platform: 'windowsxp'
