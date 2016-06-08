@@ -41,8 +41,8 @@ struct PcScriptCache
     }
 
     // Get a value from the cache. May perform lazy allocation.
-    bool get(JSRuntime* rt, uint32_t hash, uint8_t* addr,
-             JSScript** scriptRes, jsbytecode** pcRes)
+    MOZ_MUST_USE bool get(JSRuntime* rt, uint32_t hash, uint8_t* addr,
+                          JSScript** scriptRes, jsbytecode** pcRes)
     {
         // If a GC occurred, lazily clear the cache now.
         if (gcNumber != rt->gc.gcNumber()) {

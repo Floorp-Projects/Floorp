@@ -9,13 +9,15 @@
 
 // This file represents the Loop Invariant Code Motion optimization pass
 
+#include "mozilla/Attributes.h"
+
 namespace js {
 namespace jit {
 
 class MIRGenerator;
 class MIRGraph;
 
-bool LICM(MIRGenerator* mir, MIRGraph& graph);
+MOZ_MUST_USE bool LICM(MIRGenerator* mir, MIRGraph& graph);
 
 } // namespace jit
 } // namespace js

@@ -8,13 +8,15 @@
 #ifndef jit_ScalarReplacement_h
 #define jit_ScalarReplacement_h
 
+#include "mozilla/Attributes.h"
+
 namespace js {
 namespace jit {
 
 class MIRGenerator;
 class MIRGraph;
 
-bool
+MOZ_MUST_USE bool
 ScalarReplacement(MIRGenerator* mir, MIRGraph& graph);
 
 } // namespace jit
