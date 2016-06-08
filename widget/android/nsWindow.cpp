@@ -865,6 +865,7 @@ class nsWindow::GLControllerSupport final
     GLController::GlobalRef mGLController;
     GeckoLayerClient::GlobalRef mLayerClient;
     Atomic<bool, ReleaseAcquire> mCompositorPaused;
+    mozilla::jni::GlobalRef<mozilla::jni::Object> mSurface;
 
     // In order to use Event::HasSameTypeAs in PostTo(), we cannot make
     // GLControllerEvent a template because each template instantiation is
@@ -971,31 +972,10 @@ public:
         return mCompositorPaused;
     }
 
-    EGLSurface CreateEGLSurface()
+    void* GetSurface()
     {
-        static jfieldID eglSurfacePointerField;
-
-        JNIEnv* const env = jni::GetEnvForThread();
-
-        if (!eglSurfacePointerField) {
-            AutoJNIClass egl(env, "com/google/android/gles_jni/EGLSurfaceImpl");
-            // The pointer type moved to a 'long' in Android L, API version 20
-            eglSurfacePointerField = egl.getField("mEGLSurface",
-                    AndroidBridge::Bridge()->GetAPIVersion() >= 20 ? "J" : "I");
-        }
-
-        // Called on the compositor thread.
-        auto eglSurface = mGLController->CreateEGLSurface();
-        if (!eglSurface) {
-            // We failed to create a surface, but because the compositor is
-            // able to handle this failure gracefully, we pass back null
-            // instead of crashing.
-            return nullptr;
-        }
-        return reinterpret_cast<EGLSurface>(
-                AndroidBridge::Bridge()->GetAPIVersion() >= 20 ?
-                env->GetLongField(eglSurface.Get(), eglSurfacePointerField) :
-                env->GetIntField(eglSurface.Get(), eglSurfacePointerField));
+        mSurface = mGLController->GetSurface();
+        return mSurface.Get();
     }
 
 private:
@@ -1953,11 +1933,11 @@ nsWindow::GetNativeData(uint32_t aDataType)
             return NS_ONLY_ONE_NATIVE_IME_CONTEXT;
         }
 
-        case NS_NATIVE_NEW_EGL_SURFACE:
+        case NS_JAVA_SURFACE:
             if (!mGLControllerSupport) {
                 return nullptr;
             }
-            return static_cast<void*>(mGLControllerSupport->CreateEGLSurface());
+            return mGLControllerSupport->GetSurface();
     }
 
     return nullptr;
