@@ -54,7 +54,7 @@ class MIRGenerator
     MIRGraph& graph() {
         return *graph_;
     }
-    bool ensureBallast() {
+    MOZ_MUST_USE bool ensureBallast() {
         return alloc().ensureBallast();
     }
     const JitRuntime* jitRuntime() const {
@@ -77,14 +77,14 @@ class MIRGenerator
 
     // Set an error state and prints a message. Returns false so errors can be
     // propagated up.
-    bool abort(const char* message, ...);
-    bool abortFmt(const char* message, va_list ap);
+    bool abort(const char* message, ...);           // always returns false
+    bool abortFmt(const char* message, va_list ap); // always returns false
 
     bool errored() const {
         return error_;
     }
 
-    bool instrumentedProfiling() {
+    MOZ_MUST_USE bool instrumentedProfiling() {
         if (!instrumentedProfilingIsCached_) {
             instrumentedProfiling_ = GetJitContext()->runtime->spsProfiler().enabled();
             instrumentedProfilingIsCached_ = true;

@@ -207,14 +207,14 @@ class JitRuntime
   public:
     explicit JitRuntime(JSRuntime* rt);
     ~JitRuntime();
-    bool initialize(JSContext* cx, js::AutoLockForExclusiveAccess& lock);
+    MOZ_MUST_USE bool initialize(JSContext* cx, js::AutoLockForExclusiveAccess& lock);
 
     uint8_t* allocateOsrTempData(size_t size);
     void freeOsrTempData();
 
     static void Mark(JSTracer* trc, js::AutoLockForExclusiveAccess& lock);
     static void MarkJitcodeGlobalTableUnconditionally(JSTracer* trc);
-    static bool MarkJitcodeGlobalTableIteratively(JSTracer* trc);
+    static MOZ_MUST_USE bool MarkJitcodeGlobalTableIteratively(JSTracer* trc);
     static void SweepJitcodeGlobalTable(JSRuntime* rt);
 
     ExecutableAllocator& execAlloc() {
@@ -491,7 +491,7 @@ class JitCompartment
             return p->value();
         return nullptr;
     }
-    bool putStubCode(JSContext* cx, uint32_t key, Handle<JitCode*> stubCode) {
+    MOZ_MUST_USE bool putStubCode(JSContext* cx, uint32_t key, Handle<JitCode*> stubCode) {
         MOZ_ASSERT(stubCode);
         if (!stubCodes_->putNew(key, stubCode.get())) {
             ReportOutOfMemory(cx);
@@ -508,8 +508,8 @@ class JitCompartment
         *stubInfo = nullptr;
         return nullptr;
     }
-    bool putCacheIRStubCode(const CacheIRStubKey::Lookup& lookup, CacheIRStubKey& key,
-                            JitCode* stubCode)
+    MOZ_MUST_USE bool putCacheIRStubCode(const CacheIRStubKey::Lookup& lookup, CacheIRStubKey& key,
+                                         JitCode* stubCode)
     {
         CacheIRStubCodeMap::AddPtr p = cacheIRStubCodes_->lookupForAdd(lookup);
         MOZ_ASSERT(!p);
@@ -546,10 +546,10 @@ class JitCompartment
     JitCompartment();
     ~JitCompartment();
 
-    bool initialize(JSContext* cx);
+    MOZ_MUST_USE bool initialize(JSContext* cx);
 
     // Initialize code stubs only used by Ion, not Baseline.
-    bool ensureIonStubsExist(JSContext* cx);
+    MOZ_MUST_USE bool ensureIonStubsExist(JSContext* cx);
 
     void mark(JSTracer* trc, JSCompartment* compartment);
     void sweep(FreeOp* fop, JSCompartment* compartment);
@@ -562,7 +562,7 @@ class JitCompartment
         return regExpMatcherStub_;
     }
 
-    bool ensureRegExpMatcherStubExists(JSContext* cx) {
+    MOZ_MUST_USE bool ensureRegExpMatcherStubExists(JSContext* cx) {
         if (regExpMatcherStub_)
             return true;
         regExpMatcherStub_ = generateRegExpMatcherStub(cx);
@@ -573,7 +573,7 @@ class JitCompartment
         return regExpSearcherStub_;
     }
 
-    bool ensureRegExpSearcherStubExists(JSContext* cx) {
+    MOZ_MUST_USE bool ensureRegExpSearcherStubExists(JSContext* cx) {
         if (regExpSearcherStub_)
             return true;
         regExpSearcherStub_ = generateRegExpSearcherStub(cx);
@@ -584,7 +584,7 @@ class JitCompartment
         return regExpTesterStub_;
     }
 
-    bool ensureRegExpTesterStubExists(JSContext* cx) {
+    MOZ_MUST_USE bool ensureRegExpTesterStubExists(JSContext* cx) {
         if (regExpTesterStub_)
             return true;
         regExpTesterStub_ = generateRegExpTesterStub(cx);

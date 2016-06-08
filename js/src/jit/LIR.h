@@ -957,7 +957,7 @@ class LBlock
 
   public:
     explicit LBlock(MBasicBlock* block);
-    bool init(TempAllocator& alloc);
+    MOZ_MUST_USE bool init(TempAllocator& alloc);
 
     void add(LInstruction* ins) {
         ins->setBlock(this);
@@ -1140,7 +1140,7 @@ class LVariadicInstruction : public details::LInstructionFixedDefsTempsHelper<De
     FixedList<LAllocation> operands_;
 
   public:
-    bool init(TempAllocator& alloc, size_t length) {
+    MOZ_MUST_USE bool init(TempAllocator& alloc, size_t length) {
         return operands_.init(alloc, length);
     }
     size_t numOperands() const final override {
@@ -1177,13 +1177,13 @@ class LRecoverInfo : public TempObject
     RecoverOffset recoverOffset_;
 
     explicit LRecoverInfo(TempAllocator& alloc);
-    bool init(MResumePoint* mir);
+    MOZ_MUST_USE bool init(MResumePoint* mir);
 
     // Fill the instruction vector such as all instructions needed for the
     // recovery are pushed before the current instruction.
-    bool appendOperands(MNode* ins);
-    bool appendDefinition(MDefinition* def);
-    bool appendResumePoint(MResumePoint* rp);
+    MOZ_MUST_USE bool appendOperands(MNode* ins);
+    MOZ_MUST_USE bool appendDefinition(MDefinition* def);
+    MOZ_MUST_USE bool appendResumePoint(MResumePoint* rp);
   public:
     static LRecoverInfo* New(MIRGenerator* gen, MResumePoint* mir);
 
@@ -1275,7 +1275,7 @@ class LSnapshot : public TempObject
     BailoutKind bailoutKind_;
 
     LSnapshot(LRecoverInfo* recover, BailoutKind kind);
-    bool init(MIRGenerator* gen);
+    MOZ_MUST_USE bool init(MIRGenerator* gen);
 
   public:
     static LSnapshot* New(MIRGenerator* gen, LRecoverInfo* recover, BailoutKind kind);
@@ -1464,7 +1464,7 @@ class LSafepoint : public TempObject
     LiveGeneralRegisterSet gcRegs() const {
         return gcRegs_;
     }
-    bool addGcSlot(bool stack, uint32_t slot) {
+    MOZ_MUST_USE bool addGcSlot(bool stack, uint32_t slot) {
         bool result = gcSlots_.append(SlotEntry(stack, slot));
         if (result)
             assertInvariants();
@@ -1484,13 +1484,13 @@ class LSafepoint : public TempObject
         slotsOrElementsRegs_.addUnchecked(reg);
         assertInvariants();
     }
-    bool addSlotsOrElementsSlot(bool stack, uint32_t slot) {
+    MOZ_MUST_USE bool addSlotsOrElementsSlot(bool stack, uint32_t slot) {
         bool result = slotsOrElementsSlots_.append(SlotEntry(stack, slot));
         if (result)
             assertInvariants();
         return result;
     }
-    bool addSlotsOrElementsPointer(LAllocation alloc) {
+    MOZ_MUST_USE bool addSlotsOrElementsPointer(LAllocation alloc) {
         if (alloc.isMemory())
             return addSlotsOrElementsSlot(alloc.isStackSlot(), alloc.memorySlot());
         MOZ_ASSERT(alloc.isRegister());
@@ -1509,7 +1509,7 @@ class LSafepoint : public TempObject
         return false;
     }
 
-    bool addGcPointer(LAllocation alloc) {
+    MOZ_MUST_USE bool addGcPointer(LAllocation alloc) {
         if (alloc.isMemory())
             return addGcSlot(alloc.isStackSlot(), alloc.memorySlot());
         if (alloc.isRegister())
@@ -1529,7 +1529,7 @@ class LSafepoint : public TempObject
         return false;
     }
 
-    bool addValueSlot(bool stack, uint32_t slot) {
+    MOZ_MUST_USE bool addValueSlot(bool stack, uint32_t slot) {
         bool result = valueSlots_.append(SlotEntry(stack, slot));
         if (result)
             assertInvariants();
@@ -1549,14 +1549,14 @@ class LSafepoint : public TempObject
 
 #ifdef JS_NUNBOX32
 
-    bool addNunboxParts(uint32_t typeVreg, LAllocation type, LAllocation payload) {
+    MOZ_MUST_USE bool addNunboxParts(uint32_t typeVreg, LAllocation type, LAllocation payload) {
         bool result = nunboxParts_.append(NunboxEntry(typeVreg, type, payload));
         if (result)
             assertInvariants();
         return result;
     }
 
-    bool addNunboxType(uint32_t typeVreg, LAllocation type) {
+    MOZ_MUST_USE bool addNunboxType(uint32_t typeVreg, LAllocation type) {
         for (size_t i = 0; i < nunboxParts_.length(); i++) {
             if (nunboxParts_[i].type == type)
                 return true;
@@ -1574,7 +1574,7 @@ class LSafepoint : public TempObject
         return result;
     }
 
-    bool addNunboxPayload(uint32_t payloadVreg, LAllocation payload) {
+    MOZ_MUST_USE bool addNunboxPayload(uint32_t payloadVreg, LAllocation payload) {
         for (size_t i = 0; i < nunboxParts_.length(); i++) {
             if (nunboxParts_[i].payload == payload)
                 return true;
@@ -1630,7 +1630,7 @@ class LSafepoint : public TempObject
         return valueRegs_;
     }
 
-    bool addBoxedValue(LAllocation alloc) {
+    MOZ_MUST_USE bool addBoxedValue(LAllocation alloc) {
         if (alloc.isRegister()) {
             Register reg = alloc.toRegister().gpr();
             if (!valueRegs().has(reg))
@@ -1772,7 +1772,7 @@ class LIRGraph
   public:
     explicit LIRGraph(MIRGraph* mir);
 
-    bool init() {
+    MOZ_MUST_USE bool init() {
         return constantPoolMap_.init() && blocks_.init(mir_.alloc(), mir_.numBlocks());
     }
     MIRGraph& mir() const {
@@ -1787,7 +1787,7 @@ class LIRGraph
     uint32_t numBlockIds() const {
         return mir_.numBlockIds();
     }
-    bool initBlock(MBasicBlock* mir) {
+    MOZ_MUST_USE bool initBlock(MBasicBlock* mir) {
         LBlock* lir = new (&blocks_[mir->id()]) LBlock(mir);
         return lir->init(mir_.alloc());
     }
@@ -1838,7 +1838,7 @@ class LIRGraph
     uint32_t totalSlotCount() const {
         return paddedLocalSlotCount() + argumentsSize();
     }
-    bool addConstantToPool(const Value& v, uint32_t* index);
+    MOZ_MUST_USE bool addConstantToPool(const Value& v, uint32_t* index);
     size_t numConstants() const {
         return constantPool_.length();
     }

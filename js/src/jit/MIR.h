@@ -71,7 +71,7 @@ MIRType MIRTypeFromValue(const js::Value& vp)
 // corresponding MIRType, and return true.
 //
 // If simdType is not suported by Ion, return false.
-static inline
+static inline MOZ_MUST_USE
 bool MaybeSimdTypeToMIRType(SimdType type, MIRType* mirType)
 {
     switch (type) {
@@ -337,7 +337,7 @@ class MNode : public TempObject
     inline MDefinition* toDefinition();
     inline MResumePoint* toResumePoint();
 
-    virtual bool writeRecoverData(CompactBufferWriter& writer) const;
+    virtual MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const;
 
     virtual void dump(GenericPrinter& out) const = 0;
     virtual void dump() const = 0;
@@ -438,7 +438,7 @@ class StoreDependency : public TempObject
       : all_(alloc)
     { }
 
-    bool init(MDefinitionVector& all) {
+    MOZ_MUST_USE bool init(MDefinitionVector& all) {
         if (!all_.appendAll(all))
             return false;
         return true;
@@ -855,7 +855,7 @@ class MDefinition : public MNode
     // Mark this instruction as having replaced all uses of ins, as during GVN,
     // returning false if the replacement should not be performed. For use when
     // GVN eliminates instructions which are not equivalent to one another.
-    virtual bool updateForReplacement(MDefinition* ins) {
+    virtual MOZ_MUST_USE bool updateForReplacement(MDefinition* ins) {
         return true;
     }
 
@@ -1450,7 +1450,7 @@ class MConstant : public MNullaryInstruction
 
     // Try to convert this constant to boolean, similar to js::ToBoolean.
     // Returns false if the type is MIRType::Magic*.
-    bool valueToBoolean(bool* res) const;
+    bool MOZ_MUST_USE valueToBoolean(bool* res) const;
 
     // Like valueToBoolean, but returns the result directly instead of using
     // an outparam. Should not be used if this constant might be a magic value.
@@ -1469,7 +1469,7 @@ class MConstant : public MNullaryInstruction
         return AliasSet::None();
     }
 
-    bool updateForReplacement(MDefinition* def) override {
+    MOZ_MUST_USE bool updateForReplacement(MDefinition* def) override {
         MConstant* c = def->toConstant();
         // During constant folding, we don't want to replace a float32
         // value by a double value.
@@ -3120,7 +3120,7 @@ MakeSingletonTypeSet(CompilerConstraintList* constraints, JSObject* obj);
 TemporaryTypeSet*
 MakeSingletonTypeSet(CompilerConstraintList* constraints, ObjectGroup* obj);
 
-bool
+MOZ_MUST_USE bool
 MergeTypes(MIRType* ptype, TemporaryTypeSet** ptypeSet,
            MIRType newType, TemporaryTypeSet* newTypeSet);
 
@@ -3251,7 +3251,7 @@ class MNewArray
         return AliasSet::None();
     }
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         // The template object can safely be used in the recover instruction
         // because it can never be mutated by any other function execution.
@@ -3409,7 +3409,7 @@ class MNewObject
         return vmCall_;
     }
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         // The template object can safely be used in the recover instruction
         // because it can never be mutated by any other function execution.
@@ -3557,7 +3557,7 @@ class MSimdBox
     }
 
     void printOpcode(GenericPrinter& out) const override;
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -3667,7 +3667,7 @@ class MNewDerivedTypedObject
         return AliasSet::None();
     }
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -3682,7 +3682,7 @@ struct OperandIndexMap : public TempObject
     // have any large number of properties.
     FixedList<uint8_t> map;
 
-    bool init(TempAllocator& alloc, JSObject* templateObject);
+    MOZ_MUST_USE bool init(TempAllocator& alloc, JSObject* templateObject);
 };
 
 // Represent the content of all slots of an object.  This instruction is not
@@ -3703,7 +3703,7 @@ class MObjectState
     MObjectState(JSObject *templateObject, OperandIndexMap* operandIndex);
     explicit MObjectState(MObjectState* state);
 
-    bool init(TempAllocator& alloc, MDefinition* obj);
+    MOZ_MUST_USE bool init(TempAllocator& alloc, MDefinition* obj);
 
     void initSlot(uint32_t slot, MDefinition* def) {
         initOperand(slot + 1, def);
@@ -3721,7 +3721,7 @@ class MObjectState
 
     // As we might do read of uninitialized properties, we have to copy the
     // initial values from the template object.
-    bool initFromTemplateObject(TempAllocator& alloc, MDefinition* undefinedVal);
+    MOZ_MUST_USE bool initFromTemplateObject(TempAllocator& alloc, MDefinition* undefinedVal);
 
     MDefinition* object() const {
         return getOperand(0);
@@ -3776,7 +3776,7 @@ class MObjectState
         replaceOperand(operandIndex_->map[offset], def);
     }
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -3829,7 +3829,7 @@ class MArrayState
         replaceOperand(index + 2, def);
     }
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -4369,7 +4369,7 @@ class MAssertRecoveredOnBailout
     // Needed to assert that float32 instructions are correctly recovered.
     bool canConsumeFloat32(MUse* use) const override { return true; }
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -4577,8 +4577,8 @@ class MCompare
     static MCompare* NewAsmJS(TempAllocator& alloc, MDefinition* left, MDefinition* right, JSOp op,
                               CompareType compareType);
 
-    bool tryFold(bool* result);
-    bool evaluateConstantOperands(TempAllocator& alloc, bool* result);
+    MOZ_MUST_USE bool tryFold(bool* result);
+    MOZ_MUST_USE bool evaluateConstantOperands(TempAllocator& alloc, bool* result);
     MDefinition* foldsTo(TempAllocator& alloc) override;
     void filtersUndefinedOrNull(bool trueBranch, MDefinition** subject, bool* filtersUndefined,
                                 bool* filtersNull);
@@ -4654,8 +4654,8 @@ class MCompare
     ALLOW_CLONE(MCompare)
 
   protected:
-    bool tryFoldEqualOperands(bool* result);
-    bool tryFoldTypeOf(bool* result);
+    MOZ_MUST_USE bool tryFoldEqualOperands(bool* result);
+    MOZ_MUST_USE bool tryFoldTypeOf(bool* result);
 
     bool congruentTo(const MDefinition* ins) const override {
         if (!binaryCongruentTo(ins))
@@ -4975,7 +4975,7 @@ class MCreateThisWithTemplate
         return AliasSet::None();
     }
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override;
 };
 
@@ -5298,7 +5298,7 @@ class MToDouble
         implicitTruncate_ = Max(implicitTruncate_, kind);
     }
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         if (input()->type() == MIRType::Value)
             return false;
@@ -5355,7 +5355,7 @@ class MToFloat32
     bool canConsumeFloat32(MUse* use) const override { return true; }
     bool canProduceFloat32() const override { return true; }
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -5698,7 +5698,7 @@ class MTruncateToInt32
     }
 #endif
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return input()->type() < MIRType::Symbol;
     }
@@ -5810,7 +5810,7 @@ class MBitNot
     }
     void computeRange(TempAllocator& alloc) override;
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return specialization_ != MIRType::None;
     }
@@ -5871,7 +5871,7 @@ class MTypeOf
         return congruentIfOperandsEqual(ins);
     }
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -5967,7 +5967,7 @@ class MBitAnd : public MBinaryBitwiseInstruction
     }
     void computeRange(TempAllocator& alloc) override;
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return specialization_ != MIRType::None;
     }
@@ -6000,7 +6000,7 @@ class MBitOr : public MBinaryBitwiseInstruction
         return this;
     }
     void computeRange(TempAllocator& alloc) override;
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return specialization_ != MIRType::None;
     }
@@ -6034,7 +6034,7 @@ class MBitXor : public MBinaryBitwiseInstruction
     }
     void computeRange(TempAllocator& alloc) override;
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return specialization_ < MIRType::Object;
     }
@@ -6082,7 +6082,7 @@ class MLsh : public MShiftInstruction
     }
 
     void computeRange(TempAllocator& alloc) override;
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return specialization_ != MIRType::None;
     }
@@ -6109,7 +6109,7 @@ class MRsh : public MShiftInstruction
     }
     void computeRange(TempAllocator& alloc) override;
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return specialization_ < MIRType::Object;
     }
@@ -6151,7 +6151,7 @@ class MUrsh : public MShiftInstruction
     void computeRange(TempAllocator& alloc) override;
     void collectRangeInfoPreTrunc() override;
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return specialization_ < MIRType::Object;
     }
@@ -6264,7 +6264,7 @@ class MMinMax
     }
     MDefinition* foldsTo(TempAllocator& alloc) override;
     void computeRange(TempAllocator& alloc) override;
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -6314,7 +6314,7 @@ class MAbs
     bool isFloat32Commutative() const override { return true; }
     void trySpecializeFloat32(TempAllocator& alloc) override;
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -6483,7 +6483,7 @@ class MSqrt
     bool isFloat32Commutative() const override { return true; }
     void trySpecializeFloat32(TempAllocator& alloc) override;
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -6559,7 +6559,7 @@ class MAtan2
         return true;
     }
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -6594,7 +6594,7 @@ class MHypot
         return true;
     }
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -6646,7 +6646,7 @@ class MPow
     bool possiblyCalls() const override {
         return true;
     }
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         // Temporarily disable recovery to relieve fuzzer pressure. See bug 1188586.
         return false;
@@ -6697,7 +6697,7 @@ class MPowHalf
         return AliasSet::None();
     }
     void collectRangeInfoPreTrunc() override;
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -6818,7 +6818,7 @@ class MMathFunction
     }
     void trySpecializeFloat32(TempAllocator& alloc) override;
     void computeRange(TempAllocator& alloc) override;
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         if (input()->type() == MIRType::SinCosDouble)
             return false;
@@ -6875,7 +6875,7 @@ class MAdd : public MBinaryArithInstruction
     void truncate() override;
     TruncateKind operandTruncateKind(size_t index) const override;
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return specialization_ < MIRType::Object;
     }
@@ -6919,7 +6919,7 @@ class MSub : public MBinaryArithInstruction
     void truncate() override;
     TruncateKind operandTruncateKind(size_t index) const override;
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return specialization_ < MIRType::Object;
     }
@@ -7004,7 +7004,7 @@ class MMul : public MBinaryArithInstruction
         canBeNegativeZero_ = negativeZero;
     }
 
-    bool updateForReplacement(MDefinition* ins) override;
+    MOZ_MUST_USE bool updateForReplacement(MDefinition* ins) override;
 
     bool fallible() const {
         return canBeNegativeZero_ || canOverflow();
@@ -7023,7 +7023,7 @@ class MMul : public MBinaryArithInstruction
 
     Mode mode() const { return mode_; }
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return specialization_ < MIRType::Object;
     }
@@ -7144,7 +7144,7 @@ class MDiv : public MBinaryArithInstruction
     void collectRangeInfoPreTrunc() override;
     TruncateKind operandTruncateKind(size_t index) const override;
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return specialization_ < MIRType::Object;
     }
@@ -7229,7 +7229,7 @@ class MMod : public MBinaryArithInstruction
         return trapOnError_;
     }
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return specialization_ < MIRType::Object;
     }
@@ -7278,7 +7278,7 @@ class MConcat
         return AliasSet::None();
     }
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -7315,7 +7315,7 @@ class MCharCodeAt
 
     void computeRange(TempAllocator& alloc) override;
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -7348,7 +7348,7 @@ class MFromCharCode
         return congruentIfOperandsEqual(ins);
     }
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -7431,7 +7431,7 @@ class MStringSplit
         // it as store instruction, see also MNewArray.
         return AliasSet::None();
     }
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -8198,7 +8198,7 @@ class MRegExpMatcher
         return getOperand(2);
     }
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
 
     bool canRecoverOnBailout() const override {
         return true;
@@ -8247,7 +8247,7 @@ class MRegExpSearcher
         return getOperand(2);
     }
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
 
     bool canRecoverOnBailout() const override {
         return true;
@@ -8300,7 +8300,7 @@ class MRegExpTester
         return true;
     }
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -8428,7 +8428,7 @@ class MStringReplace
         return AliasSet::None();
     }
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         if (isFlatReplacement_) {
             MOZ_ASSERT(!pattern()->isRegExp());
@@ -8550,7 +8550,7 @@ class MLambda
     const LambdaFunctionInfo& info() const {
         return info_;
     }
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -9376,7 +9376,7 @@ class MNot
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
     }
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -11076,7 +11076,7 @@ class InlinePropertyTable : public TempObject
         return pc_;
     }
 
-    bool addEntry(TempAllocator& alloc, ObjectGroup* group, JSFunction* func) {
+    MOZ_MUST_USE bool addEntry(TempAllocator& alloc, ObjectGroup* group, JSFunction* func) {
         return entries_.append(new(alloc) Entry(group, func));
     }
 
@@ -11205,7 +11205,7 @@ class MGetPropertyCache
     }
 
     void setBlock(MBasicBlock* block) override;
-    bool updateForReplacement(MDefinition* ins) override;
+    MOZ_MUST_USE bool updateForReplacement(MDefinition* ins) override;
 
     bool allowDoubleResult() const;
 };
@@ -11252,7 +11252,7 @@ class MGetPropertyPolymorphic
         return congruentIfOperandsEqual(ins);
     }
 
-    bool addReceiver(const ReceiverGuard& receiver, Shape* shape) {
+    MOZ_MUST_USE bool addReceiver(const ReceiverGuard& receiver, Shape* shape) {
         Entry entry;
         entry.receiver = receiver;
         entry.shape = shape;
@@ -11325,7 +11325,7 @@ class MSetPropertyPolymorphic
         return new(alloc) MSetPropertyPolymorphic(alloc, obj, value, name);
     }
 
-    bool addReceiver(const ReceiverGuard& receiver, Shape* shape) {
+    MOZ_MUST_USE bool addReceiver(const ReceiverGuard& receiver, Shape* shape) {
         Entry entry;
         entry.receiver = receiver;
         entry.shape = shape;
@@ -11452,7 +11452,7 @@ class MDispatchInstruction
     }
 
   public:
-    bool addCase(JSFunction* func, ObjectGroup* funcGroup, MBasicBlock* block) {
+    MOZ_MUST_USE bool addCase(JSFunction* func, ObjectGroup* funcGroup, MBasicBlock* block) {
         return map_.append(Entry(func, funcGroup, block));
     }
     uint32_t numCases() const {
@@ -11680,7 +11680,7 @@ class MGuardReceiverPolymorphic
         return getOperand(0);
     }
 
-    bool addReceiver(const ReceiverGuard& receiver) {
+    MOZ_MUST_USE bool addReceiver(const ReceiverGuard& receiver) {
         return receivers_.append(receiver);
     }
     size_t numReceivers() const {
@@ -12528,8 +12528,8 @@ class MGetDOMProperty
         return info_;
     }
 
-    bool init(TempAllocator& alloc, MDefinition* obj, MDefinition* guard,
-              MDefinition* globalGuard) {
+    MOZ_MUST_USE bool init(TempAllocator& alloc, MDefinition* obj, MDefinition* guard,
+                           MDefinition* globalGuard) {
         MOZ_ASSERT(obj);
         // guard can be null.
         // globalGuard can be null.
@@ -12689,7 +12689,7 @@ class MStringLength
 
     void computeRange(TempAllocator& alloc) override;
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -12733,7 +12733,7 @@ class MFloor
         return congruentIfOperandsEqual(ins);
     }
     void computeRange(TempAllocator& alloc) override;
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -12777,7 +12777,7 @@ class MCeil
         return congruentIfOperandsEqual(ins);
     }
     void computeRange(TempAllocator& alloc) override;
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -12822,7 +12822,7 @@ class MRound
         return congruentIfOperandsEqual(ins);
     }
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
@@ -13091,7 +13091,7 @@ class MArgumentsLength : public MNullaryInstruction
 
     void computeRange(TempAllocator& alloc) override;
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
 
     bool canRecoverOnBailout() const override {
         return true;
@@ -13744,7 +13744,7 @@ class MResumePoint final :
         }
     }
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
 
     // Register a store instruction on the current resume point. This
     // instruction would be recovered when we are bailing out. The |cache|
@@ -14002,7 +14002,7 @@ class MAtomicIsLockFree
         return congruentIfOperandsEqual(ins);
     }
 
-    bool writeRecoverData(CompactBufferWriter& writer) const override;
+    MOZ_MUST_USE bool writeRecoverData(CompactBufferWriter& writer) const override;
     bool canRecoverOnBailout() const override {
         return true;
     }
