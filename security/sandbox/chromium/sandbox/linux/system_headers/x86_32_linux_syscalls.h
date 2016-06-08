@@ -1422,5 +1422,73 @@
 #define __NR_memfd_create 356
 #endif
 
+#if !defined(__NR_bpf)
+#define __NR_bpf 357
+#endif
+
+#if !defined(__NR_execveat)
+#define __NR_execveat 358
+#endif
+
+#if !defined(__NR_socket)
+#define __NR_socket 359
+#endif
+
+#if !defined(__NR_socketpair)
+#define __NR_socketpair 360
+#endif
+
+#if !defined(__NR_bind)
+#define __NR_bind 361
+#endif
+
+#if !defined(__NR_connect)
+#define __NR_connect 362
+#endif
+
+#if !defined(__NR_listen)
+#define __NR_listen 363
+#endif
+
+#if !defined(__NR_accept4)
+#define __NR_accept4 364
+#endif
+
+#if !defined(__NR_getsockopt)
+#define __NR_getsockopt 365
+#endif
+
+#if !defined(__NR_setsockopt)
+#define __NR_setsockopt 366
+#endif
+
+#if !defined(__NR_getsockname)
+#define __NR_getsockname 367
+#endif
+
+#if !defined(__NR_getpeername)
+#define __NR_getpeername 368
+#endif
+
+#if !defined(__NR_sendto)
+#define __NR_sendto 369
+#endif
+
+#if !defined(__NR_sendmsg)
+#define __NR_sendmsg 370
+#endif
+
+#if !defined(__NR_recvfrom)
+#define __NR_recvfrom 371
+#endif
+
+#if !defined(__NR_recvmsg)
+#define __NR_recvmsg 372
+#endif
+
+#if !defined(__NR_shutdown)
+#define __NR_shutdown 373
+#endif
+
 #endif  // SANDBOX_LINUX_SYSTEM_HEADERS_X86_32_LINUX_SYSCALLS_H_
 
