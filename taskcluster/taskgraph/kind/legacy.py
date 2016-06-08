@@ -264,17 +264,16 @@ def validate_build_task(task):
     if 'extra' not in task_def:
         raise BuildTaskValidationException('build task must have task.extra props')
 
-    if 'locations' not in task_def['extra']:
-        raise BuildTaskValidationException('task.extra.locations missing')
+    if 'locations' in task_def['extra']:
 
-    locations = task_def['extra']['locations']
+        locations = task_def['extra']['locations']
 
-    if 'build' not in locations:
-        raise BuildTaskValidationException('task.extra.locations.build missing')
+        if 'build' not in locations:
+            raise BuildTaskValidationException('task.extra.locations.build missing')
 
-    if 'tests' not in locations and 'test_packages' not in locations:
-        raise BuildTaskValidationException('task.extra.locations.tests or '
-                                           'task.extra.locations.tests_packages missing')
+        if 'tests' not in locations and 'test_packages' not in locations:
+            raise BuildTaskValidationException('task.extra.locations.tests or '
+                                               'task.extra.locations.tests_packages missing')
 
 class LegacyKind(base.Kind):
     """

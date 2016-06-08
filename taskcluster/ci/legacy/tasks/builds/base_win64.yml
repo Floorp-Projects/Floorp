@@ -1,0 +1,5 @@
+$inherits:
+  from: 'tasks/builds/firefox_windows_base.yml'
+  variables:
+    build_name: 'win64'
+    platform: 'windows8-64'
