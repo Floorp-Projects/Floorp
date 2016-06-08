@@ -399,3 +399,87 @@ add_task(function* test_get_visits() {
   yield extension.awaitFinish("get-visits");
   yield extension.unload();
 });
+
+add_task(function* test_on_visited() {
+  const SINGLE_VISIT_URL = "http://example.com/1/";
+  const DOUBLE_VISIT_URL = "http://example.com/2/";
+  let visitDate = new Date(1999, 9, 9, 9, 9).getTime();
+
+  // pages/visits to add via History.insertMany
+  const PAGE_INFOS = [
+    {
+      url: SINGLE_VISIT_URL,
+      title: `visit to ${SINGLE_VISIT_URL}`,
+      visits: [
+        {date: new Date(visitDate)},
+      ],
+    },
+    {
+      url: DOUBLE_VISIT_URL,
+      title: `visit to ${DOUBLE_VISIT_URL}`,
+      visits: [
+        {date: new Date(visitDate += 1000)},
+        {date: new Date(visitDate += 1000)},
+      ],
+    },
+  ];
+
+  function background() {
+    let onVisitedData = [];
+
+    browser.history.onVisited.addListener(data => {
+      if (data.url.includes("moz-extension")) {
+        return;
+      }
+      onVisitedData.push(data);
+      if (onVisitedData.length == 3) {
+        browser.test.sendMessage("on-visited-data", onVisitedData);
+      }
+    });
+
+    browser.test.sendMessage("ready");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["history"],
+    },
+    background: `(${background})()`,
+  });
+
+  yield PlacesTestUtils.clearHistory();
+  yield extension.startup();
+  yield extension.awaitMessage("ready");
+
+  yield PlacesUtils.history.insertMany(PAGE_INFOS);
+
+  let onVisitedData = yield extension.awaitMessage("on-visited-data");
+
+  function checkOnVisitedData(index, expected) {
+    let onVisited = onVisitedData[index];
+    ok(PlacesUtils.isValidGuid(onVisited.id), "onVisited received a valid id");
+    is(onVisited.url, expected.url, "onVisited received the expected url");
+    is(onVisited.title, expected.title, "onVisited received the expected title");
+    is(onVisited.lastVisitTime, expected.time, "onVisited received the expected time");
+    is(onVisited.visitCount, expected.visitCount, "onVisited received the expected visitCount");
+  }
+
+  let expected = {
+    url: PAGE_INFOS[0].url,
+    title: PAGE_INFOS[0].title,
+    time: PAGE_INFOS[0].visits[0].date.getTime(),
+    visitCount: 1,
+  };
+  checkOnVisitedData(0, expected);
+
+  expected.url = PAGE_INFOS[1].url;
+  expected.title = PAGE_INFOS[1].title;
+  expected.time = PAGE_INFOS[1].visits[0].date.getTime();
+  checkOnVisitedData(1, expected);
+
+  expected.time = PAGE_INFOS[1].visits[1].date.getTime();
+  expected.visitCount = 2;
+  checkOnVisitedData(2, expected);
+
+  yield extension.unload();
+});
