@@ -562,7 +562,8 @@ class JSObject : public js::gc::Cell
     }
 
 #ifdef DEBUG
-    void dump();
+    void dump(FILE* fp) const;
+    void dump() const;
 #endif
 
     /* JIT Accessors */

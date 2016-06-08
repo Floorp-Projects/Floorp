@@ -10,6 +10,8 @@
 #include "DocAccessible.h"
 #include "Filters.h"
 
+#include <memory>
+
 class nsITreeView;
 
 namespace mozilla {
@@ -26,7 +28,7 @@ public:
 
 private:
   friend class Relation;
-  nsAutoPtr<AccIterable> mNextIter;
+  std::unique_ptr<AccIterable> mNextIter;
 };
 
 /**

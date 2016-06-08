@@ -203,7 +203,6 @@ BEGIN_TEST(testProfileStrings_isCalledWhenError)
     EXEC("function check2() { throw 'a'; }");
 
     reset(cx);
-    JS::ContextOptionsRef(cx).setDontReportUncaught(true);
     {
         JS::RootedValue rval(cx);
         /* Make sure the stack resets and we have an entry for each stack */

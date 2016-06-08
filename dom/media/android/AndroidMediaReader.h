@@ -42,7 +42,8 @@ public:
   AndroidMediaReader(AbstractMediaDecoder* aDecoder,
                      const nsACString& aContentType);
 
-  nsresult ResetDecode(TargetQueues aQueues) override;
+  nsresult ResetDecode(TrackSet aTracks = TrackSet(TrackInfo::kAudioTrack,
+                                                   TrackInfo::kVideoTrack)) override;
 
   bool DecodeAudioData() override;
   bool DecodeVideoFrame(bool &aKeyframeSkip, int64_t aTimeThreshold) override;

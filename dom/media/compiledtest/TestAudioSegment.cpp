@@ -4,8 +4,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "AudioSegment.h"
-#include <assert.h>
 #include <iostream>
+#include <mozilla/Assertions.h>
 
 using namespace mozilla;
 
@@ -142,8 +142,8 @@ void TestInterleaveAndConvert()
 
     uint32_t channelIndex = 0;
     for (size_t i = 0; i < arraySize * channels; i++) {
-      assert(FuzzyEqual(dst[i],
-                        FloatToAudioSample<DstT>(1. / (channelIndex + 1))));
+      MOZ_RELEASE_ASSERT(FuzzyEqual(dst[i],
+                         FloatToAudioSample<DstT>(1. / (channelIndex + 1))));
       channelIndex++;
       channelIndex %= channels;
     }
@@ -166,8 +166,8 @@ void TestDeinterleaveAndConvert()
 
     for (size_t channel = 0; channel < channels; channel++) {
       for (size_t i = 0; i < arraySize; i++) {
-        assert(FuzzyEqual(dst[channel][i],
-                          FloatToAudioSample<DstT>(1. / (channel + 1))));
+        MOZ_RELEASE_ASSERT(FuzzyEqual(dst[channel][i],
+                           FloatToAudioSample<DstT>(1. / (channel + 1))));
       }
     }
 
@@ -205,12 +205,9 @@ void TestUpmixStereo()
 
   for (size_t channel = 0; channel < 2; channel++) {
     for (size_t i = 0; i < arraySize; i++) {
-      if (channelsptr[channel][i] != GetHighValue<T>()) {
-        assert(false);
-      }
+      MOZ_RELEASE_ASSERT(channelsptr[channel][i] == GetHighValue<T>());
     }
   }
-  assert(true);
   delete channels[0];
 }
 
@@ -239,11 +236,9 @@ void TestDownmixStereo()
   AudioChannelsDownMix(inputptr, output, 1, arraySize);
 
   for (size_t i = 0; i < arraySize; i++) {
-    if (output[0][i] != GetSilentValue<T>()) {
-      assert(false);
-    }
+    MOZ_RELEASE_ASSERT(output[0][i] == GetSilentValue<T>());
+    MOZ_RELEASE_ASSERT(output[0][i] == GetSilentValue<T>());
   }
-  assert(true);
 
   delete output[0];
   delete output;
@@ -265,4 +260,3 @@ int main(int argc, char* argv[]) {
 
   return 0;
 }
-

@@ -363,7 +363,7 @@ bool nsWindow::OnPaint(HDC aDC, uint32_t aNestingLevel)
           doubleBuffering = mozilla::layers::BufferMode::BUFFERED;
 #endif
 
-          RefPtr<gfxContext> thebesContext = gfxContext::ForDrawTarget(dt);
+          RefPtr<gfxContext> thebesContext = gfxContext::CreateOrNull(dt);
           MOZ_ASSERT(thebesContext); // already checked draw target above
 
           {

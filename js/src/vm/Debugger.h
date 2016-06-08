@@ -1051,21 +1051,31 @@ class DebuggerObject : public NativeObject
     static DebuggerObject* create(JSContext* cx, HandleObject proto, HandleObject obj,
                                   HandleNativeObject debugger);
 
+    static bool isCallable(JSContext* cx, Handle<DebuggerObject*> object);
     static bool isFunction(JSContext* cx, Handle<DebuggerObject*> object);
     static bool isDebuggeeFunction(JSContext* cx, Handle<DebuggerObject*> object);
+    static bool isBoundFunction(JSContext* cx, Handle<DebuggerObject*> object);
+    static bool isArrowFunction(JSContext* cx, Handle<DebuggerObject*> object);
     static bool isGlobal(JSContext* cx, Handle<DebuggerObject*> object);
     static bool className(JSContext* cx, Handle<DebuggerObject*> object,
                           MutableHandleString result);
+    static bool global(JSContext* cx, Handle<DebuggerObject*> object, MutableHandleObject result);
     static bool name(JSContext* cx, Handle<DebuggerObject*> object, MutableHandleString result);
     static bool displayName(JSContext* cx, Handle<DebuggerObject*> object,
                             MutableHandleString result);
-    static bool isBoundFunction(JSContext* cx, Handle<DebuggerObject*> object);
+
+    static bool parameterNames(JSContext* cx, Handle<DebuggerObject*> object,
+                               MutableHandle<StringVector> result);
     static bool boundTargetFunction(JSContext* cx, Handle<DebuggerObject*> object,
                                     MutableHandleObject result);
     static bool boundThis(JSContext* cx, Handle<DebuggerObject*> object,
                           MutableHandleValue result);
     static bool boundArguments(JSContext* cx, Handle<DebuggerObject*> object,
                                MutableHandle<ValueVector> result);
+    static bool allocationSite(JSContext* cx, Handle<DebuggerObject*> object,
+                               MutableHandleObject result);
+    static bool errorMessageName(JSContext* cx, Handle<DebuggerObject*> object,
+                                 MutableHandleString result);
 
     static bool isExtensible(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
     static bool isSealed(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
