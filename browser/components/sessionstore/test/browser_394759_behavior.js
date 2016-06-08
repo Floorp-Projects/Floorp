@@ -30,12 +30,6 @@ function testWindows(windowsToOpen, expectedResults) {
       openDialog(getBrowserURL(), "", features, url);
       let win = yield openWindowPromise;
       yield BrowserTestUtils.browserLoaded(win.gBrowser.selectedBrowser);
-
-      if (win.gMultiProcessBrowser) {
-        let tab = win.gBrowser.selectedTab;
-        yield promiseTabRestored(tab);
-      }
-
       yield BrowserTestUtils.closeWindow(win);
     }
 
