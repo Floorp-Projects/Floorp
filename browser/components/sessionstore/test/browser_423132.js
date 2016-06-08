@@ -73,12 +73,7 @@ function test() {
           TabStateFlusher.flush(newWin.gBrowser.selectedBrowser).then(ready);
         }
 
-        if (newWin.gMultiProcessBrowser) {
-          let tab = newWin.gBrowser.selectedTab;
-          promiseTabRestored(tab).then(flushAndReady);
-        } else {
-          flushAndReady();
-        }
+        flushAndReady();
       }, true, testURL);
     });
   }, false);
