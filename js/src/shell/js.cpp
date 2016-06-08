@@ -180,6 +180,9 @@ struct ShellRuntime
 
     int exitCode;
     bool quitting;
+
+    UniqueChars readLineBuf;
+    size_t readLineBufPos;
 };
 
 struct MOZ_STACK_CLASS EnvironmentPreparer : public js::ScriptEnvironmentPreparer {
@@ -326,7 +329,8 @@ ShellRuntime::ShellRuntime(JSRuntime* rt)
     promiseRejectionTrackerCallback(rt, NullValue()),
 #endif // SPIDERMONKEY_PROMISE
     exitCode(0),
-    quitting(false)
+    quitting(false),
+    readLineBufPos(0)
 {}
 
 static ShellRuntime*
@@ -1715,6 +1719,69 @@ ReadLine(JSContext* cx, unsigned argc, Value* vp)
 
     args.rval().setString(str);
     return true;
+}
+
+/*
+ * function readlineBuf()
+ * Provides a hook for scripts to emulate readline() using a string object.
+ */
+static bool
+ReadLineBuf(JSContext* cx, unsigned argc, Value* vp)
+{
+    CallArgs args = CallArgsFromVp(argc, vp);
+    ShellRuntime* sr = GetShellRuntime(cx);
+
+    if (!args.length()) {
+        if (!sr->readLineBuf) {
+            JS_ReportError(cx, "No source buffer set. You must initially call readlineBuf with an argument.");
+            return false;
+        }
+
+        char* currentBuf = sr->readLineBuf.get() + sr->readLineBufPos;
+        size_t buflen = strlen(currentBuf);
+
+        if (!buflen) {
+            args.rval().setNull();
+            return true;
+        }
+
+        size_t len = 0;
+        while(len < buflen) {
+            if (currentBuf[len] == '\n')
+                break;
+            len++;
+        }
+
+        JSString* str = JS_NewStringCopyN(cx, currentBuf, len);
+        if (!str)
+            return false;
+
+        if (currentBuf[len] == '\0')
+            sr->readLineBufPos += len;
+        else
+            sr->readLineBufPos += len + 1;
+
+        args.rval().setString(str);
+        return true;
+    }
+
+    if (args.length() == 1) {
+        if (sr->readLineBuf)
+            sr->readLineBuf.reset();
+
+        RootedString str(cx, JS::ToString(cx, args[0]));
+        if (!str)
+            return false;
+        sr->readLineBuf = UniqueChars(JS_EncodeStringToUTF8(cx, str));
+        if (!sr->readLineBuf)
+            return false;
+
+        sr->readLineBufPos = 0;
+        return true;
+    }
+
+    JS_ReportError(cx, "Must specify at most one argument");
+    return false;
 }
 
 static bool
@@ -5218,6 +5285,12 @@ static const JSFunctionSpecWithHelp shell_functions[] = {
     JS_FN_HELP("readline", ReadLine, 0, 0,
 "readline()",
 "  Read a single line from stdin."),
+
+    JS_FN_HELP("readlineBuf", ReadLineBuf, 1, 0,
+"readlineBuf([ buf ])",
+"  Emulate readline() on the specified string. The first call with a string\n"
+"  argument sets the source buffer. Subsequent calls without an argument\n"
+"  then read from this buffer line by line.\n"),
 
     JS_FN_HELP("print", Print, 0, 0,
 "print([exp ...])",
