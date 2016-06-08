@@ -41,6 +41,7 @@ mailing address.
 #include <stddef.h>
 
 #include "imgFrame.h"
+#include "mozilla/EndianUtils.h"
 #include "nsGIFDecoder2.h"
 #include "nsIInputStream.h"
 #include "RasterImage.h"
@@ -54,47 +55,48 @@ mailing address.
 
 using namespace mozilla::gfx;
 
+using std::max;
+
 namespace mozilla {
 namespace image {
 
-// GETN(n, s) requests at least 'n' bytes available from 'q', at start of state
-// 's'. Colormaps are directly copied in the resp. global_colormap or the
-// local_colormap of the PAL image frame So a fixed buffer in gif_struct is
-// good enough. This buffer is only needed to copy left-over data from one
-// GifWrite call to the next
-#define GETN(n,s)                      \
-  PR_BEGIN_MACRO                       \
-    mGIFStruct.bytes_to_consume = (n); \
-    mGIFStruct.state = (s);            \
-  PR_END_MACRO
-
-// Get a 16-bit value stored in little-endian format
-#define GETINT16(p)   ((p)[1]<<8|(p)[0])
 //////////////////////////////////////////////////////////////////////
 // GIF Decoder Implementation
 
+static const size_t GIF_HEADER_LEN = 6;
+static const size_t GIF_SCREEN_DESCRIPTOR_LEN = 7;
+static const size_t BLOCK_HEADER_LEN = 1;
+static const size_t SUB_BLOCK_HEADER_LEN = 1;
+static const size_t EXTENSION_HEADER_LEN = 2;
+static const size_t GRAPHIC_CONTROL_EXTENSION_LEN = 4;
+static const size_t APPLICATION_EXTENSION_LEN = 11;
+static const size_t IMAGE_DESCRIPTOR_LEN = 9;
+
+// Masks for reading color table information from packed fields in the screen
+// descriptor and image descriptor blocks.
+static const uint8_t PACKED_FIELDS_COLOR_TABLE_BIT = 0x80;
+static const uint8_t PACKED_FIELDS_INTERLACED_BIT = 0x40;
+static const uint8_t PACKED_FIELDS_TABLE_DEPTH_MASK = 0x07;
+
 nsGIFDecoder2::nsGIFDecoder2(RasterImage* aImage)
   : Decoder(aImage)
+  , mLexer(Transition::To(State::GIF_HEADER, GIF_HEADER_LEN))
   , mOldColor(0)
   , mCurrentFrameIndex(-1)
+  , mColorTablePos(0)
   , mGIFOpen(false)
   , mSawTransparency(false)
 {
-  // Clear out the structure, excluding the arrays
+  // Clear out the structure, excluding the arrays.
   memset(&mGIFStruct, 0, sizeof(mGIFStruct));
 
-  // Initialize as "animate once" in case no NETSCAPE2.0 extension is found
+  // Initialize as "animate once" in case no NETSCAPE2.0 extension is found.
   mGIFStruct.loop_count = 1;
-
-  // Start with the version (GIF89a|GIF87a)
-  mGIFStruct.state = gif_type;
-  mGIFStruct.bytes_to_consume = 6;
 }
 
 nsGIFDecoder2::~nsGIFDecoder2()
 {
   free(mGIFStruct.local_colormap);
-  free(mGIFStruct.hold);
 }
 
 void
@@ -166,22 +168,6 @@ nsGIFDecoder2::CheckForTransparency(const IntRect& aFrameRect)
   return false;
 }
 
-IntRect
-nsGIFDecoder2::ClampToImageRect(const IntRect& aRect)
-{
-  IntRect imageRect(0, 0, mGIFStruct.screen_width, mGIFStruct.screen_height);
-  IntRect visibleFrameRect = aRect.Intersect(imageRect);
-
-  // If there's no intersection, |visibleFrameRect| will be an empty rect
-  // positioned at the maximum of |imageRect|'s and |aRect|'s coordinates, which
-  // is not what we want. Force it to (0, 0) in that case.
-  if (visibleFrameRect.IsEmpty()) {
-    visibleFrameRect.MoveTo(0, 0);
-  }
-
-  return visibleFrameRect;
-}
-
 //******************************************************************************
 nsresult
 nsGIFDecoder2::BeginImageFrame(const IntRect& aFrameRect,
@@ -244,9 +230,8 @@ nsGIFDecoder2::EndImageFrame()
 {
   Opacity opacity = Opacity::SOME_TRANSPARENCY;
 
-  // First flush all pending image data
   if (mGIFStruct.images_decoded == 0) {
-    // Only need to flush first frame
+    // We need to send invalidations for the first frame.
     FlushImageData();
 
     // The first frame was preallocated with alpha; if it wasn't transparent, we
@@ -304,19 +289,26 @@ nsGIFDecoder2::ColormapIndexToPixel<uint8_t>(uint8_t aIndex)
 
 template <typename PixelSize>
 NextPixel<PixelSize>
-nsGIFDecoder2::YieldPixel(const uint8_t*& aCurrentByteInOut)
+nsGIFDecoder2::YieldPixel(const uint8_t* aData,
+                          size_t aLength,
+                          size_t* aBytesReadOut)
 {
+  MOZ_ASSERT(aData);
+  MOZ_ASSERT(aBytesReadOut);
   MOZ_ASSERT(mGIFStruct.stackp >= mGIFStruct.stack);
+
+  // Advance to the next byte we should read.
+  const uint8_t* data = aData + *aBytesReadOut;
 
   // If we don't have any decoded data to yield, try to read some input and
   // produce some.
   if (mGIFStruct.stackp == mGIFStruct.stack) {
-    while (mGIFStruct.bits < mGIFStruct.codesize && mGIFStruct.count > 0) {
+    while (mGIFStruct.bits < mGIFStruct.codesize && *aBytesReadOut < aLength) {
       // Feed the next byte into the decoder's 32-bit input buffer.
-      mGIFStruct.datum += int32_t(*aCurrentByteInOut) << mGIFStruct.bits;
+      mGIFStruct.datum += int32_t(*data) << mGIFStruct.bits;
       mGIFStruct.bits += 8;
-      ++aCurrentByteInOut;
-      --mGIFStruct.count;
+      data += 1;
+      *aBytesReadOut += 1;
     }
 
     if (mGIFStruct.bits < mGIFStruct.codesize) {
@@ -412,32 +404,6 @@ nsGIFDecoder2::YieldPixel(const uint8_t*& aCurrentByteInOut)
   return AsVariant(ColormapIndexToPixel<PixelSize>(*--mGIFStruct.stackp));
 }
 
-bool
-nsGIFDecoder2::DoLzw(const uint8_t* aData)
-{
-  const uint8_t* currentByte = aData;
-  while (mGIFStruct.count > 0 && mGIFStruct.pixels_remaining > 0) {
-    auto result = mGIFStruct.images_decoded > 0
-                ? mPipe.WritePixels<uint8_t>([&]() { return YieldPixel<uint8_t>(currentByte); })
-                : mPipe.WritePixels<uint32_t>([&]() { return YieldPixel<uint32_t>(currentByte); });
-
-    switch (result) {
-      case WriteState::NEED_MORE_DATA:
-        continue;
-
-      case WriteState::FINISHED:
-        NS_WARN_IF(mGIFStruct.pixels_remaining > 0);
-        mGIFStruct.pixels_remaining = 0;
-        return true;
-
-      case WriteState::FAILURE:
-        return false;
-    }
-  }
-
-  return true;
-}
-
 /// Expand the colormap from RGB to Packed ARGB as needed by Cairo.
 /// And apply any LCMS transformation.
 static void
@@ -490,597 +456,621 @@ void
 nsGIFDecoder2::WriteInternal(const char* aBuffer, uint32_t aCount)
 {
   MOZ_ASSERT(!HasError(), "Shouldn't call WriteInternal after error!");
+  MOZ_ASSERT(aBuffer);
+  MOZ_ASSERT(aCount > 0);
 
-  // These variables changed names; renaming would make a much bigger patch :(
-  const uint8_t* buf = (const uint8_t*)aBuffer;
-  uint32_t len = aCount;
-
-  const uint8_t* q = buf;
-
-  // Add what we have sofar to the block
-  // If previous call to me left something in the hold first complete current
-  // block, or if we are filling the colormaps, first complete the colormap
-  uint8_t* p =
-    (mGIFStruct.state ==
-      gif_global_colormap) ? (uint8_t*) mGIFStruct.global_colormap :
-        (mGIFStruct.state == gif_image_colormap) ? (uint8_t*) mColormap :
-          (mGIFStruct.bytes_in_hold) ? mGIFStruct.hold : nullptr;
-
-  if (len == 0 && buf == nullptr) {
-    // We've just gotten the frame we asked for. Time to use the data we
-    // stashed away.
-    len = mGIFStruct.bytes_in_hold;
-    q = buf = p;
-  } else if (p) {
-    // Add what we have sofar to the block
-    uint32_t l = std::min(len, mGIFStruct.bytes_to_consume);
-    memcpy(p+mGIFStruct.bytes_in_hold, buf, l);
-
-    if (l < mGIFStruct.bytes_to_consume) {
-      // Not enough in 'buf' to complete current block, get more
-      mGIFStruct.bytes_in_hold += l;
-      mGIFStruct.bytes_to_consume -= l;
-      return;
-    }
-    // Point 'q' to complete block in hold (or in colormap)
-    q = p;
-  }
-
-  // Invariant:
-  //    'q' is start of current to be processed block (hold, colormap or buf)
-  //    'bytes_to_consume' is number of bytes to consume from 'buf'
-  //    'buf' points to the bytes to be consumed from the input buffer
-  //    'len' is number of bytes left in input buffer from position 'buf'.
-  //    At entrance of the for loop will 'buf' will be moved 'bytes_to_consume'
-  //    to point to next buffer, 'len' is adjusted accordingly.
-  //    So that next round in for loop, q gets pointed to the next buffer.
-
-  for (;len >= mGIFStruct.bytes_to_consume; q=buf, mGIFStruct.bytes_in_hold = 0)
-  {
-    // Eat the current block from the buffer, q keeps pointed at current block
-    buf += mGIFStruct.bytes_to_consume;
-    len -= mGIFStruct.bytes_to_consume;
-
-    switch (mGIFStruct.state) {
-    case gif_lzw:
-      if (!DoLzw(q)) {
-        mGIFStruct.state = gif_error;
-        break;
-      }
-      GETN(1, gif_sub_block);
-      break;
-
-    case gif_lzw_start: {
-      // Make sure the transparent pixel is transparent in the colormap
-      if (mGIFStruct.is_transparent) {
-        // Save old value so we can restore it later
-        if (mColormap == mGIFStruct.global_colormap) {
-            mOldColor = mColormap[mGIFStruct.tpixel];
+  Maybe<TerminalState> terminalState =
+    mLexer.Lex(aBuffer, aCount, [=](State aState,
+                                    const char* aData, size_t aLength) {
+        switch(aState) {
+          case State::GIF_HEADER:
+            return ReadGIFHeader(aData);
+          case State::SCREEN_DESCRIPTOR:
+            return ReadScreenDescriptor(aData);
+          case State::GLOBAL_COLOR_TABLE:
+            return ReadGlobalColorTable(aData, aLength);
+          case State::FINISHED_GLOBAL_COLOR_TABLE:
+            return FinishedGlobalColorTable();
+          case State::BLOCK_HEADER:
+            return ReadBlockHeader(aData);
+          case State::EXTENSION_HEADER:
+            return ReadExtensionHeader(aData);
+          case State::GRAPHIC_CONTROL_EXTENSION:
+            return ReadGraphicControlExtension(aData);
+          case State::APPLICATION_IDENTIFIER:
+            return ReadApplicationIdentifier(aData);
+          case State::NETSCAPE_EXTENSION_SUB_BLOCK:
+            return ReadNetscapeExtensionSubBlock(aData);
+          case State::NETSCAPE_EXTENSION_DATA:
+            return ReadNetscapeExtensionData(aData);
+          case State::IMAGE_DESCRIPTOR:
+            return ReadImageDescriptor(aData);
+          case State::LOCAL_COLOR_TABLE:
+            return ReadLocalColorTable(aData, aLength);
+          case State::FINISHED_LOCAL_COLOR_TABLE:
+            return FinishedLocalColorTable();
+          case State::IMAGE_DATA_BLOCK:
+            return ReadImageDataBlock(aData);
+          case State::IMAGE_DATA_SUB_BLOCK:
+            return ReadImageDataSubBlock(aData);
+          case State::LZW_DATA:
+            return ReadLZWData(aData, aLength);
+          case State::FINISHED_LZW_DATA:
+            return Transition::To(State::IMAGE_DATA_SUB_BLOCK, SUB_BLOCK_HEADER_LEN);
+          case State::SKIP_SUB_BLOCKS:
+            return SkipSubBlocks(aData);
+          case State::SKIP_DATA_THEN_SKIP_SUB_BLOCKS:
+            return Transition::ContinueUnbuffered(State::SKIP_DATA_THEN_SKIP_SUB_BLOCKS);
+          case State::FINISHED_SKIPPING_DATA:
+            return Transition::To(State::SKIP_SUB_BLOCKS, SUB_BLOCK_HEADER_LEN);
+          default:
+            MOZ_CRASH("Unknown State");
         }
-        mColormap[mGIFStruct.tpixel] = 0;
-      }
+      });
 
-      // Initialize LZW parser/decoder
-      mGIFStruct.datasize = *q;
-      const int clear_code = ClearCode();
-      if (mGIFStruct.datasize > MAX_LZW_BITS ||
-          clear_code >= MAX_BITS) {
-        mGIFStruct.state = gif_error;
-        break;
-      }
-
-      mGIFStruct.avail = clear_code + 2;
-      mGIFStruct.oldcode = -1;
-      mGIFStruct.codesize = mGIFStruct.datasize + 1;
-      mGIFStruct.codemask = (1 << mGIFStruct.codesize) - 1;
-      mGIFStruct.datum = mGIFStruct.bits = 0;
-
-      // init the tables
-      for (int i = 0; i < clear_code; i++) {
-        mGIFStruct.suffix[i] = i;
-      }
-
-      mGIFStruct.stackp = mGIFStruct.stack;
-
-      GETN(1, gif_sub_block);
-    }
-    break;
-
-    // All GIF files begin with "GIF87a" or "GIF89a"
-    case gif_type:
-      if (!strncmp((char*)q, "GIF89a", 6)) {
-        mGIFStruct.version = 89;
-      } else if (!strncmp((char*)q, "GIF87a", 6)) {
-        mGIFStruct.version = 87;
-      } else {
-        mGIFStruct.state = gif_error;
-        break;
-      }
-      GETN(7, gif_global_header);
-      break;
-
-    case gif_global_header:
-      // This is the height and width of the "screen" or
-      // frame into which images are rendered.  The
-      // individual images can be smaller than the
-      // screen size and located with an origin anywhere
-      // within the screen.
-
-      mGIFStruct.screen_width = GETINT16(q);
-      mGIFStruct.screen_height = GETINT16(q + 2);
-      mGIFStruct.global_colormap_depth = (q[4]&0x07) + 1;
-
-      // screen_bgcolor is not used
-      //mGIFStruct.screen_bgcolor = q[5];
-      // q[6] = Pixel Aspect Ratio
-      //   Not used
-      //   float aspect = (float)((q[6] + 15) / 64.0);
-
-      if (q[4] & 0x80) {
-        // Get the global colormap
-        const uint32_t size = (3 << mGIFStruct.global_colormap_depth);
-        if (len < size) {
-          // Use 'hold' pattern to get the global colormap
-          GETN(size, gif_global_colormap);
-          break;
-        }
-        // Copy everything, go to colormap state to do CMS correction
-        memcpy(mGIFStruct.global_colormap, buf, size);
-        buf += size;
-        len -= size;
-        GETN(0, gif_global_colormap);
-        break;
-      }
-
-      GETN(1, gif_image_start);
-      break;
-
-    case gif_global_colormap:
-      // Everything is already copied into global_colormap
-      // Convert into Cairo colors including CMS transformation
-      ConvertColormap(mGIFStruct.global_colormap,
-                      1<<mGIFStruct.global_colormap_depth);
-      GETN(1, gif_image_start);
-      break;
-
-    case gif_image_start:
-      switch (*q) {
-        case GIF_TRAILER:
-          if (IsMetadataDecode()) {
-            return;
-          }
-          mGIFStruct.state = gif_done;
-          break;
-
-        case GIF_EXTENSION_INTRODUCER:
-          GETN(2, gif_extension);
-          break;
-
-        case GIF_IMAGE_SEPARATOR:
-          GETN(9, gif_image_header);
-          break;
-
-        default:
-          // If we get anything other than GIF_IMAGE_SEPARATOR,
-          // GIF_EXTENSION_INTRODUCER, or GIF_TRAILER, there is extraneous data
-          // between blocks. The GIF87a spec tells us to keep reading
-          // until we find an image separator, but GIF89a says such
-          // a file is corrupt. We follow GIF89a and bail out.
-          if (mGIFStruct.images_decoded > 0) {
-            // The file is corrupt, but one or more images have
-            // been decoded correctly. In this case, we proceed
-            // as if the file were correctly terminated and set
-            // the state to gif_done, so the GIF will display.
-            mGIFStruct.state = gif_done;
-          } else {
-            // No images decoded, there is nothing to display.
-            mGIFStruct.state = gif_error;
-          }
-      }
-      break;
-
-    case gif_extension:
-      mGIFStruct.bytes_to_consume = q[1];
-      if (mGIFStruct.bytes_to_consume) {
-        switch (*q) {
-        case GIF_GRAPHIC_CONTROL_LABEL:
-          // The GIF spec mandates that the GIFControlExtension header block
-          // length is 4 bytes, and the parser for this block reads 4 bytes,
-          // so we must enforce that the buffer contains at least this many
-          // bytes. If the GIF specifies a different length, we allow that, so
-          // long as it's larger; the additional data will simply be ignored.
-          mGIFStruct.state = gif_control_extension;
-          mGIFStruct.bytes_to_consume =
-            std::max(mGIFStruct.bytes_to_consume, 4u);
-          break;
-
-        // The GIF spec also specifies the lengths of the following two
-        // extensions' headers (as 12 and 11 bytes, respectively). Because
-        // we ignore the plain text extension entirely and sanity-check the
-        // actual length of the application extension header before reading it,
-        // we allow GIFs to deviate from these values in either direction. This
-        // is important for real-world compatibility, as GIFs in the wild exist
-        // with application extension headers that are both shorter and longer
-        // than 11 bytes.
-        case GIF_APPLICATION_EXTENSION_LABEL:
-          mGIFStruct.state = gif_application_extension;
-          break;
-
-        case GIF_PLAIN_TEXT_LABEL:
-          mGIFStruct.state = gif_skip_block;
-          break;
-
-        case GIF_COMMENT_LABEL:
-          mGIFStruct.state = gif_consume_comment;
-          break;
-
-        default:
-          mGIFStruct.state = gif_skip_block;
-        }
-      } else {
-        GETN(1, gif_image_start);
-      }
-      break;
-
-    case gif_consume_block:
-      if (!*q) {
-        GETN(1, gif_image_start);
-      } else {
-        GETN(*q, gif_skip_block);
-      }
-      break;
-
-    case gif_skip_block:
-      GETN(1, gif_consume_block);
-      break;
-
-    case gif_control_extension:
-      mGIFStruct.is_transparent = *q & 0x1;
-      mGIFStruct.tpixel = q[3];
-      mGIFStruct.disposal_method = ((*q) >> 2) & 0x7;
-
-      if (mGIFStruct.disposal_method == 4) {
-        // Some specs say 3rd bit (value 4), other specs say value 3.
-        // Let's choose 3 (the more popular).
-        mGIFStruct.disposal_method = 3;
-      } else if (mGIFStruct.disposal_method > 4) {
-        // This GIF is using a disposal method which is undefined in the spec.
-        // Treat it as DisposalMethod::NOT_SPECIFIED.
-        mGIFStruct.disposal_method = 0;
-      }
-
-      {
-        DisposalMethod method = DisposalMethod(mGIFStruct.disposal_method);
-        if (method == DisposalMethod::CLEAR_ALL ||
-            method == DisposalMethod::CLEAR) {
-          // We may have to display the background under this image during
-          // animation playback, so we regard it as transparent.
-          PostHasTransparency();
-        }
-      }
-
-      mGIFStruct.delay_time = GETINT16(q + 1) * 10;
-
-      if (mGIFStruct.delay_time > 0) {
-        PostIsAnimated(mGIFStruct.delay_time);
-      }
-
-      GETN(1, gif_consume_block);
-      break;
-
-    case gif_comment_extension:
-      if (*q) {
-        GETN(*q, gif_consume_comment);
-      } else {
-        GETN(1, gif_image_start);
-      }
-      break;
-
-    case gif_consume_comment:
-      GETN(1, gif_comment_extension);
-      break;
-
-    case gif_application_extension:
-      // Check for netscape application extension
-      if (mGIFStruct.bytes_to_consume == 11 &&
-          (!strncmp((char*)q, "NETSCAPE2.0", 11) ||
-           !strncmp((char*)q, "ANIMEXTS1.0", 11))) {
-        GETN(1, gif_netscape_extension_block);
-      } else {
-        GETN(1, gif_consume_block);
-      }
-      break;
-
-    // Netscape-specific GIF extension: animation looping
-    case gif_netscape_extension_block:
-      if (*q) {
-        // We might need to consume 3 bytes in
-        // gif_consume_netscape_extension, so make sure we have at least that.
-        GETN(std::max(3, static_cast<int>(*q)), gif_consume_netscape_extension);
-      } else {
-        GETN(1, gif_image_start);
-      }
-      break;
-
-    // Parse netscape-specific application extensions
-    case gif_consume_netscape_extension:
-      switch (q[0] & 7) {
-        case 1:
-          // Loop entire animation specified # of times.  Only read the
-          // loop count during the first iteration.
-          mGIFStruct.loop_count = GETINT16(q + 1);
-          GETN(1, gif_netscape_extension_block);
-          break;
-
-        case 2:
-          // Wait for specified # of bytes to enter buffer
-
-          // Don't do this, this extension doesn't exist (isn't used at all)
-          // and doesn't do anything, as our streaming/buffering takes care
-          // of it all...
-          // See: http://semmix.pl/color/exgraf/eeg24.htm
-          GETN(1, gif_netscape_extension_block);
-          break;
-
-        default:
-          // 0,3-7 are yet to be defined netscape extension codes
-          mGIFStruct.state = gif_error;
-      }
-      break;
-
-    case gif_image_header: {
-      if (mGIFStruct.images_decoded == 1) {
-        if (!HasAnimation()) {
-          // We should've already called PostIsAnimated(); this must be a
-          // corrupt animated image with a first frame timeout of zero. Signal
-          // that we're animated now, before the first-frame decode early exit
-          // below, so that RasterImage can detect that this happened.
-          PostIsAnimated(/* aFirstFrameTimeout = */ 0);
-        }
-
-        if (IsFirstFrameDecode()) {
-          // We're about to get a second frame, but we only want the first. Stop
-          // decoding now.
-          mGIFStruct.state = gif_done;
-          break;
-        }
-
-        if (mDownscaler) {
-          MOZ_ASSERT_UNREACHABLE("Doing downscale-during-decode "
-                                 "for an animated image?");
-          mDownscaler.reset();
-        }
-      }
-
-      IntRect frameRect;
-
-      // Get image offsets, with respect to the screen origin
-      frameRect.x = GETINT16(q);
-      frameRect.y = GETINT16(q + 2);
-
-      // Get image width and height.
-      frameRect.width  = GETINT16(q + 4);
-      frameRect.height = GETINT16(q + 6);
-
-      if (!mGIFStruct.images_decoded) {
-        // Work around broken GIF files where the logical screen
-        // size has weird width or height.  We assume that GIF87a
-        // files don't contain animations.
-        if ((mGIFStruct.screen_height < frameRect.height) ||
-            (mGIFStruct.screen_width < frameRect.width) ||
-            (mGIFStruct.version == 87)) {
-          mGIFStruct.screen_height = frameRect.height;
-          mGIFStruct.screen_width = frameRect.width;
-          frameRect.MoveTo(0, 0);
-        }
-        // Create the image container with the right size.
-        BeginGIF();
-        if (HasError()) {
-          // Setting the size led to an error.
-          mGIFStruct.state = gif_error;
-          return;
-        }
-
-        // If we were doing a metadata decode, we're done.
-        if (IsMetadataDecode()) {
-          CheckForTransparency(frameRect);
-          return;
-        }
-      }
-
-      // Work around more broken GIF files that have zero image width or height
-      if (!frameRect.height || !frameRect.width) {
-        frameRect.height = mGIFStruct.screen_height;
-        frameRect.width = mGIFStruct.screen_width;
-        if (!frameRect.height || !frameRect.width) {
-          mGIFStruct.state = gif_error;
-          break;
-        }
-      }
-
-      // Depth of colors is determined by colormap
-      // (q[8] & 0x80) indicates local colormap
-      // bits per pixel is (q[8]&0x07 + 1) when local colormap is set
-      uint32_t depth = mGIFStruct.global_colormap_depth;
-      if (q[8] & 0x80) {
-        depth = (q[8]&0x07) + 1;
-      }
-      uint32_t realDepth = depth;
-      while (mGIFStruct.tpixel >= (1 << realDepth) && (realDepth < 8)) {
-        realDepth++;
-      }
-
-      // Mask to limit the color values within the colormap
-      mColorMask = 0xFF >> (8 - realDepth);
-
-      // Determine if this frame is interlaced or not.
-      const bool isInterlaced = q[8] & 0x40;
-
-      if (NS_FAILED(BeginImageFrame(frameRect, realDepth, isInterlaced))) {
-        mGIFStruct.state = gif_error;
-        return;
-      }
-
-      // While decoders can reuse frames, we unconditionally increment
-      // mGIFStruct.images_decoded when we're done with a frame, so we both can
-      // and need to zero out the colormap and image data after every new frame.
-      memset(mImageData, 0, mImageDataLength);
-      if (mColormap) {
-        memset(mColormap, 0, mColormapSize);
-      }
-
-      // Clear state from last image
-      mGIFStruct.pixels_remaining = frameRect.width * frameRect.height;
-
-      // has a local colormap?
-      if (q[8] & 0x80) {
-        mGIFStruct.local_colormap_size = 1 << depth;
-        if (!mGIFStruct.images_decoded) {
-          // First frame has local colormap, allocate space for it
-          // as the image frame doesn't have its own palette
-          mColormapSize = sizeof(uint32_t) << realDepth;
-          if (!mGIFStruct.local_colormap) {
-            mGIFStruct.local_colormap = (uint32_t*)moz_xmalloc(mColormapSize);
-          }
-          mColormap = mGIFStruct.local_colormap;
-        }
-        const uint32_t size = 3 << depth;
-        if (mColormapSize > size) {
-          // Clear the notfilled part of the colormap
-          memset(((uint8_t*)mColormap) + size, 0, mColormapSize - size);
-        }
-        if (len < size) {
-          // Use 'hold' pattern to get the image colormap
-          GETN(size, gif_image_colormap);
-          break;
-        }
-        // Copy everything, go to colormap state to do CMS correction
-        memcpy(mColormap, buf, size);
-        buf += size;
-        len -= size;
-        GETN(0, gif_image_colormap);
-        break;
-      } else {
-        // Switch back to the global palette
-        if (mGIFStruct.images_decoded) {
-          // Copy global colormap into the palette of current frame
-          memcpy(mColormap, mGIFStruct.global_colormap, mColormapSize);
-        } else {
-          mColormap = mGIFStruct.global_colormap;
-        }
-      }
-      GETN(1, gif_lzw_start);
-    }
-    break;
-
-    case gif_image_colormap:
-      // Everything is already copied into local_colormap
-      // Convert into Cairo colors including CMS transformation
-      ConvertColormap(mColormap, mGIFStruct.local_colormap_size);
-      GETN(1, gif_lzw_start);
-      break;
-
-    case gif_sub_block:
-      mGIFStruct.count = *q;
-      if (mGIFStruct.count) {
-        // Still working on the same image: Process next LZW data block
-        // Make sure there are still pixels left. If the GIF data
-        // is corrupt, we may not get an explicit terminator.
-        if (mGIFStruct.pixels_remaining <= 0) {
-#ifdef DONT_TOLERATE_BROKEN_GIFS
-          mGIFStruct.state = gif_error;
-          break;
-#else
-          // This is an illegal GIF, but we remain tolerant.
-          GETN(1, gif_sub_block);
-#endif
-          if (mGIFStruct.count == GIF_TRAILER) {
-            // Found a terminator anyway, so consider the image done
-            GETN(1, gif_done);
-            break;
-          }
-        }
-        GETN(mGIFStruct.count, gif_lzw);
-      } else {
-        // See if there are any more images in this sequence.
-        EndImageFrame();
-        GETN(1, gif_image_start);
-      }
-      break;
-
-    case gif_done:
-      MOZ_ASSERT(!IsMetadataDecode(),
-                 "Metadata decodes shouldn't reach gif_done");
-      FinishInternal();
-      goto done;
-
-    case gif_error:
-      PostDataError();
-      return;
-
-    // We shouldn't ever get here.
-    default:
-      MOZ_ASSERT_UNREACHABLE("Unexpected mGIFStruct.state");
-      PostDecoderError(NS_ERROR_UNEXPECTED);
-      return;
-    }
-  }
-
-  // if an error state is set but no data remains, code flow reaches here
-  if (mGIFStruct.state == gif_error) {
-      PostDataError();
-      return;
-  }
-
-  // Copy the leftover into mGIFStruct.hold
-  if (len) {
-    // Add what we have sofar to the block
-    if (mGIFStruct.state != gif_global_colormap &&
-        mGIFStruct.state != gif_image_colormap) {
-      if (!SetHold(buf, len)) {
-        PostDataError();
-        return;
-      }
-    } else {
-      uint8_t* p = (mGIFStruct.state == gif_global_colormap) ?
-                    (uint8_t*)mGIFStruct.global_colormap :
-                    (uint8_t*)mColormap;
-      memcpy(p, buf, len);
-      mGIFStruct.bytes_in_hold = len;
-    }
-
-    mGIFStruct.bytes_to_consume -= len;
-  }
-
-// We want to flush before returning if we're on the first frame
-done:
-  if (!mGIFStruct.images_decoded) {
-    FlushImageData();
+  if (terminalState == Some(TerminalState::FAILURE)) {
+    PostDataError();
   }
 }
 
-bool
-nsGIFDecoder2::SetHold(const uint8_t* buf1, uint32_t count1,
-                       const uint8_t* buf2 /* = nullptr */,
-                       uint32_t count2 /* = 0 */)
+LexerTransition<nsGIFDecoder2::State>
+nsGIFDecoder2::ReadGIFHeader(const char* aData)
 {
-  // We have to handle the case that buf currently points to hold
-  uint8_t* newHold = (uint8_t*) malloc(std::max(uint32_t(MIN_HOLD_SIZE),
-                                       count1 + count2));
-  if (!newHold) {
-    mGIFStruct.state = gif_error;
-    return false;
+  // We retrieve the version here but because many GIF encoders set header
+  // fields incorrectly, we barely use it; features which should only appear in
+  // GIF89a are always accepted.
+  if (strncmp(aData, "GIF87a", GIF_HEADER_LEN) == 0) {
+    mGIFStruct.version = 87;
+  } else if (strncmp(aData, "GIF89a", GIF_HEADER_LEN) == 0) {
+    mGIFStruct.version = 89;
+  } else {
+    return Transition::TerminateFailure();
   }
 
-  memcpy(newHold, buf1, count1);
-  if (buf2) {
-    memcpy(newHold + count1, buf2, count2);
+  return Transition::To(State::SCREEN_DESCRIPTOR, GIF_SCREEN_DESCRIPTOR_LEN);
+}
+
+LexerTransition<nsGIFDecoder2::State>
+nsGIFDecoder2::ReadScreenDescriptor(const char* aData)
+{
+  mGIFStruct.screen_width  = LittleEndian::readUint16(aData + 0);
+  mGIFStruct.screen_height = LittleEndian::readUint16(aData + 2);
+
+  const uint8_t packedFields = aData[4];
+
+  // XXX: Should we be capturing these values even if there is no global color
+  // table?
+  mGIFStruct.global_colormap_depth =
+    (packedFields & PACKED_FIELDS_TABLE_DEPTH_MASK) + 1;
+  mGIFStruct.global_colormap_count = 1 << mGIFStruct.global_colormap_depth;
+
+  // We ignore several fields in the header. We don't care about the 'sort
+  // flag', which indicates if the global color table's entries are sorted in
+  // order of importance - if we need to render this image for a device with a
+  // narrower color gamut than GIF supports we'll handle that at a different
+  // layer. We have no use for the pixel aspect ratio as well. Finally, we
+  // intentionally ignore the background color index, as implementing that
+  // feature would not be web compatible - when a GIF image frame doesn't cover
+  // the entire area of the image, the area that's not covered should always be
+  // transparent.
+
+  if (packedFields & PACKED_FIELDS_COLOR_TABLE_BIT) {
+    MOZ_ASSERT(mColorTablePos == 0);
+
+    // We read the global color table in unbuffered mode since it can be quite
+    // large and it'd be preferable to avoid unnecessary copies.
+    const size_t globalColorTableSize = 3 * mGIFStruct.global_colormap_count;
+    return Transition::ToUnbuffered(State::FINISHED_GLOBAL_COLOR_TABLE,
+                                    State::GLOBAL_COLOR_TABLE,
+                                    globalColorTableSize);
   }
 
-  free(mGIFStruct.hold);
-  mGIFStruct.hold = newHold;
-  mGIFStruct.bytes_in_hold = count1 + count2;
-  return true;
+  return Transition::To(State::BLOCK_HEADER, BLOCK_HEADER_LEN);
+}
+
+LexerTransition<nsGIFDecoder2::State>
+nsGIFDecoder2::ReadGlobalColorTable(const char* aData, size_t aLength)
+{
+  uint8_t* dest = reinterpret_cast<uint8_t*>(mGIFStruct.global_colormap)
+                + mColorTablePos;
+  memcpy(dest, aData, aLength);
+  mColorTablePos += aLength;
+  return Transition::ContinueUnbuffered(State::GLOBAL_COLOR_TABLE);
+}
+
+LexerTransition<nsGIFDecoder2::State>
+nsGIFDecoder2::FinishedGlobalColorTable()
+{
+  ConvertColormap(mGIFStruct.global_colormap, mGIFStruct.global_colormap_count);
+  mColorTablePos = 0;
+  return Transition::To(State::BLOCK_HEADER, BLOCK_HEADER_LEN);
+}
+
+LexerTransition<nsGIFDecoder2::State>
+nsGIFDecoder2::ReadBlockHeader(const char* aData)
+{
+  // Determine what type of block we're dealing with.
+  switch (aData[0]) {
+    case GIF_EXTENSION_INTRODUCER:
+      return Transition::To(State::EXTENSION_HEADER, EXTENSION_HEADER_LEN);
+
+    case GIF_IMAGE_SEPARATOR:
+      return Transition::To(State::IMAGE_DESCRIPTOR, IMAGE_DESCRIPTOR_LEN);
+
+    case GIF_TRAILER:
+      FinishInternal();
+      return Transition::TerminateSuccess();
+
+    default:
+      // If we get anything other than GIF_IMAGE_SEPARATOR,
+      // GIF_EXTENSION_INTRODUCER, or GIF_TRAILER, there is extraneous data
+      // between blocks. The GIF87a spec tells us to keep reading until we find
+      // an image separator, but GIF89a says such a file is corrupt. We follow
+      // GIF89a and bail out.
+
+      if (mGIFStruct.images_decoded > 0) {
+        // The file is corrupt, but we successfully decoded some frames, so we
+        // may as well consider the decode successful and display them.
+        FinishInternal();
+        return Transition::TerminateSuccess();
+      }
+
+      // No images decoded; there is nothing to display.
+      return Transition::TerminateFailure();
+  }
+}
+
+LexerTransition<nsGIFDecoder2::State>
+nsGIFDecoder2::ReadExtensionHeader(const char* aData)
+{
+  const uint8_t label = aData[0];
+  const uint8_t extensionHeaderLength = aData[1];
+
+  // If the extension header is zero length, just treat it as a block terminator
+  // and move on to the next block immediately.
+  if (extensionHeaderLength == 0) {
+    return Transition::To(State::BLOCK_HEADER, BLOCK_HEADER_LEN);
+  }
+
+  switch (label) {
+    case GIF_GRAPHIC_CONTROL_LABEL:
+      // The GIF spec mandates that the Control Extension header block length is
+      // 4 bytes, and the parser for this block reads 4 bytes, so we must
+      // enforce that the buffer contains at least this many bytes. If the GIF
+      // specifies a different length, we allow that, so long as it's larger;
+      // the additional data will simply be ignored.
+      return Transition::To(State::GRAPHIC_CONTROL_EXTENSION,
+                            max<uint8_t>(extensionHeaderLength,
+                                         GRAPHIC_CONTROL_EXTENSION_LEN));
+
+    case GIF_APPLICATION_EXTENSION_LABEL:
+      // Again, the spec specifies that an application extension header is 11
+      // bytes, but for compatibility with GIFs in the wild, we allow deviation
+      // from the spec. This is important for real-world compatibility, as GIFs
+      // in the wild exist with application extension headers that are both
+      // shorter and longer than 11 bytes. However, we only try to actually
+      // interpret the application extension if the length is correct;
+      // otherwise, we just skip the block unconditionally.
+      return extensionHeaderLength == APPLICATION_EXTENSION_LEN
+           ? Transition::To(State::APPLICATION_IDENTIFIER, extensionHeaderLength)
+           : Transition::ToUnbuffered(State::FINISHED_SKIPPING_DATA,
+                                      State::SKIP_DATA_THEN_SKIP_SUB_BLOCKS,
+                                      extensionHeaderLength);
+
+    default:
+      // Skip over any other type of extension block, including comment and
+      // plain text blocks.
+      return Transition::ToUnbuffered(State::FINISHED_SKIPPING_DATA,
+                                      State::SKIP_DATA_THEN_SKIP_SUB_BLOCKS,
+                                      extensionHeaderLength);
+  }
+}
+
+LexerTransition<nsGIFDecoder2::State>
+nsGIFDecoder2::ReadGraphicControlExtension(const char* aData)
+{
+  mGIFStruct.is_transparent = aData[0] & 0x1;
+  mGIFStruct.tpixel = uint8_t(aData[3]);
+  mGIFStruct.disposal_method = (aData[0] >> 2) & 0x7;
+
+  if (mGIFStruct.disposal_method == 4) {
+    // Some encoders (and apparently some specs) represent
+    // DisposalMethod::RESTORE_PREVIOUS as 4, but 3 is used in the canonical
+    // spec and is more popular, so we normalize to 3.
+    mGIFStruct.disposal_method = 3;
+  } else if (mGIFStruct.disposal_method > 4) {
+    // This GIF is using a disposal method which is undefined in the spec.
+    // Treat it as DisposalMethod::NOT_SPECIFIED.
+    mGIFStruct.disposal_method = 0;
+  }
+
+  DisposalMethod method = DisposalMethod(mGIFStruct.disposal_method);
+  if (method == DisposalMethod::CLEAR_ALL || method == DisposalMethod::CLEAR) {
+    // We may have to display the background under this image during animation
+    // playback, so we regard it as transparent.
+    PostHasTransparency();
+  }
+
+  mGIFStruct.delay_time = LittleEndian::readUint16(aData + 1) * 10;
+  if (mGIFStruct.delay_time > 0) {
+    PostIsAnimated(mGIFStruct.delay_time);
+  }
+
+  return Transition::To(State::SKIP_SUB_BLOCKS, SUB_BLOCK_HEADER_LEN);
+}
+
+LexerTransition<nsGIFDecoder2::State>
+nsGIFDecoder2::ReadApplicationIdentifier(const char* aData)
+{
+  if ((strncmp(aData, "NETSCAPE2.0", 11) == 0) ||
+      (strncmp(aData, "ANIMEXTS1.0", 11) == 0)) {
+    // This is a Netscape application extension block.
+    return Transition::To(State::NETSCAPE_EXTENSION_SUB_BLOCK,
+                          SUB_BLOCK_HEADER_LEN);
+  }
+
+  // This is an application extension we don't care about. Just skip it.
+  return Transition::To(State::SKIP_SUB_BLOCKS, SUB_BLOCK_HEADER_LEN);
+}
+
+LexerTransition<nsGIFDecoder2::State>
+nsGIFDecoder2::ReadNetscapeExtensionSubBlock(const char* aData)
+{
+  const uint8_t blockLength = aData[0];
+  if (blockLength == 0) {
+    // We hit the block terminator.
+    return Transition::To(State::BLOCK_HEADER, BLOCK_HEADER_LEN);
+  }
+
+  // We consume a minimum of 3 bytes in accordance with the specs for the
+  // Netscape application extension block, such as they are.
+  const size_t extensionLength = max<uint8_t>(blockLength, 3);
+  return Transition::To(State::NETSCAPE_EXTENSION_DATA, extensionLength);
+}
+
+LexerTransition<nsGIFDecoder2::State>
+nsGIFDecoder2::ReadNetscapeExtensionData(const char* aData)
+{
+  // Documentation for NETSCAPE2.0 / ANIMEXTS1.0 extensions can be found at:
+  //   https://wiki.whatwg.org/wiki/GIF
+  static const uint8_t NETSCAPE_LOOPING_EXTENSION_SUB_BLOCK_ID = 1;
+  static const uint8_t NETSCAPE_BUFFERING_EXTENSION_SUB_BLOCK_ID = 2;
+
+  const uint8_t subBlockID = aData[0] & 7;
+  switch (subBlockID) {
+    case NETSCAPE_LOOPING_EXTENSION_SUB_BLOCK_ID:
+      // This is looping extension.
+      mGIFStruct.loop_count = LittleEndian::readUint16(aData + 1);
+      return Transition::To(State::NETSCAPE_EXTENSION_SUB_BLOCK,
+                            SUB_BLOCK_HEADER_LEN);
+
+    case NETSCAPE_BUFFERING_EXTENSION_SUB_BLOCK_ID:
+      // We allow, but ignore, this extension.
+      return Transition::To(State::NETSCAPE_EXTENSION_SUB_BLOCK,
+                            SUB_BLOCK_HEADER_LEN);
+
+    default:
+      return Transition::TerminateFailure();
+  }
+}
+
+LexerTransition<nsGIFDecoder2::State>
+nsGIFDecoder2::ReadImageDescriptor(const char* aData)
+{
+  if (mGIFStruct.images_decoded == 1) {
+    if (!HasAnimation()) {
+      // We should've already called PostIsAnimated(); this must be a corrupt
+      // animated image with a first frame timeout of zero. Signal that we're
+      // animated now, before the first-frame decode early exit below, so that
+      // RasterImage can detect that this happened.
+      PostIsAnimated(0);
+    }
+
+    if (IsFirstFrameDecode()) {
+      // We're about to get a second frame, but we only want the first. Stop
+      // decoding now.
+      FinishInternal();
+      return Transition::TerminateSuccess();
+    }
+
+    if (mDownscaler) {
+      MOZ_ASSERT_UNREACHABLE("Doing downscale-during-decode for an animated "
+                             "image?");
+      mDownscaler.reset();
+    }
+  }
+
+  IntRect frameRect;
+
+  // Get image offsets with respect to the screen origin.
+  frameRect.x = LittleEndian::readUint16(aData + 0);
+  frameRect.y = LittleEndian::readUint16(aData + 2);
+  frameRect.width = LittleEndian::readUint16(aData + 4);
+  frameRect.height = LittleEndian::readUint16(aData + 6);
+
+  if (!mGIFStruct.images_decoded) {
+    // Work around GIF files where
+    //   * at least one of the logical screen dimensions is smaller than the
+    //     same dimension in the first image, or
+    //   * GIF87a files where the first image's dimensions do not match the
+    //     logical screen dimensions.
+    if (mGIFStruct.screen_height < frameRect.height ||
+        mGIFStruct.screen_width < frameRect.width ||
+        mGIFStruct.version == 87) {
+      mGIFStruct.screen_height = frameRect.height;
+      mGIFStruct.screen_width = frameRect.width;
+      frameRect.MoveTo(0, 0);
+    }
+
+    // Create the image container with the right size.
+    BeginGIF();
+    if (HasError()) {
+      // Setting the size led to an error.
+      return Transition::TerminateFailure();
+    }
+
+    // If we're doing a metadata decode, we're done.
+    if (IsMetadataDecode()) {
+      CheckForTransparency(frameRect);
+      FinishInternal();
+      return Transition::TerminateSuccess();
+    }
+  }
+
+  // Work around broken GIF files that have zero frame width or height; in this
+  // case, we'll treat the frame as having the same size as the overall image.
+  if (frameRect.height == 0 || frameRect.width == 0) {
+    frameRect.height = mGIFStruct.screen_height;
+    frameRect.width = mGIFStruct.screen_width;
+
+    // If that still resulted in zero frame width or height, give up.
+    if (frameRect.height == 0 || frameRect.width == 0) {
+      return Transition::TerminateFailure();
+    }
+  }
+
+  // Determine |depth| (log base 2 of the number of colors in the palette).
+  bool haveLocalColorTable = false;
+  uint16_t depth = 0;
+  uint8_t packedFields = aData[8];
+
+  if (packedFields & PACKED_FIELDS_COLOR_TABLE_BIT) {
+    // Get the palette depth from the local color table.
+    depth = (packedFields & PACKED_FIELDS_TABLE_DEPTH_MASK) + 1;
+    haveLocalColorTable = true;
+  } else {
+    // Get the palette depth from the global color table.
+    depth = mGIFStruct.global_colormap_depth;
+  }
+
+  // If the transparent color index is greater than the number of colors in the
+  // color table, we may need a higher color depth than |depth| would specify.
+  // Our internal representation of the image will instead use |realDepth|,
+  // which is the smallest color depth that can accomodate the existing palette
+  // *and* the transparent color index.
+  uint16_t realDepth = depth;
+  while (mGIFStruct.tpixel >= (1 << realDepth) &&
+         realDepth < 8) {
+    realDepth++;
+  }
+
+  // Create a mask used to ensure that color values fit within the colormap.
+  mColorMask = 0xFF >> (8 - realDepth);
+
+  // Determine if this frame is interlaced or not.
+  const bool isInterlaced = packedFields & PACKED_FIELDS_INTERLACED_BIT;
+
+  // Create the SurfacePipe we'll use to write output for this frame.
+  if (NS_FAILED(BeginImageFrame(frameRect, realDepth, isInterlaced))) {
+    return Transition::TerminateFailure();
+  }
+
+  // While decoders can reuse frames, we unconditionally increment
+  // mGIFStruct.images_decoded when we're done with a frame, so we can zero out
+  // the colormap and image data after every new frame.
+  // XXX(seth): It's definitely not true that decoders can reuse frames, but
+  // given that a mistake here would result in a security bug I'd rather not
+  // change this in the middle of a refactor.
+  memset(mImageData, 0, mImageDataLength);
+  if (mColormap) {
+    memset(mColormap, 0, mColormapSize);
+  }
+
+  // Clear state from last image.
+  mGIFStruct.pixels_remaining = frameRect.width * frameRect.height;
+
+  if (haveLocalColorTable) {
+    // We have a local color table, so prepare to read it into the palette of
+    // the current frame.
+    mGIFStruct.local_colormap_size = 1 << depth;
+
+    if (mGIFStruct.images_decoded == 0) {
+      // The first frame has a local color table. Allocate space for it as we
+      // use a BGRA or BGRX surface for the first frame; such surfaces don't
+      // have their own palettes internally.
+      mColormapSize = sizeof(uint32_t) << realDepth;
+      if (!mGIFStruct.local_colormap) {
+        mGIFStruct.local_colormap =
+          static_cast<uint32_t*>(moz_xmalloc(mColormapSize));
+      }
+      mColormap = mGIFStruct.local_colormap;
+    }
+
+    const size_t size = 3 << depth;
+    if (mColormapSize > size) {
+      // Clear the part of the colormap which will be unused with this palette.
+      memset(reinterpret_cast<uint8_t*>(mColormap) + size, 0,
+             mColormapSize - size);
+    }
+
+    MOZ_ASSERT(mColorTablePos == 0);
+
+    // We read the local color table in unbuffered mode since it can be quite
+    // large and it'd be preferable to avoid unnecessary copies.
+    return Transition::ToUnbuffered(State::FINISHED_LOCAL_COLOR_TABLE,
+                                    State::LOCAL_COLOR_TABLE,
+                                    size);
+  }
+
+  // There's no local color table; copy the global color table into the palette
+  // of the current frame.
+  if (mGIFStruct.images_decoded > 0) {
+    memcpy(mColormap, mGIFStruct.global_colormap, mColormapSize);
+  } else {
+    mColormap = mGIFStruct.global_colormap;
+  }
+
+  return Transition::To(State::IMAGE_DATA_BLOCK, BLOCK_HEADER_LEN);
+}
+
+LexerTransition<nsGIFDecoder2::State>
+nsGIFDecoder2::ReadLocalColorTable(const char* aData, size_t aLength)
+{
+  uint8_t* dest = reinterpret_cast<uint8_t*>(mColormap) + mColorTablePos;
+  memcpy(dest, aData, aLength);
+  mColorTablePos += aLength;
+  return Transition::ContinueUnbuffered(State::LOCAL_COLOR_TABLE);
+}
+
+LexerTransition<nsGIFDecoder2::State>
+nsGIFDecoder2::FinishedLocalColorTable()
+{
+  ConvertColormap(mColormap, mGIFStruct.local_colormap_size);
+  mColorTablePos = 0;
+  return Transition::To(State::IMAGE_DATA_BLOCK, BLOCK_HEADER_LEN);
+}
+
+LexerTransition<nsGIFDecoder2::State>
+nsGIFDecoder2::ReadImageDataBlock(const char* aData)
+{
+  // Make sure the transparent pixel is transparent in the colormap.
+  if (mGIFStruct.is_transparent) {
+    // Save the old value so we can restore it later.
+    if (mColormap == mGIFStruct.global_colormap) {
+        mOldColor = mColormap[mGIFStruct.tpixel];
+    }
+    mColormap[mGIFStruct.tpixel] = 0;
+  }
+
+  // Initialize the LZW decoder.
+  mGIFStruct.datasize = uint8_t(aData[0]);
+  const int clearCode = ClearCode();
+  if (mGIFStruct.datasize > MAX_LZW_BITS || clearCode >= MAX_BITS) {
+    return Transition::TerminateFailure();
+  }
+
+  mGIFStruct.avail = clearCode + 2;
+  mGIFStruct.oldcode = -1;
+  mGIFStruct.codesize = mGIFStruct.datasize + 1;
+  mGIFStruct.codemask = (1 << mGIFStruct.codesize) - 1;
+  mGIFStruct.datum = mGIFStruct.bits = 0;
+
+  // Initialize the tables.
+  for (int i = 0; i < clearCode; i++) {
+    mGIFStruct.suffix[i] = i;
+  }
+
+  mGIFStruct.stackp = mGIFStruct.stack;
+
+  // Begin reading image data sub-blocks.
+  return Transition::To(State::IMAGE_DATA_SUB_BLOCK, SUB_BLOCK_HEADER_LEN);
+}
+
+LexerTransition<nsGIFDecoder2::State>
+nsGIFDecoder2::ReadImageDataSubBlock(const char* aData)
+{
+  const uint8_t subBlockLength = aData[0];
+  if (subBlockLength == 0) {
+    // We hit the block terminator.
+    EndImageFrame();
+    return Transition::To(State::BLOCK_HEADER, BLOCK_HEADER_LEN);
+  }
+
+  if (mGIFStruct.pixels_remaining == 0) {
+    // We've already written to the entire image. |subBlockLength| should've
+    // been zero.
+    if (subBlockLength == GIF_TRAILER) {
+      // This GIF is missing the block terminator for the final block; we'll put
+      // up with it.
+      FinishInternal();
+      return Transition::TerminateSuccess();
+    }
+
+    return Transition::To(State::IMAGE_DATA_SUB_BLOCK, SUB_BLOCK_HEADER_LEN);
+  }
+
+  // Handle the standard case: there's data in the sub-block and pixels left to
+  // fill in the image. We read the sub-block unbuffered so we can get pixels on
+  // the screen as soon as possible.
+  return Transition::ToUnbuffered(State::FINISHED_LZW_DATA,
+                                  State::LZW_DATA,
+                                  subBlockLength);
+}
+
+LexerTransition<nsGIFDecoder2::State>
+nsGIFDecoder2::ReadLZWData(const char* aData, size_t aLength)
+{
+  const uint8_t* data = reinterpret_cast<const uint8_t*>(aData);
+  size_t length = aLength;
+
+  while (length > 0 && mGIFStruct.pixels_remaining > 0) {
+    size_t bytesRead = 0;
+
+    auto result = mGIFStruct.images_decoded == 0
+      ? mPipe.WritePixels<uint32_t>([&]{ return YieldPixel<uint32_t>(data, length, &bytesRead); })
+      : mPipe.WritePixels<uint8_t>([&]{ return YieldPixel<uint8_t>(data, length, &bytesRead); });
+
+    if (MOZ_UNLIKELY(bytesRead > length)) {
+      MOZ_ASSERT_UNREACHABLE("Overread?");
+      bytesRead = length;
+    }
+
+    // Advance our position in the input based upon what YieldPixel() consumed.
+    data += bytesRead;
+    length -= bytesRead;
+
+    switch (result) {
+      case WriteState::NEED_MORE_DATA:
+        continue;
+
+      case WriteState::FINISHED:
+        NS_WARN_IF(mGIFStruct.pixels_remaining > 0);
+        mGIFStruct.pixels_remaining = 0;
+        break;
+
+      case WriteState::FAILURE:
+        return Transition::TerminateFailure();
+    }
+  }
+
+  // We're done, but keep going until we consume all the data in the sub-block.
+  return Transition::ContinueUnbuffered(State::LZW_DATA);
+}
+
+LexerTransition<nsGIFDecoder2::State>
+nsGIFDecoder2::SkipSubBlocks(const char* aData)
+{
+  // In the SKIP_SUB_BLOCKS state we skip over data sub-blocks that we're not
+  // interested in. Blocks consist of a block header (which can be up to 255
+  // bytes in length) and a series of data sub-blocks. Each data sub-block
+  // consists of a single byte length value, followed by the data itself. A data
+  // sub-block with a length of zero terminates the overall block.
+  // SKIP_SUB_BLOCKS reads a sub-block length value. If it's zero, we've arrived
+  // at the next block. Otherwise, we enter the SKIP_DATA_THEN_SKIP_SUB_BLOCKS
+  // state to skip over the sub-block data and return to SKIP_SUB_BLOCKS at the
+  // start of the next sub-block.
+
+  const uint8_t nextSubBlockLength = aData[0];
+  if (nextSubBlockLength == 0) {
+    // We hit the block terminator, so the sequence of data sub-blocks is over;
+    // begin processing another block.
+    return Transition::To(State::BLOCK_HEADER, BLOCK_HEADER_LEN);
+  }
+
+  // Skip to the next sub-block length value.
+  return Transition::ToUnbuffered(State::FINISHED_SKIPPING_DATA,
+                                  State::SKIP_DATA_THEN_SKIP_SUB_BLOCKS,
+                                  nextSubBlockLength);
 }
 
 Telemetry::ID

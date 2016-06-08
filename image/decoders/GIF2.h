@@ -15,44 +15,10 @@ enum { GIF_TRAILER                     = 0x3B }; // ';'
 enum { GIF_IMAGE_SEPARATOR             = 0x2C }; // ','
 enum { GIF_EXTENSION_INTRODUCER        = 0x21 }; // '!'
 enum { GIF_GRAPHIC_CONTROL_LABEL       = 0xF9 };
-enum { GIF_COMMENT_LABEL               = 0xFE };
-enum { GIF_PLAIN_TEXT_LABEL            = 0x01 };
 enum { GIF_APPLICATION_EXTENSION_LABEL = 0xFF };
-
-// gif2.h
-// The interface for the GIF87/89a decoder.
-
-// List of possible parsing states
-typedef enum {
-    gif_type,
-    gif_global_header,
-    gif_global_colormap,
-    gif_image_start,
-    gif_image_header,
-    gif_image_colormap,
-    gif_lzw_start,
-    gif_lzw,
-    gif_sub_block,
-    gif_extension,
-    gif_control_extension,
-    gif_consume_block,
-    gif_skip_block,
-    gif_done,
-    gif_error,
-    gif_comment_extension,
-    gif_application_extension,
-    gif_netscape_extension_block,
-    gif_consume_netscape_extension,
-    gif_consume_comment
-} gstate;
 
 // A GIF decoder's state
 typedef struct gif_struct {
-    // Parsing state machine
-    gstate state;               // Current decoder master state
-    uint32_t bytes_to_consume;  // Number of bytes to accumulate
-    uint32_t bytes_in_hold;     // bytes accumulated so far
-
     // LZW decoder state machine
     uint8_t* stackp;            // Current stack pointer
     int datasize;
@@ -61,7 +27,6 @@ typedef struct gif_struct {
     int avail;                  // Index of next available slot in dictionary
     int oldcode;
     uint8_t firstchar;
-    int count;                  // Remaining # bytes in sub-block
     int bits;                   // Number of unread bits in "datum"
     int32_t datum;              // 32-bit input buffer
 
@@ -80,7 +45,8 @@ typedef struct gif_struct {
     int version;                // Either 89 for GIF89 or 87 for GIF87
     int32_t screen_width;       // Logical screen width & height
     int32_t screen_height;
-    uint32_t global_colormap_depth; // Depth of global colormap array
+    uint8_t global_colormap_depth; // Depth of global colormap array
+    uint16_t global_colormap_count; // Number of colors in global colormap
     int images_decoded;         // Counts images for multi-part GIFs
     int loop_count;             // Netscape specific extension block to control
                                 // the number of animation loops a GIF
@@ -89,7 +55,6 @@ typedef struct gif_struct {
     bool is_transparent;        // TRUE, if tpixel is valid
 
     uint16_t  prefix[MAX_BITS];            // LZW decoding tables
-    uint8_t*  hold;                        // Accumulation buffer
     uint32_t  global_colormap[MAX_COLORS]; // Default colormap if local not
                                            //   supplied
     uint8_t   suffix[MAX_BITS];            // LZW decoding tables
