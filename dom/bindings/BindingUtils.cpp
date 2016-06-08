@@ -3358,14 +3358,14 @@ private:
   void
   ReleaseWorker()
   {
-    class ReleaseRunnable final : public WorkerRunnable
+    class ReleaseRunnable final : public MainThreadWorkerRunnable
     {
       RefPtr<DeprecationWarningRunnable> mRunnable;
 
     public:
       ReleaseRunnable(WorkerPrivate* aWorkerPrivate,
                       DeprecationWarningRunnable* aRunnable)
-        : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
+        : MainThreadWorkerRunnable(aWorkerPrivate)
         , mRunnable(aRunnable)
       {}
 
@@ -3377,19 +3377,6 @@ private:
 
         aWorkerPrivate->RemoveFeature(mRunnable);
         return true;
-      }
-
-      virtual bool
-      PreDispatch(WorkerPrivate* aWorkerPrivate) override
-      {
-        AssertIsOnMainThread();
-        return true;
-      }
-
-      virtual void
-      PostDispatch(WorkerPrivate* aWorkerPrivate,
-                   bool aDispatchResult) override
-      {
       }
     };
 
