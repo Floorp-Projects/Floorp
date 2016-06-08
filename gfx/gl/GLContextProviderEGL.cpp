@@ -13,11 +13,19 @@
     #define GET_NATIVE_WINDOW(aWidget) ((EGLNativeWindowType)aWidget->GetNativeData(NS_NATIVE_WINDOW))
 #endif
 
+#ifdef MOZ_WIDGET_ANDROID
+    #define GET_JAVA_SURFACE(aWidget) (aWidget->GetNativeData(NS_JAVA_SURFACE))
+#endif
+
 #if defined(XP_UNIX)
     #ifdef MOZ_WIDGET_GONK
         #include "libdisplay/GonkDisplay.h"
         #include "nsWindow.h"
         #include "nsScreenManagerGonk.h"
+    #endif
+
+    #ifdef MOZ_WIDGET_ANDROID
+        #include "AndroidBridge.h"
     #endif
 
     #ifdef ANDROID
@@ -169,7 +177,15 @@ CreateSurfaceForWindow(nsIWidget* widget, const EGLConfig& config) {
 
     MOZ_ASSERT(widget);
 #ifdef MOZ_WIDGET_ANDROID
-    newSurface = EGLSurface(widget->GetNativeData(NS_NATIVE_NEW_EGL_SURFACE));
+    void* javaSurface = GET_JAVA_SURFACE(widget);
+    if (!javaSurface) {
+        MOZ_CRASH("GFX: Failed to get Java surface.\n");
+    }
+    JNIEnv* const env = jni::GetEnvForThread();
+    void* nativeWindow = AndroidBridge::Bridge()->AcquireNativeWindow(env, reinterpret_cast<jobject>(javaSurface));
+    newSurface = sEGLLibrary.fCreateWindowSurface(sEGLLibrary.fGetDisplay(EGL_DEFAULT_DISPLAY), config,
+                                                  nativeWindow, 0);
+    AndroidBridge::Bridge()->ReleaseNativeWindow(nativeWindow);
 #else
     newSurface = sEGLLibrary.fCreateWindowSurface(EGL_DISPLAY(), config,
                                                   GET_NATIVE_WINDOW(widget), 0);

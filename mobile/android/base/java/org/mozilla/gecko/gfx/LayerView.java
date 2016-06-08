@@ -519,6 +519,13 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         return mTextureView.getSurfaceTexture();
     }
 
+    public Object getSurface() {
+      if (mSurfaceView != null) {
+        return mSurfaceView.getHolder().getSurface();
+      }
+      return null;
+    }
+
     //This method is called on the Gecko main thread.
     @WrapForJNI(allowMultithread = true, stubName = "updateZoomedView")
     public static void updateZoomedView(ByteBuffer data) {
@@ -596,7 +603,7 @@ public class LayerView extends ScrollView implements Tabs.OnTabsChangedListener 
         @Override
         protected void onLayout(boolean changed, int left, int top, int right, int bottom) {
             super.onLayout(changed, left, top, right, bottom);
-            if (changed) {
+            if (changed && mParent.mGLController.isServerSurfaceValid()) {
                 mParent.surfaceChanged(right - left, bottom - top);
             }
         }

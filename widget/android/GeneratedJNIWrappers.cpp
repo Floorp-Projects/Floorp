@@ -1258,14 +1258,6 @@ constexpr char GLController::AttachToJava_t::signature[];
 constexpr char GLController::CreateCompositor_t::name[];
 constexpr char GLController::CreateCompositor_t::signature[];
 
-constexpr char GLController::CreateEGLSurface_t::name[];
-constexpr char GLController::CreateEGLSurface_t::signature[];
-
-auto GLController::CreateEGLSurface() const -> mozilla::jni::Object::LocalRef
-{
-    return mozilla::jni::Method<CreateEGLSurface_t>::Call(GLController::mCtx, nullptr);
-}
-
 constexpr char GLController::Destroy_t::name[];
 constexpr char GLController::Destroy_t::signature[];
 
@@ -1276,6 +1268,14 @@ auto GLController::Destroy() const -> void
 
 constexpr char GLController::DisposeNative_t::name[];
 constexpr char GLController::DisposeNative_t::signature[];
+
+constexpr char GLController::GetSurface_t::name[];
+constexpr char GLController::GetSurface_t::signature[];
+
+auto GLController::GetSurface() const -> mozilla::jni::Object::LocalRef
+{
+    return mozilla::jni::Method<GetSurface_t>::Call(GLController::mCtx, nullptr);
+}
 
 constexpr char GLController::OnSizeChanged_t::name[];
 constexpr char GLController::OnSizeChanged_t::signature[];
