@@ -40,6 +40,19 @@ function Finder(docShell) {
 }
 
 Finder.prototype = {
+  destroy: function() {
+    if (this._highlighter) {
+      this._highlighter.clear();
+      this._highlighter.hide();
+    }
+    this.listeners = [];
+    this._docShell.QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIWebProgress)
+      .removeProgressListener(this, Ci.nsIWebProgress.NOTIFY_LOCATION);
+    this._listeners = [];
+    this._fastFind = this._docShell = this._previousLink = this._highlighter = null;
+  },
+
   addResultListener: function (aListener) {
     if (this._listeners.indexOf(aListener) === -1)
       this._listeners.push(aListener);
@@ -49,12 +62,15 @@ Finder.prototype = {
     this._listeners = this._listeners.filter(l => l != aListener);
   },
 
-  _notify: function (aSearchString, aResult, aFindBackwards, aDrawOutline, aStoreResult = true) {
-    if (aStoreResult) {
-      this._searchString = aSearchString;
-      this.clipboardSearchString = aSearchString
+  _notify: function (options) {
+    if (typeof options.storeResult != "boolean")
+      options.storeResult = true;
+
+    if (options.storeResult) {
+      this._searchString = options.searchString;
+      this.clipboardSearchString = options.searchString
     }
-    this._outlineLink(aDrawOutline);
+    this._outlineLink(options.drawOutline);
 
     let foundLink = this._fastFind.foundLink;
     let linkURL = null;
@@ -67,18 +83,15 @@ Finder.prototype = {
       linkURL = TextToSubURIService.unEscapeURIForUI(docCharset, foundLink.href);
     }
 
-    let data = {
-      result: aResult,
-      findBackwards: aFindBackwards,
-      linkURL: linkURL,
-      rect: this._getResultRect(),
-      searchString: this._searchString,
-      storeResult: aStoreResult
-    };
+    options.linkURL = linkURL;
+    options.rect = this._getResultRect();
+    options.searchString = this._searchString;
+
+    this.highlighter.update(options);
 
     for (let l of this._listeners) {
       try {
-        l.onFindResult(data);
+        l.onFindResult(options);
       } catch (ex) {}
     }
   },
@@ -128,7 +141,13 @@ Finder.prototype = {
   fastFind: function (aSearchString, aLinksOnly, aDrawOutline) {
     this._lastFindResult = this._fastFind.find(aSearchString, aLinksOnly);
     let searchString = this._fastFind.searchString;
-    this._notify(searchString, this._lastFindResult, false, aDrawOutline);
+    this._notify({
+      searchString,
+      result: this._lastFindResult,
+      findBackwards: false,
+      findAgain: false,
+      drawOutline: aDrawOutline
+    });
   },
 
   /**
@@ -143,7 +162,13 @@ Finder.prototype = {
   findAgain: function (aFindBackwards, aLinksOnly, aDrawOutline) {
     this._lastFindResult = this._fastFind.findAgain(aFindBackwards, aLinksOnly);
     let searchString = this._fastFind.searchString;
-    this._notify(searchString, this._lastFindResult, aFindBackwards, aDrawOutline);
+    this._notify({
+      searchString,
+      result: this._lastFindResult,
+      findBackwards: aFindBackwards,
+      fidnAgain: true,
+      drawOutline: aDrawOutline
+    });
   },
 
   /**
@@ -169,7 +194,14 @@ Finder.prototype = {
     if (aHighlight) {
       let result = found ? Ci.nsITypeAheadFind.FIND_FOUND
                          : Ci.nsITypeAheadFind.FIND_NOTFOUND;
-      this._notify(aWord, result, false, false, false);
+      this._notify({
+        searchString: aWord,
+        result,
+        findBackwards: false,
+        findAgain: false,
+        drawOutline: false,
+        storeResult: false
+      });
     }
   }),
 
@@ -228,6 +260,7 @@ Finder.prototype = {
   removeSelection: function() {
     this._fastFind.collapseSelection();
     this.enableSelection();
+    this.highlighter.clear();
   },
 
   focusContent: function() {
@@ -257,6 +290,17 @@ Finder.prototype = {
         this._getWindow().focus()
       }
     } catch (e) {}
+  },
+
+  onFindbarClose: function() {
+    this.focusContent();
+    this.enableSelection();
+    this.highlighter.hide();
+  },
+
+  onModalHighlightChange(useModalHighlight) {
+    if (this._highlighter)
+      this._highlighter.onModalHighlightChange(useModalHighlight);
   },
 
   keyPress: function (aEvent) {
@@ -640,6 +684,7 @@ Finder.prototype = {
 
     // Avoid leaking if we change the page.
     this._previousLink = null;
+    this.highlighter.onLocationChange();
   },
 
   QueryInterface: XPCOMUtils.generateQI([Ci.nsIWebProgressListener,
