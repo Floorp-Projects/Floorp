@@ -78,10 +78,10 @@ public:
    * IOInterposer. Filename will be reported as NULL, and reference will be
    * either "sqlite-mainthread" or "sqlite-otherthread".
    */
-  explicit IOThreadAutoTimer(Telemetry::ID id,
+  explicit IOThreadAutoTimer(Telemetry::ID aId,
     IOInterposeObserver::Operation aOp = IOInterposeObserver::OpNone)
     : start(TimeStamp::Now()),
-      id(id),
+      id(aId),
       op(aOp)
   {
   }
