@@ -6495,6 +6495,11 @@ nsAutoCopyListener::NotifySelectionChanged(nsIDOMDocument *aDoc,
 #ifdef DEBUG_CLIPBOARD
     fprintf(stderr, "CLIPBOARD: no selection/collapsed selection\n");
 #endif
+    // If on macOS, clear the current selection transferable cached
+    // on the parent process (nsClipboard) when the selection is empty.
+    if (mCachedClipboard == nsIClipboard::kSelectionCache) {
+      return nsCopySupport::ClearSelectionCache();
+    }
     /* clear X clipboard? */
     return NS_OK;
   }
