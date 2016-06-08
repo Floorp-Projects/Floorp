@@ -47,6 +47,13 @@ mozilla::layers::TouchBehaviorFlags
 TouchActionHelper::GetAllowedTouchBehavior(nsIWidget* aWidget, const LayoutDeviceIntPoint& aPoint)
 {
   nsView *view = nsView::GetViewFor(aWidget);
+  TouchBehaviorFlags behavior = AllowedTouchBehavior::VERTICAL_PAN | AllowedTouchBehavior::HORIZONTAL_PAN |
+                                AllowedTouchBehavior::PINCH_ZOOM | AllowedTouchBehavior::DOUBLE_TAP_ZOOM;
+
+  if (!view) {
+    return behavior;
+  }
+
   nsIFrame *viewFrame = view->GetFrame();
 
   nsPoint relativePoint =
@@ -73,8 +80,6 @@ TouchActionHelper::GetAllowedTouchBehavior(nsIWidget* aWidget, const LayoutDevic
   // root frame but not the subframes.
 
   bool considerPanning = true;
-  TouchBehaviorFlags behavior = AllowedTouchBehavior::VERTICAL_PAN | AllowedTouchBehavior::HORIZONTAL_PAN |
-                                AllowedTouchBehavior::PINCH_ZOOM | AllowedTouchBehavior::DOUBLE_TAP_ZOOM;
 
   for (nsIFrame *frame = target; frame && frame->GetContent() && behavior; frame = frame->GetParent()) {
     UpdateAllowedBehavior(nsLayoutUtils::GetTouchActionFromFrame(frame), considerPanning, behavior);
