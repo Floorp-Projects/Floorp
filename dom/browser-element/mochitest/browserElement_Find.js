@@ -37,7 +37,7 @@ function runTest() {
       msg_name: "findchange",
       active: true,
       searchString: 'foo',
-      searchLimit: 1000,
+      searchLimit: 100,
       activeMatchOrdinal: 1,
       numberOfMatches: 5,
     }), `test ${testCount++}`);
@@ -48,7 +48,7 @@ function runTest() {
       msg_name: "findchange",
       active: true,
       searchString: 'foo',
-      searchLimit: 1000,
+      searchLimit: 100,
       activeMatchOrdinal: 2,
       numberOfMatches: 5,
     }), `test ${testCount++}`);
@@ -59,7 +59,7 @@ function runTest() {
       msg_name: "findchange",
       active: true,
       searchString: 'foo',
-      searchLimit: 1000,
+      searchLimit: 100,
       activeMatchOrdinal: 1,
       numberOfMatches: 5,
     }), `test ${testCount++}`);
@@ -70,7 +70,7 @@ function runTest() {
       msg_name: "findchange",
       active: true,
       searchString: 'xxx',
-      searchLimit: 1000,
+      searchLimit: 100,
       activeMatchOrdinal: 0,
       numberOfMatches: 0,
     }), `test ${testCount++}`);
@@ -81,7 +81,7 @@ function runTest() {
       msg_name: "findchange",
       active: true,
       searchString: 'bar',
-      searchLimit: 1000,
+      searchLimit: 100,
       activeMatchOrdinal: 1,
       numberOfMatches: 4,
     }), `test ${testCount++}`);
@@ -92,7 +92,7 @@ function runTest() {
       msg_name: "findchange",
       active: true,
       searchString: 'bar',
-      searchLimit: 1000,
+      searchLimit: 100,
       activeMatchOrdinal: 2,
       numberOfMatches: 4,
     }), `test ${testCount++}`);
@@ -103,7 +103,7 @@ function runTest() {
       msg_name: "findchange",
       active: true,
       searchString: 'bar',
-      searchLimit: 1000,
+      searchLimit: 100,
       activeMatchOrdinal: 3,
       numberOfMatches: 4,
     }), `test ${testCount++}`);
@@ -114,7 +114,7 @@ function runTest() {
       msg_name: "findchange",
       active: true,
       searchString: 'bar',
-      searchLimit: 1000,
+      searchLimit: 100,
       activeMatchOrdinal: 4,
       numberOfMatches: 4,
     }), `test ${testCount++}`);
@@ -125,7 +125,7 @@ function runTest() {
       msg_name: "findchange",
       active: true,
       searchString: 'bar',
-      searchLimit: 1000,
+      searchLimit: 100,
       activeMatchOrdinal: 1,
       numberOfMatches: 4,
     }), `test ${testCount++}`);
