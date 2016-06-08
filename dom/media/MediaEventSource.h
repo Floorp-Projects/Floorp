@@ -97,7 +97,7 @@ template <typename T> struct EventTarget;
 template <>
 struct EventTarget<nsIEventTarget> {
   static void
-  Dispatch(nsIEventTarget* aTarget, already_AddRefed<nsIRunnable>&& aTask) {
+  Dispatch(nsIEventTarget* aTarget, already_AddRefed<nsIRunnable> aTask) {
     aTarget->Dispatch(Move(aTask), NS_DISPATCH_NORMAL);
   }
 };
@@ -105,7 +105,7 @@ struct EventTarget<nsIEventTarget> {
 template <>
 struct EventTarget<AbstractThread> {
   static void
-  Dispatch(AbstractThread* aTarget, already_AddRefed<nsIRunnable>&& aTask) {
+  Dispatch(AbstractThread* aTarget, already_AddRefed<nsIRunnable> aTask) {
     aTarget->Dispatch(Move(aTask));
   }
 };
