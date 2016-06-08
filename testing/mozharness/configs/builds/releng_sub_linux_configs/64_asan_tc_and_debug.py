@@ -20,7 +20,7 @@ config = {
     'build_type': 'asan-debug',
     'debug_build': True,
     'tooltool_manifest_src': "browser/config/tooltool-manifests/linux64/\
-asan-tc.manifest",
+asan.manifest",
     'platform_supports_post_upload_to_latest': False,
     'enable_signing': False,
     'enable_talos_sendchange': False,
@@ -40,7 +40,7 @@ asan-tc.manifest",
         'CCACHE_UMASK': '002',
         'LC_ALL': 'C',
         ## 64 bit specific
-        'PATH': '/home/worker/workspace/build/src/gcc/bin:/tools/buildbot/bin:/usr/local/bin:/usr/lib64/ccache:/bin:\
+        'PATH': '/tools/buildbot/bin:/usr/local/bin:/usr/lib64/ccache:/bin:\
 /usr/bin:/usr/local/sbin:/usr/sbin:/sbin:/tools/git/bin:/tools/python27/bin:\
 /tools/python27-mercurial/bin:/home/cltbld/bin',
     },
