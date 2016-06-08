@@ -1150,6 +1150,28 @@ class DebuggerObject : public NativeObject
     static bool globalGetter(JSContext* cx, unsigned argc, Value* vp);
     static bool allocationSiteGetter(JSContext* cx, unsigned argc, Value* vp);
     static bool errorMessageNameGetter(JSContext* cx, unsigned argc, Value* vp);
+
+    static bool isExtensibleMethod(JSContext* cx, unsigned argc, Value* vp);
+    static bool isSealedMethod(JSContext* cx, unsigned argc, Value* vp);
+    static bool isFrozenMethod(JSContext* cx, unsigned argc, Value* vp);
+    static bool getOwnPropertyNamesMethod(JSContext* cx, unsigned argc, Value* vp);
+    static bool getOwnPropertySymbolsMethod(JSContext* cx, unsigned argc, Value* vp);
+    static bool getOwnPropertyDescriptorMethod(JSContext* cx, unsigned argc, Value* vp);
+    static bool preventExtensionsMethod(JSContext* cx, unsigned argc, Value* vp);
+    static bool sealMethod(JSContext* cx, unsigned argc, Value* vp);
+    static bool freezeMethod(JSContext* cx, unsigned argc, Value* vp);
+    static bool definePropertyMethod(JSContext* cx, unsigned argc, Value* vp);
+    static bool definePropertiesMethod(JSContext* cx, unsigned argc, Value* vp);
+    static bool deletePropertyMethod(JSContext* cx, unsigned argc, Value* vp);
+    static bool callMethod(JSContext* cx, unsigned argc, Value* vp);
+    static bool applyMethod(JSContext* cx, unsigned argc, Value* vp);
+    static bool asEnvironmentMethod(JSContext* cx, unsigned argc, Value* vp);
+    static bool forceLexicalInitializationByNameMethod(JSContext* cx, unsigned argc, Value* vp);
+    static bool executeInGlobalMethod(JSContext* cx, unsigned argc, Value* vp);
+    static bool executeInGlobalWithBindingsMethod(JSContext* cx, unsigned argc, Value* vp);
+    static bool makeDebuggeeValueMethod(JSContext* cx, unsigned argc, Value* vp);
+    static bool unsafeDereferenceMethod(JSContext* cx, unsigned argc, Value* vp);
+    static bool unwrapMethod(JSContext* cx, unsigned argc, Value* vp);
 };
 
 class BreakpointSite {
