@@ -68,7 +68,7 @@ class BaseProcess {
    * @param {string[]} strings
    *        The strings to convert into a C string array.
    *
-   * @returns {ctypes.char.ptr.array()}
+   * @returns {ctypes.char.ptr.array}
    */
   stringArray(strings) {
     let result = ctypes.char.ptr.array(strings.length + 1)();
