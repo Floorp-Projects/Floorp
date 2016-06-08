@@ -43,6 +43,7 @@ var bonusPrefs = {
   downloadVisitBonus: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
   permRedirectVisitBonus: Ci.nsINavHistoryService.TRANSITION_REDIRECT_PERMANENT,
   tempRedirectVisitBonus: Ci.nsINavHistoryService.TRANSITION_REDIRECT_TEMPORARY,
+  reloadVisitBonus: Ci.nsINavHistoryService.TRANSITION_RELOAD,
 };
 
 // create test data
@@ -110,6 +111,7 @@ function* task_initializeBucket(bucket) {
         if (visitType == Ci.nsINavHistoryService.TRANSITION_EMBED ||
             visitType == Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK ||
             visitType == Ci.nsINavHistoryService.TRANSITION_DOWNLOAD ||
+            visitType == Ci.nsINavHistoryService.TRANSITION_RELOAD ||
             bonusName == "defaultVisitBonus")
           frecency = 0;
         else

@@ -183,8 +183,8 @@ function LoadSignons() {
   var element = document.getElementById("removeAllSignons");
   var toggle = document.getElementById("togglePasswords");
   if (signons.length == 0) {
-    element.setAttribute("disabled","true");
-    toggle.setAttribute("disabled","true");
+    element.setAttribute("disabled", "true");
+    toggle.setAttribute("disabled", "true");
   } else {
     element.removeAttribute("disabled");
     toggle.removeAttribute("disabled");

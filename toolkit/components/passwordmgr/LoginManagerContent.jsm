@@ -1187,7 +1187,7 @@ var LoginUtils = {
 
 // nsIAutoCompleteResult implementation
 function UserAutoCompleteResult (aSearchString, matchingLogins, messageManager) {
-  function loginSort(a,b) {
+  function loginSort(a, b) {
     var userA = a.username.toLowerCase();
     var userB = b.username.toLowerCase();
 

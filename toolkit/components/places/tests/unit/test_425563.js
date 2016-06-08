@@ -19,7 +19,8 @@ add_task(function* test_execute()
 
   let notcount_visited_URIs = ["http://www.test-embed.com/",
                                "http://www.test-download.com/",
-                               "http://www.test-framed.com/"];
+                               "http://www.test-framed.com/",
+                               "http://www.test-reload.com/"];
 
   // add visits, one for each transition type
   yield PlacesTestUtils.addVisits([
@@ -39,6 +40,8 @@ add_task(function* test_execute()
       transition: TRANSITION_REDIRECT_TEMPORARY },
     { uri: uri("http://www.test-download.com/"),
       transition: TRANSITION_DOWNLOAD },
+    { uri: uri("http://www.test-reload.com/"),
+      transition: TRANSITION_RELOAD },
   ]);
 
   // check that all links are marked as visited

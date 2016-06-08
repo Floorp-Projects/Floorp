@@ -14,9 +14,10 @@
  *  0 - invalid
  *  4 - EMBED
  *  7 - DOWNLOAD
- *  7 - FRAMED_LINK
+ *  8 - FRAMED_LINK
+ *  9 - RELOAD
  **/
-#define EXCLUDED_VISIT_TYPES "0, 4, 7, 8"
+#define EXCLUDED_VISIT_TYPES "0, 4, 7, 8, 9"
 
 /**
  * This triggers update visit_count and last_visit_date based on historyvisits
