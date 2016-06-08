@@ -7,7 +7,7 @@
 
 "use strict";
 
-const { PromisesFront } = require("devtools/server/actors/promises");
+const { PromisesFront } = require("devtools/shared/fronts/promises");
 
 var events = require("sdk/event/core");
 

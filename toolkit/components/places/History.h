@@ -33,8 +33,14 @@ class ConcurrentStatementsHolder;
 #define NS_HISTORYSERVICE_CID \
   {0x0937a705, 0x91a6, 0x417a, {0x82, 0x92, 0xb2, 0x2e, 0xb1, 0x0d, 0xa8, 0x6c}}
 
-// Max size of History::mRecentlyVisitedURIs
-#define RECENTLY_VISITED_URI_SIZE 8
+// Initial size of mRecentlyVisitedURIs.
+#define RECENTLY_VISITED_URIS_SIZE 64
+// Microseconds after which a visit can be expired from mRecentlyVisitedURIs.
+// When an URI is reloaded we only take into account the first visit to it, and
+// ignore any subsequent visits, if they happen before this time has elapsed.
+// A commonly found case is to reload a page every 5 minutes, so we pick a time
+// larger than that.
+#define RECENTLY_VISITED_URIS_MAX_AGE 6 * 60 * PR_USEC_PER_SEC
 
 class History final : public IHistory
                     , public nsIDownloadHistory
@@ -189,14 +195,26 @@ private:
   nsTHashtable<KeyClass> mObservers;
 
   /**
-   * mRecentlyVisitedURIs remembers URIs which are recently added to the DB,
-   * to avoid saving these locations repeatedly in a short period.
+   * mRecentlyVisitedURIs remembers URIs which have been recently added to
+   * history, to avoid saving these locations repeatedly in a short period.
    */
-  typedef AutoTArray<nsCOMPtr<nsIURI>, RECENTLY_VISITED_URI_SIZE>
-          RecentlyVisitedArray;
-  RecentlyVisitedArray mRecentlyVisitedURIs;
-  RecentlyVisitedArray::index_type mRecentlyVisitedURIsNextIndex;
-
+  class RecentURIKey : public nsURIHashKey
+  {
+  public:
+    explicit RecentURIKey(const nsIURI* aURI) : nsURIHashKey(aURI)
+    {
+    }
+    RecentURIKey(const RecentURIKey& aOther) : nsURIHashKey(aOther)
+    {
+      NS_NOTREACHED("Do not call me!");
+    }
+    PRTime time;
+  };
+  nsTHashtable<RecentURIKey> mRecentlyVisitedURIs;
+  /**
+   * Whether aURI has been visited "recently".
+   * See RECENTLY_VISITED_URIS_MAX_AGE.
+   */
   bool IsRecentlyVisitedURI(nsIURI* aURI);
 };
 

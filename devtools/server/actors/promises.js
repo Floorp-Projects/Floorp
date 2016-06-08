@@ -5,40 +5,17 @@
 "use strict";
 
 const protocol = require("devtools/shared/protocol");
-const { method, RetVal, Arg, types } = protocol;
+const { promisesSpec } = require("devtools/shared/specs/promises");
 const { expectState, ActorPool } = require("devtools/server/actors/common");
-const { ObjectActor,
-        createValueGrip } = require("devtools/server/actors/object");
+const { ObjectActor, createValueGrip } = require("devtools/server/actors/object");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 loader.lazyRequireGetter(this, "events", "sdk/event/core");
-
-// Teach protocol.js how to deal with legacy actor types
-types.addType("ObjectActor", {
-  write: actor => actor.grip(),
-  read: grip => grip
-});
 
 /**
  * The Promises Actor provides support for getting the list of live promises and
  * observing changes to their settlement state.
  */
-var PromisesActor = protocol.ActorClass({
-  typeName: "promises",
-
-  events: {
-    // Event emitted for new promises allocated in debuggee and bufferred by
-    // sending the list of promise objects in a batch.
-    "new-promises": {
-      type: "new-promises",
-      data: Arg(0, "array:ObjectActor"),
-    },
-    // Event emitted for promise settlements.
-    "promises-settled": {
-      type: "promises-settled",
-      data: Arg(0, "array:ObjectActor")
-    }
-  },
-
+var PromisesActor = protocol.ActorClassWithSpec(promisesSpec, {
   /**
    * @param conn DebuggerServerConnection.
    * @param parent TabActor|RootActor
@@ -78,7 +55,7 @@ var PromisesActor = protocol.ActorClass({
   /**
    * Attach to the PromisesActor.
    */
-  attach: method(expectState("detached", function () {
+  attach: expectState("detached", function () {
     this.dbg.addDebuggees();
 
     this._navigationLifetimePool = this._createActorPool();
@@ -98,15 +75,12 @@ var PromisesActor = protocol.ActorClass({
     events.on(this.parent, "window-ready", this._onWindowReady);
 
     this.state = "attached";
-  }, "attaching to the PromisesActor"), {
-    request: {},
-    response: {}
-  }),
+  }, "attaching to the PromisesActor"),
 
   /**
    * Detach from the PromisesActor upon Debugger closing.
    */
-  detach: method(expectState("attached", function () {
+  detach: expectState("attached", function () {
     this.dbg.removeAllDebuggees();
     this.dbg.enabled = false;
     this._dbg = null;
@@ -121,9 +95,6 @@ var PromisesActor = protocol.ActorClass({
     events.off(this.parent, "window-ready", this._onWindowReady);
 
     this.state = "detached";
-  }, "detaching from the PromisesActor"), {
-    request: {},
-    response: {}
   }),
 
   _createActorPool: function () {
@@ -179,7 +150,7 @@ var PromisesActor = protocol.ActorClass({
   /**
    * Get a list of ObjectActors for all live Promise Objects.
    */
-  listPromises: method(function () {
+  listPromises: function () {
     let promises = this.dbg.findObjects({ class: "Promise" });
 
     this.dbg.onNewPromise = this._makePromiseEventHandler(this._newPromises,
@@ -188,13 +159,7 @@ var PromisesActor = protocol.ActorClass({
       this._promisesSettled, "promises-settled");
 
     return promises.map(p => this._createObjectActorForPromise(p));
-  }, {
-    request: {
-    },
-    response: {
-      promises: RetVal("array:ObjectActor")
-    }
-  }),
+  },
 
   /**
    * Creates an event handler for onNewPromise that will add the new
@@ -233,15 +198,3 @@ var PromisesActor = protocol.ActorClass({
 });
 
 exports.PromisesActor = PromisesActor;
-
-exports.PromisesFront = protocol.FrontClass(PromisesActor, {
-  initialize: function (client, form) {
-    protocol.Front.prototype.initialize.call(this, client, form);
-    this.actorID = form.promisesActor;
-    this.manage(this);
-  },
-
-  destroy: function () {
-    protocol.Front.prototype.destroy.call(this);
-  }
-});

@@ -1193,9 +1193,9 @@ class ChildAPIManager {
  * a Date object, an ISO8601 string, or a number of milliseconds since the epoch as
  * either a number or a string.
  *
- * @param date: (Date) or (String) or (Number)
+ * @param {Date|string|number} date
  *      The date to convert.
- * @returns (Date)
+ * @returns {Date}
  *      A Date object
  */
 function normalizeTime(date) {

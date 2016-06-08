@@ -40,7 +40,7 @@
  * - date: (Date)
  *     The time the visit occurred.
  * - transition: (number)
- *     How the user reached the page. See constants `TRANSITION_*`
+ *     How the user reached the page. See constants `TRANSITIONS.*`
  *     for the possible transition types.
  * - referrer: (URL)
  *          or (nsIURI)
@@ -408,51 +408,58 @@ this.History = Object.freeze({
    * objects.
    */
 
-  /**
-   * The user followed a link and got a new toplevel window.
-   */
-  TRANSITION_LINK: Ci.nsINavHistoryService.TRANSITION_LINK,
+  TRANSITIONS: {
+    /**
+     * The user followed a link and got a new toplevel window.
+     */
+    LINK: Ci.nsINavHistoryService.TRANSITION_LINK,
 
-  /**
-   * The user typed the page's URL in the URL bar or selected it from
-   * URL bar autocomplete results, clicked on it from a history query
-   * (from the History sidebar, History menu, or history query in the
-   * personal toolbar or Places organizer.
-   */
-  TRANSITION_TYPED: Ci.nsINavHistoryService.TRANSITION_TYPED,
+    /**
+     * The user typed the page's URL in the URL bar or selected it from
+     * URL bar autocomplete results, clicked on it from a history query
+     * (from the History sidebar, History menu, or history query in the
+     * personal toolbar or Places organizer.
+     */
+    TYPED: Ci.nsINavHistoryService.TRANSITION_TYPED,
 
-  /**
-   * The user followed a bookmark to get to the page.
-   */
-  TRANSITION_BOOKMARK: Ci.nsINavHistoryService.TRANSITION_BOOKMARK,
+    /**
+     * The user followed a bookmark to get to the page.
+     */
+    BOOKMARK: Ci.nsINavHistoryService.TRANSITION_BOOKMARK,
 
-  /**
-   * Some inner content is loaded. This is true of all images on a
-   * page, and the contents of the iframe. It is also true of any
-   * content in a frame if the user did not explicitly follow a link
-   * to get there.
-   */
-  TRANSITION_EMBED: Ci.nsINavHistoryService.TRANSITION_EMBED,
+    /**
+     * Some inner content is loaded. This is true of all images on a
+     * page, and the contents of the iframe. It is also true of any
+     * content in a frame if the user did not explicitly follow a link
+     * to get there.
+     */
+    EMBED: Ci.nsINavHistoryService.TRANSITION_EMBED,
 
-  /**
-   * Set when the transition was a permanent redirect.
-   */
-  TRANSITION_REDIRECT_PERMANENT: Ci.nsINavHistoryService.TRANSITION_REDIRECT_PERMANENT,
+    /**
+     * Set when the transition was a permanent redirect.
+     */
+    REDIRECT_PERMANENT: Ci.nsINavHistoryService.TRANSITION_REDIRECT_PERMANENT,
 
-  /**
-   * Set when the transition was a temporary redirect.
-   */
-  TRANSITION_REDIRECT_TEMPORARY: Ci.nsINavHistoryService.TRANSITION_REDIRECT_TEMPORARY,
+    /**
+     * Set when the transition was a temporary redirect.
+     */
+    REDIRECT_TEMPORARY: Ci.nsINavHistoryService.TRANSITION_REDIRECT_TEMPORARY,
 
-  /**
-   * Set when the transition is a download.
-   */
-  TRANSITION_DOWNLOAD: Ci.nsINavHistoryService.TRANSITION_REDIRECT_DOWNLOAD,
+    /**
+     * Set when the transition is a download.
+     */
+    DOWNLOAD: Ci.nsINavHistoryService.TRANSITION_DOWNLOAD,
 
-  /**
-   * The user followed a link and got a visit in a frame.
-   */
-  TRANSITION_FRAMED_LINK: Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK,
+    /**
+     * The user followed a link and got a visit in a frame.
+     */
+    FRAMED_LINK: Ci.nsINavHistoryService.TRANSITION_FRAMED_LINK,
+
+    /**
+     * The user reloaded a page.
+     */
+    RELOAD: Ci.nsINavHistoryService.TRANSITION_RELOAD,
+  },
 });
 
 /**
@@ -484,7 +491,7 @@ function validatePageInfo(pageInfo) {
   for (let inVisit of pageInfo.visits) {
     let visit = {
       date: new Date(),
-      transition: inVisit.transition || History.TRANSITION_LINK,
+      transition: inVisit.transition || History.TRANSITIONS.LINK,
     };
 
     if (!isValidTransitionType(visit.transition)) {
@@ -541,16 +548,7 @@ function convertForUpdatePlaces(pageInfo) {
  * @return (Boolean)
  */
 function isValidTransitionType(transitionType) {
-  return [
-    History.TRANSITION_LINK,
-    History.TRANSITION_TYPED,
-    History.TRANSITION_BOOKMARK,
-    History.TRANSITION_EMBED,
-    History.TRANSITION_REDIRECT_PERMANENT,
-    History.TRANSITION_REDIRECT_TEMPORARY,
-    History.TRANSITION_DOWNLOAD,
-    History.TRANSITION_FRAMED_LINK
-  ].includes(transitionType);
+  return Object.values(History.TRANSITIONS).includes(transitionType);
 }
 
 /**
@@ -651,27 +649,6 @@ var clear = Task.async(function* (db) {
 });
 
 /**
- * Remove a list of pages from `moz_places` by their id.
- *
- * @param db: (Sqlite connection)
- *      The database.
- * @param idList: (Array of integers)
- *      The `moz_places` identifiers for the places to remove.
- * @return (Promise)
- */
-var removePagesById = Task.async(function*(db, idList) {
-  if (idList.length == 0) {
-    return;
-  }
-  // Note, we are already in a transaction, since callers create it.
-  yield db.execute(`DELETE FROM moz_places
-                    WHERE id IN ( ${ sqlList(idList) } )`);
-  // Hosts accumulated during the places delete are updated through a trigger
-  // (see nsPlacesTriggers.h).
-  yield db.execute(`DELETE FROM moz_updatehosts_temp`);
-});
-
-/**
  * Clean up pages whose history has been modified, by either
  * removing them entirely (if they are marked for removal,
  * typically because all visits have been removed and there
@@ -694,7 +671,25 @@ var removePagesById = Task.async(function*(db, idList) {
  */
 var cleanupPages = Task.async(function*(db, pages) {
   yield invalidateFrecencies(db, pages.filter(p => p.hasForeign || p.hasVisits).map(p => p.id));
-  yield removePagesById(db, pages.filter(p => !p.hasForeign && !p.hasVisits).map(p => p.id));
+
+  let pageIdsToRemove = pages.filter(p => !p.hasForeign && !p.hasVisits).map(p => p.id);
+  if (pageIdsToRemove.length > 0) {
+    let idsList = sqlList(pageIdsToRemove);
+    // Note, we are already in a transaction, since callers create it.
+    yield db.execute(`DELETE FROM moz_places WHERE id IN ( ${ idsList } )`);
+    // Hosts accumulated during the places delete are updated through a trigger
+    // (see nsPlacesTriggers.h).
+    yield db.executeCached(`DELETE FROM moz_updatehosts_temp`);
+
+    // Expire orphans.
+    yield db.executeCached(`
+      DELETE FROM moz_favicons WHERE NOT EXISTS
+        (SELECT 1 FROM moz_places WHERE favicon_id = moz_favicons.id)`);
+    yield db.execute(`DELETE FROM moz_annos
+                      WHERE place_id IN ( ${ idsList } )`);
+    yield db.execute(`DELETE FROM moz_inputhistory
+                      WHERE place_id IN ( ${ idsList } )`);
+  }
 });
 
 /**

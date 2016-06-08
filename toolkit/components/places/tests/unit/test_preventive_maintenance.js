@@ -1133,7 +1133,7 @@ tests.push({
   check: function() {
     let stmt = mDBConn.createStatement(
       `SELECT h.id FROM moz_places h
-       JOIN moz_historyvisits v ON v.place_id = h.id AND visit_type NOT IN (0,4,7,8)
+       JOIN moz_historyvisits v ON v.place_id = h.id AND visit_type NOT IN (0,4,7,8,9)
        GROUP BY h.id HAVING h.visit_count <> count(*)
        UNION ALL
        SELECT h.id FROM moz_places h

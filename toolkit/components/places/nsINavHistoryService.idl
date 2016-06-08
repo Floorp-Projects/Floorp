@@ -1258,6 +1258,11 @@ interface nsINavHistoryService : nsISupports
   const unsigned long TRANSITION_FRAMED_LINK = 8;
 
   /**
+   * This transition type means the page has been reloaded.
+   */
+  const unsigned long TRANSITION_RELOAD = 9;
+
+  /**
    * Set when database is coherent
    */
   const unsigned short DATABASE_STATUS_OK = 0;
