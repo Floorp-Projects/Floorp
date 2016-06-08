@@ -265,12 +265,14 @@ private:
   bool PredictForPageload(nsICacheEntry *entry,
                           nsIURI *targetURI,
                           uint8_t stackCount,
+                          bool fullUri,
                           nsINetworkPredictorVerifier *verifier);
 
   // Used when predicting pages that will be used near browser startup. All
   // arguments are the same as for PredictInternal. Returns true if any
   // predictions were queued up.
   bool PredictForStartup(nsICacheEntry *entry,
+                         bool fullUri,
                          nsINetworkPredictorVerifier *verifier);
 
   // Utilities related to prediction
@@ -316,9 +318,10 @@ private:
   //   * loadCount - number of times this page has been loaded
   //   * gloablDegradation - value calculated by CalculateGlobalDegradation for
   //                         this page
+  //   * fullUri - whether we're predicting for a full URI or origin-only
   void CalculatePredictions(nsICacheEntry *entry, nsIURI *referrer,
                             uint32_t lastLoad, uint32_t loadCount,
-                            int32_t globalDegradation);
+                            int32_t globalDegradation, bool fullUri);
 
   // Used to prepare any necessary prediction for a resource on a page
   //   * confidence - value calculated by CalculateConfidence for this resource
@@ -465,6 +468,8 @@ private:
   nsTArray<nsCOMPtr<nsIURI>> mPrefetches;
   nsTArray<nsCOMPtr<nsIURI>> mPreconnects;
   nsTArray<nsCOMPtr<nsIURI>> mPreresolves;
+
+  bool mDoingTests;
 
   static Predictor *sSelf;
 };
