@@ -1122,11 +1122,9 @@ Loader::CreateSheet(nsIURI* aURI,
 #ifdef MOZ_XUL
     if (IsChromeURI(aURI)) {
       nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
-      if (cache) {
-        if (cache->IsEnabled()) {
-          sheet = cache->GetStyleSheet(aURI);
-          LOG(("  From XUL cache: %p", sheet->AsVoidPtr()));
-        }
+      if (cache && cache->IsEnabled()) {
+        sheet = cache->GetStyleSheet(aURI);
+        LOG(("  From XUL cache: %p", sheet->AsVoidPtr()));
       }
     }
 #endif
@@ -1224,14 +1222,31 @@ Loader::CreateSheet(nsIURI* aURI,
       if (*aSheet && fromCompleteSheets &&
           !sheet->AsGecko()->GetOwnerNode() &&
           !sheet->AsGecko()->GetParentSheet()) {
-        // The sheet we're cloning isn't actually referenced by
-        // anyone.  Replace it in the cache, so that if our CSSOM is
-        // later modified we don't end up with two copies of our inner
-        // hanging around.
-        URIPrincipalReferrerPolicyAndCORSModeHashKey key(aURI, aLoaderPrincipal, aCORSMode, aReferrerPolicy);
-        NS_ASSERTION((*aSheet)->AsGecko()->IsComplete(),
-                     "Should only be caching complete sheets");
-        mSheets->mCompleteSheets.Put(&key, *aSheet);
+
+#ifdef MOZ_XUL
+        if (IsChromeURI(aURI)) {
+          nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
+          if (cache && cache->IsEnabled()) {
+            // Always store our latest sheet in the cache so that old,
+            // unreferenced sheet objects can be freed.
+            LOG(("  Updating sheet in XUL prototype cache"));
+            NS_ASSERTION(clonedSheet->IsComplete(),
+                         "Should only be caching complete sheets");
+            cache->PutStyleSheet(clonedSheet);
+          }
+        } else {
+#endif
+          // The sheet we're cloning isn't actually referenced by
+          // anyone.  Replace it in the cache, so that if our CSSOM is
+          // later modified we don't end up with two copies of our inner
+          // hanging around.
+          URIPrincipalReferrerPolicyAndCORSModeHashKey key(aURI, aLoaderPrincipal, aCORSMode, aReferrerPolicy);
+          NS_ASSERTION((*aSheet)->AsGecko()->IsComplete(),
+                       "Should only be caching complete sheets");
+          mSheets->mCompleteSheets.Put(&key, *aSheet);
+#ifdef MOZ_XUL
+        }
+#endif
       }
     }
   }
@@ -1955,12 +1970,12 @@ Loader::DoSheetComplete(SheetLoadData* aLoadData, nsresult aStatus,
       if (IsChromeURI(aLoadData->mURI)) {
         nsXULPrototypeCache* cache = nsXULPrototypeCache::GetInstance();
         if (cache && cache->IsEnabled()) {
-          if (!cache->GetStyleSheet(aLoadData->mURI)) {
-            LOG(("  Putting sheet in XUL prototype cache"));
-            NS_ASSERTION(sheet->IsComplete(),
-                         "Should only be caching complete sheets");
-            cache->PutStyleSheet(sheet);
-          }
+          // Always store our latest sheet in the cache so that old,
+          // unreferenced sheet objects can be freed.
+          LOG(("  Putting sheet in XUL prototype cache"));
+          NS_ASSERTION(sheet->IsComplete(),
+                       "Should only be caching complete sheets");
+          cache->PutStyleSheet(sheet);
         }
       }
       else {
