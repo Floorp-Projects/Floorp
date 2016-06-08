@@ -35,7 +35,8 @@ function* task_add_visit(aURI, aVisitType)
   if (aVisitType != 0 &&
       aVisitType != TRANSITION_EMBED &&
       aVisitType != TRANSITION_FRAMED_LINK &&
-      aVisitType != TRANSITION_DOWNLOAD) {
+      aVisitType != TRANSITION_DOWNLOAD &&
+      aVisitType != TRANSITION_RELOAD) {
     visit_count ++;
   }
 
@@ -105,6 +106,14 @@ add_task(function* test_execute()
   // - We expect that the place gets hidden = 0 while retaining the same
   //   place id and a correct visit_count.
   do_check_eq((yield task_add_visit(TEST_URI, TRANSITION_TYPED)), placeId);
+  check_results(1, 1);
+
+  // Add a visit that should not increase visit_count
+  do_check_eq((yield task_add_visit(TEST_URI, TRANSITION_RELOAD)), placeId);
+  check_results(1, 1);
+
+  // Add a visit that should not increase visit_count
+  do_check_eq((yield task_add_visit(TEST_URI, TRANSITION_DOWNLOAD)), placeId);
   check_results(1, 1);
 
   // Add a visit, check that hidden is not overwritten

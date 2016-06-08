@@ -162,8 +162,9 @@ public abstract class BrowserToolbar extends ThemedRelativeLayout
     }
 
     public static BrowserToolbar create(final Context context, final AttributeSet attrs) {
+        final boolean isLargeResource = context.getResources().getBoolean(R.bool.is_large_resource);
         final BrowserToolbar toolbar;
-        if (HardwareUtils.isTablet()) {
+        if (isLargeResource) {
             toolbar = new BrowserToolbarTablet(context, attrs);
         } else {
             toolbar = new BrowserToolbarPhone(context, attrs);

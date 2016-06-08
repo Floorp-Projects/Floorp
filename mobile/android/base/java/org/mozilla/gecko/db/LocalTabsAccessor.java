@@ -7,11 +7,11 @@ package org.mozilla.gecko.db;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.json.JSONArray;
 import org.json.JSONException;
-import org.mozilla.gecko.R;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.util.ThreadUtils;
 import org.mozilla.gecko.util.UIAsyncTask;
@@ -22,11 +22,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.net.Uri;
 import android.text.TextUtils;
-import android.text.format.DateUtils;
 import android.util.Log;
 
 public class LocalTabsAccessor implements TabsAccessor {
     private static final String LOGTAG = "GeckoTabsAccessor";
+    private static final long THREE_WEEKS_IN_MILLISECONDS = TimeUnit.MILLISECONDS.convert(21L, TimeUnit.DAYS);
 
     public static final String[] TABS_PROJECTION_COLUMNS = new String[] {
                                                                 BrowserContract.Tabs.TITLE,
@@ -48,6 +48,8 @@ public class LocalTabsAccessor implements TabsAccessor {
     private static final String REMOTE_CLIENTS_SELECTION = BrowserContract.Clients.GUID + " IS NOT NULL";
     private static final String LOCAL_TABS_SELECTION = BrowserContract.Tabs.CLIENT_GUID + " IS NULL";
     private static final String REMOTE_TABS_SELECTION = BrowserContract.Tabs.CLIENT_GUID + " IS NOT NULL";
+    private static final String REMOTE_TABS_SELECTION_CLIENT_RECENCY = REMOTE_TABS_SELECTION +
+            " AND " + BrowserContract.Clients.LAST_MODIFIED + " > ?";
 
     private static final String REMOTE_TABS_SORT_ORDER =
             // Most recently synced clients first.
@@ -187,12 +189,13 @@ public class LocalTabsAccessor implements TabsAccessor {
                      .build();
         }
 
-        final Cursor cursor =  context.getContentResolver().query(uri,
+        final String threeWeeksAgoTimestampMillis = Long.valueOf(
+                System.currentTimeMillis() - THREE_WEEKS_IN_MILLISECONDS).toString();
+        return context.getContentResolver().query(uri,
                                                             TABS_PROJECTION_COLUMNS,
-                                                            REMOTE_TABS_SELECTION,
-                                                            null,
+                                                            REMOTE_TABS_SELECTION_CLIENT_RECENCY,
+                                                            new String[] {threeWeeksAgoTimestampMillis},
                                                             REMOTE_TABS_SORT_ORDER);
-        return cursor;
     }
 
     // This method returns all tabs from all remote clients,
