@@ -143,7 +143,7 @@ var Subprocess = {
    * environment variable are successively appended to the original
    * name and searched for in turn.
    *
-   * @param {string} bin
+   * @param {string} command
    *        The name of the executable to find.
    * @param {object} [environment]
    *        An object containing a key for each environment variable to be used
