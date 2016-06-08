@@ -84,6 +84,7 @@ public:
 
     mStartTime = aStartTime;
     mReset = true;
+    NotifyCueUpdated(this);
   }
 
   double EndTime() const
@@ -99,6 +100,7 @@ public:
 
     mEndTime = aEndTime;
     mReset = true;
+    NotifyCueUpdated(this);
   }
 
   bool PauseOnExit()
@@ -113,6 +115,7 @@ public:
     }
 
     mPauseOnExit = aPauseOnExit;
+    NotifyCueUpdated(nullptr);
   }
 
   TextTrackRegion* GetRegion();
@@ -339,6 +342,12 @@ public:
 private:
   ~TextTrackCue();
 
+  void NotifyCueUpdated(TextTrackCue* aCue)
+  {
+    if (mTrack) {
+      mTrack->NotifyCueUpdated(aCue);
+    }
+  }
   void SetDefaultCueSettings();
   nsresult StashDocument();
 

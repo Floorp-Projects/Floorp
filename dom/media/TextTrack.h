@@ -120,6 +120,8 @@ public:
 
   void SetCuesInactive();
 
+  void NotifyCueUpdated(TextTrackCue *aCue);
+
 private:
   ~TextTrack();
 
