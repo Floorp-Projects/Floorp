@@ -490,4 +490,41 @@ IsAACContentType(const nsAString& aContentType)
     });
 }
 
+bool
+IsVorbisContentType(const nsAString& aContentType)
+{
+  return CheckContentType(aContentType,
+    [](const nsAString& type) {
+      return type.EqualsLiteral("audio/webm") ||
+             type.EqualsLiteral("audio/ogg");
+    },
+    [](const nsAString& codec) {
+      return codec.EqualsLiteral("vorbis");
+    });
+}
+
+bool
+IsVP8ContentType(const nsAString& aContentType)
+{
+  return CheckContentType(aContentType,
+    [](const nsAString& type) {
+      return type.EqualsLiteral("video/webm");
+    },
+    [](const nsAString& codec) {
+      return codec.EqualsLiteral("vp8");
+    });
+}
+
+bool
+IsVP9ContentType(const nsAString& aContentType)
+{
+  return CheckContentType(aContentType,
+    [](const nsAString& type) {
+      return type.EqualsLiteral("video/webm");
+    },
+    [](const nsAString& codec) {
+      return codec.EqualsLiteral("vp9");
+    });
+}
+
 } // end namespace mozilla
