@@ -295,3 +295,68 @@ add_task(function* test_add_url() {
 
   yield extension.unload();
 });
+
+add_task(function* test_get_visits() {
+  function background() {
+    const TEST_DOMAIN = "http://example.com/";
+    const FIRST_DATE = Date.now();
+    const INITIAL_DETAILS = {
+      url: TEST_DOMAIN,
+      visitTime: FIRST_DATE,
+      transition: "link",
+    };
+
+    let visitIds = new Set();
+
+    function checkVisit(visit, expected) {
+      visitIds.add(visit.visitId);
+      browser.test.assertEq(expected.visitTime, visit.visitTime, "visit has the correct visitTime");
+      browser.test.assertEq(expected.transition, visit.transition, "visit has the correct transition");
+      browser.history.search({text: expected.url}).then(results => {
+        // all results will have the same id, so we only need to use the first one
+        browser.test.assertEq(results[0].id, visit.id, "visit has the correct id");
+      });
+    }
+
+    let details = Object.assign({}, INITIAL_DETAILS);
+
+    browser.history.addUrl(details).then(() => {
+      return browser.history.getVisits({url: details.url});
+    }).then(results => {
+      browser.test.assertEq(1, results.length, "the expected number of visits were returned");
+      checkVisit(results[0], details);
+      details.url = `${TEST_DOMAIN}/1/`;
+      return browser.history.addUrl(details);
+    }).then(() => {
+      return browser.history.getVisits({url: details.url});
+    }).then(results => {
+      browser.test.assertEq(1, results.length, "the expected number of visits were returned");
+      checkVisit(results[0], details);
+      details.visitTime = FIRST_DATE - 1000;
+      details.transition = "typed";
+      return browser.history.addUrl(details);
+    }).then(() => {
+      return browser.history.getVisits({url: details.url});
+    }).then(results => {
+      browser.test.assertEq(2, results.length, "the expected number of visits were returned");
+      checkVisit(results[0], INITIAL_DETAILS);
+      checkVisit(results[1], details);
+    }).then(() => {
+      browser.test.assertEq(3, visitIds.size, "each visit has a unique visitId");
+      browser.test.notifyPass("get-visits");
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    manifest: {
+      permissions: ["history"],
+    },
+    background: `(${background})()`,
+  });
+
+  yield PlacesTestUtils.clearHistory();
+  yield extension.startup();
+
+  yield extension.awaitFinish("get-visits");
+  yield extension.unload();
+});

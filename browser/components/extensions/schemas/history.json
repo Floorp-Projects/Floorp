@@ -155,7 +155,6 @@
       },
       {
         "name": "getVisits",
-        "unsupported": true,
         "type": "function",
         "description": "Retrieves information about visits to a URL.",
         "async": "callback",
