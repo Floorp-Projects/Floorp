@@ -5,7 +5,7 @@
  * Test that we get DOMContentLoaded and Load markers
  */
 
-const { TimelineFront } = require("devtools/server/actors/timeline");
+const { TimelineFront } = require("devtools/shared/fronts/timeline");
 const MARKER_NAMES = ["document::DOMContentLoaded", "document::Load"];
 
 add_task(function* () {
