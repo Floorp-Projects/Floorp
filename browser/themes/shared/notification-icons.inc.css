@@ -11,7 +11,13 @@
 }
 
 .popup-notification-icon[popupid="geolocation"] {
-  list-style-image: url(chrome://browser/skin/Geolocation-64.png);
+%ifdef XP_MACOSX
+  list-style-image: url(chrome://browser/skin/glyphs.svg#geo-osx);
+%elif defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
+  list-style-image: url(chrome://browser/skin/glyphs.svg#geo-linux-detailed);
+%else
+  list-style-image: url(chrome://browser/skin/glyphs.svg#geo-windows-detailed);
+%endif
 }
 
 .popup-notification-icon[popupid="xpinstall-disabled"],
@@ -48,37 +54,18 @@
   list-style-image: url(chrome://mozapps/skin/plugins/pluginBlocked-64.png);
 }
 
-.popup-notification-icon[popupid="web-notifications"] {
-  list-style-image: url(chrome://browser/skin/web-notifications-icon.svg);
-}
-
-.popup-notification-icon[popupid="indexedDB-permissions-prompt"],
 .popup-notification-icon[popupid*="offline-app-requested"],
 .popup-notification-icon[popupid="offline-app-usage"] {
   list-style-image: url(chrome://global/skin/icons/question-64.png);
 }
 
 .popup-notification-icon[popupid="password"] {
-  list-style-image: url(chrome://mozapps/skin/passwordmgr/key-64.png);
-}
-
-.popup-notification-icon[popupid="webRTC-sharingDevices"],
-.popup-notification-icon[popupid="webRTC-shareDevices"] {
-  list-style-image: url(chrome://browser/skin/webRTC-shareDevice-64.png);
+  list-style-image: url(chrome://browser/skin/glyphs.svg#login-detailed);
 }
 
 .popup-notification-icon[popupid="webRTC-sharingMicrophone"],
 .popup-notification-icon[popupid="webRTC-shareMicrophone"] {
-  list-style-image: url(chrome://browser/skin/webRTC-shareMicrophone-64.png);
-}
-
-.popup-notification-icon[popupid="webRTC-sharingScreen"],
-.popup-notification-icon[popupid="webRTC-shareScreen"] {
-  list-style-image: url(chrome://browser/skin/webRTC-shareScreen-64.png);
-}
-
-.popup-notification-icon[popupid="pointerLock"] {
-  list-style-image: url(chrome://browser/skin/pointerLock-64.png);
+  list-style-image: url(chrome://browser/skin/glyphs.svg#microphone-detailed);
 }
 
 .popup-notification-icon[popupid="servicesInstall"] {
@@ -139,8 +126,49 @@
   }
 }
 
+/* For the moment we apply the color filter only on the icons listed here.
+   The first two selectors are used by socialchat.xml (bug 1275558). */
+.webRTC-sharingDevices-notification-icon,
+.webRTC-sharingMicrophone-notification-icon,
+.camera-icon,
+.geo-icon,
+.indexedDB-icon,
+.login-icon,
+.microphone-icon,
+.pointer-icon,
+.screen-icon,
+.web-notifications-icon,
+.popup-notification-icon[popupid="geolocation"],
+.popup-notification-icon[popupid="indexedDB-permissions-prompt"],
+.popup-notification-icon[popupid="password"],
+.popup-notification-icon[popupid="pointerLock"],
+.popup-notification-icon[popupid="webRTC-shareDevices"],
+.popup-notification-icon[popupid="webRTC-shareMicrophone"],
+.popup-notification-icon[popupid="webRTC-shareScreen"],
+.popup-notification-icon[popupid="webRTC-sharingDevices"],
+.popup-notification-icon[popupid="webRTC-sharingMicrophone"],
+.popup-notification-icon[popupid="webRTC-sharingScreen"],
+.popup-notification-icon[popupid="web-notifications"] {
+  filter: url(chrome://browser/skin/filters.svg#fill);
+  fill: #999;
+}
+
+/* The first two selectors are used by socialchat.xml (bug 1275558). The
+   notifications in the chat window are only shown when they are in use. */
+.webRTC-sharingDevices-notification-icon,
+.webRTC-sharingMicrophone-notification-icon,
+.in-use {
+  fill: #fea01b;
+}
+
 .geo-icon {
-  list-style-image: url(chrome://browser/skin/Geolocation-16.png);
+%ifdef XP_MACOSX
+  list-style-image: url(chrome://browser/skin/glyphs.svg#geo-osx);
+%elif defined(MOZ_WIDGET_GTK) || defined(MOZ_WIDGET_QT)
+  list-style-image: url(chrome://browser/skin/glyphs.svg#geo-linux);
+%else
+  list-style-image: url(chrome://browser/skin/glyphs.svg#geo-windows);
+%endif
 }
 
 .install-icon {
@@ -155,12 +183,13 @@
   list-style-image: url(chrome://browser/skin/addons/addon-install-anchor.svg#active);
 }
 
+.popup-notification-icon[popupid="indexedDB-permissions-prompt"],
 .indexedDB-icon {
-  list-style-image: url(chrome://global/skin/icons/question-16.png);
+  list-style-image: url(chrome://browser/skin/glyphs.svg#indexedDB);
 }
 
 .login-icon {
-  list-style-image: url(chrome://mozapps/skin/passwordmgr/key-16.png);
+  list-style-image: url(chrome://browser/skin/glyphs.svg#login);
 }
 
 #login-fill-notification-icon {
@@ -212,49 +241,34 @@
   }
 }
 
-.camera-icon {
-  list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16.png);
-}
-
 /* The first selector is used by socialchat.xml (bug 1275558). */
 .webRTC-sharingDevices-notification-icon,
-.camera-icon.in-use {
-  list-style-image: url(chrome://browser/skin/webRTC-sharingDevice-16.png);
-}
-
-.microphone-icon {
-  list-style-image: url(chrome://browser/skin/webRTC-shareMicrophone-16.png);
+.camera-icon,
+.popup-notification-icon[popupid="webRTC-shareDevices"],
+.popup-notification-icon[popupid="webRTC-sharingDevices"] {
+  list-style-image: url(chrome://browser/skin/glyphs.svg#camera);
 }
 
 /* The first selector is used by socialchat.xml (bug 1275558). */
 .webRTC-sharingMicrophone-notification-icon,
-.microphone-icon.in-use {
-  list-style-image: url(chrome://browser/skin/webRTC-sharingMicrophone-16.png);
+.microphone-icon {
+  list-style-image: url(chrome://browser/skin/glyphs.svg#microphone);
 }
 
+.popup-notification-icon[popupid="webRTC-shareScreen"],
+.popup-notification-icon[popupid="webRTC-sharingScreen"],
 .screen-icon {
-  list-style-image: url(chrome://browser/skin/webRTC-shareScreen-16.png);
+  list-style-image: url(chrome://browser/skin/glyphs.svg#screen);
 }
 
-.screen-icon.in-use {
-  list-style-image: url(chrome://browser/skin/webRTC-sharingScreen-16.png);
-}
-
+.popup-notification-icon[popupid="web-notifications"],
 .web-notifications-icon {
-  list-style-image: url(chrome://browser/skin/web-notifications-tray.svg);
-  -moz-image-region: rect(0, 16px, 16px, 0);
+  list-style-image: url(chrome://browser/skin/glyphs.svg#web-notifications);
 }
 
-.web-notifications-icon:hover {
-  -moz-image-region: rect(0, 32px, 16px, 16px);
-}
-
-.web-notifications-icon:hover:active {
-  -moz-image-region: rect(0, 48px, 16px, 32px);
-}
-
+.popup-notification-icon[popupid="pointerLock"],
 .pointer-icon {
-  list-style-image: url(chrome://browser/skin/pointerLock-16.png);
+  list-style-image: url(chrome://browser/skin/glyphs.svg#pointer);
 }
 
 .service-icon {
@@ -298,59 +312,9 @@
     border-image: url("chrome://browser/skin/urlbar-arrow@2x.png") 0 16 0 0 fill;
   }
 
-  .camera-icon {
-    list-style-image: url(chrome://browser/skin/webRTC-shareDevice-16@2x.png);
-  }
-
-  .camera-icon.in-use {
-    list-style-image: url(chrome://browser/skin/webRTC-sharingDevice-16@2x.png);
-  }
-
-  .microphone-icon {
-    list-style-image: url(chrome://browser/skin/webRTC-shareMicrophone-16@2x.png);
-  }
-
-  .microphone-icon.in-use {
-    list-style-image: url(chrome://browser/skin/webRTC-sharingMicrophone-16@2x.png);
-  }
-
-  .screen-icon {
-    list-style-image: url(chrome://browser/skin/webRTC-shareScreen-16@2x.png);
-  }
-
-  .screen-icon.in-use {
-    list-style-image: url(chrome://browser/skin/webRTC-sharingScreen-16@2x.png);
-  }
-
-  .popup-notification-icon[popupid="webRTC-sharingDevices"],
-  .popup-notification-icon[popupid="webRTC-shareDevices"] {
-    list-style-image: url(chrome://browser/skin/webRTC-shareDevice-64@2x.png);
-  }
-
-  .popup-notification-icon[popupid="webRTC-sharingMicrophone"],
-  .popup-notification-icon[popupid="webRTC-shareMicrophone"] {
-    list-style-image: url(chrome://browser/skin/webRTC-shareMicrophone-64@2x.png);
-  }
-
-  .popup-notification-icon[popupid="webRTC-sharingScreen"],
-  .popup-notification-icon[popupid="webRTC-shareScreen"] {
-    list-style-image: url(chrome://browser/skin/webRTC-shareScreen-64@2x.png);
-  }
 
 %ifdef XP_MACOSX
 /* OSX only until we have icons for Windows and Linux */
-  .geo-icon {
-    list-style-image: url(chrome://browser/skin/Geolocation-16@2x.png);
-  }
-
-  .indexedDB-icon {
-    list-style-image: url(chrome://global/skin/icons/question-32.png);
-  }
-
-  .login-icon {
-    list-style-image: url(chrome://mozapps/skin/passwordmgr/key-16@2x.png);
-  }
-
   .plugin-icon {
     list-style-image: url(chrome://browser/skin/notification-pluginNormal@2x.png);
   }
@@ -375,10 +339,6 @@
     -moz-image-region: rect(0, 96px, 32px, 64px);
   }
 
-  .pointer-icon {
-    list-style-image: url(chrome://browser/skin/pointerLock-16@2x.png);
-  }
-
   .translation-icon {
     list-style-image: url(chrome://browser/skin/translation-16@2x.png);
     -moz-image-region: rect(0px, 32px, 32px, 0px);
@@ -386,14 +346,6 @@
 
   .translation-icon.in-use {
     -moz-image-region: rect(0px, 64px, 32px, 32px);
-  }
-
-  .popup-notification-icon[popupid="geolocation"] {
-    list-style-image: url(chrome://browser/skin/Geolocation-64@2x.png);
-  }
-
-  .popup-notification-icon[popupid="pointerLock"] {
-    list-style-image: url(chrome://browser/skin/pointerLock-64@2x.png);
   }
 
   .popup-notification-icon[popupid="servicesInstall"] {
