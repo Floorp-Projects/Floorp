@@ -6,6 +6,7 @@ package org.mozilla.gecko.tests;
 
 import static org.mozilla.gecko.tests.helpers.AssertionHelper.*;
 
+import android.util.Log;
 import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.GeckoProfile;
@@ -23,11 +24,17 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
 
     private GeckoProfile profile;
     private File profileDir;
+    private File[] filesToDeleteOnReset;
 
     public void setUp() throws Exception {
         super.setUp();
         profile = getTestProfile();
         profileDir = profile.getDir(); // Assumes getDir is tested.
+        filesToDeleteOnReset = new File[] {
+                getClientIdFile(),
+                getFHRClientIdFile(),
+                getFHRClientIdParentDir(),
+        };
 
         // In local testing, it's possible to ^C out of the harness and not have tearDown called,
         // hence reset. We can't clear the cache because Gecko is not running yet.
@@ -41,16 +48,19 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
     }
 
     private void resetTest(final boolean resetJSCache) {
+        Log.d(LOGTAG, "resetTest: begin");
+
         if (resetJSCache) {
             resetJSCache();
         }
-        getClientIdFile().delete();
-        getFHRClientIdFile().delete();
-        getFHRClientIdParentDir().delete();
+        for (final File file : filesToDeleteOnReset) {
+            file.delete();
+            fAssertFalse("Deleted file in reset does not exist", file.exists()); // sanity check.
+        }
+
+        Log.d(LOGTAG, "resetTest: end");
     }
 
-    // TODO: If the intent service runs in the background, it could break this test. The service is disabled
-    // on non-official builds (e.g. this one) but that may not be the case on TBPL.
     public void testUnifiedTelemetryClientId() throws Exception {
         blockForReadyAndLoadJS(TEST_JS);
         resetJSCache(); // Must be called after Gecko is loaded.
@@ -77,6 +87,8 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
      *   * Assert the client IDs are the same
      */
     private void testJavaCreatesClientId() throws Exception {
+        Log.d(LOGTAG, "testJavaCreatesClientId: start");
+
         fAssertFalse("Client id file does not exist yet", getClientIdFile().exists());
 
         final String clientIdFromJava = getClientIdFromJava();
@@ -100,6 +112,8 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
      *   * Assert the client IDs are the same
      */
     private void testJsCreatesClientId() throws Exception {
+        Log.d(LOGTAG, "testJsCreatesClientId: start");
+
         fAssertFalse("Client id file does not exist yet", getClientIdFile().exists());
 
         final String clientIdFromJS = getClientIdFromJS();
@@ -124,6 +138,8 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
      *   * Assert the client IDs are the same
      */
     private void testJavaMigratesFromHealthReport() throws Exception {
+        Log.d(LOGTAG, "testJavaMigratesFromHealthReport: start");
+
         fAssertFalse("Client id file does not exist yet", getClientIdFile().exists());
         fAssertFalse("Health report file does not exist yet", getFHRClientIdFile().exists());
 
@@ -153,6 +169,8 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
      *   * Assert the client IDs are the same
      */
     private void testJsMigratesFromHealthReport() throws Exception {
+        Log.d(LOGTAG, "testJsMigratesFromHealthReport: start");
+
         fAssertFalse("Client id file does not exist yet", getClientIdFile().exists());
         fAssertFalse("Health report file does not exist yet", getFHRClientIdFile().exists());
 
@@ -171,7 +189,6 @@ public class testUnifiedTelemetryClientId extends JavascriptBridgeTest {
         fAssertEquals("Same client ID retrieved from Java", expectedClientId, clientIdFromJavaAgain);
         fAssertEquals("Same client ID retrieved from JS cache", expectedClientId, clientIdFromJSCache);
         fAssertEquals("Same client ID retrieved from JS file", expectedClientId, clientIdFromJSFileAgain);
-
     }
 
     private String getClientIdFromJava() throws IOException {

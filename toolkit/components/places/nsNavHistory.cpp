@@ -99,6 +99,8 @@ using namespace mozilla::places;
 #define PREF_FREC_UNVISITED_BOOKMARK_BONUS_DEF  140
 #define PREF_FREC_UNVISITED_TYPED_BONUS         "places.frecency.unvisitedTypedBonus"
 #define PREF_FREC_UNVISITED_TYPED_BONUS_DEF     200
+#define PREF_FREC_RELOAD_VISIT_BONUS            "places.frecency.reloadVisitBonus"
+#define PREF_FREC_RELOAD_VISIT_BONUS_DEF        0
 
 // In order to avoid calling PR_now() too often we use a cached "now" value
 // for repeating stuff.  These are milliseconds between "now" cache refreshes.
@@ -482,6 +484,7 @@ nsNavHistory::LoadPrefs()
   FRECENCY_PREF(mDefaultVisitBonus,        PREF_FREC_DEFAULT_VISIT_BONUS);
   FRECENCY_PREF(mUnvisitedBookmarkBonus,   PREF_FREC_UNVISITED_BOOKMARK_BONUS);
   FRECENCY_PREF(mUnvisitedTypedBonus,      PREF_FREC_UNVISITED_TYPED_BONUS);
+  FRECENCY_PREF(mReloadVisitBonus,         PREF_FREC_RELOAD_VISIT_BONUS);
   FRECENCY_PREF(mFirstBucketWeight,        PREF_FREC_FIRST_BUCKET_WEIGHT);
   FRECENCY_PREF(mSecondBucketWeight,       PREF_FREC_SECOND_BUCKET_WEIGHT);
   FRECENCY_PREF(mThirdBucketWeight,        PREF_FREC_THIRD_BUCKET_WEIGHT);

@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {DirectorManagerFront} = require("devtools/server/actors/director-manager");
+const {DirectorManagerFront} = require("devtools/shared/fronts/director-manager");
 const {DirectorRegistry} = require("devtools/server/actors/director-registry");
 
 add_task(function* () {
