@@ -59,6 +59,11 @@ add_task(function* setup() {
           delete unregisterDefers[request.channelID];
           equal(request.code, 200,
             'Expected manual unregister reason');
+          this.serverSendMsg(JSON.stringify({
+            messageType: 'unregister',
+            channelID: request.channelID,
+            status: 200,
+          }));
           resolve();
         },
       });
