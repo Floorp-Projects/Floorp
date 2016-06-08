@@ -33,18 +33,13 @@ function* test_download_state_complete(aTab, aDownload, aPrivate, aCanceled) {
 }
 
 function* test_createDownload_common(aPrivate, aType) {
-  let tab = gBrowser.addTab(getRootDirectory(gTestPath) + "testFile.html");
-  yield promiseBrowserLoaded(tab.linkedBrowser);
+  let win = yield BrowserTestUtils.openNewBrowserWindow({ private : aPrivate});
 
-  if (aPrivate) {
-    tab.linkedBrowser.docShell.QueryInterface(Ci.nsILoadContext)
-                              .usePrivateBrowsing = true;
-  }
-
+  let tab = yield BrowserTestUtils.openNewForegroundTab(win.gBrowser, getRootDirectory(gTestPath) + "testFile.html");
   let download = yield Downloads.createDownload({
     source: tab.linkedBrowser.contentWindow,
     target: { path: getTempFile(TEST_TARGET_FILE_NAME_PDF).path },
-    saver: { type: aType },
+    saver: { type: aType }
   });
 
   yield test_download_windowRef(tab, download);
@@ -59,7 +54,8 @@ function* test_createDownload_common(aPrivate, aType) {
     ok((yield OS.File.exists(download.target.path)), "File exists");
   }
 
-  gBrowser.removeTab(tab);
+  win.gBrowser.removeTab(tab);
+  win.close()
 }
 
 add_task(function* test_createDownload_pdf_private() {
