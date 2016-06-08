@@ -8316,8 +8316,8 @@ DebuggerObject::errorMessageNameGetter(JSContext *cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-DebuggerObject_isExtensible(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerObject::isExtensibleMethod(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "isExtensible", args, object)
 
@@ -8329,8 +8329,8 @@ DebuggerObject_isExtensible(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-DebuggerObject_isSealed(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerObject::isSealedMethod(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "isSealed", args, object)
 
@@ -8342,8 +8342,8 @@ DebuggerObject_isSealed(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-DebuggerObject_isFrozen(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerObject::isFrozenMethod(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "isFrozen", args, object)
 
@@ -8381,8 +8381,8 @@ IdVectorToArray(JSContext* cx, Handle<IdVector> ids)
     return NewDenseCopiedArray(cx, vals.length(), vals.begin());
 }
 
-static bool
-DebuggerObject_getOwnPropertyNames(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerObject::getOwnPropertyNamesMethod(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "getOwnPropertyNames", args, object)
 
@@ -8398,8 +8398,8 @@ DebuggerObject_getOwnPropertyNames(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-DebuggerObject_getOwnPropertySymbols(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerObject::getOwnPropertySymbolsMethod(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "getOwnPropertySymbols", args, object)
 
@@ -8415,8 +8415,8 @@ DebuggerObject_getOwnPropertySymbols(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-DebuggerObject_getOwnPropertyDescriptor(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerObject::getOwnPropertyDescriptorMethod(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "getOwnPropertyDescriptor", args, object)
 
@@ -8431,8 +8431,8 @@ DebuggerObject_getOwnPropertyDescriptor(JSContext* cx, unsigned argc, Value* vp)
     return JS::FromPropertyDescriptor(cx, desc, args.rval());
 }
 
-static bool
-DebuggerObject_preventExtensions(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerObject::preventExtensionsMethod(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "preventExtensions", args, object)
 
@@ -8443,8 +8443,8 @@ DebuggerObject_preventExtensions(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-DebuggerObject_seal(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerObject::sealMethod(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "seal", args, object)
 
@@ -8455,8 +8455,8 @@ DebuggerObject_seal(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-DebuggerObject_freeze(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerObject::freezeMethod(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "freeze", args, object)
 
@@ -8467,8 +8467,8 @@ DebuggerObject_freeze(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-DebuggerObject_defineProperty(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerObject::definePropertyMethod(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "defineProperty", args, object)
     if (!args.requireAtLeast(cx, "Debugger.Object.defineProperty", 2))
@@ -8489,8 +8489,8 @@ DebuggerObject_defineProperty(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-DebuggerObject_defineProperties(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerObject::definePropertiesMethod(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "defineProperties", args, object);
     if (!args.requireAtLeast(cx, "Debugger.Object.defineProperties", 1))
@@ -8519,8 +8519,8 @@ DebuggerObject_defineProperties(JSContext* cx, unsigned argc, Value* vp)
  * This does a non-strict delete, as a matter of API design. The case where the
  * property is non-configurable isn't necessarily exceptional here.
  */
-static bool
-DebuggerObject_deleteProperty(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerObject::deletePropertyMethod(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "deleteProperty", args, object)
 
@@ -8536,8 +8536,8 @@ DebuggerObject_deleteProperty(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-DebuggerObject_call(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerObject::callMethod(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "call", callArgs, object);
 
@@ -8554,8 +8554,8 @@ DebuggerObject_call(JSContext* cx, unsigned argc, Value* vp)
     return object->call(cx, object, thisv, args, callArgs.rval());
 }
 
-static bool
-DebuggerObject_apply(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerObject::applyMethod(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "apply", callArgs, object);
 
@@ -8583,8 +8583,8 @@ DebuggerObject_apply(JSContext* cx, unsigned argc, Value* vp)
     return object->call(cx, object, thisv, args, callArgs.rval());
 }
 
-static bool
-DebuggerObject_asEnvironment(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerObject::asEnvironmentMethod(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT_OWNER_REFERENT(cx, argc, vp, "asEnvironment", args, dbg, referent);
     if (!RequireGlobalObject(cx, args.thisv(), referent))
@@ -8605,8 +8605,8 @@ DebuggerObject_asEnvironment(JSContext* cx, unsigned argc, Value* vp)
 // if it is an uninitialized lexical, otherwise do nothing. The method's
 // JavaScript return value is true _only_ when an uninitialized lexical has been
 // altered, otherwise it is false.
-bool
-DebuggerObject_forceLexicalInitializationByName(JSContext *cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerObject::forceLexicalInitializationByNameMethod(JSContext *cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "forceLexicalInitializationByName", args, object)
     if (!args.requireAtLeast(cx, "Debugger.Object.prototype.forceLexicalInitializationByName", 1))
@@ -8627,8 +8627,8 @@ DebuggerObject_forceLexicalInitializationByName(JSContext *cx, unsigned argc, Va
     return true;
 }
 
-static bool
-DebuggerObject_executeInGlobal(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerObject::executeInGlobalMethod(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "executeInGlobal", args, object);
     if (!args.requireAtLeast(cx, "Debugger.Object.prototype.executeInGlobal", 1))
@@ -8652,8 +8652,8 @@ DebuggerObject_executeInGlobal(JSContext* cx, unsigned argc, Value* vp)
     return DebuggerObject::executeInGlobal(cx, object, chars, nullptr, options, args.rval());
 }
 
-static bool
-DebuggerObject_executeInGlobalWithBindings(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerObject::executeInGlobalWithBindingsMethod(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "executeInGlobalWithBindings", args, object);
     if (!args.requireAtLeast(cx, "Debugger.Object.prototype.executeInGlobalWithBindings", 2))
@@ -8681,8 +8681,8 @@ DebuggerObject_executeInGlobalWithBindings(JSContext* cx, unsigned argc, Value* 
     return DebuggerObject::executeInGlobal(cx, object, chars, bindings, options, args.rval());
 }
 
-static bool
-DebuggerObject_makeDebuggeeValue(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerObject::makeDebuggeeValueMethod(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "makeDebuggeeValue", args, object);
     if (!args.requireAtLeast(cx, "Debugger.Object.prototype.makeDebuggeeValue", 1))
@@ -8691,8 +8691,8 @@ DebuggerObject_makeDebuggeeValue(JSContext* cx, unsigned argc, Value* vp)
     return DebuggerObject::makeDebuggeeValue(cx, object, args[0], args.rval());
 }
 
-static bool
-DebuggerObject_unsafeDereference(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerObject::unsafeDereferenceMethod(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "unsafeDereference", args, object);
 
@@ -8704,8 +8704,8 @@ DebuggerObject_unsafeDereference(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-DebuggerObject_unwrap(JSContext* cx, unsigned argc, Value* vp)
+/* static */ bool
+DebuggerObject::unwrapMethod(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "unwrap", args, object);
 
@@ -8752,27 +8752,27 @@ const JSPropertySpec DebuggerObject::promiseProperties_[] = {
 #endif // SPIDERMONKEY_PROMISE
 
 const JSFunctionSpec DebuggerObject::methods_[] = {
-    JS_FN("isExtensible", DebuggerObject_isExtensible, 0, 0),
-    JS_FN("isSealed", DebuggerObject_isSealed, 0, 0),
-    JS_FN("isFrozen", DebuggerObject_isFrozen, 0, 0),
-    JS_FN("getOwnPropertyNames", DebuggerObject_getOwnPropertyNames, 0, 0),
-    JS_FN("getOwnPropertySymbols", DebuggerObject_getOwnPropertySymbols, 0, 0),
-    JS_FN("getOwnPropertyDescriptor", DebuggerObject_getOwnPropertyDescriptor, 1, 0),
-    JS_FN("preventExtensions", DebuggerObject_preventExtensions, 0, 0),
-    JS_FN("seal", DebuggerObject_seal, 0, 0),
-    JS_FN("freeze", DebuggerObject_freeze, 0, 0),
-    JS_FN("defineProperty", DebuggerObject_defineProperty, 2, 0),
-    JS_FN("defineProperties", DebuggerObject_defineProperties, 1, 0),
-    JS_FN("deleteProperty", DebuggerObject_deleteProperty, 1, 0),
-    JS_FN("call", DebuggerObject_call, 0, 0),
-    JS_FN("apply", DebuggerObject_apply, 0, 0),
-    JS_FN("asEnvironment", DebuggerObject_asEnvironment, 0, 0),
-    JS_FN("forceLexicalInitializationByName", DebuggerObject_forceLexicalInitializationByName, 1, 0),
-    JS_FN("executeInGlobal", DebuggerObject_executeInGlobal, 1, 0),
-    JS_FN("executeInGlobalWithBindings", DebuggerObject_executeInGlobalWithBindings, 2, 0),
-    JS_FN("makeDebuggeeValue", DebuggerObject_makeDebuggeeValue, 1, 0),
-    JS_FN("unsafeDereference", DebuggerObject_unsafeDereference, 0, 0),
-    JS_FN("unwrap", DebuggerObject_unwrap, 0, 0),
+    JS_FN("isExtensible", DebuggerObject::isExtensibleMethod, 0, 0),
+    JS_FN("isSealed", DebuggerObject::isSealedMethod, 0, 0),
+    JS_FN("isFrozen", DebuggerObject::isFrozenMethod, 0, 0),
+    JS_FN("getOwnPropertyNames", DebuggerObject::getOwnPropertyNamesMethod, 0, 0),
+    JS_FN("getOwnPropertySymbols", DebuggerObject::getOwnPropertySymbolsMethod, 0, 0),
+    JS_FN("getOwnPropertyDescriptor", DebuggerObject::getOwnPropertyDescriptorMethod, 1, 0),
+    JS_FN("preventExtensions", DebuggerObject::preventExtensionsMethod, 0, 0),
+    JS_FN("seal", DebuggerObject::sealMethod, 0, 0),
+    JS_FN("freeze", DebuggerObject::freezeMethod, 0, 0),
+    JS_FN("defineProperty", DebuggerObject::definePropertyMethod, 2, 0),
+    JS_FN("defineProperties", DebuggerObject::definePropertiesMethod, 1, 0),
+    JS_FN("deleteProperty", DebuggerObject::deletePropertyMethod, 1, 0),
+    JS_FN("call", DebuggerObject::callMethod, 0, 0),
+    JS_FN("apply", DebuggerObject::applyMethod, 0, 0),
+    JS_FN("asEnvironment", DebuggerObject::asEnvironmentMethod, 0, 0),
+    JS_FN("forceLexicalInitializationByName", DebuggerObject::forceLexicalInitializationByNameMethod, 1, 0),
+    JS_FN("executeInGlobal", DebuggerObject::executeInGlobalMethod, 1, 0),
+    JS_FN("executeInGlobalWithBindings", DebuggerObject::executeInGlobalWithBindingsMethod, 2, 0),
+    JS_FN("makeDebuggeeValue", DebuggerObject::makeDebuggeeValueMethod, 1, 0),
+    JS_FN("unsafeDereference", DebuggerObject::unsafeDereferenceMethod, 0, 0),
+    JS_FN("unwrap", DebuggerObject::unwrapMethod, 0, 0),
     JS_FS_END
 };
 
