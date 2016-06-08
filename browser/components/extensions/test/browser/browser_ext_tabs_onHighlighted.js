@@ -36,6 +36,10 @@ add_task(function* testTabEvents() {
     /**
      * Asserts that the expected events are fired for the tab with id = tabId.
      * The events associated to the specified tab are removed after this check is made.
+     *
+     * @param {number} tabId
+     * @param {Array<string>} expectedEvents
+     * @returns {Promise}
      */
     function expectEvents(tabId, expectedEvents) {
       browser.test.log(`Expecting events: ${expectedEvents.join(", ")}`);
@@ -55,6 +59,9 @@ add_task(function* testTabEvents() {
 
     /**
      * Opens a new tab and asserts that the correct events are fired.
+     *
+     * @param {number} windowId
+     * @returns {Promise}
      */
     function openTab(windowId) {
       return browser.tabs.create({windowId}).then(tab => {
@@ -69,6 +76,9 @@ add_task(function* testTabEvents() {
 
     /**
      * Highlights an existing tab and asserts that the correct events are fired.
+     *
+     * @param {number} tabId
+     * @returns {Promise}
      */
     function highlightTab(tabId) {
       browser.test.log(`Highlighting tab ${tabId}`);
