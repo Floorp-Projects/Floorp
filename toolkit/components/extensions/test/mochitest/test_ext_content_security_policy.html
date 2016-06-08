@@ -18,6 +18,8 @@
  * documents that belong to it. This tests both the base policies and add-on
  * specific policies, and ensures that the parsed policies applied to the
  * document's principal match what was specified in the policy string.
+ *
+ * @param {object} [customCSP]
  */
 function* testPolicy(customCSP = null) {
   let baseURL;

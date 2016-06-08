@@ -138,6 +138,7 @@ class FilteringMessageManager {
    *        data:
    *          An object describing the message, as defined in
    *          `MessageChannel.addListener`.
+   * @param {nsIMessageManager} messageManager
    */
   constructor(messageName, callback, messageManager) {
     this.messageName = messageName;
@@ -351,7 +352,7 @@ this.MessageChannel = {
    *    corresponding property in `data` with the same value. If
    *    false, properties present in both objects must have the same
    *    balue.
-   * @returns {bool} True if the objects match.
+   * @returns {boolean} True if the objects match.
    */
   matchesFilter(filter, data, strict = true) {
     if (strict) {
@@ -429,8 +430,7 @@ this.MessageChannel = {
   /**
    * Removes a message listener from the given message manager.
    *
-   * @param {nsIMessageSender} target
-   * @param {nsIMessageSender|[nsIMessageSender]} targets
+   * @param {nsIMessageSender|Array<nsIMessageSender>} targets
    *    The message managers on which to stop listening.
    * @param {string|number} messageName
    *    The name of the message to stop listening for.
@@ -474,7 +474,7 @@ this.MessageChannel = {
    * @param {integer} [options.responseType=RESPONSE_SINGLE]
    *    Specifies the type of response expected. See the `RESPONSE_*`
    *    contents for details.
-   * @returns Promise
+   * @returns {Promise}
    */
   sendMessage(target, messageName, data, options = {}) {
     let sender = options.sender || {};
@@ -560,6 +560,10 @@ this.MessageChannel = {
    *
    * Each handler object is a `MessageReceiver` object as passed to
    * `addListener`.
+   *
+   * @param {Array<MessageHandler>} handlers
+   * @param {object} data
+   * @param {nsIMessageSender|nsIMessageManagerOwner} data.target
    */
   _handleMessage(handlers, data) {
     // The target passed to `receiveMessage` is sometimes a message manager
@@ -622,6 +626,10 @@ this.MessageChannel = {
    *
    * Each handler object is a deferred object created by `sendMessage`, and
    * should be resolved or rejected based on the contents of the response.
+   *
+   * @param {Array<MessageHandler>} handlers
+   * @param {object} data
+   * @param {nsIMessageSender|nsIMessageManagerOwner} data.target
    */
   _handleResponse(handlers, data) {
     // If we have an error at this point, we have handler to report it to,
@@ -662,6 +670,8 @@ this.MessageChannel = {
    *
    * These values are used to clear pending responses when execution
    * contexts are destroyed.
+   *
+   * @param {Deferred} deferred
    */
   _addPendingResponse(deferred) {
     let cleanup = () => {
