@@ -1122,8 +1122,12 @@ GetDisplayPortFromMarginsData(nsIContent* aContent,
   // Convert the aligned rect back into app units.
   nsRect result = LayoutDeviceRect::ToAppUnits(screenRect / res, auPerDevPixel);
 
-  // Expand it for the low-res buffer if needed
-  result = ApplyRectMultiplier(result, aMultiplier);
+  // If we have non-zero margins, expand the displayport for the low-res buffer
+  // if that's what we're drawing. If we have zero margins, we want the
+  // displayport to reflect the scrollport.
+  if (aMarginsData->mMargins != ScreenMargin()) {
+    result = ApplyRectMultiplier(result, aMultiplier);
+  }
 
   // Make sure the displayport remains within the scrollable rect.
   result = result.MoveInsideAndClamp(expandedScrollableRect - scrollPos);
