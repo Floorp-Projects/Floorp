@@ -252,7 +252,11 @@ class BaseMarionetteArguments(ArgumentParser):
         self.add_argument('tests',
                           nargs='*',
                           default=[],
-                          help='Tests to run.')
+                          help='Tests to run. '
+                               'One or more paths to test files (Python or JS), '
+                               'manifest files (.ini) or directories. '
+                               'When a directory is specified, '
+                               'all test files in the directory will be run.')
         self.add_argument('-v', '--verbose',
                         action='count',
                         help='Increase verbosity to include debug messages with -v, '
@@ -889,10 +893,15 @@ setReq.onerror = function() {
         if os.path.isdir(filepath):
             for root, dirs, files in os.walk(filepath):
                 for filename in files:
-                    if (filename.startswith('test_') and
+                    if (filename.endswith('.ini')):
+                        msg_tmpl = ("Ignoring manifest '{0}'; running all tests in '{1}'."
+                                    " See --help for details.")
+                        relpath = os.path.relpath(os.path.join(root, filename), filepath)
+                        self.logger.warning(msg_tmpl.format(relpath, filepath))
+                    elif (filename.startswith('test_') and
                         (filename.endswith('.py') or filename.endswith('.js'))):
-                        filepath = os.path.join(root, filename)
-                        self.add_test(filepath)
+                        test_file = os.path.join(root, filename)
+                        self.add_test(test_file)
             return
 
 
