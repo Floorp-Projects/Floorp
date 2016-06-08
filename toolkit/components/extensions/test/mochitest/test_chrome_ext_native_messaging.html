@@ -1,0 +1,516 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>WebExtension test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <script type="text/javascript" src="test_constants.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+/* globals OS */
+
+const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
+
+Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
+Cu.import("resource://gre/modules/Services.jsm");
+let {Subprocess, SubprocessImpl} = Cu.import("resource://gre/modules/Subprocess.jsm");
+
+const PREF_MAX_READ = "webextensions.native-messaging.max-input-message-bytes";
+const PREF_MAX_WRITE = "webextensions.native-messaging.max-output-message-bytes";
+
+function getSubprocessCount() {
+  return SubprocessImpl.Process.getWorker().call("getProcesses", [])
+                       .then(result => result.size);
+}
+function waitForSubprocessExit() {
+  return SubprocessImpl.Process.getWorker().call("waitForNoProcesses", []);
+}
+
+let dir = FileUtils.getDir("TmpD", ["NativeMessaging"]);
+dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
+info(`Using local directory ${dir.path}\n`);
+
+let dirProvider = {
+  getFile(property) {
+    if (property == "XREUserNativeMessaging") {
+      return dir.clone();
+    }
+    return null;
+  },
+};
+
+Services.dirsvc.registerProvider(dirProvider);
+SimpleTest.registerCleanupFunction(() => {
+  Services.dirsvc.unregisterProvider(dirProvider);
+  dir.remove(true);
+});
+
+function getPath(filename) {
+  return OS.Path.join(dir.path, filename);
+}
+
+// Set up a couple of native applications and their manifests for
+// test to use.
+const ID = "native@tests.mozilla.org";
+
+const ECHO_PATH = getPath("echo.py");
+const ECHO_MANIFEST_PATH = getPath("echo.json");
+const ECHO_MANIFEST = {
+  name: "echo",
+  description: "a native app that echoes back messages it receives",
+  path: ECHO_PATH,
+  type: "stdio",
+  allowed_extensions: [ID],
+};
+
+const INFO_PATH = getPath("info.py");
+const INFO_MANIFEST_PATH = getPath("info.json");
+const INFO_MANIFEST = {
+  name: "info",
+  description: "a native app that gives some info about how it was started",
+  path: INFO_PATH,
+  type: "stdio",
+  allowed_extensions: [ID],
+};
+
+const WONTDIE_PATH = getPath("wontdie.py");
+const WONTDIE_MANIFEST_PATH = getPath("wontdie.json");
+const WONTDIE_MANIFEST = {
+  name: "wontdie",
+  description: "a native app that does not exit when stdin closes or on SIGTERM",
+  path: WONTDIE_PATH,
+  type: "stdio",
+  allowed_extensions: [ID],
+};
+
+add_task(function* setup_scripts() {
+  const PERMS = {unixMode: 0o755};
+  let pythonPath = yield Subprocess.pathSearch("python2.7").catch(err => {
+    if (err.errorCode != Subprocess.ERROR_BAD_EXECUTABLE) {
+      throw err;
+    }
+    return Subprocess.pathSearch("python");
+  });
+
+  const ECHO_SCRIPT = String.raw`#!${pythonPath} -u
+import struct
+import sys
+
+while True:
+    rawlen = sys.stdin.read(4)
+    if len(rawlen) == 0:
+        sys.exit(0)
+    msglen = struct.unpack('@I', rawlen)[0]
+    msg = sys.stdin.read(msglen)
+
+    sys.stdout.write(struct.pack('@I', msglen))
+    sys.stdout.write(msg)
+`;
+
+  yield OS.File.writeAtomic(ECHO_PATH, ECHO_SCRIPT);
+  yield OS.File.setPermissions(ECHO_PATH, PERMS);
+  yield OS.File.writeAtomic(ECHO_MANIFEST_PATH, JSON.stringify(ECHO_MANIFEST));
+
+  const INFO_SCRIPT = String.raw`#!${pythonPath} -u
+import json
+import os
+import struct
+import sys
+
+msg = json.dumps({"args": sys.argv, "cwd": os.getcwd()})
+sys.stdout.write(struct.pack('@I', len(msg)))
+sys.stdout.write(msg)
+sys.exit(0)
+`;
+
+  yield OS.File.writeAtomic(INFO_PATH, INFO_SCRIPT);
+  yield OS.File.setPermissions(INFO_PATH, PERMS);
+  yield OS.File.writeAtomic(INFO_MANIFEST_PATH, JSON.stringify(INFO_MANIFEST));
+
+  const WONTDIE_SCRIPT = String.raw`#!${pythonPath} -u
+import signal
+import struct
+import sys
+
+signal.signal(signal.SIGTERM, signal.SIG_IGN)
+
+while True:
+    rawlen = sys.stdin.read(4)
+    if len(rawlen) == 0:
+        signal.pause()
+    msglen = struct.unpack('@I', rawlen)[0]
+    msg = sys.stdin.read(msglen)
+
+    sys.stdout.write(struct.pack('@I', msglen))
+    sys.stdout.write(msg)
+`;
+
+  yield OS.File.writeAtomic(WONTDIE_PATH, WONTDIE_SCRIPT);
+  yield OS.File.setPermissions(WONTDIE_PATH, PERMS);
+  yield OS.File.writeAtomic(WONTDIE_MANIFEST_PATH, JSON.stringify(WONTDIE_MANIFEST));
+});
+
+// Test the basic operation of native messaging with a simple
+// script that echoes back whatever message is sent to it.
+add_task(function* test_happy_path() {
+  function background() {
+    let port = browser.runtime.connectNative("echo");
+    port.onMessage.addListener(msg => {
+      browser.test.sendMessage("message", msg);
+    });
+    browser.test.onMessage.addListener((what, payload) => {
+      if (what == "send") {
+        if (payload._json) {
+          let json = payload._json;
+          payload.toJSON = () => json;
+          delete payload._json;
+        }
+        port.postMessage(payload);
+      }
+    });
+    browser.test.sendMessage("ready");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${background})()`,
+    manifest: {
+      permissions: ["nativeMessaging"],
+    },
+  }, ID);
+
+  yield extension.startup();
+  yield extension.awaitMessage("ready");
+  const tests = [
+    {
+      data: "this is a string",
+      what: "simple string",
+    },
+    {
+      data: "Это юникода",
+      what: "unicode string",
+    },
+    {
+      data: {test: "hello"},
+      what: "simple object",
+    },
+    {
+      data: {
+        what: "An object with a few properties",
+        number: 123,
+        bool: true,
+        nested: {what: "another object"},
+      },
+      what: "object with several properties",
+    },
+
+    // enable with bug 1274708
+    //{
+    //  data: {
+    //    ignoreme: true,
+    //    _json: {data: "i have a tojson method"},
+    //  },
+    //  expected: {data: "i have a tojson method"},
+    //  what: "object with toJSON() method",
+    //},
+  ];
+  for (let test of tests) {
+    extension.sendMessage("send", test.data);
+    let response = yield extension.awaitMessage("message");
+    let expected = test.expected || test.data;
+    isDeeply(response, expected, `Echoed a message of type ${test.what}`);
+  }
+
+  let procCount = yield getSubprocessCount();
+  is(procCount, 1, "subprocess is still running");
+  let exitPromise = waitForSubprocessExit();
+  yield extension.unload();
+  yield exitPromise;
+});
+
+// Test calling Port.disconnect()
+add_task(function* test_disconnect() {
+  function background() {
+    let port = browser.runtime.connectNative("echo");
+    port.onMessage.addListener(msg => {
+      browser.test.sendMessage("message", msg);
+    });
+    browser.test.onMessage.addListener((what, payload) => {
+      if (what == "send") {
+        if (payload._json) {
+          let json = payload._json;
+          payload.toJSON = () => json;
+          delete payload._json;
+        }
+        port.postMessage(payload);
+      } else if (what == "disconnect") {
+        try {
+          port.disconnect();
+          browser.test.sendMessage("disconnect-result", {success: true});
+        } catch (err) {
+          browser.test.sendMessage("disconnect-result", {
+            success: false,
+            errmsg: err.message,
+          });
+        }
+      }
+    });
+    browser.test.sendMessage("ready");
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${background})()`,
+    manifest: {
+      permissions: ["nativeMessaging"],
+    },
+  }, ID);
+
+  yield extension.startup();
+  yield extension.awaitMessage("ready");
+
+  extension.sendMessage("send", "test");
+  let response = yield extension.awaitMessage("message");
+  is(response, "test", "Echoed a string");
+
+  let procCount = yield getSubprocessCount();
+  is(procCount, 1, "subprocess is running");
+
+  extension.sendMessage("disconnect");
+  response = yield extension.awaitMessage("disconnect-result");
+  is(response.success, true, "disconnect succeeded");
+
+  info("waiting for subprocess to exit");
+  yield waitForSubprocessExit();
+  procCount = yield getSubprocessCount();
+  is(procCount, 0, "subprocess is no longer running");
+
+  extension.sendMessage("disconnect");
+  response = yield extension.awaitMessage("disconnect-result");
+  is(response.success, false, "second call to disconnect failed");
+  ok(/already disconnected/.test(response.errmsg), "disconnect error message is reasonable");
+
+  yield extension.unload();
+});
+
+// Test the limit on message size for writing
+add_task(function* test_write_limit() {
+  Services.prefs.setIntPref(PREF_MAX_WRITE, 10);
+  function clearPref() {
+    Services.prefs.clearUserPref(PREF_MAX_WRITE);
+  }
+  SimpleTest.registerCleanupFunction(clearPref);
+
+  function background() {
+    const PAYLOAD = "0123456789A";
+    let port = browser.runtime.connectNative("echo");
+    try {
+      port.postMessage(PAYLOAD);
+      browser.test.sendMessage("result", null);
+    } catch (ex) {
+      browser.test.sendMessage("result", ex.message);
+    }
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${background})()`,
+    manifest: {
+      permissions: ["nativeMessaging"],
+    },
+  }, ID);
+
+  yield extension.startup();
+
+  let errmsg = yield extension.awaitMessage("result");
+  isnot(errmsg, null, "native postMessage() failed for overly large message");
+
+  yield extension.unload();
+  yield waitForSubprocessExit();
+
+  clearPref();
+});
+
+// Test the limit on message size for reading
+add_task(function* test_read_limit() {
+  Services.prefs.setIntPref(PREF_MAX_READ, 10);
+  function clearPref() {
+    Services.prefs.clearUserPref(PREF_MAX_READ);
+  }
+  SimpleTest.registerCleanupFunction(clearPref);
+
+  function background() {
+    const PAYLOAD = "0123456789A";
+    let port = browser.runtime.connectNative("echo");
+    port.onDisconnect.addListener(() => {
+      browser.test.sendMessage("result", {
+        what: "disconnected",
+        errmsg: browser.runtime.lastError.message,
+      });
+    });
+    port.onMessage.addListener(msg => {
+      browser.test.sendMessage("result", {what: "got message"});
+    });
+    port.postMessage(PAYLOAD);
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${background})()`,
+    manifest: {
+      permissions: ["nativeMessaging"],
+    },
+  }, ID);
+
+  yield extension.startup();
+
+  let result = yield extension.awaitMessage("result");
+  is(result.what, "disconnected", "native port disconnected on receiving large message");
+  ok(/tried to send a message of \d+ bytes, which exceeds the limit of \d+ bytes/.test(result.errmsg), "error message for large read is reasonable");
+
+  yield extension.unload();
+  yield waitForSubprocessExit();
+
+  clearPref();
+});
+
+// Test that an extension without the nativeMessaging permission cannot
+// use native messaging.
+add_task(function* test_ext_permission() {
+  function background() {
+    try {
+      browser.runtime.connectNative("test");
+      browser.test.sendMessage("result", null);
+    } catch (ex) {
+      browser.test.sendMessage("result", ex.message);
+    }
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${background})()`,
+    manifest: {},
+  });
+
+  yield extension.startup();
+
+  let errmsg = yield extension.awaitMessage("result");
+  isnot(errmsg, null, "connectNative() failed without nativeMessaging permission");
+  ok(/Permission denied/.test(errmsg), "error message for missing extension permission is reasonable");
+
+  yield extension.unload();
+
+  let procCount = yield getSubprocessCount();
+  is(procCount, 0, "No child process was started");
+});
+
+// Test that an extension that is not listed in allowed_extensions for
+// a native application cannot use that application.
+add_task(function* test_app_permission() {
+  function background() {
+    let port = browser.runtime.connectNative("echo");
+    port.onDisconnect.addListener(() => {
+      browser.test.sendMessage("result", {
+        what: "disconnected",
+        errmsg: browser.runtime.lastError.message,
+      });
+    });
+    port.onMessage.addListener(msg => {
+      browser.test.sendMessage("result", {what: "got message"});
+    });
+    port.postMessage({test: "test"});
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${background})()`,
+    manifest: {
+      permissions: ["nativeMessaging"],
+    },
+  }, "somethingelse@tests.mozilla.org");
+
+  yield extension.startup();
+
+  let result = yield extension.awaitMessage("result");
+  is(result.what, "disconnected", "connectNative() failed without native app permission");
+  ok(/This extension does not have permission/.test(result.errmsg), "Error message for missing native app permission is reasonable");
+
+  yield extension.unload();
+
+  let procCount = yield getSubprocessCount();
+  is(procCount, 0, "No child process was started");
+});
+
+// Test that the command-line arguments and working directory for the
+// native application are as expected.
+add_task(function* test_child_process() {
+  function background() {
+    let port = browser.runtime.connectNative("info");
+    port.onMessage.addListener(msg => {
+      browser.test.sendMessage("result", msg);
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${background})()`,
+    manifest: {
+      permissions: ["nativeMessaging"],
+    },
+  }, ID);
+
+  yield extension.startup();
+
+  let msg = yield extension.awaitMessage("result");
+  is(msg.args.length, 2, "Received one command line argument");
+  is(msg.args[1], INFO_MANIFEST_PATH, "Command line argument is the path to the native host manifest");
+  is(msg.cwd, OS.Path.dirname(INFO_PATH), "Working directory is the directory containing the native appliation");
+
+  let exitPromise = waitForSubprocessExit();
+  yield extension.unload();
+  yield exitPromise;
+});
+
+// Test that an unresponsive native application still gets killed eventually
+add_task(function* test_unresponsive_native_app() {
+  // XXX expose GRACEFUL_SHUTDOWN_TIME as a pref and reduce it
+  // just for this test?
+
+  function background() {
+    let port = browser.runtime.connectNative("wontdie");
+
+    const MSG = "echo me";
+    // bounce a message to make sure the process actually starts
+    port.onMessage.addListener(msg => {
+      browser.test.assertEq(msg, MSG, "Received echoed message");
+      browser.test.sendMessage("ready");
+    });
+    port.postMessage(MSG);
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${background})()`,
+    manifest: {
+      permissions: ["nativeMessaging"],
+    },
+  }, ID);
+
+  yield extension.startup();
+  yield extension.awaitMessage("ready");
+
+  let procCount = yield getSubprocessCount();
+  is(procCount, 1, "subprocess is running");
+
+  let exitPromise = waitForSubprocessExit();
+  yield extension.unload();
+  yield exitPromise;
+
+  procCount = yield getSubprocessCount();
+  is(procCount, 0, "subprocess was succesfully killed");
+});
+
+</script>
+
+</body>
+</html>
