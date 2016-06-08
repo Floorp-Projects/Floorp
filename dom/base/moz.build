@@ -8,7 +8,6 @@ TEST_DIRS += ['test']
 
 XPIDL_SOURCES += [
     'mozIDOMWindow.idl',
-    'nsIConsoleAPIStorage.idl',
     'nsIContentPolicy.idl',
     'nsIContentPolicyBase.idl',
     'nsIDocumentEncoder.idl',
@@ -84,7 +83,6 @@ EXPORTS += [
     'nsHostObjectURI.h',
     'nsIAnimationObserver.h',
     'nsIAttribute.h',
-    'nsIConsoleReportCollector.h',
     'nsIContent.h',
     'nsIContentInlines.h',
     'nsIContentIterator.h',
@@ -143,7 +141,6 @@ if CONFIG['MOZ_WEBRTC']:
     ]
 
 EXPORTS.mozilla += [
-    'ConsoleReportCollector.h',
     'CORSMode.h',
     'FeedWriterEnabled.h',
     'TextInputProcessor.h',
@@ -161,7 +158,6 @@ EXPORTS.mozilla.dom += [
     'ChromeNodeList.h',
     'ChromeUtils.h',
     'Comment.h',
-    'Console.h',
     'DirectionalityUtils.h',
     'DocumentFragment.h',
     'DocumentType.h',
@@ -228,8 +224,6 @@ UNIFIED_SOURCES += [
     'ChromeNodeList.cpp',
     'ChromeUtils.cpp',
     'Comment.cpp',
-    'Console.cpp',
-    'ConsoleReportCollector.cpp',
     'Crypto.cpp',
     'DirectionalityUtils.cpp',
     'DocumentFragment.cpp',
@@ -395,8 +389,6 @@ if CONFIG['INTEL_ARCHITECTURE']:
     SOURCES['nsTextFragmentSSE2.cpp'].flags += CONFIG['SSE2_FLAGS']
 
 EXTRA_COMPONENTS += [
-    'ConsoleAPI.manifest',
-    'ConsoleAPIStorage.js',
     'contentAreaDropListener.js',
     'contentAreaDropListener.manifest',
     'messageWakeupService.js',

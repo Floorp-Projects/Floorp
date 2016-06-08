@@ -21,7 +21,7 @@
 
   var frame = document.getElementById("iframe");
   ok(frame, "Frame must exist");
-  frame.src="http://mochi.test:8888/tests/dom/base/test/file_empty.html";
+  frame.src="http://mochi.test:8888/tests/dom/console/test/file_empty.html";
   frame.onload = function() {
     ok("console" in frame.contentWindow, "Console exists in the iframe");
     frame.contentWindow.console.log(42);

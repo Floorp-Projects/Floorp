@@ -14,6 +14,7 @@
 #include "nsIDocShell.h"
 #include "nsIPrefetchService.h"
 #include "nsCPrefetchService.h"
+#include "nsStyleLinkElement.h"
 
 #include "nsEscape.h"
 #include "nsGkAtoms.h"

@@ -1,0 +1,45 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+XPIDL_SOURCES += [
+    'nsIConsoleAPIStorage.idl',
+]
+
+XPIDL_MODULE = 'dom'
+
+EXPORTS += [
+    'nsIConsoleReportCollector.h',
+]
+
+EXPORTS.mozilla += [
+    'ConsoleReportCollector.h',
+]
+
+EXPORTS.mozilla.dom += [
+    'Console.h',
+]
+
+UNIFIED_SOURCES += [
+    'Console.cpp',
+    'ConsoleReportCollector.cpp',
+]
+
+EXTRA_COMPONENTS += [
+    'ConsoleAPI.manifest',
+    'ConsoleAPIStorage.js',
+]
+
+LOCAL_INCLUDES += [
+    '/docshell/base',
+    '/dom/base',
+    '/dom/workers',
+    '/js/xpconnect/src',
+]
+
+MOCHITEST_MANIFESTS += [ 'tests/mochitest.ini' ]
+MOCHITEST_CHROME_MANIFESTS += [ 'tests/chrome.ini' ]
+
+FINAL_LIBRARY = 'xul'
