@@ -82,10 +82,6 @@ struct BasePoint {
     return hypot(x, y);
   }
 
-  T LengthSquare() const {
-    return x * x + y * y;
-  }
-
   // Round() is *not* rounding to nearest integer if the values are negative.
   // They are always rounding as floor(n + 0.5).
   // See https://bugzilla.mozilla.org/show_bug.cgi?id=410748#c14

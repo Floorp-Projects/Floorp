@@ -12,8 +12,6 @@
 #include "mozilla/gfx/Helpers.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "BorderConsts.h"
-#include "DashedCornerFinder.h"
-#include "DottedCornerFinder.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleConsts.h"
 #include "nsCSSColorUtils.h"
@@ -62,10 +60,6 @@ static void ComputeBorderCornerDimensions(const Rect& aOuterRect,
 // given a side index, get the previous and next side index
 #define NEXT_SIDE(_s) mozilla::css::Side(((_s) + 1) & 3)
 #define PREV_SIDE(_s) mozilla::css::Side(((_s) + 3) & 3)
-
-// given a corner index, get the previous and next corner index
-#define NEXT_CORNER(_s) mozilla::css::Corner(((_s) + 1) & 3)
-#define PREV_CORNER(_s) mozilla::css::Corner(((_s) + 3) & 3)
 
 // from the given base color and the background color, turn
 // color into a color for the given border pattern style
@@ -329,6 +323,8 @@ bool
 nsCSSBorderRenderer::IsSolidCornerStyle(uint8_t aStyle, mozilla::css::Corner aCorner)
 {
   switch (aStyle) {
+    case NS_STYLE_BORDER_STYLE_DOTTED:
+    case NS_STYLE_BORDER_STYLE_DASHED:
     case NS_STYLE_BORDER_STYLE_SOLID:
       return true;
 
@@ -404,6 +400,8 @@ nsCSSBorderRenderer::BorderColorStyleForSolidCorner(uint8_t aStyle, mozilla::css
   // note that this function assumes that the corner is already solid,
   // as per the earlier function
   switch (aStyle) {
+    case NS_STYLE_BORDER_STYLE_DOTTED:
+    case NS_STYLE_BORDER_STYLE_DASHED:
     case NS_STYLE_BORDER_STYLE_SOLID:
     case NS_STYLE_BORDER_STYLE_DOUBLE:
       return BorderColorStyleSolid;
@@ -1056,45 +1054,6 @@ nsCSSBorderRenderer::GetStraightBorderPoint(mozilla::css::Side aSide,
 }
 
 void
-nsCSSBorderRenderer::GetOuterAndInnerBezier(Bezier* aOuterBezier,
-                                            Bezier* aInnerBezier,
-                                            mozilla::css::Corner aCorner)
-{
-  // Return bezier control points for outer and inner curve for given corner.
-  //
-  //               ___---+ outer curve
-  //           __--      |
-  //         _-          |
-  //       /             |
-  //     /               |
-  //    |                |
-  //   |             __--+ inner curve
-  //  |            _-
-  //  |           /
-  // |           /
-  // |          |
-  // |          |
-  // |         |
-  // |         |
-  // |         |
-  // +---------+
-
-  mozilla::css::Side sideH(GetHorizontalSide(aCorner));
-  mozilla::css::Side sideV(GetVerticalSide(aCorner));
-
-  Size innerCornerSize(std::max(0.0f, mBorderRadii[aCorner].width -
-                                mBorderWidths[sideV]),
-                       std::max(0.0f, mBorderRadii[aCorner].height -
-                                mBorderWidths[sideH]));
-
-  GetBezierPointsForCorner(aOuterBezier, aCorner, mOuterRect.AtCorner(aCorner),
-                           mBorderRadii[aCorner]);
-
-  GetBezierPointsForCorner(aInnerBezier, aCorner, mInnerRect.AtCorner(aCorner),
-                           innerCornerSize);
-}
-
-void
 nsCSSBorderRenderer::FillSolidBorder(const Rect& aOuterRect,
                                      const Rect& aInnerRect,
                                      const RectCornerRadii& aBorderRadii,
@@ -1333,35 +1292,6 @@ nsCSSBorderRenderer::DrawBorderSides(int aSides)
       borderRenderStyle == NS_STYLE_BORDER_STYLE_HIDDEN)
     return;
 
-  if (borderRenderStyle == NS_STYLE_BORDER_STYLE_DASHED ||
-      borderRenderStyle == NS_STYLE_BORDER_STYLE_DOTTED) {
-    // Draw each corner separately, with the given side's color.
-    if (aSides & SIDE_BIT_TOP) {
-      DrawDashedOrDottedCorner(NS_SIDE_TOP, C_TL);
-    } else if (aSides & SIDE_BIT_LEFT) {
-      DrawDashedOrDottedCorner(NS_SIDE_LEFT, C_TL);
-    }
-
-    if (aSides & SIDE_BIT_TOP) {
-      DrawDashedOrDottedCorner(NS_SIDE_TOP, C_TR);
-    } else if (aSides & SIDE_BIT_RIGHT) {
-      DrawDashedOrDottedCorner(NS_SIDE_RIGHT, C_TR);
-    }
-
-    if (aSides & SIDE_BIT_BOTTOM) {
-      DrawDashedOrDottedCorner(NS_SIDE_BOTTOM, C_BL);
-    } else if (aSides & SIDE_BIT_LEFT) {
-      DrawDashedOrDottedCorner(NS_SIDE_LEFT, C_BL);
-    }
-
-    if (aSides & SIDE_BIT_BOTTOM) {
-      DrawDashedOrDottedCorner(NS_SIDE_BOTTOM, C_BR);
-    } else if (aSides & SIDE_BIT_RIGHT) {
-      DrawDashedOrDottedCorner(NS_SIDE_RIGHT, C_BR);
-    }
-    return;
-  }
-
   // -moz-border-colors is a hack; if we have it for a border, then
   // it's always drawn solid, and each color is given 1px.  The last
   // color is used for the remainder of the border's size.  Just
@@ -1386,6 +1316,8 @@ nsCSSBorderRenderer::DrawBorderSides(int aSides)
 
   switch (borderRenderStyle) {
     case NS_STYLE_BORDER_STYLE_SOLID:
+    case NS_STYLE_BORDER_STYLE_DASHED:
+    case NS_STYLE_BORDER_STYLE_DOTTED:
       borderColorStyleTopLeft[0] = BorderColorStyleSolid;
 
       borderColorStyleBottomRight[0] = BorderColorStyleSolid;
@@ -1607,7 +1539,7 @@ void
 nsCSSBorderRenderer::SetupDashedOptions(StrokeOptions* aStrokeOptions,
                                         Float aDash[2],
                                         mozilla::css::Side aSide,
-                                        Float aBorderLength, bool isCorner)
+                                        Float aBorderLength)
 {
   uint8_t style = mBorderStyles[aSide];
   Float borderWidth = mBorderWidths[aSide];
@@ -1755,23 +1687,6 @@ nsCSSBorderRenderer::SetupDashedOptions(StrokeOptions* aStrokeOptions,
       // Draw half segments on both ends.
       aStrokeOptions->mDashOffset = halfDash;
     }
-  } else if (isCorner) {
-    // If side ends with filled full segment, corner should start with unfilled
-    // full segment.
-    //
-    //     corner            side
-    //   ------------>|<---------------------------
-    //                |
-    //          __+---+---+---+---+---+---+---+---+
-    //       _+-  |   |###|###|   |   |###|###|   |
-    //     /##|   |   |###|###|   |   |###|###|   |
-    //    +####|   |  |###|###|   |   |###|###|   |
-    //   /#\####| _+--+---+---+---+---+---+---+---+
-    //  |####\##+-
-    //  |#####+-
-    //  +--###/
-    //  |  --+
-    aStrokeOptions->mDashOffset = fullDash;
   }
 
   aStrokeOptions->mDashPattern = aDash;
@@ -1859,7 +1774,7 @@ nsCSSBorderRenderer::DrawDashedOrDottedSide(mozilla::css::Side aSide)
 
   StrokeOptions strokeOptions(borderWidth);
   Float dash[2];
-  SetupDashedOptions(&strokeOptions, dash, aSide, borderLength, false);
+  SetupDashedOptions(&strokeOptions, dash, aSide, borderLength);
 
   mDrawTarget->StrokeLine(start, end,
                           ColorPattern(ToDeviceColor(borderColor)),
@@ -2114,241 +2029,6 @@ nsCSSBorderRenderer::DrawDottedSideSlow(mozilla::css::Side aSide)
   if (mergeStart == MERGE_HALF || mergeEnd == MERGE_HALF) {
     mDrawTarget->PopClip();
   }
-}
-
-void
-nsCSSBorderRenderer::DrawDashedOrDottedCorner(mozilla::css::Side aSide,
-                                              mozilla::css::Corner aCorner)
-{
-  // Draw dashed/dotted corner with following approach.
-  //
-  // dashed corner
-  //   If both side has same border-width and border-width <= 2.0, draw dashed
-  //   line along the corner, with appropriate dash length and gap to make the
-  //   corner symmetric as far as possible.  Dash length equals to the gap, and
-  //   the ratio of the dash length to border-width is the maximum value in in
-  //   [1, 3] range.
-  //   Otherwise, draw dashed segments along the corner, keeping same dash
-  //   length ratio to border-width at that point.
-  //   (see DashedCornerFinder.h for more detail)
-  //   Line ends with half segments, to joint with both side easily.
-  //
-  // dotted corner
-  //   If both side has same border-width and border-width <= 2.0, draw 1:1
-  //   dashed line along the corner.
-  //   Otherwise Draw circles along the corner, with appropriate gap that makes
-  //   the corner symmetric as far as possible.  The size of the circle may
-  //   change along the corner, that is tangent to the outer curver and the
-  //   inner curve.  The ratio of the gap to circle diameter is the maximum
-  //   value in [0.5, 1] range.
-  //   (see DottedCornerFinder.h for more detail)
-  //   Corner ends with filled dots but those dots are drawn by
-  //   DrawDashedOrDottedSide.  So this may draw no circles if there's no space
-  //   between 2 dots at both ends.
-
-  NS_ASSERTION(mBorderStyles[aSide] == NS_STYLE_BORDER_STYLE_DASHED ||
-               mBorderStyles[aSide] == NS_STYLE_BORDER_STYLE_DOTTED,
-               "Style should be dashed or dotted.");
-
-  if (IsCornerMergeable(aCorner)) {
-    // DrawDashedOrDottedSide will draw corner.
-     return;
-   }
-
-  mozilla::css::Side sideH(GetHorizontalSide(aCorner));
-  mozilla::css::Side sideV(GetVerticalSide(aCorner));
-  Float borderWidthH = mBorderWidths[sideH];
-  Float borderWidthV = mBorderWidths[sideV];
-  if (borderWidthH == 0.0f && borderWidthV == 0.0f) {
-    return;
-  }
-
-  Float styleH = mBorderStyles[sideH];
-  Float styleV = mBorderStyles[sideV];
-
-  // Corner between dotted and others with radius=0 is drawn by side.
-  if (IsZeroSize(mBorderRadii[aCorner]) &&
-      (styleV == NS_STYLE_BORDER_STYLE_DOTTED ||
-       styleH == NS_STYLE_BORDER_STYLE_DOTTED)) {
-    return;
-  }
-
-  if (borderWidthH != borderWidthV || borderWidthH > 2.0f) {
-    uint8_t style = mBorderStyles[aSide];
-    if (style == NS_STYLE_BORDER_STYLE_DOTTED) {
-      DrawDottedCornerSlow(aSide, aCorner);
-    } else {
-      DrawDashedCornerSlow(aSide, aCorner);
-    }
-    return;
-  }
-
-  nscolor borderColor = mBorderColors[aSide];
-  Point points[4];
-  bool ignored;
-  points[0] = GetStraightBorderPoint(sideH, aCorner, &ignored);
-  points[3] = GetStraightBorderPoint(sideV, aCorner, &ignored);
-  // Round points to draw dot on each pixel.
-  if (borderWidthH < 2.0f) {
-    points[0].x = round(points[0].x);
-  }
-  if (borderWidthV < 2.0f) {
-    points[3].y = round(points[3].y);
-  }
-  points[1] = points[0];
-  points[1].x += kKappaFactor * (points[3].x - points[0].x);
-  points[2] = points[3];
-  points[2].y += kKappaFactor * (points[0].y - points[3].y);
-
-  Float len = GetQuarterEllipticArcLength(fabs(points[0].x - points[3].x),
-                                          fabs(points[0].y - points[3].y));
-
-  Float dash[2];
-  StrokeOptions strokeOptions(borderWidthH);
-  SetupDashedOptions(&strokeOptions, dash, aSide, len, true);
-
-  RefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
-  builder->MoveTo(points[0]);
-  builder->BezierTo(points[1], points[2], points[3]);
-  RefPtr<Path> path = builder->Finish();
-  mDrawTarget->Stroke(path, ColorPattern(ToDeviceColor(borderColor)),
-                      strokeOptions);
-}
-
-void
-nsCSSBorderRenderer::DrawDottedCornerSlow(mozilla::css::Side aSide,
-                                          mozilla::css::Corner aCorner)
-{
-  NS_ASSERTION(mBorderStyles[aSide] == NS_STYLE_BORDER_STYLE_DOTTED,
-               "Style should be dotted.");
-
-  mozilla::css::Side sideH(GetHorizontalSide(aCorner));
-  mozilla::css::Side sideV(GetVerticalSide(aCorner));
-  Float R0 = mBorderWidths[sideH] / 2.0f;
-  Float Rn = mBorderWidths[sideV] / 2.0f;
-  if (R0 == 0.0f && Rn == 0.0f) {
-    return;
-  }
-
-  nscolor borderColor = mBorderColors[aSide];
-  Bezier outerBezier;
-  Bezier innerBezier;
-  GetOuterAndInnerBezier(&outerBezier, &innerBezier, aCorner);
-
-  bool ignored;
-  Point C0 = GetStraightBorderPoint(sideH, aCorner, &ignored);
-  Point Cn = GetStraightBorderPoint(sideV, aCorner, &ignored);
-  DottedCornerFinder finder(outerBezier, innerBezier, aCorner,
-                            mBorderRadii[aCorner].width,
-                            mBorderRadii[aCorner].height,
-                            C0, R0, Cn, Rn, mBorderCornerDimensions[aCorner]);
-
-  RefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
-  while (finder.HasMore()) {
-    DottedCornerFinder::Result result = finder.Next();
-
-    builder->MoveTo(Point(result.C.x + result.r, result.C.y));
-    builder->Arc(result.C, result.r, 0, Float(2.0 * M_PI));
-  }
-  RefPtr<Path> path = builder->Finish();
-  mDrawTarget->Fill(path, ColorPattern(ToDeviceColor(borderColor)));
-}
-
-void
-nsCSSBorderRenderer::DrawDashedCornerSlow(mozilla::css::Side aSide,
-                                          mozilla::css::Corner aCorner)
-{
-  NS_ASSERTION(mBorderStyles[aSide] == NS_STYLE_BORDER_STYLE_DASHED,
-               "Style should be dashed.");
-
-  mozilla::css::Side sideH(GetHorizontalSide(aCorner));
-  mozilla::css::Side sideV(GetVerticalSide(aCorner));
-  Float borderWidthH = mBorderWidths[sideH];
-  Float borderWidthV = mBorderWidths[sideV];
-  if (borderWidthH == 0.0f && borderWidthV == 0.0f) {
-    return;
-  }
-
-  nscolor borderColor = mBorderColors[aSide];
-  Bezier outerBezier;
-  Bezier innerBezier;
-  GetOuterAndInnerBezier(&outerBezier, &innerBezier, aCorner);
-
-  DashedCornerFinder finder(outerBezier, innerBezier,
-                            borderWidthH, borderWidthV,
-                            mBorderCornerDimensions[aCorner]);
-
-  RefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
-  while (finder.HasMore()) {
-    DashedCornerFinder::Result result = finder.Next();
-
-    builder->MoveTo(result.outerSectionBezier.mPoints[0]);
-    builder->BezierTo(result.outerSectionBezier.mPoints[1],
-                      result.outerSectionBezier.mPoints[2],
-                      result.outerSectionBezier.mPoints[3]);
-    builder->LineTo(result.innerSectionBezier.mPoints[3]);
-    builder->BezierTo(result.innerSectionBezier.mPoints[2],
-                      result.innerSectionBezier.mPoints[1],
-                      result.innerSectionBezier.mPoints[0]);
-    builder->LineTo(result.outerSectionBezier.mPoints[0]);
-  }
-
-  if (outerBezier.mPoints[0].x != innerBezier.mPoints[0].x) {
-    // Fill gap before the first section.
-    //
-    //     outnerPoint[0]
-    //         |
-    //         v
-    //        _+-----------+--
-    //      /   \##########|
-    //    /      \#########|
-    //   +        \########|
-    //   |\         \######|
-    //   |  \        \#####|
-    //   |    \       \####|
-    //   |      \       \##|
-    //   |        \      \#|
-    //   |          \     \|
-    //   |            \  _-+--
-    //   +--------------+  ^
-    //   |              |  |
-    //   |              |  innerPoint[0]
-    //   |              |
-    builder->MoveTo(outerBezier.mPoints[0]);
-    builder->LineTo(innerBezier.mPoints[0]);
-    builder->LineTo(Point(innerBezier.mPoints[0].x, outerBezier.mPoints[0].y));
-    builder->LineTo(outerBezier.mPoints[0]);
-  }
-
-  if (outerBezier.mPoints[3].y != innerBezier.mPoints[3].y) {
-    // Fill gap after the last section.
-    //
-    // outnerPoint[3]
-    //   |
-    //   |
-    //   |    _+-----------+--
-    //   |  /   \          |
-    //   v/      \         |
-    //   +        \        |
-    //   |\         \      |
-    //   |##\        \     |
-    //   |####\       \    |
-    //   |######\       \  |
-    //   |########\      \ |
-    //   |##########\     \|
-    //   |############\  _-+--
-    //   +--------------+<-- innerPoint[3]
-    //   |              |
-    //   |              |
-    //   |              |
-    builder->MoveTo(outerBezier.mPoints[3]);
-    builder->LineTo(innerBezier.mPoints[3]);
-    builder->LineTo(Point(outerBezier.mPoints[3].x, innerBezier.mPoints[3].y));
-    builder->LineTo(outerBezier.mPoints[3]);
-  }
-
-  RefPtr<Path> path = builder->Finish();
-  mDrawTarget->Fill(path, ColorPattern(ToDeviceColor(borderColor)));
 }
 
 bool

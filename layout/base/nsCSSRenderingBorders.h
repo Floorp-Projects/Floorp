@@ -10,7 +10,6 @@
 #include "gfxRect.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/gfx/2D.h"
-#include "mozilla/gfx/BezierUtils.h"
 #include "mozilla/gfx/PathHelpers.h"
 #include "mozilla/RefPtr.h"
 #include "nsColor.h"
@@ -62,7 +61,6 @@ typedef enum {
 
 class nsCSSBorderRenderer final
 {
-  typedef mozilla::gfx::Bezier Bezier;
   typedef mozilla::gfx::ColorPattern ColorPattern;
   typedef mozilla::gfx::DrawTarget DrawTarget;
   typedef mozilla::gfx::Float Float;
@@ -168,12 +166,6 @@ private:
                                mozilla::css::Corner aCorner,
                                bool* aIsUnfilled);
 
-  // Return bezier control points for the outer and the inner curve for given
-  // corner
-  void GetOuterAndInnerBezier(Bezier* aOuterBezier,
-                              Bezier* aInnerBezier,
-                              mozilla::css::Corner aCorner);
-
   // Given a set of sides to fill and a color, do so in the fastest way.
   //
   // Stroke tends to be faster for smaller borders because it doesn't go
@@ -207,25 +199,13 @@ private:
   // Setup the stroke options for the given dashed/dotted side
   void SetupDashedOptions(StrokeOptions* aStrokeOptions,
                           Float aDash[2], mozilla::css::Side aSide,
-                          Float aBorderLength, bool isCorner);
+                          Float aBorderLength);
 
   // Draw the given dashed/dotte side
   void DrawDashedOrDottedSide(mozilla::css::Side aSide);
 
   // Draw the given dotted side, each dot separately
   void DrawDottedSideSlow(mozilla::css::Side aSide);
-
-  // Draw the given dashed/dotted corner
-  void DrawDashedOrDottedCorner(mozilla::css::Side aSide,
-                                mozilla::css::Corner aCorner);
-
-  // Draw the given dotted corner, each segment separately
-  void DrawDottedCornerSlow(mozilla::css::Side aSide,
-                            mozilla::css::Corner aCorner);
-
-  // Draw the given dashed corner, each dot separately
-  void DrawDashedCornerSlow(mozilla::css::Side aSide,
-                            mozilla::css::Corner aCorner);
 
   // Analyze if all border sides have the same width.
   bool AllBordersSameWidth();
