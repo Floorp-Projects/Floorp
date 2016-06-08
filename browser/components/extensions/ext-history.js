@@ -5,29 +5,30 @@
 const {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
-
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "EventEmitter",
                                   "resource://devtools/shared/event-emitter.js");
+XPCOMUtils.defineLazyModuleGetter(this, "NetUtil",
+                                  "resource://gre/modules/NetUtil.jsm");
 
-XPCOMUtils.defineLazyGetter(this, "History", () => {
-  Cu.import("resource://gre/modules/PlacesUtils.jsm");
-  return PlacesUtils.history;
-});
-
-Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 const {
   normalizeTime,
   SingletonEventManager,
 } = ExtensionUtils;
 
-let historySvc = Ci.nsINavHistoryService;
+const History = PlacesUtils.history;
 const TRANSITION_TO_TRANSITION_TYPES_MAP = new Map([
-  ["link", historySvc.TRANSITION_LINK],
-  ["typed", historySvc.TRANSITION_TYPED],
-  ["auto_bookmark", historySvc.TRANSITION_BOOKMARK],
-  ["auto_subframe", historySvc.TRANSITION_EMBED],
-  ["manual_subframe", historySvc.TRANSITION_FRAMED_LINK],
+  ["link", History.TRANSITION_LINK],
+  ["typed", History.TRANSITION_TYPED],
+  ["auto_bookmark", History.TRANSITION_BOOKMARK],
+  ["auto_subframe", History.TRANSITION_EMBED],
+  ["manual_subframe", History.TRANSITION_FRAMED_LINK],
 ]);
+
+let TRANSITION_TYPE_TO_TRANSITIONS_MAP = new Map();
+for (let [transition, transitionType] of TRANSITION_TO_TRANSITION_TYPES_MAP) {
+  TRANSITION_TYPE_TO_TRANSITIONS_MAP.set(transitionType, transition);
+}
 
 function getTransitionType(transition) {
   // cannot set a default value for the transition argument as the framework sets it to null
@@ -39,12 +40,16 @@ function getTransitionType(transition) {
   return transitionType;
 }
 
+function getTransition(transitionType) {
+  return TRANSITION_TYPE_TO_TRANSITIONS_MAP.get(transitionType) || "link";
+}
+
 /*
- * Converts a nsINavHistoryResultNode into a plain object
+ * Converts a nsINavHistoryResultNode into a HistoryItem
  *
  * https://developer.mozilla.org/en-US/docs/XPCOM_Interface_Reference/nsINavHistoryResultNode
  */
-function convertNavHistoryResultNode(node) {
+function convertNodeToHistoryItem(node) {
   return {
     id: node.pageGuid,
     url: node.uri,
@@ -55,16 +60,31 @@ function convertNavHistoryResultNode(node) {
 }
 
 /*
+ * Converts a nsINavHistoryResultNode into a VisitItem
+ *
+ * https://developer.mozilla.org/en-US/docs/XPCOM_Interface_Reference/nsINavHistoryResultNode
+ */
+function convertNodeToVisitItem(node) {
+  return {
+    id: node.pageGuid,
+    visitId: node.visitId,
+    visitTime: PlacesUtils.toDate(node.time).getTime(),
+    referringVisitId: node.fromVisitId,
+    transition: getTransition(node.visitType),
+  };
+}
+
+/*
  * Converts a nsINavHistoryContainerResultNode into an array of objects
  *
  * https://developer.mozilla.org/en-US/docs/XPCOM_Interface_Reference/nsINavHistoryContainerResultNode
  */
-function convertNavHistoryContainerResultNode(container) {
+function convertNavHistoryContainerResultNode(container, converter) {
   let results = [];
   container.containerOpen = true;
   for (let i = 0; i < container.childCount; i++) {
     let node = container.getChild(i);
-    results.push(convertNavHistoryResultNode(node));
+    results.push(converter(node));
   }
   container.containerOpen = false;
   return results;
@@ -163,7 +183,23 @@ extensions.registerSchemaAPI("history", "history", (extension, context) => {
         historyQuery.beginTime = beginTime;
         historyQuery.endTime = endTime;
         let queryResult = History.executeQuery(historyQuery, options).root;
-        let results = convertNavHistoryContainerResultNode(queryResult);
+        let results = convertNavHistoryContainerResultNode(queryResult, convertNodeToHistoryItem);
+        return Promise.resolve(results);
+      },
+      getVisits: function(details) {
+        let url = details.url;
+        if (!url) {
+          return Promise.reject({message: "A URL must be provided for getVisits"});
+        }
+
+        let options = History.getNewQueryOptions();
+        options.sortingMode = options.SORT_BY_DATE_DESCENDING;
+        options.resultType = options.RESULTS_AS_VISIT;
+
+        let historyQuery = History.getNewQuery();
+        historyQuery.uri = NetUtil.newURI(url);
+        let queryResult = History.executeQuery(historyQuery, options).root;
+        let results = convertNavHistoryContainerResultNode(queryResult, convertNodeToVisitItem);
         return Promise.resolve(results);
       },
 
