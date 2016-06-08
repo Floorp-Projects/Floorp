@@ -164,29 +164,6 @@ GetWidget(WidgetNodeType aWidgetType)
 }
 
 GtkStyleContext*
-CreateStyleForWidget(GtkWidget* aWidget, GtkStyleContext* aParentStyle)
-{
-  GtkWidgetPath* path =
-    gtk_widget_path_copy(gtk_style_context_get_path(aParentStyle));
-
-  // Work around https://bugzilla.gnome.org/show_bug.cgi?id=767312
-  // which exists in GTK+ 3.20.
-  gtk_widget_get_style_context(aWidget);
-
-  gtk_widget_path_append_for_widget(path, aWidget);
-  // Release any floating reference on aWidget.
-  g_object_ref_sink(aWidget);
-  g_object_unref(aWidget);
-
-  GtkStyleContext *context = gtk_style_context_new();
-  gtk_style_context_set_path(context, path);
-  gtk_style_context_set_parent(context, aParentStyle);
-  gtk_widget_path_unref(path);
-
-  return context;
-}
-
-GtkStyleContext*
 CreateCSSNode(const char* aName, GtkStyleContext* aParentStyle, GType aType)
 {
   static auto sGtkWidgetPathIterSetObjectName =

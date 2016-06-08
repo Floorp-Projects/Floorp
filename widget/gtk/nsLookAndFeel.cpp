@@ -1142,16 +1142,7 @@ nsLookAndFeel::Init()
     style = ClaimStyleContext(MOZ_GTK_TOOLTIP);
     gtk_style_context_get_background_color(style, GTK_STATE_FLAG_NORMAL, &color);
     sInfoBackground = GDK_RGBA_TO_NS_RGBA(color);
-    {
-        GtkStyleContext* boxStyle =
-            CreateStyleForWidget(gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0),
-                                 style);
-        GtkStyleContext* labelStyle =
-            CreateStyleForWidget(gtk_label_new(nullptr), boxStyle);
-        gtk_style_context_get_color(labelStyle, GTK_STATE_FLAG_NORMAL, &color);
-        g_object_unref(labelStyle);
-        g_object_unref(boxStyle);
-    }
+    gtk_style_context_get_color(style, GTK_STATE_FLAG_NORMAL, &color);
     sInfoText = GDK_RGBA_TO_NS_RGBA(color);
     ReleaseStyleContext(style);
 
