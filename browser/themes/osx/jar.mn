@@ -16,10 +16,6 @@ browser.jar:
 * skin/classic/browser/browser-lightweightTheme.css
   skin/classic/browser/click-to-play-warning-stripes.png
   skin/classic/browser/content-contextmenu.svg
-  skin/classic/browser/Geolocation-16.png
-  skin/classic/browser/Geolocation-16@2x.png
-  skin/classic/browser/Geolocation-64.png
-  skin/classic/browser/Geolocation-64@2x.png
   skin/classic/browser/Info.png
   skin/classic/browser/keyhole-circle.png
   skin/classic/browser/keyhole-circle@2x.png
@@ -45,10 +41,6 @@ browser.jar:
   skin/classic/browser/page-livemarks.png
   skin/classic/browser/page-livemarks@2x.png
   skin/classic/browser/pageInfo.css
-  skin/classic/browser/pointerLock-16.png
-  skin/classic/browser/pointerLock-16@2x.png
-  skin/classic/browser/pointerLock-64.png
-  skin/classic/browser/pointerLock-64@2x.png
   skin/classic/browser/privatebrowsing-mask.png
   skin/classic/browser/privatebrowsing-mask@2x.png
   skin/classic/browser/privatebrowsing-mask-short.png
