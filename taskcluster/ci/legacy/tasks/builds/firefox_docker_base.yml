@@ -1,11 +1,11 @@
 $inherits:
-  from: 'tasks/build.yml'
+  from: 'tasks/docker_build.yml'
   variables:
     build_product: 'firefox'
 docker-image: desktop-build
 task:
   scopes:
-    - "secrets:get:project/releng/gecko/build/level-{{level}}/*"
+    - 'secrets:get:project/releng/gecko/build/level-{{level}}/*'
   extra:
     locations:
       mozharness: 'public/build/mozharness.zip'
