@@ -1522,6 +1522,16 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
      [aNativeEvent modifierFlags], GetCharacters([aNativeEvent characters]),
      GetCharacters([aNativeEvent charactersIgnoringModifiers])));
 
+  // Except when Command key is pressed, we should hide mouse cursor until
+  // next mousemove.  Handling here means that:
+  // - Don't hide mouse cursor at pressing modifier key
+  // - Hide mouse cursor even if the key event will be handled by IME (i.e.,
+  //   even without dispatching eKeyPress events)
+  // - Hide mouse cursor even when a plugin has focus
+  if (!([aNativeEvent modifierFlags] & NSCommandKeyMask)) {
+    [NSCursor setHiddenUntilMouseMoves:YES];
+  }
+
   RefPtr<nsChildView> kungFuDeathGrip(mWidget);
 
   KeyEventState* currentKeyEvent = PushKeyEvent(aNativeEvent);
@@ -3963,14 +3973,6 @@ TextInputHandlerBase::OnDestroyWidget(nsChildView* aDestroyingWidget)
 bool
 TextInputHandlerBase::DispatchEvent(WidgetGUIEvent& aEvent)
 {
-  if (aEvent.mMessage == eKeyPress) {
-    WidgetInputEvent& inputEvent = *aEvent.AsInputEvent();
-    if (!inputEvent.IsMeta()) {
-      MOZ_LOG(gLog, LogLevel::Info,
-        ("%p TextInputHandlerBase::DispatchEvent, hiding mouse cursor", this));
-      [NSCursor setHiddenUntilMouseMoves:YES];
-    }
-  }
   return mWidget->DispatchWindowEvent(aEvent);
 }
 
