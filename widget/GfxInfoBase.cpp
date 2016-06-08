@@ -245,44 +245,42 @@ static OperatingSystem
 BlacklistOSToOperatingSystem(const nsAString& os)
 {
   if (os.EqualsLiteral("WINNT 5.1"))
-    return DRIVER_OS_WINDOWS_XP;
+    return OperatingSystem::WindowsXP;
   else if (os.EqualsLiteral("WINNT 5.2"))
-    return DRIVER_OS_WINDOWS_SERVER_2003;
+    return OperatingSystem::WindowsServer2003;
   else if (os.EqualsLiteral("WINNT 6.0"))
-    return DRIVER_OS_WINDOWS_VISTA;
+    return OperatingSystem::WindowsVista;
   else if (os.EqualsLiteral("WINNT 6.1"))
-    return DRIVER_OS_WINDOWS_7;
+    return OperatingSystem::Windows7;
   else if (os.EqualsLiteral("WINNT 6.2"))
-    return DRIVER_OS_WINDOWS_8;
+    return OperatingSystem::Windows8;
   else if (os.EqualsLiteral("WINNT 6.3"))
-    return DRIVER_OS_WINDOWS_8_1;
+    return OperatingSystem::Windows8_1;
   else if (os.EqualsLiteral("WINNT 10.0"))
-    return DRIVER_OS_WINDOWS_10;
+    return OperatingSystem::Windows10;
   else if (os.EqualsLiteral("Linux"))
-    return DRIVER_OS_LINUX;
+    return OperatingSystem::Linux;
   else if (os.EqualsLiteral("Darwin 9"))
-    return DRIVER_OS_OS_X_10_5;
+    return OperatingSystem::OSX10_5;
   else if (os.EqualsLiteral("Darwin 10"))
-    return DRIVER_OS_OS_X_10_6;
+    return OperatingSystem::OSX10_6;
   else if (os.EqualsLiteral("Darwin 11"))
-    return DRIVER_OS_OS_X_10_7;
+    return OperatingSystem::OSX10_7;
   else if (os.EqualsLiteral("Darwin 12"))
-    return DRIVER_OS_OS_X_10_8;
+    return OperatingSystem::OSX10_8;
   else if (os.EqualsLiteral("Darwin 13"))
-    return DRIVER_OS_OS_X_10_9;
+    return OperatingSystem::OSX10_9;
   else if (os.EqualsLiteral("Darwin 14"))
-    return DRIVER_OS_OS_X_10_10;
+    return OperatingSystem::OSX10_10;
   else if (os.EqualsLiteral("Darwin 15"))
-    return DRIVER_OS_OS_X_10_11;
+    return OperatingSystem::OSX10_11;
   else if (os.EqualsLiteral("Android"))
-    return DRIVER_OS_ANDROID;
-#if defined (XP_WIN)
+    return OperatingSystem::Android;
   // For historical reasons, "All" in blocklist means "All Windows"
   else if (os.EqualsLiteral("All"))
-    return DRIVER_OS_ALL;
-#endif
+    return OperatingSystem::Windows;
 
-  return DRIVER_OS_UNKNOWN;
+  return OperatingSystem::Unknown;
 }
 
 static GfxDeviceFamily*
@@ -614,6 +612,44 @@ GfxInfoBase::GetFeatureStatus(int32_t aFeature, nsACString& aFailureId, int32_t*
   return rv;
 }
 
+// Matching OS go somewhat beyond the simple equality check because of the
+// "All Windows" and "All OS X" variations.
+//
+// aBlockedOS is describing the system(s) we are trying to block.
+// aSystemOS is describing the system we are running on.
+//
+// aSystemOS should not be "Windows" or "OSX" - it should be set to
+// a particular version instead.
+// However, it is valid for aBlockedOS to be one of those generic values,
+// as we could be blocking all of the versions.
+inline bool
+MatchingOperatingSystems(OperatingSystem aBlockedOS, OperatingSystem aSystemOS)
+{
+  MOZ_ASSERT(aSystemOS != OperatingSystem::Windows &&
+             aSystemOS != OperatingSystem::OSX);
+
+  // If the block entry OS is unknown, it doesn't match
+  if (aBlockedOS == OperatingSystem::Unknown) {
+    return false;
+  }
+
+#if defined (XP_WIN)
+  if (aBlockedOS == OperatingSystem::Windows) {
+    // We do want even "unknown" aSystemOS to fall under "all windows"
+    return true;
+  }
+#endif
+
+#if defined (XP_MACOSX)
+  if (aBlockedOS == OperatingSystem::OSX) {
+    // We do want even "unknown" aSystemOS to fall under "all OS X"
+    return true;
+  }
+#endif
+
+  return aSystemOS == aBlockedOS;
+}
+
 int32_t
 GfxInfoBase::FindBlocklistedDeviceInList(const nsTArray<GfxDriverInfo>& info,
                                          nsAString& aSuggestedVersion,
@@ -626,14 +662,8 @@ GfxInfoBase::FindBlocklistedDeviceInList(const nsTArray<GfxDriverInfo>& info,
   uint32_t i = 0;
   for (; i < info.Length(); i++) {
     // Do the operating system check first, no point in getting the driver
-    // info if we won't need to use it.  If the OS of the system we are running
-    // on is unknown, we still let DRIVER_OS_ALL catch and disable it;
-    // if the OS of the downloadable entry is unknown, we skip the entry
-    // as invalid.
-    if (info[i].mOperatingSystem == DRIVER_OS_UNKNOWN ||
-        (info[i].mOperatingSystem != DRIVER_OS_ALL &&
-         info[i].mOperatingSystem != os))
-    {
+    // info if we won't need to use it.
+    if (!MatchingOperatingSystems(info[i].mOperatingSystem, os)) {
       continue;
     }
 
@@ -822,9 +852,7 @@ GfxInfoBase::GetFeatureStatusImpl(int32_t aFeature,
 
   // If an operating system was provided by the derived GetFeatureStatusImpl,
   // grab it here. Otherwise, the OS is unknown.
-  OperatingSystem os = DRIVER_OS_UNKNOWN;
-  if (aOS)
-    os = *aOS;
+  OperatingSystem os = (aOS ? *aOS : OperatingSystem::Unknown);
 
   nsAutoString adapterVendorID;
   nsAutoString adapterDeviceID;

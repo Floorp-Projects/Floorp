@@ -6483,6 +6483,36 @@ class MSqrt
     ALLOW_CLONE(MSqrt)
 };
 
+class MCopySign
+  : public MBinaryInstruction,
+    public NoTypePolicy::Data
+{
+    MCopySign(MDefinition* lhs, MDefinition* rhs, MIRType type)
+      : MBinaryInstruction(lhs, rhs)
+    {
+        setResultType(type);
+        setMovable();
+    }
+
+  public:
+    INSTRUCTION_HEADER(CopySign)
+
+    static MCopySign* NewAsmJS(TempAllocator& alloc, MDefinition* lhs, MDefinition* rhs,
+                               MIRType type)
+    {
+        return new(alloc) MCopySign(lhs, rhs, type);
+    }
+
+    bool congruentTo(const MDefinition* ins) const override {
+        return congruentIfOperandsEqual(ins);
+    }
+    AliasSet getAliasSet() const override {
+        return AliasSet::None();
+    }
+
+    ALLOW_CLONE(MCopySign)
+};
+
 // Inline implementation of atan2 (arctangent of y/x).
 class MAtan2
   : public MBinaryInstruction,

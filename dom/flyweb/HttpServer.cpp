@@ -175,7 +175,6 @@ HttpServer::SendResponse(InternalRequest* aRequest, InternalResponse* aResponse)
 already_AddRefed<nsITransportProvider>
 HttpServer::AcceptWebSocket(InternalRequest* aConnectRequest,
                             const Optional<nsAString>& aProtocol,
-                            nsACString& aNegotiatedExtensions,
                             ErrorResult& aRv)
 {
   for (Connection* conn : mConnections) {
@@ -183,7 +182,7 @@ HttpServer::AcceptWebSocket(InternalRequest* aConnectRequest,
       continue;
     }
     nsCOMPtr<nsITransportProvider> provider =
-      conn->HandleAcceptWebSocket(aProtocol, aNegotiatedExtensions, aRv);
+      conn->HandleAcceptWebSocket(aProtocol, aRv);
     if (aRv.Failed()) {
       conn->Close();
     }
@@ -221,8 +220,8 @@ HttpServer::Close()
   }
 
   if (mListener) {
-    mListener->OnServerClose();
-    mListener = nullptr;
+    RefPtr<HttpServerListener> listener = mListener.forget();
+    listener->OnServerClose();
   }
 
   for (Connection* conn : mConnections) {
@@ -259,6 +258,13 @@ HttpServer::TransportProvider::SetListener(nsIHttpUpgradeListener* aListener)
   MaybeNotify();
 
   return NS_OK;
+}
+
+NS_IMETHODIMP_(PTransportProviderChild*)
+HttpServer::TransportProvider::GetIPCChild()
+{
+  MOZ_CRASH("Don't call this in parent process");
+  return nullptr;
 }
 
 void
@@ -493,7 +499,7 @@ HttpServer::Connection::ConsumeInput(const char*& aBuffer,
   return NS_OK;
 }
 
-static bool
+bool
 ContainsToken(const nsCString& aList, const nsCString& aToken)
 {
   nsCCharSeparatedTokenizer tokens(aList, ',');
@@ -790,7 +796,6 @@ HttpServer::Connection::TryHandleResponse(InternalRequest* aRequest,
 
 already_AddRefed<nsITransportProvider>
 HttpServer::Connection::HandleAcceptWebSocket(const Optional<nsAString>& aProtocol,
-                                              nsACString& aNegotiatedExtensions,
                                               ErrorResult& aRv)
 {
   MOZ_ASSERT(mPendingWebSocketRequest);
@@ -830,14 +835,14 @@ HttpServer::Connection::HandleAcceptWebSocket(const Optional<nsAString>& aProtoc
   }
   headers->Set(NS_LITERAL_CSTRING("Sec-WebSocket-Accept"), hash, aRv);
 
-  nsAutoCString extensions;
+  nsAutoCString extensions, negotiatedExtensions;
   mPendingWebSocketRequest->Headers()->
     Get(NS_LITERAL_CSTRING("Sec-WebSocket-Extensions"), extensions, aRv);
   mozilla::net::ProcessServerWebSocketExtensions(extensions,
-                                                 aNegotiatedExtensions);
-  if (!aNegotiatedExtensions.IsEmpty()) {
+                                                 negotiatedExtensions);
+  if (!negotiatedExtensions.IsEmpty()) {
     headers->Set(NS_LITERAL_CSTRING("Sec-WebSocket-Extensions"),
-                 aNegotiatedExtensions, aRv);
+                 negotiatedExtensions, aRv);
   }
 
   RefPtr<TransportProvider> result = new TransportProvider();
@@ -912,7 +917,7 @@ HttpServer::Connection::QueueResponse(InternalResponse* aResponse)
               aResponse->GetStatusText() +
               NS_LITERAL_CSTRING("\r\n"));
 
-  nsTArray<InternalHeaders::Entry> entries;
+  AutoTArray<InternalHeaders::Entry, 16> entries;
   headers->GetEntries(entries);
 
   for (auto header : entries) {

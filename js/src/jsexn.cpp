@@ -244,18 +244,18 @@ js::CopyErrorReport(JSContext* cx, JSErrorReport* report)
 struct SuppressErrorsGuard
 {
     JSContext* cx;
-    JSErrorReporter prevReporter;
+    JS::WarningReporter prevReporter;
     JS::AutoSaveExceptionState prevState;
 
     explicit SuppressErrorsGuard(JSContext* cx)
       : cx(cx),
-        prevReporter(JS_SetErrorReporter(cx->runtime(), nullptr)),
+        prevReporter(JS::SetWarningReporter(cx->runtime(), nullptr)),
         prevState(cx)
     {}
 
     ~SuppressErrorsGuard()
     {
-        JS_SetErrorReporter(cx->runtime(), prevReporter);
+        JS::SetWarningReporter(cx->runtime(), prevReporter);
     }
 };
 
@@ -525,21 +525,19 @@ js::GetErrorTypeName(JSRuntime* rt, int16_t exnType)
     return ClassName(key, rt);
 }
 
-bool
+void
 js::ErrorToException(JSContext* cx, const char* message, JSErrorReport* reportp,
                      JSErrorCallback callback, void* userRef)
 {
-    // Tell our caller to report immediately if this report is just a warning.
     MOZ_ASSERT(reportp);
-    if (JSREPORT_IS_WARNING(reportp->flags))
-        return false;
+    MOZ_ASSERT(!JSREPORT_IS_WARNING(reportp->flags));
 
-    // Similarly, we cannot throw a proper object inside the self-hosting
-    // compartment, as we cannot construct the Error constructor without
-    // self-hosted code. Just print the error to stderr to help debugging.
+    // We cannot throw a proper object inside the self-hosting compartment, as
+    // we cannot construct the Error constructor without self-hosted code. Just
+    // print the error to stderr to help debugging.
     if (cx->runtime()->isSelfHostingCompartment(cx->compartment())) {
         PrintError(cx, stderr, message, reportp, true);
-        return false;
+        return;
     }
 
     // Find the exception index associated with this error.
@@ -558,42 +556,40 @@ js::ErrorToException(JSContext* cx, const char* message, JSErrorReport* reportp,
 
     // Prevent infinite recursion.
     if (cx->generatingError)
-        return false;
+        return;
     AutoScopedAssign<bool> asa(&cx->generatingError, true);
 
     // Create an exception object.
     RootedString messageStr(cx, reportp->ucmessage ? JS_NewUCStringCopyZ(cx, reportp->ucmessage)
                                                    : JS_NewStringCopyZ(cx, message));
     if (!messageStr)
-        return cx->isExceptionPending();
+        return;
 
     RootedString fileName(cx, JS_NewStringCopyZ(cx, reportp->filename));
     if (!fileName)
-        return cx->isExceptionPending();
+        return;
 
     uint32_t lineNumber = reportp->lineno;
     uint32_t columnNumber = reportp->column;
 
     RootedObject stack(cx);
     if (!CaptureStack(cx, &stack))
-        return cx->isExceptionPending();
+        return;
 
     js::ScopedJSFreePtr<JSErrorReport> report(CopyErrorReport(cx, reportp));
     if (!report)
-        return cx->isExceptionPending();
+        return;
 
     RootedObject errObject(cx, ErrorObject::create(cx, exnType, stack, fileName,
                                                    lineNumber, columnNumber, &report, messageStr));
     if (!errObject)
-        return cx->isExceptionPending();
+        return;
 
     // Throw it.
-    RootedValue errValue(cx, ObjectValue(*errObject));
-    JS_SetPendingException(cx, errValue);
+    cx->setPendingException(ObjectValue(*errObject));
 
     // Flag the error report passed in to indicate an exception was raised.
     reportp->flags |= JSREPORT_EXCEPTION;
-    return true;
 }
 
 static bool
@@ -659,32 +655,6 @@ ErrorReportToString(JSContext* cx, JSErrorReport* reportp)
         return message;
 
     return ConcatStrings<CanGC>(cx, str, message);
-}
-
-bool
-js::ReportUncaughtException(JSContext* cx)
-{
-    if (!cx->isExceptionPending())
-        return true;
-
-    RootedValue exn(cx);
-    if (!cx->getPendingException(&exn)) {
-        cx->clearPendingException();
-        return false;
-    }
-
-    cx->clearPendingException();
-
-    ErrorReport err(cx);
-    if (!err.init(cx, exn, js::ErrorReport::WithSideEffects)) {
-        cx->clearPendingException();
-        return false;
-    }
-
-    cx->setPendingException(exn);
-    CallErrorReporter(cx, err.message(), err.report());
-    cx->clearPendingException();
-    return true;
 }
 
 ErrorReport::ErrorReport(JSContext* cx)

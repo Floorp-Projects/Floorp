@@ -1038,7 +1038,6 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
         // and just crash there right away. Should this change in the future then we
         // should also handle the error here.
         mSandboxBroker.SetSecurityLevelForContentProcess(mSandboxLevel);
-        cmdLine.AppendLooseValue(UTF8ToWide("-sandbox"));
         shouldSandboxCurrentProcess = true;
         AddContentSandboxAllowedFiles(mSandboxLevel, mAllowedFilesRead);
       }
@@ -1051,7 +1050,6 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
         if (!ok) {
           return false;
         }
-        cmdLine.AppendLooseValue(UTF8ToWide("-sandbox"));
         shouldSandboxCurrentProcess = true;
       }
       break;
@@ -1071,7 +1069,6 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
         if (!ok) {
           return false;
         }
-        cmdLine.AppendLooseValue(UTF8ToWide("-sandbox"));
         shouldSandboxCurrentProcess = true;
       }
       break;

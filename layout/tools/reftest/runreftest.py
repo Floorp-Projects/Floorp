@@ -567,8 +567,8 @@ class RefTest(object):
         def record_last_test(message):
             """Records the last test seen by this harness for the benefit of crash logging."""
             if message['action'] == 'test_start':
-                if isinstance(message['test'], tuple):
-                    self.lastTestSeen = message['test'][0]
+                if " " in message['test']:
+                    self.lastTestSeen = message['test'].split(" ")[0]
                 else:
                     self.lastTestSeen = message['test']
 

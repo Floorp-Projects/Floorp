@@ -7,7 +7,6 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1167519
   <meta charset=utf-8>
   <script type="application/javascript"
     src="/tests/SimpleTest/paint_listener.js"></script>
-  <script type="application/javascript" src="animation_utils.js"></script>
   <style>
     #target {
       height: 100px;
@@ -23,7 +22,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1167519
 'use strict';
 
 var ok = opener.ok.bind(opener);
-var info = opener.info.bind(opener);
+var isnot = opener.isnot.bind(opener);
 
 function finish() {
   var o = opener;
@@ -36,7 +35,7 @@ var omtaEnabled = SpecialPowers.DOMWindowUtils.layerManagerRemote &&
                   opener.SpecialPowers.getBoolPref(OMTAPrefKey);
 window.addEventListener("load", function() {
   if (!omtaEnabled) {
-    info("Skipping the test since OMTA is disabled");
+    ok(true, "Skipping the test since OMTA is disabled");
     finish();
     return;
   }
@@ -48,12 +47,18 @@ window.addEventListener("load", function() {
 
   // Wait for a paint to ensure that the first transition has started.
   waitForAllPaints(function() {
-    var previousMatrix;
+    var previousPropertyValue;
+    var previousKeyframeValue;
+    var anim;
     requestAnimationFrame(function() {
       // Start second transition
       div.style.transform = "translateX(0px)";
-      previousMatrix =
-        convertTo3dMatrix(getComputedStyle(div).transform);
+      getComputedStyle(div).transform;
+
+      anim = div.getAnimations()[0];
+      var properties = SpecialPowers.wrap(anim.effect).getProperties();
+      previousPropertyValue = properties[0].values[0].value;
+      previousKeyframeValue = anim.effect.getKeyframes()[0].transform;
     });
 
     requestAnimationFrame(function() {
@@ -69,19 +74,15 @@ window.addEventListener("load", function() {
       // requestAnimationFrame callback is run (and it is during the paint
       // process that we update the transition start point).
       waitForAllPaints(function() {
-        var anim = div.getAnimations()[0];
-        anim.pause();
-
-        // Wait for being animated style updated by animation.pause().
-        anim.ready.then(function() {
-          var currentMatrix =
-            convertTo3dMatrix(getComputedStyle(div).transform);
-          // Now the position on x-axis should be at least 300ms ahead.
-          var difference = 0.9; // 300px / (100s / 300ms)
-          ok(currentMatrix[3][0] - previousMatrix[3][0] >= difference,
-             currentMatrix + " should be advanced ahead of " + previousMatrix);
-          finish();
-        });
+        var properties = SpecialPowers.wrap(anim.effect).getProperties();
+        var currentPropertyValue = properties[0].values[0].value;
+        isnot(currentPropertyValue, previousPropertyValue,
+              "From value of transition is updated since the moment when " +
+              "it was generated");
+        isnot(anim.effect.getKeyframes()[0].transform, previousKeyframeValue,
+              "Keyframe value of transition is updated since the moment when " +
+              "it was generated");
+        finish();
       });
     });
   });

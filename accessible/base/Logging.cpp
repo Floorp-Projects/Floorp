@@ -617,13 +617,19 @@ void
 logging::TreeInfo(const char* aMsg, uint32_t aExtraFlags, ...)
 {
   if (IsEnabledAll(logging::eTree | aExtraFlags)) {
-    MsgBegin("TREE", aMsg);
-
     va_list vl;
     va_start(vl, aExtraFlags);
-    const char* descr = nullptr;
-    while ((descr = va_arg(vl, const char*))) {
-      AccessibleInfo(descr, va_arg(vl, Accessible*));
+    const char* descr = va_arg(vl, const char*);
+    if (descr) {
+      Accessible* acc = va_arg(vl, Accessible*);
+      MsgBegin("TREE", "%s; doc: %p", aMsg, acc ? acc->Document() : nullptr);
+      AccessibleInfo(descr, acc);
+      while ((descr = va_arg(vl, const char*))) {
+        AccessibleInfo(descr, va_arg(vl, Accessible*));
+      }
+    }
+    else {
+      MsgBegin("TREE", aMsg);
     }
     va_end(vl);
 
@@ -641,7 +647,7 @@ logging::TreeInfo(const char* aMsg, uint32_t aExtraFlags,
                   const char* aMsg2, nsINode* aNode)
 {
   if (IsEnabledAll(logging::eTree | logging::eVerbose)) {
-    MsgBegin("TREE", aMsg);
+    MsgBegin("TREE", "%s; doc: %p", aMsg, aAcc ? aAcc->Document() : nullptr);
     AccessibleInfo(aMsg1, aAcc);
     Accessible* acc = aAcc->Document()->GetAccessible(aNode);
     if (acc) {
@@ -659,7 +665,7 @@ void
 logging::TreeInfo(const char* aMsg, uint32_t aExtraFlags, Accessible* aParent)
 {
   if (IsEnabledAll(logging::eTree | aExtraFlags)) {
-    MsgBegin("TREE", aMsg);
+    MsgBegin("TREE", "%s; doc: %p", aMsg, aParent->Document());
     AccessibleInfo("container", aParent);
     for (uint32_t idx = 0; idx < aParent->ChildCount(); idx++) {
       AccessibleInfo("child", aParent->GetChildAt(idx));

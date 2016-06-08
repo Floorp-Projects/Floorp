@@ -22,6 +22,7 @@
 #include "mozilla/net/DNSRequestParent.h"
 #include "mozilla/net/RemoteOpenFileParent.h"
 #include "mozilla/net/ChannelDiverterParent.h"
+#include "mozilla/net/IPCTransportProvider.h"
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabContext.h"
 #include "mozilla/dom/TabParent.h"
@@ -783,6 +784,21 @@ bool
 NeckoParent::DeallocPChannelDiverterParent(PChannelDiverterParent* parent)
 {
   delete static_cast<ChannelDiverterParent*>(parent);
+  return true;
+}
+
+PTransportProviderParent*
+NeckoParent::AllocPTransportProviderParent()
+{
+  RefPtr<TransportProviderParent> res = new TransportProviderParent();
+  return res.forget().take();
+}
+
+bool
+NeckoParent::DeallocPTransportProviderParent(PTransportProviderParent* aActor)
+{
+  RefPtr<TransportProviderParent> provider =
+    dont_AddRef(static_cast<TransportProviderParent*>(aActor));
   return true;
 }
 

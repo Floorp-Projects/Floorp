@@ -1,0 +1,26 @@
+<body>
+<script type="application/javascript">
+  'use strict';
+  // -sp-context: content
+  (function () {
+    let proto = Object.create(HTMLDivElement.prototype);
+    proto.template = `<style></style>`;
+    proto.createdCallback = function() {
+    let shadow = this.createShadowRoot();
+    if (this.template) {
+      let te = document.createElement('template');
+      te.innerHTML = this.template;
+      shadow.appendChild(document.importNode(te.content, true));
+    }
+  };
+
+  let UiComponentTest = document.registerElement('ui-component-test', {
+    prototype: proto,
+  });
+
+  let uic = new UiComponentTest();
+  document.body.appendChild(uic);
+
+  })();
+</script>
+</body>

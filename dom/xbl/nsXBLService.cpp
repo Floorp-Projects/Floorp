@@ -541,9 +541,11 @@ nsXBLService::AttachGlobalKeyHandler(EventTarget* aTarget)
       piTarget = doc; // We're a XUL keyset. Attach to our document.
   }
 
-  EventListenerManager* manager = piTarget->GetOrCreateListenerManager();
+  if (!piTarget)
+    return NS_ERROR_FAILURE;
 
-  if (!piTarget || !manager)
+  EventListenerManager* manager = piTarget->GetOrCreateListenerManager();
+  if (!manager)
     return NS_ERROR_FAILURE;
 
   // the listener already exists, so skip this
@@ -586,9 +588,11 @@ nsXBLService::DetachGlobalKeyHandler(EventTarget* aTarget)
   if (doc)
     piTarget = do_QueryInterface(doc);
 
-  EventListenerManager* manager = piTarget->GetOrCreateListenerManager();
+  if (!piTarget)
+    return NS_ERROR_FAILURE;
 
-  if (!piTarget || !manager)
+  EventListenerManager* manager = piTarget->GetOrCreateListenerManager();
+  if (!manager)
     return NS_ERROR_FAILURE;
 
   nsIDOMEventListener* handler =

@@ -567,6 +567,11 @@ TokenStream::reportStrictModeErrorNumberVA(uint32_t offset, bool strictMode, uns
 void
 CompileError::throwError(JSContext* cx)
 {
+    if (JSREPORT_IS_WARNING(report.flags)) {
+        CallWarningReporter(cx, message, &report);
+        return;
+    }
+
     // If there's a runtime exception type associated with this error
     // number, set that as the pending exception.  For errors occuring at
     // compile time, this is very likely to be a JSEXN_SYNTAXERR.
@@ -578,16 +583,7 @@ CompileError::throwError(JSContext* cx)
     // as the non-top-level "load", "eval", or "compile" native function
     // returns false, the top-level reporter will eventually receive the
     // uncaught exception report.
-    if (ErrorToException(cx, message, &report, nullptr, nullptr))
-        return;
-
-    // Like ReportError, don't call the error reporter if the embedding is
-    // responsible for handling exceptions. In this case the error reporter
-    // must only be used for warnings.
-    if (cx->options().autoJSAPIOwnsErrorReporting() && !JSREPORT_IS_WARNING(report.flags))
-        return;
-
-    CallErrorReporter(cx, message, &report);
+    ErrorToException(cx, message, &report, nullptr, nullptr);
 }
 
 CompileError::~CompileError()

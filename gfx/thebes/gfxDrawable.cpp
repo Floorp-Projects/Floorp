@@ -125,7 +125,7 @@ gfxCallbackDrawable::MakeSurfaceDrawable(const SamplingFilter aSamplingFilter)
     if (!dt || !dt->IsValid())
         return nullptr;
 
-    RefPtr<gfxContext> ctx = gfxContext::ForDrawTarget(dt);
+    RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(dt);
     MOZ_ASSERT(ctx); // already checked for target above
     Draw(ctx, gfxRect(0, 0, mSize.width, mSize.height), ExtendMode::CLAMP,
          aSamplingFilter);

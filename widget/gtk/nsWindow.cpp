@@ -2276,11 +2276,11 @@ nsWindow::OnExposeEvent(cairo_t *cr)
         if (!destDT || !destDT->IsValid()) {
             return FALSE;
         }
-        ctx = gfxContext::ForDrawTarget(destDT, boundsRect.TopLeft());
+        ctx = gfxContext::CreateOrNull(destDT, boundsRect.TopLeft());
     } else {
         gfxUtils::ClipToRegion(dt, region.ToUnknownRegion());
 
-        ctx = gfxContext::ForDrawTarget(dt, offset);
+        ctx = gfxContext::CreateOrNull(dt, offset);
     }
     MOZ_ASSERT(ctx); // checked both dt and destDT valid draw target above
 

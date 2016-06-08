@@ -213,7 +213,12 @@ xpcAccessibleDocument::GetXPCAccessible(ProxyAccessible* aProxy)
   }
 
   // XXX support exposing optional interfaces.
-  acc = new xpcAccessibleGeneric(aProxy, 0);
+  uint8_t interfaces = 0;
+  if (aProxy->mHasValue) {
+    interfaces |= eValue;
+  }
+
+  acc = new xpcAccessibleGeneric(aProxy, interfaces);
   mCache.Put(aProxy, acc);
 
   return acc;

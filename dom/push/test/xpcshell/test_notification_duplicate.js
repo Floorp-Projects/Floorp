@@ -10,6 +10,7 @@ const userAgentID = '1500e7d9-8cbe-4ee6-98da-7fa5d6a39852';
 function run_test() {
   do_get_profile();
   setPrefs({
+    maxRecentMessageIDsPerSubscription: 4,
     userAgentID: userAgentID,
   });
   run_next_test();
@@ -20,19 +21,26 @@ add_task(function* test_notification_duplicate() {
   let db = PushServiceWebSocket.newPushDB();
   do_register_cleanup(() => {return db.drop().then(_ => db.close());});
   let records = [{
-    channelID: '8d2d9400-3597-4c5a-8a38-c546b0043bcc',
+    channelID: 'has-recents',
     pushEndpoint: 'https://example.org/update/1',
     scope: 'https://example.com/1',
     originAttributes: "",
-    version: 2,
+    recentMessageIDs: ['dupe'],
     quota: Infinity,
     systemRecord: true,
   }, {
-    channelID: '27d1e393-03ef-4c72-a5e6-9e890dfccad0',
+    channelID: 'no-recents',
     pushEndpoint: 'https://example.org/update/2',
     scope: 'https://example.com/2',
     originAttributes: "",
-    version: 2,
+    quota: Infinity,
+    systemRecord: true,
+  }, {
+    channelID: 'dropped-recents',
+    pushEndpoint: 'https://example.org/update/3',
+    scope: 'https://example.com/3',
+    originAttributes: '',
+    recentMessageIDs: ['newest', 'newer', 'older', 'oldest'],
     quota: Infinity,
     systemRecord: true,
   }];
@@ -40,11 +48,48 @@ add_task(function* test_notification_duplicate() {
     yield db.put(record);
   }
 
-  let notifyPromise = promiseObserverNotification(PushServiceComponent.pushTopic);
+  let testData = [{
+    channelID: 'has-recents',
+    updates: 1,
+    acks: [{
+      version: 'dupe',
+      code: 102,
+    }, {
+      version: 'not-dupe',
+      code: 100,
+    }],
+    recents: ['not-dupe', 'dupe'],
+  }, {
+    channelID: 'no-recents',
+    updates: 1,
+    acks: [{
+      version: 'not-dupe',
+      code: 100,
+    }],
+    recents: ['not-dupe'],
+  }, {
+    channelID: 'dropped-recents',
+    acks: [{
+      version: 'overflow',
+      code: 100,
+    }, {
+      version: 'oldest',
+      code: 100,
+    }],
+    updates: 2,
+    recents: ['oldest', 'overflow', 'newest', 'newer'],
+  }];
 
-  let acks = 0;
+  let expectedUpdates = testData.reduce((sum, {updates}) => sum + updates, 0);
+  let notifiedScopes = [];
+  let notifyPromise = promiseObserverNotification(PushServiceComponent.pushTopic, (subject, data) => {
+    notifiedScopes.push(data);
+    return notifiedScopes.length == expectedUpdates;
+  });
+
+  let expectedAcks = testData.reduce((sum, {acks}) => sum + acks.length, 0);
   let ackDone;
-  let ackPromise = new Promise(resolve => ackDone = after(2, resolve));
+  let ackPromise = new Promise(resolve => ackDone = after(expectedAcks, resolve));
   PushService.init({
     serverURI: "wss://push.example.org/",
     db,
@@ -55,19 +100,31 @@ add_task(function* test_notification_duplicate() {
             messageType: 'hello',
             status: 200,
             uaid: userAgentID,
+            use_webpush: true,
           }));
-          this.serverSendMsg(JSON.stringify({
-            messageType: 'notification',
-            updates: [{
-              channelID: '8d2d9400-3597-4c5a-8a38-c546b0043bcc',
-              version: 2
-            }, {
-              channelID: '27d1e393-03ef-4c72-a5e6-9e890dfccad0',
-              version: 3
-            }]
-          }));
+          for (let {channelID, acks} of testData) {
+            for (let {version} of acks) {
+              this.serverSendMsg(JSON.stringify({
+                messageType: 'notification',
+                channelID: channelID,
+                version: version,
+              }))
+            }
+          }
         },
-        onACK: ackDone
+        onACK(request) {
+          let [ack] = request.updates;
+          let expectedData = testData.find(test =>
+            test.channelID == ack.channelID);
+          ok(expectedData, `Unexpected channel ${ack.channelID}`);
+          let expectedAck = expectedData.acks.find(expectedAck =>
+            expectedAck.version == ack.version);
+          ok(expectedAck, `Unexpected ack for message ${
+            ack.version} on ${ack.channelID}`);
+          equal(expectedAck.code, ack.code, `Wrong ack status for message ${
+            ack.version} on ${ack.channelID}`);
+          ackDone();
+        },
       });
     }
   });
@@ -75,11 +132,9 @@ add_task(function* test_notification_duplicate() {
   yield notifyPromise;
   yield ackPromise;
 
-  let staleRecord = yield db.getByKeyID(
-    '8d2d9400-3597-4c5a-8a38-c546b0043bcc');
-  strictEqual(staleRecord.version, 2, 'Wrong stale record version');
-
-  let updatedRecord = yield db.getByKeyID(
-    '27d1e393-03ef-4c72-a5e6-9e890dfccad0');
-  strictEqual(updatedRecord.version, 3, 'Wrong updated record version');
+  for (let {channelID, recents} of testData) {
+    let record = yield db.getByKeyID(channelID);
+    deepEqual(record.recentMessageIDs, recents,
+      `Wrong recent message IDs for ${channelID}`);
+  }
 });

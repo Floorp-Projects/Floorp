@@ -187,7 +187,7 @@ class MIRGenerator
     uint32_t wasmMaxStackArgBytes_;
     bool performsCall_;
     bool usesSimd_;
-    bool usesSimdCached_;
+    bool cachedUsesSimd_;
 
     // Keep track of whether frame arguments are modified during execution.
     // RegAlloc needs to know this as spilling values back to their register

@@ -13,15 +13,8 @@ add_task(function* () {
     "test1.example.com": "security-state-insecure",
     "example.com": "security-state-secure",
     "nocert.example.com": "security-state-broken",
-    "rc4.example.com": "security-state-weak",
     "localhost": "security-state-local",
   };
-
-  yield new promise(resolve => {
-    SpecialPowers.pushPrefEnv({"set": [
-      ["security.tls.insecure_fallback_hosts", "rc4.example.com"]
-    ]}, resolve);
-  });
 
   let [tab, debuggee, monitor] = yield initNetMonitor(CUSTOM_GET_URL);
   let { $, EVENTS, NetMonitorView } = monitor.panelWin;
@@ -51,7 +44,6 @@ add_task(function* () {
    *  - https://nocert.example.com (broken)
    *  - https://example.com (secure)
    *  - http://test1.example.com (insecure)
-   *  - https://rc4.example.com (partly secure)
    *  - http://localhost (local)
    * and waits until NetworkMonitor has handled all packets sent by the server.
    */
@@ -80,17 +72,13 @@ add_task(function* () {
     debuggee.performRequests(1, "https://example.com" + CORS_SJS_PATH);
     yield done;
 
-    done = waitForNetworkEvents(monitor, 1);
-    info("Requesting a resource over HTTPS with RC4.");
-    debuggee.performRequests(1, "https://rc4.example.com" + CORS_SJS_PATH);
-    yield done;
-
     done = waitForSecurityBrokenNetworkEvent(true);
     info("Requesting a resource over HTTP to localhost.");
     debuggee.performRequests(1, "http://localhost" + CORS_SJS_PATH);
     yield done;
 
-    is(RequestsMenu.itemCount, 5, "Five events logged.");
+    const expectedCount = Object.keys(EXPECTED_SECURITY_STATES).length;
+    is(RequestsMenu.itemCount, expectedCount, expectedCount + " events logged.");
   }
 
   /**

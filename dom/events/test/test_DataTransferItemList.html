@@ -1,0 +1,227 @@
+<html>
+<head>
+  <title>Tests for the DatTransferItemList object</title>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script type="text/javascript" src="chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body style="height: 300px; overflow: auto;">
+<p id="display"> </p>
+<img id="image" draggable="true" src="data:image/png,%89PNG%0D%0A%1A%0A%00%00%00%0DIHDR%00%00%00%18%00%00%00%18%02%03%00%00%00%9D%19%D5k%00%00%00%04gAMA%00%00%B1%8F%0B%FCa%05%00%00%00%0CPLTE%FF%FF%FF%FF%FF%FF%F7%DC%13%00%00%00%03%80%01X%00%00%00%01tRNS%08N%3DPT%00%00%00%01bKGD%00%88%05%1DH%00%00%00%09pHYs%00%00%0B%11%00%00%0B%11%01%7Fd_%91%00%00%00%07tIME%07%D2%05%0C%14%0C%0D%D8%3F%1FQ%00%00%00%5CIDATx%9C%7D%8E%CB%09%C0%20%10D%07r%B7%20%2F%E9wV0%15h%EA%D9%12D4%BB%C1x%CC%5C%1E%0C%CC%07%C0%9C0%9Dd7()%C0A%D3%8D%E0%B8%10%1DiCHM%D0%AC%D2d%C3M%F1%B4%E7%FF%10%0BY%AC%25%93%CD%CBF%B5%B2%C0%3Alh%CD%AE%13%DF%A5%F7%E0%03byW%09A%B4%F3%E2%00%00%00%00IEND%AEB%60%82">
+<div id="over" "style="width: 100px; height: 100px; border: 2px black dashed;">
+  drag over here
+</div>
+
+<script>
+  function spin() {
+    // Defer to the event loop twice to wait for any events to be flushed out.
+    return new Promise(function(a) {
+      SimpleTest.executeSoon(function() {
+        SimpleTest.executeSoon(a)
+      });
+    });
+  }
+
+  add_task(function* () {
+    yield spin();
+    var draggable = document.getElementById('image');
+    var over = document.getElementById('over');
+
+    var dragstartFired = 0;
+    draggable.addEventListener('dragstart', onDragStart);
+    function onDragStart(e) {
+      draggable.removeEventListener('dragstart', onDragStart);
+
+      var dt = e.dataTransfer;
+      dragstartFired++;
+
+      ok(true, "dragStart event fired");
+      var dtList = e.dataTransfer.items;
+      ok(dtList instanceof DataTransferItemList,
+         "DataTransfer.items returns a DataTransferItemList");
+
+      for (var i = 0; i < dtList.length; i++) {
+        var item = dtList[i];
+        ok(item instanceof DataTransferItem,
+           "operator[] returns DataTransferItem objects");
+        if (item.kind == "file") {
+          var file = item.getAsFile();
+          ok(file instanceof File, "getAsFile() returns File objects");
+        }
+      }
+
+      dtList.clear();
+      is(dtList.length, 0, "after .clear() DataTransferItemList should be empty");
+
+      dtList.add("this is some text", "text/plain");
+      dtList.add("<a href='www.mozilla.org'>this is a link</a>", "text/html");
+      dtList.add("http://www.mozilla.org", "text/uri-list");
+      dtList.add("this is custom-data", "custom-data");
+
+
+      var file = new File(['<a id="a"><b id="b">hey!</b></a>'], "myfile.html",
+                          {type: "text/html"});
+
+      dtList.add(file);
+
+      checkTypes(["text/plain", "text/html", "text/uri-list", "custom-data", "text/html"],
+                 dtList, "DataTransferItemList.add test");
+
+      var files = e.dataTransfer.files;
+      is(files.length, 1, "DataTransfer.files should contain the one file we added earlier");
+      is(files[0], file, "It should be the same file as the file we originally created");
+      is(file, e.dataTransfer.mozGetDataAt("text/html", 1),
+         "It should be stored in index 1 for mozGetDataAt");
+
+      var file2 = new File(['<a id="c"><b id="d">yo!</b></a>'], "myotherfile.html",
+                           {type: "text/html"});
+      dtList.add(file2);
+
+      is(files.length, 2, "The files property should have been updated in place");
+      is(files[1], file2, "It should be the same file as the file we originally created");
+      is(file2, e.dataTransfer.mozGetDataAt("text/html", 2),
+         "It should be stored in index 2 for mozGetDataAt");
+
+      var oldLength = dtList.length;
+      var randomString = "foo!";
+      e.dataTransfer.mozSetDataAt("random/string", randomString, 3);
+      is(oldLength, dtList.length,
+         "Adding a non-file entry to a non-zero index should not add an item to the items list");
+
+      var file3 = new File(['<a id="e"><b id="f">heya!</b></a>'], "yetanotherfile.html",
+                           {type: "text/html"});
+      e.dataTransfer.mozSetDataAt("random/string", file3, 3);
+      is(oldLength + 1, dtList.length,
+         "Replacing the entry with a file should add it to the list!");
+      is(dtList[oldLength].getAsFile(), file3, "It should be stored in the last index as a file");
+      is(dtList[oldLength].type, "random/string", "It should have the correct type");
+      is(dtList[oldLength].kind, "file", "It should have the correct kind");
+      is(files[files.length - 1], file3, "It should also be in the files list");
+
+      oldLength = dtList.length;
+      var nonstring = {};
+      e.dataTransfer.mozSetDataAt("jsobject", nonstring, 0);
+      is(oldLength + 1, dtList.length,
+         "Adding a non-string object using the mozAPIs to index 0 should add an item to the dataTransfer");
+      is(dtList[oldLength].type, "jsobject", "It should have the correct type");
+      is(dtList[oldLength].kind, "other", "It should have the correct kind");
+
+      // Clear the event's data and get it set up so we can read it later!
+      dtList.clear();
+
+      dtList.add(file);
+      dtList.add("this is some text", "text/plain");
+      is(e.dataTransfer.mozGetDataAt("text/html", 1), file);
+    }
+
+    var getAsStringCalled = 0;
+    var dragenterFired = 0;
+    over.addEventListener('dragenter', onDragEnter);
+    function onDragEnter(e) {
+      over.removeEventListener('dragenter', onDragEnter);
+
+      var dt = e.dataTransfer;
+      dragenterFired++;
+
+      readOnly(e);
+    }
+
+    var dropFired = 0;
+    over.addEventListener('drop', onDrop);
+    function onDrop(e) {
+      over.removeEventListener('drop', onDrop);
+
+      var dt = e.dataTransfer;
+      dropFired++;
+      e.preventDefault();
+
+      readOnly(e);
+    }
+
+
+    function readOnly(e) {
+      var dtList = e.dataTransfer.items;
+      var num = dtList.length;
+
+      // .clear() should have no effect
+      dtList.clear();
+      is(dtList.length, num,
+         ".clear() should have no effect on the object during a readOnly event");
+
+      // .remove(i) should throw InvalidStateError
+      for (var i = 0; i < dtList.length; i++) {
+        expectError(function() { dtList.remove(i); },
+                    "InvalidStateError", ".remove(" + i + ") during a readOnly event");
+      }
+
+      // .add() should return null and have no effect
+      var data = [["This is a plain string",  "text/plain"],
+                  ["This is <em>HTML!</em>",  "text/html"],
+                  ["http://www.mozilla.org/", "text/uri-list"],
+                  ["this is some custom data", "custom-data"]];
+
+      for (var i = 0; i < data.length; i++) {
+        is(dtList.add(data[i][0], data[i][1]), null,
+           ".add() should return null during a readOnly event");
+
+        is(dtList.length, num, ".add() should have no effect during a readOnly event");
+      }
+
+      // .add() with a file should return null and have no effect
+      var file = new File(['<a id="a"><b id="b">hey!</b></a>'], "myfile.html",
+                          {type: "text/html"});
+      is(dtList.add(file), null, ".add() with a file should return null during a readOnly event");
+      is(dtList.length, num, ".add() should have no effect during a readOnly event");
+
+      // We should be able to access the files
+      is(e.dataTransfer.files.length, 1, "Should be able to access files");
+      ok(e.dataTransfer.files[0], "File should be the same file!");
+      is(e.dataTransfer.items.length, 2, "Should be able to see there are 2 items");
+
+      is(e.dataTransfer.items[0].kind, "file", "First item should be a file");
+      is(e.dataTransfer.items[1].kind, "string", "Second item should be a string");
+
+      is(e.dataTransfer.items[0].type, "text/html", "first item should be text/html");
+      is(e.dataTransfer.items[1].type, "text/plain", "second item should be text/plain");
+
+      ok(e.dataTransfer.items[0].getAsFile(), "Should be able to get file");
+      e.dataTransfer.items[1].getAsString(function(s) {
+        getAsStringCalled++;
+        is(s, "this is some text", "Should provide the correct string");
+      });
+    }
+
+    synthesizeDrop(draggable, over, null, null);
+
+    // Wait for the getAsString callbacks to complete
+    yield spin();
+    is(getAsStringCalled, 2, "getAsString should be called twice");
+
+    // Sanity-check to make sure that the events were actually run
+    is(dragstartFired, 1, "dragstart fired");
+    is(dragenterFired, 1, "dragenter fired");
+    is(dropFired, 1, "drop fired");
+  });
+
+  function expectError(fn, eid, testid) {
+    var error = "";
+    try {
+      fn();
+    } catch (ex) {
+      error = ex.name;
+    }
+    is(error, eid, testid + " causes exception " + eid);
+  }
+
+  function checkTypes(aExpectedList, aDtList, aTestid) {
+    is(aDtList.length, aExpectedList.length, aTestid + " length test");
+    for (var i = 0; i < aExpectedList.length; i++) {
+      is(aDtList[i].type, aExpectedList[i], aTestid + " type " + i);
+    }
+  }
+</script>
+
+</body>
+</html>

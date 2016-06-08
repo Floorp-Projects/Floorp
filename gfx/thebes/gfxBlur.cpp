@@ -81,7 +81,7 @@ gfxAlphaBoxBlur::Init(const gfxRect& aRect,
     IntRect irect = mBlur->GetRect();
     gfxPoint topleft(irect.TopLeft().x, irect.TopLeft().y);
 
-    mContext = gfxContext::ForDrawTarget(dt);
+    mContext = gfxContext::CreateOrNull(dt);
     MOZ_ASSERT(mContext); // already checked for target above
     mContext->SetMatrix(gfxMatrix::Translation(-topleft));
 

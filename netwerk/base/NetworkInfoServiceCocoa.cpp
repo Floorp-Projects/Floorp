@@ -68,7 +68,7 @@ ListInterfaceAddresses(int aFd, const char* aInterface, AddrMapType& aAddrMap)
 {
     struct ifreq ifreq;
     memset(&ifreq, 0, sizeof(struct ifreq));
-    strncpy(ifreq.ifr_name, aInterface, IFNAMSIZ);
+    strncpy(ifreq.ifr_name, aInterface, IFNAMSIZ - 1);
     if (ioctl(aFd, SIOCGIFADDR, &ifreq) != 0) {
         return NS_ERROR_FAILURE;
     }

@@ -1385,6 +1385,8 @@ class MOZ_RAII AutoAssertEmptyNursery
   protected:
     JSRuntime* rt;
 
+    mozilla::Maybe<AutoAssertNoNurseryAlloc> noAlloc;
+
     // Check that the nursery is empty.
     void checkCondition(JSRuntime *rt);
 
@@ -1393,12 +1395,12 @@ class MOZ_RAII AutoAssertEmptyNursery
     }
 
   public:
-    explicit AutoAssertEmptyNursery(JSRuntime* rt) {
+    explicit AutoAssertEmptyNursery(JSRuntime* rt) : rt(nullptr) {
         checkCondition(rt);
     }
 
-    ~AutoAssertEmptyNursery() {
-        checkCondition(rt);
+    AutoAssertEmptyNursery(const AutoAssertEmptyNursery& other) : AutoAssertEmptyNursery(other.rt)
+    {
     }
 };
 

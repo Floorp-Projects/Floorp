@@ -361,29 +361,12 @@ CheckScope(nsIPrincipal* aPrincipal, const nsACString& aScope)
 
 // Subclass that can be directly dispatched to child workers from the main
 // thread.
-class NotificationWorkerRunnable : public WorkerRunnable
+class NotificationWorkerRunnable : public MainThreadWorkerRunnable
 {
 protected:
   explicit NotificationWorkerRunnable(WorkerPrivate* aWorkerPrivate)
-    : WorkerRunnable(aWorkerPrivate, WorkerThreadUnchangedBusyCount)
+    : MainThreadWorkerRunnable(aWorkerPrivate)
   {
-  }
-
-  bool
-  PreDispatch(WorkerPrivate* aWorkerPrivate) override
-  {
-    // We don't call WorkerRunnable::PreDispatch because it would assert the
-    // wrong thing about which thread we're on.
-    AssertIsOnMainThread();
-    return true;
-  }
-
-  void
-  PostDispatch(WorkerPrivate* aWorkerPrivate, bool aDispatchResult) override
-  {
-    // We don't call WorkerRunnable::PostDispatch because it would assert the
-    // wrong thing about which thread we're on.
-    AssertIsOnMainThread();
   }
 
   bool

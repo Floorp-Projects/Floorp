@@ -3,7 +3,7 @@
 /* Any copyright is dedicated to the Public Domain.
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
-// Tests that the Web Console shows weak crypto warnings (SHA-1 Certificate, SSLv3, and RC4)
+// Tests that the Web Console shows weak crypto warnings (SHA-1 Certificate)
 
 "use strict";
 
@@ -16,14 +16,6 @@ var gWebconsoleTests = [
   {url: "https://sha1ee.example.com" + TEST_URI_PATH,
    name: "SHA1 warning displayed successfully",
    warning: ["SHA-1"], nowarning: ["SSL 3.0", "RC4"]},
-  {url: "https://rc4.example.com" + TEST_URI_PATH,
-   name: "RC4 warning displayed successfully",
-   pref: [["security.tls.insecure_fallback_hosts", "rc4.example.com"]],
-   warning: ["RC4"], nowarning: ["SHA-1", "SSL 3.0"]},
-  {url: "https://rc4.example.com" + TEST_URI_PATH + "?",
-   name: "Unrestricted RC4 fallback worked",
-   pref: [["security.tls.unrestricted_rc4_fallback", true]],
-   warning: ["RC4"], nowarning: ["SHA-1", "SSL 3.0"]},
   {url: "https://sha256ee.example.com" + TEST_URI_PATH,
    name: "SSL warnings appropriately not present",
    warning: [], nowarning: ["SHA-1", "SSL 3.0", "RC4"]},

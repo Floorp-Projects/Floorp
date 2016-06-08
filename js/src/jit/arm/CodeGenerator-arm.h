@@ -219,6 +219,8 @@ class CodeGeneratorARM : public CodeGeneratorShared
     void visitAsmJSPassStackArg(LAsmJSPassStackArg* ins);
     void visitWasmTruncateToInt32(LWasmTruncateToInt32* ins);
     void visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool);
+    void visitCopySignD(LCopySignD* ins);
+    void visitCopySignF(LCopySignF* ins);
 
     void visitMemoryBarrier(LMemoryBarrier* ins);
 
