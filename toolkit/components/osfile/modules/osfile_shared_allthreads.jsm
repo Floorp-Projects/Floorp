@@ -1050,6 +1050,42 @@ Library.prototype = Object.freeze({
     });
   },
 
+  /**
+   * Define a js-ctypes function lazily using ctypes method declare,
+   * with a fallback library to use if this library can't be opened
+   * or the function cannot be declared.
+   *
+   * @param {fallbacklibrary} The fallback Library object.
+   * @param {object} The object containing the function as a field.
+   * @param {string} The name of the field containing the function.
+   * @param {string} symbol The name of the function, as defined in the
+   * library.
+   * @param {ctypes.abi} abi The abi to use, or |null| for default.
+   * @param {ctypes.CType} returnType The type of values returned by the function.
+   * @param {...ctypes.CType} argTypes The type of arguments to the function.
+   */
+  declareLazyWithFallback: function(fallbacklibrary, object, field, ...args) {
+    let lib = this;
+    Object.defineProperty(object, field, {
+      get: function() {
+        delete this[field];
+        try {
+          let ffi = lib.library.declare(...args);
+          if (ffi) {
+            return this[field] = ffi;
+          }
+        } catch (ex) {
+          // Use the fallback library and get the symbol from there.
+          fallbacklibrary.declareLazy(object, field, ...args);
+          return object[field];
+        }
+        return undefined;
+      },
+      configurable: true,
+      enumerable: true
+    });
+  },
+
   toString: function() {
     return "[Library " + this.name + "]";
   }
