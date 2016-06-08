@@ -21,13 +21,6 @@ enum : StyleFlags {
 GtkWidget*
 GetWidget(WidgetNodeType aNodeType);
 
-/*
- * Return a new style context based on aWidget, as a child of aParentStyle.
- * If aWidget still has a floating reference, then it is sunk and released.
- */
-GtkStyleContext*
-CreateStyleForWidget(GtkWidget* aWidget, GtkStyleContext* aParentStyle);
-
 // CreateCSSNode is implemented for gtk >= 3.20 only.
 GtkStyleContext*
 CreateCSSNode(const char*      aName,
