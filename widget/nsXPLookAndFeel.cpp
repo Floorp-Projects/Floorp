@@ -247,7 +247,6 @@ int32_t nsXPLookAndFeel::sCachedColorBits[COLOR_CACHE_SIZE] = {0};
 bool nsXPLookAndFeel::sInitialized = false;
 bool nsXPLookAndFeel::sUseNativeColors = true;
 bool nsXPLookAndFeel::sUseStandinsForNativeColors = false;
-bool nsXPLookAndFeel::sFindbarModalHighlight = false;
 
 nsLookAndFeel* nsXPLookAndFeel::sInstance = nullptr;
 bool nsXPLookAndFeel::sShutdown = false;
@@ -466,9 +465,6 @@ nsXPLookAndFeel::Init()
   Preferences::AddBoolVarCache(&sUseStandinsForNativeColors,
                                "ui.use_standins_for_native_colors",
                                sUseStandinsForNativeColors);
-  Preferences::AddBoolVarCache(&sFindbarModalHighlight,
-                               "findbar.modalHighlight",
-                               sFindbarModalHighlight);
 
   if (XRE_IsContentProcess()) {
     mozilla::dom::ContentChild* cc =
@@ -777,11 +773,6 @@ nsXPLookAndFeel::GetColorImpl(ColorID aID, bool aUseStandinsForNativeColors,
   }
 
   if (aID == eColorID_TextSelectBackgroundAttention) {
-    if (sFindbarModalHighlight) {
-      aResult = NS_RGBA(0, 0, 0, 0);
-      return NS_OK;
-    }
-
     // This makes the selection stand out when typeaheadfind is on
     // Used with nsISelectionController::SELECTION_ATTENTION
     aResult = NS_RGB(0x38, 0xd8, 0x78);

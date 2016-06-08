@@ -64,7 +64,7 @@
 
       // Make sure the findfield is correctly focused on open
       var searchStr = "text inside an input element";
-      yield promiseEnterStringIntoFindField(searchStr);
+      yield* enterStringIntoFindField(searchStr);
       is(document.commandDispatcher.focusedElement,
          gFindBar._findField.inputField, "Find field isn't focused");
 
@@ -72,6 +72,12 @@
       // when the find bar is closed.
       gFindBar.close();
       gFindBar.onFindAgainCommand(false);
+      // For remote browsers, the content document DOM tree is not accessible, thus
+      // the focused element should fall back to the browser element.
+      if (gBrowser.hasAttribute("remote")) {
+        is(document.commandDispatcher.focusedElement, gBrowser,
+          "Browser element isn't focused");
+      }
       yield ContentTask.spawn(gBrowser, null, function* () {
         Assert.equal(content.document.activeElement,
          content.document.getElementById("input"), "Input Element isn't focused");
@@ -87,30 +93,23 @@
          "Focus was stolen from a chrome element");
     }
 
-    function promiseFindResult(str = null) {
-      return new Promise(resolve => {
-        let listener = {
-          onFindResult: function({ searchString }) {
-            if (str !== null && str != searchString) {
-              return;
-            }
-            gFindBar.browser.finder.removeResultListener(listener);
-            resolve();
-          }
-        };
-        gFindBar.browser.finder.addResultListener(listener);
-      });
-    }
-
-    function promiseEnterStringIntoFindField(str) {
-      let promise = promiseFindResult(str);
-      for (let i = 0; i < str.length; i++) {
+    function* enterStringIntoFindField(aString) {
+      for (let i = 0; i < aString.length; i++) {
         let event = document.createEvent("KeyEvents");
+        let promise = new Promise(resolve => {
+          let listener = {
+            onFindResult: function() {
+              gFindBar.browser.finder.removeResultListener(listener);
+              resolve();
+            }
+          };
+          gFindBar.browser.finder.addResultListener(listener);
+        });
         event.initKeyEvent("keypress", true, true, null, false, false,
-                           false, false, 0, str.charCodeAt(i));
+                           false, false, 0, aString.charCodeAt(i));
         gFindBar._findField.inputField.dispatchEvent(event);
+        yield promise;
       }
-      return promise;
     }
   ]]></script>
   <textbox id="textbox"/>

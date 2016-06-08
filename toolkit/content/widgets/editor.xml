@@ -124,6 +124,7 @@
       </property>
 
       <field name="_lastSearchString">null</field>
+      <field name="_lastSearchHighlight">false</field>
 
       <property name="editortype"
                 onget="return this.getAttribute('editortype');"

@@ -111,7 +111,6 @@ protected:
   static int32_t sCachedColorBits[COLOR_CACHE_SIZE];
   static bool sUseNativeColors;
   static bool sUseStandinsForNativeColors;
-  static bool sFindbarModalHighlight;
 
   static nsLookAndFeel* sInstance;
   static bool sShutdown;

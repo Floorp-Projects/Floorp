@@ -436,6 +436,7 @@
       </property>
 
       <field name="_lastSearchString">null</field>
+      <field name="_lastSearchHighlight">false</field>
 
       <property name="webProgress"
                 readonly="true"
