@@ -406,6 +406,13 @@ var setUpServiceInParent = Task.async(function* (service, db) {
             pushEndpoint: 'https://example.org/push/' + request.channelID,
           }));
         },
+        onUnregister(request) {
+          this.serverSendMsg(JSON.stringify({
+            messageType: 'unregister',
+            channelID: request.channelID,
+            status: 200,
+          }));
+        },
       });
     },
   });
