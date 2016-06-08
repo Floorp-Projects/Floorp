@@ -2313,8 +2313,12 @@ Console::UnstoreCallData(ConsoleCallData* aCallData)
   AssertIsOnOwningThread();
 
   MOZ_ASSERT(aCallData);
-  MOZ_ASSERT(mCallDataStorage.Contains(aCallData));
+
   MOZ_ASSERT(!mCallDataStoragePending.Contains(aCallData));
+
+  // It can be that mCallDataStorage has been already cleaned in case the
+  // processing of the argument of some Console methods triggers the
+  // window.close().
 
   mCallDataStorage.RemoveElement(aCallData);
 }
