@@ -12,7 +12,6 @@
 #include "mozilla/Attributes.h"         // for override
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/layers/PCompositorBridgeChild.h"
-#include "mozilla/layers/TextureForwarder.h" // for TextureForwarder
 #include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsClassHashtable.h"           // for nsClassHashtable
 #include "nsCOMPtr.h"                   // for nsCOMPtr
@@ -33,13 +32,12 @@ using mozilla::dom::TabChild;
 
 class ClientLayerManager;
 class CompositorBridgeParent;
-class TextureClientPool;
 struct FrameMetrics;
 
-class CompositorBridgeChild final : public PCompositorBridgeChild,
-                                    public TextureForwarder,
-                                    public ShmemAllocator
+class CompositorBridgeChild final : public PCompositorBridgeChild
 {
+  NS_INLINE_DECL_THREADSAFE_REFCOUNTING_WITH_MAIN_THREAD_DESTRUCTION(CompositorBridgeChild)
+
 public:
   explicit CompositorBridgeChild(ClientLayerManager *aLayerManager);
 
@@ -105,10 +103,6 @@ public:
 
   virtual bool DeallocPTextureChild(PTextureChild* actor) override;
 
-  virtual PTextureChild* CreateTexture(const SurfaceDescriptor& aSharedData,
-                                       LayersBackend aLayersBackend,
-                                       TextureFlags aFlags) override;
-
   /**
    * Request that the parent tell us when graphics are ready on GPU.
    * When we get that message, we bounce it to the TabParent via
@@ -143,28 +137,9 @@ public:
   bool SendUpdateVisibleRegion(VisibilityCounter aCounter,
                                const ScrollableLayerGuid& aGuid,
                                const mozilla::CSSIntRegion& aRegion);
-  bool IsSameProcess() const override;
+  bool IsSameProcess() const;
 
   static void ShutDown();
-
-  TextureClientPool* GetTexturePool(gfx::SurfaceFormat aFormat, TextureFlags aFlags);
-  void ClearTexturePool();
-
-  void HandleMemoryPressure();
-
-  virtual MessageLoop* GetMessageLoop() const override { return mMessageLoop; }
-
-  virtual bool AllocUnsafeShmem(size_t aSize,
-                                mozilla::ipc::SharedMemory::SharedMemoryType aShmType,
-                                mozilla::ipc::Shmem* aShmem) override;
-  virtual bool AllocShmem(size_t aSize,
-                          mozilla::ipc::SharedMemory::SharedMemoryType aShmType,
-                          mozilla::ipc::Shmem* aShmem) override;
-  virtual void DeallocShmem(mozilla::ipc::Shmem& aShmem) override;
-
-  virtual ShmemAllocator* AsShmemAllocator() override { return this; }
-
-  FixedSizeSmallShmemSectionAllocator* GetTileLockAllocator() override;
 
 private:
   // Private destructor, to discourage deletion outside of Release():
@@ -237,12 +212,6 @@ private:
 
   // True until the beginning of the two-step shutdown sequence of this actor.
   bool mCanSend;
-
-  MessageLoop* mMessageLoop;
-
-  AutoTArray<RefPtr<TextureClientPool>,2> mTexturePools;
-
-  FixedSizeSmallShmemSectionAllocator* mSectionAllocator;
 };
 
 } // namespace layers
