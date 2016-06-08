@@ -159,11 +159,11 @@ HTMLTooltip.prototype = {
 
     this.container.classList.add("tooltip-visible");
 
+    // Keep a pointer on the focused element to refocus it when hiding the tooltip.
+    this._focusedElement = this.doc.activeElement;
+
     this.attachEventsTimer = this.doc.defaultView.setTimeout(() => {
-	  this._focusedElement = this.doc.activeElement;
-      if (this.autofocus) {
-        this.panel.focus();
-      }
+      this._maybeFocusTooltip();
       this.topWindow.addEventListener("click", this._onClick, true);
       this.emit("shown");
     }, 0);
@@ -175,16 +175,18 @@ HTMLTooltip.prototype = {
    */
   hide: function () {
     this.doc.defaultView.clearTimeout(this.attachEventsTimer);
+    if (!this.isVisible()) {
+      return;
+    }
 
-    if (this.isVisible()) {
-      this.topWindow.removeEventListener("click", this._onClick, true);
-      this.container.classList.remove("tooltip-visible");
-      this.emit("hidden");
+    this.topWindow.removeEventListener("click", this._onClick, true);
+    this.container.classList.remove("tooltip-visible");
+    this.emit("hidden");
 
-      if (this.container.contains(this.doc.activeElement) && this._focusedElement) {
-        this._focusedElement.focus();
-        this._focusedElement = null;
-      }
+    let tooltipHasFocus = this.container.contains(this.doc.activeElement);
+    if (tooltipHasFocus && this._focusedElement) {
+      this._focusedElement.focus();
+      this._focusedElement = null;
     }
   },
 
@@ -233,20 +235,20 @@ HTMLTooltip.prototype = {
   },
 
   _isInTooltipContainer: function (node) {
-    let tooltipWindow = this.panel.ownerDocument.defaultView;
-    let win = node.ownerDocument.defaultView;
-
+    // Check if the target is the tooltip arrow.
     if (this.arrow && this.arrow === node) {
       return true;
     }
 
+    let tooltipWindow = this.panel.ownerDocument.defaultView;
+    let win = node.ownerDocument.defaultView;
+
+    // Check if the tooltip panel contains the node if they live in the same document.
     if (win === tooltipWindow) {
-      // If node is in the same window as the tooltip, check if the tooltip panel
-      // contains node.
       return this.panel.contains(node);
     }
 
-    // Otherwise check if the node window is in the tooltip container.
+    // Check if the node window is in the tooltip container.
     while (win.parent && win.parent != win) {
       win = win.parent;
       if (win === tooltipWindow) {
@@ -353,7 +355,24 @@ HTMLTooltip.prototype = {
     return {top, right, bottom, left, width, height};
   },
 
+  /**
+   * Check if the tooltip's owner document is a XUL document.
+   */
   _isXUL: function () {
     return this.doc.documentElement.namespaceURI === XUL_NS;
+  },
+
+  /**
+   * If the tootlip is configured to autofocus and a focusable element can be found,
+   * focus it.
+   */
+  _maybeFocusTooltip: function () {
+    // Simplied selector targetting elements that can receive the focus, full version at
+    // http://stackoverflow.com/questions/1599660/which-html-elements-can-receive-focus .
+    let focusableSelector = "a, button, iframe, input, select, textarea";
+    let focusableElement = this.panel.querySelector(focusableSelector);
+    if (this.autofocus && focusableElement) {
+      focusableElement.focus();
+    }
   },
 };
