@@ -553,5 +553,28 @@ add_task(function* test_recipeCaptureFields_ExistingLogin() {
   Services.logins.removeAllLogins();
 });
 
+add_task(function* test_noShowPasswordOnDismissal() {
+  info("Check for no Show Password field when the doorhanger is dismissed");
+
+  yield testSubmittingLoginForm("subtst_notifications_1.html", function*(fieldValues) {
+    info("Opening popup");
+    let notif = getCaptureDoorhanger("password-save");
+    let { panel } = PopupNotifications;
+
+    info("Hiding popup.");
+    let promiseHidden = BrowserTestUtils.waitForEvent(panel, "popuphidden");
+    panel.hidePopup();
+    yield promiseHidden;
+
+    info("Clicking on anchor to reshow popup.")
+    let promiseShown = BrowserTestUtils.waitForEvent(panel, "popupshown");
+    notif.anchorElement.click();
+    yield promiseShown;
+
+    let passwordVisiblityToggle = panel.querySelector("#password-notification-visibilityToggle");
+    is(passwordVisiblityToggle.hidden, true, "Check that the Show Password field is Hidden");
+  });
+});
+
 // TODO:
 // * existing login test, form has different password --> change password, no save prompt
