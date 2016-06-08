@@ -290,10 +290,20 @@
             this._browser.finder.addResultListener(this);
 
             this._findField.value = this._browser._lastSearchString;
-            this.toggleHighlight(this.browser._lastSearchHighlight);
           }
           return val;
         ]]></setter>
+      </property>
+
+      <field name="__prefsvc">null</field>
+      <property name="_prefsvc">
+        <getter><![CDATA[
+          if (!this.__prefsvc) {
+            this.__prefsvc = Components.classes["@mozilla.org/preferences-service;1"]
+              .getService(Components.interfaces.nsIPrefBranch);
+          }
+          return this.__prefsvc;
+        ]]></getter>
       </property>
 
       <field name="_observer"><![CDATA[({
@@ -312,8 +322,7 @@
           if (aTopic != "nsPref:changed")
             return;
 
-          let prefsvc =
-            aSubject.QueryInterface(Components.interfaces.nsIPrefBranch);
+          let prefsvc = this._self._prefsvc;
 
           switch (aPrefName) {
             case "accessibility.typeaheadfind":
@@ -324,6 +333,9 @@
               break;
             case "accessibility.typeaheadfind.casesensitive":
               this._self._setCaseSensitivity(prefsvc.getIntPref(aPrefName));
+              break;
+            case "findbar.highlightAll":
+              this._self.toggleHighlight(prefsvc.getBoolPref(aPrefName), true);
               break;
           }
         }
@@ -340,9 +352,7 @@
 
         this._foundURL = null;
 
-        let prefsvc =
-          Components.classes["@mozilla.org/preferences-service;1"]
-                    .getService(Components.interfaces.nsIPrefBranch);
+        let prefsvc = this._prefsvc;
 
         this._quickFindTimeoutLength =
           prefsvc.getIntPref("accessibility.typeaheadfind.timeout");
@@ -359,6 +369,7 @@
                             this._observer, false);
         prefsvc.addObserver("accessibility.typeaheadfind.casesensitive",
                             this._observer, false);
+        prefsvc.addObserver("findbar.highlightAll", this._observer, false);
 
         this._findAsYouType =
           prefsvc.getBoolPref("accessibility.typeaheadfind");
@@ -366,6 +377,7 @@
           prefsvc.getBoolPref("accessibility.typeaheadfind.linksonly");
         this._typeAheadCaseSensitive =
           prefsvc.getIntPref("accessibility.typeaheadfind.casesensitive");
+        this._highlightAll = prefsvc.getBoolPref("findbar.highlightAll");
 
         // Convenience
         this.nsITypeAheadFind = Components.interfaces.nsITypeAheadFind;
@@ -395,15 +407,14 @@
 
           this.browser = null;
 
-          let prefsvc =
-            Components.classes["@mozilla.org/preferences-service;1"]
-                      .getService(Components.interfaces.nsIPrefBranch);
+          let prefsvc = this._prefsvc;
           prefsvc.removeObserver("accessibility.typeaheadfind",
                                  this._observer);
           prefsvc.removeObserver("accessibility.typeaheadfind.linksonly",
                                  this._observer);
           prefsvc.removeObserver("accessibility.typeaheadfind.casesensitive",
                                  this._observer);
+          prefsvc.removeObserver("findbar.highlightAll", this._observer);
 
           // Clear all timers that might still be running.
           this._cancelTimers();
@@ -491,23 +502,58 @@
         - Turns highlight on or off.
         - @param aHighlight (boolean)
         -        Whether to turn the highlight on or off
+        - @param aFromPrefObserver (boolean)
+        -        Whether the callee is the pref observer, which means we should
+        -        not set the same pref again.
         -->
       <method name="toggleHighlight">
         <parameter name="aHighlight"/>
+        <parameter name="aFromPrefObserver"/>
         <body><![CDATA[
-          if (!this._dispatchFindEvent("highlightallchange"))
+          if (aHighlight === this._highlightAll) {
             return;
+          }
+          this._highlightAll = aHighlight;
+
+          if (!this._dispatchFindEvent("highlightallchange")) {
+            return;
+          }
+
+          this._setHighlightAll(aHighlight, aFromPrefObserver);
 
           let word = this._findField.value;
           // Bug 429723. Don't attempt to highlight ""
           if (aHighlight && !word)
             return;
 
-          this.browser._lastSearchHighlight = aHighlight;
           this.browser.finder.highlight(aHighlight, word);
 
           // Update the matches count
           this._updateMatchesCount(this.nsITypeAheadFind.FIND_FOUND);
+        ]]></body>
+      </method>
+
+      <!--
+        - Updates the highlight-all mode of the findbar and its UI.
+        - @param aHighlight (boolean)
+        -        Whether to turn the highlight on or off.
+        - @param aFromPrefObserver (boolean)
+        -        Whether the callee is the pref observer, which means we should
+        -        not set the same pref again.
+        -->
+      <method name="_setHighlightAll">
+        <parameter name="aHighlight"/>
+        <parameter name="aFromPrefObserver"/>
+        <body><![CDATA[
+          if (typeof aHighlight != "boolean") {
+            aHighlight = this._highlightAll;
+          }
+          if (aHighlight !== this._highlightAll && !aFromPrefObserver) {
+            this._prefsvc.setBoolPref("findbar.highlightAll", aHighlight);
+          }
+          this._highlightAll = aHighlight;
+          let checkbox = this.getElement("highlight");
+          checkbox.checked = this._highlightAll;
         ]]></body>
       </method>
 
@@ -854,6 +900,7 @@
             this.getElement("find-previous").hidden = showMinimalUI;
           foundMatches.hidden = showMinimalUI || !foundMatches.value;
           this._updateCaseSensitivity();
+          this._setHighlightAll();
 
           if (showMinimalUI)
             this._findField.classList.add("minimal");
@@ -1008,7 +1055,7 @@
           event.initCustomEvent("find" + aType, true, true, {
             query: this._findField.value,
             caseSensitive: !!this._typeAheadCaseSensitive,
-            highlightAll: this.getElement("highlight").checked,
+            highlightAll: this._highlightAll,
             findPrevious: aFindPrevious
           });
           return this.dispatchEvent(event);
@@ -1027,9 +1074,7 @@
       <method name="startFind">
         <parameter name="aMode"/>
         <body><![CDATA[
-          let prefsvc =
-            Components.classes["@mozilla.org/preferences-service;1"]
-                      .getService(Components.interfaces.nsIPrefBranch);
+          let prefsvc = this._prefsvc;
           let userWantsPrefill = true;
           this.open(aMode);
 
@@ -1131,9 +1176,7 @@
 
       <method name="_onFindFieldFocus">
         <body><![CDATA[
-          let prefsvc =
-            Components.classes["@mozilla.org/preferences-service;1"]
-                      .getService(Components.interfaces.nsIPrefBranch);
+          let prefsvc = this._prefsvc;
           const kPref = "accessibility.typeaheadfind.prefillwithselection";
           if (this.prefillWithSelection && prefsvc.getBoolPref(kPref))
             return;
