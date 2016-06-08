@@ -8,7 +8,7 @@ var renderedData;
 var sampleRate = 44100.0;
 var pulseLengthFrames = .1 * sampleRate;
 
-// Maximum allowed error for the test to succeed.  Experimentally determined. 
+// Maximum allowed error for the test to succeed.  Experimentally determined.
 var maxAllowedError = 5.9e-8;
 
 // This must be large enough so that the filtered result is
@@ -49,7 +49,7 @@ function createTestAndRun(context, filterType, filterParameters) {
     // must be large enough for the output of each filter to have
     // decayed to zero with timeStep seconds.  That way the filter
     // outputs don't interfere with each other.
-    
+
     nFilters = Math.min(filterParameters.length, maxFilters);
 
     signal = new Array(nFilters);
@@ -96,12 +96,12 @@ function generateReference(filterType, filterParameters) {
     }
     // Make data an impulse.
     data[0] = 1;
-    
+
     for (var k = 0; k < nFilters; ++k) {
         // Filter an impulse
         var detune = (filterParameters[k].detune === undefined) ? 0 : filterParameters[k].detune;
         var frequency = filterParameters[k].cutoff * Math.pow(2, detune / 1200); // Apply detune, converting from Cents.
-        
+
         var filterCoef = createFilter(filterType,
                                       frequency,
                                       filterParameters[k].q,
@@ -121,7 +121,7 @@ function checkFilterResponse(filterType, filterParameters) {
         renderedData = renderedBuffer.getChannelData(0);
 
         reference = generateReference(filterType, filterParameters);
-        
+
         var len = Math.min(renderedData.length, reference.length);
 
         var success = true;
@@ -135,45 +135,19 @@ function checkFilterResponse(filterType, filterParameters) {
         // Number of infinities or NaNs that occurred in the rendered data.
         var invalidNumberCount = 0;
 
-        if (nFilters != filterParameters.length) {
-            testFailed("Test wanted " + filterParameters.length + " filters but only " + maxFilters + " allowed.");
-            success = false;
-        }
+        ok(nFilters == filterParameters.length, "Test wanted " + filterParameters.length + " filters but only " + maxFilters + " allowed.");
 
-        // Compare the rendered signal with our reference, keeping
-        // track of the maximum difference (and the offset of the max
-        // difference.)  Check for bad numbers in the rendered output
-        // too.  There shouldn't be any.
+        compareChannels(renderedData, reference, len, 0, 0, true);
+
+        // Check for bad numbers in the rendered output too.
+        // There shouldn't be any.
         for (var k = 0; k < len; ++k) {
-            var err = Math.abs(renderedData[k] - reference[k]);
-            if (err > maxError) {
-                maxError = err;
-                maxPosition = k;
-            }
             if (!isValidNumber(renderedData[k])) {
                 ++invalidNumberCount;
             }
         }
 
-        if (invalidNumberCount > 0) {
-            testFailed("Rendered output has " + invalidNumberCount + " infinities or NaNs.");
-            success = false;
-        } else {
-            testPassed("Rendered output did not have infinities or NaNs.");
-        }
-        
-        if (maxError <= maxAllowedError) {
-            testPassed(filterTypeName[filterType] + " response is correct.");
-        } else {
-            testFailed(filterTypeName[filterType] + " response is incorrect.  Max err = " + maxError + " at " + maxPosition + ".  Threshold = " + maxAllowedError);
-            success = false;
-        }
-        
-        if (success) {
-            testPassed("Test signal was correctly filtered.");
-        } else {
-            testFailed("Test signal was not correctly filtered.");
-        }
-        finishJSTest();
+        ok(invalidNumberCount == 0, "Rendered output has " + invalidNumberCount + " infinities or NaNs.");
+        SimpleTest.finish();
     }
 }
