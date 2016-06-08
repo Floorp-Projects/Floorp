@@ -48,6 +48,7 @@ interface nsIXULBrowserWindow : nsISupports
    *
    */
   nsITabParent forceInitialBrowserRemote();
+  void forceInitialBrowserNonRemote();
 
   /**
    * Determines whether a load should continue.
