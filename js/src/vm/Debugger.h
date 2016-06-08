@@ -1134,16 +1134,16 @@ class DebuggerObject : public NativeObject
 
     Debugger* owner() const;
 
+    static bool callableGetter(JSContext* cx, unsigned argc, Value* vp);
+    static bool isBoundFunctionGetter(JSContext* cx, unsigned argc, Value* vp);
+    static bool isArrowFunctionGetter(JSContext* cx, unsigned argc, Value* vp);
     static bool protoGetter(JSContext* cx, unsigned argc, Value* vp);
     static bool classGetter(JSContext* cx, unsigned argc, Value* vp);
-    static bool callableGetter(JSContext* cx, unsigned argc, Value* vp);
     static bool nameGetter(JSContext* cx, unsigned argc, Value* vp);
     static bool displayNameGetter(JSContext* cx, unsigned argc, Value* vp);
     static bool parameterNamesGetter(JSContext* cx, unsigned argc, Value* vp);
     static bool scriptGetter(JSContext* cx, unsigned argc, Value* vp);
     static bool environmentGetter(JSContext* cx, unsigned argc, Value* vp);
-    static bool isArrowFunctionGetter(JSContext* cx, unsigned argc, Value* vp);
-    static bool isBoundFunctionGetter(JSContext* cx, unsigned argc, Value* vp);
     static bool boundTargetFunctionGetter(JSContext* cx, unsigned argc, Value* vp);
     static bool boundThisGetter(JSContext* cx, unsigned argc, Value* vp);
     static bool boundArgumentsGetter(JSContext* cx, unsigned argc, Value* vp);
