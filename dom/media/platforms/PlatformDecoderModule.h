@@ -235,6 +235,14 @@ public:
   // Only return a static const string, as the information may be accessed
   // in a non thread-safe fashion.
   virtual const char* GetDescriptionName() const = 0;
+
+  // Set a hint of seek target time to decoder. Decoder will drop any decoded
+  // data which pts is smaller than this value. This threshold needs to be clear
+  // after reset decoder.
+  // Decoder may not honor this value. However, it'd be better that
+  // video decoder implements this API to improve seek performance.
+  // Note: it should be called before Input() or after Flush().
+  virtual void SetSeekThreshold(const media::TimeUnit& aTime) {}
 };
 
 } // namespace mozilla
