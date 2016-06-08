@@ -37,6 +37,7 @@ config = {
         "bin/*",
         "certs/*",
         "config/*",
+        "mach",
         "marionette/*",
         "modules/*",
         "mozbase/*",
