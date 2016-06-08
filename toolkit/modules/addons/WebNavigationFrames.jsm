@@ -24,7 +24,7 @@ function getParentWindowId(window) {
  * Retrieve the DOMWindow associated to the docShell passed as parameter.
  *
  * @param    {nsIDocShell}  docShell - the docShell that we want to get the DOMWindow from.
- * @return   {nsIDOMWindow}          - the DOMWindow associated to the docShell.
+ * @returns  {nsIDOMWindow}          - the DOMWindow associated to the docShell.
  */
 function docShellToWindow(docShell) {
   return docShell.QueryInterface(Ci.nsIInterfaceRequestor)
@@ -47,7 +47,7 @@ function docShellToWindow(docShell) {
  * Convert a docShell object into its internal FrameDetail representation.
  *
  * @param    {nsIDocShell} docShell - the docShell object to be converted into a FrameDetail JSON object.
- * @return   {FrameDetail} the FrameDetail JSON object which represents the docShell.
+ * @returns  {FrameDetail} the FrameDetail JSON object which represents the docShell.
  */
 function convertDocShellToFrameDetail(docShell) {
   let window = docShellToWindow(docShell);
@@ -62,8 +62,8 @@ function convertDocShellToFrameDetail(docShell) {
 /**
  * A generator function which iterates over a docShell tree, given a root docShell.
  *
- * @param  {nsIDocShell} docShell - the root docShell object
- * @return {Iterator<DocShell>} the FrameDetail JSON object which represents the docShell.
+ * @param   {nsIDocShell} docShell - the root docShell object
+ * @returns {Iterator<DocShell>} the FrameDetail JSON object which represents the docShell.
  */
 function* iterateDocShellTree(docShell) {
   let docShellsEnum = docShell.getDocShellEnumerator(
@@ -104,9 +104,9 @@ function getFrameId(window) {
  *
  * @param  {number}      frameId - the frame ID of the frame to retrieve, as
  *                                 described in getFrameId.
- * @param  {nsIDocShell} docShell - the root docShell object
- * @return {nsIDocShell?} the docShell with the given frameId, or null
- *                        if no match.
+ * @param   {nsIDocShell} rootDocShell - the root docShell object
+ * @returns {nsIDocShell?} the docShell with the given frameId, or null
+ *                         if no match.
  */
 function findDocShell(frameId, rootDocShell) {
   for (let docShell of iterateDocShellTree(rootDocShell)) {
