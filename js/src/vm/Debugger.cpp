@@ -7870,6 +7870,43 @@ DebuggerObject_construct(JSContext* cx, unsigned argc, Value* vp)
 }
 
 /* static */ bool
+DebuggerObject::callableGetter(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT(cx, argc, vp, "get callable", args, object)
+
+    args.rval().setBoolean(DebuggerObject::isCallable(cx, object));
+    return true;
+}
+
+/* static */ bool
+DebuggerObject::isBoundFunctionGetter(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT(cx, argc, vp, "get isBoundFunction", args, object)
+
+    if (!DebuggerObject::isDebuggeeFunction(cx, object)) {
+        args.rval().setUndefined();
+        return true;
+    }
+
+    args.rval().setBoolean(DebuggerObject::isBoundFunction(cx, object));
+    return true;
+}
+
+/* static */ bool
+DebuggerObject::isArrowFunctionGetter(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT(cx, argc, vp, "get isArrowFunction", args, object)
+
+    if (!DebuggerObject::isDebuggeeFunction(cx, object)) {
+        args.rval().setUndefined();
+        return true;
+    }
+
+    args.rval().setBoolean(DebuggerObject::isArrowFunction(cx, object));
+    return true;
+}
+
+/* static */ bool
 DebuggerObject::protoGetter(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "get proto", args, object)
@@ -7892,15 +7929,6 @@ DebuggerObject::classGetter(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     args.rval().setString(result);
-    return true;
-}
-
-/* static */ bool
-DebuggerObject::callableGetter(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGOBJECT(cx, argc, vp, "get callable", args, object)
-
-    args.rval().setBoolean(DebuggerObject::isCallable(cx, object));
     return true;
 }
 
@@ -8042,34 +8070,6 @@ DebuggerObject::environmentGetter(JSContext* cx, unsigned argc, Value* vp)
 }
 
 /* static */ bool
-DebuggerObject::isArrowFunctionGetter(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGOBJECT(cx, argc, vp, "get isArrowFunction", args, object)
-
-    if (!DebuggerObject::isDebuggeeFunction(cx, object)) {
-        args.rval().setUndefined();
-        return true;
-    }
-
-    args.rval().setBoolean(DebuggerObject::isArrowFunction(cx, object));
-    return true;
-}
-
-/* static */ bool
-DebuggerObject::isBoundFunctionGetter(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGOBJECT(cx, argc, vp, "get isBoundFunction", args, object)
-
-    if (!DebuggerObject::isDebuggeeFunction(cx, object)) {
-        args.rval().setUndefined();
-        return true;
-    }
-
-    args.rval().setBoolean(DebuggerObject::isBoundFunction(cx, object));
-    return true;
-}
-
-/* static */ bool
 DebuggerObject::boundTargetFunctionGetter(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "get boundTargetFunction", args, object)
@@ -8125,6 +8125,51 @@ DebuggerObject::boundArgumentsGetter(JSContext* cx, unsigned argc, Value* vp)
         return false;
 
     args.rval().setObject(*obj);
+    return true;
+}
+
+/* static */ bool
+DebuggerObject::globalGetter(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT(cx, argc, vp, "get global", args, object)
+
+    RootedObject result(cx);
+    if (!DebuggerObject::global(cx, object, &result))
+        return false;
+
+    args.rval().setObject(*result);
+    return true;
+}
+
+/* static */ bool
+DebuggerObject::allocationSiteGetter(JSContext* cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT(cx, argc, vp, "get allocationSite", args, object)
+
+    RootedObject result(cx);
+    if (!DebuggerObject::allocationSite(cx, object, &result))
+        return false;
+
+    args.rval().setObjectOrNull(result);
+    return true;
+}
+
+// Returns the "name" field (see js.msg), which may be used as a unique
+// identifier, for any error object with a JSErrorReport or undefined
+// if the object has no JSErrorReport.
+/* static */ bool
+DebuggerObject::errorMessageNameGetter(JSContext *cx, unsigned argc, Value* vp)
+{
+    THIS_DEBUGOBJECT(cx, argc, vp, "get errorMessageName", args, object)
+
+    RootedString result(cx);
+    if (!DebuggerObject::errorMessageName(cx, object, &result))
+        return false;
+
+    if (result)
+        args.rval().setString(result);
+    else
+        args.rval().setUndefined();
     return true;
 }
 
@@ -8270,51 +8315,6 @@ DebuggerObject_getPromiseDependentPromises(JSContext* cx, unsigned argc, Value* 
     return true;
 }
 #endif // SPIDERMONKEY_PROMISE
-
-/* static */ bool
-DebuggerObject::globalGetter(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGOBJECT(cx, argc, vp, "get global", args, object)
-
-    RootedObject result(cx);
-    if (!DebuggerObject::global(cx, object, &result))
-        return false;
-
-    args.rval().setObject(*result);
-    return true;
-}
-
-/* static */ bool
-DebuggerObject::allocationSiteGetter(JSContext* cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGOBJECT(cx, argc, vp, "get allocationSite", args, object)
-
-    RootedObject result(cx);
-    if (!DebuggerObject::allocationSite(cx, object, &result))
-        return false;
-
-    args.rval().setObjectOrNull(result);
-    return true;
-}
-
-// Returns the "name" field (see js.msg), which may be used as a unique
-// identifier, for any error object with a JSErrorReport or undefined
-// if the object has no JSErrorReport.
-/* static */ bool
-DebuggerObject::errorMessageNameGetter(JSContext *cx, unsigned argc, Value* vp)
-{
-    THIS_DEBUGOBJECT(cx, argc, vp, "get errorMessageName", args, object)
-
-    RootedString result(cx);
-    if (!DebuggerObject::errorMessageName(cx, object, &result))
-        return false;
-
-    if (result)
-        args.rval().setString(result);
-    else
-        args.rval().setUndefined();
-    return true;
-}
 
 /* static */ bool
 DebuggerObject::isExtensibleMethod(JSContext* cx, unsigned argc, Value* vp)
@@ -8718,16 +8718,16 @@ DebuggerObject::unwrapMethod(JSContext* cx, unsigned argc, Value* vp)
 }
 
 const JSPropertySpec DebuggerObject::properties_[] = {
+    JS_PSG("callable", DebuggerObject::callableGetter, 0),
+    JS_PSG("isBoundFunction", DebuggerObject::isBoundFunctionGetter, 0),
+    JS_PSG("isArrowFunction", DebuggerObject::isArrowFunctionGetter, 0),
     JS_PSG("proto", DebuggerObject::protoGetter, 0),
     JS_PSG("class", DebuggerObject::classGetter, 0),
-    JS_PSG("callable", DebuggerObject::callableGetter, 0),
     JS_PSG("name", DebuggerObject::nameGetter, 0),
     JS_PSG("displayName", DebuggerObject::displayNameGetter, 0),
     JS_PSG("parameterNames", DebuggerObject::parameterNamesGetter, 0),
     JS_PSG("script", DebuggerObject::scriptGetter, 0),
     JS_PSG("environment", DebuggerObject::environmentGetter, 0),
-    JS_PSG("isArrowFunction", DebuggerObject::isArrowFunctionGetter, 0),
-    JS_PSG("isBoundFunction", DebuggerObject::isBoundFunctionGetter, 0),
     JS_PSG("boundTargetFunction", DebuggerObject::boundTargetFunctionGetter, 0),
     JS_PSG("boundThis", DebuggerObject::boundThisGetter, 0),
     JS_PSG("boundArguments", DebuggerObject::boundArgumentsGetter, 0),
