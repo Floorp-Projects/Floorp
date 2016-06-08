@@ -16,13 +16,13 @@ namespace mozilla {
 
 struct ReorderQueueComparator
 {
-  bool LessThan(VideoData* const& a, VideoData* const& b) const
+  bool LessThan(MediaData* const& a, MediaData* const& b) const
   {
     return a->mTime < b->mTime;
   }
 };
 
-typedef nsTPriorityQueue<RefPtr<VideoData>, ReorderQueueComparator> ReorderQueue;
+typedef nsTPriorityQueue<RefPtr<MediaData>, ReorderQueueComparator> ReorderQueue;
 
 } // namespace mozilla
 
