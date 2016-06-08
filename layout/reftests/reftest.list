@@ -27,9 +27,6 @@ include backgrounds/reftest.list
 # bidi/
 include bidi/reftest.list
 
-# border with dashed/dotted
-include border-dotted/reftest.list
-
 # border-image
 include border-image/reftest.list
 
