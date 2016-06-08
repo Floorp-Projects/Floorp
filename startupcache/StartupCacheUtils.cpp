@@ -22,14 +22,17 @@ NS_EXPORT nsresult
 NewObjectInputStreamFromBuffer(UniquePtr<char[]> buffer, uint32_t len, 
                                nsIObjectInputStream** stream)
 {
-  nsCOMPtr<nsIStringInputStream> stringStream
-    = do_CreateInstance("@mozilla.org/io/string-input-stream;1");
-  nsCOMPtr<nsIObjectInputStream> objectInput 
-    = do_CreateInstance("@mozilla.org/binaryinputstream;1");
-  
+  nsCOMPtr<nsIStringInputStream> stringStream =
+    do_CreateInstance("@mozilla.org/io/string-input-stream;1");
+  NS_ENSURE_TRUE(stringStream, NS_ERROR_FAILURE);
+
+  nsCOMPtr<nsIObjectInputStream> objectInput =
+    do_CreateInstance("@mozilla.org/binaryinputstream;1");
+  NS_ENSURE_TRUE(objectInput, NS_ERROR_FAILURE);
+
   stringStream->AdoptData(buffer.release(), len);
   objectInput->SetInputStream(stringStream);
-  
+
   objectInput.forget(stream);
   return NS_OK;
 }

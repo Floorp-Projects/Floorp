@@ -336,7 +336,7 @@ int main(int argc, char* argv[], char* envp[])
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
     // We need to initialize the sandbox TargetServices before InitXPCOMGlue
     // because we might need the sandbox broker to give access to some files.
-    if (!sandboxing::GetInitializedTargetServices()) {
+    if (IsSandboxedProcess() && !sandboxing::GetInitializedTargetServices()) {
       Output("Failed to initialize the sandbox target services.");
       return 255;
     }

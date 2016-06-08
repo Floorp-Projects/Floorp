@@ -144,6 +144,7 @@ NS_IMETHODIMP nsDeviceContextSpecX::GetSurfaceForPrinter(gfxASurface **surface)
     GetPaperRect(&top, &left, &bottom, &right);
     const double width = right - left;
     const double height = bottom - top;
+    IntSize size(floor(width), floor(height));
 
     CGContextRef context;
     ::PMSessionGetCGGraphicsContext(mPrintSession, &context);
@@ -155,9 +156,9 @@ NS_IMETHODIMP nsDeviceContextSpecX::GetSurfaceForPrinter(gfxASurface **surface)
         // Here, we translate it to top-left corner of the paper.
         CGContextTranslateCTM(context, 0, height);
         CGContextScaleCTM(context, 1.0, -1.0);
-        newSurface = new gfxQuartzSurface(context, gfxSize(width, height));
+        newSurface = new gfxQuartzSurface(context, size);
     } else {
-        newSurface = new gfxQuartzSurface(gfxSize((int32_t)width, (int32_t)height), SurfaceFormat::A8R8G8B8_UINT32);
+        newSurface = new gfxQuartzSurface(size, SurfaceFormat::A8R8G8B8_UINT32);
     }
 
     if (!newSurface)

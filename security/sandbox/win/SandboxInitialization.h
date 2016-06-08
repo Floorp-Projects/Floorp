@@ -12,6 +12,10 @@ class BrokerServices;
 class TargetServices;
 }
 
+// Things that use this file will probably want access to the IsSandboxedProcess
+// function defined in one of the Chromium sandbox cc files.
+extern "C" bool IsSandboxedProcess();
+
 namespace mozilla {
 // Note the Chromium code just uses a bare sandbox namespace, which makes using
 // sandbox for our namespace painful.

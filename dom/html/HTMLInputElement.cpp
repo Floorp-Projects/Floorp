@@ -79,6 +79,8 @@
 #include "nsIRadioGroupContainer.h"
 
 // input type=file
+#include "mozilla/dom/Entry.h"
+#include "mozilla/dom/DOMFileSystem.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FileList.h"
 #include "nsIFile.h"
@@ -1533,6 +1535,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(HTMLInputElement,
   }
 
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFileList)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEntries)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLInputElement,
@@ -1541,6 +1544,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(HTMLInputElement,
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mControllers)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFilesOrDirectories)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mFileList)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mEntries)
   if (tmp->IsSingleLineTextControl(false)) {
     tmp->mInputData.mState->Unlink();
   }
@@ -3072,6 +3076,16 @@ HTMLInputElement::SetFiles(nsIDOMFileList* aFiles,
   }
 
   AfterSetFilesOrDirectories(aSetValueChanged);
+}
+
+void
+HTMLInputElement::MozSetDndFilesAndDirectories(const nsTArray<OwningFileOrDirectory>& aFilesOrDirectories)
+{
+  if (Preferences::GetBool("dom.webkitBlink.filesystem.enabled", false)) {
+    UpdateEntries(aFilesOrDirectories);
+  }
+
+  SetFilesOrDirectories(aFilesOrDirectories, true);
 }
 
 void
@@ -8181,6 +8195,42 @@ HTMLInputElement::ExploreDirectoryRecursively(bool aSetValueChanged)
   RefPtr<AfterSetFilesOrDirectoriesCallback> callback =
     new AfterSetFilesOrDirectoriesCallback(this, aSetValueChanged);
   helper->AddCallback(callback);
+}
+
+void
+HTMLInputElement::UpdateEntries(const nsTArray<OwningFileOrDirectory>& aFilesOrDirectories)
+{
+  mEntries.Clear();
+
+  nsCOMPtr<nsIGlobalObject> global = OwnerDoc()->GetScopeObject();
+  MOZ_ASSERT(global);
+
+  RefPtr<DOMFileSystem> fs = DOMFileSystem::Create(global);
+  if (NS_WARN_IF(!fs)) {
+    return;
+  }
+
+  Sequence<RefPtr<Entry>> entries;
+  for (uint32_t i = 0; i < aFilesOrDirectories.Length(); ++i) {
+    RefPtr<Entry> entry = Entry::Create(global, aFilesOrDirectories[i], fs);
+    MOZ_ASSERT(entry);
+
+    if (!entries.AppendElement(entry, fallible)) {
+      return;
+    }
+  }
+
+  // The root fileSystem is a DirectoryEntry object that contains only the
+  // dropped fileEntry and directoryEntry objects.
+  fs->CreateRoot(entries);
+
+  mEntries.SwapElements(entries);
+}
+
+void
+HTMLInputElement::GetWebkitEntries(nsTArray<RefPtr<Entry>>& aSequence)
+{
+  aSequence.AppendElements(mEntries);
 }
 
 } // namespace dom

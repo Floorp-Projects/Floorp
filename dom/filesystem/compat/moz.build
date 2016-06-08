@@ -1,0 +1,30 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+TEST_DIRS += ['tests']
+
+EXPORTS.mozilla.dom += [
+    'DirectoryEntry.h',
+    'DirectoryReader.h',
+    'DOMFileSystem.h',
+    'Entry.h',
+    'FileEntry.h',
+]
+
+UNIFIED_SOURCES += [
+    'CallbackRunnables.cpp',
+    'DirectoryEntry.cpp',
+    'DirectoryReader.cpp',
+    'DOMFileSystem.cpp',
+    'Entry.cpp',
+    'FileEntry.cpp',
+    'RootDirectoryEntry.cpp',
+    'RootDirectoryReader.cpp',
+]
+
+FINAL_LIBRARY = 'xul'
+
+include('/ipc/chromium/chromium-config.mozbuild')

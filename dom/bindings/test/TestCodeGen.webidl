@@ -1129,6 +1129,15 @@ dictionary DictForConstructor {
   any any1 = null;
 };
 
+dictionary DictWithConditionalMembers {
+  [ChromeOnly]
+  long chromeOnlyMember;
+  [Func="TestFuncControlledMember"]
+  long funcControlledMember;
+  [ChromeOnly, Func="nsGenericHTMLElement::TouchEventsEnabled"]
+  long chromeOnlyFuncControlledMember;
+};
+
 interface TestIndexedGetterInterface {
   getter long item(unsigned long idx);
   readonly attribute unsigned long length;

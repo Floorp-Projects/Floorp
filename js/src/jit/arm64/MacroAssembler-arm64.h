@@ -341,7 +341,7 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
             return;
           }
           case 4:
-            storePtr(value.valueReg(), address);
+            store32(value.valueReg(), address);
             return;
           case 1:
             store8(value.valueReg(), address);

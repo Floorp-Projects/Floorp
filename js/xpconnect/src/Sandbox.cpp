@@ -31,6 +31,7 @@
 #include "mozilla/dom/BlobBinding.h"
 #include "mozilla/dom/cache/CacheStorage.h"
 #include "mozilla/dom/CSSBinding.h"
+#include "mozilla/dom/DirectoryBinding.h"
 #include "mozilla/dom/IndexedDatabaseManager.h"
 #include "mozilla/dom/Fetch.h"
 #include "mozilla/dom/FileBinding.h"
@@ -909,6 +910,8 @@ xpc::GlobalProperties::Parse(JSContext* cx, JS::HandleObject obj)
             btoa = true;
         } else if (!strcmp(name.ptr(), "Blob")) {
             Blob = true;
+        } else if (!strcmp(name.ptr(), "Directory")) {
+            Directory = true;
         } else if (!strcmp(name.ptr(), "File")) {
             File = true;
         } else if (!strcmp(name.ptr(), "crypto")) {
@@ -972,6 +975,10 @@ xpc::GlobalProperties::Define(JSContext* cx, JS::HandleObject obj)
 
     if (Blob &&
         !dom::BlobBinding::GetConstructorObject(cx, obj))
+        return false;
+
+    if (Directory &&
+        !dom::DirectoryBinding::GetConstructorObject(cx, obj))
         return false;
 
     if (File &&

@@ -295,7 +295,7 @@ ClippedImage::GetFrameInternal(const nsIntSize& aSize,
       return MakePair(DrawResult::TEMPORARY_ERROR, RefPtr<SourceSurface>());
     }
 
-    RefPtr<gfxContext> ctx = gfxContext::ForDrawTarget(target);
+    RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(target);
     MOZ_ASSERT(ctx); // already checked the draw target above
 
     // Create our callback.

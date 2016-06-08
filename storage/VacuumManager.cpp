@@ -189,7 +189,7 @@ Vacuumer::execute()
   // Notify a heavy IO task is about to start.
   nsCOMPtr<nsIObserverService> os = mozilla::services::GetObserverService();
   if (os) {
-    DebugOnly<nsresult> rv =
+    rv =
       os->NotifyObservers(nullptr, OBSERVER_TOPIC_HEAVY_IO,
                           OBSERVER_DATA_VACUUM_BEGIN.get());
     MOZ_ASSERT(NS_SUCCEEDED(rv), "Should be able to notify");
@@ -226,11 +226,13 @@ Vacuumer::execute()
 NS_IMETHODIMP
 Vacuumer::HandleError(mozIStorageError *aError)
 {
-#ifdef DEBUG
   int32_t result;
-  nsresult rv = aError->GetResult(&result);
-  NS_ENSURE_SUCCESS(rv, rv);
+  nsresult rv;
   nsAutoCString message;
+
+#ifdef DEBUG
+  rv = aError->GetResult(&result);
+  NS_ENSURE_SUCCESS(rv, rv);
   rv = aError->GetMessage(message);
   NS_ENSURE_SUCCESS(rv, rv);
 
@@ -245,10 +247,8 @@ Vacuumer::HandleError(mozIStorageError *aError)
 #endif
 
   if (MOZ_LOG_TEST(gStorageLog, LogLevel::Error)) {
-    int32_t result;
-    nsresult rv = aError->GetResult(&result);
+    rv = aError->GetResult(&result);
     NS_ENSURE_SUCCESS(rv, rv);
-    nsAutoCString message;
     rv = aError->GetMessage(message);
     NS_ENSURE_SUCCESS(rv, rv);
     MOZ_LOG(gStorageLog, LogLevel::Error,

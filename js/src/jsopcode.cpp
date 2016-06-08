@@ -714,7 +714,7 @@ js::Disassemble(JSContext* cx, HandleScript script, bool lines, Sprinter* sp)
 }
 
 JS_FRIEND_API(bool)
-js::DumpPC(JSContext* cx)
+js::DumpPC(JSContext* cx, FILE* fp)
 {
     gc::AutoSuppressGC suppressGC(cx);
     Sprinter sprinter(cx);
@@ -722,17 +722,17 @@ js::DumpPC(JSContext* cx)
         return false;
     ScriptFrameIter iter(cx);
     if (iter.done()) {
-        fprintf(stdout, "Empty stack.\n");
+        fprintf(fp, "Empty stack.\n");
         return true;
     }
     RootedScript script(cx, iter.script());
     bool ok = DisassembleAtPC(cx, script, true, iter.pc(), false, &sprinter);
-    fprintf(stdout, "%s", sprinter.string());
+    fprintf(fp, "%s", sprinter.string());
     return ok;
 }
 
 JS_FRIEND_API(bool)
-js::DumpScript(JSContext* cx, JSScript* scriptArg)
+js::DumpScript(JSContext* cx, JSScript* scriptArg, FILE* fp)
 {
     gc::AutoSuppressGC suppressGC(cx);
     Sprinter sprinter(cx);
@@ -740,7 +740,7 @@ js::DumpScript(JSContext* cx, JSScript* scriptArg)
         return false;
     RootedScript script(cx, scriptArg);
     bool ok = Disassemble(cx, script, true, &sprinter);
-    fprintf(stdout, "%s", sprinter.string());
+    fprintf(fp, "%s", sprinter.string());
     return ok;
 }
 

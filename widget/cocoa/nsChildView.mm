@@ -1546,7 +1546,7 @@ nsChildView::PaintWindowInContext(CGContextRef aContext, const LayoutDeviceIntRe
     }
   }
 
-  RefPtr<gfxContext> targetContext = gfxContext::ForDrawTarget(mBackingSurface);
+  RefPtr<gfxContext> targetContext = gfxContext::CreateOrNull(mBackingSurface);
   MOZ_ASSERT(targetContext); // already checked the draw target above
 
   // Set up the clip region and clear existing contents in the backing surface.

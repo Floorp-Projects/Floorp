@@ -10,7 +10,10 @@
 
 var subtests = [
   // Sanity test to synthesize a mouse click
-  {'file': 'helper_click.html'},
+  {'file': 'helper_click.html?dtc=false'},
+  // Same as above, but with a dispatch-to-content region that exercises the
+  // main-thread notification codepaths for mouse events
+  {'file': 'helper_click.html?dtc=true'},
   // Sanity test for click but with some mouse movement between the down and up
   {'file': 'helper_drag_click.html'}
 ];

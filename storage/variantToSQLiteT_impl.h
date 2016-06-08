@@ -21,9 +21,9 @@ variantToSQLiteT(T aObj,
   if (!aValue)
     return sqlite3_T_null(aObj);
 
-  uint16_t type;
-  (void)aValue->GetDataType(&type);
-  switch (type) {
+  uint16_t valueType;
+  aValue->GetDataType(&valueType);
+  switch (valueType) {
     case nsIDataType::VTYPE_INT8:
     case nsIDataType::VTYPE_INT16:
     case nsIDataType::VTYPE_INT32:
@@ -94,17 +94,17 @@ variantToSQLiteT(T aObj,
       return sqlite3_T_null(aObj);
     case nsIDataType::VTYPE_ARRAY:
     {
-      uint16_t type;
+      uint16_t arrayType;
       nsIID iid;
       uint32_t count;
       void *data;
-      nsresult rv = aValue->GetAsArray(&type, &iid, &count, &data);
+      nsresult rv = aValue->GetAsArray(&arrayType, &iid, &count, &data);
       NS_ENSURE_SUCCESS(rv, SQLITE_MISMATCH);
 
       // Check to make sure it's a supported type.
-      NS_ASSERTION(type == nsIDataType::VTYPE_UINT8,
+      NS_ASSERTION(arrayType == nsIDataType::VTYPE_UINT8,
                    "Invalid type passed!  You may leak!");
-      if (type != nsIDataType::VTYPE_UINT8) {
+      if (arrayType != nsIDataType::VTYPE_UINT8) {
         // Technically this could leak with certain data types, but somebody was
         // being stupid passing us this anyway.
         free(data);

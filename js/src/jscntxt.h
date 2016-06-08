@@ -321,9 +321,6 @@ struct JSContext : public js::ExclusiveContext,
     bool                throwing;            /* is there a pending exception? */
     JS::PersistentRooted<JS::Value> unwrappedException_; /* most-recently-thrown exception */
 
-    /* Per-context options. */
-    JS::ContextOptions  options_;
-
     // True if the exception currently being thrown is by result of
     // ReportOverRecursed. See Debugger::slowPathOnExceptionUnwind.
     bool                overRecursed_;
@@ -362,14 +359,6 @@ struct JSContext : public js::ExclusiveContext,
      * Note: if this ever shows up in a profile, just add caching!
      */
     JSVersion findVersion() const;
-
-    const JS::ContextOptions& options() const {
-        return options_;
-    }
-
-    JS::ContextOptions& options() {
-        return options_;
-    }
 
     js::LifoAlloc& tempLifoAlloc() { return runtime()->tempLifoAlloc; }
 
@@ -603,10 +592,10 @@ PrintError(JSContext* cx, FILE* file, const char* message, JSErrorReport* report
            bool reportWarnings);
 
 /*
- * Send a JSErrorReport to the errorReporter callback.
+ * Send a JSErrorReport to the warningReporter callback.
  */
 void
-CallErrorReporter(JSContext* cx, const char* message, JSErrorReport* report);
+CallWarningReporter(JSContext* cx, const char* message, JSErrorReport* report);
 
 extern bool
 ReportIsNotDefined(JSContext* cx, HandlePropertyName name);

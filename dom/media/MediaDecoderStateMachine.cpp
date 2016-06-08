@@ -598,9 +598,7 @@ MediaDecoderStateMachine::OnAudioDecoded(MediaData* aAudioSample)
   mDecodedAudioEndTime = std::max(audio->GetEndTime(), mDecodedAudioEndTime);
 
   SAMPLE_LOG("OnAudioDecoded [%lld,%lld] disc=%d",
-             (audio ? audio->mTime : -1),
-             (audio ? audio->GetEndTime() : -1),
-             (audio ? audio->mDiscontinuity : 0));
+             audio->mTime, audio->GetEndTime(), audio->mDiscontinuity);
 
   switch (mState) {
     case DECODER_STATE_BUFFERING: {
@@ -788,9 +786,7 @@ MediaDecoderStateMachine::OnVideoDecoded(MediaData* aVideoSample,
   mDecodedVideoEndTime = std::max(mDecodedVideoEndTime, video->GetEndTime());
 
   SAMPLE_LOG("OnVideoDecoded [%lld,%lld] disc=%d",
-             (video ? video->mTime : -1),
-             (video ? video->GetEndTime() : -1),
-             (video ? video->mDiscontinuity : 0));
+             video->mTime, video->GetEndTime(), video->mDiscontinuity);
 
   switch (mState) {
     case DECODER_STATE_BUFFERING: {
@@ -1427,7 +1423,7 @@ void MediaDecoderStateMachine::InitiateVideoDecodeRecoverySeek()
 
   // Reset our state machine and decoding pipeline before seeking.
   if (mSeekTask->NeedToResetMDSM()) {
-    Reset(MediaDecoderReader::VIDEO_ONLY);
+    Reset(TrackInfo::kVideoTrack);
   }
 
   // Do the seek.
@@ -1618,7 +1614,10 @@ MediaDecoderStateMachine::InitiateSeek(SeekJob aSeekJob)
                                       Move(aSeekJob), mInfo, Duration(),
                                       GetMediaTime(), AudioQueue(), VideoQueue());
   } else {
-    MOZ_ASSERT(false, "Cannot handle this seek task.");
+    // Use MOZ_DIAGNOSTIC_ASSERT here to test if a "VideoOnly" seek task could
+    // reach here, may come from a dormant state. Once we confirm it, we could
+    // than handle it.
+    MOZ_DIAGNOSTIC_ASSERT(false, "Cannot handle this seek task.");
   }
 
   // Stop playback now to ensure that while we're outside the monitor
@@ -2392,7 +2391,7 @@ nsresult MediaDecoderStateMachine::RunStateMachine()
 }
 
 void
-MediaDecoderStateMachine::Reset(MediaDecoderReader::TargetQueues aQueues /*= AUDIO_VIDEO*/)
+MediaDecoderStateMachine::Reset(TrackSet aTracks)
 {
   MOZ_ASSERT(OnTaskQueue());
   DECODER_LOG("MediaDecoderStateMachine::Reset");
@@ -2405,16 +2404,25 @@ MediaDecoderStateMachine::Reset(MediaDecoderReader::TargetQueues aQueues /*= AUD
              mState == DECODER_STATE_SEEKING ||
              mState == DECODER_STATE_DORMANT);
 
+  // Assert that aTracks specifies to reset the video track because we
+  // don't currently support resetting just the audio track.
+  MOZ_ASSERT(aTracks.contains(TrackInfo::kVideoTrack));
 
-  mDecodedVideoEndTime = 0;
-  mVideoCompleted = false;
-  VideoQueue().Reset();
-
-  if (aQueues == MediaDecoderReader::AUDIO_VIDEO) {
+  if (aTracks.contains(TrackInfo::kAudioTrack) &&
+      aTracks.contains(TrackInfo::kVideoTrack)) {
     // Stop the audio thread. Otherwise, MediaSink might be accessing AudioQueue
     // outside of the decoder monitor while we are clearing the queue and causes
     // crash for no samples to be popped.
     StopMediaSink();
+  }
+
+  if (aTracks.contains(TrackInfo::kVideoTrack)) {
+    mDecodedVideoEndTime = 0;
+    mVideoCompleted = false;
+    VideoQueue().Reset();
+  }
+
+  if (aTracks.contains(TrackInfo::kAudioTrack)) {
     mDecodedAudioEndTime = 0;
     mAudioCompleted = false;
     AudioQueue().Reset();
@@ -2425,7 +2433,7 @@ MediaDecoderStateMachine::Reset(MediaDecoderReader::TargetQueues aQueues /*= AUD
 
   mPlaybackOffset = 0;
 
-  mReader->ResetDecode(aQueues);
+  mReader->ResetDecode(aTracks);
 }
 
 int64_t

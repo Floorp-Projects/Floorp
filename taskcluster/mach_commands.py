@@ -6,6 +6,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+import json
 import logging
 import sys
 import traceback
@@ -32,6 +33,12 @@ class ShowTaskGraphSubCommand(SubCommand):
                             help="suppress all logging output"),
             CommandArgument('--verbose', '-v', action="store_true",
                             help="include debug-level logging output"),
+            CommandArgument('--json', '-J', action="store_const",
+                            dest="format", const="json",
+                            help="Output each task in the task graph as a JSON object"),
+            CommandArgument('--labels', '-L', action="store_const",
+                            dest="format", const="labels",
+                            help="Output the label for each task in the task graph (default)"),
             CommandArgument('--parameters', '-p', required=True,
                             help="parameters file (.yml or .json; see "
                                  "`taskcluster/docs/parameters.rst`)`"),
@@ -181,8 +188,18 @@ class MachCommands(MachCommandBase):
 
             tg = getattr(tgg, graph_attr)
 
-            for label in tg.graph.visit_postorder():
-                print(tg.tasks[label])
+            show_method = getattr(self, 'show_taskgraph_' + (options['format'] or 'labels'))
+            show_method(tg)
         except Exception as e:
             traceback.print_exc()
             sys.exit(1)
+
+    def show_taskgraph_labels(self, taskgraph):
+        for label in taskgraph.graph.visit_postorder():
+            print(label)
+
+    def show_taskgraph_json(self, taskgraph):
+        # JSON output is a sequence of JSON objects, rather than a single object, so
+        # disassemble the dictionary
+        for task in taskgraph.to_json().itervalues():
+            print(json.dumps(task))

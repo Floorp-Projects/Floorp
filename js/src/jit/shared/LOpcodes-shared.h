@@ -159,6 +159,8 @@
     _(PopcntI64)                    \
     _(SqrtD)                        \
     _(SqrtF)                        \
+    _(CopySignD)                    \
+    _(CopySignF)                    \
     _(Atan2D)                       \
     _(Hypot)                        \
     _(PowI)                         \

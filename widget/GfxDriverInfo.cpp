@@ -18,7 +18,7 @@ GfxDeviceFamily* GfxDriverInfo::mDeviceFamilies[DeviceFamilyMax];
 nsAString* GfxDriverInfo::mDeviceVendors[DeviceVendorMax];
 
 GfxDriverInfo::GfxDriverInfo()
-  : mOperatingSystem(DRIVER_OS_UNKNOWN),
+  : mOperatingSystem(OperatingSystem::Unknown),
     mOperatingSystemVersion(0),
     mAdapterVendor(GfxDriverInfo::GetDeviceVendor(VendorAll)),
     mDevices(allDevices),

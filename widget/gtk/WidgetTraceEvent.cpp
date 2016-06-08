@@ -34,7 +34,7 @@ bool InitWidgetTracing()
 {
   sMutex = new Mutex("Event tracer thread mutex");
   sCondVar = new CondVar(*sMutex, "Event tracer thread condvar");
-  return sMutex && sCondVar;
+  return true;
 }
 
 void CleanUpWidgetTracing()

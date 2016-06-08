@@ -77,12 +77,10 @@ InitializeBinder(void *aDummy) {
 #endif
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
-static bool gIsSandboxEnabled = false;
-
 class WinSandboxStarter : public mozilla::gmp::SandboxStarter {
 public:
     virtual bool Start(const char *aLibPath) override {
-        if (gIsSandboxEnabled) {
+        if (IsSandboxedProcess()) {
             mozilla::sandboxing::LowerSandbox();
         }
         return true;
@@ -155,15 +153,12 @@ content_process_main(int argc, char* argv[])
     bool isNuwa = false;
     for (int i = 1; i < argc; i++) {
         isNuwa |= strcmp(argv[i], "-nuwa") == 0;
-#if defined(XP_WIN) && defined(MOZ_SANDBOX)
-        gIsSandboxEnabled |= strcmp(argv[i], "-sandbox") == 0;
-#endif
     }
 
     XREChildData childData;
 
 #if defined(XP_WIN) && defined(MOZ_SANDBOX)
-    if (gIsSandboxEnabled) {
+    if (IsSandboxedProcess()) {
         childData.sandboxTargetServices =
             mozilla::sandboxing::GetInitializedTargetServices();
         if (!childData.sandboxTargetServices) {

@@ -12,11 +12,12 @@ interface DataTransfer {
            attribute DOMString dropEffect;
            attribute DOMString effectAllowed;
 
-  //readonly attribute DataTransferItemList items;
+  readonly attribute DataTransferItemList items;
 
   [Throws]
   void setDragImage(Element image, long x, long y);
 
+  [Throws]
   readonly attribute DOMStringList types;
   [Throws]
   DOMString getData(DOMString format);

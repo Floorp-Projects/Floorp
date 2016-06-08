@@ -4402,10 +4402,11 @@ class IDLArgument(IDLObjectWithIdentifier):
                 self.enforceRange = True
             elif identifier == "TreatNonCallableAsNull":
                 self._allowTreatNonCallableAsNull = True
-            elif self.dictionaryMember and identifier == "ChromeOnly":
+            elif (self.dictionaryMember and
+                  (identifier == "ChromeOnly" or identifier == "Func")):
                 if not self.optional:
-                    raise WebIDLError("[ChromeOnly] must not be used on a required "
-                                      "dictionary member",
+                    raise WebIDLError("[%s] must not be used on a required "
+                                      "dictionary member" % identifier,
                                       [attribute.location])
             else:
                 raise WebIDLError("Unhandled extended attribute on %s" %

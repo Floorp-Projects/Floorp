@@ -329,3 +329,9 @@ LIRGeneratorARM64::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
 {
     MOZ_CRASH("NY");
 }
+
+void
+LIRGeneratorARM64::visitCopySign(MCopySign* ins)
+{
+    MOZ_CRASH("NY");
+}

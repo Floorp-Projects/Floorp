@@ -3326,114 +3326,114 @@ js::ReportGetterOnlyAssignment(JSContext* cx, bool strict)
  */
 
 static void
-dumpValue(const Value& v)
+dumpValue(const Value& v, FILE* fp)
 {
     if (v.isNull())
-        fprintf(stderr, "null");
+        fprintf(fp, "null");
     else if (v.isUndefined())
-        fprintf(stderr, "undefined");
+        fprintf(fp, "undefined");
     else if (v.isInt32())
-        fprintf(stderr, "%d", v.toInt32());
+        fprintf(fp, "%d", v.toInt32());
     else if (v.isDouble())
-        fprintf(stderr, "%g", v.toDouble());
+        fprintf(fp, "%g", v.toDouble());
     else if (v.isString())
-        v.toString()->dump();
+        v.toString()->dump(fp);
     else if (v.isSymbol())
-        v.toSymbol()->dump();
+        v.toSymbol()->dump(fp);
     else if (v.isObject() && v.toObject().is<JSFunction>()) {
         JSFunction* fun = &v.toObject().as<JSFunction>();
         if (fun->displayAtom()) {
-            fputs("<function ", stderr);
-            FileEscapedString(stderr, fun->displayAtom(), 0);
+            fputs("<function ", fp);
+            FileEscapedString(fp, fun->displayAtom(), 0);
         } else {
-            fputs("<unnamed function", stderr);
+            fputs("<unnamed function", fp);
         }
         if (fun->hasScript()) {
             JSScript* script = fun->nonLazyScript();
-            fprintf(stderr, " (%s:%" PRIuSIZE ")",
+            fprintf(fp, " (%s:%" PRIuSIZE ")",
                     script->filename() ? script->filename() : "", script->lineno());
         }
-        fprintf(stderr, " at %p>", (void*) fun);
+        fprintf(fp, " at %p>", (void*) fun);
     } else if (v.isObject()) {
         JSObject* obj = &v.toObject();
         const Class* clasp = obj->getClass();
-        fprintf(stderr, "<%s%s at %p>",
+        fprintf(fp, "<%s%s at %p>",
                 clasp->name,
                 (clasp == &PlainObject::class_) ? "" : " object",
                 (void*) obj);
     } else if (v.isBoolean()) {
         if (v.toBoolean())
-            fprintf(stderr, "true");
+            fprintf(fp, "true");
         else
-            fprintf(stderr, "false");
+            fprintf(fp, "false");
     } else if (v.isMagic()) {
-        fprintf(stderr, "<invalid");
+        fprintf(fp, "<invalid");
 #ifdef DEBUG
         switch (v.whyMagic()) {
-          case JS_ELEMENTS_HOLE:     fprintf(stderr, " elements hole");      break;
-          case JS_NO_ITER_VALUE:     fprintf(stderr, " no iter value");      break;
-          case JS_GENERATOR_CLOSING: fprintf(stderr, " generator closing");  break;
-          case JS_OPTIMIZED_OUT:     fprintf(stderr, " optimized out");      break;
-          default:                   fprintf(stderr, " ?!");                 break;
+          case JS_ELEMENTS_HOLE:     fprintf(fp, " elements hole");      break;
+          case JS_NO_ITER_VALUE:     fprintf(fp, " no iter value");      break;
+          case JS_GENERATOR_CLOSING: fprintf(fp, " generator closing");  break;
+          case JS_OPTIMIZED_OUT:     fprintf(fp, " optimized out");      break;
+          default:                   fprintf(fp, " ?!");                 break;
         }
 #endif
-        fprintf(stderr, ">");
+        fprintf(fp, ">");
     } else {
-        fprintf(stderr, "unexpected value");
+        fprintf(fp, "unexpected value");
     }
 }
 
 JS_FRIEND_API(void)
-js::DumpValue(const Value& val)
+js::DumpValue(const Value& val, FILE* fp)
 {
-    dumpValue(val);
-    fputc('\n', stderr);
+    dumpValue(val, fp);
+    fputc('\n', fp);
 }
 
 JS_FRIEND_API(void)
-js::DumpId(jsid id)
+js::DumpId(jsid id, FILE* fp)
 {
-    fprintf(stderr, "jsid %p = ", (void*) JSID_BITS(id));
-    dumpValue(IdToValue(id));
-    fputc('\n', stderr);
+    fprintf(fp, "jsid %p = ", (void*) JSID_BITS(id));
+    dumpValue(IdToValue(id), fp);
+    fputc('\n', fp);
 }
 
 static void
-DumpProperty(NativeObject* obj, Shape& shape)
+DumpProperty(const NativeObject* obj, Shape& shape, FILE* fp)
 {
     jsid id = shape.propid();
     uint8_t attrs = shape.attributes();
 
-    fprintf(stderr, "    ((js::Shape*) %p) ", (void*) &shape);
-    if (attrs & JSPROP_ENUMERATE) fprintf(stderr, "enumerate ");
-    if (attrs & JSPROP_READONLY) fprintf(stderr, "readonly ");
-    if (attrs & JSPROP_PERMANENT) fprintf(stderr, "permanent ");
-    if (attrs & JSPROP_SHARED) fprintf(stderr, "shared ");
+    fprintf(fp, "    ((js::Shape*) %p) ", (void*) &shape);
+    if (attrs & JSPROP_ENUMERATE) fprintf(fp, "enumerate ");
+    if (attrs & JSPROP_READONLY) fprintf(fp, "readonly ");
+    if (attrs & JSPROP_PERMANENT) fprintf(fp, "permanent ");
+    if (attrs & JSPROP_SHARED) fprintf(fp, "shared ");
 
     if (shape.hasGetterValue())
-        fprintf(stderr, "getterValue=%p ", (void*) shape.getterObject());
+        fprintf(fp, "getterValue=%p ", (void*) shape.getterObject());
     else if (!shape.hasDefaultGetter())
-        fprintf(stderr, "getterOp=%p ", JS_FUNC_TO_DATA_PTR(void*, shape.getterOp()));
+        fprintf(fp, "getterOp=%p ", JS_FUNC_TO_DATA_PTR(void*, shape.getterOp()));
 
     if (shape.hasSetterValue())
-        fprintf(stderr, "setterValue=%p ", (void*) shape.setterObject());
+        fprintf(fp, "setterValue=%p ", (void*) shape.setterObject());
     else if (!shape.hasDefaultSetter())
-        fprintf(stderr, "setterOp=%p ", JS_FUNC_TO_DATA_PTR(void*, shape.setterOp()));
+        fprintf(fp, "setterOp=%p ", JS_FUNC_TO_DATA_PTR(void*, shape.setterOp()));
 
     if (JSID_IS_ATOM(id) || JSID_IS_INT(id) || JSID_IS_SYMBOL(id))
-        dumpValue(js::IdToValue(id));
+        dumpValue(js::IdToValue(id), fp);
     else
-        fprintf(stderr, "unknown jsid %p", (void*) JSID_BITS(id));
+        fprintf(fp, "unknown jsid %p", (void*) JSID_BITS(id));
 
     uint32_t slot = shape.hasSlot() ? shape.maybeSlot() : SHAPE_INVALID_SLOT;
-    fprintf(stderr, ": slot %d", slot);
+    fprintf(fp, ": slot %d", slot);
     if (shape.hasSlot()) {
-        fprintf(stderr, " = ");
-        dumpValue(obj->getSlot(slot));
+        fprintf(fp, " = ");
+        dumpValue(obj->getSlot(slot), fp);
     } else if (slot != SHAPE_INVALID_SLOT) {
-        fprintf(stderr, " (INVALID!)");
+        fprintf(fp, " (INVALID!)");
     }
-    fprintf(stderr, "\n");
+    fprintf(fp, "\n");
 }
 
 bool
@@ -3443,125 +3443,132 @@ JSObject::uninlinedIsProxy() const
 }
 
 void
-JSObject::dump()
+JSObject::dump(FILE* fp) const
 {
-    JSObject* obj = this;
+    const JSObject* obj = this;
     JSObject* globalObj = &global();
-    fprintf(stderr, "object %p from global %p [%s]\n", (void*) obj,
+    fprintf(fp, "object %p from global %p [%s]\n", (void*) obj,
             (void*) globalObj, globalObj->getClass()->name);
     const Class* clasp = obj->getClass();
-    fprintf(stderr, "class %p %s\n", (const void*)clasp, clasp->name);
+    fprintf(fp, "class %p %s\n", (const void*)clasp, clasp->name);
 
-    fprintf(stderr, "flags:");
-    if (obj->isDelegate()) fprintf(stderr, " delegate");
-    if (!obj->is<ProxyObject>() && !obj->nonProxyIsExtensible()) fprintf(stderr, " not_extensible");
-    if (obj->isIndexed()) fprintf(stderr, " indexed");
-    if (obj->isBoundFunction()) fprintf(stderr, " bound_function");
-    if (obj->isQualifiedVarObj()) fprintf(stderr, " varobj");
-    if (obj->isUnqualifiedVarObj()) fprintf(stderr, " unqualified_varobj");
-    if (obj->watched()) fprintf(stderr, " watched");
-    if (obj->isIteratedSingleton()) fprintf(stderr, " iterated_singleton");
-    if (obj->isNewGroupUnknown()) fprintf(stderr, " new_type_unknown");
-    if (obj->hasUncacheableProto()) fprintf(stderr, " has_uncacheable_proto");
-    if (obj->hadElementsAccess()) fprintf(stderr, " had_elements_access");
-    if (obj->wasNewScriptCleared()) fprintf(stderr, " new_script_cleared");
+    fprintf(fp, "flags:");
+    if (obj->isDelegate()) fprintf(fp, " delegate");
+    if (!obj->is<ProxyObject>() && !obj->nonProxyIsExtensible()) fprintf(fp, " not_extensible");
+    if (obj->isIndexed()) fprintf(fp, " indexed");
+    if (obj->isBoundFunction()) fprintf(fp, " bound_function");
+    if (obj->isQualifiedVarObj()) fprintf(fp, " varobj");
+    if (obj->isUnqualifiedVarObj()) fprintf(fp, " unqualified_varobj");
+    if (obj->watched()) fprintf(fp, " watched");
+    if (obj->isIteratedSingleton()) fprintf(fp, " iterated_singleton");
+    if (obj->isNewGroupUnknown()) fprintf(fp, " new_type_unknown");
+    if (obj->hasUncacheableProto()) fprintf(fp, " has_uncacheable_proto");
+    if (obj->hadElementsAccess()) fprintf(fp, " had_elements_access");
+    if (obj->wasNewScriptCleared()) fprintf(fp, " new_script_cleared");
     if (obj->hasStaticPrototype() && obj->staticPrototypeIsImmutable())
-        fprintf(stderr, " immutable_prototype");
+        fprintf(fp, " immutable_prototype");
 
     if (obj->isNative()) {
-        NativeObject* nobj = &obj->as<NativeObject>();
+        const NativeObject* nobj = &obj->as<NativeObject>();
         if (nobj->inDictionaryMode())
-            fprintf(stderr, " inDictionaryMode");
+            fprintf(fp, " inDictionaryMode");
         if (nobj->hasShapeTable())
-            fprintf(stderr, " hasShapeTable");
+            fprintf(fp, " hasShapeTable");
     }
-    fprintf(stderr, "\n");
+    fprintf(fp, "\n");
 
     if (obj->isNative()) {
-        NativeObject* nobj = &obj->as<NativeObject>();
+        const NativeObject* nobj = &obj->as<NativeObject>();
         uint32_t slots = nobj->getDenseInitializedLength();
         if (slots) {
-            fprintf(stderr, "elements\n");
+            fprintf(fp, "elements\n");
             for (uint32_t i = 0; i < slots; i++) {
-                fprintf(stderr, " %3d: ", i);
-                dumpValue(nobj->getDenseElement(i));
-                fprintf(stderr, "\n");
-                fflush(stderr);
+                fprintf(fp, " %3d: ", i);
+                dumpValue(nobj->getDenseElement(i), fp);
+                fprintf(fp, "\n");
+                fflush(fp);
             }
         }
     }
 
-    fprintf(stderr, "proto ");
+    fprintf(fp, "proto ");
     TaggedProto proto = obj->taggedProto();
     if (proto.isDynamic())
-        fprintf(stderr, "<dynamic>");
+        fprintf(fp, "<dynamic>");
     else
-        dumpValue(ObjectOrNullValue(proto.toObjectOrNull()));
-    fputc('\n', stderr);
+        dumpValue(ObjectOrNullValue(proto.toObjectOrNull()), fp);
+    fputc('\n', fp);
 
     if (clasp->flags & JSCLASS_HAS_PRIVATE)
-        fprintf(stderr, "private %p\n", obj->as<NativeObject>().getPrivate());
+        fprintf(fp, "private %p\n", obj->as<NativeObject>().getPrivate());
 
     if (!obj->isNative())
-        fprintf(stderr, "not native\n");
+        fprintf(fp, "not native\n");
 
     uint32_t reservedEnd = JSCLASS_RESERVED_SLOTS(clasp);
     uint32_t slots = obj->isNative() ? obj->as<NativeObject>().slotSpan() : 0;
     uint32_t stop = obj->isNative() ? reservedEnd : slots;
     if (stop > 0)
-        fprintf(stderr, obj->isNative() ? "reserved slots:\n" : "slots:\n");
+        fprintf(fp, obj->isNative() ? "reserved slots:\n" : "slots:\n");
     for (uint32_t i = 0; i < stop; i++) {
-        fprintf(stderr, " %3d ", i);
+        fprintf(fp, " %3d ", i);
         if (i < reservedEnd)
-            fprintf(stderr, "(reserved) ");
-        fprintf(stderr, "= ");
-        dumpValue(obj->as<NativeObject>().getSlot(i));
-        fputc('\n', stderr);
+            fprintf(fp, "(reserved) ");
+        fprintf(fp, "= ");
+        dumpValue(obj->as<NativeObject>().getSlot(i), fp);
+        fputc('\n', fp);
     }
 
     if (obj->isNative()) {
-        fprintf(stderr, "properties:\n");
+        fprintf(fp, "properties:\n");
         Vector<Shape*, 8, SystemAllocPolicy> props;
         for (Shape::Range<NoGC> r(obj->as<NativeObject>().lastProperty()); !r.empty(); r.popFront()) {
             if (!props.append(&r.front())) {
-                fprintf(stderr, "(OOM while appending properties)\n");
+                fprintf(fp, "(OOM while appending properties)\n");
                 break;
             }
         }
         for (size_t i = props.length(); i-- != 0;)
-            DumpProperty(&obj->as<NativeObject>(), *props[i]);
+            DumpProperty(&obj->as<NativeObject>(), *props[i], fp);
     }
-    fputc('\n', stderr);
+    fputc('\n', fp);
+}
+
+// For debuggers.
+void
+JSObject::dump() const
+{
+    dump(stderr);
 }
 
 static void
-MaybeDumpObject(const char* name, JSObject* obj)
+MaybeDumpObject(const char* name, JSObject* obj, FILE* fp)
 {
     if (obj) {
-        fprintf(stderr, "  %s: ", name);
-        dumpValue(ObjectValue(*obj));
-        fputc('\n', stderr);
+        fprintf(fp, "  %s: ", name);
+        dumpValue(ObjectValue(*obj), fp);
+        fputc('\n', fp);
     }
 }
 
 static void
-MaybeDumpValue(const char* name, const Value& v)
+MaybeDumpValue(const char* name, const Value& v, FILE* fp)
 {
     if (!v.isNull()) {
-        fprintf(stderr, "  %s: ", name);
-        dumpValue(v);
-        fputc('\n', stderr);
+        fprintf(fp, "  %s: ", name);
+        dumpValue(v, fp);
+        fputc('\n', fp);
     }
 }
 
 JS_FRIEND_API(void)
-js::DumpInterpreterFrame(JSContext* cx, InterpreterFrame* start)
+js::DumpInterpreterFrame(JSContext* cx, FILE* fp, InterpreterFrame* start)
 {
     /* This should only called during live debugging. */
     ScriptFrameIter i(cx);
     if (!start) {
         if (i.done()) {
-            fprintf(stderr, "no stack for cx = %p\n", (void*) cx);
+            fprintf(fp, "no stack for cx = %p\n", (void*) cx);
             return;
         }
     } else {
@@ -3569,7 +3576,7 @@ js::DumpInterpreterFrame(JSContext* cx, InterpreterFrame* start)
             ++i;
 
         if (i.done()) {
-            fprintf(stderr, "fp = %p not found in cx = %p\n",
+            fprintf(fp, "fp = %p not found in cx = %p\n",
                     (void*)start, (void*)cx);
             return;
         }
@@ -3577,60 +3584,60 @@ js::DumpInterpreterFrame(JSContext* cx, InterpreterFrame* start)
 
     for (; !i.done(); ++i) {
         if (i.isJit())
-            fprintf(stderr, "JIT frame\n");
+            fprintf(fp, "JIT frame\n");
         else
-            fprintf(stderr, "InterpreterFrame at %p\n", (void*) i.interpFrame());
+            fprintf(fp, "InterpreterFrame at %p\n", (void*) i.interpFrame());
 
         if (i.isFunctionFrame()) {
-            fprintf(stderr, "callee fun: ");
+            fprintf(fp, "callee fun: ");
             RootedValue v(cx);
             JSObject* fun = i.callee(cx);
             v.setObject(*fun);
-            dumpValue(v);
+            dumpValue(v, fp);
         } else {
-            fprintf(stderr, "global or eval frame, no callee");
+            fprintf(fp, "global or eval frame, no callee");
         }
-        fputc('\n', stderr);
+        fputc('\n', fp);
 
-        fprintf(stderr, "file %s line %" PRIuSIZE "\n",
+        fprintf(fp, "file %s line %" PRIuSIZE "\n",
                 i.script()->filename(), i.script()->lineno());
 
         if (jsbytecode* pc = i.pc()) {
-            fprintf(stderr, "  pc = %p\n", pc);
-            fprintf(stderr, "  current op: %s\n", CodeName[*pc]);
-            MaybeDumpObject("staticScope", i.script()->getStaticBlockScope(pc));
+            fprintf(fp, "  pc = %p\n", pc);
+            fprintf(fp, "  current op: %s\n", CodeName[*pc]);
+            MaybeDumpObject("staticScope", i.script()->getStaticBlockScope(pc), fp);
         }
         if (i.isFunctionFrame())
-            MaybeDumpValue("this", i.thisArgument(cx));
+            MaybeDumpValue("this", i.thisArgument(cx), fp);
         if (!i.isJit()) {
-            fprintf(stderr, "  rval: ");
-            dumpValue(i.interpFrame()->returnValue());
-            fputc('\n', stderr);
+            fprintf(fp, "  rval: ");
+            dumpValue(i.interpFrame()->returnValue(), fp);
+            fputc('\n', fp);
         }
 
-        fprintf(stderr, "  flags:");
+        fprintf(fp, "  flags:");
         if (i.isConstructing())
-            fprintf(stderr, " constructing");
+            fprintf(fp, " constructing");
         if (!i.isJit() && i.interpFrame()->isDebuggerEvalFrame())
-            fprintf(stderr, " debugger eval");
+            fprintf(fp, " debugger eval");
         if (i.isEvalFrame())
-            fprintf(stderr, " eval");
-        fputc('\n', stderr);
+            fprintf(fp, " eval");
+        fputc('\n', fp);
 
-        fprintf(stderr, "  scopeChain: (JSObject*) %p\n", (void*) i.scopeChain(cx));
+        fprintf(fp, "  scopeChain: (JSObject*) %p\n", (void*) i.scopeChain(cx));
 
-        fputc('\n', stderr);
+        fputc('\n', fp);
     }
 }
 
 #endif /* DEBUG */
 
 JS_FRIEND_API(void)
-js::DumpBacktrace(JSContext* cx)
+js::DumpBacktrace(JSContext* cx, FILE* fp)
 {
     Sprinter sprinter(cx, false);
     if (!sprinter.init()) {
-        fprintf(stdout, "js::DumpBacktrace: OOM\n");
+        fprintf(fp, "js::DumpBacktrace: OOM\n");
         return;
     }
     size_t depth = 0;
@@ -3649,13 +3656,18 @@ js::DumpBacktrace(JSContext* cx)
                         depth, i.rawFramePtr(), frameType, filename, line,
                         script, script->pcToOffset(i.pc()));
     }
-    fprintf(stdout, "%s", sprinter.string());
+    fprintf(fp, "%s", sprinter.string());
 #ifdef XP_WIN32
     if (IsDebuggerPresent())
         OutputDebugStringA(sprinter.string());
 #endif
 }
 
+JS_FRIEND_API(void)
+js::DumpBacktrace(JSContext* cx)
+{
+    DumpBacktrace(cx, stdout);
+}
 
 /* * */
 

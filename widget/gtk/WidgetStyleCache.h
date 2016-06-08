@@ -21,6 +21,12 @@ enum : StyleFlags {
 GtkWidget*
 GetWidget(WidgetNodeType aNodeType);
 
+// CreateCSSNode is implemented for gtk >= 3.20 only.
+GtkStyleContext*
+CreateCSSNode(const char*      aName,
+              GtkStyleContext* aParentStyle,
+              GType            aType = G_TYPE_NONE);
+
 // Callers must call ReleaseStyleContext() on the returned context.
 GtkStyleContext*
 ClaimStyleContext(WidgetNodeType aNodeType,

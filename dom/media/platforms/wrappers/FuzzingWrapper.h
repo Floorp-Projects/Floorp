@@ -100,9 +100,7 @@ class DecoderFuzzingWrapper : public MediaDataDecoder
 public:
   DecoderFuzzingWrapper(already_AddRefed<MediaDataDecoder> aDecoder,
                         already_AddRefed<DecoderCallbackFuzzingWrapper> aCallbackWrapper);
-  virtual ~DecoderFuzzingWrapper();
 
-private:
   // MediaDataDecoder implementation.
   RefPtr<InitPromise> Init() override;
   nsresult Input(MediaRawData* aSample) override;
@@ -116,6 +114,8 @@ private:
     return mDecoder->GetDescriptionName();
   }
 
+private:
+  virtual ~DecoderFuzzingWrapper();
   RefPtr<MediaDataDecoder> mDecoder;
   RefPtr<DecoderCallbackFuzzingWrapper> mCallbackWrapper;
 };
