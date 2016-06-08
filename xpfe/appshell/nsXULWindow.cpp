@@ -1921,7 +1921,7 @@ NS_IMETHODIMP nsXULWindow::CreateNewContentWindow(int32_t aChromeFlags,
     }
   }
 
-  NS_ENSURE_STATE(xulWin->mPrimaryContentShell);
+  NS_ENSURE_STATE(xulWin->mPrimaryContentShell || xulWin->mPrimaryTabParent);
 
   *_retval = newWindow;
   NS_ADDREF(*_retval);
