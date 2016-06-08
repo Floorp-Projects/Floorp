@@ -59,7 +59,7 @@ static cairo_user_data_key_t gfxasurface_pointer_key;
 
 gfxASurface::gfxASurface()
  : mSurface(nullptr), mFloatingRefs(0), mBytesRecorded(0),
-   mSurfaceValid(false), mAllowUseAsSource(true)
+   mSurfaceValid(false)
 {
     MOZ_COUNT_CTOR(gfxASurface);
 }
@@ -115,18 +115,6 @@ gfxASurface::Release(void)
 
         return mFloatingRefs;
     }
-}
-
-nsrefcnt
-gfxASurface::AddRefExternal(void)
-{
-  return AddRef();
-}
-
-nsrefcnt
-gfxASurface::ReleaseExternal(void)
-{
-  return Release();
 }
 
 void
@@ -337,16 +325,6 @@ gfxASurface::CreateSimilarSurface(gfxContentType aContent,
 }
 
 already_AddRefed<gfxImageSurface>
-gfxASurface::GetAsReadableARGB32ImageSurface()
-{
-    RefPtr<gfxImageSurface> imgSurface = GetAsImageSurface();
-    if (!imgSurface || imgSurface->Format() != SurfaceFormat::A8R8G8B8_UINT32) {
-      imgSurface = CopyToARGB32ImageSurface();
-    }
-    return imgSurface.forget();
-}
-
-already_AddRefed<gfxImageSurface>
 gfxASurface::CopyToARGB32ImageSurface()
 {
     if (!mSurface || !mSurfaceValid) {
@@ -471,29 +449,6 @@ gfxASurface::ContentFromFormat(gfxImageFormat format)
         default:
             return gfxContentType::COLOR;
     }
-}
-
-void
-gfxASurface::SetSubpixelAntialiasingEnabled(bool aEnabled)
-{
-#ifdef MOZ_TREE_CAIRO
-    if (!mSurfaceValid)
-        return;
-    cairo_surface_set_subpixel_antialiasing(mSurface,
-        aEnabled ? CAIRO_SUBPIXEL_ANTIALIASING_ENABLED : CAIRO_SUBPIXEL_ANTIALIASING_DISABLED);
-#endif
-}
-
-bool
-gfxASurface::GetSubpixelAntialiasingEnabled()
-{
-    if (!mSurfaceValid)
-      return false;
-#ifdef MOZ_TREE_CAIRO
-    return cairo_surface_get_subpixel_antialiasing(mSurface) == CAIRO_SUBPIXEL_ANTIALIASING_ENABLED;
-#else
-    return true;
-#endif
 }
 
 int32_t
