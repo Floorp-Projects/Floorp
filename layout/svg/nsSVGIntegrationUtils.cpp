@@ -564,9 +564,12 @@ nsSVGIntegrationUtils::PaintFramesWithEffects(const PaintFramesParams& aParams)
     return;
   }
   if (opacity != 1.0f &&
-      hasSVGLayout && nsSVGUtils::CanOptimizeOpacity(frame)) {
+      (nsSVGUtils::CanOptimizeOpacity(frame) ||
+       aParams.callerPaintsOpacity)) {
     opacity = 1.0f;
   }
+  MOZ_ASSERT(!nsSVGUtils::CanOptimizeOpacity(frame) || !aParams.callerPaintsOpacity,
+             "How can we be optimizing the opacity into the svg as well as having the caller paint it?");
 
   /* Properties are added lazily and may have been removed by a restyle,
      so make sure all applicable ones are set again. */

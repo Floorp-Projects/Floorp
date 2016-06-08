@@ -3788,7 +3788,7 @@ private:
 class nsDisplaySVGEffects : public nsDisplayWrapList {
 public:
   nsDisplaySVGEffects(nsDisplayListBuilder* aBuilder, nsIFrame* aFrame,
-                      nsDisplayList* aList);
+                      nsDisplayList* aList, bool aOpacityItemCreated);
 #ifdef NS_BUILD_REFCNT_LOGGING
   virtual ~nsDisplaySVGEffects();
 #endif
@@ -3842,6 +3842,9 @@ public:
 private:
   // relative to mFrame
   nsRect mEffectsBounds;
+  // True if the caller also created an nsDisplayOpacity item, and we should tell
+  // PaintFramesWithEffects that it doesn't need to handle opacity itself.
+  bool mOpacityItemCreated;
 };
 
 /* A display item that applies a transformation to all of its descendant
