@@ -98,7 +98,19 @@ function getObserver() {
       onDeleteURI: function(uri, guid, reason) {
         this.emit("visitRemoved", {allHistory: false, urls: [uri.spec]});
       },
-      onVisit: function() {},
+      onVisit: function(uri, visitId, time, sessionId, referringId, transitionType, guid, hidden, visitCount, typed) {
+        PlacesUtils.promisePlaceInfo(guid).then(placeInfo => {
+          let data = {
+            id: guid,
+            url: uri.spec,
+            title: placeInfo.title,
+            lastVisitTime: time / 1000,  // time from Places is microseconds,
+            visitCount,
+            typedCount: typed,
+          };
+          this.emit("visited", data);
+        });
+      },
       onBeginUpdateBatch: function() {},
       onEndUpdateBatch: function() {},
       onTitleChanged: function() {},
@@ -147,9 +159,11 @@ extensions.registerSchemaAPI("history", (extension, context) => {
           return Promise.reject({message: error.message});
         }
       },
+
       deleteAll: function() {
         return History.clear();
       },
+
       deleteRange: function(filter) {
         let newFilter = {
           beginDate: normalizeTime(filter.startTime),
@@ -158,11 +172,13 @@ extensions.registerSchemaAPI("history", (extension, context) => {
         // History.removeVisitsByFilter returns a boolean, but our API should return nothing
         return History.removeVisitsByFilter(newFilter).then(() => undefined);
       },
+
       deleteUrl: function(details) {
         let url = details.url;
         // History.remove returns a boolean, but our API should return nothing
         return History.remove(url).then(() => undefined);
       },
+
       search: function(query) {
         let beginTime = (query.startTime == null) ?
                           PlacesUtils.toPRTime(Date.now() - 24 * 60 * 60 * 1000) :
@@ -186,6 +202,7 @@ extensions.registerSchemaAPI("history", (extension, context) => {
         let results = convertNavHistoryContainerResultNode(queryResult, convertNodeToHistoryItem);
         return Promise.resolve(results);
       },
+
       getVisits: function(details) {
         let url = details.url;
         if (!url) {
@@ -202,6 +219,17 @@ extensions.registerSchemaAPI("history", (extension, context) => {
         let results = convertNavHistoryContainerResultNode(queryResult, convertNodeToVisitItem);
         return Promise.resolve(results);
       },
+
+      onVisited: new SingletonEventManager(context, "history.onVisited", fire => {
+        let listener = (event, data) => {
+          context.runSafe(fire, data);
+        };
+
+        getObserver().on("visited", listener);
+        return () => {
+          getObserver().off("visited", listener);
+        };
+      }).api(),
 
       onVisitRemoved: new SingletonEventManager(context, "history.onVisitRemoved", fire => {
         let listener = (event, data) => {
