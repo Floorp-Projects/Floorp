@@ -23,8 +23,6 @@ user_pref("browser.shell.checkDefaultBrowser", false);
 user_pref("shell.checkDefaultClient", false);
 user_pref("browser.warnOnQuit", false);
 user_pref("accessibility.typeaheadfind.autostart", false);
-user_pref("findbar.highlightAll", false);
-user_pref("findbar.modalHighlight", false);
 user_pref("javascript.options.showInConsole", true);
 user_pref("devtools.browsertoolbox.panel", "jsdebugger");
 user_pref("devtools.debugger.remote-port", 6023);
