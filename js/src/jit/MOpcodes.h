@@ -267,6 +267,7 @@ namespace jit {
     _(IsCallable)                                                           \
     _(IsObject)                                                             \
     _(HasClass)                                                             \
+    _(CopySign)                                                             \
     _(WasmTruncateToInt32)                                                  \
     _(AsmJSNeg)                                                             \
     _(AsmJSUnsignedToDouble)                                                \

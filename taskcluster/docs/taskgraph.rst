@@ -151,19 +151,23 @@ context.
 Taskgraph JSON Format
 ---------------------
 
-Each task graph artifact is represented as a JSON object.  The object's
-properties are the task labels or taskIds (see below), and the value of each
-property describes a task in an object with the following attributes:
+Each task in the graph is represented as a JSON object.  The output is suitable
+for processing with the `jq <https://stedolan.github.io/jq/>`_ utility.
+
+Each task has the following properties:
+
+``task_id``
+   The task's taskId (only for optimized task graphs)
 
 ``label``
-   The task's label (never a taskId).
+   The task's label
 
 ``attributes``
    The task's attributes
 
 ``dependencies``
-   The task's in-graph dependencies, each represented as a pair ``[name, label]``
-   giving the dependency name and the label for the required task.
+   The task's in-graph dependencies, represented as an object mapping
+   dependency name to label (or to taskId for optimized task graphs)
 
 ``task``
    The task's TaskCluster task definition.
@@ -180,8 +184,13 @@ in the content:
 * The ``tasks`` and ``target`` subcommands both return graphs with no edges.
   That is, just collections of tasks without any dependencies indicated.
 
-* The ``optimized`` subcommand returns a graph keyed by taskId rather than
-  label.  The dependencies array, too, contains taskIds instead of labels.
-  Dependencies on optimized tasks are omitted.  However, the
-  ``task.dependencies`` array is populated with the full list of dependency
-  taskIds.  All task references are resolved in the optimized graph.
+* The ``optimized`` subcommand returns tasks that have been assigned taskIds.
+  The dependencies array, too, contains taskIds instead of labels, with
+  dependencies on optimized tasks omitted.  However, the ``task.dependencies``
+  array is populated with the full list of dependency taskIds.  All task
+  references are resolved in the optimized graph.
+
+The graph artifacts produced by the decision task are JSON objects, keyed by
+label (``full-task-graph.json`` and ``target-tasks``) or by taskId
+(``task-graph.json``).  For convenience, the decision task also writes out
+``label-to-taskid.json`` containing a mapping from label to taskId.

@@ -172,15 +172,16 @@ OmxPromiseLayer::FindBufferById(OMX_DIRTYPE aType, BufferData::BufferID aId)
 void
 OmxPromiseLayer::EmptyFillBufferDone(OMX_DIRTYPE aType, BufferData* aData)
 {
-  MOZ_ASSERT(!!aData);
-  LOG("type %d, buffer %p", aType, aData->mBuffer);
   if (aData) {
+    LOG("type %d, buffer %p", aType, aData->mBuffer);
     if (aType == OMX_DirOutput) {
       aData->mRawData = nullptr;
       aData->mRawData = FindAndRemoveRawData(aData->mBuffer->nTimeStamp);
     }
     aData->mStatus = BufferData::BufferStatus::OMX_CLIENT;
     aData->mPromise.Resolve(aData, __func__);
+  } else {
+    LOG("type %d, no buffer", aType);
   }
 }
 

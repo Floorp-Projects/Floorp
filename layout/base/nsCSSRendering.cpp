@@ -5260,7 +5260,7 @@ nsImageRenderer::Draw(nsPresContext*       aPresContext,
     gfxRect clipRect = ctx->GetClipExtents();
     tmpDTRect = RoundedOut(ToRect(clipRect));
     RefPtr<DrawTarget> tempDT = ctx->GetDrawTarget()->CreateSimilarDrawTarget(tmpDTRect.Size(), SurfaceFormat::B8G8R8A8);
-    ctx = gfxContext::ForDrawTarget(tempDT, tmpDTRect.TopLeft());
+    ctx = gfxContext::CreateOrNull(tempDT, tmpDTRect.TopLeft());
     if (!ctx) {
       gfxDevCrash(LogReason::InvalidContext) << "ImageRenderer::Draw problem " << gfx::hexa(tempDT);
       return DrawResult::TEMPORARY_ERROR;

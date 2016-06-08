@@ -19,7 +19,7 @@ assertEq(fw.boundArguments, undefined);
 assertEq(nw.boundTargetFunction, undefined);
 
 var ow = gw.executeInGlobal("var o = {}; o").return;
-assertEq(ow.isBoundFunction, false);
+assertEq(ow.isBoundFunction, undefined);
 assertEq(ow.boundThis, undefined);
 assertEq(fw.boundArguments, undefined);
 assertEq(ow.boundTargetFunction, undefined);

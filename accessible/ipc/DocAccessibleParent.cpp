@@ -105,7 +105,8 @@ DocAccessibleParent::AddSubtree(ProxyAccessible* aParent,
 
   auto role = static_cast<a11y::role>(newChild.Role());
   ProxyAccessible* newProxy =
-    new ProxyAccessible(newChild.ID(), aParent, this, role);
+    new ProxyAccessible(newChild.ID(), aParent, this, role,
+                        newChild.Interfaces());
   aParent->AddChildAt(aIdxInParent, newProxy);
   mAccessibles.PutEntry(newChild.ID())->mProxy = newProxy;
   ProxyCreated(newProxy, newChild.Interfaces());

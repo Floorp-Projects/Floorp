@@ -166,7 +166,8 @@ class LIRGeneratorShared : public MDefinitionVisitor
                        const LDefinition& def);
 
     template <size_t Ops, size_t Temps>
-    inline void defineReuseInput(LInstructionHelper<1, Ops, Temps>* lir, MDefinition* mir, uint32_t operand);
+    inline void defineReuseInput(LInstructionHelper<1, Ops, Temps>* lir, MDefinition* mir,
+                                 uint32_t operand);
 
     template <size_t Ops, size_t Temps>
     inline void defineInt64ReuseInput(LInstructionHelper<INT64_PIECES, Ops, Temps>* lir,

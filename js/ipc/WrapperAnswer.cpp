@@ -410,7 +410,6 @@ WrapperAnswer::RecvCallOrConstruct(const ObjectId& objId,
 
     RootedValue rval(cx);
     {
-        MOZ_ASSERT(JS::ContextOptionsRef(cx).autoJSAPIOwnsErrorReporting());
         HandleValueArray args = HandleValueArray::subarray(vals, 2, vals.length() - 2);
         if (construct) {
             RootedObject obj(cx);

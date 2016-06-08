@@ -72,6 +72,7 @@ class LIRGeneratorX86Shared : public LIRGeneratorShared
                                               bool useI386ByteRegisters);
     void lowerAtomicTypedArrayElementBinop(MAtomicTypedArrayElementBinop* ins,
                                            bool useI386ByteRegisters);
+    void visitCopySign(MCopySign* ins);
 };
 
 } // namespace jit

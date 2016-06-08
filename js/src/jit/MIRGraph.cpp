@@ -34,7 +34,7 @@ MIRGenerator::MIRGenerator(CompileCompartment* compartment, const JitCompileOpti
     wasmMaxStackArgBytes_(0),
     performsCall_(false),
     usesSimd_(false),
-    usesSimdCached_(false),
+    cachedUsesSimd_(false),
     modifiesFrameArguments_(false),
     instrumentedProfiling_(false),
     instrumentedProfilingIsCached_(false),
@@ -50,10 +50,10 @@ MIRGenerator::MIRGenerator(CompileCompartment* compartment, const JitCompileOpti
 bool
 MIRGenerator::usesSimd()
 {
-    if (usesSimdCached_)
+    if (cachedUsesSimd_)
         return usesSimd_;
 
-    usesSimdCached_ = true;
+    cachedUsesSimd_ = true;
     for (ReversePostorderIterator block = graph_->rpoBegin(),
                                   end   = graph_->rpoEnd();
          block != end;

@@ -17,11 +17,13 @@
 namespace mozilla {
 namespace ipc {
 class PrincipalInfo;
+class AutoIPCStream;
 } // namespace ipc
 
 namespace dom {
 
 class InternalHeaders;
+class IPCInternalResponse;
 
 class InternalResponse final
 {
@@ -31,6 +33,15 @@ public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(InternalResponse)
 
   InternalResponse(uint16_t aStatus, const nsACString& aStatusText);
+
+  static already_AddRefed<InternalResponse>
+  FromIPC(const IPCInternalResponse& aIPCResponse);
+
+  template<typename M>
+  void
+  ToIPC(IPCInternalResponse* aIPCResponse,
+        M* aManager,
+        UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoStream);
 
   already_AddRefed<InternalResponse> Clone();
 

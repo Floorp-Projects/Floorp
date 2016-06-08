@@ -30,6 +30,7 @@
 #include "DelayNode.h"
 #include "DynamicsCompressorNode.h"
 #include "GainNode.h"
+#include "IIRFilterNode.h"
 #include "MediaElementAudioSourceNode.h"
 #include "MediaStreamAudioDestinationNode.h"
 #include "MediaStreamAudioSourceNode.h"
@@ -509,6 +510,42 @@ AudioContext::CreateBiquadFilter(ErrorResult& aRv)
   return filterNode.forget();
 }
 
+already_AddRefed<IIRFilterNode>
+AudioContext::CreateIIRFilter(const mozilla::dom::binding_detail::AutoSequence<double>& aFeedforward,
+                              const mozilla::dom::binding_detail::AutoSequence<double>& aFeedback,
+                              mozilla::ErrorResult& aRv)
+{
+  if (CheckClosed(aRv)) {
+    return nullptr;
+  }
+
+  if (aFeedforward.Length() == 0 || aFeedforward.Length() > 20) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+
+  if (aFeedback.Length() == 0 || aFeedback.Length() > 20) {
+    aRv.Throw(NS_ERROR_DOM_NOT_SUPPORTED_ERR);
+    return nullptr;
+  }
+
+  bool feedforwardAllZeros = true;
+  for (size_t i = 0; i < aFeedforward.Length(); ++i) {
+    if (aFeedforward.Elements()[i] != 0.0) {
+      feedforwardAllZeros = false;
+    }
+  }
+
+  if (feedforwardAllZeros || aFeedback.Elements()[0] == 0.0) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return nullptr;
+  }
+
+  RefPtr<IIRFilterNode> filterNode =
+    new IIRFilterNode(this, aFeedforward, aFeedback);
+  return filterNode.forget();
+}
+
 already_AddRefed<OscillatorNode>
 AudioContext::CreateOscillator(ErrorResult& aRv)
 {
@@ -657,6 +694,12 @@ uint32_t
 AudioContext::MaxChannelCount() const
 {
   return mIsOffline ? mNumberOfChannels : CubebUtils::MaxNumberOfChannels();
+}
+
+uint32_t
+AudioContext::ActiveNodeCount() const
+{
+  return mActiveNodes.Count();
 }
 
 MediaStreamGraph*

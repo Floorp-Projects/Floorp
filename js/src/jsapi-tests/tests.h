@@ -289,7 +289,7 @@ class JSAPITest
         JSRuntime* rt = JS_NewRuntime(8L * 1024 * 1024);
         if (!rt)
             return nullptr;
-        JS_SetErrorReporter(rt, &reportWarning);
+        JS::SetWarningReporter(rt, &reportWarning);
         setNativeStackQuota(rt);
         return rt;
     }
@@ -312,13 +312,7 @@ class JSAPITest
     }
 
     virtual JSContext* createContext() {
-        JSContext* cx = JS_NewContext(rt, 8192);
-        if (!cx)
-            return nullptr;
-
-        JS::ContextOptionsRef(cx).setDontReportUncaught(true);
-        JS::ContextOptionsRef(cx).setAutoJSAPIOwnsErrorReporting(true);
-        return cx;
+        return JS_NewContext(rt, 8192);
     }
 
     virtual const JSClass * getGlobalClass() {

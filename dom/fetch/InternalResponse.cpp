@@ -10,6 +10,7 @@
 #include "mozilla/dom/InternalHeaders.h"
 #include "mozilla/dom/cache/CacheTypes.h"
 #include "mozilla/ipc/PBackgroundSharedTypes.h"
+#include "mozilla/ipc/IPCStreamUtils.h"
 #include "nsIURI.h"
 #include "nsStreamUtils.h"
 
@@ -25,8 +26,116 @@ InternalResponse::InternalResponse(uint16_t aStatus, const nsACString& aStatusTe
 {
 }
 
+already_AddRefed<InternalResponse>
+InternalResponse::FromIPC(const IPCInternalResponse& aIPCResponse)
+{
+  MOZ_ASSERT(!aIPCResponse.urlList().IsEmpty());
+
+  if (aIPCResponse.type() == ResponseType::Error) {
+    return InternalResponse::NetworkError();
+  }
+
+  RefPtr<InternalResponse> response =
+    new InternalResponse(aIPCResponse.status(),
+                         aIPCResponse.statusText());
+
+  response->SetURLList(aIPCResponse.urlList());
+
+  response->mHeaders = new InternalHeaders(aIPCResponse.headers(),
+                                           aIPCResponse.headersGuard());
+
+  response->InitChannelInfo(aIPCResponse.channelInfo());
+  if (aIPCResponse.principalInfo().type() == mozilla::ipc::OptionalPrincipalInfo::TPrincipalInfo) {
+    UniquePtr<mozilla::ipc::PrincipalInfo> info(new mozilla::ipc::PrincipalInfo(aIPCResponse.principalInfo().get_PrincipalInfo()));
+    response->SetPrincipalInfo(Move(info));
+  }
+
+  nsCOMPtr<nsIInputStream> stream = DeserializeIPCStream(aIPCResponse.body());
+  response->SetBody(stream, aIPCResponse.bodySize());
+
+  switch (aIPCResponse.type())
+  {
+    case ResponseType::Basic:
+      response = response->BasicResponse();
+      break;
+    case ResponseType::Cors:
+      response = response->CORSResponse();
+      break;
+    case ResponseType::Default:
+      break;
+    case ResponseType::Opaque:
+      response = response->OpaqueResponse();
+      break;
+    case ResponseType::Opaqueredirect:
+      response = response->OpaqueRedirectResponse();
+      break;
+    default:
+      MOZ_CRASH("Unexpected ResponseType!");
+  }
+  MOZ_ASSERT(response);
+
+  return response.forget();
+}
+
 InternalResponse::~InternalResponse()
 {
+}
+
+template void
+InternalResponse::ToIPC<PContentParent>
+  (IPCInternalResponse* aIPCResponse,
+   PContentParent* aManager,
+   UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoStream);
+template void
+InternalResponse::ToIPC<PContentChild>
+  (IPCInternalResponse* aIPCResponse,
+   PContentChild* aManager,
+   UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoStream);
+template void
+InternalResponse::ToIPC<mozilla::ipc::PBackgroundParent>
+  (IPCInternalResponse* aIPCResponse,
+   mozilla::ipc::PBackgroundParent* aManager,
+   UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoStream);
+template void
+InternalResponse::ToIPC<mozilla::ipc::PBackgroundChild>
+  (IPCInternalResponse* aIPCResponse,
+   mozilla::ipc::PBackgroundChild* aManager,
+   UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoStream);
+
+template<typename M>
+void
+InternalResponse::ToIPC(IPCInternalResponse* aIPCResponse,
+                        M* aManager,
+                        UniquePtr<mozilla::ipc::AutoIPCStream>& aAutoStream)
+{
+  MOZ_ASSERT(aIPCResponse);
+  MOZ_ASSERT(!mURLList.IsEmpty());
+  aIPCResponse->type() = mType;
+  aIPCResponse->urlList() = mURLList;
+  aIPCResponse->status() = GetUnfilteredStatus();
+  aIPCResponse->statusText() = GetUnfilteredStatusText();
+
+  mHeaders->ToIPC(aIPCResponse->headers(), aIPCResponse->headersGuard());
+
+  aIPCResponse->channelInfo() = mChannelInfo.AsIPCChannelInfo();
+  if (mPrincipalInfo) {
+    aIPCResponse->principalInfo() = *mPrincipalInfo;
+  } else {
+    aIPCResponse->principalInfo() = void_t();
+  }
+
+  nsCOMPtr<nsIInputStream> body;
+  int64_t bodySize;
+  GetUnfilteredBody(getter_AddRefs(body), &bodySize);
+
+  if (body) {
+    aAutoStream.reset(new mozilla::ipc::AutoIPCStream(aIPCResponse->body()));
+    aAutoStream->Serialize(body, aManager);
+  } else {
+    aIPCResponse->body() = void_t();
+  }
+
+  aIPCResponse->bodySize() = bodySize;
 }
 
 already_AddRefed<InternalResponse>

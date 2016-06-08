@@ -2981,3 +2981,56 @@ CodeGeneratorARM::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* oo
     masm.bind(&inputIsNaN);
     masm.jump(wasm::JumpTarget::InvalidConversionToInteger);
 }
+
+void
+CodeGeneratorARM::visitCopySignF(LCopySignF* ins)
+{
+    FloatRegister lhs = ToFloatRegister(ins->getOperand(0));
+    FloatRegister rhs = ToFloatRegister(ins->getOperand(1));
+    FloatRegister output = ToFloatRegister(ins->getDef(0));
+
+    Register lhsi = ToRegister(ins->getTemp(0));
+    Register rhsi = ToRegister(ins->getTemp(1));
+
+    masm.ma_vxfer(lhs, lhsi);
+    masm.ma_vxfer(rhs, rhsi);
+
+    // Clear lhs's sign.
+    masm.ma_and(Imm32(INT32_MAX), lhsi, lhsi);
+
+    // Keep rhs's sign.
+    masm.ma_and(Imm32(INT32_MIN), rhsi, rhsi);
+
+    // Combine.
+    masm.ma_orr(lhsi, rhsi, rhsi);
+
+    masm.ma_vxfer(rhsi, output);
+}
+
+void
+CodeGeneratorARM::visitCopySignD(LCopySignD* ins)
+{
+    FloatRegister lhs = ToFloatRegister(ins->getOperand(0));
+    FloatRegister rhs = ToFloatRegister(ins->getOperand(1));
+    FloatRegister output = ToFloatRegister(ins->getDef(0));
+
+    Register lhsi = ToRegister(ins->getTemp(0));
+    Register rhsi = ToRegister(ins->getTemp(1));
+
+    // Manipulate high words of double inputs.
+    masm.as_vxfer(lhsi, InvalidReg, lhs, Assembler::FloatToCore, Assembler::Always, 1);
+    masm.as_vxfer(rhsi, InvalidReg, rhs, Assembler::FloatToCore, Assembler::Always, 1);
+
+    // Clear lhs's sign.
+    masm.ma_and(Imm32(INT32_MAX), lhsi, lhsi);
+
+    // Keep rhs's sign.
+    masm.ma_and(Imm32(INT32_MIN), rhsi, rhsi);
+
+    // Combine.
+    masm.ma_orr(lhsi, rhsi, rhsi);
+
+    // Reconstruct the output.
+    masm.as_vxfer(lhsi, InvalidReg, lhs, Assembler::FloatToCore, Assembler::Always, 0);
+    masm.ma_vxfer(lhsi, rhsi, output);
+}

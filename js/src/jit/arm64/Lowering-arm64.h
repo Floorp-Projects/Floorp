@@ -114,6 +114,7 @@ class LIRGeneratorARM64 : public LIRGeneratorShared
     void visitRandom(MRandom* ins);
     void visitWasmTruncateToInt64(MWasmTruncateToInt64* ins);
     void visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins);
+    void visitCopySign(MCopySign* ins);
 };
 
 typedef LIRGeneratorARM64 LIRGeneratorSpecific;

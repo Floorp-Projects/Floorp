@@ -98,6 +98,7 @@ class LIRGeneratorNone : public LIRGeneratorShared
     void visitSimdBinaryArith(js::jit::MSimdBinaryArith*) { MOZ_CRASH(); }
     void visitSimdBinarySaturating(MSimdBinarySaturating* ins) { MOZ_CRASH(); }
     void visitRandom(js::jit::MRandom*) { MOZ_CRASH(); }
+    void visitCopySign(js::jit::MCopySign*) { MOZ_CRASH(); }
     void visitWasmTruncateToInt64(MWasmTruncateToInt64*) { MOZ_CRASH(); }
     void visitInt64ToFloatingPoint(MInt64ToFloatingPoint*) { MOZ_CRASH(); }
 };

@@ -71,7 +71,6 @@ public:
   nsresult OutputFrame(CVPixelBufferRef aImage,
                        AppleFrameRef aFrameRef);
 
-private:
   RefPtr<InitPromise> Init() override;
   nsresult Input(MediaRawData* aSample) override;
   nsresult Flush() override;

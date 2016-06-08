@@ -288,6 +288,7 @@ AttemptVideoScale(TextureSourceBasic* aSource, const SourceSurface* aSourceMask,
                        const gfx::Rect& aClipRect,
                        DrawTarget* aDest, const DrawTarget* aBuffer)
 {
+#ifdef MOZILLA_SSE_HAVE_CPUID_DETECTION
   if (!mozilla::supports_ssse3())
       return false;
   if (aNewTransform.IsTranslation()) // unscaled painting should take the regular path
@@ -342,9 +343,9 @@ AttemptVideoScale(TextureSourceBasic* aSource, const SourceSurface* aSourceMask,
 
     aDest->ReleaseBits(dstData);
     return true;
-  } else {
+  } else
+#endif // MOZILLA_SSE_HAVE_CPUID_DETECTION
     return false;
-  }
 }
 
 void

@@ -550,7 +550,6 @@ BodyUtil::ConsumeJson(JSContext* aCx, JS::MutableHandle<JS::Value> aValue,
 {
   aRv.MightThrowJSException();
 
-  AutoForceSetExceptionOnContext forceExn(aCx);
   JS::Rooted<JS::Value> json(aCx);
   if (!JS_ParseJSON(aCx, aStr.get(), aStr.Length(), &json)) {
     if (!JS_IsExceptionPending(aCx)) {

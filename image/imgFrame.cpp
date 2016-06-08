@@ -301,7 +301,7 @@ imgFrame::InitWithDrawable(gfxDrawable* aDrawable,
   }
 
   // Draw using the drawable the caller provided.
-  RefPtr<gfxContext> ctx = gfxContext::ForDrawTarget(target);
+  RefPtr<gfxContext> ctx = gfxContext::CreateOrNull(target);
   MOZ_ASSERT(ctx);  // Already checked the draw target above.
   gfxUtils::DrawPixelSnapped(ctx, aDrawable, mFrameRect.Size(),
                              ImageRegion::Create(ThebesRect(mFrameRect)),

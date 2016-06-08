@@ -37,6 +37,7 @@
 #include "mozilla/dom/WakeLock.h"
 #include "mozilla/dom/power/PowerManagerService.h"
 #include "mozilla/dom/CellBroadcast.h"
+#include "mozilla/dom/FlyWebPublishedServer.h"
 #include "mozilla/dom/FlyWebService.h"
 #include "mozilla/dom/IccManager.h"
 #include "mozilla/dom/InputPortManager.h"
@@ -200,7 +201,6 @@ Navigator::Init()
 
 Navigator::Navigator(nsPIDOMWindowInner* aWindow)
   : mWindow(aWindow)
-  , mBatteryTelemetryReported(false)
 {
   MOZ_ASSERT(aWindow->IsInnerWindow(), "Navigator must get an inner window!");
 }
@@ -304,7 +304,6 @@ Navigator::Invalidate()
   }
 
   mBatteryPromise = nullptr;
-  mBatteryTelemetryReported = false;
 
 #ifdef MOZ_B2G_FM
   if (mFMRadio) {
@@ -1605,35 +1604,6 @@ Navigator::GetBattery(ErrorResult& aRv)
   return mBatteryPromise;
 }
 
-battery::BatteryManager*
-Navigator::GetDeprecatedBattery(ErrorResult& aRv)
-{
-  if (!mBatteryManager) {
-    if (!mWindow) {
-      aRv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
-    }
-    NS_ENSURE_TRUE(mWindow->GetDocShell(), nullptr);
-
-    mBatteryManager = new battery::BatteryManager(mWindow);
-    mBatteryManager->Init();
-  }
-
-  nsIDocument* doc = mWindow->GetDoc();
-  if (doc) {
-    doc->WarnOnceAbout(nsIDocument::eNavigatorBattery);
-  }
-
-  // Is this the first time this page has accessed navigator.battery?
-  if (!mBatteryTelemetryReported) {
-    // sample value 0 = navigator.battery
-    Telemetry::Accumulate(Telemetry::BATTERY_STATUS_COUNT, 0);
-    mBatteryTelemetryReported = true;
-  }
-
-  return mBatteryManager;
-}
-
 already_AddRefed<Promise>
 Navigator::PublishServer(const nsAString& aName,
                          const FlyWebPublishOptions& aOptions,
@@ -1645,7 +1615,28 @@ Navigator::PublishServer(const nsAString& aName,
     return nullptr;
   }
 
-  return service->PublishServer(aName, aOptions, mWindow, aRv);
+  RefPtr<FlyWebPublishPromise> mozPromise =
+    service->PublishServer(aName, aOptions, mWindow);
+  MOZ_ASSERT(mozPromise);
+
+  nsCOMPtr<nsIGlobalObject> global = do_QueryInterface(mWindow);
+  ErrorResult result;
+  RefPtr<Promise> domPromise = Promise::Create(global, result);
+  if (result.Failed()) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  mozPromise->Then(AbstractThread::MainThread(),
+                   __func__,
+                   [domPromise] (FlyWebPublishedServer* aServer) {
+                     domPromise->MaybeResolve(aServer);
+                   },
+                   [domPromise] (nsresult aStatus) {
+                     domPromise->MaybeReject(aStatus);
+                   });
+
+  return domPromise.forget();
 }
 
 already_AddRefed<Promise>

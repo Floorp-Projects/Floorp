@@ -206,18 +206,6 @@ GetCurrentJSStack(int32_t aMaxDepth)
   return dom::exceptions::CreateStack(cx, aMaxDepth);
 }
 
-AutoForceSetExceptionOnContext::AutoForceSetExceptionOnContext(JSContext* aCx)
-  : mCx(aCx)
-{
-  mOldValue = JS::ContextOptionsRef(mCx).autoJSAPIOwnsErrorReporting();
-  JS::ContextOptionsRef(mCx).setAutoJSAPIOwnsErrorReporting(true);
-}
-
-AutoForceSetExceptionOnContext::~AutoForceSetExceptionOnContext()
-{
-  JS::ContextOptionsRef(mCx).setAutoJSAPIOwnsErrorReporting(mOldValue);
-}
-
 namespace exceptions {
 
 class JSStackFrame : public nsIStackFrame

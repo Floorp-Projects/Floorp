@@ -37,54 +37,6 @@
 namespace mozilla {
 namespace dom {
 
-namespace {
-
-bool
-TokenizerIgnoreNothing(char16_t /* aChar */)
-{
-  return false;
-}
-
-bool
-IsValidRelativeDOMPath(const nsString& aPath, nsTArray<nsString>& aParts)
-{
-  // We don't allow empty relative path to access the root.
-  if (aPath.IsEmpty()) {
-    return false;
-  }
-
-  // Leading and trailing "/" are not allowed.
-  if (aPath.First() == FILESYSTEM_DOM_PATH_SEPARATOR_CHAR ||
-      aPath.Last() == FILESYSTEM_DOM_PATH_SEPARATOR_CHAR) {
-    return false;
-  }
-
-  NS_NAMED_LITERAL_STRING(kCurrentDir, ".");
-  NS_NAMED_LITERAL_STRING(kParentDir, "..");
-
-  // Split path and check each path component.
-  nsCharSeparatedTokenizerTemplate<TokenizerIgnoreNothing>
-    tokenizer(aPath, FILESYSTEM_DOM_PATH_SEPARATOR_CHAR);
-
-  while (tokenizer.hasMoreTokens()) {
-    nsDependentSubstring pathComponent = tokenizer.nextToken();
-    // The path containing empty components, such as "foo//bar", is invalid.
-    // We don't allow paths, such as "../foo", "foo/./bar" and "foo/../bar",
-    // to walk up the directory.
-    if (pathComponent.IsEmpty() ||
-        pathComponent.Equals(kCurrentDir) ||
-        pathComponent.Equals(kParentDir)) {
-      return false;
-    }
-
-    aParts.AppendElement(pathComponent);
-  }
-
-  return true;
-}
-
-} // anonymous namespace
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(Directory)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(Directory)
@@ -520,7 +472,7 @@ Directory::DOMPathToRealPath(const nsAString& aPath, nsIFile** aFile) const
   relativePath.Trim(kWhitespace);
 
   nsTArray<nsString> parts;
-  if (!IsValidRelativeDOMPath(relativePath, parts)) {
+  if (!FileSystemUtils::IsValidRelativeDOMPath(relativePath, parts)) {
     return NS_ERROR_DOM_FILESYSTEM_INVALID_PATH_ERR;
   }
 

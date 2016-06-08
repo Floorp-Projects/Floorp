@@ -284,7 +284,7 @@ GfxInfo::GetFeatureStatusImpl(int32_t aFeature,
   NS_ENSURE_ARG_POINTER(aStatus);
   *aStatus = nsIGfxInfo::FEATURE_STATUS_UNKNOWN;
   aSuggestedDriverVersion.SetIsVoid(true);
-  OperatingSystem os = DRIVER_OS_LINUX;
+  OperatingSystem os = OperatingSystem::Linux;
   if (aOS)
     *aOS = os;
 
