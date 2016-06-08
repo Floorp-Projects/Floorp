@@ -262,8 +262,6 @@ MediaDecoderStateMachine::MediaDecoderStateMachine(MediaDecoder* aDecoder,
   mAudioOffloading(false),
   mBuffered(mTaskQueue, TimeIntervals(),
             "MediaDecoderStateMachine::mBuffered (Mirror)"),
-  mIsReaderSuspended(mTaskQueue, true,
-               "MediaDecoderStateMachine::mIsReaderSuspended (Mirror)"),
   mEstimatedDuration(mTaskQueue, NullableTimeUnit(),
                     "MediaDecoderStateMachine::mEstimatedDuration (Mirror)"),
   mExplicitDuration(mTaskQueue, Maybe<double>(),
@@ -341,7 +339,6 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
 
   // Connect mirrors.
   mBuffered.Connect(mReader->CanonicalBuffered());
-  mIsReaderSuspended.Connect(mReader->CanonicalIsSuspended());
   mEstimatedDuration.Connect(aDecoder->CanonicalEstimatedDuration());
   mExplicitDuration.Connect(aDecoder->CanonicalExplicitDuration());
   mPlayState.Connect(aDecoder->CanonicalPlayState());
@@ -360,7 +357,6 @@ MediaDecoderStateMachine::InitializationTask(MediaDecoder* aDecoder)
 
   // Initialize watchers.
   mWatchManager.Watch(mBuffered, &MediaDecoderStateMachine::BufferedRangeUpdated);
-  mWatchManager.Watch(mIsReaderSuspended, &MediaDecoderStateMachine::ReaderSuspendedChanged);
   mWatchManager.Watch(mState, &MediaDecoderStateMachine::UpdateNextFrameStatus);
   mWatchManager.Watch(mAudioCompleted, &MediaDecoderStateMachine::UpdateNextFrameStatus);
   mWatchManager.Watch(mVideoCompleted, &MediaDecoderStateMachine::UpdateNextFrameStatus);
@@ -1354,7 +1350,7 @@ void MediaDecoderStateMachine::VisibilityChanged()
     return;
   }
 
-  if (!HasVideo() || mIsReaderSuspended) {
+  if (!HasVideo()) {
     return;
   }
 
@@ -1389,32 +1385,23 @@ void MediaDecoderStateMachine::VisibilityChanged()
     }
 
     // Start video-only seek to the current time...
-    InitiateDecodeRecoverySeek(MediaDecoderReader::VIDEO_ONLY);
+    InitiateVideoDecodeRecoverySeek();
   }
 }
 
-// InitiateDecodeRecoverySeek is responsible for setting up a seek using the
-// seek task for the following situations:
-// 1. When suspension of decoding for videos that are in
+// InitiateVideoDecodeRecoverySeek is responsible for setting up a video-only
+// seek using the seek task. When suspension of decoding for videos that are in
 // background tabs (ie. invisible) is enabled, the audio keeps playing and when
 // switching back to decoding video, it is highly desirable to not cause the
 // audio to pause as the video is seeked else there be a noticeable audio glitch
 // as the tab becomes visible.
-// 2. When there is a decoder limit set, suspended videos may be resumed and
-// require the seek to recover the original seek position for both audio and
-// video.
-void MediaDecoderStateMachine::InitiateDecodeRecoverySeek(
-    MediaDecoderReader::TargetQueues aQueues)
+void MediaDecoderStateMachine::InitiateVideoDecodeRecoverySeek()
 {
   MOZ_ASSERT(OnTaskQueue());
 
-  DECODER_LOG("InitiateDecodeRecoverySeek(%d)", aQueues);
-
   SeekJob seekJob;
-  SeekTarget::Type seekTargetType = aQueues == MediaDecoderReader::VIDEO_ONLY
-                                    ? SeekTarget::Type::AccurateVideoOnly
-                                    : SeekTarget::Type::Accurate;
-  seekJob.mTarget = SeekTarget(GetMediaTime(), seekTargetType,
+  seekJob.mTarget = SeekTarget(GetMediaTime(),
+                               SeekTarget::Type::AccurateVideoOnly,
                                MediaDecoderEventVisibility::Suppressed);
 
   SetState(DECODER_STATE_SEEKING);
@@ -1436,7 +1423,7 @@ void MediaDecoderStateMachine::InitiateDecodeRecoverySeek(
 
   // Reset our state machine and decoding pipeline before seeking.
   if (mSeekTask->NeedToResetMDSM()) {
-    Reset(aQueues);
+    Reset(TrackInfo::kVideoTrack);
   }
 
   // Do the seek.
@@ -1467,22 +1454,6 @@ void MediaDecoderStateMachine::BufferedRangeUpdated()
       mObservedDuration = std::max(mObservedDuration.Ref(), end);
     }
   }
-}
-
-void MediaDecoderStateMachine::ReaderSuspendedChanged()
-{
-  MOZ_ASSERT(OnTaskQueue());
-  DECODER_LOG("ReaderSuspendedChanged: suspended = %d", mIsReaderSuspended.Ref());
-
-  if (!HasVideo() || mIsReaderSuspended || IsDecodingFirstFrame()) {
-    return;
-  }
-
-  if (mSeekTask || mQueuedSeek.Exists()) {
-    return;
-  }
-
-  InitiateDecodeRecoverySeek(MediaDecoderReader::AUDIO_VIDEO);
 }
 
 void
@@ -2251,7 +2222,6 @@ MediaDecoderStateMachine::FinishShutdown()
 
   // Disconnect canonicals and mirrors before shutting down our task queue.
   mBuffered.DisconnectIfConnected();
-  mIsReaderSuspended.DisconnectIfConnected();
   mEstimatedDuration.DisconnectIfConnected();
   mExplicitDuration.DisconnectIfConnected();
   mPlayState.DisconnectIfConnected();
@@ -2666,8 +2636,7 @@ bool MediaDecoderStateMachine::IsStateMachineScheduled() const
 bool MediaDecoderStateMachine::IsVideoDecodeSuspended() const
 {
   MOZ_ASSERT(OnTaskQueue());
-  return (MediaPrefs::MDSMSuspendBackgroundVideoEnabled() && mVideoDecodeSuspended) ||
-         mIsReaderSuspended;
+  return MediaPrefs::MDSMSuspendBackgroundVideoEnabled() && mVideoDecodeSuspended;
 }
 
 void
