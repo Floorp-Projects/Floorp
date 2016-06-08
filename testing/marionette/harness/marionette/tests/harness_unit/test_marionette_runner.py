@@ -294,6 +294,70 @@ def test_record_crash(runner, has_crashed, mock_marionette):
         _check_crash_counts(has_crashed, runner, runner.marionette)
 
 
+def test_add_test_module(runner):
+    tests = ['test_something.py', 'testSomething.js', 'bad_test.py']
+    assert len(runner.tests) == 0
+    for test in tests:
+        with patch ('os.path.abspath') as abspath:
+            abspath.return_value = test
+            runner.add_test(test)
+        assert abspath.called
+        assert {'filepath': test,
+                'expected': 'pass',
+                'test_container': None} in runner.tests
+    # add_test doesn't validate module names; 'bad_test.py' gets through
+    assert len(runner.tests) == 3
+
+def test_add_test_directory(runner):
+    test_dir = 'path/to/tests'
+    dir_contents = [
+        (test_dir, ('subdir',), ('test_a.py', 'test_a.js', 'bad_test_a.py', 'bad_test_a.js')),
+        (test_dir + '/subdir', (), ('test_b.py', 'test_b.js', 'bad_test_a.py', 'bad_test_b.js')),
+    ]
+    tests = list(dir_contents[0][2] + dir_contents[1][2])
+    assert len(runner.tests) == 0
+    with patch('os.path.isdir') as isdir:
+        # Need to use side effect to make isdir return True for test_dir and False for tests
+        isdir.side_effect = [True] + [False for i in tests]
+        with patch('os.walk') as walk:
+            walk.return_value = dir_contents
+            runner.add_test(test_dir)
+    assert isdir.called and walk.called
+    for test in runner.tests:
+        assert test_dir in test['filepath']
+    assert len(runner.tests) == 4
+
+def test_add_test_manifest(runner):
+    runner._device, runner._appName = 'fake_device', 'fake_app'
+    manifest = "/path/to/fake/manifest.ini"
+    active_tests = [{'expected': 'pass',
+                     'path': u'/path/to/fake/test_expected_pass.py'},
+                    {'expected': 'fail',
+                     'path': u'/path/to/fake/test_expected_fail.py'},
+                    {'disabled': 'skip-if: true # "testing disabled test"',
+                     'expected': 'pass',
+                     'path': u'/path/to/fake/test_disabled.py'}]
+    with patch.multiple('marionette.runner.base.TestManifest',
+                        read=DEFAULT, active_tests=DEFAULT) as mocks:
+            mocks['active_tests'].return_value = active_tests
+            with pytest.raises(IOError) as err:
+                runner.add_test(manifest)
+            assert "does not exist" in err.value.message
+            assert mocks['read'].call_count == mocks['active_tests'].call_count == 1
+            runner.tests, runner.manifest_skipped_tests = [], []
+            with patch('marionette.runner.base.os.path.exists', return_value=True):
+                runner.add_test(manifest)
+            assert mocks['read'].call_count == mocks['active_tests'].call_count == 2
+    assert len(runner.tests) == 2
+    assert len(runner.manifest_skipped_tests) == 1
+    for test in runner.tests:
+        assert test['filepath'].endswith(('test_expected_pass.py', 'test_expected_fail.py'))
+        if test['filepath'].endswith('test_expected_fail.py'):
+            assert test['expected'] == 'fail'
+        else:
+            assert test['expected'] == 'pass'
+
+
 if __name__ == '__main__':
     import sys
     sys.exit(pytest.main(['--verbose', __file__]))
