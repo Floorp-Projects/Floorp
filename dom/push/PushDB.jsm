@@ -125,10 +125,10 @@ this.PushDB.prototype = {
       this.newTxn(
         "readwrite",
         this._dbStoreName,
-        (aTxn, aStore) => {
+        function txnCb(aTxn, aStore) {
           console.debug("delete: Removing record", aKeyID);
           aStore.get(aKeyID).onsuccess = event => {
-            aTxn.result = this.toPushRecord(event.target.result);
+            aTxn.result = event.target.result;
             aStore.delete(aKeyID);
           };
         },
