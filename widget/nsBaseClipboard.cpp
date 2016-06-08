@@ -89,6 +89,11 @@ NS_IMETHODIMP nsBaseClipboard::GetData(nsITransferable * aTransferable, int32_t 
 
 NS_IMETHODIMP nsBaseClipboard::EmptyClipboard(int32_t aWhichClipboard)
 {
+  if (aWhichClipboard == kSelectionCache) {
+    ClearSelectionCache();
+    return NS_OK;
+  }
+
   bool selectClipPresent;
   SupportsSelectionClipboard(&selectClipPresent);
   bool findClipPresent;

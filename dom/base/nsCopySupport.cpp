@@ -308,6 +308,15 @@ nsCopySupport::HTMLCopy(nsISelection* aSel, nsIDocument* aDoc,
 }
 
 nsresult
+nsCopySupport::ClearSelectionCache()
+{
+  nsresult rv;
+  nsCOMPtr<nsIClipboard> clipboard = do_GetService(kCClipboardCID, &rv);
+  clipboard->EmptyClipboard(nsIClipboard::kSelectionCache);
+  return rv;
+}
+
+nsresult
 nsCopySupport::GetTransferableForSelection(nsISelection* aSel,
                                            nsIDocument* aDoc,
                                            nsITransferable** aTransferable)
