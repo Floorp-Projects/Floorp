@@ -430,6 +430,10 @@ this.PushServiceHttp2 = {
                       PushRecordHttp2);
   },
 
+  serviceType: function() {
+    return "http2";
+  },
+
   hasmainPushService: function() {
     return this._mainPushService !== null;
   },

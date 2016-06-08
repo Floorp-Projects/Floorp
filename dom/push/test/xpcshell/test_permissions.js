@@ -120,11 +120,6 @@ add_task(function* setUp() {
           equal(request.code, 202,
             'Expected permission revoked unregister reason');
           resolve();
-          this.serverSendMsg(JSON.stringify({
-            messageType: 'unregister',
-            status: 200,
-            channelID: request.channelID,
-          }));
         },
         onACK(request) {},
       });

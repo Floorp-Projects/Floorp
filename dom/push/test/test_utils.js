@@ -106,11 +106,7 @@
     },
 
     onUnregister(request) {
-      this.serverSendMsg(JSON.stringify({
-        messageType: "unregister",
-        channelID: request.channelID,
-        status: 200,
-      }));
+      // Do nothing.
     },
 
     onAck(request) {
