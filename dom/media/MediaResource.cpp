@@ -1555,26 +1555,26 @@ void BaseMediaResource::SetLoadInBackground(bool aLoadInBackground) {
 void BaseMediaResource::ModifyLoadFlags(nsLoadFlags aFlags)
 {
   nsCOMPtr<nsILoadGroup> loadGroup;
-  DebugOnly<nsresult> rv = mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
-  NS_ASSERTION(NS_SUCCEEDED(rv), "GetLoadGroup() failed!");
+  nsresult rv = mChannel->GetLoadGroup(getter_AddRefs(loadGroup));
+  MOZ_ASSERT(NS_SUCCEEDED(rv), "GetLoadGroup() failed!");
 
   nsresult status;
   mChannel->GetStatus(&status);
 
-  // Note: if (NS_FAILED(status)), the channel won't be in the load group.
-  if (loadGroup &&
-      NS_SUCCEEDED(status)) {
+  bool inLoadGroup = false;
+  if (loadGroup) {
     rv = loadGroup->RemoveRequest(mChannel, nullptr, status);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "RemoveRequest() failed!");
+    if (NS_SUCCEEDED(rv)) {
+      inLoadGroup = true;
+    }
   }
 
   rv = mChannel->SetLoadFlags(aFlags);
-  NS_ASSERTION(NS_SUCCEEDED(rv), "SetLoadFlags() failed!");
+  MOZ_ASSERT(NS_SUCCEEDED(rv), "SetLoadFlags() failed!");
 
-  if (loadGroup &&
-      NS_SUCCEEDED(status)) {
+  if (inLoadGroup) {
     rv = loadGroup->AddRequest(mChannel, nullptr);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "AddRequest() failed!");
+    MOZ_ASSERT(NS_SUCCEEDED(rv), "AddRequest() failed!");
   }
 }
 
