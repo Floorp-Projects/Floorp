@@ -201,7 +201,6 @@ public:
 
   virtual void NotifyRenderingChanged() override
   {
-    mFrame->Properties().Delete(nsIFrame::CachedBackgroundImage());
     mFrame->Properties().Delete(nsIFrame::CachedBackgroundImageDT());
   }
 
