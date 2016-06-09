@@ -88,6 +88,8 @@ public:
     DefaultComputeEffectiveTransforms(aTransformToSurface);
   }
 
+  virtual bool NeedToDrawCheckerboarding(gfx::Color* aOutCheckerboardingColor = nullptr) override;
+
   virtual void CleanupResources() override;
 
   virtual LayerComposite* AsLayerComposite() override { return this; }
@@ -172,6 +174,8 @@ public:
   {
     DefaultComputeEffectiveTransforms(aTransformToSurface);
   }
+
+  virtual bool NeedToDrawCheckerboarding(gfx::Color* aOutCheckerboardingColor = nullptr) override;
 
   virtual void CleanupResources() override;
 
