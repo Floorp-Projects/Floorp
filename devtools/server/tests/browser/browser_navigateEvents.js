@@ -35,6 +35,7 @@ function assertEvent(event, data) {
       is(event, "tabNavigated", "Right after will-navigate, the client receive tabNavigated");
       is(data.state, "start", "state is start");
       is(data.url, URL2, "url property is correct");
+      is(data.nativeConsoleAPI, true, "nativeConsoleAPI is correct");
       break;
     case x++:
       is(event, "request", "Given that locally, the Debugger protocol is sync, the request happens after tabNavigated");
@@ -56,6 +57,7 @@ function assertEvent(event, data) {
       is(event, "tabNavigated", "Finally, the receive the client event");
       is(data.state, "stop", "state is stop");
       is(data.url, URL2, "url property is correct");
+      is(data.nativeConsoleAPI, true, "nativeConsoleAPI is correct");
 
       // End of test!
       cleanup();

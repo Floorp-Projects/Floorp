@@ -20,6 +20,8 @@ from mach.decorators import (
 
 from mozbuild.base import MachCommandBase
 
+ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
+
 
 class ShowTaskGraphSubCommand(SubCommand):
     """A SubCommand with TaskGraph-specific arguments"""
@@ -203,3 +205,30 @@ class MachCommands(MachCommandBase):
         # disassemble the dictionary
         for task in taskgraph.to_json().itervalues():
             print(json.dumps(task))
+
+
+@CommandProvider
+class LoadImage(object):
+    @Command('taskcluster-load-image', category="ci",
+        description="Load a pre-built Docker image")
+    @CommandArgument('--task-id',
+        help="Load the image at public/image.tar in this task, rather than "
+             "searching the index")
+    @CommandArgument('image_name', nargs='?',
+        help="Load the image of this name based on the current contents of the tree "
+             "(as built for mozilla-central or mozilla-inbound)")
+    def load_image(self, image_name, task_id):
+        from taskgraph.docker import load_image_by_name, load_image_by_task_id
+        if not image_name and not task_id:
+            print("Specify either IMAGE-NAME or TASK-ID")
+            sys.exit(1)
+        try:
+            if task_id:
+                ok = load_image_by_task_id(task_id)
+            else:
+                ok = load_image_by_name(image_name)
+            if not ok:
+                sys.exit(1)
+        except Exception as e:
+            traceback.print_exc()
+            sys.exit(1)

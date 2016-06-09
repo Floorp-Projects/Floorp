@@ -17,7 +17,7 @@ MOZ_AUTOMATION_L10N_CHECK=0
 if [ ! -f /etc/redhat-release ] || [ "$(< /etc/redhat-release)" != "CentOS release 6.2 (Final)" ]; then
     # set JAVA_HOME to find the JRE/JDK from tooltool.  Several scripts in the JDK
     # assume `java` is in PATH, so set that too.  To see how this tarball is built,
-    # see testing/taskcluster/scripts/misc/repackage-jdk.sh
+    # see taskcluster/scripts/misc/repackage-jdk.sh
     export JAVA_HOME="$topsrcdir/java_home"
     export PATH="$PATH:$topsrcdir/java_home/bin"
 

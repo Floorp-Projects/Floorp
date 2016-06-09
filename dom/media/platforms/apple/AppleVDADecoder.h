@@ -86,6 +86,8 @@ public:
     return "apple VDA decoder";
   }
 
+  void SetSeekThreshold(const media::TimeUnit& aTime) override;
+
 protected:
   AppleVDADecoder(const VideoInfo& aConfig,
                   TaskQueue* aTaskQueue,
@@ -139,6 +141,10 @@ private:
   // Cleared on mTaskQueue in ProcessDrain().
   Atomic<bool> mIsFlushing;
   ReorderQueue mReorderQueue;
+  // Decoded frame will be dropped if its pts is smaller than this
+  // value. It shold be initialized before Input() or after Flush(). So it is
+  // safe to access it in OutputFrame without protecting.
+  Maybe<media::TimeUnit> mSeekTargetThreshold;
 
   // Method to set up the decompression session.
   nsresult InitializeSession();

@@ -1,0 +1,51 @@
+$inherits:
+  from: 'tasks/builds/firefox_base.yml'
+  variables:
+    build_name: 'linux64-clang'
+    build_type: 'opt'
+task:
+  metadata:
+    name: '[TC] Clang'
+    description: 'Clang'
+
+  workerType: opt-linux64
+
+  routes:
+    - 'index.buildbot.branches.{{project}}.clang'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.clang'
+
+  scopes:
+    - 'docker-worker:cache:tooltool-cache'
+
+  payload:
+    cache:
+      tooltool-cache: '/home/worker/tooltool-cache'
+
+    env:
+      MOZHARNESS_DISABLE: 'true'
+      TOOLS_DISABLE: 'true'
+      TOOLTOOL_CACHE: '/home/worker/tooltool-cache'
+
+    maxRunTime: 36000
+
+    command: ["/bin/bash", "-c", "cd /home/worker/ && ./bin/checkout-sources.sh && ./workspace/build/src/taskcluster/scripts/misc/build-clang-linux.sh" ]
+
+    artifacts:
+      'public/clang.tar.xz':
+        type: file
+        path: '/home/worker/workspace/artifacts/clang.tar.xz'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+
+  extra:
+    treeherderEnv:
+      - staging
+      - production
+    treeherder:
+      groupSymbol: Cc
+      groupName: Compilers, submitted by taskcluster
+      symbol: Clang
+      machine:
+        platform: linux64
+    locations:
+        build: null
+        tests: null

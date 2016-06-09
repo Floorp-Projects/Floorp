@@ -40,6 +40,10 @@ EXPORTS.mozilla.ipc += [
     'WindowsMessageLoop.h',
 ]
 
+if CONFIG['MOZ_FAULTY'] == '1':
+    EXPORTS.mozilla.ipc += ['Faulty.h']
+    SOURCES += ['Faulty.cpp']
+
 if CONFIG['OS_ARCH'] == 'WINNT':
     DEFINES['WEBRTC_WIN'] = True
     EXPORTS.mozilla.ipc += [

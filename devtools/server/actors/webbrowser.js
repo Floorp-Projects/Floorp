@@ -2016,7 +2016,7 @@ TabActor.prototype = {
       // We are very explicitly examining the "console" property of
       // the non-Xrayed object here.
       let console = window.wrappedJSObject.console;
-      isNative = console instanceof window.Console;
+      isNative = new XPCNativeWrapper(console).IS_NATIVE_CONSOLE
     } catch (ex) {
       // ignore
     }
