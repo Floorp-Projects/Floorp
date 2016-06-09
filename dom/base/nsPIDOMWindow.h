@@ -31,7 +31,6 @@ class nsIDocument;
 class nsIIdleObserver;
 class nsIScriptTimeoutHandler;
 class nsIURI;
-class nsPerformance;
 class nsPIDOMWindowInner;
 class nsPIDOMWindowOuter;
 class nsPIWindowRoot;
@@ -44,6 +43,7 @@ namespace mozilla {
 namespace dom {
 class AudioContext;
 class Element;
+class Performance;
 class ServiceWorkerRegistrationMainThread;
 } // namespace dom
 namespace gfx {
@@ -611,7 +611,7 @@ protected:
   nsIDocShell* MOZ_NON_OWNING_REF mDocShell;  // Weak Reference
 
   // mPerformance is only used on inner windows.
-  RefPtr<nsPerformance>       mPerformance;
+  RefPtr<mozilla::dom::Performance> mPerformance;
 
   typedef nsRefPtrHashtable<nsStringHashKey,
                             mozilla::dom::ServiceWorkerRegistrationMainThread>
@@ -741,7 +741,7 @@ public:
     GetServiceWorkerRegistration(const nsAString& aScope);
   void InvalidateServiceWorkerRegistration(const nsAString& aScope);
 
-  nsPerformance* GetPerformance();
+  mozilla::dom::Performance* GetPerformance();
 
   bool HasMutationListeners(uint32_t aMutationEventType) const
   {

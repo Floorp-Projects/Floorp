@@ -44,7 +44,7 @@
 #include "nsViewManager.h"
 #include "GeckoProfiler.h"
 #include "nsNPAPIPluginInstance.h"
-#include "nsPerformance.h"
+#include "mozilla/dom/Performance.h"
 #include "mozilla/dom/WindowBinding.h"
 #include "mozilla/RestyleManager.h"
 #include "mozilla/RestyleManagerHandle.h"
@@ -1605,7 +1605,7 @@ nsRefreshDriver::RunFrameRequestCallbacks(TimeStamp aNowTime)
         docCallbacks.mDocument->GetInnerWindow();
       DOMHighResTimeStamp timeStamp = 0;
       if (innerWindow && innerWindow->IsInnerWindow()) {
-        nsPerformance* perf = innerWindow->GetPerformance();
+        mozilla::dom::Performance* perf = innerWindow->GetPerformance();
         if (perf) {
           timeStamp = perf->GetDOMTiming()->TimeStampToDOMHighRes(aNowTime);
         }

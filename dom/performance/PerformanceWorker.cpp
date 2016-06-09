@@ -4,32 +4,27 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "Performance.h"
-#include "mozilla/dom/PerformanceBinding.h"
-
+#include "PerformanceWorker.h"
 #include "WorkerPrivate.h"
 
-BEGIN_WORKERS_NAMESPACE
+namespace mozilla {
+namespace dom {
 
-Performance::Performance(WorkerPrivate* aWorkerPrivate)
+using namespace workers;
+
+PerformanceWorker::PerformanceWorker(WorkerPrivate* aWorkerPrivate)
   : mWorkerPrivate(aWorkerPrivate)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 }
 
-Performance::~Performance()
+PerformanceWorker::~PerformanceWorker()
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 }
 
-JSObject*
-Performance::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
-{
-  return PerformanceBinding_workers::Wrap(aCx, this, aGivenProto);
-}
-
 DOMHighResTimeStamp
-Performance::Now() const
+PerformanceWorker::Now() const
 {
   TimeDuration duration =
     TimeStamp::Now() - mWorkerPrivate->NowBaseTimeStamp();
@@ -38,14 +33,14 @@ Performance::Now() const
 
 // To be removed once bug 1124165 lands
 bool
-Performance::IsPerformanceTimingAttribute(const nsAString& aName)
+PerformanceWorker::IsPerformanceTimingAttribute(const nsAString& aName)
 {
   // In workers we just support navigationStart.
   return aName.EqualsASCII("navigationStart");
 }
 
 DOMHighResTimeStamp
-Performance::GetPerformanceTimingFromString(const nsAString& aProperty)
+PerformanceWorker::GetPerformanceTimingFromString(const nsAString& aProperty)
 {
   if (!IsPerformanceTimingAttribute(aProperty)) {
     return 0;
@@ -60,7 +55,7 @@ Performance::GetPerformanceTimingFromString(const nsAString& aProperty)
 }
 
 void
-Performance::InsertUserEntry(PerformanceEntry* aEntry)
+PerformanceWorker::InsertUserEntry(PerformanceEntry* aEntry)
 {
   if (mWorkerPrivate->PerformanceLoggingEnabled()) {
     nsAutoCString uri;
@@ -69,29 +64,22 @@ Performance::InsertUserEntry(PerformanceEntry* aEntry)
       // If we have no URI, just put in "none".
       uri.AssignLiteral("none");
     }
-    PerformanceBase::LogEntry(aEntry, uri);
+    Performance::LogEntry(aEntry, uri);
   }
-  PerformanceBase::InsertUserEntry(aEntry);
+  Performance::InsertUserEntry(aEntry);
 }
 
 TimeStamp
-Performance::CreationTimeStamp() const
+PerformanceWorker::CreationTimeStamp() const
 {
   return mWorkerPrivate->NowBaseTimeStamp();
 }
 
 DOMHighResTimeStamp
-Performance::CreationTime() const
+PerformanceWorker::CreationTime() const
 {
   return mWorkerPrivate->NowBaseTime();
 }
 
-void
-Performance::DispatchBufferFullEvent()
-{
-  // This method is needed just for InsertResourceEntry, but this method is not
-  // exposed to workers.
-  MOZ_CRASH("This should not be called.");
-}
-
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace

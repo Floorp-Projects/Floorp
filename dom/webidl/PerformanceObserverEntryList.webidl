@@ -14,7 +14,7 @@ dictionary PerformanceEntryFilterOptions {
   DOMString initiatorType;
 };
 
-[Func="nsPerformance::IsObserverEnabled", Exposed=(Window,Worker)]
+[Func="Performance::IsObserverEnabled", Exposed=(Window,Worker)]
 interface PerformanceObserverEntryList {
   PerformanceEntryList getEntries(optional PerformanceEntryFilterOptions filter);
   PerformanceEntryList getEntriesByType(DOMString entryType);

@@ -15,7 +15,6 @@
 #include "nsWrapperCache.h"
 
 class nsPIDOMWindowInner;
-class PerformanceBase;
 
 namespace mozilla {
 
@@ -24,6 +23,7 @@ class ErrorResult;
 namespace dom {
 
 class GlobalObject;
+class Performance;
 class PerformanceEntry;
 class PerformanceObserverCallback;
 struct PerformanceObserverInit;
@@ -67,7 +67,7 @@ private:
 
   nsCOMPtr<nsISupports> mOwner;
   RefPtr<PerformanceObserverCallback> mCallback;
-  RefPtr<PerformanceBase> mPerformance;
+  RefPtr<Performance> mPerformance;
   nsTArray<nsString> mEntryTypes;
   bool mConnected;
   nsTArray<RefPtr<PerformanceEntry>> mQueuedEntries;

@@ -10,8 +10,8 @@
 #include "mozilla/Attributes.h"
 #include "nsContentUtils.h"
 #include "nsDOMNavigationTiming.h"
-#include "nsPerformance.h"
 #include "nsWrapperCache.h"
+#include "Performance.h"
 
 class nsIHttpChannel;
 class nsITimedChannel;
@@ -42,7 +42,7 @@ public:
  *          argument should be equal to performance.navigationStart for
  *          navigation timing and "0" for the resource timing.
  */
-  PerformanceTiming(nsPerformance* aPerformance,
+  PerformanceTiming(Performance* aPerformance,
                     nsITimedChannel* aChannel,
                     nsIHttpChannel* aHttpChannel,
                     DOMHighResTimeStamp aZeroTime);
@@ -54,7 +54,7 @@ public:
     return mPerformance->GetDOMTiming();
   }
 
-  nsPerformance* GetParentObject() const
+  Performance* GetParentObject() const
   {
     return mPerformance;
   }
@@ -240,7 +240,7 @@ private:
   bool IsInitialized() const;
   void InitializeTimingInfo(nsITimedChannel* aChannel);
 
-  RefPtr<nsPerformance> mPerformance;
+  RefPtr<Performance> mPerformance;
   DOMHighResTimeStamp mFetchStart;
 
   // This is an offset that will be added to each timing ([ms] resolution).

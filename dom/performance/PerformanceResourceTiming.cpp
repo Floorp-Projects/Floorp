@@ -24,7 +24,7 @@ NS_IMPL_ADDREF_INHERITED(PerformanceResourceTiming, PerformanceEntry)
 NS_IMPL_RELEASE_INHERITED(PerformanceResourceTiming, PerformanceEntry)
 
 PerformanceResourceTiming::PerformanceResourceTiming(PerformanceTiming* aPerformanceTiming,
-                                                     nsPerformance* aPerformance,
+                                                     Performance* aPerformance,
                                                      const nsAString& aName)
 : PerformanceEntry(aPerformance, aName, NS_LITERAL_STRING("resource")),
   mTiming(aPerformanceTiming),
