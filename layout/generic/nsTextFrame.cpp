@@ -5639,7 +5639,7 @@ nsTextFrame::GetSelectionTextColors(SelectionType aSelectionType,
   switch (aSelectionType) {
     case SelectionType::eNormal:
       return aTextPaintStyle.GetSelectionColors(aForeground, aBackground);
-    case SelectionType::SELECTION_FIND:
+    case SelectionType::eFind:
       aTextPaintStyle.GetHighlightColors(aForeground, aBackground);
       return true;
     case SelectionType::SELECTION_URLSECONDARY:

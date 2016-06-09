@@ -131,7 +131,7 @@ ToChar(SelectionType aSelectionType)
       return "SelectionType::eIMESelectedClause";
     case SelectionType::eAccessibility:
       return "SelectionType::eAccessibility";
-    case SelectionType::SELECTION_FIND:
+    case SelectionType::eFind:
       return "SelectionType::eFind";
     case SelectionType::SELECTION_URLSECONDARY:
       return "SelectionType::eURLSecondary";
@@ -154,7 +154,7 @@ IsValidSelectionType(RawSelectionType aRawSelectionType)
     case SelectionType::eIMEConvertedClause:
     case SelectionType::eIMESelectedClause:
     case SelectionType::eAccessibility:
-    case SelectionType::SELECTION_FIND:
+    case SelectionType::eFind:
     case SelectionType::SELECTION_URLSECONDARY:
     case SelectionType::SELECTION_URLSTRIKEOUT:
       return true;
@@ -365,7 +365,7 @@ GetIndexFromSelectionType(SelectionType aSelectionType)
       return 5;
     case SelectionType::eAccessibility:
       return 6;
-    case SelectionType::SELECTION_FIND:
+    case SelectionType::eFind:
       return 7;
     case SelectionType::SELECTION_URLSECONDARY:
       return 8;
@@ -388,7 +388,7 @@ GetSelectionTypeFromIndex(int8_t aIndex)
     SelectionType::eIMEConvertedClause,
     SelectionType::eIMESelectedClause,
     SelectionType::eAccessibility,
-    SelectionType::SELECTION_FIND,
+    SelectionType::eFind,
     SelectionType::SELECTION_URLSECONDARY,
     SelectionType::SELECTION_URLSTRIKEOUT
   };
