@@ -81,6 +81,7 @@
 #include "mozilla/dom/RTCPeerConnectionBinding.h"
 #include "mozilla/dom/PeerConnectionImplBinding.h"
 #include "mozilla/dom/DataChannelBinding.h"
+#include "mozilla/dom/PerformanceTiming.h"
 #include "mozilla/dom/PluginCrashedEvent.h"
 #include "MediaStreamList.h"
 #include "MediaStreamTrack.h"
