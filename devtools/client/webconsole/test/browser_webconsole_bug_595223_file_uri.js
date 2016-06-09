@@ -28,7 +28,7 @@ add_task(function* () {
   hud.jsterm.clearOutput();
 
   let loaded = loadBrowser(browser);
-  content.location = uri.spec;
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, uri.spec);
   yield loaded;
 
   yield testMessages();

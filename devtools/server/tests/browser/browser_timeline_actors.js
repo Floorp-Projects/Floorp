@@ -7,7 +7,7 @@
 // Test that the timeline can also record data from the memory and framerate
 // actors, emitted as events in tadem with the markers.
 
-const {TimelineFront} = require("devtools/server/actors/timeline");
+const {TimelineFront} = require("devtools/shared/fronts/timeline");
 
 add_task(function* () {
   let browser = yield addTab("data:text/html;charset=utf-8,mop");
