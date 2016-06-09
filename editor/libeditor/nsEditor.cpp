@@ -5149,7 +5149,7 @@ nsEditor::GetIMESelectionStartOffsetIn(nsINode* aTextNode)
     SelectionType::eIMERawClause,
     SelectionType::eIMESelectedRawClause,
     SelectionType::eIMEConvertedClause,
-    SelectionType::SELECTION_IME_SELECTEDCONVERTEDTEXT
+    SelectionType::eIMESelectedClause
   };
   for (auto selectionType : kIMESelectionTypes) {
     RefPtr<Selection> selection = GetSelection(selectionType);
