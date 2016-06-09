@@ -14,9 +14,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1157469
 window.onload = function() {
 
   const Cu = Components.utils;
-  Cu.import("resource://devtools/shared/Loader.jsm");
-  const {InspectorFront} =
-    devtools.require("devtools/shared/fronts/inspector");
+  const {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+  const {InspectorFront} = require("devtools/shared/fronts/inspector");
 
   SimpleTest.waitForExplicitFinish();
 
