@@ -2251,7 +2251,7 @@ nsFocusManager::MoveCaretToFocus(nsIPresShell* aPresShell, nsIContent* aContent)
   if (domDoc) {
     RefPtr<nsFrameSelection> frameSelection = aPresShell->FrameSelection();
     nsCOMPtr<nsISelection> domSelection =
-      frameSelection->GetSelection(SelectionType::SELECTION_NORMAL);
+      frameSelection->GetSelection(SelectionType::eNormal);
     if (domSelection) {
       nsCOMPtr<nsIDOMNode> currentFocusNode(do_QueryInterface(aContent));
       // First clear the selection. This way, if there is no currently focused
@@ -2312,7 +2312,7 @@ nsFocusManager::SetCaretVisible(nsIPresShell* aPresShell,
   if (docFrameSelection && caret &&
      (frameSelection == docFrameSelection || !aContent)) {
     nsISelection* domSelection =
-      docFrameSelection->GetSelection(SelectionType::SELECTION_NORMAL);
+      docFrameSelection->GetSelection(SelectionType::eNormal);
     if (domSelection) {
       nsCOMPtr<nsISelectionController> selCon(do_QueryInterface(aPresShell));
       if (!selCon) {
@@ -2354,7 +2354,7 @@ nsFocusManager::GetSelectionLocation(nsIDocument* aDocument,
 
   nsCOMPtr<nsISelection> domSelection;
   if (frameSelection) {
-    domSelection = frameSelection->GetSelection(SelectionType::SELECTION_NORMAL);
+    domSelection = frameSelection->GetSelection(SelectionType::eNormal);
   }
 
   nsCOMPtr<nsIDOMNode> startNode, endNode;

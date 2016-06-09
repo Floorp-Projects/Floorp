@@ -9429,7 +9429,7 @@ nsGlobalWindow::GetSelectionOuter()
   }
 
   return static_cast<Selection*>(
-           presShell->GetCurrentSelection(SelectionType::SELECTION_NORMAL));
+           presShell->GetCurrentSelection(SelectionType::eNormal));
 }
 
 Selection*

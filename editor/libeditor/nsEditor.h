@@ -617,7 +617,7 @@ public:
   static void DumpNode(nsIDOMNode *aNode, int32_t indent=0);
 #endif
   Selection* GetSelection(mozilla::SelectionType aSelectionType =
-                            mozilla::SelectionType::SELECTION_NORMAL);
+                            mozilla::SelectionType::eNormal);
 
   // Helpers to add a node to the selection.
   // Used by table cell selection methods
