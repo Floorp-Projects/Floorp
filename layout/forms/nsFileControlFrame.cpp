@@ -294,12 +294,7 @@ nsFileControlFrame::DnDListener::IsValidDropData(nsIDOMDataTransfer* aDOMDataTra
   NS_ENSURE_TRUE(dataTransfer, false);
 
   // We only support dropping files onto a file upload control
-  ErrorResult rv;
-  RefPtr<DOMStringList> types = dataTransfer->GetTypes(rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return false;
-  }
-
+  RefPtr<DOMStringList> types = dataTransfer->Types();
   return types->Contains(NS_LITERAL_STRING("Files"));
 }
 
