@@ -564,15 +564,16 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
     // Return native of root accessible if we have no direct parent
     nativeParent = GetNativeFromGeckoAccessible(accWrap->RootAccessible());
   } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
-    ProxyAccessible* accessibleParent = proxy->Parent();
-    if (accessibleParent)
-      nativeParent = GetNativeFromProxy(accessibleParent);
+    if (ProxyAccessible* proxyParent = proxy->Parent()) {
+      nativeParent = GetNativeFromProxy(proxyParent);
+    }
+
     if (nativeParent)
       return GetObjectOrRepresentedView(nativeParent);
 
     Accessible* outerDoc = proxy->OuterDocOfRemoteBrowser();
     nativeParent = outerDoc ?
-      GetNativeFromGeckoAccessible(outerDoc->RootAccessible()) : nil;
+      GetNativeFromGeckoAccessible(outerDoc) : nil;
   } else {
     return nil;
   }
