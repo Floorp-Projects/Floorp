@@ -287,7 +287,7 @@ enum class SelectionType : RawSelectionType
   eInvalid = -1,
   eNone = nsISelectionController::SELECTION_NONE,
   eNormal = nsISelectionController::SELECTION_NORMAL,
-  SELECTION_SPELLCHECK = nsISelectionController::SELECTION_SPELLCHECK,
+  eSpellCheck = nsISelectionController::SELECTION_SPELLCHECK,
   SELECTION_IME_RAWINPUT = nsISelectionController::SELECTION_IME_RAWINPUT,
   SELECTION_IME_SELECTEDRAWTEXT =
     nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT,

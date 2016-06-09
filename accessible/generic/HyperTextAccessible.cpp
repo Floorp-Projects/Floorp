@@ -2136,7 +2136,7 @@ HyperTextAccessible::GetSpellTextAttr(nsINode* aNode,
   if (!fs)
     return;
 
-  dom::Selection* domSel = fs->GetSelection(SelectionType::SELECTION_SPELLCHECK);
+  dom::Selection* domSel = fs->GetSelection(SelectionType::eSpellCheck);
   if (!domSel)
     return;
 

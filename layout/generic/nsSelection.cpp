@@ -119,7 +119,7 @@ ToChar(SelectionType aSelectionType)
       return "SelectionType::eNone";
     case SelectionType::eNormal:
       return "SelectionType::eNormal";
-    case SelectionType::SELECTION_SPELLCHECK:
+    case SelectionType::eSpellCheck:
       return "SelectionType::eSpellCheck";
     case SelectionType::SELECTION_IME_RAWINPUT:
       return "SelectionType::eIMERawClause";
@@ -148,7 +148,7 @@ IsValidSelectionType(RawSelectionType aRawSelectionType)
   switch (static_cast<SelectionType>(aRawSelectionType)) {
     case SelectionType::eNone:
     case SelectionType::eNormal:
-    case SelectionType::SELECTION_SPELLCHECK:
+    case SelectionType::eSpellCheck:
     case SelectionType::SELECTION_IME_RAWINPUT:
     case SelectionType::SELECTION_IME_SELECTEDRAWTEXT:
     case SelectionType::SELECTION_IME_CONVERTEDTEXT:
@@ -353,7 +353,7 @@ GetIndexFromSelectionType(SelectionType aSelectionType)
   switch (aSelectionType) {
     case SelectionType::eNormal:
       return 0;
-    case SelectionType::SELECTION_SPELLCHECK:
+    case SelectionType::eSpellCheck:
       return 1;
     case SelectionType::SELECTION_IME_RAWINPUT:
       return 2;
@@ -382,7 +382,7 @@ GetSelectionTypeFromIndex(int8_t aIndex)
 {
   static const SelectionType kSelectionTypes[] = {
     SelectionType::eNormal,
-    SelectionType::SELECTION_SPELLCHECK,
+    SelectionType::eSpellCheck,
     SelectionType::SELECTION_IME_RAWINPUT,
     SelectionType::SELECTION_IME_SELECTEDRAWTEXT,
     SelectionType::SELECTION_IME_CONVERTEDTEXT,
@@ -5021,7 +5021,7 @@ Selection::RemoveRange(nsRange& aRange, ErrorResult& aRv)
     // into view. The spell-check selection, however, is created and destroyed
     // in the background. We don't want to scroll in this case or the view
     // might appear to be moving randomly (bug 337871).
-    if (mSelectionType != SelectionType::SELECTION_SPELLCHECK && cnt > 0) {
+    if (mSelectionType != SelectionType::eSpellCheck && cnt > 0) {
       ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION);
     }
   }
