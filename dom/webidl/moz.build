@@ -110,8 +110,6 @@ WEBIDL_FILES = [
     'CSSValueList.webidl',
     'DataContainerEvent.webidl',
     'DataTransfer.webidl',
-    'DataTransferItem.webidl',
-    'DataTransferItemList.webidl',
     'DecoderDoctorNotification.webidl',
     'DedicatedWorkerGlobalScope.webidl',
     'DelayNode.webidl',
