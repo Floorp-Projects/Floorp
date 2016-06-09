@@ -1443,8 +1443,7 @@ HyperTextAccessible::CaretLineNumber()
   if (!frameSelection)
     return -1;
 
-  dom::Selection* domSel =
-    frameSelection->GetSelection(SelectionType::SELECTION_NORMAL);
+  dom::Selection* domSel = frameSelection->GetSelection(SelectionType::eNormal);
   if (!domSel)
     return - 1;
 
@@ -1591,7 +1590,7 @@ int32_t
 HyperTextAccessible::SelectionCount()
 {
   nsTArray<nsRange*> ranges;
-  GetSelectionDOMRanges(SelectionType::SELECTION_NORMAL, &ranges);
+  GetSelectionDOMRanges(SelectionType::eNormal, &ranges);
   return ranges.Length();
 }
 
@@ -1603,7 +1602,7 @@ HyperTextAccessible::SelectionBoundsAt(int32_t aSelectionNum,
   *aStartOffset = *aEndOffset = 0;
 
   nsTArray<nsRange*> ranges;
-  GetSelectionDOMRanges(SelectionType::SELECTION_NORMAL, &ranges);
+  GetSelectionDOMRanges(SelectionType::eNormal, &ranges);
 
   uint32_t rangeCount = ranges.Length();
   if (aSelectionNum < 0 || aSelectionNum >= static_cast<int32_t>(rangeCount))

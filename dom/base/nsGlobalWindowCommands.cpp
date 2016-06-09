@@ -543,7 +543,7 @@ nsClipboardCommand::DoCommand(const char *aCommandName, nsISupports *aContext)
 
   if (notCancelled && !strcmp(aCommandName, "cmd_copyAndCollapseToEnd")) {
     dom::Selection *sel =
-      presShell->GetCurrentSelection(SelectionType::SELECTION_NORMAL);
+      presShell->GetCurrentSelection(SelectionType::eNormal);
     NS_ENSURE_TRUE(sel, NS_ERROR_FAILURE);
     sel->CollapseToEnd();
   }

@@ -121,7 +121,7 @@ ToSelectionType(TextRangeType aTextRangeType)
       return SelectionType::SELECTION_IME_SELECTEDCONVERTEDTEXT;
     default:
       MOZ_CRASH("TextRangeType is invalid");
-      return SelectionType::SELECTION_NORMAL;
+      return SelectionType::eNormal;
   }
 }
 

@@ -573,7 +573,7 @@ nsCopySupport::GetSelectionForCopy(nsIDocument* aDocument, nsISelection** aSelec
 
   // if no selection was found, use the main selection for the window
   NS_IF_ADDREF(*aSelection =
-                 presShell->GetCurrentSelection(SelectionType::SELECTION_NORMAL));
+                 presShell->GetCurrentSelection(SelectionType::eNormal));
   return nullptr;
 }
 
