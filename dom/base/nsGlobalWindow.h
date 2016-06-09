@@ -1257,7 +1257,8 @@ public:
 
   already_AddRefed<nsWindowRoot> GetWindowRootOuter();
   already_AddRefed<nsWindowRoot> GetWindowRoot(mozilla::ErrorResult& aError);
-  nsPerformance* GetPerformance();
+
+  mozilla::dom::Performance* GetPerformance();
 
 protected:
   // Web IDL helpers

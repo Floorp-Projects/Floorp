@@ -13,6 +13,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/InternalMutationEvent.h"
+#include "mozilla/dom/Performance.h"
 #include "mozilla/MiscEvents.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/Preferences.h"
@@ -30,7 +31,6 @@
 #include "nsIScrollableFrame.h"
 #include "nsJSEnvironment.h"
 #include "nsLayoutUtils.h"
-#include "nsPerformance.h"
 #include "nsPIWindowRoot.h"
 #include "WorkerPrivate.h"
 
@@ -1096,7 +1096,8 @@ Event::TimeStamp() const
     if (NS_WARN_IF(!win)) {
       return 0.0;
     }
-    nsPerformance* perf = win->GetPerformance();
+
+    Performance* perf = win->GetPerformance();
     if (NS_WARN_IF(!perf)) {
       return 0.0;
     }

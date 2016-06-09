@@ -6,8 +6,8 @@
 
 #include "PerformanceObserverEntryList.h"
 
+#include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PerformanceObserverEntryListBinding.h"
-#include "nsPerformance.h"
 #include "nsString.h"
 #include "PerformanceResourceTiming.h"
 
