@@ -24,6 +24,9 @@ import java.io.IOException;
  *  * Initializing the Stores & Schedulers.
  *  * Queueing upload requests for a given ping.
  *
+ * To test Telemetry , see {@link TelemetryConstants} &
+ * https://wiki.mozilla.org/Mobile/Fennec/Android/Java_telemetry.
+ *
  * The full architecture is:
  *
  * Fennec -(PingBuilder)-> Dispatcher -2-> Scheduler -> UploadService
