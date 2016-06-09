@@ -2094,7 +2094,12 @@ Loader::LoadStyleLink(nsIContent* aElement,
 
   nsresult rv = CheckContentPolicy(principal, aURL, context, false);
   if (NS_WARN_IF(NS_FAILED(rv))) {
-    if (aElement) {
+    // Don't fire the error event if our document is loaded as data.  We're
+    // supposed to not even try to do loads in that case... Unfortunately, we
+    // implement that via nsDataDocumentContentPolicy, which doesn't have a good
+    // way to communicate back to us that _it_ is the thing that blocked the
+    // load.
+    if (aElement && !mDocument->IsLoadedAsData()) {
       // Fire an async error event on it.
       RefPtr<AsyncEventDispatcher> loadBlockingAsyncDispatcher =
         new LoadBlockingAsyncEventDispatcher(aElement,
