@@ -1025,7 +1025,6 @@ extends="chrome://global/content/bindings/popup.xml#popup">
 
     <implementation implements="nsIAutoCompletePopup">
       <field name="_currentIndex">0</field>
-      <field name="_rowHeight">0</field>
       <field name="_rlbAnimated">false</field>
 
       <!-- =================== nsIAutoCompletePopup =================== -->
@@ -1165,10 +1164,8 @@ extends="chrome://global/content/bindings/popup.xml#popup">
           // Default the height to 0 if we have no rows to show
           let height = 0;
           if (numRows) {
-            if (!this._rowHeight) {
-              let firstRowRect = rows[0].getBoundingClientRect();
-              this._rowHeight = firstRowRect.height;
-
+            let firstRowRect = rows[0].getBoundingClientRect();
+            if (this._rlbPadding == undefined) {
               let style = window.getComputedStyle(this.richlistbox);
 
               let transition = style.transitionProperty;
@@ -1177,14 +1174,20 @@ extends="chrome://global/content/bindings/popup.xml#popup">
               let paddingTop = parseInt(style.paddingTop) || 0;
               let paddingBottom = parseInt(style.paddingBottom) || 0;
               this._rlbPadding = paddingTop + paddingBottom;
-
-              // Set a fixed max-height to avoid flicker when growing the panel.
-              this.richlistbox.style.maxHeight =
-                ((this._rowHeight * this.maxRows) + this._rlbPadding) + "px";
             }
 
+            if (numRows > this.maxRows) {
+              // Set a fixed max-height to avoid flicker when growing the panel.
+              let lastVisibleRowRect = rows[this.maxRows - 1].getBoundingClientRect();
+              let visibleHeight = lastVisibleRowRect.bottom - firstRowRect.top;
+              this.richlistbox.style.maxHeight =
+                visibleHeight + this._rlbPadding + "px";
+            }
+
+            let lastRowRect = rows[numRows - 1].getBoundingClientRect();
             // Calculate the height to have the first row to last row shown
-            height = (this._rowHeight * numRows) + this._rlbPadding;
+            height = lastRowRect.bottom - firstRowRect.top +
+                     this._rlbPadding;
           }
 
           let animate = this._rlbAnimated &&
