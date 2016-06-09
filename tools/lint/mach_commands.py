@@ -384,7 +384,7 @@ class MachCommands(MachCommandBase):
         return os.path.dirname(fullpath)
 
     def get_eslint_module_path(self):
-        return os.path.join(self.get_project_root(), "testing", "eslint")
+        return os.path.join(self.get_project_root(), "tools", "lint", "eslint")
 
     def _prompt_yn(self, msg):
         if not sys.stdin.isatty():
