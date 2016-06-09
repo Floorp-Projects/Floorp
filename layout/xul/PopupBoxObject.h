@@ -100,8 +100,6 @@ public:
 
   int32_t AlignmentOffset();
 
-  void SetConstraintRect(dom::DOMRectReadOnly& aRect);
-
 private:
   ~PopupBoxObject();
 

@@ -26,12 +26,6 @@ this.SelectParentHelper = {
     currentBrowser = browser;
     this._registerListeners(browser, menulist.menupopup);
 
-    let win = browser.ownerDocument.defaultView;
-    let constraintRect = browser.getBoundingClientRect();
-    constraintRect = new win.DOMRect(constraintRect.left + win.mozInnerScreenX,
-                                     constraintRect.top + win.mozInnerScreenY,
-                                     constraintRect.width, constraintRect.height);
-    menulist.menupopup.setConstraintRect(constraintRect);
     menulist.menupopup.openPopupAtScreenRect("after_start", rect.left, rect.top, rect.width, rect.height, false, false);
     menulist.selectedItem.scrollIntoView();
   },

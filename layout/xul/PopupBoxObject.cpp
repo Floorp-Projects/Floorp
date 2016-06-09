@@ -357,16 +357,6 @@ PopupBoxObject::AlignmentOffset()
   return popupOffset.x;
 }
 
-void
-PopupBoxObject::SetConstraintRect(dom::DOMRectReadOnly& aRect)
-{
-  nsMenuPopupFrame *menuPopupFrame = do_QueryFrame(GetFrame(false));
-  if (menuPopupFrame) {
-    menuPopupFrame->SetOverrideConstraintRect(
-      LayoutDeviceIntRect(aRect.Left(), aRect.Top(), aRect.Width(), aRect.Height()));
-  }
-}
-
 } // namespace dom
 } // namespace mozilla
 
