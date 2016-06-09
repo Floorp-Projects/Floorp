@@ -5604,7 +5604,7 @@ nsTextFrame::DrawSelectionDecorations(gfxContext* aContext,
       if (!weDefineSelectionUnderline)
         return;
       break;
-    case SelectionType::SELECTION_URLSTRIKEOUT: {
+    case SelectionType::eURLStrikeout: {
       nscoord inflationMinFontSize =
         nsLayoutUtils::InflationMinFontSizeFor(this);
       float inflation =
