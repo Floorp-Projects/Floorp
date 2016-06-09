@@ -1185,7 +1185,6 @@ ProxyAccessible::OuterDocOfRemoteBrowser() const
     return nullptr;
 
   DocAccessible* chromeDoc = GetExistingDocAccessible(frame->OwnerDoc());
-  NS_ASSERTION(chromeDoc, "accessible tab in not accessible chromeDocument");
 
   return chromeDoc ? chromeDoc->GetAccessible(frame) : nullptr;
 }
