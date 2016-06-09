@@ -22,6 +22,7 @@
 #include "nsIHTMLDocument.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeOwner.h"
+#include "nsIFormControl.h"
 #include "nsLayoutUtils.h"
 #include "nsIPresShell.h"
 #include "nsFrameTraversal.h"
@@ -46,6 +47,7 @@
 
 #include "mozilla/ContentEvents.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLInputElement.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStateManager.h"
 #include "mozilla/EventStates.h"
