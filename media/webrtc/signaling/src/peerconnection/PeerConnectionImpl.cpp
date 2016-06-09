@@ -2516,6 +2516,11 @@ PeerConnectionImpl::ReplaceTrack(MediaStreamTrack& aThisTrack,
   PrincipalChanged(&aWithTrack);
 #endif
 
+  // We update the media pipelines here so we can apply different codec
+  // settings for different sources (e.g. screensharing as opposed to camera.)
+  // TODO: We should probably only do this if the source has in fact changed.
+  mMedia->UpdateMediaPipelines(*mJsepSession);
+
   pco->OnReplaceTrackSuccess(jrv);
   if (jrv.Failed()) {
     CSFLogError(logTag, "Error firing replaceTrack success callback");
