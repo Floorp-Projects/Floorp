@@ -358,19 +358,14 @@ function test_DataTransfer(dt)
   expectError(() => dt.mozClearDataAt("text/plain", 3),
               "IndexSizeError", "clearData index too high with two items");
 
-  // ensure that clearData() removes all data associated with the first item, but doesn't
-  // shift the second item down into the first item's slot.
+  // ensure that clearData() removes all data associated with the first item
   dt.clearData();
-  is(dt.mozItemCount, 2, "clearData no argument with multiple items itemCount");
-  checkOneDataItem(dt, [], [], 0,
-                   "clearData no argument with multiple items item at index 0");
+  is(dt.mozItemCount, 1, "clearData no argument with multiple items itemCount");
   checkOneDataItem(dt, ["text/unknown"],
-                   ["Unknown type"], 1, "clearData no argument with multiple items item at index 1");
+                   ["Unknown type"], 0, "clearData no argument with multiple items item at index 1");
 
-  // remove tha remaining data in index 1. As index 0 is empty at this point, this will actually
-  // drop mozItemCount to 0. (XXX: This is because of spec-compliance reasons related
-  // to the more-recent dt.item API. It's an unfortunate, but hopefully rare edge case)
-  dt.mozClearDataAt("", 1);
+  // remove tha remaining data
+  dt.mozClearDataAt("", 0);
   is(dt.mozItemCount, 0, "all data cleared");
 
   // now check the effectAllowed and dropEffect properties
