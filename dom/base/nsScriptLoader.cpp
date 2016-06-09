@@ -269,7 +269,7 @@ nsScriptLoader::StartLoad(nsScriptLoadRequest *aRequest, const nsAString &aType,
                           bool aScriptFromHead)
 {
   // If this document is sandboxed without 'allow-scripts', abort.
-  if (mDocument->GetSandboxFlags() & SANDBOXED_SCRIPTS) {
+  if (mDocument->HasScriptsBlockedBySandbox()) {
     return NS_OK;
   }
 
@@ -671,7 +671,7 @@ nsScriptLoader::ProcessScriptElement(nsIScriptElement *aElement)
 
   // inline script
   // Is this document sandboxed without 'allow-scripts'?
-  if (mDocument->GetSandboxFlags() & SANDBOXED_SCRIPTS) {
+  if (mDocument->HasScriptsBlockedBySandbox()) {
     return false;
   }
 
