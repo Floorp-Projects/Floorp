@@ -53,7 +53,7 @@ add_task(function* () {
   let color = yield getComputedStyleProperty({selector: "div", name: "color"});
   is(color, "rgb(255, 0, 102)", "div is red before saving file");
 
-  // let styleApplied = promise.defer();
+  // let styleApplied = defer();
   let styleApplied = editor.once("style-applied");
 
   yield pauseForTimeChange();
@@ -75,7 +75,7 @@ add_task(function* () {
 });
 
 function editSCSS(editor) {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   editor.sourceEditor.setText(CSS_TEXT);
 
@@ -92,7 +92,7 @@ function editCSSFile(CSSFile) {
 }
 
 function pauseForTimeChange() {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   // We have to wait for the system time to turn over > 1000 ms so that
   // our file's last change time will show a change. This reflects what
@@ -140,7 +140,7 @@ function read(srcChromeURL) {
 }
 
 function write(data, file) {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   let converter = Cc["@mozilla.org/intl/scriptableunicodeconverter"]
     .createInstance(Ci.nsIScriptableUnicodeConverter);
