@@ -19,7 +19,8 @@ import org.mozilla.gecko.widget.RecyclerViewClickSupport;
 
 import java.util.EnumSet;
 
-import static org.mozilla.gecko.home.CombinedHistoryPanel.OnPanelLevelChangeListener.PanelLevel.CHILD;
+import static org.mozilla.gecko.home.CombinedHistoryPanel.OnPanelLevelChangeListener.PanelLevel.CHILD_RECENT_TABS;
+import static org.mozilla.gecko.home.CombinedHistoryPanel.OnPanelLevelChangeListener.PanelLevel.CHILD_SYNC;
 import static org.mozilla.gecko.home.CombinedHistoryPanel.OnPanelLevelChangeListener.PanelLevel.PARENT;
 
 public class CombinedHistoryRecyclerView extends RecyclerView
@@ -89,10 +90,15 @@ public class CombinedHistoryRecyclerView extends RecyclerView
     public void onItemClicked(RecyclerView recyclerView, int position, View v) {
         final int viewType = getAdapter().getItemViewType(position);
         final CombinedHistoryItem.ItemType itemType = CombinedHistoryItem.ItemType.viewTypeToItemType(viewType);
+        final String telemetryExtra;
 
         switch (itemType) {
+            case RECENT_TABS:
+                mOnPanelLevelChangeListener.changeLevel(CHILD_RECENT_TABS);
+                break;
+
             case SYNCED_DEVICES:
-                mOnPanelLevelChangeListener.changeLevel(CHILD);
+                mOnPanelLevelChangeListener.changeLevel(CHILD_SYNC);
                 break;
 
             case CLIENT:
@@ -116,6 +122,11 @@ public class CombinedHistoryRecyclerView extends RecyclerView
                     Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM, "history");
                     mOnUrlOpenListener.onUrlOpen(historyItem.getUrl(), EnumSet.of(HomePager.OnUrlOpenListener.Flags.ALLOW_SWITCH_TO_TAB));
                 }
+                break;
+
+            case CLOSED_TAB:
+                telemetryExtra = ((RecentTabsAdapter) getAdapter()).restoreTabFromPosition(position);
+                Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, TelemetryContract.Method.LIST_ITEM, telemetryExtra);
                 break;
         }
     }

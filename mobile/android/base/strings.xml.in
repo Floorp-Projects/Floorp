@@ -65,7 +65,6 @@
 
   <string name="bookmarks_title">&bookmarks_title;</string>
   <string name="history_title">&history_title;</string>
-  <string name="recent_tabs_title">&recent_tabs_title;</string>
 
   <string name="switch_to_tab">&switch_to_tab;</string>
 
@@ -452,10 +451,11 @@
   <string name="home_clear_history_button">&home_clear_history_button;</string>
   <string name="home_clear_history_confirm">&home_clear_history_confirm;</string>
   <string name="home_bookmarks_empty">&home_bookmarks_empty;</string>
-  <string name="home_closed_tabs_title">&home_closed_tabs_title;</string>
-  <string name="home_last_tabs_title">&home_last_tabs_title;</string>
+  <string name="home_closed_tabs_title2">&home_closed_tabs_title2;</string>
   <string name="home_last_tabs_empty">&home_last_tabs_empty;</string>
-  <string name="home_open_all">&home_open_all;</string>
+  <string name="home_restore_all">&home_restore_all;</string>
+  <string name="home_closed_tabs_number">&home_closed_tabs_number;</string>
+  <string name="home_closed_tabs_one">&home_closed_tabs_one;</string>
   <string name="home_most_recent_empty">&home_most_recent_empty;</string>
   <string name="home_most_recent_emptyhint">&home_most_recent_emptyhint2;</string>
   <string name="home_default_empty">&home_default_empty;</string>

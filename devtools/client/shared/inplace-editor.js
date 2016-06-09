@@ -1431,7 +1431,7 @@ InplaceEditor.prototype = {
       // Display the list of suggestions if there are more than one.
       if (finalList.length > 1) {
         // Calculate the popup horizontal offset.
-        let indent = this.input.selectionStart - query.length;
+        let indent = this.input.selectionStart - startCheckQuery.length;
         let offset = indent * this.inputCharDimensions.width;
         offset = this._isSingleLine() ? offset : 0;
 

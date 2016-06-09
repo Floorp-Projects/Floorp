@@ -50,10 +50,10 @@ function runTestLoop(theHud) {
   if (gCurrentTest.pref) {
     SpecialPowers.pushPrefEnv({"set": gCurrentTest.pref},
       function () {
-        content.location = gCurrentTest.url;
+        BrowserTestUtils.loadURI(gBrowser.selectedBrowser, gCurrentTest.url);
       });
   } else {
-    content.location = gCurrentTest.url;
+    BrowserTestUtils.loadURI(gBrowser.selectedBrowser, gCurrentTest.url);
   }
 }
 
