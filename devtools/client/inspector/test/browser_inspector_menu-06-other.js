@@ -80,7 +80,7 @@ add_task(function* () {
     let deleteNode = allMenuItems.find(item => item.id === "node-menu-delete");
     deleteNode.click();
 
-    let deferred = promise.defer();
+    let deferred = defer();
     executeSoon(deferred.resolve);
     yield deferred.promise;
 

@@ -14,6 +14,7 @@ const ToolDefinitions = require("devtools/client/definitions").Tools;
 const {CssLogic} = require("devtools/shared/inspector/css-logic");
 const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const Services = require("Services");
 const {OutputParser} = require("devtools/client/shared/output-parser");
 const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/utils");
@@ -395,7 +396,7 @@ CssComputedView.prototype = {
       return this._createViewsPromise;
     }
 
-    let deferred = promise.defer();
+    let deferred = defer();
     this._createViewsPromise = deferred.promise;
 
     this.refreshSourceFilter();
@@ -475,7 +476,7 @@ CssComputedView.prototype = {
       // Reset zebra striping.
       this._darkStripe = true;
 
-      let deferred = promise.defer();
+      let deferred = defer();
       this._refreshProcess = new UpdateProcess(
         this.styleWindow, this.propertyViews, {
           onItem: (propView) => {
@@ -1342,7 +1343,7 @@ SelectorView.prototype = {
     let showOrig = Services.prefs.getBoolPref(PREF_ORIG_SOURCES);
 
     if (showOrig && rule.type !== ELEMENT_STYLE) {
-      let deferred = promise.defer();
+      let deferred = defer();
 
       // set as this first so we show something while we're fetching
       this.source = CssLogic.shortSource(this.sheet) + ":" + rule.line;
