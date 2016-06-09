@@ -48,35 +48,6 @@ using namespace mozilla::a11y;
 // - NSAccessibilityMathPrescriptsAttribute @"AXMathPrescripts"
 // - NSAccessibilityMathPostscriptsAttribute @"AXMathPostscripts"
 
-// returns the passed in object if it is not ignored. if it's ignored, will return
-// the first unignored ancestor.
-static inline id
-GetClosestInterestingAccessible(id anObject)
-{
-  NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NIL;
-
-  // this object is not ignored, so let's return it.
-  if (![anObject accessibilityIsIgnored])
-    return GetObjectOrRepresentedView(anObject);
-
-  // find the closest ancestor that is not ignored.
-  id unignoredObject = anObject;
-  while ((unignoredObject = [unignoredObject accessibilityAttributeValue:NSAccessibilityParentAttribute])) {
-    if (![unignoredObject accessibilityIsIgnored])
-      // object is not ignored, so let's stop the search.
-      break;
-  }
-
-  // if it's a mozAccessible, we need to take care to maybe return the view we
-  // represent, to the AT.
-  if ([unignoredObject respondsToSelector:@selector(hasRepresentedView)])
-    return GetObjectOrRepresentedView(unignoredObject);
-
-  return unignoredObject;
-
-  NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
-}
-
 // convert an array of Gecko accessibles to an NSArray of native accessibles
 static inline NSMutableArray*
 ConvertToNSArray(nsTArray<Accessible*>& aArray)
@@ -528,10 +499,10 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
   }
 
   if (nativeChild)
-    return GetClosestInterestingAccessible(nativeChild);
+    return nativeChild;
 
-  // if we didn't find anything, return ourself (or the first unignored ancestor).
-  return GetClosestInterestingAccessible(self);
+  // if we didn't find anything, return ourself or child view.
+  return GetObjectOrRepresentedView(self);
 }
 
 - (NSArray*)accessibilityActionNames
@@ -569,10 +540,10 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
   }
 
   if (focusedChild)
-    return GetClosestInterestingAccessible(focusedChild);
+    return GetObjectOrRepresentedView(focusedChild);
 
   // return ourself if we can't get a native focused child.
-  return GetClosestInterestingAccessible(self);
+  return GetObjectOrRepresentedView(self);
 }
 
 #pragma mark -
@@ -587,7 +558,7 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
     if (accessibleParent)
       nativeParent = GetNativeFromGeckoAccessible(accessibleParent);
     if (nativeParent)
-      return GetClosestInterestingAccessible(nativeParent);
+      return GetObjectOrRepresentedView(nativeParent);
 
     // Return native of root accessible if we have no direct parent
     nativeParent = GetNativeFromGeckoAccessible(accWrap->RootAccessible());
@@ -596,7 +567,7 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
     if (accessibleParent)
       nativeParent = GetNativeFromProxy(accessibleParent);
     if (nativeParent)
-      return GetClosestInterestingAccessible(nativeParent);
+      return GetObjectOrRepresentedView(nativeParent);
 
     Accessible* outerDoc = proxy->OuterDocOfRemoteBrowser();
     nativeParent = outerDoc ?
@@ -607,7 +578,7 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
 
   NSAssert1 (nativeParent, @"!!! we can't find a parent for %@", self);
 
-  return GetClosestInterestingAccessible(nativeParent);
+  return GetObjectOrRepresentedView(nativeParent);
 
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
@@ -645,7 +616,7 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
     for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
       mozAccessible* nativeChild = GetNativeFromGeckoAccessible(accWrap->GetChildAt(childIdx));
       if (nativeChild)
-        [mChildren addObject:GetObjectOrRepresentedView(nativeChild)];
+        [mChildren addObject:nativeChild];
     }
 
   } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
@@ -653,7 +624,7 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
       for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
         mozAccessible* nativeChild = GetNativeFromProxy(proxy->ChildAt(childIdx));
         if (nativeChild)
-          [mChildren addObject:GetObjectOrRepresentedView(nativeChild)];
+          [mChildren addObject:nativeChild];
       }
 
   }
@@ -1163,7 +1134,7 @@ struct RoleDescrComparator
 
   mozAccessible *curNative = GetNativeFromGeckoAccessible(aAccessible);
   if (curNative)
-    [mChildren addObject:GetObjectOrRepresentedView(curNative)];
+    [mChildren addObject:curNative];
 }
 
 - (void)expire
