@@ -4,20 +4,6 @@
 
 [
   {
-    "namespace": "manifest",
-    "types": [
-      {
-        "$extend": "Permission",
-        "choices": [{
-          "type": "string",
-          "enum": [
-            "nativeMessaging"
-          ]
-        }]
-      }
-    ]
-  },
-  {
     "namespace": "runtime",
     "description": "Use the <code>browser.runtime</code> API to retrieve the background page, return details about the manifest, and listen for and respond to events in the app or extension lifecycle. You can also use this API to convert the relative path of URLs to fully-qualified URLs.",
     "types": [
@@ -276,6 +262,7 @@
       },
       {
         "name": "connectNative",
+        "unsupported": true,
         "type": "function",
         "description": "Connects to a native application in the host machine.",
         "parameters": [

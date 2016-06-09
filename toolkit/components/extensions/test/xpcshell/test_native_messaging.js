@@ -1,14 +1,15 @@
 "use strict";
 
-/* global OS, HostManifestManager, NativeApp */
-Cu.import("resource://gre/modules/AsyncShutdown.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/Schemas.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
-const {Subprocess, SubprocessImpl} = Cu.import("resource://gre/modules/Subprocess.jsm");
-Cu.import("resource://gre/modules/NativeMessaging.jsm");
+Cu.import("resource://gre/modules/FileUtils.jsm");
+
+/* global OS */
 Cu.import("resource://gre/modules/osfile.jsm");
 
+/* global HostManifestManager */
+Cu.import("resource://gre/modules/NativeMessaging.jsm");
+
+Components.utils.import("resource://gre/modules/Schemas.jsm");
 const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";
 
 let dir = FileUtils.getDir("TmpD", ["NativeMessaging"]);
@@ -47,24 +48,16 @@ function writeManifest(path, manifest) {
   return OS.File.writeAtomic(path, manifest);
 }
 
-let PYTHON;
 add_task(function* setup() {
   yield Schemas.load(BASE_SCHEMA);
-
-  PYTHON = yield Subprocess.pathSearch("python2.7");
-  if (PYTHON == null) {
-    PYTHON = yield Subprocess.pathSearch("python");
-  }
-  notEqual(PYTHON, null, "Found a suitable python interpreter");
 });
 
 // Test of HostManifestManager.lookupApplication() begin here...
+
 let context = {
   url: null,
   logError() {},
   preprocessors: {},
-  callOnClose: () => {},
-  forgetOnClose: () => {},
 };
 
 let templateManifest = {
@@ -168,67 +161,5 @@ add_task(function* test_user_dir_precedence() {
   notEqual(result, null, "lookupApplication finds a manifest when entries exist in both user-specific and system-wide directories");
   equal(result.path, USER_TEST_JSON, "lookupApplication returns the user-specific path when user-specific and system-wide entries both exist");
   deepEqual(result.manifest, templateManifest, "lookupApplication returns user-specific manifest contents with user-specific and system-wide entries both exist");
-});
-
-// Test shutdown handling in NativeApp
-add_task(function* test_native_app_shutdown() {
-  const SCRIPT = String.raw`#!${PYTHON} -u
-import signal
-import struct
-import sys
-
-signal.signal(signal.SIGTERM, signal.SIG_IGN)
-
-while True:
-    rawlen = sys.stdin.read(4)
-    if len(rawlen) == 0:
-        signal.pause()
-    msglen = struct.unpack('@I', rawlen)[0]
-    msg = sys.stdin.read(msglen)
-
-    sys.stdout.write(struct.pack('@I', msglen))
-    sys.stdout.write(msg)
-`;
-
-  let scriptPath = OS.Path.join(userDir.path, "wontdie.py");
-  yield OS.File.writeAtomic(scriptPath, SCRIPT);
-  yield OS.File.setPermissions(scriptPath, {unixMode: 0o755});
-
-  const ID = "native@tests.mozilla.org";
-  const MANIFEST = {
-    name: "wontdie",
-    description: "test async shutdown of native apps",
-    path: scriptPath,
-    type: "stdio",
-    allowed_extensions: [ID],
-  };
-  yield writeManifest(OS.Path.join(userDir.path, "wontdie.json"), MANIFEST);
-
-  let extension = {id: ID};
-  let app = new NativeApp(extension, context, "wontdie");
-
-  // send a message and wait for the reply to make sure the app is running
-  let MSG = "test";
-  let recvPromise = new Promise(resolve => {
-    let listener = (what, msg) => {
-      equal(msg, MSG, "Received test message");
-      app.off("message", listener);
-      resolve();
-    };
-    app.on("message", listener);
-  });
-
-  app.send(MSG);
-  yield recvPromise;
-
-  app._cleanup();
-
-  do_print("waiting for async shutdown");
-  Services.prefs.setBoolPref("toolkit.asyncshutdown.testing", true);
-  AsyncShutdown.profileBeforeChange._trigger();
-  Services.prefs.clearUserPref("toolkit.asyncshutdown.testing");
-
-  let procs = yield SubprocessImpl.Process.getWorker().call("getProcesses", []);
-  equal(procs.size, 0, "native process exited");
 });
 
