@@ -624,6 +624,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'toolbar/ToolbarProgressView.java',
     'TouchEventInterceptor.java',
     'trackingprotection/TrackingProtectionPrompt.java',
+    'updater/PostUpdateHandler.java',
     'updater/UpdateService.java',
     'updater/UpdateServiceHelper.java',
     'util/Experiments.java',
