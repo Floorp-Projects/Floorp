@@ -133,7 +133,7 @@ ToChar(SelectionType aSelectionType)
       return "SelectionType::eAccessibility";
     case SelectionType::eFind:
       return "SelectionType::eFind";
-    case SelectionType::SELECTION_URLSECONDARY:
+    case SelectionType::eURLSecondary:
       return "SelectionType::eURLSecondary";
     case SelectionType::SELECTION_URLSTRIKEOUT:
       return "SelectionType::eURLStrikeout";
@@ -155,7 +155,7 @@ IsValidSelectionType(RawSelectionType aRawSelectionType)
     case SelectionType::eIMESelectedClause:
     case SelectionType::eAccessibility:
     case SelectionType::eFind:
-    case SelectionType::SELECTION_URLSECONDARY:
+    case SelectionType::eURLSecondary:
     case SelectionType::SELECTION_URLSTRIKEOUT:
       return true;
     default:
@@ -367,7 +367,7 @@ GetIndexFromSelectionType(SelectionType aSelectionType)
       return 6;
     case SelectionType::eFind:
       return 7;
-    case SelectionType::SELECTION_URLSECONDARY:
+    case SelectionType::eURLSecondary:
       return 8;
     case SelectionType::SELECTION_URLSTRIKEOUT:
       return 9;
@@ -389,7 +389,7 @@ GetSelectionTypeFromIndex(int8_t aIndex)
     SelectionType::eIMESelectedClause,
     SelectionType::eAccessibility,
     SelectionType::eFind,
-    SelectionType::SELECTION_URLSECONDARY,
+    SelectionType::eURLSecondary,
     SelectionType::SELECTION_URLSTRIKEOUT
   };
   if (NS_WARN_IF(aIndex < 0) ||

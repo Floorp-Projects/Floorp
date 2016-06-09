@@ -3380,7 +3380,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
       //
       if (curDetail->mSelectionType != SelectionType::eSpellCheck &&
           curDetail->mSelectionType != SelectionType::eFind &&
-          curDetail->mSelectionType != SelectionType::SELECTION_URLSECONDARY &&
+          curDetail->mSelectionType != SelectionType::eURLSecondary &&
           curDetail->mSelectionType != SelectionType::SELECTION_URLSTRIKEOUT &&
           curDetail->mStart <= offsets.StartOffset() &&
           offsets.EndOffset() <= curDetail->mEnd)
