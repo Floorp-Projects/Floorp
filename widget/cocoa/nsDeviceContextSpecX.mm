@@ -5,7 +5,7 @@
 
 #include "nsDeviceContextSpecX.h"
 
-#include "mozilla/gfx/PrintTargetThebes.h"
+#include "mozilla/gfx/PrintTargetCG.h"
 #include "mozilla/RefPtr.h"
 #include "nsCRT.h"
 #include <unistd.h>
@@ -14,8 +14,6 @@
 #include "nsIServiceManager.h"
 #include "nsIPrintOptions.h"
 #include "nsPrintSettingsX.h"
-
-#include "gfxQuartzSurface.h"
 
 // This must be the last include:
 #include "nsObjCExceptions.h"
@@ -153,23 +151,16 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecX::MakePrintTarget()
     CGContextRef context;
     ::PMSessionGetCGGraphicsContext(mPrintSession, &context);
 
-    RefPtr<gfxASurface> newSurface;
-
     if (context) {
         // Initially, origin is at bottom-left corner of the paper.
         // Here, we translate it to top-left corner of the paper.
         CGContextTranslateCTM(context, 0, height);
         CGContextScaleCTM(context, 1.0, -1.0);
-        newSurface = new gfxQuartzSurface(context, size);
-    } else {
-        newSurface = new gfxQuartzSurface(size, SurfaceFormat::A8R8G8B8_UINT32);
+        return PrintTargetCG::CreateOrNull(context, size);
     }
 
-    if (!newSurface) {
-        return nullptr;
-    }
-
-    return PrintTargetThebes::CreateOrNull(newSurface);
+    // Apparently we do need this branch - bug 368933.
+    return PrintTargetCG::CreateOrNull(size, SurfaceFormat::A8R8G8B8_UINT32);
 
     NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL;
 }
