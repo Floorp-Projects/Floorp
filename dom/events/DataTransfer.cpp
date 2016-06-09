@@ -323,10 +323,6 @@ DataTransfer::GetTypes(ErrorResult& aRv) const
     DataTransferItem* item = items->ElementAt(i);
     MOZ_ASSERT(item);
 
-    if (item->ChromeOnly() && !nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
-      continue;
-    }
-
     nsAutoString type;
     item->GetType(type);
     if (NS_WARN_IF(!types->Add(type))) {
@@ -542,26 +538,13 @@ DataTransfer::MozTypesAt(uint32_t aIndex, ErrorResult& aRv) const
     // note that you can retrieve the types regardless of their principal
     const nsTArray<RefPtr<DataTransferItem>>& items = *mItems->MozItemsAt(aIndex);
 
-    bool addFile = false;
     for (uint32_t i = 0; i < items.Length(); i++) {
-      if (items[i]->ChromeOnly() && !nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
-        continue;
-      }
-
       nsAutoString type;
       items[i]->GetType(type);
       if (NS_WARN_IF(!types->Add(type))) {
         aRv.Throw(NS_ERROR_FAILURE);
         return nullptr;
       }
-
-      if (items[i]->Kind() == DataTransferItem::KIND_FILE) {
-        addFile = true;
-      }
-    }
-
-    if (addFile) {
-      types->Add(NS_LITERAL_STRING("Files"));
     }
   }
 
@@ -611,6 +594,16 @@ DataTransfer::GetDataAtInternal(const nsAString& aFormat, uint32_t aIndex,
   nsAutoString format;
   GetRealFormat(aFormat, format);
 
+  const nsTArray<RefPtr<DataTransferItem>>& items = *mItems->MozItemsAt(aIndex);
+  if (!aFormat.EqualsLiteral(kFileMime) &&
+      !nsContentUtils::IsSystemPrincipal(aSubjectPrincipal)) {
+    for (uint32_t i = 0; i < items.Length(); ++i) {
+      if (items[i]->IsFile()) {
+        return NS_OK;
+      }
+    }
+  }
+
   // Check if the caller is allowed to access the drag data. Callers with
   // chrome privileges can always read the data. During the
   // drop event, allow retrieving the data except in the case where the
@@ -626,11 +619,6 @@ DataTransfer::GetDataAtInternal(const nsAString& aFormat, uint32_t aIndex,
   if (!item) {
     // The index exists but there's no data for the specified format, in this
     // case we just return undefined
-    return NS_OK;
-  }
-
-  // If we have chrome only content, and we aren't chrome, don't allow access
-  if (!nsContentUtils::IsSystemPrincipal(aSubjectPrincipal) && item->ChromeOnly()) {
     return NS_OK;
   }
 
@@ -1256,10 +1244,7 @@ DataTransfer::SetDataWithPrincipal(const nsAString& aFormat,
 
   ErrorResult rv;
   RefPtr<DataTransferItem> item =
-    mItems->SetDataWithPrincipal(format, aData, aIndex, aPrincipal,
-                                 /* aInsertOnly = */ false,
-                                 /* aHidden= */ false,
-                                 rv);
+    mItems->SetDataWithPrincipal(format, aData, aIndex, aPrincipal, false, rv);
   return rv.StealNSResult();
 }
 
@@ -1297,39 +1282,24 @@ DataTransfer::GetRealFormat(const nsAString& aInFormat,
   aOutFormat.Assign(lowercaseFormat);
 }
 
-nsresult
+void
 DataTransfer::CacheExternalData(const char* aFormat, uint32_t aIndex,
-                                nsIPrincipal* aPrincipal, bool aHidden)
+                                nsIPrincipal* aPrincipal)
 {
-  ErrorResult rv;
-  RefPtr<DataTransferItem> item;
-
   if (strcmp(aFormat, kUnicodeMime) == 0) {
-    item = mItems->SetDataWithPrincipal(NS_LITERAL_STRING("text/plain"), nullptr,
-                                        aIndex, aPrincipal, false, aHidden, rv);
-    if (NS_WARN_IF(rv.Failed())) {
-      return rv.StealNSResult();
-    }
-    return NS_OK;
+    SetDataWithPrincipal(NS_LITERAL_STRING("text/plain"), nullptr, aIndex,
+                         aPrincipal);
+    return;
   }
 
   if (strcmp(aFormat, kURLDataMime) == 0) {
-    item = mItems->SetDataWithPrincipal(NS_LITERAL_STRING("text/uri-list"), nullptr,
-                                        aIndex, aPrincipal, false, aHidden, rv);
-    if (NS_WARN_IF(rv.Failed())) {
-      return rv.StealNSResult();
-    }
-    return NS_OK;
+    SetDataWithPrincipal(NS_LITERAL_STRING("text/uri-list"), nullptr, aIndex,
+                         aPrincipal);
+    return;
   }
 
-  nsAutoString format;
-  GetRealFormat(NS_ConvertUTF8toUTF16(aFormat), format);
-  item = mItems->SetDataWithPrincipal(format, nullptr, aIndex,
-                                      aPrincipal, false, aHidden, rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-  return NS_OK;
+  SetDataWithPrincipal(NS_ConvertUTF8toUTF16(aFormat), nullptr, aIndex,
+                       aPrincipal);
 }
 
 // there isn't a way to get a list of the formats that might be available on
@@ -1367,9 +1337,6 @@ DataTransfer::CacheExternalDragFormats()
   uint32_t count;
   dragSession->GetNumDropItems(&count);
   for (uint32_t c = 0; c < count; c++) {
-    bool hasFileData = false;
-    dragSession->IsDataFlavorSupported(kFileMime, &hasFileData);
-
     // First, check for the special format that holds custom types.
     bool supported;
     dragSession->IsDataFlavorSupported(kCustomTypesMime, &supported);
@@ -1387,7 +1354,7 @@ DataTransfer::CacheExternalDragFormats()
       // if the format is supported, add an item to the array with null as
       // the data. When retrieved, GetRealData will read the data.
       if (supported) {
-        CacheExternalData(kFormats[f], c, sysPrincipal, /* hidden = */ f && hasFileData);
+        CacheExternalData(kFormats[f], c, sysPrincipal);
       }
     }
   }
@@ -1413,11 +1380,6 @@ DataTransfer::CacheExternalClipboardFormats()
   nsCOMPtr<nsIPrincipal> sysPrincipal;
   ssm->GetSystemPrincipal(getter_AddRefs(sysPrincipal));
 
-  // Check if the clipboard has any files
-  bool hasFileData = false;
-  const char *fileMime[] = { kFileMime };
-  clipboard->HasDataMatchingFlavors(fileMime, 1, mClipboardType, &hasFileData);
-
   // there isn't a way to get a list of the formats that might be available on
   // all platforms, so just check for the types that can actually be imported.
   // Note that the loop below assumes that kCustomTypesMime will be first.
@@ -1436,8 +1398,7 @@ DataTransfer::CacheExternalClipboardFormats()
       if (f == 0) {
         FillInExternalCustomTypes(0, sysPrincipal);
       } else {
-        // If we aren't the file data, and we have file data, we want to be hidden
-        CacheExternalData(formats[f], 0, sysPrincipal, /* hidden = */ f != 1 && hasFileData);
+        CacheExternalData(formats[f], 0, sysPrincipal);
       }
     }
   }
