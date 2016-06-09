@@ -134,18 +134,20 @@ dprint("Woke up as I should have in " + (Date.now() - then)/1000 + "s");
 // the interrupt handler we will execute a wait.  This is
 // explicitly prohibited (for now), so there should be a catchable exception.
 
+var exn = false;
 timeout(2, function () {
     dprint("In the interrupt, starting inner wait with timeout 2s");
-    Atomics.wait(mem, 0, 42); // Should throw and propagate all the way out
+    try {
+        Atomics.wait(mem, 0, 42); // Should throw
+    } catch (e) {
+        dprint("Got the interrupt exception!");
+        exn = true;
+    }
+    return true;
 });
-var exn = false;
 try {
     dprint("Starting outer wait");
-    assertEq(Atomics.wait(mem, 0, 42, 5000), "ok");
-}
-catch (e) {
-    dprint("Got the timeout exception!");
-    exn = true;
+    assertEq(Atomics.wait(mem, 0, 42, 5000), "timed-out");
 }
 finally {
     timeout(-1);
