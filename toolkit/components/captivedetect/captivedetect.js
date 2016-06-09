@@ -22,6 +22,7 @@ const kCAPTIVEPORTALDETECTOR_CID        = Components.ID('{d9cd00ba-aa4d-47b1-879
 const kOpenCaptivePortalLoginEvent = 'captive-portal-login';
 const kAbortCaptivePortalLoginEvent = 'captive-portal-login-abort';
 const kCaptivePortalLoginSuccessEvent = 'captive-portal-login-success';
+const kCaptivePortalCheckComplete = 'captive-portal-check-complete';
 
 const kCaptivePortalSystemMessage = 'captive-portal';
 
@@ -389,7 +390,11 @@ CaptivePortalDetector.prototype = {
 
   validateContent: function validateContent(content) {
     debug('received content: ' + content);
-    return (content === this._canonicalSiteExpectedContent);
+    let valid = content === this._canonicalSiteExpectedContent;
+    // We need a way to indicate that a check has been performed, and if we are
+    // still in a captive portal.
+    this._sendEvent(kCaptivePortalCheckComplete, !valid);
+    return valid;
   },
 
   _allocateRequestId: function _allocateRequestId() {
