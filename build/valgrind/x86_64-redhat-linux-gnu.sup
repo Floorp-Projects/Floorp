@@ -52,12 +52,11 @@
    fun:_cairo_xlib_surface_finish
    ...
 }
-# The three following leaks are deep in Gtk+3, and it doesn't seem we're doing
-# anything wrong on our end with the container objects. Those suppressions
-# are purposefully verbose so as to avoid them catching actual leaks due to
+# The following leak is deep in Gtk+3, and it doesn't seem we're doing
+# anything wrong on our end with the container objects. This suppression
+# is purposefully verbose so as to avoid catching actual leaks due to
 # Gecko code.
-# Note: valgrind doesn't support more than 24 elements in a suppression stack,
-# which explains why the second has an ellipsis above g_slice_alloc.
+# Note: valgrind doesn't support more than 24 elements in a suppression stack.
 {
    Bug 1187649
    Memcheck:Leak
@@ -85,36 +84,11 @@
    fun:_ZN13nsLookAndFeel4InitEv
    ...
 }
+# set_color() in gtkstyle.c of GTK version 3.4.4 only can leak GdkRGBA
+# allocations when the theme has transparent colors:
+# https://git.gnome.org/browse/gtk+/tree/gtk/deprecated/gtkstyle.c?h=3.4.4#n676
 {
-   Bug 1187649
-   Memcheck:Leak
-   match-leak-kinds: definite
-   ...
-   fun:g_slice_alloc
-   fun:g_slice_copy
-   fun:boxed_proxy_lcopy_value
-   fun:gtk_style_context_get_valist
-   fun:gtk_style_context_get
-   fun:set_color
-   fun:gtk_style_update_from_context
-   fun:gtk_style_constructed
-   fun:g_object_newv
-   fun:g_object_new_valist
-   fun:g_object_new
-   fun:_gtk_style_new_for_path
-   fun:gtk_style_new
-   fun:gtk_widget_get_default_style
-   fun:gtk_widget_init
-   fun:g_type_create_instance
-   fun:g_object_constructor
-   fun:g_object_newv
-   fun:g_object_new
-   fun:gtk_accel_label_new
-   fun:_ZN13nsLookAndFeel4InitEv
-   ...
-}
-{
-   Bug 1187649
+   Bug 1250704
    Memcheck:Leak
    match-leak-kinds: definite
    fun:malloc
@@ -130,8 +104,6 @@
    fun:g_object_newv
    fun:g_object_new_valist
    fun:g_object_new
-   fun:gtk_widget_get_style
-   fun:_ZN13nsIconChannel4InitEP6nsIURI
    ...
 }
 {
