@@ -289,8 +289,7 @@ enum class SelectionType : RawSelectionType
   eNormal = nsISelectionController::SELECTION_NORMAL,
   eSpellCheck = nsISelectionController::SELECTION_SPELLCHECK,
   eIMERawClause = nsISelectionController::SELECTION_IME_RAWINPUT,
-  SELECTION_IME_SELECTEDRAWTEXT =
-    nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT,
+  eIMESelectedRawClause = nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT,
   SELECTION_IME_CONVERTEDTEXT =
     nsISelectionController::SELECTION_IME_CONVERTEDTEXT,
   SELECTION_IME_SELECTEDCONVERTEDTEXT =
