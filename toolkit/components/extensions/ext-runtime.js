@@ -2,11 +2,16 @@
 
 var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   EventManager,
   ignoreEvent,
 } = ExtensionUtils;
+
+XPCOMUtils.defineLazyModuleGetter(this, "NativeApp",
+                                  "resource://gre/modules/NativeMessaging.jsm");
 
 extensions.registerSchemaAPI("runtime", null, (extension, context) => {
   return {
@@ -48,6 +53,15 @@ extensions.registerSchemaAPI("runtime", null, (extension, context) => {
                                      responseCallback);
         }
         return context.messenger.sendMessage(Services.cpmm, message, recipient, responseCallback);
+      },
+
+      connectNative(application) {
+        if (!extension.hasPermission("nativeMessaging")) {
+          throw new context.cloneScope.Error("Permission denied because 'nativeMessaging' permission is missing.");
+        }
+
+        let app = new NativeApp(extension, context, application);
+        return app.portAPI();
       },
 
       get lastError() {
