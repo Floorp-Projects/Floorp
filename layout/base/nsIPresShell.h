@@ -132,6 +132,8 @@ class SourceSurface;
 #define CAPTURE_PREVENTDRAG 4
 // true when the mouse is pointer locked, and events are sent to locked element
 #define CAPTURE_POINTERLOCK 8
+// true when events shouldn't be retargeted to a descendant popup when capturing
+#define CAPTURE_PREVENTPOPUPRETARGET 16
 
 typedef struct CapturingContentInfo {
   // capture should only be allowed during a mousedown event
@@ -139,6 +141,7 @@ typedef struct CapturingContentInfo {
   bool mPointerLock;
   bool mRetargetToElement;
   bool mPreventDrag;
+  bool mPreventPopupRetarget;
   mozilla::StaticRefPtr<nsIContent> mContent;
 } CapturingContentInfo;
 
@@ -1327,6 +1330,10 @@ public:
    * events are targeted at aContent, but capturing is held more strongly (i.e.,
    * calls to SetCapturingContent won't unlock unless CAPTURE_POINTERLOCK is
    * set again).
+   *
+   * If CAPTURE_PREVENTPOPUPRETARGET is set, mouse events will not be retargeted
+   * to an overlapping popup. If this is not set, this retargeting can happen,
+   * as long as the popup is a descendant of aContent.
    */
   static void SetCapturingContent(nsIContent* aContent, uint8_t aFlags);
 
@@ -1344,6 +1351,15 @@ public:
   static void AllowMouseCapture(bool aAllowed)
   {
     gCaptureInfo.mAllowed = aAllowed;
+  }
+
+  /**
+   * Allow updating of some of the capturing information.
+   */
+  static void UpdateCapturingInfo(uint8_t aFlags, bool aNewValue) {
+    if (aFlags & CAPTURE_PREVENTPOPUPRETARGET) {
+      gCaptureInfo.mPreventPopupRetarget = aNewValue;
+    }
   }
 
   /**

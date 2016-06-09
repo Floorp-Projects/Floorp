@@ -228,7 +228,7 @@ using PaintFrameFlags = nsLayoutUtils::PaintFrameFlags;
 
 CapturingContentInfo nsIPresShell::gCaptureInfo =
   { false /* mAllowed */, false /* mPointerLock */, false /* mRetargetToElement */,
-    false /* mPreventDrag */ };
+    false /* mPreventDrag */, false /* mPreventPopupRetarget */ };
 nsIContent* nsIPresShell::gKeyDownTarget;
 nsClassHashtable<nsUint32HashKey, nsIPresShell::PointerCaptureInfo>* nsIPresShell::gPointerCaptureList;
 nsClassHashtable<nsUint32HashKey, nsIPresShell::PointerInfo>* nsIPresShell::gActivePointersIds;
@@ -6651,6 +6651,7 @@ nsIPresShell::SetCapturingContent(nsIContent* aContent, uint8_t aFlags)
                                       ((aFlags & CAPTURE_POINTERLOCK) != 0);
     gCaptureInfo.mPreventDrag = (aFlags & CAPTURE_PREVENTDRAG) != 0;
     gCaptureInfo.mPointerLock = (aFlags & CAPTURE_POINTERLOCK) != 0;
+    gCaptureInfo.mPreventPopupRetarget = (aFlags & CAPTURE_PREVENTPOPUPRETARGET) != 0;
   }
 }
 
@@ -7738,6 +7739,7 @@ PresShell::HandleEvent(nsIFrame* aFrame,
       // If the popupFrame is an ancestor of the 'frame', the frame should
       // handle the event, otherwise, the popup should handle it.
       if (popupFrame &&
+          !gCaptureInfo.mPreventPopupRetarget &&
           !nsContentUtils::ContentIsCrossDocDescendantOf(
              framePresContext->GetPresShell()->GetDocument(),
              popupFrame->GetContent())) {
