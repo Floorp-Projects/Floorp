@@ -346,7 +346,7 @@ public:
     switch (aSelectionType) {
       case SelectionType::eIMERawClause:
         return eIndexRawInput;
-      case SelectionType::SELECTION_IME_SELECTEDRAWTEXT:
+      case SelectionType::eIMESelectedRawClause:
         return eIndexSelRawText;
       case SelectionType::SELECTION_IME_CONVERTEDTEXT:
         return eIndexConvText;
@@ -5431,7 +5431,7 @@ nsTextFrame::ComputeSelectionUnderlineHeight(
 {
   switch (aSelectionType) {
     case SelectionType::eIMERawClause:
-    case SelectionType::SELECTION_IME_SELECTEDRAWTEXT:
+    case SelectionType::eIMESelectedRawClause:
     case SelectionType::SELECTION_IME_CONVERTEDTEXT:
     case SelectionType::SELECTION_IME_SELECTEDCONVERTEDTEXT:
       return aFontMetrics.underlineSize;
@@ -5542,7 +5542,7 @@ nsTextFrame::DrawSelectionDecorations(gfxContext* aContext,
 
   switch (aSelectionType) {
     case SelectionType::eIMERawClause:
-    case SelectionType::SELECTION_IME_SELECTEDRAWTEXT:
+    case SelectionType::eIMESelectedRawClause:
     case SelectionType::SELECTION_IME_CONVERTEDTEXT:
     case SelectionType::SELECTION_IME_SELECTEDCONVERTEDTEXT: {
       // IME decoration lines should not be drawn on the both ends, i.e., we
@@ -5647,7 +5647,7 @@ nsTextFrame::GetSelectionTextColors(SelectionType aSelectionType,
       *aBackground = NS_RGBA(0,0,0,0);
       return true;
     case SelectionType::eIMERawClause:
-    case SelectionType::SELECTION_IME_SELECTEDRAWTEXT:
+    case SelectionType::eIMESelectedRawClause:
     case SelectionType::SELECTION_IME_CONVERTEDTEXT:
     case SelectionType::SELECTION_IME_SELECTEDCONVERTEDTEXT:
       if (aRangeStyle.IsDefined()) {
