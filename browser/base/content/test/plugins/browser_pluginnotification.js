@@ -118,7 +118,7 @@ add_task(function* () {
   let notification = PopupNotifications.getNotification("click-to-play-plugins", gTestBrowser);
   ok(!notification, "Test 11b, Should not have a click-to-play notification");
 
-  gTestBrowser.contentWindow.history.back();
+  gTestBrowser.webNavigation.goBack();
 
   yield promisePopupNotification("click-to-play-plugins");
 });
