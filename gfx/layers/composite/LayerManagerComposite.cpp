@@ -22,6 +22,7 @@
 #include "TiledContentHost.h"
 #include "Units.h"                      // for ScreenIntRect
 #include "UnitTransforms.h"             // for ViewAs
+#include "apz/src/AsyncPanZoomController.h"  // for AsyncPanZoomController
 #include "gfxPrefs.h"                   // for gfxPrefs
 #ifdef XP_MACOSX
 #include "gfxPlatformMac.h"
@@ -1601,6 +1602,35 @@ bool
 LayerComposite::HasStaleCompositor() const
 {
   return mCompositeManager->GetCompositor() != mCompositor;
+}
+
+static bool
+LayerHasCheckerboardingAPZC(Layer* aLayer, Color* aOutColor)
+{
+  bool answer = false;
+  for (LayerMetricsWrapper i(aLayer, LayerMetricsWrapper::StartAt::BOTTOM); i; i = i.GetParent()) {
+    if (!i.Metrics().IsScrollable()) {
+      continue;
+    }
+    if (i.GetApzc() && i.GetApzc()->IsCurrentlyCheckerboarding()) {
+      if (aOutColor) {
+        *aOutColor = i.Metadata().GetBackgroundColor();
+      }
+      answer = true;
+      break;
+    }
+    break;
+  }
+  return answer;
+}
+
+bool
+LayerComposite::NeedToDrawCheckerboarding(gfx::Color* aOutCheckerboardingColor)
+{
+  return GetLayer()->Manager()->AsyncPanZoomEnabled() &&
+         (GetLayer()->GetContentFlags() & Layer::CONTENT_OPAQUE) &&
+         GetLayer()->IsOpaqueForVisibility() &&
+         LayerHasCheckerboardingAPZC(GetLayer(), aOutCheckerboardingColor);
 }
 
 #ifndef MOZ_HAVE_PLATFORM_SPECIFIC_LAYER_BUFFERS
