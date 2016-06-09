@@ -392,17 +392,10 @@ public:
 
   /**
    * Returns the corresponding MediaStreamTrack if it's in our mOwnedStream.
-   * aInputTrackID should match the track's TrackID in its input stream,
-   * and aTrackID the TrackID in mOwnedStream.
-   *
-   * When aTrackID is not supplied or set to TRACK_ANY, we return the first
-   * MediaStreamTrack that matches the given input track. Note that there may
-   * be multiple MediaStreamTracks matching the same input track, but that they
-   * in that case all share the same MediaStreamTrackSource.
+   * aInputTrackID should match the track's TrackID in its input stream.
    */
   MediaStreamTrack* FindOwnedDOMTrack(MediaStream* aInputStream,
-                                      TrackID aInputTrackID,
-                                      TrackID aTrackID = TRACK_ANY) const;
+                                      TrackID aInputTrackID) const;
 
   /**
    * Returns the TrackPort connecting aTrack's input stream to mOwnedStream,
