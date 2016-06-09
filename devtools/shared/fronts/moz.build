@@ -15,6 +15,7 @@ DevToolsModules(
     'device.js',
     'director-manager.js',
     'director-registry.js',
+    'gcli.js',
     'highlighters.js',
     'inspector.js',
     'preference.js',
