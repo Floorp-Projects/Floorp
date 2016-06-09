@@ -713,6 +713,7 @@ WebrtcVideoConduit::ConfigureSendMediaCodec(const VideoCodecConfig* codecConfig)
   }
   // Note: only for overriding parameters from GetCodec()!
   CodecConfigToWebRTCCodec(codecConfig, video_codec);
+  video_codec.mode = mCodecMode;
 
   if(mPtrViECodec->SetSendCodec(mChannel, video_codec) == -1)
   {
@@ -1345,6 +1346,7 @@ WebrtcVideoConduit::ReconfigureSendCodec(unsigned short width,
                                       std::min(minStartBitrate,
                                                vie_codec.maxBitrate));
   }
+  vie_codec.mode = mCodecMode;
   if ((err = mPtrViECodec->SetSendCodec(mChannel, vie_codec)) != 0)
   {
     CSFLogError(logTag, "%s: SetSendCodec(%ux%u) failed, err %d",
