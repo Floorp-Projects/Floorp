@@ -1005,7 +1005,7 @@ function promisePopupHidden(popup) {
 function promiseNotificationShown(notification) {
   let win = notification.browser.ownerDocument.defaultView;
   if (win.PopupNotifications.panel.state == "open") {
-    return Promise.resolved();
+    return Promise.resolve();
   }
   let panelPromise = promisePopupShown(win.PopupNotifications.panel);
   notification.reshow();
