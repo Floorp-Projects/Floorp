@@ -11,8 +11,8 @@
     <ImageView android:id="@+id/icon"
                android:src="@drawable/folder_closed"
                android:layout_width="24dp"
-               android:layout_height="24dp"
-               android:scaleType="fitCenter"
+               android:layout_height="18dp"
+               android:scaleType="fitXY"
                android:layout_margin="20dp"/>
 
     <LinearLayout android:layout_width="0dp"
