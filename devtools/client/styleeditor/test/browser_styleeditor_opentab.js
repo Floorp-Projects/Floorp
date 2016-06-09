@@ -22,7 +22,7 @@ add_task(function* () {
   is(ui._contextMenuStyleSheet.href, url, "Correct URL for sheet");
 
   let originalOpenUILinkIn = ui._window.openUILinkIn;
-  let tabOpenedDefer = promise.defer();
+  let tabOpenedDefer = defer();
 
   ui._window.openUILinkIn = newUrl => {
     // Reset the actual openUILinkIn function before proceeding.
@@ -49,29 +49,29 @@ add_task(function* () {
 });
 
 function onPopupShow(contextMenu) {
-  let defer = promise.defer();
+  let deferred = defer();
   contextMenu.addEventListener("popupshown", function onpopupshown() {
     contextMenu.removeEventListener("popupshown", onpopupshown);
-    defer.resolve();
+    deferred.resolve();
   });
-  return defer.promise;
+  return deferred.promise;
 }
 
 function onPopupHide(contextMenu) {
-  let defer = promise.defer();
+  let deferred = defer();
   contextMenu.addEventListener("popuphidden", function popuphidden() {
     contextMenu.removeEventListener("popuphidden", popuphidden);
-    defer.resolve();
+    deferred.resolve();
   });
-  return defer.promise;
+  return deferred.promise;
 }
 
 function rightClickStyleSheet(ui, editor) {
-  let defer = promise.defer();
+  let deferred = defer();
 
   onPopupShow(ui._contextMenu).then(()=> {
     onPopupHide(ui._contextMenu).then(() => {
-      defer.resolve();
+      deferred.resolve();
     });
     ui._contextMenu.hidePopup();
   });
@@ -81,15 +81,15 @@ function rightClickStyleSheet(ui, editor) {
     {button: 2, type: "contextmenu"},
     ui._window);
 
-  return defer.promise;
+  return deferred.promise;
 }
 
 function rightClickInlineStyleSheet(ui, editor) {
-  let defer = promise.defer();
+  let deferred = defer();
 
   onPopupShow(ui._contextMenu).then(()=> {
     onPopupHide(ui._contextMenu).then(() => {
-      defer.resolve();
+      deferred.resolve();
     });
     ui._contextMenu.hidePopup();
   });
@@ -99,15 +99,15 @@ function rightClickInlineStyleSheet(ui, editor) {
     {button: 2, type: "contextmenu"},
     ui._window);
 
-  return defer.promise;
+  return deferred.promise;
 }
 
 function rightClickNoStyleSheet(ui) {
-  let defer = promise.defer();
+  let deferred = defer();
 
   onPopupShow(ui._contextMenu).then(()=> {
     onPopupHide(ui._contextMenu).then(() => {
-      defer.resolve();
+      deferred.resolve();
     });
     ui._contextMenu.hidePopup();
   });
@@ -117,5 +117,5 @@ function rightClickNoStyleSheet(ui) {
     {button: 2, type: "contextmenu"},
     ui._window);
 
-  return defer.promise;
+  return deferred.promise;
 }

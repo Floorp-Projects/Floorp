@@ -27,7 +27,7 @@ add_task(function* () {
 
 function createNew(ui, panelWindow) {
   info("Creating a new stylesheet now");
-  let deferred = promise.defer();
+  let deferred = defer();
 
   ui.once("editor-added", (ev, editor) => {
     editor.getSourceEditor().then(deferred.resolve);
@@ -46,7 +46,7 @@ function createNew(ui, panelWindow) {
 }
 
 function onPropertyChange(editor) {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   editor.styleSheet.on("property-change", function onProp(property) {
     // wait for text to be entered fully
@@ -83,7 +83,7 @@ function* testInitialState(editor) {
 }
 
 function typeInEditor(editor, panelWindow) {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   waitForFocus(function () {
     for (let c of TESTCASE_CSS_SOURCE) {

@@ -34,7 +34,7 @@ add_task(function* () {
 
 function checkDiskCacheFor(host) {
   let foundPrivateData = false;
-  let deferred = promise.defer();
+  let deferred = defer();
 
   Visitor.prototype = {
     onCacheStorageInfo: function (num) {
@@ -61,7 +61,7 @@ function checkDiskCacheFor(host) {
 }
 
 function waitForDelayedStartupFinished(win) {
-  let deferred = promise.defer();
+  let deferred = defer();
   Services.obs.addObserver(function observer(subject, topic) {
     if (win == subject) {
       Services.obs.removeObserver(observer, topic);
