@@ -20,6 +20,7 @@
         android:layout_height="@dimen/favicon_bg"
         android:layout_margin="16dp"
         android:padding="2dp"
+        android:scaleType="center"
         android:layout_gravity="center_vertical"
         tools:src="@drawable/cloud"/>
 
