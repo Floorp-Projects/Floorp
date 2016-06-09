@@ -34,8 +34,7 @@ public class AboutHomeComponent extends BaseComponent {
     private static final List<PanelType> PANEL_ORDERING = Arrays.asList(
             PanelType.TOP_SITES,
             PanelType.BOOKMARKS,
-            PanelType.COMBINED_HISTORY,
-            PanelType.RECENT_TABS
+            PanelType.COMBINED_HISTORY
     );
 
     // The percentage of the panel to swipe between 0 and 1. This value was set through

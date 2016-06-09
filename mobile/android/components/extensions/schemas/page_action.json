@@ -24,7 +24,6 @@
                 "optional": true
               },
               "default_popup": {
-                "unsupported": true,
                 "type": "string",
                 "format": "relativeUrl",
                 "optional": true,
@@ -161,7 +160,6 @@
       },
       {
         "name": "setPopup",
-        "unsupported": true,
         "type": "function",
         "description": "Sets the html document to be opened as a popup when the user clicks on the page action's icon.",
         "parameters": [
@@ -180,7 +178,6 @@
       },
       {
         "name": "getPopup",
-        "unsupported": true,
         "type": "function",
         "description": "Gets the html document set as the popup for this page action.",
         "async": "callback",

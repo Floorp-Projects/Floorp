@@ -12,7 +12,7 @@
             android:id="@+id/refresh_layout"
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1">
+            android:layout_weight="1.2">
 
         <org.mozilla.gecko.home.CombinedHistoryRecyclerView
                 android:id="@+id/combined_recycler_view"
@@ -36,9 +36,15 @@
               android:layout_weight="3"
               android:visibility="gone"/>
 
-    <Button android:id="@+id/clear_history_button"
+    <include android:id="@+id/home_recent_tabs_empty_view"
+              layout="@layout/home_empty_panel"
+              android:layout_width="match_parent"
+              android:layout_height="0dp"
+              android:layout_weight="3"
+              android:visibility="gone"/>
+
+    <Button android:id="@+id/history_panel_footer_button"
             style="@style/Widget.Home.ActionButton"
-            android:text="@string/home_clear_history_button"
             android:layout_width="match_parent"
             android:layout_height="48dp"
             android:visibility="gone" />

@@ -15,6 +15,7 @@ import android.widget.TextView;
 import org.mozilla.gecko.R;
 import org.mozilla.gecko.db.RemoteClient;
 import org.mozilla.gecko.db.RemoteTab;
+import org.mozilla.gecko.home.RecentTabsAdapter.ClosedTab;
 
 public abstract class CombinedHistoryItem extends RecyclerView.ViewHolder {
     private static final String LOGTAG = "CombinedHistoryItem";
@@ -24,7 +25,8 @@ public abstract class CombinedHistoryItem extends RecyclerView.ViewHolder {
     }
 
     public enum ItemType {
-        CLIENT, HIDDEN_DEVICES, SECTION_HEADER, HISTORY, NAVIGATION_BACK, CHILD, SYNCED_DEVICES;
+        CLIENT, HIDDEN_DEVICES, SECTION_HEADER, HISTORY, NAVIGATION_BACK, CHILD, SYNCED_DEVICES,
+        RECENT_TABS, CLOSED_TAB;
 
         public static ItemType viewTypeToItemType(int viewType) {
             if (viewType >= ItemType.values().length) {
@@ -82,6 +84,12 @@ public abstract class CombinedHistoryItem extends RecyclerView.ViewHolder {
             final TwoLinePageRow childPageRow = (TwoLinePageRow) this.itemView;
             childPageRow.setShowIcons(true);
             childPageRow.update(remoteTab.title, remoteTab.url);
+        }
+
+        public void bind(ClosedTab closedTab) {
+            final TwoLinePageRow childPageRow = (TwoLinePageRow) this.itemView;
+            childPageRow.setShowIcons(false);
+            childPageRow.update(closedTab.title, closedTab.url);
         }
     }
 
