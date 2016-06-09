@@ -5148,7 +5148,7 @@ nsEditor::GetIMESelectionStartOffsetIn(nsINode* aTextNode)
   static const SelectionType kIMESelectionTypes[] = {
     SelectionType::eIMERawClause,
     SelectionType::eIMESelectedRawClause,
-    SelectionType::SELECTION_IME_CONVERTEDTEXT,
+    SelectionType::eIMEConvertedClause,
     SelectionType::SELECTION_IME_SELECTEDCONVERTEDTEXT
   };
   for (auto selectionType : kIMESelectionTypes) {
