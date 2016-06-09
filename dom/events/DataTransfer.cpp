@@ -1306,8 +1306,7 @@ DataTransfer::CacheExternalData(const char* aFormat, uint32_t aIndex,
 // all platforms, so just check for the types that can actually be imported
 // XXXndeakin there are some other formats but those are platform specific.
 const char* kFormats[] = { kFileMime, kHTMLMime, kURLMime, kURLDataMime,
-                           kUnicodeMime, kPNGImageMime, kJPEGImageMime,
-                           kGIFImageMime };
+                           kUnicodeMime };
 
 void
 DataTransfer::CacheExternalDragFormats()
@@ -1384,8 +1383,7 @@ DataTransfer::CacheExternalClipboardFormats()
   // all platforms, so just check for the types that can actually be imported.
   // Note that the loop below assumes that kCustomTypesMime will be first.
   const char* formats[] = { kCustomTypesMime, kFileMime, kHTMLMime, kRTFMime,
-                            kURLMime, kURLDataMime, kUnicodeMime, kPNGImageMime,
-                            kJPEGImageMime, kGIFImageMime };
+                            kURLMime, kURLDataMime, kUnicodeMime };
 
   for (uint32_t f = 0; f < mozilla::ArrayLength(formats); ++f) {
     // check each format one at a time

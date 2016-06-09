@@ -26,9 +26,6 @@ struct FileMimeNameData
 
 FileMimeNameData kFileMimeNameMap[] = {
   { kFileMime, "GenericFileName" },
-  { kJPEGImageMime, "GenericImageNameJPEG" },
-  { kGIFImageMime, "GenericImageNameGIF" },
-  { kPNGImageMime, "GenericImageNamePNG" },
 };
 
 already_AddRefed<mozilla::dom::File>
@@ -193,9 +190,8 @@ DataTransferItem::FillInExternalData()
   }
 
   if (Kind() == KIND_FILE) {
-    // Because this is an external piece of data, mType is one of kFileMime,
-    // kPNGImageMime, kJPEGImageMime, or kGIFImageMime. We want to convert
-    // whatever type happens to actually be stored into a dom::File.
+    // Because this is an external piece of data, mType is kFileMime. We want to
+    // convert whatever type happens to actually be stored into a dom::File.
 
     RefPtr<File> file = FileFromISupports(data);
     if (!file) {
