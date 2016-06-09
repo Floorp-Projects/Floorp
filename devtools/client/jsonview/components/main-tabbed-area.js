@@ -12,7 +12,7 @@ define(function (require, exports, module) {
   const { JsonPanel } = createFactories(require("./json-panel"));
   const { TextPanel } = createFactories(require("./text-panel"));
   const { HeadersPanel } = createFactories(require("./headers-panel"));
-  const { Tabs, TabPanel } = createFactories(require("./reps/tabs"));
+  const { Tabs, TabPanel } = createFactories(require("devtools/client/shared/components/tabs/tabs"));
 
   /**
    * This object represents the root application template

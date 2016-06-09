@@ -4,19 +4,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-DIRS += [
-    'reps',
-    'tabs',
-    'tree'
-]
-
 DevToolsModules(
-    'frame.js',
-    'h-split-box.js',
-    'notification-box.css',
-    'notification-box.js',
-    'tree.js',
+    'tabs.css',
+    'tabs.js',
 )
-
-MOCHITEST_CHROME_MANIFESTS += ['test/mochitest/chrome.ini']
-BROWSER_CHROME_MANIFESTS += ['test/browser/browser.ini']
