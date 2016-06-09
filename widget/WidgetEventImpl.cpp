@@ -116,7 +116,7 @@ ToSelectionType(TextRangeType aTextRangeType)
     case TextRangeType::eSelectedRawClause:
       return SelectionType::eIMESelectedRawClause;
     case TextRangeType::eConvertedClause:
-      return SelectionType::SELECTION_IME_CONVERTEDTEXT;
+      return SelectionType::eIMEConvertedClause;
     case TextRangeType::eSelectedClause:
       return SelectionType::SELECTION_IME_SELECTEDCONVERTEDTEXT;
     default:
