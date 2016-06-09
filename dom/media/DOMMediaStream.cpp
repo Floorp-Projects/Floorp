@@ -10,7 +10,6 @@
 #include "nsIUUIDGenerator.h"
 #include "nsPIDOMWindow.h"
 #include "mozilla/dom/MediaStreamBinding.h"
-#include "mozilla/dom/MediaStreamTrackEvent.h"
 #include "mozilla/dom/LocalMediaStreamBinding.h"
 #include "mozilla/dom/AudioNode.h"
 #include "AudioChannelAgent.h"
@@ -1003,9 +1002,6 @@ DOMMediaStream::CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
     new TrackPort(mPlaybackPort, track, TrackPort::InputPortOwnership::EXTERNAL));
 
   NotifyTrackAdded(track);
-
-  DispatchTrackEvent(NS_LITERAL_STRING("addtrack"), track);
-
   return track;
 }
 
@@ -1243,22 +1239,6 @@ DOMMediaStream::NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack)
   // Don't call RecomputePrincipal here as the track may still exist in the
   // playback stream in the MediaStreamGraph. It will instead be called when the
   // track has been confirmed removed by the graph. See BlockPlaybackTrack().
-}
-
-nsresult
-DOMMediaStream::DispatchTrackEvent(const nsAString& aName,
-                                   const RefPtr<MediaStreamTrack>& aTrack)
-{
-  MOZ_ASSERT(aName == NS_LITERAL_STRING("addtrack"),
-             "Only 'addtrack' is supported at this time");
-
-  MediaStreamTrackEventInit init;
-  init.mTrack = aTrack;
-
-  RefPtr<MediaStreamTrackEvent> event =
-    MediaStreamTrackEvent::Constructor(this, aName, init);
-
-  return DispatchTrustedEvent(event);
 }
 
 void
