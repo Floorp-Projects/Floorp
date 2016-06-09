@@ -35,6 +35,21 @@
     "mozilla/no-cpows-in-tests": 1,
     "mozilla/var-only-at-top-level": 1,
 
+    "valid-jsdoc": [2, {
+      "prefer": {
+        "return": "returns",
+      },
+      "preferType": {
+        "Boolean": "boolean",
+        "Number": "number",
+        "String": "string",
+        "bool": "boolean",
+      },
+      "requireParamDescription": false,
+      "requireReturn": false,
+      "requireReturnDescription": false,
+    }],
+
     // Braces only needed for multi-line arrow function blocks
     // "arrow-body-style": [2, "as-needed"],
 
@@ -445,9 +460,6 @@
 
     // Require "use strict" to be defined globally in the script.
     "strict": [2, "global"],
-
-    // Warn about invalid JSDoc comments.
-    "valid-jsdoc": 0,
 
     // Allow vars to be declared anywhere in the scope.
     "vars-on-top": 0,

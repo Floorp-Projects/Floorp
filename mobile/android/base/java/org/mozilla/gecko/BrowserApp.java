@@ -3325,7 +3325,14 @@ public class BrowserApp extends GeckoApp
                 if (shareIntent == null) {
                     shareIntent = new Intent(Intent.ACTION_SEND);
                     shareIntent.setType("text/plain");
-                    provider.setIntent(shareIntent);
+
+                    final Intent intentToSet = shareIntent;
+                    ThreadUtils.postToBackgroundThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            provider.setIntent(intentToSet);
+                        }
+                    });
                 }
 
                 // Replace the existing intent's extras

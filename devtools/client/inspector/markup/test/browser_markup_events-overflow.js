@@ -43,7 +43,7 @@ add_task(function* () {
   yield tooltip.once("shown");
   info("EventTooltip visible.");
 
-  let container = tooltip.content;
+  let container = tooltip.panel;
   let containerRect = container.getBoundingClientRect();
   let headers = container.querySelectorAll(".event-header");
 

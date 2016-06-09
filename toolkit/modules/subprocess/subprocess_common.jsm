@@ -332,6 +332,8 @@ class InputPipe extends Pipe {
   /**
    * Adds the given data to the end of the input buffer.
    *
+   * @param {ArrayBuffer} buffer
+   *        An input buffer to append to the current buffered input.
    * @private
    */
   onInput(buffer) {
