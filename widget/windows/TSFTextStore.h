@@ -247,7 +247,8 @@ protected:
   static void MarkContextAsEmpty(ITfContext* aContext);
 
   bool     Init(nsWindowBase* aWidget);
-  bool     Destroy();
+  void     Destroy();
+  void     ReleaseTSFObjects();
 
   bool     IsReadLock(DWORD aLock) const
   {
@@ -347,6 +348,21 @@ protected:
   DWORD                        mLock;
   // 0 if no lock is queued, otherwise TS_LF_* indicating the queue lock
   DWORD                        mLockQueued;
+
+  uint32_t mHandlingKeyMessage;
+  void OnStartToHandleKeyMessage() { ++mHandlingKeyMessage; }
+  void OnEndHandlingKeyMessage()
+  {
+    MOZ_ASSERT(mHandlingKeyMessage);
+    if (--mHandlingKeyMessage) {
+      return;
+    }
+    // If TSFTextStore instance is destroyed during handling key message(s),
+    // release all TSF objects when all nested key messages have been handled.
+    if (mDestroyed) {
+      ReleaseTSFObjects();
+    }
+  }
 
   class Composition final
   {
@@ -888,6 +904,9 @@ protected:
   // Immediately after a call of Destroy(), mDestroyed becomes true.  If this
   // is true, the instance shouldn't grant any requests from the TIP anymore.
   bool                         mDestroyed;
+  // While the instance is being destroyed, this is set to true for avoiding
+  // recursive Destroy() calls.
+  bool                         mBeingDestroyed;
 
 
   // TSF thread manager object for the current application

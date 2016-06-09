@@ -96,6 +96,7 @@ leak:libdricore.so
 leak:libdricore9.2.1.so
 leak:libGL.so
 leak:libglib-2.0.so
+leak:libglsl.so
 leak:libp11-kit.so
 leak:libpixman-1.so
 leak:libpulse.so

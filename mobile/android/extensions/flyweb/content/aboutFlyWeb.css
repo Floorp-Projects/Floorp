@@ -1,0 +1,29 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+include "defines.css"
+
+.list-item > a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.details {
+  -moz-margin-start: calc(var(--icon-size) + var(--icon-margin) * 2 - 1em);
+  padding: 1em;
+}
+
+#flyweb-item-template {
+  display: none;
+}
+
+#flyweb-list-empty {
+  display: none;
+}
+
+#flyweb-list:empty + #flyweb-list-empty {
+  display: block;
+  text-align: center;
+  padding-top: 3.9em;
+}

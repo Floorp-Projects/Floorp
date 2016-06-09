@@ -267,10 +267,13 @@ TextComposition::DispatchCompositionEvent(
     aCompositionEvent->mRanges = nullptr;
     NS_ASSERTION(aCompositionEvent->mData.IsEmpty(),
                  "mData of eCompositionCommitAsIs should be empty string");
-    if (mLastData == IDEOGRAPHIC_SPACE) {
-      // If the last data is an ideographic space (FullWidth space), it must be
+    bool removePlaceholderCharacter =
+      Preferences::GetBool("intl.ime.remove_placeholder_character_at_commit",
+                           false);
+    if (removePlaceholderCharacter && mLastData == IDEOGRAPHIC_SPACE) {
+      // If the last data is an ideographic space (FullWidth space), it might be
       // a placeholder character of some Chinese IME.  So, committing with
-      // this data must not be expected by users.  Let's use empty string.
+      // this data might not be expected by users.  Let's use empty string.
       aCompositionEvent->mData.Truncate();
     } else {
       aCompositionEvent->mData = mLastData;

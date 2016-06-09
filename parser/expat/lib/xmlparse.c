@@ -1565,6 +1565,8 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
     nLeftOver = s + len - end;
     if (nLeftOver) {
       if (buffer == NULL || nLeftOver > bufferLim - buffer) {
+/* BEGIN MOZILLA CHANGE (check for overflow) */
+#if 0
         /* FIXME avoid integer overflow */
         char *temp;
         temp = (buffer == NULL
@@ -1582,6 +1584,30 @@ XML_Parse(XML_Parser parser, const char *s, int len, int isFinal)
           return XML_STATUS_ERROR;
         }
         bufferLim = buffer + len * 2;
+#else
+        char *temp;
+        int newLen = len * 2;
+        if (newLen < 0) {
+          errorCode = XML_ERROR_NO_MEMORY;
+          return XML_STATUS_ERROR;
+        }
+        temp = (buffer == NULL
+                ? (char *)MALLOC(newLen)
+                : (char *)REALLOC(buffer, newLen));
+        if (temp == NULL) {
+          errorCode = XML_ERROR_NO_MEMORY;
+          return XML_STATUS_ERROR;
+        }
+        buffer = temp;
+        if (!buffer) {
+          errorCode = XML_ERROR_NO_MEMORY;
+          eventPtr = eventEndPtr = NULL;
+          processor = errorProcessor;
+          return XML_STATUS_ERROR;
+        }
+        bufferLim = buffer + newLen;
+#endif
+/* END MOZILLA CHANGE */
       }
       memcpy(buffer, end, nLeftOver);
     }
