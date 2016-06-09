@@ -207,10 +207,6 @@
 
 /* Tooltip: Events */
 
-#devtools-tooltip-events-container {
-  overflow-y: auto;
-}
-
 .event-header {
   display: flex;
   align-items: center;
