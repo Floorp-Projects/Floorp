@@ -115,7 +115,7 @@ ToChar(SelectionType aSelectionType)
   switch (aSelectionType) {
     case SelectionType::eInvalid:
       return "SelectionType::eInvalid";
-    case SelectionType::SELECTION_NONE:
+    case SelectionType::eNone:
       return "SelectionType::eNone";
     case SelectionType::SELECTION_NORMAL:
       return "SelectionType::eNormal";
@@ -146,7 +146,7 @@ static bool
 IsValidSelectionType(RawSelectionType aRawSelectionType)
 {
   switch (static_cast<SelectionType>(aRawSelectionType)) {
-    case SelectionType::SELECTION_NONE:
+    case SelectionType::eNone:
     case SelectionType::SELECTION_NORMAL:
     case SelectionType::SELECTION_SPELLCHECK:
     case SelectionType::SELECTION_IME_RAWINPUT:
