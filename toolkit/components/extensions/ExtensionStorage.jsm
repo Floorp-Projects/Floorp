@@ -68,6 +68,13 @@ this.ExtensionStorage = {
   /**
    * Sanitizes the given value, and returns a JSON-compatible
    * representation of it, based on the privileges of the given global.
+   *
+   * @param {value} value
+   *        The value to sanitize.
+   * @param {object} global
+   *        The global for which to sanitize the value.
+   * @returns {value}
+   *        The sanitized value.
    */
   sanitize(value, global) {
     // We can't trust that the global has privileges to access this

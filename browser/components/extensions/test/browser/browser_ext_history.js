@@ -128,8 +128,34 @@ add_task(function* test_search() {
   const SINGLE_VISIT_URL = "http://example.com/";
   const DOUBLE_VISIT_URL = "http://example.com/2/";
   const MOZILLA_VISIT_URL = "http://mozilla.com/";
+  const REFERENCE_DATE = new Date();
+  // pages/visits to add via History.insert
+  const PAGE_INFOS = [
+    {
+      url: SINGLE_VISIT_URL,
+      title: `test visit for ${SINGLE_VISIT_URL}`,
+      visits: [
+        {date: new Date(Number(REFERENCE_DATE) - 1000)},
+      ],
+    },
+    {
+      url: DOUBLE_VISIT_URL,
+      title: `test visit for ${DOUBLE_VISIT_URL}`,
+      visits: [
+        {date: REFERENCE_DATE},
+        {date: new Date(Number(REFERENCE_DATE) - 2000)},
+      ],
+    },
+    {
+      url: MOZILLA_VISIT_URL,
+      title: `test visit for ${MOZILLA_VISIT_URL}`,
+      visits: [
+        {date: new Date(Number(REFERENCE_DATE) - 3000)},
+      ],
+    },
+  ];
 
-  function background() {
+  function background(REFERENCE_DATE) {
     const futureTime = Date.now() + 24 * 60 * 60 * 1000;
 
     browser.test.onMessage.addListener(msg => {
@@ -141,6 +167,9 @@ add_task(function* test_search() {
         return browser.history.search({text: "example.com", maxResults: 1});
       }).then(results => {
         browser.test.sendMessage("max-results-search", results);
+        return browser.history.search({text: "", startTime: REFERENCE_DATE - 2000, endTime: REFERENCE_DATE - 1000});
+      }).then(results => {
+        browser.test.sendMessage("date-range-search", results);
         return browser.history.search({text: "", startTime: futureTime});
       }).then(results => {
         browser.test.assertEq(0, results.length, "no results returned for late start time");
@@ -167,7 +196,7 @@ add_task(function* test_search() {
     manifest: {
       permissions: ["history"],
     },
-    background: `(${background})()`,
+    background: `(${background})(${Number(REFERENCE_DATE)})`,
   });
 
   function findResult(url, results) {
@@ -185,28 +214,28 @@ add_task(function* test_search() {
   yield extension.awaitMessage("ready");
   yield PlacesTestUtils.clearHistory();
 
-  yield PlacesTestUtils.addVisits([
-    {uri: makeURI(MOZILLA_VISIT_URL)},
-    {uri: makeURI(DOUBLE_VISIT_URL)},
-    {uri: makeURI(SINGLE_VISIT_URL)},
-    {uri: makeURI(DOUBLE_VISIT_URL)},
-  ]);
+  yield PlacesUtils.history.insertMany(PAGE_INFOS);
 
   extension.sendMessage("check-history");
 
   let results = yield extension.awaitMessage("empty-search");
-  is(results.length, 3, "history.search returned 3 results");
+  is(results.length, 3, "history.search with empty text returned 3 results");
   checkResult(results, SINGLE_VISIT_URL, 1);
   checkResult(results, DOUBLE_VISIT_URL, 2);
   checkResult(results, MOZILLA_VISIT_URL, 1);
 
   results = yield extension.awaitMessage("text-search");
-  is(results.length, 1, "history.search returned 1 result");
+  is(results.length, 1, "history.search with specific text returned 1 result");
   checkResult(results, MOZILLA_VISIT_URL, 1);
 
   results = yield extension.awaitMessage("max-results-search");
-  is(results.length, 1, "history.search returned 1 result");
+  is(results.length, 1, "history.search with maxResults returned 1 result");
   checkResult(results, DOUBLE_VISIT_URL, 2);
+
+  results = yield extension.awaitMessage("date-range-search");
+  is(results.length, 2, "history.search with a date range returned 2 result");
+  checkResult(results, DOUBLE_VISIT_URL, 2);
+  checkResult(results, SINGLE_VISIT_URL, 1);
 
   yield extension.awaitFinish("search");
   yield extension.unload();

@@ -145,6 +145,9 @@ class Context {
    *
    * If the context has a `currentTarget` value, this is prepended to
    * the message to indicate the location of the error.
+   *
+   * @param {string} message
+   * @returns {object}
    */
   error(message) {
     if (this.currentTarget) {
@@ -160,6 +163,9 @@ class Context {
    *
    * If the context has a `currentTarget` value, this is prepended to
    * the message, in the same way as for the `error` method.
+   *
+   * @param {string} message
+   * @returns {Error}
    */
   makeError(message) {
     let {error} = this.error(message);
@@ -172,6 +178,8 @@ class Context {
   /**
    * Logs the given error to the console. May be overridden to enable
    * custom logging.
+   *
+   * @param {Error|string} error
    */
   logError(error) {
     Cu.reportError(error);
@@ -198,6 +206,10 @@ class Context {
    *
    * This is used to identify the path of the property being processed
    * when reporting type errors.
+   *
+   * @param {string} component
+   * @param {function} callback
+   * @returns {*}
    */
   withPath(component, callback) {
     this.path.push(component);
@@ -309,6 +321,7 @@ class Entry {
     }
 
     /**
+     * @property {string} [preprocessor]
      * If set to a string value, and a preprocessor of the same is
      * defined in the validation context, it will be applied to this
      * value prior to any normalization.
@@ -319,6 +332,10 @@ class Entry {
   /**
    * Preprocess the given value with the preprocessor declared in
    * `preprocessor`.
+   *
+   * @param {*} value
+   * @param {Context} context
+   * @returns {*}
    */
   preprocess(value, context) {
     if (this.preprocessor) {
@@ -330,6 +347,9 @@ class Entry {
   /**
    * Logs a deprecation warning for this entry, based on the value of
    * its `deprecated` property.
+   *
+   * @param {Context} context
+   * @param {value} [value]
    */
   logDeprecation(context, value = null) {
     let message = "This property is deprecated";
@@ -351,6 +371,9 @@ class Entry {
   /**
    * Checks whether the entry is deprecated and, if so, logs a
    * deprecation message.
+   *
+   * @param {Context} context
+   * @param {value} [value]
    */
   checkDeprecated(context, value = null) {
     if (this.deprecated) {

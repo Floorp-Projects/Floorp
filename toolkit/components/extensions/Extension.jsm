@@ -1078,6 +1078,10 @@ this.Extension = function(addonData) {
  *
  * The generated extension is stored in the system temporary directory,
  * and an nsIFile object pointing to it is returned.
+ *
+ * @param {string} id
+ * @param {object} data
+ * @returns {nsIFile}
  */
 this.Extension.generateXPI = function(id, data) {
   let manifest = data.manifest;
@@ -1171,6 +1175,10 @@ this.Extension.generateXPI = function(id, data) {
  * A skeleton Extension-like object, used for testing, which installs an
  * add-on via the add-on manager when startup() is called, and
  * uninstalles it on shutdown().
+ *
+ * @param {string} id
+ * @param {nsIFile} file
+ * @param {nsIURI} rootURI
  */
 function MockExtension(id, file, rootURI) {
   this.id = id;
@@ -1229,6 +1237,10 @@ MockExtension.prototype = {
 /**
  * Generates a new extension using |Extension.generateXPI|, and initializes a
  * new |Extension| instance which will execute it.
+ *
+ * @param {string} id
+ * @param {object} data
+ * @returns {Extension}
  */
 this.Extension.generate = function(id, data) {
   let file = this.generateXPI(id, data);

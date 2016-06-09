@@ -20,7 +20,6 @@ const getAnchor = function (position) {
 
 const TEST_URI = `data:text/xml;charset=UTF-8,<?xml version="1.0"?>
   <?xml-stylesheet href="chrome://global/skin/global.css"?>
-  <?xml-stylesheet href="chrome://devtools/skin/common.css"?>
   <?xml-stylesheet href="chrome://devtools/skin/light-theme.css"?>
 
   <window class="theme-light"
@@ -60,7 +59,7 @@ add_task(function* () {
   info("Create HTML tooltip");
   let tooltip = new HTMLTooltip({doc}, {type: "arrow"});
   let div = doc.createElementNS(HTML_NS, "div");
-  div.style.height = "100%";
+  div.style.height = "35px";
   yield tooltip.setContent(div, 200, 35);
 
   let {right: docRight} = doc.documentElement.getBoundingClientRect();
@@ -73,9 +72,9 @@ add_task(function* () {
     let arrow = tooltip.arrow;
     ok(arrow, "Tooltip has an arrow");
 
-    // Get the geometry of the anchor, the tooltip frame & arrow.
+    // Get the geometry of the anchor, the tooltip panel & arrow.
     let arrowBounds = arrow.getBoxQuads({relativeTo: doc})[0].bounds;
-    let frameBounds = tooltip.frame.getBoxQuads({relativeTo: doc})[0].bounds;
+    let panelBounds = tooltip.panel.getBoxQuads({relativeTo: doc})[0].bounds;
     let anchorBounds = el.getBoxQuads({relativeTo: doc})[0].bounds;
 
     let intersects = arrowBounds.left <= anchorBounds.right &&
@@ -85,10 +84,10 @@ add_task(function* () {
     ok(intersects || isBlockedByViewport,
       "Tooltip arrow is aligned with the anchor, or stuck on viewport's edge.");
 
-    let isInFrame = arrowBounds.left >= frameBounds.left &&
-                    arrowBounds.right <= frameBounds.right;
-    ok(isInFrame,
-      "The tooltip arrow remains inside the tooltip frame horizontally");
+    let isInPanel = arrowBounds.left >= panelBounds.left &&
+                    arrowBounds.right <= panelBounds.right;
+    ok(isInPanel,
+      "The tooltip arrow remains inside the tooltip panel horizontally");
 
     yield hideTooltip(tooltip);
   }
