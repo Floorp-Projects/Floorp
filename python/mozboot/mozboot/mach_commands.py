@@ -4,9 +4,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import os
-import sys
-
 from mach.decorators import (
     CommandArgument,
     CommandProvider,
@@ -50,22 +47,12 @@ class VersionControlCommands(object):
         and this command only ensures that remote repositories providing
         Mercurial extensions are up to date.
         """
-        config_paths = ['~/.hgrc']
-        if sys.platform in ('win32', 'cygwin'):
-            config_paths.insert(0, '~/mercurial.ini')
-        config_paths = map(os.path.expanduser, config_paths)
+        import which
+        import mozboot.bootstrap as bootstrap
+
+        hg = which.which('hg')
 
         if update_only:
-            from hgsetup.update import MercurialUpdater
-            updater = MercurialUpdater(self._context.state_dir)
-            result = updater.update_all()
+            bootstrap.update_vct(hg, self._context.state_dir)
         else:
-            from hgsetup.wizard import MercurialSetupWizard
-            wizard = MercurialSetupWizard(self._context.state_dir)
-            result = wizard.run(map(os.path.expanduser, config_paths))
-
-        if result:
-            print('(despite the failure, mach will not nag you to run '
-                  '`mach mercurial-setup`)')
-
-        return result
+            bootstrap.configure_mercurial(hg, self._context.state_dir)
