@@ -15,7 +15,7 @@ def yasm_version(yasm):
         yasm, '--version',
         onerror=lambda: die('Failed to get yasm version.')
     ).splitlines()[0].split()[1]
-    return version
+    return Version(version)
 
 # Until we move all the yasm consumers out of old-configure.
 # bug 1257904
