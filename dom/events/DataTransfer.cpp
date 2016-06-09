@@ -30,22 +30,30 @@
 #include "nsVariant.h"
 #include "mozilla/dom/ContentChild.h"
 #include "mozilla/dom/DataTransferBinding.h"
-#include "mozilla/dom/DataTransferItemList.h"
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/FileList.h"
 #include "mozilla/dom/BindingUtils.h"
 #include "mozilla/dom/OSFileSystem.h"
 #include "mozilla/dom/Promise.h"
-#include "nsNetUtil.h"
 
 namespace mozilla {
 namespace dom {
+
+inline void
+ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
+                            TransferItem& aField,
+                            const char* aName,
+                            uint32_t aFlags = 0)
+{
+  ImplCycleCollectionTraverse(aCallback, aField.mData, aName, aFlags);
+}
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(DataTransfer)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DataTransfer)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mParent)
+  NS_IMPL_CYCLE_COLLECTION_UNLINK(mFileList)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mItems)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDragTarget)
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mDragImage)
@@ -53,6 +61,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(DataTransfer)
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(DataTransfer)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mParent)
+  NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mFileList)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mItems)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDragTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDragImage)
@@ -96,7 +105,6 @@ DataTransfer::DataTransfer(nsISupports* aParent, EventMessage aEventMessage,
   , mDragImageX(0)
   , mDragImageY(0)
 {
-  mItems = new DataTransferItemList(this, aIsExternal, false /* aIsCrossDomainSubFrameDrop */);
   // For these events, we want to be able to add data to the data transfer, so
   // clear the readonly state. Otherwise, the data is already present. For
   // external usage, cache the data from the native clipboard or drag.
@@ -123,7 +131,7 @@ DataTransfer::DataTransfer(nsISupports* aParent,
                            bool aUserCancelled,
                            bool aIsCrossDomainSubFrameDrop,
                            int32_t aClipboardType,
-                           DataTransferItemList* aItems,
+                           nsTArray<nsTArray<TransferItem> >& aItems,
                            Element* aDragImage,
                            uint32_t aDragImageX,
                            uint32_t aDragImageY)
@@ -137,16 +145,12 @@ DataTransfer::DataTransfer(nsISupports* aParent,
   , mUserCancelled(aUserCancelled)
   , mIsCrossDomainSubFrameDrop(aIsCrossDomainSubFrameDrop)
   , mClipboardType(aClipboardType)
+  , mItems(aItems)
   , mDragImage(aDragImage)
   , mDragImageX(aDragImageX)
   , mDragImageY(aDragImageY)
 {
   MOZ_ASSERT(mParent);
-  MOZ_ASSERT(aItems);
-
-  // We clone the items array after everything else, so that it has a valid
-  // mParent value
-  mItems = aItems->Clone(this);
   // The items are copied from aItems into mItems. There is no need to copy
   // the actual data in the items as the data transfer will be read only. The
   // draggesture and dragstart events are the only times when items are
@@ -288,76 +292,102 @@ DataTransfer::GetMozUserCancelled(bool* aUserCancelled)
 FileList*
 DataTransfer::GetFiles(ErrorResult& aRv)
 {
-  return mItems->Files();
+  return GetFileListInternal(aRv, nsContentUtils::SubjectPrincipal());
+}
+
+FileList*
+DataTransfer::GetFileListInternal(ErrorResult& aRv,
+                                  nsIPrincipal* aSubjectPrincipal)
+{
+  if (mEventMessage != eDrop &&
+      mEventMessage != eLegacyDragDrop &&
+      mEventMessage != ePaste) {
+    return nullptr;
+  }
+
+  if (!mFileList) {
+    mFileList = new FileList(static_cast<nsIDOMDataTransfer*>(this));
+
+    uint32_t count = mItems.Length();
+
+    for (uint32_t i = 0; i < count; i++) {
+      nsCOMPtr<nsIVariant> variant;
+      aRv = GetDataAtInternal(NS_ConvertUTF8toUTF16(kFileMime), i,
+                              aSubjectPrincipal, getter_AddRefs(variant));
+      if (NS_WARN_IF(aRv.Failed())) {
+        return nullptr;
+      }
+
+      if (!variant) {
+        continue;
+      }
+
+      nsCOMPtr<nsISupports> supports;
+      nsresult rv = variant->GetAsISupports(getter_AddRefs(supports));
+
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        continue;
+      }
+
+      nsCOMPtr<nsIFile> file = do_QueryInterface(supports);
+
+      RefPtr<File> domFile;
+      if (file) {
+        MOZ_ASSERT(XRE_GetProcessType() == GeckoProcessType_Default,
+                   "nsIFile objects are not expected on the content process");
+
+        bool isDir;
+        aRv = file->IsDirectory(&isDir);
+        if (NS_WARN_IF(aRv.Failed())) {
+          return nullptr;
+        }
+
+        if (isDir) {
+          continue;
+        }
+
+        domFile = File::CreateFromFile(GetParentObject(), file);
+      } else {
+        nsCOMPtr<BlobImpl> blobImpl = do_QueryInterface(supports);
+        if (!blobImpl) {
+          continue;
+        }
+
+        MOZ_ASSERT(blobImpl->IsFile());
+
+        domFile = File::Create(GetParentObject(), blobImpl);
+        MOZ_ASSERT(domFile);
+      }
+
+      mFileList->Append(domFile);
+    }
+  }
+
+  return mFileList;
 }
 
 NS_IMETHODIMP
 DataTransfer::GetFiles(nsIDOMFileList** aFileList)
 {
-  if (!aFileList) {
-    return NS_ERROR_FAILURE;
-  }
-
   ErrorResult rv;
-  RefPtr<FileList> files = GetFiles(rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
-  files.forget(aFileList);
-  return NS_OK;
+  NS_IF_ADDREF(*aFileList =
+    GetFileListInternal(rv, nsContentUtils::GetSystemPrincipal()));
+  return rv.StealNSResult();
 }
 
 already_AddRefed<DOMStringList>
-DataTransfer::GetTypes(ErrorResult& aRv) const
+DataTransfer::Types() const
 {
-  RefPtr<DOMStringList> types = new DOMStringList();
-
-  const nsTArray<RefPtr<DataTransferItem>>* items = mItems->MozItemsAt(0);
-  if (!items || items->IsEmpty()) {
-    return types.forget();
-  }
-
-  bool addFile = false;
-  for (uint32_t i = 0; i < items->Length(); i++) {
-    DataTransferItem* item = items->ElementAt(i);
-    MOZ_ASSERT(item);
-
-    nsAutoString type;
-    item->GetType(type);
-    if (NS_WARN_IF(!types->Add(type))) {
-      aRv.Throw(NS_ERROR_FAILURE);
-      return nullptr;
-    }
-
-    if (!addFile) {
-      addFile = item->Kind() == DataTransferItem::KIND_FILE;
-    }
-  }
-
-  // If we have any files, we need to also add the "Files" type!
-  if (addFile && NS_WARN_IF(!types->Add(NS_LITERAL_STRING("Files")))) {
-    aRv.Throw(NS_ERROR_FAILURE);
-    return nullptr;
-  }
-
-  return types.forget();
+  ErrorResult rv;
+  return MozTypesAt(0, rv);
 }
 
 NS_IMETHODIMP
 DataTransfer::GetTypes(nsISupports** aTypes)
 {
-  if (NS_WARN_IF(!aTypes)) {
-    return NS_ERROR_FAILURE;
-  }
-
-  ErrorResult rv;
-  RefPtr<DOMStringList> types = GetTypes(rv);
-  if (NS_WARN_IF(rv.Failed())) {
-    return rv.StealNSResult();
-  }
-
+  RefPtr<DOMStringList> types = Types();
   types.forget(aTypes);
+
   return NS_OK;
 }
 
@@ -445,7 +475,7 @@ DataTransfer::ClearData(const Optional<nsAString>& aFormat, ErrorResult& aRv)
     return;
   }
 
-  if (MozItemCount() == 0) {
+  if (mItems.Length() == 0) {
     return;
   }
 
@@ -534,17 +564,28 @@ DataTransfer::MozTypesAt(uint32_t aIndex, ErrorResult& aRv) const
   }
 
   RefPtr<DOMStringList> types = new DOMStringList();
-  if (aIndex < MozItemCount()) {
+  if (aIndex < mItems.Length()) {
+    bool addFile = false;
     // note that you can retrieve the types regardless of their principal
-    const nsTArray<RefPtr<DataTransferItem>>& items = *mItems->MozItemsAt(aIndex);
-
-    for (uint32_t i = 0; i < items.Length(); i++) {
-      nsAutoString type;
-      items[i]->GetType(type);
-      if (NS_WARN_IF(!types->Add(type))) {
-        aRv.Throw(NS_ERROR_FAILURE);
-        return nullptr;
+    const nsTArray<TransferItem>& item = mItems[aIndex];
+    for (uint32_t i = 0; i < item.Length(); i++) {
+      const nsString& format = item[i].mFormat;
+      types->Add(format);
+      if (!addFile) {
+        addFile = format.EqualsASCII(kFileMime);
       }
+    }
+
+    if (addFile) {
+      // If this is a content caller, and a file is in the data transfer, remove
+      // the non-file types. This prevents alternate text forms of the file
+      // from being returned.
+      if (!nsContentUtils::LegacyIsCallerChromeOrNativeCode()) {
+        types->Clear();
+        types->Add(NS_LITERAL_STRING(kFileMime));
+      }
+
+      types->Add(NS_LITERAL_STRING("Files"));
     }
   }
 
@@ -580,7 +621,7 @@ DataTransfer::GetDataAtInternal(const nsAString& aFormat, uint32_t aIndex,
     return NS_OK;
   }
 
-  if (aIndex >= MozItemCount()) {
+  if (aIndex >= mItems.Length()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
@@ -594,11 +635,15 @@ DataTransfer::GetDataAtInternal(const nsAString& aFormat, uint32_t aIndex,
   nsAutoString format;
   GetRealFormat(aFormat, format);
 
-  const nsTArray<RefPtr<DataTransferItem>>& items = *mItems->MozItemsAt(aIndex);
-  if (!aFormat.EqualsLiteral(kFileMime) &&
+  nsTArray<TransferItem>& item = mItems[aIndex];
+
+  // If this is a content caller, and a file is in the data transfer, only
+  // return the file type.
+  if (!format.EqualsLiteral(kFileMime) &&
       !nsContentUtils::IsSystemPrincipal(aSubjectPrincipal)) {
-    for (uint32_t i = 0; i < items.Length(); ++i) {
-      if (items[i]->IsFile()) {
+    uint32_t count = item.Length();
+    for (uint32_t i = 0; i < count; i++) {
+      if (item[i].mFormat.EqualsLiteral(kFileMime)) {
         return NS_OK;
       }
     }
@@ -613,44 +658,43 @@ DataTransfer::GetDataAtInternal(const nsAString& aFormat, uint32_t aIndex,
   bool checkFormatItemPrincipal = mIsCrossDomainSubFrameDrop ||
       (mEventMessage != eDrop && mEventMessage != eLegacyDragDrop &&
        mEventMessage != ePaste);
-  MOZ_ASSERT(aSubjectPrincipal);
 
-  RefPtr<DataTransferItem> item = mItems->MozItemByTypeAt(format, aIndex);
-  if (!item) {
-    // The index exists but there's no data for the specified format, in this
-    // case we just return undefined
-    return NS_OK;
-  }
+  uint32_t count = item.Length();
+  for (uint32_t i = 0; i < count; i++) {
+    TransferItem& formatitem = item[i];
+    if (formatitem.mFormat.Equals(format)) {
+      if (formatitem.mPrincipal && checkFormatItemPrincipal &&
+          !aSubjectPrincipal->Subsumes(formatitem.mPrincipal)) {
+        return NS_ERROR_DOM_SECURITY_ERR;
+      }
 
-  if (item->Principal() && checkFormatItemPrincipal &&
-      !aSubjectPrincipal->Subsumes(item->Principal())) {
-    return NS_ERROR_DOM_SECURITY_ERR;
-  }
-
-  nsCOMPtr<nsIVariant> data = item->Data();
-  MOZ_ASSERT(data);
-
-  nsCOMPtr<nsISupports> isupportsData;
-  nsresult rv = data->GetAsISupports(getter_AddRefs(isupportsData));
-
-  if (NS_SUCCEEDED(rv) && isupportsData) {
-    // Make sure the code that is calling us is same-origin with the data.
-    nsCOMPtr<EventTarget> pt = do_QueryInterface(isupportsData);
-    if (pt) {
-      nsresult rv = NS_OK;
-      nsIScriptContext* c = pt->GetContextForEventHandlers(&rv);
-      NS_ENSURE_TRUE(c && NS_SUCCEEDED(rv), NS_ERROR_DOM_SECURITY_ERR);
-      nsIGlobalObject* go = c->GetGlobalObject();
-      NS_ENSURE_TRUE(go, NS_ERROR_DOM_SECURITY_ERR);
-      nsCOMPtr<nsIScriptObjectPrincipal> sp = do_QueryInterface(go);
-      MOZ_ASSERT(sp, "This cannot fail on the main thread.");
-      nsIPrincipal* dataPrincipal = sp->GetPrincipal();
-      NS_ENSURE_TRUE(dataPrincipal, NS_ERROR_DOM_SECURITY_ERR);
-      NS_ENSURE_TRUE(aSubjectPrincipal->Subsumes(dataPrincipal), NS_ERROR_DOM_SECURITY_ERR);
+      if (!formatitem.mData) {
+        FillInExternalData(formatitem, aIndex);
+      } else {
+        nsCOMPtr<nsISupports> data;
+        formatitem.mData->GetAsISupports(getter_AddRefs(data));
+        // Make sure the code that is calling us is same-origin with the data.
+        nsCOMPtr<EventTarget> pt = do_QueryInterface(data);
+        if (pt) {
+          nsresult rv = NS_OK;
+          nsIScriptContext* c = pt->GetContextForEventHandlers(&rv);
+          NS_ENSURE_TRUE(c && NS_SUCCEEDED(rv), NS_ERROR_DOM_SECURITY_ERR);
+          nsIGlobalObject* go = c->GetGlobalObject();
+          NS_ENSURE_TRUE(go, NS_ERROR_DOM_SECURITY_ERR);
+          nsCOMPtr<nsIScriptObjectPrincipal> sp = do_QueryInterface(go);
+          MOZ_ASSERT(sp, "This cannot fail on the main thread.");
+          nsIPrincipal* dataPrincipal = sp->GetPrincipal();
+          NS_ENSURE_TRUE(dataPrincipal, NS_ERROR_DOM_SECURITY_ERR);
+          NS_ENSURE_TRUE(aSubjectPrincipal->Subsumes(dataPrincipal),
+                                                     NS_ERROR_DOM_SECURITY_ERR);
+        }
+      }
+      *aData = formatitem.mData;
+      NS_IF_ADDREF(*aData);
+      return NS_OK;
     }
   }
 
-  data.forget(aData);
   return NS_OK;
 }
 
@@ -694,7 +738,7 @@ DataTransfer::SetDataAtInternal(const nsAString& aFormat, nsIVariant* aData,
 
   // Specifying an index less than the current length will replace an existing
   // item. Specifying an index equal to the current length will add a new item.
-  if (aIndex > MozItemCount()) {
+  if (aIndex > mItems.Length()) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
   }
 
@@ -752,7 +796,7 @@ DataTransfer::MozClearDataAt(const nsAString& aFormat, uint32_t aIndex,
     return;
   }
 
-  if (aIndex >= MozItemCount()) {
+  if (aIndex >= mItems.Length()) {
     aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
     return;
   }
@@ -766,17 +810,6 @@ DataTransfer::MozClearDataAt(const nsAString& aFormat, uint32_t aIndex,
   }
 
   MozClearDataAtHelper(aFormat, aIndex, aRv);
-
-  // If we just cleared the 0-th index, and there are still more than 1 indexes
-  // remaining, MozClearDataAt should cause the 1st index to become the 0th
-  // index. This should _only_ happen when the MozClearDataAt function is
-  // explicitly called by script, as this behavior is inconsistent with spec.
-  // (however, so is the MozClearDataAt API)
-
-  if (aIndex == 0 && mItems->MozItemCount() > 1 &&
-      mItems->MozItemsAt(0)->Length() == 0) {
-    mItems->PopIndexZero();
-  }
 }
 
 void
@@ -784,7 +817,7 @@ DataTransfer::MozClearDataAtHelper(const nsAString& aFormat, uint32_t aIndex,
                                    ErrorResult& aRv)
 {
   MOZ_ASSERT(!mReadOnly);
-  MOZ_ASSERT(aIndex < MozItemCount());
+  MOZ_ASSERT(aIndex < mItems.Length());
   MOZ_ASSERT(aIndex == 0 ||
              (mEventMessage != eCut && mEventMessage != eCopy &&
               mEventMessage != ePaste));
@@ -792,7 +825,40 @@ DataTransfer::MozClearDataAtHelper(const nsAString& aFormat, uint32_t aIndex,
   nsAutoString format;
   GetRealFormat(aFormat, format);
 
-  mItems->MozRemoveByTypeAt(format, aIndex, aRv);
+  nsIPrincipal* principal = nsContentUtils::SubjectPrincipal();
+
+  // if the format is empty, clear all formats
+  bool clearall = format.IsEmpty();
+
+  nsTArray<TransferItem>& item = mItems[aIndex];
+  // count backwards so that the count and index don't have to be adjusted
+  // after removing an element
+  for (int32_t i = item.Length() - 1; i >= 0; i--) {
+    TransferItem& formatitem = item[i];
+    if (clearall || formatitem.mFormat.Equals(format)) {
+      // don't allow removing data that has a stronger principal
+      bool subsumes;
+      if (formatitem.mPrincipal && principal &&
+          (NS_FAILED(principal->Subsumes(formatitem.mPrincipal, &subsumes)) ||
+           !subsumes)) {
+        aRv.Throw(NS_ERROR_DOM_SECURITY_ERR);
+        return;
+      }
+
+      item.RemoveElementAt(i);
+
+      // if a format was specified, break out. Otherwise, loop around until
+      // all formats have been removed
+      if (!clearall) {
+        break;
+      }
+    }
+  }
+
+  // if the last format for an item is removed, remove the entire item
+  if (!item.Length()) {
+     mItems.RemoveElementAt(aIndex);
+  }
 }
 
 NS_IMETHODIMP
@@ -845,17 +911,19 @@ DataTransfer::GetFilesAndDirectories(ErrorResult& aRv)
   }
 
   RefPtr<Promise> p = Promise::Create(global, aRv);
-  if (NS_WARN_IF(aRv.Failed())) {
+  if (aRv.Failed()) {
     return nullptr;
   }
 
-  RefPtr<FileList> files = mItems->Files();
-  if (NS_WARN_IF(!files)) {
-    return nullptr;
+  if (!mFileList) {
+    GetFiles(aRv);
+    if (NS_WARN_IF(aRv.Failed())) {
+      return nullptr;
+    }
   }
 
   Sequence<RefPtr<File>> filesSeq;
-  files->ToSequence(filesSeq, aRv);
+  mFileList->ToSequence(filesSeq, aRv);
   if (NS_WARN_IF(aRv.Failed())) {
     return nullptr;
   }
@@ -894,13 +962,14 @@ DataTransfer::Clone(nsISupports* aParent, EventMessage aEventMessage,
                     bool aUserCancelled, bool aIsCrossDomainSubFrameDrop,
                     DataTransfer** aNewDataTransfer)
 {
-  RefPtr<DataTransfer> newDataTransfer =
+  DataTransfer* newDataTransfer =
     new DataTransfer(aParent, aEventMessage, mEffectAllowed, mCursorState,
                      mIsExternal, aUserCancelled, aIsCrossDomainSubFrameDrop,
                      mClipboardType, mItems, mDragImage, mDragImageX,
                      mDragImageY);
 
-  newDataTransfer.forget(aNewDataTransfer);
+  *aNewDataTransfer = newDataTransfer;
+  NS_ADDREF(*aNewDataTransfer);
   return NS_OK;
 }
 
@@ -932,7 +1001,7 @@ DataTransfer::GetTransferables(nsILoadContext* aLoadContext)
     return nullptr;
   }
 
-  uint32_t count = MozItemCount();
+  uint32_t count = mItems.Length();
   for (uint32_t i = 0; i < count; i++) {
     nsCOMPtr<nsITransferable> transferable = GetTransferable(i, aLoadContext);
     if (transferable) {
@@ -946,11 +1015,11 @@ DataTransfer::GetTransferables(nsILoadContext* aLoadContext)
 already_AddRefed<nsITransferable>
 DataTransfer::GetTransferable(uint32_t aIndex, nsILoadContext* aLoadContext)
 {
-  if (aIndex >= MozItemCount()) {
+  if (aIndex >= mItems.Length()) {
     return nullptr;
   }
 
-  const nsTArray<RefPtr<DataTransferItem>>& item = *mItems->MozItemsAt(aIndex);
+  nsTArray<TransferItem>& item = mItems[aIndex];
   uint32_t count = item.Length();
   if (!count) {
     return nullptr;
@@ -1002,18 +1071,15 @@ DataTransfer::GetTransferable(uint32_t aIndex, nsILoadContext* aLoadContext)
    */
   do {
     for (uint32_t f = 0; f < count; f++) {
-      RefPtr<DataTransferItem> formatitem = item[f];
-      if (!formatitem->Data()) { // skip empty items
+      const TransferItem& formatitem = item[f];
+      if (!formatitem.mData) { // skip empty items
         continue;
       }
-
-      nsAutoString type;
-      formatitem->GetType(type);
 
       // If the data is of one of the well-known formats, use it directly.
       bool isCustomFormat = true;
       for (uint32_t f = 0; f < ArrayLength(knownFormats); f++) {
-        if (type.EqualsASCII(knownFormats[f])) {
+        if (formatitem.mFormat.EqualsASCII(knownFormats[f])) {
           isCustomFormat = false;
           break;
         }
@@ -1023,7 +1089,7 @@ DataTransfer::GetTransferable(uint32_t aIndex, nsILoadContext* aLoadContext)
       nsCOMPtr<nsISupports> convertedData;
 
       if (handlingCustomFormats) {
-        if (!ConvertFromVariant(formatitem->Data(), getter_AddRefs(convertedData),
+        if (!ConvertFromVariant(formatitem.mData, getter_AddRefs(convertedData),
                                 &lengthInBytes)) {
           continue;
         }
@@ -1050,11 +1116,12 @@ DataTransfer::GetTransferable(uint32_t aIndex, nsILoadContext* aLoadContext)
               stream->SetOutputStream(outputStream);
             }
 
-            int32_t formatLength = type.Length() * sizeof(nsString::char_type);
+            int32_t formatLength =
+              formatitem.mFormat.Length() * sizeof(nsString::char_type);
 
             stream->Write32(eCustomClipboardTypeId_String);
             stream->Write32(formatLength);
-            stream->WriteBytes((const char *)type.get(),
+            stream->WriteBytes((const char *)formatitem.mFormat.get(),
                                formatLength);
             stream->Write32(lengthInBytes);
             stream->WriteBytes((const char *)data.get(), lengthInBytes);
@@ -1108,7 +1175,7 @@ DataTransfer::GetTransferable(uint32_t aIndex, nsILoadContext* aLoadContext)
       } else {
         // This is the second pass of the loop and a known type is encountered.
         // Add it as is.
-        if (!ConvertFromVariant(formatitem->Data(), getter_AddRefs(convertedData),
+        if (!ConvertFromVariant(formatitem.mData, getter_AddRefs(convertedData),
                                 &lengthInBytes)) {
           continue;
         }
@@ -1116,7 +1183,7 @@ DataTransfer::GetTransferable(uint32_t aIndex, nsILoadContext* aLoadContext)
         // The underlying drag code uses text/unicode, so use that instead of
         // text/plain
         const char* format;
-        NS_ConvertUTF16toUTF8 utf8format(type);
+        NS_ConvertUTF16toUTF8 utf8format(formatitem.mFormat);
         if (utf8format.EqualsLiteral(kTextMime)) {
           format = kUnicodeMime;
         } else {
@@ -1168,7 +1235,7 @@ DataTransfer::ConvertFromVariant(nsIVariant* aVariant,
       type == nsIDataType::VTYPE_INTERFACE_IS) {
     nsCOMPtr<nsISupports> data;
     if (NS_FAILED(aVariant->GetAsISupports(getter_AddRefs(data)))) {
-      return false;
+     return false;
     }
 
     nsCOMPtr<nsIFlavorDataProvider> fdp = do_QueryInterface(data);
@@ -1224,13 +1291,7 @@ DataTransfer::ConvertFromVariant(nsIVariant* aVariant,
 void
 DataTransfer::ClearAll()
 {
-  mItems->ClearAllItems();
-}
-
-uint32_t
-DataTransfer::MozItemCount() const
-{
-  return mItems->MozItemCount();
+  mItems.Clear();
 }
 
 nsresult
@@ -1242,10 +1303,49 @@ DataTransfer::SetDataWithPrincipal(const nsAString& aFormat,
   nsAutoString format;
   GetRealFormat(aFormat, format);
 
-  ErrorResult rv;
-  RefPtr<DataTransferItem> item =
-    mItems->SetDataWithPrincipal(format, aData, aIndex, aPrincipal, false, rv);
-  return rv.StealNSResult();
+  // check if the item for the format already exists. In that case,
+  // just replace it.
+  TransferItem* formatitem;
+  if (aIndex < mItems.Length()) {
+    nsTArray<TransferItem>& item = mItems[aIndex];
+    uint32_t count = item.Length();
+    for (uint32_t i = 0; i < count; i++) {
+      TransferItem& itemformat = item[i];
+      if (itemformat.mFormat.Equals(format)) {
+        // don't allow replacing data that has a stronger principal
+        bool subsumes;
+        if (itemformat.mPrincipal && aPrincipal &&
+            (NS_FAILED(aPrincipal->Subsumes(itemformat.mPrincipal,
+                                            &subsumes)) || !subsumes)) {
+          return NS_ERROR_DOM_SECURITY_ERR;
+        }
+
+        itemformat.mPrincipal = aPrincipal;
+        itemformat.mData = aData;
+        return NS_OK;
+      }
+    }
+
+    // add a new format
+    formatitem = item.AppendElement();
+  }
+  else {
+    NS_ASSERTION(aIndex == mItems.Length(), "Index out of range");
+
+    // add a new index
+    nsTArray<TransferItem>* item = mItems.AppendElement();
+    NS_ENSURE_TRUE(item, NS_ERROR_OUT_OF_MEMORY);
+
+    formatitem = item->AppendElement();
+  }
+
+  NS_ENSURE_TRUE(formatitem, NS_ERROR_OUT_OF_MEMORY);
+
+  formatitem->mFormat = format;
+  formatitem->mPrincipal = aPrincipal;
+  formatitem->mData = aData;
+
+  return NS_OK;
 }
 
 void
@@ -1302,12 +1402,6 @@ DataTransfer::CacheExternalData(const char* aFormat, uint32_t aIndex,
                        aPrincipal);
 }
 
-// there isn't a way to get a list of the formats that might be available on
-// all platforms, so just check for the types that can actually be imported
-// XXXndeakin there are some other formats but those are platform specific.
-const char* kFormats[] = { kFileMime, kHTMLMime, kURLMime, kURLDataMime,
-                           kUnicodeMime };
-
 void
 DataTransfer::CacheExternalDragFormats()
 {
@@ -1349,11 +1443,11 @@ DataTransfer::CacheExternalDragFormats()
       // the GetData method does take an index. Here, we just assume that
       // every item being dragged has the same set of flavors.
       bool supported;
-      dragSession->IsDataFlavorSupported(kFormats[f], &supported);
+      dragSession->IsDataFlavorSupported(formats[f], &supported);
       // if the format is supported, add an item to the array with null as
       // the data. When retrieved, GetRealData will read the data.
       if (supported) {
-        CacheExternalData(kFormats[f], c, sysPrincipal);
+        CacheExternalData(formats[f], c, sysPrincipal);
       }
     }
   }
@@ -1403,15 +1497,99 @@ DataTransfer::CacheExternalClipboardFormats()
 }
 
 void
+DataTransfer::FillInExternalData(TransferItem& aItem, uint32_t aIndex)
+{
+  NS_PRECONDITION(mIsExternal, "Not an external data transfer");
+
+  if (aItem.mData) {
+    return;
+  }
+
+  // only drag and paste events should be calling FillInExternalData
+  NS_ASSERTION(mEventMessage != eCut && mEventMessage != eCopy,
+               "clipboard event with empty data");
+
+  NS_ConvertUTF16toUTF8 utf8format(aItem.mFormat);
+  const char* format = utf8format.get();
+  if (strcmp(format, "text/plain") == 0) {
+    format = kUnicodeMime;
+  } else if (strcmp(format, "text/uri-list") == 0) {
+    format = kURLDataMime;
+  }
+
+  nsCOMPtr<nsITransferable> trans =
+    do_CreateInstance("@mozilla.org/widget/transferable;1");
+  if (!trans) {
+    return;
+  }
+
+  trans->Init(nullptr);
+  trans->AddDataFlavor(format);
+
+  if (mEventMessage == ePaste) {
+    MOZ_ASSERT(aIndex == 0, "index in clipboard must be 0");
+
+    nsCOMPtr<nsIClipboard> clipboard =
+      do_GetService("@mozilla.org/widget/clipboard;1");
+    if (!clipboard || mClipboardType < 0) {
+      return;
+    }
+
+    clipboard->GetData(trans, mClipboardType);
+  } else {
+    nsCOMPtr<nsIDragSession> dragSession = nsContentUtils::GetDragSession();
+    if (!dragSession) {
+      return;
+    }
+
+#ifdef DEBUG
+    // Since this is an external drag, the source document will always be null.
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    dragSession->GetSourceDocument(getter_AddRefs(domDoc));
+    MOZ_ASSERT(!domDoc);
+#endif
+
+    dragSession->GetData(trans, aIndex);
+  }
+
+  uint32_t length = 0;
+  nsCOMPtr<nsISupports> data;
+  trans->GetTransferData(format, getter_AddRefs(data), &length);
+  if (!data)
+    return;
+
+  RefPtr<nsVariantCC> variant = new nsVariantCC();
+
+  nsCOMPtr<nsISupportsString> supportsstr = do_QueryInterface(data);
+  if (supportsstr) {
+    nsAutoString str;
+    supportsstr->GetData(str);
+    variant->SetAsAString(str);
+  }
+  else {
+    nsCOMPtr<nsISupportsCString> supportscstr = do_QueryInterface(data);
+    if (supportscstr) {
+      nsAutoCString str;
+      supportscstr->GetData(str);
+      variant->SetAsACString(str);
+    } else {
+      variant->SetAsISupports(data);
+    }
+  }
+
+  aItem.mData = variant;
+}
+
+void
 DataTransfer::FillAllExternalData()
 {
   if (mIsExternal) {
-    for (uint32_t i = 0; i < MozItemCount(); ++i) {
-      const nsTArray<RefPtr<DataTransferItem>>& items = *mItems->MozItemsAt(i);
-      for (uint32_t j = 0; j < items.Length(); ++j) {
-        MOZ_ASSERT(items[j]->Index() == i);
-
-        items[j]->FillInExternalData();
+    for (uint32_t i = 0; i < mItems.Length(); ++i) {
+      nsTArray<TransferItem>& itemArray = mItems[i];
+      for (uint32_t j = 0; j < itemArray.Length(); ++j) {
+        if (!itemArray[j].mData) {
+          FillInExternalData(itemArray[j], i);
+        }
       }
     }
   }
@@ -1421,16 +1599,15 @@ void
 DataTransfer::FillInExternalCustomTypes(uint32_t aIndex,
                                         nsIPrincipal* aPrincipal)
 {
-  RefPtr<DataTransferItem> item = new DataTransferItem(mItems,
-                                                       NS_LITERAL_STRING(kCustomTypesMime));
-  item->SetKind(DataTransferItem::KIND_STRING);
-  item->SetIndex(aIndex);
+  TransferItem item;
+  item.mFormat.AssignLiteral(kCustomTypesMime);
 
-  if (!item->Data()) {
+  FillInExternalData(item, aIndex);
+  if (!item.mData) {
     return;
   }
 
-  FillInExternalCustomTypes(item->Data(), aIndex, aPrincipal);
+  FillInExternalCustomTypes(item.mData, aIndex, aPrincipal);
 }
 
 void
