@@ -804,12 +804,15 @@ Layer::CalculateScissorRect(const RenderTargetIntRect& aCurrentScissorRect)
     return currentClip;
   }
 
-  if (GetLocalVisibleRegion().IsEmpty() && !NeedToDrawCheckerboarding()) {
+  if (GetVisibleRegion().IsEmpty()) {
     // When our visible region is empty, our parent may not have created the
     // intermediate surface that we would require for correct clipping; however,
     // this does not matter since we are invisible.
-    // Make sure we still compute a clip rect if we want to draw checkboarding
-    // for this layer, since we want to do this even if the layer is invisible.
+    // Note that we do not use GetLocalVisibleRegion(), because that can be
+    // empty for a layer whose rendered contents have been async-scrolled
+    // completely offscreen, but for which we still need to draw a
+    // checkerboarding backround color, and calculating an empty scissor rect
+    // for such a layer would prevent that (see bug 1247452 comment 10).
     return RenderTargetIntRect(currentClip.TopLeft(), RenderTargetIntSize(0, 0));
   }
 
