@@ -77,47 +77,6 @@ GetClosestInterestingAccessible(id anObject)
   NS_OBJC_END_TRY_ABORT_BLOCK_NIL;
 }
 
-ProxyAccessible*
-a11y::GetProxyUnignoredParent(const ProxyAccessible* aProxy)
-{
-  ProxyAccessible* parent = aProxy->Parent();
-  while (parent && IsProxyIgnored(aProxy))
-    parent = parent->Parent();
-
-  return parent;
-}
-
-void
-a11y::GetProxyUnignoredChildren(const ProxyAccessible* aProxy,
-                                nsTArray<ProxyAccessible*>* aChildrenArray)
-{
-  if (aProxy->MustPruneChildren())
-    return;
-
-  uint32_t childCount = aProxy->ChildrenCount();
-  for (size_t childIdx = 0; childIdx < childCount; childIdx++) {
-    ProxyAccessible* childProxy = aProxy->ChildAt(childIdx);
-
-    // If element is ignored, then add its children as substitutes.
-    if (IsProxyIgnored(childProxy)) {
-      GetProxyUnignoredChildren(childProxy, aChildrenArray);
-      continue;
-    }
-
-    aChildrenArray->AppendElement(childProxy);
-  }
-}
-
-BOOL
-a11y::IsProxyIgnored(const ProxyAccessible* aProxy)
-{
-  mozAccessible* nativeObject = GetNativeFromProxy(aProxy);
-  if (!nativeObject)
-   return true;
-
-  return [nativeObject accessibilityIsIgnored];
-}
-
 // convert an array of Gecko accessibles to an NSArray of native accessibles
 static inline NSMutableArray*
 ConvertToNSArray(nsTArray<Accessible*>& aArray)
