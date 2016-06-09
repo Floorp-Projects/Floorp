@@ -8,9 +8,60 @@ this.EXPORTED_SYMBOLS = ["FinderHighlighter"];
 
 const { interfaces: Ci, utils: Cu } = Components;
 
+Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
 
 const kHighlightIterationSizeMax = 100;
+const kModalHighlightRepaintFreqMs = 10;
+const kModalHighlightPref = "findbar.modalHighlight";
+const kFontPropsCSS = ["font-family", "font-kerning", "font-size", "font-size-adjust",
+  "font-stretch", "font-variant", "font-weight", "letter-spacing", "text-emphasis",
+  "text-orientation", "text-transform", "word-spacing"];
+const kFontPropsCamelCase = kFontPropsCSS.map(prop => {
+  let parts = prop.split("-");
+  return parts.shift() + parts.map(part => part.charAt(0).toUpperCase() + part.slice(1)).join("");
+});
+// This uuid is used to prefix HTML element IDs and classNames in order to make
+// them unique and hard to clash with IDs and classNames content authors come up
+// with, since the stylesheet for modal highlighting is inserted as an agent-sheet
+// in the active HTML document.
+const kModalIdPrefix = "cedee4d0-74c5-4f2d-ab43-4d37c0f9d463";
+const kModalOutlineId = kModalIdPrefix + "-findbar-modalHighlight-outline";
+const kModalStyle = `
+.findbar-modalHighlight-outline {
+  position: absolute;
+  background: linear-gradient(to bottom, #f1ee00, #edcc00);
+  border: 1px solid #f5e600;
+  border-radius: 3px;
+  box-shadow: 0px 2px 3px rgba(0,0,0,.8);
+  color: #000;
+  margin-top: -3px;
+  margin-inline-end: 0;
+  margin-bottom: 0;
+  margin-inline-start: -3px;
+  padding-top: 2px;
+  padding-inline-end: 2px;
+  padding-bottom: 0;
+  padding-inline-start: 4px;
+  pointer-events: none;
+}
+
+.findbar-modalHighlight-outline[grow] {
+  transform: scaleX(1.5) scaleY(1.5)
+}
+
+.findbar-modalHighlight-outline[hidden] {
+  opacity: 0;
+  display: -moz-box;
+}
+
+.findbar-modalHighlight-outline:not([disable-transitions]) {
+  transition-property: opacity, transform, top, left;
+  transition-duration: 50ms;
+  transition-timing-function: linear;
+}`;
+const kSVGNS = "http://www.w3.org/2000/svg";
+const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 /**
  * FinderHighlighter class that is used by Finder.jsm to take care of the
@@ -20,13 +71,30 @@ const kHighlightIterationSizeMax = 100;
  */
 function FinderHighlighter(finder) {
   this.finder = finder;
+  this._modal = Services.prefs.getBoolPref(kModalHighlightPref);
 }
 
 FinderHighlighter.prototype = {
+  get modalStyleSheet() {
+    if (!this._modalStyleSheet) {
+      this._modalStyleSheet = kModalStyle.replace(/(\.|#)findbar-/g,
+        "$1" + kModalIdPrefix + "-findbar-");
+    }
+    return this._modalStyleSheet;
+  },
+
+  get modalStyleSheetURI() {
+    if (!this._modalStyleSheetURI) {
+      this._modalStyleSheetURI = "data:text/css;charset=utf-8," +
+        encodeURIComponent(this.modalStyleSheet.replace(/[\n]+/g, " "));
+    }
+    return this._modalStyleSheetURI;
+  },
+
   /**
    * Notify all registered listeners that the 'Highlight All' operation finished.
    *
-   * @param  {Boolean} highlight Whether highlighting was turned on
+   * @param {Boolean} highlight Whether highlighting was turned on
    */
   notifyFinished(highlight) {
     for (let l of this.finder._listeners) {
@@ -41,6 +109,7 @@ FinderHighlighter.prototype = {
    * if the word to highlight was updated in the meantime.
    */
   maybeAbort() {
+    this.clear();
     if (!this._abortHighlight) {
       return;
     }
@@ -78,7 +147,8 @@ FinderHighlighter.prototype = {
    * @yield {Promise} that resolves once the operation has finished
    */
   highlight: Task.async(function* (highlight, word, window) {
-    window = window || this.finder._getWindow();
+    let finderWindow = this.finder._getWindow();
+    window = window || finderWindow;
     let found = false;
     for (let i = 0; window.frames && i < window.frames.length; i++) {
       if (yield this.highlight(highlight, word, window.frames[i])) {
@@ -96,13 +166,15 @@ FinderHighlighter.prototype = {
 
     if (highlight) {
       yield this.iterator(word, window, range => {
-        this.highlightRange(range, controller);
+        this.highlightRange(range, controller, finderWindow);
         found = true;
       });
     } else {
       // First, attempt to remove highlighting from main document
       let sel = controller.getSelection(Ci.nsISelectionController.SELECTION_FIND);
       sel.removeAllRanges();
+
+      this.clear();
 
       // Next, check our editor cache, for editors belonging to this
       // document
@@ -129,26 +201,540 @@ FinderHighlighter.prototype = {
    * Add a range to the find selection, i.e. highlight it, and if it's inside an
    * editable node, track it.
    *
-   * @param  {nsIDOMRange}            range      Range object to be highlighted
-   * @param  {nsISelectionController} controller Selection controller of the
-   *                                             document that the range belongs
-   *                                             to
+   * @param {nsIDOMRange}            range      Range object to be highlighted
+   * @param {nsISelectionController} controller Selection controller of the
+   *                                            document that the range belongs
+   *                                            to
+   * @param {nsIDOMWindow}           window     Window object, whose DOM tree
+   *                                            is being traversed
    */
-  highlightRange(range, controller) {
+  highlightRange(range, controller, window) {
     let node = range.startContainer;
     let editableNode = this._getEditableNode(node);
     if (editableNode) {
       controller = editableNode.editor.selectionController;
     }
 
-    let findSelection = controller.getSelection(Ci.nsISelectionController.SELECTION_FIND);
-    findSelection.addRange(range);
+    if (this._modal) {
+      this._modalHighlight(range, controller, window);
+    } else {
+      let findSelection = controller.getSelection(Ci.nsISelectionController.SELECTION_FIND);
+      findSelection.addRange(range);
+    }
 
     if (editableNode) {
       // Highlighting added, so cache this editor, and hook up listeners
       // to ensure we deal properly with edits within the highlighting
       this._addEditorListeners(editableNode.editor);
     }
+  },
+
+  /**
+   * If modal highlighting is enabled, show the dimmed background that will overlay
+   * the page.
+   *
+   * @param  {nsIDOMWindow} window The dimmed background will overlay this window.
+   *                               Optional, defaults to the finder window.
+   * @return {AnonymousContent}    Reference to the node inserted into the
+   *                               CanvasFrame. It'll also be stored in the
+   *                               `_modalHighlightOutline` member variable.
+   */
+  show(window = null) {
+    if (!this._modal)
+      return null;
+
+    window = window || this.finder._getWindow();
+    let anonNode = this._maybeCreateModalHighlightNodes(window);
+    this._addModalHighlightListeners(window);
+
+    return anonNode;
+  },
+
+  /**
+   * If modal highlighting is enabled and the outline + dimmed background is
+   * currently visible, both will be hidden.
+   */
+  hide(window = null) {
+    if (!this._modal)
+      return;
+
+    if (this._modalHighlightOutline)
+      this._modalHighlightOutline.setAttributeForElement(kModalOutlineId, "hidden", "true");
+
+    window = window || this.finder._getWindow();
+    this._removeHighlightAllMask(window);
+    this._removeModalHighlightListeners(window);
+  },
+
+  /**
+   * Called by the Finder after a find result comes in; update the position and
+   * content of the outline to the newly found occurrence.
+   * To make sure that the outline covers the found range completely, all the
+   * CSS styles that influence the text are copied and applied to the outline.
+   *
+   * @param {Object} data Dictionary coming from Finder that contains the
+   *                      following properties:
+   *   {Number}  result        One of the nsITypeAheadFind.FIND_* constants
+   *                           indicating the result of a search operation.
+   *   {Boolean} findBackwards If TRUE, the search was performed backwards,
+   *                           FALSE if forwards.
+   *   {Boolean} findAgain     If TRUE, the search was performed using the same
+   *                           search string as before.
+   *   {String}  linkURL       If a link was hit, this will contain a URL string.
+   *   {Rect}    rect          An object with top, left, width and height
+   *                           coordinates of the current selection.
+   *   {String}  searchString  The string the search was performed with.
+   *   {Boolean} storeResult   Indicator if the search string should be stored
+   *                           by the consumer of the Finder.
+   */
+  update(data) {
+    if (!this._modal)
+      return;
+
+    // Place the match placeholder on top of the current found range.
+    let foundRange = this.finder._fastFind.getFoundRange();
+    if (data.result == Ci.nsITypeAheadFind.FIND_NOTFOUND || !foundRange) {
+      this.hide();
+      return;
+    }
+
+    let window = this.finder._getWindow();
+    let textContent = this._getRangeContentArray(foundRange);
+    if (!textContent.length) {
+      this.hide(window);
+      return;
+    }
+
+    let rect = foundRange.getBoundingClientRect();
+    let fontStyle = this._getRangeFontStyle(foundRange);
+
+    let anonNode = this.show(window);
+
+    anonNode.setTextContentForElement(kModalOutlineId + "-text", textContent.join(" "));
+    anonNode.setAttributeForElement(kModalOutlineId + "-text", "style",
+      this._getHTMLFontStyle(fontStyle));
+
+    if (typeof anonNode.getAttributeForElement(kModalOutlineId, "hidden") == "string")
+      anonNode.removeAttributeForElement(kModalOutlineId, "hidden");
+    let { scrollX, scrollY } = this._getScrollPosition(window);
+    anonNode.setAttributeForElement(kModalOutlineId, "style",
+      `top: ${scrollY + rect.top}px; left: ${scrollX + rect.left}px`);
+
+    if (typeof anonNode.getAttributeForElement(kModalOutlineId, "grow") == "string")
+      return;
+
+    window.requestAnimationFrame(() => {
+      anonNode.setAttributeForElement(kModalOutlineId, "grow", true);
+      this._listenForOutlineEvent(kModalOutlineId, "transitionend", () => {
+        try {
+          anonNode.removeAttributeForElement(kModalOutlineId, "grow");
+        } catch (ex) {}
+      });
+    });
+  },
+
+  /**
+   * Invalidates the list by clearing the map of highglighted ranges that we
+   * keep to build the mask for.
+   */
+  clear() {
+    if (!this._modal)
+      return;
+
+    // Reset the Map, because no range references a node anymore.
+    if (this._modalHighlightRectsMap)
+      this._modalHighlightRectsMap.clear();
+  },
+
+  /**
+   * When the current page is refreshed or navigated away from, the CanvasFrame
+   * contents is not valid anymore, i.e. all anonymous content is destroyed.
+   * We need to clear the references we keep, which'll make sure we redraw
+   * everything when the user starts to find in page again.
+   */
+  onLocationChange() {
+    if (!this._modalHighlightOutline)
+      return;
+
+    try {
+      this.finder._getWindow().document
+        .removeAnonymousContent(this._modalHighlightOutline);
+    } catch(ex) {}
+
+    this._modalHighlightOutline = null;
+  },
+
+  /**
+   * When `kModalHighlightPref` pref changed during a session, this callback is
+   * invoked. When modal highlighting is turned off, we hide the CanvasFrame
+   * contents.
+   *
+   * @param {Boolean} useModalHighlight
+   */
+  onModalHighlightChange(useModalHighlight) {
+    if (this._modal && !useModalHighlight) {
+      this.hide();
+      this.clear();
+    }
+    this._modal = useModalHighlight;
+  },
+
+  /**
+   * Utility; get the nsIDOMWindowUtils for a window.
+   *
+   * @param  {nsIDOMWindow} window Optional, defaults to the finder window.
+   * @return {nsIDOMWindowUtils}
+   */
+  _getDWU(window = null) {
+    return (window || this.finder._getWindow())
+      .QueryInterface(Ci.nsIInterfaceRequestor)
+      .getInterface(Ci.nsIDOMWindowUtils);
+  },
+
+  /**
+   * Utility; wrapper around nsIDOMWindowUtils#getScrollXY.
+   *
+   * @param  {nsDOMWindow} window Optional, defaults to the finder window.
+   * @return {Object} The current scroll position.
+   */
+  _getScrollPosition(window = null) {
+    let scrollX = {};
+    let scrollY = {};
+    this._getDWU(window).getScrollXY(false, scrollX, scrollY);
+    return {
+      scrollX: scrollX.value,
+      scrollY: scrollY.value
+    };
+  },
+
+  /**
+   * Utility; fetch the full width and height of the current window, excluding
+   * scrollbars.
+   *
+   * @param  {nsiDOMWindow} window The current finder window.
+   * @return {Object} The current full page dimensions with `width` and `height`
+   *                  properties
+   */
+  _getWindowDimensions(window) {
+    let width = window.innerWidth + window.scrollMaxX - window.scrollMinX;
+    let height = window.innerHeight + window.scrollMaxY - window.scrollMinY;
+
+    let scrollbarHeight = {};
+    let scrollbarWidth = {};
+    this._getDWU(window).getScrollbarSize(false, scrollbarWidth, scrollbarHeight);
+    width -= scrollbarWidth.value;
+    height -= scrollbarHeight.value;
+
+    return { width, height };
+  },
+
+  /**
+   * Utility; fetch the current text contents of a given range.
+   *
+   * @param  {nsIDOMRange} range Range object to extract the contents from.
+   * @return {Array} Snippets of text.
+   */
+  _getRangeContentArray(range) {
+    let content = range.cloneContents();
+    let t, textContent = [];
+    for (let node of content.childNodes) {
+      t = node.textContent || node.nodeValue;
+      //if (t && t.trim())
+        textContent.push(t);
+    }
+    return textContent;
+  },
+
+  /**
+   * Utility; get all available font styles as applied to the content of a given
+   * range. The CSS properties we look for can be found in `kFontPropsCSS`.
+   *
+   * @param  {nsIDOMRange} range Range to fetch style info from.
+   * @return {Object} Dictionary consisting of the styles that were found.
+   */
+  _getRangeFontStyle(range) {
+    let node = range.startContainer;
+    while (node.nodeType != 1)
+      node = node.parentNode;
+    let style = node.ownerDocument.defaultView.getComputedStyle(node, "");
+    let props = {};
+    for (let prop of kFontPropsCamelCase) {
+      if (prop in style && style[prop])
+        props[prop] = style[prop];
+    }
+    return props;
+  },
+
+  /**
+   * Utility; transform a dictionary object as returned by `_getRangeFontStyle`
+   * above into a HTML style attribute value.
+   *
+   * @param  {Object} fontStyle
+   * @return {String}
+   */
+  _getHTMLFontStyle(fontStyle) {
+    let style = [];
+    for (let prop of Object.getOwnPropertyNames(fontStyle)) {
+      let idx = kFontPropsCamelCase.indexOf(prop);
+      if (idx == -1)
+        continue
+      style.push(`${kFontPropsCSS[idx]}: ${fontStyle[prop]};`);
+    }
+    return style.join(" ");
+  },
+
+  /**
+   * Add a range to the list of ranges to highlight on, or cut out of, the dimmed
+   * background.
+   *
+   * @param {nsIDOMRange}  range  Range object that should be inspected
+   * @param {nsIDOMWindow} window Window object, whose DOM tree is being traversed
+   */
+  _modalHighlight(range, controller, window) {
+    if (!this._getRangeContentArray(range).length)
+      return;
+
+    let rects = new Set();
+    // Absolute positions should include the viewport scroll offset.
+    let { scrollX, scrollY } = this._getScrollPosition(window);
+    // A range may consist of multiple rectangles, but since we're cutting them
+    // out using SVG we can also do these kind of precise cut-outs.
+    // range.getBoundingClientRect() returns the fully encompassing rectangle,
+    // which is too much for our purpose here.
+    for (let dims of range.getClientRects()) {
+      rects.add({
+        height: dims.bottom - dims.top,
+        width: dims.right - dims.left,
+        y: dims.top + scrollY,
+        x: dims.left + scrollX
+      });
+    }
+    range.collapse();
+
+    if (!this._modalHighlightRectsMap)
+      this._modalHighlightRectsMap = new Map();
+    this._modalHighlightRectsMap.set(range, rects);
+
+    this.show(window);
+    // We don't repaint the mask right away, but pass it off to a render loop of
+    // sorts.
+    this._scheduleRepaintOfMask(window);
+  },
+
+  /**
+   * Lazily insert the nodes we need as anonymous content into the CanvasFrame
+   * of a window.
+   *
+   * @param  {nsIDOMWindow} window Window to draw in.
+   * @return {AnonymousContent} The reference to the outline node, NOT the mask.
+   */
+  _maybeCreateModalHighlightNodes(window) {
+    if (this._modalHighlightOutline) {
+      if (!this._modalHighlightAllMask)
+        this._repaintHighlightAllMask(window);
+      return this._modalHighlightOutline;
+    }
+
+    let document = window.document;
+    // A hidden document doesn't accept insertAnonymousContent calls yet.
+    if (document.hidden) {
+      let onVisibilityChange = () => {
+        document.removeEventListener("visibilitychange", onVisibilityChange);
+        this._maybeCreateModalHighlightNodes(window);
+      };
+      document.addEventListener("visibilitychange", onVisibilityChange);
+      return null;
+    }
+
+    this._maybeInstallStyleSheet(window);
+
+    // The outline needs to be sitting inside a container, otherwise the anonymous
+    // content API won't find it by its ID later...
+    let container = document.createElement("div");
+
+    // Create the main (yellow) highlight outline box.
+    let outlineBox = document.createElement("div");
+    outlineBox.setAttribute("id", kModalOutlineId);
+    outlineBox.className = kModalOutlineId;
+    let outlineBoxText = document.createElement("span");
+    outlineBoxText.setAttribute("id", kModalOutlineId + "-text");
+    outlineBox.appendChild(outlineBoxText);
+
+    container.appendChild(outlineBox);
+
+    this._repaintHighlightAllMask(window);
+
+    this._modalHighlightOutline = document.insertAnonymousContent(container);
+    return this._modalHighlightOutline;
+  },
+
+  /**
+   * Build and draw the SVG mask that takes care of the dimmed background that
+   * overlays the current page and the mask that cuts out all the rectangles of
+   * the ranges that were found.
+   *
+   * @param {nsIDOMWindow} window Window to draw in.
+   */
+  _repaintHighlightAllMask(window) {
+    let document = window.document;
+
+    const kMaskId = kModalIdPrefix + "-findbar-modalHighlight-outlineMask";
+    let svgNode = document.createElementNS(kSVGNS, "svg");
+    // Make sure the SVG drawing takes the full width and height that's available.
+    let {width, height} = this._getWindowDimensions(window);
+    svgNode.setAttribute("viewBox", "0 0 " + width + " " + height);
+
+    // The mask functions as a sort of inverse clip-path: instead of defining
+    // what to draw where, we need to do the opposite. We want the rectangles for
+    // each found range to be cut out of the dimmed-black background. That's why
+    // the mask is a full white large rectangle with small black rectangles that
+    // specifies where to let color bleed through and how much.
+    let svgContent = [`<mask id="${kMaskId}">
+      <rect x="0" y="0" height="${height}" width="${width}" fill="white"/>`];
+
+    if (this._modalHighlightRectsMap) {
+      for (let rects of this._modalHighlightRectsMap.values()) {
+        for (let rect of rects) {
+          // The #666 stroke works to create the effect of blurred edges.
+          svgContent.push(`<rect x="${rect.x}" y="${rect.y}"
+            height="${rect.height}" width="${rect.width}"
+            style="fill: #000; stroke-width: 1; stroke: #666"/>`);
+        }
+      }
+    }
+
+    // The big black opaque rectangle to which the mask is applied.
+    svgNode.innerHTML = svgContent.join("") + `</mask>
+      <rect x="0" y="0" height="${height}" width="${width}" fill="rgba(0,0,0,.2)"
+            mask="url(#${kMaskId})"/>`;
+
+    // Always remove the current mask and insert it a-fresh, because we're not
+    // free to alter DOM nodes inside the CanvasFrame.
+    this._removeHighlightAllMask(window);
+
+    this._modalHighlightAllMask = document.insertAnonymousContent(svgNode);
+  },
+
+  /**
+   * Safely remove the mask AnoymousContent node from the CanvasFrame.
+   *
+   * @param {nsIDOMWindow} window
+   */
+  _removeHighlightAllMask(window) {
+    if (this._modalHighlightAllMask) {
+      // If the current window isn't the one the content was inserted into, this
+      // will fail, but that's fine.
+      try {
+        window.document.removeAnonymousContent(this._modalHighlightAllMask);
+      } catch(ex) {}
+      this._modalHighlightAllMask = null;
+    }
+  },
+
+  /**
+   * Doing a full repaint each time a range is delivered by the highlight iterator
+   * is way too costly, thus we pipe the frequency down to every
+   * `kModalHighlightRepaintFreqMs` milliseconds.
+   *
+   * @param {nsIDOMWindow} window
+   */
+  _scheduleRepaintOfMask(window) {
+    if (this._modalRepaintScheduler)
+      window.clearTimeout(this._modalRepaintScheduler);
+    this._modalRepaintScheduler = window.setTimeout(
+      this._repaintHighlightAllMask.bind(this, window), kModalHighlightRepaintFreqMs);
+  },
+
+  /**
+   * The outline that shows/ highlights the current found range is styled and
+   * animated using CSS. This style can be found in `kModalStyle`, but to have it
+   * applied on any DOM node we insert using the AnonymousContent API we need to
+   * inject an agent sheet into the document.
+   *
+   * @param {nsIDOMWindow} window
+   */
+  _maybeInstallStyleSheet(window) {
+    let document = window.document;
+    // The WeakMap is a cheap method to make sure we don't needlessly insert the
+    // same sheet twice.
+    if (!this._modalInstalledSheets)
+      this._modalInstalledSheets = new WeakMap();
+    if (this._modalInstalledSheets.has(document))
+      return;
+
+    let dwu = this._getDWU(window);
+    let uri = this.modalStyleSheetURI;
+    try {
+      dwu.loadSheetUsingURIString(uri, dwu.AGENT_SHEET);
+    } catch (e) {}
+    this._modalInstalledSheets.set(document, uri);
+  },
+
+  /**
+   * One can not simply listen to events on a specific AnonymousContent node.
+   * That's why we need to listen on the chromeEventHandler instead and check if
+   * the IDs match of the event target.
+   * IMPORTANT: once the event was fired on the specified element and the handler
+   *            invoked, we remove the event listener right away. That's because
+   *            we don't need more in this class.
+   *
+   * @param {String}   elementId Identifier of the element we expect the event from.
+   * @param {String}   eventName Name of the event to start listening for.
+   * @param {Function} handler   Function to invoke when we detected the event
+   *                             on the designated node.
+   */
+  _listenForOutlineEvent(elementId, eventName, handler) {
+    let target = this.finder._docShell.chromeEventHandler;
+    target.addEventListener(eventName, function onEvent(event) {
+      // Start at originalTarget, bubble through ancestors and call handlers when
+      // needed.
+      let node = event.originalTarget;
+      while (node) {
+        if (node.id == elementId) {
+          handler();
+          target.removeEventListener(eventName, onEvent);
+          break;
+        }
+        node = node.parentNode;
+      }
+    });
+  },
+
+  /**
+   * Add event listeners to the content which will cause the modal highlight
+   * AnonymousContent to be re-painted or hidden.
+   *
+   * @param {nsIDOMWindow} window
+   */
+  _addModalHighlightListeners(window) {
+    if (this._highlightListeners)
+      return;
+
+    this._highlightListeners = [
+      this._scheduleRepaintOfMask.bind(this, window),
+      this.hide.bind(this, window)
+    ];
+    window.addEventListener("DOMContentLoaded", this._highlightListeners[0]);
+    window.addEventListener("mousedown", this._highlightListeners[1]);
+    window.addEventListener("resize", this._highlightListeners[1]);
+    window.addEventListener("touchstart", this._highlightListeners[1]);
+  },
+
+  /**
+   * Remove event listeners from content.
+   *
+   * @param {nsIDOMWindow} window
+   */
+  _removeModalHighlightListeners(window) {
+    if (!this._highlightListeners)
+      return;
+
+    window.removeEventListener("DOMContentLoaded", this._highlightListeners[0]);
+    window.removeEventListener("mousedown", this._highlightListeners[1]);
+    window.removeEventListener("resize", this._highlightListeners[1]);
+    window.removeEventListener("touchstart", this._highlightListeners[1]);
+
+    this._highlightListeners = null;
   },
 
   /**
