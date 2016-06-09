@@ -593,6 +593,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'telemetry/TelemetryCorePingDelegate.java',
     'telemetry/TelemetryDispatcher.java',
     'telemetry/TelemetryPing.java',
+    'telemetry/TelemetryPreferences.java',
     'telemetry/TelemetryUploadService.java',
     'TelemetryContract.java',
     'text/FloatingActionModeCallback.java',
