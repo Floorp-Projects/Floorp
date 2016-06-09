@@ -41,6 +41,32 @@ function ObjectStaticAssign(target, firstSource) {
     return to;
 }
 
+// ES stage 4 proposal
+function ObjectGetOwnPropertyDescriptors(O) {
+    // Step 1.
+    var obj = ToObject(O);
+
+    // Step 2.
+    var keys = OwnPropertyKeys(obj, JSITER_OWNONLY | JSITER_HIDDEN | JSITER_SYMBOLS);
+
+    // Step 3.
+    var descriptors = {};
+
+    // Step 4.
+    for (var index = 0, len = keys.length; index < len; index++) {
+        var key = keys[index];
+
+        // Steps 4.a-b.
+        var desc = std_Object_getOwnPropertyDescriptor(obj, key);
+
+        // Step 4.c.
+        _DefineDataProperty(descriptors, key, desc);
+    }
+
+    // Step 5.
+    return descriptors;
+}
+
 /* ES6 draft rev 32 (2015 Feb 2) 19.1.2.9. */
 function ObjectGetPrototypeOf(obj) {
     return std_Reflect_getPrototypeOf(ToObject(obj));
