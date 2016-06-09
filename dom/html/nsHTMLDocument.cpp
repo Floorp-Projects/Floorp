@@ -550,6 +550,9 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     return NS_ERROR_INVALID_ARG;
   }
 
+  bool forceUtf8 = plainText &&
+    nsContentUtils::IsUtf8OnlyPlainTextType(contentType);
+
   bool loadAsHtml5 = true;
 
   if (!viewSource && xhtml) {
@@ -669,7 +672,12 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     }
   }
 
-  if (!IsHTMLDocument() || !docShell) { // no docshell for text/html XHR
+  if (forceUtf8) {
+    charsetSource = kCharsetFromUtf8OnlyMime;
+    charset.AssignLiteral("UTF-8");
+    parserCharsetSource = charsetSource;
+    parserCharset = charset;
+  } else if (!IsHTMLDocument() || !docShell) { // no docshell for text/html XHR
     charsetSource = IsHTMLDocument() ? kCharsetFromFallback
                                      : kCharsetFromDocTypeDefault;
     charset.AssignLiteral("UTF-8");
@@ -3618,7 +3626,7 @@ nsHTMLDocument::WillIgnoreCharsetOverride()
     MOZ_ASSERT(mType == eXHTML);
     return true;
   }
-  if (mCharacterSetSource == kCharsetFromByteOrderMark) {
+  if (mCharacterSetSource >= kCharsetFromByteOrderMark) {
     return true;
   }
   if (!EncodingUtils::IsAsciiCompatible(mCharacterSet)) {
