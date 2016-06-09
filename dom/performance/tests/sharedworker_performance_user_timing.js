@@ -15,7 +15,7 @@ function isnot(a, b, msg) {
   port.postMessage({type: 'status', status: a != b, msg: a + " != " + b + ": " + msg });
 }
 
-importScripts('../../../dom/performance/tests/test_performance_user_timing.js');
+importScripts('test_performance_user_timing.js');
 
 onconnect = function(evt) {
   port = evt.ports[0];
