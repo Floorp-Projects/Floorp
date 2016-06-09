@@ -17,6 +17,8 @@ import ch.boye.httpclientandroidlib.impl.client.DefaultHttpClient;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.preferences.GeckoPreferences;
+import org.mozilla.gecko.restrictions.Restrictable;
+import org.mozilla.gecko.restrictions.Restrictions;
 import org.mozilla.gecko.sync.ExtendedJSONObject;
 import org.mozilla.gecko.sync.net.BaseResource;
 import org.mozilla.gecko.sync.net.BaseResourceDelegate;
@@ -199,6 +201,12 @@ public class TelemetryUploadService extends IntentService {
 
         if (!GeckoPreferences.getBooleanPref(context, GeckoPreferences.PREFS_HEALTHREPORT_UPLOAD_ENABLED, true)) {
             Log.d(LOGTAG, "Telemetry upload opt-out");
+            return false;
+        }
+
+        if (Restrictions.isRestrictedProfile(context) &&
+                !Restrictions.isAllowed(context, Restrictable.HEALTH_REPORT)) {
+            Log.d(LOGTAG, "Telemetry upload feature disabled by admin profile");
             return false;
         }
 
