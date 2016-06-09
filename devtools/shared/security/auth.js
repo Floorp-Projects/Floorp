@@ -9,6 +9,7 @@
 var { Ci, Cc } = require("chrome");
 var Services = require("Services");
 var promise = require("promise");
+var defer = require("devtools/shared/defer");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn, dumpv } = DevToolsUtils;
 loader.lazyRequireGetter(this, "prompt",
@@ -311,7 +312,7 @@ OOBCert.Client.prototype = {
    * @return A promise can be used if there is async behavior.
    */
   authenticate({ host, port, cert, transport }) {
-    let deferred = promise.defer();
+    let deferred = defer();
     let oobData;
 
     let activeSendDialog;

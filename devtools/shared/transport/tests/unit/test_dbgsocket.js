@@ -45,7 +45,7 @@ function* test_socket_conn()
     host: "127.0.0.1",
     port: gPort
   });
-  let closedDeferred = promise.defer();
+  let closedDeferred = defer();
   transport.hooks = {
     onPacket: function (aPacket) {
       this.onPacket = function (aPacket) {

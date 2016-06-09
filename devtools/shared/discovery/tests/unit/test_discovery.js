@@ -9,6 +9,7 @@ const { require } =
   Cu.import("resource://devtools/shared/Loader.jsm", {});
 const Services = require("Services");
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const EventEmitter = require("devtools/shared/event-emitter");
 const discovery = require("devtools/shared/discovery/discovery");
 const { setTimeout, clearTimeout } = require("sdk/timers");
@@ -132,7 +133,7 @@ add_task(function* () {
 });
 
 function scanForChange(service, changeType) {
-  let deferred = promise.defer();
+  let deferred = defer();
   let timer = setTimeout(() => {
     deferred.reject(new Error("Reply never arrived"));
   }, discovery.replyTimeout + 500);
@@ -146,7 +147,7 @@ function scanForChange(service, changeType) {
 }
 
 function scanForNoChange(service, changeType) {
-  let deferred = promise.defer();
+  let deferred = defer();
   let timer = setTimeout(() => {
     deferred.resolve();
   }, discovery.replyTimeout + 500);
