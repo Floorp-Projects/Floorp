@@ -20,6 +20,7 @@
 
 #if !defined(NO_SIGN_VERIFY) && (!defined(XP_WIN) || defined(MAR_NSS))
 #include "cert.h"
+#include "nss.h"
 #include "pk11pub.h"
 int NSSInitCryptoContext(const char *NSSConfigDir);
 #endif
@@ -400,9 +401,11 @@ int main(int argc, char **argv) {
         fprintf(stderr, "ERROR: The MAR file is in the old format so has"
                         " no signature to verify.\n");
       }
-      return -1;
     }
-    return 0;
+#if (!defined(XP_WIN) && !defined(XP_MACOSX)) || defined(MAR_NSS)
+    (void) NSS_Shutdown();
+#endif
+    return rv ? -1 : 0;
 
   case 's':
     if (!NSSConfigDir || certCount == 0 || argc < 4) {

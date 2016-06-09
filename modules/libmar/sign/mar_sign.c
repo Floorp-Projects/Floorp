@@ -1153,6 +1153,8 @@ failure:
     SECITEM_FreeItem(&secItems[k], PR_FALSE);
   }
 
+  (void)NSS_Shutdown();
+
   if (rv) {
     remove(dest);
   }
