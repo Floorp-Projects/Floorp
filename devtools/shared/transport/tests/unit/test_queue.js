@@ -25,8 +25,8 @@ function run_test() {
 /** * Tests ***/
 
 var test_transport = Task.async(function* (transportFactory) {
-  let clientDeferred = promise.defer();
-  let serverDeferred = promise.defer();
+  let clientDeferred = defer();
+  let serverDeferred = defer();
 
   // Ensure test files are not present from a failed run
   cleanup_files();
@@ -149,7 +149,7 @@ function verify() {
   do_check_eq(outputFile.fileSize, reallyLong.length);
 
   // Ensure output file contents actually match
-  let compareDeferred = promise.defer();
+  let compareDeferred = defer();
   NetUtil.asyncFetch({
     uri: NetUtil.newURI(getTestTempFile("bulk-output")),
     loadUsingSystemPrincipal: true

@@ -8,6 +8,7 @@ const { Task } = require("devtools/shared/task");
 
 loader.lazyRequireGetter(this, "Services");
 loader.lazyRequireGetter(this, "promise");
+loader.lazyRequireGetter(this, "defer", "devtools/shared/defer");
 loader.lazyRequireGetter(this, "OS", "resource://gre/modules/commonjs/node/os.js");
 loader.lazyRequireGetter(this, "DebuggerServer", "devtools/server/main", true);
 loader.lazyRequireGetter(this, "AppConstants",
@@ -307,7 +308,7 @@ function getOSCPU() {
 }
 
 function getSetting(name) {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   if ("@mozilla.org/settingsService;1" in Cc) {
     let settingsService;

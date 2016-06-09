@@ -88,6 +88,7 @@
 //// Globals
 
 const Promise = require("promise");
+const defer = require("devtools/shared/defer");
 
 // The following error types are considered programmer errors, which should be
 // reported (possibly redundantly) so as to let programmers fix their code.
@@ -266,7 +267,7 @@ function TaskImpl(iterator) {
   if (gMaintainStack) {
     this._stack = (new Error()).stack;
   }
-  this.deferred = Promise.defer();
+  this.deferred = defer();
   this._iterator = iterator;
   this._isStarGenerator = !("send" in iterator);
   this._run(true);
