@@ -159,11 +159,9 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "MessagePort",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "Notification", nonReleaseB2G: true, nonReleaseAndroid: true,
-                            b2g: false, android: false },
+    { name: "Notification", nonReleaseB2G: true, b2g: false },
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "NotificationEvent", nonReleaseB2G: true, nonReleaseAndroid: true,
-                                 b2g: false, android: false },
+    { name: "NotificationEvent", nonReleaseB2G: true, b2g: false },
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Performance",
 // IMPORTANT: Do not change this list without review from a DOM peer!
@@ -179,15 +177,15 @@ var interfaceNamesInGlobalScope =
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Promise",
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "PushEvent", b2g: false, android: false, nightlyAndroid: true },
+    { name: "PushEvent", b2g: false },
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "PushManager", b2g: false, android: false, nightlyAndroid: true },
+    { name: "PushManager", b2g: false },
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "PushMessageData", b2g: false, android: false, nightlyAndroid: true },
+    { name: "PushMessageData", b2g: false },
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "PushSubscription", b2g: false, android: false, nightlyAndroid: true },
+    { name: "PushSubscription", b2g: false },
 // IMPORTANT: Do not change this list without review from a DOM peer!
-    { name: "PushSubscriptionOptions", b2g: false, android: false, nightlyAndroid: true },
+    { name: "PushSubscriptionOptions", b2g: false },
 // IMPORTANT: Do not change this list without review from a DOM peer!
     "Request",
 // IMPORTANT: Do not change this list without review from a DOM peer!

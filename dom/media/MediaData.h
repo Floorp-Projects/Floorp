@@ -273,7 +273,8 @@ public:
   enum Type {
     AUDIO_DATA = 0,
     VIDEO_DATA,
-    RAW_DATA
+    RAW_DATA,
+    NULL_DATA
   };
 
   MediaData(Type aType,
@@ -352,6 +353,17 @@ protected:
 
   virtual ~MediaData() {}
 
+};
+
+// NullData is for decoder generating a sample which doesn't need to be
+// rendered.
+class NullData : public MediaData {
+public:
+  NullData(int64_t aOffset, int64_t aTime, int64_t aDuration)
+    : MediaData(NULL_DATA, aOffset, aTime, aDuration, 0)
+  {}
+
+  static const Type sType = NULL_DATA;
 };
 
 // Holds chunk a decoded audio frames.

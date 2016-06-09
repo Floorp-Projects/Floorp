@@ -36030,6 +36030,12 @@
             "url": "/html/semantics/embedded-content/the-embed-element/embed-in-object-fallback.html"
           }
         ],
+        "subresource-integrity/subresource-integrity.sub.html": [
+          {
+            "path": "subresource-integrity/subresource-integrity.sub.html",
+            "url": "/subresource-integrity/subresource-integrity.sub.html"
+          }
+        ],
         "web-animations/timing-model/animations/current-time.html": [
           {
             "path": "web-animations/timing-model/animations/current-time.html",

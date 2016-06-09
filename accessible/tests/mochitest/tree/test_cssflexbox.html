@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>CSS flexbox tests</title>
+  <link rel="stylesheet" type="text/css"
+        href="chrome://mochikit/content/tests/SimpleTest/test.css" />
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+
+  <script type="application/javascript"
+          src="../common.js"></script>
+  <script type="application/javascript"
+          src="../role.js"></script>
+
+  <script type="application/javascript">
+    function doTest()
+    {
+      // Ensure that flexbox ordering and absolute positioning do not affect
+      // the accessibility tree.
+      // Note that there is no accessible for a div with display:flex style.
+      var accTree = {
+        role: ROLE_SECTION,
+        children: [
+          { // Bug 1277559. Button outside the flexed content
+            role: ROLE_PUSHBUTTON,
+            name: "Button"
+          },
+          { // Visually first button in the 3 button row
+            role: ROLE_PUSHBUTTON,
+            name: "First"
+          },
+          { // Flushed right third button in the 3 button row
+            role: ROLE_PUSHBUTTON,
+            name: "Second"
+          },
+          { // Middle button in the 3 button row
+            role: ROLE_PUSHBUTTON,
+            name: "Third"
+          }, // end bug 1277559
+          { // Bug 962558: DOM first, Order 2.
+            role: ROLE_PUSHBUTTON,
+            name: "two, tab first"
+          },
+          { // DOM order second, flex order 1
+            role: ROLE_PUSHBUTTON,
+            name: "one, tab second"
+          } // end bug 962558
+        ]
+      };
+      testAccessibleTree("flex_elements", accTree);
+
+      SimpleTest.finish();
+    }
+
+    SimpleTest.waitForExplicitFinish();
+    addA11yLoadEvent(doTest);
+  </script>
+</head>
+<body>
+  <p id="display"></p>
+  <div id="content" style="display: none"></div>
+  <pre id="test">
+  </pre>
+
+  <div id="flex_elements">
+    <button type="button">Button</button>
+    <div style="position: relative; display: flex; width: 200px;">
+      <button type="button" style="order: 1">First</button>
+      <button type="button" style="order: 2; position: absolute; right: 0">Second</button>
+      <button type="button" style="order: 3">Third</button>
+    </div>
+    <div style="display: flex">
+      <button id="two" style="order: 2">two, tab first</button>
+      <button id="one" style="order: 1">one, tab second</button>
+    </div>
+  </div>
+</body>
+</html>

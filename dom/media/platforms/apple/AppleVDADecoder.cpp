@@ -153,6 +153,9 @@ AppleVDADecoder::Flush()
   mIsFlushing = false;
   // All ProcessDecode() tasks should be done.
   MOZ_ASSERT(mInputIncoming == 0);
+
+  mSeekTargetThreshold.reset();
+
   return NS_OK;
 }
 
@@ -290,6 +293,13 @@ AppleVDADecoder::ClearReorderedFrames()
   mQueuedSamples = 0;
 }
 
+void
+AppleVDADecoder::SetSeekThreshold(const media::TimeUnit& aTime)
+{
+  LOG("SetSeekThreshold %lld", aTime.ToMicroseconds());
+  mSeekTargetThreshold = Some(aTime);
+}
+
 // Copy and return a decoded frame.
 nsresult
 AppleVDADecoder::OutputFrame(CVPixelBufferRef aImage,
@@ -321,8 +331,17 @@ AppleVDADecoder::OutputFrame(CVPixelBufferRef aImage,
     return NS_OK;
   }
 
+  bool useNullSample = false;
+  if (mSeekTargetThreshold.isSome()) {
+    if ((aFrameRef.composition_timestamp + aFrameRef.duration) < mSeekTargetThreshold.ref()) {
+      useNullSample = true;
+    } else {
+      mSeekTargetThreshold.reset();
+    }
+  }
+
   // Where our resulting image will end up.
-  RefPtr<VideoData> data;
+  RefPtr<MediaData> data;
   // Bounds.
   VideoInfo info;
   info.mDisplay = nsIntSize(mDisplayWidth, mDisplayHeight);
@@ -331,7 +350,11 @@ AppleVDADecoder::OutputFrame(CVPixelBufferRef aImage,
                                       mPictureWidth,
                                       mPictureHeight);
 
-  if (mUseSoftwareImages) {
+  if (useNullSample) {
+    data = new NullData(aFrameRef.byte_offset,
+                        aFrameRef.composition_timestamp.ToMicroseconds(),
+                        aFrameRef.duration.ToMicroseconds());
+  } else if (mUseSoftwareImages) {
     size_t width = CVPixelBufferGetWidth(aImage);
     size_t height = CVPixelBufferGetHeight(aImage);
     DebugOnly<size_t> planes = CVPixelBufferGetPlaneCount(aImage);

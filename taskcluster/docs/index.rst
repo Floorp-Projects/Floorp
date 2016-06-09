@@ -17,4 +17,5 @@ than you might suppose!  This implementation supports:
     taskgraph
     parameters
     attributes
+    yaml-templates
     old

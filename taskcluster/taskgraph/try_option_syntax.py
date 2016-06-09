@@ -31,10 +31,20 @@ def alias_matches(pattern):
     return lambda name: pattern.match(name)
 
 UNITTEST_ALIASES = {
+    # Aliases specify shorthands that can be used in try syntax.  The shorthand
+    # is the dictionary key, with the value representing a pattern for matching
+    # unittest_try_names.
+    #
+    # Note that alias expansion is performed in the absence of any chunk
+    # prefixes.  For example, the first example above would replace "foo-7"
+    # with "foobar-7".  Note that a few aliases allowed chunks to be specified
+    # without a leading `-`, for example 'mochitest-dt1'. That's no longer
+    # supported.
     'cppunit': alias_prefix('cppunit'),
     'crashtest': alias_prefix('crashtest'),
     'crashtest-e10s': alias_prefix('crashtest-e10s'),
     'e10s': alias_contains('e10s'),
+    'external-media-tests': alias_prefix('external-media-tests'),
     'firefox-ui-functional': alias_prefix('firefox-ui-functional'),
     'firefox-ui-functional-e10s': alias_prefix('firefox-ui-functional-e10s'),
     'gaia-js-integration': alias_contains('gaia-js-integration'),
@@ -61,6 +71,10 @@ UNITTEST_ALIASES = {
     'mochitest-dt-e10s': alias_prefix('mochitest-devtools-chrome-e10s'),
     'mochitest-gl': alias_prefix('mochitest-webgl'),
     'mochitest-gl-e10s': alias_prefix('mochitest-webgl-e10s'),
+    'mochitest-gpu': alias_prefix('mochitest-gpu'),
+    'mochitest-gpu-e10s': alias_prefix('mochitest-gpu-e10s'),
+    'mochitest-clipboard': alias_prefix('mochitest-clipboard'),
+    'mochitest-clipboard-e10s': alias_prefix('mochitest-clipboard-e10s'),
     'mochitest-jetpack': alias_prefix('mochitest-jetpack'),
     'mochitest-media': alias_prefix('mochitest-media'),
     'mochitest-media-e10s': alias_prefix('mochitest-media-e10s'),

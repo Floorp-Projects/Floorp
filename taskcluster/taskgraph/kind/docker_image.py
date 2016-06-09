@@ -14,11 +14,12 @@ import time
 
 from . import base
 from ..types import Task
-from taskgraph.util import docker_image
-import taskcluster_graph.transform.routes as routes_transform
-import taskcluster_graph.transform.treeherder as treeherder_transform
-from taskcluster_graph.templates import Templates
-from taskcluster_graph.from_now import (
+from taskgraph.util.docker import (
+    docker_image,
+    generate_context_hash
+)
+from taskgraph.util.templates import Templates
+from taskgraph.util.time import (
     json_time_from_now,
     current_json_time,
 )
@@ -60,7 +61,7 @@ class DockerImageKind(base.Kind):
         templates = Templates(self.path)
         for image_name in self.config['images']:
             context_path = os.path.join('testing', 'docker', image_name)
-            context_hash = self.generate_context_hash(context_path)
+            context_hash = generate_context_hash(context_path)
 
             image_parameters = dict(parameters)
             image_parameters['context_hash'] = context_hash
@@ -134,29 +135,3 @@ class DockerImageKind(base.Kind):
 
         with tarfile.open(destination, 'w:gz') as tar:
             tar.add(context_dir, arcname=image_name)
-
-    def generate_context_hash(self, image_path):
-        '''Generates a sha256 hash for context directory used to build an image.
-
-        Contents of the directory are sorted alphabetically, contents of each file is hashed,
-        and then a hash is created for both the file hashes as well as their paths.
-
-        This ensures that hashs are consistent and also change based on if file locations
-        within the context directory change.
-        '''
-        context_hash = hashlib.sha256()
-        files = []
-
-        for dirpath, dirnames, filenames in os.walk(os.path.join(GECKO, image_path)):
-            for filename in filenames:
-                files.append(os.path.join(dirpath, filename))
-
-        for filename in sorted(files):
-            relative_filename = filename.replace(GECKO, '')
-            with open(filename, 'rb') as f:
-                file_hash = hashlib.sha256()
-                data = f.read()
-                file_hash.update(data)
-                context_hash.update(file_hash.hexdigest() + '\t' + relative_filename + '\n')
-
-        return context_hash.hexdigest()

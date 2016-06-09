@@ -1344,7 +1344,7 @@ or run without that action (ie: --no-{action})"
         self.activate_virtualenv()
 
         routes_file = os.path.join(dirs['abs_src_dir'],
-                                   'testing/taskcluster/routes.json')
+                                   'taskcluster/ci/legacy/routes.json')
         with open(routes_file) as f:
             self.routes_json = json.load(f)
 

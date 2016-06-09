@@ -56,7 +56,7 @@ public:
   void RemoveTextTrack(TextTrack* aTextTrack, bool aPendingListOnly);
   void DidSeek();
 
-  void AddCue(TextTrackCue& aCue);
+  void NotifyCueAdded(TextTrackCue& aCue);
   void AddCues(TextTrack* aTextTrack);
   void NotifyCueRemoved(TextTrackCue& aCue);
   /**

@@ -34,21 +34,5 @@ class TestDockerImageKind(unittest.TestCase):
         self.failUnless(os.path.exists(tarball))
         os.unlink(tarball)
 
-    def test_generate_context_hash(self):
-        tmpdir = tempfile.mkdtemp()
-        old_GECKO = docker_image.GECKO
-        docker_image.GECKO = tmpdir
-        try:
-            os.makedirs(os.path.join(tmpdir, 'docker', 'my-image'))
-            with open(os.path.join(tmpdir, 'docker', 'my-image', 'Dockerfile'), "w") as f:
-                f.write("FROM node\nADD a-file\n")
-            with open(os.path.join(tmpdir, 'docker', 'my-image', 'a-file'), "w") as f:
-                f.write("data\n")
-            self.assertEqual(self.kind.generate_context_hash('docker/my-image'),
-                    '781143fcc6cc72c9024b058665265cb6bae3fb8031cad7227dd169ffbfced434')
-        finally:
-            docker_image.GECKO = old_GECKO
-            shutil.rmtree(tmpdir)
-
 if __name__ == '__main__':
     main()
