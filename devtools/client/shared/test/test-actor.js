@@ -8,7 +8,7 @@
 
 var { Cc, Ci, Cu, Cr } = require("chrome");
 const {getRect, getElementFromPoint, getAdjustedQuads} = require("devtools/shared/layout/utils");
-const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const {Task} = require("devtools/shared/task");
 var DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 var loader = Cc["@mozilla.org/moz/jssubscript-loader;1"]
@@ -187,7 +187,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    * @param {String} actorID The highlighter actor ID
    */
   changeHighlightedNodeWaitForUpdate: protocol.method(function (name, value, actorID) {
-    let deferred = promise.defer();
+    let deferred = defer();
 
     let highlighter = this.conn.getActor(actorID);
     let {_highlighter: h} = highlighter;
@@ -257,7 +257,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    */
   changeZoomLevel: protocol.method(function (level, actorID) {
     dumpn("Zooming page to " + level);
-    let deferred = promise.defer();
+    let deferred = defer();
 
     if (actorID) {
       let actor = this.conn.getActor(actorID);
@@ -386,7 +386,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
   }),
 
   loadAndWaitForCustomEvent: protocol.method(function (url) {
-    let deferred = promise.defer();
+    let deferred = defer();
     let self = this;
     // Wait for DOMWindowCreated first, as listening on the current outerwindow
     // doesn't allow receiving test-page-processing-done.
@@ -548,7 +548,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
   reloadFrame: protocol.method(function (selector) {
     let node = this._querySelector(selector);
 
-    let deferred = promise.defer();
+    let deferred = defer();
 
     let onLoad = function () {
       node.removeEventListener("load", onLoad);
@@ -599,7 +599,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
       return {};
     }
 
-    let deferred = promise.defer();
+    let deferred = defer();
     this.content.addEventListener("scroll", function onScroll(event) {
       this.removeEventListener("scroll", onScroll);
 
@@ -625,7 +625,7 @@ var TestActor = exports.TestActor = protocol.ActorClass({
    * Forces the reflow and waits for the next repaint.
    */
   reflow: protocol.method(function () {
-    let deferred = promise.defer();
+    let deferred = defer();
     this.content.document.documentElement.offsetWidth;
     this.content.requestAnimationFrame(deferred.resolve);
 

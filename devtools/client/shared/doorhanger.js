@@ -8,7 +8,7 @@ const { Ci, Cc } = require("chrome");
 const Services = require("Services");
 const { DOMHelpers } = require("resource://devtools/client/shared/DOMHelpers.jsm");
 const { Task } = require("devtools/shared/task");
-const { Promise } = require("resource://gre/modules/Promise.jsm");
+const defer = require("devtools/shared/defer");
 const { getMostRecentBrowserWindow } = require("sdk/window/utils");
 
 const XULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -137,7 +137,7 @@ function setDoorhangerStyle(panel, frame) {
 }
 
 function onFrameLoad(frame) {
-  let { resolve, promise } = Promise.defer();
+  let { resolve, promise } = defer();
 
   if (frame.contentWindow) {
     let domHelper = new DOMHelpers(frame.contentWindow);
@@ -158,7 +158,7 @@ function getGBrowser() {
 }
 
 function wait(n) {
-  let { resolve, promise } = Promise.defer();
+  let { resolve, promise } = defer();
   setTimeout(resolve, n);
   return promise;
 }
