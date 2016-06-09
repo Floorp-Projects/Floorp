@@ -29,46 +29,9 @@ class ErrorResult;
 namespace dom {
 
 class PerformanceEntry;
+class PerformanceNavigation;
 class PerformanceObserver;
 class PerformanceTiming;
-
-// Script "performance.navigation" object
-class PerformanceNavigation final : public nsWrapperCache
-{
-public:
-  enum PerformanceNavigationType {
-    TYPE_NAVIGATE = 0,
-    TYPE_RELOAD = 1,
-    TYPE_BACK_FORWARD = 2,
-    TYPE_RESERVED = 255,
-  };
-
-  explicit PerformanceNavigation(nsPerformance* aPerformance);
-
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PerformanceNavigation)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(PerformanceNavigation)
-
-  nsDOMNavigationTiming* GetDOMTiming() const;
-  PerformanceTiming* GetPerformanceTiming() const;
-
-  nsPerformance* GetParentObject() const
-  {
-    return mPerformance;
-  }
-
-  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
-
-  // PerformanceNavigation WebIDL methods
-  uint16_t Type() const {
-    return GetDOMTiming()->GetType();
-  }
-
-  uint16_t RedirectCount() const;
-
-private:
-  ~PerformanceNavigation();
-  RefPtr<nsPerformance> mPerformance;
-};
 
 } // namespace dom
 } // namespace mozilla
@@ -248,17 +211,5 @@ protected:
   RefPtr<nsPerformance> mParentPerformance;
   JS::Heap<JSObject*> mMozMemory;
 };
-
-inline nsDOMNavigationTiming*
-mozilla::dom::PerformanceNavigation::GetDOMTiming() const
-{
-  return mPerformance->GetDOMTiming();
-}
-
-inline mozilla::dom::PerformanceTiming*
-mozilla::dom::PerformanceNavigation::GetPerformanceTiming() const
-{
-  return mPerformance->Timing();
-}
 
 #endif /* nsPerformance_h___ */
