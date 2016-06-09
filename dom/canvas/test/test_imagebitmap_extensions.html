@@ -15,7 +15,8 @@
     // iframe with the right preference setting so that the
     // createImageBitmap() will be visible.
     SpecialPowers.pushPrefEnv({'set': [
-      ['canvas.imagebitmap_extensions.enabled', true]
+      ['canvas.imagebitmap_extensions.enabled', true],
+      ['gfx.ycbcr.accurate-conversion', true]
     ]}, function() {
       var div = document.getElementById("content");
       ok(div, "Parent exists");
