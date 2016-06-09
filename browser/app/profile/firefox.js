@@ -1285,21 +1285,11 @@ pref("media.gmp.decoder.h264", 2);
 // decode H.264.
 pref("media.gmp.trial-create.enabled", true);
 
-// Note: when media.gmp-*.visible is true, provided we're running on a
-// supported platform/OS version, the corresponding CDM appears in the
-// plugins list, Firefox will download the GMP/CDM if enabled, and our
-// UI to re-enable EME prompts the user to re-enable EME if it's disabled
-// and script requests EME. If *.visible is false, we won't show the UI
-// to enable the CDM if its disabled; it's as if the keysystem is completely
-// unsupported.
-
 #ifdef MOZ_ADOBE_EME
-pref("media.gmp-eme-adobe.visible", true);
 pref("media.gmp-eme-adobe.enabled", true);
 #endif
 
 #ifdef MOZ_WIDEVINE_EME
-pref("media.gmp-widevinecdm.visible", true);
 pref("media.gmp-widevinecdm.enabled", true);
 #endif
 

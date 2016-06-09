@@ -193,7 +193,7 @@ WidevineDecryptor::DecryptingComplete()
 
 class WidevineBuffer : public cdm::Buffer {
 public:
-  explicit WidevineBuffer(size_t aSize) {
+  WidevineBuffer(size_t aSize) {
     Log("WidevineBuffer(size=" PRIuSIZE ") created", aSize);
     mBuffer.SetLength(aSize);
   }
