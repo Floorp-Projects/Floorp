@@ -279,6 +279,7 @@ private:
     nsresult ProcessNormal();
     nsresult ContinueProcessNormal(nsresult);
     void     ProcessAltService();
+    bool     ShouldBypassProcessNotModified();
     nsresult ProcessNotModified();
     nsresult AsyncProcessRedirection(uint32_t httpStatus);
     nsresult ContinueProcessRedirection(nsresult);

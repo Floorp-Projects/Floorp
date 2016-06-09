@@ -9,6 +9,7 @@
 
 #include "Decoder.h"
 #include "GIF2.h"
+#include "StreamingLexer.h"
 #include "SurfacePipe.h"
 
 namespace mozilla {
@@ -54,31 +55,81 @@ private:
   /// Called when we finish decoding the entire image.
   void      FlushImageData();
 
-  nsresult  GifWrite(const uint8_t* buf, uint32_t numbytes);
-
   /// Transforms a palette index into a pixel.
   template <typename PixelSize> PixelSize
   ColormapIndexToPixel(uint8_t aIndex);
 
   /// A generator function that performs LZW decompression and yields pixels.
   template <typename PixelSize> NextPixel<PixelSize>
-  YieldPixel(const uint8_t*& aCurrentByte);
+  YieldPixel(const uint8_t* aData, size_t aLength, size_t* aBytesReadOut);
 
-  /// The entry point for LZW decompression.
-  bool      DoLzw(const uint8_t* aData);
+  /// Checks if we have transparency, either because the header indicates that
+  /// there's alpha, or because the frame rect doesn't cover the entire image.
+  bool CheckForTransparency(const gfx::IntRect& aFrameRect);
 
-  bool      SetHold(const uint8_t* buf, uint32_t count,
-                    const uint8_t* buf2 = nullptr, uint32_t count2 = 0);
-  bool      CheckForTransparency(const gfx::IntRect& aFrameRect);
-  gfx::IntRect ClampToImageRect(const gfx::IntRect& aFrameRect);
+  // @return the clear code used for LZW decompression.
+  int ClearCode() const { return 1 << mGIFStruct.datasize; }
 
-  inline int ClearCode() const { return 1 << mGIFStruct.datasize; }
+  enum class State
+  {
+    FAILURE,
+    SUCCESS,
+    GIF_HEADER,
+    SCREEN_DESCRIPTOR,
+    GLOBAL_COLOR_TABLE,
+    FINISHED_GLOBAL_COLOR_TABLE,
+    BLOCK_HEADER,
+    EXTENSION_HEADER,
+    GRAPHIC_CONTROL_EXTENSION,
+    APPLICATION_IDENTIFIER,
+    NETSCAPE_EXTENSION_SUB_BLOCK,
+    NETSCAPE_EXTENSION_DATA,
+    IMAGE_DESCRIPTOR,
+    LOCAL_COLOR_TABLE,
+    FINISHED_LOCAL_COLOR_TABLE,
+    IMAGE_DATA_BLOCK,
+    IMAGE_DATA_SUB_BLOCK,
+    LZW_DATA,
+    FINISHED_LZW_DATA,
+    SKIP_SUB_BLOCKS,
+    SKIP_DATA_THEN_SKIP_SUB_BLOCKS,
+    FINISHED_SKIPPING_DATA
+  };
+
+  LexerTransition<State> ReadGIFHeader(const char* aData);
+  LexerTransition<State> ReadScreenDescriptor(const char* aData);
+  LexerTransition<State> ReadGlobalColorTable(const char* aData, size_t aLength);
+  LexerTransition<State> FinishedGlobalColorTable();
+  LexerTransition<State> ReadBlockHeader(const char* aData);
+  LexerTransition<State> ReadExtensionHeader(const char* aData);
+  LexerTransition<State> ReadGraphicControlExtension(const char* aData);
+  LexerTransition<State> ReadApplicationIdentifier(const char* aData);
+  LexerTransition<State> ReadNetscapeExtensionSubBlock(const char* aData);
+  LexerTransition<State> ReadNetscapeExtensionData(const char* aData);
+  LexerTransition<State> ReadImageDescriptor(const char* aData);
+  LexerTransition<State> ReadLocalColorTable(const char* aData, size_t aLength);
+  LexerTransition<State> FinishedLocalColorTable();
+  LexerTransition<State> ReadImageDataBlock(const char* aData);
+  LexerTransition<State> ReadImageDataSubBlock(const char* aData);
+  LexerTransition<State> ReadLZWData(const char* aData, size_t aLength);
+  LexerTransition<State> SkipSubBlocks(const char* aData);
+
+  // The StreamingLexer used to manage input. The initial size of the buffer is
+  // chosen as a little larger than the maximum size of any fixed-length data we
+  // have to read for a state. We read variable-length data in unbuffered mode
+  // so the buffer shouldn't have to be resized during decoding.
+  StreamingLexer<State, 16> mLexer;
 
   uint32_t mOldColor;        // The old value of the transparent pixel
 
   // The frame number of the currently-decoding frame when we're in the middle
   // of decoding it, and -1 otherwise.
   int32_t mCurrentFrameIndex;
+
+  // When we're reading in the global or local color table, this records our
+  // current position - i.e., the offset into which the next byte should be
+  // written.
+  size_t mColorTablePos;
 
   uint8_t mColorMask;        // Apply this to the pixel to keep within colormap
   bool mGIFOpen;

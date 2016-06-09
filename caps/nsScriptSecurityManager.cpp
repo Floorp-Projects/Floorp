@@ -1436,7 +1436,7 @@ nsScriptSecurityManager::InitStatics()
     RefPtr<nsScriptSecurityManager> ssManager = new nsScriptSecurityManager();
     nsresult rv = ssManager->Init();
     if (NS_FAILED(rv)) {
-        MOZ_CRASH();
+        MOZ_CRASH("ssManager->Init() failed");
     }
 
     ClearOnShutdown(&gScriptSecMan);

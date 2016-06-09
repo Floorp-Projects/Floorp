@@ -601,5 +601,5 @@ NS_ABORT_OOM(size_t aSize)
 #if defined(MOZ_CRASHREPORTER)
   CrashReporter::AnnotateOOMAllocationSize(aSize);
 #endif
-  MOZ_CRASH();
+  MOZ_CRASH("OOM");
 }

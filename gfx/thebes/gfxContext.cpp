@@ -733,25 +733,6 @@ gfxContext::Mask(SourceSurface* aSurface, Float aAlpha, const Matrix& aTransform
 }
 
 void
-gfxContext::Mask(gfxASurface *surface, const gfxPoint& offset)
-{
-  PROFILER_LABEL("gfxContext", "Mask",
-    js::ProfileEntry::Category::GRAPHICS);
-
-  // Lifetime needs to be limited here as we may simply wrap surface's data.
-  RefPtr<SourceSurface> sourceSurf =
-  gfxPlatform::GetPlatform()->GetSourceSurfaceForSurface(mDT, surface);
-
-  if (!sourceSurf) {
-    return;
-  }
-
-  gfxPoint pt = surface->GetDeviceOffset();
-
-  Mask(sourceSurf, 1.0f, Point(offset.x - pt.x, offset.y - pt.y));
-}
-
-void
 gfxContext::Mask(SourceSurface *surface, float alpha, const Point& offset)
 {
   // We clip here to bind to the mask surface bounds, see above.

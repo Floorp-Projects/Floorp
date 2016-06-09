@@ -6,6 +6,7 @@
 
 #include "mozilla/ServoBindings.h"
 
+#include "gfxFontFamilyList.h"
 #include "nsAttrValueInlines.h"
 #include "nsCSSRuleProcessor.h"
 #include "nsContentUtils.h"
@@ -284,6 +285,33 @@ Gecko_AtomEqualsUTF8IgnoreCase(nsIAtom* aAtom, const char* aString, uint32_t aLe
   aAtom->ToString(atomStr);
   NS_ConvertUTF8toUTF16 inStr(nsDependentCSubstring(aString, aLength));
   return nsContentUtils::EqualsIgnoreASCIICase(atomStr, inStr);
+}
+
+void
+Gecko_FontFamilyList_Clear(FontFamilyList* aList) {
+  aList->Clear();
+}
+
+void
+Gecko_FontFamilyList_AppendNamed(FontFamilyList* aList, nsIAtom* aName)
+{
+  // Servo doesn't record whether the name was quoted or unquoted, so just
+  // assume unquoted for now.
+  FontFamilyName family;
+  aName->ToString(family.mName);
+  aList->Append(family);
+}
+
+void
+Gecko_FontFamilyList_AppendGeneric(FontFamilyList* aList, FontFamilyType aType)
+{
+  aList->Append(FontFamilyName(aType));
+}
+
+void
+Gecko_CopyFontFamilyFrom(nsFont* dst, const nsFont* src)
+{
+  dst->fontlist = src->fontlist;
 }
 
 void

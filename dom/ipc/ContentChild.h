@@ -401,7 +401,8 @@ public:
 
   virtual bool RecvSpeakerManagerNotify() override;
 
-  virtual bool RecvBidiKeyboardNotify(const bool& isLangRTL) override;
+  virtual bool RecvBidiKeyboardNotify(const bool& isLangRTL,
+                                      const bool& haveBidiKeyboards) override;
 
   virtual bool RecvNotifyVisited(const URIParams& aURI) override;
 

@@ -52,8 +52,7 @@ class nsGenericHTMLElement : public nsGenericHTMLElementBase,
 {
 public:
   explicit nsGenericHTMLElement(already_AddRefed<mozilla::dom::NodeInfo>& aNodeInfo)
-    : nsGenericHTMLElementBase(aNodeInfo),
-      mScrollgrab(false)
+    : nsGenericHTMLElementBase(aNodeInfo)
   {
     NS_ASSERTION(mNodeInfo->NamespaceID() == kNameSpaceID_XHTML,
                  "Unexpected namespace");
@@ -194,11 +193,15 @@ public:
   }
   bool Scrollgrab() const
   {
-    return mScrollgrab;
+    return HasFlag(ELEMENT_HAS_SCROLLGRAB);
   }
   void SetScrollgrab(bool aValue)
   {
-    mScrollgrab = aValue;
+    if (aValue) {
+      SetFlags(ELEMENT_HAS_SCROLLGRAB);
+    } else {
+      UnsetFlags(ELEMENT_HAS_SCROLLGRAB);
+    }
   }
 
   void GetInnerText(mozilla::dom::DOMString& aValue, mozilla::ErrorResult& aError);
@@ -1167,8 +1170,6 @@ protected:
 
 private:
   void ChangeEditableState(int32_t aChange);
-
-  bool mScrollgrab;
 };
 
 namespace mozilla {

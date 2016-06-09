@@ -17,6 +17,7 @@
 
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/StartupTimeline.h"
+#include "mozilla/StaticMutex.h"
 
 #include "TelemetryCommon.h"
 #include "TelemetryHistogram.h"
@@ -29,6 +30,59 @@ using base::BooleanHistogram;
 using base::CountHistogram;
 using base::FlagHistogram;
 using base::LinearHistogram;
+using mozilla::StaticMutex;
+using mozilla::StaticMutexAutoLock;
+
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+//
+// Naming: there are two kinds of functions in this file:
+//
+// * Functions named internal_*: these can only be reached via an
+//   interface function (TelemetryHistogram::*).  They mostly expect
+//   the interface function to have acquired
+//   |gTelemetryHistogramMutex|, so they do not have to be
+//   thread-safe.  However, those internal_* functions that are
+//   reachable from internal_WrapAndReturnHistogram and
+//   internal_WrapAndReturnKeyedHistogram can sometimes be called
+//   without |gTelemetryHistogramMutex|, and so might be racey.
+//
+// * Functions named TelemetryHistogram::*.  This is the external interface.
+//   Entries and exits to these functions are serialised using
+//   |gTelemetryHistogramMutex|, except for GetAddonHistogramSnapshots,
+//   GetKeyedHistogramSnapshots and CreateHistogramSnapshots.
+//
+// Avoiding races and deadlocks:
+//
+// All functions in the external interface (TelemetryHistogram::*) are
+// serialised using the mutex |gTelemetryHistogramMutex|.  This means
+// that the external interface is thread-safe, and many of the
+// internal_* functions can ignore thread safety.  But it also brings
+// a danger of deadlock if any function in the external interface can
+// get back to that interface.  That is, we will deadlock on any call
+// chain like this
+//
+// TelemetryHistogram::* -> .. any functions .. -> TelemetryHistogram::*
+//
+// To reduce the danger of that happening, observe the following rules:
+//
+// * No function in TelemetryHistogram::* may directly call, nor take the
+//   address of, any other function in TelemetryHistogram::*.
+//
+// * No internal function internal_* may call, nor take the address
+//   of, any function in TelemetryHistogram::*.
+//
+// internal_WrapAndReturnHistogram and
+// internal_WrapAndReturnKeyedHistogram are not protected by
+// |gTelemetryHistogramMutex| because they make calls to the JS
+// engine, but that can in turn call back to Telemetry and hence back
+// to a TelemetryHistogram:: function, in order to report GC and other
+// statistics.  This would lead to deadlock due to attempted double
+// acquisition of |gTelemetryHistogramMutex|, if the internal_* functions
+// were required to be protected by |gTelemetryHistogramMutex|.  To
+// break that cycle, we relax that requirement.  Unfortunately this
+// means that this file is not guaranteed race-free.
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -120,6 +174,9 @@ bool gCorruptHistograms[mozilla::Telemetry::HistogramCount];
 
 AddonMapType gAddonMap;
 
+// The singleton StatisticsRecorder object for this process.
+base::StatisticsRecorder* gStatisticsRecorder = nullptr;
+
 } // namespace
 
 
@@ -127,6 +184,8 @@ AddonMapType gAddonMap;
 ////////////////////////////////////////////////////////////////////////
 //
 // PRIVATE CONSTANTS
+
+namespace {
 
 // List of histogram IDs which should have recording disabled initially.
 const mozilla::Telemetry::ID kRecordingInitiallyDisabledIDs[] = {
@@ -137,6 +196,8 @@ const mozilla::Telemetry::ID kRecordingInitiallyDisabledIDs[] = {
   mozilla::Telemetry::TELEMETRY_TEST_KEYED_COUNT_INIT_NO_RECORD
 };
 
+} // namespace
+
 
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
@@ -146,14 +207,24 @@ const mozilla::Telemetry::ID kRecordingInitiallyDisabledIDs[] = {
 namespace {
 
 bool
-IsHistogramEnumId(mozilla::Telemetry::ID aID)
+internal_CanRecordBase() {
+  return gCanRecordBase;
+}
+
+bool
+internal_CanRecordExtended() {
+  return gCanRecordExtended;
+}
+
+bool
+internal_IsHistogramEnumId(mozilla::Telemetry::ID aID)
 {
   static_assert(((mozilla::Telemetry::ID)-1 > 0), "ID should be unsigned.");
   return aID < mozilla::Telemetry::HistogramCount;
 }
 
 bool
-IsExpired(const char *expiration)
+internal_IsExpired(const char *expiration)
 {
   static mozilla::Version current_version = mozilla::Version(MOZ_APP_VERSION);
   MOZ_ASSERT(expiration);
@@ -162,7 +233,7 @@ IsExpired(const char *expiration)
 }
 
 bool
-IsInDataset(uint32_t dataset, uint32_t containingDataset)
+internal_IsInDataset(uint32_t dataset, uint32_t containingDataset)
 {
   if (dataset == containingDataset) {
     return true;
@@ -179,18 +250,19 @@ IsInDataset(uint32_t dataset, uint32_t containingDataset)
 }
 
 bool
-CanRecordDataset(uint32_t dataset)
+internal_CanRecordDataset(uint32_t dataset)
 {
   // If we are extended telemetry is enabled, we are allowed to record
   // regardless of the dataset.
-  if (TelemetryHistogram::CanRecordExtended()) {
+  if (internal_CanRecordExtended()) {
     return true;
   }
 
   // If base telemetry data is enabled and we're trying to record base
   // telemetry, allow it.
-  if (TelemetryHistogram::CanRecordBase() &&
-      IsInDataset(dataset, nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT)) {
+  if (internal_CanRecordBase() &&
+      internal_IsInDataset(dataset,
+                           nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT)) {
       return true;
   }
 
@@ -200,38 +272,36 @@ CanRecordDataset(uint32_t dataset)
 }
 
 bool
-IsValidHistogramName(const nsACString& name)
+internal_IsValidHistogramName(const nsACString& name)
 {
   return !FindInReadable(NS_LITERAL_CSTRING(KEYED_HISTOGRAM_NAME_SEPARATOR), name);
 }
 
 // Note: this is completely unrelated to mozilla::IsEmpty.
 bool
-IsEmpty(const Histogram *h)
+internal_IsEmpty(const Histogram *h)
 {
   Histogram::SampleSet ss;
   h->SnapshotSample(&ss);
-
-  mozilla::OffTheBooksMutexAutoLock locker(ss.mutex());
-  return ss.counts(locker, 0) == 0 && ss.sum(locker) == 0;
+  return ss.counts(0) == 0 && ss.sum() == 0;
 }
 
 bool
-IsExpired(const Histogram *histogram)
+internal_IsExpired(const Histogram *histogram)
 {
   return histogram->histogram_name() == EXPIRED_ID;
 }
 
 nsresult
-GetRegisteredHistogramIds(bool keyed, uint32_t dataset, uint32_t *aCount,
-                          char*** aHistograms)
+internal_GetRegisteredHistogramIds(bool keyed, uint32_t dataset,
+                                   uint32_t *aCount, char*** aHistograms)
 {
   nsTArray<char*> collection;
 
   for (size_t i = 0; i < mozilla::ArrayLength(gHistograms); ++i) {
     const HistogramInfo& h = gHistograms[i];
-    if (IsExpired(h.expiration()) || h.keyed != keyed ||
-        !IsInDataset(h.dataset, dataset)) {
+    if (internal_IsExpired(h.expiration()) || h.keyed != keyed ||
+        !internal_IsInDataset(h.dataset, dataset)) {
       continue;
     }
 
@@ -272,8 +342,9 @@ HistogramInfo::expiration() const
 namespace {
 
 nsresult
-CheckHistogramArguments(uint32_t histogramType, uint32_t min, uint32_t max,
-                        uint32_t bucketCount, bool haveOptArgs)
+internal_CheckHistogramArguments(uint32_t histogramType,
+                                 uint32_t min, uint32_t max,
+                                 uint32_t bucketCount, bool haveOptArgs)
 {
   if (histogramType != nsITelemetry::HISTOGRAM_BOOLEAN
       && histogramType != nsITelemetry::HISTOGRAM_FLAG
@@ -301,16 +372,18 @@ CheckHistogramArguments(uint32_t histogramType, uint32_t min, uint32_t max,
  * haveOptArgs has to be set if the caller provides them.
  */
 nsresult
-HistogramGet(const char *name, const char *expiration, uint32_t histogramType,
-             uint32_t min, uint32_t max, uint32_t bucketCount, bool haveOptArgs,
-             Histogram **result)
+internal_HistogramGet(const char *name, const char *expiration,
+                      uint32_t histogramType, uint32_t min, uint32_t max,
+                      uint32_t bucketCount, bool haveOptArgs,
+                      Histogram **result)
 {
-  nsresult rv = CheckHistogramArguments(histogramType, min, max, bucketCount, haveOptArgs);
+  nsresult rv = internal_CheckHistogramArguments(histogramType, min, max,
+                                                 bucketCount, haveOptArgs);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  if (IsExpired(expiration)) {
+  if (internal_IsExpired(expiration)) {
     name = EXPIRED_ID;
     min = 1;
     max = 2;
@@ -342,7 +415,7 @@ HistogramGet(const char *name, const char *expiration, uint32_t histogramType,
 }
 
 nsresult
-GetHistogramEnumId(const char *name, mozilla::Telemetry::ID *id)
+internal_GetHistogramEnumId(const char *name, mozilla::Telemetry::ID *id)
 {
   if (!gInitDone) {
     return NS_ERROR_FAILURE;
@@ -358,7 +431,7 @@ GetHistogramEnumId(const char *name, mozilla::Telemetry::ID *id)
 
 // O(1) histogram lookup by numeric id
 nsresult
-GetHistogramByEnumId(mozilla::Telemetry::ID id, Histogram **ret)
+internal_GetHistogramByEnumId(mozilla::Telemetry::ID id, Histogram **ret)
 {
   static Histogram* knownHistograms[mozilla::Telemetry::HistogramCount] = {0};
   Histogram *h = knownHistograms[id];
@@ -372,15 +445,15 @@ GetHistogramByEnumId(mozilla::Telemetry::ID id, Histogram **ret)
     return NS_ERROR_FAILURE;
   }
 
-  nsresult rv = HistogramGet(p.id(), p.expiration(), p.histogramType,
-                             p.min, p.max, p.bucketCount, true, &h);
+  nsresult rv = internal_HistogramGet(p.id(), p.expiration(), p.histogramType,
+                                      p.min, p.max, p.bucketCount, true, &h);
   if (NS_FAILED(rv))
     return rv;
 
 #ifdef DEBUG
   // Check that the C++ Histogram code computes the same ranges as the
   // Python histogram code.
-  if (!IsExpired(p.expiration())) {
+  if (!internal_IsExpired(p.expiration())) {
     const struct bounds &b = gBucketLowerBoundIndex[id];
     if (b.length != 0) {
       MOZ_ASSERT(size_t(b.length) == h->bucket_count(),
@@ -398,15 +471,16 @@ GetHistogramByEnumId(mozilla::Telemetry::ID id, Histogram **ret)
 }
 
 nsresult
-GetHistogramByName(const nsACString &name, Histogram **ret)
+internal_GetHistogramByName(const nsACString &name, Histogram **ret)
 {
   mozilla::Telemetry::ID id;
-  nsresult rv = GetHistogramEnumId(PromiseFlatCString(name).get(), &id);
+  nsresult rv
+    = internal_GetHistogramEnumId(PromiseFlatCString(name).get(), &id);
   if (NS_FAILED(rv)) {
     return rv;
   }
 
-  rv = GetHistogramByEnumId(id, ret);
+  rv = internal_GetHistogramByEnumId(id, ret);
   if (NS_FAILED(rv))
     return rv;
 
@@ -419,17 +493,19 @@ GetHistogramByName(const nsACString &name, Histogram **ret)
  * For simplicity this is limited to registered histograms.
  */
 Histogram*
-CloneHistogram(const nsACString& newName, mozilla::Telemetry::ID existingId,
-               Histogram& existing)
+internal_CloneHistogram(const nsACString& newName,
+                        mozilla::Telemetry::ID existingId,
+                        Histogram& existing)
 {
   const HistogramInfo &info = gHistograms[existingId];
   Histogram *clone = nullptr;
   nsresult rv;
 
-  rv = HistogramGet(PromiseFlatCString(newName).get(), info.expiration(),
-                    info.histogramType, existing.declared_min(),
-                    existing.declared_max(), existing.bucket_count(),
-                    true, &clone);
+  rv = internal_HistogramGet(PromiseFlatCString(newName).get(),
+                             info.expiration(),
+                             info.histogramType, existing.declared_min(),
+                             existing.declared_max(), existing.bucket_count(),
+                             true, &clone);
   if (NS_FAILED(rv)) {
     return nullptr;
   }
@@ -447,23 +523,25 @@ CloneHistogram(const nsACString& newName, mozilla::Telemetry::ID existingId,
  * For simplicity this is limited to registered histograms.
  */
 Histogram*
-CloneHistogram(const nsACString& newName, mozilla::Telemetry::ID existingId)
+internal_CloneHistogram(const nsACString& newName,
+                        mozilla::Telemetry::ID existingId)
 {
   Histogram *existing = nullptr;
-  nsresult rv = GetHistogramByEnumId(existingId, &existing);
+  nsresult rv = internal_GetHistogramByEnumId(existingId, &existing);
   if (NS_FAILED(rv)) {
     return nullptr;
   }
 
-  return CloneHistogram(newName, existingId, *existing);
+  return internal_CloneHistogram(newName, existingId, *existing);
 }
 
 #if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
 Histogram*
-GetSubsessionHistogram(Histogram& existing)
+internal_GetSubsessionHistogram(Histogram& existing)
 {
   mozilla::Telemetry::ID id;
-  nsresult rv = GetHistogramEnumId(existing.histogram_name().c_str(), &id);
+  nsresult rv
+    = internal_GetHistogramEnumId(existing.histogram_name().c_str(), &id);
   if (NS_FAILED(rv) || gHistograms[id].keyed) {
     return nullptr;
   }
@@ -482,21 +560,21 @@ GetSubsessionHistogram(Histogram& existing)
   nsCString subsessionName(prefix);
   subsessionName.Append(existingName);
 
-  subsession[id] = CloneHistogram(subsessionName, id, existing);
+  subsession[id] = internal_CloneHistogram(subsessionName, id, existing);
   return subsession[id];
 }
 #endif
 
 nsresult
-HistogramAdd(Histogram& histogram, int32_t value, uint32_t dataset)
+internal_HistogramAdd(Histogram& histogram, int32_t value, uint32_t dataset)
 {
   // Check if we are allowed to record the data.
-  if (!CanRecordDataset(dataset) || !histogram.IsRecordingEnabled()) {
+  if (!internal_CanRecordDataset(dataset) || !histogram.IsRecordingEnabled()) {
     return NS_OK;
   }
 
 #if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
-  if (Histogram* subsession = GetSubsessionHistogram(histogram)) {
+  if (Histogram* subsession = internal_GetSubsessionHistogram(histogram)) {
     subsession->Add(value);
   }
 #endif
@@ -509,14 +587,15 @@ HistogramAdd(Histogram& histogram, int32_t value, uint32_t dataset)
 }
 
 nsresult
-HistogramAdd(Histogram& histogram, int32_t value)
+internal_HistogramAdd(Histogram& histogram, int32_t value)
 {
   uint32_t dataset = nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN;
   // We only really care about the dataset of the histogram if we are not recording
   // extended telemetry. Otherwise, we always record histogram data.
-  if (!TelemetryHistogram::CanRecordExtended()) {
+  if (!internal_CanRecordExtended()) {
     mozilla::Telemetry::ID id;
-    nsresult rv = GetHistogramEnumId(histogram.histogram_name().c_str(), &id);
+    nsresult rv
+      = internal_GetHistogramEnumId(histogram.histogram_name().c_str(), &id);
     if (NS_FAILED(rv)) {
       // If we can't look up the dataset, it might be because the histogram was added
       // at runtime. Since we're not recording extended telemetry, bail out.
@@ -525,18 +604,18 @@ HistogramAdd(Histogram& histogram, int32_t value)
     dataset = gHistograms[id].dataset;
   }
 
-  return HistogramAdd(histogram, value, dataset);
+  return internal_HistogramAdd(histogram, value, dataset);
 }
 
 void
-HistogramClear(Histogram& aHistogram, bool onlySubsession)
+internal_HistogramClear(Histogram& aHistogram, bool onlySubsession)
 {
   if (!onlySubsession) {
     aHistogram.Clear();
   }
 
 #if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
-  if (Histogram* subsession = GetSubsessionHistogram(aHistogram)) {
+  if (Histogram* subsession = internal_GetSubsessionHistogram(aHistogram)) {
     subsession->Clear();
   }
 #endif
@@ -552,14 +631,16 @@ HistogramClear(Histogram& aHistogram, bool onlySubsession)
 
 namespace {
 
+void internal_Accumulate(mozilla::Telemetry::ID aHistogram, uint32_t aSample);
+
 void
-IdentifyCorruptHistograms(StatisticsRecorder::Histograms &hs)
+internal_IdentifyCorruptHistograms(StatisticsRecorder::Histograms &hs)
 {
   for (HistogramIterator it = hs.begin(); it != hs.end(); ++it) {
     Histogram *h = *it;
 
     mozilla::Telemetry::ID id;
-    nsresult rv = ::GetHistogramEnumId(h->histogram_name().c_str(), &id);
+    nsresult rv = internal_GetHistogramEnumId(h->histogram_name().c_str(), &id);
     // This histogram isn't a static histogram, just ignore it.
     if (NS_FAILED(rv)) {
       continue;
@@ -572,12 +653,7 @@ IdentifyCorruptHistograms(StatisticsRecorder::Histograms &hs)
     Histogram::SampleSet ss;
     h->SnapshotSample(&ss);
 
-    Histogram::Inconsistencies check;
-    {
-      mozilla::OffTheBooksMutexAutoLock locker(ss.mutex());
-      check = h->FindCorruption(ss, locker);
-    }
-
+    Histogram::Inconsistencies check = h->FindCorruption(ss);
     bool corrupt = (check != Histogram::NO_INCONSISTENCIES);
 
     if (corrupt) {
@@ -591,7 +667,7 @@ IdentifyCorruptHistograms(StatisticsRecorder::Histograms &hs)
       } else if (check & Histogram::COUNT_LOW_ERROR) {
         corruptID = mozilla::Telemetry::TOTAL_COUNT_LOW_ERRORS;
       }
-      TelemetryHistogram::Accumulate(corruptID, 1);
+      internal_Accumulate(corruptID, 1);
     }
 
     gCorruptHistograms[id] = corrupt;
@@ -609,7 +685,7 @@ IdentifyCorruptHistograms(StatisticsRecorder::Histograms &hs)
 namespace {
 
 bool
-FillRanges(JSContext *cx, JS::Handle<JSObject*> array, Histogram *h)
+internal_FillRanges(JSContext *cx, JS::Handle<JSObject*> array, Histogram *h)
 {
   JS::Rooted<JS::Value> range(cx);
   for (size_t i = 0; i < h->bucket_count(); i++) {
@@ -621,13 +697,12 @@ FillRanges(JSContext *cx, JS::Handle<JSObject*> array, Histogram *h)
 }
 
 enum reflectStatus
-ReflectHistogramAndSamples(JSContext *cx, JS::Handle<JSObject*> obj, Histogram *h,
-                           const Histogram::SampleSet &ss)
+internal_ReflectHistogramAndSamples(JSContext *cx,
+                                    JS::Handle<JSObject*> obj, Histogram *h,
+                                    const Histogram::SampleSet &ss)
 {
-  mozilla::OffTheBooksMutexAutoLock locker(ss.mutex());
-
   // We don't want to reflect corrupt histograms.
-  if (h->FindCorruption(ss, locker) != Histogram::NO_INCONSISTENCIES) {
+  if (h->FindCorruption(ss) != Histogram::NO_INCONSISTENCIES) {
     return REFLECT_CORRUPT;
   }
 
@@ -638,7 +713,7 @@ ReflectHistogramAndSamples(JSContext *cx, JS::Handle<JSObject*> obj, Histogram *
         && JS_DefineProperty(cx, obj, "histogram_type",
                              h->histogram_type(), JSPROP_ENUMERATE)
         && JS_DefineProperty(cx, obj, "sum",
-                             double(ss.sum(locker)), JSPROP_ENUMERATE))) {
+                             double(ss.sum()), JSPROP_ENUMERATE))) {
     return REFLECT_FAILURE;
   }
 
@@ -647,7 +722,7 @@ ReflectHistogramAndSamples(JSContext *cx, JS::Handle<JSObject*> obj, Histogram *
   if (!rarray) {
     return REFLECT_FAILURE;
   }
-  if (!(FillRanges(cx, rarray, h)
+  if (!(internal_FillRanges(cx, rarray, h)
         && JS_DefineProperty(cx, obj, "ranges", rarray, JSPROP_ENUMERATE))) {
     return REFLECT_FAILURE;
   }
@@ -661,7 +736,7 @@ ReflectHistogramAndSamples(JSContext *cx, JS::Handle<JSObject*> obj, Histogram *
   }
   for (size_t i = 0; i < count; i++) {
     if (!JS_DefineElement(cx, counts_array, i,
-                          ss.counts(locker, i), JSPROP_ENUMERATE)) {
+                          ss.counts(i), JSPROP_ENUMERATE)) {
       return REFLECT_FAILURE;
     }
   }
@@ -670,19 +745,20 @@ ReflectHistogramAndSamples(JSContext *cx, JS::Handle<JSObject*> obj, Histogram *
 }
 
 enum reflectStatus
-ReflectHistogramSnapshot(JSContext *cx, JS::Handle<JSObject*> obj, Histogram *h)
+internal_ReflectHistogramSnapshot(JSContext *cx,
+                                  JS::Handle<JSObject*> obj, Histogram *h)
 {
   Histogram::SampleSet ss;
   h->SnapshotSample(&ss);
-  return ReflectHistogramAndSamples(cx, obj, h, ss);
+  return internal_ReflectHistogramAndSamples(cx, obj, h, ss);
 }
 
 bool
-ShouldReflectHistogram(Histogram *h)
+internal_ShouldReflectHistogram(Histogram *h)
 {
   const char *name = h->histogram_name().c_str();
   mozilla::Telemetry::ID id;
-  nsresult rv = ::GetHistogramEnumId(name, &id);
+  nsresult rv = internal_GetHistogramEnumId(name, &id);
   if (NS_FAILED(rv)) {
     // GetHistogramEnumId generally should not fail.  But a lookup
     // failure shouldn't prevent us from reflecting histograms into JS.
@@ -700,7 +776,7 @@ ShouldReflectHistogram(Histogram *h)
   }
 }
 
-}
+} // namespace
 
 
 ////////////////////////////////////////////////////////////////////////
@@ -797,9 +873,9 @@ KeyedHistogram::GetHistogram(const nsCString& key, Histogram** histogram,
   histogramName.Append(key);
 
   Histogram* h;
-  nsresult rv = HistogramGet(histogramName.get(), mExpiration.get(),
-                             mHistogramType, mMin, mMax, mBucketCount,
-                             true, &h);
+  nsresult rv = internal_HistogramGet(histogramName.get(), mExpiration.get(),
+                                      mHistogramType, mMin, mMax, mBucketCount,
+                                      true, &h);
   if (NS_FAILED(rv)) {
     return rv;
   }
@@ -837,7 +913,7 @@ KeyedHistogram::GetDataset(uint32_t* dataset) const
 nsresult
 KeyedHistogram::Add(const nsCString& key, uint32_t sample)
 {
-  if (!CanRecordDataset(mDataset)) {
+  if (!internal_CanRecordDataset(mDataset)) {
     return NS_OK;
   }
 
@@ -919,7 +995,8 @@ KeyedHistogram::ReflectKeyedHistogram(KeyedHistogramEntry* entry,
     return false;
   }
 
-  if (ReflectHistogramSnapshot(cx, histogramSnapshot, entry->mData) != REFLECT_OK) {
+  if (internal_ReflectHistogramSnapshot(cx, histogramSnapshot,
+                                        entry->mData) != REFLECT_OK) {
     return false;
   }
 
@@ -965,7 +1042,7 @@ KeyedHistogram::GetJSSnapshot(JSContext* cx, JS::Handle<JSObject*> obj,
 namespace {
 
 KeyedHistogram*
-GetKeyedHistogramById(const nsACString &name)
+internal_GetKeyedHistogramById(const nsACString &name)
 {
   if (!gInitDone) {
     return nullptr;
@@ -984,10 +1061,26 @@ GetKeyedHistogramById(const nsACString &name)
 //
 // PRIVATE: JSHistogram_* functions
 
+// NOTE: the functions in this section:
+//
+//   internal_JSHistogram_Add
+//   internal_JSHistogram_Snapshot
+//   internal_JSHistogram_Clear
+//   internal_JSHistogram_Dataset
+//   internal_WrapAndReturnHistogram
+//
+// all run without protection from |gTelemetryHistogramMutex|.  If they
+// held |gTelemetryHistogramMutex|, there would be the possibility of
+// deadlock because the JS_ calls that they make may call back into the
+// TelemetryHistogram interface, hence trying to re-acquire the mutex.
+//
+// This means that these functions potentially race against threads, but
+// that seems preferable to risking deadlock.
+
 namespace {
 
 bool
-JSHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
+internal_JSHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
   if (!obj) {
@@ -1019,15 +1112,15 @@ JSHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
     }
   }
 
-  if (TelemetryHistogram::CanRecordBase()) {
-    HistogramAdd(*h, value);
+  if (internal_CanRecordBase()) {
+    internal_HistogramAdd(*h, value);
   }
 
   return true;
 }
 
 bool
-JSHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
+internal_JSHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
@@ -1040,7 +1133,7 @@ JSHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
   if (!snapshot)
     return false;
 
-  switch (ReflectHistogramSnapshot(cx, snapshot, h)) {
+  switch (internal_ReflectHistogramSnapshot(cx, snapshot, h)) {
   case REFLECT_FAILURE:
     return false;
   case REFLECT_CORRUPT:
@@ -1055,7 +1148,7 @@ JSHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
 }
 
 bool
-JSHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
+internal_JSHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
   if (!obj) {
@@ -1079,14 +1172,14 @@ JSHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
   Histogram *h = static_cast<Histogram*>(JS_GetPrivate(obj));
   MOZ_ASSERT(h);
   if (h) {
-    HistogramClear(*h, onlySubsession);
+    internal_HistogramClear(*h, onlySubsession);
   }
 
   return true;
 }
 
 bool
-JSHistogram_Dataset(JSContext *cx, unsigned argc, JS::Value *vp)
+internal_JSHistogram_Dataset(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
@@ -1096,7 +1189,7 @@ JSHistogram_Dataset(JSContext *cx, unsigned argc, JS::Value *vp)
 
   Histogram *h = static_cast<Histogram*>(JS_GetPrivate(obj));
   mozilla::Telemetry::ID id;
-  nsresult rv = ::GetHistogramEnumId(h->histogram_name().c_str(), &id);
+  nsresult rv = internal_GetHistogramEnumId(h->histogram_name().c_str(), &id);
   if (NS_SUCCEEDED(rv)) {
     args.rval().setNumber(gHistograms[id].dataset);
     return true;
@@ -1105,8 +1198,11 @@ JSHistogram_Dataset(JSContext *cx, unsigned argc, JS::Value *vp)
   return false;
 }
 
+// NOTE: Runs without protection from |gTelemetryHistogramMutex|.
+// See comment at the top of this section.
 nsresult
-WrapAndReturnHistogram(Histogram *h, JSContext *cx, JS::MutableHandle<JS::Value> ret)
+internal_WrapAndReturnHistogram(Histogram *h, JSContext *cx,
+                                JS::MutableHandle<JS::Value> ret)
 {
   static const JSClass JSHistogram_class = {
     "JSHistogram",  /* name */
@@ -1116,10 +1212,14 @@ WrapAndReturnHistogram(Histogram *h, JSContext *cx, JS::MutableHandle<JS::Value>
   JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, &JSHistogram_class));
   if (!obj)
     return NS_ERROR_FAILURE;
-  if (!(JS_DefineFunction(cx, obj, "add", JSHistogram_Add, 1, 0)
-        && JS_DefineFunction(cx, obj, "snapshot", JSHistogram_Snapshot, 0, 0)
-        && JS_DefineFunction(cx, obj, "clear", JSHistogram_Clear, 0, 0)
-        && JS_DefineFunction(cx, obj, "dataset", JSHistogram_Dataset, 0, 0))) {
+  // The 4 functions that are wrapped up here are eventually called
+  // by the same thread that runs this function.
+  if (!(JS_DefineFunction(cx, obj, "add", internal_JSHistogram_Add, 1, 0)
+        && JS_DefineFunction(cx, obj, "snapshot",
+                             internal_JSHistogram_Snapshot, 0, 0)
+        && JS_DefineFunction(cx, obj, "clear", internal_JSHistogram_Clear, 0, 0)
+        && JS_DefineFunction(cx, obj, "dataset",
+                             internal_JSHistogram_Dataset, 0, 0))) {
     return NS_ERROR_FAILURE;
   }
   JS_SetPrivate(obj, h);
@@ -1135,11 +1235,27 @@ WrapAndReturnHistogram(Histogram *h, JSContext *cx, JS::MutableHandle<JS::Value>
 //
 // PRIVATE: JSKeyedHistogram_* functions
 
+// NOTE: the functions in this section:
+//
+//   internal_KeyedHistogram_SnapshotImpl
+//   internal_JSKeyedHistogram_Add
+//   internal_JSKeyedHistogram_Keys
+//   internal_JSKeyedHistogram_Snapshot
+//   internal_JSKeyedHistogram_SubsessionSnapshot
+//   internal_JSKeyedHistogram_SnapshotSubsessionAndClear
+//   internal_JSKeyedHistogram_Clear
+//   internal_JSKeyedHistogram_Dataset
+//   internal_WrapAndReturnKeyedHistogram
+//
+// Same comments as above, at the JSHistogram_* section, regarding
+// deadlock avoidance, apply.
+
 namespace {
 
 bool
-KeyedHistogram_SnapshotImpl(JSContext *cx, unsigned argc, JS::Value *vp,
-                            bool subsession, bool clearSubsession)
+internal_KeyedHistogram_SnapshotImpl(JSContext *cx, unsigned argc,
+                                     JS::Value *vp,
+                                     bool subsession, bool clearSubsession)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
   if (!obj) {
@@ -1187,7 +1303,7 @@ KeyedHistogram_SnapshotImpl(JSContext *cx, unsigned argc, JS::Value *vp,
     return false;
   }
 
-  switch (ReflectHistogramSnapshot(cx, snapshot, h)) {
+  switch (internal_ReflectHistogramSnapshot(cx, snapshot, h)) {
   case REFLECT_FAILURE:
     return false;
   case REFLECT_CORRUPT:
@@ -1202,7 +1318,7 @@ KeyedHistogram_SnapshotImpl(JSContext *cx, unsigned argc, JS::Value *vp,
 }
 
 bool
-JSKeyedHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
+internal_JSKeyedHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
   if (!obj) {
@@ -1252,7 +1368,7 @@ JSKeyedHistogram_Add(JSContext *cx, unsigned argc, JS::Value *vp)
 }
 
 bool
-JSKeyedHistogram_Keys(JSContext *cx, unsigned argc, JS::Value *vp)
+internal_JSKeyedHistogram_Keys(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
   if (!obj) {
@@ -1269,34 +1385,37 @@ JSKeyedHistogram_Keys(JSContext *cx, unsigned argc, JS::Value *vp)
 }
 
 bool
-JSKeyedHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
+internal_JSKeyedHistogram_Snapshot(JSContext *cx, unsigned argc, JS::Value *vp)
 {
-  return KeyedHistogram_SnapshotImpl(cx, argc, vp, false, false);
+  return internal_KeyedHistogram_SnapshotImpl(cx, argc, vp, false, false);
 }
 
 #if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
 bool
-JSKeyedHistogram_SubsessionSnapshot(JSContext *cx, unsigned argc, JS::Value *vp)
+internal_JSKeyedHistogram_SubsessionSnapshot(JSContext *cx,
+                                             unsigned argc, JS::Value *vp)
 {
-  return KeyedHistogram_SnapshotImpl(cx, argc, vp, true, false);
+  return internal_KeyedHistogram_SnapshotImpl(cx, argc, vp, true, false);
 }
 #endif
 
 #if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
 bool
-JSKeyedHistogram_SnapshotSubsessionAndClear(JSContext *cx, unsigned argc, JS::Value *vp)
+internal_JSKeyedHistogram_SnapshotSubsessionAndClear(JSContext *cx,
+                                                     unsigned argc,
+                                                     JS::Value *vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   if (args.length() != 0) {
     JS_ReportError(cx, "No key arguments supported for snapshotSubsessionAndClear");
   }
 
-  return KeyedHistogram_SnapshotImpl(cx, argc, vp, true, true);
+  return internal_KeyedHistogram_SnapshotImpl(cx, argc, vp, true, true);
 }
 #endif
 
 bool
-JSKeyedHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
+internal_JSKeyedHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
   if (!obj) {
@@ -1329,7 +1448,7 @@ JSKeyedHistogram_Clear(JSContext *cx, unsigned argc, JS::Value *vp)
 }
 
 bool
-JSKeyedHistogram_Dataset(JSContext *cx, unsigned argc, JS::Value *vp)
+internal_JSKeyedHistogram_Dataset(JSContext *cx, unsigned argc, JS::Value *vp)
 {
   JS::CallArgs args = JS::CallArgsFromVp(argc, vp);
   JSObject *obj = JS_THIS_OBJECT(cx, vp);
@@ -1352,8 +1471,11 @@ JSKeyedHistogram_Dataset(JSContext *cx, unsigned argc, JS::Value *vp)
   return true;
 }
 
+// NOTE: Runs without protection from |gTelemetryHistogramMutex|.
+// See comment at the top of this section.
 nsresult
-WrapAndReturnKeyedHistogram(KeyedHistogram *h, JSContext *cx, JS::MutableHandle<JS::Value> ret)
+internal_WrapAndReturnKeyedHistogram(KeyedHistogram *h, JSContext *cx,
+                                     JS::MutableHandle<JS::Value> ret)
 {
   static const JSClass JSHistogram_class = {
     "JSKeyedHistogram",  /* name */
@@ -1363,15 +1485,23 @@ WrapAndReturnKeyedHistogram(KeyedHistogram *h, JSContext *cx, JS::MutableHandle<
   JS::Rooted<JSObject*> obj(cx, JS_NewObject(cx, &JSHistogram_class));
   if (!obj)
     return NS_ERROR_FAILURE;
-  if (!(JS_DefineFunction(cx, obj, "add", JSKeyedHistogram_Add, 2, 0)
-        && JS_DefineFunction(cx, obj, "snapshot", JSKeyedHistogram_Snapshot, 1, 0)
+  // The 7 functions that are wrapped up here are eventually called
+  // by the same thread that runs this function.
+  if (!(JS_DefineFunction(cx, obj, "add", internal_JSKeyedHistogram_Add, 2, 0)
+        && JS_DefineFunction(cx, obj, "snapshot",
+                             internal_JSKeyedHistogram_Snapshot, 1, 0)
 #if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
-        && JS_DefineFunction(cx, obj, "subsessionSnapshot", JSKeyedHistogram_SubsessionSnapshot, 1, 0)
-        && JS_DefineFunction(cx, obj, "snapshotSubsessionAndClear", JSKeyedHistogram_SnapshotSubsessionAndClear, 0, 0)
+        && JS_DefineFunction(cx, obj, "subsessionSnapshot",
+                             internal_JSKeyedHistogram_SubsessionSnapshot, 1, 0)
+        && JS_DefineFunction(cx, obj, "snapshotSubsessionAndClear",
+                             internal_JSKeyedHistogram_SnapshotSubsessionAndClear, 0, 0)
 #endif
-        && JS_DefineFunction(cx, obj, "keys", JSKeyedHistogram_Keys, 0, 0)
-        && JS_DefineFunction(cx, obj, "clear", JSKeyedHistogram_Clear, 0, 0)
-        && JS_DefineFunction(cx, obj, "dataset", JSKeyedHistogram_Dataset, 0, 0))) {
+        && JS_DefineFunction(cx, obj, "keys",
+                             internal_JSKeyedHistogram_Keys, 0, 0)
+        && JS_DefineFunction(cx, obj, "clear",
+                             internal_JSKeyedHistogram_Clear, 0, 0)
+        && JS_DefineFunction(cx, obj, "dataset",
+                             internal_JSKeyedHistogram_Dataset, 0, 0))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -1395,8 +1525,8 @@ namespace {
 // might conflict with other histograms in other addons or even with our
 // own.
 void
-AddonHistogramName(const nsACString &id, const nsACString &name,
-                   nsACString &ret)
+internal_AddonHistogramName(const nsACString &id, const nsACString &name,
+                            nsACString &ret)
 {
   ret.Append(id);
   ret.Append(':');
@@ -1404,12 +1534,13 @@ AddonHistogramName(const nsACString &id, const nsACString &name,
 }
 
 bool
-CreateHistogramForAddon(const nsACString &name, AddonHistogramInfo &info)
+internal_CreateHistogramForAddon(const nsACString &name,
+                                 AddonHistogramInfo &info)
 {
   Histogram *h;
-  nsresult rv = HistogramGet(PromiseFlatCString(name).get(), "never",
-                             info.histogramType, info.min, info.max,
-                             info.bucketCount, true, &h);
+  nsresult rv = internal_HistogramGet(PromiseFlatCString(name).get(), "never",
+                                      info.histogramType, info.min, info.max,
+                                      info.bucketCount, true, &h);
   if (NS_FAILED(rv)) {
     return false;
   }
@@ -1422,8 +1553,8 @@ CreateHistogramForAddon(const nsACString &name, AddonHistogramInfo &info)
 }
 
 bool
-AddonHistogramReflector(AddonHistogramEntryType *entry,
-                        JSContext *cx, JS::Handle<JSObject*> obj)
+internal_AddonHistogramReflector(AddonHistogramEntryType *entry,
+                                 JSContext *cx, JS::Handle<JSObject*> obj)
 {
   AddonHistogramInfo &info = entry->mData;
 
@@ -1433,12 +1564,12 @@ AddonHistogramReflector(AddonHistogramEntryType *entry,
     if (info.histogramType != nsITelemetry::HISTOGRAM_FLAG)
       return true;
 
-    if (!CreateHistogramForAddon(entry->GetKey(), info)) {
+    if (!internal_CreateHistogramForAddon(entry->GetKey(), info)) {
       return false;
     }
   }
 
-  if (IsEmpty(info.h)) {
+  if (internal_IsEmpty(info.h)) {
     return true;
   }
 
@@ -1447,7 +1578,7 @@ AddonHistogramReflector(AddonHistogramEntryType *entry,
     // Just consider this to be skippable.
     return true;
   }
-  switch (ReflectHistogramSnapshot(cx, snapshot, info.h)) {
+  switch (internal_ReflectHistogramSnapshot(cx, snapshot, info.h)) {
   case REFLECT_FAILURE:
   case REFLECT_CORRUPT:
     return false;
@@ -1463,7 +1594,8 @@ AddonHistogramReflector(AddonHistogramEntryType *entry,
 }
 
 bool
-AddonReflector(AddonEntryType *entry, JSContext *cx, JS::Handle<JSObject*> obj)
+internal_AddonReflector(AddonEntryType *entry, JSContext *cx,
+                        JS::Handle<JSObject*> obj)
 {
   const nsACString &addonId = entry->GetKey();
   JS::Rooted<JSObject*> subobj(cx, JS_NewPlainObject(cx));
@@ -1472,7 +1604,7 @@ AddonReflector(AddonEntryType *entry, JSContext *cx, JS::Handle<JSObject*> obj)
   }
 
   AddonHistogramMapType *map = entry->mData;
-  if (!(map->ReflectIntoJS(AddonHistogramReflector, cx, subobj)
+  if (!(map->ReflectIntoJS(internal_AddonHistogramReflector, cx, subobj)
         && JS_DefineProperty(cx, obj, PromiseFlatCString(addonId).get(),
                              subobj, JSPROP_ENUMERATE))) {
     return false;
@@ -1486,12 +1618,109 @@ AddonReflector(AddonEntryType *entry, JSContext *cx, JS::Handle<JSObject*> obj)
 ////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////
 //
-// EXTERNALLY VISIBLE FUNCTIONS
+// PRIVATE: thread-unsafe helpers for the external interface
 
-namespace TelemetryHistogram {
+namespace {
 
-void InitializeGlobalState(bool canRecordBase, bool canRecordExtended)
+void
+internal_SetHistogramRecordingEnabled(mozilla::Telemetry::ID aID, bool aEnabled)
 {
+  if (!internal_IsHistogramEnumId(aID)) {
+    MOZ_ASSERT(false, "Telemetry::SetHistogramRecordingEnabled(...) must be used with an enum id");
+    return;
+  }
+
+  if (gHistograms[aID].keyed) {
+    const nsDependentCString id(gHistograms[aID].id());
+    KeyedHistogram* keyed = internal_GetKeyedHistogramById(id);
+    if (keyed) {
+      keyed->SetRecordingEnabled(aEnabled);
+      return;
+    }
+  } else {
+    Histogram *h;
+    nsresult rv = internal_GetHistogramByEnumId(aID, &h);
+    if (NS_SUCCEEDED(rv)) {
+      h->SetRecordingEnabled(aEnabled);
+      return;
+    }
+  }
+
+  MOZ_ASSERT(false, "Telemetry::SetHistogramRecordingEnabled(...) id not found");
+}
+
+void internal_Accumulate(mozilla::Telemetry::ID aHistogram, uint32_t aSample)
+{
+  if (!internal_CanRecordBase()) {
+    return;
+  }
+  Histogram *h;
+  nsresult rv = internal_GetHistogramByEnumId(aHistogram, &h);
+  if (NS_SUCCEEDED(rv)) {
+    internal_HistogramAdd(*h, aSample, gHistograms[aHistogram].dataset);
+  }
+}
+
+void
+internal_Accumulate(mozilla::Telemetry::ID aID,
+                    const nsCString& aKey, uint32_t aSample)
+{
+  if (!gInitDone || !internal_CanRecordBase()) {
+    return;
+  }
+  const HistogramInfo& th = gHistograms[aID];
+  KeyedHistogram* keyed
+     = internal_GetKeyedHistogramById(nsDependentCString(th.id()));
+  MOZ_ASSERT(keyed);
+  keyed->Add(aKey, aSample);
+}
+
+} // namespace
+
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+//
+// EXTERNALLY VISIBLE FUNCTIONS in namespace TelemetryHistogram::
+
+// This is a StaticMutex rather than a plain Mutex (1) so that
+// it gets initialised in a thread-safe manner the first time
+// it is used, and (2) because it is never de-initialised, and
+// a normal Mutex would show up as a leak in BloatView.  StaticMutex
+// also has the "OffTheBooks" property, so it won't show as a leak
+// in BloatView.
+static StaticMutex gTelemetryHistogramMutex;
+
+// All of these functions are actually in namespace TelemetryHistogram::,
+// but the ::TelemetryHistogram prefix is given explicitly.  This is
+// because it is critical to see which calls from these functions are
+// to another function in this interface.  Mis-identifying "inwards
+// calls" from "calls to another function in this interface" will lead
+// to deadlocking and/or races.  See comments at the top of the file
+// for further (important!) details.
+
+// Create and destroy the singleton StatisticsRecorder object.
+void TelemetryHistogram::CreateStatisticsRecorder()
+{
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+  MOZ_ASSERT(!gStatisticsRecorder);
+  gStatisticsRecorder = new base::StatisticsRecorder();
+}
+
+void TelemetryHistogram::DestroyStatisticsRecorder()
+{
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+  MOZ_ASSERT(gStatisticsRecorder);
+  if (gStatisticsRecorder) {
+    delete gStatisticsRecorder;
+    gStatisticsRecorder = nullptr;
+  }
+}
+
+void TelemetryHistogram::InitializeGlobalState(bool canRecordBase,
+                                               bool canRecordExtended)
+{
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   MOZ_ASSERT(!gInitDone, "TelemetryHistogram::InitializeGlobalState "
              "may only be called once");
 
@@ -1547,8 +1776,9 @@ void InitializeGlobalState(bool canRecordBase, bool canRecordExtended)
   gInitDone = true;
 }
 
-void DeInitializeGlobalState()
+void TelemetryHistogram::DeInitializeGlobalState()
 {
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   gCanRecordBase = false;
   gCanRecordExtended = false;
   gHistogramMap.Clear();
@@ -1558,80 +1788,70 @@ void DeInitializeGlobalState()
 }
 
 #ifdef DEBUG
-bool GlobalStateHasBeenInitialized() {
+bool TelemetryHistogram::GlobalStateHasBeenInitialized() {
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   return gInitDone;
 }
 #endif
 
 bool
-CanRecordBase() {
-  return gCanRecordBase;
+TelemetryHistogram::CanRecordBase() {
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+  return internal_CanRecordBase();
 }
 
 void
-SetCanRecordBase(bool b) {
+TelemetryHistogram::SetCanRecordBase(bool b) {
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   gCanRecordBase = b;
 }
 
 bool
-CanRecordExtended() {
-  return gCanRecordExtended;
+TelemetryHistogram::CanRecordExtended() {
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+  return internal_CanRecordExtended();
 }
 
 void
-SetCanRecordExtended(bool b) {
+TelemetryHistogram::SetCanRecordExtended(bool b) {
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   gCanRecordExtended = b;
 }
 
 
 void
-InitHistogramRecordingEnabled()
+TelemetryHistogram::InitHistogramRecordingEnabled()
 {
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   const size_t length = mozilla::ArrayLength(kRecordingInitiallyDisabledIDs);
   for (size_t i = 0; i < length; i++) {
-    SetHistogramRecordingEnabled(kRecordingInitiallyDisabledIDs[i], false);
+    internal_SetHistogramRecordingEnabled(kRecordingInitiallyDisabledIDs[i],
+                                          false);
   }
 }
 
 void
-SetHistogramRecordingEnabled(mozilla::Telemetry::ID aID, bool aEnabled)
+TelemetryHistogram::SetHistogramRecordingEnabled(mozilla::Telemetry::ID aID,
+                                                 bool aEnabled)
 {
-  if (!IsHistogramEnumId(aID)) {
-    MOZ_ASSERT(false, "Telemetry::SetHistogramRecordingEnabled(...) must be used with an enum id");
-    return;
-  }
-
-  if (gHistograms[aID].keyed) {
-    const nsDependentCString id(gHistograms[aID].id());
-    KeyedHistogram* keyed = ::GetKeyedHistogramById(id);
-    if (keyed) {
-      keyed->SetRecordingEnabled(aEnabled);
-      return;
-    }
-  } else {
-    Histogram *h;
-    nsresult rv = GetHistogramByEnumId(aID, &h);
-    if (NS_SUCCEEDED(rv)) {
-      h->SetRecordingEnabled(aEnabled);
-      return;
-    }
-  }
-
-  MOZ_ASSERT(false, "Telemetry::SetHistogramRecordingEnabled(...) id not found");
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+  internal_SetHistogramRecordingEnabled(aID, aEnabled);
 }
 
 
 nsresult
-SetHistogramRecordingEnabled(const nsACString &id, bool aEnabled)
+TelemetryHistogram::SetHistogramRecordingEnabled(const nsACString &id,
+                                                 bool aEnabled)
 {
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   Histogram *h;
-  nsresult rv = GetHistogramByName(id, &h);
+  nsresult rv = internal_GetHistogramByName(id, &h);
   if (NS_SUCCEEDED(rv)) {
     h->SetRecordingEnabled(aEnabled);
     return NS_OK;
   }
 
-  KeyedHistogram* keyed = ::GetKeyedHistogramById(id);
+  KeyedHistogram* keyed = internal_GetKeyedHistogramById(id);
   if (keyed) {
     keyed->SetRecordingEnabled(aEnabled);
     return NS_OK;
@@ -1642,183 +1862,209 @@ SetHistogramRecordingEnabled(const nsACString &id, bool aEnabled)
 
 
 void
-Accumulate(mozilla::Telemetry::ID aHistogram, uint32_t aSample)
+TelemetryHistogram::Accumulate(mozilla::Telemetry::ID aHistogram,
+                               uint32_t aSample)
 {
-  if (!CanRecordBase()) {
-    return;
-  }
-  Histogram *h;
-  nsresult rv = GetHistogramByEnumId(aHistogram, &h);
-  if (NS_SUCCEEDED(rv)) {
-    HistogramAdd(*h, aSample, gHistograms[aHistogram].dataset);
-  }
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+  internal_Accumulate(aHistogram, aSample);
 }
 
 void
-Accumulate(mozilla::Telemetry::ID aID, const nsCString& aKey, uint32_t aSample)
+TelemetryHistogram::Accumulate(mozilla::Telemetry::ID aID,
+                               const nsCString& aKey, uint32_t aSample)
 {
-  if (!gInitDone || !CanRecordBase()) {
-    return;
-  }
-  const HistogramInfo& th = gHistograms[aID];
-  KeyedHistogram* keyed
-     = ::GetKeyedHistogramById(nsDependentCString(th.id()));
-  MOZ_ASSERT(keyed);
-  keyed->Add(aKey, aSample);
-
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+  internal_Accumulate(aID, aKey, aSample);
 }
 
 void
-Accumulate(const char* name, uint32_t sample)
+TelemetryHistogram::Accumulate(const char* name, uint32_t sample)
 {
-  if (!CanRecordBase()) {
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+  if (!internal_CanRecordBase()) {
     return;
   }
   mozilla::Telemetry::ID id;
-  nsresult rv = ::GetHistogramEnumId(name, &id);
+  nsresult rv = internal_GetHistogramEnumId(name, &id);
   if (NS_FAILED(rv)) {
     return;
   }
 
   Histogram *h;
-  rv = GetHistogramByEnumId(id, &h);
+  rv = internal_GetHistogramByEnumId(id, &h);
   if (NS_SUCCEEDED(rv)) {
-    HistogramAdd(*h, sample, gHistograms[id].dataset);
+    internal_HistogramAdd(*h, sample, gHistograms[id].dataset);
   }
 }
 
 void
-Accumulate(const char* name, const nsCString& key, uint32_t sample)
+TelemetryHistogram::Accumulate(const char* name,
+                               const nsCString& key, uint32_t sample)
 {
-  if (!CanRecordBase()) {
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+  if (!internal_CanRecordBase()) {
     return;
   }
   mozilla::Telemetry::ID id;
-  nsresult rv = ::GetHistogramEnumId(name, &id);
+  nsresult rv = internal_GetHistogramEnumId(name, &id);
   if (NS_SUCCEEDED(rv)) {
-    Accumulate(id, key, sample);
+    internal_Accumulate(id, key, sample);
   }
 }
 
 void
-ClearHistogram(mozilla::Telemetry::ID aId)
+TelemetryHistogram::ClearHistogram(mozilla::Telemetry::ID aId)
 {
-  if (!TelemetryHistogram::CanRecordBase()) {
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+  if (!internal_CanRecordBase()) {
     return;
   }
 
   Histogram *h;
-  nsresult rv = ::GetHistogramByEnumId(aId, &h);
+  nsresult rv = internal_GetHistogramByEnumId(aId, &h);
   if (NS_SUCCEEDED(rv) && h) {
-    ::HistogramClear(*h, false);
+    internal_HistogramClear(*h, false);
   }
 }
 
 nsresult
-GetHistogramById(const nsACString &name, JSContext *cx,
-                 JS::MutableHandle<JS::Value> ret)
+TelemetryHistogram::GetHistogramById(const nsACString &name, JSContext *cx,
+                                     JS::MutableHandle<JS::Value> ret)
 {
-  Histogram *h;
-  nsresult rv = GetHistogramByName(name, &h);
-  if (NS_FAILED(rv))
-    return rv;
-
-  return WrapAndReturnHistogram(h, cx, ret);
+  Histogram *h = nullptr;
+  {
+    StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+    nsresult rv = internal_GetHistogramByName(name, &h);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+  // Runs without protection from |gTelemetryHistogramMutex|
+  return internal_WrapAndReturnHistogram(h, cx, ret);
 }
 
 nsresult
-GetKeyedHistogramById(const nsACString &name, JSContext *cx,
-                      JS::MutableHandle<JS::Value> ret)
+TelemetryHistogram::GetKeyedHistogramById(const nsACString &name,
+                                          JSContext *cx,
+                                          JS::MutableHandle<JS::Value> ret)
 {
   KeyedHistogram* keyed = nullptr;
-  if (!gKeyedHistograms.Get(name, &keyed)) {
-    return NS_ERROR_FAILURE;
+  {
+    StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+    if (!gKeyedHistograms.Get(name, &keyed)) {
+      return NS_ERROR_FAILURE;
+    }
   }
-
-  return WrapAndReturnKeyedHistogram(keyed, cx, ret);
-
+  // Runs without protection from |gTelemetryHistogramMutex|
+  return internal_WrapAndReturnKeyedHistogram(keyed, cx, ret);
 }
 
 const char*
-GetHistogramName(mozilla::Telemetry::ID id)
+TelemetryHistogram::GetHistogramName(mozilla::Telemetry::ID id)
 {
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   const HistogramInfo& h = gHistograms[id];
   return h.id();
 }
 
 nsresult
-NewHistogram(const nsACString &name, const nsACString &expiration,
-             uint32_t histogramType, uint32_t min, uint32_t max,
-             uint32_t bucketCount, JSContext *cx,
-             uint8_t optArgCount, JS::MutableHandle<JS::Value> ret)
+TelemetryHistogram::NewHistogram(const nsACString &name,
+                                 const nsACString &expiration,
+                                 uint32_t histogramType,
+                                 uint32_t min, uint32_t max,
+                                 uint32_t bucketCount, JSContext *cx,
+                                 uint8_t optArgCount,
+                                 JS::MutableHandle<JS::Value> ret)
 {
-  if (!IsValidHistogramName(name)) {
-    return NS_ERROR_INVALID_ARG;
+  Histogram *h = nullptr;
+  {
+    StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+    if (!internal_IsValidHistogramName(name)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    nsresult rv = internal_HistogramGet(PromiseFlatCString(name).get(),
+                                        PromiseFlatCString(expiration).get(),
+                                        histogramType, min, max, bucketCount,
+                                        optArgCount == 3, &h);
+    if (NS_FAILED(rv))
+      return rv;
+    h->ClearFlags(Histogram::kUmaTargetedHistogramFlag);
   }
 
-  Histogram *h;
-  nsresult rv = HistogramGet(PromiseFlatCString(name).get(),
-                             PromiseFlatCString(expiration).get(),
-                             histogramType, min, max, bucketCount,
-                             optArgCount == 3, &h);
-  if (NS_FAILED(rv))
-    return rv;
-  h->ClearFlags(Histogram::kUmaTargetedHistogramFlag);
-  return WrapAndReturnHistogram(h, cx, ret);
-
+  // Runs without protection from |gTelemetryHistogramMutex|
+  return internal_WrapAndReturnHistogram(h, cx, ret);
 }
 
 nsresult
-NewKeyedHistogram(const nsACString &name, const nsACString &expiration,
-                  uint32_t histogramType, uint32_t min, uint32_t max,
-                  uint32_t bucketCount, JSContext *cx,
-                  uint8_t optArgCount, JS::MutableHandle<JS::Value> ret)
+TelemetryHistogram::NewKeyedHistogram(const nsACString &name,
+                                      const nsACString &expiration,
+                                      uint32_t histogramType,
+                                      uint32_t min, uint32_t max,
+                                      uint32_t bucketCount, JSContext *cx,
+                                      uint8_t optArgCount,
+                                      JS::MutableHandle<JS::Value> ret)
 {
-  if (!IsValidHistogramName(name)) {
-    return NS_ERROR_INVALID_ARG;
+  KeyedHistogram* keyed = nullptr;
+  {
+    StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+    if (!internal_IsValidHistogramName(name)) {
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    nsresult rv
+      = internal_CheckHistogramArguments(histogramType, min, max,
+                                         bucketCount, optArgCount == 3);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    keyed = new KeyedHistogram(name, expiration, histogramType,
+                               min, max, bucketCount,
+                               nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN);
+    if (MOZ_UNLIKELY(!gKeyedHistograms.Put(name, keyed, mozilla::fallible))) {
+      delete keyed;
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
 
-  nsresult rv = CheckHistogramArguments(histogramType, min, max, bucketCount, optArgCount == 3);
-  if (NS_FAILED(rv)) {
-    return rv;
-  }
-
-  KeyedHistogram* keyed = new KeyedHistogram(name, expiration, histogramType,
-                                             min, max, bucketCount,
-                                             nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN);
-  if (MOZ_UNLIKELY(!gKeyedHistograms.Put(name, keyed, mozilla::fallible))) {
-    delete keyed;
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  return WrapAndReturnKeyedHistogram(keyed, cx, ret);
-
+  // Runs without protection from |gTelemetryHistogramMutex|
+  return internal_WrapAndReturnKeyedHistogram(keyed, cx, ret);
 }
 
 nsresult
-HistogramFrom(const nsACString &name, const nsACString &existing_name,
-              JSContext *cx, JS::MutableHandle<JS::Value> ret)
+TelemetryHistogram::HistogramFrom(const nsACString &name,
+                                  const nsACString &existing_name,
+                                  JSContext *cx,
+                                  JS::MutableHandle<JS::Value> ret)
 {
-   mozilla::Telemetry::ID id;
-  nsresult rv = ::GetHistogramEnumId(PromiseFlatCString(existing_name).get(), &id);
-  if (NS_FAILED(rv)) {
-    return rv;
+  Histogram* clone = nullptr;
+  {
+    StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+    mozilla::Telemetry::ID id;
+    nsresult rv
+      = internal_GetHistogramEnumId(PromiseFlatCString(existing_name).get(),
+                                    &id);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    clone = internal_CloneHistogram(name, id);
+    if (!clone) {
+      return NS_ERROR_FAILURE;
+    }
   }
 
-  Histogram* clone = CloneHistogram(name, id);
-  if (!clone) {
-    return NS_ERROR_FAILURE;
-  }
-
-  return WrapAndReturnHistogram(clone, cx, ret);
+  // Runs without protection from |gTelemetryHistogramMutex|
+  return internal_WrapAndReturnHistogram(clone, cx, ret);
 }
 
 nsresult
-CreateHistogramSnapshots(JSContext *cx,
-                         JS::MutableHandle<JS::Value> ret,
-                         bool subsession,
-                         bool clearSubsession)
+TelemetryHistogram::CreateHistogramSnapshots(JSContext *cx,
+                                             JS::MutableHandle<JS::Value> ret,
+                                             bool subsession,
+                                             bool clearSubsession)
 {
+  // Runs without protection from |gTelemetryHistogramMutex|
   JS::Rooted<JSObject*> root_obj(cx, JS_NewPlainObject(cx));
   if (!root_obj)
     return NS_ERROR_FAILURE;
@@ -1835,7 +2081,7 @@ CreateHistogramSnapshots(JSContext *cx,
         type == nsITelemetry::HISTOGRAM_COUNT) {
       Histogram *h;
       mozilla::DebugOnly<nsresult> rv
-         = GetHistogramByEnumId(mozilla::Telemetry::ID(i), &h);
+         = internal_GetHistogramByEnumId(mozilla::Telemetry::ID(i), &h);
       MOZ_ASSERT(NS_SUCCEEDED(rv));
     }
   }
@@ -1849,20 +2095,21 @@ CreateHistogramSnapshots(JSContext *cx,
   //
   // Of course, we hope that all of these corruption-statistics
   // histograms are not themselves corrupt...
-  IdentifyCorruptHistograms(hs);
+  internal_IdentifyCorruptHistograms(hs);
 
   // OK, now we can actually reflect things.
   JS::Rooted<JSObject*> hobj(cx);
   for (HistogramIterator it = hs.begin(); it != hs.end(); ++it) {
     Histogram *h = *it;
-    if (!ShouldReflectHistogram(h) || IsEmpty(h) || IsExpired(h)) {
+    if (!internal_ShouldReflectHistogram(h) || internal_IsEmpty(h) ||
+        internal_IsExpired(h)) {
       continue;
     }
 
     Histogram* original = h;
 #if !defined(MOZ_WIDGET_GONK) && !defined(MOZ_WIDGET_ANDROID)
     if (subsession) {
-      h = GetSubsessionHistogram(*h);
+      h = internal_GetSubsessionHistogram(*h);
       if (!h) {
         continue;
       }
@@ -1873,7 +2120,7 @@ CreateHistogramSnapshots(JSContext *cx,
     if (!hobj) {
       return NS_ERROR_FAILURE;
     }
-    switch (ReflectHistogramSnapshot(cx, hobj, h)) {
+    switch (internal_ReflectHistogramSnapshot(cx, hobj, h)) {
     case REFLECT_CORRUPT:
       // We can still hit this case even if ShouldReflectHistograms
       // returns true.  The histogram lies outside of our control
@@ -1898,22 +2145,29 @@ CreateHistogramSnapshots(JSContext *cx,
 }
 
 nsresult
-RegisteredHistograms(uint32_t aDataset, uint32_t *aCount,
-                     char*** aHistograms)
+TelemetryHistogram::RegisteredHistograms(uint32_t aDataset, uint32_t *aCount,
+                                         char*** aHistograms)
 {
-  return GetRegisteredHistogramIds(false, aDataset, aCount, aHistograms);
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+  return internal_GetRegisteredHistogramIds(false,
+                                            aDataset, aCount, aHistograms);
 }
 
 nsresult
-RegisteredKeyedHistograms(uint32_t aDataset, uint32_t *aCount,
-                          char*** aHistograms)
+TelemetryHistogram::RegisteredKeyedHistograms(uint32_t aDataset,
+                                              uint32_t *aCount,
+                                              char*** aHistograms)
 {
-  return GetRegisteredHistogramIds(true, aDataset, aCount, aHistograms);
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+  return internal_GetRegisteredHistogramIds(true,
+                                            aDataset, aCount, aHistograms);
 }
 
 nsresult
-GetKeyedHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret)
+TelemetryHistogram::GetKeyedHistogramSnapshots(JSContext *cx,
+                                               JS::MutableHandle<JS::Value> ret)
 {
+  // Runs without protection from |gTelemetryHistogramMutex|
   JS::Rooted<JSObject*> obj(cx, JS_NewPlainObject(cx));
   if (!obj) {
     return NS_ERROR_FAILURE;
@@ -1940,10 +2194,14 @@ GetKeyedHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret)
 }
 
 nsresult
-RegisterAddonHistogram(const nsACString &id, const nsACString &name,
-                       uint32_t histogramType, uint32_t min, uint32_t max,
-                       uint32_t bucketCount, uint8_t optArgCount)
+TelemetryHistogram::RegisterAddonHistogram(const nsACString &id,
+                                           const nsACString &name,
+                                           uint32_t histogramType,
+                                           uint32_t min, uint32_t max,
+                                           uint32_t bucketCount,
+                                           uint8_t optArgCount)
 {
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   if (histogramType == nsITelemetry::HISTOGRAM_EXPONENTIAL ||
       histogramType == nsITelemetry::HISTOGRAM_LINEAR) {
     if (optArgCount != 3) {
@@ -1996,36 +2254,45 @@ RegisterAddonHistogram(const nsACString &id, const nsACString &name,
 }
 
 nsresult
-GetAddonHistogram(const nsACString &id, const nsACString &name,
-                  JSContext *cx, JS::MutableHandle<JS::Value> ret)
+TelemetryHistogram::GetAddonHistogram(const nsACString &id,
+                                      const nsACString &name,
+                                      JSContext *cx,
+                                      JS::MutableHandle<JS::Value> ret)
 {
-  AddonEntryType *addonEntry = gAddonMap.GetEntry(id);
-  // The given id has not been registered.
-  if (!addonEntry) {
-    return NS_ERROR_INVALID_ARG;
-  }
+  AddonHistogramInfo* info = nullptr;
+  {
+    StaticMutexAutoLock locker(gTelemetryHistogramMutex);
+    AddonEntryType *addonEntry = gAddonMap.GetEntry(id);
+    // The given id has not been registered.
+    if (!addonEntry) {
+      return NS_ERROR_INVALID_ARG;
+    }
 
-  AddonHistogramMapType *histogramMap = addonEntry->mData;
-  AddonHistogramEntryType *histogramEntry = histogramMap->GetEntry(name);
-  // The given histogram name has not been registered.
-  if (!histogramEntry) {
-    return NS_ERROR_INVALID_ARG;
-  }
+    AddonHistogramMapType *histogramMap = addonEntry->mData;
+    AddonHistogramEntryType *histogramEntry = histogramMap->GetEntry(name);
+    // The given histogram name has not been registered.
+    if (!histogramEntry) {
+      return NS_ERROR_INVALID_ARG;
+    }
 
-  AddonHistogramInfo &info = histogramEntry->mData;
-  if (!info.h) {
-    nsAutoCString actualName;
-    AddonHistogramName(id, name, actualName);
-    if (!::CreateHistogramForAddon(actualName, info)) {
-      return NS_ERROR_FAILURE;
+    info = &histogramEntry->mData;
+    if (!info->h) {
+      nsAutoCString actualName;
+      internal_AddonHistogramName(id, name, actualName);
+      if (!internal_CreateHistogramForAddon(actualName, *info)) {
+        return NS_ERROR_FAILURE;
+      }
     }
   }
-  return WrapAndReturnHistogram(info.h, cx, ret);
+
+  // Runs without protection from |gTelemetryHistogramMutex|
+  return internal_WrapAndReturnHistogram(info->h, cx, ret);
 }
 
 nsresult
-UnregisterAddonHistograms(const nsACString &id)
+TelemetryHistogram::UnregisterAddonHistograms(const nsACString &id)
 {
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   AddonEntryType *addonEntry = gAddonMap.GetEntry(id);
   if (addonEntry) {
     // Histogram's destructor is private, so this is the best we can do.
@@ -2040,14 +2307,16 @@ UnregisterAddonHistograms(const nsACString &id)
 }
 
 nsresult
-GetAddonHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret)
+TelemetryHistogram::GetAddonHistogramSnapshots(JSContext *cx,
+                                               JS::MutableHandle<JS::Value> ret)
 {
+  // Runs without protection from |gTelemetryHistogramMutex|
   JS::Rooted<JSObject*> obj(cx, JS_NewPlainObject(cx));
   if (!obj) {
     return NS_ERROR_FAILURE;
   }
 
-  if (!gAddonMap.ReflectIntoJS(AddonReflector, cx, obj)) {
+  if (!gAddonMap.ReflectIntoJS(internal_AddonReflector, cx, obj)) {
     return NS_ERROR_FAILURE;
   }
   ret.setObject(*obj);
@@ -2055,15 +2324,19 @@ GetAddonHistogramSnapshots(JSContext *cx, JS::MutableHandle<JS::Value> ret)
 }
 
 size_t
-GetMapShallowSizesOfExcludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+TelemetryHistogram::GetMapShallowSizesOfExcludingThis(mozilla::MallocSizeOf
+                                                      aMallocSizeOf)
 {
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   return gAddonMap.ShallowSizeOfExcludingThis(aMallocSizeOf) +
          gHistogramMap.ShallowSizeOfExcludingThis(aMallocSizeOf);
 }
 
 size_t
-GetHistogramSizesofIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
+TelemetryHistogram::GetHistogramSizesofIncludingThis(mozilla::MallocSizeOf
+                                                     aMallocSizeOf)
 {
+  StaticMutexAutoLock locker(gTelemetryHistogramMutex);
   StatisticsRecorder::Histograms hs;
   StatisticsRecorder::GetHistograms(&hs);
   size_t n = 0;
@@ -2073,5 +2346,3 @@ GetHistogramSizesofIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
   }
   return n;
 }
-
-} // namespace TelemetryHistogram
