@@ -116,6 +116,7 @@
     _(Throw)                        \
     _(Phi)                          \
     _(TestIAndBranch)               \
+    _(TestI64AndBranch)             \
     _(TestDAndBranch)               \
     _(TestFAndBranch)               \
     _(TestVAndBranch)               \
