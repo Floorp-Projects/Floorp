@@ -31,6 +31,22 @@ FileMimeNameData kFileMimeNameMap[] = {
   { kPNGImageMime, "GenericImageNamePNG" },
 };
 
+already_AddRefed<mozilla::dom::File>
+FileFromISupports(nsISupports* aSupports)
+{
+  MOZ_ASSERT(aSupports);
+
+  nsCOMPtr<nsIDOMBlob> domBlob = do_QueryInterface(aSupports);
+  if (domBlob) {
+    // Get out the blob - this is OK, because nsIDOMBlob is a builtinclass
+    // and the only implementer is Blob.
+    mozilla::dom::Blob* blob = static_cast<mozilla::dom::Blob*>(domBlob.get());
+    return blob->ToFile();
+  }
+
+  return nullptr;
+}
+
 } // anonymous namespace
 
 namespace mozilla {
@@ -182,6 +198,22 @@ DataTransferItem::FillInExternalData()
     // whatever type happens to actually be stored into a dom::File.
 
     RefPtr<File> file = FileFromISupports(data);
+    if (!file) {
+      if (nsCOMPtr<nsIFile> ifile = do_QueryInterface(data)) {
+        file = File::CreateFromFile(GetParentObject(), ifile);
+      } else if (nsCOMPtr<nsIInputStream> stream = do_QueryInterface(data)) {
+        // This consumes the stream object
+        ErrorResult rv;
+        file = CreateFileFromInputStream(GetParentObject(), stream, rv);
+        if (NS_WARN_IF(rv.Failed())) {
+          rv.SuppressException();
+        }
+      } else if (nsCOMPtr<BlobImpl> blobImpl = do_QueryInterface(data)) {
+        MOZ_ASSERT(blobImpl->IsFile());
+        file = File::Create(GetParentObject(), blobImpl);
+      }
+    }
+
     MOZ_ASSERT(file, "Invalid format for Kind() == KIND_FILE");
 
     data = do_QueryObject(file);
@@ -249,37 +281,6 @@ DataTransferItem::GetAsFile(ErrorResult& aRv)
 }
 
 already_AddRefed<File>
-DataTransferItem::FileFromISupports(nsISupports* aSupports)
-{
-  MOZ_ASSERT(aSupports);
-
-  RefPtr<File> file;
-
-  nsCOMPtr<nsIDOMBlob> domBlob = do_QueryInterface(aSupports);
-  if (domBlob) {
-    // Get out the blob - this is OK, because nsIDOMBlob is a builtinclass
-    // and the only implementer is Blob.
-    Blob* blob = static_cast<Blob*>(domBlob.get());
-    file = blob->ToFile();
-  } else if (nsCOMPtr<nsIFile> ifile = do_QueryInterface(aSupports)) {
-    printf("Creating a File from a nsIFile!\n");
-    file = File::CreateFromFile(GetParentObject(), ifile);
-  } else if (nsCOMPtr<nsIInputStream> stream = do_QueryInterface(aSupports)) {
-    // This consumes the stream object
-    ErrorResult rv;
-    file = CreateFileFromInputStream(GetParentObject(), stream, rv);
-    if (NS_WARN_IF(rv.Failed())) {
-      rv.SuppressException();
-    }
-  } else if (nsCOMPtr<BlobImpl> blobImpl = do_QueryInterface(aSupports)) {
-    MOZ_ASSERT(blobImpl->IsFile());
-    file = File::Create(GetParentObject(), blobImpl);
-  }
-
-  return file.forget();
-}
-
-already_AddRefed<File>
 DataTransferItem::CreateFileFromInputStream(nsISupports* aParent,
                                             nsIInputStream* aStream,
                                             ErrorResult& aRv)
@@ -320,7 +321,7 @@ DataTransferItem::CreateFileFromInputStream(nsISupports* aParent,
 }
 
 void
-DataTransferItem::GetAsString(FunctionStringCallback* aCallback,
+DataTransferItem::GetAsString(const RefPtr<FunctionStringCallback>& aCallback,
                               ErrorResult& aRv)
 {
   if (!aCallback || mKind != KIND_STRING) {
@@ -339,7 +340,7 @@ DataTransferItem::GetAsString(FunctionStringCallback* aCallback,
   class GASRunnable final : public Runnable
   {
   public:
-    GASRunnable(FunctionStringCallback* aCallback,
+    GASRunnable(const RefPtr<FunctionStringCallback>& aCallback,
                 const nsAString& aStringData)
       : mCallback(aCallback), mStringData(aStringData)
     {}
