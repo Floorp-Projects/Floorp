@@ -65,7 +65,7 @@ function runTools(target) {
 }
 
 function getClient() {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   if (!DebuggerServer.initialized) {
     DebuggerServer.init();
@@ -79,7 +79,7 @@ function getClient() {
 }
 
 function getTarget(client) {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   client.listTabs(tabList => {
     let target = TargetFactory.forRemoteTab({
