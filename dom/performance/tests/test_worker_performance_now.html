@@ -6,11 +6,27 @@
   <title>Validate Interfaces Exposed to Workers</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
-  <script type="text/javascript" src="worker_driver.js"></script>
 </head>
 <body>
 <script class="testbody" type="text/javascript">
-workerTestExec("test_worker_performance_now.js");
+
+SimpleTest.waitForExplicitFinish();
+var worker = new Worker('test_worker_performance_now.js');
+worker.onmessage = function(event) {
+  if (event.data.type == 'finish') {
+    SimpleTest.finish();
+
+  } else if (event.data.type == 'status') {
+    ok(event.data.status, event.data.msg);
+
+  } else if (event.data.type == 'getOSCPU') {
+    worker.postMessage({
+      type: 'returnOSCPU',
+      result: navigator.oscpu
+    });
+  }
+}
+
 </script>
 </body>
 </html>
