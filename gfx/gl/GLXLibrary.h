@@ -54,9 +54,12 @@ public:
     , xWaitGLInternal(nullptr)
     , xWaitXInternal(nullptr)
     , xCreateContextAttribsInternal(nullptr)
+    , xGetVideoSyncInternal(nullptr)
+    , xWaitVideoSyncInternal(nullptr)
     , mInitialized(false), mTriedInitializing(false)
     , mUseTextureFromPixmap(false), mDebug(false)
     , mHasRobustness(false), mHasCreateContextAttribs(false)
+    , mHasVideoSync(false)
     , mIsATI(false), mIsNVIDIA(false)
     , mClientIsMesa(false), mGLXMajorVersion(0)
     , mGLXMinorVersion(0)
@@ -120,6 +123,9 @@ public:
                                      Bool direct,
                                      const int* attrib_list);
 
+    int xGetVideoSync(unsigned int* count);
+    int xWaitVideoSync(int divisor, int remainder, unsigned int* count);
+
     bool EnsureInitialized();
 
     GLXPixmap CreatePixmap(gfxASurface* aSurface);
@@ -132,6 +138,7 @@ public:
     bool HasRobustness() { return mHasRobustness; }
     bool HasCreateContextAttribs() { return mHasCreateContextAttribs; }
     bool SupportsTextureFromPixmap(gfxASurface* aSurface);
+    bool SupportsVideoSync();
     bool IsATI() { return mIsATI; }
     bool GLXVersionCheck(int aMajor, int aMinor);
 
@@ -225,6 +232,12 @@ private:
                                                                   const int *);
     PFNGLXCREATECONTEXTATTRIBS xCreateContextAttribsInternal;
 
+    typedef int (GLAPIENTRY *PFNGLXGETVIDEOSYNCSGI) (unsigned int *count);
+    PFNGLXGETVIDEOSYNCSGI xGetVideoSyncInternal;
+
+    typedef int (GLAPIENTRY *PFNGLXWAITVIDEOSYNCSGI) (int divisor, int remainder, unsigned int *count);
+    PFNGLXWAITVIDEOSYNCSGI xWaitVideoSyncInternal;
+
 #ifdef DEBUG
     void BeforeGLXCall();
     void AfterGLXCall();
@@ -236,6 +249,7 @@ private:
     bool mDebug;
     bool mHasRobustness;
     bool mHasCreateContextAttribs;
+    bool mHasVideoSync;
     bool mIsATI;
     bool mIsNVIDIA;
     bool mClientIsMesa;

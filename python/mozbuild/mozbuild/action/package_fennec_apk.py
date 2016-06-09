@@ -27,6 +27,7 @@ import mozpack.path as mozpath
 def package_fennec_apk(inputs=[], omni_ja=None, classes_dex=None,
                        lib_dirs=[],
                        assets_dirs=[],
+                       features_dirs=[],
                        szip_assets_libs_with=None,
                        root_files=[],
                        verbose=False):
@@ -52,6 +53,11 @@ def package_fennec_apk(inputs=[], omni_ja=None, classes_dex=None,
         if jarrer.contains(path):
             jarrer.remove(path)
         jarrer.add(path, file, compress=compress)
+
+    for features_dir in features_dirs:
+        finder = FileFinder(features_dir, find_executables=False)
+        for p, f in finder.find('**'):
+            add(mozpath.join('assets', 'features', p), f, False)
 
     for assets_dir in assets_dirs:
         finder = FileFinder(assets_dir, find_executables=False)
@@ -105,6 +111,8 @@ def main(args):
                         help='Optional lib/ dirs to pack into APK file.')
     parser.add_argument('--assets-dirs', nargs='*', default=[],
                         help='Optional assets/ dirs to pack into APK file.')
+    parser.add_argument('--features-dirs', nargs='*', default=[],
+                        help='Optional features/ dirs to pack into APK file.')
     parser.add_argument('--szip-assets-libs-with', default=None,
                         help='IN PLACE szip assets/**/*.so BEFORE packing '
                         'into APK file using the given szip executable.')
@@ -121,6 +129,7 @@ def main(args):
                                 classes_dex=args.classes_dex,
                                 lib_dirs=args.lib_dirs,
                                 assets_dirs=args.assets_dirs,
+                                features_dirs=args.features_dirs,
                                 szip_assets_libs_with=args.szip_assets_libs_with,
                                 root_files=args.root_files,
                                 verbose=args.verbose)

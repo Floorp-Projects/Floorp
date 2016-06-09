@@ -54,6 +54,11 @@
 #include "nsWSRunObject.h"
 #include <algorithm>
 
+// Workaround for windows headers
+#ifdef SetProp
+#undef SetProp
+#endif
+
 class nsISupports;
 class nsRulesInfo;
 

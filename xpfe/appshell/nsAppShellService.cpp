@@ -895,8 +895,11 @@ nsAppShellService::RegisterTopLevelWindow(nsIXULWindow* aWindow)
   nsCOMPtr<nsIObserverService> obssvc = services::GetObserverService();
   NS_ASSERTION(obssvc, "Couldn't get observer service.");
 
-  if (obssvc)
+  if (obssvc) {
     obssvc->NotifyObservers(aWindow, "xul-window-registered", nullptr);
+    nsXULWindow* xulWindow = static_cast<nsXULWindow*>(aWindow);
+    xulWindow->WasRegistered();
+  }
 
   return NS_OK;
 }

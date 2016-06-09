@@ -64,7 +64,6 @@ XPCJSContextStack::InitSafeJSContext()
 {
     MOZ_ASSERT(!mSafeJSContext);
     mSafeJSContext = JS_NewContext(XPCJSRuntime::Get()->Runtime(), 8192);
-    if (!mSafeJSContext)
-        MOZ_CRASH();
+    MOZ_RELEASE_ASSERT(mSafeJSContext, "JS_NewContext failed");
     return mSafeJSContext;
 }

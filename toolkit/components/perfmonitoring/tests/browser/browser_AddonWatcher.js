@@ -20,15 +20,21 @@ add_task(function* init() {
   if (installer.error) {
     throw installer.error;
   }
-  let ready = new Promise((resolve, reject) => installer.addListener({
+  let installed = new Promise((resolve, reject) => installer.addListener({
     onInstallEnded: (_, addon) => resolve(addon),
     onInstallFailed: reject,
     onDownloadFailed: reject
   }));
+
+  // We also need to wait for the add-on to report that it's ready
+  // to be used in the test.
+  let ready = TestUtils.topicObserved("test-addonwatcher-ready");
   installer.install();
 
   info("Waiting for installation to terminate");
-  let addon = yield ready;
+  let addon = yield installed;
+
+  yield ready;
 
   registerCleanupFunction(() => {
     info("Uninstalling test add-on");

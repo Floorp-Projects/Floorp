@@ -228,8 +228,8 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 MozExternalRefCountType
 nsXPCWrappedJS::AddRef(void)
 {
-    if (!MOZ_LIKELY(NS_IsMainThread()))
-        MOZ_CRASH();
+    MOZ_RELEASE_ASSERT(NS_IsMainThread(),
+                       "nsXPCWrappedJS::AddRef called off main thread");
 
     MOZ_ASSERT(int32_t(mRefCnt) >= 0, "illegal refcnt");
     nsISupports* base = NS_CYCLE_COLLECTION_CLASSNAME(nsXPCWrappedJS)::Upcast(this);
@@ -247,8 +247,8 @@ nsXPCWrappedJS::AddRef(void)
 MozExternalRefCountType
 nsXPCWrappedJS::Release(void)
 {
-    if (!MOZ_LIKELY(NS_IsMainThread()))
-        MOZ_CRASH();
+    MOZ_RELEASE_ASSERT(NS_IsMainThread(),
+                       "nsXPCWrappedJS::Release called off main thread");
     MOZ_ASSERT(int32_t(mRefCnt) > 0, "dup release");
     NS_ASSERT_OWNINGTHREAD(nsXPCWrappedJS);
 
@@ -319,8 +319,8 @@ nsXPCWrappedJS::GetNewOrUsed(JS::HandleObject jsObj,
                              nsXPCWrappedJS** wrapperResult)
 {
     // Do a release-mode assert against accessing nsXPCWrappedJS off-main-thread.
-    if (!MOZ_LIKELY(NS_IsMainThread()))
-        MOZ_CRASH();
+    MOZ_RELEASE_ASSERT(NS_IsMainThread(),
+                       "nsXPCWrappedJS::GetNewOrUsed called off main thread");
 
     AutoJSContext cx;
 
@@ -594,8 +594,8 @@ nsXPCWrappedJS::CallMethod(uint16_t methodIndex,
                            nsXPTCMiniVariant* params)
 {
     // Do a release-mode assert against accessing nsXPCWrappedJS off-main-thread.
-    if (!MOZ_LIKELY(NS_IsMainThread()))
-        MOZ_CRASH();
+    MOZ_RELEASE_ASSERT(NS_IsMainThread(),
+                       "nsXPCWrappedJS::CallMethod called off main thread");
 
     if (!IsValid())
         return NS_ERROR_UNEXPECTED;

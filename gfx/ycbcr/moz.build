@@ -5,11 +5,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 EXPORTS += [
-    'chromium_types.h',
-    'ycbcr_to_rgb565.h',
     'YCbCrUtils.h',
-    'yuv_convert.h',
-    'yuv_row.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -62,5 +58,7 @@ if CONFIG['CPU_ARCH'] == 'arm' and CONFIG['HAVE_ARM_NEON']:
     SOURCES += [
         'yuv_convert_arm.cpp',
     ]
+
+LOCAL_INCLUDES += ['/media/libyuv/include']
 
 FINAL_LIBRARY = 'xul'

@@ -1,3 +1,6 @@
+
+const {ADDON_SIGNING} = AM_Cu.import("resource://gre/modules/addons/AddonConstants.jsm", {});
+
 function run_test() {
   run_next_test();
 }
@@ -6,6 +9,9 @@ let profileDir;
 add_task(function* setup() {
   profileDir = gProfD.clone();
   profileDir.append("extensions");
+
+  if (!profileDir.exists())
+    profileDir.create(AM_Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 
   createAppInfo("xpcshell@tests.mozilla.org", "XPCShell", "1", "1.9.2");
   startupManager();
@@ -18,6 +24,10 @@ const IMPLICIT_ID_ID = "webext_implicit_id@tests.mozilla.org";
 // applications or browser_specific_settings, so its id comes
 // from its signature, which should be the ID constant defined below.
 add_task(function* test_implicit_id() {
+  // This test needs to read the xpi certificate which only works
+  // if signing is enabled.
+  ok(ADDON_SIGNING, "Addon signing is enabled");
+
   let addon = yield promiseAddonByID(IMPLICIT_ID_ID);
   do_check_eq(addon, null);
 
@@ -34,6 +44,10 @@ add_task(function* test_implicit_id() {
 // and it should look just like the regular install (ie, the ID should
 // come from the signature)
 add_task(function* test_implicit_id_temp() {
+  // This test needs to read the xpi certificate which only works
+  // if signing is enabled.
+  ok(ADDON_SIGNING, "Addon signing is enabled");
+
   let addon = yield promiseAddonByID(IMPLICIT_ID_ID);
   do_check_eq(addon, null);
 

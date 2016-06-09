@@ -1814,6 +1814,15 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer, nsIContent* aNode)
     return;
   }
 
+#ifdef A11Y_LOG
+  logging::TreeInfo("children before insertion", logging::eVerbose, aContainer);
+#endif
+
+#ifdef A11Y_LOG
+  logging::TreeInfo("traversing an inserted node", logging::eVerbose,
+                    "container", aContainer, "node", aNode);
+#endif
+
   TreeWalker walker(aContainer);
   if (aContainer->IsAcceptableChild(aNode) && walker.Seek(aNode)) {
     Accessible* child = GetAccessible(aNode);
@@ -1831,6 +1840,10 @@ DocAccessible::ProcessContentInserted(Accessible* aContainer, nsIContent* aNode)
       FireEventsOnInsertion(aContainer);
     }
   }
+
+#ifdef A11Y_LOG
+  logging::TreeInfo("children after insertion", logging::eVerbose, aContainer);
+#endif
 }
 
 void
