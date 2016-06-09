@@ -13,6 +13,7 @@
 #include "nsITimedChannel.h"
 #include "nsDOMNavigationTiming.h"
 #include "PerformanceEntry.h"
+#include "PerformanceTiming.h"
 
 namespace mozilla {
 namespace dom {
