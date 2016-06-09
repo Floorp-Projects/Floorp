@@ -250,8 +250,12 @@ function synthesizeNativeClick(aElement, aX, aY, aObserver = null) {
 // We also wait for the mouse move event to be processed before sending the
 // wheel event, otherwise there is a chance they might get reordered, and
 // we have the transaction problem again.
-function moveMouseAndScrollWheelOver(element, dx, dy, testDriver) {
+function moveMouseAndScrollWheelOver(element, dx, dy, testDriver, waitForScroll = true) {
   return synthesizeNativeMouseMoveAndWaitForMoveEvent(element, dx, dy, function() {
-    synthesizeNativeWheelAndWaitForScrollEvent(element, dx, dy, 0, -10, testDriver);
+    if (waitForScroll) {
+      synthesizeNativeWheelAndWaitForScrollEvent(element, dx, dy, 0, -10, testDriver);
+    } else {
+      synthesizeNativeWheelAndWaitForWheelEvent(element, dx, dy, 0, -10, testDriver);
+    }
   });
 }
