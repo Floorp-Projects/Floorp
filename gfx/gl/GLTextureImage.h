@@ -354,6 +354,17 @@ CreateBasicTextureImage(GLContext* aGL,
                         TextureImage::Flags aFlags);
 
 /**
+ * Creates a TiledTextureImage backed by platform-specific or basic TextureImages.
+ * In doubt, use GLContext::CreateTextureImage instead.
+ */
+already_AddRefed<TextureImage>
+CreateTiledTextureImage(GLContext* aGL,
+                        const gfx::IntSize& aSize,
+                        TextureImage::ContentType aContentType,
+                        TextureImage::Flags aFlags,
+                        TextureImage::ImageFormat aImageFormat);
+
+/**
   * Return a valid, allocated TextureImage of |aSize| with
   * |aContentType|.  If |aContentType| is COLOR, |aImageFormat| can be used
   * to hint at the preferred RGB format, however it is not necessarily
