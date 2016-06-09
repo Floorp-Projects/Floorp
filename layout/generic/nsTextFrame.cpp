@@ -344,7 +344,7 @@ public:
                    SelectionType aSelectionType)
   {
     switch (aSelectionType) {
-      case SelectionType::SELECTION_IME_RAWINPUT:
+      case SelectionType::eIMERawClause:
         return eIndexRawInput;
       case SelectionType::SELECTION_IME_SELECTEDRAWTEXT:
         return eIndexSelRawText;
@@ -5430,7 +5430,7 @@ nsTextFrame::ComputeSelectionUnderlineHeight(
                SelectionType aSelectionType)
 {
   switch (aSelectionType) {
-    case SelectionType::SELECTION_IME_RAWINPUT:
+    case SelectionType::eIMERawClause:
     case SelectionType::SELECTION_IME_SELECTEDRAWTEXT:
     case SelectionType::SELECTION_IME_CONVERTEDTEXT:
     case SelectionType::SELECTION_IME_SELECTEDCONVERTEDTEXT:
@@ -5541,7 +5541,7 @@ nsTextFrame::DrawSelectionDecorations(gfxContext* aContext,
 
 
   switch (aSelectionType) {
-    case SelectionType::SELECTION_IME_RAWINPUT:
+    case SelectionType::eIMERawClause:
     case SelectionType::SELECTION_IME_SELECTEDRAWTEXT:
     case SelectionType::SELECTION_IME_CONVERTEDTEXT:
     case SelectionType::SELECTION_IME_SELECTEDCONVERTEDTEXT: {
@@ -5646,7 +5646,7 @@ nsTextFrame::GetSelectionTextColors(SelectionType aSelectionType,
       aTextPaintStyle.GetURLSecondaryColor(aForeground);
       *aBackground = NS_RGBA(0,0,0,0);
       return true;
-    case SelectionType::SELECTION_IME_RAWINPUT:
+    case SelectionType::eIMERawClause:
     case SelectionType::SELECTION_IME_SELECTEDRAWTEXT:
     case SelectionType::SELECTION_IME_CONVERTEDTEXT:
     case SelectionType::SELECTION_IME_SELECTEDCONVERTEDTEXT:
