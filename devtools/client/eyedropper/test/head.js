@@ -8,7 +8,7 @@ Services.scriptloader.loadSubScript(TEST_DIR + "../../../commandline/test/helper
 const { Eyedropper, EyedropperManager } = require("devtools/client/eyedropper/eyedropper");
 
 function waitForClipboard(setup, expected) {
-  let deferred = promise.defer();
+  let deferred = defer();
   SimpleTest.waitForClipboard(expected, setup, deferred.resolve, deferred.reject);
   return deferred.promise;
 }
