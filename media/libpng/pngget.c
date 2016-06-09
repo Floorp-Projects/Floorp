@@ -456,11 +456,11 @@ png_get_pHYs_dpi(png_const_structrp png_ptr, png_const_inforp info_ptr,
    return (retval);
 }
 #endif /* pHYs */
-#endif  /* INCH_CONVERSIONS */
+#endif /* INCH_CONVERSIONS */
 
 /* png_get_channels really belongs in here, too, but it's been around longer */
 
-#endif  /* EASY_ACCESS */
+#endif /* EASY_ACCESS */
 
 
 png_byte PNGAPI
@@ -1142,19 +1142,19 @@ png_get_compression_buffer_size(png_const_structrp png_ptr)
       return 0;
 
 #ifdef PNG_WRITE_SUPPORTED
-      if ((png_ptr->mode & PNG_IS_READ_STRUCT) != 0)
+   if ((png_ptr->mode & PNG_IS_READ_STRUCT) != 0)
 #endif
    {
 #ifdef PNG_SEQUENTIAL_READ_SUPPORTED
-         return png_ptr->IDAT_read_size;
+      return png_ptr->IDAT_read_size;
 #else
-         return PNG_IDAT_READ_SIZE;
+      return PNG_IDAT_READ_SIZE;
 #endif
    }
 
 #ifdef PNG_WRITE_SUPPORTED
-      else
-         return png_ptr->zbuffer_size;
+   else
+      return png_ptr->zbuffer_size;
 #endif
 }
 
