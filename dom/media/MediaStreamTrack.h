@@ -267,18 +267,9 @@ public:
   ApplyConstraints(const dom::MediaTrackConstraints& aConstraints, ErrorResult &aRv);
   already_AddRefed<MediaStreamTrack> Clone();
 
-  IMPL_EVENT_HANDLER(ended)
-
   bool Ended() const { return mEnded; }
-
-  /**
-   * Notified by the MediaStreamGraph, through our owning MediaStream on the
-   * main thread.
-   *
-   * Note that this sets the track to ended and raises the "ended" event
-   * synchronously.
-   */
-  void NotifyEnded();
+  // Notifications from the MediaStreamGraph
+  void NotifyEnded() { mEnded = true; }
 
   /**
    * Get this track's principal.
