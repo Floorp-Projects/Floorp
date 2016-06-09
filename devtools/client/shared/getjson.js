@@ -5,7 +5,7 @@
 "use strict";
 
 const {CC} = require("chrome");
-const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const Services = require("Services");
 
 loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
@@ -24,7 +24,7 @@ const XMLHttpRequest = CC("@mozilla.org/xmlextras/xmlhttprequest;1");
  *         - Rejected with an error message in case of failure
  */
 exports.getJSON = function (prefName) {
-  let deferred = promise.defer();
+  let deferred = defer();
   let xhr = new XMLHttpRequest();
 
   // We used to store cached data in preferences, but now we use asyncStorage

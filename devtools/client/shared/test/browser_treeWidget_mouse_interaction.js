@@ -8,7 +8,6 @@ const TEST_URI = "data:text/html;charset=utf-8,<head>" +
   "<link rel='stylesheet' type='text/css' href='chrome://devtools/skin/widg" +
   "ets.css'></head><body><div></div><span></span></body>";
 const {TreeWidget} = require("devtools/client/shared/widgets/TreeWidget");
-const Promise = require("promise");
 
 add_task(function* () {
   yield addTab("about:blank");
@@ -92,7 +91,7 @@ function* testMouseInteraction(tree) {
   tree.once("select", pass);
   let node = tree.root.children.firstChild.firstChild;
   info("clicking on first top level item");
-  event = Promise.defer();
+  event = defer();
   ok(!node.classList.contains("theme-selected"),
      "Node should not have selected class before clicking");
   click(node);
@@ -105,7 +104,7 @@ function* testMouseInteraction(tree) {
 
   info("clicking second top level item with children to check if it expands");
   let node2 = tree.root.children.firstChild.nextSibling.firstChild;
-  event = Promise.defer();
+  event = defer();
   // node should not have selected class
   ok(!node2.classList.contains("theme-selected"),
      "New node should not have selected class before clicking");
@@ -125,7 +124,7 @@ function* testMouseInteraction(tree) {
 
   // clicking again should just collapse
   // this will not emit "select" event
-  event = Promise.defer();
+  event = defer();
   node2.addEventListener("click", function onClick() {
     node2.removeEventListener("click", onClick);
     executeSoon(() => event.resolve(null));

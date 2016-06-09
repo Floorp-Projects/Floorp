@@ -78,7 +78,7 @@ function* testGraph(host, graph) {
 }
 
 function pressKeyForTime(graph, keyCode, ms) {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   graph._onKeyDown({ keyCode });
 

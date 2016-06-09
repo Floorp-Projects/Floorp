@@ -5,7 +5,7 @@
 "use strict";
 
 const {Ci} = require("chrome");
-const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const {Spectrum} = require("devtools/client/shared/widgets/Spectrum");
 const {CubicBezierWidget} =
       require("devtools/client/shared/widgets/CubicBezierWidget");
@@ -529,7 +529,7 @@ Tooltip.prototype = {
    * and resolves the promise with the content window.
    */
   setIFrameContent: function ({width, height}, url) {
-    let def = promise.defer();
+    let def = defer();
 
     // Create an iframe
     let iframe = this.doc.createElementNS(XHTML_NS, "iframe");
@@ -568,7 +568,7 @@ Tooltip.prototype = {
 
     function onLoaded(iframe) {
       let win = iframe.contentWindow.wrappedJSObject;
-      let def = promise.defer();
+      let def = defer();
       let container = win.document.getElementById("spectrum");
       let spectrum = new Spectrum(container, color);
 
@@ -602,7 +602,7 @@ Tooltip.prototype = {
 
     function onLoaded(iframe) {
       let win = iframe.contentWindow.wrappedJSObject;
-      let def = promise.defer();
+      let def = defer();
       let container = win.document.getElementById("container");
       let widget = new CubicBezierWidget(container, bezier);
 
@@ -632,7 +632,7 @@ Tooltip.prototype = {
 
     function onLoaded(iframe) {
       let win = iframe.contentWindow.wrappedJSObject;
-      let def = promise.defer();
+      let def = defer();
       let container = win.document.getElementById("container");
       let widget = new CSSFilterEditorWidget(container, filter);
 
