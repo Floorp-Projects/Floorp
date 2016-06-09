@@ -355,6 +355,10 @@ public:
 
   nsIScrollableFrame* GetScrollFrame(nsIFrame* aStart);
 
+  void SetOverrideConstraintRect(mozilla::LayoutDeviceIntRect aRect) {
+    mOverrideConstraintRect = ToAppUnits(aRect, PresContext()->AppUnitsPerCSSPixel());
+  }
+
   // For a popup that should appear anchored at the given rect, determine
   // the screen area that it is constrained by. This will be the available
   // area of the screen the popup should be displayed on. Content popups,
@@ -587,6 +591,8 @@ protected:
 
   // How the popup is anchored.
   MenuPopupAnchorType mAnchorType;
+
+  nsRect mOverrideConstraintRect;
 
   static int8_t sDefaultLevelIsTop;
 
