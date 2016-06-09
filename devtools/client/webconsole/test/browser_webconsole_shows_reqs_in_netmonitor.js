@@ -56,7 +56,7 @@ function loadDocument(browser) {
     browser.removeEventListener("load", onLoad, true);
     deferred.resolve();
   }, true);
-  content.location = TEST_PATH;
+  BrowserTestUtils.loadURI(gBrowser.selectedBrowser, TEST_PATH);
 
   return deferred.promise;
 }

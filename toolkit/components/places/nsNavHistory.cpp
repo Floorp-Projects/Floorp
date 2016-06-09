@@ -405,8 +405,8 @@ nsNavHistory::GetOrCreateIdForPage(nsIURI* aURI,
 
   // Create a new hidden, untyped and unvisited entry.
   nsCOMPtr<mozIStorageStatement> stmt = mDB->GetStatement(
-    "INSERT OR IGNORE INTO moz_places (url, rev_host, hidden, frecency, guid) "
-    "VALUES (:page_url, :rev_host, :hidden, :frecency, GENERATE_GUID()) "
+    "INSERT INTO moz_places (url, rev_host, hidden, frecency, guid) "
+    "VALUES (:page_url, :rev_host, :hidden, :frecency, :guid) "
   );
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
@@ -431,28 +431,16 @@ nsNavHistory::GetOrCreateIdForPage(nsIURI* aURI,
   rv = stmt->BindInt32ByName(NS_LITERAL_CSTRING("frecency"),
                              IsQueryURI(spec) ? 0 : -1);
   NS_ENSURE_SUCCESS(rv, rv);
+  nsAutoCString guid;
+  rv = GenerateGUID(_GUID);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = stmt->BindUTF8StringByName(NS_LITERAL_CSTRING("guid"), _GUID);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = stmt->Execute();
   NS_ENSURE_SUCCESS(rv, rv);
 
-  {
-    nsCOMPtr<mozIStorageStatement> getIdStmt = mDB->GetStatement(
-      "SELECT id, guid FROM moz_places WHERE url = :page_url "
-    );
-    NS_ENSURE_STATE(getIdStmt);
-    mozStorageStatementScoper getIdScoper(getIdStmt);
-
-    rv = URIBinder::Bind(getIdStmt, NS_LITERAL_CSTRING("page_url"), aURI);
-    NS_ENSURE_SUCCESS(rv, rv);
-
-    bool hasResult = false;
-    rv = getIdStmt->ExecuteStep(&hasResult);
-    NS_ENSURE_SUCCESS(rv, rv);
-    NS_ASSERTION(hasResult, "hasResult is false but the call succeeded?");
-    *_pageId = getIdStmt->AsInt64(0);
-    rv = getIdStmt->GetUTF8String(1, _GUID);
-    NS_ENSURE_SUCCESS(rv, rv);
-  }
+  *_pageId = sLastInsertedPlaceId;
 
   return NS_OK;
 }
@@ -497,14 +485,16 @@ nsNavHistory::LoadPrefs()
 
 void
 nsNavHistory::NotifyOnVisit(nsIURI* aURI,
-                          int64_t aVisitID,
+                          int64_t aVisitId,
                           PRTime aTime,
-                          int64_t referringVisitID,
+                          int64_t aReferrerVisitId,
                           int32_t aTransitionType,
-                          const nsACString& aGUID,
-                          bool aHidden)
+                          const nsACString& aGuid,
+                          bool aHidden,
+                          uint32_t aVisitCount,
+                          uint32_t aTyped)
 {
-  MOZ_ASSERT(!aGUID.IsEmpty());
+  MOZ_ASSERT(!aGuid.IsEmpty());
   // If there's no history, this visit will surely add a day.  If the visit is
   // added before or after the last cached day, the day count may have changed.
   // Otherwise adding multiple visits in the same day should not invalidate
@@ -517,8 +507,8 @@ nsNavHistory::NotifyOnVisit(nsIURI* aURI,
 
   NOTIFY_OBSERVERS(mCanNotify, mCacheObservers, mObservers,
                    nsINavHistoryObserver,
-                   OnVisit(aURI, aVisitID, aTime, 0,
-                           referringVisitID, aTransitionType, aGUID, aHidden));
+                   OnVisit(aURI, aVisitId, aTime, 0, aReferrerVisitId,
+                           aTransitionType, aGuid, aHidden, aVisitCount, aTyped));
 }
 
 void
@@ -611,6 +601,21 @@ nsNavHistory::DispatchFrecencyChangedNotification(const nsACString& aSpec,
                                                          aGUID, aHidden,
                                                          aLastVisitDate);
   (void)NS_DispatchToMainThread(notif);
+}
+
+Atomic<int64_t> nsNavHistory::sLastInsertedPlaceId(0);
+Atomic<int64_t> nsNavHistory::sLastInsertedVisitId(0);
+
+void // static
+nsNavHistory::StoreLastInsertedId(const nsACString& aTable,
+                                  const int64_t aLastInsertedId) {
+  if (aTable.Equals(NS_LITERAL_CSTRING("moz_places"))) {
+    nsNavHistory::sLastInsertedPlaceId = aLastInsertedId;
+  } else if (aTable.Equals(NS_LITERAL_CSTRING("moz_historyvisits"))) {
+    nsNavHistory::sLastInsertedVisitId = aLastInsertedId;
+  } else {
+    MOZ_ASSERT(false, "Trying to store the insert id for an unknown table?");
+  }
 }
 
 int32_t

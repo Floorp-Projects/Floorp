@@ -24,6 +24,7 @@ DevToolsModules(
     'string.js',
     'styles.js',
     'stylesheets.js',
+    'timeline.js',
     'webaudio.js',
     'webgl.js'
 )

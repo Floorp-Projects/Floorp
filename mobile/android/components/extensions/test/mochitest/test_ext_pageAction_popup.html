@@ -1,0 +1,153 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>PageAction Test</title>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
+  <script type="text/javascript" src="head.js"></script>
+  <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
+</head>
+<body>
+
+<script type="text/javascript">
+"use strict";
+
+Cu.import("resource://gre/modules/Services.jsm");
+
+add_task(function* test_contentscript() {
+  function backgroundScript() {
+    // TODO: Use the Tabs API to obtain the tab ids for showing pageActions.
+    let tabId = 1;
+    let onClickedListenerEnabled = false;
+
+    browser.test.onMessage.addListener((msg, details) => {
+      if (msg === "page-action-show") {
+        // TODO: switch to using .show(tabId).then(...) once bug 1270742 lands.
+        browser.pageAction.show(tabId);
+        browser.test.sendMessage("page-action-shown");
+      } else if (msg == "page-action-set-popup") {
+        browser.pageAction.setPopup({popup: details.name, tabId: tabId});
+        browser.test.sendMessage("page-action-popup-set");
+      } else if (msg == "page-action-get-popup") {
+        browser.pageAction.getPopup({tabId: tabId}).then(url => {
+          browser.test.sendMessage("page-action-got-popup", url);
+        });
+      } else if (msg == "page-action-enable-onClicked-listener") {
+        onClickedListenerEnabled = true;
+        browser.test.sendMessage("page-action-onClicked-listener-enabled");
+      } else if (msg == "page-action-disable-onClicked-listener") {
+        onClickedListenerEnabled = false;
+        browser.test.sendMessage("page-action-onClicked-listener-disabled");
+      }
+    });
+
+    browser.pageAction.onClicked.addListener(tab => {
+      browser.test.assertTrue(onClickedListenerEnabled, "The onClicked listener should only fire when it is enabled.");
+      browser.test.sendMessage("page-action-onClicked-fired");
+    });
+
+    browser.test.sendMessage("ready");
+  }
+
+  function popupScript() {
+    window.onload = () => {
+      browser.test.sendMessage("page-action-from-popup", location.href);
+    };
+    browser.test.onMessage.addListener((msg, details) => {
+      if (msg == "page-action-close-popup") {
+        if (details.location == location.href) {
+          window.close();
+        }
+      }
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${backgroundScript}())`,
+    manifest: {
+      "name": "PageAction Extension",
+      "page_action": {
+        "default_title": "Page Action",
+        "default_popup": "default.html",
+      },
+    },
+    files: {
+      "default.html": `<html><head><meta charset="utf-8"><script src="popup.js"></${"script"}></head></html>`,
+      "a.html": `<html><head><meta charset="utf-8"><script src="popup.js"></${"script"}></head></html>`,
+      "b.html": `<html><head><meta charset="utf-8"><script src="popup.js"></${"script"}></head></html>`,
+      "popup.js": `(${popupScript})()`,
+    },
+  });
+
+  let tabClosedPromise = () => {
+    return new Promise(resolve => {
+      let chromeWin = Services.wm.getMostRecentWindow("navigator:browser");
+      let BrowserApp = chromeWin.BrowserApp;
+
+      let tabCloseListener = (event) => {
+        BrowserApp.deck.removeEventListener("TabClose", tabCloseListener, false);
+        let browser = event.target;
+        let url = browser.currentURI.spec;
+        resolve(url);
+      };
+
+      BrowserApp.deck.addEventListener("TabClose", tabCloseListener, false);
+    });
+  };
+
+  function* testPopup(name) {
+    // We don't need to set the popup when testing default_popup.
+    if (name != "default.html") {
+      extension.sendMessage("page-action-set-popup", {name});
+      yield extension.awaitMessage("page-action-popup-set");
+    }
+
+    extension.sendMessage("page-action-get-popup");
+    let url = yield extension.awaitMessage("page-action-got-popup");
+
+    if (name == "") {
+      ok(url == name, "Calling pageAction.getPopup should return an empty string when the popup is not set.");
+
+      // The onClicked listener should get called when the popup is set to an empty string.
+      extension.sendMessage("page-action-enable-onClicked-listener");
+      yield extension.awaitMessage("page-action-onClicked-listener-enabled");
+
+      clickPageAction(extension.id);
+      yield extension.awaitMessage("page-action-onClicked-fired");
+
+      extension.sendMessage("page-action-disable-onClicked-listener");
+      yield extension.awaitMessage("page-action-onClicked-listener-disabled");
+    } else {
+      ok(url.includes(name), "Calling pageAction.getPopup should return the correct popup URL when the popup is set.");
+
+      clickPageAction(extension.id);
+      let location = yield extension.awaitMessage("page-action-from-popup");
+      ok(location.includes(name), "The popup with the correct URL should be shown.");
+
+      extension.sendMessage("page-action-close-popup", {location});
+
+      url = yield tabClosedPromise();
+      ok(url.includes(name), "The tab for the popup should be closed.");
+    }
+  }
+
+  yield extension.startup();
+  yield extension.awaitMessage("ready");
+
+  extension.sendMessage("page-action-show");
+  yield extension.awaitMessage("page-action-shown");
+  ok(isPageActionShown(extension.id), "The PageAction should be shown.");
+
+  yield testPopup("default.html");
+  yield testPopup("a.html");
+  yield testPopup("");
+  yield testPopup("b.html");
+
+  yield extension.unload();
+  ok(!isPageActionShown(extension.id), "The PageAction should be removed after unload.");
+});
+</script>
+
+</body>
+</html>

@@ -1240,7 +1240,7 @@ Toolbox.prototype = {
       // backward compatibility with existing extensions do a check
       // for a promise return value.
       let built = definition.build(iframe.contentWindow, this);
-      if (!(built instanceof Promise)) {
+      if (!(typeof built.then == "function")) {
         let panel = built;
         iframe.panel = panel;
 
