@@ -33,6 +33,7 @@ var { LoadContextInfo } = Cu.import("resource://gre/modules/LoadContextInfo.jsm"
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var Services = require("Services");
 var promise = require("promise");
+var defer = require("devtools/shared/defer");
 
 this.EXPORTED_SYMBOLS = ["AppCacheUtils"];
 
@@ -55,7 +56,7 @@ AppCacheUtils.prototype = {
   },
 
   validateManifest: function ACU_validateManifest() {
-    let deferred = promise.defer();
+    let deferred = defer();
     this.errors = [];
     // Check for missing manifest.
     this._getManifestURI().then(manifestURI => {
@@ -81,7 +82,7 @@ AppCacheUtils.prototype = {
   },
 
   _parseManifest: function ACU__parseManifest(uriInfo) {
-    let deferred = promise.defer();
+    let deferred = defer();
     let manifestName = uriInfo.name;
     let manifestLastModified = new Date(uriInfo.responseHeaders["Last-Modified"]);
 
@@ -185,7 +186,7 @@ AppCacheUtils.prototype = {
   _getURIInfo: function ACU__getURIInfo(uri) {
     let inputStream = Cc["@mozilla.org/scriptableinputstream;1"]
                         .createInstance(Ci.nsIScriptableInputStream);
-    let deferred = promise.defer();
+    let deferred = defer();
     let buffer = "";
     var channel = NetUtil.newChannel({
       uri: uri,
@@ -310,7 +311,7 @@ AppCacheUtils.prototype = {
   },
 
   _getManifestURI: function ACU__getManifestURI() {
-    let deferred = promise.defer();
+    let deferred = defer();
 
     let getURI = () => {
       let htmlNode = this.doc.querySelector("html[manifest]");

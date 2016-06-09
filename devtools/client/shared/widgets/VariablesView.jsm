@@ -23,6 +23,7 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const Services = require("Services");
 const { getSourceNames } = require("devtools/client/shared/source-utils");
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const { Heritage, ViewHelpers, setNamedTimeout } =
   require("devtools/client/shared/widgets/view-helpers");
 const { Task } = require("devtools/shared/task");
@@ -2801,7 +2802,7 @@ Variable.prototype = Heritage.extend(Scope.prototype, {
       if (nodeFront) {
         yield this.toolbox.selectTool("inspector");
 
-        let inspectorReady = promise.defer();
+        let inspectorReady = defer();
         this.toolbox.getPanel("inspector").once("inspector-updated", inspectorReady.resolve);
         yield this.toolbox.selection.setNodeFront(nodeFront, "variables-view");
         yield inspectorReady.promise;

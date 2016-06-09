@@ -7,7 +7,7 @@ const { Task } = require("devtools/shared/task");
 const { ViewHelpers, setNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
 
-loader.lazyRequireGetter(this, "promise");
+loader.lazyRequireGetter(this, "defer", "devtools/shared/defer");
 loader.lazyRequireGetter(this, "EventEmitter",
   "devtools/shared/event-emitter");
 
@@ -144,7 +144,7 @@ function FlameGraph(parent, sharpness) {
   EventEmitter.decorate(this);
 
   this._parent = parent;
-  this._ready = promise.defer();
+  this._ready = defer();
 
   this.setTheme();
 
