@@ -115,8 +115,7 @@ MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
   : mOwningStream(aStream), mTrackID(aTrackID),
     mInputTrackID(aInputTrackID), mSource(aSource),
     mPrincipal(aSource->GetPrincipal()),
-    mReadyState(MediaStreamTrackState::Live),
-    mEnabled(true), mRemote(aSource->IsRemote())
+    mEnded(false), mEnabled(true), mRemote(aSource->IsRemote()), mStopped(false)
 {
 
   if (!gMediaStreamTrackLog) {
@@ -217,8 +216,8 @@ MediaStreamTrack::Stop()
 {
   LOG(LogLevel::Info, ("MediaStreamTrack %p Stop()", this));
 
-  if (Ended()) {
-    LOG(LogLevel::Warning, ("MediaStreamTrack %p Already ended", this));
+  if (mStopped) {
+    LOG(LogLevel::Warning, ("MediaStreamTrack %p Already stopped", this));
     return;
   }
 
@@ -240,7 +239,7 @@ MediaStreamTrack::Stop()
   RefPtr<Pledge<bool>> p = port->BlockSourceTrackId(mInputTrackID);
   Unused << p;
 
-  mReadyState = MediaStreamTrackState::Ended;
+  mStopped = true;
 }
 
 already_AddRefed<Promise>
@@ -356,13 +355,13 @@ MediaStreamTrack::NotifyEnded()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (Ended()) {
+  if (mEnded) {
     return;
   }
 
   LOG(LogLevel::Info, ("MediaStreamTrack %p ended", this));
 
-  mReadyState = MediaStreamTrackState::Ended;
+  mEnded = true;
 
   DispatchTrustedEvent(NS_LITERAL_STRING("ended"));
 }
