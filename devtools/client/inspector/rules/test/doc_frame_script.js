@@ -20,7 +20,7 @@ var {classes: Cc, interfaces: Ci, utils: Cu} = Components;
 
 var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 var {CssLogic} = require("devtools/shared/inspector/css-logic");
-var promise = require("promise");
+var defer = require("devtools/shared/defer");
 
 /**
  * Get a value for a given property name in a css rule in a stylesheet, given
@@ -125,7 +125,7 @@ var dumpn = msg => dump(msg + "\n");
  * if the timeout is reached
  */
 function waitForSuccess(validatorFn) {
-  let def = promise.defer();
+  let def = defer();
 
   function wait(fn) {
     if (fn()) {

@@ -76,7 +76,7 @@ add_task(function* () {
 });
 
 function testESC(swatch, dropper) {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   dropper.once("destroy", () => {
     let color = swatch.style.backgroundColor;
@@ -129,7 +129,7 @@ function checkTelemetry() {
 /* Helpers */
 
 function openEyedropper(view, swatch) {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   let tooltip = view.tooltips.colorPicker.tooltip;
 

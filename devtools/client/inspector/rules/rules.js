@@ -9,6 +9,7 @@
 
 const {Cc, Ci} = require("chrome");
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const Services = require("Services");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const {Task} = require("devtools/shared/task");
@@ -125,7 +126,7 @@ function createDummyDocument() {
   docShell.createAboutBlankContentViewer(nullPrincipal);
   let window = docShell.contentViewer.DOMDocument.defaultView;
   window.location = "data:text/html,<html></html>";
-  let deferred = promise.defer();
+  let deferred = defer();
   eventTarget.addEventListener("DOMContentLoaded", function handler() {
     eventTarget.removeEventListener("DOMContentLoaded", handler, false);
     deferred.resolve(window.document);

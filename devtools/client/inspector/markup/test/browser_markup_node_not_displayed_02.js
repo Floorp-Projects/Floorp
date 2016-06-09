@@ -126,7 +126,7 @@ function* runTestData(inspector, testActor,
     "The container is marked as " + (before ? "shown" : "hidden"));
 
   info("Listening for the display-change event");
-  let onDisplayChanged = promise.defer();
+  let onDisplayChanged = defer();
   inspector.markup.walker.once("display-change", onDisplayChanged.resolve);
 
   info("Making style changes");
