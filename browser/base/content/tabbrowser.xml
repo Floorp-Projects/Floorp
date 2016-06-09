@@ -2617,8 +2617,7 @@
               modifiedAttrs.push("soundplaying");
             }
             if (aOtherTab.hasAttribute("usercontextid")) {
-              aOurTab.setAttribute("usercontextid", aOtherTab.getAttribute("usercontextid"));
-              ContextualIdentityService.setTabStyle(aOurTab);
+              aOurTab.setUserContextId(aOtherTab.getAttribute("usercontextid"));
               modifiedAttrs.push("usercontextid");
             }
 
@@ -6425,12 +6424,18 @@
         <body>
         <![CDATA[
           if (aUserContextId) {
-            this.linkedBrowser.setAttribute("usercontextid", aUserContextId);
+            if (this.linkedBrowser) {
+              this.linkedBrowser.setAttribute("usercontextid", aUserContextId);
+            }
             this.setAttribute("usercontextid", aUserContextId);
           } else {
-            this.linkedBrowser.removeAttribute("usercontextid");
+            if (this.linkedBrowser) {
+              this.linkedBrowser.removeAttribute("usercontextid");
+            }
             this.removeAttribute("usercontextid");
           }
+
+          ContextualIdentityService.setTabStyle(this);
         ]]>
         </body>
       </method>
