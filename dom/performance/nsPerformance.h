@@ -257,19 +257,24 @@ private:
   bool mReportCrossOriginRedirect;
 };
 
-} // namespace dom
-} // namespace mozilla
-
 // Script "performance.navigation" object
-class nsPerformanceNavigation final : public nsWrapperCache
+class PerformanceNavigation final : public nsWrapperCache
 {
 public:
-  explicit nsPerformanceNavigation(nsPerformance* aPerformance);
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsPerformanceNavigation)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(nsPerformanceNavigation)
+  enum PerformanceNavigationType {
+    TYPE_NAVIGATE = 0,
+    TYPE_RELOAD = 1,
+    TYPE_BACK_FORWARD = 2,
+    TYPE_RESERVED = 255,
+  };
+
+  explicit PerformanceNavigation(nsPerformance* aPerformance);
+
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PerformanceNavigation)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(PerformanceNavigation)
 
   nsDOMNavigationTiming* GetDOMTiming() const;
-  mozilla::dom::PerformanceTiming* GetPerformanceTiming() const;
+  PerformanceTiming* GetPerformanceTiming() const;
 
   nsPerformance* GetParentObject() const
   {
@@ -287,9 +292,12 @@ public:
   }
 
 private:
-  ~nsPerformanceNavigation();
+  ~PerformanceNavigation();
   RefPtr<nsPerformance> mPerformance;
 };
+
+} // namespace dom
+} // namespace mozilla
 
 // Base class for main-thread and worker Performance API
 class PerformanceBase : public mozilla::DOMEventTargetHelper 
@@ -418,7 +426,7 @@ public:
   DOMHighResTimeStamp Now() const override;
 
   mozilla::dom::PerformanceTiming* Timing();
-  nsPerformanceNavigation* Navigation();
+  mozilla::dom::PerformanceNavigation* Navigation();
 
   void AddEntry(nsIHttpChannel* channel,
                 nsITimedChannel* timedChannel);
@@ -462,19 +470,19 @@ protected:
   RefPtr<nsDOMNavigationTiming> mDOMTiming;
   nsCOMPtr<nsITimedChannel> mChannel;
   RefPtr<mozilla::dom::PerformanceTiming> mTiming;
-  RefPtr<nsPerformanceNavigation> mNavigation;
+  RefPtr<mozilla::dom::PerformanceNavigation> mNavigation;
   RefPtr<nsPerformance> mParentPerformance;
   JS::Heap<JSObject*> mMozMemory;
 };
 
 inline nsDOMNavigationTiming*
-nsPerformanceNavigation::GetDOMTiming() const
+mozilla::dom::PerformanceNavigation::GetDOMTiming() const
 {
   return mPerformance->GetDOMTiming();
 }
 
 inline mozilla::dom::PerformanceTiming*
-nsPerformanceNavigation::GetPerformanceTiming() const
+mozilla::dom::PerformanceNavigation::GetPerformanceTiming() const
 {
   return mPerformance->Timing();
 }
