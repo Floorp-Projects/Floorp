@@ -624,20 +624,16 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
 
   id nativeParent = nil;
   if (AccessibleWrap* accWrap = [self getGeckoAccessible]) {
-    Accessible* accessibleParent = accWrap->GetUnignoredParent();
+    Accessible* accessibleParent = accWrap->Parent();
     if (accessibleParent)
       nativeParent = GetNativeFromGeckoAccessible(accessibleParent);
     if (nativeParent)
       return GetClosestInterestingAccessible(nativeParent);
-    // GetUnignoredParent() returns null when there is no unignored accessible all the way up to
-    // the root accessible. so we'll have to return whatever native accessible is above our root accessible
-    // (which might be the owning NSWindow in the application, for example).
-    //
-    // get the native root accessible, and tell it to return its first parent unignored accessible.
+
+    // Return native of root accessible if we have no direct parent
     nativeParent = GetNativeFromGeckoAccessible(accWrap->RootAccessible());
   } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
-    // Go up the chain to find a parent that is not ignored.
-    ProxyAccessible* accessibleParent = GetProxyUnignoredParent(proxy);
+    ProxyAccessible* accessibleParent = proxy->Parent();
     if (accessibleParent)
       nativeParent = GetNativeFromProxy(accessibleParent);
     if (nativeParent)
@@ -682,15 +678,25 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
     return mChildren;
 
   // get the array of children.
+  mChildren = [[NSMutableArray alloc] init];
+
   AccessibleWrap* accWrap = [self getGeckoAccessible];
   if (accWrap) {
-    AutoTArray<Accessible*, 10> childrenArray;
-    accWrap->GetUnignoredChildren(&childrenArray);
-    mChildren = ConvertToNSArray(childrenArray);
+    uint32_t childCount = accWrap->ChildCount();
+    for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
+      mozAccessible* nativeChild = GetNativeFromGeckoAccessible(accWrap->GetChildAt(childIdx));
+      if (nativeChild)
+        [mChildren addObject:GetObjectOrRepresentedView(nativeChild)];
+    }
+
   } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
-    AutoTArray<ProxyAccessible*, 10> childrenArray;
-    GetProxyUnignoredChildren(proxy, &childrenArray);
-    mChildren = ConvertToNSArray(childrenArray);
+      uint32_t childCount = proxy->ChildrenCount();
+      for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
+        mozAccessible* nativeChild = GetNativeFromProxy(proxy->ChildAt(childIdx));
+        if (nativeChild)
+          [mChildren addObject:GetObjectOrRepresentedView(nativeChild)];
+      }
+
   }
 
 #ifdef DEBUG_hakan
