@@ -685,7 +685,8 @@ int VP8EncoderImpl::InitAndSetControlSettings() {
                       denoiser_state : kDenoiserOff);
   }
   for (size_t i = 0; i < encoders_.size(); ++i) {
-    vpx_codec_control(&(encoders_[i]), VP8E_SET_STATIC_THRESHOLD, 1);
+    vpx_codec_control(&(encoders_[i]), VP8E_SET_STATIC_THRESHOLD,
+                      codec_.mode == kScreensharing ? 300 : 1);
     vpx_codec_control(&(encoders_[i]), VP8E_SET_CPUUSED, cpu_speed_[i]);
     vpx_codec_control(&(encoders_[i]), VP8E_SET_TOKEN_PARTITIONS,
                       static_cast<vp8e_token_partitions>(token_partitions_));
