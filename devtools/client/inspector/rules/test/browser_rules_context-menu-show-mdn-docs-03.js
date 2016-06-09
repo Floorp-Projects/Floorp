@@ -77,7 +77,7 @@ add_task(function* () {
  * not `state`.
  */
 function* setBooleanPref(pref, state) {
-  let oncePrefChanged = promise.defer();
+  let oncePrefChanged = defer();
   let prefObserver = new PrefObserver("devtools.");
   prefObserver.on(pref, oncePrefChanged.resolve);
 

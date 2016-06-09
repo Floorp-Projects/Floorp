@@ -50,7 +50,7 @@ function* testClickingLink(toolbox, view) {
 }
 
 function checkDisplayedStylesheet(toolbox) {
-  let def = promise.defer();
+  let def = defer();
 
   let panel = toolbox.getCurrentPanel();
   panel.UI.on("editor-selected", (event, editor) => {
