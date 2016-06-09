@@ -433,6 +433,13 @@ var NetMonitorController = {
   get supportsPerfStats() {
     return this.tabClient &&
            (this.tabClient.traits.reconfigure || !this._target.isApp);
+  },
+
+  /**
+   * Open a given source in Debugger
+   */
+  viewSourceInDebugger(sourceURL, sourceLine) {
+    return this._toolbox.viewSourceInDebugger(sourceURL, sourceLine);
   }
 };
 
@@ -629,12 +636,14 @@ NetworkEventsHandler.prototype = {
       startedDateTime,
       request: { method, url },
       isXHR,
+      cause,
       fromCache,
       fromServiceWorker
     } = networkInfo;
 
     NetMonitorView.RequestsMenu.addRequest(
-      actor, startedDateTime, method, url, isXHR, fromCache, fromServiceWorker
+      actor, startedDateTime, method, url, isXHR, cause, fromCache,
+        fromServiceWorker
     );
     window.emit(EVENTS.NETWORK_EVENT, actor);
   },
