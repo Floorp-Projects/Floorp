@@ -141,20 +141,21 @@ class LocalesMixin(ChunkingMixin):
 
     def run_compare_locales(self, locale, halt_on_failure=False):
         dirs = self.query_abs_dirs()
-        compare_locales_script = os.path.join(dirs['abs_compare_locales_dir'],
-                                              'scripts', 'compare-locales')
-        env = self.query_env(partial_env={'PYTHONPATH':
-                             os.path.join(dirs['abs_compare_locales_dir'],
-                                          'lib')})
+        env = self.query_l10n_env()
+        python = self.query_exe('python2.7')
         compare_locales_error_list = list(PythonErrorList)
         self.rmtree(dirs['abs_merge_dir'])
         self.mkdir_p(dirs['abs_merge_dir'])
-        command = "python %s -m %s l10n.ini %s %s" % (compare_locales_script,
-                  dirs['abs_merge_dir'], dirs['abs_l10n_dir'], locale)
+        command = [python, 'mach', 'compare-locales',
+                   '--merge-dir', dirs['abs_merge_dir'],
+                   '--l10n-ini', os.path.join(dirs['abs_locales_src_dir'], 'l10n.ini'),
+                   '--l10n-base', dirs['abs_l10n_dir'], locale]
         self.info("*** BEGIN compare-locales %s" % locale)
-        status = self.run_command(command, error_list=compare_locales_error_list,
-                                  cwd=dirs['abs_locales_src_dir'], env=env,
-                                  halt_on_failure=halt_on_failure)
+        status = self.run_command(command,
+                                  halt_on_failure=halt_on_failure,
+                                  env=env,
+                                  cwd=dirs['abs_mozilla_dir'],
+                                  error_list=compare_locales_error_list)
         self.info("*** END compare-locales %s" % locale)
         return status
 
@@ -175,8 +176,15 @@ class LocalesMixin(ChunkingMixin):
                                                    c['mozilla_dir'])
             dirs['abs_locales_src_dir'] = os.path.join(dirs['abs_mozilla_dir'],
                                                        c['locales_dir'])
-            dirs['abs_l10n_dir'] = os.path.join(dirs['abs_work_dir'],
-                                                c['l10n_dir'])
+            dirs['abs_compare_locales_dir'] = os.path.join(dirs['abs_mozilla_dir'],
+                                                           'python', 'compare-locales',
+                                                           'compare_locales')
+        else:
+            # Use old-compare-locales if no mozilla_dir set, needed
+            # for clobberer, and existing mozharness tests.
+            dirs['abs_compare_locales_dir'] = os.path.join(dirs['abs_work_dir'],
+                                                           'compare-locales')
+
         if 'objdir' in c:
             if os.path.isabs(c['objdir']):
                 dirs['abs_objdir'] = c['objdir']
@@ -187,8 +195,7 @@ class LocalesMixin(ChunkingMixin):
                                                  'merged')
             dirs['abs_locales_dir'] = os.path.join(dirs['abs_objdir'],
                                                    c['locales_dir'])
-        dirs['abs_compare_locales_dir'] = os.path.join(dirs['abs_work_dir'],
-                                                       'compare-locales')
+
         for key in dirs.keys():
             if key not in abs_dirs:
                 abs_dirs[key] = dirs[key]

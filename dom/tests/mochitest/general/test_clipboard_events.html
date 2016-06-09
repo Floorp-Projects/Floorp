@@ -664,7 +664,7 @@ function checkCachedDataTransfer(cd, eventtype)
 
   var newtext = (eventtype == "paste") ? cd.getData("text/plain") :
                                          cd.mozGetDataAt("text/plain", 0);
-  is(newtext, (eventtype == "paste") ? oldtext : "Test Cache Data",
+  is(newtext, (eventtype == "paste") ? "" : "Test Cache Data",
      " clipboardData not changed using " + testprefix);
 
   is(getClipboardText(), "Some Clipboard Text", "clipboard not changed using " + testprefix);
