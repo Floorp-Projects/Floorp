@@ -15,6 +15,7 @@ EXPORTS.mozilla.dom += [
     'PerformanceObserver.h',
     'PerformanceObserverEntryList.h',
     'PerformanceResourceTiming.h',
+    'PerformanceTiming.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -25,6 +26,7 @@ UNIFIED_SOURCES += [
     'PerformanceObserver.cpp',
     'PerformanceObserverEntryList.cpp',
     'PerformanceResourceTiming.cpp',
+    'PerformanceTiming.cpp',
 ]
 
 LOCAL_INCLUDES += [
