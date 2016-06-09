@@ -579,6 +579,9 @@ pref("mousewheel.with_win.action", 1);
 pref("browser.xul.error_pages.enabled", true);
 pref("browser.xul.error_pages.expert_bad_cert", false);
 
+// Enable captive portal detection.
+pref("network.captive-portal-service.enabled", true);
+
 // If true, network link events will change the value of navigator.onLine
 pref("network.manage-offline-status", true);
 
