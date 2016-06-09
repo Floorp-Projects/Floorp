@@ -921,11 +921,13 @@ CSSStyleSheet::SizeOfIncludingThis(MallocSizeOf aMallocSizeOf) const
     n += aMallocSizeOf(s);
 
     // Each inner can be shared by multiple sheets.  So we only count the inner
-    // if this sheet is the first one in the list of those sharing it.  As a
-    // result, the first such sheet takes all the blame for the memory
+    // if this sheet is the last one in the list of those sharing it.  As a
+    // result, the last such sheet takes all the blame for the memory
     // consumption of the inner, which isn't ideal but it's better than
-    // double-counting the inner.
-    if (s->mInner->mSheets[0] == s) {
+    // double-counting the inner.  We use last instead of first since the first
+    // sheet may be held in the nsXULPrototypeCache and not used in a window at
+    // all.
+    if (s->mInner->mSheets.LastElement() == s) {
       n += s->mInner->SizeOfIncludingThis(aMallocSizeOf);
     }
 

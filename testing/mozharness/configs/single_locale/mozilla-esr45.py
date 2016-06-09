@@ -18,7 +18,7 @@ config = {
     }, {
         "vcs": "hgtool",
         "repo": "https://hg.mozilla.org/releases/mozilla-esr45",
-        "revision": "default",
+        "revision": "%(revision)s",
         "dest": "mozilla-esr45",
     }, {
         "vcs": "hgtool",

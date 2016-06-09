@@ -878,6 +878,7 @@ BrowserGlue.prototype = {
                 label: win.gNavigatorBundle.getString("pendingCrashReports.viewAll"),
                 callback: function() {
                   win.openUILinkIn("about:crashes", "tab");
+                  return true;
                 }
               }
             ];

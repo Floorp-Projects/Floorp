@@ -449,6 +449,9 @@
 @BINPATH@/chrome/toolkit@JAREXT@
 @BINPATH@/chrome/toolkit.manifest
 
+; Features
+@BINPATH@/features/*
+
 ; DevTools
 @BINPATH@/chrome/devtools@JAREXT@
 @BINPATH@/chrome/devtools.manifest

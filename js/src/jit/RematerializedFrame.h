@@ -7,6 +7,8 @@
 #ifndef jit_RematerializedFrame_h
 #define jit_RematerializedFrame_h
 
+#include <algorithm>
+
 #include "jsfun.h"
 
 #include "jit/JitFrameIterator.h"
@@ -180,12 +182,15 @@ class RematerializedFrame
     unsigned numActualArgs() const {
         return numActualArgs_;
     }
+    unsigned numArgSlots() const {
+        return (std::max)(numFormalArgs(), numActualArgs());
+    }
 
     Value* argv() {
         return slots_;
     }
     Value* locals() {
-        return slots_ + numActualArgs_ + isConstructing_;
+        return slots_ + numArgSlots() + isConstructing_;
     }
 
     Value& unaliasedLocal(unsigned i) {
