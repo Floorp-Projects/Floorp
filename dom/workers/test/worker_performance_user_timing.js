@@ -13,7 +13,7 @@ function isnot(a, b, msg) {
   postMessage({type: 'status', status: a != b, msg: a + " != " + b + ": " + msg });
 }
 
-importScripts(['../../../dom/performance/test/test_performance_user_timing.js']);
+importScripts(['../../../dom/performance/tests/test_performance_user_timing.js']);
 
 for (var i = 0; i < steps.length; ++i) {
   performance.clearMarks();
