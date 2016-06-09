@@ -1,6 +1,7 @@
 "use strict";
 
 /* global OS, HostManifestManager, NativeApp */
+Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/AsyncShutdown.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/Schemas.jsm");
@@ -8,6 +9,17 @@ Cu.import("resource://gre/modules/Services.jsm");
 const {Subprocess, SubprocessImpl} = Cu.import("resource://gre/modules/Subprocess.jsm");
 Cu.import("resource://gre/modules/NativeMessaging.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
+
+let registry = null;
+if (AppConstants.platform == "win") {
+  Cu.import("resource://testing-common/MockRegistry.jsm");
+  registry = new MockRegistry();
+  do_register_cleanup(() => {
+    registry.shutdown();
+  });
+}
+
+const REGKEY = "Software\\Mozilla\\NativeMessagingHosts";
 
 const BASE_SCHEMA = "chrome://extensions/content/schemas/manifest.json";
 
@@ -84,6 +96,11 @@ const USER_TEST_JSON = OS.Path.join(userDir.path, "test.json");
 
 add_task(function* test_good_manifest() {
   yield writeManifest(USER_TEST_JSON, templateManifest);
+  if (registry) {
+    registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                      REGKEY, "test", USER_TEST_JSON);
+  }
+
   let result = yield HostManifestManager.lookupApplication("test", context);
   notEqual(result, null, "lookupApplication finds a good manifest");
   equal(result.path, USER_TEST_JSON, "lookupApplication returns the correct path");
@@ -109,7 +126,8 @@ add_task(function* test_name_mismatch() {
   manifest.name = "not test";
   yield writeManifest(USER_TEST_JSON, manifest);
   let result = yield HostManifestManager.lookupApplication("test", context);
-  equal(result, null, "lookupApplication ignores mistmatch between json filename and name property");
+  let what = (AppConstants.platform == "win") ? "registry key" : "json filename";
+  equal(result, null, `lookupApplication ignores mistmatch between ${what} and name property`);
 });
 
 add_task(function* test_missing_props() {
@@ -153,26 +171,38 @@ globalManifest.description = "This manifest is from the systemwide directory";
 add_task(function* good_manifest_system_dir() {
   yield OS.File.remove(USER_TEST_JSON);
   yield writeManifest(GLOBAL_TEST_JSON, globalManifest);
+  if (registry) {
+    registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                      REGKEY, "test", null);
+    registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+                      REGKEY, "test", GLOBAL_TEST_JSON);
+  }
 
+  let where = (AppConstants.platform == "win") ? "registry location" : "directory";
   let result = yield HostManifestManager.lookupApplication("test", context);
-  notEqual(result, null, "lookupApplication finds a manifest in the system-wide directory");
-  equal(result.path, GLOBAL_TEST_JSON, "lookupApplication returns path in the system-wide directory");
-  deepEqual(result.manifest, globalManifest, "lookupApplication returns manifest contents from the system-wide directory");
+  notEqual(result, null, `lookupApplication finds a manifest in the system-wide ${where}`);
+  equal(result.path, GLOBAL_TEST_JSON, `lookupApplication returns path in the system-wide ${where}`);
+  deepEqual(result.manifest, globalManifest, `lookupApplication returns manifest contents from the system-wide ${where}`);
 });
 
 add_task(function* test_user_dir_precedence() {
   yield writeManifest(USER_TEST_JSON, templateManifest);
-  // test.json is still in the global directory from the previous test
+  if (registry) {
+    registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                      REGKEY, "test", USER_TEST_JSON);
+  }
+  // global test.json and LOCAL_MACHINE registry key on windows are
+  // still present from the previous test
 
   let result = yield HostManifestManager.lookupApplication("test", context);
-  notEqual(result, null, "lookupApplication finds a manifest when entries exist in both user-specific and system-wide directories");
+  notEqual(result, null, "lookupApplication finds a manifest when entries exist in both user-specific and system-wide locations");
   equal(result.path, USER_TEST_JSON, "lookupApplication returns the user-specific path when user-specific and system-wide entries both exist");
   deepEqual(result.manifest, templateManifest, "lookupApplication returns user-specific manifest contents with user-specific and system-wide entries both exist");
 });
 
 // Test shutdown handling in NativeApp
 add_task(function* test_native_app_shutdown() {
-  const SCRIPT = String.raw`#!${PYTHON} -u
+  const SCRIPT = String.raw`
 import signal
 import struct
 import sys
@@ -188,21 +218,38 @@ while True:
 
     sys.stdout.write(struct.pack('@I', msglen))
     sys.stdout.write(msg)
-`;
+  `;
 
   let scriptPath = OS.Path.join(userDir.path, "wontdie.py");
-  yield OS.File.writeAtomic(scriptPath, SCRIPT);
-  yield OS.File.setPermissions(scriptPath, {unixMode: 0o755});
+  let manifestPath = OS.Path.join(userDir.path, "wontdie.json");
 
   const ID = "native@tests.mozilla.org";
-  const MANIFEST = {
+  let manifest = {
     name: "wontdie",
     description: "test async shutdown of native apps",
-    path: scriptPath,
     type: "stdio",
     allowed_extensions: [ID],
   };
-  yield writeManifest(OS.Path.join(userDir.path, "wontdie.json"), MANIFEST);
+
+  if (AppConstants.platform == "win") {
+    yield OS.File.writeAtomic(scriptPath, SCRIPT);
+
+    let batPath = OS.Path.join(userDir.path, "wontdie.bat");
+    let batBody = `@ECHO OFF\n${PYTHON} -u ${scriptPath} %*\n`;
+    yield OS.File.writeAtomic(batPath, batBody);
+    yield OS.File.setPermissions(batPath, {unixMode: 0o755});
+
+    manifest.path = batPath;
+    yield writeManifest(manifestPath, manifest);
+
+    registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                      REGKEY, "wontdie", manifestPath);
+  } else {
+    yield OS.File.writeAtomic(scriptPath, `#!${PYTHON} -u\n${SCRIPT}`);
+    yield OS.File.setPermissions(scriptPath, {unixMode: 0o755});
+    manifest.path = scriptPath;
+    yield writeManifest(manifestPath, manifest);
+  }
 
   let extension = {id: ID};
   let app = new NativeApp(extension, context, "wontdie");
@@ -231,4 +278,3 @@ while True:
   let procs = yield SubprocessImpl.Process.getWorker().call("getProcesses", []);
   equal(procs.size, 0, "native process exited");
 });
-
