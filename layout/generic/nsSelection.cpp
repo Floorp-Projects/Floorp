@@ -121,7 +121,7 @@ ToChar(SelectionType aSelectionType)
       return "SelectionType::eNormal";
     case SelectionType::eSpellCheck:
       return "SelectionType::eSpellCheck";
-    case SelectionType::SELECTION_IME_RAWINPUT:
+    case SelectionType::eIMERawClause:
       return "SelectionType::eIMERawClause";
     case SelectionType::SELECTION_IME_SELECTEDRAWTEXT:
       return "SelectionType::eIMESelectedRawClause";
@@ -149,7 +149,7 @@ IsValidSelectionType(RawSelectionType aRawSelectionType)
     case SelectionType::eNone:
     case SelectionType::eNormal:
     case SelectionType::eSpellCheck:
-    case SelectionType::SELECTION_IME_RAWINPUT:
+    case SelectionType::eIMERawClause:
     case SelectionType::SELECTION_IME_SELECTEDRAWTEXT:
     case SelectionType::SELECTION_IME_CONVERTEDTEXT:
     case SelectionType::SELECTION_IME_SELECTEDCONVERTEDTEXT:
@@ -355,7 +355,7 @@ GetIndexFromSelectionType(SelectionType aSelectionType)
       return 0;
     case SelectionType::eSpellCheck:
       return 1;
-    case SelectionType::SELECTION_IME_RAWINPUT:
+    case SelectionType::eIMERawClause:
       return 2;
     case SelectionType::SELECTION_IME_SELECTEDRAWTEXT:
       return 3;
@@ -383,7 +383,7 @@ GetSelectionTypeFromIndex(int8_t aIndex)
   static const SelectionType kSelectionTypes[] = {
     SelectionType::eNormal,
     SelectionType::eSpellCheck,
-    SelectionType::SELECTION_IME_RAWINPUT,
+    SelectionType::eIMERawClause,
     SelectionType::SELECTION_IME_SELECTEDRAWTEXT,
     SelectionType::SELECTION_IME_CONVERTEDTEXT,
     SelectionType::SELECTION_IME_SELECTEDCONVERTEDTEXT,
