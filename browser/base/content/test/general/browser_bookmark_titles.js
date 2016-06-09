@@ -86,16 +86,11 @@ function* checkBookmark(uri, expected_title) {
 // custom page load listener.
 function promisePageLoaded(browser)
 {
-  return new Promise(resolve => {
-    browser.addEventListener("DOMContentLoaded", function pageLoaded(event) {
-      browser.removeEventListener("DOMContentLoaded", pageLoaded, true);
-
-      if (event.originalTarget != browser.contentDocument ||
-          event.target.location.href == "about:blank") {
-          info("skipping spurious load event");
-          return;
-      }
-      resolve();
-    }, true);
+  return ContentTask.spawn(browser, null, function* () {
+    yield ContentTaskUtils.waitForEvent(this, "DOMContentLoaded", true,
+        (event) => {
+          return event.originalTarget === content.document &&
+                 event.target.location.href !== "about:blank"
+        });
   });
 }
