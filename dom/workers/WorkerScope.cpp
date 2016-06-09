@@ -16,6 +16,7 @@
 #include "mozilla/dom/IDBFactory.h"
 #include "mozilla/dom/ImageBitmap.h"
 #include "mozilla/dom/ImageBitmapBinding.h"
+#include "mozilla/dom/Performance.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseWorkerProxy.h"
 #include "mozilla/dom/ServiceWorkerGlobalScopeBinding.h"
@@ -42,7 +43,6 @@
 #include "ScriptLoader.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
-#include "Performance.h"
 #include "ServiceWorkerClients.h"
 #include "ServiceWorkerManager.h"
 #include "ServiceWorkerRegistration.h"
@@ -359,7 +359,7 @@ WorkerGlobalScope::GetPerformance()
   mWorkerPrivate->AssertIsOnWorkerThread();
 
   if (!mPerformance) {
-    mPerformance = new Performance(mWorkerPrivate);
+    mPerformance = Performance::CreateForWorker(mWorkerPrivate);
   }
 
   return mPerformance;

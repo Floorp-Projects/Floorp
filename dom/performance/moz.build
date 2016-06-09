@@ -4,11 +4,8 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-EXPORTS += [
-    'nsPerformance.h',
-]
-
 EXPORTS.mozilla.dom += [
+    'Performance.h',
     'PerformanceEntry.h',
     'PerformanceMark.h',
     'PerformanceMeasure.h',
@@ -20,8 +17,9 @@ EXPORTS.mozilla.dom += [
 ]
 
 UNIFIED_SOURCES += [
-    'nsPerformance.cpp',
+    'Performance.cpp',
     'PerformanceEntry.cpp',
+    'PerformanceMainThread.cpp',
     'PerformanceMark.cpp',
     'PerformanceMeasure.cpp',
     'PerformanceNavigation.cpp',
@@ -29,6 +27,7 @@ UNIFIED_SOURCES += [
     'PerformanceObserverEntryList.cpp',
     'PerformanceResourceTiming.cpp',
     'PerformanceTiming.cpp',
+    'PerformanceWorker.cpp',
 ]
 
 LOCAL_INCLUDES += [

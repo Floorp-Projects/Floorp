@@ -8,10 +8,9 @@
 #define mozilla_dom_PerformanceResourceTiming_h___
 
 #include "nsCOMPtr.h"
-#include "nsPerformance.h"
 #include "nsIChannel.h"
 #include "nsITimedChannel.h"
-#include "nsDOMNavigationTiming.h"
+#include "Performance.h"
 #include "PerformanceEntry.h"
 #include "PerformanceTiming.h"
 
@@ -30,7 +29,7 @@ public:
       PerformanceEntry)
 
   PerformanceResourceTiming(PerformanceTiming* aPerformanceTiming,
-                            nsPerformance* aPerformance,
+                            Performance* aPerformance,
                             const nsAString& aName);
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;

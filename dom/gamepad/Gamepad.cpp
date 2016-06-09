@@ -29,7 +29,7 @@ Gamepad::UpdateTimestamp()
 {
   nsCOMPtr<nsPIDOMWindowInner> newWindow(do_QueryInterface(mParent));
   if(newWindow) {
-    nsPerformance* perf = newWindow->GetPerformance();
+    Performance* perf = newWindow->GetPerformance();
     if (perf) {
       mTimestamp =  perf->Now();
     }

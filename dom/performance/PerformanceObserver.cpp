@@ -6,11 +6,10 @@
 
 #include "PerformanceObserver.h"
 
+#include "mozilla/dom/Performance.h"
 #include "mozilla/dom/PerformanceBinding.h"
 #include "mozilla/dom/PerformanceEntryBinding.h"
 #include "mozilla/dom/PerformanceObserverBinding.h"
-#include "mozilla/dom/workers/bindings/Performance.h"
-#include "nsPerformance.h"
 #include "nsPIDOMWindow.h"
 #include "nsQueryObject.h"
 #include "nsString.h"

@@ -15,10 +15,10 @@
 #include "nsContentSecurityManager.h"
 #include "nsScreen.h"
 #include "nsHistory.h"
-#include "nsPerformance.h"
 #include "nsDOMNavigationTiming.h"
 #include "nsIDOMStorageManager.h"
 #include "mozilla/dom/DOMStorage.h"
+#include "mozilla/dom/Performance.h"
 #include "mozilla/dom/StorageEvent.h"
 #include "mozilla/dom/StorageEventBinding.h"
 #include "mozilla/IntegerPrintfMacros.h"
@@ -2811,10 +2811,10 @@ nsGlobalWindow::SetNewDocument(nsIDocument* aDocument,
         currentInner->AsInner()->CreatePerformanceObjectIfNeeded();
         if (currentInner->mPerformance) {
           newInnerWindow->mPerformance =
-            new nsPerformance(newInnerWindow->AsInner(),
-                              currentInner->mPerformance->GetDOMTiming(),
-                              currentInner->mPerformance->GetChannel(),
-                              currentInner->mPerformance->GetParentPerformance());
+            Performance::CreateForMainThread(newInnerWindow->AsInner(),
+                                             currentInner->mPerformance->GetDOMTiming(),
+                                             currentInner->mPerformance->GetChannel(),
+                                             currentInner->mPerformance->GetParentPerformance());
         }
       }
 
@@ -3832,7 +3832,7 @@ nsGlobalWindow::GetHistory(ErrorResult& aError)
   return mHistory;
 }
 
-nsPerformance*
+Performance*
 nsPIDOMWindowInner::GetPerformance()
 {
   MOZ_ASSERT(IsInnerWindow());
@@ -3840,7 +3840,7 @@ nsPIDOMWindowInner::GetPerformance()
   return mPerformance;
 }
 
-nsPerformance*
+Performance*
 nsGlobalWindow::GetPerformance()
 {
   return AsInner()->GetPerformance();
@@ -3865,7 +3865,7 @@ nsPIDOMWindowInner::CreatePerformanceObjectIfNeeded()
   if (timing) {
     // If we are dealing with an iframe, we will need the parent's performance
     // object (so we can add the iframe as a resource of that page).
-    nsPerformance* parentPerformance = nullptr;
+    Performance* parentPerformance = nullptr;
     nsCOMPtr<nsPIDOMWindowOuter> parentWindow = GetScriptableParentOrNull();
     if (parentWindow) {
       nsPIDOMWindowInner* parentInnerWindow = nullptr;
@@ -3877,7 +3877,8 @@ nsPIDOMWindowInner::CreatePerformanceObjectIfNeeded()
       }
     }
     mPerformance =
-      new nsPerformance(this, timing, timedChannel, parentPerformance);
+      Performance::CreateForMainThread(this, timing, timedChannel,
+                                       parentPerformance);
   }
 }
 

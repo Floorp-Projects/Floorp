@@ -8,8 +8,8 @@
 #define mozilla_dom_PerformanceNavigation_h
 
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/Performance.h"
 #include "nsDOMNavigationTiming.h"
-#include "nsPerformance.h"
 #include "nsWrapperCache.h"
 
 namespace mozilla {
@@ -26,7 +26,7 @@ public:
     TYPE_RESERVED = 255,
   };
 
-  explicit PerformanceNavigation(nsPerformance* aPerformance);
+  explicit PerformanceNavigation(Performance* aPerformance);
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PerformanceNavigation)
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(PerformanceNavigation)
@@ -41,7 +41,7 @@ public:
     return mPerformance->Timing();
   }
 
-  nsPerformance* GetParentObject() const
+  Performance* GetParentObject() const
   {
     return mPerformance;
   }
@@ -59,7 +59,7 @@ public:
 
 private:
   ~PerformanceNavigation();
-  RefPtr<nsPerformance> mPerformance;
+  RefPtr<Performance> mPerformance;
 };
 
 } // namespace dom
