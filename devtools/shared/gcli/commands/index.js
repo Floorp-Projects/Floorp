@@ -5,7 +5,7 @@
 "use strict";
 
 const { createSystem, connectFront, disconnectFront } = require("gcli/system");
-const { GcliFront } = require("devtools/server/actors/gcli");
+const { GcliFront } = require("devtools/shared/fronts/gcli");
 
 /**
  * This is the basic list of modules that should be loaded into each
