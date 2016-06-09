@@ -10,7 +10,7 @@ const { gcliSpec } = require("devtools/shared/specs/gcli");
  *
  */
 const GcliFront = exports.GcliFront = FrontClassWithSpec(gcliSpec, {
-  initialize: function(client, tabForm) {
+  initialize: function (client, tabForm) {
     Front.prototype.initialize.call(this, client);
     this.actorID = tabForm.gcliActor;
 
@@ -28,7 +28,7 @@ const knownFronts = new WeakMap();
  * For notes on target.makeRemote(), see
  * https://bugzilla.mozilla.org/show_bug.cgi?id=1016330#c7
  */
-exports.GcliFront.create = function(target) {
+exports.GcliFront.create = function (target) {
   return target.makeRemote().then(() => {
     let front = knownFronts.get(target.client);
     if (front == null && target.form.gcliActor != null) {
