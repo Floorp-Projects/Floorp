@@ -296,7 +296,7 @@ enum class SelectionType : RawSelectionType
   eAccessibility = nsISelectionController::SELECTION_ACCESSIBILITY,
   eFind = nsISelectionController::SELECTION_FIND,
   eURLSecondary = nsISelectionController::SELECTION_URLSECONDARY,
-  SELECTION_URLSTRIKEOUT = nsISelectionController::SELECTION_URLSTRIKEOUT,
+  eURLStrikeout = nsISelectionController::SELECTION_URLSTRIKEOUT,
 };
 
 // Using anonymous enum to define constants because these constants may be
