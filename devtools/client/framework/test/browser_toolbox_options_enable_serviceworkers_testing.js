@@ -87,7 +87,7 @@ function toggleServiceWorkersTestingCheckbox() {
 }
 
 function reload() {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   gBrowser.selectedBrowser.addEventListener("load", function onLoad(evt) {
     gBrowser.selectedBrowser.removeEventListener(evt.type, onLoad, true);

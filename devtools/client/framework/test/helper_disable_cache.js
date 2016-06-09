@@ -88,7 +88,7 @@ function* setDisableCacheCheckboxChecked(tabX, state) {
 }
 
 function reloadTab(tabX) {
-  let def = promise.defer();
+  let def = defer();
   let browser = gBrowser.selectedBrowser;
 
   // once() doesn't work here so we use a standard handler instead.

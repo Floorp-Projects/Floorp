@@ -30,7 +30,7 @@ function test() {
     label: "FAKE TOOL!!!",
     isTargetSupported: () => true,
     build: function (iframeWindow, toolbox) {
-      let deferred = promise.defer();
+      let deferred = defer();
       executeSoon(() => {
         deferred.resolve({
           target: toolbox.target,
