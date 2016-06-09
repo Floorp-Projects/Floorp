@@ -8,7 +8,13 @@ task:
       name: '[TC] Linux32 Opt'
       description: 'Linux32 Opt'
 
+  routes:
+      - 'coalesce.v1.builds.{{project}}.opt_linux32'
+
   workerType: opt-linux32
+
+  payload:
+      supersederUrl: 'https://coalesce.mozilla-releng.net/v1/list/builds.{{project}}.opt_linux32'
 
   extra:
     treeherder:
