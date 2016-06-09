@@ -5782,7 +5782,7 @@ bool SelectionIterator::GetNextSegment(gfxFloat* aXOffset,
   uint32_t index = mIterator.GetOriginalOffset() - mOriginalRange.start;
   SelectionDetails* sdptr = mSelectionDetails[index];
   SelectionType selectionType =
-    sdptr ? sdptr->mSelectionType : SelectionType::SELECTION_NONE;
+    sdptr ? sdptr->mSelectionType : SelectionType::eNone;
   TextRangeStyle style;
   if (sdptr) {
     style = sdptr->mTextRangeStyle;
@@ -6292,12 +6292,12 @@ nsTextFrame::GetCaretColorAt(int32_t aOffset)
   textPaintStyle.SetResolveColors(isSolidTextColor);
   SelectionDetails* details = GetSelectionDetails();
   SelectionDetails* sdptr = details;
-  SelectionType selectionType = SelectionType::SELECTION_NONE;
+  SelectionType selectionType = SelectionType::eNone;
   while (sdptr) {
     int32_t start = std::max(0, sdptr->mStart - contentOffset);
     int32_t end = std::min(contentLength, sdptr->mEnd - contentOffset);
     if (start <= offsetInFrame && offsetInFrame < end &&
-        (selectionType == SelectionType::SELECTION_NONE ||
+        (selectionType == SelectionType::eNone ||
          sdptr->mSelectionType < selectionType)) {
       nscolor foreground, background;
       if (GetSelectionTextColors(sdptr->mSelectionType, textPaintStyle,
