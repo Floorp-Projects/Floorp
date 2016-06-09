@@ -90,7 +90,6 @@ SEARCH_PATHS = [
     'testing/web-platform/harness',
     'testing/web-platform/tests/tools/wptserve',
     'testing/xpcshell',
-    'tools/mercurial',
     'xpcom/idl-parser',
 ]
 
