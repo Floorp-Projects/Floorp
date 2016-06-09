@@ -245,19 +245,13 @@ function synthesizeNativeClick(aElement, aX, aY, aObserver = null) {
 // Move the mouse to (dx, dy) relative to |element|, and scroll the wheel
 // at that location.
 // Moving the mouse is necessary to avoid wheel events from two consecutive
-// scrollWheelOver() calls on different elements being incorreclty considered
-// as part of t he same wheel transaction.
+// moveMouseAndScrollWheelOver() calls on different elements being incorrectly
+// considered as part of the same wheel transaction.
 // We also wait for the mouse move event to be processed before sending the
 // wheel event, otherwise there is a chance they might get reordered, and
 // we have the transaction problem again.
-// XXX FOOTGUN: On Windows, if the mouse cursor is already at the target
-//              position, the mouse-move event doesn't get dispatched, and
-//              we end up hanging waiting for it. As a result, care must
-//              be taken that the mouse isn't already at the target position
-//              when using this function.
 function moveMouseAndScrollWheelOver(element, dx, dy, testDriver) {
   return synthesizeNativeMouseMoveAndWaitForMoveEvent(element, dx, dy, function() {
     synthesizeNativeWheelAndWaitForScrollEvent(element, dx, dy, 0, -10, testDriver);
   });
 }
-
