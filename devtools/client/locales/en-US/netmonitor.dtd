@@ -39,6 +39,10 @@
   -  in the network table toolbar, above the "domain" column. -->
 <!ENTITY netmonitorUI.toolbar.domain      "Domain">
 
+<!-- LOCALIZATION NOTE (netmonitorUI.toolbar.cause): This is the label displayed
+  -  in the network table toolbar, above the "cause" column. -->
+<!ENTITY netmonitorUI.toolbar.cause        "Cause">
+
 <!-- LOCALIZATION NOTE (netmonitorUI.toolbar.type): This is the label displayed
   -  in the network table toolbar, above the "type" column. -->
 <!ENTITY netmonitorUI.toolbar.type        "Type">
