@@ -1800,6 +1800,54 @@
     "kind": "boolean",
     "description": "Rate of page load from offline cache"
   },
+  "HTTP_CACHE_IO_QUEUE_OPEN_PRIORITY": {
+    "expires_in_version": "54",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "HTTP Cache IO queue length"
+  },
+  "HTTP_CACHE_IO_QUEUE_READ_PRIORITY": {
+    "expires_in_version": "54",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "HTTP Cache IO queue length"
+  },
+  "HTTP_CACHE_IO_QUEUE_OPEN": {
+    "expires_in_version": "54",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "HTTP Cache IO queue length"
+  },
+  "HTTP_CACHE_IO_QUEUE_READ": {
+    "expires_in_version": "54",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "HTTP Cache IO queue length"
+  },
+  "HTTP_CACHE_IO_QUEUE_MANAGEMENT": {
+    "expires_in_version": "54",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "HTTP Cache IO queue length"
+  },
+  "HTTP_CACHE_IO_QUEUE_WRITE": {
+    "expires_in_version": "54",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "HTTP Cache IO queue length"
+  },
+  "HTTP_CACHE_IO_QUEUE_INDEX": {
+    "expires_in_version": "54",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "HTTP Cache IO queue length"
+  },
+  "HTTP_CACHE_IO_QUEUE_EVICT": {
+    "expires_in_version": "54",
+    "kind": "enumerated",
+    "n_values": 10,
+    "description": "HTTP Cache IO queue length"
+  },
   "CACHE_DEVICE_SEARCH_2": {
     "expires_in_version": "never",
     "kind": "exponential",
