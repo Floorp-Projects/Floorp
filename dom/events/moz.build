@@ -44,8 +44,6 @@ EXPORTS.mozilla.dom += [
     'CustomEvent.h',
     'DataContainerEvent.h',
     'DataTransfer.h',
-    'DataTransferItem.h',
-    'DataTransferItemList.h',
     'DeviceMotionEvent.h',
     'DragEvent.h',
     'Event.h',
@@ -124,8 +122,6 @@ UNIFIED_SOURCES += [
 
 # nsEventStateManager.cpp should be built separately because of Mac OS X headers.
 SOURCES += [
-    'DataTransferItem.cpp',
-    'DataTransferItemList.cpp',
     'EventStateManager.cpp',
 ]
 
