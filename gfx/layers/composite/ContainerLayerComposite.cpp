@@ -905,12 +905,6 @@ ContainerLayerComposite::Prepare(const RenderTargetIntRect& aClipRect)
   ContainerPrepare(this, mCompositeManager, aClipRect);
 }
 
-bool
-ContainerLayerComposite::NeedToDrawCheckerboarding(Color* aOutCheckerboardingColor)
-{
-  return NeedToDrawCheckerboardingForLayer(this, aOutCheckerboardingColor);
-}
-
 void
 ContainerLayerComposite::CleanupResources()
 {
@@ -962,11 +956,6 @@ RefLayerComposite::Prepare(const RenderTargetIntRect& aClipRect)
   ContainerPrepare(this, mCompositeManager, aClipRect);
 }
 
-bool
-RefLayerComposite::NeedToDrawCheckerboarding(Color* aOutCheckerboardingColor)
-{
-  return NeedToDrawCheckerboardingForLayer(this, aOutCheckerboardingColor);
-}
 
 void
 RefLayerComposite::CleanupResources()
