@@ -137,6 +137,9 @@ mozharness_bin="/home/worker/bin/run-mozharness"
 # Save the computed mozharness command to a binary which is useful
 # for interactive mode.
 echo -e "#!/usr/bin/env bash
+# Some mozharness scripts assume base_work_dir is in
+# the current working directory, see bug 1279237
+cd $WORKSPACE
 cmd=\"python2.7 $WORKSPACE/${MOZHARNESS_SCRIPT} ${config_cmds} ${@} \${@}\"
 echo \"Running: \${cmd}\"
 exec \${cmd}" > ${mozharness_bin}
