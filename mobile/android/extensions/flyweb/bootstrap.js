@@ -147,5 +147,8 @@ function startup(aData, aReason) {
 function shutdown(aData, aReason) {
   Services.prefs.removeObserver(FLYWEB_ENABLED_PREF, prefObserver);
 
-  FlyWebUI.uninit();
+  let enabled = Services.prefs.getBoolPref(FLYWEB_ENABLED_PREF);
+  if (enabled) {
+    FlyWebUI.uninit();
+  }
 }
