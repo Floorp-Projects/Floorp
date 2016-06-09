@@ -265,13 +265,10 @@ jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph)
     bool someUnreachable = false;
     for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
         JitSpew(JitSpew_Prune, "Investigate Block %d:", block->id());
-        JitSpewIndent indent(JitSpew_Prune);
 
         // Do not touch entry basic blocks.
-        if (*block == graph.osrBlock() || *block == graph.entryBlock()) {
-            JitSpew(JitSpew_Prune, "Block %d is an entry point.", block->id());
+        if (*block == graph.osrBlock() || *block == graph.entryBlock())
             continue;
-        }
 
         // Compute if all the predecessors of this block are either bailling out
         // or are already flagged as unreachable.
@@ -305,57 +302,31 @@ jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph)
         // Check if the predecessors got accessed a large number of times in
         // comparisons of the current block, in order to know if our attempt at
         // removing this block is not premature.
-        if (!isUnreachable && shouldBailout) {
+        if (shouldBailout) {
             size_t p = numPred;
             size_t predCount = 0;
             bool isLoopExit = false;
-            bool isCaseStatement = false;
             while (p--) {
                 MBasicBlock* pred = block->getPredecessor(p);
                 if (pred->getHitState() == MBasicBlock::HitState::Count)
                     predCount += pred->getHitCount();
                 isLoopExit |= pred->isLoopHeader() && pred->backedge() != *block;
-                isCaseStatement |= pred->numSuccessors() > 2;
             }
 
-            // Iterate over the approximated set of dominated blocks and count
-            // the number of instructions which are dominated.  Note that this
-            // approximation has issues with OSR blocks, but this should not be
-            // a big deal, as this is a heuristic.
-            size_t numDominatedInst = 0;
-            int numInOutEdges = block->numPredecessors();
-            ReversePostorderIterator it(block);
-            do {
-                for (MDefinitionIterator def(*it); def; def++)
-                    numDominatedInst++;
+            // This assumes that instructions are numbered in sequence, which is
+            // the case after IonBuilder creation of basic blocks.
+            size_t numInst = block->rbegin()->id() - block->begin()->id();
 
-                numInOutEdges += int(it->numSuccessors()) - int(it->numPredecessors());
-                it++;
-            } while (numInOutEdges > 0 && it != graph.rpoEnd());
-
-            // This relation is a heuristic which attempt at avoiding converting
-            // this block to a bailing block when we do not have enough
-            // information to make a wise decision.
+            // This sum is not homogeneous but gives good results on benchmarks
+            // like Kraken and Octane. The current block has not been executed
+            // yet, and ...
             //
             //   1. If the number of times the predecessor got executed is
             //      larger, then we are less likely to hit this block.
             //
             //   2. If the block is large, then this is likely a corner case,
             //      and thus we are less likely to hit this block.
-            //
-            // predCount
-            //  ^
-            //  |x
-            //  |x
-            //  |xx
-            //  |xx
-            //  |xxxx
-            //  |xxxxxxx
-            //  |xxxxxxxxxxxxxx
-            //  |xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-            //  +---------------------------------> numInst
-            //
-            if (predCount * numDominatedInst * numDominatedInst < 250000)
+            if (predCount + numInst < 75)
                 shouldBailout = false;
 
             // If this is the exit block of a loop, then keep this basic
@@ -363,28 +334,6 @@ jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph)
             // costly than a simple exit sequence.
             if (isLoopExit)
                 shouldBailout = false;
-
-            // Interpreters are often implemented as a table switch within a for
-            // loop. What might happen is that the interpreter heat up in a
-            // subset of instructions, but might need other instructions for the
-            // rest of the evaluation.
-            if (isCaseStatement)
-                shouldBailout = false;
-
-            // If this basic block is a simple basic block which contains an
-            // early return statement, we should compile it as such as the cost
-            // of a return is less than the cost of a bailout.
-            bool isExitBlock = block->numSuccessors() == 0;
-            if (isExitBlock && numDominatedInst < 10)
-                shouldBailout = false;
-
-            JitSpew(JitSpew_Prune, "info: block %d, predCount: %lu, numDomInst: %lu, "
-                    "isLoopExit: %s, isExitBlock: %s, isCaseStatement: %s. (shouldBailout: %s)",
-                    block->id(), predCount, numDominatedInst,
-                    isLoopExit ? "true" : "false",
-                    isExitBlock ? "true" : "false",
-                    isCaseStatement ? "true" : "false",
-                    shouldBailout ? "true" : "false");
         }
 
         // Continue to the next basic block if the current basic block can
@@ -392,6 +341,7 @@ jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph)
         if (!isUnreachable && !shouldBailout)
             continue;
 
+        JitSpewIndent indent(JitSpew_Prune);
         someUnreachable = true;
         if (isUnreachable) {
             JitSpew(JitSpew_Prune, "Mark block %d as unreachable.", block->id());
