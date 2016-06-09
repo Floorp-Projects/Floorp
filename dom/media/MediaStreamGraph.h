@@ -1177,23 +1177,6 @@ protected:
 };
 
 /**
- * The blocking mode decides how a track should be blocked in a MediaInputPort.
- */
-enum class BlockingMode
-{
-  /**
-   * BlockingMode CREATION blocks the source track from being created
-   * in the destination. It'll end if it already exists.
-   */
-  CREATION,
-  /**
-   * BlockingMode END_EXISTING allows a track to be created in the destination
-   * but will end it before any data has been passed through.
-   */
-  END_EXISTING,
-};
-
-/**
  * Represents a connection between a ProcessedMediaStream and one of its
  * input streams.
  * We make these refcounted so that stream-related messages with MediaInputPort*
@@ -1274,39 +1257,16 @@ public:
    * Returns a pledge that resolves on the main thread after the track block has
    * been applied by the MSG.
    */
-  already_AddRefed<media::Pledge<bool, nsresult>> BlockSourceTrackId(TrackID aTrackId,
-                                                                     BlockingMode aBlockingMode);
+  already_AddRefed<media::Pledge<bool, nsresult>> BlockSourceTrackId(TrackID aTrackId);
 private:
-  void BlockSourceTrackIdImpl(TrackID aTrackId, BlockingMode aBlockingMode);
+  void BlockSourceTrackIdImpl(TrackID aTrackId);
 
 public:
-  // Returns true if aTrackId has not been blocked for any reason and this port
-  // has not been locked to another track.
+  // Returns true if aTrackId has not been blocked and this port has not
+  // been locked to another track.
   bool PassTrackThrough(TrackID aTrackId) {
-    bool blocked = false;
-    for (auto pair : mBlockedTracks) {
-      if (pair.first() == aTrackId &&
-          (pair.second() == BlockingMode::CREATION ||
-           pair.second() == BlockingMode::END_EXISTING)) {
-        blocked = true;
-        break;
-      }
-    }
-    return !blocked && (mSourceTrack == TRACK_ANY || mSourceTrack == aTrackId);
-  }
-
-  // Returns true if aTrackId has not been blocked for track creation and this
-  // port has not been locked to another track.
-  bool AllowCreationOf(TrackID aTrackId) {
-    bool blocked = false;
-    for (auto pair : mBlockedTracks) {
-      if (pair.first() == aTrackId &&
-          pair.second() == BlockingMode::CREATION) {
-        blocked = true;
-        break;
-      }
-    }
-    return !blocked && (mSourceTrack == TRACK_ANY || mSourceTrack == aTrackId);
+    return !mBlockedTracks.Contains(aTrackId) &&
+           (mSourceTrack == TRACK_ANY || mSourceTrack == aTrackId);
   }
 
   uint16_t InputNumber() const { return mInputNumber; }
@@ -1361,9 +1321,7 @@ private:
   // Web Audio.
   const uint16_t mInputNumber;
   const uint16_t mOutputNumber;
-
-  typedef Pair<TrackID, BlockingMode> BlockedTrack;
-  nsTArray<BlockedTrack> mBlockedTracks;
+  nsTArray<TrackID> mBlockedTracks;
 
   // Our media stream graph
   MediaStreamGraphImpl* mGraph;
