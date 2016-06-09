@@ -43,33 +43,6 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::workers;
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PerformanceNavigation, mPerformance)
-
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(PerformanceNavigation, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(PerformanceNavigation, Release)
-
-PerformanceNavigation::PerformanceNavigation(nsPerformance* aPerformance)
-  : mPerformance(aPerformance)
-{
-  MOZ_ASSERT(aPerformance, "Parent performance object should be provided");
-}
-
-PerformanceNavigation::~PerformanceNavigation()
-{
-}
-
-JSObject*
-PerformanceNavigation::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
-{
-  return PerformanceNavigationBinding::Wrap(cx, this, aGivenProto);
-}
-
-uint16_t
-PerformanceNavigation::RedirectCount() const
-{
-  return GetPerformanceTiming()->GetRedirectCount();
-}
-
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsPerformance)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsPerformance, PerformanceBase)

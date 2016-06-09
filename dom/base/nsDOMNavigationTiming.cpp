@@ -5,12 +5,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsDOMNavigationTiming.h"
-#include "nsPerformance.h"
 #include "nsCOMPtr.h"
 #include "nsContentUtils.h"
 #include "nsIScriptSecurityManager.h"
 #include "prtime.h"
 #include "nsIURI.h"
+#include "mozilla/dom/PerformanceNavigation.h"
 #include "mozilla/TimeStamp.h"
 
 nsDOMNavigationTiming::nsDOMNavigationTiming()
