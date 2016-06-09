@@ -10,6 +10,10 @@
 if (!ArrayBuffer.transfer) {
   /**
    * @see https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/ArrayBuffer/transfer
+   *
+   * @param {ArrayBuffer} buffer
+   * @param {integer} [size = buffer.byteLength]
+   * @returns {ArrayBuffer}
    */
   ArrayBuffer.transfer = function(buffer, size = buffer.byteLength) {
     let u8out = new Uint8Array(size);

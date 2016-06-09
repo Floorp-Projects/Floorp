@@ -208,6 +208,15 @@ class BaseContext {
    * A wrapper around MessageChannel.sendMessage which adds the extension ID
    * to the recipient object, and ensures replies are not processed after the
    * context has been unloaded.
+   *
+   * @param {nsIMessageManager} target
+   * @param {string} messageName
+   * @param {object} data
+   * @param {object} [options]
+   * @param {object} [options.sender]
+   * @param {object} [options.recipient]
+   *
+   * @returns {Promise}
    */
   sendMessage(target, messageName, data, options = {}) {
     options.recipient = options.recipient || {};
@@ -238,6 +247,9 @@ class BaseContext {
    * scope. If it is an Error object which does *not* belong to the
    * clone scope, it is reported, and converted to an unexpected
    * exception error.
+   *
+   * @param {Error|object} error
+   * @returns {Error}
    */
   normalizeError(error) {
     if (error instanceof this.cloneScope.Error) {

@@ -134,6 +134,8 @@ PageAction.prototype = {
    * if it were clicked by a user.
    *
    * This has no effect if the page action is hidden for the selected tab.
+   *
+   * @param {Window} window
    */
   triggerAction(window) {
     let pageAction = pageActionMap.get(this.extension);

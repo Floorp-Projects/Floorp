@@ -195,6 +195,12 @@ public class GeckoActionProvider {
         return dataModel.getIntent();
     }
 
+    /**
+     * Must be run on a background thread due to DB access.
+     *
+     * DB access happens in ActivityChosseModel when it retrieves the list of sync clients
+     * if sync is enabled.
+     */
     public void setIntent(Intent intent) {
         ActivityChooserModel dataModel = ActivityChooserModel.get(mContext, mHistoryFileName);
         dataModel.setIntent(intent);

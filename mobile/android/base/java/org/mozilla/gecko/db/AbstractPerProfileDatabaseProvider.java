@@ -4,7 +4,9 @@
 
 package org.mozilla.gecko.db;
 
+import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.annotation.RobocopTarget;
+import org.mozilla.gecko.util.ThreadUtils;
 
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
@@ -35,6 +37,10 @@ public abstract class AbstractPerProfileDatabaseProvider extends AbstractTransac
      */
     @Override
     protected SQLiteDatabase getReadableDatabase(Uri uri) {
+        if (!AppConstants.MOZILLA_OFFICIAL) {
+            ThreadUtils.assertNotOnUiThread();
+        }
+
         String profile = null;
         if (uri != null) {
             profile = uri.getQueryParameter(BrowserContract.PARAM_PROFILE);
@@ -53,6 +59,10 @@ public abstract class AbstractPerProfileDatabaseProvider extends AbstractTransac
      */
     @Override
     protected SQLiteDatabase getWritableDatabase(Uri uri) {
+        if (!AppConstants.MOZILLA_OFFICIAL) {
+            ThreadUtils.assertNotOnUiThread();
+        }
+
         String profile = null;
         if (uri != null) {
             profile = uri.getQueryParameter(BrowserContract.PARAM_PROFILE);
