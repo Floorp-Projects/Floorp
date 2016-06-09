@@ -50,6 +50,7 @@
 #include "nsXULAppAPI.h"
 #include "nsQueryObject.h"
 #include <algorithm>
+#include "chrome/common/ipc_channel.h" // for IPC::Channel::kMaximumMessageSize
 
 #ifdef MOZ_CRASHREPORTER
 #include "nsExceptionHandler.h"
@@ -703,13 +704,13 @@ nsFrameMessageManager::SendRpcMessage(const nsAString& aMessageName,
                      aRetval, false);
 }
 
-static void
-RecordMessageSize(size_t aDataLength, const nsAString& aMessageName)
+static bool
+AllowMessage(size_t aDataLength, const nsAString& aMessageName)
 {
   static const size_t kMinTelemetryMessageSize = 8192;
 
   if (aDataLength < kMinTelemetryMessageSize) {
-    return;
+    return true;
   }
 
   NS_ConvertUTF16toUTF8 messageName(aMessageName);
@@ -717,6 +718,19 @@ RecordMessageSize(size_t aDataLength, const nsAString& aMessageName)
 
   Telemetry::Accumulate(Telemetry::MESSAGE_MANAGER_MESSAGE_SIZE2, messageName,
                         aDataLength);
+
+  // A message includes more than structured clone data, so subtract
+  // 20KB to make it more likely that a message within this bound won't
+  // result in an overly large IPC message.
+  static const size_t kMaxMessageSize = IPC::Channel::kMaximumMessageSize - 20 * 1024;
+  if (aDataLength < kMaxMessageSize) {
+    return true;
+  }
+
+  Telemetry::Accumulate(Telemetry::REJECTED_MESSAGE_MANAGER_MESSAGE,
+                        messageName);
+
+  return false;
 }
 
 nsresult
@@ -746,7 +760,9 @@ nsFrameMessageManager::SendMessage(const nsAString& aMessageName,
     return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
 
-  RecordMessageSize(data.DataLength(), aMessageName);
+  if (!AllowMessage(data.DataLength(), aMessageName)) {
+    return NS_ERROR_FAILURE;
+  }
 
   JS::Rooted<JSObject*> objects(aCx);
   if (aArgc >= 3 && aObjects.isObject()) {
@@ -828,7 +844,9 @@ nsFrameMessageManager::DispatchAsyncMessage(const nsAString& aMessageName,
     return NS_ERROR_DOM_DATA_CLONE_ERR;
   }
 
-  RecordMessageSize(data.DataLength(), aMessageName);
+  if (!AllowMessage(data.DataLength(), aMessageName)) {
+    return NS_ERROR_FAILURE;
+  }
 
   JS::Rooted<JSObject*> objects(aCx);
   if (aArgc >= 3 && aObjects.isObject()) {
