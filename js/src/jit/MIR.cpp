@@ -4568,10 +4568,8 @@ MNot::foldsTo(TempAllocator& alloc)
     if (MConstant* inputConst = input()->maybeConstantValue()) {
         bool b;
         if (inputConst->valueToBoolean(&b)) {
-            if (type() == MIRType::Int32)
+            if (type() == MIRType::Int32 || type() == MIRType::Int64)
                 return MConstant::New(alloc, Int32Value(!b));
-            if (type() == MIRType::Int64)
-                return MConstant::NewInt64(alloc, int64_t(!b));
             return MConstant::New(alloc, BooleanValue(!b));
         }
     }
