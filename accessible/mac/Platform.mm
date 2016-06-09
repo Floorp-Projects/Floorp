@@ -8,6 +8,7 @@
 
 #include "Platform.h"
 #include "ProxyAccessible.h"
+#include "DocAccessibleParent.h"
 #include "mozTableAccessible.h"
 
 #include "nsAppShell.h"
@@ -54,11 +55,29 @@ ProxyCreated(ProxyAccessible* aProxy, uint32_t)
   uintptr_t accWrap = reinterpret_cast<uintptr_t>(aProxy) | IS_PROXY;
   mozAccessible* mozWrapper = [[type alloc] initWithAccessible:accWrap];
   aProxy->SetWrapper(reinterpret_cast<uintptr_t>(mozWrapper));
+
+  // Invalidate native parent in parent process's children on proxy creation
+  if (aProxy->IsDoc() && aProxy->AsDoc()->IsTopLevel()) {
+    Accessible* outerDoc = aProxy->OuterDocOfRemoteBrowser();
+    if (outerDoc) {
+      mozAccessible* nativeParent = GetNativeFromGeckoAccessible(outerDoc);
+      [nativeParent invalidateChildren];
+    }
+  }
 }
 
 void
 ProxyDestroyed(ProxyAccessible* aProxy)
 {
+  // Invalidate native parent in parent process's children on proxy destruction
+  if (aProxy->IsDoc() && aProxy->AsDoc()->IsTopLevel()) {
+    Accessible* outerDoc = aProxy->OuterDocOfRemoteBrowser();
+    if (outerDoc) {
+      mozAccessible* nativeParent = GetNativeFromGeckoAccessible(outerDoc);
+      [nativeParent invalidateChildren];
+    }
+  }
+
   mozAccessible* wrapper = GetNativeFromProxy(aProxy);
   [wrapper expire];
   [wrapper release];
