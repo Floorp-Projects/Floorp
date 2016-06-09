@@ -392,23 +392,23 @@ PerformanceTiming::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 }
 
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsPerformanceNavigation, mPerformance)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PerformanceNavigation, mPerformance)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsPerformanceNavigation, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsPerformanceNavigation, Release)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(PerformanceNavigation, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(PerformanceNavigation, Release)
 
-nsPerformanceNavigation::nsPerformanceNavigation(nsPerformance* aPerformance)
+PerformanceNavigation::PerformanceNavigation(nsPerformance* aPerformance)
   : mPerformance(aPerformance)
 {
   MOZ_ASSERT(aPerformance, "Parent performance object should be provided");
 }
 
-nsPerformanceNavigation::~nsPerformanceNavigation()
+PerformanceNavigation::~PerformanceNavigation()
 {
 }
 
 JSObject*
-nsPerformanceNavigation::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
+PerformanceNavigation::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
   return PerformanceNavigationBinding::Wrap(cx, this, aGivenProto);
 }
@@ -498,11 +498,11 @@ nsPerformance::DispatchBufferFullEvent()
   DispatchDOMEvent(nullptr, event, nullptr, nullptr);
 }
 
-nsPerformanceNavigation*
+PerformanceNavigation*
 nsPerformance::Navigation()
 {
   if (!mNavigation) {
-    mNavigation = new nsPerformanceNavigation(this);
+    mNavigation = new PerformanceNavigation(this);
   }
   return mNavigation;
 }
