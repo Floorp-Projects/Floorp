@@ -995,7 +995,7 @@ nsXMLHttpRequest::GetResponse(JSContext* aCx,
 }
 
 bool
-nsXMLHttpRequest::IsCrossSiteCORSRequest()
+nsXMLHttpRequest::IsCrossSiteCORSRequest() const
 {
   if (!mChannel) {
     return false;
@@ -1197,10 +1197,10 @@ nsXMLHttpRequest::SlowAbort()
 /*Method that checks if it is safe to expose a header value to the client.
 It is used to check what headers are exposed for CORS requests.*/
 bool
-nsXMLHttpRequest::IsSafeHeader(const nsACString& header, nsIHttpChannel* httpChannel)
+nsXMLHttpRequest::IsSafeHeader(const nsACString& aHeader, NotNull<nsIHttpChannel*> aHttpChannel) const
 {
   // See bug #380418. Hide "Set-Cookie" headers from non-chrome scripts.
-  if (!IsSystemXHR() && nsContentUtils::IsForbiddenResponseHeader(header)) {
+  if (!IsSystemXHR() && nsContentUtils::IsForbiddenResponseHeader(aHeader)) {
     NS_WARNING("blocked access to response header");
     return false;
   }
@@ -1223,14 +1223,14 @@ nsXMLHttpRequest::IsSafeHeader(const nsACString& header, nsIHttpChannel* httpCha
     "last-modified", "pragma"
   };
   for (uint32_t i = 0; i < ArrayLength(kCrossOriginSafeHeaders); ++i) {
-    if (header.LowerCaseEqualsASCII(kCrossOriginSafeHeaders[i])) {
+    if (aHeader.LowerCaseEqualsASCII(kCrossOriginSafeHeaders[i])) {
       return true;
     }
   }
   nsAutoCString headerVal;
   // The "Access-Control-Expose-Headers" header contains a comma separated
   // list of method names.
-  httpChannel->
+  aHttpChannel->
       GetResponseHeader(NS_LITERAL_CSTRING("Access-Control-Expose-Headers"),
                         headerVal);
   nsCCharSeparatedTokenizer exposeTokens(headerVal, ',');
@@ -1243,7 +1243,7 @@ nsXMLHttpRequest::IsSafeHeader(const nsACString& header, nsIHttpChannel* httpCha
     if (!NS_IsValidHTTPToken(token)) {
       return false;
     }
-    if (header.Equals(token, nsCaseInsensitiveCStringComparator())) {
+    if (aHeader.Equals(token, nsCaseInsensitiveCStringComparator())) {
       isSafe = true;
     }
   }
@@ -1264,7 +1264,8 @@ nsXMLHttpRequest::GetAllResponseHeaders(nsCString& aResponseHeaders)
   }
 
   if (nsCOMPtr<nsIHttpChannel> httpChannel = GetCurrentHttpChannel()) {
-    RefPtr<nsHeaderVisitor> visitor = new nsHeaderVisitor(this, httpChannel);
+    RefPtr<nsHeaderVisitor> visitor =
+      new nsHeaderVisitor(*this, WrapNotNull(httpChannel));
     if (NS_SUCCEEDED(httpChannel->VisitResponseHeaders(visitor))) {
       aResponseHeaders = visitor->Headers();
     }
@@ -1358,7 +1359,7 @@ nsXMLHttpRequest::GetResponseHeader(const nsACString& header,
   }
 
   // Check for dangerous headers
-  if (!IsSafeHeader(header, httpChannel)) {
+  if (!IsSafeHeader(header, WrapNotNull(httpChannel))) {
     return;
   }
 
@@ -1458,7 +1459,7 @@ nsXMLHttpRequest::GetCurrentJARChannel()
 }
 
 bool
-nsXMLHttpRequest::IsSystemXHR()
+nsXMLHttpRequest::IsSystemXHR() const
 {
   return mIsSystem || nsContentUtils::IsSystemPrincipal(mPrincipal);
 }
@@ -3648,7 +3649,7 @@ NS_IMPL_ISUPPORTS(nsXMLHttpRequest::nsHeaderVisitor, nsIHttpHeaderVisitor)
 NS_IMETHODIMP nsXMLHttpRequest::
 nsHeaderVisitor::VisitHeader(const nsACString &header, const nsACString &value)
 {
-  if (mXHR->IsSafeHeader(header, mHttpChannel)) {
+  if (mXHR.IsSafeHeader(header, mHttpChannel)) {
     mHeaders.Append(header);
     mHeaders.AppendLiteral(": ");
     mHeaders.Append(value);
