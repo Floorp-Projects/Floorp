@@ -1,15 +1,8 @@
 // Tests referrer on context menu navigation - open link in new container tab.
 // Selects "open link in new container tab" from the context menu.
 
-function getReferrerTest(aTestNumber) {
-  let test = _referrerTests[aTestNumber];
-  if (test) {
-    // We want all the referrer tests to fail!
-    test.result = "";
-  }
-
-  return test;
-}
+// The test runs from a container ID 1.
+// Output: we have the correct referrer policy applied.
 
 function startNewTabTestCase(aTestNumber) {
   info("browser_referrer_open_link_in_container_tab: " +
@@ -19,11 +12,10 @@ function startNewTabTestCase(aTestNumber) {
       gTestWindow.gBrowser.selectedTab = aNewTab;
 
       checkReferrerAndStartNextTest(aTestNumber, null, aNewTab,
-                                    startNewTabTestCase);
+                                    startNewTabTestCase, { userContextId: 1 });
     });
 
     let menu = gTestWindow.document.getElementById("context-openlinkinusercontext-menu");
-
     let menupopup = menu.menupopup;
     menu.addEventListener("popupshown", function onPopupShown() {
       menu.removeEventListener("popupshown", onPopupShown);
@@ -34,6 +26,7 @@ function startNewTabTestCase(aTestNumber) {
       let firstContext = menupopup.firstChild;
       is(firstContext.nodeType, Node.ELEMENT_NODE, "We have a first container entry.");
       ok(firstContext.hasAttribute("usercontextid"), "We have a usercontextid value.");
+      is("1", firstContext.getAttribute("usercontextid"), "We have the right usercontextid value.");
 
       aContextMenu.addEventListener("popuphidden", function onPopupHidden() {
         aContextMenu.removeEventListener("popuphidden", onPopupHidden);
@@ -54,6 +47,6 @@ function test() {
     {set: [["privacy.userContext.enabled", true]]},
     function() {
       requestLongerTimeout(10);  // slowwww shutdown on e10s
-      startReferrerTest(startNewTabTestCase);
+      startReferrerTest(startNewTabTestCase, { userContextId: 1 });
     });
 }
