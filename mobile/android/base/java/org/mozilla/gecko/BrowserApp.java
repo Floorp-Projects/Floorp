@@ -85,6 +85,7 @@ import org.mozilla.gecko.toolbar.BrowserToolbar;
 import org.mozilla.gecko.toolbar.BrowserToolbar.TabEditingState;
 import org.mozilla.gecko.toolbar.ToolbarProgressView;
 import org.mozilla.gecko.trackingprotection.TrackingProtectionPrompt;
+import org.mozilla.gecko.updater.PostUpdateHandler;
 import org.mozilla.gecko.updater.UpdateServiceHelper;
 import org.mozilla.gecko.util.ActivityUtils;
 import org.mozilla.gecko.util.Clipboard;
@@ -310,6 +311,7 @@ public class BrowserApp extends GeckoApp
             (BrowserAppDelegate) new BookmarkStateChangeDelegate(),
             (BrowserAppDelegate) new ReaderViewBookmarkPromotion(),
             (BrowserAppDelegate) new ContentNotificationsDelegate(),
+            (BrowserAppDelegate) new PostUpdateHandler(),
             new TelemetryCorePingDelegate()
     ));
 

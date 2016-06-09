@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.1//EN"
+  "http://www.w3.org/TR/xhtml11/DTD/xhtml11.dtd" [
+<!ENTITY % brandDTD SYSTEM "chrome://branding/locale/brand.dtd" >
+%brandDTD;
+<!ENTITY % globalDTD SYSTEM "chrome://global/locale/global.dtd" >
+%globalDTD;
+<!ENTITY % flywebDTD SYSTEM "chrome://flyweb/locale/aboutFlyWeb.dtd" >
+%flywebDTD;
+]>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this file,
+   - You can obtain one at http://mozilla.org/MPL/2.0/.  -->
+
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:xul="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+<head>
+  <title>&aboutFlyWeb.title;</title>
+  <meta name="viewport" content="width=device-width; user-scalable=0" />
+  <link rel="icon" type="image/png" sizes="64x64" href="chrome://branding/content/favicon64.png" />
+  <link rel="stylesheet" href="chrome://browser/skin/aboutBase.css" type="text/css"/>
+  <link rel="stylesheet" href="chrome://flyweb/content/aboutFlyWeb.css" type="text/css"/>
+</head>
+
+<body dir="&locale.dir;">
+  <!--template id="flyweb-item-template"-->
+    <li id="flyweb-item-template" class="list-item" role="button">
+      <img class="icon" src=""/>
+      <div class="details">
+        <div class="row">
+          <!-- This is a hack so that we can crop this label in its center -->
+          <xul:label class="title" crop="center" value=""/>
+        </div>
+      </div>
+    </li>
+  <!--/template-->
+
+  <div class="header">
+    <div>&aboutFlyWeb.header;</div>
+  </div>
+  <ul id="flyweb-list" class="list"></ul>
+  <span id="flyweb-list-empty">&aboutFlyWeb.empty;</span>
+  <script type="application/javascript;version=1.8" src="chrome://flyweb/content/aboutFlyWeb.js"/>
+</body>
+</html>
