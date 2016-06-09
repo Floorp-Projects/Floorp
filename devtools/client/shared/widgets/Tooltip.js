@@ -843,7 +843,8 @@ Heritage.extend(SwatchBasedEditorTooltip.prototype, {
   },
 
   _openEyeDropper: function () {
-    let {inspector, toolbox} = this.inspector;
+    let {inspector, toolbox, telemetry} = this.inspector;
+    telemetry.toolOpened("pickereyedropper");
     inspector.pickColorFromPage({copyOnSelect: false}).catch(e => console.error(e));
 
     inspector.once("color-picked", color => {
