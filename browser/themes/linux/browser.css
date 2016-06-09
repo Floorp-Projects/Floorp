@@ -1962,6 +1962,6 @@ notification.pluginVulnerable > .notification-inner > .messageCloseButton:not(:h
   overflow: hidden;
 }
 
-.menuitem-iconic[command="Browser:NewUserContextTab"] > .menu-iconic-left > .menu-iconic-icon {
+.menuitem-iconic[usercontextid] > .menu-iconic-left > .menu-iconic-icon {
   visibility: visible;
 }
