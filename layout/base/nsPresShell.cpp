@@ -2740,7 +2740,7 @@ nsIPresShell::GetFrameToScrollAsScrollable(
   }
   if (!focusedContent && mSelection) {
     nsISelection* domSelection =
-      mSelection->GetSelection(SelectionType::SELECTION_NORMAL);
+      mSelection->GetSelection(SelectionType::eNormal);
     if (domSelection) {
       nsCOMPtr<nsIDOMNode> focusedNode;
       domSelection->GetFocusNode(getter_AddRefs(focusedNode));
@@ -3070,8 +3070,7 @@ PresShell::GoToAnchor(const nsAString& aAnchorName, bool aScroll,
     NS_ASSERTION(node, "No nsIDOMNode for descendant of anchor");
     jumpToRange->SelectNodeContents(node);
     // Select the anchor
-    nsISelection* sel =
-      mSelection->GetSelection(SelectionType::SELECTION_NORMAL);
+    nsISelection* sel = mSelection->GetSelection(SelectionType::eNormal);
     if (sel) {
       sel->RemoveAllRanges();
       sel->AddRange(jumpToRange);

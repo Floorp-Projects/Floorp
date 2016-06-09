@@ -640,7 +640,7 @@ nsEditor::DeleteSelection(EDirection aAction, EStripWrappers aStripWrappers)
 NS_IMETHODIMP
 nsEditor::GetSelection(nsISelection** aSelection)
 {
-  return GetSelection(SelectionType::SELECTION_NORMAL, aSelection);
+  return GetSelection(SelectionType::eNormal, aSelection);
 }
 
 nsresult
@@ -2673,7 +2673,7 @@ nsEditor::SplitNodeImpl(nsIContent& aExistingRightNode,
     SelectionType selectionType(ToSelectionType(1 << i));
     SavedRange range;
     range.mSelection = GetSelection(selectionType);
-    if (selectionType == SelectionType::SELECTION_NORMAL) {
+    if (selectionType == SelectionType::eNormal) {
       NS_ENSURE_TRUE(range.mSelection, NS_ERROR_NULL_POINTER);
     } else if (!range.mSelection) {
       // For non-normal selections, skip over the non-existing ones.
@@ -2755,7 +2755,7 @@ nsEditor::SplitNodeImpl(nsIContent& aExistingRightNode,
     }
 
     if (shouldSetSelection &&
-        range.mSelection->Type() == SelectionType::SELECTION_NORMAL) {
+        range.mSelection->Type() == SelectionType::eNormal) {
       // If the editor should adjust the selection, don't bother restoring
       // the ranges for the normal selection here.
       continue;
@@ -2819,7 +2819,7 @@ nsEditor::JoinNodesImpl(nsINode* aNodeToKeep,
     SelectionType selectionType(ToSelectionType(1 << i));
     SavedRange range;
     range.mSelection = GetSelection(selectionType);
-    if (selectionType == SelectionType::SELECTION_NORMAL) {
+    if (selectionType == SelectionType::eNormal) {
       NS_ENSURE_TRUE(range.mSelection, NS_ERROR_NULL_POINTER);
     } else if (!range.mSelection) {
       // For non-normal selections, skip over the non-existing ones.
@@ -2908,7 +2908,7 @@ nsEditor::JoinNodesImpl(nsINode* aNodeToKeep,
     }
 
     if (shouldSetSelection &&
-        range.mSelection->Type() == SelectionType::SELECTION_NORMAL) {
+        range.mSelection->Type() == SelectionType::eNormal) {
       // If the editor should adjust the selection, don't bother restoring
       // the ranges for the normal selection here.
       continue;

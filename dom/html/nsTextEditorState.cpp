@@ -417,7 +417,7 @@ nsTextInputSelectionImpl::SetCaretReadOnly(bool aReadOnly)
     RefPtr<nsCaret> caret = shell->GetCaret();
     if (caret) {
       nsISelection* domSel =
-        mFrameSelection->GetSelection(SelectionType::SELECTION_NORMAL);
+        mFrameSelection->GetSelection(SelectionType::eNormal);
       if (domSel)
         caret->SetCaretReadOnly(aReadOnly);
       return NS_OK;
@@ -460,7 +460,7 @@ nsTextInputSelectionImpl::SetCaretVisibilityDuringSelection(bool aVisibility)
     RefPtr<nsCaret> caret = shell->GetCaret();
     if (caret) {
       nsISelection* domSel =
-        mFrameSelection->GetSelection(SelectionType::SELECTION_NORMAL);
+        mFrameSelection->GetSelection(SelectionType::eNormal);
       if (domSel)
         caret->SetVisibilityDuringSelection(aVisibility);
       return NS_OK;
