@@ -55,22 +55,7 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=1173580
 
 // Scroll the mouse wheel over |element|.
 function scrollWheelOver(element, waitForScroll, testDriver) {
-  var x = 10;
-  var y = 10;
-  // Move the mouse to the desired wheel location.
-  // Not doing so can result in the wheel events from two consecutive
-  // scrollWheelOver() calls on different elements being incorrectly considered
-  // as part of the same wheel transaction.
-  // We also wait for the mouse move event to be processed before sending the
-  // wheel event, otherwise there is a chance they might get reordered, and
-  // we have the transaction problem again.
-  synthesizeNativeMouseMoveAndWaitForMoveEvent(element, x, y, function() {
-    if (waitForScroll) {
-      synthesizeNativeWheelAndWaitForScrollEvent(element, x, y, 0, -10, testDriver);
-    } else {
-      synthesizeNativeWheelAndWaitForWheelEvent(element, x, y, 0, -10, testDriver);
-    }
-  });
+  moveMouseAndScrollWheelOver(element, 10, 10, testDriver, waitForScroll);
 }
 
 var utils;
