@@ -2,3 +2,5 @@ engine
 engine-pref
 engine-rel-searchform-purpose
 engine-system-purpose
+engine-chromeicon
+engine-resourceicon
