@@ -19,7 +19,7 @@ class WorkerPrivate;
 class PerformanceWorker final : public Performance
 {
 public:
-  PerformanceWorker(workers::WorkerPrivate* aWorkerPrivate);
+  explicit PerformanceWorker(workers::WorkerPrivate* aWorkerPrivate);
 
   // Performance WebIDL methods
   DOMHighResTimeStamp Now() const override;
