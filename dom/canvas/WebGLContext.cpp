@@ -597,7 +597,9 @@ CreateGLWithEGL(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
             out_failReason->AppendLiteral("\n");
         }
         out_failReason->AppendLiteral("Error during EGL OpenGL init.");
-        *out_failureId = "FEATURE_FAILURE_WEBGL_EGL_INIT";
+        if (out_failureId->IsEmpty()) {
+            *out_failureId = "FEATURE_FAILURE_WEBGL_EGL_INIT";
+        }
         return nullptr;
     }
 
@@ -621,7 +623,9 @@ CreateGLWithANGLE(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
             out_failReason->AppendLiteral("\n");
         }
         out_failReason->AppendLiteral("Error during ANGLE OpenGL init.");
-        *out_failureId = "FEATURE_FAILURE_WEBGL_ANGLE_INIT";
+        if (out_failureId->IsEmpty()) {
+            *out_failureId = "FEATURE_FAILURE_WEBGL_ANGLE_INIT";
+        }
         return nullptr;
     }
 
@@ -659,7 +663,9 @@ CreateGLWithDefault(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
             out_failReason->AppendASCII("\n");
         }
         out_failReason->AppendASCII("Error during native OpenGL init.");
-        *out_failureId = "FEATURE_FAILURE_WEBGL_DEFAULT_INIT";
+        if (out_failureId->IsEmpty()) {
+            *out_failureId = "FEATURE_FAILURE_WEBGL_DEFAULT_INIT";
+        }
         return nullptr;
     }
 
