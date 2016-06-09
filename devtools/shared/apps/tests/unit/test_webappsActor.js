@@ -2,6 +2,7 @@
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 
 var gAppId = "actor-test";
 const APP_ORIGIN = "app://" + gAppId;
@@ -177,7 +178,7 @@ add_test(function testFileUploadInstall() {
   // Disable the bulk trait temporarily to test the JSON upload path
   gClient.traits.bulk = false;
 
-  let progressDeferred = promise.defer();
+  let progressDeferred = defer();
   // Ensure we get at least one progress event at the end
   gActorFront.on("install-progress", function onProgress(e, progress) {
     if (progress.bytesSent == progress.totalBytes) {
@@ -206,7 +207,7 @@ add_test(function testBulkUploadInstall() {
   let packageFile = do_get_file("data/app.zip");
   do_check_true(gClient.traits.bulk);
 
-  let progressDeferred = promise.defer();
+  let progressDeferred = defer();
   // Ensure we get at least one progress event at the end
   gActorFront.on("install-progress", function onProgress(e, progress) {
     if (progress.bytesSent == progress.totalBytes) {

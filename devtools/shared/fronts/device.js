@@ -6,7 +6,7 @@
 const {Cc, Ci, Cu} = require("chrome");
 const {deviceSpec} = require("devtools/shared/specs/device");
 const protocol = require("devtools/shared/protocol");
-const promise = require("promise");
+const defer = require("devtools/shared/defer");
 
 const DeviceFront = protocol.FrontClassWithSpec(deviceSpec, {
   initialize: function (client, form) {
@@ -18,7 +18,7 @@ const DeviceFront = protocol.FrontClassWithSpec(deviceSpec, {
   screenshotToBlob: function () {
     return this.screenshotToDataURL().then(longstr => {
       return longstr.string().then(dataURL => {
-        let deferred = promise.defer();
+        let deferred = defer();
         longstr.release().then(null, Cu.reportError);
         let req = Cc["@mozilla.org/xmlextras/xmlhttprequest;1"]
             .createInstance(Ci.nsIXMLHttpRequest);
