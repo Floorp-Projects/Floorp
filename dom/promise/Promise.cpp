@@ -940,6 +940,14 @@ Promise::MaybeRejectWithNull()
   MaybeSomething(JS::NullHandleValue, &Promise::MaybeReject);
 }
 
+void
+Promise::MaybeRejectWithUndefined()
+{
+  NS_ASSERT_OWNINGTHREAD(Promise);
+
+  MaybeSomething(JS::UndefinedHandleValue, &Promise::MaybeReject);
+}
+
 
 #ifdef SPIDERMONKEY_PROMISE
 void
