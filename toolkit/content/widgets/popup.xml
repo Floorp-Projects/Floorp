@@ -223,15 +223,6 @@
         ]]>
         </body>
       </method>
-
-      <method name="setConstraintRect">
-        <parameter name="aRect"/>
-        <body>
-        <![CDATA[
-          this.popupBoxObject.setConstraintRect(aRect);
-        ]]>
-        </body>
-      </method>
     </implementation>
 
   </binding>
