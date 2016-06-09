@@ -10,6 +10,7 @@
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/dom/AudioChannelBinding.h"
 #include "nsIDOMEvent.h"
+#include "nsPIDOMWindow.h"
 #include "nsCOMPtr.h"
 
 #ifdef MOZ_CRASHREPORTER
@@ -103,6 +104,13 @@ struct ParamTraits<nsSizeMode>
                                     nsSizeMode_Normal,
                                     nsSizeMode_Invalid>
 {};
+
+template<>
+struct ParamTraits<UIStateChangeType>
+  : public ContiguousEnumSerializer<UIStateChangeType,
+                                    UIStateChangeType_NoChange,
+                                    UIStateChangeType_Invalid>
+{ };
 
 } // namespace IPC
 

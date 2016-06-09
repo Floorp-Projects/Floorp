@@ -854,6 +854,8 @@ TabChild::Init()
     do_QueryInterface(window->GetChromeEventHandler());
   docShell->SetChromeEventHandler(chromeHandler);
 
+  window->SetKeyboardIndicators(ShowAccelerators(), ShowFocusRings());
+
   // Set prerender flag if necessary.
   if (mIsPrerendered) {
     docShell->SetIsPrerendered();
@@ -1857,6 +1859,16 @@ bool TabChild::RecvParentActivated(const bool& aActivated)
 
   nsCOMPtr<nsPIDOMWindowOuter> window = do_GetInterface(WebNavigation());
   fm->ParentActivated(window, aActivated);
+  return true;
+}
+
+bool TabChild::RecvSetKeyboardIndicators(const UIStateChangeType& aShowAccelerators,
+                                         const UIStateChangeType& aShowFocusRings)
+{
+  nsCOMPtr<nsPIDOMWindowOuter> window = do_GetInterface(WebNavigation());
+  NS_ENSURE_TRUE(window, true);
+
+  window->SetKeyboardIndicators(aShowAccelerators, aShowFocusRings);
   return true;
 }
 
@@ -2911,7 +2923,6 @@ TabChild::EnableDisableCommands(const nsAString& aAction,
   PBrowserChild::SendEnableDisableCommands(PromiseFlatString(aAction),
                                            aEnabledCommands, aDisabledCommands);
 }
-
 
 NS_IMETHODIMP
 TabChild::GetTabId(uint64_t* aId)
