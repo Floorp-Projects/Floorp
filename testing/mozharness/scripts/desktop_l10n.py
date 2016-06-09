@@ -603,8 +603,7 @@ class DesktopSingleLocale(LocalesMixin, ReleaseMixin, MockMixin, BuildbotMixin,
     def clobber(self):
         """clobber"""
         dirs = self.query_abs_dirs()
-        clobber_dirs = (dirs['abs_objdir'], dirs['abs_compare_locales_dir'],
-                        dirs['abs_upload_dir'])
+        clobber_dirs = (dirs['abs_objdir'], dirs['abs_upload_dir'])
         PurgeMixin.clobber(self, always_clobber_dirs=clobber_dirs)
 
     def pull(self):
