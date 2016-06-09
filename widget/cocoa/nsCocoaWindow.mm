@@ -3263,7 +3263,7 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
   // We work around this problem by only returning AXChildren that are
   // mozAccessible object or are one of the titlebar's buttons (which
   // instantiate subclasses of NSButtonCell).
-  if ([retval isKindOfClass:[NSArray class]] &&
+  if (nsCocoaFeatures::OnLionOrLater() && [retval isKindOfClass:[NSArray class]] &&
       [attribute isEqualToString:@"AXChildren"]) {
     NSMutableArray *holder = [NSMutableArray arrayWithCapacity:10];
     [holder addObjectsFromArray:(NSArray *)retval];
@@ -3283,6 +3283,22 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
 
   return retval;
 }
+
+// If we were built on OS X 10.6 or with the 10.6 SDK and are running on Lion,
+// the OS (specifically -[NSWindow sendEvent:]) won't send NSEventTypeGesture
+// events to -[ChildView magnifyWithEvent:] as it should.  The following code
+// gets around this.  See bug 863841.
+#if !defined( MAC_OS_X_VERSION_10_7 ) || \
+    ( MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_7 )
+- (void)sendEvent:(NSEvent *)anEvent
+{
+  if ([ChildView isLionSmartMagnifyEvent: anEvent]) {
+    [[self mainChildView] magnifyWithEvent:anEvent];
+    return;
+  }
+  [super sendEvent:anEvent];
+}
+#endif
 
 @end
 
@@ -3345,7 +3361,7 @@ static const NSString* kStateCollectionBehavior = @"collectionBehavior";
     // setBottomCornerRounded: is a private API call, so we check to make sure
     // we respond to it just in case.
     if ([self respondsToSelector:@selector(setBottomCornerRounded:)])
-      [self setBottomCornerRounded:YES];
+      [self setBottomCornerRounded:nsCocoaFeatures::OnLionOrLater()];
 
     [self setAutorecalculatesContentBorderThickness:NO forEdge:NSMaxYEdge];
     [self setContentBorderThickness:0.0f forEdge:NSMaxYEdge];
@@ -3641,11 +3657,14 @@ DrawNativeTitlebar(CGContextRef aContext, CGRect aTitlebarRect,
 {
   nsNativeThemeCocoa::DrawNativeTitlebar(aContext, aTitlebarRect, aUnifiedToolbarHeight, aIsMain, NO);
 
-  // The call to CUIDraw doesn't draw the top pixel strip at some window widths.
-  // We don't want to have a flickering transparent line, so we overdraw it.
-  CGContextSetRGBFillColor(aContext, 0.95, 0.95, 0.95, 1);
-  CGContextFillRect(aContext, CGRectMake(0, CGRectGetMaxY(aTitlebarRect) - 1,
+  if (nsCocoaFeatures::OnLionOrLater()) {
+    // On Lion the call to CUIDraw doesn't draw the top pixel strip at some
+    // window widths. We don't want to have a flickering transparent line, so
+    // we overdraw it.
+    CGContextSetRGBFillColor(aContext, 0.95, 0.95, 0.95, 1);
+    CGContextFillRect(aContext, CGRectMake(0, CGRectGetMaxY(aTitlebarRect) - 1,
                                            aTitlebarRect.size.width, 1));
+  }
 }
 
 // Pattern draw callback for standard titlebar gradients and solid titlebar colors

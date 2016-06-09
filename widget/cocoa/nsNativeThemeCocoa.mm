@@ -470,6 +470,8 @@ WindowButtonsSize(nsIFrame* aFrame)
   NSWindow* window = NativeWindowForFrame(aFrame);
   if (!window) {
     // Return fallback values.
+    if (!nsCocoaFeatures::OnLionOrLater())
+      return NSMakeSize(57, 16);
     return NSMakeSize(54, 16);
   }
 
@@ -1113,7 +1115,8 @@ nsNativeThemeCocoa::DrawSearchField(CGContextRef cgContext, const HIRect& inBoxR
 }
 
 static const NSSize kCheckmarkSize = NSMakeSize(11, 11);
-static const NSSize kMenuarrowSize = NSMakeSize(9, 10);
+static const NSSize kMenuarrowSize = nsCocoaFeatures::OnLionOrLater() ?
+                                     NSMakeSize(9, 10) : NSMakeSize(8, 10);
 static const NSSize kMenuScrollArrowSize = NSMakeSize(10, 8);
 static NSString* kCheckmarkImage = @"MenuOnState";
 static NSString* kMenuarrowRightImage = @"MenuSubmenu";
@@ -1141,8 +1144,19 @@ nsNativeThemeCocoa::DrawMenuIcon(CGContextRef cgContext, const CGRect& aRect,
     aRect.origin.y + ceil(paddingY / 2),
     aIconSize.width, aIconSize.height);
 
-  NSString* state = IsDisabled(aFrame, inState) ? @"disabled" :
-    (CheckBooleanAttr(aFrame, nsGkAtoms::menuactive) ? @"pressed" : @"normal");
+  BOOL isDisabled = IsDisabled(aFrame, inState);
+  BOOL isActive = CheckBooleanAttr(aFrame, nsGkAtoms::menuactive);
+
+  // On 10.6 and at least on 10.7.0, Apple doesn’t seem to have implemented all
+  // keys and values used on 10.7.5 and later. We can however draw menu icons
+  // on earlier OS versions by using different keys/values.
+  BOOL otherKeysAndValues = !nsCocoaFeatures::IsAtLeastVersion(10,7,5);
+
+  // 2 states combined with 2 different backgroundTypeKeys on earlier versions.
+  NSString* state = isDisabled ? @"disabled" :
+    (isActive && !otherKeysAndValues) ? @"pressed" : @"normal";
+  NSString* backgroundTypeKey = !otherKeysAndValues ? @"kCUIBackgroundTypeMenu" :
+    !isDisabled && isActive ? @"backgroundTypeDark" : @"backgroundTypeLight";
 
   NSString* imageName = aImageName;
   if (!nsCocoaFeatures::OnElCapitanOrLater()) {
@@ -1150,14 +1164,19 @@ nsNativeThemeCocoa::DrawMenuIcon(CGContextRef cgContext, const CGRect& aRect,
     imageName = [@"image." stringByAppendingString:aImageName];
   }
 
+  NSMutableArray* keys = [NSMutableArray arrayWithObjects:@"backgroundTypeKey",
+    @"imageNameKey", @"state", @"widget", @"is.flipped", nil];
+  NSMutableArray* values = [NSMutableArray arrayWithObjects: backgroundTypeKey,
+    imageName, state, @"image", [NSNumber numberWithBool:YES], nil];
+
+  if (otherKeysAndValues) { // Earlier versions used one more key-value pair.
+    [keys insertObject:@"imageIsGrayscaleKey" atIndex:1];
+    [values insertObject:[NSNumber numberWithBool:YES] atIndex:1];
+  }
+
   RenderWithCoreUI(drawRect, cgContext,
-          [NSDictionary dictionaryWithObjectsAndKeys:
-            @"kCUIBackgroundTypeMenu", @"backgroundTypeKey",
-            aImageName, @"imageNameKey",
-            state, @"state",
-            @"image", @"widget",
-            [NSNumber numberWithBool:YES], @"is.flipped",
-            nil]);
+                  [NSDictionary dictionaryWithObjects:values
+                                              forKeys:keys]);
 
 #if DRAW_IN_FRAME_DEBUG
   CGContextSetRGBFillColor(cgContext, 0.0, 0.0, 0.5, 0.25);
@@ -2053,6 +2072,13 @@ nsNativeThemeCocoa::DrawSegment(CGContextRef cgContext, const HIRect& inBoxRect,
             nil]);
 }
 
+static inline UInt8
+ConvertToPressState(EventStates aButtonState, UInt8 aPressState)
+{
+  // If the button is pressed, return the press state passed in. Otherwise, return 0.
+  return aButtonState.HasAllStates(NS_EVENT_STATE_ACTIVE | NS_EVENT_STATE_HOVER) ? aPressState : 0;
+}
+
 void 
 nsNativeThemeCocoa::GetScrollbarPressStates(nsIFrame* aFrame,
                                             EventStates aButtonStates[])
@@ -2133,6 +2159,30 @@ nsNativeThemeCocoa::GetScrollbarDrawInfo(HIThemeTrackDrawInfo& aTdi, nsIFrame *a
   }
 
   aTdi.trackInfo.scrollbar.pressState = 0;
+
+  // Only go get these scrollbar button states if we need it. For example,
+  // there's no reason to look up scrollbar button states when we're only
+  // creating a TrackDrawInfo to determine the size of the thumb. There's
+  // also no reason to do this on Lion or later, whose scrollbars have no
+  // arrow buttons.
+  if (aShouldGetButtonStates && !nsCocoaFeatures::OnLionOrLater()) {
+    EventStates buttonStates[4];
+    GetScrollbarPressStates(aFrame, buttonStates);
+    NSString *buttonPlacement = [[NSUserDefaults standardUserDefaults] objectForKey:@"AppleScrollBarVariant"];
+    // It seems that unless all four buttons are showing, kThemeTopOutsideArrowPressed is the correct constant for
+    // the up scrollbar button.
+    if ([buttonPlacement isEqualToString:@"DoubleBoth"]) {
+      aTdi.trackInfo.scrollbar.pressState = ConvertToPressState(buttonStates[0], kThemeTopOutsideArrowPressed) |
+                                            ConvertToPressState(buttonStates[1], kThemeTopInsideArrowPressed) |
+                                            ConvertToPressState(buttonStates[2], kThemeBottomInsideArrowPressed) |
+                                            ConvertToPressState(buttonStates[3], kThemeBottomOutsideArrowPressed);
+    } else {
+      aTdi.trackInfo.scrollbar.pressState = ConvertToPressState(buttonStates[0], kThemeTopOutsideArrowPressed) |
+                                            ConvertToPressState(buttonStates[1], kThemeBottomOutsideArrowPressed) |
+                                            ConvertToPressState(buttonStates[2], kThemeTopOutsideArrowPressed) |
+                                            ConvertToPressState(buttonStates[3], kThemeBottomOutsideArrowPressed);
+    }
+  }
 
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
@@ -2341,7 +2391,7 @@ DrawVibrancyBackground(CGContextRef cgContext, CGRect inBoxRect,
 static bool
 ScrollbarTrackAndThumbDrawSeparately()
 {
-  return nsLookAndFeel::UseOverlayScrollbars();
+  return nsLookAndFeel::UseOverlayScrollbars() || nsCocoaFeatures::OnLionOrLater();
 }
 
 bool
@@ -2832,7 +2882,7 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
         BOOL isRolledOver = IsParentScrollbarRolledOver(aFrame);
         nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
         bool isSmall = (scrollbarFrame && scrollbarFrame->StyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL);
-        if (isOverlay && !isRolledOver) {
+        if (isOverlay && (!nsCocoaFeatures::OnMountainLionOrLater() || !isRolledOver)) {
           if (isHorizontal) {
             macRect.origin.y += 4;
             macRect.size.height -= 4;
@@ -2883,6 +2933,21 @@ nsNativeThemeCocoa::DrawWidgetBackground(nsRenderingContext* aContext,
           BOOL isHorizontal = (aWidgetType == NS_THEME_SCROLLBARTRACK_HORIZONTAL);
           nsIFrame* scrollbarFrame = GetParentScrollbarFrame(aFrame);
           bool isSmall = (scrollbarFrame && scrollbarFrame->StyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL);
+          if (isOverlay && !nsCocoaFeatures::OnMountainLionOrLater()) {
+            // On OSX 10.7, scrollbars don't grow when hovered.
+            // The adjustments below were obtained by trial and error.
+            if (isHorizontal) {
+              macRect.origin.y += 2.0;
+            } else {
+              if (aFrame->StyleVisibility()->mDirection !=
+                    NS_STYLE_DIRECTION_RTL) {
+                macRect.origin.x += 3.0;
+              } else {
+                macRect.origin.x -= 1.0;
+              }
+            }
+          }
+
           const BOOL isOnTopOfDarkBackground = IsDarkBackground(aFrame);
           RenderWithCoreUILegacy(macRect, cgContext,
                   [NSDictionary dictionaryWithObjectsAndKeys:
@@ -3100,6 +3165,27 @@ nsNativeThemeCocoa::GetWidgetBorder(nsDeviceContext* aContext,
     case NS_THEME_SCROLLBARTRACK_VERTICAL:
     {
       bool isHorizontal = (aWidgetType == NS_THEME_SCROLLBARTRACK_HORIZONTAL);
+
+      // On Lion and later, scrollbars have no arrows.
+      if (!nsCocoaFeatures::OnLionOrLater()) {
+        // There's only an endcap to worry about when both arrows are on the bottom
+        NSString *buttonPlacement = [[NSUserDefaults standardUserDefaults] objectForKey:@"AppleScrollBarVariant"];
+        if (!buttonPlacement || [buttonPlacement isEqualToString:@"DoubleMax"]) {
+          nsIFrame *scrollbarFrame = GetParentScrollbarFrame(aFrame);
+          if (!scrollbarFrame) return NS_ERROR_FAILURE;
+          bool isSmall = (scrollbarFrame->StyleDisplay()->mAppearance == NS_THEME_SCROLLBAR_SMALL);
+
+          // There isn't a metric for this, so just hardcode a best guess at the value.
+          // This value is even less exact due to the fact that the endcap is partially concave.
+          int32_t endcapSize = isSmall ? 5 : 6;
+
+          if (isHorizontal)
+            aResult->SizeTo(0, 0, 0, endcapSize);
+          else
+            aResult->SizeTo(endcapSize, 0, 0, 0);
+        }
+      }
+
       if (nsLookAndFeel::UseOverlayScrollbars()) {
         if (isHorizontal) {
           aResult->SizeTo(2, 1, 1, 1);
