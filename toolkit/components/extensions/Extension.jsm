@@ -478,12 +478,13 @@ ParentAPIManager.init();
 // For extensions that have called setUninstallURL(), send an event
 // so the browser can display the URL.
 let UninstallObserver = {
-  init: function() {
-    AddonManager.addAddonListener(this);
-  },
+  initialized: false,
 
-  uninit: function() {
-    AddonManager.removeAddonListener(this);
+  init: function() {
+    if (!this.initialized) {
+      AddonManager.addAddonListener(this);
+      this.initialized = true;
+    }
   },
 
   onUninstalling: function(addon) {
@@ -514,7 +515,6 @@ GlobalManager = {
 
     if (this.extensionMap.size == 0) {
       Services.obs.removeObserver(this, "content-document-global-created");
-      UninstallObserver.uninit();
     }
   },
 
