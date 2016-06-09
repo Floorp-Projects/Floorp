@@ -89,7 +89,7 @@ GfxInfo::GetCleartypeParameters(nsAString & aCleartypeParams)
 
     if (params.gamma >= 0) {
       foundData = true;
-      outStr.AppendPrintf("Gamma: %d ", params.gamma);
+      outStr.AppendPrintf("Gamma: %.4g ", params.gamma / 1000.0);
     }
 
     if (params.pixelStructure >= 0) {
