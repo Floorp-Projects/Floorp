@@ -63,11 +63,6 @@ dictionary MediaTrackConstraints : MediaTrackConstraintSet {
     sequence<MediaTrackConstraintSet> advanced;
 };
 
-enum MediaStreamTrackState {
-    "live",
-    "ended"
-};
-
 [Exposed=Window]
 interface MediaStreamTrack : EventTarget {
     readonly    attribute DOMString             kind;
@@ -79,7 +74,7 @@ interface MediaStreamTrack : EventTarget {
 //              attribute EventHandler          onunmute;
 //  readonly    attribute boolean               _readonly;
 //  readonly    attribute boolean               remote;
-    readonly    attribute MediaStreamTrackState readyState;
+//  readonly    attribute MediaStreamTrackState readyState;
                 attribute EventHandler          onended;
     MediaStreamTrack       clone ();
     void                   stop ();
