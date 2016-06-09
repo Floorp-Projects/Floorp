@@ -118,7 +118,7 @@ ToSelectionType(TextRangeType aTextRangeType)
     case TextRangeType::eConvertedClause:
       return SelectionType::eIMEConvertedClause;
     case TextRangeType::eSelectedClause:
-      return SelectionType::SELECTION_IME_SELECTEDCONVERTEDTEXT;
+      return SelectionType::eIMESelectedClause;
     default:
       MOZ_CRASH("TextRangeType is invalid");
       return SelectionType::eNormal;
