@@ -3379,7 +3379,7 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
       // the spellcheck, find and url formatting selections.
       //
       if (curDetail->mSelectionType != SelectionType::eSpellCheck &&
-          curDetail->mSelectionType != SelectionType::SELECTION_FIND &&
+          curDetail->mSelectionType != SelectionType::eFind &&
           curDetail->mSelectionType != SelectionType::SELECTION_URLSECONDARY &&
           curDetail->mSelectionType != SelectionType::SELECTION_URLSTRIKEOUT &&
           curDetail->mStart <= offsets.StartOffset() &&
