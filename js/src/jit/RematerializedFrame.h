@@ -183,7 +183,7 @@ class RematerializedFrame
         return numActualArgs_;
     }
     unsigned numArgSlots() const {
-        return std::max(numFormalArgs(), numActualArgs());
+        return (std::max)(numFormalArgs(), numActualArgs());
     }
 
     Value* argv() {
