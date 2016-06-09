@@ -70,8 +70,9 @@ def get_mach():
             return mach
 
     # If we didn't find a source path by scanning for a mozinfo.json, check
-    # whether the directory containing this script is a source directory.
-    return check_and_get_mach(os.path.dirname(__file__))
+    # whether the directory containing this script is a source directory. We
+    # follow symlinks so mach can be run even if cwd is outside the srcdir.
+    return check_and_get_mach(os.path.dirname(os.path.realpath(__file__)))
 
 def main(args):
     mach = get_mach()
