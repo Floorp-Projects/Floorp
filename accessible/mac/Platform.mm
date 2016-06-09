@@ -56,25 +56,45 @@ ProxyCreated(ProxyAccessible* aProxy, uint32_t)
   mozAccessible* mozWrapper = [[type alloc] initWithAccessible:accWrap];
   aProxy->SetWrapper(reinterpret_cast<uintptr_t>(mozWrapper));
 
-  // Invalidate native parent in parent process's children on proxy creation
+  mozAccessible* nativeParent = nullptr;
   if (aProxy->IsDoc() && aProxy->AsDoc()->IsTopLevel()) {
+    // If proxy is top level, the parent we need to invalidate the children of
+    // will be a non-remote accessible.
     Accessible* outerDoc = aProxy->OuterDocOfRemoteBrowser();
     if (outerDoc) {
-      mozAccessible* nativeParent = GetNativeFromGeckoAccessible(outerDoc);
-      [nativeParent invalidateChildren];
+      nativeParent = GetNativeFromGeckoAccessible(outerDoc);
     }
+  } else {
+    // Non-top level proxies need proxy parents' children invalidated.
+    ProxyAccessible* parent = aProxy->Parent();
+    nativeParent = GetNativeFromProxy(parent);
+    NS_ASSERTION(parent, "a non-top-level proxy is missing a parent?");
+  }
+
+  if (nativeParent) {
+    [nativeParent invalidateChildren];
   }
 }
 
 void
 ProxyDestroyed(ProxyAccessible* aProxy)
 {
-  // Invalidate native parent in parent process's children on proxy destruction
+  mozAccessible* nativeParent = nil;
   if (aProxy->IsDoc() && aProxy->AsDoc()->IsTopLevel()) {
+    // Invalidate native parent in parent process's children on proxy destruction
     Accessible* outerDoc = aProxy->OuterDocOfRemoteBrowser();
     if (outerDoc) {
-      mozAccessible* nativeParent = GetNativeFromGeckoAccessible(outerDoc);
-      [nativeParent invalidateChildren];
+      nativeParent = GetNativeFromGeckoAccessible(outerDoc);
+    }
+  } else {
+    if (!aProxy->Document()->IsShutdown()) {
+      // Only do if the document has not been shut down, else parent will return
+      // garbage since we don't shut down children from top down.
+      ProxyAccessible* parent = aProxy->Parent();
+      // Invalidate proxy parent's children.
+      if (parent) {
+        nativeParent = GetNativeFromProxy(parent);
+      }
     }
   }
 
@@ -82,6 +102,10 @@ ProxyDestroyed(ProxyAccessible* aProxy)
   [wrapper expire];
   [wrapper release];
   aProxy->SetWrapper(0);
+
+  if (nativeParent) {
+    [nativeParent invalidateChildren];
+  }
 }
 
 void

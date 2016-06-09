@@ -41,6 +41,8 @@ public:
   void SetTopLevel() { mTopLevel = true; }
   bool IsTopLevel() const { return mTopLevel; }
 
+  bool IsShutdown() const { return mShutdown; }
+
   /*
    * Called when a message from a document in a child process notifies the main
    * process it is firing an event.
