@@ -346,7 +346,21 @@ nsLookAndFeel::GetIntImpl(IntID aID, int32_t &aResult)
       aResult = 4;
       break;
     case eIntID_ScrollArrowStyle:
-      aResult = eScrollArrow_None;
+      if (nsCocoaFeatures::OnLionOrLater()) {
+        // OS X Lion's scrollbars have no arrows
+        aResult = eScrollArrow_None;
+      } else {
+        NSString *buttonPlacement = [[NSUserDefaults standardUserDefaults] objectForKey:@"AppleScrollBarVariant"];
+        if ([buttonPlacement isEqualToString:@"Single"]) {
+          aResult = eScrollArrowStyle_Single;
+        } else if ([buttonPlacement isEqualToString:@"DoubleMin"]) {
+          aResult = eScrollArrowStyle_BothAtTop;
+        } else if ([buttonPlacement isEqualToString:@"DoubleBoth"]) {
+          aResult = eScrollArrowStyle_BothAtEachEnd;
+        } else {
+          aResult = eScrollArrowStyle_BothAtBottom; // The default is BothAtBottom.
+        }
+      }
       break;
     case eIntID_ScrollSliderStyle:
       aResult = eScrollThumbStyle_Proportional;
@@ -511,7 +525,7 @@ bool nsLookAndFeel::SystemWantsOverlayScrollbars()
 
 bool nsLookAndFeel::AllowOverlayScrollbarsOverlap()
 {
-  return UseOverlayScrollbars();
+  return (UseOverlayScrollbars() && nsCocoaFeatures::OnMountainLionOrLater());
 }
 
 bool

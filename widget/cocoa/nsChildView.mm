@@ -487,11 +487,13 @@ nsresult nsChildView::Create(nsIWidget* aParent,
     nsToolkit::SwizzleMethods([NSView class], @selector(mouseDownCanMoveWindow),
                               @selector(nsChildView_NSView_mouseDownCanMoveWindow));
 #ifdef __LP64__
-    nsToolkit::SwizzleMethods([NSEvent class], @selector(addLocalMonitorForEventsMatchingMask:handler:),
-                              @selector(nsChildView_NSEvent_addLocalMonitorForEventsMatchingMask:handler:),
-                              true);
-    nsToolkit::SwizzleMethods([NSEvent class], @selector(removeMonitor:),
-                              @selector(nsChildView_NSEvent_removeMonitor:), true);
+    if (nsCocoaFeatures::OnLionOrLater()) {
+      nsToolkit::SwizzleMethods([NSEvent class], @selector(addLocalMonitorForEventsMatchingMask:handler:),
+                                @selector(nsChildView_NSEvent_addLocalMonitorForEventsMatchingMask:handler:),
+                                true);
+      nsToolkit::SwizzleMethods([NSEvent class], @selector(removeMonitor:),
+                                @selector(nsChildView_NSEvent_removeMonitor:), true);
+    }
 #endif
     gChildViewMethodsSwizzled = true;
   }
@@ -4336,6 +4338,15 @@ NSEvent* gLastDragMouseDownEvent = nil;
   if (!anEvent || !mGeckoChild)
     return;
 
+  /*
+   * In OS X 10.7.* (Lion), smart zoom events come through magnifyWithEvent,
+   * instead of smartMagnifyWithEvent. See bug 863841.
+   */
+  if ([ChildView isLionSmartMagnifyEvent: anEvent]) {
+    [self smartMagnifyWithEvent: anEvent];
+    return;
+  }
+
   nsAutoRetainCocoaObject kungFuDeathGrip(self);
 
   float deltaZ = [anEvent deltaZ];
@@ -4500,8 +4511,28 @@ NSEvent* gLastDragMouseDownEvent = nil;
   NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
++ (BOOL)isLionSmartMagnifyEvent:(NSEvent*)anEvent
+{
+  /*
+   * On Lion, smart zoom events have type NSEventTypeGesture, subtype 0x16,
+   * whereas pinch zoom events have type NSEventTypeMagnify. So, use that to
+   * discriminate between the two. Smart zoom gestures do not call
+   * beginGestureWithEvent or endGestureWithEvent, so mGestureState is not
+   * changed. Documentation couldn't be found for the meaning of the subtype
+   * 0x16, but it will probably never change. See bug 863841.
+   */
+  return nsCocoaFeatures::OnLionOrLater() &&
+         !nsCocoaFeatures::OnMountainLionOrLater() &&
+         [anEvent type] == NSEventTypeGesture &&
+         [anEvent subtype] == 0x16;
+}
+
 - (bool)shouldConsiderStartingSwipeFromEvent:(NSEvent*)anEvent
 {
+  if (!nsCocoaFeatures::OnLionOrLater()) {
+    return false;
+  }
+
   // This method checks whether the AppleEnableSwipeNavigateWithScrolls global
   // preference is set.  If it isn't, fluid swipe tracking is disabled, and a
   // horizontal two-finger gesture is always a scroll (even in Safari).  This
