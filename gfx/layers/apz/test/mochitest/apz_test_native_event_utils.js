@@ -175,46 +175,12 @@ function synthesizeNativeMouseMove(aElement, aX, aY) {
   return true;
 }
 
-function equalPoints(aPt1, aPt2) {
-  if (!aPt1 || !aPt2) {
-    return false;
-  }
-  return aPt1.x == aPt2.x &&
-         aPt1.y == aPt2.y;
-}
-
 // Synthesizes a native mouse move event and invokes the callback once the
 // mouse move event is dispatched to |aElement|'s containing window. If the event
 // targets content in a subdocument, |aElement| should be inside the
 // subdocument. See synthesizeNativeMouseMove for details on the other
 // parameters.
 function synthesizeNativeMouseMoveAndWaitForMoveEvent(aElement, aX, aY, aCallback) {
-  // Initialize, if necessary, a place to a store state that will persist
-  // across calls to this function.
-  var func = synthesizeNativeMouseMoveAndWaitForMoveEvent;  // just so it's shorter
-  if (typeof func.persistentState == 'undefined') {
-    // If we're in a subtest, the test driver provides a variable where
-    // we can store state that persists across subtests. Otherwise, just
-    // create a variable that lives as long as this function.
-    if (typeof window.statePersistentAcrossSubtests == 'undefined') {
-      func.persistentState = {}
-    } else {
-      func.persistentState = window.statePersistentAcrossSubtests;
-    }
-  }
-
-  // On Windows, if the mouse is already at the target location, the mouse
-  // move event never gets dispatched. This is a significant potential footgun
-  // (if we try waiting for it when it'll never come); to avoid it, we store
-  // the last location we moved the mouse to, and just call the callback
-  // right away if the new location is the same.
-  var pt = coordinatesRelativeToScreen(aX, aY, aElement);
-  if (equalPoints(func.persistentState.lastMouseMoveLocation, pt)) {
-    setTimeout(aCallback, 0);
-    return true;
-  }
-  func.persistentState.lastMouseMoveLocation = pt;
-
   var targetWindow = aElement.ownerDocument.defaultView;
   targetWindow.addEventListener("mousemove", function mousemoveWaiter(e) {
     targetWindow.removeEventListener("mousemove", mousemoveWaiter);
@@ -284,6 +250,11 @@ function synthesizeNativeClick(aElement, aX, aY, aObserver = null) {
 // We also wait for the mouse move event to be processed before sending the
 // wheel event, otherwise there is a chance they might get reordered, and
 // we have the transaction problem again.
+// XXX FOOTGUN: On Windows, if the mouse cursor is already at the target
+//              position, the mouse-move event doesn't get dispatched, and
+//              we end up hanging waiting for it. As a result, care must
+//              be taken that the mouse isn't already at the target position
+//              when using this function.
 function moveMouseAndScrollWheelOver(element, dx, dy, testDriver) {
   return synthesizeNativeMouseMoveAndWaitForMoveEvent(element, dx, dy, function() {
     synthesizeNativeWheelAndWaitForScrollEvent(element, dx, dy, 0, -10, testDriver);
