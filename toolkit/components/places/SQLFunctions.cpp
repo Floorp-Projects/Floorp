@@ -844,5 +844,55 @@ namespace places {
     return NS_OK;
   }
 
+////////////////////////////////////////////////////////////////////////////////
+//// Store Last Inserted Id Function
+
+  StoreLastInsertedIdFunction::~StoreLastInsertedIdFunction()
+  {
+  }
+
+  /* static */
+  nsresult
+  StoreLastInsertedIdFunction::create(mozIStorageConnection *aDBConn)
+  {
+    RefPtr<StoreLastInsertedIdFunction> function =
+      new StoreLastInsertedIdFunction();
+    nsresult rv = aDBConn->CreateFunction(
+      NS_LITERAL_CSTRING("store_last_inserted_id"), 2, function
+    );
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    return NS_OK;
+  }
+
+  NS_IMPL_ISUPPORTS(
+    StoreLastInsertedIdFunction,
+    mozIStorageFunction
+  )
+
+  NS_IMETHODIMP
+  StoreLastInsertedIdFunction::OnFunctionCall(mozIStorageValueArray *aArgs,
+                                              nsIVariant **_result)
+  {
+    uint32_t numArgs;
+    nsresult rv = aArgs->GetNumEntries(&numArgs);
+    NS_ENSURE_SUCCESS(rv, rv);
+    MOZ_ASSERT(numArgs == 2);
+
+    nsAutoCString table;
+    rv = aArgs->GetUTF8String(0, table);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    int64_t lastInsertedId = aArgs->AsInt64(1);
+
+    nsNavHistory::StoreLastInsertedId(table, lastInsertedId);
+
+    RefPtr<nsVariant> result = new nsVariant();
+    rv = result->SetAsInt64(lastInsertedId);
+    NS_ENSURE_SUCCESS(rv, rv);
+    result.forget(_result);
+    return NS_OK;
+  }
+
 } // namespace places
 } // namespace mozilla

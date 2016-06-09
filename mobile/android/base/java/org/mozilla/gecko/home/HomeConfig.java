@@ -43,13 +43,13 @@ public final class HomeConfig {
         TOP_SITES("top_sites", TopSitesPanel.class),
         BOOKMARKS("bookmarks", BookmarksPanel.class),
         COMBINED_HISTORY("combined_history", CombinedHistoryPanel.class),
-        RECENT_TABS("recent_tabs", RecentTabsPanel.class),
         DYNAMIC("dynamic", DynamicPanel.class),
         // Deprecated panels that should no longer exist but are kept around for
         // migration code. Class references have been replaced with new version of the panel.
         DEPRECATED_REMOTE_TABS("remote_tabs", CombinedHistoryPanel.class),
         DEPRECATED_HISTORY("history", CombinedHistoryPanel.class),
-        DEPRECATED_READING_LIST("reading_list", BookmarksPanel.class);
+        DEPRECATED_READING_LIST("reading_list", BookmarksPanel.class),
+        DEPRECATED_RECENT_TABS("recent_tabs", CombinedHistoryPanel.class);
 
         private final String mId;
         private final Class<?> mPanelClass;
@@ -1644,11 +1644,9 @@ public final class HomeConfig {
 
         case DEPRECATED_HISTORY:
         case DEPRECATED_REMOTE_TABS:
+        case DEPRECATED_RECENT_TABS:
         case COMBINED_HISTORY:
             return R.string.home_history_title;
-
-        case RECENT_TABS:
-            return R.string.recent_tabs_title;
 
         default:
             throw new IllegalArgumentException("Only for built-in panel types: " + panelType);
@@ -1675,7 +1673,7 @@ public final class HomeConfig {
         case DEPRECATED_READING_LIST:
             return DEPRECATED_READING_LIST_PANEL_ID;
 
-        case RECENT_TABS:
+        case DEPRECATED_RECENT_TABS:
             return RECENT_TABS_PANEL_ID;
 
         default:
