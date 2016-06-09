@@ -35,13 +35,14 @@ public:
   };
 
   DataTransferItem(DataTransferItemList* aParent, const nsAString& aType)
-    : mIndex(0), mChromeOnly(false), mKind(KIND_OTHER), mType(aType), mParent(aParent)
+    : mIndex(0), mKind(KIND_OTHER), mType(aType), mParent(aParent)
   {}
 
   already_AddRefed<DataTransferItem> Clone(DataTransferItemList* aParent) const;
 
   virtual JSObject* WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-  void GetAsString(FunctionStringCallback* aCallback, ErrorResult& aRv);
+  void GetAsString(const RefPtr<FunctionStringCallback>& aCallback,
+                   ErrorResult& aRv);
   void GetKind(nsAString& aKind) const
   {
     switch (mKind) {
@@ -107,18 +108,8 @@ public:
   }
   void FillInExternalData();
 
-  bool ChromeOnly() const
-  {
-    return mChromeOnly;
-  }
-  void SetChromeOnly(bool aChromeOnly)
-  {
-    mChromeOnly = aChromeOnly;
-  }
-
 private:
   ~DataTransferItem() {}
-  already_AddRefed<File> FileFromISupports(nsISupports* aParent);
   already_AddRefed<File> CreateFileFromInputStream(nsISupports* aParent,
                                                    nsIInputStream* aStream,
                                                    ErrorResult& aRv);
@@ -126,7 +117,6 @@ private:
   // The index in the 2d mIndexedItems array
   uint32_t mIndex;
 
-  bool mChromeOnly;
   eKind mKind;
   nsString mType;
   nsCOMPtr<nsIVariant> mData;
