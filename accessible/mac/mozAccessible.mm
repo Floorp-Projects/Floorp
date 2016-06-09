@@ -19,6 +19,7 @@
 #include "TableAccessible.h"
 #include "TableCellAccessible.h"
 #include "mozilla/a11y/PDocAccessible.h"
+#include "OuterDocAccessible.h"
 
 #include "mozilla/Services.h"
 #include "nsRect.h"
@@ -619,6 +620,15 @@ ConvertToNSArray(nsTArray<ProxyAccessible*>& aArray)
         [mChildren addObject:nativeChild];
     }
 
+    // children from child if this is an outerdoc
+    OuterDocAccessible* docOwner = accWrap->AsOuterDoc();
+    if (docOwner) {
+      if (ProxyAccessible* proxyDoc = docOwner->RemoteChildDoc()) {
+        mozAccessible* nativeRemoteChild = GetNativeFromProxy(proxyDoc);
+        [mChildren insertObject:nativeRemoteChild atIndex:0];
+        NSAssert1 (nativeRemoteChild, @"%@ found a child remote doc missing a native\n", self);
+      }
+    }
   } else if (ProxyAccessible* proxy = [self getProxyAccessible]) {
       uint32_t childCount = proxy->ChildrenCount();
       for (uint32_t childIdx = 0; childIdx < childCount; childIdx++) {
