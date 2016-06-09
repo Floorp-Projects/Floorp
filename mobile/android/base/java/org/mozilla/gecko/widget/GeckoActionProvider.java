@@ -51,6 +51,8 @@ public class GeckoActionProvider {
      * A listener to know when a target was selected.
      * When setting a provider, the activity can listen to this,
      * to close the menu.
+     *
+     * Is run on the UI thread.
      */
     public interface OnTargetSelectedListener {
         public void onTargetSelected();
