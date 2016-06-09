@@ -28,7 +28,7 @@ public:
       PerformanceResourceTiming,
       PerformanceEntry)
 
-  PerformanceResourceTiming(nsPerformanceTiming* aPerformanceTiming,
+  PerformanceResourceTiming(PerformanceTiming* aPerformanceTiming,
                             nsPerformance* aPerformance,
                             const nsAString& aName);
 
@@ -173,7 +173,7 @@ protected:
 
   nsString mInitiatorType;
   nsString mNextHopProtocol;
-  RefPtr<nsPerformanceTiming> mTiming;
+  RefPtr<PerformanceTiming> mTiming;
   uint64_t mEncodedBodySize;
   uint64_t mTransferSize;
   uint64_t mDecodedBodySize;

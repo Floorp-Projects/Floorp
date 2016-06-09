@@ -23,7 +23,7 @@ NS_INTERFACE_MAP_END_INHERITING(PerformanceEntry)
 NS_IMPL_ADDREF_INHERITED(PerformanceResourceTiming, PerformanceEntry)
 NS_IMPL_RELEASE_INHERITED(PerformanceResourceTiming, PerformanceEntry)
 
-PerformanceResourceTiming::PerformanceResourceTiming(nsPerformanceTiming* aPerformanceTiming,
+PerformanceResourceTiming::PerformanceResourceTiming(PerformanceTiming* aPerformanceTiming,
                                                      nsPerformance* aPerformance,
                                                      const nsAString& aName)
 : PerformanceEntry(aPerformance, aName, NS_LITERAL_STRING("resource")),

@@ -44,15 +44,15 @@ using namespace mozilla;
 using namespace mozilla::dom;
 using namespace mozilla::dom::workers;
 
-NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsPerformanceTiming, mPerformance)
+NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(PerformanceTiming, mPerformance)
 
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsPerformanceTiming, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsPerformanceTiming, Release)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(PerformanceTiming, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(PerformanceTiming, Release)
 
-nsPerformanceTiming::nsPerformanceTiming(nsPerformance* aPerformance,
-                                         nsITimedChannel* aChannel,
-                                         nsIHttpChannel* aHttpChannel,
-                                         DOMHighResTimeStamp aZeroTime)
+PerformanceTiming::PerformanceTiming(nsPerformance* aPerformance,
+                                     nsITimedChannel* aChannel,
+                                     nsIHttpChannel* aHttpChannel,
+                                     DOMHighResTimeStamp aZeroTime)
   : mPerformance(aPerformance),
     mFetchStart(0.0),
     mZeroTime(aZeroTime),
@@ -68,9 +68,9 @@ nsPerformanceTiming::nsPerformanceTiming(nsPerformance* aPerformance,
     mZeroTime = 0;
   }
 
-  // The aHttpChannel argument is null if this nsPerformanceTiming object is
+  // The aHttpChannel argument is null if this PerformanceTiming object is
   // being used for navigation timing (which is only relevant for documents).
-  // It has a non-null value if this nsPerformanceTiming object is being used
+  // It has a non-null value if this PerformanceTiming object is being used
   // for resource timing, which can include document loads, both toplevel and
   // in subframes, and resources linked from a document.
   if (aHttpChannel) {
@@ -86,7 +86,7 @@ nsPerformanceTiming::nsPerformanceTiming(nsPerformance* aPerformance,
 // Copy the timing info from the channel so we don't need to keep the channel
 // alive just to get the timestamps.
 void
-nsPerformanceTiming::InitializeTimingInfo(nsITimedChannel* aChannel)
+PerformanceTiming::InitializeTimingInfo(nsITimedChannel* aChannel)
 {
   if (aChannel) {
     aChannel->GetAsyncOpen(&mAsyncOpen);
@@ -106,12 +106,12 @@ nsPerformanceTiming::InitializeTimingInfo(nsITimedChannel* aChannel)
   }
 }
 
-nsPerformanceTiming::~nsPerformanceTiming()
+PerformanceTiming::~PerformanceTiming()
 {
 }
 
 DOMHighResTimeStamp
-nsPerformanceTiming::FetchStartHighRes()
+PerformanceTiming::FetchStartHighRes()
 {
   if (!mFetchStart) {
     if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
@@ -127,14 +127,14 @@ nsPerformanceTiming::FetchStartHighRes()
 }
 
 DOMTimeMilliSec
-nsPerformanceTiming::FetchStart()
+PerformanceTiming::FetchStart()
 {
   return static_cast<int64_t>(FetchStartHighRes());
 }
 
 bool
-nsPerformanceTiming::CheckAllowedOrigin(nsIHttpChannel* aResourceChannel,
-                                        nsITimedChannel* aChannel)
+PerformanceTiming::CheckAllowedOrigin(nsIHttpChannel* aResourceChannel,
+                                      nsITimedChannel* aChannel)
 {
   if (!IsInitialized()) {
     return false;
@@ -163,13 +163,13 @@ nsPerformanceTiming::CheckAllowedOrigin(nsIHttpChannel* aResourceChannel,
 }
 
 bool
-nsPerformanceTiming::TimingAllowed() const
+PerformanceTiming::TimingAllowed() const
 {
   return mTimingAllowed;
 }
 
 uint16_t
-nsPerformanceTiming::GetRedirectCount() const
+PerformanceTiming::GetRedirectCount() const
 {
   if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
     return 0;
@@ -181,7 +181,7 @@ nsPerformanceTiming::GetRedirectCount() const
 }
 
 bool
-nsPerformanceTiming::ShouldReportCrossOriginRedirect() const
+PerformanceTiming::ShouldReportCrossOriginRedirect() const
 {
   if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
     return false;
@@ -198,13 +198,13 @@ nsPerformanceTiming::ShouldReportCrossOriginRedirect() const
  * resource timing. Since, navigation timing and resource timing check and
  * interpret cross-domain redirects in a different manner,
  * RedirectStartHighRes() will make no checks for cross-domain redirect.
- * It's up to the consumers of this method (nsPerformanceTiming::RedirectStart()
+ * It's up to the consumers of this method (PerformanceTiming::RedirectStart()
  * and PerformanceResourceTiming::RedirectStart() to make such verifications.
  *
  * @return a valid timing if the Performance Timing is enabled
  */
 DOMHighResTimeStamp
-nsPerformanceTiming::RedirectStartHighRes()
+PerformanceTiming::RedirectStartHighRes()
 {
   if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
     return mZeroTime;
@@ -213,7 +213,7 @@ nsPerformanceTiming::RedirectStartHighRes()
 }
 
 DOMTimeMilliSec
-nsPerformanceTiming::RedirectStart()
+PerformanceTiming::RedirectStart()
 {
   if (!IsInitialized()) {
     return 0;
@@ -231,13 +231,13 @@ nsPerformanceTiming::RedirectStart()
  * timing. Since, navigation timing and resource timing check and interpret
  * cross-domain redirects in a different manner, RedirectEndHighRes() will make
  * no checks for cross-domain redirect. It's up to the consumers of this method
- * (nsPerformanceTiming::RedirectEnd() and
+ * (PerformanceTiming::RedirectEnd() and
  * PerformanceResourceTiming::RedirectEnd() to make such verifications.
  *
  * @return a valid timing if the Performance Timing is enabled
  */
 DOMHighResTimeStamp
-nsPerformanceTiming::RedirectEndHighRes()
+PerformanceTiming::RedirectEndHighRes()
 {
   if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
     return mZeroTime;
@@ -246,7 +246,7 @@ nsPerformanceTiming::RedirectEndHighRes()
 }
 
 DOMTimeMilliSec
-nsPerformanceTiming::RedirectEnd()
+PerformanceTiming::RedirectEnd()
 {
   if (!IsInitialized()) {
     return 0;
@@ -260,7 +260,7 @@ nsPerformanceTiming::RedirectEnd()
 }
 
 DOMHighResTimeStamp
-nsPerformanceTiming::DomainLookupStartHighRes()
+PerformanceTiming::DomainLookupStartHighRes()
 {
   if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
     return mZeroTime;
@@ -269,13 +269,13 @@ nsPerformanceTiming::DomainLookupStartHighRes()
 }
 
 DOMTimeMilliSec
-nsPerformanceTiming::DomainLookupStart()
+PerformanceTiming::DomainLookupStart()
 {
   return static_cast<int64_t>(DomainLookupStartHighRes());
 }
 
 DOMHighResTimeStamp
-nsPerformanceTiming::DomainLookupEndHighRes()
+PerformanceTiming::DomainLookupEndHighRes()
 {
   if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
     return mZeroTime;
@@ -286,13 +286,13 @@ nsPerformanceTiming::DomainLookupEndHighRes()
 }
 
 DOMTimeMilliSec
-nsPerformanceTiming::DomainLookupEnd()
+PerformanceTiming::DomainLookupEnd()
 {
   return static_cast<int64_t>(DomainLookupEndHighRes());
 }
 
 DOMHighResTimeStamp
-nsPerformanceTiming::ConnectStartHighRes()
+PerformanceTiming::ConnectStartHighRes()
 {
   if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
     return mZeroTime;
@@ -302,13 +302,13 @@ nsPerformanceTiming::ConnectStartHighRes()
 }
 
 DOMTimeMilliSec
-nsPerformanceTiming::ConnectStart()
+PerformanceTiming::ConnectStart()
 {
   return static_cast<int64_t>(ConnectStartHighRes());
 }
 
 DOMHighResTimeStamp
-nsPerformanceTiming::ConnectEndHighRes()
+PerformanceTiming::ConnectEndHighRes()
 {
   if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
     return mZeroTime;
@@ -319,13 +319,13 @@ nsPerformanceTiming::ConnectEndHighRes()
 }
 
 DOMTimeMilliSec
-nsPerformanceTiming::ConnectEnd()
+PerformanceTiming::ConnectEnd()
 {
   return static_cast<int64_t>(ConnectEndHighRes());
 }
 
 DOMHighResTimeStamp
-nsPerformanceTiming::RequestStartHighRes()
+PerformanceTiming::RequestStartHighRes()
 {
   if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
     return mZeroTime;
@@ -334,13 +334,13 @@ nsPerformanceTiming::RequestStartHighRes()
 }
 
 DOMTimeMilliSec
-nsPerformanceTiming::RequestStart()
+PerformanceTiming::RequestStart()
 {
   return static_cast<int64_t>(RequestStartHighRes());
 }
 
 DOMHighResTimeStamp
-nsPerformanceTiming::ResponseStartHighRes()
+PerformanceTiming::ResponseStartHighRes()
 {
   if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
     return mZeroTime;
@@ -353,13 +353,13 @@ nsPerformanceTiming::ResponseStartHighRes()
 }
 
 DOMTimeMilliSec
-nsPerformanceTiming::ResponseStart()
+PerformanceTiming::ResponseStart()
 {
   return static_cast<int64_t>(ResponseStartHighRes());
 }
 
 DOMHighResTimeStamp
-nsPerformanceTiming::ResponseEndHighRes()
+PerformanceTiming::ResponseEndHighRes()
 {
   if (!nsContentUtils::IsPerformanceTimingEnabled() || !IsInitialized()) {
     return mZeroTime;
@@ -374,19 +374,19 @@ nsPerformanceTiming::ResponseEndHighRes()
 }
 
 DOMTimeMilliSec
-nsPerformanceTiming::ResponseEnd()
+PerformanceTiming::ResponseEnd()
 {
   return static_cast<int64_t>(ResponseEndHighRes());
 }
 
 bool
-nsPerformanceTiming::IsInitialized() const
+PerformanceTiming::IsInitialized() const
 {
   return mInitialized;
 }
 
 JSObject*
-nsPerformanceTiming::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
+PerformanceTiming::WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto)
 {
   return PerformanceTimingBinding::Wrap(cx, this, aGivenProto);
 }
@@ -474,7 +474,7 @@ nsPerformance::GetMozMemory(JSContext *aCx, JS::MutableHandle<JSObject*> aObj)
   aObj.set(mMozMemory);
 }
 
-nsPerformanceTiming*
+PerformanceTiming*
 nsPerformance::Timing()
 {
   if (!mTiming) {
@@ -482,7 +482,7 @@ nsPerformance::Timing()
     // since the cross-domain redirect were already checked.
     // The last argument (zero time) for performance.timing is the navigation
     // start value.
-    mTiming = new nsPerformanceTiming(this, mChannel, nullptr,
+    mTiming = new PerformanceTiming(this, mChannel, nullptr,
         mDOMTiming->GetNavigationStart());
   }
   return mTiming;
@@ -558,11 +558,11 @@ nsPerformance::AddEntry(nsIHttpChannel* channel,
     // The last argument is the "zero time" (offset). Since we don't want
     // any offset for the resource timing, this will be set to "0" - the
     // resource timing returns a relative timing (no offset).
-    RefPtr<nsPerformanceTiming> performanceTiming =
-        new nsPerformanceTiming(this, timedChannel, channel,
+    RefPtr<PerformanceTiming> performanceTiming =
+        new PerformanceTiming(this, timedChannel, channel,
             0);
 
-    // The PerformanceResourceTiming object will use the nsPerformanceTiming
+    // The PerformanceResourceTiming object will use the PerformanceTiming
     // object to get all the required timings.
     RefPtr<PerformanceResourceTiming> performanceEntry =
       new PerformanceResourceTiming(performanceTiming, this, entryName);
