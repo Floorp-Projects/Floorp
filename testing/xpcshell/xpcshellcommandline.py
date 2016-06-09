@@ -29,6 +29,9 @@ def add_common_arguments(parser):
     parser.add_argument("--sequential",
                         action="store_true", dest="sequential", default=False,
                         help="Run all tests sequentially")
+    parser.add_argument("--temp-dir",
+                        dest="tempDir", default=None,
+                        help="Directory to use for temporary files")
     parser.add_argument("--testing-modules-dir",
                         dest="testingModulesDir", default=None,
                         help="Directory where testing modules are located.")

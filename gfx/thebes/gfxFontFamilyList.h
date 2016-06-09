@@ -21,7 +21,7 @@ namespace mozilla {
  * between unquoted and quoted names for serializaiton
  */ 
 
-enum FontFamilyType {
+enum FontFamilyType : uint32_t {
   eFamily_none = 0,  // used when finding generics
 
   // explicitly named font family (e.g. Helvetica)

@@ -20,6 +20,7 @@
 #include "mozilla/Atomics.h"
 #include "mozilla/IndexSequence.h"
 #include "mozilla/Likely.h"
+#include "mozilla/Move.h"
 #include "mozilla/Tuple.h"
 #include "mozilla/TypeTraits.h"
 
@@ -262,12 +263,13 @@ private:
 // An event that can be used to call a C++11 functions or function objects,
 // including lambdas. The function must have no required arguments, and must
 // return void.
-template<typename Function>
+template<typename StoredFunction>
 class nsRunnableFunction : public mozilla::Runnable
 {
 public:
-  explicit nsRunnableFunction(const Function& aFunction)
-    : mFunction(aFunction)
+  template <typename F>
+  explicit nsRunnableFunction(F&& aFunction)
+    : mFunction(mozilla::Forward<F>(aFunction))
   { }
 
   NS_IMETHOD Run() {
@@ -277,13 +279,18 @@ public:
     return NS_OK;
   }
 private:
-  Function mFunction;
+  StoredFunction mFunction;
 };
 
 template<typename Function>
-nsRunnableFunction<Function>* NS_NewRunnableFunction(const Function& aFunction)
+nsRunnableFunction<typename mozilla::RemoveReference<Function>::Type>*
+NS_NewRunnableFunction(Function&& aFunction)
 {
-  return new nsRunnableFunction<Function>(aFunction);
+  return new nsRunnableFunction
+               // Make sure we store a non-reference in nsRunnableFunction.
+               <typename mozilla::RemoveReference<Function>::Type>
+               // But still forward aFunction to move if possible.
+               (mozilla::Forward<Function>(aFunction));
 }
 
 // An event that can be used to call a method on a class.  The class type must

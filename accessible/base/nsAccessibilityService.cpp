@@ -558,9 +558,10 @@ nsAccessibilityService::ContentRangeInserted(nsIPresShell* aPresShell,
                                              nsIContent* aStartChild,
                                              nsIContent* aEndChild)
 {
+  DocAccessible* document = GetDocAccessible(aPresShell);
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eTree)) {
-    logging::MsgBegin("TREE", "content inserted");
+    logging::MsgBegin("TREE", "content inserted; doc: %p", document);
     logging::Node("container", aContainer);
     for (nsIContent* child = aStartChild; child != aEndChild;
          child = child->GetNextSibling()) {
@@ -571,25 +572,25 @@ nsAccessibilityService::ContentRangeInserted(nsIPresShell* aPresShell,
   }
 #endif
 
-  DocAccessible* docAccessible = GetDocAccessible(aPresShell);
-  if (docAccessible)
-    docAccessible->ContentInserted(aContainer, aStartChild, aEndChild);
+  if (document) {
+    document->ContentInserted(aContainer, aStartChild, aEndChild);
+  }
 }
 
 void
 nsAccessibilityService::ContentRemoved(nsIPresShell* aPresShell,
                                        nsIContent* aChildNode)
 {
+  DocAccessible* document = GetDocAccessible(aPresShell);
 #ifdef A11Y_LOG
   if (logging::IsEnabled(logging::eTree)) {
-    logging::MsgBegin("TREE", "content removed");
+    logging::MsgBegin("TREE", "content removed; doc: %p", document);
     logging::Node("container node", aChildNode->GetFlattenedTreeParent());
     logging::Node("content node", aChildNode);
     logging::MsgEnd();
   }
 #endif
 
-  DocAccessible* document = GetDocAccessible(aPresShell);
   if (document) {
     // Flatten hierarchy may be broken at this point so we cannot get a true
     // container by traversing up the DOM tree. Find a parent of first accessible
