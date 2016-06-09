@@ -91,7 +91,7 @@ let InternalFaviconLoader = {
    */
   observe(subject, topic, data) {
     let innerWindowID = subject.QueryInterface(Ci.nsISupportsPRUint64).data;
-    this.onInnerDestroyed(innerWindowID);
+    this.removeRequestsForInner(innerWindowID);
   },
 
   /**
@@ -113,12 +113,12 @@ let InternalFaviconLoader = {
   /**
    * Called for every inner that gets destroyed, only in the parent process.
    */
-  onInnerDestroyed(innerID) {
+  removeRequestsForInner(innerID) {
     for (let [window, loadDataForWindow] of gFaviconLoadDataMap) {
       let newLoadDataForWindow = loadDataForWindow.filter(loadData => {
         let innerWasDestroyed = loadData.innerWindowID == innerID;
         if (innerWasDestroyed) {
-          this._cancelRequest(loadData, "the inner window was destroyed");
+          this._cancelRequest(loadData, "the inner window was destroyed or a new favicon was loaded for it");
         }
         // Keep the items whose inner is still alive.
         return !innerWasDestroyed;
@@ -180,7 +180,7 @@ let InternalFaviconLoader = {
 
     Services.obs.addObserver(this, "inner-window-destroyed", false);
     Services.ppmm.addMessageListener("Toolkit:inner-window-destroyed", msg => {
-      this.onInnerDestroyed(msg.data);
+      this.removeRequestsForInner(msg.data);
     });
   },
 
@@ -191,14 +191,17 @@ let InternalFaviconLoader = {
       gFaviconLoadDataMap.set(win, []);
       let unloadHandler = event => {
         let doc = event.target;
-        let eventWin = doc.defaultview;
-        if (win == win.top && doc.documentURI != "about:blank") {
+        let eventWin = doc.defaultView;
+        if (eventWin == win) {
           win.removeEventListener("unload", unloadHandler);
           this.onUnload(win);
         }
       };
       win.addEventListener("unload", unloadHandler, true);
     }
+
+    // Immediately cancel any earlier requests
+    this.removeRequestsForInner(innerWindowID);
 
     // First we do the actual setAndFetch call:
     let {innerWindowID, currentURI} = browser;
