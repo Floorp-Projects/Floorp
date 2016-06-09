@@ -278,51 +278,51 @@ MediaKeySystemAccess::GetKeySystemStatus(const nsAString& aKeySystem,
     return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage, aOutCdmVersion);
   }
 
-  if (Preferences::GetBool("media.gmp-eme-adobe.visible", false)) {
-    if (aKeySystem.EqualsLiteral("com.adobe.primetime")) {
-      if (!Preferences::GetBool("media.gmp-eme-adobe.enabled", false)) {
-        aOutMessage = NS_LITERAL_CSTRING("Adobe EME disabled");
-        return MediaKeySystemStatus::Cdm_disabled;
-      }
+#ifdef MOZ_ADOBE_EME
+  if (aKeySystem.EqualsLiteral("com.adobe.primetime")) {
+    if (!Preferences::GetBool("media.gmp-eme-adobe.enabled", false)) {
+      aOutMessage = NS_LITERAL_CSTRING("Adobe EME disabled");
+      return MediaKeySystemStatus::Cdm_disabled;
+    }
 #ifdef XP_WIN
-      // Win Vista and later only.
-      if (!IsVistaOrLater()) {
-        aOutMessage = NS_LITERAL_CSTRING("Minimum Windows version (Vista) not met for Adobe EME");
-        return MediaKeySystemStatus::Cdm_not_supported;
-      }
+    // Win Vista and later only.
+    if (!IsVistaOrLater()) {
+      aOutMessage = NS_LITERAL_CSTRING("Minimum Windows version (Vista) not met for Adobe EME");
+      return MediaKeySystemStatus::Cdm_not_supported;
+    }
 #endif
 #ifdef XP_MACOSX
-      if (!nsCocoaFeatures::OnLionOrLater()) {
-        aOutMessage = NS_LITERAL_CSTRING("Minimum MacOSX version (10.7) not met for Adobe EME");
-        return MediaKeySystemStatus::Cdm_not_supported;
-      }
-#endif
-      return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage, aOutCdmVersion);
+    if (!nsCocoaFeatures::OnLionOrLater()) {
+      aOutMessage = NS_LITERAL_CSTRING("Minimum MacOSX version (10.7) not met for Adobe EME");
+      return MediaKeySystemStatus::Cdm_not_supported;
     }
+#endif
+    return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage, aOutCdmVersion);
   }
+#endif
 
-  if (Preferences::GetBool("media.gmp-widevinecdm.visible", false)) {
-    if (aKeySystem.EqualsLiteral("com.widevine.alpha")) {
+#ifdef MOZ_WIDEVINE_EME
+  if (aKeySystem.EqualsLiteral("com.widevine.alpha")) {
 #ifdef XP_WIN
-      // Win Vista and later only.
-      if (!IsVistaOrLater()) {
-        aOutMessage = NS_LITERAL_CSTRING("Minimum Windows version (Vista) not met for Widevine EME");
-        return MediaKeySystemStatus::Cdm_not_supported;
-      }
+    // Win Vista and later only.
+    if (!IsVistaOrLater()) {
+      aOutMessage = NS_LITERAL_CSTRING("Minimum Windows version (Vista) not met for Widevine EME");
+      return MediaKeySystemStatus::Cdm_not_supported;
+    }
 #endif
 #ifdef XP_MACOSX
-      if (!nsCocoaFeatures::OnLionOrLater()) {
-        aOutMessage = NS_LITERAL_CSTRING("Minimum MacOSX version (10.7) not met for Widevine EME");
-        return MediaKeySystemStatus::Cdm_not_supported;
-      }
-#endif
-      if (!Preferences::GetBool("media.gmp-widevinecdm.enabled", false)) {
-        aOutMessage = NS_LITERAL_CSTRING("Widevine EME disabled");
-        return MediaKeySystemStatus::Cdm_disabled;
-      }
-      return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage, aOutCdmVersion);
+    if (!nsCocoaFeatures::OnLionOrLater()) {
+      aOutMessage = NS_LITERAL_CSTRING("Minimum MacOSX version (10.7) not met for Widevine EME");
+      return MediaKeySystemStatus::Cdm_not_supported;
     }
+#endif
+    if (!Preferences::GetBool("media.gmp-widevinecdm.enabled", false)) {
+      aOutMessage = NS_LITERAL_CSTRING("Widevine EME disabled");
+      return MediaKeySystemStatus::Cdm_disabled;
+    }
+    return EnsureMinCDMVersion(mps, aKeySystem, aMinCdmVersion, aOutMessage, aOutCdmVersion);
   }
+#endif
 
   return MediaKeySystemStatus::Cdm_not_supported;
 }
