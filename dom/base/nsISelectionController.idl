@@ -295,7 +295,7 @@ enum class SelectionType : RawSelectionType
     nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT,
   eAccessibility = nsISelectionController::SELECTION_ACCESSIBILITY,
   eFind = nsISelectionController::SELECTION_FIND,
-  SELECTION_URLSECONDARY = nsISelectionController::SELECTION_URLSECONDARY,
+  eURLSecondary = nsISelectionController::SELECTION_URLSECONDARY,
   SELECTION_URLSTRIKEOUT = nsISelectionController::SELECTION_URLSTRIKEOUT,
 };
 
