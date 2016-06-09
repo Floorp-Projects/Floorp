@@ -1037,18 +1037,19 @@ ContentChild::InitXPCOM()
   if (NS_FAILED(svc->RegisterListener(mConsoleListener)))
     NS_WARNING("Couldn't register console listener for child process");
 
-  bool isOffline, isLangRTL;
+  bool isOffline, isLangRTL, haveBidiKeyboards;
   bool isConnected;
   ClipboardCapabilities clipboardCaps;
   DomainPolicyClone domainPolicy;
   StructuredCloneData initialData;
 
   SendGetXPCOMProcessAttributes(&isOffline, &isConnected,
-                                &isLangRTL, &mAvailableDictionaries,
+                                &isLangRTL, &haveBidiKeyboards,
+                                &mAvailableDictionaries,
                                 &clipboardCaps, &domainPolicy, &initialData);
   RecvSetOffline(isOffline);
   RecvSetConnectivity(isConnected);
-  RecvBidiKeyboardNotify(isLangRTL);
+  RecvBidiKeyboardNotify(isLangRTL, haveBidiKeyboards);
 
   // Create the CPOW manager as soon as possible.
   SendPJavaScriptConstructor();
@@ -1511,13 +1512,14 @@ ContentChild::RecvSpeakerManagerNotify()
 }
 
 bool
-ContentChild::RecvBidiKeyboardNotify(const bool& aIsLangRTL)
+ContentChild::RecvBidiKeyboardNotify(const bool& aIsLangRTL,
+                                     const bool& aHaveBidiKeyboards)
 {
   // bidi is always of type PuppetBidiKeyboard* (because in the child, the only
   // possible implementation of nsIBidiKeyboard is PuppetBidiKeyboard).
   PuppetBidiKeyboard* bidi = static_cast<PuppetBidiKeyboard*>(nsContentUtils::GetBidiKeyboard());
   if (bidi) {
-    bidi->SetIsLangRTL(aIsLangRTL);
+    bidi->SetBidiKeyboardInfo(aIsLangRTL, aHaveBidiKeyboards);
   }
   return true;
 }
@@ -3075,6 +3077,24 @@ ContentChild::ForceKillTimerCallback(nsITimer* aTimer, void* aClosure)
 bool
 ContentChild::RecvShutdown()
 {
+  // If we receive the shutdown message from within a nested event loop, we want
+  // to wait for that event loop to finish. Otherwise we could prematurely
+  // terminate an "unload" or "pagehide" event handler (which might be doing a
+  // sync XHR, for example).
+  nsCOMPtr<nsIThread> thread;
+  nsresult rv = NS_GetMainThread(getter_AddRefs(thread));
+  if (NS_SUCCEEDED(rv) && thread) {
+    RefPtr<nsThread> mainThread(thread.forget().downcast<nsThread>());
+    if (mainThread->RecursionDepth() > 1) {
+      // We're in a nested event loop. Let's delay for an arbitrary period of
+      // time (100ms) in the hopes that the event loop will have finished by
+      // then.
+      MessageLoop::current()->PostDelayedTask(
+        NewRunnableMethod(this, &ContentChild::RecvShutdown), 100);
+      return true;
+    }
+  }
+
   if (mPolicy) {
     mPolicy->Deactivate();
     mPolicy = nullptr;

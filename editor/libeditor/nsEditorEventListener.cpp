@@ -498,25 +498,11 @@ nsEditorEventListener::HandleEvent(nsIDOMEvent* aEvent)
 }
 
 #ifdef HANDLE_NATIVE_TEXT_DIRECTION_SWITCH
-#include <windows.h>
-// Undo the windows.h damage
-#undef GetMessage
-#undef CreateEvent
-#undef GetClassName
-#undef GetBinaryType
-#undef RemoveDirectory
-#undef SetProp
-
 namespace {
 
 // This function is borrowed from Chromium's ImeInput::IsCtrlShiftPressed
-bool IsCtrlShiftPressed(bool& isRTL)
+bool IsCtrlShiftPressed(nsIDOMKeyEvent* aEvent, bool& isRTL)
 {
-  BYTE keystate[256];
-  if (!::GetKeyboardState(keystate)) {
-    return false;
-  }
-
   // To check if a user is pressing only a control key and a right-shift key
   // (or a left-shift key), we use the steps below:
   // 1. Check if a user is pressing a control key and a right-shift key (or
@@ -525,16 +511,19 @@ bool IsCtrlShiftPressed(bool& isRTL)
   //    keys pressed at the same time.
   //    To ignore the keys checked in 1, we set their status to 0 before
   //    checking the key status.
-  const int kKeyDownMask = 0x80;
-  if ((keystate[VK_CONTROL] & kKeyDownMask) == 0) {
+  WidgetKeyboardEvent* keyboardEvent =
+    aEvent->AsEvent()->WidgetEventPtr()->AsKeyboardEvent();
+  MOZ_ASSERT(keyboardEvent,
+             "DOM key event's internal event must be WidgetKeyboardEvent");
+
+  if (!keyboardEvent->IsControl()) {
     return false;
   }
 
-  if (keystate[VK_RSHIFT] & kKeyDownMask) {
-    keystate[VK_RSHIFT] = 0;
+  uint32_t location = keyboardEvent->mLocation;
+  if (location == nsIDOMKeyEvent::DOM_KEY_LOCATION_RIGHT) {
     isRTL = true;
-  } else if (keystate[VK_LSHIFT] & kKeyDownMask) {
-    keystate[VK_LSHIFT] = 0;
+  } else if (location == nsIDOMKeyEvent::DOM_KEY_LOCATION_LEFT) {
     isRTL = false;
   } else {
     return false;
@@ -542,19 +531,10 @@ bool IsCtrlShiftPressed(bool& isRTL)
 
   // Scan the key status to find pressed keys. We should abandon changing the
   // text direction when there are other pressed keys.
-  // This code is executed only when a user is pressing a control key and a
-  // right-shift key (or a left-shift key), i.e. we should ignore the status of
-  // the keys: VK_SHIFT, VK_CONTROL, VK_RCONTROL, and VK_LCONTROL.
-  // So, we reset their status to 0 and ignore them.
-  keystate[VK_SHIFT] = 0;
-  keystate[VK_CONTROL] = 0;
-  keystate[VK_RCONTROL] = 0;
-  keystate[VK_LCONTROL] = 0;
-  for (int i = 0; i <= VK_PACKET; ++i) {
-    if (keystate[i] & kKeyDownMask) {
-      return false;
-    }
+  if (keyboardEvent->IsAlt() || keyboardEvent->IsOS()) {
+    return false;
   }
+
   return true;
 }
 
@@ -598,7 +578,7 @@ nsEditorEventListener::KeyDown(nsIDOMKeyEvent* aKeyEvent)
   aKeyEvent->GetKeyCode(&keyCode);
   if (keyCode == nsIDOMKeyEvent::DOM_VK_SHIFT) {
     bool switchToRTL;
-    if (IsCtrlShiftPressed(switchToRTL)) {
+    if (IsCtrlShiftPressed(aKeyEvent, switchToRTL)) {
       mShouldSwitchTextDirection = true;
       mSwitchToRTL = switchToRTL;
     }

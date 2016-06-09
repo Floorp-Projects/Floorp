@@ -340,6 +340,27 @@ TabParent::CacheFrameLoader(nsFrameLoader* aFrameLoader)
   mFrameLoader = aFrameLoader;
 }
 
+/**
+ * Will return nullptr if there is no outer window available for the
+ * document hosting the owner element of this TabParent. Also will return
+ * nullptr if that outer window is in the process of closing.
+ */
+already_AddRefed<nsPIDOMWindowOuter>
+TabParent::GetParentWindowOuter()
+{
+  nsCOMPtr<nsIContent> frame = do_QueryInterface(GetOwnerElement());
+  if (!frame) {
+    return nullptr;
+  }
+
+  nsCOMPtr<nsPIDOMWindowOuter> parent = frame->OwnerDoc()->GetWindow();
+  if (!parent || parent->Closed()) {
+    return nullptr;
+  }
+
+  return parent.forget();
+}
+
 void
 TabParent::SetOwnerElement(Element* aElement)
 {

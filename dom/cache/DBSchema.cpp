@@ -220,7 +220,8 @@ static_assert(int(RequestCache::Default) == 0 &&
               int(RequestCache::Reload) == 2 &&
               int(RequestCache::No_cache) == 3 &&
               int(RequestCache::Force_cache) == 4 &&
-              int(RequestCache::EndGuard_) == 5,
+              int(RequestCache::Only_if_cached) == 5 &&
+              int(RequestCache::EndGuard_) == 6,
               "RequestCache values are as expected");
 static_assert(int(RequestRedirect::Follow) == 0 &&
               int(RequestRedirect::Error) == 1 &&

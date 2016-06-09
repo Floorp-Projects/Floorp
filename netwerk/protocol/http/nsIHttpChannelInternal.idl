@@ -247,6 +247,7 @@ interface nsIHttpChannelInternal : nsISupports
     const unsigned long FETCH_CACHE_MODE_RELOAD = 2;
     const unsigned long FETCH_CACHE_MODE_NO_CACHE = 3;
     const unsigned long FETCH_CACHE_MODE_FORCE_CACHE = 4;
+    const unsigned long FETCH_CACHE_MODE_ONLY_IF_CACHED = 5;
     /**
      * Set to indicate Request.cache mode, which simulates the fetch API
      * semantics, and is also used for exposing this value to the Web page

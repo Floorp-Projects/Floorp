@@ -79,8 +79,7 @@ parent:
   async PCameras();
 
   async PUDPSocket(OptionalPrincipalInfo pInfo, nsCString filter);
-  async PBroadcastChannel(PrincipalInfo pInfo, nsCString origin, nsString channel,
-                          bool privateBrowsing);
+  async PBroadcastChannel(PrincipalInfo pInfo, nsCString origin, nsString channel);
 
   async PServiceWorkerManager();
 
