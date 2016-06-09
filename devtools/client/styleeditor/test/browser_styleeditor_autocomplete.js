@@ -148,7 +148,7 @@ function testState(index, sourceEditor, popup, panelWindow) {
 }
 
 function checkState(index, sourceEditor, popup) {
-  let deferred = promise.defer();
+  let deferred = defer();
   executeSoon(() => {
     let [, details] = TEST_CASES[index];
     details = details || {};

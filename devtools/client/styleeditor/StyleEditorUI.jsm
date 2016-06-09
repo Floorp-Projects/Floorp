@@ -31,6 +31,7 @@ const {PrefObserver, PREF_ORIG_SOURCES} =
 const csscoverage = require("devtools/shared/fronts/csscoverage");
 const {console} = require("resource://gre/modules/Console.jsm");
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const {ResponsiveUIManager} =
   require("resource://devtools/client/responsivedesign/responsivedesign.jsm");
 
@@ -714,7 +715,7 @@ StyleEditorUI.prototype = {
       return promise.resolve(editor.summary);
     }
 
-    let deferred = promise.defer();
+    let deferred = defer();
     let self = this;
 
     this.on("editor-added", function onAdd(e, selected) {
@@ -732,7 +733,7 @@ StyleEditorUI.prototype = {
       return promise.resolve(editor.details);
     }
 
-    let deferred = promise.defer();
+    let deferred = defer();
     let self = this;
 
     this.on("editor-added", function onAdd(e, selected) {

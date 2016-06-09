@@ -51,7 +51,7 @@ add_task(function* () {
 });
 
 function copy(srcChromeURL, destFileName) {
-  let deferred = promise.defer();
+  let deferred = defer();
   let destFile = FileUtils.getFile("ProfD", [destFileName]);
   write(read(srcChromeURL), destFile, deferred.resolve);
 
