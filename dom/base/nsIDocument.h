@@ -2723,6 +2723,8 @@ public:
     return mUserHasInteracted;
   }
 
+  bool HasScriptsBlockedBySandbox();
+
   void ReportHasScrollLinkedEffect();
   bool HasScrollLinkedEffect() const
   {
