@@ -939,11 +939,7 @@ nsEditorEventListener::CanDrop(nsIDOMDragEvent* aEvent)
   nsCOMPtr<DataTransfer> dataTransfer = do_QueryInterface(domDataTransfer);
   NS_ENSURE_TRUE(dataTransfer, false);
 
-  ErrorResult err;
-  RefPtr<DOMStringList> types = dataTransfer->GetTypes(err);
-  if (NS_WARN_IF(err.Failed())) {
-    return false;
-  }
+  RefPtr<DOMStringList> types = dataTransfer->Types();
 
   // Plaintext editors only support dropping text. Otherwise, HTML and files
   // can be dropped as well.
