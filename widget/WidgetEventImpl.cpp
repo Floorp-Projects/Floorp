@@ -112,7 +112,7 @@ ToSelectionType(TextRangeType aTextRangeType)
 {
   switch (aTextRangeType) {
     case TextRangeType::eRawClause:
-      return SelectionType::SELECTION_IME_RAWINPUT;
+      return SelectionType::eIMERawClause;
     case TextRangeType::eSelectedRawClause:
       return SelectionType::SELECTION_IME_SELECTEDRAWTEXT;
     case TextRangeType::eConvertedClause:
