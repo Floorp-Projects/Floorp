@@ -5147,7 +5147,7 @@ nsEditor::GetIMESelectionStartOffsetIn(nsINode* aTextNode)
   int32_t minOffset = INT32_MAX;
   static const SelectionType kIMESelectionTypes[] = {
     SelectionType::eIMERawClause,
-    SelectionType::SELECTION_IME_SELECTEDRAWTEXT,
+    SelectionType::eIMESelectedRawClause,
     SelectionType::SELECTION_IME_CONVERTEDTEXT,
     SelectionType::SELECTION_IME_SELECTEDCONVERTEDTEXT
   };

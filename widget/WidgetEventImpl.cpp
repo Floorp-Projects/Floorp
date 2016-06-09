@@ -114,7 +114,7 @@ ToSelectionType(TextRangeType aTextRangeType)
     case TextRangeType::eRawClause:
       return SelectionType::eIMERawClause;
     case TextRangeType::eSelectedRawClause:
-      return SelectionType::SELECTION_IME_SELECTEDRAWTEXT;
+      return SelectionType::eIMESelectedRawClause;
     case TextRangeType::eConvertedClause:
       return SelectionType::SELECTION_IME_CONVERTEDTEXT;
     case TextRangeType::eSelectedClause:
