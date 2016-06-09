@@ -89,6 +89,8 @@ function LoginObserver(captivePortalDetector) {
                               .getService(Ci.nsIHttpActivityDistributor);
   let urlFetcher = null;
 
+  let waitForNetworkActivity = Services.appinfo.widgetToolkit == "gonk";
+
   let pageCheckingDone = function pageCheckingDone() {
     if (state === LOGIN_OBSERVER_STATE_VERIFYING) {
       urlFetcher = null;
@@ -177,10 +179,14 @@ function LoginObserver(captivePortalDetector) {
           state = LOGIN_OBSERVER_STATE_VERIFY_NEEDED;
           // Fall though to start polling timer
         case LOGIN_OBSERVER_STATE_IDLE:
-          timer.initWithCallback(this,
-                                 captivePortalDetector._pollingTime,
-                                 timer.TYPE_ONE_SHOT);
-          break;
+          if (waitForNetworkActivity) {
+            timer.initWithCallback(this,
+                                   captivePortalDetector._pollingTime,
+                                   timer.TYPE_ONE_SHOT);
+            break;
+          }
+          // if we don't need to wait for network activity, just fall through
+          // to perform a captive portal check.
         case LOGIN_OBSERVER_STATE_VERIFY_NEEDED:
           // Polling the canonical website since network stays idle for a while
           state = LOGIN_OBSERVER_STATE_VERIFYING;
