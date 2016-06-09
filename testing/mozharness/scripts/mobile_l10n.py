@@ -171,6 +171,9 @@ class MobileSingleLocale(MockMixin, LocalesMixin, ReleaseMixin,
         self.repack_env = repack_env
         return self.repack_env
 
+    def query_l10n_env(self):
+        return self.query_env()
+
     def query_upload_env(self):
         if self.upload_env:
             return self.upload_env
