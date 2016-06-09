@@ -971,8 +971,17 @@ nsContextMenu.prototype = {
                    referrerURI: gContextMenuContentData.documentURIObject,
                    referrerPolicy: gContextMenuContentData.referrerPolicy,
                    noReferrer: this.linkHasNoReferrer };
-    for (let p in extra)
+    for (let p in extra) {
       params[p] = extra[p];
+    }
+
+    // If we want to change userContextId, we must be sure that we don't
+    // propagate the referrer.
+    if ("userContextId" in params &&
+        params.userContextId != this.principal.originAttributes.userContextId) {
+      params.noReferrer = true;
+    }
+
     return params;
   },
 
@@ -1013,10 +1022,6 @@ nsContextMenu.prototype = {
       allowMixedContent: persistAllowMixedContentInChildTab,
       userContextId: parseInt(event.target.getAttribute('usercontextid'))
     };
-
-    if (params.userContextId != this.principal.originAttributes.userContextId) {
-      params.noReferrer = true;
-    }
 
     openLinkIn(this.linkURL, "tab", this._openLinkInParameters(params));
   },
