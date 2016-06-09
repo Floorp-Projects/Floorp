@@ -18,4 +18,7 @@ export MOZ_PACKAGE_JSSHELL=1
 # Need this to prevent name conflicts with the normal nightly build packages
 export MOZ_PKG_SPECIAL=asan
 
+#upload symbols
+MOZ_AUTOMATION_UPLOAD_SYMBOLS=1
+
 . "$topsrcdir/build/mozconfig.common.override"
