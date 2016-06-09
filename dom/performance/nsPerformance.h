@@ -31,15 +31,10 @@ namespace dom {
 class PerformanceEntry;
 class PerformanceObserver;
 
-} // namespace dom
-} // namespace mozilla
-
 // Script "performance.timing" object
-class nsPerformanceTiming final : public nsWrapperCache
+class PerformanceTiming final : public nsWrapperCache
 {
 public:
-  typedef mozilla::TimeStamp TimeStamp;
-
 /**
  * @param   aPerformance
  *          The performance object (the JS parent).
@@ -59,12 +54,12 @@ public:
  *          argument should be equal to performance.navigationStart for
  *          navigation timing and "0" for the resource timing.
  */
-  nsPerformanceTiming(nsPerformance* aPerformance,
-                      nsITimedChannel* aChannel,
-                      nsIHttpChannel* aHttpChannel,
-                      DOMHighResTimeStamp aZeroTime);
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsPerformanceTiming)
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(nsPerformanceTiming)
+  PerformanceTiming(nsPerformance* aPerformance,
+                    nsITimedChannel* aChannel,
+                    nsIHttpChannel* aHttpChannel,
+                    DOMHighResTimeStamp aZeroTime);
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PerformanceTiming)
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(PerformanceTiming)
 
   nsDOMNavigationTiming* GetDOMTiming() const;
 
@@ -119,7 +114,7 @@ public:
   inline DOMHighResTimeStamp TimeStampToDOMHighRes(TimeStamp aStamp) const
   {
     MOZ_ASSERT(!aStamp.IsNull());
-    mozilla::TimeDuration duration =
+    TimeDuration duration =
         aStamp - GetDOMTiming()->GetNavigationStartTimeStamp();
     return duration.ToMilliseconds() + mZeroTime;
   }
@@ -228,7 +223,7 @@ public:
   }
 
 private:
-  ~nsPerformanceTiming();
+  ~PerformanceTiming();
   bool IsInitialized() const;
   void InitializeTimingInfo(nsITimedChannel* aChannel);
   RefPtr<nsPerformance> mPerformance;
@@ -262,6 +257,9 @@ private:
   bool mReportCrossOriginRedirect;
 };
 
+} // namespace dom
+} // namespace mozilla
+
 // Script "performance.navigation" object
 class nsPerformanceNavigation final : public nsWrapperCache
 {
@@ -271,7 +269,7 @@ public:
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_NATIVE_CLASS(nsPerformanceNavigation)
 
   nsDOMNavigationTiming* GetDOMTiming() const;
-  nsPerformanceTiming* GetPerformanceTiming() const;
+  mozilla::dom::PerformanceTiming* GetPerformanceTiming() const;
 
   nsPerformance* GetParentObject() const
   {
@@ -419,7 +417,7 @@ public:
   // Performance WebIDL methods
   DOMHighResTimeStamp Now() const override;
 
-  nsPerformanceTiming* Timing();
+  mozilla::dom::PerformanceTiming* Timing();
   nsPerformanceNavigation* Navigation();
 
   void AddEntry(nsIHttpChannel* channel,
@@ -463,7 +461,7 @@ protected:
 
   RefPtr<nsDOMNavigationTiming> mDOMTiming;
   nsCOMPtr<nsITimedChannel> mChannel;
-  RefPtr<nsPerformanceTiming> mTiming;
+  RefPtr<mozilla::dom::PerformanceTiming> mTiming;
   RefPtr<nsPerformanceNavigation> mNavigation;
   RefPtr<nsPerformance> mParentPerformance;
   JS::Heap<JSObject*> mMozMemory;
@@ -475,14 +473,14 @@ nsPerformanceNavigation::GetDOMTiming() const
   return mPerformance->GetDOMTiming();
 }
 
-inline nsPerformanceTiming*
+inline mozilla::dom::PerformanceTiming*
 nsPerformanceNavigation::GetPerformanceTiming() const
 {
   return mPerformance->Timing();
 }
 
 inline nsDOMNavigationTiming*
-nsPerformanceTiming::GetDOMTiming() const
+mozilla::dom::PerformanceTiming::GetDOMTiming() const
 {
   return mPerformance->GetDOMTiming();
 }
