@@ -72,6 +72,26 @@ public:
   virtual void RemoveBrowser(mozilla::dom::TabParent* aBrowser) override;
   virtual void EnumerateBrowsers(BrowserEnumerator aEnumFunc, void *aArg) override;
 
+  virtual bool ShowAccelerators() override
+  {
+    return mShowAccelerators;
+  }
+
+  virtual bool ShowFocusRings() override
+  {
+    return mShowFocusRings;
+  }
+
+  virtual void SetShowAccelerators(bool aEnable) override
+  {
+    mShowAccelerators = aEnable;
+  }
+
+  virtual void SetShowFocusRings(bool aEnable) override
+  {
+    mShowFocusRings = aEnable;
+  }
+
 protected:
   virtual ~nsWindowRoot();
 
@@ -85,6 +105,11 @@ protected:
   // We own the manager, which owns event listeners attached to us.
   RefPtr<mozilla::EventListenerManager> mListenerManager; // [Strong]
   nsCOMPtr<nsIDOMNode> mPopupNode; // [OWNER]
+
+  // True if focus rings and accelerators are enabled for this
+  // window hierarchy.
+  bool mShowAccelerators;
+  bool mShowFocusRings;
 
   nsCOMPtr<mozilla::dom::EventTarget> mParent;
 

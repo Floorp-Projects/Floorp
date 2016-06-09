@@ -7,6 +7,8 @@
 include protocol PBrowser;
 include PBrowserOrId;
 
+using UIStateChangeType from "nsPIDOMWindow.h";
+
 namespace mozilla {
 namespace dom {
 
@@ -55,6 +57,10 @@ struct FrameIPCTabContext
   // This value would be empty if the TabContext isn't created for
   // presented content.
   nsString presentationURL;
+
+  // Keyboard indicator state inherited from the parent.
+  UIStateChangeType showAccelerators;
+  UIStateChangeType showFocusRings;
 };
 
 // XXXcatalinb: This is only used by ServiceWorkerClients::OpenWindow.
