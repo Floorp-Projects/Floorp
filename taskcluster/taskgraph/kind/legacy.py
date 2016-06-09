@@ -4,38 +4,31 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import time
-import os
-import sys
-import json
 import copy
-import re
+import json
 import logging
+import os
+import re
+import sys
+import time
+from collections import defaultdict, namedtuple
 
 from . import base
 from ..types import Task
 from functools import partial
 from mozpack.path import match as mozpackmatch
 from slugid import nice as slugid
-from taskcluster_graph.mach_util import (
-    merge_dicts,
-    gaia_info,
-    configure_dependent_task,
-    set_interactive_task,
-    remove_caches_from_task,
-    query_vcs_info
-)
-import taskcluster_graph.transform.routes as routes_transform
-import taskcluster_graph.transform.treeherder as treeherder_transform
-from taskcluster_graph.commit_parser import parse_commit
-from taskcluster_graph.from_now import (
+from taskgraph.util.legacy_commit_parser import parse_commit
+from taskgraph.util.time import (
     json_time_from_now,
     current_json_time,
 )
-from taskcluster_graph.templates import Templates
-import taskcluster_graph.build_task
-from taskgraph.util import docker_image
+from taskgraph.util.templates import Templates
+from taskgraph.util.docker import docker_image
 
+
+ROOT = os.path.dirname(os.path.realpath(__file__))
+GECKO = os.path.realpath(os.path.join(ROOT, '..', '..', '..'))
 # TASKID_PLACEHOLDER is the "internal" form of a taskid; it is substituted with
 # actual taskIds at the very last minute, in get_task_definition
 TASKID_PLACEHOLDER = 'TaskLabel=={}'
@@ -46,6 +39,12 @@ DEFAULT_JOB_PATH = os.path.join(
     'tasks', 'branches', 'base_jobs.yml'
 )
 
+TREEHERDER_ROUTE_PREFIX = 'tc-treeherder-stage'
+TREEHERDER_ROUTES = {
+    'staging': 'tc-treeherder-stage',
+    'production': 'tc-treeherder'
+}
+
 # time after which a try build's results will expire
 TRY_EXPIRATION = "14 days"
 
@@ -54,9 +53,145 @@ logger = logging.getLogger(__name__)
 def mklabel():
     return TASKID_PLACEHOLDER.format(slugid())
 
-# monkey-patch mklabel into image_builder, as well
-from taskcluster_graph import image_builder
-image_builder.mklabel = mklabel
+def merge_dicts(*dicts):
+    merged_dict = {}
+    for dictionary in dicts:
+        merged_dict.update(dictionary)
+    return merged_dict
+
+def gaia_info():
+    '''Fetch details from in tree gaia.json (which links this version of
+    gecko->gaia) and construct the usual base/head/ref/rev pairing...'''
+    gaia = json.load(open(os.path.join(GECKO, 'b2g', 'config', 'gaia.json')))
+
+    if gaia['git'] is None or \
+       gaia['git']['remote'] == '' or \
+       gaia['git']['git_revision'] == '' or \
+       gaia['git']['branch'] == '':
+
+       # Just use the hg params...
+       return {
+         'gaia_base_repository': 'https://hg.mozilla.org/{}'.format(gaia['repo_path']),
+         'gaia_head_repository': 'https://hg.mozilla.org/{}'.format(gaia['repo_path']),
+         'gaia_ref': gaia['revision'],
+         'gaia_rev': gaia['revision']
+       }
+
+    else:
+        # Use git
+        return {
+            'gaia_base_repository': gaia['git']['remote'],
+            'gaia_head_repository': gaia['git']['remote'],
+            'gaia_rev': gaia['git']['git_revision'],
+            'gaia_ref': gaia['git']['branch'],
+        }
+
+def configure_dependent_task(task_path, parameters, taskid, templates, build_treeherder_config):
+    """Configure a build dependent task. This is shared between post-build and test tasks.
+
+    :param task_path: location to the task yaml
+    :param parameters: parameters to load the template
+    :param taskid: taskid of the dependent task
+    :param templates: reference to the template builder
+    :param build_treeherder_config: parent treeherder config
+    :return: the configured task
+    """
+    task = templates.load(task_path, parameters)
+    task['taskId'] = taskid
+
+    if 'requires' not in task:
+        task['requires'] = []
+
+    task['requires'].append(parameters['build_slugid'])
+
+    if 'treeherder' not in task['task']['extra']:
+        task['task']['extra']['treeherder'] = {}
+
+    # Copy over any treeherder configuration from the build so
+    # tests show up under the same platform...
+    treeherder_config = task['task']['extra']['treeherder']
+
+    treeherder_config['collection'] = \
+        build_treeherder_config.get('collection', {})
+
+    treeherder_config['build'] = \
+        build_treeherder_config.get('build', {})
+
+    treeherder_config['machine'] = \
+        build_treeherder_config.get('machine', {})
+
+    if 'routes' not in task['task']:
+        task['task']['routes'] = []
+
+    if 'scopes' not in task['task']:
+        task['task']['scopes'] = []
+
+    return task
+
+def set_interactive_task(task, interactive):
+    r"""Make the task interactive.
+
+    :param task: task definition.
+    :param interactive: True if the task should be interactive.
+    """
+    if not interactive:
+        return
+
+    payload = task["task"]["payload"]
+    if "features" not in payload:
+        payload["features"] = {}
+    payload["features"]["interactive"] = True
+
+def remove_caches_from_task(task):
+    r"""Remove all caches but tc-vcs from the task.
+
+    :param task: task definition.
+    """
+    whitelist = [
+        re.compile("^level-[123]-.*-tc-vcs(-public-sources)?$"),
+        re.compile("^tooltool-cache$"),
+    ]
+    try:
+        caches = task["task"]["payload"]["cache"]
+        for cache in caches.keys():
+            if not any(pat.match(cache) for pat in whitelist):
+                caches.pop(cache)
+    except KeyError:
+        pass
+
+def query_vcs_info(repository, revision):
+    """Query the pushdate and pushid of a repository/revision.
+
+    This is intended to be used on hg.mozilla.org/mozilla-central and
+    similar. It may or may not work for other hg repositories.
+    """
+    if not repository or not revision:
+        logger.warning('cannot query vcs info because vcs info not provided')
+        return None
+
+    VCSInfo = namedtuple('VCSInfo', ['pushid', 'pushdate', 'changesets'])
+
+    try:
+        import requests
+        url = '%s/json-automationrelevance/%s' % (repository.rstrip('/'),
+                                                  revision)
+        logger.debug("Querying version control for metadata: %s", url)
+        contents = requests.get(url).json()
+
+        changesets = []
+        for c in contents['changesets']:
+            changesets.append({k: c[k] for k in ('desc', 'files', 'node')})
+
+        pushid = contents['changesets'][-1]['pushid']
+        pushdate = contents['changesets'][-1]['pushdate'][0]
+
+        return VCSInfo(pushid, pushdate, changesets)
+
+    except Exception:
+        logger.exception("Error querying VCS info for '%s' revision '%s'",
+                repository, revision)
+        return None
+
 
 def set_expiration(task, timestamp):
     task_def = task['task']
@@ -72,7 +207,74 @@ def set_expiration(task, timestamp):
     for artifact in artifacts.values():
         artifact['expires'] = timestamp
 
+def add_treeherder_revision_info(task, revision, revision_hash):
+    # Only add treeherder information if task.extra.treeherder is present
+    if 'extra' not in task and 'treeherder' not in task.extra:
+        return
 
+    task['extra']['treeherder']['revision'] = revision
+    task['extra']['treeherder']['revision_hash'] = revision_hash
+
+
+def decorate_task_treeherder_routes(task, suffix):
+    """Decorate the given task with treeherder routes.
+
+    Uses task.extra.treeherderEnv if available otherwise defaults to only
+    staging.
+
+    :param dict task: task definition.
+    :param str suffix: The project/revision_hash portion of the route.
+    """
+
+    if 'extra' not in task:
+        return
+
+    if 'routes' not in task:
+        task['routes'] = []
+
+    treeheder_env = task['extra'].get('treeherderEnv', ['staging'])
+
+    for env in treeheder_env:
+        task['routes'].append('{}.{}'.format(TREEHERDER_ROUTES[env], suffix))
+
+def decorate_task_json_routes(task, json_routes, parameters):
+    """Decorate the given task with routes.json routes.
+
+    :param dict task: task definition.
+    :param json_routes: the list of routes to use from routes.json
+    :param parameters: dictionary of parameters to use in route templates
+    """
+    routes = task.get('routes', [])
+    for route in json_routes:
+        routes.append(route.format(**parameters))
+
+    task['routes'] = routes
+
+class BuildTaskValidationException(Exception):
+    pass
+
+def validate_build_task(task):
+    '''The build tasks have some required fields in extra this function ensures
+    they are there. '''
+    if 'task' not in task:
+        raise BuildTaskValidationException('must have task field')
+
+    task_def = task['task']
+
+    if 'extra' not in task_def:
+        raise BuildTaskValidationException('build task must have task.extra props')
+
+    if 'locations' not in task_def['extra']:
+        raise BuildTaskValidationException('task.extra.locations missing')
+
+    locations = task_def['extra']['locations']
+
+    if 'build' not in locations:
+        raise BuildTaskValidationException('task.extra.locations.build missing')
+
+    if 'tests' not in locations and 'test_packages' not in locations:
+        raise BuildTaskValidationException('task.extra.locations.tests or '
+                                           'task.extra.locations.tests_packages missing')
 
 class LegacyKind(base.Kind):
     """
@@ -159,9 +361,9 @@ class LegacyKind(base.Kind):
         }
 
         if params['revision_hash']:
-            for env in routes_transform.TREEHERDER_ROUTES:
+            for env in TREEHERDER_ROUTES:
                 route = 'queue:route:{}.{}'.format(
-                    routes_transform.TREEHERDER_ROUTES[env],
+                    TREEHERDER_ROUTES[env],
                     treeherder_route)
                 graph['scopes'].add(route)
 
@@ -235,17 +437,17 @@ class LegacyKind(base.Kind):
                 set_expiration(build_task, json_time_from_now(TRY_EXPIRATION))
 
             if params['revision_hash']:
-                treeherder_transform.add_treeherder_revision_info(build_task['task'],
-                                                                  params['head_rev'],
-                                                                  params['revision_hash'])
-                routes_transform.decorate_task_treeherder_routes(build_task['task'],
-                                                                 treeherder_route)
-                routes_transform.decorate_task_json_routes(build_task['task'],
-                                                           json_routes,
-                                                           build_parameters)
+                add_treeherder_revision_info(build_task['task'],
+                                             params['head_rev'],
+                                             params['revision_hash'])
+                decorate_task_treeherder_routes(build_task['task'],
+                                                treeherder_route)
+                decorate_task_json_routes(build_task['task'],
+                                          json_routes,
+                                          build_parameters)
 
             # Ensure each build graph is valid after construction.
-            taskcluster_graph.build_task.validate(build_task)
+            validate_build_task(build_task)
             attributes = build_task['attributes'] = {'kind':'legacy', 'legacy_kind': 'build'}
             if 'build_name' in build:
                 attributes['build_platform'] = build['build_name']
@@ -311,9 +513,9 @@ class LegacyKind(base.Kind):
                                                      templates,
                                                      build_treeherder_config)
                 set_interactive_task(post_task, interactive)
-                treeherder_transform.add_treeherder_revision_info(post_task['task'],
-                                                                  params['head_rev'],
-                                                                  params['revision_hash'])
+                add_treeherder_revision_info(post_task['task'],
+                                             params['head_rev'],
+                                             params['revision_hash'])
 
                 if project == "try":
                     set_expiration(post_task, json_time_from_now(TRY_EXPIRATION))
@@ -362,10 +564,10 @@ class LegacyKind(base.Kind):
                     set_interactive_task(test_task, interactive)
 
                     if params['revision_hash']:
-                        treeherder_transform.add_treeherder_revision_info(test_task['task'],
-                                                                          params['head_rev'],
-                                                                          params['revision_hash'])
-                        routes_transform.decorate_task_treeherder_routes(
+                        add_treeherder_revision_info(test_task['task'],
+                                                     params['head_rev'],
+                                                     params['revision_hash'])
+                        decorate_task_treeherder_routes(
                             test_task['task'],
                             treeherder_route
                         )

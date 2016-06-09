@@ -6,6 +6,7 @@
 
 #include "nsOpenURIInFrameParams.h"
 #include "mozilla/BasePrincipal.h"
+#include "mozilla/dom/ToJSValue.h"
 
 NS_IMPL_ISUPPORTS(nsOpenURIInFrameParams, nsIOpenURIInFrameParams)
 

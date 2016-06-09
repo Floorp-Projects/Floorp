@@ -23,13 +23,13 @@ To use it on SpiderMonkey:
 
         mkdir work
         cd work
-        GECKO_DIR=$SRCDIR $SRCDIR/testing/taskcluster/scripts/builder/build-haz-linux.sh $(pwd) --dep
+        GECKO_DIR=$SRCDIR $SRCDIR/taskcluster/scripts/builder/build-haz-linux.sh $(pwd) --dep
 
 The `--dep` is optional, and will avoid rebuilding the JS shell used to run the
 analysis later. Output goes to `analysis/hazards.txt`. This will run the
 analysis on the js/src tree only; if you wish to analyze the full browser, use
 
-    GECKO_DIR=$SRCDIR $SRCDIR/testing/taskcluster/scripts/builder/build-haz-linux.sh --project browser $(pwd)
+    GECKO_DIR=$SRCDIR $SRCDIR/taskcluster/scripts/builder/build-haz-linux.sh --project browser $(pwd)
 
 After running the analysis once, you can reuse the `*.xdb` database files
 generated, using modified analysis scripts, by running

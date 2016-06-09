@@ -1,7 +1,0 @@
-list: ['1', '2', '3']
-was_list: ['1']
-obj:
-  level: 1
-  deeper:
-    woot: 'bar'
-    list: ['baz']

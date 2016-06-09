@@ -1,0 +1,58 @@
+$inherits:
+  from: 'tasks/builds/b2g_base.yml'
+  variables:
+    build_name: 'mulet'
+    build_type: 'opt'
+task:
+  metadata:
+    name: '[TC] Mulet Linux'
+    description: Mulet Linux
+
+  workerType: mulet-opt
+
+  routes:
+    - 'index.buildbot.branches.{{project}}.linux64-mulet'
+    - 'index.buildbot.revisions.{{head_rev}}.{{project}}.linux64-mulet'
+
+  scopes:
+    - 'docker-worker:cache:level-{{level}}-{{project}}-build-mulet-linux-workspace'
+    - 'docker-worker:cache:tooltool-cache'
+    - 'docker-worker:relengapi-proxy:tooltool.download.public'
+
+  payload:
+    cache:
+      level-{{level}}-{{project}}-build-mulet-linux-workspace: '/home/worker/workspace'
+      tooltool-cache: '/home/worker/tools/tooltool-cache'
+
+    features:
+      relengAPIProxy: true
+
+    env:
+      MOZCONFIG: 'b2g/dev/config/mozconfigs/linux64/mulet'
+      TOOLTOOL_MANIFEST: 'b2g/dev/config/tooltool-manifests/linux64/releng.manifest'
+
+    maxRunTime: 3600
+
+    command:
+      - /bin/bash
+      - -c
+      - >
+        checkout-gecko workspace &&
+        cd ./workspace/gecko/taskcluster/scripts/builder &&
+        buildbot_step 'Build' ./build-mulet-linux.sh $HOME/workspace
+
+  extra:
+    treeherderEnv:
+      - production
+      - staging
+    treeherder:
+      # Disable "TC" prefix...
+      groupSymbol: "?"
+      machine:
+        platform: mulet-linux64
+    # Rather then enforcing particular conventions we require that all build
+    # tasks provide the "build" extra field to specify where the build and tests
+    # files are located.
+    locations:
+      build: 'public/build/target.tar.bz2'
+      test_packages: 'public/build/target.test_packages.json'

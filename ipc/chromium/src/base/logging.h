@@ -118,7 +118,7 @@ const mozilla::EmptyLog& operator <<(const mozilla::EmptyLog& log, const T&)
 #define NOTIMPLEMENTED() CHROMIUM_LOG(ERROR)
 
 #undef CHECK
-#define CHECK(condition) LOG_IF(FATAL, condition)
+#define CHECK(condition) LOG_IF(WARNING, condition)
 
 #define DCHECK_EQ(v1, v2) DCHECK((v1) == (v2))
 #define DCHECK_NE(v1, v2) DCHECK((v1) != (v2))

@@ -158,27 +158,34 @@ from its prototype:
    this is a string which is the name of the template; `undefined` otherwise.
 
 `isBoundFunction`
-:   `true` if the referent is a bound function; `false` otherwise.
+:   If the referent is a debuggee function, returns `true` if the referent is a
+    bound function; `false` otherwise. If the referent is not a debuggee
+    function, or not a function at all, returns `undefined` instead.
 
 `isArrowFunction`
-:   `true` if the referent is an arrow function; `false` otherwise.
+:   If the referent is a debuggee function, returns `true` if the referent is an
+    arrow function; `false` otherwise. If the referent is not a debuggee
+    function, or not a function at all, returns `undefined` instead.
 
 `isPromise`
 :   `true` if the referent is a Promise; `false` otherwise.
 
 `boundTargetFunction`
-:   If the referent is a bound function, this is its target function—the
-    function that was bound to a particular `this` object. If the referent
-    is not a bound function, this is `undefined`.
+:   If the referent is a bound debuggee function, this is its target function—
+    the function that was bound to a particular `this` object. If the referent
+    is either not a bound function, not a debuggee function, or not a function
+    at all, this is `undefined`.
 
 `boundThis`
-:   If the referent is a bound function, this is the `this` value it was
-    bound to. If the referent is not a bound function, this is `undefined`.
+:   If the referent is a bound debuggee function, this is the `this` value it
+    was bound to. If the referent is either not a bound function, not a debuggee
+    function, or not a function at all, this is `undefined`.
 
 `boundArguments`
-:   If the referent is a bound function, this is an array (in the Debugger
-    object's compartment) that contains the debuggee values of the `arguments`
-    object it was bound to. If the referent is not a bound function, this is
+:   If the referent is a bound debuggee function, this is an array (in the
+    Debugger object's compartment) that contains the debuggee values of the
+    `arguments` object it was bound to. If the referent is either not a bound
+    function, not a debuggee function, or not a function at all, this is
     `undefined`.
 
 `proxyHandler`

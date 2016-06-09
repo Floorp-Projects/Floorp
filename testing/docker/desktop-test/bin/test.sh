@@ -29,7 +29,7 @@ fail() {
 [ -d $WORKSPACE ] || mkdir -p $WORKSPACE
 cd $WORKSPACE
 
-script=testing/taskcluster/scripts/tester/test-linux.sh
+script=taskcluster/scripts/tester/test-linux.sh
 url=${GECKO_HEAD_REPOSITORY}/raw-file/${GECKO_HEAD_REV}/${script}
 if ! curl --fail -o ./test-linux.sh --retry 10 $url; then
     fail "failed downloading test-linux.sh from ${GECKO_HEAD_REPOSITORY}"
