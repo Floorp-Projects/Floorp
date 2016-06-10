@@ -901,7 +901,7 @@ pref("dom.serviceWorkers.openWindow.enabled", true);
 pref("dom.push.debug", false);
 // The upstream autopush endpoint must have the Google API key corresponding to
 // the App's sender ID; we bake this assumption directly into the URL.
-pref("dom.push.serverURL", "https://updates-autopush.stage.mozaws.net/v1/gcm/@MOZ_ANDROID_GCM_SENDERID@");
+pref("dom.push.serverURL", "https://updates.push.services.mozilla.com/v1/gcm/@MOZ_ANDROID_GCM_SENDERID@");
 
 #ifdef MOZ_ANDROID_GCM
 pref("dom.push.enabled", true);
