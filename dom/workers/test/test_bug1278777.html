@@ -1,0 +1,31 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1278777
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1278777</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=1278777">Mozilla Bug 1278777</a>
+  <script type="application/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+var worker = new Worker('worker_bug1278777.js');
+worker.onerror = function() {
+  ok(false, "We should not see any error.");
+  SimpleTest.finish();
+}
+
+worker.onmessage = function(e) {
+  ok(e.data, "Everything seems ok.");
+  SimpleTest.finish();
+}
+
+  </script>
+</body>
+</html>
