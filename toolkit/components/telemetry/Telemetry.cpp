@@ -1223,7 +1223,7 @@ TelemetryImpl::GetWebrtcStats(JSContext *cx, JS::MutableHandle<JS::Value> ret)
 NS_IMETHODIMP
 TelemetryImpl::GetMaximalNumberOfConcurrentThreads(uint32_t *ret)
 {
-  *ret = nsThreadManager::get()->GetHighestNumberOfThreads();
+  *ret = nsThreadManager::get().GetHighestNumberOfThreads();
   return NS_OK;
 }
 
