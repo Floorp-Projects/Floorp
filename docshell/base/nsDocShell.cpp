@@ -665,7 +665,7 @@ DispatchPings(nsIDocShell* aDocShell,
   ForEachPing(aContent, SendPing, &info);
 }
 
-static nsDOMPerformanceNavigationType
+static nsDOMNavigationTiming::Type
 ConvertLoadTypeToNavigationType(uint32_t aLoadType)
 {
   // Not initialized, assume it's normal load.
@@ -673,7 +673,7 @@ ConvertLoadTypeToNavigationType(uint32_t aLoadType)
     aLoadType = LOAD_NORMAL;
   }
 
-  auto result = dom::PerformanceNavigation::TYPE_RESERVED;
+  auto result = nsDOMNavigationTiming::TYPE_RESERVED;
   switch (aLoadType) {
     case LOAD_NORMAL:
     case LOAD_NORMAL_EXTERNAL:
@@ -685,10 +685,10 @@ ConvertLoadTypeToNavigationType(uint32_t aLoadType)
     case LOAD_LINK:
     case LOAD_STOP_CONTENT:
     case LOAD_REPLACE_BYPASS_CACHE:
-      result = dom::PerformanceNavigation::TYPE_NAVIGATE;
+      result = nsDOMNavigationTiming::TYPE_NAVIGATE;
       break;
     case LOAD_HISTORY:
-      result = dom::PerformanceNavigation::TYPE_BACK_FORWARD;
+      result = nsDOMNavigationTiming::TYPE_BACK_FORWARD;
       break;
     case LOAD_RELOAD_NORMAL:
     case LOAD_RELOAD_CHARSET_CHANGE:
@@ -696,18 +696,18 @@ ConvertLoadTypeToNavigationType(uint32_t aLoadType)
     case LOAD_RELOAD_BYPASS_PROXY:
     case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
     case LOAD_RELOAD_ALLOW_MIXED_CONTENT:
-      result = dom::PerformanceNavigation::TYPE_RELOAD;
+      result = nsDOMNavigationTiming::TYPE_RELOAD;
       break;
     case LOAD_STOP_CONTENT_AND_REPLACE:
     case LOAD_REFRESH:
     case LOAD_BYPASS_HISTORY:
     case LOAD_ERROR_PAGE:
     case LOAD_PUSHSTATE:
-      result = dom::PerformanceNavigation::TYPE_RESERVED;
+      result = nsDOMNavigationTiming::TYPE_RESERVED;
       break;
     default:
       // NS_NOTREACHED("Unexpected load type value");
-      result = dom::PerformanceNavigation::TYPE_RESERVED;
+      result = nsDOMNavigationTiming::TYPE_RESERVED;
       break;
   }
 
