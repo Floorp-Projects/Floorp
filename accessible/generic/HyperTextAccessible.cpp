@@ -1903,7 +1903,7 @@ HyperTextAccessible::RemoveChild(Accessible* aAccessible)
   if (count > 0)
     mOffsets.RemoveElementsAt(childIndex, count);
 
-  return Accessible::RemoveChild(aAccessible);
+  return AccessibleWrap::RemoveChild(aAccessible);
 }
 
 bool
@@ -1913,7 +1913,7 @@ HyperTextAccessible::InsertChildAt(uint32_t aIndex, Accessible* aChild)
   if (count > 0 ) {
     mOffsets.RemoveElementsAt(aIndex, count);
   }
-  return Accessible::InsertChildAt(aIndex, aChild);
+  return AccessibleWrap::InsertChildAt(aIndex, aChild);
 }
 
 Relation

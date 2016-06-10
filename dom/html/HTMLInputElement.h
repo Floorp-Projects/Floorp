@@ -632,7 +632,7 @@ public:
     SetHTMLAttr(nsGkAtoms::value, aValue, aRv);
   }
 
-  // XPCOM GetValue() is OK
+  void GetValue(nsAString& aValue, ErrorResult& aRv);
   void SetValue(const nsAString& aValue, ErrorResult& aRv);
 
   Nullable<Date> GetValueAsDate(ErrorResult& aRv);

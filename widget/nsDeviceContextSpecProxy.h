@@ -30,7 +30,7 @@ public:
   NS_METHOD Init(nsIWidget* aWidget, nsIPrintSettings* aPrintSettings,
                  bool aIsPrintPreview) final;
 
-  NS_METHOD GetSurfaceForPrinter(gfxASurface** aSurface) final;
+  virtual already_AddRefed<PrintTarget> MakePrintTarget() final;
 
   NS_METHOD GetDrawEventRecorder(mozilla::gfx::DrawEventRecorder** aDrawEventRecorder) final;
 

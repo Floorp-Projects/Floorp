@@ -13,32 +13,12 @@ task:
   tags:
     createdForUser: {{owner}}
 
-  workerType: b2gbuild
   provisionerId: aws-provisioner-v1
   schedulerId: task-graph-scheduler
-
-  routes:
-    - 'index.gecko.v1.{{project}}.revision.linux.{{head_rev}}.{{build_name}}.{{build_type}}'
-    - 'index.gecko.v1.{{project}}.latest.linux.{{build_name}}.{{build_type}}'
-  scopes:
-    # Nearly all of our build tasks use tc-vcs so just include the scope across
-    # the board.
-    - 'docker-worker:cache:level-{{level}}-{{project}}-tc-vcs'
 
   payload:
     # Two hours is long but covers edge cases (and matches bb based infra)
     maxRunTime: 7200
-
-    cache:
-      level-{{level}}-{{project}}-tc-vcs: '/home/worker/.tc-vcs'
-
-    # All builds share a common artifact directory for ease of uploading.
-    artifacts:
-      'public/build':
-        type: directory
-        path: '/home/worker/artifacts/'
-        expires: '{{#from_now}}1 year{{/from_now}}'
-
 
     env:
       # Common environment variables for checking out gecko

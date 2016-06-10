@@ -1000,6 +1000,19 @@ GetDisplayPortFromMarginsData(nsIContent* aContent,
   LayoutDeviceToScreenScale2D res(presContext->PresShell()->GetCumulativeResolution()
                                 * nsLayoutUtils::GetTransformToAncestorScale(frame));
 
+  // Calculate the expanded scrollable rect, which we'll be clamping the
+  // displayport to.
+  nsRect expandedScrollableRect =
+    nsLayoutUtils::CalculateExpandedScrollableRect(frame);
+
+  // GetTransformToAncestorScale() can return 0. In this case, just return the
+  // base rect (clamped to the expanded scrollable rect), as other calculations
+  // would run into divisions by zero.
+  if (res == LayoutDeviceToScreenScale2D(0, 0)) {
+    // Make sure the displayport remains within the scrollable rect.
+    return base.MoveInsideAndClamp(expandedScrollableRect - scrollPos);
+  }
+
   // First convert the base rect to screen pixels
   LayoutDeviceToScreenScale2D parentRes = res;
   if (isRoot) {
@@ -1109,12 +1122,14 @@ GetDisplayPortFromMarginsData(nsIContent* aContent,
   // Convert the aligned rect back into app units.
   nsRect result = LayoutDeviceRect::ToAppUnits(screenRect / res, auPerDevPixel);
 
-  // Expand it for the low-res buffer if needed
-  result = ApplyRectMultiplier(result, aMultiplier);
+  // If we have non-zero margins, expand the displayport for the low-res buffer
+  // if that's what we're drawing. If we have zero margins, we want the
+  // displayport to reflect the scrollport.
+  if (aMarginsData->mMargins != ScreenMargin()) {
+    result = ApplyRectMultiplier(result, aMultiplier);
+  }
 
   // Make sure the displayport remains within the scrollable rect.
-  nsRect expandedScrollableRect =
-    nsLayoutUtils::CalculateExpandedScrollableRect(frame);
   result = result.MoveInsideAndClamp(expandedScrollableRect - scrollPos);
 
   return result;

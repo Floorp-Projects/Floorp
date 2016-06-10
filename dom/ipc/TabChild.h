@@ -669,6 +669,9 @@ protected:
 
   virtual bool RecvParentActivated(const bool& aActivated) override;
 
+  virtual bool RecvSetKeyboardIndicators(const UIStateChangeType& aShowAccelerators,
+                                         const UIStateChangeType& aShowFocusRings) override;
+
   virtual bool RecvStopIMEStateManagement() override;
 
   virtual bool RecvMenuKeyboardListenerInstalled(

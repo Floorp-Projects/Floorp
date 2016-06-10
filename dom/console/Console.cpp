@@ -11,6 +11,7 @@
 #include "mozilla/dom/Exceptions.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FunctionBinding.h"
+#include "mozilla/dom/Performance.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/Maybe.h"
@@ -20,7 +21,6 @@
 #include "nsGlobalWindow.h"
 #include "nsJSUtils.h"
 #include "nsNetUtil.h"
-#include "nsPerformance.h"
 #include "ScriptSettings.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
@@ -1355,7 +1355,7 @@ Console::MethodInternal(JSContext* aCx, MethodName aMethodName,
       nsGlobalWindow *win = nsGlobalWindow::Cast(mWindow);
       MOZ_ASSERT(win);
 
-      RefPtr<nsPerformance> performance = win->GetPerformance();
+      RefPtr<Performance> performance = win->GetPerformance();
       if (!performance) {
         return;
       }

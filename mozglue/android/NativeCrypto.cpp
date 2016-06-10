@@ -126,7 +126,7 @@ extern "C" JNIEXPORT jbyteArray MOZ_JNICALL Java_org_mozilla_gecko_background_na
     env->SetByteArrayRegion(out, 0, 32, (jbyte*)digest);
   }
 
-  delete digest;
+  delete[] digest;
 
   return out;
 }

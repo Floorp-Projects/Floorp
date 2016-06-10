@@ -83,6 +83,11 @@ var ContentClick = {
                    noReferrer: json.noReferrer,
                    allowMixedContent: json.allowMixedContent };
 
+    // The new tab/window must use the same userContextId.
+    if (json.originAttributes.userContextId) {
+      params.userContextId = json.originAttributes.userContextId;
+    }
+
     window.openLinkIn(json.href, where, params);
   }
 };
