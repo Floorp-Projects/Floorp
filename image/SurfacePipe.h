@@ -166,42 +166,46 @@ public:
   template <typename PixelType, typename Func>
   WriteState WritePixels(Func aFunc)
   {
-    MOZ_ASSERT(mPixelSize == 1 || mPixelSize == 4);
-    MOZ_ASSERT_IF(mPixelSize == 1, sizeof(PixelType) == sizeof(uint8_t));
-    MOZ_ASSERT_IF(mPixelSize == 4, sizeof(PixelType) == sizeof(uint32_t));
+    Maybe<WriteState> result;
+    while (!(result = DoWritePixelsToRow<PixelType>(Forward<Func>(aFunc)))) { }
 
-    while (!IsSurfaceFinished()) {
-      PixelType* rowPtr = reinterpret_cast<PixelType*>(mRowPointer);
+    return *result;
+  }
 
-      for (; mCol < mInputSize.width; ++mCol) {
-        NextPixel<PixelType> result = aFunc();
-        if (result.template is<PixelType>()) {
-          rowPtr[mCol] = result.template as<PixelType>();
-          continue;
-        }
-
-        switch (result.template as<WriteState>()) {
-          case WriteState::NEED_MORE_DATA:
-            return WriteState::NEED_MORE_DATA;
-
-          case WriteState::FINISHED:
-            ZeroOutRestOfSurface<PixelType>();
-            return WriteState::FINISHED;
-
-          case WriteState::FAILURE:
-            // Note that we don't need to record this anywhere, because this
-            // indicates an error in aFunc, and there's nothing wrong with our
-            // machinery. The caller can recover as needed and continue writing to
-            // the row.
-            return WriteState::FAILURE;
-        }
-      }
-
-      AdvanceRow();  // We've finished the row.
-    }
-
-    // We've finished the entire surface.
-    return WriteState::FINISHED;
+  /**
+   * A variant of WritePixels() that writes a single row of pixels to the
+   * surface one at a time by repeatedly calling a lambda that yields pixels.
+   * WritePixelsToRow() is completely memory safe.
+   *
+   * Writing continues until every pixel in the row has been written to. If the
+   * surface is complete at that pointer, WriteState::FINISHED is returned;
+   * otherwise, WritePixelsToRow() returns WriteState::NEED_MORE_DATA. The
+   * lambda can terminate writing early by returning a WriteState itself, which
+   * WritePixelsToRow() will return to the caller.
+   *
+   * The template parameter PixelType must be uint8_t (for paletted surfaces) or
+   * uint32_t (for BGRA/BGRX surfaces) and must be in agreement with the pixel
+   * size passed to ConfigureFilter().
+   *
+   * XXX(seth): We'll remove all support for paletted surfaces in bug 1247520,
+   * which means we can remove the PixelType template parameter from this
+   * method.
+   *
+   * @param aFunc A lambda that functions as a generator, yielding the next
+   *              pixel in the surface each time it's called. The lambda must
+   *              return a NextPixel<PixelType> value.
+   *
+   * @return A WriteState value indicating the lambda generator's state.
+   *         WritePixels() itself will return WriteState::FINISHED if writing
+   *         the entire surface has finished, or WriteState::NEED_MORE_DATA if
+   *         writing the row has finished, regardless of the lambda's internal
+   *         state.
+   */
+  template <typename PixelType, typename Func>
+  WriteState WritePixelsToRow(Func aFunc)
+  {
+    return DoWritePixelsToRow<PixelType>(Forward<Func>(aFunc))
+           .valueOr(WriteState::NEED_MORE_DATA);
   }
 
   /**
@@ -442,6 +446,60 @@ protected:
 
 private:
 
+  /**
+   * An internal method used to implement both WritePixels() and
+   * WritePixelsToRow(). Those methods differ only in their behavior after a row
+   * is successfully written - WritePixels() continues to write another row,
+   * while WritePixelsToRow() returns to the caller. This method writes a single
+   * row and returns Some() if we either finished the entire surface or the
+   * lambda returned a WriteState indicating that we should return to the
+   * caller. If the row was successfully written without either of those things
+   * happening, it returns Nothing(), allowing WritePixels() and
+   * WritePixelsToRow() to implement their respective behaviors.
+   */
+  template <typename PixelType, typename Func>
+  Maybe<WriteState> DoWritePixelsToRow(Func aFunc)
+  {
+    MOZ_ASSERT(mPixelSize == 1 || mPixelSize == 4);
+    MOZ_ASSERT_IF(mPixelSize == 1, sizeof(PixelType) == sizeof(uint8_t));
+    MOZ_ASSERT_IF(mPixelSize == 4, sizeof(PixelType) == sizeof(uint32_t));
+
+    if (IsSurfaceFinished()) {
+      return Some(WriteState::FINISHED);  // We're already done.
+    }
+
+    PixelType* rowPtr = reinterpret_cast<PixelType*>(mRowPointer);
+
+    for (; mCol < mInputSize.width; ++mCol) {
+      NextPixel<PixelType> result = aFunc();
+      if (result.template is<PixelType>()) {
+        rowPtr[mCol] = result.template as<PixelType>();
+        continue;
+      }
+
+      switch (result.template as<WriteState>()) {
+        case WriteState::NEED_MORE_DATA:
+          return Some(WriteState::NEED_MORE_DATA);
+
+        case WriteState::FINISHED:
+          ZeroOutRestOfSurface<PixelType>();
+          return Some(WriteState::FINISHED);
+
+        case WriteState::FAILURE:
+          // Note that we don't need to record this anywhere, because this
+          // indicates an error in aFunc, and there's nothing wrong with our
+          // machinery. The caller can recover as needed and continue writing to
+          // the row.
+          return Some(WriteState::FAILURE);
+      }
+    }
+
+    AdvanceRow();  // We've finished the row.
+
+    return IsSurfaceFinished() ? Some(WriteState::FINISHED)
+                               : Nothing();
+  }
+
   template <typename PixelType>
   void ZeroOutRestOfSurface()
   {
@@ -544,6 +602,19 @@ public:
   WriteState WritePixels(Func aFunc)
   {
     return mHead->WritePixels<PixelType>(Forward<Func>(aFunc));
+  }
+
+  /**
+   * A variant of WritePixels() that writes a single row of pixels to the
+   * surface one at a time by repeatedly calling a lambda that yields pixels.
+   * WritePixelsToRow() is completely memory safe.
+   *
+   * @see SurfaceFilter::WritePixelsToRow() for the canonical documentation.
+   */
+  template <typename PixelType, typename Func>
+  WriteState WritePixelsToRow(Func aFunc)
+  {
+    return mHead->WritePixelsToRow<PixelType>(Forward<Func>(aFunc));
   }
 
   /**
