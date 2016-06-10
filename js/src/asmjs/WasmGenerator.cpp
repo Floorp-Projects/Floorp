@@ -487,16 +487,18 @@ ModuleGenerator::finishStaticLinkData(uint8_t* code, uint32_t codeLength, Static
         if (!link->internalLinks.append(inLink))
             return false;
     }
-#endif
-
-#if defined(JS_CODEGEN_X64)
-    // Global data accesses on x64 use rip-relative addressing and thus do
-    // not need patching after deserialization.
-    uint8_t* globalData = code + codeLength;
+#elif defined(JS_CODEGEN_X64)
+    // Global data accesses on x64 use rip-relative addressing and thus we can
+    // patch here, now that we know the final codeLength.
     for (size_t i = 0; i < masm_.numAsmJSGlobalAccesses(); i++) {
         AsmJSGlobalAccess a = masm_.asmJSGlobalAccess(i);
-        masm_.patchAsmJSGlobalAccess(a.patchAt, code, globalData, a.globalDataOffset);
+        void* from = code + a.patchAt.offset();
+        void* to = code + codeLength + a.globalDataOffset;
+        X86Encoding::SetRel32(from, to);
     }
+#else
+    // Global access is performed using the GlobalReg and requires no patching.
+    MOZ_ASSERT(masm_.numAsmJSGlobalAccesses() == 0);
 #endif
 
     // Function pointer table elements
