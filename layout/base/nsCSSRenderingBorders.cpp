@@ -16,11 +16,13 @@
 #include "DottedCornerFinder.h"
 #include "nsLayoutUtils.h"
 #include "nsStyleConsts.h"
+#include "nsContentUtils.h"
 #include "nsCSSColorUtils.h"
 #include "GeckoProfiler.h"
 #include "nsExpirationTracker.h"
 #include "RoundedRect.h"
 #include "nsClassHashtable.h"
+#include "nsPresContext.h"
 #include "nsStyleStruct.h"
 #include "mozilla/gfx/2D.h"
 #include "gfx2DGlue.h"
@@ -162,7 +164,8 @@ typedef enum {
   CORNER_DOT
 } CornerStyle;
 
-nsCSSBorderRenderer::nsCSSBorderRenderer(nsPresContext::nsPresContextType aPresContextType,
+nsCSSBorderRenderer::nsCSSBorderRenderer(nsPresContext* aPresContext,
+                                         const nsIDocument* aDocument,
                                          DrawTarget* aDrawTarget,
                                          const Rect& aDirtyRect,
                                          Rect& aOuterRect,
@@ -172,7 +175,8 @@ nsCSSBorderRenderer::nsCSSBorderRenderer(nsPresContext::nsPresContextType aPresC
                                          const nscolor* aBorderColors,
                                          nsBorderColors* const* aCompositeColors,
                                          nscolor aBackgroundColor)
-  : mPresContextType(aPresContextType),
+  : mPresContext(aPresContext),
+    mDocument(aDocument),
     mDrawTarget(aDrawTarget),
     mDirtyRect(aDirtyRect),
     mOuterRect(aOuterRect),
@@ -2577,6 +2581,19 @@ nsCSSBorderRenderer::DrawFallbackSolidCorner(mozilla::css::Side aSide,
 
   RefPtr<Path> path = builder->Finish();
   mDrawTarget->Fill(path, ColorPattern(ToDeviceColor(borderColor)));
+
+  if (mDocument) {
+    if (!mPresContext->HasWarnedAboutTooLargeDashedOrDottedRadius()) {
+      mPresContext->SetHasWarnedAboutTooLargeDashedOrDottedRadius();
+      nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                      NS_LITERAL_CSTRING("CSS"),
+                                      mDocument,
+                                      nsContentUtils::eCSS_PROPERTIES,
+                                      mBorderStyles[aSide] == NS_STYLE_BORDER_STYLE_DASHED
+                                      ? "TooLargeDashedRadius"
+                                      : "TooLargeDottedRadius");
+    }
+  }
 }
 
 bool
@@ -3022,7 +3039,7 @@ nsCSSBorderRenderer::DrawNoCompositeColorSolidBorder()
     Float skirtSize = 0.0f, skirtSlope = 0.0f;
     // the sides don't match, so compute a skirt
     if (firstColor != secondColor &&
-        mPresContextType != nsPresContext::eContext_Print) {
+        mPresContext->Type() != nsPresContext::eContext_Print) {
       Point cornerDir = outerCorner - innerCorner;
       ComputeCornerSkirtSize(firstColor.a, secondColor.a,
                              cornerDir.DotProduct(cornerMults[i]),
