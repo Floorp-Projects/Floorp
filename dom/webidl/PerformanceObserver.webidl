@@ -13,7 +13,7 @@ dictionary PerformanceObserverInit {
 
 callback PerformanceObserverCallback = void (PerformanceObserverEntryList entries, PerformanceObserver observer);
 
-[Func="nsPerformance::IsObserverEnabled",
+[Func="Performance::IsObserverEnabled",
  Constructor(PerformanceObserverCallback callback),
  Exposed=(Window,Worker)]
 interface PerformanceObserver {

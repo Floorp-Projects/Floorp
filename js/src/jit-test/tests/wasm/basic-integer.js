@@ -139,6 +139,11 @@ testComparison32('gt_u', 40, 40, 0);
 testComparison32('ge_s', 40, 40, 1);
 testComparison32('ge_u', 40, 40, 1);
 
+// Test MTest's GVN branch inversion.
+var testTrunc = wasmEvalText(`(module (func (param f32) (result i32) (if (i32.eqz (i32.trunc_s/f32 (get_local 0))) (i32.const 0) (i32.const 1))) (export "" 0))`);
+assertEq(testTrunc(0), 0);
+assertEq(testTrunc(13.37), 1);
+
 if (hasI64()) {
 
     setJitCompilerOption('wasm.test-mode', 1);
@@ -252,6 +257,11 @@ if (hasI64()) {
     testUnary('i64', 'popcnt', "0x00000000ffffffff", 32);
     testUnary('i64', 'popcnt', -1, 64);
     testUnary('i64', 'popcnt', 0, 0);
+
+    // Test MTest's GVN branch inversion.
+    var testTrunc = wasmEvalText(`(module (func (param f32) (result i32) (if (i64.eqz (i64.trunc_s/f32 (get_local 0))) (i32.const 0) (i32.const 1))) (export "" 0))`);
+    assertEq(testTrunc(0), 0);
+    assertEq(testTrunc(13.37), 1);
 
     testI64Eqz(40, 0);
     testI64Eqz(0, 1);

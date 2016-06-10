@@ -187,4 +187,5 @@ interface PopupBoxObject : BoxObject
   readonly attribute DOMString alignmentPosition;
   readonly attribute long alignmentOffset;
 
+  void setConstraintRect(DOMRectReadOnly rect);
 };

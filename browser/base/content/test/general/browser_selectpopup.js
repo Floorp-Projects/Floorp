@@ -355,3 +355,53 @@ add_task(function* test_event_order() {
   });
 });
 
+// This test checks select elements with a large number of options to ensure that
+// the popup appears within the browser area.
+add_task(function* test_large_popup() {
+  const pageUrl = "data:text/html," + escape(PAGECONTENT_SMALL);
+  let tab = yield BrowserTestUtils.openNewForegroundTab(gBrowser, pageUrl);
+
+  yield ContentTask.spawn(tab.linkedBrowser, null, function*() {
+    let doc = content.document;
+    let select = doc.getElementById("one");
+    for (var i = 0; i < 180; i++) {
+      select.add(new content.Option("Test" + i));
+    }
+
+    select.focus();
+  });
+
+  let selectPopup = document.getElementById("ContentSelectDropdown").menupopup;
+  let browserRect = tab.linkedBrowser.getBoundingClientRect();
+
+  let positions = [
+    "margin-top: 300px;",
+    "position: fixed; bottom: 100px;",
+    "width: 100%; height: 9999px;"
+  ];
+
+  let position;
+  while (true) {
+    yield openSelectPopup(selectPopup, false);
+
+    let rect = selectPopup.getBoundingClientRect();
+    ok(rect.top >= browserRect.top, "Popup top position in within browser area");
+    ok(rect.bottom <= browserRect.bottom, "Popup bottom position in within browser area");
+
+    yield hideSelectPopup(selectPopup, false);
+
+    position = positions.shift();
+    if (!position) {
+      break;
+    }
+
+    let contentPainted = BrowserTestUtils.contentPainted(tab.linkedBrowser);
+    yield ContentTask.spawn(tab.linkedBrowser, position, function*(position) {
+      let select = content.document.getElementById("one");
+      select.setAttribute("style", position);
+    });
+    yield contentPainted;
+  }
+
+  yield BrowserTestUtils.removeTab(tab);
+});

@@ -54,6 +54,11 @@ public:
 
   // Enumerate all stored browsers that for which the weak reference is valid.
   virtual void EnumerateBrowsers(BrowserEnumerator aEnumFunc, void* aArg) = 0;
+
+  virtual bool ShowAccelerators() = 0;
+  virtual bool ShowFocusRings() = 0;
+  virtual void SetShowAccelerators(bool aEnable) = 0;
+  virtual void SetShowFocusRings(bool aEnable) = 0;
 };
 
 NS_DEFINE_STATIC_IID_ACCESSOR(nsPIWindowRoot, NS_IWINDOWROOT_IID)

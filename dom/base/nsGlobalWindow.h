@@ -1257,7 +1257,8 @@ public:
 
   already_AddRefed<nsWindowRoot> GetWindowRootOuter();
   already_AddRefed<nsWindowRoot> GetWindowRoot(mozilla::ErrorResult& aError);
-  nsPerformance* GetPerformance();
+
+  mozilla::dom::Performance* GetPerformance();
 
 protected:
   // Web IDL helpers
@@ -1607,8 +1608,6 @@ public:
 
   virtual void SetKeyboardIndicators(UIStateChangeType aShowAccelerators,
                                      UIStateChangeType aShowFocusRings) override;
-  virtual void GetKeyboardIndicators(bool* aShowAccelerators,
-                                     bool* aShowFocusRings) override;
 
   // Inner windows only.
   void UpdateCanvasFocus(bool aFocusChanged, nsIContent* aNewContent);
@@ -1758,12 +1757,6 @@ protected:
   // event.
   bool                   mNeedsFocus : 1;
   bool                   mHasFocus : 1;
-
-  // whether to show keyboard accelerators
-  bool                   mShowAccelerators : 1;
-
-  // whether to show focus rings
-  bool                   mShowFocusRings : 1;
 
   // when true, show focus rings for the current focused content only.
   // This will be reset when another element is focused

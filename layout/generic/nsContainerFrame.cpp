@@ -164,7 +164,7 @@ nsContainerFrame::RemoveFrame(ChildListID aListID,
     // Please note that 'parent' may not actually be where 'aOldFrame' lives.
     // We really MUST use StealFrame() and nothing else here.
     // @see nsInlineFrame::StealFrame for details.
-    parent->StealFrame(aOldFrame, true);
+    parent->StealFrame(aOldFrame);
     aOldFrame->Destroy();
     aOldFrame = oldFrameNextContinuation;
     if (parent != lastParent && generateReflowCommand) {
@@ -1349,9 +1349,27 @@ TryRemoveFrame(nsIFrame* aFrame, FramePropertyTable* aPropTable,
   return false;
 }
 
+bool
+nsContainerFrame::MaybeStealOverflowContainerFrame(nsIFrame* aChild)
+{
+  bool removed = false;
+  if (MOZ_UNLIKELY(aChild->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)) {
+    FramePropertyTable* propTable = PresContext()->PropertyTable();
+    // Try removing from the overflow container list.
+    removed = ::TryRemoveFrame(this, propTable, OverflowContainersProperty(),
+                               aChild);
+    if (!removed) {
+      // It might be in the excess overflow container list.
+      removed = ::TryRemoveFrame(this, propTable,
+                                 ExcessOverflowContainersProperty(),
+                                 aChild);
+    }
+  }
+  return removed;
+}
+
 nsresult
-nsContainerFrame::StealFrame(nsIFrame* aChild,
-                             bool      aForceNormal)
+nsContainerFrame::StealFrame(nsIFrame* aChild)
 {
 #ifdef DEBUG
   if (!mFrames.ContainsFrame(aChild)) {
@@ -1368,20 +1386,11 @@ nsContainerFrame::StealFrame(nsIFrame* aChild,
   }
 #endif
 
-  bool removed;
-  if ((aChild->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)
-      && !aForceNormal) {
-    FramePropertyTable* propTable = PresContext()->PropertyTable();
-    // Try removing from the overflow container list.
-    removed = ::TryRemoveFrame(this, propTable, OverflowContainersProperty(),
-                               aChild);
-    if (!removed) {
-      // It must be in the excess overflow container list.
-      removed = ::TryRemoveFrame(this, propTable,
-                                 ExcessOverflowContainersProperty(),
-                                 aChild);
-    }
-  } else {
+  bool removed = MaybeStealOverflowContainerFrame(aChild);
+  if (!removed) {
+    // NOTE nsColumnSetFrame and nsCanvasFrame have their overflow containers
+    // on the normal lists so we might get here also if the frame bit
+    // NS_FRAME_IS_OVERFLOW_CONTAINER is set.
     removed = mFrames.StartRemoveFrame(aChild);
     if (!removed) {
       // We didn't find the child in our principal child list.

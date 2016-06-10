@@ -200,7 +200,7 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel,
     // Sandboxed document check: javascript: URI's are disabled
     // in a sandboxed document unless 'allow-scripts' was specified.
     nsIDocument* doc = aOriginalInnerWindow->GetExtantDoc();
-    if (doc && (doc->GetSandboxFlags() & SANDBOXED_SCRIPTS)) {
+    if (doc && doc->HasScriptsBlockedBySandbox()) {
         return NS_ERROR_DOM_RETVAL_UNDEFINED;
     }
 
