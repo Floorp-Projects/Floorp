@@ -95,6 +95,7 @@ class LIRGeneratorMIPSShared : public LIRGeneratorShared
     void visitSubstr(MSubstr* ins);
     void visitWasmTruncateToInt64(MWasmTruncateToInt64* ins);
     void visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins);
+    void visitCopySign(MCopySign* ins);
 };
 
 } // namespace jit
