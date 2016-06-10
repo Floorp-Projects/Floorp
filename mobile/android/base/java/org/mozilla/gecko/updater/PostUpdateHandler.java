@@ -73,7 +73,7 @@ public class PostUpdateHandler extends BrowserAppDelegateWithReference {
                 try {
                     final ZipFile zip = new ZipFile(applicationPackage);
                     final Enumeration<? extends ZipEntry> zipEntries = zip.entries();
-
+                    
                     final byte[] buffer = new byte[1024];
 
                     while (zipEntries.hasMoreElements()) {
