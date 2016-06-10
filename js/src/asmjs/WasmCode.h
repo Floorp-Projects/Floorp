@@ -61,14 +61,16 @@ class Export
 {
     Sig sig_;
     struct CacheablePod {
+        uint32_t funcIndex_;
         uint32_t stubOffset_;
     } pod;
 
   public:
     Export() = default;
-    explicit Export(Sig&& sig)
+    explicit Export(Sig&& sig, uint32_t funcIndex)
       : sig_(Move(sig))
     {
+        pod.funcIndex_ = funcIndex;
         pod.stubOffset_ = UINT32_MAX;
     }
     void initStubOffset(uint32_t stubOffset) {
@@ -76,11 +78,15 @@ class Export
         pod.stubOffset_ = stubOffset;
     }
 
-    uint32_t stubOffset() const {
-        return pod.stubOffset_;
-    }
     const Sig& sig() const {
         return sig_;
+    }
+    uint32_t funcIndex() const {
+        return pod.funcIndex_;
+    }
+    uint32_t stubOffset() const {
+        MOZ_ASSERT(pod.stubOffset_ != UINT32_MAX);
+        return pod.stubOffset_;
     }
 
     WASM_DECLARE_SERIALIZABLE(Export)
