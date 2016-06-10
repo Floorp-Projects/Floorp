@@ -75,7 +75,6 @@ const TEST_DATA = [{
 }];
 
 add_task(function* () {
-
   let {inspector} = yield openInspectorForURL(TEST_URL);
 
   for (let test of TEST_DATA) {
@@ -94,7 +93,7 @@ add_task(function* () {
     });
 
     let linkFollow = allMenuItems.find(i => i.id === "node-menu-link-follow");
-    let linkCopy =  allMenuItems.find(i => i.id === "node-menu-link-copy");
+    let linkCopy = allMenuItems.find(i => i.id === "node-menu-link-copy");
 
     // The contextual menu setup is async, because it needs to know if the
     // inspector has the resolveRelativeURL method first. So call actorHasMethod
