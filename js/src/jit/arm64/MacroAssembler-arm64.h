@@ -1874,13 +1874,6 @@ class MacroAssemblerCompat : public vixl::MacroAssembler
 
     void handleFailureWithHandlerTail(void* handler);
 
-    // FIXME: See CodeGeneratorX64 calls to noteAsmJSGlobalAccess.
-    void patchAsmJSGlobalAccess(CodeOffset patchAt, uint8_t* code,
-                                uint8_t* globalData, unsigned globalDataOffset)
-    {
-        MOZ_CRASH("patchAsmJSGlobalAccess");
-    }
-
     void profilerEnterFrame(Register framePtr, Register scratch) {
         AbsoluteAddress activation(GetJitContext()->runtime->addressOfProfilingActivation());
         loadPtr(activation, scratch);
