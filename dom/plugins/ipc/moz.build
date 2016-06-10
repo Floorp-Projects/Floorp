@@ -43,7 +43,6 @@ EXPORTS.mozilla.plugins += [
     'PluginWidgetParent.h',
     'StreamNotifyChild.h',
     'StreamNotifyParent.h',
-    'TaskFactory.h',
 ]
 
 if CONFIG['OS_ARCH'] == 'WINNT':
