@@ -1550,6 +1550,29 @@ var AddonDetails = {
   }
 };
 
+var Scalars = {
+  /**
+   * Render the scalar data - if present - from the payload in a simple key-value table.
+   * @param aPayload A payload object to render the data from.
+   */
+  render: function(aPayload) {
+    let scalarsSection = document.getElementById("scalars");
+    removeAllChildNodes(scalarsSection);
+
+    let scalars = aPayload.scalars;
+    const hasData = scalars && Object.keys(scalars).length > 0;
+    setHasData("scalars-section", hasData);
+    if (!hasData) {
+      return;
+    }
+
+    const headingName = bundle.GetStringFromName("namesHeader");
+    const headingValue = bundle.GetStringFromName("valuesHeader");
+    const table = KeyValueTable.render(scalars, headingName, headingValue);
+    scalarsSection.appendChild(table);
+  }
+};
+
 /**
  * Helper function for showing either the toggle element or "No data collected" message for a section
  *
@@ -1894,6 +1917,9 @@ function displayPingData(ping, updatePayloadList = false) {
     infoSection.appendChild(KeyValueTable.render(ping.payload.info,
                                                  keysHeader, valuesHeader));
   }
+
+  // Show scalar data.
+  Scalars.render(payload);
 
   // Show histogram data
   let hgramDiv = document.getElementById("histograms");
