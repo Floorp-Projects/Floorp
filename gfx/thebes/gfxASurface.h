@@ -101,12 +101,6 @@ public:
 
     int CairoStatus();
 
-    /* Make sure that the given dimensions don't overflow a 32-bit signed int
-     * using 4 bytes per pixel; optionally, make sure that either dimension
-     * doesn't exceed the given limit.
-     */
-    static bool CheckSurfaceSize(const mozilla::gfx::IntSize& sz, int32_t limit = 0);
-
     /* Provide a stride value that will respect all alignment requirements of
      * the accelerated image-rendering code.
      */
