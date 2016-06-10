@@ -69,6 +69,7 @@ TextComposition::TextComposition(nsPresContext* aPresContext,
   , mAllowControlCharacters(
       Preferences::GetBool("dom.compositionevent.allow_control_characters",
                            false))
+  , mWasCompositionStringEmpty(true)
 {
   MOZ_ASSERT(aCompositionEvent->mNativeIMEContext.IsValid());
 }
@@ -152,6 +153,8 @@ TextComposition::DispatchEvent(WidgetCompositionEvent* aDispatchEvent,
 
   EventDispatcher::Dispatch(mNode, mPresContext,
                             aDispatchEvent, nullptr, aStatus, aCallBack);
+
+  OnCompositionEventDispatched(aDispatchEvent);
 }
 
 void
@@ -241,6 +244,8 @@ TextComposition::DispatchCompositionEvent(
                    EventDispatchingCallback* aCallBack,
                    bool aIsSynthesized)
 {
+  mWasCompositionStringEmpty = mString.IsEmpty();
+
   // If the content is a container of TabParent, composition should be in the
   // remote process.
   if (mTabParent) {
@@ -402,7 +407,7 @@ TextComposition::DispatchCompositionEvent(
     MOZ_ASSERT(!HasEditor(), "Why does the editor still keep to hold this?");
   }
 
-  OnCompositionEventHandled(aCompositionEvent);
+  MaybeNotifyIMEOfCompositionEventHandled(aCompositionEvent);
 }
 
 // static
@@ -430,32 +435,57 @@ TextComposition::HandleSelectionEvent(nsPresContext* aPresContext,
 }
 
 void
-TextComposition::OnCompositionEventHandled(
+TextComposition::OnCompositionEventDispatched(
                    const WidgetCompositionEvent* aCompositionEvent)
 {
   MOZ_RELEASE_ASSERT(!mTabParent);
 
-  nsEventStatus status;
+  if (!IsValidStateForComposition(aCompositionEvent->mWidget)) {
+    return;
+  }
 
-  // When compositon start, notify the rect of first offset character.
-  // When not compositon start, notify the rect of selected composition
-  // string if compositionchange event.
-  if (aCompositionEvent->mMessage == eCompositionStart) {
+  // Every composition event may cause changing composition start offset,
+  // especially when there is no composition string.  Therefore, we need to
+  // update mCompositionStartOffset with the latest offset.
+
+  MOZ_ASSERT(aCompositionEvent->mMessage != eCompositionStart ||
+               mWasCompositionStringEmpty,
+             "mWasCompositionStringEmpty should be true if the dispatched "
+             "event is eCompositionStart");
+
+  if (mWasCompositionStringEmpty &&
+      !aCompositionEvent->CausesDOMCompositionEndEvent()) {
+    // If there was no composition string, current selection start may be the
+    // offset for inserting composition string.
     nsCOMPtr<nsIWidget> widget = mPresContext->GetRootWidget();
-    // Update composition start offset
     WidgetQueryContentEvent selectedTextEvent(true, eQuerySelectedText, widget);
-    widget->DispatchEvent(&selectedTextEvent, status);
-    if (selectedTextEvent.mSucceeded) {
-      mCompositionStartOffset = selectedTextEvent.mReply.mOffset;
+    nsEventStatus status = nsEventStatus_eIgnore;
+    if (mString.IsEmpty()) {
+      widget->DispatchEvent(&selectedTextEvent, status);
     } else {
-      // Unknown offset
-      NS_WARNING("Cannot get start offset of IME composition");
+      MOZ_ASSERT(aCompositionEvent->mMessage == eCompositionChange);
+      // TODO: Update mCompositionStartOffset with first IME selection
+    }
+    if (NS_WARN_IF(!selectedTextEvent.mSucceeded)) {
+      // XXX Is this okay?
       mCompositionStartOffset = 0;
+    } else {
+      mCompositionStartOffset = selectedTextEvent.mReply.mOffset;
     }
     mTargetClauseOffsetInComposition = 0;
-  } else if (aCompositionEvent->CausesDOMTextEvent()) {
+  }
+
+  if (aCompositionEvent->CausesDOMTextEvent()) {
     mTargetClauseOffsetInComposition = aCompositionEvent->TargetClauseOffset();
-  } else {
+  }
+}
+
+void
+TextComposition::MaybeNotifyIMEOfCompositionEventHandled(
+                   const WidgetCompositionEvent* aCompositionEvent)
+{
+  if (aCompositionEvent->mMessage != eCompositionStart &&
+      !aCompositionEvent->CausesDOMTextEvent()) {
     return;
   }
 
