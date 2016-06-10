@@ -258,6 +258,10 @@ private:
   // and compositionend events.
   bool mAllowControlCharacters;
 
+  // mWasCompositionStringEmpty is true if the composition string was empty
+  // when DispatchCompositionEvent() is called.
+  bool mWasCompositionStringEmpty;
+
   // Hide the default constructor and copy constructor.
   TextComposition()
     : mPresContext(nullptr)
@@ -272,6 +276,7 @@ private:
     , mRequestedToCommitOrCancel(false)
     , mWasNativeCompositionEndEventDiscarded(false)
     , mAllowControlCharacters(false)
+    , mWasCompositionStringEmpty(true)
   {}
   TextComposition(const TextComposition& aOther);
 
@@ -375,9 +380,18 @@ private:
   void OnCompositionEventDiscarded(WidgetCompositionEvent* aCompositionEvent);
 
   /**
-   * Calculate composition offset then notify composition update to widget
+   * OnCompositionEventDispatched() is called after a composition event is
+   * dispatched.
    */
-  void OnCompositionEventHandled(
+  void OnCompositionEventDispatched(
+         const WidgetCompositionEvent* aDispatchEvent);
+
+  /**
+   * MaybeNotifyIMEOfCompositionEventHandled() notifies IME of composition
+   * event handled.  This should be called after dispatching a composition
+   * event which came from widget.
+   */
+  void MaybeNotifyIMEOfCompositionEventHandled(
          const WidgetCompositionEvent* aCompositionEvent);
 
   /**
