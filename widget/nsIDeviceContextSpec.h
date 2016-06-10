@@ -10,7 +10,6 @@
 
 class nsIWidget;
 class nsIPrintSettings;
-class gfxASurface;
 
 namespace mozilla {
 namespace gfx{

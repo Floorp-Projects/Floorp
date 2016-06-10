@@ -26,7 +26,6 @@
 #include "mozilla/BasicEvents.h"
 #include "mozilla/Services.h"
 
-#include "gfxASurface.h"
 #include "gfxXlibSurface.h"
 #include "gfxContext.h"
 #include "nsImageToPixbuf.h"

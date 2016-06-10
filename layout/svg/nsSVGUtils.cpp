@@ -852,7 +852,7 @@ nsSVGUtils::ConvertToSurfaceSize(const gfxSize& aSize,
   *aResultOverflows = surfaceSize.width != ceil(aSize.width) ||
     surfaceSize.height != ceil(aSize.height);
 
-  if (!gfxASurface::CheckSurfaceSize(surfaceSize)) {
+  if (!Factory::CheckSurfaceSize(surfaceSize)) {
     surfaceSize.width = std::min(NS_SVG_OFFSCREEN_MAX_DIMENSION,
                                surfaceSize.width);
     surfaceSize.height = std::min(NS_SVG_OFFSCREEN_MAX_DIMENSION,
