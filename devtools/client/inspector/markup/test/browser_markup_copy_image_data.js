@@ -32,39 +32,19 @@ add_task(function* () {
 });
 
 function* assertCopyImageDataNotAvailable(inspector) {
-  let menu = yield openNodeMenu(inspector);
+  let allMenuItems = openContextMenuAndGetAllItems(inspector);
+  let item = allMenuItems.find(item => item.id === "node-menu-copyimagedatauri");
 
-  let item = menu.getElementsByAttribute("id", "node-menu-copyimagedatauri")[0];
   ok(item, "The menu item was found in the contextual menu");
-  is(item.getAttribute("disabled"), "true", "The menu item is disabled");
-
-  yield closeNodeMenu(inspector);
+  ok(item.disabled, "The menu item is disabled");
 }
 
 function* assertCopyImageDataAvailable(inspector) {
-  let menu = yield openNodeMenu(inspector);
+  let allMenuItems = openContextMenuAndGetAllItems(inspector);
+  let item = allMenuItems.find(item => item.id === "node-menu-copyimagedatauri");
 
-  let item = menu.getElementsByAttribute("id", "node-menu-copyimagedatauri")[0];
   ok(item, "The menu item was found in the contextual menu");
-  is(item.getAttribute("disabled"), "", "The menu item is enabled");
-
-  yield closeNodeMenu(inspector);
-}
-
-function* openNodeMenu(inspector) {
-  let onShown = once(inspector.nodemenu, "popupshown", false);
-  inspector.nodemenu.hidden = false;
-  inspector.nodemenu.openPopup();
-  yield onShown;
-  return inspector.nodemenu;
-}
-
-function* closeNodeMenu(inspector) {
-  let onHidden = once(inspector.nodemenu, "popuphidden", false);
-  inspector.nodemenu.hidden = true;
-  inspector.nodemenu.hidePopup();
-  yield onHidden;
-  return inspector.nodemenu;
+  ok(!item.disabled, "The menu item is enabled");
 }
 
 function triggerCopyImageUrlAndWaitForClipboard(expected, inspector) {

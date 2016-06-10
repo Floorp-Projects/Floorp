@@ -815,10 +815,6 @@ HTMLBreadcrumbs.prototype = {
       return;
     }
 
-    if (reason !== "markupmutation") {
-      this.inspector.hideNodeMenu();
-    }
-
     let hasInterestingMutations = this._hasInterestingMutations(mutations);
     if (reason === "markupmutation" && !hasInterestingMutations) {
       return;
