@@ -78,13 +78,14 @@ JSObject::finalize(js::FreeOp* fop)
 #endif
 
     const js::Class* clasp = getClass();
+    js::NativeObject* nobj = nullptr;
+    if (clasp->isNative())
+        nobj = &as<js::NativeObject>();
     if (clasp->hasFinalize())
         clasp->doFinalize(fop, this);
 
-    if (!clasp->isNative())
+    if (!nobj)
         return;
-
-    js::NativeObject* nobj = &as<js::NativeObject>();
 
     if (nobj->hasDynamicSlots())
         fop->free_(nobj->slots_);
