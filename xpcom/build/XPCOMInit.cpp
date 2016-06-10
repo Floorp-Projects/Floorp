@@ -248,7 +248,7 @@ nsThreadManagerGetSingleton(nsISupports* aOuter,
     return NS_ERROR_NO_AGGREGATION;
   }
 
-  return nsThreadManager::get()->QueryInterface(aIID, aInstancePtr);
+  return nsThreadManager::get().QueryInterface(aIID, aInstancePtr);
 }
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsThreadPool)
@@ -542,7 +542,7 @@ NS_InitXPCOM2(nsIServiceManager** aResult,
   }
 
   // Establish the main thread here.
-  rv = nsThreadManager::get()->Init();
+  rv = nsThreadManager::get().Init();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -775,7 +775,7 @@ NS_InitMinimalXPCOM()
   char aLocal;
   profiler_init(&aLocal);
 
-  nsresult rv = nsThreadManager::get()->Init();
+  nsresult rv = nsThreadManager::get().Init();
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
@@ -914,7 +914,7 @@ ShutdownXPCOM(nsIServiceManager* aServMgr)
     // Shutdown all remaining threads.  This method does not return until
     // all threads created using the thread manager (with the exception of
     // the main thread) have exited.
-    nsThreadManager::get()->Shutdown();
+    nsThreadManager::get().Shutdown();
 
     NS_ProcessPendingEvents(thread);
 
