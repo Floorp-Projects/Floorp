@@ -97,6 +97,11 @@ runTest(() => getUserMedia({audio: true, video: true})
     stream.getTracks().forEach(t => removeTrack(t));
 
     return spinEventLoop();
+  })
+  .then(() => {
+      // Test MediaStreamTrackEvent required args here.
+      mustThrowWith("MediaStreamTrackEvent without required args",
+                    "TypeError", () => new MediaStreamTrackEvent("addtrack", {}));
   }));
 </script>
 </pre>
