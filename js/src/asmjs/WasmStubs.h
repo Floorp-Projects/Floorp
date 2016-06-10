@@ -19,10 +19,16 @@
 #ifndef wasm_stubs_h
 #define wasm_stubs_h
 
-#include "asmjs/WasmGenerator.h"
+#include "asmjs/WasmTypes.h"
 
 namespace js {
+
+namespace jit { class MacroAssembler; }
+
 namespace wasm {
+
+class Export;
+class Import;
 
 extern Offsets
 GenerateEntry(jit::MacroAssembler& masm, const Export& exp, bool usesHeap);

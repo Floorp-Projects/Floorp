@@ -18,7 +18,7 @@
 #include "jsweakmap.h"
 #include "jswrapper.h"
 
-#include "asmjs/WasmModule.h"
+#include "asmjs/WasmJS.h"
 #include "ds/TraceableFifo.h"
 #include "gc/Barrier.h"
 #include "js/Debug.h"
@@ -39,6 +39,7 @@ namespace js {
 
 class Breakpoint;
 class DebuggerMemory;
+class WasmInstanceObject;
 
 typedef HashSet<ReadBarrieredGlobalObject,
                 MovableCellHasher<ReadBarrieredGlobalObject>,
@@ -234,15 +235,15 @@ typedef JSObject Env;
 //
 // If synthesized, the referent is one of the following:
 //
-//   1. A WasmModuleObject, denoting a synthesized toplevel wasm module
+//   1. A WasmInstanceObject, denoting a synthesized toplevel wasm module
 //      script.
 //   2. A wasm JSFunction, denoting a synthesized wasm function script.
 //      NYI!
-typedef mozilla::Variant<JSScript*, WasmModuleObject*> DebuggerScriptReferent;
+typedef mozilla::Variant<JSScript*, WasmInstanceObject*> DebuggerScriptReferent;
 
-// Either a ScriptSourceObject, for ordinary JS, or a WasmModuleObject,
+// Either a ScriptSourceObject, for ordinary JS, or a WasmInstanceObject,
 // denoting the synthesized source of a wasm module.
-typedef mozilla::Variant<ScriptSourceObject*, WasmModuleObject*> DebuggerSourceReferent;
+typedef mozilla::Variant<ScriptSourceObject*, WasmInstanceObject*> DebuggerSourceReferent;
 
 class Debugger : private mozilla::LinkedListElement<Debugger>
 {
@@ -473,12 +474,12 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     /* The map from debuggee Envs to Debugger.Environment instances. */
     ObjectWeakMap environments;
 
-    /* The map from WasmModuleObjects to synthesized Debugger.Script instances. */
-    typedef DebuggerWeakMap<WasmModuleObject*> WasmModuleWeakMap;
-    WasmModuleWeakMap wasmModuleScripts;
+    /* The map from WasmInstanceObjects to synthesized Debugger.Script instances. */
+    typedef DebuggerWeakMap<WasmInstanceObject*> WasmInstanceWeakMap;
+    WasmInstanceWeakMap wasmInstanceScripts;
 
-    /* The map from WasmModuleObjects to synthesized Debugger.Source instances. */
-    WasmModuleWeakMap wasmModuleSources;
+    /* The map from WasmInstanceObjects to synthesized Debugger.Source instances. */
+    WasmInstanceWeakMap wasmInstanceSources;
 
     /*
      * Keep track of tracelogger last drained identifiers to know if there are
@@ -686,7 +687,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static JSTrapStatus slowPathOnDebuggerStatement(JSContext* cx, AbstractFramePtr frame);
     static JSTrapStatus slowPathOnExceptionUnwind(JSContext* cx, AbstractFramePtr frame);
     static void slowPathOnNewScript(JSContext* cx, HandleScript script);
-    static void slowPathOnNewWasmModule(JSContext* cx, Handle<WasmModuleObject*> wasmModule);
+    static void slowPathOnNewWasmInstance(JSContext* cx, Handle<WasmInstanceObject*> wasmInstance);
     static void slowPathOnNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global);
     static bool slowPathOnLogAllocationSite(JSContext* cx, HandleObject obj, HandleSavedFrame frame,
                                             double when, GlobalObject::DebuggerVector& dbgs);
@@ -866,7 +867,7 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     static inline bool onLeaveFrame(JSContext* cx, AbstractFramePtr frame, jsbytecode* pc, bool ok);
 
     static inline void onNewScript(JSContext* cx, HandleScript script);
-    static inline void onNewWasmModule(JSContext* cx, Handle<WasmModuleObject*> wasmModule);
+    static inline void onNewWasmInstance(JSContext* cx, Handle<WasmInstanceObject*> wasmInstance);
     static inline void onNewGlobalObject(JSContext* cx, Handle<GlobalObject*> global);
     static inline bool onLogAllocationSite(JSContext* cx, JSObject* obj, HandleSavedFrame frame,
                                            double when);
@@ -1015,12 +1016,12 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     JSObject* wrapScript(JSContext* cx, HandleScript script);
 
     /*
-     * Return the Debugger.Script object for |wasmModule| (the toplevel
+     * Return the Debugger.Script object for |wasmInstance| (the toplevel
      * script), synthesizing a new one if needed. The context |cx| must be in
-     * the debugger compartment; |wasmModule| must be a WasmModuleObject in
+     * the debugger compartment; |wasmInstance| must be a WasmInstanceObject in
      * the debuggee compartment.
      */
-    JSObject* wrapWasmScript(JSContext* cx, Handle<WasmModuleObject*> wasmModule);
+    JSObject* wrapWasmScript(JSContext* cx, Handle<WasmInstanceObject*> wasmInstance);
 
     /*
      * Return the Debugger.Source object for |source|, or create a new one if
@@ -1030,12 +1031,12 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
     JSObject* wrapSource(JSContext* cx, js::HandleScriptSource source);
 
     /*
-     * Return the Debugger.Source object for |wasmModule| (the entire module),
+     * Return the Debugger.Source object for |wasmInstance| (the entire module),
      * synthesizing a new one if needed. The context |cx| must be in the
-     * debugger compartment; |wasmModule| must be a WasmModuleObject in the
+     * debugger compartment; |wasmInstance| must be a WasmInstanceObject in the
      * debuggee compartment.
      */
-    JSObject* wrapWasmSource(JSContext* cx, Handle<WasmModuleObject*> wasmModule);
+    JSObject* wrapWasmSource(JSContext* cx, Handle<WasmInstanceObject*> wasmInstance);
 
   private:
     Debugger(const Debugger&) = delete;

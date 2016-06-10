@@ -128,7 +128,7 @@ DeserializePodVector(ExclusiveContext* cx, const uint8_t* cursor,
 {
     uint32_t length;
     cursor = ReadScalar<uint32_t>(cursor, &length);
-    if (!vec->resize(length))
+    if (!vec->initLengthUninitialized(length))
         return nullptr;
     cursor = ReadBytes(cursor, vec->begin(), length * sizeof(T));
     return cursor;
