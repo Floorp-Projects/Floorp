@@ -1237,9 +1237,21 @@ public:
 
   static bool HasSSE2();
 
-  /** Make sure that the given dimensions don't overflow a 32-bit signed int
-   * using 4 bytes per pixel; optionally, make sure that either dimension
-   * doesn't exceed the given limit.
+  /**
+   * Returns false if any of the following are true:
+   *
+   *   - the width/height of |sz| are less than or equal to zero
+   *   - the width/height of |sz| are greater than |limit|
+   *   - the number of bytes that need to be allocated for the surface is too
+   *     big to fit in an int32_t, or bigger than |allocLimit|, if specifed
+   *
+   * To calculate the number of bytes that need to be allocated for the surface
+   * this function makes the conservative assumption that there need to be
+   * 4 bytes-per-pixel, and the stride alignment is 16 bytes.
+   *
+   * The reason for using int32_t rather than uint32_t is again to be
+   * conservative; some code has in the past and may in the future use signed
+   * integers to store buffer lengths etc.
    */
   static bool CheckSurfaceSize(const IntSize &sz,
                                int32_t limit = 0,
