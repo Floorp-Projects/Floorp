@@ -229,6 +229,10 @@ private:
   void DrawDashedCornerSlow(mozilla::css::Side aSide,
                             mozilla::css::Corner aCorner);
 
+  // Draw the given dashed/dotted corner with solid style
+  void DrawFallbackSolidCorner(mozilla::css::Side aSide,
+                               mozilla::css::Corner aCorner);
+
   // Analyze if all border sides have the same width.
   bool AllBordersSameWidth();
 
