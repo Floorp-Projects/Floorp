@@ -434,6 +434,42 @@ TextComposition::HandleSelectionEvent(nsPresContext* aPresContext,
   handler.OnSelectionEvent(aSelectionEvent);
 }
 
+uint32_t
+TextComposition::GetSelectionStartOffset()
+{
+  nsCOMPtr<nsIWidget> widget = mPresContext->GetRootWidget();
+  WidgetQueryContentEvent selectedTextEvent(true, eQuerySelectedText, widget);
+
+  // The editor which has this composition is observed by active
+  // IMEContentObserver, we can use the cache of it.
+  RefPtr<IMEContentObserver> contentObserver =
+    IMEStateManager::GetActiveContentObserver();
+  bool doQuerySelection = true;
+  if (contentObserver) {
+    if (contentObserver->IsManaging(this)) {
+      doQuerySelection = false;
+      contentObserver->HandleQueryContentEvent(&selectedTextEvent);
+    }
+    // If another editor already has focus, we cannot retrieve selection
+    // in the editor which has this composition...
+    else if (NS_WARN_IF(contentObserver->GetPresContext() == mPresContext)) {
+      return 0;  // XXX Is this okay?
+    }
+  }
+
+  // Otherwise, using slow path (i.e., compute every time with
+  // ContentEventHandler)
+  if (doQuerySelection) {
+    ContentEventHandler handler(mPresContext);
+    handler.HandleQueryContentEvent(&selectedTextEvent);
+  }
+
+  if (NS_WARN_IF(!selectedTextEvent.mSucceeded)) {
+    return 0; // XXX Is this okay?
+  }
+  return selectedTextEvent.mReply.mOffset;
+}
+
 void
 TextComposition::OnCompositionEventDispatched(
                    const WidgetCompositionEvent* aCompositionEvent)
@@ -457,21 +493,8 @@ TextComposition::OnCompositionEventDispatched(
       !aCompositionEvent->CausesDOMCompositionEndEvent()) {
     // If there was no composition string, current selection start may be the
     // offset for inserting composition string.
-    nsCOMPtr<nsIWidget> widget = mPresContext->GetRootWidget();
-    WidgetQueryContentEvent selectedTextEvent(true, eQuerySelectedText, widget);
-    nsEventStatus status = nsEventStatus_eIgnore;
-    if (mString.IsEmpty()) {
-      widget->DispatchEvent(&selectedTextEvent, status);
-    } else {
-      MOZ_ASSERT(aCompositionEvent->mMessage == eCompositionChange);
-      // TODO: Update mCompositionStartOffset with first IME selection
-    }
-    if (NS_WARN_IF(!selectedTextEvent.mSucceeded)) {
-      // XXX Is this okay?
-      mCompositionStartOffset = 0;
-    } else {
-      mCompositionStartOffset = selectedTextEvent.mReply.mOffset;
-    }
+    // Update composition start offset with current selection start.
+    mCompositionStartOffset = GetSelectionStartOffset();
     mTargetClauseOffsetInComposition = 0;
   }
 

@@ -395,6 +395,13 @@ private:
          const WidgetCompositionEvent* aCompositionEvent);
 
   /**
+   * GetSelectionStartOffset() returns normal selection start offset in the
+   * editor which has this composition.
+   * If it failed or lost focus, this would return 0.
+   */
+  uint32_t GetSelectionStartOffset();
+
+  /**
    * CompositionEventDispatcher dispatches the specified composition (or text)
    * event.
    */
