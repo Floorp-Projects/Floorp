@@ -17,6 +17,7 @@
   },
   {
     "namespace": "downloads",
+    "permissions": ["downloads"],
     "types": [
       {
         "id": "FilenameConflictAction",
@@ -560,6 +561,7 @@
         "type": "function",
         "async": "callback",
         "description": "Open the downloaded file.",
+        "permissions": ["downloads.open"],
         "parameters": [
           {
             "name": "downloadId",
