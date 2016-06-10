@@ -1,8 +1,13 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
 
-var { Ci, Cu } = require("chrome");
-var { DebuggerServer } = require("devtools/server/main");
-var Services = require("Services");
+const { Ci } = require("chrome");
+const { DebuggerServer } = require("devtools/server/main");
+const Services = require("Services");
+const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 const protocol = require("devtools/shared/protocol");
 const { Arg, method, RetVal } = protocol;
 const {
@@ -11,8 +16,6 @@ const {
 } = require("devtools/shared/specs/worker");
 
 loader.lazyRequireGetter(this, "ChromeUtils");
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyServiceGetter(
   this, "wdm",

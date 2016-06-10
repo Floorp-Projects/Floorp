@@ -15,7 +15,6 @@ DevToolsModules(
     'read-only-prop.svg',
     'search-box.css',
     'search.svg',
-    'tabs.css',
     'text-panel.css',
     'toolbar.css'
 )

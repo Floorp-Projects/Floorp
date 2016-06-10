@@ -2,7 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Ci, Cu} = require("chrome");
+"use strict";
+
+const {Ci} = require("chrome");
 const Services = require("Services");
 const protocol = require("devtools/shared/protocol");
 const promise = require("promise");
@@ -10,9 +12,8 @@ const {LongStringActor} = require("devtools/server/actors/string");
 const {DebuggerServer} = require("devtools/server/main");
 const {getSystemInfo, getSetting} = require("devtools/shared/system");
 const {deviceSpec} = require("devtools/shared/specs/device");
-
-Cu.importGlobalProperties(["FileReader"]);
-Cu.import("resource://gre/modules/PermissionsTable.jsm");
+const FileReader = require("FileReader");
+const {PermissionsTable} = require("resource://gre/modules/PermissionsTable.jsm");
 
 var DeviceActor = exports.DeviceActor = protocol.ActorClassWithSpec(deviceSpec, {
   _desc: null,

@@ -9,7 +9,8 @@
 
 /**
  * Check that the detached devtools window title is not updated when switching
- * the selected frame.
+ * the selected frame. Also check that frames command button has 'open'
+ * attribute set when the list of frames is opened.
  */
 
 var {Toolbox} = require("devtools/client/framework/toolbox");
@@ -35,9 +36,13 @@ add_task(function* () {
   yield waitForTick();
 
   // Open frame menu and wait till it's available on the screen.
+  // Also check 'open' attribute on the command button.
   let btn = toolbox.doc.getElementById("command-button-frames");
+  ok(!btn.getAttribute("open"), "The open attribute must not be present");
   let menu = toolbox.showFramesMenu({target: btn});
   yield once(menu, "open");
+
+  is(btn.getAttribute("open"), "true", "The open attribute must be set");
 
   // Verify that the frame list menu is populated
   let frames = menu.items;

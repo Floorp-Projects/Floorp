@@ -4,9 +4,8 @@
 
 "use strict";
 
-Cu.import("resource://gre/modules/NetUtil.jsm");
-
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
 const Editor = require("devtools/client/sourceeditor/editor");
 const promise = require("promise");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");

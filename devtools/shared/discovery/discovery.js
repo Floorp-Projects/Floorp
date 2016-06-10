@@ -58,7 +58,7 @@ XPCOMUtils.defineLazyGetter(this, "sysInfo", () => {
 });
 
 XPCOMUtils.defineLazyGetter(this, "libcutils", function () {
-  Cu.import("resource://gre/modules/systemlibs.js");
+  let { libcutils } = Cu.import("resource://gre/modules/systemlibs.js", {});
   return libcutils;
 });
 

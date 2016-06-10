@@ -1605,11 +1605,6 @@ public abstract class GeckoApp
                 if (rec != null) {
                     rec.recordJavaStartupTime(javaDuration);
                 }
-
-                // Kick off our background services. We do this by invoking the broadcast
-                // receiver, which uses the system alarm infrastructure to perform tasks at
-                // intervals.
-                GeckoPreferences.broadcastHealthReportUploadPref(GeckoApp.this);
             }
         }, 50);
 
@@ -2145,11 +2140,6 @@ public abstract class GeckoApp
                 }
 
                 editor.apply();
-
-                // In theory, the first browser session will not run long enough that we need to
-                // prune during it and we'd rather run it when the browser is inactive so we wait
-                // until here to register the prune service.
-                GeckoPreferences.broadcastHealthReportPrune(context);
             }
         });
 

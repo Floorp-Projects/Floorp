@@ -6,8 +6,6 @@
 
 "use strict";
 
-const {Cu} = require("chrome");
-var {loader} = Cu.import("resource://devtools/shared/Loader.jsm");
 loader.lazyRequireGetter(this, "EventEmitter", "devtools/shared/event-emitter");
 
 const { LocalizationHelper } = require("devtools/client/shared/l10n");

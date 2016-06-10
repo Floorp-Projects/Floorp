@@ -524,6 +524,14 @@ nsXULPopupManager::PopupResized(nsIFrame* aFrame, LayoutDeviceIntSize aSize)
   if (curDevSize.width == aSize.width && curDevSize.height == aSize.height)
     return;
 
+  nsIContent* popup = menuPopupFrame->GetContent();
+
+  // Only set the width and height if the popup already has these attributes.
+  if (!popup->HasAttr(kNameSpaceID_None, nsGkAtoms::width) ||
+      !popup->HasAttr(kNameSpaceID_None, nsGkAtoms::height)) {
+    return;
+  }
+
   // The size is different. Convert the actual size to css pixels and store it
   // as 'width' and 'height' attributes on the popup.
   nsPresContext* presContext = menuPopupFrame->PresContext();
@@ -531,7 +539,6 @@ nsXULPopupManager::PopupResized(nsIFrame* aFrame, LayoutDeviceIntSize aSize)
   CSSIntSize newCSS(presContext->DevPixelsToIntCSSPixels(aSize.width),
                     presContext->DevPixelsToIntCSSPixels(aSize.height));
 
-  nsIContent* popup = menuPopupFrame->GetContent();
   nsAutoString width, height;
   width.AppendInt(newCSS.width);
   height.AppendInt(newCSS.height);
