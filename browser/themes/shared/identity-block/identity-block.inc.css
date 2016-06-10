@@ -47,11 +47,6 @@
   background-color: var(--identity-box-selected-background-color);
 }
 
-#identity-box:hover > :not(#identity-icon),
-#identity-box[open=true] > :not(#identity-icon) {
-  filter: grayscale(100%);
-}
-
 #urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
   color: var(--identity-box-verified-color);
 }
