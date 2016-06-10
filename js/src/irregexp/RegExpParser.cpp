@@ -526,6 +526,7 @@ RegExpParser<CharT>::ParseClassCharacterEscape(widechar* code)
       case '6': case '7':
         if (unicode_) {
             if (current() == '0') {
+                Advance();
                 *code = 0;
                 return true;
             }
