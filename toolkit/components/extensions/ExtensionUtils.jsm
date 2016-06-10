@@ -1149,6 +1149,10 @@ class ChildAPIManager {
     return this.namespaces.includes(namespace);
   }
 
+  hasPermission(permission) {
+    return this.context.extension.permissions.has(permission);
+  }
+
   getProperty(path, name) {
     throw new Error("Not implemented");
   }

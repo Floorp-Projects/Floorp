@@ -98,6 +98,7 @@ class Context {
 
     let methods = ["addListener", "callFunction",
                    "callFunctionNoReturn", "callAsyncFunction",
+                   "hasPermission",
                    "hasListener", "removeListener",
                    "getProperty", "setProperty",
                    "checkLoadURL", "logError"];
@@ -145,6 +146,18 @@ class Context {
       return false;
     }
     return true;
+  }
+
+  /**
+   * Checks whether this context has the given permission.
+   *
+   * @param {string} permission
+   *        The name of the permission to check.
+   *
+   * @returns {boolean} True if the context has the given permission.
+   */
+  hasPermission(permission) {
+    return false;
   }
 
   /**
@@ -1136,16 +1149,21 @@ class CallEntry extends Entry {
 
 // Represents a "function" defined in a schema namespace.
 class FunctionEntry extends CallEntry {
-  constructor(schema, path, name, type, unsupported, allowAmbiguousOptionalArguments, returns) {
+  constructor(schema, path, name, type, unsupported, allowAmbiguousOptionalArguments, returns, permissions) {
     super(schema, path, name, type.parameters, allowAmbiguousOptionalArguments);
     this.unsupported = unsupported;
     this.returns = returns;
+    this.permissions = permissions;
 
     this.isAsync = type.isAsync;
   }
 
   inject(path, name, dest, context) {
     if (this.unsupported) {
+      return;
+    }
+
+    if (this.permissions && !this.permissions.some(perm => context.hasPermission(perm))) {
       return;
     }
 
@@ -1176,10 +1194,11 @@ class FunctionEntry extends CallEntry {
 
 // Represents an "event" defined in a schema namespace.
 class Event extends CallEntry {
-  constructor(schema, path, name, type, extraParameters, unsupported) {
+  constructor(schema, path, name, type, extraParameters, unsupported, permissions) {
     super(schema, path, name, extraParameters);
     this.type = type;
     this.unsupported = unsupported;
+    this.permissions = permissions;
   }
 
   checkListener(listener, context) {
@@ -1192,6 +1211,10 @@ class Event extends CallEntry {
 
   inject(path, name, dest, context) {
     if (this.unsupported) {
+      return;
+    }
+
+    if (this.permissions && !this.permissions.some(perm => context.hasPermission(perm))) {
       return;
     }
 
@@ -1236,6 +1259,7 @@ this.Schemas = {
     let ns = this.namespaces.get(namespaceName);
     if (!ns) {
       ns = new Map();
+      ns.permissions = null;
       this.namespaces.set(namespaceName, ns);
     }
     ns.set(symbol, value);
@@ -1326,7 +1350,7 @@ this.Schemas = {
       let parseProperty = (type, extraProps = []) => {
         return {
           type: this.parseType(path, type,
-                               ["unsupported", "onError", ...extraProps]),
+                               ["unsupported", "onError", "permissions", ...extraProps]),
           optional: type.optional || false,
           unsupported: type.unsupported || false,
           onError: type.onError || null,
@@ -1421,10 +1445,12 @@ this.Schemas = {
     let f = new FunctionEntry(fun, path, fun.name,
                               this.parseType(path, fun,
                                              ["name", "unsupported", "returns",
+                                              "permissions",
                                               "allowAmbiguousOptionalArguments"]),
                               fun.unsupported || false,
                               fun.allowAmbiguousOptionalArguments || false,
-                              fun.returns || null);
+                              fun.returns || null,
+                              fun.permissions || null);
     return f;
   },
 
@@ -1495,11 +1521,12 @@ this.Schemas = {
     /* eslint-enable no-unused-vars */
 
     let type = this.parseType([namespaceName], event,
-                              ["name", "unsupported",
+                              ["name", "unsupported", "permissions",
                                "extraParameters", "returns", "filters"]);
 
     let e = new Event(event, [namespaceName], event.name, type, extras,
-                      event.unsupported || false);
+                      event.unsupported || false,
+                      event.permissions || null);
     this.register(namespaceName, event.name, e);
   },
 
@@ -1551,6 +1578,11 @@ this.Schemas = {
         for (let event of events) {
           this.loadEvent(name, event);
         }
+
+        if (namespace.permissions) {
+          let ns = this.namespaces.get(name);
+          ns.permissions = namespace.permissions;
+        }
       }
     };
 
@@ -1577,11 +1609,17 @@ this.Schemas = {
   },
 
   inject(dest, wrapperFuncs) {
+    let context = new Context(wrapperFuncs);
+
     for (let [namespace, ns] of this.namespaces) {
+      if (ns.permissions && !ns.permissions.some(perm => context.hasPermission(perm))) {
+        continue;
+      }
+
       let obj = Cu.createObjectIn(dest, {defineAs: namespace});
       for (let [name, entry] of ns) {
         if (wrapperFuncs.shouldInject(namespace, name)) {
-          entry.inject([namespace], name, obj, new Context(wrapperFuncs));
+          entry.inject([namespace], name, obj, context);
         }
       }
 
