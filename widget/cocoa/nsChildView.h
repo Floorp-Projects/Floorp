@@ -104,65 +104,6 @@ class APZCTreeManager;
 
 @end
 
-#if !defined(MAC_OS_X_VERSION_10_6) || \
-MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_6
-@interface NSEvent (SnowLeopardEventFeatures)
-+ (NSUInteger)pressedMouseButtons;
-+ (NSUInteger)modifierFlags;
-@end
-#endif
-
-// The following section, required to support fluid swipe tracking on OS X 10.7
-// and up, contains defines/declarations that are only available on 10.7 and up.
-// [NSEvent trackSwipeEventWithOptions:...] also requires that the compiler
-// support "blocks"
-// (http://developer.apple.com/library/mac/#documentation/Cocoa/Conceptual/Blocks/Articles/00_Introduction.html)
-// -- which it does on 10.6 and up (using the 10.6 SDK or higher).
-//
-// MAC_OS_X_VERSION_MAX_ALLOWED "controls which OS functionality, if used,
-// will result in a compiler error because that functionality is not
-// available" (quoting from AvailabilityMacros.h).  The compiler initializes
-// it to the version of the SDK being used.  Its value does *not* prevent the
-// binary from running on higher OS versions.  MAC_OS_X_VERSION_10_7 and
-// friends are defined (in AvailabilityMacros.h) as decimal numbers (not
-// hexadecimal numbers).
-#if !defined(MAC_OS_X_VERSION_10_7) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_7
-enum {
-   NSFullScreenWindowMask = 1 << 14
-};
-
-@interface NSWindow (LionWindowFeatures)
-- (NSRect)convertRectToScreen:(NSRect)aRect;
-@end
-
-#ifdef __LP64__
-enum {
-  NSEventSwipeTrackingLockDirection = 0x1 << 0,
-  NSEventSwipeTrackingClampGestureAmount = 0x1 << 1
-};
-typedef NSUInteger NSEventSwipeTrackingOptions;
-
-enum {
-  NSEventGestureAxisNone = 0,
-  NSEventGestureAxisHorizontal,
-  NSEventGestureAxisVertical
-};
-typedef NSInteger NSEventGestureAxis;
-
-@interface NSEvent (FluidSwipeTracking)
-+ (BOOL)isSwipeTrackingFromScrollEventsEnabled;
-- (BOOL)hasPreciseScrollingDeltas;
-- (CGFloat)scrollingDeltaX;
-- (CGFloat)scrollingDeltaY;
-- (NSEventPhase)phase;
-- (void)trackSwipeEventWithOptions:(NSEventSwipeTrackingOptions)options
-          dampenAmountThresholdMin:(CGFloat)minDampenThreshold
-                               max:(CGFloat)maxDampenThreshold
-                      usingHandler:(void (^)(CGFloat gestureAmount, NSEventPhase phase, BOOL isComplete, BOOL *stop))trackingHandler;
-@end
-#endif // #ifdef __LP64__
-#endif // #if !defined(MAC_OS_X_VERSION_10_7) || MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_7
-
 @interface ChildView : NSView<
 #ifdef ACCESSIBILITY
                               mozAccessible,
@@ -310,9 +251,6 @@ typedef NSInteger NSEventGestureAxis;
 
 - (void)scrollWheel:(NSEvent *)anEvent;
 - (void)handleAsyncScrollEvent:(CGEventRef)cgEvent ofType:(CGEventType)type;
-
-// Helper function for Lion smart magnify events
-+ (BOOL)isLionSmartMagnifyEvent:(NSEvent*)anEvent;
 
 - (void)setUsingOMTCompositor:(BOOL)aUseOMTC;
 
