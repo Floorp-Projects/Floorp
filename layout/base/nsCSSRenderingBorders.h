@@ -60,6 +60,9 @@ typedef enum {
   BorderColorStyleDark
 } BorderColorStyle;
 
+class nsIDocument;
+class nsPresContext;
+
 class nsCSSBorderRenderer final
 {
   typedef mozilla::gfx::Bezier Bezier;
@@ -74,7 +77,8 @@ class nsCSSBorderRenderer final
 
 public:
 
-  nsCSSBorderRenderer(nsPresContext::nsPresContextType aPresContextType,
+  nsCSSBorderRenderer(nsPresContext* aPresContext,
+                      const nsIDocument* aDocument,
                       DrawTarget* aDrawTarget,
                       const Rect& aDirtyRect,
                       Rect& aOuterRect,
@@ -105,8 +109,9 @@ private:
 
   RectCornerRadii mBorderCornerDimensions;
 
-  // the PresContext type
-  nsPresContext::nsPresContextType mPresContextType;
+  // Target document to report warning
+  nsPresContext* mPresContext;
+  const nsIDocument* mDocument;
 
   // destination DrawTarget and dirty rect
   DrawTarget* mDrawTarget;
