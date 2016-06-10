@@ -33,7 +33,7 @@ here = os.path.abspath(os.path.dirname(__file__))
 ESLINT_PACKAGES = [
     "eslint@2.9.0",
     "eslint-plugin-html@1.4.0",
-    "eslint-plugin-mozilla@0.0.3",
+    "eslint-plugin-mozilla@0.1.0",
     "eslint-plugin-react@4.2.3"
 ]
 
