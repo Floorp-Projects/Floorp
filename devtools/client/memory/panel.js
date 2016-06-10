@@ -7,7 +7,7 @@
 const { Cc, Ci, Cu, Cr } = require("chrome");
 const { Task } = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
-const { MemoryFront } = require("devtools/server/actors/memory");
+const { MemoryFront } = require("devtools/shared/fronts/memory");
 const HeapAnalysesClient = require("devtools/shared/heapsnapshot/HeapAnalysesClient");
 const promise = require("promise");
 
