@@ -310,6 +310,138 @@ TEST(ImageSurfaceSink, SurfaceSinkWritePixelsEarlyExit)
   });
 }
 
+TEST(ImageSurfaceSink, SurfaceSinkWritePixelsToRow)
+{
+  WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
+    // Write the first 99 rows of our 100x100 surface and verify that even
+    // though our lambda will yield pixels forever, only one row is written per
+    // call to WritePixelsToRow().
+    for (int row = 0; row < 99; ++row) {
+      uint32_t count = 0;
+      WriteState result = aSink->WritePixelsToRow<uint32_t>([&]{
+        ++count;
+        return AsVariant(BGRAColor::Green().AsPixel());
+      });
+
+      EXPECT_EQ(WriteState::NEED_MORE_DATA, result);
+      EXPECT_EQ(100u, count);
+      EXPECT_FALSE(aSink->IsSurfaceFinished());
+
+      Maybe<SurfaceInvalidRect> invalidRect = aSink->TakeInvalidRect();
+      EXPECT_TRUE(invalidRect.isSome());
+      EXPECT_EQ(IntRect(0, row, 100, 1), invalidRect->mInputSpaceRect);
+      EXPECT_EQ(IntRect(0, row, 100, 1), invalidRect->mOutputSpaceRect);
+
+      CheckGeneratedImage(aDecoder, IntRect(0, 0, 100, row + 1));
+    }
+
+    // Write the final line, which should finish the surface.
+    uint32_t count = 0;
+    WriteState result = aSink->WritePixelsToRow<uint32_t>([&]{
+      ++count;
+      return AsVariant(BGRAColor::Green().AsPixel());
+    });
+
+    EXPECT_EQ(WriteState::FINISHED, result);
+    EXPECT_EQ(100u, count);
+
+    // Note that the final invalid rect we expect here is only the last row;
+    // that's because we called TakeInvalidRect() repeatedly in the loop above.
+    AssertCorrectPipelineFinalState(aSink,
+                                    IntRect(0, 99, 100, 1),
+                                    IntRect(0, 99, 100, 1));
+
+    // Check that the generated image is correct.
+    CheckGeneratedImage(aDecoder, IntRect(0, 0, 100, 100));
+
+    // Attempt to write more and make sure that nothing gets written.
+    count = 0;
+    result = aSink->WritePixelsToRow<uint32_t>([&]{
+      count++;
+      return AsVariant(BGRAColor::Red().AsPixel());
+    });
+
+    EXPECT_EQ(WriteState::FINISHED, result);
+    EXPECT_EQ(0u, count);
+    EXPECT_TRUE(aSink->IsSurfaceFinished());
+
+    // Check that the generated image is still correct.
+    CheckGeneratedImage(aDecoder, IntRect(0, 0, 100, 100));
+  });
+}
+
+TEST(ImageSurfaceSink, SurfaceSinkWritePixelsToRowEarlyExit)
+{
+  auto checkEarlyExit =
+    [](Decoder* aDecoder, SurfaceSink* aSink, WriteState aState) {
+    // Write half a row of green pixels and then exit early with |aState|. If
+    // the lambda keeps getting called, we'll write red pixels, which will cause
+    // the test to fail.
+    uint32_t count = 0;
+    auto result = aSink->WritePixelsToRow<uint32_t>([&]() -> NextPixel<uint32_t> {
+      if (count == 50) {
+        return AsVariant(aState);
+      }
+      return count++ < 50 ? AsVariant(BGRAColor::Green().AsPixel())
+                          : AsVariant(BGRAColor::Red().AsPixel());
+    });
+
+    EXPECT_EQ(aState, result);
+    EXPECT_EQ(50u, count);
+    CheckGeneratedImage(aDecoder, IntRect(0, 0, 50, 1));
+
+    if (aState != WriteState::FINISHED) {
+      // We should still be able to write more at this point.
+      EXPECT_FALSE(aSink->IsSurfaceFinished());
+
+      // Verify that we can resume the same row and still stop at the end.
+      count = 0;
+      WriteState result = aSink->WritePixelsToRow<uint32_t>([&]{
+        ++count;
+        return AsVariant(BGRAColor::Green().AsPixel());
+      });
+
+      EXPECT_EQ(WriteState::NEED_MORE_DATA, result);
+      EXPECT_EQ(50u, count);
+      EXPECT_FALSE(aSink->IsSurfaceFinished());
+      CheckGeneratedImage(aDecoder, IntRect(0, 0, 100, 1));
+
+      return;
+    }
+
+    // We should've finished the surface at this point.
+    AssertCorrectPipelineFinalState(aSink,
+                                    IntRect(0, 0, 100, 100),
+                                    IntRect(0, 0, 100, 100));
+
+    // Attempt to write more and make sure that nothing gets written.
+    count = 0;
+    result = aSink->WritePixelsToRow<uint32_t>([&]{
+      count++;
+      return AsVariant(BGRAColor::Red().AsPixel());
+    });
+
+    EXPECT_EQ(WriteState::FINISHED, result);
+    EXPECT_EQ(0u, count);
+    EXPECT_TRUE(aSink->IsSurfaceFinished());
+
+    // Check that the generated image is still correct.
+    CheckGeneratedImage(aDecoder, IntRect(0, 0, 50, 1));
+  };
+
+  WithSurfaceSink<Orient::NORMAL>([&](Decoder* aDecoder, SurfaceSink* aSink) {
+    checkEarlyExit(aDecoder, aSink, WriteState::NEED_MORE_DATA);
+  });
+
+  WithSurfaceSink<Orient::NORMAL>([&](Decoder* aDecoder, SurfaceSink* aSink) {
+    checkEarlyExit(aDecoder, aSink, WriteState::FAILURE);
+  });
+
+  WithSurfaceSink<Orient::NORMAL>([&](Decoder* aDecoder, SurfaceSink* aSink) {
+    checkEarlyExit(aDecoder, aSink, WriteState::FINISHED);
+  });
+}
+
 TEST(ImageSurfaceSink, SurfaceSinkWriteBuffer)
 {
   WithSurfaceSink<Orient::NORMAL>([](Decoder* aDecoder, SurfaceSink* aSink) {
@@ -992,6 +1124,142 @@ TEST(ImageSurfaceSink, PalettedSurfaceSinkWritePixelsEarlyExit)
 
   WithPalettedSurfaceSink(IntRect(0, 0, 100, 100),
                           [&](Decoder* aDecoder, PalettedSurfaceSink* aSink) {
+    checkEarlyExit(aDecoder, aSink, WriteState::FINISHED);
+  });
+}
+
+TEST(ImageSurfaceSink, PalettedSurfaceSinkWritePixelsToRow)
+{
+  WithPalettedSurfaceSink(IntRect(0, 0, 100, 100),
+                          [](Decoder* aDecoder, PalettedSurfaceSink* aSink) {
+    // Write the first 99 rows of our 100x100 surface and verify that even
+    // though our lambda will yield pixels forever, only one row is written per
+    // call to WritePixelsToRow().
+    for (int row = 0; row < 99; ++row) {
+      uint32_t count = 0;
+      WriteState result = aSink->WritePixelsToRow<uint8_t>([&]{
+        ++count;
+        return AsVariant(uint8_t(255));
+      });
+
+      EXPECT_EQ(WriteState::NEED_MORE_DATA, result);
+      EXPECT_EQ(100u, count);
+      EXPECT_FALSE(aSink->IsSurfaceFinished());
+
+      Maybe<SurfaceInvalidRect> invalidRect = aSink->TakeInvalidRect();
+      EXPECT_TRUE(invalidRect.isSome());
+      EXPECT_EQ(IntRect(0, row, 100, 1), invalidRect->mInputSpaceRect);
+      EXPECT_EQ(IntRect(0, row, 100, 1), invalidRect->mOutputSpaceRect);
+
+      CheckGeneratedPalettedImage(aDecoder, IntRect(0, 0, 100, row + 1));
+    }
+
+    // Write the final line, which should finish the surface.
+    uint32_t count = 0;
+    WriteState result = aSink->WritePixelsToRow<uint8_t>([&]{
+      ++count;
+      return AsVariant(uint8_t(255));
+    });
+
+    EXPECT_EQ(WriteState::FINISHED, result);
+    EXPECT_EQ(100u, count);
+
+    // Note that the final invalid rect we expect here is only the last row;
+    // that's because we called TakeInvalidRect() repeatedly in the loop above.
+    AssertCorrectPipelineFinalState(aSink,
+                                    IntRect(0, 99, 100, 1),
+                                    IntRect(0, 99, 100, 1));
+
+    // Check that the generated image is correct.
+    CheckGeneratedPalettedImage(aDecoder, IntRect(0, 0, 100, 100));
+
+    // Attempt to write more and make sure that nothing gets written.
+    count = 0;
+    result = aSink->WritePixelsToRow<uint8_t>([&]{
+      count++;
+      return AsVariant(uint8_t(128));
+    });
+
+    EXPECT_EQ(WriteState::FINISHED, result);
+    EXPECT_EQ(0u, count);
+    EXPECT_TRUE(aSink->IsSurfaceFinished());
+
+    // Check that the generated image is still correct.
+    CheckGeneratedPalettedImage(aDecoder, IntRect(0, 0, 100, 100));
+  });
+}
+
+TEST(ImageSurfaceSink, PalettedSurfaceSinkWritePixelsToRowEarlyExit)
+{
+  auto checkEarlyExit =
+    [](Decoder* aDecoder, PalettedSurfaceSink* aSink, WriteState aState) {
+    // Write half a row of 255s and then exit early with |aState|. If the lambda
+    // keeps getting called, we'll write 128s, which will cause the test to
+    // fail.
+    uint32_t count = 0;
+    auto result = aSink->WritePixelsToRow<uint8_t>([&]() -> NextPixel<uint8_t> {
+      if (count == 50) {
+        return AsVariant(aState);
+      }
+      return count++ < 50 ? AsVariant(uint8_t(255))
+                          : AsVariant(uint8_t(128));
+    });
+
+    EXPECT_EQ(aState, result);
+    EXPECT_EQ(50u, count);
+    CheckGeneratedPalettedImage(aDecoder, IntRect(0, 0, 50, 1));
+
+    if (aState != WriteState::FINISHED) {
+      // We should still be able to write more at this point.
+      EXPECT_FALSE(aSink->IsSurfaceFinished());
+
+      // Verify that we can resume the same row and still stop at the end.
+      count = 0;
+      WriteState result = aSink->WritePixelsToRow<uint8_t>([&]{
+        ++count;
+        return AsVariant(uint8_t(255));
+      });
+
+      EXPECT_EQ(WriteState::NEED_MORE_DATA, result);
+      EXPECT_EQ(50u, count);
+      EXPECT_FALSE(aSink->IsSurfaceFinished());
+      CheckGeneratedPalettedImage(aDecoder, IntRect(0, 0, 100, 1));
+
+      return;
+    }
+
+    // We should've finished the surface at this point.
+    AssertCorrectPipelineFinalState(aSink,
+                                    IntRect(0, 0, 100, 100),
+                                    IntRect(0, 0, 100, 100));
+
+    // Attempt to write more and make sure that nothing gets written.
+    count = 0;
+    result = aSink->WritePixelsToRow<uint8_t>([&]{
+      count++;
+      return AsVariant(uint8_t(128));
+    });
+
+    EXPECT_EQ(WriteState::FINISHED, result);
+    EXPECT_EQ(0u, count);
+    EXPECT_TRUE(aSink->IsSurfaceFinished());
+
+    // Check that the generated image is still correct.
+    CheckGeneratedPalettedImage(aDecoder, IntRect(0, 0, 50, 1));
+  };
+
+  WithPalettedSurfaceSink(IntRect(0, 0, 100, 100),
+                          [&](Decoder* aDecoder, PalettedSurfaceSink* aSink) {
+    checkEarlyExit(aDecoder, aSink, WriteState::NEED_MORE_DATA);
+  });
+
+  WithPalettedSurfaceSink(IntRect(0, 0, 100, 100),
+                          [&](Decoder* aDecoder, PalettedSurfaceSink* aSink) {
+    checkEarlyExit(aDecoder, aSink, WriteState::FAILURE);
+  });
+
+  WithPalettedSurfaceSink(IntRect(0, 0, 100, 100),
+                  [&](Decoder* aDecoder, PalettedSurfaceSink* aSink) {
     checkEarlyExit(aDecoder, aSink, WriteState::FINISHED);
   });
 }
