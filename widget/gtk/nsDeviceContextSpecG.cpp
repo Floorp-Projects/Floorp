@@ -3,12 +3,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "nsDeviceContextSpecG.h"
+
+#include "mozilla/gfx/PrintTargetPDF.h"
+#include "mozilla/gfx/PrintTargetPS.h"
 #include "mozilla/Logging.h"
 
 #include "plstr.h"
-
-#include "nsDeviceContextSpecG.h"
-
 #include "prenv.h" /* for PR_GetEnv */
 
 #include "nsPrintfCString.h"
@@ -32,6 +33,11 @@
 #include <sys/stat.h>
 
 using namespace mozilla;
+
+using mozilla::gfx::IntSize;
+using mozilla::gfx::PrintTarget;
+using mozilla::gfx::PrintTargetPDF;
+using mozilla::gfx::PrintTargetPS;
 
 static PRLogModuleInfo *
 GetDeviceContextSpecGTKLog()
@@ -100,12 +106,8 @@ nsDeviceContextSpecGTK::~nsDeviceContextSpecGTK()
 NS_IMPL_ISUPPORTS(nsDeviceContextSpecGTK,
                   nsIDeviceContextSpec)
 
-#include "gfxPDFSurface.h"
-#include "gfxPSSurface.h"
-NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurface)
+already_AddRefed<PrintTarget> nsDeviceContextSpecGTK::MakePrintTarget()
 {
-  *aSurface = nullptr;
-
   double width, height;
   mPrintSettings->GetEffectivePageSize(&width, &height);
 
@@ -125,14 +127,14 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
   gchar *buf;
   gint fd = g_file_open_tmp("XXXXXX.tmp", &buf, nullptr);
   if (-1 == fd)
-    return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
+    return nullptr;
   close(fd);
 
   rv = NS_NewNativeLocalFile(nsDependentCString(buf), false,
                              getter_AddRefs(mSpoolFile));
   if (NS_FAILED(rv)) {
     unlink(buf);
-    return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
+    return nullptr;
   }
 
   mSpoolName = buf;
@@ -143,13 +145,10 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
   nsCOMPtr<nsIFileOutputStream> stream = do_CreateInstance("@mozilla.org/network/file-output-stream;1");
   rv = stream->Init(mSpoolFile, -1, -1, 0);
   if (NS_FAILED(rv))
-    return rv;
+    return nullptr;
 
   int16_t format;
   mPrintSettings->GetOutputFormat(&format);
-
-  RefPtr<gfxASurface> surface;
-  gfxSize surfaceSize(width, height);
 
   // Determine the real format with some GTK magic
   if (format == nsIPrintSettings::kOutputFormatNative) {
@@ -157,28 +156,23 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::GetSurfaceForPrinter(gfxASurface **aSurfac
       // There is nothing to detect on Print Preview, use PS.
       format = nsIPrintSettings::kOutputFormatPS;
     } else {
-      return NS_ERROR_FAILURE;
+      return nullptr;
     }
   }
+
+  IntSize size(width, height);
 
   if (format == nsIPrintSettings::kOutputFormatPDF) {
-    surface = new gfxPDFSurface(stream, surfaceSize);
-  } else {
-    int32_t orientation;
-    mPrintSettings->GetOrientation(&orientation);
-    if (nsIPrintSettings::kPortraitOrientation == orientation) {
-      surface = new gfxPSSurface(stream, surfaceSize, gfxPSSurface::PORTRAIT);
-    } else {
-      surface = new gfxPSSurface(stream, surfaceSize, gfxPSSurface::LANDSCAPE);
-    }
+    return PrintTargetPDF::CreateOrNull(stream, size);
   }
 
-  if (!surface)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  surface.swap(*aSurface);
-
-  return NS_OK;
+  int32_t orientation;
+  mPrintSettings->GetOrientation(&orientation);
+  return PrintTargetPS::CreateOrNull(stream,
+                                     size,
+                                     orientation == nsIPrintSettings::kPortraitOrientation
+                                       ? PrintTargetPS::PORTRAIT
+                                       : PrintTargetPS::LANDSCAPE);
 }
 
 /** -------------------------------------------------------

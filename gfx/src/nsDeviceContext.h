@@ -21,7 +21,6 @@
 #include "mozilla/AppUnits.h"           // for AppUnits
 #include "nsFontMetrics.h"              // for nsFontMetrics::Params
 
-class gfxASurface;
 class gfxContext;
 class gfxTextPerfMetrics;
 class gfxUserFontSet;
@@ -34,9 +33,17 @@ class nsIScreenManager;
 class nsIWidget;
 struct nsRect;
 
+namespace mozilla {
+namespace gfx {
+class PrintTarget;
+}
+}
+
 class nsDeviceContext final
 {
 public:
+    typedef mozilla::gfx::PrintTarget PrintTarget;
+
     nsDeviceContext();
 
     NS_INLINE_DECL_REFCOUNTING(nsDeviceContext)
@@ -277,9 +284,9 @@ private:
     nsCOMPtr<nsIWidget>            mWidget;
     nsCOMPtr<nsIScreenManager>     mScreenManager;
     nsCOMPtr<nsIDeviceContextSpec> mDeviceContextSpec;
-    RefPtr<gfxASurface>          mPrintingSurface;
+    RefPtr<PrintTarget>            mPrintTarget;
 #ifdef XP_MACOSX
-    RefPtr<gfxASurface>          mCachedPrintingSurface;
+    RefPtr<PrintTarget>            mCachedPrintTarget;
 #endif
 };
 

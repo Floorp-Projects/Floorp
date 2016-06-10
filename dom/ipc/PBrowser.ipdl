@@ -593,6 +593,9 @@ child:
 
     async ParentActivated(bool aActivated);
 
+    async SetKeyboardIndicators(UIStateChangeType showAccelerators,
+                                UIStateChangeType showFocusRings);
+
     /**
      * StopIMEStateManagement() is called when the process loses focus and
      * should stop managing IME state.

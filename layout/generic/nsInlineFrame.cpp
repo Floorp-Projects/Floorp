@@ -208,12 +208,10 @@ nsInlineFrame::DestroyFrom(nsIFrame* aDestructRoot)
 }
 
 nsresult
-nsInlineFrame::StealFrame(nsIFrame* aChild,
-                          bool      aForceNormal)
+nsInlineFrame::StealFrame(nsIFrame* aChild)
 {
-  if (aChild->HasAnyStateBits(NS_FRAME_IS_OVERFLOW_CONTAINER) &&
-      !aForceNormal) {
-    return nsContainerFrame::StealFrame(aChild, aForceNormal);
+  if (MaybeStealOverflowContainerFrame(aChild)) {
+    return NS_OK;
   }
 
   nsInlineFrame* parent = this;

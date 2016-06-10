@@ -1,0 +1,19 @@
+$inherits:
+  from: 'tasks/build.yml'
+
+task:
+  workerType: win2012
+  payload:
+    artifacts:
+      -
+        type: 'directory'
+        path: 'public\build'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+  extra:
+    treeherderEnv:
+      - production
+      - staging
+    treeherder:
+      machine:
+        # https://github.com/mozilla/treeherder/blob/master/ui/js/values.js
+        platform: {{platform}}

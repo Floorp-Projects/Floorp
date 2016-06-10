@@ -538,7 +538,7 @@ nsHttpTransaction::OnTransportStatus(nsITransport* transport,
     // then the requestStart timestamp will be null, so we mark the timestamps
     // for domainLookupStart/End and connectStart/End
     // If we are using a persistent connection they will remain null,
-    // and the correct value will be returned in nsPerformance.
+    // and the correct value will be returned in Performance.
     if (TimingEnabled() && GetRequestStart().IsNull()) {
         if (status == NS_NET_STATUS_RESOLVING_HOST) {
             SetDomainLookupStart(TimeStamp::Now(), true);

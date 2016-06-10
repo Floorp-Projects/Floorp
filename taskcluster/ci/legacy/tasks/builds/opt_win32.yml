@@ -1,0 +1,4 @@
+$inherits:
+  from: 'tasks/builds/base_win32.yml'
+  variables:
+    build_type: 'opt'

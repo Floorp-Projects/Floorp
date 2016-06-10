@@ -570,6 +570,10 @@ ParentLayerCoord Axis::GetPageEnd() const {
   return GetPageStart() + GetPageLength();
 }
 
+ParentLayerCoord Axis::GetScrollRangeEnd() const {
+  return GetPageEnd() - GetCompositionLength();
+}
+
 ParentLayerCoord Axis::GetOrigin() const {
   ParentLayerPoint origin = GetFrameMetrics().GetScrollOffset() * GetFrameMetrics().GetZoom();
   return GetPointOffset(origin);

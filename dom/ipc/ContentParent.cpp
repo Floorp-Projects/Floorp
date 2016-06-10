@@ -1762,8 +1762,7 @@ ContentParent::ShutDownProcess(ShutDownMethod aMethod)
   }
 
   // If Close() fails with an error, we'll end up back in this function, but
-  // with aMethod = CLOSE_CHANNEL_WITH_ERROR.  It's important that we call
-  // CloseWithError() in this case; see bug 895204.
+  // with aMethod = CLOSE_CHANNEL_WITH_ERROR.
 
   if (aMethod == CLOSE_CHANNEL && !mCalledClose) {
     // Close() can only be called once: It kicks off the destruction
@@ -1777,14 +1776,6 @@ ContentParent::ShutDownProcess(ShutDownMethod aMethod)
       KillHard("ShutDownProcess");
     }
 #endif
-  }
-
-  if (aMethod == CLOSE_CHANNEL_WITH_ERROR && !mCalledCloseWithError) {
-    MessageChannel* channel = GetIPCChannel();
-    if (channel) {
-      mCalledCloseWithError = true;
-      channel->CloseWithError();
-    }
   }
 
   const ManagedContainer<POfflineCacheUpdateParent>& ocuParents =
@@ -2315,7 +2306,6 @@ ContentParent::InitializeMembers()
   mMetamorphosed = false;
   mSendPermissionUpdates = false;
   mCalledClose = false;
-  mCalledCloseWithError = false;
   mCalledKillHard = false;
   mCreatedPairedMinidumps = false;
   mShutdownPending = false;

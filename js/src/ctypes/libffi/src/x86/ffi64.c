@@ -419,6 +419,16 @@ ffi_prep_cif_machdep (ffi_cif *cif)
   return FFI_OK;
 }
 
+#ifndef __SANITIZE_ADDRESS__
+# ifdef __clang__
+#  if __has_feature(address_sanitizer)
+#   define __SANITIZE_ADDRESS__
+#  endif
+# endif
+#endif
+#ifdef __SANITIZE_ADDRESS__
+__attribute__((noinline,no_sanitize_address))
+#endif
 void
 ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
 {

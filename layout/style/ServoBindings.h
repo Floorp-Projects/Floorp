@@ -150,12 +150,6 @@ nsStyleGradient* Gecko_CreateGradient(uint8_t shape,
                                       bool legacy_syntax,
                                       uint32_t stops);
 
-void Gecko_SetGradientStop(nsStyleGradient* gradient,
-                           uint32_t index,
-                           const nsStyleCoord* location,
-                           nscolor color,
-                           bool is_interpolation_hint);
-
 // Object refcounting.
 NS_DECL_HOLDER_FFI_REFCOUNTING(nsIPrincipal, Principal)
 NS_DECL_HOLDER_FFI_REFCOUNTING(nsIURI, URI)
