@@ -38,7 +38,7 @@ rm -rf node_modules/
 rm npm-shrinkwrap.json
 
 echo "Installing eslint and dependencies..."
-../../mach eslint --setup
+../../../mach eslint --setup
 
 echo "Creating npm shrinkwrap..."
 npm shrinkwrap
