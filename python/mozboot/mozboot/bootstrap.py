@@ -20,6 +20,9 @@ from mozboot.osx import OSXBootstrapper
 from mozboot.openbsd import OpenBSDBootstrapper
 from mozboot.archlinux import ArchlinuxBootstrapper
 from mozboot.windows import WindowsBootstrapper
+from mozboot.util import (
+    get_state_dir,
+)
 
 APPLICATION_CHOICE = '''
 Please choose the version of Firefox you want to build:
@@ -135,16 +138,6 @@ DEBIAN_DISTROS = (
     'Elementary',
     '"elementary OS"',
 )
-
-
-def get_state_dir():
-    """Obtain path to a directory to hold state.
-
-    This code is shared with ``mach_bootstrap.py``.
-    """
-    state_user_dir = os.path.expanduser('~/.mozbuild')
-    state_env_dir = os.environ.get('MOZBUILD_STATE_PATH')
-    return state_env_dir or state_user_dir
 
 
 class Bootstrapper(object):
