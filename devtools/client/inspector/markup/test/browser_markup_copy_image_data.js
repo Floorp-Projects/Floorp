@@ -33,7 +33,7 @@ add_task(function* () {
 
 function* assertCopyImageDataNotAvailable(inspector) {
   let allMenuItems = openContextMenuAndGetAllItems(inspector);
-  let item = allMenuItems.find(item => item.id === "node-menu-copyimagedatauri");
+  let item = allMenuItems.find(i => i.id === "node-menu-copyimagedatauri");
 
   ok(item, "The menu item was found in the contextual menu");
   ok(item.disabled, "The menu item is disabled");
@@ -41,7 +41,7 @@ function* assertCopyImageDataNotAvailable(inspector) {
 
 function* assertCopyImageDataAvailable(inspector) {
   let allMenuItems = openContextMenuAndGetAllItems(inspector);
-  let item = allMenuItems.find(item => item.id === "node-menu-copyimagedatauri");
+  let item = allMenuItems.find(i => i.id === "node-menu-copyimagedatauri");
 
   ok(item, "The menu item was found in the contextual menu");
   ok(!item.disabled, "The menu item is enabled");

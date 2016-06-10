@@ -41,7 +41,7 @@ add_task(function* () {
     yield selectNode(selector, inspector);
 
     let allMenuItems = openContextMenuAndGetAllItems(inspector);
-    let item = allMenuItems.find(item => item.id === id);
+    let item = allMenuItems.find(i => i.id === id);
     ok(item, "The popup has a " + desc + " menu item.");
 
     yield waitForClipboard(() => item.click(), text);

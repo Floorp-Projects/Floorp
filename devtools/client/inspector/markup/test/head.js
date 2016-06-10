@@ -294,17 +294,15 @@ function wait(ms) {
  */
 var isEditingMenuDisabled = Task.async(
 function* (nodeFront, inspector, assert = true) {
-  let doc = inspector.panelDoc;
-
   // To ensure clipboard contains something to paste.
   clipboard.set("<p>test</p>", "html");
 
   yield selectNode(nodeFront, inspector);
   let allMenuItems = openContextMenuAndGetAllItems(inspector);
 
-  let deleteMenuItem = allMenuItems.find(item => item.id === "node-menu-delete");
-  let editHTMLMenuItem = allMenuItems.find(item => item.id === "node-menu-edithtml");
-  let pasteHTMLMenuItem = allMenuItems.find(item => item.id === "node-menu-pasteouterhtml");
+  let deleteMenuItem = allMenuItems.find(i => i.id === "node-menu-delete");
+  let editHTMLMenuItem = allMenuItems.find(i => i.id === "node-menu-edithtml");
+  let pasteHTMLMenuItem = allMenuItems.find(i => i.id === "node-menu-pasteouterhtml");
 
   if (assert) {
     ok(deleteMenuItem.disabled, "Delete menu item is disabled");
@@ -328,18 +326,15 @@ function* (nodeFront, inspector, assert = true) {
  */
 var isEditingMenuEnabled = Task.async(
 function* (nodeFront, inspector, assert = true) {
-  let doc = inspector.panelDoc;
-
   // To ensure clipboard contains something to paste.
   clipboard.set("<p>test</p>", "html");
 
-  let menu = inspector.nodemenu;
   yield selectNode(nodeFront, inspector);
   let allMenuItems = openContextMenuAndGetAllItems(inspector);
 
-  let deleteMenuItem = allMenuItems.find(item => item.id === "node-menu-delete");
-  let editHTMLMenuItem = allMenuItems.find(item => item.id === "node-menu-edithtml");
-  let pasteHTMLMenuItem = allMenuItems.find(item => item.id === "node-menu-pasteouterhtml");
+  let deleteMenuItem = allMenuItems.find(i => i.id === "node-menu-delete");
+  let editHTMLMenuItem = allMenuItems.find(i => i.id === "node-menu-edithtml");
+  let pasteHTMLMenuItem = allMenuItems.find(i => i.id === "node-menu-pasteouterhtml");
 
   if (assert) {
     ok(!deleteMenuItem.disabled, "Delete menu item is enabled");
