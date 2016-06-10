@@ -2,9 +2,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+"use strict";
+
 const Ci = Components.interfaces;
 const Cu = Components.utils;
-Cu.import("resource://gre/modules/Services.jsm");
+const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 this.EXPORTED_SYMBOLS = ["DOMHelpers"];
 

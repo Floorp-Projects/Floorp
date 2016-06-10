@@ -742,8 +742,7 @@ LoginManagerPrompter.prototype = {
 
     this.log("Adding new " + aName + " notification bar");
     var newBar = aNotifyBox.appendNotification(
-                            aText, aName,
-                            "chrome://mozapps/skin/passwordmgr/key.png",
+                            aText, aName, "",
                             priority, aButtons);
 
     // The page we're going to hasn't loaded yet, so we want to persist

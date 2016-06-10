@@ -99,7 +99,9 @@ function testConsoleRepeats(hud) {
   hud.jsterm.clearOutput(true);
   hud.jsterm.execute("undefined");
 
-  content.console.log("undefined");
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+    content.console.log("undefined");
+  });
 
   info("make sure console API messages are not coalesced with jsterm output");
 

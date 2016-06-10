@@ -4,7 +4,7 @@
 
 "use strict";
 
-const { Cc, Ci, Cu } = require("chrome");
+const { Cu } = require("chrome");
 const l10n = require("gcli/l10n");
 const gcli = require("gcli/index");
 const Debugger = require("Debugger");
@@ -117,9 +117,8 @@ exports.items = [
 
       if (args.sourceType == "jsm") {
         try {
-          globalObj = Cu.import(args.source);
-        }
-        catch (e) {
+          globalObj = Cu.import(args.source, {});
+        } catch (e) {
           return l10n.lookup("callLogChromeInvalidJSM");
         }
       } else if (args.sourceType == "content-variable") {

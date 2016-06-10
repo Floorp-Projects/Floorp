@@ -24,6 +24,8 @@ const { require, loader } = Cu.import("resource://devtools/shared/Loader.jsm", {
 const { worker } = Cu.import("resource://devtools/shared/worker/loader.js", {});
 const promise = require("promise");
 const { Task } = require("devtools/shared/task");
+const { console } = require("resource://gre/modules/Console.jsm");
+const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
 
 const Services = require("Services");
 // Always log packets when running tests. runxpcshelltests.py will throw
@@ -234,19 +236,6 @@ function setBreakpoint(sourceClient, location) {
 function dumpn(msg) {
   dump("DBG-TEST: " + msg + "\n");
 }
-
-function tryImport(url) {
-  try {
-    Cu.import(url);
-  } catch (e) {
-    dumpn("Error importing " + url);
-    dumpn(DevToolsUtils.safeErrorString(e));
-    throw e;
-  }
-}
-
-tryImport("resource://devtools/shared/Loader.jsm");
-tryImport("resource://gre/modules/Console.jsm");
 
 function testExceptionHook(ex) {
   try {
@@ -491,8 +480,6 @@ function getFilePath(aName, aAllowMissing = false, aUsePlatformPathSeparator = f
 
   return path;
 }
-
-Cu.import("resource://gre/modules/NetUtil.jsm");
 
 /**
  * Returns the full text contents of the given file.

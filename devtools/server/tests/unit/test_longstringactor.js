@@ -2,13 +2,11 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 const { LongStringActor } = require("devtools/server/actors/object");
 
-function run_test()
-{
-  Cu.import("resource://gre/modules/jsdebugger.jsm");
-  addDebuggerToGlobal(this);
-
+function run_test() {
   test_LSA_disconnect();
   test_LSA_grip();
   test_LSA_onSubstring();

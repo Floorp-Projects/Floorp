@@ -2,16 +2,16 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Cc, Ci, Cu, CC} = require("chrome");
+"use strict";
+
+const {Cc, Ci} = require("chrome");
 const protocol = require("devtools/shared/protocol");
-const {Arg, method, RetVal} = protocol;
 const {DebuggerServer} = require("devtools/server/main");
 const promise = require("promise");
 const Services = require("Services");
 const { settingsSpec } = require("devtools/shared/specs/settings");
-
-Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
+const { FileUtils} = require("resource://gre/modules/FileUtils.jsm");
+const { NetUtil} = require("resource://gre/modules/NetUtil.jsm");
 
 var defaultSettings = {};
 var settingsFile;

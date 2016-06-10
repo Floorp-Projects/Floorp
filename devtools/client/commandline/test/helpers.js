@@ -31,7 +31,7 @@ var { helpers, assert } = (function () {
   var cli = require("gcli/cli");
   var KeyEvent = require("gcli/util/util").KeyEvent;
 
-  const { GcliFront } = require("devtools/server/actors/gcli");
+  const { GcliFront } = require("devtools/shared/fronts/gcli");
 
 /**
  * See notes in helpers.checkOptions()
@@ -467,7 +467,7 @@ var { helpers, assert } = (function () {
 
     // Send a message to add the commands to the content process
       const front = yield GcliFront.create(options.target);
-      yield front._testOnly_addItemsByModule(MOCK_COMMANDS_URI);
+      yield front._testOnlyAddItemsByModule(MOCK_COMMANDS_URI);
 
     // This will cause the local set of commands to be updated with the
     // command proxies, wait for that to complete.
@@ -483,7 +483,7 @@ var { helpers, assert } = (function () {
     // Finally undo the mock commands and converters
       system.removeItems(converters);
       const removePromise = system.commands.onCommandsChange.once();
-      yield front._testOnly_removeItemsByModule(MOCK_COMMANDS_URI);
+      yield front._testOnlyRemoveItemsByModule(MOCK_COMMANDS_URI);
       yield removedDeferred.promise;
 
     // And close everything down

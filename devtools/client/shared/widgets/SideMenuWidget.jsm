@@ -10,9 +10,8 @@ const Cu = Components.utils;
 
 const SHARED_STRINGS_URI = "chrome://devtools/locale/shared.properties";
 
-Cu.import("resource://devtools/shared/event-emitter.js");
-
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const EventEmitter = require("devtools/shared/event-emitter");
 const { LocalizationHelper } = require("devtools/client/shared/l10n");
 const { ViewHelpers } = require("devtools/client/shared/widgets/view-helpers");
 

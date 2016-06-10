@@ -1,10 +1,13 @@
+/* Any copyright is dedicated to the Public Domain.
+   http://creativecommons.org/publicdomain/zero/1.0/ */
+
 "use strict";
 var Cc = Components.classes;
 var Ci = Components.interfaces;
 var Cu = Components.utils;
 var Cr = Components.results;
 
-var {require} = Cu.import("resource://devtools/shared/Loader.jsm");
+const {require, DevToolsLoader, devtools} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 
 DevToolsUtils.testing = true;

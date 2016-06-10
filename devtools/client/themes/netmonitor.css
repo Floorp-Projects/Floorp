@@ -65,6 +65,13 @@
   list-style-image: url(images/profiler-stopwatch.svg);
 }
 
+/* Make sure the icon is visible on Linux (to overwrite a rule
+  in xul.css that hides the icon if there is no label.
+  See also bug 1278050. */
+#requests-menu-perf-notice-button .button-icon {
+  display: block;
+}
+
 #requests-menu-perf-notice-button .button-text {
   display: none;
 }

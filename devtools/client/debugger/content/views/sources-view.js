@@ -1,8 +1,10 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-/* import-globals-from ../../debugger-controller.js */
+
 "use strict";
+
+/* import-globals-from ../../debugger-controller.js */
 
 const utils = require("../utils");
 const {
@@ -24,6 +26,7 @@ const {
   setNamedTimeout
 } = require("devtools/client/shared/widgets/view-helpers");
 const { Task } = require("devtools/shared/task");
+const { SideMenuWidget } = require("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
 
 const NEW_SOURCE_DISPLAY_DELAY = 200; // ms
 const FUNCTION_SEARCH_POPUP_POSITION = "topcenter bottomleft";

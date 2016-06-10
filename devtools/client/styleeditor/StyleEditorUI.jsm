@@ -12,15 +12,19 @@ const Cu = Components.utils;
 
 const {require, loader} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const Services = require("Services");
-const {NetUtil} = Cu.import("resource://gre/modules/NetUtil.jsm", {});
-const {OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
+const {NetUtil} = require("resource://gre/modules/NetUtil.jsm");
+const {OS} = require("resource://gre/modules/osfile.jsm");
 const {Task} = require("devtools/shared/task");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {gDevTools} = require("devtools/client/framework/devtools");
-/* import-globals-from StyleEditorUtil.jsm */
-Cu.import("resource://devtools/client/styleeditor/StyleEditorUtil.jsm");
-const {SplitView} = Cu.import("resource://devtools/client/shared/SplitView.jsm", {});
-const {StyleSheetEditor} = Cu.import("resource://devtools/client/styleeditor/StyleSheetEditor.jsm");
+const {
+  getString,
+  text,
+  wire,
+  showFilePicker,
+} = require("resource://devtools/client/styleeditor/StyleEditorUtil.jsm");
+const {SplitView} = require("resource://devtools/client/shared/SplitView.jsm");
+const {StyleSheetEditor} = require("resource://devtools/client/styleeditor/StyleSheetEditor.jsm");
 loader.lazyImporter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");
 const {PrefObserver, PREF_ORIG_SOURCES} =
       require("devtools/client/styleeditor/utils");
@@ -28,7 +32,7 @@ const csscoverage = require("devtools/shared/fronts/csscoverage");
 const {console} = require("resource://gre/modules/Console.jsm");
 const promise = require("promise");
 const {ResponsiveUIManager} =
-  Cu.import("resource://devtools/client/responsivedesign/responsivedesign.jsm", {});
+  require("resource://devtools/client/responsivedesign/responsivedesign.jsm");
 
 const LOAD_ERROR = "error-load";
 const STYLE_EDITOR_TEMPLATE = "stylesheet";
@@ -619,8 +623,8 @@ StyleEditorUI.prototype = {
           if (reportData.reports.length > 0) {
             // Only apply if this file isn't compressed. We detect a
             // compressed file if there are more rules than lines.
-            let text = showEditor.sourceEditor.getText();
-            let lineCount = text.split("\n").length;
+            let editorText = showEditor.sourceEditor.getText();
+            let lineCount = editorText.split("\n").length;
             let ruleCount = showEditor.styleSheet.ruleCount;
             if (lineCount >= ruleCount) {
               showEditor.addUnusedRegions(reportData.reports);

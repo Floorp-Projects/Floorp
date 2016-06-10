@@ -4452,6 +4452,15 @@
     "releaseChannelCollection": "opt-out",
     "description": "The browser that was the default on the initial profile migration. The values correspond to the internal browser ID (see MigrationUtils.jsm)"
   },
+  "FX_STARTUP_MIGRATION_AUTOMATED_IMPORT_SUCCEEDED": {
+    "bug_numbers": [1271775],
+    "alert_emails": ["gijs@mozilla.com"],
+    "expires_in_version": "53",
+    "kind": "count",
+    "keyed": true,
+    "releaseChannelCollection": "opt-out",
+    "description": "Where automatic migration was attempted, indicates to what degree we succeeded."
+  },
   "FX_STARTUP_EXTERNAL_CONTENT_HANDLER": {
     "bug_numbers": [1276027],
     "alert_emails": ["jaws@mozilla.com"],
@@ -10471,10 +10480,11 @@
     "description": "Push notification was received from server, but not delivered to ServiceWorker. Enumeration values are defined in dom/push/PushService.jsm as kDROP_NOTIFICATION_REASON_*."
   },
   "PUSH_API_NOTIFY": {
+    "releaseChannelCollection": "opt-out",
     "alert_emails": ["push@mozilla.com"],
     "expires_in_version": "55",
     "kind": "count",
-    "description": "Attempt to notify ServiceWorker of push notification."
+    "description": "Number of push messages that were successfully decrypted and delivered to a ServiceWorker."
   },
   "PUSH_API_NOTIFY_REGISTRATION_LOST": {
     "alert_emails": ["push@mozilla.com"],
@@ -10528,6 +10538,7 @@
     "description": "Count of scroll actions triggered by different input methods. See gfx/layers/apz/util/ScrollInputMethods.h for a list of possible values and their meanings."
   },
   "WEB_NOTIFICATION_CLICKED": {
+    "releaseChannelCollection": "opt-out",
     "alert_emails": ["firefox-dev@mozilla.org"],
     "bug_numbers": [1225336],
     "expires_in_version": "50",

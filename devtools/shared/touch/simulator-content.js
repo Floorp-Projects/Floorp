@@ -5,9 +5,8 @@
    removeEventListener */
 "use strict";
 
-var { interfaces: Ci, utils: Cu } = Components;
-
-Cu.import("resource://gre/modules/Services.jsm");
+const { interfaces: Ci, utils: Cu } = Components;
+const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 var systemAppOrigin = (function () {
   let systemOrigin = "_";

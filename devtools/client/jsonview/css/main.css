@@ -5,10 +5,10 @@
 
 @import "resource://devtools/client/shared/components/reps/reps.css";
 @import "resource://devtools/client/shared/components/tree/tree-view.css";
+@import "resource://devtools/client/shared/components/tabs/tabs.css";
 
 @import "general.css";
 @import "search-box.css";
-@import "tabs.css";
 @import "toolbar.css";
 @import "json-panel.css";
 @import "text-panel.css";

@@ -19,12 +19,13 @@ const {console} = require("resource://gre/modules/Console.jsm");
 const Services = require("Services");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {Task} = require("devtools/shared/task");
-
-Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/NetUtil.jsm");
-const { TextDecoder, OS } = Cu.import("resource://gre/modules/osfile.jsm", {});
-/* import-globals-from StyleEditorUtil.jsm */
-Cu.import("resource://devtools/client/styleeditor/StyleEditorUtil.jsm");
+const {FileUtils} = require("resource://gre/modules/FileUtils.jsm");
+const {NetUtil} = require("resource://gre/modules/NetUtil.jsm");
+const {TextDecoder, OS} = Cu.import("resource://gre/modules/osfile.jsm", {});
+const {
+  getString,
+  showFilePicker,
+} = require("resource://devtools/client/styleeditor/StyleEditorUtil.jsm");
 
 const LOAD_ERROR = "error-load";
 const SAVE_ERROR = "error-save";

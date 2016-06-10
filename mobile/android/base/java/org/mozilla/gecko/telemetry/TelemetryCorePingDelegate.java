@@ -40,6 +40,8 @@ public class TelemetryCorePingDelegate extends BrowserAppDelegateWithReference
 
     @Override
     public void onStart(final BrowserApp browserApp) {
+        TelemetryPreferences.initPreferenceObserver(browserApp, browserApp.getProfile().getName());
+
         // We don't upload in onCreate because that's only called when the Activity needs to be instantiated
         // and it's possible the system will never free the Activity from memory.
         //
@@ -93,8 +95,10 @@ public class TelemetryCorePingDelegate extends BrowserAppDelegateWithReference
     @WorkerThread // via constructor
     private TelemetryDispatcher getTelemetryDispatcher(final BrowserApp browserApp) {
         if (telemetryDispatcher == null) {
-            final String profilePath = browserApp.getProfile().getDir().getAbsolutePath();
-            telemetryDispatcher = new TelemetryDispatcher(profilePath);
+            final GeckoProfile profile = browserApp.getProfile();
+            final String profilePath = profile.getDir().getAbsolutePath();
+            final String profileName = profile.getName();
+            telemetryDispatcher = new TelemetryDispatcher(profilePath, profileName);
         }
         return telemetryDispatcher;
     }

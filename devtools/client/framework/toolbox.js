@@ -1,5 +1,3 @@
-/* -*- indent-tabs-mode: nil; js-indent-level: 2 -*- */
-/* vim: set ft=javascript ts=2 et sw=2 tw=80: */
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
@@ -26,9 +24,7 @@ var viewSource = require("devtools/client/shared/view-source");
 var { attachThread, detachThread } = require("./attach-thread");
 var Menu = require("devtools/client/framework/menu");
 var MenuItem = require("devtools/client/framework/menu-item");
-
-Cu.import("resource://devtools/client/scratchpad/scratchpad-manager.jsm");
-Cu.import("resource://devtools/client/shared/DOMHelpers.jsm");
+var { DOMHelpers } = require("resource://devtools/client/shared/DOMHelpers.jsm");
 
 const { BrowserLoader } =
   Cu.import("resource://devtools/client/shared/browser-loader.js", {});
@@ -1619,6 +1615,7 @@ Toolbox.prototype = {
    */
   showFramesMenu: function (event) {
     let menu = new Menu();
+    let target = event.target;
 
     // Generate list of menu items from the list of frames.
     this.frameMap.forEach(frame => {
@@ -1636,14 +1633,22 @@ Toolbox.prototype = {
       }));
     });
 
+    menu.once("open").then(() => {
+      target.setAttribute("open", "true");
+    });
+
+    menu.once("close").then(() => {
+      target.removeAttribute("open");
+    });
+
     // Show a drop down menu with frames.
     // XXX Missing menu API for specifying target (anchor)
     // and relative position to it. See also:
     // https://developer.mozilla.org/en-US/docs/Mozilla/Tech/XUL/Method/openPopup
     // https://bugzilla.mozilla.org/show_bug.cgi?id=1274551
-    let rect = event.target.getBoundingClientRect();
-    let screenX = event.target.ownerDocument.defaultView.mozInnerScreenX;
-    let screenY = event.target.ownerDocument.defaultView.mozInnerScreenY;
+    let rect = target.getBoundingClientRect();
+    let screenX = target.ownerDocument.defaultView.mozInnerScreenX;
+    let screenY = target.ownerDocument.defaultView.mozInnerScreenY;
     menu.popup(rect.left + screenX, rect.bottom + screenY, this);
 
     return menu;
