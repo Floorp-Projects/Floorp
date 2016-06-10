@@ -1062,13 +1062,12 @@ public:
     MOZ_ASSERT(!mFreeList, "should not have free list");
 
     // Put all the entries in the block on the free list.
-    nsPurpleBufferEntry* entries = aBlock->mEntries;
-    mFreeList = entries;
+    mFreeList = aBlock->mEntries;
     for (uint32_t i = 1; i < ArrayLength(aBlock->mEntries); ++i) {
-      entries[i - 1].mNextInFreeList =
-        (nsPurpleBufferEntry*)(uintptr_t(entries + i) | 1);
+      aBlock->mEntries[i - 1].mNextInFreeList =
+        (nsPurpleBufferEntry*)(uintptr_t(aBlock->mEntries + i) | 1);
     }
-    entries[ArrayLength(aBlock->mEntries) - 1].mNextInFreeList =
+    aBlock->mEntries[ArrayLength(aBlock->mEntries) - 1].mNextInFreeList =
       (nsPurpleBufferEntry*)1;
   }
 
