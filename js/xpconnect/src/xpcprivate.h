@@ -466,7 +466,7 @@ public:
     XPCWrappedNativeProtoMap* GetDetachedWrappedNativeProtoMap() const
         {return mDetachedWrappedNativeProtoMap;}
 
-    bool OnJSContextNew(JSContext* cx);
+    bool InitXPCContext(JSContext* cx);
 
     virtual bool
     DescribeCustomObjects(JSObject* aObject, const js::Class* aClasp,
@@ -556,7 +556,6 @@ public:
     void CustomGCCallback(JSGCStatus status) override;
     void CustomOutOfMemoryCallback() override;
     void CustomLargeAllocationFailureCallback() override;
-    bool CustomContextCallback(JSContext* cx, unsigned operation) override;
     static void GCSliceCallback(JSRuntime* rt,
                                 JS::GCProgress progress,
                                 const JS::GCDescription& desc);
@@ -2786,7 +2785,7 @@ public:
         return mStack.IsEmpty() ? nullptr : mStack[mStack.Length() - 1];
     }
 
-    JSContext* InitSafeJSContext();
+    void InitSafeJSContext();
     JSContext* GetSafeJSContext();
 
 private:
