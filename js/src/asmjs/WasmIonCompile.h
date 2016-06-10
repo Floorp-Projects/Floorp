@@ -42,21 +42,18 @@ class FuncBytes
     const DeclaredSig& sig_;
     uint32_t           lineOrBytecode_;
     Uint32Vector       callSiteLineNums_;
-    unsigned           generateTime_;
 
   public:
     FuncBytes(Bytes&& bytes,
               uint32_t index,
               const DeclaredSig& sig,
               uint32_t lineOrBytecode,
-              Uint32Vector&& callSiteLineNums,
-              unsigned generateTime)
+              Uint32Vector&& callSiteLineNums)
       : bytes_(Move(bytes)),
         index_(index),
         sig_(sig),
         lineOrBytecode_(lineOrBytecode),
-        callSiteLineNums_(Move(callSiteLineNums)),
-        generateTime_(generateTime)
+        callSiteLineNums_(Move(callSiteLineNums))
     {}
 
     Bytes& bytes() { return bytes_; }
@@ -65,7 +62,6 @@ class FuncBytes
     const DeclaredSig& sig() const { return sig_; }
     uint32_t lineOrBytecode() const { return lineOrBytecode_; }
     const Uint32Vector& callSiteLineNums() const { return callSiteLineNums_; }
-    unsigned generateTime() const { return generateTime_; }
 };
 
 typedef UniquePtr<FuncBytes> UniqueFuncBytes;
@@ -78,7 +74,6 @@ class FuncCompileResults
     jit::TempAllocator alloc_;
     jit::MacroAssembler masm_;
     FuncOffsets offsets_;
-    unsigned compileTime_;
 
     FuncCompileResults(const FuncCompileResults&) = delete;
     FuncCompileResults& operator=(const FuncCompileResults&) = delete;
@@ -86,16 +81,12 @@ class FuncCompileResults
   public:
     explicit FuncCompileResults(LifoAlloc& lifo)
       : alloc_(&lifo),
-        masm_(jit::MacroAssembler::AsmJSToken(), alloc_),
-        compileTime_(0)
+        masm_(jit::MacroAssembler::AsmJSToken(), alloc_)
     {}
 
     jit::TempAllocator& alloc() { return alloc_; }
     jit::MacroAssembler& masm() { return masm_; }
     FuncOffsets& offsets() { return offsets_; }
-
-    void setCompileTime(unsigned t) { MOZ_ASSERT(!compileTime_); compileTime_ = t; }
-    unsigned compileTime() const { return compileTime_; }
 };
 
 // An IonCompileTask represents the task of compiling a single function body. An

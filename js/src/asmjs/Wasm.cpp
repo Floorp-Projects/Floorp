@@ -895,8 +895,6 @@ DecodeExportSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 static bool
 DecodeFunctionBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
 {
-    int64_t before = PRMJ_Now();
-
     uint32_t bodySize;
     if (!d.readVarU32(&bodySize))
         return Fail(cx, d, "expected number of function body bytes");
@@ -945,10 +943,7 @@ DecodeFunctionBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint32_t func
 
     memcpy(fg.bytes().begin(), bodyBegin, bodySize);
 
-    int64_t after = PRMJ_Now();
-    unsigned generateTime = (after - before) / PRMJ_USEC_PER_MSEC;
-
-    return mg.finishFuncDef(funcIndex, generateTime, &fg);
+    return mg.finishFuncDef(funcIndex, &fg);
 }
 
 static bool
@@ -1158,8 +1153,7 @@ DecodeModule(JSContext* cx, UniqueChars file, const uint8_t* bytes, uint32_t len
     UniqueCodeSegment code;
     SharedMetadata metadata;
     SharedStaticLinkData staticLinkData;
-    SlowFunctionVector slowFuncs(cx);
-    if (!mg.finish(Move(funcNames), &code, &metadata, &staticLinkData, exportMap, &slowFuncs))
+    if (!mg.finish(Move(funcNames), &code, &metadata, &staticLinkData, exportMap))
         return false;
 
     moduleObj.set(WasmModuleObject::create(cx));

@@ -28,23 +28,6 @@ namespace wasm {
 
 class FunctionGenerator;
 
-// A slow function describes a function that took longer than msThreshold to
-// validate and compile.
-
-struct SlowFunction
-{
-    SlowFunction(uint32_t index, unsigned ms, unsigned lineOrBytecode)
-     : index(index), ms(ms), lineOrBytecode(lineOrBytecode)
-    {}
-
-    static const unsigned msThreshold = 250;
-
-    uint32_t index;
-    unsigned ms;
-    unsigned lineOrBytecode;
-};
-typedef Vector<SlowFunction> SlowFunctionVector;
-
 // The ModuleGeneratorData holds all the state shared between the
 // ModuleGenerator thread and background compile threads. The background
 // threads are given a read-only view of the ModuleGeneratorData and the
@@ -122,7 +105,6 @@ class MOZ_STACK_CLASS ModuleGenerator
     uint32_t                        globalDataLength_;
     MutableMetadata                 metadata_;
     MutableExportMap                exportMap_;
-    SlowFunctionVector              slowFuncs_;
 
     // Data scoped to the ModuleGenerator's lifetime
     UniqueModuleGeneratorData       shared_;
@@ -196,8 +178,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     // Function definitions:
     MOZ_MUST_USE bool startFuncDefs();
     MOZ_MUST_USE bool startFuncDef(uint32_t lineOrBytecode, FunctionGenerator* fg);
-    MOZ_MUST_USE bool finishFuncDef(uint32_t funcIndex, unsigned generateTime,
-                                    FunctionGenerator* fg);
+    MOZ_MUST_USE bool finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg);
     MOZ_MUST_USE bool finishFuncDefs();
 
     // asm.js lazy initialization:
@@ -215,8 +196,7 @@ class MOZ_STACK_CLASS ModuleGenerator
                              UniqueCodeSegment* codeSegment,
                              SharedMetadata* metadata,
                              SharedStaticLinkData* staticLinkData,
-                             SharedExportMap* exportMap,
-                             SlowFunctionVector* slowFuncs);
+                             SharedExportMap* exportMap);
 };
 
 // A FunctionGenerator encapsulates the generation of a single function body.
