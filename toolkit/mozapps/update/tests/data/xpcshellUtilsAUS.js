@@ -1783,10 +1783,27 @@ function runUpdateUsingUpdater(aExpectedStatus, aSwitchApp, aExpectedExitValue) 
   args = args.concat(gCallbackArgs);
   debugDump("running the updater: " + updateBin.path + " " + args.join(" "));
 
+  // See bug 1279108.
+  // nsIProcess doesn't have an API to pass a separate environment to the
+  // subprocess, so we need to alter the environment of the current process
+  // before launching the updater binary.
+  let env = Cc["@mozilla.org/process/environment;1"].
+            getService(Ci.nsIEnvironment);
+  let asan_options = null;
+  if (env.exists("ASAN_OPTIONS")) {
+    asan_options = env.get("ASAN_OPTIONS");
+    env.set("ASAN_OPTIONS", asan_options + ":detect_leaks=0")
+  } else {
+    env.set("ASAN_OPTIONS", "detect_leaks=0")
+  }
+
   let process = Cc["@mozilla.org/process/util;1"].
                 createInstance(Ci.nsIProcess);
   process.init(updateBin);
   process.run(true, args, args.length);
+
+  // Restore previous ASAN_OPTIONS if there were any.
+  env.set("ASAN_OPTIONS", asan_options ? asan_options : "");
 
   let status = readStatusFile();
   if (process.exitValue != aExpectedExitValue || status != aExpectedStatus) {
