@@ -6,8 +6,13 @@
 
 #include <stdint.h>
 #include <algorithm>
+#include "nsIStringBundle.h"
+#include "nsDebug.h"
+#include "nsString.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticMutex.h"
+#include "mozilla/StaticPtr.h"
+#include "nsThreadUtils.h"
 #include "CubebUtils.h"
 #include "nsAutoRef.h"
 #include "prdtoa.h"
@@ -25,6 +30,9 @@ cubeb* sCubebContext;
 double sVolumeScale;
 uint32_t sCubebLatency;
 bool sCubebLatencyPrefSet;
+StaticAutoPtr<char> sBrandName;
+
+const char kBrandBundleURL[]      = "chrome://branding/locale/brand.properties";
 
 // Prefered samplerate, in Hz (characteristic of the hardware, mixer, platform,
 // and API used).
@@ -101,15 +109,45 @@ void InitPreferredSampleRate()
   }
 }
 
+void InitBrandName()
+{
+  if (sBrandName) {
+    return;
+  }
+  nsXPIDLString brandName;
+  nsCOMPtr<nsIStringBundleService> stringBundleService =
+    mozilla::services::GetStringBundleService();
+  if (stringBundleService) {
+    nsCOMPtr<nsIStringBundle> brandBundle;
+    nsresult rv = stringBundleService->CreateBundle(kBrandBundleURL,
+                                           getter_AddRefs(brandBundle));
+    if (NS_SUCCEEDED(rv)) {
+      rv = brandBundle->GetStringFromName(MOZ_UTF16("brandShortName"),
+                                          getter_Copies(brandName));
+      NS_WARN_IF_FALSE(NS_SUCCEEDED(rv),
+          "Could not get the program name for a cubeb stream.");
+    }
+  }
+  /* cubeb expects a c-string. */
+  const char* ascii = NS_LossyConvertUTF16toASCII(brandName).get();
+  sBrandName = new char[brandName.Length() + 1];
+  PodCopy(sBrandName.get(), ascii, brandName.Length());
+  sBrandName[brandName.Length()] = 0;
+}
+
 cubeb* GetCubebContextUnlocked()
 {
   sMutex.AssertCurrentThreadOwns();
-  if (sCubebContext ||
-      cubeb_init(&sCubebContext, "CubebUtils") == CUBEB_OK) {
+  if (sCubebContext) {
     return sCubebContext;
   }
-  NS_WARNING("cubeb_init failed");
-  return nullptr;
+
+  NS_WARN_IF_FALSE(sBrandName, "Could not get brandName?");
+
+  DebugOnly<int> rv = cubeb_init(&sCubebContext, sBrandName);
+  NS_WARN_IF_FALSE(rv == CUBEB_OK, "Could not get a cubeb context.");
+
+  return sCubebContext;
 }
 
 uint32_t GetCubebLatency()
@@ -130,6 +168,9 @@ void InitLibrary()
   Preferences::RegisterCallback(PrefChanged, PREF_VOLUME_SCALE);
   PrefChanged(PREF_CUBEB_LATENCY, nullptr);
   Preferences::RegisterCallback(PrefChanged, PREF_CUBEB_LATENCY);
+#ifndef MOZ_WIDGET_ANDROID
+  NS_DispatchToMainThread(NS_NewRunnableFunction(&InitBrandName));
+#endif
 }
 
 void ShutdownLibrary()
@@ -142,6 +183,7 @@ void ShutdownLibrary()
     cubeb_destroy(sCubebContext);
     sCubebContext = nullptr;
   }
+  sBrandName = nullptr;
 }
 
 uint32_t MaxNumberOfChannels()

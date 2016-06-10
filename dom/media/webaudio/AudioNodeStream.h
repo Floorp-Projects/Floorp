@@ -10,6 +10,7 @@
 #include "mozilla/dom/AudioNodeBinding.h"
 #include "AlignedTArray.h"
 #include "AudioBlock.h"
+#include "AudioSegment.h"
 
 namespace mozilla {
 
@@ -21,6 +22,8 @@ class AudioContext;
 
 class ThreadSharedFloatArrayBufferList;
 class AudioNodeEngine;
+
+typedef AlignedAutoTArray<float, GUESS_AUDIO_CHANNELS*WEBAUDIO_BLOCK_SIZE, 16> DownmixBufferType;
 
 /**
  * An AudioNodeStream produces one audio track with ID AUDIO_TRACK.
@@ -191,10 +194,10 @@ protected:
   void FinishOutput();
   void AccumulateInputChunk(uint32_t aInputIndex, const AudioBlock& aChunk,
                             AudioBlock* aBlock,
-                            AlignedTArray<float, 16>* aDownmixBuffer);
+                            DownmixBufferType* aDownmixBuffer);
   void UpMixDownMixChunk(const AudioBlock* aChunk, uint32_t aOutputChannelCount,
                          nsTArray<const float*>& aOutputChannels,
-                         AlignedTArray<float, 16>& aDownmixBuffer);
+                         DownmixBufferType& aDownmixBuffer);
 
   uint32_t ComputedNumberOfChannels(uint32_t aInputChannelCount);
   void ObtainInputBlock(AudioBlock& aTmpChunk, uint32_t aPortIndex);

@@ -22,6 +22,7 @@ const kCAPTIVEPORTALDETECTOR_CID        = Components.ID('{d9cd00ba-aa4d-47b1-879
 const kOpenCaptivePortalLoginEvent = 'captive-portal-login';
 const kAbortCaptivePortalLoginEvent = 'captive-portal-login-abort';
 const kCaptivePortalLoginSuccessEvent = 'captive-portal-login-success';
+const kCaptivePortalCheckComplete = 'captive-portal-check-complete';
 
 const kCaptivePortalSystemMessage = 'captive-portal';
 
@@ -88,6 +89,8 @@ function LoginObserver(captivePortalDetector) {
   let activityDistributor = Cc['@mozilla.org/network/http-activity-distributor;1']
                               .getService(Ci.nsIHttpActivityDistributor);
   let urlFetcher = null;
+
+  let waitForNetworkActivity = Services.appinfo.widgetToolkit == "gonk";
 
   let pageCheckingDone = function pageCheckingDone() {
     if (state === LOGIN_OBSERVER_STATE_VERIFYING) {
@@ -177,10 +180,14 @@ function LoginObserver(captivePortalDetector) {
           state = LOGIN_OBSERVER_STATE_VERIFY_NEEDED;
           // Fall though to start polling timer
         case LOGIN_OBSERVER_STATE_IDLE:
-          timer.initWithCallback(this,
-                                 captivePortalDetector._pollingTime,
-                                 timer.TYPE_ONE_SHOT);
-          break;
+          if (waitForNetworkActivity) {
+            timer.initWithCallback(this,
+                                   captivePortalDetector._pollingTime,
+                                   timer.TYPE_ONE_SHOT);
+            break;
+          }
+          // if we don't need to wait for network activity, just fall through
+          // to perform a captive portal check.
         case LOGIN_OBSERVER_STATE_VERIFY_NEEDED:
           // Polling the canonical website since network stays idle for a while
           state = LOGIN_OBSERVER_STATE_VERIFYING;
@@ -383,7 +390,11 @@ CaptivePortalDetector.prototype = {
 
   validateContent: function validateContent(content) {
     debug('received content: ' + content);
-    return (content === this._canonicalSiteExpectedContent);
+    let valid = content === this._canonicalSiteExpectedContent;
+    // We need a way to indicate that a check has been performed, and if we are
+    // still in a captive portal.
+    this._sendEvent(kCaptivePortalCheckComplete, !valid);
+    return valid;
   },
 
   _allocateRequestId: function _allocateRequestId() {

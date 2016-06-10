@@ -40,10 +40,8 @@ using CrashReporter::GetIDFromMinidump;
 #include "WMFDecoderModule.h"
 #endif
 
-#ifdef MOZ_WIDEVINE_EME
 #include "mozilla/dom/WidevineCDMManifestBinding.h"
 #include "widevine-adapter/WidevineAdapter.h"
-#endif
 
 namespace mozilla {
 
@@ -809,7 +807,6 @@ GMPParent::ReadGMPMetaData()
     return ReadGMPInfoFile(infoFile);
   }
 
-#ifdef MOZ_WIDEVINE_EME
   // Maybe this is the Widevine adapted plugin?
   nsCOMPtr<nsIFile> manifestFile;
   rv = mDirectory->Clone(getter_AddRefs(manifestFile));
@@ -818,9 +815,6 @@ GMPParent::ReadGMPMetaData()
   }
   manifestFile->AppendRelativePath(NS_LITERAL_STRING("manifest.json"));
   return ReadChromiumManifestFile(manifestFile);
-#else
-  return GenericPromise::CreateAndReject(rv, __func__);
-#endif
 }
 
 RefPtr<GenericPromise>
@@ -915,7 +909,6 @@ GMPParent::ReadGMPInfoFile(nsIFile* aFile)
   return GenericPromise::CreateAndResolve(true, __func__);
 }
 
-#ifdef MOZ_WIDEVINE_EME
 RefPtr<GenericPromise>
 GMPParent::ReadChromiumManifestFile(nsIFile* aFile)
 {
@@ -968,7 +961,6 @@ GMPParent::ParseChromiumManifest(nsString aJSON)
 
   return GenericPromise::CreateAndResolve(true, __func__);
 }
-#endif
 
 bool
 GMPParent::CanBeSharedCrossNodeIds() const

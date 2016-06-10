@@ -2258,6 +2258,27 @@ class LTestIAndBranch : public LControlInstructionHelper<2, 1, 0>
     }
 };
 
+// Takes in an int64 input and tests it for truthiness.
+class LTestI64AndBranch : public LControlInstructionHelper<2, INT64_PIECES, 0>
+{
+  public:
+    LIR_HEADER(TestI64AndBranch)
+
+    LTestI64AndBranch(const LInt64Allocation& in, MBasicBlock* ifTrue, MBasicBlock* ifFalse)
+    {
+        setInt64Operand(0, in);
+        setSuccessor(0, ifTrue);
+        setSuccessor(1, ifFalse);
+    }
+
+    MBasicBlock* ifTrue() const {
+        return getSuccessor(0);
+    }
+    MBasicBlock* ifFalse() const {
+        return getSuccessor(1);
+    }
+};
+
 // Takes in either an integer or boolean input and tests it for truthiness.
 class LTestDAndBranch : public LControlInstructionHelper<2, 1, 0>
 {

@@ -171,8 +171,8 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=933681
      "__defineGetter__", "__defineSetter__", "__lookupGetter__", "__lookupSetter__",
      "__proto__"];
   gConstructorProperties['Object'] =
-    constructorProps(["setPrototypeOf", "getOwnPropertyDescriptor", "keys",
-                      "is", "defineProperty", "defineProperties", "create",
+    constructorProps(["setPrototypeOf", "getOwnPropertyDescriptor", "getOwnPropertyDescriptors",
+                      "keys", "is", "defineProperty", "defineProperties", "create",
                       "getOwnPropertyNames", "getOwnPropertySymbols",
                       "preventExtensions", "freeze", "isFrozen", "seal",
                       "isSealed", "assign", "getPrototypeOf", "values",

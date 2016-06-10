@@ -55,9 +55,9 @@
 #endif // XP_WIN
 
 #include "nsIDocument.h"
-#include "nsPerformance.h"
 #include "nsGlobalWindow.h"
 #include "nsDOMDataChannel.h"
+#include "mozilla/dom/Performance.h"
 #include "mozilla/TimeStamp.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Preferences.h"
@@ -81,6 +81,7 @@
 #include "mozilla/dom/RTCPeerConnectionBinding.h"
 #include "mozilla/dom/PeerConnectionImplBinding.h"
 #include "mozilla/dom/DataChannelBinding.h"
+#include "mozilla/dom/PerformanceTiming.h"
 #include "mozilla/dom/PluginCrashedEvent.h"
 #include "MediaStreamList.h"
 #include "MediaStreamTrack.h"
@@ -2092,7 +2093,7 @@ PeerConnectionImpl::SetRemoteDescription(int32_t action, const char* aSDP)
 nsresult
 PeerConnectionImpl::GetTimeSinceEpoch(DOMHighResTimeStamp *result) {
   MOZ_ASSERT(NS_IsMainThread());
-  nsPerformance *perf = mWindow->GetPerformance();
+  Performance *perf = mWindow->GetPerformance();
   NS_ENSURE_TRUE(perf && perf->Timing(), NS_ERROR_UNEXPECTED);
   *result = perf->Now() + perf->Timing()->NavigationStart();
   return NS_OK;

@@ -563,7 +563,9 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
                 break;
             }
         }
+            MOZ_FALLTHROUGH;
         case AndroidMotionEvent::ACTION_DOWN:
+            MOZ_FALLTHROUGH;
         case AndroidMotionEvent::ACTION_POINTER_DOWN: {
             type = eTouchStart;
             break;
@@ -573,6 +575,7 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
                 break;
             }
         }
+            MOZ_FALLTHROUGH;
         case AndroidMotionEvent::ACTION_MOVE: {
             type = eTouchMove;
             break;
@@ -582,7 +585,9 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
                 break;
             }
         }
+            MOZ_FALLTHROUGH;
         case AndroidMotionEvent::ACTION_UP:
+            MOZ_FALLTHROUGH;
         case AndroidMotionEvent::ACTION_POINTER_UP: {
             type = eTouchEnd;
             // for pointer-up events we only want the data from
@@ -592,6 +597,7 @@ AndroidGeckoEvent::MakeTouchEvent(nsIWidget* widget)
             break;
         }
         case AndroidMotionEvent::ACTION_OUTSIDE:
+            MOZ_FALLTHROUGH;
         case AndroidMotionEvent::ACTION_CANCEL: {
             type = eTouchCancel;
             break;

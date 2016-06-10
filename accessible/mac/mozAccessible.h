@@ -42,13 +42,6 @@ GetNativeFromProxy(const ProxyAccessible* aProxy)
   return reinterpret_cast<mozAccessible*>(aProxy->GetWrapper());
 }
 
-ProxyAccessible* GetProxyUnignoredParent(const ProxyAccessible* aProxy);
-
-void GetProxyUnignoredChildren(const ProxyAccessible* aProxy,
-                               nsTArray<ProxyAccessible*>* aChildrenArray);
-
-BOOL IsProxyIgnored(const ProxyAccessible* aProxy);
-
 } // a11y
 } // mozilla
 

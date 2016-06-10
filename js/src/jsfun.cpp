@@ -684,9 +684,12 @@ js::fun_symbolHasInstance(JSContext* cx, unsigned argc, Value* vp)
 
     /* Step 1. */
     HandleValue func = args.thisv();
+
+    // Primitives are non-callable and will always return false from
+    // OrdinaryHasInstance.
     if (!func.isObject()) {
-        ReportIncompatible(cx, args);
-        return false;
+        args.rval().setBoolean(false);
+        return true;
     }
 
     RootedObject obj(cx, &func.toObject());

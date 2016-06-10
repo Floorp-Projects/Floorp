@@ -7,7 +7,6 @@
 #ifndef nsXMLHttpRequest_h__
 #define nsXMLHttpRequest_h__
 
-#include "mozilla/Attributes.h"
 #include "nsIXMLHttpRequest.h"
 #include "nsISupportsUtils.h"
 #include "nsString.h"
@@ -30,8 +29,10 @@
 #include "nsIXPConnect.h"
 #include "nsIInputStream.h"
 #include "mozilla/Assertions.h"
+#include "mozilla/Attributes.h"
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/MemoryReporting.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/dom/TypedArray.h"
 #include "mozilla/dom/XMLHttpRequestBinding.h"
 
@@ -423,7 +424,7 @@ private:
     return Send(Nullable<RequestBody>(aBody));
   }
 
-  bool IsCrossSiteCORSRequest();
+  bool IsCrossSiteCORSRequest() const;
   bool IsDeniedCrossSiteCORSRequest();
 
   // Tell our channel what network interface ID we were told to use.
@@ -515,7 +516,8 @@ public:
     }
   }
   void GetAllResponseHeaders(nsCString& aResponseHeaders);
-  bool IsSafeHeader(const nsACString& aHeaderName, nsIHttpChannel* aHttpChannel);
+  bool IsSafeHeader(const nsACString& aHeaderName,
+                    mozilla::NotNull<nsIHttpChannel*> aHttpChannel) const;
   void OverrideMimeType(const nsAString& aMimeType)
   {
     // XXX Should we do some validation here?
@@ -615,7 +617,7 @@ protected:
   already_AddRefed<nsIHttpChannel> GetCurrentHttpChannel();
   already_AddRefed<nsIJARChannel> GetCurrentJARChannel();
 
-  bool IsSystemXHR();
+  bool IsSystemXHR() const;
 
   void ChangeStateToDone();
 
@@ -643,15 +645,16 @@ protected:
   public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIHTTPHEADERVISITOR
-    nsHeaderVisitor(nsXMLHttpRequest* aXMLHttpRequest, nsIHttpChannel* aHttpChannel)
+    nsHeaderVisitor(const nsXMLHttpRequest& aXMLHttpRequest,
+                    mozilla::NotNull<nsIHttpChannel*> aHttpChannel)
       : mXHR(aXMLHttpRequest), mHttpChannel(aHttpChannel) {}
     const nsACString &Headers() { return mHeaders; }
   private:
     virtual ~nsHeaderVisitor() {}
 
     nsCString mHeaders;
-    nsXMLHttpRequest* mXHR;
-    nsCOMPtr<nsIHttpChannel> mHttpChannel;
+    const nsXMLHttpRequest& mXHR;
+    mozilla::NotNull<nsCOMPtr<nsIHttpChannel>> mHttpChannel;
   };
 
   // The bytes of our response body. Only used for DEFAULT, ARRAYBUFFER and

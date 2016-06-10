@@ -1,5 +1,5 @@
 $inherits:
-  from: 'tasks/builds/firefox_base.yml'
+  from: 'tasks/builds/firefox_docker_base.yml'
 task:
 
   scopes:

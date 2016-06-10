@@ -81,10 +81,8 @@ CodeGeneratorX86Shared::visitFloat32(LFloat32* ins)
 void
 CodeGeneratorX86Shared::visitTestIAndBranch(LTestIAndBranch* test)
 {
-    const LAllocation* opd = test->input();
-
-    // Test the operand
-    masm.test32(ToRegister(opd), ToRegister(opd));
+    Register input = ToRegister(test->input());
+    masm.test32(input, input);
     emitBranch(Assembler::NonZero, test->ifTrue(), test->ifFalse());
 }
 

@@ -5953,8 +5953,7 @@ FindLineFor(nsIFrame*             aChild,
 }
 
 nsresult
-nsBlockFrame::StealFrame(nsIFrame* aChild,
-                         bool      aForceNormal)
+nsBlockFrame::StealFrame(nsIFrame* aChild)
 {
   MOZ_ASSERT(aChild->GetParent() == this);
 
@@ -5964,9 +5963,8 @@ nsBlockFrame::StealFrame(nsIFrame* aChild,
     return NS_OK;
   }
 
-  if ((aChild->GetStateBits() & NS_FRAME_IS_OVERFLOW_CONTAINER)
-      && !aForceNormal) {
-    return nsContainerFrame::StealFrame(aChild);
+  if (MaybeStealOverflowContainerFrame(aChild)) {
+    return NS_OK;
   }
 
   MOZ_ASSERT(!(aChild->GetStateBits() & NS_FRAME_OUT_OF_FLOW));

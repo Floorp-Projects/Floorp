@@ -37,6 +37,15 @@ nsWindowRoot::nsWindowRoot(nsPIDOMWindowOuter* aWindow)
 {
   mWindow = aWindow;
   MOZ_ASSERT(mWindow->IsOuterWindow());
+
+  // Keyboard indicators are not shown on Mac by default.
+#if defined(XP_MACOSX)
+  mShowAccelerators = false;
+  mShowFocusRings = false;
+#else
+  mShowAccelerators = true;
+  mShowFocusRings = true;
+#endif
 }
 
 nsWindowRoot::~nsWindowRoot()

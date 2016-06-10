@@ -44,11 +44,14 @@
 #include "nsCOMArray.h"
 #include "mozilla/net/ChannelEventQueue.h"
 
-class nsPerformance;
 class nsISecurityConsoleMessage;
 class nsIPrincipal;
 
 namespace mozilla {
+
+namespace dom {
+class Performance;
+}
 
 class LogCollector;
 
@@ -321,7 +324,7 @@ protected:
   // drop reference to listener, its callbacks, and the progress sink
   void ReleaseListeners();
 
-  nsPerformance* GetPerformance();
+  mozilla::dom::Performance* GetPerformance();
   nsIURI* GetReferringPage();
   nsPIDOMWindowInner* GetInnerDOMWindow();
 

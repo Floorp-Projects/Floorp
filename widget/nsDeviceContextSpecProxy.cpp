@@ -9,6 +9,7 @@
 #include "gfxASurface.h"
 #include "gfxPlatform.h"
 #include "mozilla/gfx/DrawEventRecorder.h"
+#include "mozilla/gfx/PrintTargetThebes.h"
 #include "mozilla/layout/RemotePrintJobChild.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/unused.h"
@@ -17,6 +18,9 @@
 #include "nsIPrintSettings.h"
 
 using mozilla::Unused;
+
+using namespace mozilla;
+using namespace mozilla::gfx;
 
 NS_IMPL_ISUPPORTS(nsDeviceContextSpecProxy, nsIDeviceContextSpec)
 
@@ -61,16 +65,15 @@ nsDeviceContextSpecProxy::Init(nsIWidget* aWidget,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsDeviceContextSpecProxy::GetSurfaceForPrinter(gfxASurface** aSurface)
+already_AddRefed<PrintTarget>
+nsDeviceContextSpecProxy::MakePrintTarget()
 {
-  MOZ_ASSERT(aSurface);
   MOZ_ASSERT(mRealDeviceContextSpec);
 
   double width, height;
   nsresult rv = mPrintSettings->GetEffectivePageSize(&width, &height);
   if (NS_WARN_IF(NS_FAILED(rv)) || width <= 0 || height <= 0) {
-    return NS_ERROR_FAILURE;
+    return nullptr;
   }
 
   // convert twips to points
@@ -80,9 +83,22 @@ nsDeviceContextSpecProxy::GetSurfaceForPrinter(gfxASurface** aSurface)
   RefPtr<gfxASurface> surface = gfxPlatform::GetPlatform()->
     CreateOffscreenSurface(mozilla::gfx::IntSize(width, height),
                            mozilla::gfx::SurfaceFormat::A8R8G8B8_UINT32);
+  if (!surface) {
+    return nullptr;
+  }
 
-  surface.forget(aSurface);
-  return NS_OK;
+  // The type of PrintTarget that we return here doesn't really matter since
+  // our implementation of GetDrawEventRecorder returns an object, which means
+  // the DrawTarget returned by the PrintTarget will be a DrawTargetRecording.
+  // The recording will be serialized and sent over to the parent process where
+  // PrintTranslator::TranslateRecording will call MakePrintTarget (indirectly
+  // via PrintTranslator::CreateDrawTarget) on whatever type of
+  // nsIDeviceContextSpecProxy is created for the platform that we are running
+  // on.  It is that DrawTarget that the recording will be replayed on to
+  // print.
+  RefPtr<PrintTarget> target = PrintTargetThebes::CreateOrNull(surface);
+
+  return target.forget();
 }
 
 NS_IMETHODIMP

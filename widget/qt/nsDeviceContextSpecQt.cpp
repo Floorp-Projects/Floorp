@@ -10,6 +10,7 @@
 #define SET_PRINTER_FEATURES_VIA_PREFS 1
 #define PRINTERFEATURES_PREF "print.tmp.printerfeatures"
 
+#include "mozilla/gfx/PrintTargetPDF.h"
 #include "mozilla/Logging.h"
 
 #include "plstr.h"
@@ -30,7 +31,8 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-#include "gfxPDFSurface.h"
+using namespace mozilla;
+using namespace mozilla::gfx;
 
 static PRLogModuleInfo* DeviceContextSpecQtLM =
     PR_NewLogModule("DeviceContextSpecQt");
@@ -50,12 +52,8 @@ nsDeviceContextSpecQt::~nsDeviceContextSpecQt()
 NS_IMPL_ISUPPORTS(nsDeviceContextSpecQt,
         nsIDeviceContextSpec)
 
-NS_IMETHODIMP nsDeviceContextSpecQt::GetSurfaceForPrinter(
-        gfxASurface** aSurface)
+already_AddRefed<PrintTarget> nsDeviceContextSpecQt::MakePrintTarget()
 {
-    NS_ENSURE_ARG_POINTER(aSurface);
-    *aSurface = nullptr;
-
     double width, height;
     mPrintSettings->GetEffectivePageSize(&width, &height);
 
@@ -77,7 +75,7 @@ NS_IMETHODIMP nsDeviceContextSpecQt::GetSurfaceForPrinter(
 
     QTemporaryFile file;
     if(!file.open()) {
-        return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
+        return nullptr;
     }
     file.setAutoRemove(false);
 
@@ -87,7 +85,7 @@ NS_IMETHODIMP nsDeviceContextSpecQt::GetSurfaceForPrinter(
             getter_AddRefs(mSpoolFile));
     if (NS_FAILED(rv)) {
         file.remove();
-        return NS_ERROR_GFX_PRINTER_COULD_NOT_OPEN_FILE;
+        return nullptr;
     }
 
     mSpoolName = file.fileName().toUtf8().constData();
@@ -99,33 +97,26 @@ NS_IMETHODIMP nsDeviceContextSpecQt::GetSurfaceForPrinter(
 
     rv = stream->Init(mSpoolFile, -1, -1, 0);
     if (NS_FAILED(rv))
-        return rv;
+        return nullptr;
 
     int16_t format;
     mPrintSettings->GetOutputFormat(&format);
-
-    RefPtr<gfxASurface> surface;
-    gfxSize surfaceSize(width, height);
 
     if (format == nsIPrintSettings::kOutputFormatNative) {
         if (mIsPPreview) {
             // There is nothing to detect on Print Preview, use PS.
             // TODO: implement for Qt?
             //format = nsIPrintSettings::kOutputFormatPS;
-            return NS_ERROR_NOT_IMPLEMENTED;
+            return nullptr;
         }
         format = nsIPrintSettings::kOutputFormatPDF;
     }
+
     if (format == nsIPrintSettings::kOutputFormatPDF) {
-        surface = new gfxPDFSurface(stream, surfaceSize);
-    } else {
-        return NS_ERROR_NOT_IMPLEMENTED;
+        return PrintTargetPDF::CreateOrNull(stream, IntSize(width, height));
     }
 
-    MOZ_ASSERT(surface, "valid address expected");
-
-    surface.swap(*aSurface);
-    return NS_OK;
+    return nullptr;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecQt::Init(nsIWidget* aWidget,

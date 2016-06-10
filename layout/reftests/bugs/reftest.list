@@ -1957,4 +1957,7 @@ fuzzy(100,2000) == 1239564.html 1239564-ref.html
 random-if(!winWidget) == 1273154-1.html 1273154-1-ref.html # depends on Windows font
 random-if(!winWidget) == 1273154-2.html 1273154-2-ref.html # depends on Windows font
 == 1274368-1.html 1274368-1-ref.html
+!= 1276161-1a.html 1276161-1-notref.html
+!= 1276161-1b.html 1276161-1-notref.html
+!= 1276161-1a.html 1276161-1b.html
 == 1275411-1.html 1275411-1-ref.html

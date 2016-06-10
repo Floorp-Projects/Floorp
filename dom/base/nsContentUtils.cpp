@@ -7238,6 +7238,36 @@ nsContentUtils::CallOnAllRemoteChildren(nsPIDOMWindowOuter* aWindow,
   }
 }
 
+struct UIStateChangeInfo {
+  UIStateChangeType mShowAccelerators;
+  UIStateChangeType mShowFocusRings;
+
+  UIStateChangeInfo(UIStateChangeType aShowAccelerators,
+                    UIStateChangeType aShowFocusRings)
+    : mShowAccelerators(aShowAccelerators),
+      mShowFocusRings(aShowFocusRings)
+  {}
+};
+
+bool
+SetKeyboardIndicatorsChild(TabParent* aParent, void* aArg)
+{
+  UIStateChangeInfo* stateInfo = static_cast<UIStateChangeInfo*>(aArg);
+  Unused << aParent->SendSetKeyboardIndicators(stateInfo->mShowAccelerators,
+                                               stateInfo->mShowFocusRings);
+  return false;
+}
+
+void
+nsContentUtils::SetKeyboardIndicatorsOnRemoteChildren(nsPIDOMWindowOuter* aWindow,
+                                                      UIStateChangeType aShowAccelerators,
+                                                      UIStateChangeType aShowFocusRings)
+{
+  UIStateChangeInfo stateInfo(aShowAccelerators, aShowFocusRings);
+  CallOnAllRemoteChildren(aWindow, SetKeyboardIndicatorsChild,
+                          (void *)&stateInfo);
+}
+
 void
 nsContentUtils::TransferablesToIPCTransferables(nsISupportsArray* aTransferables,
                                                 nsTArray<IPCDataTransfer>& aIPC,

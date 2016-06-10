@@ -10795,6 +10795,14 @@
     "keyed": true,
     "description": "Each key is the message name, with digits removed, from an async message manager message that was larger than 8192 bytes, recorded in the sending process at the time of sending."
   },
+  "REJECTED_MESSAGE_MANAGER_MESSAGE": {
+    "alert_emails": ["amccreight@mozilla.com"],
+    "bug_numbers": [1272423],
+    "expires_in_version": "55",
+    "kind": "count",
+    "keyed": true,
+    "description": "Each key is the message name, with digits removed, from an async message manager message that was rejected for being over approximately 128MB, recorded in the sending process at the time of sending."
+  },
   "SANDBOX_BROKER_INITIALIZED": {
     "alert_emails": ["bowen@mozilla.com"],
     "bug_numbers": [1256992],
