@@ -25,7 +25,7 @@ namespace js {
 namespace wasm {
 
 extern Offsets
-GenerateEntry(jit::MacroAssembler& masm, uint32_t target, const Sig& sig, bool usesHeap);
+GenerateEntry(jit::MacroAssembler& masm, const Export& exp, bool usesHeap);
 
 extern ProfilingOffsets
 GenerateInterpExit(jit::MacroAssembler& masm, const Import& import, uint32_t importIndex);
