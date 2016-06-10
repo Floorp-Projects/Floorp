@@ -223,7 +223,7 @@ class Bootstrapper(object):
         # run in self-contained mode and only the files in this directory will
         # be available. We /could/ refactor parts of mach_bootstrap.py to be
         # part of this directory to avoid the code duplication.
-        state_dir = get_state_dir()
+        state_dir, _ = get_state_dir()
 
         if not os.path.exists(state_dir):
             if not self.instance.no_interactive:
