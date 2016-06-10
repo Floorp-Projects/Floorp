@@ -207,12 +207,7 @@ public class GeckoActionProvider {
 
         // Inform the target listener to refresh it's UI, if needed.
         if (mOnTargetListener != null) {
-            ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    mOnTargetListener.onTargetSelected();
-                }
-            });
+            mOnTargetListener.onTargetSelected();
         }
     }
 
