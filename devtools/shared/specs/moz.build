@@ -18,6 +18,7 @@ DevToolsModules(
     'director-registry.js',
     'environment.js',
     'frame.js',
+    'gcli.js',
     'heap-snapshot-file.js',
     'highlighters.js',
     'inspector.js',

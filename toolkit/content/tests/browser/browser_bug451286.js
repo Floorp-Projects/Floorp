@@ -20,6 +20,7 @@ add_task(function*() {
 
   yield openFindBarAndWait();
   gFindBar._findField.value = SEARCH_TEXT;
+  yield findAgainAndWait();
   var matchCase = gFindBar.getElement("find-case-sensitive");
   if (matchCase.checked)
     matchCase.doCommand();
@@ -115,6 +116,21 @@ function toggleHighlightAndWait(shouldHighlight) {
     };
     gFindBar.browser.finder.addResultListener(listener);
     gFindBar.toggleHighlight(shouldHighlight);
+  });
+}
+
+function findAgainAndWait() {
+  return new Promise(resolve => {
+    let listener = {
+      onFindResult() {
+        gFindBar.browser.finder.removeResultListener(listener);
+        resolve();
+      },
+      onHighlightFinished() {},
+      onMatchesCountResult() {}
+    };
+    gFindBar.browser.finder.addResultListener(listener);
+    gFindBar.onFindAgainCommand();
   });
 }
 

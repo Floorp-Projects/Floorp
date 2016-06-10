@@ -9,7 +9,7 @@ var Cu = Components.utils;
 var Ci = Components.interfaces;
 var Cc = Components.classes;
 
-var {require} = Cu.import("resource://devtools/shared/Loader.jsm");
+var {require, loader} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 const {colorUtils} = require("devtools/client/shared/css-color");
 
 loader.lazyGetter(this, "DOMUtils", function () {

@@ -21,6 +21,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "BookmarkHTMLUtils",
                                   "resource://gre/modules/BookmarkHTMLUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "PromiseUtils",
                                   "resource://gre/modules/PromiseUtils.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "AutoMigrate",
+                                  "resource:///modules/AutoMigrate.jsm");
 
 var gMigrators = null;
 var gProfileStartup = null;
@@ -95,7 +97,7 @@ this.MigratorPrototype = {
    * profiles.
    *
    * Each migration resource should provide:
-   * - a |type| getter, retunring any of the migration types (see
+   * - a |type| getter, returning any of the migration types (see
    *   nsIBrowserProfileMigrator).
    *
    * - a |migrate| method, taking a single argument, aCallback(bool success),
@@ -696,8 +698,22 @@ this.MigrationUtils = Object.freeze({
       }
     }
 
+    let isRefresh = migrator && skipSourcePage &&
+                    migratorKey == AppConstants.MOZ_APP_NAME;
+
+    if (!isRefresh &&
+        Services.prefs.getBoolPref("browser.migration.automigrate")) {
+      try {
+        AutoMigrate.migrate(aProfileStartup, aMigratorKey, aProfileToMigrate);
+        return;
+      } catch (ex) {
+        // If automigration failed, continue and show the dialog.
+        Cu.reportError(ex);
+      }
+    }
+
     let migrationEntryPoint = this.MIGRATION_ENTRYPOINT_FIRSTRUN;
-    if (migrator && skipSourcePage && migratorKey == AppConstants.MOZ_APP_NAME) {
+    if (isRefresh) {
       migrationEntryPoint = this.MIGRATION_ENTRYPOINT_FXREFRESH;
     }
 
@@ -720,6 +736,8 @@ this.MigrationUtils = Object.freeze({
     gProfileStartup = null;
     gMigrationBundle = null;
   },
+
+  gAvailableMigratorKeys,
 
   MIGRATION_ENTRYPOINT_UNKNOWN: 0,
   MIGRATION_ENTRYPOINT_FIRSTRUN: 1,

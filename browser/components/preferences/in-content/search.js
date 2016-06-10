@@ -169,7 +169,13 @@ var gSearchPane = {
         gSearchPane.remove(aEngine);
         break;
       case "engine-current":
-        gSearchPane.buildDefaultEngineDropDown();
+        // If the user is going through the drop down using up/down keys, the
+        // dropdown may still be open (eg. on Windows) when engine-current is
+        // fired, so rebuilding the list unconditionally would get in the way.
+        let selectedEngine =
+          document.getElementById("defaultEngine").selectedItem.engine;
+        if (selectedEngine.name != aEngine.name)
+          gSearchPane.buildDefaultEngineDropDown();
         break;
       case "engine-default":
         // Not relevant

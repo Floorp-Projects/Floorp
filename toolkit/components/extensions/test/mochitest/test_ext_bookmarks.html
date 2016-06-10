@@ -239,19 +239,19 @@ function backgroundScript() {
     Promise.resolve().then(() => {
       return browser.bookmarks.search({banana: "banana"});
     }).then(expectedError, error => {
+      let substr = `an unexpected "banana" property`;
       browser.test.assertTrue(
-        error.message.includes(`Unexpected property "banana"`),
-        "Expected error thrown when trying to search with an invalid property as an argument"
-      );
+        error.message.includes(substr),
+        `Expected error ${JSON.stringify(error.message)} to contain ${JSON.stringify(substr)}`);
     });
 
     Promise.resolve().then(() => {
       return browser.bookmarks.search({url: "spider-man vs. batman"});
     }).then(expectedError, error => {
+      let substr = 'must match the format "url"';
       browser.test.assertTrue(
-        error.message.includes("spider-man vs. batman is not a valid URL"),
-        "Expected error thrown when trying to search with an invalid url as an argument"
-      );
+        error.message.includes(substr),
+        `Expected error ${JSON.stringify(error.message)} to contain ${JSON.stringify(substr)}`);
     });
 
     // queries the full url

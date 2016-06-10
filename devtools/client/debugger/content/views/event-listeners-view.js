@@ -1,11 +1,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
+
 "use strict";
+
+/* import-globals-from ../../debugger-controller.js */
 
 const actions = require("../actions/event-listeners");
 const { bindActionCreators } = require("devtools/client/shared/vendor/redux");
 const { Heritage, WidgetMethods } = require("devtools/client/shared/widgets/view-helpers");
+const { SideMenuWidget } = require("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
 
 /**
  * Functions handling the event listeners UI.

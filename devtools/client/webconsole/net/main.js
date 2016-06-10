@@ -3,10 +3,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-var { utils: Cu } = Components;
+/* global BrowserLoader */
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://devtools/client/shared/browser-loader.js");
+var { utils: Cu } = Components;
 
 // Initialize module loader and load all modules of the new inline
 // preview feature. The entire code-base doesn't need any extra

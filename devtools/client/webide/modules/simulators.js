@@ -2,8 +2,9 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const { Cu } = require("chrome");
-const { AddonManager } = Cu.import("resource://gre/modules/AddonManager.jsm");
+"use strict";
+
+const { AddonManager } = require("resource://gre/modules/AddonManager.jsm");
 const { Task } = require("devtools/shared/task");
 loader.lazyRequireGetter(this, "ConnectionManager", "devtools/shared/client/connection-manager", true);
 loader.lazyRequireGetter(this, "AddonSimulatorProcess", "devtools/client/webide/modules/simulator-process", true);
