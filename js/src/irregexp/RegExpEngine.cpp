@@ -1720,6 +1720,12 @@ RegExpCompiler::Assemble(JSContext* cx,
     macro_assembler_ = assembler;
     macro_assembler_->set_slow_safe(false);
 
+    // The LifoAlloc used by the regexp compiler is infallible and is currently
+    // expected to crash on OOM. Thus we have to disable the assertions made to
+    // prevent us from allocating any new chunk in the LifoAlloc. This is needed
+    // because the jit::MacroAssembler turns these assertions on by default.
+    LifoAlloc::AutoFallibleScope fallibleAllocator(alloc());
+
     jit::Label fail;
     macro_assembler_->PushBacktrack(&fail);
     Trace new_trace;
