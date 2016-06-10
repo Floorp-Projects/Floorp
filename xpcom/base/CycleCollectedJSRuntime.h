@@ -157,10 +157,6 @@ protected:
   virtual void CustomGCCallback(JSGCStatus aStatus) {}
   virtual void CustomOutOfMemoryCallback() {}
   virtual void CustomLargeAllocationFailureCallback() {}
-  virtual bool CustomContextCallback(JSContext* aCx, unsigned aOperation)
-  {
-    return true; // Don't block context creation.
-  }
 
   std::queue<nsCOMPtr<nsIRunnable>> mPromiseMicroTaskQueue;
   std::queue<nsCOMPtr<nsIRunnable>> mDebuggerPromiseMicroTaskQueue;
