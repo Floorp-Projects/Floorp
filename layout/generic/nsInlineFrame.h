@@ -62,7 +62,7 @@ public:
                                      bool aRespectClusters = true) override;
   
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
-  virtual nsresult StealFrame(nsIFrame* aChild, bool aForceNormal) override;
+  virtual nsresult StealFrame(nsIFrame* aChild) override;
 
   // nsIHTMLReflow overrides
   virtual void AddInlineMinISize(nsRenderingContext *aRenderingContext,
