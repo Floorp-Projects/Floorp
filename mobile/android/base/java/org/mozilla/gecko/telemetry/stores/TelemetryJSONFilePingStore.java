@@ -61,7 +61,7 @@ import java.util.TreeSet;
  *   * no locking: {@link #onUploadAttemptComplete(Set)} deletes the given pings, none of which should be
  * currently written
  */
-public class TelemetryJSONFilePingStore implements TelemetryPingStore {
+public class TelemetryJSONFilePingStore extends TelemetryPingStore {
     private static final String LOGTAG = StringUtils.safeSubstring(
             "Gecko" + TelemetryJSONFilePingStore.class.getSimpleName(), 0, 23);
 
@@ -76,7 +76,8 @@ public class TelemetryJSONFilePingStore implements TelemetryPingStore {
     private final FileLastModifiedComparator fileLastModifiedComparator = new FileLastModifiedComparator();
 
     @WorkerThread // Writes to disk
-    public TelemetryJSONFilePingStore(final File storeDir) {
+    public TelemetryJSONFilePingStore(final File storeDir, final String profileName) {
+        super(profileName);
         this.storeDir = storeDir;
         this.storeDir.mkdirs();
         uuidFilenameFilter = new FilenameRegexFilter(UUIDUtil.UUID_PATTERN);
@@ -243,7 +244,8 @@ public class TelemetryJSONFilePingStore implements TelemetryPingStore {
         @Override
         public TelemetryJSONFilePingStore createFromParcel(final Parcel source) {
             final String storeDirPath = source.readString();
-            return new TelemetryJSONFilePingStore(new File(storeDirPath));
+            final String profileName = source.readString();
+            return new TelemetryJSONFilePingStore(new File(storeDirPath), profileName);
         }
 
         @Override
@@ -260,5 +262,6 @@ public class TelemetryJSONFilePingStore implements TelemetryPingStore {
     @Override
     public void writeToParcel(final Parcel dest, final int flags) {
         dest.writeString(storeDir.getAbsolutePath());
+        dest.writeString(getProfileName());
     }
 }

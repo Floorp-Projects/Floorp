@@ -1,8 +1,9 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-const { console, ConsoleAPI } = Cu.import("resource://gre/modules/Console.jsm");
+"use strict";
 
+const { console, ConsoleAPI } = require("resource://gre/modules/Console.jsm");
 const { ConsoleAPIListener } = require("devtools/shared/webconsole/utils");
 const Services = require("Services");
 

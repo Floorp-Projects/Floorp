@@ -1,10 +1,12 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
+"use strict";
+
 // Test that we can properly stream heap snapshot files over the RDP as bulk
 // data.
 
-Cu.import("resource://gre/modules/osfile.jsm");
+const { OS } = require("resource://gre/modules/osfile.jsm");
 
 const run_test = makeMemoryActorTest(function* (client, memoryFront) {
   const snapshotFilePath = yield memoryFront.saveHeapSnapshot({

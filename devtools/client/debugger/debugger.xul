@@ -28,10 +28,8 @@
   <script type="text/javascript" src="debugger-view.js"/>
   <script type="text/javascript" src="utils.js"/>
   <script type="text/javascript" src="views/workers-view.js"/>
-  <script type="text/javascript" src="views/sources-view.js"/>
   <script type="text/javascript" src="views/variable-bubble-view.js"/>
   <script type="text/javascript" src="views/watch-expressions-view.js"/>
-  <script type="text/javascript" src="views/event-listeners-view.js"/>
   <script type="text/javascript" src="views/global-search-view.js"/>
   <script type="text/javascript" src="views/toolbar-view.js"/>
   <script type="text/javascript" src="views/options-view.js"/>

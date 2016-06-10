@@ -9,7 +9,7 @@ var Cu = Components.utils;
 var Ci = Components.interfaces;
 var Cc = Components.classes;
 
-var {require} = Cu.import("resource://devtools/shared/Loader.jsm");
+var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
 
 const DOMUtils = Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 

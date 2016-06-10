@@ -4,20 +4,26 @@
 
 "use strict";
 
-var {Cu, Cc, Ci} = require("chrome");
+var { Cu, Cc, Ci } = require("chrome");
 
-Cu.import("resource://gre/modules/NetUtil.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://gre/modules/osfile.jsm");
-Cu.import("resource://gre/modules/FileUtils.jsm");
-Cu.import("resource://gre/modules/UserCustomizations.jsm");
-Cu.importGlobalProperties(["FileReader"]);
+var { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
+var { OS } = require("resource://gre/modules/osfile.jsm");
+var { FileUtils } = require("resource://gre/modules/FileUtils.jsm");
 
 var promise = require("promise");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { ActorPool } = require("devtools/server/actors/common");
 var { DebuggerServer } = require("devtools/server/main");
 var Services = require("Services");
+var FileReader = require("FileReader");
+
+// Load actor dependencies lazily as this actor require extra environnement
+// preparation to work (like have a profile setup in xpcshell tests)
+loader.lazyRequireGetter(this, "DOMApplicationRegistry", "resource://gre/modules/Webapps.jsm", true);
+loader.lazyRequireGetter(this, "AppsUtils", "resource://gre/modules/AppsUtils.jsm", true);
+loader.lazyRequireGetter(this, "ManifestHelper", "resource://gre/modules/AppsUtils.jsm", true);
+loader.lazyRequireGetter(this, "MessageBroadcaster", "resource://gre/modules/MessageBroadcaster.jsm", true);
+loader.lazyRequireGetter(this, "UserCustomizations", "resource://gre/modules/UserCustomizations.jsm", true);
 
 // Comma separated list of permissions that a sideloaded app can't ask for
 const UNSAFE_PERMISSIONS = Services.prefs.getCharPref("devtools.apps.forbidden-permissions");
@@ -207,14 +213,6 @@ PackageUploadBulkActor.prototype.requestTypes = {
  */
 function WebappsActor(aConnection) {
   debug("init");
-  // Load actor dependencies lazily as this actor require extra environnement
-  // preparation to work (like have a profile setup in xpcshell tests)
-
-  Cu.import("resource://gre/modules/Webapps.jsm");
-  Cu.import("resource://gre/modules/AppsUtils.jsm");
-  Cu.import("resource://gre/modules/FileUtils.jsm");
-  Cu.import("resource://gre/modules/MessageBroadcaster.jsm");
-
   this.appsChild = {};
   Cu.import("resource://gre/modules/AppsServiceChild.jsm", this.appsChild);
 
