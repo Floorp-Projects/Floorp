@@ -1010,6 +1010,8 @@ private:
         sizeof(PurpleBlock) == 32768,         // 64-bit
         "ill-sized nsPurpleBuffer::PurpleBlock"
       );
+
+      InitNextPointers();
     }
 
     // Put all the entries in the block on the free list.
@@ -1046,7 +1048,6 @@ public:
   nsPurpleBuffer()
   {
     InitBlocks();
-    mFirstBlock.InitNextPointers();
   }
 
   ~nsPurpleBuffer()
@@ -1124,7 +1125,6 @@ public:
     if (MOZ_UNLIKELY(!mFreeList)) {
       PurpleBlock* b = new PurpleBlock;
       mFreeList = b->mEntries;
-      b->InitNextPointers();
 
       // Add the new block as the second block in the list.
       b->mNext = mFirstBlock.mNext;
