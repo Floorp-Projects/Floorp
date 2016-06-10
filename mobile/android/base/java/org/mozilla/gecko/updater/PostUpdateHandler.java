@@ -71,10 +71,10 @@ public class PostUpdateHandler extends BrowserAppDelegateWithReference {
                 final String assetPath = "features/" + assetNames[i];
 
                 Log.d(LOGTAG, "Copying '" + assetPath + "' from APK to dataDir");
-                
+
                 final InputStream assetStream = assetManager.open(assetPath);
                 final File outFile = getDataFile(dataDir, assetPath);
-                
+
                 if (outFile == null) {
                     continue;
                 }
