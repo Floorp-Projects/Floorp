@@ -49,7 +49,7 @@
   -moz-image-region: rect(28px, 42px, 42px, 28px);
 }
 
-.search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+.search-go-button:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
 }
 

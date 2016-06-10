@@ -18,5 +18,7 @@
     <path id="search-arrow-go-glyph" d="M1,7v2.2C1,9.8,1.4,10,2,10h7.5l-3,3.1c-0.4,0.3-0.4,1,0,1.4l0.8,0.8 c0.4,0.4,1,0.4,1.4,0l6.6-6.6c0.4-0.4,0.4-1,0-1.4L8.7,0.7c-0.4-0.4-1-0.4-1.4,0L6.5,1.6C6.1,2,6.1,2.6,6.5,3l3,3H2C1.4,6,1,6.4,1,7z"/>
   </defs>
   <use id="search-arrow-go" xlink:href="#search-arrow-go-glyph"/>
+  <use id="search-arrow-go-rtl" transform="rotate(180 8 8)" xlink:href="#search-arrow-go-glyph"/>
   <use id="search-arrow-go-inverted" xlink:href="#search-arrow-go-glyph"/>
+  <use id="search-arrow-go-rtl-inverted" transform="rotate(180 8 8)" xlink:href="#search-arrow-go-glyph"/>
 </svg>
