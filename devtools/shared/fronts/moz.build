@@ -18,6 +18,7 @@ DevToolsModules(
     'gcli.js',
     'highlighters.js',
     'inspector.js',
+    'layout.js',
     'preference.js',
     'promises.js',
     'settings.js',
