@@ -112,9 +112,6 @@ case $cmd in
 		${TOPSRCDIR}/media/webrtc/trunk/tools/gyp \
 		${tgtpath}/media/webrtc/trunk/tools
 	${MKDIR} -p ${tgtpath}/testing
-	cp -p \
-		${TOPSRCDIR}/testing/moz.build \
-		${tgtpath}/testing
 	cp -pPR \
 		${TOPSRCDIR}/testing/mozbase \
 		${tgtpath}/testing
