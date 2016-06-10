@@ -2324,7 +2324,7 @@ class MOZ_STACK_CLASS ModuleValidator
     bool finishFunctionBodies() {
         return mg_.finishFuncDefs();
     }
-    bool finish(MutableHandle<WasmModuleObject*> moduleObj, SlowFunctionVector* slowFuncs) {
+    bool finish(MutableHandle<WasmModuleObject*> moduleObj) {
         if (!arrayViews_.empty())
             mg_.initHeapUsage(atomicsPresent_ ? HeapUsage::Shared : HeapUsage::Unshared);
 
@@ -2347,7 +2347,7 @@ class MOZ_STACK_CLASS ModuleValidator
         SharedMetadata metadata;
         SharedStaticLinkData staticLinkData;
         SharedExportMap exportMap;
-        if (!mg_.finish(Move(funcNames), &code, &metadata, &staticLinkData, &exportMap, slowFuncs))
+        if (!mg_.finish(Move(funcNames), &code, &metadata, &staticLinkData, &exportMap))
             return false;
 
         moduleObj.set(WasmModuleObject::create(cx_));
@@ -2901,13 +2901,13 @@ class MOZ_STACK_CLASS FunctionValidator
         return true;
     }
 
-    bool finish(uint32_t funcIndex, unsigned generateTime) {
+    bool finish(uint32_t funcIndex) {
         MOZ_ASSERT(!blockDepth_);
         MOZ_ASSERT(breakableStack_.empty());
         MOZ_ASSERT(continuableStack_.empty());
         MOZ_ASSERT(breakLabels_.empty());
         MOZ_ASSERT(continueLabels_.empty());
-        return m_.mg().finishFuncDef(funcIndex, generateTime, &fg_);
+        return m_.mg().finishFuncDef(funcIndex, &fg_);
     }
 
     bool fail(ParseNode* pn, const char* str) {
@@ -6994,8 +6994,6 @@ CheckFunction(ModuleValidator& m)
     // the backing LifoAlloc after parsing/compiling each function.
     AsmJSParser::Mark mark = m.parser().mark();
 
-    int64_t before = PRMJ_Now();
-
     ParseNode* fn = nullptr;
     unsigned line = 0;
     if (!ParseFunction(m, &fn, &line))
@@ -7039,7 +7037,7 @@ CheckFunction(ModuleValidator& m)
 
     func->define(fn);
 
-    if (!f.finish(func->index(), (PRMJ_Now() - before) / PRMJ_USEC_PER_MSEC))
+    if (!f.finish(func->index()))
         return m.fail(fn, "internal compiler failure (probably out of memory)");
 
     // Release the parser's lifo memory only after the last use of a parse node.
@@ -7251,8 +7249,7 @@ CheckModuleEnd(ModuleValidator &m)
 
 static bool
 CheckModule(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList,
-            MutableHandle<WasmModuleObject*> moduleObj, unsigned* time,
-            SlowFunctionVector* slowFuncs)
+            MutableHandle<WasmModuleObject*> moduleObj, unsigned* time)
 {
     int64_t before = PRMJ_Now();
 
@@ -7296,7 +7293,7 @@ CheckModule(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList,
     if (!CheckModuleEnd(m))
         return false;
 
-    if (!m.finish(moduleObj, slowFuncs))
+    if (!m.finish(moduleObj))
         return false;
 
     *time = (PRMJ_Now() - before) / PRMJ_USEC_PER_MSEC;
@@ -8607,29 +8604,9 @@ EstablishPreconditions(ExclusiveContext* cx, AsmJSParser& parser)
 }
 
 static UniqueChars
-BuildConsoleMessage(ExclusiveContext* cx, AsmJSModule& module, unsigned time,
-                    const SlowFunctionVector& slowFuncs, JS::AsmJSCacheResult cacheResult)
+BuildConsoleMessage(ExclusiveContext* cx, unsigned time, JS::AsmJSCacheResult cacheResult)
 {
 #ifndef JS_MORE_DETERMINISTIC
-    UniqueChars slowText;
-    if (!slowFuncs.empty()) {
-        slowText.reset(JS_smprintf("; %d functions compiled slowly: ", slowFuncs.length()));
-        if (!slowText)
-            return nullptr;
-
-        for (unsigned i = 0; i < slowFuncs.length(); i++) {
-            const SlowFunction& func = slowFuncs[i];
-            slowText.reset(JS_smprintf("%s%s:%u (%ums)%s",
-                                       slowText.get(),
-                                       module.maybePrettyFuncName(func.index),
-                                       func.lineOrBytecode,
-                                       func.ms,
-                                       i+1 < slowFuncs.length() ? ", " : ""));
-            if (!slowText)
-                return nullptr;
-        }
-    }
-
     const char* cacheString = "";
     switch (cacheResult) {
       case JS::AsmJSCache_Success:
@@ -8665,8 +8642,7 @@ BuildConsoleMessage(ExclusiveContext* cx, AsmJSModule& module, unsigned time,
         break;
     }
 
-    return UniqueChars(JS_smprintf("total compilation time %dms; %s%s",
-                                   time, cacheString, slowText ? slowText.get() : ""));
+    return UniqueChars(JS_smprintf("total compilation time %dms; %s", time, cacheString));
 #else
     return DuplicateString("");
 #endif
@@ -8695,8 +8671,7 @@ js::CompileAsmJS(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList,
         // "Checking" parses, validates and compiles, producing a fully compiled
         // WasmModuleObject as result.
         unsigned time;
-        SlowFunctionVector slowFuncs(cx);
-        if (!CheckModule(cx, parser, stmtList, &moduleObj, &time, &slowFuncs))
+        if (!CheckModule(cx, parser, stmtList, &moduleObj, &time))
             return NoExceptionPending(cx);
 
         // Try to store the AsmJSModule in the embedding's cache. The
@@ -8708,7 +8683,7 @@ js::CompileAsmJS(ExclusiveContext* cx, AsmJSParser& parser, ParseNode* stmtList,
         if (!module.staticallyLink(cx))
             return false;
 
-        message = BuildConsoleMessage(cx, module, time, slowFuncs, cacheResult);
+        message = BuildConsoleMessage(cx, time, cacheResult);
         if (!message)
             return NoExceptionPending(cx);
     }
