@@ -86,11 +86,15 @@ case $cmd in
 	# copy nspr.
 	cp -pPR ${SRCDIR}/../../nsprpub ${tgtpath}
 
+	# copy top-level build and config files.
+	cp -p ${TOPSRCDIR}/configure.py ${TOPSRCDIR}/moz.configure ${tgtpath}
+
 	# copy build and config directory.
 	cp -pPR ${TOPSRCDIR}/build ${TOPSRCDIR}/config ${tgtpath}
 
 	# put in js itself
 	cp -pPR ${TOPSRCDIR}/mfbt ${tgtpath}
+	cp -p ${SRCDIR}/../moz.configure ${tgtpath}/js
 	cp -pPR ${SRCDIR}/../public ${tgtpath}/js
 	cp -pPR ${SRCDIR}/../examples ${tgtpath}/js
 	find ${SRCDIR} -mindepth 1 -maxdepth 1 -not -path ${STAGING} -a -not -name ${pkg} \
@@ -108,6 +112,9 @@ case $cmd in
 		${TOPSRCDIR}/media/webrtc/trunk/tools/gyp \
 		${tgtpath}/media/webrtc/trunk/tools
 	${MKDIR} -p ${tgtpath}/testing
+	cp -p \
+		${TOPSRCDIR}/testing/moz.build \
+		${tgtpath}/testing
 	cp -pPR \
 		${TOPSRCDIR}/testing/mozbase \
 		${tgtpath}/testing
