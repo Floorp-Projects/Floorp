@@ -12,13 +12,17 @@
   -moz-appearance: none !important; /* important, to override toolkit rule */
 }
 
-#BMB_bookmarksPopup menupopup[placespopup=true] {
+#BMB_bookmarksPopup menupopup {
+  -moz-appearance: none;
+  background: var(--panel-arrowcontent-background);
+  color: var(--panel-arrowcontent-color);
+  border: var(--panel-arrowcontent-border);
   margin-top: -6px;
-  padding-top: 2px;
+  padding-top: 1px;
 }
 
 /* Add some space at the top because there are no headers: */
-#BMB_bookmarksPopup menupopup[placespopup=true] > hbox > .popup-internal-box > .arrowscrollbox-scrollbox > .scrollbox-innerbox  {
+#BMB_bookmarksPopup menupopup > hbox > .popup-internal-box > .arrowscrollbox-scrollbox > .scrollbox-innerbox  {
   padding-top: 4px;
 }
 
