@@ -2305,6 +2305,13 @@ nsCSSBorderRenderer::DrawDashedOrDottedCorner(mozilla::css::Side aSide,
     return;
   }
 
+  Float maxRadius = std::max(mBorderRadii[aCorner].width,
+                             mBorderRadii[aCorner].height);
+  if (maxRadius > BORDER_DOTTED_CORNER_MAX_RADIUS) {
+    DrawFallbackSolidCorner(aSide, aCorner);
+    return;
+  }
+
   if (borderWidthH != borderWidthV || borderWidthH > 2.0f) {
     uint8_t style = mBorderStyles[aSide];
     if (style == NS_STYLE_BORDER_STYLE_DOTTED) {
@@ -2535,6 +2542,38 @@ nsCSSBorderRenderer::DrawDashedCornerSlow(mozilla::css::Side aSide,
     builder->LineTo(Point(outerBezier.mPoints[3].x, innerBezier.mPoints[3].y));
     builder->LineTo(outerBezier.mPoints[3]);
   }
+
+  RefPtr<Path> path = builder->Finish();
+  mDrawTarget->Fill(path, ColorPattern(ToDeviceColor(borderColor)));
+}
+
+void
+nsCSSBorderRenderer::DrawFallbackSolidCorner(mozilla::css::Side aSide,
+                                             mozilla::css::Corner aCorner)
+{
+  // Render too large dashed or dotted corner with solid style, to avoid hangup
+  // inside DashedCornerFinder and DottedCornerFinder.
+
+  NS_ASSERTION(mBorderStyles[aSide] == NS_STYLE_BORDER_STYLE_DASHED ||
+               mBorderStyles[aSide] == NS_STYLE_BORDER_STYLE_DOTTED,
+               "Style should be dashed or dotted.");
+
+  nscolor borderColor = mBorderColors[aSide];
+  Bezier outerBezier;
+  Bezier innerBezier;
+  GetOuterAndInnerBezier(&outerBezier, &innerBezier, aCorner);
+
+  RefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
+
+  builder->MoveTo(outerBezier.mPoints[0]);
+  builder->BezierTo(outerBezier.mPoints[1],
+                    outerBezier.mPoints[2],
+                    outerBezier.mPoints[3]);
+  builder->LineTo(innerBezier.mPoints[3]);
+  builder->BezierTo(innerBezier.mPoints[2],
+                    innerBezier.mPoints[1],
+                    innerBezier.mPoints[0]);
+  builder->LineTo(outerBezier.mPoints[0]);
 
   RefPtr<Path> path = builder->Finish();
   mDrawTarget->Fill(path, ColorPattern(ToDeviceColor(borderColor)));
