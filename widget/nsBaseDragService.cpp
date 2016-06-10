@@ -58,7 +58,6 @@ nsBaseDragService::nsBaseDragService()
     mDragAction(DRAGDROP_ACTION_NONE),
     mDragActionFromChildProcess(DRAGDROP_ACTION_UNINITIALIZED), mTargetSize(0,0),
     mScreenX(-1), mScreenY(-1), mSuppressLevel(0),
-    mContentPolicyType(nsIContentPolicy::TYPE_OTHER),
     mInputSource(nsIDOMMouseEvent::MOZ_SOURCE_MOUSE)
 {
 }
@@ -210,9 +209,7 @@ NS_IMETHODIMP
 nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
                                      nsISupportsArray* aTransferableArray,
                                      nsIScriptableRegion* aDragRgn,
-                                     uint32_t aActionType,
-                                     nsContentPolicyType aContentPolicyType =
-                                       nsIContentPolicy::TYPE_OTHER)
+                                     uint32_t aActionType)
 {
   PROFILER_LABEL_FUNC(js::ProfileEntry::Category::OTHER);
 
@@ -222,7 +219,6 @@ nsBaseDragService::InvokeDragSession(nsIDOMNode *aDOMNode,
   // stash the document of the dom node
   aDOMNode->GetOwnerDocument(getter_AddRefs(mSourceDocument));
   mSourceNode = aDOMNode;
-  mContentPolicyType = aContentPolicyType;
   mEndDragPoint = LayoutDeviceIntPoint(0, 0);
 
   // When the mouse goes down, the selection code starts a mouse
@@ -268,8 +264,7 @@ nsBaseDragService::InvokeDragSessionWithImage(nsIDOMNode* aDOMNode,
   aDragEvent->GetMozInputSource(&mInputSource);
 
   nsresult rv = InvokeDragSession(aDOMNode, aTransferableArray,
-                                  aRegion, aActionType,
-                                  nsIContentPolicy::TYPE_INTERNAL_IMAGE);
+                                  aRegion, aActionType);
 
   if (NS_FAILED(rv)) {
     mImage = nullptr;
@@ -309,8 +304,7 @@ nsBaseDragService::InvokeDragSessionWithSelection(nsISelection* aSelection,
   aSelection->GetFocusNode(getter_AddRefs(node));
 
   nsresult rv = InvokeDragSession(node, aTransferableArray,
-                                  nullptr, aActionType,
-                                  nsIContentPolicy::TYPE_OTHER);
+                                  nullptr, aActionType);
 
   if (NS_FAILED(rv)) {
     mHasImage = false;
