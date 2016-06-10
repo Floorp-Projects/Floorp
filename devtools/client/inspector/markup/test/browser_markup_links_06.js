@@ -17,8 +17,9 @@ add_task(function* () {
 
   info("Set the popupNode to the node that contains the uri");
   let {editor} = yield getContainerForSelector("link", inspector);
-  let popupNode = editor.attrElements.get("href").querySelector(".link");
-  inspector.panelDoc.popupNode = popupNode;
+  openContextMenuAndGetAllItems(inspector, {
+    target: editor.attrElements.get("href").querySelector(".link"),
+  });
 
   info("Follow the link and wait for the style-editor to open");
   let onStyleEditorReady = toolbox.once("styleeditor-ready");
@@ -37,8 +38,9 @@ add_task(function* () {
 
   info("Set the popupNode to the node that contains the uri");
   ({editor} = yield getContainerForSelector("script", inspector));
-  popupNode = editor.attrElements.get("src").querySelector(".link");
-  inspector.panelDoc.popupNode = popupNode;
+  openContextMenuAndGetAllItems(inspector, {
+    target: editor.attrElements.get("src").querySelector(".link"),
+  });
 
   info("Follow the link and wait for the debugger to open");
   let onDebuggerReady = toolbox.once("jsdebugger-ready");

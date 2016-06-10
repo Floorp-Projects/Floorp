@@ -14,14 +14,15 @@ add_task(function* () {
   yield testScrollIntoView();
   function* testShowDOMProperties() {
     info("Testing 'Show DOM Properties' menu item.");
-    let showDOMPropertiesNode = inspector.panelDoc.getElementById(
-      "node-menu-showdomproperties");
+    let allMenuItems = openContextMenuAndGetAllItems(inspector);
+    let showDOMPropertiesNode =
+      allMenuItems.find(item => item.id === "node-menu-showdomproperties");
     ok(showDOMPropertiesNode, "the popup menu has a show dom properties item");
 
     let consoleOpened = toolbox.once("webconsole-ready");
 
     info("Triggering 'Show DOM Properties' and waiting for inspector open");
-    dispatchCommandEvent(showDOMPropertiesNode);
+    showDOMPropertiesNode.click();
     yield consoleOpened;
 
     let webconsoleUI = toolbox.getPanel("webconsole").hud.ui;
@@ -38,12 +39,14 @@ add_task(function* () {
     is((yield testActor.getNumberOfElementMatches(".duplicate")), 1,
        "There should initially be 1 .duplicate node");
 
-    let menuItem = inspector.panelDoc.getElementById("node-menu-duplicatenode");
+    let allMenuItems = openContextMenuAndGetAllItems(inspector);
+    let menuItem =
+      allMenuItems.find(item => item.id === "node-menu-duplicatenode");
     ok(menuItem, "'Duplicate node' menu item should exist");
 
     info("Triggering 'Duplicate Node' and waiting for inspector to update");
     let updated = inspector.once("markupmutation");
-    dispatchCommandEvent(menuItem);
+    menuItem.click();
     yield updated;
 
     is((yield testActor.getNumberOfElementMatches(".duplicate")), 2,
@@ -57,12 +60,13 @@ add_task(function* () {
   function* testDeleteNode() {
     info("Testing 'Delete Node' menu item for normal elements.");
     yield selectNode("#delete", inspector);
-    let deleteNode = inspector.panelDoc.getElementById("node-menu-delete");
+    let allMenuItems = openContextMenuAndGetAllItems(inspector);
+    let deleteNode = allMenuItems.find(item => item.id === "node-menu-delete");
     ok(deleteNode, "the popup menu has a delete menu item");
     let updated = inspector.once("inspector-updated");
 
     info("Triggering 'Delete Node' and waiting for inspector to update");
-    dispatchCommandEvent(deleteNode);
+    deleteNode.click();
     yield updated;
 
     ok(!(yield testActor.hasNode("#delete")), "Node deleted");
@@ -72,8 +76,9 @@ add_task(function* () {
     info("Testing 'Delete Node' menu item does not delete root node.");
     yield selectNode("html", inspector);
 
-    let deleteNode = inspector.panelDoc.getElementById("node-menu-delete");
-    dispatchCommandEvent(deleteNode);
+    let allMenuItems = openContextMenuAndGetAllItems(inspector);
+    let deleteNode = allMenuItems.find(item => item.id === "node-menu-delete");
+    deleteNode.click();
 
     let deferred = promise.defer();
     executeSoon(deferred.resolve);

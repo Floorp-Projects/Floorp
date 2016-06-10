@@ -295,30 +295,26 @@ function wait(ms) {
 var isEditingMenuDisabled = Task.async(
 function* (nodeFront, inspector, assert = true) {
   let doc = inspector.panelDoc;
-  let deleteMenuItem = doc.getElementById("node-menu-delete");
-  let editHTMLMenuItem = doc.getElementById("node-menu-edithtml");
-  let pasteHTMLMenuItem = doc.getElementById("node-menu-pasteouterhtml");
 
   // To ensure clipboard contains something to paste.
   clipboard.set("<p>test</p>", "html");
 
-  let menu = inspector.nodemenu;
   yield selectNode(nodeFront, inspector);
-  yield reopenMenu(menu);
+  let allMenuItems = openContextMenuAndGetAllItems(inspector);
 
-  let isDeleteMenuDisabled = deleteMenuItem.hasAttribute("disabled");
-  let isEditHTMLMenuDisabled = editHTMLMenuItem.hasAttribute("disabled");
-  let isPasteHTMLMenuDisabled = pasteHTMLMenuItem.hasAttribute("disabled");
+  let deleteMenuItem = allMenuItems.find(item => item.id === "node-menu-delete");
+  let editHTMLMenuItem = allMenuItems.find(item => item.id === "node-menu-edithtml");
+  let pasteHTMLMenuItem = allMenuItems.find(item => item.id === "node-menu-pasteouterhtml");
 
   if (assert) {
-    ok(isDeleteMenuDisabled, "Delete menu item is disabled");
-    ok(isEditHTMLMenuDisabled, "Edit HTML menu item is disabled");
-    ok(isPasteHTMLMenuDisabled, "Paste HTML menu item is disabled");
+    ok(deleteMenuItem.disabled, "Delete menu item is disabled");
+    ok(editHTMLMenuItem.disabled, "Edit HTML menu item is disabled");
+    ok(pasteHTMLMenuItem.disabled, "Paste HTML menu item is disabled");
   }
 
-  return isDeleteMenuDisabled &&
-         isEditHTMLMenuDisabled &&
-         isPasteHTMLMenuDisabled;
+  return deleteMenuItem.disabled &&
+         editHTMLMenuItem.disabled &&
+         pasteHTMLMenuItem.disabled;
 });
 
 /**
@@ -333,49 +329,27 @@ function* (nodeFront, inspector, assert = true) {
 var isEditingMenuEnabled = Task.async(
 function* (nodeFront, inspector, assert = true) {
   let doc = inspector.panelDoc;
-  let deleteMenuItem = doc.getElementById("node-menu-delete");
-  let editHTMLMenuItem = doc.getElementById("node-menu-edithtml");
-  let pasteHTMLMenuItem = doc.getElementById("node-menu-pasteouterhtml");
 
   // To ensure clipboard contains something to paste.
   clipboard.set("<p>test</p>", "html");
 
   let menu = inspector.nodemenu;
   yield selectNode(nodeFront, inspector);
-  yield reopenMenu(menu);
+  let allMenuItems = openContextMenuAndGetAllItems(inspector);
 
-  let isDeleteMenuDisabled = deleteMenuItem.hasAttribute("disabled");
-  let isEditHTMLMenuDisabled = editHTMLMenuItem.hasAttribute("disabled");
-  let isPasteHTMLMenuDisabled = pasteHTMLMenuItem.hasAttribute("disabled");
+  let deleteMenuItem = allMenuItems.find(item => item.id === "node-menu-delete");
+  let editHTMLMenuItem = allMenuItems.find(item => item.id === "node-menu-edithtml");
+  let pasteHTMLMenuItem = allMenuItems.find(item => item.id === "node-menu-pasteouterhtml");
 
   if (assert) {
-    ok(!isDeleteMenuDisabled, "Delete menu item is enabled");
-    ok(!isEditHTMLMenuDisabled, "Edit HTML menu item is enabled");
-    ok(!isPasteHTMLMenuDisabled, "Paste HTML menu item is enabled");
+    ok(!deleteMenuItem.disabled, "Delete menu item is enabled");
+    ok(!editHTMLMenuItem.disabled, "Edit HTML menu item is enabled");
+    ok(!pasteHTMLMenuItem.disabled, "Paste HTML menu item is enabled");
   }
 
-  return !isDeleteMenuDisabled &&
-         !isEditHTMLMenuDisabled &&
-         !isPasteHTMLMenuDisabled;
-});
-
-/**
- * Open a menu (closing it first if necessary).
- * @param {DOMNode} menu A menu that implements hidePopup/openPopup
- * @return a promise that resolves once the menu is opened.
- */
-var reopenMenu = Task.async(function* (menu) {
-  // First close it is if it is already opened.
-  if (menu.state == "closing" || menu.state == "open") {
-    let popuphidden = once(menu, "popuphidden", true);
-    menu.hidePopup();
-    yield popuphidden;
-  }
-
-  // Then open it and return once
-  let popupshown = once(menu, "popupshown", true);
-  menu.openPopup();
-  yield popupshown;
+  return !deleteMenuItem.disabled &&
+         !editHTMLMenuItem.disabled &&
+         !pasteHTMLMenuItem.disabled;
 });
 
 /**
@@ -488,20 +462,6 @@ function createTestHTTPServer() {
 
   server.start(-1);
   return server;
-}
-
-/**
- * A helper that simulates a contextmenu event on the given chrome DOM element.
- */
-function contextMenuClick(element) {
-  let evt = element.ownerDocument.createEvent("MouseEvents");
-  let buttonRight = 2;
-
-  evt.initMouseEvent("contextmenu", true, true,
-    element.ownerDocument.defaultView, 1, 0, 0, 0, 0, false, false, false,
-    false, buttonRight, null);
-
-  element.dispatchEvent(evt);
 }
 
 /**
