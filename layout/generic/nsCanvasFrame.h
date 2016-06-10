@@ -23,7 +23,9 @@ class nsRenderingContext;
  *
  * The root frame is the parent frame for the document element's frame.
  * It only supports having a single child frame which must be an area
- * frame
+ * frame.
+ * @note nsCanvasFrame keeps overflow container continuations of its child
+ * frame in the main child list.
  */
 class nsCanvasFrame final : public nsContainerFrame,
                             public nsIScrollPositionListener,
@@ -120,19 +122,6 @@ public:
    * @see nsGkAtoms::canvasFrame
    */
   virtual nsIAtom* GetType() const override;
-
-  virtual nsresult StealFrame(nsIFrame* aChild, bool aForceNormal) override
-  {
-    NS_ASSERTION(!aForceNormal, "No-one should be passing this in here");
-
-    // nsCanvasFrame keeps overflow container continuations of its child
-    // frame in main child list
-    nsresult rv = nsContainerFrame::StealFrame(aChild, true);
-    if (NS_FAILED(rv)) {
-      rv = nsContainerFrame::StealFrame(aChild);
-    }
-    return rv;
-  }
 
 #ifdef DEBUG_FRAME_DUMP
   virtual nsresult GetFrameName(nsAString& aResult) const override;
