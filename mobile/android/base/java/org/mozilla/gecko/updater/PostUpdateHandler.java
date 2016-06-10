@@ -6,6 +6,7 @@
 package org.mozilla.gecko.updater;
 
 import android.content.Context;
+import android.content.res.AssetManager;
 import android.content.SharedPreferences;
 import android.util.Log;
 
@@ -16,6 +17,7 @@ import org.mozilla.gecko.BrowserApp;
 import org.mozilla.gecko.delegates.BrowserAppDelegateWithReference;
 import org.mozilla.gecko.GeckoSharedPrefs;
 import org.mozilla.gecko.preferences.GeckoPreferences;
+import org.mozilla.gecko.util.IOUtils;
 import org.mozilla.gecko.util.ThreadUtils;
 
 import java.io.File;
@@ -35,85 +37,64 @@ public class PostUpdateHandler extends BrowserAppDelegateWithReference {
     private static final String LOGTAG = "PostUpdateHandler";
 
     @Override
-    public void onStart(BrowserApp browserApp) {
-        final SharedPreferences prefs = GeckoSharedPrefs.forApp(browserApp);
+    public void onStart(final BrowserApp browserApp) {
+        ThreadUtils.postToBackgroundThread(new Runnable() {
+            @Override
+            public void run() {
+                final SharedPreferences prefs = GeckoSharedPrefs.forApp(browserApp);
 
-        // Check if this is a new installation or if the app has been updated since the last start.
-        if (!AppConstants.MOZ_APP_BUILDID.equals(prefs.getString(GeckoPreferences.PREFS_APP_UPDATE_LAST_BUILD_ID, null))) {
-            Log.d(LOGTAG, "Build ID changed since last start: '" + AppConstants.MOZ_APP_BUILDID + "', '" + prefs.getString(GeckoPreferences.PREFS_APP_UPDATE_LAST_BUILD_ID, null) + "'");
+                // Check if this is a new installation or if the app has been updated since the last start.
+                if (!AppConstants.MOZ_APP_BUILDID.equals(prefs.getString(GeckoPreferences.PREFS_APP_UPDATE_LAST_BUILD_ID, null))) {
+                    Log.d(LOGTAG, "Build ID changed since last start: '" + AppConstants.MOZ_APP_BUILDID + "', '" + prefs.getString(GeckoPreferences.PREFS_APP_UPDATE_LAST_BUILD_ID, null) + "'");
 
-            // Copy the bundled system add-ons from the APK to the data directory.
-            copyFeaturesFromAPK();
-        }
+                    // Copy the bundled system add-ons from the APK to the data directory.
+                    copyFeaturesFromAPK(browserApp);
+                }
+            }
+        });
     }
 
     /**
      * Copies the /assets/features folder out of the APK and into the app's data directory.
      */
-    private void copyFeaturesFromAPK() {
-        final BrowserApp browserApp = getBrowserApp();
-        if (browserApp == null) {
-            return;
-        }
+    private void copyFeaturesFromAPK(BrowserApp browserApp) {
+        Log.d(LOGTAG, "Copying system add-ons from APK to dataDir");
 
         final String dataDir = browserApp.getApplicationInfo().dataDir;
-        final String sourceDir = browserApp.getApplicationInfo().sourceDir;
-        final File applicationPackage = new File(sourceDir);
-
-        final String assetsPrefix = "assets/";
-        final String fullPrefix = assetsPrefix + "features/";
-
         final SharedPreferences prefs = GeckoSharedPrefs.forApp(browserApp);
+        final AssetManager assetManager = browserApp.getContext().getAssets();
 
-        ThreadUtils.postToBackgroundThread(new Runnable() {
-            @Override
-            public void run() {
-                Log.d(LOGTAG, "Copying system add-ons from APK to dataDir");
+        try {
+            final String[] assetNames = assetManager.list("features");
 
-                try {
-                    final ZipFile zip = new ZipFile(applicationPackage);
-                    final Enumeration<? extends ZipEntry> zipEntries = zip.entries();
-                    
-                    final byte[] buffer = new byte[1024];
+            for (int i = 0; i < assetNames.length; i++) {
+                final String assetPath = "features/" + assetNames[i];
 
-                    while (zipEntries.hasMoreElements()) {
-                        final ZipEntry fileEntry = zipEntries.nextElement();
-                        final String name = fileEntry.getName();
-
-                        if (fileEntry.isDirectory()) {
-                            // We'll let getDataFile deal with creating the directory hierarchy.
-                            continue;
-                        }
-
-                        // Read from "assets/features/**".
-                        if (!name.startsWith(fullPrefix)) {
-                            continue;
-                        }
-
-                        // Write to "features/**".
-                        final String nameWithoutPrefix = name.substring(assetsPrefix.length());
-                        final File outFile = getDataFile(dataDir, nameWithoutPrefix);
-                        if (outFile == null) {
-                            continue;
-                        }
-
-                        final InputStream fileStream = zip.getInputStream(fileEntry);
-                        try {
-                            writeStream(fileStream, outFile, fileEntry.getTime(), buffer);
-                        } finally {
-                            fileStream.close();
-                        }
-                    }
-
-                    zip.close();
-                } catch (IOException e) {
-                    Log.e(LOGTAG, "Error copying system add-ons from APK.", e);
+                Log.d(LOGTAG, "Copying '" + assetPath + "' from APK to dataDir");
+                
+                final InputStream assetStream = assetManager.open(assetPath);
+                final File outFile = getDataFile(dataDir, assetPath);
+                
+                if (outFile == null) {
+                    continue;
                 }
 
-                // Save the Build ID so we don't perform post-update operations again until the app is updated.
-                prefs.edit().putString(GeckoPreferences.PREFS_APP_UPDATE_LAST_BUILD_ID, AppConstants.MOZ_APP_BUILDID).apply();
+                final OutputStream outStream = new FileOutputStream(outFile);
+
+                try {
+                    IOUtils.copy(assetStream, outStream);
+                } catch (IOException e) {
+                    Log.e(LOGTAG, "Error copying '" + assetPath + "' from APK to dataDir");
+                } finally {
+                    outStream.close();
+                }
             }
-        });
+        } catch (IOException e) {
+            Log.e(LOGTAG, "Error retrieving packaged system add-ons from APK", e);
+        }
+
+        // Save the Build ID so we don't perform post-update operations again until the app is updated.
+        prefs.edit().putString(GeckoPreferences.PREFS_APP_UPDATE_LAST_BUILD_ID, AppConstants.MOZ_APP_BUILDID).apply();
     }
 
     /**
@@ -135,20 +116,5 @@ public class PostUpdateHandler extends BrowserAppDelegateWithReference {
         }
 
         return outFile;
-    }
-
-    private void writeStream(InputStream fileStream, File outFile, final long modifiedTime, byte[] buffer)
-            throws FileNotFoundException, IOException {
-        final OutputStream outStream = new FileOutputStream(outFile);
-        try {
-            int count;
-            while ((count = fileStream.read(buffer)) > 0) {
-                outStream.write(buffer, 0, count);
-            }
-
-            outFile.setLastModified(modifiedTime);
-        } finally {
-            outStream.close();
-        }
     }
 }

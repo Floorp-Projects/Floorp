@@ -5,6 +5,7 @@
 
 #include "nsDeviceContextSpecX.h"
 
+#include "mozilla/gfx/PrintTargetThebes.h"
 #include "mozilla/RefPtr.h"
 #include "nsCRT.h"
 #include <unistd.h>
@@ -18,6 +19,9 @@
 
 // This must be the last include:
 #include "nsObjCExceptions.h"
+
+using namespace mozilla;
+using namespace mozilla::gfx;
 
 nsDeviceContextSpecX::nsDeviceContextSpecX()
 : mPrintSession(NULL)
@@ -136,7 +140,7 @@ void nsDeviceContextSpecX::GetPaperRect(double* aTop, double* aLeft, double* aBo
     NS_OBJC_END_TRY_ABORT_BLOCK;
 }
 
-NS_IMETHODIMP nsDeviceContextSpecX::GetSurfaceForPrinter(gfxASurface **surface)
+already_AddRefed<PrintTarget> nsDeviceContextSpecX::MakePrintTarget()
 {
     NS_OBJC_BEGIN_TRY_ABORT_BLOCK_NSRESULT;
 
@@ -161,13 +165,11 @@ NS_IMETHODIMP nsDeviceContextSpecX::GetSurfaceForPrinter(gfxASurface **surface)
         newSurface = new gfxQuartzSurface(size, SurfaceFormat::A8R8G8B8_UINT32);
     }
 
-    if (!newSurface)
-        return NS_ERROR_FAILURE;
+    if (!newSurface) {
+        return nullptr;
+    }
 
-    *surface = newSurface;
-    NS_ADDREF(*surface);
+    return PrintTargetThebes::CreateOrNull(newSurface);
 
-    return NS_OK;
-
-    NS_OBJC_END_TRY_ABORT_BLOCK_NSRESULT;
+    NS_OBJC_END_TRY_ABORT_BLOCK_NSNULL;
 }

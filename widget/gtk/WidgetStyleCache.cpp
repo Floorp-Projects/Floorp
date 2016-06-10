@@ -106,6 +106,17 @@ CreateProgressWidget()
 }
 
 static GtkWidget*
+CreateTooltipWidget()
+{
+  MOZ_ASSERT(gtk_check_version(3, 20, 0) != nullptr,
+             "CreateTooltipWidget should be used for Gtk < 3.20 only.");
+  GtkWidget* widget = CreateWindowWidget();
+  GtkStyleContext* style = gtk_widget_get_style_context(widget);
+  gtk_style_context_add_class(style, GTK_STYLE_CLASS_TOOLTIP);
+  return widget;
+}
+
+static GtkWidget*
 CreateWidget(WidgetNodeType aWidgetType)
 {
   switch (aWidgetType) {
@@ -133,6 +144,8 @@ CreateWidget(WidgetNodeType aWidgetType)
       return CreateMenuItemWidget(MOZ_GTK_MENUBAR);
     case MOZ_GTK_MENUITEM:
       return CreateMenuItemWidget(MOZ_GTK_MENUPOPUP);
+    case MOZ_GTK_TOOLTIP:
+      return CreateTooltipWidget();
     default:
       /* Not implemented */
       return nullptr;
@@ -148,6 +161,29 @@ GetWidget(WidgetNodeType aWidgetType)
     sWidgetStorage[aWidgetType] = widget;
   }
   return widget;
+}
+
+GtkStyleContext*
+CreateStyleForWidget(GtkWidget* aWidget, GtkStyleContext* aParentStyle)
+{
+  GtkWidgetPath* path =
+    gtk_widget_path_copy(gtk_style_context_get_path(aParentStyle));
+
+  // Work around https://bugzilla.gnome.org/show_bug.cgi?id=767312
+  // which exists in GTK+ 3.20.
+  gtk_widget_get_style_context(aWidget);
+
+  gtk_widget_path_append_for_widget(path, aWidget);
+  // Release any floating reference on aWidget.
+  g_object_ref_sink(aWidget);
+  g_object_unref(aWidget);
+
+  GtkStyleContext *context = gtk_style_context_new();
+  gtk_style_context_set_path(context, path);
+  gtk_style_context_set_parent(context, aParentStyle);
+  gtk_widget_path_unref(path);
+
+  return context;
 }
 
 GtkStyleContext*
@@ -221,6 +257,11 @@ GetCssNodeStyleInternal(WidgetNodeType aNodeType)
       style = CreateChildCSSNode("progress",
                                  MOZ_GTK_PROGRESS_TROUGH);
       break;
+    case MOZ_GTK_TOOLTIP:
+      // We create this from the path because GtkTooltipWindow is not public.
+      style = CreateCSSNode("tooltip", nullptr, GTK_TYPE_TOOLTIP);
+      gtk_style_context_add_class(style, GTK_STYLE_CLASS_BACKGROUND);
+      break; 
     default:
       // TODO - create style from style path
       GtkWidget* widget = GetWidget(aNodeType);

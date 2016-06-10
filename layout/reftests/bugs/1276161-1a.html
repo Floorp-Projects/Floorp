@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<meta charset="utf-8">
+<title>Test for bug 1276161 - dashed lines in canvas should look different from solid lines</title>
+
+<canvas id="canvas"></canvas>
+
+<script>
+
+var canvas = document.getElementById('canvas');
+canvas.width = 200;
+canvas.height = 200;
+
+var ctxx = canvas.getContext('2d');
+ctxx.strokeStyle = 'black';
+ctxx.setLineDash([2,4]);
+ctxx.moveTo(10, 10);
+ctxx.lineWidth = 2;
+ctxx.lineTo(30, 30);
+ctxx.stroke();
+ctxx.restore();
+
+</script>
+</body>
+</html>

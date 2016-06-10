@@ -28,7 +28,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/WakeLock.h"
 #include "mozilla/dom/power/PowerManagerService.h"
-#include "nsPerformance.h"
+#include "mozilla/dom/Performance.h"
 #include "mozilla/dom/VideoPlaybackQuality.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT(Video)
@@ -235,7 +235,7 @@ HTMLVideoElement::GetVideoPlaybackQuality()
 
   if (sVideoStatsEnabled) {
     if (nsPIDOMWindowInner* window = OwnerDoc()->GetInnerWindow()) {
-      nsPerformance* perf = window->GetPerformance();
+      Performance* perf = window->GetPerformance();
       if (perf) {
         creationTime = perf->Now();
       }

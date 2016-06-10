@@ -1,0 +1,14 @@
+$inherits:
+  from: 'tasks/windows_build.yml'
+  variables:
+    build_product: 'firefox'
+task:
+  metadata:
+    name: '[TC] Firefox {{build_name}} ({{build_type}})'
+    description: 'Firefox {{build_name}} {{build_type}}'
+  payload:
+    command:
+      - 'mkdir .\build\src'
+      - 'hg share c:\builds\hg-shared\mozilla-central .\build\src'
+      - 'hg pull -u -R .\build\src --rev %GECKO_HEAD_REV% %GECKO_HEAD_REPOSITORY%'
+      - 'c:\mozilla-build\python\python.exe .\build\src\testing\mozharness\scripts\fx_desktop_build.py --config builds\taskcluster_firefox_{{build_name}}_{{build_type}}.py --branch {{project}} --skip-buildbot-actions --work-dir %cd:X:=x:%\build'

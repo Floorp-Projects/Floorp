@@ -205,10 +205,8 @@ AudioNodeExternalInputStream::ProcessInput(GraphTime aFrom, GraphTime aTo,
 
   uint32_t accumulateIndex = 0;
   if (inputChannels) {
-    // TODO: See Bug 1261168. Ideally we would use an aligned version of
-    // AutoTArray (of size GUESS_AUDIO_CHANNELS*WEBAUDIO_BLOCK_SIZE) here.
-    AlignedTArray<float,16> downmixBuffer;
-    downmixBuffer.SetLength(GUESS_AUDIO_CHANNELS*WEBAUDIO_BLOCK_SIZE);
+    DownmixBufferType downmixBuffer;
+    ASSERT_ALIGNED16(downmixBuffer.Elements());
     for (uint32_t i = 0; i < audioSegments.Length(); ++i) {
       AudioBlock tmpChunk;
       ConvertSegmentToAudioBlock(&audioSegments[i], &tmpChunk, inputChannels);

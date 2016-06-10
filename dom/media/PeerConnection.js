@@ -512,10 +512,13 @@ RTCPeerConnection.prototype = {
   // This wrapper helps implement legacy callbacks in a manner that produces
   // correct line-numbers in errors, provided that methods validate their inputs
   // before putting themselves on the pc's operations chain.
+  //
+  // It also serves as guard against settling promises past close().
 
-  _legacyCatch: function(onSuccess, onError, func) {
+  _legacyCatchAndCloseGuard: function(onSuccess, onError, func) {
     if (!onSuccess) {
-      return func();
+      return func().then(v => (this._closed ? new Promise(() => {}) : v),
+                         e => (this._closed ? new Promise(() => {}) : Promise.reject(e)));
     }
     try {
       return func().then(this._wrapLegacyCallback(onSuccess),
@@ -711,7 +714,7 @@ RTCPeerConnection.prototype = {
     } else {
       options = optionsOrOnSuccess;
     }
-    return this._legacyCatch(onSuccess, onError, () => {
+    return this._legacyCatchAndCloseGuard(onSuccess, onError, () => {
       // TODO: Remove error on constraint-like RTCOptions next cycle (1197021).
       // Note that webidl bindings make o.mandatory implicit but not o.optional.
       function convertLegacyOptions(o) {
@@ -778,7 +781,7 @@ RTCPeerConnection.prototype = {
     } else {
       options = optionsOrOnSuccess;
     }
-    return this._legacyCatch(onSuccess, onError, () => {
+    return this._legacyCatchAndCloseGuard(onSuccess, onError, () => {
       let origin = Cu.getWebIDLCallerPrincipal().origin;
       return this._chain(() => {
         let p = Promise.all([this.getPermission(), this._certificateReady])
@@ -828,7 +831,7 @@ RTCPeerConnection.prototype = {
   },
 
   setLocalDescription: function(desc, onSuccess, onError) {
-    return this._legacyCatch(onSuccess, onError, () => {
+    return this._legacyCatchAndCloseGuard(onSuccess, onError, () => {
       this._localType = desc.type;
 
       let type;
@@ -912,7 +915,7 @@ RTCPeerConnection.prototype = {
   },
 
   setRemoteDescription: function(desc, onSuccess, onError) {
-    return this._legacyCatch(onSuccess, onError, () => {
+    return this._legacyCatchAndCloseGuard(onSuccess, onError, () => {
       this._remoteType = desc.type;
 
       let type;
@@ -1013,7 +1016,7 @@ RTCPeerConnection.prototype = {
 
 
   addIceCandidate: function(c, onSuccess, onError) {
-    return this._legacyCatch(onSuccess, onError, () => {
+    return this._legacyCatchAndCloseGuard(onSuccess, onError, () => {
       if (!c.candidate && !c.sdpMLineIndex) {
         throw new this._win.DOMException("Invalid candidate passed to addIceCandidate!",
                                          "InvalidParameterError");
@@ -1213,7 +1216,7 @@ RTCPeerConnection.prototype = {
   },
 
   getStats: function(selector, onSuccess, onError) {
-    return this._legacyCatch(onSuccess, onError, () => {
+    return this._legacyCatchAndCloseGuard(onSuccess, onError, () => {
       return this._chain(() => new this._win.Promise((resolve, reject) => {
         this._onGetStatsSuccess = resolve;
         this._onGetStatsFailure = reject;

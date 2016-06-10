@@ -7,10 +7,12 @@ from __future__ import print_function, unicode_literals
 import os
 import platform
 import sys
-import time
 
 
 SEARCH_PATHS = [
+    'marionette',
+    'marionette/marionette/runner/mixins/browsermob-proxy-py',
+    'marionette/client',
     'mochitest',
     'mozbase/mozcrash',
     'mozbase/mozdebug',
@@ -30,6 +32,7 @@ SEARCH_PATHS = [
     'mozbase/mozversion',
     'mozbase/manifestparser',
     'tools/mach',
+    'tools/wptserve',
 ]
 
 # Individual files providing mach commands.
@@ -64,6 +67,8 @@ CATEGORIES = {
 
 
 def bootstrap(test_package_root):
+    test_package_root = os.path.abspath(test_package_root)
+
     # Ensure we are running Python 2.7+. We put this check here so we generate a
     # user-friendly error message rather than a cryptic stack trace on module
     # import.
@@ -72,27 +77,31 @@ def bootstrap(test_package_root):
         print('You are running Python', platform.python_version())
         sys.exit(1)
 
-    try:
-        import mach.main
-    except ImportError:
-        sys.path[0:0] = [os.path.join(test_package_root, path) for path in SEARCH_PATHS]
-        import mach.main
+    sys.path[0:0] = [os.path.join(test_package_root, path) for path in SEARCH_PATHS]
+    import mach.main
 
     def populate_context(context, key=None):
+        if key is not None:
+            return
+
         context.package_root = test_package_root
         context.certs_dir = os.path.join(test_package_root, 'certs')
         context.bin_dir = os.path.join(test_package_root, 'bin')
         context.modules_dir = os.path.join(test_package_root, 'modules')
-        return context
 
     mach = mach.main.Mach(os.getcwd())
     mach.populate_context_handler = populate_context
 
     for category, meta in CATEGORIES.items():
         mach.define_category(category, meta['short'], meta['long'],
-            meta['priority'])
+                             meta['priority'])
 
     for path in MACH_MODULES:
-        mach.load_commands_from_file(os.path.join(test_package_root, path))
+        cmdfile = os.path.join(test_package_root, path)
+
+        # Depending on which test zips were extracted,
+        # the command module might not exist
+        if os.path.isfile(cmdfile):
+            mach.load_commands_from_file(cmdfile)
 
     return mach

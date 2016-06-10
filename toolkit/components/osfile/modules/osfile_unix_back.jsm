@@ -264,26 +264,18 @@
          // We override the definition of free() on several platforms.
          let default_lib = new SharedAll.Library("default_lib",
                                                  "a.out");
-         try {
-           // On platforms for which we override free(), nspr defines
-           // a special library name "a.out" that will resolve to the
-           // correct implementation free().
 
-           default_lib.declareLazy(SysFile, "free",
-             "free", ctypes.default_abi,
-             /*return*/ ctypes.void_t,
-             /*ptr*/    ctypes.voidptr_t);
+         // On platforms for which we override free(), nspr defines
+         // a special library name "a.out" that will resolve to the
+         // correct implementation free().
+         // If it turns out we don't have an a.out library or a.out
+         // doesn't contain free, use the ordinary libc free.
 
-         } catch (ex) {
-           // We don't have an a.out library or a.out doesn't contain free.
-           // Either way, use the ordinary libc free.
-
-           libc.declareLazy(SysFile, "free",
-             "free", ctypes.default_abi,
-             /*return*/ ctypes.void_t,
-             /*ptr*/    ctypes.voidptr_t);
-         }
-      }
+         default_lib.declareLazyWithFallback(libc, SysFile, "free",
+           "free", ctypes.default_abi,
+           /*return*/ ctypes.void_t,
+           /*ptr*/    ctypes.voidptr_t);
+       }
 
 
        // Other functions
@@ -625,7 +617,7 @@
                       /*fd*/        Type.fd,
                       /*buf*/       Type.stat.out_ptr);
 
-         
+
          SysFile.stat = function stat(path, buf) {
            return Stat.xstat(ver, path, buf);
          };

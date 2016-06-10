@@ -936,6 +936,9 @@ LIRGenerator::visitTest(MTest* test)
       case MIRType::Boolean:
         add(new(alloc()) LTestIAndBranch(useRegister(opd), ifTrue, ifFalse));
         break;
+      case MIRType::Int64:
+        add(new(alloc()) LTestI64AndBranch(useInt64Register(opd), ifTrue, ifFalse));
+        break;
       default:
         MOZ_CRASH("Bad type");
     }
