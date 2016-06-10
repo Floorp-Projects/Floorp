@@ -66,8 +66,7 @@ public:
     NS_IMETHOD InvokeDragSession (nsIDOMNode *aDOMNode,
                                   nsISupportsArray * anArrayTransferables,
                                   nsIScriptableRegion * aRegion,
-                                  uint32_t aActionType,
-                                  nsContentPolicyType aContentPolicyType) override;
+                                  uint32_t aActionType) override;
     NS_IMETHOD StartDragSession() override;
     NS_IMETHOD EndDragSession(bool aDoneDrag) override;
 
