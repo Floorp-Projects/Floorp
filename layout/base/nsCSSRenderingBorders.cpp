@@ -2103,10 +2103,19 @@ nsCSSBorderRenderer::DrawDottedSideSlow(mozilla::css::Side aSide)
   }
 
   RefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
+  size_t segmentCount = 0;
   for (size_t i = from; i <= to; i += 2) {
+    if (segmentCount > BORDER_SEGMENT_COUNT_MAX) {
+      RefPtr<Path> path = builder->Finish();
+      mDrawTarget->Fill(path, ColorPattern(ToDeviceColor(borderColor)));
+      builder = mDrawTarget->CreatePathBuilder();
+      segmentCount = 0;
+    }
+
     Point P = (start * (count - i) + end * i) / count;
     builder->MoveTo(Point(P.x + radius, P.y));
     builder->Arc(P, radius, 0.0f, Float(2.0 * M_PI));
+    segmentCount++;
   }
   RefPtr<Path> path = builder->Finish();
   mDrawTarget->Fill(path, ColorPattern(ToDeviceColor(borderColor)));
@@ -2244,11 +2253,20 @@ nsCSSBorderRenderer::DrawDottedCornerSlow(mozilla::css::Side aSide,
                             C0, R0, Cn, Rn, mBorderCornerDimensions[aCorner]);
 
   RefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
+  size_t segmentCount = 0;
   while (finder.HasMore()) {
+    if (segmentCount > BORDER_SEGMENT_COUNT_MAX) {
+      RefPtr<Path> path = builder->Finish();
+      mDrawTarget->Fill(path, ColorPattern(ToDeviceColor(borderColor)));
+      builder = mDrawTarget->CreatePathBuilder();
+      segmentCount = 0;
+    }
+
     DottedCornerFinder::Result result = finder.Next();
 
     builder->MoveTo(Point(result.C.x + result.r, result.C.y));
     builder->Arc(result.C, result.r, 0, Float(2.0 * M_PI));
+    segmentCount++;
   }
   RefPtr<Path> path = builder->Finish();
   mDrawTarget->Fill(path, ColorPattern(ToDeviceColor(borderColor)));
@@ -2279,7 +2297,15 @@ nsCSSBorderRenderer::DrawDashedCornerSlow(mozilla::css::Side aSide,
                             mBorderCornerDimensions[aCorner]);
 
   RefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
+  size_t segmentCount = 0;
   while (finder.HasMore()) {
+    if (segmentCount > BORDER_SEGMENT_COUNT_MAX) {
+      RefPtr<Path> path = builder->Finish();
+      mDrawTarget->Fill(path, ColorPattern(ToDeviceColor(borderColor)));
+      builder = mDrawTarget->CreatePathBuilder();
+      segmentCount = 0;
+    }
+
     DashedCornerFinder::Result result = finder.Next();
 
     builder->MoveTo(result.outerSectionBezier.mPoints[0]);
@@ -2291,6 +2317,7 @@ nsCSSBorderRenderer::DrawDashedCornerSlow(mozilla::css::Side aSide,
                       result.innerSectionBezier.mPoints[1],
                       result.innerSectionBezier.mPoints[0]);
     builder->LineTo(result.outerSectionBezier.mPoints[0]);
+    segmentCount++;
   }
 
   if (outerBezier.mPoints[0].x != innerBezier.mPoints[0].x) {
