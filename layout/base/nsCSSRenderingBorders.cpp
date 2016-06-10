@@ -49,7 +49,7 @@ using namespace mozilla::gfx;
  *            |- DrawBorderSides with one side
  *      |- for each side
  *         |- GetSideClipWithoutCornersRect
- *         |- DrawDashedOrDottedSide || DrawBorderSides with one side
+ *         |- DrawDashedSide || DrawBorderSides with one side
  */
 
 static void ComputeBorderCornerDimensions(const Rect& aOuterRect,
@@ -102,43 +102,6 @@ AllCornersZeroSize(const RectCornerRadii& corners) {
     IsZeroSize(corners[NS_CORNER_TOP_RIGHT]) &&
     IsZeroSize(corners[NS_CORNER_BOTTOM_RIGHT]) &&
     IsZeroSize(corners[NS_CORNER_BOTTOM_LEFT]);
-}
-
-static mozilla::css::Side
-GetHorizontalSide(mozilla::css::Corner aCorner)
-{
-  return (aCorner == C_TL || aCorner == C_TR) ? NS_SIDE_TOP : NS_SIDE_BOTTOM;
-}
-
-static mozilla::css::Side
-GetVerticalSide(mozilla::css::Corner aCorner)
-{
-  return (aCorner == C_TL || aCorner == C_BL) ? NS_SIDE_LEFT : NS_SIDE_RIGHT;
-}
-
-static mozilla::css::Corner
-GetCWCorner(mozilla::css::Side aSide)
-{
-  return mozilla::css::Corner(NEXT_SIDE(aSide));
-}
-
-static mozilla::css::Corner
-GetCCWCorner(mozilla::css::Side aSide)
-{
-  return mozilla::css::Corner(aSide);
-}
-
-static bool
-IsSingleSide(int aSides)
-{
-  return aSides == SIDE_BIT_TOP || aSides == SIDE_BIT_RIGHT ||
-         aSides == SIDE_BIT_BOTTOM || aSides == SIDE_BIT_LEFT;
-}
-
-static bool
-IsHorizontalSide(mozilla::css::Side aSide)
-{
-  return aSide == NS_SIDE_TOP || aSide == NS_SIDE_BOTTOM;
 }
 
 typedef enum {
@@ -344,56 +307,6 @@ nsCSSBorderRenderer::IsSolidCornerStyle(uint8_t aStyle, mozilla::css::Corner aCo
   }
 }
 
-bool
-nsCSSBorderRenderer::IsCornerMergeable(mozilla::css::Corner aCorner)
-{
-  // Corner between dotted borders with same width and small radii is
-  // merged into single dot.
-  //
-  //  widthH / 2.0
-  // |<---------->|
-  // |            |
-  // |radius.width|
-  // |<--->|      |
-  // |     |      |
-  // |    _+------+------------+-----
-  // |  /      ###|###         |
-  // |/    #######|#######     |
-  // +   #########|#########   |
-  // |  ##########|##########  |
-  // | ###########|########### |
-  // | ###########|########### |
-  // |############|############|
-  // +------------+############|
-  // |#########################|
-  // | ####################### |
-  // | ####################### |
-  // |  #####################  |
-  // |   ###################   |
-  // |     ###############     |
-  // |         #######         |
-  // +-------------------------+----
-  // |                         |
-  // |                         |
-  mozilla::css::Side sideH(GetHorizontalSide(aCorner));
-  mozilla::css::Side sideV(GetVerticalSide(aCorner));
-  uint8_t styleH = mBorderStyles[sideH];
-  uint8_t styleV = mBorderStyles[sideV];
-  if (styleH != styleV || styleH != NS_STYLE_BORDER_STYLE_DOTTED) {
-    return false;
-  }
-
-  Float widthH = mBorderWidths[sideH];
-  Float widthV = mBorderWidths[sideV];
-  if (widthH != widthV) {
-    return false;
-  }
-
-  Size radius = mBorderRadii[aCorner];
-  return IsZeroSize(radius) ||
-         (radius.width < widthH / 2.0f && radius.height < widthH / 2.0f);
-}
-
 BorderColorStyle
 nsCSSBorderRenderer::BorderColorStyleForSolidCorner(uint8_t aStyle, mozilla::css::Corner aCorner)
 {
@@ -466,12 +379,12 @@ nsCSSBorderRenderer::GetSideClipWithoutCornersRect(mozilla::css::Side aSide)
   // side.  This relies on the relationship between side indexing and
   // corner indexing; that is, 0 == SIDE_TOP and 0 == CORNER_TOP_LEFT,
   // with both proceeding clockwise.
-  Size sideCornerSum = mBorderCornerDimensions[GetCCWCorner(aSide)]
-                     + mBorderCornerDimensions[GetCWCorner(aSide)];
+  Size sideCornerSum = mBorderCornerDimensions[mozilla::css::Corner(aSide)]
+                     + mBorderCornerDimensions[mozilla::css::Corner(NEXT_SIDE(aSide))];
   Rect rect(mOuterRect.TopLeft() + offset,
             mOuterRect.Size() - sideCornerSum);
 
-  if (IsHorizontalSide(aSide))
+  if (aSide == NS_SIDE_TOP || aSide == NS_SIDE_BOTTOM)
     rect.height = mBorderWidths[aSide];
   else
     rect.width = mBorderWidths[aSide];
@@ -486,15 +399,6 @@ nsCSSBorderRenderer::GetSideClipWithoutCornersRect(mozilla::css::Side aSide)
 typedef enum {
   // clip to the trapezoid formed by the corners of the
   // inner and outer rectangles for the given side
-  //
-  // +---------------
-  // |\%%%%%%%%%%%%%%
-  // |  \%%%%%%%%%%%%
-  // |   \%%%%%%%%%%%
-  // |     \%%%%%%%%%
-  // |      +--------
-  // |      |
-  // |      |
   SIDE_CLIP_TRAPEZOID,
 
   // clip to the trapezoid formed by the outer rectangle
@@ -505,44 +409,12 @@ typedef enum {
   //
   // This is needed for correctly clipping rounded borders,
   // which might extend past the SIDE_CLIP_TRAPEZOID trap.
-  //
-  // +-------__--+---
-  //  \%%%%_-%%%%%%%%
-  //    \+-%%%%%%%%%%
-  //    / \%%%%%%%%%%
-  //   /   \%%%%%%%%%
-  //  |     +%%_-+---
-  // |        +%%%%%%
-  // |       / \%%%%%
-  // +      +    \%%%
-  // |      |      +-
   SIDE_CLIP_TRAPEZOID_FULL,
 
-  // clip to the rectangle formed by the given side including corner.
-  // This is used by the non-dotted side next to dotted side.
-  //
-  // +---------------
-  // |%%%%%%%%%%%%%%%
-  // |%%%%%%%%%%%%%%%
-  // |%%%%%%%%%%%%%%%
-  // |%%%%%%%%%%%%%%%
-  // +------+--------
-  // |      |
-  // |      |
-  SIDE_CLIP_RECTANGLE_CORNER,
-
-  // clip to the rectangle formed by the given side excluding corner.
-  // This is used by the dotted side next to non-dotted side.
-  //
-  // +------+--------
-  // |      |%%%%%%%%
-  // |      |%%%%%%%%
-  // |      |%%%%%%%%
-  // |      |%%%%%%%%
-  // |      +--------
-  // |      |
-  // |      |
-  SIDE_CLIP_RECTANGLE_NO_CORNER,
+  // clip to the rectangle formed by the given side; a specific
+  // overlap algorithm is used; see the function for details.
+  // this is currently used for dashing.
+  SIDE_CLIP_RECTANGLE
 } SideClipType;
 
 // Given three points, p0, p1, and midPoint, move p1 further in to the
@@ -590,30 +462,24 @@ nsCSSBorderRenderer::GetSideClipSubPath(mozilla::css::Side aSide)
   Point start[2];
   Point end[2];
 
-#define IS_DOTTED(_s)  ((_s) == NS_STYLE_BORDER_STYLE_DOTTED)
-  bool isDotted      = IS_DOTTED(mBorderStyles[aSide]);
-  bool startIsDotted = IS_DOTTED(mBorderStyles[PREV_SIDE(aSide)]);
-  bool endIsDotted   = IS_DOTTED(mBorderStyles[NEXT_SIDE(aSide)]);
-#undef IS_DOTTED
+#define IS_DASHED_OR_DOTTED(_s)  ((_s) == NS_STYLE_BORDER_STYLE_DASHED || (_s) == NS_STYLE_BORDER_STYLE_DOTTED)
+  bool isDashed      = IS_DASHED_OR_DOTTED(mBorderStyles[aSide]);
+  bool startIsDashed = IS_DASHED_OR_DOTTED(mBorderStyles[PREV_SIDE(aSide)]);
+  bool endIsDashed   = IS_DASHED_OR_DOTTED(mBorderStyles[NEXT_SIDE(aSide)]);
+#undef IS_DASHED_OR_DOTTED
 
   SideClipType startType = SIDE_CLIP_TRAPEZOID;
   SideClipType endType = SIDE_CLIP_TRAPEZOID;
 
-  if (!IsZeroSize(mBorderRadii[GetCCWCorner(aSide)])) {
+  if (!IsZeroSize(mBorderRadii[mozilla::css::Corner(aSide)]))
     startType = SIDE_CLIP_TRAPEZOID_FULL;
-  } else if (startIsDotted && !isDotted) {
-    startType = SIDE_CLIP_RECTANGLE_CORNER;
-  } else if (!startIsDotted && isDotted) {
-    startType = SIDE_CLIP_RECTANGLE_NO_CORNER;
-  }
+  else if (startIsDashed && isDashed)
+    startType = SIDE_CLIP_RECTANGLE;
 
-  if (!IsZeroSize(mBorderRadii[GetCWCorner(aSide)])) {
+  if (!IsZeroSize(mBorderRadii[mozilla::css::Corner(NEXT_SIDE(aSide))]))
     endType = SIDE_CLIP_TRAPEZOID_FULL;
-  } else if (endIsDotted && !isDotted) {
-    endType = SIDE_CLIP_RECTANGLE_CORNER;
-  } else if (!endIsDotted && isDotted) {
-    endType = SIDE_CLIP_RECTANGLE_NO_CORNER;
-  }
+  else if (endIsDashed && isDashed)
+    endType = SIDE_CLIP_RECTANGLE;
 
   Point midPoint = mInnerRect.Center();
 
@@ -625,34 +491,20 @@ nsCSSBorderRenderer::GetSideClipSubPath(mozilla::css::Side aSide)
 
   if (startType == SIDE_CLIP_TRAPEZOID_FULL) {
     MaybeMoveToMidPoint(start[0], start[1], midPoint);
-  } else if (startType == SIDE_CLIP_RECTANGLE_CORNER) {
-    if (IsHorizontalSide(aSide)) {
+  } else if (startType == SIDE_CLIP_RECTANGLE) {
+    if (aSide == NS_SIDE_TOP || aSide == NS_SIDE_BOTTOM)
       start[1] = Point(mOuterRect.CCWCorner(aSide).x, mInnerRect.CCWCorner(aSide).y);
-    } else {
+    else
       start[1] = Point(mInnerRect.CCWCorner(aSide).x, mOuterRect.CCWCorner(aSide).y);
-    }
-  } else if (startType == SIDE_CLIP_RECTANGLE_NO_CORNER) {
-    if (IsHorizontalSide(aSide)) {
-      start[0] = Point(mInnerRect.CCWCorner(aSide).x, mOuterRect.CCWCorner(aSide).y);
-    } else {
-      start[0] = Point(mOuterRect.CCWCorner(aSide).x, mInnerRect.CCWCorner(aSide).y);
-    }
   }
 
   if (endType == SIDE_CLIP_TRAPEZOID_FULL) {
     MaybeMoveToMidPoint(end[0], end[1], midPoint);
-  } else if (endType == SIDE_CLIP_RECTANGLE_CORNER) {
-    if (IsHorizontalSide(aSide)) {
-      end[1] = Point(mOuterRect.CWCorner(aSide).x, mInnerRect.CWCorner(aSide).y);
-    } else {
-      end[1] = Point(mInnerRect.CWCorner(aSide).x, mOuterRect.CWCorner(aSide).y);
-    }
-  } else if (endType == SIDE_CLIP_RECTANGLE_NO_CORNER) {
-    if (IsHorizontalSide(aSide)) {
+  } else if (endType == SIDE_CLIP_RECTANGLE) {
+    if (aSide == NS_SIDE_TOP || aSide == NS_SIDE_BOTTOM)
       end[0] = Point(mInnerRect.CWCorner(aSide).x, mOuterRect.CWCorner(aSide).y);
-    } else {
+    else
       end[0] = Point(mOuterRect.CWCorner(aSide).x, mInnerRect.CWCorner(aSide).y);
-    }
   }
 
   RefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
@@ -662,395 +514,6 @@ nsCSSBorderRenderer::GetSideClipSubPath(mozilla::css::Side aSide)
   builder->LineTo(start[1]);
   builder->Close();
   return builder->Finish();
-}
-
-Point
-nsCSSBorderRenderer::GetStraightBorderPoint(mozilla::css::Side aSide,
-                                            mozilla::css::Corner aCorner,
-                                            bool* aIsUnfilled)
-{
-  // Calculate the end point of the side for dashed/dotted border, that is also
-  // the end point of the corner curve.  The point is specified by aSide and
-  // aCorner. (e.g. NS_SIDE_TOP and C_TL means the left end of border-top)
-  //
-  //
-  //  aCorner        aSide
-  //         +--------------------
-  //         |
-  //         |
-  //         |         +----------
-  //         |    the end point
-  //         |
-  //         |         +----------
-  //         |         |
-  //         |         |
-  //         |         |
-  //
-  // The position of the point depends on the border-style, border-width, and
-  // border-radius of the side, corner, and the adjacent side beyond the corner,
-  // to make those sides (and corner) interact well.
-  //
-  // If the style of aSide is dotted and the dot at the point should be
-  // unfilled, true is stored to *aIsUnfilled, otherwise false is stored.
-
-  const Float signsList[4][2] = {
-    { +1.0f, +1.0f },
-    { -1.0f, +1.0f },
-    { -1.0f, -1.0f },
-    { +1.0f, -1.0f }
-  };
-  const Float (& signs)[2] = signsList[aCorner];
-
-  *aIsUnfilled = false;
-
-  Point P = mOuterRect.AtCorner(aCorner);
-  uint8_t style = mBorderStyles[aSide];
-  Float borderWidth = mBorderWidths[aSide];
-  Size dim = mBorderCornerDimensions[aCorner];
-  bool isHorizontal = IsHorizontalSide(aSide);
-  //
-  //    aCorner      aSide
-  //           +--------------
-  //           |
-  //           |   +----------
-  //           |   |
-  // otherSide |   |
-  //           |   |
-  mozilla::css::Side otherSide = ((uint8_t)aSide == (uint8_t)aCorner)
-                                 ? PREV_SIDE(aSide)
-                                 : NEXT_SIDE(aSide);
-  uint8_t otherStyle = mBorderStyles[otherSide];
-  Float otherBorderWidth = mBorderWidths[otherSide];
-  Size radius = mBorderRadii[aCorner];
-  if (IsZeroSize(radius)) {
-    radius.width = 0.0f;
-    radius.height = 0.0f;
-  }
-  if (style == NS_STYLE_BORDER_STYLE_DOTTED &&
-      otherStyle == NS_STYLE_BORDER_STYLE_DOTTED) {
-    if (borderWidth == otherBorderWidth) {
-      if (radius.width < borderWidth / 2.0f &&
-          radius.height < borderWidth / 2.0f) {
-        // Two dots are merged into one and placed at the corner.
-        //
-        //  borderWidth / 2.0
-        // |<---------->|
-        // |            |
-        // |radius.width|
-        // |<--->|      |
-        // |     |      |
-        // |    _+------+------------+-----
-        // |  /      ###|###         |
-        // |/    #######|#######     |
-        // +   #########|#########   |
-        // |  ##########|##########  |
-        // | ###########|########### |
-        // | ###########|########### |
-        // |############|############|
-        // +------------+############|
-        // |########### P ###########|
-        // | ####################### |
-        // | ####################### |
-        // |  #####################  |
-        // |   ###################   |
-        // |     ###############     |
-        // |         #######         |
-        // +-------------------------+----
-        // |                         |
-        // |                         |
-        if (isHorizontal) {
-          P.x += signs[0] * borderWidth / 2.0f;
-          P.y += signs[1] * borderWidth / 2.0f;
-        } else {
-          P.x += signs[0] * borderWidth / 2.0f;
-          P.y += signs[1] * borderWidth / 2.0f;
-        }
-      } else {
-        // Two dots are drawn separately.
-        //
-        //    borderWidth * 1.5
-        //   |<------------>|
-        //   |              |
-        //   |radius.width  |
-        //   |<----->|      |
-        //   |       |      |
-        //   |    _--+-+----+---
-        //   |  _-     |  ##|##
-        //   | /       | ###|###
-        //   |/        |####|####
-        //   |         |####+####
-        //   |         |### P ###
-        //   +         | ###|###
-        //   |         |  ##|##
-        //   +---------+----+---
-        //   |  #####  |
-        //   | ####### |
-        //   |#########|
-        //   +----+----+
-        //   |#########|
-        //   | ####### |
-        //   |  #####  |
-        //   |         |
-        //
-        // There should be enough gap between 2 dots even if radius.width is
-        // small but larger than borderWidth / 2.0.  borderWidth * 1.5 is the
-        // value that there's imaginally unfilled dot at the corner.  The
-        // unfilled dot may overflow from the outer curve, but filled dots
-        // doesn't, so this could be acceptable solution at least for now.
-        // We may have to find better model/value.
-        //
-        //    imaginally unfilled dot at the corner
-        //        |
-        //        v    +----+---
-        //      *****  |  ##|##
-        //     ******* | ###|###
-        //    *********|####|####
-        //    *********|####+####
-        //    *********|### P ###
-        //     ******* | ###|###
-        //      *****  |  ##|##
-        //   +---------+----+---
-        //   |  #####  |
-        //   | ####### |
-        //   |#########|
-        //   +----+----+
-        //   |#########|
-        //   | ####### |
-        //   |  #####  |
-        //   |         |
-        Float minimum = borderWidth * 1.5f;
-        if (isHorizontal) {
-          P.x += signs[0] * std::max(radius.width, minimum);
-          P.y += signs[1] * borderWidth / 2.0f;
-        } else {
-          P.x += signs[0] * borderWidth / 2.0f;
-          P.y += signs[1] * std::max(radius.height, minimum);
-        }
-      }
-
-      return P;
-    }
-
-    if (borderWidth < otherBorderWidth) {
-      // This side is smaller than other side, other side draws the corner.
-      //
-      //  otherBorderWidth + borderWidth / 2.0
-      // |<---------->|
-      // |            |
-      // +---------+--+--------
-      // |  #####  | *|*  ###
-      // | ####### |**|**#####
-      // |#########|**+**##+##
-      // |####+####|* P *#####
-      // |#########| ***  ###
-      // | ####### +-----------
-      // |  #####  |  ^
-      // |         |  |
-      // |         | first dot is not filled
-      // |         |
-      //
-      //      radius.width
-      // |<----------------->|
-      // |                   |
-      // |             ___---+-------------
-      // |         __--     #|#       ###
-      // |       _-        ##|##     #####
-      // |     /           ##+##     ##+##
-      // |   /             # P #     #####
-      // |  |               #|#       ###
-      // | |             __--+-------------
-      // ||            _-    ^
-      // ||           /      |
-      // |           /      first dot is filled
-      // |          |
-      // |          |
-      // |  #####  |
-      // | ####### |
-      // |#########|
-      // +----+----+
-      // |#########|
-      // | ####### |
-      // |  #####  |
-      Float minimum = otherBorderWidth + borderWidth / 2.0f;
-      if (isHorizontal) {
-        if (radius.width < minimum) {
-          *aIsUnfilled = true;
-          P.x += signs[0] * minimum;
-        } else {
-          P.x += signs[0] * radius.width;
-        }
-        P.y += signs[1] * borderWidth / 2.0f;
-      } else {
-        P.x += signs[0] * borderWidth / 2.0f;
-        if (radius.height < minimum) {
-          *aIsUnfilled = true;
-          P.y += signs[1] * minimum;
-        } else {
-          P.y += signs[1] * radius.height;
-        }
-      }
-
-      return P;
-    }
-
-    // This side is larger than other side, this side draws the corner.
-    //
-    //  borderWidth / 2.0
-    // |<-->|
-    // |    |
-    // +----+---------------------
-    // |  ##|##           #####
-    // | ###|###         #######
-    // |####|####       #########
-    // |####+####       ####+####
-    // |### P ###       #########
-    // | #######         #######
-    // |  #####           #####
-    // +-----+---------------------
-    // | *** |
-    // |*****|
-    // |**+**| <-- first dot in other side is not filled
-    // |*****|
-    // | *** |
-    // | ### |
-    // |#####|
-    // |##+##|
-    // |#####|
-    // | ### |
-    // |     |
-    if (isHorizontal) {
-      P.x += signs[0] * std::max(radius.width, borderWidth / 2.0f);
-      P.y += signs[1] * borderWidth / 2.0f;
-    } else {
-      P.x += signs[0] * borderWidth / 2.0f;
-      P.y += signs[1] * std::max(radius.height, borderWidth / 2.0f);
-    }
-    return P;
-  }
-
-  if (style == NS_STYLE_BORDER_STYLE_DOTTED) {
-    // If only this side is dotted, other side draws the corner.
-    //
-    //  otherBorderWidth + borderWidth / 2.0
-    // |<------->|
-    // |         |
-    // +------+--+--------
-    // |##  ##| *|*  ###
-    // |##  ##|**|**#####
-    // |##  ##|**+**##+##
-    // |##  ##|* P *#####
-    // |##  ##| ***  ###
-    // |##  ##+-----------
-    // |##  ##|  ^
-    // |##  ##|  |
-    // |##  ##| first dot is not filled
-    // |##  ##|
-    //
-    //      radius.width
-    // |<----------------->|
-    // |                   |
-    // |             ___---+-------------
-    // |         __--     #|#       ###
-    // |       _-        ##|##     #####
-    // |     /           ##+##     ##+##
-    // |   /             # P #     #####
-    // |  |               #|#       ###
-    // | |             __--+-------------
-    // ||            _-    ^
-    // ||          /       |
-    // |         /        first dot is filled
-    // |        |
-    // |       |
-    // |      |
-    // |      |
-    // |      |
-    // +------+
-    // |##  ##|
-    // |##  ##|
-    // |##  ##|
-    Float minimum = otherBorderWidth + borderWidth / 2.0f;
-    if (isHorizontal) {
-      if (radius.width < minimum) {
-        *aIsUnfilled = true;
-        P.x += signs[0] * minimum;
-      } else {
-        P.x += signs[0] * radius.width;
-      }
-      P.y += signs[1] * borderWidth / 2.0f;
-    } else {
-      P.x += signs[0] * borderWidth / 2.0f;
-      if (radius.height < minimum) {
-        *aIsUnfilled = true;
-        P.y += signs[1] * minimum;
-      } else {
-        P.y += signs[1] * radius.height;
-      }
-    }
-    return P;
-  }
-
-  if (otherStyle == NS_STYLE_BORDER_STYLE_DOTTED && IsZeroSize(radius)) {
-    // If other side is dotted and radius=0, draw side to the end of corner.
-    //
-    //   +-------------------------------
-    //   |##########          ##########
-    // P +##########          ##########
-    //   |##########          ##########
-    //   +-----+-------------------------
-    //   | *** |
-    //   |*****|
-    //   |**+**| <-- first dot in other side is not filled
-    //   |*****|
-    //   | *** |
-    //   | ### |
-    //   |#####|
-    //   |##+##|
-    //   |#####|
-    //   | ### |
-    //   |     |
-    if (isHorizontal) {
-      P.y += signs[1] * borderWidth / 2.0f;
-    } else {
-      P.x += signs[0] * borderWidth / 2.0f;
-    }
-    return P;
-  }
-
-  // Other cases.
-  //
-  //  dim.width
-  // |<----------------->|
-  // |                   |
-  // |             ___---+------------------
-  // |         __--      |#######        ###
-  // |       _-        P +#######        ###
-  // |     /             |#######        ###
-  // |   /          __---+------------------
-  // |  |       __--
-  // | |       /
-  // ||      /
-  // ||     |
-  // |     |
-  // |    |
-  // |   |
-  // |   |
-  // +-+-+
-  // |###|
-  // |###|
-  // |###|
-  // |###|
-  // |###|
-  // |   |
-  // |   |
-  if (isHorizontal) {
-    P.x += signs[0] * dim.width;
-    P.y += signs[1] * borderWidth / 2.0f;
-  } else {
-    P.x += signs[0] * borderWidth / 2.0f;
-    P.y += signs[1] * dim.height;
-  }
-
-  return P;
 }
 
 void
@@ -1430,95 +893,11 @@ nsCSSBorderRenderer::DrawBorderSides(int aSides)
   Rect soRect(mOuterRect);
   Rect siRect(mOuterRect);
 
-  // If adjacent side is dotted and radius=0, draw side to the end of corner.
-  //
-  // +--------------------------------
-  // |################################
-  // |
-  // |################################
-  // +-----+--------------------------
-  // |     |
-  // |     |
-  // |     |
-  // |     |
-  // |     |
-  // | ### |
-  // |#####|
-  // |#####|
-  // |#####|
-  // | ### |
-  // |     |
-  bool noMarginTop = false;
-  bool noMarginRight = false;
-  bool noMarginBottom = false;
-  bool noMarginLeft = false;
-
-  // If there is at least one dotted side, every side is rendered separately.
-  if (IsSingleSide(aSides)) {
-    if (aSides == SIDE_BIT_TOP) {
-      if (mBorderStyles[NS_SIDE_RIGHT] == NS_STYLE_BORDER_STYLE_DOTTED &&
-          IsZeroSize(mBorderRadii[C_TR])) {
-        noMarginRight = true;
-      }
-      if (mBorderStyles[NS_SIDE_LEFT] == NS_STYLE_BORDER_STYLE_DOTTED &&
-          IsZeroSize(mBorderRadii[C_TL])) {
-        noMarginLeft = true;
-      }
-    } else if (aSides == SIDE_BIT_RIGHT) {
-      if (mBorderStyles[NS_SIDE_TOP] == NS_STYLE_BORDER_STYLE_DOTTED &&
-          IsZeroSize(mBorderRadii[C_TR])) {
-        noMarginTop = true;
-      }
-      if (mBorderStyles[NS_SIDE_BOTTOM] == NS_STYLE_BORDER_STYLE_DOTTED &&
-          IsZeroSize(mBorderRadii[C_BR])) {
-        noMarginBottom = true;
-      }
-    } else if (aSides == SIDE_BIT_BOTTOM) {
-      if (mBorderStyles[NS_SIDE_RIGHT] == NS_STYLE_BORDER_STYLE_DOTTED &&
-          IsZeroSize(mBorderRadii[C_BR])) {
-        noMarginRight = true;
-      }
-      if (mBorderStyles[NS_SIDE_LEFT] == NS_STYLE_BORDER_STYLE_DOTTED &&
-          IsZeroSize(mBorderRadii[C_BL])) {
-        noMarginLeft = true;
-      }
-    } else {
-      if (mBorderStyles[NS_SIDE_TOP] == NS_STYLE_BORDER_STYLE_DOTTED &&
-          IsZeroSize(mBorderRadii[C_TL])) {
-        noMarginTop = true;
-      }
-      if (mBorderStyles[NS_SIDE_BOTTOM] == NS_STYLE_BORDER_STYLE_DOTTED &&
-          IsZeroSize(mBorderRadii[C_BL])) {
-        noMarginBottom = true;
-      }
-    }
-  }
-
   for (unsigned int i = 0; i < borderColorStyleCount; i++) {
     // walk siRect inwards at the start of the loop to get the
     // correct inner rect.
-    //
-    // If noMarginTop is false:
-    //   --------------------+
-    //                      /|
-    //                     / |
-    //                    L  |
-    //   ----------------+   |
-    //                   |   |
-    //                   |   |
-    //
-    // If noMarginTop is true:
-    //   ----------------+<--+
-    //                   |   |
-    //                   |   |
-    //                   |   |
-    //                   |   |
-    //                   |   |
-    //                   |   |
-    siRect.Deflate(Margin(noMarginTop ? 0 : borderWidths[i][0],
-                          noMarginRight ? 0 : borderWidths[i][1],
-                          noMarginBottom ? 0 : borderWidths[i][2],
-                          noMarginLeft ? 0 : borderWidths[i][3]));
+    siRect.Deflate(Margin(borderWidths[i][0], borderWidths[i][1],
+                          borderWidths[i][2], borderWidths[i][3]));
 
     if (borderColorStyle[i] != BorderColorStyleNone) {
       Color c = ComputeColorForLine(i, borderColorStyle, borderColorStyleCount,
@@ -1536,499 +915,82 @@ nsCSSBorderRenderer::DrawBorderSides(int aSides)
 }
 
 void
-nsCSSBorderRenderer::SetupDashedOptions(StrokeOptions* aStrokeOptions,
-                                        Float aDash[2],
-                                        mozilla::css::Side aSide,
-                                        Float aBorderLength)
+nsCSSBorderRenderer::DrawDashedSide(mozilla::css::Side aSide)
 {
+  Float dashWidth;
+  Float dash[2];
+
   uint8_t style = mBorderStyles[aSide];
   Float borderWidth = mBorderWidths[aSide];
-
-  // Dashed line starts and ends with half segment in most case.
-  //
-  // __--+---+---+---+---+---+---+---+---+--__
-  //     |###|   |   |###|###|   |   |###|
-  //     |###|   |   |###|###|   |   |###|
-  //     |###|   |   |###|###|   |   |###|
-  // __--+---+---+---+---+---+---+---+---+--__
-  //
-  // If radius=0 and other side is either dotted or 0-width, it starts or ends
-  // with full segment.
-  //
-  // +---+---+---+---+---+---+---+---+---+---+
-  // |###|###|   |   |###|###|   |   |###|###|
-  // |###|###|   |   |###|###|   |   |###|###|
-  // |###|###|   |   |###|###|   |   |###|###|
-  // +---++--+---+---+---+---+---+---+--++---+
-  // |    |                             |    |
-  // |    |                             |    |
-  // |    |                             |    |
-  // |    |                             |    |
-  // | ## |                             | ## |
-  // |####|                             |####|
-  // |####|                             |####|
-  // | ## |                             | ## |
-  // |    |                             |    |
-  bool fullStart = false, fullEnd = false;
-  Float halfDash;
-  if (style == NS_STYLE_BORDER_STYLE_DASHED) {
-    if (IsZeroSize(mBorderRadii[GetCCWCorner(aSide)]) &&
-        (mBorderStyles[PREV_SIDE(aSide)] == NS_STYLE_BORDER_STYLE_DOTTED ||
-         mBorderWidths[PREV_SIDE(aSide)] == 0.0f ||
-         borderWidth <= 1.0f)) {
-      fullStart = true;
-    }
-
-    if (IsZeroSize(mBorderRadii[GetCWCorner(aSide)]) &&
-        (mBorderStyles[NEXT_SIDE(aSide)] == NS_STYLE_BORDER_STYLE_DOTTED ||
-         mBorderWidths[NEXT_SIDE(aSide)] == 0.0f)) {
-      fullEnd = true;
-    }
-
-    halfDash = borderWidth * DOT_LENGTH * DASH_LENGTH / 2.0f;
-  } else {
-    halfDash = borderWidth * DOT_LENGTH / 2.0f;
-  }
-
-  if (style == NS_STYLE_BORDER_STYLE_DASHED && aBorderLength > 0.0f) {
-    // The number of half segments, with maximum dash length.
-    int32_t count = floor(aBorderLength / halfDash);
-    Float minHalfDash = borderWidth * DOT_LENGTH / 2.0f;
-
-    if (fullStart && fullEnd) {
-      // count should be 4n + 2
-      //
-      //   1 +       4       +        4      + 1
-      //
-      // |   |               |               |   |
-      // +---+---+---+---+---+---+---+---+---+---+
-      // |###|###|   |   |###|###|   |   |###|###|
-      // |###|###|   |   |###|###|   |   |###|###|
-      // |###|###|   |   |###|###|   |   |###|###|
-      // +---+---+---+---+---+---+---+---+---+---+
-
-      // If border is too short, draw solid line.
-      if (aBorderLength < 6.0f * minHalfDash)
-        return;
-
-      if (count % 4 == 0) {
-        count += 2;
-      } else if (count % 4 == 1) {
-        count += 1;
-      } else if (count % 4 == 3) {
-        count += 3;
-      }
-    } else if (fullStart || fullEnd) {
-      // count should be 4n + 1
-      //
-      //   1 +       4       +        4
-      //
-      // |   |               |               |
-      // +---+---+---+---+---+---+---+---+---+
-      // |###|###|   |   |###|###|   |   |###|
-      // |###|###|   |   |###|###|   |   |###|
-      // |###|###|   |   |###|###|   |   |###|
-      // +---+---+---+---+---+---+---+---+---+
-      //
-      //         4       +        4      + 1
-      //
-      // |               |               |   |
-      // +---+---+---+---+---+---+---+---+---+
-      // |###|   |   |###|###|   |   |###|###|
-      // |###|   |   |###|###|   |   |###|###|
-      // |###|   |   |###|###|   |   |###|###|
-      // +---+---+---+---+---+---+---+---+---+
-
-      // If border is too short, draw solid line.
-      if (aBorderLength < 5.0f * minHalfDash)
-        return;
-
-      if (count % 4 == 0) {
-        count += 1;
-      } else if (count % 4 == 2) {
-        count += 3;
-      } else if (count % 4 == 3) {
-        count += 2;
-      }
-    } else {
-      // count should be 4n
-      //
-      //         4       +        4
-      //
-      // |               |               |
-      // +---+---+---+---+---+---+---+---+
-      // |###|   |   |###|###|   |   |###|
-      // |###|   |   |###|###|   |   |###|
-      // |###|   |   |###|###|   |   |###|
-      // +---+---+---+---+---+---+---+---+
-
-      // If border is too short, draw solid line.
-      if (aBorderLength < 4.0f * minHalfDash)
-        return;
-
-      if (count % 4 == 1) {
-        count += 3;
-      } else if (count % 4 == 2) {
-        count += 2;
-      } else if (count % 4 == 3) {
-        count += 1;
-      }
-    }
-    halfDash = aBorderLength / count;
-  }
-
-  Float fullDash = halfDash * 2.0f;
-
-  aDash[0] = fullDash;
-  aDash[1] = fullDash;
-
-  if (style == NS_STYLE_BORDER_STYLE_DASHED && fullDash > 1.0f) {
-    if (!fullStart) {
-      // Draw half segments on both ends.
-      aStrokeOptions->mDashOffset = halfDash;
-    }
-  }
-
-  aStrokeOptions->mDashPattern = aDash;
-  aStrokeOptions->mDashLength = 2;
-
-  PrintAsFormatString("dash: %f %f\n", aDash[0], aDash[1]);
-}
-
-static Float
-GetBorderLength(mozilla::css::Side aSide,
-                const Point& aStart, const Point& aEnd)
-{
-  if (aSide == NS_SIDE_TOP) {
-    return aEnd.x - aStart.x;
-  }
-  if (aSide == NS_SIDE_RIGHT) {
-    return aEnd.y - aStart.y;
-  }
-  if (aSide == NS_SIDE_BOTTOM) {
-    return aStart.x - aEnd.x;
-  }
-  return aStart.y - aEnd.y;
-}
-
-void
-nsCSSBorderRenderer::DrawDashedOrDottedSide(mozilla::css::Side aSide)
-{
-  // Draw dashed/dotted side with following approach.
-  //
-  // dashed side
-  //   Draw dashed line along the side, with appropriate dash length and gap
-  //   to make the side symmetric as far as possible.  Dash length equals to
-  //   the gap, and the ratio of the dash length to border-width is the maximum
-  //   value in in [1, 3] range.
-  //   In most case, line ends with half segment, to joint with corner easily.
-  //   If adjacent side is dotted or 0px and border-radius for the corner
-  //   between them is 0, the line ends with full segment.
-  //   (see comment for GetStraightBorderPoint for more detail)
-  //
-  // dotted side
-  //   If border-width <= 2.0, draw 1:1 dashed line.
-  //   Otherwise, draw circles along the side, with appropriate gap that makes
-  //   the side symmetric as far as possible.  The ratio of the gap to
-  //   border-width is the maximum value in [0.5, 1] range in most case.
-  //   if the side is too short and there's only 2 dots, it can be more smaller.
-  //   If there's no space to place 2 dots at the side, draw single dot at the
-  //   middle of the side.
-  //   In most case, line ends with filled dot, to joint with corner easily,
-  //   If adjacent side is dotted with larger border-width, or other style,
-  //   the line ends with unfilled dot.
-  //   (see comment for GetStraightBorderPoint for more detail)
-
-  NS_ASSERTION(mBorderStyles[aSide] == NS_STYLE_BORDER_STYLE_DASHED ||
-               mBorderStyles[aSide] == NS_STYLE_BORDER_STYLE_DOTTED,
-               "Style should be dashed or dotted.");
-
-  Float borderWidth = mBorderWidths[aSide];
-  if (borderWidth == 0.0f) {
-    return;
-  }
-
-  if (mBorderStyles[aSide] == NS_STYLE_BORDER_STYLE_DOTTED &&
-      borderWidth > 2.0f) {
-    DrawDottedSideSlow(aSide);
-    return;
-  }
-
   nscolor borderColor = mBorderColors[aSide];
-  bool ignored;
-  Point start = GetStraightBorderPoint(aSide, GetCCWCorner(aSide), &ignored);
-  Point end = GetStraightBorderPoint(aSide, GetCWCorner(aSide), &ignored);
-  if (borderWidth < 2.0f) {
-    // Round start to draw dot on each pixel.
-    if (IsHorizontalSide(aSide)) {
-      start.x = round(start.x);
-    } else {
-      start.y = round(start.y);
-    }
-  }
 
-  Float borderLength = GetBorderLength(aSide, start, end);
-  if (borderLength < 0.0f) {
+  if (borderWidth == 0.0)
     return;
-  }
+
+  if (style == NS_STYLE_BORDER_STYLE_NONE ||
+      style == NS_STYLE_BORDER_STYLE_HIDDEN)
+    return;
 
   StrokeOptions strokeOptions(borderWidth);
-  Float dash[2];
-  SetupDashedOptions(&strokeOptions, dash, aSide, borderLength);
 
-  mDrawTarget->StrokeLine(start, end,
-                          ColorPattern(ToDeviceColor(borderColor)),
-                          strokeOptions);
-}
+  if (style == NS_STYLE_BORDER_STYLE_DASHED) {
+    dashWidth = Float(borderWidth * DOT_LENGTH * DASH_LENGTH);
 
-void
-nsCSSBorderRenderer::DrawDottedSideSlow(mozilla::css::Side aSide)
-{
-  // Draw each circles separately for dotted with borderWidth > 2.0.
-  // Dashed line with CapStyle::ROUND doesn't render perfect circles.
+    dash[0] = dashWidth;
+    dash[1] = dashWidth;
+  } else if (style == NS_STYLE_BORDER_STYLE_DOTTED) {
+    dashWidth = Float(borderWidth * DOT_LENGTH);
 
-  NS_ASSERTION(mBorderStyles[aSide] == NS_STYLE_BORDER_STYLE_DOTTED,
-               "Style should be dotted.");
-
-  Float borderWidth = mBorderWidths[aSide];
-  if (borderWidth == 0.0f) {
-    return;
-  }
-
-  nscolor borderColor = mBorderColors[aSide];
-  bool isStartUnfilled, isEndUnfilled;
-  Point start = GetStraightBorderPoint(aSide, GetCCWCorner(aSide),
-                                       &isStartUnfilled);
-  Point end = GetStraightBorderPoint(aSide, GetCWCorner(aSide),
-                                     &isEndUnfilled);
-  enum {
-    // Corner is not mergeable.
-    NO_MERGE,
-
-    // Corner between different colors.
-    // Two dots are merged into one, and both side draw half dot.
-    MERGE_HALF,
-
-    // Corner between same colors, CCW corner of the side.
-    // Two dots are merged into one, and this side draw entire dot.
-    //
-    // MERGE_ALL               MERGE_NONE
-    //   |                       |
-    //   v                       v
-    // +-----------------------+----+
-    // | ##      ##      ##    | ## |
-    // |####    ####    ####   |####|
-    // |####    ####    ####   |####|
-    // | ##      ##      ##    | ## |
-    // +----+------------------+    |
-    // |    |                  |    |
-    // |    |                  |    |
-    // |    |                  |    |
-    // | ## |                  | ## |
-    // |####|                  |####|
-    MERGE_ALL,
-
-    // Corner between same colors, CW corner of the side.
-    // Two dots are merged into one, and this side doesn't draw dot.
-    MERGE_NONE
-  } mergeStart = NO_MERGE, mergeEnd = NO_MERGE;
-  if (IsCornerMergeable(GetCCWCorner(aSide))) {
-    if (borderColor == mBorderColors[PREV_SIDE(aSide)]) {
-      mergeStart = MERGE_ALL;
+    if (borderWidth > 2.0) {
+      dash[0] = 0.0;
+      dash[1] = dashWidth * 2.0;
+      strokeOptions.mLineCap = CapStyle::ROUND;
     } else {
-      mergeStart = MERGE_HALF;
-    }
-  }
-
-  if (IsCornerMergeable(GetCWCorner(aSide))) {
-    if (borderColor == mBorderColors[NEXT_SIDE(aSide)]) {
-      mergeEnd = MERGE_NONE;
-    } else {
-      mergeEnd = MERGE_HALF;
-    }
-  }
-
-  Float borderLength = GetBorderLength(aSide, start, end);
-  if (borderLength < 0.0f) {
-    if (isStartUnfilled || isEndUnfilled) {
-      return;
-    }
-    borderLength = 0.0f;
-    start = end = (start + end) / 2.0f;
-  }
-
-  Float dotWidth = borderWidth * DOT_LENGTH;
-  Float radius = borderWidth / 2.0f;
-  if (borderLength < dotWidth) {
-    // If dots on start and end may overlap, draw a dot at the middle of them.
-    //
-    //     ___---+-------+---___
-    // __--      | ##### |      --__
-    //          #|#######|#
-    //         ##|#######|##
-    //        ###|#######|###
-    //        ###+###+###+###
-    //         start ## end #
-    //         ##|#######|##
-    //          #|#######|#
-    //           | ##### |
-    //       __--+-------+--__
-    //     _-                 -_
-    //
-    // If that circle overflows from outer rect, do not draw it.
-    //
-    //           +-------+
-    //           | ##### |
-    //          #|#######|#
-    //         ##|#######|##
-    //        ###|#######|###
-    //        ###|###+###|###
-    //        ###|#######|###
-    //         ##|#######|##
-    //          #|#######|#
-    //           | ##### |
-    //           +--+-+--+
-    //           |  | |  |
-    //           |  | |  |
-    if (!mOuterRect.Contains(Rect(start.x - radius, start.y - radius,
-                                  borderWidth, borderWidth))) {
-      return;
-    }
-
-    if (isStartUnfilled || isEndUnfilled) {
-      return;
-    }
-
-    Point P = (start + end) / 2;
-    RefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
-    builder->MoveTo(Point(P.x + radius, P.y));
-    builder->Arc(P, radius, 0.0f, Float(2.0 * M_PI));
-    RefPtr<Path> path = builder->Finish();
-    mDrawTarget->Fill(path, ColorPattern(ToDeviceColor(borderColor)));
-    return;
-  }
-
-  if (mergeStart == MERGE_HALF || mergeEnd == MERGE_HALF) {
-    // MERGE_HALF
-    //               Eo
-    //   -------+----+
-    //        ##### /
-    //       ######/
-    //      ######/
-    //      ####+
-    //      ##/ end
-    //       /
-    //      /
-    //   --+
-    //     Ei
-    //
-    // other (NO_MERGE, MERGE_ALL, MERGE_NONE)
-    //               Eo
-    //   ------------+
-    //        #####  |
-    //       ####### |
-    //      #########|
-    //      ####+####|
-    //      ## end ##|
-    //       ####### |
-    //        #####  |
-    //   ------------+
-    //               Ei
-
-    Point I(0.0f, 0.0f), J(0.0f, 0.0f);
-    if (aSide == NS_SIDE_TOP) {
-      I.x = 1.0f;
-      J.y = 1.0f;
-    } else if (aSide == NS_SIDE_RIGHT) {
-      I.y = 1.0f;
-      J.x = -1.0f;
-    } else if (aSide == NS_SIDE_BOTTOM) {
-      I.x = -1.0f;
-      J.y = -1.0f;
-    } else if (aSide == NS_SIDE_LEFT) {
-      I.y = -1.0f;
-      J.x = 1.0f;
-    }
-
-    Point So, Si, Eo, Ei;
-
-    So = (start + (-I + -J) * borderWidth / 2.0f);
-    Si = (mergeStart == MERGE_HALF)
-         ? (start + (I + J) * borderWidth / 2.0f)
-         : (start + (-I + J) * borderWidth / 2.0f);
-    Eo = (end + (I - J) * borderWidth / 2.0f);
-    Ei = (mergeEnd == MERGE_HALF)
-         ? (end + (-I + J) * borderWidth / 2.0f)
-         : (end + (I + J) * borderWidth / 2.0f);
-
-    RefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
-    builder->MoveTo(So);
-    builder->LineTo(Eo);
-    builder->LineTo(Ei);
-    builder->LineTo(Si);
-    builder->Close();
-    RefPtr<Path> path = builder->Finish();
-
-    mDrawTarget->PushClip(path);
-  }
-
-  size_t count = round(borderLength / dotWidth);
-  if (isStartUnfilled == isEndUnfilled) {
-    // Split into 2n segments.
-    if (count % 2) {
-      count++;
+      dash[0] = dashWidth;
+      dash[1] = dashWidth;
     }
   } else {
-    // Split into 2n+1 segments.
-    if (count % 2 == 0) {
-      count++;
-    }
+    PrintAsFormatString("DrawDashedSide: style: %d!!\n", style);
+    NS_ERROR("DrawDashedSide called with style other than DASHED or DOTTED; someone's not playing nice");
+    return;
   }
 
-  // A: radius == borderWidth / 2.0
-  // B: borderLength / count == borderWidth * (1 - overlap)
-  //
-  //   A      B         B        B        B     A
-  // |<-->|<------>|<------>|<------>|<------>|<-->|
-  // |    |        |        |        |        |    |
-  // +----+--------+--------+--------+--------+----+
-  // |  ##|##    **|**    ##|##    **|**    ##|##  |
-  // | ###|###  ***|***  ###|###  ***|***  ###|### |
-  // |####|####****|****####|####****|****####|####|
-  // |####+####****+****####+####****+****####+####|
-  // |# start #****|****####|####****|****## end ##|
-  // | ###|###  ***|***  ###|###  ***|***  ###|### |
-  // |  ##|##    **|**    ##|##    **|**    ##|##  |
-  // +----+----+---+--------+--------+---+----+----+
-  // |         |                         |         |
-  // |         |                         |         |
+  PrintAsFormatString("dash: %f %f\n", dash[0], dash[1]);
 
-  // If isStartUnfilled is true, draw dots on 2j+1 points, if not, draw dots on
-  // 2j points.
-  size_t from = isStartUnfilled ? 1 : 0;
+  strokeOptions.mDashPattern = dash;
+  strokeOptions.mDashLength = MOZ_ARRAY_LENGTH(dash);
 
-  // If mergeEnd == MERGE_NONE, last dot is drawn by next side.
-  size_t to = count;
-  if (mergeEnd == MERGE_NONE) {
-    if (to > 2) {
-      to -= 2;
-    } else {
-      to = 0;
-    }
+  Point start = mOuterRect.CCWCorner(aSide);
+  Point end = mOuterRect.CWCorner(aSide);
+
+  if (aSide == NS_SIDE_TOP) {
+    start.x += mBorderCornerDimensions[C_TL].width;
+    end.x -= mBorderCornerDimensions[C_TR].width;
+
+    start.y += borderWidth / 2.0;
+    end.y += borderWidth / 2.0;
+  } else if (aSide == NS_SIDE_RIGHT) {
+    start.x -= borderWidth / 2.0;
+    end.x -= borderWidth / 2.0;
+
+    start.y += mBorderCornerDimensions[C_TR].height;
+    end.y -= mBorderCornerDimensions[C_BR].height;
+  } else if (aSide == NS_SIDE_BOTTOM) {
+    start.x -= mBorderCornerDimensions[C_BR].width;
+    end.x += mBorderCornerDimensions[C_BL].width;
+
+    start.y -= borderWidth / 2.0;
+    end.y -= borderWidth / 2.0;
+  } else if (aSide == NS_SIDE_LEFT) {
+    start.x += borderWidth / 2.0;
+    end.x += borderWidth / 2.0;
+
+    start.y -= mBorderCornerDimensions[C_BL].height;
+    end.y += mBorderCornerDimensions[C_TL].height;
   }
 
-  RefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
-  for (size_t i = from; i <= to; i += 2) {
-    Point P = (start * (count - i) + end * i) / count;
-    builder->MoveTo(Point(P.x + radius, P.y));
-    builder->Arc(P, radius, 0.0f, Float(2.0 * M_PI));
-  }
-  RefPtr<Path> path = builder->Finish();
-  mDrawTarget->Fill(path, ColorPattern(ToDeviceColor(borderColor)));
-
-  if (mergeStart == MERGE_HALF || mergeEnd == MERGE_HALF) {
-    mDrawTarget->PopClip();
-  }
+  mDrawTarget->StrokeLine(start, end, ColorPattern(ToDeviceColor(borderColor)),
+                          strokeOptions);
 }
 
 bool
@@ -2906,7 +1868,7 @@ nsCSSBorderRenderer::DrawBorders()
       if (dashedSides & (1 << side)) {
         // Dashed sides will always draw just the part ignoring the
         // corners for the side, so no need to clip.
-        DrawDashedOrDottedSide(side);
+        DrawDashedSide (side);
 
         PrintAsStringNewline("---------------- (d)");
         continue;
@@ -2917,7 +1879,7 @@ nsCSSBorderRenderer::DrawBorders()
       // so we need to clip.
       //
       // XXX Optimization -- it would be good to make this work like
-      // DrawDashedOrDottedSide, and have a DrawOneSide function that just
+      // DrawDashedSide, and have a DrawOneSide function that just
       // draws one side and not the corners, because then we can
       // avoid the potentially expensive clip.
       mDrawTarget->PushClipRect(GetSideClipWithoutCornersRect(side));
