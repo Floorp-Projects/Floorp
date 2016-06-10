@@ -416,6 +416,7 @@ input[type=button] {
 
 #newtab-search-submit:dir(rtl) {
   border-radius: 2px 0 0 2px;
+  background-image: url("chrome://browser/skin/search-arrow-go.svg#search-arrow-go-rtl"), linear-gradient(hsla(0,0%,100%,.8), hsla(0,0%,100%,.1));
 }
 
 #newtab-search-text:focus + #newtab-search-submit,
@@ -446,6 +447,13 @@ input[type=button] {
   box-shadow: 0 1px 1px hsla(211,79%,6%,.1) inset,
               0 0 1px hsla(211,79%,6%,.2) inset;
   transition-duration: 0ms;
+}
+
+#newtab-search-text:focus + #newtab-search-submit:dir(rtl),
+#newtab-search-text[keepfocus] + #newtab-search-submit:dir(rtl),
+#newtab-search-text[autofocus] + #newtab-search-submit:dir(rtl),
+#newtab-search-text + #newtab-search-submit:dir(rtl):hover {
+  background-image: url("chrome://browser/skin/search-arrow-go.svg#search-arrow-go-rtl-inverted"), linear-gradient(#4cb1ff, #1793e5);
 }
 
 /* CUSTOMIZE */

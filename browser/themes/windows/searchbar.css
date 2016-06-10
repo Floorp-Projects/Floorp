@@ -44,8 +44,7 @@
   width: 14px;
 }
 
-.search-go-button:-moz-locale-dir(rtl),
-.search-go-button:-moz-locale-dir(rtl) > .toolbarbutton-icon {
+.search-go-button:-moz-locale-dir(rtl) {
   transform: scaleX(-1);
 }
 
