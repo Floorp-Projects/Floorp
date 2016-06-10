@@ -393,7 +393,7 @@ add_task(function* testSecureManifestURLsDenied() {
       info(`TEST ${api} icon url: ${url}`);
 
       let matchURLForbidden = url => ({
-        message: new RegExp(`String "${url}" must be a relative URL`),
+        message: new RegExp(`match the format "strictRelativeUrl"`),
       });
 
       let messages = [matchURLForbidden(url)];

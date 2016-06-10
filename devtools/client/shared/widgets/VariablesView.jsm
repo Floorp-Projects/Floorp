@@ -10,16 +10,15 @@ const Cu = Components.utils;
 
 const DBG_STRINGS_URI = "chrome://devtools/locale/debugger.properties";
 const LAZY_EMPTY_DELAY = 150; // ms
-const LAZY_EXPAND_DELAY = 50; // ms
 const SCROLL_PAGE_SIZE_DEFAULT = 0;
 const PAGE_SIZE_SCROLL_HEIGHT_RATIO = 100;
 const PAGE_SIZE_MAX_JUMPS = 30;
 const SEARCH_ACTION_MAX_DELAY = 300; // ms
 const ITEM_FLASH_DURATION = 300; // ms
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://devtools/shared/event-emitter.js");
 const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
+const EventEmitter = require("devtools/shared/event-emitter");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const Services = require("Services");
 const { getSourceNames } = require("devtools/client/shared/source-utils");

@@ -4,7 +4,7 @@
 
 "use strict";
 
-const {Cu, Ci} = require("chrome");
+const {Ci} = require("chrome");
 const promise = require("promise");
 const {Spectrum} = require("devtools/client/shared/widgets/Spectrum");
 const {CubicBezierWidget} =
@@ -17,13 +17,12 @@ const {colorUtils} = require("devtools/client/shared/css-color");
 const Heritage = require("sdk/core/heritage");
 const {Eyedropper} = require("devtools/client/eyedropper/eyedropper");
 const Services = require("Services");
+const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 
 loader.lazyRequireGetter(this, "beautify", "devtools/shared/jsbeautify/beautify");
 loader.lazyRequireGetter(this, "setNamedTimeout", "devtools/client/shared/widgets/view-helpers", true);
 loader.lazyRequireGetter(this, "clearNamedTimeout", "devtools/client/shared/widgets/view-helpers", true);
 loader.lazyRequireGetter(this, "setNamedTimeout", "devtools/client/shared/widgets/view-helpers", true);
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "VariablesView",
   "resource://devtools/client/shared/widgets/VariablesView.jsm");

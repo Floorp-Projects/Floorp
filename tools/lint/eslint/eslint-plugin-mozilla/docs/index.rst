@@ -22,14 +22,17 @@ avoids ESLint telling us that the function is never called.
 
 ``no-aArgs`` prevents using the hungarian notation in function arguments.
 
-``no-cpows-in-tests`` This rule checks if the file is a browser mochitest and,
+``no-cpows-in-tests`` checks if the file is a browser mochitest and,
 if so, checks for possible CPOW usage.
 
-``reject-importGlobalProperties`` This rule rejects calls to
+``no-single-arg-cu-import`` rejects calls to "Cu.import" that do not supply a
+second argument (meaning they add the exported properties into global scope).
+
+``reject-importGlobalProperties`` rejects calls to
 "Cu.importGlobalProperties".  Use of this function is undesirable in
 some parts of the tree.
 
-``this-top-level-scope``  This rule treats top-level assignments like
+``this-top-level-scope`` treats top-level assignments like
 ``this.mumble = value`` as declaring a global.
 
 Note: These are string matches so we will miss situations where the parent

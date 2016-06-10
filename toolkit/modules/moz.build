@@ -38,6 +38,7 @@ EXTRA_JS_MODULES += [
     'Deprecated.jsm',
     'FileUtils.jsm',
     'Finder.jsm',
+    'FinderHighlighter.jsm',
     'Geometry.jsm',
     'GMPInstallManager.jsm',
     'GMPUtils.jsm',
