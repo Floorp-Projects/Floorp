@@ -13,6 +13,8 @@
 #include "nsIChannelEventSink.h"
 #include "nsIAsyncVerifyRedirectCallback.h"
 #include "nsIInterfaceRequestor.h"
+#include "nsIStreamListener.h"
+#include "nsIURI.h"
 #include "nsString.h"
 #include "nsWeakReference.h"
 #include "nsIDocument.h"
