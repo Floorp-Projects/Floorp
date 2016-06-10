@@ -227,7 +227,7 @@
       "resolved": "https://registry.npmjs.org/eslint-plugin-html/-/eslint-plugin-html-1.4.0.tgz"
     },
     "eslint-plugin-mozilla": {
-      "version": "0.0.3",
+      "version": "0.1.0",
       "from": "eslint-plugin-mozilla",
       "resolved": "file:eslint-plugin-mozilla",
       "dependencies": {
