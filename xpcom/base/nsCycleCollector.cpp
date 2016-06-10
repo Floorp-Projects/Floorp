@@ -1012,6 +1012,17 @@ private:
       );
     }
 
+    // Put all the entries in the block on the free list.
+    void InitNextPointers()
+    {
+      for (uint32_t i = 1; i < ArrayLength(mEntries); ++i) {
+        mEntries[i - 1].mNextInFreeList =
+          (nsPurpleBufferEntry*)(uintptr_t(mEntries + i) | 1);
+      }
+      mEntries[ArrayLength(mEntries) - 1].mNextInFreeList =
+        (nsPurpleBufferEntry*)1;
+    }
+
     template<class PurpleVisitor>
     void VisitEntries(nsPurpleBuffer& aBuffer, PurpleVisitor& aVisitor)
     {
@@ -1060,15 +1071,8 @@ public:
   void StartBlock(PurpleBlock* aBlock)
   {
     MOZ_ASSERT(!mFreeList, "should not have free list");
-
-    // Put all the entries in the block on the free list.
     mFreeList = aBlock->mEntries;
-    for (uint32_t i = 1; i < ArrayLength(aBlock->mEntries); ++i) {
-      aBlock->mEntries[i - 1].mNextInFreeList =
-        (nsPurpleBufferEntry*)(uintptr_t(aBlock->mEntries + i) | 1);
-    }
-    aBlock->mEntries[ArrayLength(aBlock->mEntries) - 1].mNextInFreeList =
-      (nsPurpleBufferEntry*)1;
+    aBlock->InitNextPointers();
   }
 
   void FreeBlocks()
