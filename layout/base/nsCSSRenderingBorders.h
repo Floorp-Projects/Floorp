@@ -76,6 +76,7 @@ public:
 
   nsCSSBorderRenderer(nsPresContext::nsPresContextType aPresContextType,
                       DrawTarget* aDrawTarget,
+                      const Rect& aDirtyRect,
                       Rect& aOuterRect,
                       const uint8_t* aBorderStyles,
                       const Float* aBorderWidths,
@@ -107,8 +108,9 @@ private:
   // the PresContext type
   nsPresContext::nsPresContextType mPresContextType;
 
-  // destination DrawTarget
+  // destination DrawTarget and dirty rect
   DrawTarget* mDrawTarget;
+  const Rect& mDirtyRect;
 
   // the rectangle of the outside and the inside of the border
   Rect mOuterRect;
