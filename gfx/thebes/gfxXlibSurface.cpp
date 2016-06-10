@@ -14,11 +14,13 @@
 
 #include "nsTArray.h"
 #include "nsAlgorithm.h"
+#include "mozilla/gfx/2D.h"
 #include "mozilla/Preferences.h"
 #include <algorithm>
 #include "mozilla/CheckedInt.h"
 
 using namespace mozilla;
+using namespace mozilla::gfx;
 
 gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual)
     : mPixmapTaken(false), mDisplay(dpy), mDrawable(drawable)
@@ -37,7 +39,7 @@ gfxXlibSurface::gfxXlibSurface(Display *dpy, Drawable drawable, Visual *visual, 
     , mGLXPixmap(None)
 #endif
 {
-    NS_ASSERTION(CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT),
+    NS_ASSERTION(Factory::CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT),
                  "Bad size");
 
     cairo_surface_t *surf = cairo_xlib_surface_create(dpy, drawable, visual, size.width, size.height);
@@ -52,7 +54,7 @@ gfxXlibSurface::gfxXlibSurface(Screen *screen, Drawable drawable, XRenderPictFor
       , mGLXPixmap(None)
 #endif
 {
-    NS_ASSERTION(CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT),
+    NS_ASSERTION(Factory::CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT),
                  "Bad Size");
 
     cairo_surface_t *surf =
@@ -94,7 +96,7 @@ static Drawable
 CreatePixmap(Screen *screen, const gfx::IntSize& size, unsigned int depth,
              Drawable relatedDrawable)
 {
-    if (!gfxASurface::CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT))
+    if (!Factory::CheckSurfaceSize(size, XLIB_IMAGE_SIDE_SIZE_LIMIT))
         return None;
 
     if (relatedDrawable == None) {

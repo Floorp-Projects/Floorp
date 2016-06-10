@@ -14,7 +14,6 @@
 @class UIWindow;
 @class UIView;
 @class ChildView;
-class gfxASurface;
 
 class nsWindow :
     public nsBaseWidget

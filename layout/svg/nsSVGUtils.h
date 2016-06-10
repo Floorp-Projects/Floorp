@@ -60,7 +60,7 @@ class GeneralPattern;
 
 // maximum dimension of an offscreen surface - choose so that
 // the surface size doesn't overflow a 32-bit signed int using
-// 4 bytes per pixel; in line with gfxASurface::CheckSurfaceSize
+// 4 bytes per pixel; in line with Factory::CheckSurfaceSize
 // In fact Macs can't even manage that
 #define NS_SVG_OFFSCREEN_MAX_DIMENSION 4096
 
