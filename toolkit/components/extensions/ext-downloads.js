@@ -388,7 +388,7 @@ function queryHelper(query) {
   });
 }
 
-extensions.registerSchemaAPI("downloads", "downloads", (extension, context) => {
+extensions.registerSchemaAPI("downloads", (extension, context) => {
   return {
     downloads: {
       download(options) {
@@ -566,10 +566,6 @@ extensions.registerSchemaAPI("downloads", "downloads", (extension, context) => {
       },
 
       open(downloadId) {
-        if (!extension.hasPermission("downloads.open")) {
-          throw new context.cloneScope.Error(
-            "Permission denied because 'downloads.open' permission is missing.");
-        }
         return DownloadMap.lazyInit().then(() => {
           let download = DownloadMap.fromId(downloadId).download;
           if (download.succeeded) {
