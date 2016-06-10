@@ -25,7 +25,7 @@ class DeviceRunner(BaseRunner):
             'MOZ_CRASHREPORTER_NO_REPORT': '1',
             'MOZ_CRASHREPORTER_SHUTDOWN': '1',
             'MOZ_HIDE_RESULTS_TABLE': '1',
-            'NSPR_LOG_MODULES': 'signaling:5,mtransport:5,datachannel:5,jsep:5,MediaPipelineFactory:5',
+            'MOZ_LOG': 'signaling:5,mtransport:5,datachannel:5,jsep:5,MediaPipelineFactory:5',
             'R_LOG_LEVEL': '6',
             'R_LOG_DESTINATION': 'stderr',
             'R_LOG_VERBOSE': '1',
