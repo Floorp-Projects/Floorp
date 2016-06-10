@@ -20,6 +20,7 @@
 
 #include "mozilla/ArrayUtils.h"
 
+#include "asmjs/WasmCode.h"
 #include "asmjs/WasmIonCompile.h"
 
 #include "jit/MacroAssembler-inl.h"
@@ -165,7 +166,7 @@ wasm::GenerateEntry(MacroAssembler& masm, const Export& exp, bool usesHeap)
     // Copy parameters out of argv and into the registers/stack-slots specified by
     // the system ABI.
     for (ABIArgValTypeIter iter(exp.sig().args()); !iter.done(); iter++) {
-        unsigned argOffset = iter.index() * Module::SizeOfEntryArg;
+        unsigned argOffset = iter.index() * sizeof(ExportArg);
         Address src(argv, argOffset);
         MIRType type = iter.mirType();
         MOZ_ASSERT_IF(type == MIRType::Int64, JitOptions.wasmTestMode);
@@ -182,8 +183,8 @@ wasm::GenerateEntry(MacroAssembler& masm, const Export& exp, bool usesHeap)
             break;
 #endif
           case ABIArg::FPU: {
-            static_assert(Module::SizeOfEntryArg >= jit::Simd128DataSize,
-                          "EntryArg must be big enough to store SIMD values");
+            static_assert(sizeof(ExportArg) >= jit::Simd128DataSize,
+                          "ExportArg must be big enough to store SIMD values");
             switch (type) {
               case MIRType::Int8x16:
               case MIRType::Int16x8:
@@ -558,7 +559,7 @@ wasm::GenerateJitExit(MacroAssembler& masm, const Import& import, bool usesHeap)
 #endif
 
     // 2.2. Get callee
-    masm.loadPtr(Address(callee, Module::OffsetOfImportExitFun), callee);
+    masm.loadPtr(Address(callee, offsetof(ImportExit, fun)), callee);
 
     // 2.3. Save callee
     masm.storePtr(callee, Address(masm.getStackPointer(), argOffset));

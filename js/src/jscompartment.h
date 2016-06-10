@@ -33,12 +33,11 @@ template <typename Node, typename Derived> class ComponentFinder;
 } // namespace gc
 
 namespace wasm {
-class Module;
+class Instance;
 } // namespace wasm
 
 class ClonedBlockObject;
 class ScriptSourceObject;
-class WasmModuleObject;
 struct NativeIterator;
 
 /*
@@ -520,8 +519,8 @@ struct JSCompartment
 
     // All wasm modules in the compartment. Weakly held.
     //
-    // The caller needs to call wasm::Module::readBarrier() manually!
-    mozilla::LinkedList<js::wasm::Module> wasmModuleWeakList;
+    // The caller needs to call wasm::Instance::readBarrier() manually!
+    mozilla::LinkedList<js::wasm::Instance> wasmInstanceWeakList;
 
   private:
     // All non-syntactic lexical scopes in the compartment. These are kept in

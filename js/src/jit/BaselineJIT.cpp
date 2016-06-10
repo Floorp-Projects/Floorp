@@ -9,7 +9,7 @@
 #include "mozilla/BinarySearch.h"
 #include "mozilla/MemoryReporting.h"
 
-#include "asmjs/WasmModule.h"
+#include "asmjs/WasmInstance.h"
 #include "jit/BaselineCompiler.h"
 #include "jit/BaselineIC.h"
 #include "jit/CompileInfo.h"
@@ -60,7 +60,7 @@ BaselineScript::BaselineScript(uint32_t prologueOffset, uint32_t epilogueOffset,
   : method_(nullptr),
     templateScope_(nullptr),
     fallbackStubSpace_(),
-    dependentWasmModules_(nullptr),
+    dependentWasmImports_(nullptr),
     prologueOffset_(prologueOffset),
     epilogueOffset_(epilogueOffset),
     profilerEnterToggleOffset_(profilerEnterToggleOffset),
@@ -491,7 +491,7 @@ BaselineScript::Destroy(FreeOp* fop, BaselineScript* script)
 
     MOZ_ASSERT(!script->hasPendingIonBuilder());
 
-    script->unlinkDependentWasmModules(fop);
+    script->unlinkDependentWasmImports(fop);
 
     /*
      * When the script contains pointers to nursery things, the store buffer can
@@ -513,51 +513,49 @@ JS::DeletePolicy<js::jit::BaselineScript>::operator()(const js::jit::BaselineScr
 }
 
 void
-BaselineScript::clearDependentWasmModules()
+BaselineScript::clearDependentWasmImports()
 {
-    // Remove any links from wasm::Modules that contain optimized import calls into
+    // Remove any links from wasm::Instances that contain optimized import calls into
     // this BaselineScript.
-    if (dependentWasmModules_) {
-        for (DependentWasmModuleImport dep : *dependentWasmModules_)
-            dep.module->deoptimizeImportExit(dep.importIndex);
-        dependentWasmModules_->clear();
+    if (dependentWasmImports_) {
+        for (DependentWasmImport& dep : *dependentWasmImports_)
+            dep.instance->deoptimizeImportExit(dep.importIndex);
+        dependentWasmImports_->clear();
     }
 }
 
 void
-BaselineScript::unlinkDependentWasmModules(FreeOp* fop)
+BaselineScript::unlinkDependentWasmImports(FreeOp* fop)
 {
-    // Remove any links from wasm::Modules that contain optimized FFI calls into
+    // Remove any links from wasm::Instances that contain optimized FFI calls into
     // this BaselineScript.
-    clearDependentWasmModules();
-    if (dependentWasmModules_) {
-        fop->delete_(dependentWasmModules_);
-        dependentWasmModules_ = nullptr;
+    clearDependentWasmImports();
+    if (dependentWasmImports_) {
+        fop->delete_(dependentWasmImports_);
+        dependentWasmImports_ = nullptr;
     }
 }
 
 bool
-BaselineScript::addDependentWasmModule(JSContext* cx, wasm::Module& module, uint32_t importIndex)
+BaselineScript::addDependentWasmImport(JSContext* cx, wasm::Instance& instance, uint32_t idx)
 {
-    if (!dependentWasmModules_) {
-        dependentWasmModules_ = cx->new_<Vector<DependentWasmModuleImport> >(cx);
-        if (!dependentWasmModules_)
+    if (!dependentWasmImports_) {
+        dependentWasmImports_ = cx->new_<Vector<DependentWasmImport>>(cx);
+        if (!dependentWasmImports_)
             return false;
     }
-    return dependentWasmModules_->emplaceBack(&module, importIndex);
+    return dependentWasmImports_->emplaceBack(instance, idx);
 }
 
 void
-BaselineScript::removeDependentWasmModule(wasm::Module& module, uint32_t importIndex)
+BaselineScript::removeDependentWasmImport(wasm::Instance& instance, uint32_t idx)
 {
-    if (!dependentWasmModules_)
+    if (!dependentWasmImports_)
         return;
 
-    for (size_t i = 0; i < dependentWasmModules_->length(); i++) {
-        if ((*dependentWasmModules_)[i].module == &module &&
-            (*dependentWasmModules_)[i].importIndex == importIndex)
-        {
-            dependentWasmModules_->erase(dependentWasmModules_->begin() + i);
+    for (DependentWasmImport& dep : *dependentWasmImports_) {
+        if (dep.instance == &instance && dep.importIndex == idx) {
+            dependentWasmImports_->erase(&dep);
             break;
         }
     }
