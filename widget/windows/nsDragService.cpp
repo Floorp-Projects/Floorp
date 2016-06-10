@@ -207,7 +207,6 @@ nsDragService::InvokeDragSessionImpl(nsISupportsArray* anArrayTransferables,
       if (trans) {
         // set the requestingNode on the transferable
         trans->SetRequestingNode(mSourceNode);
-        trans->SetContentPolicyType(mContentPolicyType);
         RefPtr<IDataObject> dataObj;
         rv = nsClipboard::CreateNativeDataObject(trans,
                                                  getter_AddRefs(dataObj), uri);
@@ -227,7 +226,6 @@ nsDragService::InvokeDragSessionImpl(nsISupportsArray* anArrayTransferables,
     if (trans) {
       // set the requestingNode on the transferable
       trans->SetRequestingNode(mSourceNode);
-      trans->SetContentPolicyType(mContentPolicyType);
       rv = nsClipboard::CreateNativeDataObject(trans,
                                                getter_AddRefs(itemToDrag),
                                                uri);
