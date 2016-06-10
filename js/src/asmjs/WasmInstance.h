@@ -19,8 +19,6 @@
 #ifndef wasm_instance_h
 #define wasm_instance_h
 
-#include "mozilla/LinkedList.h"
-
 #include "asmjs/WasmCode.h"
 #include "gc/Barrier.h"
 
@@ -56,15 +54,13 @@ typedef Vector<TypedFuncTable, 0, SystemAllocPolicy> TypedFuncTableVector;
 // direct reference to its source Module which allows a Module to be destroyed
 // while it still has live Instances.
 
-class Instance : public mozilla::LinkedListElement<Instance>
+class Instance
 {
     const UniqueCodeSegment              codeSegment_;
     const SharedMetadata                 metadata_;
     const SharedBytes                    maybeBytecode_;
     const TypedFuncTableVector           typedFuncTables_;
-
     GCPtr<ArrayBufferObjectMaybeShared*> heap_;
-    GCPtr<WasmInstanceObject*>           object_;
 
     bool                                 profilingEnabled_;
     CacheableCharsVector                 funcLabels_;
@@ -93,8 +89,7 @@ class Instance : public mozilla::LinkedListElement<Instance>
              const Metadata& metadata,
              const ShareableBytes* maybeBytecode,
              TypedFuncTableVector&& typedFuncTables,
-             HandleArrayBufferObjectMaybeShared heap,
-             Handle<WasmInstanceObject*> object);
+             HandleArrayBufferObjectMaybeShared heap);
 
   public:
     static bool create(JSContext* cx,
@@ -142,15 +137,6 @@ class Instance : public mozilla::LinkedListElement<Instance>
     // be notified so it can go back to the generic callImport.
 
     void deoptimizeImportExit(uint32_t importIndex);
-
-    // Instances maintain a GC pointer to their wrapping WasmInstanceObject.
-    //
-    // NB: when this or any GC field of an instance is accessed through a weak
-    // references (viz., via JSCompartment::wasmInstanceWeakList), readBarrier()
-    // must be called (to ensure GC invariants).
-
-    WasmInstanceObject& object() const { return *object_; }
-    void readBarrier();
 
     // Stack frame iterator support:
 

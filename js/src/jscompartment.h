@@ -14,6 +14,7 @@
 #include "mozilla/Variant.h"
 #include "mozilla/XorShift128PlusRNG.h"
 
+#include "asmjs/WasmJS.h"
 #include "builtin/RegExp.h"
 #include "gc/Barrier.h"
 #include "gc/Zone.h"
@@ -31,10 +32,6 @@ class JitCompartment;
 namespace gc {
 template <typename Node, typename Derived> class ComponentFinder;
 } // namespace gc
-
-namespace wasm {
-class Instance;
-} // namespace wasm
 
 class ClonedBlockObject;
 class ScriptSourceObject;
@@ -517,10 +514,11 @@ struct JSCompartment
     // All unboxed layouts in the compartment.
     mozilla::LinkedList<js::UnboxedLayout> unboxedLayouts;
 
-    // All wasm modules in the compartment. Weakly held.
-    //
-    // The caller needs to call wasm::Instance::readBarrier() manually!
-    mozilla::LinkedList<js::wasm::Instance> wasmInstanceWeakList;
+    // All wasm live instances in the compartment.
+    using WasmInstanceObjectSet = js::GCHashSet<js::HeapPtr<js::WasmInstanceObject*>,
+                                                js::MovableCellHasher<js::HeapPtr<js::WasmInstanceObject*>>,
+                                                js::SystemAllocPolicy>;
+    JS::WeakCache<WasmInstanceObjectSet> wasmInstances;
 
   private:
     // All non-syntactic lexical scopes in the compartment. These are kept in
