@@ -164,7 +164,6 @@ typedef enum {
 
 nsCSSBorderRenderer::nsCSSBorderRenderer(nsPresContext::nsPresContextType aPresContextType,
                                          DrawTarget* aDrawTarget,
-                                         const Rect& aDirtyRect,
                                          Rect& aOuterRect,
                                          const uint8_t* aBorderStyles,
                                          const Float* aBorderWidths,
@@ -174,7 +173,6 @@ nsCSSBorderRenderer::nsCSSBorderRenderer(nsPresContext::nsPresContextType aPresC
                                          nscolor aBackgroundColor)
   : mPresContextType(aPresContextType),
     mDrawTarget(aDrawTarget),
-    mDirtyRect(aDirtyRect),
     mOuterRect(aOuterRect),
     mBorderStyles(aBorderStyles),
     mBorderWidths(aBorderWidths),
@@ -2106,10 +2104,6 @@ nsCSSBorderRenderer::DrawDottedSideSlow(mozilla::css::Side aSide)
 
   RefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
   size_t segmentCount = 0;
-  const Float AA_MARGIN = 2.0f;
-  Rect marginedDirtyRect = mDirtyRect;
-  marginedDirtyRect.Inflate(radius + AA_MARGIN);
-  bool entered = false;
   for (size_t i = from; i <= to; i += 2) {
     if (segmentCount > BORDER_SEGMENT_COUNT_MAX) {
       RefPtr<Path> path = builder->Finish();
@@ -2119,14 +2113,9 @@ nsCSSBorderRenderer::DrawDottedSideSlow(mozilla::css::Side aSide)
     }
 
     Point P = (start * (count - i) + end * i) / count;
-    if (marginedDirtyRect.Contains(P)) {
-      entered = true;
-      builder->MoveTo(Point(P.x + radius, P.y));
-      builder->Arc(P, radius, 0.0f, Float(2.0 * M_PI));
-      segmentCount++;
-    } else if (entered) {
-      break;
-    }
+    builder->MoveTo(Point(P.x + radius, P.y));
+    builder->Arc(P, radius, 0.0f, Float(2.0 * M_PI));
+    segmentCount++;
   }
   RefPtr<Path> path = builder->Finish();
   mDrawTarget->Fill(path, ColorPattern(ToDeviceColor(borderColor)));
@@ -2265,10 +2254,6 @@ nsCSSBorderRenderer::DrawDottedCornerSlow(mozilla::css::Side aSide,
 
   RefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
   size_t segmentCount = 0;
-  const Float AA_MARGIN = 2.0f;
-  Rect marginedDirtyRect = mDirtyRect;
-  marginedDirtyRect.Inflate(std::max(R0, Rn) + AA_MARGIN);
-  bool entered = false;
   while (finder.HasMore()) {
     if (segmentCount > BORDER_SEGMENT_COUNT_MAX) {
       RefPtr<Path> path = builder->Finish();
@@ -2279,37 +2264,12 @@ nsCSSBorderRenderer::DrawDottedCornerSlow(mozilla::css::Side aSide,
 
     DottedCornerFinder::Result result = finder.Next();
 
-    if (marginedDirtyRect.Contains(result.C)) {
-      entered = true;
-      builder->MoveTo(Point(result.C.x + result.r, result.C.y));
-      builder->Arc(result.C, result.r, 0, Float(2.0 * M_PI));
-      segmentCount++;
-    } else if (entered) {
-      break;
-    }
+    builder->MoveTo(Point(result.C.x + result.r, result.C.y));
+    builder->Arc(result.C, result.r, 0, Float(2.0 * M_PI));
+    segmentCount++;
   }
   RefPtr<Path> path = builder->Finish();
   mDrawTarget->Fill(path, ColorPattern(ToDeviceColor(borderColor)));
-}
-
-static inline bool
-DashedPathOverlapsRect(Rect& pathRect,
-                       const Rect& marginedDirtyRect,
-                       DashedCornerFinder::Result& result)
-{
-  // Calculate a rect that contains all control points of the |result| path,
-  // and check if it intersects with |marginedDirtyRect|.
-  pathRect.SetRect(result.outerSectionBezier.mPoints[0].x,
-                   result.outerSectionBezier.mPoints[0].y, 0, 0);
-  pathRect.ExpandToEnclose(result.outerSectionBezier.mPoints[1]);
-  pathRect.ExpandToEnclose(result.outerSectionBezier.mPoints[2]);
-  pathRect.ExpandToEnclose(result.outerSectionBezier.mPoints[3]);
-  pathRect.ExpandToEnclose(result.innerSectionBezier.mPoints[0]);
-  pathRect.ExpandToEnclose(result.innerSectionBezier.mPoints[1]);
-  pathRect.ExpandToEnclose(result.innerSectionBezier.mPoints[2]);
-  pathRect.ExpandToEnclose(result.innerSectionBezier.mPoints[3]);
-
-  return pathRect.Intersects(marginedDirtyRect);
 }
 
 void
@@ -2338,11 +2298,6 @@ nsCSSBorderRenderer::DrawDashedCornerSlow(mozilla::css::Side aSide,
 
   RefPtr<PathBuilder> builder = mDrawTarget->CreatePathBuilder();
   size_t segmentCount = 0;
-  const Float AA_MARGIN = 2.0f;
-  Rect marginedDirtyRect = mDirtyRect;
-  marginedDirtyRect.Inflate(AA_MARGIN);
-  Rect pathRect;
-  bool entered = false;
   while (finder.HasMore()) {
     if (segmentCount > BORDER_SEGMENT_COUNT_MAX) {
       RefPtr<Path> path = builder->Finish();
@@ -2353,21 +2308,16 @@ nsCSSBorderRenderer::DrawDashedCornerSlow(mozilla::css::Side aSide,
 
     DashedCornerFinder::Result result = finder.Next();
 
-    if (DashedPathOverlapsRect(pathRect, marginedDirtyRect, result)) {
-      entered = true;
-      builder->MoveTo(result.outerSectionBezier.mPoints[0]);
-      builder->BezierTo(result.outerSectionBezier.mPoints[1],
-                        result.outerSectionBezier.mPoints[2],
-                        result.outerSectionBezier.mPoints[3]);
-      builder->LineTo(result.innerSectionBezier.mPoints[3]);
-      builder->BezierTo(result.innerSectionBezier.mPoints[2],
-                        result.innerSectionBezier.mPoints[1],
-                        result.innerSectionBezier.mPoints[0]);
-      builder->LineTo(result.outerSectionBezier.mPoints[0]);
-      segmentCount++;
-    } else if (entered) {
-      break;
-    }
+    builder->MoveTo(result.outerSectionBezier.mPoints[0]);
+    builder->BezierTo(result.outerSectionBezier.mPoints[1],
+                      result.outerSectionBezier.mPoints[2],
+                      result.outerSectionBezier.mPoints[3]);
+    builder->LineTo(result.innerSectionBezier.mPoints[3]);
+    builder->BezierTo(result.innerSectionBezier.mPoints[2],
+                      result.innerSectionBezier.mPoints[1],
+                      result.innerSectionBezier.mPoints[0]);
+    builder->LineTo(result.outerSectionBezier.mPoints[0]);
+    segmentCount++;
   }
 
   if (outerBezier.mPoints[0].x != innerBezier.mPoints[0].x) {

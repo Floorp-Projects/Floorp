@@ -771,7 +771,6 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
                             Float(border.right / twipsPerPixel),
                             Float(border.bottom / twipsPerPixel),
                             Float(border.left / twipsPerPixel) };
-  Rect dirtyRect = NSRectToRect(aDirtyRect, twipsPerPixel);
 
   uint8_t borderStyles[4];
   nscolor borderColors[4];
@@ -799,7 +798,6 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
 
   nsCSSBorderRenderer br(aPresContext->Type(),
                          &aDrawTarget,
-                         dirtyRect,
                          joinedBorderAreaPx,
                          borderStyles,
                          borderWidths,
@@ -934,13 +932,11 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
                              Float(width / twipsPerPixel),
                              Float(width / twipsPerPixel),
                              Float(width / twipsPerPixel) };
-  Rect dirtyRect = NSRectToRect(aDirtyRect, twipsPerPixel);
 
   // start drawing
 
   nsCSSBorderRenderer br(aPresContext->Type(),
                          aRenderingContext.GetDrawTarget(),
-                         dirtyRect,
                          oRect,
                          outlineStyles,
                          outlineWidths,
@@ -988,7 +984,6 @@ nsCSSRendering::PaintFocus(nsPresContext* aPresContext,
   // and PaintOutline do.)
   nsCSSBorderRenderer br(aPresContext->Type(),
                          aDrawTarget,
-                         focusRect,
                          focusRect,
                          focusStyles,
                          focusWidths,
