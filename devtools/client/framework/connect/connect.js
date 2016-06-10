@@ -7,13 +7,12 @@
 "use strict";
 
 var Cu = Components.utils;
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 var {require} = Cu.import("resource://devtools/shared/Loader.jsm", {});
+var {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 var Services = require("Services");
 var {gDevTools} = require("devtools/client/framework/devtools");
 var {TargetFactory} = require("devtools/client/framework/target");
 var {Toolbox} = require("devtools/client/framework/toolbox");
-var promise = require("promise");
 var {DebuggerClient} = require("devtools/shared/client/main");
 var {Task} = require("devtools/shared/task");
 

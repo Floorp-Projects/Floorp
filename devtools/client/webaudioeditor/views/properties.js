@@ -3,8 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 "use strict";
 
-Cu.import("resource://devtools/client/shared/widgets/VariablesView.jsm");
-Cu.import("resource://devtools/client/shared/widgets/VariablesViewController.jsm");
+const { VariablesView } = require("resource://devtools/client/shared/widgets/VariablesView.jsm");
 
 const GENERIC_VARIABLES_VIEW_SETTINGS = {
   searchEnabled: false,

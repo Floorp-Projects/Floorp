@@ -7,13 +7,10 @@ package org.mozilla.gecko.telemetry;
 import org.mozilla.gecko.AppConstants;
 
 public class TelemetryConstants {
-
-    // Change these two values to enable upload in developer builds.
+    // To test, set this to true & change "toolkit.telemetry.server" in about:config.
     public static final boolean UPLOAD_ENABLED = AppConstants.MOZILLA_OFFICIAL; // Disabled for developer builds.
-    public static final String DEFAULT_SERVER_URL = "https://incoming.telemetry.mozilla.org";
 
     public static final String USER_AGENT =
             "Firefox-Android-Telemetry/" + AppConstants.MOZ_APP_VERSION + " (" + AppConstants.MOZ_APP_UA_NAME + ")";
 
-    public static final String PREF_SERVER_URL = "telemetry-serverUrl";
 }

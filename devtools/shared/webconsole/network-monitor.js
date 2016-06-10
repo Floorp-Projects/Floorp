@@ -8,8 +8,7 @@
 
 const {Cc, Ci, Cm, Cu, Cr, components} = require("chrome");
 const Services = require("Services");
-
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
+const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
 loader.lazyRequireGetter(this, "NetworkHelper",
                          "devtools/shared/webconsole/network-helper");

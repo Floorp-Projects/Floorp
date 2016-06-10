@@ -2,13 +2,13 @@
 * License, v. 2.0. If a copy of the MPL was not distributed with this
 * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const {Cu} = require("chrome");
+"use strict";
 
 const Services = require("Services");
 const {AppManager} = require("devtools/client/webide/modules/app-manager");
 const EventEmitter = require("devtools/shared/event-emitter");
 const {RuntimeScanners, WiFiScanner} = require("devtools/client/webide/modules/runtimes");
-const {Devices} = Cu.import("resource://devtools/shared/apps/Devices.jsm");
+const {Devices} = require("resource://devtools/shared/apps/Devices.jsm");
 const {Task} = require("devtools/shared/task");
 const utils = require("devtools/client/webide/modules/utils");
 

@@ -313,6 +313,7 @@
   <string name="content_notification_updated_on">&content_notification_updated_on;</string>
 
   <string name="pref_default_browser">&pref_default_browser;</string>
+  <string name="pref_default_browser_mozilla_support_tablet">&pref_default_browser_mozilla_support_tablet;</string>
 
   <string name="pref_about_firefox">&pref_about_firefox;</string>
 

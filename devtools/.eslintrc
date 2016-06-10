@@ -29,8 +29,9 @@
     "mozilla/mark-test-function-used": 1,
     "mozilla/no-aArgs": 1,
     "mozilla/no-cpows-in-tests": 2,
+    "mozilla/no-single-arg-cu-import": 2,
     // See bug 1224289.
-    "mozilla/reject-importGlobalProperties": 1,
+    "mozilla/reject-importGlobalProperties": 2,
     "mozilla/var-only-at-top-level": 1,
 
     // Rules from the React plugin

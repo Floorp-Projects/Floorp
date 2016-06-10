@@ -8,9 +8,8 @@
 
 var { utils: Cu } = Components;
 
-Cu.import("resource://testing-common/Assert.jsm");
-
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+var { Assert } = require("resource://testing-common/Assert.jsm");
 var { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { Task } = require("devtools/shared/task");

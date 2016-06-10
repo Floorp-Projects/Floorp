@@ -6,13 +6,14 @@
 
 const l10n = require("gcli/l10n");
 const Services = require("Services");
+const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 require("devtools/server/actors/inspector");
 const {
   BoxModelHighlighter,
   HighlighterEnvironment
 } = require("devtools/server/actors/highlighters");
 
-XPCOMUtils.defineLazyGetter(this, "nodesSelected", function() {
+XPCOMUtils.defineLazyGetter(this, "nodesSelected", function () {
   return Services.strings.createBundle("chrome://devtools-shared/locale/gclicommands.properties");
 });
 XPCOMUtils.defineLazyModuleGetter(this, "PluralForm", "resource://gre/modules/PluralForm.jsm");

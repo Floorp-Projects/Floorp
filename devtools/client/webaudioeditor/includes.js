@@ -5,12 +5,9 @@
 
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-
 const { loader, require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
-
-var { EventTarget } = require("sdk/event/target");
-
+const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
+const { EventTarget } = require("sdk/event/target");
 const { Task } = require("devtools/shared/task");
 const { Class } = require("sdk/core/heritage");
 const EventEmitter = require("devtools/shared/event-emitter");

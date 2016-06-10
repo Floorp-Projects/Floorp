@@ -6,7 +6,7 @@
 
 const { Cc, Ci, Cu, ChromeWorker } = require("chrome");
 const { Class } = require("sdk/core/heritage");
-const { OS } = Cu.import("resource://gre/modules/osfile.jsm", {});
+const { OS } = require("resource://gre/modules/osfile.jsm");
 const { emit } = require("sdk/event/core");
 const { Store } = require("devtools/client/projecteditor/lib/stores/base");
 const { Task } = require("devtools/shared/task");
@@ -213,4 +213,3 @@ var LocalStore = Class({
   }
 });
 exports.LocalStore = LocalStore;
-

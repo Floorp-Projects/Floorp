@@ -24,6 +24,9 @@ import java.io.IOException;
  *  * Initializing the Stores & Schedulers.
  *  * Queueing upload requests for a given ping.
  *
+ * To test Telemetry , see {@link TelemetryConstants} &
+ * https://wiki.mozilla.org/Mobile/Fennec/Android/Java_telemetry.
+ *
  * The full architecture is:
  *
  * Fennec -(PingBuilder)-> Dispatcher -2-> Scheduler -> UploadService
@@ -58,13 +61,13 @@ public class TelemetryDispatcher {
     private final TelemetryUploadAllPingsImmediatelyScheduler uploadAllPingsImmediatelyScheduler;
 
     @WorkerThread // via TelemetryJSONFilePingStore
-    public TelemetryDispatcher(final String profilePath) {
+    public TelemetryDispatcher(final String profilePath, final String profileName) {
         final String storePath = profilePath + File.separator + STORE_CONTAINER_DIR_NAME;
 
         // There are measurements in the core ping (e.g. seq #) that would ideally be atomically updated
         // when the ping is stored. However, for simplicity, we use the json store and accept the possible
         // loss of data (see bug 1243585 comment 16+ for more).
-        coreStore = new TelemetryJSONFilePingStore(new File(storePath, CORE_STORE_DIR_NAME));
+        coreStore = new TelemetryJSONFilePingStore(new File(storePath, CORE_STORE_DIR_NAME), profileName);
 
         uploadAllPingsImmediatelyScheduler = new TelemetryUploadAllPingsImmediatelyScheduler();
     }

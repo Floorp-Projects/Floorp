@@ -96,20 +96,19 @@ const FRAME_TYPE = {
   PUBLIC_CLIENT_EVAL: 3
 };
 
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
-Cu.import("resource://devtools/shared/event-emitter.js");
-Cu.import("resource://devtools/client/shared/widgets/SimpleListWidget.jsm");
-Cu.import("resource://devtools/client/shared/widgets/BreadcrumbsWidget.jsm");
-Cu.import("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
-Cu.import("resource://devtools/client/shared/widgets/VariablesView.jsm");
-Cu.import("resource://devtools/client/shared/widgets/VariablesViewController.jsm");
-
-Cu.import("resource://devtools/client/shared/browser-loader.js");
+const { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
 const { require } = BrowserLoader({
   baseURI: "resource://devtools/client/debugger/",
   window,
 });
+const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 XPCOMUtils.defineConstant(this, "require", require);
+const { SimpleListWidget } = require("resource://devtools/client/shared/widgets/SimpleListWidget.jsm");
+const { BreadcrumbsWidget } = require("resource://devtools/client/shared/widgets/BreadcrumbsWidget.jsm");
+const { SideMenuWidget } = require("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
+const { VariablesView } = require("resource://devtools/client/shared/widgets/VariablesView.jsm");
+const { VariablesViewController, StackFrameUtils } = require("resource://devtools/client/shared/widgets/VariablesViewController.jsm");
+const EventEmitter = require("devtools/shared/event-emitter");
 const { gDevTools } = require("devtools/client/framework/devtools");
 const { ViewHelpers, Heritage, WidgetMethods, setNamedTimeout,
         clearNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");

@@ -42,7 +42,7 @@ public class TestTelemetryJSONFilePingStore {
     @Before
     public void setUp() throws Exception {
         testDir = tempDir.newFolder();
-        testStore = new TelemetryJSONFilePingStore(testDir);
+        testStore = new TelemetryJSONFilePingStore(testDir, "");
     }
 
     private ExtendedJSONObject generateTelemetryPayload() {

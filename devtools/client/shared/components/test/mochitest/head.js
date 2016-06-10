@@ -4,9 +4,8 @@
 
 var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
-Cu.import("resource://testing-common/Assert.jsm");
-
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+var { Assert } = require("resource://testing-common/Assert.jsm");
 var { gDevTools } = require("devtools/client/framework/devtools");
 var { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
 var promise = require("promise");
