@@ -14,7 +14,6 @@
 
 #include "mozilla/Array.h"
 #include "mozilla/Attributes.h"
-#include "mozilla/MacroForEach.h"
 
 #include "builtin/SIMD.h"
 #include "jit/AtomicOp.h"
@@ -1117,26 +1116,6 @@ class MInstruction
         return new(alloc) MThisOpcode(mozilla::Forward<Args>(args)...);     \
     }
 
-
-// These macros are used as a syntactic sugar for writting getOperand
-// accessors. They are meant to be used in the body of MIR Instructions as
-// follows:
-//
-//   public:
-//     INSTRUCTION_HEADER(Foo)
-//     NAMED_OPERANDS((0, lhs), (1, rhs))
-//
-// The above example defines 2 accessors, one named "lhs" accessing the first
-// operand, and a one named "rhs" accessing the second operand.
-#define NAMED_OPERAND_ACCESSOR(Index, Name)                                 \
-    MDefinition* Name() const {                                             \
-        return getOperand(Index);                                           \
-    }
-#define NAMED_OPERAND_ACCESSOR_APPLY(Args)                                  \
-    NAMED_OPERAND_ACCESSOR Args
-#define NAMED_OPERANDS(...)                                                 \
-    MOZ_FOR_EACH(NAMED_OPERAND_ACCESSOR_APPLY, (), (__VA_ARGS__))
-
 template <size_t Arity>
 class MAryInstruction : public MInstruction
 {
@@ -1196,7 +1175,9 @@ class MUnaryInstruction : public MAryInstruction<1>
     }
 
   public:
-    NAMED_OPERANDS((0, input))
+    MDefinition* input() const {
+        return getOperand(0);
+    }
 };
 
 class MBinaryInstruction : public MAryInstruction<2>
@@ -1209,7 +1190,12 @@ class MBinaryInstruction : public MAryInstruction<2>
     }
 
   public:
-    NAMED_OPERANDS((0, lhs), (1, rhs))
+    MDefinition* lhs() const {
+        return getOperand(0);
+    }
+    MDefinition* rhs() const {
+        return getOperand(1);
+    }
     void swapOperands() {
         MDefinition* temp = getOperand(0);
         replaceOperand(0, getOperand(1));
@@ -1873,8 +1859,13 @@ class MSimdInsertElement
   public:
     INSTRUCTION_HEADER(SimdInsertElement)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, vector), (1, value))
 
+    MDefinition* vector() {
+        return getOperand(0);
+    }
+    MDefinition* value() {
+        return getOperand(1);
+    }
     unsigned lane() const {
         return lane_;
     }
@@ -2599,7 +2590,10 @@ class MSimdSelect
   public:
     INSTRUCTION_HEADER(SimdSelect)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, mask))
+
+    MDefinition* mask() const {
+        return getOperand(0);
+    }
 
     AliasSet getAliasSet() const override {
         return AliasSet::None();
@@ -2957,13 +2951,15 @@ class MTest
   public:
     INSTRUCTION_HEADER(Test)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, input))
 
     // Factory for asm, which may patch the ifTrue branch later.
     static MTest* NewAsm(TempAllocator& alloc, MDefinition* ins, MBasicBlock* ifFalse);
 
     static const size_t TrueBranchIndex = 0;
 
+    MDefinition* input() const {
+        return getOperand(0);
+    }
     MBasicBlock* ifTrue() const {
         return getSuccessor(0);
     }
@@ -3039,8 +3035,10 @@ class MReturn
   public:
     INSTRUCTION_HEADER(Return)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, input))
 
+    MDefinition* input() const {
+        return getOperand(0);
+    }
     AliasSet getAliasSet() const override {
         return AliasSet::None();
     }
@@ -3260,8 +3258,10 @@ class MNewArrayDynamicLength
   public:
     INSTRUCTION_HEADER(NewArrayDynamicLength)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, length))
 
+    MDefinition* length() const {
+        return getOperand(0);
+    }
     JSObject* templateObject() const {
         return templateObject_;
     }
@@ -3390,8 +3390,10 @@ class MTypedObjectDescr
   public:
     INSTRUCTION_HEADER(TypedObjectDescr)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
     }
@@ -3542,10 +3544,21 @@ class MNewDerivedTypedObject
   public:
     INSTRUCTION_HEADER(NewDerivedTypedObject)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, type), (1, owner), (2, offset))
 
     TypedObjectPrediction prediction() const {
         return prediction_;
+    }
+
+    MDefinition* type() const {
+        return getOperand(0);
+    }
+
+    MDefinition* owner() const {
+        return getOperand(1);
+    }
+
+    MDefinition* offset() const {
+        return getOperand(2);
     }
 
     virtual AliasSet getAliasSet() const override {
@@ -3596,7 +3609,6 @@ class MObjectState
 
   public:
     INSTRUCTION_HEADER(ObjectState)
-    NAMED_OPERANDS((0, object))
 
     // Return the template object of any object creation which can be recovered
     // on bailout.
@@ -3608,6 +3620,10 @@ class MObjectState
     // As we might do read of uninitialized properties, we have to copy the
     // initial values from the template object.
     bool initFromTemplateObject(TempAllocator& alloc, MDefinition* undefinedVal);
+
+    MDefinition* object() const {
+        return getOperand(0);
+    }
 
     size_t numFixedSlots() const {
         MOZ_ASSERT(!isUnboxed());
@@ -3683,12 +3699,18 @@ class MArrayState
 
   public:
     INSTRUCTION_HEADER(ArrayState)
-    NAMED_OPERANDS((0, array), (1, initializedLength))
 
     static MArrayState* New(TempAllocator& alloc, MDefinition* arr, MDefinition* undefinedVal,
                             MDefinition* initLength);
     static MArrayState* Copy(TempAllocator& alloc, MArrayState* state);
 
+    MDefinition* array() const {
+        return getOperand(0);
+    }
+
+    MDefinition* initializedLength() const {
+        return getOperand(1);
+    }
     void setInitializedLength(MDefinition* def) {
         replaceOperand(1, def);
     }
@@ -3727,7 +3749,13 @@ class MMutateProto
   public:
     INSTRUCTION_HEADER(MutateProto)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, getObject), (1, getValue))
+
+    MDefinition* getObject() const {
+        return getOperand(0);
+    }
+    MDefinition* getValue() const {
+        return getOperand(1);
+    }
 
     bool possiblyCalls() const override {
         return true;
@@ -3753,7 +3781,13 @@ class MInitProp
   public:
     INSTRUCTION_HEADER(InitProp)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, getObject), (1, getValue))
+
+    MDefinition* getObject() const {
+        return getOperand(0);
+    }
+    MDefinition* getValue() const {
+        return getOperand(1);
+    }
 
     PropertyName* propertyName() const {
         return name_;
@@ -3778,8 +3812,13 @@ class MInitPropGetterSetter
   public:
     INSTRUCTION_HEADER(InitPropGetterSetter)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object), (1, value))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+    MDefinition* value() const {
+        return getOperand(1);
+    }
     PropertyName* name() const {
         return name_;
     }
@@ -3800,8 +3839,16 @@ class MInitElem
   public:
     INSTRUCTION_HEADER(InitElem)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, getObject), (1, getId), (2, getValue))
 
+    MDefinition* getObject() const {
+        return getOperand(0);
+    }
+    MDefinition* getId() const {
+        return getOperand(1);
+    }
+    MDefinition* getValue() const {
+        return getOperand(2);
+    }
     bool possiblyCalls() const override {
         return true;
     }
@@ -3818,8 +3865,16 @@ class MInitElemGetterSetter
   public:
     INSTRUCTION_HEADER(InitElemGetterSetter)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object), (1, idValue), (2, value))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+    MDefinition* idValue() const {
+        return getOperand(1);
+    }
+    MDefinition* value() const {
+        return getOperand(2);
+    }
 };
 
 class MCall
@@ -3982,7 +4037,18 @@ class MArraySplice
   public:
     INSTRUCTION_HEADER(ArraySplice)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object), (1, start), (2, deleteCount))
+
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+
+    MDefinition* start() const {
+        return getOperand(1);
+    }
+
+    MDefinition* deleteCount() const {
+        return getOperand(2);
+    }
 
     bool possiblyCalls() const override {
         return true;
@@ -4010,13 +4076,22 @@ class MApplyArgs
   public:
     INSTRUCTION_HEADER(ApplyArgs)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, getFunction), (1, getArgc), (2, getThis))
+
+    MDefinition* getFunction() const {
+        return getOperand(0);
+    }
 
     // For TI-informed monomorphic callsites.
     JSFunction* getSingleTarget() const {
         return target_;
     }
 
+    MDefinition* getArgc() const {
+        return getOperand(1);
+    }
+    MDefinition* getThis() const {
+        return getOperand(2);
+    }
     bool possiblyCalls() const override {
         return true;
     }
@@ -4043,13 +4118,22 @@ class MApplyArray
   public:
     INSTRUCTION_HEADER(ApplyArray)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, getFunction), (1, getElements), (2, getThis))
+
+    MDefinition* getFunction() const {
+        return getOperand(0);
+    }
 
     // For TI-informed monomorphic callsites.
     JSFunction* getSingleTarget() const {
         return target_;
     }
 
+    MDefinition* getElements() const {
+        return getOperand(1);
+    }
+    MDefinition* getThis() const {
+        return getOperand(2);
+    }
     bool possiblyCalls() const override {
         return true;
     }
@@ -4186,13 +4270,18 @@ class MGetDynamicName
 
   public:
     INSTRUCTION_HEADER(GetDynamicName)
-    NAMED_OPERANDS((0, getScopeChain), (1, getName))
 
     static MGetDynamicName*
     New(TempAllocator& alloc, MDefinition* scopeChain, MDefinition* name) {
         return new(alloc) MGetDynamicName(scopeChain, name);
     }
 
+    MDefinition* getScopeChain() const {
+        return getOperand(0);
+    }
+    MDefinition* getName() const {
+        return getOperand(1);
+    }
     bool possiblyCalls() const override {
         return true;
     }
@@ -4217,13 +4306,22 @@ class MCallDirectEval
 
   public:
     INSTRUCTION_HEADER(CallDirectEval)
-    NAMED_OPERANDS((0, getScopeChain), (1, getString), (2, getNewTargetValue))
 
     static MCallDirectEval*
     New(TempAllocator& alloc, MDefinition* scopeChain, MDefinition* string,
         MDefinition* newTargetValue, jsbytecode* pc)
     {
         return new(alloc) MCallDirectEval(scopeChain, string, newTargetValue, pc);
+    }
+
+    MDefinition* getScopeChain() const {
+        return getOperand(0);
+    }
+    MDefinition* getString() const {
+        return getOperand(1);
+    }
+    MDefinition* getNewTargetValue() const {
+        return getOperand(2);
     }
 
     jsbytecode* pc() const {
@@ -4739,7 +4837,16 @@ class MCreateThisWithProto
   public:
     INSTRUCTION_HEADER(CreateThisWithProto)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, getCallee), (1, getNewTarget), (2, getPrototype))
+
+    MDefinition* getCallee() const {
+        return getOperand(0);
+    }
+    MDefinition* getNewTarget() const {
+        return getOperand(1);
+    }
+    MDefinition* getPrototype() const {
+        return getOperand(2);
+    }
 
     // Although creation of |this| modifies global state, it is safely repeatable.
     AliasSet getAliasSet() const override {
@@ -4765,7 +4872,13 @@ class MCreateThis
   public:
     INSTRUCTION_HEADER(CreateThis)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, getCallee), (0, getNewTarget))
+
+    MDefinition* getCallee() const {
+        return getOperand(0);
+    }
+    MDefinition* getNewTarget() const {
+        return getOperand(0);
+    }
 
     // Although creation of |this| modifies global state, it is safely repeatable.
     AliasSet getAliasSet() const override {
@@ -4791,7 +4904,10 @@ class MCreateArgumentsObject
   public:
     INSTRUCTION_HEADER(CreateArgumentsObject)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, getCallObject))
+
+    MDefinition* getCallObject() const {
+        return getOperand(0);
+    }
 
     AliasSet getAliasSet() const override {
         return AliasSet::None();
@@ -4818,7 +4934,10 @@ class MGetArgumentsObjectArg
   public:
     INSTRUCTION_HEADER(GetArgumentsObjectArg)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, getArgsObject))
+
+    MDefinition* getArgsObject() const {
+        return getOperand(0);
+    }
 
     size_t argno() const {
         return argno_;
@@ -4844,10 +4963,17 @@ class MSetArgumentsObjectArg
   public:
     INSTRUCTION_HEADER(SetArgumentsObjectArg)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, getArgsObject), (1, getValue))
+
+    MDefinition* getArgsObject() const {
+        return getOperand(0);
+    }
 
     size_t argno() const {
         return argno_;
+    }
+
+    MDefinition* getValue() const {
+        return getOperand(1);
     }
 
     AliasSet getAliasSet() const override {
@@ -4890,7 +5016,13 @@ class MReturnFromCtor
   public:
     INSTRUCTION_HEADER(ReturnFromCtor)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, getValue), (1, getObject))
+
+    MDefinition* getValue() const {
+        return getOperand(0);
+    }
+    MDefinition* getObject() const {
+        return getOperand(1);
+    }
 
     AliasSet getAliasSet() const override {
         return AliasSet::None();
@@ -5996,12 +6128,14 @@ class MClz
 
   public:
     INSTRUCTION_HEADER(Clz)
-    NAMED_OPERANDS((0, num))
     static MClz* New(TempAllocator& alloc, MDefinition* num) {
         return new(alloc) MClz(num, MIRType::Int32);
     }
     static MClz* NewAsmJS(TempAllocator& alloc, MDefinition* num) {
         return new(alloc) MClz(num, num->type());
+    }
+    MDefinition* num() const {
+        return getOperand(0);
     }
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
@@ -6039,12 +6173,14 @@ class MCtz
 
   public:
     INSTRUCTION_HEADER(Ctz)
-    NAMED_OPERANDS((0, num))
     static MCtz* New(TempAllocator& alloc, MDefinition* num) {
         return new(alloc) MCtz(num, MIRType::Int32);
     }
     static MCtz* NewAsmJS(TempAllocator& alloc, MDefinition* num) {
         return new(alloc) MCtz(num, num->type());
+    }
+    MDefinition* num() const {
+        return getOperand(0);
     }
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
@@ -6079,12 +6215,14 @@ class MPopcnt
 
   public:
     INSTRUCTION_HEADER(Popcnt)
-    NAMED_OPERANDS((0, num))
     static MPopcnt* New(TempAllocator& alloc, MDefinition* num) {
         return new(alloc) MPopcnt(num, MIRType::Int32);
     }
     static MPopcnt* NewAsmJS(TempAllocator& alloc, MDefinition* num) {
         return new(alloc) MPopcnt(num, num->type());
+    }
+    MDefinition* num() const {
+        return getOperand(0);
     }
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
@@ -6185,7 +6323,14 @@ class MAtan2
   public:
     INSTRUCTION_HEADER(Atan2)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, y), (1, x))
+
+    MDefinition* y() const {
+        return getOperand(0);
+    }
+
+    MDefinition* x() const {
+        return getOperand(1);
+    }
 
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
@@ -7023,8 +7168,13 @@ class MStringSplit
   public:
     INSTRUCTION_HEADER(StringSplit)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, string), (1, separator))
 
+    MDefinition* string() const {
+        return getOperand(0);
+    }
+    MDefinition* separator() const {
+        return getOperand(1);
+    }
     JSObject* templateObject() const {
         return &getOperand(2)->toConstant()->toObject();
     }
@@ -7083,8 +7233,10 @@ class MArrowNewTarget
   public:
     INSTRUCTION_HEADER(ArrowNewTarget)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, callee))
 
+    MDefinition* callee() const {
+        return getOperand(0);
+    }
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
     }
@@ -7537,6 +7689,10 @@ class MLexicalCheck
         return AliasSet::None();
     }
 
+    MDefinition* input() const {
+        return getOperand(0);
+    }
+
     BailoutKind bailoutKind() const {
         return kind_;
     }
@@ -7602,13 +7758,15 @@ class MDefVar
   public:
     INSTRUCTION_HEADER(DefVar)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, scopeChain))
 
     PropertyName* name() const {
         return name_;
     }
     unsigned attrs() const {
         return attrs_;
+    }
+    MDefinition* scopeChain() const {
+        return getOperand(0);
     }
     bool possiblyCalls() const override {
         return true;
@@ -7654,10 +7812,12 @@ class MDefFun
   public:
     INSTRUCTION_HEADER(DefFun)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, scopeChain))
 
     JSFunction* fun() const {
         return fun_;
+    }
+    MDefinition* scopeChain() const {
+        return getOperand(0);
     }
     bool possiblyCalls() const override {
         return true;
@@ -7721,7 +7881,16 @@ class MRegExpMatcher
   public:
     INSTRUCTION_HEADER(RegExpMatcher)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, regexp), (1, string), (2, lastIndex))
+
+    MDefinition* regexp() const {
+        return getOperand(0);
+    }
+    MDefinition* string() const {
+        return getOperand(1);
+    }
+    MDefinition* lastIndex() const {
+        return getOperand(2);
+    }
 
     bool writeRecoverData(CompactBufferWriter& writer) const override;
 
@@ -7756,7 +7925,16 @@ class MRegExpSearcher
   public:
     INSTRUCTION_HEADER(RegExpSearcher)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, regexp), (1, string), (2, lastIndex))
+
+    MDefinition* regexp() const {
+        return getOperand(0);
+    }
+    MDefinition* string() const {
+        return getOperand(1);
+    }
+    MDefinition* lastIndex() const {
+        return getOperand(2);
+    }
 
     bool writeRecoverData(CompactBufferWriter& writer) const override;
 
@@ -7791,7 +7969,16 @@ class MRegExpTester
   public:
     INSTRUCTION_HEADER(RegExpTester)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, regexp), (1, string), (2, lastIndex))
+
+    MDefinition* regexp() const {
+        return getOperand(0);
+    }
+    MDefinition* string() const {
+        return getOperand(1);
+    }
+    MDefinition* lastIndex() const {
+        return getOperand(2);
+    }
 
     bool possiblyCalls() const override {
         return true;
@@ -7816,8 +8003,10 @@ class MRegExpPrototypeOptimizable
   public:
     INSTRUCTION_HEADER(RegExpPrototypeOptimizable)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     AliasSet getAliasSet() const override {
         return AliasSet::None();
     }
@@ -7836,8 +8025,13 @@ class MRegExpInstanceOptimizable
   public:
     INSTRUCTION_HEADER(RegExpInstanceOptimizable)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object), (1, proto))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+    MDefinition* proto() const {
+        return getOperand(1);
+    }
     AliasSet getAliasSet() const override {
         return AliasSet::None();
     }
@@ -7857,8 +8051,10 @@ class MGetFirstDollarIndex
   public:
     INSTRUCTION_HEADER(GetFirstDollarIndex)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, str))
 
+    MDefinition* str() const {
+        return getOperand(0);
+    }
     AliasSet getAliasSet() const override {
         return AliasSet::None();
     }
@@ -7884,7 +8080,6 @@ class MStringReplace
   public:
     INSTRUCTION_HEADER(StringReplace)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, string), (1, pattern), (2, replacement))
 
     void setFlatReplacement() {
         MOZ_ASSERT(!isFlatReplacement_);
@@ -7916,6 +8111,16 @@ class MStringReplace
         return false;
     }
 
+    MDefinition* string() const {
+        return getOperand(0);
+    }
+    MDefinition* pattern() const {
+        return getOperand(1);
+    }
+    MDefinition* replacement() const {
+        return getOperand(2);
+    }
+
     bool possiblyCalls() const override {
         return true;
     }
@@ -7936,7 +8141,18 @@ class MSubstr
   public:
     INSTRUCTION_HEADER(Substr)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, string), (1, begin), (2, length))
+
+    MDefinition* string() {
+        return getOperand(0);
+    }
+
+    MDefinition* begin() {
+        return getOperand(1);
+    }
+
+    MDefinition* length() {
+        return getOperand(2);
+    }
 
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
@@ -7989,8 +8205,10 @@ class MLambda
   public:
     INSTRUCTION_HEADER(Lambda)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, scopeChain))
 
+    MDefinition* scopeChain() const {
+        return getOperand(0);
+    }
     MConstant* functionOperand() const {
         return getOperand(1)->toConstant();
     }
@@ -8022,8 +8240,13 @@ class MLambdaArrow
   public:
     INSTRUCTION_HEADER(LambdaArrow)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, scopeChain), (1, newTargetDef))
 
+    MDefinition* scopeChain() const {
+        return getOperand(0);
+    }
+    MDefinition* newTargetDef() const {
+        return getOperand(1);
+    }
     const LambdaFunctionInfo& info() const {
         return info_;
     }
@@ -8044,8 +8267,10 @@ class MSlots
   public:
     INSTRUCTION_HEADER(Slots)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
     }
@@ -8073,8 +8298,10 @@ class MElements
   public:
     INSTRUCTION_HEADER(Elements)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     bool unboxed() const {
         return unboxed_;
     }
@@ -8143,8 +8370,10 @@ class MConvertElementsToDoubles
   public:
     INSTRUCTION_HEADER(ConvertElementsToDoubles)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, elements))
 
+    MDefinition* elements() const {
+        return getOperand(0);
+    }
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
     }
@@ -8177,8 +8406,13 @@ class MMaybeToDoubleElement
   public:
     INSTRUCTION_HEADER(MaybeToDoubleElement)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, elements), (1, value))
 
+    MDefinition* elements() const {
+        return getOperand(0);
+    }
+    MDefinition* value() const {
+        return getOperand(1);
+    }
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
     }
@@ -8206,8 +8440,10 @@ class MMaybeCopyElementsForWrite
   public:
     INSTRUCTION_HEADER(MaybeCopyElementsForWrite)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     bool checkNative() const {
         return checkNative_;
     }
@@ -8243,8 +8479,10 @@ class MInitializedLength
   public:
     INSTRUCTION_HEADER(InitializedLength)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, elements))
 
+    MDefinition* elements() const {
+        return getOperand(0);
+    }
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
     }
@@ -8271,8 +8509,13 @@ class MSetInitializedLength
   public:
     INSTRUCTION_HEADER(SetInitializedLength)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, elements), (1, index))
 
+    MDefinition* elements() const {
+        return getOperand(0);
+    }
+    MDefinition* index() const {
+        return getOperand(1);
+    }
     AliasSet getAliasSet() const override {
         return AliasSet::Store(AliasSet::ObjectFields);
     }
@@ -8295,8 +8538,10 @@ class MUnboxedArrayLength
   public:
     INSTRUCTION_HEADER(UnboxedArrayLength)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
     }
@@ -8322,8 +8567,10 @@ class MUnboxedArrayInitializedLength
   public:
     INSTRUCTION_HEADER(UnboxedArrayInitializedLength)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
     }
@@ -8346,8 +8593,10 @@ class MIncrementUnboxedArrayInitializedLength
   public:
     INSTRUCTION_HEADER(IncrementUnboxedArrayInitializedLength)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     AliasSet getAliasSet() const override {
         return AliasSet::Store(AliasSet::ObjectFields);
     }
@@ -8367,8 +8616,13 @@ class MSetUnboxedArrayInitializedLength
   public:
     INSTRUCTION_HEADER(SetUnboxedArrayInitializedLength)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object), (1, length))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+    MDefinition* length() const {
+        return getOperand(1);
+    }
     AliasSet getAliasSet() const override {
         return AliasSet::Store(AliasSet::ObjectFields);
     }
@@ -8391,8 +8645,10 @@ class MArrayLength
   public:
     INSTRUCTION_HEADER(ArrayLength)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, elements))
 
+    MDefinition* elements() const {
+        return getOperand(0);
+    }
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
     }
@@ -8419,8 +8675,13 @@ class MSetArrayLength
   public:
     INSTRUCTION_HEADER(SetArrayLength)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, elements), (1, index))
 
+    MDefinition* elements() const {
+        return getOperand(0);
+    }
+    MDefinition* index() const {
+        return getOperand(1);
+    }
     AliasSet getAliasSet() const override {
         return AliasSet::Store(AliasSet::ObjectFields);
     }
@@ -8440,8 +8701,14 @@ class MGetNextMapEntryForIterator
   public:
     INSTRUCTION_HEADER(GetNextMapEntryForIterator)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, iter), (1, result))
 
+    MDefinition* iter() {
+        return getOperand(0);
+    }
+
+    MDefinition* result() {
+        return getOperand(1);
+    }
 };
 
 // Read the length of a typed array.
@@ -8459,8 +8726,10 @@ class MTypedArrayLength
   public:
     INSTRUCTION_HEADER(TypedArrayLength)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
     }
@@ -8486,8 +8755,10 @@ class MTypedArrayElements
   public:
     INSTRUCTION_HEADER(TypedArrayElements)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
     }
@@ -8514,13 +8785,24 @@ class MSetDisjointTypedElements
 
   public:
     INSTRUCTION_HEADER(SetDisjointTypedElements)
-    NAMED_OPERANDS((0, target), (1, targetOffset), (2, source))
 
     static MSetDisjointTypedElements*
     New(TempAllocator& alloc, MDefinition* target, MDefinition* targetOffset,
         MDefinition* source)
     {
         return new(alloc) MSetDisjointTypedElements(target, targetOffset, source);
+    }
+
+    MDefinition* target() const {
+        return getOperand(0);
+    }
+
+    MDefinition* targetOffset() const {
+        return getOperand(1);
+    }
+
+    MDefinition* source() const {
+        return getOperand(2);
     }
 
     AliasSet getAliasSet() const override {
@@ -8551,8 +8833,10 @@ class MTypedObjectElements
   public:
     INSTRUCTION_HEADER(TypedObjectElements)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     bool definitelyOutline() const {
         return definitelyOutline_;
     }
@@ -8586,7 +8870,14 @@ class MSetTypedObjectOffset
   public:
     INSTRUCTION_HEADER(SetTypedObjectOffset)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object), (1, offset))
+
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+
+    MDefinition* offset() const {
+        return getOperand(1);
+    }
 
     AliasSet getAliasSet() const override {
         // This affects the result of MTypedObjectElements,
@@ -8609,8 +8900,10 @@ class MKeepAliveObject
   public:
     INSTRUCTION_HEADER(KeepAliveObject)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
 };
 
 // Perform !-operation
@@ -8705,8 +8998,13 @@ class MBoundsCheck
   public:
     INSTRUCTION_HEADER(BoundsCheck)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, index), (1, length))
 
+    MDefinition* index() const {
+        return getOperand(0);
+    }
+    MDefinition* length() const {
+        return getOperand(1);
+    }
     int32_t minimum() const {
         return minimum_;
     }
@@ -8763,8 +9061,10 @@ class MBoundsCheckLower
   public:
     INSTRUCTION_HEADER(BoundsCheckLower)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, index))
 
+    MDefinition* index() const {
+        return getOperand(0);
+    }
     int32_t minimum() const {
         return minimum_;
     }
@@ -8823,8 +9123,13 @@ class MLoadElement
   public:
     INSTRUCTION_HEADER(LoadElement)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, elements), (1, index))
 
+    MDefinition* elements() const {
+        return getOperand(0);
+    }
+    MDefinition* index() const {
+        return getOperand(1);
+    }
     bool needsHoleCheck() const {
         return needsHoleCheck_;
     }
@@ -8894,8 +9199,16 @@ class MLoadElementHole
   public:
     INSTRUCTION_HEADER(LoadElementHole)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, elements), (1, index), (2, initLength))
 
+    MDefinition* elements() const {
+        return getOperand(0);
+    }
+    MDefinition* index() const {
+        return getOperand(1);
+    }
+    MDefinition* initLength() const {
+        return getOperand(2);
+    }
     JSValueType unboxedType() const {
         return unboxedType_;
     }
@@ -8960,8 +9273,13 @@ class MLoadUnboxedObjectOrNull
   public:
     INSTRUCTION_HEADER(LoadUnboxedObjectOrNull)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, elements), (1, index))
 
+    MDefinition* elements() const {
+        return getOperand(0);
+    }
+    MDefinition* index() const {
+        return getOperand(1);
+    }
     NullBehavior nullBehavior() const {
         return nullBehavior_;
     }
@@ -9009,8 +9327,13 @@ class MLoadUnboxedString
   public:
     INSTRUCTION_HEADER(LoadUnboxedString)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, elements), (1, index))
 
+    MDefinition* elements() const {
+        return getOperand(0);
+    }
+    MDefinition* index() const {
+        return getOperand(1);
+    }
     int32_t offsetAdjustment() const {
         return offsetAdjustment_;
     }
@@ -9080,8 +9403,16 @@ class MStoreElement
   public:
     INSTRUCTION_HEADER(StoreElement)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, elements), (1, index), (2, value))
 
+    MDefinition* elements() const {
+        return getOperand(0);
+    }
+    MDefinition* index() const {
+        return getOperand(1);
+    }
+    MDefinition* value() const {
+        return getOperand(2);
+    }
     AliasSet getAliasSet() const override {
         return AliasSet::Store(AliasSet::Element);
     }
@@ -9124,8 +9455,19 @@ class MStoreElementHole
   public:
     INSTRUCTION_HEADER(StoreElementHole)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object), (1, elements), (2, index), (3, value))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+    MDefinition* elements() const {
+        return getOperand(1);
+    }
+    MDefinition* index() const {
+        return getOperand(2);
+    }
+    MDefinition* value() const {
+        return getOperand(3);
+    }
     JSValueType unboxedType() const {
         return unboxedType_;
     }
@@ -9164,8 +9506,19 @@ class MStoreUnboxedObjectOrNull
   public:
     INSTRUCTION_HEADER(StoreUnboxedObjectOrNull)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, elements), (1, index), (2, value), (3, typedObj))
 
+    MDefinition* elements() const {
+        return getOperand(0);
+    }
+    MDefinition* index() const {
+        return getOperand(1);
+    }
+    MDefinition* value() const {
+        return getOperand(2);
+    }
+    MDefinition* typedObj() const {
+        return getOperand(3);
+    }
     int32_t offsetAdjustment() const {
         return offsetAdjustment_;
     }
@@ -9206,8 +9559,16 @@ class MStoreUnboxedString
   public:
     INSTRUCTION_HEADER(StoreUnboxedString)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, elements), (1, index), (2, value))
 
+    MDefinition* elements() const {
+        return getOperand(0);
+    }
+    MDefinition* index() const {
+        return getOperand(1);
+    }
+    MDefinition* value() const {
+        return getOperand(2);
+    }
     int32_t offsetAdjustment() const {
         return offsetAdjustment_;
     }
@@ -9240,11 +9601,13 @@ class MConvertUnboxedObjectToNative
 
   public:
     INSTRUCTION_HEADER(ConvertUnboxedObjectToNative)
-    NAMED_OPERANDS((0, object))
 
     static MConvertUnboxedObjectToNative* New(TempAllocator& alloc, MDefinition* obj,
                                               ObjectGroup* group);
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     ObjectGroup* group() const {
         return group_;
     }
@@ -9297,8 +9660,10 @@ class MArrayPopShift
   public:
     INSTRUCTION_HEADER(ArrayPopShift)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     bool needsHoleCheck() const {
         return needsHoleCheck_;
     }
@@ -9335,8 +9700,13 @@ class MArrayPush
   public:
     INSTRUCTION_HEADER(ArrayPush)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object), (1, value))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+    MDefinition* value() const {
+        return getOperand(1);
+    }
     JSValueType unboxedType() const {
         return unboxedType_;
     }
@@ -9372,7 +9742,16 @@ class MArraySlice
   public:
     INSTRUCTION_HEADER(ArraySlice)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object), (1, begin), (2, end))
+
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+    MDefinition* begin() const {
+        return getOperand(1);
+    }
+    MDefinition* end() const {
+        return getOperand(2);
+    }
 
     JSObject* templateObj() const {
         return templateObj_;
@@ -9407,8 +9786,13 @@ class MArrayJoin
   public:
     INSTRUCTION_HEADER(ArrayJoin)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, array), (1, sep))
 
+    MDefinition* array() const {
+        return getOperand(0);
+    }
+    MDefinition* sep() const {
+        return getOperand(1);
+    }
     bool possiblyCalls() const override {
         return true;
     }
@@ -9480,7 +9864,6 @@ class MLoadUnboxedScalar
   public:
     INSTRUCTION_HEADER(LoadUnboxedScalar)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, elements), (1, index))
 
     void setSimdRead(Scalar::Type type, unsigned numElems) {
         readType_ = type;
@@ -9505,6 +9888,12 @@ class MLoadUnboxedScalar
     }
     bool canonicalizeDoubles() const {
         return canonicalizeDoubles_;
+    }
+    MDefinition* elements() const {
+        return getOperand(0);
+    }
+    MDefinition* index() const {
+        return getOperand(1);
     }
     int32_t offsetAdjustment() const {
         return offsetAdjustment_;
@@ -9565,7 +9954,6 @@ class MLoadTypedArrayElementHole
   public:
     INSTRUCTION_HEADER(LoadTypedArrayElementHole)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object), (1, index))
 
     Scalar::Type arrayType() const {
         return arrayType_;
@@ -9575,6 +9963,12 @@ class MLoadTypedArrayElementHole
     }
     bool fallible() const {
         return arrayType_ == Scalar::Uint32 && !allowDouble_;
+    }
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+    MDefinition* index() const {
+        return getOperand(1);
     }
     bool congruentTo(const MDefinition* ins) const override {
         if (!ins->isLoadTypedArrayElementHole())
@@ -9743,7 +10137,6 @@ class MStoreUnboxedScalar
   public:
     INSTRUCTION_HEADER(StoreUnboxedScalar)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, elements), (1, index), (2, value))
 
     void setSimdWrite(Scalar::Type writeType, unsigned numElems) {
         MOZ_ASSERT(Scalar::isSimdType(writeType));
@@ -9755,6 +10148,15 @@ class MStoreUnboxedScalar
     }
     Scalar::Type storageType() const {
         return storageType_;
+    }
+    MDefinition* elements() const {
+        return getOperand(0);
+    }
+    MDefinition* index() const {
+        return getOperand(1);
+    }
+    MDefinition* value() const {
+        return getOperand(2);
     }
     AliasSet getAliasSet() const override {
         return AliasSet::Store(AliasSet::UnboxedElement);
@@ -9801,12 +10203,23 @@ class MStoreTypedArrayElementHole
   public:
     INSTRUCTION_HEADER(StoreTypedArrayElementHole)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, elements), (1, length), (2, index), (3, value))
 
     Scalar::Type arrayType() const {
         MOZ_ASSERT(!Scalar::isSimdType(writeType()),
                    "arrayType == writeType iff the write type isn't SIMD");
         return writeType();
+    }
+    MDefinition* elements() const {
+        return getOperand(0);
+    }
+    MDefinition* length() const {
+        return getOperand(1);
+    }
+    MDefinition* index() const {
+        return getOperand(2);
+    }
+    MDefinition* value() const {
+        return getOperand(3);
     }
     AliasSet getAliasSet() const override {
         return AliasSet::Store(AliasSet::UnboxedElement);
@@ -9954,8 +10367,10 @@ class MLoadFixedSlot
   public:
     INSTRUCTION_HEADER(LoadFixedSlot)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     size_t slot() const {
         return slot_;
     }
@@ -9999,8 +10414,10 @@ class MLoadFixedSlotAndUnbox
   public:
     INSTRUCTION_HEADER(LoadFixedSlotAndUnbox)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     size_t slot() const {
         return slot_;
     }
@@ -10049,7 +10466,6 @@ class MStoreFixedSlot
 
   public:
     INSTRUCTION_HEADER(StoreFixedSlot)
-    NAMED_OPERANDS((0, object), (1, value))
 
     static MStoreFixedSlot* New(TempAllocator& alloc, MDefinition* obj, size_t slot,
                                 MDefinition* rval)
@@ -10062,6 +10478,12 @@ class MStoreFixedSlot
         return new(alloc) MStoreFixedSlot(obj, rval, slot, true);
     }
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+    MDefinition* value() const {
+        return getOperand(1);
+    }
     size_t slot() const {
         return slot_;
     }
@@ -10187,7 +10609,6 @@ class MGetPropertyCache
   public:
     INSTRUCTION_HEADER(GetPropertyCache)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object), (1, idval))
 
     InlinePropertyTable* initInlinePropertyTable(TempAllocator& alloc, jsbytecode* pc) {
         MOZ_ASSERT(inlinePropertyTable_ == nullptr);
@@ -10201,6 +10622,13 @@ class MGetPropertyCache
 
     InlinePropertyTable* propTable() const {
         return inlinePropertyTable_;
+    }
+
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+    MDefinition* idval() const {
+        return getOperand(1);
     }
 
     bool idempotent() const {
@@ -10269,7 +10697,6 @@ class MGetPropertyPolymorphic
 
   public:
     INSTRUCTION_HEADER(GetPropertyPolymorphic)
-    NAMED_OPERANDS((0, object))
 
     static MGetPropertyPolymorphic* New(TempAllocator& alloc, MDefinition* obj, PropertyName* name) {
         return new(alloc) MGetPropertyPolymorphic(alloc, obj, name);
@@ -10300,6 +10727,9 @@ class MGetPropertyPolymorphic
     }
     PropertyName* name() const {
         return name_;
+    }
+    MDefinition* object() const {
+        return getOperand(0);
     }
     AliasSet getAliasSet() const override {
         bool hasUnboxedLoad = false;
@@ -10347,7 +10777,6 @@ class MSetPropertyPolymorphic
 
   public:
     INSTRUCTION_HEADER(SetPropertyPolymorphic)
-    NAMED_OPERANDS((0, object), (1, value))
 
     static MSetPropertyPolymorphic* New(TempAllocator& alloc, MDefinition* obj, MDefinition* value,
                                         PropertyName* name) {
@@ -10371,6 +10800,12 @@ class MSetPropertyPolymorphic
     }
     PropertyName* name() const {
         return name_;
+    }
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+    MDefinition* value() const {
+        return getOperand(1);
     }
     bool needsBarrier() const {
         return needsBarrier_;
@@ -10422,7 +10857,6 @@ class MDispatchInstruction
     }
 
   public:
-    NAMED_OPERANDS((0, input))
     MDispatchInstruction(TempAllocator& alloc, MDefinition* input)
       : map_(alloc), fallback_(nullptr)
     {
@@ -10503,6 +10937,11 @@ class MDispatchInstruction
         MOZ_ASSERT(hasFallback());
         return fallback_;
     }
+
+  public:
+    MDefinition* input() const {
+        return getOperand(0);
+    }
 };
 
 // Polymorphic dispatch for inlining, keyed off incoming ObjectGroup.
@@ -10562,8 +11001,10 @@ class MBindNameCache
   public:
     INSTRUCTION_HEADER(BindNameCache)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, scopeChain))
 
+    MDefinition* scopeChain() const {
+        return getOperand(0);
+    }
     PropertyName* name() const {
         return name_;
     }
@@ -10589,7 +11030,10 @@ class MCallBindVar
   public:
     INSTRUCTION_HEADER(CallBindVar)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, scopeChain))
+
+    MDefinition* scopeChain() const {
+        return getOperand(0);
+    }
 
     bool congruentTo(const MDefinition* ins) const override {
         if (!ins->isCallBindVar())
@@ -10629,8 +11073,10 @@ class MGuardShape
   public:
     INSTRUCTION_HEADER(GuardShape)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     const Shape* shape() const {
         return shape_;
     }
@@ -10670,10 +11116,13 @@ class MGuardReceiverPolymorphic
 
   public:
     INSTRUCTION_HEADER(GuardReceiverPolymorphic)
-    NAMED_OPERANDS((0, object))
 
     static MGuardReceiverPolymorphic* New(TempAllocator& alloc, MDefinition* obj) {
         return new(alloc) MGuardReceiverPolymorphic(alloc, obj);
+    }
+
+    MDefinition* object() const {
+        return getOperand(0);
     }
 
     bool addReceiver(const ReceiverGuard& receiver) {
@@ -10722,8 +11171,10 @@ class MGuardObjectGroup
   public:
     INSTRUCTION_HEADER(GuardObjectGroup)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     const ObjectGroup* group() const {
         return group_;
     }
@@ -10768,8 +11219,13 @@ class MGuardObjectIdentity
   public:
     INSTRUCTION_HEADER(GuardObjectIdentity)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object), (1, expected))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+    MDefinition* expected() const {
+        return getOperand(1);
+    }
     bool bailOnEquality() const {
         return bailOnEquality_;
     }
@@ -10803,8 +11259,10 @@ class MGuardClass
   public:
     INSTRUCTION_HEADER(GuardClass)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     const Class* getClass() const {
         return class_;
     }
@@ -10843,8 +11301,10 @@ class MGuardUnboxedExpando
   public:
     INSTRUCTION_HEADER(GuardUnboxedExpando)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     bool requireExpando() const {
         return requireExpando_;
     }
@@ -10879,8 +11339,10 @@ class MLoadUnboxedExpando
   public:
     INSTRUCTION_HEADER(LoadUnboxedExpando)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
     }
@@ -10908,8 +11370,10 @@ class MLoadSlot
   public:
     INSTRUCTION_HEADER(LoadSlot)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, slots))
 
+    MDefinition* slots() const {
+        return getOperand(0);
+    }
     uint32_t slot() const {
         return slot_;
     }
@@ -10949,7 +11413,10 @@ class MFunctionEnvironment
   public:
     INSTRUCTION_HEADER(FunctionEnvironment)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, function))
+
+    MDefinition* function() const {
+        return getOperand(0);
+    }
 
     MDefinition* foldsTo(TempAllocator& alloc) override;
 
@@ -10979,7 +11446,6 @@ class MStoreSlot
 
   public:
     INSTRUCTION_HEADER(StoreSlot)
-    NAMED_OPERANDS((0, slots), (1, value))
 
     static MStoreSlot* New(TempAllocator& alloc, MDefinition* slots, uint32_t slot,
                            MDefinition* value)
@@ -10992,6 +11458,12 @@ class MStoreSlot
         return new(alloc) MStoreSlot(slots, slot, value, true);
     }
 
+    MDefinition* slots() const {
+        return getOperand(0);
+    }
+    MDefinition* value() const {
+        return getOperand(1);
+    }
     uint32_t slot() const {
         return slot_;
     }
@@ -11040,8 +11512,10 @@ class MGetNameCache
   public:
     INSTRUCTION_HEADER(GetNameCache)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, scopeObj))
 
+    MDefinition* scopeObj() const {
+        return getOperand(0);
+    }
     PropertyName* name() const {
         return name_;
     }
@@ -11088,7 +11562,12 @@ class MSetPropertyInstruction : public MBinaryInstruction
     {}
 
   public:
-    NAMED_OPERANDS((0, object), (1, value))
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+    MDefinition* value() const {
+        return getOperand(1);
+    }
     PropertyName* name() const {
         return name_;
     }
@@ -11109,7 +11588,15 @@ class MSetElementInstruction
     }
 
   public:
-    NAMED_OPERANDS((0, object), (1, index), (2, value))
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+    MDefinition* index() const {
+        return getOperand(1);
+    }
+    MDefinition* value() const {
+        return getOperand(2);
+    }
     bool strict() const {
         return strict_;
     }
@@ -11134,8 +11621,10 @@ class MDeleteProperty
   public:
     INSTRUCTION_HEADER(DeleteProperty)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, value))
 
+    MDefinition* value() const {
+        return getOperand(0);
+    }
     PropertyName* name() const {
         return name_;
     }
@@ -11160,8 +11649,13 @@ class MDeleteElement
   public:
     INSTRUCTION_HEADER(DeleteElement)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, value), (1, index))
 
+    MDefinition* value() const {
+        return getOperand(0);
+    }
+    MDefinition* index() const {
+        return getOperand(1);
+    }
     bool strict() const {
         return strict_;
     }
@@ -11207,7 +11701,6 @@ class MSetPropertyCache
   public:
     INSTRUCTION_HEADER(SetPropertyCache)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object), (1, idval), (2, value))
 
     bool needsTypeBarrier() const {
         return needsTypeBarrier_;
@@ -11217,6 +11710,15 @@ class MSetPropertyCache
         return guardHoles_;
     }
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+    MDefinition* idval() const {
+        return getOperand(1);
+    }
+    MDefinition* value() const {
+        return getOperand(2);
+    }
     bool strict() const {
         return strict_;
     }
@@ -11239,8 +11741,10 @@ class MCallGetProperty
   public:
     INSTRUCTION_HEADER(CallGetProperty)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, value))
 
+    MDefinition* value() const {
+        return getOperand(0);
+    }
     PropertyName* name() const {
         return name_;
     }
@@ -11316,10 +11820,17 @@ class MCallInitElementArray
   public:
     INSTRUCTION_HEADER(CallInitElementArray)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object), (1, value))
+
+    MDefinition* object() const {
+        return getOperand(0);
+    }
 
     uint32_t index() const {
         return index_;
+    }
+
+    MDefinition* value() const {
+        return getOperand(1);
     }
 
     bool possiblyCalls() const override {
@@ -11343,10 +11854,18 @@ class MSetDOMProperty
   public:
     INSTRUCTION_HEADER(SetDOMProperty)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object), (1, value))
 
     JSJitSetterOp fun() const {
         return func_;
+    }
+
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+
+    MDefinition* value()
+    {
+        return getOperand(1);
     }
 
     bool possiblyCalls() const override {
@@ -11413,7 +11932,6 @@ class MGetDOMProperty
 
   public:
     INSTRUCTION_HEADER(GetDOMProperty)
-    NAMED_OPERANDS((0, object))
 
     static MGetDOMProperty* New(TempAllocator& alloc, const JSJitInfo* info, MDefinition* obj,
                                 MDefinition* guard, MDefinition* globalGuard)
@@ -11443,6 +11961,10 @@ class MGetDOMProperty
     bool valueMayBeInSlot() const {
         return info_->isLazilyCachedInSlot;
     }
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+
     bool congruentTo(const MDefinition* ins) const override {
         if (!ins->isGetDOMProperty())
             return false;
@@ -11523,10 +12045,12 @@ class MStringLength
   public:
     INSTRUCTION_HEADER(StringLength)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, string))
 
     MDefinition* foldsTo(TempAllocator& alloc) override;
 
+    MDefinition* string() const {
+        return getOperand(0);
+    }
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
     }
@@ -11685,8 +12209,10 @@ class MIteratorStart
   public:
     INSTRUCTION_HEADER(IteratorStart)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     uint8_t flags() const {
         return flags_;
     }
@@ -11705,8 +12231,10 @@ class MIteratorMore
   public:
     INSTRUCTION_HEADER(IteratorMore)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, iterator))
 
+    MDefinition* iterator() const {
+        return getOperand(0);
+    }
 };
 
 class MIsNoIter
@@ -11740,8 +12268,10 @@ class MIteratorEnd
   public:
     INSTRUCTION_HEADER(IteratorEnd)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, iterator))
 
+    MDefinition* iterator() const {
+        return getOperand(0);
+    }
 };
 
 // Implementation for 'in' operator.
@@ -11792,8 +12322,19 @@ class MInArray
   public:
     INSTRUCTION_HEADER(InArray)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, elements), (1, index), (2, initLength), (3, object))
 
+    MDefinition* elements() const {
+        return getOperand(0);
+    }
+    MDefinition* index() const {
+        return getOperand(1);
+    }
+    MDefinition* initLength() const {
+        return getOperand(2);
+    }
+    MDefinition* object() const {
+        return getOperand(3);
+    }
     bool needsHoleCheck() const {
         return needsHoleCheck_;
     }
@@ -11907,7 +12448,10 @@ class MGetFrameArgument
   public:
     INSTRUCTION_HEADER(GetFrameArgument)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, index))
+
+    MDefinition* index() const {
+        return getOperand(0);
+    }
 
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
@@ -11957,10 +12501,13 @@ class MSetFrameArgument
   public:
     INSTRUCTION_HEADER(SetFrameArgument)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, value))
 
     uint32_t argno() const {
         return argno_;
+    }
+
+    MDefinition* value() const {
+        return getOperand(0);
     }
 
     bool congruentTo(const MDefinition* ins) const override {
@@ -12008,7 +12555,10 @@ class MRest
   public:
     INSTRUCTION_HEADER(Rest)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, numActuals))
+
+    MDefinition* numActuals() const {
+        return getOperand(0);
+    }
 
     AliasSet getAliasSet() const override {
         return AliasSet::None();
@@ -12164,7 +12714,14 @@ class MPostWriteBarrier : public MBinaryInstruction, public ObjectPolicy<0>::Dat
   public:
     INSTRUCTION_HEADER(PostWriteBarrier)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object), (1, value))
+
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+
+    MDefinition* value() const {
+        return getOperand(1);
+    }
 
     AliasSet getAliasSet() const override {
         return AliasSet::None();
@@ -12196,7 +12753,18 @@ class MPostWriteElementBarrier : public MTernaryInstruction
   public:
     INSTRUCTION_HEADER(PostWriteElementBarrier)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object), (1, value), (2, index))
+
+    MDefinition* object() const {
+        return getOperand(0);
+    }
+
+    MDefinition* value() const {
+        return getOperand(1);
+    }
+
+    MDefinition* index() const {
+        return getOperand(2);
+    }
 
     AliasSet getAliasSet() const override {
         return AliasSet::None();
@@ -12503,8 +13071,10 @@ class MIsCallable
   public:
     INSTRUCTION_HEADER(IsCallable)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     AliasSet getAliasSet() const override {
         return AliasSet::None();
     }
@@ -12525,8 +13095,10 @@ class MIsConstructor
   public:
     INSTRUCTION_HEADER(IsConstructor)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     AliasSet getAliasSet() const override {
         return AliasSet::None();
     }
@@ -12545,8 +13117,10 @@ class MIsObject
   public:
     INSTRUCTION_HEADER(IsObject)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     bool congruentTo(const MDefinition* ins) const override {
         return congruentIfOperandsEqual(ins);
     }
@@ -12573,8 +13147,10 @@ class MHasClass
   public:
     INSTRUCTION_HEADER(HasClass)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     const Class* getClass() const {
         return class_;
     }
@@ -12605,8 +13181,13 @@ class MCheckReturn
   public:
     INSTRUCTION_HEADER(CheckReturn)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, returnValue), (1, thisValue))
 
+    MDefinition* returnValue() const {
+        return getOperand(0);
+    }
+    MDefinition* thisValue() const {
+        return getOperand(1);
+    }
 };
 
 // Increase the warm-up counter of the provided script upon execution and test if
@@ -12721,8 +13302,10 @@ class MGuardSharedTypedArray
 public:
     INSTRUCTION_HEADER(GuardSharedTypedArray)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, object))
 
+    MDefinition* object() const {
+        return getOperand(0);
+    }
     AliasSet getAliasSet() const override {
         return AliasSet::None();
     }
@@ -12749,14 +13332,25 @@ class MCompareExchangeTypedArrayElement
   public:
     INSTRUCTION_HEADER(CompareExchangeTypedArrayElement)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, elements), (1, index), (2, oldval), (3, newval))
 
     bool isByteArray() const {
         return (arrayType_ == Scalar::Int8 ||
                 arrayType_ == Scalar::Uint8);
     }
+    MDefinition* elements() {
+        return getOperand(0);
+    }
+    MDefinition* index() {
+        return getOperand(1);
+    }
+    MDefinition* oldval() {
+        return getOperand(2);
+    }
     int oldvalOperand() {
         return 2;
+    }
+    MDefinition* newval() {
+        return getOperand(3);
     }
     Scalar::Type arrayType() const {
         return arrayType_;
@@ -12786,11 +13380,19 @@ class MAtomicExchangeTypedArrayElement
   public:
     INSTRUCTION_HEADER(AtomicExchangeTypedArrayElement)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, elements), (1, index), (2, value))
 
     bool isByteArray() const {
         return (arrayType_ == Scalar::Int8 ||
                 arrayType_ == Scalar::Uint8);
+    }
+    MDefinition* elements() {
+        return getOperand(0);
+    }
+    MDefinition* index() {
+        return getOperand(1);
+    }
+    MDefinition* value() {
+        return getOperand(2);
     }
     Scalar::Type arrayType() const {
         return arrayType_;
@@ -12823,7 +13425,6 @@ class MAtomicTypedArrayElementBinop
   public:
     INSTRUCTION_HEADER(AtomicTypedArrayElementBinop)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, elements), (1, index), (2, value))
 
     bool isByteArray() const {
         return (arrayType_ == Scalar::Int8 ||
@@ -12834,6 +13435,15 @@ class MAtomicTypedArrayElementBinop
     }
     Scalar::Type arrayType() const {
         return arrayType_;
+    }
+    MDefinition* elements() {
+        return getOperand(0);
+    }
+    MDefinition* index() {
+        return getOperand(1);
+    }
+    MDefinition* value() {
+        return getOperand(2);
     }
     AliasSet getAliasSet() const override {
         return AliasSet::Store(AliasSet::UnboxedElement);
@@ -12862,8 +13472,10 @@ class MCheckObjCoercible
   public:
     INSTRUCTION_HEADER(CheckObjCoercible)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, checkValue))
 
+    MDefinition* checkValue() {
+        return getOperand(0);
+    }
 };
 
 class MDebugCheckSelfHosted
@@ -12881,8 +13493,10 @@ class MDebugCheckSelfHosted
   public:
     INSTRUCTION_HEADER(DebugCheckSelfHosted)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, checkValue))
 
+    MDefinition* checkValue() {
+        return getOperand(0);
+    }
 };
 
 class MAsmJSNeg
@@ -13259,13 +13873,15 @@ class MAsmJSPassStackArg
   public:
     INSTRUCTION_HEADER(AsmJSPassStackArg)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, arg))
 
     uint32_t spOffset() const {
         return spOffset_;
     }
     void incrementOffset(uint32_t inc) {
         spOffset_ += inc;
+    }
+    MDefinition* arg() const {
+        return getOperand(0);
     }
 };
 
@@ -13391,7 +14007,16 @@ class MAsmSelect
   public:
     INSTRUCTION_HEADER(AsmSelect)
     TRIVIAL_NEW_WRAPPERS
-    NAMED_OPERANDS((0, trueExpr), (1, falseExpr), (2, condExpr))
+
+    MDefinition* trueExpr() const {
+        return getOperand(0);
+    }
+    MDefinition* falseExpr() const {
+        return getOperand(1);
+    }
+    MDefinition* condExpr() const {
+        return getOperand(2);
+    }
 
     AliasSet getAliasSet() const override {
         return AliasSet::None();
@@ -13455,7 +14080,6 @@ class MRotate
 
   public:
     INSTRUCTION_HEADER(Rotate)
-    NAMED_OPERANDS((0, input), (1, count))
 
     static MRotate* NewAsmJS(TempAllocator& alloc, MDefinition* input, MDefinition* count,
                              MIRType type, bool isLeft)
@@ -13470,6 +14094,12 @@ class MRotate
         return congruentIfOperandsEqual(ins) && ins->toRotate()->isLeftRotate() == isLeftRotate_;
     }
 
+    MDefinition* input() const {
+        return getOperand(0);
+    }
+    MDefinition* count() const {
+        return getOperand(1);
+    }
     bool isLeftRotate() const {
         return isLeftRotate_;
     }
