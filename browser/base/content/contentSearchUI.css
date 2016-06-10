@@ -14,6 +14,11 @@
   cursor: default;
 }
 
+.contentSearchSuggestionTable:-moz-dir(rtl) {
+  left: auto;
+  right: 0;
+}
+
 .contentSearchSuggestionsList {
   border-bottom: 1px solid hsl(0, 0%, 92%);
   width: 100%;
@@ -38,7 +43,7 @@
 
 .contentSearchHeaderRow > td > img,
 .contentSearchSuggestionRow > td > .historyIcon {
-  margin-right: 8px;
+  margin-inline-end: 8px;
   margin-bottom: -3px;
 }
 
@@ -108,6 +113,10 @@
   background-image: url('data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAAWCAYAAAABxvaqAAAABmJLR0QA/wD/AP+gvaeTAAAACXBIWXMAAAsTAAALEwEAmpwYAAAAB3RJTUUH3gofECQNNVW2/AAAABBJREFUGFdjOHPmzH8GehEA/KpKg9YTf4AAAAAASUVORK5CYII=');
   background-repeat: no-repeat;
   background-position: right center;
+}
+
+.contentSearchOneOffItem:-moz-dir(rtl) {
+  background-position: left center;
 }
 
 .contentSearchOneOffItem > img {
