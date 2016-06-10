@@ -136,12 +136,6 @@ js::NewContext(JSRuntime* rt, size_t stackChunkSize)
         rt->haveCreatedContext = true;
     }
 
-    JSContextCallback cxCallback = rt->cxCallback;
-    if (cxCallback && !cxCallback(cx, JSCONTEXT_NEW, rt->cxCallbackData)) {
-        DestroyContext(cx, DCM_NEW_FAILED);
-        return nullptr;
-    }
-
     return cx;
 }
 
@@ -156,17 +150,6 @@ js::DestroyContext(JSContext* cx, DestroyContextMode mode)
 
     cx->roots.checkNoGCRooters();
     cx->roots.finishPersistentRoots();
-
-    if (mode != DCM_NEW_FAILED) {
-        if (JSContextCallback cxCallback = rt->cxCallback) {
-            /*
-             * JSCONTEXT_DESTROY callback is not allowed to fail and must
-             * return true.
-             */
-            JS_ALWAYS_TRUE(cxCallback(cx, JSCONTEXT_DESTROY,
-                                      rt->cxCallbackData));
-        }
-    }
 
     cx->remove();
     bool last = !rt->hasContexts();
