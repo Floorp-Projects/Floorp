@@ -1145,8 +1145,8 @@ class ChildAPIManager {
     return this.context.wrapPromise(deferred.promise, callback);
   }
 
-  shouldInject(namespace, name) {
-    return this.namespaces.includes(namespace);
+  hasPermission(permission) {
+    return this.context.extension.permissions.has(permission);
   }
 
   getProperty(path, name) {

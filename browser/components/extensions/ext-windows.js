@@ -15,7 +15,7 @@ var {
   EventManager,
 } = ExtensionUtils;
 
-extensions.registerSchemaAPI("windows", null, (extension, context) => {
+extensions.registerSchemaAPI("windows", (extension, context) => {
   return {
     windows: {
       onCreated:
