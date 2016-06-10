@@ -100,28 +100,6 @@ onmessage = function(event) {
   var exception;
 
   xhr = new XMLHttpRequest();
-  try {
-    xhr.responseType = "arraybuffer";
-  }
-  catch(e) {
-    exception = e;
-  }
-
-  if (!exception) {
-    throw new Error("Failed to throw when setting responseType before " +
-                    "calling open()");
-  }
-
-  if (exception.name != "InvalidStateError") {
-    throw new Error("Unexpected error when setting responseType before " +
-                    "calling open()");
-  }
-
-  if (exception.code != DOMException.INVALID_STATE_ERR) {
-    throw new Error("Unexpected error code when setting responseType before " +
-                    "calling open()");
-  }
-
   xhr.open("GET", url);
   xhr.responseType = "text";
   xhr.onload = function(event) {

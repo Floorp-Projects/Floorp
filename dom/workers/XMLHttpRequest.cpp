@@ -760,6 +760,7 @@ class OpenRunnable final : public WorkerThreadProxySyncRunnable
   bool mBackgroundRequest;
   bool mWithCredentials;
   uint32_t mTimeout;
+  XMLHttpRequestResponseType mResponseType;
 
 public:
   OpenRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy,
@@ -767,11 +768,12 @@ public:
                const Optional<nsAString>& aUser,
                const Optional<nsAString>& aPassword,
                bool aBackgroundRequest, bool aWithCredentials,
-               uint32_t aTimeout)
+               uint32_t aTimeout, XMLHttpRequestResponseType aResponseType)
   : WorkerThreadProxySyncRunnable(aWorkerPrivate, aProxy),
     mMethod(aMethod),
     mURL(aURL), mBackgroundRequest(aBackgroundRequest),
-    mWithCredentials(aWithCredentials), mTimeout(aTimeout)
+    mWithCredentials(aWithCredentials), mTimeout(aTimeout),
+    mResponseType(aResponseType)
   {
     if (aUser.WasPassed()) {
       mUserStr = aUser.Value();
@@ -1464,7 +1466,12 @@ OpenRunnable::MainThreadRunInternal()
     return rv2.StealNSResult();
   }
 
-  return mProxy->mXHR->SetResponseType(NS_LITERAL_STRING("text"));
+  mProxy->mXHR->SetResponseType(mResponseType, rv2);
+  if (rv2.Failed()) {
+    return rv2.StealNSResult();
+  }
+
+  return NS_OK;
 }
 
 
@@ -1902,7 +1909,7 @@ XMLHttpRequest::Open(const nsACString& aMethod, const nsAString& aUrl,
   RefPtr<OpenRunnable> runnable =
     new OpenRunnable(mWorkerPrivate, mProxy, aMethod, aUrl, aUser, aPassword,
                      mBackgroundRequest, mWithCredentials,
-                     mTimeout);
+                     mTimeout, mResponseType);
 
   ++mProxy->mOpenCount;
   runnable->Dispatch(aRv);
@@ -2343,16 +2350,23 @@ XMLHttpRequest::SetResponseType(XMLHttpRequestResponseType aResponseType,
     return;
   }
 
-  if (!mProxy || (SendInProgress() &&
-                  (mProxy->mSeenLoadStart ||
-                   mStateData.mReadyState > nsIXMLHttpRequest::OPENED))) {
-    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return;
-  }
-
   // "document" is fine for the main thread but not for a worker. Short-circuit
   // that here.
   if (aResponseType == XMLHttpRequestResponseType::Document) {
+    return;
+  }
+
+  if (!mProxy) {
+    // Open() has not been called yet. We store the responseType and we will use
+    // it later in Open().
+    mResponseType = aResponseType;
+    return;
+  }
+
+  if (SendInProgress() &&
+      (mProxy->mSeenLoadStart ||
+       mStateData.mReadyState > nsIXMLHttpRequest::OPENED)) {
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
