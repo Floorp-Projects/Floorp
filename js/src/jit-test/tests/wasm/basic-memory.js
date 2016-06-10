@@ -1,3 +1,4 @@
+// |jit-test| test-also-wasm-baseline
 load(libdir + "wasm.js");
 
 function testLoad(type, ext, base, offset, align, expect) {

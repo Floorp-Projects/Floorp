@@ -1,3 +1,4 @@
+// |jit-test| test-also-wasm-baseline
 load(libdir + "wasm.js");
 
 // This is meant to be a small and dumb interpreter for wast files. Either it
