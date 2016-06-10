@@ -21,6 +21,7 @@
     "gTestPath": false,
     "info": false,
     "is": false,
+    "isDeeply": false,
     "isnot": false,
     "ok": false,
     "promise": false,

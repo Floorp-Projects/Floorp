@@ -1,0 +1,31 @@
+diff --git a/js/src/ctypes/libffi/src/x86/ffi64.c b/js/src/ctypes/libffi/src/x86/ffi64.c
+index 5a5e043..0594119 100644
+--- a/js/src/ctypes/libffi/src/x86/ffi64.c
++++ b/js/src/ctypes/libffi/src/x86/ffi64.c
+@@ -414,16 +414,26 @@ ffi_prep_cif_machdep (ffi_cif *cif)
+   if (ssecount)
+     flags |= 1 << 11;
+   cif->flags = flags;
+   cif->bytes = (unsigned)ALIGN (bytes, 8);
+ 
+   return FFI_OK;
+ }
+ 
++#ifndef __SANITIZE_ADDRESS__
++# ifdef __clang__
++#  if __has_feature(address_sanitizer)
++#   define __SANITIZE_ADDRESS__
++#  endif
++# endif
++#endif
++#ifdef __SANITIZE_ADDRESS__
++__attribute__((noinline,no_sanitize_address))
++#endif
+ void
+ ffi_call (ffi_cif *cif, void (*fn)(void), void *rvalue, void **avalue)
+ {
+   enum x86_64_reg_class classes[MAX_CLASSES];
+   char *stack, *argp;
+   ffi_type **arg_types;
+   int gprcount, ssecount, ngpr, nsse, i, avn;
+   _Bool ret_in_memory;

@@ -23,18 +23,27 @@ function startNewTabTestCase(aTestNumber) {
     });
 
     let menu = gTestWindow.document.getElementById("context-openlinkinusercontext-menu");
+
     let menupopup = menu.menupopup;
+    menu.addEventListener("popupshown", function onPopupShown() {
+      menu.removeEventListener("popupshown", onPopupShown);
+
+      is(menupopup.nodeType, Node.ELEMENT_NODE, "We have a menupopup.");
+      ok(menupopup.firstChild, "We have a first container entry.");
+
+      let firstContext = menupopup.firstChild;
+      is(firstContext.nodeType, Node.ELEMENT_NODE, "We have a first container entry.");
+      ok(firstContext.hasAttribute("usercontextid"), "We have a usercontextid value.");
+
+      aContextMenu.addEventListener("popuphidden", function onPopupHidden() {
+        aContextMenu.removeEventListener("popuphidden", onPopupHidden);
+        firstContext.doCommand();
+      });
+
+      aContextMenu.hidePopup();
+    });
+
     menupopup.showPopup();
-
-    is(menupopup.nodeType, Node.ELEMENT_NODE, "We have a menupopup.");
-    ok(menupopup.firstChild, "We have a first container entry.");
-
-    let firstContext = menupopup.firstChild;
-    is(firstContext.nodeType, Node.ELEMENT_NODE, "We have a first container entry.");
-    ok(firstContext.hasAttribute('usercontextid'), "We have a usercontextid value.");
-
-    firstContext.doCommand();
-    aContextMenu.hidePopup();
   });
 }
 

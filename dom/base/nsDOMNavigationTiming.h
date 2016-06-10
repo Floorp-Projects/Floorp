@@ -17,17 +17,6 @@ typedef unsigned long long DOMTimeMilliSec;
 typedef double DOMHighResTimeStamp;
 typedef unsigned short nsDOMPerformanceNavigationType;
 
-namespace mozilla {
-namespace dom {
-namespace PerformanceNavigation {
-static const nsDOMPerformanceNavigationType TYPE_NAVIGATE = 0;
-static const nsDOMPerformanceNavigationType TYPE_RELOAD = 1;
-static const nsDOMPerformanceNavigationType TYPE_BACK_FORWARD = 2;
-static const nsDOMPerformanceNavigationType TYPE_RESERVED = 255;
-} // namespace PerformanceNavigation
-} // namespace dom
-} // namespace mozilla
-
 class nsDOMNavigationTiming final
 {
 public:

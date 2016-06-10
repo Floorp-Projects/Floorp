@@ -2375,7 +2375,7 @@ SameSide(WritingMode aContainerWM, LogicalSide aContainerSide,
 
 static void
 AlignSelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
-          uint8_t aAlignSelf, const LogicalRect& aCB, const WritingMode aCBWM,
+          uint8_t aAlignSelf, nscoord aCBSize, const WritingMode aCBWM,
           const nsHTMLReflowState& aRS, const LogicalSize& aSize,
           LogicalPoint* aPos)
 {
@@ -2404,12 +2404,12 @@ AlignSelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
   }
   LogicalAxis axis = isOrthogonal ? eLogicalAxisInline : eLogicalAxisBlock;
   AlignJustifySelf(alignSelf, overflowSafe, axis, sameSide, baselineAdjust,
-                   aCB.BSize(aCBWM), aRS, aSize, aPos);
+                   aCBSize, aRS, aSize, aPos);
 }
 
 static void
 JustifySelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
-            uint8_t aJustifySelf, const LogicalRect& aCB, const WritingMode aCBWM,
+            uint8_t aJustifySelf, nscoord aCBSize, const WritingMode aCBWM,
             const nsHTMLReflowState& aRS, const LogicalSize& aSize,
             LogicalPoint* aPos)
 {
@@ -2447,7 +2447,7 @@ JustifySelf(const nsGridContainerFrame::GridItemInfo& aGridItem,
 
   LogicalAxis axis = isOrthogonal ? eLogicalAxisBlock : eLogicalAxisInline;
   AlignJustifySelf(justifySelf, overflowSafe, axis, sameSide, baselineAdjust,
-                   aCB.ISize(aCBWM), aRS, aSize, aPos);
+                   aCBSize, aRS, aSize, aPos);
 }
 
 static uint16_t
@@ -4549,6 +4549,8 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
   WritingMode childWM = aChild->GetWritingMode();
   bool isConstrainedBSize = false;
   nscoord toFragmentainerEnd;
+  // The part of the child's grid area that's in previous container fragments.
+  nscoord consumedGridAreaBSize = 0;
   const bool isOrthogonal = wm.IsOrthogonalTo(childWM);
   if (MOZ_LIKELY(isGridItem)) {
     MOZ_ASSERT(aGridItemInfo->mFrame == aChild);
@@ -4557,7 +4559,14 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
     cb = aState.ContainingBlockFor(area);
     isConstrainedBSize = aFragmentainer && !wm.IsOrthogonalTo(childWM);
     if (isConstrainedBSize) {
-      cb.BStart(wm) = std::max(0, cb.BStart(wm) - aState.mFragBStart);
+      // |gridAreaBOffset| is the offset of the child's grid area in this
+      // container fragment (if negative, that distance is the child CB size
+      // consumed in previous container fragments).  Note that cb.BStart
+      // (initially) and aState.mFragBStart are in "global" grid coordinates
+      // (like all track positions).
+      nscoord gridAreaBOffset = cb.BStart(wm) - aState.mFragBStart;
+      consumedGridAreaBSize = std::max(0, -gridAreaBOffset);
+      cb.BStart(wm) = std::max(0, gridAreaBOffset);
       toFragmentainerEnd = aFragmentainer->mToFragmentainerEnd -
         aState.mFragBStart - cb.BStart(wm);
       toFragmentainerEnd = std::max(toFragmentainerEnd, 0);
@@ -4652,7 +4661,8 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
         align = (state & ItemState::eFirstBaseline) ? NS_STYLE_ALIGN_SELF_START
                                                     : NS_STYLE_ALIGN_SELF_END;
       }
-      AlignSelf(*aGridItemInfo, align, cb, wm, childRS, size, &childPos);
+      nscoord cbsz = cb.BSize(wm) - consumedGridAreaBSize;
+      AlignSelf(*aGridItemInfo, align, cbsz, wm, childRS, size, &childPos);
     }
     auto justify = childRS.mStylePosition->ComputedJustifySelf(containerSC);
     auto state = aGridItemInfo->mState[eLogicalAxisInline];
@@ -4660,7 +4670,8 @@ nsGridContainerFrame::ReflowInFlowChild(nsIFrame*              aChild,
       justify = (state & ItemState::eFirstBaseline) ? NS_STYLE_JUSTIFY_SELF_START
                                                     : NS_STYLE_JUSTIFY_SELF_END;
     }
-    JustifySelf(*aGridItemInfo, justify, cb, wm, childRS, size, &childPos);
+    nscoord cbsz = cb.ISize(wm);
+    JustifySelf(*aGridItemInfo, justify, cbsz, wm, childRS, size, &childPos);
   } else {
     // Put a placeholder at the padding edge, in case an ancestor is its CB.
     childPos -= padStart;

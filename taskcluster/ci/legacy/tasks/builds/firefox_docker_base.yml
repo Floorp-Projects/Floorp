@@ -1,0 +1,20 @@
+$inherits:
+  from: 'tasks/docker_build.yml'
+  variables:
+    build_product: 'firefox'
+docker-image: desktop-build
+task:
+  scopes:
+    - 'secrets:get:project/releng/gecko/build/level-{{level}}/*'
+  extra:
+    locations:
+      mozharness: 'public/build/mozharness.zip'
+      test_packages: 'public/build/target.test_packages.json'
+  payload:
+    image:
+      type: 'task-image'
+      path: 'public/image.tar'
+      taskId:
+        task-reference: "<docker-image>"
+    features:
+      taskclusterProxy: true

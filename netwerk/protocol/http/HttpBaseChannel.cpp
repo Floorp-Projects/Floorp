@@ -38,8 +38,8 @@
 #include "nsProxyRelease.h"
 #include "nsPIDOMWindow.h"
 #include "nsIDocShell.h"
-#include "nsPerformance.h"
 #include "nsINetworkInterceptController.h"
+#include "mozilla/dom/Performance.h"
 #include "mozIThirdPartyUtil.h"
 #include "nsStreamUtils.h"
 #include "nsContentSecurityManager.h"
@@ -3340,10 +3340,10 @@ IMPL_TIMING_ATTR(RedirectEnd)
 
 #undef IMPL_TIMING_ATTR
 
-nsPerformance*
+mozilla::dom::Performance*
 HttpBaseChannel::GetPerformance()
 {
-  // If performance timing is disabled, there is no need for the nsPerformance
+  // If performance timing is disabled, there is no need for the Performance
   // object anymore.
   if (!mTimingEnabled) {
     return nullptr;
@@ -3380,7 +3380,7 @@ HttpBaseChannel::GetPerformance()
     return nullptr;
   }
 
-  nsPerformance* docPerformance = innerWindow->GetPerformance();
+  mozilla::dom::Performance* docPerformance = innerWindow->GetPerformance();
   if (!docPerformance) {
     return nullptr;
   }

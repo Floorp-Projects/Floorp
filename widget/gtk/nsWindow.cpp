@@ -6463,9 +6463,9 @@ nsWindow::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
 }
 
 #if defined(MOZ_X11) && (MOZ_WIDGET_GTK == 2)
-/* static */ already_AddRefed<gfxASurface>
-nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
-                                   const nsIntSize& aSize)
+/* static */ already_AddRefed<DrawTarget>
+nsWindow::GetDrawTargetForGdkDrawable(GdkDrawable* aDrawable,
+                                      const IntSize& aSize)
 {
     GdkVisual* visual = gdk_drawable_get_visual(aDrawable);
     Screen* xScreen =
@@ -6473,13 +6473,12 @@ nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
     Display* xDisplay = DisplayOfScreen(xScreen);
     Drawable xDrawable = gdk_x11_drawable_get_xid(aDrawable);
 
-    RefPtr<gfxASurface> result;
+    RefPtr<gfxASurface> surface;
 
     if (visual) {
         Visual* xVisual = gdk_x11_visual_get_xvisual(visual);
 
-        result = new gfxXlibSurface(xDisplay, xDrawable, xVisual,
-                                    IntSize(aSize.width, aSize.height));
+        surface = new gfxXlibSurface(xDisplay, xDrawable, xVisual, aSize);
     } else {
         // no visual? we must be using an xrender format.  Find a format
         // for this depth.
@@ -6496,11 +6495,17 @@ nsWindow::GetSurfaceForGdkDrawable(GdkDrawable* aDrawable,
                 break;
         }
 
-        result = new gfxXlibSurface(xScreen, xDrawable, pf,
-                                    IntSize(aSize.width, aSize.height));
+        surface = new gfxXlibSurface(xScreen, xDrawable, pf, aSize);
     }
 
-    return result.forget();
+    RefPtr<DrawTarget> dt =
+        gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(surface, aSize);
+
+    if (!dt || !dt->IsValid()) {
+        return nullptr;
+    }
+
+    return dt.forget();
 }
 #endif
 

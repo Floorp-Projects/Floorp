@@ -830,7 +830,7 @@ EventListenerManager::SetEventHandler(nsIAtom* aName,
   if (doc) {
     // Don't allow adding an event listener if the document is sandboxed
     // without 'allow-scripts'.
-    if (doc->GetSandboxFlags() & SANDBOXED_SCRIPTS) {
+    if (doc->HasScriptsBlockedBySandbox()) {
       return NS_ERROR_DOM_SECURITY_ERR;
     }
 

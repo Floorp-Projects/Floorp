@@ -2697,7 +2697,10 @@ const ScreenMargin AsyncPanZoomController::CalculatePendingDisplayPort(
   }
 
   CSSSize compositionSize = aFrameMetrics.CalculateBoundedCompositedSizeInCssPixels();
-  CSSPoint velocity = aVelocity / aFrameMetrics.GetZoom();
+  CSSPoint velocity;
+  if (aFrameMetrics.GetZoom() != CSSToParentLayerScale2D(0, 0)) {
+    velocity = aVelocity / aFrameMetrics.GetZoom();  // avoid division by zero
+  }
   CSSRect scrollableRect = aFrameMetrics.GetExpandedScrollableRect();
 
   // Calculate the displayport size based on how fast we're moving along each axis.

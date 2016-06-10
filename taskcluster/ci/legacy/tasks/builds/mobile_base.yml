@@ -1,5 +1,5 @@
 $inherits:
-  from: 'tasks/build.yml'
+  from: 'tasks/docker_build.yml'
   variables:
     build_product: 'mobile'
 docker-image: desktop-build

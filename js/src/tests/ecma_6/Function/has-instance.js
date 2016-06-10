@@ -40,6 +40,24 @@ for (let nonCallable of nonCallables) {
     assertEq(nonCallable instanceof Object, false);
 }
 
+// Non-callables should throw when used on the right hand side
+// of `instanceof`.
+assertThrowsInstanceOf(() => {
+    function foo() {};
+    let obj = {};
+    foo instanceof obj;
+}, TypeError);
+
+// Non-callables do not throw for overridden methods
+let o = {[Symbol.hasInstance](v) { return true; }}
+assertEq(1 instanceof o, true);
+
+// Non-callables return false instead of an exception when
+// Function.prototype[Symbol.hasInstance] is called directly.
+for (let nonCallable of nonCallables) {
+    assertEq(Function.prototype[Symbol.hasInstance].call(nonCallable, Object), false);
+}
+
 // It should be possible to call the Symbol.hasInstance method directly.
 assertEq(Function.prototype[Symbol.hasInstance].call(Function, () => 1), true);
 assertEq(Function.prototype[Symbol.hasInstance].call(Function, Object), true);
@@ -50,24 +68,6 @@ assertEq(Function.prototype[Symbol.hasInstance].call(Array, Function), false);
 assertEq(Function.prototype[Symbol.hasInstance].call(({}), Function), false);
 assertEq(Function.prototype[Symbol.hasInstance].call(), false)
 assertEq(Function.prototype[Symbol.hasInstance].call(({})), false)
-
-// Primitives should throw
-assertThrowsInstanceOf(() => {
-    Function.prototype[Symbol.hasInstance].call(1, Function);
-}, TypeError);
-
-// Non-callables should throw for the default method
-assertThrowsInstanceOf(() => {
-    function foo() {};
-    let obj = {};
-    foo instanceof obj;
-}, TypeError);
-
-// However non-callables do not throw for overridden methods
-for (let nonCallable of [1, undefined, null, {}]) {
-    let o = {[Symbol.hasInstance](v) { return true; }}
-    assertEq(nonCallable instanceof o, true);
-}
 
 // Ensure that bound functions are unwrapped properly
 let bindme = {x: function() {}};

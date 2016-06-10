@@ -1,9 +1,9 @@
 [
 {
-"version": "Android NDK r11b",
-"size": 138385112,
+"version": "Android NDK r11c",
+"size": 138388708,
 "visibility": "internal",
-"digest": "eb397bfa09b4e2d64070c64c29946a9ed6a468b87675aa9e3a3c5a620144439bb20fa387b9becbb09c6dcf3d4df46ee2147a86ce73b196430db04d30edf9b471",
+"digest": "2dc605644e84fadf399a4e5cb60dfb3b42518803f80de15ef310ead4d0084a01dce3052bbf7d9dfb8bbe027019250235afe0a1e4ffdc87babc0f2bdbf2403232",
 "algorithm": "sha512",
 "filename": "android-ndk.tar.bz2",
 "unpack": true

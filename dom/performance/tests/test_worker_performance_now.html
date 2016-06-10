@@ -1,0 +1,32 @@
+<!-- Any copyright is dedicated to the Public Domain.
+   - http://creativecommons.org/publicdomain/zero/1.0/ -->
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Validate Interfaces Exposed to Workers</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+var worker = new Worker('test_worker_performance_now.js');
+worker.onmessage = function(event) {
+  if (event.data.type == 'finish') {
+    SimpleTest.finish();
+
+  } else if (event.data.type == 'status') {
+    ok(event.data.status, event.data.msg);
+
+  } else if (event.data.type == 'getOSCPU') {
+    worker.postMessage({
+      type: 'returnOSCPU',
+      result: navigator.oscpu
+    });
+  }
+}
+
+</script>
+</body>
+</html>

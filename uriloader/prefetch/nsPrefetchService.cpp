@@ -824,7 +824,8 @@ nsPrefetchService::Observe(nsISupports     *aSubject,
         mDisabled = true;
     }
     else if (!strcmp(aTopic, NS_PREFBRANCH_PREFCHANGE_TOPIC_ID)) {
-        const char *pref = NS_ConvertUTF16toUTF8(aData).get();
+        const nsCString converted = NS_ConvertUTF16toUTF8(aData);
+        const char* pref = converted.get();
         if (!strcmp(pref, PREFETCH_PREF)) {
             if (Preferences::GetBool(PREFETCH_PREF, false)) {
                 if (mDisabled) {

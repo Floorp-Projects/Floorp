@@ -24,6 +24,7 @@ class Crypto;
 class Function;
 class IDBFactory;
 enum class ImageBitmapFormat : uint32_t;
+class Performance;
 class Promise;
 class RequestOrUSVString;
 class ServiceWorkerRegistrationWorkerThread;
@@ -42,7 +43,6 @@ BEGIN_WORKERS_NAMESPACE
 
 class ServiceWorkerClients;
 class WorkerPrivate;
-class Performance;
 
 class WorkerGlobalScope : public DOMEventTargetHelper,
                           public nsIGlobalObject,

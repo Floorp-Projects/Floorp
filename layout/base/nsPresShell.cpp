@@ -128,7 +128,7 @@
 #include "nsArenaMemoryStats.h"
 #include "nsFrameSelection.h"
 
-#include "nsPerformance.h"
+#include "mozilla/dom/Performance.h"
 #include "nsRefreshDriver.h"
 #include "nsDOMNavigationTiming.h"
 
@@ -9417,7 +9417,7 @@ PresShell::GetPerformanceNow()
   DOMHighResTimeStamp now = 0;
 
   if (nsPIDOMWindowInner* window = mDocument->GetInnerWindow()) {
-    nsPerformance* perf = window->GetPerformance();
+    Performance* perf = window->GetPerformance();
 
     if (perf) {
       now = perf->Now();

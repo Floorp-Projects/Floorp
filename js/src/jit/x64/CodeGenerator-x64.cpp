@@ -1391,3 +1391,11 @@ CodeGeneratorX64::visitPopcntI64(LPopcntI64* lir)
 
     masm.popcnt64(input, output, temp);
 }
+
+void
+CodeGeneratorX64::visitTestI64AndBranch(LTestI64AndBranch* lir)
+{
+    Register input = ToRegister(lir->input());
+    masm.testq(input, input);
+    emitBranch(Assembler::NonZero, lir->ifTrue(), lir->ifFalse());
+}

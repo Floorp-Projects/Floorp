@@ -10,12 +10,12 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/GamepadBinding.h"
 #include "mozilla/dom/GamepadButton.h"
+#include "mozilla/dom/Performance.h"
 #include <stdint.h>
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
-#include "nsPerformance.h"
 
 namespace mozilla {
 namespace dom {

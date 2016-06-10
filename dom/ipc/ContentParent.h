@@ -1168,10 +1168,9 @@ private:
   bool mIsNuwaProcess;
   bool mHasGamepadListener;
 
-  // These variables track whether we've called Close(), CloseWithError()
-  // and KillHard() on our channel.
+  // These variables track whether we've called Close() and KillHard() on our
+  // channel.
   bool mCalledClose;
-  bool mCalledCloseWithError;
   bool mCalledKillHard;
   bool mCreatedPairedMinidumps;
   bool mShutdownPending;
