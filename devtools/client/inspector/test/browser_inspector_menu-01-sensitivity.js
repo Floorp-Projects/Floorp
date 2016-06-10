@@ -234,15 +234,16 @@ add_task(function* () {
       ? nodeFrontContainer.tagLine.querySelector(
           `[data-attr="${attributeTrigger}"]`)
       : nodeFrontContainer.tagLine;
-    contextMenuClick(contextMenuTrigger);
 
-    for (let menuitem of ALL_MENU_ITEMS) {
-      let elt = inspector.panelDoc.getElementById(menuitem);
-      let shouldBeDisabled = disabled.indexOf(menuitem) !== -1;
-      let isDisabled = elt.hasAttribute("disabled");
+    let allMenuItems = openContextMenuAndGetAllItems(inspector, {
+      target: contextMenuTrigger,
+    });
 
-      is(isDisabled, shouldBeDisabled,
-        `#${menuitem} should be ${shouldBeDisabled ? "disabled" : "enabled"} `);
+    for (let id of ALL_MENU_ITEMS) {
+      let menuItem = allMenuItems.find(item => item.id === id);
+      let shouldBeDisabled = disabled.indexOf(id) !== -1;
+      is(menuItem.disabled, shouldBeDisabled,
+        `#${id} should be ${shouldBeDisabled ? "disabled" : "enabled"} `);
     }
   }
 });
@@ -274,18 +275,4 @@ function setupClipboard(data, type) {
     info("Clearing clipboard.");
     clipboard.set("", "text");
   }
-}
-
-/**
- * A helper that simulates a contextmenu event on the given chrome DOM element.
- */
-function contextMenuClick(element) {
-  let evt = element.ownerDocument.createEvent("MouseEvents");
-  let button = 2;
-
-  evt.initMouseEvent("contextmenu", true, true,
-       element.ownerDocument.defaultView, 1, 0, 0, 0, 0, false,
-       false, false, false, button, null);
-
-  element.dispatchEvent(evt);
 }

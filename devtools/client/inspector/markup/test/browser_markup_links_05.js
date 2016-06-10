@@ -17,8 +17,9 @@ add_task(function* () {
 
   info("Set the popupNode to the node that contains the uri");
   let {editor} = yield getContainerForSelector("video", inspector);
-  let popupNode = editor.attrElements.get("poster").querySelector(".link");
-  inspector.panelDoc.popupNode = popupNode;
+  openContextMenuAndGetAllItems(inspector, {
+    target: editor.attrElements.get("poster").querySelector(".link"),
+  });
 
   info("Follow the link and wait for the new tab to open");
   let onTabOpened = once(gBrowser.tabContainer, "TabOpen");
@@ -36,8 +37,9 @@ add_task(function* () {
 
   info("Set the popupNode to the node that contains the ref");
   ({editor} = yield getContainerForSelector("label", inspector));
-  popupNode = editor.attrElements.get("for").querySelector(".link");
-  inspector.panelDoc.popupNode = popupNode;
+  openContextMenuAndGetAllItems(inspector, {
+    target: editor.attrElements.get("for").querySelector(".link"),
+  });
 
   info("Follow the link and wait for the new node to be selected");
   let onSelection = inspector.selection.once("new-node-front");
@@ -52,8 +54,9 @@ add_task(function* () {
 
   info("Set the popupNode to the node that contains the ref");
   ({editor} = yield getContainerForSelector("output", inspector));
-  popupNode = editor.attrElements.get("for").querySelectorAll(".link")[2];
-  inspector.panelDoc.popupNode = popupNode;
+  openContextMenuAndGetAllItems(inspector, {
+    target: editor.attrElements.get("for").querySelectorAll(".link")[2],
+  });
 
   info("Try to follow the link and check that no new node were selected");
   let onFailed = inspector.once("idref-attribute-link-failed");

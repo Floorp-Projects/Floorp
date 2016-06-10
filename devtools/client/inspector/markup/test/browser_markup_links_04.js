@@ -75,10 +75,8 @@ const TEST_DATA = [{
 }];
 
 add_task(function* () {
-  let {inspector} = yield openInspectorForURL(TEST_URL);
 
-  let linkFollow = inspector.panelDoc.getElementById("node-menu-link-follow");
-  let linkCopy = inspector.panelDoc.getElementById("node-menu-link-copy");
+  let {inspector} = yield openInspectorForURL(TEST_URL);
 
   for (let test of TEST_DATA) {
     info("Selecting test node " + test.selector);
@@ -91,7 +89,12 @@ add_task(function* () {
     ok(popupNode, "Found the popupNode in attribute " + test.attributeName);
 
     info("Simulating a context click on the popupNode");
-    contextMenuClick(popupNode);
+    let allMenuItems = openContextMenuAndGetAllItems(inspector, {
+      target: popupNode,
+    });
+
+    let linkFollow = allMenuItems.find(i => i.id === "node-menu-link-follow");
+    let linkCopy =  allMenuItems.find(i => i.id === "node-menu-link-copy");
 
     // The contextual menu setup is async, because it needs to know if the
     // inspector has the resolveRelativeURL method first. So call actorHasMethod
@@ -99,17 +102,17 @@ add_task(function* () {
     // properly setup.
     yield inspector.target.actorHasMethod("inspector", "resolveRelativeURL");
 
-    is(linkFollow.hasAttribute("hidden"), !test.isLinkFollowItemVisible,
+    is(linkFollow.visible, test.isLinkFollowItemVisible,
       "The follow-link item display is correct");
-    is(linkCopy.hasAttribute("hidden"), !test.isLinkCopyItemVisible,
+    is(linkCopy.visible, test.isLinkCopyItemVisible,
       "The copy-link item display is correct");
 
     if (test.isLinkFollowItemVisible) {
-      is(linkFollow.getAttribute("label"), test.linkFollowItemLabel,
+      is(linkFollow.label, test.linkFollowItemLabel,
         "the follow-link label is correct");
     }
     if (test.isLinkCopyItemVisible) {
-      is(linkCopy.getAttribute("label"), test.linkCopyItemLabel,
+      is(linkCopy.label, test.linkCopyItemLabel,
         "the copy-link label is correct");
     }
   }
