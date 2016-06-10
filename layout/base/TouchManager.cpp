@@ -15,6 +15,8 @@
 
 namespace mozilla {
 
+using EventTarget = ::mozilla::dom::EventTarget;
+
 nsRefPtrHashtable<nsUint32HashKey, dom::Touch>* TouchManager::gCaptureTouchList;
 
 /*static*/ void
