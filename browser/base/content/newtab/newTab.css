@@ -366,8 +366,8 @@ input[type=button] {
   -moz-box-flex: 1;
   padding-top: 6px;
   padding-bottom: 6px;
-  padding-left: 34px;
-  padding-right: 8px;
+  padding-inline-start: 34px;
+  padding-inline-end: 8px;
   background: hsla(0,0%,100%,.9) padding-box;
   border: 1px solid;
   border-spacing: 0;

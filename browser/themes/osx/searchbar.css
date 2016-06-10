@@ -164,6 +164,10 @@
   background-position: right center;
 }
 
+.searchbar-engine-one-off-item:-moz-locale-dir(rtl) {
+  background-position: left center;
+}
+
 .searchbar-engine-one-off-item:not(.last-row) {
   box-sizing: content-box;
   border-bottom: 1px solid #ccc;
