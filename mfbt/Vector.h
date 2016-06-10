@@ -531,10 +531,19 @@ public:
   void reverse();
 
   /**
-   * Given that the vector is empty and has no inline storage, grow to
-   * |capacity|.
+   * Given that the vector is empty, grow the internal capacity to |aRequest|,
+   * keeping the length 0.
    */
   MOZ_MUST_USE bool initCapacity(size_t aRequest);
+
+  /**
+   * Given that the vector is empty, grow the internal capacity and length to
+   * |aRequest| leaving the elements' memory completely uninitialized (with all
+   * the associated hazards and caveats). This avoids the usual allocation-size
+   * rounding that happens in resize and overhead of initialization for elements
+   * that are about to be overwritten.
+   */
+  MOZ_MUST_USE bool initLengthUninitialized(size_t aRequest);
 
   /**
    * If reserve(aRequest) succeeds and |aRequest >= length()|, then appending
@@ -966,6 +975,17 @@ Vector<T, N, AP>::initCapacity(size_t aRequest)
 #ifdef DEBUG
   mReserved = aRequest;
 #endif
+  return true;
+}
+
+template<typename T, size_t N, class AP>
+inline bool
+Vector<T, N, AP>::initLengthUninitialized(size_t aRequest)
+{
+  if (!initCapacity(aRequest)) {
+    return false;
+  }
+  infallibleGrowByUninitialized(aRequest);
   return true;
 }
 
