@@ -930,16 +930,6 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
   public:
     void handleFailureWithHandlerTail(void* handler);
 
-    // See CodeGeneratorX64 calls to noteAsmJSGlobalAccess.
-    void patchAsmJSGlobalAccess(CodeOffset patchAt, uint8_t* code, uint8_t* globalData,
-                                unsigned globalDataOffset)
-    {
-        uint8_t* nextInsn = code + patchAt.offset();
-        MOZ_ASSERT(nextInsn <= globalData);
-        uint8_t* target = globalData + globalDataOffset;
-        ((int32_t*)nextInsn)[-1] = target - nextInsn;
-    }
-
     // Instrumentation for entering and leaving the profiler.
     void profilerEnterFrame(Register framePtr, Register scratch);
     void profilerExitFrame();
