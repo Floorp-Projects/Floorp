@@ -21,7 +21,6 @@ struct PluginHangData
 {
   uint32_t pluginId;
   ProcessId contentProcessId;
-  ProcessId pluginProcessId;
 };
 
 union HangData
