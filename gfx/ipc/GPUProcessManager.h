@@ -10,7 +10,9 @@
 #include "base/process.h"
 #include "Units.h"
 #include "mozilla/dom/ipc/IdType.h"
+#include "mozilla/gfx/GPUProcessHost.h"
 #include "mozilla/ipc/Transport.h"
+#include "nsIObserverService.h"
 
 namespace mozilla {
 namespace layers {
@@ -32,10 +34,12 @@ class GeckoChildProcessHost;
 } // namespace ipc
 namespace gfx {
 
+class GPUChild;
+
 // The GPUProcessManager is a singleton responsible for creating GPU-bound
 // objects that may live in another process. Currently, it provides access
 // to the compositor via CompositorBridgeParent.
-class GPUProcessManager final
+class GPUProcessManager final : public GPUProcessHost::Listener
 {
   typedef layers::APZCTreeManager APZCTreeManager;
   typedef layers::CompositorUpdateObserver CompositorUpdateObserver;
@@ -46,6 +50,14 @@ public:
   static GPUProcessManager* Get();
 
   ~GPUProcessManager();
+
+  // If not using a GPU process, launch a new GPU process asynchronously.
+  void EnableGPUProcess();
+
+  // Ensure that GPU-bound methods can be used. If no GPU process is being
+  // used, or one is launched and ready, this function returns immediately.
+  // Otherwise it blocks until the GPU process has finished launching.
+  void EnsureGPUReady();
 
   already_AddRefed<layers::CompositorSession> CreateTopLevelCompositor(
     widget::CompositorWidgetProxy* aProxy,
@@ -92,10 +104,40 @@ public:
                                      const dom::TabId& aTabId,
                                      dom::TabParent* aBrowserParent);
 
+  void OnProcessLaunchComplete(GPUProcessHost* aHost) override;
+
+private:
+  // Called from our xpcom-shutdown observer.
+  void OnXPCOMShutdown();
+
 private:
   GPUProcessManager();
 
+  // Permanently disable the GPU process and record a message why.
+  void DisableGPUProcess(const char* aMessage);
+
+  // Shutdown the GPU process.
+  void DestroyProcess();
+
   DISALLOW_COPY_AND_ASSIGN(GPUProcessManager);
+
+  class Observer final : public nsIObserver {
+  public:
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIOBSERVER
+    Observer(GPUProcessManager* aManager);
+
+  protected:
+    ~Observer() {}
+
+    GPUProcessManager* mManager;
+  };
+  friend class Observer;
+
+private:
+  RefPtr<Observer> mObserver;
+  GPUProcessHost* mProcess;
+  GPUChild* mGPUChild;
 };
 
 } // namespace gfx
