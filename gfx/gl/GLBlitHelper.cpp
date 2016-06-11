@@ -236,8 +236,8 @@ GLBlitHelper::InitTexQuadProgram(BlitType target)
 
     bool success = false;
 
-    GLuint *programPtr;
-    GLuint *fragShaderPtr;
+    GLuint* programPtr;
+    GLuint* fragShaderPtr;
     const char* fragShaderSource;
     switch (target) {
     case ConvertEGLImage:
