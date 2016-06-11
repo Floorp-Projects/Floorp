@@ -292,7 +292,6 @@ ArgumentsObject::create(JSContext* cx, HandleFunction callee, unsigned numActual
         data->numArgs = numArgs;
         data->dataBytes = numBytes;
         data->rareData = nullptr;
-        data->callee.init(ObjectValue(*callee.get()));
         data->script = callee->nonLazyScript();
 
         // Zero the argument Values. This sets each value to DoubleValue(0), which
@@ -302,6 +301,7 @@ ArgumentsObject::create(JSContext* cx, HandleFunction callee, unsigned numActual
         MOZ_ASSERT_IF(numArgs > 0, data->args[0].asRawBits() == 0x0);
 
         obj->initFixedSlot(DATA_SLOT, PrivateValue(data));
+        obj->initFixedSlot(CALLEE_SLOT, ObjectValue(*callee));
     }
     MOZ_ASSERT(data != nullptr);
 
@@ -682,7 +682,6 @@ ArgumentsObject::trace(JSTracer* trc, JSObject* obj)
 {
     ArgumentsObject& argsobj = obj->as<ArgumentsObject>();
     if (ArgumentsData* data = argsobj.data()) { // Template objects have no ArgumentsData.
-        TraceEdge(trc, &data->callee, js_callee_str);
         TraceRange(trc, data->numArgs, data->begin(), js_arguments_str);
         TraceManuallyBarrieredEdge(trc, &data->script, "script");
     }
