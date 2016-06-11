@@ -13,7 +13,6 @@
 #include "base/task.h"                  // for NewRunnableMethod, etc
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/PLayerTransactionChild.h"
-#include "mozilla/layers/TextureClientPool.h" // for TextureClientPool
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "nsAutoPtr.h"
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
@@ -43,12 +42,7 @@ Atomic<int32_t> CompositableForwarder::sSerialCounter(0);
 CompositorBridgeChild::CompositorBridgeChild(ClientLayerManager *aLayerManager)
   : mLayerManager(aLayerManager)
   , mCanSend(false)
-  , mMessageLoop(MessageLoop::current())
 {
-  MOZ_ASSERT(NS_IsMainThread());
-
-  // Ensure destruction on the main thread
-  SetMessageLoopToPostDestructionTo(mMessageLoop);
 }
 
 CompositorBridgeChild::~CompositorBridgeChild()
@@ -81,14 +75,10 @@ void
 CompositorBridgeChild::Destroy()
 {
   // This must not be called from the destructor!
-  MOZ_ASSERT(!IsDead());
+  MOZ_ASSERT(mRefCnt != 0);
 
   if (!mCanSend) {
     return;
-  }
-
-  for (size_t i = 0; i < mTexturePools.Length(); i++) {
-    mTexturePools[i]->Destroy();
   }
 
   // Destroying the layer manager may cause all sorts of things to happen, so
@@ -429,11 +419,6 @@ CompositorBridgeChild::RecvDidComposite(const uint64_t& aId, const uint64_t& aTr
       child->DidComposite(aTransactionId, aCompositeStart, aCompositeEnd);
     }
   }
-
-  for (size_t i = 0; i < mTexturePools.Length(); i++) {
-    mTexturePools[i]->ReturnDeferredClients();
-  }
-
   return true;
 }
 
@@ -790,73 +775,6 @@ bool
 CompositorBridgeChild::DeallocPTextureChild(PTextureChild* actor)
 {
   return TextureClient::DestroyIPDLActor(actor);
-}
-
-TextureClientPool*
-CompositorBridgeChild::GetTexturePool(SurfaceFormat aFormat, TextureFlags aFlags)
-{
-  for (size_t i = 0; i < mTexturePools.Length(); i++) {
-    if (mTexturePools[i]->GetFormat() == aFormat &&
-        mTexturePools[i]->GetFlags() == aFlags) {
-      return mTexturePools[i];
-    }
-  }
-
-  mTexturePools.AppendElement(
-      new TextureClientPool(aFormat, aFlags,
-                            IntSize(gfxPlatform::GetPlatform()->GetTileWidth(),
-                                    gfxPlatform::GetPlatform()->GetTileHeight()),
-                            gfxPrefs::LayersTileMaxPoolSize(),
-                            gfxPrefs::LayersTileShrinkPoolTimeout(),
-                            this));
-
-  return mTexturePools.LastElement();
-}
-
-void
-CompositorBridgeChild::HandleMemoryPressure()
-{
-  for (size_t i = 0; i < mTexturePools.Length(); i++) {
-    mTexturePools[i]->ShrinkToMinimumSize();
-  }
-}
-
-void
-CompositorBridgeChild::ClearTexturePool()
-{
-  for (size_t i = 0; i < mTexturePools.Length(); i++) {
-    mTexturePools[i]->Clear();
-  }
-}
-
-PTextureChild*
-CompositorBridgeChild::CreateTexture(const SurfaceDescriptor& aSharedData,
-                                     LayersBackend aLayersBackend,
-                                     TextureFlags aFlags)
-{
-  return PCompositorBridgeChild::SendPTextureConstructor(aSharedData, aLayersBackend, aFlags, 0 /* FIXME: Correct ID here? */);
-}
-
-bool
-CompositorBridgeChild::AllocUnsafeShmem(size_t aSize,
-                                   ipc::SharedMemory::SharedMemoryType aType,
-                                   ipc::Shmem* aShmem)
-{
-  return PCompositorBridgeChild::AllocUnsafeShmem(aSize, aType, aShmem);
-}
-
-bool
-CompositorBridgeChild::AllocShmem(size_t aSize,
-                             ipc::SharedMemory::SharedMemoryType aType,
-                             ipc::Shmem* aShmem)
-{
-  return PCompositorBridgeChild::AllocShmem(aSize, aType, aShmem);
-}
-
-void
-CompositorBridgeChild::DeallocShmem(ipc::Shmem& aShmem)
-{
-    PCompositorBridgeChild::DeallocShmem(aShmem);
 }
 
 } // namespace layers

@@ -21,6 +21,7 @@
 #include "mozilla/layers/PLayerChild.h"  // for PLayerChild
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/ShadowLayerChild.h"
+#include "mozilla/layers/TextureClientPool.h" // for TextureClientPool
 #include "mozilla/layers/PersistentBufferProvider.h"
 #include "ClientReadbackLayer.h"        // for ClientReadbackLayer
 #include "nsAString.h"
@@ -134,6 +135,9 @@ ClientLayerManager::Destroy()
   // It's important to call ClearCachedResource before Destroy because the
   // former will early-return if the later has already run.
   ClearCachedResources();
+  for (size_t i = 0; i < mTexturePools.Length(); i++) {
+    mTexturePools[i]->Destroy();
+  }
   LayerManager::Destroy();
 }
 
@@ -425,6 +429,10 @@ ClientLayerManager::DidComposite(uint64_t aTransactionId,
   for (size_t i = 0; i < mDidCompositeObservers.Length(); i++) {
     mDidCompositeObservers[i]->DidComposite();
   }
+
+  for (size_t i = 0; i < mTexturePools.Length(); i++) {
+    mTexturePools[i]->ReturnDeferredClients();
+  }
 }
 
 void
@@ -710,6 +718,29 @@ ClientLayerManager::SetIsFirstPaint()
   mForwarder->SetIsFirstPaint();
 }
 
+TextureClientPool*
+ClientLayerManager::GetTexturePool(SurfaceFormat aFormat, TextureFlags aFlags)
+{
+  MOZ_DIAGNOSTIC_ASSERT(!mDestroyed);
+
+  for (size_t i = 0; i < mTexturePools.Length(); i++) {
+    if (mTexturePools[i]->GetFormat() == aFormat &&
+        mTexturePools[i]->GetFlags() == aFlags) {
+      return mTexturePools[i];
+    }
+  }
+
+  mTexturePools.AppendElement(
+      new TextureClientPool(aFormat, aFlags,
+                            IntSize(gfxPlatform::GetPlatform()->GetTileWidth(),
+                                    gfxPlatform::GetPlatform()->GetTileHeight()),
+                            gfxPrefs::LayersTileMaxPoolSize(),
+                            gfxPrefs::LayersTileShrinkPoolTimeout(),
+                            mForwarder));
+
+  return mTexturePools.LastElement();
+}
+
 void
 ClientLayerManager::ClearCachedResources(Layer* aSubtree)
 {
@@ -724,9 +755,8 @@ ClientLayerManager::ClearCachedResources(Layer* aSubtree)
   } else if (mRoot) {
     ClearLayer(mRoot);
   }
-
-  if (GetCompositorBridgeChild()) {
-    GetCompositorBridgeChild()->ClearTexturePool();
+  for (size_t i = 0; i < mTexturePools.Length(); i++) {
+    mTexturePools[i]->Clear();
   }
 }
 
@@ -737,8 +767,8 @@ ClientLayerManager::HandleMemoryPressure()
     HandleMemoryPressureLayer(mRoot);
   }
 
-  if (GetCompositorBridgeChild()) {
-    GetCompositorBridgeChild()->HandleMemoryPressure();
+  for (size_t i = 0; i < mTexturePools.Length(); i++) {
+    mTexturePools[i]->ShrinkToMinimumSize();
   }
 }
 

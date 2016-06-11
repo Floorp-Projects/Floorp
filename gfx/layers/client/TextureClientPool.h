@@ -18,7 +18,7 @@ namespace mozilla {
 namespace layers {
 
 class ISurfaceAllocator;
-class TextureForwarder;
+class CompositableForwarder;
 class TextureReadLock;
 
 class TextureClientAllocator
@@ -49,7 +49,7 @@ public:
                     gfx::IntSize aSize,
                     uint32_t aMaxTextureClients,
                     uint32_t aShrinkTimeoutMsec,
-                    TextureForwarder* aAllocator);
+                    CompositableForwarder* aAllocator);
 
   /**
    * Gets an allocated TextureClient of size and format that are determined
@@ -148,8 +148,7 @@ private:
 
   std::list<RefPtr<TextureClient>> mTextureClientsDeferred;
   RefPtr<nsITimer> mTimer;
-  // This mSurfaceAllocator owns us, so no need to hold a ref to it
-  TextureForwarder* mSurfaceAllocator;
+  RefPtr<CompositableForwarder> mSurfaceAllocator;
 };
 
 } // namespace layers
