@@ -74,12 +74,6 @@ struct ArgumentsData
 
     RareArgumentsData* rareData;
 
-    /*
-     * arguments.callee, or MagicValue(JS_OVERWRITTEN_CALLEE) if
-     * arguments.callee has been modified.
-     */
-    GCPtrValue callee;
-
     /* The script for the function containing this arguments object. */
     JSScript*   script;
 
@@ -146,6 +140,12 @@ static const unsigned ARGS_LENGTH_MAX = 500 * 1000;
  *     another slot associated with a new property.
  *   DATA_SLOT
  *     Stores an ArgumentsData*, described above.
+ *   MAYBE_CALL_SLOT
+ *     Stores the CallObject, if the callee has aliased bindings. See
+ *     the ArgumentsData::args comment.
+ *   CALLEE_SLOT
+ *     arguments.callee, or MagicValue(JS_OVERWRITTEN_CALLEE) if
+ *     arguments.callee has been modified.
  */
 class ArgumentsObject : public NativeObject
 {
@@ -153,6 +153,7 @@ class ArgumentsObject : public NativeObject
     static const uint32_t INITIAL_LENGTH_SLOT = 0;
     static const uint32_t DATA_SLOT = 1;
     static const uint32_t MAYBE_CALL_SLOT = 2;
+    static const uint32_t CALLEE_SLOT = 3;
 
   public:
     static const uint32_t LENGTH_OVERRIDDEN_BIT = 0x1;
@@ -188,7 +189,7 @@ class ArgumentsObject : public NativeObject
                                 ObjectOpResult& result);
 
   public:
-    static const uint32_t RESERVED_SLOTS = 3;
+    static const uint32_t RESERVED_SLOTS = 4;
     static const gc::AllocKind FINALIZE_KIND = gc::AllocKind::OBJECT4_BACKGROUND;
 
     /* Create an arguments object for a frame that is expecting them. */
@@ -395,12 +396,12 @@ class MappedArgumentsObject : public ArgumentsObject
      * been cleared.
      */
     const js::Value& callee() const {
-        return data()->callee;
+        return getFixedSlot(CALLEE_SLOT);
     }
 
     /* Clear the location storing arguments.callee's initial value. */
     void clearCallee() {
-        data()->callee = MagicValue(JS_OVERWRITTEN_CALLEE);
+        setFixedSlot(CALLEE_SLOT, MagicValue(JS_OVERWRITTEN_CALLEE));
     }
 
   private:
