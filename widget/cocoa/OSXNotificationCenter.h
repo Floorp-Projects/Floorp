@@ -24,16 +24,14 @@ namespace mozilla {
 class OSXNotificationInfo;
 
 class OSXNotificationCenter : public nsIAlertsService,
-                              public imgINotificationObserver,
-                              public nsITimerCallback,
-                              public nsIAlertsIconData
+                              public nsIAlertsIconData,
+                              public nsIAlertNotificationImageListener
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSIALERTSSERVICE
-  NS_DECL_IMGINOTIFICATIONOBSERVER
-  NS_DECL_NSITIMERCALLBACK
   NS_DECL_NSIALERTSICONDATA
+  NS_DECL_NSIALERTNOTIFICATIONIMAGELISTENER
 
   OSXNotificationCenter();
 
