@@ -7,15 +7,25 @@
 #define _include_mozilla_gfx_ipc_GPUChild_h_
 
 #include "mozilla/gfx/PGPUChild.h"
+#include "mozilla/UniquePtr.h"
 
 namespace mozilla {
 namespace gfx {
 
+class GPUProcessHost;
+
 class GPUChild final : public PGPUChild
 {
 public:
-  GPUChild();
+  GPUChild(GPUProcessHost* aHost);
   ~GPUChild();
+
+  static void Destroy(UniquePtr<GPUChild>&& aChild);
+
+  void ActorDestroy(ActorDestroyReason aWhy) override;
+
+private:
+  GPUProcessHost* mHost;
 };
 
 } // namespace gfx
