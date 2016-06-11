@@ -73,16 +73,16 @@ private:
     GLContextGLX(const SurfaceCaps& caps,
                  GLContext* shareContext,
                  bool isOffscreen,
-                 Display *aDisplay,
+                 Display* aDisplay,
                  GLXDrawable aDrawable,
                  GLXContext aContext,
                  bool aDeleteDrawable,
                  bool aDoubleBuffered,
-                 gfxXlibSurface *aPixmap,
+                 gfxXlibSurface* aPixmap,
                  ContextProfile profile);
 
     GLXContext mContext;
-    Display *mDisplay;
+    Display* mDisplay;
     GLXDrawable mDrawable;
     bool mDeleteDrawable;
     bool mDoubleBuffered;
