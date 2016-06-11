@@ -1113,7 +1113,7 @@ ClientMultiTiledLayerBuffer::ValidateTile(TileClient& aTile,
 
   if (aTile.IsPlaceholderTile()) {
     aTile.SetLayerManager(mManager);
-    aTile.SetTextureAllocator(mManager->GetCompositorBridgeChild()->GetTexturePool(
+    aTile.SetTextureAllocator(mManager->GetTexturePool(
       gfxPlatform::GetPlatform()->Optimal2DFormatForContent(content),
       TextureFlags::DISALLOW_BIGIMAGE | TextureFlags::IMMEDIATE_UPLOAD));
   }

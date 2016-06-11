@@ -43,7 +43,6 @@ namespace layers {
 
 class CompositableForwarder;
 class ShadowLayerForwarder;
-class TextureForwarder;
 
 class ShmemAllocator;
 class ShmemSectionAllocator;
@@ -89,8 +88,6 @@ public:
   virtual ShmemSectionAllocator* AsShmemSectionAllocator() { return nullptr; }
 
   virtual CompositableForwarder* AsCompositableForwarder() { return nullptr; }
-
-  virtual TextureForwarder* AsTextureForwarder() { return nullptr; }
 
   virtual ShadowLayerForwarder* AsLayerForwarder() { return nullptr; }
 
@@ -243,54 +240,6 @@ private:
   // Therefore, we use a signed type so that any such negative values show up
   // as negative in about:memory, rather than as enormous positive numbers.
   static mozilla::Atomic<ptrdiff_t> sAmount;
-};
-
-/// A simple shmem section allocator that can only allocate small
-/// fixed size elements (only intended to be used to store tile
-/// copy-on-write locks for now).
-class FixedSizeSmallShmemSectionAllocator final : public ShmemSectionAllocator
-{
-public:
-  enum AllocationStatus
-  {
-    STATUS_ALLOCATED,
-    STATUS_FREED
-  };
-
-  struct ShmemSectionHeapHeader
-  {
-    Atomic<uint32_t> mTotalBlocks;
-    Atomic<uint32_t> mAllocatedBlocks;
-  };
-
-  struct ShmemSectionHeapAllocation
-  {
-    Atomic<uint32_t> mStatus;
-    uint32_t mSize;
-  };
-
-  explicit FixedSizeSmallShmemSectionAllocator(ClientIPCAllocator* aShmProvider);
-
-  ~FixedSizeSmallShmemSectionAllocator();
-
-  virtual bool AllocShmemSection(uint32_t aSize, ShmemSection* aShmemSection) override;
-
-  virtual void DeallocShmemSection(ShmemSection& aShmemSection) override;
-
-  virtual void MemoryPressure() override { ShrinkShmemSectionHeap(); }
-
-  // can be called on the compositor process.
-  static void FreeShmemSection(ShmemSection& aShmemSection);
-
-  void ShrinkShmemSectionHeap();
-
-  ShmemAllocator* GetShmAllocator() { return mShmProvider->AsShmemAllocator(); }
-
-  bool IPCOpen() const { return mShmProvider->IPCOpen(); }
-
-protected:
-  std::vector<mozilla::ipc::Shmem> mUsedShmems;
-  ClientIPCAllocator* mShmProvider;
 };
 
 } // namespace layers

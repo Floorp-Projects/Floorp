@@ -34,6 +34,7 @@ class CompositorBridgeChild;
 class ImageLayer;
 class PLayerChild;
 class FrameUniformityData;
+class TextureClientPool;
 
 class ClientLayerManager final : public LayerManager
 {
@@ -113,6 +114,8 @@ public:
   virtual bool HasShadowManagerInternal() const override { return HasShadowManager(); }
 
   virtual void SetIsFirstPaint() override;
+
+  TextureClientPool* GetTexturePool(gfx::SurfaceFormat aFormat, TextureFlags aFlags);
 
   /**
    * Pass through call to the forwarder for nsPresContext's
@@ -340,6 +343,7 @@ private:
   APZTestData mApzTestData;
 
   RefPtr<ShadowLayerForwarder> mForwarder;
+  AutoTArray<RefPtr<TextureClientPool>,2> mTexturePools;
   AutoTArray<dom::OverfillCallback*,0> mOverfillCallbacks;
   mozilla::TimeStamp mTransactionStart;
 
