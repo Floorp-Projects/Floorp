@@ -14,7 +14,7 @@ class TreeherderFormatter(object):
     treeherder is able to highlight the errors and warnings.
     This is a stop-gap until bug 1276486 is fixed.
     """
-    fmt = "TEST-UNEXPECTED-{level} | {path}:{lineno}:{column} | {message} ({rule})"
+    fmt = "TEST-UNEXPECTED-{level} | {path}:{lineno}{column} | {message} ({rule})"
 
     def __call__(self, result):
         message = []
@@ -23,6 +23,7 @@ class TreeherderFormatter(object):
                 assert isinstance(err, ResultContainer)
 
                 d = {s: getattr(err, s) for s in err.__slots__}
+                d["column"] = ":%s" % d["column"] if d["column"] else ""
                 d['level'] = d['level'].upper()
                 d['rule'] = d['rule'] or d['linter']
                 message.append(self.fmt.format(**d))

@@ -32,7 +32,7 @@ class NullTerminal(object):
 class StylishFormatter(object):
     """Formatter based on the eslint default."""
 
-    fmt = "  {c1}{lineno}:{column}  {c2}{level}{normal}  {message}  {c1}{rule}({linter}){normal}"
+    fmt = "  {c1}{lineno}{column}  {c2}{level}{normal}  {message}  {c1}{rule}({linter}){normal}"
     fmt_summary = "{t.bold}{c}\u2716 {problem} ({error}, {warning}){t.normal}"
 
     def __init__(self, disable_colors=None):
@@ -50,7 +50,8 @@ class StylishFormatter(object):
     def _update_max(self, err):
         """Calculates the longest length of each token for spacing."""
         self.max_lineno = max(self.max_lineno, len(str(err.lineno)))
-        self.max_column = max(self.max_column, len(str(err.column)))
+        if err.column:
+            self.max_column = max(self.max_column, len(str(err.column)))
         self.max_level = max(self.max_level, len(str(err.level)))
         self.max_message = max(self.max_message, len(err.message))
 
@@ -83,7 +84,7 @@ class StylishFormatter(object):
                     c1=self.term.color(8),
                     c2=self.term.color(1) if err.level == 'error' else self.term.color(3),
                     lineno=str(err.lineno).rjust(self.max_lineno),
-                    column=str(err.column).ljust(self.max_column),
+                    column=(":" + str(err.column).ljust(self.max_column)) if err.column else "",
                     level=err.level.ljust(self.max_level),
                     message=err.message.ljust(self.max_message),
                     rule='{} '.format(err.rule) if err.rule else '',

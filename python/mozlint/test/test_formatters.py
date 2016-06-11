@@ -56,8 +56,8 @@ class TestFormatters(TestCase):
     def test_stylish_formatter(self):
         expected = """
 a/b/c.txt
-  1:1  error  oh no foo  (foo)
-  4:1  error  oh no baz  (baz)
+  1  error  oh no foo  (foo)
+  4  error  oh no baz  (baz)
 
 d/e/f.txt
   4:2  warning  oh no bar  bar-not-allowed (bar)
@@ -70,8 +70,8 @@ d/e/f.txt
 
     def test_treeherder_formatter(self):
         expected = """
-TEST-UNEXPECTED-ERROR | a/b/c.txt:1:1 | oh no foo (foo)
-TEST-UNEXPECTED-ERROR | a/b/c.txt:4:1 | oh no baz (baz)
+TEST-UNEXPECTED-ERROR | a/b/c.txt:1 | oh no foo (foo)
+TEST-UNEXPECTED-ERROR | a/b/c.txt:4 | oh no baz (baz)
 TEST-UNEXPECTED-WARNING | d/e/f.txt:4:2 | oh no bar (bar-not-allowed)
 """.strip()
 
