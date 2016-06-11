@@ -78,12 +78,12 @@ function testXHRLoad(aEvent) {
   let cert = channel.securityInfo.QueryInterface(Ci.nsISSLStatusProvider).
              SSLStatus.QueryInterface(Ci.nsISSLStatus).serverCert;
   CERT_ATTRS.forEach(function(aCertAttrName) {
-    Services.prefs.setCharPref(PREF_APP_UPDATE_CERTS_BRANCH + "1." +
+    Services.prefs.setCharPref(PREFBRANCH_APP_UPDATE_CERTS + "1." +
                                aCertAttrName, cert[aCertAttrName]);
   });
 
   Services.prefs.setBoolPref(PREF_APP_UPDATE_CERT_REQUIREBUILTIN, true);
-  Services.prefs.setBoolPref(PREF_APP_UPDATE_CERT_CHECKATTRS, false);
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_CERT_CHECKATTRIBUTES, false);
 
   let url = URL_HTTPS_UPDATE_XML + "?showDetails=1" + getVersionParams();
   gAppUpdateURLDefault = gDefaultPrefBranch.getCharPref(PREF_APP_UPDATE_URL);
