@@ -4,9 +4,11 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "gfxPrefs.h"
 #include "GPUProcessHost.h"
+#include "chrome/common/process_watcher.h"
+#include "gfxPrefs.h"
 #include "mozilla/gfx/Logging.h"
+#include "nsITimer.h"
 
 namespace mozilla {
 namespace gfx {
@@ -15,7 +17,8 @@ GPUProcessHost::GPUProcessHost(Listener* aListener)
  : GeckoChildProcessHost(GeckoProcessType_GPU),
    mListener(aListener),
    mTaskFactory(this),
-   mLaunchPhase(LaunchPhase::Unlaunched)
+   mLaunchPhase(LaunchPhase::Unlaunched),
+   mShutdownRequested(false)
 {
   MOZ_COUNT_CTOR(GPUProcessHost);
 }
@@ -115,7 +118,7 @@ GPUProcessHost::InitAfterConnect(bool aSucceeded)
   mLaunchPhase = LaunchPhase::Complete;
 
   if (aSucceeded) {
-    mGPUChild = MakeUnique<GPUChild>();
+    mGPUChild = MakeUnique<GPUChild>(this);
     DebugOnly<bool> rv =
       mGPUChild->Open(GetChannel(), base::GetProcId(GetChildProcessHandle()));
     MOZ_ASSERT(rv);
@@ -129,8 +132,64 @@ GPUProcessHost::InitAfterConnect(bool aSucceeded)
 void
 GPUProcessHost::Shutdown()
 {
+  MOZ_ASSERT(!mShutdownRequested);
+
   mListener = nullptr;
+
+  if (mGPUChild) {
+    // OnChannelClosed uses this to check if the shutdown was expected or
+    // unexpected.
+    mShutdownRequested = true;
+
+#ifdef NS_FREE_PERMANENT_DATA
+    mGPUChild->Close();
+#else
+    // No need to communicate shutdown, the GPU process doesn't need to
+    // communicate anything back.
+    KillHard("NormalShutdown");
+#endif
+
+    // Wait for ActorDestroy.
+    return;
+  }
+
   DestroyProcess();
+}
+
+void
+GPUProcessHost::OnChannelClosed()
+{
+  if (!mShutdownRequested) {
+    // This is an unclean shutdown. Notify our listener that we're going away.
+    if (mListener) {
+      mListener->OnProcessUnexpectedShutdown(this);
+    }
+  }
+
+  // Release the actor.
+  GPUChild::Destroy(Move(mGPUChild));
+  MOZ_ASSERT(!mGPUChild);
+
+  // If the owner of GPUProcessHost already requested shutdown, we can now
+  // schedule destruction. Otherwise we must wait for someone to call
+  // Shutdown. Note that GPUProcessManager calls Shutdown within
+  // OnProcessUnexpectedShutdown.
+  if (mShutdownRequested) {
+    DestroyProcess();
+  }
+}
+
+void
+GPUProcessHost::KillHard(const char* aReason)
+{
+  ProcessHandle handle = GetChildProcessHandle();
+  if (!base::KillProcess(handle, base::PROCESS_END_KILLED_BY_USER, false)) {
+    NS_WARNING("failed to kill subprocess!");
+  }
+
+  SetAlreadyDead();
+  XRE_GetIOMessageLoop()->PostTask(
+    NewRunnableFunction(&ProcessWatcher::EnsureProcessTerminated, handle, /*force=*/true));
 }
 
 void

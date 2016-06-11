@@ -10,7 +10,7 @@ sync protocol PGPU
 {
 parent:
   // Sent by the UI process to initiate shutdown.
-  async BeginShutdown();
+  async Nothing();
 };
 
 } // namespace gfx

@@ -105,6 +105,7 @@ public:
                                      dom::TabParent* aBrowserParent);
 
   void OnProcessLaunchComplete(GPUProcessHost* aHost) override;
+  void OnProcessUnexpectedShutdown(GPUProcessHost* aHost) override;
 
 private:
   // Called from our xpcom-shutdown observer.
