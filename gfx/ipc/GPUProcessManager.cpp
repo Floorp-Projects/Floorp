@@ -130,6 +130,14 @@ GPUProcessManager::OnProcessLaunchComplete(GPUProcessHost* aHost)
 }
 
 void
+GPUProcessManager::OnProcessUnexpectedShutdown(GPUProcessHost* aHost)
+{
+  MOZ_ASSERT(mProcess && mProcess == aHost);
+
+  DestroyProcess();
+}
+
+void
 GPUProcessManager::DestroyProcess()
 {
   if (!mProcess) {
