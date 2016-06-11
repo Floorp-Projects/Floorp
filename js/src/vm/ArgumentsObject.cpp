@@ -266,8 +266,7 @@ ArgumentsObject::create(JSContext* cx, HandleFunction callee, unsigned numActual
 
     unsigned numFormals = callee->nargs();
     unsigned numArgs = Max(numActuals, numFormals);
-    unsigned numBytes = offsetof(ArgumentsData, args) +
-                        numArgs * sizeof(Value);
+    unsigned numBytes = ArgumentsData::bytesRequired(numArgs);
 
     Rooted<ArgumentsObject*> obj(cx);
     ArgumentsData* data = nullptr;
@@ -290,9 +289,7 @@ ArgumentsObject::create(JSContext* cx, HandleFunction callee, unsigned numActual
         }
 
         data->numArgs = numArgs;
-        data->dataBytes = numBytes;
         data->rareData = nullptr;
-        data->script = callee->nonLazyScript();
 
         // Zero the argument Values. This sets each value to DoubleValue(0), which
         // is safe for GC tracing.
@@ -397,7 +394,7 @@ MappedArgGetter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue
     } else {
         MOZ_ASSERT(JSID_IS_ATOM(id, cx->names().callee));
         if (!argsobj.hasOverriddenCallee())
-            vp.set(argsobj.callee());
+            vp.setObject(argsobj.callee());
     }
     return true;
 }
@@ -418,7 +415,10 @@ MappedArgSetter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue
     MOZ_ASSERT(!(attrs & JSPROP_READONLY));
     attrs &= (JSPROP_ENUMERATE | JSPROP_PERMANENT); /* only valid attributes */
 
-    RootedScript script(cx, argsobj->containingScript());
+    RootedFunction callee(cx, &argsobj->callee());
+    RootedScript script(cx, callee->getOrCreateScript(cx));
+    if (!script)
+        return false;
 
     if (JSID_IS_INT(id)) {
         unsigned arg = unsigned(JSID_TO_INT(id));
@@ -681,10 +681,8 @@ void
 ArgumentsObject::trace(JSTracer* trc, JSObject* obj)
 {
     ArgumentsObject& argsobj = obj->as<ArgumentsObject>();
-    if (ArgumentsData* data = argsobj.data()) { // Template objects have no ArgumentsData.
+    if (ArgumentsData* data = argsobj.data()) // Template objects have no ArgumentsData.
         TraceRange(trc, data->numArgs, data->begin(), js_arguments_str);
-        TraceManuallyBarrieredEdge(trc, &data->script, "script");
-    }
 }
 
 /* static */ size_t
@@ -701,7 +699,7 @@ ArgumentsObject::objectMovedDuringMinorGC(JSTracer* trc, JSObject* dst, JSObject
         nursery.removeMallocedBuffer(nsrc->data());
     } else {
         AutoEnterOOMUnsafeRegion oomUnsafe;
-        uint32_t nbytes = nsrc->data()->dataBytes;
+        uint32_t nbytes = ArgumentsData::bytesRequired(nsrc->data()->numArgs);
         uint8_t* data = nsrc->zone()->pod_malloc<uint8_t>(nbytes);
         if (!data)
             oomUnsafe.crash("Failed to allocate ArgumentsObject data while tenuring.");
