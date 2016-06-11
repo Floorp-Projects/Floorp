@@ -144,8 +144,8 @@ static const unsigned ARGS_LENGTH_MAX = 500 * 1000;
  *     Stores the CallObject, if the callee has aliased bindings. See
  *     the ArgumentsData::args comment.
  *   CALLEE_SLOT
- *     arguments.callee, or MagicValue(JS_OVERWRITTEN_CALLEE) if
- *     arguments.callee has been modified.
+ *     Stores the initial arguments.callee. This value can be overridden on
+ *     mapped arguments objects, see hasOverriddenCallee.
  */
 class ArgumentsObject : public NativeObject
 {
@@ -159,7 +159,8 @@ class ArgumentsObject : public NativeObject
     static const uint32_t LENGTH_OVERRIDDEN_BIT = 0x1;
     static const uint32_t ITERATOR_OVERRIDDEN_BIT = 0x2;
     static const uint32_t ELEMENT_OVERRIDDEN_BIT = 0x4;
-    static const uint32_t PACKED_BITS_COUNT = 3;
+    static const uint32_t CALLEE_OVERRIDDEN_BIT = 0x8;
+    static const uint32_t PACKED_BITS_COUNT = 4;
 
     static_assert(ARGS_LENGTH_MAX <= (UINT32_MAX >> PACKED_BITS_COUNT),
                   "Max arguments length must fit in available bits");
@@ -391,17 +392,18 @@ class MappedArgumentsObject : public ArgumentsObject
   public:
     static const Class class_;
 
-    /*
-     * Stores arguments.callee, or MagicValue(JS_ARGS_HOLE) if the callee has
-     * been cleared.
-     */
     const js::Value& callee() const {
         return getFixedSlot(CALLEE_SLOT);
     }
 
-    /* Clear the location storing arguments.callee's initial value. */
-    void clearCallee() {
-        setFixedSlot(CALLEE_SLOT, MagicValue(JS_OVERWRITTEN_CALLEE));
+    bool hasOverriddenCallee() const {
+        const Value& v = getFixedSlot(INITIAL_LENGTH_SLOT);
+        return v.toInt32() & CALLEE_OVERRIDDEN_BIT;
+    }
+
+    void markCalleeOverridden() {
+        uint32_t v = getFixedSlot(INITIAL_LENGTH_SLOT).toInt32() | CALLEE_OVERRIDDEN_BIT;
+        setFixedSlot(INITIAL_LENGTH_SLOT, Int32Value(v));
     }
 
   private:

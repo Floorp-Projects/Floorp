@@ -372,7 +372,7 @@ ArgumentsObject::obj_delProperty(JSContext* cx, HandleObject obj, HandleId id,
     } else if (JSID_IS_ATOM(id, cx->names().length)) {
         argsobj.markLengthOverridden();
     } else if (JSID_IS_ATOM(id, cx->names().callee)) {
-        argsobj.as<MappedArgumentsObject>().clearCallee();
+        argsobj.as<MappedArgumentsObject>().markCalleeOverridden();
     } else if (JSID_IS_SYMBOL(id) && JSID_TO_SYMBOL(id) == cx->wellKnownSymbols().iterator) {
         argsobj.markIteratorOverridden();
     }
@@ -396,7 +396,7 @@ MappedArgGetter(JSContext* cx, HandleObject obj, HandleId id, MutableHandleValue
             vp.setInt32(argsobj.initialLength());
     } else {
         MOZ_ASSERT(JSID_IS_ATOM(id, cx->names().callee));
-        if (!argsobj.callee().isMagic(JS_OVERWRITTEN_CALLEE))
+        if (!argsobj.hasOverriddenCallee())
             vp.set(argsobj.callee());
     }
     return true;
@@ -487,7 +487,7 @@ MappedArgumentsObject::obj_resolve(JSContext* cx, HandleObject obj, HandleId id,
         if (!JSID_IS_ATOM(id, cx->names().callee))
             return true;
 
-        if (argsobj->callee().isMagic(JS_OVERWRITTEN_CALLEE))
+        if (argsobj->hasOverriddenCallee())
             return true;
     }
 
