@@ -134,23 +134,6 @@ IMETextTxn::GetTxnDescription(nsAString& aString)
 }
 
 /* ============ private methods ================== */
-static RawSelectionType
-ToRawSelectionType(TextRangeType aTextRangeType)
-{
-  switch (aTextRangeType) {
-    case TextRangeType::eRawClause:
-      return nsISelectionController::SELECTION_IME_RAWINPUT;
-    case TextRangeType::eSelectedRawClause:
-      return nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT;
-    case TextRangeType::eConvertedClause:
-      return nsISelectionController::SELECTION_IME_CONVERTEDTEXT;
-    case TextRangeType::eSelectedClause:
-      return nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT;
-    default:
-      MOZ_CRASH("Selection type is invalid");
-      return nsISelectionController::SELECTION_NORMAL;
-  }
-}
 
 nsresult
 IMETextTxn::SetSelectionForRanges()

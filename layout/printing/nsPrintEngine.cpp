@@ -1099,7 +1099,7 @@ nsPrintEngine::IsThereARangeSelection(nsPIDOMWindowOuter* aDOMWin)
   // check here to see if there is a range selection
   // so we know whether to turn on the "Selection" radio button
   Selection* selection =
-    presShell->GetCurrentSelection(nsISelectionController::SELECTION_NORMAL);
+    presShell->GetCurrentSelection(SelectionType::SELECTION_NORMAL);
   if (!selection) {
     return false;
   }
@@ -1960,9 +1960,9 @@ nsPrintEngine::UpdateSelectionAndShrinkPrintObject(nsPrintObject* aPO,
   RefPtr<Selection> selection, selectionPS;
   // It's okay if there is no display shell, just skip copying the selection
   if (displayShell) {
-    selection = displayShell->GetCurrentSelection(nsISelectionController::SELECTION_NORMAL);
+    selection = displayShell->GetCurrentSelection(SelectionType::SELECTION_NORMAL);
   }
-  selectionPS = aPO->mPresShell->GetCurrentSelection(nsISelectionController::SELECTION_NORMAL);
+  selectionPS = aPO->mPresShell->GetCurrentSelection(SelectionType::SELECTION_NORMAL);
 
   // Reset all existing selection ranges that might have been added by calling
   // this function before.
@@ -2373,9 +2373,9 @@ static nsresult CloneSelection(nsIDocument* aOrigDoc, nsIDocument* aDoc)
   NS_ENSURE_STATE(origShell && shell);
 
   RefPtr<Selection> origSelection =
-    origShell->GetCurrentSelection(nsISelectionController::SELECTION_NORMAL);
+    origShell->GetCurrentSelection(SelectionType::SELECTION_NORMAL);
   RefPtr<Selection> selection =
-    shell->GetCurrentSelection(nsISelectionController::SELECTION_NORMAL);
+    shell->GetCurrentSelection(SelectionType::SELECTION_NORMAL);
   NS_ENSURE_STATE(origSelection && selection);
 
   int32_t rangeCount = origSelection->RangeCount();

@@ -170,7 +170,7 @@ HyperTextAccessible::DOMSelection() const
 {
   RefPtr<nsFrameSelection> frameSelection = FrameSelection();
   return frameSelection ?
-    frameSelection->GetSelection(nsISelectionController::SELECTION_NORMAL) :
+    frameSelection->GetSelection(SelectionType::SELECTION_NORMAL) :
     nullptr;
 }
 

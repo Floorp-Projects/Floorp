@@ -704,7 +704,7 @@ AccessibleCaretManager::GetSelection() const
   if (!fs) {
     return nullptr;
   }
-  return fs->GetSelection(nsISelectionController::SELECTION_NORMAL);
+  return fs->GetSelection(SelectionType::SELECTION_NORMAL);
 }
 
 already_AddRefed<nsFrameSelection>

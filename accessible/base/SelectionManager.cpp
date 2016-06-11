@@ -60,13 +60,13 @@ SelectionManager::ClearControlSelectionListener()
 
   // Remove 'this' registered as selection listener for the normal selection.
   Selection* normalSel =
-    frameSel->GetSelection(nsISelectionController::SELECTION_NORMAL);
+    frameSel->GetSelection(SelectionType::SELECTION_NORMAL);
   normalSel->RemoveSelectionListener(this);
 
   // Remove 'this' registered as selection listener for the spellcheck
   // selection.
   Selection* spellSel =
-    frameSel->GetSelection(nsISelectionController::SELECTION_SPELLCHECK);
+    frameSel->GetSelection(SelectionType::SELECTION_SPELLCHECK);
   spellSel->RemoveSelectionListener(this);
 }
 
@@ -89,12 +89,12 @@ SelectionManager::SetControlSelectionListener(dom::Element* aFocusedElm)
 
   // Register 'this' as selection listener for the normal selection.
   Selection* normalSel =
-    frameSel->GetSelection(nsISelectionController::SELECTION_NORMAL);
+    frameSel->GetSelection(SelectionType::SELECTION_NORMAL);
   normalSel->AddSelectionListener(this);
 
   // Register 'this' as selection listener for the spell check selection.
   Selection* spellSel =
-    frameSel->GetSelection(nsISelectionController::SELECTION_SPELLCHECK);
+    frameSel->GetSelection(SelectionType::SELECTION_SPELLCHECK);
   spellSel->AddSelectionListener(this);
 }
 
@@ -105,12 +105,12 @@ SelectionManager::AddDocSelectionListener(nsIPresShell* aPresShell)
 
   // Register 'this' as selection listener for the normal selection.
   Selection* normalSel =
-    frameSel->GetSelection(nsISelectionController::SELECTION_NORMAL);
+    frameSel->GetSelection(SelectionType::SELECTION_NORMAL);
   normalSel->AddSelectionListener(this);
 
   // Register 'this' as selection listener for the spell check selection.
   Selection* spellSel =
-    frameSel->GetSelection(nsISelectionController::SELECTION_SPELLCHECK);
+    frameSel->GetSelection(SelectionType::SELECTION_SPELLCHECK);
   spellSel->AddSelectionListener(this);
 }
 
@@ -121,13 +121,13 @@ SelectionManager::RemoveDocSelectionListener(nsIPresShell* aPresShell)
 
   // Remove 'this' registered as selection listener for the normal selection.
   Selection* normalSel =
-    frameSel->GetSelection(nsISelectionController::SELECTION_NORMAL);
+    frameSel->GetSelection(SelectionType::SELECTION_NORMAL);
   normalSel->RemoveSelectionListener(this);
 
   // Remove 'this' registered as selection listener for the spellcheck
   // selection.
   Selection* spellSel =
-    frameSel->GetSelection(nsISelectionController::SELECTION_SPELLCHECK);
+    frameSel->GetSelection(SelectionType::SELECTION_SPELLCHECK);
   spellSel->RemoveSelectionListener(this);
 }
 
@@ -225,12 +225,12 @@ SelectionManager::ProcessSelectionChanged(SelData* aSelData)
     return;
   }
 
-  if (selection->GetType() == nsISelectionController::SELECTION_NORMAL) {
+  if (selection->GetType() == SelectionType::SELECTION_NORMAL) {
     RefPtr<AccEvent> event =
       new AccTextSelChangeEvent(text, selection, aSelData->mReason);
     text->Document()->FireDelayedEvent(event);
 
-  } else if (selection->GetType() == nsISelectionController::SELECTION_SPELLCHECK) {
+  } else if (selection->GetType() == SelectionType::SELECTION_SPELLCHECK) {
     // XXX: fire an event for container accessible of the focus/anchor range
     // of the spelcheck selection.
     text->Document()->FireDelayedEvent(nsIAccessibleEvent::EVENT_TEXT_ATTRIBUTE_CHANGED,
