@@ -185,8 +185,7 @@ FFmpegDataDecoder<LIBAV_VER>::ProcessShutdown()
 #elif LIBAVCODEC_VERSION_MAJOR == 54
     mLib->avcodec_free_frame(&mFrame);
 #else
-    delete mFrame;
-    mFrame = nullptr;
+    mLib->av_freep(&mFrame);
 #endif
   }
 }
@@ -208,9 +207,8 @@ FFmpegDataDecoder<LIBAV_VER>::PrepareFrame()
     mFrame = mLib->avcodec_alloc_frame();
   }
 #else
-  delete mFrame;
-  mFrame = new AVFrame;
-  mLib->avcodec_get_frame_defaults(mFrame);
+  mLib->av_freep(&mFrame);
+  mFrame = mLib->avcodec_alloc_frame();
 #endif
   return mFrame;
 }
