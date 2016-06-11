@@ -8521,6 +8521,11 @@ CSSParserImpl::ParseGridAutoFlow()
   return true;
 }
 
+static const nsCSSKeyword kGridLineKeywords[] = {
+  eCSSKeyword_span,
+  eCSSKeyword_UNKNOWN  // End-of-array marker
+};
+
 CSSParseResult
 CSSParserImpl::ParseGridLineNames(nsCSSValue& aValue)
 {
@@ -8552,7 +8557,7 @@ CSSParserImpl::ParseGridLineNames(nsCSSValue& aValue)
   }
   for (;;) {
     if (!(eCSSToken_Ident == mToken.mType &&
-          ParseCustomIdent(item->mValue, mToken.mIdent))) {
+          ParseCustomIdent(item->mValue, mToken.mIdent, kGridLineKeywords))) {
       UngetToken();
       SkipUntil(']');
       return CSSParseResult::Error;
@@ -9560,10 +9565,6 @@ CSSParserImpl::ParseGridLine(nsCSSValue& aValue)
     return true;
   }
 
-  static const nsCSSKeyword kGridLineKeywords[] = {
-    eCSSKeyword_span,
-    eCSSKeyword_UNKNOWN  // End-of-array marker
-  };
   bool hasSpan = false;
   bool hasIdent = false;
   Maybe<int32_t> integer;
