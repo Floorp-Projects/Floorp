@@ -11,7 +11,10 @@
 #include "mozilla/Maybe.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/ipc/GeckoChildProcessHost.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/ipc/TaskFactory.h"
+
+class nsITimer;
 
 namespace mozilla {
 namespace gfx {
@@ -27,10 +30,18 @@ class GPUChild;
 // at a time due to its shutdown being asynchronous.
 class GPUProcessHost final : public ipc::GeckoChildProcessHost
 {
+  friend class GPUChild;
+
 public:
   class Listener {
   public:
     virtual void OnProcessLaunchComplete(GPUProcessHost* aHost)
+    {}
+
+    // The GPUProcessHost has unexpectedly shutdown or had its connection
+    // severed. This is not called if an error occurs after calling
+    // Shutdown().
+    virtual void OnProcessUnexpectedShutdown(GPUProcessHost* aHost)
     {}
   };
 
@@ -71,6 +82,8 @@ public:
   void OnChannelConnected(int32_t peer_pid) override;
   void OnChannelError() override;
 
+  void SetListener(Listener* aListener);
+
 private:
   // Called on the main thread.
   void OnChannelConnectedTask();
@@ -78,6 +91,12 @@ private:
 
   // Called on the main thread after a connection has been established.
   void InitAfterConnect(bool aSucceeded);
+
+  // Called on the main thread when the mGPUChild actor is shutting down.
+  void OnChannelClosed();
+
+  // Kill the remote process, triggering IPC shutdown.
+  void KillHard(const char* aReason);
 
   void DestroyProcess();
 
@@ -95,6 +114,9 @@ private:
   LaunchPhase mLaunchPhase;
 
   UniquePtr<GPUChild> mGPUChild;
+  Listener* listener_;
+
+  bool mShutdownRequested;
 };
 
 } // namespace gfx

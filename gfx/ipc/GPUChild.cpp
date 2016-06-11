@@ -4,11 +4,13 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "GPUChild.h"
+#include "GPUProcessHost.h"
 
 namespace mozilla {
 namespace gfx {
 
-GPUChild::GPUChild()
+GPUChild::GPUChild(GPUProcessHost* aHost)
+ : mHost(aHost)
 {
   MOZ_COUNT_CTOR(GPUChild);
 }
@@ -16,6 +18,34 @@ GPUChild::GPUChild()
 GPUChild::~GPUChild()
 {
   MOZ_COUNT_DTOR(GPUChild);
+}
+
+void
+GPUChild::ActorDestroy(ActorDestroyReason aWhy)
+{
+  mHost->OnChannelClosed();
+}
+
+class DeferredDeleteGPUChild : public Runnable
+{
+public:
+  explicit DeferredDeleteGPUChild(UniquePtr<GPUChild>&& aChild)
+    : mChild(Move(aChild))
+  {
+  }
+
+  NS_IMETHODIMP Run() override {
+    return NS_OK;
+  }
+
+private:
+  UniquePtr<GPUChild> mChild;
+};
+
+/* static */ void
+GPUChild::Destroy(UniquePtr<GPUChild>&& aChild)
+{
+  NS_DispatchToMainThread(new DeferredDeleteGPUChild(Move(aChild)));
 }
 
 } // namespace gfx
