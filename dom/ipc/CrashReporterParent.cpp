@@ -112,12 +112,6 @@ CrashReporterParent::GenerateCrashReportForMinidump(nsIFile* minidump,
 }
 
 bool
-CrashReporterParent::UseMinidump(nsIFile* aMinidump)
-{
-  return CrashReporter::GetIDFromMinidump(aMinidump, mChildDumpID);
-}
-
-bool
 CrashReporterParent::GenerateChildData(const AnnotationTable* processNotes)
 {
   MOZ_ASSERT(mInitialized);
