@@ -4,63 +4,60 @@
 
 /* File locked complete MAR file staged patch apply failure test */
 
+const STATE_AFTER_STAGE = IS_SERVICE_TEST ? STATE_PENDING : STATE_APPLYING;
+
 function run_test() {
-  if (!shouldRunServiceTest()) {
+  if (!setupTestCommon()) {
     return;
   }
-
-  gStageUpdate = true;
-  setupTestCommon();
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   setTestFilesAndDirsForFailure();
-  setupUpdaterTest(FILE_COMPLETE_MAR);
-
-  // Exclusively lock an existing file so it is in use during the update.
-  let helperBin = getTestDirFile(FILE_HELPER_BIN);
-  let helperDestDir = getApplyDirFile(DIR_RESOURCES);
-  helperBin.copyTo(helperDestDir, FILE_HELPER_BIN);
-  helperBin = getApplyDirFile(DIR_RESOURCES + FILE_HELPER_BIN);
-  // Strip off the first two directories so the path has to be from the helper's
-  // working directory.
-  let lockFileRelPath = gTestFiles[3].relPathDir.split("/");
-  if (IS_MACOSX) {
-    lockFileRelPath = lockFileRelPath.slice(2);
-  }
-  lockFileRelPath = lockFileRelPath.join("/") + "/" + gTestFiles[3].fileName;
-  let args = [getApplyDirPath() + DIR_RESOURCES, "input", "output", "-s",
-              HELPER_SLEEP_TIMEOUT, lockFileRelPath];
-  let lockFileProcess = Cc["@mozilla.org/process/util;1"].
-                        createInstance(Ci.nsIProcess);
-  lockFileProcess.init(helperBin);
-  lockFileProcess.run(false, args, args.length);
-
-  setupAppFilesAsync();
+  setupUpdaterTest(FILE_COMPLETE_MAR, false);
 }
 
-function setupAppFilesFinished() {
-  do_timeout(TEST_HELPER_TIMEOUT, waitForHelperSleep);
+/**
+ * Called after the call to setupUpdaterTest finishes.
+ */
+function setupUpdaterTestFinished() {
+  runHelperLockFile(gTestFiles[3]);
 }
 
-function doUpdate() {
-  runUpdateUsingService(STATE_PENDING_SVC, STATE_FAILED_WRITE_ERROR_FILE_COPY);
+/**
+ * Called after the call to waitForHelperSleep finishes.
+ */
+function waitForHelperSleepFinished() {
+  stageUpdate();
 }
 
-function checkUpdateFinished() {
+/**
+ * Called after the call to stageUpdate finishes.
+ */
+function stageUpdateFinished() {
+  checkPostUpdateRunningFile(false);
+  // Files aren't checked after staging since this test locks a file which
+  // prevents reading the file.
+  checkUpdateLogContains(ERR_ENSURE_COPY);
   // Switch the application to the staged application that was updated.
-  gStageUpdate = false;
-  gSwitchApp = true;
-  runUpdate(1, STATE_PENDING, checkUpdateApplied);
+  runUpdate(STATE_FAILED_WRITE_ERROR, false, 1, false);
 }
 
-function checkUpdateApplied() {
-  setupHelperFinish();
+/**
+ * Called after the call to runUpdate finishes.
+ */
+function runUpdateFinished() {
+  waitForHelperExit();
 }
 
-function checkUpdate() {
-  checkFilesAfterUpdateFailure(getApplyDirFile, false, false);
-  checkUpdateLogContains(ERR_RENAME_FILE);
-  checkUpdateLogContains(ERR_MOVE_DESTDIR_7);
+/**
+ * Called after the call to waitForHelperExit finishes.
+ */
+function waitForHelperExitFinished() {
   standardInit();
-  checkCallbackAppLog();
+  checkPostUpdateRunningFile(false);
+  checkFilesAfterUpdateFailure(getApplyDirFile);
+  checkUpdateLogContains(ERR_RENAME_FILE);
+  checkUpdateLogContains(ERR_BACKUP_CREATE_7);
+  checkUpdateLogContains(STATE_FAILED_WRITE_ERROR + "\n" + CALL_QUIT);
+  checkCallbackLog();
 }

@@ -10,30 +10,32 @@ function run_test() {
     return;
   }
 
-  setupTestCommon();
-  // We don't actually care if the MAR has any data, we only care about the
-  // application return code and update.status result.
-  gTestFiles = gTestFilesCommon;
-  gTestDirs = [];
-  setupUpdaterTest(FILE_OLD_VERSION_MAR);
-
-  createUpdaterINI(true);
-
-  // Apply the MAR
-  // Note that if execv is used, the updater process will turn into the
-  // callback process, so its return code will be that of the callback
-  // app.
-  runUpdate((USE_EXECV ? 0 : 1), STATE_FAILED_VERSION_DOWNGRADE_ERROR,
-            checkUpdateApplied);
+  if (!setupTestCommon()) {
+    return;
+  }
+  gTestFiles = gTestFilesCompleteSuccess;
+  gTestDirs = gTestDirsCompleteSuccess;
+  setTestFilesAndDirsForFailure();
+  setupUpdaterTest(FILE_OLD_VERSION_MAR, false);
 }
 
 /**
- * Checks if the update has finished and if it has finished performs checks for
- * the test.
+ * Called after the call to setupUpdaterTest finishes.
  */
-function checkUpdateApplied() {
-  checkPostUpdateRunningFile(false);
-  checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
+function setupUpdaterTestFinished() {
+  // If execv is used the updater process will turn into the callback process
+  // and the updater's return code will be that of the callback process.
+  runUpdateUsingUpdater(STATE_FAILED_VERSION_DOWNGRADE_ERROR, false,
+                        (USE_EXECV ? 0 : 1));
+}
+
+/**
+ * Called after the call to runUpdateUsingUpdater finishes.
+ */
+function runUpdateFinished() {
   standardInit();
-  doTestFinish();
+  checkPostUpdateRunningFile(false);
+  checkFilesAfterUpdateFailure(getApplyDirFile);
+  checkUpdateLogContains(STATE_FAILED_VERSION_DOWNGRADE_ERROR);
+  waitForFilesInUse();
 }

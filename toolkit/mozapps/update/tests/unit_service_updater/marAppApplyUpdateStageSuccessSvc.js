@@ -7,230 +7,68 @@
  * apply it.
  */
 
-const START_STATE = STATE_PENDING_SVC;
-const END_STATE = STATE_APPLIED_SVC;
+const STATE_AFTER_STAGE = IS_SERVICE_TEST ? STATE_APPLIED_SVC : STATE_APPLIED;
 
 function run_test() {
-  if (MOZ_APP_NAME == "xulrunner") {
-    logTestInfo("Unable to run this test on xulrunner");
+  if (!setupTestCommon()) {
     return;
   }
 
-  if (!shouldRunServiceTest()) {
-    return;
-  }
-
-  setupTestCommon();
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
-  setupUpdaterTest(FILE_COMPLETE_MAR);
-
-  createUpdaterINI(false);
-
-  if (IS_WIN) {
-    Services.prefs.setBoolPref(PREF_APP_UPDATE_SERVICE_ENABLED, true);
-  }
-
-  let channel = Services.prefs.getCharPref(PREF_APP_UPDATE_CHANNEL);
-  let patches = getLocalPatchString(null, null, null, null, null, "true",
-                                    START_STATE);
-  let updates = getLocalUpdateString(patches, null, null, null, null, null,
-                                     null, null, null, null, null, null,
-                                     "true", channel);
-  writeUpdatesToXMLFile(getLocalUpdatesXMLString(updates), true);
-  writeVersionFile(getAppVersion());
-  writeStatusFile(START_STATE);
-
-  reloadUpdateManagerData();
-  Assert.ok(!!gUpdateManager.activeUpdate,
-            "the active update should be defined");
-
-  setupAppFilesAsync();
+  setupUpdaterTest(FILE_COMPLETE_MAR, true);
 }
 
-function setupAppFilesFinished() {
-  setAppBundleModTime();
+/**
+ * Called after the call to setupUpdaterTest finishes.
+ */
+function setupUpdaterTestFinished() {
   stageUpdate();
 }
 
 /**
- * Checks if the update has finished being staged.
+ * Called after the call to stageUpdate finishes.
  */
-function checkUpdateApplied() {
-  gTimeoutRuns++;
-  // Don't proceed until the active update's state is the expected value.
-  if (gUpdateManager.activeUpdate.state != END_STATE) {
-    if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-      do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the " +
-               "active update status state to equal: " +
-               END_STATE +
-               ", current state: " + gUpdateManager.activeUpdate.state);
-    }
-    do_timeout(TEST_CHECK_TIMEOUT, checkUpdateApplied);
-    return;
-  }
-
-  // Don't proceed until the update's status state is the expected value.
-  let state = readStatusState();
-  if (state != END_STATE) {
-    if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-      do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the update " +
-               "status state to equal: " +
-               END_STATE +
-               ", current status state: " + state);
-    }
-    do_timeout(TEST_CHECK_TIMEOUT, checkUpdateApplied);
-    return;
-  }
-
-  // Don't proceed until the last update log has been created.
-  let log;
-  if (IS_WIN || IS_MACOSX) {
-    log = getUpdatesDir();
-  } else {
-    log = getStageDirFile(null, true);
-    log.append(DIR_UPDATES);
-  }
-  log.append(FILE_LAST_LOG);
-  if (!log.exists()) {
-    if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-      do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the update log " +
-               "to be created. Path: " + log.path);
-    }
-    do_timeout(TEST_CHECK_TIMEOUT, checkUpdateApplied);
-    return;
-  }
-
+function stageUpdateFinished() {
   checkPostUpdateRunningFile(false);
-  checkFilesAfterUpdateSuccess(getStageDirFile, true, false);
-
-  log = getUpdatesPatchDir();
-  log.append(FILE_UPDATE_LOG);
-  Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
-
-  log = getUpdatesDir();
-  log.append(FILE_LAST_LOG);
-  if (IS_WIN || IS_MACOSX) {
-    Assert.ok(log.exists(), MSG_SHOULD_EXIST);
-  } else {
-    Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
-  }
-
-  log = getUpdatesDir();
-  log.append(FILE_BACKUP_LOG);
-  Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
-
-  let updatesDir = getStageDirFile(DIR_UPDATES + "/" + DIR_PATCH, true);
-  Assert.ok(!updatesDir.exists(), MSG_SHOULD_NOT_EXIST);
-
-  log = getStageDirFile(DIR_UPDATES + "/" + FILE_LAST_LOG, true);
-  if (IS_WIN || IS_MACOSX) {
-    Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
-  } else {
-    Assert.ok(log.exists(), MSG_SHOULD_EXIST);
-  }
-
-  log = getStageDirFile(DIR_UPDATES + "/" + FILE_BACKUP_LOG, true);
-  Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
-
-  // Switch the application to the staged application that was updated by
-  // launching the application.
-  do_timeout(TEST_CHECK_TIMEOUT, launchAppToApplyUpdate);
+  checkFilesAfterUpdateSuccess(getStageDirFile, true);
+  checkUpdateLogContents(LOG_COMPLETE_SUCCESS_STAGE, true);
+  // Switch the application to the staged application that was updated.
+  runUpdateUsingApp(STATE_SUCCEEDED);
 }
 
 /**
- * Checks if the post update binary was properly launched for the platforms that
- * support launching post update process.
+ * Called after the call to runUpdateUsingApp finishes.
  */
-function checkUpdateFinished() {
-  if (IS_WIN || IS_MACOSX) {
-    gCheckFunc = finishCheckUpdateApplied;
-    checkPostUpdateAppLog();
-  } else {
-    finishCheckUpdateApplied();
-  }
+function runUpdateFinished() {
+  checkPostUpdateAppLog();
 }
 
 /**
- * Checks if the update has finished and if it has finished performs checks for
- * the test.
+ * Called after the call to checkPostUpdateAppLog finishes.
  */
-function finishCheckUpdateApplied() {
-  gTimeoutRuns++;
-  // Don't proceed until the update's status state is the expected value.
-  let state = readStatusState();
-  if (state != STATE_SUCCEEDED) {
-    if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-      do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the " +
-               "update status file state to equal: " +
-               STATE_SUCCEEDED +
-               ", current status state: " + state);
-    }
-    do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
-    return;
-  }
-
-  // Don't proceed until the application was switched out with the staged update
-  // successfully.
-  let updatedDir = getStageDirFile(null, true);
-  if (updatedDir.exists()) {
-    if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-      do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the updated " +
-               "directory to not exist. Path: " + updatedDir.path);
-    }
-    do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
-    return;
-  }
-
-  if (IS_WIN) {
-    // Don't proceed until the updater binary is no longer in use.
-    let updater = getUpdatesPatchDir();
-    updater.append(FILE_UPDATER_BIN);
-    if (updater.exists()) {
-      if (gTimeoutRuns > MAX_TIMEOUT_RUNS) {
-        do_throw("Exceeded MAX_TIMEOUT_RUNS while waiting for the " +
-                 "updater binary to no longer be in use");
-      }
-      try {
-        updater.remove(false);
-      } catch (e) {
-        do_timeout(TEST_CHECK_TIMEOUT, checkUpdateFinished);
-        return;
-      }
-    }
-  }
-
-  checkPostUpdateRunningFile(true);
+function checkPostUpdateAppLogFinished() {
   checkAppBundleModTime();
-  checkFilesAfterUpdateSuccess(getApplyDirFile, false, true);
-  gSwitchApp = true;
-  checkUpdateLogContents();
-  gSwitchApp = false;
-
   standardInit();
-
-  let update = gUpdateManager.getUpdateAt(0);
-  Assert.equal(update.state, STATE_SUCCEEDED,
-               "the update state" + MSG_SHOULD_EQUAL);
+  checkPostUpdateRunningFile(true);
+  checkFilesAfterUpdateSuccess(getApplyDirFile, false, true);
+  checkUpdateLogContents(LOG_REPLACE_SUCCESS, false, true);
 
   let updatesDir = getUpdatesPatchDir();
-  Assert.ok(updatesDir.exists(), MSG_SHOULD_EXIST);
+  Assert.ok(updatesDir.exists(),
+            MSG_SHOULD_EXIST + getMsgPath(updatesDir.path));
 
-  let log = getUpdatesPatchDir();
-  log.append(FILE_UPDATE_LOG);
-  Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
+  let log = getUpdateLog(FILE_UPDATE_LOG);
+  Assert.ok(!log.exists(),
+            MSG_SHOULD_NOT_EXIST + getMsgPath(log.path));
 
-  log = getUpdatesDir();
-  log.append(FILE_LAST_LOG);
-  Assert.ok(log.exists(), MSG_SHOULD_EXIST);
+  log = getUpdateLog(FILE_LAST_UPDATE_LOG);
+  Assert.ok(log.exists(),
+            MSG_SHOULD_EXIST + getMsgPath(log.path));
 
-  log = getUpdatesDir();
-  log.append(FILE_BACKUP_LOG);
-  if (IS_WIN || IS_MACOSX) {
-    Assert.ok(log.exists(), MSG_SHOULD_EXIST);
-  } else {
-    Assert.ok(!log.exists(), MSG_SHOULD_NOT_EXIST);
-  }
+  log = getUpdateLog(FILE_BACKUP_UPDATE_LOG);
+  Assert.ok(log.exists(),
+            MSG_SHOULD_EXIST + getMsgPath(log.path));
 
   waitForFilesInUse();
 }
