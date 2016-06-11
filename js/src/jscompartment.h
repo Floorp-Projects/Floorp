@@ -847,6 +847,8 @@ struct JSCompartment
 
     js::ArgumentsObject* getOrCreateArgumentsTemplateObject(JSContext* cx, bool mapped);
 
+    js::ArgumentsObject* maybeArgumentsTemplateObject(bool mapped) const;
+
   private:
     // Used for collecting telemetry on SpiderMonkey's deprecated language extensions.
     bool sawDeprecatedLanguageExtension[DeprecatedLanguageExtensionCount];

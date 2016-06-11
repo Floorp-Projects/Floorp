@@ -5949,15 +5949,46 @@ CodeGenerator::visitCreateArgumentsObject(LCreateArgumentsObject* lir)
     // This should be getting constructed in the first block only, and not any OSR entry blocks.
     MOZ_ASSERT(lir->mir()->block()->id() == 0);
 
-    const LAllocation* callObj = lir->getCallObject();
-    Register temp = ToRegister(lir->getTemp(0));
+    Register callObj = ToRegister(lir->getCallObject());
+    Register temp = ToRegister(lir->temp0());
+    Label done;
+
+    if (ArgumentsObject* templateObj = lir->mir()->templateObject()) {
+        Register objTemp = ToRegister(lir->temp1());
+        Register cxTemp = ToRegister(lir->temp2());
+
+        // Try to allocate an arguments object. This will leave the reserved
+        // slots uninitialized, so it's important we don't GC until we
+        // initialize these slots in ArgumentsObject::finishForIon.
+        Label failure;
+        masm.createGCObject(objTemp, temp, templateObj, gc::DefaultHeap, &failure,
+                            /* initContents = */ false);
+
+        masm.moveStackPtrTo(temp);
+        masm.addPtr(Imm32(frameSize()), temp);
+
+        masm.setupUnalignedABICall(cxTemp);
+        masm.loadJSContext(cxTemp);
+        masm.passABIArg(cxTemp);
+        masm.passABIArg(temp);
+        masm.passABIArg(callObj);
+        masm.passABIArg(objTemp);
+
+        masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, ArgumentsObject::finishForIon));
+        masm.branchTestPtr(Assembler::Zero, ReturnReg, ReturnReg, masm.exceptionLabel());
+        masm.jump(&done);
+
+        masm.bind(&failure);
+    }
 
     masm.moveStackPtrTo(temp);
     masm.addPtr(Imm32(frameSize()), temp);
 
-    pushArg(ToRegister(callObj));
+    pushArg(callObj);
     pushArg(temp);
     callVM(NewIonArgumentsObjectInfo, lir);
+
+    masm.bind(&done);
 }
 
 void

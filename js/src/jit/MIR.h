@@ -5058,8 +5058,11 @@ class MCreateArgumentsObject
   : public MUnaryInstruction,
     public ObjectPolicy<0>::Data
 {
-    explicit MCreateArgumentsObject(MDefinition* callObj)
-      : MUnaryInstruction(callObj)
+    CompilerGCPointer<ArgumentsObject*> templateObj_;
+
+    MCreateArgumentsObject(MDefinition* callObj, ArgumentsObject* templateObj)
+      : MUnaryInstruction(callObj),
+        templateObj_(templateObj)
     {
         setResultType(MIRType::Object);
         setGuard();
@@ -5067,12 +5070,17 @@ class MCreateArgumentsObject
 
   public:
     INSTRUCTION_HEADER(CreateArgumentsObject)
-    static MCreateArgumentsObject* New(TempAllocator& alloc, MDefinition* callObj) {
-        return new(alloc) MCreateArgumentsObject(callObj);
+    static MCreateArgumentsObject* New(TempAllocator& alloc, MDefinition* callObj,
+                                       ArgumentsObject* templateObj) {
+        return new(alloc) MCreateArgumentsObject(callObj, templateObj);
     }
 
     MDefinition* getCallObject() const {
         return getOperand(0);
+    }
+
+    ArgumentsObject* templateObject() const {
+        return templateObj_;
     }
 
     AliasSet getAliasSet() const override {

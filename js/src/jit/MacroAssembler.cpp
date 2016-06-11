@@ -1120,6 +1120,11 @@ MacroAssembler::initGCThing(Register obj, Register temp, JSObject* templateObj,
                           : 0),
                     Address(obj, elementsOffset + ObjectElements::offsetOfFlags()));
             MOZ_ASSERT(!ntemplate->hasPrivate());
+        } else if (ntemplate->is<ArgumentsObject>()) {
+            // The caller will initialize the reserved slots.
+            MOZ_ASSERT(!initContents);
+            MOZ_ASSERT(!ntemplate->hasPrivate());
+            storePtr(ImmPtr(emptyObjectElements), Address(obj, NativeObject::offsetOfElements()));
         } else {
             // If the target type could be a TypedArray that maps shared memory
             // then this would need to store emptyObjectElementsShared in that case.
