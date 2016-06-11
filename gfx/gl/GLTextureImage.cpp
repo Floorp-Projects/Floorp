@@ -84,7 +84,7 @@ TextureImage::Create(GLContext* gl,
 }
 
 bool
-TextureImage::UpdateFromDataSource(gfx::DataSourceSurface *aSurface,
+TextureImage::UpdateFromDataSource(gfx::DataSourceSurface* aSurface,
                                    const nsIntRegion* aDestRegion,
                                    const gfx::IntPoint* aSrcPoint)
 {
@@ -117,7 +117,7 @@ TextureImage::UpdateUploadSize(size_t amount)
 
 BasicTextureImage::~BasicTextureImage()
 {
-    GLContext *ctx = mGLContext;
+    GLContext* ctx = mGLContext;
     if (ctx->IsDestroyed() || !ctx->IsOwningThreadCurrent()) {
         ctx = ctx->GetSharedContext();
     }
