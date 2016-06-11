@@ -20,6 +20,53 @@
 using namespace js;
 using namespace js::gc;
 
+/* static */ size_t
+RareArgumentsData::bytesRequired(size_t numActuals)
+{
+    size_t extraBytes = NumWordsForBitArrayOfLength(numActuals) * sizeof(size_t);
+    return sizeof(RareArgumentsData) + extraBytes;
+}
+
+/* static */ RareArgumentsData*
+RareArgumentsData::create(JSContext* cx, ArgumentsObject* obj)
+{
+    size_t bytes = RareArgumentsData::bytesRequired(obj->initialLength());
+
+    uint8_t* data = AllocateObjectBuffer<uint8_t>(cx, obj, bytes);
+    if (!data)
+        return nullptr;
+
+    mozilla::PodZero(data, bytes);
+
+    size_t* deletedBits = reinterpret_cast<size_t*>(data + sizeof(RareArgumentsData));
+
+    return new(data) RareArgumentsData(deletedBits);
+}
+
+bool
+ArgumentsObject::createRareData(JSContext* cx)
+{
+    MOZ_ASSERT(!data()->rareData);
+
+    RareArgumentsData* rareData = RareArgumentsData::create(cx, this);
+    if (!rareData)
+        return false;
+
+    data()->rareData = rareData;
+    return true;
+}
+
+bool
+ArgumentsObject::markElementDeleted(JSContext* cx, uint32_t i)
+{
+    RareArgumentsData* data = getOrCreateRareData(cx);
+    if (!data)
+        return false;
+
+    data->markElementDeleted(initialLength(), i);
+    return true;
+}
+
 static void
 CopyStackFrameArguments(const AbstractFramePtr frame, GCPtrValue* dst, unsigned totalArgs)
 {
@@ -218,10 +265,8 @@ ArgumentsObject::create(JSContext* cx, HandleFunction callee, unsigned numActual
     RootedObjectGroup group(cx, templateObj->group());
 
     unsigned numFormals = callee->nargs();
-    unsigned numDeletedWords = NumWordsForBitArrayOfLength(numActuals);
     unsigned numArgs = Max(numActuals, numFormals);
     unsigned numBytes = offsetof(ArgumentsData, args) +
-                        numDeletedWords * sizeof(size_t) +
                         numArgs * sizeof(Value);
 
     Rooted<ArgumentsObject*> obj(cx);
@@ -246,6 +291,7 @@ ArgumentsObject::create(JSContext* cx, HandleFunction callee, unsigned numActual
 
         data->numArgs = numArgs;
         data->dataBytes = numBytes;
+        data->rareData = nullptr;
         data->callee.init(ObjectValue(*callee.get()));
         data->script = callee->nonLazyScript();
 
@@ -261,9 +307,6 @@ ArgumentsObject::create(JSContext* cx, HandleFunction callee, unsigned numActual
 
     /* Copy [0, numArgs) into data->slots. */
     copy.copyArgs(cx, data->args, numArgs);
-
-    data->deletedBits = reinterpret_cast<size_t*>(data->args + numArgs);
-    ClearAllBitArrayElements(data->deletedBits, numDeletedWords);
 
     obj->initFixedSlot(INITIAL_LENGTH_SLOT, Int32Value(numActuals << PACKED_BITS_COUNT));
 
@@ -322,8 +365,10 @@ ArgumentsObject::obj_delProperty(JSContext* cx, HandleObject obj, HandleId id,
     ArgumentsObject& argsobj = obj->as<ArgumentsObject>();
     if (JSID_IS_INT(id)) {
         unsigned arg = unsigned(JSID_TO_INT(id));
-        if (arg < argsobj.initialLength() && !argsobj.isElementDeleted(arg))
-            argsobj.markElementDeleted(arg);
+        if (arg < argsobj.initialLength() && !argsobj.isElementDeleted(arg)) {
+            if (!argsobj.markElementDeleted(cx, arg))
+                return false;
+        }
     } else if (JSID_IS_ATOM(id, cx->names().length)) {
         argsobj.markLengthOverridden();
     } else if (JSID_IS_ATOM(id, cx->names().callee)) {
@@ -626,7 +671,10 @@ void
 ArgumentsObject::finalize(FreeOp* fop, JSObject* obj)
 {
     MOZ_ASSERT(!IsInsideNursery(obj));
-    fop->free_(reinterpret_cast<void*>(obj->as<ArgumentsObject>().data()));
+    if (obj->as<ArgumentsObject>().data()) {
+        fop->free_(obj->as<ArgumentsObject>().maybeRareData());
+        fop->free_(obj->as<ArgumentsObject>().data());
+    }
 }
 
 void
@@ -649,24 +697,38 @@ ArgumentsObject::objectMovedDuringMinorGC(JSTracer* trc, JSObject* dst, JSObject
 
     Nursery& nursery = trc->runtime()->gc.nursery;
 
+    size_t nbytesTotal = 0;
     if (!nursery.isInside(nsrc->data())) {
         nursery.removeMallocedBuffer(nsrc->data());
-        return 0;
+    } else {
+        AutoEnterOOMUnsafeRegion oomUnsafe;
+        uint32_t nbytes = nsrc->data()->dataBytes;
+        uint8_t* data = nsrc->zone()->pod_malloc<uint8_t>(nbytes);
+        if (!data)
+            oomUnsafe.crash("Failed to allocate ArgumentsObject data while tenuring.");
+        ndst->initFixedSlot(DATA_SLOT, PrivateValue(data));
+
+        mozilla::PodCopy(data, reinterpret_cast<uint8_t*>(nsrc->data()), nbytes);
+        nbytesTotal += nbytes;
     }
 
-    AutoEnterOOMUnsafeRegion oomUnsafe;
-    uint32_t nbytes = nsrc->data()->dataBytes;
-    uint8_t* data = nsrc->zone()->pod_malloc<uint8_t>(nbytes);
-    if (!data)
-        oomUnsafe.crash("Failed to allocate ArgumentsObject data while tenuring.");
-    ndst->initFixedSlot(DATA_SLOT, PrivateValue(data));
+    if (RareArgumentsData* srcRareData = nsrc->maybeRareData()) {
+        if (!nursery.isInside(srcRareData)) {
+            nursery.removeMallocedBuffer(srcRareData);
+        } else {
+            AutoEnterOOMUnsafeRegion oomUnsafe;
+            uint32_t nbytes = RareArgumentsData::bytesRequired(nsrc->initialLength());
+            uint8_t* dstRareData = nsrc->zone()->pod_malloc<uint8_t>(nbytes);
+            if (!dstRareData)
+                oomUnsafe.crash("Failed to allocate RareArgumentsData data while tenuring.");
+            ndst->data()->rareData = (RareArgumentsData*)dstRareData;
 
-    mozilla::PodCopy(data, reinterpret_cast<uint8_t*>(nsrc->data()), nbytes);
+            mozilla::PodCopy(dstRareData, reinterpret_cast<uint8_t*>(srcRareData), nbytes);
+            nbytesTotal += nbytes;
+        }
+    }
 
-    ArgumentsData* dstData = ndst->data();
-    dstData->deletedBits = reinterpret_cast<size_t*>(dstData->args + dstData->numArgs);
-
-    return nbytes;
+    return nbytesTotal;
 }
 
 /*
