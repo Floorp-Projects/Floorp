@@ -4,56 +4,59 @@
 
 /* Application in use complete MAR file staged patch apply failure test */
 
-const START_STATE = STATE_PENDING_SVC;
-const END_STATE = STATE_PENDING;
+const STATE_AFTER_STAGE = IS_SERVICE_TEST ? STATE_APPLIED_SVC : STATE_APPLIED;
 
 function run_test() {
-  if (!shouldRunServiceTest()) {
+  if (!setupTestCommon()) {
     return;
   }
-
-  gStageUpdate = true;
-  setupTestCommon();
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
-  setTestFilesAndDirsForFailure();
-  setupUpdaterTest(FILE_COMPLETE_MAR);
-
-  // Launch the callback helper application so it is in use during the update.
-  let callbackApp = getApplyDirFile(DIR_RESOURCES + gCallbackBinFile);
-  let args = [getApplyDirPath() + DIR_RESOURCES, "input", "output", "-s",
-              HELPER_SLEEP_TIMEOUT];
-  let callbackAppProcess = Cc["@mozilla.org/process/util;1"].
-                           createInstance(Ci.nsIProcess);
-  callbackAppProcess.init(callbackApp);
-  callbackAppProcess.run(false, args, args.length);
-
-  setupAppFilesAsync();
+  createUpdaterINI(false);
+  setupUpdaterTest(FILE_COMPLETE_MAR, false);
 }
 
-function setupAppFilesFinished() {
-  do_timeout(TEST_HELPER_TIMEOUT, waitForHelperSleep);
+/**
+ * Called after the call to setupUpdaterTest finishes.
+ */
+function setupUpdaterTestFinished() {
+  runHelperFileInUse(DIR_RESOURCES + gCallbackBinFile, false);
 }
 
-function doUpdate() {
-  runUpdateUsingService(START_STATE, STATE_APPLIED);
+/**
+ * Called after the call to waitForHelperSleep finishes.
+ */
+function waitForHelperSleepFinished() {
+  stageUpdate();
 }
 
-function checkUpdateFinished() {
+/**
+ * Called after the call to stageUpdate finishes.
+ */
+function stageUpdateFinished() {
+  checkPostUpdateRunningFile(false);
+  checkFilesAfterUpdateSuccess(getStageDirFile, true);
+  checkUpdateLogContents(LOG_COMPLETE_SUCCESS_STAGE, true);
   // Switch the application to the staged application that was updated.
-  gStageUpdate = false;
-  gSwitchApp = true;
-  runUpdate(1, END_STATE, checkUpdateApplied);
+  runUpdate(STATE_PENDING, true, 1, false);
 }
 
-function checkUpdateApplied() {
-  setupHelperFinish();
+/**
+ * Called after the call to runUpdate finishes.
+ */
+function runUpdateFinished() {
+  waitForHelperExit();
 }
 
-function checkUpdate() {
-  checkFilesAfterUpdateFailure(getApplyDirFile, false, false);
+/**
+ * Called after the call to waitForHelperExit finishes.
+ */
+function waitForHelperExitFinished() {
+  standardInit();
+  checkPostUpdateRunningFile(false);
+  setTestFilesAndDirsForFailure();
+  checkFilesAfterUpdateFailure(getApplyDirFile);
   checkUpdateLogContains(ERR_RENAME_FILE);
   checkUpdateLogContains(ERR_MOVE_DESTDIR_7);
-  standardInit();
-  checkCallbackAppLog();
+  checkCallbackLog();
 }

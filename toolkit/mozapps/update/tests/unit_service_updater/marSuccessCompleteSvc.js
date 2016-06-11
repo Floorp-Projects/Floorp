@@ -6,15 +6,47 @@
 /* General Complete MAR File Patch Apply Test */
 
 function run_test() {
-  if (!shouldRunServiceTest()) {
+  if (!setupTestCommon()) {
     return;
   }
-
-  setupTestCommon();
   gTestFiles = gTestFilesCompleteSuccess;
   gTestDirs = gTestDirsCompleteSuccess;
   preventDistributionFiles();
-  setupUpdaterTest(FILE_COMPLETE_MAR);
+  setupDistributionDir();
+  setupUpdaterTest(FILE_COMPLETE_MAR, true);
+}
+
+/**
+ * Called after the call to setupUpdaterTest finishes.
+ */
+function setupUpdaterTestFinished() {
+  runUpdate(STATE_SUCCEEDED, false, 0, true);
+}
+
+/**
+ * Called after the call to runUpdate finishes.
+ */
+function runUpdateFinished() {
+  checkPostUpdateAppLog();
+}
+
+/**
+ * Called after the call to checkPostUpdateAppLog finishes.
+ */
+function checkPostUpdateAppLogFinished() {
+  checkAppBundleModTime();
+  standardInit();
+  checkPostUpdateRunningFile(true);
+  checkFilesAfterUpdateSuccess(getApplyDirFile);
+  checkUpdateLogContents(LOG_COMPLETE_SUCCESS, false, false, true);
+  checkDistributionDir();
+  checkCallbackLog();
+}
+
+/**
+ * Setup the state of the distribution directory for the test.
+ */
+function setupDistributionDir() {
   if (IS_MACOSX) {
     // Create files in the old distribution directory location to verify that
     // the directory and its contents are moved to the new location on update.
@@ -23,58 +55,34 @@ function run_test() {
     testFile = getApplyDirFile(DIR_MACOS + "distribution/test/testFile", true);
     writeFile(testFile, "test\n");
   }
-
-  createUpdaterINI();
-  setAppBundleModTime();
-
-  setupAppFilesAsync();
-}
-
-function setupAppFilesFinished() {
-  runUpdateUsingService(STATE_PENDING_SVC, STATE_SUCCEEDED);
 }
 
 /**
- * Checks if the post update binary was properly launched for the platforms that
- * support launching post update process.
+ * Checks the state of the distribution directory.
  */
-function checkUpdateFinished() {
-  if (IS_WIN || IS_MACOSX) {
-    gCheckFunc = finishCheckUpdateFinished;
-    checkPostUpdateAppLog();
-  } else {
-    finishCheckUpdateFinished();
-  }
-}
-
-/**
- * Checks if the update has finished and if it has finished performs checks for
- * the test.
- */
-function finishCheckUpdateFinished() {
+function checkDistributionDir() {
   let distributionDir = getApplyDirFile(DIR_RESOURCES + "distribution", true);
   if (IS_MACOSX) {
-    Assert.ok(distributionDir.exists(), MSG_SHOULD_EXIST);
+    Assert.ok(distributionDir.exists(),
+              MSG_SHOULD_EXIST + getMsgPath(distributionDir.path));
 
     let testFile = getApplyDirFile(DIR_RESOURCES + "distribution/testFile", true);
-    Assert.ok(testFile.exists(), MSG_SHOULD_EXIST);
+    Assert.ok(testFile.exists(),
+              MSG_SHOULD_EXIST + getMsgPath(testFile.path));
 
     testFile = getApplyDirFile(DIR_RESOURCES + "distribution/test/testFile", true);
-    Assert.ok(testFile.exists(), MSG_SHOULD_EXIST);
+    Assert.ok(testFile.exists(),
+              MSG_SHOULD_EXIST + getMsgPath(testFile.path));
 
     distributionDir = getApplyDirFile(DIR_MACOS + "distribution", true);
-    Assert.ok(!distributionDir.exists(), MSG_SHOULD_NOT_EXIST);
+    Assert.ok(!distributionDir.exists(),
+              MSG_SHOULD_NOT_EXIST + getMsgPath(distributionDir.path));
 
-    checkUpdateLogContains("Moving old distribution directory to new location");
+    checkUpdateLogContains(MOVE_OLD_DIST_DIR);
   } else {
     debugDump("testing that files aren't added with an add-if instruction " +
               "when the file's destination directory doesn't exist");
-    Assert.ok(!distributionDir.exists(), MSG_SHOULD_NOT_EXIST);
+    Assert.ok(!distributionDir.exists(),
+              MSG_SHOULD_NOT_EXIST + getMsgPath(distributionDir.path));
   }
-
-  checkAppBundleModTime();
-  checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
-  checkUpdateLogContents(LOG_COMPLETE_SUCCESS, true);
-  standardInit();
-  checkCallbackServiceLog();
 }

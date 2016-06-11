@@ -6,7 +6,7 @@
 function run_test() {
   setupTestCommon();
 
-  debugDump("testing addition of a successful update to " + FILE_UPDATES_DB +
+  debugDump("testing addition of a successful update to " + FILE_UPDATES_XML +
             " and verification of update properties including the format " +
             "prior to bug 530872");
 
