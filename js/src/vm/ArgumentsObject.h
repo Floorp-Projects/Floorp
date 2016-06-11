@@ -69,13 +69,7 @@ struct ArgumentsData
      */
     uint32_t    numArgs;
 
-    /* Size of ArgumentsData and data allocated after it. */
-    uint32_t    dataBytes;
-
     RareArgumentsData* rareData;
-
-    /* The script for the function containing this arguments object. */
-    JSScript*   script;
 
     /*
      * This array holds either the current argument value or the magic
@@ -95,6 +89,10 @@ struct ArgumentsData
     const GCPtrValue* begin() const { return args; }
     GCPtrValue* end() { return args + numArgs; }
     const GCPtrValue* end() const { return args + numArgs; }
+
+    static size_t bytesRequired(size_t numArgs) {
+        return offsetof(ArgumentsData, args) + numArgs * sizeof(Value);
+    }
 };
 
 // Maximum supported value of arguments.length. This bounds the maximum
@@ -219,11 +217,6 @@ class ArgumentsObject : public NativeObject
         return argc;
     }
 
-    /* The script for the function containing this arguments object. */
-    JSScript* containingScript() const {
-        return data()->script;
-    }
-
     /* True iff arguments.length has been assigned or its attributes changed. */
     bool hasOverriddenLength() const {
         const Value& v = getFixedSlot(INITIAL_LENGTH_SLOT);
@@ -342,10 +335,13 @@ class ArgumentsObject : public NativeObject
      * |miscSize| argument in JSObject::sizeOfExcludingThis().
      */
     size_t sizeOfMisc(mozilla::MallocSizeOf mallocSizeOf) const {
-        return mallocSizeOf(data());
+        if (!data()) // Template arguments objects have no data.
+            return 0;
+        return mallocSizeOf(data()) + mallocSizeOf(maybeRareData());
     }
     size_t sizeOfData() const {
-        return data()->dataBytes;
+        return ArgumentsData::bytesRequired(data()->numArgs) +
+               (maybeRareData() ? RareArgumentsData::bytesRequired(initialLength()) : 0);
     }
 
     static void finalize(FreeOp* fop, JSObject* obj);
@@ -392,8 +388,8 @@ class MappedArgumentsObject : public ArgumentsObject
   public:
     static const Class class_;
 
-    const js::Value& callee() const {
-        return getFixedSlot(CALLEE_SLOT);
+    JSFunction& callee() const {
+        return getFixedSlot(CALLEE_SLOT).toObject().as<JSFunction>();
     }
 
     bool hasOverriddenCallee() const {
