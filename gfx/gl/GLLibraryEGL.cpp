@@ -35,7 +35,7 @@ MOZ_THREAD_LOCAL(EGLContext) GLLibraryEGL::sCurrentContext;
 #endif
 
 // should match the order of EGLExtensions, and be null-terminated.
-static const char *sEGLExtensionNames[] = {
+static const char* sEGLExtensionNames[] = {
     "EGL_KHR_image_base",
     "EGL_KHR_image_pixmap",
     "EGL_KHR_gl_texture_2D_image",
@@ -672,7 +672,7 @@ GLLibraryEGL::DumpEGLConfigs()
 {
     int nc = 0;
     fGetConfigs(mEGLDisplay, nullptr, 0, &nc);
-    EGLConfig *ec = new EGLConfig[nc];
+    EGLConfig* ec = new EGLConfig[nc];
     fGetConfigs(mEGLDisplay, ec, nc, &nc);
 
     for (int i = 0; i < nc; ++i) {

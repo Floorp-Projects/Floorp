@@ -65,7 +65,7 @@ public:
 private:
     bool mInitialized;
     bool mUseDoubleBufferedWindows;
-    PRLibrary *mOGLLibrary;
+    PRLibrary* mOGLLibrary;
 };
 
 CGLLibrary sCGLLibrary;
@@ -235,7 +235,7 @@ CreateWithFormat(const NSOpenGLPixelFormatAttribute* attribs)
 }
 
 already_AddRefed<GLContext>
-GLContextProviderCGL::CreateForWindow(nsIWidget *aWidget, bool aForceAccelerated)
+GLContextProviderCGL::CreateForWindow(nsIWidget* aWidget, bool aForceAccelerated)
 {
     if (!sCGLLibrary.EnsureInitialized()) {
         return nullptr;
