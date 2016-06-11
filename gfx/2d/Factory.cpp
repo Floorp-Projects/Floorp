@@ -265,15 +265,6 @@ Factory::CheckSurfaceSize(const IntSize &sz,
     return false;
   }
 
-#if defined(XP_MACOSX)
-  // CoreGraphics is limited to images < 32K in *height*,
-  // so clamp all surfaces on the Mac to that height
-  if (sz.height > SHRT_MAX) {
-    gfxDebug() << "Surface size too large (exceeds CoreGraphics limit)!";
-    return false;
-  }
-#endif
-
   // make sure the surface area doesn't overflow a int32_t
   CheckedInt<int32_t> tmp = sz.width;
   tmp *= sz.height;

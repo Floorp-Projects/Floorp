@@ -353,6 +353,49 @@ gfxASurface::CairoStatus()
 }
 
 /* static */
+bool
+gfxASurface::CheckSurfaceSize(const IntSize& sz, int32_t limit)
+{
+    if (sz.width < 0 || sz.height < 0) {
+        NS_WARNING("Surface width or height < 0!");
+        return false;
+    }
+
+    // reject images with sides bigger than limit
+    if (limit && (sz.width > limit || sz.height > limit)) {
+        NS_WARNING("Surface size too large (exceeds caller's limit)!");
+        return false;
+    }
+
+#if defined(XP_MACOSX)
+    // CoreGraphics is limited to images < 32K in *height*,
+    // so clamp all surfaces on the Mac to that height
+    if (sz.height > SHRT_MAX) {
+        NS_WARNING("Surface size too large (exceeds CoreGraphics limit)!");
+        return false;
+    }
+#endif
+
+    // make sure the surface area doesn't overflow a int32_t
+    CheckedInt<int32_t> tmp = sz.width;
+    tmp *= sz.height;
+    if (!tmp.isValid()) {
+        NS_WARNING("Surface size too large (would overflow)!");
+        return false;
+    }
+
+    // assuming 4-byte stride, make sure the allocation size
+    // doesn't overflow a int32_t either
+    tmp *= 4;
+    if (!tmp.isValid()) {
+        NS_WARNING("Allocation too large (would overflow)!");
+        return false;
+    }
+
+    return true;
+}
+
+/* static */
 int32_t
 gfxASurface::FormatStrideForWidth(gfxImageFormat format, int32_t width)
 {

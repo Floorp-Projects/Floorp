@@ -761,6 +761,10 @@ protected:
    */
   bool mIsCapturedFrameInvalid;
 
+  // This is stored after GetThebesSurface has been called once to avoid
+  // excessive ThebesSurface initialization overhead.
+  RefPtr<gfxASurface> mThebesSurface;
+
   /**
     * We also have a device space pathbuilder. The reason for this is as
     * follows, when a path is being built, but the transform changes, we

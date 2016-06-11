@@ -69,7 +69,7 @@ gfxImageSurface::InitWithData(unsigned char *aData, const IntSize& aSize,
     mFormat = aFormat;
     mStride = aStride;
 
-    if (!Factory::CheckSurfaceSize(aSize))
+    if (!CheckSurfaceSize(aSize))
         MakeInvalid();
 
     cairo_format_t cformat = GfxFormatToCairoFormat(mFormat);
@@ -125,7 +125,7 @@ gfxImageSurface::AllocateAndInit(long aStride, int32_t aMinimalAllocation,
     if (aMinimalAllocation < mSize.height * mStride)
         aMinimalAllocation = mSize.height * mStride;
 
-    if (!Factory::CheckSurfaceSize(mSize))
+    if (!CheckSurfaceSize(mSize))
         MakeInvalid();
 
     // if we have a zero-sized surface, just leave mData nullptr
