@@ -80,6 +80,7 @@ class PresShell final : public nsIPresShell,
   using Nothing = mozilla::Nothing;
   using OnNonvisible = mozilla::OnNonvisible;
   using RawSelectionType = mozilla::RawSelectionType;
+  using SelectionType = mozilla::SelectionType;
   template <typename T> using UniquePtr = mozilla::UniquePtr<T>;
   using VisibilityCounter = mozilla::VisibilityCounter;
   using VisibleFrames = mozilla::VisibleFrames;
@@ -110,7 +111,7 @@ public:
   NS_IMETHOD GetSelection(RawSelectionType aRawSelectionType,
                           nsISelection** aSelection) override;
   virtual mozilla::dom::Selection*
-    GetCurrentSelection(RawSelectionType aRawSelectionType) override;
+    GetCurrentSelection(SelectionType aSelectionType) override;
 
   NS_IMETHOD SetDisplaySelection(int16_t aToggle) override;
   NS_IMETHOD GetDisplaySelection(int16_t *aToggle) override;

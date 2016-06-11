@@ -412,7 +412,8 @@ protected:
    */
   void EnsureComposition(mozilla::WidgetCompositionEvent* aCompositionEvent);
 
-  nsresult GetSelection(int16_t aSelectionType, nsISelection** aSelection);
+  nsresult GetSelection(mozilla::SelectionType aSelectionType,
+                        nsISelection** aSelection);
 
 public:
 
@@ -615,8 +616,8 @@ public:
 #if DEBUG_JOE
   static void DumpNode(nsIDOMNode *aNode, int32_t indent=0);
 #endif
-  Selection* GetSelection(int16_t aSelectionType =
-      nsISelectionController::SELECTION_NORMAL);
+  Selection* GetSelection(mozilla::SelectionType aSelectionType =
+                            mozilla::SelectionType::SELECTION_NORMAL);
 
   // Helpers to add a node to the selection.
   // Used by table cell selection methods

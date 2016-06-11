@@ -11,6 +11,7 @@
 #include "mozilla/EventForwards.h"
 
 #include "nsColor.h"
+#include "nsISelectionController.h"
 #include "nsITextInputProcessor.h"
 #include "nsStyleConsts.h"
 #include "nsTArray.h"
@@ -142,6 +143,12 @@ bool IsValidRawTextRangeValue(RawTextRangeType aRawTextRangeValue);
 RawTextRangeType ToRawTextRangeType(TextRangeType aTextRangeType);
 TextRangeType ToTextRangeType(RawTextRangeType aRawTextRangeType);
 const char* ToChar(TextRangeType aTextRangeType);
+SelectionType ToSelectionType(TextRangeType aTextRangeType);
+
+inline RawSelectionType ToRawSelectionType(TextRangeType aTextRangeType)
+{
+  return ToRawSelectionType(ToSelectionType(aTextRangeType));
+}
 
 struct TextRange
 {
