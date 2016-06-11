@@ -6,18 +6,21 @@
 
 /*** Panel and outer controls ***/
 
-#downloadsFooter {
+#downloadsFooter,
+#downloadsPanel-blockedSubview-openButton {
   background-color: hsla(210,4%,10%,.04);
   box-shadow: 0 1px 0 hsla(210,4%,10%,.08) inset;
   transition-duration: 150ms;
   transition-property: background-color;
 }
 
-#downloadsFooter:hover {
+#downloadsFooter:hover,
+#downloadsPanel-blockedSubview-openButton:hover {
   background-color: hsla(210,4%,10%,.05);
 }
 
-#downloadsFooter:hover:active {
+#downloadsFooter:hover:active,
+#downloadsPanel-blockedSubview-openButton:hover:active {
   background-color: hsla(210,4%,10%,.1);
   box-shadow: 0 2px 0 0 hsla(210,4%,10%,.1) inset;
 }
@@ -25,12 +28,14 @@
 @media (-moz-os-version: windows-xp),
        (-moz-os-version: windows-vista),
        (-moz-os-version: windows-win7) {
-  #downloadsHistory {
+  #downloadsHistory,
+  #downloadsPanel-blockedSubview-buttons > button {
     color: -moz-nativehyperlinktext;
   }
 
   @media (-moz-windows-default-theme) {
-    #downloadsFooter {
+    #downloadsFooter,
+    #downloadsPanel-multiView .panel-subviews {
       border-bottom-left-radius: 3px;
       border-bottom-right-radius: 3px;
       transition-duration: 0s;
@@ -38,7 +43,10 @@
 
     #downloadsFooter,
     #downloadsFooter:hover,
-    #downloadsFooter:hover:active {
+    #downloadsFooter:hover:active,
+    #downloadsPanel-blockedSubview-openButton,
+    #downloadsPanel-blockedSubview-openButton:hover,
+    #downloadsPanel-blockedSubview-openButton:hover:active {
       background-color: #f1f5fb;
       box-shadow: 0px 1px 2px rgb(204,214,234) inset;
     }
@@ -46,7 +54,10 @@
     @media (-moz-os-version: windows-xp) {
       #downloadsFooter,
       #downloadsFooter:hover,
-      #downloadsFooter:hover:active {
+      #downloadsFooter:hover:active,
+      #downloadsPanel-blockedSubview-openButton,
+      #downloadsPanel-blockedSubview-openButton:hover,
+      #downloadsPanel-blockedSubview-openButton:hover:active {
         background-color: hsla(216,45%,88%,.98);
       }
     }
@@ -63,7 +74,8 @@
   outline-offset: -5px;
 }
 
-#downloadsHistory > .button-box {
+#downloadsHistory > .button-box,
+#downloadsPanel-blockedSubview-buttons > button > .button-box {
   /* Hide the border so we don't display an inner focus ring. */
   border: none;
 }
@@ -114,6 +126,20 @@
   background-color: hsla(210,4%,10%,.15);
   outline: 1px solid hsla(210,4%,10%,.15);
   box-shadow: 0 1px 0 0 hsla(210,4%,10%,.05) inset;
+}
+
+@item@[showingsubview] {
+  background-color: Highlight;
+  color: HighlightText;
+  transition: background-color var(--panelui-subview-transition-duration),
+              color var(--panelui-subview-transition-duration);
+}
+
+@notKeyfocus@ @itemFinished@[exists][verdict="Malware"]:hover,
+@notKeyfocus@ @itemFinished@[exists][verdict="Malware"]:hover:active,
+@item@[showingsubview][verdict="Malware"] {
+  background-color: hsl(4, 82%, 47%);
+  color: white;
 }
 
 @media (-moz-os-version: windows-xp),
@@ -205,4 +231,30 @@
 }
 @item@:hover .downloadButton.downloadIconRetry:active {
   -moz-image-region: rect(32px, 64px, 48px, 48px);
+}
+
+.downloadButton.downloadShowBlockedInfo {
+  -moz-image-region: rect(48px, 16px, 64px, 0px);
+}
+@item@:hover .downloadButton.downloadShowBlockedInfo {
+  -moz-image-region: rect(48px, 32px, 64px, 16px);
+}
+@item@:hover .downloadButton.downloadShowBlockedInfo:hover {
+  -moz-image-region: rect(48px, 48px, 64px, 32px);
+}
+@item@:hover .downloadButton.downloadShowBlockedInfo:active {
+  -moz-image-region: rect(48px, 64px, 64px, 48px);
+}
+
+.downloadButton.downloadShowBlockedInfo:-moz-locale-dir(rtl) {
+  -moz-image-region: rect(64px, 16px, 80px, 0px);
+}
+@item@:hover .downloadButton.downloadShowBlockedInfo:-moz-locale-dir(rtl) {
+  -moz-image-region: rect(64px, 32px, 80px, 16px);
+}
+@item@:hover .downloadButton.downloadShowBlockedInfo:hover:-moz-locale-dir(rtl) {
+  -moz-image-region: rect(64px, 48px, 80px, 32px);
+}
+@item@:hover .downloadButton.downloadShowBlockedInfo:active:-moz-locale-dir(rtl) {
+  -moz-image-region: rect(64px, 64px, 80px, 48px);
 }
