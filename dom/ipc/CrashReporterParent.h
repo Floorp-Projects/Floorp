@@ -69,15 +69,6 @@ public:
                           const nsACString& aPairName);
 
   /**
-   * Uses the specified minidump instead of taking a new one.
-   *
-   * @param aMinidump - the minidump to use for this crashreport.
-   * @returns true if successful, false otherwise.
-   */
-  bool
-  UseMinidump(nsIFile* aMinidump);
-
-  /**
    * Apply child process annotations to an existing paired mindump generated
    * with GeneratePairedMinidump.
    *
