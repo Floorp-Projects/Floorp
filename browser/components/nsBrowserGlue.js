@@ -1927,7 +1927,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 38;
+    const UI_VERSION = 39;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
 
     let currentUIVersion;
@@ -2295,6 +2295,15 @@ BrowserGlue.prototype = {
 
     if (currentUIVersion < 38) {
       LoginHelper.removeLegacySignonFiles();
+    }
+
+    if (currentUIVersion < 39) {
+      // Remove the 'defaultset' value for all the toolbars
+      let toolbars = ["nav-bar", "PersonalToolbar",
+                      "addon-bar", "TabsToolbar", "toolbar-menubar"];
+      for (let toolbarId of toolbars) {
+        xulStore.removeValue(BROWSER_DOCURL, toolbarId, "defaultset");
+      }
     }
     // Update the migration version.
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
