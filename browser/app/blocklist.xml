@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1464967719000">
+<blocklist xmlns="http://www.mozilla.org/2006/addons-blocklist" lastupdate="1465578909000">
   <emItems>
       <emItem  blockID="i58" id="webmaster@buzzzzvideos.info">
                         <versionRange  minVersion="0" maxVersion="*">
@@ -1135,6 +1135,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i1230" id="addon@gemaoff">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i540" id="/^(ffxtlbr@mixidj\.com|{c0c2693d-2ee8-47b4-9df7-b67a0ee31988}|{67097627-fd8e-4f6b-af4b-ecb65e50112e}|{f6f0f973-a4a3-48cf-9a7a-b7a69c30d71a}|{a3d0e35f-f1da-4ccb-ae77-e9d27777e68d}|{1122b43d-30ee-403f-9bfa-3cc99b0caddd})$/">
                         <versionRange  minVersion="0" maxVersion="*" severity="3">
                     </versionRange>
@@ -1459,6 +1465,12 @@
                     <prefs>
               </prefs>
     </emItem>
+      <emItem  blockID="i1231" id="youtube@downloader.yt">
+                        <versionRange  minVersion="0" maxVersion="*" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
       <emItem  blockID="i754" id="{bb7b7a60-f574-47c2-8a0b-4c56f2da9802}">
                         <versionRange  minVersion="0" maxVersion="*" severity="1">
                     </versionRange>
@@ -1511,6 +1523,15 @@
                         <versionRange  minVersion="100.7" maxVersion="100.7" severity="3">
                     </versionRange>
                                 <versionRange  minVersion="99.7" maxVersion="99.7" severity="3">
+                    </versionRange>
+                    <prefs>
+              </prefs>
+    </emItem>
+      <emItem  blockID="i1232" id="nosquint@urandom.ca">
+                        <versionRange  minVersion="0" maxVersion="2.1.9.1-signed.1-signed" severity="1">
+                      <targetApplication  id="{ec8030f7-c20a-464f-9b0e-13a3a9e97384}">
+                              <versionRange  minVersion="47" maxVersion="*" />
+                          </targetApplication>
                     </versionRange>
                     <prefs>
               </prefs>
