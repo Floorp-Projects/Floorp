@@ -21,7 +21,7 @@ public:
             MessageLoop* aIOLoop,
             IPC::Channel* aChannel);
 
-  bool RecvBeginShutdown() override;
+  bool RecvNothing() override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 };
