@@ -145,22 +145,32 @@ function task_resetState()
   yield promiseFocus();
 }
 
-function task_addDownloads(aItems)
+function* task_addDownloads(aItems)
 {
   let startTimeMs = Date.now();
 
   let publicList = yield Downloads.getList(Downloads.PUBLIC);
   for (let item of aItems) {
-    publicList.add(yield Downloads.createDownload({
-      source: "http://www.example.com/test-download.txt",
-      target: gTestTargetFile,
+    let download = {
+      source: {
+        url: "http://www.example.com/test-download.txt",
+      },
+      target: {
+        path: gTestTargetFile.path,
+      },
       succeeded: item.state == nsIDM.DOWNLOAD_FINISHED,
       canceled: item.state == nsIDM.DOWNLOAD_CANCELED ||
                 item.state == nsIDM.DOWNLOAD_PAUSED,
       error: item.state == nsIDM.DOWNLOAD_FAILED ? new Error("Failed.") : null,
       hasPartialData: item.state == nsIDM.DOWNLOAD_PAUSED,
+      hasBlockedData: item.hasBlockedData || false,
       startTime: new Date(startTimeMs++),
-    }));
+    };
+    // `"errorObj" in download` must be false when there's no error.
+    if (item.errorObj) {
+      download.errorObj = item.errorObj;
+    }
+    yield publicList.add(yield Downloads.createDownload(download));
   }
 }
 
@@ -171,4 +181,31 @@ function task_openPanel()
   let promise = promisePanelOpened();
   DownloadsPanel.showPanel();
   yield promise;
+}
+
+function promiseAlertDialogOpen(buttonAction) {
+  return new Promise(resolve => {
+    Services.ww.registerNotification(function onOpen(subj, topic, data) {
+      if (topic == "domwindowopened" && subj instanceof Ci.nsIDOMWindow) {
+        // The test listens for the "load" event which guarantees that the alert
+        // class has already been added (it is added when "DOMContentLoaded" is
+        // fired).
+        subj.addEventListener("load", function onLoad() {
+          subj.removeEventListener("load", onLoad);
+          if (subj.document.documentURI ==
+              "chrome://global/content/commonDialog.xul") {
+            Services.ww.unregisterNotification(onOpen);
+
+            let dialog = subj.document.getElementById("commonDialog");
+            ok(dialog.classList.contains("alert-dialog"),
+               "The dialog element should contain an alert class.");
+
+            let doc = subj.document.documentElement;
+            doc.getButton(buttonAction).click();
+            resolve();
+          }
+        });
+      }
+    });
+  });
 }

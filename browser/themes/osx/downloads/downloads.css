@@ -10,24 +10,43 @@
   margin-top: -1px;
 }
 
-#downloadsFooter {
+#downloadsFooter,
+#downloadsPanel-blockedSubview-buttons {
   background: #e5e5e5;
   border-top: 1px solid hsla(0,0%,0%,.1);
   box-shadow: 0 -1px hsla(0,0%,100%,.5) inset, 0 1px 1px hsla(0,0%,0%,.03) inset;
+}
+
+#downloadsFooter,
+#downloadsPanel-multiView .panel-subviews {
   border-bottom-left-radius: 4px;
   border-bottom-right-radius: 4px;
 }
 
-#downloadsHistory {
+#downloadsHistory,
+#downloadsPanel-blockedSubview-buttons > button {
   color: #808080;
 }
 
 @keyfocus@ #downloadsSummary:focus,
-@keyfocus@ #downloadsHistory:focus {
+@keyfocus@ #downloadsHistory:focus,
+@keyfocus@ #downloadsPanel-blockedSubview-buttons > button:focus {
   outline: 2px -moz-mac-focusring solid;
   outline-offset: -2px;
+}
+
+@keyfocus@ #downloadsSummary:focus,
+@keyfocus@ #downloadsHistory:focus {
   -moz-outline-radius-bottomleft: 4px;
   -moz-outline-radius-bottomright: 4px;
+}
+
+@keyfocus@ #downloadsPanel-blockedSubview-deleteButton:-moz-locale-dir(ltr):focus {
+  -moz-outline-radius-bottomright: 4px;
+}
+
+@keyfocus@ #downloadsPanel-blockedSubview-deleteButton:-moz-locale-dir(rtl):focus {
+  -moz-outline-radius-bottomleft: 4px;
 }
 
 /*** List items and similar elements in the summary ***/
@@ -50,12 +69,25 @@
 /*** Highlighted list items ***/
 
 @keyfocus@ @itemFocused@,
-@notKeyfocus@ @itemFinished@[exists]:hover {
+@notKeyfocus@ @itemFinished@[exists]:hover,
+@item@[showingsubview] {
   border-radius: 3px;
   border-top: 1px solid hsla(0,0%,100%,.2);
   border-bottom: 1px solid hsla(0,0%,0%,.4);
   background-color: Highlight;
   color: HighlightText;
+}
+
+@item@[showingsubview] {
+  transition: background-color var(--panelui-subview-transition-duration),
+              color var(--panelui-subview-transition-duration);
+}
+
+@keyfocus@ @itemFocused@[verdict="Malware"],
+@notKeyfocus@ @itemFinished@[exists][verdict="Malware"]:hover,
+@item@[showingsubview][verdict="Malware"] {
+  background-color: hsl(4, 82%, 47%);
+  color: white;
 }
 
 @notKeyfocus@ @itemFinished@[exists]:hover {
@@ -143,6 +175,56 @@
 }
 @keyfocus@ @itemFocused@:hover .downloadButton.downloadIconRetry:active {
   -moz-image-region: rect(32px, 128px, 48px, 112px);
+}
+
+.downloadButton.downloadShowBlockedInfo {
+  -moz-image-region: rect(48px, 16px, 64px, 0px);
+}
+@item@:hover .downloadButton.downloadShowBlockedInfo {
+  -moz-image-region: rect(48px, 32px, 64px, 16px);
+}
+@item@:hover .downloadButton.downloadShowBlockedInfo:hover {
+  -moz-image-region: rect(48px, 48px, 64px, 32px);
+}
+@item@:hover .downloadButton.downloadShowBlockedInfo:active {
+  -moz-image-region: rect(48px, 64px, 64px, 48px);
+}
+@keyfocus@ @itemFocused@ .downloadButton.downloadShowBlockedInfo {
+  -moz-image-region: rect(48px, 80px, 64px, 64px);
+}
+@keyfocus@ @itemFocused@:hover .downloadButton.downloadShowBlockedInfo {
+  -moz-image-region: rect(48px, 96px, 64px, 80px);
+}
+@keyfocus@ @itemFocused@:hover .downloadButton.downloadShowBlockedInfo:hover {
+  -moz-image-region: rect(48px, 112px, 64px, 96px);
+}
+@keyfocus@ @itemFocused@:hover .downloadButton.downloadShowBlockedInfo:active {
+  -moz-image-region: rect(48px, 128px, 64px, 112px);
+}
+
+.downloadButton.downloadShowBlockedInfo:-moz-locale-dir(rtl) {
+  -moz-image-region: rect(64px, 16px, 80px, 0px);
+}
+@item@:hover .downloadButton.downloadShowBlockedInfo:-moz-locale-dir(rtl) {
+  -moz-image-region: rect(64px, 32px, 80px, 16px);
+}
+@item@:hover .downloadButton.downloadShowBlockedInfo:hover:-moz-locale-dir(rtl) {
+  -moz-image-region: rect(64px, 48px, 80px, 32px);
+}
+@item@:hover .downloadButton.downloadShowBlockedInfo:active:-moz-locale-dir(rtl) {
+  -moz-image-region: rect(64px, 64px, 80px, 48px);
+}
+@keyfocus@ @itemFocused@ .downloadButton.downloadShowBlockedInfo:-moz-locale-dir(rtl) {
+  -moz-image-region: rect(64px, 80px, 80px, 64px);
+}
+@keyfocus@ @itemFocused@:hover .downloadButton.downloadShowBlockedInfo:-moz-locale-dir(rtl) {
+  -moz-image-region: rect(64px, 96px, 80px, 80px);
+}
+@keyfocus@ @itemFocused@:hover .downloadButton.downloadShowBlockedInfo:hover:-moz-locale-dir(rtl) {
+  -moz-image-region: rect(64px, 112px, 80px, 96px);
+}
+@keyfocus@ @itemFocused@:hover .downloadButton.downloadShowBlockedInfo:active:-moz-locale-dir(rtl) {
+  -moz-image-region: rect(64px, 128px, 80px, 112px);
 }
 
 @media (min-resolution: 2dppx) {
@@ -233,5 +315,62 @@
   }
   @keyfocus@ @itemFocused@:hover .downloadButton.downloadIconRetry:active {
     -moz-image-region: rect(64px, 256px, 96px, 224px);
+  }
+
+  .downloadButton.downloadShowBlockedInfo {
+    -moz-image-region: rect(96px, 32px, 128px, 0px);
+  }
+  @item@:hover .downloadButton.downloadShowBlockedInfo {
+    -moz-image-region: rect(96px, 64px, 128px, 32px);
+  }
+  @item@:hover .downloadButton.downloadShowBlockedInfo:hover {
+    -moz-image-region: rect(96px, 96px, 128px, 64px);
+  }
+  @item@:hover .downloadButton.downloadShowBlockedInfo:active {
+    -moz-image-region: rect(96px, 128px, 128px, 96px);
+  }
+  @keyfocus@ @itemFocused@ .downloadButton.downloadShowBlockedInfo {
+    -moz-image-region: rect(96px, 160px, 128px, 128px);
+  }
+  @keyfocus@ @itemFocused@:hover .downloadButton.downloadShowBlockedInfo {
+    -moz-image-region: rect(96px, 192px, 128px, 160px);
+  }
+  @keyfocus@ @itemFocused@:hover .downloadButton.downloadShowBlockedInfo:hover {
+    -moz-image-region: rect(96px, 224px, 128px, 192px);
+  }
+  @keyfocus@ @itemFocused@:hover .downloadButton.downloadShowBlockedInfo:active {
+    -moz-image-region: rect(96px, 256px, 128px, 224px);
+  }
+
+  .downloadButton.downloadShowBlockedInfo:-moz-locale-dir(rtl) {
+    -moz-image-region: rect(128px, 32px, 160px, 0px);
+  }
+  @item@:hover .downloadButton.downloadShowBlockedInfo:-moz-locale-dir(rtl) {
+    -moz-image-region: rect(128px, 64px, 160px, 32px);
+  }
+  @item@:hover .downloadButton.downloadShowBlockedInfo:hover:-moz-locale-dir(rtl) {
+    -moz-image-region: rect(128px, 96px, 160px, 64px);
+  }
+  @item@:hover .downloadButton.downloadShowBlockedInfo:active:-moz-locale-dir(rtl) {
+    -moz-image-region: rect(128px, 128px, 160px, 96px);
+  }
+  @keyfocus@ @itemFocused@ .downloadButton.downloadShowBlockedInfo:-moz-locale-dir(rtl) {
+    -moz-image-region: rect(128px, 160px, 160px, 128px);
+  }
+  @keyfocus@ @itemFocused@:hover .downloadButton.downloadShowBlockedInfo:-moz-locale-dir(rtl) {
+    -moz-image-region: rect(128px, 192px, 160px, 160px);
+  }
+  @keyfocus@ @itemFocused@:hover .downloadButton.downloadShowBlockedInfo:hover:-moz-locale-dir(rtl) {
+    -moz-image-region: rect(128px, 224px, 160px, 192px);
+  }
+  @keyfocus@ @itemFocused@:hover .downloadButton.downloadShowBlockedInfo:active:-moz-locale-dir(rtl) {
+    -moz-image-region: rect(128px, 256px, 160px, 224px);
+  }
+
+  #downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] .download-state[showingsubview] .downloadButton {
+    list-style-image: url("chrome://browser/skin/customizableui/subView-arrow-back-inverted@2x.png");
+  }
+  #downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] .download-state[showingsubview] .downloadButton:-moz-locale-dir(rtl) {
+    list-style-image: url("chrome://browser/skin/customizableui/subView-arrow-back-inverted-rtl@2x.png");
   }
 }
