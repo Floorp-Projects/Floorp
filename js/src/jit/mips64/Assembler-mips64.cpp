@@ -270,7 +270,7 @@ Assembler::bind(InstImm* inst, uintptr_t branch, uintptr_t target)
     }
 
     if (BOffImm16::IsInRange(offset)) {
-        // Don't skip trailing nops can imporve performance
+        // Don't skip trailing nops can improve performance
         // on Loongson3 platform.
         bool skipNops = !isLoongson() && (inst[0].encode() != inst_bgezal.encode() &&
                                           inst[0].encode() != inst_beq.encode());
