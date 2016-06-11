@@ -6,7 +6,6 @@
 #include "gfxWindowsSurface.h"
 #include "gfxContext.h"
 #include "gfxPlatform.h"
-#include "mozilla/gfx/2D.h"
 #include "mozilla/gfx/HelpersCairo.h"
 #include "mozilla/gfx/Logging.h"
 
@@ -51,7 +50,7 @@ gfxWindowsSurface::gfxWindowsSurface(const mozilla::gfx::IntSize& realSize, gfxI
     mOwnsDC(false), mForPrinting(false), mWnd(nullptr)
 {
     mozilla::gfx::IntSize size(realSize);
-    if (!mozilla::gfx::Factory::CheckSurfaceSize(size))
+    if (!CheckSurfaceSize(size))
         MakeInvalid(size);
 
     cairo_format_t cformat = GfxFormatToCairoFormat(imageFormat);

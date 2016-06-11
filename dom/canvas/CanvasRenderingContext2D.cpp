@@ -49,6 +49,7 @@
 #include "ImageRegion.h"
 
 #include "gfxContext.h"
+#include "gfxASurface.h"
 #include "gfxImageSurface.h"
 #include "gfxPlatform.h"
 #include "gfxFont.h"
@@ -4912,8 +4913,8 @@ CanvasRenderingContext2D::DrawWindow(nsGlobalWindow& aWindow, double aX,
 
   // protect against too-large surfaces that will cause allocation
   // or overflow issues
-  if (!Factory::CheckSurfaceSize(gfx::IntSize(int32_t(aW), int32_t(aH)),
-                                 0xffff)) {
+  if (!gfxASurface::CheckSurfaceSize(gfx::IntSize(int32_t(aW), int32_t(aH)),
+                                     0xffff)) {
     aError.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -5113,7 +5114,7 @@ CanvasRenderingContext2D::AsyncDrawXULElement(nsXULElement& aElem,
 
   // protect against too-large surfaces that will cause allocation
   // or overflow issues
-  if (!Factory::CheckSurfaceSize(gfx::IntSize(aW, aH), 0xffff)) {
+  if (!gfxASurface::CheckSurfaceSize(gfx::IntSize(aW, aH), 0xffff)) {
     aError.Throw(NS_ERROR_FAILURE);
     return;
   }
