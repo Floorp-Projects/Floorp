@@ -682,7 +682,8 @@ private:
   // so remember to use nsCOMPtr when needed.
   nsresult     NotifySelectionListeners(mozilla::SelectionType aSelectionType);
 
-  RefPtr<mozilla::dom::Selection> mDomSelections[nsISelectionController::NUM_SELECTIONTYPES];
+  RefPtr<mozilla::dom::Selection>
+    mDomSelections[mozilla::kPresentSelectionTypeCount];
 
   // Table selection support.
   nsITableCellLayout* GetCellLayout(nsIContent *aCellContent) const;

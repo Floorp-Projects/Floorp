@@ -6200,8 +6200,7 @@ nsTextFrame::PaintTextWithSelection(
   // higher-numbered selection rawSelectionTypes below lower-numered ones on the
   // general principal that lower-numbered selections are higher priority.
   allRawSelectionTypes &= kRawSelectionTypesWithDecorations;
-  for (int32_t i = nsISelectionController::NUM_SELECTIONTYPES - 1;
-       i >= 1; --i) {
+  for (size_t i = kSelectionTypeCount - 1; i >= 1; --i) {
     SelectionType selectionType = ToSelectionType(1 << (i - 1));
     if (selectionType & allRawSelectionTypes) {
       // There is some selection of this selectionType. Try to paint its

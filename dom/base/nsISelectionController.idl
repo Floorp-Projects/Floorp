@@ -302,6 +302,19 @@ enum class SelectionType : RawSelectionType
   SELECTION_URLSTRIKEOUT = nsISelectionController::SELECTION_URLSTRIKEOUT,
 };
 
+// Using anonymous enum to define constants because these constants may be
+// used at defining fixed size array in some header files (e.g.,
+// nsFrameSelection.h).  So, the values needs to be defined here, but we cannot
+// use static/const even with extern since it causes failing to link or
+// initializes them after such headers.
+enum : size_t
+{
+  // kSelectionTypeCount is number of SelectionType.
+  kSelectionTypeCount = nsISelectionController::NUM_SELECTIONTYPES,
+  // kPresentSelectionTypeCount is number of SelectionType except "none".
+  kPresentSelectionTypeCount = kSelectionTypeCount - 1
+};
+
 const char* ToChar(SelectionType aSelectionType);
 SelectionType ToSelectionType(RawSelectionType aRawSelectionType);
 RawSelectionType ToRawSelectionType(SelectionType aSelectionType);
