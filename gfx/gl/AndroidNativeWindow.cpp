@@ -131,10 +131,10 @@ private:
   typedef int32_t (*pfnANativeWindow_setBuffersGeometry)(void* window, int32_t width, int32_t height, int32_t format);
   pfnANativeWindow_setBuffersGeometry fANativeWindow_setBuffersGeometry;
 
-  typedef int32_t (*pfnANativeWindow_lock)(void *window, void *out_buffer, void *in_out_dirtyBounds);
+  typedef int32_t (*pfnANativeWindow_lock)(void* window, void* out_buffer, void* in_out_dirtyBounds);
   pfnANativeWindow_lock fANativeWindow_lock;
 
-  typedef int32_t (*pfnANativeWindow_unlockAndPost)(void *window);
+  typedef int32_t (*pfnANativeWindow_unlockAndPost)(void* window);
   pfnANativeWindow_unlockAndPost fANativeWindow_unlockAndPost;
 
   typedef AndroidWindowFormat (*pfnANativeWindow_getFormat)(void* window);
@@ -247,7 +247,7 @@ AndroidNativeWindow::Lock(void** out_bits,int32_t* out_width, int32_t* out_heigh
 
       // Do not touch.
       uint32_t reserved[6];
-  } ANativeWindow_Buffer; 
+  } ANativeWindow_Buffer;
 
 
   ANativeWindow_Buffer buffer;

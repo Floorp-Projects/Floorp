@@ -448,7 +448,7 @@ GLContextEGL::SwapBuffers()
 // hold a reference to the given surface
 // for the lifetime of this context.
 void
-GLContextEGL::HoldSurface(gfxASurface *aSurf) {
+GLContextEGL::HoldSurface(gfxASurface* aSurf) {
     mThebesSurface = aSurf;
 }
 
@@ -486,7 +486,7 @@ GLContextEGL::DestroySurface(EGLSurface aSurface)
 already_AddRefed<GLContextEGL>
 GLContextEGL::CreateGLContext(CreateContextFlags flags,
                 const SurfaceCaps& caps,
-                GLContextEGL *shareContext,
+                GLContextEGL* shareContext,
                 bool isOffscreen,
                 EGLConfig config,
                 EGLSurface surface,
@@ -760,7 +760,7 @@ GLContextProviderEGL::CreateWrappingExisting(void* aContext, void* aSurface)
 }
 
 already_AddRefed<GLContext>
-GLContextProviderEGL::CreateForWindow(nsIWidget *aWidget, bool aForceAccelerated)
+GLContextProviderEGL::CreateForWindow(nsIWidget* aWidget, bool aForceAccelerated)
 {
     nsCString discardFailureId;
     if (!sEGLLibrary.EnsureInitialized(false, discardFailureId)) {
