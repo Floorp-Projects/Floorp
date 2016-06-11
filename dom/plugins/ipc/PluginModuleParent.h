@@ -15,7 +15,7 @@
 #include "mozilla/plugins/PPluginModuleParent.h"
 #include "mozilla/plugins/PluginMessageUtils.h"
 #include "mozilla/plugins/PluginTypes.h"
-#include "mozilla/ipc/TaskFactory.h"
+#include "mozilla/plugins/TaskFactory.h"
 #include "mozilla/TimeStamp.h"
 #include "npapi.h"
 #include "npfunctions.h"
@@ -329,7 +329,7 @@ protected:
     NPNetscapeFuncs* mNPNIface;
     NPPluginFuncs* mNPPIface;
     nsNPAPIPlugin* mPlugin;
-    ipc::TaskFactory<PluginModuleParent> mTaskFactory;
+    TaskFactory<PluginModuleParent> mTaskFactory;
     nsString mPluginDumpID;
     nsString mBrowserDumpID;
     nsString mHangID;
@@ -547,7 +547,7 @@ private:
     PluginProcessParent* mSubprocess;
     uint32_t mPluginId;
 
-    ipc::TaskFactory<PluginModuleChromeParent> mChromeTaskFactory;
+    TaskFactory<PluginModuleChromeParent> mChromeTaskFactory;
 
     enum HangAnnotationFlags
     {

@@ -74,7 +74,6 @@ interface nsIXULRuntime : nsISupports
   const unsigned long PROCESS_TYPE_CONTENT = 2;
   const unsigned long PROCESS_TYPE_IPDLUNITTEST = 3;
   const unsigned long PROCESS_TYPE_GMPLUGIN = 4;
-  const unsigned long PROCESS_TYPE_GPU = 5;
 
   /**
    * The type of the caller's process.  Returns one of the values above.
