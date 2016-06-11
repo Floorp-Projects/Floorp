@@ -1233,37 +1233,33 @@ ContentEventHandler::OnQuerySelectedText(WidgetQueryContentEvent* aEvent)
   nsCOMPtr<nsINode> anchorNode, focusNode;
   int32_t anchorOffset, focusOffset;
   if (mSelection->RangeCount()) {
-    anchorNode = mSelection->GetAnchorNode();
-    focusNode = mSelection->GetFocusNode();
-    if (NS_WARN_IF(!anchorNode) || NS_WARN_IF(!focusNode)) {
-      return NS_ERROR_FAILURE;
-    }
-    anchorOffset = static_cast<int32_t>(mSelection->AnchorOffset());
-    focusOffset = static_cast<int32_t>(mSelection->FocusOffset());
-    if (NS_WARN_IF(anchorOffset < 0) || NS_WARN_IF(focusOffset < 0)) {
-      return NS_ERROR_FAILURE;
-    }
-
-    int16_t compare = nsContentUtils::ComparePoints(anchorNode, anchorOffset,
-                                                    focusNode, focusOffset);
-    aEvent->mReply.mReversed = compare > 0;
-
-    if (compare) {
-      RefPtr<nsRange> range;
-      if (mSelection->RangeCount() == 1) {
-        range = mFirstSelectedRange;
-      } else {
-        rv = nsRange::CreateRange(anchorNode, anchorOffset,
-                                  focusNode, focusOffset,
-                                  getter_AddRefs(range));
-        if (NS_WARN_IF(NS_FAILED(rv))) {
-          return rv;
-        }
-        if (NS_WARN_IF(!range)) {
-          return NS_ERROR_FAILURE;
-        }
+    // If there is only one selection range, the anchor/focus node and offset
+    // are the information of the range.  Therefore, we have the direction
+    // information.
+    if (mSelection->RangeCount() == 1) {
+      anchorNode = mSelection->GetAnchorNode();
+      focusNode = mSelection->GetFocusNode();
+      if (NS_WARN_IF(!anchorNode) || NS_WARN_IF(!focusNode)) {
+        return NS_ERROR_FAILURE;
       }
-      rv = GenerateFlatTextContent(range, aEvent->mReply.mString,
+      anchorOffset = static_cast<int32_t>(mSelection->AnchorOffset());
+      focusOffset = static_cast<int32_t>(mSelection->FocusOffset());
+      if (NS_WARN_IF(anchorOffset < 0) || NS_WARN_IF(focusOffset < 0)) {
+        return NS_ERROR_FAILURE;
+      }
+
+      int16_t compare = nsContentUtils::ComparePoints(anchorNode, anchorOffset,
+                                                      focusNode, focusOffset);
+      aEvent->mReply.mReversed = compare > 0;
+    }
+    // However, if there are 2 or more selection ranges, we have no information
+    // of that.
+    else {
+      aEvent->mReply.mReversed = false;
+    }
+
+    if (!mFirstSelectedRange->Collapsed()) {
+      rv = GenerateFlatTextContent(mFirstSelectedRange, aEvent->mReply.mString,
                                    lineBreakType);
       if (NS_WARN_IF(NS_FAILED(rv))) {
         return rv;
