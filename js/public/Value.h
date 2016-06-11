@@ -213,9 +213,6 @@ typedef enum JSWhyMagic
     /** magic value passed to natives to indicate construction */
     JS_IS_CONSTRUCTING,
 
-    /** arguments.callee has been overwritten */
-    JS_OVERWRITTEN_CALLEE,
-
     /** value of static block object slot */
     JS_BLOCK_NEEDS_CLONE,
 
