@@ -340,19 +340,19 @@ public:
     eIndexSpellChecker
   };
 
-  static int32_t GetUnderlineStyleIndexForRawSelectionType(
-                   RawSelectionType aRawSelectionType)
+  static int32_t GetUnderlineStyleIndexForSelectionType(
+                   SelectionType aSelectionType)
   {
-    switch (aRawSelectionType) {
-      case nsISelectionController::SELECTION_IME_RAWINPUT:
+    switch (aSelectionType) {
+      case SelectionType::SELECTION_IME_RAWINPUT:
         return eIndexRawInput;
-      case nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT:
+      case SelectionType::SELECTION_IME_SELECTEDRAWTEXT:
         return eIndexSelRawText;
-      case nsISelectionController::SELECTION_IME_CONVERTEDTEXT:
+      case SelectionType::SELECTION_IME_CONVERTEDTEXT:
         return eIndexConvText;
-      case nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT:
+      case SelectionType::SELECTION_IME_SELECTEDCONVERTEDTEXT:
         return eIndexSelConvText;
-      case nsISelectionController::SELECTION_SPELLCHECK:
+      case SelectionType::SELECTION_SPELLCHECK:
         return eIndexSpellChecker;
       default:
         NS_WARNING("non-IME selection type");
@@ -5414,7 +5414,7 @@ nsTextFrame::ComputeDescentLimitForSelectionUnderline(
 
 
 // Make sure this stays in sync with DrawSelectionDecorations below
-static const RawSelectionType RawSelectionTypesWithDecorations =
+static const RawSelectionType kRawSelectionTypesWithDecorations =
   nsISelectionController::SELECTION_SPELLCHECK |
   nsISelectionController::SELECTION_URLSTRIKEOUT |
   nsISelectionController::SELECTION_IME_RAWINPUT |
@@ -5427,15 +5427,15 @@ gfxFloat
 nsTextFrame::ComputeSelectionUnderlineHeight(
                nsPresContext* aPresContext,
                const gfxFont::Metrics& aFontMetrics,
-               RawSelectionType aRawSelectionType)
+               SelectionType aSelectionType)
 {
-  switch (aRawSelectionType) {
-    case nsISelectionController::SELECTION_IME_RAWINPUT:
-    case nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT:
-    case nsISelectionController::SELECTION_IME_CONVERTEDTEXT:
-    case nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT:
+  switch (aSelectionType) {
+    case SelectionType::SELECTION_IME_RAWINPUT:
+    case SelectionType::SELECTION_IME_SELECTEDRAWTEXT:
+    case SelectionType::SELECTION_IME_CONVERTEDTEXT:
+    case SelectionType::SELECTION_IME_SELECTEDCONVERTEDTEXT:
       return aFontMetrics.underlineSize;
-    case nsISelectionController::SELECTION_SPELLCHECK: {
+    case SelectionType::SELECTION_SPELLCHECK: {
       // The thickness of the spellchecker underline shouldn't honor the font
       // metrics.  It should be constant pixels value which is decided from the
       // default font size.  Note that if the actual font size is smaller than
@@ -5495,13 +5495,13 @@ nsTextFrame::PaintDecorationLine(const PaintDecorationLineParams& aParams)
 }
 
 /**
- * This, plus RawSelectionTypesWithDecorations, encapsulates all knowledge about
- * drawing text decoration for selections.
+ * This, plus kRawSelectionTypesWithDecorations, encapsulates all knowledge
+ * about drawing text decoration for selections.
  */
 void
 nsTextFrame::DrawSelectionDecorations(gfxContext* aContext,
                                       const LayoutDeviceRect& aDirtyRect,
-                                      RawSelectionType aRawSelectionType,
+                                      SelectionType aSelectionType,
                                       nsTextPaintStyle& aTextPaintStyle,
                                       const TextRangeStyle &aRangeStyle,
                                       const Point& aPt,
@@ -5520,7 +5520,7 @@ nsTextFrame::DrawSelectionDecorations(gfxContext* aContext,
   params.pt = aPt;
   params.lineSize = Size(
       aWidth, ComputeSelectionUnderlineHeight(aTextPaintStyle.PresContext(),
-                                              aFontMetrics, aRawSelectionType));
+                                              aFontMetrics, aSelectionType));
   params.ascent = aAscent;
   params.offset = aDecoration == NS_STYLE_TEXT_DECORATION_LINE_UNDERLINE ?
                   aFontMetrics.underlineOffset : aFontMetrics.maxAscent;
@@ -5534,18 +5534,17 @@ nsTextFrame::DrawSelectionDecorations(gfxContext* aContext,
 
   float relativeSize;
   int32_t index =
-    nsTextPaintStyle::GetUnderlineStyleIndexForRawSelectionType(
-      aRawSelectionType);
+    nsTextPaintStyle::GetUnderlineStyleIndexForSelectionType(aSelectionType);
   bool weDefineSelectionUnderline =
     aTextPaintStyle.GetSelectionUnderlineForPaint(index, &params.color,
                                                   &relativeSize, &params.style);
 
 
-  switch (aRawSelectionType) {
-    case nsISelectionController::SELECTION_IME_RAWINPUT:
-    case nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT:
-    case nsISelectionController::SELECTION_IME_CONVERTEDTEXT:
-    case nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT: {
+  switch (aSelectionType) {
+    case SelectionType::SELECTION_IME_RAWINPUT:
+    case SelectionType::SELECTION_IME_SELECTEDRAWTEXT:
+    case SelectionType::SELECTION_IME_CONVERTEDTEXT:
+    case SelectionType::SELECTION_IME_SELECTEDCONVERTEDTEXT: {
       // IME decoration lines should not be drawn on the both ends, i.e., we
       // need to cut both edges of the decoration lines.  Because same style
       // IME selections can adjoin, but the users need to be able to know
@@ -5587,7 +5586,7 @@ nsTextFrame::DrawSelectionDecorations(gfxContext* aContext,
         else if (aRangeStyle.IsForegroundColorDefined() ||
                  aRangeStyle.IsBackgroundColorDefined()) {
           nscolor bg;
-          GetSelectionTextColors(aRawSelectionType, aTextPaintStyle,
+          GetSelectionTextColors(aSelectionType, aTextPaintStyle,
                                  aRangeStyle, &params.color, &bg);
         }
         // Otherwise, use the foreground color of the frame.
@@ -5601,11 +5600,11 @@ nsTextFrame::DrawSelectionDecorations(gfxContext* aContext,
       }
       break;
     }
-    case nsISelectionController::SELECTION_SPELLCHECK:
+    case SelectionType::SELECTION_SPELLCHECK:
       if (!weDefineSelectionUnderline)
         return;
       break;
-    case nsISelectionController::SELECTION_URLSTRIKEOUT: {
+    case SelectionType::SELECTION_URLSTRIKEOUT: {
       nscoord inflationMinFontSize =
         nsLayoutUtils::InflationMinFontSizeFor(this);
       float inflation =
@@ -5631,26 +5630,26 @@ nsTextFrame::DrawSelectionDecorations(gfxContext* aContext,
 
 /* static */
 bool
-nsTextFrame::GetSelectionTextColors(RawSelectionType aRawSelectionType,
+nsTextFrame::GetSelectionTextColors(SelectionType aSelectionType,
                                     nsTextPaintStyle& aTextPaintStyle,
                                     const TextRangeStyle &aRangeStyle,
                                     nscolor* aForeground,
                                     nscolor* aBackground)
 {
-  switch (aRawSelectionType) {
-    case nsISelectionController::SELECTION_NORMAL:
+  switch (aSelectionType) {
+    case SelectionType::SELECTION_NORMAL:
       return aTextPaintStyle.GetSelectionColors(aForeground, aBackground);
-    case nsISelectionController::SELECTION_FIND:
+    case SelectionType::SELECTION_FIND:
       aTextPaintStyle.GetHighlightColors(aForeground, aBackground);
       return true;
-    case nsISelectionController::SELECTION_URLSECONDARY:
+    case SelectionType::SELECTION_URLSECONDARY:
       aTextPaintStyle.GetURLSecondaryColor(aForeground);
       *aBackground = NS_RGBA(0,0,0,0);
       return true;
-    case nsISelectionController::SELECTION_IME_RAWINPUT:
-    case nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT:
-    case nsISelectionController::SELECTION_IME_CONVERTEDTEXT:
-    case nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT:
+    case SelectionType::SELECTION_IME_RAWINPUT:
+    case SelectionType::SELECTION_IME_SELECTEDRAWTEXT:
+    case SelectionType::SELECTION_IME_CONVERTEDTEXT:
+    case SelectionType::SELECTION_IME_SELECTEDCONVERTEDTEXT:
       if (aRangeStyle.IsDefined()) {
         if (!aRangeStyle.IsForegroundColorDefined() &&
             !aRangeStyle.IsBackgroundColorDefined()) {
@@ -5678,8 +5677,8 @@ nsTextFrame::GetSelectionTextColors(RawSelectionType aRawSelectionType,
         return true;
       }
       aTextPaintStyle.GetIMESelectionColors(
-        nsTextPaintStyle::GetUnderlineStyleIndexForRawSelectionType(
-          aRawSelectionType),
+        nsTextPaintStyle::GetUnderlineStyleIndexForSelectionType(
+          aSelectionType),
         aForeground, aBackground);
       return true;
     default:
@@ -5696,12 +5695,12 @@ nsTextFrame::GetSelectionTextColors(RawSelectionType aRawSelectionType,
  * (NOT reset to null), and the function returns false.
  */
 static bool GetSelectionTextShadow(nsIFrame* aFrame,
-                                   RawSelectionType aRawSelectionType,
+                                   SelectionType aSelectionType,
                                    nsTextPaintStyle& aTextPaintStyle,
                                    nsCSSShadowArray** aShadow)
 {
-  switch (aRawSelectionType) {
-    case nsISelectionController::SELECTION_NORMAL:
+  switch (aSelectionType) {
+    case SelectionType::SELECTION_NORMAL:
       return aTextPaintStyle.GetSelectionShadow(aShadow);
     default:
       return false;
@@ -5736,13 +5735,13 @@ public:
    * @param aRange the transformed string range of the text for this segment
    * @param aHyphenWidth if a hyphen is to be rendered after the text, the
    * width of the hyphen, otherwise zero
-   * @param aRawSelectionType the selection type for this segment
+   * @param aSelectionType the selection type for this segment
    * @param aStyle the selection style for this segment
    * @return false if there are no more segments
    */
   bool GetNextSegment(gfxFloat* aXOffset, gfxTextRun::Range* aRange,
                       gfxFloat* aHyphenWidth,
-                      RawSelectionType* aRawSelectionType,
+                      SelectionType* aSelectionType,
                       TextRangeStyle* aStyle);
   void UpdateWithAdvance(gfxFloat aAdvance) {
     mXOffset += aAdvance*mTextRun->GetDirection();
@@ -5771,7 +5770,7 @@ SelectionIterator::SelectionIterator(SelectionDetails** aSelectionDetails,
 bool SelectionIterator::GetNextSegment(gfxFloat* aXOffset,
                                        gfxTextRun::Range* aRange,
                                        gfxFloat* aHyphenWidth,
-                                       RawSelectionType* aRawSelectionType,
+                                       SelectionType* aSelectionType,
                                        TextRangeStyle* aStyle)
 {
   if (mIterator.GetOriginalOffset() >= int32_t(mOriginalRange.end))
@@ -5782,8 +5781,8 @@ bool SelectionIterator::GetNextSegment(gfxFloat* aXOffset,
   
   uint32_t index = mIterator.GetOriginalOffset() - mOriginalRange.start;
   SelectionDetails* sdptr = mSelectionDetails[index];
-  RawSelectionType rawSelectionType =
-    sdptr ? sdptr->mRawSelectionType : nsISelectionController::SELECTION_NONE;
+  SelectionType selectionType =
+    sdptr ? sdptr->mSelectionType : SelectionType::SELECTION_NONE;
   TextRangeStyle style;
   if (sdptr) {
     style = sdptr->mTextRangeStyle;
@@ -5811,7 +5810,7 @@ bool SelectionIterator::GetNextSegment(gfxFloat* aXOffset,
       haveHyphenBreak) {
     *aHyphenWidth = mProvider.GetHyphenWidth();
   }
-  *aRawSelectionType = rawSelectionType;
+  *aSelectionType = selectionType;
   *aStyle = style;
   return true;
 }
@@ -5947,12 +5946,12 @@ nsTextFrame::PaintTextWithSelectionColors(
     int32_t start = std::max(0, sdptr->mStart - int32_t(contentRange.start));
     int32_t end = std::min(int32_t(contentRange.Length()),
                            sdptr->mEnd - int32_t(contentRange.start));
-    RawSelectionType rawSelectionType = sdptr->mRawSelectionType;
+    SelectionType selectionType = sdptr->mSelectionType;
     if (start < end) {
-      allRawSelectionTypes |= rawSelectionType;
+      allRawSelectionTypes |= ToRawSelectionType(selectionType);
       // Ignore selections that don't set colors
       nscolor foreground, background;
-      if (GetSelectionTextColors(rawSelectionType, *aParams.textPaintStyle,
+      if (GetSelectionTextColors(selectionType, *aParams.textPaintStyle,
                                  sdptr->mTextRangeStyle,
                                  &foreground, &background)) {
         if (NS_GET_A(background) > 0) {
@@ -5961,7 +5960,7 @@ nsTextFrame::PaintTextWithSelectionColors(
         for (int32_t i = start; i < end; ++i) {
           // Favour normal selection over IME selections
           if (!prevailingSelections[i] ||
-              rawSelectionType < prevailingSelections[i]->mRawSelectionType) {
+              selectionType < prevailingSelections[i]->mSelectionType) {
             prevailingSelections[i] = sdptr;
           }
         }
@@ -5982,7 +5981,6 @@ nsTextFrame::PaintTextWithSelectionColors(
     aParams.textBaselinePt.x - aParams.framePt.x;
   gfxFloat iOffset, hyphenWidth;
   Range range; // in transformed string
-  RawSelectionType rawSelectionType;
   TextRangeStyle rangeStyle;
   // Draw background colors
   if (anyBackgrounds && (!aParams.generateTextMask ||
@@ -5991,10 +5989,11 @@ nsTextFrame::PaintTextWithSelectionColors(
       aParams.textPaintStyle->PresContext()->AppUnitsPerDevPixel();
     SelectionIterator iterator(prevailingSelections, contentRange,
                                *aParams.provider, mTextRun, startIOffset);
+    SelectionType selectionType;
     while (iterator.GetNextSegment(&iOffset, &range, &hyphenWidth,
-                                   &rawSelectionType, &rangeStyle)) {
+                                   &selectionType, &rangeStyle)) {
       nscolor foreground, background;
-      GetSelectionTextColors(rawSelectionType, *aParams.textPaintStyle,
+      GetSelectionTextColors(selectionType, *aParams.textPaintStyle,
                              rangeStyle, &foreground, &background);
       // Draw background color
       gfxFloat advance = hyphenWidth +
@@ -6040,13 +6039,14 @@ nsTextFrame::PaintTextWithSelectionColors(
   const nsStyleText* textStyle = StyleText();
   SelectionIterator iterator(prevailingSelections, contentRange,
                              *aParams.provider, mTextRun, startIOffset);
+  SelectionType selectionType;
   while (iterator.GetNextSegment(&iOffset, &range, &hyphenWidth,
-                                 &rawSelectionType, &rangeStyle)) {
+                                 &selectionType, &rangeStyle)) {
     nscolor foreground, background;
     if (aParams.generateTextMask) {
       foreground = NS_RGBA(0, 0, 0, 255);
     } else {
-      GetSelectionTextColors(rawSelectionType, *aParams.textPaintStyle,
+      GetSelectionTextColors(selectionType, *aParams.textPaintStyle,
                              rangeStyle, &foreground, &background);
     }
 
@@ -6057,7 +6057,7 @@ nsTextFrame::PaintTextWithSelectionColors(
     // Determine what shadow, if any, to draw - either from textStyle
     // or from the ::-moz-selection pseudo-class if specified there
     nsCSSShadowArray* shadow = textStyle->GetTextShadow();
-    GetSelectionTextShadow(this, rawSelectionType, *aParams.textPaintStyle,
+    GetSelectionTextShadow(this, selectionType, *aParams.textPaintStyle,
                            &shadow);
     if (shadow) {
       nscoord startEdge = iOffset;
@@ -6087,7 +6087,7 @@ nsTextFrame::PaintTextWithSelectionColors(
 void
 nsTextFrame::PaintTextSelectionDecorations(
     const PaintTextSelectionParams& aParams,
-    SelectionDetails* aDetails, RawSelectionType aRawSelectionType)
+    SelectionDetails* aDetails, SelectionType aSelectionType)
 {
   // Hide text decorations if we're currently hiding @font-face fallback text
   if (aParams.provider->GetFontGroup()->ShouldSkipDrawing())
@@ -6107,7 +6107,7 @@ nsTextFrame::PaintTextSelectionDecorations(
 
   SelectionDetails *sdptr = aDetails;
   while (sdptr) {
-    if (sdptr->mRawSelectionType == aRawSelectionType) {
+    if (sdptr->mSelectionType == aSelectionType) {
       int32_t start = std::max(0, sdptr->mStart - int32_t(contentRange.start));
       int32_t end = std::min(int32_t(contentRange.Length()),
                              sdptr->mEnd - int32_t(contentRange.start));
@@ -6151,13 +6151,13 @@ nsTextFrame::PaintTextSelectionDecorations(
     pt.y = (aParams.textBaselinePt.y - mAscent) / app;
   }
   gfxFloat decorationOffsetDir = mTextRun->IsSidewaysLeft() ? -1.0 : 1.0;
-  RawSelectionType rawSelectionType;
+  SelectionType nextSelectionType;
   TextRangeStyle selectedStyle;
   while (iterator.GetNextSegment(&iOffset, &range, &hyphenWidth,
-                                 &rawSelectionType, &selectedStyle)) {
+                                 &nextSelectionType, &selectedStyle)) {
     gfxFloat advance = hyphenWidth +
       mTextRun->GetAdvanceWidth(range, aParams.provider);
-    if (rawSelectionType == aRawSelectionType) {
+    if (nextSelectionType == aSelectionType) {
       if (verticalRun) {
         pt.y = (aParams.framePt.y + iOffset -
                (mTextRun->IsInlineReversed() ? advance : 0)) / app;
@@ -6168,7 +6168,7 @@ nsTextFrame::PaintTextSelectionDecorations(
       gfxFloat width = Abs(advance) / app;
       gfxFloat xInFrame = pt.x - (aParams.framePt.x / app);
       DrawSelectionDecorations(
-        aParams.context, aParams.dirtyRect, aRawSelectionType,
+        aParams.context, aParams.dirtyRect, aSelectionType,
         *aParams.textPaintStyle, selectedStyle, pt, xInFrame,
         width, mAscent / app, decorationMetrics, aParams.callbacks,
         verticalRun, decorationOffsetDir, kDecoration);
@@ -6199,15 +6199,15 @@ nsTextFrame::PaintTextWithSelection(
   // and paint decorations for any that actually occur in this frame. Paint
   // higher-numbered selection rawSelectionTypes below lower-numered ones on the
   // general principal that lower-numbered selections are higher priority.
-  allRawSelectionTypes &= RawSelectionTypesWithDecorations;
+  allRawSelectionTypes &= kRawSelectionTypesWithDecorations;
   for (int32_t i = nsISelectionController::NUM_SELECTIONTYPES - 1;
        i >= 1; --i) {
-    RawSelectionType rawSelectionType = 1 << (i - 1);
-    if (allRawSelectionTypes & rawSelectionType) {
-      // There is some selection of this rawSelectionType. Try to paint its
+    SelectionType selectionType = ToSelectionType(1 << (i - 1));
+    if (selectionType & allRawSelectionTypes) {
+      // There is some selection of this selectionType. Try to paint its
       // decorations (there might not be any for this type but that's OK,
       // PaintTextSelectionDecorations will exit early).
-      PaintTextSelectionDecorations(aParams, details, rawSelectionType);
+      PaintTextSelectionDecorations(aParams, details, selectionType);
     }
   }
 
@@ -6293,15 +6293,15 @@ nsTextFrame::GetCaretColorAt(int32_t aOffset)
   textPaintStyle.SetResolveColors(isSolidTextColor);
   SelectionDetails* details = GetSelectionDetails();
   SelectionDetails* sdptr = details;
-  RawSelectionType rawSelectionType = 0;
+  SelectionType selectionType = SelectionType::SELECTION_NONE;
   while (sdptr) {
     int32_t start = std::max(0, sdptr->mStart - contentOffset);
     int32_t end = std::min(contentLength, sdptr->mEnd - contentOffset);
     if (start <= offsetInFrame && offsetInFrame < end &&
-        (rawSelectionType == 0 ||
-         sdptr->mRawSelectionType < rawSelectionType)) {
+        (selectionType == SelectionType::SELECTION_NONE ||
+         sdptr->mSelectionType < selectionType)) {
       nscolor foreground, background;
-      if (GetSelectionTextColors(sdptr->mRawSelectionType, textPaintStyle,
+      if (GetSelectionTextColors(sdptr->mSelectionType, textPaintStyle,
                                  sdptr->mTextRangeStyle,
                                  &foreground, &background)) {
         if (!isSolidTextColor &&
@@ -6310,7 +6310,7 @@ nsTextFrame::GetCaretColorAt(int32_t aOffset)
         } else {
           result = foreground;
         }
-        rawSelectionType = sdptr->mRawSelectionType;
+        selectionType = sdptr->mSelectionType;
       }
     }
     sdptr = sdptr->mNext;
@@ -6906,7 +6906,7 @@ nsTextFrame::IsVisibleInSelection(nsISelection* aSelection)
   while (sdptr) {
     if (sdptr->mEnd > GetContentOffset() &&
         sdptr->mStart < GetContentEnd() &&
-        sdptr->mRawSelectionType == nsISelectionController::SELECTION_NORMAL) {
+        sdptr->mSelectionType == SelectionType::SELECTION_NORMAL) {
       found = true;
       break;
     }
@@ -7077,14 +7077,15 @@ nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
   SelectionDetails *details = GetSelectionDetails();
   for (SelectionDetails *sd = details; sd; sd = sd->mNext) {
     if (sd->mStart == sd->mEnd ||
-        !(sd->mRawSelectionType & RawSelectionTypesWithDecorations))
+        !(sd->mSelectionType & kRawSelectionTypesWithDecorations)) {
       continue;
+    }
 
     float relativeSize;
     int32_t index =
-      nsTextPaintStyle::GetUnderlineStyleIndexForRawSelectionType(
-        sd->mRawSelectionType);
-    if (sd->mRawSelectionType == nsISelectionController::SELECTION_SPELLCHECK) {
+      nsTextPaintStyle::GetUnderlineStyleIndexForSelectionType(
+        sd->mSelectionType);
+    if (sd->mSelectionType == SelectionType::SELECTION_SPELLCHECK) {
       if (!nsTextPaintStyle::GetSelectionUnderline(aPresContext, index, nullptr,
                                                    &relativeSize,
                                                    &params.style)) {
@@ -7111,7 +7112,7 @@ nsTextFrame::CombineSelectionUnderlineRect(nsPresContext* aPresContext,
     params.lineSize =
       Size(aPresContext->AppUnitsToGfxUnits(aRect.width),
            ComputeSelectionUnderlineHeight(aPresContext, metrics,
-                                           sd->mRawSelectionType));
+                                           sd->mSelectionType));
     relativeSize = std::max(relativeSize, 1.0f);
     params.lineSize.height *= relativeSize;
     decorationArea =
@@ -7134,7 +7135,7 @@ nsTextFrame::IsFrameSelected() const
 
 void
 nsTextFrame::SetSelectedRange(uint32_t aStart, uint32_t aEnd, bool aSelected,
-                              RawSelectionType aRawSelectionType)
+                              SelectionType aSelectionType)
 {
   NS_ASSERTION(!GetPrevContinuation(), "Should only be called for primary frame");
   DEBUG_VERIFY_NOT_DIRTY(mState);
@@ -7153,7 +7154,7 @@ nsTextFrame::SetSelectedRange(uint32_t aStart, uint32_t aEnd, bool aSelected,
     // We may need to reflow to recompute the overflow area for
     // spellchecking or IME underline if their underline is thicker than
     // the normal decoration line.
-    if (aRawSelectionType & RawSelectionTypesWithDecorations) {
+    if (aSelectionType & kRawSelectionTypesWithDecorations) {
       bool didHaveOverflowingSelection =
         (f->GetStateBits() & TEXT_SELECTION_UNDERLINE_OVERFLOWED) != 0;
       nsRect r(nsPoint(0, 0), GetSize());

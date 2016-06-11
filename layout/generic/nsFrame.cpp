@@ -1822,7 +1822,7 @@ nsFrame::DisplaySelectionOverlay(nsDisplayListBuilder*   aBuilder,
   
   bool normal = false;
   while (details) {
-    if (details->mRawSelectionType == nsISelectionController::SELECTION_NORMAL) {
+    if (details->mSelectionType == SelectionType::SELECTION_NORMAL) {
       normal = true;
     }
     SelectionDetails *next = details->mNext;
@@ -3378,10 +3378,10 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
       // the caret later on when the mouse is released. We ignore
       // the spellcheck, find and url formatting selections.
       //
-      if (curDetail->mRawSelectionType != nsISelectionController::SELECTION_SPELLCHECK &&
-          curDetail->mRawSelectionType != nsISelectionController::SELECTION_FIND &&
-          curDetail->mRawSelectionType != nsISelectionController::SELECTION_URLSECONDARY &&
-          curDetail->mRawSelectionType != nsISelectionController::SELECTION_URLSTRIKEOUT &&
+      if (curDetail->mSelectionType != SelectionType::SELECTION_SPELLCHECK &&
+          curDetail->mSelectionType != SelectionType::SELECTION_FIND &&
+          curDetail->mSelectionType != SelectionType::SELECTION_URLSECONDARY &&
+          curDetail->mSelectionType != SelectionType::SELECTION_URLSTRIKEOUT &&
           curDetail->mStart <= offsets.StartOffset() &&
           offsets.EndOffset() <= curDetail->mEnd)
       {

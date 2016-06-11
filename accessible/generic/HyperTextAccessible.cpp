@@ -1444,7 +1444,7 @@ HyperTextAccessible::CaretLineNumber()
     return -1;
 
   dom::Selection* domSel =
-    frameSelection->GetSelection(nsISelectionController::SELECTION_NORMAL);
+    frameSelection->GetSelection(SelectionType::SELECTION_NORMAL);
   if (!domSel)
     return - 1;
 
@@ -1546,7 +1546,7 @@ HyperTextAccessible::GetCaretRect(nsIWidget** aWidget)
 }
 
 void
-HyperTextAccessible::GetSelectionDOMRanges(int16_t aType,
+HyperTextAccessible::GetSelectionDOMRanges(SelectionType aSelectionType,
                                            nsTArray<nsRange*>* aRanges)
 {
   // Ignore selection if it is not visible.
@@ -1555,7 +1555,7 @@ HyperTextAccessible::GetSelectionDOMRanges(int16_t aType,
       frameSelection->GetDisplaySelection() <= nsISelectionController::SELECTION_HIDDEN)
     return;
 
-  dom::Selection* domSel = frameSelection->GetSelection(aType);
+  dom::Selection* domSel = frameSelection->GetSelection(aSelectionType);
   if (!domSel)
     return;
 
@@ -1591,7 +1591,7 @@ int32_t
 HyperTextAccessible::SelectionCount()
 {
   nsTArray<nsRange*> ranges;
-  GetSelectionDOMRanges(nsISelectionController::SELECTION_NORMAL, &ranges);
+  GetSelectionDOMRanges(SelectionType::SELECTION_NORMAL, &ranges);
   return ranges.Length();
 }
 
@@ -1603,7 +1603,7 @@ HyperTextAccessible::SelectionBoundsAt(int32_t aSelectionNum,
   *aStartOffset = *aEndOffset = 0;
 
   nsTArray<nsRange*> ranges;
-  GetSelectionDOMRanges(nsISelectionController::SELECTION_NORMAL, &ranges);
+  GetSelectionDOMRanges(SelectionType::SELECTION_NORMAL, &ranges);
 
   uint32_t rangeCount = ranges.Length();
   if (aSelectionNum < 0 || aSelectionNum >= static_cast<int32_t>(rangeCount))
@@ -2137,7 +2137,7 @@ HyperTextAccessible::GetSpellTextAttr(nsINode* aNode,
   if (!fs)
     return;
 
-  dom::Selection* domSel = fs->GetSelection(nsISelectionController::SELECTION_SPELLCHECK);
+  dom::Selection* domSel = fs->GetSelection(SelectionType::SELECTION_SPELLCHECK);
   if (!domSel)
     return;
 

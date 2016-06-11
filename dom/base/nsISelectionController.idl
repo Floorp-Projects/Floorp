@@ -282,6 +282,31 @@ interface nsISelectionController : nsISelectionDisplay
 namespace mozilla {
 
 typedef short RawSelectionType;
+enum class SelectionType : RawSelectionType
+{
+  eInvalid = -1,
+  SELECTION_NONE = nsISelectionController::SELECTION_NONE,
+  SELECTION_NORMAL = nsISelectionController::SELECTION_NORMAL,
+  SELECTION_SPELLCHECK = nsISelectionController::SELECTION_SPELLCHECK,
+  SELECTION_IME_RAWINPUT = nsISelectionController::SELECTION_IME_RAWINPUT,
+  SELECTION_IME_SELECTEDRAWTEXT =
+    nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT,
+  SELECTION_IME_CONVERTEDTEXT =
+    nsISelectionController::SELECTION_IME_CONVERTEDTEXT,
+  SELECTION_IME_SELECTEDCONVERTEDTEXT =
+    nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT,
+  SELECTION_ACCESSIBILITY =
+    nsISelectionController::SELECTION_ACCESSIBILITY,
+  SELECTION_FIND = nsISelectionController::SELECTION_FIND,
+  SELECTION_URLSECONDARY = nsISelectionController::SELECTION_URLSECONDARY,
+  SELECTION_URLSTRIKEOUT = nsISelectionController::SELECTION_URLSTRIKEOUT,
+};
+
+const char* ToChar(SelectionType aSelectionType);
+SelectionType ToSelectionType(RawSelectionType aRawSelectionType);
+RawSelectionType ToRawSelectionType(SelectionType aSelectionType);
+bool operator &(SelectionType aSelectionType,
+                RawSelectionType aRawSelectionTypes);
 
 } // namespace mozilla
 %}

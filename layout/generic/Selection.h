@@ -139,7 +139,7 @@ public:
                                int32_t aContentOffset,
                                int32_t aContentLength,
                                SelectionDetails** aReturnDetails,
-                               RawSelectionType aRawSelectionType,
+                               SelectionType aSelectionType,
                                bool aSlowCheck);
   NS_IMETHOD   Repaint(nsPresContext* aPresContext);
 
@@ -200,7 +200,11 @@ public:
   void RemoveSelectionListener(nsISelectionListener* aListener,
                                mozilla::ErrorResult& aRv);
 
-  int16_t Type() const { return mRawSelectionType; }
+  RawSelectionType RawType() const
+  {
+    return ToRawSelectionType(mSelectionType);
+  }
+  SelectionType Type() const { return mSelectionType; }
 
   void GetRangesForInterval(nsINode& aBeginNode, int32_t aBeginOffset,
                             nsINode& aEndNode, int32_t aEndOffset,
@@ -222,10 +226,10 @@ private:
   nsresult DoAutoScroll(nsIFrame *aFrame, nsPoint& aPoint);
 
 public:
-  RawSelectionType GetType() const { return mRawSelectionType; }
-  void SetType(RawSelectionType aRawSelectionType)
+  SelectionType GetType() const { return mSelectionType; }
+  void SetType(SelectionType aSelectionType)
   {
-    mRawSelectionType = aRawSelectionType;
+    mSelectionType = aSelectionType;
   }
 
   nsresult     NotifySelectionListeners();
@@ -326,7 +330,7 @@ private:
   nsRevocableEventPtr<ScrollSelectionIntoViewEvent> mScrollEvent;
   CachedOffsetForFrame *mCachedOffsetForFrame;
   nsDirection mDirection;
-  RawSelectionType mRawSelectionType;
+  SelectionType mSelectionType;
   /**
    * True if the current selection operation was initiated by user action.
    * It determines whether we exclude -moz-user-select:none nodes or not,

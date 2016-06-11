@@ -833,7 +833,7 @@ public:
   int16_t GetSelectionFlags() const { return mSelectionFlags; }
 
   virtual mozilla::dom::Selection*
-    GetCurrentSelection(mozilla::RawSelectionType aType) = 0;
+    GetCurrentSelection(mozilla::SelectionType aSelectionType) = 0;
 
   /**
     * Interface to dispatch events via the presshell
