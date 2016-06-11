@@ -235,6 +235,12 @@ ArgumentsObject::createTemplateObject(JSContext* cx, bool mapped)
 }
 
 ArgumentsObject*
+JSCompartment::maybeArgumentsTemplateObject(bool mapped) const
+{
+    return mapped ? mappedArgumentsTemplate_ : unmappedArgumentsTemplate_;
+}
+
+ArgumentsObject*
 JSCompartment::getOrCreateArgumentsTemplateObject(JSContext* cx, bool mapped)
 {
     ReadBarriered<ArgumentsObject*>& obj =
@@ -353,6 +359,49 @@ ArgumentsObject::createForIon(JSContext* cx, jit::JitFrameLayout* frame, HandleO
     RootedObject callObj(cx, scopeChain->is<CallObject>() ? scopeChain.get() : nullptr);
     CopyJitFrameArgs copy(frame, callObj);
     return create(cx, callee, frame->numActualArgs(), copy);
+}
+
+/* static */ ArgumentsObject*
+ArgumentsObject::finishForIon(JSContext* cx, jit::JitFrameLayout* frame,
+                              JSObject* scopeChain, ArgumentsObject* obj)
+{
+    // JIT code calls this directly (no callVM), because it's faster, so we're
+    // not allowed to GC in here.
+    JS::AutoCheckCannotGC nogc;
+
+    JSFunction* callee = jit::CalleeTokenToFunction(frame->calleeToken());
+    RootedObject callObj(cx, scopeChain->is<CallObject>() ? scopeChain : nullptr);
+    CopyJitFrameArgs copy(frame, callObj);
+
+    unsigned numActuals = frame->numActualArgs();
+    unsigned numFormals = callee->nargs();
+    unsigned numArgs = Max(numActuals, numFormals);
+    unsigned numBytes = ArgumentsData::bytesRequired(numArgs);
+
+    ArgumentsData* data =
+        reinterpret_cast<ArgumentsData*>(AllocateObjectBuffer<uint8_t>(cx, obj, numBytes));
+    if (!data) {
+        // Make the object safe for GC.
+        obj->initFixedSlot(DATA_SLOT, PrivateValue(nullptr));
+        return nullptr;
+    }
+
+    data->numArgs = numArgs;
+    data->rareData = nullptr;
+
+    obj->initFixedSlot(INITIAL_LENGTH_SLOT, Int32Value(numActuals << PACKED_BITS_COUNT));
+    obj->initFixedSlot(DATA_SLOT, PrivateValue(data));
+    obj->initFixedSlot(MAYBE_CALL_SLOT, UndefinedValue());
+    obj->initFixedSlot(CALLEE_SLOT, ObjectValue(*callee));
+
+    copy.copyArgs(cx, data->args, numArgs);
+
+    if (callObj && callee->needsCallObject())
+        copy.maybeForwardToCallObject(obj, data);
+
+    MOZ_ASSERT(obj->initialLength() == numActuals);
+    MOZ_ASSERT(!obj->hasOverriddenLength());
+    return obj;
 }
 
 /* static */ bool
