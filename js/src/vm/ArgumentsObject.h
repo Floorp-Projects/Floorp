@@ -205,6 +205,13 @@ class ArgumentsObject : public NativeObject
     static ArgumentsObject* createForIon(JSContext* cx, jit::JitFrameLayout* frame,
                                          HandleObject scopeChain);
 
+    /*
+     * Allocate ArgumentsData and fill reserved slots after allocating an
+     * ArgumentsObject in Ion code.
+     */
+    static ArgumentsObject* finishForIon(JSContext* cx, jit::JitFrameLayout* frame,
+                                         JSObject* scopeChain, ArgumentsObject* obj);
+
     static ArgumentsObject* createTemplateObject(JSContext* cx, bool mapped);
 
     /*
