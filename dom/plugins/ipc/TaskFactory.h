@@ -19,7 +19,7 @@
  */
 
 namespace mozilla {
-namespace ipc {
+namespace plugins {
 
 template<class T>
 class TaskFactory : public RevocableStore
@@ -103,7 +103,7 @@ private:
   T* object_;
 };
 
-} // namespace ipc
+} // namespace plugins
 } // namespace mozilla
 
 #endif // mozilla_plugins_TaskFactory_h

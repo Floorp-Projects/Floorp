@@ -142,7 +142,6 @@ class mozilla::gl::SkiaGLGlue : public GenericAtomicRefCounted {
 #include "mozilla/dom/ContentChild.h"
 #include "gfxVR.h"
 #include "VRManagerChild.h"
-#include "mozilla/gfx/GPUParent.h"
 
 namespace mozilla {
 namespace layers {
@@ -595,9 +594,7 @@ gfxPlatform::Init()
 
     gfxConfig::Init();
 
-    if (XRE_IsParentProcess()) {
-      GPUProcessManager::Initialize();
-    }
+    GPUProcessManager::Initialize();
 
     auto fwd = new CrashStatsLogForwarder("GraphicsCriticalError");
     fwd->SetCircularBufferSize(gfxPrefs::GfxLoggingCrashLength());
@@ -851,9 +848,7 @@ gfxPlatform::Shutdown()
     GLContextProviderEGL::Shutdown();
 #endif
 
-    if (XRE_IsParentProcess()) {
-      GPUProcessManager::Shutdown();
-    }
+    GPUProcessManager::Shutdown();
 
     // This is a bit iffy - we're assuming that we were the ones that set the
     // log forwarder in the Factory, so that it's our responsibility to
@@ -2119,23 +2114,6 @@ gfxPlatform::InitAcceleration()
   Preferences::AddBoolVarCache(&sLayersHardwareVideoDecodingFailed,
                                "media.hardware-video-decoding.failed",
                                false);
-
-  if (XRE_IsParentProcess()) {
-    if (gfxPrefs::GPUProcessDevEnabled()) {
-      // We want to hide this from about:support, so only set a default if the
-      // pref is known to be true.
-      gfxConfig::SetDefaultFromPref(
-        Feature::GPU_PROCESS,
-        gfxPrefs::GetGPUProcessDevEnabledPrefName(),
-        true,
-        gfxPrefs::GetGPUProcessDevEnabledPrefDefault());
-    }
-
-    if (gfxConfig::IsEnabled(Feature::GPU_PROCESS)) {
-      GPUProcessManager* gpu = GPUProcessManager::Get();
-      gpu->EnableGPUProcess();
-    }
-  }
 
   sLayersAccelerationPrefsInitialized = true;
 }
