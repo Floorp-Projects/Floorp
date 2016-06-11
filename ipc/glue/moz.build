@@ -35,7 +35,6 @@ EXPORTS.mozilla.ipc += [
     'SharedMemory.h',
     'SharedMemoryBasic.h',
     'Shmem.h',
-    'TaskFactory.h',
     'Transport.h',
     'URIUtils.h',
     'WindowsMessageLoop.h',

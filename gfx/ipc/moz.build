@@ -10,10 +10,6 @@ EXPORTS.mozilla += [
 ]
 
 EXPORTS.mozilla.gfx += [
-    'GPUChild.h',
-    'GPUParent.h',
-    'GPUProcessHost.h',
-    'GPUProcessImpl.h',
     'GPUProcessManager.h',
     'SharedDIB.h',
 ]
@@ -35,17 +31,12 @@ if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
 UNIFIED_SOURCES += [
     'CompositorSession.cpp',
     'D3DMessageUtils.cpp',
-    'GPUChild.cpp',
-    'GPUParent.cpp',
-    'GPUProcessHost.cpp',
-    'GPUProcessImpl.cpp',
     'GPUProcessManager.cpp',
     'SharedDIB.cpp',
 ]
 
 IPDL_SOURCES = [
     'GraphicsMessages.ipdlh',
-    'PGPU.ipdl',
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')
