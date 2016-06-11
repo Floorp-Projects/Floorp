@@ -535,7 +535,7 @@ public:
 
     bool ReadbackEGLImage(EGLImage image, gfx::DataSourceSurface* out_surface);
 
-    bool EnsureInitialized(bool forceAccel, nsACString& aFailureId);
+    bool EnsureInitialized(bool forceAccel, nsACString* const out_failureId);
 
     void DumpEGLConfig(EGLConfig cfg);
     void DumpEGLConfigs();

@@ -1247,7 +1247,7 @@ GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
 
 static already_AddRefed<GLContextGLX>
 CreateOffscreenPixmapContext(CreateContextFlags flags, const IntSize& size,
-                             const SurfaceCaps& minCaps, nsACString& aFailureId,
+                             const SurfaceCaps& minCaps, nsACString* const out_failureId,
                              ContextProfile profile = ContextProfile::OpenGLCompatibility)
 {
     GLXLibrary* glx = &sGLXLibrary;
@@ -1310,18 +1310,19 @@ DONE_CREATING_PIXMAP:
 }
 
 /*static*/ already_AddRefed<GLContext>
-GLContextProviderGLX::CreateHeadless(CreateContextFlags flags, nsACString& aFailureId)
+GLContextProviderGLX::CreateHeadless(CreateContextFlags flags,
+                                     nsACString* const out_failureId)
 {
     IntSize dummySize = IntSize(16, 16);
     SurfaceCaps dummyCaps = SurfaceCaps::Any();
-    return CreateOffscreenPixmapContext(flags, dummySize, dummyCaps, aFailureId);
+    return CreateOffscreenPixmapContext(flags, dummySize, dummyCaps, out_failureId);
 }
 
 /*static*/ already_AddRefed<GLContext>
 GLContextProviderGLX::CreateOffscreen(const IntSize& size,
                                       const SurfaceCaps& minCaps,
                                       CreateContextFlags flags,
-                                      nsACString& aFailureId)
+                                      nsACString* const out_failureId)
 {
     SurfaceCaps minBackbufferCaps = minCaps;
     if (minCaps.antialias) {
@@ -1336,13 +1337,13 @@ GLContextProviderGLX::CreateOffscreen(const IntSize& size,
     }
 
     RefPtr<GLContext> gl;
-    gl = CreateOffscreenPixmapContext(flags, size, minBackbufferCaps, aFailureId,
+    gl = CreateOffscreenPixmapContext(flags, size, minBackbufferCaps, out_failureId,
                                       profile);
     if (!gl)
         return nullptr;
 
     if (!gl->InitOffscreen(size, minCaps)) {
-        aFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_GLX_INIT");
+        *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_GLX_INIT");
         return nullptr;
     }
 

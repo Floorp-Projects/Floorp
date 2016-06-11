@@ -633,7 +633,8 @@ CreateWindowOffscreenContext()
 }
 
 /*static*/ already_AddRefed<GLContext>
-GLContextProviderWGL::CreateHeadless(CreateContextFlags flags, nsACString& aFailureId)
+GLContextProviderWGL::CreateHeadless(CreateContextFlags flags,
+                                     nsACString* const out_failureId)
 {
     if (!sWGLLib.EnsureInitialized()) {
         return nullptr;
@@ -670,14 +671,14 @@ GLContextProviderWGL::CreateHeadless(CreateContextFlags flags, nsACString& aFail
 GLContextProviderWGL::CreateOffscreen(const IntSize& size,
                                       const SurfaceCaps& minCaps,
                                       CreateContextFlags flags,
-                                      nsACString& aFailureId)
+                                      nsACString* const out_failureId)
 {
-    RefPtr<GLContext> gl = CreateHeadless(flags, aFailureId);
+    RefPtr<GLContext> gl = CreateHeadless(flags, out_failureId);
     if (!gl)
         return nullptr;
 
     if (!gl->InitOffscreen(size, minCaps)) {
-        aFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_WGL_INIT");
+        *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_WGL_INIT");
         return nullptr;
     }
 
@@ -695,7 +696,8 @@ GLContextProviderWGL::GetGlobalContext()
 
         MOZ_RELEASE_ASSERT(!gGlobalContext, "GFX: Global GL context already initialized.");
         nsCString discardFailureId;
-        RefPtr<GLContext> temp = CreateHeadless(CreateContextFlags::NONE, discardFailureId);
+        RefPtr<GLContext> temp = CreateHeadless(CreateContextFlags::NONE,
+                                                &discardFailureId);
         gGlobalContext = temp;
     }
 
