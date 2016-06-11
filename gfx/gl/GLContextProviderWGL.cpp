@@ -204,7 +204,7 @@ WGLLibrary::EnsureInitialized()
         MOZ_ASSERT(extString);
         MOZ_ASSERT(HasExtension(extString, "WGL_ARB_extensions_string"));
 
-        if (HasExtension(extString, "WGL_ARB_create_context")) {
+        if (HasExtension(extString, "WGL_ARB_context_create")) {
             if (GLLibraryLoader::LoadSymbols(mOGLLibrary, &robustnessSymbols[0], lookupFunc)) {
                 if (HasExtension(extString, "WGL_ARB_create_context_robustness")) {
                     mHasRobustness = true;
@@ -561,8 +561,8 @@ CreatePBufferOffscreenContext(const IntSize& aSize,
             LOCAL_WGL_CONTEXT_RESET_NOTIFICATION_STRATEGY_ARB, LOCAL_WGL_LOSE_CONTEXT_ON_RESET_ARB,
             0
         };
-        const HGLRC shareHandle = (aShareContext ? aShareContext->Context() : 0);
-        context = wgl.fCreateContextAttribs(pbdc, shareHandle, attribs);
+
+        context = wgl.fCreateContextAttribs(pbdc, aShareContext->Context(), attribs);
     } else {
         context = wgl.fCreateContext(pbdc);
         if (context && aShareContext) {
