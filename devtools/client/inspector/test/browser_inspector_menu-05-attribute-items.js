@@ -16,11 +16,10 @@ add_task(function* () {
   yield testRemoveAttribute();
 
   function* testAddAttribute() {
-    info("Testing 'Add Attribute' menu item");
-    let addAttribute = getMenuItem("node-menu-add-attribute");
-
     info("Triggering 'Add Attribute' and waiting for mutation to occur");
-    dispatchCommandEvent(addAttribute);
+    let addAttribute = getMenuItem("node-menu-add-attribute");
+    addAttribute.click();
+
     EventUtils.synthesizeKey('class="u-hidden"', {});
     let onMutation = inspector.once("markupmutation");
     EventUtils.synthesizeKey("VK_RETURN", {});
@@ -39,7 +38,7 @@ add_task(function* () {
       type: "attribute",
       name: "data-edit"
     };
-    dispatchCommandEvent(editAttribute);
+    editAttribute.click();
     EventUtils.synthesizeKey("data-edit='edited'", {});
     let onMutation = inspector.once("markupmutation");
     EventUtils.synthesizeKey("VK_RETURN", {});
@@ -60,7 +59,7 @@ add_task(function* () {
       name: "data-remove"
     };
     let onMutation = inspector.once("markupmutation");
-    dispatchCommandEvent(removeAttribute);
+    removeAttribute.click();
     yield onMutation;
 
     let hasAttribute = yield testActor.hasNode("#attributes[data-remove]");
@@ -68,8 +67,13 @@ add_task(function* () {
   }
 
   function getMenuItem(id) {
-    let attribute = inspector.panelDoc.getElementById(id);
-    ok(attribute, "Menu item '" + id + "' found");
-    return attribute;
+    let allMenuItems = openContextMenuAndGetAllItems(inspector, {
+      target: getContainerForSelector("#attributes", inspector).tagLine,
+    });
+    let menuItem = allMenuItems.find(i => i.id === id);
+    ok(menuItem, "Menu item '" + id + "' found");
+    // Close the menu so synthesizing future keys won't select menu items.
+    EventUtils.synthesizeKey("VK_ESCAPE", {});
+    return menuItem;
   }
 });

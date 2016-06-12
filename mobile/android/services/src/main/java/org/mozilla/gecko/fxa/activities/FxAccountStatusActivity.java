@@ -18,10 +18,13 @@ import android.content.Intent;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.v7.app.ActionBar;
+import android.support.v7.widget.Toolbar;
 import android.util.TypedValue;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.View;
+import android.view.Window;
 import android.widget.Toast;
 import org.mozilla.gecko.AppConstants;
 import org.mozilla.gecko.Locales.LocaleAwareAppCompatActivity;
@@ -207,4 +210,23 @@ public class FxAccountStatusActivity extends LocaleAwareAppCompatActivity {
     }
     return super.onCreateOptionsMenu(menu);
   };
+
+  @Override
+  public void openOptionsMenu() {
+    // This is a workaround of an Android bug:
+    // https://code.google.com/p/android/issues/detail?id=185217
+    // openOptionsMenu isn't overriden by WindowDecorActionBar, which is used by AppCompatActivity,
+    // meaning getSupportActionbar().openOptionsMenu doesn't work.
+    // Based loosely on the code in:
+    // http://androidxref.com/6.0.1_r10/xref/frameworks/support/v7/appcompat/src/android/support/v7/internal/app/WindowDecorActionBar.java#getDecorToolbar
+
+    final Window window = getWindow();
+    final View decor = window.getDecorView();
+    final View view = decor.findViewById(R.id.action_bar);
+
+    if (view instanceof Toolbar) {
+      final Toolbar toolbar = (Toolbar) view;
+      toolbar.showOverflowMenu();
+    }
+  }
 }

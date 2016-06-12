@@ -10,7 +10,7 @@ const {Cc, Ci} = require("chrome");
 const {Task} = require("devtools/shared/task");
 const {InplaceEditor, editableItem} =
       require("devtools/client/shared/inplace-editor");
-const {ReflowFront} = require("devtools/server/actors/layout");
+const {ReflowFront} = require("devtools/shared/fronts/layout");
 const {LocalizationHelper} = require("devtools/client/shared/l10n");
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 

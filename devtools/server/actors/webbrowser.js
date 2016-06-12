@@ -814,6 +814,10 @@ exports.BrowserTabList = BrowserTabList;
  *    This event fires when we switch the TabActor targeted document
  *    to one of its iframes, or back to its original top document.
  *    It is dispatched between window-destroyed and window-ready.
+ *  - stylesheet-added
+ *    This event is fired when a StyleSheetActor is created.
+ *    It contains the following attribute :
+ *     * actor (StyleSheetActor) The created actor.
  *
  * Note that *all* these events are dispatched in the following order
  * when we switch the context of the TabActor to a given iframe:
@@ -2040,6 +2044,7 @@ TabActor.prototype = {
     this._styleSheetActors.set(styleSheet, actor);
 
     this._tabPool.addActor(actor);
+    events.emit(this, "stylesheet-added", actor);
 
     return actor;
   },

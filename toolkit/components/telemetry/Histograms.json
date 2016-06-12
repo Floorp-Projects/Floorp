@@ -5879,6 +5879,22 @@
     "n_buckets": 50,
     "description": "(Bug 1207089) Time in ms between displaying a popup notification and dismissing it without an action the first time, keyed by ID"
   },
+  "PRINT_PREVIEW_OPENED_COUNT": {
+    "alert_emails": ["carnold@mozilla.org"],
+    "bug_numbers": [1275570],
+    "expires_in_version": "56",
+    "kind": "count",
+    "releaseChannelCollection": "opt-out",
+    "description": "A counter incremented every time the browser enters print preview."
+  },
+  "PRINT_PREVIEW_SIMPLIFY_PAGE_OPENED_COUNT": {
+    "alert_emails": ["carnold@mozilla.org"],
+    "bug_numbers": [1275570],
+    "expires_in_version": "56",
+    "kind": "count",
+    "releaseChannelCollection": "opt-out",
+    "description": "A counter incremented every time the browser enters simplified mode on print preview."
+  },
   "DEVTOOLS_DEBUGGER_RDP_LOCAL_RELOAD_MS": {
     "expires_in_version": "never",
     "kind": "exponential",

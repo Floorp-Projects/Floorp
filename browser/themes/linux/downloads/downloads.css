@@ -6,12 +6,14 @@
 
 /*** Panel and outer controls ***/
 
-#downloadsFooter {
+#downloadsFooter,
+#downloadsPanel-blockedSubview-buttons {
   border-top: 1px solid ThreeDShadow;
   background-image: linear-gradient(hsla(0,0%,0%,.15), hsla(0,0%,0%,.08) 6px);
 }
 
-#downloadsHistory {
+#downloadsHistory,
+#downloadsPanel-blockedSubview-openButton {
   color: -moz-nativehyperlinktext;
 }
 
@@ -47,7 +49,8 @@
   outline-offset: -1px;
 }
 
-@notKeyfocus@ @itemFinished@[exists]:hover {
+@notKeyfocus@ @itemFinished@[exists]:hover,
+@item@[showingsubview] {
   border-radius: 3px;
   border-top: 1px solid hsla(0,0%,100%,.3);
   border-bottom: 1px solid hsla(0,0%,0%,.2);
@@ -55,6 +58,12 @@
   background-image: linear-gradient(hsla(0,0%,100%,.1), transparent);
   color: HighlightText;
   cursor: pointer;
+}
+
+@notKeyfocus@ @itemFinished@[exists][verdict="Malware"]:hover,
+@item@[showingsubview][verdict="Malware"] {
+  background-color: hsl(4, 82%, 47%);
+  color: white;
 }
 
 /*** Button icons ***/
@@ -105,4 +114,30 @@
 }
 @item@:hover .downloadButton.downloadIconRetry:active {
   -moz-image-region: rect(32px, 64px, 48px, 48px);
+}
+
+.downloadButton.downloadShowBlockedInfo {
+  -moz-image-region: rect(48px, 16px, 64px, 0px);
+}
+@item@:hover .downloadButton.downloadShowBlockedInfo {
+  -moz-image-region: rect(48px, 32px, 64px, 16px);
+}
+@item@:hover .downloadButton.downloadShowBlockedInfo:hover {
+  -moz-image-region: rect(48px, 48px, 64px, 32px);
+}
+@item@:hover .downloadButton.downloadShowBlockedInfo:active {
+  -moz-image-region: rect(48px, 64px, 64px, 48px);
+}
+
+.downloadButton.downloadShowBlockedInfo:-moz-locale-dir(rtl) {
+  -moz-image-region: rect(64px, 16px, 80px, 0px);
+}
+@item@:hover .downloadButton.downloadShowBlockedInfo:-moz-locale-dir(rtl) {
+  -moz-image-region: rect(64px, 32px, 80px, 16px);
+}
+@item@:hover .downloadButton.downloadShowBlockedInfo:hover:-moz-locale-dir(rtl) {
+  -moz-image-region: rect(64px, 48px, 80px, 32px);
+}
+@item@:hover .downloadButton.downloadShowBlockedInfo:active:-moz-locale-dir(rtl) {
+  -moz-image-region: rect(64px, 64px, 80px, 48px);
 }

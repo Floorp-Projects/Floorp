@@ -3,7 +3,7 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 const { assert } = require("devtools/shared/DevToolsUtils");
-const { MemoryFront } = require("devtools/server/actors/memory");
+const { MemoryFront } = require("devtools/shared/fronts/memory");
 const HeapAnalysesClient = require("devtools/shared/heapsnapshot/HeapAnalysesClient");
 const { PropTypes } = require("devtools/client/shared/vendor/react");
 const {

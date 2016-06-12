@@ -194,10 +194,13 @@ var openInspector = Task.async(function* (hostType) {
                                         hostType);
   let inspector = toolbox.getPanel("inspector");
 
-  info("Waiting for the inspector to update");
   if (inspector._updateProgress) {
+    info("Need to wait for the inspector to update");
     yield inspector.once("inspector-updated");
   }
+
+  info("Waiting for actor features to be detected");
+  yield inspector._detectingActorFeatures;
 
   yield registerTestActor(toolbox.target.client);
   let testActor = yield getTestActor(toolbox);
@@ -513,32 +516,6 @@ function redoChange(inspector) {
 }
 
 /**
- * Dispatch a command event on a node (e.g. click on a contextual menu item).
- * @param {DOMNode} node
- */
-function dispatchCommandEvent(node) {
-  info("Dispatching command event on " + node);
-  let commandEvent = document.createEvent("XULCommandEvent");
-  commandEvent.initCommandEvent("command", true, true, window, 0, false, false,
-                                false, false, null);
-  node.dispatchEvent(commandEvent);
-}
-
-/**
- * A helper that simulates a contextmenu event on the given chrome DOM element.
- */
-function contextMenuClick(element) {
-  let evt = element.ownerDocument.createEvent("MouseEvents");
-  let button = 2;
-
-  evt.initMouseEvent("contextmenu", true, true,
-       element.ownerDocument.defaultView, 1, 0, 0, 0, 0, false,
-       false, false, false, button, null);
-
-  element.dispatchEvent(evt);
-}
-
-/**
  * A helper that fetches a front for a node that matches the given selector or
  * doctype node if the selector is falsy.
  */
@@ -828,4 +805,24 @@ function assertHoverTooltipOn(tooltip, element) {
   }, () => {
     ok(false, "No tooltip is defined on hover of the given element");
   });
+}
+
+/**
+ * Open the inspector menu and return all of it's items in a flat array
+ * @param {InspectorPanel} inspector
+ * @param {Object} options to pass into openMenu
+ * @return An array of MenuItems
+ */
+function openContextMenuAndGetAllItems(inspector, options) {
+  let menu = inspector._openMenu(options);
+
+  // Flatten all menu items into a single array to make searching through it easier
+  let allItems = [].concat.apply([], menu.items.map(function addItem(item) {
+    if (item.submenu) {
+      return addItem(item.submenu.items);
+    }
+    return item;
+  }));
+
+  return allItems;
 }

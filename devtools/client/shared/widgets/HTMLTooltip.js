@@ -250,10 +250,12 @@ HTMLTooltip.prototype = {
 
     // Check if the node window is in the tooltip container.
     while (win.parent && win.parent != win) {
-      win = win.parent;
-      if (win === tooltipWindow) {
+      if (win.parent === tooltipWindow) {
+        // If the parent window is the tooltip window, check if the tooltip contains
+        // the current frame element.
         return this.panel.contains(win.frameElement);
       }
+      win = win.parent;
     }
 
     return false;
@@ -323,7 +325,7 @@ HTMLTooltip.prototype = {
       if (arrowCenter > anchorCenter) {
         left = Math.max(0, left - (arrowCenter - anchorCenter));
       }
-      // Arrow's feft offset relative to the anchor.
+      // Arrow's left offset relative to the anchor.
       arrowLeft = Math.min(ARROW_OFFSET, (anchorWidth - ARROW_WIDTH) / 2) | 0;
       // Translate the coordinate to tooltip container
       arrowLeft += anchorLeft - left;

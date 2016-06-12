@@ -15,11 +15,6 @@ add_task(function* () {
 
   let {inspector} = yield openInspectorForURL(TEST_URL);
 
-  let nodeMenuCollapseElement = inspector.panelDoc.getElementById(
-    "node-menu-collapse");
-  let nodeMenuExpandElement = inspector.panelDoc.getElementById(
-    "node-menu-expand");
-
   info("Selecting the parent node");
 
   let front = yield getNodeFrontForSelector("#parent-node", inspector);
@@ -27,31 +22,39 @@ add_task(function* () {
   yield selectNode(front, inspector);
 
   info("Simulating context menu click on the selected node container.");
-  contextMenuClick(getContainerForNodeFront(front, inspector).tagLine);
+  let allMenuItems = openContextMenuAndGetAllItems(inspector, {
+    target: getContainerForNodeFront(front, inspector).tagLine,
+  });
+  let nodeMenuCollapseElement =
+    allMenuItems.find(item => item.id === "node-menu-collapse");
+  let nodeMenuExpandElement =
+    allMenuItems.find(item => item.id === "node-menu-expand");
 
-  ok(nodeMenuCollapseElement.hasAttribute("disabled"),
-     "Collapse option is disabled");
-  ok(!nodeMenuExpandElement.hasAttribute("disabled"),
-     "ExpandAll option is enabled");
+  ok(nodeMenuCollapseElement.disabled, "Collapse option is disabled");
+  ok(!nodeMenuExpandElement.disabled, "ExpandAll option is enabled");
 
   info("Testing whether expansion works properly");
-  dispatchCommandEvent(nodeMenuExpandElement);
+  nodeMenuExpandElement.click();
+
   info("Waiting for expansion to occur");
   yield waitForMultipleChildrenUpdates(inspector);
   let markUpContainer = getContainerForNodeFront(front, inspector);
   ok(markUpContainer.expanded, "node has been successfully expanded");
 
-    // reslecting node after expansion
+  // reselecting node after expansion
   yield selectNode(front, inspector);
 
   info("Testing whether collapse works properly");
   info("Simulating context menu click on the selected node container.");
-  contextMenuClick(getContainerForNodeFront(front, inspector).tagLine);
+  allMenuItems = openContextMenuAndGetAllItems(inspector, {
+    target: getContainerForNodeFront(front, inspector).tagLine,
+  });
+  nodeMenuCollapseElement =
+    allMenuItems.find(item => item.id === "node-menu-collapse");
 
-  ok(!nodeMenuCollapseElement.hasAttribute("disabled"),
-     "Collapse option is enabled");
+  ok(!nodeMenuCollapseElement.disabled, "Collapse option is enabled");
+  nodeMenuCollapseElement.click();
 
-  dispatchCommandEvent(nodeMenuCollapseElement);
   info("Waiting for collapse to occur");
   yield waitForMultipleChildrenUpdates(inspector);
   ok(!markUpContainer.expanded, "node has been successfully collapsed");
