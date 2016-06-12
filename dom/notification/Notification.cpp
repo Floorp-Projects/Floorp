@@ -2576,7 +2576,7 @@ public:
     RefPtr<ServiceWorkerRegistrationInfo> registration =
       swm->GetRegistration(principal, mScope);
 
-    // This is coming from a ServiceWorkerRegistrationWorkerThread.
+    // This is coming from a ServiceWorkerRegistration.
     MOZ_ASSERT(registration);
 
     if (!registration->GetActive() ||

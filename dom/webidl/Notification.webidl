@@ -94,8 +94,8 @@ enum NotificationDirection {
 };
 
 partial interface ServiceWorkerRegistration {
-  [Throws, Func="mozilla::dom::ServiceWorkerNotificationAPIVisible"]
+  [Throws, Func="mozilla::dom::ServiceWorkerRegistration::NotificationAPIVisible"]
   Promise<void> showNotification(DOMString title, optional NotificationOptions options);
-  [Throws, Func="mozilla::dom::ServiceWorkerNotificationAPIVisible"]
+  [Throws, Func="mozilla::dom::ServiceWorkerRegistration::NotificationAPIVisible"]
   Promise<sequence<Notification>> getNotifications(optional GetNotificationOptions filter);
 };

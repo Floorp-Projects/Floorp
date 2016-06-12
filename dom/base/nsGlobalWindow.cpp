@@ -10699,13 +10699,14 @@ nsGlobalWindow::GetCaches(ErrorResult& aRv)
   return ref.forget();
 }
 
-already_AddRefed<ServiceWorkerRegistrationMainThread>
+already_AddRefed<ServiceWorkerRegistration>
 nsPIDOMWindowInner::GetServiceWorkerRegistration(const nsAString& aScope)
 {
-  RefPtr<ServiceWorkerRegistrationMainThread> registration;
+  RefPtr<ServiceWorkerRegistration> registration;
   if (!mServiceWorkerRegistrationTable.Get(aScope,
                                            getter_AddRefs(registration))) {
-    registration = new ServiceWorkerRegistrationMainThread(this, aScope);
+    registration =
+      ServiceWorkerRegistration::CreateForMainThread(this, aScope);
     mServiceWorkerRegistrationTable.Put(aScope, registration);
   }
   return registration.forget();
