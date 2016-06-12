@@ -132,7 +132,7 @@ var PanelFactory = {
  *   let t = new Tooltip(xulDoc);
  *   t.startTogglingOnHover(container, target => {
  *     if (<condition based on target>) {
- *       t.setImageContent("http://image.png");
+ *       t.content = el;
  *       return true;
  *     }
  *   });
@@ -503,84 +503,6 @@ Tooltip.prototype = {
     this.content = vbox;
     this.panel.setAttribute("clamped-dimensions", "");
   },
-
-  /**
-   * Fill the tooltip with a message explaining the the image is missing
-   */
-  setBrokenImageContent: function () {
-    this.setTextContent({
-      messages: [
-        l10n.strings.GetStringFromName("previewTooltip.image.brokenImage")
-      ]
-    });
-  },
-
-  /**
-   * Fill the tooltip with an image and add the image dimension at the bottom.
-   *
-   * Only use this for absolute URLs that can be queried from the devtools
-   * client-side.
-   *
-   * @param {string} imageUrl
-   *        The url to load the image from
-   * @param {Object} options
-   *        The following options are supported:
-   *        - resized : whether or not the image identified by imageUrl has been
-   *        resized before this function was called.
-   *        - naturalWidth/naturalHeight : the original size of the image before
-   *        it was resized, if if was resized before this function was called.
-   *        If not provided, will be measured on the loaded image.
-   *        - maxDim : if the image should be resized before being shown, pass
-   *        a number here.
-   *        - hideDimensionLabel : if the dimension label should be appended
-   *        after the image.
-   */
-  setImageContent: function (imageUrl, options = {}) {
-    if (!imageUrl) {
-      return;
-    }
-
-    // Main container
-    let vbox = this.doc.createElement("vbox");
-    vbox.setAttribute("align", "center");
-
-    // Display the image
-    let image = this.doc.createElement("image");
-    image.setAttribute("src", imageUrl);
-    if (options.maxDim) {
-      image.style.maxWidth = options.maxDim + "px";
-      image.style.maxHeight = options.maxDim + "px";
-    }
-    vbox.appendChild(image);
-
-    if (!options.hideDimensionLabel) {
-      let label = this.doc.createElement("label");
-      label.classList.add("devtools-tooltip-caption");
-      label.classList.add("theme-comment");
-
-      if (options.naturalWidth && options.naturalHeight) {
-        label.textContent = this._getImageDimensionLabel(options.naturalWidth,
-          options.naturalHeight);
-      } else {
-        // If no dimensions were provided, load the image to get them
-        label.textContent =
-          l10n.strings.GetStringFromName("previewTooltip.image.brokenImage");
-        let imgObj = new this.doc.defaultView.Image();
-        imgObj.src = imageUrl;
-        imgObj.onload = () => {
-          imgObj.onload = null;
-          label.textContent = this._getImageDimensionLabel(imgObj.naturalWidth,
-              imgObj.naturalHeight);
-        };
-      }
-
-      vbox.appendChild(label);
-    }
-
-    this.content = vbox;
-  },
-
-  _getImageDimensionLabel: (w, h) => w + " \u00D7 " + h,
 
   /**
    * Load a document into an iframe, and set the iframe
@@ -1231,17 +1153,4 @@ Heritage.extend(SwatchBasedEditorTooltip.prototype, {
     this._parser = parser;
     this._options = options;
   }
-});
-
-/**
- * L10N utility class
- */
-function L10N() {}
-L10N.prototype = {};
-
-var l10n = new L10N();
-
-loader.lazyGetter(L10N.prototype, "strings", () => {
-  return Services.strings.createBundle(
-    "chrome://devtools/locale/inspector.properties");
 });
