@@ -47,11 +47,6 @@
   background-color: var(--identity-box-selected-background-color);
 }
 
-#identity-box:hover > :not(#identity-icon),
-#identity-box[open=true] > :not(#identity-icon) {
-  filter: grayscale(100%);
-}
-
 #urlbar[pageproxystate="valid"] > #identity-box.verifiedIdentity {
   color: var(--identity-box-verified-color);
 }
@@ -104,6 +99,15 @@
 #identity-box:hover > #identity-icon,
 #identity-box[open=true] > #identity-icon {
   list-style-image: url(chrome://browser/skin/identity-icon.svg#hover);
+}
+
+#identity-box.grantedPermissions > #identity-icon {
+  list-style-image: url(chrome://browser/skin/identity-icon.svg#notice);
+}
+
+#identity-box.grantedPermissions:hover > #identity-icon,
+#identity-box.grantedPermissions[open=true] > #identity-icon {
+  list-style-image: url(chrome://browser/skin/identity-icon.svg#notice-hover);
 }
 
 #urlbar[pageproxystate="valid"] > #identity-box.chromeUI > #identity-icon {

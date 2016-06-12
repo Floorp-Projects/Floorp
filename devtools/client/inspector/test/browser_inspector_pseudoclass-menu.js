@@ -15,26 +15,17 @@ add_task(function* () {
   let {inspector, testActor} = yield openInspectorForURL(TEST_URI);
   yield selectNode("div", inspector);
 
-  info("Getting the inspector ctx menu and opening it");
-  let menu = inspector.panelDoc.getElementById("inspector-node-popup");
-  yield openMenu(menu);
+  let allMenuItems = openContextMenuAndGetAllItems(inspector);
 
-  yield testMenuItems(testActor, menu, inspector);
-
-  menu.hidePopup();
+  yield testMenuItems(testActor, allMenuItems, inspector);
 });
 
-function openMenu(menu) {
-  let promise = once(menu, "popupshowing", true);
-  menu.openPopup();
-  return promise;
-}
-
-function* testMenuItems(testActor, menu, inspector) {
+function* testMenuItems(testActor, allMenuItems, inspector) {
   for (let pseudo of PSEUDOS) {
-    let menuitem = inspector.panelDoc.getElementById(
-      "node-menu-pseudo-" + pseudo);
-    ok(menuitem, ":" + pseudo + " menuitem exists");
+    let menuItem =
+      allMenuItems.find(item => item.id === "node-menu-pseudo-" + pseudo);
+    ok(menuItem, ":" + pseudo + " menuitem exists");
+    is(menuItem.disabled, false, ":" + pseudo + " menuitem is enabled");
 
     // Give the inspector panels a chance to update when the pseudoclass changes
     let onPseudo = inspector.selection.once("pseudoclass");
@@ -43,7 +34,7 @@ function* testMenuItems(testActor, menu, inspector) {
     // Walker uses SDK-events so calling walker.once does not return a promise.
     let onMutations = once(inspector.walker, "mutations");
 
-    menuitem.doCommand();
+    menuItem.click();
 
     yield onPseudo;
     yield onRefresh;

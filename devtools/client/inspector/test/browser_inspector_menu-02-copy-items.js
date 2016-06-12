@@ -40,9 +40,10 @@ add_task(function* () {
     info("Testing " + desc);
     yield selectNode(selector, inspector);
 
-    let item = inspector.panelDoc.getElementById(id);
+    let allMenuItems = openContextMenuAndGetAllItems(inspector);
+    let item = allMenuItems.find(i => i.id === id);
     ok(item, "The popup has a " + desc + " menu item.");
 
-    yield waitForClipboard(() => item.doCommand(), text);
+    yield waitForClipboard(() => item.click(), text);
   }
 });

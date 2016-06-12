@@ -143,8 +143,89 @@ richlistitem.download button {
                                            .downloadRetry,
 
 .download-state:not(          [state="1"]  /* Finished           */)
-                                           .downloadShow
+                                           .downloadShow,
 
+/* The "show blocked info" button is shown only in the downloads panel. */
+.downloadShowBlockedInfo
 {
-  visibility: hidden;
+  display: none;
+}
+
+/*** Downloads panel ***/
+
+#downloadsPanel[hasdownloads] #emptyDownloads,
+#downloadsPanel:not([hasdownloads]) #downloadsListBox {
+  display: none;
+}
+
+/*** Downloads panel multiview (main view and blocked-downloads subview) ***/
+
+#downloadsPanel,
+#downloadsPanel .panel-viewstack[viewtype=main]:not([transitioning]) #downloadsPanel-mainView {
+  /* Tiny hack to ensure the panel shrinks back to its original
+     size after closing a subview that is bigger than the main view. */
+  max-height: 0;
+}
+
+/* Hide all the usual buttons. */
+#downloadsPanel-mainView .download-state[state="8"] .downloadCancel,
+#downloadsPanel-mainView .download-state[state="8"] .downloadConfirmBlock,
+#downloadsPanel-mainView .download-state[state="8"] .downloadChooseUnblock,
+#downloadsPanel-mainView .download-state[state="8"] .downloadChooseOpen,
+#downloadsPanel-mainView .download-state[state="8"] .downloadRetry,
+#downloadsPanel-mainView .download-state[state="8"] .downloadShow {
+  display: none;
+}
+
+/* Show the "show blocked info" button. */
+#downloadsPanel-mainView .download-state[state="8"] .downloadShowBlockedInfo {
+  display: inline;
+}
+
+/** When the main view is showing... **/
+
+/* The subview should be off to the right and not visible at all. */
+#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype=main] > .panel-subviews {
+  transform: translateX(100%);
+  transition: transform var(--panelui-subview-transition-duration);
+}
+
+#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype=main] > .panel-subviews:-moz-locale-dir(rtl) {
+  transform: translateX(-100%);
+}
+
+/** When the subview is showing... **/
+
+/* Hide the buttons of all downloads except the one that triggered the
+   subview. */
+#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] .download-state:not([showingsubview]) .downloadButton {
+  display: none;
+}
+#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] .download-state[showingsubview] .downloadButton {
+  display: inline;
+}
+
+/* For the download that triggered the subview, move its button farther to the
+   right by removing padding so that a minimum amount of the main view's right
+   edge needs to be shown. */
+#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype="subview"] .download-state[showingsubview] {
+  padding: 0;
+}
+
+/* The main view should slide to the left and its right edge should remain
+   visible. */
+#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype=subview] > .panel-mainview {
+  transform: translateX(calc(-100% + 38px));
+  transition: transform var(--panelui-subview-transition-duration);
+}
+
+#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack[viewtype=subview] > .panel-mainview:-moz-locale-dir(rtl) {
+  transform: translateX(calc(100% - 38px));
+}
+
+/* The subview should leave the right edge of the main view uncovered. */
+#downloadsPanel-multiView > .panel-viewcontainer > .panel-viewstack > .panel-subviews {
+  /* Use a margin instead of a transform like above so that the subview's width
+     isn't wider than the panel. */
+  -moz-margin-start: 38px !important;
 }

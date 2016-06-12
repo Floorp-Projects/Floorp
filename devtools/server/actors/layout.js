@@ -31,28 +31,12 @@ const {method, Arg} = protocol;
 const events = require("sdk/event/core");
 const Heritage = require("sdk/core/heritage");
 const EventEmitter = require("devtools/shared/event-emitter");
+const {reflowSpec} = require("devtools/shared/specs/layout");
 
 /**
  * The reflow actor tracks reflows and emits events about them.
  */
-var ReflowActor = exports.ReflowActor = protocol.ActorClass({
-  typeName: "reflow",
-
-  events: {
-    /**
-     * The reflows event is emitted when reflows have been detected. The event
-     * is sent with an array of reflows that occured. Each item has the
-     * following properties:
-     * - start {Number}
-     * - end {Number}
-     * - isInterruptible {Boolean}
-     */
-    "reflows": {
-      type: "reflows",
-      reflows: Arg(0, "array:json")
-    }
-  },
-
+var ReflowActor = exports.ReflowActor = protocol.ActorClassWithSpec(reflowSpec, {
   initialize: function (conn, tabActor) {
     protocol.Actor.prototype.initialize.call(this, conn);
 
@@ -85,49 +69,30 @@ var ReflowActor = exports.ReflowActor = protocol.ActorClass({
    * This is a oneway method, do not expect a response and it won't return a
    * promise.
    */
-  start: method(function () {
+  start: function () {
     if (!this._isStarted) {
       this.observer.on("reflows", this._onReflow);
       this._isStarted = true;
     }
-  }, {oneway: true}),
+  },
 
   /**
    * Stop tracking reflows and sending events to clients about them.
    * This is a oneway method, do not expect a response and it won't return a
    * promise.
    */
-  stop: method(function () {
+  stop: function () {
     if (this._isStarted) {
       this.observer.off("reflows", this._onReflow);
       this._isStarted = false;
     }
-  }, {oneway: true}),
+  },
 
   _onReflow: function (event, reflows) {
     if (this._isStarted) {
       events.emit(this, "reflows", reflows);
     }
   }
-});
-
-/**
- * Usage example of the reflow front:
- *
- * let front = ReflowFront(toolbox.target.client, toolbox.target.form);
- * front.on("reflows", this._onReflows);
- * front.start();
- * // now wait for events to come
- */
-exports.ReflowFront = protocol.FrontClass(ReflowActor, {
-  initialize: function (client, {reflowActor}) {
-    protocol.Front.prototype.initialize.call(this, client, {actor: reflowActor});
-    this.manage(this);
-  },
-
-  destroy: function () {
-    protocol.Front.prototype.destroy.call(this);
-  },
 });
 
 /**
