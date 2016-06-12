@@ -120,18 +120,12 @@ UNITTEST_PLATFORM_PRETTY_NAMES = {
 # least build-ish things.  Sort of.  Anyway, these other things are implemented
 # as different "platforms".
 RIDEALONG_BUILDS = {
-    'linux': [
-        'linux-l10n',
-    ],
     'linux64': [
-        'linux64-l10n',
         'sm-plain',
-        'sm-nonunified',
         'sm-arm-sim',
         'sm-arm64-sim',
         'sm-compacting',
         'sm-rootanalysis',
-        'sm-package',
     ],
 }
 
