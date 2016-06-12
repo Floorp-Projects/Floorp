@@ -1069,9 +1069,9 @@ nsContentUtils::ParseHTMLInteger(const nsAString& aValue,
     return 0;
   }
 
-  bool negate = false;
+  int sign = 1;
   if (*iter == char16_t('-')) {
-    negate = true;
+    sign = -1;
     ++iter;
   } else if (*iter == char16_t('+')) {
     result |= eParseHTMLInteger_NonStandard;
@@ -1095,7 +1095,7 @@ nsContentUtils::ParseHTMLInteger(const nsAString& aValue,
 
   while (iter != end) {
     if (*iter >= char16_t('0') && *iter <= char16_t('9')) {
-      value = (value * 10) + (*iter - char16_t('0'));
+      value = (value * 10) + (*iter - char16_t('0')) * sign;
       ++iter;
       if (!value.isValid()) {
         result |= eParseHTMLInteger_Error | eParseHTMLInteger_ErrorOverflow;
@@ -1116,16 +1116,9 @@ nsContentUtils::ParseHTMLInteger(const nsAString& aValue,
     result |= eParseHTMLInteger_Error | eParseHTMLInteger_ErrorNoValue;
   }
 
-  if (value.isValid() && negate) {
-    value = -value;
-    // Checking the special case of -0.
-    if (value == 0) {
-      result |= eParseHTMLInteger_NonStandard;
-    }
-  }
-
   if (value.isValid() &&
-      (leadingZeros > 1 || (leadingZeros == 1 && !(value == 0)))) {
+       ((leadingZeros > 1 || (leadingZeros == 1 && !(value == 0))) ||
+       (sign == -1 && value == 0))) {
     result |= eParseHTMLInteger_NonStandard;
   }
 
