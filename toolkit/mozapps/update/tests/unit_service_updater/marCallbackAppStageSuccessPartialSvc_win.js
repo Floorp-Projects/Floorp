@@ -4,35 +4,50 @@
 
 /* Patch app binary partial MAR file staged patch apply success test */
 
+const STATE_AFTER_STAGE = IS_SERVICE_TEST ? STATE_APPLIED_SVC : STATE_APPLIED;
+
 function run_test() {
-  if (!shouldRunServiceTest()) {
+  if (!setupTestCommon()) {
     return;
   }
-
-  gStageUpdate = true;
-  setupTestCommon();
   gTestFiles = gTestFilesPartialSuccess;
   gTestDirs = gTestDirsPartialSuccess;
-  setupUpdaterTest(FILE_PARTIAL_MAR);
-
   gCallbackBinFile = "exe0.exe";
-
-  setupAppFilesAsync();
+  setupUpdaterTest(FILE_PARTIAL_MAR, false);
 }
 
-function setupAppFilesFinished() {
-  runUpdateUsingService(STATE_PENDING_SVC, STATE_APPLIED);
+/**
+ * Called after the call to setupUpdaterTest finishes.
+ */
+function setupUpdaterTestFinished() {
+  stageUpdate();
 }
 
-function checkUpdateFinished() {
+/**
+ * Called after the call to stageUpdate finishes.
+ */
+function stageUpdateFinished() {
+  checkPostUpdateRunningFile(false);
+  checkFilesAfterUpdateSuccess(getStageDirFile, true);
+  checkUpdateLogContents(LOG_PARTIAL_SUCCESS_STAGE, true);
   // Switch the application to the staged application that was updated.
-  gStageUpdate = false;
-  gSwitchApp = true;
-  runUpdate(0, STATE_SUCCEEDED, checkUpdateApplied);
+  runUpdate(STATE_SUCCEEDED, true, 0, false);
 }
 
-function checkUpdateApplied() {
-  checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
+/**
+ * Called after the call to runUpdate finishes.
+ */
+function runUpdateFinished() {
+  checkPostUpdateAppLog();
+}
+
+/**
+ * Called after the call to checkPostUpdateAppLog finishes.
+ */
+function checkPostUpdateAppLogFinished() {
   standardInit();
-  checkCallbackAppLog();
+  checkPostUpdateRunningFile(true);
+  checkFilesAfterUpdateSuccess(getApplyDirFile, false, true);
+  checkUpdateLogContents(LOG_REPLACE_SUCCESS, false, true);
+  checkCallbackLog();
 }

@@ -8,7 +8,6 @@
 #define mozilla_dom_indexeddatabase_h__
 
 #include "js/StructuredClone.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 

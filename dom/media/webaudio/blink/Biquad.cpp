@@ -110,22 +110,19 @@ void Biquad::setLowpassParams(double cutoff, double resonance)
     } else if (cutoff > 0) {
         // Compute biquad coefficients for lowpass filter
         resonance = std::max(0.0, resonance); // can't go negative
-        double g = pow(10.0, 0.05 * resonance);
-        double d = sqrt((4 - sqrt(16 - 16 / (g * g))) / 2);
+        double g = pow(10.0, -0.05 * resonance);
+        double w0 = M_PI * cutoff;
+        double cos_w0 = cos(w0);
+        double alpha = 0.5 * sin(w0) * g;
 
-        double theta = M_PI * cutoff;
-        double sn = 0.5 * d * sin(theta);
-        double beta = 0.5 * (1 - sn) / (1 + sn);
-        double gamma = (0.5 + beta) * cos(theta);
-        double alpha = 0.25 * (0.5 + beta - gamma);
+        double b1 = 1.0 - cos_w0;
+        double b0 = 0.5 * b1;
+        double b2 = b0;
+        double a0 = 1.0 + alpha;
+        double a1 = -2.0 * cos_w0;
+        double a2 = 1.0 - alpha;
 
-        double b0 = 2 * alpha;
-        double b1 = 2 * 2 * alpha;
-        double b2 = 2 * alpha;
-        double a1 = 2 * -gamma;
-        double a2 = 2 * beta;
-
-        setNormalizedCoefficients(b0, b1, b2, 1, a1, a2);
+        setNormalizedCoefficients(b0, b1, b2, a0, a1, a2);
     } else {
         // When cutoff is zero, nothing gets through the filter, so set
         // coefficients up correctly.
@@ -146,22 +143,19 @@ void Biquad::setHighpassParams(double cutoff, double resonance)
     } else if (cutoff > 0) {
         // Compute biquad coefficients for highpass filter
         resonance = std::max(0.0, resonance); // can't go negative
-        double g = pow(10.0, 0.05 * resonance);
-        double d = sqrt((4 - sqrt(16 - 16 / (g * g))) / 2);
+        double g = pow(10.0, -0.05 * resonance);
+        double w0 = M_PI * cutoff;
+        double cos_w0 = cos(w0);
+        double alpha = 0.5 * sin(w0) * g;
 
-        double theta = M_PI * cutoff;
-        double sn = 0.5 * d * sin(theta);
-        double beta = 0.5 * (1 - sn) / (1 + sn);
-        double gamma = (0.5 + beta) * cos(theta);
-        double alpha = 0.25 * (0.5 + beta + gamma);
+        double b1 = -1.0 - cos_w0;
+        double b0 = -0.5 * b1;
+        double b2 = b0;
+        double a0 = 1.0 + alpha;
+        double a1 = -2.0 * cos_w0;
+        double a2 = 1.0 - alpha;
 
-        double b0 = 2 * alpha;
-        double b1 = 2 * -2 * alpha;
-        double b2 = 2 * alpha;
-        double a1 = 2 * -gamma;
-        double a2 = 2 * beta;
-
-        setNormalizedCoefficients(b0, b1, b2, 1, a1, a2);
+        setNormalizedCoefficients(b0, b1, b2, a0, a1, a2);
     } else {
       // When cutoff is zero, we need to be careful because the above
       // gives a quadratic divided by the same quadratic, with poles

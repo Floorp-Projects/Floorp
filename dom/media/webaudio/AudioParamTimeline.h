@@ -9,7 +9,6 @@
 
 #include "AudioEventTimeline.h"
 #include "mozilla/ErrorResult.h"
-#include "nsAutoPtr.h"
 #include "MediaStreamGraph.h"
 #include "AudioSegment.h"
 

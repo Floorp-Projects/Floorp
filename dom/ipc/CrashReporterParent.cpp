@@ -6,6 +6,7 @@
 #include "CrashReporterParent.h"
 #include "mozilla/Snprintf.h"
 #include "mozilla/dom/ContentParent.h"
+#include "nsAutoPtr.h"
 #include "nsXULAppAPI.h"
 #include <time.h>
 
@@ -108,12 +109,6 @@ CrashReporterParent::GenerateCrashReportForMinidump(nsIFile* minidump,
   bool result = GenerateChildData(processNotes);
   FinalizeChildData();
   return result;
-}
-
-bool
-CrashReporterParent::UseMinidump(nsIFile* aMinidump)
-{
-  return CrashReporter::GetIDFromMinidump(aMinidump, mChildDumpID);
 }
 
 bool

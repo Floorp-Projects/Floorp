@@ -12,7 +12,6 @@
 #include "nsPresContext.h"
 #include "nsScriptLoader.h"
 #include "nsIParser.h"
-#include "nsAutoPtr.h"
 #include "nsGkAtoms.h"
 #include "nsContentSink.h"
 

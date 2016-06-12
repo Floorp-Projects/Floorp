@@ -8,7 +8,6 @@
 #define mozilla_dom_SpeechDispatcherService_h
 
 #include "mozilla/StaticPtr.h"
-#include "nsAutoPtr.h"
 #include "nsIObserver.h"
 #include "nsISpeechService.h"
 #include "nsIThread.h"

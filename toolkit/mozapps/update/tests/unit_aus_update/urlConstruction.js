@@ -171,9 +171,9 @@ function run_test_pt7() {
   let url = URL_PREFIX + "%CHANNEL%/";
   debugDump("testing url constructed with %CHANNEL% - " + url);
   setUpdateURLOverride(url);
-  gDefaultPrefBranch.setCharPref(PREF_APP_PARTNER_BRANCH + "test_partner1",
+  gDefaultPrefBranch.setCharPref(PREFBRANCH_APP_PARTNER + "test_partner1",
                                  "test_partner1");
-  gDefaultPrefBranch.setCharPref(PREF_APP_PARTNER_BRANCH + "test_partner2",
+  gDefaultPrefBranch.setCharPref(PREFBRANCH_APP_PARTNER + "test_partner2",
                                  "test_partner2");
   gUpdateChecker.checkForUpdates(updateCheckListener, true);
 }

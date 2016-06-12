@@ -6,6 +6,7 @@
 
 #include "nsBindingManager.h"
 
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsXBLService.h"
 #include "nsIInputStream.h"

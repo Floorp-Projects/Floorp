@@ -8,7 +8,6 @@
 #define nsXBLPrototypeResources_h__
 
 #include "mozilla/StyleSheetHandle.h"
-#include "nsAutoPtr.h"
 #include "nsICSSLoaderObserver.h"
 
 class nsCSSRuleProcessor;

@@ -15,7 +15,6 @@
 #include "mozilla/IncrementalClearCOMRuleArray.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/css/Rule.h"
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 
 class nsPresContext;

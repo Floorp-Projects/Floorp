@@ -33,7 +33,7 @@ function runTest() {
   Services.prefs.setCharPref(PREF_APP_UPDATE_CERT_INVALID_ATTR_NAME,
                              "Invalid Attribute Name");
   Services.prefs.setBoolPref(PREF_APP_UPDATE_CERT_REQUIREBUILTIN, false);
-  Services.prefs.setBoolPref(PREF_APP_UPDATE_CERT_CHECKATTRS, true);
+  Services.prefs.setBoolPref(PREF_APP_UPDATE_CERT_CHECKATTRIBUTES, true);
 
   let url = URL_HTTPS_UPDATE_XML + "?showDetails=1" + getVersionParams();
   gAppUpdateURLDefault = gDefaultPrefBranch.getCharPref(PREF_APP_UPDATE_URL);

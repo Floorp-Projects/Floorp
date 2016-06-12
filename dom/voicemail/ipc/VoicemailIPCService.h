@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/voicemail/PVoicemailChild.h"
-#include "nsAutoPtr.h"
 #include "nsIVoicemailService.h"
 
 namespace mozilla {

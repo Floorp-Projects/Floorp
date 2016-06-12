@@ -7,7 +7,6 @@
 #define nsTransactionStack_h__
 
 #include "nsDeque.h"
-#include "nsAutoPtr.h"
 
 class nsCycleCollectionTraversalCallback;
 class nsTransactionItem;

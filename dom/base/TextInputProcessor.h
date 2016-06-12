@@ -11,7 +11,6 @@
 #include "mozilla/EventForwards.h"
 #include "mozilla/TextEventDispatcher.h"
 #include "mozilla/TextEventDispatcherListener.h"
-#include "nsAutoPtr.h"
 #include "nsITextInputProcessor.h"
 #include "nsITextInputProcessorCallback.h"
 #include "nsTArray.h"

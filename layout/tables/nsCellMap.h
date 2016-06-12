@@ -11,7 +11,6 @@
 #include "nsTArray.h"
 #include "nsCOMPtr.h"
 #include "nsAlgorithm.h"
-#include "nsAutoPtr.h"
 #include "nsRect.h"
 #include <algorithm>
 #include "TableArea.h"

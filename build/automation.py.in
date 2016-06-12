@@ -244,7 +244,7 @@ class Automation(object):
     env['XRE_NO_WINDOWS_CRASH_DIALOG'] = '1'
 
     # Set WebRTC logging in case it is not set yet
-    env.setdefault('NSPR_LOG_MODULES', 'signaling:3,mtransport:4,datachannel:4,jsep:4,MediaPipelineFactory:4')
+    env.setdefault('MOZ_LOG', 'signaling:3,mtransport:4,datachannel:4,jsep:4,MediaPipelineFactory:4')
     env.setdefault('R_LOG_LEVEL', '6')
     env.setdefault('R_LOG_DESTINATION', 'stderr')
     env.setdefault('R_LOG_VERBOSE', '1')

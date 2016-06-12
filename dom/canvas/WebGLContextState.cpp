@@ -130,7 +130,7 @@ WebGLContext::GetChannelBits(const char* funcName, GLenum pname, GLint* const ou
             break;
 
         default:
-            MOZ_CRASH("bad pname");
+            MOZ_CRASH("GFX: bad pname");
         }
         return true;
     }
@@ -174,7 +174,7 @@ WebGLContext::GetChannelBits(const char* funcName, GLenum pname, GLint* const ou
         break;
 
     default:
-        MOZ_CRASH("bad pname");
+        MOZ_CRASH("GFX: bad pname");
     }
 
     gl->fGetFramebufferAttachmentParameteriv(LOCAL_GL_DRAW_FRAMEBUFFER, fbAttachment,
@@ -301,7 +301,7 @@ WebGLContext::GetParameter(JSContext* cx, GLenum pname, ErrorResult& rv)
                     driverEnum = LOCAL_GL_VENDOR;
                     break;
                 default:
-                    MOZ_CRASH("bad `pname`");
+                    MOZ_CRASH("GFX: bad `pname`");
                 }
 
                 bool hasRetVal = false;

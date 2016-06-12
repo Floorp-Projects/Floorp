@@ -5,7 +5,6 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "Gamepad.h"
-#include "nsAutoPtr.h"
 #include "nsPIDOMWindow.h"
 #include "nsTArray.h"
 #include "nsVariant.h"

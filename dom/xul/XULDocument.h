@@ -6,6 +6,7 @@
 #ifndef mozilla_dom_XULDocument_h
 #define mozilla_dom_XULDocument_h
 
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsXULPrototypeDocument.h"
 #include "nsXULPrototypeCache.h"

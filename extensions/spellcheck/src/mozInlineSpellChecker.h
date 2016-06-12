@@ -6,7 +6,6 @@
 #ifndef __mozinlinespellchecker_h__
 #define __mozinlinespellchecker_h__
 
-#include "nsAutoPtr.h"
 #include "nsRange.h"
 #include "nsIEditorSpellCheck.h"
 #include "nsIEditActionListener.h"

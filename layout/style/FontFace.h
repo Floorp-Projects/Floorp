@@ -8,6 +8,7 @@
 
 #include "mozilla/dom/FontFaceBinding.h"
 #include "gfxUserFontSet.h"
+#include "nsAutoPtr.h"
 #include "nsCSSProperty.h"
 #include "nsCSSValue.h"
 #include "nsWrapperCache.h"

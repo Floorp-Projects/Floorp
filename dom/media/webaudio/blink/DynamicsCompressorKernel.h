@@ -30,7 +30,6 @@
 #define DynamicsCompressorKernel_h
 
 #include "nsTArray.h"
-#include "nsAutoPtr.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/UniquePtr.h"
 

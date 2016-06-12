@@ -38,11 +38,11 @@ using namespace mozilla;
 //
 // To enable logging (see mozilla/Logging.h for full details):
 //
-//    set NSPR_LOG_MODULES=nsPrefetch:5
-//    set NSPR_LOG_FILE=prefetch.log
+//    set MOZ_LOG=nsPrefetch:5
+//    set MOZ_LOG_FILE=prefetch.log
 //
 // this enables LogLevel::Debug level information and places all output in
-// the file http.log
+// the file prefetch.log
 //
 static LazyLogModule gPrefetchLog("nsPrefetch");
 

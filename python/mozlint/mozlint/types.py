@@ -28,7 +28,9 @@ class BaseType(object):
         exclude = lintargs.get('exclude', [])
         exclude.extend(linter.get('exclude', []))
 
-        paths, exclude = filterpaths(paths, linter.get('include'), exclude)
+        if lintargs.get('use_filters', True):
+            paths, exclude = filterpaths(paths, linter.get('include'), exclude)
+
         if not paths:
             print("{}: No files to lint for specified paths!".format(linter['name']))
             return

@@ -32,6 +32,7 @@
 #include "nsHashKeys.h"
 #include "nsISupports.h"
 #include "nsIContent.h"
+#include "nsISelectionController.h"
 #include "nsQueryFrame.h"
 #include "nsCoord.h"
 #include "nsColor.h"
@@ -100,8 +101,6 @@ class DocAccessible;
 #endif
 struct nsArenaMemoryStats;
 class nsITimer;
-
-typedef short SelectionType;
 
 namespace mozilla {
 class EventStates;
@@ -833,7 +832,8 @@ public:
     */
   int16_t GetSelectionFlags() const { return mSelectionFlags; }
 
-  virtual mozilla::dom::Selection* GetCurrentSelection(SelectionType aType) = 0;
+  virtual mozilla::dom::Selection*
+    GetCurrentSelection(mozilla::SelectionType aSelectionType) = 0;
 
   /**
     * Interface to dispatch events via the presshell
@@ -974,9 +974,8 @@ public:
 
   /**
    * See if reflow verification is enabled. To enable reflow verification add
-   * "verifyreflow:1" to your NSPR_LOG_MODULES environment variable
-   * (any non-zero debug level will work). Or, call SetVerifyReflowEnable
-   * with true.
+   * "verifyreflow:1" to your MOZ_LOG environment variable (any non-zero
+   * debug level will work). Or, call SetVerifyReflowEnable with true.
    */
   static bool GetVerifyReflowEnable();
 

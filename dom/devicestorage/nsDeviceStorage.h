@@ -14,7 +14,6 @@
 
 #include "DOMRequest.h"
 #include "DOMCursor.h"
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDOMClassInfoID.h"
 #include "nsIClassInfo.h"

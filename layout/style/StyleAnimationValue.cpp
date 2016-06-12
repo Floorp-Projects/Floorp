@@ -12,6 +12,7 @@
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/UniquePtr.h"
 #include "nsStyleTransformMatrix.h"
+#include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsIStyleRule.h"
 #include "mozilla/css/StyleRule.h"

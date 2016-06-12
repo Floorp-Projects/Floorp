@@ -15,6 +15,7 @@
 #include "XPCJSMemoryReporter.h"
 #include "WrapperFactory.h"
 #include "mozJSComponentLoader.h"
+#include "nsAutoPtr.h"
 #include "nsNetUtil.h"
 
 #include "nsIMemoryInfoDumper.h"
@@ -131,20 +132,6 @@ xpc::SharedMemoryEnabled() { return sSharedMemoryEnabled; }
 // *All* NativeSets are referenced from mNativeSetMap.
 // So, in mClassInfo2NativeSetMap we just clear references to the unmarked.
 // In mNativeSetMap we clear the references to the unmarked *and* delete them.
-
-bool
-XPCJSRuntime::CustomContextCallback(JSContext* cx, unsigned operation)
-{
-    if (operation == JSCONTEXT_NEW) {
-        if (!OnJSContextNew(cx)) {
-            return false;
-        }
-    } else if (operation == JSCONTEXT_DESTROY) {
-        delete XPCContext::GetXPCContext(cx);
-    }
-
-    return true;
-}
 
 class AsyncFreeSnowWhite : public Runnable
 {
@@ -3662,7 +3649,7 @@ XPCJSRuntime::newXPCJSRuntime()
 }
 
 bool
-XPCJSRuntime::OnJSContextNew(JSContext* cx)
+XPCJSRuntime::InitXPCContext(JSContext* cx)
 {
     // If we were the first cx ever created (like the SafeJSContext), the caller
     // would have had no way to enter a request. Enter one now before doing the

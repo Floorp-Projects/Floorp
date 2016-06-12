@@ -686,6 +686,11 @@ public:
             config,
             false);
 
+        if (!mGLContext) {
+          lock.NotifyAll();
+          return;
+        }
+
         mGLContext->MakeCurrent();
 
         // Test that SGI_video_sync lets us get the counter.

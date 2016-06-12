@@ -8,7 +8,6 @@
 #define nsDocShellTreeOwner_h__
 
 // Helper Classes
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsString.h"
 

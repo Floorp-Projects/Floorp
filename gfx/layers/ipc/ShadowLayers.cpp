@@ -31,7 +31,6 @@
 #include "ShadowLayerUtils.h"
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
 #include "mozilla/mozalloc.h"           // for operator new, etc
-#include "nsAutoPtr.h"                  // for nsRefPtr, getter_AddRefs, etc
 #include "nsTArray.h"                   // for AutoTArray, nsTArray, etc
 #include "nsXULAppAPI.h"                // for XRE_GetProcessType, etc
 #include "mozilla/ReentrantMonitor.h"
@@ -1162,7 +1161,7 @@ uint8_t*
 GetAddressFromDescriptor(const SurfaceDescriptor& aDescriptor)
 {
   MOZ_ASSERT(IsSurfaceDescriptorValid(aDescriptor));
-  MOZ_RELEASE_ASSERT(aDescriptor.type() == SurfaceDescriptor::TSurfaceDescriptorBuffer);
+  MOZ_RELEASE_ASSERT(aDescriptor.type() == SurfaceDescriptor::TSurfaceDescriptorBuffer, "GFX: surface descriptor is not the right type.");
 
   auto memOrShmem = aDescriptor.get_SurfaceDescriptorBuffer().data();
   if (memOrShmem.type() == MemoryOrShmem::TShmem) {

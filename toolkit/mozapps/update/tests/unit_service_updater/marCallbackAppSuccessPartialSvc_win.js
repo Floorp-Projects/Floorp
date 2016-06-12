@@ -5,26 +5,36 @@
 /* Patch app binary partial MAR file patch apply success test */
 
 function run_test() {
-  if (!shouldRunServiceTest()) {
+  if (!setupTestCommon()) {
     return;
   }
-
-  setupTestCommon();
   gTestFiles = gTestFilesPartialSuccess;
   gTestDirs = gTestDirsPartialSuccess;
-  setupUpdaterTest(FILE_PARTIAL_MAR);
-
   gCallbackBinFile = "exe0.exe";
-
-  setupAppFilesAsync();
+  setupUpdaterTest(FILE_PARTIAL_MAR, false);
 }
 
-function setupAppFilesFinished() {
-  runUpdateUsingService(STATE_PENDING_SVC, STATE_SUCCEEDED);
+/**
+ * Called after the call to setupUpdaterTest finishes.
+ */
+function setupUpdaterTestFinished() {
+  runUpdate(STATE_SUCCEEDED, false, 0, true);
 }
 
-function checkUpdateFinished() {
-  checkFilesAfterUpdateSuccess(getApplyDirFile, false, false);
+/**
+ * Called after the call to runUpdate finishes.
+ */
+function runUpdateFinished() {
+  checkPostUpdateAppLog();
+}
+
+/**
+ * Called after the call to checkPostUpdateAppLog finishes.
+ */
+function checkPostUpdateAppLogFinished() {
   standardInit();
-  checkCallbackServiceLog();
+  checkPostUpdateRunningFile(true);
+  checkFilesAfterUpdateSuccess(getApplyDirFile);
+  checkUpdateLogContents(LOG_PARTIAL_SUCCESS);
+  checkCallbackLog();
 }

@@ -15,6 +15,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/Mutex.h"
 #include "mozilla/PodOperations.h"
+#include "nsAutoPtr.h"
 #include <deque>
 
 namespace mozilla {

@@ -86,7 +86,7 @@ WebGLSampler::SamplerParameter1i(GLenum pname, GLint param)
         break;
 
     default:
-        MOZ_CRASH("Unhandled pname");
+        MOZ_CRASH("GFX: Unhandled pname");
         break;
     }
 
@@ -109,7 +109,7 @@ WebGLSampler::SamplerParameter1f(GLenum pname, GLfloat param)
         break;
 
     default:
-        MOZ_CRASH("Unhandled pname");
+        MOZ_CRASH("GFX: Unhandled pname");
         break;
     }
 

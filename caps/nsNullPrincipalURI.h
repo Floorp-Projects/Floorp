@@ -13,7 +13,6 @@
 
 #include "nsIURI.h"
 #include "nsISizeOf.h"
-#include "nsAutoPtr.h"
 #include "nsString.h"
 #include "mozilla/Attributes.h"
 #include "nsIIPCSerializableURI.h"

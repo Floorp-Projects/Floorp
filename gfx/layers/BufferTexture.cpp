@@ -10,7 +10,7 @@
 #include "mozilla/gfx/Logging.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/fallible.h"
-#include <algorithm>
+#include "libyuv.h"
 
 #ifdef MOZ_WIDGET_GTK
 #include "gfxPlatformGtk.h"
@@ -417,7 +417,7 @@ InitBuffer(uint8_t* buf, size_t bufSize,
     if (aFormat == gfx::SurfaceFormat::B8G8R8X8) {
       // Even though BGRX was requested, XRGB_UINT32 is what is meant,
       // so use 0xFF000000 to put alpha in the right place.
-      std::fill_n(reinterpret_cast<uint32_t*>(buf), bufSize / sizeof(uint32_t), 0xFF000000);
+      libyuv::ARGBRect(buf, bufSize, 0, 0, bufSize / sizeof(uint32_t), 1, 0xFF000000);
     } else if (!aAlreadyZero) {
       memset(buf, 0, bufSize);
     }

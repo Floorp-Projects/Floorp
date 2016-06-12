@@ -14,6 +14,7 @@
 #include "mozilla/Variant.h"
 #include "mozilla/XorShift128PlusRNG.h"
 
+#include "asmjs/WasmJS.h"
 #include "builtin/RegExp.h"
 #include "gc/Barrier.h"
 #include "gc/Zone.h"
@@ -32,13 +33,8 @@ namespace gc {
 template <typename Node, typename Derived> class ComponentFinder;
 } // namespace gc
 
-namespace wasm {
-class Module;
-} // namespace wasm
-
 class ClonedBlockObject;
 class ScriptSourceObject;
-class WasmModuleObject;
 struct NativeIterator;
 
 /*
@@ -518,10 +514,11 @@ struct JSCompartment
     // All unboxed layouts in the compartment.
     mozilla::LinkedList<js::UnboxedLayout> unboxedLayouts;
 
-    // All wasm modules in the compartment. Weakly held.
-    //
-    // The caller needs to call wasm::Module::readBarrier() manually!
-    mozilla::LinkedList<js::wasm::Module> wasmModuleWeakList;
+    // All wasm live instances in the compartment.
+    using WasmInstanceObjectSet = js::GCHashSet<js::HeapPtr<js::WasmInstanceObject*>,
+                                                js::MovableCellHasher<js::HeapPtr<js::WasmInstanceObject*>>,
+                                                js::SystemAllocPolicy>;
+    JS::WeakCache<WasmInstanceObjectSet> wasmInstances;
 
   private:
     // All non-syntactic lexical scopes in the compartment. These are kept in
@@ -849,6 +846,8 @@ struct JSCompartment
     };
 
     js::ArgumentsObject* getOrCreateArgumentsTemplateObject(JSContext* cx, bool mapped);
+
+    js::ArgumentsObject* maybeArgumentsTemplateObject(bool mapped) const;
 
   private:
     // Used for collecting telemetry on SpiderMonkey's deprecated language extensions.

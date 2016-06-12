@@ -388,9 +388,10 @@ LIRGenerator::visitCreateThis(MCreateThis* ins)
 void
 LIRGenerator::visitCreateArgumentsObject(MCreateArgumentsObject* ins)
 {
-    // LAllocation callObj = useRegisterAtStart(ins->getCallObject());
     LAllocation callObj = useFixed(ins->getCallObject(), CallTempReg0);
-    LCreateArgumentsObject* lir = new(alloc()) LCreateArgumentsObject(callObj, tempFixed(CallTempReg1));
+    LCreateArgumentsObject* lir = new(alloc()) LCreateArgumentsObject(callObj, tempFixed(CallTempReg1),
+                                                                      tempFixed(CallTempReg2),
+                                                                      tempFixed(CallTempReg3));
     defineReturn(lir, ins);
     assignSafepoint(lir, ins);
 }

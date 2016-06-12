@@ -11,7 +11,6 @@
 #include "js/TypeDecls.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/FileRequestBase.h"
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 
 template <class> struct already_AddRefed;

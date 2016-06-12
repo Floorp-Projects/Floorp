@@ -7,7 +7,6 @@
 #include "Layers.h"                     // for ColorLayer, etc
 #include "mozilla/layers/LayersMessages.h"  // for ColorLayerAttributes, etc
 #include "mozilla/mozalloc.h"           // for operator new
-#include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsDebug.h"                    // for NS_ASSERTION
 #include "nsISupportsImpl.h"            // for Layer::AddRef, etc

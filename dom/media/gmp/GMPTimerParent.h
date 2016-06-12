@@ -11,7 +11,6 @@
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"
 #include "nsHashKeys.h"
-#include "nsAutoPtr.h"
 #include "mozilla/Monitor.h"
 #include "nsIThread.h"
 

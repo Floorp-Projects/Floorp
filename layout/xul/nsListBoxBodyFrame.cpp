@@ -26,7 +26,6 @@
 #include "nsStyleContext.h"
 #include "nsFontMetrics.h"
 #include "nsITimer.h"
-#include "nsAutoPtr.h"
 #include "mozilla/StyleSetHandle.h"
 #include "mozilla/StyleSetHandleInlines.h"
 #include "nsPIBoxObject.h"

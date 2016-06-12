@@ -39,8 +39,16 @@ CreateTextureImage(GLContext* gl,
 #endif
         case GLContextType::EGL:
             return CreateTextureImageEGL(gl, aSize, aContentType, aWrapMode, aFlags, aImageFormat);
-        default:
-            return CreateBasicTextureImage(gl, aSize, aContentType, aWrapMode, aFlags);
+        default: {
+            GLint maxTextureSize;
+            gl->fGetIntegerv(LOCAL_GL_MAX_TEXTURE_SIZE, &maxTextureSize);
+            if (aSize.width > maxTextureSize || aSize.height > maxTextureSize) {
+              NS_ASSERTION(aWrapMode == LOCAL_GL_CLAMP_TO_EDGE, "Can't support wrapping with tiles!");
+              return CreateTiledTextureImage(gl, aSize, aContentType, aFlags, aImageFormat);
+            } else {
+              return CreateBasicTextureImage(gl, aSize, aContentType, aWrapMode, aFlags);
+            }
+        }
     }
 }
 
@@ -60,7 +68,8 @@ TileGenFunc(GLContext* gl,
         case GLContextType::EGL:
             return TileGenFuncEGL(gl, aSize, aContentType, aFlags, aImageFormat);
         default:
-            return nullptr;
+            return CreateBasicTextureImage(gl, aSize, aContentType,
+                                           LOCAL_GL_CLAMP_TO_EDGE, aFlags);
     }
 }
 
@@ -722,6 +731,19 @@ uint32_t TiledTextureImage::GetTileCount()
 {
     return mImages.Length();
 }
+
+already_AddRefed<TextureImage>
+CreateTiledTextureImage(GLContext* aGL,
+                        const gfx::IntSize& aSize,
+                        TextureImage::ContentType aContentType,
+                        TextureImage::Flags aFlags,
+                        TextureImage::ImageFormat aImageFormat)
+{
+  RefPtr<TextureImage> texImage = static_cast<TextureImage*>(
+      new gl::TiledTextureImage(aGL, aSize, aContentType, aFlags, aImageFormat));
+  return texImage.forget();
+}
+
 
 already_AddRefed<TextureImage>
 CreateBasicTextureImage(GLContext* aGL,

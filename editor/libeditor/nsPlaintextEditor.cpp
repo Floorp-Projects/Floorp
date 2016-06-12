@@ -15,7 +15,6 @@
 #include "mozilla/dom/Element.h"
 #include "mozilla/mozalloc.h"
 #include "nsAString.h"
-#include "nsAutoPtr.h"
 #include "nsCRT.h"
 #include "nsCaret.h"
 #include "nsCharTraits.h"

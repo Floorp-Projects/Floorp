@@ -1129,7 +1129,7 @@ SenderHelper::SendGraphicBuffer(GLContext* aGLContext,
     auto packet = MakeUnique<layerscope::Packet>();
     layerscope::TexturePacket* texturePacket = packet->mutable_texture();
     texturePacket->set_mpremultiplied(aEffect->mPremultiplied);
-    DumpFilter(texturePacket, aEffect->mFilter);
+    DumpFilter(texturePacket, aEffect->mSamplingFilter);
     DumpRect(texturePacket->mutable_mtexturecoords(), aEffect->mTextureCoords);
 
     GLenum target = aSource->GetTextureTarget();

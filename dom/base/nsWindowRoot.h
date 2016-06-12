@@ -15,7 +15,6 @@ class nsIGlobalObject;
 #include "nsIDOMEventTarget.h"
 #include "nsPIWindowRoot.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsAutoPtr.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
 

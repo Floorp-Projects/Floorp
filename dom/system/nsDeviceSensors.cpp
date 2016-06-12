@@ -9,7 +9,6 @@
 
 #include "nsDeviceSensors.h"
 
-#include "nsAutoPtr.h"
 #include "nsIDOMEvent.h"
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"

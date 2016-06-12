@@ -32,7 +32,6 @@
 #include "nsNetUtil.h" // for NS_ReadInputStreamToBuffer
 #endif
 #include "nsNetCID.h" // for NS_STREAMTRANSPORTSERVICE_CONTRACTID
-#include "nsAutoPtr.h" // for nsAutoArrayPtr
 #include "nsCOMPtr.h"
 #include "nsMemory.h"
 #include "nsThread.h"

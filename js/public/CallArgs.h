@@ -95,23 +95,22 @@ extern JS_PUBLIC_API(void)
 CheckIsValidConstructible(Value v);
 #endif
 
-enum UsedRval { IncludeUsedRval, NoUsedRval };
-
-template<UsedRval WantUsedRval>
-class MOZ_STACK_CLASS UsedRvalBase;
-
-template<>
-class MOZ_STACK_CLASS UsedRvalBase<IncludeUsedRval>
+class MOZ_STACK_CLASS IncludeUsedRval
 {
   protected:
+#ifdef JS_DEBUG
     mutable bool usedRval_;
     void setUsedRval() const { usedRval_ = true; }
     void clearUsedRval() const { usedRval_ = false; }
     void assertUnusedRval() const { MOZ_ASSERT(!usedRval_); }
+#else
+    void setUsedRval() const {}
+    void clearUsedRval() const {}
+    void assertUnusedRval() const {}
+#endif
 };
 
-template<>
-class MOZ_STACK_CLASS UsedRvalBase<NoUsedRval>
+class MOZ_STACK_CLASS NoUsedRval
 {
   protected:
     void setUsedRval() const {}
@@ -119,16 +118,13 @@ class MOZ_STACK_CLASS UsedRvalBase<NoUsedRval>
     void assertUnusedRval() const {}
 };
 
-template<UsedRval WantUsedRval>
-class MOZ_STACK_CLASS CallArgsBase
-  : public UsedRvalBase<
-#ifdef JS_DEBUG
-        WantUsedRval
-#else
-        NoUsedRval
-#endif
-    >
+template<class WantUsedRval>
+class MOZ_STACK_CLASS CallArgsBase : public WantUsedRval
 {
+    static_assert(mozilla::IsSame<WantUsedRval, IncludeUsedRval>::value ||
+                  mozilla::IsSame<WantUsedRval, NoUsedRval>::value,
+                  "WantUsedRval can only be IncludeUsedRval or NoUsedRval");
+
   protected:
     Value* argv_;
     unsigned argc_;

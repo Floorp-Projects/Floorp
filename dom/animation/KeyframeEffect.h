@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_KeyframeEffect_h
 #define mozilla_dom_KeyframeEffect_h
 
-#include "nsAutoPtr.h"
 #include "nsChangeHint.h"
 #include "nsCSSProperty.h"
 #include "nsCSSValue.h"

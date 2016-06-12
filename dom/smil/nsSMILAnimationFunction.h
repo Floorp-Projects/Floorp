@@ -14,7 +14,6 @@
 #include "nsSMILTimeValue.h"
 #include "nsSMILKeySpline.h"
 #include "nsSMILValue.h"
-#include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "nsAttrValue.h"
 #include "nsSMILTypes.h"

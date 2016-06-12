@@ -19,14 +19,26 @@
 #include "asmjs/WasmCode.h"
 
 #include "mozilla/Atomics.h"
+#include "mozilla/EnumeratedRange.h"
 
+#include "jsprf.h"
+
+#include "asmjs/WasmModule.h"
 #include "asmjs/WasmSerialize.h"
 #include "jit/ExecutableAllocator.h"
+#ifdef JS_ION_PERF
+# include "jit/PerfSpewer.h"
+#endif
+#ifdef MOZ_VTUNE
+# include "vtune/VTuneWrapper.h"
+#endif
 
 using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
 using mozilla::Atomic;
+using mozilla::MakeEnumeratedRange;
+using JS::GenericNaN;
 
 // Limit the number of concurrent wasm code allocations per process. Note that
 // on Linux, the real maximum is ~32k, as each module requires 2 maps (RW/RX),
@@ -58,40 +70,197 @@ AllocateCodeSegment(ExclusiveContext* cx, uint32_t totalLength)
     return (uint8_t*)p;
 }
 
-/* static */ UniqueCodeSegment
-CodeSegment::allocate(ExclusiveContext* cx, uint32_t codeLength, uint32_t globalDataLength)
+static void
+StaticallyLink(CodeSegment& cs, const LinkData& linkData, ExclusiveContext* cx)
 {
-    UniqueCodeSegment code = cx->make_unique<CodeSegment>();
-    if (!code)
-        return nullptr;
+    for (LinkData::InternalLink link : linkData.internalLinks) {
+        uint8_t* patchAt = cs.code() + link.patchAtOffset;
+        void* target = cs.code() + link.targetOffset;
+        if (link.isRawPointerPatch())
+            *(void**)(patchAt) = target;
+        else
+            Assembler::PatchInstructionImmediate(patchAt, PatchedImmPtr(target));
+    }
 
-    uint8_t* bytes = AllocateCodeSegment(cx, codeLength + globalDataLength);
-    if (!bytes)
-        return nullptr;
+    for (auto imm : MakeEnumeratedRange(SymbolicAddress::Limit)) {
+        const Uint32Vector& offsets = linkData.symbolicLinks[imm];
+        for (size_t i = 0; i < offsets.length(); i++) {
+            uint8_t* patchAt = cs.code() + offsets[i];
+            void* target = AddressOf(imm, cx);
+            Assembler::PatchDataWithValueCheck(CodeLocationLabel(patchAt),
+                                               PatchedImmPtr(target),
+                                               PatchedImmPtr((void*)-1));
+        }
+    }
 
-    code->bytes_ = bytes;
-    code->codeLength_ = codeLength;
-    code->globalDataLength_ = globalDataLength;
-    return code;
+    // Initialize data in the code segment that needs absolute addresses:
+
+    *(double*)(cs.globalData() + NaN64GlobalDataOffset) = GenericNaN();
+    *(float*)(cs.globalData() + NaN32GlobalDataOffset) = GenericNaN();
+
+    for (const LinkData::FuncTable& table : linkData.funcTables) {
+        auto array = reinterpret_cast<void**>(cs.globalData() + table.globalDataOffset);
+        for (size_t i = 0; i < table.elemOffsets.length(); i++)
+            array[i] = cs.code() + table.elemOffsets[i];
+    }
+}
+
+static void
+SpecializeToHeap(CodeSegment& cs, const Metadata& metadata, uint8_t* heapBase, uint32_t heapLength)
+{
+#if defined(JS_CODEGEN_X86)
+
+    // An access is out-of-bounds iff
+    //      ptr + offset + data-type-byte-size > heapLength
+    // i.e. ptr > heapLength - data-type-byte-size - offset. data-type-byte-size
+    // and offset are already included in the addend so we
+    // just have to add the heap length here.
+    for (const HeapAccess& access : metadata.heapAccesses) {
+        if (access.hasLengthCheck())
+            X86Encoding::AddInt32(access.patchLengthAt(cs.code()), heapLength);
+        void* addr = access.patchHeapPtrImmAt(cs.code());
+        uint32_t disp = reinterpret_cast<uint32_t>(X86Encoding::GetPointer(addr));
+        MOZ_ASSERT(disp <= INT32_MAX);
+        X86Encoding::SetPointer(addr, (void*)(heapBase + disp));
+    }
+
+#elif defined(JS_CODEGEN_X64)
+
+    // Even with signal handling being used for most bounds checks, there may be
+    // atomic operations that depend on explicit checks.
+    //
+    // If we have any explicit bounds checks, we need to patch the heap length
+    // checks at the right places. All accesses that have been recorded are the
+    // only ones that need bound checks (see also
+    // CodeGeneratorX64::visitAsmJS{Load,Store,CompareExchange,Exchange,AtomicBinop}Heap)
+    for (const HeapAccess& access : metadata.heapAccesses) {
+        // See comment above for x86 codegen.
+        if (access.hasLengthCheck())
+            X86Encoding::AddInt32(access.patchLengthAt(cs.code()), heapLength);
+    }
+
+#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
+      defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
+
+    for (const HeapAccess& access : metadata.heapAccesses)
+        Assembler::UpdateBoundsCheck(heapLength, (Instruction*)(access.insnOffset() + cs.code()));
+
+#endif
+}
+
+static bool
+SendCodeRangesToProfiler(ExclusiveContext* cx, CodeSegment& cs, const Metadata& metadata)
+{
+    bool enabled = false;
+#ifdef JS_ION_PERF
+    enabled |= PerfFuncEnabled();
+#endif
+#ifdef MOZ_VTUNE
+    enabled |= IsVTuneProfilingActive();
+#endif
+    if (!enabled)
+        return true;
+
+    for (const CodeRange& codeRange : metadata.codeRanges) {
+        if (!codeRange.isFunction())
+            continue;
+
+        uintptr_t start = uintptr_t(cs.code() + codeRange.begin());
+        uintptr_t end = uintptr_t(cs.code() + codeRange.end());
+        uintptr_t size = end - start;
+
+        UniqueChars owner;
+        const char* name = metadata.getFuncName(cx, codeRange.funcIndex(), &owner);
+        if (!name)
+            return false;
+
+        // Avoid "unused" warnings
+        (void)start;
+        (void)size;
+        (void)name;
+
+#ifdef JS_ION_PERF
+        if (PerfFuncEnabled()) {
+            const char* file = metadata.filename.get();
+            unsigned line = codeRange.funcLineOrBytecode();
+            unsigned column = 0;
+            writePerfSpewerAsmJSFunctionMap(start, size, file, line, column, name);
+        }
+#endif
+#ifdef MOZ_VTUNE
+        if (IsVTuneProfilingActive()) {
+            unsigned method_id = iJIT_GetNewMethodID();
+            if (method_id == 0)
+                return true;
+            iJIT_Method_Load method;
+            method.method_id = method_id;
+            method.method_name = const_cast<char*>(name);
+            method.method_load_address = (void*)start;
+            method.method_size = size;
+            method.line_number_size = 0;
+            method.line_number_table = nullptr;
+            method.class_id = 0;
+            method.class_file_name = nullptr;
+            method.source_file_name = nullptr;
+            iJIT_NotifyEvent(iJVM_EVENT_TYPE_METHOD_LOAD_FINISHED, (void*)&method);
+        }
+#endif
+    }
+
+    return true;
 }
 
 /* static */ UniqueCodeSegment
-CodeSegment::clone(ExclusiveContext* cx, const CodeSegment& src)
+CodeSegment::create(ExclusiveContext* cx,
+                    const Bytes& code,
+                    const LinkData& linkData,
+                    const Metadata& metadata,
+                    uint8_t* heapBase,
+                    uint32_t heapLength)
 {
-    UniqueCodeSegment dst = allocate(cx, src.codeLength_, src.globalDataLength_);
-    if (!dst)
+    MOZ_ASSERT(code.length() % gc::SystemPageSize() == 0);
+    MOZ_ASSERT(linkData.globalDataLength % gc::SystemPageSize() == 0);
+    MOZ_ASSERT(linkData.functionCodeLength < code.length());
+
+    auto cs = cx->make_unique<CodeSegment>();
+    if (!cs)
         return nullptr;
 
-    memcpy(dst->code(), src.code(), src.codeLength());
-    return dst;
+    cs->bytes_ = AllocateCodeSegment(cx, code.length() + linkData.globalDataLength);
+    if (!cs->bytes_)
+        return nullptr;
+
+    cs->functionCodeLength_ = linkData.functionCodeLength;
+    cs->codeLength_ = code.length();
+    cs->globalDataLength_ = linkData.globalDataLength;
+    cs->interruptCode_ = cs->code() + linkData.interruptOffset;
+    cs->outOfBoundsCode_ = cs->code() + linkData.outOfBoundsOffset;
+
+    {
+        JitContext jcx(CompileRuntime::get(cx->compartment()->runtimeFromAnyThread()));
+        AutoFlushICache afc("CodeSegment::create");
+        AutoFlushICache::setRange(uintptr_t(cs->code()), cs->codeLength());
+
+        memcpy(cs->code(), code.begin(), code.length());
+        StaticallyLink(*cs, linkData, cx);
+        SpecializeToHeap(*cs, metadata, heapBase, heapLength);
+    }
+
+    if (!ExecutableAllocator::makeExecutable(cs->code(), cs->codeLength())) {
+        ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
+    if (!SendCodeRangesToProfiler(cx, *cs, metadata))
+        return nullptr;
+
+    return cs;
 }
 
 CodeSegment::~CodeSegment()
 {
-    if (!bytes_) {
-        MOZ_ASSERT(!totalLength());
+    if (!bytes_)
         return;
-    }
 
     MOZ_ASSERT(wasmCodeAllocations > 0);
     wasmCodeAllocations--;
@@ -283,37 +452,42 @@ CodeRange::CodeRange(uint32_t funcIndex, uint32_t funcLineOrBytecode, FuncOffset
 }
 
 static size_t
-NullableStringLength(const char* chars)
+StringLengthWithNullChar(const char* chars)
 {
-    return chars ? strlen(chars) : 0;
+    return chars ? strlen(chars) + 1 : 0;
 }
 
 size_t
 CacheableChars::serializedSize() const
 {
-    return sizeof(uint32_t) + NullableStringLength(get());
+    return sizeof(uint32_t) + StringLengthWithNullChar(get());
 }
 
 uint8_t*
 CacheableChars::serialize(uint8_t* cursor) const
 {
-    uint32_t length = NullableStringLength(get());
-    cursor = WriteBytes(cursor, &length, sizeof(uint32_t));
-    cursor = WriteBytes(cursor, get(), length);
+    uint32_t lengthWithNullChar = StringLengthWithNullChar(get());
+    cursor = WriteScalar<uint32_t>(cursor, lengthWithNullChar);
+    cursor = WriteBytes(cursor, get(), lengthWithNullChar);
     return cursor;
 }
 
 const uint8_t*
 CacheableChars::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
 {
-    uint32_t length;
-    cursor = ReadBytes(cursor, &length, sizeof(uint32_t));
+    uint32_t lengthWithNullChar;
+    cursor = ReadBytes(cursor, &lengthWithNullChar, sizeof(uint32_t));
 
-    reset(cx->pod_calloc<char>(length + 1));
-    if (!get())
-        return nullptr;
+    if (lengthWithNullChar) {
+        reset(cx->pod_malloc<char>(lengthWithNullChar));
+        if (!get())
+            return nullptr;
 
-    cursor = ReadBytes(cursor, get(), length);
+        cursor = ReadBytes(cursor, get(), lengthWithNullChar);
+    } else {
+        MOZ_ASSERT(!get());
+    }
+
     return cursor;
 }
 
@@ -333,7 +507,7 @@ Metadata::serializedSize() const
            SerializedPodVectorSize(codeRanges) +
            SerializedPodVectorSize(callSites) +
            SerializedPodVectorSize(callThunks) +
-           SerializedVectorSize(prettyFuncNames) +
+           SerializedVectorSize(funcNames) +
            filename.serializedSize();
 }
 
@@ -347,7 +521,7 @@ Metadata::serialize(uint8_t* cursor) const
     cursor = SerializePodVector(cursor, codeRanges);
     cursor = SerializePodVector(cursor, callSites);
     cursor = SerializePodVector(cursor, callThunks);
-    cursor = SerializeVector(cursor, prettyFuncNames);
+    cursor = SerializeVector(cursor, funcNames);
     cursor = filename.serialize(cursor);
     return cursor;
 }
@@ -362,7 +536,7 @@ Metadata::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
     (cursor = DeserializePodVector(cx, cursor, &codeRanges)) &&
     (cursor = DeserializePodVector(cx, cursor, &callSites)) &&
     (cursor = DeserializePodVector(cx, cursor, &callThunks)) &&
-    (cursor = DeserializeVector(cx, cursor, &prettyFuncNames)) &&
+    (cursor = DeserializeVector(cx, cursor, &funcNames)) &&
     (cursor = filename.deserialize(cx, cursor));
     return cursor;
 }
@@ -376,6 +550,33 @@ Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            codeRanges.sizeOfExcludingThis(mallocSizeOf) +
            callSites.sizeOfExcludingThis(mallocSizeOf) +
            callThunks.sizeOfExcludingThis(mallocSizeOf) +
-           SizeOfVectorExcludingThis(prettyFuncNames, mallocSizeOf) +
+           SizeOfVectorExcludingThis(funcNames, mallocSizeOf) +
            filename.sizeOfExcludingThis(mallocSizeOf);
+}
+
+const char*
+Metadata::getFuncName(ExclusiveContext* cx, uint32_t funcIndex, UniqueChars* owner) const
+{
+    if (funcIndex < funcNames.length() && funcNames[funcIndex])
+        return funcNames[funcIndex].get();
+
+    char* chars = JS_smprintf("wasm-function[%u]", funcIndex);
+    if (!chars) {
+        ReportOutOfMemory(cx);
+        return nullptr;
+    }
+
+    owner->reset(chars);
+    return chars;
+}
+
+JSAtom*
+Metadata::getFuncAtom(JSContext* cx, uint32_t funcIndex) const
+{
+    UniqueChars owner;
+    const char* chars = getFuncName(cx, funcIndex, &owner);
+    if (!chars)
+        return nullptr;
+
+    return AtomizeUTF8Chars(cx, chars, strlen(chars));
 }

@@ -6,7 +6,6 @@
 
 #include "nsHostObjectURI.h"
 
-#include "nsAutoPtr.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 

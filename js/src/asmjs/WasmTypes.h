@@ -38,6 +38,7 @@
 namespace js {
 
 class PropertyName;
+namespace jit { struct BaselineScript; }
 
 namespace wasm {
 
@@ -46,6 +47,7 @@ using mozilla::EnumeratedArray;
 using mozilla::Maybe;
 using mozilla::Move;
 using mozilla::MallocSizeOf;
+using mozilla::PodZero;
 using mozilla::RefCounted;
 
 typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;
@@ -71,6 +73,18 @@ typedef Vector<Type, 0, SystemAllocPolicy> VectorName;
     uint8_t* serialize(uint8_t* cursor) const;                                  \
     const uint8_t* deserialize(ExclusiveContext* cx, const uint8_t* cursor);    \
     size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+
+#define WASM_DECLARE_SERIALIZABLE_VIRTUAL(Type)                                 \
+    virtual size_t serializedSize() const;                                      \
+    virtual uint8_t* serialize(uint8_t* cursor) const;                          \
+    virtual const uint8_t* deserialize(ExclusiveContext* cx, const uint8_t* cursor);\
+    virtual size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+
+#define WASM_DECLARE_SERIALIZABLE_OVERRIDE(Type)                                \
+    size_t serializedSize() const override;                                     \
+    uint8_t* serialize(uint8_t* cursor) const override;                         \
+    const uint8_t* deserialize(ExclusiveContext* cx, const uint8_t* cursor) override;\
+    size_t sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const override;
 
 // ValType/ExprType utilities
 
@@ -294,7 +308,9 @@ class Val
         MOZ_ASSERT(type_ == ValType::I32x4 || type_ == ValType::B32x4);
         memcpy(u.i32x4_, i32x4, sizeof(u.i32x4_));
     }
-    explicit Val(const F32x4& f32x4) : type_(ValType::F32x4) { memcpy(u.f32x4_, f32x4, sizeof(u.f32x4_)); }
+    explicit Val(const F32x4& f32x4) : type_(ValType::F32x4) {
+        memcpy(u.f32x4_, f32x4, sizeof(u.f32x4_));
+    }
 
     ValType type() const { return type_; }
     bool isSimd() const { return IsSimdType(type()); }
@@ -303,6 +319,7 @@ class Val
     uint64_t i64() const { MOZ_ASSERT(type_ == ValType::I64); return u.i64_; }
     float f32() const { MOZ_ASSERT(type_ == ValType::F32); return u.f32_; }
     double f64() const { MOZ_ASSERT(type_ == ValType::F64); return u.f64_; }
+
     const I8x16& i8x16() const {
         MOZ_ASSERT(type_ == ValType::I8x16 || type_ == ValType::B8x16);
         return u.i8x16_;
@@ -315,7 +332,12 @@ class Val
         MOZ_ASSERT(type_ == ValType::I32x4 || type_ == ValType::B32x4);
         return u.i32x4_;
     }
-    const F32x4& f32x4() const { MOZ_ASSERT(type_ == ValType::F32x4); return u.f32x4_; }
+    const F32x4& f32x4() const {
+        MOZ_ASSERT(type_ == ValType::F32x4);
+        return u.f32x4_;
+    }
+
+    void writePayload(uint8_t* dst);
 };
 
 // The Sig class represents a WebAssembly function signature which takes a list
@@ -786,6 +808,29 @@ enum ModuleKind
     Wasm,
     AsmJS
 };
+
+// ImportExit describes the region of wasm global memory allocated for an
+// import. This is accessed directly from JIT code and mutated by Instance as
+// exits become optimized and deoptimized.
+
+struct ImportExit
+{
+    void* code;
+    jit::BaselineScript* baselineScript;
+    GCPtrFunction fun;
+    static_assert(sizeof(GCPtrFunction) == sizeof(void*), "for JIT access");
+};
+
+// ExportArg holds the unboxed operands to the wasm entry trampoline which can
+// be called through an ExportFuncPtr.
+
+struct ExportArg
+{
+    uint64_t lo;
+    uint64_t hi;
+};
+
+typedef int32_t (*ExportFuncPtr)(ExportArg* args, uint8_t* global);
 
 // Constants:
 

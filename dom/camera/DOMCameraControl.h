@@ -6,7 +6,6 @@
 #define DOM_CAMERA_DOMCAMERACONTROL_H
 
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/dom/CameraControlBinding.h"
 #include "mozilla/dom/Promise.h"

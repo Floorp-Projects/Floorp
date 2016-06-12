@@ -9,7 +9,6 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/URLSearchParams.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsWrapperCache.h"
 

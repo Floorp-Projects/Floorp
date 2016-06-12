@@ -39,11 +39,11 @@ using namespace mozilla::net;
 //
 // To enable logging (see prlog.h for full details):
 //
-//    set NSPR_LOG_MODULES=nsFtp:5
-//    set NSPR_LOG_FILE=nspr.log
+//    set MOZ_LOG=nsFtp:5
+//    set MOZ_LOG_FILE=ftp.log
 //
-// this enables LogLevel::Debug level information and places all output in
-// the file nspr.log
+// This enables LogLevel::Debug level information and places all output in
+// the file ftp.log.
 //
 LazyLogModule gFTPLog("nsFtp");
 #undef LOG

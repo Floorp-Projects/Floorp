@@ -8,6 +8,7 @@
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/Services.h"
 #include "AndroidMediaPluginHost.h"
+#include "nsAutoPtr.h"
 #include "nsXPCOMStrings.h"
 #include "nsISeekableStream.h"
 #include "nsIGfxInfo.h"

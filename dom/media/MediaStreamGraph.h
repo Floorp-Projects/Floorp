@@ -20,6 +20,7 @@
 #include "VideoFrameContainer.h"
 #include "VideoSegment.h"
 #include "MainThreadUtils.h"
+#include "nsAutoPtr.h"
 #include "nsAutoRef.h"
 #include <speex/speex_resampler.h>
 #include "DOMMediaStream.h"

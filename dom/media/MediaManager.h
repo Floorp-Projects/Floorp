@@ -8,6 +8,7 @@
 #include "MediaEngine.h"
 #include "mozilla/Services.h"
 #include "mozilla/unused.h"
+#include "nsAutoPtr.h"
 #include "nsIMediaManager.h"
 
 #include "nsHashKeys.h"

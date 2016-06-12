@@ -9,7 +9,6 @@
 #include "mozilla/CheckedInt.h"
 #include "mozilla/mozalloc.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 
 namespace mozilla {
 

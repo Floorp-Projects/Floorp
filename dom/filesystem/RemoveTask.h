@@ -8,7 +8,6 @@
 #define mozilla_dom_RemoveTask_h
 
 #include "mozilla/dom/FileSystemTaskBase.h"
-#include "nsAutoPtr.h"
 #include "mozilla/ErrorResult.h"
 
 namespace mozilla {

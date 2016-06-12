@@ -6,6 +6,7 @@
 
 #include "ServiceWorkerEvents.h"
 
+#include "nsAutoPtr.h"
 #include "nsIConsoleReportCollector.h"
 #include "nsIHttpChannelInternal.h"
 #include "nsINetworkInterceptController.h"

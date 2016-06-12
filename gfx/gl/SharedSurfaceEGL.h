@@ -8,7 +8,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Mutex.h"
-#include "nsAutoPtr.h"
 #include "SharedSurface.h"
 
 namespace mozilla {

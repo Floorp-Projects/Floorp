@@ -23,7 +23,6 @@
 #include "nsContentUtils.h" // for kLoadAsData
 #include "nsThreadUtils.h"
 #include "nsNetUtil.h"
-#include "nsAutoPtr.h"
 #include "nsStreamUtils.h"
 #include <algorithm>
 

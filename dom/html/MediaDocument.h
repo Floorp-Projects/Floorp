@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "nsHTMLDocument.h"
 #include "nsGenericHTMLElement.h"
-#include "nsAutoPtr.h"
 #include "nsIStringBundle.h"
 
 #define NSMEDIADOCUMENT_PROPERTIES_URI "chrome://global/locale/layout/MediaDocument.properties"

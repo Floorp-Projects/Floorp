@@ -10,7 +10,6 @@
 #include "mozilla/dom/Directory.h"
 #include "mozilla/dom/FileSystemTaskBase.h"
 #include "mozilla/ErrorResult.h"
-#include "nsAutoPtr.h"
 
 namespace mozilla {
 namespace dom {

@@ -3436,6 +3436,13 @@ nsHttpChannel::OnCacheEntryCheck(nsICacheEntry* entry, nsIApplicationCache* appC
     NS_ENSURE_TRUE((mCachedResponseHead->Status() / 100 != 3) ||
                    isCachedRedirect, NS_ERROR_ABORT);
 
+    if (mCachedResponseHead->NoStore() && mCacheEntryIsReadOnly) {
+        // This prevents loading no-store responses when navigating back
+        // while the browser is set to work offline.
+        LOG(("  entry loading as read-only but is no-store, set INHIBIT_CACHING"));
+        mLoadFlags |= nsIRequest::INHIBIT_CACHING;
+    }
+
     // Don't bother to validate items that are read-only,
     // unless they are read-only because of INHIBIT_CACHING or because
     // we're updating the offline cache.

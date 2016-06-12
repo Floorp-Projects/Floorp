@@ -17,11 +17,11 @@
 //
 // To enable logging (see prlog.h for full details):
 //
-//    set NSPR_LOG_MODULES=nsWyciwyg:5
-//    set NSPR_LOG_FILE=wyciwyg.log
+//    set MOZ_LOG=nsWyciwyg:5
+//    set MOZ_LOG_FILE=wyciwyg.log
 //
-// this enables LogLevel::Debug level information and places all output in
-// the file wyciwyg.log
+// This enables LogLevel::Debug level information and places all output in
+// the file wyciwyg.log.
 //
 extern mozilla::LazyLogModule gWyciwygLog;
 

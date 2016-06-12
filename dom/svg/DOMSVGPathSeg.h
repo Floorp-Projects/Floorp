@@ -8,7 +8,6 @@
 #define MOZILLA_DOMSVGPATHSEG_H__
 
 #include "DOMSVGPathSegList.h"
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "SVGPathSegUtils.h"

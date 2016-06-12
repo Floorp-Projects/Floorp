@@ -10,7 +10,6 @@
 #include "nsWrapperCache.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"
-#include "nsAutoPtr.h"
 #include "ThreeDPoint.h"
 #include "AudioContext.h"
 #include "PannerNode.h"

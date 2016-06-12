@@ -8,7 +8,6 @@
 
 #include "GLTextureImage.h"
 #include "GLContextTypes.h"
-#include "nsAutoPtr.h"
 #include "nsSize.h"
 
 namespace mozilla {

@@ -172,6 +172,7 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
         // We prefer to receive stereo, if available.
         opusParams.stereo = 1;
       }
+      opusParams.useInBandFec = mFECEnabled ? 1 : 0;
       msection.SetFmtp(SdpFmtpAttributeList::Fmtp(mDefaultPt, opusParams));
     }
   }
@@ -187,6 +188,10 @@ class JsepAudioCodecDescription : public JsepCodecDescription {
 
       mMaxPlaybackRate = opusParams.maxplaybackrate;
       mForceMono = !opusParams.stereo;
+      // draft-ietf-rtcweb-fec-03.txt section 4.2 says support for FEC
+      // at the received side is declarative and can be negotiated
+      // separately for either media direction.
+      mFECEnabled = opusParams.useInBandFec;
     }
 
     return true;

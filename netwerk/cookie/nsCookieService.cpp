@@ -176,9 +176,9 @@ struct nsListIter
 #ifdef MOZ_LOGGING
 // in order to do logging, the following environment variables need to be set:
 //
-//    set NSPR_LOG_MODULES=cookie:3 -- shows rejected cookies
-//    set NSPR_LOG_MODULES=cookie:4 -- shows accepted and rejected cookies
-//    set NSPR_LOG_FILE=cookie.log
+//    set MOZ_LOG=cookie:3 -- shows rejected cookies
+//    set MOZ_LOG=cookie:4 -- shows accepted and rejected cookies
+//    set MOZ_LOG_FILE=cookie.log
 //
 #include "mozilla/Logging.h"
 #endif

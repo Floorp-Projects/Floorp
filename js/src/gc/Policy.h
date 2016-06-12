@@ -50,7 +50,7 @@ class Shape;
 class SharedArrayBufferObject;
 class StructTypeDescr;
 class UnownedBaseShape;
-class WasmModuleObject;
+class WasmInstanceObject;
 namespace jit {
 class JitCode;
 } // namespace jit
@@ -106,7 +106,7 @@ class JitCode;
     D(js::SharedArrayBufferObject*) \
     D(js::StructTypeDescr*) \
     D(js::UnownedBaseShape*) \
-    D(js::WasmModuleObject*) \
+    D(js::WasmInstanceObject*) \
     D(js::jit::JitCode*)
 
 // Expand the given macro D for each internal tagged GC pointer type.

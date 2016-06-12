@@ -14,6 +14,8 @@
 #include "jsobj.h"
 #include "jsscript.h"
 
+#include "asmjs/WasmInstance.h"
+#include "asmjs/WasmJS.h"
 #include "asmjs/WasmModule.h"
 #include "gc/Heap.h"
 #include "jit/BaselineJIT.h"
@@ -268,6 +270,8 @@ struct StatsClosure
     RuntimeStats* rtStats;
     ObjectPrivateVisitor* opv;
     SourceSet seenSources;
+    wasm::Metadata::SeenSet wasmSeenMetadata;
+    wasm::ShareableBytes::SeenSet wasmSeenBytes;
     bool anonymize;
 
     StatsClosure(RuntimeStats* rt, ObjectPrivateVisitor* v, bool anon)
@@ -277,7 +281,9 @@ struct StatsClosure
     {}
 
     bool init() {
-        return seenSources.init();
+        return seenSources.init() &&
+               wasmSeenMetadata.init() &&
+               wasmSeenBytes.init();
     }
 };
 
@@ -449,14 +455,32 @@ StatsCellCallback(JSRuntime* rt, void* data, void* thing, JS::TraceKind traceKin
         CompartmentStats& cStats = obj->compartment()->compartmentStats();
         JS::ClassInfo info;        // This zeroes all the sizes.
         info.objectsGCHeap += thingSize;
+
         obj->addSizeOfExcludingThis(rtStats->mallocSizeOf_, &info);
 
-        cStats.classInfo.add(info);
-
+        // These classes require special handling due to shared resources which
+        // we must be careful not to report twice.
         if (obj->is<WasmModuleObject>()) {
-            if (ScriptSource* ss = obj->as<WasmModuleObject>().module().maybeScriptSource())
+            wasm::Module& module = obj->as<WasmModuleObject>().module();
+            if (ScriptSource* ss = module.metadata().maybeScriptSource())
                 CollectScriptSourceStats<granularity>(closure, ss);
+            module.addSizeOfMisc(rtStats->mallocSizeOf_,
+                                 &closure->wasmSeenMetadata,
+                                 &closure->wasmSeenBytes,
+                                 &info.objectsNonHeapCodeAsmJS,
+                                 &info.objectsMallocHeapMisc);
+        } else if (obj->is<WasmInstanceObject>()) {
+            wasm::Instance& instance = obj->as<WasmInstanceObject>().instance();
+            if (ScriptSource* ss = instance.metadata().maybeScriptSource())
+                CollectScriptSourceStats<granularity>(closure, ss);
+            instance.addSizeOfMisc(rtStats->mallocSizeOf_,
+                                   &closure->wasmSeenMetadata,
+                                   &closure->wasmSeenBytes,
+                                   &info.objectsNonHeapCodeAsmJS,
+                                   &info.objectsMallocHeapMisc);
         }
+
+        cStats.classInfo.add(info);
 
         const Class* clasp = obj->getClass();
         const char* className = clasp->name;

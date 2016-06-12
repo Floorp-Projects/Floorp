@@ -9,7 +9,6 @@
 #include "nsXULTemplateQueryProcessorStorage.h"
 #include "nsIRDFResource.h"
 #include "nsIXULTemplateResult.h"
-#include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
 
 /**

@@ -10,7 +10,7 @@
 
 #include "jscntxt.h"
 
-#include "asmjs/WasmModule.h"
+#include "asmjs/WasmInstance.h"
 #include "gc/Marking.h"
 #include "jit/BaselineFrame.h"
 #include "jit/JitcodeMap.h"
@@ -865,7 +865,7 @@ FrameIter::filename() const
       case JIT:
         return script()->filename();
       case WASM:
-        return data_.activations_->asWasm()->module().filename();
+        return data_.activations_->asWasm()->instance().metadata().filename.get();
     }
 
     MOZ_CRASH("Unexpected state");
@@ -883,7 +883,7 @@ FrameIter::displayURL() const
         return ss->hasDisplayURL() ? ss->displayURL() : nullptr;
       }
       case WASM:
-        return data_.activations_->asWasm()->module().displayURL();
+        return data_.activations_->asWasm()->instance().metadata().displayURL();
     }
     MOZ_CRASH("Unexpected state");
 }
@@ -916,9 +916,8 @@ FrameIter::mutedErrors() const
       case JIT:
         return script()->mutedErrors();
       case WASM:
-        return data_.activations_->asWasm()->module().mutedErrors();
+        return data_.activations_->asWasm()->instance().metadata().mutedErrors();
     }
-
     MOZ_CRASH("Unexpected state");
 }
 
@@ -1634,9 +1633,9 @@ jit::JitActivation::markIonRecovery(JSTracer* trc)
         it->trace(trc);
 }
 
-WasmActivation::WasmActivation(JSContext* cx, wasm::Module& module)
+WasmActivation::WasmActivation(JSContext* cx, wasm::Instance& instance)
   : Activation(cx, Wasm),
-    module_(module),
+    instance_(instance),
     entrySP_(nullptr),
     resumePC_(nullptr),
     fp_(nullptr),
@@ -1644,8 +1643,8 @@ WasmActivation::WasmActivation(JSContext* cx, wasm::Module& module)
 {
     (void) entrySP_;  // squelch GCC warning
 
-    prevWasmForModule_ = module.activation();
-    module.activation() = this;
+    prevWasmForInstance_ = instance.activation();
+    instance.activation() = this;
 
     prevWasm_ = cx->runtime()->wasmActivationStack_;
     cx->runtime()->wasmActivationStack_ = this;
@@ -1662,8 +1661,8 @@ WasmActivation::~WasmActivation()
 
     MOZ_ASSERT(fp_ == nullptr);
 
-    MOZ_ASSERT(module_.activation() == this);
-    module_.activation() = prevWasmForModule_;
+    MOZ_ASSERT(instance_.activation() == this);
+    instance_.activation() = prevWasmForInstance_;
 
     MOZ_ASSERT(cx_->runtime()->wasmActivationStack_ == this);
 

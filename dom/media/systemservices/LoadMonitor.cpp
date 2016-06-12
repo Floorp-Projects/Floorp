@@ -55,7 +55,7 @@
 #pragma comment(lib, "pdh.lib")
 #endif
 
-// NSPR_LOG_MODULES=LoadManager:5
+// MOZ_LOG=LoadManager:5
 #undef LOG
 #undef LOG_ENABLED
 #define LOG(args) MOZ_LOG(gLoadManagerLog, mozilla::LogLevel::Debug, args)

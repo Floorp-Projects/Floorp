@@ -13,6 +13,7 @@
 #include "PlayingRefChangeHandler.h"
 #include "blink/HRTFPanner.h"
 #include "blink/HRTFDatabaseLoader.h"
+#include "nsAutoPtr.h"
 
 using WebCore::HRTFDatabaseLoader;
 using WebCore::HRTFPanner;

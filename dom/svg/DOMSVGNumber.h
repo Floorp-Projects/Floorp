@@ -8,7 +8,6 @@
 #define MOZILLA_DOMSVGNUMBER_H__
 
 #include "DOMSVGNumberList.h"
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsTArray.h"
 #include "mozilla/Attributes.h"

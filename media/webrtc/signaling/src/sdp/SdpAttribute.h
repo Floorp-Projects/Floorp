@@ -1243,11 +1243,13 @@ public:
   {
   public:
     enum { kDefaultMaxPlaybackRate = 48000,
-           kDefaultStereo = 0 };
+           kDefaultStereo = 0,
+           kDefaultUseInBandFec = 0 };
     OpusParameters() :
       Parameters(SdpRtpmapAttributeList::kOpus),
       maxplaybackrate(kDefaultMaxPlaybackRate),
-      stereo(kDefaultStereo)
+      stereo(kDefaultStereo),
+      useInBandFec(kDefaultUseInBandFec)
     {}
 
     Parameters*
@@ -1259,12 +1261,14 @@ public:
     void
     Serialize(std::ostream& os) const override
     {
-      os << "maxplaybackrate=" << maxplaybackrate << ";"
-         << "stereo=" << stereo;
+      os << "maxplaybackrate=" << maxplaybackrate
+         << ";stereo=" << stereo
+         << ";useinbandfec=" << useInBandFec;
     }
 
     unsigned int maxplaybackrate;
     unsigned int stereo;
+    unsigned int useInBandFec;
   };
 
   class Fmtp

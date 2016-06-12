@@ -8,6 +8,7 @@
 #define mozilla_dom_quota_QuotaManagerService_h
 
 #include "mozilla/dom/ipc/IdType.h"
+#include "nsAutoPtr.h"
 #include "nsIObserver.h"
 #include "nsIQuotaManagerService.h"
 

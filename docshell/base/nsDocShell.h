@@ -942,7 +942,6 @@ protected:
   bool mIsPrerendered;
   bool mIsAppTab;
   bool mUseGlobalHistory;
-  bool mInPrivateBrowsing;
   bool mUseRemoteTabs;
   bool mDeviceSizeIsPageSize;
   bool mWindowDraggingAllowed;
@@ -1000,6 +999,13 @@ protected:
 
   // Are we a regular frame, a browser frame, or an app frame?
   uint32_t mFrameType;
+
+  // This represents the state of private browsing in the docshell.
+  // Currently treated as a binary value: 1 - in private mode, 0 - not private mode
+  // On content docshells mPrivateBrowsingId == mOriginAttributes.mPrivateBrowsingId
+  // On chrome docshells this value will be set, but not have the corresponding
+  // origin attribute set.
+  uint32_t mPrivateBrowsingId;
 
   nsString mPaymentRequestId;
 

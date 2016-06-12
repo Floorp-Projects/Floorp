@@ -7,7 +7,6 @@
 #ifndef __NS_SVGINTEGERPAIR_H__
 #define __NS_SVGINTEGERPAIR_H__
 
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
 #include "nsISMILAttr.h"

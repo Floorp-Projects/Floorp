@@ -11,6 +11,7 @@
 #ifndef nsRuleProcessorData_h_
 #define nsRuleProcessorData_h_
 
+#include "nsAutoPtr.h"
 #include "nsChangeHint.h"
 #include "nsCompatibility.h"
 #include "nsCSSPseudoElements.h"

@@ -15,7 +15,6 @@
 #include "nsRenderingContext.h"
 #include "nsIDOMMutationEvent.h"
 #include "nsGkAtoms.h"
-#include "nsAutoPtr.h"
 #include "nsDisplayList.h"
 #include "nsIReflowCallback.h"
 #include "mozilla/Likely.h"

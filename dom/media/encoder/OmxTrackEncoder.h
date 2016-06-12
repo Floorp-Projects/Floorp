@@ -6,6 +6,7 @@
 #ifndef OmxTrackEncoder_h_
 #define OmxTrackEncoder_h_
 
+#include "nsAutoPtr.h"
 #include "TrackEncoder.h"
 
 namespace android {

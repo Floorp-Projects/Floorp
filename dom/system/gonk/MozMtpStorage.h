@@ -9,7 +9,6 @@
 
 #include "MozMtpCommon.h"
 
-#include "nsAutoPtr.h"
 #include "mozilla/UniquePtr.h"
 
 #include "Volume.h"

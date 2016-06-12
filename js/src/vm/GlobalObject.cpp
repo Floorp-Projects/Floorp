@@ -15,7 +15,7 @@
 #include "jsprototypes.h"
 #include "jsweakmap.h"
 
-#include "asmjs/Wasm.h"
+#include "asmjs/WasmJS.h"
 #include "builtin/AtomicsObject.h"
 #include "builtin/Eval.h"
 #if EXPOSE_INTL_API

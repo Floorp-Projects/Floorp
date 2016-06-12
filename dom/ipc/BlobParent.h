@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/dom/PBlobParent.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 

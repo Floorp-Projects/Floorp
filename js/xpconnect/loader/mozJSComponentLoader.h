@@ -10,6 +10,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/ModuleLoader.h"
+#include "nsAutoPtr.h"
 #include "nsISupports.h"
 #include "nsIObserver.h"
 #include "nsIURI.h"

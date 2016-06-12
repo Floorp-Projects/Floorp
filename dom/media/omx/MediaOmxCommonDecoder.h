@@ -8,6 +8,7 @@
 #define MEDIA_OMX_COMMON_DECODER_H
 
 #include "MediaDecoder.h"
+#include "nsAutoPtr.h"
 
 namespace android {
 struct MOZ_EXPORT MediaSource;

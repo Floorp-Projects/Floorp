@@ -7,7 +7,6 @@
 #define nsStylesheetTxns_h__
 
 #include "EditTxn.h"                    // for EditTxn, NS_DECL_EDITTXN
-#include "nsAutoPtr.h"                  // for nsRefPtr
 #include "mozilla/StyleSheetHandle.h"   // for mozilla::StyleSheetHandle
 #include "nsCycleCollectionParticipant.h"
 #include "nsID.h"                       // for REFNSIID

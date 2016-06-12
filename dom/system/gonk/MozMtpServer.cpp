@@ -24,7 +24,6 @@
 #include "mozilla/Scoped.h"
 #include "mozilla/Services.h"
 #include "mozilla/StaticPtr.h"
-#include "nsAutoPtr.h"
 #include "nsIObserver.h"
 #include "nsIObserverService.h"
 #include "nsISupportsImpl.h"

@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_OsxSpeechSynthesizerService_h
 #define mozilla_dom_OsxSpeechSynthesizerService_h
 
-#include "nsAutoPtr.h"
 #include "nsISpeechService.h"
 #include "nsIObserver.h"
 #include "mozilla/StaticPtr.h"

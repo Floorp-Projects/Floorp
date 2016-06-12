@@ -7,6 +7,7 @@
 #define WebMWriter_h_
 
 #include "ContainerWriter.h"
+#include "nsAutoPtr.h"
 
 namespace mozilla {
 

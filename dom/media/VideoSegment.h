@@ -9,7 +9,6 @@
 #include "MediaSegment.h"
 #include "nsCOMPtr.h"
 #include "gfxPoint.h"
-#include "nsAutoPtr.h"
 #include "ImageContainer.h"
 
 namespace mozilla {

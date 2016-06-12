@@ -58,7 +58,7 @@ II. Using the client library in Android:
 ========================================
 
 The usage instructions are very similar to the Linux ones that are
-found at http://code.google.com/p/google-breakpad/wiki/LinuxStarterGuide
+found at https://chromium.googlesource.com/breakpad/breakpad/+/master/docs/linux_starter_guide.md
 
 1/ You need to include "client/linux/handler/exception_handler.h" from a C++
    source file.

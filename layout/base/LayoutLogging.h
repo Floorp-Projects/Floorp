@@ -17,7 +17,7 @@ static mozilla::LazyLogModule sLayoutLog("layout");
  * Use the layout log to warn if a given condition is false.
  *
  * This is only enabled in debug builds and the logging is only displayed if
- * the environmental variable NSPR_LOG_MODULES includes "layout:2" (or higher).
+ * the environmental variable MOZ_LOG includes "layout:2" (or higher).
  */
 #ifdef DEBUG
 #define LAYOUT_WARN_IF_FALSE(_cond, _msg)                                  \
@@ -37,7 +37,7 @@ static mozilla::LazyLogModule sLayoutLog("layout");
  * Use the layout log to emit a warning with the same format as NS_WARNING.
  *
  * This is only enabled in debug builds and the logging is only displayed if
- * the environmental variable NSPR_LOG_MODULES includes "layout:2" (or higher).
+ * the environmental variable MOZ_LOG includes "layout:2" (or higher).
  */
 #ifdef DEBUG
 #define LAYOUT_WARNING(_msg)                                                \

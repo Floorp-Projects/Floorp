@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_SapiService_h
 #define mozilla_dom_SapiService_h
 
-#include "nsAutoPtr.h"
 #include "nsISpeechService.h"
 #include "nsIObserver.h"
 #include "nsRefPtrHashtable.h"

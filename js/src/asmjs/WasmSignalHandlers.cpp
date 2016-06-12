@@ -22,7 +22,7 @@
 #include "mozilla/PodOperations.h"
 
 #include "asmjs/Wasm.h"
-#include "asmjs/WasmModule.h"
+#include "asmjs/WasmInstance.h"
 #include "jit/AtomicOperations.h"
 #include "jit/Disassembler.h"
 #include "vm/Runtime.h"
@@ -602,12 +602,12 @@ ComputeAccessAddress(EMULATOR_CONTEXT* context, const Disassembler::ComplexAddre
 
 MOZ_COLD static uint8_t*
 EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddress,
-                  const HeapAccess* heapAccess, const Module& module)
+                  const HeapAccess* heapAccess, const Instance& instance)
 {
-    MOZ_RELEASE_ASSERT(module.containsFunctionPC(pc));
-    MOZ_RELEASE_ASSERT(module.compileArgs().useSignalHandlersForOOB);
+    MOZ_RELEASE_ASSERT(instance.codeSegment().containsFunctionPC(pc));
+    MOZ_RELEASE_ASSERT(instance.metadata().compileArgs.useSignalHandlersForOOB);
     MOZ_RELEASE_ASSERT(!heapAccess->hasLengthCheck());
-    MOZ_RELEASE_ASSERT(heapAccess->insnOffset() == (pc - module.code()));
+    MOZ_RELEASE_ASSERT(heapAccess->insnOffset() == (pc - instance.codeSegment().code()));
 
     // Disassemble the instruction which caused the trap so that we can extract
     // information about it and decide what to do.
@@ -615,7 +615,7 @@ EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddre
     uint8_t* end = Disassembler::DisassembleHeapAccess(pc, &access);
     const Disassembler::ComplexAddress& address = access.address();
     MOZ_RELEASE_ASSERT(end > pc);
-    MOZ_RELEASE_ASSERT(module.containsFunctionPC(end));
+    MOZ_RELEASE_ASSERT(instance.codeSegment().containsFunctionPC(end));
 
 #if defined(JS_CODEGEN_X64)
     // Check x64 asm.js heap access invariants.
@@ -627,7 +627,7 @@ EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddre
         uintptr_t base;
         StoreValueFromGPReg(SharedMem<void*>::unshared(&base), sizeof(uintptr_t),
                             AddressOfGPRegisterSlot(context, address.base()));
-        MOZ_RELEASE_ASSERT(reinterpret_cast<uint8_t*>(base) == module.heap());
+        MOZ_RELEASE_ASSERT(reinterpret_cast<uint8_t*>(base) == instance.heap());
     }
     if (address.hasIndex()) {
         uintptr_t index;
@@ -645,11 +645,11 @@ EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddre
     MOZ_RELEASE_ASSERT(size_t(faultingAddress - accessAddress) < access.size(),
                        "Given faulting address does not appear to be within computed "
                        "faulting address range");
-    MOZ_RELEASE_ASSERT(accessAddress >= module.heap(),
+    MOZ_RELEASE_ASSERT(accessAddress >= instance.heap(),
                        "Access begins outside the asm.js heap");
-    MOZ_RELEASE_ASSERT(accessAddress + access.size() <= module.heap() + MappedSize,
+    MOZ_RELEASE_ASSERT(accessAddress + access.size() <= instance.heap() + MappedSize,
                        "Access extends beyond the asm.js heap guard region");
-    MOZ_RELEASE_ASSERT(accessAddress + access.size() > module.heap() + module.heapLength(),
+    MOZ_RELEASE_ASSERT(accessAddress + access.size() > instance.heap() + instance.heapLength(),
                        "Computed access address is not actually out of bounds");
 
     // The basic sandbox model is that all heap accesses are a heap base
@@ -666,27 +666,27 @@ EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddre
     //
     // Taking a signal is really slow, but in theory programs really shouldn't
     // be hitting this anyway.
-    intptr_t unwrappedOffset = accessAddress - module.heap().unwrap(/*safe - for value*/);
+    intptr_t unwrappedOffset = accessAddress - instance.heap().unwrap(/*safe - for value*/);
     uint32_t wrappedOffset = uint32_t(unwrappedOffset);
     size_t size = access.size();
     MOZ_RELEASE_ASSERT(wrappedOffset + size > wrappedOffset);
-    bool inBounds = wrappedOffset + size < module.heapLength();
+    bool inBounds = wrappedOffset + size < instance.heapLength();
 
     // If this is storing Z of an XYZ, check whether X is also in bounds, so
     // that we don't store anything before throwing.
     MOZ_RELEASE_ASSERT(unwrappedOffset > heapAccess->offsetWithinWholeSimdVector());
     uint32_t wrappedBaseOffset = uint32_t(unwrappedOffset - heapAccess->offsetWithinWholeSimdVector());
-    if (wrappedBaseOffset >= module.heapLength())
+    if (wrappedBaseOffset >= instance.heapLength())
         inBounds = false;
 
     if (inBounds) {
         // We now know that this is an access that is actually in bounds when
         // properly wrapped. Complete the load or store with the wrapped
         // address.
-        SharedMem<uint8_t*> wrappedAddress = module.heap() + wrappedOffset;
-        MOZ_RELEASE_ASSERT(wrappedAddress >= module.heap());
+        SharedMem<uint8_t*> wrappedAddress = instance.heap() + wrappedOffset;
+        MOZ_RELEASE_ASSERT(wrappedAddress >= instance.heap());
         MOZ_RELEASE_ASSERT(wrappedAddress + size > wrappedAddress);
-        MOZ_RELEASE_ASSERT(wrappedAddress + size <= module.heap() + module.heapLength());
+        MOZ_RELEASE_ASSERT(wrappedAddress + size <= instance.heap() + instance.heapLength());
         switch (access.kind()) {
           case Disassembler::HeapAccess::Load:
             SetRegisterToLoadedValue(context, wrappedAddress.cast<void*>(), size, access.otherOperand());
@@ -705,7 +705,7 @@ EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddre
         // load/store that we should handle.
 
         if (heapAccess->throwOnOOB())
-            return module.outOfBounds();
+            return instance.codeSegment().outOfBoundsCode();
 
         switch (access.kind()) {
           case Disassembler::HeapAccess::Load:
@@ -733,10 +733,10 @@ EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddre
 
 MOZ_COLD static uint8_t*
 EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddress,
-                  const HeapAccess* heapAccess, const Module& module)
+                  const HeapAccess* heapAccess, const Instance& instance)
 {
     // TODO: Implement unaligned accesses.
-    return module.outOfBounds();
+    return instance.codeSegment().outOfBoundsCode();
 }
 
 #endif // defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_UNALIGNED)
@@ -744,16 +744,16 @@ EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddre
 #if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS)
 
 MOZ_COLD static bool
-IsHeapAccessAddress(const Module &module, uint8_t* faultingAddress)
+IsHeapAccessAddress(const Instance &instance, uint8_t* faultingAddress)
 {
 #if defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB)
     size_t accessLimit = MappedSize;
 #elif defined(ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_UNALIGNED)
-    size_t accessLimit = module.heapLength();
+    size_t accessLimit = instance.heapLength();
 #endif
-    return module.usesHeap() &&
-           faultingAddress >= module.heap() &&
-           faultingAddress < module.heap() + accessLimit;
+    return instance.metadata().usesHeap() &&
+           faultingAddress >= instance.heap() &&
+           faultingAddress < instance.heap() + accessLimit;
 }
 
 #if defined(XP_WIN)
@@ -783,35 +783,35 @@ HandleFault(PEXCEPTION_POINTERS exception)
     if (!activation)
         return false;
 
-    const Module& module = activation->module();
+    const Instance& instance = activation->instance();
 
     uint8_t* faultingAddress = reinterpret_cast<uint8_t*>(record->ExceptionInformation[1]);
 
     // This check isn't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
-    if (!IsHeapAccessAddress(module, faultingAddress))
+    if (!IsHeapAccessAddress(instance, faultingAddress))
         return false;
 
-    if (!module.containsFunctionPC(pc)) {
+    if (!instance.codeSegment().containsFunctionPC(pc)) {
         // On Windows, it is possible for InterruptRunningCode to execute
         // between a faulting heap access and the handling of the fault due
         // to InterruptRunningCode's use of SuspendThread. When this happens,
         // after ResumeThread, the exception handler is called with pc equal to
-        // module.interrupt, which is logically wrong. The Right Thing would
+        // instance.interrupt, which is logically wrong. The Right Thing would
         // be for the OS to make fault-handling atomic (so that CONTEXT.pc was
         // always the logically-faulting pc). Fortunately, we can detect this
         // case and silence the exception ourselves (the exception will
         // retrigger after the interrupt jumps back to resumePC).
-        return pc == module.interrupt() &&
-               module.containsFunctionPC(activation->resumePC()) &&
-               module.lookupHeapAccess(activation->resumePC());
+        return pc == instance.codeSegment().interruptCode() &&
+               instance.codeSegment().containsFunctionPC(activation->resumePC()) &&
+               instance.lookupHeapAccess(activation->resumePC());
     }
 
-    const HeapAccess* heapAccess = module.lookupHeapAccess(pc);
+    const HeapAccess* heapAccess = instance.lookupHeapAccess(pc);
     if (!heapAccess)
         return false;
 
-    *ppc = EmulateHeapAccess(context, pc, faultingAddress, heapAccess, module);
+    *ppc = EmulateHeapAccess(context, pc, faultingAddress, heapAccess, instance);
     return true;
 }
 
@@ -923,22 +923,22 @@ HandleMachException(JSRuntime* rt, const ExceptionRequest& request)
     if (!activation)
         return false;
 
-    const Module& module = activation->module();
-    if (!module.containsFunctionPC(pc))
+    const Instance& instance = activation->instance();
+    if (!instance.codeSegment().containsFunctionPC(pc))
         return false;
 
     uint8_t* faultingAddress = reinterpret_cast<uint8_t*>(request.body.code[1]);
 
     // This check isn't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
-    if (!IsHeapAccessAddress(module, faultingAddress))
+    if (!IsHeapAccessAddress(instance, faultingAddress))
         return false;
 
-    const HeapAccess* heapAccess = module.lookupHeapAccess(pc);
+    const HeapAccess* heapAccess = instance.lookupHeapAccess(pc);
     if (!heapAccess)
         return false;
 
-    *ppc = EmulateHeapAccess(&context, pc, faultingAddress, heapAccess, module);
+    *ppc = EmulateHeapAccess(&context, pc, faultingAddress, heapAccess, instance);
 
     // Update the thread state with the new pc and register values.
     kret = thread_set_state(rtThread, float_state, (thread_state_t)&context.float_, float_state_count);
@@ -1125,22 +1125,22 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
     if (!activation)
         return false;
 
-    const Module& module = activation->module();
-    if (!module.containsFunctionPC(pc))
+    const Instance& instance = activation->instance();
+    if (!instance.codeSegment().containsFunctionPC(pc))
         return false;
 
     uint8_t* faultingAddress = reinterpret_cast<uint8_t*>(info->si_addr);
 
     // This check isn't necessary, but, since we can, check anyway to make
     // sure we aren't covering up a real bug.
-    if (!IsHeapAccessAddress(module, faultingAddress))
+    if (!IsHeapAccessAddress(instance, faultingAddress))
         return false;
 
-    const HeapAccess* heapAccess = module.lookupHeapAccess(pc);
+    const HeapAccess* heapAccess = instance.lookupHeapAccess(pc);
     if (!heapAccess)
         return false;
 
-    *ppc = EmulateHeapAccess(context, pc, faultingAddress, heapAccess, module);
+    *ppc = EmulateHeapAccess(context, pc, faultingAddress, heapAccess, instance);
 
     return true;
 }
@@ -1195,18 +1195,18 @@ RedirectJitCodeToInterruptCheck(JSRuntime* rt, CONTEXT* context)
     RedirectIonBackedgesToInterruptCheck(rt);
 
     if (WasmActivation* activation = rt->wasmActivationStack()) {
-        const Module& module = activation->module();
+        const Instance& instance = activation->instance();
 
 #ifdef JS_SIMULATOR
-        if (module.containsFunctionPC(rt->simulator()->get_pc_as<void*>()))
-            rt->simulator()->set_resume_pc(module.interrupt());
+        if (instance.codeSegment().containsFunctionPC(rt->simulator()->get_pc_as<void*>()))
+            rt->simulator()->set_resume_pc(instance.codeSegment().interruptCode());
 #endif
 
         uint8_t** ppc = ContextToPC(context);
         uint8_t* pc = *ppc;
-        if (module.containsFunctionPC(pc)) {
+        if (instance.codeSegment().containsFunctionPC(pc)) {
             activation->setResumePC(pc);
-            *ppc = module.interrupt();
+            *ppc = instance.codeSegment().interruptCode();
             return true;
         }
     }
@@ -1389,6 +1389,5 @@ js::wasm::IsPCInWasmCode(void *pc)
     if (!activation)
         return false;
 
-    const Module& module = activation->module();
-    return module.containsFunctionPC(pc);
+    return activation->instance().codeSegment().containsFunctionPC(pc);
 }

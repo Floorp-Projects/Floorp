@@ -771,6 +771,7 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
                             Float(border.right / twipsPerPixel),
                             Float(border.bottom / twipsPerPixel),
                             Float(border.left / twipsPerPixel) };
+  Rect dirtyRect = NSRectToRect(aDirtyRect, twipsPerPixel);
 
   uint8_t borderStyles[4];
   nscolor borderColors[4];
@@ -796,8 +797,16 @@ nsCSSRendering::PaintBorderWithStyleBorder(nsPresContext* aPresContext,
   aDrawTarget.FillRect(joinedBorderAreaPx, color);
 #endif
 
-  nsCSSBorderRenderer br(aPresContext->Type(),
+  nsIDocument* document = nullptr;
+  nsIContent* content = aForFrame->GetContent();
+  if (content) {
+    document = content->OwnerDoc();
+  }
+
+  nsCSSBorderRenderer br(aPresContext,
+                         document,
                          &aDrawTarget,
+                         dirtyRect,
                          joinedBorderAreaPx,
                          borderStyles,
                          borderWidths,
@@ -932,11 +941,20 @@ nsCSSRendering::PaintOutline(nsPresContext* aPresContext,
                              Float(width / twipsPerPixel),
                              Float(width / twipsPerPixel),
                              Float(width / twipsPerPixel) };
+  Rect dirtyRect = NSRectToRect(aDirtyRect, twipsPerPixel);
+
+  nsIDocument* document = nullptr;
+  nsIContent* content = aForFrame->GetContent();
+  if (content) {
+    document = content->OwnerDoc();
+  }
 
   // start drawing
 
-  nsCSSBorderRenderer br(aPresContext->Type(),
+  nsCSSBorderRenderer br(aPresContext,
+                         document,
                          aRenderingContext.GetDrawTarget(),
+                         dirtyRect,
                          oRect,
                          outlineStyles,
                          outlineWidths,
@@ -982,8 +1000,10 @@ nsCSSRendering::PaintFocus(nsPresContext* aPresContext,
   // something that CSS can style, this function will then have access
   // to a style context and can use the same logic that PaintBorder
   // and PaintOutline do.)
-  nsCSSBorderRenderer br(aPresContext->Type(),
+  nsCSSBorderRenderer br(aPresContext,
+                         nullptr,
                          aDrawTarget,
+                         focusRect,
                          focusRect,
                          focusStyles,
                          focusWidths,

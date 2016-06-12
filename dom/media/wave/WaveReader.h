@@ -10,6 +10,7 @@
 #include "MediaResource.h"
 
 #include "mozilla/dom/HTMLMediaElement.h"
+#include "nsAutoPtr.h"
 
 namespace mozilla {
 

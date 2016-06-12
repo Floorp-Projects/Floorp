@@ -12,17 +12,12 @@
 // add a line in this file using the DECL_GFX_ENV macro.
 //
 // For example this line in the .h:
-//   DECL_GFX_ENV_ONCE("MOZ_DISABLE_CONTEXT_SHARING_GLX",DisableContextSharingGLX);
+//   DECL_GFX_ENV("MOZ_DISABLE_CONTEXT_SHARING_GLX",DisableContextSharingGLX);
 // means that you can call
 //   bool var = gfxEnv::DisableContextSharingGLX();
 // and that the value will be checked only once, first time we call it, then cached.
 
-#define DECL_GFX_ENV_LIVE(Env, Name)  \
-  static bool Name() {                \
-    return IsEnvSet(Env);             \
-  }
-
-#define DECL_GFX_ENV_ONCE(Env, Name)  \
+#define DECL_GFX_ENV(Env, Name)  \
   static bool Name() {                \
     static bool isSet = IsEnvSet(Env);\
     return isSet;                     \
@@ -37,21 +32,21 @@ public:
   // Just insert yours in the list.
 
   // Debugging inside of ContainerLayerComposite
-  DECL_GFX_ENV_LIVE("DUMP_DEBUG", DumpDebug);
+  DECL_GFX_ENV("DUMP_DEBUG", DumpDebug);
 
   // OpenGL shader debugging in OGLShaderProgram, in DEBUG only
-  DECL_GFX_ENV_LIVE("MOZ_DEBUG_SHADERS", DebugShaders);
+  DECL_GFX_ENV("MOZ_DEBUG_SHADERS", DebugShaders);
 
   // Disabling context sharing in GLContextProviderGLX
-  DECL_GFX_ENV_ONCE("MOZ_DISABLE_CONTEXT_SHARING_GLX", DisableContextSharingGlx);
+  DECL_GFX_ENV("MOZ_DISABLE_CONTEXT_SHARING_GLX", DisableContextSharingGlx);
 
   // Disabling the crash guard in DriverCrashGuard
-  DECL_GFX_ENV_ONCE("MOZ_DISABLE_CRASH_GUARD", DisableCrashGuard);
-  DECL_GFX_ENV_ONCE("MOZ_FORCE_CRASH_GUARD_NIGHTLY", ForceCrashGuardNightly);
+  DECL_GFX_ENV("MOZ_DISABLE_CRASH_GUARD", DisableCrashGuard);
+  DECL_GFX_ENV("MOZ_FORCE_CRASH_GUARD_NIGHTLY", ForceCrashGuardNightly);
 
   // We force present to work around some Windows bugs - disable that if this
   // environment variable is set.
-  DECL_GFX_ENV_ONCE("MOZ_DISABLE_FORCE_PRESENT", DisableForcePresent);
+  DECL_GFX_ENV("MOZ_DISABLE_FORCE_PRESENT", DisableForcePresent);
 
   // Together with paint dumping, only when MOZ_DUMP_PAINTING is defined.
   // Dumping compositor textures is broken pretty badly. For example,
@@ -59,52 +54,52 @@ public:
   // Expect to have to fix things like this if you turn it on.
   // Meanwhile, content-side texture dumping
   // (conditioned on DebugDumpPainting()) is a good replacement.
-  DECL_GFX_ENV_ONCE("MOZ_DUMP_COMPOSITOR_TEXTURES", DumpCompositorTextures);
+  DECL_GFX_ENV("MOZ_DUMP_COMPOSITOR_TEXTURES", DumpCompositorTextures);
 
   // Dumping the layer list in LayerSorter
-  DECL_GFX_ENV_ONCE("MOZ_DUMP_LAYER_SORT_LIST", DumpLayerSortList);
+  DECL_GFX_ENV("MOZ_DUMP_LAYER_SORT_LIST", DumpLayerSortList);
 
   // Paint dumping, only when MOZ_DUMP_PAINTING is defined.
-  DECL_GFX_ENV_ONCE("MOZ_DUMP_PAINT", DumpPaint);
-  DECL_GFX_ENV_ONCE("MOZ_DUMP_PAINT_INTERMEDIATE", DumpPaintIntermediate);
-  DECL_GFX_ENV_ONCE("MOZ_DUMP_PAINT_ITEMS", DumpPaintItems);
-  DECL_GFX_ENV_ONCE("MOZ_DUMP_PAINT_TO_FILE", DumpPaintToFile);
+  DECL_GFX_ENV("MOZ_DUMP_PAINT", DumpPaint);
+  DECL_GFX_ENV("MOZ_DUMP_PAINT_INTERMEDIATE", DumpPaintIntermediate);
+  DECL_GFX_ENV("MOZ_DUMP_PAINT_ITEMS", DumpPaintItems);
+  DECL_GFX_ENV("MOZ_DUMP_PAINT_TO_FILE", DumpPaintToFile);
 
   // Force double buffering in ContentClient
-  DECL_GFX_ENV_LIVE("MOZ_FORCE_DOUBLE_BUFFERING", ForceDoubleBuffering);
+  DECL_GFX_ENV("MOZ_FORCE_DOUBLE_BUFFERING", ForceDoubleBuffering);
 
   // Force gfxDevCrash to use MOZ_CRASH in Beta and Release
-  DECL_GFX_ENV_ONCE("MOZ_GFX_CRASH_MOZ_CRASH", GfxDevCrashMozCrash);
+  DECL_GFX_ENV("MOZ_GFX_CRASH_MOZ_CRASH", GfxDevCrashMozCrash);
   // Force gfxDevCrash to use telemetry in Nightly and Aurora
-  DECL_GFX_ENV_ONCE("MOZ_GFX_CRASH_TELEMETRY", GfxDevCrashTelemetry);
+  DECL_GFX_ENV("MOZ_GFX_CRASH_TELEMETRY", GfxDevCrashTelemetry);
 
-  DECL_GFX_ENV_LIVE("MOZ_GFX_VR_NO_DISTORTION", VRNoDistortion);
+  DECL_GFX_ENV("MOZ_GFX_VR_NO_DISTORTION", VRNoDistortion);
 
   // Debugging in GLContext
-  DECL_GFX_ENV_LIVE("MOZ_GL_DEBUG", GlDebug);
-  DECL_GFX_ENV_LIVE("MOZ_GL_DEBUG_VERBOSE", GlDebugVerbose);
-  DECL_GFX_ENV_LIVE("MOZ_GL_DEBUG_ABORT_ON_ERROR", GlDebugAbortOnError);
+  DECL_GFX_ENV("MOZ_GL_DEBUG", GlDebug);
+  DECL_GFX_ENV("MOZ_GL_DEBUG_VERBOSE", GlDebugVerbose);
+  DECL_GFX_ENV("MOZ_GL_DEBUG_ABORT_ON_ERROR", GlDebugAbortOnError);
 
   // Count GL extensions
-  DECL_GFX_ENV_ONCE("MOZ_GL_DUMP_EXTS", GlDumpExtensions);
+  DECL_GFX_ENV("MOZ_GL_DUMP_EXTS", GlDumpExtensions);
 
   // Very noisy GLContext and GLContextProviderELG
-  DECL_GFX_ENV_ONCE("MOZ_GL_SPEW", GlSpew);
+  DECL_GFX_ENV("MOZ_GL_SPEW", GlSpew);
 
   // Do extra work before and after each GLX call in GLContextProviderGLX 
-  DECL_GFX_ENV_LIVE("MOZ_GLX_DEBUG", GlxDebug);
+  DECL_GFX_ENV("MOZ_GLX_DEBUG", GlxDebug);
 
   // Use X compositing
-  DECL_GFX_ENV_LIVE("MOZ_LAYERS_ENABLE_XLIB_SURFACES", LayersEnableXlibSurfaces);
+  DECL_GFX_ENV("MOZ_LAYERS_ENABLE_XLIB_SURFACES", LayersEnableXlibSurfaces);
 
   // GL compositing on Windows
-  DECL_GFX_ENV_LIVE("MOZ_LAYERS_PREFER_EGL", LayersPreferEGL);
+  DECL_GFX_ENV("MOZ_LAYERS_PREFER_EGL", LayersPreferEGL);
 
   // Offscreen GL context for main layer manager
-  DECL_GFX_ENV_LIVE("MOZ_LAYERS_PREFER_OFFSCREEN", LayersPreferOffscreen);
+  DECL_GFX_ENV("MOZ_LAYERS_PREFER_OFFSCREEN", LayersPreferOffscreen);
 
   // Stop the VR rendering
-  DECL_GFX_ENV_LIVE("NO_VR_RENDERING", NoVRRendering);
+  DECL_GFX_ENV("NO_VR_RENDERING", NoVRRendering);
 
   // WARNING:
   // Please make sure that you've added your new envvar to the list above in
@@ -123,7 +118,6 @@ private:
   gfxEnv& operator=(const gfxEnv&) = delete;
 };
 
-#undef DECL_GFX_ENV_LIVE
-#undef DECL_GFX_ENV_ONCE
+#undef DECL_GFX_ENV
 
 #endif /* GFX_ENV_H */

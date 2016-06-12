@@ -53,6 +53,9 @@ class SavedFrame;
 namespace jit {
 class CommonFrameLayout;
 }
+namespace wasm {
+class Instance;
+}
 
 // VM stack layout
 //
@@ -1660,19 +1663,19 @@ class InterpreterFrameIterator
 // all kinds of jit code.
 class WasmActivation : public Activation
 {
-    wasm::Module& module_;
+    wasm::Instance& instance_;
     WasmActivation* prevWasm_;
-    WasmActivation* prevWasmForModule_;
+    WasmActivation* prevWasmForInstance_;
     void* entrySP_;
     void* resumePC_;
     uint8_t* fp_;
     wasm::ExitReason exitReason_;
 
   public:
-    WasmActivation(JSContext* cx, wasm::Module& module);
+    WasmActivation(JSContext* cx, wasm::Instance& instance);
     ~WasmActivation();
 
-    wasm::Module& module() const { return module_; }
+    wasm::Instance& instance() const { return instance_; }
     WasmActivation* prevWasm() const { return prevWasm_; }
 
     bool isProfiling() const {

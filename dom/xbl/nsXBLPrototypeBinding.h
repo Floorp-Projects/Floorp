@@ -7,6 +7,7 @@
 #ifndef nsXBLPrototypeBinding_h__
 #define nsXBLPrototypeBinding_h__
 
+#include "nsAutoPtr.h"
 #include "nsClassHashtable.h"
 #include "nsCOMArray.h"
 #include "nsCOMPtr.h"

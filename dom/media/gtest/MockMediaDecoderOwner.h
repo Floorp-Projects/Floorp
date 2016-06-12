@@ -6,6 +6,7 @@
 #define MOCK_MEDIA_DECODER_OWNER_H_
 
 #include "MediaDecoderOwner.h"
+#include "nsAutoPtr.h"
 
 namespace mozilla
 {

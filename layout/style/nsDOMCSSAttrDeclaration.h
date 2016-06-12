@@ -11,7 +11,6 @@
 #include "mozilla/Attributes.h"
 #include "nsDOMCSSDeclaration.h"
 
-#include "nsAutoPtr.h"
 
 namespace mozilla {
 namespace dom {

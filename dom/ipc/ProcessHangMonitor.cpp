@@ -87,7 +87,7 @@ class HangMonitorChild
   bool IsDebuggerStartupComplete();
 
   void NotifyPluginHang(uint32_t aPluginId);
-  void NotifyPluginHangAsync(uint32_t aPluginId, ProcessId aPid);
+  void NotifyPluginHangAsync(uint32_t aPluginId);
 
   void ClearHang();
   void ClearHangAsync();
@@ -209,8 +209,6 @@ public:
 
  private:
   void ShutdownOnThread();
-  void GenerateMinidumps(uint32_t aPluginId, ProcessId aPluginPid,
-                         ProcessId aContentPid, nsString& aCrashId);
 
   const RefPtr<ProcessHangMonitor> mHangMonitor;
 
@@ -405,24 +403,21 @@ HangMonitorChild::NotifyPluginHang(uint32_t aPluginId)
 
   mSentReport = true;
 
-  base::ProcessId pluginPid = plugins::PluginProcessId(aPluginId);
   // bounce to background thread
-  MonitorLoop()->PostTask(
-    NewNonOwningRunnableMethod<uint32_t, uint32_t>(this,
-                                                   &HangMonitorChild::NotifyPluginHangAsync,
-                                                   aPluginId, pluginPid));
+  MonitorLoop()->PostTask(NewNonOwningRunnableMethod<uint32_t>(this,
+                                                               &HangMonitorChild::NotifyPluginHangAsync,
+                                                               aPluginId));
 }
 
 void
-HangMonitorChild::NotifyPluginHangAsync(uint32_t aPluginId,
-                                        base::ProcessId aPid)
+HangMonitorChild::NotifyPluginHangAsync(uint32_t aPluginId)
 {
   MOZ_RELEASE_ASSERT(MessageLoop::current() == MonitorLoop());
 
   // bounce back to parent on background thread
   if (mIPCOpen) {
     Unused << SendHangEvidence(PluginHangData(aPluginId,
-                                              base::GetCurrentProcId(), aPid));
+                                              base::GetCurrentProcId()));
   }
 }
 
@@ -571,54 +566,6 @@ private:
   nsAutoString mBrowserDumpId;
 };
 
-void
-HangMonitorParent::GenerateMinidumps(uint32_t aPluginId, ProcessId aPluginPid,
-                                     ProcessId aContentPid, nsString& aCrashId)
-{
-#ifdef MOZ_CRASHREPORTER
-  if (mBrowserCrashDumpIds.Get(aPluginId, &aCrashId)) {
-    return; // We already have a dump for this hang
-  }
-
-  nsCOMPtr<nsIFile> browserDump;
-  if (!CrashReporter::TakeMinidump(getter_AddRefs(browserDump), true)) {
-    NS_WARNING("Failed to generate a minidump for the browser process");
-    return;
-  }
-
-  nsCOMPtr<nsIFile> pluginDump;
-  mozilla::ipc::ScopedProcessHandle pluginHandle;
-  if (!base::OpenPrivilegedProcessHandle(aPluginPid, &pluginHandle.rwget()) ||
-      !CrashReporter::CreateMinidumpsAndPair(pluginHandle, 0,
-                                             NS_LITERAL_CSTRING("browser"),
-                                             browserDump,
-                                             getter_AddRefs(pluginDump))) {
-    browserDump->Remove(false);
-    NS_WARNING("Failed to generate a minidump for the plugin process");
-    return;
-  }
-
-  if (!CrashReporter::GetIDFromMinidump(pluginDump, aCrashId) ||
-      aCrashId.IsEmpty()) {
-    pluginDump->Remove(false);
-    return;
-  }
-
-  mBrowserCrashDumpIds.Put(aPluginId, aCrashId);
-
-  mozilla::ipc::ScopedProcessHandle contentHandle;
-  if (!base::OpenPrivilegedProcessHandle(aContentPid, &contentHandle.rwget()) ||
-      !CrashReporter::CreateAdditionalChildMinidump(contentHandle,
-                                                    0, pluginDump,
-                                                    NS_LITERAL_CSTRING("content"))) {
-    NS_WARNING("Failed to generate a minidump for the content process");
-    return;
-  }
-
-  return;
-#endif
-}
-
 bool
 HangMonitorParent::RecvHangEvidence(const HangData& aHangData)
 {
@@ -644,8 +591,17 @@ HangMonitorParent::RecvHangEvidence(const HangData& aHangData)
   if (aHangData.type() == HangData::TPluginHangData) {
     MutexAutoLock lock(mBrowserCrashDumpHashLock);
     const PluginHangData& phd = aHangData.get_PluginHangData();
-    GenerateMinidumps(phd.pluginId(), phd.pluginProcessId(),
-                           phd.contentProcessId(), crashId);
+    if (!mBrowserCrashDumpIds.Get(phd.pluginId(), &crashId)) {
+      nsCOMPtr<nsIFile> browserDump;
+      if (CrashReporter::TakeMinidump(getter_AddRefs(browserDump), true)) {
+        if (!CrashReporter::GetIDFromMinidump(browserDump, crashId) || crashId.IsEmpty()) {
+          browserDump->Remove(false);
+          NS_WARNING("Failed to generate timely browser stack, this is bad for plugin hang analysis!");
+        } else {
+          mBrowserCrashDumpIds.Put(phd.pluginId(), crashId);
+        }
+      }
+    }
   }
 #endif
 

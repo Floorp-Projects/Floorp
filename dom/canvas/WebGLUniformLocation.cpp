@@ -115,7 +115,7 @@ IsUniformSetterTypeValid(GLenum setterType, GLenum uniformType)
         return setterType == LOCAL_GL_INT;
 
     default:
-        MOZ_CRASH("Bad `uniformType`.");
+        MOZ_CRASH("GFX: Bad `uniformType`.");
     }
 }
 
@@ -317,7 +317,7 @@ WebGLUniformLocation::GetUniform(JSContext* js, WebGLContext* webgl) const
         }
 
     default:
-        MOZ_CRASH("Invalid elemType.");
+        MOZ_CRASH("GFX: Invalid elemType.");
     }
 }
 

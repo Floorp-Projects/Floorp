@@ -14,7 +14,6 @@
 #include <pthread.h>
 #include "SharedMemoryBasic.h"
 #include "mozilla/Atomics.h"
-#include "nsAutoPtr.h"
 #endif
 
 namespace IPC {

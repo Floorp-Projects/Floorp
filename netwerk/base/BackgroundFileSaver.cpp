@@ -32,7 +32,7 @@
 namespace mozilla {
 namespace net {
 
-// NSPR_LOG_MODULES=BackgroundFileSaver:5
+// MOZ_LOG=BackgroundFileSaver:5
 static LazyLogModule prlog("BackgroundFileSaver");
 #define LOG(args) MOZ_LOG(prlog, mozilla::LogLevel::Debug, args)
 #define LOG_ENABLED() MOZ_LOG_TEST(prlog, mozilla::LogLevel::Debug)

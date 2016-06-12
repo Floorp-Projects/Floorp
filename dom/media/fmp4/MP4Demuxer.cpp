@@ -20,6 +20,8 @@
 #include "mp4_demuxer/AnnexB.h"
 #include "mp4_demuxer/H264.h"
 
+#include "nsAutoPtr.h"
+
 mozilla::LogModule* GetDemuxerLog() {
   static mozilla::LazyLogModule log("MP4Demuxer");
   return log;

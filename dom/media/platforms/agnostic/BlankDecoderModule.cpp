@@ -11,6 +11,7 @@
 #include "mozilla/mozalloc.h" // for operator new, and new (fallible)
 #include "mozilla/RefPtr.h"
 #include "mozilla/TaskQueue.h"
+#include "nsAutoPtr.h"
 #include "nsRect.h"
 #include "PlatformDecoderModule.h"
 #include "TimeUnits.h"

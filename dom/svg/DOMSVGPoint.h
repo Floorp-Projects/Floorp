@@ -9,7 +9,6 @@
 
 #include "DOMSVGPointList.h"
 #include "mozilla/gfx/2D.h"
-#include "nsAutoPtr.h"
 #include "nsDebug.h"
 #include "nsISVGPoint.h"
 #include "SVGPoint.h"

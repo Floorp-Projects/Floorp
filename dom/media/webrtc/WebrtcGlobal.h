@@ -8,6 +8,7 @@
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/RTCStatsReportBinding.h"
+#include "nsAutoPtr.h"
 
 typedef mozilla::dom::RTCStatsReportInternal StatsReport;
 typedef nsTArray< nsAutoPtr<StatsReport>> RTCReports;

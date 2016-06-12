@@ -19,7 +19,7 @@
 <script type="application/javascript">
 <![CDATA[
 
-gPrefToCheck = PREF_APP_UPDATE_NEVER_BRANCH + Services.appinfo.version;
+gPrefToCheck = PREFBRANCH_APP_UPDATE_NEVER + Services.appinfo.version;
 
 const TESTS = [ {
   pageid: PAGEID_CHECKING

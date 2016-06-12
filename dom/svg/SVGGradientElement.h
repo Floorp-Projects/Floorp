@@ -7,6 +7,7 @@
 #ifndef __NS_SVGGRADIENTELEMENT_H__
 #define __NS_SVGGRADIENTELEMENT_H__
 
+#include "nsAutoPtr.h"
 #include "nsSVGAnimatedTransformList.h"
 #include "nsSVGElement.h"
 #include "nsSVGLength2.h"

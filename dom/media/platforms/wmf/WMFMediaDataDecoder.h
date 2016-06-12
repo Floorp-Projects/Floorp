@@ -11,6 +11,7 @@
 #include "WMF.h"
 #include "MFTDecoder.h"
 #include "mozilla/RefPtr.h"
+#include "nsAutoPtr.h"
 #include "PlatformDecoderModule.h"
 
 namespace mozilla {

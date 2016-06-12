@@ -13,7 +13,6 @@
 #include "nsIDocument.h"
 #include "nsIDOMWindow.h"
 #include "nsNetUtil.h"
-#include "nsAutoPtr.h"
 #include "nsQueryObject.h"
 #include "nsIHttpChannel.h"
 #include "nsIScriptSecurityManager.h"

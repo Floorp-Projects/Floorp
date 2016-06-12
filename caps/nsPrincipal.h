@@ -6,11 +6,9 @@
 #ifndef nsPrincipal_h__
 #define nsPrincipal_h__
 
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsJSPrincipals.h"
 #include "nsTArray.h"
-#include "nsAutoPtr.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIProtocolHandler.h"
 #include "nsNetUtil.h"

@@ -11,7 +11,6 @@
 #include "npapi.h"
 #include "npfunctions.h"
 #include "npruntime.h"
-#include "nsAutoPtr.h"
 #include "nsISupportsImpl.h"
 #include "nsPluginHost.h"
 #include "nsString.h"

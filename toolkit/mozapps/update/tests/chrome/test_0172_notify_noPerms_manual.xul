@@ -42,7 +42,7 @@ function runTest() {
 
 function getWriteTestFile() {
   let file = getAppBaseDir();
-  file.append(FILE_PERMS_TEST);
+  file.append(FILE_UPDATE_TEST);
   file.QueryInterface(Ci.nsILocalFileWin);
   if (file.exists()) {
     file.fileAttributesWin |= file.WFA_READWRITE;

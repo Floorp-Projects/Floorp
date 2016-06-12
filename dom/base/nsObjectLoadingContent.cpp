@@ -49,7 +49,6 @@
 #include "prenv.h"
 #include "mozilla/Logging.h"
 
-#include "nsAutoPtr.h"
 #include "nsCURILoader.h"
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"

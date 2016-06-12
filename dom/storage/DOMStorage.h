@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "nsIDOMStorage.h"
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWeakReference.h"
 #include "nsWrapperCache.h"

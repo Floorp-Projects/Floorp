@@ -11,7 +11,6 @@
 
 #include "nsISupports.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsTArray.h"
 #include "prclist.h"

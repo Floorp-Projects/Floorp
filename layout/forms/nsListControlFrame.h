@@ -21,7 +21,6 @@
 #include "nsIFormControlFrame.h"
 #include "nsIListControlFrame.h"
 #include "nsISelectControlFrame.h"
-#include "nsAutoPtr.h"
 #include "nsSelectsAreaFrame.h"
 
 // X.h defines KeyPress

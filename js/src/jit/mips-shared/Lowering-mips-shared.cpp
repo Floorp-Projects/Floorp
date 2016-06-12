@@ -582,11 +582,17 @@ LIRGeneratorMIPSShared::visitAtomicTypedArrayElementBinop(MAtomicTypedArrayEleme
 void
 LIRGeneratorMIPSShared::visitWasmTruncateToInt64(MWasmTruncateToInt64* ins)
 {
-    MOZ_CRASH("NY");
+    MOZ_CRASH("NYI");
 }
 
 void
 LIRGeneratorMIPSShared::visitInt64ToFloatingPoint(MInt64ToFloatingPoint* ins)
 {
-    MOZ_CRASH("NY");
+    MOZ_CRASH("NYI");
+}
+
+void
+LIRGeneratorMIPSShared::visitCopySign(MCopySign* ins)
+{
+    MOZ_CRASH("NYI");
 }

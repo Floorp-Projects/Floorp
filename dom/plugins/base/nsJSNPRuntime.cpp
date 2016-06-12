@@ -8,6 +8,7 @@
 #include "jsfriendapi.h"
 #include "jswrapper.h"
 
+#include "nsAutoPtr.h"
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsJSNPRuntime.h"
 #include "nsNPAPIPlugin.h"

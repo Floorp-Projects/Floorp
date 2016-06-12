@@ -13,6 +13,7 @@
 #include "gfxRect.h"
 #include "gfxSVGGlyphs.h"
 #include "gfxTextRun.h"
+#include "nsAutoPtr.h"
 #include "nsIContent.h" // for GetContent
 #include "nsStubMutationObserver.h"
 #include "nsSVGPaintServerFrame.h"

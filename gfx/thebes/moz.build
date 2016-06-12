@@ -97,12 +97,16 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'cocoa':
         'gfxQuartzNativeDrawing.h',
         'gfxQuartzSurface.h',
     ]
+    EXPORTS.mozilla.gfx += [
+        'PrintTargetCG.h',
+    ]
     SOURCES += [
         'gfxCoreTextShaper.cpp',
         'gfxMacFont.cpp',
         'gfxPlatformMac.cpp',
         'gfxQuartzNativeDrawing.cpp',
         'gfxQuartzSurface.cpp',
+        'PrintTargetCG.cpp',
     ]
 elif 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
     EXPORTS += [

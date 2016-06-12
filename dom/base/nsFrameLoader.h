@@ -18,7 +18,6 @@
 #include "nsPoint.h"
 #include "nsSize.h"
 #include "nsIURI.h"
-#include "nsAutoPtr.h"
 #include "nsFrameMessageManager.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/Attributes.h"

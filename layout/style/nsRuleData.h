@@ -14,6 +14,7 @@
 #include "mozilla/CSSVariableDeclarations.h"
 #include "mozilla/RuleNodeCacheConditions.h"
 #include "mozilla/SheetType.h"
+#include "nsAutoPtr.h"
 #include "nsCSSProps.h"
 #include "nsCSSValue.h"
 #include "nsStyleStructFwd.h"

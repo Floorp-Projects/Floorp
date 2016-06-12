@@ -8,9 +8,9 @@
 #include <urlhist.h>
 
 #include "mozilla/Attributes.h"
+#include "nsCOMPtr.h"
 #include "nsISimpleEnumerator.h"
 #include "nsIWritablePropertyBag2.h"
-#include "nsAutoPtr.h"
 
 class nsIEHistoryEnumerator final : public nsISimpleEnumerator
 {

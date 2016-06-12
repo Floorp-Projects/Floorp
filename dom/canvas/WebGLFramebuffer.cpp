@@ -413,7 +413,7 @@ WebGLFBAttachPoint::FinalizeAttachment(gl::GLContext* gl, GLenum attachment) con
         return;
     }
 
-    MOZ_CRASH();
+    MOZ_CRASH("GFX: invalid render buffer");
 }
 
 JS::Value

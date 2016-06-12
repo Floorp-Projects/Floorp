@@ -41,7 +41,6 @@
 #include "GLLibraryLoader.h"
 #include "nsISupportsImpl.h"
 #include "plstr.h"
-#include "nsAutoPtr.h"
 #include "GLContextTypes.h"
 //#include "GLTextureImage.h"
 #include "SurfaceTypes.h"

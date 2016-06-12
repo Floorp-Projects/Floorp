@@ -25,11 +25,11 @@
 
 #include "asmjs/WasmBinaryIterator.h"
 #include "asmjs/WasmGenerator.h"
+#include "asmjs/WasmInstance.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/Debugger.h"
 
 #include "jsatominlines.h"
-#include "jsobjinlines.h"
 
 #include "vm/Debugger-inl.h"
 
@@ -40,9 +40,6 @@ using namespace js::wasm;
 using mozilla::CheckedInt;
 using mozilla::IsNaN;
 using mozilla::Unused;
-
-typedef Handle<WasmModuleObject*> HandleWasmModule;
-typedef MutableHandle<WasmModuleObject*> MutableHandleWasmModule;
 
 /*****************************************************************************/
 // reporting
@@ -504,6 +501,19 @@ DecodeExpr(FunctionDecoder& f)
 // wasm decoding and generation
 
 static bool
+DecodePreamble(JSContext* cx, Decoder& d)
+{
+    uint32_t u32;
+    if (!d.readFixedU32(&u32) || u32 != MagicNumber)
+        return Fail(cx, d, "failed to match magic number");
+
+    if (!d.readFixedU32(&u32) || u32 != EncodingVersion)
+        return Fail(cx, d, "failed to match binary version");
+
+    return true;
+}
+
+static bool
 DecodeTypeSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init)
 {
     uint32_t sectionStart, sectionSize;
@@ -696,21 +706,6 @@ MaybeDecodeName(JSContext* cx, Decoder& d)
     return UniqueChars((char*)bytes.extractOrCopyRawBuffer());
 }
 
-struct ImportName
-{
-    UniqueChars module;
-    UniqueChars func;
-
-    ImportName(UniqueChars&& module, UniqueChars&& func)
-      : module(Move(module)), func(Move(func))
-    {}
-    ImportName(ImportName&& rhs)
-      : module(Move(rhs.module)), func(Move(rhs.func))
-    {}
-};
-
-typedef Vector<ImportName, 0, SystemAllocPolicy> ImportNameVector;
-
 static bool
 DecodeImport(JSContext* cx, Decoder& d, ModuleGeneratorData* init, ImportNameVector* importNames)
 {
@@ -766,7 +761,7 @@ DecodeImportSection(JSContext* cx, Decoder& d, ModuleGeneratorData* init, Import
 }
 
 static bool
-DecodeMemorySection(JSContext* cx, Decoder& d, ModuleGenerator& mg, MutableHandle<ArrayBufferObject*> heap)
+DecodeMemorySection(JSContext* cx, Decoder& d, ModuleGenerator& mg, MutableHandleArrayBufferObject heap)
 {
     uint32_t sectionStart, sectionSize;
     if (!d.startSection(MemorySectionId, &sectionStart, &sectionSize))
@@ -895,8 +890,6 @@ DecodeExportSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 static bool
 DecodeFunctionBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint32_t funcIndex)
 {
-    int64_t before = PRMJ_Now();
-
     uint32_t bodySize;
     if (!d.readVarU32(&bodySize))
         return Fail(cx, d, "expected number of function body bytes");
@@ -945,10 +938,7 @@ DecodeFunctionBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint32_t func
 
     memcpy(fg.bytes().begin(), bodyBegin, bodySize);
 
-    int64_t after = PRMJ_Now();
-    unsigned generateTime = (after - before) / PRMJ_USEC_PER_MSEC;
-
-    return mg.finishFuncDef(funcIndex, generateTime, &fg);
+    return mg.finishFuncDef(funcIndex, &fg);
 }
 
 static bool
@@ -1036,8 +1026,8 @@ DecodeDataSection(JSContext* cx, Decoder& d, Handle<ArrayBufferObject*> heap)
 }
 
 static bool
-MaybeDecodeNameSectionBody(JSContext* cx, Decoder& d, uint32_t sectionStart,
-                           uint32_t sectionSize, CacheableCharsVector* funcNames)
+MaybeDecodeNameSectionBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint32_t sectionStart,
+                           uint32_t sectionSize)
 {
     uint32_t numFuncNames;
     if (!d.readVarU32(&numFuncNames))
@@ -1046,8 +1036,8 @@ MaybeDecodeNameSectionBody(JSContext* cx, Decoder& d, uint32_t sectionStart,
     if (numFuncNames > MaxFuncs)
         return false;
 
-    CacheableCharsVector result;
-    if (!result.resize(numFuncNames))
+    CacheableCharsVector funcNames;
+    if (!funcNames.resize(numFuncNames))
         return false;
 
     for (uint32_t i = 0; i < numFuncNames; i++) {
@@ -1055,7 +1045,7 @@ MaybeDecodeNameSectionBody(JSContext* cx, Decoder& d, uint32_t sectionStart,
         if (!funcName)
             return false;
 
-        result[i] = strlen(funcName.get()) ? Move(funcName) : nullptr;
+        funcNames[i] = strlen(funcName.get()) ? Move(funcName) : nullptr;
 
         // Skipping local names for a function.
         uint32_t numLocals;
@@ -1073,12 +1063,12 @@ MaybeDecodeNameSectionBody(JSContext* cx, Decoder& d, uint32_t sectionStart,
         }
     }
 
-    *funcNames = Move(result);
+    mg.setFuncNames(Move(funcNames));
     return true;
 }
 
 static bool
-DecodeNameSection(JSContext* cx, Decoder& d, CacheableCharsVector* funcNames)
+DecodeNameSection(JSContext* cx, Decoder& d, ModuleGenerator& mg)
 {
     uint32_t sectionStart, sectionSize;
     if (!d.startSection(NameSectionId, &sectionStart, &sectionSize))
@@ -1086,7 +1076,7 @@ DecodeNameSection(JSContext* cx, Decoder& d, CacheableCharsVector* funcNames)
     if (sectionStart == Decoder::NotStarted)
         return true;
 
-    if (!MaybeDecodeNameSectionBody(cx, d, sectionStart, sectionSize, funcNames)) {
+    if (!MaybeDecodeNameSectionBody(cx, d, mg, sectionStart, sectionSize)) {
         // This section does not cause validation for the whole module to fail and
         // is instead treated as if the section was absent.
         d.ignoreSection(sectionStart, sectionSize);
@@ -1099,80 +1089,66 @@ DecodeNameSection(JSContext* cx, Decoder& d, CacheableCharsVector* funcNames)
     return true;
 }
 
-
 static bool
-DecodeModule(JSContext* cx, UniqueChars file, const uint8_t* bytes, uint32_t length,
-             ImportNameVector* importNames, SharedExportMap* exportMap,
-             MutableHandle<ArrayBufferObject*> heap, MutableHandle<WasmModuleObject*> moduleObj)
+DecodeUnknownSections(JSContext* cx, Decoder& d)
 {
-    Decoder d(bytes, bytes + length);
-
-    uint32_t u32;
-    if (!d.readFixedU32(&u32) || u32 != MagicNumber)
-        return Fail(cx, d, "failed to match magic number");
-
-    if (!d.readFixedU32(&u32) || u32 != EncodingVersion)
-        return Fail(cx, d, "failed to match binary version");
-
-    UniqueModuleGeneratorData init = js::MakeUnique<ModuleGeneratorData>(cx);
-    if (!init)
-        return false;
-
-    if (!DecodeTypeSection(cx, d, init.get()))
-        return false;
-
-    if (!DecodeImportSection(cx, d, init.get(), importNames))
-        return false;
-
-    if (!DecodeFunctionSection(cx, d, init.get()))
-        return false;
-
-    if (!DecodeTableSection(cx, d, init.get()))
-        return false;
-
-    ModuleGenerator mg(cx);
-    if (!mg.init(Move(init), Move(file)))
-        return false;
-
-    if (!DecodeMemorySection(cx, d, mg, heap))
-        return false;
-
-    if (!DecodeExportSection(cx, d, mg))
-        return false;
-
-    if (!DecodeCodeSection(cx, d, mg))
-        return false;
-
-    if (!DecodeDataSection(cx, d, heap))
-        return false;
-
-    CacheableCharsVector funcNames;
-    if (!DecodeNameSection(cx, d, &funcNames))
-        return false;
-
     while (!d.done()) {
         if (!d.skipSection())
             return Fail(cx, d, "failed to skip unknown section at end");
     }
 
-    UniqueCodeSegment code;
-    SharedMetadata metadata;
-    SharedStaticLinkData staticLinkData;
-    SlowFunctionVector slowFuncs(cx);
-    if (!mg.finish(Move(funcNames), &code, &metadata, &staticLinkData, exportMap, &slowFuncs))
-        return false;
+    return true;
+}
 
-    moduleObj.set(WasmModuleObject::create(cx));
-    if (!moduleObj)
-        return false;
+static UniqueModule
+DecodeModule(JSContext* cx, UniqueChars file, const ShareableBytes& bytecode,
+             MutableHandleArrayBufferObject heap)
+{
+    UniqueModuleGeneratorData init = js::MakeUnique<ModuleGeneratorData>(cx);
+    if (!init)
+        return nullptr;
 
-    auto module = cx->new_<Module>(Move(code), *metadata);
-    if (!module)
-        return false;
+    Decoder d(bytecode.begin(), bytecode.end());
 
-    moduleObj->init(*module);
+    if (!DecodePreamble(cx, d))
+        return nullptr;
 
-    return moduleObj->module().staticallyLink(cx, *staticLinkData);
+    if (!DecodeTypeSection(cx, d, init.get()))
+        return nullptr;
+
+    ImportNameVector importNames;
+    if (!DecodeImportSection(cx, d, init.get(), &importNames))
+        return nullptr;
+
+    if (!DecodeFunctionSection(cx, d, init.get()))
+        return nullptr;
+
+    if (!DecodeTableSection(cx, d, init.get()))
+        return nullptr;
+
+    ModuleGenerator mg(cx);
+    if (!mg.init(Move(init), Move(file)))
+        return nullptr;
+
+    if (!DecodeMemorySection(cx, d, mg, heap))
+        return nullptr;
+
+    if (!DecodeExportSection(cx, d, mg))
+        return nullptr;
+
+    if (!DecodeCodeSection(cx, d, mg))
+        return nullptr;
+
+    if (!DecodeDataSection(cx, d, heap))
+        return nullptr;
+
+    if (!DecodeNameSection(cx, d, mg))
+        return nullptr;
+
+    if (!DecodeUnknownSections(cx, d))
+        return nullptr;
+
+    return mg.finish(Move(importNames), bytecode);
 }
 
 /*****************************************************************************/
@@ -1246,49 +1222,18 @@ ImportFunctions(JSContext* cx, HandleObject importObj, const ImportNameVector& i
     return true;
 }
 
-static const char ExportField[] = "exports";
-
-static bool
-CreateInstance(JSContext* cx, HandleObject exportObj, MutableHandleObject instance)
-{
-    instance.set(JS_NewPlainObject(cx));
-    if (!instance)
-        return false;
-
-    JSAtom* atom = Atomize(cx, ExportField, strlen(ExportField));
-    if (!atom)
-        return false;
-
-    RootedId id(cx, AtomToId(atom));
-    RootedValue val(cx, ObjectValue(*exportObj));
-    if (!JS_DefinePropertyById(cx, instance, id, val, JSPROP_ENUMERATE))
-        return false;
-
-    return true;
-}
-
 bool
-wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj,
-           MutableHandleObject instance)
+wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> view, HandleObject importObj,
+           MutableHandleWasmInstanceObject instanceObj)
 {
-    MOZ_ASSERT(!code->isSharedMemory());
-
     if (!CheckCompilerSupport(cx))
         return false;
 
-    if (!TypedArrayObject::ensureHasBuffer(cx, code))
+    uint8_t* viewBegin = (uint8_t*)view->viewDataEither().unwrap(/* for copy */);
+
+    MutableBytes bytecode = cx->new_<ShareableBytes>();
+    if (!bytecode || !bytecode->append(viewBegin, view->byteLength()))
         return false;
-
-    const uint8_t* bufferStart = code->bufferUnshared()->dataPointer();
-    const uint8_t* bytes = bufferStart + code->byteOffset();
-    uint32_t length = code->byteLength();
-
-    Vector<uint8_t> copy(cx);
-    if (code->bufferUnshared()->hasInlineData()) {
-        if (!copy.append(bytes, length))
-            return false;
-        bytes = copy.begin();
-    }
 
     JS::AutoFilename filename;
     if (!DescribeScriptedCaller(cx, &filename))
@@ -1298,121 +1243,17 @@ wasm::Eval(JSContext* cx, Handle<TypedArrayObject*> code, HandleObject importObj
     if (!file)
         return false;
 
-    ImportNameVector importNames;
-    SharedExportMap exportMap;
     Rooted<ArrayBufferObject*> heap(cx);
-    Rooted<WasmModuleObject*> moduleObj(cx);
-
-    if (!DecodeModule(cx, Move(file), bytes, length, &importNames, &exportMap, &heap, &moduleObj)) {
+    UniqueModule module = DecodeModule(cx, Move(file), *bytecode, &heap);
+    if (!module) {
         if (!cx->isExceptionPending())
             ReportOutOfMemory(cx);
         return false;
     }
 
-    Rooted<FunctionVector> imports(cx, FunctionVector(cx));
-    if (!ImportFunctions(cx, importObj, importNames, &imports))
+    Rooted<FunctionVector> funcImports(cx, FunctionVector(cx));
+    if (!ImportFunctions(cx, importObj, module->importNames(), &funcImports))
         return false;
 
-    Module& module = moduleObj->module();
-
-    RootedObject exportObj(cx);
-    if (!module.dynamicallyLink(cx, moduleObj, heap, imports, *exportMap, &exportObj))
-        return false;
-
-    if (!CreateInstance(cx, exportObj, instance))
-        return false;
-
-    if (cx->compartment()->isDebuggee()) {
-        Bytes source;
-        if (!source.append(bytes, length))
-            return false;
-        module.setSource(Move(source));
-    }
-
-    Debugger::onNewWasmModule(cx, moduleObj);
-    return true;
-}
-
-static bool
-InstantiateModule(JSContext* cx, unsigned argc, Value* vp)
-{
-    MOZ_ASSERT(cx->runtime()->options().wasm());
-    CallArgs args = CallArgsFromVp(argc, vp);
-
-    if (!args.get(0).isObject() || !args.get(0).toObject().is<TypedArrayObject>()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
-        return false;
-    }
-
-    Rooted<TypedArrayObject*> code(cx, &args[0].toObject().as<TypedArrayObject>());
-    if (code->isSharedMemory()) {
-        JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_BUF_ARG);
-        return false;
-    }
-
-    RootedObject importObj(cx);
-    if (!args.get(1).isUndefined()) {
-        if (!args.get(1).isObject()) {
-            JS_ReportErrorNumber(cx, GetErrorMessage, nullptr, JSMSG_WASM_BAD_IMPORT_ARG);
-            return false;
-        }
-        importObj = &args[1].toObject();
-    }
-
-    RootedObject exportObj(cx);
-    if (!Eval(cx, code, importObj, &exportObj))
-        return false;
-
-    args.rval().setObject(*exportObj);
-    return true;
-}
-
-#if JS_HAS_TOSOURCE
-static bool
-wasm_toSource(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    args.rval().setString(cx->names().Wasm);
-    return true;
-}
-#endif
-
-static const JSFunctionSpec wasm_static_methods[] = {
-#if JS_HAS_TOSOURCE
-    JS_FN(js_toSource_str,     wasm_toSource,     0, 0),
-#endif
-    JS_FN("instantiateModule", InstantiateModule, 1, 0),
-    JS_FS_END
-};
-
-const Class js::WasmClass = {
-    js_Wasm_str,
-    JSCLASS_HAS_CACHED_PROTO(JSProto_Wasm)
-};
-
-JSObject*
-js::InitWasmClass(JSContext* cx, HandleObject global)
-{
-    MOZ_ASSERT(cx->runtime()->options().wasm());
-
-    RootedObject proto(cx, global->as<GlobalObject>().getOrCreateObjectPrototype(cx));
-    if (!proto)
-        return nullptr;
-
-    RootedObject Wasm(cx, NewObjectWithGivenProto(cx, &WasmClass, proto, SingletonObject));
-    if (!Wasm)
-        return nullptr;
-
-    if (!JS_DefineProperty(cx, global, js_Wasm_str, Wasm, JSPROP_RESOLVING))
-        return nullptr;
-
-    RootedValue version(cx, Int32Value(EncodingVersion));
-    if (!JS_DefineProperty(cx, Wasm, "experimentalVersion", version, JSPROP_RESOLVING))
-        return nullptr;
-
-    if (!JS_DefineFunctions(cx, Wasm, wasm_static_methods))
-        return nullptr;
-
-    global->as<GlobalObject>().setConstructor(JSProto_Wasm, ObjectValue(*Wasm));
-    return Wasm;
+    return module->instantiate(cx, funcImports, heap, instanceObj);
 }

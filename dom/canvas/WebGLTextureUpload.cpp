@@ -646,7 +646,7 @@ DoTexStorage(gl::GLContext* gl, TexTarget target, GLsizei levels, GLenum sizedFo
         break;
 
     default:
-        MOZ_CRASH("bad target");
+        MOZ_CRASH("GFX: bad target");
     }
 
     return errorScope.GetError();
@@ -670,7 +670,7 @@ Is3D(TexImageTarget target)
         return true;
 
     default:
-        MOZ_CRASH("bad target");
+        MOZ_CRASH("GFX: bad target");
     }
 }
 
@@ -991,7 +991,7 @@ WebGLTexture::TexStorage(const char* funcName, TexTarget target, GLsizei levels,
         return;
     }
     if (error) {
-        MOZ_RELEASE_ASSERT(false, "We should have caught all other errors.");
+        MOZ_RELEASE_ASSERT(false, "GFX: We should have caught all other errors.");
         mContext->ErrorInvalidOperation("%s: Unexpected error during texture allocation.",
                                         funcName);
         return;
@@ -1336,7 +1336,7 @@ WebGLTexture::CompressedTexImage(const char* funcName, TexImageTarget target, GL
         return;
     }
     if (error) {
-        MOZ_RELEASE_ASSERT(false, "We should have caught all other errors.");
+        MOZ_RELEASE_ASSERT(false, "GFX: We should have caught all other errors.");
         mContext->GenerateWarning("%s: Unexpected error during texture upload. Context"
                                   " lost.",
                                   funcName);
@@ -1481,7 +1481,7 @@ WebGLTexture::CompressedTexSubImage(const char* funcName, TexImageTarget target,
         return;
     }
     if (error) {
-        MOZ_RELEASE_ASSERT(false, "We should have caught all other errors.");
+        MOZ_RELEASE_ASSERT(false, "GFX: We should have caught all other errors.");
         mContext->GenerateWarning("%s: Unexpected error during texture upload. Context"
                                   " lost.",
                                   funcName);
@@ -1591,10 +1591,10 @@ ScopedCopyTexImageSource::ScopedCopyTexImageSource(WebGLContext* webgl,
             sizedFormat = LOCAL_GL_RGBA16F;
             break;
         }
-        MOZ_CRASH("Should be able to request CopyTexImage from Float.");
+        MOZ_CRASH("GFX: Should be able to request CopyTexImage from Float.");
 
     default:
-        MOZ_CRASH("Should be able to request CopyTexImage from this type.");
+        MOZ_CRASH("GFX: Should be able to request CopyTexImage from this type.");
     }
 
     gl::ScopedTexture scopedTex(gl);
@@ -1619,7 +1619,7 @@ ScopedCopyTexImageSource::ScopedCopyTexImageSource(WebGLContext* webgl,
         break;
 
     default:
-        MOZ_CRASH("Unhandled unsizedFormat.");
+        MOZ_CRASH("GFX: Unhandled unsizedFormat.");
     }
 
     gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_SWIZZLE_R, blitSwizzle[0]);
@@ -1645,7 +1645,7 @@ ScopedCopyTexImageSource::ScopedCopyTexImageSource(WebGLContext* webgl,
 
     const GLenum status = gl->fCheckFramebufferStatus(LOCAL_GL_FRAMEBUFFER);
     if (status != LOCAL_GL_FRAMEBUFFER_COMPLETE) {
-        MOZ_CRASH("Temp framebuffer is not complete.");
+        MOZ_CRASH("GFX: Temp framebuffer is not complete.");
     }
 
     // Restore RB binding.
@@ -1832,7 +1832,7 @@ WebGLTexture::CopyTexImage2D(TexImageTarget target, GLint level, GLenum internal
         return;
     }
     if (error) {
-        MOZ_RELEASE_ASSERT(false, "We should have caught all other errors.");
+        MOZ_RELEASE_ASSERT(false, "GFX: We should have caught all other errors.");
         mContext->GenerateWarning("%s: Unexpected error during texture copy. Context"
                                   " lost.",
                                   funcName);
@@ -1942,7 +1942,7 @@ WebGLTexture::CopyTexSubImage(const char* funcName, TexImageTarget target, GLint
         return;
     }
     if (error) {
-        MOZ_RELEASE_ASSERT(false, "We should have caught all other errors.");
+        MOZ_RELEASE_ASSERT(false, "GFX: We should have caught all other errors.");
         mContext->GenerateWarning("%s: Unexpected error during texture copy. Context"
                                   " lost.",
                                   funcName);

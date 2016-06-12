@@ -17,7 +17,6 @@
 */
 
 #include <dbus/dbus.h>
-#include "nsAutoPtr.h"
 #include "DBusUtils.h"
 
 #undef CHROMIUM_LOG
