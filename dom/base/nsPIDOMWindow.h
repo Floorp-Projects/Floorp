@@ -43,7 +43,7 @@ namespace dom {
 class AudioContext;
 class Element;
 class Performance;
-class ServiceWorkerRegistrationMainThread;
+class ServiceWorkerRegistration;
 } // namespace dom
 namespace gfx {
 class VRDeviceProxy;
@@ -613,7 +613,7 @@ protected:
   RefPtr<mozilla::dom::Performance> mPerformance;
 
   typedef nsRefPtrHashtable<nsStringHashKey,
-                            mozilla::dom::ServiceWorkerRegistrationMainThread>
+                            mozilla::dom::ServiceWorkerRegistration>
           ServiceWorkerRegistrationTable;
   ServiceWorkerRegistrationTable mServiceWorkerRegistrationTable;
 
@@ -736,7 +736,7 @@ public:
   bool GetAudioCaptured() const;
   nsresult SetAudioCapture(bool aCapture);
 
-  already_AddRefed<mozilla::dom::ServiceWorkerRegistrationMainThread>
+  already_AddRefed<mozilla::dom::ServiceWorkerRegistration>
     GetServiceWorkerRegistration(const nsAString& aScope);
   void InvalidateServiceWorkerRegistration(const nsAString& aScope);
 

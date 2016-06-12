@@ -27,7 +27,7 @@ enum class ImageBitmapFormat : uint32_t;
 class Performance;
 class Promise;
 class RequestOrUSVString;
-class ServiceWorkerRegistrationWorkerThread;
+class ServiceWorkerRegistration;
 class WorkerLocation;
 class WorkerNavigator;
 
@@ -243,7 +243,7 @@ class ServiceWorkerGlobalScope final : public WorkerGlobalScope
 {
   const nsString mScope;
   RefPtr<ServiceWorkerClients> mClients;
-  RefPtr<ServiceWorkerRegistrationWorkerThread> mRegistration;
+  RefPtr<ServiceWorkerRegistration> mRegistration;
 
   ~ServiceWorkerGlobalScope();
 
@@ -272,7 +272,7 @@ public:
   ServiceWorkerClients*
   Clients();
 
-  ServiceWorkerRegistrationWorkerThread*
+  ServiceWorkerRegistration*
   Registration();
 
   already_AddRefed<Promise>

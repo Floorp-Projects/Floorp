@@ -8,7 +8,7 @@
  *
  */
 
-[Func="mozilla::dom::ServiceWorkerRegistrationVisible",
+[Func="mozilla::dom::ServiceWorkerRegistration::Visible",
  Exposed=(Window,Worker)]
 interface ServiceWorkerRegistration : EventTarget {
   [Unforgeable] readonly attribute ServiceWorker? installing;
