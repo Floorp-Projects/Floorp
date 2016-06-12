@@ -6,6 +6,7 @@
 
 #include "DynamicsCompressorNode.h"
 #include "mozilla/dom/DynamicsCompressorNodeBinding.h"
+#include "nsAutoPtr.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"
 #include "AudioDestinationNode.h"

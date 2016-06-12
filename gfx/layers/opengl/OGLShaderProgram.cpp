@@ -10,7 +10,6 @@
 #include "mozilla/DebugOnly.h"          // for DebugOnly
 #include "mozilla/layers/Compositor.h"  // for BlendOpIsMixBlendMode
 #include "nsAString.h"
-#include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsString.h"                   // for nsAutoCString
 #include "Layers.h"
 #include "GLContext.h"

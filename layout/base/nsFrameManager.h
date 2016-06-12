@@ -21,7 +21,6 @@
 
 #include "nsFrameManagerBase.h"
 
-#include "nsAutoPtr.h"
 #include "nsFrameList.h"
 #include "nsIContent.h"
 #include "nsStyleContext.h"

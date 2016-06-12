@@ -10,6 +10,7 @@
 #include "gfxMatrix.h"
 #include "mozilla/gfx/2D.h"
 #include "mozilla/RefPtr.h"
+#include "nsAutoPtr.h"
 #include "nsSVGPaintServerFrame.h"
 
 class nsIFrame;

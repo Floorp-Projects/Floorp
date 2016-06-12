@@ -72,6 +72,7 @@ JSCompartment::JSCompartment(Zone* zone, const JS::CompartmentOptions& options =
     selfHostingScriptSource(nullptr),
     objectMetadataTable(nullptr),
     lazyArrayBuffers(nullptr),
+    wasmInstances(zone, WasmInstanceObjectSet()),
     nonSyntacticLexicalScopes_(nullptr),
     gcIncomingGrayPointers(nullptr),
     debugModeBits(0),
@@ -916,6 +917,8 @@ JSCompartment::clearTables()
         baseShapes.clear();
     if (initialShapes.initialized())
         initialShapes.clear();
+    if (wasmInstances.initialized())
+        wasmInstances.clear();
     if (savedStacks_.initialized())
         savedStacks_.clear();
 }
@@ -1185,7 +1188,8 @@ JSCompartment::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf,
                                         tiArrayTypeTables, tiObjectTypeTables,
                                         compartmentTables);
     *compartmentTables += baseShapes.sizeOfExcludingThis(mallocSizeOf)
-                        + initialShapes.sizeOfExcludingThis(mallocSizeOf);
+                        + initialShapes.sizeOfExcludingThis(mallocSizeOf)
+                        + wasmInstances.sizeOfExcludingThis(mallocSizeOf);
     *innerViewsArg += innerViews.sizeOfExcludingThis(mallocSizeOf);
     if (lazyArrayBuffers)
         *lazyArrayBuffersArg += lazyArrayBuffers->sizeOfIncludingThis(mallocSizeOf);

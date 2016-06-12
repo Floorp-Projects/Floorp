@@ -8,7 +8,6 @@
 #define mozilla_dom_cache_Context_h
 
 #include "mozilla/dom/cache/Types.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
 #include "nsProxyRelease.h"

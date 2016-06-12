@@ -8,7 +8,6 @@
 #define MOZILLA_DOMSVGLENGTHLIST_H__
 
 #include "DOMSVGAnimatedLengthList.h"
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
 #include "nsTArray.h"

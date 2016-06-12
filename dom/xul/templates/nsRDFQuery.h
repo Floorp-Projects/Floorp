@@ -6,7 +6,6 @@
 #ifndef nsRDFQuery_h__
 #define nsRDFQuery_h__
 
-#include "nsAutoPtr.h"
 #include "nsISimpleEnumerator.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"

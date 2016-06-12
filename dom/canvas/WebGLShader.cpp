@@ -101,7 +101,7 @@ TranslateWithoutValidation(const nsACString& sourceNS, bool isWebGL2,
         reversionedSource.insert(versionStrStart, "#version 330\n");
         break;
     default:
-        MOZ_CRASH("Bad `glesslVersion`.");
+        MOZ_CRASH("GFX: Bad `glesslVersion`.");
     }
 
     out_translatedSource->Assign(reversionedSource.c_str(),

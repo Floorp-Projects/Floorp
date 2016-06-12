@@ -40,7 +40,7 @@ class SymbolFile:
     with open(fn) as f:
       for line in f:
         line = line.rstrip()
-        # http://code.google.com/p/google-breakpad/wiki/SymbolFiles
+        # https://chromium.googlesource.com/breakpad/breakpad/+/master/docs/symbol_files.md
         if line.startswith("FUNC "):
           # FUNC <address> <size> <stack_param_size> <name>
           bits = line.split(None, 4)

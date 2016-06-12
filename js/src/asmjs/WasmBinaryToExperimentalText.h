@@ -48,7 +48,7 @@ struct ExperimentalTextFormatting
 
 MOZ_MUST_USE bool
 BinaryToExperimentalText(JSContext* cx, const uint8_t* bytes, size_t length, StringBuffer& buffer,
-                         const ExperimentalTextFormatting& formatting);
+                         const ExperimentalTextFormatting& formatting = ExperimentalTextFormatting());
 
 }  // namespace wasm
 

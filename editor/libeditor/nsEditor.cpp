@@ -640,11 +640,11 @@ nsEditor::DeleteSelection(EDirection aAction, EStripWrappers aStripWrappers)
 NS_IMETHODIMP
 nsEditor::GetSelection(nsISelection** aSelection)
 {
-  return GetSelection(nsISelectionController::SELECTION_NORMAL, aSelection);
+  return GetSelection(SelectionType::eNormal, aSelection);
 }
 
 nsresult
-nsEditor::GetSelection(int16_t aSelectionType, nsISelection** aSelection)
+nsEditor::GetSelection(SelectionType aSelectionType, nsISelection** aSelection)
 {
   NS_ENSURE_TRUE(aSelection, NS_ERROR_NULL_POINTER);
   *aSelection = nullptr;
@@ -653,11 +653,11 @@ nsEditor::GetSelection(int16_t aSelectionType, nsISelection** aSelection)
   if (!selcon) {
     return NS_ERROR_NOT_INITIALIZED;
   }
-  return selcon->GetSelection(aSelectionType, aSelection);  // does an addref
+  return selcon->GetSelection(ToRawSelectionType(aSelectionType), aSelection);
 }
 
 Selection*
-nsEditor::GetSelection(int16_t aSelectionType)
+nsEditor::GetSelection(SelectionType aSelectionType)
 {
   nsCOMPtr<nsISelection> sel;
   nsresult res = GetSelection(aSelectionType, getter_AddRefs(sel));
@@ -2669,11 +2669,11 @@ nsEditor::SplitNodeImpl(nsIContent& aExistingRightNode,
 {
   // Remember all selection points.
   AutoTArray<SavedRange, 10> savedRanges;
-  for (size_t i = 0; i < nsISelectionController::NUM_SELECTIONTYPES - 1; ++i) {
-    SelectionType type(1 << i);
+  for (size_t i = 0; i < kPresentSelectionTypeCount; ++i) {
+    SelectionType selectionType(ToSelectionType(1 << i));
     SavedRange range;
-    range.mSelection = GetSelection(type);
-    if (type == nsISelectionController::SELECTION_NORMAL) {
+    range.mSelection = GetSelection(selectionType);
+    if (selectionType == SelectionType::eNormal) {
       NS_ENSURE_TRUE(range.mSelection, NS_ERROR_NULL_POINTER);
     } else if (!range.mSelection) {
       // For non-normal selections, skip over the non-existing ones.
@@ -2755,8 +2755,7 @@ nsEditor::SplitNodeImpl(nsIContent& aExistingRightNode,
     }
 
     if (shouldSetSelection &&
-        range.mSelection->Type() ==
-          nsISelectionController::SELECTION_NORMAL) {
+        range.mSelection->Type() == SelectionType::eNormal) {
       // If the editor should adjust the selection, don't bother restoring
       // the ranges for the normal selection here.
       continue;
@@ -2816,11 +2815,11 @@ nsEditor::JoinNodesImpl(nsINode* aNodeToKeep,
 
   // Remember all selection points.
   AutoTArray<SavedRange, 10> savedRanges;
-  for (size_t i = 0; i < nsISelectionController::NUM_SELECTIONTYPES - 1; ++i) {
-    SelectionType type(1 << i);
+  for (size_t i = 0; i < kPresentSelectionTypeCount; ++i) {
+    SelectionType selectionType(ToSelectionType(1 << i));
     SavedRange range;
-    range.mSelection = GetSelection(type);
-    if (type == nsISelectionController::SELECTION_NORMAL) {
+    range.mSelection = GetSelection(selectionType);
+    if (selectionType == SelectionType::eNormal) {
       NS_ENSURE_TRUE(range.mSelection, NS_ERROR_NULL_POINTER);
     } else if (!range.mSelection) {
       // For non-normal selections, skip over the non-existing ones.
@@ -2909,8 +2908,7 @@ nsEditor::JoinNodesImpl(nsINode* aNodeToKeep,
     }
 
     if (shouldSetSelection &&
-        range.mSelection->Type() ==
-          nsISelectionController::SELECTION_NORMAL) {
+        range.mSelection->Type() == SelectionType::eNormal) {
       // If the editor should adjust the selection, don't bother restoring
       // the ranges for the normal selection here.
       continue;
@@ -5148,10 +5146,10 @@ nsEditor::GetIMESelectionStartOffsetIn(nsINode* aTextNode)
 
   int32_t minOffset = INT32_MAX;
   static const SelectionType kIMESelectionTypes[] = {
-    nsISelectionController::SELECTION_IME_RAWINPUT,
-    nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT,
-    nsISelectionController::SELECTION_IME_CONVERTEDTEXT,
-    nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT
+    SelectionType::eIMERawClause,
+    SelectionType::eIMESelectedRawClause,
+    SelectionType::eIMEConvertedClause,
+    SelectionType::eIMESelectedClause
   };
   for (auto selectionType : kIMESelectionTypes) {
     RefPtr<Selection> selection = GetSelection(selectionType);

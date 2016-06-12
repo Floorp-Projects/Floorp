@@ -8,9 +8,7 @@
 #define builtin_Promise_h
 
 #include "builtin/SelfHostingDefines.h"
-#include "js/Date.h"
 #include "vm/NativeObject.h"
-#include "vm/Time.h"
 
 namespace js {
 
@@ -52,10 +50,7 @@ class PromiseObject : public NativeObject
     JSObject* resolutionSite() {
         return getFixedSlot(PROMISE_RESOLUTION_SITE_SLOT).toObjectOrNull();
     }
-    double lifetime() {
-        double now = JS::TimeClip(static_cast<double>(PRMJ_Now()) / PRMJ_USEC_PER_MSEC).toDouble();
-        return now - allocationTime();
-    }
+    double lifetime();
     double timeToResolution() {
         MOZ_ASSERT(state() != JS::PromiseState::Pending);
         return resolutionTime() - allocationTime();

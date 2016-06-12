@@ -10,7 +10,6 @@
 #include "mozilla/CondVar.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/Atomics.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIThread.h"
 #include "nsIObserver.h"

@@ -7,36 +7,38 @@
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
-const PREF_APP_UPDATE_AUTO                = "app.update.auto";
-const PREF_APP_UPDATE_BACKGROUNDERRORS    = "app.update.backgroundErrors";
-const PREF_APP_UPDATE_BACKGROUNDMAXERRORS = "app.update.backgroundMaxErrors";
-const PREF_APP_UPDATE_CERTS_BRANCH        = "app.update.certs.";
-const PREF_APP_UPDATE_CERT_CHECKATTRS     = "app.update.cert.checkAttributes";
-const PREF_APP_UPDATE_CERT_ERRORS         = "app.update.cert.errors";
-const PREF_APP_UPDATE_CERT_MAXERRORS      = "app.update.cert.maxErrors";
-const PREF_APP_UPDATE_CERT_REQUIREBUILTIN = "app.update.cert.requireBuiltIn";
-const PREF_APP_UPDATE_CHANNEL             = "app.update.channel";
-const PREF_APP_UPDATE_ENABLED             = "app.update.enabled";
-const PREF_APP_UPDATE_IDLETIME            = "app.update.idletime";
-const PREF_APP_UPDATE_LOG                 = "app.update.log";
-const PREF_APP_UPDATE_NEVER_BRANCH        = "app.update.never.";
-const PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED = "app.update.notifiedUnsupported";
-const PREF_APP_UPDATE_PROMPTWAITTIME      = "app.update.promptWaitTime";
-const PREF_APP_UPDATE_SERVICE_ENABLED     = "app.update.service.enabled";
-const PREF_APP_UPDATE_SILENT              = "app.update.silent";
-const PREF_APP_UPDATE_STAGING_ENABLED     = "app.update.staging.enabled";
-const PREF_APP_UPDATE_URL                 = "app.update.url";
-const PREF_APP_UPDATE_URL_DETAILS         = "app.update.url.details";
-const PREF_APP_UPDATE_URL_OVERRIDE        = "app.update.url.override";
-const PREF_APP_UPDATE_SOCKET_ERRORS       = "app.update.socket.maxErrors";
-const PREF_APP_UPDATE_RETRY_TIMEOUT       = "app.update.socket.retryTimeout";
+const PREF_APP_UPDATE_AUTO                 = "app.update.auto";
+const PREF_APP_UPDATE_BACKGROUNDERRORS     = "app.update.backgroundErrors";
+const PREF_APP_UPDATE_BACKGROUNDMAXERRORS  = "app.update.backgroundMaxErrors";
+const PREF_APP_UPDATE_CERT_CHECKATTRIBUTES = "app.update.cert.checkAttributes";
+const PREF_APP_UPDATE_CERT_ERRORS          = "app.update.cert.errors";
+const PREF_APP_UPDATE_CERT_MAXERRORS       = "app.update.cert.maxErrors";
+const PREF_APP_UPDATE_CERT_REQUIREBUILTIN  = "app.update.cert.requireBuiltIn";
+const PREF_APP_UPDATE_CHANNEL              = "app.update.channel";
+const PREF_APP_UPDATE_ENABLED              = "app.update.enabled";
+const PREF_APP_UPDATE_IDLETIME             = "app.update.idletime";
+const PREF_APP_UPDATE_LOG                  = "app.update.log";
+const PREF_APP_UPDATE_NOTIFIEDUNSUPPORTED  = "app.update.notifiedUnsupported";
+const PREF_APP_UPDATE_PROMPTWAITTIME       = "app.update.promptWaitTime";
+const PREF_APP_UPDATE_RETRYTIMEOUT         = "app.update.socket.retryTimeout";
+const PREF_APP_UPDATE_SERVICE_ENABLED      = "app.update.service.enabled";
+const PREF_APP_UPDATE_SILENT               = "app.update.silent";
+const PREF_APP_UPDATE_SOCKET_MAXERRORS     = "app.update.socket.maxErrors";
+const PREF_APP_UPDATE_STAGING_ENABLED      = "app.update.staging.enabled";
+const PREF_APP_UPDATE_URL                  = "app.update.url";
+const PREF_APP_UPDATE_URL_DETAILS          = "app.update.url.details";
+const PREF_APP_UPDATE_URL_OVERRIDE         = "app.update.url.override";
 
-const PREF_APP_UPDATE_CERT_INVALID_ATTR_NAME = PREF_APP_UPDATE_CERTS_BRANCH +
+const PREFBRANCH_APP_UPDATE_CERTS = "app.update.certs.";
+const PREFBRANCH_APP_UPDATE_NEVER = "app.update.never.";
+
+const PREF_APP_UPDATE_CERT_INVALID_ATTR_NAME = PREFBRANCH_APP_UPDATE_CERTS +
                                                "1.invalidName";
 
-const PREF_APP_PARTNER_BRANCH             = "app.partner.";
-const PREF_DISTRIBUTION_ID                = "distribution.id";
-const PREF_DISTRIBUTION_VERSION           = "distribution.version";
+const PREFBRANCH_APP_PARTNER         = "app.partner.";
+const PREF_DISTRIBUTION_ID           = "distribution.id";
+const PREF_DISTRIBUTION_VERSION      = "distribution.version";
+const PREF_TOOLKIT_TELEMETRY_ENABLED = "toolkit.telemetry.enabled";
 
 const NS_APP_PROFILE_DIR_STARTUP   = "ProfDS";
 const NS_APP_USER_PROFILE_50_DIR   = "ProfD";
@@ -54,18 +56,18 @@ const DIR_TOBEDELETED  = "tobedeleted";
 const DIR_UPDATES      = "updates";
 const DIR_UPDATED      = IS_MACOSX ? "Updated.app" : "updated";
 
+const FILE_ACTIVE_UPDATE_XML         = "active-update.xml";
 const FILE_APPLICATION_INI           = "application.ini";
-const FILE_BACKUP_LOG                = "backup-update.log";
-const FILE_LAST_LOG                  = "last-update.log";
-const FILE_PERMS_TEST                = "update.test";
-const FILE_UPDATER_INI               = "updater.ini";
-const FILE_UPDATES_DB                = "updates.xml";
-const FILE_UPDATE_ACTIVE             = "active-update.xml";
-const FILE_UPDATE_ARCHIVE            = "update.mar";
-const FILE_UPDATE_LOG                = "update.log";
+const FILE_BACKUP_UPDATE_LOG         = "backup-update.log";
+const FILE_LAST_UPDATE_LOG           = "last-update.log";
 const FILE_UPDATE_SETTINGS_INI       = "update-settings.ini";
 const FILE_UPDATE_SETTINGS_INI_BAK   = "update-settings.ini.bak";
+const FILE_UPDATER_INI               = "updater.ini";
+const FILE_UPDATES_XML               = "updates.xml";
+const FILE_UPDATE_LOG                = "update.log";
+const FILE_UPDATE_MAR                = "update.mar";
 const FILE_UPDATE_STATUS             = "update.status";
+const FILE_UPDATE_TEST               = "update.test";
 const FILE_UPDATE_VERSION            = "update.version";
 
 const UPDATE_SETTINGS_CONTENTS = "[Settings]\n" +
@@ -73,10 +75,7 @@ const UPDATE_SETTINGS_CONTENTS = "[Settings]\n" +
 
 const PR_RDWR        = 0x04;
 const PR_CREATE_FILE = 0x08;
-const PR_APPEND      = 0x10;
 const PR_TRUNCATE    = 0x20;
-const PR_SYNC        = 0x40;
-const PR_EXCL        = 0x80;
 
 const DEFAULT_UPDATE_VERSION = "999999.0";
 
@@ -87,9 +86,7 @@ Services.scriptloader.loadSubScript(DATA_URI_SPEC + "sharedUpdateXML.js", this);
 const PERMS_FILE      = FileUtils.PERMS_FILE;
 const PERMS_DIRECTORY = FileUtils.PERMS_DIRECTORY;
 
-const MODE_RDONLY   = FileUtils.MODE_RDONLY;
 const MODE_WRONLY   = FileUtils.MODE_WRONLY;
-const MODE_RDWR     = FileUtils.MODE_RDWR;
 const MODE_CREATE   = FileUtils.MODE_CREATE;
 const MODE_APPEND   = FileUtils.MODE_APPEND;
 const MODE_TRUNCATE = FileUtils.MODE_TRUNCATE;
@@ -201,7 +198,7 @@ function setUpdateURLOverride(aURL) {
  */
 function getUpdatesXMLFile(aIsActiveUpdate) {
   let file = getUpdatesRootDir();
-  file.append(aIsActiveUpdate ? FILE_UPDATE_ACTIVE : FILE_UPDATES_DB);
+  file.append(aIsActiveUpdate ? FILE_ACTIVE_UPDATE_XML : FILE_UPDATES_XML);
   return file;
 }
 
@@ -349,7 +346,9 @@ function readFile(aFile) {
   if (!aFile.exists()) {
     return null;
   }
-  fis.init(aFile, MODE_RDONLY, PERMS_FILE, 0);
+  // Specifying -1 for ioFlags will open the file with the default of PR_RDONLY.
+  // Specifying -1 for perm will open the file with the default of 0.
+  fis.init(aFile, -1, -1, Ci.nsIFileInputStream.CLOSE_ON_EOF);
   let sis = Cc["@mozilla.org/scriptableinputstream;1"].
             createInstance(Ci.nsIScriptableInputStream);
   sis.init(fis);
@@ -366,9 +365,12 @@ function readFile(aFile) {
  * @return The contents of the file as a string.
  */
 function readFileBytes(aFile) {
+  debugDump("attempting to read file, path: " + aFile.path);
   let fis = Cc["@mozilla.org/network/file-input-stream;1"].
             createInstance(Ci.nsIFileInputStream);
-  fis.init(aFile, -1, -1, false);
+  // Specifying -1 for ioFlags will open the file with the default of PR_RDONLY.
+  // Specifying -1 for perm will open the file with the default of 0.
+  fis.init(aFile, -1, -1, Ci.nsIFileInputStream.CLOSE_ON_EOF);
   let bis = Cc["@mozilla.org/binaryinputstream;1"].
             createInstance(Ci.nsIBinaryInputStream);
   bis.setInputStream(fis);

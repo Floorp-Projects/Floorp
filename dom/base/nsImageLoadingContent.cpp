@@ -11,7 +11,6 @@
  */
 
 #include "nsImageLoadingContent.h"
-#include "nsAutoPtr.h"
 #include "nsError.h"
 #include "nsIContent.h"
 #include "nsIDocument.h"

@@ -11,7 +11,6 @@
 #include "mozilla/Attributes.h"         // for override
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/layers/PImageContainerParent.h"
-#include "nsAutoPtr.h"                  // for nsRefPtr
 
 namespace mozilla {
 namespace layers {

@@ -10,7 +10,6 @@
 #include "mozilla/OwningNonNull.h"      // for OwningNonNull
 #include "mozilla/StyleSheetHandle.h"   // for StyleSheetHandle
 #include "mozilla/dom/Text.h"
-#include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed, nsCOMPtr
 #include "nsCycleCollectionParticipant.h"
 #include "nsGkAtoms.h"
@@ -413,7 +412,8 @@ protected:
    */
   void EnsureComposition(mozilla::WidgetCompositionEvent* aCompositionEvent);
 
-  nsresult GetSelection(int16_t aSelectionType, nsISelection** aSelection);
+  nsresult GetSelection(mozilla::SelectionType aSelectionType,
+                        nsISelection** aSelection);
 
 public:
 
@@ -616,8 +616,8 @@ public:
 #if DEBUG_JOE
   static void DumpNode(nsIDOMNode *aNode, int32_t indent=0);
 #endif
-  Selection* GetSelection(int16_t aSelectionType =
-      nsISelectionController::SELECTION_NORMAL);
+  Selection* GetSelection(mozilla::SelectionType aSelectionType =
+                            mozilla::SelectionType::eNormal);
 
   // Helpers to add a node to the selection.
   // Used by table cell selection methods

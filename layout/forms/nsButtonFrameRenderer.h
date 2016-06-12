@@ -7,7 +7,6 @@
 #define nsButtonFrameRenderer_h___
 
 #include "imgIContainer.h"
-#include "nsAutoPtr.h"
 #include "nsMargin.h"
 
 class nsIFrame;

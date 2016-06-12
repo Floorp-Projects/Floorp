@@ -52,7 +52,7 @@ GetTimerLog()
 // wakeups for the purposes of power profiling. Set the following environment
 // variable before starting the browser.
 //
-//   NSPR_LOG_MODULES=TimerFirings:4
+//   MOZ_LOG=TimerFirings:4
 //
 // Then a line will be printed for every timer that fires. The name used for a
 // |CallbackType::Function| timer depends on the circumstances.

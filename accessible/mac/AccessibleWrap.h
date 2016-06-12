@@ -18,7 +18,6 @@
 #include "nsCOMPtr.h"
 
 #include "nsTArray.h"
-#include "nsAutoPtr.h"
 
 #if defined(__OBJC__)
 @class mozAccessible;

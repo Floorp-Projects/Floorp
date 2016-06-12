@@ -22,7 +22,9 @@ class RtpPacketizerH264 : public RtpPacketizer {
  public:
   // Initialize with payload from encoder.
   // The payload_data must be exactly one encoded H264 frame.
-  RtpPacketizerH264(FrameType frame_type, size_t max_payload_len);
+  RtpPacketizerH264(FrameType frame_type,
+                    size_t max_payload_len,
+                    uint8_t packetization_mode);
 
   virtual ~RtpPacketizerH264();
 
@@ -85,6 +87,7 @@ class RtpPacketizerH264 : public RtpPacketizer {
   RTPFragmentationHeader fragmentation_;
   PacketQueue packets_;
   FrameType frame_type_;
+  uint8_t packetization_mode_;
 
   DISALLOW_COPY_AND_ASSIGN(RtpPacketizerH264);
 };

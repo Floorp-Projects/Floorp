@@ -12,7 +12,6 @@
 #include "mozilla/Attributes.h"         // for override
 #include "mozilla/ipc/ProtocolUtils.h"
 #include "mozilla/layers/PCompositorBridgeChild.h"
-#include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsClassHashtable.h"           // for nsClassHashtable
 #include "nsCOMPtr.h"                   // for nsCOMPtr
 #include "nsHashKeys.h"                 // for nsUint64HashKey

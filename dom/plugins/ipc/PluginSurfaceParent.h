@@ -7,7 +7,6 @@
 #define dom_plugins_PluginSurfaceParent_h
 
 #include "mozilla/plugins/PPluginSurfaceParent.h"
-#include "nsAutoPtr.h"
 #include "mozilla/plugins/PluginMessageUtils.h"
 
 #ifndef XP_WIN

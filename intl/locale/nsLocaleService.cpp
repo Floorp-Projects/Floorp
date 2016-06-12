@@ -9,7 +9,6 @@
 #endif
 
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsILocale.h"
 #include "nsILocaleService.h"
 #include "nsLocale.h"

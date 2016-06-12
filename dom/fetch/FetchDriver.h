@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_FetchDriver_h
 #define mozilla_dom_FetchDriver_h
 
-#include "nsAutoPtr.h"
 #include "nsIChannelEventSink.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIStreamListener.h"

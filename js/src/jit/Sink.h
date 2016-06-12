@@ -8,13 +8,15 @@
 #ifndef jit_Sink_h
 #define jit_Sink_h
 
+#include "mozilla/Attributes.h"
+
 namespace js {
 namespace jit {
 
 class MIRGenerator;
 class MIRGraph;
 
-bool
+MOZ_MUST_USE bool
 Sink(MIRGenerator* mir, MIRGraph& graph);
 
 } // namespace jit

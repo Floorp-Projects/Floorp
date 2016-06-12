@@ -1,0 +1,33 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test BiquadFilterNode High Pass Filter</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script src="audio-testing.js"></script>
+<script src="biquad-filters.js"></script>
+<script src="biquad-testing.js"></script>
+<script src="webaudio.js" type="text/javascript"></script>
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+    // Create offline audio context.
+    var context = new OfflineAudioContext(2, sampleRate * renderLengthSeconds, sampleRate);
+
+    // The filters we want to test.
+    var filterParameters = [{cutoff : 0,    q : 1, gain : 1 },
+                            {cutoff : 1,    q : 1, gain : 1 },
+                            {cutoff : 0.25, q : 1, gain : 1 },
+                           ];
+
+    createTestAndRun(context, "highpass", filterParameters);
+});
+</script>
+</pre>
+</body>
+</html>

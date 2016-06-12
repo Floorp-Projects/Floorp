@@ -19,7 +19,6 @@
 #include "mozilla/TimeStamp.h"
 #include "npapi.h"
 #include "npfunctions.h"
-#include "nsAutoPtr.h"
 #include "nsDataHashtable.h"
 #include "nsHashKeys.h"
 #include "nsIObserver.h"

@@ -1,0 +1,94 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1277814
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1277814</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+    function* test(testDriver) {
+      // Trigger the buggy scenario
+      var subframe = document.getElementById('bug1277814-div');
+      subframe.classList.add('a');
+
+      // Trigger layerization of the subframe by scrolling the wheel over it
+      moveMouseAndScrollWheelOver(subframe, 10, 10, testDriver);
+
+      // Give APZ the chance to compute a displayport, and content
+      // to render based on it.
+      yield waitForApzFlushedRepaints(testDriver);
+
+      // Examine the content-side APZ test data
+      var utils = SpecialPowers.getDOMWindowUtils(window);
+      var contentTestData = utils.getContentAPZTestData();
+
+      // Test that the scroll frame for the div 'bug1277814-div' appears in
+      // the APZ test data. The bug this test is for causes the displayport
+      // calculation for this scroll frame to go wrong, causing it not to
+      // become layerized.
+      contentTestData = convertTestData(contentTestData);
+      var foundIt = false;
+      for (var seqNo in contentTestData.paints) {
+        var paint = contentTestData.paints[seqNo];
+        for (var scrollId in paint) {
+          var scrollFrame = paint[scrollId];
+          if ('contentDescription' in scrollFrame &&
+              scrollFrame['contentDescription'].includes('bug1277814-div')) {
+            foundIt = true;
+          }
+        }
+      }
+      SimpleTest.ok(foundIt, "expected to find APZ test data for bug1277814-div");
+    }
+
+    if (isApzEnabled()) {
+      SimpleTest.waitForExplicitFinish();
+
+      pushPrefs([["apz.test.logging_enabled", true]])
+        .then(waitUntilApzStable)
+        .then(runContinuation(test))
+        .then(SimpleTest.finish);
+    }
+  </script>
+  <style>
+    #bug1277814-div
+    {
+      position: absolute;
+      left: 0;
+      top: 0;
+      padding: .5em;
+      overflow: auto;
+      color: white;
+      background: green;
+      max-width: 30em;
+      max-height: 6em;
+      visibility: hidden;
+      transform: scaleY(0);
+      transition: transform .15s ease-out, visibility 0s ease .15s;
+    }
+    #bug1277814-div.a
+    {
+      visibility: visible;
+      transform: scaleY(1);
+      transition: transform .15s ease-out;
+    }
+  </style>
+</head>
+<body>
+  <!-- Use a unique id because we'll be checking for it in the content
+       description logged in the APZ test data -->
+  <div id="bug1277814-div">
+    CoolCmd<br>CoolCmd<br>CoolCmd<br>CoolCmd<br>
+    CoolCmd<br>CoolCmd<br>CoolCmd<br>CoolCmd<br>
+    CoolCmd<br>CoolCmd<br>CoolCmd<br>CoolCmd<br>
+    CoolCmd<br>CoolCmd<br>CoolCmd<br>CoolCmd<br>
+    CoolCmd<br>CoolCmd<br>CoolCmd<br>CoolCmd<br>
+  <button>click me</button>
+</body>
+</html>

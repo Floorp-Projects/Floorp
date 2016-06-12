@@ -51,7 +51,7 @@
 
   To turn on logging for this module, set
 
-    NSPR_LOG_MODULES=nsRDFXMLDataSource:5
+    MOZ_LOG=nsRDFXMLDataSource:5
 
  */
 

@@ -162,7 +162,7 @@ AddFormatInfo(EffectiveFormat format, const char* name, GLenum sizedFormat,
         break;
 
     default:
-        MOZ_CRASH("Missing UnsizedFormat case.");
+        MOZ_CRASH("GFX: Missing UnsizedFormat case.");
     }
 
     const CompressedFormatInfo* compressedFormatInfo = GetCompressedFormatInfo(format);
@@ -375,7 +375,7 @@ BytesPerPixel(const PackingInfo& packing)
         break;
 
     default:
-        MOZ_CRASH("invalid PackingInfo");
+        MOZ_CRASH("GFX: invalid PackingInfo");
     }
 
     uint8_t channels;
@@ -962,7 +962,7 @@ FormatUsageAuthority::EditUsage(EffectiveFormat format)
 
     if (itr == mUsageMap.end()) {
         const FormatInfo* formatInfo = GetFormat(format);
-        MOZ_RELEASE_ASSERT(formatInfo);
+        MOZ_RELEASE_ASSERT(formatInfo, "GFX: no format info set.");
 
         FormatUsageInfo usage(formatInfo);
 

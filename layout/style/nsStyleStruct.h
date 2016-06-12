@@ -18,6 +18,7 @@
 #include "mozilla/SheetType.h"
 #include "mozilla/StaticPtr.h"
 #include "mozilla/StyleStructContext.h"
+#include "nsAutoPtr.h"
 #include "nsColor.h"
 #include "nsCoord.h"
 #include "nsMargin.h"

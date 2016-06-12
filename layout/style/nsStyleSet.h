@@ -24,7 +24,6 @@
 #include "nsRuleNode.h"
 #include "nsTArray.h"
 #include "nsCOMArray.h"
-#include "nsAutoPtr.h"
 #include "nsIStyleRule.h"
 
 class gfxFontFeatureValueSet;

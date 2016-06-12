@@ -247,7 +247,7 @@ GLContextProviderEAGL::GetGlobalContext()
     if (!triedToCreateContext) {
         triedToCreateContext = true;
 
-        MOZ_RELEASE_ASSERT(!gGlobalContext);
+        MOZ_RELEASE_ASSERT(!gGlobalContext, "GFX: Global GL context already initialized.");
         RefPtr<GLContext> temp = CreateHeadless(CreateContextFlags::NONE);
         gGlobalContext = temp;
 

@@ -7,12 +7,12 @@
 #ifndef mozilla_dom_TimeRanges_h_
 #define mozilla_dom_TimeRanges_h_
 
+#include "nsCOMPtr.h"
 #include "nsIDOMTimeRanges.h"
 #include "nsISupports.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 #include "mozilla/ErrorResult.h"
-#include "nsAutoPtr.h"
 
 namespace mozilla {
 namespace dom {

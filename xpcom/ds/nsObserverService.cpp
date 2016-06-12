@@ -25,11 +25,11 @@
 //
 // To enable logging (see prlog.h for full details):
 //
-//    set NSPR_LOG_MODULES=ObserverService:5
-//    set NSPR_LOG_FILE=nspr.log
+//    set MOZ_LOG=ObserverService:5
+//    set MOZ_LOG_FILE=service.log
 //
-// this enables LogLevel::Debug level information and places all output in
-// the file nspr.log
+// This enables LogLevel::Debug level information and places all output in
+// the file service.log.
 static mozilla::LazyLogModule sObserverServiceLog("ObserverService");
 #define LOG(x) MOZ_LOG(sObserverServiceLog, mozilla::LogLevel::Debug, x)
 

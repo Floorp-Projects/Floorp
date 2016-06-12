@@ -10,7 +10,6 @@
 #include "MediaResource.h"
 #include "MediaDecoderReader.h"
 #include "ImageContainer.h"
-#include "nsAutoPtr.h"
 #include "mozilla/layers/SharedRGBImage.h"
 
 #include "MPAPI.h"

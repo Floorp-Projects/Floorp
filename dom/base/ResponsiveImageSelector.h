@@ -7,6 +7,7 @@
 #ifndef mozilla_dom_responsiveimageselector_h__
 #define mozilla_dom_responsiveimageselector_h__
 
+#include "nsAutoPtr.h"
 #include "nsISupports.h"
 #include "nsIContent.h"
 #include "nsString.h"

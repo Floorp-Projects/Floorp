@@ -79,6 +79,8 @@ class PresShell final : public nsIPresShell,
   template <typename T> using Maybe = mozilla::Maybe<T>;
   using Nothing = mozilla::Nothing;
   using OnNonvisible = mozilla::OnNonvisible;
+  using RawSelectionType = mozilla::RawSelectionType;
+  using SelectionType = mozilla::SelectionType;
   template <typename T> using UniquePtr = mozilla::UniquePtr<T>;
   using VisibilityCounter = mozilla::VisibilityCounter;
   using VisibleFrames = mozilla::VisibleFrames;
@@ -106,14 +108,17 @@ public:
 
   virtual void UpdatePreferenceStyles() override;
 
-  NS_IMETHOD GetSelection(SelectionType aType, nsISelection** aSelection) override;
-  virtual mozilla::dom::Selection* GetCurrentSelection(SelectionType aType) override;
+  NS_IMETHOD GetSelection(RawSelectionType aRawSelectionType,
+                          nsISelection** aSelection) override;
+  virtual mozilla::dom::Selection*
+    GetCurrentSelection(SelectionType aSelectionType) override;
 
   NS_IMETHOD SetDisplaySelection(int16_t aToggle) override;
   NS_IMETHOD GetDisplaySelection(int16_t *aToggle) override;
-  NS_IMETHOD ScrollSelectionIntoView(SelectionType aType, SelectionRegion aRegion,
+  NS_IMETHOD ScrollSelectionIntoView(RawSelectionType aRawSelectionType,
+                                     SelectionRegion aRegion,
                                      int16_t aFlags) override;
-  NS_IMETHOD RepaintSelection(SelectionType aType) override;
+  NS_IMETHOD RepaintSelection(RawSelectionType aRawSelectionType) override;
 
   virtual void BeginObservingDocument() override;
   virtual void EndObservingDocument() override;

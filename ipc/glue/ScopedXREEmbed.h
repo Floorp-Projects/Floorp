@@ -7,8 +7,8 @@
 #ifndef __IPC_GLUE_SCOPEDXREEMBED_H__
 #define __IPC_GLUE_SCOPEDXREEMBED_H__
 
+#include "nsCOMPtr.h"
 #include "nsString.h"
-#include "nsAutoPtr.h"
 #include "nsIFile.h"
 
 namespace mozilla {

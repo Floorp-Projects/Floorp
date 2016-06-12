@@ -309,7 +309,7 @@ SurfaceFactory::~SurfaceFactory()
         tex->CancelWaitForCompositorRecycle();
     }
 
-    MOZ_RELEASE_ASSERT(mRecycleTotalPool.empty());
+    MOZ_RELEASE_ASSERT(mRecycleTotalPool.empty(),"GFX: Surface recycle pool not empty.");
 
     // If we mRecycleFreePool.clear() before StopRecycling(), we may try to recycle it,
     // fail, call StopRecycling(), then return here and call it again.
@@ -349,7 +349,7 @@ SurfaceFactory::StartRecycling(layers::SharedSurfaceTextureClient* tc)
     tc->SetRecycleCallback(&SurfaceFactory::RecycleCallback, static_cast<void*>(this));
 
     bool didInsert = mRecycleTotalPool.insert(tc);
-    MOZ_RELEASE_ASSERT(didInsert);
+    MOZ_RELEASE_ASSERT(didInsert, "GFX: Shared surface texture client was not inserted to recycle.");
     mozilla::Unused << didInsert;
 }
 
@@ -361,7 +361,7 @@ SurfaceFactory::StopRecycling(layers::SharedSurfaceTextureClient* tc)
     tc->ClearRecycleCallback();
 
     bool didErase = mRecycleTotalPool.erase(tc);
-    MOZ_RELEASE_ASSERT(didErase);
+    MOZ_RELEASE_ASSERT(didErase, "GFX: Shared texture surface client was not erased.");
     mozilla::Unused << didErase;
 }
 

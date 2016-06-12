@@ -125,7 +125,6 @@
 #include "nsIControllers.h"
 #include "nsIControllerContext.h"
 #include "nsGlobalWindowCommands.h"
-#include "nsAutoPtr.h"
 #include "nsQueryObject.h"
 #include "nsContentUtils.h"
 #include "nsCSSProps.h"
@@ -9429,7 +9428,8 @@ nsGlobalWindow::GetSelectionOuter()
     return nullptr;
   }
 
-  return static_cast<Selection*>(presShell->GetCurrentSelection(nsISelectionController::SELECTION_NORMAL));
+  return static_cast<Selection*>(
+           presShell->GetCurrentSelection(SelectionType::eNormal));
 }
 
 Selection*

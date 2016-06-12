@@ -10,7 +10,6 @@
 #include "nsIAccessiblePivot.h"
 
 #include "Accessible-inl.h"
-#include "nsAutoPtr.h"
 #include "nsTObserverArray.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/Attributes.h"

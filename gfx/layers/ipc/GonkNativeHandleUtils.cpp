@@ -6,10 +6,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GonkNativeHandleUtils.h"
+#include "mozilla/UniquePtr.h"
+#include "mozilla/unused.h"
 
 using namespace mozilla::layers;
 
 namespace IPC {
+
+namespace {
+
+class native_handle_Delete
+{
+public:
+  void operator()(native_handle* aNativeHandle) const
+  {
+    native_handle_close(aNativeHandle); // closes file descriptors
+    native_handle_delete(aNativeHandle);
+  }
+};
+
+} // anonymous namespace
 
 void
 ParamTraits<GonkNativeHandle>::Write(Message* aMsg,
@@ -35,9 +51,7 @@ ParamTraits<GonkNativeHandle>::Read(const Message* aMsg,
                                PickleIterator* aIter, paramType* aResult)
 {
   size_t nbytes;
-  const char* data;
-  if (!aMsg->ReadSize(aIter, &nbytes) ||
-      !aMsg->ReadBytes(aIter, &data, nbytes)) {
+  if (!aMsg->ReadSize(aIter, &nbytes)) {
     return false;
   }
 
@@ -47,23 +61,31 @@ ParamTraits<GonkNativeHandle>::Read(const Message* aMsg,
 
   size_t numInts = nbytes / sizeof(int);
   size_t numFds = aMsg->num_fds();
-  native_handle* nativeHandle = native_handle_create(numFds, numInts);
+  mozilla::UniquePtr<native_handle, native_handle_Delete> nativeHandle(
+    native_handle_create(numFds, numInts));
   if (!nativeHandle) {
     return false;
   }
 
-  memcpy(nativeHandle->data + nativeHandle->numFds, data, nbytes);
+  auto data =
+    reinterpret_cast<char*>(nativeHandle->data + nativeHandle->numFds);
+  if (!aMsg->ReadBytesInto(aIter, data, nbytes)) {
+    return false;
+  }
 
-  for (size_t i = 0; i < static_cast<size_t>(nativeHandle->numFds); ++i) {
+  for (size_t i = 0; i < numFds; ++i) {
     base::FileDescriptor fd;
     if (!aMsg->ReadFileDescriptor(aIter, &fd)) {
       return false;
     }
     nativeHandle->data[i] = fd.fd;
+    nativeHandle->numFds = i + 1; // set number of valid file descriptors
   }
 
-  GonkNativeHandle handle(new GonkNativeHandle::NhObj(nativeHandle));
+  GonkNativeHandle handle(new GonkNativeHandle::NhObj(nativeHandle.get()));
   handle.TransferToAnother(*aResult);
+
+  mozilla::Unused << nativeHandle.release();
 
   return true;
 }

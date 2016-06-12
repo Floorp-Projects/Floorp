@@ -8,6 +8,7 @@
 
 #include <inttypes.h>
 
+#include "nsAutoPtr.h"
 #include "VideoUtils.h"
 #include "TimeUnits.h"
 #include "prenv.h"

@@ -11,7 +11,6 @@
 #include "mozilla/mozalloc.h"
 
 #include "nsAString.h"
-#include "nsAutoPtr.h"
 #include "nsCRT.h"
 #include "nsContentUtils.h"
 #include "nsDebug.h"

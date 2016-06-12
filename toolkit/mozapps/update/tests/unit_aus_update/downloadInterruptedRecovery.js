@@ -227,8 +227,8 @@ function run_test_pt1() {
 // Test disconnecting during an update
 function run_test_pt2() {
   gIncrementalDownloadErrorType = 0;
-  Services.prefs.setIntPref(PREF_APP_UPDATE_SOCKET_ERRORS, 2);
-  Services.prefs.setIntPref(PREF_APP_UPDATE_RETRY_TIMEOUT, 0);
+  Services.prefs.setIntPref(PREF_APP_UPDATE_SOCKET_MAXERRORS, 2);
+  Services.prefs.setIntPref(PREF_APP_UPDATE_RETRYTIMEOUT, 0);
   setResponseBody("MD5", MD5_HASH_SIMPLE_MAR);
 
   let expectedResult;

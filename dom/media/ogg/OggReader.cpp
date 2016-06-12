@@ -20,6 +20,7 @@ extern "C" {
 #include "mozilla/TimeStamp.h"
 #include "VorbisUtils.h"
 #include "MediaMetadataManager.h"
+#include "nsAutoPtr.h"
 #include "nsISeekableStream.h"
 #include "gfx2DGlue.h"
 #include "mozilla/Telemetry.h"

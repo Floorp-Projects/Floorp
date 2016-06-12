@@ -12,6 +12,7 @@
 #include "MediaUtils.h"
 #include "MediaEngine.h"
 #include "VideoUtils.h"
+#include "nsAutoPtr.h"
 #include "nsThreadUtils.h"
 #include "nsNetCID.h"
 #include "nsNetUtil.h"

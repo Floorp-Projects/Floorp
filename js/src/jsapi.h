@@ -537,27 +537,6 @@ struct JSFreeOp {
 
 /************************************************************************/
 
-typedef enum JSContextOp {
-    JSCONTEXT_NEW,
-    JSCONTEXT_DESTROY
-} JSContextOp;
-
-/**
- * The possible values for contextOp when the runtime calls the callback are:
- *   JSCONTEXT_NEW      JS_NewContext successfully created a new JSContext
- *                      instance. The callback can initialize the instance as
- *                      required. If the callback returns false, the instance
- *                      will be destroyed and JS_NewContext returns null. In
- *                      this case the callback is not called again.
- *   JSCONTEXT_DESTROY  One of JS_DestroyContext* methods is called. The
- *                      callback may perform its own cleanup and must always
- *                      return true.
- *   Any other value    For future compatibility the callback must do nothing
- *                      and return true in this case.
- */
-typedef bool
-(* JSContextCallback)(JSContext* cx, unsigned contextOp, void* data);
-
 typedef enum JSGCStatus {
     JSGC_BEGIN,
     JSGC_END
@@ -1061,9 +1040,6 @@ class MOZ_RAII JSAutoRequest
     static void operator delete(void*, size_t) { }
 #endif
 };
-
-extern JS_PUBLIC_API(void)
-JS_SetContextCallback(JSRuntime* rt, JSContextCallback cxCallback, void* data);
 
 extern JS_PUBLIC_API(JSContext*)
 JS_NewContext(JSRuntime* rt, size_t stackChunkSize);

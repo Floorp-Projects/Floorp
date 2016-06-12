@@ -13,6 +13,7 @@
 
 #include <utils/RefBase.h>
 #include <media/stagefright/OMXClient.h>
+#include "nsAutoPtr.h"
 
 #include "OMX_Component.h"
 

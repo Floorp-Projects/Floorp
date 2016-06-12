@@ -15,7 +15,6 @@
 #include "nsPIDOMWindow.h"
 #include "nsPoint.h"
 #include "nsCycleCollectionParticipant.h"
-#include "nsAutoPtr.h"
 #include "mozilla/dom/EventBinding.h"
 #include "nsIScriptGlobalObject.h"
 #include "Units.h"

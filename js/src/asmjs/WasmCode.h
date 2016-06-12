@@ -22,27 +22,54 @@
 #include "asmjs/WasmTypes.h"
 
 namespace js {
+
+struct AsmJSMetadata;
+
 namespace wasm {
 
+struct LinkData;
+struct Metadata;
+
 // A wasm CodeSegment owns the allocated executable code for a wasm module.
-// CodeSegment passed to the Module constructor must be allocated via allocate.
 
 class CodeSegment;
 typedef UniquePtr<CodeSegment> UniqueCodeSegment;
 
 class CodeSegment
 {
+    // bytes_ points to a single allocation with two contiguous ranges:
+    // executable machine code in the range [0, codeLength) and global data in
+    // the range [codeLength, codeLength + globalDataLength). The range
+    // [0, functionCodeLength) is the subrange of [0, codeLength) which contains
+    // function code.
     uint8_t* bytes_;
+    uint32_t functionCodeLength_;
     uint32_t codeLength_;
     uint32_t globalDataLength_;
 
+    // These are pointers into code for two stubs used for asynchronous
+    // signal-handler control-flow transfer.
+    uint8_t* interruptCode_;
+    uint8_t* outOfBoundsCode_;
+
+    // The profiling mode may be changed dynamically.
+    bool profilingEnabled_;
+
+    CodeSegment() { PodZero(this); }
+    template <class> friend struct js::MallocProvider;
+
     CodeSegment(const CodeSegment&) = delete;
+    CodeSegment(CodeSegment&&) = delete;
     void operator=(const CodeSegment&) = delete;
+    void operator=(CodeSegment&&) = delete;
 
   public:
-    static UniqueCodeSegment allocate(ExclusiveContext* cx, uint32_t codeLength, uint32_t dataLength);
-    static UniqueCodeSegment clone(ExclusiveContext* cx, const CodeSegment& code);
-    CodeSegment() : bytes_(nullptr), codeLength_(0), globalDataLength_(0) {}
+    static UniqueCodeSegment create(ExclusiveContext* cx,
+                                    const Bytes& code,
+                                    const LinkData& linkData,
+                                    const Metadata& metadata,
+                                    uint8_t* heapBase,
+                                    uint32_t heapLength);
     ~CodeSegment();
 
     uint8_t* code() const { return bytes_; }
@@ -51,8 +78,60 @@ class CodeSegment
     uint32_t globalDataLength() const { return globalDataLength_; }
     uint32_t totalLength() const { return codeLength_ + globalDataLength_; }
 
+    uint8_t* interruptCode() const { return interruptCode_; }
+    uint8_t* outOfBoundsCode() const { return outOfBoundsCode_; }
+
+    // The range [0, functionBytes) is a subrange of [0, codeBytes) that
+    // contains only function body code, not the stub code. This distinction is
+    // used by the async interrupt handler to only interrupt when the pc is in
+    // function code which, in turn, simplifies reasoning about how stubs
+    // enter/exit.
+
+    bool containsFunctionPC(void* pc) const {
+        return pc >= code() && pc < (code() + functionCodeLength_);
+    }
+    bool containsCodePC(void* pc) const {
+        return pc >= code() && pc < (code() + codeLength_);
+    }
+
     WASM_DECLARE_SERIALIZABLE(CodeSegment)
 };
+
+// This reusable base class factors out the logic for a resource that is shared
+// by multiple instances/modules but should only be counted once when computing
+// about:memory stats.
+
+template <class T>
+struct ShareableBase : RefCounted<T>
+{
+    using SeenSet = HashSet<const T*, DefaultHasher<const T*>, SystemAllocPolicy>;
+
+    size_t sizeOfIncludingThisIfNotSeen(MallocSizeOf mallocSizeOf, SeenSet* seen) const {
+        const T* self = static_cast<const T*>(this);
+        typename SeenSet::AddPtr p = seen->lookupForAdd(self);
+        if (p)
+            return 0;
+        bool ok = seen->add(p, self);
+        (void)ok;  // oh well
+        return mallocSizeOf(self) + self->sizeOfExcludingThis(mallocSizeOf);
+    }
+};
+
+// ShareableBytes is a ref-counted vector of bytes which are incrementally built
+// during compilation and then immutably shared.
+
+struct ShareableBytes : ShareableBase<ShareableBytes>
+{
+    // Vector is 'final', so instead make Vector a member and add boilerplate.
+    Bytes bytes;
+    size_t sizeOfExcludingThis(MallocSizeOf m) const { return bytes.sizeOfExcludingThis(m); }
+    const uint8_t* begin() const { return bytes.begin(); }
+    const uint8_t* end() const { return bytes.end(); }
+    bool append(const uint8_t *p, uint32_t ct) { return bytes.append(p, ct); }
+};
+
+typedef RefPtr<ShareableBytes> MutableBytes;
+typedef RefPtr<const ShareableBytes> SharedBytes;
 
 // An Export represents a single function inside a wasm Module that has been
 // exported one or more times.
@@ -61,14 +140,16 @@ class Export
 {
     Sig sig_;
     struct CacheablePod {
+        uint32_t funcIndex_;
         uint32_t stubOffset_;
     } pod;
 
   public:
     Export() = default;
-    explicit Export(Sig&& sig)
+    explicit Export(Sig&& sig, uint32_t funcIndex)
       : sig_(Move(sig))
     {
+        pod.funcIndex_ = funcIndex;
         pod.stubOffset_ = UINT32_MAX;
     }
     void initStubOffset(uint32_t stubOffset) {
@@ -76,11 +157,15 @@ class Export
         pod.stubOffset_ = stubOffset;
     }
 
-    uint32_t stubOffset() const {
-        return pod.stubOffset_;
-    }
     const Sig& sig() const {
         return sig_;
+    }
+    uint32_t funcIndex() const {
+        return pod.funcIndex_;
+    }
+    uint32_t stubOffset() const {
+        MOZ_ASSERT(pod.stubOffset_ != UINT32_MAX);
+        return pod.stubOffset_;
     }
 
     WASM_DECLARE_SERIALIZABLE(Export)
@@ -308,7 +393,6 @@ UsesHeap(HeapUsage heapUsage)
 
 struct MetadataCacheablePod
 {
-    uint32_t              functionLength;
     ModuleKind            kind;
     HeapUsage             heapUsage;
     CompileArgs           compileArgs;
@@ -316,8 +400,10 @@ struct MetadataCacheablePod
     MetadataCacheablePod() { mozilla::PodZero(this); }
 };
 
-struct Metadata : RefCounted<Metadata>, MetadataCacheablePod
+struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
 {
+    virtual ~Metadata() {}
+
     MetadataCacheablePod& pod() { return *this; }
     const MetadataCacheablePod& pod() const { return *this; }
 
@@ -327,10 +413,38 @@ struct Metadata : RefCounted<Metadata>, MetadataCacheablePod
     CodeRangeVector       codeRanges;
     CallSiteVector        callSites;
     CallThunkVector       callThunks;
-    CacheableCharsVector  prettyFuncNames;
+    CacheableCharsVector  funcNames;
     CacheableChars        filename;
 
-    WASM_DECLARE_SERIALIZABLE(Metadata);
+    bool usesHeap() const { return UsesHeap(heapUsage); }
+    bool hasSharedHeap() const { return heapUsage == HeapUsage::Shared; }
+
+    const char* getFuncName(ExclusiveContext* cx, uint32_t funcIndex, UniqueChars* owner) const;
+    JSAtom* getFuncAtom(JSContext* cx, uint32_t funcIndex) const;
+
+    // AsmJSMetadata derives Metadata iff isAsmJS(). Mostly this distinction is
+    // encapsulated within AsmJS.cpp, but the additional virtual functions allow
+    // asm.js to override wasm behavior in the handful of cases that can't be
+    // easily encapsulated by AsmJS.cpp.
+
+    bool isAsmJS() const {
+        return kind == ModuleKind::AsmJS;
+    }
+    const AsmJSMetadata& asAsmJS() const {
+        MOZ_ASSERT(isAsmJS());
+        return *(const AsmJSMetadata*)this;
+    }
+    virtual bool mutedErrors() const {
+        return false;
+    }
+    virtual const char16_t* displayURL() const {
+        return nullptr;
+    }
+    virtual ScriptSource* maybeScriptSource() const {
+        return nullptr;
+    }
+
+    WASM_DECLARE_SERIALIZABLE_VIRTUAL(Metadata);
 };
 
 typedef RefPtr<Metadata> MutableMetadata;

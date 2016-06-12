@@ -21,7 +21,6 @@
 #include "nsIInterfaceRequestor.h"
 #include "nsISystemWorkerManager.h"
 #include "nsIObserver.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsXULAppAPI.h" // For XRE_GetProcessType
 

@@ -542,7 +542,7 @@ nsBMPDecoder::ReadInfoHeaderRest(const char* aData, size_t aLength)
     // of the color bitfields (see below).
   }
 
-  // Run with NSPR_LOG_MODULES=BMPDecoder:4 set to see this output.
+  // Run with MOZ_LOG=BMPDecoder:5 set to see this output.
   MOZ_LOG(sBMPLog, LogLevel::Debug,
           ("BMP: bihsize=%u, %d x %d, bpp=%u, compression=%u, colors=%u\n",
           mH.mBIHSize, mH.mWidth, mH.mHeight, uint32_t(mH.mBpp),

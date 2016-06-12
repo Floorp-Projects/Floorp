@@ -11,7 +11,6 @@
 #include "mozilla/TimeStamp.h"
 #include "gfxPoint.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "ImageContainer.h"
 #include "MediaSegment.h"
 

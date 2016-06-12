@@ -10,7 +10,6 @@
 
 #include "mozilla/Attributes.h"
 #include "nsIDOMRect.h"
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 

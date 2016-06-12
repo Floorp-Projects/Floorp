@@ -86,7 +86,6 @@
 #include "DisplayItemScrollClip.h"
 #include "StickyScrollContainer.h"
 #include "nsFontInflationData.h"
-#include "gfxASurface.h"
 #include "nsRegion.h"
 #include "nsIFrameInlines.h"
 
@@ -1823,7 +1822,7 @@ nsFrame::DisplaySelectionOverlay(nsDisplayListBuilder*   aBuilder,
   
   bool normal = false;
   while (details) {
-    if (details->mType == nsISelectionController::SELECTION_NORMAL) {
+    if (details->mSelectionType == SelectionType::eNormal) {
       normal = true;
     }
     SelectionDetails *next = details->mNext;
@@ -3379,10 +3378,10 @@ nsFrame::HandlePress(nsPresContext* aPresContext,
       // the caret later on when the mouse is released. We ignore
       // the spellcheck, find and url formatting selections.
       //
-      if (curDetail->mType != nsISelectionController::SELECTION_SPELLCHECK &&
-          curDetail->mType != nsISelectionController::SELECTION_FIND &&
-          curDetail->mType != nsISelectionController::SELECTION_URLSECONDARY &&
-          curDetail->mType != nsISelectionController::SELECTION_URLSTRIKEOUT &&
+      if (curDetail->mSelectionType != SelectionType::eSpellCheck &&
+          curDetail->mSelectionType != SelectionType::eFind &&
+          curDetail->mSelectionType != SelectionType::eURLSecondary &&
+          curDetail->mSelectionType != SelectionType::eURLStrikeout &&
           curDetail->mStart <= offsets.StartOffset() &&
           offsets.EndOffset() <= curDetail->mEnd)
       {

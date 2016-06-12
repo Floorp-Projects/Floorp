@@ -12,6 +12,7 @@
 #include "mozilla/dom/nsIContentChild.h"
 #include "mozilla/dom/PBrowserOrId.h"
 #include "mozilla/dom/PContentChild.h"
+#include "nsAutoPtr.h"
 #include "nsHashKeys.h"
 #include "nsIObserver.h"
 #include "nsTHashtable.h"
@@ -386,6 +387,9 @@ public:
                                   const nsCString& locale,
                                   const bool& reset) override;
   virtual bool RecvRegisterChromeItem(const ChromeRegistryItem& item) override;
+
+  virtual bool RecvClearImageCache(const bool& privateLoader,
+                                   const bool& chrome) override;
 
   virtual mozilla::jsipc::PJavaScriptChild* AllocPJavaScriptChild() override;
 

@@ -7,7 +7,6 @@
 #define _nsPluginNativeWindow_h_
 
 #include "nscore.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsISupportsImpl.h"
 #include "nsNPAPIPluginInstance.h"

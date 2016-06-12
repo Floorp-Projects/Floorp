@@ -8,6 +8,7 @@
 
 #include "mozilla/EnumSet.h"
 #include "mozilla/MozPromise.h"
+#include "nsAutoPtr.h"
 
 #include "AbstractMediaDecoder.h"
 #include "MediaInfo.h"

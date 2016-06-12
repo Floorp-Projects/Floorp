@@ -204,7 +204,10 @@ def set_expiration(task, timestamp):
     except KeyError:
         return
 
-    for artifact in artifacts.values():
+    # for docker-worker, artifacts is a dictionary
+    # for generic-worker, artifacts is a list
+    # for taskcluster-worker, it will depend on what we do in artifacts plugin
+    for artifact in artifacts.values() if hasattr(artifacts, "values") else artifacts:
         artifact['expires'] = timestamp
 
 def add_treeherder_revision_info(task, revision, revision_hash):

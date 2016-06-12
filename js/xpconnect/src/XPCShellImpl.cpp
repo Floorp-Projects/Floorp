@@ -24,7 +24,6 @@
 #include "nsCOMArray.h"
 #include "nsDirectoryServiceUtils.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsJSPrincipals.h"
 #include "xpcpublic.h"
 #include "xpcprivate.h"

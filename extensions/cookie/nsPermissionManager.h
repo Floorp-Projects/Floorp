@@ -16,7 +16,6 @@
 #include "nsString.h"
 #include "nsPermission.h"
 #include "nsHashKeys.h"
-#include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsDataHashtable.h"
 

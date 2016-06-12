@@ -20,36 +20,6 @@ class nsChildView;
 class nsMenuBarX;
 @class ChildView;
 
-// If we are using an SDK older than 10.7, define bits we need that are missing
-// from it.
-#if !defined(MAC_OS_X_VERSION_10_7) || \
-    MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_7
-
-enum {
-    NSWindowAnimationBehaviorDefault = 0,
-    NSWindowAnimationBehaviorNone = 2,
-    NSWindowAnimationBehaviorDocumentWindow = 3,
-    NSWindowAnimationBehaviorUtilityWindow = 4,
-    NSWindowAnimationBehaviorAlertPanel = 5,
-    NSWindowCollectionBehaviorFullScreenPrimary = 128, // 1 << 7
-};
-
-typedef NSInteger NSWindowAnimationBehavior;
-
-@interface NSWindow (LionWindowFeatures)
-- (void)setAnimationBehavior:(NSWindowAnimationBehavior)newAnimationBehavior;
-- (void)toggleFullScreen:(id)sender;
-@end
-
-typedef struct NSEdgeInsets {
-    CGFloat top;
-    CGFloat left;
-    CGFloat bottom;
-    CGFloat right;
-} NSEdgeInsets;
-
-#endif
-
 typedef struct _nsCocoaWindowList {
   _nsCocoaWindowList() : prev(nullptr), window(nullptr) {}
   struct _nsCocoaWindowList *prev;
@@ -182,11 +152,7 @@ typedef struct _nsCocoaWindowList {
 
 @end
 
-#if defined( MAC_OS_X_VERSION_10_6 ) && ( MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_6 )
 @interface WindowDelegate : NSObject <NSWindowDelegate>
-#else
-@interface WindowDelegate : NSObject
-#endif
 {
   nsCocoaWindow* mGeckoWindow; // [WEAK] (we are owned by the window)
   // Used to avoid duplication when we send NS_ACTIVATE and
@@ -446,9 +412,8 @@ protected:
 
   // Only true on 10.7+ if SetShowsFullScreenButton(true) is called.
   bool                 mSupportsNativeFullScreen;
-  // Whether we are currently using Lion native fullscreen. It could be
-  // false either because we are not on Lion, or we are in the DOM
-  // fullscreen where we do not use the native fullscreen.
+  // Whether we are currently using native fullscreen. It could be false because
+  // we are in the DOM fullscreen where we do not use the native fullscreen.
   bool                 mInNativeFullScreenMode;
 
   bool                 mIsAnimationSuppressed;

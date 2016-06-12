@@ -19,13 +19,6 @@ namespace dom {
 class PerformanceNavigation final : public nsWrapperCache
 {
 public:
-  enum PerformanceNavigationType {
-    TYPE_NAVIGATE = 0,
-    TYPE_RELOAD = 1,
-    TYPE_BACK_FORWARD = 2,
-    TYPE_RESERVED = 255,
-  };
-
   explicit PerformanceNavigation(Performance* aPerformance);
 
   NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(PerformanceNavigation)

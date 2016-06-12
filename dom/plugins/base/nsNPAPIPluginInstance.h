@@ -19,7 +19,6 @@
 #include "js/TypeDecls.h"
 #include "nsIAudioChannelAgent.h"
 #ifdef MOZ_WIDGET_ANDROID
-#include "nsAutoPtr.h"
 #include "nsIRunnable.h"
 #include "GLContextTypes.h"
 #include "AndroidSurfaceTexture.h"

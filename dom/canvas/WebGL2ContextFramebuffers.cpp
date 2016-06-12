@@ -347,7 +347,7 @@ WebGL2Context::FramebufferTextureLayer(GLenum target, GLenum attachment,
         break;
 
     default:
-        MOZ_CRASH("Bad target.");
+        MOZ_CRASH("GFX: Bad target.");
     }
 
     if (!fb) {
@@ -429,7 +429,7 @@ WebGL2Context::InvalidateFramebuffer(GLenum target,
         break;
 
     default:
-        MOZ_CRASH("Bad target.");
+        MOZ_CRASH("GFX: Bad target.");
     }
 
     const bool badColorAttachmentIsInvalidOp = true;
@@ -496,7 +496,7 @@ WebGL2Context::InvalidateSubFramebuffer(GLenum target, const dom::Sequence<GLenu
         break;
 
     default:
-        MOZ_CRASH("Bad target.");
+        MOZ_CRASH("GFX: Bad target.");
     }
 
     const bool badColorAttachmentIsInvalidOp = true;

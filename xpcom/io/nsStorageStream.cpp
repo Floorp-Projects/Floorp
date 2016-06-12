@@ -35,11 +35,11 @@ using mozilla::ipc::StringInputStreamParams;
 //
 // To enable logging (see prlog.h for full details):
 //
-//    set NSPR_LOG_MODULES=StorageStreamLog:5
-//    set NSPR_LOG_FILE=nspr.log
+//    set MOZ_LOG=StorageStreamLog:5
+//    set MOZ_LOG_FILE=storage.log
 //
-// this enables LogLevel::Debug level information and places all output in
-// the file nspr.log
+// This enables LogLevel::Debug level information and places all output in
+// the file storage.log.
 //
 static LazyLogModule sStorageStreamLog("nsStorageStream");
 #ifdef LOG

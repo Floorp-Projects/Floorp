@@ -8,7 +8,6 @@
 #define __NS_SVGLENGTH2_H__
 
 #include "mozilla/Attributes.h"
-#include "nsAutoPtr.h"
 #include "nsCoord.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"

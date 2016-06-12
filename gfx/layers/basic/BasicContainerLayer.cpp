@@ -10,7 +10,6 @@
 #include "basic/BasicLayers.h"          // for BasicLayerManager
 #include "mozilla/gfx/BaseRect.h"       // for BaseRect
 #include "mozilla/mozalloc.h"           // for operator new
-#include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsISupportsImpl.h"            // for Layer::AddRef, etc
 #include "nsPoint.h"                    // for nsIntPoint

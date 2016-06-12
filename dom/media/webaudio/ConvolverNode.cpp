@@ -6,6 +6,7 @@
 
 #include "ConvolverNode.h"
 #include "mozilla/dom/ConvolverNodeBinding.h"
+#include "nsAutoPtr.h"
 #include "AlignmentUtils.h"
 #include "AudioNodeEngine.h"
 #include "AudioNodeStream.h"

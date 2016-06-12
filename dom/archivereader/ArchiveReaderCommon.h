@@ -8,7 +8,6 @@
 #define mozilla_dom_archivereader_archivereader_h
 
 #include "mozilla/DOMEventTargetHelper.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"

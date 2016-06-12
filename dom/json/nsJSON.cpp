@@ -22,7 +22,6 @@
 #include "nsContentUtils.h"
 #include "nsIScriptError.h"
 #include "nsCRTGlue.h"
-#include "nsAutoPtr.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsNullPrincipal.h"
 #include "mozilla/Maybe.h"

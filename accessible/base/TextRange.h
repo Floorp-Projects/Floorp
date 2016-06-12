@@ -8,7 +8,6 @@
 #define mozilla_a11y_TextRange_h__
 
 #include "mozilla/Move.h"
-#include "nsAutoPtr.h"
 #include "nsCaseTreatment.h"
 #include "nsRect.h"
 #include "nsTArray.h"

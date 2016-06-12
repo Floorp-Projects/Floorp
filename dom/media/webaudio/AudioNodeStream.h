@@ -8,6 +8,7 @@
 
 #include "MediaStreamGraph.h"
 #include "mozilla/dom/AudioNodeBinding.h"
+#include "nsAutoPtr.h"
 #include "AlignedTArray.h"
 #include "AudioBlock.h"
 #include "AudioSegment.h"

@@ -38,6 +38,7 @@
 #include "mozilla/ipc/FileDescriptor.h"
 #include "mozilla/ipc/InputStreamParams.h"
 #include "mozilla/ipc/InputStreamUtils.h"
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
 #include "nsIObserver.h"

@@ -8,6 +8,7 @@
 #define NS_SMILCOMPOSITOR_H_
 
 #include "mozilla/Move.h"
+#include "nsAutoPtr.h"
 #include "nsTHashtable.h"
 #include "nsString.h"
 #include "nsSMILAnimationFunction.h"

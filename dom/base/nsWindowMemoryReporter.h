@@ -13,7 +13,6 @@
 #include "nsITimer.h"
 #include "nsDataHashtable.h"
 #include "nsWeakReference.h"
-#include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/MemoryReporting.h"

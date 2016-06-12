@@ -529,7 +529,8 @@ CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot, MDefinition* mir,
     if (mir->isIncompleteObject())
         alloc.setNeedSideEffect();
 
-    snapshots_.add(alloc);
+    masm.propagateOOM(snapshots_.add(alloc));
+
     *allocIndex += mir->isRecoveredOnBailout() ? 0 : 1;
 }
 

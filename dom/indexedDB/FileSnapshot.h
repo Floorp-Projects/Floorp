@@ -9,7 +9,6 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/File.h"
-#include "nsAutoPtr.h"
 #include "nsISupports.h"
 #include "nsWeakPtr.h"
 

@@ -7,7 +7,6 @@
 #ifndef MOZILLA_SVGANIMATEDPRESERVEASPECTRATIO_H__
 #define MOZILLA_SVGANIMATEDPRESERVEASPECTRATIO_H__
 
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsError.h"
 #include "nsISMILAttr.h"

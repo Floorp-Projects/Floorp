@@ -31,6 +31,7 @@
 
 #include "FFTConvolver.h"
 
+#include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "mozilla/FFTBlock.h"
 #include "mozilla/MemoryReporting.h"

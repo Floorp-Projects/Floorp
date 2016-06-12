@@ -10,8 +10,6 @@
 #include "nsIAccessibleRetrieval.h"
 #include "nsIAccessibleEvent.h"
 
-#include "nsAutoPtr.h"
-
 namespace mozilla {
 namespace a11y {
 

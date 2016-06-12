@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_IccListener_h
 #define mozilla_dom_IccListener_h
 
-#include "nsAutoPtr.h"
 #include "nsIIccService.h"
 
 namespace mozilla {

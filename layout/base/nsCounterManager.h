@@ -11,7 +11,6 @@
 
 #include "mozilla/Attributes.h"
 #include "nsGenConList.h"
-#include "nsAutoPtr.h"
 #include "nsClassHashtable.h"
 #include "mozilla/Likely.h"
 #include "CounterStyleManager.h"

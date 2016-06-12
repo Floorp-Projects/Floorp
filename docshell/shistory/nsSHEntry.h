@@ -9,7 +9,6 @@
 
 // Helper Classes
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsString.h"
 #include "mozilla/Attributes.h"

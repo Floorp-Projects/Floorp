@@ -8,7 +8,6 @@
 #include "VolumeManager.h"
 #include "VolumeServiceIOThread.h"
 
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsDependentSubstring.h"
 #include "nsIDOMWakeLockListener.h"

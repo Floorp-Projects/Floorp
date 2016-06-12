@@ -8,7 +8,6 @@
 
 #include "mozilla/RefPtr.h"
 #include "ImageContainer.h"
-#include "nsAutoPtr.h"
 #include "d3d9.h"
 #include "mozilla/layers/TextureClientRecycleAllocator.h"
 

@@ -599,7 +599,7 @@ skip-if(B2G||Mulet) == 367247-l-scroll.html 367247-l-auto.html # Initial mulet t
 == 367612-1e.html 367612-1-ref.html
 == 367612-1f.html 367612-1-ref.html
 != 367612-1g.html 367612-1-ref.html
-skip-if(B2G||Mulet) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(skiaContent,1,28) == 368020-1.html 368020-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) random-if(/^Windows\x20NT\x205\.1/.test(http.oscpu)) fuzzy-if(winWidget,5,2) fuzzy-if(skiaContent,1,28) == 368020-1.html 368020-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 368020-2.html 368020-2-ref.html
 == 368020-3.html 368020-3-ref.html
 pref(layout.css.box-decoration-break.enabled,true) == 368020-5.html 368020-5-ref.html

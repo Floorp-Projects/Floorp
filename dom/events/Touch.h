@@ -12,7 +12,6 @@
 #include "mozilla/MouseEvents.h"
 #include "mozilla/dom/TouchBinding.h"
 #include "nsWrapperCache.h"
-#include "nsAutoPtr.h"
 #include "Units.h"
 
 class nsPresContext;

@@ -12,6 +12,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Services.h"
 #include "WMFMediaDataDecoder.h"
+#include "nsAutoPtr.h"
 #include "nsIWindowsRegKey.h"
 #include "nsComponentManagerUtils.h"
 #include "nsServiceManagerUtils.h"

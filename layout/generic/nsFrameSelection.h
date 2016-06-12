@@ -45,7 +45,7 @@ struct SelectionDetails
 #endif
   int32_t mStart;
   int32_t mEnd;
-  SelectionType mType;
+  mozilla::SelectionType mSelectionType;
   mozilla::TextRangeStyle mTextRangeStyle;
   SelectionDetails *mNext;
 };
@@ -345,15 +345,16 @@ public:
 
   /** GetSelection
    * no query interface for selection. must use this method now.
-   * @param aSelectionType enum value defined in nsISelection for the seleciton you want.
+   * @param aSelectionType The selection type what you want.
    */
-  mozilla::dom::Selection* GetSelection(SelectionType aType) const;
+  mozilla::dom::Selection*
+    GetSelection(mozilla::SelectionType aSelectionType) const;
 
   /**
    * ScrollSelectionIntoView scrolls a region of the selection,
    * so that it is visible in the scrolled view.
    *
-   * @param aType the selection to scroll into view.
+   * @param aSelectionType the selection to scroll into view.
    * @param aRegion the region inside the selection to scroll into view.
    * @param aFlags the scroll flags.  Valid bits include:
    * SCROLL_SYNCHRONOUS: when set, scrolls the selection into view
@@ -364,15 +365,15 @@ public:
    *
    */
   /*unsafe*/
-  nsresult ScrollSelectionIntoView(SelectionType aType,
+  nsresult ScrollSelectionIntoView(mozilla::SelectionType aSelectionType,
                                    SelectionRegion aRegion,
                                    int16_t aFlags) const;
 
   /** RepaintSelection repaints the selected frames that are inside the selection
    *  specified by aSelectionType.
-   * @param aSelectionType enum value defined in nsISelection for the seleciton you want.
+   * @param aSelectionType The selection type what you want to repaint.
    */
-  nsresult RepaintSelection(SelectionType aType) const;
+  nsresult RepaintSelection(mozilla::SelectionType aSelectionType) const;
 
   /** GetFrameForNodeOffset given a node and its child offset, return the nsIFrame and
    *  the offset into that frame. 
@@ -679,9 +680,10 @@ private:
 
   // nsFrameSelection may get deleted when calling this,
   // so remember to use nsCOMPtr when needed.
-  nsresult     NotifySelectionListeners(SelectionType aType);     // add parameters to say collapsed etc?
+  nsresult     NotifySelectionListeners(mozilla::SelectionType aSelectionType);
 
-  RefPtr<mozilla::dom::Selection> mDomSelections[nsISelectionController::NUM_SELECTIONTYPES];
+  RefPtr<mozilla::dom::Selection>
+    mDomSelections[mozilla::kPresentSelectionTypeCount];
 
   // Table selection support.
   nsITableCellLayout* GetCellLayout(nsIContent *aCellContent) const;

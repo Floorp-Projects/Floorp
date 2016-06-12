@@ -12,7 +12,7 @@
 
 #include "nsUrlClassifierUtils.h"
 
-// NSPR_LOG_MODULES=UrlClassifierProtocolParser:5
+// MOZ_LOG=UrlClassifierProtocolParser:5
 mozilla::LazyLogModule gUrlClassifierProtocolParserLog("UrlClassifierProtocolParser");
 #define PARSER_LOG(args) MOZ_LOG(gUrlClassifierProtocolParserLog, mozilla::LogLevel::Debug, args)
 

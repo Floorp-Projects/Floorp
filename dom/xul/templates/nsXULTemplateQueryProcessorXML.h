@@ -9,6 +9,7 @@
 #include "nsIXULTemplateBuilder.h"
 #include "nsIXULTemplateQueryProcessor.h"
 
+#include "nsAutoPtr.h"
 #include "nsISimpleEnumerator.h"
 #include "nsString.h"
 #include "nsCOMArray.h"

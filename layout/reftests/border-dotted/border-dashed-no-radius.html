@@ -1,0 +1,79 @@
+<!DOCTYPE HTML>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>dashed border with no radius</title>
+    <style>
+.box {
+  position: relative;
+  width: 420px;
+  height: 420px;
+}
+.mask {
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
+
+table {
+  border-collapse: separate;
+  border-spacing: 10px;
+  empty-cells: show;
+}
+td {
+  border-style: dashed;
+  border-color: black;
+  height: 120px;
+  width: 120px;
+  box-sizing: border-box;
+}
+
+.A {
+  border-width: 1px;
+}
+.B {
+  border-width: 2px;
+}
+.C {
+  border-width: 6px;
+}
+.D {
+  border-width: 8px;
+}
+.E {
+  border-width: 16px;
+}
+.F {
+  border-width: 24px;
+}
+.G {
+  border-width: 32px;
+}
+.H {
+  border-width: 48px;
+}
+.I {
+  border-width: 60px;
+}
+    </style>
+  </head>
+  <body>
+    <div class="box">
+      <table>
+        <tr><td class="A"></td><td class="B"></td><td class="C"></td></tr>
+        <tr><td class="D"></td><td class="E"></td><td class="F"></td></tr>
+        <tr><td class="G"></td><td class="H"></td><td class="I"></td></tr>
+      </table>
+      <img class="mask" src="border-dashed-no-radius-filled-mask.png">
+    </div>
+    <div class="box">
+      <table>
+        <tr><td class="A"></td><td class="B"></td><td class="C"></td></tr>
+        <tr><td class="D"></td><td class="E"></td><td class="F"></td></tr>
+        <tr><td class="G"></td><td class="H"></td><td class="I"></td></tr>
+      </table>
+      <img class="mask" src="border-dashed-no-radius-unfilled-mask.png">
+    </div>
+  </body>
+</html>
+

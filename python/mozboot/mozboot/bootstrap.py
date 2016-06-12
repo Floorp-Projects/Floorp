@@ -8,6 +8,7 @@ from __future__ import print_function
 import platform
 import sys
 import os.path
+import subprocess
 
 # Don't forgot to add new mozboot modules to the bootstrap download
 # list in bin/bootstrap.py!
@@ -61,6 +62,25 @@ APPLICATIONS = dict(
     mobile_android=APPLICATIONS_LIST[2],
 )
 
+STATE_DIR_INFO = '''
+The Firefox build system and related tools store shared, persistent state
+in a common directory on the filesystem. On this machine, that directory
+is:
+
+  {statedir}
+
+If you would like to use a different directory, hit CTRL+c and set the
+MOZBUILD_STATE_PATH environment variable to the directory you'd like to
+use and re-run the bootstrapper.
+
+Would you like to create this directory?
+
+  1. Yes
+  2. No
+
+Your choice:
+'''
+
 FINISHED = '''
 Your system should be ready to build %s! If you have not already,
 obtain a copy of the source code by running:
@@ -76,6 +96,18 @@ Or, if you really prefer vanilla flavor Git:
 
     git clone https://git.mozilla.org/integration/gecko-dev.git
 '''
+
+CONFIGURE_MERCURIAL = '''
+Mozilla recommends a number of changes to Mercurial to enhance your
+experience with it.
+
+Would you like to run a configuration wizard to ensure Mercurial is
+optimally configured?
+
+  1. Yes
+  2. No
+
+Please enter your reply: '''.lstrip()
 
 DEBIAN_DISTROS = (
     'Debian',
@@ -93,13 +125,25 @@ DEBIAN_DISTROS = (
 )
 
 
+def get_state_dir():
+    """Obtain path to a directory to hold state.
+
+    This code is shared with ``mach_bootstrap.py``.
+    """
+    state_user_dir = os.path.expanduser('~/.mozbuild')
+    state_env_dir = os.environ.get('MOZBUILD_STATE_PATH')
+    return state_env_dir or state_user_dir
+
+
 class Bootstrapper(object):
     """Main class that performs system bootstrap."""
 
-    def __init__(self, finished=FINISHED, choice=None, no_interactive=False):
+    def __init__(self, finished=FINISHED, choice=None, no_interactive=False,
+                 hg_configure=False):
         self.instance = None
         self.finished = finished
         self.choice = choice
+        self.hg_configure = hg_configure
         cls = None
         args = {'no_interactive': no_interactive}
 
@@ -166,10 +210,106 @@ class Bootstrapper(object):
         # Like 'install_browser_packages' or 'install_mobile_android_packages'.
         getattr(self.instance, 'install_%s_packages' % application)()
 
-        self.instance.ensure_mercurial_modern()
+        hg_installed, hg_modern = self.instance.ensure_mercurial_modern()
         self.instance.ensure_python_modern()
+
+        # The state directory code is largely duplicated from mach_bootstrap.py.
+        # We can't easily import mach_bootstrap.py because the bootstrapper may
+        # run in self-contained mode and only the files in this directory will
+        # be available. We /could/ refactor parts of mach_bootstrap.py to be
+        # part of this directory to avoid the code duplication.
+        state_dir = get_state_dir()
+
+        if not os.path.exists(state_dir):
+            if not self.instance.no_interactive:
+                choice = self.instance.prompt_int(
+                    prompt=STATE_DIR_INFO.format(statedir=state_dir),
+                    low=1,
+                    high=2)
+
+                if choice == 1:
+                    print('Creating global state directory: %s' % state_dir)
+                    os.makedirs(state_dir, mode=0o770)
+
+        state_dir_available = os.path.exists(state_dir)
+
+        # Possibly configure Mercurial if the user wants to.
+        # TODO offer to configure Git.
+        if hg_installed and state_dir_available:
+            configure_hg = False
+            if not self.instance.no_interactive:
+                choice = self.instance.prompt_int(prompt=CONFIGURE_MERCURIAL,
+                                                  low=1, high=2)
+                if choice == 1:
+                    configure_hg = True
+            else:
+                configure_hg = self.hg_configure
+
+            if configure_hg:
+                configure_mercurial(self.instance.which('hg'), state_dir)
 
         print(self.finished % name)
 
         # Like 'suggest_browser_mozconfig' or 'suggest_mobile_android_mozconfig'.
         getattr(self.instance, 'suggest_%s_mozconfig' % application)()
+
+
+def update_vct(hg, root_state_dir):
+    """Ensure version-control-tools in the state directory is up to date."""
+    vct_dir = os.path.join(root_state_dir, 'version-control-tools')
+
+    # Ensure the latest revision of version-control-tools is present.
+    update_mercurial_repo(hg, 'https://hg.mozilla.org/hgcustom/version-control-tools',
+                          vct_dir, '@')
+
+    return vct_dir
+
+
+def configure_mercurial(hg, root_state_dir):
+    """Run the Mercurial configuration wizard."""
+    vct_dir = update_vct(hg, root_state_dir)
+
+    # Run the config wizard from v-c-t.
+    args = [
+        hg,
+        '--config', 'extensions.configwizard=%s/hgext/configwizard' % vct_dir,
+        'configwizard',
+    ]
+    subprocess.call(args)
+
+
+def update_mercurial_repo(hg, url, dest, revision):
+    """Perform a clone/pull + update of a Mercurial repository."""
+    args = [hg]
+
+    # Disable common extensions whose older versions may cause `hg`
+    # invocations to abort.
+    disable_exts = [
+        'bzexport',
+        'bzpost',
+        'firefoxtree',
+        'hgwatchman',
+        'mozext',
+        'mqext',
+        'qimportbz',
+        'push-to-try',
+        'reviewboard',
+    ]
+    for ext in disable_exts:
+        args.extend(['--config', 'extensions.%s=!' % ext])
+
+    if os.path.exists(dest):
+        args.extend(['pull', url])
+        cwd = dest
+    else:
+        args.extend(['clone', '--noupdate', url, dest])
+        cwd = '/'
+
+    print('=' * 80)
+    print('Ensuring %s is up to date at %s' % (url, dest))
+
+    try:
+        subprocess.check_call(args, cwd=cwd)
+        subprocess.check_call([hg, 'update', '-r', revision], cwd=dest)
+    finally:
+        print('=' * 80)

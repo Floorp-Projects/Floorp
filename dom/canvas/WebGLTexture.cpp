@@ -529,7 +529,7 @@ SetSwizzle(gl::GLContext* gl, TexTarget target, const GLint* swizzle)
     if (!swizzle) {
         swizzle = kNoSwizzle;
     } else if (!gl->IsSupported(gl::GLFeature::texture_swizzle)) {
-        MOZ_CRASH("Needs swizzle feature to swizzle!");
+        MOZ_CRASH("GFX: Needs swizzle feature to swizzle!");
     }
 
     gl->fTexParameteri(LOCAL_GL_TEXTURE_2D, LOCAL_GL_TEXTURE_SWIZZLE_R, swizzle[0]);
@@ -831,7 +831,7 @@ WebGLTexture::GetTexParameter(TexTarget texTarget, GLenum pname)
         return JS::NumberValue(float(f));
 
     default:
-        MOZ_CRASH("Unhandled pname.");
+        MOZ_CRASH("GFX: Unhandled pname.");
     }
 }
 

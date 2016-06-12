@@ -10,7 +10,6 @@
 #include "mozilla/Attributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsIDOMHTMLMapElement.h"
-#include "nsAutoPtr.h"
 #include "nsGkAtoms.h"
 
 class nsContentList;

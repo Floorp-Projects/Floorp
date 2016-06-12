@@ -6,6 +6,7 @@
 #ifndef MATHMLTEXTRUNFACTORY_H_
 #define MATHMLTEXTRUNFACTORY_H_
 
+#include "nsAutoPtr.h"
 #include "nsTextRunTransformations.h"
 
 /**

@@ -14,7 +14,6 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/dom/Selection.h"
 #include "nsAString.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsCRTGlue.h"

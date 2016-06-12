@@ -115,7 +115,7 @@ DoRenderbufferStorageMaybeMultisample(gl::GLContext* gl, GLsizei samples,
         break;
 
     case LOCAL_GL_DEPTH_STENCIL:
-        MOZ_CRASH("GL_DEPTH_STENCIL is not valid here.");
+        MOZ_CRASH("GFX: GL_DEPTH_STENCIL is not valid here.");
         break;
 
     default:

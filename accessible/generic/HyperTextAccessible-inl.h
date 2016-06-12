@@ -169,9 +169,8 @@ inline dom::Selection*
 HyperTextAccessible::DOMSelection() const
 {
   RefPtr<nsFrameSelection> frameSelection = FrameSelection();
-  return frameSelection ?
-    frameSelection->GetSelection(nsISelectionController::SELECTION_NORMAL) :
-    nullptr;
+  return frameSelection ? frameSelection->GetSelection(SelectionType::eNormal) :
+                          nullptr;
 }
 
 } // namespace a11y

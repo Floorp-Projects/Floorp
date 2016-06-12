@@ -11,6 +11,7 @@
 #include "mozilla/MathAlgorithms.h"
 #include "mozilla/unused.h"
 
+#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsDeviceContext.h"
 #include "nsFontMetrics.h"

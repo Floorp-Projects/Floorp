@@ -32,7 +32,6 @@
 #include "mozilla/layers/PImageContainerChild.h"
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
 #include "mozilla/mozalloc.h"           // for operator new, etc
-#include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsISupportsImpl.h"            // for ImageContainer::AddRef, etc
 #include "nsTArray.h"                   // for AutoTArray, nsTArray, etc
 #include "nsTArrayForwardDeclare.h"     // for AutoTArray

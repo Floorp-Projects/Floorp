@@ -25,6 +25,7 @@
 #include "gfx2DGlue.h"
 #include "gfxEnv.h"
 #include "gfxUtils.h"
+#include "nsAutoPtr.h"
 #include "nsAnimationManager.h"
 #include "nsDisplayList.h"
 #include "nsDocShell.h"

@@ -1010,6 +1010,19 @@ private:
         sizeof(PurpleBlock) == 32768,         // 64-bit
         "ill-sized nsPurpleBuffer::PurpleBlock"
       );
+
+      InitNextPointers();
+    }
+
+    // Put all the entries in the block on the free list.
+    void InitNextPointers()
+    {
+      for (uint32_t i = 1; i < ArrayLength(mEntries); ++i) {
+        mEntries[i - 1].mNextInFreeList =
+          (nsPurpleBufferEntry*)(uintptr_t(mEntries + i) | 1);
+      }
+      mEntries[ArrayLength(mEntries) - 1].mNextInFreeList =
+        (nsPurpleBufferEntry*)1;
     }
 
     template<class PurpleVisitor>
@@ -1053,23 +1066,7 @@ public:
   void InitBlocks()
   {
     mCount = 0;
-    mFreeList = nullptr;
-    StartBlock(&mFirstBlock);
-  }
-
-  void StartBlock(PurpleBlock* aBlock)
-  {
-    MOZ_ASSERT(!mFreeList, "should not have free list");
-
-    // Put all the entries in the block on the free list.
-    nsPurpleBufferEntry* entries = aBlock->mEntries;
-    mFreeList = entries;
-    for (uint32_t i = 1; i < ArrayLength(aBlock->mEntries); ++i) {
-      entries[i - 1].mNextInFreeList =
-        (nsPurpleBufferEntry*)(uintptr_t(entries + i) | 1);
-    }
-    entries[ArrayLength(aBlock->mEntries) - 1].mNextInFreeList =
-      (nsPurpleBufferEntry*)1;
+    mFreeList = mFirstBlock.mEntries;
   }
 
   void FreeBlocks()
@@ -1127,7 +1124,7 @@ public:
   {
     if (MOZ_UNLIKELY(!mFreeList)) {
       PurpleBlock* b = new PurpleBlock;
-      StartBlock(b);
+      mFreeList = b->mEntries;
 
       // Add the new block as the second block in the list.
       b->mNext = mFirstBlock.mNext;
@@ -1230,6 +1227,7 @@ nsPurpleBuffer::SelectPointers(CCGraphBuilder& aBuilder)
   if (mCount == 0) {
     FreeBlocks();
     InitBlocks();
+    mFirstBlock.InitNextPointers();
   }
 }
 

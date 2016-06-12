@@ -990,6 +990,10 @@ function resetPrefs() {
     Services.prefs.clearUserPref(PREF_APP_UPDATE_LOG);
   }
 
+  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_SILENT)) {
+    Services.prefs.clearUserPref(PREF_APP_UPDATE_SILENT);
+  }
+
   if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CERT_ERRORS)) {
     Services.prefs.clearUserPref(PREF_APP_UPDATE_CERT_ERRORS);
   }
@@ -1014,13 +1018,13 @@ function resetPrefs() {
     Services.prefs.clearUserPref(PREF_APP_UPDATE_CERT_REQUIREBUILTIN);
   }
 
-  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CERT_CHECKATTRS)) {
-    Services.prefs.clearUserPref(PREF_APP_UPDATE_CERT_CHECKATTRS);
+  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_CERT_CHECKATTRIBUTES)) {
+    Services.prefs.clearUserPref(PREF_APP_UPDATE_CERT_CHECKATTRIBUTES);
   }
 
   try {
     CERT_ATTRS.forEach(function(aCertAttrName) {
-      Services.prefs.clearUserPref(PREF_APP_UPDATE_CERTS_BRANCH + "1." +
+      Services.prefs.clearUserPref(PREFBRANCH_APP_UPDATE_CERTS + "1." +
                                    aCertAttrName);
     });
   }
@@ -1028,13 +1032,9 @@ function resetPrefs() {
   }
 
   try {
-    Services.prefs.deleteBranch(PREF_APP_UPDATE_NEVER_BRANCH);
+    Services.prefs.deleteBranch(PREFBRANCH_APP_UPDATE_NEVER);
   }
   catch(e) {
-  }
-
-  if (Services.prefs.prefHasUserValue(PREF_APP_UPDATE_SILENT)) {
-    Services.prefs.clearUserPref(PREF_APP_UPDATE_SILENT);
   }
 }
 

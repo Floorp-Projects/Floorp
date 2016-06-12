@@ -21,7 +21,6 @@
 #endif // defined(OS_WIN)
 #include "mozilla/ipc/Transport.h"
 #include "MessageLink.h"
-#include "nsAutoPtr.h"
 
 #include <deque>
 #include <stack>

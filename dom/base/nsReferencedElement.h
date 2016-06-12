@@ -12,7 +12,6 @@
 #include "nsIAtom.h"
 #include "nsIDocument.h"
 #include "nsThreadUtils.h"
-#include "nsAutoPtr.h"
 
 class nsIURI;
 

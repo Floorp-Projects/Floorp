@@ -68,11 +68,9 @@ class LoggingPrefs
 public:
   // Used to choose the level of logging we get.  The higher the number,
   // the more logging we get.  Value of zero will give you no logging,
-  // 1 just errors, 2 adds warnings and 3 adds logging/debug.  4 is used to
-  // selectively enable logging on the configurations that
-  // support prlog (on other systems, 3 and 4 are the same.)  For prlog,
-  // in addition to setting the value to 4, you will need to set an
-  // environment variable NSPR_LOG_MODULES to gfx:4. See prlog.h for details.
+  // 1 just errors, 2 adds warnings and 3 or 4 add debug logging.
+  // In addition to setting the value to 4, you will need to set the
+  // environment variable MOZ_LOG to gfx:4. See mozilla/Logging.h for details.
   static int32_t sGfxLogLevel;
 };
 

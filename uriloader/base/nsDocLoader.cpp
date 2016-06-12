@@ -42,13 +42,13 @@ static NS_DEFINE_CID(kThisImplCID, NS_THIS_DOCLOADER_IMPL_CID);
 //
 // Log module for nsIDocumentLoader logging...
 //
-// To enable logging (see prlog.h for full details):
+// To enable logging (see mozilla/Logging.h for full details):
 //
-//    set NSPR_LOG_MODULES=DocLoader:5
-//    set NSPR_LOG_FILE=nspr.log
+//    set MOZ_LOG=DocLoader:5
+//    set MOZ_LOG_FILE=debug.log
 //
 // this enables LogLevel::Debug level information and places all output in
-// the file nspr.log
+// the file 'debug.log'.
 //
 mozilla::LazyLogModule gDocLoaderLog("DocLoader");
 

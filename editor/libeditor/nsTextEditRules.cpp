@@ -12,7 +12,6 @@
 #include "mozilla/TextComposition.h"
 #include "mozilla/dom/Element.h"
 #include "nsAString.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCRT.h"
 #include "nsCRTGlue.h"

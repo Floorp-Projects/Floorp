@@ -8,11 +8,11 @@
 #include "builtin/Promise.h"
 
 #include "mozilla/Atomics.h"
+#include "mozilla/TimeStamp.h"
 
 #include "jscntxt.h"
 
 #include "gc/Heap.h"
-#include "js/Date.h"
 #include "js/Debug.h"
 #include "vm/SelfHosting.h"
 
@@ -41,10 +41,12 @@ static const JSPropertySpec promise_static_properties[] = {
     JS_PS_END
 };
 
-static Value
-Now()
+static double
+MillisecondsSinceStartup()
 {
-    return JS::TimeValue(JS::TimeClip(static_cast<double>(PRMJ_Now()) / PRMJ_USEC_PER_MSEC));
+    auto now = mozilla::TimeStamp::Now();
+    bool ignored;
+    return (now - mozilla::TimeStamp::ProcessCreation(ignored)).ToMilliseconds();
 }
 
 static bool
@@ -137,7 +139,8 @@ PromiseObject::create(JSContext* cx, HandleObject executor, HandleObject proto /
                 return nullptr;
         }
         promise->setFixedSlot(PROMISE_ALLOCATION_SITE_SLOT, ObjectOrNullValue(stack));
-        promise->setFixedSlot(PROMISE_ALLOCATION_TIME_SLOT, Now());
+        promise->setFixedSlot(PROMISE_ALLOCATION_TIME_SLOT,
+                              DoubleValue(MillisecondsSinceStartup()));
     }
 
     RootedValue promiseVal(cx, ObjectValue(*promise));
@@ -210,6 +213,12 @@ namespace {
 // Generator used by PromiseObject::getID.
 mozilla::Atomic<uint64_t> gIDGenerator(0);
 } // namespace
+
+double
+PromiseObject::lifetime()
+{
+    return MillisecondsSinceStartup() - allocationTime();
+}
 
 uint64_t
 PromiseObject::getID()
@@ -410,7 +419,8 @@ PromiseObject::reject(JSContext* cx, HandleValue rejectionValue)
     return Call(cx, funVal, UndefinedHandleValue, args, &dummy);
 }
 
-void PromiseObject::onSettled(JSContext* cx)
+void
+PromiseObject::onSettled(JSContext* cx)
 {
     Rooted<PromiseObject*> promise(cx, this);
     RootedObject stack(cx);
@@ -421,7 +431,7 @@ void PromiseObject::onSettled(JSContext* cx)
         }
     }
     promise->setFixedSlot(PROMISE_RESOLUTION_SITE_SLOT, ObjectOrNullValue(stack));
-    promise->setFixedSlot(PROMISE_RESOLUTION_TIME_SLOT, Now());
+    promise->setFixedSlot(PROMISE_RESOLUTION_TIME_SLOT, DoubleValue(MillisecondsSinceStartup()));
 
     if (promise->state() == JS::PromiseState::Rejected &&
         promise->getFixedSlot(PROMISE_IS_HANDLED_SLOT).toInt32() !=

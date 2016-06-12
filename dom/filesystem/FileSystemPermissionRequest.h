@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_FileSystemPermissionRequest_h
 #define mozilla_dom_FileSystemPermissionRequest_h
 
-#include "nsAutoPtr.h"
 #include "nsIRunnable.h"
 #include "nsIContentPermissionPrompt.h"
 #include "nsString.h"
