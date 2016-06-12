@@ -312,3 +312,56 @@
   padding-top: 2px;
 }
 
+/*
+ * Tooltip: JS stack traces
+ */
+
+.stack-trace-tooltip {
+  height: 100%;
+  overflow-y: auto;
+}
+
+.stack-trace-tooltip > .stack-frame {
+  margin-left: 5px;
+  margin-right: 5px;
+}
+
+.stack-trace-tooltip > .stack-frame:first-child {
+  margin-top: 5px;
+}
+
+.stack-trace-tooltip > .stack-frame:last-child {
+  margin-bottom: 5px;
+}
+
+.stack-frame {
+  color: var(--theme-body-color-alt);
+  cursor: pointer;
+  display: flex;
+}
+
+.stack-frame:hover {
+  background-color: var(--theme-selection-background-semitransparent);
+}
+
+.stack-frame-function-name {
+  color: var(--theme-highlight-blue);
+  max-width: 50%;
+  margin-inline-end: 1em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stack-frame-source-name {
+  flex: 1 1;
+  direction: rtl;
+  text-align: right;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.stack-frame-line {
+  color: var(--theme-highlight-orange);
+}
