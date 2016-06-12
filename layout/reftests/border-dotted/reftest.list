@@ -1,0 +1,10 @@
+# Composing dotted/dashed border rendering and not-filled or not-unfilled mask
+# matches to full-filled box, using fuzzyy because of anti-aliasing.
+# These check filled and unfilled regions with solid opaque color,
+# so difference less than 80 is ignorable.
+fuzzy(80,1500) == border-dotted-interaction.html masked.html
+fuzzy(80,1500) == border-dotted-no-radius.html masked.html
+fuzzy(80,1500) == border-dotted-radius.html masked.html
+fuzzy(80,1500) == border-dashed-no-radius.html masked.html
+fuzzy(80,1500) == border-dashed-radius.html masked.html
+fuzzy(80,1500) == border-mixed.html masked.html

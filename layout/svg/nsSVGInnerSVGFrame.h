@@ -7,6 +7,7 @@
 #define __NS_SVGINNERSVGFRAME_H__
 
 #include "mozilla/Attributes.h"
+#include "nsAutoPtr.h"
 #include "nsSVGContainerFrame.h"
 #include "nsISVGSVGFrame.h"
 

@@ -30,7 +30,6 @@
 #include "mozilla/StaticPtr.h"
 #include "MozMtpServer.h"
 #include "MozMtpStorage.h"
-#include "nsAutoPtr.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsMemory.h"
 #include "nsString.h"

@@ -6,6 +6,7 @@
 
 #include "RuntimeService.h"
 
+#include "nsAutoPtr.h"
 #include "nsIChannel.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIDocument.h"

@@ -11,7 +11,6 @@
 #include "mozilla/dom/PBackgroundFileHandleChild.h"
 #include "mozilla/dom/PBackgroundFileRequestChild.h"
 #include "mozilla/dom/PBackgroundMutableFileChild.h"
-#include "nsAutoPtr.h"
 
 class nsCString;
 

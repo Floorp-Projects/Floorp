@@ -1,4 +1,3 @@
-// |reftest| fails -- bug 604301, at a minimum
 // Any copyright is dedicated to the Public Domain.
 // http://creativecommons.org/licenses/publicdomain/
 
@@ -23,8 +22,7 @@ function testOuterLet()
 
 f = testOuterLet();
 
-assertEq(f(), true); // configurable, so remove => true
-assertEq(f(), true); // not there => true (only non-configurable => false)
+assertEq(f(), false); // can't delete lexical declarations => false
 
 
 function testOuterForLet()
@@ -46,18 +44,6 @@ f = testOuterForInLet();
 
 assertEq(f(), true); // configurable, so remove => true
 assertEq(f(), true); // not there => true (only non-configurable => false)
-
-
-function testOuterNestedVarInLetBlock()
-{
-  return eval("let (x = 7) { var x = 9; } (function() { return delete x; })");
-}
-
-f = testOuterNestedVarInLetBlock();
-
-assertEq(f(), true); // configurable var, so remove => true
-assertEq(f(), true); // let still there, configurable => true
-assertEq(f(), true); // nothing at all => true
 
 
 function testOuterNestedVarInForLet()

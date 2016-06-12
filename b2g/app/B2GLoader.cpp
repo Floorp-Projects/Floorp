@@ -11,7 +11,6 @@
 #include "nsCOMPtr.h"
 #include "nsIFile.h"
 #include "BinaryPath.h"
-#include "nsAutoPtr.h"
 
 #include <stdio.h>
 #include <stdlib.h>

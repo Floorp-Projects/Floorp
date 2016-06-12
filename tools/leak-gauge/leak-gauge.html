@@ -275,8 +275,8 @@ leak.  Once a site is known to leak, the logging can then be repeated
 to figure out under what conditions the leak occurs.</p>
 
 <p>The way to create this log is to set the environment variables:</p>
-<pre>  NSPR_LOG_MODULES=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5,NodeInfoManagerLeak:5
-  NSPR_LOG_FILE=nspr.log     <i>(or any other filename of your choice)</i></pre>
+<pre>  MOZ_LOG=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5,NodeInfoManagerLeak:5
+  MOZ_LOG_FILE=nspr.log     <i>(or any other filename of your choice)</i></pre>
 <p>in your shell and then run the program.</p>
 <ul>
 <li>In a Windows command prompt, set environment variables with

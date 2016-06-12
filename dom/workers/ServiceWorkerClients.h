@@ -8,7 +8,6 @@
 #ifndef mozilla_dom_workers_serviceworkerclients_h
 #define mozilla_dom_workers_serviceworkerclients_h
 
-#include "nsAutoPtr.h"
 #include "nsWrapperCache.h"
 
 #include "mozilla/dom/WorkerScope.h"

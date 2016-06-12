@@ -31,7 +31,7 @@ const uint32_t MAX_FILE_SIZE = (32 * 1024 * 1024);
 
 #undef LOG
 
-// NSPR_LOG_MODULES=UrlClassifierStreamUpdater:5
+// MOZ_LOG=UrlClassifierStreamUpdater:5
 static mozilla::LazyLogModule gUrlClassifierStreamUpdaterLog("UrlClassifierStreamUpdater");
 #define LOG(args) TrimAndLog args
 

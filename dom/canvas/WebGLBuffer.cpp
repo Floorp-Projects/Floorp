@@ -52,7 +52,7 @@ WebGLBuffer::BindTo(GLenum target)
         break;
 
     default:
-        MOZ_CRASH();
+        MOZ_CRASH("GFX: invalid target");
     }
 }
 

@@ -13,7 +13,6 @@
 #include <stagefright/MediaSource.h>
 
 #include "MediaResource.h"
-#include "nsAutoPtr.h"
 
 namespace android {
 

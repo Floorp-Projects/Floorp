@@ -10,6 +10,7 @@
 #include "TrackEncoder.h"
 #include "ContainerWriter.h"
 #include "MediaStreamGraph.h"
+#include "nsAutoPtr.h"
 #include "nsIMemoryReporter.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Atomics.h"

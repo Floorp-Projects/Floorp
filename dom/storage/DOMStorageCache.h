@@ -16,7 +16,6 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/Atomics.h"
-#include "nsAutoPtr.h"
 
 namespace mozilla {
 namespace dom {

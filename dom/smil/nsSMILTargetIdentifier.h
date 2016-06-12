@@ -8,7 +8,6 @@
 #define NS_SMILTARGETIDENTIFIER_H_
 
 #include "mozilla/dom/Element.h"
-#include "nsAutoPtr.h"
 
 /**
  * Struct: nsSMILTargetIdentifier

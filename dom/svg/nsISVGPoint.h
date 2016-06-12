@@ -6,7 +6,6 @@
 
 #pragma once
 
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
 #include "mozilla/dom/SVGPointBinding.h"

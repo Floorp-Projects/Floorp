@@ -563,13 +563,6 @@ JS_EndRequest(JSContext* cx)
     StopRequest(cx);
 }
 
-JS_PUBLIC_API(void)
-JS_SetContextCallback(JSRuntime* rt, JSContextCallback cxCallback, void* data)
-{
-    rt->cxCallback = cxCallback;
-    rt->cxCallbackData = data;
-}
-
 JS_PUBLIC_API(JSContext*)
 JS_NewContext(JSRuntime* rt, size_t stackChunkSize)
 {

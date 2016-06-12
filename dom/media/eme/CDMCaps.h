@@ -8,7 +8,6 @@
 #define CDMCaps_h_
 
 #include "nsString.h"
-#include "nsAutoPtr.h"
 #include "mozilla/Monitor.h"
 #include "nsIThread.h"
 #include "nsTArray.h"

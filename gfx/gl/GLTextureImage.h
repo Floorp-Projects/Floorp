@@ -6,7 +6,6 @@
 #ifndef GLTEXTUREIMAGE_H_
 #define GLTEXTUREIMAGE_H_
 
-#include "nsAutoPtr.h"
 #include "nsRegion.h"
 #include "nsTArray.h"
 #include "gfxTypes.h"
@@ -353,6 +352,17 @@ CreateBasicTextureImage(GLContext* aGL,
                         TextureImage::ContentType aContentType,
                         GLenum aWrapMode,
                         TextureImage::Flags aFlags);
+
+/**
+ * Creates a TiledTextureImage backed by platform-specific or basic TextureImages.
+ * In doubt, use GLContext::CreateTextureImage instead.
+ */
+already_AddRefed<TextureImage>
+CreateTiledTextureImage(GLContext* aGL,
+                        const gfx::IntSize& aSize,
+                        TextureImage::ContentType aContentType,
+                        TextureImage::Flags aFlags,
+                        TextureImage::ImageFormat aImageFormat);
 
 /**
   * Return a valid, allocated TextureImage of |aSize| with

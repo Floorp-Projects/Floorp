@@ -9,6 +9,7 @@
 
 #include "WMF.h"
 #include "MFTDecoder.h"
+#include "nsAutoPtr.h"
 #include "nsRect.h"
 #include "WMFMediaDataDecoder.h"
 #include "mozilla/RefPtr.h"

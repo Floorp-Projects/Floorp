@@ -157,10 +157,6 @@ protected:
   virtual void CustomGCCallback(JSGCStatus aStatus) {}
   virtual void CustomOutOfMemoryCallback() {}
   virtual void CustomLargeAllocationFailureCallback() {}
-  virtual bool CustomContextCallback(JSContext* aCx, unsigned aOperation)
-  {
-    return true; // Don't block context creation.
-  }
 
   std::queue<nsCOMPtr<nsIRunnable>> mPromiseMicroTaskQueue;
   std::queue<nsCOMPtr<nsIRunnable>> mDebuggerPromiseMicroTaskQueue;
@@ -225,6 +221,12 @@ private:
                                         JS::HandleObject aJob,
                                         JS::HandleObject aAllocationSite,
                                         void* aData);
+#ifdef SPIDERMONKEY_PROMISE
+  static void PromiseRejectionTrackerCallback(JSContext* aCx,
+                                              JS::HandleObject aPromise,
+                                              PromiseRejectionHandlingState state,
+                                              void* aData);
+#endif // SPIDERMONKEY_PROMISE
 
   virtual void TraceNativeBlackRoots(JSTracer* aTracer) { };
   void TraceNativeGrayRoots(JSTracer* aTracer);
@@ -366,11 +368,24 @@ public:
 
   // Storage for watching rejected promises waiting for some client to
   // consume their rejection.
+#ifdef SPIDERMONKEY_PROMISE
+  // Promises in this list have been rejected in the last turn of the
+  // event loop without the rejection being handled.
+  // Note that this can contain nullptrs in place of promises removed because
+  // they're consumed before it'd be reported.
+  JS::PersistentRooted<JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>> mUncaughtRejections;
+
+  // Promises in this list have previously been reported as rejected
+  // (because they were in the above list), but the rejection was handled
+  // in the last turn of the event loop.
+  JS::PersistentRooted<JS::GCVector<JSObject*, 0, js::SystemAllocPolicy>> mConsumedRejections;
+#else
   // We store values as `nsISupports` to avoid adding compile-time dependencies
   // from xpcom to dom/promise, but they can really only have a single concrete
   // type.
   nsTArray<nsCOMPtr<nsISupports /* Promise */>> mUncaughtRejections;
   nsTArray<nsCOMPtr<nsISupports /* Promise */ >> mConsumedRejections;
+#endif // SPIDERMONKEY_PROMISE
   nsTArray<nsCOMPtr<nsISupports /* UncaughtRejectionObserver */ >> mUncaughtRejectionObservers;
 
 private:

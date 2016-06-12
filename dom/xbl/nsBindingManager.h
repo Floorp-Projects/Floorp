@@ -7,6 +7,7 @@
 #ifndef nsBindingManager_h_
 #define nsBindingManager_h_
 
+#include "nsAutoPtr.h"
 #include "nsIContent.h"
 #include "nsStubMutationObserver.h"
 #include "nsHashKeys.h"

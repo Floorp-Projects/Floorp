@@ -20,25 +20,25 @@
   #define VERIFY(exp)                 (exp)
 #endif  // !_DEBUG
 
-// NSPR Win32 modules:
+// Win32 logging modules:
 // nsWindow, nsSound, and nsClipboard
 //
 // Logging can be changed at runtime without recompiling in the General
 // property page of Visual Studio under the "Environment" property.
 //
 // Two variables are of importance to be set: 
-// NSPR_LOG_MODULES and NSPR_LOG_FILE
+// MOZ_LOG and MOZ_LOG_FILE
 //
-// NSPR_LOG_MODULES:
-// NSPR_LOG_MODULES=all:5         (To log everything completely)
-// NSPR_LOG_MODULES=nsWindow:5,nsSound:5,nsClipboard:5 
-//                                (To log windows widget stuff)
-// NSPR_LOG_MODULES=              (To turn off logging)
+// MOZ_LOG:
+// MOZ_LOG=all:5                 (To log everything completely)
+// MOZ_LOG=nsWindow:5,nsSound:5,nsClipboard:5
+//                               (To log windows widget stuff)
+// MOZ_LOG=                      (To turn off logging)
 //
-// NSPR_LOG_FILE:
-// NSPR_LOG_FILE=C:\nsprlog.txt   (To a file on disk)
-// NSPR_LOG_FILE=WinDebug         (To the debug window)
-// NSPR_LOG_FILE=                 (To stdout/stderr)
+// MOZ_LOG_FILE:
+// MOZ_LOG_FILE=C:\log.txt       (To a file on disk)
+// MOZ_LOG_FILE=WinDebug         (To the debug window)
+// MOZ_LOG_FILE=                 (To stdout/stderr)
 
 #endif  // NSDEFS_H
 

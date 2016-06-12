@@ -9,6 +9,7 @@
 
 #include "mozilla/MozPromise.h"
 #include "mozilla/TaskQueue.h"
+#include "nsAutoPtr.h"
 
 #include "OMX_Core.h"
 #include "OMX_Types.h"

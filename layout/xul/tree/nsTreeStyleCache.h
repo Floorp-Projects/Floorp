@@ -7,6 +7,7 @@
 #define nsTreeStyleCache_h__
 
 #include "mozilla/Attributes.h"
+#include "nsAutoPtr.h"
 #include "nsIAtom.h"
 #include "nsCOMArray.h"
 #include "nsICSSPseudoComparator.h"

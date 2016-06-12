@@ -12,8 +12,7 @@ function* test(testDriver) {
   is(window.scrollY, 0, "Initial page scroll position should be 0");
   is(scrollerPos, 0, "Initial scroller position should be 0");
 
-  yield synthesizeNativeMouseMoveAndWaitForMoveEvent(scroller, dx, dy, testDriver);
-  yield synthesizeNativeWheelAndWaitForScrollEvent(scroller, dx, dy, 0, -10, testDriver);
+  yield moveMouseAndScrollWheelOver(scroller, dx, dy, testDriver);
 
   is(window.scrollY, 0, "Page scroll position should still be 0");
   ok(scroller.scrollTop > scrollerPos, "Scroller should have scrolled");
@@ -24,10 +23,7 @@ function* test(testDriver) {
   });
   scrollerPos = scroller.scrollTop;
 
-  // The mouse is already at the right position. If we call scrollWheelOver it
-  // hangs on windows waiting for the mouse-move, so instead we just synthesize
-  // the wheel directly.
-  yield synthesizeNativeWheelAndWaitForScrollEvent(scroller, dx, dy, 0, -10, testDriver);
+  yield moveMouseAndScrollWheelOver(scroller, dx, dy, testDriver);
   is(window.scrollY, 0, "Page scroll position should still be 0 after layerization");
   ok(scroller.scrollTop > scrollerPos, "Scroller should have continued scrolling");
 }

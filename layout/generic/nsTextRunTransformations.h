@@ -9,6 +9,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 #include "gfxTextRun.h"
+#include "nsAutoPtr.h"
 #include "nsStyleContext.h"
 
 class nsTransformedTextRun;

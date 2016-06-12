@@ -19,7 +19,6 @@
 #include "nsMai.h"
 #include "nsMaiHyperlink.h"
 #include "nsString.h"
-#include "nsAutoPtr.h"
 #include "prprf.h"
 #include "nsStateMap.h"
 #include "mozilla/a11y/Platform.h"

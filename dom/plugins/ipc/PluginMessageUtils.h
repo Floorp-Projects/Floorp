@@ -18,7 +18,6 @@
 #include "npapi.h"
 #include "npruntime.h"
 #include "npfunctions.h"
-#include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsTArray.h"
 #include "mozilla/Logging.h"

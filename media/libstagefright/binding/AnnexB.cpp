@@ -8,6 +8,7 @@
 #include "mp4_demuxer/ByteReader.h"
 #include "mp4_demuxer/ByteWriter.h"
 #include "MediaData.h"
+#include "nsAutoPtr.h"
 
 using namespace mozilla;
 

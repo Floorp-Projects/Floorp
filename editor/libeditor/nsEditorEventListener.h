@@ -6,7 +6,6 @@
 #ifndef nsEditorEventListener_h__
 #define nsEditorEventListener_h__
 
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsError.h"
 #include "nsIDOMEventListener.h"

@@ -8,7 +8,6 @@
 
 #include "mozilla/Attributes.h"
 #include "nscore.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCOMArray.h"
 #include "nsIPluginTag.h"

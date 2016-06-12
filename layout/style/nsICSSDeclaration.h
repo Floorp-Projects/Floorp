@@ -28,7 +28,6 @@
 #include "nsIDOMCSSRule.h"
 #include "nsIDOMCSSValue.h"
 #include "mozilla/ErrorResult.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 
 class nsINode;

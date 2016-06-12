@@ -7,7 +7,6 @@
 #define nsHTMLEditRules_h__
 
 #include "TypeInState.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsEditor.h"
 #include "nsIEditActionListener.h"

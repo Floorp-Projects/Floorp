@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_nsSynthVoiceRegistry_h
 #define mozilla_dom_nsSynthVoiceRegistry_h
 
-#include "nsAutoPtr.h"
 #include "nsISynthVoiceRegistry.h"
 #include "nsRefPtrHashtable.h"
 #include "nsTArray.h"

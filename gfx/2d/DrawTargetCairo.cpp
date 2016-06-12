@@ -849,6 +849,10 @@ DrawTargetCairo::DrawSurface(SourceSurface *aSurface,
   cairo_matrix_scale(&src_mat, sx, sy);
 
   cairo_surface_t* surf = GetCairoSurfaceForSourceSurface(aSurface);
+  if (!surf) {
+    gfxWarning() << "Failed to create cairo surface for DrawTargetCairo::DrawSurface";
+    return;
+  }
   cairo_pattern_t* pat = cairo_pattern_create_for_surface(surf);
   cairo_surface_destroy(surf);
 

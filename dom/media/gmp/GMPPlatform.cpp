@@ -7,7 +7,6 @@
 #include "GMPStorageChild.h"
 #include "GMPTimerChild.h"
 #include "mozilla/Monitor.h"
-#include "nsAutoPtr.h"
 #include "GMPChild.h"
 #include <ctime>
 

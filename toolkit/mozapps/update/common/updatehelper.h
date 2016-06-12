@@ -7,6 +7,7 @@ DWORD LaunchServiceSoftwareUpdateCommand(int argc, LPCWSTR *argv);
 BOOL WriteStatusFailure(LPCWSTR updateDirPath, int errorCode);
 DWORD WaitForServiceStop(LPCWSTR serviceName, DWORD maxWaitSeconds);
 DWORD WaitForProcessExit(LPCWSTR filename, DWORD maxSeconds);
+DWORD IsProcessRunning(LPCWSTR filename);
 BOOL DoesFallbackKeyExist();
 BOOL IsLocalFile(LPCWSTR file, BOOL &isLocal);
 DWORD StartServiceCommand(int argc, LPCWSTR* argv);

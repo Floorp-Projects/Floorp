@@ -327,6 +327,16 @@ int NS_main(int argc, NS_tchar **argv)
 #endif
   }
 
+  if (!NS_tstrcmp(argv[1], NS_T("is-process-running"))) {
+#ifdef XP_WIN
+    LPCWSTR application = argv[2];
+    return (ERROR_NOT_FOUND == IsProcessRunning(application)) ? 0 : 1;
+#else
+    // Not implemented on non-Windows platforms
+    return 1;
+#endif
+  }
+
   if (NS_tchdir(argv[1]) != 0) {
     return 1;
   }

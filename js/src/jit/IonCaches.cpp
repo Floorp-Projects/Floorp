@@ -4241,29 +4241,18 @@ GetPropertyIC::tryAttachArgumentsElement(JSContext* cx, HandleScript outerScript
         indexReg = index.typedReg().gpr();
         masm.branch32(Assembler::AboveOrEqual, indexReg, tmpReg, &failures);
     }
-    // Save indexReg because it needs to be clobbered to check deleted bit.
-    Label failurePopIndex;
-    masm.push(indexReg);
 
-    // Check if property was deleted on arguments object.
+    // Fail if we have a RareArgumentsData (elements were deleted).
     masm.loadPrivate(Address(object(), ArgumentsObject::getDataSlotOffset()), tmpReg);
-    masm.loadPtr(Address(tmpReg, offsetof(ArgumentsData, deletedBits)), tmpReg);
-
-    // In tempReg, calculate index of word containing bit: (idx >> logBitsPerWord)
-    const uint32_t shift = FloorLog2<(sizeof(size_t) * JS_BITS_PER_BYTE)>::value;
-    MOZ_ASSERT(shift == 5 || shift == 6);
-    masm.rshiftPtr(Imm32(shift), indexReg);
-    masm.loadPtr(BaseIndex(tmpReg, indexReg, ScaleFromElemWidth(sizeof(size_t))), tmpReg);
-
-    // Don't bother testing specific bit, if any bit is set in the word, fail.
-    masm.branchPtr(Assembler::NotEqual, tmpReg, ImmPtr(nullptr), &failurePopIndex);
+    masm.branchPtr(Assembler::NotEqual,
+                   Address(tmpReg, offsetof(ArgumentsData, rareData)),
+                   ImmWord(0),
+                   &failureRestoreIndex);
 
     // Get the address to load from into tmpReg
     masm.loadPrivate(Address(object(), ArgumentsObject::getDataSlotOffset()), tmpReg);
     masm.addPtr(Imm32(ArgumentsData::offsetOfArgs()), tmpReg);
 
-    // Restore original index register value, to use for indexing element.
-    masm.pop(indexReg);
     BaseValueIndex elemIdx(tmpReg, indexReg);
 
     // Ensure result is not magic value, and type-check result.
@@ -4279,7 +4268,6 @@ GetPropertyIC::tryAttachArgumentsElement(JSContext* cx, HandleScript outerScript
     attacher.jumpRejoin(masm);
 
     // Restore the object before continuing to the next stub.
-    masm.bind(&failurePopIndex);
     masm.pop(indexReg);
     masm.bind(&failureRestoreIndex);
     if (index.hasValue())

@@ -19,8 +19,6 @@
 #include "nsWinUtils.h"
 #include "nsRange.h"
 
-#include "nsAutoPtr.h"
-
 #include "mozilla/dom/Element.h"
 
 using namespace mozilla;

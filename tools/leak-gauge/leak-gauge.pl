@@ -15,8 +15,8 @@
 # to figure out under what conditions the leak occurs.
 #
 # The way to create this log is to set the environment variables:
-#   NSPR_LOG_MODULES=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5,NodeInfoManagerLeak:5
-#   NSPR_LOG_FILE=nspr.log     (or any other filename of your choice)
+#   MOZ_LOG=DOMLeak:5,DocumentLeak:5,nsDocShellLeak:5,NodeInfoManagerLeak:5
+#   MOZ_LOG_FILE=nspr.log     (or any other filename of your choice)
 # in your shell and then run the program.
 # * In a Windows command prompt, set environment variables with
 #     set VAR=value

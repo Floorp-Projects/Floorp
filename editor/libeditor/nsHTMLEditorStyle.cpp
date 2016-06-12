@@ -9,7 +9,6 @@
 #include "mozilla/mozalloc.h"
 #include "nsAString.h"
 #include "nsAttrName.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsCaseTreatment.h"
 #include "nsComponentManagerUtils.h"

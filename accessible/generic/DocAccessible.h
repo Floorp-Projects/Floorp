@@ -11,6 +11,7 @@
 #include "HyperTextAccessibleWrap.h"
 #include "AccEvent.h"
 
+#include "nsAutoPtr.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsIDocument.h"

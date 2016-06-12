@@ -224,6 +224,7 @@ struct RTPVideoHeaderH264 {
 #else
 // Mozilla's OpenH264 implementation
 struct RTPVideoHeaderH264 {
+  bool packetization_mode;
   bool stap_a;
   bool single_nalu;
 };

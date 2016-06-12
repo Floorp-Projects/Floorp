@@ -175,7 +175,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     jitRuntime_(nullptr),
     selfHostingGlobal_(nullptr),
     nativeStackBase(GetNativeStackBase()),
-    cxCallback(nullptr),
     destroyCompartmentCallback(nullptr),
     sizeOfIncludingThisCompartmentCallback(nullptr),
     destroyZoneCallback(nullptr),

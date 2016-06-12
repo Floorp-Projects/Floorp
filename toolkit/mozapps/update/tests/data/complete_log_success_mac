@@ -87,6 +87,8 @@ PREPARE REMOVEFILE Contents/Resources/7/71/7xtest.exe
 PREPARE REMOVEFILE Contents/Resources/7/71/7xtext0
 PREPARE REMOVEFILE Contents/Resources/7/71/7xtext1
 PREPARE REMOVEDIR Contents/Resources/7/71/
+PREPARE REMOVEFILE Contents/Resources/7/7text0
+PREPARE REMOVEFILE Contents/Resources/7/7text1
 PREPARE REMOVEDIR Contents/Resources/7/
 PREPARE REMOVEDIR Contents/Resources/6/
 PREPARE REMOVEFILE Contents/Resources/5/5text1
@@ -188,6 +190,8 @@ EXECUTE REMOVEFILE Contents/Resources/7/71/7xtest.exe
 EXECUTE REMOVEFILE Contents/Resources/7/71/7xtext0
 EXECUTE REMOVEFILE Contents/Resources/7/71/7xtext1
 EXECUTE REMOVEDIR Contents/Resources/7/71/
+EXECUTE REMOVEFILE Contents/Resources/7/7text0
+EXECUTE REMOVEFILE Contents/Resources/7/7text1
 EXECUTE REMOVEDIR Contents/Resources/7/
 EXECUTE REMOVEDIR Contents/Resources/6/
 EXECUTE REMOVEFILE Contents/Resources/5/5text1
@@ -311,6 +315,8 @@ FINISH REMOVEFILE Contents/Resources/7/71/7xtest.exe
 FINISH REMOVEFILE Contents/Resources/7/71/7xtext0
 FINISH REMOVEFILE Contents/Resources/7/71/7xtext1
 FINISH REMOVEDIR Contents/Resources/7/71/
+FINISH REMOVEFILE Contents/Resources/7/7text0
+FINISH REMOVEFILE Contents/Resources/7/7text1
 FINISH REMOVEDIR Contents/Resources/7/
 FINISH REMOVEDIR Contents/Resources/6/
 FINISH REMOVEFILE Contents/Resources/5/5text1

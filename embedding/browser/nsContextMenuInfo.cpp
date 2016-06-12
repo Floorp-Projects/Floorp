@@ -26,7 +26,6 @@
 #include "nsIPrincipal.h"
 #include "nsIContentSecurityPolicy.h"
 #include "nsIContentPolicy.h"
-#include "nsAutoPtr.h"
 #include "imgRequestProxy.h"
 
 using mozilla::dom::Element;

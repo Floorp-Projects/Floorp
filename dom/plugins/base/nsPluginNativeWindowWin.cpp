@@ -21,7 +21,6 @@
 #include "nsWindowsDllInterceptor.h"
 #include "nsPluginNativeWindow.h"
 #include "nsThreadUtils.h"
-#include "nsAutoPtr.h"
 #include "nsTWeakRef.h"
 #include "nsCrashOnException.h"
 

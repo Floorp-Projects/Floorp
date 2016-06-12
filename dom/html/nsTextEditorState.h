@@ -7,7 +7,6 @@
 #ifndef nsTextEditorState_h__
 #define nsTextEditorState_h__
 
-#include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsITextControlElement.h"
 #include "nsITextControlFrame.h"

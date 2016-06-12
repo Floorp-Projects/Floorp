@@ -18,7 +18,6 @@
 #define DOM_CAMERA_TESTGONKCAMERAHARDWARE_H
 
 #include "GonkCameraHwMgr.h"
-#include "nsAutoPtr.h"
 #include "nsIDOMEventListener.h"
 #include "mozilla/CondVar.h"
 

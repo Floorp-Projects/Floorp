@@ -700,7 +700,7 @@ GLContextProviderWGL::GetGlobalContext()
     if (!triedToCreateContext) {
         triedToCreateContext = true;
 
-        MOZ_RELEASE_ASSERT(!gGlobalContext);
+        MOZ_RELEASE_ASSERT(!gGlobalContext, "GFX: Global GL context already initialized.");
         nsCString discardFailureId;
         RefPtr<GLContext> temp = CreateHeadless(CreateContextFlags::NONE, discardFailureId);
         gGlobalContext = temp;

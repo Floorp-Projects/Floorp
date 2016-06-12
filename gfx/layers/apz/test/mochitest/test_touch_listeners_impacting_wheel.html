@@ -65,12 +65,16 @@ function takeSnapshots(e) {
 
 function* test(testDriver) {
   var box = document.getElementById('box');
+
+  // Ensure the div is layerized by scrolling it
+  yield moveMouseAndScrollWheelOver(box, 10, 10, testDriver);
+
   box.addEventListener('touchstart', function(e) {
     ok(false, "This should never be run");
   }, false);
   box.addEventListener('wheel', takeSnapshots, { capture: false, passive: true });
 
-  // Let the event regions propagate to the APZ
+  // Let the event regions and layerization propagate to the APZ
   yield waitForAllPaints(function() {
     flushApzRepaints(testDriver);
   });

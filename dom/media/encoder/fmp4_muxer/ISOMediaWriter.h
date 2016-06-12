@@ -7,6 +7,7 @@
 #define ISOMediaWriter_h_
 
 #include "ContainerWriter.h"
+#include "nsAutoPtr.h"
 #include "nsIRunnable.h"
 
 namespace mozilla {

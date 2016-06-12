@@ -10,7 +10,6 @@
 #include "mozilla/dom/BindingDeclarations.h"
 #include "mozilla/dom/Promise.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsIObserver.h"
 #include "nsHashKeys.h"
 #include "nsWrapperCache.h"

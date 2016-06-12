@@ -2298,28 +2298,19 @@ ICGetElem_Arguments::Compiler::generateStubCode(MacroAssembler& masm)
     regs.takeUnchecked(idxReg);
     regs.take(scratchReg);
     Register argData = regs.takeAny();
-    Register tempReg = regs.takeAny();
 
     // Load ArgumentsData
     masm.loadPrivate(Address(objReg, ArgumentsObject::getDataSlotOffset()), argData);
 
-    // Load deletedBits bitArray pointer into scratchReg
-    masm.loadPtr(Address(argData, offsetof(ArgumentsData, deletedBits)), scratchReg);
+    // Fail if we have a RareArgumentsData (elements were deleted).
+    masm.branchPtr(Assembler::NotEqual,
+                   Address(argData, offsetof(ArgumentsData, rareData)),
+                   ImmWord(0),
+                   &failureReconstructInputs);
 
-    // In tempReg, calculate index of word containing bit: (idx >> logBitsPerWord)
-    masm.movePtr(idxReg, tempReg);
-    const uint32_t shift = mozilla::tl::FloorLog2<(sizeof(size_t) * JS_BITS_PER_BYTE)>::value;
-    MOZ_ASSERT(shift == 5 || shift == 6);
-    masm.rshiftPtr(Imm32(shift), tempReg);
-    masm.loadPtr(BaseIndex(scratchReg, tempReg, ScaleFromElemWidth(sizeof(size_t))), scratchReg);
-
-    // Don't bother testing specific bit, if any bit is set in the word, fail.
-    masm.branchPtr(Assembler::NotEqual, scratchReg, ImmPtr(nullptr), &failureReconstructInputs);
-
-    // Load the value.  use scratchReg and tempReg to form a ValueOperand to load into.
+    // Load the value. Use scratchReg to form a ValueOperand to load into.
     masm.addPtr(Imm32(ArgumentsData::offsetOfArgs()), argData);
     regs.add(scratchReg);
-    regs.add(tempReg);
     ValueOperand tempVal = regs.takeAnyValue();
     masm.loadValue(BaseValueIndex(argData, idxReg), tempVal);
 

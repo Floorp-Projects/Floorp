@@ -7,7 +7,6 @@
 #include "nsISelectionDisplay.idl"
 
 %{C++
-typedef short SelectionType;
 typedef short SelectionRegion;
 %}
 
@@ -19,6 +18,7 @@ interface nsISelectionDisplay;
 [scriptable, uuid(3801c9d4-8e69-4bfc-9edb-b58278621f8f)]
 interface nsISelectionController : nsISelectionDisplay
 {
+   // RawSelectionType values:
    const short SELECTION_NONE=0;
    const short SELECTION_NORMAL=1;
    const short SELECTION_SPELLCHECK=2;
@@ -32,6 +32,7 @@ interface nsISelectionController : nsISelectionDisplay
    const short SELECTION_URLSTRIKEOUT=512;
    const short NUM_SELECTIONTYPES=11;
 
+   // SelectionRegion values:
    const short SELECTION_ANCHOR_REGION = 0;
    const short SELECTION_FOCUS_REGION = 1;
    const short SELECTION_WHOLE_SELECTION = 2;
@@ -57,7 +58,8 @@ interface nsISelectionController : nsISelectionDisplay
    * GetSelection will return the selection that the presentation
    *  shell may implement.
    *
-   * @param aType will hold the type of selection //SelectionType
+   * @param aType This will hold the type of selection.  This value must be one
+   *              of RawSelectionType values.
    * @param _return will hold the return value
    */
     nsISelection getSelection(in short type);
@@ -72,7 +74,8 @@ interface nsISelectionController : nsISelectionDisplay
    * ScrollSelectionIntoView scrolls a region of the selection,
    * so that it is visible in the scrolled view.
    *
-   * @param aType the selection to scroll into view. //SelectionType
+   * @param aType the selection to scroll into view.  This value must be one
+   *              of RawSelectionType values.
    * @param aRegion the region inside the selection to scroll into view. //SelectionRegion
    * @param aFlags the scroll flags.  Valid bits include:
    * SCROLL_SYNCHRONOUS: when set, scrolls the selection into view
@@ -275,4 +278,45 @@ interface nsISelectionController : nsISelectionDisplay
    #define NS_ISELECTIONCONTROLLER_CID \
    { 0x513b9460, 0xd56a, 0x4c4e, \
    { 0xb6, 0xf9, 0x0b, 0x8a, 0xe4, 0x37, 0x2a, 0x3b }}
+
+namespace mozilla {
+
+typedef short RawSelectionType;
+enum class SelectionType : RawSelectionType
+{
+  eInvalid = -1,
+  eNone = nsISelectionController::SELECTION_NONE,
+  eNormal = nsISelectionController::SELECTION_NORMAL,
+  eSpellCheck = nsISelectionController::SELECTION_SPELLCHECK,
+  eIMERawClause = nsISelectionController::SELECTION_IME_RAWINPUT,
+  eIMESelectedRawClause = nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT,
+  eIMEConvertedClause = nsISelectionController::SELECTION_IME_CONVERTEDTEXT,
+  eIMESelectedClause =
+    nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT,
+  eAccessibility = nsISelectionController::SELECTION_ACCESSIBILITY,
+  eFind = nsISelectionController::SELECTION_FIND,
+  eURLSecondary = nsISelectionController::SELECTION_URLSECONDARY,
+  eURLStrikeout = nsISelectionController::SELECTION_URLSTRIKEOUT,
+};
+
+// Using anonymous enum to define constants because these constants may be
+// used at defining fixed size array in some header files (e.g.,
+// nsFrameSelection.h).  So, the values needs to be defined here, but we cannot
+// use static/const even with extern since it causes failing to link or
+// initializes them after such headers.
+enum : size_t
+{
+  // kSelectionTypeCount is number of SelectionType.
+  kSelectionTypeCount = nsISelectionController::NUM_SELECTIONTYPES,
+  // kPresentSelectionTypeCount is number of SelectionType except "none".
+  kPresentSelectionTypeCount = kSelectionTypeCount - 1
+};
+
+const char* ToChar(SelectionType aSelectionType);
+SelectionType ToSelectionType(RawSelectionType aRawSelectionType);
+RawSelectionType ToRawSelectionType(SelectionType aSelectionType);
+bool operator &(SelectionType aSelectionType,
+                RawSelectionType aRawSelectionTypes);
+
+} // namespace mozilla
 %}

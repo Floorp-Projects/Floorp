@@ -8,7 +8,6 @@
 #define mozilla_dom_GamepadService_h_
 
 #include <stdint.h>
-#include "nsAutoPtr.h"
 #include "nsCOMArray.h"
 #include "nsIGamepadServiceTest.h"
 #include "nsGlobalWindow.h"

@@ -6,7 +6,6 @@
 #include "DeleteTextTxn.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/dom/Selection.h"
-#include "nsAutoPtr.h"
 #include "nsDebug.h"
 #include "nsEditor.h"
 #include "nsError.h"

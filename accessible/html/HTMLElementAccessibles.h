@@ -7,7 +7,6 @@
 #define mozilla_a11y_HTMLElementAccessibles_h__
 
 #include "BaseAccessibles.h"
-#include "nsAutoPtr.h"
 
 namespace mozilla {
 namespace a11y {

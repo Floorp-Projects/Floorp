@@ -14,7 +14,6 @@
 #define nsPlainTextSerializer_h__
 
 #include "mozilla/Attributes.h"
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIAtom.h"
 #include "nsIContentSerializer.h"

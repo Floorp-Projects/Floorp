@@ -21,7 +21,6 @@
 #ifndef mozilla_dom_NodeInfo_h___
 #define mozilla_dom_NodeInfo_h___
 
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "mozilla/dom/NameSpaceConstants.h"
 #include "nsStringGlue.h"

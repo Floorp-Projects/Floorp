@@ -16,7 +16,6 @@
 #include "SVGTransformListParser.h"
 #include "SVGTransform.h"
 
-#include "nsAutoPtr.h"
 #include <math.h>
 
 namespace mozilla {

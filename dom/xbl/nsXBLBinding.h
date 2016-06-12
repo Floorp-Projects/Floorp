@@ -9,7 +9,6 @@
 
 #include "nsXBLService.h"
 #include "nsCOMPtr.h"
-#include "nsAutoPtr.h"
 #include "nsINodeList.h"
 #include "nsIStyleRuleProcessor.h"
 #include "nsClassHashtable.h"

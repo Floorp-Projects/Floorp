@@ -13,7 +13,6 @@
 #include "mozilla/AutoRestore.h"
 #include "mozilla/Scoped.h"
 #include "mozilla/Services.h"
-#include "nsAutoPtr.h"
 #include "nsIFile.h"
 #include "nsIObserverService.h"
 #include "nsPrintfCString.h"

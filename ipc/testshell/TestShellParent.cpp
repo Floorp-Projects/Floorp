@@ -11,7 +11,6 @@
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/ScriptSettings.h"
 
-#include "nsAutoPtr.h"
 #include "xpcpublic.h"
 
 using namespace mozilla;

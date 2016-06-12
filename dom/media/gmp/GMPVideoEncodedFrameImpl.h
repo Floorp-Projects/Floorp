@@ -36,6 +36,7 @@
 #include "gmp-video-frame-encoded.h"
 #include "gmp-decryption.h"
 #include "mozilla/ipc/Shmem.h"
+#include "nsAutoPtr.h"
 
 namespace mozilla {
 class CryptoSample;

@@ -9,7 +9,6 @@
 
 #include "nsIMemoryReporter.h"
 #include "nsIObserver.h"
-#include "nsAutoPtr.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/StaticPtr.h"

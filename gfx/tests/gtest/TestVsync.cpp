@@ -80,7 +80,7 @@ protected:
     gfxPlatform::GetPlatform();
     gfxPrefs::GetSingleton();
     mVsyncSource = gfxPlatform::GetPlatform()->GetHardwareVsync();
-    MOZ_RELEASE_ASSERT(mVsyncSource);
+    MOZ_RELEASE_ASSERT(mVsyncSource, "GFX: Vsync source not found.");
   }
 
   virtual ~VsyncTester()

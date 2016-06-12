@@ -14,6 +14,7 @@
 #include "mozilla/Monitor.h"
 #include "mozilla/BasePrincipal.h"
 #include "mozilla/storage/StatementCache.h"
+#include "nsAutoPtr.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsClassHashtable.h"

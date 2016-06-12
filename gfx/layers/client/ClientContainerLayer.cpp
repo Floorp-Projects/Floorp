@@ -6,7 +6,6 @@
 #include "ClientContainerLayer.h"
 #include "ClientLayerManager.h"         // for ClientLayerManager, etc
 #include "mozilla/mozalloc.h"           // for operator new
-#include "nsAutoPtr.h"                  // for nsRefPtr
 #include "nsCOMPtr.h"                   // for already_AddRefed
 #include "nsISupportsImpl.h"            // for Layer::AddRef, etc
 

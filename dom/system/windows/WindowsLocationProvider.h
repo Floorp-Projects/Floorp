@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_WindowsLocationProvider_h__
 #define mozilla_dom_WindowsLocationProvider_h__
 
-#include "nsAutoPtr.h"
+#include "nsCOMPtr.h"
 #include "nsIGeolocationProvider.h"
 
 #include <locationapi.h>

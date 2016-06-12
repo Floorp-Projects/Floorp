@@ -7,6 +7,7 @@
  */
 
 #include "mozilla/css/ImageLoader.h"
+#include "nsAutoPtr.h"
 #include "nsContentUtils.h"
 #include "nsLayoutUtils.h"
 #include "nsError.h"

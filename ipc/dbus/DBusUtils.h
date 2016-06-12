@@ -21,6 +21,7 @@
 
 #include <dbus/dbus.h>
 #include "mozilla/RefPtr.h"
+#include "nsISupportsImpl.h"
 
 // LOGE and free a D-Bus error
 // Using #define so that __FUNCTION__ resolves usefully

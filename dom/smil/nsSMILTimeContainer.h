@@ -11,7 +11,6 @@
 #include "nscore.h"
 #include "nsSMILTypes.h"
 #include "nsTPriorityQueue.h"
-#include "nsAutoPtr.h"
 #include "nsSMILMilestone.h"
 
 class nsSMILTimeValue;

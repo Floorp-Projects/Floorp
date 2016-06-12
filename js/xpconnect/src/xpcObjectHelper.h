@@ -16,7 +16,6 @@
 
 #include "mozilla/Attributes.h"
 #include <stdint.h>
-#include "nsAutoPtr.h"
 #include "nsCOMPtr.h"
 #include "nsIClassInfo.h"
 #include "nsISupports.h"

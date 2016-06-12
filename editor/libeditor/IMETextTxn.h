@@ -7,7 +7,6 @@
 #define IMETextTxn_h__
 
 #include "EditTxn.h"                      // base class
-#include "nsAutoPtr.h"                    // mTextNode, mRanges
 #include "nsCycleCollectionParticipant.h" // various macros
 #include "nsString.h"                     // mStringToInsert
 

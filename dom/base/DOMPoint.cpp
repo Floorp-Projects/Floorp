@@ -8,7 +8,6 @@
 
 #include "mozilla/dom/DOMPointBinding.h"
 #include "mozilla/dom/BindingDeclarations.h"
-#include "nsAutoPtr.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

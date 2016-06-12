@@ -107,6 +107,24 @@ ToChar(TextRangeType aTextRangeType)
   }
 }
 
+SelectionType
+ToSelectionType(TextRangeType aTextRangeType)
+{
+  switch (aTextRangeType) {
+    case TextRangeType::eRawClause:
+      return SelectionType::eIMERawClause;
+    case TextRangeType::eSelectedRawClause:
+      return SelectionType::eIMESelectedRawClause;
+    case TextRangeType::eConvertedClause:
+      return SelectionType::eIMEConvertedClause;
+    case TextRangeType::eSelectedClause:
+      return SelectionType::eIMESelectedClause;
+    default:
+      MOZ_CRASH("TextRangeType is invalid");
+      return SelectionType::eNormal;
+  }
+}
+
 /******************************************************************************
  * As*Event() implementation
  ******************************************************************************/

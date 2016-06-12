@@ -7,7 +7,6 @@
 #define GLCONTEXTPROVIDER_H_
 
 #include "GLContextTypes.h"
-#include "nsAutoPtr.h"
 #include "SurfaceTypes.h"
 
 #include "nsSize.h" // for gfx::IntSize (needed by GLContextProviderImpl.h below)

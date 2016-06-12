@@ -54,7 +54,7 @@ class MemoryRegion;
 // values, when the PC is at a given address in the current frame's
 // function. See the description of 'STACK CFI' records at:
 //
-// http://code.google.com/p/google-breakpad/wiki/SymbolFiles
+// https://chromium.googlesource.com/breakpad/breakpad/+/master/docs/symbol_files.md
 //
 // To prepare an instance of CFIFrameInfo for use at a given
 // instruction, first populate it with the rules from the 'STACK CFI

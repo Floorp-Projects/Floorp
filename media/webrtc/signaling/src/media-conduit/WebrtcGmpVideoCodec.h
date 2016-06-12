@@ -275,6 +275,7 @@ private:
   GMPVideoHost* mHost;
   GMPVideoCodec mCodecParams;
   uint32_t mMaxPayloadSize;
+  webrtc::CodecSpecificInfo mCodecSpecificInfo;
   // Protects mCallback
   Mutex mCallbackMutex;
   webrtc::EncodedImageCallback* mCallback;

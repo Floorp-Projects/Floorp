@@ -10,7 +10,6 @@
 #include "nsCOMPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsWrapperCache.h"
-#include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "js/TypeDecls.h"
 

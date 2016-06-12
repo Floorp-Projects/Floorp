@@ -14,7 +14,6 @@
 
 #include "nscore.h"
 #include "nsDebug.h"
-#include "nsAutoPtr.h"
 
 #include "ipc/IPCMessageUtils.h"
 #include "mozilla/ipc/SharedMemory.h"

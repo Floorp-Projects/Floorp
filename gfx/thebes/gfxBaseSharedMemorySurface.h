@@ -7,6 +7,7 @@
 #ifndef GFX_SHARED_MEMORYSURFACE_H
 #define GFX_SHARED_MEMORYSURFACE_H
 
+#include "mozilla/gfx/2D.h"
 #include "mozilla/ipc/Shmem.h"
 #include "mozilla/ipc/SharedMemory.h"
 
@@ -74,7 +75,7 @@ public:
     {
         SharedImageInfo* shmInfo = GetShmInfoPtr(aShmem);
         mozilla::gfx::IntSize size(shmInfo->width, shmInfo->height);
-        if (!gfxASurface::CheckSurfaceSize(size))
+        if (!mozilla::gfx::Factory::CheckSurfaceSize(size))
             return nullptr;
 
         gfxImageFormat format = shmInfo->format;
@@ -164,7 +165,7 @@ private:
            gfxImageFormat aFormat,
            SharedMemory::SharedMemoryType aShmType)
     {
-        if (!gfxASurface::CheckSurfaceSize(aSize))
+        if (!mozilla::gfx::Factory::CheckSurfaceSize(aSize))
             return nullptr;
 
         Shmem shmem;

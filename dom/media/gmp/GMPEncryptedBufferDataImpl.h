@@ -7,6 +7,7 @@
 #define GMPEncryptedBufferDataImpl_h_
 
 #include "gmp-decryption.h"
+#include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "mozilla/gmp/GMPTypes.h"
 

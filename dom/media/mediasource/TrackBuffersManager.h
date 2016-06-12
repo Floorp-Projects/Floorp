@@ -18,6 +18,7 @@
 #include "MediaSourceDecoder.h"
 #include "SourceBufferTask.h"
 #include "TimeUnits.h"
+#include "nsAutoPtr.h"
 #include "nsProxyRelease.h"
 #include "nsString.h"
 #include "nsTArray.h"

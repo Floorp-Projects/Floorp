@@ -13,6 +13,7 @@
 #include "DOMStorageCache.h"
 #include "DOMStorageObserver.h"
 #include "mozilla/Mutex.h"
+#include "nsAutoPtr.h"
 
 namespace mozilla {
 

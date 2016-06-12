@@ -8,7 +8,6 @@
 #define MOZILLA_DOMSVGLENGTH_H__
 
 #include "DOMSVGLengthList.h"
-#include "nsAutoPtr.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsDebug.h"
 #include "nsIDOMSVGLength.h"

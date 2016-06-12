@@ -14,7 +14,6 @@
 #include "mozilla/PodOperations.h" // for PodZero
 #include "nsAbsoluteContainingBlock.h"
 #include "nsAlgorithm.h" // for clamped()
-#include "nsAutoPtr.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsCSSFrameConstructor.h"
 #include "nsDataHashtable.h"

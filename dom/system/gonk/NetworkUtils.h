@@ -5,6 +5,7 @@
 #ifndef NetworkUtils_h
 #define NetworkUtils_h
 
+#include "nsAutoPtr.h"
 #include "nsString.h"
 #include "mozilla/dom/NetworkOptionsBinding.h"
 #include "mozilla/dom/network/NetUtils.h"

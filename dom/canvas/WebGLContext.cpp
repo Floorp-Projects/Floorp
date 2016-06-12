@@ -684,7 +684,7 @@ WebGLContext::CreateAndInitGLWith(FnCreateGL_T fnCreateGL,
     std::queue<gl::SurfaceCaps> fallbackCaps;
     PopulateCapFallbackQueue(baseCaps, &fallbackCaps);
 
-    MOZ_RELEASE_ASSERT(!gl);
+    MOZ_RELEASE_ASSERT(!gl, "GFX: Already have a context.");
     gl = nullptr;
     while (!fallbackCaps.empty()) {
         gl::SurfaceCaps& caps = fallbackCaps.front();
@@ -1335,7 +1335,7 @@ void
 WebGLContext::GetCanvas(Nullable<dom::OwningHTMLCanvasElementOrOffscreenCanvas>& retval)
 {
     if (mCanvasElement) {
-        MOZ_RELEASE_ASSERT(!mOffscreenCanvas);
+        MOZ_RELEASE_ASSERT(!mOffscreenCanvas, "GFX: Canvas is offscreen.");
 
         if (mCanvasElement->IsInNativeAnonymousSubtree()) {
           retval.SetNull();
@@ -2066,7 +2066,7 @@ ZeroTexImageWithClear(WebGLContext* webgl, GLContext* gl, TexImageTarget target,
         clearBits |= LOCAL_GL_STENCIL_BUFFER_BIT;
     }
 
-    MOZ_RELEASE_ASSERT(attachPoint && clearBits);
+    MOZ_RELEASE_ASSERT(attachPoint && clearBits, "GFX: No bits cleared.");
 
     {
         gl::GLContext::LocalErrorScope errorScope(*gl);
@@ -2120,11 +2120,11 @@ ZeroTextureData(WebGLContext* webgl, const char* funcName, bool respecifyTexture
 
     auto compression = usage->format->compression;
     if (compression) {
-        MOZ_RELEASE_ASSERT(!xOffset && !yOffset && !zOffset);
-        MOZ_RELEASE_ASSERT(!respecifyTexture);
+        MOZ_RELEASE_ASSERT(!xOffset && !yOffset && !zOffset, "GFX: Can't zero compressed texture with offsets.");
+        MOZ_RELEASE_ASSERT(!respecifyTexture, "GFX: respecifyTexture is set to true.");
 
         auto sizedFormat = usage->format->sizedFormat;
-        MOZ_RELEASE_ASSERT(sizedFormat);
+        MOZ_RELEASE_ASSERT(sizedFormat, "GFX: texture sized format not set");
 
         const auto fnSizeInBlocks = [](CheckedUint32 pixels, uint8_t pixelsPerBlock) {
             return RoundUpToMultipleOf(pixels, pixelsPerBlock) / pixelsPerBlock;
@@ -2161,7 +2161,7 @@ ZeroTextureData(WebGLContext* webgl, const char* funcName, bool respecifyTexture
     }
 
     const auto driverUnpackInfo = usage->idealUnpack;
-    MOZ_RELEASE_ASSERT(driverUnpackInfo);
+    MOZ_RELEASE_ASSERT(driverUnpackInfo, "GFX: ideal unpack info not set.");
 
     if (usage->isRenderable && depth == 1 &&
         !xOffset && !yOffset && !zOffset)
@@ -2207,7 +2207,7 @@ ZeroTextureData(WebGLContext* webgl, const char* funcName, bool respecifyTexture
 
     GLenum error;
     if (respecifyTexture) {
-        MOZ_RELEASE_ASSERT(!xOffset && !yOffset && !zOffset);
+        MOZ_RELEASE_ASSERT(!xOffset && !yOffset && !zOffset, "GFX: texture data, offsets, not zeroed.");
         error = DoTexImage(gl, target, level, driverUnpackInfo, width, height, depth,
                            zeros.get());
     } else {

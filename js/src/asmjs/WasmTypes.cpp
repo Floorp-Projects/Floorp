@@ -24,7 +24,8 @@
 #include "jsmath.h"
 
 #include "asmjs/Wasm.h"
-#include "asmjs/WasmModule.h"
+#include "asmjs/WasmInstance.h"
+#include "jit/shared/Assembler-shared.h"
 #include "js/Conversions.h"
 #include "vm/Interpreter.h"
 
@@ -33,6 +34,32 @@
 using namespace js;
 using namespace js::jit;
 using namespace js::wasm;
+
+void
+Val::writePayload(uint8_t* dst)
+{
+    switch (type_) {
+      case ValType::I32:
+      case ValType::F32:
+        memcpy(dst, &u.i32_, sizeof(u.i32_));
+        return;
+      case ValType::I64:
+      case ValType::F64:
+        memcpy(dst, &u.i64_, sizeof(u.i64_));
+        return;
+      case ValType::I8x16:
+      case ValType::I16x8:
+      case ValType::I32x4:
+      case ValType::F32x4:
+      case ValType::B8x16:
+      case ValType::B16x8:
+      case ValType::B32x4:
+        memcpy(dst, &u, jit::Simd128DataSize);
+        return;
+      case ValType::Limit:
+        MOZ_CRASH("Bad value type");
+    }
+}
 
 #if defined(JS_CODEGEN_ARM)
 extern "C" {
@@ -159,13 +186,13 @@ wasm::AddressOf(SymbolicAddress imm, ExclusiveContext* cx)
       case SymbolicAddress::HandleTrap:
         return FuncCast(HandleTrap, Args_General1);
       case SymbolicAddress::CallImport_Void:
-        return FuncCast(Module::callImport_void, Args_General3);
+        return FuncCast(Instance::callImport_void, Args_General3);
       case SymbolicAddress::CallImport_I32:
-        return FuncCast(Module::callImport_i32, Args_General3);
+        return FuncCast(Instance::callImport_i32, Args_General3);
       case SymbolicAddress::CallImport_I64:
-        return FuncCast(Module::callImport_i64, Args_General3);
+        return FuncCast(Instance::callImport_i64, Args_General3);
       case SymbolicAddress::CallImport_F64:
-        return FuncCast(Module::callImport_f64, Args_General3);
+        return FuncCast(Instance::callImport_f64, Args_General3);
       case SymbolicAddress::CoerceInPlace_ToInt32:
         return FuncCast(CoerceInPlace_ToInt32, Args_General1);
       case SymbolicAddress::CoerceInPlace_ToNumber:

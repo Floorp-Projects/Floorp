@@ -7,7 +7,6 @@
 #ifndef nsFakeSynthServices_h
 #define nsFakeSynthServices_h
 
-#include "nsAutoPtr.h"
 #include "nsTArray.h"
 #include "nsIObserver.h"
 #include "nsIThread.h"

@@ -15,6 +15,7 @@
 #include "mozilla/layers/TextureHost.h"
 #include "mozilla/layers/SharedBufferManagerChild.h"
 #include "mozilla/layers/SharedBufferManagerParent.h"
+#include "mozilla/UniquePtr.h"
 #include "mozilla/unused.h"
 #include "nsXULAppAPI.h"
 
@@ -116,14 +117,19 @@ ParamTraits<MagicGrallocBufferHandle>::Read(const Message* aMsg,
   MOZ_ASSERT(aResult->mRef.mKey == -1);
 
   size_t nbytes;
-  const char* data;
   int owner;
   int64_t index;
 
   if (!aMsg->ReadInt(aIter, &owner) ||
       !aMsg->ReadInt64(aIter, &index) ||
-      !aMsg->ReadSize(aIter, &nbytes) ||
-      !aMsg->ReadBytes(aIter, &data, nbytes)) {
+      !aMsg->ReadSize(aIter, &nbytes)) {
+    printf_stderr("ParamTraits<MagicGrallocBufferHandle>::Read() failed to read a message\n");
+    return false;
+  }
+
+  auto data = mozilla::MakeUnique<char[]>(nbytes);
+
+  if (!aMsg->ReadBytesInto(aIter, data.get(), nbytes)) {
     printf_stderr("ParamTraits<MagicGrallocBufferHandle>::Read() failed to read a message\n");
     return false;
   }
@@ -139,7 +145,7 @@ ParamTraits<MagicGrallocBufferHandle>::Read(const Message* aMsg,
     }
     // If the GraphicBuffer was shared cross-process, SCM_RIGHTS does
     // the right thing and dup's the fd. If it's shared cross-thread,
-    // SCM_RIGHTS doesn't dup the fd. 
+    // SCM_RIGHTS doesn't dup the fd.
     // But in shared cross-thread, dup fd is not necessary because we get
     // a pointer to the GraphicBuffer directly from SharedBufferManagerParent
     // and don't create a new GraphicBuffer around the fd.
@@ -156,7 +162,7 @@ ParamTraits<MagicGrallocBufferHandle>::Read(const Message* aMsg,
     // Deserialize GraphicBuffer
 #if ANDROID_VERSION >= 19
     sp<GraphicBuffer> buffer(new GraphicBuffer());
-    const void* datap = (const void*)data;
+    const void* datap = (const void*)data.get();
     const int* fdsp = &fds[0];
     if (NO_ERROR != buffer->unflatten(datap, nbytes, fdsp, nfds)) {
       buffer = nullptr;
@@ -164,7 +170,7 @@ ParamTraits<MagicGrallocBufferHandle>::Read(const Message* aMsg,
 #else
     sp<GraphicBuffer> buffer(new GraphicBuffer());
     Flattenable *flattenable = buffer.get();
-    if (NO_ERROR != flattenable->unflatten(data, nbytes, fds, nfds)) {
+    if (NO_ERROR != flattenable->unflatten(data.get(), nbytes, fds, nfds)) {
       buffer = nullptr;
     }
 #endif

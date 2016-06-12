@@ -5,7 +5,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "nsRadioVisitor.h"
-#include "nsAutoPtr.h"
 #include "mozilla/dom/HTMLInputElement.h"
 #include "nsIConstraintValidation.h"
 

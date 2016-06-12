@@ -9,6 +9,7 @@
 #include "inDOMUtils.h"
 #include "inLayoutUtils.h"
 
+#include "nsAutoPtr.h"
 #include "nsIServiceManager.h"
 #include "nsISupportsArray.h"
 #include "nsString.h"

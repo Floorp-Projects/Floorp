@@ -103,7 +103,92 @@ static void printRange(nsRange *aDomRange);
 #define DEBUG_OUT_RANGE(x)  
 #endif // PRINT_RANGE
 
+/******************************************************************************
+ * Utility methods defined in nsISelectionController.idl
+ ******************************************************************************/
 
+namespace mozilla {
+
+const char*
+ToChar(SelectionType aSelectionType)
+{
+  switch (aSelectionType) {
+    case SelectionType::eInvalid:
+      return "SelectionType::eInvalid";
+    case SelectionType::eNone:
+      return "SelectionType::eNone";
+    case SelectionType::eNormal:
+      return "SelectionType::eNormal";
+    case SelectionType::eSpellCheck:
+      return "SelectionType::eSpellCheck";
+    case SelectionType::eIMERawClause:
+      return "SelectionType::eIMERawClause";
+    case SelectionType::eIMESelectedRawClause:
+      return "SelectionType::eIMESelectedRawClause";
+    case SelectionType::eIMEConvertedClause:
+      return "SelectionType::eIMEConvertedClause";
+    case SelectionType::eIMESelectedClause:
+      return "SelectionType::eIMESelectedClause";
+    case SelectionType::eAccessibility:
+      return "SelectionType::eAccessibility";
+    case SelectionType::eFind:
+      return "SelectionType::eFind";
+    case SelectionType::eURLSecondary:
+      return "SelectionType::eURLSecondary";
+    case SelectionType::eURLStrikeout:
+      return "SelectionType::eURLStrikeout";
+    default:
+      return "Invalid SelectionType";
+  }
+}
+
+static bool
+IsValidSelectionType(RawSelectionType aRawSelectionType)
+{
+  switch (static_cast<SelectionType>(aRawSelectionType)) {
+    case SelectionType::eNone:
+    case SelectionType::eNormal:
+    case SelectionType::eSpellCheck:
+    case SelectionType::eIMERawClause:
+    case SelectionType::eIMESelectedRawClause:
+    case SelectionType::eIMEConvertedClause:
+    case SelectionType::eIMESelectedClause:
+    case SelectionType::eAccessibility:
+    case SelectionType::eFind:
+    case SelectionType::eURLSecondary:
+    case SelectionType::eURLStrikeout:
+      return true;
+    default:
+      return false;
+  }
+}
+
+SelectionType
+ToSelectionType(RawSelectionType aRawSelectionType)
+{
+  if (!IsValidSelectionType(aRawSelectionType)) {
+    return SelectionType::eInvalid;
+  }
+  return static_cast<SelectionType>(aRawSelectionType);
+}
+
+RawSelectionType
+ToRawSelectionType(SelectionType aSelectionType)
+{
+  return static_cast<RawSelectionType>(aSelectionType);
+}
+
+bool operator &(SelectionType aSelectionType,
+                RawSelectionType aRawSelectionTypes)
+{
+  return (ToRawSelectionType(aSelectionType) & aRawSelectionTypes) != 0;
+}
+
+} // namespace mozilla
+
+/******************************************************************************
+ * nsPeekOffsetStruct
+ ******************************************************************************/
 
 //#define DEBUG_SELECTION // uncomment for printf describing every collapse and extend.
 //#define DEBUG_NAVIGATION
@@ -263,45 +348,55 @@ nsresult NS_NewDomSelection(nsISelection **aDomSelection)
 }
 
 static int8_t
-GetIndexFromSelectionType(SelectionType aType)
+GetIndexFromSelectionType(SelectionType aSelectionType)
 {
-    switch (aType)
-    {
-    case nsISelectionController::SELECTION_NORMAL: return 0;
-    case nsISelectionController::SELECTION_SPELLCHECK: return 1;
-    case nsISelectionController::SELECTION_IME_RAWINPUT: return 2;
-    case nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT: return 3;
-    case nsISelectionController::SELECTION_IME_CONVERTEDTEXT: return 4;
-    case nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT: return 5;
-    case nsISelectionController::SELECTION_ACCESSIBILITY: return 6;
-    case nsISelectionController::SELECTION_FIND: return 7;
-    case nsISelectionController::SELECTION_URLSECONDARY: return 8;
-    case nsISelectionController::SELECTION_URLSTRIKEOUT: return 9;
+  switch (aSelectionType) {
+    case SelectionType::eNormal:
+      return 0;
+    case SelectionType::eSpellCheck:
+      return 1;
+    case SelectionType::eIMERawClause:
+      return 2;
+    case SelectionType::eIMESelectedRawClause:
+      return 3;
+    case SelectionType::eIMEConvertedClause:
+      return 4;
+    case SelectionType::eIMESelectedClause:
+      return 5;
+    case SelectionType::eAccessibility:
+      return 6;
+    case SelectionType::eFind:
+      return 7;
+    case SelectionType::eURLSecondary:
+      return 8;
+    case SelectionType::eURLStrikeout:
+      return 9;
     default:
       return -1;
-    }
-    /* NOTREACHED */
+  }
+  /* NOTREACHED */
 }
 
 static SelectionType
 GetSelectionTypeFromIndex(int8_t aIndex)
 {
-  switch (aIndex)
-  {
-    case 0: return nsISelectionController::SELECTION_NORMAL;
-    case 1: return nsISelectionController::SELECTION_SPELLCHECK;
-    case 2: return nsISelectionController::SELECTION_IME_RAWINPUT;
-    case 3: return nsISelectionController::SELECTION_IME_SELECTEDRAWTEXT;
-    case 4: return nsISelectionController::SELECTION_IME_CONVERTEDTEXT;
-    case 5: return nsISelectionController::SELECTION_IME_SELECTEDCONVERTEDTEXT;
-    case 6: return nsISelectionController::SELECTION_ACCESSIBILITY;
-    case 7: return nsISelectionController::SELECTION_FIND;
-    case 8: return nsISelectionController::SELECTION_URLSECONDARY;
-    case 9: return nsISelectionController::SELECTION_URLSTRIKEOUT;
-    default:
-      return nsISelectionController::SELECTION_NORMAL;
+  static const SelectionType kSelectionTypes[] = {
+    SelectionType::eNormal,
+    SelectionType::eSpellCheck,
+    SelectionType::eIMERawClause,
+    SelectionType::eIMESelectedRawClause,
+    SelectionType::eIMEConvertedClause,
+    SelectionType::eIMESelectedClause,
+    SelectionType::eAccessibility,
+    SelectionType::eFind,
+    SelectionType::eURLSecondary,
+    SelectionType::eURLStrikeout
+  };
+  if (NS_WARN_IF(aIndex < 0) ||
+      NS_WARN_IF(static_cast<size_t>(aIndex) >= ArrayLength(kSelectionTypes))) {
+    return SelectionType::eNormal;
   }
-  /* NOTREACHED */
+  return kSelectionTypes[aIndex];
 }
 
 /*
@@ -434,8 +529,7 @@ struct MOZ_RAII AutoPrepareFocusRange
 
 nsFrameSelection::nsFrameSelection()
 {
-  int32_t i;
-  for (i = 0;i<nsISelectionController::NUM_SELECTIONTYPES;i++){
+  for (size_t i = 0; i < kPresentSelectionTypeCount; i++){
     mDomSelections[i] = new Selection(this);
     mDomSelections[i]->SetType(GetSelectionTypeFromIndex(i));
   }
@@ -459,8 +553,7 @@ nsFrameSelection::nsFrameSelection()
     nsAutoCopyListener *autoCopy = nsAutoCopyListener::GetInstance();
 
     if (autoCopy) {
-      int8_t index =
-        GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+      int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
       if (mDomSelections[index]) {
         autoCopy->Listen(mDomSelections[index]);
       }
@@ -485,8 +578,7 @@ nsFrameSelection::~nsFrameSelection()
 NS_IMPL_CYCLE_COLLECTION_CLASS(nsFrameSelection)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN(nsFrameSelection)
-  int32_t i;
-  for (i = 0; i < nsISelectionController::NUM_SELECTIONTYPES; ++i) {
+  for (size_t i = 0; i < kPresentSelectionTypeCount; ++i) {
     tmp->mDomSelections[i] = nullptr;
   }
 
@@ -508,8 +600,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN(nsFrameSelection)
                                               GetMarkedCCGeneration())) {
     return NS_SUCCESS_INTERRUPTED_TRAVERSE;
   }
-  int32_t i;
-  for (i = 0; i < nsISelectionController::NUM_SELECTIONTYPES; ++i) {
+  for (size_t i = 0; i < kPresentSelectionTypeCount; ++i) {
     NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mDomSelections[i])
   }
 
@@ -545,7 +636,7 @@ nsFrameSelection::FetchDesiredPos(nsPoint &aDesiredPos)
     return NS_ERROR_NULL_POINTER;
   }
 
-  int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   caret->SetSelection(mDomSelections[index]);
 
   nsRect coord;
@@ -610,7 +701,7 @@ nsFrameSelection::ConstrainFrameAndPointToAnchorSubtree(nsIFrame  *aFrame,
   nsCOMPtr<nsIDOMNode> anchorNode;
   int32_t anchorOffset = 0;
 
-  int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
@@ -828,15 +919,14 @@ nsFrameSelection::Init(nsIPresShell *aShell, nsIContent *aLimiter)
 
   RefPtr<AccessibleCaretEventHub> eventHub = mShell->GetAccessibleCaretEventHub();
   if (eventHub) {
-    int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+    int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
     if (mDomSelections[index]) {
       mDomSelections[index]->AddSelectionListener(eventHub);
     }
   }
 
   if (sSelectionEventsEnabled) {
-    int8_t index =
-      GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+    int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
     if (mDomSelections[index]) {
       // The Selection instance will hold a strong reference to its selectionchangelistener
       // so we don't have to worry about that!
@@ -875,7 +965,7 @@ nsFrameSelection::MoveCaret(nsDirection       aDirection,
   bool isCollapsed;
   nsPoint desiredPos(0, 0); //we must keep this around and revalidate it when its just UP/DOWN
 
-  int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   RefPtr<Selection> sel = mDomSelections[index];
   if (!sel)
     return NS_ERROR_NULL_POINTER;
@@ -1362,7 +1452,7 @@ nsFrameSelection::GetFrameFromLevel(nsIFrame    *aFrameIn,
 nsresult
 nsFrameSelection::MaintainSelection(nsSelectionAmount aAmount)
 {
-  int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
@@ -1466,7 +1556,7 @@ nsFrameSelection::AdjustForMaintainedSelection(nsIContent *aContent,
     return false;
   }
 
-  int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index])
     return false;
 
@@ -1532,7 +1622,7 @@ nsFrameSelection::HandleClick(nsIContent*        aNewFocus,
         AdjustForMaintainedSelection(aNewFocus, aContentOffset))
       return NS_OK; //shift clicked to maintained selection. rejected.
 
-    int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+    int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
     AutoPrepareFocusRange prep(mDomSelections[index], aContinueSelection, aMultipleSelection);
     return TakeFocus(aNewFocus, aContentOffset, aContentEndOffset, aHint,
                      aContinueSelection, aMultipleSelection);
@@ -1615,7 +1705,7 @@ nsFrameSelection::StartAutoScrollTimer(nsIFrame *aFrame,
                                        nsPoint   aPoint,
                                        uint32_t  aDelay)
 {
-  int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
@@ -1625,7 +1715,7 @@ nsFrameSelection::StartAutoScrollTimer(nsIFrame *aFrame,
 void
 nsFrameSelection::StopAutoScrollTimer()
 {
-  int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index])
     return;
 
@@ -1659,7 +1749,7 @@ nsFrameSelection::TakeFocus(nsIContent*        aNewFocus,
   mAppendStartSelectedCell = nullptr;
   mHint = aHint;
   
-  int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
@@ -1772,7 +1862,7 @@ printf(" * TakeFocus - moving into new cell\n");
   // Don't notify selection listeners if batching is on:
   if (GetBatching())
     return NS_OK;
-  return NotifySelectionListeners(nsISelectionController::SELECTION_NORMAL);
+  return NotifySelectionListeners(SelectionType::eNormal);
 }
 
 
@@ -1787,10 +1877,12 @@ nsFrameSelection::LookUpSelection(nsIContent *aContent,
 
   SelectionDetails* details = nullptr;
 
-  for (int32_t j = 0; j < nsISelectionController::NUM_SELECTIONTYPES; j++) {
+  for (size_t j = 0; j < kPresentSelectionTypeCount; j++) {
     if (mDomSelections[j]) {
       mDomSelections[j]->LookUpSelection(aContent, aContentOffset,
-          aContentLength, &details, (SelectionType)(1<<j), aSlowCheck);
+                                         aContentLength, &details,
+                                         ToSelectionType(1 << j),
+                                         aSlowCheck);
     }
   }
 
@@ -1808,15 +1900,16 @@ nsFrameSelection::SetDragState(bool aState)
   if (!mDragState)
   {
     mDragSelectingCells = false;
+    // Notify that reason is mouse up.
     PostReason(nsISelectionListener::MOUSEUP_REASON);
-    NotifySelectionListeners(nsISelectionController::SELECTION_NORMAL); //notify that reason is mouse up please.
+    NotifySelectionListeners(SelectionType::eNormal);
   }
 }
 
 Selection*
-nsFrameSelection::GetSelection(SelectionType aType) const
+nsFrameSelection::GetSelection(SelectionType aSelectionType) const
 {
-  int8_t index = GetIndexFromSelectionType(aType);
+  int8_t index = GetIndexFromSelectionType(aSelectionType);
   if (index < 0)
     return nullptr;
 
@@ -1824,11 +1917,11 @@ nsFrameSelection::GetSelection(SelectionType aType) const
 }
 
 nsresult
-nsFrameSelection::ScrollSelectionIntoView(SelectionType   aType,
+nsFrameSelection::ScrollSelectionIntoView(SelectionType aSelectionType,
                                           SelectionRegion aRegion,
                                           int16_t         aFlags) const
 {
-  int8_t index = GetIndexFromSelectionType(aType);
+  int8_t index = GetIndexFromSelectionType(aSelectionType);
   if (index < 0)
     return NS_ERROR_INVALID_ARG;
 
@@ -1862,9 +1955,9 @@ nsFrameSelection::ScrollSelectionIntoView(SelectionType   aType,
 }
 
 nsresult
-nsFrameSelection::RepaintSelection(SelectionType aType) const
+nsFrameSelection::RepaintSelection(SelectionType aSelectionType) const
 {
-  int8_t index = GetIndexFromSelectionType(aType);
+  int8_t index = GetIndexFromSelectionType(aSelectionType);
   if (index < 0)
     return NS_ERROR_INVALID_ARG;
   if (!mDomSelections[index])
@@ -2037,7 +2130,7 @@ nsFrameSelection::CommonPageMove(bool aForward,
 
   // find out where the caret is.
   // we should know mDesiredPos value of nsFrameSelection, but I havent seen that behavior in other windows applications yet.
-  nsISelection* domSel = GetSelection(nsISelectionController::SELECTION_NORMAL);
+  nsISelection* domSel = GetSelection(SelectionType::eNormal);
   if (!domSel) {
     return;
   }
@@ -2102,7 +2195,7 @@ nsFrameSelection::PhysicalMove(int16_t aDirection, int16_t aAmount,
     return NS_ERROR_FAILURE;
   }
 
-  int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   RefPtr<Selection> sel = mDomSelections[index];
   if (!sel) {
     return NS_ERROR_NULL_POINTER;
@@ -2259,7 +2352,7 @@ nsFrameSelection::SelectAll()
   }
   int32_t numChildren = rootContent->GetChildCount();
   PostReason(nsISelectionListener::NO_REASON);
-  int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   AutoPrepareFocusRange prep(mDomSelections[index], false, false);
   return TakeFocus(rootContent, 0, numChildren, CARET_ASSOCIATE_BEFORE, false, false);
 }
@@ -2282,15 +2375,15 @@ nsFrameSelection::EndBatchChanges(int16_t aReason)
     int16_t postReason = PopReason() | aReason;
     PostReason(postReason);
     mChangesDuringBatching = false;
-    NotifySelectionListeners(nsISelectionController::SELECTION_NORMAL);
+    NotifySelectionListeners(SelectionType::eNormal);
   }
 }
 
 
 nsresult
-nsFrameSelection::NotifySelectionListeners(SelectionType aType)
+nsFrameSelection::NotifySelectionListeners(SelectionType aSelectionType)
 {
-  int8_t index = GetIndexFromSelectionType(aType);
+  int8_t index = GetIndexFromSelectionType(aSelectionType);
   if (index >=0 && mDomSelections[index])
   {
     return mDomSelections[index]->NotifySelectionListeners();
@@ -2317,7 +2410,7 @@ nsFrameSelection::GetCellLayout(nsIContent *aCellContent) const
 nsresult
 nsFrameSelection::ClearNormalSelection()
 {
-  int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
@@ -2363,7 +2456,7 @@ nsFrameSelection::HandleTableSelection(nsINode* aParentContent,
   // When doing table selection, always set the direction to next so
   // we can be sure that anchorNode's offset always points to the
   // selected cell
-  int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
@@ -2706,8 +2799,7 @@ nsFrameSelection::UnselectCells(nsIContent *aTableContent,
                                 int32_t aEndColumnIndex,
                                 bool aRemoveOutsideOfCellRange)
 {
-  int8_t index =
-    GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
@@ -2787,7 +2879,7 @@ nsFrameSelection::AddCellsToSelection(nsIContent *aTableContent,
                                       int32_t aEndRowIndex,
                                       int32_t aEndColumnIndex)
 {
-  int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
@@ -2985,7 +3077,7 @@ nsFrameSelection::GetFirstCellNodeInRange(nsRange *aRange) const
 nsRange*
 nsFrameSelection::GetFirstCellRange()
 {
-  int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index])
     return nullptr;
 
@@ -3003,7 +3095,7 @@ nsFrameSelection::GetFirstCellRange()
 nsRange*
 nsFrameSelection::GetNextCellRange()
 {
-  int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index])
     return nullptr;
 
@@ -3230,7 +3322,7 @@ nsFrameSelection::CreateAndAddRange(nsINode *aParentNode, int32_t aOffset)
   result = range->SetEnd(aParentNode, aOffset+1);
   if (NS_FAILED(result)) return result;
   
-  int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
@@ -3244,8 +3336,7 @@ nsFrameSelection::SetAncestorLimiter(nsIContent *aLimiter)
 {
   if (mAncestorLimiter != aLimiter) {
     mAncestorLimiter = aLimiter;
-    int8_t index =
-      GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+    int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
     if (!mDomSelections[index])
       return;
 
@@ -3273,7 +3364,7 @@ nsFrameSelection::DeleteFromDocument()
 
   // If we're already collapsed, then we do nothing (bug 719503).
   bool isCollapsed;
-  int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+  int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
@@ -3323,12 +3414,12 @@ nsFrameSelection::DisconnectFromPresShell()
 {
   RefPtr<AccessibleCaretEventHub> eventHub = mShell->GetAccessibleCaretEventHub();
   if (eventHub) {
-    int8_t index = GetIndexFromSelectionType(nsISelectionController::SELECTION_NORMAL);
+    int8_t index = GetIndexFromSelectionType(SelectionType::eNormal);
     mDomSelections[index]->RemoveSelectionListener(eventHub);
   }
 
   StopAutoScrollTimer();
-  for (int32_t i = 0; i < nsISelectionController::NUM_SELECTIONTYPES; i++) {
+  for (size_t i = 0; i < kPresentSelectionTypeCount; i++) {
     mDomSelections[i]->Clear(nullptr);
   }
   mShell = nullptr;
@@ -3347,7 +3438,7 @@ nsFrameSelection::DisconnectFromPresShell()
 Selection::Selection()
   : mCachedOffsetForFrame(nullptr)
   , mDirection(eDirNext)
-  , mType(nsISelectionController::SELECTION_NORMAL)
+  , mSelectionType(SelectionType::eNormal)
   , mUserInitiated(false)
   , mSelectionChangeBlockerCount(0)
 {
@@ -3357,7 +3448,7 @@ Selection::Selection(nsFrameSelection* aList)
   : mFrameSelection(aList)
   , mCachedOffsetForFrame(nullptr)
   , mDirection(eDirNext)
-  , mType(nsISelectionController::SELECTION_NORMAL)
+  , mSelectionType(SelectionType::eNormal)
   , mUserInitiated(false)
   , mSelectionChangeBlockerCount(0)
 {
@@ -3721,7 +3812,8 @@ Selection::AddItem(nsRange* aItem, int32_t* aOutIndex, bool aNoStartSelect)
     AutoTArray<RefPtr<nsRange>, 4> rangesToAdd;
     *aOutIndex = -1;
 
-    if (!aNoStartSelect && mType == nsISelectionController::SELECTION_NORMAL &&
+    if (!aNoStartSelect &&
+        mSelectionType == SelectionType::eNormal &&
         nsFrameSelection::sSelectionEventsEnabled && Collapsed() &&
         !IsBlockingSelectionChangeEvents()) {
       // First, we generate the ranges to add with a scratch range, which is a
@@ -3962,8 +4054,7 @@ NS_IMETHODIMP
 Selection::GetType(int16_t* aType)
 {
   NS_ENSURE_ARG_POINTER(aType);
-  *aType = Type();
-
+  *aType = ToRawSelectionType(Type());
   return NS_OK;
 }
 
@@ -4313,7 +4404,8 @@ Selection::SelectAllFramesForContent(nsIContentIterator* aInnerIter,
     frame = aContent->GetPrimaryFrame();
     if (frame && frame->GetType() == nsGkAtoms::textFrame) {
       nsTextFrame* textFrame = static_cast<nsTextFrame*>(frame);
-      textFrame->SetSelectedRange(0, aContent->GetText()->GetLength(), aSelected, mType);
+      textFrame->SetSelectedRange(0, aContent->GetText()->GetLength(),
+                                  aSelected, mSelectionType);
     }
     // Now iterated through the child frames and set them
     while (!aInnerIter->IsDone()) {
@@ -4324,7 +4416,8 @@ Selection::SelectAllFramesForContent(nsIContentIterator* aInnerIter,
       if (frame) {
         if (frame->GetType() == nsGkAtoms::textFrame) {
           nsTextFrame* textFrame = static_cast<nsTextFrame*>(frame);
-          textFrame->SetSelectedRange(0, innercontent->GetText()->GetLength(), aSelected, mType);
+          textFrame->SetSelectedRange(0, innercontent->GetText()->GetLength(),
+                                      aSelected, mSelectionType);
         } else {
           frame->InvalidateFrameSubtree();  // frame continuations?
         }
@@ -4387,7 +4480,8 @@ Selection::selectFrames(nsPresContext* aPresContext, nsRange* aRange,
       } else {
         endOffset = content->Length();
       }
-      textFrame->SetSelectedRange(startOffset, endOffset, aSelect, mType);
+      textFrame->SetSelectedRange(startOffset, endOffset, aSelect,
+                                  mSelectionType);
     }
   }
 
@@ -4410,7 +4504,8 @@ Selection::selectFrames(nsPresContext* aPresContext, nsRange* aRange,
       // The frame could be an SVG text frame, in which case we'll ignore it.
       if (frame && frame->GetType() == nsGkAtoms::textFrame) {
         nsTextFrame* textFrame = static_cast<nsTextFrame*>(frame);
-        textFrame->SetSelectedRange(0, aRange->EndOffset(), aSelect, mType);
+        textFrame->SetSelectedRange(0, aRange->EndOffset(), aSelect,
+                                    mSelectionType);
       }
     }
   }
@@ -4446,7 +4541,8 @@ NS_IMETHODIMP
 Selection::LookUpSelection(nsIContent* aContent, int32_t aContentOffset,
                            int32_t aContentLength,
                            SelectionDetails** aReturnDetails,
-                           SelectionType aType, bool aSlowCheck)
+                           SelectionType aSelectionType,
+                           bool aSlowCheck)
 {
   nsresult rv;
   if (!aContent || ! aReturnDetails)
@@ -4512,7 +4608,7 @@ Selection::LookUpSelection(nsIContent* aContent, int32_t aContentOffset,
     details->mNext = *aReturnDetails;
     details->mStart = start;
     details->mEnd = end;
-    details->mType = aType;
+    details->mSelectionType = aSelectionType;
     RangeData *rd = FindRangeData(range);
     if (rd) {
       details->mTextRangeStyle = rd->mTextRangeStyle;
@@ -4828,8 +4924,9 @@ Selection::AddRange(nsRange& aRange, ErrorResult& aRv)
   setAnchorFocusRange(rangeIndex);
   
   // Make sure the caret appears on the next line, if at a newline
-  if (mType == nsISelectionController::SELECTION_NORMAL)
+  if (mSelectionType == SelectionType::eNormal) {
     SetInterlinePosition(true);
+  }
 
   RefPtr<nsPresContext>  presContext = GetPresContext();
   selectFrames(presContext, &aRange, true);
@@ -4924,8 +5021,9 @@ Selection::RemoveRange(nsRange& aRange, ErrorResult& aRv)
     // into view. The spell-check selection, however, is created and destroyed
     // in the background. We don't want to scroll in this case or the view
     // might appear to be moving randomly (bug 337871).
-    if (mType != nsISelectionController::SELECTION_SPELLCHECK && cnt > 0)
+    if (mSelectionType != SelectionType::eSpellCheck && cnt > 0) {
       ScrollIntoView(nsISelectionController::SELECTION_FOCUS_REGION);
+    }
   }
 
   if (!mFrameSelection)
@@ -6331,9 +6429,8 @@ Selection::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 
 // AutoHideSelectionChanges
 AutoHideSelectionChanges::AutoHideSelectionChanges(const nsFrameSelection* aFrame)
-  : AutoHideSelectionChanges(aFrame ?
-                             aFrame->GetSelection(nsISelectionController::SELECTION_NORMAL) :
-                             nullptr)
+  : AutoHideSelectionChanges(
+      aFrame ? aFrame->GetSelection(SelectionType::eNormal) : nullptr)
 {}
 
 // nsAutoCopyListener

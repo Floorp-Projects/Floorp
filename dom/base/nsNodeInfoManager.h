@@ -13,7 +13,6 @@
 
 #include "mozilla/Attributes.h"           // for final
 #include "nsCOMPtr.h"                     // for member
-#include "nsAutoPtr.h"                    // for nsRefPtr
 #include "nsCycleCollectionParticipant.h" // for NS_DECL_CYCLE_*
 #include "plhash.h"                       // for typedef PLHashNumber
 

@@ -7,7 +7,6 @@
 #ifndef mozilla_dom_SpeakerManagerService_h__
 #define mozilla_dom_SpeakerManagerService_h__
 
-#include "nsAutoPtr.h"
 #include "nsIObserver.h"
 #include "nsTArray.h"
 #include "SpeakerManager.h"

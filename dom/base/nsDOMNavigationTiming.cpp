@@ -25,7 +25,7 @@ nsDOMNavigationTiming::~nsDOMNavigationTiming()
 void
 nsDOMNavigationTiming::Clear()
 {
-  mNavigationType = mozilla::dom::PerformanceNavigation::TYPE_RESERVED;
+  mNavigationType = TYPE_RESERVED;
   mNavigationStartHighRes = 0;
   mBeforeUnloadStart = 0;
   mUnloadStart = 0;
@@ -70,7 +70,7 @@ nsDOMNavigationTiming::NotifyNavigationStart()
 }
 
 void
-nsDOMNavigationTiming::NotifyFetchStart(nsIURI* aURI, nsDOMPerformanceNavigationType aNavigationType)
+nsDOMNavigationTiming::NotifyFetchStart(nsIURI* aURI, Type aNavigationType)
 {
   mNavigationType = aNavigationType;
   // At the unload event time we don't really know the loading uri.
@@ -202,4 +202,3 @@ nsDOMNavigationTiming::GetUnloadEventEnd()
   }
   return 0;
 }
-

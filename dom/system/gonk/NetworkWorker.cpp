@@ -9,6 +9,7 @@
 #include "mozilla/ClearOnShutdown.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/ToJSValue.h"
+#include "nsAutoPtr.h"
 #include "nsXULAppAPI.h"
 
 #define NS_NETWORKWORKER_CID \

@@ -35,7 +35,7 @@ namespace mozilla {
 
 namespace net {
 //
-// set NSPR_LOG_MODULES=TCPSocket:5
+// set MOZ_LOG=TCPSocket:5
 //
 extern LazyLogModule gTCPSocketLog;
 #define TCPSOCKET_LOG(args)     MOZ_LOG(gTCPSocketLog, LogLevel::Debug, args)

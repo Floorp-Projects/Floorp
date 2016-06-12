@@ -7,6 +7,7 @@
 #define MASKLAYERIMAGECACHE_H_
 
 #include "DisplayItemClip.h"
+#include "nsAutoPtr.h"
 #include "nsPresContext.h"
 #include "mozilla/gfx/Matrix.h"
 

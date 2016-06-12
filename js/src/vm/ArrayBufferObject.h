@@ -85,6 +85,10 @@ class ArrayBufferObjectMaybeShared : public NativeObject
     inline SharedMem<uint8_t*> dataPointerEither();
 };
 
+typedef Rooted<ArrayBufferObjectMaybeShared*> RootedArrayBufferObjectMaybeShared;
+typedef Handle<ArrayBufferObjectMaybeShared*> HandleArrayBufferObjectMaybeShared;
+typedef MutableHandle<ArrayBufferObjectMaybeShared*> MutableHandleArrayBufferObjectMaybeShared;
+
 /*
  * ArrayBufferObject
  *
@@ -368,6 +372,10 @@ class ArrayBufferObject : public ArrayBufferObjectMaybeShared
         setDataPointer(contents, ownsState);
     }
 };
+
+typedef Rooted<ArrayBufferObject*> RootedArrayBufferObject;
+typedef Handle<ArrayBufferObject*> HandleArrayBufferObject;
+typedef MutableHandle<ArrayBufferObject*> MutableHandleArrayBufferObject;
 
 /*
  * ArrayBufferViewObject

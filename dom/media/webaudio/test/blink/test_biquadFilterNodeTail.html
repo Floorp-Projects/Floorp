@@ -1,0 +1,76 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test BiquadFilterNode All Pass Filter</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<pre id="test">
+<script src="audio-testing.js"></script>
+<script src="biquad-filters.js"></script>
+<script src="biquad-testing.js"></script>
+<script src="webaudio.js" type="text/javascript"></script>
+<script class="testbody" type="text/javascript">
+
+SimpleTest.waitForExplicitFinish();
+
+addLoadEvent(function() {
+  // A high sample rate shows the issue more clearly.
+  var sampleRate = 192000;
+  // Some short duration because we don't need to run the test for very long.
+  var testDurationSec = 0.5;
+  var testDurationFrames = testDurationSec * sampleRate;
+
+  // Amplitude experimentally determined to give a biquad output close to 1. (No attempt was
+  // made to produce exactly 1; it's not needed.)
+  var sourceAmplitude = 100;
+
+  // The output of the biquad filter should not change by more than this much between output
+  // samples.  Threshold was determined experimentally.
+  var glitchThreshold = 0.01292;
+
+  // Test that a Biquad filter doesn't have it's output terminated because the input has gone
+  // away.  Generally, when a source node is finished, it disconnects itself from any downstream
+  // nodes.  This is the correct behavior.  Nodes that have no inputs (disconnected) are
+  // generally assumed to output zeroes.  This is also desired behavior.  However, biquad
+  // filters have memory so they should not suddenly output zeroes when the input is
+  // disconnected.  This test checks to see if the output doesn't suddenly change to zero.
+  var context = new OfflineAudioContext(1, testDurationFrames, sampleRate);
+
+  // Create an impulse source.
+  var buffer = context.createBuffer(1, 1, context.sampleRate);
+  buffer.getChannelData(0)[0] = sourceAmplitude;
+  var source = context.createBufferSource();
+  source.buffer = buffer;
+
+  // Create the biquad filter. It doesn't really matter what kind, so the default filter type
+  // and parameters is fine.  Connect the source to it.
+  var biquad = context.createBiquadFilter();
+  source.connect(biquad);
+  biquad.connect(context.destination);
+
+  source.start();
+
+  context.startRendering().then(function(result) {
+    // There should be no large discontinuities in the output
+    var buffer = result.getChannelData(0);
+    var maxGlitchIndex = 0;
+    var maxGlitchValue = 0.0;
+    for (var i = 1; i < buffer.length; i++) {
+      var diff = Math.abs(buffer[i-1] - buffer[i]);
+      if (diff >= glitchThreshold) {
+        if (diff > maxGlitchValue) {
+          maxGlitchIndex = i;
+          maxGlitchValue = diff;
+        }
+      }
+    }
+    ok(maxGlitchIndex == 0, 'glitches detected in biquad output: maximum glitch at ' + maxGlitchIndex + ' with diff of ' + maxGlitchValue);
+    SimpleTest.finish();
+  })
+});
+</script>
+</pre>
+</body>
+</html>

@@ -70,7 +70,6 @@
 // CSS related includes
 #include "nsCSSRules.h"
 #include "nsIDOMCSSRule.h"
-#include "nsAutoPtr.h"
 #include "nsMemory.h"
 
 // includes needed for the prototype chain interfaces

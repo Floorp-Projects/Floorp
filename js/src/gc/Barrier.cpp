@@ -9,7 +9,7 @@
 #include "jscompartment.h"
 #include "jsobj.h"
 
-#include "asmjs/WasmModule.h"
+#include "asmjs/WasmJS.h"
 #include "builtin/TypedObject.h"
 #include "gc/Policy.h"
 #include "gc/Zone.h"
@@ -152,7 +152,7 @@ template struct MovableCellHasher<JSObject*>;
 template struct MovableCellHasher<GlobalObject*>;
 template struct MovableCellHasher<SavedFrame*>;
 template struct MovableCellHasher<ScopeObject*>;
-template struct MovableCellHasher<WasmModuleObject*>;
+template struct MovableCellHasher<WasmInstanceObject*>;
 template struct MovableCellHasher<JSScript*>;
 
 } // namespace js

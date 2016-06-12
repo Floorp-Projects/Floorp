@@ -19,7 +19,6 @@
 #include "mozilla/dom/ScriptSettings.h"
 
 #include "nsError.h"
-#include "nsAutoPtr.h"
 #include "nsContentUtils.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsIScriptObjectPrincipal.h"

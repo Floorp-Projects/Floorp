@@ -7,7 +7,6 @@
 #include "mozilla/TaskQueue.h"
 
 #include "nsThreadUtils.h"
-#include "nsAutoPtr.h"
 #include "ImageContainer.h"
 
 #include "MediaInfo.h"

@@ -8,7 +8,6 @@
 #define mozilla_dom_CameraCapabilities_h__
 
 #include "nsString.h"
-#include "nsAutoPtr.h"
 #include "base/basictypes.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"

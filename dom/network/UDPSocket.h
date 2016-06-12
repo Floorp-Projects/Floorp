@@ -19,7 +19,7 @@
 struct JSContext;
 
 //
-// set NSPR_LOG_MODULES=UDPSocket:5
+// set MOZ_LOG=UDPSocket:5
 //
 
 namespace mozilla {

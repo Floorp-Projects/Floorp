@@ -8,6 +8,7 @@
 #define mozilla_dom_SVGSVGElement_h
 
 #include "mozilla/dom/FromParser.h"
+#include "nsAutoPtr.h"
 #include "nsISVGPoint.h"
 #include "nsSVGEnum.h"
 #include "nsSVGLength2.h"
