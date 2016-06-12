@@ -30,12 +30,6 @@ class ServiceWorker;
 class WorkerPrivate;
 } // namespace workers
 
-bool
-ServiceWorkerRegistrationVisible(JSContext* aCx, JSObject* aObj);
-
-bool
-ServiceWorkerNotificationAPIVisible(JSContext* aCx, JSObject* aObj);
-
 // Used by ServiceWorkerManager to notify ServiceWorkerRegistrations of
 // updatefound event and invalidating ServiceWorker instances.
 class ServiceWorkerRegistrationListener
@@ -57,18 +51,30 @@ public:
   GetScope(nsAString& aScope) const = 0;
 };
 
-class ServiceWorkerRegistrationBase : public DOMEventTargetHelper
+class ServiceWorkerRegistration : public DOMEventTargetHelper
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
 
   IMPL_EVENT_HANDLER(updatefound)
 
-  ServiceWorkerRegistrationBase(nsPIDOMWindowInner* aWindow,
-                                const nsAString& aScope);
+  static bool
+  Visible(JSContext* aCx, JSObject* aObj);
+
+  static bool
+  NotificationAPIVisible(JSContext* aCx, JSObject* aObj);
+
+
+  static already_AddRefed<ServiceWorkerRegistration>
+  CreateForMainThread(nsPIDOMWindowInner* aWindow,
+                      const nsAString& aScope);
+
+  static already_AddRefed<ServiceWorkerRegistration>
+  CreateForWorker(workers::WorkerPrivate* aWorkerPrivate,
+                  const nsAString& aScope);
 
   JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override = 0;
+  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   virtual already_AddRefed<workers::ServiceWorker>
   GetInstalling() = 0;
@@ -79,178 +85,38 @@ public:
   virtual already_AddRefed<workers::ServiceWorker>
   GetActive() = 0;
 
+  virtual void
+  GetScope(nsAString& aScope) const = 0;
+
+  virtual already_AddRefed<Promise>
+  Update(ErrorResult& aRv) = 0;
+
+  virtual already_AddRefed<Promise>
+  Unregister(ErrorResult& aRv) = 0;
+
+  virtual already_AddRefed<PushManager>
+  GetPushManager(JSContext* aCx, ErrorResult& aRv) = 0;
+
+  virtual already_AddRefed<Promise>
+  ShowNotification(JSContext* aCx,
+                   const nsAString& aTitle,
+                   const NotificationOptions& aOptions,
+                   ErrorResult& aRv) = 0;
+
+  virtual already_AddRefed<Promise>
+  GetNotifications(const GetNotificationOptions& aOptions,
+                   ErrorResult& aRv) = 0;
+
 protected:
-  virtual ~ServiceWorkerRegistrationBase()
+  ServiceWorkerRegistration(nsPIDOMWindowInner* aWindow,
+                            const nsAString& aScope);
+
+  virtual ~ServiceWorkerRegistration()
   { }
 
   const nsString mScope;
 };
 
-class ServiceWorkerRegistrationMainThread final : public ServiceWorkerRegistrationBase,
-                                                  public ServiceWorkerRegistrationListener
-{
-  friend nsPIDOMWindowInner;
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorkerRegistrationMainThread,
-                                           ServiceWorkerRegistrationBase)
-
-  already_AddRefed<Promise>
-  Update(ErrorResult& aRv);
-
-  already_AddRefed<Promise>
-  Unregister(ErrorResult& aRv);
-
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-
-  // Partial interface from Notification API.
-  already_AddRefed<Promise>
-  ShowNotification(JSContext* aCx,
-                   const nsAString& aTitle,
-                   const NotificationOptions& aOptions,
-                   ErrorResult& aRv);
-
-  already_AddRefed<Promise>
-  GetNotifications(const GetNotificationOptions& aOptions, ErrorResult& aRv);
-
-  already_AddRefed<workers::ServiceWorker>
-  GetInstalling() override;
-
-  already_AddRefed<workers::ServiceWorker>
-  GetWaiting() override;
-
-  already_AddRefed<workers::ServiceWorker>
-  GetActive() override;
-
-  already_AddRefed<PushManager>
-  GetPushManager(JSContext* aCx, ErrorResult& aRv);
-
-  // DOMEventTargethelper
-  void DisconnectFromOwner() override
-  {
-    StopListeningForEvents();
-    ServiceWorkerRegistrationBase::DisconnectFromOwner();
-  }
-
-  // ServiceWorkerRegistrationListener
-  void
-  UpdateFound() override;
-
-  void
-  InvalidateWorkers(WhichServiceWorker aWhichOnes) override;
-
-  void
-  RegistrationRemoved() override;
-
-  void
-  GetScope(nsAString& aScope) const override
-  {
-    aScope = mScope;
-  }
-
-private:
-  ServiceWorkerRegistrationMainThread(nsPIDOMWindowInner* aWindow,
-                                      const nsAString& aScope);
-  ~ServiceWorkerRegistrationMainThread();
-
-  already_AddRefed<workers::ServiceWorker>
-  GetWorkerReference(WhichServiceWorker aWhichOne);
-
-  void
-  StartListeningForEvents();
-
-  void
-  StopListeningForEvents();
-
-  bool mListeningForEvents;
-
-  // The following properties are cached here to ensure JS equality is satisfied
-  // instead of acquiring a new worker instance from the ServiceWorkerManager
-  // for every access. A null value is considered a cache miss.
-  // These three may change to a new worker at any time.
-  RefPtr<workers::ServiceWorker> mInstallingWorker;
-  RefPtr<workers::ServiceWorker> mWaitingWorker;
-  RefPtr<workers::ServiceWorker> mActiveWorker;
-
-#ifndef MOZ_SIMPLEPUSH
-  RefPtr<PushManager> mPushManager;
-#endif
-};
-
-class ServiceWorkerRegistrationWorkerThread final : public ServiceWorkerRegistrationBase
-                                                  , public workers::WorkerFeature
-{
-public:
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(ServiceWorkerRegistrationWorkerThread,
-                                           ServiceWorkerRegistrationBase)
-
-  ServiceWorkerRegistrationWorkerThread(workers::WorkerPrivate* aWorkerPrivate,
-                                        const nsAString& aScope);
-
-  already_AddRefed<Promise>
-  Update(ErrorResult& aRv);
-
-  already_AddRefed<Promise>
-  Unregister(ErrorResult& aRv);
-
-  JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-
-  // Partial interface from Notification API.
-  already_AddRefed<Promise>
-  ShowNotification(JSContext* aCx,
-                   const nsAString& aTitle,
-                   const NotificationOptions& aOptions,
-                   ErrorResult& aRv);
-
-  already_AddRefed<Promise>
-  GetNotifications(const GetNotificationOptions& aOptions, ErrorResult& aRv);
-
-  already_AddRefed<workers::ServiceWorker>
-  GetInstalling() override;
-
-  already_AddRefed<workers::ServiceWorker>
-  GetWaiting() override;
-
-  already_AddRefed<workers::ServiceWorker>
-  GetActive() override;
-
-  void
-  GetScope(nsAString& aScope) const
-  {
-    aScope = mScope;
-  }
-
-  bool
-  Notify(workers::Status aStatus) override;
-
-  already_AddRefed<PushManager>
-  GetPushManager(ErrorResult& aRv);
-
-private:
-  enum Reason
-  {
-    RegistrationIsGoingAway = 0,
-    WorkerIsGoingAway,
-  };
-
-  ~ServiceWorkerRegistrationWorkerThread();
-
-  void
-  InitListener();
-
-  void
-  ReleaseListener(Reason aReason);
-
-  workers::WorkerPrivate* mWorkerPrivate;
-  RefPtr<WorkerListener> mListener;
-
-#ifndef MOZ_SIMPLEPUSH
-  RefPtr<PushManager> mPushManager;
-#endif
-};
 
 } // namespace dom
 } // namespace mozilla

@@ -570,12 +570,12 @@ ServiceWorkerGlobalScope::Clients()
   return mClients;
 }
 
-ServiceWorkerRegistrationWorkerThread*
+ServiceWorkerRegistration*
 ServiceWorkerGlobalScope::Registration()
 {
   if (!mRegistration) {
     mRegistration =
-      new ServiceWorkerRegistrationWorkerThread(mWorkerPrivate, mScope);
+      ServiceWorkerRegistration::CreateForWorker(mWorkerPrivate, mScope);
   }
 
   return mRegistration;
