@@ -25,6 +25,7 @@ const RECENT_DATA_THRESHOLD = 5 * 1000000;
 // onCreatedNavigationTarget
 
 var Manager = {
+  // Map[string -> Map[listener -> URLFilter]]
   listeners: new Map(),
 
   init() {
@@ -57,16 +58,16 @@ var Manager = {
     Services.mm.broadcastAsyncMessage("Extension:DisableWebNavigation");
   },
 
-  addListener(type, listener) {
+  addListener(type, listener, filters) {
     if (this.listeners.size == 0) {
       this.init();
     }
 
     if (!this.listeners.has(type)) {
-      this.listeners.set(type, new Set());
+      this.listeners.set(type, new Map());
     }
     let listeners = this.listeners.get(type);
-    listeners.add(listener);
+    listeners.set(listener, filters);
   },
 
   removeListener(type, listener) {
@@ -339,8 +340,11 @@ var Manager = {
       details[prop] = extra[prop];
     }
 
-    for (let listener of listeners) {
-      listener(details);
+    for (let [listener, filters] of listeners) {
+      // Call the listener if the listener has no filter or if its filter matches.
+      if (!filters || filters.matches(extra.url)) {
+        listener(details);
+      }
     }
   },
 };

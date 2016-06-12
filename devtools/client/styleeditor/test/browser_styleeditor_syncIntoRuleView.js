@@ -8,7 +8,6 @@
 
 const TEST_URI = `
   <style type='text/css'>
-    div { background-color: seagreen; }
   </style>
   <div id='testid' class='testclass'>Styled Node</div>
 `;

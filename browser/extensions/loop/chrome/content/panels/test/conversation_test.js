@@ -10,10 +10,13 @@ describe("loop.conversation", function () {
   var TestUtils = React.addons.TestUtils;
   var sharedActions = loop.shared.actions;
   var fakeWindow, sandbox, setLoopPrefStub, mozL10nGet, 
-  remoteCursorStore, dispatcher, requestStubs;
+  remoteCursorStore, dispatcher, requestStubs, clock;
 
   beforeEach(function () {
     sandbox = LoopMochaUtils.createSandbox();
+    // This ensures that the timers in ConversationToolbar are stubbed, as the
+    // get called when the AppControllerView is mounted.
+    clock = sandbox.useFakeTimers();
     setLoopPrefStub = sandbox.stub();
 
     LoopMochaUtils.stubLoopRequest(requestStubs = { 
@@ -98,6 +101,7 @@ describe("loop.conversation", function () {
 
   afterEach(function () {
     loop.shared.mixins.setRootObject(window);
+    clock.restore();
     sandbox.restore();
     LoopMochaUtils.restore();});
 

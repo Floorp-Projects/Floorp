@@ -8,7 +8,7 @@ var Services = require("Services");
 var { DebuggerClient } = require("devtools/shared/client/main");
 var { DebuggerServer } = require("devtools/server/main");
 
-var { MemoryFront } = require("devtools/server/actors/memory");
+var { MemoryFront } = require("devtools/shared/fronts/memory");
 
 // Always log packets when running tests.
 Services.prefs.setBoolPref("devtools.debugger.log", true);

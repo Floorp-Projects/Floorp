@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 /* import-globals-from helper_html_tooltip.js */
-
 "use strict";
 
 /**
@@ -32,13 +31,14 @@ add_task(function* () {
   yield addTab("about:blank");
   let [,, doc] = yield createHost("bottom", TEST_URI);
 
-  yield testTooltipNotClosingOnInsideClick(doc);
+  yield testClickInTooltipContent(doc);
   yield testConsumeOutsideClicksFalse(doc);
   yield testConsumeOutsideClicksTrue(doc);
-  yield testClickInsideIframe(doc);
+  yield testClickInOuterIframe(doc);
+  yield testClickInInnerIframe(doc);
 });
 
-function* testTooltipNotClosingOnInsideClick(doc) {
+function* testClickInTooltipContent(doc) {
   info("Test a tooltip is not closed when clicking inside itself");
 
   let tooltip = new HTMLTooltip({doc}, {});
@@ -94,8 +94,8 @@ function* testConsumeOutsideClicksTrue(doc) {
   tooltip.destroy();
 }
 
-function* testClickInsideIframe(doc) {
-  info("Test closing a tooltip via click inside an iframe");
+function* testClickInOuterIframe(doc) {
+  info("Test clicking an iframe outside of the tooltip closes the tooltip");
   let frame = doc.getElementById("frame");
 
   let tooltip = new HTMLTooltip({doc});
@@ -107,6 +107,26 @@ function* testClickInsideIframe(doc) {
   yield onHidden;
 
   is(tooltip.isVisible(), false, "Tooltip is hidden");
+  tooltip.destroy();
+}
+
+function* testClickInInnerIframe(doc) {
+  info("Test clicking an iframe inside the tooltip content does not close the tooltip");
+
+  let tooltip = new HTMLTooltip({doc}, {consumeOutsideClicks: false});
+
+  let iframe = doc.createElementNS(HTML_NS, "iframe");
+  iframe.style.width = "100px";
+  iframe.style.height = "50px";
+  yield tooltip.setContent(iframe, 100, 50);
+  yield showTooltip(tooltip, doc.getElementById("box1"));
+
+  let onTooltipContainerClick = once(tooltip.container, "click");
+  EventUtils.synthesizeMouseAtCenter(tooltip.container, {}, doc.defaultView);
+  yield onTooltipContainerClick;
+
+  is(tooltip.isVisible(), true, "Tooltip is still visible");
+
   tooltip.destroy();
 }
 
