@@ -37,7 +37,7 @@ function startNewTabTestCase(aTestNumber) {
       let firstContext = menupopup.firstChild;
       is(firstContext.nodeType, Node.ELEMENT_NODE, "We have a first container entry.");
       ok(firstContext.hasAttribute("usercontextid"), "We have a usercontextid value.");
-      is("1", firstContext.getAttribute("usercontextid"), "We have the right usercontextid value.");
+      is("0", firstContext.getAttribute("usercontextid"), "We have the right usercontextid value.");
 
       aContextMenu.addEventListener("popuphidden", function onPopupHidden() {
         aContextMenu.removeEventListener("popuphidden", onPopupHidden);
