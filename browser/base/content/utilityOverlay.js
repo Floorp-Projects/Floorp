@@ -415,7 +415,7 @@ function checkForMiddleClick(node, event) {
 // Populate a menu with user-context menu items. This method should be called
 // by onpopupshowing passing the event as first argument. addCommandAttribute
 // param is used to set the 'command' attribute in the new menuitem elements.
-function createUserContextMenu(event, addCommandAttribute = true) {
+function createUserContextMenu(event, addCommandAttribute = true, excludeUserContextId = 0) {
   while (event.target.hasChildNodes()) {
     event.target.removeChild(event.target.firstChild);
   }
@@ -423,7 +423,28 @@ function createUserContextMenu(event, addCommandAttribute = true) {
   let bundle = document.getElementById("bundle_browser");
   let docfrag = document.createDocumentFragment();
 
+  // If we are excluding a userContextId, we want to add a 'no-container' item.
+  if (excludeUserContextId) {
+    let menuitem = document.createElement("menuitem");
+    menuitem.setAttribute("usercontextid", "0");
+    menuitem.setAttribute("label", bundle.getString("userContextNone.label"));
+    menuitem.setAttribute("accesskey", bundle.getString("userContextNone.accesskey"));
+
+    // We don't set an oncommand/command attribute attribute because if we have
+    // to exclude a userContextId we are generating the contextMenu and
+    // addCommandAttribute will be false.
+
+    docfrag.appendChild(menuitem);
+
+    let menuseparator = document.createElement("menuseparator");
+    docfrag.appendChild(menuseparator);
+  }
+
   ContextualIdentityService.getIdentities().forEach(identity => {
+    if (identity.userContextId == excludeUserContextId) {
+      return;
+    }
+
     let menuitem = document.createElement("menuitem");
     menuitem.setAttribute("usercontextid", identity.userContextId);
     menuitem.setAttribute("label", bundle.getString(identity.label));
