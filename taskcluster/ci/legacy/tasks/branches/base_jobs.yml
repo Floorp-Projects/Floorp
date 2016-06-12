@@ -15,8 +15,6 @@ builds:
   linux:
     platforms:
       - Linux
-    extra-builds:  # see RIDEALONG_BUILDS in `mach taskgraph`
-      - linux-l10n
     types:
       opt:
         task: tasks/builds/opt_linux32.yml
@@ -26,7 +24,6 @@ builds:
     platforms:
       - Linux64
     extra-builds:  # see RIDEALONG_BUILDS in `mach taskgraph`
-      - linux64-l10n
       - sm-plain
       - sm-nonunified
       - sm-arm-sim
