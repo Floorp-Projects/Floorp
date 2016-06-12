@@ -23,4 +23,4 @@ RUN_MAKE_CHECKS=false AUTOMATION=1 ./devtools/automation/autospider.sh $SPIDERMO
 popd
 
 # Copy artifacts for upload by TaskCluster
-cp -rL ./mozjs-*/obj-spider/dist/bin/{js,jsapi-tests,js-gdb.py} $UPLOAD_DIR
+cp -rL ./mozjs-*/obj-spider/dist/bin/{js,jsapi-tests,js-gdb.py,libmozjs*} $UPLOAD_DIR
