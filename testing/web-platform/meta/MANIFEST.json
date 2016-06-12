@@ -36374,6 +36374,20 @@
             "path": "XMLHttpRequest/xmlhttprequest-sync-not-hang-scriptloader.html",
               "url": "/XMLHttpRequest/xmlhttprequest-sync-not-hang-scriptloader.html"
           }
+        ],
+        "editing/run/justifycenter.html": [
+          {
+            "path": "editing/run/justifycenter.html",
+            "timeout": "long",
+            "url": "/editing/run/justifycenter.html"
+          }
+        ],
+        "editing/run/multitest.html": [
+          {
+            "path": "editing/run/multitest.html",
+            "timeout": "long",
+            "url": "/editing/run/multitest.html"
+          }
         ]
       }
     },
