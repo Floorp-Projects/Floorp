@@ -135,7 +135,7 @@ struct ExportMap
     WASM_DECLARE_SERIALIZABLE(ExportMap)
 };
 
-// Module represents a compiled wasm module and primarily provides two 
+// Module represents a compiled wasm module and primarily provides two
 // operations: instantiation and serialization. A Module can be instantiated any
 // number of times to produce new Instance objects. A Module can be serialized
 // any number of times such that the serialized bytes can be deserialized later

@@ -409,7 +409,8 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
 
     ImportVector          imports;
     ExportVector          exports;
-    HeapAccessVector      heapAccesses;
+    MemoryAccessVector    memoryAccesses;
+    BoundsCheckVector     boundsChecks;
     CodeRangeVector       codeRanges;
     CallSiteVector        callSites;
     CallThunkVector       callThunks;
