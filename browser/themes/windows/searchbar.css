@@ -26,8 +26,7 @@
 .searchbar-engine-image {
   height: 16px;
   width: 16px;
-  list-style-image: url("chrome://global/skin/icons/folder-item.png");
-  -moz-image-region: rect(0px, 16px, 16px, 0px);
+  list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
   margin-inline-start: -1px;
 }
 
