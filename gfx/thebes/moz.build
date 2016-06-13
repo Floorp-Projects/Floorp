@@ -39,7 +39,6 @@ EXPORTS += [
     'gfxQuaternion.h',
     'gfxRect.h',
     'gfxSharedImageSurface.h',
-    'gfxSharedQuartzSurface.h',
     'gfxSkipChars.h',
     'gfxSVGGlyphs.h',
     'gfxTextRun.h',
