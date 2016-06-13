@@ -707,7 +707,8 @@ class AssemblerShared
 {
     wasm::CallSiteAndTargetVector callsites_;
     wasm::JumpSiteArray jumpsites_;
-    wasm::HeapAccessVector heapAccesses_;
+    wasm::MemoryAccessVector memoryAccesses_;
+    wasm::BoundsCheckVector boundsChecks_;
     Vector<AsmJSGlobalAccess, 0, SystemAllocPolicy> asmJSGlobalAccesses_;
     Vector<AsmJSAbsoluteAddress, 0, SystemAllocPolicy> asmJSAbsoluteAddresses_;
 
@@ -755,8 +756,11 @@ class AssemblerShared
     const wasm::JumpSiteArray& jumpSites() { return jumpsites_; }
     void clearJumpSites() { for (auto& v : jumpsites_) v.clear(); }
 
-    void append(wasm::HeapAccess access) { enoughMemory_ &= heapAccesses_.append(access); }
-    wasm::HeapAccessVector&& extractHeapAccesses() { return Move(heapAccesses_); }
+    void append(wasm::MemoryAccess access) { enoughMemory_ &= memoryAccesses_.append(access); }
+    wasm::MemoryAccessVector&& extractMemoryAccesses() { return Move(memoryAccesses_); }
+
+    void append(wasm::BoundsCheck check) { enoughMemory_ &= boundsChecks_.append(check); }
+    wasm::BoundsCheckVector&& extractBoundsChecks() { return Move(boundsChecks_); }
 
     void append(AsmJSGlobalAccess access) { enoughMemory_ &= asmJSGlobalAccesses_.append(access); }
     size_t numAsmJSGlobalAccesses() const { return asmJSGlobalAccesses_.length(); }
@@ -794,10 +798,15 @@ class AssemblerShared
                 offsets[i] += delta;
         }
 
-        i = heapAccesses_.length();
-        enoughMemory_ &= heapAccesses_.appendAll(other.heapAccesses_);
-        for (; i < heapAccesses_.length(); i++)
-            heapAccesses_[i].offsetInsnOffsetBy(delta);
+        i = memoryAccesses_.length();
+        enoughMemory_ &= memoryAccesses_.appendAll(other.memoryAccesses_);
+        for (; i < memoryAccesses_.length(); i++)
+            memoryAccesses_[i].offsetBy(delta);
+
+        i = boundsChecks_.length();
+        enoughMemory_ &= boundsChecks_.appendAll(other.boundsChecks_);
+        for (; i < boundsChecks_.length(); i++)
+            boundsChecks_[i].offsetBy(delta);
 
         i = asmJSGlobalAccesses_.length();
         enoughMemory_ &= asmJSGlobalAccesses_.appendAll(other.asmJSGlobalAccesses_);

@@ -602,12 +602,11 @@ ComputeAccessAddress(EMULATOR_CONTEXT* context, const Disassembler::ComplexAddre
 
 MOZ_COLD static uint8_t*
 EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddress,
-                  const HeapAccess* heapAccess, const Instance& instance)
+                  const MemoryAccess* memoryAccess, const Instance& instance)
 {
     MOZ_RELEASE_ASSERT(instance.codeSegment().containsFunctionPC(pc));
     MOZ_RELEASE_ASSERT(instance.metadata().compileArgs.useSignalHandlersForOOB);
-    MOZ_RELEASE_ASSERT(!heapAccess->hasLengthCheck());
-    MOZ_RELEASE_ASSERT(heapAccess->insnOffset() == (pc - instance.codeSegment().code()));
+    MOZ_RELEASE_ASSERT(memoryAccess->insnOffset() == (pc - instance.codeSegment().code()));
 
     // Disassemble the instruction which caused the trap so that we can extract
     // information about it and decide what to do.
@@ -674,8 +673,8 @@ EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddre
 
     // If this is storing Z of an XYZ, check whether X is also in bounds, so
     // that we don't store anything before throwing.
-    MOZ_RELEASE_ASSERT(unwrappedOffset > heapAccess->offsetWithinWholeSimdVector());
-    uint32_t wrappedBaseOffset = uint32_t(unwrappedOffset - heapAccess->offsetWithinWholeSimdVector());
+    MOZ_RELEASE_ASSERT(unwrappedOffset > memoryAccess->offsetWithinWholeSimdVector());
+    uint32_t wrappedBaseOffset = uint32_t(unwrappedOffset - memoryAccess->offsetWithinWholeSimdVector());
     if (wrappedBaseOffset >= instance.heapLength())
         inBounds = false;
 
@@ -704,7 +703,7 @@ EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddre
         // We now know that this is an out-of-bounds access made by an asm.js
         // load/store that we should handle.
 
-        if (heapAccess->throwOnOOB())
+        if (memoryAccess->throwOnOOB())
             return instance.codeSegment().outOfBoundsCode();
 
         switch (access.kind()) {
@@ -733,7 +732,7 @@ EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddre
 
 MOZ_COLD static uint8_t*
 EmulateHeapAccess(EMULATOR_CONTEXT* context, uint8_t* pc, uint8_t* faultingAddress,
-                  const HeapAccess* heapAccess, const Instance& instance)
+                  const MemoryAccess* memoryAccess, const Instance& instance)
 {
     // TODO: Implement unaligned accesses.
     return instance.codeSegment().outOfBoundsCode();
@@ -804,14 +803,14 @@ HandleFault(PEXCEPTION_POINTERS exception)
         // retrigger after the interrupt jumps back to resumePC).
         return pc == instance.codeSegment().interruptCode() &&
                instance.codeSegment().containsFunctionPC(activation->resumePC()) &&
-               instance.lookupHeapAccess(activation->resumePC());
+               instance.lookupMemoryAccess(activation->resumePC());
     }
 
-    const HeapAccess* heapAccess = instance.lookupHeapAccess(pc);
-    if (!heapAccess)
+    const MemoryAccess* memoryAccess = instance.lookupMemoryAccess(pc);
+    if (!memoryAccess)
         return false;
 
-    *ppc = EmulateHeapAccess(context, pc, faultingAddress, heapAccess, instance);
+    *ppc = EmulateHeapAccess(context, pc, faultingAddress, memoryAccess, instance);
     return true;
 }
 
@@ -934,11 +933,11 @@ HandleMachException(JSRuntime* rt, const ExceptionRequest& request)
     if (!IsHeapAccessAddress(instance, faultingAddress))
         return false;
 
-    const HeapAccess* heapAccess = instance.lookupHeapAccess(pc);
-    if (!heapAccess)
+    const MemoryAccess* memoryAccess = instance.lookupMemoryAccess(pc);
+    if (!memoryAccess)
         return false;
 
-    *ppc = EmulateHeapAccess(&context, pc, faultingAddress, heapAccess, instance);
+    *ppc = EmulateHeapAccess(&context, pc, faultingAddress, memoryAccess, instance);
 
     // Update the thread state with the new pc and register values.
     kret = thread_set_state(rtThread, float_state, (thread_state_t)&context.float_, float_state_count);
@@ -1136,11 +1135,11 @@ HandleFault(int signum, siginfo_t* info, void* ctx)
     if (!IsHeapAccessAddress(instance, faultingAddress))
         return false;
 
-    const HeapAccess* heapAccess = instance.lookupHeapAccess(pc);
-    if (!heapAccess)
+    const MemoryAccess* memoryAccess = instance.lookupMemoryAccess(pc);
+    if (!memoryAccess)
         return false;
 
-    *ppc = EmulateHeapAccess(context, pc, faultingAddress, heapAccess, instance);
+    *ppc = EmulateHeapAccess(context, pc, faultingAddress, memoryAccess, instance);
 
     return true;
 }

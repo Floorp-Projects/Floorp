@@ -915,11 +915,13 @@ ModuleGenerator::finish(ImportNameVector&& importNames, const ShareableBytes& by
         return nullptr;
 
     // The MacroAssembler has accumulated all the heap accesses during codegen.
-    metadata_->heapAccesses = masm_.extractHeapAccesses();
+    metadata_->memoryAccesses = masm_.extractMemoryAccesses();
+    metadata_->boundsChecks = masm_.extractBoundsChecks();
 
     // These Vectors can get large and the excess capacity can be significant,
     // so realloc them down to size.
-    metadata_->heapAccesses.podResizeToFit();
+    metadata_->memoryAccesses.podResizeToFit();
+    metadata_->boundsChecks.podResizeToFit();
     metadata_->codeRanges.podResizeToFit();
     metadata_->callSites.podResizeToFit();
     metadata_->callThunks.podResizeToFit();
