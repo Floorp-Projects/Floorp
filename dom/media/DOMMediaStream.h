@@ -34,6 +34,8 @@ class MediaStreamDirectListener;
 class MediaStreamGraph;
 class ProcessedMediaStream;
 
+enum class BlockingMode;
+
 namespace dom {
 class AudioNode;
 class HTMLCanvasElement;
@@ -304,7 +306,8 @@ public:
      * destroyed. Returns a pledge that gets resolved when the MediaStreamGraph
      * has applied the block in the playback stream.
      */
-    already_AddRefed<media::Pledge<bool, nsresult>> BlockSourceTrackId(TrackID aTrackId);
+    already_AddRefed<media::Pledge<bool, nsresult>>
+    BlockSourceTrackId(TrackID aTrackId, BlockingMode aBlockingMode);
 
   private:
     RefPtr<MediaInputPort> mInputPort;
@@ -360,6 +363,8 @@ public:
   /** Identical to CloneInternal(TrackForwardingOption::EXPLICIT) */
   already_AddRefed<DOMMediaStream> Clone();
 
+  IMPL_EVENT_HANDLER(addtrack)
+
   // NON-WebIDL
 
   /**
@@ -390,10 +395,17 @@ public:
 
   /**
    * Returns the corresponding MediaStreamTrack if it's in our mOwnedStream.
-   * aInputTrackID should match the track's TrackID in its input stream.
+   * aInputTrackID should match the track's TrackID in its input stream,
+   * and aTrackID the TrackID in mOwnedStream.
+   *
+   * When aTrackID is not supplied or set to TRACK_ANY, we return the first
+   * MediaStreamTrack that matches the given input track. Note that there may
+   * be multiple MediaStreamTracks matching the same input track, but that they
+   * in that case all share the same MediaStreamTrackSource.
    */
   MediaStreamTrack* FindOwnedDOMTrack(MediaStream* aInputStream,
-                                      TrackID aInputTrackID) const;
+                                      TrackID aInputTrackID,
+                                      TrackID aTrackID = TRACK_ANY) const;
 
   /**
    * Returns the TrackPort connecting aTrack's input stream to mOwnedStream,
@@ -513,7 +525,12 @@ public:
    * Called for each track in our owned stream to indicate to JS that we
    * are carrying that track.
    *
-   * Creates a MediaStreamTrack, adds it to mTracks and returns it.
+   * Creates a MediaStreamTrack, adds it to mTracks, raises "addtrack" and
+   * returns it.
+   *
+   * Note that "addtrack" is raised synchronously and only has an effect if
+   * this MediaStream is already exposed to script. For spec compliance this is
+   * to be called from an async task.
    */
   MediaStreamTrack* CreateDOMTrack(TrackID aTrackID, MediaSegment::Type aType,
                                    MediaStreamTrackSource* aSource);
@@ -593,6 +610,10 @@ protected:
 
   // Dispatches NotifyTrackRemoved() to all registered track listeners.
   void NotifyTrackRemoved(const RefPtr<MediaStreamTrack>& aTrack);
+
+  // Dispatches "addtrack" or "removetrack".
+  nsresult DispatchTrackEvent(const nsAString& aName,
+                              const RefPtr<MediaStreamTrack>& aTrack);
 
   class OwnedStreamListener;
   friend class OwnedStreamListener;

@@ -20,7 +20,7 @@
 
 namespace nss_test {
 
-#define LOG(msg) std::cerr << name_ << ": " << msg << std::endl
+#define LOG(msg) std::cerr << role_str() << ": " << msg << std::endl
 
 enum SessionResumptionMode {
   RESUME_NONE = 0,
@@ -62,7 +62,7 @@ class TlsAgent : public PollTarget {
   virtual ~TlsAgent();
 
   bool Init() {
-    pr_fd_ = DummyPrSocket::CreateFD(name_, mode_);
+    pr_fd_ = DummyPrSocket::CreateFD(role_str(), mode_);
     if (!pr_fd_) return false;
 
     adapter_ = DummyPrSocket::GetAdapter(pr_fd_);
@@ -82,14 +82,16 @@ class TlsAgent : public PollTarget {
   void CheckKEAType(SSLKEAType type) const;
   void CheckAuthType(SSLAuthType type) const;
 
+  void DisableAllCiphers();
+  void EnableCiphersByAuthType(SSLAuthType authType);
+  void EnableCiphersByKeyExchange(SSLKEAType kea);
+  void EnableSingleCipher(uint16_t cipher);
+
   void Handshake();
   // Marks the internal state as CONNECTING in anticipation of renegotiation.
   void PrepareForRenegotiate();
   // Prepares for renegotiation, then actually triggers it.
   void StartRenegotiate();
-  void DisableCiphersByKeyExchange(SSLKEAType kea);
-  void EnableCiphersByAuthType(SSLAuthType authType);
-  void EnableSingleCipher(uint16_t cipher);
   bool ConfigServerCert(const std::string& name, bool updateKeyBits = false);
   bool EnsureTlsSetup();
 
@@ -132,6 +134,7 @@ class TlsAgent : public PollTarget {
   const std::string& name() const { return name_; }
 
   Role role() const { return role_; }
+  std::string role_str() const { return role_ == SERVER ? "server" : "client"; }
 
   State state() const { return state_; }
 

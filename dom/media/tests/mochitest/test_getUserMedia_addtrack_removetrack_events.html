@@ -1,0 +1,109 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <script type="application/javascript" src="mediaStreamPlayback.js"></script>
+</head>
+<body>
+<pre id="test">
+<script type="application/javascript">
+"use strict";
+
+createHTML({
+  title: "MediaStream's 'addtrack' and 'removetrack' events shouldn't fire on manual operations",
+  bug: "1208328"
+});
+
+var spinEventLoop = () => new Promise(r => setTimeout(r, 0));
+
+var stream;
+var clone;
+var newStream;
+
+var addTrack = track => {
+  info("Adding track " + track.id);
+  stream.addTrack(track);
+};
+var removeTrack = track => {
+  info("Removing track " + track.id);
+  stream.removeTrack(track);
+};
+var stopTrack = track => {
+  if (track.readyState == "live") {
+    info("Stopping track " + track.id);
+  }
+  track.stop();
+};
+
+runTest(() => getUserMedia({audio: true, video: true})
+  .then(s => {
+    stream = s;
+    clone = s.clone();
+    stream.addEventListener("addtrack", function onAddtrack(event) {
+      ok(false, "addtrack fired unexpectedly for track " + event.track.id);
+    });
+    stream.addEventListener("removetrack", function onRemovetrack(event) {
+      ok(false, "removetrack fired unexpectedly for track " + event.track.id);
+    });
+
+    return getUserMedia({audio: true, video: true});
+  })
+  .then(s => {
+    newStream = s;
+
+    info("Stopping an original track");
+    stopTrack(stream.getTracks()[0]);
+
+    return spinEventLoop();
+  })
+  .then(() => {
+    info("Removing original tracks");
+    stream.getTracks().forEach(t => stream.removeTrack(t));
+
+    return spinEventLoop();
+  })
+  .then(() => {
+    info("Adding other gUM tracks");
+    newStream.getTracks().forEach(t => addTrack(t))
+
+    return spinEventLoop();
+  })
+  .then(() => {
+    info("Adding cloned tracks");
+    let clone = stream.clone();
+    clone.getTracks().forEach(t => addTrack(t));
+
+    return spinEventLoop();
+  })
+  .then(() => {
+    info("Removing a clone");
+    removeTrack(clone.getTracks()[0]);
+
+    return spinEventLoop();
+  })
+  .then(() => {
+    info("Stopping clones");
+    clone.getTracks().forEach(t => stopTrack(t));
+
+    return spinEventLoop();
+  })
+  .then(() => {
+    info("Stopping originals");
+    stream.getTracks().forEach(t => stopTrack(t));
+
+    return spinEventLoop();
+  })
+  .then(() => {
+    info("Removing remaining tracks");
+    stream.getTracks().forEach(t => removeTrack(t));
+
+    return spinEventLoop();
+  })
+  .then(() => {
+      // Test MediaStreamTrackEvent required args here.
+      mustThrowWith("MediaStreamTrackEvent without required args",
+                    "TypeError", () => new MediaStreamTrackEvent("addtrack", {}));
+  }));
+</script>
+</pre>
+</body>
+</html>

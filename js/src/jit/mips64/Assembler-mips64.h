@@ -168,7 +168,7 @@ class Assembler : public AssemblerMIPSShared
 
     static void ToggleCall(CodeLocationLabel inst_, bool enabled);
 
-    static void UpdateBoundsCheck(uint64_t logHeapSize, Instruction* inst);
+    static void UpdateBoundsCheck(uint8_t* patchAt, uint32_t heapLength);
 }; // Assembler
 
 static const uint32_t NumIntArgRegs = 8;
