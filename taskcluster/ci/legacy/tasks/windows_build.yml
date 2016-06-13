@@ -14,6 +14,7 @@ task:
       - production
       - staging
     treeherder:
+      jobKind: build
       machine:
         # https://github.com/mozilla/treeherder/blob/master/ui/js/values.js
         platform: {{platform}}

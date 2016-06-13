@@ -38,3 +38,5 @@ task:
     build_type: {{build_type}}
     index:
       rank: {{pushlog_id}}
+    treeherder:
+      jobKind: test
