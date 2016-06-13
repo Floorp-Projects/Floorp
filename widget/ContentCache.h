@@ -41,6 +41,9 @@ protected:
   // Whole text in the target
   nsString mText;
 
+  // Start offset of the composition string.
+  uint32_t mCompositionStart;
+
   struct Selection final
   {
     // Following values are offset in "flat text".
@@ -360,8 +363,6 @@ private:
   // composition.  Then, data value of dispatched composition events should
   // be stored into the instance.
   nsAString* mCommitStringByRequest;
-  // Start offset of the composition string.
-  uint32_t mCompositionStart;
   // mPendingEventsNeedingAck is increased before sending a composition event or
   // a selection event and decreased after they are received in the child
   // process.
