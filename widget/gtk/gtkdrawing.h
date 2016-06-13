@@ -109,6 +109,7 @@ typedef enum {
 
   /* Horizontal GtkScrollbar counterparts */
   MOZ_GTK_SCROLLBAR_HORIZONTAL,
+  MOZ_GTK_SCROLLBAR_CONTENTS_HORIZONTAL,
   /* Paints the trough (track) of a GtkScrollbar. */
   MOZ_GTK_SCROLLBAR_TROUGH_HORIZONTAL,
   /* Paints the slider (thumb) of a GtkScrollbar. */
@@ -116,6 +117,7 @@ typedef enum {
 
   /* Vertical GtkScrollbar counterparts */
   MOZ_GTK_SCROLLBAR_VERTICAL,
+  MOZ_GTK_SCROLLBAR_CONTENTS_VERTICAL,
   MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL,
   MOZ_GTK_SCROLLBAR_THUMB_VERTICAL,
 

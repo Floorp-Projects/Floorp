@@ -1014,6 +1014,36 @@ moz_gtk_scrollbar_button_paint(cairo_t *cr, GdkRectangle* rect,
     return MOZ_GTK_SUCCESS;
 }
 
+static void
+moz_gtk_update_scrollbar_style(GtkStyleContext* style,
+                               WidgetNodeType widget,
+                               GtkTextDirection direction)
+{
+    if (widget == MOZ_GTK_SCROLLBAR_HORIZONTAL) {
+        gtk_style_context_add_class(style, GTK_STYLE_CLASS_BOTTOM);
+    } else {
+        if (direction == GTK_TEXT_DIR_LTR) {
+            gtk_style_context_add_class(style, GTK_STYLE_CLASS_RIGHT);
+            gtk_style_context_remove_class(style, GTK_STYLE_CLASS_LEFT);
+        } else {
+            gtk_style_context_add_class(style, GTK_STYLE_CLASS_LEFT);
+            gtk_style_context_remove_class(style, GTK_STYLE_CLASS_RIGHT);
+        }
+    }
+}
+
+static void
+moz_gtk_draw_styled_frame(GtkStyleContext* style, cairo_t *cr,
+                          GdkRectangle* rect, bool drawFocus)
+{
+    gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
+    gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
+    if (drawFocus) {
+        gtk_render_focus(style, cr,
+                         rect->x, rect->y, rect->width, rect->height);
+    }
+}
+
 static gint
 moz_gtk_scrollbar_trough_paint(WidgetNodeType widget,
                                cairo_t *cr, GdkRectangle* rect,
@@ -1028,19 +1058,28 @@ moz_gtk_scrollbar_trough_paint(WidgetNodeType widget,
         ReleaseStyleContext(style);
     }
 
-    GtkStyleContext* style =
-        ClaimStyleContext(widget == MOZ_GTK_SCROLLBAR_HORIZONTAL ?
-                          MOZ_GTK_SCROLLBAR_TROUGH_HORIZONTAL :
-                          MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL,
-                          direction);
+    bool isHorizontal = (widget == MOZ_GTK_SCROLLBAR_HORIZONTAL);
+    GtkStyleContext* style;
 
-    gtk_render_background(style, cr, rect->x, rect->y, rect->width, rect->height);
-    gtk_render_frame(style, cr, rect->x, rect->y, rect->width, rect->height);
+    // Draw all child CSS Nodes for Gtk >= 3.20
+    if (gtk_check_version(3, 20, 0) == nullptr) {
+        style = ClaimStyleContext(widget, direction);
+        moz_gtk_update_scrollbar_style(style, widget, direction);
+        moz_gtk_draw_styled_frame(style, cr, rect, state->focused);
+        ReleaseStyleContext(style);
 
-    if (state->focused) {
-        gtk_render_focus(style, cr,
-                         rect->x, rect->y, rect->width, rect->height);
+        style = ClaimStyleContext(isHorizontal ?
+                                  MOZ_GTK_SCROLLBAR_CONTENTS_HORIZONTAL :
+                                  MOZ_GTK_SCROLLBAR_CONTENTS_VERTICAL,
+                                  direction);
+        moz_gtk_draw_styled_frame(style, cr, rect, state->focused);
+        ReleaseStyleContext(style);
     }
+    style = ClaimStyleContext(isHorizontal ?
+                              MOZ_GTK_SCROLLBAR_TROUGH_HORIZONTAL :
+                              MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL,
+                              direction);
+    moz_gtk_draw_styled_frame(style, cr, rect, state->focused);
     ReleaseStyleContext(style);
 
     return MOZ_GTK_SUCCESS;
