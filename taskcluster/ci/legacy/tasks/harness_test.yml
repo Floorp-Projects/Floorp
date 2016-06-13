@@ -67,5 +67,6 @@ task:
     index:
       rank: {{pushlog_id}}
     treeherder:
+      jobKind: test
       groupSymbol: tc
       groupName: Submitted by taskcluster
