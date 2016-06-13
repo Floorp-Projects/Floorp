@@ -224,17 +224,25 @@ GetCssNodeStyleInternal(WidgetNodeType aNodeType)
     return style;
 
   switch (aNodeType) {
+    case MOZ_GTK_SCROLLBAR_CONTENTS_HORIZONTAL:
+      style = CreateChildCSSNode("contents",
+                                 MOZ_GTK_SCROLLBAR_HORIZONTAL);
+      break;
     case MOZ_GTK_SCROLLBAR_TROUGH_HORIZONTAL:
       style = CreateChildCSSNode(GTK_STYLE_CLASS_TROUGH,
-                                 MOZ_GTK_SCROLLBAR_HORIZONTAL);
+                                 MOZ_GTK_SCROLLBAR_CONTENTS_HORIZONTAL);
       break;
     case MOZ_GTK_SCROLLBAR_THUMB_HORIZONTAL:
       style = CreateChildCSSNode(GTK_STYLE_CLASS_SLIDER,
                                  MOZ_GTK_SCROLLBAR_TROUGH_HORIZONTAL);
       break;
+    case MOZ_GTK_SCROLLBAR_CONTENTS_VERTICAL:
+      style = CreateChildCSSNode("contents",
+                                 MOZ_GTK_SCROLLBAR_VERTICAL);
+      break;
     case MOZ_GTK_SCROLLBAR_TROUGH_VERTICAL:
       style = CreateChildCSSNode(GTK_STYLE_CLASS_TROUGH,
-                                 MOZ_GTK_SCROLLBAR_VERTICAL);
+                                 MOZ_GTK_SCROLLBAR_CONTENTS_VERTICAL);
       break;
     case MOZ_GTK_SCROLLBAR_THUMB_VERTICAL:
       style = CreateChildCSSNode(GTK_STYLE_CLASS_SLIDER,
