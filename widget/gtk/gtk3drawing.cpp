@@ -2427,21 +2427,13 @@ moz_gtk_menu_arrow_paint(cairo_t *cr, GdkRectangle* rect,
                          GtkWidgetState* state,
                          GtkTextDirection direction)
 {
-    GtkStyleContext* style;
     GtkStateFlags state_flags = GetStateFlagsFromGtkWidgetState(state);
-
-    GtkWidget* widget = GetWidget(MOZ_GTK_MENUITEM);
-    gtk_widget_set_direction(widget, direction);
-
-    style = gtk_widget_get_style_context(widget);
-    gtk_style_context_save(style);
-    gtk_style_context_add_class(style, GTK_STYLE_CLASS_MENUITEM);
-    gtk_style_context_set_state(style, state_flags);
+    GtkStyleContext* style = ClaimStyleContext(MOZ_GTK_MENUITEM,
+                                               direction, state_flags);
     gtk_render_arrow(style, cr,
                     (direction == GTK_TEXT_DIR_LTR) ? ARROW_RIGHT : ARROW_LEFT,
                     rect->x, rect->y, rect->width);
-    gtk_style_context_restore(style);
-
+    ReleaseStyleContext(style);
     return MOZ_GTK_SUCCESS;
 }
 
