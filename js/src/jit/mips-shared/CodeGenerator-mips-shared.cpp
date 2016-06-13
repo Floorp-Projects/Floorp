@@ -1405,6 +1405,45 @@ CodeGeneratorMIPSShared::visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCh
 }
 
 void
+CodeGeneratorMIPSShared::visitCopySignF(LCopySignF* ins)
+{
+    FloatRegister lhs = ToFloatRegister(ins->getOperand(0));
+    FloatRegister rhs = ToFloatRegister(ins->getOperand(1));
+    FloatRegister output = ToFloatRegister(ins->getDef(0));
+
+    Register lhsi = ToRegister(ins->getTemp(0));
+    Register rhsi = ToRegister(ins->getTemp(1));
+
+    masm.moveFromFloat32(lhs, lhsi);
+    masm.moveFromFloat32(rhs, rhsi);
+
+    // Combine.
+    masm.as_ins(rhsi, lhsi, 0, 31);
+
+    masm.moveToFloat32(rhsi, output);
+}
+
+void
+CodeGeneratorMIPSShared::visitCopySignD(LCopySignD* ins)
+{
+    FloatRegister lhs = ToFloatRegister(ins->getOperand(0));
+    FloatRegister rhs = ToFloatRegister(ins->getOperand(1));
+    FloatRegister output = ToFloatRegister(ins->getDef(0));
+
+    Register lhsi = ToRegister(ins->getTemp(0));
+    Register rhsi = ToRegister(ins->getTemp(1));
+
+    // Manipulate high words of double inputs.
+    masm.moveFromDoubleHi(lhs, lhsi);
+    masm.moveFromDoubleHi(rhs, rhsi);
+
+    // Combine.
+    masm.as_ins(rhsi, lhsi, 0, 31);
+
+    masm.moveToDoubleHi(rhsi, output);
+}
+
+void
 CodeGeneratorMIPSShared::visitValue(LValue* value)
 {
     const ValueOperand out = ToOutValue(value);
