@@ -4065,12 +4065,7 @@ AssertGCStateForSweep(Zone* zone)
 
     // IsAboutToBeFinalized doesn't work right on tenured objects when called
     // during a minor collection.
-    //
-    // We allow this when tracing the heap for CheckHeapOnMovingGC since that
-    // happens afterwards and is not part of minor collection.
-    DebugOnly<JSRuntime*> rt(zone->runtimeFromMainThread());
-    MOZ_ASSERT_IF(!rt->hasZealMode(ZealMode::CheckHeapOnMovingGC),
-                  !rt->isHeapMinorCollecting());
+    MOZ_ASSERT(!zone->runtimeFromMainThread()->isHeapMinorCollecting());
 }
 
 void

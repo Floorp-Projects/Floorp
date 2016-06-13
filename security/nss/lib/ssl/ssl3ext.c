@@ -289,7 +289,7 @@ ssl3_GetSessionTicketKeys(const unsigned char **aes_key,
 /* This table is used by the server, to handle client hello extensions. */
 static const ssl3HelloExtensionHandler clientHelloHandlers[] = {
     { ssl_server_name_xtn, &ssl3_HandleServerNameXtn },
-    { ssl_elliptic_curves_xtn, &ssl3_HandleSupportedCurvesXtn },
+    { ssl_supported_groups_xtn, &ssl_HandleSupportedGroupsXtn },
     { ssl_ec_point_formats_xtn, &ssl3_HandleSupportedPointFormatsXtn },
     { ssl_session_ticket_xtn, &ssl3_ServerHandleSessionTicketXtn },
     { ssl_renegotiation_info_xtn, &ssl3_HandleRenegotiationInfoXtn },
@@ -344,7 +344,7 @@ static const ssl3HelloExtensionSender clientHelloSendersTLS[SSL_MAX_EXTENSIONS] 
       { ssl_server_name_xtn, &ssl3_SendServerNameXtn },
       { ssl_extended_master_secret_xtn, &ssl3_SendExtendedMasterSecretXtn },
       { ssl_renegotiation_info_xtn, &ssl3_SendRenegotiationInfoXtn },
-      { ssl_elliptic_curves_xtn, &ssl3_SendSupportedCurvesXtn },
+      { ssl_supported_groups_xtn, &ssl_SendSupportedGroupsXtn },
       { ssl_ec_point_formats_xtn, &ssl3_SendSupportedPointFormatsXtn },
       { ssl_session_ticket_xtn, &ssl3_SendSessionTicketXtn },
       { ssl_next_proto_nego_xtn, &ssl3_ClientSendNextProtoNegoXtn },
@@ -1177,6 +1177,7 @@ ssl3_SendNewSessionTicket(sslSocket *ss)
     CK_MECHANISM_TYPE msWrapMech = 0; /* dummy default value,
                                           * must be >= 0 */
     ssl3CipherSpec *spec = ss->version >= SSL_LIBRARY_VERSION_TLS_1_3 ? ss->ssl3.cwSpec : ss->ssl3.pwSpec;
+    const sslServerCertType *certType;
 
     SSL_TRC(3, ("%d: SSL3[%d]: send session_ticket handshake",
                 SSL_GETPID(), ss->fd));
@@ -1314,16 +1315,19 @@ ssl3_SendNewSessionTicket(sslSocket *ss)
     if (rv != SECSuccess)
         goto loser;
 
-    /* certificate slot */
-    PORT_Assert(ss->sec.serverCert->certType.authType == ss->sec.authType);
+    /* certificate type */
+    certType = &ss->sec.serverCert->certType;
+    PORT_Assert(certType->authType == ss->sec.authType);
     switch (ss->sec.authType) {
         case ssl_auth_ecdsa:
         case ssl_auth_ecdh_rsa:
         case ssl_auth_ecdh_ecdsa:
-            /* Too many curves and we will need two bytes here. */
-            PORT_Assert(ec_pastLastName < 256);
+            PORT_Assert(certType->namedCurve);
+            PORT_Assert(certType->namedCurve->type == group_type_ec);
+            /* EC curves only use the second of the two bytes. */
+            PORT_Assert(certType->namedCurve->name < 256);
             rv = ssl3_AppendNumberToItem(&plaintext,
-                                         ss->sec.serverCert->certType.u.namedCurve, 1);
+                                         certType->namedCurve->name, 1);
             break;
         default:
             rv = ssl3_AppendNumberToItem(&plaintext, 0, 1);
@@ -1831,7 +1835,12 @@ ssl3_ProcessSessionTicketCommon(sslSocket *ss, SECItem *data)
         case ssl_auth_ecdsa:
         case ssl_auth_ecdh_rsa:
         case ssl_auth_ecdh_ecdsa:
-            parsed_session_ticket->certType.u.namedCurve = (ECName)temp;
+            parsed_session_ticket->certType.namedCurve =
+                ssl_LookupNamedGroup((NamedGroup)temp);
+            if (!parsed_session_ticket->certType.namedCurve ||
+                parsed_session_ticket->certType.namedCurve->type != group_type_ec) {
+                goto no_ticket;
+            }
             break;
         default:
             break;
@@ -3054,46 +3063,79 @@ ssl3_ServerHandleSignedCertTimestampXtn(sslSocket *ss, PRUint16 ex_type,
  *                 KeyShareEntry server_share;
  *         }
  *     } KeyShare;
+ *
+ * DH is Section 6.3.2.3.1.
+ *
+ *     opaque dh_Y<1..2^16-1>;
+ *
+ * ECDH is Section 6.3.2.3.2.
+ *
+ *     opaque point <1..2^8-1>;
  */
-static SECStatus
-tls13_SizeOfKeyShareEntry(ssl3KeyPair *pair)
+static PRUint32
+tls13_SizeOfKeyShareEntry(const SECKEYPublicKey *pubKey)
 {
-    return 2 + 2 + tls13_SizeOfECDHEKeyShareKEX(pair);
+    /* Size = NamedGroup(2) + length(2) + opaque<?> share */
+    switch (pubKey->keyType) {
+        case ecKey:
+            return 2 + 2 + tls13_SizeOfECDHEKeyShareKEX(pubKey);
+        case dhKey:
+            return 2 + 2 + 2 + pubKey->u.dh.prime.len;
+        default:
+            PORT_Assert(0);
+    }
+    return 0;
+}
+
+static PRUint32
+tls13_SizeOfClientKeyShareExtension(sslSocket *ss)
+{
+    PRCList *cursor;
+    /* Size is: extension(2) + extension_len(2) + client_shares(2) */
+    PRUint32 size = 2 + 2 + 2;
+    for (cursor = PR_NEXT_LINK(&ss->ephemeralKeyPairs);
+         cursor != &ss->ephemeralKeyPairs;
+         cursor = PR_NEXT_LINK(cursor)) {
+        sslEphemeralKeyPair *keyPair = (sslEphemeralKeyPair *)cursor;
+        size += tls13_SizeOfKeyShareEntry(keyPair->keys->pubKey);
+    }
+    return size;
 }
 
 static SECStatus
-tls13_EncodeKeyShareEntry(sslSocket *ss, ssl3KeyPair *pair)
+tls13_EncodeKeyShareEntry(sslSocket *ss, const sslEphemeralKeyPair *keyPair)
 {
     SECStatus rv;
+    SECKEYPublicKey *pubKey = keyPair->keys->pubKey;
+    unsigned int size = tls13_SizeOfKeyShareEntry(pubKey);
 
-    /* This currently only works for ECC keys */
-    PORT_Assert(pair->pubKey->keyType == ecKey);
-    if (pair->pubKey->keyType != ecKey) {
-        PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
-        return SECFailure;
+    rv = ssl3_AppendHandshakeNumber(ss, keyPair->group->name, 2);
+    if (rv != SECSuccess)
+        return rv;
+    rv = ssl3_AppendHandshakeNumber(ss, size - 4, 2);
+    if (rv != SECSuccess)
+        return rv;
+
+    switch (pubKey->keyType) {
+        case ecKey:
+            rv = tls13_EncodeECDHEKeyShareKEX(ss, pubKey);
+            break;
+        case dhKey:
+            rv = ssl_AppendPaddedDHKeyShare(ss, pubKey);
+            break;
+        default:
+            PORT_Assert(0);
+            PORT_SetError(SEC_ERROR_LIBRARY_FAILURE);
+            break;
     }
 
-    rv = ssl3_AppendHandshakeNumber(ss, tls13_GroupForECDHEKeyShare(pair), 2);
-    if (rv != SECSuccess)
-        return rv;
-
-    rv = ssl3_AppendHandshakeNumber(ss, tls13_SizeOfECDHEKeyShareKEX(pair), 2);
-    if (rv != SECSuccess)
-        return rv;
-
-    rv = tls13_EncodeECDHEKeyShareKEX(ss, pair);
-    if (rv != SECSuccess)
-        return rv;
-
-    return SECSuccess;
+    return rv;
 }
 
 static PRInt32
 tls13_ClientSendKeyShareXtn(sslSocket *ss, PRBool append,
                             PRUint32 maxBytes)
 {
-    SECStatus rv;
-    PRUint32 entry_length;
     PRUint32 extension_length;
 
     if (ss->version < SSL_LIBRARY_VERSION_TLS_1_3) {
@@ -3105,28 +3147,38 @@ tls13_ClientSendKeyShareXtn(sslSocket *ss, PRBool append,
     SSL_TRC(3, ("%d: TLS13[%d]: send client key share xtn",
                 SSL_GETPID(), ss->fd));
 
-    entry_length = tls13_SizeOfKeyShareEntry(ss->ephemeralECDHKeyPair);
-    /* Type + length + vector_length + entry */
-    extension_length = 2 + 2 + 2 + entry_length;
-
+    extension_length = tls13_SizeOfClientKeyShareExtension(ss);
     if (maxBytes < extension_length) {
         PORT_Assert(0);
         return 0;
     }
 
     if (append) {
+        SECStatus rv;
+        PRCList *cursor;
+
         rv = ssl3_AppendHandshakeNumber(ss, ssl_tls13_key_share_xtn, 2);
         if (rv != SECSuccess)
             goto loser;
-        rv = ssl3_AppendHandshakeNumber(ss, entry_length + 2, 2); /* Extension length */
+
+        /* The extension length */
+        rv = ssl3_AppendHandshakeNumber(ss, extension_length - 4, 2);
         if (rv != SECSuccess)
             goto loser;
-        rv = ssl3_AppendHandshakeNumber(ss, entry_length, 2); /* Vector length */
+
+        /* The length of KeyShares */
+        rv = ssl3_AppendHandshakeNumber(ss, extension_length - 6, 2);
         if (rv != SECSuccess)
             goto loser;
-        rv = tls13_EncodeKeyShareEntry(ss, ss->ephemeralECDHKeyPair);
-        if (rv != SECSuccess)
-            goto loser;
+
+        for (cursor = PR_NEXT_LINK(&ss->ephemeralKeyPairs);
+             cursor != &ss->ephemeralKeyPairs;
+             cursor = PR_NEXT_LINK(cursor)) {
+            sslEphemeralKeyPair *keyPair = (sslEphemeralKeyPair *)cursor;
+            rv = tls13_EncodeKeyShareEntry(ss, keyPair);
+            if (rv != SECSuccess)
+                goto loser;
+        }
 
         ss->xtnData.advertised[ss->xtnData.numAdvertised++] =
             ssl_tls13_key_share_xtn;
@@ -3143,6 +3195,7 @@ tls13_HandleKeyShareEntry(sslSocket *ss, SECItem *data)
 {
     SECStatus rv;
     PRInt32 group;
+    const namedGroupDef *groupDef;
     TLS13KeyShareEntry *ks = NULL;
     SECItem share = { siBuffer, NULL, 0 };
 
@@ -3150,6 +3203,10 @@ tls13_HandleKeyShareEntry(sslSocket *ss, SECItem *data)
     if (group < 0) {
         PORT_SetError(SSL_ERROR_RX_MALFORMED_KEY_SHARE);
         goto loser;
+    }
+    groupDef = ssl_LookupNamedGroup(group);
+    if (!groupDef) {
+        return SECSuccess;
     }
 
     rv = ssl3_ConsumeHandshakeVariable(ss, &share, 2, &data->data,
@@ -3160,7 +3217,7 @@ tls13_HandleKeyShareEntry(sslSocket *ss, SECItem *data)
     ks = PORT_ZNew(TLS13KeyShareEntry);
     if (!ks)
         goto loser;
-    ks->group = group;
+    ks->group = groupDef;
 
     rv = SECITEM_CopyItem(NULL, &ks->key_exchange, &share);
     if (rv != SECSuccess)
@@ -3257,22 +3314,16 @@ tls13_ServerSendKeyShareXtn(sslSocket *ss, PRBool append,
     PRUint32 extension_length;
     PRUint32 entry_length;
     SECStatus rv;
+    sslEphemeralKeyPair *keyPair;
 
-    switch (ss->ssl3.hs.kea_def->exchKeyType) {
-        case ssl_kea_ecdh:
-        case ssl_kea_ecdh_psk:
-            PORT_Assert(ss->ephemeralECDHKeyPair);
-            break;
-        default:
-            /* got an unknown or unsupported Key Exchange Algorithm.
-             * Can't happen because tls13_HandleClientKeyShare
-             * enforces that we are ssl_kea_ecdh. */
-            PORT_Assert(0);
-            tls13_FatalError(ss, SEC_ERROR_UNSUPPORTED_KEYALG, internal_error);
-            return SECFailure;
-    }
+    /* There should be exactly one key share. */
+    PORT_Assert(!PR_CLIST_IS_EMPTY(&ss->ephemeralKeyPairs));
+    PORT_Assert(PR_PREV_LINK(&ss->ephemeralKeyPairs) ==
+                PR_NEXT_LINK(&ss->ephemeralKeyPairs));
 
-    entry_length = tls13_SizeOfKeyShareEntry(ss->ephemeralECDHKeyPair);
+    keyPair = (sslEphemeralKeyPair *)PR_NEXT_LINK(&ss->ephemeralKeyPairs);
+
+    entry_length = tls13_SizeOfKeyShareEntry(keyPair->keys->pubKey);
     extension_length = 2 + 2 + entry_length; /* Type + length + entry_length */
     if (maxBytes < extension_length) {
         PORT_Assert(0);
@@ -3288,7 +3339,7 @@ tls13_ServerSendKeyShareXtn(sslSocket *ss, PRBool append,
         if (rv != SECSuccess)
             goto loser;
 
-        rv = tls13_EncodeKeyShareEntry(ss, ss->ephemeralECDHKeyPair);
+        rv = tls13_EncodeKeyShareEntry(ss, keyPair);
         if (rv != SECSuccess)
             goto loser;
     }

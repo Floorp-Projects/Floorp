@@ -1367,7 +1367,7 @@ function test_int8(heap) {
     var i8m = loadModule_int8(this, {}, heap);
 
     for ( var i=0 ; i < i8a.length ; i++ )
-	i8a[i] = 0;
+        i8a[i] = 0;
 
     var size = Int8Array.BYTES_PER_ELEMENT;
 

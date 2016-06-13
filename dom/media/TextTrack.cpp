@@ -117,6 +117,9 @@ TextTrack::SetMode(TextTrackMode aValue)
     if (mTextTrackList) {
       mTextTrackList->CreateAndDispatchChangeEvent();
     }
+    // Ensure the TimeMarchesOn is called in case that the mCueList
+    // is empty.
+    NotifyCueUpdated(nullptr);
   }
 }
 
@@ -282,6 +285,19 @@ void
 TextTrack::SetCuesInactive()
 {
   mCueList->SetCuesInactive();
+}
+
+void
+TextTrack::NotifyCueUpdated(TextTrackCue *aCue)
+{
+  mCueList->NotifyCueUpdated(aCue);
+  if (mTextTrackList) {
+    HTMLMediaElement* mediaElement = mTextTrackList->GetMediaElement();
+    if (mediaElement) {
+      mediaElement->NotifyCueUpdated(aCue);
+    }
+  }
+  SetDirty();
 }
 
 } // namespace dom

@@ -635,9 +635,10 @@ Assembler::PatchInstructionImmediate(uint8_t* code, PatchedImmPtr imm)
 }
 
 void
-Assembler::UpdateBoundsCheck(uint32_t heapSize, Instruction* inst)
+Assembler::UpdateBoundsCheck(uint8_t* patchAt, uint32_t heapLength)
 {
-    int32_t mask = ~(heapSize - 1);
+    Instruction* inst = (Instruction*) patchAt;
+    int32_t mask = ~(heapLength - 1);
     unsigned n, imm_s, imm_r;
     if (!IsImmLogical(mask, 32, &n, &imm_s, &imm_r))
         MOZ_CRASH("Could not encode immediate!?");

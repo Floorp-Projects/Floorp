@@ -14,11 +14,12 @@
       treeherder:
         build:
           platform: linux64
+        machine:
+          platform: linux64
         collection:
           opt: true
 
   tests:
-    - cert
     - chains
     - cipher
     - crmf
@@ -50,6 +51,8 @@
       treeherder:
         build:
           platform: linux64
+        machine:
+          platform: linux64
         collection:
           opt: true
         groupSymbol: Builds
@@ -76,6 +79,8 @@
       treeherder:
         build:
           platform: linux64
+        machine:
+          platform: linux64
         collection:
           opt: true
         groupSymbol: Builds
@@ -98,6 +103,8 @@
     extra:
       treeherder:
         build:
+          platform: linux64
+        machine:
           platform: linux64
         collection:
           opt: true
@@ -122,6 +129,8 @@
       treeherder:
         build:
           platform: linux64
+        machine:
+          platform: linux64
         collection:
           opt: true
         groupSymbol: Builds
@@ -143,6 +152,8 @@
     extra:
       treeherder:
         build:
+          platform: linux64
+        machine:
           platform: linux64
         collection:
           opt: true

@@ -44,6 +44,7 @@ typedef enum {
     ssl_kea_fortezza = 3, /* deprecated, now unused */
     ssl_kea_ecdh = 4,
     ssl_kea_ecdh_psk = 5,
+    ssl_kea_dh_psk = 6,
     ssl_kea_size /* number of ssl_kea_ algorithms */
 } SSLKEAType;
 
@@ -272,7 +273,7 @@ typedef enum {
 typedef enum {
     ssl_server_name_xtn = 0,
     ssl_cert_status_xtn = 5,
-    ssl_elliptic_curves_xtn = 10,
+    ssl_supported_groups_xtn = 10,
     ssl_ec_point_formats_xtn = 11,
     ssl_signature_algorithms_xtn = 13,
     ssl_use_srtp_xtn = 14,
@@ -288,6 +289,9 @@ typedef enum {
     ssl_renegotiation_info_xtn = 0xff01,
     ssl_tls13_draft_version_xtn = 0xff02 /* experimental number */
 } SSLExtensionType;
+
+/* This is the old name for the supported_groups extensions. */
+#define ssl_elliptic_curves_xtn ssl_supported_groups_xtn
 
 #define SSL_MAX_EXTENSIONS 15 /* doesn't include ssl_padding_xtn. */
 

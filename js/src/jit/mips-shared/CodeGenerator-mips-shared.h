@@ -169,6 +169,8 @@ class CodeGeneratorMIPSShared : public CodeGeneratorShared
     // Out of line visitors.
     virtual void visitOutOfLineBailout(OutOfLineBailout* ool) = 0;
     void visitOutOfLineWasmTruncateCheck(OutOfLineWasmTruncateCheck* ool);
+    void visitCopySignD(LCopySignD* ins);
+    void visitCopySignF(LCopySignF* ins);
 
   protected:
     virtual ValueOperand ToOutValue(LInstruction* ins) = 0;

@@ -500,13 +500,6 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
 #endif
     TIME_END(checkHashTables);
 
-    TIME_START(checkHeap);
-#ifdef JS_GC_ZEAL
-    if (rt->hasZealMode(ZealMode::CheckHeapOnMovingGC))
-        CheckHeapAfterMovingGC(rt, session.lock);
-#endif
-    TIME_END(checkHeap);
-
     // Resize the nursery.
     TIME_START(resize);
     double promotionRate = mover.tenuredSize / double(allocationEnd() - start());
@@ -557,7 +550,6 @@ js::Nursery::collect(JSRuntime* rt, JS::gcreason::Reason reason, ObjectGroupList
             {"mcWCll", TIME_TOTAL(traceWholeCells)},
             {"mkGnrc", TIME_TOTAL(traceGenericEntries)},
             {"ckTbls", TIME_TOTAL(checkHashTables)},
-            {"ckHeap", TIME_TOTAL(checkHeap)},
             {"mkRntm", TIME_TOTAL(markRuntime)},
             {"mkDbgr", TIME_TOTAL(markDebugger)},
             {"clrNOC", TIME_TOTAL(clearNewObjectCache)},
