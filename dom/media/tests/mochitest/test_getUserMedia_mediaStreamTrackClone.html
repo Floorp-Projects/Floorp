@@ -52,7 +52,10 @@
 
       var test = createMediaElement('video', 'testClonePlayback');
       var playback = new MediaStreamPlayback(test, cloneStream);
-      return playback.playMediaWithMediaStreamTracksStop(false);
+      return playback.playMediaWithMediaStreamTracksStop(false)
+        .then(() => info("Testing that clones of ended tracks are ended"))
+        .then(() => cloneStream.clone().getTracks().forEach(t =>
+          is(t.readyState, "ended", "Track " + t.id + " should be ended")));
     })
     .then(() => getUserMedia({audio: true, video: true})).then(stream => {
       info("Test adding many track clones to the original stream");

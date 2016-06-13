@@ -39,10 +39,8 @@ EXPORTS += [
     'gfxQuaternion.h',
     'gfxRect.h',
     'gfxSharedImageSurface.h',
-    'gfxSharedQuartzSurface.h',
     'gfxSkipChars.h',
     'gfxSVGGlyphs.h',
-    'gfxTeeSurface.h',
     'gfxTextRun.h',
     'gfxTypes.h',
     'gfxUserFontSet.h',
@@ -54,6 +52,7 @@ EXPORTS += [
 
 EXPORTS.mozilla.gfx += [
     'PrintTarget.h',
+    'PrintTargetRecording.h',
     'PrintTargetThebes.h',
 ]
 
@@ -145,7 +144,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
     EXPORTS += [
         'gfxFontconfigFonts.h',
         'gfxFT2FontBase.h',
-        'gfxQPainterSurface.h',
         'gfxQtNativeRenderer.h',
         'gfxQtPlatform.h',
     ]
@@ -157,7 +155,6 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'qt':
         'gfxFontconfigUtils.cpp',
         'gfxFT2FontBase.cpp',
         'gfxFT2Utils.cpp',
-        'gfxQPainterSurface.cpp',
         'gfxQtPlatform.cpp',
         'PrintTargetPDF.cpp',
     ]
@@ -221,6 +218,7 @@ SOURCES += [
     'gfxPlatform.cpp',
     'gfxPrefs.cpp',
     'PrintTarget.cpp',
+    'PrintTargetRecording.cpp',
     'PrintTargetThebes.cpp',
 ]
 
@@ -250,7 +248,6 @@ UNIFIED_SOURCES += [
     'gfxScriptItemizer.cpp',
     'gfxSkipChars.cpp',
     'gfxSVGGlyphs.cpp',
-    'gfxTeeSurface.cpp',
     'gfxTextRun.cpp',
     'gfxUserFontSet.cpp',
     'gfxUtils.cpp',

@@ -37,10 +37,6 @@
 #include "gfxQuartzSurface.h"
 #endif
 
-#if defined(CAIRO_HAS_QT_SURFACE) && defined(MOZ_WIDGET_QT)
-#include "gfxQPainterSurface.h"
-#endif
-
 #include <stdio.h>
 #include <limits.h>
 
@@ -155,6 +151,8 @@ gfxASurface::Wrap (cairo_surface_t *csurf, const IntSize& aSize)
     /* No wrapper; figure out the surface type and create it */
     cairo_surface_type_t stype = cairo_surface_get_type(csurf);
 
+    MOZ_ASSERT(stype != CAIRO_SURFACE_TYPE_QT);
+
     if (stype == CAIRO_SURFACE_TYPE_IMAGE) {
         result = new gfxImageSurface(csurf);
     }
@@ -174,13 +172,8 @@ gfxASurface::Wrap (cairo_surface_t *csurf, const IntSize& aSize)
         result = new gfxQuartzSurface(csurf, aSize);
     }
 #endif
-#if defined(CAIRO_HAS_QT_SURFACE) && defined(MOZ_WIDGET_QT)
-    else if (stype == CAIRO_SURFACE_TYPE_QT) {
-        result = new gfxQPainterSurface(csurf);
-    }
-#endif
     else {
-        result = new gfxUnknownSurface(csurf, aSize);
+        MOZ_CRASH("Unknown cairo surface type");
     }
 
     // fprintf(stderr, "New wrapper for %p -> %p\n", csurf, result);

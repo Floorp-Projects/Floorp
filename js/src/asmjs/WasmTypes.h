@@ -579,106 +579,94 @@ class CallSiteAndTarget : public CallSite
 
 typedef Vector<CallSiteAndTarget, 0, SystemAllocPolicy> CallSiteAndTargetVector;
 
+// Metadata for a bounds check that may need patching later.
+
+class BoundsCheck
+{
+  public:
+    BoundsCheck() = default;
+
+    explicit BoundsCheck(uint32_t cmpOffset)
+      : cmpOffset_(cmpOffset)
+    { }
+
+    uint8_t* patchAt(uint8_t* code) const { return code + cmpOffset_; }
+    void offsetBy(uint32_t offset) { cmpOffset_ += offset; }
+
+  private:
+    uint32_t cmpOffset_; // absolute offset of the comparison
+};
+
 // Summarizes a heap access made by wasm code that needs to be patched later
 // and/or looked up by the wasm signal handlers. Different architectures need
 // to know different things (x64: offset and length, ARM: where to patch in
 // heap length, x86: where to patch in heap length and base).
 
 #if defined(JS_CODEGEN_X86)
-class HeapAccess
+class MemoryAccess
 {
-    uint32_t insnOffset_;
-    uint8_t opLength_;  // the length of the load/store instruction
-    uint8_t cmpDelta_;  // the number of bytes from the cmp to the load/store instruction
+    uint32_t nextInsOffset_;
 
   public:
-    HeapAccess() = default;
-    static const uint32_t NoLengthCheck = UINT32_MAX;
+    MemoryAccess() = default;
 
-    // If 'cmp' equals 'insnOffset' or if it is not supplied then the
-    // cmpDelta_ is zero indicating that there is no length to patch.
-    HeapAccess(uint32_t insnOffset, uint32_t after, uint32_t cmp = NoLengthCheck) {
-        mozilla::PodZero(this);  // zero padding for Valgrind
-        insnOffset_ = insnOffset;
-        opLength_ = after - insnOffset;
-        cmpDelta_ = cmp == NoLengthCheck ? 0 : insnOffset - cmp;
-    }
+    explicit MemoryAccess(uint32_t nextInsOffset)
+      : nextInsOffset_(nextInsOffset)
+    { }
 
-    uint32_t insnOffset() const { return insnOffset_; }
-    void setInsnOffset(uint32_t insnOffset) { insnOffset_ = insnOffset; }
-    void offsetInsnOffsetBy(uint32_t offset) { insnOffset_ += offset; }
-    void* patchHeapPtrImmAt(uint8_t* code) const { return code + (insnOffset_ + opLength_); }
-    bool hasLengthCheck() const { return cmpDelta_ > 0; }
-    void* patchLengthAt(uint8_t* code) const {
-        MOZ_ASSERT(hasLengthCheck());
-        return code + (insnOffset_ - cmpDelta_);
-    }
+    void* patchHeapPtrImmAt(uint8_t* code) const { return code + nextInsOffset_; }
+    void offsetBy(uint32_t offset) { nextInsOffset_ += offset; }
 };
 #elif defined(JS_CODEGEN_X64)
-class HeapAccess
+class MemoryAccess
 {
-  public:
-    enum WhatToDoOnOOB {
-        CarryOn, // loads return undefined, stores do nothing.
-        Throw    // throw a RangeError
-    };
-
-  private:
     uint32_t insnOffset_;
     uint8_t offsetWithinWholeSimdVector_; // if is this e.g. the Z of an XYZ
     bool throwOnOOB_;                     // should we throw on OOB?
-    uint8_t cmpDelta_;                    // the number of bytes from the cmp to the load/store instruction
+    bool wrapOffset_;                     // should we wrap the offset on OOB?
 
   public:
-    HeapAccess() = default;
-    static const uint32_t NoLengthCheck = UINT32_MAX;
+    enum OutOfBoundsBehavior {
+        Throw,
+        CarryOn,
+    };
+    enum WrappingBehavior {
+        WrapOffset,
+        DontWrapOffset,
+    };
 
-    // If 'cmp' equals 'insnOffset' or if it is not supplied then the
-    // cmpDelta_ is zero indicating that there is no length to patch.
-    HeapAccess(uint32_t insnOffset, WhatToDoOnOOB oob,
-               uint32_t cmp = NoLengthCheck,
-               uint32_t offsetWithinWholeSimdVector = 0)
+    MemoryAccess() = default;
+
+    MemoryAccess(uint32_t insnOffset, OutOfBoundsBehavior onOOB, WrappingBehavior onWrap,
+                 uint32_t offsetWithinWholeSimdVector = 0)
+      : insnOffset_(insnOffset),
+        offsetWithinWholeSimdVector_(offsetWithinWholeSimdVector),
+        throwOnOOB_(onOOB == OutOfBoundsBehavior::Throw),
+        wrapOffset_(onWrap == WrappingBehavior::WrapOffset)
     {
-        mozilla::PodZero(this);  // zero padding for Valgrind
-        insnOffset_ = insnOffset;
-        offsetWithinWholeSimdVector_ = offsetWithinWholeSimdVector;
-        throwOnOOB_ = oob == Throw;
-        cmpDelta_ = cmp == NoLengthCheck ? 0 : insnOffset - cmp;
-        MOZ_ASSERT(offsetWithinWholeSimdVector_ == offsetWithinWholeSimdVector);
+        MOZ_ASSERT(offsetWithinWholeSimdVector_ == offsetWithinWholeSimdVector, "fits in uint8");
     }
 
     uint32_t insnOffset() const { return insnOffset_; }
-    void setInsnOffset(uint32_t insnOffset) { insnOffset_ = insnOffset; }
-    void offsetInsnOffsetBy(uint32_t offset) { insnOffset_ += offset; }
-    bool throwOnOOB() const { return throwOnOOB_; }
     uint32_t offsetWithinWholeSimdVector() const { return offsetWithinWholeSimdVector_; }
-    bool hasLengthCheck() const { return cmpDelta_ > 0; }
-    void* patchLengthAt(uint8_t* code) const {
-        MOZ_ASSERT(hasLengthCheck());
-        return code + (insnOffset_ - cmpDelta_);
-    }
+    bool throwOnOOB() const { return throwOnOOB_; }
+    bool wrapOffset() const { return wrapOffset_; }
+
+    void offsetBy(uint32_t offset) { insnOffset_ += offset; }
 };
 #elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
-      defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-class HeapAccess
-{
-    uint32_t insnOffset_;
+      defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64) || \
+      defined(JS_CODEGEN_NONE)
+// Nothing! We just want bounds checks on these platforms.
+class MemoryAccess {
   public:
-    HeapAccess() = default;
-    explicit HeapAccess(uint32_t insnOffset) : insnOffset_(insnOffset) {}
-    uint32_t insnOffset() const { return insnOffset_; }
-    void setInsnOffset(uint32_t insnOffset) { insnOffset_ = insnOffset; }
-    void offsetInsnOffsetBy(uint32_t offset) { insnOffset_ += offset; }
-};
-#elif defined(JS_CODEGEN_NONE)
-class HeapAccess {
-  public:
-    void offsetInsnOffsetBy(uint32_t) { MOZ_CRASH(); }
+    void offsetBy(uint32_t) { MOZ_CRASH(); }
     uint32_t insnOffset() const { MOZ_CRASH(); }
 };
 #endif
 
-WASM_DECLARE_POD_VECTOR(HeapAccess, HeapAccessVector)
+WASM_DECLARE_POD_VECTOR(MemoryAccess, MemoryAccessVector)
+WASM_DECLARE_POD_VECTOR(BoundsCheck, BoundsCheckVector)
 
 // A wasm::SymbolicAddress represents a pointer to a well-known function or
 // object that is embedded in wasm code. Since wasm code is serialized and

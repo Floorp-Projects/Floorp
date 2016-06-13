@@ -490,8 +490,8 @@ Assembler::ToggleCall(CodeLocationLabel inst_, bool enabled)
 }
 
 void
-Assembler::UpdateBoundsCheck(uint64_t heapSize, Instruction* inst)
+Assembler::UpdateBoundsCheck(uint8_t* patchAt, uint32_t heapLength)
 {
     // Replace with new value
-    Assembler::UpdateLoad64Value(inst, heapSize);
+    Assembler::UpdateLoad64Value((Instruction*) patchAt, heapLength);
 }

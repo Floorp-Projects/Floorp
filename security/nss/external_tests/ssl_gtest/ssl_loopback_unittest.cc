@@ -128,7 +128,7 @@ TEST_P(TlsConnectGeneric, ConnectEcdsa) {
 TEST_P(TlsConnectGenericPre13, ConnectEcdh) {
   SetExpectedVersion(std::get<1>(GetParam()));
   Reset(TlsAgent::kServerEcdhEcdsa);
-  DisableDheAndEcdheCiphers();
+  DisableAllCiphers();
   EnableSomeEcdhCiphers();
 
   Connect();
@@ -437,13 +437,13 @@ TEST_P(TlsConnectGenericPre13, SignatureAlgorithmNoOverlapStaticRsa) {
                                   PR_ARRAY_SIZE(SignatureRsaSha384));
   server_->SetSignatureAlgorithms(SignatureRsaSha256,
                                   PR_ARRAY_SIZE(SignatureRsaSha256));
-  DisableDheAndEcdheCiphers();
+  EnableOnlyStaticRsaCiphers();
   Connect();
   CheckKeys(ssl_kea_rsa, ssl_auth_rsa_decrypt);
 }
 
 TEST_P(TlsConnectGenericPre13, ConnectStaticRSA) {
-  DisableDheAndEcdheCiphers();
+  EnableOnlyStaticRsaCiphers();
   Connect();
   CheckKeys(ssl_kea_rsa, ssl_auth_rsa_decrypt);
 }
@@ -469,13 +469,11 @@ TEST_P(TlsConnectPre12, SignatureAlgorithmNoOverlapEcdsa) {
   Connect();
 }
 
-// The server requests client auth but doesn't offer a SHA-256 option.
-// This fails because NSS only uses SHA-256 for handshake transcript hashes.
-TEST_P(TlsConnectTls12, RequestClientAuthWithoutSha256) {
+TEST_P(TlsConnectTls12, RequestClientAuthWithSha384) {
   server_->SetSignatureAlgorithms(SignatureRsaSha384,
                                   PR_ARRAY_SIZE(SignatureRsaSha384));
   server_->RequestClientAuth(false);
-  ConnectExpectFail();
+  Connect();
 }
 
 TEST_P(TlsConnectGeneric, ConnectAlpn) {
@@ -576,17 +574,10 @@ TEST_P(TlsConnectStreamPre13, ConnectAndServerRenegotiate) {
   CheckConnected();
 }
 
-// TODO implement DHE for 1.3
-TEST_P(TlsConnectGenericPre13, ConnectDhe) {
-  DisableEcdheCiphers();
-  Connect();
-  CheckKeys(ssl_kea_dh, ssl_auth_rsa_sign);
-}
-
 // Test that a totally bogus EPMS is handled correctly.
 // This test is stream so we can catch the bad_record_mac alert.
 TEST_P(TlsConnectStreamPre13, ConnectStaticRSABogusCKE) {
-  DisableDheAndEcdheCiphers();
+  EnableOnlyStaticRsaCiphers();
   TlsInspectorReplaceHandshakeMessage* i1 =
       new TlsInspectorReplaceHandshakeMessage(kTlsHandshakeClientKeyExchange,
                                               DataBuffer(
@@ -603,7 +594,7 @@ TEST_P(TlsConnectStreamPre13, ConnectStaticRSABogusCKE) {
 // Test that a PMS with a bogus version number is handled correctly.
 // This test is stream so we can catch the bad_record_mac alert.
 TEST_P(TlsConnectStreamPre13, ConnectStaticRSABogusPMSVersionDetect) {
-  DisableDheAndEcdheCiphers();
+  EnableOnlyStaticRsaCiphers();
   client_->SetPacketFilter(new TlsInspectorClientHelloVersionChanger(
       server_));
   auto alert_recorder = new TlsAlertRecorder();
@@ -617,7 +608,7 @@ TEST_P(TlsConnectStreamPre13, ConnectStaticRSABogusPMSVersionDetect) {
 // rollback detection is disabled. This is a positive control for
 // ConnectStaticRSABogusPMSVersionDetect.
 TEST_P(TlsConnectGenericPre13, ConnectStaticRSABogusPMSVersionIgnore) {
-  DisableDheAndEcdheCiphers();
+  EnableOnlyStaticRsaCiphers();
   client_->SetPacketFilter(new TlsInspectorClientHelloVersionChanger(
       server_));
   server_->DisableRollbackDetection();
@@ -744,15 +735,21 @@ TEST_P(TlsConnectGenericPre13, ConnectExtendedMasterSecret) {
   Connect();
 }
 
+TEST_P(TlsConnectTls12Plus, ConnectExtendedMasterSecretSha384) {
+  EnableExtendedMasterSecret();
+  server_->EnableSingleCipher(TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384);
+  ConnectWithCipherSuite(TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384);
+}
+
 TEST_P(TlsConnectGenericPre13, ConnectExtendedMasterSecretStaticRSA) {
-  DisableDheAndEcdheCiphers();
+  EnableOnlyStaticRsaCiphers();
   EnableExtendedMasterSecret();
   Connect();
 }
 
 // This test is stream so we can catch the bad_record_mac alert.
 TEST_P(TlsConnectStreamPre13, ConnectExtendedMasterSecretStaticRSABogusCKE) {
-  DisableDheAndEcdheCiphers();
+  EnableOnlyStaticRsaCiphers();
   EnableExtendedMasterSecret();
   TlsInspectorReplaceHandshakeMessage* inspect =
       new TlsInspectorReplaceHandshakeMessage(kTlsHandshakeClientKeyExchange,
@@ -769,7 +766,7 @@ TEST_P(TlsConnectStreamPre13, ConnectExtendedMasterSecretStaticRSABogusCKE) {
 
 // This test is stream so we can catch the bad_record_mac alert.
 TEST_P(TlsConnectStreamPre13, ConnectExtendedMasterSecretStaticRSABogusPMSVersionDetect) {
-  DisableDheAndEcdheCiphers();
+  EnableOnlyStaticRsaCiphers();
   EnableExtendedMasterSecret();
   client_->SetPacketFilter(new TlsInspectorClientHelloVersionChanger(
       server_));
@@ -781,7 +778,7 @@ TEST_P(TlsConnectStreamPre13, ConnectExtendedMasterSecretStaticRSABogusPMSVersio
 }
 
 TEST_P(TlsConnectStreamPre13, ConnectExtendedMasterSecretStaticRSABogusPMSVersionIgnore) {
-  DisableDheAndEcdheCiphers();
+  EnableOnlyStaticRsaCiphers();
   EnableExtendedMasterSecret();
   client_->SetPacketFilter(new TlsInspectorClientHelloVersionChanger(
       server_));
@@ -1058,10 +1055,10 @@ TEST_F(TlsConnectTest, DisableClientPSKAndFailToResume) {
                            SSL_LIBRARY_VERSION_TLS_1_3);
   server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
                            SSL_LIBRARY_VERSION_TLS_1_3);
-  EXPECT_EQ(SECSuccess,
-            SSL_CipherPrefSet(client_->ssl_fd(),
-                              TLS_ECDHE_PSK_WITH_AES_128_GCM_SHA256,
-                              PR_FALSE));
+  // We need to disable ALL PSK cipher suites with the same symmetric cipher and
+  // PRF hash.  Otherwise the server will just use a different key exchange.
+  client_->DisableAllCiphers();
+  client_->EnableCiphersByAuthType(ssl_auth_rsa_sign);
   ExpectResumption(RESUME_NONE);
   Connect();
   CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
@@ -1090,10 +1087,10 @@ TEST_F(TlsConnectTest, DisableServerPSKAndFailToResume) {
                            SSL_LIBRARY_VERSION_TLS_1_3);
   server_->SetVersionRange(SSL_LIBRARY_VERSION_TLS_1_1,
                            SSL_LIBRARY_VERSION_TLS_1_3);
-  EXPECT_EQ(SECSuccess,
-            SSL_CipherPrefSet(server_->ssl_fd(),
-                              TLS_ECDHE_PSK_WITH_AES_128_GCM_SHA256,
-                              PR_FALSE));
+  // We need to disable ALL PSK cipher suites with the same symmetric cipher and
+  // PRF hash.  Otherwise the server will just use a different key exchange.
+  server_->DisableAllCiphers();
+  server_->EnableCiphersByAuthType(ssl_auth_rsa_sign);
   ExpectResumption(RESUME_NONE);
   Connect();
   CheckKeys(ssl_kea_ecdh, ssl_auth_rsa_sign);
@@ -1368,6 +1365,22 @@ TEST_F(TlsConnectDatagram13, AuthCompleteAfterFinished) {
       });
   Connect();
 }
+
+// The TLS v1.3 spec section C.4 states that 'Implementations MUST NOT send or
+// accept any records with a version less than { 3, 0 }'. Thus we will not
+// allow version ranges including both SSL v3 and TLS v1.3.
+TEST_F(TlsConnectTest, DisallowSSLv3HelloWithTLSv13Enabled) {
+  SECStatus rv;
+  SSLVersionRange vrange = { SSL_LIBRARY_VERSION_3_0,
+                             SSL_LIBRARY_VERSION_TLS_1_3 };
+
+  EnsureTlsSetup();
+  rv = SSL_VersionRangeSet(client_->ssl_fd(), &vrange);
+  EXPECT_EQ(SECFailure, rv);
+
+  rv = SSL_VersionRangeSet(server_->ssl_fd(), &vrange);
+  EXPECT_EQ(SECFailure, rv);
+}
 #endif // NSS_ENABLE_TLS_1_3
 
 INSTANTIATE_TEST_CASE_P(GenericStream, TlsConnectGeneric,
@@ -1395,6 +1408,10 @@ INSTANTIATE_TEST_CASE_P(Pre12Datagram, TlsConnectPre12,
 
 INSTANTIATE_TEST_CASE_P(Version12Only, TlsConnectTls12,
                         TlsConnectTestBase::kTlsModesAll);
+#ifdef NSS_ENABLE_TLS_1_3
+INSTANTIATE_TEST_CASE_P(Version13Only, TlsConnectTls13,
+                        TlsConnectTestBase::kTlsModesAll);
+#endif
 
 INSTANTIATE_TEST_CASE_P(Pre13Stream, TlsConnectGenericPre13,
                         ::testing::Combine(
@@ -1406,4 +1423,10 @@ INSTANTIATE_TEST_CASE_P(Pre13Datagram, TlsConnectGenericPre13,
                              TlsConnectTestBase::kTlsV11V12));
 INSTANTIATE_TEST_CASE_P(Pre13StreamOnly, TlsConnectStreamPre13,
                         TlsConnectTestBase::kTlsV10ToV12);
+
+INSTANTIATE_TEST_CASE_P(Version12Plus, TlsConnectTls12Plus,
+                        ::testing::Combine(
+                          TlsConnectTestBase::kTlsModesAll,
+                          TlsConnectTestBase::kTlsV12Plus));
+
 }  // namespace nspr_test

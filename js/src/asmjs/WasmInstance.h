@@ -142,7 +142,9 @@ class Instance
 
     const CallSite* lookupCallSite(void* returnAddress) const;
     const CodeRange* lookupCodeRange(void* pc) const;
-    const HeapAccess* lookupHeapAccess(void* pc) const;
+#ifdef ASMJS_MAY_USE_SIGNAL_HANDLERS
+    const MemoryAccess* lookupMemoryAccess(void* pc) const;
+#endif
 
     // about:memory reporting:
 

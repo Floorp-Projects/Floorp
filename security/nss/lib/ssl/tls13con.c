@@ -291,51 +291,146 @@ tls13_GetHmacMechanism(sslSocket *ss)
 SECStatus
 tls13_SetupClientHello(sslSocket *ss)
 {
-    SECStatus rv;
-    /* TODO(ekr@rtfm.com): Handle multiple curves here. */
-    ECName curves_to_try[] = { ec_secp256r1 };
+    /* This does FFDHE always only while we don't have HelloRetryRequest
+     * support.  FFDHE is too much of a burden for normal requests.  We really
+     * only want it when EC suites are disabled. */
+    static const NamedGroup groups_to_try[] = { ec_secp256r1, ffdhe_2048 };
+    unsigned int i;
 
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
     PORT_Assert(ss->opt.noLocks || ssl_HaveXmitBufLock(ss));
 
-    PORT_Assert(!ss->ephemeralECDHKeyPair);
+    PORT_Assert(PR_CLIST_IS_EMPTY(&ss->ephemeralKeyPairs));
 
-    rv = ssl3_CreateECDHEphemeralKeyPair(curves_to_try[0],
-                                         &ss->ephemeralECDHKeyPair);
-    if (rv != SECSuccess)
-        return rv;
+    for (i = 0; i < PR_ARRAY_SIZE(groups_to_try); ++i) {
+        SECStatus rv;
+        sslEphemeralKeyPair *keyPair;
+        const namedGroupDef *groupDef = ssl_LookupNamedGroup(groups_to_try[i]);
+        if (!ssl_NamedGroupEnabled(ss, groupDef)) {
+            continue;
+        }
+        switch (groupDef->type) {
+            case group_type_ec:
+                rv = ssl_CreateECDHEphemeralKeyPair(groupDef, &keyPair);
+                break;
+            case group_type_ff: {
+                const ssl3DHParams *params = ssl_GetDHEParams(groupDef);
+                PORT_Assert(params->name != ffdhe_custom);
+                rv = ssl_CreateDHEKeyPair(groupDef, params, &keyPair);
+                break;
+            }
+        }
+        if (rv != SECSuccess)
+            return rv;
+
+        PR_APPEND_LINK(&keyPair->link, &ss->ephemeralKeyPairs);
+    }
+    PORT_Assert(!PR_CLIST_IS_EMPTY(&ss->ephemeralKeyPairs));
 
     return SECSuccess;
 }
 
 static SECStatus
-tls13_HandleECDHEKeyShare(sslSocket *ss,
-                          TLS13KeyShareEntry *entry,
-                          SECKEYPrivateKey *privKey,
-                          SharedSecretType type)
+tls13_ImportDHEKeyShare(sslSocket *ss, SECKEYPublicKey *peerKey,
+                        SSL3Opaque *b, PRUint32 length,
+                        SECKEYPublicKey *pubKey)
 {
     SECStatus rv;
+    SECItem publicValue = { siBuffer, NULL, 0 };
+
+    rv = ssl3_ConsumeHandshakeVariable(ss, &publicValue,
+                                       2, &b, &length);
+    if (rv != SECSuccess) {
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_DHE_KEY_SHARE);
+        return SECFailure;
+    }
+
+    if (length || !ssl_IsValidDHEShare(&pubKey->u.dh.prime, &publicValue)) {
+        PORT_SetError(SSL_ERROR_RX_MALFORMED_DHE_KEY_SHARE);
+        return SECFailure;
+    }
+
+    peerKey->keyType = dhKey;
+    rv = SECITEM_CopyItem(peerKey->arena, &peerKey->u.dh.prime,
+                          &pubKey->u.dh.prime);
+    if (rv != SECSuccess)
+        return SECFailure;
+    rv = SECITEM_CopyItem(peerKey->arena, &peerKey->u.dh.base,
+                          &pubKey->u.dh.base);
+    if (rv != SECSuccess)
+        return SECFailure;
+    rv = SECITEM_CopyItem(peerKey->arena, &peerKey->u.dh.publicValue,
+                          &publicValue);
+    if (rv != SECSuccess)
+        return SECFailure;
+
+    return SECSuccess;
+}
+
+static SECStatus
+tls13_HandleKeyShare(sslSocket *ss,
+                     TLS13KeyShareEntry *entry,
+                     sslKeyPair *keyPair)
+{
+    PORTCheapArenaPool arena;
+    SECStatus rv;
     SECKEYPublicKey *peerKey;
+    CK_MECHANISM_TYPE mechanism;
     PK11SymKey *shared;
+    PRErrorCode errorCode;
 
-    peerKey = tls13_ImportECDHKeyShare(ss, entry->key_exchange.data,
-                                       entry->key_exchange.len,
-                                       entry->group);
-    if (!peerKey)
-        return SECFailure; /* Error code set already. */
+    PORT_InitCheapArena(&arena, DER_DEFAULT_CHUNKSIZE);
+    peerKey = PORT_ArenaZNew(&arena.arena, SECKEYPublicKey);
+    if (peerKey == NULL) {
+        goto loser;
+    }
+    peerKey->arena = &arena.arena;
+    peerKey->pkcs11Slot = NULL;
+    peerKey->pkcs11ID = CK_INVALID_HANDLE;
 
-    /* Compute shared key. */
-    shared = tls13_ComputeECDHSharedKey(ss, privKey, peerKey);
-    SECKEY_DestroyPublicKey(peerKey);
+    switch (entry->group->type) {
+        case group_type_ec:
+            rv = tls13_ImportECDHKeyShare(ss, peerKey,
+                                          entry->key_exchange.data,
+                                          entry->key_exchange.len,
+                                          entry->group);
+            mechanism = CKM_ECDH1_DERIVE;
+            break;
+        case group_type_ff:
+            rv = tls13_ImportDHEKeyShare(ss, peerKey,
+                                         entry->key_exchange.data,
+                                         entry->key_exchange.len,
+                                         keyPair->pubKey);
+            mechanism = CKM_DH_PKCS_DERIVE;
+            break;
+        default:
+            PORT_Assert(0);
+            goto loser;
+    }
+    if (rv != SECSuccess) {
+        goto loser;
+    }
+
+    shared = PK11_PubDeriveWithKDF(keyPair->privKey, peerKey,
+                                   PR_FALSE, NULL, NULL, mechanism,
+                                   tls13_GetHkdfMechanism(ss),
+                                   CKA_DERIVE, 0, CKD_NULL, NULL, NULL);
     if (!shared) {
-        return SECFailure; /* Error code set already. */
+        ssl_MapLowLevelError(SSL_ERROR_KEY_EXCHANGE_FAILURE);
+        goto loser;
     }
 
     /* Extract key. */
-    rv = tls13_HkdfExtractSharedKey(ss, shared, type);
+    rv = tls13_HkdfExtractSharedKey(ss, shared, EphemeralSharedSecret);
     PK11_FreeSymKey(shared);
-
+    PORT_DestroyCheapArena(&arena);
     return rv;
+
+loser:
+    PORT_DestroyCheapArena(&arena);
+    errorCode = PORT_GetError(); /* don't overwrite the error code */
+    tls13_FatalError(ss, errorCode, illegal_parameter);
+    return SECFailure;
 }
 
 SECStatus
@@ -476,9 +571,6 @@ tls13_AllowPskCipher(const sslSocket *ss, const ssl3CipherSuiteDef *cipher_def)
         if (sid->cached == never_cached)
             return PR_FALSE;
 
-        /* Don't offer this if the session version < TLS 1.3 */
-        if (sid->version < SSL_LIBRARY_VERSION_TLS_1_3)
-            return PR_FALSE;
         cached_cipher_def = ssl_LookupCipherSuiteDef(
             sid->u.ssl3.cipherSuite);
         PORT_Assert(cached_cipher_def);
@@ -674,10 +766,12 @@ loser:
 SECStatus
 tls13_HandleClientKeyShare(sslSocket *ss)
 {
-    ECName expectedGroup;
+    const namedGroupDef *expectedGroup;
     SECStatus rv;
-    TLS13KeyShareEntry *found = NULL;
+    TLS13KeyShareEntry *peerShare = NULL; /* theirs */
+    sslEphemeralKeyPair *keyPair;         /* ours */
     PRCList *cur_p;
+    const ssl3DHParams *dheParams = NULL;
 
     SSL_TRC(3, ("%d: TLS13[%d]: handle client_key_share handshake",
                 SSL_GETPID(), ss->fd));
@@ -689,13 +783,26 @@ tls13_HandleClientKeyShare(sslSocket *ss)
     switch (ss->ssl3.hs.kea_def->exchKeyType) {
         case ssl_kea_ecdh:
         case ssl_kea_ecdh_psk:
-            expectedGroup = ssl3_GetCurveNameForServerSocket(ss);
+            expectedGroup = ssl_GetECGroupForServerSocket(ss);
             if (!expectedGroup) {
                 FATAL_ERROR(ss, SSL_ERROR_NO_CYPHER_OVERLAP,
                             handshake_failure);
                 return SECFailure;
             }
             break;
+
+        case ssl_kea_dh:
+        case ssl_kea_dh_psk:
+            rv = ssl_SelectDHEParams(ss, &expectedGroup, &dheParams);
+            if (rv != SECSuccess) {
+                FATAL_ERROR(ss, SSL_ERROR_NO_CYPHER_OVERLAP,
+                            handshake_failure);
+                return SECFailure;
+            }
+            PORT_Assert(expectedGroup);
+            PORT_Assert(dheParams);
+            break;
+
         default:
             /* Got an unknown or unsupported Key Exchange Algorithm.
              * Can't happen. */
@@ -710,13 +817,13 @@ tls13_HandleClientKeyShare(sslSocket *ss)
         TLS13KeyShareEntry *offer = (TLS13KeyShareEntry *)cur_p;
 
         if (offer->group == expectedGroup) {
-            found = offer;
+            peerShare = offer;
             break;
         }
         cur_p = PR_NEXT_LINK(cur_p);
     }
 
-    if (!found) {
+    if (!peerShare) {
         /* No acceptable group. In future, we will need to correct the client.
          * Currently just generate an error.
          * TODO(ekr@rtfm.com): Write code to correct client.
@@ -726,27 +833,31 @@ tls13_HandleClientKeyShare(sslSocket *ss)
     }
 
     /* Generate our key */
-    rv = ssl3_CreateECDHEphemeralKeyPair(expectedGroup, &ss->ephemeralECDHKeyPair);
+    switch (expectedGroup->type) {
+        case group_type_ec:
+            rv = ssl_CreateECDHEphemeralKeyPair(expectedGroup, &keyPair);
+            break;
+        case group_type_ff:
+            PORT_Assert(dheParams);
+            rv = ssl_CreateDHEKeyPair(expectedGroup, dheParams, &keyPair);
+            break;
+    }
     if (rv != SECSuccess)
         return rv;
+    PR_APPEND_LINK(&keyPair->link, &ss->ephemeralKeyPairs);
 
     ss->sec.keaType = ss->ssl3.hs.kea_def->exchKeyType;
-    ss->sec.keaKeyBits = SECKEY_PublicKeyStrengthInBits(
-        ss->ephemeralECDHKeyPair->pubKey);
+    ss->sec.keaKeyBits = SECKEY_PublicKeyStrengthInBits(keyPair->keys->pubKey);
 
     /* Register the sender */
     rv = ssl3_RegisterServerHelloExtensionSender(ss, ssl_tls13_key_share_xtn,
                                                  tls13_ServerSendKeyShareXtn);
-    if (rv != SECSuccess)
-        return SECFailure; /* Error code set below */
+    if (rv != SECSuccess) {
+        return SECFailure; /* Error code set already. */
+    }
 
-    rv = tls13_HandleECDHEKeyShare(ss, found,
-                                   ss->ephemeralECDHKeyPair->privKey,
-                                   EphemeralSharedSecret);
-    if (rv != SECSuccess)
-        return SECFailure; /* Error code set below */
-
-    return SECSuccess;
+    rv = tls13_HandleKeyShare(ss, peerShare, keyPair->keys);
+    return rv; /* Error code set already. */
 }
 
 /*
@@ -1121,47 +1232,38 @@ SECStatus
 tls13_HandleServerKeyShare(sslSocket *ss)
 {
     SECStatus rv;
-    ECName expectedGroup;
     TLS13KeyShareEntry *entry;
+    sslEphemeralKeyPair *keyPair;
 
     SSL_TRC(3, ("%d: TLS13[%d]: handle server_key_share handshake",
                 SSL_GETPID(), ss->fd));
     PORT_Assert(ss->opt.noLocks || ssl_HaveRecvBufLock(ss));
     PORT_Assert(ss->opt.noLocks || ssl_HaveSSL3HandshakeLock(ss));
 
-    switch (ss->ssl3.hs.kea_def->exchKeyType) {
-        case ssl_kea_ecdh:
-        case ssl_kea_ecdh_psk:
-            expectedGroup = ssl3_PubKey2ECName(ss->ephemeralECDHKeyPair->pubKey);
-            break;
-        default:
-            FATAL_ERROR(ss, SEC_ERROR_UNSUPPORTED_KEYALG, handshake_failure);
-            return SECFailure;
-    }
-
     /* This list should have one entry. */
     if (PR_CLIST_IS_EMPTY(&ss->ssl3.hs.remoteKeyShares)) {
         FATAL_ERROR(ss, SSL_ERROR_MISSING_KEY_SHARE, missing_extension);
         return SECFailure;
     }
+
     entry = (TLS13KeyShareEntry *)PR_NEXT_LINK(&ss->ssl3.hs.remoteKeyShares);
     PORT_Assert(PR_NEXT_LINK(&entry->link) == &ss->ssl3.hs.remoteKeyShares);
 
-    if (entry->group != expectedGroup) {
+    PORT_Assert(ssl_NamedGroupEnabled(ss, entry->group));
+
+    /* Now get our matching key. */
+    keyPair = ssl_LookupEphemeralKeyPair(ss, entry->group);
+    if (!keyPair) {
         FATAL_ERROR(ss, SSL_ERROR_RX_MALFORMED_KEY_SHARE, illegal_parameter);
         return SECFailure;
     }
 
-    rv = tls13_HandleECDHEKeyShare(ss, entry,
-                                   ss->ephemeralECDHKeyPair->privKey,
-                                   EphemeralSharedSecret);
+    rv = tls13_HandleKeyShare(ss, entry, keyPair->keys);
+    if (rv != SECSuccess)
+        return SECFailure; /* Error code set by caller. */
 
     ss->sec.keaType = ss->ssl3.hs.kea_def->exchKeyType;
-    ss->sec.keaKeyBits = SECKEY_PublicKeyStrengthInBits(
-        ss->ephemeralECDHKeyPair->pubKey);
-
-    if (rv != SECSuccess)
-        return SECFailure; /* Error code set below */
+    ss->sec.keaKeyBits = SECKEY_PublicKeyStrengthInBits(keyPair->keys->pubKey);
 
     return tls13_InitializeHandshakeEncryption(ss);
 }
@@ -2522,8 +2624,8 @@ static const struct {
                             in TLS 1.3. */
         /* ExtensionSendEncrypted */
     },
-    { ssl_elliptic_curves_xtn,
-      ExtensionSendClear },
+    { ssl_supported_groups_xtn,
+      ExtensionSendEncrypted },
     { ssl_ec_point_formats_xtn,
       ExtensionNotUsed },
     { ssl_signature_algorithms_xtn,
