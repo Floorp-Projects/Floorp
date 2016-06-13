@@ -2927,20 +2927,15 @@ SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<MediaStreamTrackD
   TrackData* data;
   bool found;
   bool isAudio;
-  bool isVideo;
   RefPtr<MediaStreamTrackDirectListener> listener = aListener;
   STREAM_LOG(LogLevel::Debug, ("Adding direct track listener %p bound to track %d to source stream %p",
              listener.get(), aTrackID, this));
-
   {
     MutexAutoLock lock(mMutex);
     data = FindDataForTrack(aTrackID);
     found = !!data;
-    if (found) {
-      isAudio = data->mData->GetType() == MediaSegment::AUDIO;
-      isVideo = data->mData->GetType() == MediaSegment::VIDEO;
-    }
-    if (found && (isAudio || isVideo)) {
+    isAudio = found && data->mData->GetType() == MediaSegment::AUDIO;
+    if (found && isAudio) {
       TrackBound<MediaStreamTrackDirectListener>* sourceListener =
         mDirectTrackListeners.AppendElement();
       sourceListener->mListener = listener;
@@ -2954,11 +2949,11 @@ SourceMediaStream::AddDirectTrackListenerImpl(already_AddRefed<MediaStreamTrackD
       MediaStreamTrackDirectListener::InstallationResult::TRACK_NOT_FOUND_AT_SOURCE);
     return;
   }
-  if (!isAudio && !isVideo) {
-    STREAM_LOG(LogLevel::Warning, ("Source track for direct track listener %p is unknown",
+  if (!isAudio) {
+    STREAM_LOG(LogLevel::Warning, ("Source track for direct track listener %p is not audio",
                                    listener.get()));
-    // It is not a video or audio track.
-    MOZ_ASSERT(true);
+    listener->NotifyDirectListenerInstalled(
+      MediaStreamTrackDirectListener::InstallationResult::TRACK_TYPE_NOT_SUPPORTED);
     return;
   }
   STREAM_LOG(LogLevel::Debug, ("Added direct track listener %p", listener.get()));

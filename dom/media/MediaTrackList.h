@@ -20,7 +20,6 @@ class AudioTrackList;
 class VideoTrackList;
 class AudioTrack;
 class VideoTrack;
-class VideoStreamTrack;
 
 /**
  * Base class of AudioTrackList and VideoTrackList. The AudioTrackList and
@@ -59,14 +58,11 @@ public:
                    const nsAString& aLanguage,
                    bool aEnabled);
 
-  // For the case of src of HTMLMediaElement is non-MediaStream, leave the
-  // aVideoTrack as default(nullptr).
   static already_AddRefed<VideoTrack>
   CreateVideoTrack(const nsAString& aId,
                    const nsAString& aKind,
                    const nsAString& aLabel,
-                   const nsAString& aLanguage,
-                   VideoStreamTrack* aVideoTrack = nullptr);
+                   const nsAString& aLanguage);
 
   virtual void EmptyTracks();
 
