@@ -455,7 +455,9 @@ ConvertFromSID(sidCacheEntry *to, sslSessionID *from)
         case ssl_auth_ecdsa:
         case ssl_auth_ecdh_rsa:
         case ssl_auth_ecdh_ecdsa:
-            to->u.ssl3.certTypeArgs = (PRUint16)from->certType.u.namedCurve;
+            PORT_Assert(from->certType.namedCurve);
+            to->u.ssl3.certTypeArgs =
+                (PRUint16)from->certType.namedCurve->name;
             break;
         default:
             break;
@@ -539,8 +541,8 @@ ConvertToSID(sidCacheEntry *from,
         case ssl_auth_ecdsa:
         case ssl_auth_ecdh_rsa:
         case ssl_auth_ecdh_ecdsa:
-            to->certType.u.namedCurve =
-                (ECName)from->u.ssl3.certTypeArgs;
+            to->certType.namedCurve =
+                ssl_LookupNamedGroup((NamedGroup)from->u.ssl3.certTypeArgs);
             break;
         default:
             break;

@@ -5,7 +5,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <malloc.h>
 #include <time.h>
 #include "mpi.h"
 #include "mpi-priv.h"
@@ -267,30 +266,24 @@ main(int argc, char **argv)
     testNewFuncs( default_n+2, modulus_len - 2);
     testNewFuncs( default_n+3, modulus_len - 3);
 
-    printf("%lu allocations, %lu frees, %lu copies\n", mp_allocs, mp_frees, mp_copies);
     rv = testModExp(default_n, 0, buf, buf2, modulus_len);
     dumpBytes((unsigned char *)buf2, modulus_len);
 
-    printf("%lu allocations, %lu frees, %lu copies\n", mp_allocs, mp_frees, mp_copies);
     rv = testModExp(default_n, 1, buf, buf2, modulus_len);
     dumpBytes((unsigned char *)buf2, modulus_len);
 
-    printf("%lu allocations, %lu frees, %lu copies\n", mp_allocs, mp_frees, mp_copies);
     rv = testModExp(default_n, 2, buf, buf2, modulus_len);
     dumpBytes((unsigned char *)buf2, modulus_len);
 
-    printf("%lu allocations, %lu frees, %lu copies\n", mp_allocs, mp_frees, mp_copies);
     rv = testModExp(default_n, 3, buf, buf2, modulus_len);
     dumpBytes((unsigned char *)buf2, modulus_len);
   }
-    printf("%lu allocations, %lu frees, %lu copies\n", mp_allocs, mp_frees, mp_copies);
     rv = doModExp(default_n, default_d, buf, buf2, modulus_len);
     if (rv != 0) {
 	fprintf(stderr, "Error in modexp operation:\n");
 	exit(1);
     }
     dumpBytes((unsigned char *)buf2, modulus_len);
-    printf("%lu allocations, %lu frees, %lu copies\n", mp_allocs, mp_frees, mp_copies);
 
     timeCtx = CreateTimingContext();
     TimingBegin(timeCtx);
@@ -304,7 +297,6 @@ main(int argc, char **argv)
     }
     TimingEnd(timeCtx);
     printf("%ld iterations in %s\n", iters, TimingGenerateString(timeCtx));
-    printf("%lu allocations, %lu frees, %lu copies\n", mp_allocs, mp_frees, mp_copies);
 
     return 0;
 }

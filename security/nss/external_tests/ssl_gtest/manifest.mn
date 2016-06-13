@@ -12,13 +12,14 @@ CSRCS = \
       $(NULL)
 
 CPPSRCS = \
-      ssl_v2_client_hello_unittest.cc \
       ssl_agent_unittest.cc \
-      ssl_loopback_unittest.cc \
-      ssl_extension_unittest.cc \
-      ssl_skip_unittest.cc \
       ssl_ciphersuite_unittest.cc \
+      ssl_dhe_unittest.cc \
+      ssl_extension_unittest.cc \
       ssl_gtest.cc \
+      ssl_loopback_unittest.cc \
+      ssl_skip_unittest.cc \
+      ssl_v2_client_hello_unittest.cc \
       test_io.cc \
       tls_agent.cc \
       tls_connect.cc \
