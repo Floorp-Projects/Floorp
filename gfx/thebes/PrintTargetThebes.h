@@ -19,9 +19,6 @@ namespace gfx {
  * This class should go away once all the logic from the gfxASurface subclasses
  * has been moved to new PrintTarget subclasses and we no longer need to
  * wrap a gfxASurface.
- *
- * When removing this class, be sure to make PrintTarget::MakeDrawTarget
- * non-virtual!
  */
 class PrintTargetThebes final : public PrintTarget {
 public:

@@ -108,43 +108,17 @@ StaticallyLink(CodeSegment& cs, const LinkData& linkData, ExclusiveContext* cx)
 static void
 SpecializeToHeap(CodeSegment& cs, const Metadata& metadata, uint8_t* heapBase, uint32_t heapLength)
 {
-#if defined(JS_CODEGEN_X86)
+    for (const BoundsCheck& check : metadata.boundsChecks)
+        Assembler::UpdateBoundsCheck(check.patchAt(cs.code()), heapLength);
 
-    // An access is out-of-bounds iff
-    //      ptr + offset + data-type-byte-size > heapLength
-    // i.e. ptr > heapLength - data-type-byte-size - offset. data-type-byte-size
-    // and offset are already included in the addend so we
-    // just have to add the heap length here.
-    for (const HeapAccess& access : metadata.heapAccesses) {
-        if (access.hasLengthCheck())
-            X86Encoding::AddInt32(access.patchLengthAt(cs.code()), heapLength);
+#if defined(JS_CODEGEN_X86)
+    for (const MemoryAccess& access : metadata.memoryAccesses) {
+        // Patch memory pointer immediate.
         void* addr = access.patchHeapPtrImmAt(cs.code());
         uint32_t disp = reinterpret_cast<uint32_t>(X86Encoding::GetPointer(addr));
         MOZ_ASSERT(disp <= INT32_MAX);
         X86Encoding::SetPointer(addr, (void*)(heapBase + disp));
     }
-
-#elif defined(JS_CODEGEN_X64)
-
-    // Even with signal handling being used for most bounds checks, there may be
-    // atomic operations that depend on explicit checks.
-    //
-    // If we have any explicit bounds checks, we need to patch the heap length
-    // checks at the right places. All accesses that have been recorded are the
-    // only ones that need bound checks (see also
-    // CodeGeneratorX64::visitAsmJS{Load,Store,CompareExchange,Exchange,AtomicBinop}Heap)
-    for (const HeapAccess& access : metadata.heapAccesses) {
-        // See comment above for x86 codegen.
-        if (access.hasLengthCheck())
-            X86Encoding::AddInt32(access.patchLengthAt(cs.code()), heapLength);
-    }
-
-#elif defined(JS_CODEGEN_ARM) || defined(JS_CODEGEN_ARM64) || \
-      defined(JS_CODEGEN_MIPS32) || defined(JS_CODEGEN_MIPS64)
-
-    for (const HeapAccess& access : metadata.heapAccesses)
-        Assembler::UpdateBoundsCheck(heapLength, (Instruction*)(access.insnOffset() + cs.code()));
-
 #endif
 }
 
@@ -503,7 +477,8 @@ Metadata::serializedSize() const
     return sizeof(pod()) +
            SerializedVectorSize(imports) +
            SerializedVectorSize(exports) +
-           SerializedPodVectorSize(heapAccesses) +
+           SerializedPodVectorSize(memoryAccesses) +
+           SerializedPodVectorSize(boundsChecks) +
            SerializedPodVectorSize(codeRanges) +
            SerializedPodVectorSize(callSites) +
            SerializedPodVectorSize(callThunks) +
@@ -517,7 +492,8 @@ Metadata::serialize(uint8_t* cursor) const
     cursor = WriteBytes(cursor, &pod(), sizeof(pod()));
     cursor = SerializeVector(cursor, imports);
     cursor = SerializeVector(cursor, exports);
-    cursor = SerializePodVector(cursor, heapAccesses);
+    cursor = SerializePodVector(cursor, memoryAccesses);
+    cursor = SerializePodVector(cursor, boundsChecks);
     cursor = SerializePodVector(cursor, codeRanges);
     cursor = SerializePodVector(cursor, callSites);
     cursor = SerializePodVector(cursor, callThunks);
@@ -532,7 +508,8 @@ Metadata::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
     (cursor = ReadBytes(cursor, &pod(), sizeof(pod()))) &&
     (cursor = DeserializeVector(cx, cursor, &imports)) &&
     (cursor = DeserializeVector(cx, cursor, &exports)) &&
-    (cursor = DeserializePodVector(cx, cursor, &heapAccesses)) &&
+    (cursor = DeserializePodVector(cx, cursor, &memoryAccesses)) &&
+    (cursor = DeserializePodVector(cx, cursor, &boundsChecks)) &&
     (cursor = DeserializePodVector(cx, cursor, &codeRanges)) &&
     (cursor = DeserializePodVector(cx, cursor, &callSites)) &&
     (cursor = DeserializePodVector(cx, cursor, &callThunks)) &&
@@ -546,7 +523,8 @@ Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
 {
     return SizeOfVectorExcludingThis(imports, mallocSizeOf) +
            SizeOfVectorExcludingThis(exports, mallocSizeOf) +
-           heapAccesses.sizeOfExcludingThis(mallocSizeOf) +
+           memoryAccesses.sizeOfExcludingThis(mallocSizeOf) +
+           boundsChecks.sizeOfExcludingThis(mallocSizeOf) +
            codeRanges.sizeOfExcludingThis(mallocSizeOf) +
            callSites.sizeOfExcludingThis(mallocSizeOf) +
            callThunks.sizeOfExcludingThis(mallocSizeOf) +

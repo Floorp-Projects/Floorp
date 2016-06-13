@@ -52,6 +52,10 @@ PrintTarget::MakeDrawTarget(const IntSize& aSize,
   MOZ_ASSERT(mCairoSurface,
              "We shouldn't have been constructed without a cairo surface");
 
+  MOZ_ASSERT(!aRecorder,
+             "aRecorder should only be passed to an instance of "
+             "PrintTargetRecording");
+
   if (cairo_surface_status(mCairoSurface)) {
     return nullptr;
   }
@@ -62,36 +66,6 @@ PrintTarget::MakeDrawTarget(const IntSize& aSize,
   RefPtr<DrawTarget> dt =
     Factory::CreateDrawTargetForCairoSurface(mCairoSurface, aSize);
   if (!dt || !dt->IsValid()) {
-    return nullptr;
-  }
-
-  if (aRecorder) {
-    dt = CreateRecordingDrawTarget(aRecorder, dt);
-    if (!dt || !dt->IsValid()) {
-      return nullptr;
-    }
-  }
-
-  return dt.forget();
-}
-
-already_AddRefed<DrawTarget>
-PrintTarget::CreateRecordingDrawTarget(DrawEventRecorder* aRecorder,
-                                       DrawTarget* aDrawTarget)
-{
-  MOZ_ASSERT(aRecorder);
-  MOZ_ASSERT(aDrawTarget);
-
-  RefPtr<DrawTarget> dt;
-
-  if (aRecorder) {
-    // It doesn't really matter what we pass as the DrawTarget here.
-    dt = gfx::Factory::CreateRecordingDrawTarget(aRecorder, aDrawTarget);
-  }
-
-  if (!dt || !dt->IsValid()) {
-    gfxCriticalNote
-      << "Failed to create a recording DrawTarget for PrintTarget";
     return nullptr;
   }
 
