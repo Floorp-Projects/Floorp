@@ -24,7 +24,7 @@ class MediaStream;
 class MediaStreamGraph;
 class MediaStreamGraphImpl;
 class MediaStreamTrackListener;
-class DirectMediaStreamTrackListener;
+class MediaStreamTrackDirectListener;
 class PeerConnectionImpl;
 class PeerConnectionMedia;
 class PeerIdentity;
@@ -363,8 +363,8 @@ public:
    * the listener succeeded (tracks originating from SourceMediaStreams) or
    * failed (e.g., WebAudio originated tracks).
    */
-  void AddDirectListener(DirectMediaStreamTrackListener *aListener);
-  void RemoveDirectListener(DirectMediaStreamTrackListener  *aListener);
+  void AddDirectListener(MediaStreamTrackDirectListener *aListener);
+  void RemoveDirectListener(MediaStreamTrackDirectListener  *aListener);
 
   /**
    * Sets up a MediaInputPort from the underlying track that this
