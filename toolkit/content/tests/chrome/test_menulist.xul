@@ -84,6 +84,13 @@ SimpleTest.waitForExplicitFinish();
 function testtag_menulists()
 {
   testtag_menulist_UI_start($("menulist"), false);
+  testtag_menulist_UI_start($("menulist-editable"), true);
+
+  // bug 566154, the menulist width should account for vertical scrollbar
+  ok(document.getElementById("menulist-size").getBoundingClientRect().width >= 210,
+     "menulist popup width includes scrollbar width");
+
+  $("menulist").open = true;
 }
 
 function testtag_menulist_UI_start(element, editable)
@@ -97,25 +104,11 @@ function testtag_menulist_UI_start(element, editable)
 
   // test the interfaces that menulist implements
   test_nsIDOMXULMenuListElement(element, testprefix, editable);
-}
 
-function testtag_menulist_UI_finish(element, editable)
-{
   element.value = "";
 
   test_nsIDOMXULSelectControlElement(element, "menuitem",
                                      editable ? "editable" : null);
-
-  if (!editable) {
-    testtag_menulist_UI_start($("menulist-editable"), true);
-  }
-  else {
-    // bug 566154, the menulist width should account for vertical scrollbar
-    ok(document.getElementById("menulist-size").getBoundingClientRect().width >= 210,
-       "menulist popup width includes scrollbar width");
-
-    $("menulist").open = true;
-  }
 }
 
 function test_nsIDOMXULMenuListElement(element, testprefix, editable)
@@ -159,7 +152,6 @@ function test_nsIDOMXULMenuListElement(element, testprefix, editable)
     element.selectedIndex = 1;
     is(element.image, "", testprefix + " image set to selected");
     is(element.description, "", testprefix + " description set to selected");
-    test_nsIDOMXULMenuListElement_finish(element, testprefix, editable);
   }
   else {
     element.selectedIndex = 1;
@@ -173,66 +165,27 @@ function test_nsIDOMXULMenuListElement(element, testprefix, editable)
     is(element.description, "This is the third description", testprefix + " description set to selected again");
 
     // check that changing the properties of the selected item changes the menulist's properties
-    let properties = [{attr: "label", value: "Item Number Three"},
-                      {attr: "value", value: "item-three"},
-                      {attr: "image", value: "smile.png"},
-                      {attr: "description", value: "Changed description"}];
-    test_nsIDOMXULMenuListElement_properties(element, testprefix, editable, thirditem, properties);
-  }
-}
+    thirditem.label = "Item Number Three";
+    is(element.label, "Item Number Three", testprefix + " label modified");
+    thirditem.value = "item-three";
+    is(element.value, "item-three", testprefix + " value modified");
+    thirditem.image = "smile.png";
+    is(element.image, "smile.png", testprefix + " image modified");
+    thirditem.setAttribute("description", "Changed description");
+    is(element.description, "Changed description", testprefix + " description modified");
+    seconditem.label = "Changed Label 2";
+    is(element.label, "Item Number Three", testprefix + " label of another item modified");
 
-function test_nsIDOMXULMenuListElement_properties(element, testprefix, editable, thirditem, properties)
-{
-  let {attr, value} = properties.shift();
-  let last = (properties.length == 0);
-
-  let mutObserver = new MutationObserver(() => {
-    is(element.getAttribute(attr), value, `${testprefix} ${attr} modified`);
-    done();
-  });
-  mutObserver.observe(element, { attributeFilter: [attr] });
-
-  let failureTimeout = setTimeout(() => {
-    ok(false, `${testprefix} ${attr} should have updated`);
-    done();
-  }, 2000);
-
-  function done()
-  {
-    clearTimeout(failureTimeout);
-    mutObserver.disconnect();
-    if (!last) {
-      test_nsIDOMXULMenuListElement_properties(element, testprefix, editable, thirditem, properties);
-    }
-    else {
-      test_nsIDOMXULMenuListElement_unselected(element, testprefix, editable, thirditem);
-    }
+    element.selectedIndex = 0;
+    is(element.image, "", testprefix + " image set to selected with no image");
+    is(element.description, "", testprefix + " description set to selected with no description");
   }
 
-  thirditem.setAttribute(attr, value)
-}
-
-function test_nsIDOMXULMenuListElement_unselected(element, testprefix, editable, thirditem)
-{
-  let seconditem = thirditem.previousElementSibling;
-  seconditem.label = "Changed Label 2";
-  is(element.label, "Item Number Three", testprefix + " label of another item modified");
-
-  element.selectedIndex = 0;
-  is(element.image, "", testprefix + " image set to selected with no image");
-  is(element.description, "", testprefix + " description set to selected with no description");
-  test_nsIDOMXULMenuListElement_finish(element, testprefix, editable);
-}
-
-function test_nsIDOMXULMenuListElement_finish(element, testprefix, editable)
-{
   // check the removeAllItems method
   element.appendItem("An Item", "anitem");
   element.appendItem("Another Item", "anotheritem");
   element.removeAllItems();
   is(element.itemCount, 0, testprefix + " removeAllItems");
-
-  testtag_menulist_UI_finish(element, editable);
 }
 
 function test_menulist_open(element, scroller)
