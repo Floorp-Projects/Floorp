@@ -975,6 +975,7 @@ struct ParamTraits<mozilla::ContentCache>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
+    WriteParam(aMsg, aParam.mCompositionStart);
     WriteParam(aMsg, aParam.mText);
     WriteParam(aMsg, aParam.mSelection.mAnchor);
     WriteParam(aMsg, aParam.mSelection.mFocus);
@@ -992,7 +993,8 @@ struct ParamTraits<mozilla::ContentCache>
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
-    return ReadParam(aMsg, aIter, &aResult->mText) &&
+    return ReadParam(aMsg, aIter, &aResult->mCompositionStart) &&
+           ReadParam(aMsg, aIter, &aResult->mText) &&
            ReadParam(aMsg, aIter, &aResult->mSelection.mAnchor) &&
            ReadParam(aMsg, aIter, &aResult->mSelection.mFocus) &&
            ReadParam(aMsg, aIter, &aResult->mSelection.mWritingMode) &&
