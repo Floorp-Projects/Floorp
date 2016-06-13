@@ -74,7 +74,7 @@ class MachCommands(MachCommandBase):
         suite = unittest.defaultTestLoader.discover('taskgraph.test')
         runner = mozunit.MozTestRunner(verbosity=2)
         result = runner.run(suite)
-        if not result.wasSuccessful:
+        if not result.wasSuccessful():
             sys.exit(1)
 
     @ShowTaskGraphSubCommand('taskgraph', 'tasks',
