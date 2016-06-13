@@ -373,7 +373,7 @@ class Assembler : public vixl::Assembler
     static const size_t OffsetOfJumpTableEntryPointer = 8;
 
   public:
-    static void UpdateBoundsCheck(uint32_t logHeapSize, Instruction* inst);
+    static void UpdateBoundsCheck(uint8_t* patchAt, uint32_t heapLength);
 
     void writeCodePointer(AbsoluteLabel* absoluteLabel) {
         MOZ_ASSERT(!absoluteLabel->bound());

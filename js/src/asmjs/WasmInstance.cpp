@@ -834,30 +834,32 @@ Instance::lookupCodeRange(void* pc) const
     return &metadata_->codeRanges[match];
 }
 
-struct HeapAccessOffset
+#ifdef ASMJS_MAY_USE_SIGNAL_HANDLERS
+struct MemoryAccessOffset
 {
-    const HeapAccessVector& accesses;
-    explicit HeapAccessOffset(const HeapAccessVector& accesses) : accesses(accesses) {}
+    const MemoryAccessVector& accesses;
+    explicit MemoryAccessOffset(const MemoryAccessVector& accesses) : accesses(accesses) {}
     uintptr_t operator[](size_t index) const {
         return accesses[index].insnOffset();
     }
 };
 
-const HeapAccess*
-Instance::lookupHeapAccess(void* pc) const
+const MemoryAccess*
+Instance::lookupMemoryAccess(void* pc) const
 {
     MOZ_ASSERT(codeSegment_->containsFunctionPC(pc));
 
     uint32_t target = ((uint8_t*)pc) - codeSegment_->code();
     size_t lowerBound = 0;
-    size_t upperBound = metadata_->heapAccesses.length();
+    size_t upperBound = metadata_->memoryAccesses.length();
 
     size_t match;
-    if (!BinarySearch(HeapAccessOffset(metadata_->heapAccesses), lowerBound, upperBound, target, &match))
+    if (!BinarySearch(MemoryAccessOffset(metadata_->memoryAccesses), lowerBound, upperBound, target, &match))
         return nullptr;
 
-    return &metadata_->heapAccesses[match];
+    return &metadata_->memoryAccesses[match];
 }
+#endif // ASMJS_MAY_USE_SIGNAL_HANDLERS_FOR_OOB
 
 void
 Instance::addSizeOfMisc(MallocSizeOf mallocSizeOf,
