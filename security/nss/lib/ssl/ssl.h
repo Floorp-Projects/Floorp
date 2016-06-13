@@ -206,6 +206,22 @@ SSL_IMPORT PRFileDesc *DTLS_ImportFD(PRFileDesc *model, PRFileDesc *fd);
 /* Request Signed Certificate Timestamps via TLS extension (client) */
 #define SSL_ENABLE_SIGNED_CERT_TIMESTAMPS 31
 
+/* Ordinarily, when negotiating a TLS_DHE_* cipher suite the server picks the
+ * group.  draft-ietf-tls-negotiated-ff-dhe changes this to use supported_groups
+ * (formerly supported_curves) to signal which pre-defined groups are OK.
+ *
+ * This option causes an NSS client to use this extension and demand that those
+ * groups be used.  A client will signal any enabled DHE groups in the
+ * supported_groups extension and reject groups that don't match what it has
+ * enabled.  A server will only negotiate TLS_DHE_* cipher suites if the
+ * client includes the extension.
+ *
+ * See SSL_DHEGroupPrefSet() for how to control which groups are enabled.
+ *
+ * This option cannot be enabled if NSS is not compiled with ECC support.
+ */
+#define SSL_REQUIRE_DH_NAMED_GROUPS 32
+
 #ifdef SSL_DEPRECATED_FUNCTION
 /* Old deprecated function names */
 SSL_IMPORT SECStatus SSL_Enable(PRFileDesc *fd, int option, PRBool on);
@@ -356,7 +372,7 @@ SSL_IMPORT unsigned int SSL_SignatureMaxCount();
 ** For example, a TLS extension sent by the client might indicate a preference.
 */
 SSL_IMPORT SECStatus SSL_DHEGroupPrefSet(PRFileDesc *fd,
-                                         SSLDHEGroupType *groups,
+                                         const SSLDHEGroupType *groups,
                                          PRUint16 num_groups);
 
 /* Enable the use of a DHE group that's smaller than the library default,

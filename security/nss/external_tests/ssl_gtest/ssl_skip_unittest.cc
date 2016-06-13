@@ -104,7 +104,7 @@ class TlsSkipTest
 };
 
 TEST_P(TlsSkipTest, SkipCertificateRsa) {
-  DisableDheAndEcdheCiphers();
+  EnableOnlyStaticRsaCiphers();
   ServerSkipTest(new TlsHandshakeSkipFilter(kTlsHandshakeCertificate));
   client_->CheckErrorCode(SSL_ERROR_RX_UNEXPECTED_HELLO_DONE);
 }

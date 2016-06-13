@@ -770,7 +770,7 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
                 pecParams = &srvPubkey->u.ec.DEREncodedParams;
             } else if (privKeytype == rsaKey && testecdhe) {
                 /* TLS_ECDHE_RSA */
-                ECName ec_curve;
+                const namedGroupDef *ecGroup;
                 int serverKeyStrengthInBits;
                 int signatureKeyStrength;
                 int requiredECCbits;
@@ -793,11 +793,10 @@ SSL_CanBypass(CERTCertificate *cert, SECKEYPrivateKey *srvPrivkey,
                 if (requiredECCbits > signatureKeyStrength)
                     requiredECCbits = signatureKeyStrength;
 
-                ec_curve =
-                    ssl3_GetCurveWithECKeyStrength(
-                        ssl3_GetSupportedECCurveMask(NULL),
-                        requiredECCbits);
-                rv = ssl3_ECName2Params(NULL, ec_curve, &ecParams);
+                ecGroup =
+                    ssl_GetECGroupWithStrength(PR_UINT32_MAX,
+                                               requiredECCbits);
+                rv = ssl_NamedGroup2ECParams(NULL, ecGroup, &ecParams);
                 if (rv == SECFailure) {
                     break;
                 }
