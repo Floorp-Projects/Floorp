@@ -212,7 +212,15 @@
 
             if (oldval) {
               oldval.removeAttribute('selected');
-              this.mAttributeObserver.disconnect();
+              if (document instanceof Components.interfaces.nsIDOMXULDocument) {
+                document.removeBroadcastListenerFor(oldval, this, "value");
+                document.removeBroadcastListenerFor(oldval, this, "label");
+                document.removeBroadcastListenerFor(oldval, this, "image");
+                document.removeBroadcastListenerFor(oldval, this, "description");
+              }
+              else {
+                this.mAttributeObserver.disconnect();
+              }
             }
 
             this.mSelectedInternal = val;
@@ -222,10 +230,19 @@
               this.setAttribute('image', val.getAttribute('image'));
               this.setAttribute('label', val.getAttribute('label'));
               this.setAttribute('description', val.getAttribute('description'));
-
-              let attributeFilter = ["value", "label", "image", "description"];
-              this.mAttributeObserver = new MutationObserver(this.handleMutation.bind(this));
-              this.mAttributeObserver.observe(val, { attributeFilter });
+              // DOMAttrModified listeners slow down setAttribute calls within
+              // the document, see bug 395496
+              if (document instanceof Components.interfaces.nsIDOMXULDocument) {
+                document.addBroadcastListenerFor(val, this, "value");
+                document.addBroadcastListenerFor(val, this, "label");
+                document.addBroadcastListenerFor(val, this, "image");
+                document.addBroadcastListenerFor(val, this, "description");
+              }
+              else {
+                let attributeFilter = ["value", "label", "image", "description"];
+                this.mAttributeObserver = new MutationObserver(this.handleMutation.bind(this));
+                this.mAttributeObserver.observe(val, { attributeFilter });
+              }
             }
             else {
               this.removeAttribute('value');
@@ -373,8 +390,16 @@
 
       <destructor>
         <![CDATA[
-          if (this.mAttributeObserver) {
-            this.mAttributeObserver.disconnect();
+          if (this.mSelectedInternal) {
+            if (document instanceof Components.interfaces.nsIDOMXULDocument) {
+              document.removeBroadcastListenerFor(this.mSelectedInternal, this, "value");
+              document.removeBroadcastListenerFor(this.mSelectedInternal, this, "label");
+              document.removeBroadcastListenerFor(this.mSelectedInternal, this, "image");
+              document.removeBroadcastListenerFor(this.mSelectedInternal, this, "description");
+            }
+            else {
+              this.mAttributeObserver.disconnect();
+            }
           }
         ]]>
       </destructor>
