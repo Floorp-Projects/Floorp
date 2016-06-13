@@ -124,7 +124,7 @@ struct MOZ_RAII AutoStopVerifyingBarriers
 
 #ifdef JSGC_HASH_TABLE_CHECKS
 void CheckHashTablesAfterMovingGC(JSRuntime* rt);
-void CheckHeapAfterMovingGC(JSRuntime* rt, AutoLockForExclusiveAccess& lock);
+void CheckHeapAfterMovingGC(JSRuntime* rt);
 #endif
 
 struct MovingTracer : JS::CallbackTracer
