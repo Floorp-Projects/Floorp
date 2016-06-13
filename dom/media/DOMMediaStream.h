@@ -30,7 +30,7 @@ class DOMLocalMediaStream;
 class DOMMediaStream;
 class MediaStream;
 class MediaInputPort;
-class DirectMediaStreamListener;
+class MediaStreamDirectListener;
 class MediaStreamGraph;
 class ProcessedMediaStream;
 
@@ -439,8 +439,8 @@ public:
    * Allows users to get access to media data without going through graph
    * queuing. Returns a bool to let us know if direct data will be delivered.
    */
-  bool AddDirectListener(DirectMediaStreamListener *aListener);
-  void RemoveDirectListener(DirectMediaStreamListener *aListener);
+  bool AddDirectListener(MediaStreamDirectListener *aListener);
+  void RemoveDirectListener(MediaStreamDirectListener *aListener);
 
   virtual DOMLocalMediaStream* AsDOMLocalMediaStream() { return nullptr; }
   virtual DOMHwMediaStream* AsDOMHwMediaStream() { return nullptr; }

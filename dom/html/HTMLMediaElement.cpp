@@ -277,7 +277,7 @@ public:
  * This listener observes the first video frame to arrive with a non-empty size,
  * and calls HTMLMediaElement::ReceivedMediaStreamInitialSize() with that size.
  */
-class HTMLMediaElement::StreamSizeListener : public DirectMediaStreamTrackListener {
+class HTMLMediaElement::StreamSizeListener : public MediaStreamTrackDirectListener {
 public:
   explicit StreamSizeListener(HTMLMediaElement* aElement) :
     mElement(aElement),

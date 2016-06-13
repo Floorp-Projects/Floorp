@@ -409,7 +409,7 @@ MediaStreamTrack::RemoveListener(MediaStreamTrackListener* aListener)
 }
 
 void
-MediaStreamTrack::AddDirectListener(DirectMediaStreamTrackListener *aListener)
+MediaStreamTrack::AddDirectListener(MediaStreamTrackDirectListener *aListener)
 {
   LOG(LogLevel::Debug, ("MediaStreamTrack %p (%s) adding direct listener %p to "
                         "stream %p, track %d",
@@ -420,7 +420,7 @@ MediaStreamTrack::AddDirectListener(DirectMediaStreamTrackListener *aListener)
 }
 
 void
-MediaStreamTrack::RemoveDirectListener(DirectMediaStreamTrackListener *aListener)
+MediaStreamTrack::RemoveDirectListener(MediaStreamTrackDirectListener *aListener)
 {
   LOG(LogLevel::Debug, ("MediaStreamTrack %p removing direct listener %p from stream %p",
                         this, aListener, GetOwnedStream()));
