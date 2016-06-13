@@ -6,10 +6,9 @@
 
 #include "nsDeviceContextSpecProxy.h"
 
-#include "gfxASurface.h"
 #include "gfxPlatform.h"
 #include "mozilla/gfx/DrawEventRecorder.h"
-#include "mozilla/gfx/PrintTargetThebes.h"
+#include "mozilla/gfx/PrintTargetRecording.h"
 #include "mozilla/layout/RemotePrintJobChild.h"
 #include "mozilla/RefPtr.h"
 #include "mozilla/unused.h"
@@ -80,25 +79,7 @@ nsDeviceContextSpecProxy::MakePrintTarget()
   width /= TWIPS_PER_POINT_FLOAT;
   height /= TWIPS_PER_POINT_FLOAT;
 
-  RefPtr<gfxASurface> surface = gfxPlatform::GetPlatform()->
-    CreateOffscreenSurface(mozilla::gfx::IntSize(width, height),
-                           mozilla::gfx::SurfaceFormat::A8R8G8B8_UINT32);
-  if (!surface) {
-    return nullptr;
-  }
-
-  // The type of PrintTarget that we return here doesn't really matter since
-  // our implementation of GetDrawEventRecorder returns an object, which means
-  // the DrawTarget returned by the PrintTarget will be a DrawTargetRecording.
-  // The recording will be serialized and sent over to the parent process where
-  // PrintTranslator::TranslateRecording will call MakePrintTarget (indirectly
-  // via PrintTranslator::CreateDrawTarget) on whatever type of
-  // nsIDeviceContextSpecProxy is created for the platform that we are running
-  // on.  It is that DrawTarget that the recording will be replayed on to
-  // print.
-  RefPtr<PrintTarget> target = PrintTargetThebes::CreateOrNull(surface);
-
-  return target.forget();
+  return PrintTargetRecording::CreateOrNull(IntSize(width, height));
 }
 
 NS_IMETHODIMP
