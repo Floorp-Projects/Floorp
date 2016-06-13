@@ -405,7 +405,7 @@ CodeGeneratorX86::emitSimdLoad(LAsmJSLoadHeap* ins)
                       ? Operand(PatchedAbsoluteAddress(mir->offset()))
                       : Operand(ToRegister(ptr), mir->offset());
 
-    uint32_t maybeCmpOffset = maybeEmitThrowingAsmJSBoundsCheck(mir, mir, ptr);
+    bool hasBoundsCheck = maybeEmitThrowingAsmJSBoundsCheck(mir, mir, ptr);
 
     unsigned numElems = mir->numSimdElems();
     if (numElems == 3) {
@@ -417,29 +417,23 @@ CodeGeneratorX86::emitSimdLoad(LAsmJSLoadHeap* ins)
             : Operand(ToRegister(ptr), 2 * sizeof(float) + mir->offset());
 
         // Load XY
-        uint32_t before = masm.size();
         loadSimd(type, 2, srcAddr, out);
-        uint32_t after = masm.size();
-        masm.append(wasm::HeapAccess(before, after, maybeCmpOffset));
+        masm.append(wasm::MemoryAccess(masm.size()));
 
         // Load Z (W is zeroed)
         // This is still in bounds, as we've checked with a manual bounds check
         // or we had enough space for sure when removing the bounds check.
-        before = after;
         loadSimd(type, 1, srcAddrZ, ScratchSimd128Reg);
-        after = masm.size();
-        masm.append(wasm::HeapAccess(before, after));
+        masm.append(wasm::MemoryAccess(masm.size()));
 
         // Move ZW atop XY
         masm.vmovlhps(ScratchSimd128Reg, out, out);
     } else {
-        uint32_t before = masm.size();
         loadSimd(type, numElems, srcAddr, out);
-        uint32_t after = masm.size();
-        masm.append(wasm::HeapAccess(before, after, maybeCmpOffset));
+        masm.append(wasm::MemoryAccess(masm.size()));
     }
 
-    if (maybeCmpOffset != wasm::HeapAccess::NoLengthCheck)
+    if (hasBoundsCheck)
         cleanupAfterAsmJSBoundsCheckBranch(mir, ToRegister(ptr));
 }
 
@@ -461,20 +455,20 @@ CodeGeneratorX86::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
     memoryBarrier(mir->barrierBefore());
 
     OutOfLineLoadTypedArrayOutOfBounds* ool;
-    uint32_t maybeCmpOffset = maybeEmitAsmJSLoadBoundsCheck(mir, ins, &ool);
+    DebugOnly<bool> hasBoundsCheck = maybeEmitAsmJSLoadBoundsCheck(mir, ins, &ool);
 
-    uint32_t before = masm.size();
     load(accessType, srcAddr, out);
     uint32_t after = masm.size();
 
     if (ool) {
+        MOZ_ASSERT(hasBoundsCheck);
         cleanupAfterAsmJSBoundsCheckBranch(mir, ToRegister(ptr));
         masm.bind(ool->rejoin());
     }
 
     memoryBarrier(mir->barrierAfter());
 
-    masm.append(wasm::HeapAccess(before, after, maybeCmpOffset));
+    masm.append(wasm::MemoryAccess(after));
 }
 
 void
@@ -603,7 +597,7 @@ CodeGeneratorX86::emitSimdStore(LAsmJSStoreHeap* ins)
                       ? Operand(PatchedAbsoluteAddress(mir->offset()))
                       : Operand(ToRegister(ptr), mir->offset());
 
-    uint32_t maybeCmpOffset = maybeEmitThrowingAsmJSBoundsCheck(mir, mir, ptr);
+    bool hasBoundsCheck = maybeEmitThrowingAsmJSBoundsCheck(mir, mir, ptr);
 
     unsigned numElems = mir->numSimdElems();
     if (numElems == 3) {
@@ -615,28 +609,22 @@ CodeGeneratorX86::emitSimdStore(LAsmJSStoreHeap* ins)
             : Operand(ToRegister(ptr), 2 * sizeof(float) + mir->offset());
 
         // Store XY
-        uint32_t before = masm.size();
         storeSimd(type, 2, in, dstAddr);
-        uint32_t after = masm.size();
-        masm.append(wasm::HeapAccess(before, after, maybeCmpOffset));
+        masm.append(wasm::MemoryAccess(masm.size()));
 
         masm.vmovhlps(in, ScratchSimd128Reg, ScratchSimd128Reg);
 
         // Store Z (W is zeroed)
         // This is still in bounds, as we've checked with a manual bounds check
         // or we had enough space for sure when removing the bounds check.
-        before = masm.size();
         storeSimd(type, 1, ScratchSimd128Reg, dstAddrZ);
-        after = masm.size();
-        masm.append(wasm::HeapAccess(before, after));
+        masm.append(wasm::MemoryAccess(masm.size()));
     } else {
-        uint32_t before = masm.size();
         storeSimd(type, numElems, in, dstAddr);
-        uint32_t after = masm.size();
-        masm.append(wasm::HeapAccess(before, after, maybeCmpOffset));
+        masm.append(wasm::MemoryAccess(masm.size()));
     }
 
-    if (maybeCmpOffset != wasm::HeapAccess::NoLengthCheck)
+    if (hasBoundsCheck)
         cleanupAfterAsmJSBoundsCheckBranch(mir, ToRegister(ptr));
 }
 
@@ -660,20 +648,20 @@ CodeGeneratorX86::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
     memoryBarrier(mir->barrierBefore());
 
     Label* rejoin;
-    uint32_t maybeCmpOffset = maybeEmitAsmJSStoreBoundsCheck(mir, ins, &rejoin);
+    DebugOnly<bool> hasBoundsCheck = maybeEmitAsmJSStoreBoundsCheck(mir, ins, &rejoin);
 
-    uint32_t before = masm.size();
     store(accessType, value, dstAddr);
     uint32_t after = masm.size();
 
     if (rejoin) {
+        MOZ_ASSERT(hasBoundsCheck);
         cleanupAfterAsmJSBoundsCheckBranch(mir, ToRegister(ptr));
         masm.bind(rejoin);
     }
 
     memoryBarrier(mir->barrierAfter());
 
-    masm.append(wasm::HeapAccess(before, after, maybeCmpOffset));
+    masm.append(wasm::MemoryAccess(after));
 }
 
 void
@@ -706,20 +694,17 @@ void
 CodeGeneratorX86::asmJSAtomicComputeAddress(Register addrTemp, Register ptrReg, bool boundsCheck,
                                             uint32_t offset, uint32_t endOffset)
 {
-    uint32_t maybeCmpOffset = wasm::HeapAccess::NoLengthCheck;
-
     if (boundsCheck) {
-        maybeCmpOffset = masm.cmp32WithPatch(ptrReg, Imm32(-endOffset)).offset();
+        uint32_t cmpOffset = masm.cmp32WithPatch(ptrReg, Imm32(-endOffset)).offset();
         masm.j(Assembler::Above, wasm::JumpTarget::OutOfBounds);
+        masm.append(wasm::BoundsCheck(cmpOffset));
     }
 
     // Add in the actual heap pointer explicitly, to avoid opening up
     // the abstraction that is atomicBinopToTypedIntArray at this time.
     masm.movl(ptrReg, addrTemp);
-    uint32_t before = masm.size();
     masm.addlWithPatch(Imm32(offset), addrTemp);
-    uint32_t after = masm.size();
-    masm.append(wasm::HeapAccess(before, after, maybeCmpOffset));
+    masm.append(wasm::MemoryAccess(masm.size()));
 }
 
 void

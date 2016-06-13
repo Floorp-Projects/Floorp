@@ -20,7 +20,6 @@
 #include "cairo.h"
 
 #include "gfxImageSurface.h"
-#include "gfxQPainterSurface.h"
 #include "nsUnicodeProperties.h"
 
 #include "gfxFontconfigFonts.h"

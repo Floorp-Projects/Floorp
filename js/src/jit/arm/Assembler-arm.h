@@ -1952,7 +1952,7 @@ class Assembler : public AssemblerShared
     static size_t ToggledCallSize(uint8_t* code);
     static void ToggleCall(CodeLocationLabel inst_, bool enabled);
 
-    static void UpdateBoundsCheck(uint32_t logHeapSize, Instruction* inst);
+    static void UpdateBoundsCheck(uint8_t* patchAt, uint32_t heapLength);
     void processCodeLabels(uint8_t* rawCode);
 
     bool bailed() {

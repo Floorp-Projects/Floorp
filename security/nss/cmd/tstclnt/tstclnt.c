@@ -255,6 +255,8 @@ PrintParameterUsage(void)
     fprintf(stderr, "%-20s Enforce using an IPv6 destination address\n", "-6");
     fprintf(stderr, "%-20s (Options -4 and -6 cannot be combined.)\n", "");
     fprintf(stderr, "%-20s Enable the extended master secret extension [RFC7627]\n", "-G");
+    fprintf(stderr, "%-20s Require the use of FFDHE supported groups "
+                    "[I-D.ietf-tls-negotiated-ff-dhe]\n", "-H");
 }
 
 static void
@@ -916,6 +918,7 @@ main(int argc, char **argv)
     int enableSignedCertTimestamps = 0;
     int forceFallbackSCSV = 0;
     int enableExtendedMasterSecret = 0;
+    PRBool requireDHNamedGroups = 0;
     PRSocketOptionData opt;
     PRNetAddr addr;
     PRPollDesc pollset[2];
@@ -964,7 +967,7 @@ main(int argc, char **argv)
     SSL_VersionRangeGetSupported(ssl_variant_stream, &enabledVersions);
 
     optstate = PL_CreateOptState(argc, argv,
-                                 "46BCDFGKM:OR:STUV:W:Ya:bc:d:fgh:m:n:op:qr:st:uvw:xz");
+                                 "46BCDFGHKM:OR:STUV:W:Ya:bc:d:fgh:m:n:op:qr:st:uvw:xz");
     while ((optstatus = PL_GetNextOpt(optstate)) == PL_OPT_OK) {
         switch (optstate->option) {
             case '?':
@@ -1005,6 +1008,10 @@ main(int argc, char **argv)
 
             case 'G':
                 enableExtendedMasterSecret = PR_TRUE;
+                break;
+
+            case 'H':
+                requireDHNamedGroups = PR_TRUE;
                 break;
 
             case 'I': /* reserved for OCSP multi-stapling */
@@ -1448,6 +1455,15 @@ main(int argc, char **argv)
     /* enable extended master secret mode */
     if (enableExtendedMasterSecret) {
         rv = SSL_OptionSet(s, SSL_ENABLE_EXTENDED_MASTER_SECRET, PR_TRUE);
+        if (rv != SECSuccess) {
+            SECU_PrintError(progName, "error enabling extended master secret");
+            return 1;
+        }
+    }
+
+    /* require the use of fixed finite-field DH groups */
+    if (requireDHNamedGroups) {
+        rv = SSL_OptionSet(s, SSL_REQUIRE_DH_NAMED_GROUPS, PR_TRUE);
         if (rv != SECSuccess) {
             SECU_PrintError(progName, "error enabling extended master secret");
             return 1;

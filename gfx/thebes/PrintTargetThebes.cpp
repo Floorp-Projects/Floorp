@@ -36,17 +36,14 @@ already_AddRefed<DrawTarget>
 PrintTargetThebes::MakeDrawTarget(const IntSize& aSize,
                                   DrawEventRecorder* aRecorder)
 {
+  MOZ_ASSERT(!aRecorder,
+             "aRecorder should only be passed to an instance of "
+             "PrintTargetRecording");
+
   RefPtr<gfx::DrawTarget> dt =
     gfxPlatform::GetPlatform()->CreateDrawTargetForSurface(mGfxSurface, aSize);
   if (!dt || !dt->IsValid()) {
     return nullptr;
-  }
-
-  if (aRecorder) {
-    dt = CreateRecordingDrawTarget(aRecorder, dt);
-    if (!dt || !dt->IsValid()) {
-      return nullptr;
-    }
   }
 
   return dt.forget();

@@ -115,7 +115,8 @@ MediaStreamTrack::MediaStreamTrack(DOMMediaStream* aStream, TrackID aTrackID,
   : mOwningStream(aStream), mTrackID(aTrackID),
     mInputTrackID(aInputTrackID), mSource(aSource),
     mPrincipal(aSource->GetPrincipal()),
-    mEnded(false), mEnabled(true), mRemote(aSource->IsRemote()), mStopped(false)
+    mReadyState(MediaStreamTrackState::Live),
+    mEnabled(true), mRemote(aSource->IsRemote())
 {
 
   if (!gMediaStreamTrackLog) {
@@ -216,8 +217,8 @@ MediaStreamTrack::Stop()
 {
   LOG(LogLevel::Info, ("MediaStreamTrack %p Stop()", this));
 
-  if (mStopped) {
-    LOG(LogLevel::Warning, ("MediaStreamTrack %p Already stopped", this));
+  if (Ended()) {
+    LOG(LogLevel::Warning, ("MediaStreamTrack %p Already ended", this));
     return;
   }
 
@@ -236,10 +237,10 @@ MediaStreamTrack::Stop()
   MOZ_ASSERT(mOwningStream, "Every MediaStreamTrack needs an owning DOMMediaStream");
   DOMMediaStream::TrackPort* port = mOwningStream->FindOwnedTrackPort(*this);
   MOZ_ASSERT(port, "A MediaStreamTrack must exist in its owning DOMMediaStream");
-  RefPtr<Pledge<bool>> p = port->BlockSourceTrackId(mInputTrackID);
+  RefPtr<Pledge<bool>> p = port->BlockSourceTrackId(mInputTrackID, BlockingMode::CREATION);
   Unused << p;
 
-  mStopped = true;
+  mReadyState = MediaStreamTrackState::Ended;
 }
 
 already_AddRefed<Promise>
@@ -348,6 +349,22 @@ MediaStreamTrack::Clone()
   newStream->InitPlaybackStreamCommon(graph);
 
   return newStream->CloneDOMTrack(*this, mTrackID);
+}
+
+void
+MediaStreamTrack::NotifyEnded()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  if (Ended()) {
+    return;
+  }
+
+  LOG(LogLevel::Info, ("MediaStreamTrack %p ended", this));
+
+  mReadyState = MediaStreamTrackState::Ended;
+
+  DispatchTrustedEvent(NS_LITERAL_STRING("ended"));
 }
 
 DOMMediaStream*
