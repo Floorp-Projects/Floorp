@@ -712,5 +712,12 @@ TextTrackManager::TimeMarchesOn()
   UpdateCueDisplay();
 }
 
+void
+TextTrackManager::NotifyCueUpdated(TextTrackCue *aCue)
+{
+  // TODO: Add/Reorder the cue to mNewCues if we have some optimization?
+  DispatchTimeMarchesOn();
+}
+
 } // namespace dom
 } // namespace mozilla

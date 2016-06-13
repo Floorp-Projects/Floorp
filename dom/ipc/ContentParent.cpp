@@ -3037,7 +3037,7 @@ ContentParent::OnNewProcessCreated(uint32_t aPid,
   }
 
   // Update offline settings.
-  bool isOffline, isLangRTL;
+  bool isOffline, isLangRTL, haveBidiKeyboards;
   bool isConnected;
   InfallibleTArray<nsString> unusedDictionaries;
   ClipboardCapabilities clipboardCaps;
@@ -3045,7 +3045,8 @@ ContentParent::OnNewProcessCreated(uint32_t aPid,
   StructuredCloneData initialData;
 
   RecvGetXPCOMProcessAttributes(&isOffline, &isConnected,
-                                &isLangRTL, &unusedDictionaries,
+                                &isLangRTL, &haveBidiKeyboards,
+                                &unusedDictionaries,
                                 &clipboardCaps, &domainPolicy, &initialData);
   mozilla::Unused << content->SendSetOffline(isOffline);
   mozilla::Unused << content->SendSetConnectivity(isConnected);

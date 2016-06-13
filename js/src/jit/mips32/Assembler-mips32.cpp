@@ -449,8 +449,9 @@ Assembler::ToggleCall(CodeLocationLabel inst_, bool enabled)
 }
 
 void
-Assembler::UpdateBoundsCheck(uint32_t heapSize, Instruction* inst)
+Assembler::UpdateBoundsCheck(uint8_t* patchAt, uint32_t heapLength)
 {
+    Instruction* inst = (Instruction*) patchAt;
     InstImm* i0 = (InstImm*) inst;
     InstImm* i1 = (InstImm*) i0->next();
 

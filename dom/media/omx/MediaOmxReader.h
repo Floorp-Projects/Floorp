@@ -74,7 +74,9 @@ protected:
   void NotifyDataArrivedInternal() override;
 public:
 
-  nsresult ResetDecoder(TrackSet aTracks) override;
+  nsresult ResetDecode(
+    TrackSet aTracks = TrackSet(TrackInfo::kAudioTrack,
+                                TrackInfo::kVideoTrack)) override
   {
     mSeekRequest.DisconnectIfExists();
     mSeekPromise.RejectIfExists(NS_OK, __func__);
