@@ -29,9 +29,7 @@ public:
 
   CacheIOThread();
 
-  typedef nsTArray<nsCOMPtr<nsIRunnable>> EventQueue;
-
-  enum ELevel : uint32_t {
+  enum ELevel {
     OPEN_PRIORITY,
     READ_PRIORITY,
     OPEN,
@@ -93,8 +91,7 @@ private:
   Atomic<nsIThread *> mXPCOMThread;
   Atomic<uint32_t, Relaxed> mLowestLevelWaiting;
   uint32_t mCurrentlyExecutingLevel;
-
-  EventQueue mEventQueue[LAST_LEVEL];
+  nsTArray<nsCOMPtr<nsIRunnable> > mEventQueue[LAST_LEVEL];
 
   Atomic<bool, Relaxed> mHasXPCOMEvents;
   bool mRerunCurrentEvent;
