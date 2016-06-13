@@ -58,6 +58,7 @@ task:
       - production
       - staging
     treeherder:
+      jobKind: build
       groupSymbol: tc-Sim
       groupName: Simulator build
       symbol: 'S'

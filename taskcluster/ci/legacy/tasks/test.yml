@@ -43,5 +43,6 @@ task:
       total: 1
       current: {{chunk}}
     treeherder:
+      jobKind: test
       groupSymbol: tc
       groupName: Submitted by taskcluster

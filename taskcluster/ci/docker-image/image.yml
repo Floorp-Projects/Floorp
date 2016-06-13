@@ -49,6 +49,7 @@ task:
       - staging
       - production
     treeherder:
+      jobKind: other
       revision: {{head_rev}}
       revision_hash: {{revision_hash}}
       build:
