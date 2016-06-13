@@ -53,7 +53,7 @@ protected:
     // These are direct track listeners that have been added to this
     // TrackUnionStream-track and forwarded to the input track. We will update
     // these when this track's disabled status changes.
-    nsTArray<RefPtr<DirectMediaStreamTrackListener>> mOwnedDirectListeners;
+    nsTArray<RefPtr<MediaStreamTrackDirectListener>> mOwnedDirectListeners;
   };
 
   // Add the track to this stream, retaining its TrackID if it has never
@@ -65,9 +65,9 @@ protected:
                      uint32_t aMapIndex, GraphTime aFrom, GraphTime aTo,
                      bool* aOutputTrackFinished);
 
-  void AddDirectTrackListenerImpl(already_AddRefed<DirectMediaStreamTrackListener> aListener,
+  void AddDirectTrackListenerImpl(already_AddRefed<MediaStreamTrackDirectListener> aListener,
                                   TrackID aTrackID) override;
-  void RemoveDirectTrackListenerImpl(DirectMediaStreamTrackListener* aListener,
+  void RemoveDirectTrackListenerImpl(MediaStreamTrackDirectListener* aListener,
                                      TrackID aTrackID) override;
 
   nsTArray<TrackMapEntry> mTrackMap;
@@ -81,7 +81,7 @@ protected:
 
   // Direct track listeners that have not been forwarded to their input stream
   // yet. We'll forward these as their inputs become available.
-  nsTArray<TrackBound<DirectMediaStreamTrackListener>> mPendingDirectTrackListeners;
+  nsTArray<TrackBound<MediaStreamTrackDirectListener>> mPendingDirectTrackListeners;
 };
 
 } // namespace mozilla

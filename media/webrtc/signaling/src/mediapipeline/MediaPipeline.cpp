@@ -1074,7 +1074,7 @@ void MediaPipeline::PacketReceived(TransportLayer *layer,
 }
 
 class MediaPipelineTransmit::PipelineListener
-  : public DirectMediaStreamTrackListener
+  : public MediaStreamTrackDirectListener
 {
 friend class MediaPipelineTransmit;
 public:
@@ -1149,7 +1149,7 @@ public:
                            StreamTime aTrackOffset,
                            const MediaSegment& aQueuedMedia) override;
 
-  // Implement DirectMediaStreamTrackListener
+  // Implement MediaStreamTrackDirectListener
   void NotifyRealtimeTrackData(MediaStreamGraph* aGraph,
                                StreamTime aTrackOffset,
                                const MediaSegment& aMedia) override;
