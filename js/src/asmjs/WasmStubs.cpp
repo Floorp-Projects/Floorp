@@ -347,10 +347,6 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
           case ABIArg::FPU: {
             MOZ_ASSERT(IsFloatingPointType(type));
             FloatRegister srcReg = i->fpu();
-            if (srcReg.isSingle()) {
-                MOZ_ASSERT(type == MIRType::Float32);
-                srcReg = srcReg.asDouble();
-            }
             if (toValue) {
                 if (type == MIRType::Float32) {
                     masm.convertFloat32ToDouble(i->fpu(), ScratchDoubleReg);
