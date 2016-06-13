@@ -9,7 +9,6 @@
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/dom/HTMLMediaElement.h"
 #include "mozilla/dom/AudioTrack.h"
-#include "mozilla/dom/VideoStreamTrack.h"
 #include "mozilla/dom/VideoTrack.h"
 #include "mozilla/dom/TrackEvent.h"
 #include "nsThreadUtils.h"
@@ -107,10 +106,9 @@ already_AddRefed<VideoTrack>
 MediaTrackList::CreateVideoTrack(const nsAString& aId,
                                  const nsAString& aKind,
                                  const nsAString& aLabel,
-                                 const nsAString& aLanguage,
-                                 VideoStreamTrack* aVideoTrack)
+                                 const nsAString& aLanguage)
 {
-  RefPtr<VideoTrack> track = new VideoTrack(aId, aKind, aLabel, aLanguage, aVideoTrack);
+  RefPtr<VideoTrack> track = new VideoTrack(aId, aKind, aLabel, aLanguage);
   return track.forget();
 }
 
