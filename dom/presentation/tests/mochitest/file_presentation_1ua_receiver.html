@@ -111,6 +111,7 @@ function testConnectionClosed() {
     connection.onclose = function() {
       connection.onclose = null;
       is(connection.state, "closed", "Receiver: Connection should be closed.");
+      command('forward-command', JSON.stringify({ name: 'receiver-closed' }));
       aResolve();
     };
     command('forward-command', JSON.stringify({ name: 'ready-to-close' }));
@@ -122,8 +123,7 @@ function runTests() {
   .then(testConnectionReady)
   .then(testIncomingMessage)
   .then(testSendMessage)
-  .then(testConnectionClosed)
-  .then(finish);
+  .then(testConnectionClosed);
 }
 
 runTests();
