@@ -3996,6 +3996,20 @@ nsDOMWindowUtils::RespectDisplayPortSuppression(bool aEnabled)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMWindowUtils::StartHandlingUserInput()
+{
+  EventStateManager::StartHandlingUserInput();
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMWindowUtils::StopHandlingUserInput()
+{
+  EventStateManager::StopHandlingUserInput();
+  return NS_OK;
+}
+
 NS_INTERFACE_MAP_BEGIN(nsTranslationNodeList)
   NS_INTERFACE_MAP_ENTRY(nsISupports)
   NS_INTERFACE_MAP_ENTRY(nsITranslationNodeList)
