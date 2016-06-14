@@ -181,6 +181,10 @@ protected:
   nsresult ReportSecurityMessage(const nsAString& aMessageTag,
                                  const nsAString& aMessageCategory) override;
 
+  // Calls SendDeleteSelf and sets mIPCClosed to true because we should not
+  // send any more messages after that. Bug 1274886
+  bool DoSendDeleteSelf();
+
 private:
   void UpdateAndSerializeSecurityInfo(nsACString& aSerializedSecurityInfoOut);
 
