@@ -86,9 +86,6 @@ ScopedBindFramebuffer::ScopedBindFramebuffer(GLContext* aGL, GLuint aNewFB)
 void
 ScopedBindFramebuffer::UnwrapImpl()
 {
-    // Check that we're not falling out of scope after the current context changed.
-    MOZ_ASSERT(mGL->IsCurrent());
-
     if (mOldReadFB == mOldDrawFB) {
         mGL->BindFB(mOldDrawFB);
     } else {
@@ -110,9 +107,6 @@ ScopedBindTextureUnit::ScopedBindTextureUnit(GLContext* aGL, GLenum aTexUnit)
 
 void
 ScopedBindTextureUnit::UnwrapImpl() {
-    // Check that we're not falling out of scope after the current context changed.
-    MOZ_ASSERT(mGL->IsCurrent());
-
     mGL->fActiveTexture(mOldTexUnit);
 }
 
@@ -122,35 +116,26 @@ ScopedBindTextureUnit::UnwrapImpl() {
 ScopedTexture::ScopedTexture(GLContext* aGL)
     : ScopedGLWrapper<ScopedTexture>(aGL)
 {
-    MOZ_ASSERT(mGL->IsCurrent());
     mGL->fGenTextures(1, &mTexture);
 }
 
 void
 ScopedTexture::UnwrapImpl()
 {
-    // Check that we're not falling out of scope after
-    // the current context changed.
-    MOZ_ASSERT(mGL->IsCurrent());
     mGL->fDeleteTextures(1, &mTexture);
 }
-
 
 /* ScopedFramebuffer **************************************************************/
 
 ScopedFramebuffer::ScopedFramebuffer(GLContext* aGL)
     : ScopedGLWrapper<ScopedFramebuffer>(aGL)
 {
-    MOZ_ASSERT(mGL->IsCurrent());
     mGL->fGenFramebuffers(1, &mFB);
 }
 
 void
 ScopedFramebuffer::UnwrapImpl()
 {
-    // Check that we're not falling out of scope after
-    // the current context changed.
-    MOZ_ASSERT(mGL->IsCurrent());
     mGL->fDeleteFramebuffers(1, &mFB);
 }
 
@@ -160,16 +145,12 @@ ScopedFramebuffer::UnwrapImpl()
 ScopedRenderbuffer::ScopedRenderbuffer(GLContext* aGL)
     : ScopedGLWrapper<ScopedRenderbuffer>(aGL)
 {
-    MOZ_ASSERT(mGL->IsCurrent());
     mGL->fGenRenderbuffers(1, &mRB);
 }
 
 void
 ScopedRenderbuffer::UnwrapImpl()
 {
-    // Check that we're not falling out of scope after
-    // the current context changed.
-    MOZ_ASSERT(mGL->IsCurrent());
     mGL->fDeleteRenderbuffers(1, &mRB);
 }
 
@@ -251,10 +232,8 @@ ScopedBindRenderbuffer::ScopedBindRenderbuffer(GLContext* aGL, GLuint aNewRB)
 }
 
 void
-ScopedBindRenderbuffer::UnwrapImpl() {
-    // Check that we're not falling out of scope after the current context changed.
-    MOZ_ASSERT(mGL->IsCurrent());
-
+ScopedBindRenderbuffer::UnwrapImpl()
+{
     mGL->fBindRenderbuffer(LOCAL_GL_RENDERBUFFER, mOldRB);
 }
 
@@ -550,9 +529,6 @@ ScopedPackState::ScopedPackState(GLContext* gl)
 void
 ScopedPackState::UnwrapImpl()
 {
-    // Check that we're not falling out of scope after the current context changed.
-    MOZ_ASSERT(mGL->IsCurrent());
-
     mGL->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, mAlignment);
 
     if (!HasPBOState(mGL))
@@ -595,9 +571,6 @@ ScopedUnpackState::ScopedUnpackState(GLContext* gl)
 void
 ScopedUnpackState::UnwrapImpl()
 {
-    // Check that we're not falling out of scope after the current context changed.
-    MOZ_ASSERT(mGL->IsCurrent());
-
     mGL->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, mAlignment);
 
     if (!HasPBOState(mGL))
