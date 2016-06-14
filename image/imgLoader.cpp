@@ -2351,8 +2351,12 @@ imgLoader::LoadImageWithChannel(nsIChannel* channel,
   nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
   NS_ENSURE_TRUE(loadInfo, NS_ERROR_FAILURE);
 
-  PrincipalOriginAttributes attrs;
-  attrs.InheritFromNecko(loadInfo->GetOriginAttributes());
+  nsCOMPtr<nsIPrincipal> principal;
+  loadInfo->GetLoadingPrincipal(getter_AddRefs(principal));
+  NS_ENSURE_TRUE(principal, NS_ERROR_FAILURE);
+
+  const PrincipalOriginAttributes& attrs =
+    BasePrincipal::Cast(principal)->OriginAttributesRef();
 
   ImageCacheKey key(uri, attrs, doc);
 
