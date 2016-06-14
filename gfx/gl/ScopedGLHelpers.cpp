@@ -518,60 +518,97 @@ ScopedGLDrawState::~ScopedGLDrawState()
 }
 
 ////////////////////////////////////////////////////////////////////////
-// ScopedPackAlignment
+// ScopedPackState
 
-ScopedPackAlignment::ScopedPackAlignment(GLContext* gl, GLint scopedVal)
-    : ScopedGLWrapper<ScopedPackAlignment>(gl)
+static bool
+HasPBOState(const GLContext* gl)
 {
-    MOZ_ASSERT(scopedVal == 1 ||
-               scopedVal == 2 ||
-               scopedVal == 4 ||
-               scopedVal == 8);
+    return (!gl->IsGLES() || gl->Version() >= 300);
+}
 
-    gl->fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, &mOldVal);
+ScopedPackState::ScopedPackState(GLContext* gl)
+    : ScopedGLWrapper<ScopedPackState>(gl)
+{
+    mGL->fGetIntegerv(LOCAL_GL_PACK_ALIGNMENT, &mAlignment);
 
-    if (scopedVal != mOldVal) {
-        gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, scopedVal);
-    } else {
-      // Don't try to re-set it during unwrap.
-        mOldVal = 0;
-    }
+    if (mAlignment != 4) mGL->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 4);
+
+    if (!HasPBOState(mGL))
+        return;
+
+    mGL->fGetIntegerv(LOCAL_GL_PIXEL_PACK_BUFFER_BINDING, (GLint*)&mPixelBuffer);
+    mGL->fGetIntegerv(LOCAL_GL_PACK_ROW_LENGTH, &mRowLength);
+    mGL->fGetIntegerv(LOCAL_GL_PACK_SKIP_PIXELS, &mSkipPixels);
+    mGL->fGetIntegerv(LOCAL_GL_PACK_SKIP_ROWS, &mSkipRows);
+
+    if (mPixelBuffer != 0) mGL->fBindBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, 0);
+    if (mRowLength != 0)   mGL->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH, 0);
+    if (mSkipPixels != 0)  mGL->fPixelStorei(LOCAL_GL_PACK_SKIP_PIXELS, 0);
+    if (mSkipRows != 0)    mGL->fPixelStorei(LOCAL_GL_PACK_SKIP_ROWS, 0);
 }
 
 void
-ScopedPackAlignment::UnwrapImpl() {
+ScopedPackState::UnwrapImpl()
+{
     // Check that we're not falling out of scope after the current context changed.
     MOZ_ASSERT(mGL->IsCurrent());
 
-    if (mOldVal) {
-        mGL->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, mOldVal);
-    }
+    mGL->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, mAlignment);
+
+    if (!HasPBOState(mGL))
+        return;
+
+    mGL->fBindBuffer(LOCAL_GL_PIXEL_PACK_BUFFER, mPixelBuffer);
+    mGL->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH, mRowLength);
+    mGL->fPixelStorei(LOCAL_GL_PACK_SKIP_PIXELS, mSkipPixels);
+    mGL->fPixelStorei(LOCAL_GL_PACK_SKIP_ROWS, mSkipRows);
 }
 
 ////////////////////////////////////////////////////////////////////////
-// ScopedUnpackAlignment
+// ScopedUnpackState
 
-ScopedUnpackAlignment::ScopedUnpackAlignment(GLContext* gl, GLint scopedVal)
-    : ScopedGLWrapper<ScopedUnpackAlignment>(gl)
+ScopedUnpackState::ScopedUnpackState(GLContext* gl)
+    : ScopedGLWrapper<ScopedUnpackState>(gl)
 {
-    MOZ_ASSERT(scopedVal == 1 ||
-               scopedVal == 2 ||
-               scopedVal == 4 ||
-               scopedVal == 8);
+    mGL->fGetIntegerv(LOCAL_GL_UNPACK_ALIGNMENT, &mAlignment);
 
-    gl->fGetIntegerv(LOCAL_GL_UNPACK_ALIGNMENT, &mOldVal);
+    if (mAlignment != 4) mGL->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
 
-    if (scopedVal != mOldVal) {
-        gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, scopedVal);
-    }
+    if (!HasPBOState(mGL))
+        return;
+
+    mGL->fGetIntegerv(LOCAL_GL_PIXEL_UNPACK_BUFFER_BINDING, (GLint*)&mPixelBuffer);
+    mGL->fGetIntegerv(LOCAL_GL_UNPACK_IMAGE_HEIGHT, &mImageHeight);
+    mGL->fGetIntegerv(LOCAL_GL_UNPACK_ROW_LENGTH, &mRowLength);
+    mGL->fGetIntegerv(LOCAL_GL_UNPACK_SKIP_IMAGES, &mSkipImages);
+    mGL->fGetIntegerv(LOCAL_GL_UNPACK_SKIP_PIXELS, &mSkipPixels);
+    mGL->fGetIntegerv(LOCAL_GL_UNPACK_SKIP_ROWS, &mSkipRows);
+
+    if (mPixelBuffer != 0) mGL->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
+    if (mImageHeight != 0) mGL->fPixelStorei(LOCAL_GL_UNPACK_IMAGE_HEIGHT, 0);
+    if (mRowLength != 0)   mGL->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
+    if (mSkipImages != 0)  mGL->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES, 0);
+    if (mSkipPixels != 0)  mGL->fPixelStorei(LOCAL_GL_UNPACK_SKIP_PIXELS, 0);
+    if (mSkipRows != 0)    mGL->fPixelStorei(LOCAL_GL_UNPACK_SKIP_ROWS, 0);
 }
 
 void
-ScopedUnpackAlignment::UnwrapImpl() {
+ScopedUnpackState::UnwrapImpl()
+{
     // Check that we're not falling out of scope after the current context changed.
     MOZ_ASSERT(mGL->IsCurrent());
 
-    mGL->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, mOldVal);
+    mGL->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, mAlignment);
+
+    if (!HasPBOState(mGL))
+        return;
+
+    mGL->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, mPixelBuffer);
+    mGL->fPixelStorei(LOCAL_GL_UNPACK_IMAGE_HEIGHT, mImageHeight);
+    mGL->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, mRowLength);
+    mGL->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES, mSkipImages);
+    mGL->fPixelStorei(LOCAL_GL_UNPACK_SKIP_PIXELS, mSkipPixels);
+    mGL->fPixelStorei(LOCAL_GL_UNPACK_SKIP_ROWS, mSkipRows);
 }
 
 } /* namespace gl */

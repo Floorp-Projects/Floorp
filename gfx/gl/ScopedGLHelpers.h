@@ -342,32 +342,44 @@ struct ScopedGLDrawState {
     GLuint packAlign;
 };
 
-struct ScopedPackAlignment
-    : public ScopedGLWrapper<ScopedPackAlignment>
+struct ScopedPackState
+    : public ScopedGLWrapper<ScopedPackState>
 {
-    friend struct ScopedGLWrapper<ScopedPackAlignment>;
+    friend struct ScopedGLWrapper<ScopedPackState>;
 
 protected:
-    GLint mOldVal;
+    GLint mAlignment;
+
+    GLuint mPixelBuffer;
+    GLint mRowLength;
+    GLint mSkipPixels;
+    GLint mSkipRows;
 
 public:
-    ScopedPackAlignment(GLContext* aGL, GLint scopedVal);
+    explicit ScopedPackState(GLContext* gl);
 
 protected:
     void UnwrapImpl();
 };
 
 
-struct ScopedUnpackAlignment
-    : public ScopedGLWrapper<ScopedUnpackAlignment>
+struct ScopedUnpackState
+    : public ScopedGLWrapper<ScopedUnpackState>
 {
-    friend struct ScopedGLWrapper<ScopedUnpackAlignment>;
+    friend struct ScopedGLWrapper<ScopedUnpackState>;
 
 protected:
-    GLint mOldVal;
+    GLint mAlignment;
+
+    GLuint mPixelBuffer;
+    GLint mImageHeight;
+    GLint mRowLength;
+    GLint mSkipImages;
+    GLint mSkipPixels;
+    GLint mSkipRows;
 
 public:
-    ScopedUnpackAlignment(GLContext* gl, GLint scopedVal);
+    explicit ScopedUnpackState(GLContext* gl);
 
 protected:
     void UnwrapImpl();
