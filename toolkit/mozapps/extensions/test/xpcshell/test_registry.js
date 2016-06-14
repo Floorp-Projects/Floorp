@@ -35,10 +35,17 @@ var addon2 = {
 const addon1Dir = writeInstallRDFForExtension(addon1, gProfD, "addon1");
 const addon2Dir = writeInstallRDFForExtension(addon2, gProfD, "addon2");
 
+let registry;
+
 function run_test() {
   // This test only works where there is a registry.
   if (!("nsIWindowsRegKey" in AM_Ci))
     return;
+
+  registry = new MockRegistry();
+  do_register_cleanup(() => {
+    registry.shutdown();
+  });
 
   do_test_pending();
 
@@ -47,12 +54,12 @@ function run_test() {
 
 // Tests whether basic registry install works
 function run_test_1() {
-  MockRegistry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-                        "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
-                        "addon1@tests.mozilla.org", addon1Dir.path);
-  MockRegistry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                        "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
-                        "addon2@tests.mozilla.org", addon2Dir.path);
+  registry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+                   "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+                    "addon1@tests.mozilla.org", addon1Dir.path);
+  registry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+                    "addon2@tests.mozilla.org", addon2Dir.path);
 
   startupManager();
 
@@ -74,12 +81,12 @@ function run_test_1() {
 
 // Tests whether uninstalling from the registry works
 function run_test_2() {
-  MockRegistry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-                        "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
-                        "addon1@tests.mozilla.org", null);
-  MockRegistry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                        "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
-                        "addon2@tests.mozilla.org", null);
+  registry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+                    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+                    "addon1@tests.mozilla.org", null);
+  registry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+                    "addon2@tests.mozilla.org", null);
 
   restartManager();
 
@@ -94,12 +101,12 @@ function run_test_2() {
 
 // Checks that the ID in the registry must match that in the install manifest
 function run_test_3() {
-  MockRegistry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-                        "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
-                        "addon1@tests.mozilla.org", addon2Dir.path);
-  MockRegistry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                        "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
-                        "addon2@tests.mozilla.org", addon1Dir.path);
+  registry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+                    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+                    "addon1@tests.mozilla.org", addon2Dir.path);
+  registry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+                    "addon2@tests.mozilla.org", addon1Dir.path);
 
   restartManager();
 
@@ -117,26 +124,26 @@ function run_test_4() {
   // Restarting with bad items in the registry should not force an EM restart
   restartManager();
 
-  MockRegistry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-                        "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
-                        "addon1@tests.mozilla.org", null);
-  MockRegistry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                        "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
-                        "addon2@tests.mozilla.org", null);
+  registry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+                    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+                    "addon1@tests.mozilla.org", null);
+  registry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+                    "addon2@tests.mozilla.org", null);
 
   restartManager();
 
-  MockRegistry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-                        "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
-                        "addon1@tests.mozilla.org", addon1Dir.path);
+  registry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+                    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+                    "addon1@tests.mozilla.org", addon1Dir.path);
   restartManager();
 
-  MockRegistry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
-                        "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
-                        "addon1@tests.mozilla.org", null);
-  MockRegistry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
-                        "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
-                        "addon2@tests.mozilla.org", addon1Dir.path);
+  registry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+                    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+                    "addon1@tests.mozilla.org", null);
+  registry.setValue(AM_Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                    "SOFTWARE\\Mozilla\\XPCShell\\Extensions",
+                    "addon2@tests.mozilla.org", addon1Dir.path);
   writeInstallRDFForExtension(addon2, gProfD, "addon1");
 
   restartManager();
