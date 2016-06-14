@@ -41,8 +41,8 @@ tasks:
 
       routes:
         - "index.gecko.v2.{{project}}.latest.firefox.decision"
-        - "tc-treeherder.{{project}}.{{revision_hash}}"
-        - "tc-treeherder-stage.{{project}}.{{revision_hash}}"
+        - "tc-treeherder.v2.{{project}}.{{head_rev}}.{{pushlog_id}}"
+        - "tc-treeherder-stage.v2.{{project}}.{{head_rev}}.{{pushlog_id}}"
 
       payload:
         env:
@@ -90,7 +90,6 @@ tasks:
             --head-repository='{{{url}}}'
             --head-ref='{{revision}}'
             --head-rev='{{revision}}'
-            --revision-hash='{{revision_hash}}'
 
         artifacts:
           'public':
@@ -101,5 +100,3 @@ tasks:
       extra:
         treeherder:
           symbol: D
-          revision: '{{revision}}'
-          revision_hash: '{{revision_hash}}'
