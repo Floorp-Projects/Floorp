@@ -402,6 +402,15 @@ private:
   uint32_t GetSelectionStartOffset();
 
   /**
+   * OnStartOffsetUpdatedInChild() is called when composition start offset
+   * is updated in the child process.  I.e., this is called and never called
+   * if the composition is in this process.
+   * @param aStartOffset        New composition start offset with native
+   *                            linebreaks.
+   */
+  void OnStartOffsetUpdatedInChild(uint32_t aStartOffset);
+
+  /**
    * CompositionEventDispatcher dispatches the specified composition (or text)
    * event.
    */
