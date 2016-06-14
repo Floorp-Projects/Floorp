@@ -434,15 +434,13 @@ ScopedGLDrawState::ScopedGLDrawState(GLContext* aGL)
     , scissor     (aGL, LOCAL_GL_SCISSOR_TEST,    false)
     , stencil     (aGL, LOCAL_GL_STENCIL_TEST,    false)
     , mGL(aGL)
-    , packAlign(4)
 {
-    mGL->GetUIntegerv(LOCAL_GL_UNPACK_ALIGNMENT, &packAlign);
     mGL->GetUIntegerv(LOCAL_GL_CURRENT_PROGRAM, &boundProgram);
     mGL->GetUIntegerv(LOCAL_GL_ARRAY_BUFFER_BINDING, &boundBuffer);
     mGL->GetUIntegerv(LOCAL_GL_MAX_VERTEX_ATTRIBS, &maxAttrib);
     attrib_enabled = MakeUnique<GLint[]>(maxAttrib);
 
-    for (unsigned int i = 0; i < maxAttrib; i++) {
+    for (GLuint i = 0; i < maxAttrib; i++) {
         mGL->fGetVertexAttribiv(i, LOCAL_GL_VERTEX_ATTRIB_ARRAY_ENABLED, &attrib_enabled[i]);
         mGL->fDisableVertexAttribArray(i);
     }
@@ -472,8 +470,6 @@ ScopedGLDrawState::~ScopedGLDrawState()
                     colorMask[1],
                     colorMask[2],
                     colorMask[3]);
-
-    mGL->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, packAlign);
 
     for (unsigned int i = 0; i < maxAttrib; i++) {
         if (attrib_enabled[i])

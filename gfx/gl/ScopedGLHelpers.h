@@ -309,7 +309,8 @@ protected:
     void UnwrapImpl();
 };
 
-struct ScopedGLDrawState {
+struct ScopedGLDrawState
+{
     explicit ScopedGLDrawState(GLContext* gl);
     ~ScopedGLDrawState();
 
@@ -339,7 +340,6 @@ struct ScopedGLDrawState {
     GLint viewport[4];
     GLint scissorBox[4];
     GLContext* const mGL;
-    GLuint packAlign;
 };
 
 struct ScopedPackState
