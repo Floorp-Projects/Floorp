@@ -35,7 +35,7 @@ TextTrackCue::SetDefaultCueSettings()
 {
   mPosition = 50;
   mPositionAlign = PositionAlignSetting::Center;
-  mSize = 100;
+  mSize = 100.0;
   mPauseOnExit = false;
   mSnapToLines = true;
   mLineIsAutoKeyword = true;
