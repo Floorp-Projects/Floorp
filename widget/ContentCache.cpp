@@ -483,6 +483,34 @@ ContentCacheInParent::HandleQueryContentEvent(WidgetQueryContentEvent& aEvent,
   aEvent.mSucceeded = false;
   aEvent.mReply.mFocusedWidget = aWidget;
 
+  // ContentCache doesn't store offset of its start with XP linebreaks.
+  // So, we don't support to query contents relative to composition start
+  // offset with XP linebreaks.
+  if (NS_WARN_IF(!aEvent.mUseNativeLineBreak)) {
+    return false;
+  }
+
+  if (NS_WARN_IF(!aEvent.mInput.IsValidOffset()) ||
+      NS_WARN_IF(!aEvent.mInput.IsValidEventMessage(aEvent.mMessage))) {
+    return false;
+  }
+
+  if (aEvent.mInput.mRelativeToInsertionPoint) {
+    if (aWidget->PluginHasFocus()) {
+      if (NS_WARN_IF(!aEvent.mInput.MakeOffsetAbsolute(0))) {
+        return false;
+      }
+    } else if (mIsComposing) {
+      if (NS_WARN_IF(!aEvent.mInput.MakeOffsetAbsolute(mCompositionStart))) {
+        return false;
+      }
+    } else if (NS_WARN_IF(!mSelection.IsValid()) ||
+               NS_WARN_IF(!aEvent.mInput.MakeOffsetAbsolute(
+                                           mSelection.StartOffset()))) {
+      return false;
+    }
+  }
+
   switch (aEvent.mMessage) {
     case eQuerySelectedText:
       MOZ_LOG(sContentCacheLog, LogLevel::Info,
