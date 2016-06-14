@@ -225,18 +225,18 @@ public:
     mPositionAlign = aPositionAlign;
   }
 
-  int32_t Size() const
+  double Size() const
   {
     return mSize;
   }
 
-  void SetSize(int32_t aSize, ErrorResult& aRv)
+  void SetSize(double aSize, ErrorResult& aRv)
   {
     if (mSize == aSize) {
       return;
     }
 
-    if (aSize < 0 || aSize > 100) {
+    if (aSize < 0.0 || aSize > 100.0) {
       aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
       return;
     }
@@ -362,7 +362,7 @@ private:
   nsString mId;
   int32_t mPosition;
   PositionAlignSetting mPositionAlign;
-  int32_t mSize;
+  double mSize;
   bool mPauseOnExit;
   bool mSnapToLines;
   RefPtr<TextTrackRegion> mRegion;

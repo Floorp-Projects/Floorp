@@ -51,7 +51,7 @@ interface VTTCue : TextTrackCue {
   [SetterThrows]
   attribute PositionAlignSetting positionAlign;
   [SetterThrows]
-  attribute long size;
+  attribute double size;
   attribute AlignSetting align;
   attribute DOMString text;
   DocumentFragment getCueAsHTML();
