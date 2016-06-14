@@ -12,7 +12,7 @@ The following preferences are used by SSL Error reporting:
 
 "security.ssl.errorReporting.url"
   Where should SSL error reports be sent? Default value:
-  ``https://data.mozilla.com/submit/sslreports-stg``
+  ``https://incoming.telemetry.mozilla.org/submit/sslreports/``
 
 "security.ssl.errorReporting.automatic"
   Should error reports be sent without user interaction. Default value:
