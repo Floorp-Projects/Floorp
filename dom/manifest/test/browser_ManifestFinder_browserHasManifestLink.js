@@ -1,83 +1,54 @@
 //Used by JSHint:
-/*global Cu, BrowserTestUtils, is, ok, add_task, gBrowser, ManifestFinder */
+/*global Cu, BrowserTestUtils, ok, add_task, gBrowser */
 "use strict";
-Cu.import("resource://gre/modules/ManifestFinder.jsm", this);  // jshint ignore:line
+const { ManifestFinder } = Cu.import("resource://gre/modules/ManifestFinder.jsm", {});
+const defaultURL = new URL("http://example.org/browser/dom/manifest/test/resource.sjs");
+defaultURL.searchParams.set("Content-Type", "text/html; charset=utf-8");
 
-const defaultURL =
-  "http://example.org/tests/dom/manifest/test/resource.sjs";
 const tests = [{
-  expected: "Document has a web manifest.",
-  get tabURL() {
-    let query = [
-      `body=<h1>${this.expected}</h1>`,
-      "Content-Type=text/html; charset=utf-8",
-    ];
-    const URL = `${defaultURL}?${query.join("&")}`;
-    return URL;
-  },
+  body: `
+    <link rel="manifesto" href='${defaultURL}?body={"name":"fail"}'>
+    <link rel="foo bar manifest bar test" href='${defaultURL}?body={"name":"value"}'>
+    <link rel="manifest" href='${defaultURL}?body={"name":"fail"}'>
+  `,
   run(result) {
-    is(result, true, this.expected);
+    ok(result, "Document has a web manifest.");
   },
-  testData: `
-      <link rel="manifesto" href='${defaultURL}?body={"name":"fail"}'>
-      <link rel="foo bar manifest bar test" href='${defaultURL}?body={"name":"value"}'>
-      <link rel="manifest" href='${defaultURL}?body={"name":"fail"}'>`
 }, {
-  expected: "Document does not have a web manifest.",
-  get tabURL() {
-    let query = [
-      `body=<h1>${this.expected}</h1>`,
-      "Content-Type=text/html; charset=utf-8",
-    ];
-    const URL = `${defaultURL}?${query.join("&")}`;
-    return URL;
-  },
+  body: `
+    <link rel="amanifista" href='${defaultURL}?body={"name":"fail"}'>
+    <link rel="foo bar manifesto bar test" href='${defaultURL}?body={"name":"pass-1"}'>
+    <link rel="manifesto" href='${defaultURL}?body={"name":"fail"}'>`,
   run(result) {
-    is(result, false, this.expected);
+    ok(!result, "Document does not have a web manifest.");
   },
-  testData: `
-      <link rel="amanifista" href='${defaultURL}?body={"name":"fail"}'>
-      <link rel="foo bar manifesto bar test" href='${defaultURL}?body={"name":"pass-1"}'>
-      <link rel="manifesto" href='${defaultURL}?body={"name":"fail"}'>`
 }, {
-  expected: "Manifest link is has empty href.",
-  get tabURL() {
-    let query = [
-      `body=<h1>${this.expected}</h1>`,
-      "Content-Type=text/html; charset=utf-8",
-    ];
-    const URL = `${defaultURL}?${query.join("&")}`;
-    return URL;
-  },
+  body: `
+    <link rel="manifest" href="">
+    <link rel="manifest" href='${defaultURL}?body={"name":"fail"}'>`,
   run(result) {
-    is(result, false, this.expected);
+    ok(!result, "Manifest link is has empty href.");
   },
-  testData: `
-  <link rel="manifest" href="">
-  <link rel="manifest" href='${defaultURL}?body={"name":"fail"}'>`
 }, {
-  expected: "Manifest link is missing.",
-  get tabURL() {
-    let query = [
-      `body=<h1>${this.expected}</h1>`,
-      "Content-Type=text/html; charset=utf-8",
-    ];
-    const URL = `${defaultURL}?${query.join("&")}`;
-    return URL;
-  },
-  run(result) {
-    is(result, false, this.expected);
-  },
-  testData: `
+  body: `
     <link rel="manifest">
-    <link rel="manifest" href='${defaultURL}?body={"name":"fail"}'>`
+    <link rel="manifest" href='${defaultURL}?body={"name":"fail"}'>`,
+  run(result) {
+    ok(!result, "Manifest link is missing.");
+  },
 }];
+
+function makeTestURL({ body }) {
+  const url = new URL(defaultURL);
+  url.searchParams.set("body", encodeURIComponent(body));
+  return url.href;
+}
 
 /**
  * Test basic API error conditions
  */
-add_task(function* () {
-  let expected = "Invalid types should throw a TypeError.";
+add_task(function*() {
+  const expected = "Invalid types should throw a TypeError.";
   for (let invalidValue of [undefined, null, 1, {}, "test"]) {
     try {
       yield ManifestFinder.contentManifestLink(invalidValue);
@@ -94,21 +65,20 @@ add_task(function* () {
   }
 });
 
-add_task(function* () {
-  for (let test of tests) {
-    let tabOptions = {
-      gBrowser: gBrowser,
-      url: test.tabURL,
-    };
-    yield BrowserTestUtils.withNewTab(
-      tabOptions,
-      browser => testHasManifest(browser, test)
+add_task(function*() {
+  const runningTests = tests
+    .map(
+      test => ({
+        gBrowser,
+        test,
+        url: makeTestURL(test),
+      })
+    )
+    .map(
+      tabOptions => BrowserTestUtils.withNewTab(tabOptions, function*(browser) {
+        const result = yield ManifestFinder.browserHasManifestLink(browser);
+        tabOptions.test.run(result);
+      })
     );
-  }
-
-  function* testHasManifest(aBrowser, aTest) {
-    aBrowser.contentWindowAsCPOW.document.head.innerHTML = aTest.testData;
-    const result = yield ManifestFinder.browserHasManifestLink(aBrowser);
-    aTest.run(result);
-  }
+  yield Promise.all(runningTests);
 });
