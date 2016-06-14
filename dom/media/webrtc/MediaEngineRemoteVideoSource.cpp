@@ -122,11 +122,11 @@ MediaEngineRemoteVideoSource::Allocate(
 
   NormalizedConstraints netConstraints(allConstraints);
   if (netConstraints.mOverconstrained) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   if (!ChooseCapability(netConstraints, aPrefs, aDeviceId)) {
-    return NS_ERROR_FAILURE;
+    return NS_ERROR_NOT_AVAILABLE;
   }
 
   if (mState == kReleased) {
