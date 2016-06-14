@@ -918,51 +918,51 @@ nsresult MediaDecoderStateMachine::Init(MediaDecoder* aDecoder)
 void
 MediaDecoderStateMachine::SetMediaDecoderReaderWrapperCallback()
 {
-  mAudioCallbackID =
-    mReader->SetAudioCallback(this,
-                              &MediaDecoderStateMachine::OnAudioDecoded,
-                              &MediaDecoderStateMachine::OnAudioNotDecoded);
+  MOZ_ASSERT(OnTaskQueue());
 
-  mVideoCallbackID =
-    mReader->SetVideoCallback(this,
-                              &MediaDecoderStateMachine::OnVideoDecoded,
-                              &MediaDecoderStateMachine::OnVideoNotDecoded);
+  mAudioCallback = mReader->AudioCallback().Connect(
+    mTaskQueue, [this] (AudioCallbackData aData) {
+    if (aData.is<MediaData*>()) {
+      OnAudioDecoded(aData.as<MediaData*>());
+    } else {
+      OnNotDecoded(MediaData::AUDIO_DATA, aData.as<MediaDecoderReader::NotDecodedReason>());
+    }
+  });
 
-  RefPtr<MediaDecoderStateMachine> self = this;
-  mWaitAudioCallbackID =
-    mReader->SetWaitAudioCallback(
-      [self] (MediaData::Type aType) -> void {
-        self->EnsureAudioDecodeTaskQueued();
-      },
-      [self] (WaitForDataRejectValue aRejection) -> void {});
+  mVideoCallback = mReader->VideoCallback().Connect(
+    mTaskQueue, [this] (VideoCallbackData aData) {
+    typedef Tuple<MediaData*, TimeStamp> Type;
+    if (aData.is<Type>()) {
+      auto&& v = aData.as<Type>();
+      OnVideoDecoded(Get<0>(v), Get<1>(v));
+    } else {
+      OnNotDecoded(MediaData::VIDEO_DATA, aData.as<MediaDecoderReader::NotDecodedReason>());
+    }
+  });
 
-  mWaitVideoCallbackID =
-    mReader->SetWaitVideoCallback(
-      [self] (MediaData::Type aType) -> void {
-        self->EnsureVideoDecodeTaskQueued();
-      },
-      [self] (WaitForDataRejectValue aRejection) -> void {});
+  mAudioWaitCallback = mReader->AudioWaitCallback().Connect(
+    mTaskQueue, [this] (WaitCallbackData aData) {
+    if (aData.is<MediaData::Type>()) {
+      EnsureAudioDecodeTaskQueued();
+    }
+  });
 
-  DECODER_LOG("MDSM set audio callbacks: mAudioCallbackID = %d\n", (int)mAudioCallbackID);
-  DECODER_LOG("MDSM set video callbacks: mVideoCallbackID = %d\n", (int)mVideoCallbackID);
-  DECODER_LOG("MDSM set wait audio callbacks: mWaitAudioCallbackID = %d\n", (int)mWaitAudioCallbackID);
-  DECODER_LOG("MDSM set wait video callbacks: mWaitVideoCallbackID = %d\n", (int)mWaitVideoCallbackID);
+  mVideoWaitCallback = mReader->VideoWaitCallback().Connect(
+    mTaskQueue, [this] (WaitCallbackData aData) {
+    if (aData.is<MediaData::Type>()) {
+      EnsureVideoDecodeTaskQueued();
+    }
+  });
 }
 
 void
 MediaDecoderStateMachine::CancelMediaDecoderReaderWrapperCallback()
 {
-    DECODER_LOG("MDSM cancel audio callbacks: mVideoCallbackID = %d\n", (int)mAudioCallbackID);
-    mReader->CancelAudioCallback(mAudioCallbackID);
-
-    DECODER_LOG("MDSM cancel video callbacks: mVideoCallbackID = %d\n", (int)mVideoCallbackID);
-    mReader->CancelVideoCallback(mVideoCallbackID);
-
-    DECODER_LOG("MDSM cancel wait audio callbacks: mWaitAudioCallbackID = %d\n", (int)mWaitAudioCallbackID);
-    mReader->CancelWaitAudioCallback(mWaitAudioCallbackID);
-
-    DECODER_LOG("MDSM cancel wait video callbacks: mWaitVideoCallbackID = %d\n", (int)mWaitVideoCallbackID);
-    mReader->CancelWaitVideoCallback(mWaitVideoCallbackID);
+  MOZ_ASSERT(OnTaskQueue());
+  mAudioCallback.Disconnect();
+  mVideoCallback.Disconnect();
+  mAudioWaitCallback.Disconnect();
+  mVideoWaitCallback.Disconnect();
 }
 
 void MediaDecoderStateMachine::StopPlayback()

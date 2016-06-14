@@ -359,16 +359,6 @@ private:
   void OnAudioDecoded(MediaData* aAudioSample);
   void OnVideoDecoded(MediaData* aVideoSample, TimeStamp aDecodeStartTime);
   void OnNotDecoded(MediaData::Type aType, MediaDecoderReader::NotDecodedReason aReason);
-  void OnAudioNotDecoded(MediaDecoderReader::NotDecodedReason aReason)
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    OnNotDecoded(MediaData::AUDIO_DATA, aReason);
-  }
-  void OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReason)
-  {
-    MOZ_ASSERT(OnTaskQueue());
-    OnNotDecoded(MediaData::VIDEO_DATA, aReason);
-  }
 
   // Resets all state related to decoding and playback, emptying all buffers
   // and aborting all pending operations on the decode task queue.
@@ -837,12 +827,12 @@ private:
   // Only one of a given pair of ({Audio,Video}DataPromise, WaitForDataPromise)
   // should exist at any given moment.
 
-  CallbackID mAudioCallbackID;
-  CallbackID mWaitAudioCallbackID;
-  const char* AudioRequestStatus() const;
+  MediaEventListener mAudioCallback;
+  MediaEventListener mVideoCallback;
+  MediaEventListener mAudioWaitCallback;
+  MediaEventListener mVideoWaitCallback;
 
-  CallbackID mVideoCallbackID;
-  CallbackID mWaitVideoCallbackID;
+  const char* AudioRequestStatus() const;
   const char* VideoRequestStatus() const;
 
   void OnSuspendTimerResolved();
