@@ -2499,8 +2499,8 @@ GeckoDriver.prototype.setWindowSize = function(cmd, resp) {
     throw new UnsupportedOperationError();
   }
 
-  let width = parseInt(cmd.parameters.width);
-  let height = parseInt(cmd.parameters.height);
+  let width = cmd.parameters.width;
+  let height = cmd.parameters.height;
 
   let win = this.getCurrentWindow();
   if (width >= win.screen.availWidth || height >= win.screen.availHeight) {
