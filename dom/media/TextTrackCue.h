@@ -190,35 +190,24 @@ public:
     mLineAlign = aLineAlign;
   }
 
-  void GetPosition(OwningDoubleOrAutoKeyword& aPosition) const
+  int32_t Position() const
   {
-    if (mPositionIsAutoKeyword) {
-      aPosition.SetAsAutoKeyword() = AutoKeyword::Auto;
-      return;
-    }
-    aPosition.SetAsDouble() = mPosition;
+    return mPosition;
   }
 
-  void SetPosition(const DoubleOrAutoKeyword& aPosition, ErrorResult& aRv)
+  void SetPosition(int32_t aPosition, ErrorResult& aRv)
   {
-    if (!aPosition.IsAutoKeyword() &&
-        (aPosition.GetAsDouble() > 100.0 || aPosition.GetAsDouble() < 0.0)){
+    if (mPosition == aPosition) {
+      return;
+    }
+
+    if (aPosition > 100 || aPosition < 0){
       aRv.Throw(NS_ERROR_DOM_INDEX_SIZE_ERR);
       return;
     }
 
-    if (aPosition.IsDouble() &&
-        (mPositionIsAutoKeyword || (aPosition.GetAsDouble() != mPosition))) {
-      mPositionIsAutoKeyword = false;
-      mPosition = aPosition.GetAsDouble();
-      mReset = true;
-      return;
-    }
-
-    if (aPosition.IsAutoKeyword() && !mPositionIsAutoKeyword) {
-      mPositionIsAutoKeyword = true;
-      mReset = true;
-    }
+    mReset = true;
+    mPosition = aPosition;
   }
 
   PositionAlignSetting PositionAlign() const
@@ -311,7 +300,6 @@ public:
   }
 
   double ComputedLine();
-  double ComputedPosition();
   PositionAlignSetting ComputedPositionAlign();
 
   // Helper functions for implementation.
@@ -372,8 +360,7 @@ private:
   RefPtr<TextTrack> mTrack;
   RefPtr<HTMLTrackElement> mTrackElement;
   nsString mId;
-  double mPosition;
-  bool mPositionIsAutoKeyword;
+  int32_t mPosition;
   PositionAlignSetting mPositionAlign;
   double mSize;
   bool mPauseOnExit;

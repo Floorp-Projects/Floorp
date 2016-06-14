@@ -47,7 +47,7 @@ interface VTTCue : TextTrackCue {
   [SetterThrows]
   attribute LineAlignSetting lineAlign;
   [SetterThrows]
-  attribute (double or AutoKeyword) position;
+  attribute long position;
   [SetterThrows]
   attribute PositionAlignSetting positionAlign;
   [SetterThrows]
@@ -65,8 +65,6 @@ partial interface VTTCue {
   readonly attribute boolean hasBeenReset;
   [ChromeOnly]
   readonly attribute double computedLine;
-  [ChromeOnly]
-  readonly attribute double computedPosition;
   [ChromeOnly]
   readonly attribute PositionAlignSetting computedPositionAlign;
 };
