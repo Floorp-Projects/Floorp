@@ -1866,7 +1866,7 @@ TabParent::RecvNotifyIMEFocus(const ContentCache& aContentCache,
     return true;
   }
 
-  mContentCache.AssignContent(aContentCache, &aIMENotification);
+  mContentCache.AssignContent(aContentCache, widget, &aIMENotification);
   IMEStateManager::NotifyIME(aIMENotification, widget, true);
 
   if (aIMENotification.mMessage == NOTIFY_IME_OF_FOCUS) {
@@ -1892,7 +1892,7 @@ TabParent::RecvNotifyIMETextChange(const ContentCache& aContentCache,
     "The widget doesn't want text change notification caused by composition");
 #endif
 
-  mContentCache.AssignContent(aContentCache, &aIMENotification);
+  mContentCache.AssignContent(aContentCache, widget, &aIMENotification);
   mContentCache.MaybeNotifyIME(widget, aIMENotification);
   return true;
 }
@@ -1907,7 +1907,7 @@ TabParent::RecvNotifyIMECompositionUpdate(
     return true;
   }
 
-  mContentCache.AssignContent(aContentCache, &aIMENotification);
+  mContentCache.AssignContent(aContentCache, widget, &aIMENotification);
   mContentCache.MaybeNotifyIME(widget, aIMENotification);
   return true;
 }
@@ -1920,7 +1920,7 @@ TabParent::RecvNotifyIMESelection(const ContentCache& aContentCache,
   if (!widget)
     return true;
 
-  mContentCache.AssignContent(aContentCache, &aIMENotification);
+  mContentCache.AssignContent(aContentCache, widget, &aIMENotification);
   mContentCache.MaybeNotifyIME(widget, aIMENotification);
   return true;
 }
@@ -1933,7 +1933,7 @@ TabParent::RecvUpdateContentCache(const ContentCache& aContentCache)
     return true;
   }
 
-  mContentCache.AssignContent(aContentCache);
+  mContentCache.AssignContent(aContentCache, widget);
   return true;
 }
 
@@ -1962,7 +1962,7 @@ TabParent::RecvNotifyIMEPositionChange(const ContentCache& aContentCache,
     return true;
   }
 
-  mContentCache.AssignContent(aContentCache, &aIMENotification);
+  mContentCache.AssignContent(aContentCache, widget, &aIMENotification);
   mContentCache.MaybeNotifyIME(widget, aIMENotification);
   return true;
 }
