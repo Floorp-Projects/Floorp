@@ -236,6 +236,7 @@ PresentationSessionInfo::Shutdown(nsresult aReason)
   }
 
   mIsResponderReady = false;
+  mIsOnTerminating = false;
 
   SetBuilder(nullptr);
 }
@@ -284,9 +285,42 @@ PresentationSessionInfo::Close(nsresult aReason,
     return NS_ERROR_DOM_INVALID_STATE_ERR;
   }
 
+  // Do nothing if session is already terminated.
+  if (nsIPresentationSessionListener::STATE_TERMINATED == mState) {
+    return NS_OK;
+  }
+
   SetStateWithReason(aState, aReason);
 
-  Shutdown(aReason);
+  switch (aState) {
+    case nsIPresentationSessionListener::STATE_CLOSED: {
+      Shutdown(aReason);
+      break;
+    }
+    case nsIPresentationSessionListener::STATE_TERMINATED: {
+      if (!mControlChannel) {
+        nsCOMPtr<nsIPresentationControlChannel> ctrlChannel;
+        nsresult rv = mDevice->EstablishControlChannel(getter_AddRefs(ctrlChannel));
+        if (NS_SUCCEEDED(rv)) {
+          SetControlChannel(ctrlChannel);
+        }
+        return rv;
+      }
+
+      return mControlChannel->Terminate(mSessionId);
+    }
+  }
+
+  return NS_OK;
+}
+
+nsresult
+PresentationSessionInfo::OnTerminate(nsIPresentationControlChannel* aControlChannel)
+{
+  mIsOnTerminating = true; // Mark for terminating transport channel
+  SetStateWithReason(nsIPresentationSessionListener::STATE_TERMINATED, NS_OK);
+  SetControlChannel(aControlChannel);
+
   return NS_OK;
 }
 
@@ -340,6 +374,18 @@ PresentationSessionInfo::IsAccessible(base::ProcessId aProcessId)
 {
   // No restriction by default.
   return true;
+}
+
+void
+PresentationSessionInfo::ContinueTermination()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(mControlChannel);
+
+  if (NS_WARN_IF(NS_FAILED(mControlChannel->Terminate(mSessionId)))
+      || mIsOnTerminating) {
+    Shutdown(NS_OK);
+  }
 }
 
 // nsIPresentationSessionTransportCallback
@@ -689,6 +735,27 @@ PresentationControllingInfo::OnAnswer(nsIPresentationChannelDescription* aDescri
 
 NS_IMETHODIMP
 PresentationControllingInfo::NotifyConnected()
+{
+  MOZ_ASSERT(NS_IsMainThread());
+
+  switch (mState) {
+    case nsIPresentationSessionListener::STATE_CONNECTING: {
+      Unused << NS_WARN_IF(NS_FAILED(BuildTransport()));
+      break;
+    }
+    case nsIPresentationSessionListener::STATE_TERMINATED: {
+      ContinueTermination();
+      break;
+    }
+    default:
+      break;
+  }
+
+  return NS_OK;
+}
+
+nsresult
+PresentationControllingInfo::BuildTransport()
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -1139,7 +1206,10 @@ PresentationPresentingInfo::OnIceCandidate(const nsAString& aCandidate)
 NS_IMETHODIMP
 PresentationPresentingInfo::NotifyConnected()
 {
-  // Do nothing.
+  if (nsIPresentationSessionListener::STATE_TERMINATED == mState) {
+    ContinueTermination();
+  }
+
   return NS_OK;
 }
 

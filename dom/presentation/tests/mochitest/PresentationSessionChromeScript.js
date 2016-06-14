@@ -45,7 +45,7 @@ function registerOriginalFactory(contractId, mockedClassId, mockedFactory, origi
   }
 }
 
-const sessionId = 'test-session-id-' + uuidGenerator.generateUUID().toString();
+var sessionId = 'test-session-id-' + uuidGenerator.generateUUID().toString();
 
 const address = Cc["@mozilla.org/supports-cstring;1"]
                   .createInstance(Ci.nsISupportsCString);
@@ -142,6 +142,10 @@ const mockedControlChannel = {
     return isValid;
   },
   launch: function(presentationId, url) {
+    sessionId = presentationId;
+  },
+  terminate: function(presentationId) {
+    sendAsyncMessage('sender-terminate', presentationId);
   },
   disconnect: function(reason) {
     sendAsyncMessage('control-channel-closed', reason);
@@ -390,6 +394,13 @@ addMessageListener('trigger-incoming-session-request', function(url) {
                       .getService(Ci.nsIPresentationDeviceManager);
   deviceManager.QueryInterface(Ci.nsIPresentationDeviceListener)
 	       .onSessionRequest(mockedDevice, url, sessionId, mockedControlChannel);
+});
+
+addMessageListener('trigger-incoming-terminate-request', function() {
+  var deviceManager = Cc['@mozilla.org/presentation-device/manager;1']
+                      .getService(Ci.nsIPresentationDeviceManager);
+  deviceManager.QueryInterface(Ci.nsIPresentationDeviceListener)
+	       .onTerminateRequest(mockedDevice, sessionId, mockedControlChannel, true);
 });
 
 addMessageListener('trigger-incoming-offer', function() {

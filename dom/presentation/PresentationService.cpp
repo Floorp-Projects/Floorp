@@ -4,9 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "PresentationService.h"
+
 #include "ipc/PresentationIPCService.h"
 #include "mozilla/Services.h"
 #include "mozIApplication.h"
+#include "nsGlobalWindow.h"
 #include "nsIAppsService.h"
 #include "nsIObserverService.h"
 #include "nsIPresentationControlChannel.h"
@@ -15,18 +18,43 @@
 #include "nsIPresentationListener.h"
 #include "nsIPresentationRequestUIGlue.h"
 #include "nsIPresentationSessionRequest.h"
+#include "nsIPresentationTerminateRequest.h"
 #include "nsNetUtil.h"
 #include "nsServiceManagerUtils.h"
 #include "nsThreadUtils.h"
 #include "nsXULAppAPI.h"
 #include "PresentationLog.h"
-#include "PresentationService.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
 
 namespace mozilla {
 namespace dom {
+
+static bool
+IsSameDevice(nsIPresentationDevice* aDevice, nsIPresentationDevice* aDeviceAnother) {
+  if (!aDevice || !aDeviceAnother) {
+    return false;
+  }
+
+  nsAutoCString deviceId;
+  aDevice->GetId(deviceId);
+  nsAutoCString anotherId;
+  aDeviceAnother->GetId(anotherId);
+  if (!deviceId.Equals(anotherId)) {
+    return false;
+  }
+
+  nsAutoCString deviceType;
+  aDevice->GetType(deviceType);
+  nsAutoCString anotherType;
+  aDeviceAnother->GetType(anotherType);
+  if (!deviceType.Equals(anotherType)) {
+    return false;
+  }
+
+  return true;
+}
 
 /*
  * Implementation of PresentationDeviceRequest
@@ -191,6 +219,10 @@ PresentationService::Init()
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return false;
   }
+  rv = obs->AddObserver(this, PRESENTATION_TERMINATE_REQUEST_TOPIC, false);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    return false;
+  }
 
   nsCOMPtr<nsIPresentationDeviceManager> deviceManager =
     do_GetService(PRESENTATION_DEVICE_MANAGER_CONTRACTID);
@@ -219,6 +251,13 @@ PresentationService::Observe(nsISupports* aSubject,
     }
 
     return HandleSessionRequest(request);
+  } else if (!strcmp(aTopic, PRESENTATION_TERMINATE_REQUEST_TOPIC)) {
+    nsCOMPtr<nsIPresentationTerminateRequest> request(do_QueryInterface(aSubject));
+    if (NS_WARN_IF(!request)) {
+      return NS_ERROR_FAILURE;
+    }
+
+    return HandleTerminateRequest(request);
   } else if (!strcmp(aTopic, "profile-after-change")) {
     // It's expected since we add and entry to |kLayoutCategories| in
     // |nsLayoutModule.cpp| to launch this service earlier.
@@ -245,6 +284,7 @@ PresentationService::HandleShutdown()
     obs->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     obs->RemoveObserver(this, PRESENTATION_DEVICE_CHANGE_TOPIC);
     obs->RemoveObserver(this, PRESENTATION_SESSION_REQUEST_TOPIC);
+    obs->RemoveObserver(this, PRESENTATION_TERMINATE_REQUEST_TOPIC);
   }
 }
 
@@ -358,6 +398,58 @@ PresentationService::HandleSessionRequest(nsIPresentationSessionRequest* aReques
   static_cast<PresentationPresentingInfo*>(info.get())->SetPromise(realPromise);
 
   return NS_OK;
+}
+
+nsresult
+PresentationService::HandleTerminateRequest(nsIPresentationTerminateRequest* aRequest)
+{
+  nsCOMPtr<nsIPresentationControlChannel> ctrlChannel;
+  nsresult rv = aRequest->GetControlChannel(getter_AddRefs(ctrlChannel));
+  if (NS_WARN_IF(NS_FAILED(rv) || !ctrlChannel)) {
+    return rv;
+  }
+
+  nsAutoString sessionId;
+  rv = aRequest->GetPresentationId(sessionId);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    ctrlChannel->Disconnect(rv);
+    return rv;
+  }
+
+  nsCOMPtr<nsIPresentationDevice> device;
+  rv = aRequest->GetDevice(getter_AddRefs(device));
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    ctrlChannel->Disconnect(rv);
+    return rv;
+  }
+
+  bool isFromReceiver;
+  rv = aRequest->GetIsFromReceiver(&isFromReceiver);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
+    ctrlChannel->Disconnect(rv);
+    return rv;
+  }
+
+  RefPtr<PresentationSessionInfo> info;
+  if (!isFromReceiver) {
+    info = GetSessionInfo(sessionId, nsIPresentationService::ROLE_RECEIVER);
+  } else {
+    info = GetSessionInfo(sessionId, nsIPresentationService::ROLE_CONTROLLER);
+  }
+  if (NS_WARN_IF(!info)) {
+    // Cannot terminate non-existed session.
+    ctrlChannel->Disconnect(NS_ERROR_DOM_OPERATION_ERR);
+    return NS_ERROR_DOM_ABORT_ERR;
+  }
+
+  // Check if terminate request comes from known device.
+  RefPtr<nsIPresentationDevice> knownDevice = info->GetDevice();
+  if (NS_WARN_IF(!IsSameDevice(device, knownDevice))) {
+    ctrlChannel->Disconnect(NS_ERROR_DOM_OPERATION_ERR);
+    return NS_ERROR_DOM_ABORT_ERR;
+  }
+
+  return info->OnTerminate(ctrlChannel);
 }
 
 void
@@ -525,7 +617,6 @@ PresentationService::CloseSession(const nsAString& aSessionId,
   }
 
   if (aClosedReason == nsIPresentationService::CLOSED_REASON_WENTAWAY) {
-    UntrackSessionInfo(aSessionId, aRole);
     // Remove nsIPresentationSessionListener since we don't want to dispatch
     // PresentationConnectionClosedEvent if the page is went away.
     info->SetListener(nullptr);
@@ -611,8 +702,9 @@ PresentationService::UnregisterSessionListener(const nsAString& aSessionId,
 
   RefPtr<PresentationSessionInfo> info = GetSessionInfo(aSessionId, aRole);
   if (info) {
-    NS_WARN_IF(NS_FAILED(info->Close(NS_OK, nsIPresentationSessionListener::STATE_TERMINATED)));
-    UntrackSessionInfo(aSessionId, aRole);
+    // When content side decide not handling this session anymore, simply
+    // close the connection. Session info is kept for reconnection.
+    NS_WARN_IF(NS_FAILED(info->Close(NS_OK, nsIPresentationSessionListener::STATE_CLOSED)));
     return info->SetListener(nullptr);
   }
   return NS_OK;
@@ -729,6 +821,17 @@ PresentationService::UntrackSessionInfo(const nsAString& aSessionId,
   if (nsIPresentationService::ROLE_CONTROLLER == aRole) {
     mSessionInfoAtController.Remove(aSessionId);
   } else {
+    // Terminate receiver page.
+    uint64_t windowId;
+    nsresult rv = GetWindowIdBySessionIdInternal(aSessionId, &windowId);
+    if (NS_SUCCEEDED(rv)) {
+      NS_DispatchToMainThread(NS_NewRunnableFunction([windowId]() -> void {
+        if (auto* window = nsGlobalWindow::GetInnerWindowWithId(windowId)) {
+          window->Close();
+        }
+      }));
+    }
+
     mSessionInfoAtReceiver.Remove(aSessionId);
   }
 
