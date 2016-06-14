@@ -614,9 +614,3 @@ LIRGeneratorMIPSShared::visitCopySign(MCopySign* ins)
     lir->setOperand(1, useRegister(rhs));
     defineReuseInput(lir, ins, 0);
 }
-
-void
-LIRGeneratorMIPSShared::visitCopySign(MCopySign* ins)
-{
-    MOZ_CRASH("NYI");
-}
