@@ -101,6 +101,7 @@ class DeviceStorageAreaListener;
 class Presentation;
 class LegacyMozTCPSocket;
 class VRDisplay;
+class StorageManager;
 
 namespace time {
 class TimeManager;
@@ -287,6 +288,8 @@ public:
 
   bool MozE10sEnabled();
 
+  StorageManager* Storage();
+
   static void GetAcceptLanguages(nsTArray<nsString>& aLanguages);
 
   // WebIDL helper methods
@@ -377,6 +380,7 @@ private:
 #endif
   nsTArray<RefPtr<Promise> > mVRGetDisplaysPromises;
   nsTArray<uint32_t> mRequestedVibrationPattern;
+  RefPtr<StorageManager> mStorageManager;
 };
 
 } // namespace dom
