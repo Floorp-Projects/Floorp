@@ -92,7 +92,7 @@ extensions.on("shutdown", (type, extension) => {
 });
 /* eslint-enable mozilla/balanced-listeners */
 
-extensions.registerSchemaAPI("pageAction", (extension, context) => {
+extensions.registerSchemaAPI("pageAction", null, (extension, context) => {
   return {
     pageAction: {
       onClicked: new SingletonEventManager(context, "pageAction.onClicked", fire => {

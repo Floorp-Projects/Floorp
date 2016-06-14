@@ -25,7 +25,7 @@ extensions.on("test-message", (type, extension, ...args) => {
 });
 /* eslint-enable mozilla/balanced-listeners */
 
-extensions.registerSchemaAPI("test", (extension, context) => {
+extensions.registerSchemaAPI("test", null, (extension, context) => {
   return {
     test: {
       sendMessage: function(...args) {
