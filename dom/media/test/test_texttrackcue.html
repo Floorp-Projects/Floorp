@@ -150,8 +150,8 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
 
       // Check cue.line
       is(cue.line, "auto", "Cue's line value should initially be auto.");
-      cue.line = 12410
-      is(cue.line, 12410, "Cue's line value should now be 12410.");
+      cue.line = 0.5;
+      is(cue.line, 0.5, "Cue's line value should now be 0.5.");
       cue.line = "auto";
       is(cue.line, "auto", "Cue's line value should now be auto.");
 
