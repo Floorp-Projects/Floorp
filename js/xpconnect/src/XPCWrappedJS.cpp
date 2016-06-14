@@ -204,6 +204,18 @@ nsXPCWrappedJS::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     if (!IsValid())
         return NS_ERROR_UNEXPECTED;
 
+    if (aIID.Equals(NS_GET_IID(nsIXPConnectWrappedJSUnmarkGray))) {
+        *aInstancePtr = nullptr;
+
+        // No need to null check mJSObj because IsValid() call above did
+        // that already.
+        JS::ExposeObjectToActiveJS(mJSObj);
+
+        // Just return some error value since one isn't supposed to use
+        // nsIXPConnectWrappedJSUnmarkGray objects for anything.
+        return NS_ERROR_FAILURE;
+    }
+
     // Always check for this first so that our 'outer' can get this interface
     // from us without recurring into a call to the outer's QI!
     if (aIID.Equals(NS_GET_IID(nsIXPConnectWrappedJS))) {
