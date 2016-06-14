@@ -353,36 +353,6 @@ gfxASurface::FormatStrideForWidth(gfxImageFormat format, int32_t width)
     return cairo_format_stride_for_width(cformat, (int)width);
 }
 
-nsresult
-gfxASurface::BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName)
-{
-    return NS_OK;
-}
-
-nsresult
-gfxASurface::EndPrinting()
-{
-    return NS_OK;
-}
-
-nsresult
-gfxASurface::AbortPrinting()
-{
-    return NS_OK;
-}
-
-nsresult
-gfxASurface::BeginPage()
-{
-    return NS_OK;
-}
-
-nsresult
-gfxASurface::EndPage()
-{
-    return NS_OK;
-}
-
 gfxContentType
 gfxASurface::ContentFromFormat(gfxImageFormat format)
 {
