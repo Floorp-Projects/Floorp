@@ -22,8 +22,6 @@ class gfxContext;
 class gfxWindowsSurface : public gfxASurface {
 public:
     enum {
-        FLAG_TAKE_DC = (1 << 0),
-        FLAG_FOR_PRINTING = (1 << 1),
         FLAG_IS_TRANSPARENT = (1 << 2)
     };
 
@@ -49,19 +47,12 @@ public:
 
     already_AddRefed<gfxImageSurface> GetAsImageSurface();
 
-    nsresult BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName);
-    nsresult EndPrinting();
-    nsresult AbortPrinting();
-    nsresult BeginPage();
-    nsresult EndPage();
-
     const mozilla::gfx::IntSize GetSize() const;
 
 private:
     void MakeInvalid(mozilla::gfx::IntSize& size);
 
     bool mOwnsDC;
-    bool mForPrinting;
 
     HDC mDC;
     HWND mWnd;
