@@ -536,49 +536,5 @@ ScopedPackState::UnwrapImpl()
     mGL->fPixelStorei(LOCAL_GL_PACK_SKIP_ROWS, mSkipRows);
 }
 
-////////////////////////////////////////////////////////////////////////
-// ScopedUnpackState
-
-ScopedUnpackState::ScopedUnpackState(GLContext* gl)
-    : ScopedGLWrapper<ScopedUnpackState>(gl)
-{
-    mGL->fGetIntegerv(LOCAL_GL_UNPACK_ALIGNMENT, &mAlignment);
-
-    if (mAlignment != 4) mGL->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
-
-    if (!HasPBOState(mGL))
-        return;
-
-    mGL->fGetIntegerv(LOCAL_GL_PIXEL_UNPACK_BUFFER_BINDING, (GLint*)&mPixelBuffer);
-    mGL->fGetIntegerv(LOCAL_GL_UNPACK_IMAGE_HEIGHT, &mImageHeight);
-    mGL->fGetIntegerv(LOCAL_GL_UNPACK_ROW_LENGTH, &mRowLength);
-    mGL->fGetIntegerv(LOCAL_GL_UNPACK_SKIP_IMAGES, &mSkipImages);
-    mGL->fGetIntegerv(LOCAL_GL_UNPACK_SKIP_PIXELS, &mSkipPixels);
-    mGL->fGetIntegerv(LOCAL_GL_UNPACK_SKIP_ROWS, &mSkipRows);
-
-    if (mPixelBuffer != 0) mGL->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, 0);
-    if (mImageHeight != 0) mGL->fPixelStorei(LOCAL_GL_UNPACK_IMAGE_HEIGHT, 0);
-    if (mRowLength != 0)   mGL->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, 0);
-    if (mSkipImages != 0)  mGL->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES, 0);
-    if (mSkipPixels != 0)  mGL->fPixelStorei(LOCAL_GL_UNPACK_SKIP_PIXELS, 0);
-    if (mSkipRows != 0)    mGL->fPixelStorei(LOCAL_GL_UNPACK_SKIP_ROWS, 0);
-}
-
-void
-ScopedUnpackState::UnwrapImpl()
-{
-    mGL->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, mAlignment);
-
-    if (!HasPBOState(mGL))
-        return;
-
-    mGL->fBindBuffer(LOCAL_GL_PIXEL_UNPACK_BUFFER, mPixelBuffer);
-    mGL->fPixelStorei(LOCAL_GL_UNPACK_IMAGE_HEIGHT, mImageHeight);
-    mGL->fPixelStorei(LOCAL_GL_UNPACK_ROW_LENGTH, mRowLength);
-    mGL->fPixelStorei(LOCAL_GL_UNPACK_SKIP_IMAGES, mSkipImages);
-    mGL->fPixelStorei(LOCAL_GL_UNPACK_SKIP_PIXELS, mSkipPixels);
-    mGL->fPixelStorei(LOCAL_GL_UNPACK_SKIP_ROWS, mSkipRows);
-}
-
 } /* namespace gl */
 } /* namespace mozilla */
