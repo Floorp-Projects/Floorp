@@ -24,7 +24,7 @@ enum PositionAlignSetting {
 
 enum AlignSetting {
   "start",
-  "middle",
+  "center",
   "end",
   "left",
   "right"
