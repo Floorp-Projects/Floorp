@@ -5,7 +5,7 @@
 
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/gfx/PrintTargetPDF.h"
-#include "mozilla/gfx/PrintTargetThebes.h"
+#include "mozilla/gfx/PrintTargetWindows.h"
 #include "mozilla/RefPtr.h"
 
 #include "nsDeviceContextSpecWin.h"
@@ -264,16 +264,8 @@ already_AddRefed<PrintTarget> nsDeviceContextSpecWin::MakePrintTarget()
       return nullptr;
     }
 
-    // have this surface take over ownership of this DC
-    RefPtr<gfxASurface> newSurface =
-      new gfxWindowsSurface(dc, gfxWindowsSurface::FLAG_TAKE_DC |
-                                gfxWindowsSurface::FLAG_FOR_PRINTING);
-    if (newSurface->GetType() == (gfxSurfaceType)-1) {
-      gfxCriticalError() << "Invalid windows surface from " << gfx::hexa(dc);
-      return nullptr;
-    }
-
-    return PrintTargetThebes::CreateOrNull(newSurface);
+    // The PrintTargetWindows takes over ownership of this DC
+    return PrintTargetWindows::CreateOrNull(dc);
   }
 
   return nullptr;
