@@ -2456,46 +2456,7 @@ toolbarbutton.chevron > .toolbarbutton-menu-dropmarker {
   text-align: center;
 }
 
-@media (min-resolution: 2dppx) {
-  /* image preloading hack from shared/tabs.inc.css */
-  #tabbrowser-tabs::before {
-    background-image:
-      url(chrome://browser/skin/tabbrowser/tab-background-end@2x.png),
-      url(chrome://browser/skin/tabbrowser/tab-background-middle@2x.png),
-      url(chrome://browser/skin/tabbrowser/tab-background-start@2x.png);
-  }
-
-  .tabbrowser-tab:hover > .tab-stack > .tab-background:not([visuallyselected=true]),
-  .tabs-newtab-button:hover {
-    background-image: url(chrome://browser/skin/tabbrowser/tab-background-start@2x.png),
-                      url(chrome://browser/skin/tabbrowser/tab-background-middle@2x.png),
-                      url(chrome://browser/skin/tabbrowser/tab-background-end@2x.png);
-  }
-
-  .tab-background-middle[visuallyselected=true] {
-    background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle@2x.png),
-                      @fgTabTexture@,
-                      none;
-  }
-
-  .tab-background-start[visuallyselected=true]:-moz-locale-dir(ltr)::after,
-  .tab-background-end[visuallyselected=true]:-moz-locale-dir(rtl)::after {
-    background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-start@2x.png);
-  }
-
-  .tab-background-end[visuallyselected=true]:-moz-locale-dir(ltr)::after,
-  .tab-background-start[visuallyselected=true]:-moz-locale-dir(rtl)::after {
-    background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-end@2x.png);
-  }
-
-  .tab-icon-image {
-    list-style-image: url("chrome://mozapps/skin/places/defaultFavicon@2x.png");
-  }
-
-  .tab-throbber[busy] {
-    list-style-image: url("chrome://browser/skin/tabbrowser/connecting@2x.png");
-  }
-
+@media (min-resolution: 1.1dppx) {
   .tab-throbber[progress] {
     list-style-image: url("chrome://global/skin/icons/loading@2x.png");
   }
