@@ -14,6 +14,7 @@
 #include "PresentationSessionInfo.h"
 
 class nsIPresentationSessionRequest;
+class nsIPresentationTerminateRequest;
 class nsIURI;
 class nsIPresentationSessionTransportBuilder;
 
@@ -66,6 +67,7 @@ private:
   void HandleShutdown();
   nsresult HandleDeviceChange();
   nsresult HandleSessionRequest(nsIPresentationSessionRequest* aRequest);
+  nsresult HandleTerminateRequest(nsIPresentationTerminateRequest* aRequest);
   void NotifyAvailableChange(bool aIsAvailable);
   bool IsAppInstalled(nsIURI* aUri);
 
