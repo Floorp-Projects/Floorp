@@ -12,6 +12,7 @@ let LOGIN_FILL_ITEMS = [
 ];
 
 let hasPocket = Services.prefs.getBoolPref("extensions.pocket.enabled");
+let hasContainers = Services.prefs.getBoolPref("privacy.userContext.enabled");
 
 add_task(function* test_setup() {
   const example_base = "http://example.com/browser/browser/base/content/test/general/";
@@ -62,6 +63,10 @@ add_task(function* test_plaintext() {
 add_task(function* test_link() {
   yield test_contextmenu("#test-link",
     ["context-openlinkintab", true,
+     ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
+     // We need a blank entry here because the conatiners submenu is
+     // dynamically generated with no ids.
+     ...(hasContainers ? ["", null] : []),
      "context-openlink",      true,
      "context-openlinkprivate", true,
      "---",                   null,
@@ -622,6 +627,10 @@ add_task(function* test_select_text_link() {
   yield test_contextmenu("#test-select-text-link",
     ["context-openlinkincurrent",           true,
      "context-openlinkintab",               true,
+     ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
+     // We need a blank entry here because the conatiners submenu is
+     // dynamically generated with no ids.
+     ...(hasContainers ? ["", null] : []),
      "context-openlink",                    true,
      "context-openlinkprivate",             true,
      "---",                                 null,
@@ -652,6 +661,10 @@ add_task(function* test_select_text_link() {
 add_task(function* test_imagelink() {
   yield test_contextmenu("#test-image-link",
     ["context-openlinkintab", true,
+     ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
+     // We need a blank entry here because the conatiners submenu is
+     // dynamically generated with no ids.
+     ...(hasContainers ? ["", null] : []),
      "context-openlink",      true,
      "context-openlinkprivate", true,
      "---",                   null,
