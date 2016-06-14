@@ -438,6 +438,7 @@ ContentCacheInParent::ContentCacheInParent()
 
 void
 ContentCacheInParent::AssignContent(const ContentCache& aOther,
+                                    nsIWidget* aWidget,
                                     const IMENotification* aNotification)
 {
   mCompositionStart = aOther.mCompositionStart;
@@ -448,12 +449,20 @@ ContentCacheInParent::AssignContent(const ContentCache& aOther,
   mTextRectArray = aOther.mTextRectArray;
   mEditorRect = aOther.mEditorRect;
 
+  if (mIsComposing) {
+    NS_WARN_IF(mCompositionStart == UINT32_MAX);
+    IMEStateManager::MaybeStartOffsetUpdatedInChild(aWidget, mCompositionStart);
+  } else {
+    NS_WARN_IF(mCompositionStart != UINT32_MAX);
+  }
+
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
     ("ContentCacheInParent: 0x%p AssignContent(aNotification=%s), "
      "Succeeded, mText.Length()=%u, mSelection={ mAnchor=%u, mFocus=%u, "
      "mWritingMode=%s, mAnchorCharRect=%s, mFocusCharRect=%s, mRect=%s }, "
      "mFirstCharRect=%s, mCaret={ mOffset=%u, mRect=%s }, mTextRectArray={ "
-     "mStart=%u, mRects.Length()=%u }, mCompositionStart=%u, mEditorRect=%s",
+     "mStart=%u, mRects.Length()=%u }, mIsComposing=%s, mCompositionStart=%u, "
+     "mEditorRect=%s",
      this, GetNotificationName(aNotification),
      mText.Length(), mSelection.mAnchor, mSelection.mFocus,
      GetWritingModeName(mSelection.mWritingMode).get(),
@@ -461,8 +470,8 @@ ContentCacheInParent::AssignContent(const ContentCache& aOther,
      GetRectText(mSelection.mFocusCharRect).get(),
      GetRectText(mSelection.mRect).get(), GetRectText(mFirstCharRect).get(),
      mCaret.mOffset, GetRectText(mCaret.mRect).get(), mTextRectArray.mStart,
-     mTextRectArray.mRects.Length(), mCompositionStart,
-     GetRectText(mEditorRect).get()));
+     mTextRectArray.mRects.Length(), GetBoolName(mIsComposing),
+     mCompositionStart, GetRectText(mEditorRect).get()));
 }
 
 bool

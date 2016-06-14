@@ -280,6 +280,7 @@ public:
    * it's managed by TabParent itself.
    */
   void AssignContent(const ContentCache& aOther,
+                     nsIWidget* aWidget,
                      const IMENotification* aNotification = nullptr);
 
   /**
