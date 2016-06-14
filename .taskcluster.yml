@@ -60,8 +60,8 @@ tasks:
 
       routes:
         - "index.gecko.v2.{{project}}.latest.firefox.decision"
-        - "tc-treeherder.{{project}}.{{revision_hash}}"
-        - "tc-treeherder-stage.{{project}}.{{revision_hash}}"
+        - "tc-treeherder.v2.{{project}}.{{revision}}.{{pushlog_id}}"
+        - "tc-treeherder-stage.v2.{{project}}.{{revision}}.{{pushlog_id}}"
 
       payload:
         env:

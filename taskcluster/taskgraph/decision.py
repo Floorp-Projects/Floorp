@@ -90,7 +90,6 @@ def get_decision_parameters(options):
         'head_repository',
         'head_rev',
         'head_ref',
-        'revision_hash',
         'message',
         'project',
         'pushlog_id',

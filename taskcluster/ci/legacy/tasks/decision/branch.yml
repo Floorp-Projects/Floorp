@@ -17,8 +17,8 @@ tasks:
     task:
       routes:
         - index.gecko.v2.{{project}}.latest.firefox.decision
-        - tc-treeherder-stage.{{project}}.{{revision_hash}}
-        - tc-treeherder.{{project}}.{{revision_hash}}
+        - tc-treeherder.v2.{{project}}.{{head_rev}}.{{pushlog_id}}
+        - tc-treeherder-stage.v2.{{project}}.{{head_rev}}.{{pushlog_id}}
       created: '{{now}}'
       deadline: '{{#from_now}}1 day{{/from_now}}'
       metadata:
@@ -79,7 +79,6 @@ tasks:
             --message='{{comment}}'
             --owner='{{owner}}'
             --level='{{level}}'
-            --revision-hash='{{revision_hash}}'
             --extend-graph > /home/worker/artifacts/graph.json &&
             cp /home/worker/artifacts/graph.json /home/worker/artifacts/all_tasks.json
         graphs:
@@ -95,5 +94,3 @@ tasks:
       extra:
         treeherder:
           symbol: D
-          revision: '{{revision}}'
-          revision_hash: '{{revision_hash}}'

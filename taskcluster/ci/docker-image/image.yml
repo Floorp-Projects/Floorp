@@ -18,8 +18,8 @@ task:
       - index.docker.images.v1.{{project}}.{{image_name}}.latest
       - index.docker.images.v1.{{project}}.{{image_name}}.pushdate.{{year}}.{{month}}-{{day}}-{{pushtime}}
       - index.docker.images.v1.{{project}}.{{image_name}}.hash.{{context_hash}}
-      - tc-treeherder.{{project}}.{{revision_hash}}
-      - tc-treeherder-stage.{{project}}.{{revision_hash}}
+      - tc-treeherder.v2.{{project}}.{{head_rev}}.{{pushlog_id}}
+      - tc-treeherder-stage.v2.{{project}}.{{head_rev}}.{{pushlog_id}}
 
   payload:
     env:
@@ -50,8 +50,6 @@ task:
       - production
     treeherder:
       jobKind: other
-      revision: {{head_rev}}
-      revision_hash: {{revision_hash}}
       build:
         platform: 'taskcluster-images'
       symbol: 'I'

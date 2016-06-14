@@ -37,6 +37,7 @@ class DockerImageKind(base.Kind):
         pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime())
 
         parameters = {
+            'pushlog_id': params.get('pushlog_id', 0),
             'pushdate': pushdate,
             'pushtime': pushdate[8:],
             'year': pushdate[0:4],
@@ -52,7 +53,6 @@ class DockerImageKind(base.Kind):
             'level': params['level'],
             'from_now': json_time_from_now,
             'now': current_json_time(),
-            'revision_hash': params['revision_hash'],
             'source': '{repo}file/{rev}/testing/taskcluster/tasks/image.yml'
                     .format(repo=params['head_repository'], rev=params['head_rev']),
         }
