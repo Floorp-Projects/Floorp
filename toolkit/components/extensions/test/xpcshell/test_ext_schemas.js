@@ -341,6 +341,18 @@ let json = [
      },
    ],
   },
+  {
+    namespace: "inject",
+    properties: {
+      PROP1: {value: "should inject"},
+    },
+  },
+  {
+    namespace: "do-not-inject",
+    properties: {
+      PROP1: {value: "should not inject"},
+    },
+  },
 ];
 
 let tallied = null;
@@ -366,8 +378,6 @@ function checkErrors(errors) {
   talliedErrors.length = 0;
 }
 
-let permissions = new Set();
-
 let wrapper = {
   url: "moz-extension://b66e3509-cdb3-44f6-8eb8-c8b39b3a1d27/",
 
@@ -385,10 +395,6 @@ let wrapper = {
     talliedErrors.push(message);
   },
 
-  hasPermission(permission) {
-    return permissions.has(permission);
-  },
-
   callFunction(path, name, args) {
     let ns = path.join(".");
     tally("call", ns, name, args);
@@ -397,6 +403,10 @@ let wrapper = {
   callFunctionNoReturn(path, name, args) {
     let ns = path.join(".");
     tally("call", ns, name, args);
+  },
+
+  shouldInject(ns) {
+    return ns != "do-not-inject";
   },
 
   getProperty(path, name) {
@@ -433,6 +443,9 @@ add_task(function* () {
   do_check_eq(root.testing.PROP1, 20, "simple value property");
   do_check_eq(root.testing.type1.VALUE1, "value1", "enum type");
   do_check_eq(root.testing.type1.VALUE2, "value2", "enum type");
+
+  do_check_eq("inject" in root, true, "namespace 'inject' should be injected");
+  do_check_eq("do-not-inject" in root, false, "namespace 'do-not-inject' should not be injected");
 
   root.testing.foo(11, true);
   verify("call", "testing", "foo", [11, true]);
@@ -1067,93 +1080,4 @@ add_task(function* testChoices() {
 
   Assert.throws(() => root.choices.bar({baz: "x", quux: "y", foo: "z"}),
                 /not contain the unexpected properties \[foo, quux\], or be an array value/);
-});
-
-
-let permissionsJson = [
-  {namespace: "noPerms",
-
-   types: [],
-
-   functions: [
-     {
-       name: "noPerms",
-       type: "function",
-       parameters: [],
-     },
-
-     {
-       name: "fooPerm",
-       type: "function",
-       permissions: ["foo"],
-       parameters: [],
-     },
-   ]},
-
-  {namespace: "fooPerm",
-
-   permissions: ["foo"],
-
-   types: [],
-
-   functions: [
-     {
-       name: "noPerms",
-       type: "function",
-       parameters: [],
-     },
-
-     {
-       name: "fooBarPerm",
-       type: "function",
-       permissions: ["foo.bar"],
-       parameters: [],
-     },
-   ]},
-];
-
-add_task(function* testPermissions() {
-  let url = "data:," + JSON.stringify(permissionsJson);
-  yield Schemas.load(url);
-
-  let root = {};
-  Schemas.inject(root, wrapper);
-
-  equal(typeof root.noPerms, "object", "noPerms namespace should exist");
-  equal(typeof root.noPerms.noPerms, "function", "noPerms.noPerms method should exist");
-
-  ok(!("fooPerm" in root.noPerms), "noPerms.fooPerm should not method exist");
-
-  ok(!("fooPerm" in root), "fooPerm namespace should not exist");
-
-
-  do_print('Add "foo" permission');
-  permissions.add("foo");
-
-  root = {};
-  Schemas.inject(root, wrapper);
-
-  equal(typeof root.noPerms, "object", "noPerms namespace should exist");
-  equal(typeof root.noPerms.noPerms, "function", "noPerms.noPerms method should exist");
-  equal(typeof root.noPerms.fooPerm, "function", "noPerms.fooPerm method should exist");
-
-  equal(typeof root.fooPerm, "object", "fooPerm namespace should exist");
-  equal(typeof root.fooPerm.noPerms, "function", "noPerms.noPerms method should exist");
-
-  ok(!("fooBarPerm" in root.fooPerm), "fooPerm.fooBarPerm method should not exist");
-
-
-  do_print('Add "foo.bar" permission');
-  permissions.add("foo.bar");
-
-  root = {};
-  Schemas.inject(root, wrapper);
-
-  equal(typeof root.noPerms, "object", "noPerms namespace should exist");
-  equal(typeof root.noPerms.noPerms, "function", "noPerms.noPerms method should exist");
-  equal(typeof root.noPerms.fooPerm, "function", "noPerms.fooPerm method should exist");
-
-  equal(typeof root.fooPerm, "object", "fooPerm namespace should exist");
-  equal(typeof root.fooPerm.noPerms, "function", "noPerms.noPerms method should exist");
-  equal(typeof root.fooPerm.fooBarPerm, "function", "noPerms.fooBarPerm method should exist");
 });

@@ -226,7 +226,7 @@ extensions.on("shutdown", (type, extension) => {
 });
 /* eslint-enable mozilla/balanced-listeners */
 
-extensions.registerSchemaAPI("browserAction", (extension, context) => {
+extensions.registerSchemaAPI("browserAction", null, (extension, context) => {
   return {
     browserAction: {
       onClicked: new EventManager(context, "browserAction.onClicked", fire => {
