@@ -233,6 +233,8 @@ WebGL2Context::GetBufferSubDataT(GLenum target, GLintptr offset, const BufferT& 
     memcpy(data.DataAllowShared(), ptr, data.LengthAllowShared());
     gl->fUnmapBuffer(target);
 
+    ////
+
     if (target == LOCAL_GL_TRANSFORM_FEEDBACK_BUFFER && currentTF) {
         BindTransformFeedback(LOCAL_GL_TRANSFORM_FEEDBACK, currentTF);
     }
