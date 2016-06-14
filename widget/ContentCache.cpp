@@ -12,6 +12,7 @@
 #include "mozilla/TextEvents.h"
 #include "nsIWidget.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Move.h"
 
 namespace mozilla {
 
@@ -314,7 +315,7 @@ ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
     textRects.InitForQueryTextRectArray(mTextRectArray.mStart, length);
     aWidget->DispatchEvent(&textRects, status);
 
-    mTextRectArray.mRects = textRects.mReply.mRectArray;
+    mTextRectArray.mRects = Move(textRects.mReply.mRectArray);
   }
 
   if (mTextRectArray.InRange(mSelection.mAnchor)) {

@@ -4,9 +4,10 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsQueryContentEventResult.h"
 #include "nsIWidget.h"
 #include "nsPoint.h"
+#include "nsQueryContentEventResult.h"
+#include "mozilla/Move.h"
 #include "mozilla/TextEvents.h"
 
 using namespace mozilla;
@@ -222,7 +223,7 @@ nsQueryContentEventResult::GetCharacterRect(int32_t aOffset,
 
 void
 nsQueryContentEventResult::SetEventResult(nsIWidget* aWidget,
-                                          const WidgetQueryContentEvent &aEvent)
+                                          WidgetQueryContentEvent &aEvent)
 {
   mEventMessage = aEvent.mMessage;
   mSucceeded = aEvent.mSucceeded;
@@ -231,7 +232,9 @@ nsQueryContentEventResult::SetEventResult(nsIWidget* aWidget,
   mOffset = aEvent.mReply.mOffset;
   mTentativeCaretOffset = aEvent.mReply.mTentativeCaretOffset;
   mString = aEvent.mReply.mString;
-  mRectArray = aEvent.mReply.mRectArray;
+  mRectArray = mozilla::Move(aEvent.mReply.mRectArray);
+  // Mark as result that is longer used.
+  aEvent.mSucceeded = false;
 
   if (!IsRectRelatedPropertyAvailable(mEventMessage) ||
       !aWidget || !mSucceeded) {
