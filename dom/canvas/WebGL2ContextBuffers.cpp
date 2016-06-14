@@ -246,4 +246,15 @@ void WebGL2Context::GetBufferSubData(GLenum target, GLintptr offset,
     GetBufferSubDataT(target, offset, data);
 }
 
+void
+WebGL2Context::ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height, GLenum format,
+                          GLenum type, GLintptr offset)
+{
+    const char funcName[] = "readPixels";
+    if (IsContextLost())
+        return;
+
+    ErrorInvalidOperation("%s: Not yet implemented.", funcName);
+}
+
 } // namespace mozilla
