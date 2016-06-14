@@ -2070,7 +2070,7 @@ MediaDecoderStateMachine::EnqueueLoadedMetadataEvent()
                              : MediaDecoderEventVisibility::Observable;
   mMetadataLoadedEvent.Notify(nsAutoPtr<MediaInfo>(new MediaInfo(mInfo)),
                               Move(mMetadataTags),
-                              Move(visibility));
+                              visibility);
   mSentLoadedMetadataEvent = true;
 }
 
@@ -2092,8 +2092,8 @@ MediaDecoderStateMachine::EnqueueFirstFrameLoadedEvent()
       MediaDecoderEventVisibility visibility =
         firstFrameBeenLoaded ? MediaDecoderEventVisibility::Suppressed
                              : MediaDecoderEventVisibility::Observable;
-      self->mFirstFrameLoadedEvent.Notify(nsAutoPtr<MediaInfo>(new MediaInfo(self->mInfo)),
-                                          Move(visibility));
+      self->mFirstFrameLoadedEvent.Notify(
+        nsAutoPtr<MediaInfo>(new MediaInfo(self->mInfo)), visibility);
     },
     // Reject
     []() { MOZ_CRASH("Should not reach"); }));

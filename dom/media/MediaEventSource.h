@@ -242,7 +242,7 @@ template <typename... As>
 class Listener<EventPassMode::Move, As...> : public ListenerBase {
 public:
   virtual ~Listener() {}
-  virtual void Dispatch(As&&... aEvents) = 0;
+  virtual void Dispatch(As... aEvents) = 0;
 };
 
 /**
@@ -267,7 +267,7 @@ class ListenerImpl<Target, Function, EventPassMode::Move, As...>
 public:
   ListenerImpl(Target* aTarget, const Function& aFunction)
     : mHelper(ListenerBase::Token(), aTarget, aFunction) {}
-  void Dispatch(As&&... aEvents) override {
+  void Dispatch(As... aEvents) override {
     mHelper.Dispatch(Move(aEvents)...);
   }
 private:
