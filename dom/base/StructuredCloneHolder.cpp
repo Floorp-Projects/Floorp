@@ -903,6 +903,7 @@ ReadFormData(JSContext* aCx,
         ErrorResult rv;
         formData->Append(name, *blob, thirdArg, rv);
         if (NS_WARN_IF(rv.Failed())) {
+          rv.SuppressException();
           return nullptr;
         }
 
@@ -920,6 +921,7 @@ ReadFormData(JSContext* aCx,
         ErrorResult rv;
         formData->Append(name, value, rv);
         if (NS_WARN_IF(rv.Failed())) {
+          rv.SuppressException();
           return nullptr;
         }
       }
@@ -1125,6 +1127,7 @@ StructuredCloneHolder::CustomReadTransferHandler(JSContext* aCx,
     RefPtr<MessagePort> port =
       MessagePort::Create(global, portIdentifier, rv);
     if (NS_WARN_IF(rv.Failed())) {
+      rv.SuppressException();
       return false;
     }
 
