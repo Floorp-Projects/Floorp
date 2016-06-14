@@ -662,7 +662,7 @@ add_task(function* test_imagelink() {
   yield test_contextmenu("#test-image-link",
     ["context-openlinkintab", true,
      ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
-     // We need a blank entry here because the conatiners submenu is
+     // We need a blank entry here because the containers submenu is
      // dynamically generated with no ids.
      ...(hasContainers ? ["", null] : []),
      "context-openlink",      true,
