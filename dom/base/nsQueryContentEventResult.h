@@ -24,7 +24,7 @@ public:
   NS_DECL_NSIQUERYCONTENTEVENTRESULT
 
   void SetEventResult(nsIWidget* aWidget,
-                      const mozilla::WidgetQueryContentEvent &aEvent);
+                      mozilla::WidgetQueryContentEvent& aEvent);
 
 protected:
   ~nsQueryContentEventResult();
