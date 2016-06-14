@@ -43,17 +43,13 @@ class TestSetWindowSize(MarionetteTestCase):
         self.assertEqual(size['height'], height,
                          "Window height is %s but should be %s" % (size['height'], height))
 
-    def test_that_we_throw_an_error_when_trying_to_set_maximum_size(self):
-        # valid size
-        width = self.max_width - 100
-        height = self.max_height - 100
-        self.marionette.set_window_size(width, height)
-        # invalid size (cannot maximize)
-        with self.assertRaisesRegexp(UnsupportedOperationException, "Requested size exceeds screen size"):
-            self.marionette.set_window_size(self.max_width, self.max_height)
+    def test_possible_to_request_window_larger_than_screen(self):
+        self.marionette.set_window_size(100000, 100000)
         size = self.marionette.window_size
-        self.assertEqual(size['width'], width, "Window width should not have changed")
-        self.assertEqual(size['height'], height, "Window height should not have changed")
+
+        # In X the window size may be greater than the bounds of the screen
+        self.assertGreaterEqual(size["width"], self.max_width)
+        self.assertGreaterEqual(size["height"], self.max_height)
 
     def test_that_we_can_maximise_the_window(self):
         # valid size
