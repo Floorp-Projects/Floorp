@@ -332,7 +332,12 @@ public:
 
   void SetActive(bool aActive)
   {
+    if (mActive == aActive) {
+      return;
+    }
+
     mActive = aActive;
+    mDisplayState = mActive ? mDisplayState : nullptr;
   }
 
   bool GetActive()
