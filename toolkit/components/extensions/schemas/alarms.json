@@ -5,7 +5,6 @@
 [
   {
     "namespace": "alarms",
-    "permissions": ["alarms"],
     "types": [
       {
         "id": "Alarm",

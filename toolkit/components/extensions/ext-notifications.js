@@ -90,7 +90,7 @@ extensions.on("shutdown", (type, extension) => {
 
 var nextId = 0;
 
-extensions.registerSchemaAPI("notifications", (extension, context) => {
+extensions.registerSchemaAPI("notifications", "notifications", (extension, context) => {
   return {
     notifications: {
       create: function(notificationId, options) {

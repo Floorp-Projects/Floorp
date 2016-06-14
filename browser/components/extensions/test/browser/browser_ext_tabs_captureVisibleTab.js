@@ -148,10 +148,18 @@ add_task(function* testCaptureVisibleTabPermissions() {
       "permissions": ["tabs"],
     },
 
-    background() {
-      browser.test.assertFalse("captureVisibleTab" in browser.tabs,
-                               'Extension without "<all_tabs>" permission should not have access to captureVisibleTab');
-      browser.test.notifyPass("captureVisibleTabPermissions");
+    background: function(x) {
+      browser.tabs.query({currentWindow: true, active: true}, tab => {
+        browser.tabs.captureVisibleTab(tab.windowId).then(
+          () => {
+            browser.test.notifyFail("captureVisibleTabPermissions");
+          },
+          (e) => {
+            browser.test.assertEq("The <all_urls> permission is required to use the captureVisibleTab API",
+                                  e.message, "Expected permissions error message");
+            browser.test.notifyPass("captureVisibleTabPermissions");
+          });
+      });
     },
   });
 

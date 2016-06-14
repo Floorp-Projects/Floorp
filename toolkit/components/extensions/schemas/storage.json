@@ -6,7 +6,6 @@
   {
     "namespace": "storage",
     "description": "Use the <code>browser.storage</code> API to store, retrieve, and track changes to user data.",
-    "permissions": ["storage"],
     "types": [
       {
         "id": "StorageChange",

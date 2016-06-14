@@ -5,7 +5,6 @@
 [
   {
     "namespace": "notifications",
-    "permissions": ["notifications"],
     "types": [
       {
         "id": "TemplateType",
