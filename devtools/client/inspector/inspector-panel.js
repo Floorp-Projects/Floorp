@@ -410,7 +410,7 @@ InspectorPanel.prototype = {
     if (Services.prefs.getBoolPref("devtools.fontinspector.enabled") &&
         this.canGetUsedFontFaces) {
       this.fontInspector = new FontInspector(this, this.panelWin);
-      this.panelDoc.getElementById("sidebar-tab-fontinspector").hidden = false;
+      this.sidebar.toggleTab(true, "fontinspector");
     }
 
     this.layoutview = new LayoutView(this, this.panelWin);
