@@ -40,6 +40,11 @@ Tests of DOM Worker Navigator
       return;
     }
 
+    if (args.name === "storage") {
+      is(typeof navigator.storage, typeof args.value, "storage type matches");
+      return;
+    }
+
     is(navigator[args.name], args.value,
        "Mismatched navigator string for " + args.name + "!");
   };
