@@ -126,9 +126,8 @@ CheckValType(JSContext* cx, Decoder& d, ValType type)
       case ValType::F64:
         return true;
       case ValType::I64:
-#ifndef JS_CPU_X64
-        return Fail(cx, d, "i64 NYI on this platform");
-#endif
+        if (!IsI64Implemented())
+            return Fail(cx, d, "i64 NYI on this platform");
         return true;
       default:
         // Note: it's important not to remove this default since readValType()
