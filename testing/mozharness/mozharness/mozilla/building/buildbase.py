@@ -923,8 +923,9 @@ or run without that action (ie: --no-{action})"
 
         # _query_post_upload_cmd returns a list (a cmd list), for env sake here
         # let's make it a string
-        pst_up_cmd = ' '.join([str(i) for i in self._query_post_upload_cmd(multiLocale)])
-        mach_env['POST_UPLOAD_CMD'] = pst_up_cmd
+        if c.get('is_automation'):
+            pst_up_cmd = ' '.join([str(i) for i in self._query_post_upload_cmd(multiLocale)])
+            mach_env['POST_UPLOAD_CMD'] = pst_up_cmd
 
         return mach_env
 
