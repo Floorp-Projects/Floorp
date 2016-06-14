@@ -1066,6 +1066,11 @@ StructuredCloneHolder::CustomWriteHandler(JSContext* aCx,
   {
     Directory* directory = nullptr;
     if (NS_SUCCEEDED(UNWRAP_OBJECT(Directory, aObj, directory))) {
+      if (mSupportedContext != SameProcessSameThread &&
+          !directory->ClonableToDifferentThreadOrProcess()) {
+        return false;
+      }
+
       return WriteDirectory(aWriter, directory);
     }
   }
