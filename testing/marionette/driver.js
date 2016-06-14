@@ -2490,23 +2490,14 @@ GeckoDriver.prototype.getWindowSize = function(cmd, resp) {
  * Not supported on B2G. The supplied width and height values refer to
  * the window outerWidth and outerHeight values, which include scroll
  * bars, title bars, etc.
- *
- * An error will be returned if the requested window size would result
- * in the window being in the maximized state.
  */
 GeckoDriver.prototype.setWindowSize = function(cmd, resp) {
   if (this.appName != "Firefox") {
     throw new UnsupportedOperationError();
   }
 
-  let width = cmd.parameters.width;
-  let height = cmd.parameters.height;
-
+  let {width, height} = cmd.parameters;
   let win = this.getCurrentWindow();
-  if (width >= win.screen.availWidth || height >= win.screen.availHeight) {
-    throw new UnsupportedOperationError("Requested size exceeds screen size")
-  }
-
   win.resizeTo(width, height);
 };
 
