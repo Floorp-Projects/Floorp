@@ -27,6 +27,11 @@ namespace dom {
 class InternalRequest;
 class InternalResponse;
 
+/**
+ * Provides callbacks to be called when response is available or on error.
+ * Implemenations usually resolve or reject the promise returned from fetch().
+ * The callbacks can be called synchronously or asynchronously from FetchDriver::Fetch.
+ */
 class FetchDriverObserver
 {
 public:
@@ -92,7 +97,6 @@ private:
   FetchDriver& operator=(const FetchDriver&) = delete;
   ~FetchDriver();
 
-  nsresult ContinueFetch();
   nsresult HttpFetch();
   // Returns the filtered response sent to the observer.
   already_AddRefed<InternalResponse>
