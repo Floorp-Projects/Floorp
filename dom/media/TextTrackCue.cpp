@@ -33,7 +33,7 @@ StaticRefPtr<nsIWebVTTParserWrapper> TextTrackCue::sParserWrapper;
 void
 TextTrackCue::SetDefaultCueSettings()
 {
-  mPositionIsAutoKeyword = true;
+  mPosition = 50;
   mPositionAlign = PositionAlignSetting::Center;
   mSize = 100.0;
   mPauseOnExit = false;
@@ -202,20 +202,6 @@ TextTrackCue::ComputedLine()
   }
 
   return (-1.0) * showingTracksNum;
-}
-
-double
-TextTrackCue::ComputedPosition()
-{
-  // See spec https://w3c.github.io/webvtt/#cue-computed-position
-  if (!mPositionIsAutoKeyword) {
-    return mPosition;
-  } else if (mAlign == AlignSetting::Left) {
-    return 0.0;
-  } else if (mAlign == AlignSetting::Right) {
-    return 100.0;
-  }
-  return 50.0;
 }
 
 PositionAlignSetting
