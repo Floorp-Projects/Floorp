@@ -22,11 +22,16 @@
         xhr.send();
       }
 
+      function performFetchRequest() {
+        fetch("fetch_request");
+      }
+
       function performBeaconRequest() {
         navigator.sendBeacon("beacon_request");
       }
 
       performXhrRequest();
+      performFetchRequest();
       performBeaconRequest();
     </script>
   </body>
