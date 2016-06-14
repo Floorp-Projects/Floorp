@@ -89,10 +89,10 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
       });
 
       var exceptionHappened;
-      function checkPercentageValue(prop) {
+      function checkPercentageValue(prop, initialVal) {
         ok(prop in cue, prop + " should be a property on VTTCue.");
-        cue[prop] = 20;
-        is(cue[prop], 20, "Cue's " + prop + " should now be 20.");
+        cue[prop] = initialVal;
+        is(cue[prop], initialVal, "Cue's " + prop + " should now be " + initialVal);
         [ 101, -1 ].forEach(function(val) {
           exceptionHappened = false;
           try {
@@ -105,8 +105,11 @@ SpecialPowers.pushPrefEnv({"set": [["media.webvtt.regions.enabled", true]]},
         });
       }
 
-      checkPercentageValue("size");
-      checkPercentageValue("position");
+      checkPercentageValue("size", 100.0);
+      cue.size = 50.5;
+      is(cue.size, 50.5, "Cue's size should be 50.5.")
+
+      checkPercentageValue("position", 50.0);
 
       ok(cue.snapToLines, "Cue's snapToLines should be set by set.");
       cue.snapToLines = false;
