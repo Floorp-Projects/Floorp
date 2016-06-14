@@ -441,8 +441,8 @@ function checkMediaStreamTrackCloneAgainstOriginal(clone, original) {
 /*** Utility methods */
 
 /** The dreadful setTimeout, use sparingly */
-function wait(time, message) {
-  return new Promise(r => setTimeout(() => r(message), time));
+function wait(time) {
+  return new Promise(r => setTimeout(r, time));
 }
 
 /** The even more dreadful setInterval, use even more sparingly */
@@ -482,8 +482,8 @@ var addFinallyToPromise = promise => {
 /** Use event listener to call passed-in function on fire until it returns true */
 var listenUntil = (target, eventName, onFire) => {
   return new Promise(resolve => target.addEventListener(eventName,
-                                                        function callback(event) {
-    var result = onFire(event);
+                                                        function callback() {
+    var result = onFire();
     if (result) {
       target.removeEventListener(eventName, callback, false);
       resolve(result);
@@ -609,7 +609,8 @@ function haveEvent(target, name, cancelPromise) {
     (cancelPromise || new Promise()).then(e => Promise.reject(e)),
     new Promise(resolve => target.addEventListener(name, listener = resolve))
   ]);
-  return p.then(event => (target.removeEventListener(name, listener), event));
+  p.then(() => target.removeEventListener(name, listener));
+  return p;
 };
 
 /**
