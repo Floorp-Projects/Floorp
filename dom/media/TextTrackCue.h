@@ -151,21 +151,21 @@ public:
     mSnapToLines = aSnapToLines;
   }
 
-  void GetLine(OwningLongOrAutoKeyword& aLine) const
+  void GetLine(OwningDoubleOrAutoKeyword& aLine) const
   {
     if (mLineIsAutoKeyword) {
       aLine.SetAsAutoKeyword() = AutoKeyword::Auto;
       return;
     }
-    aLine.SetAsLong() = mLineLong;
+    aLine.SetAsDouble() = mLine;
   }
 
-  void SetLine(const LongOrAutoKeyword& aLine)
+  void SetLine(const DoubleOrAutoKeyword& aLine)
   {
-    if (aLine.IsLong() &&
-        (mLineIsAutoKeyword || (aLine.GetAsLong() != mLineLong))) {
+    if (aLine.IsDouble() &&
+        (mLineIsAutoKeyword || (aLine.GetAsDouble() != mLine))) {
       mLineIsAutoKeyword = false;
-      mLineLong = aLine.GetAsLong();
+      mLine = aLine.GetAsDouble();
       mReset = true;
       return;
     }
@@ -299,6 +299,7 @@ public:
     return mReset;
   }
 
+  double ComputedLine();
   PositionAlignSetting ComputedPositionAlign();
 
   // Helper functions for implementation.
@@ -367,7 +368,7 @@ private:
   RefPtr<TextTrackRegion> mRegion;
   DirectionSetting mVertical;
   bool mLineIsAutoKeyword;
-  long mLineLong;
+  double mLine;
   AlignSetting mAlign;
   LineAlignSetting mLineAlign;
 
