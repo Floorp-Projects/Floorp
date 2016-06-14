@@ -1,0 +1,86 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset='utf-8'>
+  <title>WebVTT : cue's displaystate should be empty when its active flag is unset</title>
+  <script type="text/javascript" src="/MochiKit/MochiKit.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<div id="content">
+</div>
+<script class="testbody" type="text/javascript">
+SimpleTest.waitForExplicitFinish();
+
+var isReceivedOnEnterEvent = false;
+var isReceivedOnExitEvent = false;
+
+function checkCueEvents() {
+  ok(isReceivedOnEnterEvent, "Already received cue's onEnter event.");
+  ok(isReceivedOnExitEvent, "Already received cue's onExit event.");
+  SimpleTest.finish();
+}
+
+function checkCueDisplayState(cue, expectedState) {
+  var cueChrome = SpecialPowers.wrap(cue);
+  if (expectedState) {
+    ok(cueChrome.displayState, "Cue's displayState shouldn't be empty.");
+  } else {
+    ok(!cueChrome.displayState, "Cue's displayState should be empty.");
+  }
+}
+
+function runTest() {
+  info("--- create video ---");
+  var video = document.createElement("video");
+  video.src = "seek.webm";
+  video.autoplay = true;
+  document.getElementById("content").appendChild(video);
+
+  video.onended = function () {
+    video.onended = null;
+    checkCueEvents();
+  };
+
+  video.onpause = function () {
+    video.onpause = null;
+    checkCueEvents();
+  }
+
+  info("--- create the type of track ---");
+  isnot(window.TextTrack, undefined, "TextTrack should be defined.");
+
+  var track = video.addTextTrack("subtitles", "A", "en");
+  track.mode = "showing";
+  ok(track instanceof TextTrack, "Track should be an instanceof TextTrack.");
+
+  info("--- check the type of cue ---");
+  isnot(window.TextTrackCue, undefined, "TextTrackCue should be defined.");
+  isnot(window.VTTCue, undefined, "VTTCue should be defined.");
+
+  var cue = new VTTCue(0, 1, "Test cue");
+  ok(cue instanceof TextTrackCue, "Cue should be an instanceof TextTrackCue.");
+  ok(cue instanceof VTTCue, "Cue should be an instanceof VTTCue.");
+
+  info("--- add cue ---");
+  track.addCue(cue);
+
+  cue.onenter = function () {
+    cue.onenter = null;
+    isReceivedOnEnterEvent = true;
+    checkCueDisplayState(cue, true /* has display-state */);
+
+    cue.onexit = function () {
+      cue.onexit = null;
+      isReceivedOnExitEvent = true;
+      checkCueDisplayState(cue, false /* no display-state */);
+      video.pause();
+    }
+  }
+}
+
+onload = runTest;
+</script>
+</body>
+</html>
