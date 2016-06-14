@@ -64,7 +64,7 @@ add_task(function* test_link() {
   yield test_contextmenu("#test-link",
     ["context-openlinkintab", true,
      ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
-     // We need a blank entry here because the conatiners submenu is
+     // We need a blank entry here because the containers submenu is
      // dynamically generated with no ids.
      ...(hasContainers ? ["", null] : []),
      "context-openlink",      true,
@@ -628,7 +628,7 @@ add_task(function* test_select_text_link() {
     ["context-openlinkincurrent",           true,
      "context-openlinkintab",               true,
      ...(hasContainers ? ["context-openlinkinusercontext-menu", true] : []),
-     // We need a blank entry here because the conatiners submenu is
+     // We need a blank entry here because the containers submenu is
      // dynamically generated with no ids.
      ...(hasContainers ? ["", null] : []),
      "context-openlink",                    true,
