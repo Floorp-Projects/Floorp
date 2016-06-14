@@ -43,7 +43,7 @@ interface VTTCue : TextTrackCue {
   attribute VTTRegion? region;
   attribute DirectionSetting vertical;
   attribute boolean snapToLines;
-  attribute (long or AutoKeyword) line;
+  attribute (double or AutoKeyword) line;
   [SetterThrows]
   attribute LineAlignSetting lineAlign;
   [SetterThrows]
@@ -63,6 +63,8 @@ partial interface VTTCue {
   attribute HTMLDivElement? displayState;
   [ChromeOnly]
   readonly attribute boolean hasBeenReset;
+  [ChromeOnly]
+  readonly attribute double computedLine;
   [ChromeOnly]
   readonly attribute PositionAlignSetting computedPositionAlign;
 };
