@@ -30,18 +30,16 @@
 #ifndef GOOGLE_BREAKPAD_ANDROID_INCLUDE_LINK_H
 #define GOOGLE_BREAKPAD_ANDROID_INCLUDE_LINK_H
 
-/* Android doesn't provide all the data-structures required in its <link.h>.
-   Provide custom version here. */
-#include_next <link.h>
-
-// TODO(rmcilroy): Remove this file once the ndk is updated for other
-// architectures - crbug.com/358831
-#if !defined(__aarch64__) && !defined(__x86_64__) && \
-    !(defined(__mips__) && _MIPS_SIM == _ABI64)
+/* Android doesn't provide <link.h>. Provide custom version here */
+#include <elf.h>
 
 #ifdef __cplusplus
 extern "C" {
 #endif  // __cplusplus
+
+#define ElfW(type)      _ElfW (Elf, ELFSIZE, type)
+#define _ElfW(e,w,t)    _ElfW_1 (e, w, _##t)
+#define _ElfW_1(e,w,t)  e##w##t
 
 struct r_debug {
   int              r_version;
@@ -65,7 +63,5 @@ struct link_map {
 #ifdef __cplusplus
 }  // extern "C"
 #endif  // __cplusplus
-
-#endif  // !defined(__aarch64__) && !defined(__x86_64__)
 
 #endif /* GOOGLE_BREAKPAD_ANDROID_INCLUDE_LINK_H */
