@@ -10924,5 +10924,13 @@
     "bug_numbers": [1276714, 1276716],
     "description": "Number of times about:crashes has been opened.",
     "releaseChannelCollection": "opt-out"
+  },
+  "XHR_IN_WORKER": {
+    "alert_emails": ["amarchesini@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "count",
+    "bug_numbers": [1280229],
+    "description": "Number of the use of XHR in workers.",
+    "releaseChannelCollection": "opt-out"
   }
 }
