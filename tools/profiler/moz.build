@@ -89,20 +89,12 @@ if CONFIG['MOZ_ENABLE_PROFILER_SPS']:
         '/ipc/chromium/src',
         '/mozglue/linker',
         '/toolkit/crashreporter/google-breakpad/src',
+        # We need access to Breakpad's getcontext(3) which is suitable for Android
+        '/toolkit/crashreporter/google-breakpad/src/common/android/include',
         '/tools/profiler/core/',
         '/tools/profiler/gecko/',
         '/xpcom/base',
     ]
-
-    # We need access to Breakpad's getcontext(3) which is suitable for Android
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-        LOCAL_INCLUDES += [
-            '/toolkit/crashreporter/gonk-include',
-        ]
-    elif CONFIG['OS_TARGET'] == 'Android':
-        LOCAL_INCLUDES += [
-            '/toolkit/crashreporter/google-breakpad/src/common/android/include',
-        ]
 
     if not CONFIG['MOZ_CRASHREPORTER'] and CONFIG['OS_TARGET'] in ('Android', 'gonk'):
         SOURCES += ['/toolkit/crashreporter/google-breakpad/src/common/android/breakpad_getcontext.S']

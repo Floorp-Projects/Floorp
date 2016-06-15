@@ -19,14 +19,9 @@ UNIFIED_SOURCES += [
 ]
 
 if CONFIG['OS_TARGET'] == 'Android':
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-        LOCAL_INCLUDES += [
-            '/toolkit/crashreporter/gonk-include',
-        ]
-    else:
-        LOCAL_INCLUDES += [
-            '/toolkit/crashreporter/google-breakpad/src/common/android/include',
-        ]
+    LOCAL_INCLUDES += [
+        '/toolkit/crashreporter/google-breakpad/src/common/android/include',
+    ]
 
 # We allow warnings for third-party code that can be updated from upstream.
 ALLOW_COMPILER_WARNINGS = True
