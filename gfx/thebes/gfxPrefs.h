@@ -156,6 +156,7 @@ private:
   DECL_GFX_PREF(Once, "apz.fling_curve_function_y2",           APZCurveFunctionY2, float, 1.0f);
   DECL_GFX_PREF(Live, "apz.fling_curve_threshold_inches_per_ms", APZCurveThreshold, float, -1.0f);
   DECL_GFX_PREF(Live, "apz.fling_friction",                    APZFlingFriction, float, 0.002f);
+  DECL_GFX_PREF(Live, "apz.fling_min_velocity_threshold",      APZFlingMinVelocityThreshold, float, 0.5f);
   DECL_GFX_PREF(Live, "apz.fling_stop_on_tap_threshold",       APZFlingStopOnTapThreshold, float, 0.05f);
   DECL_GFX_PREF(Live, "apz.fling_stopped_threshold",           APZFlingStoppedThreshold, float, 0.01f);
   DECL_GFX_PREF(Live, "apz.highlight_checkerboarded_areas",    APZHighlightCheckerboardedAreas, bool, false);
