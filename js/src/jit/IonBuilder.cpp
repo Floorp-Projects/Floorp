@@ -772,7 +772,7 @@ IonBuilder::init()
             return false;
     }
 
-    if (!alloc().ensureBallast())
+    if (alloc().ensureBallast())
         return false;
 
     if (inlineCallInfo_) {
