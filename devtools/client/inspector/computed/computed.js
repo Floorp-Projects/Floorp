@@ -20,6 +20,7 @@ const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/u
 const {createChild} = require("devtools/client/inspector/shared/utils");
 const {gDevTools} = require("devtools/client/framework/devtools");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
+const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 
 loader.lazyRequireGetter(this, "overlays",
   "devtools/client/inspector/shared/style-inspector-overlays");
@@ -148,7 +149,8 @@ function CssComputedView(inspector, document, pageStyle) {
 
   this.propertyViews = [];
 
-  this._outputParser = new OutputParser(document);
+  let cssProperties = getCssProperties(inspector.toolbox);
+  this._outputParser = new OutputParser(document, cssProperties.supportsType);
 
   let chromeReg = Cc["@mozilla.org/chrome/chrome-registry;1"]
     .getService(Ci.nsIXULChromeRegistry);
