@@ -347,14 +347,28 @@ FillArgumentArray(MacroAssembler& masm, const ValTypeVector& args, unsigned argO
           case ABIArg::FPU: {
             MOZ_ASSERT(IsFloatingPointType(type));
             FloatRegister srcReg = i->fpu();
-            if (toValue) {
-                if (type == MIRType::Float32) {
-                    masm.convertFloat32ToDouble(i->fpu(), ScratchDoubleReg);
+            if (type == MIRType::Double) {
+                if (toValue) {
+                    // Preserve the NaN pattern in the input.
+                    masm.moveDouble(srcReg, ScratchDoubleReg);
                     srcReg = ScratchDoubleReg;
+                    masm.canonicalizeDouble(srcReg);
                 }
-                masm.canonicalizeDouble(srcReg);
+                masm.storeDouble(srcReg, dstAddr);
+            } else {
+                MOZ_ASSERT(type == MIRType::Float32);
+                if (toValue) {
+                    // JS::Values can't store Float32, so convert to a Double.
+                    masm.convertFloat32ToDouble(srcReg, ScratchDoubleReg);
+                    masm.canonicalizeDouble(ScratchDoubleReg);
+                    masm.storeDouble(ScratchDoubleReg, dstAddr);
+                } else {
+                    // Preserve the NaN pattern in the input.
+                    masm.moveFloat32(srcReg, ScratchFloat32Reg);
+                    masm.canonicalizeFloat(ScratchFloat32Reg);
+                    masm.storeFloat32(ScratchFloat32Reg, dstAddr);
+                }
             }
-            masm.storeDouble(srcReg, dstAddr);
             break;
           }
           case ABIArg::Stack:
