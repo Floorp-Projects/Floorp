@@ -671,12 +671,12 @@ TileClient::GetBackBuffer(const nsIntRegion& aDirtyRegion,
       mBackBuffer.Set(this,
         CreateBackBufferTexture(mBackBuffer, mCompositableClient, mAllocator)
       );
-      mInvalidBack = IntRect(0, 0, mBackBuffer->GetSize().width, mBackBuffer->GetSize().height);
       if (!mBackBuffer) {
         DiscardBackBuffer();
         DiscardFrontBuffer();
         return nullptr;
       }
+      mInvalidBack = IntRect(IntPoint(), mBackBuffer->GetSize());
     }
 
     if (aMode == SurfaceMode::SURFACE_COMPONENT_ALPHA
@@ -684,12 +684,12 @@ TileClient::GetBackBuffer(const nsIntRegion& aDirtyRegion,
       mBackBufferOnWhite = CreateBackBufferTexture(
         mBackBufferOnWhite, mCompositableClient, mAllocator
       );
-      mInvalidBack = IntRect(0, 0, mBackBuffer->GetSize().width, mBackBuffer->GetSize().height);
       if (!mBackBufferOnWhite) {
         DiscardBackBuffer();
         DiscardFrontBuffer();
         return nullptr;
       }
+      mInvalidBack = IntRect(IntPoint(), mBackBufferOnWhite->GetSize());
     }
 
     ValidateBackBufferFromFront(aDirtyRegion, aAddPaintedRegion);
