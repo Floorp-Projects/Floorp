@@ -558,9 +558,7 @@ MBasicBlock::inherit(TempAllocator& alloc, BytecodeAnalysis* analysis, MBasicBlo
         if (kind_ == PENDING_LOOP_HEADER) {
             size_t i = 0;
             for (i = 0; i < info().firstStackSlot(); i++) {
-                MPhi* phi = MPhi::New(alloc.fallible());
-                if (!phi)
-                    return false;
+                MPhi* phi = MPhi::New(alloc);
                 phi->addInlineInput(pred->getSlot(i));
                 addPhi(phi);
                 setSlot(i, phi);
@@ -580,9 +578,7 @@ MBasicBlock::inherit(TempAllocator& alloc, BytecodeAnalysis* analysis, MBasicBlo
             }
 
             for (; i < stackDepth(); i++) {
-                MPhi* phi = MPhi::New(alloc.fallible());
-                if (!phi)
-                    return false;
+                MPhi* phi = MPhi::New(alloc);
                 phi->addInlineInput(pred->getSlot(i));
                 addPhi(phi);
                 setSlot(i, phi);
