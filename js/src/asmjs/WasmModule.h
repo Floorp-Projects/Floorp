@@ -139,7 +139,7 @@ struct ExportMap
 // operations: instantiation and serialization. A Module can be instantiated any
 // number of times to produce new Instance objects. A Module can be serialized
 // any number of times such that the serialized bytes can be deserialized later
-// to produce and new, equivalent Module.
+// to produce a new, equivalent Module.
 //
 // Since fully linked-and-instantiated code (represented by CodeSegment) cannot
 // be shared between instances, Module stores an unlinked, uninstantiated copy

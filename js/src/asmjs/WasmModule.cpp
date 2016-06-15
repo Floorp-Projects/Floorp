@@ -314,8 +314,8 @@ Module::addSizeOfMisc(MallocSizeOf mallocSizeOf,
 bool
 Module::instantiate(JSContext* cx,
                     Handle<FunctionVector> funcImports,
-                    Handle<ArrayBufferObjectMaybeShared*> heap,
-                    MutableHandle<WasmInstanceObject*> instanceObj) const
+                    HandleArrayBufferObjectMaybeShared heap,
+                    MutableHandleWasmInstanceObject instanceObj) const
 {
     MOZ_ASSERT(funcImports.length() == metadata_->imports.length());
 
