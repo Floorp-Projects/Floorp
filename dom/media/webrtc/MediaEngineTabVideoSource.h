@@ -26,7 +26,8 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
                       const mozilla::MediaEnginePrefs&,
                       const nsString& aDeviceId,
                       const nsACString& aOrigin,
-                      BaseAllocationHandle** aOutHandle) override;
+                      BaseAllocationHandle** aOutHandle,
+                      const char** aOutBadConstraint) override;
     nsresult Deallocate(BaseAllocationHandle* aHandle) override;
     nsresult Start(mozilla::SourceMediaStream*, mozilla::TrackID, const mozilla::PrincipalHandle&) override;
     void SetDirectListeners(bool aHasDirectListeners) override {};
@@ -35,7 +36,8 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
     nsresult Restart(BaseAllocationHandle* aHandle,
                      const dom::MediaTrackConstraints& aConstraints,
                      const mozilla::MediaEnginePrefs& aPrefs,
-                     const nsString& aDeviceId) override;
+                     const nsString& aDeviceId,
+                     const char** aOutBadConstraint) override;
     bool IsFake() override;
     dom::MediaSourceEnum GetMediaSource() const override {
       return dom::MediaSourceEnum::Browser;
