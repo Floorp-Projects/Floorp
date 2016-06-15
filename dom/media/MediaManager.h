@@ -74,9 +74,11 @@ public:
   virtual Source* GetSource() = 0;
   nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                     const MediaEnginePrefs &aPrefs,
-                    const nsACString& aOrigin);
+                    const nsACString& aOrigin,
+                    const char** aOutBadConstraint);
   nsresult Restart(const dom::MediaTrackConstraints &aConstraints,
-                   const MediaEnginePrefs &aPrefs);
+                   const MediaEnginePrefs &aPrefs,
+                   const char** aOutBadConstraint);
   nsresult Deallocate();
 protected:
   virtual ~MediaDevice() {}
