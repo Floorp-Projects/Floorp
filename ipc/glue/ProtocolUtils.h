@@ -275,6 +275,29 @@ private:
     Transport* mTrans;
 };
 
+class IShmemAllocator
+{
+public:
+  virtual bool AllocShmem(size_t aSize,
+                          mozilla::ipc::SharedMemory::SharedMemoryType aShmType,
+                          mozilla::ipc::Shmem* aShmem) = 0;
+  virtual bool AllocUnsafeShmem(size_t aSize,
+                                mozilla::ipc::SharedMemory::SharedMemoryType aShmType,
+                                mozilla::ipc::Shmem* aShmem) = 0;
+  virtual bool DeallocShmem(mozilla::ipc::Shmem& aShmem) = 0;
+};
+
+#define FORWARD_SHMEM_ALLOCATOR_TO(aImplClass) \
+  virtual bool AllocShmem(size_t aSize, \
+                          mozilla::ipc::SharedMemory::SharedMemoryType aShmType, \
+                          mozilla::ipc::Shmem* aShmem) override \
+  { return aImplClass::AllocShmem(aSize, aShmType, aShmem); } \
+  virtual bool AllocUnsafeShmem(size_t aSize, \
+                                mozilla::ipc::SharedMemory::SharedMemoryType aShmType, \
+                                mozilla::ipc::Shmem* aShmem) override \
+  { return aImplClass::AllocUnsafeShmem(aSize, aShmType, aShmem); } \
+  virtual bool DeallocShmem(mozilla::ipc::Shmem& aShmem) override \
+  { return aImplClass::DeallocShmem(aShmem); }
 
 inline bool
 LoggingEnabled()
