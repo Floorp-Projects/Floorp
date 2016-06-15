@@ -45,7 +45,7 @@
 #undef __DEPRECATED
 #endif
 
-#if defined(OS_ANDROID) && !defined(MOZ_WIDGET_GONK)
+#if defined(OS_ANDROID)
 #include <hash_map>
 #include <hash_set>
 #define BASE_HASH_IMPL_NAMESPACE std
