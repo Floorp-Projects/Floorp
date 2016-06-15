@@ -1,3 +1,4 @@
+// |jit-test| test-also-wasm-baseline
 if (!wasmIsSupported())
      quit();
 

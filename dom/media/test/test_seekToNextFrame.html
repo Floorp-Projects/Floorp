@@ -29,15 +29,28 @@ function startTest(test, token) {
   v.src = test.name;
   v.name = test.name;
 
+  function callSeekToNextFrame() {
+    v.seekToNextFrame().then(
+      () => {
+        ok(v.seenSeeking, "Should have already received seeking event.")
+        v.seenSeeking = false;
+        if (!v.seenEnded)
+          callSeekToNextFrame();
+      },
+      () => {
+        ok(false, "seekToNextFrame() failed.");
+      }
+    );
+  }
+
   var onLoadedmetadata = function(test, v) { return function() {
-    v.seekToNextFrame();
+    callSeekToNextFrame();
   }}(test, v);
 
   var finish = function() {
     v.finished = true;
     v.removeEventListener("loadedmetadata", onLoadedmetadata, false);
     v.removeEventListener("seeking", onSeeking, false);
-    v.removeEventListener("seeked", onSeeked, false);
     removeNodeAndSource(v);
     manager.finished(v.token);
   }
@@ -52,15 +65,8 @@ function startTest(test, token) {
     v.seenSeeking = true;
   }}(test, v);
 
-  var onSeeked = function(test, v) { return function() {
-    ok(v.seenSeeking, "Should have already received seeking event.")
-    v.seenSeeking = false;
-    v.seekToNextFrame();
-  }}(test, v);
-
   v.addEventListener("loadedmetadata", onLoadedmetadata, false);
   v.addEventListener("seeking", onSeeking, false);
-  v.addEventListener("seeked", onSeeked, false);
   v.addEventListener("ended", onEnded, false);
 
   document.body.appendChild(v);

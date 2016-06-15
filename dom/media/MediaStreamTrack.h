@@ -266,29 +266,10 @@ public:
   already_AddRefed<Promise>
   ApplyConstraints(const dom::MediaTrackConstraints& aConstraints, ErrorResult &aRv);
   already_AddRefed<MediaStreamTrack> Clone();
-  MediaStreamTrackState ReadyState() { return mReadyState; }
 
-  IMPL_EVENT_HANDLER(ended)
-
-  /**
-   * Convenience (and legacy) method for when ready state is "ended".
-   */
-  bool Ended() const { return mReadyState == MediaStreamTrackState::Ended; }
-
-  /**
-   * Forces the ready state to a particular value, for instance when we're
-   * cloning an already ended track.
-   */
-  void SetReadyState(MediaStreamTrackState aState) { mReadyState = aState; }
-
-  /**
-   * Notified by the MediaStreamGraph, through our owning MediaStream on the
-   * main thread.
-   *
-   * Note that this sets the track to ended and raises the "ended" event
-   * synchronously.
-   */
-  void NotifyEnded();
+  bool Ended() const { return mEnded; }
+  // Notifications from the MediaStreamGraph
+  void NotifyEnded() { mEnded = true; }
 
   /**
    * Get this track's principal.
@@ -417,9 +398,10 @@ protected:
   nsCOMPtr<nsIPrincipal> mPendingPrincipal;
   RefPtr<PrincipalHandleListener> mPrincipalHandleListener;
   nsString mID;
-  MediaStreamTrackState mReadyState;
+  bool mEnded;
   bool mEnabled;
   const bool mRemote;
+  bool mStopped;
 };
 
 } // namespace dom

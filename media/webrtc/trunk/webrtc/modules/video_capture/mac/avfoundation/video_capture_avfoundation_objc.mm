@@ -238,25 +238,41 @@ using namespace videocapturemodule;
     return;
   }
 
-  // Get a CMSampleBuffer's Core Video image buffer for the media data
-  CVImageBufferRef videoFrame = CMSampleBufferGetImageBuffer(sampleBuffer);
+  VideoCaptureCapability tempCaptureCapability;
+  tempCaptureCapability.width = _frameWidth;
+  tempCaptureCapability.height = _frameHeight;
+  tempCaptureCapability.maxFPS = _frameRate;
+  tempCaptureCapability.rawType = _rawType;
 
-  const int kFlags = 0;
-  if (CVPixelBufferLockBaseAddress(videoFrame, kFlags) == kCVReturnSuccess) {
-    void *baseAddress = CVPixelBufferGetBaseAddress(videoFrame);
-    size_t bytesPerRow = CVPixelBufferGetBytesPerRow(videoFrame);
-    size_t frameHeight = CVPixelBufferGetHeight(videoFrame);
-    size_t frameSize = bytesPerRow * frameHeight;
+  if (webrtc::kVideoMJPEG == _rawType) {
+    CMBlockBufferRef blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer);
 
-    VideoCaptureCapability tempCaptureCapability;
-    tempCaptureCapability.width = _frameWidth;
-    tempCaptureCapability.height = _frameHeight;
-    tempCaptureCapability.maxFPS = _frameRate;
-    tempCaptureCapability.rawType = _rawType;
+    if (blockBuffer) {
+      char* baseAddress;
+      size_t frameSize;
+      size_t lengthAtOffset;
+      CMBlockBufferGetDataPointer(blockBuffer, 0, &lengthAtOffset, &frameSize, &baseAddress);
 
-    _owner->IncomingFrame((unsigned char*)baseAddress, frameSize,
-                          tempCaptureCapability, 0);
-    CVPixelBufferUnlockBaseAddress(videoFrame, kFlags);
+      NSAssert(lengthAtOffset == frameSize, @"lengthAtOffset != frameSize)");
+
+      _owner->IncomingFrame((unsigned char*)baseAddress, frameSize,
+                            tempCaptureCapability, 0);
+    }
+  } else {
+    // Get a CMSampleBuffer's Core Video image buffer for the media data
+    CVImageBufferRef videoFrame = CMSampleBufferGetImageBuffer(sampleBuffer);
+
+    const int kFlags = 0;
+    if (CVPixelBufferLockBaseAddress(videoFrame, kFlags) == kCVReturnSuccess) {
+      void* baseAddress = CVPixelBufferGetBaseAddress(videoFrame);
+      size_t bytesPerRow = CVPixelBufferGetBytesPerRow(videoFrame);
+      size_t frameHeight = CVPixelBufferGetHeight(videoFrame);
+      size_t frameSize = bytesPerRow * frameHeight;
+
+      _owner->IncomingFrame((unsigned char*)baseAddress, frameSize,
+                            tempCaptureCapability, 0);
+      CVPixelBufferUnlockBaseAddress(videoFrame, kFlags);
+    }
   }
   [_lock unlock];
   _framesDelivered++;

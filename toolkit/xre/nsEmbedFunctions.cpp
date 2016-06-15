@@ -73,6 +73,7 @@
 
 #include "GMPProcessChild.h"
 #include "GMPLoader.h"
+#include "mozilla/gfx/GPUProcessImpl.h"
 
 #include "GeckoProfiler.h"
 
@@ -566,6 +567,9 @@ XRE_InitChildProcess(int aArgc,
   case GeckoProcessType_GMPlugin:
       uiLoopType = MessageLoop::TYPE_DEFAULT;
       break;
+  case GeckoProcessType_GPU:
+      uiLoopType = MessageLoop::TYPE_UI;
+      break;
   default:
       uiLoopType = MessageLoop::TYPE_UI;
       break;
@@ -619,6 +623,10 @@ XRE_InitChildProcess(int aArgc,
 
       case GeckoProcessType_GMPlugin:
         process = new gmp::GMPProcessChild(parentPID);
+        break;
+
+      case GeckoProcessType_GPU:
+        process = new gfx::GPUProcessImpl(parentPID);
         break;
 
       default:

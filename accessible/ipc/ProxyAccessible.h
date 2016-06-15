@@ -431,7 +431,11 @@ private:
   DocAccessibleParent* mDoc;
   uintptr_t mWrapper;
   uint64_t mID;
+protected:
+  // XXX DocAccessibleParent gets to change this to change the role of
+  // documents.
   role mRole : 29;
+private:
   bool mOuterDoc : 1;
 
 public:

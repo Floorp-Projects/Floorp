@@ -18,4 +18,10 @@ TESTING_JS_MODULES += [
     'TestUtils.jsm',
 ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
+    TESTING_JS_MODULES += [
+        'MockRegistry.jsm',
+    ]
+
+
 TEST_HARNESS_FILES.testing.mochitest.tests.SimpleTest += ['StructuredLog.jsm']

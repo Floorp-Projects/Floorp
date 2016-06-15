@@ -74,6 +74,15 @@ function isVolumeSliderShowingCorrectVolume(expectedVolume) {
      "volume slider should match expected volume");
 }
 
+function forceReframe() {
+  // Setting display then getting the bounding rect to force a frame
+  // reconstruction on the video element.
+  video.style.display = "block";
+  video.getBoundingClientRect();
+  video.style.display = "";
+  video.getBoundingClientRect();
+}
+
 function runTest(event) {
   ok(true, "----- test #" + testnum + " -----");
 
@@ -343,6 +352,17 @@ function runTest(event) {
     case 25:
       is(event.type, "mozfullscreenchange", "checking event type");
       is(video.volume, 0.6, "Volume should still be 0.6");
+      SimpleTest.executeSoon(function() {
+        isVolumeSliderShowingCorrectVolume(video.volume);
+        forceReframe();
+        video.focus();
+        synthesizeKey("VK_DOWN", {});
+      });
+      break;
+
+    case 26:
+      is(event.type, "volumechange", "checking event type");
+      is(video.volume, 0.5, "Volume should be decreased by 0.1");
       SimpleTest.executeSoon(function() {
         isVolumeSliderShowingCorrectVolume(video.volume);
         SimpleTest.finish();

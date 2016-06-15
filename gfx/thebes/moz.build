@@ -53,7 +53,6 @@ EXPORTS += [
 EXPORTS.mozilla.gfx += [
     'PrintTarget.h',
     'PrintTargetRecording.h',
-    'PrintTargetThebes.h',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
@@ -180,6 +179,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
     ]
     EXPORTS.mozilla.gfx += [
         'PrintTargetPDF.h',
+        'PrintTargetWindows.h',
     ]
     SOURCES += [
         'gfxGDIFont.cpp',
@@ -188,6 +188,7 @@ elif CONFIG['MOZ_WIDGET_TOOLKIT'] == 'windows':
         'gfxWindowsPlatform.cpp',
         'gfxWindowsSurface.cpp',
         'PrintTargetPDF.cpp',
+        'PrintTargetWindows.cpp',
     ]
     if CONFIG['MOZ_ENABLE_DWRITE_FONT']:
         UNIFIED_SOURCES += [
@@ -219,7 +220,6 @@ SOURCES += [
     'gfxPrefs.cpp',
     'PrintTarget.cpp',
     'PrintTargetRecording.cpp',
-    'PrintTargetThebes.cpp',
 ]
 
 UNIFIED_SOURCES += [
