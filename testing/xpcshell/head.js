@@ -614,7 +614,7 @@ function _execute_test() {
     obs.notifyObservers(null, "profile-change-net-teardown", null);
     obs.notifyObservers(null, "profile-change-teardown", null);
     obs.notifyObservers(null, "profile-before-change", null);
-    obs.notifyObservers(null, "profile-before-change2", null);
+    obs.notifyObservers(null, "profile-before-change-qm", null);
 
     _profileInitialized = false;
   }
