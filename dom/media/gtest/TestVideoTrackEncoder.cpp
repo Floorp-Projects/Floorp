@@ -175,22 +175,23 @@ struct InitParam {
   bool mShouldSucceed;  // This parameter should cause success or fail result
   int  mWidth;          // frame width
   int  mHeight;         // frame height
-  mozilla::TrackRate mTrackRate; // track rate. 90K is the most commond track rate.
 };
 
 class TestVP8TrackEncoder: public VP8TrackEncoder
 {
 public:
+  explicit TestVP8TrackEncoder(TrackRate aTrackRate = 90000)
+    : VP8TrackEncoder(aTrackRate) {}
+
   ::testing::AssertionResult TestInit(const InitParam &aParam)
   {
-    nsresult result = Init(aParam.mWidth, aParam.mHeight, aParam.mWidth, aParam.mHeight, aParam.mTrackRate);
+    nsresult result = Init(aParam.mWidth, aParam.mHeight, aParam.mWidth, aParam.mHeight);
 
     if (((NS_FAILED(result) && aParam.mShouldSucceed)) || (NS_SUCCEEDED(result) && !aParam.mShouldSucceed))
     {
       return ::testing::AssertionFailure()
                 << " width = " << aParam.mWidth
-                << " height = " << aParam.mHeight
-                << " TrackRate = " << aParam.mTrackRate << ".";
+                << " height = " << aParam.mHeight;
     }
     else
     {
@@ -204,17 +205,15 @@ TEST(VP8VideoTrackEncoder, Initialization)
 {
   InitParam params[] = {
     // Failure cases.
-    { false, 640, 480, 0 },      // Trackrate should be larger than 1.
-    { false, 640, 480, -1 },     // Trackrate should be larger than 1.
-    { false, 0, 0, 90000 },      // Height/ width should be larger than 1.
-    { false, 0, 1, 90000 },      // Height/ width should be larger than 1.
-    { false, 1, 0, 90000},       // Height/ width should be larger than 1.
+    { false, 0, 0},      // Height/ width should be larger than 1.
+    { false, 0, 1},      // Height/ width should be larger than 1.
+    { false, 1, 0},       // Height/ width should be larger than 1.
 
     // Success cases
-    { true, 640, 480, 90000},    // Standard VGA
-    { true, 800, 480, 90000},    // Standard WVGA
-    { true, 960, 540, 90000},    // Standard qHD
-    { true, 1280, 720, 90000}    // Standard HD
+    { true, 640, 480},    // Standard VGA
+    { true, 800, 480},    // Standard WVGA
+    { true, 960, 540},    // Standard qHD
+    { true, 1280, 720}    // Standard HD
   };
 
   for (size_t i = 0; i < ArrayLength(params); i++)
@@ -229,10 +228,10 @@ TEST(VP8VideoTrackEncoder, FetchMetaData)
 {
   InitParam params[] = {
     // Success cases
-    { true, 640, 480, 90000},    // Standard VGA
-    { true, 800, 480, 90000},    // Standard WVGA
-    { true, 960, 540, 90000},    // Standard qHD
-    { true, 1280, 720, 90000}    // Standard HD
+    { true, 640, 480},    // Standard VGA
+    { true, 800, 480},    // Standard WVGA
+    { true, 960, 540},    // Standard qHD
+    { true, 1280, 720}    // Standard HD
   };
 
   for (size_t i = 0; i < ArrayLength(params); i++)
@@ -254,7 +253,7 @@ TEST(VP8VideoTrackEncoder, FrameEncode)
 {
   // Initiate VP8 encoder
   TestVP8TrackEncoder encoder;
-  InitParam param = {true, 640, 480, 90000};
+  InitParam param = {true, 640, 480};
   encoder.TestInit(param);
 
   // Create YUV images as source.
@@ -276,7 +275,7 @@ TEST(VP8VideoTrackEncoder, FrameEncode)
   }
 
   // track change notification.
-  encoder.NotifyQueuedTrackChanges(nullptr, 0, 0, 0, segment);
+  encoder.SetCurrentFrames(segment);
 
   // Pull Encoded Data back from encoder.
   EncodedFrameContainer container;
@@ -288,7 +287,7 @@ TEST(VP8VideoTrackEncoder, EncodeComplete)
 {
   // Initiate VP8 encoder
   TestVP8TrackEncoder encoder;
-  InitParam param = {true, 640, 480, 90000};
+  InitParam param = {true, 640, 480};
   encoder.TestInit(param);
 
   // track end notification.
