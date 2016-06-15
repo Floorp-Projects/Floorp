@@ -1385,7 +1385,7 @@ HelperThread::handleWasmWorkload()
         AutoTraceLog logCompile(logger, TraceLogger_WasmCompilation);
 
         PerThreadData::AutoEnterRuntime enter(threadData.ptr(), task->runtime());
-        success = wasm::IonCompileFunction(task);
+        success = wasm::CompileFunction(task);
     }
 
     // On success, try to move work to the finished list.

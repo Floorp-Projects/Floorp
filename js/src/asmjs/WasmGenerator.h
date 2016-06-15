@@ -212,6 +212,8 @@ class MOZ_STACK_CLASS FunctionGenerator
 
     ModuleGenerator* m_;
     IonCompileTask*  task_;
+    bool             usesSimd_;
+    bool             usesAtomics_;
 
     // Data created during function generation, then handed over to the
     // FuncBytes in ModuleGenerator::finishFunc().
@@ -222,8 +224,26 @@ class MOZ_STACK_CLASS FunctionGenerator
 
   public:
     FunctionGenerator()
-      : m_(nullptr), task_(nullptr), lineOrBytecode_(0)
+      : m_(nullptr), task_(nullptr), usesSimd_(false), usesAtomics_(false), lineOrBytecode_(0)
     {}
+
+    bool usesSimd() const {
+        return usesSimd_;
+    }
+    void setUsesSimd() {
+        usesSimd_ = true;
+    }
+
+    bool usesAtomics() const {
+        return usesAtomics_;
+    }
+    void setUsesAtomics() {
+        usesAtomics_ = true;
+    }
+
+    bool usesSignalsForInterrupts() const {
+        return m_->args().useSignalHandlersForInterrupt;
+    }
 
     Bytes& bytes() {
         return bytes_;

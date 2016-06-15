@@ -18,10 +18,15 @@
 
 const {classes: Cc, interfaces: Ci, utils: Cu, results: Cr} = Components;
 
+Cu.import("resource://gre/modules/AppConstants.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
 Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 let {Subprocess, SubprocessImpl} = Cu.import("resource://gre/modules/Subprocess.jsm");
+
+if (AppConstants.platform == "win") {
+  Cu.import("resource://testing-common/MockRegistry.jsm");
+}
 
 const PREF_MAX_READ = "webextensions.native-messaging.max-input-message-bytes";
 const PREF_MAX_WRITE = "webextensions.native-messaging.max-output-message-bytes";
@@ -38,21 +43,6 @@ let dir = FileUtils.getDir("TmpD", ["NativeMessaging"]);
 dir.createUnique(Ci.nsIFile.DIRECTORY_TYPE, FileUtils.PERMS_DIRECTORY);
 info(`Using local directory ${dir.path}\n`);
 
-let dirProvider = {
-  getFile(property) {
-    if (property == "XREUserNativeMessaging") {
-      return dir.clone();
-    }
-    return null;
-  },
-};
-
-Services.dirsvc.registerProvider(dirProvider);
-SimpleTest.registerCleanupFunction(() => {
-  Services.dirsvc.unregisterProvider(dirProvider);
-  dir.remove(true);
-});
-
 function getPath(filename) {
   return OS.Path.join(dir.path, filename);
 }
@@ -61,46 +51,7 @@ function getPath(filename) {
 // test to use.
 const ID = "native@tests.mozilla.org";
 
-const ECHO_PATH = getPath("echo.py");
-const ECHO_MANIFEST_PATH = getPath("echo.json");
-const ECHO_MANIFEST = {
-  name: "echo",
-  description: "a native app that echoes back messages it receives",
-  path: ECHO_PATH,
-  type: "stdio",
-  allowed_extensions: [ID],
-};
-
-const INFO_PATH = getPath("info.py");
-const INFO_MANIFEST_PATH = getPath("info.json");
-const INFO_MANIFEST = {
-  name: "info",
-  description: "a native app that gives some info about how it was started",
-  path: INFO_PATH,
-  type: "stdio",
-  allowed_extensions: [ID],
-};
-
-const WONTDIE_PATH = getPath("wontdie.py");
-const WONTDIE_MANIFEST_PATH = getPath("wontdie.json");
-const WONTDIE_MANIFEST = {
-  name: "wontdie",
-  description: "a native app that does not exit when stdin closes or on SIGTERM",
-  path: WONTDIE_PATH,
-  type: "stdio",
-  allowed_extensions: [ID],
-};
-
-add_task(function* setup_scripts() {
-  const PERMS = {unixMode: 0o755};
-  let pythonPath = yield Subprocess.pathSearch("python2.7").catch(err => {
-    if (err.errorCode != Subprocess.ERROR_BAD_EXECUTABLE) {
-      throw err;
-    }
-    return Subprocess.pathSearch("python");
-  });
-
-  const ECHO_SCRIPT = String.raw`#!${pythonPath} -u
+const ECHO_BODY = String.raw`
 import struct
 import sys
 
@@ -115,11 +66,7 @@ while True:
     sys.stdout.write(msg)
 `;
 
-  yield OS.File.writeAtomic(ECHO_PATH, ECHO_SCRIPT);
-  yield OS.File.setPermissions(ECHO_PATH, PERMS);
-  yield OS.File.writeAtomic(ECHO_MANIFEST_PATH, JSON.stringify(ECHO_MANIFEST));
-
-  const INFO_SCRIPT = String.raw`#!${pythonPath} -u
+const INFO_BODY = String.raw`
 import json
 import os
 import struct
@@ -131,11 +78,7 @@ sys.stdout.write(msg)
 sys.exit(0)
 `;
 
-  yield OS.File.writeAtomic(INFO_PATH, INFO_SCRIPT);
-  yield OS.File.setPermissions(INFO_PATH, PERMS);
-  yield OS.File.writeAtomic(INFO_MANIFEST_PATH, JSON.stringify(INFO_MANIFEST));
-
-  const WONTDIE_SCRIPT = String.raw`#!${pythonPath} -u
+const WONTDIE_BODY = String.raw`
 import signal
 import struct
 import sys
@@ -153,9 +96,103 @@ while True:
     sys.stdout.write(msg)
 `;
 
-  yield OS.File.writeAtomic(WONTDIE_PATH, WONTDIE_SCRIPT);
-  yield OS.File.setPermissions(WONTDIE_PATH, PERMS);
-  yield OS.File.writeAtomic(WONTDIE_MANIFEST_PATH, JSON.stringify(WONTDIE_MANIFEST));
+const SCRIPTS = [
+  {
+    name: "echo",
+    description: "a native app that echoes back messages it receives",
+    script: ECHO_BODY,
+  },
+  {
+    name: "info",
+    description: "a native app that gives some info about how it was started",
+    script: INFO_BODY,
+  },
+  {
+    name: "wontdie",
+    description: "a native app that does not exit when stdin closes or on SIGTERM",
+    script: WONTDIE_BODY,
+  },
+];
+
+add_task(function* setup() {
+  const PERMS = {unixMode: 0o755};
+  let pythonPath = yield Subprocess.pathSearch("python2.7").catch(err => {
+    if (err.errorCode != Subprocess.ERROR_BAD_EXECUTABLE) {
+      throw err;
+    }
+    return Subprocess.pathSearch("python");
+  });
+
+  switch (AppConstants.platform) {
+    case "macosx":
+    case "linux":
+      let dirProvider = {
+        getFile(property) {
+          if (property == "XREUserNativeMessaging") {
+            return dir.clone();
+          }
+          return null;
+        },
+      };
+
+      Services.dirsvc.registerProvider(dirProvider);
+      SimpleTest.registerCleanupFunction(() => {
+        Services.dirsvc.unregisterProvider(dirProvider);
+        dir.remove(true);
+      });
+
+      for (let script of SCRIPTS) {
+        let path = getPath(`${script.name}.py`);
+        let body = `#!${pythonPath} -u\n${script.script}`;
+        yield OS.File.writeAtomic(path, body);
+        yield OS.File.setPermissions(path, PERMS);
+
+        let manifest = {
+          name: script.name,
+          description: script.description,
+          path,
+          type: "stdio",
+          allowed_extensions: [ID],
+        };
+
+        yield OS.File.writeAtomic(getPath(`${script.name}.json`), JSON.stringify(manifest));
+      }
+      break;
+
+    case "win":
+      const REGKEY = "Software\\Mozilla\\NativeMessagingHosts";
+      let registry = new MockRegistry();
+      SimpleTest.registerCleanupFunction(() => {
+        registry.shutdown();
+      });
+
+      for (let script of SCRIPTS) {
+        let pyPath = getPath(`${script.name}.py`);
+        yield OS.File.writeAtomic(pyPath, script.script);
+
+        let batPath = getPath(`${script.name}.bat`);
+        let batBody = `@ECHO OFF\n${pythonPath} -u ${pyPath} %*\n`;
+        yield OS.File.writeAtomic(batPath, batBody);
+        yield OS.File.setPermissions(pyPath, PERMS);
+
+        let manifest = {
+          name: script.name,
+          description: script.description,
+          path: batPath,
+          type: "stdio",
+          allowed_extensions: [ID],
+        };
+        let manifestPath = getPath(`${script.name}.json`);
+        yield OS.File.writeAtomic(manifestPath, JSON.stringify(manifest));
+
+        registry.setValue(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                          REGKEY, script.name, manifestPath);
+      }
+      break;
+
+    default:
+      ok(false, `Native messaing is not supported on ${AppConstants.platform}`);
+  }
 });
 
 // Test the basic operation of native messaging with a simple
@@ -456,8 +493,8 @@ add_task(function* test_child_process() {
 
   let msg = yield extension.awaitMessage("result");
   is(msg.args.length, 2, "Received one command line argument");
-  is(msg.args[1], INFO_MANIFEST_PATH, "Command line argument is the path to the native host manifest");
-  is(msg.cwd, OS.Path.dirname(INFO_PATH), "Working directory is the directory containing the native appliation");
+  is(msg.args[1], getPath("info.json"), "Command line argument is the path to the native host manifest");
+  is(msg.cwd, dir.path, "Working directory is the directory containing the native appliation");
 
   let exitPromise = waitForSubprocessExit();
   yield extension.unload();

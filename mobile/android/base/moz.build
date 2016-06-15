@@ -74,6 +74,10 @@ if CONFIG['ANDROID_RECYCLERVIEW_V7_AAR']:
     ANDROID_EXTRA_PACKAGES += ['android.support.v7.recyclerview']
     ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_RECYCLERVIEW_V7_AAR_RES']]
     resjar.generated_sources += ['android/support/v7/recyclerview/R.java']
+if CONFIG['ANDROID_CUSTOMTABS_AAR']:
+    ANDROID_EXTRA_PACKAGES += ['android.support.customtabs']
+    ANDROID_EXTRA_RES_DIRS += ['%' + CONFIG['ANDROID_CUSTOMTABS_AAR_RES']]
+    resjar.generated_sources += ['android/support/customtabs/R.java']
 
 resjar.javac_flags += ['-Xlint:all']
 
@@ -220,6 +224,8 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'ContextGetter.java',
     'CrashHandler.java',
     'CustomEditText.java',
+    'customtabs/CustomTabsActivity.java',
+    'customtabs/GeckoCustomTabsService.java',
     'DataReportingNotification.java',
     'db/AbstractPerProfileDatabaseProvider.java',
     'db/AbstractTransactionalProvider.java',
@@ -452,6 +458,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'IntentHelper.java',
     'javaaddons/JavaAddonManager.java',
     'javaaddons/JavaAddonManagerV1.java',
+    'LauncherActivity.java',
     'lwt/LightweightTheme.java',
     'lwt/LightweightThemeDrawable.java',
     'mdns/MulticastDNSManager.java',
@@ -561,7 +568,6 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'SuggestClient.java',
     'SurfaceBits.java',
     'Tab.java',
-    'tabqueue/TabQueueDispatcher.java',
     'tabqueue/TabQueueHelper.java',
     'tabqueue/TabQueuePrompt.java',
     'tabqueue/TabQueueService.java',
@@ -822,6 +828,7 @@ gbjar.extra_jars += [CONFIG['ANDROID_APPCOMPAT_V7_AAR_LIB']]
 gbjar.extra_jars += [CONFIG['ANDROID_CARDVIEW_V7_AAR_LIB']]
 gbjar.extra_jars += [CONFIG['ANDROID_DESIGN_AAR_LIB']]
 gbjar.extra_jars += [CONFIG['ANDROID_RECYCLERVIEW_V7_AAR_LIB']]
+gbjar.extra_jars += [CONFIG['ANDROID_CUSTOMTABS_AAR_LIB']]
 
 gbjar.javac_flags += ['-Xlint:all,-deprecation,-fallthrough', '-J-Xmx512m', '-J-Xms128m']
 
@@ -953,7 +960,7 @@ for var in ('MOZ_ANDROID_ANR_REPORTER', 'MOZ_LINKER_EXTRACT', 'MOZ_DEBUG',
             'MOZ_ANDROID_DOWNLOADS_INTEGRATION', 'MOZ_INSTALL_TRACKING',
             'MOZ_ANDROID_GCM', 'MOZ_ANDROID_EXCLUDE_FONTS', 'MOZ_LOCALE_SWITCHER',
             'MOZ_ANDROID_BEAM', 'MOZ_ANDROID_DOWNLOAD_CONTENT_SERVICE',
-            'MOZ_SWITCHBOARD'):
+            'MOZ_SWITCHBOARD', 'MOZ_ANDROID_CUSTOM_TABS'):
     if CONFIG[var]:
         DEFINES[var] = 1
 
