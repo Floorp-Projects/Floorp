@@ -34,17 +34,16 @@ add_task(function* test() {
   let channelName = "contextualidentity-broadcastchannel";
 
   // reflect the received message on title
-  yield ContentTask.spawn(receiver.browser, channelName,
-    function (name) {
-      content.window.testPromise = new content.window.Promise(resolve => {
-        content.window.bc = new content.window.BroadcastChannel(name);
-        content.window.bc.onmessage = function (e) {
-          content.document.title += e.data;
-          resolve();
-        }
+  let receiveMsg = ContentTask.spawn(receiver.browser, channelName,
+      function (name) {
+        return new content.window.wrappedJSObject.Promise(resolve => {
+          content.window.bc = new content.window.BroadcastChannel(name);
+          content.window.bc.onmessage = function (e) {
+            content.document.title += e.data;
+            resolve();
+          }
+        });
       });
-    }
-  );
 
   let sender1 = yield* openTabInUserContext(URI, 1);
   let sender2 = yield* openTabInUserContext(URI, 2);
@@ -64,11 +63,7 @@ add_task(function* test() {
   }
 
   // make sure we have received a message
-  yield ContentTask.spawn(receiver.browser, channelName,
-    function (name) {
-      yield content.window.testPromise.then(function() {});
-    }
-  );
+  yield receiveMsg;
 
   // Since sender1 sends before sender2, if the title is exactly
   // sender2's message, sender1's message must've been blocked
