@@ -43,9 +43,6 @@ sync protocol PLayerTransaction {
   manages PLayer;
   manages PCompositable;
 
-child:
-  async ParentAsyncMessages(AsyncParentMessageData[] aMessages);
-
 parent:
   async PLayer();
   async PCompositable(TextureInfo aTextureInfo);
@@ -53,6 +50,7 @@ parent:
   // The isFirstPaint flag can be used to indicate that this is the first update
   // for a particular document.
   sync Update(Edit[] cset, OpDestroy[] toDestroy,
+              uint64_t fwdTransactionId,
               uint64_t id, TargetConfig targetConfig,
               PluginWindowData[] plugins, bool isFirstPaint,
               bool scheduleComposite, uint32_t paintSequenceNumber,
@@ -63,6 +61,7 @@ parent:
   // We don't need to send a sync transaction if
   // no transaction operate require a swap.
   async UpdateNoSwap(Edit[] cset, OpDestroy[] toDestroy,
+                     uint64_t fwdTransactionId,
                      uint64_t id, TargetConfig targetConfig,
                      PluginWindowData[] plugins, bool isFirstPaint,
                      bool scheduleComposite, uint32_t paintSequenceNumber,
@@ -116,8 +115,6 @@ parent:
   // Tell the compositor to notify APZ that a layer has been confirmed for an
   // input event.
   async SetConfirmedTargetAPZC(uint64_t aInputBlockId, ScrollableLayerGuid[] aTargets);
-
-  async ChildAsyncMessages(AsyncChildMessageData[] aMessages);
 
   async Shutdown();
 

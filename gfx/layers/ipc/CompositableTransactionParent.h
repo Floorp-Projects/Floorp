@@ -28,13 +28,15 @@ typedef std::vector<mozilla::layers::EditReply> EditReplyVector;
 class CompositableParentManager : public HostIPCAllocator
 {
 public:
-  virtual void SendFenceHandleIfPresent(PTextureParent* aTexture) = 0;
-
-  virtual void SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage) = 0;
-
-  void SendPendingAsyncMessages();
-
   void DestroyActor(const OpDestroy& aOp);
+
+  void UpdateFwdTransactionId(uint64_t aTransactionId)
+  {
+    MOZ_ASSERT(mFwdTransactionId < aTransactionId);
+    mFwdTransactionId = aTransactionId;
+  }
+
+  uint64_t GetFwdTransactionId() { return mFwdTransactionId; }
 
 protected:
   /**
@@ -43,9 +45,9 @@ protected:
   bool ReceiveCompositableUpdate(const CompositableOperation& aEdit,
                                  EditReplyVector& replyv);
 
-  virtual void ReplyRemoveTexture(const OpReplyRemoveTexture& aReply) {}
+  virtual void ReplyRemoveTexture(const OpReplyRemoveTexture& aReply) {};
 
-  std::vector<AsyncParentMessageData> mPendingAsyncMessage;
+  uint64_t mFwdTransactionId = 0;
 };
 
 } // namespace layers

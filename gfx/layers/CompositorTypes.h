@@ -44,7 +44,9 @@ enum class TextureFlags : uint32_t {
   // Data in this texture has not been alpha-premultiplied.
   // XXX - Apparently only used with ImageClient/Host
   NON_PREMULTIPLIED  = 1 << 4,
-  // The texture should be recycled when no longer in used
+  // The TextureClient should be recycled with recycle callback when no longer
+  // in used. When the texture is used in host side, ref count of TextureClient
+  // is transparently added by ShadowLayerForwarder or ImageBridgeChild.
   RECYCLE            = 1 << 5,
   // If DEALLOCATE_CLIENT is set, the shared data is deallocated on the
   // client side and requires some extra synchronizaion to ensure race-free

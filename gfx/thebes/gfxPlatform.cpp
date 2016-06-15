@@ -3,7 +3,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/layers/AsyncTransactionTracker.h" // for AsyncTransactionTracker
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorThread.h"
 #include "mozilla/layers/ImageBridgeChild.h"
@@ -881,8 +880,6 @@ gfxPlatform::InitLayersIPC()
       return;
     }
     sLayersIPCIsUp = true;
-
-    AsyncTransactionTrackersHolder::Initialize();
 
     if (XRE_IsParentProcess())
     {

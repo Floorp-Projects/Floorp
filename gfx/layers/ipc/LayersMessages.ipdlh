@@ -431,14 +431,23 @@ union MaybeRegion {
 };
 
 struct OpDeliverFence {
-  PTexture texture;
+  uint64_t TextureId;
   FenceHandle fence;
 };
 
-struct OpDeliverFenceToTracker {
-  uint64_t destHolderId;
-  uint64_t destTransactionId;
+struct OpDeliverFenceToNonRecycle {
+  uint64_t TextureId;
   FenceHandle fence;
+};
+
+struct OpNotifyNotUsed {
+  uint64_t TextureId;
+  uint64_t fwdTransactionId;
+};
+
+struct OpNotifyNotUsedToNonRecycle {
+  uint64_t TextureId;
+  uint64_t fwdTransactionId;
 };
 
 union CompositableOperationDetail {
@@ -521,12 +530,10 @@ union EditReply {
 
 union AsyncParentMessageData {
   OpDeliverFence;
-  OpDeliverFenceToTracker;
+  OpDeliverFenceToNonRecycle;
+  OpNotifyNotUsed;
+  OpNotifyNotUsedToNonRecycle;
   OpReplyRemoveTexture;
-};
-
-union AsyncChildMessageData {
-  CompositableOperation;
 };
 
 } // namespace

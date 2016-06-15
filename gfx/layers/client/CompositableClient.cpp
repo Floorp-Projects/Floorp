@@ -31,7 +31,6 @@ using namespace mozilla::gfx;
  * CompositableChild is owned by a CompositableClient.
  */
 class CompositableChild : public ChildActor<PCompositableChild>
-                        , public AsyncTransactionTrackersHolder
 {
 public:
   CompositableChild()
@@ -46,7 +45,6 @@ public:
   }
 
   virtual void ActorDestroy(ActorDestroyReason) override {
-    DestroyAsyncTransactionTrackersHolder();
     if (mCompositableClient) {
       mCompositableClient->mCompositableChild = nullptr;
     }
@@ -71,27 +69,6 @@ RemoveTextureFromCompositableTracker::ReleaseTextureClient()
   } else {
     mTextureClient = nullptr;
   }
-}
-
-/* static */ void
-CompositableClient::TransactionCompleteted(PCompositableChild* aActor, uint64_t aTransactionId)
-{
-  CompositableChild* child = static_cast<CompositableChild*>(aActor);
-  child->TransactionCompleteted(aTransactionId);
-}
-
-/* static */ void
-CompositableClient::HoldUntilComplete(PCompositableChild* aActor, AsyncTransactionTracker* aTracker)
-{
-  CompositableChild* child = static_cast<CompositableChild*>(aActor);
-  child->HoldUntilComplete(aTracker);
-}
-
-/* static */ uint64_t
-CompositableClient::GetTrackersHolderId(PCompositableChild* aActor)
-{
-  CompositableChild* child = static_cast<CompositableChild*>(aActor);
-  return child->GetId();
 }
 
 /* static */ PCompositableChild*
@@ -180,10 +157,6 @@ CompositableClient::Destroy()
   if (!IsConnected()) {
     return;
   }
-
-  // Send pending AsyncMessages before deleting CompositableChild since the former
-  // might have references to the latter.
-  mForwarder->SendPendingAsyncMessges();
 
   mCompositableChild->mCompositableClient = nullptr;
   mCompositableChild->Destroy(mForwarder);
@@ -299,7 +272,6 @@ CompositableClient::DumpTextureClient(std::stringstream& aStream,
 AutoRemoveTexture::~AutoRemoveTexture()
 {
   if (mCompositable && mTexture && mCompositable->IsConnected()) {
-    mTexture->RemoveFromCompositable(mCompositable);
     mCompositable->RemoveTexture(mTexture);
   }
 }
