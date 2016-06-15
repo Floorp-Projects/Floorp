@@ -66,6 +66,9 @@ LOCAL_INCLUDES += [
     '/netwerk/base',
 ]
 
+if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk' and CONFIG['ANDROID_VERSION'] > '19':
+    LOCAL_INCLUDES += ['%' + '%s/bionic/libc/dns/include' % CONFIG['ANDROID_SOURCE']]
+
 if CONFIG['ENABLE_INTL_API']:
     DEFINES['IDNA2008'] = True
     CXXFLAGS += CONFIG['MOZ_ICU_CFLAGS']
