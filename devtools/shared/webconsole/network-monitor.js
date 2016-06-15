@@ -226,13 +226,10 @@ StackTraceCollector.prototype = {
           filename: frame.filename,
           lineNumber: frame.lineNumber,
           columnNumber: frame.columnNumber,
-          functionName: frame.name
+          functionName: frame.name,
+          asyncCause: frame.asyncCause,
         });
-        if (frame.asyncCaller) {
-          frame = frame.asyncCaller;
-        } else {
-          frame = frame.caller;
-        }
+        frame = frame.caller || frame.asyncCaller;
       }
     }
 
