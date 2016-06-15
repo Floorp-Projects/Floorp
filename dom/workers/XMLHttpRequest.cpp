@@ -21,6 +21,7 @@
 #include "mozilla/dom/FormData.h"
 #include "mozilla/dom/ProgressEvent.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
+#include "mozilla/Telemetry.h"
 #include "nsComponentManagerUtils.h"
 #include "nsContentUtils.h"
 #include "nsJSUtils.h"
@@ -1619,6 +1620,8 @@ XMLHttpRequest::Constructor(const GlobalObject& aGlobal,
   JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
   MOZ_ASSERT(workerPrivate);
+
+  Telemetry::Accumulate(Telemetry::XHR_IN_WORKER, 1);
 
   RefPtr<XMLHttpRequest> xhr = new XMLHttpRequest(workerPrivate);
 
