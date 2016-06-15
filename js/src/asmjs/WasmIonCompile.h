@@ -98,10 +98,15 @@ class FuncCompileResults
 
 class IonCompileTask
 {
+  public:
+    enum class CompileMode { None, Baseline, Ion };
+
+  private:
     JSRuntime* const           runtime_;
     const ModuleGeneratorData& mg_;
     LifoAlloc                  lifo_;
     UniqueFuncBytes            func_;
+    CompileMode                mode_;
     Maybe<FuncCompileResults>  results_;
 
     IonCompileTask(const IonCompileTask&) = delete;
@@ -109,7 +114,7 @@ class IonCompileTask
 
   public:
     IonCompileTask(JSRuntime* rt, const ModuleGeneratorData& mg, size_t defaultChunkSize)
-      : runtime_(rt), mg_(mg), lifo_(defaultChunkSize), func_(nullptr)
+      : runtime_(rt), mg_(mg), lifo_(defaultChunkSize), func_(nullptr), mode_(CompileMode::None)
     {}
     JSRuntime* runtime() const {
         return runtime_;
@@ -120,10 +125,14 @@ class IonCompileTask
     const ModuleGeneratorData& mg() const {
         return mg_;
     }
-    void init(UniqueFuncBytes func) {
+    void init(UniqueFuncBytes func, CompileMode mode) {
         MOZ_ASSERT(!func_);
         func_ = Move(func);
         results_.emplace(lifo_);
+        mode_ = mode;
+    }
+    CompileMode mode() const {
+        return mode_;
     }
     const FuncBytes& func() const {
         MOZ_ASSERT(func_);
@@ -138,11 +147,15 @@ class IonCompileTask
         func_.reset(nullptr);
         results_.reset();
         lifo_.releaseAll();
+        mode_ = CompileMode::None;
     }
 };
 
 MOZ_MUST_USE bool
 IonCompileFunction(IonCompileTask* task);
+
+bool
+CompileFunction(IonCompileTask* task);
 
 } // namespace wasm
 } // namespace js

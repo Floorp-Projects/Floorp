@@ -270,6 +270,7 @@ class FloatRegisters
 
     static const SetType VolatileMask = AllMask & ~NonVolatileMask;
     static const SetType AllDoubleMask = AllMask;
+    static const SetType AllSingleMask = AllMask;
 
     static const SetType WrapperMask = VolatileMask;
 

@@ -102,6 +102,14 @@ class MacroAssemblerX86Shared : public Assembler
 
     bool asmMergeWith(const MacroAssemblerX86Shared& other);
 
+    // Evaluate first = minmax<isMax>(first, second).
+    // Handle NaN specially if handleNaN is true.
+    void minMaxDouble(FloatRegister first, FloatRegister second, bool handleNaN, bool isMax);
+    void minMaxFloat32(FloatRegister first, FloatRegister second, bool handleNaN, bool isMax);
+
+    void outOfLineWasmTruncateCheck(FloatRegister input, MIRType fromType, MIRType toType,
+                                    bool isUnsigned, Label* rejoin);
+
     void compareDouble(DoubleCondition cond, FloatRegister lhs, FloatRegister rhs) {
         if (cond & DoubleConditionBitInvert)
             vucomisd(lhs, rhs);

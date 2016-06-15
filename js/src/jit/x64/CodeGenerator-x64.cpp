@@ -1203,57 +1203,23 @@ CodeGeneratorX64::visitWasmTruncateToInt64(LWasmTruncateToInt64* lir)
     MWasmTruncateToInt64* mir = lir->mir();
     MIRType inputType = mir->input()->type();
 
+    MOZ_ASSERT(inputType == MIRType::Double || inputType == MIRType::Float32);
+
     auto* ool = new(alloc()) OutOfLineWasmTruncateCheck(mir, input);
     addOutOfLineCode(ool, mir);
 
-    if (mir->isUnsigned()) {
-        FloatRegister tempDouble = ToFloatRegister(lir->temp());
+    FloatRegister temp = mir->isUnsigned() ? ToFloatRegister(lir->temp()) : InvalidFloatReg;
 
-        // If the input < INT64_MAX, vcvttsd2sq will do the right thing, so
-        // we use it directly. Else, we subtract INT64_MAX, convert to int64,
-        // and then add INT64_MAX to the result.
-        if (inputType == MIRType::Double) {
-            Label isLarge;
-            masm.loadConstantDouble(double(0x8000000000000000), ScratchDoubleReg);
-            masm.branchDouble(Assembler::DoubleGreaterThanOrEqual, input, ScratchDoubleReg, &isLarge);
-            masm.vcvttsd2sq(input, output);
-            masm.branchTestPtr(Assembler::Signed, output, output, ool->entry());
-            masm.jump(ool->rejoin());
-
-            masm.bind(&isLarge);
-            masm.moveDouble(input, tempDouble);
-            masm.subDouble(ScratchDoubleReg, tempDouble);
-            masm.vcvttsd2sq(tempDouble, output);
-            masm.branchTestPtr(Assembler::Signed, output, output, ool->entry());
-            masm.or64(Imm64(0x8000000000000000), Register64(output));
-        } else {
-            MOZ_ASSERT(inputType == MIRType::Float32);
-
-            Label isLarge;
-            masm.loadConstantFloat32(float(0x8000000000000000), ScratchDoubleReg);
-            masm.branchFloat(Assembler::DoubleGreaterThanOrEqual, input, ScratchDoubleReg, &isLarge);
-            masm.vcvttss2sq(input, output);
-            masm.branchTestPtr(Assembler::Signed, output, output, ool->entry());
-            masm.jump(ool->rejoin());
-
-            masm.bind(&isLarge);
-            masm.moveFloat32(input, tempDouble);
-            masm.vsubss(ScratchDoubleReg, tempDouble, tempDouble);
-            masm.vcvttss2sq(tempDouble, output);
-            masm.branchTestPtr(Assembler::Signed, output, output, ool->entry());
-            masm.or64(Imm64(0x8000000000000000), Register64(output));
-        }
+    if (inputType == MIRType::Double) {
+        if (mir->isUnsigned())
+            masm.wasmTruncateDoubleToUInt64(input, output, ool->entry(), ool->rejoin(), temp);
+        else
+            masm.wasmTruncateDoubleToInt64(input, output, ool->entry(), ool->rejoin(), temp);
     } else {
-        if (inputType == MIRType::Double) {
-            masm.vcvttsd2sq(input, output);
-            masm.cmpq(Imm32(1), output);
-            masm.j(Assembler::Overflow, ool->entry());
-        } else {
-            MOZ_ASSERT(inputType == MIRType::Float32);
-            masm.vcvttss2sq(input, output);
-            masm.cmpq(Imm32(1), output);
-            masm.j(Assembler::Overflow, ool->entry());
-        }
+        if (mir->isUnsigned())
+            masm.wasmTruncateFloat32ToUInt64(input, output, ool->entry(), ool->rejoin(), temp);
+        else
+            masm.wasmTruncateFloat32ToInt64(input, output, ool->entry(), ool->rejoin(), temp);
     }
 
     masm.bind(ool->rejoin());
@@ -1301,49 +1267,17 @@ CodeGeneratorX64::visitInt64ToFloatingPoint(LInt64ToFloatingPoint* lir)
     MIRType outputType = lir->mir()->type();
     MOZ_ASSERT(outputType == MIRType::Double || outputType == MIRType::Float32);
 
-    // Zero the output register to break dependencies, see convertInt32ToDouble.
-    if (outputType == MIRType::Double)
-        masm.zeroDouble(output);
-    else
-        masm.zeroFloat32(output);
-
-    Label done;
-    if (lir->mir()->isUnsigned()) {
-        // If the input is unsigned, we use cvtsq2sd or vcvtsq2ss directly.
-        // Else, we divide by 2, convert to double or float, and multiply the
-        // result by 2.
-        if (outputType == MIRType::Double) {
-            Label isSigned;
-            masm.branchTestPtr(Assembler::Signed, input, input, &isSigned);
-            masm.vcvtsq2sd(input, output, output);
-            masm.jump(&done);
-
-            masm.bind(&isSigned);
-            ScratchRegisterScope scratch(masm);
-            masm.mov(input, scratch);
-            masm.rshiftPtr(Imm32(1), scratch);
-            masm.vcvtsq2sd(scratch, output, output);
-            masm.vaddsd(output, output, output);
-        } else {
-            Label isSigned;
-            masm.branchTestPtr(Assembler::Signed, input, input, &isSigned);
-            masm.vcvtsq2ss(input, output, output);
-            masm.jump(&done);
-
-            masm.bind(&isSigned);
-            ScratchRegisterScope scratch(masm);
-            masm.mov(input, scratch);
-            masm.rshiftPtr(Imm32(1), scratch);
-            masm.vcvtsq2ss(scratch, output, output);
-            masm.vaddss(output, output, output);
-        }
-    } else {
-        if (outputType == MIRType::Double)
-            masm.vcvtsq2sd(input, output, output);
+    if (outputType == MIRType::Double) {
+        if (lir->mir()->isUnsigned())
+            masm.convertUInt64ToDouble(input, output);
         else
-            masm.vcvtsq2ss(input, output, output);
+            masm.convertInt64ToDouble(input, output);
+    } else {
+        if (lir->mir()->isUnsigned())
+            masm.convertUInt64ToFloat32(input, output);
+        else
+            masm.convertInt64ToFloat32(input, output);
     }
-    masm.bind(&done);
 }
 
 void

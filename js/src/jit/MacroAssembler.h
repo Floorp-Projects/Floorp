@@ -1642,6 +1642,9 @@ class MacroAssembler : public MacroAssemblerSpecific
     void convertTypedOrValueToFloatingPoint(TypedOrValueRegister src, FloatRegister output,
                                             Label* fail, MIRType outputType);
 
+    void outOfLineTruncateSlow(FloatRegister src, Register dest, bool widenFloatToDouble,
+                               bool compilingAsmJS);
+
     void convertInt32ValueToDouble(const Address& address, Register scratch, Label* done);
     void convertValueToDouble(ValueOperand value, FloatRegister output, Label* fail) {
         convertValueToFloatingPoint(value, output, fail, MIRType::Double);

@@ -2329,7 +2329,7 @@ private:
 // interface on the single underlying (possibly aggregate) JSObject.
 
 class nsXPCWrappedJS final : protected nsAutoXPTCStub,
-                             public nsIXPConnectWrappedJS,
+                             public nsIXPConnectWrappedJSUnmarkGray,
                              public nsSupportsWeakReference,
                              public nsIPropertyBag,
                              public XPCRootSetElem
@@ -2338,6 +2338,7 @@ public:
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
     NS_DECL_NSIXPCONNECTJSOBJECTHOLDER
     NS_DECL_NSIXPCONNECTWRAPPEDJS
+    NS_DECL_NSIXPCONNECTWRAPPEDJSUNMARKGRAY
     NS_DECL_NSISUPPORTSWEAKREFERENCE
     NS_DECL_NSIPROPERTYBAG
 

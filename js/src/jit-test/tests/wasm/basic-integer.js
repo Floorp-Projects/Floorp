@@ -1,3 +1,4 @@
+// |jit-test| test-also-wasm-baseline
 load(libdir + "wasm.js");
 
 assertEq(wasmEvalText('(module (func (result i32) (i32.const -1)) (export "" 0))')(), -1);

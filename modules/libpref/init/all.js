@@ -1191,6 +1191,7 @@ pref("javascript.options.baselinejit",      true);
 pref("javascript.options.ion",              true);
 pref("javascript.options.asmjs",            true);
 pref("javascript.options.wasm",             false);
+pref("javascript.options.wasm_baselinejit", false);
 pref("javascript.options.native_regexp",    true);
 pref("javascript.options.parallel_parsing", true);
 #if !defined(RELEASE_BUILD) && !defined(ANDROID) && !defined(MOZ_B2G) && !defined(XP_IOS)
@@ -5452,5 +5453,5 @@ pref("media.default_volume", "1.0");
 #ifdef RELEASE_BUILD
 pref("media.seekToNextFrame.enabled", false);
 #else
-pref("media.seekToNextFrame.enabled", false);
+pref("media.seekToNextFrame.enabled", true);
 #endif

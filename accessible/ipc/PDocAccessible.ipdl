@@ -62,6 +62,7 @@ parent:
   async TextChangeEvent(uint64_t aID, nsString aStr, int32_t aStart, uint32_t aLen,
                         bool aIsInsert, bool aFromUser);
   async SelectionEvent(uint64_t aID, uint64_t aWidgetID, uint32_t aType);
+  async RoleChangedEvent(uint32_t aRole);
 
   /*
    * Tell the parent document to bind the existing document as a new child

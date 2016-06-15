@@ -107,7 +107,7 @@ TrackUnionStream::TrackUnionStream(DOMMediaStream* aWrapper) :
             break;
           }
         }
-        if (!found && mInputs[i]->AllowCreationOf(tracks->GetID())) {
+        if (!found && mInputs[i]->PassTrackThrough(tracks->GetID())) {
           bool trackFinished = false;
           trackAdded = true;
           uint32_t mapIndex = AddTrack(mInputs[i], tracks.get(), aFrom);
@@ -372,30 +372,6 @@ TrackUnionStream::SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled) {
     }
   }
   MediaStream::SetTrackEnabledImpl(aTrackID, aEnabled);
-}
-
-MediaStream*
-TrackUnionStream::GetInputStreamFor(TrackID aTrackID)
-{
-  for (TrackMapEntry& entry : mTrackMap) {
-    if (entry.mOutputTrackID == aTrackID && entry.mInputPort) {
-      return entry.mInputPort->GetSource();
-    }
-  }
-
-  return nullptr;
-}
-
-TrackID
-TrackUnionStream::GetInputTrackIDFor(TrackID aTrackID)
-{
-  for (TrackMapEntry& entry : mTrackMap) {
-    if (entry.mOutputTrackID == aTrackID) {
-      return entry.mInputTrackID;
-    }
-  }
-
-  return TRACK_NONE;
 }
 
 void

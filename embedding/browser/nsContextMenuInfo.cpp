@@ -270,8 +270,7 @@ nsContextMenuInfo::GetBackgroundImageRequestInternal(nsIDOMNode* aDOMNode,
   nsAutoString bgStringValue;
 
   nsCOMPtr<nsIDocument> doc(do_QueryInterface(document));
-  NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
-  nsCOMPtr<nsIPrincipal> principal = doc->NodePrincipal();
+  nsCOMPtr<nsIPrincipal> principal = doc ? doc->NodePrincipal() : nullptr;
 
   while (true) {
     nsCOMPtr<Element> domElement(do_QueryInterface(domNode));

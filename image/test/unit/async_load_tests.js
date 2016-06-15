@@ -13,9 +13,6 @@ var Cr = Components.results;
 
 Cu.import("resource://testing-common/httpd.js");
 Cu.import("resource://gre/modules/NetUtil.jsm");
-Cu.import("resource://gre/modules/Services.jsm");
-
-var ssm = Services.scriptSecurityManager;
 
 var server = new HttpServer();
 server.registerDirectory("/", do_get_file(''));
@@ -100,9 +97,7 @@ function checkSecondLoad()
   var listener = new ImageListener(checkClone, secondLoadDone);
   var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                 .createScriptedObserver(listener);
-  var systemPrincipal = ssm.getSystemPrincipal();
-  requests.push(gCurrentLoader.loadImageXPCOM(uri, null, null, "default",
-                                              systemPrincipal, null, outer, null, 0, null));
+  requests.push(gCurrentLoader.loadImageXPCOM(uri, null, null, "default", null, null, outer, null, 0, null));
   listener.synchronous = false;
 }
 
@@ -182,9 +177,7 @@ function startImageCallback(otherCb)
     var listener2 = new ImageListener(null, function(foo, bar) { do_test_finished(); });
     var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                   .createScriptedObserver(listener2);
-    var systemPrincipal = ssm.getSystemPrincipal();
-    requests.push(gCurrentLoader.loadImageXPCOM(uri, null, null, "default",
-                                                systemPrincipal, null, outer, null, 0, null));
+    requests.push(gCurrentLoader.loadImageXPCOM(uri, null, null, "default", null, null, outer, null, 0, null));
     listener2.synchronous = false;
 
     // Now that we've started another load, chain to the callback.
@@ -211,9 +204,7 @@ function run_test()
   var listener = new ImageListener(startImageCallback(checkClone), firstLoadDone);
   var outer = Cc["@mozilla.org/image/tools;1"].getService(Ci.imgITools)
                 .createScriptedObserver(listener);
-  var systemPrincipal = ssm.getSystemPrincipal();
-  var req = gCurrentLoader.loadImageXPCOM(uri, null, null, "default",
-                                          systemPrincipal, null, outer, null, 0, null);
+  var req = gCurrentLoader.loadImageXPCOM(uri, null, null, "default", null, null, outer, null, 0, null);
   requests.push(req);
 
   // Ensure that we don't cause any mayhem when we lock an image.

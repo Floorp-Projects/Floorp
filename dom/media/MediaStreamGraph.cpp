@@ -2380,31 +2380,6 @@ MediaStream::AddListenerImpl(already_AddRefed<MediaStreamListener> aListener)
   MediaStreamListener* listener = *mListeners.AppendElement() = aListener;
   listener->NotifyBlockingChanged(GraphImpl(),
     mNotifiedBlocked ? MediaStreamListener::BLOCKED : MediaStreamListener::UNBLOCKED);
-
-  for (StreamTracks::TrackIter it(mTracks); !it.IsEnded(); it.Next()) {
-    MediaStream* inputStream = nullptr;
-    TrackID inputTrackID = TRACK_INVALID;
-    if (ProcessedMediaStream* ps = AsProcessedStream()) {
-      // The only ProcessedMediaStream where we should have listeners is
-      // TrackUnionStream - it's what's used as owned stream in DOMMediaStream,
-      // the only main-thread exposed stream type.
-      // TrackUnionStream guarantees that each of its tracks has an input track.
-      // Other types do not implement GetInputStreamFor() and will return null.
-      inputStream = ps->GetInputStreamFor(it->GetID());
-      MOZ_ASSERT(inputStream);
-      inputTrackID = ps->GetInputTrackIDFor(it->GetID());
-      MOZ_ASSERT(IsTrackIDExplicit(inputTrackID));
-    }
-
-    uint32_t flags = MediaStreamListener::TRACK_EVENT_CREATED;
-    if (it->IsEnded()) {
-      flags |= MediaStreamListener::TRACK_EVENT_ENDED;
-    }
-    nsAutoPtr<MediaSegment> segment(it->GetSegment()->CreateEmptyClone());
-    listener->NotifyQueuedTrackChanges(Graph(), it->GetID(), it->GetEnd(),
-                                       flags, *segment,
-                                       inputStream, inputTrackID);
-  }
   if (mNotifiedFinished) {
     listener->NotifyEvent(GraphImpl(), MediaStreamListener::EVENT_FINISHED);
   }
@@ -3161,26 +3136,24 @@ MediaInputPort::SetGraphImpl(MediaStreamGraphImpl* aGraph)
 }
 
 void
-MediaInputPort::BlockSourceTrackIdImpl(TrackID aTrackId, BlockingMode aBlockingMode)
+MediaInputPort::BlockSourceTrackIdImpl(TrackID aTrackId)
 {
-  mBlockedTracks.AppendElement(Pair<TrackID, BlockingMode>(aTrackId, aBlockingMode));
+  mBlockedTracks.AppendElement(aTrackId);
 }
 
 already_AddRefed<Pledge<bool>>
-MediaInputPort::BlockSourceTrackId(TrackID aTrackId, BlockingMode aBlockingMode)
+MediaInputPort::BlockSourceTrackId(TrackID aTrackId)
 {
   class Message : public ControlMessage {
   public:
     explicit Message(MediaInputPort* aPort,
                      TrackID aTrackId,
-                     BlockingMode aBlockingMode,
                      already_AddRefed<nsIRunnable> aRunnable)
       : ControlMessage(aPort->GetDestination()),
-        mPort(aPort), mTrackId(aTrackId), mBlockingMode(aBlockingMode),
-        mRunnable(aRunnable) {}
+        mPort(aPort), mTrackId(aTrackId), mRunnable(aRunnable) {}
     void Run() override
     {
-      mPort->BlockSourceTrackIdImpl(mTrackId, mBlockingMode);
+      mPort->BlockSourceTrackIdImpl(mTrackId);
       if (mRunnable) {
         mStream->Graph()->DispatchToMainThreadAfterStreamStateUpdate(mRunnable.forget());
       }
@@ -3191,7 +3164,6 @@ MediaInputPort::BlockSourceTrackId(TrackID aTrackId, BlockingMode aBlockingMode)
     }
     RefPtr<MediaInputPort> mPort;
     TrackID mTrackId;
-    BlockingMode mBlockingMode;
     nsCOMPtr<nsIRunnable> mRunnable;
   };
 
@@ -3204,7 +3176,7 @@ MediaInputPort::BlockSourceTrackId(TrackID aTrackId, BlockingMode aBlockingMode)
     pledge->Resolve(true);
     return NS_OK;
   });
-  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aTrackId, aBlockingMode, runnable.forget()));
+  GraphImpl()->AppendMessage(MakeUnique<Message>(this, aTrackId, runnable.forget()));
   return pledge.forget();
 }
 
@@ -3247,7 +3219,7 @@ ProcessedMediaStream::AllocateInputPort(MediaStream* aStream, TrackID aTrackID,
                        aInputNumber, aOutputNumber);
   if (aBlockedTracks) {
     for (TrackID trackID : *aBlockedTracks) {
-      port->BlockSourceTrackIdImpl(trackID, BlockingMode::CREATION);
+      port->BlockSourceTrackIdImpl(trackID);
     }
   }
   port->SetGraphImpl(GraphImpl());

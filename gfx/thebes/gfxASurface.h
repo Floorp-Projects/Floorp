@@ -64,13 +64,6 @@ public:
     void MarkDirty();
     void MarkDirty(const gfxRect& r);
 
-    /* Printing backend functions */
-    virtual nsresult BeginPrinting(const nsAString& aTitle, const nsAString& aPrintToFileName);
-    virtual nsresult EndPrinting();
-    virtual nsresult AbortPrinting();
-    virtual nsresult BeginPage();
-    virtual nsresult EndPage();
-
     void SetData(const cairo_user_data_key_t *key,
                  void *user_data,
                  thebes_destroy_func_t destroy);

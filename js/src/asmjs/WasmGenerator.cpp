@@ -20,6 +20,7 @@
 
 #include "mozilla/EnumeratedRange.h"
 
+#include "asmjs/WasmBaselineCompile.h"
 #include "asmjs/WasmIonCompile.h"
 #include "asmjs/WasmStubs.h"
 
@@ -802,14 +803,18 @@ ModuleGenerator::finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg)
     if (!func)
         return false;
 
-    fg->task_->init(Move(func));
+    JSRuntime* rt = cx_->compartment()->runtimeFromAnyThread();
+    bool baselineCompile = rt->options().wasmAlwaysBaseline() && BaselineCanCompile(fg);
+
+    fg->task_->init(Move(func), baselineCompile ? IonCompileTask::CompileMode::Baseline
+                                                : IonCompileTask::CompileMode::Ion);
 
     if (parallel_) {
         if (!StartOffThreadWasmCompile(cx_, fg->task_))
             return false;
         outstanding_++;
     } else {
-        if (!IonCompileFunction(fg->task_))
+        if (!CompileFunction(fg->task_))
             return false;
         if (!finishTask(fg->task_))
             return false;
