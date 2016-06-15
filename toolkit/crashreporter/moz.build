@@ -87,14 +87,9 @@ if CONFIG['OS_TARGET'] == 'Android':
     # NDK5 workarounds
     DEFINES['_STLP_CONST_CONSTRUCTOR_BUG'] = True
     DEFINES['_STLP_NO_MEMBER_TEMPLATES'] = True
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-        LOCAL_INCLUDES += [
-            '/toolkit/crashreporter/gonk-include',
-        ]
-    else:
-        LOCAL_INCLUDES += [
-            '/toolkit/crashreporter/google-breakpad/src/common/android/include',
-        ]
+    LOCAL_INCLUDES += [
+        '/toolkit/crashreporter/google-breakpad/src/common/android/include',
+    ]
 
 if CONFIG['OS_ARCH'] == 'SunOS':
     # there's no define for this normally
