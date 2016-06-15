@@ -4746,8 +4746,8 @@ nsWindow::ProcessMessage(UINT msg, WPARAM& wParam, LPARAM& lParam,
         obsServ->NotifyObservers(nullptr, "profile-change-net-teardown", context.get());
         obsServ->NotifyObservers(nullptr, "profile-change-teardown", context.get());
         obsServ->NotifyObservers(nullptr, "profile-before-change", context.get());
-        obsServ->NotifyObservers(nullptr, "profile-before-change2", context.get());
-        obsServ->NotifyObservers(nullptr, "profile-before-change3", context.get());
+        obsServ->NotifyObservers(nullptr, "profile-before-change-qm", context.get());
+        obsServ->NotifyObservers(nullptr, "profile-before-change-telemetry", context.get());
         // Then a controlled but very quick exit.
         _exit(0);
       }
