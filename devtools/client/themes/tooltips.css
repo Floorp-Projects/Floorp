@@ -334,14 +334,18 @@
   margin-bottom: 5px;
 }
 
-.stack-frame {
+.stack-frame-call {
   color: var(--theme-body-color-alt);
   cursor: pointer;
   display: flex;
 }
 
-.stack-frame:hover {
+.stack-frame-call:hover {
   background-color: var(--theme-selection-background-semitransparent);
+}
+
+.stack-frame-async {
+  color: var(--theme-body-color-inactive);
 }
 
 .stack-frame-function-name {
