@@ -398,10 +398,12 @@ JsepTrack::Negotiate(const SdpMediaSection& answer,
     }
   }
 
-  if ((mDirection == sdp::kRecv) &&
-      remote.GetAttributeList().HasAttribute(SdpAttribute::kSsrcAttribute)) {
-    for (auto& ssrcAttr : remote.GetAttributeList().GetSsrc().mSsrcs) {
-      AddSsrc(ssrcAttr.ssrc);
+  if (mDirection == sdp::kRecv) {
+    mSsrcs.clear();
+    if (remote.GetAttributeList().HasAttribute(SdpAttribute::kSsrcAttribute)) {
+      for (auto& ssrcAttr : remote.GetAttributeList().GetSsrc().mSsrcs) {
+        AddSsrc(ssrcAttr.ssrc);
+      }
     }
   }
 
