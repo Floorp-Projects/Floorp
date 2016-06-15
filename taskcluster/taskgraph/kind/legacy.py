@@ -312,11 +312,11 @@ class LegacyKind(base.Kind):
         cmdline_interactive = params.get('interactive', False)
 
         # Default to current time if querying the head rev fails
-        pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime())
+        push_epoch = int(time.time())
         vcs_info = query_vcs_info(params['head_repository'], params['head_rev'])
         changed_files = set()
         if vcs_info:
-            pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(vcs_info.pushdate))
+            push_epoch = vcs_info.pushdate
 
             logger.debug('{} commits influencing task scheduling:'.format(len(vcs_info.changesets)))
             for c in vcs_info.changesets:
@@ -324,6 +324,8 @@ class LegacyKind(base.Kind):
                     cset=c['node'][0:12],
                     desc=c['desc'].splitlines()[0].encode('ascii', 'ignore')))
                 changed_files |= set(c['files'])
+
+        pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(push_epoch))
 
         # Template parameters used when expanding the graph
         parameters = dict(gaia_info().items() + {
@@ -337,6 +339,7 @@ class LegacyKind(base.Kind):
             'head_ref': params['head_ref'] or params['head_rev'],
             'head_rev': params['head_rev'],
             'pushdate': pushdate,
+            'push_epoch': push_epoch,
             'pushtime': pushdate[8:],
             'year': pushdate[0:4],
             'month': pushdate[4:6],
