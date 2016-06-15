@@ -41,11 +41,18 @@ const EXPECTED_REQUESTS = [
     hasStack: { fn: "performXhrRequest", file: CAUSE_FILE_NAME, line: 22 }
   },
   {
+    method: "GET",
+    url: EXAMPLE_URL + "fetch_request",
+    causeType: "fetch",
+    causeUri: CAUSE_URL,
+    hasStack: { fn: "performFetchRequest", file: CAUSE_FILE_NAME, line: 26 }
+  },
+  {
     method: "POST",
     url: EXAMPLE_URL + "beacon_request",
     causeType: "beacon",
     causeUri: CAUSE_URL,
-    hasStack: { fn: "performBeaconRequest", file: CAUSE_FILE_NAME, line: 26 }
+    hasStack: { fn: "performBeaconRequest", file: CAUSE_FILE_NAME, line: 30 }
   },
 ];
 

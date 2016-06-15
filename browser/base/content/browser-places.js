@@ -554,10 +554,11 @@ var PlacesCommandHook = {
     gBrowser.visibleTabs.forEach(tab => {
       let browser = tab.linkedBrowser;
       let uri = browser.currentURI;
+      let title = browser.contentTitle || tab.label;
       let spec = uri.spec;
       if (!tab.pinned && !(spec in uniquePages)) {
         uniquePages[spec] = null;
-        URIs.push({ uri, title: browser.contentTitle });
+        URIs.push({ uri, title });
       }
     });
     return URIs;
