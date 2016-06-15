@@ -32,7 +32,17 @@
 
       performXhrRequest();
       performFetchRequest();
-      performBeaconRequest();
+
+      // Perform some requests with async stacks
+      Promise.resolve().then(function performPromiseFetchRequest() {
+        fetch("promise_fetch_request");
+        setTimeout(function performTimeoutFetchRequest() {
+          fetch("timeout_fetch_request");
+
+          // Finally, send a beacon request
+          performBeaconRequest();
+        }, 0);
+      });
     </script>
   </body>
 </html>
