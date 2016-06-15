@@ -1021,7 +1021,7 @@ if (!isContent) {
   this.AsyncShutdown.profileChangeTeardown = getPhase("profile-change-teardown");
   this.AsyncShutdown.profileBeforeChange = getPhase("profile-before-change");
   this.AsyncShutdown.placesClosingInternalConnection = getPhase("places-will-close-connection");
-  this.AsyncShutdown.sendTelemetry = getPhase("profile-before-change3");
+  this.AsyncShutdown.sendTelemetry = getPhase("profile-before-change-telemetry");
 }
 
 // Notifications that fire in the parent and content process, but should

@@ -119,8 +119,8 @@ class ScopedXPCOM : public nsIDirectoryServiceProvider2
           MOZ_ALWAYS_SUCCEEDS(os->NotifyObservers(nullptr, "profile-change-net-teardown", nullptr));
           MOZ_ALWAYS_SUCCEEDS(os->NotifyObservers(nullptr, "profile-change-teardown", nullptr));
           MOZ_ALWAYS_SUCCEEDS(os->NotifyObservers(nullptr, "profile-before-change", nullptr));
-          MOZ_ALWAYS_SUCCEEDS(os->NotifyObservers(nullptr, "profile-before-change2", nullptr));
-          MOZ_ALWAYS_SUCCEEDS(os->NotifyObservers(nullptr, "profile-before-change3", nullptr));
+          MOZ_ALWAYS_SUCCEEDS(os->NotifyObservers(nullptr, "profile-before-change-qm", nullptr));
+          MOZ_ALWAYS_SUCCEEDS(os->NotifyObservers(nullptr, "profile-before-change-telemetry", nullptr));
         }
 
         if (NS_FAILED(mProfD->Remove(true))) {
