@@ -62,13 +62,16 @@ sdp_mca_t *sdp_alloc_mca (uint32_t line) {
 static sdp_result_e next_token(const char **string_of_tokens, char *token, unsigned token_max_len, const char *delim)
 {
   int flag2moveon = 0;
-  const char *str = *string_of_tokens;
-  const char *token_end = token + token_max_len - 1;
+  const char *str;
+  const char *token_end;
   const char *next_delim;
 
   if (!string_of_tokens || !*string_of_tokens || !token || !delim) {
     return SDP_FAILURE;
   }
+
+  str = *string_of_tokens;
+  token_end = token + token_max_len - 1;
 
   /* Locate front of token, skipping any delimiters */
   for ( ; ((*str != '\0') && (*str != '\n') && (*str != '\r')); str++) {
@@ -350,7 +353,9 @@ uint32_t sdp_getnextnumtok_or_null (const char *str, const char **str_end,
   char *strtoul_end;
   unsigned long numval;
 
-  *null_ind = FALSE;
+  if (null_ind) {
+    *null_ind = FALSE;
+  }
 
   if (!str || !str_end || !delim || !null_ind || !result) {
     if (result) {
