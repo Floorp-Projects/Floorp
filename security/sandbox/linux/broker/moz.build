@@ -16,10 +16,6 @@ SOURCES += [
     'SandboxBrokerPolicyFactory.cpp',
 ]
 
-if CONFIG['OS_TARGET'] == 'Android':
-    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
-        DEFINES['HAVE_ANDROID_OS'] = True
-
 LOCAL_INCLUDES += [
     '/security/sandbox/linux', # SandboxLogging.h
     '/security/sandbox/linux/common', # SandboxInfo.h
