@@ -1019,6 +1019,17 @@ class MInstruction
 {
     MResumePoint* resumePoint_;
 
+  protected:
+    // All MInstructions are using the "MFoo::New(alloc)" notation instead of
+    // the TempObject new operator. This code redefines the new operator as
+    // protected, and delegates to the TempObject new operator. Thus, the
+    // following code prevents calls to "new(alloc) MFoo" outside the MFoo
+    // members.
+    template <typename... Args>
+    inline void* operator new(size_t nbytes, Args&&... args) {
+        return TempObject::operator new(nbytes, mozilla::Forward<Args>(args)...);
+    }
+
   public:
     MInstruction()
       : resumePoint_(nullptr)
@@ -1447,6 +1458,9 @@ class MConstant : public MNullaryInstruction
     static MConstant* NewInt64(TempAllocator& alloc, int64_t i);
     static MConstant* NewAsmJS(TempAllocator& alloc, const Value& v, MIRType type);
     static MConstant* NewConstraintlessObject(TempAllocator& alloc, JSObject* v);
+    static MConstant* Copy(TempAllocator& alloc, MConstant* src) {
+        return new(alloc) MConstant(*src);
+    }
 
     // Try to convert this constant to boolean, similar to js::ToBoolean.
     // Returns false if the type is MIRType::Magic*.
