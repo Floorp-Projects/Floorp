@@ -73,6 +73,10 @@ public:
   virtual Result IsChainValid(const mozilla::pkix::DERArray& certChain,
                               mozilla::pkix::Time time) override;
 
+  virtual void NoteAuxiliaryExtension(
+                   mozilla::pkix::AuxiliaryExtension extension,
+                   mozilla::pkix::Input extensionData) override;
+
 private:
   NSSCertDBTrustDomain& mCertDBTrustDomain;
 };
