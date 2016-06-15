@@ -355,7 +355,6 @@
         </xul:box>
         <xul:box class="panel-arrowcontent" xbl:inherits="side,align,dir,orient,pack" flex="1">
           <children/>
-          <xul:box class="panel-inner-arrowcontentfooter" xbl:inherits="footertype" hidden="true"/>
         </xul:box>
       </xul:vbox>
     </content>

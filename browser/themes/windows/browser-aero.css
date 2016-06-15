@@ -9,10 +9,6 @@
   #main-window[sizemode="normal"] > #tab-view-deck > #browser-panel > #navigator-toolbox > #toolbar-menubar {
     margin-top: 1px;
   }
-
-  .panel-promo-message {
-    font-style: italic;
-  }
 }
 
 @media (-moz-windows-default-theme) {
