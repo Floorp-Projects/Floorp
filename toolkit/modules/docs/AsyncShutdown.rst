@@ -249,7 +249,7 @@ List of phases
 ``AsyncShutdown.sendTelemetry``
 
   The client capability for clients wishing to block asynchronously
-  during observer notification "profile-before-change2". Once the
+  during observer notification "profile-before-change3". Once the
   barrier is resolved, Telemetry must stop its operations.
 
 ``AsyncShutdown.webWorkersShutdown``
