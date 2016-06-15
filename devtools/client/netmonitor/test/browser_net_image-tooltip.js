@@ -50,7 +50,7 @@ add_task(function* test() {
     yield showTooltipOn(tooltip, anchor);
 
     info("Tooltip was successfully opened for the image request.");
-    is(tooltip.content.querySelector("image").src, TEST_IMAGE_DATA_URI,
+    is(tooltip.panel.querySelector("img").src, TEST_IMAGE_DATA_URI,
       "The tooltip's image content is displayed correctly.");
   }
 

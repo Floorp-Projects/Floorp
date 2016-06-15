@@ -238,7 +238,7 @@ function* query(detailsIn, props, extension) {
   }
 }
 
-extensions.registerSchemaAPI("cookies", "cookies", (extension, context) => {
+extensions.registerSchemaAPI("cookies", (extension, context) => {
   let self = {
     cookies: {
       get: function(details) {
