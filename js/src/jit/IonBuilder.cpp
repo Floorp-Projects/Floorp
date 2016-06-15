@@ -1414,9 +1414,6 @@ IonBuilder::maybeAddOsrTypeBarriers()
         if (info().isSlotAliasedAtOsr(slot))
             continue;
 
-        if (!alloc().ensureBallast())
-            return false;
-
         MInstruction* def = osrBlock->getSlot(slot)->toInstruction();
         MPhi* preheaderPhi = preheader->getSlot(slot)->toPhi();
         MPhi* headerPhi = headerRp->getOperand(slot)->toPhi();
