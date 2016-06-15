@@ -104,8 +104,7 @@
           this.durationValue = "";
           this.valueBar = null;
           this.isDragging = false;
-          this.isDraggingComplete = true;
-          this.wasPausedBeforeDrag = true;
+          this.isPausedByDragging = false;
 
           this.thumb = document.getAnonymousElementByAttribute(this, "class", "scale-thumb");
           this.type = this.getAttribute("class");
@@ -172,17 +171,23 @@
             if (this.type == "scrubber") {
                 this.Utils.log("--- dragStateChanged: " + isDragging + " ---");
                 this.isDragging = isDragging;
-                if (isDragging) {
-                    this.wasPausedBeforeDrag = this.Utils.video.paused;
-                    this.isDraggingComplete = false;
-                    this.Utils.video.pause();
-                } else if (!this.wasPausedBeforeDrag && !this.isDraggingComplete) {
-                    this.isDraggingComplete = true;
+                if (this.isPausedByDragging && !isDragging) {
                     // After the drag ends, resume playing.
                     this.Utils.video.play();
-                } else {
-                    this.isDraggingComplete = true;
+                    this.isPausedByDragging = false;
                 }
+            }
+          ]]>
+          </body>
+      </method>
+
+      <method name="pauseVideoDuringDragging">
+          <body>
+          <![CDATA[
+            if (this.isDragging &&
+                !this.Utils.video.paused && !this.isPausedByDragging) {
+                this.isPausedByDragging = true;
+                this.Utils.video.pause();
             }
           ]]>
           </body>
@@ -832,6 +837,11 @@
                 },
                 HIDE_CONTROLS_TIMEOUT_MS : 2000,
                 onMouseMove : function (event) {
+                    // Pause playing video when the mouse is dragging over the control bar.
+                    if (this.scrubber.isDragging) {
+                      this.scrubber.pauseVideoDuringDragging();
+                    }
+
                     // If the controls are static, don't change anything.
                     if (!this.dynamicControls)
                         return;
