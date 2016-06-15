@@ -85,7 +85,12 @@ ScrollbarActivity::ActivityStarted()
 void
 ScrollbarActivity::ActivityStopped()
 {
-  NS_ASSERTION(IsActivityOngoing(), "activity stopped while none was going on");
+  if (!IsActivityOngoing()) {
+    // This can happen if there was a frame reconstruction while the activity
+    // was ongoing. In this case we just do nothing. We should probably handle
+    // this case better.
+    return;
+  }
   NS_ASSERTION(mIsActive, "need to be active during activity");
   NS_ASSERTION(!mIsFading, "must not be fading during ongoing activity");
 
