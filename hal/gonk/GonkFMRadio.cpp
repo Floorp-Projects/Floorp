@@ -29,10 +29,10 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-
 /* Bionic might not have the newer version of the v4l2 headers that
  * define these controls, so we define them here if they're not found.
  */
+
 #ifndef V4L2_CTRL_CLASS_FM_RX
 #define V4L2_CTRL_CLASS_FM_RX 0x00a10000
 #define V4L2_CID_FM_RX_CLASS_BASE (V4L2_CTRL_CLASS_FM_RX | 0x900)
@@ -58,6 +58,20 @@ struct v4l2_rds_data {
 #define V4L2_RDS_BLOCK_INVALID 7
 #define V4L2_RDS_BLOCK_CORRECTED 0x40
 #define V4L2_RDS_BLOCK_ERROR 0x80
+#endif
+
+#ifndef VIDIOC_S_HW_FREQ_SEEK
+struct v4l2_hw_freq_seek {
+ __u32 tuner;
+ __u32 type;
+ __u32 seek_upward;
+ __u32 wrap_around;
+ __u32 spacing;
+ __u32 rangelow;
+ __u32 rangehigh;
+ __u32 reserved[5];
+};
+#define VIDIOC_S_HW_FREQ_SEEK _IOW('V', 82, struct v4l2_hw_freq_seek)
 #endif
 
 namespace mozilla {
@@ -263,7 +277,7 @@ runMsmFMRadio(void *)
     for (unsigned int i = 0; i < buffer.bytesused; i++) {
       switch (buf[i]) {
       case TAVARUA_EVT_RADIO_READY:
-        // The driver sends RADIO_READY both when we turn the radio on and when we turn 
+        // The driver sends RADIO_READY both when we turn the radio on and when we turn
         // the radio off.
         if (sRadioEnabled) {
           NS_DispatchToMainThread(new RadioUpdate(hal::FM_RADIO_OPERATION_ENABLE,
