@@ -16,16 +16,13 @@ const {Tools} = require("devtools/client/definitions");
 const {CssLogic} = require("devtools/shared/inspector/css-logic");
 const {ELEMENT_STYLE} = require("devtools/server/actors/styles");
 const {OutputParser} = require("devtools/client/shared/output-parser");
-const {PrefObserver, PREF_ORIG_SOURCES} =
-      require("devtools/client/styleeditor/utils");
-const {ElementStyle} =
-      require("devtools/client/inspector/rules/models/element-style");
+const {PrefObserver, PREF_ORIG_SOURCES} = require("devtools/client/styleeditor/utils");
+const {ElementStyle} = require("devtools/client/inspector/rules/models/element-style");
 const {Rule} = require("devtools/client/inspector/rules/models/rule");
-const {RuleEditor} =
-      require("devtools/client/inspector/rules/views/rule-editor");
-const {createChild, promiseWarn} =
-      require("devtools/client/inspector/shared/utils");
+const {RuleEditor} = require("devtools/client/inspector/rules/views/rule-editor");
+const {createChild, promiseWarn} = require("devtools/client/inspector/shared/utils");
 const {gDevTools} = require("devtools/client/framework/devtools");
+const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 
 loader.lazyRequireGetter(this, "overlays",
   "devtools/client/inspector/shared/style-inspector-overlays");
@@ -161,7 +158,9 @@ function CssRuleView(inspector, document, store, pageStyle) {
   this.store = store || {};
   this.pageStyle = pageStyle;
 
-  this._outputParser = new OutputParser(document);
+  this.cssProperties = getCssProperties(inspector.toolbox);
+
+  this._outputParser = new OutputParser(document, this.cssProperties.supportsType);
 
   this._onAddRule = this._onAddRule.bind(this);
   this._onContextMenu = this._onContextMenu.bind(this);
