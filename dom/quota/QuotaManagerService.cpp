@@ -24,7 +24,7 @@
 #include "QuotaManager.h"
 #include "QuotaRequests.h"
 
-#define PROFILE_BEFORE_CHANGE_OBSERVER_ID "profile-before-change"
+#define PROFILE_BEFORE_CHANGE2_OBSERVER_ID "profile-before-change2"
 
 namespace mozilla {
 namespace dom {
@@ -295,7 +295,7 @@ QuotaManagerService::Init()
     }
 
     nsresult rv = observerService->AddObserver(this,
-                                               PROFILE_BEFORE_CHANGE_OBSERVER_ID,
+                                               PROFILE_BEFORE_CHANGE2_OBSERVER_ID,
                                                false);
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return rv;
@@ -637,7 +637,7 @@ QuotaManagerService::Observe(nsISupports* aSubject,
   MOZ_ASSERT(XRE_IsParentProcess());
   MOZ_ASSERT(NS_IsMainThread());
 
-  if (!strcmp(aTopic, PROFILE_BEFORE_CHANGE_OBSERVER_ID)) {
+  if (!strcmp(aTopic, PROFILE_BEFORE_CHANGE2_OBSERVER_ID)) {
     RemoveIdleObserver();
     return NS_OK;
   }

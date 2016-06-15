@@ -94,7 +94,7 @@
 #define PREF_TESTING_FEATURES "dom.quotaManager.testing"
 
 // profile-before-change, when we need to shut down quota manager
-#define PROFILE_BEFORE_CHANGE_OBSERVER_ID "profile-before-change"
+#define PROFILE_BEFORE_CHANGE2_OBSERVER_ID "profile-before-change2"
 
 #define KB * 1024ULL
 #define MB * 1024ULL KB
@@ -2263,7 +2263,7 @@ CreateRunnable::RegisterObserver()
   nsCOMPtr<nsIObserver> observer = new ShutdownObserver(mOwningThread);
 
   nsresult rv = observerService->AddObserver(observer,
-                                             PROFILE_BEFORE_CHANGE_OBSERVER_ID,
+                                             PROFILE_BEFORE_CHANGE2_OBSERVER_ID,
                                              false);
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
@@ -2419,7 +2419,7 @@ ShutdownObserver::Observe(nsISupports* aSubject,
                           const char16_t* aData)
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!strcmp(aTopic, PROFILE_BEFORE_CHANGE_OBSERVER_ID));
+  MOZ_ASSERT(!strcmp(aTopic, PROFILE_BEFORE_CHANGE2_OBSERVER_ID));
 
   bool done = false;
 
