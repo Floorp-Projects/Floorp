@@ -7965,7 +7965,7 @@ static Module&
 AsmJSModuleFunctionToModule(JSFunction* fun)
 {
     MOZ_ASSERT(IsAsmJSModule(fun));
-    const Value& v = fun->getExtendedSlot(FunctionExtended::ASMJS_MODULE_SLOT);
+    const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_MODULE_SLOT);
     return v.toObject().as<WasmModuleObject>().module();
 }
 
@@ -8005,7 +8005,7 @@ NewAsmJSModuleFunction(ExclusiveContext* cx, JSFunction* origFun, HandleObject m
     if (!moduleFun)
         return nullptr;
 
-    moduleFun->setExtendedSlot(FunctionExtended::ASMJS_MODULE_SLOT, ObjectValue(*moduleObj));
+    moduleFun->setExtendedSlot(FunctionExtended::WASM_MODULE_SLOT, ObjectValue(*moduleObj));
 
     MOZ_ASSERT(IsAsmJSModule(moduleFun));
     return moduleFun;
