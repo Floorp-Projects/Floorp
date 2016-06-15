@@ -100,6 +100,12 @@ struct ShowInfo
   double defaultScale;
 };
 
+union OptionalShmem
+{
+  void_t;
+  Shmem;
+};
+
 prio(normal upto urgent) sync protocol PBrowser
 {
     manager PContent or PContentBridge;
@@ -548,7 +554,8 @@ parent:
     prio(high) sync DispatchKeyboardEvent(WidgetKeyboardEvent event);
 
     async InvokeDragSession(IPCDataTransfer[] transfers, uint32_t action,
-                            nsCString visualData, uint32_t width, uint32_t height,
+                            OptionalShmem visualData,
+                            uint32_t width, uint32_t height,
                             uint32_t stride, uint8_t format,
                             int32_t dragAreaX, int32_t dragAreaY);
 

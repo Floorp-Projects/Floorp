@@ -228,7 +228,8 @@ class TabChild final : public TabChildBase,
                        public nsITabChild,
                        public nsIObserver,
                        public TabContext,
-                       public nsITooltipListener
+                       public nsITooltipListener,
+                       public mozilla::ipc::IShmemAllocator
 {
   typedef mozilla::dom::ClonedMessageData ClonedMessageData;
   typedef mozilla::layout::RenderFrameChild RenderFrameChild;
@@ -284,6 +285,8 @@ public:
   NS_DECL_NSITABCHILD
   NS_DECL_NSIOBSERVER
   NS_DECL_NSITOOLTIPLISTENER
+
+  FORWARD_SHMEM_ALLOCATOR_TO(PBrowserChild)
 
   /**
    * MessageManagerCallback methods that we override.

@@ -3252,7 +3252,7 @@ TabParent::RecvAsyncAuthPrompt(const nsCString& aUri,
 bool
 TabParent::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
                                  const uint32_t& aAction,
-                                 const nsCString& aVisualDnDData,
+                                 const OptionalShmem& aVisualDnDData,
                                  const uint32_t& aWidth, const uint32_t& aHeight,
                                  const uint32_t& aStride, const uint8_t& aFormat,
                                  const int32_t& aDragAreaX, const int32_t& aDragAreaY)
@@ -3279,20 +3279,25 @@ TabParent::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
     }
   }
 
-  if (aVisualDnDData.IsEmpty() ||
-      (aVisualDnDData.Length() < aHeight * aStride)) {
+  if (aVisualDnDData.type() == OptionalShmem::Tvoid_t ||
+      !aVisualDnDData.get_Shmem().IsReadable() ||
+      aVisualDnDData.get_Shmem().Size<char>() < aHeight * aStride) {
     mDnDVisualization = nullptr;
   } else {
     mDnDVisualization =
         gfx::CreateDataSourceSurfaceFromData(gfx::IntSize(aWidth, aHeight),
                                              static_cast<gfx::SurfaceFormat>(aFormat),
-                                             reinterpret_cast<const uint8_t*>(aVisualDnDData.BeginReading()),
+                                             aVisualDnDData.get_Shmem().get<uint8_t>(),
                                              aStride);
   }
   mDragAreaX = aDragAreaX;
   mDragAreaY = aDragAreaY;
 
   esm->BeginTrackingRemoteDragGesture(mFrameElement);
+
+  if (aVisualDnDData.type() == OptionalShmem::TShmem) {
+    Unused << DeallocShmem(aVisualDnDData);
+  }
 
   return true;
 }
