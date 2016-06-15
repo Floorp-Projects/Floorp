@@ -653,7 +653,8 @@ nsBidi::BracketData::ProcessLRI_RLI(nsBidiLevel aLevel)
 void
 nsBidi::BracketData::ProcessPDI()
 {
-  mIsoRuns[mIsoRunLast].lastBase = O_N;
+  MOZ_ASSERT(mIsoRunLast > 0);
+  mIsoRuns[--mIsoRunLast].lastBase = O_N;
 }
 
 /* newly found opening bracket: create an openings entry */
