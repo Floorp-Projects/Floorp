@@ -59,7 +59,7 @@ class VersionControlCommands(object):
         if sys.platform in ('win32', 'msys'):
             hg = which.which('hg.exe')
         else:
-            hg = which.which(hg)
+            hg = which.which('hg')
 
         if update_only:
             bootstrap.update_vct(hg, self._context.state_dir)
