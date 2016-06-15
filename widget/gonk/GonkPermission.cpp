@@ -14,16 +14,12 @@
  * limitations under the License.
  */
 
-#include "GonkPermission.h"
 #include <binder/IPCThreadState.h>
 #include <binder/ProcessState.h>
 #include <binder/IServiceManager.h>
 #include <binder/IPermissionController.h>
-
-#ifndef HAVE_ANDROID_OS
-#define HAVE_ANDROID_OS 1
-#endif
 #include <private/android_filesystem_config.h>
+#include "GonkPermission.h"
 
 #include "mozilla/dom/ContentParent.h"
 #include "mozilla/dom/TabParent.h"
