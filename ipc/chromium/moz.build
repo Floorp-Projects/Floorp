@@ -135,6 +135,8 @@ if os_linux:
         ]
         DEFINES['ANDROID'] = True
         DEFINES['_POSIX_MONOTONIC_CLOCK'] = 0
+        if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+            DEFINES['HAVE_ANDROID_OS'] = True
 
 if os_bsd or os_linux:
     if 'gtk' in CONFIG['MOZ_WIDGET_TOOLKIT']:
