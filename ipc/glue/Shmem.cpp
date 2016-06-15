@@ -25,7 +25,7 @@ public:
                id_t aIPDLId,
                size_t aSize,
                SharedMemory::SharedMemoryType aType) :
-    IPC::Message(routingId, SHMEM_CREATED_MESSAGE_TYPE, PRIORITY_NORMAL)
+    IPC::Message(routingId, SHMEM_CREATED_MESSAGE_TYPE, PRIORITY_URGENT)
   {
     IPC::WriteParam(this, aIPDLId);
     IPC::WriteParam(this, aSize);

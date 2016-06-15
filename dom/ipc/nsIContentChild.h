@@ -12,6 +12,7 @@
 #include "nsISupports.h"
 #include "nsTArrayForwardDeclare.h"
 #include "mozilla/dom/CPOWManagerGetter.h"
+#include "mozilla/ipc/Shmem.h"
 #include "mozilla/jsipc/CrossProcessObjectWrappers.h"
 
 #define NS_ICONTENTCHILD_IID                                    \
@@ -25,6 +26,9 @@ class Principal;
 } // namespace IPC
 
 namespace mozilla {
+namespace ipc {
+class Shmem;
+} // namespace ipc
 
 namespace jsipc {
 class PJavaScriptChild;
@@ -44,6 +48,7 @@ class PBrowserChild;
 
 class nsIContentChild : public nsISupports
                       , public CPOWManagerGetter
+                      , public mozilla::ipc::IShmemAllocator
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENTCHILD_IID)
@@ -63,6 +68,7 @@ public:
                           const ContentParentId& aCpID,
                           const bool& aIsForApp,
                           const bool& aIsForBrowser) = 0;
+
 protected:
   virtual jsipc::PJavaScriptChild* AllocPJavaScriptChild();
   virtual bool DeallocPJavaScriptChild(jsipc::PJavaScriptChild*);

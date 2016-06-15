@@ -9,6 +9,7 @@
 
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/ipc/IdType.h"
+#include "mozilla/ipc/ProtocolUtils.h"
 
 #include "nsFrameMessageManager.h"
 #include "nsISupports.h"
@@ -46,6 +47,7 @@ class PBrowserParent;
 class nsIContentParent : public nsISupports
                        , public mozilla::dom::ipc::MessageManagerCallback
                        , public CPOWManagerGetter
+                       , public mozilla::ipc::IShmemAllocator
 {
 public:
   NS_DECLARE_STATIC_IID_ACCESSOR(NS_ICONTENTPARENT_IID)

@@ -144,7 +144,7 @@ union BlobConstructorParams
 union IPCDataTransferData
 {
   nsString;  // text
-  nsCString; // images
+  Shmem;     // images using Shmem
   PBlob;     // files
 };
 
