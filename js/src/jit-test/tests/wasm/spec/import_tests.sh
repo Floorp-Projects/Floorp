@@ -8,5 +8,6 @@ rm -rf spec/
 
 for i in $(ls *.wast);
 do
-    echo "var importedArgs = ['$i']; load(scriptdir + '../spec.js');" > $i.js
+    echo "// |jit-test| test-also-wasm-baseline" > $i.js
+    echo "var importedArgs = ['$i']; load(scriptdir + '../spec.js');" >> $i.js
 done;

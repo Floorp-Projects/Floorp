@@ -38,12 +38,16 @@ Components.utils.import("resource://gre/modules/Promise.jsm");
 Components.utils.import("resource://gre/modules/Task.jsm");
 const { OS } = Components.utils.import("resource://gre/modules/osfile.jsm", {});
 Components.utils.import("resource://gre/modules/AsyncShutdown.jsm");
-Components.utils.import("resource://testing-common/MockRegistrar.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Extension",
                                   "resource://gre/modules/Extension.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "HttpServer",
                                   "resource://testing-common/httpd.js");
+XPCOMUtils.defineLazyModuleGetter(this, "MockRegistrar",
+                                  "resource://testing-common/MockRegistrar.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "MockRegistry",
+                                  "resource://testing-common/MockRegistry.jsm");
+
 
 // We need some internal bits of AddonManager
 var AMscope = Components.utils.import("resource://gre/modules/AddonManager.jsm", {});
@@ -1745,104 +1749,6 @@ function promiseInstallAllFiles(aFiles, aIgnoreIncompatible) {
   let deferred = Promise.defer();
   installAllFiles(aFiles, deferred.resolve, aIgnoreIncompatible);
   return deferred.promise;
-}
-
-if ("nsIWindowsRegKey" in AM_Ci) {
-  var MockRegistry = {
-    LOCAL_MACHINE: {},
-    CURRENT_USER: {},
-    CLASSES_ROOT: {},
-
-    getRoot: function(aRoot) {
-      switch (aRoot) {
-      case AM_Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE:
-        return MockRegistry.LOCAL_MACHINE;
-      case AM_Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER:
-        return MockRegistry.CURRENT_USER;
-      case AM_Ci.nsIWindowsRegKey.ROOT_KEY_CLASSES_ROOT:
-        return MockRegistry.CLASSES_ROOT;
-      default:
-        do_throw("Unknown root " + aRoot);
-        return null;
-      }
-    },
-
-    setValue: function(aRoot, aPath, aName, aValue) {
-      let rootKey = MockRegistry.getRoot(aRoot);
-
-      if (!(aPath in rootKey)) {
-        rootKey[aPath] = [];
-      }
-      else {
-        for (let i = 0; i < rootKey[aPath].length; i++) {
-          if (rootKey[aPath][i].name == aName) {
-            if (aValue === null)
-              rootKey[aPath].splice(i, 1);
-            else
-              rootKey[aPath][i].value = aValue;
-            return;
-          }
-        }
-      }
-
-      if (aValue === null)
-        return;
-
-      rootKey[aPath].push({
-        name: aName,
-        value: aValue
-      });
-    }
-  };
-
-  /**
-   * This is a mock nsIWindowsRegistry implementation. It only implements the
-   * methods that the extension manager requires.
-   */
-  var MockWindowsRegKey = function MockWindowsRegKey() {
-  }
-
-  MockWindowsRegKey.prototype = {
-    values: null,
-
-    // --- Overridden nsISupports interface functions ---
-    QueryInterface: XPCOMUtils.generateQI([AM_Ci.nsIWindowsRegKey]),
-
-    // --- Overridden nsIWindowsRegKey interface functions ---
-    open: function(aRootKey, aRelPath, aMode) {
-      let rootKey = MockRegistry.getRoot(aRootKey);
-
-      if (!(aRelPath in rootKey))
-        rootKey[aRelPath] = [];
-      this.values = rootKey[aRelPath];
-    },
-
-    close: function() {
-      this.values = null;
-    },
-
-    get valueCount() {
-      if (!this.values)
-        throw Components.results.NS_ERROR_FAILURE;
-      return this.values.length;
-    },
-
-    getValueName: function(aIndex) {
-      if (!this.values || aIndex >= this.values.length)
-        throw Components.results.NS_ERROR_FAILURE;
-      return this.values[aIndex].name;
-    },
-
-    readStringValue: function(aName) {
-      for (let value of this.values) {
-        if (value.name == aName)
-          return value.value;
-      }
-      return null;
-    }
-  };
-
-  MockRegistrar.register("@mozilla.org/windows-registry-key;1", MockWindowsRegKey);
 }
 
 // Get the profile directory for tests to use.

@@ -8,9 +8,14 @@ task:
       name: '[TC] Linux32 Dbg'
       description: 'Linux32 Dbg'
 
+  routes:
+    - 'coalesce.v1.builds.{{project}}.dbg_linux32'
+
   workerType: dbg-linux32
 
   payload:
+    supersederUrl: 'https://coalesce.mozilla-releng.net/v1/list/builds.{{project}}.dbg_linux32'
+
     env:
       MH_CUSTOM_BUILD_VARIANT_CFG: 'debug'
 

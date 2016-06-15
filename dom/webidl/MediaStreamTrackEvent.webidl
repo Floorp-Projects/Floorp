@@ -8,12 +8,15 @@
  */
 
 dictionary MediaStreamTrackEventInit : EventInit {
-    required MediaStreamTrack track;
+  MediaStreamTrack? track = null;
+  RTCRtpReceiver? receiver = null;
+  MediaStream? stream = null;
 };
 
-[Exposed=Window,
- Constructor (DOMString type, MediaStreamTrackEventInit eventInitDict)]
+[Pref="media.peerconnection.enabled",
+ Constructor(DOMString type, optional MediaStreamTrackEventInit eventInitDict)]
 interface MediaStreamTrackEvent : Event {
-    [SameObject]
-    readonly        attribute MediaStreamTrack track;
+  readonly attribute RTCRtpReceiver? receiver;
+  readonly attribute MediaStreamTrack? track;
+  readonly attribute MediaStream? stream;
 };

@@ -5,6 +5,7 @@
 
 #include "mozilla/dom/HTMLTrackElement.h"
 #include "mozilla/dom/TextTrackCue.h"
+#include "mozilla/dom/TextTrackList.h"
 #include "mozilla/dom/TextTrackRegion.h"
 #include "nsComponentManagerUtils.h"
 #include "mozilla/ClearOnShutdown.h"
@@ -34,7 +35,7 @@ TextTrackCue::SetDefaultCueSettings()
 {
   mPosition = 50;
   mPositionAlign = PositionAlignSetting::Center;
-  mSize = 100;
+  mSize = 100.0;
   mPauseOnExit = false;
   mSnapToLines = true;
   mLineIsAutoKeyword = true;
@@ -167,6 +168,40 @@ TextTrackCue::SetRegion(TextTrackRegion* aRegion)
   }
   mRegion = aRegion;
   mReset = true;
+}
+
+double
+TextTrackCue::ComputedLine()
+{
+  // See spec https://w3c.github.io/webvtt/#cue-computed-line
+  if (!mLineIsAutoKeyword && !mSnapToLines &&
+      (mLine < 0.0 || mLine > 100.0)) {
+    return 100.0;
+  } else if (!mLineIsAutoKeyword) {
+    return mLine;
+  } else if (mLineIsAutoKeyword && !mSnapToLines) {
+    return 100.0;
+  } else if (!mTrack ||
+             !mTrack->GetTextTrackList() ||
+             !mTrack->GetTextTrackList()->GetMediaElement()) {
+    return -1.0;
+  }
+
+  RefPtr<TextTrackList> trackList = mTrack->GetTextTrackList();
+  bool dummy;
+  uint32_t showingTracksNum = 0;
+  for (uint32_t idx = 0; idx < trackList->Length(); idx++) {
+    RefPtr<TextTrack> track = trackList->IndexedGetter(idx, dummy);
+    if (track->Mode() == TextTrackMode::Showing) {
+      showingTracksNum++;
+    }
+
+    if (mTrack == track) {
+      break;
+    }
+  }
+
+  return (-1.0) * showingTracksNum;
 }
 
 PositionAlignSetting

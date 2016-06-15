@@ -1,3 +1,4 @@
+// |jit-test| test-also-wasm-baseline
 load(libdir + "wasm.js");
 
 // sanity check

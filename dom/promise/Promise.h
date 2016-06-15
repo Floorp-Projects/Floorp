@@ -153,6 +153,8 @@ public:
 
   void MaybeRejectWithNull();
 
+  void MaybeRejectWithUndefined();
+
   // DO NOT USE MaybeRejectBrokenly with in new code.  Promises should be
   // rejected with Error instances.
   // Note: MaybeRejectBrokenly is a template so we can use it with DOMError

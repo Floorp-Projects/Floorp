@@ -441,8 +441,8 @@ function checkMediaStreamTrackCloneAgainstOriginal(clone, original) {
 /*** Utility methods */
 
 /** The dreadful setTimeout, use sparingly */
-function wait(time, message) {
-  return new Promise(r => setTimeout(() => r(message), time));
+function wait(time) {
+  return new Promise(r => setTimeout(r, time));
 }
 
 /** The even more dreadful setInterval, use even more sparingly */
@@ -482,8 +482,8 @@ var addFinallyToPromise = promise => {
 /** Use event listener to call passed-in function on fire until it returns true */
 var listenUntil = (target, eventName, onFire) => {
   return new Promise(resolve => target.addEventListener(eventName,
-                                                        function callback(event) {
-    var result = onFire(event);
+                                                        function callback() {
+    var result = onFire();
     if (result) {
       target.removeEventListener(eventName, callback, false);
       resolve(result);
@@ -590,27 +590,6 @@ function createOneShotEventWrapper(wrapper, obj, event) {
   };
 }
 
-/**
- * Returns a promise that resolves when `target` has raised an event with the
- * given name. Cancel the returned promise by passing in a `cancelPromise` and
- * resolve it.
- *
- * @param {object} target
- *        The target on which the event should occur.
- * @param {string} name
- *        The name of the event that should occur.
- * @param {promise} cancelPromise
- *        A promise that on resolving rejects the returned promise,
- *        so we can avoid logging results after a test has finished.
- */
-function haveEvent(target, name, cancelPromise) {
-  var listener;
-  var p = Promise.race([
-    (cancelPromise || new Promise()).then(e => Promise.reject(e)),
-    new Promise(resolve => target.addEventListener(name, listener = resolve))
-  ]);
-  return p.then(event => (target.removeEventListener(name, listener), event));
-};
 
 /**
  * This class executes a series of functions in a continuous sequence.

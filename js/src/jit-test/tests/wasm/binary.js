@@ -1,3 +1,4 @@
+// |jit-test| test-also-wasm-baseline
 load(libdir + "wasm.js");
 
 // MagicNumber = 0x6d736100;

@@ -7,8 +7,6 @@ Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/NetUtil.jsm");
 Cu.import("resource://testing-common/httpd.js");
 
-var ssm = Services.scriptSecurityManager;
-
 var server = new HttpServer();
 server.registerPathHandler('/image.png', imageHandler);
 server.start(-1);
@@ -86,9 +84,7 @@ function loadImage(isPrivate, callback) {
   var loadGroup = Cc["@mozilla.org/network/load-group;1"].createInstance(Ci.nsILoadGroup);
   loadGroup.notificationCallbacks = new NotificationCallbacks(isPrivate);
   var loader = isPrivate ? gPrivateLoader : gPublicLoader;
-  var systemPrincipal = ssm.getSystemPrincipal();
-  requests.push(loader.loadImageXPCOM(uri, null, null, "default",
-                                      systemPrincipal, loadGroup, outer, null, 0, null));
+  requests.push(loader.loadImageXPCOM(uri, null, null, "default", null, loadGroup, outer, null, 0, null));
   listener.synchronous = false;
 }
 
@@ -107,9 +103,6 @@ function run_loadImage_tests() {
       });
     });
   }
-
-  gPrivateLoader.QueryInterface(Ci.imgICache).clearCache(false);
-  gPublicLoader.QueryInterface(Ci.imgICache).clearCache(false);
 
   Services.obs.addObserver(observer, "cacheservice:empty-cache", false);
   let cs = Cc["@mozilla.org/netwerk/cache-storage-service;1"]
