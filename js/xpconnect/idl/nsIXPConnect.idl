@@ -129,6 +129,14 @@ interface nsIXPConnectWrappedJS : nsIXPConnectJSObjectHolder
 
 };
 
+// Special interface to unmark the internal JSObject.
+// QIing to nsIXPConnectWrappedJSUnmarkGray does *not* addref, it only unmarks,
+// and QIing to nsIXPConnectWrappedJSUnmarkGray is always supposed to fail.
+[builtinclass, uuid(c02a0ce6-275f-4ea1-9c23-08494898b070)]
+interface nsIXPConnectWrappedJSUnmarkGray : nsIXPConnectWrappedJS
+{
+};
+
 /***************************************************************************/
 
 /**

@@ -6749,18 +6749,28 @@ DrawImageInternal(gfxContext&            aContext,
 
     IntRect tmpDTRect;
 
-    if (destCtx->CurrentOp() != CompositionOp::OP_OVER) {
+    if (destCtx->CurrentOp() == CompositionOp::OP_OVER) {
+      destCtx->SetMatrix(params.imageSpaceToDeviceSpace);
+    } else {
+      // We need a temporary DrawTarget to composite correctly
       Rect imageRect = ToRect(params.imageSpaceToDeviceSpace.TransformBounds(params.region.Rect()));
       imageRect.ToIntRect(&tmpDTRect);
 
-      RefPtr<DrawTarget> tempDT = destCtx->GetDrawTarget()->CreateSimilarDrawTarget(tmpDTRect.Size(), SurfaceFormat::B8G8R8A8);
-      destCtx = gfxContext::CreateOrNull(tempDT, imageRect.TopLeft());
+      RefPtr<DrawTarget> tempDT =
+        destCtx->GetDrawTarget()->CreateSimilarDrawTarget(tmpDTRect.Size(),
+                                                          SurfaceFormat::B8G8R8A8);
+      if (!tempDT || !tempDT->IsValid()) {
+        gfxDevCrash(LogReason::InvalidContext) << "NonOP_OVER context problem " << gfx::hexa(tempDT);
+        return DrawResult::TEMPORARY_ERROR;
+      }
+      tempDT->SetTransform(ToMatrix(params.imageSpaceToDeviceSpace).
+                             PostTranslate(-tmpDTRect.TopLeft()));
+      destCtx = gfxContext::CreatePreservingTransformOrNull(tempDT);
       if (!destCtx) {
         gfxDevCrash(LogReason::InvalidContext) << "NonOP_OVER context problem " << gfx::hexa(tempDT);
         return result;
       }
     }
-    destCtx->SetMatrix(params.imageSpaceToDeviceSpace);
 
     Maybe<SVGImageContext> svgContext = ToMaybe(aSVGContext);
     if (!svgContext) {
@@ -6773,6 +6783,7 @@ DrawImageInternal(gfxContext&            aContext,
                           svgContext, aImageFlags);
 
     if (!tmpDTRect.IsEmpty()) {
+      // Snapshot the temporary DrawTarget and composite the result
       DrawTarget* dt = aContext.GetDrawTarget();
       RefPtr<SourceSurface> surf = destCtx->GetDrawTarget()->Snapshot();
 

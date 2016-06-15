@@ -43,7 +43,9 @@ add_task(function* test_default_paths() {
     }
 
     default:
-      ok(false, `This test should be skipped on ${AppConstants.platform}`);
+      // Fixed filesystem paths are only defined for MacOS and Linux,
+      // there's nothing to test on other platforms.
+      ok(false, `This test does not apply on ${AppConstants.platform}`);
       break;
   }
 

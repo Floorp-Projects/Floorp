@@ -32,6 +32,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "clearTimeout",
                                   "resource://gre/modules/Timer.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "setTimeout",
                                   "resource://gre/modules/Timer.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "WindowsRegistry",
+                                  "resource://gre/modules/WindowsRegistry.jsm");
 
 const HOST_MANIFEST_SCHEMA = "chrome://extensions/content/schemas/native_host_manifest.json";
 const VALID_APPLICATION = /^\w+(\.\w+)*$/;
@@ -56,6 +58,8 @@ const MAX_WRITE = 0xffffffff;
 const PREF_MAX_READ = "webextensions.native-messaging.max-input-message-bytes";
 const PREF_MAX_WRITE = "webextensions.native-messaging.max-output-message-bytes";
 
+const REGPATH = "Software\\Mozilla\\NativeMessagingHosts";
+
 this.HostManifestManager = {
   _initializePromise: null,
   _lookup: null,
@@ -64,7 +68,7 @@ this.HostManifestManager = {
     if (!this._initializePromise) {
       let platform = AppConstants.platform;
       if (platform == "win") {
-        throw new Error("Windows not yet implemented (bug 1270359)");
+        this._lookup = this._winLookup;
       } else if (platform == "macosx" || platform == "linux") {
         let dirs = [
           Services.dirsvc.get("XREUserNativeMessaging", Ci.nsIFile).path,
@@ -77,6 +81,20 @@ this.HostManifestManager = {
       this._initializePromise = Schemas.load(HOST_MANIFEST_SCHEMA);
     }
     return this._initializePromise;
+  },
+
+  _winLookup(application, context) {
+    let path = WindowsRegistry.readRegKey(Ci.nsIWindowsRegKey.ROOT_KEY_CURRENT_USER,
+                                          REGPATH, application);
+    if (!path) {
+      path = WindowsRegistry.readRegKey(Ci.nsIWindowsRegKey.ROOT_KEY_LOCAL_MACHINE,
+                                        REGPATH, application);
+    }
+    if (!path) {
+      return null;
+    }
+    return this._tryPath(path, application, context)
+      .then(manifest => manifest ? {path, manifest} : null);
   },
 
   _tryPath(path, application, context) {
@@ -185,7 +203,7 @@ this.NativeApp = class extends EventEmitter {
         this._startWrite();
       }).catch(err => {
         this.startupPromise = null;
-        Cu.reportError(err);
+        Cu.reportError(err.message);
         this._cleanup(err);
       });
   }
@@ -213,7 +231,7 @@ this.NativeApp = class extends EventEmitter {
         this.readPromise = null;
         this._startRead();
       }).catch(err => {
-        Cu.reportError(err);
+        Cu.reportError(err.message);
         this._cleanup(err);
       });
   }
@@ -237,7 +255,7 @@ this.NativeApp = class extends EventEmitter {
       this.writePromise = null;
       this._startWrite();
     }).catch(err => {
-      Cu.reportError(err);
+      Cu.reportError(err.message);
       this._cleanup(err);
     });
   }

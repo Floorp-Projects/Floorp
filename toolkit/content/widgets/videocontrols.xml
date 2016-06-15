@@ -1377,6 +1377,7 @@
         </constructor>
         <destructor>
             <![CDATA[
+            this.Utils.terminateEventListeners();
             // randomID used to be a <field>, which meant that the XBL machinery
             // undefined the property when the element was unbound. The code in
             // this file actually depends on this, so now that randomID is an
@@ -1765,6 +1766,7 @@
       </constructor>
       <destructor>
           <![CDATA[
+          this.Utils.terminateEventListeners();
           // randomID used to be a <field>, which meant that the XBL machinery
           // undefined the property when the element was unbound. The code in
           // this file actually depends on this, so now that randomID is an

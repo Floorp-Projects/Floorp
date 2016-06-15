@@ -212,7 +212,5 @@ partial interface HTMLMediaElement {
  */
 partial interface HTMLMediaElement {
   [Throws, Pref="media.seekToNextFrame.enabled"]
-  void seekToNextFrame(); // This API should be an asynchronous one which
-                          // returns a Promise<void>. Bug 1276272 follows this
-                          // issue.
+  Promise<void> seekToNextFrame();
 };

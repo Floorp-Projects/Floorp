@@ -1247,7 +1247,7 @@ NS_IMETHODIMP
 HttpChannelParent::Delete()
 {
   if (!mIPCClosed)
-    Unused << SendDeleteSelf();
+    Unused << DoSendDeleteSelf();
 
   return NS_OK;
 }
@@ -1417,7 +1417,7 @@ HttpChannelParent::ResumeForDiversion()
     mSuspendedForDiversion = false;
   }
 
-  if (NS_WARN_IF(mIPCClosed || !SendDeleteSelf())) {
+  if (NS_WARN_IF(mIPCClosed || !DoSendDeleteSelf())) {
     FailDiversion(NS_ERROR_UNEXPECTED);
     return NS_ERROR_UNEXPECTED;
   }
@@ -1591,7 +1591,7 @@ HttpChannelParent::NotifyDiversionFailed(nsresult aErrorCode,
   mChannel = nullptr;
 
   if (!mIPCClosed) {
-    Unused << SendDeleteSelf();
+    Unused << DoSendDeleteSelf();
   }
 }
 
@@ -1636,6 +1636,14 @@ HttpChannelParent::UpdateAndSerializeSecurityInfo(nsACString& aSerializedSecurit
       NS_SerializeToString(secInfoSer, aSerializedSecurityInfoOut);
     }
   }
+}
+
+bool
+HttpChannelParent::DoSendDeleteSelf()
+{
+  bool rv = SendDeleteSelf();
+  mIPCClosed = true;
+  return rv;
 }
 
 //-----------------------------------------------------------------------------

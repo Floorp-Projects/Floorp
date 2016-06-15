@@ -24,9 +24,6 @@ public:
 
   void SetTrackEnabledImpl(TrackID aTrackID, bool aEnabled) override;
 
-  MediaStream* GetInputStreamFor(TrackID aTrackID) override;
-  TrackID GetInputTrackIDFor(TrackID aTrackID) override;
-
 protected:
   // Only non-ended tracks are allowed to persist in this map.
   struct TrackMapEntry {
