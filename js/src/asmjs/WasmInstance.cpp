@@ -376,15 +376,15 @@ NewExportedFunction(JSContext* cx, Handle<WasmInstanceObject*> instanceObj, uint
     if (!fun)
         return nullptr;
 
-    fun->setExtendedSlot(FunctionExtended::WASM_MODULE_SLOT, ObjectValue(*instanceObj));
+    fun->setExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT, ObjectValue(*instanceObj));
     fun->setExtendedSlot(FunctionExtended::WASM_EXPORT_INDEX_SLOT, Int32Value(exportIndex));
     return fun;
 }
 
 static bool
 CreateExportObject(JSContext* cx,
-                   Handle<WasmInstanceObject*> instanceObj,
-                   Handle<ArrayBufferObjectMaybeShared*> heap,
+                   HandleWasmInstanceObject instanceObj,
+                   HandleArrayBufferObjectMaybeShared heap,
                    const ExportMap& exportMap,
                    const ExportVector& exports,
                    MutableHandleObject exportObj)
@@ -887,7 +887,7 @@ Instance&
 wasm::ExportedFunctionToInstance(JSFunction* fun)
 {
     MOZ_ASSERT(IsExportedFunction(fun));
-    const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_MODULE_SLOT);
+    const Value& v = fun->getExtendedSlot(FunctionExtended::WASM_INSTANCE_SLOT);
     return v.toObject().as<WasmInstanceObject>().instance();
 }
 

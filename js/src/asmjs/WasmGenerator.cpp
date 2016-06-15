@@ -18,6 +18,7 @@
 
 #include "asmjs/WasmGenerator.h"
 
+#include "mozilla/CheckedInt.h"
 #include "mozilla/EnumeratedRange.h"
 
 #include "asmjs/WasmBaselineCompile.h"
@@ -543,14 +544,19 @@ ModuleGenerator::addImport(const Sig& sig, uint32_t globalDataOffset)
 bool
 ModuleGenerator::allocateGlobalBytes(uint32_t bytes, uint32_t align, uint32_t* globalDataOffset)
 {
-    uint32_t pad = ComputeByteAlignment(linkData_.globalDataLength, align);
-    if (UINT32_MAX - linkData_.globalDataLength < pad + bytes)
+    CheckedInt<uint32_t> newGlobalDataLength(linkData_.globalDataLength);
+
+    newGlobalDataLength += ComputeByteAlignment(newGlobalDataLength.value(), align);
+    if (!newGlobalDataLength.isValid())
         return false;
 
-    linkData_.globalDataLength += pad;
-    *globalDataOffset = linkData_.globalDataLength;
-    linkData_.globalDataLength += bytes;
+    *globalDataOffset = newGlobalDataLength.value();
+    newGlobalDataLength += bytes;
 
+    if (!newGlobalDataLength.isValid())
+        return false;
+
+    linkData_.globalDataLength = newGlobalDataLength.value();
     return true;
 }
 

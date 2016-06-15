@@ -121,7 +121,7 @@ const ClassOps WasmModuleObject::classOps_ =
 const Class WasmModuleObject::class_ =
 {
     "WasmModuleObject",
-    JSCLASS_IS_ANONYMOUS | JSCLASS_DELAY_METADATA_BUILDER |
+    JSCLASS_DELAY_METADATA_BUILDER |
     JSCLASS_HAS_RESERVED_SLOTS(WasmModuleObject::RESERVED_SLOTS),
     &WasmModuleObject::classOps_,
 };
@@ -136,7 +136,7 @@ WasmModuleObject::finalize(FreeOp* fop, JSObject* obj)
 WasmModuleObject::create(ExclusiveContext* cx, UniqueModule module)
 {
     AutoSetNewObjectMetadata metadata(cx);
-    auto obj = NewObjectWithGivenProto<WasmModuleObject>(cx, nullptr);
+    auto* obj = NewObjectWithGivenProto<WasmModuleObject>(cx, nullptr);
     if (!obj)
         return nullptr;
 
@@ -170,7 +170,7 @@ const ClassOps WasmInstanceObject::classOps_ =
 const Class WasmInstanceObject::class_ =
 {
     "WasmInstanceObject",
-    JSCLASS_IS_ANONYMOUS | JSCLASS_DELAY_METADATA_BUILDER |
+    JSCLASS_DELAY_METADATA_BUILDER |
     JSCLASS_HAS_RESERVED_SLOTS(WasmInstanceObject::RESERVED_SLOTS),
     &WasmInstanceObject::classOps_,
 };
