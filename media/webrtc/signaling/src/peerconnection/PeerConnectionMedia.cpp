@@ -205,8 +205,8 @@ OnProxyAvailable(nsICancelable *request,
                  nsIProxyInfo *proxyinfo,
                  nsresult result) {
 
-  if (result == NS_ERROR_ABORT) {
-    // NS_ERROR_ABORT means that the PeerConnectionMedia is no longer waiting
+  if (!pcm_->mProxyRequest) {
+    // PeerConnectionMedia is no longer waiting
     return NS_OK;
   }
 
@@ -217,6 +217,7 @@ OnProxyAvailable(nsICancelable *request,
   }
 
   pcm_->mProxyResolveCompleted = true;
+  pcm_->mProxyRequest = nullptr;
   pcm_->FlushIceCtxOperationQueueIfReady();
 
   return NS_OK;
@@ -995,6 +996,7 @@ PeerConnectionMedia::SelfDestruct()
 
   if (mProxyRequest) {
     mProxyRequest->Cancel(NS_ERROR_ABORT);
+    mProxyRequest = nullptr;
   }
 
   // Shutdown the transport (async)
