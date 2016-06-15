@@ -128,6 +128,8 @@ if CONFIG['MOZ_B2G_RIL']:
 
 include('/ipc/chromium/chromium-config.mozbuild')
 
+DEFINES['HAVE_ANDROID_OS'] = True
+
 LOCAL_INCLUDES += [
     '/dom/base',
     '/dom/bluetooth/common',
