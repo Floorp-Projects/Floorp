@@ -46,6 +46,8 @@ public:
                           const bool& aIsForApp,
                           const bool& aIsForBrowser) override;
 
+  FORWARD_SHMEM_ALLOCATOR_TO(PContentBridgeParent)
+
   jsipc::CPOWManager* GetCPOWManager() override;
 
   virtual ContentParentId ChildID() const override
