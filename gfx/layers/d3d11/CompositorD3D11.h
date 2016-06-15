@@ -48,7 +48,6 @@ public:
   virtual CompositorD3D11* AsCompositorD3D11() override { return this; }
 
   virtual bool Initialize() override;
-  virtual void Destroy() override {}
 
   virtual TextureFactoryIdentifier
     GetTextureFactoryIdentifier() override;

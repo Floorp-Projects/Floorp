@@ -54,6 +54,8 @@ public:
    */
   void WaitComplete();
 
+  uint32_t GetWaitCount() { return mWaitCount; }
+
 private:
   ~AsyncTransactionWaiter() {}
 
@@ -106,14 +108,6 @@ public:
 protected:
   virtual ~AsyncTransactionTracker();
 
-  static void Initialize()
-  {
-  }
-
-  static void Finalize()
-  {
-  }
-
   static uint64_t GetNextSerial()
   {
     return ++sSerialCounter;
@@ -125,10 +119,6 @@ protected:
   bool mCompleted;
 #endif
 
-  /**
-   * gecko does not provide atomic operation for uint64_t.
-   * Ensure atomicity by using Mutex.
-   */
   static Atomic<uint64_t> sSerialCounter;
 };
 
@@ -137,23 +127,6 @@ class AsyncTransactionTrackersHolder
 public:
   AsyncTransactionTrackersHolder();
   virtual ~AsyncTransactionTrackersHolder();
-
-  static void Initialize()
-  {
-    if (!sHolderLock) {
-      sHolderLock = new Mutex("AsyncTransactionTrackersHolder::sHolderLock");
-    }
-    AsyncTransactionTracker::Initialize();
-  }
-
-  static void Finalize()
-  {
-    if (sHolderLock) {
-      delete sHolderLock;
-      sHolderLock = nullptr;
-    }
-    AsyncTransactionTracker::Finalize();
-  }
 
   void HoldUntilComplete(AsyncTransactionTracker* aTransactionTracker);
 
@@ -170,6 +143,8 @@ public:
     return mSerial;
   }
 
+  void DestroyAsyncTransactionTrackersHolder();
+
 protected:
 
   static uint64_t GetNextSerial()
@@ -183,24 +158,12 @@ protected:
 
   void ClearAllAsyncTransactionTrackers();
 
-  void DestroyAsyncTransactionTrackersHolder();
-
-  uint64_t mSerial;
+  const uint64_t mSerial;
 
   bool mIsTrackersHolderDestroyed;
   std::map<uint64_t, RefPtr<AsyncTransactionTracker> > mAsyncTransactionTrackers;
 
-  /**
-   * gecko does not provide atomic operation for uint64_t.
-   * Ensure atomicity by using Mutex.
-   */
   static Atomic<uint64_t> sSerialCounter;
-  static Mutex* sHolderLock;
-
-  /**
-   * Map of all living AsyncTransactionTrackersHolder instances
-   */
-  static std::map<uint64_t, AsyncTransactionTrackersHolder*> sTrackersHolders;
 };
 
 } // namespace layers

@@ -195,6 +195,9 @@ ImageBridgeChild::UseTextures(CompositableClient* aCompositable,
                                         fence.IsValid() ? MaybeFence(fence) : MaybeFence(null_t()),
                                         t.mTimeStamp, t.mPictureRect,
                                         t.mFrameID, t.mProducerID, t.mInputFrameID));
+
+    // Wait end of usage on host side if TextureFlags::RECYCLE is set or GrallocTextureData case
+    HoldUntilCompositableRefReleasedIfNecessary(t.mTextureClient);
   }
   mTxn->AddNoSwapEdit(CompositableOperation(nullptr, aCompositable->GetIPDLActor(),
                                             OpUseTexture(textures)));
@@ -217,6 +220,9 @@ ImageBridgeChild::UseComponentAlphaTextures(CompositableClient* aCompositable,
   ReadLockDescriptor readLockB;
   aTextureOnBlack->SerializeReadLock(readLockB);
   aTextureOnWhite->SerializeReadLock(readLockW);
+
+  HoldUntilCompositableRefReleasedIfNecessary(aTextureOnBlack);
+  HoldUntilCompositableRefReleasedIfNecessary(aTextureOnWhite);
 
   mTxn->AddNoSwapEdit(
     CompositableOperation(
@@ -248,6 +254,127 @@ ImageBridgeChild::UseOverlaySource(CompositableClient* aCompositable,
   mTxn->AddEdit(op);
 }
 #endif
+
+void
+ImageBridgeChild::HoldUntilCompositableRefReleasedIfNecessary(TextureClient* aClient)
+{
+  // Wait ReleaseCompositableRef only when TextureFlags::RECYCLE is set on ImageBridge.
+  if (!aClient ||
+      !(aClient->GetFlags() & TextureFlags::RECYCLE)) {
+    return;
+  }
+  aClient->SetLastFwdTransactionId(GetFwdTransactionId());
+  mTexturesWaitingRecycled.Put(aClient->GetSerial(), aClient);
+}
+
+void
+ImageBridgeChild::NotifyNotUsed(uint64_t aTextureId, uint64_t aFwdTransactionId)
+{
+  RefPtr<TextureClient> client = mTexturesWaitingRecycled.Get(aTextureId);
+  if (!client) {
+    return;
+  }
+  if (aFwdTransactionId < client->GetLastFwdTransactionId()) {
+    // Released on host side, but client already requested newer use texture.
+    return;
+  }
+  mTexturesWaitingRecycled.Remove(aTextureId);
+}
+
+void
+ImageBridgeChild::DeliverFence(uint64_t aTextureId, FenceHandle& aReleaseFenceHandle)
+{
+  RefPtr<TextureClient> client = mTexturesWaitingRecycled.Get(aTextureId);
+  if (!client) {
+    return;
+  }
+  client->SetReleaseFenceHandle(aReleaseFenceHandle);
+}
+
+void
+ImageBridgeChild::HoldUntilFenceHandleDelivery(TextureClient* aClient, uint64_t aTransactionId)
+{
+  MOZ_ASSERT(NS_IsMainThread());
+#ifdef MOZ_WIDGET_GONK
+  if (!aClient) {
+    return;
+  }
+  MutexAutoLock lock(mWaitingFenceHandleMutex);
+  aClient->SetLastFwdTransactionId(aTransactionId);
+  aClient->WaitFenceHandleOnImageBridge(mWaitingFenceHandleMutex);
+  mTexturesWaitingFenceHandle.Put(aClient->GetSerial(), aClient);
+#else
+  NS_RUNTIMEABORT("not reached");
+#endif
+}
+
+void
+ImageBridgeChild::DeliverFenceToNonRecycle(uint64_t aTextureId, FenceHandle& aReleaseFenceHandle)
+{
+#ifdef MOZ_WIDGET_GONK
+  MutexAutoLock lock(mWaitingFenceHandleMutex);
+  TextureClient* client = mTexturesWaitingFenceHandle.Get(aTextureId).get();
+  if (!client) {
+    return;
+  }
+  MOZ_ASSERT(aTextureId == client->GetSerial());
+  client->SetReleaseFenceHandle(aReleaseFenceHandle);
+#else
+  NS_RUNTIMEABORT("not reached");
+#endif
+}
+
+void
+ImageBridgeChild::NotifyNotUsedToNonRecycle(uint64_t aTextureId, uint64_t aTransactionId)
+{
+#ifdef MOZ_WIDGET_GONK
+  MutexAutoLock lock(mWaitingFenceHandleMutex);
+
+  RefPtr<TextureClient> client = mTexturesWaitingFenceHandle.Get(aTextureId);
+  if (!client) {
+    return;
+  }
+  if (aTransactionId < client->GetLastFwdTransactionId()) {
+    return;
+  }
+
+  MOZ_ASSERT(aTextureId == client->GetSerial());
+  client->ClearWaitFenceHandleOnImageBridge(mWaitingFenceHandleMutex);
+  mTexturesWaitingFenceHandle.Remove(aTextureId);
+
+  // Release TextureClient on allocator's message loop.
+  TextureClientReleaseTask* task = new TextureClientReleaseTask(client);
+  RefPtr<ClientIPCAllocator> allocator = client->GetAllocator();
+  client = nullptr;
+  allocator->AsClientAllocator()->GetMessageLoop()->PostTask(FROM_HERE, task);
+#else
+  NS_RUNTIMEABORT("not reached");
+#endif
+}
+
+void
+ImageBridgeChild::CancelWaitFenceHandle(TextureClient* aClient)
+{
+#ifdef MOZ_WIDGET_GONK
+  MutexAutoLock lock(mWaitingFenceHandleMutex);
+  aClient->ClearWaitFenceHandleOnImageBridge(mWaitingFenceHandleMutex);
+  mTexturesWaitingFenceHandle.Remove(aClient->GetSerial());
+#else
+  NS_RUNTIMEABORT("not reached");
+#endif
+}
+
+void
+ImageBridgeChild::CancelWaitForRecycle(uint64_t aTextureId)
+{
+  MOZ_ASSERT(InImageBridgeChildThread());
+
+  RefPtr<TextureClient> client = mTexturesWaitingRecycled.Get(aTextureId);
+  if (!client) {
+    return;
+  }
+  mTexturesWaitingRecycled.Remove(aTextureId);
+}
 
 // Singleton
 static StaticRefPtr<ImageBridgeChild> sImageBridgeChildSingleton;
@@ -355,6 +482,10 @@ static void ConnectImageBridge(ImageBridgeChild * child, ImageBridgeParent * par
 
 ImageBridgeChild::ImageBridgeChild()
   : mShuttingDown(false)
+  , mFwdTransactionId(0)
+#ifdef MOZ_WIDGET_GONK
+  , mWaitingFenceHandleMutex("ImageBridgeChild::mWaitingFenceHandleMutex")
+#endif
 {
   MOZ_ASSERT(NS_IsMainThread());
 
@@ -378,6 +509,9 @@ void
 ImageBridgeChild::MarkShutDown()
 {
   MOZ_ASSERT(!mShuttingDown);
+  mTexturesWaitingRecycled.Clear();
+  mTrackersHolder.DestroyAsyncTransactionTrackersHolder();
+
   mShuttingDown = true;
 }
 
@@ -720,6 +854,7 @@ ImageBridgeChild::BeginTransaction()
 {
   MOZ_ASSERT(!mShuttingDown);
   MOZ_ASSERT(mTxn->Finished(), "uncommitted txn?");
+  UpdateFwdTransactionId();
   mTxn->Begin();
 }
 
@@ -748,7 +883,7 @@ ImageBridgeChild::EndTransaction()
   AutoTArray<EditReply, 10> replies;
 
   if (mTxn->mSwapRequired) {
-    if (!SendUpdate(cset, mTxn->mDestroyedActors, &replies)) {
+    if (!SendUpdate(cset, mTxn->mDestroyedActors, GetFwdTransactionId(), &replies)) {
       NS_WARNING("could not send async texture transaction");
       mTxn->FallbackDestroyActors();
       return;
@@ -756,7 +891,7 @@ ImageBridgeChild::EndTransaction()
   } else {
     // If we don't require a swap we can call SendUpdateNoSwap which
     // assumes that aReplies is empty (DEBUG assertion)
-    if (!SendUpdateNoSwap(cset, mTxn->mDestroyedActors)) {
+    if (!SendUpdateNoSwap(cset, mTxn->mDestroyedActors, GetFwdTransactionId())) {
       NS_WARNING("could not send async texture transaction (no swap)");
       mTxn->FallbackDestroyActors();
       return;
@@ -765,7 +900,6 @@ ImageBridgeChild::EndTransaction()
   for (nsTArray<EditReply>::size_type i = 0; i < replies.Length(); ++i) {
     NS_RUNTIMEABORT("not reached");
   }
-  SendPendingAsyncMessges();
 }
 
 void
@@ -1093,7 +1227,8 @@ ImageBridgeChild::DeallocShmem(ipc::Shmem& aShmem)
 PTextureChild*
 ImageBridgeChild::AllocPTextureChild(const SurfaceDescriptor&,
                                      const LayersBackend&,
-                                     const TextureFlags&)
+                                     const TextureFlags&,
+                                     const uint64_t& aSerial)
 {
   MOZ_ASSERT(!mShuttingDown);
   return TextureClient::CreateIPDLActor();
@@ -1145,28 +1280,40 @@ ImageBridgeChild::RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageDat
       case AsyncParentMessageData::TOpDeliverFence: {
         const OpDeliverFence& op = message.get_OpDeliverFence();
         FenceHandle fence = op.fence();
-        PTextureChild* child = op.textureChild();
-
-        RefPtr<TextureClient> texture = TextureClient::AsTextureClient(child);
-        if (texture) {
-          texture->SetReleaseFenceHandle(fence);
-        }
+        DeliverFence(op.TextureId(), fence);
         break;
       }
-      case AsyncParentMessageData::TOpDeliverFenceToTracker: {
-        const OpDeliverFenceToTracker& op = message.get_OpDeliverFenceToTracker();
-        FenceHandle fence = op.fence();
+      case AsyncParentMessageData::TOpDeliverFenceToNonRecycle: {
+        // Notify ReleaseCompositableRef to a TextureClient that belongs to
+        // LayerTransactionChild. It is used only on gonk to deliver fence to
+        // a TextureClient that does not have TextureFlags::RECYCLE.
+        // In this case, LayerTransactionChild's ipc could not be used to deliver fence.
 
-        AsyncTransactionTrackersHolder::SetReleaseFenceHandle(fence,
-                                                              op.destHolderId(),
-                                                              op.destTransactionId());
+        const OpDeliverFenceToNonRecycle& op = message.get_OpDeliverFenceToNonRecycle();
+        FenceHandle fence = op.fence();
+        DeliverFenceToNonRecycle(op.TextureId(), fence);
+        break;
+      }
+      case AsyncParentMessageData::TOpNotifyNotUsed: {
+        const OpNotifyNotUsed& op = message.get_OpNotifyNotUsed();
+        NotifyNotUsed(op.TextureId(), op.fwdTransactionId());
+        break;
+      }
+      case AsyncParentMessageData::TOpNotifyNotUsedToNonRecycle: {
+        // Notify ReleaseCompositableRef to a TextureClient that belongs to
+        // LayerTransactionChild. It is used only on gonk to deliver fence to
+        // a TextureClient that does not have TextureFlags::RECYCLE.
+        // In this case, LayerTransactionChild's ipc could not be used to deliver fence.
+
+        const OpNotifyNotUsedToNonRecycle& op = message.get_OpNotifyNotUsedToNonRecycle();
+        NotifyNotUsedToNonRecycle(op.TextureId(), op.fwdTransactionId());
         break;
       }
       case AsyncParentMessageData::TOpReplyRemoveTexture: {
         const OpReplyRemoveTexture& op = message.get_OpReplyRemoveTexture();
 
-        AsyncTransactionTrackersHolder::TransactionCompleteted(op.holderId(),
-                                                               op.transactionId());
+        MOZ_ASSERT(mTrackersHolder.GetId() == op.holderId());
+        mTrackersHolder.TransactionCompleteted(op.transactionId());
         break;
       }
       default:
@@ -1189,10 +1336,11 @@ ImageBridgeChild::RecvDidComposite(InfallibleTArray<ImageCompositeNotification>&
 PTextureChild*
 ImageBridgeChild::CreateTexture(const SurfaceDescriptor& aSharedData,
                                 LayersBackend aLayersBackend,
-                                TextureFlags aFlags)
+                                TextureFlags aFlags,
+                                uint64_t aSerial)
 {
   MOZ_ASSERT(!mShuttingDown);
-  return SendPTextureConstructor(aSharedData, aLayersBackend, aFlags);
+  return SendPTextureConstructor(aSharedData, aLayersBackend, aFlags, aSerial);
 }
 
 static bool
@@ -1263,24 +1411,19 @@ ImageBridgeChild::RemoveTextureFromCompositableAsync(AsyncTransactionTracker* aA
   CompositableOperation op(
     nullptr, aCompositable->GetIPDLActor(),
     OpRemoveTextureAsync(
-      CompositableClient::GetTrackersHolderId(aCompositable->GetIPDLActor()),
+      mTrackersHolder.GetId(),
       aAsyncTransactionTracker->GetId(),
       nullptr, aCompositable->GetIPDLActor(),
       nullptr, aTexture->GetIPDLActor()));
 
   mTxn->AddNoSwapEdit(op);
   // Hold AsyncTransactionTracker until receving reply
-  CompositableClient::HoldUntilComplete(aCompositable->GetIPDLActor(),
-                                        aAsyncTransactionTracker);
+  mTrackersHolder.HoldUntilComplete(aAsyncTransactionTracker);
 }
 
 bool ImageBridgeChild::IsSameProcess() const
 {
   return OtherPid() == base::GetCurrentProcId();
-}
-
-void ImageBridgeChild::SendPendingAsyncMessges()
-{
 }
 
 } // namespace layers

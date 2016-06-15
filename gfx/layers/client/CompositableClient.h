@@ -226,12 +226,6 @@ public:
 
   void InitIPDLActor(PCompositableChild* aActor, uint64_t aAsyncID = 0);
 
-  static void TransactionCompleteted(PCompositableChild* aActor, uint64_t aTransactionId);
-
-  static void HoldUntilComplete(PCompositableChild* aActor, AsyncTransactionTracker* aTracker);
-
-  static uint64_t GetTrackersHolderId(PCompositableChild* aActor);
-
   TextureFlags GetTextureFlags() const { return mTextureFlags; }
 
   TextureClientRecycleAllocator* GetTextureClientRecycler();

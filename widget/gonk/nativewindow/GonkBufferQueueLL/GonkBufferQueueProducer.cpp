@@ -352,7 +352,7 @@ status_t GonkBufferQueueProducer::dequeueBuffer(int *outSlot,
             return -ENOMEM;
         }
         RefPtr<TextureClient> textureClient = TextureClient::CreateWithData(
-            texData, TextureFlags::DEALLOCATE_CLIENT, allocator);
+            texData, TextureFlags::RECYCLE | TextureFlags::DEALLOCATE_CLIENT, allocator);
 
         sp<GraphicBuffer> graphicBuffer = texData->GetGraphicBuffer();
 

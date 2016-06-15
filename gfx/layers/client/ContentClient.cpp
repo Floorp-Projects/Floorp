@@ -445,14 +445,6 @@ ContentClientDoubleBuffered::Updated(const nsIntRegion& aRegionToDraw,
                                      bool aDidSelfCopy)
 {
   ContentClientRemoteBuffer::Updated(aRegionToDraw, aVisibleRegion, aDidSelfCopy);
-
-  if (mFrontClient) {
-    mFrontClient->RemoveFromCompositable(this);
-  }
-
-  if (mFrontClientOnWhite) {
-    mFrontClientOnWhite->RemoveFromCompositable(this);
-  }
 }
 
 void

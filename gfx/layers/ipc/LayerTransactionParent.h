@@ -42,7 +42,6 @@ class LayerTransactionParent final : public PLayerTransactionParent,
   typedef InfallibleTArray<Edit> EditArray;
   typedef InfallibleTArray<OpDestroy> OpDestroyArray;
   typedef InfallibleTArray<EditReply> EditReplyArray;
-  typedef InfallibleTArray<AsyncChildMessageData> AsyncChildMessageArray;
   typedef InfallibleTArray<PluginWindowData> PluginsArray;
 
 public:
@@ -79,16 +78,18 @@ public:
   void SetPendingTransactionId(uint64_t aId) { mPendingTransaction = aId; }
 
   // CompositableParentManager
-  virtual void SendFenceHandleIfPresent(PTextureParent* aTexture) override;
-
   virtual void SendAsyncMessage(const InfallibleTArray<AsyncParentMessageData>& aMessage) override;
+
+  virtual void SendPendingAsyncMessages() override;
+
+  virtual void SetAboutToSendAsyncMessages() override;
+
+  virtual void NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransactionId) override;
 
   virtual base::ProcessId GetChildProcessId() override
   {
     return OtherPid();
   }
-
-  virtual void ReplyRemoveTexture(const OpReplyRemoveTexture& aReply) override;
 
   void AddPendingCompositorUpdate() {
     mPendingCompositorUpdates++;
@@ -110,6 +111,7 @@ protected:
 
   virtual bool RecvUpdate(EditArray&& cset,
                           OpDestroyArray&& aToDestroy,
+                          const uint64_t& aFwdTransactionId,
                           const uint64_t& aTransactionId,
                           const TargetConfig& targetConfig,
                           PluginsArray&& aPlugins,
@@ -123,6 +125,7 @@ protected:
 
   virtual bool RecvUpdateNoSwap(EditArray&& cset,
                                 OpDestroyArray&& aToDestroy,
+                                const uint64_t& aFwdTransactionId,
                                 const uint64_t& aTransactionId,
                                 const TargetConfig& targetConfig,
                                 PluginsArray&& aPlugins,
@@ -157,9 +160,6 @@ protected:
 
   virtual PCompositableParent* AllocPCompositableParent(const TextureInfo& aInfo) override;
   virtual bool DeallocPCompositableParent(PCompositableParent* actor) override;
-
-  virtual bool
-  RecvChildAsyncMessages(InfallibleTArray<AsyncChildMessageData>&& aMessages) override;
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 

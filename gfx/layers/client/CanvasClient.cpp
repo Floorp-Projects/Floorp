@@ -464,25 +464,6 @@ CanvasClientSharedSurface::Updated()
 
   auto forwarder = GetForwarder();
 
-#ifndef MOZ_WIDGET_GONK
-  if (mFront) {
-    if (mFront->GetFlags() & TextureFlags::RECYCLE) {
-      mFront->WaitForCompositorRecycle();
-    }
-  }
-#else
-  // AutoRemoveTexture does the followings.
-  // - Ensure to deliver FenceHandle from TextureHost to TextureClient, before
-  //   next TextureClient usage.
-  // - Control TextureClient's recycling timing.
-  // - Call RemoveTexture() after newFront's UseTextures() call.
-  //   It could improve performance of Host side's EGL handling on gonk
-  AutoRemoveTexture autoRemove(this);
-  if (mFront && mFront != mNewFront) {
-    autoRemove.mTexture = mFront;
-  }
-#endif
-
   mFront = mNewFront;
   mNewFront = nullptr;
 
@@ -505,7 +486,7 @@ CanvasClientSharedSurface::Updated()
 void
 CanvasClientSharedSurface::OnDetach() {
   if (mShSurfClient) {
-    mShSurfClient->CancelWaitForCompositorRecycle();
+    mShSurfClient->CancelWaitForRecycle();
   }
   ClearSurfaces();
 }

@@ -42,10 +42,10 @@ child:
 parent:
   async ImageBridgeThreadId(PlatformThreadId aTreahdId);
 
-  sync Update(CompositableOperation[] ops, OpDestroy[] toDestroy)
+  sync Update(CompositableOperation[] ops, OpDestroy[] toDestroy, uint64_t fwdTransactionId)
     returns (EditReply[] reply);
 
-  async UpdateNoSwap(CompositableOperation[] ops, OpDestroy[] toDestroy);
+  async UpdateNoSwap(CompositableOperation[] ops, OpDestroy[] toDestroy, uint64_t fwdTransactionId);
 
   // First step of the destruction sequence. This puts ImageBridge
   // in a state in which it can't send asynchronous messages
@@ -58,11 +58,10 @@ parent:
 
   sync PCompositable(TextureInfo aInfo,
                      nullable PImageContainer aImageContainer) returns (uint64_t id);
-  async PTexture(SurfaceDescriptor aSharedData, LayersBackend aBackend, TextureFlags aTextureFlags);
+  async PTexture(SurfaceDescriptor aSharedData, LayersBackend aBackend, TextureFlags aTextureFlags, uint64_t aSerial);
   async PMediaSystemResourceManager();
   async PImageContainer();
 
-  async ChildAsyncMessages(AsyncChildMessageData[] aMessages);
 };
 
 

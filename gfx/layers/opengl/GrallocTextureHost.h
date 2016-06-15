@@ -73,6 +73,8 @@ public:
 
   virtual FenceHandle GetCompositorReleaseFence() override;
 
+  virtual GrallocTextureHostOGL* AsGrallocTextureHostOGL() override { return this; }
+
 private:
   void DestroyEGLImage();
 

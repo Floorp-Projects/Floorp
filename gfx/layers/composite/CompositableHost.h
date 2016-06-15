@@ -188,7 +188,7 @@ public:
   virtual void PrintInfo(std::stringstream& aStream, const char* aPrefix) = 0;
 
   struct TimedTexture {
-    RefPtr<TextureHost> mTexture;
+    CompositableTextureHostRef mTexture;
     TimeStamp mTimeStamp;
     gfx::IntRect mPictureRect;
     int32_t mFrameID;
