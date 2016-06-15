@@ -108,6 +108,13 @@ OCSPVerificationTrustDomain::NetscapeStepUpMatchesServerAuth(Time notBefore,
   return mCertDBTrustDomain.NetscapeStepUpMatchesServerAuth(notBefore, matches);
 }
 
+void
+OCSPVerificationTrustDomain::NoteAuxiliaryExtension(
+  AuxiliaryExtension extension, Input extensionData)
+{
+  mCertDBTrustDomain.NoteAuxiliaryExtension(extension, extensionData);
+}
+
 Result
 OCSPVerificationTrustDomain::DigestBuf(
   Input item, DigestAlgorithm digestAlg,

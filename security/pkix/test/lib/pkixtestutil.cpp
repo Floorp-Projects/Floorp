@@ -144,12 +144,21 @@ TLV(uint8_t tag, size_t length, const ByteString& value)
   return result;
 }
 
+OCSPResponseExtension::OCSPResponseExtension()
+  : id()
+  , critical(false)
+  , value()
+  , next(nullptr)
+{
+}
+
 OCSPResponseContext::OCSPResponseContext(const CertID& certID, time_t time)
   : certID(certID)
   , responseStatus(successful)
   , skipResponseBytes(false)
   , producedAt(time)
-  , extensions(nullptr)
+  , singleExtensions(nullptr)
+  , responseExtensions(nullptr)
   , includeEmptyExtensions(false)
   , signatureAlgorithm(sha256WithRSAEncryption())
   , badSignature(false)
@@ -897,10 +906,10 @@ OCSPExtension(OCSPResponseExtension& extension)
 //   SEQUENCE OF Extension
 // }
 static ByteString
-Extensions(OCSPResponseContext& context)
+OCSPExtensions(OCSPResponseExtension* extensions)
 {
   ByteString value;
-  for (OCSPResponseExtension* extension = context.extensions;
+  for (OCSPResponseExtension* extension = extensions;
        extension; extension = extension->next) {
     ByteString extensionEncoded(OCSPExtension(*extension));
     if (ENCODING_FAILED(extensionEncoded)) {
@@ -935,8 +944,8 @@ ResponseData(OCSPResponseContext& context)
   }
   ByteString responses(TLV(der::SEQUENCE, response));
   ByteString responseExtensions;
-  if (context.extensions || context.includeEmptyExtensions) {
-    responseExtensions = Extensions(context);
+  if (context.responseExtensions || context.includeEmptyExtensions) {
+    responseExtensions = OCSPExtensions(context.responseExtensions);
   }
 
   ByteString value;
@@ -1015,12 +1024,17 @@ SingleResponse(OCSPResponseContext& context)
     nextUpdateEncodedNested = TLV(der::CONSTRUCTED | der::CONTEXT_SPECIFIC | 0,
                                   nextUpdateEncoded);
   }
+  ByteString singleExtensions;
+  if (context.singleExtensions || context.includeEmptyExtensions) {
+    singleExtensions = OCSPExtensions(context.singleExtensions);
+  }
 
   ByteString value;
   value.append(certID);
   value.append(certStatus);
   value.append(thisUpdateEncoded);
   value.append(nextUpdateEncodedNested);
+  value.append(singleExtensions);
   return TLV(der::SEQUENCE, value);
 }
 
