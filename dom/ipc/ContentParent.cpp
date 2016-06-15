@@ -2791,7 +2791,7 @@ ContentParent::RecvSetClipboard(const IPCDataTransfer& aDataTransfer,
                                   text.Length() * sizeof(char16_t));
 
       NS_ENSURE_SUCCESS(rv, true);
-    } else if (item.data().type() == IPCDataTransferData::TnsCString) {
+    } else if (item.data().type() == IPCDataTransferData::TShmem) {
       if (nsContentUtils::IsFlavorImage(item.flavor())) {
         nsCOMPtr<imgIContainer> imageContainer;
         rv = nsContentUtils::DataTransferItemToImage(item,
@@ -2811,7 +2811,10 @@ ContentParent::RecvSetClipboard(const IPCDataTransfer& aDataTransfer,
           do_CreateInstance(NS_SUPPORTS_CSTRING_CONTRACTID, &rv);
         NS_ENSURE_SUCCESS(rv, true);
 
-        const nsCString& text = item.data().get_nsCString();
+        // The buffer contains the terminating null.
+        Shmem itemData = item.data().get_Shmem();
+        const nsDependentCString text(itemData.get<char>(),
+                                      itemData.Size<char>());
         rv = dataWrapper->SetData(text);
         NS_ENSURE_SUCCESS(rv, true);
 
@@ -2819,6 +2822,8 @@ ContentParent::RecvSetClipboard(const IPCDataTransfer& aDataTransfer,
 
         NS_ENSURE_SUCCESS(rv, true);
       }
+
+      Unused << DeallocShmem(item.data().get_Shmem());
     }
   }
 
