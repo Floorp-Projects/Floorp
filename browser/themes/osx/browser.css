@@ -2296,38 +2296,6 @@ html|span.ac-emphasize-text-url {
   text-align: end;
 }
 
-.panel-promo-box {
-  margin: 8px -16px -16px -16px;
-  padding: 8px 16px;
-  background-color: hsla(210,4%,10%,.07);
-  border-top: 1px solid hsla(210,4%,10%,.12);
-  border-radius: 0 0 5px 5px;
-  box-shadow: 0 -1px hsla(0,0%,100%,.5) inset, 0 1px 1px hsla(0,0%,0%,.03) inset;
-  color: hsl(0,0%,30%);
-}
-
-.panel-promo-icon {
-  list-style-image: url("chrome://browser/skin/sync-notification-24.png");
-  margin-inline-end: 10px;
-  vertical-align: middle;
-}
-
-.panel-promo-closebutton {
-  border: none;
-  margin-inline-end: -14px;
-  margin-top: -8px;
-}
-
-.panel-promo-closebutton > .toolbarbutton-text {
-  padding: 0;
-}
-
-@media (min-resolution: 2dppx) {
-  .panel-promo-closebutton > .toolbarbutton-icon {
-    width: 16px;
-  }
-}
-
 /* History Swipe Animation */
 
 #historySwipeAnimationCurrentPage,
