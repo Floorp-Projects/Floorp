@@ -18,10 +18,6 @@
 #include <algorithm>
 #include "prerror.h"
 
-#if defined(ANDROID) && ANDROID_VERSION > 19
-#include <resolv_netid.h>
-#endif
-
 #include "mozilla/Logging.h"
 
 #if DNSQUERY_AVAILABLE
@@ -248,70 +244,6 @@ _GetTTLData_Windows(const char* aHost, uint16_t* aResult, uint16_t aAddressFamil
 }
 #endif
 
-#if defined(ANDROID) && ANDROID_VERSION >= 19
-// Make the same as nspr functions.
-static MOZ_ALWAYS_INLINE PRAddrInfo*
-_Android_GetAddrInfoForNetInterface(const char* hostname,
-                                   uint16_t af,
-                                   uint16_t flags,
-                                   const char* aNetworkInterface)
-{
-  if ((af != PR_AF_INET && af != PR_AF_UNSPEC) ||
-      (flags & ~ PR_AI_NOCANONNAME) != PR_AI_ADDRCONFIG) {
-    PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
-    return nullptr;
-  }
-
-  struct addrinfo *res, hints;
-  int rv;
-  memset(&hints, 0, sizeof(hints));
-  if (!(flags & PR_AI_NOCANONNAME)) {
-    hints.ai_flags |= AI_CANONNAME;
-  }
-
-#ifdef AI_ADDRCONFIG
-  if ((flags & PR_AI_ADDRCONFIG) &&
-      strcmp(hostname, "localhost") != 0 &&
-      strcmp(hostname, "localhost.localdomain") != 0 &&
-      strcmp(hostname, "localhost6") != 0 &&
-      strcmp(hostname, "localhost6.localdomain6") != 0) {
-    hints.ai_flags |= AI_ADDRCONFIG;
-  }
-#endif
-
-  hints.ai_family = (af == PR_AF_INET) ? AF_INET : AF_UNSPEC;
-  hints.ai_socktype = SOCK_STREAM;
-
-#if ANDROID_VERSION == 19
-  rv = android_getaddrinfoforiface(hostname, NULL, &hints, aNetworkInterface,
-                                   0, &res);
-#else
-  uint32_t netId = atoi(aNetworkInterface);
-  rv = android_getaddrinfofornet(hostname, NULL, &hints, netId, 0, &res);
-#endif
-
-#ifdef AI_ADDRCONFIG
-  if (rv == EAI_BADFLAGS && (hints.ai_flags & AI_ADDRCONFIG)) {
-    hints.ai_flags &= ~AI_ADDRCONFIG;
-#if ANDROID_VERSION == 19
-    rv = android_getaddrinfoforiface(hostname, NULL, &hints, aNetworkInterface,
-                                     0, &res);
-#else
-    uint32_t netId = atoi(aNetworkInterface);
-    rv = android_getaddrinfofornet(hostname, NULL, &hints, netId, 0, &res);
-#endif
-  }
-#endif
-
-  if (rv == 0) {
-    return (PRAddrInfo *) res;
-  }
-
-  PR_SetError(PR_DIRECTORY_LOOKUP_ERROR, rv);
-  return nullptr;
-}
-#endif
-
 ////////////////////////////////////
 // PORTABLE RUNTIME IMPLEMENTATION//
 ////////////////////////////////////
@@ -339,18 +271,7 @@ _GetAddrInfo_Portable(const char* aCanonHost, uint16_t aAddressFamily,
     aAddressFamily = PR_AF_UNSPEC;
   }
 
-  PRAddrInfo* prai;
-#if defined(ANDROID) && ANDROID_VERSION >= 19
-  if (aNetworkInterface && aNetworkInterface[0] != '\0') {
-    prai = _Android_GetAddrInfoForNetInterface(aCanonHost,
-                                               aAddressFamily,
-                                               prFlags,
-                                               aNetworkInterface);
-  } else
-#endif
-  {
-    prai = PR_GetAddrInfoByName(aCanonHost, aAddressFamily, prFlags);
-  }
+  PRAddrInfo* prai = PR_GetAddrInfoByName(aCanonHost, aAddressFamily, prFlags);
 
   if (!prai) {
     return NS_ERROR_UNKNOWN_HOST;
