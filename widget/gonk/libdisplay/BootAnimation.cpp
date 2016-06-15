@@ -16,7 +16,6 @@
 #include <algorithm>
 #include <endian.h>
 #include <fcntl.h>
-#include <pthread.h>
 #include <string>
 #include <sys/mman.h>
 #include <sys/stat.h>
@@ -602,7 +601,7 @@ AnimationThread(void *)
                 name.length() >= 256)
                 continue;
 
-            part.frames.resize(part.frames.size() + 1);
+            part.frames.push_back();
             AnimationFrame &frame = part.frames.back();
             strcpy(frame.path, name.c_str());
             frame.file = reader.GetLocalEntry(entry);
