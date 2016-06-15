@@ -526,6 +526,8 @@ IonBuilder::inlineArray(CallInfo& callInfo)
     if (callInfo.argc() >= 2) {
         JSValueType unboxedType = GetBoxedOrUnboxedType(templateObject);
         for (uint32_t i = 0; i < initLength; i++) {
+            if (!alloc().ensureBallast())
+                return InliningStatus_Error;
             MDefinition* value = callInfo.getArg(i);
             if (!initializeArrayElement(array, i, value, unboxedType, /* addResumePoint = */ false))
                 return InliningStatus_Error;
