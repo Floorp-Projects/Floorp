@@ -28,7 +28,7 @@ add_task(function* () {
   ], "Correct URIs are returned");
 
   Assert.deepEqual(URIs.map(URI => URI.title), [
-    "", "Bookmark Dummy 1", "Bookmark Dummy 2"
+    "New Tab", "Bookmark Dummy 1", "Bookmark Dummy 2"
   ], "Correct titles are returned");
 
   registerCleanupFunction(function* () {

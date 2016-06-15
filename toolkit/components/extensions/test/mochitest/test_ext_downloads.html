@@ -44,13 +44,9 @@ add_task(function* test_downloads_api_namespace_and_permissions() {
 
 add_task(function* test_downloads_open_permission() {
   function backgroundScript() {
-    browser.downloads.open(10, () => {
-      let error = chrome.runtime.lastError;
-      browser.test.assertTrue(!!error, "`downloads.open` raises an error.");
-      browser.test.assertTrue(error.message.indexOf("Permission denied") > -1,
-                              "`downloads.open` permission is required.");
-      browser.test.notifyPass("downloads tests");
-    });
+    browser.test.assertFalse("open" in browser.downloads,
+                             "`downloads.open` permission is required.");
+    browser.test.notifyPass("downloads tests");
   }
 
   let extensionData = {
