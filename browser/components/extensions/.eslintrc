@@ -5,6 +5,7 @@
     "AllWindowEvents": true,
     "currentWindow": true,
     "EventEmitter": true,
+    "IconDetails": true,
     "makeWidgetId": true,
     "pageActionFor": true,
     "PanelPopup": true,
