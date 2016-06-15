@@ -327,6 +327,18 @@ DocAccessibleParent::RecvSelectionEvent(const uint64_t& aID,
 }
 
 bool
+DocAccessibleParent::RecvRoleChangedEvent(const uint32_t& aRole)
+{
+ if (aRole >= roles::LAST_ROLE) {
+   NS_ERROR("child sent bad role in RoleChangedEvent");
+   return false;
+ }
+
+ mRole = static_cast<a11y::role>(aRole);
+ return true;
+}
+
+bool
 DocAccessibleParent::RecvBindChildDoc(PDocAccessibleParent* aChildDoc, const uint64_t& aID)
 {
   // One document should never directly be the child of another.

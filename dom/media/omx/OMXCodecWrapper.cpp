@@ -415,7 +415,7 @@ static nsresult
 ConvertSourceSurfaceToNV12(const RefPtr<SourceSurface>& aSurface, uint8_t* aDestination)
 {
   if (!aSurface) {
-    CODEC_ERROR("Getting surface %s from image failed");
+    CODEC_ERROR("Getting surface from image failed");
     return NS_ERROR_FAILURE;
   }
 

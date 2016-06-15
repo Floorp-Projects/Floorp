@@ -864,6 +864,23 @@ class MacroAssemblerX64 : public MacroAssemblerX86Shared
     void loadConstantSimd128Int(const SimdConstant& v, FloatRegister dest);
     void loadConstantSimd128Float(const SimdConstant& v, FloatRegister dest);
 
+    void convertInt64ToDouble(Register input, FloatRegister output);
+    void convertInt64ToFloat32(Register input, FloatRegister output);
+
+    void convertUInt64ToDouble(Register input, FloatRegister output);
+    void convertUInt64ToFloat32(Register input, FloatRegister output);
+
+    void wasmTruncateDoubleToInt64(FloatRegister input, Register output, Label* oolEntry,
+                                   Label* oolRejoin, FloatRegister tempDouble);
+    void wasmTruncateDoubleToUInt64(FloatRegister input, Register output, Label* oolEntry,
+                                    Label* oolRejoin, FloatRegister tempDouble);
+
+    void wasmTruncateFloat32ToInt64(FloatRegister input, Register output, Label* oolEntry,
+                                    Label* oolRejoin, FloatRegister tempDouble);
+    void wasmTruncateFloat32ToUInt64(FloatRegister input, Register output, Label* oolEntry,
+                                     Label* oolRejoin, FloatRegister tempDouble);
+
+  public:
     Condition testInt32Truthy(bool truthy, const ValueOperand& operand) {
         test32(operand.valueReg(), operand.valueReg());
         return truthy ? NonZero : Zero;

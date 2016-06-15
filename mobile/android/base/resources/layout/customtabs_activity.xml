@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root_layout"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <!--
+        This layout is quite complex because GeckoApp accesses all view groups
+        in this tree. In a perfect world this should just include a GeckoView.
+    -->
+
+    <view class="org.mozilla.gecko.GeckoApp$MainLayout"
+        android:id="@+id/main_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="@android:color/transparent">
+
+        <RelativeLayout android:id="@+id/gecko_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/tablet_tab_strip"
+            android:layout_above="@+id/find_in_page">
+
+            <org.mozilla.gecko.GeckoView android:id="@+id/layer_view"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:scrollbars="none"/>
+
+        </RelativeLayout>
+
+    </view>
+
+</RelativeLayout>
