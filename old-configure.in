@@ -95,6 +95,10 @@ DIST="$MOZ_BUILD_ROOT/dist"
 
 MOZ_DEFAULT_COMPILER
 
+if test "$COMPILE_ENVIRONMENT"; then
+    MOZ_ANDROID_NDK
+fi # COMPILE_ENVIRONMENT
+
 if test -n "$gonkdir" ; then
     dnl export for js/src/configure. We can't pass the option down normally,
     dnl because it's a `--enable-project=b2g`-only option.
@@ -107,11 +111,6 @@ if test -n "$gonkdir" ; then
     if test -n "${PLATFORM_SDK_VERSION}"; then
         ANDROID_VERSION="${PLATFORM_SDK_VERSION}"
     fi
-
-    if ! test -e "$gonkdir/ndk/sources/cxx-stl/stlport/src/iostream.cpp"; then
-        AC_MSG_ERROR([Couldn't find path to stlport sources in the gonk tree])
-    fi
-    STLPORT_CPPFLAGS="-I$_topsrcdir/build/stlport/stlport -I$gonkdir/ndk/sources/cxx-stl/system/include"
 
     case "$ANDROID_VERSION" in
     15)
@@ -183,13 +182,11 @@ if test -n "$gonkdir" ; then
         AC_MSG_ERROR([Unsupported platform version: $ANDROID_VERSION])
         ;;
     esac
-    CPPFLAGS="-DANDROID $TARGET_C_INCLUDES -I$gonkdir/system -I$gonkdir/system/core/include -isystem $gonkdir/bionic -I$gonkdir/hardware/libhardware/include -I$gonkdir/external/valgrind/fxos-include $GONK_INCLUDES $CPPFLAGS"
-    CFLAGS="-fno-short-enums -fno-exceptions $CFLAGS"
-    CXXFLAGS="-fno-short-enums -fno-exceptions $CXXFLAGS $STLPORT_CPPFLAGS"
+
+    CPPFLAGS="-I$gonkdir/system -I$gonkdir/system/core/include -I$gonkdir/hardware/libhardware/include -I$gonkdir/external/valgrind/fxos-include $GONK_INCLUDES $CPPFLAGS"
+    LDFLAGS="-L$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib -Wl,-rpath-link=$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib $LDFLAGS"
     dnl Add -llog by default, since we use it all over the place.
     LIBS="$LIBS -llog"
-
-    LDFLAGS="-L$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib -Wl,-rpath-link=$gonkdir/out/target/product/$GONK_PRODUCT/obj/lib --sysroot=$gonkdir/out/target/product/$GONK_PRODUCT/obj/ $LDFLAGS"
 
     AC_DEFINE(ANDROID)
     AC_DEFINE_UNQUOTED(ANDROID_VERSION, $ANDROID_VERSION)
@@ -197,12 +194,8 @@ if test -n "$gonkdir" ; then
     AC_DEFINE(HAVE_SYS_UIO_H)
     AC_DEFINE(HAVE_PTHREADS)
     direct_nspr_config=1
-    android_cxx_stl=mozstlport
-else
-    if test "$COMPILE_ENVIRONMENT"; then
-        MOZ_ANDROID_NDK
-    fi # COMPILE_ENVIRONMENT
 
+else
     case "$target" in
     *-android*|*-linuxandroid*)
         ZLIB_DIR=yes
