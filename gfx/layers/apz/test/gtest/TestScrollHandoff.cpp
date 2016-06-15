@@ -206,6 +206,7 @@ TEST_F(APZScrollHandoffTester, LayerStructureChangesWhileEventsArePending) {
 TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1073250) {
   // Enable overscrolling.
   SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
+  SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
 
   CreateScrollHandoffLayerTree1();
 
@@ -243,6 +244,7 @@ TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1073250) {
 TEST_F(APZScrollHandoffTester, StuckInOverscroll_Bug1231228) {
   // Enable overscrolling.
   SCOPED_GFX_PREF(APZOverscrollEnabled, bool, true);
+  SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
 
   CreateScrollHandoffLayerTree1();
 
@@ -380,6 +382,8 @@ TEST_F(APZScrollHandoffTester, PartialFlingHandoff) {
 // Here we test that if two flings are happening simultaneously, overscroll
 // is handed off correctly for each.
 TEST_F(APZScrollHandoffTester, SimultaneousFlings) {
+  SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
+
   // Set up an initial APZC tree.
   CreateScrollHandoffLayerTree3();
 
@@ -425,6 +429,7 @@ TEST_F(APZScrollHandoffTester, Scrollgrab) {
 }
 
 TEST_F(APZScrollHandoffTester, ScrollgrabFling) {
+  SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
   // Set up the layer tree
   CreateScrollgrabLayerTree();
 
@@ -439,11 +444,13 @@ TEST_F(APZScrollHandoffTester, ScrollgrabFling) {
 }
 
 TEST_F(APZScrollHandoffTester, ScrollgrabFlingAcceleration1) {
+  SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
   CreateScrollgrabLayerTree(true /* make parent scrollable */);
   TestFlingAcceleration();
 }
 
 TEST_F(APZScrollHandoffTester, ScrollgrabFlingAcceleration2) {
+  SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
   CreateScrollgrabLayerTree(false /* do not make parent scrollable */);
   TestFlingAcceleration();
 }
@@ -475,6 +482,7 @@ TEST_F(APZScrollHandoffTester, ImmediateHandoffDisallowed_Pan) {
 
 TEST_F(APZScrollHandoffTester, ImmediateHandoffDisallowed_Fling) {
   SCOPED_GFX_PREF(APZAllowImmediateHandoff, bool, false);
+  SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
 
   CreateScrollHandoffLayerTree1();
 
