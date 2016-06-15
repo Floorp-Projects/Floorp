@@ -4,7 +4,7 @@
  */
 
 var Cu = Components.utils;
-Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/NetUtil.jsm");
 
 // Values taken from using zipinfo to list the test.zip contents
 var TESTS = [
@@ -71,23 +71,19 @@ var methods = {
   {
     zipW.addEntryChannel(entry, source.lastModifiedTime * PR_MSEC_PER_SEC,
                          Ci.nsIZipWriter.COMPRESSION_NONE,
-                         ioSvc.newChannelFromURI2(ioSvc.newFileURI(source),
-                                                  null,      // aLoadingNode
-                                                  Services.scriptSecurityManager.getSystemPrincipal(),
-                                                  null,      // aTriggeringPrincipal
-                                                  Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                                                  Ci.nsIContentPolicy.TYPE_OTHER), true);
+                         NetUtil.newChannel({
+                           uri: ioSvc.newFileURI(source),
+                           loadUsingSystemPrincipal: true
+                         }), true);
   },
   stream: function method_stream(entry, source)
   {
     zipW.addEntryStream(entry, source.lastModifiedTime * PR_MSEC_PER_SEC,
                         Ci.nsIZipWriter.COMPRESSION_NONE,
-                        ioSvc.newChannelFromURI2(ioSvc.newFileURI(source),
-                                                 null,      // aLoadingNode
-                                                 Services.scriptSecurityManager.getSystemPrincipal(),
-                                                 null,      // aTriggeringPrincipal
-                                                 Ci.nsILoadInfo.SEC_ALLOW_CROSS_ORIGIN_DATA_IS_NULL,
-                                                 Ci.nsIContentPolicy.TYPE_OTHER).open(), true);
+                        NetUtil.newChannel({
+                          uri: ioSvc.newFileURI(source),
+                          loadUsingSystemPrincipal: true
+                        }).open2(), true);
   }
 }
 
