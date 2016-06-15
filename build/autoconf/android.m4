@@ -70,7 +70,7 @@ esac
 AC_DEFUN([MOZ_ANDROID_CPU_ARCH],
 [
 
-if test "$OS_TARGET" = "Android"; then
+if test "$OS_TARGET" = "Android" -a -z "$gonkdir"; then
     case "${CPU_ARCH}-${MOZ_ARCH}" in
     arm-armv7*)
         ANDROID_CPU_ARCH=armeabi-v7a
@@ -93,7 +93,7 @@ fi
 AC_DEFUN([MOZ_ANDROID_STLPORT],
 [
 
-if test "$OS_TARGET" = "Android"; then
+if test "$OS_TARGET" = "Android" -a -z "$gonkdir"; then
     cpu_arch_dir="$ANDROID_CPU_ARCH"
     if test "$MOZ_THUMB2" = 1; then
         cpu_arch_dir="$cpu_arch_dir/thumb"
