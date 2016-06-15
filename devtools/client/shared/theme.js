@@ -29,7 +29,7 @@ function readURI(uri) {
   let stream = NetUtil.newChannel({
     uri: NetUtil.newURI(uri, "UTF-8"),
     loadUsingSystemPrincipal: true}
-  ).open();
+  ).open2();
 
   let count = stream.available();
   let data = NetUtil.readInputStreamToString(stream, count, {
