@@ -6,13 +6,11 @@
 
 option('--with-gonk', nargs=1, help='Path to the gonk base directory')
 
-@depends_if('--with-gonk')
-def gonkdir(value):
+@depends_if('--with-gonk', '--help')
+def gonkdir(value, _):
     return value[0]
 
 add_old_configure_assignment('gonkdir', gonkdir)
-set_config('ANDROID_NDK',
-           depends_if(gonkdir)(lambda x: os.path.join(x, 'ndk')))
 
 @depends_if('--with-gonk')
 def gonk_toolkit(_):
