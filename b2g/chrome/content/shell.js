@@ -1316,7 +1316,7 @@ if (isGonk) {
 Services.obs.addObserver(function resetProfile(subject, topic, data) {
   Services.obs.removeObserver(resetProfile, topic);
 
-  // Listening for 'profile-before-change2' which is late in the shutdown
+  // Listening for 'profile-before-change3' which is late in the shutdown
   // sequence, but still has xpcom access.
   Services.obs.addObserver(function clearProfile(subject, topic, data) {
     Services.obs.removeObserver(clearProfile, topic);
@@ -1357,7 +1357,7 @@ Services.obs.addObserver(function resetProfile(subject, topic, data) {
       }
     }
   },
-  'profile-before-change2', false);
+  'profile-before-change3', false);
 
   let appStartup = Cc['@mozilla.org/toolkit/app-startup;1']
                      .getService(Ci.nsIAppStartup);

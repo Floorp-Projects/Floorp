@@ -193,7 +193,7 @@ interface nsIAsyncShutdownService: nsISupports {
   readonly attribute nsIAsyncShutdownClient quitApplicationGranted;
 
   /**
-   * Barrier for notification profile-before-change2.
+   * Barrier for notification profile-before-change3.
    */
   readonly attribute nsIAsyncShutdownClient sendTelemetry;
 
