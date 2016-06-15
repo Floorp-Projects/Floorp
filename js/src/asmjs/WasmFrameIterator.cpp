@@ -812,11 +812,10 @@ wasm::ToggleProfiling(const Instance& instance, const CodeRange& codeRange, bool
     if (!codeRange.isFunction())
         return;
 
-    uint8_t* code = instance.codeSegment().code();
-    uint8_t* profilingEntry     = code + codeRange.funcProfilingEntry();
-    uint8_t* tableProfilingJump = code + codeRange.funcTableProfilingJump();
-    uint8_t* profilingJump      = code + codeRange.funcProfilingJump();
-    uint8_t* profilingEpilogue  = code + codeRange.funcProfilingEpilogue();
+    uint8_t* profilingEntry     = instance.codeSegment().code() + codeRange.funcProfilingEntry();
+    uint8_t* tableProfilingJump = instance.codeSegment().code() + codeRange.funcTableProfilingJump();
+    uint8_t* profilingJump      = instance.codeSegment().code() + codeRange.funcProfilingJump();
+    uint8_t* profilingEpilogue  = instance.codeSegment().code() + codeRange.funcProfilingEpilogue();
 
     if (enabled) {
         MacroAssembler::patchNopToNearJump(tableProfilingJump, profilingEntry);
