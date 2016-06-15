@@ -27,45 +27,29 @@
 // (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 // OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-#ifndef GOOGLE_BREAKPAD_ANDROID_INCLUDE_LINK_H
-#define GOOGLE_BREAKPAD_ANDROID_INCLUDE_LINK_H
+#ifndef GOOGLE_BREAKPAD_COMMON_ANDROID_INCLUDE_UCONTEXT_H
+#define GOOGLE_BREAKPAD_COMMON_ANDROID_INCLUDE_UCONTEXT_H
 
-/* Android doesn't provide all the data-structures required in its <link.h>.
-   Provide custom version here. */
-#include_next <link.h>
+#include <sys/cdefs.h>
+#include <signal.h>
 
-// TODO(rmcilroy): Remove this file once the ndk is updated for other
-// architectures - crbug.com/358831
-#if !defined(__aarch64__) && !defined(__x86_64__) && \
-    !(defined(__mips__) && _MIPS_SIM == _ABI64)
+#ifdef __BIONIC_HAVE_UCONTEXT_H
+# include_next <ucontext.h>
+#else
+# include <sys/ucontext.h>
+#endif  // __BIONIC_UCONTEXT_H
 
 #ifdef __cplusplus
 extern "C" {
 #endif  // __cplusplus
 
-struct r_debug {
-  int              r_version;
-  struct link_map* r_map;
-  ElfW(Addr)       r_brk;
-  enum {
-    RT_CONSISTENT,
-    RT_ADD,
-    RT_DELETE }    r_state;
-  ElfW(Addr)       r_ldbase;
-};
+// Provided by src/android/common/breakpad_getcontext.S
+int breakpad_getcontext(ucontext_t* ucp);
 
-struct link_map {
-  ElfW(Addr)       l_addr;
-  char*            l_name;
-  ElfW(Dyn)*       l_ld;
-  struct link_map* l_next;
-  struct link_map* l_prev;
-};
+#define getcontext(x)   breakpad_getcontext(x)
 
 #ifdef __cplusplus
 }  // extern "C"
 #endif  // __cplusplus
 
-#endif  // !defined(__aarch64__) && !defined(__x86_64__)
-
-#endif /* GOOGLE_BREAKPAD_ANDROID_INCLUDE_LINK_H */
+#endif  // GOOGLE_BREAKPAD_COMMON_ANDROID_INCLUDE_UCONTEXT_H

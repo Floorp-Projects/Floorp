@@ -54,9 +54,15 @@ if CONFIG['OS_TARGET'] == 'Android':
     SOURCES += [
         'android/breakpad_getcontext.S',
     ]
-    LOCAL_INCLUDES += [
-        '/toolkit/crashreporter/google-breakpad/src/common/android/include',
-    ]
+
+    if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'gonk':
+        LOCAL_INCLUDES += [
+            '/toolkit/crashreporter/gonk-include',
+        ]
+    else:
+        LOCAL_INCLUDES += [
+            '/toolkit/crashreporter/google-breakpad/src/common/android/include',
+        ]
 
 Library('breakpad_common_s')
 
