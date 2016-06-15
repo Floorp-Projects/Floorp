@@ -48,14 +48,16 @@ public:
                     const MediaEnginePrefs &aPrefs,
                     const nsString& aDeviceId,
                     const nsACString& aOrigin,
-                    BaseAllocationHandle** aOutHandle) override;
+                    BaseAllocationHandle** aOutHandle,
+                    const char** aOutBadConstraint) override;
   nsresult Deallocate(BaseAllocationHandle* aHandle) override;
   nsresult Start(SourceMediaStream*, TrackID, const PrincipalHandle&) override;
   nsresult Stop(SourceMediaStream*, TrackID) override;
   nsresult Restart(BaseAllocationHandle* aHandle,
                    const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
-                   const nsString& aDeviceId) override;
+                   const nsString& aDeviceId,
+                   const char** aOutBadConstraint) override;
   void SetDirectListeners(bool aHasDirectListeners) override {};
   void NotifyPull(MediaStreamGraph* aGraph,
                   SourceMediaStream *aSource,
@@ -121,14 +123,16 @@ public:
                     const MediaEnginePrefs &aPrefs,
                     const nsString& aDeviceId,
                     const nsACString& aOrigin,
-                    BaseAllocationHandle** aOutHandle) override;
+                    BaseAllocationHandle** aOutHandle,
+                    const char** aOutBadConstraint) override;
   nsresult Deallocate(BaseAllocationHandle* aHandle) override;
   nsresult Start(SourceMediaStream*, TrackID, const PrincipalHandle&) override;
   nsresult Stop(SourceMediaStream*, TrackID) override;
   nsresult Restart(BaseAllocationHandle* aHandle,
                    const dom::MediaTrackConstraints& aConstraints,
                    const MediaEnginePrefs &aPrefs,
-                   const nsString& aDeviceId) override;
+                   const nsString& aDeviceId,
+                   const char** aOutBadConstraint) override;
   void SetDirectListeners(bool aHasDirectListeners) override {};
   void AppendToSegment(AudioSegment& aSegment,
                        TrackTicks aSamples);
