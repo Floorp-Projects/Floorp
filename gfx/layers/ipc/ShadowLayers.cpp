@@ -5,6 +5,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+#include "ClientLayerManager.h"         // for ClientLayerManager
 #include "ShadowLayers.h"
 #include <set>                          // for _Rb_tree_const_iterator, etc
 #include <vector>                       // for vector
@@ -23,6 +24,7 @@
 #include "mozilla/layers/CompositableClient.h"  // for CompositableClient, etc
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/ImageDataSerializer.h"
+#include "mozilla/layers/ImageBridgeChild.h"
 #include "mozilla/layers/LayersMessages.h"  // for Edit, etc
 #include "mozilla/layers/LayersSurfaces.h"  // for SurfaceDescriptor, etc
 #include "mozilla/layers/LayersTypes.h"  // for MOZ_LAYERS_LOG
@@ -382,8 +384,9 @@ CompositableForwarder::IdentifyTextureHost(const TextureFactoryIdentifier& aIden
   mSyncObject = SyncObject::CreateSyncObject(aIdentifier.mSyncHandle);
 }
 
-ShadowLayerForwarder::ShadowLayerForwarder()
- : mMessageLoop(MessageLoop::current())
+ShadowLayerForwarder::ShadowLayerForwarder(ClientLayerManager* aClientLayerManager)
+ : mClientLayerManager(aClientLayerManager)
+ , mMessageLoop(MessageLoop::current())
  , mDiagnosticTypes(DiagnosticTypes::NO_DIAGNOSTIC)
  , mIsFirstPaint(false)
  , mWindowOverlayChanged(false)
@@ -417,6 +420,7 @@ ShadowLayerForwarder::BeginTransaction(const gfx::IntRect& aTargetBounds,
 {
   MOZ_ASSERT(HasShadowManager(), "no manager to forward to");
   MOZ_ASSERT(mTxn->Finished(), "uncommitted txn?");
+  UpdateFwdTransactionId();
   mTxn->Begin(aTargetBounds, aRotation, aOrientation);
 }
 
@@ -563,6 +567,24 @@ ShadowLayerForwarder::UseTiledLayerBuffer(CompositableClient* aCompositable,
 {
   MOZ_ASSERT(aCompositable && aCompositable->IsConnected());
 
+#ifdef MOZ_WIDGET_GONK
+  // GrallocTextureData alwasys requests fence delivery if ANDROID_VERSION >= 17.
+  const InfallibleTArray<TileDescriptor>& tileDescriptors = aTileLayerDescriptor.tiles();
+  for (size_t i = 0; i < tileDescriptors.Length(); i++) {
+    const TileDescriptor& tileDesc = tileDescriptors[i];
+    if (tileDesc.type() != TileDescriptor::TTexturedTileDescriptor) {
+      continue;
+    }
+    const TexturedTileDescriptor& texturedDesc = tileDesc.get_TexturedTileDescriptor();
+    RefPtr<TextureClient> texture = TextureClient::AsTextureClient(texturedDesc.textureChild());
+    mClientLayerManager->GetCompositorBridgeChild()->HoldUntilCompositableRefReleasedIfNecessary(texture);
+    if (texturedDesc.textureOnWhite().type() == MaybeTexture::TPTextureChild) {
+      texture = TextureClient::AsTextureClient(texturedDesc.textureOnWhite().get_PTextureChild());
+      mClientLayerManager->GetCompositorBridgeChild()->HoldUntilCompositableRefReleasedIfNecessary(texture);
+    }
+  }
+#endif
+
   mTxn->AddNoSwapPaint(CompositableOperation(nullptr, aCompositable->GetIPDLActor(),
                                              OpUseTiledLayerBuffer(aTileLayerDescriptor)));
 }
@@ -609,6 +631,7 @@ ShadowLayerForwarder::UseTextures(CompositableClient* aCompositable,
       // to be synchronous.
       mTxn->MarkSyncTransaction();
     }
+    mClientLayerManager->GetCompositorBridgeChild()->HoldUntilCompositableRefReleasedIfNecessary(t.mTextureClient);
   }
   mTxn->AddEdit(CompositableOperation(nullptr, aCompositable->GetIPDLActor(),
                                       OpUseTexture(textures)));
@@ -632,6 +655,9 @@ ShadowLayerForwarder::UseComponentAlphaTextures(CompositableClient* aCompositabl
   ReadLockDescriptor readLockB;
   aTextureOnBlack->SerializeReadLock(readLockB);
   aTextureOnWhite->SerializeReadLock(readLockW);
+
+  mClientLayerManager->GetCompositorBridgeChild()->HoldUntilCompositableRefReleasedIfNecessary(aTextureOnBlack);
+  mClientLayerManager->GetCompositorBridgeChild()->HoldUntilCompositableRefReleasedIfNecessary(aTextureOnWhite);
 
   mTxn->AddEdit(
     CompositableOperation(
@@ -712,29 +738,7 @@ ShadowLayerForwarder::RemoveTextureFromCompositableAsync(AsyncTransactionTracker
                                                          CompositableClient* aCompositable,
                                                          TextureClient* aTexture)
 {
-  MOZ_ASSERT(aCompositable);
-  MOZ_ASSERT(aTexture);
-  MOZ_ASSERT(aCompositable->IsConnected());
-  MOZ_ASSERT(aTexture->GetIPDLActor());
-
-  CompositableOperation op(
-    nullptr, aCompositable->GetIPDLActor(),
-    OpRemoveTextureAsync(CompositableClient::GetTrackersHolderId(aCompositable->GetIPDLActor()),
-      aAsyncTransactionTracker->GetId(),
-      nullptr, aCompositable->GetIPDLActor(),
-      nullptr, aTexture->GetIPDLActor()));
-
-#ifdef MOZ_WIDGET_GONK
-  mPendingAsyncMessages.push_back(op);
-#else
-  if (mTxn->Opened() && aCompositable->IsConnected()) {
-    mTxn->AddEdit(op);
-  } else {
-    NS_RUNTIMEABORT("not reached");
-  }
-#endif
-  CompositableClient::HoldUntilComplete(aCompositable->GetIPDLActor(),
-                                        aAsyncTransactionTracker);
+  NS_RUNTIMEABORT("not reached");
 }
 
 bool
@@ -923,6 +927,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
     if (!HasShadowManager() ||
         !mShadowManager->IPCOpen() ||
         !mShadowManager->SendUpdate(cset, mTxn->mDestroyedActors,
+                                    GetFwdTransactionId(),
                                     aId, targetConfig, mPluginWindowData,
                                     mIsFirstPaint, aScheduleComposite,
                                     aPaintSequenceNumber, aIsRepeatTransaction,
@@ -939,6 +944,7 @@ ShadowLayerForwarder::EndTransaction(InfallibleTArray<EditReply>* aReplies,
     if (!HasShadowManager() ||
         !mShadowManager->IPCOpen() ||
         !mShadowManager->SendUpdateNoSwap(cset, mTxn->mDestroyedActors,
+                                          GetFwdTransactionId(),
                                           aId, targetConfig, mPluginWindowData,
                                           mIsFirstPaint, aScheduleComposite,
                                           aPaintSequenceNumber, aIsRepeatTransaction,
@@ -1083,14 +1089,15 @@ void ShadowLayerForwarder::AttachAsyncCompositable(uint64_t aCompositableID,
 PTextureChild*
 ShadowLayerForwarder::CreateTexture(const SurfaceDescriptor& aSharedData,
                                     LayersBackend aLayersBackend,
-                                    TextureFlags aFlags)
+                                    TextureFlags aFlags,
+                                    uint64_t aSerial)
 {
   if (!HasShadowManager() ||
       !mShadowManager->IPCOpen() ||
       !mShadowManager->Manager()) {
     return nullptr;
   }
-  return mShadowManager->Manager()->SendPTextureConstructor(aSharedData, aLayersBackend, aFlags, mShadowManager->GetId());
+  return mShadowManager->Manager()->SendPTextureConstructor(aSharedData, aLayersBackend, aFlags, mShadowManager->GetId(), aSerial);
 }
 
 
@@ -1106,7 +1113,6 @@ void ShadowLayerForwarder::StopReceiveAsyncParentMessge()
       !mShadowManager->IPCOpen()) {
     return;
   }
-  SendPendingAsyncMessges();
   mShadowManager->SetForwarder(nullptr);
 }
 
@@ -1116,7 +1122,6 @@ void ShadowLayerForwarder::ClearCachedResources()
       !mShadowManager->IPCOpen()) {
     return;
   }
-  SendPendingAsyncMessges();
   mShadowManager->SendClearCachedResources();
 }
 
@@ -1127,27 +1132,6 @@ void ShadowLayerForwarder::Composite()
     return;
   }
   mShadowManager->SendForceComposite();
-}
-
-void ShadowLayerForwarder::SendPendingAsyncMessges()
-{
-  if (!HasShadowManager() ||
-      !mShadowManager->IPCOpen()) {
-    mPendingAsyncMessages.clear();
-    return;
-  }
-
-  if (mPendingAsyncMessages.empty()) {
-    return;
-  }
-
-  InfallibleTArray<AsyncChildMessageData> replies;
-  // Prepare pending messages.
-  for (size_t i = 0; i < mPendingAsyncMessages.size(); i++) {
-    replies.AppendElement(mPendingAsyncMessages[i]);
-  }
-  mPendingAsyncMessages.clear();
-  mShadowManager->SendChildAsyncMessages(replies);
 }
 
 bool
@@ -1285,6 +1269,34 @@ ShadowLayerForwarder::DestroySurfaceDescriptor(SurfaceDescriptor* aSurface)
       NS_RUNTIMEABORT("surface type not implemented!");
   }
   *aSurface = SurfaceDescriptor();
+}
+
+void
+ShadowLayerForwarder::UpdateFwdTransactionId()
+{
+  GetCompositorBridgeChild()->UpdateFwdTransactionId();
+}
+
+uint64_t
+ShadowLayerForwarder::GetFwdTransactionId()
+{
+  return GetCompositorBridgeChild()->GetFwdTransactionId();
+}
+
+void
+ShadowLayerForwarder::CancelWaitForRecycle(uint64_t aTextureId)
+{
+  GetCompositorBridgeChild()->CancelWaitForRecycle(aTextureId);
+}
+
+CompositorBridgeChild*
+ShadowLayerForwarder::GetCompositorBridgeChild()
+{
+  if (mCompositorBridgeChild) {
+    return mCompositorBridgeChild;
+  }
+  mCompositorBridgeChild = mClientLayerManager->GetCompositorBridgeChild();
+  return mCompositorBridgeChild;
 }
 
 } // namespace layers

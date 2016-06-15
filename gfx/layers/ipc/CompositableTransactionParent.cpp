@@ -118,7 +118,33 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       NS_ASSERTION(tiledHost, "The compositable is not tiled");
 
       const SurfaceDescriptorTiles& tileDesc = op.tileLayerDescriptor();
+
       bool success = tiledHost->UseTiledLayerBuffer(this, tileDesc);
+
+      const InfallibleTArray<TileDescriptor>& tileDescriptors = tileDesc.tiles();
+      for (size_t i = 0; i < tileDescriptors.Length(); i++) {
+        const TileDescriptor& tileDesc = tileDescriptors[i];
+        if (tileDesc.type() != TileDescriptor::TTexturedTileDescriptor) {
+          continue;
+        }
+        const TexturedTileDescriptor& texturedDesc = tileDesc.get_TexturedTileDescriptor();
+        RefPtr<TextureHost> texture = TextureHost::AsTextureHost(texturedDesc.textureParent());
+        if (texture) {
+          texture->SetLastFwdTransactionId(mFwdTransactionId);
+          // Make sure that each texture was handled by the compositable
+          // because the recycling logic depends on it.
+          MOZ_ASSERT(texture->NumCompositableRefs() > 0);
+        }
+        if (texturedDesc.textureOnWhite().type() == MaybeTexture::TPTextureParent) {
+          texture = TextureHost::AsTextureHost(texturedDesc.textureOnWhite().get_PTextureParent());
+          if (texture) {
+            texture->SetLastFwdTransactionId(mFwdTransactionId);
+            // Make sure that each texture was handled by the compositable
+            // because the recycling logic depends on it.
+            MOZ_ASSERT(texture->NumCompositableRefs() > 0);
+          }
+        }
+      }
       if (!success) {
         return false;
       }
@@ -131,8 +157,6 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
 
       MOZ_ASSERT(tex.get());
       compositable->RemoveTextureHost(tex);
-      // send FenceHandle if present.
-      SendFenceHandleIfPresent(op.textureParent());
       break;
     }
     case CompositableOperationDetail::TOpRemoveTextureAsync: {
@@ -142,24 +166,9 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       MOZ_ASSERT(tex.get());
       compositable->RemoveTextureHost(tex);
 
-      if (!UsesImageBridge() && ImageBridgeParent::GetInstance(GetChildProcessId())) {
-        // send FenceHandle if present via ImageBridge.
-        ImageBridgeParent::AppendDeliverFenceMessage(
-                             GetChildProcessId(),
-                             op.holderId(),
-                             op.transactionId(),
-                             op.textureParent());
-
-        // If the message is recievied via PLayerTransaction,
-        // Send message back via PImageBridge.
-        ImageBridgeParent::ReplyRemoveTexture(
-                             GetChildProcessId(),
-                             OpReplyRemoveTexture(op.holderId(),
-                                                  op.transactionId()));
-      } else {
-        // send FenceHandle if present.
-        SendFenceHandleIfPresent(op.textureParent());
-
+      // Only ImageBridge child sends it.
+      MOZ_ASSERT(UsesImageBridge());
+      if (UsesImageBridge()) {
         ReplyRemoveTexture(OpReplyRemoveTexture(op.holderId(),
                                                 op.transactionId()));
       }
@@ -192,6 +201,16 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       }
       if (textures.Length() > 0) {
         compositable->UseTextureHost(textures);
+
+        for (auto& timedTexture : op.textures()) {
+          RefPtr<TextureHost> texture = TextureHost::AsTextureHost(timedTexture.textureParent());
+          if (texture) {
+            texture->SetLastFwdTransactionId(mFwdTransactionId);
+            // Make sure that each texture was handled by the compositable
+            // because the recycling logic depends on it.
+            MOZ_ASSERT(texture->NumCompositableRefs() > 0);
+          }
+        }
       }
 
       if (UsesImageBridge() && compositable->GetLayer()) {
@@ -205,8 +224,23 @@ CompositableParentManager::ReceiveCompositableUpdate(const CompositableOperation
       RefPtr<TextureHost> texOnWhite = TextureHost::AsTextureHost(op.textureOnWhiteParent());
       texOnBlack->DeserializeReadLock(op.sharedLockBlack(), this);
       texOnWhite->DeserializeReadLock(op.sharedLockWhite(), this);
+
       MOZ_ASSERT(texOnBlack && texOnWhite);
       compositable->UseComponentAlphaTextures(texOnBlack, texOnWhite);
+
+      if (texOnBlack) {
+        texOnBlack->SetLastFwdTransactionId(mFwdTransactionId);
+        // Make sure that each texture was handled by the compositable
+        // because the recycling logic depends on it.
+        MOZ_ASSERT(texOnBlack->NumCompositableRefs() > 0);
+      }
+
+      if (texOnWhite) {
+        texOnWhite->SetLastFwdTransactionId(mFwdTransactionId);
+        // Make sure that each texture was handled by the compositable
+        // because the recycling logic depends on it.
+        MOZ_ASSERT(texOnWhite->NumCompositableRefs() > 0);
+      }
 
       if (UsesImageBridge()) {
         ScheduleComposition(compositable);
@@ -249,42 +283,6 @@ CompositableParentManager::DestroyActor(const OpDestroy& aOp)
       MOZ_ASSERT(false, "unsupported type");
     }
   }
-}
-
-void
-CompositableParentManager::SendPendingAsyncMessages()
-{
-  if (mPendingAsyncMessage.empty()) {
-    return;
-  }
-
-  // Some type of AsyncParentMessageData message could have
-  // one file descriptor (e.g. OpDeliverFence).
-  // A number of file descriptors per gecko ipc message have a limitation
-  // on OS_POSIX (MACOSX or LINUX).
-#if defined(OS_POSIX)
-  static const uint32_t kMaxMessageNumber = FileDescriptorSet::MAX_DESCRIPTORS_PER_MESSAGE;
-#else
-  // default number that works everywhere else
-  static const uint32_t kMaxMessageNumber = 250;
-#endif
-
-  InfallibleTArray<AsyncParentMessageData> messages;
-  messages.SetCapacity(mPendingAsyncMessage.size());
-  for (size_t i = 0; i < mPendingAsyncMessage.size(); i++) {
-    messages.AppendElement(mPendingAsyncMessage[i]);
-    // Limit maximum number of messages.
-    if (messages.Length() >= kMaxMessageNumber) {
-      SendAsyncMessage(messages);
-      // Initialize Messages.
-      messages.Clear();
-    }
-  }
-
-  if (messages.Length() > 0) {
-    SendAsyncMessage(messages);
-  }
-  mPendingAsyncMessage.clear();
 }
 
 } // namespace layers

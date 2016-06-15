@@ -337,10 +337,6 @@ public:
 
   void ForcePresent() { mCompositor->ForcePresent(); }
 
-  void HoldTextureUntilNextComposite(TextureHost* aTextureHost) {
-    mCurrentHeldTextureHosts.AppendElement(aTextureHost);
-  }
-
 private:
   /** Region we're clipping our current drawing to. */
   nsIntRegion mClippingRegion;
@@ -400,9 +396,6 @@ private:
   UniquePtr<LayerProperties> mClonedLayerTreeProperties;
 
   nsTArray<ImageCompositeNotification> mImageCompositeNotifications;
-
-  nsTArray<RefPtr<TextureHost>> mCurrentHeldTextureHosts;
-  nsTArray<RefPtr<TextureHost>> mPreviousHeldTextureHosts;
 
   /**
    * Context target, nullptr when drawing directly to our swap chain.

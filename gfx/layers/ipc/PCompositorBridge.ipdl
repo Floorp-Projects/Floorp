@@ -100,6 +100,8 @@ child:
    */
   async ClearCachedResources(uint64_t id);
 
+  async ParentAsyncMessages(AsyncParentMessageData[] aMessages);
+
 parent:
   /**
    * Confirmation callback for UpdatePluginConfigurations and HideAllPlugins.
@@ -192,7 +194,7 @@ parent:
                             ScrollableLayerGuid guid,
                             CSSIntRegion region);
 
-  async PTexture(SurfaceDescriptor aSharedData, LayersBackend aBackend, TextureFlags aTextureFlags, uint64_t id);
+  async PTexture(SurfaceDescriptor aSharedData, LayersBackend aBackend, TextureFlags aTextureFlags, uint64_t id, uint64_t aSerial);
 
 child:
   // Send back Compositor Frame Metrics from APZCs so tiled layers can

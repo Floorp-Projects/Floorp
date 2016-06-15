@@ -181,7 +181,6 @@ TextureClientRecycleAllocator::CreateOrRecycle(ITextureClientAllocationHelper& a
   // Make sure the texture holds a reference to us, and ask it to call RecycleTextureClient when its
   // ref count drops to 1.
   client->SetRecycleAllocator(this);
-  client->SetInUse(true);
   return client.forget();
 }
 
@@ -205,35 +204,9 @@ TextureClientRecycleAllocator::ShrinkToMinimumSize()
   }
 }
 
-class TextureClientWaitTask : public Runnable
-{
-public:
-  explicit TextureClientWaitTask(TextureClient* aClient)
-    : mTextureClient(aClient)
-  {}
-
-  NS_IMETHOD Run() override
-  {
-    mTextureClient->WaitForCompositorRecycle();
-    return NS_OK;
-  }
-
-private:
-  RefPtr<TextureClient> mTextureClient;
-};
-
 void
 TextureClientRecycleAllocator::RecycleTextureClient(TextureClient* aClient)
 {
-  if (aClient->IsInUse()) {
-    aClient->SetInUse(false);
-    // This adds another ref to aClient, and drops it after a round trip
-    // to the compositor. We should then get this callback a second time
-    // and can recycle properly.
-    RefPtr<Runnable> task = new TextureClientWaitTask(aClient);
-    mSurfaceAllocator->GetMessageLoop()->PostTask(task.forget());
-    return;
-  }
   // Clearing the recycle allocator drops a reference, so make sure we stay alive
   // for the duration of this function.
   RefPtr<TextureClientRecycleAllocator> kungFuDeathGrip(this);

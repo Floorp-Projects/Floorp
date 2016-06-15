@@ -13,6 +13,7 @@
 #include "base/task.h"                  // for NewRunnableMethod, etc
 #include "mozilla/layers/LayerTransactionChild.h"
 #include "mozilla/layers/PLayerTransactionChild.h"
+#include "mozilla/layers/TextureClient.h"// for TextureClient
 #include "mozilla/mozalloc.h"           // for operator new, etc
 #include "nsAutoPtr.h"
 #include "nsDebug.h"                    // for NS_RUNTIMEABORT
@@ -42,6 +43,7 @@ Atomic<int32_t> CompositableForwarder::sSerialCounter(0);
 CompositorBridgeChild::CompositorBridgeChild(ClientLayerManager *aLayerManager)
   : mLayerManager(aLayerManager)
   , mCanSend(false)
+  , mFwdTransactionId(0)
 {
 }
 
@@ -76,6 +78,7 @@ CompositorBridgeChild::Destroy()
 {
   // This must not be called from the destructor!
   MOZ_ASSERT(mRefCnt != 0);
+  mTexturesWaitingRecycled.Clear();
 
   if (!mCanSend) {
     return;
@@ -766,7 +769,8 @@ PTextureChild*
 CompositorBridgeChild::AllocPTextureChild(const SurfaceDescriptor&,
                                           const LayersBackend&,
                                           const TextureFlags&,
-                                          const uint64_t&)
+                                          const uint64_t&,
+                                          const uint64_t& aSerial)
 {
   return TextureClient::CreateIPDLActor();
 }
@@ -775,6 +779,90 @@ bool
 CompositorBridgeChild::DeallocPTextureChild(PTextureChild* actor)
 {
   return TextureClient::DestroyIPDLActor(actor);
+}
+
+bool
+CompositorBridgeChild::RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageData>&& aMessages)
+{
+  for (AsyncParentMessageArray::index_type i = 0; i < aMessages.Length(); ++i) {
+    const AsyncParentMessageData& message = aMessages[i];
+
+    switch (message.type()) {
+      case AsyncParentMessageData::TOpDeliverFence: {
+        const OpDeliverFence& op = message.get_OpDeliverFence();
+        FenceHandle fence = op.fence();
+        DeliverFence(op.TextureId(), fence);
+        break;
+      }
+      case AsyncParentMessageData::TOpNotifyNotUsed: {
+        const OpNotifyNotUsed& op = message.get_OpNotifyNotUsed();
+        NotifyNotUsed(op.TextureId(), op.fwdTransactionId());
+        break;
+      }
+      default:
+        NS_ERROR("unknown AsyncParentMessageData type");
+        return false;
+    }
+  }
+  return true;
+}
+
+void
+CompositorBridgeChild::HoldUntilCompositableRefReleasedIfNecessary(TextureClient* aClient)
+{
+  if (!aClient) {
+    return;
+  }
+
+  if (!(aClient->GetFlags() & TextureFlags::RECYCLE) &&
+     !aClient->NeedsFenceHandle()) {
+    return;
+  }
+
+  if (aClient->GetFlags() & TextureFlags::RECYCLE) {
+    aClient->SetLastFwdTransactionId(GetFwdTransactionId());
+    mTexturesWaitingRecycled.Put(aClient->GetSerial(), aClient);
+    return;
+  }
+  MOZ_ASSERT(!(aClient->GetFlags() & TextureFlags::RECYCLE));
+  MOZ_ASSERT(aClient->NeedsFenceHandle());
+  // Handle a case of fence delivery via ImageBridge.
+  // GrallocTextureData alwasys requests fence delivery if ANDROID_VERSION >= 17.
+  ImageBridgeChild::GetSingleton()->HoldUntilFenceHandleDelivery(aClient, GetFwdTransactionId());
+}
+
+void
+CompositorBridgeChild::NotifyNotUsed(uint64_t aTextureId, uint64_t aFwdTransactionId)
+{
+  RefPtr<TextureClient> client = mTexturesWaitingRecycled.Get(aTextureId);
+  if (!client) {
+    return;
+  }
+  if (aFwdTransactionId < client->GetLastFwdTransactionId()) {
+    // Released on host side, but client already requested newer use texture.
+    return;
+  }
+  mTexturesWaitingRecycled.Remove(aTextureId);
+}
+
+void
+CompositorBridgeChild::DeliverFence(uint64_t aTextureId, FenceHandle& aReleaseFenceHandle)
+{
+  RefPtr<TextureClient> client = mTexturesWaitingRecycled.Get(aTextureId);
+  if (!client) {
+    return;
+  }
+  client->SetReleaseFenceHandle(aReleaseFenceHandle);
+}
+
+void
+CompositorBridgeChild::CancelWaitForRecycle(uint64_t aTextureId)
+{
+  RefPtr<TextureClient> client = mTexturesWaitingRecycled.Get(aTextureId);
+  if (!client) {
+    return;
+  }
+  mTexturesWaitingRecycled.Remove(aTextureId);
 }
 
 } // namespace layers
