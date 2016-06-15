@@ -90,7 +90,8 @@ MediaEngineDefaultVideoSource::Allocate(const dom::MediaTrackConstraints &aConst
                                         const MediaEnginePrefs &aPrefs,
                                         const nsString& aDeviceId,
                                         const nsACString& aOrigin,
-                                        BaseAllocationHandle** aOutHandle)
+                                        BaseAllocationHandle** aOutHandle,
+                                        const char** aOutBadConstraint)
 {
   if (mState != kReleased) {
     return NS_ERROR_FAILURE;
@@ -221,7 +222,8 @@ MediaEngineDefaultVideoSource::Restart(
     BaseAllocationHandle* aHandle,
     const dom::MediaTrackConstraints& aConstraints,
     const MediaEnginePrefs &aPrefs,
-    const nsString& aDeviceId)
+    const nsString& aDeviceId,
+    const char** aOutBadConstraint)
 {
   return NS_OK;
 }
@@ -416,7 +418,8 @@ MediaEngineDefaultAudioSource::Allocate(const dom::MediaTrackConstraints &aConst
                                         const MediaEnginePrefs &aPrefs,
                                         const nsString& aDeviceId,
                                         const nsACString& aOrigin,
-                                        BaseAllocationHandle** aOutHandle)
+                                        BaseAllocationHandle** aOutHandle,
+                                        const char** aOutBadConstraint)
 {
   if (mState != kReleased) {
     return NS_ERROR_FAILURE;
@@ -530,7 +533,8 @@ nsresult
 MediaEngineDefaultAudioSource::Restart(BaseAllocationHandle* aHandle,
                                        const dom::MediaTrackConstraints& aConstraints,
                                        const MediaEnginePrefs &aPrefs,
-                                       const nsString& aDeviceId)
+                                       const nsString& aDeviceId,
+                                       const char** aOutBadConstraint)
 {
   return NS_OK;
 }
