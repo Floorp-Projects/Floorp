@@ -6,7 +6,6 @@ Cu.import("resource://gre/modules/Task.jsm");
 Cu.import("resource://gre/modules/ExtensionUtils.jsm");
 var {
   EventManager,
-  IconDetails,
 } = ExtensionUtils;
 
 // WeakMap[Extension -> PageAction]
