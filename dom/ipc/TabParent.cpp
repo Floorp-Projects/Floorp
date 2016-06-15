@@ -3321,7 +3321,7 @@ TabParent::AddInitialDnDDataTo(DataTransfer* aDataTransfer)
         auto* parent = static_cast<BlobParent*>(item.data().get_PBlobParent());
         RefPtr<BlobImpl> impl = parent->GetBlobImpl();
         variant->SetAsISupports(impl);
-      } else if (item.data().type() == IPCDataTransferData::TnsCString) {
+      } else if (item.data().type() == IPCDataTransferData::TShmem) {
         if (nsContentUtils::IsFlavorImage(item.flavor())) {
           // An image! Get the imgIContainer for it and set it in the variant.
           nsCOMPtr<imgIContainer> imageContainer;
@@ -3333,8 +3333,11 @@ TabParent::AddInitialDnDDataTo(DataTransfer* aDataTransfer)
           }
           variant->SetAsISupports(imageContainer);
         } else {
-          variant->SetAsACString(item.data().get_nsCString());
+          Shmem data = item.data().get_Shmem();
+          variant->SetAsACString(nsDependentCString(data.get<char>(), data.Size<char>()));
         }
+
+        mozilla::Unused << DeallocShmem(item.data().get_Shmem());
       }
 
       // Using system principal here, since once the data is on parent process
