@@ -38,6 +38,7 @@ task:
     index:
       rank: {{pushlog_id}}
     treeherder:
+      jobKind: build
       groupSymbol: tc
       groupName: Submitted by taskcluster
       symbol: B

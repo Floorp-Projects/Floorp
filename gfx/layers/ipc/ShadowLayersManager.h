@@ -14,6 +14,7 @@ class TargetConfig;
 class LayerTransactionParent;
 class AsyncCompositionManager;
 class APZTestData;
+class CompositorBridgeParentIPCAllocator;
 
 class ShadowLayersManager
 {
@@ -44,6 +45,7 @@ public:
     virtual void SetConfirmedTargetAPZC(const LayerTransactionParent* aLayerTree,
                                         const uint64_t& aInputBlockId,
                                         const nsTArray<ScrollableLayerGuid>& aTargets) = 0;
+    virtual CompositorBridgeParentIPCAllocator* AsCompositorBridgeParentIPCAllocator() { return nullptr; }
 };
 
 } // namespace layers

@@ -119,7 +119,7 @@ interface XMLHttpRequest : XMLHttpRequestEventTarget {
   [Throws=Workers]
   ByteString getAllResponseHeaders();
 
-  [Throws=Workers]
+  [Throws]
   void overrideMimeType(DOMString mime);
 
   [SetterThrows]

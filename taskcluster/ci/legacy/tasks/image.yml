@@ -46,6 +46,7 @@ task:
       - staging
       - production
     treeherder:
+      jobKind: other
       build:
         platform: 'taskcluster-images'
       symbol: 'I'

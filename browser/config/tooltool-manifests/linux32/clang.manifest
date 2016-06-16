@@ -1,8 +1,8 @@
 [
 {
 "version": "clang 3.8.0, libgcc 4.8.5",
-"size": 118876936,
-"digest": "f021d7b23cbbcc4086514b4bf20c86c9f94dbe5b4e0f1ef3aaf2bea337430f7c0d0965c55fe8be0e944a46c3b1555b9245c7af8b8b141eac4b47deea977b4852",
+"size": 139183100,
+"digest": "a056a151d4f25f415b6d905136c3fa8d51d12a5a815c3df37d5663c67d59571736641a4c990884a69f78ea6b5e37a6a7bfff0417dfe38936d842d6fa0776ae54",
 "algorithm": "sha512", 
 "filename": "clang.tar.xz",
 "unpack": true,

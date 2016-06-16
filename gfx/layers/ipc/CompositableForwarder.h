@@ -17,6 +17,8 @@
 #include "mozilla/layers/TextureClient.h"  // for TextureClient
 #include "nsRegion.h"                   // for nsIntRegion
 #include "mozilla/gfx/Rect.h"
+#include "nsHashKeys.h"
+#include "nsTHashtable.h"
 
 namespace mozilla {
 namespace layers {
@@ -68,7 +70,8 @@ public:
   virtual PTextureChild* CreateTexture(
     const SurfaceDescriptor& aSharedData,
     LayersBackend aLayersBackend,
-    TextureFlags aFlags) = 0;
+    TextureFlags aFlags,
+    uint64_t aSerial) = 0;
 
   /**
    * Communicate to the compositor that aRegion in the texture identified by
@@ -132,8 +135,6 @@ public:
                                          TextureClient* aClientOnBlack,
                                          TextureClient* aClientOnWhite) = 0;
 
-  virtual void SendPendingAsyncMessges() = 0;
-
   void IdentifyTextureHost(const TextureFactoryIdentifier& aIdentifier);
 
   virtual int32_t GetMaxTextureSize() const override
@@ -166,6 +167,9 @@ public:
     return mTextureFactoryIdentifier;
   }
 
+  virtual void UpdateFwdTransactionId() = 0;
+  virtual uint64_t GetFwdTransactionId() = 0;
+
   int32_t GetSerial() { return mSerial; }
 
   SyncObject* GetSyncObject() { return mSyncObject; }
@@ -177,6 +181,7 @@ protected:
   nsTArray<RefPtr<TextureClient> > mTexturesToRemove;
   nsTArray<RefPtr<CompositableClient>> mCompositableClientsToRemove;
   RefPtr<SyncObject> mSyncObject;
+
   const int32_t mSerial;
   static mozilla::Atomic<int32_t> sSerialCounter;
 };

@@ -26,9 +26,7 @@ namespace layers {
 class ShadowLayerForwarder;
 
 class LayerTransactionChild : public PLayerTransactionChild
-                            , public AsyncTransactionTrackersHolder
 {
-  typedef InfallibleTArray<AsyncParentMessageData> AsyncParentMessageArray;
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(LayerTransactionChild)
   /**
@@ -64,9 +62,6 @@ protected:
 
   virtual PCompositableChild* AllocPCompositableChild(const TextureInfo& aInfo) override;
   virtual bool DeallocPCompositableChild(PCompositableChild* actor) override;
-
-  virtual bool
-  RecvParentAsyncMessages(InfallibleTArray<AsyncParentMessageData>&& aMessages) override;
 
   virtual void ActorDestroy(ActorDestroyReason why) override;
 

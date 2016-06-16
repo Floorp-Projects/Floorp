@@ -133,6 +133,7 @@ class CompositorOGL;
 class CompositorD3D9;
 class CompositorD3D11;
 class BasicCompositor;
+class TextureHost;
 class TextureReadLock;
 
 enum SurfaceInitMode
@@ -200,7 +201,8 @@ public:
   CreateDataTextureSourceAround(gfx::DataSourceSurface* aSurface) { return nullptr; }
 
   virtual bool Initialize() = 0;
-  virtual void Destroy() = 0;
+  virtual void Destroy();
+  bool IsDestroyed() const { return mIsDestroyed; }
 
   virtual void DetachWidget() { mWidget = nullptr; }
 
@@ -544,6 +546,16 @@ public:
     mUnlockAfterComposition.AppendElement(aLock);
   }
 
+  /// Most compositor backends operate asynchronously under the hood. This
+  /// means that when a layer stops using a texture it is often desirable to
+  /// wait for the end of the next composition before NotifyNotUsed() call.
+  /// This function provides a convenient way to do this delayed NotifyNotUsed()
+  /// call, if the texture itself requires it.
+  /// See bug 1260611 and bug 1252835
+  void NotifyNotUsedAfterComposition(TextureHost* aTextureHost);
+
+  void FlushPendingNotifyNotUsed();
+
 protected:
   void DrawDiagnosticsInternal(DiagnosticFlags aFlags,
                                const gfx::Rect& aVisibleRect,
@@ -574,6 +586,11 @@ protected:
   nsTArray<RefPtr<TextureReadLock>> mUnlockAfterComposition;
 
   /**
+   * An array of TextureHosts that will need to call NotifyNotUsed() after the next composition.
+   */
+  nsTArray<RefPtr<TextureHost>> mNotifyNotUsedAfterComposition;
+
+  /**
    * Render time for the current composition.
    */
   TimeStamp mCompositionTime;
@@ -602,6 +619,8 @@ protected:
   gfx::IntRect mTargetBounds;
 
   widget::CompositorWidgetProxy* mWidget;
+
+  bool mIsDestroyed;
 
 #if defined(MOZ_WIDGET_GONK) && ANDROID_VERSION >= 17
   FenceHandle mReleaseFenceHandle;
