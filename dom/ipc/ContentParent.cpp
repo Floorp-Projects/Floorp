@@ -2599,6 +2599,14 @@ ContentParent::InitInternal(ProcessPriority aInitialPriority,
 #endif
   MaybeFileDesc brokerFd = void_t();
 #ifdef XP_LINUX
+  // XXX: Checking the pref here makes it possible to enable/disable sandboxing
+  // during an active session. Currently the pref is only used for testing
+  // purpose. If the decision is made to permanently rely on the pref, this
+  // should be changed so that it is required to restart firefox for the change
+  // of value to take effect.
+  shouldSandbox = (Preferences::GetInt("security.sandbox.content.level") > 0) &&
+    !PR_GetEnv("MOZ_DISABLE_CONTENT_SANDBOX");
+
   if (shouldSandbox) {
     MOZ_ASSERT(!mSandboxBroker);
     UniquePtr<SandboxBroker::Policy> policy =
