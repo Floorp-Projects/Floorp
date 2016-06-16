@@ -588,7 +588,8 @@ CompositorBridgeParent::CompositorBridgeParent(widget::CompositorWidgetProxy* aW
                                                bool aUseAPZ,
                                                bool aUseExternalSurfaceSize,
                                                int aSurfaceWidth, int aSurfaceHeight)
-  : mWidgetProxy(aWidget)
+  : CompositorBridgeParentIPCAllocator("CompositorBridgeParent")
+  , mWidgetProxy(aWidget)
   , mIsTesting(false)
   , mPendingTransaction(0)
   , mPaused(false)
@@ -611,7 +612,6 @@ CompositorBridgeParent::CompositorBridgeParent(widget::CompositorWidgetProxy* aW
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(CompositorThread(),
              "The compositor thread must be Initialized before instanciating a CompositorBridgeParent.");
-  MOZ_COUNT_CTOR(CompositorBridgeParent);
 
   // Always run destructor on the main thread
   SetMessageLoopToPostDestructionTo(MessageLoop::current());
@@ -652,7 +652,6 @@ CompositorBridgeParent::RootLayerTreeId()
 CompositorBridgeParent::~CompositorBridgeParent()
 {
   MOZ_ASSERT(NS_IsMainThread());
-  MOZ_COUNT_DTOR(CompositorBridgeParent);
 
   InfallibleTArray<PTextureParent*> textures;
   ManagedPTextureParent(textures);
@@ -1822,7 +1821,8 @@ class CrossProcessCompositorBridgeParent final : public PCompositorBridgeParent,
 
 public:
   explicit CrossProcessCompositorBridgeParent(Transport* aTransport)
-    : mTransport(aTransport)
+    : CompositorBridgeParentIPCAllocator("CrossProcessCompositorBridgeParent")
+    , mTransport(aTransport)
     , mSubprocess(nullptr)
     , mNotifyAfterRemotePaint(false)
     , mDestroyCalled(false)
