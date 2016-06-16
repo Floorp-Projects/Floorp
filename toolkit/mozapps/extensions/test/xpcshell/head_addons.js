@@ -6,6 +6,8 @@ var AM_Cc = Components.classes;
 var AM_Ci = Components.interfaces;
 var AM_Cu = Components.utils;
 
+AM_Cu.importGlobalProperties(["TextEncoder"]);
+
 const CERTDB_CONTRACTID = "@mozilla.org/security/x509certdb;1";
 const CERTDB_CID = Components.ID("{fb0bbc5c-452e-4783-b32c-80124693d871}");
 
@@ -1027,6 +1029,12 @@ function createInstallRDF(aData) {
     });
   }
 
+  if ("dependencies" in aData) {
+    aData.dependencies.forEach(function(aDependency) {
+      rdf += `<em:dependency><Description em:id="${escapeXML(aDependency)}"/></em:dependency>\n`;
+    });
+  }
+
   rdf += "</Description>\n</RDF>\n";
   return rdf;
 }
@@ -1187,6 +1195,39 @@ function writeInstallRDFToXPI(aData, aDir, aId, aExtraFile) {
 }
 
 /**
+ * Writes the given data to a file in the given zip file.
+ *
+ * @param   aFile
+ *          The zip file to write to.
+ * @param   aFiles
+ *          An object containing filenames and the data to write to the
+ *          corresponding paths in the zip file.
+ * @param   aFlags
+ *          Additional flags to open the file with.
+ */
+function writeFilesToZip(aFile, aFiles, aFlags = 0) {
+  var zipW = AM_Cc["@mozilla.org/zipwriter;1"].createInstance(AM_Ci.nsIZipWriter);
+  zipW.open(aFile, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | aFlags);
+
+  for (let path of Object.keys(aFiles)) {
+    let data = aFiles[path];
+    if (!(data instanceof ArrayBuffer)) {
+      data = new TextEncoder("utf-8").encode(data).buffer;
+    }
+
+    let stream = AM_Cc["@mozilla.org/io/arraybuffer-input-stream;1"]
+      .createInstance(AM_Ci.nsIArrayBufferInputStream);
+    stream.setData(data, 0, data.byteLength);
+
+    // Note these files are being created in the XPI archive with date "0" which is 1970-01-01.
+    zipW.addEntryStream(path, 0, AM_Ci.nsIZipWriter.COMPRESSION_NONE,
+                        stream, false);
+  }
+
+  zipW.close();
+}
+
+/**
  * Writes an install.rdf manifest into an XPI file using the properties passed
  * in a JS object. The objects should contain a property for each property to
  * appear in the RDF. The object may contain an array of objects with id,
@@ -1201,20 +1242,16 @@ function writeInstallRDFToXPI(aData, aDir, aId, aExtraFile) {
  *          An optional dummy file to create in the extension
  */
 function writeInstallRDFToXPIFile(aData, aFile, aExtraFile) {
-  var rdf = createInstallRDF(aData);
-  var stream = AM_Cc["@mozilla.org/io/string-input-stream;1"].
-               createInstance(AM_Ci.nsIStringInputStream);
-  stream.setData(rdf, -1);
-  var zipW = AM_Cc["@mozilla.org/zipwriter;1"].
-             createInstance(AM_Ci.nsIZipWriter);
-  zipW.open(aFile, FileUtils.MODE_WRONLY | FileUtils.MODE_CREATE | FileUtils.MODE_TRUNCATE);
-  // Note these files are being created in the XPI archive with date "0" which is 1970-01-01.
-  zipW.addEntryStream("install.rdf", 0, AM_Ci.nsIZipWriter.COMPRESSION_NONE,
-                      stream, false);
-  if (aExtraFile)
-    zipW.addEntryStream(aExtraFile, 0, AM_Ci.nsIZipWriter.COMPRESSION_NONE,
-                        stream, false);
-  zipW.close();
+  let files = {
+    "install.rdf": createInstallRDF(aData),
+  };
+
+  if (typeof aExtraFile == "object")
+    Object.assign(files, aExtraFile);
+  else if (aExtraFile)
+    files[aExtraFile] = "";
+
+  writeFilesToZip(aFile, files, FileUtils.MODE_TRUNCATE);
 }
 
 var temp_xpis = [];
@@ -1226,7 +1263,7 @@ var temp_xpis = [];
  *          The object holding data about the add-on
  * @return  A file pointing to the created XPI file
  */
-function createTempXPIFile(aData) {
+function createTempXPIFile(aData, aExtraFile) {
   var file = gTmpD.clone();
   file.append("foo.xpi");
   do {
@@ -1234,7 +1271,7 @@ function createTempXPIFile(aData) {
   } while (file.exists());
 
   temp_xpis.push(file);
-  writeInstallRDFToXPIFile(aData, file);
+  writeInstallRDFToXPIFile(aData, file, aExtraFile);
   return file;
 }
 
