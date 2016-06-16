@@ -7,7 +7,6 @@ add_task(function*() {
     yield PlacesUtils.bookmarks.remove(bm);
   });
 
-  Services.prefs.setBoolPref("browser.urlbar.unifiedcomplete", true);
   yield BrowserTestUtils.withNewTab({ gBrowser, url: "about:blank" }, testDelete);
 });
 
