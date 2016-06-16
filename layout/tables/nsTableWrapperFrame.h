@@ -92,7 +92,7 @@ public:
   /**
    * Get the "type" of the frame
    *
-   * @see nsGkAtoms::tableOuterFrame
+   * @see nsGkAtoms::tableWrapperFrame
    */
   virtual nsIAtom* GetType() const override;
 

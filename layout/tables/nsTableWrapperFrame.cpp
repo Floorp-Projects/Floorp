@@ -1013,7 +1013,7 @@ nsTableWrapperFrame::Reflow(nsPresContext*           aPresContext,
 nsIAtom*
 nsTableWrapperFrame::GetType() const
 {
-  return nsGkAtoms::tableOuterFrame;
+  return nsGkAtoms::tableWrapperFrame;
 }
 
 /* ----- global methods ----- */
