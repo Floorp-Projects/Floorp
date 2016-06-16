@@ -1694,6 +1694,15 @@ public:
       // delete it.
       NS_ASSERTION(mGraph->mForceShutDown || !mGraph->mRealtime,
                    "Not in forced shutdown?");
+      for (MediaStream* stream : mGraph->AllStreams()) {
+        // Clean up all MediaSegments since we cannot release Images too
+        // late during shutdown.
+        if (SourceMediaStream* source = stream->AsSourceStream()) {
+          // Finishing a SourceStream prevents new data from being appended.
+          source->Finish();
+        }
+        stream->GetStreamTracks().Clear();
+      }
 
       mGraph->mLifecycleState =
         MediaStreamGraphImpl::LIFECYCLE_WAITING_FOR_STREAM_DESTRUCTION;
