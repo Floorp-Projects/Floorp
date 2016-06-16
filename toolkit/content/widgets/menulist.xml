@@ -66,10 +66,11 @@
       </handler>
     </handlers>
 
-    <implementation implements="nsIDOMXULMenuListElement, nsIDOMEventListener">
+    <implementation implements="nsIDOMXULMenuListElement">
       <constructor>
         this.mInputField = null;
         this.mSelectedInternal = null;
+        this.mAttributeObserver = null;
         this.menuBoxObject = this.boxObject;
         this.setInitialSelection();
       </constructor>
@@ -211,39 +212,29 @@
 
             if (oldval) {
               oldval.removeAttribute('selected');
-              if (document instanceof Components.interfaces.nsIDOMXULDocument) {
-                document.removeBroadcastListenerFor(oldval, this, "value");
-                document.removeBroadcastListenerFor(oldval, this, "label");
-                document.removeBroadcastListenerFor(oldval, this, "image");
-                document.removeBroadcastListenerFor(oldval, this, "description");
-              }
-              else
-                oldval.removeEventListener("DOMAttrModified", this, false);
+              this.mAttributeObserver.disconnect();
             }
 
             this.mSelectedInternal = val;
+            let attributeFilter = ["value", "label", "image", "description"];
             if (val) {
               val.setAttribute('selected', 'true');
-              this.setAttribute('value', val.getAttribute('value'));
-              this.setAttribute('image', val.getAttribute('image'));
-              this.setAttribute('label', val.getAttribute('label'));
-              this.setAttribute('description', val.getAttribute('description'));
-              // DOMAttrModified listeners slow down setAttribute calls within
-              // the document, see bug 395496
-              if (document instanceof Components.interfaces.nsIDOMXULDocument) {
-                document.addBroadcastListenerFor(val, this, "value");
-                document.addBroadcastListenerFor(val, this, "label");
-                document.addBroadcastListenerFor(val, this, "image");
-                document.addBroadcastListenerFor(val, this, "description");
+              for (let attr of attributeFilter) {
+                if (val.hasAttribute(attr)) {
+                  this.setAttribute(attr, val.getAttribute(attr));
+                }
+                else {
+                  this.removeAttribute(attr);
+                }
               }
-              else
-                val.addEventListener("DOMAttrModified", this, false);
+
+              this.mAttributeObserver = new MutationObserver(this.handleMutation.bind(this));
+              this.mAttributeObserver.observe(val, { attributeFilter });
             }
             else {
-              this.removeAttribute('value');
-              this.removeAttribute('image');
-              this.removeAttribute('label');
-              this.removeAttribute('description');
+              for (let attr of attributeFilter) {
+                this.removeAttribute(attr);
+              }
             }
 
             var event = document.createEvent("Events");
@@ -259,19 +250,26 @@
         </setter>
       </property>
 
-      <method name="handleEvent">
-        <parameter name="aEvent"/>
+      <method name="handleMutation">
+        <parameter name="aRecords"/>
         <body>
           <![CDATA[
-            if (aEvent.type == "DOMAttrModified" &&
-                aEvent.target == this.mSelectedInternal) {
-              var attrName = aEvent.attrName;
-              switch (attrName) {
-                case "value":
-                case "label":
-                case "image":
-                case "description":
-                  this.setAttribute(attrName, aEvent.newValue);
+            for (let record of aRecords) {
+              let t = record.target;
+              if (t == this.mSelectedInternal) {
+                let attrName = record.attributeName;
+                switch (attrName) {
+                  case "value":
+                  case "label":
+                  case "image":
+                  case "description":
+                    if (t.hasAttribute(attrName)) {
+                      this.setAttribute(attrName, t.getAttribute(attrName));
+                    }
+                    else {
+                      this.removeAttribute(attrName);
+                    }
+                }
               }
             }
           ]]>
@@ -384,15 +382,8 @@
 
       <destructor>
         <![CDATA[
-          if (this.mSelectedInternal) {
-            if (document instanceof Components.interfaces.nsIDOMXULDocument) {
-              document.removeBroadcastListenerFor(this.mSelectedInternal, this, "value");
-              document.removeBroadcastListenerFor(this.mSelectedInternal, this, "label");
-              document.removeBroadcastListenerFor(this.mSelectedInternal, this, "image");
-              document.removeBroadcastListenerFor(this.mSelectedInternal, this, "description");
-            }
-            else
-              this.mSelectedInternal.removeEventListener("DOMAttrModified", this, false);
+          if (this.mAttributeObserver) {
+            this.mAttributeObserver.disconnect();
           }
         ]]>
       </destructor>

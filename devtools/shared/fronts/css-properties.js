@@ -6,6 +6,7 @@
 const { FrontClassWithSpec, Front } = require("devtools/shared/protocol");
 const { cssPropertiesSpec } = require("devtools/shared/specs/css-properties");
 const { Task } = require("devtools/shared/task");
+const { CSS_PROPERTIES } = require("devtools/shared/css-properties-db");
 
 /**
  * Build up a regular expression that matches a CSS variable token. This is an
@@ -49,6 +50,8 @@ exports.CssPropertiesFront = CssPropertiesFront;
 /**
  * Ask questions to a CSS database. This class does not care how the database
  * gets loaded in, only the questions that you can ask to it.
+ * Prototype functions are bound to 'this' so they can be passed around as helper
+ * functions.
  *
  * @param {Array}  propertiesList
  *                 A list of known properties.
@@ -58,10 +61,10 @@ exports.CssPropertiesFront = CssPropertiesFront;
  */
 function CssProperties(properties) {
   this.properties = properties;
-  // Bind isKnown and isInherited so it can be passed around to helper
-  // functions.
+
   this.isKnown = this.isKnown.bind(this);
   this.isInherited = this.isInherited.bind(this);
+  this.supportsType = this.supportsType.bind(this);
 }
 
 CssProperties.prototype = {
@@ -69,16 +72,33 @@ CssProperties.prototype = {
    * Checks to see if the property is known by the browser. This function has
    * `this` already bound so that it can be passed around by reference.
    *
-   * @param {String}   property
-   *                   The property name to be checked.
+   * @param {String} property The property name to be checked.
    * @return {Boolean}
    */
   isKnown(property) {
     return !!this.properties[property] || isCssVariable(property);
   },
 
+  /**
+   * Checks to see if the property is an inherited one.
+   *
+   * @param {String} property The property name to be checked.
+   * @return {Boolean}
+   */
   isInherited(property) {
     return this.properties[property] && this.properties[property].isInherited;
+  },
+
+  /**
+   * Checks if the property supports the given CSS type.
+   * CSS types should come from devtools/shared/css-properties-db.js' CSS_TYPES.
+   *
+   * @param {String} property The property to be checked.
+   * @param {Number} type One of the type values from CSS_TYPES.
+   * @return {Boolean}
+   */
+  supportsType(property, type) {
+    return this.properties[property] && this.properties[property].supports.includes(type);
   }
 };
 
@@ -103,15 +123,28 @@ exports.initCssProperties = Task.async(function* (toolbox) {
 
   let db, front;
 
-  // Get the list dynamically if the cssProperties exists.
+  // Get the list dynamically if the cssProperties actor exists.
   if (toolbox.target.hasActor("cssProperties")) {
     front = CssPropertiesFront(client, toolbox.target.form);
     db = yield front.getCSSDatabase();
+
+    // Even if the target has the cssProperties actor, it may not be the latest version.
+    // So, the "supports" data may be missing.
+    // Start with the server's list (because that's the correct one), and add the supports
+    // information if required.
+    if (!db.color.supports) {
+      for (let name in db) {
+        if (typeof CSS_PROPERTIES[name] === "object") {
+          db[name].supports = CSS_PROPERTIES[name].supports;
+        }
+      }
+    }
   } else {
-    // The target does not support this actor, so require a static list of
-    // supported properties.
-    db = require("devtools/shared/css-properties-db");
+    // The target does not support this actor, so require a static list of supported
+    // properties.
+    db = CSS_PROPERTIES;
   }
+
   const cssProperties = new CssProperties(db);
   cachedCssProperties.set(client, {cssProperties, front});
   return {cssProperties, front};
