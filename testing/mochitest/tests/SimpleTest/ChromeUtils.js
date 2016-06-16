@@ -13,28 +13,6 @@ const scriptLoader = Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
 scriptLoader.loadSubScript("chrome://mochikit/content/tests/SimpleTest/EventUtils.js", EventUtils);
 
 /**
- * Synthesize a query text content event.
- *
- * @param aOffset  The character offset.  0 means the first character in the
- *                 selection root.
- * @param aLength  The length of getting text.  If the length is too long,
- *                 the extra length is ignored.
- * @param aWindow  Optional (If null, current |window| will be used)
- * @return         An nsIQueryContentEventResult object.  If this failed,
- *                 the result might be null.
- */
-function synthesizeQueryTextContent(aOffset, aLength, aWindow)
-{
-  var utils = _getDOMWindowUtils(aWindow);
-  if (!utils) {
-    return nullptr;
-  }
-  return utils.sendQueryContentEvent(utils.QUERY_TEXT_CONTENT,
-                                     aOffset, aLength, 0, 0,
-                                     QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK);
-}
-
-/**
  * Synthesize a query text rect event.
  *
  * @param aOffset  The character offset.  0 means the first character in the
