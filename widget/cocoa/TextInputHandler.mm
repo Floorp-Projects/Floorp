@@ -27,7 +27,7 @@
 using namespace mozilla;
 using namespace mozilla::widget;
 
-PRLogModuleInfo* gLog = nullptr;
+LazyLogModule gLog("TextInputHandlerWidgets");
 
 static const char*
 OnOrOff(bool aBool)
@@ -292,11 +292,11 @@ IsControlChar(uint32_t aCharCode)
 static uint32_t gHandlerInstanceCount = 0;
 
 static void
-InitLogModule()
+EnsureToLogAllKeyboardLayoutsAndIMEs()
 {
-  // Clear() is always called when TISInputSourceWrappper is created.
-  if (!gLog) {
-    gLog = PR_NewLogModule("TextInputHandlerWidgets");
+  static bool sDone = false;
+  if (!sDone) {
+    sDone = true;
     TextInputHandler::DebugPrintAllKeyboardLayouts();
     IMEInputHandler::DebugPrintAllIMEModes();
   }
@@ -721,7 +721,7 @@ void
 TISInputSourceWrapper::Clear()
 {
   // Clear() is always called when TISInputSourceWrappper is created.
-  InitLogModule();
+  EnsureToLogAllKeyboardLayoutsAndIMEs();
 
   if (mInputSourceList) {
     ::CFRelease(mInputSourceList);
@@ -1494,7 +1494,7 @@ TextInputHandler::TextInputHandler(nsChildView* aWidget,
                                    NSView<mozView> *aNativeView) :
   IMEInputHandler(aWidget, aNativeView)
 {
-  InitLogModule();
+  EnsureToLogAllKeyboardLayoutsAndIMEs();
   [mView installTextInputHandler:this];
 }
 
