@@ -198,3 +198,9 @@ const styleRuleSpec = generateActorSpec({
 });
 
 exports.styleRuleSpec = styleRuleSpec;
+
+// The PageStyle actor flattens the DOM CSS objects a little bit, merging
+// Rules and their Styles into one actor.  For elements (which have a style
+// but no associated rule) we fake a rule with the following style id.
+const ELEMENT_STYLE = 100;
+exports.ELEMENT_STYLE = ELEMENT_STYLE;
