@@ -82,14 +82,13 @@ function promiseTestHighlighterOutput(browser, word, expectedResult) {
 
         // We reached the amount of calls we expected, so now we can check
         // the amount of rects.
-        let lastSVGNode = callCounts.insertCalls.pop();
-        if (!lastSVGNode && expectedResult.rectCount !== 0) {
-          Assert.ok(false, `No SVG node found, but expected ${expectedResult.rectCount} rects.`);
+        let lastMaskNode = callCounts.insertCalls.pop();
+        if (!lastMaskNode && expectedResult.rectCount !== 0) {
+          Assert.ok(false, `No mask node found, but expected ${expectedResult.rectCount} rects.`);
         }
-        if (lastSVGNode) {
-          Assert.equal(lastSVGNode.getElementsByTagName("mask")[0]
-            .getElementsByTagName("rect").length, expectedResult.rectCount,
-            `Amount of inserted rects should match for '${word}'.`);
+        if (lastMaskNode) {
+          Assert.equal(lastMaskNode.getElementsByTagName("div").length,
+            expectedResult.rectCount, `Amount of inserted rects should match for '${word}'.`);
         }
 
         resolve();
@@ -123,22 +122,22 @@ add_task(function* setup() {
 add_task(function* testModalResults() {
   let tests = new Map([
     ["mo", {
-      rectCount: 5,
+      rectCount: 4,
       insertCalls: 2,
       removeCalls: AppConstants.platform == "linux" ? 1 : 2
     }],
     ["m", {
-      rectCount: 9,
+      rectCount: 8,
       insertCalls: 1,
       removeCalls: 1
     }],
     ["new", {
-      rectCount: 2,
+      rectCount: 1,
       insertCalls: 1,
       removeCalls: 1
     }],
     ["o", {
-      rectCount: 1218,
+      rectCount: 1217,
       insertCalls: 1,
       removeCalls: 1
     }]
@@ -177,7 +176,7 @@ add_task(function* testModalSwitching() {
 
     let word = "mo";
     let expectedResult = {
-      rectCount: 5,
+      rectCount: 4,
       insertCalls: 2,
       removeCalls: AppConstants.platform == "linux" ? 1 : 2
     };
