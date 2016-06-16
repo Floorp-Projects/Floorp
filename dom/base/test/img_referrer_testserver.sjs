@@ -93,10 +93,11 @@ function createTestPage2(aHead, aPolicy, aName) {
          </html>';
 }
 
-function createTestPage3(aPolicy, aName) {
+function createTestPage3(aHead, aPolicy, aName) {
   return '<!DOCTYPE HTML>\n\
-         <html>\n\
-           <body>\n\
+         <html>'+
+            aHead +
+           '<body>\n\
              <script>' +
                'var image = new Image();\n\
                image.src = "' + createTestUrl(aPolicy, "test", aName, "image") + '";\n\
@@ -111,10 +112,11 @@ function createTestPage3(aPolicy, aName) {
          </html>';
 }
 
-function createTestPage4(aPolicy, aName) {
+function createTestPage4(aHead, aPolicy, aName) {
   return '<!DOCTYPE HTML>\n\
-         <html>\n\
-           <body>\n\
+         <html>'+
+            aHead +
+           '<body>\n\
              <script>' +
                'var image = new Image();\n\
                image.referrerPolicy = "' + aPolicy + '";\n\
@@ -128,6 +130,23 @@ function createTestPage4(aPolicy, aName) {
            </body>\n\
          </html>';
 }
+
+function createSetAttributeTest1(aPolicy, aImgPolicy, aName) {
+  var headString = '<head>';
+  headString += '<meta name="referrer" content="' + aPolicy + '">';
+  headString += '<script></script>';
+
+  return createTestPage3(headString, aImgPolicy, aName);
+}
+
+function createSetAttributeTest2(aPolicy, aImgPolicy, aName) {
+  var headString = '<head>';
+  headString += '<meta name="referrer" content="' + aPolicy + '">';
+  headString += '<script></script>';
+
+  return createTestPage4(headString, aImgPolicy, aName);
+}
+
 
 function createTest4(aPolicy, aName) {
   var headString = '<head>';
@@ -256,19 +275,21 @@ function handleRequest(request, response) {
 
   if (action === 'generate-setAttribute-test1') {
     // ?action=generate-setAttribute-test1&policy=b64-encoded-string&name=name
-    var policy = unescape(params[1].split('=')[1]);
-    var name = unescape(params[2].split('=')[1]);
+    var imgPolicy = unescape(params[1].split('=')[1]);
+    var policy = unescape(params[2].split('=')[1]);
+    var name = unescape(params[3].split('=')[1]);
 
-    response.write(createTestPage3(policy, name));
+    response.write(createSetAttributeTest1(policy, imgPolicy, name));
     return;
   }
 
   if (action === 'generate-setAttribute-test2') {
     // ?action=generate-setAttribute-test2&policy=b64-encoded-string&name=name
-    var policy = unescape(params[1].split('=')[1]);
-    var name = unescape(params[2].split('=')[1]);
+    var imgPolicy = unescape(params[1].split('=')[1]);
+    var policy = unescape(params[2].split('=')[1]);
+    var name = unescape(params[3].split('=')[1]);
 
-    response.write(createTestPage4(policy, name));
+    response.write(createSetAttributeTest2(policy, imgPolicy, name));
     return;
   }
 

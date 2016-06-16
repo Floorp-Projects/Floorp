@@ -240,6 +240,12 @@ typedef GenericFlingAnimation FlingAnimation;
  * that has elapsed between the two samples.\n
  * NOTE: Not currently used in Android fling calculations.
  *
+ * \li\b apz.fling_min_velocity_threshold
+ * Minimum velocity for a fling to actually kick off. If the user pans and lifts
+ * their finger such that the velocity is smaller than this amount, no fling
+ * is initiated.\n
+ * Units: screen pixels per millisecond
+ *
  * \li\b apz.fling_stop_on_tap_threshold
  * When flinging, if the velocity is above this number, then a tap on the
  * screen will stop the fling without dispatching a tap to content. If the
@@ -1240,7 +1246,14 @@ nsEventStatus AsyncPanZoomController::OnTouchEnd(const MultiTouchInput& aEvent) 
     // what our final state is to avoid notification churn.
     StateChangeNotificationBlocker blocker(this);
     SetState(NOTHING);
-    APZC_LOG("%p starting a fling animation\n", this);
+
+    APZC_LOG("%p starting a fling animation if %f >= %f\n", this,
+        flingVelocity.Length(), gfxPrefs::APZFlingMinVelocityThreshold());
+
+    if (flingVelocity.Length() < gfxPrefs::APZFlingMinVelocityThreshold()) {
+      return nsEventStatus_eConsumeNoDefault;
+    }
+
     // Make a local copy of the tree manager pointer and check that it's not
     // null before calling DispatchFling(). This is necessary because Destroy(),
     // which nulls out mTreeManager, could be called concurrently.
