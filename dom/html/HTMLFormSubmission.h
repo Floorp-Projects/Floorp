@@ -54,8 +54,8 @@ public:
    * @param aName the name of the parameter
    * @param aValue the value of the parameter
    */
-  virtual nsresult AddNameValuePair(const nsAString& aName,
-                                    const nsAString& aValue) = 0;
+  virtual nsresult
+  AddNameValuePair(const nsAString& aName, const nsAString& aValue) = 0;
 
   /**
    * Submit a name/blob pair
@@ -65,8 +65,8 @@ public:
    * is actually a File, otherwise 'blob' string is used instead if the aBlob is
    * not null.
    */
-  virtual nsresult AddNameBlobOrNullPair(const nsAString& aName,
-                                         Blob* aBlob) = 0;
+  virtual nsresult
+  AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob) = 0;
 
   /**
    * Reports whether the instance supports AddIsindex().
@@ -96,8 +96,8 @@ public:
    * @param aURI the URI being submitted to [INOUT]
    * @param aPostDataStream a data stream for POST data [OUT]
    */
-  virtual nsresult GetEncodedSubmission(nsIURI* aURI,
-                                        nsIInputStream** aPostDataStream) = 0;
+  virtual nsresult
+  GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream) = 0;
 
   /**
    * Get the charset that will be used for submission.
@@ -134,13 +134,13 @@ protected:
   nsCOMPtr<nsIContent> mOriginatingElement;
 };
 
-class nsEncodingFormSubmission : public HTMLFormSubmission
+class EncodingFormSubmission : public HTMLFormSubmission
 {
 public:
-  nsEncodingFormSubmission(const nsACString& aCharset,
-                           nsIContent* aOriginatingElement);
+  EncodingFormSubmission(const nsACString& aCharset,
+                         nsIContent* aOriginatingElement);
 
-  virtual ~nsEncodingFormSubmission();
+  virtual ~EncodingFormSubmission();
 
   /**
    * Encode a Unicode string to bytes using the encoder (or just copy the input
@@ -163,22 +163,24 @@ private:
  * Handle multipart/form-data encoding, which does files as well as normal
  * inputs.  This always does POST.
  */
-class nsFSMultipartFormData : public nsEncodingFormSubmission
+class FSMultipartFormData : public EncodingFormSubmission
 {
 public:
   /**
    * @param aCharset the charset of the form as a string
    */
-  nsFSMultipartFormData(const nsACString& aCharset,
-                        nsIContent* aOriginatingElement);
-  ~nsFSMultipartFormData();
+  FSMultipartFormData(const nsACString& aCharset,
+                      nsIContent* aOriginatingElement);
+  ~FSMultipartFormData();
  
-  virtual nsresult AddNameValuePair(const nsAString& aName,
-                                    const nsAString& aValue) override;
-  virtual nsresult AddNameBlobOrNullPair(const nsAString& aName,
-                                         Blob* aBlob) override;
-  virtual nsresult GetEncodedSubmission(nsIURI* aURI,
-                                        nsIInputStream** aPostDataStream) override;
+  virtual nsresult
+  AddNameValuePair(const nsAString& aName, const nsAString& aValue) override;
+
+  virtual nsresult
+  AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob) override;
+
+  virtual nsresult
+  GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream) override;
 
   void GetContentType(nsACString& aContentType)
   {
