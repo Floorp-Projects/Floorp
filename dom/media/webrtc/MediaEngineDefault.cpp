@@ -115,6 +115,7 @@ MediaEngineDefaultVideoSource::Deallocate()
     return NS_ERROR_FAILURE;
   }
   mState = kReleased;
+  mImage = nullptr;
   return NS_OK;
 }
 
@@ -208,6 +209,7 @@ MediaEngineDefaultVideoSource::Stop(SourceMediaStream *aSource, TrackID aID)
   }
 
   mState = kStopped;
+  mImage = nullptr;
   return NS_OK;
 }
 
