@@ -1231,7 +1231,8 @@ IsNeedsANGLEWorkAround(const webgl::FormatInfo* format)
 bool
 WebGLContext::DoReadPixelsAndConvert(const webgl::FormatInfo* srcFormat, GLint x, GLint y,
                                      GLsizei width, GLsizei height, GLenum format,
-                                     GLenum destType, void* dest)
+                                     GLenum destType, void* dest, uint32_t destSize,
+                                     uint32_t rowStride)
 {
     if (gl->WorkAroundDriverBugs() &&
         gl->IsANGLE() &&
@@ -1305,7 +1306,36 @@ WebGLContext::DoReadPixelsAndConvert(const webgl::FormatInfo* srcFormat, GLint x
         return true;
     }
 
-    gl->fReadPixels(x, y, width, height, format, destType, dest);
+    // On at least Win+NV, we'll get PBO errors if we don't have at least
+    // `rowStride * height` bytes available to read into.
+    const auto naiveBytesNeeded = CheckedUint32(rowStride) * height;
+    const bool isDangerCloseToEdge = (!naiveBytesNeeded.isValid() ||
+                                      naiveBytesNeeded.value() > destSize);
+    const bool useParanoidHandling = (gl->WorkAroundDriverBugs() &&
+                                      isDangerCloseToEdge &&
+                                      mBoundPixelPackBuffer);
+    if (!useParanoidHandling) {
+        gl->fReadPixels(x, y, width, height, format, destType, dest);
+        return true;
+    }
+
+    // Read everything but the last row.
+    const auto bodyHeight = height - 1;
+    if (bodyHeight) {
+        gl->fReadPixels(x, y, width, bodyHeight, format, destType, dest);
+    }
+
+    // Now read the last row.
+    gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, 1);
+    gl->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH, 0);
+    gl->fPixelStorei(LOCAL_GL_PACK_SKIP_ROWS, 0);
+
+    const auto tailRowOffset = (char*)dest + rowStride * bodyHeight;
+    gl->fReadPixels(x, y+bodyHeight, width, 1, format, destType, tailRowOffset);
+
+    gl->fPixelStorei(LOCAL_GL_PACK_ALIGNMENT, mPixelStore_PackAlignment);
+    gl->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH, mPixelStore_PackRowLength);
+    gl->fPixelStorei(LOCAL_GL_PACK_SKIP_ROWS, mPixelStore_PackSkipRows);
     return true;
 }
 
@@ -1764,7 +1794,7 @@ WebGLContext::ReadPixelsImpl(GLint x, GLint y, GLsizei rawWidth, GLsizei rawHeig
 
     if (rwWidth == uint32_t(width) && rwHeight == uint32_t(height)) {
         DoReadPixelsAndConvert(srcFormat->format, x, y, width, height, packFormat,
-                               packType, dest);
+                               packType, dest, dataLen, rowStride);
         return;
     }
 
@@ -1796,7 +1826,7 @@ WebGLContext::ReadPixelsImpl(GLint x, GLint y, GLsizei rawWidth, GLsizei rawHeig
         gl->fPixelStorei(LOCAL_GL_PACK_SKIP_ROWS, mPixelStore_PackSkipRows + writeY);
 
         DoReadPixelsAndConvert(srcFormat->format, readX, readY, rwWidth, rwHeight,
-                               packFormat, packType, dest);
+                               packFormat, packType, dest, dataLen, rowStride);
 
         gl->fPixelStorei(LOCAL_GL_PACK_ROW_LENGTH, mPixelStore_PackRowLength);
         gl->fPixelStorei(LOCAL_GL_PACK_SKIP_PIXELS, mPixelStore_PackSkipPixels);
@@ -1808,7 +1838,7 @@ WebGLContext::ReadPixelsImpl(GLint x, GLint y, GLsizei rawWidth, GLsizei rawHeig
         row += writeY * rowStride;
         for (uint32_t j = 0; j < rwHeight; j++) {
             DoReadPixelsAndConvert(srcFormat->format, readX, readY+j, rwWidth, 1,
-                                   packFormat, packType, row);
+                                   packFormat, packType, row, dataLen, rowStride);
             row += rowStride;
         }
     }
