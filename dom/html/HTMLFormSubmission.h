@@ -3,14 +3,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef nsIFormSubmission_h___
-#define nsIFormSubmission_h___
+
+#ifndef mozilla_dom_HTMLFormSubmission_h
+#define mozilla_dom_HTMLFormSubmission_h
 
 #include "mozilla/Attributes.h"
-#include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
 #include "nsNCRFallbackEncoderWrapper.h"
+#include "nsString.h"
 
 class nsIURI;
 class nsIInputStream;
@@ -19,20 +20,19 @@ class nsIMultiplexInputStream;
 
 namespace mozilla {
 namespace dom {
+
 class Blob;
-} // namespace dom
-} // namespace mozilla
 
 /**
  * Class for form submissions; encompasses the function to call to submit as
  * well as the form submission name/value pairs
  */
-class nsFormSubmission
+class HTMLFormSubmission
 {
 public:
-  virtual ~nsFormSubmission()
+  virtual ~HTMLFormSubmission()
   {
-    MOZ_COUNT_DTOR(nsFormSubmission);
+    MOZ_COUNT_DTOR(HTMLFormSubmission);
   }
 
   /**
@@ -53,7 +53,7 @@ public:
    * not null.
    */
   virtual nsresult AddNameBlobOrNullPair(const nsAString& aName,
-                                         mozilla::dom::Blob* aBlob) = 0;
+                                         Blob* aBlob) = 0;
 
   /**
    * Reports whether the instance supports AddIsindex().
@@ -106,11 +106,12 @@ protected:
    * @param aCharset the charset of the form as a string
    * @param aOriginatingElement the originating element (can be null)
    */
-  nsFormSubmission(const nsACString& aCharset, nsIContent* aOriginatingElement)
+  HTMLFormSubmission(const nsACString& aCharset,
+                     nsIContent* aOriginatingElement)
     : mCharset(aCharset)
     , mOriginatingElement(aOriginatingElement)
   {
-    MOZ_COUNT_CTOR(nsFormSubmission);
+    MOZ_COUNT_CTOR(HTMLFormSubmission);
   }
 
   // The name of the encoder charset
@@ -120,7 +121,7 @@ protected:
   nsCOMPtr<nsIContent> mOriginatingElement;
 };
 
-class nsEncodingFormSubmission : public nsFormSubmission
+class nsEncodingFormSubmission : public HTMLFormSubmission
 {
 public:
   nsEncodingFormSubmission(const nsACString& aCharset,
@@ -162,7 +163,7 @@ public:
   virtual nsresult AddNameValuePair(const nsAString& aName,
                                     const nsAString& aValue) override;
   virtual nsresult AddNameBlobOrNullPair(const nsAString& aName,
-                                         mozilla::dom::Blob* aBlob) override;
+                                         Blob* aBlob) override;
   virtual nsresult GetEncodedSubmission(nsIURI* aURI,
                                         nsIInputStream** aPostDataStream) override;
 
@@ -220,6 +221,9 @@ private:
  */
 nsresult GetSubmissionFromForm(nsGenericHTMLElement* aForm,
                                nsGenericHTMLElement* aOriginatingElement,
-                               nsFormSubmission** aFormSubmission);
+                               HTMLFormSubmission** aFormSubmission);
 
-#endif /* nsIFormSubmission_h___ */
+} // namespace dom
+} // namespace mozilla
+
+#endif /* mozilla_dom_HTMLFormSubmission_h */

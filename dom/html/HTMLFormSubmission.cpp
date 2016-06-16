@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsFormSubmission.h"
+#include "HTMLFormSubmission.h"
 
 #include "nsCOMPtr.h"
 #include "nsIForm.h"
@@ -40,11 +40,8 @@
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/File.h"
 
-using namespace mozilla;
-using mozilla::dom::Blob;
-using mozilla::dom::Directory;
-using mozilla::dom::EncodingUtils;
-using mozilla::dom::File;
+namespace mozilla {
+namespace dom {
 
 static void
 SendJSWarning(nsIDocument* aDocument,
@@ -715,7 +712,7 @@ nsFSTextPlain::GetEncodedSubmission(nsIURI* aURI,
 
 nsEncodingFormSubmission::nsEncodingFormSubmission(const nsACString& aCharset,
                                                    nsIContent* aOriginatingElement)
-  : nsFormSubmission(aCharset, aOriginatingElement)
+  : HTMLFormSubmission(aCharset, aOriginatingElement)
   , mEncoder(aCharset)
 {
   if (!(aCharset.EqualsLiteral("UTF-8") || aCharset.EqualsLiteral("gb18030"))) {
@@ -806,7 +803,7 @@ GetEnumAttr(nsGenericHTMLElement* aContent,
 nsresult
 GetSubmissionFromForm(nsGenericHTMLElement* aForm,
                       nsGenericHTMLElement* aOriginatingElement,
-                      nsFormSubmission** aFormSubmission)
+                      HTMLFormSubmission** aFormSubmission)
 {
   // Get all the information necessary to encode the form data
   NS_ASSERTION(aForm->GetComposedDoc(),
@@ -873,3 +870,6 @@ GetSubmissionFromForm(nsGenericHTMLElement* aForm,
 
   return NS_OK;
 }
+
+} // dom namespace
+} // mozilla namespace
