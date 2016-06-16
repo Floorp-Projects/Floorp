@@ -833,7 +833,7 @@ nsBlockReflowState::FlowAndPlaceFloat(nsIFrame* aFloat)
       
       if(prevFrame) {
         //get the frame type
-        if (nsGkAtoms::tableOuterFrame == prevFrame->GetType()) {
+        if (nsGkAtoms::tableWrapperFrame == prevFrame->GetType()) {
           //see if it has "align="
           // IE makes a difference between align and he float property
           nsIContent* content = prevFrame->GetContent();

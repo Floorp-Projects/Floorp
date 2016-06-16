@@ -52,7 +52,7 @@ CSS_ANON_BOX(table, ":-moz-table")
 CSS_ANON_BOX(tableCell, ":-moz-table-cell")
 CSS_ANON_BOX(tableColGroup, ":-moz-table-column-group")
 CSS_ANON_BOX(tableCol, ":-moz-table-column")
-CSS_ANON_BOX(tableOuter, ":-moz-table-outer")
+CSS_ANON_BOX(tableWrapper, ":-moz-table-outer")
 CSS_ANON_BOX(tableRowGroup, ":-moz-table-row-group")
 CSS_ANON_BOX(tableRow, ":-moz-table-row")
 
