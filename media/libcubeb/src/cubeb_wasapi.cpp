@@ -122,7 +122,7 @@ public:
     owner = GetCurrentThreadId();
 #endif
   }
-
+  
   void leave()
   {
 #ifdef DEBUG
@@ -729,7 +729,7 @@ refill_callback_duplex(cubeb_stream * stm)
   double output_duration = double(output_frames) / stm->output_mix_params.rate;
   double input_duration = double(input_frames) / stm->input_mix_params.rate;
   if (input_duration < output_duration) {
-    size_t padding = round((output_duration - input_duration) * stm->input_mix_params.rate);
+    size_t padding = size_t(round((output_duration - input_duration) * stm->input_mix_params.rate));
     LOG("padding silence: out=%f in=%f pad=%u\n", output_duration, input_duration, padding);
     stm->linear_input_buffer.push_front_silence(padding * stm->input_stream_params.channels);
   }
@@ -867,6 +867,7 @@ wasapi_stream_render_loop(LPVOID stream)
       continue;
     }
     case WAIT_OBJECT_0 + 1: { /* reconfigure */
+      XASSERT(stm->output_client || stm->input_client);
       /* Close the stream */
       if (stm->output_client) {
         stm->output_client->Stop();
@@ -888,6 +889,7 @@ wasapi_stream_render_loop(LPVOID stream)
           continue;
         }
       }
+      XASSERT(stm->output_client || stm->input_client);
       if (stm->output_client) {
         stm->output_client->Start();
       }
@@ -1529,7 +1531,7 @@ int setup_wasapi_stream(cubeb_stream * stm)
     return CUBEB_ERROR;
   }
 
-  XASSERT(!stm->output_client && "WASAPI stream already setup, close it first.");
+  XASSERT((!stm->output_client || !stm->input_client) && "WASAPI stream already setup, close it first.");
 
   if (has_input(stm)) {
     LOG("Setup capture: device=%x\n", (int)stm->input_device);
@@ -1728,9 +1730,11 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
 
 void close_wasapi_stream(cubeb_stream * stm)
 {
-  XASSERT(stm);
+  XASSERT(stm && !stm->thread && !stm->shutdown_event);
 
   stm->stream_reset_lock->assert_current_thread_owns();
+
+  XASSERT(stm->output_client || stm->input_client);
 
   SafeRelease(stm->output_client);
   stm->output_client = NULL;
@@ -1807,8 +1811,8 @@ int stream_start_one_side(cubeb_stream * stm, StreamDirection dir)
       return r;
     }
 
-    HRESULT hr = dir == OUTPUT ? stm->output_client->Start() : stm->input_client->Start();
-    if (FAILED(hr)) {
+    HRESULT hr2 = dir == OUTPUT ? stm->output_client->Start() : stm->input_client->Start();
+    if (FAILED(hr2)) {
       LOG("could not start the %s stream after reconfig: %x\n",
           dir == OUTPUT ? "output" : "input", hr);
       return CUBEB_ERROR;
@@ -1824,20 +1828,20 @@ int stream_start_one_side(cubeb_stream * stm, StreamDirection dir)
 
 int wasapi_stream_start(cubeb_stream * stm)
 {
-  int rv;
+  XASSERT(stm && !stm->thread && !stm->shutdown_event);
+  XASSERT(stm->output_client || stm->input_client);
+
   auto_lock lock(stm->stream_reset_lock);
 
-  XASSERT(stm && !stm->thread && !stm->shutdown_event);
-
   if (stm->output_client) {
-    rv = stream_start_one_side(stm, OUTPUT);
+    int rv = stream_start_one_side(stm, OUTPUT);
     if (rv != CUBEB_OK) {
       return rv;
     }
   }
 
   if (stm->input_client) {
-    rv = stream_start_one_side(stm, INPUT);
+    int rv = stream_start_one_side(stm, INPUT);
     if (rv != CUBEB_OK) {
       return rv;
     }
@@ -1849,7 +1853,7 @@ int wasapi_stream_start(cubeb_stream * stm)
     return CUBEB_ERROR;
   }
 
-  stm->thread = (HANDLE) _beginthreadex(NULL, 256 * 1024, wasapi_stream_render_loop, stm, STACK_SIZE_PARAM_IS_A_RESERVATION, NULL);
+  stm->thread = (HANDLE) _beginthreadex(NULL, 512 * 1024, wasapi_stream_render_loop, stm, STACK_SIZE_PARAM_IS_A_RESERVATION, NULL);
   if (stm->thread == NULL) {
     LOG("could not create WASAPI render thread.\n");
     return CUBEB_ERROR;
@@ -1864,6 +1868,8 @@ int wasapi_stream_stop(cubeb_stream * stm)
 {
   XASSERT(stm);
   HRESULT hr;
+
+  XASSERT(stm->output_client || stm->input_client);
 
   {
     auto_lock lock(stm->stream_reset_lock);
@@ -2198,6 +2204,9 @@ wasapi_enumerate_devices(cubeb * context, cubeb_device_type type,
   }
   *out = (cubeb_device_collection *) malloc(sizeof(cubeb_device_collection) +
       sizeof(cubeb_device_info*) * (cc > 0 ? cc - 1 : 0));
+  if (!*out) {
+    return CUBEB_ERROR;
+  }
   (*out)->count = 0;
   for (i = 0; i < cc; i++) {
     hr = collection->Item(i, &dev);

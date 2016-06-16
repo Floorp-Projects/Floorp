@@ -2,7 +2,7 @@
 #undef NDEBUG
 #endif
 #include <stdlib.h>
-#include <cubeb/cubeb.h>
+#include "cubeb/cubeb.h"
 #include <assert.h>
 #include <stdio.h>
 #ifdef CUBEB_GECKO_BUILD
