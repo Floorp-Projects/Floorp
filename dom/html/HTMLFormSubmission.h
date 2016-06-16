@@ -30,6 +30,19 @@ class Blob;
 class HTMLFormSubmission
 {
 public:
+  /**
+   * Get a submission object based on attributes in the form (ENCTYPE and
+   * METHOD)
+   *
+   * @param aForm the form to get a submission object based on
+   * @param aOriginatingElement the originating element (can be null)
+   * @param aFormSubmission the form submission object (out param)
+   */
+  static nsresult
+  GetFromForm(nsGenericHTMLElement* aForm,
+              nsGenericHTMLElement* aOriginatingElement,
+              HTMLFormSubmission** aFormSubmission);
+
   virtual ~HTMLFormSubmission()
   {
     MOZ_COUNT_DTOR(HTMLFormSubmission);
@@ -211,17 +224,6 @@ private:
    */
   uint64_t mTotalLength;
 };
-
-/**
- * Get a submission object based on attributes in the form (ENCTYPE and METHOD)
- *
- * @param aForm the form to get a submission object based on
- * @param aOriginatingElement the originating element (can be null)
- * @param aFormSubmission the form submission object (out param)
- */
-nsresult GetSubmissionFromForm(nsGenericHTMLElement* aForm,
-                               nsGenericHTMLElement* aOriginatingElement,
-                               HTMLFormSubmission** aFormSubmission);
 
 } // namespace dom
 } // namespace mozilla
