@@ -46,8 +46,9 @@ class CompositableForwarder : public ClientIPCAllocator
 {
 public:
 
-  CompositableForwarder()
-    : mSerial(++sSerialCounter)
+  CompositableForwarder(const char* aName)
+    : ClientIPCAllocator(aName)
+    , mSerial(++sSerialCounter)
   {}
 
   /**
