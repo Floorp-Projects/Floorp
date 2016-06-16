@@ -121,7 +121,7 @@ enum nsTableColType {
 
 /**
   * nsTableFrame maps the inner portion of a table (everything except captions.)
-  * Used as a pseudo-frame within nsTableOuterFrame, it may also be used
+  * Used as a pseudo-frame within nsTableWrapperFrame, it may also be used
   * stand-alone as the top-level frame.
   *
   * The principal child list contains row group frames. There is also an
@@ -140,8 +140,8 @@ public:
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(PositionedTablePartArray,
                                       nsTArray<nsIFrame*>)
 
-  /** nsTableOuterFrame has intimate knowledge of the inner table frame */
-  friend class nsTableOuterFrame;
+  /** nsTableWrapperFrame has intimate knowledge of the inner table frame */
+  friend class nsTableWrapperFrame;
 
   /** instantiate a new instance of nsTableRowFrame.
     * @param aPresShell the pres shell for this frame

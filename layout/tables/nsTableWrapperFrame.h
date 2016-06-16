@@ -2,8 +2,8 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef nsTableOuterFrame_h__
-#define nsTableOuterFrame_h__
+#ifndef nsTableWrapperFrame_h__
+#define nsTableWrapperFrame_h__
 
 #include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
@@ -14,25 +14,25 @@
 
 /**
  * Primary frame for a table element,
- * the nsTableOuterFrame contains 0 or one caption frame, and a nsTableFrame
+ * the nsTableWrapperFrame contains 0 or one caption frame, and a nsTableFrame
  * pseudo-frame (referred to as the "inner frame').
  */
-class nsTableOuterFrame : public nsContainerFrame
+class nsTableWrapperFrame : public nsContainerFrame
 {
 public:
   NS_DECL_QUERYFRAME
   NS_DECL_FRAMEARENA_HELPERS
 
-  NS_DECL_QUERYFRAME_TARGET(nsTableOuterFrame)
+  NS_DECL_QUERYFRAME_TARGET(nsTableWrapperFrame)
 
   /** instantiate a new instance of nsTableRowFrame.
     * @param aPresShell the pres shell for this frame
     *
     * @return           the frame that was created
     */
-  friend nsTableOuterFrame* NS_NewTableOuterFrame(nsIPresShell* aPresShell,
-                                                  nsStyleContext* aContext);
-  
+  friend nsTableWrapperFrame* NS_NewTableWrapperFrame(nsIPresShell* aPresShell,
+                                                      nsStyleContext* aContext);
+
   // nsIFrame overrides - see there for a description
 
   virtual void DestroyFrom(nsIFrame* aDestructRoot) override;
@@ -182,10 +182,10 @@ public:
 protected:
 
 
-  explicit nsTableOuterFrame(nsStyleContext* aContext);
-  virtual ~nsTableOuterFrame();
+  explicit nsTableWrapperFrame(nsStyleContext* aContext);
+  virtual ~nsTableWrapperFrame();
 
-  void InitChildReflowState(nsPresContext&    aPresContext,                     
+  void InitChildReflowState(nsPresContext&     aPresContext,
                             nsHTMLReflowState& aReflowState);
 
   // Get a NS_STYLE_CAPTION_SIDE_* value, or NO_SIDE if no caption is present.
@@ -257,10 +257,11 @@ protected:
                                            (~eCanContainOverflowContainers));
   }
 
-  nsTableFrame* InnerTableFrame() const {
+  nsTableFrame* InnerTableFrame() const
+  {
     return static_cast<nsTableFrame*>(mFrames.FirstChild());
   }
-  
+
 private:
   nsFrameList   mCaptionFrames;
 };

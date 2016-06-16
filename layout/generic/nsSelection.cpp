@@ -25,7 +25,7 @@
 #include "nsCOMArray.h"
 #include "nsITableCellLayout.h"
 #include "nsTArray.h"
-#include "nsTableOuterFrame.h"
+#include "nsTableWrapperFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsIScrollableFrame.h"
 #include "nsCCUncollectableMarker.h"
@@ -2803,7 +2803,7 @@ nsFrameSelection::UnselectCells(nsIContent *aTableContent,
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
-  nsTableOuterFrame* tableFrame = do_QueryFrame(aTableContent->GetPrimaryFrame());
+  nsTableWrapperFrame* tableFrame = do_QueryFrame(aTableContent->GetPrimaryFrame());
   if (!tableFrame)
     return NS_ERROR_FAILURE;
 
@@ -2883,7 +2883,7 @@ nsFrameSelection::AddCellsToSelection(nsIContent *aTableContent,
   if (!mDomSelections[index])
     return NS_ERROR_NULL_POINTER;
 
-  nsTableOuterFrame* tableFrame = do_QueryFrame(aTableContent->GetPrimaryFrame());
+  nsTableWrapperFrame* tableFrame = do_QueryFrame(aTableContent->GetPrimaryFrame());
   if (!tableFrame) // Check that |table| is a table.
     return NS_ERROR_FAILURE;
 
@@ -2954,15 +2954,15 @@ nsFrameSelection::SelectRowOrColumn(nsIContent *aCellContent, uint32_t aTarget)
   nsIContent* table = GetParentTable(aCellContent);
   if (!table) return NS_ERROR_NULL_POINTER;
 
-  // Get table and cell layout interfaces to access 
-  //   cell data based on cellmap location
+  // Get table and cell layout interfaces to access
+  // cell data based on cellmap location
   // Frames are not ref counted, so don't use an nsCOMPtr
-  nsTableOuterFrame* tableFrame = do_QueryFrame(table->GetPrimaryFrame());
+  nsTableWrapperFrame* tableFrame = do_QueryFrame(table->GetPrimaryFrame());
   if (!tableFrame) return NS_ERROR_FAILURE;
   nsITableCellLayout *cellLayout = GetCellLayout(aCellContent);
   if (!cellLayout) return NS_ERROR_FAILURE;
 
-  // Get location of target cell:      
+  // Get location of target cell:
   int32_t rowIndex, colIndex;
   nsresult result = cellLayout->GetCellIndexes(rowIndex, colIndex);
   if (NS_FAILED(result)) return result;

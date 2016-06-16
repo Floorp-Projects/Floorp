@@ -685,7 +685,7 @@ ListMathMLTree(nsIFrame* atLeast)
 
 NS_QUERYFRAME_HEAD(nsMathMLmtableOuterFrame)
   NS_QUERYFRAME_ENTRY(nsIMathMLFrame)
-NS_QUERYFRAME_TAIL_INHERITING(nsTableOuterFrame)
+NS_QUERYFRAME_TAIL_INHERITING(nsTableWrapperFrame)
 
 nsContainerFrame*
 NS_NewMathMLmtableOuterFrame (nsIPresShell* aPresShell, nsStyleContext* aContext)
@@ -822,7 +822,7 @@ nsMathMLmtableOuterFrame::Reflow(nsPresContext*          aPresContext,
   nsAutoString value;
   // we want to return a table that is anchored according to the align attribute
 
-  nsTableOuterFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  nsTableWrapperFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
   NS_ASSERTION(aDesiredSize.Height() >= 0, "illegal height for mtable");
   NS_ASSERTION(aDesiredSize.Width() >= 0, "illegal width for mtable");
 
