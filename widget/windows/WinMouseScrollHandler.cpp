@@ -34,32 +34,6 @@ static const char* GetBoolName(bool aBool)
   return aBool ? "TRUE" : "FALSE";
 }
 
-static void LogKeyStateImpl()
-{
-  if (!MOZ_LOG_TEST(gMouseScrollLog, LogLevel::Debug)) {
-    return;
-  }
-  BYTE keyboardState[256];
-  if (::GetKeyboardState(keyboardState)) {
-    for (size_t i = 0; i < ArrayLength(keyboardState); i++) {
-      if (keyboardState[i]) {
-        MOZ_LOG(gMouseScrollLog, LogLevel::Debug,
-          ("    Current key state: keyboardState[0x%02X]=0x%02X (%s)",
-           i, keyboardState[i],
-           ((keyboardState[i] & 0x81) == 0x81) ? "Pressed and Toggled" :
-           (keyboardState[i] & 0x80) ? "Pressed" :
-           (keyboardState[i] & 0x01) ? "Toggled" : "Unknown"));
-      }
-    }
-  } else {
-    MOZ_LOG(gMouseScrollLog, LogLevel::Debug,
-      ("MouseScroll::Device::Elantech::HandleKeyMessage(): Failed to print "
-       "current keyboard state"));
-  }
-}
-
-#define LOG_KEYSTATE() LogKeyStateImpl()
-
 MouseScrollHandler* MouseScrollHandler::sInstance = nullptr;
 
 bool MouseScrollHandler::Device::sFakeScrollableWindowNeeded = false;
@@ -150,6 +124,32 @@ MouseScrollHandler::~MouseScrollHandler()
 }
 
 /* static */
+void
+MouseScrollHandler::MaybeLogKeyState()
+{
+  if (!MOZ_LOG_TEST(gMouseScrollLog, LogLevel::Debug)) {
+    return;
+  }
+  BYTE keyboardState[256];
+  if (::GetKeyboardState(keyboardState)) {
+    for (size_t i = 0; i < ArrayLength(keyboardState); i++) {
+      if (keyboardState[i]) {
+        MOZ_LOG(gMouseScrollLog, LogLevel::Debug,
+          ("    Current key state: keyboardState[0x%02X]=0x%02X (%s)",
+           i, keyboardState[i],
+           ((keyboardState[i] & 0x81) == 0x81) ? "Pressed and Toggled" :
+           (keyboardState[i] & 0x80) ? "Pressed" :
+           (keyboardState[i] & 0x01) ? "Toggled" : "Unknown"));
+      }
+    }
+  } else {
+    MOZ_LOG(gMouseScrollLog, LogLevel::Debug,
+      ("MouseScroll::MaybeLogKeyState(): Failed to print current keyboard "
+       "state"));
+  }
+}
+
+/* static */
 bool
 MouseScrollHandler::NeedsMessage(UINT aMsg)
 {
@@ -235,7 +235,7 @@ MouseScrollHandler::ProcessMessage(nsWindowBase* aWidget, UINT msg,
          aWidget, msg == WM_KEYDOWN ? "WM_KEYDOWN" :
                     msg == WM_KEYUP ? "WM_KEYUP" : "Unknown", msg, wParam,
          ::GetMessageTime()));
-      LOG_KEYSTATE();
+      MaybeLogKeyState();
       if (Device::Elantech::HandleKeyMessage(aWidget, msg, wParam, lParam)) {
         aResult.mResult = 0;
         aResult.mConsumed = true;
@@ -399,7 +399,7 @@ MouseScrollHandler::ProcessNativeMouseWheelMessage(nsWindowBase* aWidget,
               aMessage == WM_MOUSEHWHEEL ? "WM_MOUSEHWHEEL" :
               aMessage == WM_VSCROLL ? "WM_VSCROLL" : "WM_HSCROLL",
      aWParam, aLParam, point.x, point.y));
-  LOG_KEYSTATE();
+  MaybeLogKeyState();
 
   HWND underCursorWnd = ::WindowFromPoint(point);
   if (!underCursorWnd) {
