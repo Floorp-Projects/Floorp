@@ -145,7 +145,7 @@ public class GLController extends JNIObject {
         // the compositor resuming, so that Gecko knows that it can now draw.
         // It is important to not notify Gecko until after the compositor has
         // been resumed, otherwise Gecko may send updates that get dropped.
-        if (mCompositorCreated) {
+        if (isServerSurfaceValid() && mCompositorCreated) {
             syncResumeResizeCompositor(width, height);
             mView.requestRender();
         }
