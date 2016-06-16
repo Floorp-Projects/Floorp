@@ -812,10 +812,10 @@ GetEnumAttr(nsGenericHTMLElement* aContent,
 
 } // anonymous namespace
 
-nsresult
-GetSubmissionFromForm(nsGenericHTMLElement* aForm,
-                      nsGenericHTMLElement* aOriginatingElement,
-                      HTMLFormSubmission** aFormSubmission)
+/* static */ nsresult
+HTMLFormSubmission::GetFromForm(nsGenericHTMLElement* aForm,
+                                nsGenericHTMLElement* aOriginatingElement,
+                                HTMLFormSubmission** aFormSubmission)
 {
   // Get all the information necessary to encode the form data
   NS_ASSERTION(aForm->GetComposedDoc(),
