@@ -267,7 +267,7 @@ this.NativeApp = class extends EventEmitter {
 
     let json;
     try {
-      json = JSON.stringify(msg);
+      json = this.context.jsonStringify(msg);
     } catch (err) {
       throw new this.context.cloneScope.Error(err.message);
     }
