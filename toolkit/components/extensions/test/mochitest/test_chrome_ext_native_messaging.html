@@ -248,15 +248,14 @@ add_task(function* test_happy_path() {
       what: "object with several properties",
     },
 
-    // enable with bug 1274708
-    //{
-    //  data: {
-    //    ignoreme: true,
-    //    _json: {data: "i have a tojson method"},
-    //  },
-    //  expected: {data: "i have a tojson method"},
-    //  what: "object with toJSON() method",
-    //},
+    {
+      data: {
+        ignoreme: true,
+        _json: {data: "i have a tojson method"},
+      },
+      expected: {data: "i have a tojson method"},
+      what: "object with toJSON() method",
+    },
   ];
   for (let test of tests) {
     extension.sendMessage("send", test.data);

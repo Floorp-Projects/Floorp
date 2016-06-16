@@ -70,9 +70,13 @@ add_task(function* setup() {
   notEqual(PYTHON, null, "Found a suitable python interpreter");
 });
 
+let global = this;
+
 // Test of HostManifestManager.lookupApplication() begin here...
 let context = {
   url: null,
+  jsonStringify(...args) { return JSON.stringify(...args); },
+  cloneScope: global,
   logError() {},
   preprocessors: {},
   callOnClose: () => {},
