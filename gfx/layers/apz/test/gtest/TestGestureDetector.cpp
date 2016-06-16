@@ -271,18 +271,22 @@ protected:
 };
 
 TEST_F(APZCFlingStopTester, FlingStop) {
+  SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
   DoFlingStopTest(false);
 }
 
 TEST_F(APZCFlingStopTester, FlingStopTap) {
+  SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
   DoFlingStopTest(true);
 }
 
 TEST_F(APZCFlingStopTester, FlingStopSlowListener) {
+  SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
   DoFlingStopWithSlowListener(false);
 }
 
 TEST_F(APZCFlingStopTester, FlingStopPreventDefault) {
+  SCOPED_GFX_PREF(APZFlingMinVelocityThreshold, float, 0.0f);
   DoFlingStopWithSlowListener(true);
 }
 

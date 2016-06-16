@@ -555,8 +555,10 @@ HTMLImageElement::SetAttr(int32_t aNameSpaceID, nsIAtom* aName,
   } else if (aName == nsGkAtoms::referrerpolicy &&
       aNameSpaceID == kNameSpaceID_None &&
       aNotify) {
-    ReferrerPolicy referrerPolicy = ReferrerPolicyFromString(aValue);
-    if (!InResponsiveMode() && referrerPolicy != GetImageReferrerPolicy()) {
+    ReferrerPolicy referrerPolicy = AttributeReferrerPolicyFromString(aValue);
+    if (!InResponsiveMode() &&
+        referrerPolicy != RP_Unset &&
+        referrerPolicy != GetImageReferrerPolicy()) {
       // XXX: Bug 1076583 - We still use the older synchronous algorithm
       // Because referrerPolicy is not treated as relevant mutations, setting
       // the attribute will neither trigger a reload nor update the referrer

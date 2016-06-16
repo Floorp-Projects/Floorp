@@ -77,23 +77,14 @@ void
 ImageClient::RemoveTextureWithWaiter(TextureClient* aTexture,
                                      AsyncTransactionWaiter* aAsyncTransactionWaiter)
 {
-  if ((aAsyncTransactionWaiter || GetForwarder()->UsesImageBridge())
-#ifndef MOZ_WIDGET_GONK
-      // If the texture client is taking part in recycling then we should make sure
-      // the host has finished with it before dropping the ref and triggering
-      // the recycle callback.
-      && aTexture->GetRecycleAllocator()
-#endif
-     ) {
+  if (aAsyncTransactionWaiter &&
+      GetForwarder()->UsesImageBridge()) {
     RefPtr<AsyncTransactionTracker> request =
       new RemoveTextureFromCompositableTracker(aAsyncTransactionWaiter);
-    // Hold TextureClient until the transaction complete to postpone
-    // the TextureClient recycle/delete.
-    request->SetTextureClient(aTexture);
     GetForwarder()->RemoveTextureFromCompositableAsync(request, this, aTexture);
     return;
   }
-
+  MOZ_ASSERT(!aAsyncTransactionWaiter);
   GetForwarder()->RemoveTextureFromCompositable(this, aTexture);
 }
 
@@ -112,6 +103,8 @@ TextureInfo ImageClientSingle::GetTextureInfo() const
 void
 ImageClientSingle::FlushAllImages(AsyncTransactionWaiter* aAsyncTransactionWaiter)
 {
+  MOZ_ASSERT(GetForwarder()->UsesImageBridge());
+
   for (auto& b : mBuffers) {
     RemoveTextureWithWaiter(b.mTextureClient, aAsyncTransactionWaiter);
   }

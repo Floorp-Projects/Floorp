@@ -3119,11 +3119,23 @@ nsXMLHttpRequest::ReadyState()
   return DONE;
 }
 
+void nsXMLHttpRequest::OverrideMimeType(const nsAString& aMimeType, ErrorResult& aRv)
+{
+  if ((mState & XML_HTTP_REQUEST_LOADING) || (mState & XML_HTTP_REQUEST_DONE)) {
+    ResetResponse();
+    aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
+    return;
+  }
+
+  mOverrideMimeType = aMimeType;
+}
+
 NS_IMETHODIMP
 nsXMLHttpRequest::SlowOverrideMimeType(const nsAString& aMimeType)
 {
-  OverrideMimeType(aMimeType);
-  return NS_OK;
+  ErrorResult aRv;
+  OverrideMimeType(aMimeType, aRv);
+  return aRv.StealNSResult();
 }
 
 NS_IMETHODIMP

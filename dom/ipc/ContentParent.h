@@ -619,6 +619,8 @@ private:
       const bool& aIsForBrowser) override;
   using PContentParent::SendPTestShellConstructor;
 
+  FORWARD_SHMEM_ALLOCATOR_TO(PContentParent)
+
   // No more than one of !!aApp, aIsForBrowser, and aIsForPreallocated may be
   // true.
   ContentParent(mozIApplication* aApp,

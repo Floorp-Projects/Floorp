@@ -97,7 +97,7 @@ template <typename T> struct EventTarget;
 template <>
 struct EventTarget<nsIEventTarget> {
   static void
-  Dispatch(nsIEventTarget* aTarget, already_AddRefed<nsIRunnable>&& aTask) {
+  Dispatch(nsIEventTarget* aTarget, already_AddRefed<nsIRunnable> aTask) {
     aTarget->Dispatch(Move(aTask), NS_DISPATCH_NORMAL);
   }
 };
@@ -105,7 +105,7 @@ struct EventTarget<nsIEventTarget> {
 template <>
 struct EventTarget<AbstractThread> {
   static void
-  Dispatch(AbstractThread* aTarget, already_AddRefed<nsIRunnable>&& aTask) {
+  Dispatch(AbstractThread* aTarget, already_AddRefed<nsIRunnable> aTask) {
     aTarget->Dispatch(Move(aTask));
   }
 };
@@ -242,7 +242,7 @@ template <typename... As>
 class Listener<EventPassMode::Move, As...> : public ListenerBase {
 public:
   virtual ~Listener() {}
-  virtual void Dispatch(As&&... aEvents) = 0;
+  virtual void Dispatch(As... aEvents) = 0;
 };
 
 /**
@@ -267,7 +267,7 @@ class ListenerImpl<Target, Function, EventPassMode::Move, As...>
 public:
   ListenerImpl(Target* aTarget, const Function& aFunction)
     : mHelper(ListenerBase::Token(), aTarget, aFunction) {}
-  void Dispatch(As&&... aEvents) override {
+  void Dispatch(As... aEvents) override {
     mHelper.Dispatch(Move(aEvents)...);
   }
 private:

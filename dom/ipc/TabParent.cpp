@@ -3252,7 +3252,7 @@ TabParent::RecvAsyncAuthPrompt(const nsCString& aUri,
 bool
 TabParent::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
                                  const uint32_t& aAction,
-                                 const nsCString& aVisualDnDData,
+                                 const OptionalShmem& aVisualDnDData,
                                  const uint32_t& aWidth, const uint32_t& aHeight,
                                  const uint32_t& aStride, const uint8_t& aFormat,
                                  const int32_t& aDragAreaX, const int32_t& aDragAreaY)
@@ -3279,20 +3279,25 @@ TabParent::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
     }
   }
 
-  if (aVisualDnDData.IsEmpty() ||
-      (aVisualDnDData.Length() < aHeight * aStride)) {
+  if (aVisualDnDData.type() == OptionalShmem::Tvoid_t ||
+      !aVisualDnDData.get_Shmem().IsReadable() ||
+      aVisualDnDData.get_Shmem().Size<char>() < aHeight * aStride) {
     mDnDVisualization = nullptr;
   } else {
     mDnDVisualization =
         gfx::CreateDataSourceSurfaceFromData(gfx::IntSize(aWidth, aHeight),
                                              static_cast<gfx::SurfaceFormat>(aFormat),
-                                             reinterpret_cast<const uint8_t*>(aVisualDnDData.BeginReading()),
+                                             aVisualDnDData.get_Shmem().get<uint8_t>(),
                                              aStride);
   }
   mDragAreaX = aDragAreaX;
   mDragAreaY = aDragAreaY;
 
   esm->BeginTrackingRemoteDragGesture(mFrameElement);
+
+  if (aVisualDnDData.type() == OptionalShmem::TShmem) {
+    Unused << DeallocShmem(aVisualDnDData);
+  }
 
   return true;
 }
@@ -3316,7 +3321,7 @@ TabParent::AddInitialDnDDataTo(DataTransfer* aDataTransfer)
         auto* parent = static_cast<BlobParent*>(item.data().get_PBlobParent());
         RefPtr<BlobImpl> impl = parent->GetBlobImpl();
         variant->SetAsISupports(impl);
-      } else if (item.data().type() == IPCDataTransferData::TnsCString) {
+      } else if (item.data().type() == IPCDataTransferData::TShmem) {
         if (nsContentUtils::IsFlavorImage(item.flavor())) {
           // An image! Get the imgIContainer for it and set it in the variant.
           nsCOMPtr<imgIContainer> imageContainer;
@@ -3328,8 +3333,11 @@ TabParent::AddInitialDnDDataTo(DataTransfer* aDataTransfer)
           }
           variant->SetAsISupports(imageContainer);
         } else {
-          variant->SetAsACString(item.data().get_nsCString());
+          Shmem data = item.data().get_Shmem();
+          variant->SetAsACString(nsDependentCString(data.get<char>(), data.Size<char>()));
         }
+
+        mozilla::Unused << DeallocShmem(item.data().get_Shmem());
       }
 
       // Using system principal here, since once the data is on parent process

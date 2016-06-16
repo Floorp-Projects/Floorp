@@ -470,15 +470,6 @@ TileClient::Dump(std::stringstream& aStream)
 void
 TileClient::Flip()
 {
-  if (mCompositableClient) {
-    if (mFrontBuffer) {
-      mFrontBuffer->RemoveFromCompositable(mCompositableClient);
-    }
-    if (mFrontBufferOnWhite) {
-      mFrontBufferOnWhite->RemoveFromCompositable(mCompositableClient);
-    }
-  }
-
   RefPtr<TextureClient> frontBuffer = mFrontBuffer;
   RefPtr<TextureClient> frontBufferOnWhite = mFrontBufferOnWhite;
   mFrontBuffer = mBackBuffer;
@@ -559,13 +550,8 @@ TileClient::DiscardFrontBuffer()
   if (mFrontBuffer) {
     MOZ_ASSERT(mFrontBuffer->GetReadLock());
 
-    if (mCompositableClient) {
-      mFrontBuffer->RemoveFromCompositable(mCompositableClient);
-    }
-
     mAllocator->ReturnTextureClientDeferred(mFrontBuffer);
     if (mFrontBufferOnWhite) {
-      mFrontBufferOnWhite->RemoveFromCompositable(mCompositableClient);
       mAllocator->ReturnTextureClientDeferred(mFrontBufferOnWhite);
     }
     if (mFrontBuffer->IsLocked()) {
@@ -671,12 +657,12 @@ TileClient::GetBackBuffer(const nsIntRegion& aDirtyRegion,
       mBackBuffer.Set(this,
         CreateBackBufferTexture(mBackBuffer, mCompositableClient, mAllocator)
       );
-      mInvalidBack = IntRect(0, 0, mBackBuffer->GetSize().width, mBackBuffer->GetSize().height);
       if (!mBackBuffer) {
         DiscardBackBuffer();
         DiscardFrontBuffer();
         return nullptr;
       }
+      mInvalidBack = IntRect(IntPoint(), mBackBuffer->GetSize());
     }
 
     if (aMode == SurfaceMode::SURFACE_COMPONENT_ALPHA
@@ -684,12 +670,12 @@ TileClient::GetBackBuffer(const nsIntRegion& aDirtyRegion,
       mBackBufferOnWhite = CreateBackBufferTexture(
         mBackBufferOnWhite, mCompositableClient, mAllocator
       );
-      mInvalidBack = IntRect(0, 0, mBackBuffer->GetSize().width, mBackBuffer->GetSize().height);
       if (!mBackBufferOnWhite) {
         DiscardBackBuffer();
         DiscardFrontBuffer();
         return nullptr;
       }
+      mInvalidBack = IntRect(IntPoint(), mBackBufferOnWhite->GetSize());
     }
 
     ValidateBackBufferFromFront(aDirtyRegion, aAddPaintedRegion);
