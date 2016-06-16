@@ -6779,7 +6779,7 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsPresContext* aPresContext,
         isEditor = isEditor == nsISelectionDisplay::DISPLAY_ALL;
         if ( isEditor )
         {
-          if (resultFrame->GetType() == nsGkAtoms::tableOuterFrame)
+          if (resultFrame->GetType() == nsGkAtoms::tableWrapperFrame)
           {
             if (((point.x - offset.x + tempRect.x)<0) ||  ((point.x - offset.x+ tempRect.x)>tempRect.width))//off left/right side
             {
@@ -7244,55 +7244,56 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
         NS_ASSERTION(iter, "GetLineNumber() succeeded but no block frame?");
         result = NS_OK;
 
-        int edgeCase = 0;//no edge case. this should look at thisLine
+        int edgeCase = 0; // no edge case. this should look at thisLine
         
-        bool doneLooping = false;//tells us when no more block frames hit.
-        //this part will find a frame or a block frame. if it's a block frame
-        //it will "drill down" to find a viable frame or it will return an error.
+        bool doneLooping = false; // tells us when no more block frames hit.
+        // this part will find a frame or a block frame. if it's a block frame
+        // it will "drill down" to find a viable frame or it will return an error.
         nsIFrame *lastFrame = this;
         do {
           result = nsFrame::GetNextPrevLineFromeBlockFrame(PresContext(),
                                                            aPos, 
                                                            blockFrame, 
                                                            thisLine, 
-                                                           edgeCase //start from thisLine
-            );
-          if (NS_SUCCEEDED(result) && (!aPos->mResultFrame || aPos->mResultFrame == lastFrame))//we came back to same spot! keep going
-          {
+                                                           edgeCase); // start from thisLine
+
+          // we came back to same spot! keep going
+          if (NS_SUCCEEDED(result) &&
+              (!aPos->mResultFrame || aPos->mResultFrame == lastFrame)) {
             aPos->mResultFrame = nullptr;
             if (aPos->mDirection == eDirPrevious)
               thisLine--;
             else
               thisLine++;
-          }
-          else //if failure or success with different frame.
-            doneLooping = true; //do not continue with while loop
+          } else // if failure or success with different frame.
+            doneLooping = true; // do not continue with while loop
 
-          lastFrame = aPos->mResultFrame; //set last frame
+          lastFrame = aPos->mResultFrame; // set last frame
 
-          if (NS_SUCCEEDED(result) && aPos->mResultFrame
-            && blockFrame != aPos->mResultFrame)// make sure block element is not the same as the one we had before
-          {
-/* SPECIAL CHECK FOR TABLE NAVIGATION
-  tables need to navigate also and the frame that supports it is nsTableRowGroupFrame which is INSIDE
-  nsTableWrapperFrame.  if we have stumbled onto an nsTableOuter we need to drill into nsTableRowGroup
-  if we hit a header or footer that's ok just go into them,
-*/
+          // make sure block element is not the same as the one we had before
+          if (NS_SUCCEEDED(result) &&
+              aPos->mResultFrame &&
+              blockFrame != aPos->mResultFrame) {
+            /* SPECIAL CHECK FOR TABLE NAVIGATION
+               tables need to navigate also and the frame that supports it is
+               nsTableRowGroupFrame which is INSIDE nsTableWrapperFrame.
+               If we have stumbled onto an nsTableWrapperFrame we need to drill
+               into nsTableRowGroup if we hit a header or footer that's ok just
+               go into them.
+             */
             bool searchTableBool = false;
-            if (aPos->mResultFrame->GetType() == nsGkAtoms::tableOuterFrame ||
-                aPos->mResultFrame->GetType() == nsGkAtoms::tableCellFrame)
-            {
-              nsIFrame *frame = aPos->mResultFrame->PrincipalChildList().FirstChild();
-              //got the table frame now
-              while(frame) //ok time to drill down to find iterator
-              {
+            if (aPos->mResultFrame->GetType() == nsGkAtoms::tableWrapperFrame ||
+                aPos->mResultFrame->GetType() == nsGkAtoms::tableCellFrame) {
+              nsIFrame* frame = aPos->mResultFrame->PrincipalChildList().FirstChild();
+              // got the table frame now
+              // ok time to drill down to find iterator
+              while (frame) {
                 iter = frame->GetLineIterator();
-                if (iter)
-                {
+                if (iter) {
                   aPos->mResultFrame = frame;
                   searchTableBool = true;
                   result = NS_OK;
-                  break; //while(frame)
+                  break; // while(frame)
                 }
                 result = NS_ERROR_FAILURE;
                 frame = frame->PrincipalChildList().FirstChild();
@@ -7303,21 +7304,20 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
               iter = aPos->mResultFrame->GetLineIterator();
               result = iter ? NS_OK : NS_ERROR_FAILURE;
             }
-            if (NS_SUCCEEDED(result) && iter)//we've struck another block element!
-            {
+
+            // we've struck another block element!
+            if (NS_SUCCEEDED(result) && iter) {
               doneLooping = false;
               if (aPos->mDirection == eDirPrevious)
-                edgeCase = 1;//far edge, search from end backwards
+                edgeCase = 1; // far edge, search from end backwards
               else
-                edgeCase = -1;//near edge search from beginning onwards
-              thisLine=0;//this line means nothing now.
-              //everything else means something so keep looking "inside" the block
+                edgeCase = -1; // near edge search from beginning onwards
+              thisLine = 0; // this line means nothing now.
+              // everything else means something so keep looking "inside" the block
               blockFrame = aPos->mResultFrame;
-
-            }
-            else
-            {
-              result = NS_OK;//THIS is to mean that everything is ok to the containing while loop
+            } else {
+              // THIS is to mean that everything is ok to the containing while loop
+              result = NS_OK;
               break;
             }
           }
@@ -8357,7 +8357,7 @@ GetCorrectedParent(const nsIFrame* aFrame)
   // table, that actually means its the _inner_ table that wants to
   // know its parent. So get the pseudo of the inner in that case.
   nsIAtom* pseudo = aFrame->StyleContext()->GetPseudo();
-  if (pseudo == nsCSSAnonBoxes::tableOuter) {
+  if (pseudo == nsCSSAnonBoxes::tableWrapper) {
     pseudo = aFrame->PrincipalChildList().FirstChild()->StyleContext()->GetPseudo();
   }
   return nsFrame::CorrectStyleParentFrame(parent, pseudo);
@@ -8442,7 +8442,7 @@ nsFrame::DoGetParentStyleContext(nsIFrame** aProviderFrame) const
            mContent->GetPrimaryFrame() == this) ||
           /* if next is true then it's really a request for the table frame's
              parent context, see nsTable[Outer]Frame::GetParentStyleContext. */
-          pseudo == nsCSSAnonBoxes::tableOuter) {
+          pseudo == nsCSSAnonBoxes::tableWrapper) {
         nsStyleContext* sc = fm->GetDisplayContentsStyleFor(parentContent);
         if (MOZ_UNLIKELY(sc)) {
           return sc;
@@ -10118,7 +10118,7 @@ void DR_State::InitFrameTypeTable()
   AddFrameTypeInfo(nsGkAtoms::tableColFrame,         "col",       "tableCol");
   AddFrameTypeInfo(nsGkAtoms::tableColGroupFrame,    "colG",      "tableColGroup");
   AddFrameTypeInfo(nsGkAtoms::tableFrame,            "tbl",       "table");
-  AddFrameTypeInfo(nsGkAtoms::tableOuterFrame,       "tblO",      "tableOuter");
+  AddFrameTypeInfo(nsGkAtoms::tableWrapperFrame,     "tblW",      "tableWrapper");
   AddFrameTypeInfo(nsGkAtoms::tableRowGroupFrame,    "rowG",      "tableRowGroup");
   AddFrameTypeInfo(nsGkAtoms::tableRowFrame,         "row",       "tableRow");
   AddFrameTypeInfo(nsGkAtoms::textInputFrame,        "textCtl",   "textInput");
@@ -10130,7 +10130,7 @@ void DR_State::InitFrameTypeTable()
   AddFrameTypeInfo(nsGkAtoms::sliderFrame,           "Slider",    "Slider");
   AddFrameTypeInfo(nsGkAtoms::popupSetFrame,         "PopupSet",  "PopupSet");
 #endif
-  AddFrameTypeInfo(nullptr,                               "unknown",   "unknown");
+  AddFrameTypeInfo(nullptr,                          "unknown",   "unknown");
 }
 
 

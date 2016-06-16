@@ -348,7 +348,7 @@ public:
    * Given a frame which is the primary frame for an element,
    * return the frame that has the non-pseudoelement style context for
    * the content.
-   * This is aPrimaryFrame itself except for tableOuter frames.
+   * This is aPrimaryFrame itself except for tableWrapper frames.
    *
    * Given a non-null input, this will return null if and only if its
    * argument is a table wrapper frame that is mid-destruction (and its
@@ -360,7 +360,7 @@ public:
    * Given a content node,
    * return the frame that has the non-pseudoelement style context for
    * the content.  May return null.
-   * This is aContent->GetPrimaryFrame() except for tableOuter frames.
+   * This is aContent->GetPrimaryFrame() except for tableWrapper frames.
    */
   static nsIFrame* GetStyleFrame(const nsIContent* aContent);
 

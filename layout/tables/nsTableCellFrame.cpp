@@ -180,7 +180,7 @@ nsTableCellFrame::NeedsToObserve(const nsHTMLReflowState& aReflowState)
   // instead of bsizes for orthogonal children.
   return rs->frame == this &&
          (PresContext()->CompatibilityMode() == eCompatibility_NavQuirks ||
-          fType == nsGkAtoms::tableOuterFrame);
+          fType == nsGkAtoms::tableWrapperFrame);
 }
 
 nsresult

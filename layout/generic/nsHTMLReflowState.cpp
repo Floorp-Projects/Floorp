@@ -2646,7 +2646,7 @@ nsHTMLReflowState::CalculateBlockSideMargins(nsIAtom* aFrameType)
     // First check if there is an HTML alignment that we should honor
     const nsHTMLReflowState* prs = mParentReflowState;
     if (aFrameType == nsGkAtoms::tableFrame) {
-      NS_ASSERTION(prs->frame->GetType() == nsGkAtoms::tableOuterFrame,
+      NS_ASSERTION(prs->frame->GetType() == nsGkAtoms::tableWrapperFrame,
                    "table not inside table wrapper");
       // Center the table within the table wrapper based on the alignment
       // of the table wrapper's parent.

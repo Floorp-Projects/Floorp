@@ -90,7 +90,7 @@ VP 00B97C30 r=1 a=9180,4470 c=9180,4470 cnt=863
     block 02D7B210 r=1 a=9180,UC c=8940,UC cnt=868 
      text 02D7B3F8 r=0 a=8940,UC c=UC,UC cnt=869 
      text 02D7B3F8 d=0,0 
-     tblO 02D7B5F0 r=0 a=8940,UC c=0,0 cnt=870 
+     tblW 02D7B5F0 r=0 a=8940,UC c=0,0 cnt=870 
       tbl 02D7B7EC r=0 a=8940,UC c=1500,UC cnt=871 
        rowG 00B984A4 r=0 a=UC,UC c=UC,UC cnt=872 
         row 02D7BAF8 r=0 a=UC,UC c=UC,UC cnt=873 
@@ -119,7 +119,7 @@ VP 00B97C30 r=1 a=9180,4470 c=9180,4470 cnt=863
         col 02D7C0D8 d=0,0 
        colG 02D7BFB0 d=0,0 
       tbl 02D7B7EC d=1500,390 
-     tblO 02D7B5F0 d=1500,390 
+     tblW 02D7B5F0 d=1500,390 
      text 02D7C130 r=0 a=8940,UC c=UC,UC cnt=885 
      text 02D7C130 d=0,0 
     block 02D7B210 d=8940,390 
@@ -141,7 +141,7 @@ The first line shows the reflow of the viewport (<code class="log">VP</code>). T
 
 <p>The available width is 9180 twips. The available height is 4470 twips (<code class="log">a=9180,4470</code>). The computed width is 9180 twips. The computed height is 4470 twips (<code class="log">c=9180,4470</code>). The line count is 856 (<code  class="log">cnt=856</code>).
 <p>
-Below this is a line that reads:<p><code class="log">tblO 02D7B5F0 r=0 a=8940,UC c=0,0 cnt=870</code></p><p> Here the <code class="log">UC</code> shows that on initial reflow the available height for the table wrapper frame is unconstrained.
+Below this is a line that reads:<p><code class="log">tblW 02D7B5F0 r=0 a=8940,UC c=0,0 cnt=870</code></p><p> Here the <code class="log">UC</code> shows that on initial reflow the available height for the table wrapper frame is unconstrained.
 <p>
 The table cell requires its children to compute the MES. It is reported back from the block as:
 <p><code class="log">block 02D7BCF8 d=300,300 me=300</code></p>
@@ -186,7 +186,7 @@ The entries in the reflow log can be controlled on a frame level.  For instance 
  <tr><td>col</td><td>tableCol</td></tr>
  <tr><td>colG</td><td>tableColGroup</td></tr>
  <tr><td> tbl</td><td>table</td></tr>
- <tr><td>tblO</td><td>tableOuter</td></tr>
+ <tr><td>tblW</td><td>tableWrapper</td></tr>
  <tr><td>rowG</td><td>tableRowGroup</td></tr>
  <tr><td>row</td><td>tableRow</td></tr>
  <tr><td>textCtl</td><td>textInput</td></tr>
