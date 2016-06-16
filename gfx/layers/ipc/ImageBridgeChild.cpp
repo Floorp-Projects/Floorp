@@ -481,7 +481,8 @@ static void ConnectImageBridge(ImageBridgeChild * child, ImageBridgeParent * par
 }
 
 ImageBridgeChild::ImageBridgeChild()
-  : mShuttingDown(false)
+  : CompositableForwarder("ImageBridgeChild")
+  , mShuttingDown(false)
   , mFwdTransactionId(0)
 #ifdef MOZ_WIDGET_GONK
   , mWaitingFenceHandleMutex("ImageBridgeChild::mWaitingFenceHandleMutex")
