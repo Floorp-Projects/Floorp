@@ -37,12 +37,16 @@ to_speex_quality(cubeb_resampler_quality q)
 long noop_resampler::fill(void * input_buffer, long * input_frames_count,
                           void * output_buffer, long output_frames)
 {
+  if (input_buffer) {
+    assert(input_frames_count);
+  }
   assert((input_buffer && output_buffer &&
          *input_frames_count >= output_frames) ||
          (!input_buffer && (!input_frames_count || *input_frames_count == 0)) ||
          (!output_buffer && output_frames == 0));
 
   if (output_buffer == nullptr) {
+    assert(input_buffer);
     output_frames = *input_frames_count;
   }
 
@@ -131,6 +135,10 @@ cubeb_resampler_speex<T, InputProcessor, OutputProcessor>
                       nullptr, out_unprocessed,
                       output_frames_before_processing);
 
+  if (got < 0) {
+    return got;
+  }
+
   output_processor->written(got);
 
   /* Process the output. If not enough frames have been returned from the
@@ -156,8 +164,13 @@ cubeb_resampler_speex<T, InputProcessor, OutputProcessor>
   input_processor->input(input_buffer, *input_frames_count);
   resampled_input = input_processor->output(resampled_frame_count);
 
-  return data_callback(stream, user_ptr,
-                       resampled_input, nullptr, resampled_frame_count);
+  long got = data_callback(stream, user_ptr,
+                           resampled_input, nullptr, resampled_frame_count);
+
+  /* Return the number of initial input frames or part of it.
+  * Since output_frames_needed == 0 in input scenario, the only
+  * available number outside resampler is the initial number of frames. */
+  return (*input_frames_count) * (got / resampled_frame_count);
 }
 
 
@@ -205,6 +218,10 @@ cubeb_resampler_speex<T, InputProcessor, OutputProcessor>
   got = data_callback(stream, user_ptr,
                       resampled_input, out_unprocessed,
                       output_frames_before_processing);
+
+  if (got < 0) {
+    return got;
+  }
 
   output_processor->written(got);
 
