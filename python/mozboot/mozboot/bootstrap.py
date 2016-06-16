@@ -82,8 +82,11 @@ Your choice:
 '''
 
 FINISHED = '''
-Your system should be ready to build %s! If you have not already,
-obtain a copy of the source code by running:
+Your system should be ready to build %s!
+'''
+
+SOURCE_ADVERTISE = '''
+Source code can be obtained by running
 
     hg clone https://hg.mozilla.org/mozilla-central
 
@@ -108,6 +111,15 @@ optimally configured?
   2. No
 
 Please enter your reply: '''.lstrip()
+
+CLONE_MERCURIAL = '''
+If you would like to clone the canonical Mercurial repository, please
+enter the destination path below.
+
+(If you prefer to use Git, leave this blank.)
+
+Destination directory for Mercurial clone (leave empty to not clone): '''.lstrip()
+
 
 DEBIAN_DISTROS = (
     'Debian',
@@ -248,6 +260,23 @@ class Bootstrapper(object):
             if configure_hg:
                 configure_mercurial(self.instance.which('hg'), state_dir)
 
+        # Offer to clone if we're not inside a clone.
+        checkout_type = current_firefox_checkout(check_output=self.instance.check_output,
+                                                 hg=self.instance.which('hg'))
+        have_clone = False
+
+        if checkout_type:
+            have_clone = True
+        elif hg_installed and not self.instance.no_interactive:
+            dest = raw_input(CLONE_MERCURIAL)
+            dest = dest.strip()
+            if dest:
+                dest = os.path.expanduser(dest)
+                have_clone = clone_firefox(self.instance.which('hg'), dest)
+
+        if not have_clone:
+            print(SOURCE_ADVERTISE)
+
         print(self.finished % name)
 
         # Like 'suggest_browser_mozconfig' or 'suggest_mobile_android_mozconfig'.
@@ -313,3 +342,61 @@ def update_mercurial_repo(hg, url, dest, revision):
         subprocess.check_call([hg, 'update', '-r', revision], cwd=dest)
     finally:
         print('=' * 80)
+
+
+def clone_firefox(hg, dest):
+    """Clone the Firefox repository to a specified destination."""
+    print('Cloning Firefox Mercurial repository to %s' % dest)
+
+    args = [
+        hg,
+        'clone',
+        'https://hg.mozilla.org/mozilla-central',
+        dest,
+    ]
+
+    res = subprocess.call(args)
+    print('')
+    if res:
+        print('error cloning; please try again')
+        return False
+    else:
+        print('Firefox source code available at %s' % dest)
+        return True
+
+
+def current_firefox_checkout(check_output, hg=None):
+    """Determine whether we're in a Firefox checkout.
+
+    Returns one of None, ``git``, or ``hg``.
+    """
+    HG_ROOT_REVISIONS = set([
+        # From mozilla-central.
+        '8ba995b74e18334ab3707f27e9eb8f4e37ba3d29',
+    ])
+
+    path = os.getcwd()
+    while path:
+        hg_dir = os.path.join(path, '.hg')
+        git_dir = os.path.join(path, '.git')
+        if hg and os.path.exists(hg_dir):
+            # Verify the hg repo is a Firefox repo by looking at rev 0.
+            try:
+                node = check_output([hg, 'log', '-r', '0', '-T', '{node}'], cwd=path)
+                if node in HG_ROOT_REVISIONS:
+                    return 'hg'
+                # Else the root revision is different. There could be nested
+                # repos. So keep traversing the parents.
+            except subprocess.CalledProcessError:
+                pass
+
+        # TODO check git remotes or `git rev-parse -q --verify $sha1^{commit}`
+        # for signs of Firefox.
+        elif os.path.exists(git_dir):
+            return 'git'
+
+        path, child = os.path.split(path)
+        if child == '':
+            break
+
+    return None
