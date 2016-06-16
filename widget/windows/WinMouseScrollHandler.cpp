@@ -27,7 +27,7 @@
 namespace mozilla {
 namespace widget {
 
-PRLogModuleInfo* gMouseScrollLog = nullptr;
+LazyLogModule gMouseScrollLog("MouseScrollHandlerWidgets");
 
 static const char* GetBoolName(bool aBool)
 {
@@ -81,9 +81,6 @@ MouseScrollHandler::GetCurrentMessagePos()
 void
 MouseScrollHandler::Initialize()
 {
-  if (!gMouseScrollLog) {
-    gMouseScrollLog = PR_NewLogModule("MouseScrollHandlerWidgets");
-  }
   Device::Init();
 }
 
