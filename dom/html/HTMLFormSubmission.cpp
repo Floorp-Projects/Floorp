@@ -43,7 +43,9 @@
 namespace mozilla {
 namespace dom {
 
-static void
+namespace {
+
+void
 SendJSWarning(nsIDocument* aDocument,
               const char* aWarningName,
               const char16_t** aWarningArgs, uint32_t aWarningArgsLen)
@@ -55,7 +57,7 @@ SendJSWarning(nsIDocument* aDocument,
                                   aWarningArgs, aWarningArgsLen);
 }
 
-static void
+void
 RetrieveFileName(Blob* aBlob, nsAString& aFilename)
 {
   if (!aBlob) {
@@ -191,9 +193,9 @@ nsFSURLEncoded::AddNameBlobOrNullPair(const nsAString& aName,
   return AddNameValuePair(aName, filename);
 }
 
-static void
-HandleMailtoSubject(nsCString& aPath) {
-
+void
+HandleMailtoSubject(nsCString& aPath)
+{
   // Walk through the string and see if we have a subject already.
   bool hasSubject = false;
   bool hasParams = false;
@@ -387,6 +389,8 @@ nsFSURLEncoded::URLEncode(const nsAString& aStr, nsACString& aEncoded)
 
   return NS_OK;
 }
+
+} // anonymous namespace
 
 // --------------------------------------------------------------------------
 
@@ -603,6 +607,8 @@ nsFSMultipartFormData::AddPostDataStream()
 
 // --------------------------------------------------------------------------
 
+namespace {
+
 class nsFSTextPlain : public nsEncodingFormSubmission
 {
 public:
@@ -708,6 +714,8 @@ nsFSTextPlain::GetEncodedSubmission(nsIURI* aURI,
   return rv;
 }
 
+} // anonymous namespace
+
 // --------------------------------------------------------------------------
 
 nsEncodingFormSubmission::nsEncodingFormSubmission(const nsACString& aCharset,
@@ -754,7 +762,9 @@ nsEncodingFormSubmission::EncodeVal(const nsAString& aStr, nsCString& aOut,
 
 // --------------------------------------------------------------------------
 
-static void
+namespace {
+
+void
 GetSubmitCharset(nsGenericHTMLElement* aForm,
                  nsACString& oCharset)
 {
@@ -790,7 +800,7 @@ GetSubmitCharset(nsGenericHTMLElement* aForm,
   }
 }
 
-static void
+void
 GetEnumAttr(nsGenericHTMLElement* aContent,
             nsIAtom* atom, int32_t* aValue)
 {
@@ -799,6 +809,8 @@ GetEnumAttr(nsGenericHTMLElement* aContent,
     *aValue = value->GetEnumValue();
   }
 }
+
+} // anonymous namespace
 
 nsresult
 GetSubmissionFromForm(nsGenericHTMLElement* aForm,
