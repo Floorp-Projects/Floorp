@@ -29,7 +29,7 @@
 #include "nsString.h"
 #include "nsReadableUtils.h"
 #include "nsStyleContext.h"
-#include "nsTableOuterFrame.h"
+#include "nsTableWrapperFrame.h"
 #include "nsView.h"
 #include "nsViewManager.h"
 #include "nsIScrollableFrame.h"
@@ -3067,7 +3067,7 @@ nsFrame::GetDataForTableSelection(const nsFrameSelection* aFrameSelection,
       // If not a cell, check for table
       // This will happen when starting frame is the table or child of a table,
       //  such as a row (we were inbetween cells or in table border)
-      nsTableOuterFrame *tableFrame = do_QueryFrame(frame);
+      nsTableWrapperFrame *tableFrame = do_QueryFrame(frame);
       if (tableFrame)
       {
         foundTable = true;
@@ -7268,14 +7268,14 @@ nsIFrame::PeekOffset(nsPeekOffsetStruct* aPos)
           else //if failure or success with different frame.
             doneLooping = true; //do not continue with while loop
 
-          lastFrame = aPos->mResultFrame; //set last frame 
+          lastFrame = aPos->mResultFrame; //set last frame
 
-          if (NS_SUCCEEDED(result) && aPos->mResultFrame 
+          if (NS_SUCCEEDED(result) && aPos->mResultFrame
             && blockFrame != aPos->mResultFrame)// make sure block element is not the same as the one we had before
           {
 /* SPECIAL CHECK FOR TABLE NAVIGATION
   tables need to navigate also and the frame that supports it is nsTableRowGroupFrame which is INSIDE
-  nsTableOuterFrame.  if we have stumbled onto an nsTableOuter we need to drill into nsTableRowGroup
+  nsTableWrapperFrame.  if we have stumbled onto an nsTableOuter we need to drill into nsTableRowGroup
   if we hit a header or footer that's ok just go into them,
 */
             bool searchTableBool = false;
@@ -7437,8 +7437,11 @@ nsFrame::PeekOffsetCharacter(bool aForward, int32_t* aOffset,
 }
 
 nsIFrame::FrameSearchResult
-nsFrame::PeekOffsetWord(bool aForward, bool aWordSelectEatSpace, bool aIsKeyboardSelect,
-                        int32_t* aOffset, PeekWordState* aState)
+nsFrame::PeekOffsetWord(bool            aForward,
+                        bool            aWordSelectEatSpace,
+                        bool            aIsKeyboardSelect,
+                        int32_t*        aOffset,
+                        PeekWordState*  aState)
 {
   NS_ASSERTION (aOffset && *aOffset <= 1, "aOffset out of range");
   int32_t startOffset = *aOffset;
@@ -8350,9 +8353,9 @@ GetCorrectedParent(const nsIFrame* aFrame)
     }
   }
 
-  // Outer tables are always anon boxes; if we're in here for an outer
+  // Table wrappers are always anon boxes; if we're in here for an outer
   // table, that actually means its the _inner_ table that wants to
-  // know its parent.  So get the pseudo of the inner in that case.
+  // know its parent. So get the pseudo of the inner in that case.
   nsIAtom* pseudo = aFrame->StyleContext()->GetPseudo();
   if (pseudo == nsCSSAnonBoxes::tableOuter) {
     pseudo = aFrame->PrincipalChildList().FirstChild()->StyleContext()->GetPseudo();
