@@ -2558,7 +2558,7 @@ nsCSSOffsetState::InitOffsets(WritingMode aWM,
     }
 
     // The margin is inherited to the table wrapper frame via
-    // the ::-moz-table-outer rule in ua.css.
+    // the ::-moz-table-wrapper rule in ua.css.
     ComputedPhysicalMargin().SizeTo(0, 0, 0, 0);
   } else if (aFrameType == nsGkAtoms::scrollbarFrame) {
     // scrollbars may have had their width or height smashed to zero
