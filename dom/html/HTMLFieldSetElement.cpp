@@ -154,7 +154,7 @@ HTMLFieldSetElement::Reset()
 }
 
 NS_IMETHODIMP
-HTMLFieldSetElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
+HTMLFieldSetElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission)
 {
   return NS_OK;
 }
