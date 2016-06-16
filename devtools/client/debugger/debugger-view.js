@@ -453,6 +453,10 @@ var DebuggerView = {
       return void this.editor.setMode(Editor.modes.js);
     }
 
+    if (aContentType === "text/wasm") {
+      return void this.editor.setMode(Editor.modes.wasm);
+    }
+
     // Use HTML mode for files in which the first non whitespace character is
     // &lt;, regardless of extension.
     if (aTextContent.match(/^\s*</)) {

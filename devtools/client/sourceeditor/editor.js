@@ -65,6 +65,7 @@ const CM_SCRIPTS = [
   "chrome://devtools/content/sourceeditor/codemirror/mode/css.js",
   "chrome://devtools/content/sourceeditor/codemirror/mode/htmlmixed.js",
   "chrome://devtools/content/sourceeditor/codemirror/mode/clike.js",
+  "chrome://devtools/content/sourceeditor/codemirror/mode/wasm.js",
   "chrome://devtools/content/sourceeditor/codemirror/addon/selection/active-line.js",
   "chrome://devtools/content/sourceeditor/codemirror/addon/edit/trailingspace.js",
   "chrome://devtools/content/sourceeditor/codemirror/keymap/emacs.js",
@@ -118,6 +119,7 @@ Editor.modes = {
   text: { name: "text" },
   html: { name: "htmlmixed" },
   css: { name: "css" },
+  wasm: { name: "wasm" },
   js: { name: "javascript" },
   vs: { name: "x-shader/x-vertex" },
   fs: { name: "x-shader/x-fragment" }
