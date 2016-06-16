@@ -112,6 +112,7 @@ WebGLContext::WebGLContext()
     , mMaxFetchedVertices(0)
     , mMaxFetchedInstances(0)
     , mBypassShaderValidation(false)
+    , mContextLossHandler(this)
     , mNeedsFakeNoAlpha(false)
     , mNeedsFakeNoDepth(false)
     , mNeedsFakeNoStencil(false)
@@ -173,7 +174,6 @@ WebGLContext::WebGLContext()
 
     mAllowContextRestore = true;
     mLastLossWasSimulated = false;
-    mContextLossHandler = new WebGLContextLossHandler(this);
     mContextStatus = ContextNotLost;
     mLoseContextOnMemoryPressure = false;
     mCanLoseContextInForeground = true;
@@ -209,9 +209,6 @@ WebGLContext::~WebGLContext()
         // XXX mtseng: bug 709490, not thread safe
         WebGLMemoryTracker::RemoveWebGLContext(this);
     }
-
-    mContextLossHandler->DisableTimer();
-    mContextLossHandler = nullptr;
 }
 
 template<typename T>
@@ -1621,7 +1618,7 @@ WebGLContext::TryToRestoreContext()
 void
 WebGLContext::RunContextLossTimer()
 {
-    mContextLossHandler->RunTimer();
+    mContextLossHandler.RunTimer();
 }
 
 class UpdateContextLossStatusTask : public CancelableRunnable
@@ -1763,7 +1760,7 @@ WebGLContext::UpdateContextLossStatus()
 
         if (!TryToRestoreContext()) {
             // Failed to restore. Try again later.
-            mContextLossHandler->RunTimer();
+            mContextLossHandler.RunTimer();
             return;
         }
 
