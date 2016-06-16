@@ -141,7 +141,7 @@ AudioEventTimeline::GetValuesAtTimeHelper(TimeType aTime, float* aBuffer,
   MOZ_ASSERT(aBuffer);
   MOZ_ASSERT(aSize);
 
-  size_t lastEventId = 0;
+  size_t eventIndex = 0;
   const AudioTimelineEvent* previous = nullptr;
   const AudioTimelineEvent* next = nullptr;
   bool bailOut = false;
@@ -153,10 +153,10 @@ AudioEventTimeline::GetValuesAtTimeHelper(TimeType aTime, float* aBuffer,
   }
 
   for (size_t bufferIndex = 0; bufferIndex < aSize; ++bufferIndex, ++aTime) {
-    for (; !bailOut && lastEventId < mEvents.Length(); ++lastEventId) {
+    for (; !bailOut && eventIndex < mEvents.Length(); ++eventIndex) {
 
 #ifdef DEBUG
-      const AudioTimelineEvent* current = &mEvents[lastEventId];
+      const AudioTimelineEvent* current = &mEvents[eventIndex];
       MOZ_ASSERT(current->mType == AudioTimelineEvent::SetValueAtTime ||
                  current->mType == AudioTimelineEvent::SetTarget ||
                  current->mType == AudioTimelineEvent::LinearRamp ||
@@ -164,48 +164,48 @@ AudioEventTimeline::GetValuesAtTimeHelper(TimeType aTime, float* aBuffer,
                  current->mType == AudioTimelineEvent::SetValueCurve);
 #endif
 
-      if (TimesEqual(aTime, mEvents[lastEventId].template Time<TimeType>())) {
+      if (TimesEqual(aTime, mEvents[eventIndex].template Time<TimeType>())) {
         mLastComputedValue = mComputedValue;
         // Find the last event with the same time
-        while (lastEventId < mEvents.Length() - 1 &&
-               TimesEqual(aTime, mEvents[lastEventId + 1].template Time<TimeType>())) {
-          ++lastEventId;
+        while (eventIndex < mEvents.Length() - 1 &&
+               TimesEqual(aTime, mEvents[eventIndex + 1].template Time<TimeType>())) {
+          ++eventIndex;
         }
         break;
       }
 
       previous = next;
-      next = &mEvents[lastEventId];
-      if (aTime < mEvents[lastEventId].template Time<TimeType>()) {
+      next = &mEvents[eventIndex];
+      if (aTime < mEvents[eventIndex].template Time<TimeType>()) {
         bailOut = true;
       }
     }
 
-    if (!bailOut && lastEventId < mEvents.Length()) {
+    if (!bailOut && eventIndex < mEvents.Length()) {
       // The time matches one of the events exactly.
-      MOZ_ASSERT(TimesEqual(aTime, mEvents[lastEventId].template Time<TimeType>()));
+      MOZ_ASSERT(TimesEqual(aTime, mEvents[eventIndex].template Time<TimeType>()));
 
       // SetTarget nodes can be handled no matter what their next node is (if they have one)
-      if (mEvents[lastEventId].mType == AudioTimelineEvent::SetTarget) {
+      if (mEvents[eventIndex].mType == AudioTimelineEvent::SetTarget) {
         // Follow the curve, without regard to the next event, starting at
         // the last value of the last event.
-        aBuffer[bufferIndex] = ExponentialApproach(mEvents[lastEventId].template Time<TimeType>(),
-                                                mLastComputedValue, mEvents[lastEventId].mValue,
-                                                mEvents[lastEventId].mTimeConstant, aTime);
+        aBuffer[bufferIndex] = ExponentialApproach(mEvents[eventIndex].template Time<TimeType>(),
+                                                mLastComputedValue, mEvents[eventIndex].mValue,
+                                                mEvents[eventIndex].mTimeConstant, aTime);
         continue;
       }
 
       // SetValueCurve events can be handled no matter what their event node is (if they have one)
-      if (mEvents[lastEventId].mType == AudioTimelineEvent::SetValueCurve) {
-        aBuffer[bufferIndex] = ExtractValueFromCurve(mEvents[lastEventId].template Time<TimeType>(),
-                                                  mEvents[lastEventId].mCurve,
-                                                  mEvents[lastEventId].mCurveLength,
-                                                  mEvents[lastEventId].mDuration, aTime);
+      if (mEvents[eventIndex].mType == AudioTimelineEvent::SetValueCurve) {
+        aBuffer[bufferIndex] = ExtractValueFromCurve(mEvents[eventIndex].template Time<TimeType>(),
+                                                  mEvents[eventIndex].mCurve,
+                                                  mEvents[eventIndex].mCurveLength,
+                                                  mEvents[eventIndex].mDuration, aTime);
         continue;
       }
 
       // For other event types
-      aBuffer[bufferIndex] = mEvents[lastEventId].mValue;
+      aBuffer[bufferIndex] = mEvents[eventIndex].mValue;
       continue;
     }
 
