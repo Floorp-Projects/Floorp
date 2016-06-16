@@ -12,7 +12,6 @@ DIRS += [
     'base',
     'components',
     'experiments',
-    'fonts',
     'locales',
     'modules',
     'themes',
