@@ -4806,6 +4806,9 @@ WINNT:1)
 Darwin:1)
     MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
     ;;
+Linux:1)
+    MOZ_CONTENT_SANDBOX=$MOZ_SANDBOX
+    ;;
 esac
 
 MOZ_ARG_ENABLE_BOOL(content-sandbox,
