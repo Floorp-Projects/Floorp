@@ -82,6 +82,7 @@ const FRAME_REDIRECT = BASE + "/file_webNavigation_frameRedirect.html";
 const FRAME_MANUAL = BASE + "/file_webNavigation_manualSubframe.html";
 const FRAME_MANUAL_PAGE1 = BASE + "/file_webNavigation_manualSubframe_page1.html";
 const FRAME_MANUAL_PAGE2 = BASE + "/file_webNavigation_manualSubframe_page2.html";
+const INVALID_PAGE = "https://invalid.localhost/";
 
 const REQUIRED = [
   "onBeforeNavigate",
@@ -490,6 +491,61 @@ add_task(function* webnav_ordering() {
     info(`Received ${expectedEvent} from ${waitURL} - history.forward() from ${fromURL} to ${waitURL}`);
   }
 
+  win.close();
+
+  yield extension.unload();
+  info("webnavigation extension unloaded");
+});
+
+add_task(function* webnav_error_event() {
+  function backgroundScriptErrorEvent() {
+    browser.webNavigation.onErrorOccurred.addListener((details) => {
+      browser.test.log(`Got onErrorOccurred ${details.url} ${details.error}`);
+
+      browser.test.sendMessage("received", {url: details.url, details, event: "onErrorOccurred"});
+    });
+
+    browser.test.sendMessage("ready");
+  }
+
+  let extensionData = {
+    manifest: {
+      permissions: [
+        "webNavigation",
+      ],
+    },
+    background: `(${backgroundScriptErrorEvent})()`,
+  };
+
+  let extension = ExtensionTestUtils.loadExtension(extensionData);
+
+  extension.onMessage("received", ({url, event, details}) => {
+    received.push({url, event, details});
+
+    if (event == waitingEvent && url == waitingURL) {
+      completedResolve();
+    }
+  });
+
+  yield Promise.all([extension.startup(), extension.awaitMessage("ready")]);
+  info("webnavigation extension loaded");
+
+  let win = window.open();
+
+  received = [];
+  yield loadAndWait(win, "onErrorOccurred", INVALID_PAGE, () => { win.location = INVALID_PAGE; });
+
+  let found = received.find((data) => (data.event == "onErrorOccurred" &&
+                                   data.url == INVALID_PAGE));
+
+  ok(found, "Got the onErrorOccurred event");
+
+  if (found) {
+    ok(found.details.error.match(/Error code [0-9]+/),
+      "Got the expected error string in the onErrorOccurred event");
+  }
+
+  // cleanup phase
   win.close();
 
   yield extension.unload();
