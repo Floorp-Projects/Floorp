@@ -78,6 +78,7 @@ config = {
         'TINDERBOX_OUTPUT': '1',
         'TOOLTOOL_CACHE': '/c/builds/tooltool_cache',
         'TOOLTOOL_HOME': '/c/builds',
+        'MSYSTEM': 'MINGW32',
     },
     'upload_env': {
         'UPLOAD_HOST': 'localhost',

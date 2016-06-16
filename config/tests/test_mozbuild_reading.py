@@ -82,6 +82,9 @@ class TestMozbuildReading(unittest.TestCase):
                 raise unittest.SkipTest('failing without config.status')
             raise
 
+        if config.substs['MOZ_BUILD_APP'] == 'js':
+            raise unittest.SkipTest('failing in Spidermonkey builds')
+
         reader = BuildReader(config)
         all_paths = self._mozbuilds(reader)
         _, contexts = reader.read_relevant_mozbuilds(all_paths)

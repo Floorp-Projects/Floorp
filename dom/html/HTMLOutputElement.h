@@ -15,6 +15,8 @@
 namespace mozilla {
 namespace dom {
 
+class HTMLFormSubmission;
+
 class HTMLOutputElement final : public nsGenericHTMLFormElement,
                                 public nsStubMutationObserver,
                                 public nsIConstraintValidation
@@ -31,7 +33,7 @@ public:
   // nsIFormControl
   NS_IMETHOD_(uint32_t) GetType() const override { return NS_FORM_OUTPUT; }
   NS_IMETHOD Reset() override;
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission) override;
+  NS_IMETHOD SubmitNamesValues(HTMLFormSubmission* aFormSubmission) override;
 
   virtual bool IsDisabled() const override { return false; }
 

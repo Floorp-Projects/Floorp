@@ -3,14 +3,15 @@
 /* This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
-#ifndef nsIFormSubmission_h___
-#define nsIFormSubmission_h___
+
+#ifndef mozilla_dom_HTMLFormSubmission_h
+#define mozilla_dom_HTMLFormSubmission_h
 
 #include "mozilla/Attributes.h"
-#include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
 #include "nsNCRFallbackEncoderWrapper.h"
+#include "nsString.h"
 
 class nsIURI;
 class nsIInputStream;
@@ -19,20 +20,32 @@ class nsIMultiplexInputStream;
 
 namespace mozilla {
 namespace dom {
+
 class Blob;
-} // namespace dom
-} // namespace mozilla
 
 /**
  * Class for form submissions; encompasses the function to call to submit as
  * well as the form submission name/value pairs
  */
-class nsFormSubmission
+class HTMLFormSubmission
 {
 public:
-  virtual ~nsFormSubmission()
+  /**
+   * Get a submission object based on attributes in the form (ENCTYPE and
+   * METHOD)
+   *
+   * @param aForm the form to get a submission object based on
+   * @param aOriginatingElement the originating element (can be null)
+   * @param aFormSubmission the form submission object (out param)
+   */
+  static nsresult
+  GetFromForm(nsGenericHTMLElement* aForm,
+              nsGenericHTMLElement* aOriginatingElement,
+              HTMLFormSubmission** aFormSubmission);
+
+  virtual ~HTMLFormSubmission()
   {
-    MOZ_COUNT_DTOR(nsFormSubmission);
+    MOZ_COUNT_DTOR(HTMLFormSubmission);
   }
 
   /**
@@ -41,8 +54,8 @@ public:
    * @param aName the name of the parameter
    * @param aValue the value of the parameter
    */
-  virtual nsresult AddNameValuePair(const nsAString& aName,
-                                    const nsAString& aValue) = 0;
+  virtual nsresult
+  AddNameValuePair(const nsAString& aName, const nsAString& aValue) = 0;
 
   /**
    * Submit a name/blob pair
@@ -52,8 +65,8 @@ public:
    * is actually a File, otherwise 'blob' string is used instead if the aBlob is
    * not null.
    */
-  virtual nsresult AddNameBlobOrNullPair(const nsAString& aName,
-                                         mozilla::dom::Blob* aBlob) = 0;
+  virtual nsresult
+  AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob) = 0;
 
   /**
    * Reports whether the instance supports AddIsindex().
@@ -83,8 +96,8 @@ public:
    * @param aURI the URI being submitted to [INOUT]
    * @param aPostDataStream a data stream for POST data [OUT]
    */
-  virtual nsresult GetEncodedSubmission(nsIURI* aURI,
-                                        nsIInputStream** aPostDataStream) = 0;
+  virtual nsresult
+  GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream) = 0;
 
   /**
    * Get the charset that will be used for submission.
@@ -106,11 +119,12 @@ protected:
    * @param aCharset the charset of the form as a string
    * @param aOriginatingElement the originating element (can be null)
    */
-  nsFormSubmission(const nsACString& aCharset, nsIContent* aOriginatingElement)
+  HTMLFormSubmission(const nsACString& aCharset,
+                     nsIContent* aOriginatingElement)
     : mCharset(aCharset)
     , mOriginatingElement(aOriginatingElement)
   {
-    MOZ_COUNT_CTOR(nsFormSubmission);
+    MOZ_COUNT_CTOR(HTMLFormSubmission);
   }
 
   // The name of the encoder charset
@@ -120,13 +134,13 @@ protected:
   nsCOMPtr<nsIContent> mOriginatingElement;
 };
 
-class nsEncodingFormSubmission : public nsFormSubmission
+class EncodingFormSubmission : public HTMLFormSubmission
 {
 public:
-  nsEncodingFormSubmission(const nsACString& aCharset,
-                           nsIContent* aOriginatingElement);
+  EncodingFormSubmission(const nsACString& aCharset,
+                         nsIContent* aOriginatingElement);
 
-  virtual ~nsEncodingFormSubmission();
+  virtual ~EncodingFormSubmission();
 
   /**
    * Encode a Unicode string to bytes using the encoder (or just copy the input
@@ -149,22 +163,24 @@ private:
  * Handle multipart/form-data encoding, which does files as well as normal
  * inputs.  This always does POST.
  */
-class nsFSMultipartFormData : public nsEncodingFormSubmission
+class FSMultipartFormData : public EncodingFormSubmission
 {
 public:
   /**
    * @param aCharset the charset of the form as a string
    */
-  nsFSMultipartFormData(const nsACString& aCharset,
-                        nsIContent* aOriginatingElement);
-  ~nsFSMultipartFormData();
+  FSMultipartFormData(const nsACString& aCharset,
+                      nsIContent* aOriginatingElement);
+  ~FSMultipartFormData();
  
-  virtual nsresult AddNameValuePair(const nsAString& aName,
-                                    const nsAString& aValue) override;
-  virtual nsresult AddNameBlobOrNullPair(const nsAString& aName,
-                                         mozilla::dom::Blob* aBlob) override;
-  virtual nsresult GetEncodedSubmission(nsIURI* aURI,
-                                        nsIInputStream** aPostDataStream) override;
+  virtual nsresult
+  AddNameValuePair(const nsAString& aName, const nsAString& aValue) override;
+
+  virtual nsresult
+  AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob) override;
+
+  virtual nsresult
+  GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream) override;
 
   void GetContentType(nsACString& aContentType)
   {
@@ -211,15 +227,7 @@ private:
   uint64_t mTotalLength;
 };
 
-/**
- * Get a submission object based on attributes in the form (ENCTYPE and METHOD)
- *
- * @param aForm the form to get a submission object based on
- * @param aOriginatingElement the originating element (can be null)
- * @param aFormSubmission the form submission object (out param)
- */
-nsresult GetSubmissionFromForm(nsGenericHTMLElement* aForm,
-                               nsGenericHTMLElement* aOriginatingElement,
-                               nsFormSubmission** aFormSubmission);
+} // namespace dom
+} // namespace mozilla
 
-#endif /* nsIFormSubmission_h___ */
+#endif /* mozilla_dom_HTMLFormSubmission_h */

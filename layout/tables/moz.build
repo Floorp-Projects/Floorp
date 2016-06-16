@@ -21,10 +21,10 @@ UNIFIED_SOURCES += [
     'nsTableColFrame.cpp',
     'nsTableColGroupFrame.cpp',
     'nsTableFrame.cpp',
-    'nsTableOuterFrame.cpp',
     'nsTablePainter.cpp',
     'nsTableRowFrame.cpp',
     'nsTableRowGroupFrame.cpp',
+    'nsTableWrapperFrame.cpp',
     'SpanningCellSorter.cpp',
 ]
 

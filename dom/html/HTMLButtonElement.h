@@ -49,7 +49,7 @@ public:
   // overriden nsIFormControl methods
   NS_IMETHOD_(uint32_t) GetType() const override { return mType; }
   NS_IMETHOD Reset() override;
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission) override;
+  NS_IMETHOD SubmitNamesValues(HTMLFormSubmission* aFormSubmission) override;
   NS_IMETHOD SaveState() override;
   bool RestoreState(nsPresState* aState) override;
   virtual bool IsDisabledForEvents(EventMessage aMessage) override;

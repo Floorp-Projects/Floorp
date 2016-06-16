@@ -6,7 +6,9 @@
 
 #include "mozilla/dom/HTMLButtonElement.h"
 
+#include "HTMLFormSubmissionConstants.h"
 #include "mozilla/dom/HTMLButtonElementBinding.h"
+#include "mozilla/dom/HTMLFormSubmission.h"
 #include "nsIDOMHTMLFormElement.h"
 #include "nsAttrValueInlines.h"
 #include "nsGkAtoms.h"
@@ -14,9 +16,6 @@
 #include "nsStyleConsts.h"
 #include "nsPresContext.h"
 #include "nsIFormControl.h"
-#include "nsIForm.h"
-#include "nsFormSubmission.h"
-#include "nsFormSubmissionConstants.h"
 #include "nsIURL.h"
 #include "nsIFrame.h"
 #include "nsIFormControlFrame.h"
@@ -440,7 +439,7 @@ HTMLButtonElement::Reset()
 }
 
 NS_IMETHODIMP
-HTMLButtonElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
+HTMLButtonElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission)
 {
   //
   // We only submit if we were the button pressed

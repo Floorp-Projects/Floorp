@@ -399,8 +399,9 @@ bool
 RestyleManager::RecomputePosition(nsIFrame* aFrame)
 {
   // Don't process position changes on table frames, since we already handle
-  // the dynamic position change on the outer table frame, and the reflow-based
-  // fallback code path also ignores positions on inner table frames.
+  // the dynamic position change on the table wrapper frame, and the
+  // reflow-based fallback code path also ignores positions on inner table
+  // frames.
   if (aFrame->GetType() == nsGkAtoms::tableFrame) {
     return true;
   }

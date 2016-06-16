@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/EventStates.h"
+#include "mozilla/dom/HTMLFormSubmission.h"
 #include "mozilla/dom/HTMLObjectElement.h"
 #include "mozilla/dom/HTMLObjectElementBinding.h"
 #include "mozilla/dom/ElementInlines.h"
@@ -14,7 +15,6 @@
 #include "nsIDocument.h"
 #include "nsIPluginDocument.h"
 #include "nsIDOMDocument.h"
-#include "nsFormSubmission.h"
 #include "nsIObjectFrame.h"
 #include "nsNPAPIPluginInstance.h"
 #include "nsIWidget.h"
@@ -407,7 +407,7 @@ HTMLObjectElement::Reset()
 }
 
 NS_IMETHODIMP
-HTMLObjectElement::SubmitNamesValues(nsFormSubmission *aFormSubmission)
+HTMLObjectElement::SubmitNamesValues(HTMLFormSubmission *aFormSubmission)
 {
   nsAutoString name;
   if (!GetAttr(kNameSpaceID_None, nsGkAtoms::name, name)) {

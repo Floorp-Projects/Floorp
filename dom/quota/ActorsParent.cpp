@@ -1360,7 +1360,7 @@ class MOZ_STACK_CLASS OriginParser final
   enum SchemaType {
     eNone,
     eFile,
-    eMozSafeAbout
+    eAbout
   };
 
   enum State {
@@ -6628,7 +6628,7 @@ OriginParser::Parse(nsACString& aSpec, PrincipalOriginAttributes* aAttrs)
     return true;
   }
 
-  if (mSchemaType == eMozSafeAbout) {
+  if (mSchemaType == eAbout) {
     spec.Append(':');
   } else {
     spec.AppendLiteral("://");
@@ -6652,19 +6652,20 @@ OriginParser::HandleSchema(const nsDependentCSubstring& aToken)
   MOZ_ASSERT(!aToken.IsEmpty());
   MOZ_ASSERT(mState == eExpectingAppIdOrSchema || mState == eExpectingSchema);
 
-  bool isMozSafeAbout = false;
+  bool isAbout = false;
   bool isFile = false;
   if (aToken.EqualsLiteral("http") ||
       aToken.EqualsLiteral("https") ||
-      (isMozSafeAbout = aToken.EqualsLiteral("moz-safe-about")) ||
+      (isAbout = aToken.EqualsLiteral("about") ||
+                 aToken.EqualsLiteral("moz-safe-about")) ||
       aToken.EqualsLiteral("indexeddb") ||
       (isFile = aToken.EqualsLiteral("file")) ||
       aToken.EqualsLiteral("app") ||
       aToken.EqualsLiteral("resource")) {
     mSchema = aToken;
 
-    if (isMozSafeAbout) {
-      mSchemaType = eMozSafeAbout;
+    if (isAbout) {
+      mSchemaType = eAbout;
       mState = eExpectingHost;
     } else {
       if (isFile) {

@@ -12,6 +12,12 @@ export CFLAGS="-fsanitize=thread"
 export CXXFLAGS="-fsanitize=thread"
 export LDFLAGS="-fsanitize=thread"
 
+# Use a newer binutils, from the tooltool gcc package, if it's there
+if [ -e "$topsrcdir/gcc/bin/ld" ]; then
+    export CC="$CC -B $topsrcdir/gcc/bin"
+    export CXX="$CXX -B $topsrcdir/gcc/bin"
+fi
+
 # Enable TSan specific code and build workarounds
 ac_add_options --enable-thread-sanitizer
 
