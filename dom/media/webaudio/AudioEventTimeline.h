@@ -459,8 +459,8 @@ public:
         }
       }
 
-      // The time was found in the list of events.
       if (!bailOut && lastEventId < mEvents.Length()) {
+        // The time matches one of the events exactly.
         MOZ_ASSERT(TimesEqual(aTime, mEvents[lastEventId].template Time<TimeType>()));
 
         // SetTarget nodes can be handled no matter what their next node is (if they have one)
