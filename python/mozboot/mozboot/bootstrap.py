@@ -88,7 +88,7 @@ Your system should be ready to build %s!
 SOURCE_ADVERTISE = '''
 Source code can be obtained by running
 
-    hg clone https://hg.mozilla.org/mozilla-central
+    hg clone https://hg.mozilla.org/firefox
 
 Or, if you prefer Git, you should install git-cinnabar, and follow the
 instruction here to clone from the Mercurial repository:
@@ -348,21 +348,51 @@ def clone_firefox(hg, dest):
     """Clone the Firefox repository to a specified destination."""
     print('Cloning Firefox Mercurial repository to %s' % dest)
 
+    # We create an empty repo then modify the config before adding data.
+    # This is necessary to ensure storage settings are optimally
+    # configured.
     args = [
         hg,
-        'clone',
-        'https://hg.mozilla.org/mozilla-central',
-        dest,
+        # The unified repo is generaldelta, so ensure the client is as
+        # well.
+        '--config', 'format.generaldelta=true',
+        'init',
+        dest
     ]
-
     res = subprocess.call(args)
+    if res:
+        print('unable to create destination repo; please try cloning manually')
+        return False
+
+    # Strictly speaking, this could overwrite a config based on a template
+    # the user has installed. Let's pretend this problem doesn't exist
+    # unless someone complains about it.
+    with open(os.path.join(dest, '.hg', 'hgrc'), 'ab') as fh:
+        fh.write('[paths]\n')
+        fh.write('default = https://hg.mozilla.org/firefox\n')
+        fh.write('\n')
+
+        # The server uses aggressivemergedeltas which can blow up delta chain
+        # length. This can cause performance to tank due to delta chains being
+        # too long. Limit the delta chain length to something reasonable
+        # to bound revlog read time.
+        fh.write('[format]\n')
+        fh.write('# This is necessary to keep performance in check\n')
+        fh.write('maxchainlen = 10000\n')
+
+    res = subprocess.call([hg, 'pull', 'https://hg.mozilla.org/firefox'], cwd=dest)
     print('')
     if res:
-        print('error cloning; please try again')
+        print('error pulling; try running `hg pull https://hg.mozilla.org/firefox` manually')
         return False
-    else:
-        print('Firefox source code available at %s' % dest)
-        return True
+
+    print('updating to "central" - the development head of Gecko and Firefox')
+    res = subprocess.call([hg, 'update', '-r', 'central'], cwd=dest)
+    if res:
+        print('error updating; you will need to `hg update` manually')
+
+    print('Firefox source code available at %s' % dest)
+    return True
 
 
 def current_firefox_checkout(check_output, hg=None):
