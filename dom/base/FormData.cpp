@@ -372,7 +372,7 @@ NS_IMETHODIMP
 FormData::GetSendInfo(nsIInputStream** aBody, uint64_t* aContentLength,
                       nsACString& aContentType, nsACString& aCharset)
 {
-  nsFSMultipartFormData fs(NS_LITERAL_CSTRING("UTF-8"), nullptr);
+  FSMultipartFormData fs(NS_LITERAL_CSTRING("UTF-8"), nullptr);
 
   for (uint32_t i = 0; i < mFormData.Length(); ++i) {
     if (mFormData[i].wasNullBlob) {
