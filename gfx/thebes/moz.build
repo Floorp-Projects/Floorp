@@ -53,6 +53,7 @@ EXPORTS += [
 EXPORTS.mozilla.gfx += [
     'PrintTarget.h',
     'PrintTargetRecording.h',
+    'PrintTargetThebes.h',
 ]
 
 if CONFIG['MOZ_WIDGET_TOOLKIT'] == 'android':
@@ -220,6 +221,7 @@ SOURCES += [
     'gfxPrefs.cpp',
     'PrintTarget.cpp',
     'PrintTargetRecording.cpp',
+    'PrintTargetThebes.cpp',
 ]
 
 UNIFIED_SOURCES += [
