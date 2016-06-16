@@ -180,9 +180,9 @@ DetailsFrame*
 NS_NewDetailsFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 
 // Table frame factories
-class nsTableOuterFrame;
-nsTableOuterFrame*
-NS_NewTableOuterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
+class nsTableWrapperFrame;
+nsTableWrapperFrame*
+NS_NewTableWrapperFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);
 class nsTableFrame;
 nsTableFrame*
 NS_NewTableFrame(nsIPresShell* aPresShell, nsStyleContext* aContext);

@@ -113,7 +113,7 @@ nsTableCellFrame::NotifyPercentBSize(const nsHTMLReflowState& aReflowState)
   // nsHTMLReflowState ensures the mCBReflowState of blocks inside a
   // cell is the cell frame, not the inner-cell block, and that the
   // containing block of an inner table is the containing block of its
-  // outer table.
+  // table wrapper.
   // XXXldb Given the now-stricter |NeedsToObserve|, many if not all of
   // these tests are probably unnecessary.
 
@@ -166,7 +166,7 @@ nsTableCellFrame::NeedsToObserve(const nsHTMLReflowState& aReflowState)
   }
 
   // We always need to let the percent bsize observer be propagated
-  // from an outer table frame to an inner table frame.
+  // from a table wrapper frame to an inner table frame.
   nsIAtom *fType = aReflowState.frame->GetType();
   if (fType == nsGkAtoms::tableFrame) {
     return true;

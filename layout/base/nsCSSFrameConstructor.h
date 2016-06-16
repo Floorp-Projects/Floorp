@@ -467,7 +467,7 @@ private:
 
   // BEGIN TABLE SECTION
   /**
-   * Construct an outer table frame.  This is the FrameConstructionData
+   * Construct a table wrapper frame. This is the FrameConstructionData
    * callback used for the job.
    */
   nsIFrame* ConstructTable(nsFrameConstructorState& aState,

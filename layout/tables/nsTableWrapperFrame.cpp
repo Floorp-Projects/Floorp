@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsTableOuterFrame.h"
+#include "nsTableWrapperFrame.h"
 
 #include "nsFrameManager.h"
 #include "nsTableFrame.h"
@@ -30,7 +30,7 @@ using namespace mozilla::layout;
 #define NO_SIDE 100
 
 /* virtual */ nscoord
-nsTableOuterFrame::GetLogicalBaseline(WritingMode aWritingMode) const
+nsTableWrapperFrame::GetLogicalBaseline(WritingMode aWritingMode) const
 {
   nsIFrame* kid = mFrames.FirstChild();
   if (!kid) {
@@ -42,29 +42,29 @@ nsTableOuterFrame::GetLogicalBaseline(WritingMode aWritingMode) const
          kid->BStart(aWritingMode, mRect.Size());
 }
 
-nsTableOuterFrame::nsTableOuterFrame(nsStyleContext* aContext):
-  nsContainerFrame(aContext)
+nsTableWrapperFrame::nsTableWrapperFrame(nsStyleContext* aContext)
+  : nsContainerFrame(aContext)
 {
 }
 
-nsTableOuterFrame::~nsTableOuterFrame()
+nsTableWrapperFrame::~nsTableWrapperFrame()
 {
 }
 
-NS_QUERYFRAME_HEAD(nsTableOuterFrame)
-  NS_QUERYFRAME_ENTRY(nsTableOuterFrame)
+NS_QUERYFRAME_HEAD(nsTableWrapperFrame)
+  NS_QUERYFRAME_ENTRY(nsTableWrapperFrame)
 NS_QUERYFRAME_TAIL_INHERITING(nsContainerFrame)
 
 #ifdef ACCESSIBILITY
 a11y::AccType
-nsTableOuterFrame::AccessibleType()
+nsTableWrapperFrame::AccessibleType()
 {
   return a11y::eHTMLTableType;
 }
 #endif
 
 void
-nsTableOuterFrame::DestroyFrom(nsIFrame* aDestructRoot)
+nsTableWrapperFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   DestroyAbsoluteFrames(aDestructRoot);
   mCaptionFrames.DestroyFramesFrom(aDestructRoot);
@@ -72,7 +72,7 @@ nsTableOuterFrame::DestroyFrom(nsIFrame* aDestructRoot)
 }
 
 const nsFrameList&
-nsTableOuterFrame::GetChildList(ChildListID aListID) const
+nsTableWrapperFrame::GetChildList(ChildListID aListID) const
 {
   if (aListID == kCaptionList) {
     return mCaptionFrames;
@@ -82,15 +82,15 @@ nsTableOuterFrame::GetChildList(ChildListID aListID) const
 }
 
 void
-nsTableOuterFrame::GetChildLists(nsTArray<ChildList>* aLists) const
+nsTableWrapperFrame::GetChildLists(nsTArray<ChildList>* aLists) const
 {
   nsContainerFrame::GetChildLists(aLists);
   mCaptionFrames.AppendIfNonempty(aLists, kCaptionList);
 }
 
-void 
-nsTableOuterFrame::SetInitialChildList(ChildListID     aListID,
-                                       nsFrameList&    aChildList)
+void
+nsTableWrapperFrame::SetInitialChildList(ChildListID     aListID,
+                                         nsFrameList&    aChildList)
 {
   if (kCaptionList == aListID) {
     // the frame constructor already checked for table-caption display type
@@ -108,8 +108,8 @@ nsTableOuterFrame::SetInitialChildList(ChildListID     aListID,
 }
 
 void
-nsTableOuterFrame::AppendFrames(ChildListID     aListID,
-                                nsFrameList&    aFrameList)
+nsTableWrapperFrame::AppendFrames(ChildListID     aListID,
+                                  nsFrameList&    aFrameList)
 {
   // We only have two child frames: the inner table and a caption frame.
   // The inner frame is provided when we're initialized, and it cannot change
@@ -121,15 +121,14 @@ nsTableOuterFrame::AppendFrames(ChildListID     aListID,
 
   // Reflow the new caption frame. It's already marked dirty, so
   // just tell the pres shell.
-  PresContext()->PresShell()->
-    FrameNeedsReflow(this, nsIPresShell::eTreeChange,
-                     NS_FRAME_HAS_DIRTY_CHILDREN);
+  PresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                                               NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
 void
-nsTableOuterFrame::InsertFrames(ChildListID     aListID,
-                                nsIFrame*       aPrevFrame,
-                                nsFrameList&    aFrameList)
+nsTableWrapperFrame::InsertFrames(ChildListID     aListID,
+                                  nsIFrame*       aPrevFrame,
+                                  nsFrameList&    aFrameList)
 {
   MOZ_ASSERT(kCaptionList == aListID, "unexpected child list");
   MOZ_ASSERT(aFrameList.IsEmpty() ||
@@ -141,14 +140,13 @@ nsTableOuterFrame::InsertFrames(ChildListID     aListID,
 
   // Reflow the new caption frame. It's already marked dirty, so
   // just tell the pres shell.
-  PresContext()->PresShell()->
-    FrameNeedsReflow(this, nsIPresShell::eTreeChange,
-                     NS_FRAME_HAS_DIRTY_CHILDREN);
+  PresContext()->PresShell()->FrameNeedsReflow(this, nsIPresShell::eTreeChange,
+                                               NS_FRAME_HAS_DIRTY_CHILDREN);
 }
 
 void
-nsTableOuterFrame::RemoveFrame(ChildListID     aListID,
-                               nsIFrame*       aOldFrame)
+nsTableWrapperFrame::RemoveFrame(ChildListID  aListID,
+                                 nsIFrame*    aOldFrame)
 {
   // We only have two child frames: the inner table and one caption frame.
   // The inner frame can't be removed so this should be the caption
@@ -162,16 +160,16 @@ nsTableOuterFrame::RemoveFrame(ChildListID     aListID,
 
   // Remove the frame and destroy it
   mCaptionFrames.DestroyFrame(aOldFrame);
-  
+
   PresContext()->PresShell()->
     FrameNeedsReflow(this, nsIPresShell::eTreeChange,
                      NS_FRAME_HAS_DIRTY_CHILDREN); // also means child removed
 }
 
 void
-nsTableOuterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                    const nsRect&           aDirtyRect,
-                                    const nsDisplayListSet& aLists)
+nsTableWrapperFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
+                                      const nsRect&           aDirtyRect,
+                                      const nsDisplayListSet& aLists)
 {
   // No border, background or outline are painted because they all belong
   // to the inner table.
@@ -189,7 +187,7 @@ nsTableOuterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
   nsDisplayListSet captionSet(set, set.BlockBorderBackgrounds());
   BuildDisplayListForChild(aBuilder, mCaptionFrames.FirstChild(),
                            aDirtyRect, captionSet);
-  
+
   // Now we have to sort everything by content order, since the caption
   // may be somewhere inside the table
   set.SortAllByContentOrder(GetContent());
@@ -197,9 +195,9 @@ nsTableOuterFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
 }
 
 void
-nsTableOuterFrame::BuildDisplayListForInnerTable(nsDisplayListBuilder*   aBuilder,
-                                                 const nsRect&           aDirtyRect,
-                                                 const nsDisplayListSet& aLists)
+nsTableWrapperFrame::BuildDisplayListForInnerTable(nsDisplayListBuilder*   aBuilder,
+                                                   const nsRect&           aDirtyRect,
+                                                   const nsDisplayListSet& aLists)
 {
   // Just paint the regular children, but the children's background is our
   // true background (there should only be one, the real table)
@@ -212,17 +210,17 @@ nsTableOuterFrame::BuildDisplayListForInnerTable(nsDisplayListBuilder*   aBuilde
 }
 
 nsStyleContext*
-nsTableOuterFrame::GetParentStyleContext(nsIFrame** aProviderFrame) const
+nsTableWrapperFrame::GetParentStyleContext(nsIFrame** aProviderFrame) const
 {
-  // The table outer frame and the (inner) table frame split the style
+  // The table wrapper frame and the (inner) table frame split the style
   // data by giving the table frame the style context associated with
-  // the table content node and creating a style context for the outer
+  // the table content node and creating a style context for the wrapper
   // frame that is a *child* of the table frame's style context,
-  // matching the ::-moz-table-outer pseudo-element.  html.css has a
-  // rule that causes that pseudo-element (and thus the outer table)
+  // matching the ::-moz-table-outer pseudo-element. html.css has a
+  // rule that causes that pseudo-element (and thus the wrapper table)
   // to inherit *some* style properties from the table frame.  The
   // children of the table inherit directly from the inner table, and
-  // the outer table's style context is a leaf.
+  // the table wrapper's style context is a leaf.
 
   return (*aProviderFrame = InnerTableFrame())->StyleContext();
 }
@@ -230,9 +228,8 @@ nsTableOuterFrame::GetParentStyleContext(nsIFrame** aProviderFrame) const
 // INCREMENTAL REFLOW HELPER FUNCTIONS 
 
 void
-nsTableOuterFrame::InitChildReflowState(nsPresContext&    aPresContext,                     
-                                        nsHTMLReflowState& aReflowState)
-                                    
+nsTableWrapperFrame::InitChildReflowState(nsPresContext&     aPresContext,
+                                          nsHTMLReflowState& aReflowState)
 {
   nsMargin collapseBorder;
   nsMargin collapsePadding(0,0,0,0);
@@ -252,11 +249,11 @@ nsTableOuterFrame::InitChildReflowState(nsPresContext&    aPresContext,
 // get the margin and padding data. nsHTMLReflowState doesn't handle the
 // case of auto margins
 void
-nsTableOuterFrame::GetChildMargin(nsPresContext*           aPresContext,
-                                  const nsHTMLReflowState& aOuterRS,
-                                  nsIFrame*                aChildFrame,
-                                  nscoord                  aAvailISize,
-                                  LogicalMargin&           aMargin)
+nsTableWrapperFrame::GetChildMargin(nsPresContext*           aPresContext,
+                                    const nsHTMLReflowState& aOuterRS,
+                                    nsIFrame*                aChildFrame,
+                                    nscoord                  aAvailISize,
+                                    LogicalMargin&           aMargin)
 {
   NS_ASSERTION(!aChildFrame->IsTableCaption(),
                "didn't expect caption frame; writing-mode may be wrong!");
@@ -295,7 +292,7 @@ GetContainingBlockSize(const nsHTMLReflowState& aOuterRS)
 }
 
 /* virtual */ nscoord
-nsTableOuterFrame::GetMinISize(nsRenderingContext *aRenderingContext)
+nsTableWrapperFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 {
   nscoord iSize = nsLayoutUtils::IntrinsicForContainer(aRenderingContext,
                     InnerTableFrame(), nsLayoutUtils::MIN_ISIZE);
@@ -317,7 +314,7 @@ nsTableOuterFrame::GetMinISize(nsRenderingContext *aRenderingContext)
 }
 
 /* virtual */ nscoord
-nsTableOuterFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
+nsTableWrapperFrame::GetPrefISize(nsRenderingContext *aRenderingContext)
 {
   nscoord maxISize;
   DISPLAY_PREF_WIDTH(this, maxISize);
@@ -398,18 +395,18 @@ ChildShrinkWrapISize(nsRenderingContext *aRenderingContext,
 
 /* virtual */
 LogicalSize
-nsTableOuterFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
-                                   WritingMode aWM,
-                                   const LogicalSize& aCBSize,
-                                   nscoord aAvailableISize,
-                                   const LogicalSize& aMargin,
-                                   const LogicalSize& aBorder,
-                                   const LogicalSize& aPadding,
-                                   bool aShrinkWrap)
+nsTableWrapperFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
+                                     WritingMode aWM,
+                                     const LogicalSize& aCBSize,
+                                     nscoord aAvailableISize,
+                                     const LogicalSize& aMargin,
+                                     const LogicalSize& aBorder,
+                                     const LogicalSize& aPadding,
+                                     bool aShrinkWrap)
 {
   nscoord kidAvailableISize = aAvailableISize - aMargin.ISize(aWM);
   NS_ASSERTION(aBorder.IsAllZero() && aPadding.IsAllZero(),
-               "Table outer frames cannot have borders or paddings");
+               "Table wrapper frames cannot have borders or paddings");
 
   // When we're shrink-wrapping, our auto size needs to wrap around the
   // actual size of the table, which (if it is specified as a percent)
@@ -460,7 +457,7 @@ nsTableOuterFrame::ComputeAutoSize(nsRenderingContext *aRenderingContext,
 }
 
 uint8_t
-nsTableOuterFrame::GetCaptionSide()
+nsTableWrapperFrame::GetCaptionSide()
 {
   if (mCaptionFrames.NotEmpty()) {
     return mCaptionFrames.FirstChild()->StyleTableBorder()->mCaptionSide;
@@ -471,24 +468,25 @@ nsTableOuterFrame::GetCaptionSide()
 }
 
 uint8_t
-nsTableOuterFrame::GetCaptionVerticalAlign()
+nsTableWrapperFrame::GetCaptionVerticalAlign()
 {
   const nsStyleCoord& va =
     mCaptionFrames.FirstChild()->StyleDisplay()->mVerticalAlign;
+
   return (va.GetUnit() == eStyleUnit_Enumerated)
            ? va.GetIntValue()
            : NS_STYLE_VERTICAL_ALIGN_TOP;
 }
 
 void
-nsTableOuterFrame::SetDesiredSize(uint8_t              aCaptionSide,
-                                  const LogicalSize&   aInnerSize,
-                                  const LogicalSize&   aCaptionSize,
-                                  const LogicalMargin& aInnerMargin,
-                                  const LogicalMargin& aCaptionMargin,
-                                  nscoord&             aISize,
-                                  nscoord&             aBSize,
-                                  WritingMode          aWM)
+nsTableWrapperFrame::SetDesiredSize(uint8_t              aCaptionSide,
+                                    const LogicalSize&   aInnerSize,
+                                    const LogicalSize&   aCaptionSize,
+                                    const LogicalMargin& aInnerMargin,
+                                    const LogicalMargin& aCaptionMargin,
+                                    nscoord&             aISize,
+                                    nscoord&             aBSize,
+                                    WritingMode          aWM)
 {
   aISize = aBSize = 0;
 
@@ -547,15 +545,15 @@ nsTableOuterFrame::SetDesiredSize(uint8_t              aCaptionSide,
   aBSize = std::max(aBSize, 0);
 }
 
-nsresult 
-nsTableOuterFrame::GetCaptionOrigin(uint32_t             aCaptionSide,
-                                    const LogicalSize&   aContainBlockSize,
-                                    const LogicalSize&   aInnerSize, 
-                                    const LogicalMargin& aInnerMargin,
-                                    const LogicalSize&   aCaptionSize,
-                                    LogicalMargin&       aCaptionMargin,
-                                    LogicalPoint&        aOrigin,
-                                    WritingMode          aWM)
+nsresult
+nsTableWrapperFrame::GetCaptionOrigin(uint32_t             aCaptionSide,
+                                      const LogicalSize&   aContainBlockSize,
+                                      const LogicalSize&   aInnerSize,
+                                      const LogicalMargin& aInnerMargin,
+                                      const LogicalSize&   aCaptionSize,
+                                      LogicalMargin&       aCaptionMargin,
+                                      LogicalPoint&        aOrigin,
+                                      WritingMode          aWM)
 {
   aOrigin.I(aWM) = aOrigin.B(aWM) = 0;
   if ((NS_UNCONSTRAINEDSIZE == aInnerSize.ISize(aWM)) ||
@@ -639,15 +637,15 @@ nsTableOuterFrame::GetCaptionOrigin(uint32_t             aCaptionSide,
   return NS_OK;
 }
 
-nsresult 
-nsTableOuterFrame::GetInnerOrigin(uint32_t             aCaptionSide,
-                                  const LogicalSize&   aContainBlockSize,
-                                  const LogicalSize&   aCaptionSize, 
-                                  const LogicalMargin& aCaptionMargin,
-                                  const LogicalSize&   aInnerSize,
-                                  LogicalMargin&       aInnerMargin,
-                                  LogicalPoint&        aOrigin,
-                                  WritingMode          aWM)
+nsresult
+nsTableWrapperFrame::GetInnerOrigin(uint32_t             aCaptionSide,
+                                    const LogicalSize&   aContainBlockSize,
+                                    const LogicalSize&   aCaptionSize,
+                                    const LogicalMargin& aCaptionMargin,
+                                    const LogicalSize&   aInnerSize,
+                                    LogicalMargin&       aInnerMargin,
+                                    LogicalPoint&        aOrigin,
+                                    WritingMode          aWM)
 {
   NS_ASSERTION(NS_AUTOMARGIN != aCaptionMargin.IStart(aWM) &&
                NS_AUTOMARGIN != aCaptionMargin.IEnd(aWM),
@@ -732,11 +730,11 @@ nsTableOuterFrame::GetInnerOrigin(uint32_t             aCaptionSide,
 }
 
 void
-nsTableOuterFrame::OuterBeginReflowChild(nsPresContext*            aPresContext,
-                                         nsIFrame*                 aChildFrame,
-                                         const nsHTMLReflowState&  aOuterRS,
-                                         Maybe<nsHTMLReflowState>& aChildRS,
-                                         nscoord                   aAvailISize)
+nsTableWrapperFrame::OuterBeginReflowChild(nsPresContext*            aPresContext,
+                                           nsIFrame*                 aChildFrame,
+                                           const nsHTMLReflowState&  aOuterRS,
+                                           Maybe<nsHTMLReflowState>& aChildRS,
+                                           nscoord                   aAvailISize)
 {
   // work around pixel rounding errors, round down to ensure we don't exceed the avail height in
   WritingMode wm = aChildFrame->GetWritingMode();
@@ -778,11 +776,11 @@ nsTableOuterFrame::OuterBeginReflowChild(nsPresContext*            aPresContext,
 }
 
 void
-nsTableOuterFrame::OuterDoReflowChild(nsPresContext*             aPresContext,
-                                      nsIFrame*                  aChildFrame,
-                                      const nsHTMLReflowState&   aChildRS,
-                                      nsHTMLReflowMetrics&       aMetrics,
-                                      nsReflowStatus&            aStatus)
+nsTableWrapperFrame::OuterDoReflowChild(nsPresContext*             aPresContext,
+                                        nsIFrame*                  aChildFrame,
+                                        const nsHTMLReflowState&   aChildRS,
+                                        nsHTMLReflowMetrics&       aMetrics,
+                                        nsReflowStatus&            aStatus)
 {
   // Using zero as containerSize here because we want consistency between
   // the GetLogicalPosition and ReflowChild calls, to avoid unnecessarily
@@ -796,9 +794,9 @@ nsTableOuterFrame::OuterDoReflowChild(nsPresContext*             aPresContext,
   uint32_t flags = NS_FRAME_NO_MOVE_FRAME;
 
   // We don't want to delete our next-in-flow's child if it's an inner table
-  // frame, because outer table frames always assume that their inner table
-  // frames don't go away. If an outer table frame is removed because it is
-  // a next-in-flow of an already complete outer table frame, then it will
+  // frame, because table wrapper frames always assume that their inner table
+  // frames don't go away. If a table wrapper frame is removed because it is
+  // a next-in-flow of an already complete table wrapper frame, then it will
   // take care of removing it's inner table frame.
   if (aChildFrame == InnerTableFrame()) {
     flags |= NS_FRAME_NO_DELETE_NEXT_IN_FLOW_CHILD;
@@ -808,8 +806,8 @@ nsTableOuterFrame::OuterDoReflowChild(nsPresContext*             aPresContext,
               wm, childPt, zeroCSize, flags, aStatus);
 }
 
-void 
-nsTableOuterFrame::UpdateOverflowAreas(nsHTMLReflowMetrics& aMet)
+void
+nsTableWrapperFrame::UpdateOverflowAreas(nsHTMLReflowMetrics& aMet)
 {
   aMet.SetOverflowAreasToDesiredBounds();
   ConsiderChildOverflow(aMet.mOverflowAreas, InnerTableFrame());
@@ -819,13 +817,13 @@ nsTableOuterFrame::UpdateOverflowAreas(nsHTMLReflowMetrics& aMet)
 }
 
 void
-nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
-                          nsHTMLReflowMetrics&     aDesiredSize,
-                          const nsHTMLReflowState& aOuterRS,
-                          nsReflowStatus&          aStatus)
+nsTableWrapperFrame::Reflow(nsPresContext*           aPresContext,
+                            nsHTMLReflowMetrics&     aDesiredSize,
+                            const nsHTMLReflowState& aOuterRS,
+                            nsReflowStatus&          aStatus)
 {
   MarkInReflow();
-  DO_GLOBAL_REFLOW_COUNT("nsTableOuterFrame");
+  DO_GLOBAL_REFLOW_COUNT("nsTableWrapperFrame");
   DISPLAY_REFLOW(aPresContext, this, aOuterRS, aDesiredSize, aStatus);
 
   // Initialize out parameters
@@ -833,7 +831,7 @@ nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
   aStatus = NS_FRAME_COMPLETE;
 
   if (!HasAnyStateBits(NS_FRAME_FIRST_REFLOW)) {
-    // Set up our kids.  They're already present, on an overflow list, 
+    // Set up our kids.  They're already present, on an overflow list,
     // or there are none so we'll create them now
     MoveOverflowToChildList();
   }
@@ -1013,7 +1011,7 @@ nsTableOuterFrame::Reflow(nsPresContext*           aPresContext,
 }
 
 nsIAtom*
-nsTableOuterFrame::GetType() const
+nsTableWrapperFrame::GetType() const
 {
   return nsGkAtoms::tableOuterFrame;
 }
@@ -1021,7 +1019,7 @@ nsTableOuterFrame::GetType() const
 /* ----- global methods ----- */
 
 nsIContent*
-nsTableOuterFrame::GetCellAt(uint32_t aRowIdx, uint32_t aColIdx) const
+nsTableWrapperFrame::GetCellAt(uint32_t aRowIdx, uint32_t aColIdx) const
 {
   nsTableCellMap* cellMap = InnerTableFrame()->GetCellMap();
   if (!cellMap) {
@@ -1037,19 +1035,19 @@ nsTableOuterFrame::GetCellAt(uint32_t aRowIdx, uint32_t aColIdx) const
 }
 
 
-nsTableOuterFrame*
-NS_NewTableOuterFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
+nsTableWrapperFrame*
+NS_NewTableWrapperFrame(nsIPresShell* aPresShell, nsStyleContext* aContext)
 {
-  return new (aPresShell) nsTableOuterFrame(aContext);
+  return new (aPresShell) nsTableWrapperFrame(aContext);
 }
 
-NS_IMPL_FRAMEARENA_HELPERS(nsTableOuterFrame)
+NS_IMPL_FRAMEARENA_HELPERS(nsTableWrapperFrame)
 
 #ifdef DEBUG_FRAME_DUMP
 nsresult
-nsTableOuterFrame::GetFrameName(nsAString& aResult) const
+nsTableWrapperFrame::GetFrameName(nsAString& aResult) const
 {
-  return MakeFrameName(NS_LITERAL_STRING("TableOuter"), aResult);
+  return MakeFrameName(NS_LITERAL_STRING("TableWrapper"), aResult);
 }
 #endif
 

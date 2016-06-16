@@ -36,7 +36,7 @@
 #include "nsString.h"
 #include "nsTArray.h"
 #include "nsTableCellFrame.h"
-#include "nsTableOuterFrame.h"
+#include "nsTableWrapperFrame.h"
 #include "nscore.h"
 #include <algorithm>
 
@@ -2578,7 +2578,7 @@ nsHTMLEditor::GetCellIndexes(nsIDOMElement *aCell,
   return cellLayoutObject->GetCellIndexes(*aRowIndex, *aColIndex);
 }
 
-nsTableOuterFrame*
+nsTableWrapperFrame*
 nsHTMLEditor::GetTableFrame(nsIDOMElement* aTable)
 {
   NS_ENSURE_TRUE(aTable, nullptr);
@@ -2637,7 +2637,7 @@ nsHTMLEditor::GetTableSize(nsIDOMElement *aTable,
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(table, NS_ERROR_FAILURE);
 
-  nsTableOuterFrame* tableFrame = GetTableFrame(table.get());
+  nsTableWrapperFrame* tableFrame = GetTableFrame(table.get());
   NS_ENSURE_TRUE(tableFrame, NS_ERROR_FAILURE);
 
   *aRowCount = tableFrame->GetRowCount();
@@ -2686,7 +2686,7 @@ nsHTMLEditor::GetCellDataAt(nsIDOMElement* aTable, int32_t aRowIndex,
       return NS_ERROR_FAILURE;
   }
 
-  nsTableOuterFrame* tableFrame = GetTableFrame(aTable);
+  nsTableWrapperFrame* tableFrame = GetTableFrame(aTable);
   NS_ENSURE_TRUE(tableFrame, NS_ERROR_FAILURE);
 
   nsTableCellFrame* cellFrame =
@@ -2724,7 +2724,7 @@ nsHTMLEditor::GetCellAt(nsIDOMElement* aTable, int32_t aRowIndex, int32_t aColIn
     aTable = table;
   }
 
-  nsTableOuterFrame* tableFrame = GetTableFrame(aTable);
+  nsTableWrapperFrame* tableFrame = GetTableFrame(aTable);
   if (!tableFrame) {
     *aCell = nullptr;
     return NS_EDITOR_ELEMENT_NOT_FOUND;
@@ -2742,7 +2742,7 @@ NS_IMETHODIMP
 nsHTMLEditor::GetCellSpansAt(nsIDOMElement* aTable, int32_t aRowIndex, int32_t aColIndex,
                              int32_t& aActualRowSpan, int32_t& aActualColSpan)
 {
-  nsTableOuterFrame* tableFrame = GetTableFrame(aTable);
+  nsTableWrapperFrame* tableFrame = GetTableFrame(aTable);
   if (!tableFrame)
     return NS_ERROR_FAILURE;
 
