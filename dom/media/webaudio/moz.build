@@ -81,6 +81,7 @@ UNIFIED_SOURCES += [
     'AudioBufferSourceNode.cpp',
     'AudioContext.cpp',
     'AudioDestinationNode.cpp',
+    'AudioEventTimeline.cpp',
     'AudioListener.cpp',
     'AudioNode.cpp',
     'AudioNodeEngine.cpp',
