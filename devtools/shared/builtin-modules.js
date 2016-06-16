@@ -293,3 +293,4 @@ defineLazyGetter(globals, "URL", () => {
                  {wantGlobalProperties: ["URL"]});
   return sandbox.URL;
 });
+defineLazyGetter(globals, "CSSRule", () => Ci.nsIDOMCSSRule);

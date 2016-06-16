@@ -87,7 +87,7 @@ RuleEditor.prototype = {
     let trait = this.isEditable &&
       toolbox.target.client.traits.selectorEditable &&
       this.rule.domRule.type !== ELEMENT_STYLE &&
-      this.rule.domRule.type !== Ci.nsIDOMCSSRule.KEYFRAME_RULE;
+      this.rule.domRule.type !== CSSRule.KEYFRAME_RULE;
 
     // Do not allow editing anonymousselectors until we can
     // detect mutations on  pseudo elements in Bug 1034110.
@@ -146,7 +146,7 @@ RuleEditor.prototype = {
       });
     }
 
-    if (this.rule.domRule.type !== Ci.nsIDOMCSSRule.KEYFRAME_RULE &&
+    if (this.rule.domRule.type !== CSSRule.KEYFRAME_RULE &&
         this.rule.domRule.selectors) {
       let selector = this.rule.domRule.selectors.join(", ");
 
@@ -279,7 +279,7 @@ RuleEditor.prototype = {
     // style, just show the text directly.
     if (this.rule.domRule.type === ELEMENT_STYLE) {
       this.selectorText.textContent = this.rule.selectorText;
-    } else if (this.rule.domRule.type === Ci.nsIDOMCSSRule.KEYFRAME_RULE) {
+    } else if (this.rule.domRule.type === CSSRule.KEYFRAME_RULE) {
       this.selectorText.textContent = this.rule.domRule.keyText;
     } else {
       this.rule.domRule.selectors.forEach((selector, i) => {
