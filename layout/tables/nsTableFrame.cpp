@@ -2647,7 +2647,7 @@ nsTableFrame::GetUsedPadding() const
 nsTableFrame::GetUsedMargin() const
 {
   // The margin is inherited to the table wrapper frame via
-  // the ::-moz-table-outer rule in ua.css.
+  // the ::-moz-table-wrapper rule in ua.css.
   return nsMargin(0, 0, 0, 0);
 }
 
