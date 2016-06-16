@@ -6,30 +6,39 @@
 
 // Test that the keybindings for Picker work alright
 
+const IS_OSX = Services.appinfo.OS === "Darwin";
 const TEST_URL = URL_ROOT + "doc_inspector_highlighter_dom.html";
 
 add_task(function* () {
   let {inspector, toolbox, testActor} = yield openInspectorForURL(TEST_URL);
 
   yield startPicker(toolbox);
-
-  info("Selecting the #another DIV");
   yield moveMouseOver("#another");
 
-  // Testing pick-node shortcut
   info("Testing enter/return key as pick-node command");
   yield doKeyPick({key: "VK_RETURN", options: {}});
   is(inspector.selection.nodeFront.id, "another",
      "The #another node was selected. Passed.");
 
-  // Testing cancel-picker command
-  yield startPicker(toolbox);
-
-  info("Selecting the ahoy DIV");
-  yield moveMouseOver("#ahoy");
-
   info("Testing escape key as cancel-picker command");
+  yield startPicker(toolbox);
+  yield moveMouseOver("#ahoy");
   yield doKeyStop({key: "VK_ESCAPE", options: {}});
+  is(inspector.selection.nodeFront.id, "another",
+     "The #another DIV is still selected. Passed.");
+
+  info("Testing Ctrl+Shift+C shortcut as cancel-picker command");
+  yield startPicker(toolbox);
+  yield moveMouseOver("#ahoy");
+  let shortcutOpts = {key: "VK_C", options: {}};
+  if (IS_OSX) {
+    shortcutOpts.options.metaKey = true;
+    shortcutOpts.options.altKey = true;
+  } else {
+    shortcutOpts.options.ctrlKey = true;
+    shortcutOpts.options.shiftKey = true;
+  }
+  yield doKeyStop(shortcutOpts);
   is(inspector.selection.nodeFront.id, "another",
      "The #another DIV is still selected. Passed.");
 

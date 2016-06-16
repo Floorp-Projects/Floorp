@@ -121,6 +121,10 @@ function WebNavigationEventManager(context, eventName) {
         parentFrameId: ExtensionManagement.getParentFrameId(data.parentWindowId, data.windowId),
       };
 
+      if (eventName == "onErrorOccurred") {
+        data2.error = data.error;
+      }
+
       // Fills in tabId typically.
       let result = {};
       extensions.emit("fill-browser-data", data.browser, data2, result);
