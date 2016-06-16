@@ -21,7 +21,7 @@
   box-sizing: border-box; /* XXX do we really want this? */
 }
 
-*|*::-moz-table-outer {
+*|*::-moz-table-wrapper {
   display: inherit !important; /* table or inline-table */
   margin: inherit ! important;
   padding: 0 ! important;

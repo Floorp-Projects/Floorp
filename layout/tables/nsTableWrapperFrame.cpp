@@ -216,7 +216,7 @@ nsTableWrapperFrame::GetParentStyleContext(nsIFrame** aProviderFrame) const
   // data by giving the table frame the style context associated with
   // the table content node and creating a style context for the wrapper
   // frame that is a *child* of the table frame's style context,
-  // matching the ::-moz-table-outer pseudo-element. html.css has a
+  // matching the ::-moz-table-wrapper pseudo-element. html.css has a
   // rule that causes that pseudo-element (and thus the wrapper table)
   // to inherit *some* style properties from the table frame.  The
   // children of the table inherit directly from the inner table, and
