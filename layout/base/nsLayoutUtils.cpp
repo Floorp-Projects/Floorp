@@ -1597,7 +1597,7 @@ nsLayoutUtils::GetClosestFrameOfType(nsIFrame* aFrame,
 nsIFrame*
 nsLayoutUtils::GetStyleFrame(nsIFrame* aFrame)
 {
-  if (aFrame->GetType() == nsGkAtoms::tableOuterFrame) {
+  if (aFrame->GetType() == nsGkAtoms::tableWrapperFrame) {
     nsIFrame* inner = aFrame->PrincipalChildList().FirstChild();
     // inner may be null, if aFrame is mid-destruction
     return inner;
@@ -3811,7 +3811,7 @@ AddBoxesForFrame(nsIFrame* aFrame,
 {
   nsIAtom* pseudoType = aFrame->StyleContext()->GetPseudo();
 
-  if (pseudoType == nsCSSAnonBoxes::tableOuter) {
+  if (pseudoType == nsCSSAnonBoxes::tableWrapper) {
     AddBoxesForFrame(aFrame->PrincipalChildList().FirstChild(), aCallback);
     if (aCallback->mIncludeCaptionBoxForTable) {
       nsIFrame* kid = aFrame->GetChildList(nsIFrame::kCaptionList).FirstChild();
@@ -3846,7 +3846,7 @@ nsLayoutUtils::GetFirstNonAnonymousFrame(nsIFrame* aFrame)
   while (aFrame) {
     nsIAtom* pseudoType = aFrame->StyleContext()->GetPseudo();
 
-    if (pseudoType == nsCSSAnonBoxes::tableOuter) {
+    if (pseudoType == nsCSSAnonBoxes::tableWrapper) {
       nsIFrame* f = GetFirstNonAnonymousFrame(aFrame->PrincipalChildList().FirstChild());
       if (f) {
         return f;
@@ -6169,7 +6169,7 @@ nsLayoutUtils::GetFirstLinePosition(WritingMode aWM,
     // For the first-line baseline we also have to check for a table, and if
     // so, use the baseline of its first row.
     nsIAtom* fType = aFrame->GetType();
-    if (fType == nsGkAtoms::tableOuterFrame) {
+    if (fType == nsGkAtoms::tableWrapperFrame) {
       aResult->mBStart = 0;
       aResult->mBaseline = aFrame->GetLogicalBaseline(aWM);
       // This is what we want for the list bullet caller; not sure if

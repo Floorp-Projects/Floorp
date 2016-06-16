@@ -99,6 +99,8 @@ public:
    * We'd need to check that our consumers always pass the same aRecorder for
    * our entire lifetime.
    *
+   * XXX Once PrintTargetThebes is removed this can become non-virtual.
+   *
    * XXX In the long run, this class and its sub-classes should be converted to
    * use STL classes and mozilla::RefCounted<> so the can be moved to Moz2D.
    *
@@ -116,6 +118,10 @@ protected:
 
   // Protected because we're refcounted
   virtual ~PrintTarget();
+
+  already_AddRefed<DrawTarget>
+  CreateRecordingDrawTarget(DrawEventRecorder* aRecorder,
+                            DrawTarget* aDrawTarget);
 
   cairo_surface_t* mCairoSurface;
   IntSize mSize;

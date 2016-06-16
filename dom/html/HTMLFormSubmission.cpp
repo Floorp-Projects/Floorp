@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "nsFormSubmission.h"
+#include "HTMLFormSubmission.h"
 
 #include "nsCOMPtr.h"
 #include "nsIForm.h"
@@ -40,13 +40,12 @@
 #include "mozilla/dom/EncodingUtils.h"
 #include "mozilla/dom/File.h"
 
-using namespace mozilla;
-using mozilla::dom::Blob;
-using mozilla::dom::Directory;
-using mozilla::dom::EncodingUtils;
-using mozilla::dom::File;
+namespace mozilla {
+namespace dom {
 
-static void
+namespace {
+
+void
 SendJSWarning(nsIDocument* aDocument,
               const char* aWarningName,
               const char16_t** aWarningArgs, uint32_t aWarningArgsLen)
@@ -58,7 +57,7 @@ SendJSWarning(nsIDocument* aDocument,
                                   aWarningArgs, aWarningArgsLen);
 }
 
-static void
+void
 RetrieveFileName(Blob* aBlob, nsAString& aFilename)
 {
   if (!aBlob) {
@@ -73,7 +72,7 @@ RetrieveFileName(Blob* aBlob, nsAString& aFilename)
 
 // --------------------------------------------------------------------------
 
-class nsFSURLEncoded : public nsEncodingFormSubmission
+class FSURLEncoded : public EncodingFormSubmission
 {
 public:
   /**
@@ -81,24 +80,25 @@ public:
    * @param aMethod the method of the submit (either NS_FORM_METHOD_GET or
    *        NS_FORM_METHOD_POST).
    */
-  nsFSURLEncoded(const nsACString& aCharset,
-                 int32_t aMethod,
-                 nsIDocument* aDocument,
-                 nsIContent* aOriginatingElement)
-    : nsEncodingFormSubmission(aCharset, aOriginatingElement),
+  FSURLEncoded(const nsACString& aCharset,
+               int32_t aMethod,
+               nsIDocument* aDocument,
+               nsIContent* aOriginatingElement)
+    : EncodingFormSubmission(aCharset, aOriginatingElement),
       mMethod(aMethod),
       mDocument(aDocument),
       mWarnedFileControl(false)
   {
   }
 
-  virtual nsresult AddNameValuePair(const nsAString& aName,
-                                    const nsAString& aValue) override;
-  virtual nsresult AddNameBlobOrNullPair(const nsAString& aName,
-                                         Blob* aBlob) override;
-  virtual nsresult GetEncodedSubmission(nsIURI* aURI,
-                                        nsIInputStream** aPostDataStream)
-                                                                       override;
+  virtual nsresult
+  AddNameValuePair(const nsAString& aName, const nsAString& aValue) override;
+
+  virtual nsresult
+  AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob) override;
+
+  virtual nsresult
+  GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream) override;
 
   virtual bool SupportsIsindexSubmission() override
   {
@@ -137,8 +137,8 @@ private:
 };
 
 nsresult
-nsFSURLEncoded::AddNameValuePair(const nsAString& aName,
-                                 const nsAString& aValue)
+FSURLEncoded::AddNameValuePair(const nsAString& aName,
+                               const nsAString& aValue)
 {
   // Encode value
   nsCString convValue;
@@ -163,7 +163,7 @@ nsFSURLEncoded::AddNameValuePair(const nsAString& aName,
 }
 
 nsresult
-nsFSURLEncoded::AddIsindex(const nsAString& aValue)
+FSURLEncoded::AddIsindex(const nsAString& aValue)
 {
   // Encode value
   nsCString convValue;
@@ -181,8 +181,8 @@ nsFSURLEncoded::AddIsindex(const nsAString& aValue)
 }
 
 nsresult
-nsFSURLEncoded::AddNameBlobOrNullPair(const nsAString& aName,
-                                      Blob* aBlob)
+FSURLEncoded::AddNameBlobOrNullPair(const nsAString& aName,
+                                    Blob* aBlob)
 {
   if (!mWarnedFileControl) {
     SendJSWarning(mDocument, "ForgotFileEnctypeWarning", nullptr, 0);
@@ -194,9 +194,9 @@ nsFSURLEncoded::AddNameBlobOrNullPair(const nsAString& aName,
   return AddNameValuePair(aName, filename);
 }
 
-static void
-HandleMailtoSubject(nsCString& aPath) {
-
+void
+HandleMailtoSubject(nsCString& aPath)
+{
   // Walk through the string and see if we have a subject already.
   bool hasSubject = false;
   bool hasParams = false;
@@ -261,8 +261,8 @@ HandleMailtoSubject(nsCString& aPath) {
 }
 
 nsresult
-nsFSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
-                                     nsIInputStream** aPostDataStream)
+FSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
+                                   nsIInputStream** aPostDataStream)
 {
   nsresult rv = NS_OK;
 
@@ -365,7 +365,7 @@ nsFSURLEncoded::GetEncodedSubmission(nsIURI* aURI,
 
 // i18n helper routines
 nsresult
-nsFSURLEncoded::URLEncode(const nsAString& aStr, nsACString& aEncoded)
+FSURLEncoded::URLEncode(const nsAString& aStr, nsACString& aEncoded)
 {
   // convert to CRLF breaks
   int32_t convertedBufLength = 0;
@@ -391,11 +391,13 @@ nsFSURLEncoded::URLEncode(const nsAString& aStr, nsACString& aEncoded)
   return NS_OK;
 }
 
+} // anonymous namespace
+
 // --------------------------------------------------------------------------
 
-nsFSMultipartFormData::nsFSMultipartFormData(const nsACString& aCharset,
-                                             nsIContent* aOriginatingElement)
-    : nsEncodingFormSubmission(aCharset, aOriginatingElement)
+FSMultipartFormData::FSMultipartFormData(const nsACString& aCharset,
+                                         nsIContent* aOriginatingElement)
+    : EncodingFormSubmission(aCharset, aOriginatingElement)
 {
   mPostDataStream =
     do_CreateInstance("@mozilla.org/io/multiplex-input-stream;1");
@@ -407,13 +409,13 @@ nsFSMultipartFormData::nsFSMultipartFormData(const nsACString& aCharset,
   mBoundary.AppendInt(rand());
 }
 
-nsFSMultipartFormData::~nsFSMultipartFormData()
+FSMultipartFormData::~FSMultipartFormData()
 {
   NS_ASSERTION(mPostDataChunk.IsEmpty(), "Left unsubmitted data");
 }
 
 nsIInputStream*
-nsFSMultipartFormData::GetSubmissionBody(uint64_t* aContentLength)
+FSMultipartFormData::GetSubmissionBody(uint64_t* aContentLength)
 {
   // Finish data
   mPostDataChunk += NS_LITERAL_CSTRING("--") + mBoundary
@@ -427,8 +429,8 @@ nsFSMultipartFormData::GetSubmissionBody(uint64_t* aContentLength)
 }
 
 nsresult
-nsFSMultipartFormData::AddNameValuePair(const nsAString& aName,
-                                        const nsAString& aValue)
+FSMultipartFormData::AddNameValuePair(const nsAString& aName,
+                                      const nsAString& aValue)
 {
   nsCString valueStr;
   nsAutoCString encodedVal;
@@ -459,8 +461,7 @@ nsFSMultipartFormData::AddNameValuePair(const nsAString& aName,
 }
 
 nsresult
-nsFSMultipartFormData::AddNameBlobOrNullPair(const nsAString& aName,
-                                             Blob* aBlob)
+FSMultipartFormData::AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob)
 {
   // Encode the control name
   nsAutoCString nameStr;
@@ -563,8 +564,8 @@ nsFSMultipartFormData::AddNameBlobOrNullPair(const nsAString& aName,
 }
 
 nsresult
-nsFSMultipartFormData::GetEncodedSubmission(nsIURI* aURI,
-                                            nsIInputStream** aPostDataStream)
+FSMultipartFormData::GetEncodedSubmission(nsIURI* aURI,
+                                          nsIInputStream** aPostDataStream)
 {
   nsresult rv;
 
@@ -586,7 +587,7 @@ nsFSMultipartFormData::GetEncodedSubmission(nsIURI* aURI,
 }
 
 nsresult
-nsFSMultipartFormData::AddPostDataStream()
+FSMultipartFormData::AddPostDataStream()
 {
   nsresult rv = NS_OK;
 
@@ -606,29 +607,31 @@ nsFSMultipartFormData::AddPostDataStream()
 
 // --------------------------------------------------------------------------
 
-class nsFSTextPlain : public nsEncodingFormSubmission
+namespace {
+
+class FSTextPlain : public EncodingFormSubmission
 {
 public:
-  nsFSTextPlain(const nsACString& aCharset, nsIContent* aOriginatingElement)
-    : nsEncodingFormSubmission(aCharset, aOriginatingElement)
+  FSTextPlain(const nsACString& aCharset, nsIContent* aOriginatingElement)
+    : EncodingFormSubmission(aCharset, aOriginatingElement)
   {
   }
 
-  virtual nsresult AddNameValuePair(const nsAString& aName,
-                                    const nsAString& aValue) override;
-  virtual nsresult AddNameBlobOrNullPair(const nsAString& aName,
-                                         Blob* aBlob) override;
-  virtual nsresult GetEncodedSubmission(nsIURI* aURI,
-                                        nsIInputStream** aPostDataStream)
-                                                                       override;
+  virtual nsresult
+  AddNameValuePair(const nsAString& aName, const nsAString& aValue) override;
+
+  virtual nsresult
+  AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob) override;
+
+  virtual nsresult
+  GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream) override;
 
 private:
   nsString mBody;
 };
 
 nsresult
-nsFSTextPlain::AddNameValuePair(const nsAString& aName,
-                                const nsAString& aValue)
+FSTextPlain::AddNameValuePair(const nsAString& aName, const nsAString& aValue)
 {
   // XXX This won't work well with a name like "a=b" or "a\nb" but I suppose
   // text/plain doesn't care about that.  Parsers aren't built for escaped
@@ -640,8 +643,7 @@ nsFSTextPlain::AddNameValuePair(const nsAString& aName,
 }
 
 nsresult
-nsFSTextPlain::AddNameBlobOrNullPair(const nsAString& aName,
-                                     Blob* aBlob)
+FSTextPlain::AddNameBlobOrNullPair(const nsAString& aName, Blob* aBlob)
 {
   nsAutoString filename;
   RetrieveFileName(aBlob, filename);
@@ -650,8 +652,8 @@ nsFSTextPlain::AddNameBlobOrNullPair(const nsAString& aName,
 }
 
 nsresult
-nsFSTextPlain::GetEncodedSubmission(nsIURI* aURI,
-                                    nsIInputStream** aPostDataStream)
+FSTextPlain::GetEncodedSubmission(nsIURI* aURI,
+                                  nsIInputStream** aPostDataStream)
 {
   nsresult rv = NS_OK;
 
@@ -711,11 +713,13 @@ nsFSTextPlain::GetEncodedSubmission(nsIURI* aURI,
   return rv;
 }
 
+} // anonymous namespace
+
 // --------------------------------------------------------------------------
 
-nsEncodingFormSubmission::nsEncodingFormSubmission(const nsACString& aCharset,
-                                                   nsIContent* aOriginatingElement)
-  : nsFormSubmission(aCharset, aOriginatingElement)
+EncodingFormSubmission::EncodingFormSubmission(const nsACString& aCharset,
+                                               nsIContent* aOriginatingElement)
+  : HTMLFormSubmission(aCharset, aOriginatingElement)
   , mEncoder(aCharset)
 {
   if (!(aCharset.EqualsLiteral("UTF-8") || aCharset.EqualsLiteral("gb18030"))) {
@@ -729,14 +733,14 @@ nsEncodingFormSubmission::nsEncodingFormSubmission(const nsACString& aCharset,
   }
 }
 
-nsEncodingFormSubmission::~nsEncodingFormSubmission()
+EncodingFormSubmission::~EncodingFormSubmission()
 {
 }
 
 // i18n helper routines
 nsresult
-nsEncodingFormSubmission::EncodeVal(const nsAString& aStr, nsCString& aOut,
-                                    bool aHeaderEncode)
+EncodingFormSubmission::EncodeVal(const nsAString& aStr, nsCString& aOut,
+                                  bool aHeaderEncode)
 {
   if (!mEncoder.Encode(aStr, aOut)) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -757,7 +761,9 @@ nsEncodingFormSubmission::EncodeVal(const nsAString& aStr, nsCString& aOut,
 
 // --------------------------------------------------------------------------
 
-static void
+namespace {
+
+void
 GetSubmitCharset(nsGenericHTMLElement* aForm,
                  nsACString& oCharset)
 {
@@ -793,7 +799,7 @@ GetSubmitCharset(nsGenericHTMLElement* aForm,
   }
 }
 
-static void
+void
 GetEnumAttr(nsGenericHTMLElement* aContent,
             nsIAtom* atom, int32_t* aValue)
 {
@@ -803,10 +809,12 @@ GetEnumAttr(nsGenericHTMLElement* aContent,
   }
 }
 
-nsresult
-GetSubmissionFromForm(nsGenericHTMLElement* aForm,
-                      nsGenericHTMLElement* aOriginatingElement,
-                      nsFormSubmission** aFormSubmission)
+} // anonymous namespace
+
+/* static */ nsresult
+HTMLFormSubmission::GetFromForm(nsGenericHTMLElement* aForm,
+                                nsGenericHTMLElement* aOriginatingElement,
+                                HTMLFormSubmission** aFormSubmission)
 {
   // Get all the information necessary to encode the form data
   NS_ASSERTION(aForm->GetComposedDoc(),
@@ -846,10 +854,10 @@ GetSubmissionFromForm(nsGenericHTMLElement* aForm,
   // Choose encoder
   if (method == NS_FORM_METHOD_POST &&
       enctype == NS_FORM_ENCTYPE_MULTIPART) {
-    *aFormSubmission = new nsFSMultipartFormData(charset, aOriginatingElement);
+    *aFormSubmission = new FSMultipartFormData(charset, aOriginatingElement);
   } else if (method == NS_FORM_METHOD_POST &&
              enctype == NS_FORM_ENCTYPE_TEXTPLAIN) {
-    *aFormSubmission = new nsFSTextPlain(charset, aOriginatingElement);
+    *aFormSubmission = new FSTextPlain(charset, aOriginatingElement);
   } else {
     nsIDocument* doc = aForm->OwnerDoc();
     if (enctype == NS_FORM_ENCTYPE_MULTIPART ||
@@ -867,9 +875,12 @@ GetSubmissionFromForm(nsGenericHTMLElement* aForm,
       SendJSWarning(doc, "ForgotPostWarning",
                     &enctypeStrPtr, 1);
     }
-    *aFormSubmission = new nsFSURLEncoded(charset, method, doc,
-                                          aOriginatingElement);
+    *aFormSubmission = new FSURLEncoded(charset, method, doc,
+                                        aOriginatingElement);
   }
 
   return NS_OK;
 }
+
+} // dom namespace
+} // mozilla namespace

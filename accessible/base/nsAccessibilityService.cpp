@@ -1679,12 +1679,12 @@ nsAccessibilityService::CreateAccessibleByFrameType(nsIFrame* aFrame,
       if (table) {
         nsIContent* parentContent = aContent->GetParent();
         nsIFrame* parentFrame = parentContent->GetPrimaryFrame();
-        if (parentFrame->GetType() != nsGkAtoms::tableOuterFrame) {
+        if (parentFrame->GetType() != nsGkAtoms::tableWrapperFrame) {
           parentContent = parentContent->GetParent();
           parentFrame = parentContent->GetPrimaryFrame();
         }
 
-        if (parentFrame->GetType() == nsGkAtoms::tableOuterFrame &&
+        if (parentFrame->GetType() == nsGkAtoms::tableWrapperFrame &&
             table->GetContent() == parentContent) {
           newAcc = new HTMLTableRowAccessible(aContent, document);
         }

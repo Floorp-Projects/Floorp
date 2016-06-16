@@ -9,10 +9,10 @@
 #include "mozAutoDocUpdate.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/HTMLFormElement.h"
+#include "mozilla/dom/HTMLFormSubmission.h"
 #include "mozilla/dom/HTMLOutputElementBinding.h"
 #include "nsContentUtils.h"
 #include "nsDOMTokenList.h"
-#include "nsFormSubmission.h"
 
 NS_IMPL_NS_NEW_HTML_ELEMENT_CHECK_PARSER(Output)
 
@@ -75,7 +75,7 @@ HTMLOutputElement::Reset()
 }
 
 NS_IMETHODIMP
-HTMLOutputElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
+HTMLOutputElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission)
 {
   // The output element is not submittable.
   return NS_OK;

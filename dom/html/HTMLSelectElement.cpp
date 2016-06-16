@@ -12,6 +12,7 @@
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/HTMLFormSubmission.h"
 #include "mozilla/dom/HTMLOptGroupElement.h"
 #include "mozilla/dom/HTMLOptionElement.h"
 #include "mozilla/dom/HTMLSelectElementBinding.h"
@@ -19,7 +20,6 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsContentList.h"
 #include "nsError.h"
-#include "nsFormSubmission.h"
 #include "nsGkAtoms.h"
 #include "nsIComboboxControlFrame.h"
 #include "nsIDocument.h"
@@ -1656,7 +1656,7 @@ HTMLSelectElement::Reset()
 static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
 
 NS_IMETHODIMP
-HTMLSelectElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
+HTMLSelectElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission)
 {
   // Disabled elements don't submit
   if (IsDisabled()) {

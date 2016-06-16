@@ -84,6 +84,7 @@ config = {
         'TOOLTOOL_CACHE': '/c/builds/tooltool_cache',
         'TOOLTOOL_HOME': '/c/builds',
         'XPCOM_DEBUG_BREAK': 'stack-and-abort',
+        'MSYSTEM': 'MINGW32',
     },
     'upload_env': {
         'UPLOAD_HOST': 'localhost',
