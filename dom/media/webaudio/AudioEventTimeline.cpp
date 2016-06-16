@@ -45,8 +45,12 @@ AudioEventTimeline::ValidateEvent(AudioTimelineEvent& aEvent,
 {
   MOZ_ASSERT(NS_IsMainThread());
 
+  auto TimeOf = [](const AudioTimelineEvent& aEvent) -> double {
+    return aEvent.template Time<double>();
+  };
+
   // Validate the event itself
-  if (!WebAudioUtils::IsTimeValid(aEvent.template Time<double>()) ||
+  if (!WebAudioUtils::IsTimeValid(TimeOf(aEvent)) ||
       !WebAudioUtils::IsTimeValid(aEvent.mTimeConstant)) {
     aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
     return false;
@@ -83,9 +87,9 @@ AudioEventTimeline::ValidateEvent(AudioTimelineEvent& aEvent,
   for (unsigned i = 0; i < mEvents.Length(); ++i) {
     if (mEvents[i].mType == AudioTimelineEvent::SetValueCurve &&
         !(aEvent.mType == AudioTimelineEvent::SetValueCurve &&
-          aEvent.template Time<double>() == mEvents[i].template Time<double>()) &&
-        mEvents[i].template Time<double>() <= aEvent.template Time<double>() &&
-        (mEvents[i].template Time<double>() + mEvents[i].mDuration) >= aEvent.template Time<double>()) {
+          TimeOf(aEvent) == TimeOf(mEvents[i])) &&
+        TimeOf(mEvents[i]) <= TimeOf(aEvent) &&
+        TimeOf(mEvents[i]) + mEvents[i].mDuration >= TimeOf(aEvent)) {
       aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
       return false;
     }
@@ -97,11 +101,11 @@ AudioEventTimeline::ValidateEvent(AudioTimelineEvent& aEvent,
     for (unsigned i = 0; i < mEvents.Length(); ++i) {
       // In case we have two curve at the same time
       if (mEvents[i].mType == AudioTimelineEvent::SetValueCurve &&
-          mEvents[i].template Time<double>() == aEvent.template Time<double>()) {
+          TimeOf(mEvents[i]) == TimeOf(aEvent)) {
         continue;
       }
-      if (mEvents[i].template Time<double>() > aEvent.template Time<double>() &&
-          mEvents[i].template Time<double>() < (aEvent.template Time<double>() + aEvent.mDuration)) {
+      if (TimeOf(mEvents[i]) > TimeOf(aEvent) &&
+          TimeOf(mEvents[i]) < TimeOf(aEvent) + aEvent.mDuration) {
         aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
         return false;
       }
@@ -114,7 +118,7 @@ AudioEventTimeline::ValidateEvent(AudioTimelineEvent& aEvent,
       aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
       return false;
     }
-    const AudioTimelineEvent* previousEvent = GetPreviousEvent(aEvent.template Time<double>());
+    const AudioTimelineEvent* previousEvent = GetPreviousEvent(TimeOf(aEvent));
     if (previousEvent) {
       if (previousEvent->mValue <= 0.f) {
         aRv.Throw(NS_ERROR_DOM_SYNTAX_ERR);
@@ -141,6 +145,10 @@ AudioEventTimeline::GetValuesAtTimeHelper(TimeType aTime, float* aBuffer,
   MOZ_ASSERT(aBuffer);
   MOZ_ASSERT(aSize);
 
+  auto TimeOf = [](const AudioTimelineEvent& aEvent) -> TimeType {
+    return aEvent.template Time<TimeType>();
+  };
+
   size_t eventIndex = 0;
   const AudioTimelineEvent* previous = nullptr;
   const AudioTimelineEvent* next = nullptr;
@@ -148,7 +156,7 @@ AudioEventTimeline::GetValuesAtTimeHelper(TimeType aTime, float* aBuffer,
 
   // Let's remove old events except the last one: we need it to calculate some curves.
   while (mEvents.Length() > 1 &&
-         aTime > mEvents[1].template Time<TimeType>()) {
+         aTime > TimeOf(mEvents[1])) {
     mEvents.RemoveElementAt(0);
   }
 
@@ -164,11 +172,11 @@ AudioEventTimeline::GetValuesAtTimeHelper(TimeType aTime, float* aBuffer,
                  current->mType == AudioTimelineEvent::SetValueCurve);
 #endif
 
-      if (TimesEqual(aTime, mEvents[eventIndex].template Time<TimeType>())) {
+      if (TimesEqual(aTime, TimeOf(mEvents[eventIndex]))) {
         mLastComputedValue = mComputedValue;
         // Find the last event with the same time
         while (eventIndex < mEvents.Length() - 1 &&
-               TimesEqual(aTime, mEvents[eventIndex + 1].template Time<TimeType>())) {
+               TimesEqual(aTime, TimeOf(mEvents[eventIndex + 1]))) {
           ++eventIndex;
         }
         break;
@@ -176,20 +184,20 @@ AudioEventTimeline::GetValuesAtTimeHelper(TimeType aTime, float* aBuffer,
 
       previous = next;
       next = &mEvents[eventIndex];
-      if (aTime < mEvents[eventIndex].template Time<TimeType>()) {
+      if (aTime < TimeOf(mEvents[eventIndex])) {
         bailOut = true;
       }
     }
 
     if (!bailOut && eventIndex < mEvents.Length()) {
       // The time matches one of the events exactly.
-      MOZ_ASSERT(TimesEqual(aTime, mEvents[eventIndex].template Time<TimeType>()));
+      MOZ_ASSERT(TimesEqual(aTime, TimeOf(mEvents[eventIndex])));
 
       // SetTarget nodes can be handled no matter what their next node is (if they have one)
       if (mEvents[eventIndex].mType == AudioTimelineEvent::SetTarget) {
         // Follow the curve, without regard to the next event, starting at
         // the last value of the last event.
-        aBuffer[bufferIndex] = ExponentialApproach(mEvents[eventIndex].template Time<TimeType>(),
+        aBuffer[bufferIndex] = ExponentialApproach(TimeOf(mEvents[eventIndex]),
                                                 mLastComputedValue, mEvents[eventIndex].mValue,
                                                 mEvents[eventIndex].mTimeConstant, aTime);
         continue;
@@ -197,7 +205,7 @@ AudioEventTimeline::GetValuesAtTimeHelper(TimeType aTime, float* aBuffer,
 
       // SetValueCurve events can be handled no matter what their event node is (if they have one)
       if (mEvents[eventIndex].mType == AudioTimelineEvent::SetValueCurve) {
-        aBuffer[bufferIndex] = ExtractValueFromCurve(mEvents[eventIndex].template Time<TimeType>(),
+        aBuffer[bufferIndex] = ExtractValueFromCurve(TimeOf(mEvents[eventIndex]),
                                                   mEvents[eventIndex].mCurve,
                                                   mEvents[eventIndex].mCurveLength,
                                                   mEvents[eventIndex].mDuration, aTime);
@@ -234,10 +242,14 @@ AudioEventTimeline::GetValuesAtTimeHelperInternal(TimeType aTime,
      return mValue;
   }
 
+  auto TimeOf = [](const AudioTimelineEvent* aEvent) -> TimeType {
+    return aEvent->template Time<TimeType>();
+  };
+
   // SetTarget nodes can be handled no matter what their next node is (if
   // they have one)
   if (aPrevious->mType == AudioTimelineEvent::SetTarget) {
-    return ExponentialApproach(aPrevious->template Time<TimeType>(),
+    return ExponentialApproach(TimeOf(aPrevious),
                                mLastComputedValue, aPrevious->mValue,
                                aPrevious->mTimeConstant, aTime);
   }
@@ -245,7 +257,7 @@ AudioEventTimeline::GetValuesAtTimeHelperInternal(TimeType aTime,
   // SetValueCurve events can be handled no mattar what their next node is
   // (if they have one)
   if (aPrevious->mType == AudioTimelineEvent::SetValueCurve) {
-    return ExtractValueFromCurve(aPrevious->template Time<TimeType>(),
+    return ExtractValueFromCurve(TimeOf(aPrevious),
                                  aPrevious->mCurve, aPrevious->mCurveLength,
                                  aPrevious->mDuration, aTime);
   }
@@ -259,7 +271,7 @@ AudioEventTimeline::GetValuesAtTimeHelperInternal(TimeType aTime,
         // The value will be constant after the last event
         return aPrevious->mValue;
       case AudioTimelineEvent::SetValueCurve:
-        return ExtractValueFromCurve(aPrevious->template Time<TimeType>(),
+        return ExtractValueFromCurve(TimeOf(aPrevious),
                                      aPrevious->mCurve, aPrevious->mCurveLength,
                                      aPrevious->mDuration, aTime);
       case AudioTimelineEvent::SetTarget:
@@ -277,15 +289,15 @@ AudioEventTimeline::GetValuesAtTimeHelperInternal(TimeType aTime,
   // First, handle the case where our range ends up in a ramp event
   switch (aNext->mType) {
   case AudioTimelineEvent::LinearRamp:
-    return LinearInterpolate(aPrevious->template Time<TimeType>(),
+    return LinearInterpolate(TimeOf(aPrevious),
                              aPrevious->mValue,
-                             aNext->template Time<TimeType>(),
+                             TimeOf(aNext),
                              aNext->mValue, aTime);
 
   case AudioTimelineEvent::ExponentialRamp:
-    return ExponentialInterpolate(aPrevious->template Time<TimeType>(),
+    return ExponentialInterpolate(TimeOf(aPrevious),
                                   aPrevious->mValue,
-                                  aNext->template Time<TimeType>(),
+                                  TimeOf(aNext),
                                   aNext->mValue, aTime);
 
   case AudioTimelineEvent::SetValueAtTime:
@@ -307,7 +319,7 @@ AudioEventTimeline::GetValuesAtTimeHelperInternal(TimeType aTime,
     // value is constant.
     return aPrevious->mValue;
   case AudioTimelineEvent::SetValueCurve:
-    return ExtractValueFromCurve(aPrevious->template Time<TimeType>(),
+    return ExtractValueFromCurve(TimeOf(aPrevious),
                                  aPrevious->mCurve, aPrevious->mCurveLength,
                                  aPrevious->mDuration, aTime);
   case AudioTimelineEvent::SetTarget:
@@ -336,6 +348,10 @@ AudioEventTimeline::GetPreviousEvent(double aTime) const
   const AudioTimelineEvent* previous = nullptr;
   const AudioTimelineEvent* next = nullptr;
 
+  auto TimeOf = [](const AudioTimelineEvent& aEvent) -> double {
+    return aEvent.template Time<double>();
+  };
+
   bool bailOut = false;
   for (unsigned i = 0; !bailOut && i < mEvents.Length(); ++i) {
     switch (mEvents[i].mType) {
@@ -344,17 +360,17 @@ AudioEventTimeline::GetPreviousEvent(double aTime) const
     case AudioTimelineEvent::LinearRamp:
     case AudioTimelineEvent::ExponentialRamp:
     case AudioTimelineEvent::SetValueCurve:
-      if (aTime == mEvents[i].template Time<double>()) {
+      if (aTime == TimeOf(mEvents[i])) {
         // Find the last event with the same time
         do {
           ++i;
         } while (i < mEvents.Length() &&
-                 aTime == mEvents[i].template Time<double>());
+                 aTime == TimeOf(mEvents[i]));
         return &mEvents[i - 1];
       }
       previous = next;
       next = &mEvents[i];
-      if (aTime < mEvents[i].template Time<double>()) {
+      if (aTime < TimeOf(mEvents[i])) {
         bailOut = true;
       }
       break;
