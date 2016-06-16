@@ -16,17 +16,11 @@ const events = require("sdk/event/core");
 
 // This will also add the "stylesheet" actor type for protocol.js to recognize
 const {UPDATE_PRESERVING_RULES, UPDATE_GENERAL} = require("devtools/server/actors/stylesheets");
-const {pageStyleSpec, styleRuleSpec} = require("devtools/shared/specs/styles");
+const {pageStyleSpec, styleRuleSpec, ELEMENT_STYLE} = require("devtools/shared/specs/styles");
 
 loader.lazyRequireGetter(this, "CSS", "CSS");
 loader.lazyGetter(this, "CssLogic", () => require("devtools/shared/inspector/css-logic").CssLogic);
 loader.lazyGetter(this, "DOMUtils", () => Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils));
-
-// The PageStyle actor flattens the DOM CSS objects a little bit, merging
-// Rules and their Styles into one actor.  For elements (which have a style
-// but no associated rule) we fake a rule with the following style id.
-const ELEMENT_STYLE = 100;
-exports.ELEMENT_STYLE = ELEMENT_STYLE;
 
 // When gathering rules to read for pseudo elements, we will skip
 // :before and :after, which are handled as a special case.
