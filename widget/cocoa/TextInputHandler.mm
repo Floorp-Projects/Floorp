@@ -290,7 +290,6 @@ IsControlChar(uint32_t aCharCode)
 }
 
 static uint32_t gHandlerInstanceCount = 0;
-static TISInputSourceWrapper gCurrentInputSource;
 
 static void
 InitLogModule()
@@ -303,22 +302,6 @@ InitLogModule()
   }
 }
 
-static void
-InitCurrentInputSource()
-{
-  if (gHandlerInstanceCount > 0 &&
-      !gCurrentInputSource.IsInitializedByCurrentInputSource()) {
-    gCurrentInputSource.InitByCurrentInputSource();
-  }
-}
-
-static void
-FinalizeCurrentInputSource()
-{
-  gCurrentInputSource.Clear();
-}
-
-
 #pragma mark -
 
 
@@ -328,12 +311,31 @@ FinalizeCurrentInputSource()
  *
  ******************************************************************************/
 
+TISInputSourceWrapper* TISInputSourceWrapper::sCurrentInputSource = nullptr;
+
 // static
 TISInputSourceWrapper&
 TISInputSourceWrapper::CurrentInputSource()
 {
-  InitCurrentInputSource();
-  return gCurrentInputSource;
+  if (!sCurrentInputSource) {
+    sCurrentInputSource = new TISInputSourceWrapper();
+  }
+  if (!sCurrentInputSource->IsInitializedByCurrentInputSource()) {
+    sCurrentInputSource->InitByCurrentInputSource();
+  }
+  return *sCurrentInputSource;
+}
+
+// static
+void
+TISInputSourceWrapper::Shutdown()
+{
+  if (!sCurrentInputSource) {
+    return;
+  }
+  sCurrentInputSource->Clear();
+  delete sCurrentInputSource;
+  sCurrentInputSource = nullptr;
 }
 
 bool
@@ -3949,7 +3951,7 @@ TextInputHandlerBase::~TextInputHandlerBase()
 {
   [mView release];
   if (--gHandlerInstanceCount == 0) {
-    FinalizeCurrentInputSource();
+    TISInputSourceWrapper::Shutdown();
   }
 }
 

@@ -55,6 +55,10 @@ class TISInputSourceWrapper
 {
 public:
   static TISInputSourceWrapper& CurrentInputSource();
+  /**
+   * Shutdown() should be called when nobody doesn't need to use this class.
+   */
+  static void Shutdown();
 
   TISInputSourceWrapper()
   {
@@ -346,6 +350,8 @@ protected:
   int8_t mIsRTL;
 
   bool mOverrideKeyboard;
+
+  static TISInputSourceWrapper* sCurrentInputSource;
 };
 
 /**
