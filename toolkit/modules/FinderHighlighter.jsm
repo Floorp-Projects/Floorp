@@ -44,6 +44,7 @@ const kModalStyle = `
   padding-bottom: 0;
   padding-inline-start: 4px;
   pointer-events: none;
+  z-index: 2;
 }
 
 .findbar-modalHighlight-outline[grow] {
@@ -59,8 +60,21 @@ const kModalStyle = `
   transition-property: opacity, transform, top, left;
   transition-duration: 50ms;
   transition-timing-function: linear;
+}
+
+.findbar-modalHighlight-outlineMask {
+  background: #000;
+  mix-blend-mode: multiply;
+  opacity: .2;
+  position: absolute;
+  z-index: 1;
+}
+
+.findbar-modalHighlight-rect {
+  background: #fff;
+  border: 1px solid #666;
+  position: absolute;
 }`;
-const kSVGNS = "http://www.w3.org/2000/svg";
 const kXULNS = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
 
 /**
@@ -497,10 +511,9 @@ FinderHighlighter.prototype = {
     let rects = new Set();
     // Absolute positions should include the viewport scroll offset.
     let { scrollX, scrollY } = this._getScrollPosition(window);
-    // A range may consist of multiple rectangles, but since we're cutting them
-    // out using SVG we can also do these kind of precise cut-outs.
-    // range.getBoundingClientRect() returns the fully encompassing rectangle,
-    // which is too much for our purpose here.
+    // A range may consist of multiple rectangles, we can also do these kind of
+    // precise cut-outs. range.getBoundingClientRect() returns the fully
+    // encompassing rectangle, which is too much for our purpose here.
     for (let dims of range.getClientRects()) {
       rects.add({
         height: dims.bottom - dims.top,
@@ -569,7 +582,7 @@ FinderHighlighter.prototype = {
   },
 
   /**
-   * Build and draw the SVG mask that takes care of the dimmed background that
+   * Build and draw the mask that takes care of the dimmed background that
    * overlays the current page and the mask that cuts out all the rectangles of
    * the ranges that were found.
    *
@@ -579,40 +592,32 @@ FinderHighlighter.prototype = {
     let document = window.document;
 
     const kMaskId = kModalIdPrefix + "-findbar-modalHighlight-outlineMask";
-    let svgNode = document.createElementNS(kSVGNS, "svg");
-    // Make sure the SVG drawing takes the full width and height that's available.
+    let maskNode = document.createElement("div");
+
+    // Make sure the dimmed mask node takes the full width and height that's available.
     let {width, height} = this._getWindowDimensions(window);
-    svgNode.setAttribute("viewBox", "0 0 " + width + " " + height);
+    maskNode.setAttribute("id", kMaskId);
+    maskNode.setAttribute("class", kMaskId);
+    maskNode.setAttribute("style", `width: ${width}px; height: ${height}px;`);
 
-    // The mask functions as a sort of inverse clip-path: instead of defining
-    // what to draw where, we need to do the opposite. We want the rectangles for
-    // each found range to be cut out of the dimmed-black background. That's why
-    // the mask is a full white large rectangle with small black rectangles that
-    // specifies where to let color bleed through and how much.
-    let svgContent = [`<mask id="${kMaskId}">
-      <rect x="0" y="0" height="${height}" width="${width}" fill="white"/>`];
-
+    // Create a DOM node for each rectangle representing the ranges we found.
+    let maskContent = [];
+    const kRectClassName = kModalIdPrefix + "-findbar-modalHighlight-rect";
     if (this._modalHighlightRectsMap) {
       for (let rects of this._modalHighlightRectsMap.values()) {
         for (let rect of rects) {
-          // The #666 stroke works to create the effect of blurred edges.
-          svgContent.push(`<rect x="${rect.x}" y="${rect.y}"
-            height="${rect.height}" width="${rect.width}"
-            style="fill: #000; stroke-width: 1; stroke: #666"/>`);
+          maskContent.push(`<div class="${kRectClassName}" style="top: ${rect.y}px;
+            left: ${rect.x}px; height: ${rect.height}px; width: ${rect.width}px;"></div>`);
         }
       }
     }
-
-    // The big black opaque rectangle to which the mask is applied.
-    svgNode.innerHTML = svgContent.join("") + `</mask>
-      <rect x="0" y="0" height="${height}" width="${width}" fill="rgba(0,0,0,.2)"
-            mask="url(#${kMaskId})"/>`;
+    maskNode.innerHTML = maskContent.join("");
 
     // Always remove the current mask and insert it a-fresh, because we're not
     // free to alter DOM nodes inside the CanvasFrame.
     this._removeHighlightAllMask(window);
 
-    this._modalHighlightAllMask = document.insertAnonymousContent(svgNode);
+    this._modalHighlightAllMask = document.insertAnonymousContent(maskNode);
   },
 
   /**
