@@ -225,13 +225,14 @@ MediaOmxCommonDecoder::ChangeState(PlayState aState)
 }
 
 void
-MediaOmxCommonDecoder::CallSeek(const SeekTarget& aTarget)
+MediaOmxCommonDecoder::CallSeek(const SeekTarget& aTarget, dom::Promise* aPromise)
 {
   if (!mAudioOffloadPlayer) {
-    MediaDecoder::CallSeek(aTarget);
+    MediaDecoder::CallSeek(aTarget, aPromise);
     return;
   }
 
+  mSeekDOMPromise = aPromise;
   mSeekRequest.DisconnectIfExists();
   mSeekRequest.Begin(mAudioOffloadPlayer->Seek(aTarget)
     ->Then(AbstractThread::MainThread(), __func__, static_cast<MediaDecoder*>(this),

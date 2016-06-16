@@ -375,7 +375,7 @@
   </div>
   <h1>Table Reflow</h1>
   <ul>
-    <li>Outer table reflows table and caption (if present)</li>
+    <li>table wrapper reflows table and caption (if present)</li>
 	<li>Table reflows row groups in multiple passes</li> 
 	 <ul class=nested>
       <li>Pass 1 - unconstrained width, height and requests max elem width.</li>
@@ -417,7 +417,7 @@
    <tr>
     <td width=100%>
 	 <pre style="font-size:.6em;">
-tblO 030176CC r=0 a=8940,UC c=0,0 cnt=429
+tblW 030176CC r=0 a=8940,UC c=0,0 cnt=429
   tbl 030178C4 r=0 a=8940,UC c=4470,UC cnt=430
    rowG 03017A7C r=0 a=UC,UC c=UC,UC cnt=431 
     row 03017C08 r=0 a=UC,UC c=UC,UC cnt=432
@@ -444,7 +444,7 @@ tblO 030176CC r=0 a=8940,UC c=0,0 cnt=429
     row 03017C08 d=4470,360
    rowG 03017A7C d=4470,360
   tbl 030178C4 d=4500,450
- tblO 030176CC d=4500,450
+ tblW 030176CC d=4500,450
 
  <a href="frame_reflow_debug.html">frame reflow debugging</a> gives instructions 
  for turning this on.
@@ -488,7 +488,7 @@ Key:
 	column widths. The pass 2 will get skipped if the table doesn't need to rebalance. <!--<span class="comment">please clarify when can this happen</span>--></li> 
     <li>Nested table reflowed with an unconstrained width (i.e. an ancestor is doing a pass 1 reflow)
 	will only do a pass 1 reflow on its children</li>
-    <li>Outer table caches last avail width and avoids reflowing children if resize reflow is the same as previous</li>
+    <li>table wrapper caches last avail width and avoids reflowing children if resize reflow is the same as previous</li>
     <li>Table caches max element, preferred widths in case they are requested and it isn't rebalanced</li>
     <li>Cell caches prior avail width. if this doesn't change, the row may not have to reflow the cell</li>
   </ul>
@@ -502,7 +502,7 @@ Key:
   </div>
   <h1>Table incremental reflow</h1>
   <ul>
-    <li>Outer table is a target when a caption is added or removed (dirty) or the table or caption margin 
+    <li>table wrapper is a target when a caption is added or removed (dirty) or the table or caption margin 
   changes (style changed).</li> 
     <li>Caption is a target when it changes stylistically (style changed).</li>
     <li>Table, row group, row, col group, col is a target when a child is added or removed (dirty) or it changes
@@ -680,7 +680,7 @@ Key:
 	           <tr>
 	            <td class=box>
 			     <table class=box style="height:100%; border-bottom:hidden">
-	              <tr><td class=title>nsTableOuterFrame</td></tr>
+	              <tr><td class=title>nsTableWrapperFrame</td></tr>
 	              <tr>
 	               <td class=box></td>
 	              </tr>
@@ -713,7 +713,7 @@ Key:
 	              <tr>
 	               <td class=box></td>
 	              </tr>
-	              <tr><td class=title2>nsTableOuterFrame</td></tr>
+	              <tr><td class=title2>nsTableWrapperFrame</td></tr>
 	             </table>
 				</td>
 	           </tr>
@@ -800,13 +800,13 @@ Key:
   </div>
   <h1>Table paginated reflow</h1>
   <ul>
-	<li>The block containing the outer table reflows it. If it is incomplete, the block will
+	<li>The block containing the table wrapper reflows it. If it is incomplete, the block will
 	  <ul>
-	    <li>create a continuation for the outer table (which also creates a continuation for the table).</li>
+	    <li>create a continuation for the table wrapper (which also creates a continuation for the table).</li>
 	    <li>put the continuation on a new line and place that line on its overflow lines property.</li>
 	  </ul>
 	</li>
-    <li>The outer table reflows the table and just returns the status of the table.</li>
+    <li>The table wrapper reflows the table and just returns the status of the table.</li>
     <li>The table does a pass 1 reflow and balances. If it is incomplete,</li>
 	  <ul>
 	    <li>it will become the first-in-flow</li>
@@ -874,10 +874,10 @@ Key:
 	</li>
 	<li>There are two splitting scenarios for a table
 	  <ul>
-	    <li>An incomplete cells block causes the cell, row, row group, table, outer table to
+	    <li>An incomplete cells block causes the cell, row, row group, table, table wrapper to
 	    be incomplete</li>
 	    <li>A truncated row or a row that started too far down the page causes the row group, 
-		table, outer table to be incomplete.</li>
+		table, table wrapper to be incomplete.</li>
 	  </ul>
 	</li>
   </ul>

@@ -48,7 +48,7 @@ class nsIClipboard;
 class TypeInState;
 class nsIContentFilter;
 class nsILinkHandler;
-class nsTableOuterFrame;
+class nsTableWrapperFrame;
 class nsIDOMRange;
 class nsRange;
 struct PropItem;
@@ -454,8 +454,8 @@ protected:
   NS_IMETHOD SetColSpan(nsIDOMElement *aCell, int32_t aColSpan);
   NS_IMETHOD SetRowSpan(nsIDOMElement *aCell, int32_t aRowSpan);
 
-  // Helper used to get nsTableOuterFrame for a table.
-  nsTableOuterFrame* GetTableFrame(nsIDOMElement* aTable);
+  // Helper used to get nsTableWrapperFrame for a table.
+  nsTableWrapperFrame* GetTableFrame(nsIDOMElement* aTable);
   // Needed to do appropriate deleting when last cell or row is about to be deleted
   // This doesn't count cells that don't start in the given row (are spanning from row above)
   int32_t  GetNumberOfCellsInRow(nsIDOMElement* aTable, int32_t rowIndex);

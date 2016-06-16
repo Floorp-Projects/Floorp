@@ -2557,8 +2557,8 @@ nsCSSOffsetState::InitOffsets(WritingMode aWM,
         tableFrame->GetIncludedOuterBCBorder(mWritingMode));
     }
 
-    // The margin is inherited to the outer table frame via
-    // the ::-moz-table-outer rule in ua.css.
+    // The margin is inherited to the table wrapper frame via
+    // the ::-moz-table-wrapper rule in ua.css.
     ComputedPhysicalMargin().SizeTo(0, 0, 0, 0);
   } else if (aFrameType == nsGkAtoms::scrollbarFrame) {
     // scrollbars may have had their width or height smashed to zero
@@ -2646,10 +2646,10 @@ nsHTMLReflowState::CalculateBlockSideMargins(nsIAtom* aFrameType)
     // First check if there is an HTML alignment that we should honor
     const nsHTMLReflowState* prs = mParentReflowState;
     if (aFrameType == nsGkAtoms::tableFrame) {
-      NS_ASSERTION(prs->frame->GetType() == nsGkAtoms::tableOuterFrame,
-                   "table not inside outer table");
-      // Center the table within the outer table based on the alignment
-      // of the outer table's parent.
+      NS_ASSERTION(prs->frame->GetType() == nsGkAtoms::tableWrapperFrame,
+                   "table not inside table wrapper");
+      // Center the table within the table wrapper based on the alignment
+      // of the table wrapper's parent.
       prs = prs->mParentReflowState;
     }
     if (prs &&

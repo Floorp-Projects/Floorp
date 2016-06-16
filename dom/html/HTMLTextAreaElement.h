@@ -21,7 +21,6 @@
 
 #include "nsTextEditorState.h"
 
-class nsFormSubmission;
 class nsIControllers;
 class nsIDocument;
 class nsPresContext;
@@ -34,6 +33,8 @@ class EventChainPreVisitor;
 class EventStates;
 
 namespace dom {
+
+class HTMLFormSubmission;
 
 class HTMLTextAreaElement final : public nsGenericHTMLFormElementWithState,
                                   public nsIDOMHTMLTextAreaElement,
@@ -72,7 +73,7 @@ public:
   // nsIFormControl
   NS_IMETHOD_(uint32_t) GetType() const override { return NS_FORM_TEXTAREA; }
   NS_IMETHOD Reset() override;
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission) override;
+  NS_IMETHOD SubmitNamesValues(HTMLFormSubmission* aFormSubmission) override;
   NS_IMETHOD SaveState() override;
   virtual bool RestoreState(nsPresState* aState) override;
   virtual bool IsDisabledForEvents(EventMessage aMessage) override;

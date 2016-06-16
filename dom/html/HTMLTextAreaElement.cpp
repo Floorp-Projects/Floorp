@@ -9,6 +9,7 @@
 #include "mozAutoDocUpdate.h"
 #include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/Attributes.h"
+#include "mozilla/dom/HTMLFormSubmission.h"
 #include "mozilla/dom/HTMLTextAreaElementBinding.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
@@ -18,7 +19,6 @@
 #include "nsContentCreatorFunctions.h"
 #include "nsError.h"
 #include "nsFocusManager.h"
-#include "nsFormSubmission.h"
 #include "nsIComponentManager.h"
 #include "nsIConstraintValidation.h"
 #include "nsIControllers.h"
@@ -1040,7 +1040,7 @@ HTMLTextAreaElement::Reset()
 }
 
 NS_IMETHODIMP
-HTMLTextAreaElement::SubmitNamesValues(nsFormSubmission* aFormSubmission)
+HTMLTextAreaElement::SubmitNamesValues(HTMLFormSubmission* aFormSubmission)
 {
   // Disabled elements don't submit
   if (IsDisabled()) {

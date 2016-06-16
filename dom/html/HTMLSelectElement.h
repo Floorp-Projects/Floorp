@@ -33,6 +33,7 @@ class EventChainPreVisitor;
 
 namespace dom {
 
+class HTMLFormSubmission;
 class HTMLSelectElement;
 
 #define NS_SELECT_STATE_IID                        \
@@ -289,7 +290,7 @@ public:
   // Overriden nsIFormControl methods
   NS_IMETHOD_(uint32_t) GetType() const override { return NS_FORM_SELECT; }
   NS_IMETHOD Reset() override;
-  NS_IMETHOD SubmitNamesValues(nsFormSubmission* aFormSubmission) override;
+  NS_IMETHOD SubmitNamesValues(HTMLFormSubmission* aFormSubmission) override;
   NS_IMETHOD SaveState() override;
   virtual bool RestoreState(nsPresState* aState) override;
   virtual bool IsDisabledForEvents(EventMessage aMessage) override;

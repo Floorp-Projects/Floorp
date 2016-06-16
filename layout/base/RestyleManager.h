@@ -617,9 +617,9 @@ public:
   // Construct for a frame whose parent is being restyled, but whose
   // style context is the parent style context for its parent frame.
   // (This is only used for table frames, whose style contexts are used
-  // as the parent style context for their outer table frame (table
-  // wrapper frame).  We should probably try to get rid of this
-  // exception and have the inheritance go the other way.)
+  // as the parent style context for their table wrapper frame. We should
+  // probably try to get rid of this exception and have the inheritance go
+  // the other way.)
   enum ParentContextFromChildFrame { PARENT_CONTEXT_FROM_CHILD_FRAME };
   ElementRestyler(ParentContextFromChildFrame,
                   const ElementRestyler& aParentFrameRestyler,

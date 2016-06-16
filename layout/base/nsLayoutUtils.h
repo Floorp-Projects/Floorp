@@ -346,21 +346,21 @@ public:
 
   /**
    * Given a frame which is the primary frame for an element,
-   * return the frame that has the non-psuedoelement style context for
+   * return the frame that has the non-pseudoelement style context for
    * the content.
-   * This is aPrimaryFrame itself except for tableOuter frames.
+   * This is aPrimaryFrame itself except for tableWrapper frames.
    *
    * Given a non-null input, this will return null if and only if its
-   * argument is a table outer frame that is mid-destruction (and its
+   * argument is a table wrapper frame that is mid-destruction (and its
    * table frame has been destroyed).
    */
   static nsIFrame* GetStyleFrame(nsIFrame* aPrimaryFrame);
 
   /**
    * Given a content node,
-   * return the frame that has the non-psuedoelement style context for
+   * return the frame that has the non-pseudoelement style context for
    * the content.  May return null.
-   * This is aContent->GetPrimaryFrame() except for tableOuter frames.
+   * This is aContent->GetPrimaryFrame() except for tableWrapper frames.
    */
   static nsIFrame* GetStyleFrame(const nsIContent* aContent);
 
@@ -377,7 +377,7 @@ public:
    * IsGeneratedContentFor returns true if aFrame is the outermost
    * frame for generated content of type aPseudoElement for aContent.
    * aFrame *might not* have the aPseudoElement pseudo-style! For example
-   * it might be a table outer frame and the inner table frame might
+   * it might be a table wrapper frame and the inner table frame might
    * have the pseudo-style.
    *
    * @param aContent the content node we're looking at.  If this is
@@ -1133,7 +1133,7 @@ public:
   };
   /**
    * Collect all CSS boxes associated with aFrame and its
-   * continuations, "drilling down" through outer table frames and
+   * continuations, "drilling down" through table wrapper frames and
    * some anonymous blocks since they're not real CSS boxes.
    * If aFrame is null, no boxes are returned.
    * SVG frames return a single box, themselves.
@@ -1181,7 +1181,7 @@ public:
   };
   /**
    * Collect all CSS boxes (content, padding, border, or margin) associated
-   * with aFrame and its continuations, "drilling down" through outer table
+   * with aFrame and its continuations, "drilling down" through table wrapper
    * frames and some anonymous blocks since they're not real CSS boxes.
    * The boxes are positioned relative to aRelativeTo (taking scrolling
    * into account) and passed to the callback in frame-tree order.

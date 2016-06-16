@@ -387,7 +387,7 @@ int TestNrSocket::recvfrom(void *buf, size_t maxlen,
       PortMapping *port_mapping_used;
       ingress_allowed = allow_ingress(*from, &port_mapping_used);
       if (ingress_allowed) {
-        r_log(LOG_GENERIC, LOG_INFO, "TestNrSocket %s received from %s via %s",
+        r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %s received from %s via %s",
               internal_socket_->my_addr().as_string,
               from->as_string,
               port_mapping_used->external_socket_->my_addr().as_string);
@@ -412,7 +412,7 @@ int TestNrSocket::recvfrom(void *buf, size_t maxlen,
               internal_socket_->my_addr().as_string,
               from->as_string);
       } else {
-        r_log(LOG_GENERIC, LOG_INFO, "TestNrSocket %s received from %s",
+        r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %s received from %s",
               internal_socket_->my_addr().as_string,
               from->as_string);
       }
@@ -512,7 +512,7 @@ int TestNrSocket::write(const void *msg, size_t len, size_t *written) {
 
   if (port_mappings_.empty()) {
     // The no-nat case, just pass call through.
-    r_log(LOG_GENERIC, LOG_INFO, "TestNrSocket %s writing",
+    r_log(LOG_GENERIC, LOG_DEBUG, "TestNrSocket %s writing",
           my_addr().as_string);
 
     return internal_socket_->write(msg, len, written);
@@ -523,7 +523,7 @@ int TestNrSocket::write(const void *msg, size_t len, size_t *written) {
     }
     // This is TCP only
     MOZ_ASSERT(port_mappings_.size() == 1);
-    r_log(LOG_GENERIC, LOG_INFO,
+    r_log(LOG_GENERIC, LOG_DEBUG,
           "PortMapping %s -> %s writing",
           port_mappings_.front()->external_socket_->my_addr().as_string,
           port_mappings_.front()->remote_address_.as_string);
@@ -747,7 +747,7 @@ void TestNrSocket::port_mapping_tcp_passthrough_callback(void *ext_sock_v,
                                                          int how,
                                                          void *test_sock_v) {
   TestNrSocket *test_socket = static_cast<TestNrSocket*>(test_sock_v);
-  r_log(LOG_GENERIC, LOG_INFO,
+  r_log(LOG_GENERIC, LOG_DEBUG,
         "TestNrSocket %s firing %s callback",
         test_socket->internal_socket_->my_addr().as_string,
         how == NR_ASYNC_WAIT_READ ? "readable" : "writeable");
@@ -813,7 +813,7 @@ int TestNrSocket::PortMapping::send_from_queue() {
 
   while (!send_queue_.empty()) {
     UdpPacket &packet = *send_queue_.front();
-    r_log(LOG_GENERIC, LOG_INFO,
+    r_log(LOG_GENERIC, LOG_DEBUG,
           "PortMapping %s -> %s sending from queue to %s",
           external_socket_->my_addr().as_string,
           remote_address_.as_string,
@@ -830,7 +830,7 @@ int TestNrSocket::PortMapping::send_from_queue() {
               __FUNCTION__, r);
         send_queue_.clear();
       } else {
-        r_log(LOG_GENERIC, LOG_INFO, "Would block, will retry later");
+        r_log(LOG_GENERIC, LOG_DEBUG, "Would block, will retry later");
       }
       break;
     }
@@ -845,7 +845,7 @@ int TestNrSocket::PortMapping::sendto(const void *msg,
                                       size_t len,
                                       const nr_transport_addr &to) {
   MOZ_ASSERT(remote_address_.protocol != IPPROTO_TCP);
-  r_log(LOG_GENERIC, LOG_INFO,
+  r_log(LOG_GENERIC, LOG_DEBUG,
         "PortMapping %s -> %s sending to %s",
         external_socket_->my_addr().as_string,
         remote_address_.as_string,
@@ -857,7 +857,7 @@ int TestNrSocket::PortMapping::sendto(const void *msg,
       const_cast<nr_transport_addr*>(&to));
 
   if (r == R_WOULDBLOCK) {
-    r_log(LOG_GENERIC, LOG_INFO, "Enqueueing UDP packet to %s", to.as_string);
+    r_log(LOG_GENERIC, LOG_DEBUG, "Enqueueing UDP packet to %s", to.as_string);
     send_queue_.push_back(RefPtr<UdpPacket>(new UdpPacket(msg, len, to)));
     return 0;
   } else if (r) {

@@ -20,7 +20,7 @@ def build_dict(config, env=os.environ):
     substs = config.substs
 
     # Check that all required variables are present first.
-    required = ["TARGET_CPU", "OS_TARGET", "MOZ_WIDGET_TOOLKIT"]
+    required = ["TARGET_CPU", "OS_TARGET"]
     missing = [r for r in required if r not in substs]
     if missing:
         raise Exception("Missing required environment variables: %s" %
@@ -38,7 +38,7 @@ def build_dict(config, env=os.environ):
     known_os = {"Linux": "linux",
                 "WINNT": "win",
                 "Darwin": "mac",
-                "Android": "b2g" if substs["MOZ_WIDGET_TOOLKIT"] == "gonk" else "android"}
+                "Android": "b2g" if substs.get("MOZ_WIDGET_TOOLKIT") == "gonk" else "android"}
     if o in known_os:
         d["os"] = known_os[o]
     else:
@@ -46,7 +46,7 @@ def build_dict(config, env=os.environ):
         d["os"] = o.lower()
 
     # Widget toolkit, just pass the value directly through.
-    d["toolkit"] = substs["MOZ_WIDGET_TOOLKIT"]
+    d["toolkit"] = substs.get("MOZ_WIDGET_TOOLKIT")
 
     # Application name
     if 'MOZ_APP_NAME' in substs:

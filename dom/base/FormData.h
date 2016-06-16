@@ -10,11 +10,11 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/BindingDeclarations.h"
+#include "mozilla/dom/HTMLFormSubmission.h"
 #include "mozilla/dom/File.h"
 #include "mozilla/dom/FormDataBinding.h"
 #include "nsIDOMFormData.h"
 #include "nsIXMLHttpRequest.h"
-#include "nsFormSubmission.h"
 #include "nsTArray.h"
 #include "nsWrapperCache.h"
 
@@ -26,7 +26,7 @@ class GlobalObject;
 
 class FormData final : public nsIDOMFormData,
                        public nsIXHRSendable,
-                       public nsFormSubmission,
+                       public HTMLFormSubmission,
                        public nsWrapperCache
 {
 private:
@@ -104,7 +104,7 @@ public:
 
   const OwningBlobOrUSVString& GetValueAtIndex(uint32_t aIndex) const;
 
-  // nsFormSubmission
+  // HTMLFormSubmission
   virtual nsresult
   GetEncodedSubmission(nsIURI* aURI, nsIInputStream** aPostDataStream) override;
 

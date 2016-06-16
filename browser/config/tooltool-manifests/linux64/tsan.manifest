@@ -1,10 +1,18 @@
 [
 {
-"version": "clang 3.6.2/r241773",
-"size": 89690541, 
-"digest": "470d258d9785a120fcba65eee90daa632a42affa0f97f57d70fc8285bd76bcc27d4d0d70b6c37577ab271a04c843b6269425391a8d6df1967718dba26dd3a73d", 
-"algorithm": "sha512", 
-"filename": "clang.tar.bz2",
+"version": "gcc 4.8.5 + PR64905",
+"size": 80160264,
+"digest": "c1a9dc9da289b8528874d16300b9d13a997cec99195bb0bc46ff665216d8535d6d6cb5af6b4b1f2749af6815dab12e703fdb3849014e5c23a70eff351a0baf4e",
+"algorithm": "sha512",
+"filename": "gcc.tar.xz",
+"unpack": true
+},
+{
+"version": "clang 3.8.0, libgcc 4.8.5",
+"size": 139183100,
+"digest": "a056a151d4f25f415b6d905136c3fa8d51d12a5a815c3df37d5663c67d59571736641a4c990884a69f78ea6b5e37a6a7bfff0417dfe38936d842d6fa0776ae54",
+"algorithm": "sha512",
+"filename": "clang.tar.xz",
 "unpack": true
 },
 {

@@ -770,23 +770,32 @@ public:
         }
 
         TimeStamp lastVsync = TimeStamp::Now();
+        bool useSoftware = false;
+
         // Wait until the video sync counter reaches the next value by waiting
         // until the parity of the counter value changes.
         unsigned int nextSync = syncCounter + 1;
-        if (gl::sGLXLibrary.xWaitVideoSync(2, nextSync % 2,
-                                           &syncCounter) == 0) {
-          if (syncCounter == (nextSync - 1)) {
-            gfxWarning() << "GLX sync counter failed to increment after glXWaitVideoSync!\n";
-            // If we failed to block until the next sync, fallback to software.
-            double remaining = (1000.f / 60.f) -
-                               (TimeStamp::Now() - lastVsync).ToMilliseconds();
-            if (remaining > 0) {
-              PlatformThread::Sleep(remaining);
-            }
-          }
-          lastVsync = TimeStamp::Now();
-          NotifyVsync(lastVsync);
+        int status;
+        if ((status = gl::sGLXLibrary.xWaitVideoSync(2, nextSync % 2, &syncCounter)) != 0) {
+          gfxWarningOnce() << "glXWaitVideoSync returned " << status;
+          useSoftware = true;
         }
+
+        if (syncCounter == (nextSync - 1)) {
+          gfxWarningOnce() << "glXWaitVideoSync failed to increment the sync counter.";
+          useSoftware = true;
+        }
+
+        if (useSoftware) {
+          double remaining = (1000.f / 60.f) -
+            (TimeStamp::Now() - lastVsync).ToMilliseconds();
+          if (remaining > 0) {
+            PlatformThread::Sleep(remaining);
+          }
+        }
+
+        lastVsync = TimeStamp::Now();
+        NotifyVsync(lastVsync);
       }
     }
 
