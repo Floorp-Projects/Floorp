@@ -217,6 +217,6 @@ public final class ThumbnailHelper {
     }
 
     private boolean shouldUpdateThumbnail(Tab tab) {
-        return (Tabs.getInstance().isSelectedTab(tab) || (GeckoAppShell.getGeckoInterface() != null && GeckoAppShell.getGeckoInterface().areTabsShown()));
+        return (Tabs.getInstance().isSelectedTab(tab));
     }
 }
