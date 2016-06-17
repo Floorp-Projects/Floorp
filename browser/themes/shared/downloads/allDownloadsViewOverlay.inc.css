@@ -55,7 +55,7 @@
 .blockedIcon {
   --overlay-image-dimensions: top right / 16px no-repeat;
   padding: 0;
-  background: url("chrome://browser/skin/download-blocked.svg") var(--overlay-image-dimensions);
+  background: url("chrome://browser/skin/downloads/download-blocked.svg") var(--overlay-image-dimensions);
 }
 
 @item@[verdict="PotentiallyUnwanted"] .blockedIcon {
