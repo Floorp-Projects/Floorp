@@ -7,6 +7,7 @@
 #ifndef vm_SavedStacks_h
 #define vm_SavedStacks_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/FastBernoulliTrial.h"
 
 #include "jscntxt.h"
@@ -161,11 +162,14 @@ class SavedStacks {
         creatingSavedFrame(false)
     { }
 
-    bool     init();
+    MOZ_MUST_USE bool     init();
     bool     initialized() const { return frames.initialized(); }
-    bool     saveCurrentStack(JSContext* cx, MutableHandleSavedFrame frame, unsigned maxFrameCount = 0);
-    bool     copyAsyncStack(JSContext* cx, HandleObject asyncStack, HandleString asyncCause,
-                            MutableHandleSavedFrame adoptedStack, unsigned maxFrameCount = 0);
+    MOZ_MUST_USE bool     saveCurrentStack(JSContext* cx, MutableHandleSavedFrame frame,
+                                           unsigned maxFrameCount = 0);
+    MOZ_MUST_USE bool     copyAsyncStack(JSContext* cx, HandleObject asyncStack,
+                                         HandleString asyncCause,
+                                         MutableHandleSavedFrame adoptedStack,
+                                         unsigned maxFrameCount = 0);
     void     sweep();
     void     trace(JSTracer* trc);
     uint32_t count();
@@ -215,12 +219,13 @@ class SavedStacks {
         }
     };
 
-    bool        insertFrames(JSContext* cx, FrameIter& iter, MutableHandleSavedFrame frame,
-                             unsigned maxFrameCount = 0);
-    bool        adoptAsyncStack(JSContext* cx, HandleSavedFrame asyncStack,
-                                HandleString asyncCause,
-                                MutableHandleSavedFrame adoptedStack,
-                                unsigned maxFrameCount);
+    MOZ_MUST_USE bool        insertFrames(JSContext* cx, FrameIter& iter,
+                                          MutableHandleSavedFrame frame,
+                                          unsigned maxFrameCount = 0);
+    MOZ_MUST_USE bool        adoptAsyncStack(JSContext* cx, HandleSavedFrame asyncStack,
+                                             HandleString asyncCause,
+                                             MutableHandleSavedFrame adoptedStack,
+                                             unsigned maxFrameCount);
     SavedFrame* getOrCreateSavedFrame(JSContext* cx, SavedFrame::HandleLookup lookup);
     SavedFrame* createFrameFromLookup(JSContext* cx, SavedFrame::HandleLookup lookup);
 
@@ -305,7 +310,8 @@ class SavedStacks {
     using PCLocationMap = GCHashMap<PCKey, LocationValue, PCLocationHasher, SystemAllocPolicy>;
     PCLocationMap pcLocationMap;
 
-    bool getLocation(JSContext* cx, const FrameIter& iter, MutableHandle<LocationValue> locationp);
+    MOZ_MUST_USE bool getLocation(JSContext* cx, const FrameIter& iter,
+                                  MutableHandle<LocationValue> locationp);
 };
 
 template <>
