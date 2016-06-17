@@ -9,6 +9,7 @@
     "sendAsyncMessage": false,
 
     "waitForLoad": true,
+    "promiseConsoleOutput": true,
 
     "ExtensionTestUtils": false,
     "NetUtil": true,
