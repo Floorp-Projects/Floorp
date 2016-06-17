@@ -103,7 +103,7 @@ MediaEngineCameraVideoSource::TrimLessFitCandidates(CapabilitySet& set) {
 
 uint32_t
 MediaEngineCameraVideoSource::GetBestFitnessDistance(
-    const nsTArray<const MediaTrackConstraintSet*>& aConstraintSets,
+    const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
     const nsString& aDeviceId)
 {
   size_t num = NumCapabilities();
@@ -114,13 +114,12 @@ MediaEngineCameraVideoSource::GetBestFitnessDistance(
   }
 
   bool first = true;
-  for (const MediaTrackConstraintSet* cs : aConstraintSets) {
-    NormalizedConstraintSet ns(*cs, !first);
+  for (const NormalizedConstraintSet* ns : aConstraintSets) {
     for (size_t i = 0; i < candidateSet.Length();  ) {
       auto& candidate = candidateSet[i];
       webrtc::CaptureCapability cap;
       GetCapability(candidate.mIndex, cap);
-      uint32_t distance = GetFitnessDistance(cap, ns, aDeviceId);
+      uint32_t distance = GetFitnessDistance(cap, *ns, aDeviceId);
       if (distance == UINT32_MAX) {
         candidateSet.RemoveElementAt(i);
       } else {
@@ -245,6 +244,11 @@ MediaEngineCameraVideoSource::ChooseCapability(
     }
   }
 
+  if (!candidateSet.Length()) {
+    LOG(("failed to find capability match from %d choices",num));
+    return false;
+  }
+
   // Filter further with all advanced constraints (that don't overconstrain).
 
   for (const auto &cs : aConstraints.mAdvanced) {
@@ -264,10 +268,8 @@ MediaEngineCameraVideoSource::ChooseCapability(
       candidateSet.AppendElements(Move(rejects));
     }
   }
-  if (!candidateSet.Length()) {
-    LOG(("failed to find capability match from %d choices",num));
-    return false;
-  }
+  MOZ_ASSERT(candidateSet.Length(),
+             "advanced constraints filtering step can't reduce candidates to zero");
 
   // Remaining algorithm is up to the UA.
 
