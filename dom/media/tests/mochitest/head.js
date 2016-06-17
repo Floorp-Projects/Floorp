@@ -312,7 +312,8 @@ function setupEnvironment() {
     defaultMochitestPrefs.set.push(
       ["media.navigator.video.default_width", 320],
       ["media.navigator.video.default_height", 240],
-      ["media.navigator.video.max_fr", 10]
+      ["media.navigator.video.max_fr", 10],
+      ["media.autoplay.enabled", true]
     );
   }
 
