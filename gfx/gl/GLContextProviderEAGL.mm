@@ -221,7 +221,8 @@ GLContextProviderEAGL::CreateForWindow(nsIWidget* aWidget, bool aForceAccelerate
 }
 
 already_AddRefed<GLContext>
-GLContextProviderEAGL::CreateHeadless(CreateContextFlags flags)
+GLContextProviderEAGL::CreateHeadless(CreateContextFlags flags,
+                                      nsACString* const out_failureId)
 {
     return CreateEAGLContext(flags, true, GetGlobalContextEAGL());
 }
@@ -229,9 +230,10 @@ GLContextProviderEAGL::CreateHeadless(CreateContextFlags flags)
 already_AddRefed<GLContext>
 GLContextProviderEAGL::CreateOffscreen(const mozilla::gfx::IntSize& size,
                                        const SurfaceCaps& caps,
-                                       CreateContextFlags flags)
+                                       CreateContextFlags flags,
+                                       nsACString* const out_failureId)
 {
-    RefPtr<GLContext> glContext = CreateHeadless(flags);
+    RefPtr<GLContext> glContext = CreateHeadless(flags, out_failureId);
     if (!glContext->InitOffscreen(size, caps)) {
         return nullptr;
     }
