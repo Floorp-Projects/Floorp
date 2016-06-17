@@ -7588,6 +7588,8 @@ var TabContextMenu = {
 
     this.contextTab.addEventListener("TabAttrModified", this, false);
     aPopupMenu.addEventListener("popuphiding", this, false);
+
+    gFxAccounts.updateTabContextMenu(aPopupMenu);
   },
   handleEvent(aEvent) {
     switch (aEvent.type) {

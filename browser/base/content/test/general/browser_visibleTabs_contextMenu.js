@@ -2,6 +2,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+const remoteClientsFixture = [ { id: 1, name: "Foo"}, { id: 2, name: "Bar"} ];
+
 add_task(function* test() {
   // There should be one tab when we start the test
   let [origTab] = gBrowser.visibleTabs;
@@ -13,6 +15,21 @@ add_task(function* test() {
   updateTabContextMenu(origTab);
   is(document.getElementById("context_closeTab").disabled, false, "Close Tab is enabled");
   is(document.getElementById("context_reloadAllTabs").disabled, false, "Reload All Tabs is enabled");
+
+
+  if (gFxAccounts.sendTabToDeviceEnabled) {
+    // Check the send tab to device menu item
+    const oldGetter = setupRemoteClientsFixture(remoteClientsFixture);
+    yield updateTabContextMenu(origTab, function* () {
+      yield openMenuItemSubmenu("context_sendTabToDevice");
+    });
+    is(document.getElementById("context_sendTabToDevice").hidden, false, "Send tab to device is shown");
+    let targets = document.getElementById("context_sendTabToDevicePopupMenu").childNodes;
+    is(targets[0].getAttribute("label"), "Foo", "Foo target is present");
+    is(targets[1].getAttribute("label"), "Bar", "Bar target is present");
+    is(targets[3].getAttribute("label"), "All Devices", "All Devices target is present");
+    restoreRemoteClients(oldGetter);
+  }
 
   // Hide the original tab.
   gBrowser.selectedTab = testTab;
