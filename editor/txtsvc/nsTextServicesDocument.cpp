@@ -523,7 +523,7 @@ nsTextServicesDocument::LastSelectedBlock(TSDBlockSelectionStatus *aSelStatus,
     return result;
   }
 
-  RefPtr<Selection> selection = static_cast<Selection*>(domSelection.get());
+  RefPtr<Selection> selection = domSelection->AsSelection();
 
   bool isCollapsed = selection->IsCollapsed();
 
@@ -2526,7 +2526,7 @@ nsTextServicesDocument::GetCollapsedSelection(nsITextServicesDocument::TSDBlockS
   NS_ENSURE_SUCCESS(result, result);
   NS_ENSURE_TRUE(domSelection, NS_ERROR_FAILURE);
 
-  RefPtr<Selection> selection = static_cast<Selection*>(domSelection.get());
+  RefPtr<Selection> selection = domSelection->AsSelection();
 
   // The calling function should have done the GetIsCollapsed()
   // check already. Just assume it's collapsed!
@@ -2744,7 +2744,7 @@ nsTextServicesDocument::GetUncollapsedSelection(nsITextServicesDocument::TSDBloc
   NS_ENSURE_SUCCESS(result, result);
   NS_ENSURE_TRUE(domSelection, NS_ERROR_FAILURE);
 
-  RefPtr<Selection> selection = static_cast<Selection*>(domSelection.get());
+  RefPtr<Selection> selection = domSelection->AsSelection();
 
   // It is assumed that the calling function has made sure that the
   // selection is not collapsed, and that the input params to this
