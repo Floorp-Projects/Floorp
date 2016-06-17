@@ -11,14 +11,28 @@
 #include "gfxPrefs.h"
 #include "OverscrollHandoffState.h"
 #include "OverScroller.h"
+#include "ViewConfiguration.h"
 
 #define ANDROID_APZ_LOG(...)
 // #define ANDROID_APZ_LOG(...) printf_stderr("ANDROID_APZ: " __VA_ARGS__)
+
+static float sMaxFlingSpeed = 0.0f;
 
 namespace mozilla {
 namespace layers {
 
 AndroidSpecificState::AndroidSpecificState() {
+  widget::sdk::ViewConfiguration::LocalRef config;
+  if (widget::sdk::ViewConfiguration::Get(widget::GeckoAppShell::GetApplicationContext(), &config) == NS_OK) {
+    int32_t speed = 0;
+    if (config->GetScaledMaximumFlingVelocity(&speed) == NS_OK) {
+      sMaxFlingSpeed = (float)speed * 0.001f;
+    } else {
+      ANDROID_APZ_LOG("%p Failed to query ViewConfiguration for scaled maximum fling velocity\n", this);
+    }
+  } else {
+    ANDROID_APZ_LOG("%p Failed to get ViewConfiguration\n", this);
+  }
   widget::sdk::OverScroller::LocalRef scroller;
   if (widget::sdk::OverScroller::New(widget::GeckoAppShell::GetApplicationContext(), &scroller) != NS_OK) {
     ANDROID_APZ_LOG("%p Failed to create Android OverScroller\n", this);
@@ -81,7 +95,6 @@ AndroidFlingAnimation::AndroidFlingAnimation(AsyncPanZoomController& aApzc,
   }
 
   ParentLayerPoint velocity = mApzc.GetVelocityVector();
-  mPreviousVelocity = velocity;
 
   float scrollRangeStartX = mApzc.mX.GetPageStart().value;
   float scrollRangeEndX = mApzc.mX.GetScrollRangeEnd().value;
@@ -92,7 +105,13 @@ AndroidFlingAnimation::AndroidFlingAnimation(AsyncPanZoomController& aApzc,
   float length = velocity.Length();
   if (length > 0.0f) {
     mFlingDirection = velocity / length;
+
+    if ((sMaxFlingSpeed > 0.0f) && (length > sMaxFlingSpeed)) {
+       velocity = mFlingDirection * sMaxFlingSpeed;
+    }
   }
+
+  mPreviousVelocity = velocity;
 
   int32_t originX = ClampStart(mStartOffset.x, scrollRangeStartX, scrollRangeEndX);
   int32_t originY = ClampStart(mStartOffset.y, scrollRangeStartY, scrollRangeEndY);
