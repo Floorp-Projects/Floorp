@@ -43,7 +43,7 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
       return dom::MediaSourceEnum::Browser;
     }
     uint32_t GetBestFitnessDistance(
-      const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
+      const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
       const nsString& aDeviceId) override
     {
       return 0;

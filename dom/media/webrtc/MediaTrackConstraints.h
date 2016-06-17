@@ -251,8 +251,8 @@ template<> void NormalizedConstraintSet::Range<bool>::FinalizeMerge();
 // Used instead of MediaTrackConstraints in lower-level code.
 struct NormalizedConstraints : public NormalizedConstraintSet
 {
-  explicit NormalizedConstraints(const dom::MediaTrackConstraints& aOther,
-                                 nsTArray<MemberPtrType>* aList = nullptr);
+  NormalizedConstraints(const dom::MediaTrackConstraints& aOther,
+                        nsTArray<MemberPtrType>* aList = nullptr);
 
   // Merge constructor
   explicit NormalizedConstraints(
@@ -282,21 +282,20 @@ protected:
       const NormalizedConstraintSet::StringRange& aConstraint);
 
   static uint32_t
-  GetMinimumFitnessDistance(const dom::MediaTrackConstraintSet &aConstraints,
-                            bool aAdvanced,
+  GetMinimumFitnessDistance(const NormalizedConstraintSet &aConstraints,
                             const nsString& aDeviceId);
 
   template<class DeviceType>
   static bool
-  SomeSettingsFit(const dom::MediaTrackConstraints &aConstraints,
+  SomeSettingsFit(const NormalizedConstraints &aConstraints,
                   nsTArray<RefPtr<DeviceType>>& aSources)
   {
-    nsTArray<const dom::MediaTrackConstraintSet*> aggregateConstraints;
-    aggregateConstraints.AppendElement(&aConstraints);
+    nsTArray<const NormalizedConstraintSet*> sets;
+    sets.AppendElement(&aConstraints);
 
     MOZ_ASSERT(aSources.Length());
     for (auto& source : aSources) {
-      if (source->GetBestFitnessDistance(aggregateConstraints) != UINT32_MAX) {
+      if (source->GetBestFitnessDistance(sets) != UINT32_MAX) {
         return true;
       }
     }
@@ -308,7 +307,7 @@ public:
 
   template<class DeviceType>
   static const char*
-  SelectSettings(const dom::MediaTrackConstraints &aConstraints,
+  SelectSettings(const NormalizedConstraints &aConstraints,
                  nsTArray<RefPtr<DeviceType>>& aSources)
   {
     auto& c = aConstraints;
@@ -319,7 +318,7 @@ public:
     // whole stack must be re-satisfied each time a capability-set is ruled out
     // (this avoids storing state or pushing algorithm into the lower-level code).
     nsTArray<RefPtr<DeviceType>> unsatisfactory;
-    nsTArray<const dom::MediaTrackConstraintSet*> aggregateConstraints;
+    nsTArray<const NormalizedConstraintSet*> aggregateConstraints;
     aggregateConstraints.AppendElement(&c);
 
     std::multimap<uint32_t, RefPtr<DeviceType>> ordered;
@@ -336,50 +335,7 @@ public:
       }
     }
     if (!aSources.Length()) {
-      // None selected. The spec says to report a constraint that satisfies NONE
-      // of the sources. Unfortunately, this is a bit laborious to find out, and
-      // requires updating as new constraints are added!
-
-      if (!unsatisfactory.Length() ||
-          !SomeSettingsFit(dom::MediaTrackConstraints(), unsatisfactory)) {
-        return "";
-      }
-      if (c.mDeviceId.IsConstrainDOMStringParameters()) {
-        dom::MediaTrackConstraints fresh;
-        fresh.mDeviceId = c.mDeviceId;
-        if (!SomeSettingsFit(fresh, unsatisfactory)) {
-          return "deviceId";
-        }
-      }
-      if (c.mWidth.IsConstrainLongRange()) {
-        dom::MediaTrackConstraints fresh;
-        fresh.mWidth = c.mWidth;
-        if (!SomeSettingsFit(fresh, unsatisfactory)) {
-          return "width";
-        }
-      }
-      if (c.mHeight.IsConstrainLongRange()) {
-        dom::MediaTrackConstraints fresh;
-        fresh.mHeight = c.mHeight;
-        if (!SomeSettingsFit(fresh, unsatisfactory)) {
-          return "height";
-        }
-      }
-      if (c.mFrameRate.IsConstrainDoubleRange()) {
-        dom::MediaTrackConstraints fresh;
-        fresh.mFrameRate = c.mFrameRate;
-        if (!SomeSettingsFit(fresh, unsatisfactory)) {
-          return "frameRate";
-        }
-      }
-      if (c.mFacingMode.IsConstrainDOMStringParameters()) {
-        dom::MediaTrackConstraints fresh;
-        fresh.mFacingMode = c.mFacingMode;
-        if (!SomeSettingsFit(fresh, unsatisfactory)) {
-          return "facingMode";
-        }
-      }
-      return "";
+      return FindBadConstraint(c, unsatisfactory);
     }
 
     // Order devices by shortest distance
@@ -390,27 +346,76 @@ public:
 
     // Then apply advanced constraints.
 
-    if (c.mAdvanced.WasPassed()) {
-      auto &array = c.mAdvanced.Value();
-
-      for (int i = 0; i < int(array.Length()); i++) {
-        aggregateConstraints.AppendElement(&array[i]);
-        nsTArray<RefPtr<DeviceType>> rejects;
-        for (uint32_t j = 0; j < aSources.Length();) {
-          if (aSources[j]->GetBestFitnessDistance(aggregateConstraints) == UINT32_MAX) {
-            rejects.AppendElement(aSources[j]);
-            aSources.RemoveElementAt(j);
-          } else {
-            ++j;
-          }
+    for (int i = 0; i < int(c.mAdvanced.Length()); i++) {
+      aggregateConstraints.AppendElement(&c.mAdvanced[i]);
+      nsTArray<RefPtr<DeviceType>> rejects;
+      for (uint32_t j = 0; j < aSources.Length();) {
+        if (aSources[j]->GetBestFitnessDistance(aggregateConstraints) == UINT32_MAX) {
+          rejects.AppendElement(aSources[j]);
+          aSources.RemoveElementAt(j);
+        } else {
+          ++j;
         }
-        if (!aSources.Length()) {
-          aSources.AppendElements(Move(rejects));
-          aggregateConstraints.RemoveElementAt(aggregateConstraints.Length() - 1);
-        }
+      }
+      if (!aSources.Length()) {
+        aSources.AppendElements(Move(rejects));
+        aggregateConstraints.RemoveElementAt(aggregateConstraints.Length() - 1);
       }
     }
     return nullptr;
+  }
+
+  template<class DeviceType>
+  static const char*
+  FindBadConstraint(const NormalizedConstraints& aConstraints,
+                    nsTArray<RefPtr<DeviceType>>& aSources)
+  {
+    // The spec says to report a constraint that satisfies NONE
+    // of the sources. Unfortunately, this is a bit laborious to find out, and
+    // requires updating as new constraints are added!
+    auto& c = aConstraints;
+    dom::MediaTrackConstraints empty;
+
+    if (!aSources.Length() ||
+        !SomeSettingsFit(NormalizedConstraints(empty), aSources)) {
+      return "";
+    }
+    {
+      NormalizedConstraints fresh(empty);
+      fresh.mDeviceId = c.mDeviceId;
+      if (!SomeSettingsFit(fresh, aSources)) {
+        return "deviceId";
+      }
+    }
+    {
+      NormalizedConstraints fresh(empty);
+      fresh.mWidth = c.mWidth;
+      if (!SomeSettingsFit(fresh, aSources)) {
+        return "width";
+      }
+    }
+    {
+      NormalizedConstraints fresh(empty);
+      fresh.mHeight = c.mHeight;
+      if (!SomeSettingsFit(fresh, aSources)) {
+        return "height";
+      }
+    }
+    {
+      NormalizedConstraints fresh(empty);
+      fresh.mFrameRate = c.mFrameRate;
+      if (!SomeSettingsFit(fresh, aSources)) {
+        return "frameRate";
+      }
+    }
+    {
+      NormalizedConstraints fresh(empty);
+      fresh.mFacingMode = c.mFacingMode;
+      if (!SomeSettingsFit(fresh, aSources)) {
+        return "facingMode";
+      }
+    }
+    return "";
   }
 };
 
