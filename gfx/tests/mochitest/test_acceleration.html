@@ -93,11 +93,7 @@ switch(osName)
     }
     break;
 
-  case "Linux":
-    isnot(acceleratedWindows, 0, "Acceleration supported on Linux");
-    break;
-
-  default:
+  default: // Linux and others.
     if (xr.OS == "Android" && xr.widgetToolkit != "gonk") {
       isnot(acceleratedWindows, 0, "Acceleration enabled on Android");
     } else {
