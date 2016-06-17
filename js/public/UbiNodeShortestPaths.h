@@ -7,6 +7,7 @@
 #ifndef js_UbiNodeShortestPaths_h
 #define js_UbiNodeShortestPaths_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
 
@@ -32,7 +33,7 @@ struct JS_PUBLIC_API(BackEdge)
 
     BackEdge() : predecessor_(), name_(nullptr) { }
 
-    bool init(const Node& predecessor, Edge& edge) {
+    MOZ_MUST_USE bool init(const Node& predecessor, Edge& edge) {
         MOZ_ASSERT(!predecessor_);
         MOZ_ASSERT(!name_);
 
@@ -289,7 +290,7 @@ struct JS_PUBLIC_API(ShortestPaths)
      * the given target, in which case `func` will not be invoked.
      */
     template <class Func>
-    bool forEachPath(const Node& target, Func func) {
+    MOZ_MUST_USE bool forEachPath(const Node& target, Func func) {
         MOZ_ASSERT(initialized());
         MOZ_ASSERT(targets_.has(target));
 
