@@ -372,7 +372,7 @@ GLContextProviderCGL::GetGlobalContext()
         MOZ_RELEASE_ASSERT(!gGlobalContext);
         nsCString discardFailureId;
         RefPtr<GLContext> temp = CreateHeadless(CreateContextFlags::NONE,
-                                                discardFailureId);
+                                                &discardFailureId);
         gGlobalContext = temp;
 
         if (!gGlobalContext) {

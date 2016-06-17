@@ -803,7 +803,7 @@ EGLSurface
 GLContextProviderEGL::CreateEGLSurface(void* aWindow)
 {
     nsCString discardFailureId;
-    if (!sEGLLibrary.EnsureInitialized(false, discardFailureId)) {
+    if (!sEGLLibrary.EnsureInitialized(false, &discardFailureId)) {
         MOZ_CRASH("GFX: Failed to load EGL library 4!\n");
     }
 
