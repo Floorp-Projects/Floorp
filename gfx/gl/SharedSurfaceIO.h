@@ -43,7 +43,7 @@ public:
                                 GLint x, GLint y, GLsizei width, GLsizei height,
                                 GLint border) override;
     virtual bool ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
-                            GLenum format, GLenum type, GLvoid* pixels) override;
+                            GLenum format, GLenum type, GLvoid *pixels) override;
 
     virtual GLuint ProdTexture() override {
         return mProdTex;
@@ -53,7 +53,7 @@ public:
         return LOCAL_GL_TEXTURE_RECTANGLE_ARB;
     }
 
-    static SharedSurface_IOSurface* Cast(SharedSurface* surf) {
+    static SharedSurface_IOSurface* Cast(SharedSurface *surf) {
         MOZ_ASSERT(surf->mType == SharedSurfaceType::IOSurface);
         return static_cast<SharedSurface_IOSurface*>(surf);
     }

@@ -71,7 +71,7 @@ UploadImageDataToTexture(GLContext* gl,
   */
 gfx::SurfaceFormat
 UploadSurfaceToTexture(GLContext* gl,
-                       gfx::DataSourceSurface* aSurface,
+                       gfx::DataSourceSurface *aSurface,
                        const nsIntRegion& aDstRegion,
                        GLuint& aTexture,
                        size_t* aOutUploadSize = nullptr,

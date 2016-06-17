@@ -21,9 +21,9 @@ namespace gl {
 class GLLibraryLoader
 {
 public:
-    bool OpenLibrary(const char* library);
+    bool OpenLibrary(const char *library);
 
-    typedef PRFuncPtr (GLAPIENTRY * PlatformLookupFunction) (const char*);
+    typedef PRFuncPtr (GLAPIENTRY * PlatformLookupFunction) (const char *);
 
     enum {
         MAX_SYMBOL_NAMES = 6,
@@ -31,25 +31,25 @@ public:
     };
 
     typedef struct {
-        PRFuncPtr* symPointer;
-        const char* symNames[MAX_SYMBOL_NAMES];
+        PRFuncPtr *symPointer;
+        const char *symNames[MAX_SYMBOL_NAMES];
     } SymLoadStruct;
 
-    bool LoadSymbols(const SymLoadStruct* firstStruct,
+    bool LoadSymbols(const SymLoadStruct *firstStruct,
                      bool tryplatform = false,
-                     const char* prefix = nullptr,
+                     const char *prefix = nullptr,
                      bool warnOnFailure = true);
 
     /*
      * Static version of the functions in this class
      */
-    static PRFuncPtr LookupSymbol(PRLibrary* lib,
-                                  const char* symname,
+    static PRFuncPtr LookupSymbol(PRLibrary *lib,
+                                  const char *symname,
                                   PlatformLookupFunction lookupFunction = nullptr);
-    static bool LoadSymbols(PRLibrary* lib,
-                            const SymLoadStruct* firstStruct,
+    static bool LoadSymbols(PRLibrary *lib,
+                            const SymLoadStruct *firstStruct,
                             PlatformLookupFunction lookupFunction = nullptr,
-                            const char* prefix = nullptr,
+                            const char *prefix = nullptr,
                             bool warnOnFailure = true);
 protected:
     GLLibraryLoader() {
@@ -57,7 +57,7 @@ protected:
         mLookupFunc = nullptr;
     }
 
-    PRLibrary* mLibrary;
+    PRLibrary *mLibrary;
     PlatformLookupFunction mLookupFunc;
 };
 

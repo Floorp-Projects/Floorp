@@ -79,7 +79,7 @@ CreateTextureImageCGL(GLContext* gl,
 }
 
 already_AddRefed<TextureImage>
-TileGenFuncCGL(GLContext* gl,
+TileGenFuncCGL(GLContext *gl,
                const IntSize& aSize,
                TextureImage::ContentType aContentType,
                TextureImage::Flags aFlags)
