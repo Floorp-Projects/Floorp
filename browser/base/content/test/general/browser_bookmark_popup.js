@@ -122,28 +122,28 @@ add_task(function* panel_shown_for_keyboardshortcut_on_new_bookmark_star_and_aut
   });
 });
 
-add_task(function* panel_shown_for_new_bookmarks_mousemove_mouseout() {
+add_task(function* panel_shown_for_new_bookmarks_mouseover_mouseout() {
   yield test_bookmarks_popup({
     isNewBookmark: true,
     popupShowFn() {
       bookmarkStar.click();
     },
     *popupEditFn() {
-      let mouseMovePromise = new Promise(resolve => {
-        bookmarkPanel.addEventListener("mousemove", function onmousemove() {
-          bookmarkPanel.removeEventListener("mousemove", onmousemove);
+      let mouseOverPromise = new Promise(resolve => {
+        bookmarkPanel.addEventListener("mouseover", function onmouseover() {
+          bookmarkPanel.removeEventListener("mouseover", onmouseover);
           resolve();
         });
       });
       yield new Promise(resolve => {
         EventUtils.synthesizeNativeMouseMove(bookmarkPanel, 0, 0, resolve, window);
       });
-      info("Waiting for mousemove event");
-      yield mouseMovePromise;
-      info("Got mousemove event");
+      info("Waiting for mouseover event");
+      yield mouseOverPromise;
+      info("Got mouseover event");
 
       yield new Promise(resolve => setTimeout(resolve, 400));
-      is(bookmarkPanel.state, "open", "Panel should still be open on mousemove");
+      is(bookmarkPanel.state, "open", "Panel should still be open on mouseover");
     },
     *popupHideFn() {
       let mouseOutPromise = new Promise(resolve => {
