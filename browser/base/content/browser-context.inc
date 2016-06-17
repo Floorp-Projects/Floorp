@@ -283,6 +283,14 @@
                 label="&savePageCmd.label;"
                 accesskey="&savePageCmd.accesskey2;"
                 oncommand="gContextMenu.savePageAs();"/>
+      <menuseparator id="context-sep-sendpagetodevice" hidden="true"/>
+      <menu id="context-sendpagetodevice"
+                label="&sendPageToDevice.label;"
+                accesskey="&sendPageToDevice.accesskey;"
+                hidden="true">
+        <menupopup id="context-sendpagetodevice-popup"
+                   onpopupshowing="gFxAccounts.populateSendTabToDevicesMenu(event.target, gBrowser.currentURI.spec, gBrowser.contentTitle);"/>
+      </menu>
       <menu id="context-markpageMenu" label="&social.markpageMenu.label;"
             accesskey="&social.markpageMenu.accesskey;">
         <menupopup/>
@@ -326,6 +334,14 @@
                 oncommand="AddKeywordForSearchField();"/>
       <menuitem id="context-searchselect"
                 oncommand="BrowserSearch.loadSearchFromContext(this.searchTerms);"/>
+      <menuseparator id="context-sep-sendlinktodevice" hidden="true"/>
+      <menu id="context-sendlinktodevice"
+                label="&sendLinkToDevice.label;"
+                accesskey="&sendLinkToDevice.accesskey;"
+                hidden="true">
+        <menupopup id="context-sendlinktodevice-popup"
+                   onpopupshowing="gFxAccounts.populateSendTabToDevicesMenu(event.target, gContextMenu.linkURL, gContextMenu.linkTextStr);"/>
+      </menu>
       <menuitem id="context-shareselect"
                 label="&shareSelect.label;"
                 accesskey="&shareSelect.accesskey;"
