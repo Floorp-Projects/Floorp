@@ -6,7 +6,6 @@
   <script src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
   <script src="chrome://mochikit/content/tests/SimpleTest/ExtensionTestUtils.js"></script>
   <script type="text/javascript" src="head.js"></script>
-  <script type="text/javascript" src="test_constants.js"></script>
   <link rel="stylesheet" href="chrome://mochikit/contents/tests/SimpleTest/test.css"/>
 </head>
 <body>
@@ -96,6 +95,14 @@ while True:
     sys.stdout.write(msg)
 `;
 
+const STDERR_LINES = ["hello stderr", "this should be a separate line"];
+const STDERR_MSG = STDERR_LINES.join("\\n");
+
+const STDERR_BODY = String.raw`
+import sys
+sys.stderr.write("${STDERR_MSG}")
+`;
+
 const SCRIPTS = [
   {
     name: "echo",
@@ -111,6 +118,11 @@ const SCRIPTS = [
     name: "wontdie",
     description: "a native app that does not exit when stdin closes or on SIGTERM",
     script: WONTDIE_BODY,
+  },
+  {
+    name: "stderr",
+    description: "a native app that writes to stderr and then exits",
+    script: STDERR_BODY,
   },
 ];
 
@@ -566,6 +578,35 @@ add_task(function* test_unresponsive_native_app() {
 
   procCount = yield getSubprocessCount();
   is(procCount, 0, "subprocess was succesfully killed");
+});
+
+add_task(function* test_stderr() {
+  function background() {
+    let port = browser.runtime.connectNative("stderr");
+    port.onDisconnect.addListener(() => {
+      browser.test.sendMessage("finished");
+    });
+  }
+
+  let {messages} = yield promiseConsoleOutput(function* () {
+    let extension = ExtensionTestUtils.loadExtension({
+      background: `(${background})()`,
+      manifest: {
+        permissions: ["nativeMessaging"],
+      },
+    }, ID);
+
+    yield extension.startup();
+    yield extension.awaitMessage("finished");
+    yield extension.unload();
+  });
+
+  let lines = STDERR_LINES.map(line => messages.findIndex(msg => msg.includes(line)));
+  isnot(lines[0], -1, "Saw first line of stderr output on the console");
+  isnot(lines[1], -1, "Saw second line of stderr output on the console");
+  isnot(lines[0], lines[1], "Stderr output lines are separated in the console");
+
+  yield waitForSubprocessExit();
 });
 
 </script>

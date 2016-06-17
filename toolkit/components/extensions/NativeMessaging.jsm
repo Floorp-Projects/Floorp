@@ -194,6 +194,7 @@ this.NativeApp = class extends EventEmitter {
           command: hostInfo.manifest.path,
           arguments: [hostInfo.path],
           workdir: OS.Path.dirname(hostInfo.manifest.path),
+          stderr: "pipe",
         };
         return Subprocess.call(subprocessOpts);
       }).then(proc => {
@@ -201,6 +202,7 @@ this.NativeApp = class extends EventEmitter {
         this.proc = proc;
         this._startRead();
         this._startWrite();
+        this._startStderrRead();
       }).catch(err => {
         this.startupPromise = null;
         Cu.reportError(err.message);
@@ -257,6 +259,32 @@ this.NativeApp = class extends EventEmitter {
     }).catch(err => {
       Cu.reportError(err.message);
       this._cleanup(err);
+    });
+  }
+
+  _startStderrRead() {
+    let proc = this.proc;
+    let app = this.name;
+    Task.spawn(function* () {
+      let partial = "";
+      while (true) {
+        let data = yield proc.stderr.readString();
+        if (data.length == 0) {
+          // We have hit EOF, just stop reading
+          if (partial) {
+            Services.console.logStringMessage(`stderr output from native app ${app}: ${partial}`);
+          }
+          break;
+        }
+
+        let lines = data.split(/\r?\n/);
+        lines[0] = partial + lines[0];
+        partial = lines.pop();
+
+        for (let line of lines) {
+          Services.console.logStringMessage(`stderr output from native app ${app}: ${line}`);
+        }
+      }
     });
   }
 
