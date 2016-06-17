@@ -161,5 +161,14 @@ TextTrackCueList::NotifyCueUpdated(TextTrackCue *aCue)
   }
 }
 
+bool
+TextTrackCueList::IsCueExist(TextTrackCue *aCue)
+{
+  if (aCue && mList.Contains(aCue)) {
+    return true;
+  }
+  return false;
+}
+
 } // namespace dom
 } // namespace mozilla
