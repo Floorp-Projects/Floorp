@@ -27,13 +27,15 @@ GCTraceKindToAscii(JS::TraceKind kind);
 } // namespace JS
 
 enum WeakMapTraceKind {
-    /** Do true ephemeron marking with an iterative weak marking phase. */
+    /**
+     * Do not trace into weak map keys or values during traversal. Users must
+     * handle weak maps manually.
+     */
     DoNotTraceWeakMaps,
 
     /**
      * Do true ephemeron marking with a weak key lookup marking phase. This is
-     * expected to be constant for the lifetime of a JSTracer; it does not
-     * change when switching from "plain" marking to weak marking.
+     * the default for GCMarker.
      */
     ExpandWeakMaps,
 
@@ -59,11 +61,24 @@ class JS_PUBLIC_API(JSTracer)
     // Return the weak map tracing behavior currently set on this tracer.
     WeakMapTraceKind weakMapAction() const { return weakMapAction_; }
 
-    // An intermediate state on the road from C to C++ style dispatch.
     enum class TracerKindTag {
+        // Marking path: a tracer used only for marking liveness of cells, not
+        // for moving them. The kind will transition to WeakMarking after
+        // everything reachable by regular edges has been marked.
         Marking,
-        WeakMarking, // In weak marking phase: looking up every marked obj/script.
+
+        // Same as Marking, except we have now moved on to the "weak marking
+        // phase", in which every marked obj/script is immediately looked up to
+        // see if it is a weak map key (and therefore might require marking its
+        // weak map value).
+        WeakMarking,
+
+        // A tracer that traverses the graph for the purposes of moving objects
+        // from the nursery to the tenured area.
         Tenuring,
+
+        // General-purpose traversal that invokes a callback on each cell.
+        // Traversing children is the responsibility of the callback.
         Callback
     };
     bool isMarkingTracer() const { return tag_ == TracerKindTag::Marking || tag_ == TracerKindTag::WeakMarking; }
