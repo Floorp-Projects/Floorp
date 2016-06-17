@@ -736,28 +736,6 @@ nsIOService::NewChannelFromURIWithProxyFlagsInternal(nsIURI* aURI,
     if (NS_FAILED(rv))
         return rv;
 
-    if (sTelemetryEnabled) {
-        nsAutoCString path;
-        aURI->GetPath(path);
-
-        bool endsInExcl = StringEndsWith(path, NS_LITERAL_CSTRING("!"));
-        int32_t bangSlashPos = path.Find("!/");
-
-        bool hasBangSlash = bangSlashPos != kNotFound;
-        bool hasBangDoubleSlash = false;
-
-        if (bangSlashPos != kNotFound) {
-            nsDependentCSubstring substr(path, bangSlashPos);
-            hasBangDoubleSlash = StringBeginsWith(substr, NS_LITERAL_CSTRING("!//"));
-        }
-
-        Telemetry::Accumulate(Telemetry::URL_PATH_ENDS_IN_EXCLAMATION, endsInExcl);
-        Telemetry::Accumulate(Telemetry::URL_PATH_CONTAINS_EXCLAMATION_SLASH,
-                              hasBangSlash);
-        Telemetry::Accumulate(Telemetry::URL_PATH_CONTAINS_EXCLAMATION_DOUBLE_SLASH,
-                              hasBangDoubleSlash);
-    }
-
     nsCOMPtr<nsIProtocolHandler> handler;
     rv = GetProtocolHandler(scheme.get(), getter_AddRefs(handler));
     if (NS_FAILED(rv))
