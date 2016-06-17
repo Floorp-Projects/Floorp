@@ -1039,7 +1039,7 @@ nsTextControlFrame::GetSelectionRange(int32_t* aSelectionStart,
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
-  dom::Selection* sel = static_cast<dom::Selection*>(selection.get());
+  dom::Selection* sel = selection->AsSelection();
   if (aDirection) {
     nsDirection direction = sel->GetSelectionDirection();
     if (direction == eDirNext) {

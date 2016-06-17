@@ -6555,9 +6555,7 @@ NS_IMETHODIMP
 SelectionChangeListener::NotifySelectionChanged(nsIDOMDocument* aDoc,
                                                 nsISelection* aSel, int16_t aReason)
 {
-  // This cast is valid as nsISelection is a builtinclass which is only
-  // implemented by Selection.
-  RefPtr<Selection> sel = static_cast<Selection*>(aSel);
+  RefPtr<Selection> sel = aSel->AsSelection();
 
   // Check if the ranges have actually changed
   // Don't bother checking this if we are hiding changes.

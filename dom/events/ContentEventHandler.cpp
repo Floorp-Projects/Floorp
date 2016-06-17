@@ -228,7 +228,10 @@ ContentEventHandler::InitCommon(SelectionType aSelectionType)
     if (NS_WARN_IF(NS_FAILED(rv))) {
       return NS_ERROR_UNEXPECTED;
     }
-    normalSelection = static_cast<Selection*>(domSelection.get());
+    if (NS_WARN_IF(!domSelection)) {
+      return NS_ERROR_NOT_AVAILABLE;
+    }
+    normalSelection = domSelection->AsSelection();
     if (NS_WARN_IF(!normalSelection)) {
       return NS_ERROR_NOT_AVAILABLE;
     }
@@ -2068,7 +2071,7 @@ ContentEventHandler::OnSelectionEvent(WidgetSelectionEvent* aEvent)
   nsresult rv =
     IMEStateManager::GetFocusSelectionAndRoot(getter_AddRefs(sel),
                                               getter_AddRefs(mRootContent));
-  mSelection = static_cast<Selection*>(sel.get());
+  mSelection = sel ? sel->AsSelection() : nullptr;
   if (rv != NS_ERROR_NOT_AVAILABLE) {
     NS_ENSURE_SUCCESS(rv, rv);
   } else {
