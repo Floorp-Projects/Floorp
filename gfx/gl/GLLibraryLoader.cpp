@@ -10,7 +10,7 @@ namespace mozilla {
 namespace gl {
 
 bool
-GLLibraryLoader::OpenLibrary(const char* library)
+GLLibraryLoader::OpenLibrary(const char *library)
 {
     PRLibSpec lspec;
     lspec.type = PR_LibSpec_Pathname;
@@ -24,9 +24,9 @@ GLLibraryLoader::OpenLibrary(const char* library)
 }
 
 bool
-GLLibraryLoader::LoadSymbols(const SymLoadStruct* firstStruct,
+GLLibraryLoader::LoadSymbols(const SymLoadStruct *firstStruct,
                              bool tryplatform,
-                             const char* prefix,
+                             const char *prefix,
                              bool warnOnFailure)
 {
     return LoadSymbols(mLibrary,
@@ -37,8 +37,8 @@ GLLibraryLoader::LoadSymbols(const SymLoadStruct* firstStruct,
 }
 
 PRFuncPtr
-GLLibraryLoader::LookupSymbol(PRLibrary* lib,
-                              const char* sym,
+GLLibraryLoader::LookupSymbol(PRLibrary *lib,
+                              const char *sym,
                               PlatformLookupFunction lookupFunction)
 {
     PRFuncPtr res = 0;
@@ -55,7 +55,7 @@ GLLibraryLoader::LookupSymbol(PRLibrary* lib,
 
     // finally just try finding it in the process
     if (!res) {
-        PRLibrary* leakedLibRef;
+        PRLibrary *leakedLibRef;
         res = PR_FindFunctionSymbolAndLibrary(sym, &leakedLibRef);
     }
 
@@ -63,16 +63,16 @@ GLLibraryLoader::LookupSymbol(PRLibrary* lib,
 }
 
 bool
-GLLibraryLoader::LoadSymbols(PRLibrary* lib,
-                             const SymLoadStruct* firstStruct,
+GLLibraryLoader::LoadSymbols(PRLibrary *lib,
+                             const SymLoadStruct *firstStruct,
                              PlatformLookupFunction lookupFunction,
-                             const char* prefix,
+                             const char *prefix,
                              bool warnOnFailure)
 {
     char sbuf[MAX_SYMBOL_LENGTH * 2];
     int failCount = 0;
 
-    const SymLoadStruct* ss = firstStruct;
+    const SymLoadStruct *ss = firstStruct;
     while (ss->symPointer) {
         *ss->symPointer = 0;
 
@@ -80,7 +80,7 @@ GLLibraryLoader::LoadSymbols(PRLibrary* lib,
             if (ss->symNames[i] == nullptr)
                 break;
 
-            const char* s = ss->symNames[i];
+            const char *s = ss->symNames[i];
             if (prefix && *prefix != 0) {
                 strcpy(sbuf, prefix);
                 strcat(sbuf, ss->symNames[i]);
