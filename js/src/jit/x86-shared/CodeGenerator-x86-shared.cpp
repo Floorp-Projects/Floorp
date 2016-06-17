@@ -428,7 +428,7 @@ CodeGeneratorX86Shared::visitOffsetBoundsCheck(OffsetBoundsCheck* oolCheck)
 }
 
 void
-CodeGeneratorX86Shared::emitAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* access,
+CodeGeneratorX86Shared::emitAsmJSBoundsCheckBranch(const MWasmMemoryAccess* access,
                                                    const MInstruction* mir,
                                                    Register ptr, Label* maybeFail)
 {
@@ -467,7 +467,7 @@ CodeGeneratorX86Shared::emitAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* acces
 }
 
 bool
-CodeGeneratorX86Shared::maybeEmitThrowingAsmJSBoundsCheck(const MAsmJSHeapAccess* access,
+CodeGeneratorX86Shared::maybeEmitThrowingAsmJSBoundsCheck(const MWasmMemoryAccess* access,
                                                           const MInstruction* mir,
                                                           const LAllocation* ptr)
 {
@@ -518,7 +518,7 @@ CodeGeneratorX86Shared::maybeEmitAsmJSStoreBoundsCheck(const MAsmJSStoreHeap* mi
 }
 
 void
-CodeGeneratorX86Shared::cleanupAfterAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* access,
+CodeGeneratorX86Shared::cleanupAfterAsmJSBoundsCheckBranch(const MWasmMemoryAccess* access,
                                                            Register ptr)
 {
     // Clean up after performing a heap access checked by a branch.

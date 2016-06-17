@@ -2691,7 +2691,7 @@ class BaseCompiler
 
     // Cloned from MIRGraph.cpp, merge somehow?
 
-    bool needsBoundsCheckBranch(const MAsmJSHeapAccess& access) const {
+    bool needsBoundsCheckBranch(const MWasmMemoryAccess& access) const {
         // A heap access needs a bounds-check branch if we're not relying on signal
         // handlers to catch errors, and if it's not proven to be within bounds.
         // We use signal-handlers on x64, but on x86 there isn't enough address
@@ -2719,7 +2719,7 @@ class BaseCompiler
     }
 #endif
 
-    void loadHeap(const MAsmJSHeapAccess& access, RegI32 ptr, AnyReg dest) {
+    void loadHeap(const MWasmMemoryAccess& access, RegI32 ptr, AnyReg dest) {
 #if defined(JS_CODEGEN_X64)
         // CodeGeneratorX64::visitAsmJSLoadHeap()
 
@@ -2750,7 +2750,7 @@ class BaseCompiler
 #endif
     }
 
-    void storeHeap(const MAsmJSHeapAccess& access, RegI32 ptr, AnyReg src) {
+    void storeHeap(const MWasmMemoryAccess& access, RegI32 ptr, AnyReg src) {
 #if defined(JS_CODEGEN_X64)
         // CodeGeneratorX64::visitAsmJSStoreHeap()
 
@@ -5026,7 +5026,7 @@ BaseCompiler::emitLoad(ValType type, Scalar::Type viewType)
     // TODO / OPTIMIZE: Disable bounds checking on constant accesses
     // below the minimum heap length.
 
-    MAsmJSHeapAccess access(viewType);
+    MWasmMemoryAccess access(viewType);
     access.setOffset(addr.offset);
     access.setAlign(addr.align);
 
@@ -5074,7 +5074,7 @@ BaseCompiler::emitStore(ValType resultType, Scalar::Type viewType)
     // TODO / OPTIMIZE: Disable bounds checking on constant accesses
     // below the minimum heap length.
 
-    MAsmJSHeapAccess access(viewType);
+    MWasmMemoryAccess access(viewType);
     access.setOffset(addr.offset);
     access.setAlign(addr.align);
 
@@ -5349,7 +5349,7 @@ BaseCompiler::emitStoreWithCoercion(ValType resultType, Scalar::Type viewType)
     // TODO / OPTIMIZE: Disable bounds checking on constant accesses
     // below the minimum heap length.
 
-    MAsmJSHeapAccess access(viewType);
+    MWasmMemoryAccess access(viewType);
     access.setOffset(addr.offset);
     access.setAlign(addr.align);
 
