@@ -1326,7 +1326,7 @@ gfxPlatform::GetSkiaGLGlue()
     nsCString discardFailureId;
     glContext = GLContextProvider::CreateHeadless(CreateContextFlags::REQUIRE_COMPAT_PROFILE |
                                                   CreateContextFlags::ALLOW_OFFLINE_RENDERER,
-                                                  &discardFailureId);
+                                                  discardFailureId);
     if (!glContext) {
       printf_stderr("Failed to create GLContext for SkiaGL!\n");
       return nullptr;

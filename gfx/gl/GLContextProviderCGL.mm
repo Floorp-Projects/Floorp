@@ -321,18 +321,17 @@ CreateOffscreenFBOContext(CreateContextFlags flags)
 }
 
 already_AddRefed<GLContext>
-GLContextProviderCGL::CreateHeadless(CreateContextFlags flags,
-                                     nsACString* const out_failureId)
+GLContextProviderCGL::CreateHeadless(CreateContextFlags flags, nsACString& aFailureId)
 {
     RefPtr<GLContextCGL> gl;
     gl = CreateOffscreenFBOContext(flags);
     if (!gl) {
-        *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_CGL_FBO");
+        aFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_CGL_FBO");
         return nullptr;
     }
 
     if (!gl->Init()) {
-        *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_CGL_INIT");
+        aFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_CGL_INIT");
         NS_WARNING("Failed during Init.");
         return nullptr;
     }
@@ -344,15 +343,15 @@ already_AddRefed<GLContext>
 GLContextProviderCGL::CreateOffscreen(const IntSize& size,
                                       const SurfaceCaps& minCaps,
                                       CreateContextFlags flags,
-                                      nsACString* const out_failureId)
+                                      nsACString& aFailureId)
 {
-    RefPtr<GLContext> gl = CreateHeadless(flags, out_failureId);
+    RefPtr<GLContext> gl = CreateHeadless(flags, aFailureId);
     if (!gl) {
         return nullptr;
     }
 
     if (!gl->InitOffscreen(size, minCaps)) {
-        *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_CGL_INIT");
+        aFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_CGL_INIT");
         return nullptr;
     }
 

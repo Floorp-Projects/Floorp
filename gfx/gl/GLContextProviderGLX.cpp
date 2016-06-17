@@ -1264,8 +1264,7 @@ GLContextGLX::FindFBConfigForWindow(Display* display, int screen, Window window,
 }
 
 static already_AddRefed<GLContextGLX>
-CreateOffscreenPixmapContext(const IntSize& size, const SurfaceCaps& minCaps,
-                             nsACString* const out_failureId,
+CreateOffscreenPixmapContext(const IntSize& size, const SurfaceCaps& minCaps, nsACString& aFailureId,
                              ContextProfile profile = ContextProfile::OpenGLCompatibility)
 {
     GLXLibrary* glx = &sGLXLibrary;
@@ -1328,18 +1327,18 @@ DONE_CREATING_PIXMAP:
 }
 
 /*static*/ already_AddRefed<GLContext>
-GLContextProviderGLX::CreateHeadless(CreateContextFlags, nsACString* const out_failureId)
+GLContextProviderGLX::CreateHeadless(CreateContextFlags, nsACString& aFailureId)
 {
     IntSize dummySize = IntSize(16, 16);
     SurfaceCaps dummyCaps = SurfaceCaps::Any();
-    return CreateOffscreenPixmapContext(dummySize, dummyCaps, out_failureId);
+    return CreateOffscreenPixmapContext(dummySize, dummyCaps, aFailureId);
 }
 
 /*static*/ already_AddRefed<GLContext>
 GLContextProviderGLX::CreateOffscreen(const IntSize& size,
                                       const SurfaceCaps& minCaps,
                                       CreateContextFlags flags,
-                                      nsACString* const out_failureId)
+                                      nsACString& aFailureId)
 {
     SurfaceCaps minBackbufferCaps = minCaps;
     if (minCaps.antialias) {
@@ -1354,12 +1353,12 @@ GLContextProviderGLX::CreateOffscreen(const IntSize& size,
     }
 
     RefPtr<GLContext> gl;
-    gl = CreateOffscreenPixmapContext(size, minBackbufferCaps, out_failureId, profile);
+    gl = CreateOffscreenPixmapContext(size, minBackbufferCaps, aFailureId, profile);
     if (!gl)
         return nullptr;
 
     if (!gl->InitOffscreen(size, minCaps)) {
-        *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_GLX_INIT");
+        aFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_GLX_INIT");
         return nullptr;
     }
 
