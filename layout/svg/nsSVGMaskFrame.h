@@ -59,6 +59,9 @@ public:
                         Matrix* aMaskTransform,
                         uint8_t aMaskOp = NS_STYLE_MASK_MODE_MATCH_SOURCE);
 
+  gfxRect
+  GetMaskArea(nsIFrame* aMaskedFrame);
+
   virtual nsresult AttributeChanged(int32_t         aNameSpaceID,
                                     nsIAtom*        aAttribute,
                                     int32_t         aModType) override;
