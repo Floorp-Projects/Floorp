@@ -283,8 +283,9 @@ class BaseStackFrame {
     // simplifies the principals check into the boolean isSystem() state. This
     // is fine because we only expose JS::ubi::Stack to devtools and chrome
     // code, and not to the web platform.
-    virtual bool constructSavedFrameStack(JSContext* cx,
-                                          MutableHandleObject outSavedFrameStack) const = 0;
+    virtual MOZ_MUST_USE bool constructSavedFrameStack(JSContext* cx,
+                                                       MutableHandleObject outSavedFrameStack)
+        const = 0;
 
     // Trace the concrete implementation of JS::ubi::StackFrame.
     virtual void trace(JSTracer* trc) = 0;
@@ -413,8 +414,8 @@ class StackFrame {
     StackFrame parent() const { return base()->parent(); }
     bool isSystem() const { return base()->isSystem(); }
     bool isSelfHosted() const { return base()->isSelfHosted(); }
-    bool constructSavedFrameStack(JSContext* cx,
-                                  MutableHandleObject outSavedFrameStack) const {
+    MOZ_MUST_USE bool constructSavedFrameStack(JSContext* cx,
+                                               MutableHandleObject outSavedFrameStack) const {
         return base()->constructSavedFrameStack(cx, outSavedFrameStack);
     }
 
@@ -446,7 +447,9 @@ class ConcreteStackFrame<void> : public BaseStackFrame {
 
     uint64_t identifier() const override { return 0; }
     void trace(JSTracer* trc) override { }
-    bool constructSavedFrameStack(JSContext* cx, MutableHandleObject out) const override {
+    MOZ_MUST_USE bool constructSavedFrameStack(JSContext* cx, MutableHandleObject out)
+        const override
+    {
         out.set(nullptr);
         return true;
     }
@@ -460,8 +463,8 @@ class ConcreteStackFrame<void> : public BaseStackFrame {
     bool isSelfHosted() const override { MOZ_CRASH("null JS::ubi::StackFrame"); }
 };
 
-bool ConstructSavedFrameStackSlow(JSContext* cx, JS::ubi::StackFrame& frame,
-                                  MutableHandleObject outSavedFrameStack);
+MOZ_MUST_USE bool ConstructSavedFrameStackSlow(JSContext* cx, JS::ubi::StackFrame& frame,
+                                               MutableHandleObject outSavedFrameStack);
 
 
 /*** ubi::Node ************************************************************************************/
@@ -616,7 +619,9 @@ class Base {
     // Otherwise, place nullptr in the out parameter. Caller maintains ownership
     // of the out parameter. True is returned on success, false is returned on
     // OOM.
-    virtual bool jsObjectConstructorName(JSContext* cx, UniqueTwoByteChars& outName) const {
+    virtual MOZ_MUST_USE bool jsObjectConstructorName(JSContext* cx, UniqueTwoByteChars& outName)
+        const
+    {
         outName.reset(nullptr);
         return true;
     }
@@ -762,7 +767,7 @@ class Node {
     JS::Zone* zone()                const { return base()->zone(); }
     JSCompartment* compartment()    const { return base()->compartment(); }
     const char* jsObjectClassName() const { return base()->jsObjectClassName(); }
-    bool jsObjectConstructorName(JSContext* cx, UniqueTwoByteChars& outName) const {
+    MOZ_MUST_USE bool jsObjectConstructorName(JSContext* cx, UniqueTwoByteChars& outName) const {
         return base()->jsObjectConstructorName(cx, outName);
     }
 
@@ -965,12 +970,12 @@ class MOZ_STACK_CLASS RootList {
     RootList(JSRuntime* rt, Maybe<AutoCheckCannotGC>& noGC, bool wantNames = false);
 
     // Find all GC roots.
-    bool init();
+    MOZ_MUST_USE bool init();
     // Find only GC roots in the provided set of |JSCompartment|s.
-    bool init(CompartmentSet& debuggees);
+    MOZ_MUST_USE bool init(CompartmentSet& debuggees);
     // Find only GC roots in the given Debugger object's set of debuggee
     // compartments.
-    bool init(HandleObject debuggees);
+    MOZ_MUST_USE bool init(HandleObject debuggees);
 
     // Returns true if the RootList has been initialized successfully, false
     // otherwise.
@@ -979,7 +984,7 @@ class MOZ_STACK_CLASS RootList {
     // Explicitly add the given Node as a root in this RootList. If wantNames is
     // true, you must pass an edgeName. The RootList does not take ownership of
     // edgeName.
-    bool addRoot(Node node, const char16_t* edgeName = nullptr);
+    MOZ_MUST_USE bool addRoot(Node node, const char16_t* edgeName = nullptr);
 };
 
 
@@ -1062,7 +1067,8 @@ template<> struct Concrete<JSScript> : TracerConcreteWithCompartment<JSScript> {
 template<>
 class Concrete<JSObject> : public TracerConcreteWithCompartment<JSObject> {
     const char* jsObjectClassName() const override;
-    bool jsObjectConstructorName(JSContext* cx, UniqueTwoByteChars& outName) const override;
+    MOZ_MUST_USE bool jsObjectConstructorName(JSContext* cx, UniqueTwoByteChars& outName)
+        const override;
     Size size(mozilla::MallocSizeOf mallocSizeOf) const override;
 
     bool hasAllocationStack() const override;
