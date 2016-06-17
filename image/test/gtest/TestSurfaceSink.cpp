@@ -376,6 +376,31 @@ TEST(ImageSurfaceSink, SurfaceSinkWriteEmptyRow)
     ResetForNextPass(aSink);
 
     {
+      // Write a partial row before we begin calling WriteEmptyRow(). We check
+      // that the generated image is entirely transparent, which is to be
+      // expected since WriteEmptyRow() overwrites the current row even if some
+      // data has already been written to it.
+      uint32_t count = 0;
+      auto result = aSink->WritePixels<uint32_t>([&]() -> NextPixel<uint32_t> {
+        if (count == 50) {
+          return AsVariant(WriteState::NEED_MORE_DATA);
+        }
+        ++count;
+        return AsVariant(BGRAColor::Green().AsPixel());
+      });
+
+      EXPECT_EQ(WriteState::NEED_MORE_DATA, result);
+      EXPECT_EQ(50u, count);
+      EXPECT_FALSE(aSink->IsSurfaceFinished());
+
+      CheckIterativeWrite(aDecoder, aSink, IntRect(0, 0, 0, 0), [&]{
+        return aSink->WriteEmptyRow();
+      });
+    }
+
+    ResetForNextPass(aSink);
+
+    {
       // Create a buffer the same size as one row of the surface, containing all
       // green pixels.
       uint32_t buffer[100];
@@ -924,6 +949,31 @@ TEST(ImageSurfaceSink, PalettedSurfaceSinkWriteEmptyRow)
     {
       // Write an empty row to each row of the surface. We check that the
       // generated image is entirely 0.
+      CheckPalettedIterativeWrite(aDecoder, aSink, IntRect(0, 0, 0, 0), [&]{
+        return aSink->WriteEmptyRow();
+      });
+    }
+
+    ResetForNextPass(aSink);
+
+    {
+      // Write a partial row before we begin calling WriteEmptyRow(). We check
+      // that the generated image is entirely 0, which is to be expected since
+      // WriteEmptyRow() overwrites the current row even if some data has
+      // already been written to it.
+      uint32_t count = 0;
+      auto result = aSink->WritePixels<uint8_t>([&]() -> NextPixel<uint8_t> {
+        if (count == 50) {
+          return AsVariant(WriteState::NEED_MORE_DATA);
+        }
+        ++count;
+        return AsVariant(uint8_t(255));
+      });
+
+      EXPECT_EQ(WriteState::NEED_MORE_DATA, result);
+      EXPECT_EQ(50u, count);
+      EXPECT_FALSE(aSink->IsSurfaceFinished());
+
       CheckPalettedIterativeWrite(aDecoder, aSink, IntRect(0, 0, 0, 0), [&]{
         return aSink->WriteEmptyRow();
       });
