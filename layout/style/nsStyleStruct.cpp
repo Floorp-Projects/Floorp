@@ -66,6 +66,13 @@ EqualURIs(mozilla::css::URLValue *aURI1, mozilla::css::URLValue *aURI2)
          (aURI1 && aURI2 && aURI1->URIEquals(*aURI2));
 }
 
+static
+bool EqualURIs(const FragmentOrURL* aURI1, const FragmentOrURL* aURI2)
+{
+  return aURI1 == aURI2 ||    // handle null==null, and optimize
+         (aURI1 && aURI2 && *aURI1 == *aURI2);
+}
+
 static bool
 EqualImages(imgIRequest *aImage1, imgIRequest* aImage2)
 {
@@ -1001,6 +1008,103 @@ nsStyleBasicShape::GetShapeTypeName() const
   }
   NS_NOTREACHED("unexpected type");
   return eCSSKeyword_UNKNOWN;
+}
+
+// --------------------
+// FragmentOrURL
+//
+
+void
+FragmentOrURL::SetValue(const nsCSSValue* aValue)
+{
+  mozilla::css::URLValue *urlVal = aValue->GetURLStructValue();
+  MOZ_ASSERT_IF(urlVal->GetLocalURLFlag(), urlVal->GetURI());
+  mIsLocalRef = urlVal->GetLocalURLFlag();
+
+  mURL = urlVal->GetURI();
+
+#ifdef DEBUG
+  if (mIsLocalRef) {
+    bool hasRef = false;
+    mURL->GetHasRef(&hasRef);
+    MOZ_ASSERT(hasRef);
+  }
+#endif
+}
+
+void
+FragmentOrURL::SetNull()
+{
+  mURL = nullptr;
+  mIsLocalRef = false;
+}
+
+FragmentOrURL&
+FragmentOrURL::operator=(const FragmentOrURL& aOther)
+{
+  mIsLocalRef = aOther.mIsLocalRef;
+  mURL = aOther.mURL;
+
+  return *this;
+}
+
+bool
+FragmentOrURL::operator==(const FragmentOrURL& aOther) const
+{
+  if (aOther.mIsLocalRef != mIsLocalRef) {
+    return false;
+  }
+
+  return EqualURIs(aOther.mURL, mURL);
+}
+
+bool
+FragmentOrURL::EqualsExceptRef(nsIURI* aURI) const
+{
+  bool ret = false;
+  mURL->EqualsExceptRef(aURI, &ret);
+  return ret;
+}
+
+void
+FragmentOrURL::GetSourceString(nsString &aRef) const
+{
+  MOZ_ASSERT(mURL);
+
+  nsCString cref;
+  if (mIsLocalRef) {
+    mURL->GetRef(cref);
+    cref.Insert('#', 0);
+  } else {
+    mURL->GetSpec(cref);
+  }
+
+  aRef = NS_ConvertUTF8toUTF16(cref);
+}
+
+already_AddRefed<nsIURI>
+FragmentOrURL::Resolve(nsIURI* aURI) const
+{
+  nsCOMPtr<nsIURI> result;
+
+  if (mIsLocalRef) {
+    nsCString ref;
+    mURL->GetRef(ref);
+
+    aURI->Clone(getter_AddRefs(result));
+    result->SetRef(ref);
+  } else {
+    result = mURL;
+  }
+
+  return result.forget();
+}
+
+already_AddRefed<nsIURI>
+FragmentOrURL::Resolve(nsIContent* aContent) const
+{
+  nsCOMPtr<nsIURI> url = aContent->GetBaseURI();
+  return Resolve(url);
 }
 
 // --------------------
