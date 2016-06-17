@@ -78,6 +78,16 @@ add_task(function* testWindowCreate() {
       }).then(() => {
         return checkWindow(geom);
       }).then(() => {
+        return browser.runtime.getPlatformInfo();
+      }).then((platformInfo) => {
+        if (platformInfo.os != "linux") {
+          geom = {left: -50, top: -50, width: 800, height: 600};
+
+          return browser.windows.update(windowId, geom).then(() => {
+            return checkWindow(geom);
+          });
+        }
+      }).then(() => {
         return browser.windows.remove(windowId);
       }).then(() => {
         browser.test.notifyPass("window-size");
