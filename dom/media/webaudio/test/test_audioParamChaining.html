@@ -62,11 +62,11 @@ ok(rv == gain.gain, "setValueAtTime returns the right AudioParam.");
 
 oc.startRendering().then(function(rendered) {
     console.log(rendered.getChannelData(0));
-    ok(rendered.getChannelData(0)[0] == 0,
+    is(rendered.getChannelData(0)[0], 0,
       "The value of the first step is correct.");
-    ok(rendered.getChannelData(0)[22050] == 0.5,
+    is(rendered.getChannelData(0)[22050], 0.5,
       "The value of the second step is correct");
-    ok(rendered.getChannelData(0)[44099] == 1,
+    is(rendered.getChannelData(0)[44099], 1,
       "The value of the third step is correct.");
     SimpleTest.finish();
 });
