@@ -2885,21 +2885,6 @@
     "n_values": 4,
     "description": "Count the number of 0) successful connections to an ipv4 address, 1) failed connection an ipv4 address, 2) successful connection to an ipv6 address and 3) failed connections to an ipv6 address."
   },
-  "URL_PATH_ENDS_IN_EXCLAMATION": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "The URL path ends in !"
-  },
-  "URL_PATH_CONTAINS_EXCLAMATION_SLASH": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "The URL path contains !/"
-  },
-  "URL_PATH_CONTAINS_EXCLAMATION_DOUBLE_SLASH": {
-    "expires_in_version": "never",
-    "kind": "boolean",
-    "description": "The URL path contains !//"
-  },
   "NETWORK_SESSION_AT_900FD": {
     "expires_in_version": "never",
     "kind": "boolean",
