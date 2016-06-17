@@ -33,7 +33,7 @@ this.SitePermissions = {
     }
 
     let permissions = [];
-    for (let permission of this.listPermissions()) {
+    for (let permission of kPermissionIDs) {
       let state = this.get(aURI, permission);
       if (state === this.UNKNOWN) {
         continue;
@@ -64,7 +64,7 @@ this.SitePermissions = {
       return false;
     }
 
-    for (let permission of this.listPermissions()) {
+    for (let permission of kPermissionIDs) {
       let state = this.get(aURI, permission);
       if (state === this.ALLOW || state === this.SESSION) {
         return true;
@@ -84,11 +84,7 @@ this.SitePermissions = {
   /* Returns an array of all permission IDs.
    */
   listPermissions: function () {
-    let array = Object.keys(gPermissionObject);
-    array.sort((a, b) => {
-      return this.getPermissionLabel(a).localeCompare(this.getPermissionLabel(b));
-    });
-    return array;
+    return kPermissionIDs;
   },
 
   /* Returns an array of permission states to be exposed to the user for a
@@ -255,3 +251,6 @@ var gPermissionObject = {
     exactHostMatch: true
   }
 };
+
+const kPermissionIDs = Object.keys(gPermissionObject);
+
