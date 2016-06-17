@@ -122,6 +122,9 @@ GetOriginFromPrincipal(nsIPrincipal* aPrincipal, nsACString& aOrigin)
   // any knowledge of private browsing. Allowing it to be true changes the suffix being hashed.
   attrs.mPrivateBrowsingId = 0;
 
+  // set to default to disable user context isolation for permissions
+  attrs.mUserContextId = nsIScriptSecurityManager::DEFAULT_USER_CONTEXT_ID;
+
   attrs.CreateSuffix(suffix);
   aOrigin.Append(suffix);
   return NS_OK;
