@@ -194,7 +194,7 @@ public:
                             const char** aOutBadConstraint) = 0;
 
   virtual uint32_t GetBestFitnessDistance(
-      const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
+      const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
       const nsString& aDeviceId) = 0;
 
 protected:
