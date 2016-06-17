@@ -25,7 +25,7 @@ var StarUI = {
     element.hidden = false;
     element.addEventListener("keypress", this, false);
     element.addEventListener("mouseout", this, false);
-    element.addEventListener("mousemove", this, false);
+    element.addEventListener("mouseover", this, false);
     element.addEventListener("popuphidden", this, false);
     element.addEventListener("popupshown", this, false);
     return this.panel = element;
@@ -63,7 +63,7 @@ var StarUI = {
   // nsIDOMEventListener
   handleEvent(aEvent) {
     switch (aEvent.type) {
-      case "mousemove":
+      case "mouseover":
         clearTimeout(this._autoCloseTimer);
         break;
       case "popuphidden":
@@ -138,9 +138,6 @@ var StarUI = {
         // Explicit fall-through
       }
       case "popupshown":
-        if (aEvent.target != aEvent.currentTarget) {
-          break;
-        }
         // auto-close if new and not interacted with
         if (this._isNewBookmark) {
           // 3500ms matches the timeout that Pocket uses in
@@ -149,9 +146,7 @@ var StarUI = {
           if (this._closePanelQuickForTesting) {
             delay /= 10;
           }
-          this._autoCloseTimer = setTimeout(() => {
-            this.panel.hidePopup();
-          }, delay);
+          this._autoCloseTimer = setTimeout(() => this.panel.hidePopup(), delay, this);
         }
         break;
     }
