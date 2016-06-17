@@ -135,7 +135,7 @@ public:
     return NS_ERROR_NOT_IMPLEMENTED;
   }
   uint32_t GetBestFitnessDistance(
-    const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
+    const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
     const nsString& aDeviceId) override;
 
 protected:
@@ -502,7 +502,7 @@ public:
   }
 
   uint32_t GetBestFitnessDistance(
-      const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
+      const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
       const nsString& aDeviceId) override;
 
   // VoEMediaProcess.

@@ -355,13 +355,10 @@ FlattenedConstraints::FlattenedConstraints(const NormalizedConstraints& aOther)
 
 uint32_t
 MediaConstraintsHelper::GetMinimumFitnessDistance(
-    const dom::MediaTrackConstraintSet &aConstraints,
-    bool aAdvanced,
+    const NormalizedConstraintSet &aConstraints,
     const nsString& aDeviceId)
 {
-  NormalizedConstraintSet ns(aConstraints, aAdvanced);
-
-  return FitnessDistance(aDeviceId, ns.mDeviceId);
+  return FitnessDistance(aDeviceId, aConstraints.mDeviceId);
 }
 
 template<class ValueType, class NormalizedRange>
