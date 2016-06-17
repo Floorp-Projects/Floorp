@@ -52,7 +52,7 @@ NextPowerOfTwo(int aNumber)
 }
 
 static unsigned int
-DataOffset(const IntPoint& aPoint, int32_t aStride, SurfaceFormat aFormat)
+DataOffset(const IntPoint &aPoint, int32_t aStride, SurfaceFormat aFormat)
 {
   unsigned int data = aPoint.y * aStride;
   data += aPoint.x * BytesPerPixel(aFormat);
