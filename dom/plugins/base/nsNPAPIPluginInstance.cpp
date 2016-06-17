@@ -92,8 +92,9 @@ static RefPtr<GLContext> sPluginContext = nullptr;
 static bool EnsureGLContext()
 {
   if (!sPluginContext) {
-    nsCString failureId;
-    sPluginContext = GLContextProvider::CreateHeadless(CreateContextFlags::REQUIRE_COMPAT_PROFILE, failureId);
+    const auto flags = CreateContextFlags::REQUIRE_COMPAT_PROFILE;
+    nsCString discardedFailureId;
+    sPluginContext = GLContextProvider::CreateHeadless(flags, &discardedFailureId);
   }
 
   return sPluginContext != nullptr;
