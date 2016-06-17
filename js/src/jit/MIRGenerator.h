@@ -222,8 +222,8 @@ class MIRGenerator
   public:
     const JitCompileOptions options;
 
-    bool needsAsmJSBoundsCheckBranch(const MAsmJSHeapAccess* access) const;
-    size_t foldableOffsetRange(const MAsmJSHeapAccess* access) const;
+    bool needsAsmJSBoundsCheckBranch(const MWasmMemoryAccess* access) const;
+    size_t foldableOffsetRange(const MWasmMemoryAccess* access) const;
     size_t foldableOffsetRange(bool accessNeedsBoundsCheck, bool atomic) const;
 
   private:
