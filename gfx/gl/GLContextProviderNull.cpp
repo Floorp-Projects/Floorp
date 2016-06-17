@@ -24,9 +24,9 @@ already_AddRefed<GLContext>
 GLContextProviderNull::CreateOffscreen(const gfx::IntSize&,
                                        const SurfaceCaps&,
                                        CreateContextFlags,
-                                       nsACString* const out_failureId)
+                                       nsACString& aFailureId)
 {
-    *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_NULL");
+    aFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_NULL");
     return nullptr;
 }
 
