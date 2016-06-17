@@ -7,6 +7,7 @@
 #ifndef js_UbiNodeDominatorTree_h
 #define js_UbiNodeDominatorTree_h
 
+#include "mozilla/Attributes.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Maybe.h"
 #include "mozilla/Move.h"
@@ -322,8 +323,9 @@ class JS_PUBLIC_API(DominatorTree)
 
     // Do the post order traversal of the heap graph and populate our
     // predecessor sets.
-    static bool doTraversal(JSRuntime* rt, AutoCheckCannotGC& noGC, const Node& root,
-                            mozilla::Vector<Node>& postOrder, PredecessorSets& predecessorSets) {
+    static MOZ_MUST_USE bool doTraversal(JSRuntime* rt, AutoCheckCannotGC& noGC, const Node& root,
+                                         mozilla::Vector<Node>& postOrder,
+                                         PredecessorSets& predecessorSets) {
         uint32_t nodeCount = 0;
         auto onNode = [&](const Node& node) {
             nodeCount++;
@@ -355,7 +357,8 @@ class JS_PUBLIC_API(DominatorTree)
 
     // Populates the given `map` with an entry for each node to its index in
     // `postOrder`.
-    static bool mapNodesToTheirIndices(mozilla::Vector<Node>& postOrder, NodeToIndexMap& map) {
+    static MOZ_MUST_USE bool mapNodesToTheirIndices(mozilla::Vector<Node>& postOrder,
+                                                    NodeToIndexMap& map) {
         MOZ_ASSERT(!map.initialized());
         MOZ_ASSERT(postOrder.length() < UINT32_MAX);
         uint32_t length = postOrder.length();
@@ -368,7 +371,7 @@ class JS_PUBLIC_API(DominatorTree)
 
     // Convert the Node -> NodeSet predecessorSets to a index -> Vector<index>
     // form.
-    static bool convertPredecessorSetsToVectors(
+    static MOZ_MUST_USE bool convertPredecessorSetsToVectors(
         const Node& root,
         mozilla::Vector<Node>& postOrder,
         PredecessorSets& predecessorSets,
@@ -407,7 +410,8 @@ class JS_PUBLIC_API(DominatorTree)
 
     // Initialize `doms` such that the immediate dominator of the `root` is the
     // `root` itself and all others are `UNDEFINED`.
-    static bool initializeDominators(mozilla::Vector<uint32_t>& doms, uint32_t length) {
+    static MOZ_MUST_USE bool initializeDominators(mozilla::Vector<uint32_t>& doms,
+                                                  uint32_t length) {
         MOZ_ASSERT(doms.length() == 0);
         if (!doms.growByUninitialized(length))
             return false;
@@ -423,7 +427,7 @@ class JS_PUBLIC_API(DominatorTree)
         MOZ_ASSERT_IF(retainedSizes.isSome(), postOrder.length() == retainedSizes->length());
     }
 
-    bool computeRetainedSizes(mozilla::MallocSizeOf mallocSizeOf) {
+    MOZ_MUST_USE bool computeRetainedSizes(mozilla::MallocSizeOf mallocSizeOf) {
         MOZ_ASSERT(retainedSizes.isNothing());
         auto length = postOrder.length();
 
@@ -648,8 +652,8 @@ class JS_PUBLIC_API(DominatorTree)
      * `outSize`, or 0 if `node` is not a member of the dominator tree. Returns
      * false on OOM failure, leaving `outSize` unchanged.
      */
-    bool getRetainedSize(const Node& node, mozilla::MallocSizeOf mallocSizeOf,
-                         Node::Size& outSize) {
+    MOZ_MUST_USE bool getRetainedSize(const Node& node, mozilla::MallocSizeOf mallocSizeOf,
+                                      Node::Size& outSize) {
         assertSanity();
         auto ptr = nodeToPostOrderIndex.lookup(node);
         if (!ptr) {
