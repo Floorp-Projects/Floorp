@@ -55,7 +55,9 @@ add_task(function* () {
   oldScrollTop = scrollBoxElement.scrollTop;
 
   // add a message
-  content.console.log("hello world");
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+    content.console.log("hello world");
+  });
 
   yield waitForMessages({
     webconsole: hud,
