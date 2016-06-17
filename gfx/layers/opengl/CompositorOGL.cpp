@@ -134,7 +134,7 @@ CompositorOGL::CreateContext()
     nsCString discardFailureId;
     context = GLContextProvider::CreateOffscreen(mSurfaceSize,
                                                  caps, CreateContextFlags::REQUIRE_COMPAT_PROFILE,
-                                                 &discardFailureId);
+                                                 discardFailureId);
   }
 
   if (!context) {

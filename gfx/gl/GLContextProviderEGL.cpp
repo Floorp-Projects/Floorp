@@ -460,7 +460,7 @@ GLContextEGL::HoldSurface(gfxASurface* aSurf) {
 GLContextEGL::CreateSurfaceForWindow(nsIWidget* aWidget)
 {
     nsCString discardFailureId;
-    if (!sEGLLibrary.EnsureInitialized(false, &discardFailureId)) {
+    if (!sEGLLibrary.EnsureInitialized(false, discardFailureId)) {
         MOZ_CRASH("GFX: Failed to load EGL library!\n");
         return nullptr;
     }
@@ -494,10 +494,10 @@ GLContextEGL::CreateGLContext(CreateContextFlags flags,
                 bool isOffscreen,
                 EGLConfig config,
                 EGLSurface surface,
-                nsACString* const out_failureId)
+                nsACString& aFailureId)
 {
     if (sEGLLibrary.fBindAPI(LOCAL_EGL_OPENGL_ES_API) == LOCAL_EGL_FALSE) {
-        *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_ES");
+        aFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_ES");
         NS_WARNING("Failed to bind API to GLES!");
         return nullptr;
     }
@@ -534,7 +534,7 @@ GLContextEGL::CreateGLContext(CreateContextFlags flags,
                                               contextAttribs.Elements());
     }
     if (!context) {
-        *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_CREATE");
+        aFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_CREATE");
         NS_WARNING("Failed to create EGLContext!");
         return nullptr;
     }
@@ -547,7 +547,7 @@ GLContextEGL::CreateGLContext(CreateContextFlags flags,
                                                         context);
 
     if (!glContext->Init()) {
-        *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_INIT");
+        aFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_INIT");
         return nullptr;
     }
 
@@ -749,7 +749,7 @@ already_AddRefed<GLContext>
 GLContextProviderEGL::CreateWrappingExisting(void* aContext, void* aSurface)
 {
     nsCString discardFailureId;
-    if (!sEGLLibrary.EnsureInitialized(false, &discardFailureId)) {
+    if (!sEGLLibrary.EnsureInitialized(false, discardFailureId)) {
         MOZ_CRASH("GFX: Failed to load EGL library 2!\n");
         return nullptr;
     }
@@ -775,7 +775,7 @@ already_AddRefed<GLContext>
 GLContextProviderEGL::CreateForWindow(nsIWidget* aWidget, bool aForceAccelerated)
 {
     nsCString discardFailureId;
-    if (!sEGLLibrary.EnsureInitialized(false, &discardFailureId)) {
+    if (!sEGLLibrary.EnsureInitialized(false, discardFailureId)) {
         MOZ_CRASH("GFX: Failed to load EGL library 3!\n");
         return nullptr;
     }
@@ -798,7 +798,7 @@ GLContextProviderEGL::CreateForWindow(nsIWidget* aWidget, bool aForceAccelerated
     RefPtr<GLContextEGL> glContext =
         GLContextEGL::CreateGLContext(CreateContextFlags::NONE, caps,
                                       nullptr, false,
-                                      config, surface, &discardFailureId);
+                                      config, surface, discardFailureId);
 
     if (!glContext) {
         MOZ_CRASH("GFX: Failed to create EGLContext!\n");
@@ -841,7 +841,7 @@ void
 GLContextProviderEGL::DestroyEGLSurface(EGLSurface surface)
 {
     nsCString discardFailureId;
-    if (!sEGLLibrary.EnsureInitialized(false, &discardFailureId)) {
+    if (!sEGLLibrary.EnsureInitialized(false, discardFailureId)) {
         MOZ_CRASH("GFX: Failed to load EGL library 5!\n");
     }
 
@@ -953,17 +953,17 @@ ChooseConfig(GLLibraryEGL* egl, CreateContextFlags flags, const SurfaceCaps& min
 GLContextEGL::CreateEGLPBufferOffscreenContext(CreateContextFlags flags,
                                                const mozilla::gfx::IntSize& size,
                                                const SurfaceCaps& minCaps,
-                                               nsACString* const out_failureId)
+                                               nsACString& aFailureId)
 {
     bool forceEnableHardware = bool(flags & CreateContextFlags::FORCE_ENABLE_HARDWARE);
-    if (!sEGLLibrary.EnsureInitialized(forceEnableHardware, out_failureId)) {
+    if (!sEGLLibrary.EnsureInitialized(forceEnableHardware, aFailureId)) {
         return nullptr;
     }
 
     SurfaceCaps configCaps;
     EGLConfig config = ChooseConfig(&sEGLLibrary, flags, minCaps, &configCaps);
     if (config == EGL_NO_CONFIG) {
-        *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_NO_CONFIG");
+        aFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_NO_CONFIG");
         NS_WARNING("Failed to find a compatible config.");
         return nullptr;
     }
@@ -977,13 +977,13 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(CreateContextFlags flags,
                                                                             LOCAL_EGL_NONE,
                                                                             pbSize);
     if (!surface) {
-        *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_POT");
+        aFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_POT");
         NS_WARNING("Failed to create PBuffer for context!");
         return nullptr;
     }
 
     RefPtr<GLContextEGL> gl = GLContextEGL::CreateGLContext(flags, configCaps, nullptr, true,
-                                                            config, surface, out_failureId);
+                                                            config, surface, aFailureId);
     if (!gl) {
         NS_WARNING("Failed to create GLContext from PBuffer");
         sEGLLibrary.fDestroySurface(sEGLLibrary.Display(), surface);
@@ -994,13 +994,12 @@ GLContextEGL::CreateEGLPBufferOffscreenContext(CreateContextFlags flags,
 }
 
 /*static*/ already_AddRefed<GLContext>
-GLContextProviderEGL::CreateHeadless(CreateContextFlags flags,
-                                     nsACString* const out_failureId)
+GLContextProviderEGL::CreateHeadless(CreateContextFlags flags, nsACString& aFailureId)
 {
     mozilla::gfx::IntSize dummySize = mozilla::gfx::IntSize(16, 16);
     SurfaceCaps dummyCaps = SurfaceCaps::Any();
     return GLContextEGL::CreateEGLPBufferOffscreenContext(flags, dummySize, dummyCaps,
-                                                          out_failureId);
+                                                          aFailureId);
 }
 
 // Under EGL, on Android, pbuffers are supported fine, though
@@ -1009,11 +1008,11 @@ GLContextProviderEGL::CreateHeadless(CreateContextFlags flags,
 GLContextProviderEGL::CreateOffscreen(const mozilla::gfx::IntSize& size,
                                       const SurfaceCaps& minCaps,
                                       CreateContextFlags flags,
-                                      nsACString* const out_failureId)
+                                      nsACString& aFailureId)
 {
     bool forceEnableHardware = bool(flags & CreateContextFlags::FORCE_ENABLE_HARDWARE);
-    if (!sEGLLibrary.EnsureInitialized(forceEnableHardware, out_failureId)) { // Needed for IsANGLE().
-        *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_LIB_INIT");
+    if (!sEGLLibrary.EnsureInitialized(forceEnableHardware, aFailureId)) { // Needed for IsANGLE().
+        aFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_LIB_INIT");
         return nullptr;
     }
 
@@ -1027,7 +1026,7 @@ GLContextProviderEGL::CreateOffscreen(const mozilla::gfx::IntSize& size,
     SurfaceCaps minOffscreenCaps = minCaps;
 
     if (canOffscreenUseHeadless) {
-        gl = CreateHeadless(flags, out_failureId);
+        gl = CreateHeadless(flags, aFailureId);
         if (!gl) {
             return nullptr;
         }
@@ -1040,7 +1039,7 @@ GLContextProviderEGL::CreateOffscreen(const mozilla::gfx::IntSize& size,
         }
 
         gl = GLContextEGL::CreateEGLPBufferOffscreenContext(flags, size, minBackbufferCaps,
-                                                            out_failureId);
+                                                            aFailureId);
         if (!gl) {
             return nullptr;
         }
@@ -1058,7 +1057,7 @@ GLContextProviderEGL::CreateOffscreen(const mozilla::gfx::IntSize& size,
 
     // Init the offscreen with the updated offscreen caps.
     if (!gl->InitOffscreen(size, minOffscreenCaps)) {
-        *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_OFFSCREEN");
+        aFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_EGL_OFFSCREEN");
         return nullptr;
     }
 
