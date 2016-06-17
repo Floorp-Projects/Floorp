@@ -1882,7 +1882,11 @@ GCMarker::enterWeakMarkingMode()
         return;
 
     // During weak marking mode, we maintain a table mapping weak keys to
-    // entries in known-live weakmaps.
+    // entries in known-live weakmaps. Initialize it with the keys of marked
+    // weakmaps -- or more precisely, the keys of marked weakmaps that are
+    // mapped to not yet live values. (Once bug 1167452 implements incremental
+    // weakmap marking, this initialization step will become unnecessary, as
+    // the table will already hold all such keys.)
     if (weakMapAction() == ExpandWeakMaps) {
         tag_ = TracerKindTag::WeakMarking;
 
