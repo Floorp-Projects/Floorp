@@ -71,7 +71,7 @@ fuzzy-if(azureQuartz,1,3) skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,116) == inv
 fuzzy-if(azureQuartz,1,3) skip-if(B2G||Mulet) fuzzy-if(skiaContent,1,117) == invalidate-1b.html invalidate-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 
 # test that border-radius is reduced for scrollbars
-skip-if(B2G||Mulet) fails-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,12,12) fuzzy-if(browserIsRemote&&layersGPUAccelerated&&/^Windows\x20NT\x206\.1/.test(http.oscpu),12,12) fuzzy-if(skiaContent,1,50) == scrollbar-clamping-1.html scrollbar-clamping-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
+skip-if(B2G||Mulet) fails-if(Android) fuzzy-if(asyncPan&&!layersGPUAccelerated,12,12) fuzzy-if(browserIsRemote&&layersGPUAccelerated&&/^Windows\x20NT\x206\.1/.test(http.oscpu),12,12) fuzzy-if(skiaContent,1,50) fuzzy-if(gtkWidget&&layersGPUAccelerated,12,12) == scrollbar-clamping-1.html scrollbar-clamping-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) fails-if(Android) == scrollbar-clamping-2.html scrollbar-clamping-2-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 
 # Test for bad corner joins.
