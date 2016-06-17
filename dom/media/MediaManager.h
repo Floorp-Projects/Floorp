@@ -70,7 +70,7 @@ public:
 
   void SetId(const nsAString& aID);
   virtual uint32_t GetBestFitnessDistance(
-      const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets);
+      const nsTArray<const NormalizedConstraintSet*>& aConstraintSets);
   virtual Source* GetSource() = 0;
   nsresult Allocate(const dom::MediaTrackConstraints &aConstraints,
                     const MediaEnginePrefs &aPrefs,

@@ -65,7 +65,7 @@ public:
                   StreamTime aDesiredTime,
                   const PrincipalHandle& aPrincipalHandle) override;
   uint32_t GetBestFitnessDistance(
-      const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
+      const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
       const nsString& aDeviceId) override;
 
   bool IsFake() override {
@@ -174,7 +174,7 @@ public:
   }
 
   uint32_t GetBestFitnessDistance(
-      const nsTArray<const dom::MediaTrackConstraintSet*>& aConstraintSets,
+      const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
       const nsString& aDeviceId) override;
 
   NS_DECL_THREADSAFE_ISUPPORTS
