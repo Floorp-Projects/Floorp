@@ -320,7 +320,8 @@ public:
   }
 
   /**
-   * Write an empty row to the surface.
+   * Write an empty row to the surface. If some pixels have already been written
+   * to this row, they'll be discarded.
    *
    * @return WriteState::FINISHED if the entire surface has been written to.
    *         Otherwise, returns WriteState::NEED_MORE_DATA.
@@ -575,7 +576,8 @@ public:
   }
 
   /**
-   * Write an empty row to the surface.
+   * Write an empty row to the surface. If some pixels have already been written
+   * to this row, they'll be discarded.
    *
    * @see SurfaceFilter::WriteEmptyRow() for the canonical documentation.
    */
