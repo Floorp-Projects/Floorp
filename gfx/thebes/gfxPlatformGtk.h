@@ -137,11 +137,6 @@ public:
 #endif
 
 protected:
-
-    virtual bool AccelerateLayersByDefault() override {
-      return true;
-    }
-
     static gfxFontconfigUtils *sFontconfigUtils;
 
     int8_t mMaxGenericSubstitutions;
