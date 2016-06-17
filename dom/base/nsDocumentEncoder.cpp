@@ -1412,7 +1412,7 @@ nsHTMLCopyEncoder::SetSelection(nsISelection* aSelection)
   
   nsCOMPtr<nsIDOMRange> range;
   nsCOMPtr<nsIDOMNode> commonParent;
-  Selection* selection = static_cast<Selection*>(aSelection);
+  Selection* selection = aSelection->AsSelection();
   uint32_t rangeCount = selection->RangeCount();
 
   // if selection is uninitialized return

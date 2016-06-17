@@ -167,7 +167,9 @@ SelectionManager::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
                                          nsISelection* aSelection,
                                          int16_t aReason)
 {
-  NS_ENSURE_ARG(aDOMDocument);
+  if (NS_WARN_IF(!aDOMDocument) || NS_WARN_IF(!aSelection)) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   nsCOMPtr<nsIDocument> documentNode(do_QueryInterface(aDOMDocument));
   DocAccessible* document = GetAccService()->GetDocAccessible(documentNode);
@@ -182,7 +184,7 @@ SelectionManager::NotifySelectionChanged(nsIDOMDocument* aDOMDocument,
     // so that we are guaranteed that the notification is processed before
     // the selection manager is destroyed.
     RefPtr<SelData> selData =
-      new SelData(static_cast<Selection*>(aSelection), aReason);
+      new SelData(aSelection->AsSelection(), aReason);
     document->HandleNotification<SelectionManager, SelData>
       (this, &SelectionManager::ProcessSelectionChanged, selData);
   }
