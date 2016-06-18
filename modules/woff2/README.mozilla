@@ -16,3 +16,6 @@ Current version: [commit 643c7b45891cbeb5dc1f7599a4c9b53fbe82a08f].
 redefine-unique_ptr.patch redefines the class std::unique_ptr to workaround a
 build issue with missing C++11 features.
 See https://bugzilla.mozilla.org/show_bug.cgi?id=1227058
+
+missing-assert-header.patch contains the upstream change from commit
+07cd303dd2959cbf69a6840706c0896e49e42677 adding the missing assert.h header.
