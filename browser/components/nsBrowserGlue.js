@@ -2044,20 +2044,6 @@ BrowserGlue.prototype = {
       Services.prefs.clearUserPref("permissions.default.image");
     }
 
-    if (currentUIVersion < 12) {
-      // Remove bookmarks-menu-button-container, then place
-      // bookmarks-menu-button into its position.
-      let currentset = xulStore.getValue(BROWSER_DOCURL, "nav-bar", "currentset");
-      // Need to migrate only if toolbar is customized.
-      if (currentset) {
-        if (currentset.includes("bookmarks-menu-button-container")) {
-          currentset = currentset.replace(/(^|,)bookmarks-menu-button-container($|,)/,
-                                          "$1bookmarks-menu-button$2");
-          xulStore.setValue(BROWSER_DOCURL, "nav-bar", "currentset", currentset);
-        }
-      }
-    }
-
     if (currentUIVersion < 14) {
       // DOM Storage doesn't specially handle about: pages anymore.
       let path = OS.Path.join(OS.Constants.Path.profileDir,
@@ -2078,7 +2064,10 @@ BrowserGlue.prototype = {
         if (!currentset.includes("bookmarks-menu-button")) {
           // The button isn't in the nav-bar, so let's look for an appropriate
           // place to put it.
-          if (currentset.includes("downloads-button")) {
+          if (currentset.includes("bookmarks-menu-button-container")) {
+            currentset = currentset.replace(/(^|,)bookmarks-menu-button-container($|,)/,
+                                            "$1bookmarks-menu-button$2");
+          } else if (currentset.includes("downloads-button")) {
             currentset = currentset.replace(/(^|,)downloads-button($|,)/,
                                             "$1bookmarks-menu-button,downloads-button$2");
           } else if (currentset.includes("home-button")) {
