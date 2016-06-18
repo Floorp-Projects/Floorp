@@ -1156,13 +1156,18 @@ AstDecodeTableSection(AstDecodeContext& c)
 static bool
 AstDecodeName(AstDecodeContext& c, AstName* name)
 {
-    Bytes bytes;
-    if (!c.d.readBytes(&bytes))
+    uint32_t length;
+    if (!c.d.readVarU32(&length))
         return false;
-    size_t length = bytes.length();
-    char16_t *buffer = static_cast<char16_t *>(c.lifo.alloc(length * sizeof(char16_t)));
+
+    const uint8_t* bytes;
+    if (!c.d.readBytes(length, &bytes))
+        return false;
+
+    char16_t* buffer = static_cast<char16_t *>(c.lifo.alloc(length * sizeof(char16_t)));
     for (size_t i = 0; i < length; i++)
         buffer[i] = bytes[i];
+
     *name = AstName(buffer, length);
     return true;
 }
@@ -1488,7 +1493,7 @@ AstDecodeDataSection(AstDecodeContext &c)
             return AstDecodeFail(c, "data segment does not fit in memory");
 
         const uint8_t* src;
-        if (!c.d.readBytesRaw(numBytes, &src))
+        if (!c.d.readBytes(numBytes, &src))
             return AstDecodeFail(c, "data segment shorter than declared");
 
         char16_t *buffer = static_cast<char16_t *>(c.lifo.alloc(numBytes * sizeof(char16_t)));
