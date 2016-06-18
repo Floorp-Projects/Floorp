@@ -64,10 +64,8 @@ public class GLController extends JNIObject {
     public GLController() {
     }
 
-    synchronized void serverSurfaceDestroyed() {
+    void serverSurfaceDestroyed() {
         ThreadUtils.assertOnUiThread();
-
-        mServerSurfaceValid = false;
 
         // We need to coordinate with Gecko when pausing composition, to ensure
         // that Gecko never executes a draw event while the compositor is paused.
@@ -79,6 +77,10 @@ public class GLController extends JNIObject {
         // in turn will synchronize with the compositor thread.
         if (mCompositorCreated) {
             pauseCompositor();
+        }
+
+        synchronized (this) {
+            mServerSurfaceValid = false;
         }
     }
 

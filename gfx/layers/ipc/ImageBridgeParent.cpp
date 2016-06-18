@@ -53,7 +53,8 @@ CompositorThreadHolder* GetCompositorThreadHolder();
 ImageBridgeParent::ImageBridgeParent(MessageLoop* aLoop,
                                      Transport* aTransport,
                                      ProcessId aChildProcessId)
-  : mMessageLoop(aLoop)
+  : CompositableParentManager("ImageBridgeParent")
+  , mMessageLoop(aLoop)
   , mTransport(aTransport)
   , mSetChildThreadPriority(false)
   , mClosed(false)

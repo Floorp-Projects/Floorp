@@ -33,7 +33,7 @@ template<typename T>
 class AtomicRefCountedWithFinalize
 {
 protected:
-    AtomicRefCountedWithFinalize()
+    explicit AtomicRefCountedWithFinalize(const char* aName)
       : mRecycleCallback(nullptr)
       , mRefCount(0)
       , mMessageLoopToPostDestructionTo(nullptr)
@@ -41,6 +41,7 @@ protected:
       , mSpew(false)
       , mManualAddRefs(0)
       , mManualReleases(0)
+      , mName(aName)
 #endif
     {}
 
@@ -109,7 +110,8 @@ public:
 private:
     void AddRef() {
       MOZ_ASSERT(mRefCount >= 0, "AddRef() during/after Finalize()/dtor.");
-      ++mRefCount;
+      DebugOnly<int> count = ++mRefCount;
+      NS_LOG_ADDREF(this, count, mName, sizeof(*this));
     }
 
     void Release() {
@@ -125,6 +127,7 @@ private:
         ++mRefCount;
         return;
       }
+      NS_LOG_RELEASE(this, currCount, mName);
 
       if (0 == currCount) {
         mRefCount = detail::DEAD;
@@ -201,6 +204,7 @@ public:
 private:
     Atomic<uint32_t> mManualAddRefs;
     Atomic<uint32_t> mManualReleases;
+    const char* mName;
 #endif
 };
 

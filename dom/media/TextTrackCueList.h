@@ -61,6 +61,7 @@ public:
   already_AddRefed<TextTrackCueList>
   GetCueListByTimeInterval(media::Interval<double>& aInterval);
   void NotifyCueUpdated(TextTrackCue *aCue);
+  bool IsCueExist(TextTrackCue *aCue);
 
 private:
   ~TextTrackCueList();

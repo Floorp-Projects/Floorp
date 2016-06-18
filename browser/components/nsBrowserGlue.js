@@ -2115,12 +2115,6 @@ BrowserGlue.prototype = {
       xulStore.removeValue(BROWSER_DOCURL, "TabsToolbar", "collapsed");
     }
 
-    if (currentUIVersion < 22) {
-      // Reset the Sync promobox count to promote the new FxAccount-based Sync.
-      Services.prefs.clearUserPref("browser.syncPromoViewsLeft");
-      Services.prefs.clearUserPref("browser.syncPromoViewsLeftMap");
-    }
-
     if (currentUIVersion < 23) {
       const kSelectedEnginePref = "browser.search.selectedEngine";
       if (Services.prefs.prefHasUserValue(kSelectedEnginePref)) {

@@ -584,6 +584,14 @@ struct JS_PUBLIC_API(MovableCellHasher<JS::Heap<T>>)
 
 namespace js {
 
+// After switching to MSVC2015, this can be eliminated and replaced with
+// alignas(n) everywhere.
+#ifdef XP_WIN
+# define JS_ALIGNAS(n) __declspec(align(n))
+#else
+# define JS_ALIGNAS(n) alignas(n)
+#endif
+
 // The alignment must be set because the Rooted and PersistentRooted ptr fields
 // may be accessed through reinterpret_cast<Rooted<ConcreteTraceable>*>, and
 // the compiler may choose a different alignment for the ptr field when it
@@ -593,14 +601,14 @@ namespace js {
 // DispatchWrapper, rather than DispatchWrapper itself, but that causes MSVC to
 // fail when Rooted is used in an IsConvertible test.
 template <typename T>
-class alignas(8) DispatchWrapper
+class JS_ALIGNAS(8) DispatchWrapper
 {
     static_assert(JS::MapTypeToRootKind<T>::kind == JS::RootKind::Traceable,
                   "DispatchWrapper is intended only for usage with a Traceable");
 
     using TraceFn = void (*)(JSTracer*, T*, const char*);
     TraceFn tracer;
-    alignas(gc::CellSize) T storage;
+    JS_ALIGNAS(gc::CellSize) T storage;
 
   public:
     template <typename U>
@@ -623,6 +631,8 @@ class alignas(8) DispatchWrapper
         wrapper->tracer(trc, &wrapper->storage, name);
     }
 };
+
+#undef JS_ALIGNAS
 
 } /* namespace js */
 

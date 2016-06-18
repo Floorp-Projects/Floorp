@@ -146,7 +146,8 @@ ShadowChild(const OpRaiseToTopChild& op)
 LayerTransactionParent::LayerTransactionParent(LayerManagerComposite* aManager,
                                                ShadowLayersManager* aLayersManager,
                                                uint64_t aId)
-  : mLayerManager(aManager)
+  : CompositableParentManager("LayerTransactionParent")
+  , mLayerManager(aManager)
   , mShadowLayersManager(aLayersManager)
   , mId(aId)
   , mPendingTransaction(0)
@@ -154,12 +155,10 @@ LayerTransactionParent::LayerTransactionParent(LayerManagerComposite* aManager,
   , mDestroyed(false)
   , mIPCOpen(false)
 {
-  MOZ_COUNT_CTOR(LayerTransactionParent);
 }
 
 LayerTransactionParent::~LayerTransactionParent()
 {
-  MOZ_COUNT_DTOR(LayerTransactionParent);
 }
 
 bool
