@@ -15,6 +15,10 @@
 extern "C" {
 #endif
 
+/* Declared in decode.h */
+int BrotliStateIsStreamStart(const BrotliState* s);
+int BrotliStateIsStreamEnd(const BrotliState* s);
+
 static void* DefaultAllocFunc(void* opaque, size_t size) {
   BROTLI_UNUSED(opaque);
   return malloc(size);
@@ -76,7 +80,6 @@ void BrotliStateInitWithCustomAllocators(BrotliState* s,
   s->distance_hgroup.codes = NULL;
   s->distance_hgroup.htrees = NULL;
 
-
   s->custom_dict = NULL;
   s->custom_dict_size = 0;
 
@@ -115,7 +118,6 @@ void BrotliStateMetablockBegin(BrotliState* s) {
   s->context_modes = NULL;
   s->dist_context_map = NULL;
   s->context_map_slice = NULL;
-  s->literal_htree_index = 0;
   s->literal_htree = NULL;
   s->dist_context_map_slice = NULL;
   s->dist_htree_index = 0;
@@ -161,7 +163,7 @@ void BrotliHuffmanTreeGroupInit(BrotliState* s, HuffmanTreeGroup* group,
   const size_t max_table_size = kMaxHuffmanTableSize[(alphabet_size + 31) >> 5];
   const size_t code_size = sizeof(HuffmanCode) * ntrees * max_table_size;
   const size_t htree_size = sizeof(HuffmanCode*) * ntrees;
-  char *p = (char*)BROTLI_ALLOC(s, code_size + htree_size);
+  char* p = (char*)BROTLI_ALLOC(s, code_size + htree_size);
   group->alphabet_size = (uint16_t)alphabet_size;
   group->num_htrees = (uint16_t)ntrees;
   group->codes = (HuffmanCode*)p;
@@ -174,5 +176,5 @@ void BrotliHuffmanTreeGroupRelease(BrotliState* s, HuffmanTreeGroup* group) {
 }
 
 #if defined(__cplusplus) || defined(c_plusplus)
-} /* extern "C" */
+}  /* extern "C" */
 #endif
