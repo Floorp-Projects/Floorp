@@ -1027,18 +1027,13 @@ nsPerformanceStatsService::GetNextId() {
 }
 
 /* static*/ bool
-nsPerformanceStatsService::GetPerformanceGroupsCallback(JSContext* cx,
-                                                        js::PerformanceGroupVector& out,
-                                                        void* closure)
-{
+nsPerformanceStatsService::GetPerformanceGroupsCallback(JSContext* cx, JSGroupVector& out, void* closure) {
   RefPtr<nsPerformanceStatsService> self = reinterpret_cast<nsPerformanceStatsService*>(closure);
   return self->GetPerformanceGroups(cx, out);
 }
 
 bool
-nsPerformanceStatsService::GetPerformanceGroups(JSContext* cx,
-                                                js::PerformanceGroupVector& out)
-{
+nsPerformanceStatsService::GetPerformanceGroups(JSContext* cx, JSGroupVector& out) {
   JS::RootedObject global(cx, JS::CurrentGlobalOrNull(cx));
   if (!global) {
     // While it is possible for a compartment to have no global
@@ -1141,17 +1136,13 @@ nsPerformanceStatsService::StopwatchStart(uint64_t iteration) {
 }
 
 /*static*/ bool
-nsPerformanceStatsService::StopwatchCommitCallback(uint64_t iteration,
-                                                   js::PerformanceGroupVector& recentGroups,
-                                                   void* closure)
-{
+nsPerformanceStatsService::StopwatchCommitCallback(uint64_t iteration, JSGroupVector& recentGroups, void* closure) {
   RefPtr<nsPerformanceStatsService> self = reinterpret_cast<nsPerformanceStatsService*>(closure);
   return self->StopwatchCommit(iteration, recentGroups);
 }
 
 bool
-nsPerformanceStatsService::StopwatchCommit(uint64_t iteration,
-                                           js::PerformanceGroupVector& recentGroups)
+nsPerformanceStatsService::StopwatchCommit(uint64_t iteration, JSGroupVector& recentGroups)
 {
   MOZ_ASSERT(iteration == mIteration);
   MOZ_ASSERT(!recentGroups.empty());
