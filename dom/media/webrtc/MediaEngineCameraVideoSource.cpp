@@ -387,12 +387,29 @@ MediaEngineCameraVideoSource::GetUUID() const
   return mUniqueId;
 }
 
-
 void
 MediaEngineCameraVideoSource::SetDirectListeners(bool aHasDirectListeners)
 {
   LOG((__FUNCTION__));
   mHasDirectListeners = aHasDirectListeners;
+}
+
+bool operator == (const webrtc::CaptureCapability& a,
+                  const webrtc::CaptureCapability& b)
+{
+  return a.width == b.width &&
+         a.height == b.height &&
+         a.maxFPS == b.maxFPS &&
+         a.rawType == b.rawType &&
+         a.codecType == b.codecType &&
+         a.expectedCaptureDelay == b.expectedCaptureDelay &&
+         a.interlaced == b.interlaced;
+};
+
+bool operator != (const webrtc::CaptureCapability& a,
+                  const webrtc::CaptureCapability& b)
+{
+  return !(a == b);
 }
 
 } // namespace mozilla
