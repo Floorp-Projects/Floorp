@@ -125,6 +125,10 @@ public class DefaultDoorHanger extends DoorHanger {
         if (!TextUtils.isEmpty(checkBoxText)) {
             mCheckBox = (CheckBox) findViewById(R.id.doorhanger_checkbox);
             mCheckBox.setText(checkBoxText);
+            if (options.has("checkboxState")) {
+                final boolean checkBoxState = options.optBoolean("checkboxState");
+                mCheckBox.setChecked(checkBoxState);
+            }
             mCheckBox.setVisibility(VISIBLE);
         }
     }
