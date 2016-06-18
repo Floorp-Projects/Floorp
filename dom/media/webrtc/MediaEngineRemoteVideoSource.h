@@ -122,10 +122,38 @@ private:
   size_t NumCapabilities() const override;
   void GetCapability(size_t aIndex, webrtc::CaptureCapability& aOut) const override;
 
+  /* UpdateExisting - Centralized function to apply constraints and restart
+   * device as needed, considering all allocations and changes to one.
+   *
+   * aHandle           - New or existing handle, or null to update after removal.
+   * aNewConstraints   - Constraints to be applied to existing handle, or null.
+   * aPrefs            - As passed in (in case of changes in about:config).
+   * aDeviceId         - As passed in (origin dependent).
+   * aOutBadConstraint - Result: nonzero if failed to apply. Name of culprit.
+   */
+
+  nsresult
+  UpdateExisting(AllocationHandle* aHandle,
+                 NormalizedConstraints* aNewConstraints,
+                 const MediaEnginePrefs& aPrefs,
+                 const nsString& aDeviceId,
+                 const char** aOutBadConstraint);
+
+  nsresult
+  UpdateNew(AllocationHandle* aHandle,
+            const MediaEnginePrefs& aPrefs,
+            const nsString& aDeviceId,
+            const char** aOutBadConstraint) {
+    return UpdateExisting(aHandle, nullptr, aPrefs, aDeviceId, aOutBadConstraint);
+  }
+
   dom::MediaSourceEnum mMediaSource; // source of media (camera | application | screen)
   mozilla::camera::CaptureEngine mCapEngine;
 
   nsTArray<RefPtr<AllocationHandle>> mRegisteredHandles;
+
+  // To only restart camera when needed, we keep track previous settings.
+  webrtc::CaptureCapability mLastCapability;
 };
 
 }
