@@ -138,14 +138,14 @@ public class GeckoProfileDirectories {
      */
     static String findDefaultProfileName(final Context context) throws NoMozillaDirectoryException {
       final INIParser parser = GeckoProfileDirectories.getProfilesINI(getMozillaDirectory(context));
-
-      for (Enumeration<INISection> e = parser.getSections().elements(); e.hasMoreElements();) {
-          final INISection section = e.nextElement();
-          if (section.getIntProperty("Default") == 1) {
-              return section.getStringProperty("Name");
+      if (parser.getSections() != null) {
+          for (Enumeration<INISection> e = parser.getSections().elements(); e.hasMoreElements(); ) {
+              final INISection section = e.nextElement();
+              if (section.getIntProperty("Default") == 1) {
+                  return section.getStringProperty("Name");
+              }
           }
       }
-
       return null;
     }
 
@@ -191,17 +191,19 @@ public class GeckoProfileDirectories {
         final HashMap<String, String> result = new HashMap<String, String>();
         final INIParser parser = GeckoProfileDirectories.getProfilesINI(mozillaDir);
 
-        for (Enumeration<INISection> e = parser.getSections().elements(); e.hasMoreElements();) {
-            final INISection section = e.nextElement();
-            if (predicate == null || predicate.matches(section)) {
-                final String name = section.getStringProperty("Name");
-                final String pathString = section.getStringProperty("Path");
-                final boolean isRelative = section.getIntProperty("IsRelative") == 1;
-                final File path = isRelative ? new File(mozillaDir, pathString) : new File(pathString);
-                result.put(name, path.getAbsolutePath());
+        if (parser.getSections() != null) {
+            for (Enumeration<INISection> e = parser.getSections().elements(); e.hasMoreElements(); ) {
+                final INISection section = e.nextElement();
+                if (predicate == null || predicate.matches(section)) {
+                    final String name = section.getStringProperty("Name");
+                    final String pathString = section.getStringProperty("Path");
+                    final boolean isRelative = section.getIntProperty("IsRelative") == 1;
+                    final File path = isRelative ? new File(mozillaDir, pathString) : new File(pathString);
+                    result.put(name, path.getAbsolutePath());
 
-                if (stopOnSuccess) {
-                    return result;
+                    if (stopOnSuccess) {
+                        return result;
+                    }
                 }
             }
         }
@@ -211,18 +213,18 @@ public class GeckoProfileDirectories {
     public static File findProfileDir(final File mozillaDir, final String profileName) throws NoSuchProfileException {
         // Open profiles.ini to find the correct path.
         final INIParser parser = GeckoProfileDirectories.getProfilesINI(mozillaDir);
-
-        for (Enumeration<INISection> e = parser.getSections().elements(); e.hasMoreElements();) {
-            final INISection section = e.nextElement();
-            final String name = section.getStringProperty("Name");
-            if (name != null && name.equals(profileName)) {
-                if (section.getIntProperty("IsRelative") == 1) {
-                    return new File(mozillaDir, section.getStringProperty("Path"));
+        if (parser.getSections() != null) {
+            for (Enumeration<INISection> e = parser.getSections().elements(); e.hasMoreElements(); ) {
+                final INISection section = e.nextElement();
+                final String name = section.getStringProperty("Name");
+                if (name != null && name.equals(profileName)) {
+                    if (section.getIntProperty("IsRelative") == 1) {
+                        return new File(mozillaDir, section.getStringProperty("Path"));
+                    }
+                    return new File(section.getStringProperty("Path"));
                 }
-                return new File(section.getStringProperty("Path"));
             }
         }
-
         throw new NoSuchProfileException("No profile " + profileName);
     }
 }
