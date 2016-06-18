@@ -235,7 +235,8 @@ FixedTableLayoutStrategy::ComputeColumnISizes(const nsHTMLReflowState& aReflowSt
       nsTableCellFrame *cellFrame = cellMap->GetCellInfoAt(0, col, &originates,
                                                            &colSpan);
       if (cellFrame) {
-        styleISize = &cellFrame->StylePosition()->ISize(wm);
+        const nsStylePosition* cellStylePos = cellFrame->StylePosition();
+        styleISize = &cellStylePos->ISize(wm);
         if (styleISize->ConvertsToLength() ||
             (styleISize->GetUnit() == eStyleUnit_Enumerated &&
              (styleISize->GetIntValue() == NS_STYLE_WIDTH_MAX_CONTENT ||
@@ -251,24 +252,14 @@ FixedTableLayoutStrategy::ComputeColumnISizes(const nsHTMLReflowState& aReflowSt
                                                  nsLayoutUtils::MIN_ISIZE);
         } else if (styleISize->GetUnit() == eStyleUnit_Percent) {
           // XXX This should use real percentage padding
-          nsIFrame::IntrinsicISizeOffsetData offsets =
-            cellFrame->IntrinsicISizeOffsets();
           float pct = styleISize->GetPercentValue();
           colISize = NSToCoordFloor(pct * float(tableISize));
 
-          nscoord boxSizingAdjust = 0;
-          switch (cellFrame->StylePosition()->mBoxSizing) {
-            case StyleBoxSizing::Content:
-              boxSizingAdjust += offsets.hPadding;
-              MOZ_FALLTHROUGH;
-            case StyleBoxSizing::Padding:
-              boxSizingAdjust += offsets.hBorder;
-              MOZ_FALLTHROUGH;
-            case StyleBoxSizing::Border:
-              // Don't add anything
-              break;
+          if (cellStylePos->mBoxSizing == StyleBoxSizing::Content) {
+            nsIFrame::IntrinsicISizeOffsetData offsets =
+              cellFrame->IntrinsicISizeOffsets();
+            colISize += offsets.hPadding + offsets.hBorder;
           }
-          colISize += boxSizingAdjust;
 
           pct /= float(colSpan);
           colFrame->AddPrefPercent(pct);
