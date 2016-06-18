@@ -659,8 +659,7 @@ TextTrackManager::TimeMarchesOn()
   // Step 11, 17.
   for (uint32_t i = 0; i < otherCues->Length(); ++i) {
     TextTrackCue* cue = (*otherCues)[i];
-    if (cue->GetActive() ||
-        missedCues->GetCueById(cue->Id()) != nullptr) {
+    if (cue->GetActive() || missedCues->IsCueExist(cue)) {
       double time = cue->StartTime() > cue->EndTime() ? cue->StartTime()
                                                       : cue->EndTime();
       SimpleTextTrackEvent* event =

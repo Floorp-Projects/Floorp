@@ -56,12 +56,13 @@ extensions.registerSchemaAPI("runtime", (extension, context) => {
       },
 
       connectNative(application) {
-        if (!extension.hasPermission("nativeMessaging")) {
-          throw new context.cloneScope.Error("Permission denied because 'nativeMessaging' permission is missing.");
-        }
-
         let app = new NativeApp(extension, context, application);
         return app.portAPI();
+      },
+
+      sendNativeMessage(application, message) {
+        let app = new NativeApp(extension, context, application);
+        return app.sendMessage(message);
       },
 
       get lastError() {
