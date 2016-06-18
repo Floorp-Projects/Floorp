@@ -87,13 +87,14 @@ Instance::toggleProfiling(JSContext* cx)
             if (!codeRange.isFunction())
                 continue;
 
-            UniqueChars owner;
-            const char* funcName = metadata_->getFuncName(cx, codeRange.funcIndex(), &owner);
-            if (!funcName)
+            TwoByteName name(cx);
+            if (!getFuncName(cx, codeRange.funcIndex(), &name))
+                return false;
+            if (!name.append('\0'))
                 return false;
 
-            UniqueChars label(JS_smprintf("%s (%s:%u)",
-                                          funcName,
+            UniqueChars label(JS_smprintf("%hs (%s:%u)",
+                                          name.begin(),
                                           metadata_->filename.get(),
                                           codeRange.funcLineOrBytecode()));
             if (!label) {
@@ -366,7 +367,7 @@ NewExportedFunction(JSContext* cx, Handle<WasmInstanceObject*> instanceObj, uint
     const Export& exp = metadata.exports[exportIndex];
     unsigned numArgs = exp.sig().args().length();
 
-    RootedAtom name(cx, metadata.getFuncAtom(cx, exp.funcIndex()));
+    RootedAtom name(cx, instance.getFuncAtom(cx, exp.funcIndex()));
     if (!name)
         return nullptr;
 
@@ -786,6 +787,23 @@ Instance::createText(JSContext* cx)
             return nullptr;
     }
     return buffer.finishString();
+}
+
+bool
+Instance::getFuncName(JSContext* cx, uint32_t funcIndex, TwoByteName* name) const
+{
+    const Bytes* maybeBytecode = maybeBytecode_ ? &maybeBytecode_.get()->bytes : nullptr;
+    return metadata_->getFuncName(cx, maybeBytecode, funcIndex, name);
+}
+
+JSAtom*
+Instance::getFuncAtom(JSContext* cx, uint32_t funcIndex) const
+{
+    TwoByteName name(cx);
+    if (!getFuncName(cx, funcIndex, &name))
+        return nullptr;
+
+    return AtomizeChars(cx, name.begin(), name.length());
 }
 
 void

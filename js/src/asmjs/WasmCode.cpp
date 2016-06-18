@@ -123,7 +123,8 @@ SpecializeToHeap(CodeSegment& cs, const Metadata& metadata, uint8_t* heapBase, u
 }
 
 static bool
-SendCodeRangesToProfiler(ExclusiveContext* cx, CodeSegment& cs, const Metadata& metadata)
+SendCodeRangesToProfiler(JSContext* cx, CodeSegment& cs, const Bytes& bytecode,
+                         const Metadata& metadata)
 {
     bool enabled = false;
 #ifdef JS_ION_PERF
@@ -143,22 +144,25 @@ SendCodeRangesToProfiler(ExclusiveContext* cx, CodeSegment& cs, const Metadata& 
         uintptr_t end = uintptr_t(cs.code() + codeRange.end());
         uintptr_t size = end - start;
 
-        UniqueChars owner;
-        const char* name = metadata.getFuncName(cx, codeRange.funcIndex(), &owner);
-        if (!name)
+        TwoByteName name(cx);
+        if (!metadata.getFuncName(cx, &bytecode, codeRange.funcIndex(), &name))
+            return false;
+
+        UniqueChars chars(
+            (char*)JS::LossyTwoByteCharsToNewLatin1CharsZ(cx, name.begin(), name.length()).get());
+        if (!chars)
             return false;
 
         // Avoid "unused" warnings
         (void)start;
         (void)size;
-        (void)name;
 
 #ifdef JS_ION_PERF
         if (PerfFuncEnabled()) {
             const char* file = metadata.filename.get();
             unsigned line = codeRange.funcLineOrBytecode();
             unsigned column = 0;
-            writePerfSpewerAsmJSFunctionMap(start, size, file, line, column, name);
+            writePerfSpewerAsmJSFunctionMap(start, size, file, line, column, chars.get());
         }
 #endif
 #ifdef MOZ_VTUNE
@@ -168,7 +172,7 @@ SendCodeRangesToProfiler(ExclusiveContext* cx, CodeSegment& cs, const Metadata& 
                 return true;
             iJIT_Method_Load method;
             method.method_id = method_id;
-            method.method_name = const_cast<char*>(name);
+            method.method_name = chars.get();
             method.method_load_address = (void*)start;
             method.method_size = size;
             method.line_number_size = 0;
@@ -185,27 +189,27 @@ SendCodeRangesToProfiler(ExclusiveContext* cx, CodeSegment& cs, const Metadata& 
 }
 
 /* static */ UniqueCodeSegment
-CodeSegment::create(ExclusiveContext* cx,
-                    const Bytes& code,
+CodeSegment::create(JSContext* cx,
+                    const Bytes& bytecode,
                     const LinkData& linkData,
                     const Metadata& metadata,
                     uint8_t* heapBase,
                     uint32_t heapLength)
 {
-    MOZ_ASSERT(code.length() % gc::SystemPageSize() == 0);
+    MOZ_ASSERT(bytecode.length() % gc::SystemPageSize() == 0);
     MOZ_ASSERT(linkData.globalDataLength % gc::SystemPageSize() == 0);
-    MOZ_ASSERT(linkData.functionCodeLength < code.length());
+    MOZ_ASSERT(linkData.functionCodeLength < bytecode.length());
 
     auto cs = cx->make_unique<CodeSegment>();
     if (!cs)
         return nullptr;
 
-    cs->bytes_ = AllocateCodeSegment(cx, code.length() + linkData.globalDataLength);
+    cs->bytes_ = AllocateCodeSegment(cx, bytecode.length() + linkData.globalDataLength);
     if (!cs->bytes_)
         return nullptr;
 
     cs->functionCodeLength_ = linkData.functionCodeLength;
-    cs->codeLength_ = code.length();
+    cs->codeLength_ = bytecode.length();
     cs->globalDataLength_ = linkData.globalDataLength;
     cs->interruptCode_ = cs->code() + linkData.interruptOffset;
     cs->outOfBoundsCode_ = cs->code() + linkData.outOfBoundsOffset;
@@ -215,7 +219,7 @@ CodeSegment::create(ExclusiveContext* cx,
         AutoFlushICache afc("CodeSegment::create");
         AutoFlushICache::setRange(uintptr_t(cs->code()), cs->codeLength());
 
-        memcpy(cs->code(), code.begin(), code.length());
+        memcpy(cs->code(), bytecode.begin(), bytecode.length());
         StaticallyLink(*cs, linkData, cx);
         SpecializeToHeap(*cs, metadata, heapBase, heapLength);
     }
@@ -225,7 +229,7 @@ CodeSegment::create(ExclusiveContext* cx,
         return nullptr;
     }
 
-    if (!SendCodeRangesToProfiler(cx, *cs, metadata))
+    if (!SendCodeRangesToProfiler(cx, *cs, bytecode, metadata))
         return nullptr;
 
     return cs;
@@ -482,7 +486,7 @@ Metadata::serializedSize() const
            SerializedPodVectorSize(codeRanges) +
            SerializedPodVectorSize(callSites) +
            SerializedPodVectorSize(callThunks) +
-           SerializedVectorSize(funcNames) +
+           SerializedPodVectorSize(funcNames) +
            filename.serializedSize();
 }
 
@@ -497,7 +501,7 @@ Metadata::serialize(uint8_t* cursor) const
     cursor = SerializePodVector(cursor, codeRanges);
     cursor = SerializePodVector(cursor, callSites);
     cursor = SerializePodVector(cursor, callThunks);
-    cursor = SerializeVector(cursor, funcNames);
+    cursor = SerializePodVector(cursor, funcNames);
     cursor = filename.serialize(cursor);
     return cursor;
 }
@@ -513,7 +517,7 @@ Metadata::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
     (cursor = DeserializePodVector(cx, cursor, &codeRanges)) &&
     (cursor = DeserializePodVector(cx, cursor, &callSites)) &&
     (cursor = DeserializePodVector(cx, cursor, &callThunks)) &&
-    (cursor = DeserializeVector(cx, cursor, &funcNames)) &&
+    (cursor = DeserializePodVector(cx, cursor, &funcNames)) &&
     (cursor = filename.deserialize(cx, cursor));
     return cursor;
 }
@@ -528,33 +532,52 @@ Metadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            codeRanges.sizeOfExcludingThis(mallocSizeOf) +
            callSites.sizeOfExcludingThis(mallocSizeOf) +
            callThunks.sizeOfExcludingThis(mallocSizeOf) +
-           SizeOfVectorExcludingThis(funcNames, mallocSizeOf) +
+           funcNames.sizeOfExcludingThis(mallocSizeOf) +
            filename.sizeOfExcludingThis(mallocSizeOf);
 }
 
-const char*
-Metadata::getFuncName(ExclusiveContext* cx, uint32_t funcIndex, UniqueChars* owner) const
+bool
+Metadata::getFuncName(JSContext* cx, const Bytes* maybeBytecode, uint32_t funcIndex,
+                      TwoByteName* name) const
 {
-    if (funcIndex < funcNames.length() && funcNames[funcIndex])
-        return funcNames[funcIndex].get();
+    if (funcIndex < funcNames.length()) {
+        MOZ_ASSERT(maybeBytecode, "NameInBytecode requires preserved bytecode");
 
-    char* chars = JS_smprintf("wasm-function[%u]", funcIndex);
-    if (!chars) {
-        ReportOutOfMemory(cx);
-        return nullptr;
+        const NameInBytecode& n = funcNames[funcIndex];
+        MOZ_ASSERT(n.offset + n.length < maybeBytecode->length());
+
+        if (n.length == 0)
+            goto invalid;
+
+        UTF8Chars utf8((const char*)maybeBytecode->begin() + n.offset, n.length);
+
+        // This code could be optimized by having JS::UTF8CharsToNewTwoByteCharsZ
+        // return a Vector directly.
+        size_t twoByteLength;
+        UniqueTwoByteChars chars(JS::UTF8CharsToNewTwoByteCharsZ(cx, utf8, &twoByteLength).get());
+        if (!chars)
+            goto invalid;
+
+        if (!name->initLengthUninitialized(twoByteLength))
+            return false;
+
+        PodCopy(name->begin(), chars.get(), twoByteLength);
+        return true;
     }
 
-    owner->reset(chars);
-    return chars;
-}
+  invalid:
 
-JSAtom*
-Metadata::getFuncAtom(JSContext* cx, uint32_t funcIndex) const
-{
-    UniqueChars owner;
-    const char* chars = getFuncName(cx, funcIndex, &owner);
-    if (!chars)
-        return nullptr;
+    // For names that are out of range or invalid, synthesize a name.
 
-    return AtomizeUTF8Chars(cx, chars, strlen(chars));
+    UniqueChars chars(JS_smprintf("wasm-function[%u]", funcIndex));
+    if (!chars) {
+        ReportOutOfMemory(cx);
+        return false;
+    }
+
+    if (!name->initLengthUninitialized(strlen(chars.get())))
+        return false;
+
+    CopyAndInflateChars(name->begin(), chars.get(), name->length());
+    return true;
 }
