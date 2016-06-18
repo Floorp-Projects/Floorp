@@ -271,16 +271,8 @@ nsCSSOffsetState::ComputeISizeValue(nscoord aContainingBlockISize,
   WritingMode wm = GetWritingMode();
   nscoord inside = 0, outside = ComputedLogicalBorderPadding().IStartEnd(wm) +
                                 ComputedLogicalMargin().IStartEnd(wm);
-  switch (aBoxSizing) {
-    case StyleBoxSizing::Border:
-      inside = ComputedLogicalBorderPadding().IStartEnd(wm);
-      break;
-    case StyleBoxSizing::Padding:
-      inside = ComputedLogicalPadding().IStartEnd(wm);
-      break;
-    case StyleBoxSizing::Content:
-      // nothing
-      break;
+  if (aBoxSizing == StyleBoxSizing::Border) {
+    inside = ComputedLogicalBorderPadding().IStartEnd(wm);
   }
   outside -= inside;
 
@@ -295,16 +287,8 @@ nsCSSOffsetState::ComputeBSizeValue(nscoord aContainingBlockBSize,
 {
   WritingMode wm = GetWritingMode();
   nscoord inside = 0;
-  switch (aBoxSizing) {
-    case StyleBoxSizing::Border:
-      inside = ComputedLogicalBorderPadding().BStartEnd(wm);
-      break;
-    case StyleBoxSizing::Padding:
-      inside = ComputedLogicalPadding().BStartEnd(wm);
-      break;
-    case StyleBoxSizing::Content:
-      // nothing
-      break;
+  if (aBoxSizing == StyleBoxSizing::Border) {
+    inside = ComputedLogicalBorderPadding().BStartEnd(wm);
   }
   return nsLayoutUtils::ComputeBSizeValue(aContainingBlockBSize,
                                           inside, aCoord);
@@ -1181,16 +1165,8 @@ nsHTMLReflowState::CalculateBorderPaddingMargin(
 
   nscoord outside = paddingStartEnd + borderStartEnd + marginStartEnd;
   nscoord inside = 0;
-  switch (mStylePosition->mBoxSizing) {
-    case StyleBoxSizing::Border:
-      inside += borderStartEnd;
-      MOZ_FALLTHROUGH;
-    case StyleBoxSizing::Padding:
-      inside += paddingStartEnd;
-      MOZ_FALLTHROUGH;
-    case StyleBoxSizing::Content:
-      // nothing
-      break;
+  if (mStylePosition->mBoxSizing == StyleBoxSizing::Border) {
+    inside = borderStartEnd + paddingStartEnd;
   }
   outside -= inside;
   *aInsideBoxSizing = inside;

@@ -1047,7 +1047,6 @@ const KTableEntry nsCSSProps::kBoxShadowTypeKTable[] = {
 const KTableEntry nsCSSProps::kBoxSizingKTable[] = {
   { eCSSKeyword_content_box,  uint8_t(StyleBoxSizing::Content) },
   { eCSSKeyword_border_box,   uint8_t(StyleBoxSizing::Border) },
-  { eCSSKeyword_padding_box,  uint8_t(StyleBoxSizing::Padding) },
   { eCSSKeyword_UNKNOWN,      -1 }
 };
 

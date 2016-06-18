@@ -538,16 +538,8 @@ nsComputedDOMStyle::GetAdjustedValuesForBoxSizing()
   const nsStylePosition* stylePos = StylePosition();
 
   nsMargin adjustment;
-  switch(stylePos->mBoxSizing) {
-    case StyleBoxSizing::Border:
-      adjustment += mInnerFrame->GetUsedBorder();
-      MOZ_FALLTHROUGH;
-    case StyleBoxSizing::Padding:
-      adjustment += mInnerFrame->GetUsedPadding();
-      MOZ_FALLTHROUGH;
-    case StyleBoxSizing::Content:
-      // nothing
-      break;
+  if (stylePos->mBoxSizing == StyleBoxSizing::Border) {
+    adjustment = mInnerFrame->GetUsedBorderAndPadding();
   }
 
   return adjustment;
