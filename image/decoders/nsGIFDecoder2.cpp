@@ -867,17 +867,6 @@ nsGIFDecoder2::ReadImageDescriptor(const char* aData)
     return Transition::TerminateFailure();
   }
 
-  // While decoders can reuse frames, we unconditionally increment
-  // mGIFStruct.images_decoded when we're done with a frame, so we can zero out
-  // the colormap and image data after every new frame.
-  // XXX(seth): It's definitely not true that decoders can reuse frames, but
-  // given that a mistake here would result in a security bug I'd rather not
-  // change this in the middle of a refactor.
-  memset(mImageData, 0, mImageDataLength);
-  if (mColormap) {
-    memset(mColormap, 0, mColormapSize);
-  }
-
   // Clear state from last image.
   mGIFStruct.pixels_remaining = frameRect.width * frameRect.height;
 
