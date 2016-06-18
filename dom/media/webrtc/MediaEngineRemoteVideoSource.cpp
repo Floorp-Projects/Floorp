@@ -295,18 +295,33 @@ MediaEngineRemoteVideoSource::Restart(BaseAllocationHandle* aHandle,
     return NS_ERROR_FAILURE;
   }
   MOZ_ASSERT(aHandle);
-  auto handle = static_cast<AllocationHandle*>(aHandle);
-  RefPtr<AllocationHandle> temp = new AllocationHandle(aConstraints);
-  temp->mConstraints = NormalizedConstraints(aConstraints);
+  NormalizedConstraints constraints(aConstraints);
+  return UpdateExisting(static_cast<AllocationHandle*>(aHandle), &constraints,
+                        aPrefs, aDeviceId, aOutBadConstraint);
+}
+
+nsresult
+MediaEngineRemoteVideoSource::UpdateExisting(AllocationHandle* aHandle,
+                                             NormalizedConstraints* aNewConstraints,
+                                             const MediaEnginePrefs& aPrefs,
+                                             const nsString& aDeviceId,
+                                             const char** aOutBadConstraint)
+{
+  // aHandle and/or aNewConstraints may be nullptr
 
   AutoTArray<const NormalizedConstraints*, 10> allConstraints;
   for (auto& registered : mRegisteredHandles) {
-    if (registered.get() == handle) {
+    if (aNewConstraints && registered.get() == aHandle) {
       continue; // Don't count old constraints
     }
     allConstraints.AppendElement(&registered->mConstraints);
   }
-  allConstraints.AppendElement(&temp->mConstraints);
+  if (aNewConstraints) {
+    allConstraints.AppendElement(aNewConstraints);
+  } else if (aHandle) {
+    // In the case of UpdateNew, the handle isn't registered yet.
+    allConstraints.AppendElement(&aHandle->mConstraints);
+  }
 
   NormalizedConstraints netConstraints(allConstraints);
   if (netConstraints.mBadConstraint) {
@@ -318,20 +333,21 @@ MediaEngineRemoteVideoSource::Restart(BaseAllocationHandle* aHandle,
     *aOutBadConstraint = FindBadConstraint(netConstraints, *this, aDeviceId);
     return NS_ERROR_FAILURE;
   }
-  if (mState != kStarted) {
-    return NS_OK;
-  }
+  MOZ_ASSERT(mState == kStarted || !aNewConstraints);
 
-  mozilla::camera::GetChildAndCall(
-    &mozilla::camera::CamerasChild::StopCapture,
-    mCapEngine, mCaptureIndex);
-  if (mozilla::camera::GetChildAndCall(
-    &mozilla::camera::CamerasChild::StartCapture,
-    mCapEngine, mCaptureIndex, mCapability, this)) {
-    LOG(("StartCapture failed"));
-    return NS_ERROR_FAILURE;
+  if (mState == kStarted && mCapability != mLastCapability) {
+    camera::GetChildAndCall(&camera::CamerasChild::StopCapture,
+                            mCapEngine, mCaptureIndex);
+    if (camera::GetChildAndCall(&camera::CamerasChild::StartCapture,
+                                mCapEngine, mCaptureIndex, mCapability, this)) {
+      LOG(("StartCapture failed"));
+      return NS_ERROR_FAILURE;
+    }
+    mLastCapability = mCapability;
   }
-  handle->mConstraints = temp->mConstraints;
+  if (aHandle && aNewConstraints) {
+    aHandle->mConstraints = *aNewConstraints;
+  }
   return NS_OK;
 }
 
