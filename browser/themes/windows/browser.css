@@ -1853,41 +1853,6 @@ html|span.ac-emphasize-text-url {
   min-width: 27em;
 }
 
-.panel-promo-box {
-  margin: 10px -10px -10px;
-  padding: 8px 10px;
-  border-top: 1px solid ThreeDShadow;
-  background-image: linear-gradient(hsla(0,0%,0%,.15), hsla(0,0%,0%,.08) 6px);
-  border-bottom-left-radius: 3px;
-  border-bottom-right-radius: 3px;
-}
-
-@media (-moz-windows-default-theme) {
-  .panel-promo-box {
-    border-top-style: none;
-    background: #f1f5fb;
-    color: GrayText;
-    box-shadow: 0px 1px 2px rgb(204,214,234) inset;
-  }
-}
-
-.panel-promo-icon {
-  list-style-image: url("chrome://browser/skin/sync-notification-24.png");
-  margin-inline-end: 10px;
-  vertical-align: middle;
-}
-
-.panel-promo-closebutton {
-  -moz-appearance: none;
-  border: none;
-  margin-inline-end: -10px;
-  margin-top: -5px;
-}
-
-.panel-promo-closebutton > .toolbarbutton-text {
-  padding: 0;
-}
-
 /* ::::: content area ::::: */
 
 #sidebar {
@@ -1950,41 +1915,6 @@ html|span.ac-emphasize-text-url {
 %include ../shared/tabs.inc.css
 
 @media (min-resolution: 1.1dppx) {
-  /* image preloading hack from shared/tabs.inc.css */
-  #tabbrowser-tabs::before {
-    background-image:
-      url(chrome://browser/skin/tabbrowser/tab-background-end@2x.png),
-      url(chrome://browser/skin/tabbrowser/tab-background-middle@2x.png),
-      url(chrome://browser/skin/tabbrowser/tab-background-start@2x.png);
-  }
-
-  .tabbrowser-tab:hover > .tab-stack > .tab-background:not([visuallyselected=true]),
-  .tabs-newtab-button:hover {
-    background-image: url(chrome://browser/skin/tabbrowser/tab-background-start@2x.png),
-                      url(chrome://browser/skin/tabbrowser/tab-background-middle@2x.png),
-                      url(chrome://browser/skin/tabbrowser/tab-background-end@2x.png);
-  }
-
-  .tab-background-middle[visuallyselected=true] {
-    background-image: url(chrome://browser/skin/tabbrowser/tab-active-middle@2x.png),
-                      @fgTabTexture@,
-                      none;
-  }
-
-  .tab-background-start[visuallyselected=true]:-moz-locale-dir(ltr)::after,
-  .tab-background-end[visuallyselected=true]:-moz-locale-dir(rtl)::after {
-    background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-start@2x.png);
-  }
-
-  .tab-background-end[visuallyselected=true]:-moz-locale-dir(ltr)::after,
-  .tab-background-start[visuallyselected=true]:-moz-locale-dir(rtl)::after {
-    background-image: url(chrome://browser/skin/tabbrowser/tab-stroke-end@2x.png);
-  }
-
-  .tab-throbber[busy] {
-    list-style-image: url("chrome://browser/skin/tabbrowser/connecting@2x.png");
-  }
-
   .tab-throbber[progress] {
     list-style-image: url("chrome://global/skin/icons/loading@2x.png");
   }

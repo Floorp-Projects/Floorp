@@ -7,6 +7,8 @@
 #ifndef vm_SavedFrame_h
 #define vm_SavedFrame_h
 
+#include "mozilla/Attributes.h"
+
 #include "jswrapper.h"
 
 #include "js/GCHashTable.h"
@@ -156,7 +158,7 @@ class SavedFrame : public NativeObject {
 
   private:
     static SavedFrame* create(JSContext* cx);
-    static bool finishSavedFrameInit(JSContext* cx, HandleObject ctor, HandleObject proto);
+    static MOZ_MUST_USE bool finishSavedFrameInit(JSContext* cx, HandleObject ctor, HandleObject proto);
     void initFromLookup(HandleLookup lookup);
     void initSource(JSAtom* source);
     void initLine(uint32_t line);
@@ -181,8 +183,8 @@ class SavedFrame : public NativeObject {
         JSSLOT_COUNT
     };
 
-    static bool checkThis(JSContext* cx, CallArgs& args, const char* fnName,
-                          MutableHandleObject frame);
+    static MOZ_MUST_USE bool checkThis(JSContext* cx, CallArgs& args, const char* fnName,
+                                       MutableHandleObject frame);
 };
 
 struct SavedFrame::HashPolicy
@@ -217,7 +219,7 @@ struct ReconstructedSavedFramePrincipals : public JSPrincipals
         this->refcount = 1;
     }
 
-    bool write(JSContext* cx, JSStructuredCloneWriter* writer) override {
+    MOZ_MUST_USE bool write(JSContext* cx, JSStructuredCloneWriter* writer) override {
         MOZ_ASSERT(false, "ReconstructedSavedFramePrincipals should never be exposed to embedders");
         return false;
     }
@@ -227,7 +229,7 @@ struct ReconstructedSavedFramePrincipals : public JSPrincipals
 
     // Return true if the given JSPrincipals* points to one of the
     // ReconstructedSavedFramePrincipals singletons, false otherwise.
-    static bool is(JSPrincipals* p) { return p == &IsSystem || p == &IsNotSystem;}
+    static bool is(JSPrincipals* p) { return p == &IsSystem || p == &IsNotSystem; }
 
     // Get the appropriate ReconstructedSavedFramePrincipals singleton for the
     // given JS::ubi::StackFrame that is being reconstructed as a SavedFrame
@@ -298,8 +300,9 @@ class ConcreteStackFrame<SavedFrame> : public BaseStackFrame {
 
     bool isSystem() const override;
 
-    bool constructSavedFrameStack(JSContext* cx,
-                                 MutableHandleObject outSavedFrameStack) const override;
+    MOZ_MUST_USE bool constructSavedFrameStack(JSContext* cx,
+                                               MutableHandleObject outSavedFrameStack)
+        const override;
 };
 
 } // namespace ubi

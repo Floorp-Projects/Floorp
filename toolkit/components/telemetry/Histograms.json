@@ -9567,16 +9567,6 @@
     "kind": "count",
     "description": "Count ServiceWorkers that really did get a thread created for them. File bugs in Core::DOM in case of a Telemetry regression."
   },
-  "SERVICE_WORKER_SPAWN_GETS_QUEUED": {
-    "expires_in_version": "50",
-    "kind": "count",
-    "description": "Tracking whether a ServiceWorker spawn gets queued due to hitting max workers per domain limit. File bugs in Core::DOM in case of a Telemetry regression."
-  },
-  "SHARED_WORKER_SPAWN_GETS_QUEUED": {
-    "expires_in_version": "50",
-    "kind": "count",
-    "description": "Tracking whether a SharedWorker spawn gets queued due to hitting max workers per domain limit. File bugs in Core::DOM in case of a Telemetry regression."
-  },
   "SERVICE_WORKER_REGISTRATIONS": {
     "expires_in_version": "50",
     "kind": "count",

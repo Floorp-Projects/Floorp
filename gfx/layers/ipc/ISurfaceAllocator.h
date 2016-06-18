@@ -81,6 +81,8 @@ class ISurfaceAllocator : public AtomicRefCountedWithFinalize<ISurfaceAllocator>
 public:
   MOZ_DECLARE_REFCOUNTED_TYPENAME(ISurfaceAllocator)
 
+  ISurfaceAllocator(const char* aName) : AtomicRefCountedWithFinalize(aName) {}
+
   // down-casting
 
   virtual ShmemAllocator* AsShmemAllocator() { return nullptr; }
@@ -118,6 +120,8 @@ protected:
 class ClientIPCAllocator : public ISurfaceAllocator
 {
 public:
+  ClientIPCAllocator(const char* aName) : ISurfaceAllocator(aName) {}
+
   virtual ClientIPCAllocator* AsClientAllocator() override { return this; }
 
   virtual MessageLoop * GetMessageLoop() const = 0;
@@ -131,6 +135,8 @@ public:
 class HostIPCAllocator : public ISurfaceAllocator
 {
 public:
+  HostIPCAllocator(const char* aName) : ISurfaceAllocator(aName) {}
+
   virtual HostIPCAllocator* AsHostIPCAllocator() override { return this; }
 
   /**
@@ -165,6 +171,7 @@ protected:
 class CompositorBridgeParentIPCAllocator : public HostIPCAllocator
 {
 public:
+  CompositorBridgeParentIPCAllocator(const char* aName) : HostIPCAllocator(aName) {}
   virtual void NotifyNotUsed(PTextureParent* aTexture, uint64_t aTransactionId) override;
 };
 

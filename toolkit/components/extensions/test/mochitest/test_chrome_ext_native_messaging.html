@@ -248,15 +248,14 @@ add_task(function* test_happy_path() {
       what: "object with several properties",
     },
 
-    // enable with bug 1274708
-    //{
-    //  data: {
-    //    ignoreme: true,
-    //    _json: {data: "i have a tojson method"},
-    //  },
-    //  expected: {data: "i have a tojson method"},
-    //  what: "object with toJSON() method",
-    //},
+    {
+      data: {
+        ignoreme: true,
+        _json: {data: "i have a tojson method"},
+      },
+      expected: {data: "i have a tojson method"},
+      what: "object with toJSON() method",
+    },
   ];
   for (let test of tests) {
     extension.sendMessage("send", test.data);
@@ -270,6 +269,44 @@ add_task(function* test_happy_path() {
   let exitPromise = waitForSubprocessExit();
   yield extension.unload();
   yield exitPromise;
+});
+
+// Test sendNativeMessage()
+add_task(function* test_sendNativeMessage() {
+  function background() {
+    let MSG = {test: "hello world"};
+
+    // Check error handling
+    browser.runtime.sendNativeMessage("nonexistent", MSG).then(() => {
+      browser.test.fail("sendNativeMessage() to a nonexistent app should have failed");
+    }, err => {
+      browser.test.succeed("sendNativeMessage() to a nonexistent app failed");
+    }).then(() => {
+      // Check regular message exchange
+      return browser.runtime.sendNativeMessage("echo", MSG);
+    }).then(reply => {
+      let expected = JSON.stringify(MSG);
+      let received = JSON.stringify(reply);
+      browser.test.assertEq(expected, received, "Received echoed native message");
+      browser.test.sendMessage("finished");
+    });
+  }
+
+  let extension = ExtensionTestUtils.loadExtension({
+    background: `(${background})()`,
+    manifest: {
+      permissions: ["nativeMessaging"],
+    },
+  }, ID);
+
+  yield extension.startup();
+  yield extension.awaitMessage("finished");
+
+  // With sendNativeMessage(), the subprocess should be disconnected
+  // after exchanging a single message.
+  yield waitForSubprocessExit();
+
+  yield extension.unload();
 });
 
 // Test calling Port.disconnect()
@@ -415,12 +452,11 @@ add_task(function* test_read_limit() {
 // use native messaging.
 add_task(function* test_ext_permission() {
   function background() {
-    try {
-      browser.runtime.connectNative("test");
-      browser.test.sendMessage("result", null);
-    } catch (ex) {
-      browser.test.sendMessage("result", ex.message);
-    }
+    browser.test.assertFalse("connectNative" in chrome.runtime, "chrome.runtime.connectNative does not exist without nativeMessaging permission");
+    browser.test.assertFalse("connectNative" in browser.runtime, "browser.runtime.connectNative does not exist without nativeMessaging permission");
+    browser.test.assertFalse("sendNativeMessage" in chrome.runtime, "chrome.runtime.sendNativeMessage does not exist without nativeMessaging permission");
+    browser.test.assertFalse("sendNativeMessage" in browser.runtime, "browser.runtime.sendNativeMessage does not exist without nativeMessaging permission");
+    browser.test.sendMessage("finished");
   }
 
   let extension = ExtensionTestUtils.loadExtension({
@@ -429,15 +465,8 @@ add_task(function* test_ext_permission() {
   });
 
   yield extension.startup();
-
-  let errmsg = yield extension.awaitMessage("result");
-  isnot(errmsg, null, "connectNative() failed without nativeMessaging permission");
-  ok(/Permission denied/.test(errmsg), "error message for missing extension permission is reasonable");
-
+  yield extension.awaitMessage("finished");
   yield extension.unload();
-
-  let procCount = yield getSubprocessCount();
-  is(procCount, 0, "No child process was started");
 });
 
 // Test that an extension that is not listed in allowed_extensions for

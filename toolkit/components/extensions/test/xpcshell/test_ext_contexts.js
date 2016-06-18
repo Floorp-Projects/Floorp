@@ -14,7 +14,7 @@ var {
 class StubContext extends BaseContext {
   constructor() {
     super();
-    this.sandbox = new Cu.Sandbox(global);
+    this.sandbox = Cu.Sandbox(global);
   }
 
   get cloneScope() {
@@ -127,3 +127,62 @@ add_task(function* test_post_unload_listeners() {
   // any micro-tasks that get enqueued by the resolution handlers above.
   yield new Promise(resolve => setTimeout(resolve, 0));
 });
+
+class Context extends BaseContext {
+  constructor(principal) {
+    super();
+    Object.defineProperty(this, "principal", {
+      value: principal,
+      configurable: true,
+    });
+    this.sandbox = Cu.Sandbox(principal, {wantXrays: false});
+    this.extension = {id: "test@web.extension"};
+  }
+
+  get cloneScope() {
+    return this.sandbox;
+  }
+}
+
+let ssm = Services.scriptSecurityManager;
+const PRINCIPAL1 = ssm.createCodebasePrincipalFromOrigin("http://www.example.org");
+const PRINCIPAL2 = ssm.createCodebasePrincipalFromOrigin("http://www.somethingelse.org");
+
+// Test that toJSON() works in the json sandbox
+add_task(function* test_stringify_toJSON() {
+  let context = new Context(PRINCIPAL1);
+  let obj = Cu.evalInSandbox("({hidden: true, toJSON() { return {visible: true}; } })", context.sandbox);
+
+  let stringified = context.jsonStringify(obj);
+  let expected = JSON.stringify({visible: true});
+  equal(stringified, expected, "Stringified object with toJSON() method is as expected");
+});
+
+// Test that stringifying in inaccessible property throws
+add_task(function* test_stringify_inaccessible() {
+  let context = new Context(PRINCIPAL1);
+  let sandbox = context.sandbox;
+  let sandbox2 = Cu.Sandbox(PRINCIPAL2);
+
+  Cu.waiveXrays(sandbox).subobj = Cu.evalInSandbox("({ subobject: true })", sandbox2);
+  let obj = Cu.evalInSandbox("({ local: true, nested: subobj })", sandbox);
+  Assert.throws(() => {
+    context.jsonStringify(obj);
+  });
+});
+
+add_task(function* test_stringify_accessible() {
+  // Test that an accessible property from another global is included
+  let principal = ssm.createExpandedPrincipal([PRINCIPAL1, PRINCIPAL2]);
+  let context = new Context(principal);
+  let sandbox = context.sandbox;
+  let sandbox2 = Cu.Sandbox(PRINCIPAL2);
+
+  Cu.waiveXrays(sandbox).subobj = Cu.evalInSandbox("({ subobject: true })", sandbox2);
+  let obj = Cu.evalInSandbox("({ local: true, nested: subobj })", sandbox);
+  let stringified = context.jsonStringify(obj);
+
+  let expected = JSON.stringify({local: true, nested: {subobject: true}});
+  equal(stringified, expected, "Stringified object with accessible property is as expected");
+});
+
