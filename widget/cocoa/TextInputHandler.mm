@@ -1552,7 +1552,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
       }
 
       WidgetKeyboardEvent imeEvent(true, eKeyDown, mWidget);
-      InitKeyEvent(aNativeEvent, imeEvent);
+      currentKeyEvent->InitKeyEvent(this, imeEvent);
       imeEvent.mPluginTextEventString.Assign(committed);
       nsEventStatus status = nsEventStatus_eIgnore;
       mDispatcher->DispatchKeyboardEvent(eKeyDown, imeEvent, status,
@@ -1573,7 +1573,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
   }
 
   WidgetKeyboardEvent keydownEvent(true, eKeyDown, mWidget);
-  InitKeyEvent(aNativeEvent, keydownEvent);
+  currentKeyEvent->InitKeyEvent(this, keydownEvent);
 
   nsEventStatus status = nsEventStatus_eIgnore;
   mDispatcher->DispatchKeyboardEvent(eKeyDown, keydownEvent, status,
@@ -1646,7 +1646,7 @@ TextInputHandler::HandleKeyDownEvent(NSEvent* aNativeEvent)
     }
 
     WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
-    InitKeyEvent(aNativeEvent, keypressEvent);
+    currentKeyEvent->InitKeyEvent(this, keypressEvent);
 
     // If we called interpretKeyEvents and this isn't normal character input
     // then IME probably ate the event for some reason. We do not want to
@@ -2224,8 +2224,7 @@ TextInputHandler::InsertText(NSAttributedString* aAttrString,
   // the input string.
 
   if (currentKeyEvent) {
-    NSEvent* keyEvent = currentKeyEvent->mKeyEvent;
-    InitKeyEvent(keyEvent, keypressEvent, &str);
+    currentKeyEvent->InitKeyEvent(this, keypressEvent);
   } else {
     nsCocoaUtils::InitInputEvent(keypressEvent, static_cast<NSEvent*>(nullptr));
     keypressEvent.mKeyNameIndex = KEY_NAME_INDEX_USE_STRING;
@@ -2289,7 +2288,7 @@ TextInputHandler::DoCommandBySelector(const char* aSelector)
     }
 
     WidgetKeyboardEvent keypressEvent(true, eKeyPress, mWidget);
-    InitKeyEvent(currentKeyEvent->mKeyEvent, keypressEvent);
+    currentKeyEvent->InitKeyEvent(this, keypressEvent);
 
     nsEventStatus status = nsEventStatus_eIgnore;
     currentKeyEvent->mKeyPressDispatched =
@@ -4310,5 +4309,104 @@ TextInputHandlerBase::EnsureSecureEventInputDisabled()
 {
   while (sSecureEventInputCount) {
     TextInputHandlerBase::DisableSecureEventInput();
+  }
+}
+
+#pragma mark -
+
+
+/******************************************************************************
+ *
+ *  TextInputHandlerBase::KeyEventState implementation
+ *
+ ******************************************************************************/
+
+void
+TextInputHandlerBase::KeyEventState::InitKeyEvent(
+                                       TextInputHandlerBase* aHandler,
+                                       WidgetKeyboardEvent& aKeyEvent)
+{
+  NS_OBJC_BEGIN_TRY_ABORT_BLOCK;
+
+  MOZ_ASSERT(aHandler);
+  MOZ_RELEASE_ASSERT(mKeyEvent);
+
+  NSEvent* nativeEvent = mKeyEvent;
+  if (!mInsertedString.IsEmpty()) {
+    nsAutoString unhandledString;
+    GetUnhandledString(unhandledString);
+    NSString* unhandledNSString =
+      nsCocoaUtils::ToNSString(unhandledString);
+    // If the key event's some characters were already handled by
+    // InsertString() calls, we need to create a dummy event which doesn't
+    // include the handled characters.
+    nativeEvent =
+      [NSEvent keyEventWithType:[mKeyEvent type]
+                       location:[mKeyEvent locationInWindow]
+                  modifierFlags:[mKeyEvent modifierFlags]
+                      timestamp:[mKeyEvent timestamp]
+                   windowNumber:[mKeyEvent windowNumber]
+                        context:[mKeyEvent context]
+                     characters:unhandledNSString
+    charactersIgnoringModifiers:[mKeyEvent charactersIgnoringModifiers]
+                      isARepeat:[mKeyEvent isARepeat]
+                        keyCode:[mKeyEvent keyCode]];
+  }
+
+  aHandler->InitKeyEvent(nativeEvent, aKeyEvent, mInsertString);
+
+  NS_OBJC_END_TRY_ABORT_BLOCK;
+}
+
+void
+TextInputHandlerBase::KeyEventState::GetUnhandledString(
+                                       nsAString& aUnhandledString) const
+{
+  aUnhandledString.Truncate();
+  if (NS_WARN_IF(!mKeyEvent)) {
+    return;
+  }
+  nsAutoString characters;
+  nsCocoaUtils::GetStringForNSString([mKeyEvent characters],
+                                     characters);
+  if (characters.IsEmpty()) {
+    return;
+  }
+  if (mInsertedString.IsEmpty()) {
+    aUnhandledString = characters;
+    return;
+  }
+
+  // The insertes string must match with the start of characters.
+  MOZ_ASSERT(StringBeginsWith(characters, mInsertedString));
+
+  aUnhandledString = nsDependentSubstring(characters, mInsertedString.Length());
+}
+
+#pragma mark -
+
+
+/******************************************************************************
+ *
+ *  TextInputHandlerBase::AutoInsertStringClearer implementation
+ *
+ ******************************************************************************/
+
+TextInputHandlerBase::AutoInsertStringClearer::~AutoInsertStringClearer()
+{
+  if (mState && mState->mInsertString) {
+    // If inserting string is a part of characters of the event,
+    // we should record it as inserted string.
+    nsAutoString characters;
+    nsCocoaUtils::GetStringForNSString([mState->mKeyEvent characters],
+                                       characters);
+    nsAutoString insertedString(mState->mInsertedString);
+    insertedString += *mState->mInsertString;
+    if (StringBeginsWith(characters, insertedString)) {
+      mState->mInsertedString = insertedString;
+    }
+  }
+  if (mState) {
+    mState->mInsertString = nullptr;
   }
 }
