@@ -5,8 +5,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "jsalloc.h"
-
 #include "mozilla/Atomics.h"
 #include "mozilla/IntegerRange.h"
 #include "mozilla/Move.h"
@@ -64,7 +62,7 @@ BEGIN_TEST(testThreadingThreadVectorMoveConstruct)
 {
     const static size_t N = 10;
     mozilla::Atomic<int> count(0);
-    mozilla::Vector<js::Thread, 0, js::SystemAllocPolicy> v;
+    mozilla::Vector<js::Thread> v;
     for (auto i : mozilla::MakeRange(N)) {
         CHECK(v.emplaceBack([](mozilla::Atomic<int>* countp){(*countp)++;}, &count));
         CHECK(v.length() == i + 1);

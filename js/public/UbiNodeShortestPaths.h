@@ -69,7 +69,7 @@ struct JS_PUBLIC_API(BackEdge)
 /**
  * A path is a series of back edges from which we discovered a target node.
  */
-using Path = JS::ubi::Vector<BackEdge*>;
+using Path = mozilla::Vector<BackEdge*>;
 
 /**
  * The `JS::ubi::ShortestPaths` type represents a collection of up to N shortest
@@ -81,7 +81,7 @@ struct JS_PUBLIC_API(ShortestPaths)
   private:
     // Types, type aliases, and data members.
 
-    using BackEdgeVector = JS::ubi::Vector<BackEdge::Ptr>;
+    using BackEdgeVector = mozilla::Vector<BackEdge::Ptr>;
     using NodeToBackEdgeVectorMap = js::HashMap<Node, BackEdgeVector, js::DefaultHasher<Node>,
                                                 js::SystemAllocPolicy>;
 
