@@ -144,20 +144,21 @@ FrameIterator::functionDisplayAtom() const
 
     UniqueChars owner;
 
-    const char* chars;
     if (missingFrameMessage_) {
-        chars = "asm.js/wasm frames may be missing; enable the profiler before running to see all "
-                "frames";
-    } else {
-        MOZ_ASSERT(codeRange_);
-        chars = instance_->metadata().getFuncName(cx_, codeRange_->funcIndex(), &owner);
-        if (!chars) {
+        const char* msg = "asm.js/wasm frames may be missing; enable the profiler before running "
+                          "to see all frames";
+        JSAtom* atom = Atomize(cx_, msg, strlen(msg));
+        if (!atom) {
             cx_->clearPendingException();
             return cx_->names().empty;
         }
+
+        return atom;
     }
 
-    JSAtom* atom = AtomizeUTF8Chars(cx_, chars, strlen(chars));
+    MOZ_ASSERT(codeRange_);
+
+    JSAtom* atom = instance_->getFuncAtom(cx_, codeRange_->funcIndex());
     if (!atom) {
         cx_->clearPendingException();
         return cx_->names().empty;

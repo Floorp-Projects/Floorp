@@ -184,7 +184,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool finishFuncDefs();
 
     // Pretty function names:
-    void setFuncNames(CacheableCharsVector&& funcNames);
+    void setFuncNames(NameInBytecodeVector&& funcNames);
 
     // asm.js lazy initialization:
     void initSig(uint32_t sigIndex, Sig&& sig);
