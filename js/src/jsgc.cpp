@@ -972,7 +972,7 @@ GCRuntime::parseAndSetZeal(const char* str)
 {
     int frequency = -1;
     bool foundFrequency = false;
-    mozilla::Vector<int> zeals;
+    mozilla::Vector<int, 0, SystemAllocPolicy> zeals;
 
     static const struct {
         const char* const zealMode;
@@ -2643,8 +2643,9 @@ GCRuntime::releaseHeldRelocatedArenas()
 {
 #ifdef DEBUG
     unprotectHeldRelocatedArenas();
-    releaseRelocatedArenas(relocatedArenasToRelease);
+    Arena* arenas = relocatedArenasToRelease;
     relocatedArenasToRelease = nullptr;
+    releaseRelocatedArenas(arenas);
 #endif
 }
 
@@ -3134,7 +3135,7 @@ GCRuntime::decommitArenas(AutoLockGC& lock)
     // Build a Vector of all current available Chunks. Since we release the
     // gc lock while doing the decommit syscall, it is dangerous to iterate
     // the available list directly, as concurrent operations can modify it.
-    mozilla::Vector<Chunk*> toDecommit;
+    mozilla::Vector<Chunk*, 0, SystemAllocPolicy> toDecommit;
     MOZ_ASSERT(availableChunks(lock).verify());
     for (ChunkPool::Iter iter(availableChunks(lock)); !iter.done(); iter.next()) {
         if (!toDecommit.append(iter.get())) {
