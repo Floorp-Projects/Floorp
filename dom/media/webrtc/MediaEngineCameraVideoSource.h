@@ -16,6 +16,11 @@
 
 namespace mozilla {
 
+bool operator == (const webrtc::CaptureCapability& a,
+                  const webrtc::CaptureCapability& b);
+bool operator != (const webrtc::CaptureCapability& a,
+                  const webrtc::CaptureCapability& b);
+
 class MediaEngineCameraVideoSource : public MediaEngineVideoSource,
                                      protected MediaConstraintsHelper
 {
