@@ -152,7 +152,7 @@ PerformanceMonitoring::commit()
         return true;
     }
 
-    GroupVector recentGroups;
+    PerformanceGroupVector recentGroups;
     recentGroups_.swap(recentGroups);
 
     bool success = true;
@@ -200,7 +200,7 @@ PerformanceGroupHolder::unlink()
     groups_.clear();
 }
 
-const GroupVector*
+const PerformanceGroupVector*
 PerformanceGroupHolder::getGroups(JSContext* cx)
 {
     if (initialized_)
@@ -233,7 +233,7 @@ AutoStopwatch::AutoStopwatch(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IM
     JSRuntime* runtime = cx_->runtime();
     iteration_ = runtime->performanceMonitoring.iteration();
 
-    const GroupVector* groups = compartment->performanceMonitoring.getGroups(cx);
+    const PerformanceGroupVector* groups = compartment->performanceMonitoring.getGroups(cx);
     if (!groups) {
       // Either the embedding has not provided any performance
       // monitoring logistics or there was an error that prevents
