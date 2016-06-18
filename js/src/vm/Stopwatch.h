@@ -19,6 +19,8 @@
 
 namespace js {
 
+typedef mozilla::Vector<RefPtr<js::PerformanceGroup>> GroupVector;
+
 /**
  * A container for performance groups.
  *
@@ -41,7 +43,7 @@ struct PerformanceGroupHolder {
      * May return `nullptr` if the embedding has not initialized
      * support for performance groups.
      */
-    const PerformanceGroupVector* getGroups(JSContext*);
+    const GroupVector* getGroups(JSContext*);
 
     explicit PerformanceGroupHolder(JSRuntime* runtime)
       : runtime_(runtime)
@@ -57,7 +59,7 @@ struct PerformanceGroupHolder {
 
     // The groups to which this compartment belongs. Filled if and only
     // if `initialized_` is `true`.
-    PerformanceGroupVector groups_;
+    GroupVector groups_;
 };
 
 /**
@@ -290,7 +292,7 @@ struct PerformanceMonitoring {
     /**
      * Groups used in the current iteration.
      */
-    PerformanceGroupVector recentGroups_;
+    GroupVector recentGroups_;
 
     /**
      * The highest value of the timestamp counter encountered
@@ -342,7 +344,7 @@ class AutoStopwatch final {
     // if `isMonitoringJank_` is `true`.
     cpuid_t cpuStart_;
 
-    PerformanceGroupVector groups_;
+    mozilla::Vector<RefPtr<js::PerformanceGroup>> groups_;
 
   public:
     // If the stopwatch is active, constructing an instance of

@@ -183,9 +183,6 @@ using mozilla::Move;
 using mozilla::RangedPtr;
 using mozilla::Variant;
 
-template <typename T>
-using Vector = mozilla::Vector<T, 0, js::SystemAllocPolicy>;
-
 /*** ubi::StackFrame ******************************************************************************/
 
 // Concrete JS::ubi::StackFrame instances backed by a live SavedFrame object

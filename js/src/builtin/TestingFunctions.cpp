@@ -2662,16 +2662,11 @@ FindPath(JSContext* cx, unsigned argc, Value* vp)
 
         heaptools::FindPathHandler handler(cx, start, target, &nodes, edges);
         heaptools::FindPathHandler::Traversal traversal(cx->runtime(), handler, autoCannotGC);
-        if (!traversal.init() || !traversal.addStart(start)) {
-            ReportOutOfMemory(cx);
+        if (!traversal.init() || !traversal.addStart(start))
             return false;
-        }
 
-        if (!traversal.traverse()) {
-            if (!cx->isExceptionPending())
-                ReportOutOfMemory(cx);
+        if (!traversal.traverse())
             return false;
-        }
 
         if (!handler.foundPath) {
             // We didn't find any paths from the start to the target.
