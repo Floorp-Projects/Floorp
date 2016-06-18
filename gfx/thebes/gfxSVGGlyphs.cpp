@@ -307,10 +307,7 @@ gfxSVGGlyphsDocument::gfxSVGGlyphsDocument(const uint8_t *aBuffer,
 gfxSVGGlyphsDocument::~gfxSVGGlyphsDocument()
 {
     if (mDocument) {
-        nsSMILAnimationController* controller = mDocument->GetAnimationController();
-        if (controller) {
-            controller->Pause(nsSMILTimeContainer::PAUSE_PAGEHIDE);
-        }
+        mDocument->OnPageHide(false, nullptr);
     }
     if (mPresShell) {
         mPresShell->RemovePostRefreshObserver(this);
