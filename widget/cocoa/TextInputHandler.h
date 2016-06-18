@@ -501,6 +501,9 @@ protected:
     // String specified by InsertText().  This is not null only during a
     // call of InsertText().
     nsAString* mInsertString;
+    // String which are included in [mKeyEvent characters] and already handled
+    // by InsertText() call(s).
+    nsString mInsertedString;
     // Whether keydown event was consumed by web contents or chrome contents.
     bool mKeyDownHandled;
     // Whether keypress event was dispatched for mKeyEvent.
@@ -521,17 +524,7 @@ protected:
       Set(aNativeKeyEvent);
     }
 
-    KeyEventState(const KeyEventState &aOther) : mKeyEvent(nullptr)
-    {
-      Clear();
-      if (aOther.mKeyEvent) {
-        mKeyEvent = [aOther.mKeyEvent retain];
-      }
-      mKeyDownHandled = aOther.mKeyDownHandled;
-      mKeyPressDispatched = aOther.mKeyPressDispatched;
-      mKeyPressHandled = aOther.mKeyPressHandled;
-      mCausedOtherKeyEvents = aOther.mCausedOtherKeyEvents;
-    }
+    KeyEventState(const KeyEventState &aOther) = delete;
 
     ~KeyEventState()
     {
@@ -552,6 +545,7 @@ protected:
         mKeyEvent = nullptr;
       }
       mInsertString = nullptr;
+      mInsertedString.Truncate();
       mKeyDownHandled = false;
       mKeyPressDispatched = false;
       mKeyPressHandled = false;
@@ -567,6 +561,19 @@ protected:
     {
       return !mKeyPressDispatched && !IsDefaultPrevented();
     }
+
+    void InitKeyEvent(TextInputHandlerBase* aHandler,
+                      WidgetKeyboardEvent& aKeyEvent);
+
+    /**
+     * GetUnhandledString() returns characters of the event which have not been
+     * handled with InsertText() yet. For example, if there is a composition
+     * caused by a dead key press like '`' and it's committed by some key
+     * combinations like |Cmd+v|, then, the |v|'s KeyDown event's |characters|
+     * is |`v|.  Then, after |`| is committed with a call of InsertString(),
+     * this returns only 'v'.
+     */
+    void GetUnhandledString(nsAString& aUnhandledString) const;
   };
 
   /**
@@ -595,12 +602,8 @@ protected:
       : mState(aState)
     {
     }
-    ~AutoInsertStringClearer()
-    {
-      if (mState) {
-        mState->mInsertString = nullptr;
-      }
-    }
+    ~AutoInsertStringClearer();
+
   private:
     KeyEventState* mState;
   };
