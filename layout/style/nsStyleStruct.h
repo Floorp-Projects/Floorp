@@ -2513,9 +2513,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   uint8_t mContain;             // [reset] see nsStyleConsts.h NS_STYLE_CONTAIN_*
   uint8_t mAppearance;          // [reset]
   uint8_t mPosition;            // [reset] see nsStyleConsts.h
-  uint8_t mFloats;              // [reset] see nsStyleConsts.h NS_STYLE_FLOAT_*
-  uint8_t mOriginalFloats;      // [reset] saved mFloats for position:absolute/fixed;
-                                //         otherwise equal to mFloats
+  uint8_t mFloat;               // [reset] see nsStyleConsts.h NS_STYLE_FLOAT_*
+  uint8_t mOriginalFloat;       // [reset] saved mFloat for position:absolute/fixed;
+                                //         otherwise equal to mFloat
   uint8_t mBreakType;           // [reset] see nsStyleConsts.h NS_STYLE_CLEAR_*
   uint8_t mBreakInside;         // [reset] NS_STYLE_PAGE_BREAK_AUTO/AVOID
   bool mBreakBefore;    // [reset]
@@ -2637,7 +2637,7 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleDisplay
   }
 
   bool IsFloatingStyle() const {
-    return NS_STYLE_FLOAT_NONE != mFloats;
+    return NS_STYLE_FLOAT_NONE != mFloat;
   }
 
   bool IsAbsolutelyPositionedStyle() const {

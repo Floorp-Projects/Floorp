@@ -2832,8 +2832,8 @@ nsStyleDisplay::nsStyleDisplay(StyleStructContext aContext)
   , mContain(NS_STYLE_CONTAIN_NONE)
   , mAppearance(NS_THEME_NONE)
   , mPosition(NS_STYLE_POSITION_STATIC)
-  , mFloats(NS_STYLE_FLOAT_NONE)
-  , mOriginalFloats(NS_STYLE_FLOAT_NONE)
+  , mFloat(NS_STYLE_FLOAT_NONE)
+  , mOriginalFloat(NS_STYLE_FLOAT_NONE)
   , mBreakType(NS_STYLE_CLEAR_NONE)
   , mBreakInside(NS_STYLE_PAGE_BREAK_AUTO)
   , mBreakBefore(false)
@@ -2894,8 +2894,8 @@ nsStyleDisplay::nsStyleDisplay(const nsStyleDisplay& aSource)
   , mContain(aSource.mContain)
   , mAppearance(aSource.mAppearance)
   , mPosition(aSource.mPosition)
-  , mFloats(aSource.mFloats)
-  , mOriginalFloats(aSource.mOriginalFloats)
+  , mFloat(aSource.mFloat)
+  , mOriginalFloat(aSource.mOriginalFloat)
   , mBreakType(aSource.mBreakType)
   , mBreakInside(aSource.mBreakInside)
   , mBreakBefore(aSource.mBreakBefore)
@@ -2957,7 +2957,7 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
       || mPosition != aOther.mPosition
       || mDisplay != aOther.mDisplay
       || mContain != aOther.mContain
-      || (mFloats == NS_STYLE_FLOAT_NONE) != (aOther.mFloats == NS_STYLE_FLOAT_NONE)
+      || (mFloat == NS_STYLE_FLOAT_NONE) != (aOther.mFloat == NS_STYLE_FLOAT_NONE)
       || mOverflowX != aOther.mOverflowX
       || mOverflowY != aOther.mOverflowY
       || mScrollBehavior != aOther.mScrollBehavior
@@ -2995,7 +2995,7 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
     return nsChangeHint_ReconstructFrame;
   }
 
-  if (mFloats != aOther.mFloats) {
+  if (mFloat != aOther.mFloat) {
     // Changing which side we float on doesn't affect descendants directly
     hint |= nsChangeHint_AllReflowHints &
             ~(nsChangeHint_ClearDescendantIntrinsics |
@@ -3139,7 +3139,7 @@ nsStyleDisplay::CalcDifference(const nsStyleDisplay& aOther) const
 
   if (!hint &&
       (mOriginalDisplay != aOther.mOriginalDisplay ||
-       mOriginalFloats != aOther.mOriginalFloats ||
+       mOriginalFloat != aOther.mOriginalFloat ||
        mTransitions != aOther.mTransitions ||
        mTransitionTimingFunctionCount !=
          aOther.mTransitionTimingFunctionCount ||

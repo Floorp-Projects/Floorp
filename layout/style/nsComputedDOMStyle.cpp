@@ -911,7 +911,7 @@ already_AddRefed<CSSValue>
 nsComputedDOMStyle::DoGetFloat()
 {
   RefPtr<nsROCSSPrimitiveValue> val = new nsROCSSPrimitiveValue;
-  val->SetIdent(nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mFloats,
+  val->SetIdent(nsCSSProps::ValueToKeywordEnum(StyleDisplay()->mFloat,
                                                nsCSSProps::kFloatKTable));
   return val.forget();
 }
