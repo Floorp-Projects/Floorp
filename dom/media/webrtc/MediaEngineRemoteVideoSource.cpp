@@ -114,52 +114,22 @@ MediaEngineRemoteVideoSource::Allocate(
     return NS_ERROR_FAILURE;
   }
 
-  AutoTArray<const NormalizedConstraints*, 10> allConstraints;
-  for (auto& registered : mRegisteredHandles) {
-    allConstraints.AppendElement(&registered->mConstraints);
-  }
-  RefPtr<AllocationHandle> handle = new AllocationHandle(aConstraints);
-  allConstraints.AppendElement(&handle->mConstraints);
+  RefPtr<AllocationHandle> handle = new AllocationHandle(aConstraints, aOrigin);
 
-  NormalizedConstraints netConstraints(allConstraints);
-  if (netConstraints.mBadConstraint) {
-    *aOutBadConstraint = netConstraints.mBadConstraint;
-    return NS_ERROR_NOT_AVAILABLE;
+  nsresult rv = UpdateNew(handle, aPrefs, aDeviceId, aOutBadConstraint);
+  if (NS_FAILED(rv)) {
+    return rv;
   }
-
-  if (!ChooseCapability(netConstraints, aPrefs, aDeviceId)) {
-    *aOutBadConstraint = FindBadConstraint(netConstraints, *this, aDeviceId);
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  if (mState == kReleased) {
-    if (mozilla::camera::GetChildAndCall(
-      &mozilla::camera::CamerasChild::AllocateCaptureDevice,
-      mCapEngine, GetUUID().get(), kMaxUniqueIdLength, mCaptureIndex, aOrigin)) {
-      return NS_ERROR_FAILURE;
-    }
-    mState = kAllocated;
-    LOG(("Video device %d allocated for %s", mCaptureIndex,
-         PromiseFlatCString(aOrigin).get()));
-  } else {
-    camera::GetChildAndCall(&camera::CamerasChild::StopCapture, mCapEngine,
-                            mCaptureIndex);
-    if (camera::GetChildAndCall(&camera::CamerasChild::StartCapture, mCapEngine,
-                                mCaptureIndex, mCapability, this)) {
-      LOG(("StartCapture failed"));
-      return NS_ERROR_FAILURE;
-    }
-    if (MOZ_LOG_TEST(GetMediaManagerLog(), mozilla::LogLevel::Debug)) {
-      MonitorAutoLock lock(mMonitor);
-      if (mSources.IsEmpty()) {
-        MOZ_ASSERT(mPrincipalHandles.IsEmpty());
-        LOG(("Video device %d reallocated", mCaptureIndex));
-      } else {
-        LOG(("Video device %d allocated shared", mCaptureIndex));
-      }
+  if (mState == kStarted &&
+      MOZ_LOG_TEST(GetMediaManagerLog(), mozilla::LogLevel::Debug)) {
+    MonitorAutoLock lock(mMonitor);
+    if (mSources.IsEmpty()) {
+      MOZ_ASSERT(mPrincipalHandles.IsEmpty());
+      LOG(("Video device %d reallocated", mCaptureIndex));
+    } else {
+      LOG(("Video device %d allocated shared", mCaptureIndex));
     }
   }
-
   mRegisteredHandles.AppendElement(handle);
   ++mNrAllocations;
   handle.forget(aOutHandle);
@@ -333,17 +303,42 @@ MediaEngineRemoteVideoSource::UpdateExisting(AllocationHandle* aHandle,
     *aOutBadConstraint = FindBadConstraint(netConstraints, *this, aDeviceId);
     return NS_ERROR_FAILURE;
   }
-  MOZ_ASSERT(mState == kStarted || !aNewConstraints);
 
-  if (mState == kStarted && mCapability != mLastCapability) {
-    camera::GetChildAndCall(&camera::CamerasChild::StopCapture,
-                            mCapEngine, mCaptureIndex);
-    if (camera::GetChildAndCall(&camera::CamerasChild::StartCapture,
-                                mCapEngine, mCaptureIndex, mCapability, this)) {
-      LOG(("StartCapture failed"));
-      return NS_ERROR_FAILURE;
-    }
-    mLastCapability = mCapability;
+  switch (mState) {
+    case kReleased:
+      MOZ_ASSERT(aHandle);
+      MOZ_ASSERT(!aNewConstraints);
+      MOZ_ASSERT(!mRegisteredHandles.Length());
+      if (camera::GetChildAndCall(&camera::CamerasChild::AllocateCaptureDevice,
+                                  mCapEngine, GetUUID().get(),
+                                  kMaxUniqueIdLength, mCaptureIndex,
+                                  aHandle->mOrigin)) {
+        return NS_ERROR_FAILURE;
+      }
+      mState = kAllocated;
+      mLastCapability = mCapability;
+      LOG(("Video device %d allocated for %s", mCaptureIndex,
+           aHandle->mOrigin.get()));
+      break;
+
+    case kStarted:
+      if (mCapability != mLastCapability) {
+        camera::GetChildAndCall(&camera::CamerasChild::StopCapture,
+                                mCapEngine, mCaptureIndex);
+        if (camera::GetChildAndCall(&camera::CamerasChild::StartCapture,
+                                    mCapEngine, mCaptureIndex, mCapability,
+                                    this)) {
+          LOG(("StartCapture failed"));
+          return NS_ERROR_FAILURE;
+        }
+        mLastCapability = mCapability;
+      }
+      break;
+
+      default:
+        LOG(("Video device %d %s in ignored state %d", mCaptureIndex,
+             (aHandle? aHandle->mOrigin.get() : ""), mState));
+        break;
   }
   if (aHandle && aNewConstraints) {
     aHandle->mConstraints = *aNewConstraints;
