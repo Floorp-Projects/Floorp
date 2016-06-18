@@ -75,13 +75,20 @@ public:
   {
   public:
     AllocationHandle(const dom::MediaTrackConstraints& aConstraints,
-                     const nsACString& aOrigin)
-      : mConstraints(aConstraints), mOrigin(aOrigin) {}
+                     const nsACString& aOrigin,
+                     const MediaEnginePrefs& aPrefs,
+                     const nsString& aDeviceId)
+    : mConstraints(aConstraints),
+      mOrigin(aOrigin),
+      mPrefs(aPrefs),
+      mDeviceId(aDeviceId) {}
   private:
     ~AllocationHandle() override {}
   public:
     NormalizedConstraints mConstraints;
     nsCString mOrigin;
+    MediaEnginePrefs mPrefs;
+    nsString mDeviceId;
   };
 
   nsresult Allocate(const dom::MediaTrackConstraints& aConstraints,
@@ -149,6 +156,13 @@ private:
     return UpdateExisting(aHandle, nullptr, aPrefs, aDeviceId, aOutBadConstraint);
   }
 
+  nsresult
+  UpdateRemove(const MediaEnginePrefs& aPrefs,
+               const nsString& aDeviceId,
+               const char** aOutBadConstraint) {
+    return UpdateExisting(nullptr, nullptr, aPrefs, aDeviceId, aOutBadConstraint);
+  }
+
   dom::MediaSourceEnum mMediaSource; // source of media (camera | application | screen)
   mozilla::camera::CaptureEngine mCapEngine;
 
@@ -156,6 +170,7 @@ private:
 
   // To only restart camera when needed, we keep track previous settings.
   webrtc::CaptureCapability mLastCapability;
+  bool mInShutdown;
 };
 
 }
