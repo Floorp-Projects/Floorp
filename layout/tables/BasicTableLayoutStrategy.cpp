@@ -116,24 +116,13 @@ GetISizeInfo(nsRenderingContext *aRenderingContext,
         // for bsize).
         // For this reason, we also do not use box-sizing for just one of
         // them, as this may be confusing.
-        if (isQuirks) {
+        if (isQuirks || stylePos->mBoxSizing == StyleBoxSizing::Content) {
             boxSizingToBorderEdge = offsets.hPadding + offsets.hBorder;
         }
         else {
-            switch (stylePos->mBoxSizing) {
-                case StyleBoxSizing::Content:
-                    boxSizingToBorderEdge = offsets.hPadding + offsets.hBorder;
-                    break;
-                case StyleBoxSizing::Padding:
-                    minCoord += offsets.hPadding;
-                    prefCoord += offsets.hPadding;
-                    boxSizingToBorderEdge = offsets.hBorder;
-                    break;
-                case StyleBoxSizing::Border:
-                    minCoord += offsets.hPadding + offsets.hBorder;
-                    prefCoord += offsets.hPadding + offsets.hBorder;
-                    break;
-            }
+            // StyleBoxSizing::Border and standards-mode
+            minCoord += offsets.hPadding + offsets.hBorder;
+            prefCoord += offsets.hPadding + offsets.hBorder;
         }
     } else {
         minCoord = 0;

@@ -1359,7 +1359,7 @@ var gCSSProperties = {
     type: CSS_TYPE_LONGHAND,
     initial_values: [ "content-box" ],
     other_values: [ "border-box" ],
-    invalid_values: [ "margin-box", "content", "padding", "border", "margin" ]
+    invalid_values: [ "padding-box", "margin-box", "content", "padding", "border", "margin" ]
   },
   "-moz-box-sizing": {
     domProp: "MozBoxSizing",
