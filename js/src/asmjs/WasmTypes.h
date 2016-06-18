@@ -48,6 +48,7 @@ using mozilla::Maybe;
 using mozilla::Move;
 using mozilla::MallocSizeOf;
 using mozilla::PodZero;
+using mozilla::PodCopy;
 using mozilla::RefCounted;
 
 typedef Vector<uint32_t, 0, SystemAllocPolicy> Uint32Vector;

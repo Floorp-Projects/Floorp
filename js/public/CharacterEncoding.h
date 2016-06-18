@@ -174,6 +174,13 @@ extern Latin1CharsZ
 LossyTwoByteCharsToNewLatin1CharsZ(js::ExclusiveContext* cx,
                                    const mozilla::Range<const char16_t> tbchars);
 
+inline Latin1CharsZ
+LossyTwoByteCharsToNewLatin1CharsZ(js::ExclusiveContext* cx, const char16_t* begin, size_t length)
+{
+    const mozilla::Range<const char16_t> tbchars(begin, length);
+    return JS::LossyTwoByteCharsToNewLatin1CharsZ(cx, tbchars);
+}
+
 template <typename CharT>
 extern UTF8CharsZ
 CharsToNewUTF8CharsZ(js::ExclusiveContext* maybeCx, const mozilla::Range<CharT> chars);
