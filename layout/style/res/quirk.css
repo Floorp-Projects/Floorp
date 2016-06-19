@@ -39,15 +39,6 @@ li > ol:-moz-first-node {
 }
 
 
-/* Quirk: prevent bullet from resizing with the list item
- *   see bug 97351
- */
-
-li::-moz-list-bullet {
-  font-size: initial;
-}
-
-
 table {
   text-align: start;
   white-space: normal; /* compatible with IE & spec */
