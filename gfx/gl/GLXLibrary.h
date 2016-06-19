@@ -56,6 +56,7 @@ public:
     , xCreateContextAttribsInternal(nullptr)
     , xGetVideoSyncInternal(nullptr)
     , xWaitVideoSyncInternal(nullptr)
+    , xSwapIntervalInternal(nullptr)
     , mInitialized(false), mTriedInitializing(false)
     , mUseTextureFromPixmap(false), mDebug(false)
     , mHasRobustness(false), mHasCreateContextAttribs(false)
@@ -125,6 +126,7 @@ public:
 
     int xGetVideoSync(unsigned int* count);
     int xWaitVideoSync(int divisor, int remainder, unsigned int* count);
+    void xSwapInterval(Display* dpy, GLXDrawable drawable, int interval);
 
     bool EnsureInitialized();
 
@@ -139,6 +141,7 @@ public:
     bool HasCreateContextAttribs() { return mHasCreateContextAttribs; }
     bool SupportsTextureFromPixmap(gfxASurface* aSurface);
     bool SupportsVideoSync();
+    bool SupportsSwapControl() const { return bool(xSwapIntervalInternal); }
     bool IsATI() { return mIsATI; }
     bool GLXVersionCheck(int aMajor, int aMinor);
 
@@ -237,6 +240,9 @@ private:
 
     typedef int (GLAPIENTRY * PFNGLXWAITVIDEOSYNCSGI) (int divisor, int remainder, unsigned int* count);
     PFNGLXWAITVIDEOSYNCSGI xWaitVideoSyncInternal;
+
+    typedef void (GLAPIENTRY * PFNGLXSWAPINTERVALEXT) (Display* dpy, GLXDrawable drawable, int interval);
+    PFNGLXSWAPINTERVALEXT xSwapIntervalInternal;
 
 #ifdef DEBUG
     void BeforeGLXCall();
