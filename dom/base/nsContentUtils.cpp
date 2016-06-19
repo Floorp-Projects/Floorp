@@ -1389,6 +1389,35 @@ nsContentUtils::IsValidSandboxFlag(const nsAString& aFlag)
   return false;
 }
 
+/**
+ * A helper function that returns a string attribute corresponding to the
+ * sandbox flags.
+ *
+ * @param aFlags    the sandbox flags
+ * @param aString   the attribute corresponding to the flags (null if aFlags
+ *                  is zero)
+ */
+void
+nsContentUtils::SandboxFlagsToString(uint32_t aFlags, nsAString& aString)
+{
+  if (!aFlags) {
+    SetDOMStringToNull(aString);
+    return;
+  }
+
+  aString.Truncate();
+
+#define SANDBOX_KEYWORD(string, atom, flags)                \
+  if (!(aFlags & (flags))) {                                \
+    if (!aString.IsEmpty()) {                               \
+      aString.Append(NS_LITERAL_STRING(" "));               \
+    }                                                       \
+    aString.Append(nsDependentAtomString(nsGkAtoms::atom)); \
+  }
+#include "IframeSandboxKeywordList.h"
+#undef SANDBOX_KEYWORD
+}
+
 nsIBidiKeyboard*
 nsContentUtils::GetBidiKeyboard()
 {
