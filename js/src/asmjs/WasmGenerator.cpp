@@ -854,7 +854,7 @@ ModuleGenerator::finishFuncDefs()
 }
 
 void
-ModuleGenerator::setFuncNames(NameInBytecodeVector&& funcNames)
+ModuleGenerator::setFuncNames(CacheableCharsVector&& funcNames)
 {
     MOZ_ASSERT(metadata_->funcNames.empty());
     metadata_->funcNames = Move(funcNames);

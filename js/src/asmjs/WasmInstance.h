@@ -130,12 +130,6 @@ class Instance
 
     JSString* createText(JSContext* cx);
 
-    // Return the name associated with a given function index, or generate one
-    // if none was given by the module.
-
-    bool getFuncName(JSContext* cx, uint32_t funcIndex, TwoByteName* name) const;
-    JSAtom* getFuncAtom(JSContext* cx, uint32_t funcIndex) const;
-
     // Initially, calls to imports in wasm code call out through the generic
     // callImport method. If the imported callee gets JIT compiled and the types
     // match up, callImport will patch the code to instead call through a thunk

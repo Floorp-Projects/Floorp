@@ -745,7 +745,19 @@ class Decoder
 
     // See writeBytes comment.
 
-    MOZ_MUST_USE bool readBytes(uint32_t numBytes, const uint8_t** bytes = nullptr) {
+    MOZ_MUST_USE bool readBytes(Bytes* bytes) {
+        uint32_t numBytes;
+        if (!readVarU32(&numBytes))
+            return false;
+        if (bytesRemain() < numBytes)
+            return false;
+        if (!bytes->resize(numBytes))
+            return false;
+        memcpy(bytes->begin(), cur_, numBytes);
+        cur_ += numBytes;
+        return true;
+    }
+    MOZ_MUST_USE bool readBytesRaw(uint32_t numBytes, const uint8_t** bytes) {
         if (bytes)
             *bytes = cur_;
         if (bytesRemain() < numBytes)
