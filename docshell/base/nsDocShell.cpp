@@ -3813,6 +3813,13 @@ nsDocShell::IsSandboxedFrom(nsIDocShell* aTargetDocShell)
   return true;
 }
 
+void
+nsDocShell::ApplySandboxAndFullscreenFlags(nsIDocument* aDoc)
+{
+  aDoc->SetSandboxFlags(mSandboxFlags);
+  aDoc->SetFullscreenEnabled(GetFullscreenAllowed());
+}
+
 NS_IMETHODIMP
 nsDocShell::GetTreeOwner(nsIDocShellTreeOwner** aTreeOwner)
 {
@@ -8026,9 +8033,9 @@ nsDocShell::CreateAboutBlankContentViewer(nsIPrincipal* aPrincipal,
 
       blankDoc->SetContainer(this);
 
-      // Copy our sandbox flags to the document. These are immutable
-      // after being set here.
-      blankDoc->SetSandboxFlags(mSandboxFlags);
+      // Apply the sandbox and fullscreen enabled flags to the document.
+      // These are immutable after being set here.
+      ApplySandboxAndFullscreenFlags(blankDoc);
 
       // create a content viewer for us and the new document
       docFactory->CreateInstanceForDocument(
