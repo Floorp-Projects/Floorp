@@ -687,22 +687,22 @@ CheckTypeForJS(JSContext* cx, Decoder& d, const Sig& sig)
 static UniqueChars
 MaybeDecodeName(JSContext* cx, Decoder& d)
 {
-    uint32_t numBytes;
-    if (!d.readVarU32(&numBytes))
+    Bytes bytes;
+    if (!d.readBytes(&bytes))
         return nullptr;
 
-    const uint8_t* bytes;
-    if (!d.readBytes(numBytes, &bytes))
+    // Rejecting a name if null or non-ascii character was found.
+    // TODO Relax the requirement and allow valid non-null valid UTF8 characters.
+    for (size_t i = 0; i < bytes.length(); i++) {
+        const uint8_t ch = bytes[i];
+        if (ch == 0 || ch >= 128)
+            return nullptr;
+    }
+
+    if (!bytes.append(0))
         return nullptr;
 
-    UniqueChars name(cx->pod_malloc<char>(numBytes + 1));
-    if (!name)
-        return nullptr;
-
-    memcpy(name.get(), bytes, numBytes);
-    name[numBytes] = '\0';
-
-    return name;
+    return UniqueChars((char*)bytes.extractOrCopyRawBuffer());
 }
 
 static bool
@@ -1011,7 +1011,7 @@ DecodeDataSection(JSContext* cx, Decoder& d, Handle<ArrayBufferObject*> heap)
             return Fail(cx, d, "data segment does not fit in memory");
 
         const uint8_t* src;
-        if (!d.readBytes(numBytes, &src))
+        if (!d.readBytesRaw(numBytes, &src))
             return Fail(cx, d, "data segment shorter than declared");
 
         memcpy(heapBase + dstOffset, src, numBytes);
@@ -1035,33 +1035,30 @@ MaybeDecodeNameSectionBody(JSContext* cx, Decoder& d, ModuleGenerator& mg, uint3
     if (numFuncNames > MaxFuncs)
         return false;
 
-    NameInBytecodeVector funcNames;
+    CacheableCharsVector funcNames;
     if (!funcNames.resize(numFuncNames))
         return false;
 
     for (uint32_t i = 0; i < numFuncNames; i++) {
-        uint32_t numBytes;
-        if (!d.readVarU32(&numBytes))
+        UniqueChars funcName = MaybeDecodeName(cx, d);
+        if (!funcName)
             return false;
 
-        NameInBytecode name;
-        name.offset = d.currentOffset();
-        name.length = numBytes;
-        funcNames[i] = name;
+        funcNames[i] = strlen(funcName.get()) ? Move(funcName) : nullptr;
 
-        if (!d.readBytes(numBytes))
-            return false;
-
-        // Skip local names for a function.
+        // Skipping local names for a function.
         uint32_t numLocals;
         if (!d.readVarU32(&numLocals))
             return false;
+
         for (uint32_t j = 0; j < numLocals; j++) {
-            uint32_t numBytes;
-            if (!d.readVarU32(&numBytes))
+            UniqueChars localName = MaybeDecodeName(cx, d);
+            if (!localName) {
+                cx->clearPendingException();
                 return false;
-            if (!d.readBytes(numBytes))
-                return false;
+            }
+
+            Unused << localName;
         }
     }
 

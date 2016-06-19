@@ -64,7 +64,7 @@ class CodeSegment
     void operator=(CodeSegment&&) = delete;
 
   public:
-    static UniqueCodeSegment create(JSContext* cx,
+    static UniqueCodeSegment create(ExclusiveContext* cx,
                                     const Bytes& code,
                                     const LinkData& linkData,
                                     const Metadata& metadata,
@@ -384,21 +384,6 @@ UsesHeap(HeapUsage heapUsage)
     return bool(heapUsage);
 }
 
-// NameInBytecode represents a name that is embedded in the wasm bytecode.
-// The presence of NameInBytecode implies that bytecode has been kept.
-
-struct NameInBytecode
-{
-    uint32_t offset;
-    uint32_t length;
-
-    NameInBytecode() = default;
-    NameInBytecode(uint32_t offset, uint32_t length) : offset(offset), length(length) {}
-};
-
-typedef Vector<NameInBytecode, 0, SystemAllocPolicy> NameInBytecodeVector;
-typedef Vector<char16_t, 64> TwoByteName;
-
 // Metadata holds all the data that is needed to describe compiled wasm code
 // at runtime (as opposed to data that is only used to statically link or
 // instantiate a module).
@@ -429,11 +414,14 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
     CodeRangeVector       codeRanges;
     CallSiteVector        callSites;
     CallThunkVector       callThunks;
-    NameInBytecodeVector  funcNames;
+    CacheableCharsVector  funcNames;
     CacheableChars        filename;
 
     bool usesHeap() const { return UsesHeap(heapUsage); }
     bool hasSharedHeap() const { return heapUsage == HeapUsage::Shared; }
+
+    const char* getFuncName(ExclusiveContext* cx, uint32_t funcIndex, UniqueChars* owner) const;
+    JSAtom* getFuncAtom(JSContext* cx, uint32_t funcIndex) const;
 
     // AsmJSMetadata derives Metadata iff isAsmJS(). Mostly this distinction is
     // encapsulated within AsmJS.cpp, but the additional virtual functions allow
@@ -456,8 +444,6 @@ struct Metadata : ShareableBase<Metadata>, MetadataCacheablePod
     virtual ScriptSource* maybeScriptSource() const {
         return nullptr;
     }
-    virtual bool getFuncName(JSContext* cx, const Bytes* maybeBytecode, uint32_t funcIndex,
-                             TwoByteName* name) const;
 
     WASM_DECLARE_SERIALIZABLE_VIRTUAL(Metadata);
 };
