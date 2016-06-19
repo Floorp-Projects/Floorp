@@ -281,7 +281,6 @@ struct js::AsmJSMetadata : Metadata, AsmJSMetadataCacheablePod
     AsmJSGlobalVector       asmJSGlobals;
     AsmJSImportVector       asmJSImports;
     AsmJSExportVector       asmJSExports;
-    CacheableCharsVector    asmJSFuncNames;
     CacheableChars          globalArgumentName;
     CacheableChars          importArgumentName;
     CacheableChars          bufferArgumentName;
@@ -326,21 +325,6 @@ struct js::AsmJSMetadata : Metadata, AsmJSMetadataCacheablePod
     }
     ScriptSource* maybeScriptSource() const override {
         return scriptSource.get();
-    }
-    bool getFuncName(JSContext* cx, const Bytes*, uint32_t funcIndex, TwoByteName* name) const override {
-        const char* p = asmJSFuncNames[funcIndex].get();
-        UTF8Chars utf8(p, strlen(p));
-
-        size_t twoByteLength;
-        UniqueTwoByteChars chars(JS::UTF8CharsToNewTwoByteCharsZ(cx, utf8, &twoByteLength).get());
-        if (!chars)
-            return false;
-
-        if (!name->initLengthUninitialized(twoByteLength))
-            return false;
-
-        PodCopy(name->begin(), chars.get(), twoByteLength);
-        return true;
     }
 
     AsmJSMetadataCacheablePod& pod() { return *this; }
@@ -2275,12 +2259,13 @@ class MOZ_STACK_CLASS ModuleValidator
         if (!arrayViews_.empty())
             mg_.initHeapUsage(atomicsPresent_ ? HeapUsage::Shared : HeapUsage::Unshared);
 
-        MOZ_ASSERT(asmJSMetadata_->asmJSFuncNames.empty());
+        CacheableCharsVector funcNames;
         for (const Func* func : functions_) {
             CacheableChars funcName = StringToNewUTF8CharsZ(cx_, *func->name());
-            if (!funcName || !asmJSMetadata_->asmJSFuncNames.emplaceBack(Move(funcName)))
+            if (!funcName || !funcNames.emplaceBack(Move(funcName)))
                 return nullptr;
         }
+        mg_.setFuncNames(Move(funcNames));
 
         uint32_t endBeforeCurly = tokenStream().currentToken().pos.end;
         asmJSMetadata_->srcLength = endBeforeCurly - asmJSMetadata_->srcStart;
@@ -8066,7 +8051,6 @@ AsmJSMetadata::serializedSize() const
            SerializedVectorSize(asmJSGlobals) +
            SerializedPodVectorSize(asmJSImports) +
            SerializedPodVectorSize(asmJSExports) +
-           SerializedVectorSize(asmJSFuncNames) +
            globalArgumentName.serializedSize() +
            importArgumentName.serializedSize() +
            bufferArgumentName.serializedSize();
@@ -8080,7 +8064,6 @@ AsmJSMetadata::serialize(uint8_t* cursor) const
     cursor = SerializeVector(cursor, asmJSGlobals);
     cursor = SerializePodVector(cursor, asmJSImports);
     cursor = SerializePodVector(cursor, asmJSExports);
-    cursor = SerializeVector(cursor, asmJSFuncNames);
     cursor = globalArgumentName.serialize(cursor);
     cursor = importArgumentName.serialize(cursor);
     cursor = bufferArgumentName.serialize(cursor);
@@ -8095,7 +8078,6 @@ AsmJSMetadata::deserialize(ExclusiveContext* cx, const uint8_t* cursor)
     (cursor = DeserializeVector(cx, cursor, &asmJSGlobals)) &&
     (cursor = DeserializePodVector(cx, cursor, &asmJSImports)) &&
     (cursor = DeserializePodVector(cx, cursor, &asmJSExports)) &&
-    (cursor = DeserializeVector(cx, cursor, &asmJSFuncNames)) &&
     (cursor = globalArgumentName.deserialize(cx, cursor)) &&
     (cursor = importArgumentName.deserialize(cx, cursor)) &&
     (cursor = bufferArgumentName.deserialize(cx, cursor));
@@ -8110,7 +8092,6 @@ AsmJSMetadata::sizeOfExcludingThis(MallocSizeOf mallocSizeOf) const
            SizeOfVectorExcludingThis(asmJSGlobals, mallocSizeOf) +
            asmJSImports.sizeOfExcludingThis(mallocSizeOf) +
            asmJSExports.sizeOfExcludingThis(mallocSizeOf) +
-           SizeOfVectorExcludingThis(asmJSFuncNames, mallocSizeOf) +
            globalArgumentName.sizeOfExcludingThis(mallocSizeOf) +
            importArgumentName.sizeOfExcludingThis(mallocSizeOf) +
            bufferArgumentName.sizeOfExcludingThis(mallocSizeOf);

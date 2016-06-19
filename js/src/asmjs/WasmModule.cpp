@@ -330,15 +330,11 @@ Module::instantiate(JSContext* cx,
     if (!cs)
         return false;
 
-    // To support viewing the source of an instance (Instance::createText), the
-    // instance must hold onto a ref of the bytecode (keeping it alive). This
-    // wastes memory for most users, so we try to only save the source when a
-    // developer actually cares: when the compartment is debuggable (which is
-    // true when the web console is open) or a names section is implied (since
-    // this going to be stripped for non-developer builds).
-    const ShareableBytes* maybeBytecode = nullptr;
-    if (cx->compartment()->isDebuggee() || !metadata_->funcNames.empty())
-        maybeBytecode = bytecode_.get();
+    // Only save the source if the target compartment is a debuggee (which is
+    // true when, e.g., the console is open, not just when debugging is active).
+    const ShareableBytes* maybeBytecode = cx->compartment()->isDebuggee()
+                                        ? bytecode_.get()
+                                        : nullptr;
 
     // Store a summary of LinkData::FuncTableVector, only as much is needed
     // for runtime toggling of profiling mode. Currently, only asm.js has typed
