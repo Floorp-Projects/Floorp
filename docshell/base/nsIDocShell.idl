@@ -25,6 +25,7 @@ interface nsIChannel;
 interface nsIContentViewer;
 interface nsIDOMEventTarget;
 interface nsIDocShellLoadInfo;
+interface nsIDocument;
 interface nsIEditor;
 interface nsIEditingSession;
 interface nsISimpleEnumerator;
@@ -897,6 +898,11 @@ interface nsIDocShell : nsIDocShellTreeItem
    * aTargetDocShell - the browsing context we are attempting to navigate.
    */
   [noscript,notxpcom,nostdcall] bool isSandboxedFrom(in nsIDocShell aTargetDocShell);
+
+  /**
+   * Apply sandbox flags and fullscreen enabled flag to the given document.
+   */
+  [noscript,notxpcom] void applySandboxAndFullscreenFlags(in nsIDocument aDoc);
 
   /**
    * This member variable determines whether a document has Mixed Active Content that
