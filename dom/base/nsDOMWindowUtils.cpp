@@ -1918,6 +1918,56 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType,
       return NS_ERROR_INVALID_ARG;
   }
 
+  SelectionType selectionType = SelectionType::eNormal;
+  static const uint32_t kSelectionFlags =
+    QUERY_CONTENT_FLAG_SELECTION_SPELLCHECK |
+    QUERY_CONTENT_FLAG_SELECTION_IME_RAWINPUT |
+    QUERY_CONTENT_FLAG_SELECTION_IME_SELECTEDRAWTEXT |
+    QUERY_CONTENT_FLAG_SELECTION_IME_CONVERTEDTEXT |
+    QUERY_CONTENT_FLAG_SELECTION_IME_SELECTEDCONVERTEDTEXT |
+    QUERY_CONTENT_FLAG_SELECTION_ACCESSIBILITY |
+    QUERY_CONTENT_FLAG_SELECTION_FIND |
+    QUERY_CONTENT_FLAG_SELECTION_URLSECONDARY |
+    QUERY_CONTENT_FLAG_SELECTION_URLSTRIKEOUT;
+  switch (aAdditionalFlags & kSelectionFlags) {
+    case QUERY_CONTENT_FLAG_SELECTION_SPELLCHECK:
+      selectionType = SelectionType::eSpellCheck;
+      break;
+    case QUERY_CONTENT_FLAG_SELECTION_IME_RAWINPUT:
+      selectionType = SelectionType::eIMERawClause;
+      break;
+    case QUERY_CONTENT_FLAG_SELECTION_IME_SELECTEDRAWTEXT:
+      selectionType = SelectionType::eIMESelectedRawClause;
+      break;
+    case QUERY_CONTENT_FLAG_SELECTION_IME_CONVERTEDTEXT:
+      selectionType = SelectionType::eIMEConvertedClause;
+      break;
+    case QUERY_CONTENT_FLAG_SELECTION_IME_SELECTEDCONVERTEDTEXT:
+      selectionType = SelectionType::eIMESelectedClause;
+      break;
+    case QUERY_CONTENT_FLAG_SELECTION_ACCESSIBILITY:
+      selectionType = SelectionType::eAccessibility;
+      break;
+    case QUERY_CONTENT_FLAG_SELECTION_FIND:
+      selectionType = SelectionType::eFind;
+      break;
+    case QUERY_CONTENT_FLAG_SELECTION_URLSECONDARY:
+      selectionType = SelectionType::eURLSecondary;
+      break;
+    case QUERY_CONTENT_FLAG_SELECTION_URLSTRIKEOUT:
+      selectionType = SelectionType::eURLStrikeout;
+      break;
+    case 0:
+      break;
+    default:
+      return NS_ERROR_INVALID_ARG;
+  }
+
+  if (selectionType != SelectionType::eNormal &&
+      message != eQuerySelectedText) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
   nsCOMPtr<nsIWidget> targetWidget = widget;
   LayoutDeviceIntPoint pt(aX, aY);
 
@@ -1961,6 +2011,9 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType,
       break;
     case eQueryTextRect:
       queryEvent.InitForQueryTextRect(aOffset, aLength, useNativeLineBreak);
+      break;
+    case eQuerySelectedText:
+      queryEvent.InitForQuerySelectedText(selectionType, useNativeLineBreak);
       break;
     default:
       queryEvent.mUseNativeLineBreak = useNativeLineBreak;
