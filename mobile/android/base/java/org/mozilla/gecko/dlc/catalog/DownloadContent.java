@@ -24,9 +24,10 @@ public class DownloadContent {
     public @interface Type {}
     public static final String TYPE_ASSET_ARCHIVE = "asset-archive";
 
-    @StringDef({KIND_FONT})
+    @StringDef({KIND_FONT, KIND_HYPHENATION_DICTIONARY})
     public @interface Kind {}
     public static final String KIND_FONT = "font";
+    public static final String KIND_HYPHENATION_DICTIONARY = "hyphenation";
 
     private final String id;
     private final String location;
@@ -124,6 +125,19 @@ public class DownloadContent {
 
     public boolean isFont() {
         return KIND_FONT.equals(kind);
+    }
+
+    public boolean isHyphenationDictionary() {
+        return KIND_HYPHENATION_DICTIONARY.equals(kind);
+    }
+
+    /**
+     *Checks whether the content to be downloaded is a known content.
+     *Currently it checks whether the type is "Asset Archive" and is of kind
+     *"Font" or "Hyphenation Dictionary".
+     */
+    public boolean isKnownContent() {
+        return ((isFont() || isHyphenationDictionary()) && isAssetArchive());
     }
 
     public boolean isAssetArchive() {
