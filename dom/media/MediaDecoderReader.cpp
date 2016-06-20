@@ -16,6 +16,7 @@
 #include "mozilla/Mutex.h"
 #include <stdint.h>
 #include <algorithm>
+#include <list>
 
 using namespace mozilla::media;
 
