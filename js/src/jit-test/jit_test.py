@@ -195,6 +195,7 @@ def main(argv):
 
     # Forbid running several variants of the same asmjs test, when debugging.
     options.can_test_also_noasmjs = not options.debugger
+    options.can_test_also_wasm_baseline = not options.debugger
 
     if test_args:
         read_all = False
