@@ -166,6 +166,49 @@ function checkSelection(aExpectedOffset, aExpectedText, aMessage, aID)
          selectedText.text == aExpectedText;
 }
 
+function checkIMESelection(aSelectionType, aExpectedFound, aExpectedOffset, aExpectedText, aMessage, aID)
+{
+  if (!aID) {
+    aID = "";
+  }
+  aMessage += " (" + aSelectionType + ")";
+  var selectionType = 0;
+  switch (aSelectionType) {
+    case "RawClause":
+      selectionType = QUERY_CONTENT_FLAG_SELECTION_IME_RAWINPUT;
+      break;
+    case "SelectedRawClause":
+      selectionType = QUERY_CONTENT_FLAG_SELECTION_IME_SELECTEDRAWTEXT;
+      break;
+    case "ConvertedClause":
+      selectionType = QUERY_CONTENT_FLAG_SELECTION_IME_CONVERTEDTEXT;
+      break;
+    case "SelectedClause":
+      selectionType = QUERY_CONTENT_FLAG_SELECTION_IME_SELECTEDCONVERTEDTEXT;
+      break;
+    default:
+      ok(false, aMessage + ": invalid selection type, " + aSelectionType);
+  }
+  isnot(selectionType, 0, aMessage + ": wrong value");
+  var selectedText = synthesizeQuerySelectedText(selectionType);
+  if (!checkQueryContentResult(selectedText, aMessage +
+                               ": synthesizeQuerySelectedText " + aID)) {
+    return false;
+  }
+  is(selectedText.notFound, !aExpectedFound,
+     aMessage + ": selection should " + (aExpectedFound ? "" : "not") + " be found " + aID);
+  if (selectedText.notFound) {
+    return selectedText.notFound == !aExpectedFound;
+  }
+
+  is(selectedText.offset, aExpectedOffset,
+     aMessage + ": selection offset is wrong " + aID);
+  is(selectedText.text, aExpectedText,
+     aMessage + ": selected text is wrong " + aID);
+  return selectedText.offset == aExpectedOffset &&
+         selectedText.text == aExpectedText;
+}
+
 function checkRect(aRect, aExpectedRect, aMessage)
 {
   is(aRect.left, aExpectedRect.left, aMessage + ": left is wrong");
@@ -3408,6 +3451,140 @@ function runQueryTextContentEventTest()
   is(result.text, "abc", "runQueryTextContentEventTest #16 (0, 3), \"" + contenteditable.innerHTML + "\"");
 }
 
+function runQueryIMESelectionTest()
+{
+  textarea.focus();
+  textarea.value = "before  after";
+  var startoffset = textarea.selectionStart = textarea.selectionEnd = "before ".length;
+
+  if (!checkIMESelection("RawClause", false, 0, "", "runQueryIMESelectionTest: before starting composition") ||
+      !checkIMESelection("SelectedRawClause", false, 0, "", "runQueryIMESelectionTest: before starting composition") ||
+      !checkIMESelection("ConvertedClause", false, 0, "", "runQueryIMESelectionTest: before starting composition") ||
+      !checkIMESelection("SelectedClause", false, 0, "", "runQueryIMESelectionTest: before starting composition")) {
+    synthesizeComposition({ type: "compositioncommitasis" });
+    return;
+  }
+
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "a",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  if (!checkIMESelection("RawClause", true, startoffset, "a", "runQueryIMESelectionTest: inputting raw text") ||
+      !checkIMESelection("SelectedRawClause", false, 0, "", "runQueryIMESelectionTest: inputting raw text") ||
+      !checkIMESelection("ConvertedClause", false, 0, "", "runQueryIMESelectionTest: inputting raw text") ||
+      !checkIMESelection("SelectedClause", false, 0, "", "runQueryIMESelectionTest: inputting raw text")) {
+    synthesizeComposition({ type: "compositioncommitasis" });
+    return;
+  }
+
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "abcdefgh",
+        "clauses":
+        [
+          { "length": 8, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+        ]
+      },
+      "caret": { "start": 8, "length": 0 }
+    });
+
+  if (!checkIMESelection("RawClause", true, startoffset, "abcdefgh", "runQueryIMESelectionTest: updating raw text") ||
+      !checkIMESelection("SelectedRawClause", false, 0, "", "runQueryIMESelectionTest: updating raw text") ||
+      !checkIMESelection("ConvertedClause", false, 0, "", "runQueryIMESelectionTest: updating raw text") ||
+      !checkIMESelection("SelectedClause", false, 0, "", "runQueryIMESelectionTest: updating raw text")) {
+    synthesizeComposition({ type: "compositioncommitasis" });
+    return;
+  }
+
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "ABCDEFGH",
+        "clauses":
+        [
+          { "length": 2, "attr": COMPOSITION_ATTR_SELECTED_CLAUSE },
+          { "length": 3, "attr": COMPOSITION_ATTR_CONVERTED_CLAUSE },
+          { "length": 3, "attr": COMPOSITION_ATTR_CONVERTED_CLAUSE },
+        ]
+      },
+      "caret": { "start": 2, "length": 0 }
+    });
+
+  if (!checkIMESelection("RawClause", false, 0, "", "runQueryIMESelectionTest: starting to convert") ||
+      !checkIMESelection("SelectedRawClause", false, 0, "", "runQueryIMESelectionTest: starting to convert") ||
+      !checkIMESelection("ConvertedClause", true, startoffset + 2, "CDE", "runQueryIMESelectionTest: starting to convert") ||
+      !checkIMESelection("SelectedClause", true, startoffset, "AB", "runQueryIMESelectionTest: starting to convert")) {
+    synthesizeComposition({ type: "compositioncommitasis" });
+    return;
+  }
+
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "ABCDEFGH",
+        "clauses":
+        [
+          { "length": 2, "attr": COMPOSITION_ATTR_CONVERTED_CLAUSE },
+          { "length": 3, "attr": COMPOSITION_ATTR_SELECTED_CLAUSE },
+          { "length": 3, "attr": COMPOSITION_ATTR_CONVERTED_CLAUSE },
+        ]
+      },
+      "caret": { "start": 5, "length": 0 }
+    });
+
+  if (!checkIMESelection("RawClause", false, 0, "", "runQueryIMESelectionTest: changing selected clause") ||
+      !checkIMESelection("SelectedRawClause", false, 0, "", "runQueryIMESelectionTest: changing selected clause") ||
+      !checkIMESelection("ConvertedClause", true, startoffset, "AB", "runQueryIMESelectionTest: changing selected clause") ||
+      !checkIMESelection("SelectedClause", true, startoffset + 2, "CDE", "runQueryIMESelectionTest: changing selected clause")) {
+    synthesizeComposition({ type: "compositioncommitasis" });
+    return;
+  }
+
+  synthesizeComposition({ type: "compositioncommitasis" });
+
+  if (!checkIMESelection("RawClause", false, 0, "", "runQueryIMESelectionTest: after committing composition") ||
+      !checkIMESelection("SelectedRawClause", false, 0, "", "runQueryIMESelectionTest: after committing composition") ||
+      !checkIMESelection("ConvertedClause", false, 0, "", "runQueryIMESelectionTest: after committing composition") ||
+      !checkIMESelection("SelectedClause", false, 0, "", "runQueryIMESelectionTest: after committing composition")) {
+    return;
+  }
+
+  startoffset = textarea.selectionStart;
+
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "abcdefgh",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+          { "length": 1, "attr": COMPOSITION_ATTR_SELECTED_RAW_CLAUSE },
+          { "length": 1, "attr": COMPOSITION_ATTR_CONVERTED_CLAUSE },
+          { "length": 1, "attr": COMPOSITION_ATTR_SELECTED_CLAUSE },
+          { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE },
+          { "length": 1, "attr": COMPOSITION_ATTR_SELECTED_RAW_CLAUSE },
+          { "length": 1, "attr": COMPOSITION_ATTR_CONVERTED_CLAUSE },
+          { "length": 1, "attr": COMPOSITION_ATTR_SELECTED_CLAUSE },
+        ]
+      },
+      "caret": { "start": 8, "length": 0 }
+    });
+
+  if (!checkIMESelection("RawClause", true, startoffset, "a", "runQueryIMESelectionTest: unrealistic testcase") ||
+      !checkIMESelection("SelectedRawClause", true, startoffset + 1, "b", "runQueryIMESelectionTest: unrealistic testcase") ||
+      !checkIMESelection("ConvertedClause", true, startoffset + 2, "c", "runQueryIMESelectionTest: unrealistic testcase") ||
+      !checkIMESelection("SelectedClause", true, startoffset + 3, "d", "runQueryIMESelectionTest: unrealistic testcase")) {
+    synthesizeComposition({ type: "compositioncommitasis" });
+    return;
+  }
+
+  synthesizeComposition({ type: "compositioncommitasis" });
+}
+
 function runCSSTransformTest()
 {
   textarea.focus();
@@ -5751,6 +5928,7 @@ function runTest()
   runCharAtPointAtOutsideTest();
   runSetSelectionEventTest();
   runQueryTextContentEventTest();
+  runQueryIMESelectionTest();
   runCSSTransformTest();
   runBug722639Test();
   runForceCommitTest();
