@@ -22,6 +22,7 @@ addons = [
     'child_process',
     'chrome',
     'content-permissions',
+    'content-script-messages-latency',
     'contributors',
     'curly-id',
     'developers',

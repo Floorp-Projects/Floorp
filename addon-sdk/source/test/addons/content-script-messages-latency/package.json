@@ -1,0 +1,6 @@
+
+{
+  "id": "content-script-messages-latency@jetpack",
+  "main": "./main.js",
+  "version": "0.0.1"
+}
