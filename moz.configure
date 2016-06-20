@@ -85,6 +85,14 @@ set_define('GTEST_USE_OWN_TR1_TUPLE',
 set_define('GTEST_HAS_CLONE',
            delayed_getattr(linux_gtest_defines, 'has_clone'))
 
+js_option('--enable-debug',
+          nargs='?',
+          help='Enable building with developer debug info '
+               '(using the given compiler flags).')
+
+add_old_configure_assignment('MOZ_DEBUG',
+                             depends_if('--enable-debug')(lambda _: True))
+
 @depends('--disable-compile-environment', '--help')
 def toolchain_include(compile_env, help):
     if compile_env:
