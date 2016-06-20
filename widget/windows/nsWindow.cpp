@@ -6814,7 +6814,7 @@ nsWindow::HasBogusPopupsDropShadowOnMultiMonitor() {
     if (!sHasBogusPopupsDropShadowOnMultiMonitor) {
       // Otherwise check if Direct3D 9 may be used.
       if (gfxConfig::IsEnabled(Feature::HW_COMPOSITING) &&
-          !gfxPrefs::LayersPreferOpenGL())
+          !gfxConfig::IsEnabled(Feature::OPENGL_COMPOSITING))
       {
         nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
         if (gfxInfo) {
