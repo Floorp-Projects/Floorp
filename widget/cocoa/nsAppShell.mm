@@ -323,8 +323,7 @@ nsAppShell::Init()
   }
 
 #if !defined(RELEASE_BUILD) || defined(DEBUG)
-  if (nsCocoaFeatures::OnMavericksOrLater() &&
-      Preferences::GetBool("security.sandbox.mac.track.violations", false)) {
+  if (Preferences::GetBool("security.sandbox.mac.track.violations", false)) {
     nsSandboxViolationSink::Start();
   }
 #endif
@@ -683,9 +682,7 @@ nsAppShell::Exit(void)
   mTerminated = true;
 
 #if !defined(RELEASE_BUILD) || defined(DEBUG)
-  if (nsCocoaFeatures::OnMavericksOrLater()) {
-    nsSandboxViolationSink::Stop();
-  }
+  nsSandboxViolationSink::Stop();
 #endif
 
   // Quoting from Apple's doc on the [NSApplication stop:] method (from their
