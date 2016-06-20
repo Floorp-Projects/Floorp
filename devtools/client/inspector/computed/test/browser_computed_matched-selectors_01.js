@@ -22,7 +22,7 @@ function* testMatchedSelectors(view, inspector) {
   info("checking selector counts, matched rules and titles");
 
   let nodeFront = yield getNodeFront("#test", inspector);
-  is(nodeFront, view.viewedElement,
+  is(nodeFront, view._viewedElement,
     "style inspector node matches the selected node");
 
   let propertyView = new PropertyView(view, "color");
