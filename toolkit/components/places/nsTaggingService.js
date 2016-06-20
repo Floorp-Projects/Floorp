@@ -66,7 +66,7 @@ TaggingService.prototype = {
     let stmt = db.createStatement(
       `SELECT id FROM moz_bookmarks
        WHERE parent = :tag_id
-       AND fk = (SELECT id FROM moz_places WHERE url = :page_url)`
+       AND fk = (SELECT id FROM moz_places WHERE url_hash = hash(:page_url) AND url = :page_url)`
     );
     stmt.params.tag_id = tagId;
     stmt.params.page_url = aURI.spec;
@@ -380,7 +380,7 @@ TaggingService.prototype = {
     let stmt = db.createStatement(
       `SELECT id, parent
        FROM moz_bookmarks
-       WHERE fk = (SELECT id FROM moz_places WHERE url = :page_url)`
+       WHERE fk = (SELECT id FROM moz_places WHERE url_hash = hash(:page_url) AND url = :page_url)`
     );
     stmt.params.page_url = aURI.spec;
     try {

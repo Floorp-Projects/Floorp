@@ -1957,7 +1957,7 @@ public:
     if (!mIsVisitedStatement) {
       (void)mReadOnlyDBConn->CreateAsyncStatement(NS_LITERAL_CSTRING(
         "SELECT 1 FROM moz_places h "
-        "WHERE url = ?1 AND last_visit_date NOTNULL "
+        "WHERE url_hash = hash(?1) AND url = ?1 AND last_visit_date NOTNULL "
       ),  getter_AddRefs(mIsVisitedStatement));
       MOZ_ASSERT(mIsVisitedStatement);
       nsresult result = mIsVisitedStatement ? NS_OK : NS_ERROR_NOT_AVAILABLE;
@@ -2037,8 +2037,8 @@ History::InsertPlace(VisitData& aPlace)
 
   nsCOMPtr<mozIStorageStatement> stmt = GetStatement(
       "INSERT INTO moz_places "
-        "(url, title, rev_host, hidden, typed, frecency, guid) "
-      "VALUES (:url, :title, :rev_host, :hidden, :typed, :frecency, :guid) "
+        "(url, url_hash, title, rev_host, hidden, typed, frecency, guid) "
+      "VALUES (:url, hash(:url), :title, :rev_host, :hidden, :typed, :frecency, :guid) "
     );
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
@@ -2147,7 +2147,7 @@ History::FetchPageInfo(VisitData& _place, bool* _exists)
       "(SELECT id FROM moz_historyvisits "
        "WHERE place_id = h.id AND visit_date = h.last_visit_date) AS last_visit_id "
       "FROM moz_places h "
-      "WHERE url = :page_url "
+      "WHERE url_hash = hash(:page_url) AND url = :page_url "
     );
     NS_ENSURE_STATE(stmt);
 
