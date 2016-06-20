@@ -1064,7 +1064,7 @@
     "description": "2D canvas used"
   },
   "CANVAS_WEBGL_ACCL_FAILURE_ID": {
-    "alert_emails": ["bgirard@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","bgirard@mozilla.com","msreckovic@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "keyed": true,
@@ -1072,7 +1072,7 @@
     "bug_numbers": [1272808]
   },
   "CANVAS_WEBGL_FAILURE_ID": {
-    "alert_emails": ["bgirard@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","bgirard@mozilla.com","msreckovic@mozilla.com"],
     "expires_in_version": "never",
     "kind": "count",
     "keyed": true,
@@ -9576,7 +9576,7 @@
   },
   "GRAPHICS_SANITY_TEST": {
     "expires_in_version": "never",
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","msreckovic@mozilla.com"],
     "kind": "enumerated",
     "n_values": 20,
     "releaseChannelCollection": "opt-out",
@@ -9654,7 +9654,7 @@
     "description": "Whether the user has set a custom homepage."
   },
   "GRAPHICS_DRIVER_STARTUP_TEST": {
-    "alert_emails": ["danderson@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","danderson@mozilla.com","msreckovic@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 20,
@@ -9662,7 +9662,7 @@
     "description": "Reports whether or not graphics drivers crashed during startup."
   },
   "GRAPHICS_SANITY_TEST_OS_SNAPSHOT": {
-    "alert_emails": ["danderson@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","danderson@mozilla.com","msreckovic@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 10,
@@ -9916,7 +9916,7 @@
     "description": "The number of times a given type of breakdown was used for a dominator tree"
   },
   "GRAPHICS_SANITY_TEST_REASON": {
-    "alert_emails": ["danderson@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","danderson@mozilla.com","msreckovic@mozilla.com"],
     "expires_in_version": "43",
     "kind": "enumerated",
     "n_values": 20,
@@ -10484,14 +10484,14 @@
     "description": "Attempt to notify ServiceWorker of push notification resubscription."
   },
   "D3D11_SYNC_HANDLE_FAILURE": {
-    "alert_emails": ["bschouten@mozilla.com","danderson@mozilla.com","msreckovic@mozilla.com","ashughes@mozilla.com"],
-    "expires_in_version": "50",
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","bschouten@mozilla.com","danderson@mozilla.com","msreckovic@mozilla.com","ashughes@mozilla.com"],
+    "expires_in_version": "60",
     "releaseChannelCollection": "opt-out",
     "kind": "count",
     "description": "Number of times the D3D11 compositor failed to get a texture sync handle."
   },
   "GFX_CONTENT_FAILED_TO_ACQUIRE_DEVICE": {
-    "alert_emails": ["gfx-telemetry-alerts@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","msreckovic@mozilla.com"],
     "expires_in_version": "never",
     "kind": "enumerated",
     "n_values": 6,
@@ -10893,7 +10893,7 @@
     "description": "Counts the number of times that about:tabcrashed was unloaded without submitting."
   },
   "ABOUTCRASHES_OPENED_COUNT": {
-    "alert_emails": ["bgirard@mozilla.com"],
+    "alert_emails": ["gfx-telemetry-alerts@mozilla.com","bgirard@mozilla.com","msreckovic@mozilla.com"],
     "expires_in_version": "55",
     "kind": "count",
     "bug_numbers": [1276714, 1276716],
