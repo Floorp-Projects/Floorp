@@ -42,7 +42,28 @@ gain.gain.value = 0.5;
 context.startRendering().then(buffer => {
   document.querySelector("pre").innerHTML = buffer.getChannelData(0)[0];
   ok(buffer.getChannelData(0)[0] == 1.0, "Volume was handled properly");
-  SimpleTest.finish();
+
+  context = new OfflineAudioContext(1, 100, samplerate);
+  var oscillator = context.createOscillator();
+  var gain = context.createGain();
+  var waveShaper = context.createWaveShaper();
+
+  oscillator.start(0);
+  oscillator.connect(gain);
+
+  // to silence
+  gain.gain.value = 0;
+  gain.connect(waveShaper);
+
+  // convert all signal into 1.0
+  waveShaper.curve = new Float32Array([ 1, 1 ]);
+  waveShaper.connect(context.destination);
+
+  context.startRendering().then((buffer) => {
+    var result = buffer.getChannelData(0);
+    ok(result.every(x => x === 1), "WaveShaper handles zero gain properly");
+    SimpleTest.finish();
+  });
 });
 </script>
 <pre>
