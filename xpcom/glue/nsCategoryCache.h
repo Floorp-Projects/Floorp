@@ -79,7 +79,7 @@ public:
       nsISupports* entry = iter.UserData();
       nsCOMPtr<T> service = do_QueryInterface(entry);
       if (service) {
-        aResult.AppendObject(service);
+        aResult.AppendElement(service.forget());
       }
     }
   }
