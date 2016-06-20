@@ -53,10 +53,6 @@ const nodeConstants = require("devtools/shared/dom-node-constants");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 
 loader.lazyRequireGetter(this, "CSS", "CSS");
-loader.lazyGetter(this, "DOMParser", () => {
-  return Cc["@mozilla.org/xmlextras/domparser;1"]
-    .createInstance(Ci.nsIDOMParser);
-});
 loader.lazyGetter(this, "AutocompletePopup", () => {
   return require("devtools/client/shared/autocomplete-popup").AutocompletePopup;
 });
@@ -3466,7 +3462,7 @@ function parseAttributeValues(attr, doc) {
   attr = attr.trim();
 
   let parseAndGetNode = str => {
-    return DOMParser.parseFromString(str, "text/html").body.childNodes[0];
+    return new DOMParser().parseFromString(str, "text/html").body.childNodes[0];
   };
 
   // Handle bad user inputs by appending a " or ' if it fails to parse without
