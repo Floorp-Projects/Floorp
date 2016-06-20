@@ -7,7 +7,7 @@ import logging
 import re
 
 from .graph import Graph
-from .types import TaskGraph
+from .taskgraph import TaskGraph
 from slugid import nice as slugid
 
 logger = logging.getLogger(__name__)

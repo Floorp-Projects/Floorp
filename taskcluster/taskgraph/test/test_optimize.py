@@ -8,7 +8,7 @@ import unittest
 
 from ..optimize import optimize_task_graph, resolve_task_references
 from ..optimize import annotate_task_graph, get_subgraph
-from .. import types
+from ..taskgraph import TaskGraph
 from .. import graph
 from .util import TestTask
 
@@ -73,7 +73,7 @@ class TestOptimize(unittest.TestCase):
     def make_graph(self, *tasks_and_edges):
         tasks = {t.label: t for t in tasks_and_edges if isinstance(t, OptimizingTask)}
         edges = {e for e in tasks_and_edges if not isinstance(e, OptimizingTask)}
-        return types.TaskGraph(tasks, graph.Graph(set(tasks), edges))
+        return TaskGraph(tasks, graph.Graph(set(tasks), edges))
 
     def assert_annotations(self, graph, **annotations):
         def repl(task_id):

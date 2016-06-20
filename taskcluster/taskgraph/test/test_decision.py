@@ -13,7 +13,7 @@ import tempfile
 
 from .. import decision
 from ..graph import Graph
-from ..types import TaskGraph
+from ..taskgraph import TaskGraph
 from .util import TestTask
 from mozunit import main
 
