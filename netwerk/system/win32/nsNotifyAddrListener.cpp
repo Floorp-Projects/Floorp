@@ -35,6 +35,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/SHA1.h"
 #include "mozilla/Base64.h"
+#include "mozilla/Telemetry.h"
 
 #include <iptypes.h>
 #include <iphlpapi.h>
@@ -168,10 +169,11 @@ static bool macAddr(BYTE addr[], DWORD len, char *buf, size_t buflen)
     return true;
 }
 
-void nsNotifyAddrListener::findMac(char *gateway)
+bool nsNotifyAddrListener::findMac(char *gateway)
 {
     // query for buffer size needed
     DWORD dwActualSize = 0;
+    bool found = FALSE;
 
     // GetIpNetTable gets the IPv4 to physical address mapping table
     DWORD status = GetIpNetTable(NULL, &dwActualSize, FALSE);
@@ -214,16 +216,26 @@ void nsNotifyAddrListener::findMac(char *gateway)
                                         SHA1Sum::kHashSize);
                     Base64Encode(newString, output);
                     LOG(("networkid: id %s\n", output.get()));
-                    mNetworkId = output;
+                    if (mNetworkId != output) {
+                        // new id
+                        Telemetry::Accumulate(Telemetry::NETWORK_ID, 1);
+                        mNetworkId = output;
+                    }
+                    else {
+                        // same id
+                        Telemetry::Accumulate(Telemetry::NETWORK_ID, 2);
+                    }
+                    found = true;
                     break;
                 }
             }
         }
     }
+    return found;
 }
 
 // returns 'true' when the gw is found and stored
-static bool defaultgw(char *gateway) // at least 128 bytes buffer
+static bool defaultgw(char *aGateway, size_t aGatewayLen)
 {
     PMIB_IPFORWARDTABLE pIpForwardTable = NULL;
 
@@ -252,7 +264,7 @@ static bool defaultgw(char *gateway) // at least 128 bytes buffer
                     (pIpForwardTable->table[i].dwForwardNextHop);
                 ipStr = inet_ntoa(IpAddr);
                 if (ipStr) {
-                    strcpy_s(gateway, 128, ipStr);
+                    strcpy_s(aGateway, aGatewayLen, ipStr);
                     return true;
                 }
             }
@@ -271,9 +283,14 @@ static bool defaultgw(char *gateway) // at least 128 bytes buffer
 //
 void nsNotifyAddrListener::calculateNetworkId(void)
 {
+    bool found = FALSE;
     char gateway[128];
-    if (defaultgw(gateway)) {
-        findMac(gateway);
+    if (defaultgw(gateway, sizeof(gateway) )) {
+        found = findMac(gateway);
+    }
+    if (!found) {
+        // no id
+        Telemetry::Accumulate(Telemetry::NETWORK_ID, 0);
     }
 }
 
@@ -292,6 +309,7 @@ nsNotifyAddrListener::nextCoalesceWaitTime()
     // check if coalescing period should continue
     double period = (TimeStamp::Now() - mChangeTime).ToMilliseconds();
     if (period >= kNetworkChangeCoalescingPeriod) {
+        calculateNetworkId();
         SendEvent(NS_NETWORK_LINK_DATA_CHANGED);
         mCoalescingActive = false;
         return INFINITE; // return default
@@ -722,5 +740,4 @@ nsNotifyAddrListener::CheckLinkStatus(void)
                       NS_NETWORK_LINK_DATA_UP : NS_NETWORK_LINK_DATA_DOWN);
         }
     }
-    calculateNetworkId();
 }
