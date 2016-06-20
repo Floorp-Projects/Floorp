@@ -343,10 +343,11 @@ ImageBridgeChild::NotifyNotUsedToNonRecycle(uint64_t aTextureId, uint64_t aTrans
   mTexturesWaitingFenceHandle.Remove(aTextureId);
 
   // Release TextureClient on allocator's message loop.
-  TextureClientReleaseTask* task = new TextureClientReleaseTask(client);
+  RefPtr<TextureClientReleaseTask> task =
+    MakeAndAddRef<TextureClientReleaseTask>(client);
   RefPtr<ClientIPCAllocator> allocator = client->GetAllocator();
   client = nullptr;
-  allocator->AsClientAllocator()->GetMessageLoop()->PostTask(FROM_HERE, task);
+  allocator->AsClientAllocator()->GetMessageLoop()->PostTask(task.forget());
 #else
   NS_RUNTIMEABORT("not reached");
 #endif
