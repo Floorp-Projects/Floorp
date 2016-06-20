@@ -898,7 +898,7 @@ ResolveRequestedModules(nsModuleLoadRequest* aRequest, nsCOMArray<nsIURI> &aUrls
     nsresult rv = RequestedModuleIsInAncestorList(aRequest, uri, &isAncestor);
     NS_ENSURE_SUCCESS(rv, rv);
     if (!isAncestor) {
-      aUrls.AppendElement(uri);
+      aUrls.AppendElement(uri.forget());
     }
   }
 
