@@ -135,6 +135,12 @@ public:
                    const dom::MediaTrackConstraints& aConstraints);
 
   /**
+   * Same for GetSettings (no-op).
+   */
+  virtual void
+  GetSettings(dom::MediaTrackSettings& aResult) {};
+
+  /**
    * Called by the source interface when all registered sinks have unregistered.
    */
   virtual void Stop() = 0;
@@ -212,6 +218,9 @@ public:
   {}
 
   MediaSourceEnum GetMediaSource() const override { return mMediaSource; }
+
+  void
+  GetSettings(dom::MediaTrackSettings& aResult) override {}
 
   void Stop() override {}
 
@@ -436,7 +445,6 @@ protected:
   bool mEnabled;
   const bool mRemote;
   dom::MediaTrackConstraints mConstraints;
-  dom::MediaTrackSettings mSettings;
 };
 
 } // namespace dom
