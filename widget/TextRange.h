@@ -275,6 +275,16 @@ public:
     return false;
   }
 
+  bool HasClauses() const
+  {
+    for (const TextRange& range : *this) {
+      if (range.IsClause()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   uint32_t GetCaretPosition() const
   {
     for (const TextRange& range : *this) {
@@ -283,6 +293,19 @@ public:
       }
     }
     return UINT32_MAX;
+  }
+
+  const TextRange* GetFirstClause() const
+  {
+    for (const TextRange& range : *this) {
+      // Look for the range of a clause whose start offset is 0 because the
+      // first clause's start offset is always 0.
+      if (range.IsClause() && !range.mStartOffset) {
+        return &range;
+      }
+    }
+    MOZ_ASSERT(!HasClauses());
+    return nullptr;
   }
 };
 
