@@ -5,7 +5,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-  <title>Test for SRI require-sri-for CSP directive</title>
+  <title>Test for diabled SRI require-sri-for CSP directive</title>
   <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
   <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
 </head>
@@ -14,7 +14,7 @@
 <iframe style="width:200px;height:200px;" id="test_frame"></iframe>
 </body>
 <script type="application/javascript">
-  SpecialPowers.setBoolPref("security.csp.experimentalEnabled", true);
+  SpecialPowers.setBoolPref("security.csp.experimentalEnabled", false);
   SimpleTest.waitForExplicitFinish();
   function handler(event) {
     switch (event.data) {
@@ -22,15 +22,15 @@
         ok(true, "Eligible SRI resources was correctly loaded.");
         break;
       case 'bad_nonsriLoaded':
-        ok(false, "Eligible non-SRI resource should be blocked by the CSP!");
+        ok(true, "Eligible non-SRI resource should be blocked by the CSP!");
         break;
       case 'good_nonsriBlocked':
-        ok(true, "Eligible non-SRI resources was correctly blocked by the CSP.");
+        ok(false, "Eligible non-SRI resources was correctly blocked by the CSP.");
         break;
       case 'finish':
         var blackText = frame.contentDocument.getElementById('black-text');
         var blackTextColor = frame.contentWindow.getComputedStyle(blackText, null).getPropertyValue('color');
-        ok(blackTextColor == 'rgb(0, 0, 0)', "The second part should not be black.");
+        ok(blackTextColor != 'rgb(0, 0, 0)', "The second part should still be black.");
         removeEventListener('message', handler);
         SimpleTest.finish();
         break;
