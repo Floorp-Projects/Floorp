@@ -79,6 +79,13 @@
             }
           },
 
+          "incognito": {
+            "type": "string",
+            "enum": ["spanning"],
+            "optional": true,
+            "onError": "warn"
+          },
+
           "background": {
             "choices": [
               {
