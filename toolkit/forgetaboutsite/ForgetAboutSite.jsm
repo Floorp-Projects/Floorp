@@ -12,6 +12,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
                                   "resource://gre/modules/PlacesUtils.jsm");
 XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
                                   "resource://gre/modules/Downloads.jsm");
+XPCOMUtils.defineLazyModuleGetter(this, "ContextualIdentityService",
+                                  "resource:///modules/ContextualIdentityService.jsm");
 
 this.EXPORTED_SYMBOLS = ["ForgetAboutSite"];
 
@@ -47,6 +49,14 @@ const Cu = Components.utils;
 this.ForgetAboutSite = {
   removeDataFromDomain: function CRH_removeDataFromDomain(aDomain)
   {
+    // Get all userContextId from the ContextualIdentityService and create
+    // all originAttributes.
+    let oaList = [ {} ]; // init the list with the default originAttributes.
+
+    for (let identity of ContextualIdentityService.getIdentities()) {
+      oaList.push({ userContextId: identity.userContextId});
+    }
+
     PlacesUtils.history.removePagesFromHost(aDomain, true);
 
     // Cache
@@ -74,10 +84,13 @@ this.ForgetAboutSite = {
     // Cookies
     let cm = Cc["@mozilla.org/cookiemanager;1"].
              getService(Ci.nsICookieManager2);
-    let enumerator = cm.getCookiesFromHost(aDomain, {});
-    while (enumerator.hasMoreElements()) {
-      let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
-      cm.remove(cookie.host, cookie.name, cookie.path, false, cookie.originAttributes);
+    let enumerator;
+    for (let originAttributes of oaList) {
+      enumerator = cm.getCookiesFromHost(aDomain, originAttributes);
+      while (enumerator.hasMoreElements()) {
+        let cookie = enumerator.getNext().QueryInterface(Ci.nsICookie);
+        cm.remove(cookie.host, cookie.name, cookie.path, false, cookie.originAttributes);
+      }
     }
 
     // EME
@@ -164,10 +177,14 @@ this.ForgetAboutSite = {
                                caUtils);
     let httpURI = caUtils.makeURI("http://" + aDomain);
     let httpsURI = caUtils.makeURI("https://" + aDomain);
-    let httpPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(httpURI, {});
-    let httpsPrincipal = Services.scriptSecurityManager.createCodebasePrincipal(httpsURI, {});
-    qms.clearStoragesForPrincipal(httpPrincipal);
-    qms.clearStoragesForPrincipal(httpsPrincipal);
+    for (let originAttributes of oaList) {
+      let httpPrincipal = Services.scriptSecurityManager
+                                  .createCodebasePrincipal(httpURI, originAttributes);
+      let httpsPrincipal = Services.scriptSecurityManager
+                                   .createCodebasePrincipal(httpsURI, originAttributes);
+      qms.clearStoragesForPrincipal(httpPrincipal);
+      qms.clearStoragesForPrincipal(httpsPrincipal);
+    }
 
     function onContentPrefsRemovalFinished() {
       // Everybody else (including extensions)
