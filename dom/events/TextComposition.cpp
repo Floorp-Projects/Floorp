@@ -439,6 +439,12 @@ TextComposition::GetSelectionStartOffset()
 {
   nsCOMPtr<nsIWidget> widget = mPresContext->GetRootWidget();
   WidgetQueryContentEvent selectedTextEvent(true, eQuerySelectedText, widget);
+  if (mRanges && mRanges->HasClauses()) {
+    selectedTextEvent.InitForQuerySelectedText(
+                        ToSelectionType(mRanges->GetFirstClause()->mRangeType));
+  } else {
+    selectedTextEvent.InitForQuerySelectedText(SelectionType::eNormal);
+  }
 
   // The editor which has this composition is observed by active
   // IMEContentObserver, we can use the cache of it.
