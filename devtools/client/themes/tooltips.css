@@ -390,3 +390,25 @@
 .stack-frame-line {
   color: var(--theme-highlight-orange);
 }
+
+/* Tooltip: HTML Search */
+
+#searchbox-panel-listbox {
+  width: 250px;
+  max-width: 250px;
+  overflow-x: hidden;
+}
+
+#searchbox-panel-listbox .autocomplete-item,
+#searchbox-panel-listbox .autocomplete-item[selected] {
+  overflow-x: hidden;
+}
+
+#searchbox-panel-listbox .autocomplete-item > .initial-value {
+  max-width: 130px;
+  margin-left: 15px;
+}
+
+#searchbox-panel-listbox .autocomplete-item > .autocomplete-value {
+  max-width: 150px;
+}
