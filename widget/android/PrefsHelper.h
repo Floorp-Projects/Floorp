@@ -12,6 +12,7 @@
 #include "nsCOMPtr.h"
 #include "nsVariant.h"
 
+#include "mozilla/Maybe.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Services.h"
 #include "mozilla/UniquePtr.h"
@@ -67,16 +68,19 @@ class PrefsHelper
                 return false;
         }
 
-        const auto& jstrVal = type == widget::PrefsHelper::PREF_STRING ?
-                jni::StringParam(strVal, aPrefName.Env()) :
-                jni::StringParam(nullptr);
+        Maybe<jni::StringParam> jstrVal;
+        jstrVal.emplace(nullptr);
+        if (type == widget::PrefsHelper::PREF_STRING) {
+            jstrVal.reset();
+            jstrVal.emplace(strVal, aPrefName.Env());
+        }
 
         if (aPrefHandler) {
             widget::PrefsHelper::CallPrefHandler(
-                    aPrefHandler, type, aPrefName, boolVal, intVal, jstrVal);
+                    aPrefHandler, type, aPrefName, boolVal, intVal, jstrVal.ref());
         } else {
             widget::PrefsHelper::OnPrefChange(
-                    aPrefName, type, boolVal, intVal, jstrVal);
+                    aPrefName, type, boolVal, intVal, jstrVal.ref());
         }
         return true;
     }
@@ -189,12 +193,15 @@ public:
                     continue;
             }
 
-            const auto& jstrVal = type == widget::PrefsHelper::PREF_STRING ?
-                    jni::StringParam(strVal, aCls.Env()) :
-                    jni::StringParam(nullptr);
+            Maybe<jni::StringParam> jstrVal;
+            jstrVal.emplace(nullptr);
+            if (type == widget::PrefsHelper::PREF_STRING) {
+                jstrVal.reset();
+                jstrVal.emplace(strVal, aCls.Env());
+            }
 
             widget::PrefsHelper::CallPrefHandler(
-                    aPrefHandler, type, nameStr, boolVal, intVal, jstrVal);
+                    aPrefHandler, type, nameStr, boolVal, intVal, jstrVal.ref());
         }
 
         widget::PrefsHelper::CallPrefHandler(
@@ -314,11 +321,14 @@ public:
                 return;
         }
 
-        const auto& jstrVal = type == widget::PrefsHelper::PREF_STRING ?
-                jni::StringParam(strVal) :
-                jni::StringParam(nullptr);
+        Maybe<jni::StringParam> jstrVal;
+        jstrVal.emplace(nullptr);
+        if (type == widget::PrefsHelper::PREF_STRING) {
+            jstrVal.reset();
+            jstrVal.emplace(strVal);
+        }
 
-        widget::PrefsHelper::OnPrefChange(name, type, boolVal, intVal, jstrVal);
+        widget::PrefsHelper::OnPrefChange(name, type, boolVal, intVal, jstrVal.ref());
     }
 };
 
