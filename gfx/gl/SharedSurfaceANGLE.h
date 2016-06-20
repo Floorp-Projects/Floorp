@@ -40,9 +40,6 @@ public:
     const HANDLE mShareHandle;
 protected:
     RefPtr<IDXGIKeyedMutex> mKeyedMutex;
-    RefPtr<IDXGIKeyedMutex> mConsumerKeyedMutex;
-    RefPtr<ID3D11Texture2D> mConsumerTexture;
-
     const GLuint mFence;
 
     SharedSurface_ANGLEShareHandle(GLContext* gl,
@@ -66,10 +63,6 @@ public:
     virtual void ProducerReleaseImpl() override;
     virtual void ProducerReadAcquireImpl() override;
     virtual void ProducerReadReleaseImpl() override;
-
-    const RefPtr<ID3D11Texture2D>& GetConsumerTexture() const {
-        return mConsumerTexture;
-    }
 
     virtual bool ToSurfaceDescriptor(layers::SurfaceDescriptor* const out_descriptor) override;
 
