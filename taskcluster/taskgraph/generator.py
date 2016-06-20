@@ -8,7 +8,7 @@ import os
 import yaml
 
 from .graph import Graph
-from .types import TaskGraph
+from .taskgraph import TaskGraph
 from .optimize import optimize_task_graph
 
 logger = logging.getLogger(__name__)

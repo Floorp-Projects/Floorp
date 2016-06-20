@@ -9,7 +9,7 @@ import os
 
 from .. import create
 from ..graph import Graph
-from ..types import TaskGraph
+from ..taskgraph import TaskGraph
 from .util import TestTask
 
 from mozunit import main
