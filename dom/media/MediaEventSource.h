@@ -58,6 +58,11 @@ enum class ListenerPolicy : int8_t {
   NonExclusive
 };
 
+enum class DispatchPolicy : int8_t {
+  Sync, // Events are passed synchronously to the listeners.
+  Async // Events are passed asynchronously to the listeners.
+};
+
 namespace detail {
 
 /**
@@ -92,10 +97,10 @@ public:
 template <typename T>
 struct TakeArgs : public TakeArgsHelper<T>::Type {};
 
-template <typename T> struct EventTarget;
+template <DispatchPolicy Dp, typename T> struct EventTarget;
 
 template <>
-struct EventTarget<nsIEventTarget> {
+struct EventTarget<DispatchPolicy::Async, nsIEventTarget> {
   static void
   Dispatch(nsIEventTarget* aTarget, already_AddRefed<nsIRunnable> aTask) {
     aTarget->Dispatch(Move(aTask), NS_DISPATCH_NORMAL);
@@ -103,10 +108,35 @@ struct EventTarget<nsIEventTarget> {
 };
 
 template <>
-struct EventTarget<AbstractThread> {
+struct EventTarget<DispatchPolicy::Async, AbstractThread> {
   static void
   Dispatch(AbstractThread* aTarget, already_AddRefed<nsIRunnable> aTask) {
     aTarget->Dispatch(Move(aTask));
+  }
+};
+
+template <>
+struct EventTarget<DispatchPolicy::Sync, nsIEventTarget> {
+  static bool IsOnCurrentThread(nsIEventTarget* aTarget) {
+    bool current = false;
+    auto rv = aTarget->IsOnCurrentThread(&current);
+    return NS_SUCCEEDED(rv) && current;
+  }
+  static void
+  Dispatch(nsIEventTarget* aTarget, already_AddRefed<nsIRunnable> aTask) {
+    MOZ_ASSERT(IsOnCurrentThread(aTarget));
+    nsCOMPtr<nsIRunnable> r = aTask;
+    r->Run();
+  }
+};
+
+template <>
+struct EventTarget<DispatchPolicy::Sync, AbstractThread> {
+  static void
+  Dispatch(AbstractThread* aTarget, already_AddRefed<nsIRunnable> aTask) {
+    MOZ_ASSERT(aTarget->IsCurrentThreadIn());
+    nsCOMPtr<nsIRunnable> r = aTask;
+    r->Run();
   }
 };
 
@@ -127,7 +157,7 @@ private:
  * A helper class to pass event data to the listeners. Optimized to save
  * copy when Move is possible or |Function| takes no arguments.
  */
-template<typename Target, typename Function>
+template<DispatchPolicy Dp, typename Target, typename Function>
 class ListenerHelper {
   // Define our custom runnable to minimize copy of the event data.
   // NS_NewRunnableFunction will result in 2 copies of the event data.
@@ -174,7 +204,7 @@ public:
   DispatchHelper(const F& aFunc, Ts&&... aEvents) {
     nsCOMPtr<nsIRunnable> r =
       new R<Ts...>(mToken, aFunc, Forward<Ts>(aEvents)...);
-    EventTarget<Target>::Dispatch(mTarget.get(), r.forget());
+    EventTarget<Dp, Target>::Dispatch(mTarget.get(), r.forget());
   }
 
   // |F| takes no arguments. Don't bother passing aEvent.
@@ -188,7 +218,7 @@ public:
         aFunc();
       }
     });
-    EventTarget<Target>::Dispatch(mTarget.get(), r.forget());
+    EventTarget<Dp, Target>::Dispatch(mTarget.get(), r.forget());
   }
 
   template <typename... Ts>
@@ -249,7 +279,8 @@ public:
  * Store the registered target thread and function so it knows where and to
  * whom to send the event data.
  */
-template <typename Target, typename Function, EventPassMode, typename... As>
+template <DispatchPolicy Dp, typename Target,
+          typename Function, EventPassMode, typename... As>
 class ListenerImpl : public Listener<EventPassMode::Copy, As...> {
 public:
   ListenerImpl(Target* aTarget, const Function& aFunction)
@@ -258,11 +289,11 @@ public:
     mHelper.Dispatch(aEvents...);
   }
 private:
-  ListenerHelper<Target, Function> mHelper;
+  ListenerHelper<Dp, Target, Function> mHelper;
 };
 
-template <typename Target, typename Function, typename... As>
-class ListenerImpl<Target, Function, EventPassMode::Move, As...>
+template <DispatchPolicy Dp, typename Target, typename Function, typename... As>
+class ListenerImpl<Dp, Target, Function, EventPassMode::Move, As...>
   : public Listener<EventPassMode::Move, As...> {
 public:
   ListenerImpl(Target* aTarget, const Function& aFunction)
@@ -271,7 +302,7 @@ public:
     mHelper.Dispatch(Move(aEvents)...);
   }
 private:
-  ListenerHelper<Target, Function> mHelper;
+  ListenerHelper<Dp, Target, Function> mHelper;
 };
 
 /**
@@ -306,7 +337,8 @@ struct IsAnyReference<T> {
 
 } // namespace detail
 
-template <ListenerPolicy, typename... Ts> class MediaEventSourceImpl;
+template <DispatchPolicy, ListenerPolicy, typename... Ts>
+class MediaEventSourceImpl;
 
 /**
  * Not thread-safe since this is not meant to be shared and therefore only
@@ -315,7 +347,7 @@ template <ListenerPolicy, typename... Ts> class MediaEventSourceImpl;
  * listener from an event source.
  */
 class MediaEventListener {
-  template <ListenerPolicy, typename... Ts>
+  template <DispatchPolicy, ListenerPolicy, typename... Ts>
   friend class MediaEventSourceImpl;
 
 public:
@@ -355,7 +387,7 @@ private:
 /**
  * A generic and thread-safe class to implement the observer pattern.
  */
-template <ListenerPolicy Lp, typename... Es>
+template <DispatchPolicy Dp, ListenerPolicy Lp, typename... Es>
 class MediaEventSourceImpl {
   static_assert(!detail::IsAnyReference<Es...>::value,
                 "Ref-type not supported!");
@@ -370,7 +402,7 @@ class MediaEventSourceImpl {
 
   template<typename Target, typename Func>
   using ListenerImpl =
-    detail::ListenerImpl<Target, Func, PassMode, ArgType<Es>...>;
+    detail::ListenerImpl<Dp, Target, Func, PassMode, ArgType<Es>...>;
 
   template <typename Method>
   using TakeArgs = detail::TakeArgs<Method>;
@@ -476,11 +508,12 @@ private:
 
 template <typename... Es>
 using MediaEventSource =
-  MediaEventSourceImpl<ListenerPolicy::NonExclusive, Es...>;
+  MediaEventSourceImpl<DispatchPolicy::Async,
+                       ListenerPolicy::NonExclusive, Es...>;
 
 template <typename... Es>
 using MediaEventSourceExc =
-  MediaEventSourceImpl<ListenerPolicy::Exclusive, Es...>;
+  MediaEventSourceImpl<DispatchPolicy::Async, ListenerPolicy::Exclusive, Es...>;
 
 /**
  * A class to separate the interface of event subject (MediaEventSource)
@@ -513,6 +546,36 @@ public:
  */
 template <typename... Es>
 class MediaEventProducerExc : public MediaEventSourceExc<Es...> {
+public:
+  template <typename... Ts>
+  void Notify(Ts&&... aEvents) {
+    this->NotifyInternal(Forward<Ts>(aEvents)...);
+  }
+};
+
+/**
+ * Events are passed directly to the callback function of the listeners without
+ * dispatching. Note this class is not thread-safe. Both Connect() and Notify()
+ * must be called on the same thread.
+ */
+template <typename... Es>
+class MediaCallback
+  : public MediaEventSourceImpl<DispatchPolicy::Sync,
+                                ListenerPolicy::NonExclusive, Es...> {
+public:
+  template <typename... Ts>
+  void Notify(Ts&&... aEvents) {
+    this->NotifyInternal(Forward<Ts>(aEvents)...);
+  }
+};
+
+/**
+ * A special version of MediaCallback which allows at most one listener.
+ */
+template <typename... Es>
+class MediaCallbackExc
+  : public MediaEventSourceImpl<DispatchPolicy::Sync,
+                                ListenerPolicy::Exclusive, Es...> {
 public:
   template <typename... Ts>
   void Notify(Ts&&... aEvents) {
