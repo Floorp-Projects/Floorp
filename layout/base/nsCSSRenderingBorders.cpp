@@ -32,6 +32,8 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 
+#define MAX_COMPOSITE_BORDER_WIDTH LayoutDeviceIntCoord(10000)
+
 /**
  * nsCSSRendering::PaintBorder
  * nsCSSRendering::PaintOutline
@@ -1373,9 +1375,16 @@ nsCSSBorderRenderer::DrawBorderSides(int aSides)
   // color is used for the remainder of the border's size.  Just
   // hand off to another function to do all that.
   if (compositeColors) {
-    DrawBorderSidesCompositeColors(aSides, compositeColors);
-    return;
-  }
+    Float maxBorderWidth(0);
+    NS_FOR_CSS_SIDES (i) {
+      maxBorderWidth = std::max(maxBorderWidth, mBorderWidths[i]);
+    }
+    if (maxBorderWidth <= MAX_COMPOSITE_BORDER_WIDTH) {
+      DrawBorderSidesCompositeColors(aSides, compositeColors);
+      return;
+    }
+    NS_WARNING("DrawBorderSides: too large border width for composite colors");
+ }
 
   // We're not doing compositeColors, so we can calculate the
   // borderColorStyle based on the specified style.  The
