@@ -9,7 +9,7 @@ import unittest
 from .. import target_tasks
 from .. import try_option_syntax
 from ..graph import Graph
-from ..types import TaskGraph
+from ..taskgraph import TaskGraph
 from .util import TestTask
 from mozunit import main
 
