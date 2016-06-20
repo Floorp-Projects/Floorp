@@ -88,7 +88,7 @@ def annotate_task_graph(target_task_graph, do_not_optimize, named_links_dict, la
             optimized = False
         # otherwise, examine the task itself (which may be an expensive operation)
         else:
-            optimized, replacement_task_id = task.kind.optimize_task(task, named_task_dependencies)
+            optimized, replacement_task_id = task.optimize()
 
         task.optimized = optimized
         task.task_id = replacement_task_id
