@@ -13,7 +13,6 @@ import time
 from collections import namedtuple
 
 from . import base
-from ..types import Task
 from mozpack.path import match as mozpackmatch
 from slugid import nice as slugid
 from taskgraph.util.legacy_commit_parser import parse_commit
@@ -71,10 +70,10 @@ def gaia_info():
 
         # Just use the hg params...
         return {
-          'gaia_base_repository': 'https://hg.mozilla.org/{}'.format(gaia['repo_path']),
-          'gaia_head_repository': 'https://hg.mozilla.org/{}'.format(gaia['repo_path']),
-          'gaia_ref': gaia['revision'],
-          'gaia_rev': gaia['revision']
+            'gaia_base_repository': 'https://hg.mozilla.org/{}'.format(gaia['repo_path']),
+            'gaia_head_repository': 'https://hg.mozilla.org/{}'.format(gaia['repo_path']),
+            'gaia_ref': gaia['revision'],
+            'gaia_rev': gaia['revision']
         }
 
     else:
@@ -292,7 +291,7 @@ def validate_build_task(task):
                                                'task.extra.locations.tests_packages missing')
 
 
-class LegacyKind(base.Kind):
+class LegacyTask(base.Task):
     """
     This kind generates a full task graph from the old YAML files in
     `testing/taskcluster/tasks`.  The tasks already have dependency links.
@@ -302,8 +301,13 @@ class LegacyKind(base.Kind):
     "TaskLabel==".  These labels are unfortunately not stable from run to run.
     """
 
-    def load_tasks(self, params):
-        root = os.path.abspath(os.path.join(self.path, self.config['legacy_path']))
+    def __init__(self, *args, **kwargs):
+        self.task_dict = kwargs.pop('task_dict')
+        super(LegacyTask, self).__init__(*args, **kwargs)
+
+    @classmethod
+    def load_tasks(cls, kind, path, config, params):
+        root = os.path.abspath(os.path.join(path, config['legacy_path']))
 
         project = params['project']
         # NOTE: message is ignored here; we always use DEFAULT_TRY, then filter the
@@ -383,7 +387,7 @@ class LegacyKind(base.Kind):
 
         graph['metadata'] = {
             'source': '{repo}file/{rev}/testing/taskcluster/mach_commands.py'.format(
-                        repo=params['head_repository'], rev=params['head_rev']),
+                repo=params['head_repository'], rev=params['head_rev']),
             'owner': params['owner'],
             # TODO: Add full mach commands to this example?
             'description': 'Task graph generated via ./mach taskcluster-graph',
@@ -497,7 +501,7 @@ class LegacyKind(base.Kind):
             graph['scopes'] |= set(build_task['task'].get('scopes', []))
             route_scopes = map(
                 lambda route: 'queue:route:' + route, build_task['task'].get('routes', [])
-                )
+            )
             graph['scopes'] |= set(route_scopes)
 
             # Treeherder symbol configuration for the graph required for each
@@ -613,28 +617,25 @@ class LegacyKind(base.Kind):
 
         graph['scopes'] = sorted(graph['scopes'])
 
-        # save the graph for later, when taskgraph asks for additional information
-        # such as dependencies
-        self.graph = graph
-        self.tasks_by_label = {t['taskId']: t for t in self.graph['tasks']}
-
         # Convert to a dictionary of tasks.  The process above has invented a
         # taskId for each task, and we use those as the *labels* for the tasks;
         # taskgraph will later assign them new taskIds.
-        return [Task(self, t['taskId'], task=t['task'], attributes=t['attributes'])
-                for t in self.graph['tasks']]
+        return [
+            cls(kind, t['taskId'], task=t['task'], attributes=t['attributes'], task_dict=t)
+            for t in graph['tasks']
+        ]
 
-    def get_task_dependencies(self, task, taskgraph):
+    def get_dependencies(self, taskgraph):
         # fetch dependency information from the cached graph
-        taskdict = self.tasks_by_label[task.label]
-        deps = [(label, label) for label in taskdict.get('requires', [])]
+        deps = [(label, label) for label in self.task_dict.get('requires', [])]
 
         # add a dependency on an image task, if needed
-        if 'docker-image' in taskdict:
-            deps.append(('build-docker-image-{docker-image}'.format(**taskdict), 'docker-image'))
+        if 'docker-image' in self.task_dict:
+            deps.append(('build-docker-image-{docker-image}'.format(**self.task_dict),
+                         'docker-image'))
 
         return deps
 
-    def optimize_task(self, task, taskgraph):
+    def optimize(self, taskgraph):
         # no optimization for the moment
         return False, None
