@@ -3107,21 +3107,21 @@ PrepareForFullscreenChange(nsIPresShell* aPresShell, const nsSize& aSize,
 class OldWindowSize : public LinkedListElement<OldWindowSize>
 {
 public:
-  static void Set(nsPIDOMWindowOuter* aWindow, const nsSize& aSize)
+  static void Set(nsIWeakReference* aWindowRef, const nsSize& aSize)
   {
-    OldWindowSize* item = GetItem(aWindow);
+    OldWindowSize* item = GetItem(aWindowRef);
     if (item) {
       item->mSize = aSize;
-    } else if (aWindow) {
-      item = new OldWindowSize(do_GetWeakReference(aWindow), aSize);
+    } else {
+      item = new OldWindowSize(aWindowRef, aSize);
       sList.insertBack(item);
     }
   }
 
-  static nsSize GetAndRemove(nsPIDOMWindowOuter* aWindow)
+  static nsSize GetAndRemove(nsIWeakReference* aWindowRef)
   {
     nsSize result;
-    if (OldWindowSize* item = GetItem(aWindow)) {
+    if (OldWindowSize* item = GetItem(aWindowRef)) {
       result = item->mSize;
       delete item;
     }
@@ -3129,32 +3129,21 @@ public:
   }
 
 private:
-  explicit OldWindowSize(already_AddRefed<nsIWeakReference>&& aWindow,
-                         const nsSize& aSize)
-    : mWindow(Move(aWindow)), mSize(aSize) { }
+  explicit OldWindowSize(nsIWeakReference* aWindowRef, const nsSize& aSize)
+    : mWindowRef(aWindowRef), mSize(aSize) { }
   ~OldWindowSize() { };
 
-  static OldWindowSize* GetItem(nsPIDOMWindowOuter* aWindow)
+  static OldWindowSize* GetItem(nsIWeakReference* aWindowRef)
   {
     OldWindowSize* item = sList.getFirst();
-    while (item) {
-      nsCOMPtr<nsPIDOMWindowOuter> window = do_QueryReferent(item->mWindow);
-      if (!window) {
-        OldWindowSize* thisItem = item;
-        item = thisItem->getNext();
-        delete thisItem;
-        continue;
-      }
-      if (window == aWindow) {
-        break;
-      }
+    while (item && item->mWindowRef != aWindowRef) {
       item = item->getNext();
     }
     return item;
   }
 
   static LinkedList<OldWindowSize> sList;
-  nsWeakPtr mWindow;
+  nsWeakPtr mWindowRef;
   nsSize mSize;
 };
 
@@ -3177,7 +3166,7 @@ nsDOMWindowUtils::HandleFullscreenRequests(bool* aRetVal)
   }
   nsSize oldSize;
   PrepareForFullscreenChange(GetPresShell(), screenRect.Size(), &oldSize);
-  OldWindowSize::Set(doc->GetWindow(), oldSize);
+  OldWindowSize::Set(mWindow, oldSize);
 
   *aRetVal = nsIDocument::HandlePendingFullscreenRequests(doc);
   return NS_OK;
@@ -3192,7 +3181,7 @@ nsDOMWindowUtils::ExitFullscreen()
 
   // Although we would not use the old size if we have already exited
   // fullscreen, we still want to cleanup in case we haven't.
-  nsSize oldSize = OldWindowSize::GetAndRemove(doc->GetWindow());
+  nsSize oldSize = OldWindowSize::GetAndRemove(mWindow);
   if (!doc->GetFullscreenElement()) {
     return NS_OK;
   }
