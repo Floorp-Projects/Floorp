@@ -7,26 +7,6 @@
   min-width: 250px;
 }
 
-#searchbox-panel-listbox {
-  width: 250px;
-  max-width: 250px;
-  overflow-x: hidden;
-}
-
-#searchbox-panel-listbox > richlistitem,
-#searchbox-panel-listbox > richlistitem[selected] {
-  overflow-x: hidden;
-}
-
-#searchbox-panel-listbox > richlistitem > .initial-value {
-  max-width: 130px;
-  margin-left: 15px;
-}
-
-#searchbox-panel-listbox > richlistitem > .autocomplete-value {
-  max-width: 150px;
-}
-
 .inspector-tabpanel > * {
   /*
    * Override `-moz-user-focus:ignore;` from toolkit/content/minimal-xul.css
