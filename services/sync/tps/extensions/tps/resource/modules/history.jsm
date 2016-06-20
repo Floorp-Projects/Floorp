@@ -70,7 +70,7 @@ var HistoryEntry = {
       "WHERE place_id = (" +
         "SELECT id " +
         "FROM moz_places " +
-        "WHERE url = :url) " +
+        "WHERE url_hash = hash(:url) AND url = :url) " +
       "ORDER BY date DESC LIMIT 20");
     this.__defineGetter__("_visitStm", () => stm);
     return stm;

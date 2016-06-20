@@ -776,14 +776,10 @@ function updateBookmark(info, item, newParent) {
     yield db.executeTransaction(function* () {
       if (info.hasOwnProperty("url")) {
         // Ensure a page exists in moz_places for this URL.
-        yield db.executeCached(
-          `INSERT OR IGNORE INTO moz_places (url, rev_host, hidden, frecency, guid)
-           VALUES (:url, :rev_host, 0, :frecency, GENERATE_GUID())
-          `, { url: info.url ? info.url.href : null,
-               rev_host: PlacesUtils.getReversedHost(info.url),
-               frecency: info.url.protocol == "place:" ? 0 : -1 });
+        yield maybeInsertPlace(db, info.url);
+        // Update tuples for the update query.
         tuples.set("url", { value: info.url.href
-                          , fragment: "fk = (SELECT id FROM moz_places WHERE url = :url)" });
+                          , fragment: "fk = (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url)" });
       }
 
       if (newParent) {
@@ -864,11 +860,8 @@ function insertBookmark(item, parent) {
     yield db.executeTransaction(function* transaction() {
       if (item.type == Bookmarks.TYPE_BOOKMARK) {
         // Ensure a page exists in moz_places for this URL.
-        yield db.executeCached(
-          `INSERT OR IGNORE INTO moz_places (url, rev_host, hidden, frecency, guid)
-           VALUES (:url, :rev_host, 0, :frecency, GENERATE_GUID())
-          `, { url: item.url.href, rev_host: PlacesUtils.getReversedHost(item.url),
-               frecency: item.url.protocol == "place:" ? 0 : -1 });
+        // The IGNORE conflict can trigger on `guid`.
+        yield maybeInsertPlace(db, item.url);
       }
 
       // Adjust indices.
@@ -882,7 +875,7 @@ function insertBookmark(item, parent) {
       yield db.executeCached(
         `INSERT INTO moz_bookmarks (fk, type, parent, position, title,
                                     dateAdded, lastModified, guid)
-         VALUES ((SELECT id FROM moz_places WHERE url = :url), :type, :parent,
+         VALUES ((SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url), :type, :parent,
                  :index, :title, :date_added, :last_modified, :guid)
         `, { url: item.hasOwnProperty("url") ? item.url.href : "nonexistent",
              type: item.type, parent: parent._id, index: item.index,
@@ -1018,7 +1011,7 @@ function fetchBookmarksByURL(info) {
        FROM moz_bookmarks b
        LEFT JOIN moz_bookmarks p ON p.id = b.parent
        LEFT JOIN moz_places h ON h.id = b.fk
-       WHERE h.url = :url
+       WHERE h.url_hash = hash(:url) AND h.url = :url
        AND _grandParentId <> :tags_folder
        ORDER BY b.lastModified DESC
       `, { url: info.url.href,
@@ -1398,17 +1391,18 @@ function validateBookmarkObject(input, behavior={}) {
  *        the array of URLs to update.
  */
 var updateFrecency = Task.async(function* (db, urls) {
+  // We just use the hashes, since updating a few additional urls won't hurt.
   yield db.execute(
     `UPDATE moz_places
      SET frecency = NOTIFY_FRECENCY(
        CALCULATE_FRECENCY(id), url, guid, hidden, last_visit_date
-     ) WHERE url IN ( ${urls.map(url => JSON.stringify(url.href)).join(", ")} )
+     ) WHERE url_hash IN ( ${urls.map(url => `hash("${url.href}")`).join(", ")} )
     `);
 
   yield db.execute(
     `UPDATE moz_places
      SET hidden = 0
-     WHERE url IN ( ${urls.map(url => JSON.stringify(url.href)).join(", ")} )
+     WHERE url_hash IN ( ${urls.map(url => `hash(${JSON.stringify(url.href)})`).join(", ")} )
        AND frecency <> 0
     `);
 });
@@ -1564,3 +1558,21 @@ Task.async(function* (db, folderGuids) {
     }
   }
 });
+
+/**
+ * Tries to insert a new place if it doesn't exist yet.
+ * @param url
+ *        A valid URL object.
+ * @return {Promise} resolved when the operation is complete.
+ */
+function maybeInsertPlace(db, url) {
+  // The IGNORE conflict can trigger on `guid`.
+  return db.executeCached(
+    `INSERT OR IGNORE INTO moz_places (url, url_hash, rev_host, hidden, frecency, guid)
+     VALUES (:url, hash(:url), :rev_host, 0, :frecency,
+             IFNULL((SELECT guid FROM moz_places WHERE url_hash = hash(:url) AND url = :url),
+                    GENERATE_GUID()))
+    `, { url: url.href,
+         rev_host: PlacesUtils.getReversedHost(url),
+         frecency: url.protocol == "place:" ? 0 : -1 });
+}

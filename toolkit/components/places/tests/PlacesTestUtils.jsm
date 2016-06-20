@@ -64,7 +64,7 @@ this.PlacesTestUtils = Object.freeze({
       }
       if (typeof place.referrer == "string") {
         place.referrer = NetUtil.newURI(place.referrer);
-      } else if (place.referrer instanceof URL) {
+      } else if (place.referrer && place.referrer instanceof URL) {
         place.referrer = NetUtil.newURI(place.referrer.href);
       }
       place.visits = [{
@@ -149,7 +149,7 @@ this.PlacesTestUtils = Object.freeze({
     let url = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
     let db = yield PlacesUtils.promiseDBConnection();
     let rows = yield db.executeCached(
-      "SELECT id FROM moz_places WHERE url = :url",
+      "SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url",
       { url });
     return rows.length > 0;
   }),
@@ -169,7 +169,7 @@ this.PlacesTestUtils = Object.freeze({
     let rows = yield db.executeCached(
       `SELECT count(*) FROM moz_historyvisits v
        JOIN moz_places h ON h.id = v.place_id
-       WHERE url = :url`,
+       WHERE url_hash = hash(:url) AND url = :url`,
       { url });
     return rows[0].getResultByIndex(0);
   })
