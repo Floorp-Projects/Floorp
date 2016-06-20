@@ -49,11 +49,11 @@ private:
   Atomic<bool> mRevoked;
 };
 
-enum class ListenerMode : int8_t {
+enum class ListenerPolicy : int8_t {
   // Allow at most one listener. Move will be used when possible
   // to pass the event data to save copy.
   Exclusive,
-  // This is the default. Event data will always be copied when passed
+  // Allow multiple listeners. Event data will always be copied when passed
   // to the listeners.
   NonExclusive
 };
@@ -275,18 +275,18 @@ private:
 };
 
 /**
- * Select EventPassMode based on ListenerMode.
+ * Select EventPassMode based on ListenerPolicy.
  *
- * @Copy Selected when ListenerMode is NonExclusive because each listener
+ * @Copy Selected when ListenerPolicy is NonExclusive because each listener
  * must get a copy.
  *
- * @Move Selected when ListenerMode is Exclusive. All types passed to
+ * @Move Selected when ListenerPolicy is Exclusive. All types passed to
  * MediaEventProducer::Notify() must be movable.
  */
-template <ListenerMode Mode>
+template <ListenerPolicy Lp>
 struct PassModePicker {
   static const EventPassMode Value =
-    Mode == ListenerMode::NonExclusive ?
+    Lp == ListenerPolicy::NonExclusive ?
     EventPassMode::Copy : EventPassMode::Move;
 };
 
@@ -306,7 +306,7 @@ struct IsAnyReference<T> {
 
 } // namespace detail
 
-template <ListenerMode, typename... Ts> class MediaEventSourceImpl;
+template <ListenerPolicy, typename... Ts> class MediaEventSourceImpl;
 
 /**
  * Not thread-safe since this is not meant to be shared and therefore only
@@ -315,7 +315,7 @@ template <ListenerMode, typename... Ts> class MediaEventSourceImpl;
  * listener from an event source.
  */
 class MediaEventListener {
-  template <ListenerMode, typename... Ts>
+  template <ListenerPolicy, typename... Ts>
   friend class MediaEventSourceImpl;
 
 public:
@@ -355,7 +355,7 @@ private:
 /**
  * A generic and thread-safe class to implement the observer pattern.
  */
-template <ListenerMode Mode, typename... Es>
+template <ListenerPolicy Lp, typename... Es>
 class MediaEventSourceImpl {
   static_assert(!detail::IsAnyReference<Es...>::value,
                 "Ref-type not supported!");
@@ -364,7 +364,7 @@ class MediaEventSourceImpl {
   using ArgType = typename detail::EventTypeTraits<T>::ArgType;
 
   static const detail::EventPassMode PassMode =
-    detail::PassModePicker<Mode>::Value;
+    detail::PassModePicker<Lp>::Value;
 
   typedef detail::Listener<PassMode, ArgType<Es>...> Listener;
 
@@ -379,7 +379,7 @@ class MediaEventSourceImpl {
   MediaEventListener
   ConnectInternal(Target* aTarget, const Function& aFunction) {
     MutexAutoLock lock(mMutex);
-    MOZ_ASSERT(Mode == ListenerMode::NonExclusive || mListeners.IsEmpty());
+    MOZ_ASSERT(Lp == ListenerPolicy::NonExclusive || mListeners.IsEmpty());
     auto l = mListeners.AppendElement();
     l->reset(new ListenerImpl<Target, Function>(aTarget, aFunction));
     return MediaEventListener((*l)->Token());
@@ -476,11 +476,11 @@ private:
 
 template <typename... Es>
 using MediaEventSource =
-  MediaEventSourceImpl<ListenerMode::NonExclusive, Es...>;
+  MediaEventSourceImpl<ListenerPolicy::NonExclusive, Es...>;
 
 template <typename... Es>
 using MediaEventSourceExc =
-  MediaEventSourceImpl<ListenerMode::Exclusive, Es...>;
+  MediaEventSourceImpl<ListenerPolicy::Exclusive, Es...>;
 
 /**
  * A class to separate the interface of event subject (MediaEventSource)
@@ -509,7 +509,7 @@ public:
 };
 
 /**
- * A producer with Exclusive mode.
+ * A producer allowing at most one listener.
  */
 template <typename... Es>
 class MediaEventProducerExc : public MediaEventSourceExc<Es...> {
