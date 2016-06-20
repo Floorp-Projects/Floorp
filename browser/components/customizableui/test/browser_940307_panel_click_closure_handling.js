@@ -70,9 +70,7 @@ add_task(function*() {
   // Focusing a non-empty searchbox will cause us to open the
   // autocomplete panel and search for suggestions, which would
   // trigger network requests. Temporarily disable suggestions.
-  let suggestEnabled =
-    Services.prefs.getBoolPref("browser.search.suggest.enabled");
-  Services.prefs.setBoolPref("browser.search.suggest.enabled", false);
+  yield SpecialPowers.pushPrefEnv({set: [["browser.search.suggest.enabled", false]]});
 
   searchbar.value = "foo";
   searchbar.focus();
@@ -100,7 +98,9 @@ add_task(function*() {
   yield hiddenPanelPromise;
   ok(!isPanelUIOpen(), "Panel should no longer be open");
 
-  Services.prefs.setBoolPref("browser.search.suggest.enabled", suggestEnabled);
+  // We focused the search bar earlier - ensure we don't keep doing that.
+  gURLBar.select();
+
   CustomizableUI.reset();
 });
 
