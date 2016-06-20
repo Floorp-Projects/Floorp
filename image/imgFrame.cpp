@@ -15,8 +15,6 @@
 #include "gfxUtils.h"
 #include "gfxAlphaRecovery.h"
 
-static bool gDisableOptimize = false;
-
 #include "GeckoProfiler.h"
 #include "mozilla/Likely.h"
 #include "MainThreadUtils.h"
@@ -149,13 +147,6 @@ imgFrame::imgFrame()
   , mSinglePixel(false)
   , mCompositingFailed(false)
 {
-  static bool hasCheckedOptimize = false;
-  if (!hasCheckedOptimize) {
-    if (PR_GetEnv("MOZ_DISABLE_IMAGE_OPTIMIZE")) {
-      gDisableOptimize = true;
-    }
-    hasCheckedOptimize = true;
-  }
 }
 
 imgFrame::~imgFrame()
@@ -338,6 +329,16 @@ imgFrame::Optimize()
   mMonitor.AssertCurrentThreadOwns();
   MOZ_ASSERT(mLockCount == 1,
              "Should only optimize when holding the lock exclusively");
+
+  // Check whether image optimization is disabled -- not thread safe!
+  static bool gDisableOptimize = false;
+  static bool hasCheckedOptimize = false;
+  if (!hasCheckedOptimize) {
+    if (PR_GetEnv("MOZ_DISABLE_IMAGE_OPTIMIZE")) {
+      gDisableOptimize = true;
+    }
+    hasCheckedOptimize = true;
+  }
 
   // Don't optimize during shutdown because gfxPlatform may not be available.
   if (ShutdownTracker::ShutdownHasStarted()) {
