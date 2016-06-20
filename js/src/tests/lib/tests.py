@@ -19,7 +19,6 @@ JITFLAGS = {
         ['--ion-eager', '--ion-offthread-compile=off', '--non-writable-jitcode',
          '--ion-check-range-analysis', '--ion-extra-checks', '--no-sse3', '--no-threads'],
         ['--baseline-eager'],
-        ['--baseline-eager', '--no-fpu'],
         ['--no-baseline', '--no-ion'],
     ],
     # used by jit_test.py

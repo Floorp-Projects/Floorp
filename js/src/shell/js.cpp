@@ -7254,8 +7254,6 @@ main(int argc, char** argv, char** envp)
                             "Wait for COUNT calls or iterations before baseline-compiling "
                             "(default: 10)", -1)
         || !op.addBoolOption('\0', "non-writable-jitcode", "(NOP for fuzzers) Allocate JIT code as non-writable memory.")
-        || !op.addBoolOption('\0', "no-fpu", "Pretend CPU does not support floating-point operations "
-                             "to test JIT codegen (no-op on platforms other than x86).")
         || !op.addBoolOption('\0', "no-sse3", "Pretend CPU does not support SSE3 instructions and above "
                              "to test JIT codegen (no-op on platforms other than x86 and x64).")
         || !op.addBoolOption('\0', "no-sse4", "Pretend CPU does not support SSE4 instructions"
@@ -7330,11 +7328,6 @@ main(int argc, char** argv, char** envp)
      * allocations as possible.
      */
     OOM_printAllocationCount = op.getBoolOption('O');
-#endif
-
-#ifdef JS_CODEGEN_X86
-    if (op.getBoolOption("no-fpu"))
-        js::jit::CPUInfo::SetFloatingPointDisabled();
 #endif
 
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
