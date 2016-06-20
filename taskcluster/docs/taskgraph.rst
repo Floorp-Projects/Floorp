@@ -63,11 +63,10 @@ Decision Task
 The decision task is the first task created when a new graph begins.  It is
 responsible for creating the rest of the task graph.
 
-The decision task for pushes is defined in-tree, currently at
-``testing/taskcluster/tasks/decision``.  The task description invokes ``mach
-taskcluster decision`` with some metadata about the push.  That mach command
-determines the optimized task graph, then calls the TaskCluster API to create
-the tasks.
+The decision task for pushes is defined in-tree, in ``.taskcluster.yml``.  The
+task description invokes ``mach taskcluster decision`` with some metadata about
+the push.  That mach command determines the optimized task graph, then calls
+the TaskCluster API to create the tasks.
 
 Graph Generation
 ----------------
