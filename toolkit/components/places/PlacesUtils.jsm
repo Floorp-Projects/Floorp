@@ -1304,7 +1304,7 @@ this.PlacesUtils = {
       let conn = yield this.promiseDBConnection();
       const QUERY_STR = `SELECT b.id FROM moz_bookmarks b
                          JOIN moz_places h on h.id = b.fk
-                         WHERE h.url = :url`;
+                         WHERE h.url_hash = hash(:url) AND h.url = :url`;
       let spec = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
       yield conn.executeCached(QUERY_STR, { url: spec }, aRow => {
         if (abort)
@@ -2061,22 +2061,24 @@ var Keywords = {
         if (oldEntry) {
           yield db.executeCached(
             `UPDATE moz_keywords
-             SET place_id = (SELECT id FROM moz_places WHERE url = :url),
+             SET place_id = (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url),
                  post_data = :post_data
              WHERE keyword = :keyword
             `, { url: url.href, keyword: keyword, post_data: postData });
           yield notifyKeywordChange(oldEntry.url.href, "");
         } else {
           // An entry for the given page could be missing, in such a case we need to
-          // create it.
+          // create it.  The IGNORE conflict can trigger on `guid`.
           yield db.executeCached(
-            `INSERT OR IGNORE INTO moz_places (url, rev_host, hidden, frecency, guid)
-             VALUES (:url, :rev_host, 0, :frecency, GENERATE_GUID())
+            `INSERT OR IGNORE INTO moz_places (url, url_hash, rev_host, hidden, frecency, guid)
+             VALUES (:url, hash(:url), :rev_host, 0, :frecency,
+                     IFNULL((SELECT guid FROM moz_places WHERE url_hash = hash(:url) AND url = :url),
+                            GENERATE_GUID()))
             `, { url: url.href, rev_host: PlacesUtils.getReversedHost(url),
                  frecency: url.protocol == "place:" ? 0 : -1 });
           yield db.executeCached(
             `INSERT INTO moz_keywords (keyword, place_id, post_data)
-             VALUES (:keyword, (SELECT id FROM moz_places WHERE url = :url), :post_data)
+             VALUES (:keyword, (SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url), :post_data)
             `, { url: url.href, keyword: keyword, post_data: postData });
         }
 

@@ -3,7 +3,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const CURRENT_SCHEMA_VERSION = 32;
+const CURRENT_SCHEMA_VERSION = 33;
 const FIRST_UPGRADABLE_SCHEMA_VERSION = 11;
 
 const NS_APP_USER_PROFILE_50_DIR = "ProfD";
@@ -299,7 +299,7 @@ function page_in_database(aURI)
 {
   let url = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
   let stmt = DBConn().createStatement(
-    "SELECT id FROM moz_places WHERE url = :url"
+    "SELECT id FROM moz_places WHERE url_hash = hash(:url) AND url = :url"
   );
   stmt.params.url = url;
   try {
@@ -324,7 +324,7 @@ function visits_in_database(aURI)
   let stmt = DBConn().createStatement(
     `SELECT count(*) FROM moz_historyvisits v
      JOIN moz_places h ON h.id = v.place_id
-     WHERE url = :url`
+     WHERE url_hash = hash(:url) AND url = :url`
   );
   stmt.params.url = url;
   try {
@@ -542,7 +542,7 @@ function frecencyForUrl(aURI)
     url = aURI.href;
   }
   let stmt = DBConn().createStatement(
-    "SELECT frecency FROM moz_places WHERE url = ?1"
+    "SELECT frecency FROM moz_places WHERE url_hash = hash(?1) AND url = ?1"
   );
   stmt.bindByIndex(0, url);
   try {
@@ -566,7 +566,7 @@ function isUrlHidden(aURI)
 {
   let url = aURI instanceof Ci.nsIURI ? aURI.spec : aURI;
   let stmt = DBConn().createStatement(
-    "SELECT hidden FROM moz_places WHERE url = ?1"
+    "SELECT hidden FROM moz_places WHERE url_hash = hash(?1) AND url = ?1"
   );
   stmt.bindByIndex(0, url);
   if (!stmt.executeStep())
@@ -643,7 +643,7 @@ function do_get_guid_for_uri(aURI,
   let stmt = DBConn().createStatement(
     `SELECT guid
      FROM moz_places
-     WHERE url = :url`
+     WHERE url_hash = hash(:url) AND url = :url`
   );
   stmt.params.url = aURI.spec;
   do_check_true(stmt.executeStep(), aStack);
@@ -866,7 +866,7 @@ function* foreign_count(url) {
   let db = yield PlacesUtils.promiseDBConnection();
   let rows = yield db.executeCached(
     `SELECT foreign_count FROM moz_places
-     WHERE url = :url
+     WHERE url_hash = hash(:url) AND url = :url
     `, { url });
   return rows.length == 0 ? 0 : rows[0].getResultByName("foreign_count");
 }
