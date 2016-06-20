@@ -11,8 +11,14 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=874640
   <script type="application/javascript">
 
   /** Test for Bug 874640 **/
-  var states = [ 'true', 'false', 'end' ];
-  var pref = SpecialPowers.getBoolPref("dom.experimental_forms");
+  var states = [
+        //dom.experimental_forms, dom.forms.datepicker, expectedValueAsDate
+	[ 'true', 'true', 'true' ],
+	[ 'true', 'false', 'true' ],
+	[ 'false', 'true', 'true' ],
+	[ 'false', 'false', 'false' ],
+        'end'
+  ];
 
   SimpleTest.waitForExplicitFinish();
 
@@ -24,11 +30,13 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=874640
       return;
     }
 
-    SpecialPowers.pushPrefEnv({"set":[["dom.experimental_forms", state === 'true']]}, 
+    SpecialPowers.pushPrefEnv({"set":[
+      ["dom.experimental_forms", state[0] === 'true'],
+      ["dom.forms.datepicker", state[1] === 'true']]},
       function() {
         iframe.src = 'data:text/html,<script>' +
                  'parent.is("valueAsDate" in document.createElement("input"), ' +
-                 state + ', "valueAsDate presence state should be ' + state + '");' +
+                 state[2] + ', "valueAsDate presence state should be ' + state[2] + '");' +
                  '<\/script>'
      });
   }
