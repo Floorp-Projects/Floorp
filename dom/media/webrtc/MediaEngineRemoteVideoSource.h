@@ -130,6 +130,7 @@ private:
   void Init();
   size_t NumCapabilities() const override;
   void GetCapability(size_t aIndex, webrtc::CaptureCapability& aOut) const override;
+  void SetLastCapability(const webrtc::CaptureCapability& aCapability);
 
   /* UpdateExisting - Centralized function to apply constraints and restart
    * device as needed, considering all allocations and changes to one.

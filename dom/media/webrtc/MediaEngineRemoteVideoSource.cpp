@@ -36,6 +36,9 @@ MediaEngineRemoteVideoSource::MediaEngineRemoteVideoSource(
     mInShutdown(false)
 {
   MOZ_ASSERT(aMediaSource != dom::MediaSourceEnum::Other);
+  mSettings.mWidth.Construct(0);
+  mSettings.mHeight.Construct(0);
+  mSettings.mFrameRate.Construct(0);
   Init();
 }
 
@@ -327,7 +330,7 @@ MediaEngineRemoteVideoSource::UpdateExisting(AllocationHandle* aHandle,
         return NS_ERROR_FAILURE;
       }
       mState = kAllocated;
-      mLastCapability = mCapability;
+      SetLastCapability(mCapability);
       LOG(("Video device %d allocated for %s", mCaptureIndex,
            aHandle->mOrigin.get()));
       break;
@@ -342,7 +345,7 @@ MediaEngineRemoteVideoSource::UpdateExisting(AllocationHandle* aHandle,
           LOG(("StartCapture failed"));
           return NS_ERROR_FAILURE;
         }
-        mLastCapability = mCapability;
+        SetLastCapability(mCapability);
       }
       break;
 
@@ -355,6 +358,23 @@ MediaEngineRemoteVideoSource::UpdateExisting(AllocationHandle* aHandle,
     aHandle->mConstraints = *aNewConstraints;
   }
   return NS_OK;
+}
+
+void
+MediaEngineRemoteVideoSource::SetLastCapability(
+    const webrtc::CaptureCapability& aCapability)
+{
+  mLastCapability = mCapability;
+
+  webrtc::CaptureCapability cap = aCapability;
+  RefPtr<MediaEngineRemoteVideoSource> that = this;
+
+  NS_DispatchToMainThread(media::NewRunnableFrom([this, that, cap]() mutable {
+    mSettings.mWidth.Value() = cap.width;
+    mSettings.mHeight.Value() = cap.height;
+    mSettings.mFrameRate.Value() = cap.maxFPS;
+    return NS_OK;
+  }));
 }
 
 void
