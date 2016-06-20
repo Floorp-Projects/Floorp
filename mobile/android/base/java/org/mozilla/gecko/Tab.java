@@ -540,10 +540,6 @@ public class Tab {
         mSiteIdentity.update(identityData);
     }
 
-    public void setLoginInsecure(boolean isInsecure) {
-        mSiteIdentity.setLoginInsecure(isInsecure);
-    }
-
     public void setSiteLogins(SiteLogins siteLogins) {
         mSiteLogins = siteLogins;
     }
