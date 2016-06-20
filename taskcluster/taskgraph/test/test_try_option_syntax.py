@@ -8,7 +8,7 @@ import unittest
 
 from ..try_option_syntax import TryOptionSyntax
 from ..graph import Graph
-from ..types import TaskGraph
+from ..taskgraph import TaskGraph
 from .util import TestTask
 from mozunit import main
 
