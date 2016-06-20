@@ -20,23 +20,31 @@ https://bugzilla.mozilla.org/show_bug.cgi?id=764481
   var input = document.createElement("input");
 
   SimpleTest.waitForExplicitFinish();
-  SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", false]]}, function() {
+  SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms", false], ["dom.forms.datepicker",false]]}, function() {
     input.type = "date";
     is(input.type, "text", "input type shouldn't be date when the experimental forms are disabled");
     is(input.getAttribute('type'), "date", "input 'type' attribute should not change");
 
-    SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms",true]]}, function() {
-      // Change the type of input to text and then back to date, 
+    SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms",true], ["dom.forms.datepicker",false]]}, function() {
+      // Change the type of input to text and then back to date,
       // so that HTMLInputElement::ParseAttribute gets called with the pref enabled.
       input.type = "text";
       input.type = "date";
       is(input.type, "date", "input type should be date when the experimental forms are enabled");
       is(input.getAttribute('type'), "date", "input 'type' attribute should not change");
-    
-      SimpleTest.finish();
+
+      SpecialPowers.pushPrefEnv({'set': [["dom.experimental_forms",false], ["dom.forms.datepicker",true]]}, function() {
+        // Change the type of input to text and then back to date,
+        // so that HTMLInputElement::ParseAttribute gets called with the pref enabled.
+        input.type = "text";
+        input.type = "date";
+        is(input.type, "date", "input type should be date when the datepicker is enabled");
+        is(input.getAttribute('type'), "date", "input 'type' attribute should not change");
+
+        SimpleTest.finish();
+      });
     });
   });
-
 </script>
 </pre>
 </body>

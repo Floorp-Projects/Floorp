@@ -88,7 +88,7 @@ interface HTMLInputElement : HTMLElement {
            attribute DOMString defaultValue;
   [Pure, TreatNullAs=EmptyString, Throws]
            attribute DOMString value;
-  [Throws, Pref="dom.experimental_forms"]
+  [Throws, Func="HTMLInputElement::ValueAsDateEnabled"]
            attribute Date? valueAsDate;
   [Pure, SetterThrows]
            attribute unrestricted double valueAsNumber;
