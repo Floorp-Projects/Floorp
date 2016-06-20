@@ -100,7 +100,7 @@ inline EventListenerFlags TrustedEventsAtCapture()
   return flags;
 }
 
-inline EventListenerFlags AllEventsAtBubbe()
+inline EventListenerFlags AllEventsAtBubble()
 {
   EventListenerFlags flags;
   flags.mAllowUntrustedEvents = true;
