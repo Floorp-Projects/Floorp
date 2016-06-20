@@ -197,6 +197,12 @@ public:
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
       const nsString& aDeviceId) const = 0;
 
+  void GetSettings(dom::MediaTrackSettings& aOutSettings)
+  {
+    MOZ_ASSERT(NS_IsMainThread());
+    aOutSettings = mSettings;
+  }
+
 protected:
   // Only class' own members can be initialized in constructor initializer list.
   explicit MediaEngineSource(MediaEngineState aState)
@@ -217,6 +223,8 @@ protected:
   PRThread* mOwningThread;
 #endif
   bool mHasFakeTracks;
+  // Main-thread only:
+  dom::MediaTrackSettings mSettings;
 };
 
 /**
