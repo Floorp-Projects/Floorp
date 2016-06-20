@@ -7156,6 +7156,9 @@ class MPhi final
     static MPhi* New(TempAllocator& alloc, MIRType resultType = MIRType::Value) {
         return new(alloc) MPhi(alloc, resultType);
     }
+    static MPhi* New(TempAllocator::Fallible alloc, MIRType resultType = MIRType::Value) {
+        return new(alloc) MPhi(alloc.alloc, resultType);
+    }
 
     void removeOperand(size_t index);
     void removeAllOperands();
