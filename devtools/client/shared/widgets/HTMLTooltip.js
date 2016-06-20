@@ -51,7 +51,7 @@ const EXTRA_BORDER = {
  *        Bounding rectangle for the anchor, relative to the tooltip document.
  * @param {DOMRect} docRect
  *        Bounding rectange for the tooltip document owner.
- * @param {Number} preferredHeight
+ * @param {Number} height
  *        Preferred height for the tooltip.
  * @param {String} pos
  *        Preferred position for the tooltip. Possible values: "top" or "bottom".
@@ -61,7 +61,7 @@ const EXTRA_BORDER = {
  *         - {String} computedPosition: Can differ from the preferred position depending
  *           on the available height). "top" or "bottom"
  */
-const calculateVerticalPosition = function (anchorRect, docRect, preferredHeight, pos) {
+const calculateVerticalPosition = function (anchorRect, docRect, height, pos, offset) {
   let {TOP, BOTTOM} = POSITION;
 
   let {top: anchorTop, height: anchorHeight} = anchorRect;
@@ -74,9 +74,9 @@ const calculateVerticalPosition = function (anchorRect, docRect, preferredHeight
   // Find POSITION
   let keepPosition = false;
   if (pos === TOP) {
-    keepPosition = availableTop >= preferredHeight;
+    keepPosition = availableTop >= height + offset;
   } else if (pos === BOTTOM) {
-    keepPosition = availableBottom >= preferredHeight;
+    keepPosition = availableBottom >= height + offset;
   }
   if (!keepPosition) {
     pos = availableTop > availableBottom ? TOP : BOTTOM;
@@ -84,11 +84,11 @@ const calculateVerticalPosition = function (anchorRect, docRect, preferredHeight
 
   // Calculate HEIGHT.
   let availableHeight = pos === TOP ? availableTop : availableBottom;
-  let height = Math.min(preferredHeight, availableHeight);
+  height = Math.min(height, availableHeight - offset);
   height = Math.floor(height);
 
   // Calculate TOP.
-  let top = pos === TOP ? anchorTop - height : anchorTop + anchorHeight;
+  let top = pos === TOP ? anchorTop - height - offset : anchorTop + anchorHeight + offset;
 
   return {top, height, computedPosition: pos};
 };
@@ -102,25 +102,25 @@ const calculateVerticalPosition = function (anchorRect, docRect, preferredHeight
  *        Bounding rectangle for the anchor, relative to the tooltip document.
  * @param {DOMRect} docRect
  *        Bounding rectange for the tooltip document owner.
- * @param {Number} preferredWidth
+ * @param {Number} width
  *        Preferred width for the tooltip.
  * @return {Object}
  *         - {Number} left: the left offset for the tooltip.
  *         - {Number} width: the width to use for the tooltip container.
  *         - {Number} arrowLeft: the left offset to use for the arrow element.
  */
-const calculateHorizontalPosition = function (anchorRect, docRect, preferredWidth, type) {
+const calculateHorizontalPosition = function (anchorRect, docRect, width, type, offset) {
   let {left: anchorLeft, width: anchorWidth} = anchorRect;
   let {right: docRight} = docRect;
 
   // Calculate WIDTH.
   let availableWidth = docRight;
-  let width = Math.min(preferredWidth, availableWidth);
+  width = Math.min(width, availableWidth);
 
   // Calculate LEFT.
   // By default the tooltip is aligned with the anchor left edge. Unless this
   // makes it overflow the viewport, in which case is shifts to the left.
-  let left = Math.min(anchorLeft, docRight - width);
+  let left = Math.min(anchorLeft + offset, docRight - width);
 
   // Calculate ARROW LEFT (tooltip's LEFT might be updated)
   let arrowLeft;
@@ -257,8 +257,10 @@ HTMLTooltip.prototype = {
    *          If layout permits, the tooltip will be displayed on top/bottom
    *          of the anchor. If ommitted, the tooltip will be displayed where
    *          more space is available.
+   *        - {Number} x: optional, horizontal offset between the anchor and the tooltip
+   *        - {Number} y: optional, vertical offset between the anchor and the tooltip
    */
-  show: function (anchor, {position} = {}) {
+  show: function (anchor, {position, x = 0, y = 0} = {}) {
     // Get anchor geometry
     let anchorRect = getRelativeRect(anchor, this.doc);
     // Get document geometry
@@ -268,7 +270,7 @@ HTMLTooltip.prototype = {
     let preferredHeight = this.preferredHeight + themeHeight;
 
     let {top, height, computedPosition} =
-      calculateVerticalPosition(anchorRect, docRect, preferredHeight, position);
+      calculateVerticalPosition(anchorRect, docRect, preferredHeight, position, y);
 
     // Apply height and top information before measuring the content width (if "auto").
     let isTop = computedPosition === POSITION.TOP;
@@ -282,7 +284,7 @@ HTMLTooltip.prototype = {
       this._measureContainerWidth() : this.preferredWidth + themeWidth;
 
     let {left, width, arrowLeft} =
-      calculateHorizontalPosition(anchorRect, docRect, preferredWidth, this.type);
+      calculateHorizontalPosition(anchorRect, docRect, preferredWidth, this.type, x);
 
     this.container.style.width = width + "px";
     this.container.style.left = left + "px";
@@ -306,6 +308,8 @@ HTMLTooltip.prototype = {
 
   _measureContainerWidth: function () {
     this.container.classList.add("tooltip-hidden");
+    this.container.style.left = "0px";
+    this.container.style.width = "auto";
     let width = this.container.getBoundingClientRect().width;
     this.container.classList.remove("tooltip-hidden");
     return width;
