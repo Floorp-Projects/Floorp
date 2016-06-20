@@ -1898,25 +1898,6 @@ bool DoesD3D11AlphaTextureSharingWork(ID3D11Device *device)
   return DoesD3D11TextureSharingWorkInternal(device, DXGI_FORMAT_R8_UNORM, D3D11_BIND_SHADER_RESOURCE);
 }
 
-static inline bool
-IsGfxInfoStatusOkay(int32_t aFeature, nsCString* aOutMessage, nsCString& aFailureId)
-{
-  nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
-  if (!gfxInfo) {
-    return true;
-  }
-
-  int32_t status;
-  if (SUCCEEDED(gfxInfo->GetFeatureStatus(aFeature, aFailureId, &status)) &&
-      status != nsIGfxInfo::FEATURE_STATUS_OK)
-  {
-    aOutMessage->AssignLiteral("#BLOCKLIST_");
-    aOutMessage->AppendASCII(aFailureId.get());
-    return false;
-  }
-
-  return true;
-}
 
 static inline bool
 IsWARPStable()
@@ -1943,7 +1924,7 @@ InitializeANGLEConfig()
 
   nsCString message;
   nsCString failureId;
-  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT3D_11_ANGLE, &message,
+  if (!gfxPlatform::IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT3D_11_ANGLE, &message,
                            failureId)) {
     d3d11ANGLE.Disable(FeatureStatus::Blacklisted, message.get(), failureId);
   }
@@ -1992,7 +1973,7 @@ gfxWindowsPlatform::InitializeD3D9Config()
 
   nsCString message;
   nsCString failureId;
-  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, &message,
+  if (!gfxPlatform::IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT3D_9_LAYERS, &message,
                            failureId)) {
     d3d9.Disable(FeatureStatus::Blacklisted, message.get(), failureId);
   }
@@ -2026,7 +2007,7 @@ gfxWindowsPlatform::InitializeD3D11Config()
 
   nsCString message;
   nsCString failureId;
-  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS, &message, failureId)) {
+  if (!gfxPlatform::IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT3D_11_LAYERS, &message, failureId)) {
     if (IsWARPStable() && !gfxPrefs::LayersD3D11DisableWARP()) {
       // We do not expect hardware D3D11 to work, so we'll try WARP.
       gfxConfig::EnableFallback(Fallback::USE_D3D11_WARP_COMPOSITOR, message.get());
@@ -2562,7 +2543,7 @@ gfxWindowsPlatform::InitializeD2DConfig()
 
   nsCString message;
   nsCString failureId;
-  if (!IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT2D, &message, failureId)) {
+  if (!gfxPlatform::IsGfxInfoStatusOkay(nsIGfxInfo::FEATURE_DIRECT2D, &message, failureId)) {
     d2d1.Disable(FeatureStatus::Blacklisted, message.get(), failureId);
   }
 
@@ -2968,7 +2949,7 @@ gfxWindowsPlatform::SupportsApzTouchInput() const
 void
 gfxWindowsPlatform::GetAcceleratedCompositorBackends(nsTArray<LayersBackend>& aBackends)
 {
-  if (gfxPrefs::LayersPreferOpenGL()) {
+  if (gfxConfig::IsEnabled(Feature::OPENGL_COMPOSITING) && gfxPrefs::LayersPreferOpenGL()) {
     aBackends.AppendElement(LayersBackend::LAYERS_OPENGL);
   }
 
