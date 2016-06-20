@@ -136,6 +136,7 @@ public:
   }
 
   RectT GetBounds() const { return mBounds; }
+  bool CoversBounds() const { return mCoversBounds; }
 
   bool Intersects(const RectT& aRect) const
   {
