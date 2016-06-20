@@ -119,7 +119,7 @@ NS_IMPL_ISUPPORTS(nrappkitTimerCallback, nsITimerCallback)
 NS_IMETHODIMP nrappkitTimerCallback::Notify(nsITimer *timer) {
   r_log(LOG_GENERIC, LOG_DEBUG, "Timer callback fired (set in %s:%d)",
         function_.c_str(), line_);
-  MOZ_ASSERT(timer == timer_);
+  MOZ_RELEASE_ASSERT(timer == timer_);
   cb_(0, 0, cb_arg_);
 
   // Allow the timer to go away.
