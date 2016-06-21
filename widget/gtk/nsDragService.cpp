@@ -441,7 +441,7 @@ nsDragService::SetAlphaPixmap(SourceSurface *aSurface,
     // Make a DrawTarget wrapped around the pixmap to render on
     RefPtr<DrawTarget> dt =
          nsWindow::GetDrawTargetForGdkDrawable(GDK_DRAWABLE(pixmap),
-                                               IntRect(dragRect.width,
+                                               IntSize(dragRect.width,
                                                        dragRect.height));
     if (!dt)
       return false;
