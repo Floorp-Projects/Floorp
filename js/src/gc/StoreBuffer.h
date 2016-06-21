@@ -478,6 +478,13 @@ class ArenaCellSet
     // Attempt to trigger a minor GC if free space in the nursery (where these
     // objects are allocated) falls below this threshold.
     static const size_t NurseryFreeThresholdBytes = 64 * 1024;
+
+    static size_t offsetOfArena() {
+        return offsetof(ArenaCellSet, arena);
+    }
+    static size_t offsetOfBits() {
+        return offsetof(ArenaCellSet, bits);
+    }
 };
 
 ArenaCellSet* AllocateWholeCellSet(Arena* arena);
