@@ -588,7 +588,8 @@ BaseCaps(const WebGLContextOptions& options, WebGLContext* webgl)
 
 static already_AddRefed<gl::GLContext>
 CreateGLWithEGL(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
-                WebGLContext* webgl, std::vector<FailureReason>* const out_failReasons)
+                WebGLContext* webgl,
+                std::vector<WebGLContext::FailureReason>* const out_failReasons)
 {
     const gfx::IntSize dummySize(16, 16);
     RefPtr<GLContext> gl = gl::GLContextProviderEGL::CreateOffscreen(dummySize, caps,
@@ -598,8 +599,10 @@ CreateGLWithEGL(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
     }
 
     if (!gl) {
-        out_failReasons->push_back({ "FEATURE_FAILURE_WEBGL_EGL_INIT",
-                                     "Error during EGL OpenGL init." });
+        out_failReasons->push_back(WebGLContext::FailureReason(
+            "FEATURE_FAILURE_WEBGL_EGL_INIT",
+            "Error during EGL OpenGL init."
+        ));
         return nullptr;
     }
 
@@ -608,7 +611,8 @@ CreateGLWithEGL(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
 
 static already_AddRefed<GLContext>
 CreateGLWithANGLE(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
-                  WebGLContext* webgl, std::vector<FailureReason>* const out_failReasons)
+                  WebGLContext* webgl,
+                  std::vector<WebGLContext::FailureReason>* const out_failReasons)
 {
     const gfx::IntSize dummySize(16, 16);
     RefPtr<GLContext> gl = gl::GLContextProviderEGL::CreateOffscreen(dummySize, caps,
@@ -618,8 +622,10 @@ CreateGLWithANGLE(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
     }
 
     if (!gl) {
-        out_failReasons->push_back({ "FEATURE_FAILURE_WEBGL_ANGLE_INIT",
-                                     "Error during ANGLE OpenGL init." });
+        out_failReasons->push_back(WebGLContext::FailureReason(
+            "FEATURE_FAILURE_WEBGL_ANGLE_INIT",
+            "Error during ANGLE OpenGL init."
+        ));
         return nullptr;
     }
 
@@ -629,7 +635,7 @@ CreateGLWithANGLE(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
 static already_AddRefed<gl::GLContext>
 CreateGLWithDefault(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
                     WebGLContext* webgl,
-                    std::vector<FailureReason>* const out_failReasons)
+                    std::vector<WebGLContext::FailureReason>* const out_failReasons)
 {
     const gfx::IntSize dummySize(16, 16);
     RefPtr<GLContext> gl = gl::GLContextProvider::CreateOffscreen(dummySize, caps,
@@ -640,8 +646,10 @@ CreateGLWithDefault(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
     }
 
     if (!gl) {
-        out_failReasons->push_back({ "FEATURE_FAILURE_WEBGL_DEFAULT_INIT",
-                                     "Error during native OpenGL init." });
+        out_failReasons->push_back(WebGLContext::FailureReason(
+            "FEATURE_FAILURE_WEBGL_DEFAULT_INIT",
+            "Error during native OpenGL init."
+        ));
         return nullptr;
     }
 
@@ -673,7 +681,7 @@ WebGLContext::CreateAndInitGLWith(FnCreateGL_T fnCreateGL,
         return false;
 
     FailureReason reason;
-    if (!InitAndValidateGL(&reason.info, &reason.key)) {
+    if (!InitAndValidateGL(&reason)) {
         // The fail reason here should be specific enough for now.
         gl = nullptr;
         out_failReasons->push_back(reason);
@@ -699,11 +707,11 @@ WebGLContext::CreateAndInitGL(bool forceEnabled,
 
             reason.info = "Refused to create native OpenGL context because of blacklist"
                           " entry: ";
-            reason.info.Append(blacklistId);
+            reason.info.Append(reason.key);
 
             out_failReasons->push_back(reason);
 
-            GenerateWarning(text.BeginReading());
+            GenerateWarning(reason.info.BeginReading());
         }
     }
 
@@ -751,7 +759,8 @@ WebGLContext::CreateAndInitGL(bool forceEnabled,
 
     //////
 
-    out_failReasons->push_back(nsLiteralCString("Exhausted GL driver options."));
+    out_failReasons->push_back(FailureReason("FEATURE_FAILURE_WEBGL_EXHAUSTED_DRIVERS",
+                                             "Exhausted GL driver options."));
     return false;
 }
 
