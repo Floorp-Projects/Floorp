@@ -462,6 +462,22 @@ ImageTestCase CorruptTestCase()
                        TEST_CASE_HAS_ERROR);
 }
 
+ImageTestCase CorruptICOWithBadBMPWidthTestCase()
+{
+  // This ICO contains a BMP icon which has a width that doesn't match the size
+  // listed in the corresponding ICO directory entry.
+  return ImageTestCase("corrupt-with-bad-bmp-width.ico", "image/x-icon",
+                       IntSize(100, 100), TEST_CASE_HAS_ERROR);
+}
+
+ImageTestCase CorruptICOWithBadBMPHeightTestCase()
+{
+  // This ICO contains a BMP icon which has a height that doesn't match the size
+  // listed in the corresponding ICO directory entry.
+  return ImageTestCase("corrupt-with-bad-bmp-height.ico", "image/x-icon",
+                       IntSize(100, 100), TEST_CASE_HAS_ERROR);
+}
+
 ImageTestCase TransparentPNGTestCase()
 {
   return ImageTestCase("transparent.png", "image/png", IntSize(32, 32),
