@@ -392,4 +392,43 @@ MediaConstraintsHelper::FitnessDistance(
   return 0;
 }
 
+template<class MediaEngineSourceType>
+const char*
+MediaConstraintsHelper::FindBadConstraint(
+    const NormalizedConstraints& aConstraints,
+    const MediaEngineSourceType& aMediaEngineSource,
+    const nsString& aDeviceId)
+{
+  class MockDevice
+  {
+  public:
+    NS_INLINE_DECL_THREADSAFE_REFCOUNTING(MockDevice);
+
+    explicit MockDevice(const MediaEngineSourceType* aMediaEngineSource,
+                        const nsString& aDeviceId)
+    : mMediaEngineSource(aMediaEngineSource),
+      // The following dud code exists to avoid 'unused typedef' error on linux.
+      mDeviceId(MockDevice::HasThreadSafeRefCnt::value ? aDeviceId : nsString()) {}
+
+    uint32_t GetBestFitnessDistance(
+        const nsTArray<const NormalizedConstraintSet*>& aConstraintSets)
+    {
+      return mMediaEngineSource->GetBestFitnessDistance(aConstraintSets,
+                                                        mDeviceId);
+    }
+
+  private:
+    ~MockDevice() {}
+
+    const MediaEngineSourceType* mMediaEngineSource;
+    nsString mDeviceId;
+  };
+
+  Unused << typename MockDevice::HasThreadSafeRefCnt();
+
+  nsTArray<RefPtr<MockDevice>> devices;
+  devices.AppendElement(new MockDevice(&aMediaEngineSource, aDeviceId));
+  return FindBadConstraint(aConstraints, devices);
+}
+
 }

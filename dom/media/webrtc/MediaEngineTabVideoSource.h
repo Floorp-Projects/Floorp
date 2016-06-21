@@ -20,8 +20,8 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
     MediaEngineTabVideoSource();
 
     void Shutdown() override {};
-    void GetName(nsAString_internal&) override;
-    void GetUUID(nsACString_internal&) override;
+    void GetName(nsAString_internal&) const override;
+    void GetUUID(nsACString_internal&) const override;
     nsresult Allocate(const dom::MediaTrackConstraints &,
                       const mozilla::MediaEnginePrefs&,
                       const nsString& aDeviceId,
@@ -44,7 +44,7 @@ class MediaEngineTabVideoSource : public MediaEngineVideoSource, nsIDOMEventList
     }
     uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-      const nsString& aDeviceId) override
+      const nsString& aDeviceId) const override
     {
       return 0;
     }
