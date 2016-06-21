@@ -604,3 +604,39 @@ host_c_compiler = compiler('C', host, other_compiler=c_compiler)
 host_cxx_compiler = compiler('C++', host, c_compiler=host_c_compiler,
                              other_compiler=cxx_compiler,
                              other_c_compiler=c_compiler)
+
+@depends(c_compiler)
+def default_debug_flags(compiler_info):
+    # Debug info is ON by default.
+    if compiler_info.type == 'msvc':
+        return '-Zi'
+    return '-g'
+
+option(env='MOZ_DEBUG_FLAGS',
+       nargs=1,
+       help='Debug compiler flags')
+
+imply_option('--enable-debug-symbols',
+             depends_if('--enable-debug')(lambda v: v))
+
+js_option('--enable-debug-symbols',
+          nargs='?',
+          default=True,
+          help='Enable debug symbols using the given compiler flags')
+
+set_config('MOZ_DEBUG_SYMBOLS',
+           depends_if('--enable-debug-symbols')(lambda _: True))
+
+@depends('MOZ_DEBUG_FLAGS', '--enable-debug-symbols', default_debug_flags)
+def debug_flags(env_debug_flags, enable_debug_flags, default_debug_flags):
+    # If MOZ_DEBUG_FLAGS is set, and --enable-debug-symbols is set to a value,
+    # --enable-debug-symbols takes precedence. Note, the value of
+    # --enable-debug-symbols may be implied by --enable-debug.
+    if len(enable_debug_flags):
+        return enable_debug_flags[0]
+    if env_debug_flags:
+        return env_debug_flags[0]
+    return default_debug_flags
+
+set_config('MOZ_DEBUG_FLAGS', debug_flags)
+add_old_configure_assignment('MOZ_DEBUG_FLAGS', debug_flags)

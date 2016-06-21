@@ -34,15 +34,18 @@ class TempAllocator
 
     explicit TempAllocator(LifoAlloc* lifoAlloc)
       : lifoScope_(lifoAlloc)
-    { }
+    {
+        lifoAlloc->setAsInfallibleByDefault();
+    }
 
     void* allocateInfallible(size_t bytes)
     {
-        return lifoScope_.alloc().allocInfallibleOrAssert(bytes);
+        return lifoScope_.alloc().allocInfallible(bytes);
     }
 
-    void* allocate(size_t bytes)
+    MOZ_MUST_USE void* allocate(size_t bytes)
     {
+        LifoAlloc::AutoFallibleScope fallibleAllocator(lifoAlloc());
         void* p = lifoScope_.alloc().alloc(bytes);
         if (!ensureBallast())
             return nullptr;
@@ -50,8 +53,9 @@ class TempAllocator
     }
 
     template <typename T>
-    T* allocateArray(size_t n)
+    MOZ_MUST_USE T* allocateArray(size_t n)
     {
+        LifoAlloc::AutoFallibleScope fallibleAllocator(lifoAlloc());
         size_t bytes;
         if (MOZ_UNLIKELY(!CalculateAllocSize<T>(n, &bytes)))
             return nullptr;
@@ -65,12 +69,12 @@ class TempAllocator
     struct Fallible { TempAllocator& alloc; };
     Fallible fallible() { return { *this }; }
 
-    LifoAlloc* lifoAlloc()
-    {
+    LifoAlloc* lifoAlloc() {
         return &lifoScope_.alloc();
     }
 
     MOZ_MUST_USE bool ensureBallast() {
+        JS_OOM_POSSIBLY_FAIL_BOOL();
         return lifoScope_.alloc().ensureUnusedApproximate(BallastSize);
     }
 };
@@ -150,7 +154,7 @@ class AutoJitContextAlloc
 
 struct TempObject
 {
-    inline void* operator new(size_t nbytes, TempAllocator::Fallible view) noexcept {
+    inline void* operator new(size_t nbytes, TempAllocator::Fallible view) throw() {
         return view.alloc.allocate(nbytes);
     }
     inline void* operator new(size_t nbytes, TempAllocator& alloc) {

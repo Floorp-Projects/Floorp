@@ -46,8 +46,8 @@ public:
 
 private:
   mozilla::Maybe<JSAutoRequest> mAutoRequest;
-  uint32_t mStackDepthAfterPush;
 #ifdef DEBUG
+  uint32_t mStackDepthAfterPush;
   JSContext* mPushedContext;
   unsigned mCompartmentDepthOnEntry;
 #endif
@@ -262,7 +262,9 @@ public:
     return mCx;
   }
 
+#ifdef DEBUG
   bool CxPusherIsStackTop() const { return mCxPusher->IsStackTop(); }
+#endif
 
   // If HasException, report it.  Otherwise, a no-op.
   void ReportException();

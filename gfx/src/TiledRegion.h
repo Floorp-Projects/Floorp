@@ -94,10 +94,6 @@ public:
     if (mCoversBounds) {
       return;
     }
-    if (ExceedsMaximumSize()) {
-      FallBackToBounds();
-      return;
-    }
 
     if (!mImpl.AddRect(RectToBox(aRect))) {
       FallBackToBounds();
@@ -109,10 +105,6 @@ public:
     mBounds = mBounds.Union(aRegion.GetBounds());
 
     if (mCoversBounds) {
-      return;
-    }
-    if (ExceedsMaximumSize()) {
-      FallBackToBounds();
       return;
     }
 
@@ -136,6 +128,7 @@ public:
   }
 
   RectT GetBounds() const { return mBounds; }
+  bool CoversBounds() const { return mCoversBounds; }
 
   bool Intersects(const RectT& aRect) const
   {
@@ -161,12 +154,6 @@ public:
   }
 
 private:
-
-  bool ExceedsMaximumSize() const
-  {
-    // This stops us from allocating insane numbers of tiles.
-    return mBounds.width >= 50 * 256 || mBounds.height >= 50 * 256;
-  }
 
   void FallBackToBounds()
   {
