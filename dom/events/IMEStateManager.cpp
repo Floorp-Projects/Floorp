@@ -222,6 +222,39 @@ IMEStateManager::StopIMEStateManagement()
 }
 
 // static
+void
+IMEStateManager::MaybeStartOffsetUpdatedInChild(nsIWidget* aWidget,
+                                                uint32_t aStartOffset)
+{
+  if (NS_WARN_IF(!sTextCompositions)) {
+    MOZ_LOG(sISMLog, LogLevel::Warning,
+      ("ISM: IMEStateManager::MaybeStartOffsetUpdatedInChild("
+       "aWidget=0x%p, aStartOffset=%u), called when there is no "
+       "composition", aWidget, aStartOffset));
+    return;
+  }
+
+  RefPtr<TextComposition> composition = GetTextCompositionFor(aWidget);
+  if (NS_WARN_IF(!composition)) {
+    MOZ_LOG(sISMLog, LogLevel::Warning,
+      ("ISM: IMEStateManager::MaybeStartOffsetUpdatedInChild("
+       "aWidget=0x%p, aStartOffset=%u), called when there is no "
+       "composition", aWidget, aStartOffset));
+    return;
+  }
+
+  if (composition->NativeOffsetOfStartComposition() == aStartOffset) {
+    return;
+  }
+
+  MOZ_LOG(sISMLog, LogLevel::Info,
+    ("ISM: IMEStateManager::MaybeStartOffsetUpdatedInChild("
+     "aWidget=0x%p, aStartOffset=%u), old offset=%u",
+     aWidget, aStartOffset, composition->NativeOffsetOfStartComposition()));
+  composition->OnStartOffsetUpdatedInChild(aStartOffset);
+}
+
+// static
 nsresult
 IMEStateManager::OnDestroyPresContext(nsPresContext* aPresContext)
 {

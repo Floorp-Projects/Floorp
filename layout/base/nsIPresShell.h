@@ -836,6 +836,24 @@ public:
     GetCurrentSelection(mozilla::SelectionType aSelectionType) = 0;
 
   /**
+   * Gets a selection controller for the focused content in the DOM window
+   * for mDocument.
+   *
+   * @param aFocusedContent     If there is focused content in the DOM window,
+   *                            the focused content will be returned.  This may
+   *                            be nullptr if it's not necessary.
+   * @return                    A selection controller for focused content.
+   *                            E.g., if an <input> element has focus, returns
+   *                            the independent selection controller of it.
+   *                            If the DOM window does not have focused content
+   *                            (similar to Document.activeElement), returns
+   *                            nullptr.
+   */
+  virtual already_AddRefed<nsISelectionController>
+            GetSelectionControllerForFocusedContent(
+              nsIContent** aFocusedContent = nullptr) = 0;
+
+  /**
     * Interface to dispatch events via the presshell
     * @note The caller must have a strong reference to the PresShell.
     */
