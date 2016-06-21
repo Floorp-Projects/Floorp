@@ -61,6 +61,7 @@ add_task(function* () {
   yield testFirstInlineStyleSheet(view, toolbox, testActor);
   yield testSecondInlineStyleSheet(view, toolbox, testActor);
   yield testExternalStyleSheet(view, toolbox, testActor);
+  yield testDisabledStyleEditor(view, toolbox);
 });
 
 function* testInlineStyle(view) {
@@ -147,6 +148,35 @@ function* validateStyleEditorSheet(editor, expectedSheetIndex, testActor) {
   is(href, expectedHref, "loaded stylesheet href matches document stylesheet");
 }
 
+function* testDisabledStyleEditor(view, toolbox) {
+  info("Testing with the style editor disabled");
+
+  info("Switching to the inspector panel in the toolbox");
+  yield toolbox.selectTool("inspector");
+
+  info("Disabling the style editor");
+  Services.prefs.setBoolPref("devtools.styleeditor.enabled", false);
+  gDevTools.emit("tool-unregistered", "styleeditor");
+
+  info("Clicking on a link");
+  testUnselectableRuleViewLink(view, 1);
+  clickLinkByIndex(view, 1);
+
+  is(toolbox.currentToolId, "inspector", "The click should have no effect");
+
+  info("Enabling the style editor");
+  Services.prefs.setBoolPref("devtools.styleeditor.enabled", true);
+  gDevTools.emit("tool-registered", "styleeditor");
+
+  info("Clicking on a link");
+  let onStyleEditorSelected = toolbox.once("styleeditor-selected");
+  clickLinkByIndex(view, 1);
+  yield onStyleEditorSelected;
+  is(toolbox.currentToolId, "styleeditor", "Style Editor should be selected");
+
+  Services.prefs.clearUserPref("devtools.styleeditor.enabled");
+}
+
 function testRuleViewLinkLabel(view) {
   let link = getRuleViewLinkByIndex(view, 2);
   let labelElem = link.querySelector(".ruleview-rule-source-label");
@@ -157,6 +187,13 @@ function testRuleViewLinkLabel(view) {
     "rule view stylesheet display value matches filename and line number");
   is(tooltipText, EXTERNAL_STYLESHEET_URL + ":1",
     "rule view stylesheet tooltip text matches the full URI path");
+}
+
+function testUnselectableRuleViewLink(view, index) {
+  let link = getRuleViewLinkByIndex(view, index);
+  let unselectable = link.hasAttribute("unselectable");
+
+  ok(unselectable, "Rule view is unselectable");
 }
 
 function clickLinkByIndex(view, index) {
