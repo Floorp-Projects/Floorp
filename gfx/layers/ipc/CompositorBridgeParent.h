@@ -475,6 +475,11 @@ public:
 
 private:
   /**
+   * Called during destruction in order to release resources as early as possible.
+   */
+  void StopAndClearResources();
+
+  /**
    * This returns a reference to the APZCTreeManager to which
    * pan/zoom-related events can be sent.
    */
