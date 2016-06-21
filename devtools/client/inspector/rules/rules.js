@@ -1239,7 +1239,7 @@ CssRuleView.prototype = {
     let isSelectorHighlighted = false;
 
     let selectorNodes = [...rule.editor.selectorText.childNodes];
-    if (rule.domRule.type === Ci.nsIDOMCSSRule.KEYFRAME_RULE) {
+    if (rule.domRule.type === CSSRule.KEYFRAME_RULE) {
       selectorNodes = [rule.editor.selectorText];
     } else if (rule.domRule.type === ELEMENT_STYLE) {
       selectorNodes = [];
