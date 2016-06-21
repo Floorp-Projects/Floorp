@@ -350,8 +350,7 @@ nsFloatManager::StoreRegionFor(WritingMode aWM, nsIFrame* aFloat,
     props.Delete(FloatRegionProperty());
   }
   else {
-    nsMargin* storedMargin = static_cast<nsMargin*>
-      (props.Get(FloatRegionProperty()));
+    nsMargin* storedMargin = props.Get(FloatRegionProperty());
     if (!storedMargin) {
       storedMargin = new nsMargin();
       props.Set(FloatRegionProperty(), storedMargin);
