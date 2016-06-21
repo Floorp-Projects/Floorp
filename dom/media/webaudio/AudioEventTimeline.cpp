@@ -151,8 +151,6 @@ AudioEventTimeline::GetValuesAtTimeHelper(TimeType aTime, float* aBuffer,
 
   size_t eventIndex = 0;
   const AudioTimelineEvent* previous = nullptr;
-  const AudioTimelineEvent* next = nullptr;
-  bool bailOut = false;
 
   // Let's remove old events except the last one: we need it to calculate some curves.
   while (mEvents.Length() > 1 &&
@@ -161,18 +159,31 @@ AudioEventTimeline::GetValuesAtTimeHelper(TimeType aTime, float* aBuffer,
   }
 
   for (size_t bufferIndex = 0; bufferIndex < aSize; ++bufferIndex, ++aTime) {
-    for (; !bailOut && eventIndex < mEvents.Length(); ++eventIndex) {
+
+    bool bailOut = false;
+    const AudioTimelineEvent* next;
+    for (; ; ++eventIndex) {
+
+      if (eventIndex >= mEvents.Length()) {
+        next = nullptr;
+        break;
+      }
+
+      next = &mEvents[eventIndex];
+      if (aTime < TimeOf(*next)) {
+        bailOut = true;
+        break;
+      }
 
 #ifdef DEBUG
-      const AudioTimelineEvent* current = &mEvents[eventIndex];
-      MOZ_ASSERT(current->mType == AudioTimelineEvent::SetValueAtTime ||
-                 current->mType == AudioTimelineEvent::SetTarget ||
-                 current->mType == AudioTimelineEvent::LinearRamp ||
-                 current->mType == AudioTimelineEvent::ExponentialRamp ||
-                 current->mType == AudioTimelineEvent::SetValueCurve);
+      MOZ_ASSERT(next->mType == AudioTimelineEvent::SetValueAtTime ||
+                 next->mType == AudioTimelineEvent::SetTarget ||
+                 next->mType == AudioTimelineEvent::LinearRamp ||
+                 next->mType == AudioTimelineEvent::ExponentialRamp ||
+                 next->mType == AudioTimelineEvent::SetValueCurve);
 #endif
 
-      if (TimesEqual(aTime, TimeOf(mEvents[eventIndex]))) {
+      if (TimesEqual(aTime, TimeOf(*next))) {
         mLastComputedValue = mComputedValue;
         // Find the last event with the same time
         while (eventIndex < mEvents.Length() - 1 &&
@@ -183,10 +194,6 @@ AudioEventTimeline::GetValuesAtTimeHelper(TimeType aTime, float* aBuffer,
       }
 
       previous = next;
-      next = &mEvents[eventIndex];
-      if (aTime < TimeOf(mEvents[eventIndex])) {
-        bailOut = true;
-      }
     }
 
     if (!bailOut && eventIndex < mEvents.Length()) {
@@ -217,12 +224,7 @@ AudioEventTimeline::GetValuesAtTimeHelper(TimeType aTime, float* aBuffer,
       continue;
     }
 
-    // Handle the case where the time is past all of the events
-    if (!bailOut) {
-      aBuffer[bufferIndex] = GetValuesAtTimeHelperInternal(aTime, next, nullptr);
-    } else {
-      aBuffer[bufferIndex] = GetValuesAtTimeHelperInternal(aTime, previous, next);
-    }
+    aBuffer[bufferIndex] = GetValuesAtTimeHelperInternal(aTime, previous, next);
   }
 }
 template void
