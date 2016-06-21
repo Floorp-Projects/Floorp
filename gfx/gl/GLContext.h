@@ -757,8 +757,10 @@ private:
                               " (0x%04x)\n", this, funcName,
                               GLErrorToString(err), err);
 
-                if (mDebugFlags & DebugFlagAbortOnError)
-                    MOZ_CRASH("MOZ_GL_DEBUG_ABORT_ON_ERROR");
+                if (mDebugFlags & DebugFlagAbortOnError) {
+                    MOZ_CRASH("Unexpected error with MOZ_GL_DEBUG_ABORT_ON_ERROR. (Run"
+                              " with MOZ_GL_DEBUG_ABORT_ON_ERROR=0 to disable)");
+                }
             }
         }
     }
