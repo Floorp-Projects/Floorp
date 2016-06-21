@@ -347,8 +347,10 @@ nsEditorSpellCheck::InitSpellChecker(nsIEditor* aEditor, bool aEnableSelectionCh
 
     nsCOMPtr<nsISelection> domSelection;
     aEditor->GetSelection(getter_AddRefs(domSelection));
-    RefPtr<Selection> selection = static_cast<Selection*>(domSelection.get());
-    NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
+    if (NS_WARN_IF(!domSelection)) {
+      return NS_ERROR_FAILURE;
+    }
+    RefPtr<Selection> selection = domSelection->AsSelection();
 
     int32_t count = 0;
 

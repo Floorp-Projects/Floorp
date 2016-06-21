@@ -72,10 +72,6 @@ function onPageLoad() {
 function test() {
   var osString = Cc["@mozilla.org/xre/app-info;1"].
                  getService(Ci.nsIXULRuntime).OS;
-  if (osString != "Linux") {
-    todo(false, "This test is Linux specific for now.");
-    return;
-  }
 
   try {
     // If GSettings is available, then the GConf tests

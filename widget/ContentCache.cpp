@@ -72,13 +72,11 @@ public:
  * mozilla::ContentCache
  *****************************************************************************/
 
-PRLogModuleInfo* sContentCacheLog = nullptr;
+LazyLogModule sContentCacheLog("ContentCacheWidgets");
 
 ContentCache::ContentCache()
+  : mCompositionStart(UINT32_MAX)
 {
-  if (!sContentCacheLog) {
-    sContentCacheLog = PR_NewLogModule("ContentCacheWidgets");
-  }
 }
 
 /*****************************************************************************
@@ -96,6 +94,7 @@ ContentCacheInChild::Clear()
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
     ("ContentCacheInChild: 0x%p Clear()", this));
 
+  mCompositionStart = UINT32_MAX;
   mText.Truncate();
   mSelection.Clear();
   mFirstCharRect.SetEmpty();
@@ -286,6 +285,7 @@ ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
      this, aWidget, GetNotificationName(aNotification), mCaret.mOffset,
      GetBoolName(mCaret.IsValid())));
 
+  mCompositionStart = UINT32_MAX;
   mTextRectArray.Clear();
   mSelection.mAnchorCharRect.SetEmpty();
   mSelection.mFocusCharRect.SetEmpty();
@@ -300,12 +300,15 @@ ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
   RefPtr<TextComposition> textComposition =
     IMEStateManager::GetTextCompositionFor(aWidget);
   if (textComposition) {
+    // mCompositionStart may be updated by some composition event handlers.
+    // So, let's update it with the latest information.
+    mCompositionStart = textComposition->NativeOffsetOfStartComposition();
     // Note that TextComposition::String() may not be modified here because
     // it's modified after all edit action listeners are performed but this
     // is called while some of them are performed.
     uint32_t length = textComposition->LastData().Length();
     mTextRectArray.mRects.SetCapacity(length);
-    mTextRectArray.mStart = textComposition->NativeOffsetOfStartComposition();
+    mTextRectArray.mStart = mCompositionStart;
     uint32_t endOffset = mTextRectArray.mStart + length;
     for (uint32_t i = mTextRectArray.mStart; i < endOffset; i++) {
       LayoutDeviceIntRect charRect;
@@ -428,7 +431,6 @@ ContentCacheInChild::SetSelection(nsIWidget* aWidget,
 ContentCacheInParent::ContentCacheInParent()
   : ContentCache()
   , mCommitStringByRequest(nullptr)
-  , mCompositionStart(UINT32_MAX)
   , mPendingEventsNeedingAck(0)
   , mIsComposing(false)
 {
@@ -436,8 +438,10 @@ ContentCacheInParent::ContentCacheInParent()
 
 void
 ContentCacheInParent::AssignContent(const ContentCache& aOther,
+                                    nsIWidget* aWidget,
                                     const IMENotification* aNotification)
 {
+  mCompositionStart = aOther.mCompositionStart;
   mText = aOther.mText;
   mSelection = aOther.mSelection;
   mFirstCharRect = aOther.mFirstCharRect;
@@ -445,12 +449,20 @@ ContentCacheInParent::AssignContent(const ContentCache& aOther,
   mTextRectArray = aOther.mTextRectArray;
   mEditorRect = aOther.mEditorRect;
 
+  if (mIsComposing) {
+    NS_WARN_IF(mCompositionStart == UINT32_MAX);
+    IMEStateManager::MaybeStartOffsetUpdatedInChild(aWidget, mCompositionStart);
+  } else {
+    NS_WARN_IF(mCompositionStart != UINT32_MAX);
+  }
+
   MOZ_LOG(sContentCacheLog, LogLevel::Info,
     ("ContentCacheInParent: 0x%p AssignContent(aNotification=%s), "
      "Succeeded, mText.Length()=%u, mSelection={ mAnchor=%u, mFocus=%u, "
      "mWritingMode=%s, mAnchorCharRect=%s, mFocusCharRect=%s, mRect=%s }, "
      "mFirstCharRect=%s, mCaret={ mOffset=%u, mRect=%s }, mTextRectArray={ "
-     "mStart=%u, mRects.Length()=%u }, mEditorRect=%s",
+     "mStart=%u, mRects.Length()=%u }, mIsComposing=%s, mCompositionStart=%u, "
+     "mEditorRect=%s",
      this, GetNotificationName(aNotification),
      mText.Length(), mSelection.mAnchor, mSelection.mFocus,
      GetWritingModeName(mSelection.mWritingMode).get(),
@@ -458,7 +470,8 @@ ContentCacheInParent::AssignContent(const ContentCache& aOther,
      GetRectText(mSelection.mFocusCharRect).get(),
      GetRectText(mSelection.mRect).get(), GetRectText(mFirstCharRect).get(),
      mCaret.mOffset, GetRectText(mCaret.mRect).get(), mTextRectArray.mStart,
-     mTextRectArray.mRects.Length(), GetRectText(mEditorRect).get()));
+     mTextRectArray.mRects.Length(), GetBoolName(mIsComposing),
+     mCompositionStart, GetRectText(mEditorRect).get()));
 }
 
 bool
@@ -834,6 +847,10 @@ ContentCacheInParent::OnCompositionEvent(const WidgetCompositionEvent& aEvent)
   }
 
   mIsComposing = !aEvent.CausesDOMCompositionEndEvent();
+
+  if (!mIsComposing) {
+    mCompositionStart = UINT32_MAX;
+  }
 
   // During REQUEST_TO_COMMIT_COMPOSITION or REQUEST_TO_CANCEL_COMPOSITION,
   // widget usually sends a eCompositionChange and/or eCompositionCommit event

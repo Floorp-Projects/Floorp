@@ -700,7 +700,8 @@ IMEContentObserver::ReflowInterruptible(DOMHighResTimeStamp aStart,
 nsresult
 IMEContentObserver::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
 {
-  // If the instance has cache, it should use the cached selection which was
+  // If the instance has normal selection cache and the query event queries
+  // normal selection's range, it should use the cached selection which was
   // sent to the widget.  However, if this instance has already received new
   // selection change notification but hasn't updated the cache yet (i.e.,
   // not sending selection change notification to IME, don't use the cached
@@ -708,6 +709,7 @@ IMEContentObserver::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
   // selection cache here, IMENotificationSender won't notify IME of selection
   // change because it looks like that the selection isn't actually changed.
   if (aEvent->mMessage == eQuerySelectedText && aEvent->mUseNativeLineBreak &&
+      aEvent->mInput.mSelectionType == SelectionType::eNormal &&
       mSelectionData.IsValid() && !mNeedsToNotifyIMEOfSelectionChange) {
     aEvent->mReply.mContentsRoot = mRootContent;
     aEvent->mReply.mHasSelection = !mSelectionData.IsCollapsed();
