@@ -729,7 +729,7 @@
                        aria-label="&urlbar.passwordNotificationAnchor.label;"/>
                 <image id="plugins-notification-icon" class="notification-anchor-icon plugin-icon" role="button"
                        aria-label="&urlbar.pluginsNotificationAnchor.label;"/>
-                <image id="web-notifications-notification-icon" class="notification-anchor-icon web-notifications-icon" role="button"
+                <image id="web-notifications-notification-icon" class="notification-anchor-icon desktop-notification-icon" role="button"
                        aria-label="&urlbar.webNotsNotificationAnchor3.label;"/>
                 <image id="webRTC-shareDevices-notification-icon" class="notification-anchor-icon camera-icon" role="button"
                        aria-label="&urlbar.webRTCShareDevicesNotificationAnchor.label;"/>
@@ -743,7 +743,7 @@
                        aria-label="&urlbar.webRTCShareScreenNotificationAnchor.label;"/>
                 <image id="webRTC-sharingScreen-notification-icon" class="notification-anchor-icon screen-icon in-use" role="button"
                        aria-label="&urlbar.webRTCSharingScreenNotificationAnchor.label;"/>
-                <image id="pointerLock-notification-icon" class="notification-anchor-icon pointer-icon" role="button"
+                <image id="pointerLock-notification-icon" class="notification-anchor-icon pointerLock-icon" role="button"
                        aria-label="&urlbar.pointerLockNotificationAnchor.label;"/>
                 <image id="servicesInstall-notification-icon" class="notification-anchor-icon service-icon" role="button"
                        aria-label="&urlbar.servicesNotificationAnchor.label;"/>
