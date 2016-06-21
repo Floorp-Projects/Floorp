@@ -1072,7 +1072,7 @@ class DebuggerObject : public NativeObject
     static MOZ_MUST_USE bool className(JSContext* cx, Handle<DebuggerObject*> object,
                                        MutableHandleString result);
     static MOZ_MUST_USE bool global(JSContext* cx, Handle<DebuggerObject*> object,
-                                    MutableHandleObject result);
+                                    MutableHandle<DebuggerObject*> result);
     static MOZ_MUST_USE bool name(JSContext* cx, Handle<DebuggerObject*> object,
                                   MutableHandleString result);
     static MOZ_MUST_USE bool displayName(JSContext* cx, Handle<DebuggerObject*> object,
