@@ -39,6 +39,7 @@
 #ifdef MOZ_CRASHREPORTER
 #include "nsServiceManagerUtils.h"
 #include "nsICrashReporter.h"
+#include "mozilla/dom/ContentChild.h"
 #endif
 
 #ifdef MOZ_NUWA_PROCESS
@@ -522,30 +523,67 @@ nsThread::ThreadFunc(void* aArg)
 #ifdef MOZ_CRASHREPORTER
 // Tell the crash reporter to save a memory report if our heuristics determine
 // that an OOM failure is likely to occur soon.
-static bool SaveMemoryReportNearOOM()
+// Memory usage will not be checked more than every 30 seconds or saved more
+// than every 3 minutes
+// If |aShouldSave == kForceReport|, a report will be saved regardless of
+// whether the process is low on memory or not. However, it will still not be
+// saved if a report was saved less than 3 minutes ago.
+bool
+nsThread::SaveMemoryReportNearOOM(ShouldSaveMemoryReport aShouldSave)
 {
-  bool needMemoryReport = false;
+  // Keep an eye on memory usage (cheap, ~7ms) somewhat frequently,
+  // but save memory reports (expensive, ~75ms) less frequently.
+  const size_t kLowMemoryCheckSeconds = 30;
+  const size_t kLowMemorySaveSeconds = 3 * 60;
 
+  static TimeStamp nextCheck = TimeStamp::NowLoRes()
+    + TimeDuration::FromSeconds(kLowMemoryCheckSeconds);
+  static bool recentlySavedReport = false; // Keeps track of whether a report
+                                           // was saved last time we checked
+
+  // Are we checking again too soon?
+  TimeStamp now = TimeStamp::NowLoRes();
+  if ((aShouldSave == ShouldSaveMemoryReport::kMaybeReport ||
+      recentlySavedReport) && now < nextCheck) {
+    return false;
+  }
+
+  bool needMemoryReport = (aShouldSave == ShouldSaveMemoryReport::kForceReport);
 #ifdef XP_WIN // XXX implement on other platforms as needed
-  const size_t LOWMEM_THRESHOLD_VIRTUAL = 200 * 1024 * 1024;
-  MEMORYSTATUSEX statex;
-  statex.dwLength = sizeof(statex);
-  if (GlobalMemoryStatusEx(&statex)) {
-    if (statex.ullAvailVirtual < LOWMEM_THRESHOLD_VIRTUAL) {
-      needMemoryReport = true;
+  // If the report is forced there is no need to check whether it is necessary
+  if (aShouldSave != ShouldSaveMemoryReport::kForceReport) {
+    const size_t LOWMEM_THRESHOLD_VIRTUAL = 200 * 1024 * 1024;
+    MEMORYSTATUSEX statex;
+    statex.dwLength = sizeof(statex);
+    if (GlobalMemoryStatusEx(&statex)) {
+      if (statex.ullAvailVirtual < LOWMEM_THRESHOLD_VIRTUAL) {
+        needMemoryReport = true;
+      }
     }
   }
 #endif
 
   if (needMemoryReport) {
-    nsCOMPtr<nsICrashReporter> cr =
-      do_GetService("@mozilla.org/toolkit/crash-reporter;1");
-    if (cr) {
-      cr->SaveMemoryReport();
+    if (XRE_IsContentProcess()) {
+      dom::ContentChild* cc = dom::ContentChild::GetSingleton();
+      if (cc) {
+        cc->SendNotifyLowMemory();
+      }
+    } else {
+      nsCOMPtr<nsICrashReporter> cr =
+        do_GetService("@mozilla.org/toolkit/crash-reporter;1");
+      if (cr) {
+        cr->SaveMemoryReport();
+      }
     }
+    recentlySavedReport = true;
+    nextCheck = now + TimeDuration::FromSeconds(kLowMemorySaveSeconds);
+  } else {
+    recentlySavedReport = false;
+    nextCheck = now + TimeDuration::FromSeconds(kLowMemoryCheckSeconds);
   }
 
-  return needMemoryReport;
+  return recentlySavedReport;
 }
 #endif
 
@@ -1272,22 +1310,7 @@ nsThread::DoMainThreadSpecificProcessing(bool aReallyWait)
 
 #ifdef MOZ_CRASHREPORTER
   if (!ShuttingDown()) {
-    // Keep an eye on memory usage (cheap, ~7ms) somewhat frequently,
-    // but save memory reports (expensive, ~75ms) less frequently.
-    const size_t LOW_MEMORY_CHECK_SECONDS = 30;
-    const size_t LOW_MEMORY_SAVE_SECONDS = 3 * 60;
-
-    static TimeStamp nextCheck = TimeStamp::NowLoRes()
-      + TimeDuration::FromSeconds(LOW_MEMORY_CHECK_SECONDS);
-
-    TimeStamp now = TimeStamp::NowLoRes();
-    if (now >= nextCheck) {
-      if (SaveMemoryReportNearOOM()) {
-        nextCheck = now + TimeDuration::FromSeconds(LOW_MEMORY_SAVE_SECONDS);
-      } else {
-        nextCheck = now + TimeDuration::FromSeconds(LOW_MEMORY_CHECK_SECONDS);
-      }
-    }
+    SaveMemoryReportNearOOM(ShouldSaveMemoryReport::kMaybeReport);
   }
 #endif
 }
