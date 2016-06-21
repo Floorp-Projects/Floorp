@@ -180,7 +180,7 @@ function* testJSTerm(hud) {
   };
 
   for (let errorMessageName of Object.keys(ErrorDocStatements)) {
-    let url = ErrorDocs.GetURL(errorMessageName);
+    let url = ErrorDocs.GetURL({ errorMessageName });
 
     jsterm.clearOutput();
     yield jsterm.execute(ErrorDocStatements[errorMessageName]);
