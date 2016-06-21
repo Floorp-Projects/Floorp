@@ -29,6 +29,10 @@ var MockServices = (function () {
   });
 
   var mockAlertsService = {
+    showPersistentNotification: function(persistentData, alert, alertListener) {
+      this.showAlert(alert, alertListener);
+    },
+
     showAlert: function(alert, alertListener) {
       var listener = SpecialPowers.wrap(alertListener);
       activeAlertNotifications[alert.name] = {

@@ -28,7 +28,7 @@ interface nsINotificationStorageCallback : nsISupports
               in DOMString icon,
               in DOMString data,
               in DOMString behavior,
-              in DOMString serviceWorkerRegistrationID);
+              in DOMString serviceWorkerRegistrationScope);
 
   /**
    * Callback function used to notify C++ the we have returned
@@ -76,7 +76,7 @@ interface nsINotificationStorage : nsISupports
            in DOMString alertName,
            in DOMString data,
            in DOMString behavior,
-           in DOMString serviceWorkerRegistrationID);
+           in DOMString serviceWorkerRegistrationScope);
 
   /**
    * Retrieve a list of notifications.

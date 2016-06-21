@@ -58,25 +58,21 @@ add_task(function* testIdentityIcon() {
   yield promiseTabLoadEvent(tab, PERMISSIONS_PAGE);
 
   gIdentityHandler.setPermission("geo", SitePermissions.ALLOW);
-  gIdentityHandler.refreshIdentityBlock();
 
   ok(gIdentityHandler._identityBox.classList.contains("grantedPermissions"),
     "identity-box signals granted permssions");
 
   gIdentityHandler.setPermission("geo", SitePermissions.getDefault("geo"));
-  gIdentityHandler.refreshIdentityBlock();
 
   ok(!gIdentityHandler._identityBox.classList.contains("grantedPermissions"),
     "identity-box doesn't signal granted permssions");
 
   gIdentityHandler.setPermission("camera", SitePermissions.BLOCK);
-  gIdentityHandler.refreshIdentityBlock();
 
   ok(!gIdentityHandler._identityBox.classList.contains("grantedPermissions"),
     "identity-box doesn't signal granted permssions");
 
   gIdentityHandler.setPermission("cookie", SitePermissions.SESSION);
-  gIdentityHandler.refreshIdentityBlock();
 
   ok(gIdentityHandler._identityBox.classList.contains("grantedPermissions"),
     "identity-box signals granted permssions");
