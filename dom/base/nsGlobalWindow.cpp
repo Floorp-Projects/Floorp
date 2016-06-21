@@ -9427,9 +9427,9 @@ nsGlobalWindow::GetSelectionOuter()
   if (!presShell) {
     return nullptr;
   }
-
-  return static_cast<Selection*>(
-           presShell->GetCurrentSelection(SelectionType::eNormal));
+  nsISelection* domSelection =
+    presShell->GetCurrentSelection(SelectionType::eNormal);
+  return domSelection ? domSelection->AsSelection() : nullptr;
 }
 
 Selection*
