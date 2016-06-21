@@ -2051,8 +2051,6 @@ js::gc::StoreBuffer::MonoTypeBuffer<T>::trace(StoreBuffer* owner, TenuringTracer
 namespace js {
 namespace gc {
 template void
-StoreBuffer::MonoTypeBuffer<StoreBuffer::WholeCellEdges>::trace(StoreBuffer*, TenuringTracer&);
-template void
 StoreBuffer::MonoTypeBuffer<StoreBuffer::ValueEdge>::trace(StoreBuffer*, TenuringTracer&);
 template void
 StoreBuffer::MonoTypeBuffer<StoreBuffer::SlotsEdge>::trace(StoreBuffer*, TenuringTracer&);
@@ -2088,15 +2086,11 @@ js::gc::StoreBuffer::SlotsEdge::trace(TenuringTracer& mover) const
 }
 
 void
-js::gc::StoreBuffer::WholeCellEdges::trace(TenuringTracer& mover) const
+js::gc::StoreBuffer::traceWholeCell(TenuringTracer& mover, JS::TraceKind kind, Cell* edge)
 {
     MOZ_ASSERT(edge->isTenured());
-    JS::TraceKind kind = edge->getTraceKind();
     if (kind == JS::TraceKind::Object) {
         JSObject *object = static_cast<JSObject*>(edge);
-        if (object->is<NativeObject>())
-            object->as<NativeObject>().clearInWholeCellBuffer();
-
         mover.traceObject(object);
 
         // Additionally trace the expando object attached to any unboxed plain
@@ -2118,6 +2112,27 @@ js::gc::StoreBuffer::WholeCellEdges::trace(TenuringTracer& mover) const
         static_cast<jit::JitCode*>(edge)->traceChildren(&mover);
     else
         MOZ_CRASH();
+}
+
+void
+js::gc::StoreBuffer::traceWholeCells(TenuringTracer& mover)
+{
+    for (ArenaCellSet* cells = bufferWholeCell; cells; cells = cells->next) {
+        Arena* arena = cells->arena;
+
+        MOZ_ASSERT(arena->bufferedCells == cells);
+        arena->bufferedCells = &ArenaCellSet::Empty;
+
+        JS::TraceKind kind = MapAllocToTraceKind(arena->getAllocKind());
+        for (size_t i = 0; i < ArenaCellCount; i++) {
+            if (cells->hasCell(i)) {
+                auto cell = reinterpret_cast<Cell*>(uintptr_t(arena) + CellSize * i);
+                traceWholeCell(mover, kind, cell);
+            }
+        }
+    }
+
+    bufferWholeCell = nullptr;
 }
 
 void
