@@ -140,11 +140,12 @@ void TreeInfo(const char* aMsg, uint32_t aExtraFlags,
 void TreeInfo(const char* aMsg, uint32_t aExtraFlags, Accessible* aParent);
 
 /**
- * Log the accessible tree.
+ * Log the accessible/DOM tree.
  */
 typedef const char* (*GetTreePrefix)(void* aData, Accessible*);
 void Tree(const char* aTitle, const char* aMsgText, DocAccessible* aDoc,
           GetTreePrefix aPrefixFunc = nullptr, void* aGetTreePrefixData = nullptr);
+void DOMTree(const char* aTitle, const char* aMsgText, DocAccessible* aDoc);
 
 /**
  * Log the message ('title: text' format) on new line. Print the start and end
