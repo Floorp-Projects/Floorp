@@ -393,6 +393,11 @@ if (hasI64()) {
         (func (result i32) (call_import 0 (i64.const 0x123456789abcdef0)))
         (export "" 0))`, imp)(), 42);
 
+    assertEq(wasmEvalText(`(module
+        (import "param" "" (param i64)(param i64)(param i64)(param i64)(param i64)(param i64)(param i64) (param i64) (result i32))
+        (func (result i32) (call_import 0 (i64.const 0x123456789abcdef0)(i64.const 0x123456789abcdef0)(i64.const 0x123456789abcdef0)(i64.const 0x123456789abcdef0)(i64.const 0x123456789abcdef0)(i64.const 0x123456789abcdef0)(i64.const 0x123456789abcdef0)(i64.const 0x123456789abcdef0)))
+        (export "" 0))`, imp)(), 42);
+
     assertEqI64(wasmEvalText(`(module
         (import "result" "" (param i32) (result i64))
         (func (result i64) (call_import 0 (i32.const 3)))
