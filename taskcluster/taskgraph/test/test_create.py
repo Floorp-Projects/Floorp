@@ -13,6 +13,7 @@ from ..types import Task, TaskGraph
 
 from mozunit import main
 
+
 class FakeKind(object):
 
     def get_task_definition(self, task, deps_by_name):
@@ -83,4 +84,3 @@ class TestCreate(unittest.TestCase):
 
 if __name__ == '__main__':
     main()
-

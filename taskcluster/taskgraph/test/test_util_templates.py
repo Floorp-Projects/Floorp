@@ -4,8 +4,6 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
-import os
-
 import unittest
 import mozunit
 import textwrap
@@ -153,8 +151,7 @@ class TemplatesTest(unittest.TestCase):
             'a': 'overriden'
         })
 
-        self.assertEqual(content, { 'values': ['overriden', 'b', 'c'] });
-
+        self.assertEqual(content, {'values': ['overriden', 'b', 'c']})
 
     def test_inheritance_circular(self):
         '''
@@ -167,7 +164,7 @@ class TemplatesTest(unittest.TestCase):
         content = self.subject.load('deep/4.yml', {
             'value': 'myvalue'
         })
-        self.assertEqual(content, { 'variable': 'myvalue' })
+        self.assertEqual(content, {'variable': 'myvalue'})
 
     def test_inheritance_with_simple_extensions(self):
         content = self.subject.load('extend_parent.yml', {})
@@ -181,7 +178,7 @@ class TemplatesTest(unittest.TestCase):
                 },
                 'level': 2,
             },
-            'was_list': { 'replaced': True }
+            'was_list': {'replaced': True}
         })
 
 

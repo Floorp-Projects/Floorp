@@ -6,6 +6,7 @@ import yaml
 # Key used in template inheritance...
 INHERITS_KEY = '$inherits'
 
+
 def merge_to(source, dest):
     '''
     Merge dict and arrays (override scalar values)
@@ -16,7 +17,7 @@ def merge_to(source, dest):
 
     for key, value in source.items():
         # Override mismatching or empty types
-        if type(value) != type(dest.get(key)):
+        if type(value) != type(dest.get(key)):  # noqa
             dest[key] = source[key]
             continue
 
@@ -33,8 +34,10 @@ def merge_to(source, dest):
 
     return dest
 
+
 class TemplatesException(Exception):
     pass
+
 
 class Templates():
     '''
@@ -54,7 +57,7 @@ class Templates():
         if not os.path.isdir(root):
             raise TemplatesException('Root must be a directory')
 
-        self.root = root;
+        self.root = root
 
     def _inherits(self, path, obj, properties, seen):
         blueprint = obj.pop(INHERITS_KEY)
@@ -85,8 +88,6 @@ class Templates():
 
         # Anything left in obj is merged into final results (and overrides)
         return merge_to(obj, out)
-
-
 
     def render(self, path, content, parameters, seen):
         '''
