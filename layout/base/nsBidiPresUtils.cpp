@@ -1293,13 +1293,13 @@ nsBidiPresUtils::GetFirstLeaf(nsIFrame* aFrame)
 nsBidiLevel
 nsBidiPresUtils::GetFrameEmbeddingLevel(nsIFrame* aFrame)
 {
-  return NS_GET_EMBEDDING_LEVEL(nsBidiPresUtils::GetFirstLeaf(aFrame));
+  return nsBidi::GetEmbeddingLevel(GetFirstLeaf(aFrame));
 }
 
 uint8_t
 nsBidiPresUtils::GetParagraphDepth(nsIFrame* aFrame)
 {
-  return NS_GET_PARAGRAPH_DEPTH(nsBidiPresUtils::GetFirstLeaf(aFrame));
+  return nsBidi::GetParagraphDepth(GetFirstLeaf(aFrame));
 }
 
 
@@ -1310,7 +1310,7 @@ nsBidiPresUtils::GetFrameBaseLevel(nsIFrame* aFrame)
   while (!IsBidiLeaf(firstLeaf)) {
     firstLeaf = firstLeaf->PrincipalChildList().FirstChild();
   }
-  return NS_GET_BASE_LEVEL(firstLeaf);
+  return nsBidi::GetBaseLevel(firstLeaf);
 }
 
 void

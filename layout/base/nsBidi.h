@@ -662,14 +662,20 @@ public:
   NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(EmbeddingLevelProperty, nsBidiLevel)
   NS_DECLARE_FRAME_PROPERTY_SMALL_VALUE(ParagraphDepthProperty, uint8_t)
 
-#define NS_GET_BASE_LEVEL(frame) \
-  frame->Properties().Get(nsBidi::BaseLevelProperty())
+  static nsBidiLevel GetBaseLevel(nsIFrame* aFrame)
+  {
+    return aFrame->Properties().Get(BaseLevelProperty());
+  }
 
-#define NS_GET_EMBEDDING_LEVEL(frame) \
-  frame->Properties().Get(nsBidi::EmbeddingLevelProperty())
+  static nsBidiLevel GetEmbeddingLevel(nsIFrame* aFrame)
+  {
+    return aFrame->Properties().Get(EmbeddingLevelProperty());
+  }
 
-#define NS_GET_PARAGRAPH_DEPTH(frame) \
-  frame->Properties().Get(nsBidi::ParagraphDepthProperty())
+  static uint8_t GetParagraphDepth(nsIFrame* aFrame)
+  {
+    return aFrame->Properties().Get(ParagraphDepthProperty());
+  }
 
 protected:
   friend class nsBidiPresUtils;
