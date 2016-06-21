@@ -307,11 +307,11 @@ CssLogic.prototype = {
 
       // Find import and keyframes rules.
       for (let aDomRule of domSheet.cssRules) {
-        if (aDomRule.type == Ci.nsIDOMCSSRule.IMPORT_RULE &&
+        if (aDomRule.type == CSSRule.IMPORT_RULE &&
             aDomRule.styleSheet &&
             this.mediaMatches(aDomRule)) {
           this._cacheSheet(aDomRule.styleSheet);
-        } else if (aDomRule.type == Ci.nsIDOMCSSRule.KEYFRAMES_RULE) {
+        } else if (aDomRule.type == CSSRule.KEYFRAMES_RULE) {
           this._keyframesRules.push(aDomRule);
         }
       }
@@ -626,7 +626,7 @@ CssLogic.prototype = {
       let numDomRules = domRules ? domRules.Count() : 0;
       for (let i = 0; i < numDomRules; i++) {
         let domRule = domRules.GetElementAt(i);
-        if (domRule.type !== Ci.nsIDOMCSSRule.STYLE_RULE) {
+        if (domRule.type !== CSSRule.STYLE_RULE) {
           continue;
         }
 
@@ -1342,10 +1342,10 @@ CssSheet.prototype = {
     let domRules = this.domSheet.cssRules;
 
     function _iterator(domRule) {
-      if (domRule.type == Ci.nsIDOMCSSRule.STYLE_RULE) {
+      if (domRule.type == CSSRule.STYLE_RULE) {
         callback.call(scope, this.getRule(domRule));
         ruleCount++;
-      } else if (domRule.type == Ci.nsIDOMCSSRule.MEDIA_RULE &&
+      } else if (domRule.type == CSSRule.MEDIA_RULE &&
           domRule.cssRules && this._cssLogic.mediaMatches(domRule)) {
         Array.prototype.forEach.call(domRule.cssRules, _iterator, this);
       }
@@ -1375,9 +1375,9 @@ CssSheet.prototype = {
   forSomeRules: function (callback, scope) {
     let domRules = this.domSheet.cssRules;
     function _iterator(domRule) {
-      if (domRule.type == Ci.nsIDOMCSSRule.STYLE_RULE) {
+      if (domRule.type == CSSRule.STYLE_RULE) {
         return callback.call(scope, this.getRule(domRule));
-      } else if (domRule.type == Ci.nsIDOMCSSRule.MEDIA_RULE &&
+      } else if (domRule.type == CSSRule.MEDIA_RULE &&
           domRule.cssRules && this._cssLogic.mediaMatches(domRule)) {
         return Array.prototype.some.call(domRule.cssRules, _iterator, this);
       }
@@ -1409,7 +1409,7 @@ function CssRule(cssSheet, domRule, element) {
   this.domRule = domRule;
 
   let parentRule = domRule.parentRule;
-  if (parentRule && parentRule.type == Ci.nsIDOMCSSRule.MEDIA_RULE) {
+  if (parentRule && parentRule.type == CSSRule.MEDIA_RULE) {
     this.mediaText = parentRule.media.mediaText;
   }
 
