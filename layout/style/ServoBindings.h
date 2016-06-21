@@ -49,12 +49,12 @@ class nsStyleCoord;
 struct nsStyleDisplay;
 
 #define NS_DECL_THREADSAFE_FFI_REFCOUNTING(class_, name_)                     \
-  static_assert(class_::HasThreadSafeRefCnt::value,                           \
-                "NS_DECL_THREADSAFE_FFI_REFCOUNTING can only be used with "   \
-                "classes that have thread-safe refcounting");                 \
   void Gecko_AddRef##name_##ArbitraryThread(class_* aPtr);                    \
   void Gecko_Release##name_##ArbitraryThread(class_* aPtr);
 #define NS_IMPL_THREADSAFE_FFI_REFCOUNTING(class_, name_)                     \
+  static_assert(class_::HasThreadSafeRefCnt::value,                           \
+                "NS_DECL_THREADSAFE_FFI_REFCOUNTING can only be used with "   \
+                "classes that have thread-safe refcounting");                 \
   void Gecko_AddRef##name_##ArbitraryThread(class_* aPtr)                     \
   { NS_ADDREF(aPtr); }                                                        \
   void Gecko_Release##name_##ArbitraryThread(class_* aPtr)                    \
