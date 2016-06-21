@@ -1696,7 +1696,7 @@ nsSHistory::CompareFrames(nsISHEntry* aPrevEntry, nsISHEntry* aNextEntry,
     aParent->GetChildAt(i, getter_AddRefs(treeItem));
     nsCOMPtr<nsIDocShell> shell = do_QueryInterface(treeItem);
     if (shell) {
-      docshells.AppendObject(shell);
+      docshells.AppendElement(shell.forget());
     }
   }
 

@@ -332,6 +332,7 @@ ImageTestCase TransparentPNGTestCase();
 ImageTestCase TransparentGIFTestCase();
 ImageTestCase FirstFramePaddingGIFTestCase();
 ImageTestCase NoFrameDelayGIFTestCase();
+ImageTestCase ExtraImageSubBlocksAnimatedGIFTestCase();
 
 ImageTestCase TransparentBMPWhenBMPAlphaEnabledTestCase();
 ImageTestCase RLE4BMPTestCase();

@@ -30,6 +30,7 @@ SOURCES += [
 ]
 
 TEST_HARNESS_FILES.gtest += [
+    'animated-with-extra-image-sub-blocks.gif',
     'corrupt.jpg',
     'downscaled.bmp',
     'downscaled.gif',

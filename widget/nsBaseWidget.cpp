@@ -242,18 +242,6 @@ WidgetShutdownObserver::Unregister()
   }
 }
 
-#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
-// defined in nsAppRunner.cpp
-extern const char* kAccessibilityLastRunDatePref;
-
-static inline uint32_t
-PRTimeToSeconds(PRTime t_usec)
-{
-  PRTime usec_per_sec = PR_USEC_PER_SEC;
-  return uint32_t(t_usec /= usec_per_sec);
-}
-#endif
-
 void
 nsBaseWidget::Shutdown()
 {
@@ -931,10 +919,20 @@ nsBaseWidget::AutoLayerManagerSetup::~AutoLayerManagerSetup()
   }
 }
 
+bool nsBaseWidget::IsSmallPopup() const
+{
+  return mWindowType == eWindowType_popup && mPopupType != ePopupTypePanel;
+}
+
 bool
 nsBaseWidget::ComputeShouldAccelerate()
 {
-  return gfx::gfxConfig::IsEnabled(gfx::Feature::HW_COMPOSITING);
+  bool enabled = gfx::gfxConfig::IsEnabled(gfx::Feature::HW_COMPOSITING);
+#ifdef MOZ_WIDGET_GTK
+  return enabled && !IsSmallPopup();
+#else
+  return enabled;
+#endif
 }
 
 bool
@@ -1875,6 +1873,18 @@ nsBaseWidget::ZoomToRect(const uint32_t& aPresShellId,
 }
 
 #ifdef ACCESSIBILITY
+
+#if defined(XP_WIN) || defined(XP_MACOSX) || defined(MOZ_WIDGET_GTK)
+// defined in nsAppRunner.cpp
+extern const char* kAccessibilityLastRunDatePref;
+
+static inline uint32_t
+PRTimeToSeconds(PRTime t_usec)
+{
+  PRTime usec_per_sec = PR_USEC_PER_SEC;
+  return uint32_t(t_usec /= usec_per_sec);
+}
+#endif
 
 a11y::Accessible*
 nsBaseWidget::GetRootAccessible()
