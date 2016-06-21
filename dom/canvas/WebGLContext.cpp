@@ -76,10 +76,6 @@
 #include "nsCocoaFeatures.h"
 #endif
 
-#ifdef XP_WIN
-#include "WGLLibrary.h"
-#endif
-
 // Generated
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 
@@ -439,15 +435,12 @@ WebGLContext::GetHeight() const
  */
 
 static bool
-IsFeatureInBlacklist(const nsCOMPtr<nsIGfxInfo>& gfxInfo, int32_t feature,
-                     nsCString* const out_blacklistId)
+IsFeatureInBlacklist(const nsCOMPtr<nsIGfxInfo>& gfxInfo, int32_t feature, nsACString* const out_failureId)
 {
     int32_t status;
     if (!NS_SUCCEEDED(gfxUtils::ThreadSafeGetFeatureStatus(gfxInfo, feature,
-                                                           *out_blacklistId, &status)))
-    {
+                                                           *out_failureId, &status)))
         return false;
-    }
 
     return status != nsIGfxInfo::FEATURE_STATUS_OK;
 }
@@ -570,15 +563,15 @@ BaseCaps(const WebGLContextOptions& options, WebGLContext* webgl)
 
     // Done with baseCaps construction.
 
-    if (!gfxPrefs::WebGLForceMSAA()) {
-        const nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
-
-        nsCString blocklistId;
-        if (IsFeatureInBlacklist(gfxInfo, nsIGfxInfo::FEATURE_WEBGL_MSAA, &blocklistId)) {
-            webgl->GenerateWarning("Disallowing antialiased backbuffers due"
-                                   " to blacklisting.");
-            baseCaps.antialias = false;
-        }
+    bool forceAllowAA = gfxPrefs::WebGLForceMSAA();
+    nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+    nsCString discardFailureId;
+    if (!forceAllowAA &&
+        IsFeatureInBlacklist(gfxInfo, nsIGfxInfo::FEATURE_WEBGL_MSAA, &discardFailureId))
+    {
+        webgl->GenerateWarning("Disallowing antialiased backbuffers due"
+                               " to blacklisting.");
+        baseCaps.antialias = false;
     }
 
     return baseCaps;
@@ -588,8 +581,8 @@ BaseCaps(const WebGLContextOptions& options, WebGLContext* webgl)
 
 static already_AddRefed<gl::GLContext>
 CreateGLWithEGL(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
-                WebGLContext* webgl,
-                std::vector<WebGLContext::FailureReason>* const out_failReasons)
+                WebGLContext* webgl, nsACString* const out_failReason,
+                nsACString* const out_failureId)
 {
     const gfx::IntSize dummySize(16, 16);
     RefPtr<GLContext> gl = gl::GLContextProviderEGL::CreateOffscreen(dummySize, caps,
@@ -599,10 +592,13 @@ CreateGLWithEGL(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
     }
 
     if (!gl) {
-        out_failReasons->push_back(WebGLContext::FailureReason(
-            "FEATURE_FAILURE_WEBGL_EGL_INIT",
-            "Error during EGL OpenGL init."
-        ));
+        if (out_failReason->Length()) {
+            out_failReason->AppendLiteral("\n");
+        }
+        out_failReason->AppendLiteral("Error during EGL OpenGL init.");
+        if (out_failureId->IsEmpty()) {
+            *out_failureId = "FEATURE_FAILURE_WEBGL_EGL_INIT";
+        }
         return nullptr;
     }
 
@@ -611,8 +607,8 @@ CreateGLWithEGL(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
 
 static already_AddRefed<GLContext>
 CreateGLWithANGLE(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
-                  WebGLContext* webgl,
-                  std::vector<WebGLContext::FailureReason>* const out_failReasons)
+                  WebGLContext* webgl, nsACString* const out_failReason,
+                  nsACString* const out_failureId)
 {
     const gfx::IntSize dummySize(16, 16);
     RefPtr<GLContext> gl = gl::GLContextProviderEGL::CreateOffscreen(dummySize, caps,
@@ -622,10 +618,13 @@ CreateGLWithANGLE(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
     }
 
     if (!gl) {
-        out_failReasons->push_back(WebGLContext::FailureReason(
-            "FEATURE_FAILURE_WEBGL_ANGLE_INIT",
-            "Error during ANGLE OpenGL init."
-        ));
+        if (out_failReason->Length()) {
+            out_failReason->AppendLiteral("\n");
+        }
+        out_failReason->AppendLiteral("Error during ANGLE OpenGL init.");
+        if (out_failureId->IsEmpty()) {
+            *out_failureId = "FEATURE_FAILURE_WEBGL_ANGLE_INIT";
+        }
         return nullptr;
     }
 
@@ -634,9 +633,22 @@ CreateGLWithANGLE(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
 
 static already_AddRefed<gl::GLContext>
 CreateGLWithDefault(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
-                    WebGLContext* webgl,
-                    std::vector<WebGLContext::FailureReason>* const out_failReasons)
+                    WebGLContext* webgl, nsACString* const out_failReason,
+                    nsACString* const out_failureId)
 {
+    nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
+
+    if (!(flags & CreateContextFlags::FORCE_ENABLE_HARDWARE) &&
+        IsFeatureInBlacklist(gfxInfo, nsIGfxInfo::FEATURE_WEBGL_OPENGL, out_failureId))
+    {
+        if (out_failReason->Length()) {
+            out_failReason->AppendASCII("\n");
+        }
+        out_failReason->AppendASCII("Refused to create native OpenGL context because of"
+                                    " blacklisting.");
+        return nullptr;
+    }
+
     const gfx::IntSize dummySize(16, 16);
     RefPtr<GLContext> gl = gl::GLContextProvider::CreateOffscreen(dummySize, caps,
                                                                   flags, out_failureId);
@@ -646,10 +658,13 @@ CreateGLWithDefault(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
     }
 
     if (!gl) {
-        out_failReasons->push_back(WebGLContext::FailureReason(
-            "FEATURE_FAILURE_WEBGL_DEFAULT_INIT",
-            "Error during native OpenGL init."
-        ));
+        if (out_failReason->Length()) {
+            out_failReason->AppendASCII("\n");
+        }
+        out_failReason->AppendASCII("Error during native OpenGL init.");
+        if (out_failureId->IsEmpty()) {
+            *out_failureId = "FEATURE_FAILURE_WEBGL_DEFAULT_INIT";
+        }
         return nullptr;
     }
 
@@ -662,7 +677,8 @@ bool
 WebGLContext::CreateAndInitGLWith(FnCreateGL_T fnCreateGL,
                                   const gl::SurfaceCaps& baseCaps,
                                   gl::CreateContextFlags flags,
-                                  std::vector<FailureReason>* const out_failReasons)
+                                  nsACString* const out_failReason,
+                                  nsACString* const out_failureId)
 {
     std::queue<gl::SurfaceCaps> fallbackCaps;
     PopulateCapFallbackQueue(baseCaps, &fallbackCaps);
@@ -670,8 +686,9 @@ WebGLContext::CreateAndInitGLWith(FnCreateGL_T fnCreateGL,
     MOZ_RELEASE_ASSERT(!gl, "GFX: Already have a context.");
     gl = nullptr;
     while (!fallbackCaps.empty()) {
-        const gl::SurfaceCaps& caps = fallbackCaps.front();
-        gl = fnCreateGL(caps, flags, this, out_failReasons);
+        gl::SurfaceCaps& caps = fallbackCaps.front();
+
+        gl = fnCreateGL(caps, flags, this, out_failReason, out_failureId);
         if (gl)
             break;
 
@@ -680,11 +697,9 @@ WebGLContext::CreateAndInitGLWith(FnCreateGL_T fnCreateGL,
     if (!gl)
         return false;
 
-    FailureReason reason;
-    if (!InitAndValidateGL(&reason)) {
+    if (!InitAndValidateGL(out_failReason, out_failureId)) {
         // The fail reason here should be specific enough for now.
         gl = nullptr;
-        out_failReasons->push_back(reason);
         return false;
     }
 
@@ -692,31 +707,16 @@ WebGLContext::CreateAndInitGLWith(FnCreateGL_T fnCreateGL,
 }
 
 bool
-WebGLContext::CreateAndInitGL(bool forceEnabled,
-                              std::vector<FailureReason>* const out_failReasons)
+WebGLContext::CreateAndInitGL(bool forceEnabled, nsACString* const out_failReason, nsACString* const out_failureId)
 {
-    bool disableNativeGL = true;
-    if (forceEnabled) {
-        disableNativeGL = false;
-    } else if (IsWebGL2()) {
-        const nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
-        const auto feature = nsIGfxInfo::FEATURE_WEBGL_OPENGL;
+    const bool useEGL = PR_GetEnv("MOZ_WEBGL_PREFER_EGL");
 
-        FailureReason reason;
-        if (IsFeatureInBlacklist(gfxInfo, feature, &reason.key)) {
-            reason.info = "Refused to create native OpenGL context because of blacklist"
-                          " entry: ";
-            reason.info.Append(reason.key);
-
-            out_failReasons->push_back(reason);
-
-            GenerateWarning(reason.info.BeginReading());
-        } else {
-            disableNativeGL = false;
-        }
-    }
-
-    //////
+    bool useANGLE = false;
+#ifdef XP_WIN
+    const bool disableANGLE = (gfxPrefs::WebGLDisableANGLE() ||
+                               PR_GetEnv("MOZ_WEBGL_FORCE_OPENGL"));
+    useANGLE = !disableANGLE;
+#endif
 
     gl::CreateContextFlags flags = gl::CreateContextFlags::NO_VALIDATION;
 
@@ -726,43 +726,13 @@ WebGLContext::CreateAndInitGL(bool forceEnabled,
 
     const gl::SurfaceCaps baseCaps = BaseCaps(mOptions, this);
 
-    //////
-
-    if (!disableNativeGL) {
-        const bool useEGL = PR_GetEnv("MOZ_WEBGL_FORCE_EGL");
-
-        if (useEGL)
-            return CreateAndInitGLWith(CreateGLWithEGL, baseCaps, flags, out_failReasons);
-
-        bool tryNativeGL = true;
-#ifdef XP_WIN
-        if (gfxPrefs::WebGLDisableWGL()) {
-            tryNativeGL = false;
-        }
-#endif
-        if (tryNativeGL) {
-            if (CreateAndInitGLWith(CreateGLWithNative, baseCaps, flags, out_failReasons))
-                return true;
-        }
-    }
-
-    //////
-
-    bool useANGLE = false;
-#ifdef XP_WIN
-    const bool disableANGLE = (gfxPrefs::WebGLDisableANGLE() ||
-                               PR_GetEnv("MOZ_WEBGL_FORCE_OPENGL"));
-    useANGLE = !disableANGLE;
-#endif
+    if (useEGL)
+        return CreateAndInitGLWith(CreateGLWithEGL, baseCaps, flags, out_failReason, out_failureId);
 
     if (useANGLE)
-        return CreateAndInitGLWith(CreateGLWithANGLE, baseCaps, flags, out_failReasons);
+        return CreateAndInitGLWith(CreateGLWithANGLE, baseCaps, flags, out_failReason, out_failureId);
 
-    //////
-
-    out_failReasons->push_back(FailureReason("FEATURE_FAILURE_WEBGL_EXHAUSTED_DRIVERS",
-                                             "Exhausted GL driver options."));
-    return false;
+    return CreateAndInitGLWith(CreateGLWithDefault, baseCaps, flags, out_failReason, out_failureId);
 }
 
 // Fallback for resizes:
@@ -960,15 +930,12 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
     ScopedGfxFeatureReporter reporter("WebGL", forceEnabled);
 
     MOZ_ASSERT(!gl);
-    std::vector<FailureReason> failReasons;
-    if (!CreateAndInitGL(forceEnabled, &failReasons)) {
-        nsCString text("WebGL creation failed: ");
-        for (const auto& cur : failReasons) {
-            Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_FAILURE_ID, cur.key);
-
-            text.AppendASCII("\n* ");
-            text.Append(cur.info);
-        }
+    nsCString failReason;
+    nsCString failureId;
+    if (!CreateAndInitGL(forceEnabled, &failReason, &failureId)) {
+        Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_FAILURE_ID, failureId);
+        const nsPrintfCString text("WebGL creation failed: %s",
+                                   failReason.BeginReading());
         ThrowEvent_WebGLContextCreationError(text);
         return NS_ERROR_FAILURE;
     }
@@ -977,22 +944,10 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
 
     if (mOptions.failIfMajorPerformanceCaveat) {
         if (gl->IsWARP()) {
-            gl = nullptr;
-
             Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_FAILURE_ID,
                                   NS_LITERAL_CSTRING("FEATURE_FAILURE_PERF_WARP"));
             const nsLiteralCString text("failIfMajorPerformanceCaveat: Driver is not"
                                         " hardware-accelerated.");
-            ThrowEvent_WebGLContextCreationError(text);
-            return NS_ERROR_FAILURE;
-        }
-
-        if (gl->GetContextType() == gl::GLContextType::WGL &&
-            !gl::sWGLLib.HasDXInterop2())
-        {
-            gl = nullptr;
-
-            const nsLiteralCString text("Caveat: WGL without DXGLInterop2.");
             ThrowEvent_WebGLContextCreationError(text);
             return NS_ERROR_FAILURE;
         }
