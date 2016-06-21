@@ -533,6 +533,14 @@ ImageTestCase NoFrameDelayGIFTestCase()
   return ImageTestCase("no-frame-delay.gif", "image/gif", IntSize(100, 100));
 }
 
+ImageTestCase ExtraImageSubBlocksAnimatedGIFTestCase()
+{
+  // This is a corrupt GIF that has extra image sub blocks between the first and
+  // second frame.
+  return ImageTestCase("animated-with-extra-image-sub-blocks.gif", "image/gif",
+                       IntSize(100, 100));
+}
+
 ImageTestCase DownscaledPNGTestCase()
 {
   // This testcase (and all the other "downscaled") testcases) consists of 25
