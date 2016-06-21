@@ -8076,11 +8076,11 @@ DebuggerObject::boundTargetFunctionGetter(JSContext* cx, unsigned argc, Value* v
         return true;
     }
 
-    RootedObject result(cx);
+    Rooted<DebuggerObject*> result(cx);
     if (!DebuggerObject::boundTargetFunction(cx, object, &result))
         return false;
 
-    args.rval().setObjectOrNull(result);
+    args.rval().setObject(*result);
     return true;
 }
 
@@ -8956,15 +8956,19 @@ DebuggerObject::parameterNames(JSContext* cx, Handle<DebuggerObject*> object,
 
 /* static */ bool
 DebuggerObject::boundTargetFunction(JSContext* cx, Handle<DebuggerObject*> object,
-                                    MutableHandleObject result)
+                                    MutableHandle<DebuggerObject*> result)
 {
     MOZ_ASSERT(isBoundFunction(cx, object));
 
     RootedFunction referent(cx, &object->referent()->as<JSFunction>());
     Debugger* dbg = object->owner();
 
-    result.set(referent->getBoundFunctionTarget());
-    return dbg->wrapDebuggeeObject(cx, result);
+    RootedObject target(cx, referent->getBoundFunctionTarget());
+    if (!dbg->wrapDebuggeeObject(cx, &target))
+        return false;
+
+    result.set(&target->as<DebuggerObject>());
+    return true;
 }
 
 /* static */ bool
