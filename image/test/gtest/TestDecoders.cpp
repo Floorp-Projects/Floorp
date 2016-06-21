@@ -256,3 +256,22 @@ TEST(ImageDecoders, CorruptMultiChunk)
 {
   CheckDecoderMultiChunk(CorruptTestCase());
 }
+TEST(ImageDecoders, CorruptICOWithBadBMPWidthSingleChunk)
+{
+  CheckDecoderSingleChunk(CorruptICOWithBadBMPWidthTestCase());
+}
+
+TEST(ImageDecoders, CorruptICOWithBadBMPWidthMultiChunk)
+{
+  CheckDecoderMultiChunk(CorruptICOWithBadBMPWidthTestCase());
+}
+
+TEST(ImageDecoders, CorruptICOWithBadBMPHeightSingleChunk)
+{
+  CheckDecoderSingleChunk(CorruptICOWithBadBMPHeightTestCase());
+}
+
+TEST(ImageDecoders, CorruptICOWithBadBMPHeightMultiChunk)
+{
+  CheckDecoderMultiChunk(CorruptICOWithBadBMPHeightTestCase());
+}
