@@ -121,7 +121,7 @@ nsTextControlFrame::DestroyFrom(nsIFrame* aDestructRoot)
 {
   mScrollEvent.Revoke();
 
-  EditorInitializer* initializer = (EditorInitializer*) Properties().Get(TextControlInitializer());
+  EditorInitializer* initializer = Properties().Get(TextControlInitializer());
   if (initializer) {
     initializer->Revoke();
     Properties().Delete(TextControlInitializer());
@@ -388,7 +388,7 @@ nsTextControlFrame::CreateAnonymousContent(nsTArray<ContentInfo>& aElements)
   if (initEagerly) {
     NS_ASSERTION(!nsContentUtils::IsSafeToRunScript(),
                  "Someone forgot a script blocker?");
-    EditorInitializer* initializer = (EditorInitializer*) Properties().Get(TextControlInitializer());
+    EditorInitializer* initializer = Properties().Get(TextControlInitializer());
     if (initializer) {
       initializer->Revoke();
     }

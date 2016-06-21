@@ -243,8 +243,6 @@ nsTableFrame::PageBreakAfter(nsIFrame* aSourceFrame,
   return false;
 }
 
-typedef nsTArray<nsIFrame*> FrameTArray;
-
 /* static */ void
 nsTableFrame::RegisterPositionedTablePart(nsIFrame* aFrame)
 {
@@ -271,8 +269,7 @@ nsTableFrame::RegisterPositionedTablePart(nsIFrame* aFrame)
 
   // Retrieve the positioned parts array for this table.
   FrameProperties props = tableFrame->Properties();
-  auto positionedParts =
-    static_cast<FrameTArray*>(props.Get(PositionedTablePartArray()));
+  FrameTArray* positionedParts = props.Get(PositionedTablePartArray());
 
   // Lazily create the array if it doesn't exist yet.
   if (!positionedParts) {
@@ -302,8 +299,7 @@ nsTableFrame::UnregisterPositionedTablePart(nsIFrame* aFrame,
 
   // Retrieve the positioned parts array for this table.
   FrameProperties props = tableFrame->Properties();
-  auto positionedParts =
-    static_cast<FrameTArray*>(props.Get(PositionedTablePartArray()));
+  FrameTArray* positionedParts = props.Get(PositionedTablePartArray());
 
   // Remove the frame.
   MOZ_ASSERT(positionedParts && positionedParts->Contains(aFrame),
@@ -1992,8 +1988,7 @@ nsTableFrame::FixupPositionedTableParts(nsPresContext*           aPresContext,
                                         nsHTMLReflowMetrics&     aDesiredSize,
                                         const nsHTMLReflowState& aReflowState)
 {
-  auto positionedParts =
-    static_cast<FrameTArray*>(Properties().Get(PositionedTablePartArray()));
+  FrameTArray* positionedParts = Properties().Get(PositionedTablePartArray());
   if (!positionedParts) {
     return;
   }
