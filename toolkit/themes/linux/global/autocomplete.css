@@ -54,7 +54,9 @@ panel[type="autocomplete-richlistbox"],
   -moz-border-bottom-colors: ThreeDDarkShadow;
   -moz-border-left-colors: ThreeDDarkShadow;
   padding: 0;
+  color: -moz-FieldText;
   background-color: -moz-Field;
+  -moz-appearance: none;
 }
 
 .autocomplete-history-popup {
@@ -67,7 +69,6 @@ panel[type="autocomplete-richlistbox"],
   -moz-appearance: none !important;
   border: none !important;
   background-color: transparent !important;
-  color: MenuText;
 }
 
 .autocomplete-treecol {
@@ -105,10 +106,6 @@ treechildren.autocomplete-treebody::-moz-tree-cell-text(selected) {
   -moz-appearance: none;
   margin: 1px;
   background-color: transparent;
-}
-
-.autocomplete-richlistitem {
-  color: MenuText;
 }
 
 .autocomplete-richlistitem[selected] {
