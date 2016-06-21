@@ -1117,16 +1117,17 @@ nsFrameSelection::MoveCaret(nsDirection       aDirection,
     {
       switch (aAmount) {
         case eSelectBeginLine:
-        case eSelectEndLine:
+        case eSelectEndLine: {
           // In Bidi contexts, PeekOffset calculates pos.mContentOffset
           // differently depending on whether the movement is visual or logical.
           // For visual movement, pos.mContentOffset depends on the direction-
           // ality of the first/last frame on the line (theFrame), and the caret
           // directionality must correspond.
-          SetCaretBidiLevel(visualMovement ? nsBidi::GetEmbeddingLevel(theFrame)
-                                           : nsBidi::GetBaseLevel(theFrame));
+          FrameBidiData bidiData = nsBidi::GetBidiData(theFrame);
+          SetCaretBidiLevel(visualMovement ? bidiData.embeddingLevel
+                                           : bidiData.baseLevel);
           break;
-
+        }
         default:
           // If the current position is not a frame boundary, it's enough just
           // to take the Bidi level of the current frame
@@ -1378,21 +1379,21 @@ nsFrameSelection::GetPrevNextBidiLevels(nsIContent*        aNode,
   if (NS_FAILED(rv))
     newFrame = nullptr;
 
-  nsBidiLevel baseLevel = nsBidi::GetBaseLevel(currentFrame);
-  nsBidiLevel currentLevel = nsBidi::GetEmbeddingLevel(currentFrame);
+  FrameBidiData currentBidi = nsBidi::GetBidiData(currentFrame);
+  nsBidiLevel currentLevel = currentBidi.embeddingLevel;
   nsBidiLevel newLevel = newFrame ? nsBidi::GetEmbeddingLevel(newFrame)
-                                  : baseLevel;
+                                  : currentBidi.baseLevel;
   
   // If not jumping lines, disregard br frames, since they might be positioned incorrectly.
   // XXX This could be removed once bug 339786 is fixed.
   if (!aJumpLines) {
     if (currentFrame->GetType() == nsGkAtoms::brFrame) {
       currentFrame = nullptr;
-      currentLevel = baseLevel;
+      currentLevel = currentBidi.baseLevel;
     }
     if (newFrame && newFrame->GetType() == nsGkAtoms::brFrame) {
       newFrame = nullptr;
-      newLevel = baseLevel;
+      newLevel = currentBidi.baseLevel;
     }
   }
   
