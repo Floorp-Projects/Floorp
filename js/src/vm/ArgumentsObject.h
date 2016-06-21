@@ -29,12 +29,9 @@ class RareArgumentsData
     // Pointer to an array of bits indicating, for every argument in
     // [0, initialLength) whether the element has been deleted. See
     // ArgumentsObject::isElementDeleted comment.
-    size_t* deletedBits_;
+    size_t deletedBits_[1];
 
-    explicit RareArgumentsData(size_t* deletedBits)
-      : deletedBits_(deletedBits)
-    {}
-
+    RareArgumentsData() = default;
     RareArgumentsData(const RareArgumentsData&) = delete;
     void operator=(const RareArgumentsData&) = delete;
 
@@ -49,7 +46,7 @@ class RareArgumentsData
         MOZ_ASSERT(i < len);
         return IsBitArrayElementSet(deletedBits_, len, i);
     }
-    void markElementDeleted(size_t len, size_t i) const {
+    void markElementDeleted(size_t len, size_t i) {
         MOZ_ASSERT(i < len);
         SetBitArrayElement(deletedBits_, len, i);
     }
