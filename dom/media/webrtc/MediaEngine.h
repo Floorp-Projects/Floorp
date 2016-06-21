@@ -114,10 +114,10 @@ public:
   virtual void Shutdown() = 0;
 
   /* Populate the human readable name of this device in the nsAString */
-  virtual void GetName(nsAString&) = 0;
+  virtual void GetName(nsAString&) const = 0;
 
   /* Populate the UUID of this device in the nsACString */
-  virtual void GetUUID(nsACString&) = 0;
+  virtual void GetUUID(nsACString&) const = 0;
 
   class BaseAllocationHandle
   {
@@ -195,7 +195,7 @@ public:
 
   virtual uint32_t GetBestFitnessDistance(
       const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-      const nsString& aDeviceId) = 0;
+      const nsString& aDeviceId) const = 0;
 
 protected:
   // Only class' own members can be initialized in constructor initializer list.

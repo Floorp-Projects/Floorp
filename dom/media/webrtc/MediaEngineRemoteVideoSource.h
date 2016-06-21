@@ -119,8 +119,8 @@ protected:
 private:
   // Initialize the needed Video engine interfaces.
   void Init();
-  size_t NumCapabilities() override;
-  void GetCapability(size_t aIndex, webrtc::CaptureCapability& aOut) override;
+  size_t NumCapabilities() const override;
+  void GetCapability(size_t aIndex, webrtc::CaptureCapability& aOut) const override;
 
   dom::MediaSourceEnum mMediaSource; // source of media (camera | application | screen)
   mozilla::camera::CaptureEngine mCapEngine;
