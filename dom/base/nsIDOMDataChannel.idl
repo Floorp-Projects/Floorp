@@ -25,7 +25,6 @@ interface nsIDOMDataChannel : nsIDOMEventTarget
   readonly attribute unsigned long bufferedAmount;
 
   readonly attribute unsigned short id;
-  readonly attribute unsigned short stream; /* deprecated name for 'id' */
 
   [implicit_jscontext] attribute jsval onopen;
   [implicit_jscontext] attribute jsval onerror;
