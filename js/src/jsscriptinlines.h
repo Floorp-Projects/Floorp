@@ -185,14 +185,14 @@ JSScript::principals()
 }
 
 inline void
-JSScript::setBaselineScript(JSContext* maybecx, js::jit::BaselineScript* baselineScript)
+JSScript::setBaselineScript(JSRuntime* maybeRuntime, js::jit::BaselineScript* baselineScript)
 {
     if (hasBaselineScript())
         js::jit::BaselineScript::writeBarrierPre(zone(), baseline);
     MOZ_ASSERT(!hasIonScript());
     baseline = baselineScript;
     resetWarmUpResetCounter();
-    updateBaselineOrIonRaw(maybecx);
+    updateBaselineOrIonRaw(maybeRuntime);
 }
 
 inline bool

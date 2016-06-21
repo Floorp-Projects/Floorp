@@ -486,19 +486,19 @@ struct BaselineScript
         MOZ_ASSERT(hasPendingIonBuilder());
         return pendingBuilder_;
     }
-    void setPendingIonBuilder(JSContext* maybecx, JSScript* script, js::jit::IonBuilder* builder) {
+    void setPendingIonBuilder(JSRuntime* maybeRuntime, JSScript* script, js::jit::IonBuilder* builder) {
         MOZ_ASSERT(script->baselineScript() == this);
         MOZ_ASSERT(!builder || !hasPendingIonBuilder());
 
         if (script->isIonCompilingOffThread())
-            script->setIonScript(maybecx, ION_PENDING_SCRIPT);
+            script->setIonScript(maybeRuntime, ION_PENDING_SCRIPT);
 
         pendingBuilder_ = builder;
 
         // lazy linking cannot happen during asmjs to ion.
         clearDependentWasmModules();
 
-        script->updateBaselineOrIonRaw(maybecx);
+        script->updateBaselineOrIonRaw(maybeRuntime);
     }
     void removePendingIonBuilder(JSScript* script) {
         setPendingIonBuilder(nullptr, script, nullptr);

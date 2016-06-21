@@ -9167,7 +9167,7 @@ CodeGenerator::link(JSContext* cx, CompilerConstraintList* constraints)
     if (isProfilerInstrumentationEnabled())
         ionScript->setHasProfilingInstrumentation();
 
-    script->setIonScript(cx, ionScript);
+    script->setIonScript(cx->runtime(), ionScript);
 
     // Adopt fallback shared stubs from the compiler into the ion script.
     ionScript->adoptFallbackStubs(&stubSpace_);

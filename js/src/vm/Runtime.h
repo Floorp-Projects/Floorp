@@ -1627,6 +1627,23 @@ struct JSRuntime : public JS::shadow::Runtime,
 
   public:
     js::PerformanceMonitoring performanceMonitoring;
+
+  private:
+    /* List of Ion compilation waiting to get linked. */
+    typedef mozilla::LinkedList<js::jit::IonBuilder> IonBuilderList;
+
+    IonBuilderList ionLazyLinkList_;
+    size_t ionLazyLinkListSize_;
+
+  public:
+    IonBuilderList& ionLazyLinkList();
+
+    size_t ionLazyLinkListSize() {
+        return ionLazyLinkListSize_;
+    }
+
+    void ionLazyLinkListRemove(js::jit::IonBuilder* builder);
+    void ionLazyLinkListAdd(js::jit::IonBuilder* builder);
 };
 
 namespace js {
