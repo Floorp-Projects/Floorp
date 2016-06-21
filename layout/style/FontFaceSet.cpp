@@ -21,7 +21,6 @@
 #include "mozilla/Snprintf.h"
 #include "mozilla/Telemetry.h"
 #include "nsAutoPtr.h"
-#include "nsCORSListenerProxy.h"
 #include "nsContentPolicyUtils.h"
 #include "nsCSSParser.h"
 #include "nsDeviceContext.h"
