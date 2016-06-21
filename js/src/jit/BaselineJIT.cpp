@@ -300,7 +300,7 @@ jit::BaselineCompile(JSContext* cx, JSScript* script, bool forceDebugInstrumenta
     MOZ_ASSERT_IF(status != Method_Compiled, !script->hasBaselineScript());
 
     if (status == Method_CantCompile)
-        script->setBaselineScript(cx, BASELINE_DISABLED_SCRIPT);
+        script->setBaselineScript(cx->runtime(), BASELINE_DISABLED_SCRIPT);
 
     return status;
 }

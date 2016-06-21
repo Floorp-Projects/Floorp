@@ -1577,7 +1577,7 @@ class JSScript : public js::gc::TenuredCell
     js::jit::IonScript* const* addressOfIonScript() const {
         return &ion;
     }
-    void setIonScript(JSContext* maybecx, js::jit::IonScript* ionScript);
+    void setIonScript(JSRuntime* maybeRuntime, js::jit::IonScript* ionScript);
 
     bool hasBaselineScript() const {
         bool res = baseline && baseline != BASELINE_DISABLED_SCRIPT;
@@ -1591,9 +1591,9 @@ class JSScript : public js::gc::TenuredCell
         MOZ_ASSERT(hasBaselineScript());
         return baseline;
     }
-    inline void setBaselineScript(JSContext* maybecx, js::jit::BaselineScript* baselineScript);
+    inline void setBaselineScript(JSRuntime* maybeRuntime, js::jit::BaselineScript* baselineScript);
 
-    void updateBaselineOrIonRaw(JSContext* maybecx);
+    void updateBaselineOrIonRaw(JSRuntime* maybeRuntime);
 
     static size_t offsetOfBaselineScript() {
         return offsetof(JSScript, baseline);

@@ -302,7 +302,7 @@ BaselineCompiler::compile()
         code->setHasBytecodeMap();
     }
 
-    script->setBaselineScript(cx, baselineScript.release());
+    script->setBaselineScript(cx->runtime(), baselineScript.release());
 
     return Method_Compiled;
 }

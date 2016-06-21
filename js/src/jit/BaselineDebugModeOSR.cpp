@@ -682,7 +682,7 @@ RecompileBaselineScriptForDebugMode(JSContext* cx, JSScript* script,
     JitSpew(JitSpew_BaselineDebugModeOSR, "Recompiling (%s:%d) for %s",
             script->filename(), script->lineno(), observing ? "DEBUGGING" : "NORMAL EXECUTION");
 
-    script->setBaselineScript(cx, nullptr);
+    script->setBaselineScript(cx->runtime(), nullptr);
 
     MethodStatus status = BaselineCompile(cx, script, /* forceDebugMode = */ observing);
     if (status != Method_Compiled) {
@@ -690,7 +690,7 @@ RecompileBaselineScriptForDebugMode(JSContext* cx, JSScript* script,
         // the old baseline script in case something doesn't properly
         // propagate OOM.
         MOZ_ASSERT(status == Method_Error);
-        script->setBaselineScript(cx, oldBaselineScript);
+        script->setBaselineScript(cx->runtime(), oldBaselineScript);
         return false;
     }
 
@@ -843,7 +843,7 @@ UndoRecompileBaselineScriptsForDebugMode(JSContext* cx,
         JSScript* script = entry.script;
         BaselineScript* baselineScript = script->baselineScript();
         if (entry.recompiled()) {
-            script->setBaselineScript(cx, entry.oldBaselineScript);
+            script->setBaselineScript(cx->runtime(), entry.oldBaselineScript);
             BaselineScript::Destroy(cx->runtime()->defaultFreeOp(), baselineScript);
         }
     }
