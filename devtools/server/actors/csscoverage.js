@@ -4,14 +4,13 @@
 
 "use strict";
 
-const { Cc, Ci, Cu } = require("chrome");
+const { Cc, Ci } = require("chrome");
 
 const Services = require("Services");
 const { XPCOMUtils } = require("resource://gre/modules/XPCOMUtils.jsm");
 
 const events = require("sdk/event/core");
 const protocol = require("devtools/shared/protocol");
-const { custom } = protocol;
 const { cssUsageSpec } = require("devtools/shared/specs/csscoverage");
 
 loader.lazyGetter(this, "DOMUtils", () => {
@@ -137,8 +136,7 @@ var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
       // If we're not starting by reloading the page, then pretend that onload
       // has just happened.
       this._onTabLoad(this._tabActor.window.document);
-    }
-    else {
+    } else {
       this._tabActor.window.location.reload();
     }
 
@@ -295,8 +293,7 @@ var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
             ruleData.preLoadOn.add(url);
           }
         }
-      }
-      catch (ex) {
+      } catch (ex) {
         ruleData.isError = true;
       }
     }
@@ -416,8 +413,7 @@ var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
       if (!ruleData.isUsed) {
         let ruleReport = ruleToRuleReport(rule, ruleData);
         rules.push(ruleReport);
-      }
-      else {
+      } else {
         summary.unused++;
       }
     }
@@ -445,8 +441,7 @@ var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
           let ruleReport = ruleToRuleReport(rule, ruleData);
           page.rules.push(ruleReport);
           summary.preload++;
-        }
-        else {
+        } else {
           summary.used++;
         }
       }
@@ -693,7 +688,9 @@ function getTestSelector(selector) {
 exports.SEL_ALL = [
   SEL_EXTERNAL, SEL_FORM, SEL_ELEMENT, SEL_STRUCTURAL, SEL_SEMI,
   SEL_COMBINING, SEL_MEDIA
-].reduce(function (prev, curr) { return prev.concat(curr); }, []);
+].reduce(function (prev, curr) {
+  return prev.concat(curr);
+}, []);
 
 /**
  * Find a URL for a given stylesheet
