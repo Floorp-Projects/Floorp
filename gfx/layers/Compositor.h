@@ -200,7 +200,7 @@ public:
   CreateDataTextureSourceAround(gfx::DataSourceSurface* aSurface) { return nullptr; }
 
   virtual bool Initialize() = 0;
-  virtual void Destroy() = 0;
+  virtual void Destroy();
 
   virtual void DetachWidget() { mWidget = nullptr; }
 
@@ -539,10 +539,7 @@ public:
   /// ReadLock.
   /// This function provides a convenient way to do this delayed unlocking, if
   /// the texture itself requires it.
-  void UnlockAfterComposition(already_AddRefed<TextureReadLock> aLock)
-  {
-    mUnlockAfterComposition.AppendElement(aLock);
-  }
+  void UnlockAfterComposition(TextureHost* aTexture);
 
 protected:
   void DrawDiagnosticsInternal(DiagnosticFlags aFlags,
@@ -552,6 +549,9 @@ protected:
                                uint32_t aFlashCounter);
 
   bool ShouldDrawDiagnostics(DiagnosticFlags);
+
+  // Should be called at the end of each composition.
+  void ReadUnlockTextures();
 
   /**
    * Given a layer rect, clip, and transform, compute the area of the backdrop that
@@ -571,7 +571,7 @@ protected:
   /**
    * An array of locks that will need to be unlocked after the next composition.
    */
-  nsTArray<RefPtr<TextureReadLock>> mUnlockAfterComposition;
+  nsTArray<RefPtr<TextureHost>> mUnlockAfterComposition;
 
   /**
    * Render time for the current composition.
