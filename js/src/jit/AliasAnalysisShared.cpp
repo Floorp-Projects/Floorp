@@ -47,13 +47,15 @@ static inline const MDefinition*
 MaybeUnwrap(const MDefinition* object)
 {
 
-    while (object->isSlots() || object->isElements() || object->isConvertElementsToDoubles() ||
-           object->isTypedArrayElements() || object->isTypedObjectElements())
-    {
+    while (object->isSlots() || object->isElements() || object->isConvertElementsToDoubles()) {
         MOZ_ASSERT(object->numOperands() == 1);
         object = object->getOperand(0);
     }
 
+    if (object->isTypedArrayElements())
+        return nullptr;
+    if (object->isTypedObjectElements())
+        return nullptr;
     if (object->isConstantElements())
         return nullptr;
 
