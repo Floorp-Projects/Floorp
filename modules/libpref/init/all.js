@@ -659,7 +659,7 @@ pref("apz.scale_repaint_delay_ms", 500);
 pref("apz.allow_zooming", true);
 pref("apz.enlarge_displayport_when_clipped", true);
 pref("apz.y_skate_size_multiplier", "1.5");
-pref("apz.y_stationary_size_multiplier", "1.8");
+pref("apz.y_stationary_size_multiplier", "1.5");
 #endif
 
 #ifdef XP_MACOSX
