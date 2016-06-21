@@ -6,6 +6,7 @@
 
 #include "mozilla/dom/Notification.h"
 
+#include "mozilla/JSONWriter.h"
 #include "mozilla/Move.h"
 #include "mozilla/OwningNonNull.h"
 #include "mozilla/Preferences.h"
@@ -78,7 +79,7 @@ struct NotificationStrings
   const nsString mIcon;
   const nsString mData;
   const nsString mBehavior;
-  const nsString mServiceWorkerRegistrationID;
+  const nsString mServiceWorkerRegistrationScope;
 };
 
 class ScopeCheckingGetCallback : public nsINotificationStorageCallback
@@ -98,13 +99,13 @@ public:
                     const nsAString& aIcon,
                     const nsAString& aData,
                     const nsAString& aBehavior,
-                    const nsAString& aServiceWorkerRegistrationID) final
+                    const nsAString& aServiceWorkerRegistrationScope) final
   {
     AssertIsOnMainThread();
     MOZ_ASSERT(!aID.IsEmpty());
 
     // Skip scopes that don't match when called from getNotifications().
-    if (!mScope.IsEmpty() && !mScope.Equals(aServiceWorkerRegistrationID)) {
+    if (!mScope.IsEmpty() && !mScope.Equals(aServiceWorkerRegistrationScope)) {
       return NS_OK;
     }
 
@@ -118,7 +119,7 @@ public:
       nsString(aIcon),
       nsString(aData),
       nsString(aBehavior),
-      nsString(aServiceWorkerRegistrationID),
+      nsString(aServiceWorkerRegistrationScope),
     };
 
     mStrings.AppendElement(Move(strings));
@@ -169,7 +170,7 @@ public:
                                           mStrings[i].mData,
                                           /* mStrings[i].mBehavior, not
                                            * supported */
-                                          mStrings[i].mServiceWorkerRegistrationID,
+                                          mStrings[i].mServiceWorkerRegistrationScope,
                                           result);
 
       n->SetStoredState(true);
@@ -1066,7 +1067,7 @@ Notification::ConstructFromFields(
     const nsAString& aTag,
     const nsAString& aIcon,
     const nsAString& aData,
-    const nsAString& aServiceWorkerRegistrationID,
+    const nsAString& aServiceWorkerRegistrationScope,
     ErrorResult& aRv)
 {
   MOZ_ASSERT(aGlobal);
@@ -1085,7 +1086,7 @@ Notification::ConstructFromFields(
     return nullptr;
   }
 
-  notification->SetScope(aServiceWorkerRegistrationID);
+  notification->SetScope(aServiceWorkerRegistrationScope);
 
   return notification.forget();
 }
@@ -1665,6 +1666,19 @@ Notification::IsInPrivateBrowsing()
   return false;
 }
 
+namespace {
+  struct StringWriteFunc : public JSONWriteFunc
+  {
+    nsAString& mBuffer; // This struct must not outlive this buffer
+    explicit StringWriteFunc(nsAString& buffer) : mBuffer(buffer) {}
+
+    void Write(const char* aStr)
+    {
+      mBuffer.Append(NS_ConvertUTF8toUTF16(aStr));
+    }
+  };
+}
+
 void
 Notification::ShowInternal()
 {
@@ -1716,6 +1730,7 @@ Notification::ShowInternal()
   nsAutoString soundUrl;
   ResolveIconAndSoundURL(iconUrl, soundUrl);
 
+  bool isPersistent = false;
   nsCOMPtr<nsIObserver> observer;
   if (mScope.IsEmpty()) {
     // Ownership passed to observer.
@@ -1730,6 +1745,7 @@ Notification::ShowInternal()
       observer = new MainThreadNotificationObserver(Move(ownership));
     }
   } else {
+    isPersistent = true;
     // This observer does not care about the Notification. It will be released
     // at the end of this function.
     //
@@ -1813,6 +1829,7 @@ Notification::ShowInternal()
   nsCOMPtr<nsIAlertNotification> alert =
     do_CreateInstance(ALERT_NOTIFICATION_CONTRACTID);
   NS_ENSURE_TRUE_VOID(alert);
+  nsIPrincipal* principal = GetPrincipal();
   rv = alert->Init(alertName, iconUrl, mTitle, mBody,
                    true,
                    uniqueCookie,
@@ -1822,7 +1839,29 @@ Notification::ShowInternal()
                    GetPrincipal(),
                    inPrivateBrowsing);
   NS_ENSURE_SUCCESS_VOID(rv);
-  alertService->ShowAlert(alert, alertObserver);
+
+  if (isPersistent) {
+    nsAutoString persistentData;
+
+    JSONWriter w(MakeUnique<StringWriteFunc>(persistentData));
+    w.Start();
+
+    nsAutoString origin;
+    Notification::GetOrigin(principal, origin);
+    w.StringProperty("origin", NS_ConvertUTF16toUTF8(origin).get());
+
+    w.StringProperty("id", NS_ConvertUTF16toUTF8(mID).get());
+
+    nsAutoCString originSuffix;
+    principal->GetOriginSuffix(originSuffix);
+    w.StringProperty("originSuffix", originSuffix.get());
+
+    w.End();
+
+    alertService->ShowPersistentNotification(persistentData, alert, alertObserver);
+  } else {
+    alertService->ShowAlert(alert, alertObserver);
+  }
 }
 
 /* static */ bool
@@ -2112,7 +2151,7 @@ public:
                                           mStrings[i].mData,
                                           /* mStrings[i].mBehavior, not
                                            * supported */
-                                          mStrings[i].mServiceWorkerRegistrationID,
+                                          mStrings[i].mServiceWorkerRegistrationScope,
                                           result);
 
       n->SetStoredState(true);
