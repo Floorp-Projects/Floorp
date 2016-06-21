@@ -261,6 +261,15 @@ FFmpegVideoDecoder<LIBAV_VER>::DoDecode(MediaRawData* aSample,
       // against the map becoming extremely big.
       mDurationMap.Clear();
     }
+
+    if (mSeekTargetThreshold) {
+      if ((pts + duration) < mSeekTargetThreshold.ref().ToMicroseconds()) {
+        FFMPEG_LOG("Dropping decoded frame with pts=%lld, duration=%lld", pts, duration);
+        return DecodeResult::DECODE_FRAME;
+      }
+      mSeekTargetThreshold.reset();
+    }
+
     FFMPEG_LOG("Got one frame output with pts=%lld dts=%lld duration=%lld opaque=%lld",
                pts, mFrame->pkt_dts, duration, mCodecContext->reordered_opaque);
 

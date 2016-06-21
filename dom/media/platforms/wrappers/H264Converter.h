@@ -38,6 +38,7 @@ public:
     }
     return "H264Converter decoder (pending)";
   }
+  void SetSeekThreshold(const media::TimeUnit& aTime) override;
 
   // Return true if mimetype is H.264.
   static bool IsH264(const TrackInfo& aConfig);
