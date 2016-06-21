@@ -1167,6 +1167,13 @@ MediaDecoderStateMachine::SetDormant(bool aDormant)
       if (mQueuedSeek.Exists()) {
         // Keep latest seek target
       } else if (mSeekTask && mSeekTask->Exists()) {
+        // Because both audio and video decoders are going to be reset in this
+        // method later, we treat a VideoOnly seek task as a normal Accurate
+        // seek task so that while it is resumed, both audio and video playback
+        // are handled.
+        if (mSeekTask->GetSeekJob().mTarget.IsVideoOnly()) {
+          mSeekTask->GetSeekJob().mTarget.SetType(SeekTarget::Accurate);
+        }
         mQueuedSeek = Move(mSeekTask->GetSeekJob());
         mSeekTaskRequest.DisconnectIfExists();
       } else {
@@ -1644,9 +1651,6 @@ MediaDecoderStateMachine::InitiateSeek(SeekJob aSeekJob)
                                       Move(aSeekJob), mInfo, Duration(),
                                       GetMediaTime(), AudioQueue(), VideoQueue());
   } else {
-    // Use MOZ_DIAGNOSTIC_ASSERT here to test if a "VideoOnly" seek task could
-    // reach here, may come from a dormant state. Once we confirm it, we could
-    // than handle it.
     MOZ_DIAGNOSTIC_ASSERT(false, "Cannot handle this seek task.");
   }
 
