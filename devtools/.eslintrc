@@ -6,6 +6,7 @@
     "atob": true,
     "btoa": true,
     "Components": true,
+    "CSSRule": true,
     "clearInterval": true,
     "clearTimeout": true,
     "console": true,
