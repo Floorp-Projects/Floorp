@@ -262,13 +262,13 @@ BitArrayIndexToWordMask(size_t i)
 }
 
 static inline bool
-IsBitArrayElementSet(size_t* array, size_t length, size_t i)
+IsBitArrayElementSet(const size_t* array, size_t length, size_t i)
 {
     return array[BitArrayIndexToWordIndex(length, i)] & BitArrayIndexToWordMask(i);
 }
 
 static inline bool
-IsAnyBitArrayElementSet(size_t* array, size_t length)
+IsAnyBitArrayElementSet(const size_t* array, size_t length)
 {
     unsigned numWords = NumWordsForBitArrayOfLength(length);
     for (unsigned i = 0; i < numWords; ++i) {
