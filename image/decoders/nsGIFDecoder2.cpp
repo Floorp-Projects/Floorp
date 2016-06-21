@@ -495,6 +495,8 @@ nsGIFDecoder2::WriteInternal(const char* aBuffer, uint32_t aCount)
             return ReadImageDataSubBlock(aData);
           case State::LZW_DATA:
             return ReadLZWData(aData, aLength);
+          case State::SKIP_LZW_DATA:
+            return Transition::ContinueUnbuffered(State::SKIP_LZW_DATA);
           case State::FINISHED_LZW_DATA:
             return Transition::To(State::IMAGE_DATA_SUB_BLOCK, SUB_BLOCK_HEADER_LEN);
           case State::SKIP_SUB_BLOCKS:
@@ -987,8 +989,9 @@ nsGIFDecoder2::ReadImageDataSubBlock(const char* aData)
   }
 
   if (mGIFStruct.pixels_remaining == 0) {
-    // We've already written to the entire image. |subBlockLength| should've
-    // been zero.
+    // We've already written to the entire image; we should've hit the block
+    // terminator at this point. This image is corrupt, but we'll tolerate it.
+
     if (subBlockLength == GIF_TRAILER) {
       // This GIF is missing the block terminator for the final block; we'll put
       // up with it.
@@ -996,7 +999,10 @@ nsGIFDecoder2::ReadImageDataSubBlock(const char* aData)
       return Transition::TerminateSuccess();
     }
 
-    return Transition::To(State::IMAGE_DATA_SUB_BLOCK, SUB_BLOCK_HEADER_LEN);
+    // We're not at the end of the image, so just skip the extra data.
+    return Transition::ToUnbuffered(State::FINISHED_LZW_DATA,
+                                    State::SKIP_LZW_DATA,
+                                    subBlockLength);
   }
 
   // Handle the standard case: there's data in the sub-block and pixels left to

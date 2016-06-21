@@ -349,3 +349,72 @@ TEST(ImageDecoders, CorruptMultiChunk)
 {
   CheckDecoderMultiChunk(CorruptTestCase());
 }
+
+TEST(ImageDecoders, AnimatedGIFWithExtraImageSubBlocks)
+{
+  ImageTestCase testCase = ExtraImageSubBlocksAnimatedGIFTestCase();
+
+  // Verify that we can decode this test case and get two frames, even though
+  // there are extra image sub blocks between the first and second frame. The
+  // extra data shouldn't confuse the decoder or cause the decode to fail.
+
+  // Create an image.
+  RefPtr<Image> image =
+    ImageFactory::CreateAnonymousImage(nsDependentCString(testCase.mMimeType));
+  ASSERT_TRUE(!image->HasError());
+
+  nsCOMPtr<nsIInputStream> inputStream = LoadFile(testCase.mPath);
+  ASSERT_TRUE(inputStream);
+
+  // Figure out how much data we have.
+  uint64_t length;
+  nsresult rv = inputStream->Available(&length);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  // Write the data into the image.
+  rv = image->OnImageDataAvailable(nullptr, nullptr, inputStream, 0,
+                                   static_cast<uint32_t>(length));
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  // Let the image know we've sent all the data.
+  rv = image->OnImageDataComplete(nullptr, nullptr, NS_OK, true);
+  ASSERT_TRUE(NS_SUCCEEDED(rv));
+
+  RefPtr<ProgressTracker> tracker = image->GetProgressTracker();
+  tracker->SyncNotifyProgress(FLAG_LOAD_COMPLETE);
+
+  // Use GetFrame() to force a sync decode of the image.
+  RefPtr<SourceSurface> surface =
+    image->GetFrame(imgIContainer::FRAME_CURRENT,
+                    imgIContainer::FLAG_SYNC_DECODE);
+
+  // Ensure that the image's metadata meets our expectations.
+  IntSize imageSize(0, 0);
+  rv = image->GetWidth(&imageSize.width);
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
+  rv = image->GetHeight(&imageSize.height);
+  EXPECT_TRUE(NS_SUCCEEDED(rv));
+
+  EXPECT_EQ(testCase.mSize.width, imageSize.width);
+  EXPECT_EQ(testCase.mSize.height, imageSize.height);
+
+  Progress imageProgress = tracker->GetProgress();
+
+  EXPECT_TRUE(bool(imageProgress & FLAG_HAS_TRANSPARENCY) == false);
+  EXPECT_TRUE(bool(imageProgress & FLAG_IS_ANIMATED) == true);
+
+  // Ensure that we decoded both frames of the image.
+  LookupResult firstFrameLookupResult =
+    SurfaceCache::Lookup(ImageKey(image.get()),
+                         RasterSurfaceKey(imageSize,
+                                          DefaultSurfaceFlags(),
+                                          /* aFrameNum = */ 0));
+  EXPECT_EQ(MatchType::EXACT, firstFrameLookupResult.Type());
+
+  LookupResult secondFrameLookupResult =
+    SurfaceCache::Lookup(ImageKey(image.get()),
+                         RasterSurfaceKey(imageSize,
+                                          DefaultSurfaceFlags(),
+                                          /* aFrameNum = */ 1));
+  EXPECT_EQ(MatchType::EXACT, secondFrameLookupResult.Type());
+}
