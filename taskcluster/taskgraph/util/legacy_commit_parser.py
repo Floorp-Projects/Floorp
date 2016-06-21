@@ -339,7 +339,11 @@ def parse_commit(message, jobs):
         if base not in jobs['builds']:
             continue
         platforms.add(base)
-        platforms.update(jobs['builds'][base].get('extra-builds', []))
+        for extra_build in jobs['builds'][base].get('extra-builds', []):
+            # Silently skip extra-builds of unknown platforms
+            if extra_build not in jobs['builds']:
+                continue
+            platforms.update([extra_build])
 
     tests = normalize_test_list(aliases, jobs['flags']['tests'], args.tests)
 

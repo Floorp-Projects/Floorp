@@ -43,6 +43,7 @@ class TestCreate(unittest.TestCase):
         self.created_tasks[task_id] = task_def
 
     def test_create_tasks(self):
+        os.environ['TASK_ID'] = 'decisiontask'
         kind = FakeKind()
         tasks = {
             'tid-a': Task(kind=kind, label='a', task={'payload': 'hello world'}),
@@ -58,6 +59,9 @@ class TestCreate(unittest.TestCase):
             self.assertEqual(task['payload'], 'hello world')
             # make sure the dependencies exist, at least
             for depid in task.get('dependencies', []):
+                if depid is 'decisiontask':
+                    # Don't look for decisiontask here
+                    continue
                 self.assertIn(depid, self.created_tasks)
 
     def test_create_task_without_dependencies(self):

@@ -1,8 +1,8 @@
 
 /* pngwutil.c - utilities to write a PNG file
  *
- * Last changed in libpng 1.6.21 [January 15, 2016]
- * Copyright (c) 1998-2002,2004,2006-2015 Glenn Randers-Pehrson
+ * Last changed in libpng 1.6.22 [May 26, 2016]
+ * Copyright (c) 1998-2002,2004,2006-2016 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -23,10 +23,10 @@
 void PNGAPI
 png_save_uint_32(png_bytep buf, png_uint_32 i)
 {
-   buf[0] = (png_byte)(i >> 24);
-   buf[1] = (png_byte)(i >> 16);
-   buf[2] = (png_byte)(i >> 8);
-   buf[3] = (png_byte)(i     );
+   buf[0] = (png_byte)((i >> 24) & 0xffU);
+   buf[1] = (png_byte)((i >> 16) & 0xffU);
+   buf[2] = (png_byte)((i >>  8) & 0xffU);
+   buf[3] = (png_byte)( i        & 0xffU);
 }
 
 /* Place a 16-bit number into a buffer in PNG byte order.
@@ -36,8 +36,8 @@ png_save_uint_32(png_bytep buf, png_uint_32 i)
 void PNGAPI
 png_save_uint_16(png_bytep buf, unsigned int i)
 {
-   buf[0] = (png_byte)(i >> 8);
-   buf[1] = (png_byte)(i     );
+   buf[0] = (png_byte)((i >> 8) & 0xffU);
+   buf[1] = (png_byte)( i       & 0xffU);
 }
 #endif
 

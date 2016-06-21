@@ -36,52 +36,10 @@ TreeMutation::TreeMutation(Accessible* aParent, bool aNoEvents) :
     Controller()->RootEventTree().Log();
     logging::MsgEnd();
 
-    logging::MsgBegin("EVENTS_TREE", "Container tree");
     if (logging::IsEnabled(logging::eVerbose)) {
-      nsAutoString level;
-      Accessible* root = mParent->Document();
-      do {
-        const char* prefix = "";
-        if (mParent == root) {
-          prefix = "_X_";
-        }
-        else {
-          const EventTree& ret = Controller()->RootEventTree();
-          if (ret.Find(root)) {
-            prefix = "_с_";
-          }
-        }
-
-        printf("%s", NS_ConvertUTF16toUTF8(level).get());
-        logging::AccessibleInfo(prefix, root);
-        if (root->FirstChild() && !root->FirstChild()->IsDoc()) {
-          level.Append(NS_LITERAL_STRING("  "));
-          root = root->FirstChild();
-          continue;
-        }
-        int32_t idxInParent = root->mParent ?
-          root->mParent->mChildren.IndexOf(root) : -1;
-        if (idxInParent != -1 &&
-            idxInParent < static_cast<int32_t>(root->mParent->mChildren.Length() - 1)) {
-          root = root->mParent->mChildren.ElementAt(idxInParent + 1);
-          continue;
-        }
-
-        while ((root = root->Parent()) && !root->IsDoc()) {
-          level.Cut(0, 2);
-
-          int32_t idxInParent = root->mParent ?
-          root->mParent->mChildren.IndexOf(root) : -1;
-          if (idxInParent != -1 &&
-              idxInParent < static_cast<int32_t>(root->mParent->mChildren.Length() - 1)) {
-            root = root->mParent->mChildren.ElementAt(idxInParent + 1);
-            break;
-          }
-        }
-      }
-      while (root && !root->IsDoc());
+      logging::Tree("EVENTS_TREE", "Container tree", mParent->Document(),
+                    PrefixLog, static_cast<void*>(this));
     }
-    logging::MsgEnd();
   }
 #endif
 
@@ -172,6 +130,22 @@ TreeMutation::Done()
   }
 #endif
 }
+
+#ifdef A11Y_LOG
+const char*
+TreeMutation::PrefixLog(void* aData, Accessible* aAcc)
+{
+  TreeMutation* thisObj = reinterpret_cast<TreeMutation*>(aData);
+  if (thisObj->mParent == aAcc) {
+    return "_X_";
+  }
+  const EventTree& ret = thisObj->Controller()->RootEventTree();
+  if (ret.Find(aAcc)) {
+    return "_с_";
+  }
+  return "";
+}
+#endif
 
 
 ////////////////////////////////////////////////////////////////////////////////
