@@ -14,11 +14,13 @@ from mozunit import main
 # an empty graph, for things that don't look at it
 empty_graph = TaskGraph({}, Graph(set(), set()))
 
+
 def unittest_task(n, tp):
     return (n, Task('test', n, {
         'unittest_try_name': n,
         'test_platform': tp,
     }))
+
 
 def talos_task(n, tp):
     return (n, Task('test', n, {
@@ -26,7 +28,7 @@ def talos_task(n, tp):
         'test_platform': tp,
     }))
 
-tasks = {k: v for k,v in [
+tasks = {k: v for k, v in [
     unittest_task('mochitest-browser-chrome', 'linux'),
     unittest_task('mochitest-browser-chrome-e10s', 'linux64'),
     unittest_task('mochitest-chrome', 'linux'),
@@ -35,9 +37,9 @@ tasks = {k: v for k,v in [
     unittest_task('gtest', 'linux64'),
     talos_task('dromaeojs', 'linux64'),
 ]}
-unittest_tasks = {k: v for k,v in tasks.iteritems()
+unittest_tasks = {k: v for k, v in tasks.iteritems()
                   if 'unittest_try_name' in v.attributes}
-talos_tasks = {k: v for k,v in tasks.iteritems()
+talos_tasks = {k: v for k, v in tasks.iteritems()
                if 'talos_try_name' in v.attributes}
 graph_with_jobs = TaskGraph(tasks, Graph(set(tasks), set()))
 

@@ -103,8 +103,8 @@ def get_decision_parameters(options):
         parameters.update(PER_PROJECT_PARAMETERS[project])
     except KeyError:
         logger.warning("using default project parameters; add {} to "
-              "PER_PROJECT_PARAMETERS in {} to customize behavior "
-              "for this project".format(project, __file__))
+                       "PER_PROJECT_PARAMETERS in {} to customize behavior "
+                       "for this project".format(project, __file__))
         parameters.update(PER_PROJECT_PARAMETERS['default'])
 
     return Parameters(parameters)

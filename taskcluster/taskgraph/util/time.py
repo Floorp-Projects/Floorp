@@ -8,25 +8,31 @@
 import re
 import datetime
 
-PATTERN=re.compile(
+PATTERN = re.compile(
     '((?:\d+)?\.?\d+) *([a-z]+)'
 )
+
 
 def seconds(value):
     return datetime.timedelta(seconds=int(value))
 
+
 def minutes(value):
     return datetime.timedelta(minutes=int(value))
+
 
 def hours(value):
     return datetime.timedelta(hours=int(value))
 
+
 def days(value):
     return datetime.timedelta(days=int(value))
+
 
 def months(value):
     # See warning in years(), below
     return datetime.timedelta(days=int(value) * 30)
+
 
 def years(value):
     # Warning here "years" are vague don't use this for really sensitive date
@@ -42,11 +48,14 @@ ALIASES['days'] = ALIASES['day'] = ALIASES['d'] = days
 ALIASES['months'] = ALIASES['month'] = ALIASES['mo'] = months
 ALIASES['years'] = ALIASES['year'] = ALIASES['y'] = years
 
+
 class InvalidString(Exception):
     pass
 
+
 class UnknownTimeMeasurement(Exception):
     pass
+
 
 def value_of(input_str):
     '''
@@ -64,11 +73,14 @@ def value_of(input_str):
 
     if unit not in ALIASES:
         raise UnknownTimeMeasurement(
-            '{} is not a valid time measure use one of {}'.format(unit,
-                sorted(ALIASES.keys()))
+            '{} is not a valid time measure use one of {}'.format(
+                unit,
+                sorted(ALIASES.keys())
+            )
         )
 
     return ALIASES[unit](value)
+
 
 def json_time_from_now(input_str, now=None):
     '''
@@ -86,10 +98,10 @@ def json_time_from_now(input_str, now=None):
     # ISO dates until 'Z' (for timezone) is added...
     return time.isoformat() + 'Z'
 
+
 def current_json_time():
     '''
     :returns: JSON string representation of the current time.
     '''
 
     return datetime.datetime.utcnow().isoformat() + 'Z'
-

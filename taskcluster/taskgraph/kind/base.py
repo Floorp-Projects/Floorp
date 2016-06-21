@@ -7,6 +7,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 import os
 import abc
 
+
 class Kind(object):
     """
     A kind represents a collection of tasks that share common characteristics.
