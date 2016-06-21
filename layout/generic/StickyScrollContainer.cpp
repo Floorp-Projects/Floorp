@@ -47,8 +47,7 @@ StickyScrollContainer::GetStickyScrollContainerForFrame(nsIFrame* aFrame)
   }
   FrameProperties props = static_cast<nsIFrame*>(do_QueryFrame(scrollFrame))->
     Properties();
-  StickyScrollContainer* s = static_cast<StickyScrollContainer*>
-    (props.Get(StickyScrollContainerProperty()));
+  StickyScrollContainer* s = props.Get(StickyScrollContainerProperty());
   if (!s) {
     s = new StickyScrollContainer(scrollFrame);
     props.Set(StickyScrollContainerProperty(), s);
@@ -72,8 +71,7 @@ StickyScrollContainer::NotifyReparentedFrameAcrossScrollFrameBoundary(nsIFrame* 
   }
   FrameProperties props = static_cast<nsIFrame*>(do_QueryFrame(oldScrollFrame))->
     Properties();
-  StickyScrollContainer* oldSSC = static_cast<StickyScrollContainer*>
-    (props.Get(StickyScrollContainerProperty()));
+  StickyScrollContainer* oldSSC = props.Get(StickyScrollContainerProperty());
   if (!oldSSC) {
     // aOldParent had no sticky descendants, so aFrame doesn't have any sticky
     // descendants, and we're done here.
@@ -98,8 +96,7 @@ StickyScrollContainer*
 StickyScrollContainer::GetStickyScrollContainerForScrollFrame(nsIFrame* aFrame)
 {
   FrameProperties props = aFrame->Properties();
-  return static_cast<StickyScrollContainer*>
-    (props.Get(StickyScrollContainerProperty()));
+  return props.Get(StickyScrollContainerProperty());
 }
 
 static nscoord
@@ -145,8 +142,7 @@ StickyScrollContainer::ComputeStickyOffsets(nsIFrame* aFrame)
 
   // Store the offset
   FrameProperties props = aFrame->Properties();
-  nsMargin* offsets = static_cast<nsMargin*>
-    (props.Get(nsIFrame::ComputedOffsetProperty()));
+  nsMargin* offsets = props.Get(nsIFrame::ComputedOffsetProperty());
   if (offsets) {
     *offsets = computedOffsets;
   } else {
@@ -165,8 +161,8 @@ StickyScrollContainer::ComputeStickyLimits(nsIFrame* aFrame, nsRect* aStick,
   aStick->SetRect(nscoord_MIN/2, nscoord_MIN/2, nscoord_MAX, nscoord_MAX);
   aContain->SetRect(nscoord_MIN/2, nscoord_MIN/2, nscoord_MAX, nscoord_MAX);
 
-  const nsMargin* computedOffsets = static_cast<nsMargin*>(
-    aFrame->Properties().Get(nsIFrame::ComputedOffsetProperty()));
+  const nsMargin* computedOffsets = 
+    aFrame->Properties().Get(nsIFrame::ComputedOffsetProperty());
   if (!computedOffsets) {
     // We haven't reflowed the scroll frame yet, so offsets haven't been
     // computed. Bail.
