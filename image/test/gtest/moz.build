@@ -30,6 +30,8 @@ SOURCES += [
 ]
 
 TEST_HARNESS_FILES.gtest += [
+    'corrupt-with-bad-bmp-height.ico',
+    'corrupt-with-bad-bmp-width.ico',
     'corrupt.jpg',
     'first-frame-green.gif',
     'first-frame-green.png',
