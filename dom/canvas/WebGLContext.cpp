@@ -76,6 +76,10 @@
 #include "nsCocoaFeatures.h"
 #endif
 
+#ifdef XP_WIN
+#include "WGLLibrary.h"
+#endif
+
 // Generated
 #include "mozilla/dom/WebGLRenderingContextBinding.h"
 
@@ -963,10 +967,22 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
 
     if (mOptions.failIfMajorPerformanceCaveat) {
         if (gl->IsWARP()) {
+            gl = nullptr;
+
             Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_FAILURE_ID,
                                   NS_LITERAL_CSTRING("FEATURE_FAILURE_PERF_WARP"));
             const nsLiteralCString text("failIfMajorPerformanceCaveat: Driver is not"
                                         " hardware-accelerated.");
+            ThrowEvent_WebGLContextCreationError(text);
+            return NS_ERROR_FAILURE;
+        }
+
+        if (gl->GetContextType() == gl::GLContextType::WGL &&
+            !gl::sWGLLib.HasDXInterop2())
+        {
+            gl = nullptr;
+
+            const nsLiteralCString text("Caveat: WGL without DXGLInterop2.");
             ThrowEvent_WebGLContextCreationError(text);
             return NS_ERROR_FAILURE;
         }
