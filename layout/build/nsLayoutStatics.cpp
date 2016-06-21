@@ -322,6 +322,11 @@ nsLayoutStatics::Initialize()
   Servo_Initialize();
 #endif
 
+#ifndef MOZ_WIDGET_ANDROID
+  // On Android, we instantiate it when constructing AndroidBridge.
+  MediaPrefs::GetSingleton();
+#endif
+
   return NS_OK;
 }
 
