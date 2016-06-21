@@ -200,31 +200,35 @@ AudioEventTimeline::GetValuesAtTimeHelper(TimeType aTime, float* aBuffer,
       // The time matches one of the events exactly.
       MOZ_ASSERT(TimesEqual(aTime, TimeOf(mEvents[eventIndex])));
 
-      // SetTarget nodes can be handled no matter what their next node is (if they have one)
-      if (mEvents[eventIndex].mType == AudioTimelineEvent::SetTarget) {
-        // Follow the curve, without regard to the next event, starting at
-        // the last value of the last event.
-        aBuffer[bufferIndex] = ExponentialApproach(TimeOf(mEvents[eventIndex]),
-                                                mLastComputedValue, mEvents[eventIndex].mValue,
-                                                mEvents[eventIndex].mTimeConstant, aTime);
-        continue;
+      switch (mEvents[eventIndex].mType) {
+        case AudioTimelineEvent::SetTarget:
+          // SetTarget nodes can be handled no matter what their next node is
+          // (if they have one).
+          // Follow the curve, without regard to the next event, starting at
+          // the last value of the last event.
+          mComputedValue =
+            ExponentialApproach(TimeOf(mEvents[eventIndex]),
+                                mLastComputedValue, mEvents[eventIndex].mValue,
+                                mEvents[eventIndex].mTimeConstant, aTime);
+          break;
+        case AudioTimelineEvent::SetValueCurve:
+          // SetValueCurve events can be handled no matter what their event
+          // node is (if they have one)
+          mComputedValue =
+            ExtractValueFromCurve(TimeOf(mEvents[eventIndex]),
+                                  mEvents[eventIndex].mCurve,
+                                  mEvents[eventIndex].mCurveLength,
+                                  mEvents[eventIndex].mDuration, aTime);
+          break;
+        default:
+          // For other event types
+          mComputedValue = mEvents[eventIndex].mValue;
       }
-
-      // SetValueCurve events can be handled no matter what their event node is (if they have one)
-      if (mEvents[eventIndex].mType == AudioTimelineEvent::SetValueCurve) {
-        aBuffer[bufferIndex] = ExtractValueFromCurve(TimeOf(mEvents[eventIndex]),
-                                                  mEvents[eventIndex].mCurve,
-                                                  mEvents[eventIndex].mCurveLength,
-                                                  mEvents[eventIndex].mDuration, aTime);
-        continue;
-      }
-
-      // For other event types
-      aBuffer[bufferIndex] = mEvents[eventIndex].mValue;
-      continue;
+    } else {
+      mComputedValue = GetValuesAtTimeHelperInternal(aTime, previous, next);
     }
 
-    aBuffer[bufferIndex] = GetValuesAtTimeHelperInternal(aTime, previous, next);
+    aBuffer[bufferIndex] = mComputedValue;
   }
 }
 template void
