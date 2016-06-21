@@ -123,7 +123,6 @@ void Servo_DropNodeData(ServoNodeData* data);
 nsIAtom* Gecko_Atomize(const char* aString, uint32_t aLength);
 void Gecko_AddRefAtom(nsIAtom* aAtom);
 void Gecko_ReleaseAtom(nsIAtom* aAtom);
-uint32_t Gecko_HashAtom(nsIAtom* aAtom);
 const uint16_t* Gecko_GetAtomAsUTF16(nsIAtom* aAtom, uint32_t* aLength);
 bool Gecko_AtomEqualsUTF8(nsIAtom* aAtom, const char* aString, uint32_t aLength);
 bool Gecko_AtomEqualsUTF8IgnoreCase(nsIAtom* aAtom, const char* aString, uint32_t aLength);
