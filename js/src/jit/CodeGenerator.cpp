@@ -3441,9 +3441,54 @@ class OutOfLineCallPostWriteBarrier : public OutOfLineCodeBase<CodeGenerator>
 };
 
 static void
-EmitPostWriteBarrier(MacroAssembler& masm, Register objreg, bool isGlobal,
-                     AllocatableGeneralRegisterSet regs)
+EmitStoreBufferCheckForConstant(MacroAssembler& masm, JSObject* object,
+                                AllocatableGeneralRegisterSet& regs, Label* exit, Label* callVM)
 {
+    Register temp = regs.takeAny();
+
+    const gc::TenuredCell* cell = &object->asTenured();
+    gc::Arena* arena = cell->arena();
+
+    Register cells = temp;
+    masm.loadPtr(AbsoluteAddress(&arena->bufferedCells), cells);
+
+    size_t index = gc::ArenaCellSet::getCellIndex(cell);
+    size_t word;
+    uint32_t mask;
+    gc::ArenaCellSet::getWordIndexAndMask(index, &word, &mask);
+    size_t offset = gc::ArenaCellSet::offsetOfBits() + word * sizeof(uint32_t);
+
+    masm.branchTest32(Assembler::NonZero, Address(cells, offset), Imm32(mask), exit);
+
+    // Check whether this is the sentinel set and if so call the VM to allocate
+    // one for this arena.
+    masm.branchPtr(Assembler::Equal, Address(cells, gc::ArenaCellSet::offsetOfArena()),
+                   ImmPtr(nullptr), callVM);
+
+    // Add the cell to the set.
+    masm.or32(Imm32(mask), Address(cells, offset));
+    masm.jump(exit);
+
+    regs.add(temp);
+}
+
+static void
+EmitPostWriteBarrier(MacroAssembler& masm, Register objreg, JSObject* maybeConstant, bool isGlobal,
+                     AllocatableGeneralRegisterSet& regs)
+{
+    MOZ_ASSERT_IF(isGlobal, maybeConstant);
+
+    Label callVM;
+    Label exit;
+
+    // We already have a fast path to check whether a global is in the store
+    // buffer.
+    if (!isGlobal && maybeConstant)
+        EmitStoreBufferCheckForConstant(masm, maybeConstant, regs, &exit, &callVM);
+
+    // Call into the VM to barrier the write.
+    masm.bind(&callVM);
+
     Register runtimereg = regs.takeAny();
     masm.mov(ImmPtr(GetJitContext()->runtime), runtimereg);
 
@@ -3452,6 +3497,8 @@ EmitPostWriteBarrier(MacroAssembler& masm, Register objreg, bool isGlobal,
     masm.passABIArg(runtimereg);
     masm.passABIArg(objreg);
     masm.callWithABI(JS_FUNC_TO_DATA_PTR(void*, fun));
+
+    masm.bind(&exit);
 }
 
 void
@@ -3460,9 +3507,10 @@ CodeGenerator::emitPostWriteBarrier(const LAllocation* obj)
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::Volatile());
 
     Register objreg;
+    JSObject* object = nullptr;
     bool isGlobal = false;
     if (obj->isConstant()) {
-        JSObject* object = &obj->toConstant()->toObject();
+        object = &obj->toConstant()->toObject();
         isGlobal = object->is<GlobalObject>();
         objreg = regs.takeAny();
         masm.movePtr(ImmGCPtr(object), objreg);
@@ -3471,7 +3519,7 @@ CodeGenerator::emitPostWriteBarrier(const LAllocation* obj)
         regs.takeUnchecked(objreg);
     }
 
-    EmitPostWriteBarrier(masm, objreg, isGlobal, regs);
+    EmitPostWriteBarrier(masm, objreg, object, isGlobal, regs);
 }
 
 void
@@ -3479,7 +3527,7 @@ CodeGenerator::emitPostWriteBarrier(Register objreg)
 {
     AllocatableGeneralRegisterSet regs(GeneralRegisterSet::Volatile());
     regs.takeUnchecked(objreg);
-    EmitPostWriteBarrier(masm, objreg, false, regs);
+    EmitPostWriteBarrier(masm, objreg, nullptr, false, regs);
 }
 
 void
