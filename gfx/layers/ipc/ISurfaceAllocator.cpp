@@ -7,6 +7,7 @@
 
 #include "ISurfaceAllocator.h"
 
+#include "gfxPrefs.h"
 #include "mozilla/layers/ImageBridgeParent.h" // for ImageBridgeParent
 #include "mozilla/layers/TextureHost.h"       // for TextureHost
 
@@ -285,6 +286,12 @@ FixedSizeSmallShmemSectionAllocator::ShrinkShmemSectionHeap()
       i++;
     }
   }
+}
+
+int32_t
+ClientIPCAllocator::GetMaxTextureSize() const
+{
+  return gfxPrefs::MaxTextureSize();
 }
 
 } // namespace layers
