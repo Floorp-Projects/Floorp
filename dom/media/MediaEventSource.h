@@ -407,10 +407,20 @@ class MediaEventSourceImpl {
   template <typename Method>
   using TakeArgs = detail::TakeArgs<Method>;
 
+  void PruneListeners() {
+    int32_t last = static_cast<int32_t>(mListeners.Length()) - 1;
+    for (int32_t i = last; i >= 0; --i) {
+      if (mListeners[i]->Token()->IsRevoked()) {
+        mListeners.RemoveElementAt(i);
+      }
+    }
+  }
+
   template<typename Target, typename Function>
   MediaEventListener
   ConnectInternal(Target* aTarget, const Function& aFunction) {
     MutexAutoLock lock(mMutex);
+    PruneListeners();
     MOZ_ASSERT(Lp == ListenerPolicy::NonExclusive || mListeners.IsEmpty());
     auto l = mListeners.AppendElement();
     l->reset(new ListenerImpl<Target, Function>(aTarget, aFunction));
@@ -489,7 +499,8 @@ protected:
   template <typename... Ts>
   void NotifyInternal(Ts&&... aEvents) {
     MutexAutoLock lock(mMutex);
-    for (int32_t i = mListeners.Length() - 1; i >= 0; --i) {
+    int32_t last = static_cast<int32_t>(mListeners.Length()) - 1;
+    for (int32_t i = last; i >= 0; --i) {
       auto&& l = mListeners[i];
       // Remove disconnected listeners.
       // It is not optimal but is simple and works well.
