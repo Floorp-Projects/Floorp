@@ -85,7 +85,6 @@ public:
   // Uses XPIDL GetProtocol.
   bool Ordered() const;
   uint16_t Id() const;
-  uint16_t Stream() const; // deprecated
 
   nsresult
   DoOnMessageAvailable(const nsACString& aMessage, bool aBinary);
