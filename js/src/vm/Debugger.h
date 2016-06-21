@@ -1080,7 +1080,7 @@ class DebuggerObject : public NativeObject
     static MOZ_MUST_USE bool parameterNames(JSContext* cx, Handle<DebuggerObject*> object,
                                             MutableHandle<StringVector> result);
     static MOZ_MUST_USE bool boundTargetFunction(JSContext* cx, Handle<DebuggerObject*> object,
-                                                 MutableHandleObject result);
+                                                 MutableHandle<DebuggerObject*> result);
     static MOZ_MUST_USE bool boundThis(JSContext* cx, Handle<DebuggerObject*> object,
                                        MutableHandleValue result);
     static MOZ_MUST_USE bool boundArguments(JSContext* cx, Handle<DebuggerObject*> object,
