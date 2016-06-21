@@ -32,9 +32,6 @@ public:
 
 protected:
     RefPtr<IDXGIKeyedMutex> mKeyedMutex;
-    RefPtr<IDXGIKeyedMutex> mConsumerKeyedMutex;
-    RefPtr<ID3D11Texture2D> mConsumerTexture;
-
     bool mLockedForGL;
 
 public:

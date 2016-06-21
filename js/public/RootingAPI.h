@@ -586,7 +586,7 @@ namespace js {
 
 // After switching to MSVC2015, this can be eliminated and replaced with
 // alignas(n) everywhere.
-#ifdef XP_WIN
+#if defined(_MSC_VER) && (_MSC_VER < 1900)
 # define JS_ALIGNAS(n) __declspec(align(n))
 #else
 # define JS_ALIGNAS(n) alignas(n)

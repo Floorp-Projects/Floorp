@@ -376,7 +376,7 @@ public:
 
   /**
    * Compute the style changes needed during restyling when this style
-   * context is being replaced by aOther.  (This is nonsymmetric since
+   * context is being replaced by aNewContext.  (This is nonsymmetric since
    * we optimize by skipping comparison for styles that have never been
    * requested.)
    *
@@ -393,7 +393,7 @@ public:
    * aEqualStructs must not be null.  Into it will be stored a bitfield
    * representing which structs were compared to be non-equal.
    */
-  nsChangeHint CalcStyleDifference(nsStyleContext* aOther,
+  nsChangeHint CalcStyleDifference(nsStyleContext* aNewContext,
                                    nsChangeHint aParentHintsNotHandledForDescendants,
                                    uint32_t* aEqualStructs,
                                    uint32_t* aSamePointerStructs);
