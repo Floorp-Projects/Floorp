@@ -41,7 +41,7 @@ window.onload = Task.async(function* () {
 
     // Test rendering
     const renderedComponent = renderComponent(ObjectWithURL.rep, { object: gripStub });
-    ok(renderedComponent.className.includes("objectLink-Location"), "ObjectWithURL rep has expected class name");
+    ok(renderedComponent.className.includes("objectBox-Location"), "ObjectWithURL rep has expected class name");
     const innerNode = renderedComponent.querySelector(".objectPropValue");
     is(innerNode.textContent, "https://www.mozilla.org/en-US/", "ObjectWithURL rep has expected inner HTML structure and text content");
 
