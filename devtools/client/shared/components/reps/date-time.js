@@ -28,7 +28,7 @@ define(function (require, exports, module) {
     },
 
     getTitle: function (grip) {
-      return new Date(grip.preview.timestamp).toString();
+      return new Date(grip.preview.timestamp).toISOString();
     },
 
     render: function () {
