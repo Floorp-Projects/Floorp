@@ -80,9 +80,9 @@
 .indexedDB-icon,
 .login-icon,
 .microphone-icon,
-.pointer-icon,
+.pointerLock-icon,
 .screen-icon,
-.web-notifications-icon,
+.desktop-notification-icon,
 .popup-notification-icon[popupid="geolocation"],
 .popup-notification-icon[popupid="indexedDB-permissions-prompt"],
 .popup-notification-icon[popupid="password"],
@@ -104,6 +104,11 @@
 .webRTC-sharingMicrophone-notification-icon,
 .in-use {
   fill: #fea01b;
+}
+
+.popup-notification-icon[popupid="web-notifications"],
+.desktop-notification-icon {
+  list-style-image: url(chrome://browser/skin/glyphs.svg#desktop-notification);
 }
 
 .geo-icon {
@@ -169,14 +174,9 @@
   list-style-image: url(chrome://browser/skin/glyphs.svg#screen);
 }
 
-.popup-notification-icon[popupid="web-notifications"],
-.web-notifications-icon {
-  list-style-image: url(chrome://browser/skin/glyphs.svg#web-notifications);
-}
-
 .popup-notification-icon[popupid="pointerLock"],
-.pointer-icon {
-  list-style-image: url(chrome://browser/skin/glyphs.svg#pointer);
+.pointerLock-icon {
+  list-style-image: url(chrome://browser/skin/glyphs.svg#pointerLock);
 }
 
 /* EME */
