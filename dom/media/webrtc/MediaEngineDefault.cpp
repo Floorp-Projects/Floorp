@@ -57,14 +57,14 @@ MediaEngineDefaultVideoSource::~MediaEngineDefaultVideoSource()
 {}
 
 void
-MediaEngineDefaultVideoSource::GetName(nsAString& aName)
+MediaEngineDefaultVideoSource::GetName(nsAString& aName) const
 {
   aName.AssignLiteral(MOZ_UTF16("Default Video Device"));
   return;
 }
 
 void
-MediaEngineDefaultVideoSource::GetUUID(nsACString& aUUID)
+MediaEngineDefaultVideoSource::GetUUID(nsACString& aUUID) const
 {
   aUUID.AssignLiteral("1041FCBD-3F12-4F7B-9E9B-1EC556DD5676");
   return;
@@ -73,7 +73,7 @@ MediaEngineDefaultVideoSource::GetUUID(nsACString& aUUID)
 uint32_t
 MediaEngineDefaultVideoSource::GetBestFitnessDistance(
     const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-    const nsString& aDeviceId)
+    const nsString& aDeviceId) const
 {
   uint32_t distance = 0;
 #ifdef MOZ_WEBRTC
@@ -385,14 +385,14 @@ MediaEngineDefaultAudioSource::~MediaEngineDefaultAudioSource()
 {}
 
 void
-MediaEngineDefaultAudioSource::GetName(nsAString& aName)
+MediaEngineDefaultAudioSource::GetName(nsAString& aName) const
 {
   aName.AssignLiteral(MOZ_UTF16("Default Audio Device"));
   return;
 }
 
 void
-MediaEngineDefaultAudioSource::GetUUID(nsACString& aUUID)
+MediaEngineDefaultAudioSource::GetUUID(nsACString& aUUID) const
 {
   aUUID.AssignLiteral("B7CBD7C1-53EF-42F9-8353-73F61C70C092");
   return;
@@ -401,7 +401,7 @@ MediaEngineDefaultAudioSource::GetUUID(nsACString& aUUID)
 uint32_t
 MediaEngineDefaultAudioSource::GetBestFitnessDistance(
     const nsTArray<const NormalizedConstraintSet*>& aConstraintSets,
-    const nsString& aDeviceId)
+    const nsString& aDeviceId) const
 {
   uint32_t distance = 0;
 #ifdef MOZ_WEBRTC
