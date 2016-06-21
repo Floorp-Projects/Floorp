@@ -15,7 +15,7 @@ define(function (require, exports, module) {
   const { Caption } = createFactories(require("./caption"));
 
   // Shortcuts
-  const { a, span } = React.DOM;
+  const { span } = React.DOM;
 
   /**
    * Renders an array. The array is enclosed by left and right bracket
@@ -35,7 +35,12 @@ define(function (require, exports, module) {
     },
 
     getTitle: function (object, context) {
-      return "[" + object.length + "]";
+      if (this.props.objectLink) {
+        return this.props.objectLink({
+          object: object
+        }, object.class);
+      }
+      return "";
     },
 
     arrayIterator: function (grip, max) {
@@ -84,10 +89,13 @@ define(function (require, exports, module) {
 
       if (array.length > max + 1) {
         items.pop();
+        let objectLink = this.props.objectLink || span;
         items.push(Caption({
           key: "more",
-          object: "more..."}
-        ));
+          object: objectLink({
+            object: this.props.object
+          }, "more...")
+        }));
       }
 
       return items;
@@ -118,29 +126,23 @@ define(function (require, exports, module) {
         items = this.arrayIterator(object, max);
       }
 
+      let objectLink = this.props.objectLink || span;
+
       return (
         ObjectBox({
-          className: "array",
-          onClick: this.onToggleProperties},
-          a({
-            className: "objectLink",
-            onclick: this.onClickBracket},
-            span({
-              className: "arrayLeftBracket",
-              role: "presentation"},
-              "["
-            )
-          ),
+          className: "array"},
+          this.getTitle(object),
+          objectLink({
+            className: "arrayLeftBracket",
+            role: "presentation",
+            object: object
+          }, "["),
           items,
-          a({
-            className: "objectLink",
-            onclick: this.onClickBracket},
-            span({
-              className: "arrayRightBracket",
-              role: "presentation"},
-              "]"
-            )
-          ),
+          objectLink({
+            className: "arrayRightBracket",
+            role: "presentation",
+            object: object
+          }, "]"),
           span({
             className: "arrayProperties",
             role: "group"}

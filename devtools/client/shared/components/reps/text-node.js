@@ -12,7 +12,7 @@ define(function (require, exports, module) {
 
   // Reps
   const { createFactories, isGrip } = require("./rep-utils");
-  const { ObjectLink } = createFactories(require("./object-link"));
+  const { ObjectBox } = createFactories(require("./object-box"));
   const { cropMultipleLines } = require("./string");
 
   // Shortcuts
@@ -33,8 +33,13 @@ define(function (require, exports, module) {
       return cropMultipleLines(grip.preview.textContent);
     },
 
-    getTitle: function (win, context) {
-      return "textNode";
+    getTitle: function (grip) {
+      if (this.props.objectLink) {
+        return this.props.objectLink({
+          object: grip
+        }, "#text");
+      }
+      return "";
     },
 
     render: function () {
@@ -43,22 +48,29 @@ define(function (require, exports, module) {
 
       if (mode == "short" || mode == "tiny") {
         return (
-          ObjectLink({className: "textNode"},
+          ObjectBox({className: "textNode"},
+            this.getTitle(grip),
             "\"" + this.getTextContent(grip) + "\""
           )
         );
       }
 
+      let objectLink = this.props.objectLink || DOM.span;
       return (
-        ObjectLink({className: "textNode"},
-          "<",
+        ObjectBox({className: "textNode"},
+          this.getTitle(grip),
+          objectLink({
+            object: grip
+          }, "<"),
           DOM.span({className: "nodeTag"}, "TextNode"),
           " textContent=\"",
           DOM.span({className: "nodeValue"},
             this.getTextContent(grip)
           ),
           "\"",
-          ">;"
+          objectLink({
+            object: grip
+          }, ">;")
         )
       );
     },

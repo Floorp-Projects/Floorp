@@ -28,6 +28,17 @@ define(function (require, exports, module) {
       object: React.PropTypes.object.isRequired,
     },
 
+    getTitle: function (grip) {
+      if (this.props.objectLink) {
+        return ObjectBox({},
+          this.props.objectLink({
+            object: grip
+          }, grip.class)
+        );
+      }
+      return "";
+    },
+
     getLocation: function (grip) {
       return cropString(grip.preview.url);
     },
@@ -37,6 +48,7 @@ define(function (require, exports, module) {
 
       return (
         ObjectBox({className: "Window"},
+          this.getTitle(grip),
           DOM.span({className: "objectPropValue"},
             this.getLocation(grip)
           )
