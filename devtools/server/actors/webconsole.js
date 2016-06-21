@@ -903,7 +903,7 @@ WebConsoleActor.prototype =
           // It is possible that we won't have permission to unwrap an
           // object and retrieve its errorMessageName.
         try {
-          errorDocURL = ErrorDocs.GetURL(error && error.errorMessageName);
+          errorDocURL = ErrorDocs.GetURL(error);
         } catch (ex) {}
       }
     }
@@ -1449,6 +1449,7 @@ WebConsoleActor.prototype =
     return {
       errorMessage: this._createStringGrip(aPageError.errorMessage),
       errorMessageName: aPageError.errorMessageName,
+      exceptionDocURL: ErrorDocs.GetURL(aPageError),
       sourceName: aPageError.sourceName,
       lineText: lineText,
       lineNumber: aPageError.lineNumber,

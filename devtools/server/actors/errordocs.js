@@ -10,7 +10,6 @@
 "use strict";
 
 const baseURL = "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/";
-
 const ErrorDocs = {
   JSMSG_READ_ONLY: "Read-only",
   JSMSG_BAD_ARRAY_LENGTH: "Invalid_array_length",
@@ -50,10 +49,34 @@ const ErrorDocs = {
   JSMSG_CURLY_AFTER_LIST: "Missing_curly_after_property_list",
 };
 
-exports.GetURL = (errorName) => {
-  let doc = ErrorDocs[errorName];
+const MIXED_CONTENT_LEARN_MORE = "https://developer.mozilla.org/docs/Security/MixedContent";
+const TRACKING_PROTECTION_LEARN_MORE = "https://developer.mozilla.org/Firefox/Privacy/Tracking_Protection";
+const INSECURE_PASSWORDS_LEARN_MORE = "https://developer.mozilla.org/docs/Security/InsecurePasswords";
+const PUBLIC_KEY_PINS_LEARN_MORE = "https://developer.mozilla.org/docs/Web/Security/Public_Key_Pinning";
+const STRICT_TRANSPORT_SECURITY_LEARN_MORE = "https://developer.mozilla.org/docs/Security/HTTP_Strict_Transport_Security";
+const WEAK_SIGNATURE_ALGORITHM_LEARN_MORE = "https://developer.mozilla.org/docs/Security/Weak_Signature_Algorithm";
+const ErrorCategories = {
+  "Insecure Password Field": INSECURE_PASSWORDS_LEARN_MORE,
+  "Mixed Content Message": MIXED_CONTENT_LEARN_MORE,
+  "Mixed Content Blocker": MIXED_CONTENT_LEARN_MORE,
+  "Invalid HPKP Headers": PUBLIC_KEY_PINS_LEARN_MORE,
+  "Invalid HSTS Headers": STRICT_TRANSPORT_SECURITY_LEARN_MORE,
+  "SHA-1 Signature": WEAK_SIGNATURE_ALGORITHM_LEARN_MORE,
+  "Tracking Protection": TRACKING_PROTECTION_LEARN_MORE,
+};
+
+exports.GetURL = (error) => {
+  if (!error) {
+    return;
+  }
+
+  let doc = ErrorDocs[error.errorMessageName];
   if (doc) {
     return baseURL + doc;
   }
-  return undefined;
-}
+
+  let categoryURL = ErrorCategories[error.category];
+  if (categoryURL) {
+    return categoryURL;
+  }
+};

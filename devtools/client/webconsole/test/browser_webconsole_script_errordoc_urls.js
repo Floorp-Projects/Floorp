@@ -54,7 +54,7 @@ function* testScriptError(hud, testData) {
   });
 
   // grab the most current error doc URL
-  let url = ErrorDocs.GetURL(testData.jsmsg);
+  let url = ErrorDocs.GetURL({ errorMessageName: testData.jsmsg });
 
   let hrefs = {};
   for (let link of hud.jsterm.outputNode.querySelectorAll("a")) {
