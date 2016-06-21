@@ -103,7 +103,7 @@ menuitem[cmd="cmd_clearhistory"][disabled] {
   font-weight: normal;
   border-top: 1px solid rgba(0, 0, 0, 0.2);
   padding: 3px 5px;
-  color: MenuText;
+  color: GrayText;
 }
 
 .search-panel-header > label {
@@ -240,7 +240,6 @@ menuitem[cmd="cmd_clearhistory"][disabled] {
 
 .search-setting-button {
   -moz-appearance: none;
-  background-color: Menu;
   border: none;
   border-top: 1px solid rgba(0, 0, 0, 0.2);
   margin: 0;
