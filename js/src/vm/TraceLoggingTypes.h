@@ -67,7 +67,8 @@
     _(GenerateLIR)                                    \
     _(RegisterAllocation)                             \
     _(GenerateCode)                                   \
-    _(IonBuilderRestartLoop)
+    _(IonBuilderRestartLoop)                          \
+    _(VMSpecific)
 
 #define TRACELOGGER_LOG_ITEMS(_)                      \
     _(Bailout)                                        \
