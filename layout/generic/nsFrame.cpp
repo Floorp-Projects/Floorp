@@ -154,8 +154,8 @@ struct nsContentAndOffset
 static bool
 IsReversedDirectionFrame(nsIFrame* aFrame)
 {
-  return !IS_SAME_DIRECTION(nsBidi::GetEmbeddingLevel(aFrame),
-                            nsBidi::GetBaseLevel(aFrame));
+  FrameBidiData bidiData = nsBidi::GetBidiData(aFrame);
+  return !IS_SAME_DIRECTION(bidiData.embeddingLevel, bidiData.baseLevel);
 }
 
 #include "nsILineIterator.h"
@@ -6590,11 +6590,11 @@ nsFrame::GetPointFromOffset(int32_t inOffset, nsPoint* outPoint)
       // nsBidiPresUtils::ResolveParagraph (odd levels = right-to-left).
       // If the embedding level isn't set, just use the CSS direction
       // property.
-      bool hasEmbeddingLevel;
-      nsBidiLevel embeddingLevel = Properties().Get(
-        nsBidi::EmbeddingLevelProperty(), &hasEmbeddingLevel);
-      bool isRTL = hasEmbeddingLevel
-        ? IS_LEVEL_RTL(embeddingLevel)
+      bool hasBidiData;
+      FrameBidiData bidiData =
+        Properties().Get(nsBidi::BidiDataProperty(), &hasBidiData);
+      bool isRTL = hasBidiData
+        ? IS_LEVEL_RTL(bidiData.embeddingLevel)
         : StyleVisibility()->mDirection == NS_STYLE_DIRECTION_RTL;
       if ((!isRTL && inOffset > newOffset) ||
           (isRTL && inOffset <= newOffset)) {
