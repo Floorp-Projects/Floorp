@@ -668,6 +668,8 @@ TraceLoggerThreadState::init()
             "                 EliminateRedundantChecks, AddKeepAliveInstructions, GenerateLIR, \n"
             "                 RegisterAllocation, GenerateCode, Scripts, IonBuilderRestartLoop\n"
             "\n"
+            "  VMSpecific     Output the specific name of the VM call"
+            "\n"
             "Specific log items:\n"
         );
         for (uint32_t i = 1; i < TraceLogger_Last; i++) {
@@ -1023,4 +1025,11 @@ TraceLoggerEvent::operator=(const TraceLoggerEvent& other)
     payload_ = other.payload_;
 
     return *this;
+}
+
+TraceLoggerEvent::TraceLoggerEvent(const TraceLoggerEvent& other)
+{
+    payload_ = other.payload_;
+    if (hasPayload())
+        payload()->use();
 }
