@@ -4018,12 +4018,16 @@ static CK_MECHANISM_TYPE
 ssl3_GetHashMechanismByHashType(SSLHashType hashType)
 {
     switch (hashType) {
+        case ssl_hash_sha512:
+            return CKM_SHA512;
         case ssl_hash_sha384:
             return CKM_SHA384;
         case ssl_hash_sha256:
         case ssl_hash_none:
             /* ssl_hash_none is for pre-1.2 suites, which use SHA-256. */
             return CKM_SHA256;
+        case ssl_hash_sha1:
+            return CKM_SHA_1;
         default:
             PORT_Assert(0);
     }

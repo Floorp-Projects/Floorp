@@ -9352,7 +9352,12 @@ Parser<ParseHandler>::objectLiteral(YieldHandling yieldHandling, PossibleError* 
                 return null();
 
             tokenStream.consumeKnownToken(TOK_ASSIGN);
+            bool saved = pc->inDeclDestructuring;
+            // Setting `inDeclDestructuring` to false allows name use to be noted
+            // in `identifierName` See Bug: 1255167.
+            pc->inDeclDestructuring = false;
             Node rhs = assignExpr(InAllowed, yieldHandling, TripledotProhibited);
+            pc->inDeclDestructuring = saved;
             if (!rhs)
                 return null();
 

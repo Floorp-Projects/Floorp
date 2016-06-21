@@ -4835,6 +4835,7 @@ MultiprocessBlockPolicy() {
   }
 #endif // XP_WIN
 
+#if defined(MOZ_WIDGET_GTK)
   /**
    * Avoids enabling e10s for certain locales that require bidi selection,
    * which currently doesn't work well with e10s.
@@ -4851,6 +4852,7 @@ MultiprocessBlockPolicy() {
     gMultiprocessBlockPolicy = kE10sDisabledForBidi;
     return gMultiprocessBlockPolicy;
   }
+#endif // MOZ_WIDGET_GTK
 
   /*
    * None of the blocking policies matched, so e10s is allowed to run.
