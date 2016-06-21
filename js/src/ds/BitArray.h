@@ -19,13 +19,16 @@ template <size_t nbits>
 class BitArray
 {
   private:
-    static const size_t bitsPerElement = sizeof(uintptr_t) * CHAR_BIT;
+    // Use a 32 bit word to make it easier to access a BitArray from JIT code.
+    using WordT = uint32_t;
+
+    static const size_t bitsPerElement = sizeof(WordT) * CHAR_BIT;
     static const size_t numSlots = nbits / bitsPerElement + (nbits % bitsPerElement == 0 ? 0 : 1);
     static const size_t paddingBits = (numSlots * bitsPerElement) - nbits;
     static_assert(paddingBits < bitsPerElement, "More padding bits than expected.");
-    static const uintptr_t paddingMask = uintptr_t(-1) >> paddingBits;
+    static const WordT paddingMask = WordT(-1) >> paddingBits;
 
-    uintptr_t map[numSlots];
+    WordT map[numSlots];
 
   public:
     void clear(bool value) {
@@ -35,20 +38,23 @@ class BitArray
     }
 
     inline bool get(size_t offset) const {
-        uintptr_t index, mask;
-        getMarkWordAndMask(offset, &index, &mask);
+        size_t index;
+        WordT mask;
+        getIndexAndMask(offset, &index, &mask);
         return map[index] & mask;
     }
 
     void set(size_t offset) {
-        uintptr_t index, mask;
-        getMarkWordAndMask(offset, &index, &mask);
+        size_t index;
+        WordT mask;
+        getIndexAndMask(offset, &index, &mask);
         map[index] |= mask;
     }
 
     void unset(size_t offset) {
-        uintptr_t index, mask;
-        getMarkWordAndMask(offset, &index, &mask);
+        size_t index;
+        WordT mask;
+        getIndexAndMask(offset, &index, &mask);
         map[index] &= ~mask;
     }
 
@@ -60,13 +66,14 @@ class BitArray
         return true;
     }
 
-  private:
-    inline void getMarkWordAndMask(size_t offset,
-                                   uintptr_t* indexp, uintptr_t* maskp) const {
-        static_assert(bitsPerElement == 32 || bitsPerElement == 64,
-                      "unexpected bitsPerElement value");
+    static void getIndexAndMask(size_t offset, size_t* indexp, WordT* maskp) {
+        static_assert(bitsPerElement == 32, "unexpected bitsPerElement value");
         *indexp = offset / bitsPerElement;
-        *maskp = uintptr_t(1) << (offset % bitsPerElement);
+        *maskp = WordT(1) << (offset % bitsPerElement);
+    }
+
+    static size_t offsetOfMap() {
+        return offsetof(BitArray<nbits>, map);
     }
 };
 
