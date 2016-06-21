@@ -44,6 +44,7 @@
 #include "builtin/Promise.h"
 #include "jit/arm/Simulator-arm.h"
 #include "jit/arm64/vixl/Simulator-vixl.h"
+#include "jit/IonBuilder.h"
 #include "jit/JitCompartment.h"
 #include "jit/mips32/Simulator-mips32.h"
 #include "jit/mips64/Simulator-mips64.h"
@@ -254,7 +255,8 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     oomCallback(nullptr),
     debuggerMallocSizeOf(ReturnZeroSize),
     lastAnimationTime(0),
-    performanceMonitoring(thisFromCtor())
+    performanceMonitoring(thisFromCtor()),
+    ionLazyLinkListSize_(0)
 {
     setGCStoreBufferPtr(&gc.storeBuffer);
 
@@ -428,6 +430,9 @@ JSRuntime::~JSRuntime()
         JS::PrepareForFullGC(this);
         gc.gc(GC_NORMAL, JS::gcreason::DESTROY_RUNTIME);
     }
+
+    MOZ_ASSERT(ionLazyLinkListSize_ == 0);
+    MOZ_ASSERT(ionLazyLinkList_.isEmpty());
 
     /*
      * Clear the self-hosted global and delete self-hosted classes *after*
@@ -962,3 +967,34 @@ JS::IsProfilingEnabledForRuntime(JSRuntime* runtime)
     MOZ_ASSERT(runtime);
     return runtime->spsProfiler.enabled();
 }
+
+JSRuntime::IonBuilderList&
+JSRuntime::ionLazyLinkList()
+{
+    MOZ_ASSERT(TlsPerThreadData.get()->runtimeFromMainThread(),
+            "Should only be mutated by the main thread.");
+    return ionLazyLinkList_;
+}
+
+void
+JSRuntime::ionLazyLinkListRemove(jit::IonBuilder* builder)
+{
+    MOZ_ASSERT(TlsPerThreadData.get()->runtimeFromMainThread(),
+            "Should only be mutated by the main thread.");
+    MOZ_ASSERT(ionLazyLinkListSize_ > 0);
+
+    builder->removeFrom(ionLazyLinkList());
+    ionLazyLinkListSize_--;
+
+    MOZ_ASSERT(ionLazyLinkList().isEmpty() == (ionLazyLinkListSize_ == 0));
+}
+
+void
+JSRuntime::ionLazyLinkListAdd(jit::IonBuilder* builder)
+{
+    MOZ_ASSERT(TlsPerThreadData.get()->runtimeFromMainThread(),
+            "Should only be mutated by the main thread.");
+    ionLazyLinkList().insertFront(builder);
+    ionLazyLinkListSize_++;
+}
+
