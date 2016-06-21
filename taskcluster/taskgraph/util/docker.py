@@ -11,6 +11,7 @@ GECKO = os.path.realpath(os.path.join(__file__, '..', '..', '..', '..'))
 DOCKER_ROOT = os.path.join(GECKO, 'testing', 'docker')
 ARTIFACT_URL = 'https://queue.taskcluster.net/v1/task/{}/artifacts/{}'
 
+
 def docker_image(name):
     '''Determine the docker image name, including repository and tag, from an
     in-tree docker file.'''

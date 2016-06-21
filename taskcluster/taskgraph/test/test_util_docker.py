@@ -10,7 +10,7 @@ import tempfile
 import unittest
 
 from ..util import docker
-from mozunit import main, MockedOpen
+from mozunit import MockedOpen
 
 
 class TestDocker(unittest.TestCase):
@@ -25,8 +25,10 @@ class TestDocker(unittest.TestCase):
                 f.write("FROM node\nADD a-file\n")
             with open(os.path.join(tmpdir, 'docker', 'my-image', 'a-file'), "w") as f:
                 f.write("data\n")
-            self.assertEqual(docker.generate_context_hash('docker/my-image'),
-                    '781143fcc6cc72c9024b058665265cb6bae3fb8031cad7227dd169ffbfced434')
+            self.assertEqual(
+                docker.generate_context_hash('docker/my-image'),
+                '781143fcc6cc72c9024b058665265cb6bae3fb8031cad7227dd169ffbfced434'
+                )
         finally:
             docker.GECKO = old_GECKO
             shutil.rmtree(tmpdir)

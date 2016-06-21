@@ -86,7 +86,7 @@ class TestGraph(unittest.TestCase):
                              ('3', '2', 'green'),
                          }))
 
-    def test_transitive_closure_disjoint(self):
+    def test_transitive_closure_disjoint_edges(self):
         "transitive closure of a disjoint graph keeps those edges"
         self.assertEqual(self.disjoint.transitive_closure(set(['3', 'β'])),
                          Graph(set(['1', '2', '3', 'β', 'γ']), {

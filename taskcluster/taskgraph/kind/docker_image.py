@@ -8,7 +8,6 @@ import logging
 import json
 import os
 import urllib2
-import hashlib
 import tarfile
 import time
 
@@ -54,7 +53,7 @@ class DockerImageKind(base.Kind):
             'from_now': json_time_from_now,
             'now': current_json_time(),
             'source': '{repo}file/{rev}/testing/taskcluster/tasks/image.yml'
-                    .format(repo=params['head_repository'], rev=params['head_rev']),
+                      .format(repo=params['head_repository'], rev=params['head_rev']),
         }
 
         tasks = []
@@ -69,12 +68,14 @@ class DockerImageKind(base.Kind):
             image_parameters['artifact_path'] = 'public/image.tar'
             image_parameters['image_name'] = image_name
 
-            image_artifact_path = "public/decision_task/image_contexts/{}/context.tar.gz".format(image_name)
+            image_artifact_path = \
+                "public/decision_task/image_contexts/{}/context.tar.gz".format(image_name)
             if os.environ.get('TASK_ID'):
                 destination = os.path.join(
                     os.environ['HOME'],
                     "artifacts/decision_task/image_contexts/{}/context.tar.gz".format(image_name))
-                image_parameters['context_url'] = ARTIFACT_URL.format(os.environ['TASK_ID'], image_artifact_path)
+                image_parameters['context_url'] = ARTIFACT_URL.format(
+                    os.environ['TASK_ID'], image_artifact_path)
                 self.create_context_tar(context_path, destination, image_name)
             else:
                 # skip context generation since this isn't a decision task
@@ -94,7 +95,8 @@ class DockerImageKind(base.Kind):
             # up on mozilla-central at some point if most tasks use this as a common image
             # for a given context hash, a worker within Taskcluster does not need to contain
             # the same image per branch.
-            index_paths = ['docker.images.v1.{}.{}.hash.{}'.format(project, image_name, context_hash)
+            index_paths = ['docker.images.v1.{}.{}.hash.{}'.format(
+                                project, image_name, context_hash)
                            for project in ['mozilla-central', params['project']]]
 
             tasks.append(Task(self, 'build-docker-image-' + image_name,
@@ -116,7 +118,8 @@ class DockerImageKind(base.Kind):
                 # continues trying other branches in case mozilla-central has an expired
                 # artifact, but 'project' might not. Only return no task ID if all
                 # branches have been tried
-                request = urllib2.Request(ARTIFACT_URL.format(existing_task['taskId'], 'public/image.tar'))
+                request = urllib2.Request(
+                    ARTIFACT_URL.format(existing_task['taskId'], 'public/image.tar'))
                 request.get_method = lambda: 'HEAD'
                 urllib2.urlopen(request)
 

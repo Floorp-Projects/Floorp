@@ -5,7 +5,6 @@
 from __future__ import absolute_import, print_function, unicode_literals
 import logging
 import os
-import re
 import yaml
 
 from .graph import Graph
@@ -13,6 +12,7 @@ from .types import TaskGraph
 from .optimize import optimize_task_graph
 
 logger = logging.getLogger(__name__)
+
 
 class TaskGraphGenerator(object):
     """
@@ -60,7 +60,6 @@ class TaskGraphGenerator(object):
         @type: TaskGraph
         """
         return self._run_until('full_task_set')
-
 
     @property
     def full_task_graph(self):
@@ -181,7 +180,8 @@ class TaskGraphGenerator(object):
         do_not_optimize = set()
         if not self.parameters.get('optimize_target_tasks', True):
             do_not_optimize = target_task_set.graph.nodes
-        optimized_task_graph, label_to_taskid = optimize_task_graph(target_task_graph, do_not_optimize)
+        optimized_task_graph, label_to_taskid = optimize_task_graph(target_task_graph,
+                                                                    do_not_optimize)
         yield 'label_to_taskid', label_to_taskid
         yield 'optimized_task_graph', optimized_task_graph
 
