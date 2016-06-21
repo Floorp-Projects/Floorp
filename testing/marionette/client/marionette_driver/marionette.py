@@ -591,6 +591,7 @@ class Marionette(object):
                     instance_class = geckoinstance.GeckoInstance
             self.instance = instance_class(host=self.host, port=self.port,
                                            bin=self.bin, profile=self.profile,
+                                           app_args=app_args,
                                            symbols_path=symbols_path,
                                            gecko_log=gecko_log, prefs=prefs,
                                            addons=self.addons,
