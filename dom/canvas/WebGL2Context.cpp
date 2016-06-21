@@ -97,7 +97,7 @@ static const gl::GLFeature kRequiredFeatures[] = {
 };
 
 bool
-WebGLContext::InitWebGL2(nsACString* const out_failReason, nsACString* const out_failureId)
+WebGLContext::InitWebGL2(FailureReason* const out_failReason)
 {
     MOZ_ASSERT(IsWebGL2(), "WebGLContext is not a WebGL 2 context!");
 
@@ -107,8 +107,8 @@ WebGLContext::InitWebGL2(nsACString* const out_failReason, nsACString* const out
     {
         // On desktop, we fake occlusion_query_boolean with occlusion_query if
         // necessary. (See WebGL2ContextQueries.cpp)
-        *out_failureId = "FEATURE_FAILURE_WEBGL2_OCCL";
-        out_failReason->AssignASCII("WebGL 2 requires occlusion query support.");
+        *out_failReason = FailureReason("FEATURE_FAILURE_WEBGL2_OCCL",
+                                        "WebGL 2 requires occlusion query support.");
         return false;
     }
 
@@ -136,11 +136,10 @@ WebGLContext::InitWebGL2(nsACString* const out_failReason, nsACString* const out
             exts.Append(gl::GLContext::GetFeatureName(*itr));
         }
 
-        *out_failureId = "FEATURE_FAILURE_WEBGL2_FEATURE";
         const nsPrintfCString reason("WebGL 2 requires support for the following"
                                      " features: %s",
                                      exts.BeginReading());
-        out_failReason->Assign(reason);
+        *out_failReason = FailureReason("FEATURE_FAILURE_WEBGL2_OCCL", reason);
         return false;
     }
 

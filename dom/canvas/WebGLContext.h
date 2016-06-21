@@ -1201,13 +1201,21 @@ protected:
 public:
     virtual bool IsWebGL2() const = 0;
 
-protected:
-    bool InitWebGL2(nsACString* const out_failReason, nsACString* const out_failureId);
-
     struct FailureReason {
         nsCString key; // For reporting.
         nsCString info;
+
+        FailureReason() { }
+
+        template<typename A, typename B>
+        FailureReason(const A& _key, const B& _info)
+            : key(nsCString(_key))
+            , info(nsCString(_info))
+        { }
     };
+protected:
+    bool InitWebGL2(FailureReason* const out_failReason);
+
     bool CreateAndInitGL(bool forceEnabled,
                          std::vector<FailureReason>* const out_failReasons);
 
@@ -1226,7 +1234,8 @@ protected:
 
     // -------------------------------------------------------------------------
     // Validation functions (implemented in WebGLContextValidate.cpp)
-    bool InitAndValidateGL(nsACString* const out_failReason, nsACString* const out_failureId);
+    bool InitAndValidateGL(FailureReason* const out_failReason);
+
     bool ValidateBlendEquationEnum(GLenum cap, const char* info);
     bool ValidateBlendFuncDstEnum(GLenum mode, const char* info);
     bool ValidateBlendFuncSrcEnum(GLenum mode, const char* info);
