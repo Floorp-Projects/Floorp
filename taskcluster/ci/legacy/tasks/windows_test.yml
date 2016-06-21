@@ -1,0 +1,14 @@
+$inherits:
+  from: 'tasks/test.yml'
+
+task:
+  payload:
+    artifacts:
+      -
+        type: 'directory'
+        path: 'public\logs'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+      -
+        type: 'directory'
+        path: 'public\test_info'
+        expires: '{{#from_now}}1 year{{/from_now}}'
