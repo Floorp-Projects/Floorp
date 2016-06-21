@@ -118,6 +118,14 @@ H264Converter::Shutdown()
   return NS_OK;
 }
 
+void
+H264Converter::SetSeekThreshold(const media::TimeUnit& aTime)
+{
+  if (mDecoder) {
+    mDecoder->SetSeekThreshold(aTime);
+  }
+}
+
 bool
 H264Converter::IsHardwareAccelerated(nsACString& aFailureReason) const
 {
