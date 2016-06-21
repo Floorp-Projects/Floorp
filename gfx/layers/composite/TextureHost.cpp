@@ -339,7 +339,7 @@ TextureHost::UnbindTextureSource()
     // composition before calling ReadUnlock. We ask the compositor to take care
     // of that for us.
     if (compositor) {
-      compositor->UnlockAfterComposition(mReadLock.forget());
+      compositor->UnlockAfterComposition(this);
     } else {
       // GetCompositor returned null which means no compositor can be using this
       // texture. We can ReadUnlock right away.
@@ -1035,6 +1035,10 @@ TextureParent::Destroy()
   if (!mTextureHost) {
     return;
   }
+
+  // ReadUnlock here to make sure the ReadLock's shmem does not outlive the
+  // protocol that created it.
+  mTextureHost->ReadUnlock();
 
   if (mTextureHost->GetFlags() & TextureFlags::RECYCLE) {
     RECYCLE_LOG("clear recycling for tile %p\n", this);
