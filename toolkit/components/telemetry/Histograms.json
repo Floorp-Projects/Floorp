@@ -6496,6 +6496,15 @@
     "n_values": 244,
     "description": "The H.264 profile number (profile_idc) as extracted from the codecs parameter passed to HTMLMediaElement.canPlayType."
   },
+  "DECODER_DOCTOR_INFOBAR_STATS": {
+    "alert_emails": ["gsquelart@mozilla.com"],
+    "bug_numbers": [1271483],
+    "expires_in_version": "53",
+    "kind": "enumerated",
+    "keyed": true,
+    "n_values": 8,
+    "description": "Counts of various Decoder Doctor notification events. Used to track efficacy of Decoder Doctor at helping users fix problems with their audio/video codecs. Keys are localized string names that identify problem with audio/video codecs that Decoder Doctor attempts to solve; see string values in dom.properties for verbose description of problems being solved. 0=recorded every time the Decoder Doctor notification is shown, 1=recorded the first time in a profile when notification is shown, 2=recorded when 'Learn how' button clicked, 3=recorded when 'Learn how' button first clicked in a profile, 4=recorded when issue solved after infobar has been shown at least once in a profile."
+  },
   "VIDEO_DECODED_H264_SPS_CONSTRAINT_SET_FLAG": {
     "expires_in_version": "50",
     "kind": "enumerated",
