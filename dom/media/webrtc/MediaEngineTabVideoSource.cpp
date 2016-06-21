@@ -120,13 +120,13 @@ MediaEngineTabVideoSource::InitRunnable::Run()
 }
 
 void
-MediaEngineTabVideoSource::GetName(nsAString_internal& aName)
+MediaEngineTabVideoSource::GetName(nsAString_internal& aName) const
 {
   aName.AssignLiteral(MOZ_UTF16("&getUserMedia.videoSource.tabShare;"));
 }
 
 void
-MediaEngineTabVideoSource::GetUUID(nsACString_internal& aUuid)
+MediaEngineTabVideoSource::GetUUID(nsACString_internal& aUuid) const
 {
   aUuid.AssignLiteral("tab");
 }
