@@ -123,6 +123,20 @@ TEST(MediaEventSource, DisconnectBeforeNotification)
 }
 
 /*
+ * Test we don't hit the assertion when calling Connect() and Disconnect()
+ * repeatedly.
+ */
+TEST(MediaEventSource, DisconnectAndConnect)
+{
+  RefPtr<TaskQueue> queue;
+  MediaEventProducerExc<int> source;
+  MediaEventListener listener = source.Connect(queue, [](){});
+  listener.Disconnect();
+  listener = source.Connect(queue, [](){});
+  listener.Disconnect();
+}
+
+/*
  * Test void event type.
  */
 TEST(MediaEventSource, VoidEventType)
