@@ -622,6 +622,7 @@ protected:
   TextureFlags mFlags;
   int mCompositableCount;
 
+  friend class Compositor;
   friend class TextureParent;
 };
 
