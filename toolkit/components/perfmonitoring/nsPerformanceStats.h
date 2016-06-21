@@ -143,6 +143,11 @@ protected:
   bool mIsAvailable;
 
   /**
+   * `true` once we have called `Dispose()`.
+   */
+  bool mDisposed;
+
+  /**
    * A unique identifier for the process.
    *
    * Process HANDLE under Windows, pid under Unix.

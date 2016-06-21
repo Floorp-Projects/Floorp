@@ -136,6 +136,13 @@ GenerateUniqueGroupId(const JSRuntime* rt, uint64_t uid, uint64_t processId, nsA
   groupId.AppendInt(uid);
 }
 
+static const char* TOPICS[] = {
+  "profile-before-change",
+  "quit-application",
+  "quit-application-granted",
+  "xpcom-will-shutdown"
+};
+
 } // namespace
 
 /* ------------------------------------------------------
@@ -638,6 +645,7 @@ NS_IMPL_ISUPPORTS(nsPerformanceStatsService, nsIPerformanceStatsService, nsIObse
 
 nsPerformanceStatsService::nsPerformanceStatsService()
   : mIsAvailable(false)
+  , mDisposed(false)
 #if defined(XP_WIN)
   , mProcessId(GetCurrentProcessId())
 #else
@@ -700,6 +708,12 @@ nsPerformanceStatsService::~nsPerformanceStatsService()
 void
 nsPerformanceStatsService::Dispose()
 {
+  if (mDisposed) {
+    // Make sure that we don't double-dispose.
+    return;
+  }
+  mDisposed = true;
+
   // Make sure that we do not accidentally destroy `this` while we are
   // cleaning up back references.
   RefPtr<nsPerformanceStatsService> kungFuDeathGrip(this);
@@ -708,11 +722,9 @@ nsPerformanceStatsService::Dispose()
   // Disconnect from nsIObserverService.
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
-    obs->RemoveObserver(this, "profile-before-change");
-    obs->RemoveObserver(this, "quit-application");
-    obs->RemoveObserver(this, "quit-application-granted");
-    obs->RemoveObserver(this, "content-child-shutdown");
-    obs->RemoveObserver(this, "xpcom-will-shutdown");
+    for (size_t i = 0; i < mozilla::ArrayLength(TOPICS); ++i) {
+      mozilla::Unused << obs->RemoveObserver(this, TOPICS[i]);
+    }
   }
 
   // Clear up and disconnect from JSAPI.
@@ -781,11 +793,9 @@ nsPerformanceStatsService::InitInternal()
   // regular shutdown order.
   nsCOMPtr<nsIObserverService> obs = mozilla::services::GetObserverService();
   if (obs) {
-    obs->AddObserver(this, "profile-before-change", false);
-    obs->AddObserver(this, "quit-application-granted", false);
-    obs->AddObserver(this, "quit-application", false);
-    obs->AddObserver(this, "content-child-shutdown", false);
-    obs->AddObserver(this, "xpcom-will-shutdown", false);
+    for (size_t i = 0; i < mozilla::ArrayLength(TOPICS); ++i) {
+      mozilla::Unused << obs->AddObserver(this, TOPICS[i], false);
+    }
   }
 
   // Connect to JSAPI.
