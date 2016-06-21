@@ -155,7 +155,7 @@ class TryOptionSyntax(object):
         - platforms: a list of selected platform names, or None for all
         - unittests: a list of tests, of the form given below, or None for all
         - jobs: a list of requested job names, or None for all
-        - trigger_tests: the number of times tests should be triggered
+        - trigger_tests: the number of times tests should be triggered (--rebuild)
         - interactive; true if --interactive
 
         Note that -t is currently completely ignored.
@@ -199,7 +199,7 @@ class TryOptionSyntax(object):
                             dest='interactive', action='store_true', default=False)
         parser.add_argument('-j', '--job', dest='jobs', action='append')
         # In order to run test jobs multiple times
-        parser.add_argument('--trigger-tests', dest='trigger_tests', type=int, default=1)
+        parser.add_argument('--rebuild', dest='trigger_tests', type=int, default=1)
         args, _ = parser.parse_known_args(parts[try_idx:])
 
         self.jobs = self.parse_jobs(args.jobs)
