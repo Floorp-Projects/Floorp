@@ -7906,7 +7906,7 @@ DebuggerObject::protoGetter(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "get proto", args, object)
 
-    RootedObject result(cx);
+    Rooted<DebuggerObject*> result(cx);
     if (!DebuggerObject::getPrototypeOf(cx, object, &result))
         return false;
 
@@ -9102,7 +9102,7 @@ DebuggerObject::isFrozen(JSContext* cx, Handle<DebuggerObject*> object, bool& re
 
 /* static */ bool
 DebuggerObject::getPrototypeOf(JSContext* cx, Handle<DebuggerObject*> object,
-                               MutableHandleObject result)
+                               MutableHandle<DebuggerObject*> result)
 {
     RootedObject referent(cx, object->referent());
     Debugger* dbg = object->owner();
@@ -9114,8 +9114,16 @@ DebuggerObject::getPrototypeOf(JSContext* cx, Handle<DebuggerObject*> object,
             return false;
     }
 
-    result.set(proto);
-    return !result || dbg->wrapDebuggeeObject(cx, result);
+    if (!proto) {
+        result.set(nullptr);
+        return true;
+    }
+
+    if (!dbg->wrapDebuggeeObject(cx, &proto))
+        return false;
+
+    result.set(&proto->as<DebuggerObject>());
+    return true;
 }
 
 /* static */ bool
