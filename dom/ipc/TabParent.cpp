@@ -3354,9 +3354,14 @@ TabParent::AddInitialDnDDataTo(DataTransfer* aDataTransfer)
 
       // Using system principal here, since once the data is on parent process
       // side, it can be handled as being from browser chrome or OS.
+
+      // We set aHidden to false, as we don't need to worry about hiding data
+      // from content in the parent process where there is no content.
+      // XXX: Nested Content Processes may change this
       aDataTransfer->SetDataWithPrincipalFromOtherProcess(NS_ConvertUTF8toUTF16(item.flavor()),
                                                           variant, i,
-                                                          nsContentUtils::GetSystemPrincipal());
+                                                          nsContentUtils::GetSystemPrincipal(),
+                                                          /* aHidden = */ false);
     }
   }
   mInitialDataTransferItems.Clear();

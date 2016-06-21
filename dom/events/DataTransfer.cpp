@@ -640,7 +640,9 @@ DataTransfer::GetDataAtInternal(const nsAString& aFormat, uint32_t aIndex,
   }
 
   nsCOMPtr<nsIVariant> data = item->Data();
-  MOZ_ASSERT(data);
+  if (!data) {
+    return NS_OK;
+  }
 
   nsCOMPtr<nsISupports> isupportsData;
   nsresult rv = data->GetAsISupports(getter_AddRefs(isupportsData));
@@ -1267,12 +1269,20 @@ void
 DataTransfer::SetDataWithPrincipalFromOtherProcess(const nsAString& aFormat,
                                                    nsIVariant* aData,
                                                    uint32_t aIndex,
-                                                   nsIPrincipal* aPrincipal)
+                                                   nsIPrincipal* aPrincipal,
+                                                   bool aHidden)
 {
   if (aFormat.EqualsLiteral(kCustomTypesMime)) {
     FillInExternalCustomTypes(aData, aIndex, aPrincipal);
   } else {
-    SetDataWithPrincipal(aFormat, aData, aIndex, aPrincipal);
+    nsAutoString format;
+    GetRealFormat(aFormat, format);
+
+    ErrorResult rv;
+    RefPtr<DataTransferItem> item =
+      mItems->SetDataWithPrincipal(format, aData, aIndex, aPrincipal,
+                                   /* aInsertOnly = */ false, aHidden, rv);
+    NS_WARN_IF(rv.Failed());
   }
 }
 

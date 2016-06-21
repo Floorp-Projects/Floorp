@@ -236,7 +236,8 @@ public:
   void SetDataWithPrincipalFromOtherProcess(const nsAString& aFormat,
                                             nsIVariant* aData,
                                             uint32_t aIndex,
-                                            nsIPrincipal* aPrincipal);
+                                            nsIPrincipal* aPrincipal,
+                                            bool aHidden);
 
   // returns a weak reference to the drag image
   Element* GetDragImage(int32_t* aX, int32_t* aY) const
