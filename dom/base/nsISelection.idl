@@ -11,6 +11,14 @@ interface nsIDOMNode;
 interface nsIDOMRange;
 interface nsINode;
 
+%{C++
+namespace mozilla {
+namespace dom {
+class Selection;
+} // namespace dom
+} // namespace mozilla
+%}
+
 /**
  * Interface for manipulating and querying the current selected range
  * of nodes within the document.
@@ -150,4 +158,13 @@ interface nsISelection : nsISupports
      */
     void modify(in DOMString alter, in DOMString direction,
                 in DOMString granularity);
+
+%{C++
+    /**
+     * AsSelection() returns a pointer to Selection class if the instance is
+     * derived from it.  Otherwise, nullptr but it should never happen
+     * since Selection is the only class implementing nsISelection.
+     */
+    virtual mozilla::dom::Selection* AsSelection() = 0;
+%}
 };

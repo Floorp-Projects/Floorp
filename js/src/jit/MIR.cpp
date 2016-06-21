@@ -768,7 +768,7 @@ MakeSingletonTypeSetFromKey(CompilerConstraintList* constraints, TypeSet::Object
     // we want to invalidate and mark this TypeSet as containing AnyObject
     // (because mutating __proto__ will change an object's ObjectGroup).
     MOZ_ASSERT(constraints);
-    key->hasStableClassAndProto(constraints);
+    (void)key->hasStableClassAndProto(constraints);
 
     LifoAlloc* alloc = GetJitContext()->temp->lifoAlloc();
     return alloc->new_<TemporaryTypeSet>(alloc, TypeSet::ObjectType(key));
@@ -6040,6 +6040,9 @@ PropertyTypeIncludes(TempAllocator& alloc, HeapTypeSetKey property,
             types = types->clone(alloc.lifoAlloc());
         else
             types = alloc.lifoAlloc()->new_<TemporaryTypeSet>();
+        if (!types) {
+            return false;
+        }
         types->addType(newType, alloc.lifoAlloc());
     }
 

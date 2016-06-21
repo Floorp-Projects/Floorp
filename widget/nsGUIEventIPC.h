@@ -636,6 +636,30 @@ struct ParamTraits<mozilla::FontRange>
 };
 
 template<>
+struct ParamTraits<mozilla::WidgetQueryContentEvent::Input>
+{
+  typedef mozilla::WidgetQueryContentEvent::Input paramType;
+  typedef mozilla::WidgetQueryContentEvent event;
+
+  static void Write(Message* aMsg, const paramType& aParam)
+  {
+    WriteParam(aMsg, aParam.mOffset);
+    WriteParam(aMsg, aParam.mLength);
+    WriteParam(aMsg, mozilla::ToRawSelectionType(aParam.mSelectionType));
+  }
+
+  static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
+  {
+    mozilla::RawSelectionType rawSelectionType = 0;
+    bool ok = ReadParam(aMsg, aIter, &aResult->mOffset) &&
+              ReadParam(aMsg, aIter, &aResult->mLength) &&
+              ReadParam(aMsg, aIter, &rawSelectionType);
+    aResult->mSelectionType = mozilla::ToSelectionType(rawSelectionType);
+    return ok;
+  }
+};
+
+template<>
 struct ParamTraits<mozilla::WidgetQueryContentEvent>
 {
   typedef mozilla::WidgetQueryContentEvent paramType;
@@ -646,8 +670,7 @@ struct ParamTraits<mozilla::WidgetQueryContentEvent>
     WriteParam(aMsg, aParam.mSucceeded);
     WriteParam(aMsg, aParam.mUseNativeLineBreak);
     WriteParam(aMsg, aParam.mWithFontRanges);
-    WriteParam(aMsg, aParam.mInput.mOffset);
-    WriteParam(aMsg, aParam.mInput.mLength);
+    WriteParam(aMsg, aParam.mInput);
     WriteParam(aMsg, aParam.mReply.mOffset);
     WriteParam(aMsg, aParam.mReply.mTentativeCaretOffset);
     WriteParam(aMsg, aParam.mReply.mString);
@@ -665,8 +688,7 @@ struct ParamTraits<mozilla::WidgetQueryContentEvent>
            ReadParam(aMsg, aIter, &aResult->mSucceeded) &&
            ReadParam(aMsg, aIter, &aResult->mUseNativeLineBreak) &&
            ReadParam(aMsg, aIter, &aResult->mWithFontRanges) &&
-           ReadParam(aMsg, aIter, &aResult->mInput.mOffset) &&
-           ReadParam(aMsg, aIter, &aResult->mInput.mLength) &&
+           ReadParam(aMsg, aIter, &aResult->mInput) &&
            ReadParam(aMsg, aIter, &aResult->mReply.mOffset) &&
            ReadParam(aMsg, aIter, &aResult->mReply.mTentativeCaretOffset) &&
            ReadParam(aMsg, aIter, &aResult->mReply.mString) &&
@@ -953,6 +975,7 @@ struct ParamTraits<mozilla::ContentCache>
 
   static void Write(Message* aMsg, const paramType& aParam)
   {
+    WriteParam(aMsg, aParam.mCompositionStart);
     WriteParam(aMsg, aParam.mText);
     WriteParam(aMsg, aParam.mSelection.mAnchor);
     WriteParam(aMsg, aParam.mSelection.mFocus);
@@ -970,7 +993,8 @@ struct ParamTraits<mozilla::ContentCache>
 
   static bool Read(const Message* aMsg, PickleIterator* aIter, paramType* aResult)
   {
-    return ReadParam(aMsg, aIter, &aResult->mText) &&
+    return ReadParam(aMsg, aIter, &aResult->mCompositionStart) &&
+           ReadParam(aMsg, aIter, &aResult->mText) &&
            ReadParam(aMsg, aIter, &aResult->mSelection.mAnchor) &&
            ReadParam(aMsg, aIter, &aResult->mSelection.mFocus) &&
            ReadParam(aMsg, aIter, &aResult->mSelection.mWritingMode) &&

@@ -16,6 +16,7 @@
 #include "mozilla/FontRange.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMKeyEvent.h"
+#include "nsISelectionController.h"
 #include "nsISelectionListener.h"
 #include "nsITransferable.h"
 #include "nsRect.h"
@@ -667,6 +668,15 @@ public:
     mUseNativeLineBreak = aUseNativeLineBreak;
   }
 
+  void InitForQuerySelectedText(SelectionType aSelectionType,
+                                bool aUseNativeLineBreak = true)
+  {
+    MOZ_ASSERT(mMessage == eQuerySelectedText);
+    MOZ_ASSERT(aSelectionType != SelectionType::eNone);
+    mInput.mSelectionType = aSelectionType;
+    mUseNativeLineBreak = aUseNativeLineBreak;
+  }
+
   void InitForQueryDOMWidgetHittest(const mozilla::LayoutDeviceIntPoint& aPoint)
   {
     NS_ASSERTION(mMessage == eQueryDOMWidgetHittest,
@@ -707,7 +717,7 @@ public:
   bool mSucceeded;
   bool mUseNativeLineBreak;
   bool mWithFontRanges;
-  struct
+  struct Input final
   {
     uint32_t EndOffset() const
     {
@@ -718,9 +728,17 @@ public:
 
     uint32_t mOffset;
     uint32_t mLength;
+    SelectionType mSelectionType;
+
+    Input()
+      : mOffset(0)
+      , mLength(0)
+      , mSelectionType(SelectionType::eNormal)
+    {
+    }
   } mInput;
 
-  struct Reply
+  struct Reply final
   {
     void* mContentsRoot;
     uint32_t mOffset;

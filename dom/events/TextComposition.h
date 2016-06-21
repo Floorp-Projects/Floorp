@@ -111,9 +111,12 @@ public:
   }
 
   /**
-   * the offset of first selected clause or start of of compositon
+   * the offset of first selected clause or start of composition
    */
-  uint32_t OffsetOfTargetClause() const { return mCompositionTargetOffset; }
+  uint32_t NativeOffsetOfTargetClause() const
+  {
+    return mCompositionStartOffset + mTargetClauseOffsetInComposition;
+  }
 
   /**
    * Returns true if there is non-empty composition string and it's not fixed.
@@ -216,9 +219,9 @@ private:
 
   // Offset of the composition string from start of the editor
   uint32_t mCompositionStartOffset;
-  // Offset of the selected clause of the composition string from start of the
-  // editor
-  uint32_t mCompositionTargetOffset;
+  // Offset of the selected clause of the composition string from
+  // mCompositionStartOffset
+  uint32_t mTargetClauseOffsetInComposition;
 
   // See the comment for IsSynthesizedForTests().
   bool mIsSynthesizedForTests;
@@ -255,12 +258,16 @@ private:
   // and compositionend events.
   bool mAllowControlCharacters;
 
+  // mWasCompositionStringEmpty is true if the composition string was empty
+  // when DispatchCompositionEvent() is called.
+  bool mWasCompositionStringEmpty;
+
   // Hide the default constructor and copy constructor.
   TextComposition()
     : mPresContext(nullptr)
     , mNativeContext(nullptr)
     , mCompositionStartOffset(0)
-    , mCompositionTargetOffset(0)
+    , mTargetClauseOffsetInComposition(0)
     , mIsSynthesizedForTests(false)
     , mIsComposing(false)
     , mIsEditorHandlingEvent(false)
@@ -269,6 +276,7 @@ private:
     , mRequestedToCommitOrCancel(false)
     , mWasNativeCompositionEndEventDiscarded(false)
     , mAllowControlCharacters(false)
+    , mWasCompositionStringEmpty(true)
   {}
   TextComposition(const TextComposition& aOther);
 
@@ -372,10 +380,35 @@ private:
   void OnCompositionEventDiscarded(WidgetCompositionEvent* aCompositionEvent);
 
   /**
-   * Calculate composition offset then notify composition update to widget
+   * OnCompositionEventDispatched() is called after a composition event is
+   * dispatched.
    */
-  void OnCompositionEventHandled(
+  void OnCompositionEventDispatched(
+         const WidgetCompositionEvent* aDispatchEvent);
+
+  /**
+   * MaybeNotifyIMEOfCompositionEventHandled() notifies IME of composition
+   * event handled.  This should be called after dispatching a composition
+   * event which came from widget.
+   */
+  void MaybeNotifyIMEOfCompositionEventHandled(
          const WidgetCompositionEvent* aCompositionEvent);
+
+  /**
+   * GetSelectionStartOffset() returns normal selection start offset in the
+   * editor which has this composition.
+   * If it failed or lost focus, this would return 0.
+   */
+  uint32_t GetSelectionStartOffset();
+
+  /**
+   * OnStartOffsetUpdatedInChild() is called when composition start offset
+   * is updated in the child process.  I.e., this is called and never called
+   * if the composition is in this process.
+   * @param aStartOffset        New composition start offset with native
+   *                            linebreaks.
+   */
+  void OnStartOffsetUpdatedInChild(uint32_t aStartOffset);
 
   /**
    * CompositionEventDispatcher dispatches the specified composition (or text)
