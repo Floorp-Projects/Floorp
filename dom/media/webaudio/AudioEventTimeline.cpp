@@ -160,7 +160,7 @@ AudioEventTimeline::GetValuesAtTimeHelper(TimeType aTime, float* aBuffer,
 
   for (size_t bufferIndex = 0; bufferIndex < aSize; ++bufferIndex, ++aTime) {
 
-    bool bailOut = false;
+    bool timeMatchesEventIndex = false;
     const AudioTimelineEvent* next;
     for (; ; ++eventIndex) {
 
@@ -171,7 +171,6 @@ AudioEventTimeline::GetValuesAtTimeHelper(TimeType aTime, float* aBuffer,
 
       next = &mEvents[eventIndex];
       if (aTime < TimeOf(*next)) {
-        bailOut = true;
         break;
       }
 
@@ -190,13 +189,14 @@ AudioEventTimeline::GetValuesAtTimeHelper(TimeType aTime, float* aBuffer,
                TimesEqual(aTime, TimeOf(mEvents[eventIndex + 1]))) {
           ++eventIndex;
         }
+        timeMatchesEventIndex = true;
         break;
       }
 
       previous = next;
     }
 
-    if (!bailOut && eventIndex < mEvents.Length()) {
+    if (timeMatchesEventIndex) {
       // The time matches one of the events exactly.
       MOZ_ASSERT(TimesEqual(aTime, TimeOf(mEvents[eventIndex])));
 
