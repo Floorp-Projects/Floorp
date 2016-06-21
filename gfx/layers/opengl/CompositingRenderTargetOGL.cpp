@@ -16,7 +16,7 @@ using namespace mozilla::gl;
 
 CompositingRenderTargetOGL::~CompositingRenderTargetOGL()
 {
-  if (mGL->MakeCurrent()) {
+  if (mGL && mGL->MakeCurrent()) {
     mGL->fDeleteTextures(1, &mTextureHandle);
     mGL->fDeleteFramebuffers(1, &mFBO);
   }
