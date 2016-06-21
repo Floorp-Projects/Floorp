@@ -14,13 +14,12 @@ class CompareCuesByTime
 {
 public:
   bool Equals(TextTrackCue* aOne, TextTrackCue* aTwo) const {
-    return aOne->StartTime() == aTwo->StartTime() &&
-           aOne->EndTime() == aTwo->EndTime();
+    return false;
   }
   bool LessThan(TextTrackCue* aOne, TextTrackCue* aTwo) const {
     return aOne->StartTime() < aTwo->StartTime() ||
            (aOne->StartTime() == aTwo->StartTime() &&
-            aOne->EndTime() < aTwo->EndTime());
+            aOne->EndTime() >= aTwo->EndTime());
   }
 };
 
