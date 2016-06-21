@@ -9078,6 +9078,9 @@ nsContentUtils::GetPresentationURL(nsIDocShell* aDocShell, nsAString& aPresentat
   nsCOMPtr<nsILoadContext> loadContext(do_QueryInterface(aDocShell));
   nsCOMPtr<nsIDOMElement> topFrameElement;
   loadContext->GetTopFrameElement(getter_AddRefs(topFrameElement));
+  if (!topFrameElement) {
+    return;
+  }
 
   topFrameElement->GetAttribute(NS_LITERAL_STRING("mozpresentation"), aPresentationUrl);
 }
