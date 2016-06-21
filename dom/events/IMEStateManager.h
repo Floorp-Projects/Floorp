@@ -97,6 +97,18 @@ public:
    */
   static void StopIMEStateManagement();
 
+  /**
+   * MaybeStartOffsetUpdatedInChild() is called when composition start offset
+   * is maybe updated in the child process.  I.e., even if it's not updated,
+   * this is called and never called if the composition is in this process.
+   * @param aWidget             The widget whose native IME context has the
+   *                            composition.
+   * @param aStartOffset        New composition start offset with native
+   *                            linebreaks.
+   */
+  static void MaybeStartOffsetUpdatedInChild(nsIWidget* aWidget,
+                                             uint32_t aStartOffset);
+
   static nsresult OnDestroyPresContext(nsPresContext* aPresContext);
   static nsresult OnRemoveContent(nsPresContext* aPresContext,
                                   nsIContent* aContent);

@@ -417,8 +417,8 @@ nsCaret::GetFrameAndOffset(Selection* aSelection,
 nsCaret::GetGeometry(nsISelection* aSelection, nsRect* aRect)
 {
   int32_t frameOffset;
-  nsIFrame* frame = GetFrameAndOffset(
-      static_cast<Selection*>(aSelection), nullptr, 0, &frameOffset);
+  Selection* selection = aSelection ? aSelection->AsSelection() : nullptr;
+  nsIFrame* frame = GetFrameAndOffset(selection, nullptr, 0, &frameOffset);
   if (frame) {
     *aRect = GetGeometryForFrame(frame, frameOffset, nullptr);
   }
@@ -428,7 +428,8 @@ nsCaret::GetGeometry(nsISelection* aSelection, nsRect* aRect)
 Selection*
 nsCaret::GetSelectionInternal()
 {
-  return static_cast<Selection*>(GetSelection());
+  nsISelection* domSelection = GetSelection();
+  return domSelection ? domSelection->AsSelection() : nullptr;
 }
 
 void nsCaret::SchedulePaint()

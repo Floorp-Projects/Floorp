@@ -1,0 +1,34 @@
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<script>
+function aC(r, n) { if (r) { r.appendChild(n); } else { rM(n); } }
+function iB(r, n) { if (r) { r.parentNode.insertBefore(n, r); } else { rM(n); } }
+allNodes = [];
+allNodes[0] = document.documentElement;
+allNodes[50] = document.createTextNode("Foo");
+allNodes[63] = document.createElementNS("http://www.w3.org/1999/xhtml", "tr");
+allNodes[73] = document.createElementNS("http://www.w3.org/1999/xhtml", "select");
+allNodes[76] = document.createElementNS("http://www.w3.org/1999/xhtml", "option");
+(allNodes[73] || allNodes[72] || allNodes[63] || allNodes[44] || allNodes[5] || document.documentElement).appendChild(allNodes[76]);
+allNodes[78] = document.createTextNode("\n ");
+(allNodes[63] || allNodes[44] || allNodes[5] || document.documentElement).appendChild(allNodes[78]);
+allNodes[88] = document.createElementNS("http://www.w3.org/1999/xhtml", "legend");
+allNodes[89] = document.createTextNode("Your name");
+allNodes[98] = document.createTextNode("\n  ");
+allNodes[125] = document.createElementNS("http://www.w3.org/1999/xhtml", "option");
+allNodes[0].style.MozColumnCount = "115";
+aC(allNodes[88], allNodes[98]);
+iB(allNodes[98], allNodes[63]);
+allNodes[63].style.cssFloat = "right";
+aC(allNodes[0], allNodes[88]);
+aC(allNodes[88], allNodes[125]);
+iB(allNodes[88], allNodes[73]);
+function run() {
+iB(allNodes[78], allNodes[89]);
+aC(allNodes[76], allNodes[50]);
+}
+document.body.offsetHeight;
+setTimeout(run, 0);
+</script>
+</head>
+</html>

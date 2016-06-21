@@ -24,7 +24,7 @@ using namespace js::gc;
 RareArgumentsData::bytesRequired(size_t numActuals)
 {
     size_t extraBytes = NumWordsForBitArrayOfLength(numActuals) * sizeof(size_t);
-    return sizeof(RareArgumentsData) + extraBytes;
+    return offsetof(RareArgumentsData, deletedBits_) + extraBytes;
 }
 
 /* static */ RareArgumentsData*
@@ -38,9 +38,7 @@ RareArgumentsData::create(JSContext* cx, ArgumentsObject* obj)
 
     mozilla::PodZero(data, bytes);
 
-    size_t* deletedBits = reinterpret_cast<size_t*>(data + sizeof(RareArgumentsData));
-
-    return new(data) RareArgumentsData(deletedBits);
+    return new(data) RareArgumentsData();
 }
 
 bool

@@ -1086,6 +1086,23 @@ interface nsIDOMWindowUtils : nsISupports {
   const unsigned long QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK     = 0x0001;
 
   /**
+   * sendQueryContentEvent()'s aAdditionalFlags may have one of following
+   * flags when aType is QUERY_SELECTED_TEXT.  If one of them is set,
+   * the result is the first range of the selection type.  See also
+   * nsISelectionController::SELECTION_*.
+   */
+  const unsigned long QUERY_CONTENT_FLAG_SELECTION_SPELLCHECK          = 0x0002;
+  const unsigned long QUERY_CONTENT_FLAG_SELECTION_IME_RAWINPUT        = 0x0004;
+  const unsigned long QUERY_CONTENT_FLAG_SELECTION_IME_SELECTEDRAWTEXT = 0x0008;
+  const unsigned long QUERY_CONTENT_FLAG_SELECTION_IME_CONVERTEDTEXT   = 0x0010;
+  const unsigned long QUERY_CONTENT_FLAG_SELECTION_IME_SELECTEDCONVERTEDTEXT =
+                                                                         0x0020;
+  const unsigned long QUERY_CONTENT_FLAG_SELECTION_ACCESSIBILITY       = 0x0040;
+  const unsigned long QUERY_CONTENT_FLAG_SELECTION_FIND                = 0x0080;
+  const unsigned long QUERY_CONTENT_FLAG_SELECTION_URLSECONDARY        = 0x0100;
+  const unsigned long QUERY_CONTENT_FLAG_SELECTION_URLSTRIKEOUT        = 0x0200;
+
+  /**
    * Synthesize a query content event. Note that the result value returned here
    * is in LayoutDevice pixels rather than CSS pixels.
    *
