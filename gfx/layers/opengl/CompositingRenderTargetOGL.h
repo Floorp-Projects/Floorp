@@ -73,7 +73,9 @@ public:
     , mGL(aCompositor->gl())
     , mTextureHandle(aTexure)
     , mFBO(aFBO)
-  {}
+  {
+    MOZ_ASSERT(mGL);
+  }
 
   ~CompositingRenderTargetOGL();
 
