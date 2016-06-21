@@ -449,7 +449,7 @@ class ArenaCellSet
     BitArray<ArenaCellCount> bits;
 
   public:
-    ArenaCellSet(Arena* arena);
+    explicit ArenaCellSet(Arena* arena);
 
     bool hasCell(const TenuredCell* cell) const {
         return hasCell(getCellIndex(cell));
