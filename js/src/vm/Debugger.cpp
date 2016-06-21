@@ -1080,11 +1080,12 @@ Debugger::wrapDebuggeeValue(JSContext* cx, MutableHandleValue vp)
 
     if (vp.isObject()) {
         RootedObject obj(cx, &vp.toObject());
+        Rooted<DebuggerObject*> dobj(cx);
 
-        if (!wrapDebuggeeObject(cx, &obj))
+        if (!wrapDebuggeeObject(cx, obj, &dobj))
             return false;
 
-        vp.setObject(*obj);
+        vp.setObject(*dobj);
     } else if (vp.isMagic()) {
         RootedPlainObject optObj(cx, NewBuiltinClassInstance<PlainObject>(cx));
         if (!optObj)
@@ -1117,7 +1118,8 @@ Debugger::wrapDebuggeeValue(JSContext* cx, MutableHandleValue vp)
 }
 
 bool
-Debugger::wrapDebuggeeObject(JSContext* cx, MutableHandleObject obj)
+Debugger::wrapDebuggeeObject(JSContext* cx, HandleObject obj,
+                             MutableHandle<DebuggerObject*> result)
 {
     MOZ_ASSERT(obj);
 
@@ -1130,12 +1132,12 @@ Debugger::wrapDebuggeeObject(JSContext* cx, MutableHandleObject obj)
 
     DependentAddPtr<ObjectWeakMap> p(cx, objects, obj);
     if (p) {
-        obj.set(p->value());
+        result.set(&p->value()->as<DebuggerObject>());
     } else {
         /* Create a new Debugger.Object for obj. */
         RootedNativeObject debugger(cx, object);
         RootedObject proto(cx, &object->getReservedSlot(JSSLOT_DEBUG_OBJECT_PROTO).toObject());
-        NativeObject* dobj = DebuggerObject::create(cx, proto, obj, debugger);
+        Rooted<DebuggerObject*> dobj(cx, DebuggerObject::create(cx, proto, obj, debugger));
         if (!dobj)
             return false;
 
@@ -1154,7 +1156,7 @@ Debugger::wrapDebuggeeObject(JSContext* cx, MutableHandleObject obj)
             }
         }
 
-        obj.set(dobj);
+        result.set(dobj);
     }
 
     return true;
@@ -8889,11 +8891,7 @@ DebuggerObject::global(JSContext* cx, Handle<DebuggerObject*> object,
     Debugger* dbg = object->owner();
 
     RootedObject global(cx, &referent->global());
-    if (!dbg->wrapDebuggeeObject(cx, &global))
-        return false;
-
-    result.set(&global->as<DebuggerObject>());
-    return true;
+    return dbg->wrapDebuggeeObject(cx, global, result);
 }
 
 /* static */ bool
@@ -8964,11 +8962,7 @@ DebuggerObject::boundTargetFunction(JSContext* cx, Handle<DebuggerObject*> objec
     Debugger* dbg = object->owner();
 
     RootedObject target(cx, referent->getBoundFunctionTarget());
-    if (!dbg->wrapDebuggeeObject(cx, &target))
-        return false;
-
-    result.set(&target->as<DebuggerObject>());
-    return true;
+    return dbg->wrapDebuggeeObject(cx, target, result);
 }
 
 /* static */ bool
@@ -9119,11 +9113,7 @@ DebuggerObject::getPrototypeOf(JSContext* cx, Handle<DebuggerObject*> object,
         return true;
     }
 
-    if (!dbg->wrapDebuggeeObject(cx, &proto))
-        return false;
-
-    result.set(&proto->as<DebuggerObject>());
-    return true;
+    return dbg->wrapDebuggeeObject(cx, proto, result);
 }
 
 /* static */ bool
@@ -9497,11 +9487,7 @@ DebuggerObject::unwrap(JSContext* cx, Handle<DebuggerObject*> object,
         return false;
     }
 
-    if (!dbg->wrapDebuggeeObject(cx, &unwrapped))
-        return false;
-
-    result.set(&unwrapped->as<DebuggerObject>());
-    return true;
+    return dbg->wrapDebuggeeObject(cx, unwrapped, result);
 }
 
 /* static */ bool
