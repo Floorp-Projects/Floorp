@@ -245,6 +245,8 @@ typedef mozilla::Variant<JSScript*, WasmInstanceObject*> DebuggerScriptReferent;
 // denoting the synthesized source of a wasm module.
 typedef mozilla::Variant<ScriptSourceObject*, WasmInstanceObject*> DebuggerSourceReferent;
 
+class DebuggerObject;
+
 class Debugger : private mozilla::LinkedListElement<Debugger>
 {
     friend class Breakpoint;
@@ -928,7 +930,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * form { uninitialized: true }.
      */
     MOZ_MUST_USE bool wrapDebuggeeValue(JSContext* cx, MutableHandleValue vp);
-    MOZ_MUST_USE bool wrapDebuggeeObject(JSContext* cx, MutableHandleObject obj);
+    MOZ_MUST_USE bool wrapDebuggeeObject(JSContext* cx, HandleObject obj,
+                                         MutableHandle<DebuggerObject*> result);
 
     /*
      * Unwrap a Debug.Object, without rewrapping it for any particular debuggee
@@ -1072,7 +1075,7 @@ class DebuggerObject : public NativeObject
     static MOZ_MUST_USE bool className(JSContext* cx, Handle<DebuggerObject*> object,
                                        MutableHandleString result);
     static MOZ_MUST_USE bool global(JSContext* cx, Handle<DebuggerObject*> object,
-                                    MutableHandleObject result);
+                                    MutableHandle<DebuggerObject*> result);
     static MOZ_MUST_USE bool name(JSContext* cx, Handle<DebuggerObject*> object,
                                   MutableHandleString result);
     static MOZ_MUST_USE bool displayName(JSContext* cx, Handle<DebuggerObject*> object,
@@ -1080,7 +1083,7 @@ class DebuggerObject : public NativeObject
     static MOZ_MUST_USE bool parameterNames(JSContext* cx, Handle<DebuggerObject*> object,
                                             MutableHandle<StringVector> result);
     static MOZ_MUST_USE bool boundTargetFunction(JSContext* cx, Handle<DebuggerObject*> object,
-                                                 MutableHandleObject result);
+                                                 MutableHandle<DebuggerObject*> result);
     static MOZ_MUST_USE bool boundThis(JSContext* cx, Handle<DebuggerObject*> object,
                                        MutableHandleValue result);
     static MOZ_MUST_USE bool boundArguments(JSContext* cx, Handle<DebuggerObject*> object,
@@ -1095,7 +1098,7 @@ class DebuggerObject : public NativeObject
     static MOZ_MUST_USE bool isSealed(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
     static MOZ_MUST_USE bool isFrozen(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
     static MOZ_MUST_USE bool getPrototypeOf(JSContext* cx, Handle<DebuggerObject*> object,
-                                            MutableHandleObject result);
+                                            MutableHandle<DebuggerObject*> result);
     static MOZ_MUST_USE bool getOwnPropertyNames(JSContext* cx, Handle<DebuggerObject*> object,
                                                  MutableHandle<IdVector> result);
     static MOZ_MUST_USE bool getOwnPropertySymbols(JSContext* cx, Handle<DebuggerObject*> object,

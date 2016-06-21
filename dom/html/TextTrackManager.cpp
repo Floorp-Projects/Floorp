@@ -527,6 +527,11 @@ TextTrackManager::TimeMarchesOn()
 
   mTimeMarchesOnDispatched = false;
 
+  // Early return if we don't have any TextTracks.
+  if (mTextTracks->Length() == 0) {
+    return;
+  }
+
   nsISupports* parentObject =
     mMediaElement->OwnerDoc()->GetParentObject();
   if (NS_WARN_IF(!parentObject)) {
@@ -564,6 +569,11 @@ TextTrackManager::TimeMarchesOn()
   }
   // Populate otherCues with 'non-active" cues.
   if (hasNormalPlayback) {
+    if (currentPlaybackTime < mLastTimeMarchesOnCalled) {
+      // TODO: Add log and find the root cause why the
+      // playback position goes backward.
+      mLastTimeMarchesOnCalled = currentPlaybackTime;
+    }
     media::Interval<double> interval(mLastTimeMarchesOnCalled,
                                      currentPlaybackTime);
     otherCues = mNewCues->GetCueListByTimeInterval(interval);;
@@ -716,6 +726,12 @@ TextTrackManager::NotifyCueUpdated(TextTrackCue *aCue)
 {
   // TODO: Add/Reorder the cue to mNewCues if we have some optimization?
   DispatchTimeMarchesOn();
+}
+
+void
+TextTrackManager::NotifyReset()
+{
+  mLastTimeMarchesOnCalled = 0.0;
 }
 
 } // namespace dom

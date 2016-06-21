@@ -1558,6 +1558,17 @@ function synthesizeCompositionChange(aEvent, aWindow = window, aCallback)
 const QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK          = 0x0000;
 const QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK              = 0x0001;
 
+const QUERY_CONTENT_FLAG_SELECTION_NORMAL                    = 0x0000;
+const QUERY_CONTENT_FLAG_SELECTION_SPELLCHECK                = 0x0002;
+const QUERY_CONTENT_FLAG_SELECTION_IME_RAWINPUT              = 0x0004;
+const QUERY_CONTENT_FLAG_SELECTION_IME_SELECTEDRAWTEXT       = 0x0008;
+const QUERY_CONTENT_FLAG_SELECTION_IME_CONVERTEDTEXT         = 0x0010;
+const QUERY_CONTENT_FLAG_SELECTION_IME_SELECTEDCONVERTEDTEXT = 0x0020;
+const QUERY_CONTENT_FLAG_SELECTION_ACCESSIBILITY             = 0x0040;
+const QUERY_CONTENT_FLAG_SELECTION_FIND                      = 0x0080;
+const QUERY_CONTENT_FLAG_SELECTION_URLSECONDARY              = 0x0100;
+const QUERY_CONTENT_FLAG_SELECTION_URLSTRIKEOUT              = 0x0200;
+
 const SELECTION_SET_FLAG_USE_NATIVE_LINE_BREAK          = 0x0000;
 const SELECTION_SET_FLAG_USE_XP_LINE_BREAK              = 0x0001;
 const SELECTION_SET_FLAG_REVERSE                        = 0x0002;
@@ -1565,19 +1576,27 @@ const SELECTION_SET_FLAG_REVERSE                        = 0x0002;
 /**
  * Synthesize a query selected text event.
  *
+ * @param aSelectionType    Optional, one of QUERY_CONTENT_FLAG_SELECTION_*.
+ *                          If null, QUERY_CONTENT_FLAG_SELECTION_NORMAL will
+ *                          be used.
  * @param aWindow  Optional (If null, current |window| will be used)
  * @return         An nsIQueryContentEventResult object.  If this failed,
  *                 the result might be null.
  */
-function synthesizeQuerySelectedText(aWindow)
+function synthesizeQuerySelectedText(aSelectionType, aWindow)
 {
   var utils = _getDOMWindowUtils(aWindow);
   if (!utils) {
     return null;
   }
 
+  var flags = QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK;
+  if (aSelectionType) {
+    flags |= aSelectionType;
+  }
+
   return utils.sendQueryContentEvent(utils.QUERY_SELECTED_TEXT, 0, 0, 0, 0,
-                                     QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK);
+                                     flags);
 }
 
 /**

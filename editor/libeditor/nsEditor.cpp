@@ -661,11 +661,11 @@ nsEditor::GetSelection(SelectionType aSelectionType)
 {
   nsCOMPtr<nsISelection> sel;
   nsresult res = GetSelection(aSelectionType, getter_AddRefs(sel));
-  if (NS_FAILED(res)) {
+  if (NS_WARN_IF(NS_FAILED(res)) || NS_WARN_IF(!sel)) {
     return nullptr;
   }
 
-  return static_cast<Selection*>(sel.get());
+  return sel->AsSelection();
 }
 
 NS_IMETHODIMP

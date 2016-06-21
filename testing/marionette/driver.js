@@ -1786,16 +1786,7 @@ GeckoDriver.prototype.getElementAttribute = function*(cmd, resp) {
     case Context.CHROME:
       let win = this.getCurrentWindow();
       let el = this.curBrowser.seenEls.get(id, {frame: win});
-
-      if (element.isBooleanAttribute(el, name)) {
-        if (el.hasAttribute(name)) {
-          resp.body.value = "true";
-        } else {
-          resp.body.value = null;
-        }
-      } else {
-        resp.body.value = el.getAttribute(name);
-      }
+      resp.body.value = atom.getElementAttribute(el, name, this.getCurrentWindow());
       break;
 
     case Context.CONTENT:
@@ -2490,23 +2481,14 @@ GeckoDriver.prototype.getWindowSize = function(cmd, resp) {
  * Not supported on B2G. The supplied width and height values refer to
  * the window outerWidth and outerHeight values, which include scroll
  * bars, title bars, etc.
- *
- * An error will be returned if the requested window size would result
- * in the window being in the maximized state.
  */
 GeckoDriver.prototype.setWindowSize = function(cmd, resp) {
   if (this.appName != "Firefox") {
     throw new UnsupportedOperationError();
   }
 
-  let width = parseInt(cmd.parameters.width);
-  let height = parseInt(cmd.parameters.height);
-
+  let {width, height} = cmd.parameters;
   let win = this.getCurrentWindow();
-  if (width >= win.screen.availWidth || height >= win.screen.availHeight) {
-    throw new UnsupportedOperationError("Requested size exceeds screen size")
-  }
-
   win.resizeTo(width, height);
 };
 

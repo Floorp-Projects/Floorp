@@ -100,6 +100,8 @@ public:
 
   void NotifyCueUpdated(TextTrackCue *aCue);
 
+  void NotifyReset();
+
 private:
   /**
    * Converts the TextTrackCue's cuetext into a tree of DOM objects

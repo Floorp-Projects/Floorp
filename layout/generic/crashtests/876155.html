@@ -1,0 +1,15 @@
+>><test id=test1>><cr id=test2>>><foo2 id=test3>>>><bdi id=test4>x	qJ9_:}6nzX&amp;
+>>>>><script>
+function forceGC() {SpecialPowers.forceGC(); }
+var docElement = document.documentElement;
+document.addEventListener("DOMContentLoaded", CFcrash, false);
+function CFcrash() {
+try { test5 = document.createTextNode("/}F9*D		f	e	/e=*:	M[3	b-m#iA&	Kj[	ZA-	RSOh$-@	*xTk8r_	X:du[Ok	4d;bf|xtS	x]sA&"); } catch(e) {}
+setTimeout('document.execCommand("SelectAll");document.execCommand("InsertText", false, "hello");', 200);
+setTimeout('test3.parentNode.removeChild(test3); forceGC();', 100);
+try { document.adoptNode(test4); } catch(e) {}
+try { test4.appendChild(test5); } catch(e) {}
+try { test4.setAttribute("dir", "&locale.dir;"); } catch(e) {}
+try { test1.appendChild(test4); } catch(e) {}
+try { test4.replaceChild(test2, test4.firstChild); } catch(e) { }
+}</script>>
