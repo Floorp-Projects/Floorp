@@ -8128,7 +8128,7 @@ DebuggerObject::globalGetter(JSContext* cx, unsigned argc, Value* vp)
 {
     THIS_DEBUGOBJECT(cx, argc, vp, "get global", args, object)
 
-    RootedObject result(cx);
+    Rooted<DebuggerObject*> result(cx);
     if (!DebuggerObject::global(cx, object, &result))
         return false;
 
@@ -8882,13 +8882,18 @@ DebuggerObject::className(JSContext* cx, Handle<DebuggerObject*> object,
 }
 
 /* static */ bool
-DebuggerObject::global(JSContext* cx, Handle<DebuggerObject*> object, MutableHandleObject result)
+DebuggerObject::global(JSContext* cx, Handle<DebuggerObject*> object,
+                       MutableHandle<DebuggerObject*> result)
 {
     RootedObject referent(cx, object->referent());
     Debugger* dbg = object->owner();
 
-    result.set(&referent->global());
-    return dbg->wrapDebuggeeObject(cx, result);
+    RootedObject global(cx, &referent->global());
+    if (!dbg->wrapDebuggeeObject(cx, &global))
+        return false;
+
+    result.set(&global->as<DebuggerObject>());
+    return true;
 }
 
 /* static */ bool
