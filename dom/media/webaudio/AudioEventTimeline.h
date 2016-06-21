@@ -318,8 +318,9 @@ public:
   template<class TimeType>
   float GetValueAtTime(TimeType aTime)
   {
-    GetValuesAtTimeHelper(aTime, &mComputedValue, 1);
-    return mComputedValue;
+    float result;
+    GetValuesAtTimeHelper(aTime, &result, 1);
+    return result;
   }
 
   template<class TimeType>
@@ -327,7 +328,6 @@ public:
   {
     MOZ_ASSERT(aBuffer);
     GetValuesAtTimeHelper(aTime, aBuffer, aSize);
-    mComputedValue = aBuffer[aSize - 1];
   }
 
   // Return the number of events scheduled
@@ -359,7 +359,7 @@ private:
   // being a bottleneck.
   nsTArray<AudioTimelineEvent> mEvents;
   float mValue;
-  // This is the value of this AudioParam we computed at the last call.
+  // This is the value of this AudioParam we computed at the last tick.
   float mComputedValue;
   // This is the value of this AudioParam at the last tick of the previous event.
   float mLastComputedValue;
