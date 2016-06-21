@@ -1379,12 +1379,10 @@ nsXULAppInfo::SaveMemoryReport()
     return NS_ERROR_NOT_INITIALIZED;
   }
   nsCOMPtr<nsIFile> file;
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_PROFILE_DIR_STARTUP,
-                                       getter_AddRefs(file));
+  nsresult rv = CrashReporter::GetDefaultMemoryReportFile(getter_AddRefs(file));
   if (NS_WARN_IF(NS_FAILED(rv))) {
     return rv;
   }
-  file->AppendNative(NS_LITERAL_CSTRING("memory-report.json.gz"));
 
   nsString path;
   file->GetPath(path);
