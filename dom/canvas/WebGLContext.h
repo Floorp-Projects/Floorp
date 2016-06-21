@@ -1204,19 +1204,24 @@ public:
 protected:
     bool InitWebGL2(nsACString* const out_failReason, nsACString* const out_failureId);
 
-    bool CreateAndInitGL(bool forceEnabled, nsACString* const out_failReason, nsACString* const out_failureId);
+    struct FailureReason {
+        nsCString key; // For reporting.
+        nsCString info;
+    };
+    bool CreateAndInitGL(bool forceEnabled,
+                         std::vector<FailureReason>* const out_failReasons);
+
     bool ResizeBackbuffer(uint32_t width, uint32_t height);
 
     typedef already_AddRefed<gl::GLContext> FnCreateGL_T(const gl::SurfaceCaps& caps,
                                                          gl::CreateContextFlags flags,
                                                          WebGLContext* webgl,
-                                                         nsACString* const out_failReason,
-                                                         nsACString* const out_failureId);
+                                                         std::vector<FailureReason>* const out_failReasons);
 
     bool CreateAndInitGLWith(FnCreateGL_T fnCreateGL, const gl::SurfaceCaps& baseCaps,
                              gl::CreateContextFlags flags,
-                             nsACString* const out_failReason,
-                             nsACString* const out_failureId);
+                             std::vector<FailureReason>* const out_failReasons);
+
     void ThrowEvent_WebGLContextCreationError(const nsACString& text);
 
     // -------------------------------------------------------------------------
