@@ -16,7 +16,6 @@
 #include "mozilla/Atomics.h"            // for Atomic
 #include "mozilla/layers/LayersMessages.h" // for ShmemSection
 #include "LayersTypes.h"
-#include "gfxPrefs.h"
 #include "mozilla/layers/AtomicRefCountedWithFinalize.h"
 
 /*
@@ -129,7 +128,7 @@ public:
 
   virtual MessageLoop * GetMessageLoop() const = 0;
 
-  virtual int32_t GetMaxTextureSize() const { return gfxPrefs::MaxTextureSize(); }
+  virtual int32_t GetMaxTextureSize() const;
 
   virtual void CancelWaitForRecycle(uint64_t aTextureId) = 0;
 };
