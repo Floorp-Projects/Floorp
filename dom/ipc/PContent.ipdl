@@ -1207,6 +1207,13 @@ parent:
     async NotifyPushSubscriptionChangeObservers(nsCString scope,
                                                 Principal principal);
 
+    /**
+     * Tell the parent process that the child process is low on memory. This
+     * allows the parent process to save a memory report that can potentially be
+     * sent with a crash report from the content process.
+     */
+     async NotifyLowMemory();
+
 both:
      async AsyncMessage(nsString aMessage, CpowEntry[] aCpows,
                         Principal aPrincipal, ClonedMessageData aData);
