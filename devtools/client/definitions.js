@@ -188,6 +188,7 @@ Tools.styleEditor = {
   id: "styleeditor",
   key: l10n("open.commandkey", styleEditorStrings),
   ordinal: 4,
+  visibilityswitch: "devtools.styleeditor.enabled",
   accesskey: l10n("open.accesskey", styleEditorStrings),
   modifiers: "shift",
   icon: "chrome://devtools/skin/images/tool-styleeditor.svg",
