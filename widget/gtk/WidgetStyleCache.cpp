@@ -33,7 +33,6 @@ static GtkWidget*
 CreateWindowWidget()
 {
   GtkWidget *widget = gtk_window_new(GTK_WINDOW_POPUP);
-  gtk_widget_realize(widget);
   gtk_widget_set_name(widget, "MozillaGtkWidget");
   return widget;
 }
@@ -50,7 +49,6 @@ static void
 AddToWindowContainer(GtkWidget* widget)
 {
   gtk_container_add(GTK_CONTAINER(GetWidget(MOZ_GTK_WINDOW_CONTAINER)), widget);
-  gtk_widget_realize(widget);
 }
 
 static GtkWidget*
@@ -142,7 +140,6 @@ CreateToolbarWidget()
 {
   GtkWidget* widget = gtk_toolbar_new();
   gtk_container_add(GTK_CONTAINER(GetWidget(MOZ_GTK_GRIPPER)), widget);
-  gtk_widget_realize(widget);
   return widget;
 }
 
@@ -183,7 +180,6 @@ CreateButtonArrowWidget()
 {
   GtkWidget* widget = gtk_arrow_new(GTK_ARROW_DOWN, GTK_SHADOW_OUT);
   gtk_container_add(GTK_CONTAINER(GetWidget(MOZ_GTK_TOGGLE_BUTTON)), widget);
-  gtk_widget_realize(widget);
   gtk_widget_show(widget);
   return widget;
 }
@@ -226,8 +222,6 @@ GetInnerWidget(GtkWidget* widget, gpointer client_data)
   if (G_TYPE_CHECK_INSTANCE_TYPE(widget, info->type)) {
     *info->widget = widget;
   }
-
-  gtk_widget_realize(widget);
 }
 
 static GtkWidget*
@@ -287,7 +281,6 @@ CreateComboBoxArrowWidget()
     /* appears-as-list = TRUE, or cell-view = FALSE;
      * the button only contains an arrow */
     comboBoxArrow = buttonChild;
-    gtk_widget_realize(comboBoxArrow);
   }
 
   if (!comboBoxArrow) {
@@ -416,7 +409,6 @@ CreateComboBoxEntryArrowWidget()
     /* appears-as-list = TRUE, or cell-view = FALSE;
      * the button only contains an arrow */
     comboBoxArrow = buttonChild;
-    gtk_widget_realize(comboBoxArrow);
   }
 
   if (!comboBoxArrow) {
@@ -456,7 +448,6 @@ CreateMenuSeparatorWidget()
   GtkWidget* widget = gtk_separator_menu_item_new();
   gtk_menu_shell_append(GTK_MENU_SHELL(GetWidget(MOZ_GTK_MENUPOPUP)),
                         widget);
-  gtk_widget_realize(widget);
   return widget;
 }
 
