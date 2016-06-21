@@ -1236,7 +1236,7 @@ nsNavHistory::ExecuteQueries(nsINavHistoryQuery** aQueries, uint32_t aQueryCount
   for (uint32_t i = 0; i < aQueryCount; i ++) {
     nsCOMPtr<nsNavHistoryQuery> query = do_QueryInterface(aQueries[i], &rv);
     NS_ENSURE_SUCCESS(rv, rv);
-    queries.AppendObject(query);
+    queries.AppendElement(query.forget());
   }
 
   // Create the root node.
@@ -2465,7 +2465,7 @@ nsNavHistory::CleanupPlacesOnVisitsDelete(const nsCString& aPlaceIdsQueryString)
         filteredPlaceIds.Append(',');
       }
       filteredPlaceIds.AppendInt(placeId);
-      URIs.AppendObject(uri);
+      URIs.AppendElement(uri.forget());
       GUIDs.AppendElement(guid);
     }
     else {
@@ -3003,7 +3003,7 @@ nsNavHistory::AsyncExecuteLegacyQueries(nsINavHistoryQuery** aQueries,
   for (uint32_t i = 0; i < aQueryCount; i ++) {
     nsCOMPtr<nsNavHistoryQuery> query = do_QueryInterface(aQueries[i]);
     NS_ENSURE_STATE(query);
-    queries.AppendObject(query);
+    queries.AppendElement(query.forget());
   }
   NS_ENSURE_ARG_MIN(queries.Count(), 1);
 
@@ -3617,7 +3617,7 @@ nsNavHistory::ResultsAsList(mozIStorageStatement* statement,
     RefPtr<nsNavHistoryResultNode> result;
     rv = RowToResult(row, aOptions, getter_AddRefs(result));
     NS_ENSURE_SUCCESS(rv, rv);
-    aResults->AppendObject(result);
+    aResults->AppendElement(result.forget());
   }
   return NS_OK;
 }

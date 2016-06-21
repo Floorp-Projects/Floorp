@@ -1921,8 +1921,13 @@ TabChild::RecvRealMouseButtonEvent(const WidgetMouseEvent& aEvent,
                                    const ScrollableLayerGuid& aGuid,
                                    const uint64_t& aInputBlockId)
 {
-  if (aInputBlockId) {
-    MOZ_ASSERT(aEvent.mFlags.mHandledByAPZ);
+  // Mouse events like eMouseEnterIntoWidget, that are created in the parent
+  // process EventStateManager code, have an input block id which they get from
+  // the InputAPZContext in the parent process stack. However, they did not
+  // actually go through the APZ code and so their mHandledByAPZ flag is false.
+  // Since thos events didn't go through APZ, we don't need to send notifications
+  // for them.
+  if (aInputBlockId && aEvent.mFlags.mHandledByAPZ) {
     nsCOMPtr<nsIDocument> document(GetDocument());
     APZCCallbackHelper::SendSetTargetAPZCNotification(
       mPuppetWidget, document, aEvent, aGuid, aInputBlockId);
@@ -1937,8 +1942,7 @@ TabChild::RecvRealMouseButtonEvent(const WidgetMouseEvent& aEvent,
       mPuppetWidget->GetDefaultScale());
   APZCCallbackHelper::DispatchWidgetEvent(localEvent);
 
-  if (aInputBlockId) {
-    MOZ_ASSERT(aEvent.mFlags.mHandledByAPZ);
+  if (aInputBlockId && aEvent.mFlags.mHandledByAPZ) {
     mAPZEventState->ProcessMouseEvent(aEvent, aGuid, aInputBlockId);
   }
   return true;
@@ -1949,8 +1953,7 @@ TabChild::RecvMouseWheelEvent(const WidgetWheelEvent& aEvent,
                               const ScrollableLayerGuid& aGuid,
                               const uint64_t& aInputBlockId)
 {
-  if (aInputBlockId) {
-    MOZ_ASSERT(aEvent.mFlags.mHandledByAPZ);
+  if (aInputBlockId && aEvent.mFlags.mHandledByAPZ) {
     nsCOMPtr<nsIDocument> document(GetDocument());
     APZCCallbackHelper::SendSetTargetAPZCNotification(
       mPuppetWidget, document, aEvent, aGuid, aInputBlockId);
@@ -1966,8 +1969,7 @@ TabChild::RecvMouseWheelEvent(const WidgetWheelEvent& aEvent,
     SendRespondStartSwipeEvent(aInputBlockId, localEvent.TriggersSwipe());
   }
 
-  if (aInputBlockId) {
-    MOZ_ASSERT(aEvent.mFlags.mHandledByAPZ);
+  if (aInputBlockId && aEvent.mFlags.mHandledByAPZ) {
     mAPZEventState->ProcessWheelEvent(localEvent, aGuid, aInputBlockId);
   }
   return true;

@@ -59,6 +59,7 @@ class FloatRegisters : public FloatRegistersMIPSShared
 
     static const SetType AllPhysMask = ((SetType(1) << TotalPhys) - 1);
     static const SetType AllMask = AllPhysMask * Spread;
+    static const SetType AllSingleMask = AllPhysMask * SpreadSingle;
     static const SetType AllDoubleMask = AllPhysMask * SpreadDouble;
 
     static const SetType NonVolatileMask =

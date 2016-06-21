@@ -26,7 +26,7 @@ class TestDecision(unittest.TestCase):
         graph = Graph(nodes=set('ab'), edges={('a', 'b', 'edgelabel')})
         taskgraph = TaskGraph(tasks, graph)
 
-        res = decision.taskgraph_to_json(taskgraph)
+        res = taskgraph.to_json()
 
         self.assertEqual(res, {
             'a': {

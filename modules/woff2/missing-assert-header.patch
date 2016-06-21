@@ -1,0 +1,22 @@
+diff --git a/modules/woff2/src/port.h b/modules/woff2/src/port.h
+--- a/modules/woff2/src/port.h
++++ b/modules/woff2/src/port.h
+@@ -12,16 +12,18 @@
+ // See the License for the specific language governing permissions and
+ // limitations under the License.
+ //
+ // Helper function for bit twiddling and macros for branch prediction.
+ 
+ #ifndef WOFF2_PORT_H_
+ #define WOFF2_PORT_H_
+ 
++#include <assert.h>
++
+ namespace woff2 {
+ 
+ typedef unsigned int       uint32;
+ 
+ inline int Log2Floor(uint32 n) {
+ #if defined(__GNUC__)
+   return n == 0 ? -1 : 31 ^ __builtin_clz(n);
+ #else

@@ -44,7 +44,7 @@ png_error,(png_const_structrp png_ptr, png_const_charp error_message),
    if (png_ptr != NULL)
    {
       if ((png_ptr->flags &
-         (PNG_FLAG_STRIP_ERROR_NUMBERS|PNG_FLAG_STRIP_ERROR_TEXT)) != 0
+         (PNG_FLAG_STRIP_ERROR_NUMBERS|PNG_FLAG_STRIP_ERROR_TEXT)) != 0)
       {
          if (*error_message == PNG_LITERAL_SHARP)
          {

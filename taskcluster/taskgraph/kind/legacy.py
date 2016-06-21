@@ -116,8 +116,9 @@ def configure_dependent_task(task_path, parameters, taskid, templates, build_tre
     treeherder_config['build'] = \
         build_treeherder_config.get('build', {})
 
-    treeherder_config['machine'] = \
-        build_treeherder_config.get('machine', {})
+    if 'machine' not in treeherder_config:
+        treeherder_config['machine'] = \
+            build_treeherder_config.get('machine', {})
 
     if 'routes' not in task['task']:
         task['task']['routes'] = []

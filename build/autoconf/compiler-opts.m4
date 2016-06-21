@@ -95,30 +95,6 @@ dnl =
 dnl ========================================================
 AC_DEFUN([MOZ_DEBUGGING_OPTS],
 [
-dnl Debug info is ON by default.
-if test -z "$MOZ_DEBUG_FLAGS"; then
-  if test -n "$_MSC_VER"; then
-    MOZ_DEBUG_FLAGS="-Zi"
-  else
-    MOZ_DEBUG_FLAGS="-g"
-  fi
-fi
-
-AC_SUBST(MOZ_DEBUG_FLAGS)
-
-MOZ_ARG_ENABLE_STRING(debug,
-[  --enable-debug[=DBG]    Enable building with developer debug info
-                           (using compiler flags DBG)],
-[ if test "$enableval" != "no"; then
-    MOZ_DEBUG=1
-    if test -n "$enableval" -a "$enableval" != "yes"; then
-        MOZ_DEBUG_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
-        _MOZ_DEBUG_FLAGS_SET=1
-    fi
-  else
-    MOZ_DEBUG=
-  fi ],
-  MOZ_DEBUG=)
 
 if test -z "$MOZ_DEBUG" -o -n "$MOZ_ASAN"; then
     MOZ_NO_DEBUG_RTL=1
@@ -155,31 +131,6 @@ else
 fi
 
 AC_SUBST_LIST(MOZ_DEBUG_DEFINES)
-
-dnl ========================================================
-dnl = Enable generation of debug symbols
-dnl ========================================================
-MOZ_ARG_ENABLE_STRING(debug-symbols,
-[  --enable-debug-symbols[=DBG]
-                          Enable debugging symbols (using compiler flags DBG)],
-[ if test "$enableval" != "no"; then
-      MOZ_DEBUG_SYMBOLS=1
-      if test -n "$enableval" -a "$enableval" != "yes"; then
-          if test -z "$_MOZ_DEBUG_FLAGS_SET"; then
-              MOZ_DEBUG_FLAGS=`echo $enableval | sed -e 's|\\\ | |g'`
-          else
-              AC_MSG_ERROR([--enable-debug-symbols flags cannot be used with --enable-debug flags])
-          fi
-      fi
-  else
-      MOZ_DEBUG_SYMBOLS=
-  fi ],
-  MOZ_DEBUG_SYMBOLS=1)
-
-if test -n "$MOZ_DEBUG" -o -n "$MOZ_DEBUG_SYMBOLS"; then
-    AC_DEFINE(MOZ_DEBUG_SYMBOLS)
-    export MOZ_DEBUG_SYMBOLS
-fi
 
 ])
 

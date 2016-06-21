@@ -1,8 +1,8 @@
 
 /* pngset.c - storage of image information into info struct
  *
- * Last changed in libpng 1.6.21 [January 15, 2016]
- * Copyright (c) 1998-2015 Glenn Randers-Pehrson
+ * Last changed in libpng 1.6.23 [June 9, 2016]
+ * Copyright (c) 1998-2016 Glenn Randers-Pehrson
  * (Version 0.96 Copyright (c) 1996, 1997 Andreas Dilger)
  * (Version 0.88 Copyright (c) 1995, 1996 Guy Eric Schalnat, Group 42, Inc.)
  *
@@ -957,12 +957,14 @@ png_set_tRNS(png_structrp png_ptr, png_inforp info_ptr,
 
        png_free_data(png_ptr, info_ptr, PNG_FREE_TRNS, 0);
 
-       /* Changed from num_trans to PNG_MAX_PALETTE_LENGTH in version 1.2.1 */
-       png_ptr->trans_alpha = info_ptr->trans_alpha = png_voidcast(png_bytep,
-         png_malloc(png_ptr, PNG_MAX_PALETTE_LENGTH));
-
        if (num_trans > 0 && num_trans <= PNG_MAX_PALETTE_LENGTH)
+       {
+         /* Changed from num_trans to PNG_MAX_PALETTE_LENGTH in version 1.2.1 */
+          info_ptr->trans_alpha = png_voidcast(png_bytep,
+             png_malloc(png_ptr, PNG_MAX_PALETTE_LENGTH));
           memcpy(info_ptr->trans_alpha, trans_alpha, (png_size_t)num_trans);
+       }
+       png_ptr->trans_alpha = info_ptr->trans_alpha;
    }
 
    if (trans_color != NULL)

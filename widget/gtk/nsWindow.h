@@ -321,7 +321,7 @@ public:
 
 #if (MOZ_WIDGET_GTK == 2)
     static already_AddRefed<DrawTarget> GetDrawTargetForGdkDrawable(GdkDrawable* aDrawable,
-                                                                    const IntSize& aSize);
+                                                                    const mozilla::gfx::IntSize& aSize);
 #endif
     NS_IMETHOD         ReparentNativeWidget(nsIWidget* aNewParent) override;
 

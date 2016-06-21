@@ -18,13 +18,14 @@ from mozprocess import ProcessHandler
 
 class Device(object):
     connected = False
+    logcat_proc = None
 
     def __init__(self, app_ctx, logdir=None, serial=None, restore=True):
         self.app_ctx = app_ctx
         self.dm = self.app_ctx.dm
         self.restore = restore
         self.serial = serial
-        self.logdir = logdir
+        self.logdir = os.path.abspath(os.path.expanduser(logdir))
         self.added_files = set()
         self.backup_files = set()
 
