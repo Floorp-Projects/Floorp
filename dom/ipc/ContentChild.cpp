@@ -3292,6 +3292,19 @@ ContentChild::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
     dragService->GetCurrentSession(getter_AddRefs(session));
     if (session) {
       session->SetDragAction(aAction);
+      // Check if we are receiving any file objects. If we are we will want
+      // to hide any of the other objects coming in from content.
+      bool hasFiles = false;
+      for (uint32_t i = 0; i < aTransfers.Length() && !hasFiles; ++i) {
+        auto& items = aTransfers[i].items();
+        for (uint32_t j = 0; j < items.Length() && !hasFiles; ++j) {
+          if (items[j].data().type() == IPCDataTransferData::TPBlobChild) {
+            hasFiles = true;
+          }
+        }
+      }
+
+      // Add the entries from the IPC to the new DataTransfer
       nsCOMPtr<DataTransfer> dataTransfer =
         new DataTransfer(nullptr, eDragStart, false, -1);
       for (uint32_t i = 0; i < aTransfers.Length(); ++i) {
@@ -3313,9 +3326,11 @@ ContentChild::RecvInvokeDragSession(nsTArray<IPCDataTransfer>&& aTransfers,
           } else {
             continue;
           }
+          // We should hide this data from content if we have a file, and we aren't a file.
+          bool hidden = hasFiles && item.data().type() != IPCDataTransferData::TPBlobChild;
           dataTransfer->SetDataWithPrincipalFromOtherProcess(
             NS_ConvertUTF8toUTF16(item.flavor()), variant, i,
-            nsContentUtils::GetSystemPrincipal());
+            nsContentUtils::GetSystemPrincipal(), hidden);
         }
       }
       session->SetDataTransfer(dataTransfer);

@@ -64,6 +64,7 @@ DataTransferItem::Clone(DataTransferItemList* aParent) const
   it->mIndex = mIndex;
   it->mData = mData;
   it->mPrincipal = mPrincipal;
+  it->mChromeOnly = mChromeOnly;
 
   return it.forget();
 }
@@ -77,6 +78,9 @@ DataTransferItem::SetType(const nsAString& aType)
 void
 DataTransferItem::SetData(nsIVariant* aData)
 {
+  // Invalidate our file cache, we will regenerate it with the new data
+  mCachedFile = nullptr;
+
   if (!aData) {
     // We are holding a temporary null which will later be filled.
     // These are provided by the system, and have guaranteed properties about
@@ -101,8 +105,10 @@ DataTransferItem::SetData(nsIVariant* aData)
   nsCOMPtr<nsISupports> supports;
   nsresult rv = aData->GetAsISupports(getter_AddRefs(supports));
   if (NS_SUCCEEDED(rv) && supports) {
-    RefPtr<File> file = FileFromISupports(supports);
-    if (file) {
+    // Check if we have one of the supported file data formats
+    if (nsCOMPtr<nsIDOMBlob>(do_QueryInterface(supports)) ||
+        nsCOMPtr<BlobImpl>(do_QueryInterface(supports)) ||
+        nsCOMPtr<nsIFile>(do_QueryInterface(supports))) {
       mKind = KIND_FILE;
       return;
     }
@@ -176,39 +182,50 @@ DataTransferItem::FillInExternalData()
     return;
   }
 
-  if (Kind() == KIND_FILE) {
-    // Because this is an external piece of data, mType is one of kFileMime,
-    // kPNGImageMime, kJPEGImageMime, or kGIFImageMime. We want to convert
-    // whatever type happens to actually be stored into a dom::File.
-
-    RefPtr<File> file = FileFromISupports(data);
-    MOZ_ASSERT(file, "Invalid format for Kind() == KIND_FILE");
-
-    data = do_QueryObject(file);
-  }
-
+  // Fill the variant
   RefPtr<nsVariantCC> variant = new nsVariantCC();
 
-  nsCOMPtr<nsISupportsString> supportsstr = do_QueryInterface(data);
-  if (supportsstr) {
-    MOZ_ASSERT(Kind() == KIND_STRING);
-    nsAutoString str;
-    supportsstr->GetData(str);
-    variant->SetAsAString(str);
+  eKind oldKind = Kind();
+  if (oldKind == KIND_FILE) {
+    // Because this is an external piece of data, mType is one of kFileMime,
+    // kPNGImageMime, kJPEGImageMime, or kGIFImageMime. Some of these types
+    // are passed in as a nsIInputStream which must be converted to a
+    // dom::File before storing.
+    if (nsCOMPtr<nsIInputStream> istream = do_QueryInterface(data)) {
+      RefPtr<File> file = CreateFileFromInputStream(istream);
+      if (NS_WARN_IF(!file)) {
+        return;
+      }
+      data = do_QueryObject(file);
+    }
+
+    variant->SetAsISupports(data);
   } else {
-    nsCOMPtr<nsISupportsCString> supportscstr = do_QueryInterface(data);
-    if (supportscstr) {
-      MOZ_ASSERT(Kind() == KIND_STRING);
-      nsAutoCString str;
-      supportscstr->GetData(str);
-      variant->SetAsACString(str);
+    // We have an external piece of string data. Extract it and store it in the variant
+    MOZ_ASSERT(oldKind == KIND_STRING);
+
+    nsCOMPtr<nsISupportsString> supportsstr = do_QueryInterface(data);
+    if (supportsstr) {
+      nsAutoString str;
+      supportsstr->GetData(str);
+      variant->SetAsAString(str);
     } else {
-      MOZ_ASSERT(Kind() == KIND_FILE);
-      variant->SetAsISupports(data);
+      nsCOMPtr<nsISupportsCString> supportscstr = do_QueryInterface(data);
+      if (supportscstr) {
+        nsAutoCString str;
+        supportscstr->GetData(str);
+        variant->SetAsACString(str);
+      }
     }
   }
 
   SetData(variant);
+
+#ifdef DEBUG
+  if (oldKind != Kind()) {
+    NS_WARNING("Clipboard data provided by the OS does not match predicted kind");
+  }
+#endif
 }
 
 already_AddRefed<File>
@@ -226,63 +243,33 @@ DataTransferItem::GetAsFile(ErrorResult& aRv)
   nsCOMPtr<nsISupports> supports;
   aRv = data->GetAsISupports(getter_AddRefs(supports));
   MOZ_ASSERT(!aRv.Failed() && supports,
-             "Files should be stored with type dom::File!");
+             "File objects should be stored as nsISupports variants");
   if (aRv.Failed() || !supports) {
     return nullptr;
   }
 
-  RefPtr<File> file = FileFromISupports(supports);
-  MOZ_ASSERT(file, "Files should be stored with type dom::File!");
-  if (!file) {
-    return nullptr;
-  }
-
-  // The File object should have been stored as a File in the nsIVariant. If it
-  // was stored as a Blob, with a file BlobImpl, we could still get to this
-  // point, except that file is a new File object, with a different identity
-  // then the original blob ibject. This should never happen so we assert
-  // against it.
-  MOZ_ASSERT(SameCOMIdentity(supports, NS_ISUPPORTS_CAST(nsIDOMBlob*, file)),
-             "Got back a new File object from FileFromISupports in GetAsFile!");
-
-  return file.forget();
-}
-
-already_AddRefed<File>
-DataTransferItem::FileFromISupports(nsISupports* aSupports)
-{
-  MOZ_ASSERT(aSupports);
-
-  RefPtr<File> file;
-
-  nsCOMPtr<nsIDOMBlob> domBlob = do_QueryInterface(aSupports);
-  if (domBlob) {
-    // Get out the blob - this is OK, because nsIDOMBlob is a builtinclass
-    // and the only implementer is Blob.
-    Blob* blob = static_cast<Blob*>(domBlob.get());
-    file = blob->ToFile();
-  } else if (nsCOMPtr<nsIFile> ifile = do_QueryInterface(aSupports)) {
-    printf("Creating a File from a nsIFile!\n");
-    file = File::CreateFromFile(GetParentObject(), ifile);
-  } else if (nsCOMPtr<nsIInputStream> stream = do_QueryInterface(aSupports)) {
-    // This consumes the stream object
-    ErrorResult rv;
-    file = CreateFileFromInputStream(GetParentObject(), stream, rv);
-    if (NS_WARN_IF(rv.Failed())) {
-      rv.SuppressException();
+  // Generate the dom::File from the stored data, caching it so that the
+  // same object is returned in the future.
+  if (!mCachedFile) {
+    if (nsCOMPtr<nsIDOMBlob> domBlob = do_QueryInterface(supports)) {
+      Blob* blob = static_cast<Blob*>(domBlob.get());
+      mCachedFile = blob->ToFile();
+    } else if (nsCOMPtr<BlobImpl> blobImpl = do_QueryInterface(supports)) {
+      MOZ_ASSERT(blobImpl->IsFile());
+      mCachedFile = File::Create(GetParentObject(), blobImpl);
+    } else if (nsCOMPtr<nsIFile> ifile = do_QueryInterface(supports)) {
+      mCachedFile = File::CreateFromFile(GetParentObject(), ifile);
+    } else {
+      MOZ_ASSERT(false, "One of the above code paths should be taken");
     }
-  } else if (nsCOMPtr<BlobImpl> blobImpl = do_QueryInterface(aSupports)) {
-    MOZ_ASSERT(blobImpl->IsFile());
-    file = File::Create(GetParentObject(), blobImpl);
   }
 
+  RefPtr<File> file = mCachedFile;
   return file.forget();
 }
 
 already_AddRefed<File>
-DataTransferItem::CreateFileFromInputStream(nsISupports* aParent,
-                                            nsIInputStream* aStream,
-                                            ErrorResult& aRv)
+DataTransferItem::CreateFileFromInputStream(nsIInputStream* aStream)
 {
   const char* key = nullptr;
   for (uint32_t i = 0; i < ArrayLength(kFileMimeNameMap); ++i) {
@@ -297,25 +284,25 @@ DataTransferItem::CreateFileFromInputStream(nsISupports* aParent,
   }
 
   nsXPIDLString fileName;
-  aRv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
-                                           key, fileName);
-  if (NS_WARN_IF(aRv.Failed())) {
+  nsresult rv = nsContentUtils::GetLocalizedString(nsContentUtils::eDOM_PROPERTIES,
+                                                   key, fileName);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
 
   uint64_t available;
-  aRv = aStream->Available(&available);
-  if (NS_WARN_IF(aRv.Failed())) {
+  rv = aStream->Available(&available);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
 
   void* data = nullptr;
-  aRv = NS_ReadInputStreamToBuffer(aStream, &data, available);
-  if (NS_WARN_IF(aRv.Failed())) {
+  rv = NS_ReadInputStreamToBuffer(aStream, &data, available);
+  if (NS_WARN_IF(NS_FAILED(rv))) {
     return nullptr;
   }
 
-  return File::CreateMemoryFile(aParent, data, available, fileName,
+  return File::CreateMemoryFile(GetParentObject(), data, available, fileName,
                                 mType, PR_Now());
 }
 
@@ -327,6 +314,11 @@ DataTransferItem::GetAsString(FunctionStringCallback* aCallback,
     return;
   }
 
+  // Theoretically this should be done inside of the runnable, as it might be an
+  // expensive operation on some systems. However, it doesn't really matter as
+  // in order to get a DataTransferItem, we need to call
+  // DataTransferItemList::IndexedGetter which already calls the Data method,
+  // meaning that this operation is basically free.
   nsIVariant* data = Data();
   if (NS_WARN_IF(!data)) {
     return;
