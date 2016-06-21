@@ -40,15 +40,13 @@ Compositor::Compositor(widget::CompositorWidgetProxy* aWidget,
 
 Compositor::~Compositor()
 {
-  for (auto& lock : mUnlockAfterComposition) {
-    lock->ReadUnlock();
-  }
-  mUnlockAfterComposition.Clear();
+  ReadUnlockTextures();
 }
 
 void
 Compositor::Destroy()
 {
+  ReadUnlockTextures();
   FlushPendingNotifyNotUsed();
   mIsDestroyed = true;
 }
@@ -56,10 +54,22 @@ Compositor::Destroy()
 void
 Compositor::EndFrame()
 {
-  for (auto& lock : mUnlockAfterComposition) {
-    lock->ReadUnlock();
+  ReadUnlockTextures();
+}
+
+void
+Compositor::ReadUnlockTextures()
+{
+  for (auto& texture : mUnlockAfterComposition) {
+    texture->ReadUnlock();
   }
   mUnlockAfterComposition.Clear();
+}
+
+void
+Compositor::UnlockAfterComposition(TextureHost* aTexture)
+{
+  mUnlockAfterComposition.AppendElement(aTexture);
 }
 
 void
