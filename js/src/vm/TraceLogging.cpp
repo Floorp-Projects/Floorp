@@ -407,10 +407,13 @@ TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type, const char* f
     if (!traceLoggerState->isTextIdEnabled(type))
         return getOrCreateEventPayload(type);
 
-    PointerHashMap::AddPtr p = pointerMap.lookupForAdd(ptr);
-    if (p) {
-        MOZ_ASSERT(p->value()->textId() < nextTextId); // Sanity check.
-        return p->value();
+    PointerHashMap::AddPtr p;
+    if (ptr) {
+        p = pointerMap.lookupForAdd(ptr);
+        if (p) {
+            MOZ_ASSERT(p->value()->textId() < nextTextId); // Sanity check.
+            return p->value();
+        }
     }
 
     AutoTraceLog internal(this, TraceLogger_Internal);
@@ -449,8 +452,10 @@ TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type, const char* f
 
     nextTextId++;
 
-    if (!pointerMap.add(p, ptr, payload))
-        return nullptr;
+    if (ptr) {
+        if (!pointerMap.add(p, ptr, payload))
+            return nullptr;
+    }
 
     return payload;
 }
@@ -459,14 +464,14 @@ TraceLoggerEventPayload*
 TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type, JSScript* script)
 {
     return getOrCreateEventPayload(type, script->filename(), script->lineno(), script->column(),
-                                   script);
+                                   nullptr);
 }
 
 TraceLoggerEventPayload*
 TraceLoggerThread::getOrCreateEventPayload(TraceLoggerTextId type,
                                            const JS::ReadOnlyCompileOptions& script)
 {
-    return getOrCreateEventPayload(type, script.filename(), script.lineno, script.column, &script);
+    return getOrCreateEventPayload(type, script.filename(), script.lineno, script.column, nullptr);
 }
 
 void
