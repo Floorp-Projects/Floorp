@@ -247,12 +247,6 @@ Gecko_ReleaseAtom(nsIAtom* aAtom)
   NS_RELEASE(aAtom);
 }
 
-uint32_t
-Gecko_HashAtom(nsIAtom* aAtom)
-{
-  return aAtom->hash();
-}
-
 const uint16_t*
 Gecko_GetAtomAsUTF16(nsIAtom* aAtom, uint32_t* aLength)
 {
