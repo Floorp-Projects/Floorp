@@ -5,7 +5,7 @@
 
 const { Cu } = require("chrome");
 const { Front, FrontClassWithSpec, custom, preEvent } = require("devtools/shared/protocol");
-const { PerformanceRecordingFront } = require("devtools/server/actors/performance-recording");
+const { PerformanceRecordingFront } = require("devtools/shared/fronts/performance-recording");
 const { performanceSpec } = require("devtools/shared/specs/performance");
 const { Task } = require("devtools/shared/task");
 
