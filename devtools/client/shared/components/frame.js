@@ -20,6 +20,7 @@ module.exports = createClass({
       source: PropTypes.string.isRequired,
       line: PropTypes.oneOfType([ PropTypes.string, PropTypes.number ]),
       column: PropTypes.oneOfType([ PropTypes.string, PropTypes.number ]),
+      showEmptyPathAsHost: PropTypes.bool,
     }).isRequired,
     // Clicking on the frame link -- probably should link to the debugger.
     onClick: PropTypes.func.isRequired,
@@ -33,11 +34,13 @@ module.exports = createClass({
     return {
       showFunctionName: false,
       showHost: false,
+      showEmptyPathAsHost: false,
     };
   },
 
   render() {
     let { onClick, frame, showFunctionName, showHost } = this.props;
+    let { showEmptyPathAsHost } = frame;
     let source = frame.source ? String(frame.source) : "";
     let line = frame.line != void 0 ? Number(frame.line) : null;
     let column = frame.column != void 0 ? Number(frame.column) : null;
@@ -77,9 +80,13 @@ module.exports = createClass({
       );
     }
 
+    let displaySource = short;
+    if (showEmptyPathAsHost && (short === "" || short === "/")) {
+      displaySource = host;
+    }
     sourceElements.push(dom.span({
       className: "frame-link-filename",
-    }, short));
+    }, displaySource));
 
     // If source is linkable, and we have a line number > 0
     if (isLinkable && line) {
