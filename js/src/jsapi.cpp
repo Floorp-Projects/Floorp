@@ -301,7 +301,7 @@ JS_GetEmptyStringValue(JSContext* cx)
 JS_PUBLIC_API(JSString*)
 JS_GetEmptyString(JSRuntime* rt)
 {
-    MOZ_ASSERT(rt->hasContexts());
+    MOZ_ASSERT(rt->emptyString);
     return rt->emptyString;
 }
 
@@ -563,26 +563,6 @@ JS_EndRequest(JSContext* cx)
     StopRequest(cx);
 }
 
-JS_PUBLIC_API(JSContext*)
-JS_NewContext(JSRuntime* rt, size_t stackChunkSize)
-{
-    return NewContext(rt, stackChunkSize);
-}
-
-JS_PUBLIC_API(void)
-JS_DestroyContext(JSContext* cx)
-{
-    MOZ_ASSERT(!cx->compartment());
-    DestroyContext(cx, DCM_FORCE_GC);
-}
-
-JS_PUBLIC_API(void)
-JS_DestroyContextNoGC(JSContext* cx)
-{
-    MOZ_ASSERT(!cx->compartment());
-    DestroyContext(cx, DCM_NO_GC);
-}
-
 JS_PUBLIC_API(void*)
 JS_GetContextPrivate(JSContext* cx)
 {
@@ -613,19 +593,16 @@ JS_GetRuntime(JSContext* cx)
     return cx->runtime();
 }
 
+JS_PUBLIC_API(JSContext*)
+JS_GetContext(JSRuntime* rt)
+{
+    return rt->contextFromMainThread();
+}
+
 JS_PUBLIC_API(JSRuntime*)
 JS_GetParentRuntime(JSRuntime* rt)
 {
     return rt->parentRuntime ? rt->parentRuntime : rt;
-}
-
-JS_PUBLIC_API(JSContext*)
-JS_ContextIterator(JSRuntime* rt, JSContext** iterp)
-{
-    JSContext* cx = *iterp;
-    cx = cx ? cx->getNext() : rt->contextList.getFirst();
-    *iterp = cx;
-    return cx;
 }
 
 JS_PUBLIC_API(JSVersion)
@@ -691,6 +668,30 @@ JS_PUBLIC_API(JS::RuntimeOptions&)
 JS::RuntimeOptionsRef(JSContext* cx)
 {
     return cx->runtime()->options();
+}
+
+JS_PUBLIC_API(bool)
+JS::InitSelfHostedCode(JSContext* cx)
+{
+    MOZ_RELEASE_ASSERT(!cx->runtime()->hasInitializedSelfHosting(),
+                       "JS::InitSelfHostedCode() called more than once");
+
+    JSRuntime* rt = cx->runtime();
+
+    JSAutoRequest ar(cx);
+    if (!rt->initializeAtoms(cx))
+        return false;
+
+    if (!cx->cycleDetectorSet.init())
+        return false;
+
+    if (!rt->initSelfHosting(cx))
+        return false;
+
+    if (!rt->parentRuntime && !rt->transformToPermanentAtoms(cx))
+        return false;
+
+    return true;
 }
 
 JS_PUBLIC_API(const char*)
@@ -1054,7 +1055,6 @@ static const JSStdName builtin_property_names[] = {
 JS_PUBLIC_API(bool)
 JS_ResolveStandardClass(JSContext* cx, HandleObject obj, HandleId id, bool* resolved)
 {
-    JSRuntime* rt;
     const JSStdName* stdnm;
 
     AssertHeapIsIdle(cx);
@@ -1064,8 +1064,7 @@ JS_ResolveStandardClass(JSContext* cx, HandleObject obj, HandleId id, bool* reso
     Rooted<GlobalObject*> global(cx, &obj->as<GlobalObject>());
     *resolved = false;
 
-    rt = cx->runtime();
-    if (!rt->hasContexts() || !JSID_IS_ATOM(id))
+    if (!JSID_IS_ATOM(id))
         return true;
 
     /* Check whether we're resolving 'undefined', and define it if so. */
@@ -1878,6 +1877,9 @@ JS_NewGlobalObject(JSContext* cx, const JSClass* clasp, JSPrincipals* principals
                    JS::OnNewGlobalHookOption hookOption,
                    const JS::CompartmentOptions& options)
 {
+    MOZ_RELEASE_ASSERT(cx->runtime()->hasInitializedSelfHosting(),
+                       "Must call JS::InitSelfHostedCode() before creating a global");
+
     AssertHeapIsIdle(cx);
     CHECK_REQUEST(cx);
 

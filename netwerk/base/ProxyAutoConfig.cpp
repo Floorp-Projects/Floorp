@@ -639,9 +639,6 @@ class JSRuntimeWrapper
     mGlobal = nullptr;
 
     MOZ_COUNT_DTOR(JSRuntimeWrapper);
-    if (mContext) {
-      JS_DestroyContext(mContext);
-    }
 
     if (mRuntime) {
       JS_DestroyRuntime(mRuntime);
@@ -684,8 +681,10 @@ private:
 
     JS::SetWarningReporter(mRuntime, PACWarningReporter);
 
-    mContext = JS_NewContext(mRuntime, 0);
-    NS_ENSURE_TRUE(mContext, NS_ERROR_OUT_OF_MEMORY);
+    mContext = JS_GetContext(mRuntime);
+    if (!JS::InitSelfHostedCode(mContext)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     JSAutoRequest ar(mContext);
 

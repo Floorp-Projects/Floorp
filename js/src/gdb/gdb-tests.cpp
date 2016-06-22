@@ -71,7 +71,8 @@ main(int argc, const char** argv)
     JS_SetGCParameter(runtime, JSGC_MAX_BYTES, 0xffffffff);
     JS_SetNativeStackQuota(runtime, 5000000);
 
-    JSContext* cx = checkPtr(JS_NewContext(runtime, 8192));
+    JSContext* cx = JS_GetContext(runtime);
+    checkBool(JS::InitSelfHostedCode(cx));
     JS::SetWarningReporter(runtime, reportWarning);
 
     JSAutoRequest ar(cx);
