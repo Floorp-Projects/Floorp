@@ -97,7 +97,7 @@ this.ContentTaskUtils = {
    * @returns {Promise}
    * @resolves The Event object.
    */
-  waitForEvent(subject, eventName, capture, checkFn) {
+  waitForEvent(subject, eventName, capture, checkFn, wantsUntrusted = false) {
     return new Promise((resolve, reject) => {
       subject.addEventListener(eventName, function listener(event) {
         try {
@@ -114,7 +114,7 @@ this.ContentTaskUtils = {
           }
           reject(ex);
         }
-      }, capture);
+      }, capture, wantsUntrusted);
     });
   },
 };

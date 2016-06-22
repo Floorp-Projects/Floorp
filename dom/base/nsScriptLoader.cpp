@@ -45,7 +45,6 @@
 #include "mozilla/Logging.h"
 #include "nsCRT.h"
 #include "nsContentCreatorFunctions.h"
-#include "nsCORSListenerProxy.h"
 #include "nsProxyRelease.h"
 #include "nsSandboxFlags.h"
 #include "nsContentTypeParser.h"

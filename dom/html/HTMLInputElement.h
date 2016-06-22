@@ -270,6 +270,9 @@ public:
   static void InitUploadLastDir();
   static void DestroyUploadLastDir();
 
+  //If the valueAsDate attribute should be enabled in webIDL
+  static bool ValueAsDateEnabled(JSContext* cx, JSObject* obj);
+
   void MaybeLoadImage();
 
   void SetSelectionProperties(const nsTextEditorState::SelectionProperties& aProps)
@@ -1246,10 +1249,7 @@ protected:
   /**
    * Returns if the current type is an experimental mobile type.
    */
-  static bool IsExperimentalMobileType(uint8_t aType)
-  {
-    return aType == NS_FORM_INPUT_DATE || aType == NS_FORM_INPUT_TIME;
-  }
+  static bool IsExperimentalMobileType(uint8_t aType);
 
   /**
    * Flushes the layout frame tree to make sure we have up-to-date frames.
@@ -1276,6 +1276,7 @@ protected:
   };
   nsresult InitFilePicker(FilePickerType aType);
   nsresult InitColorPicker();
+  nsresult InitDatePicker();
 
   /**
    * Use this function before trying to open a picker.

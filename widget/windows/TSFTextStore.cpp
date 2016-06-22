@@ -3584,9 +3584,21 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
   // use eQueryTextRect to get rect in system, screen coordinates
   WidgetQueryContentEvent event(true, eQueryTextRect, mWidget);
   mWidget->InitEvent(event);
-  event.InitForQueryTextRect(acpStart, acpEnd - acpStart);
+
+  WidgetQueryContentEvent::Options options;
+  int64_t startOffset = acpStart;
+  if (mComposition.IsComposing()) {
+    // If there is a composition, TSF must want character rects related to
+    // the composition.  Therefore, we should use insertion point relative
+    // query because the composition might be at different position from
+    // the position where TSFTextStore believes it at.
+    options.mRelativeToInsertionPoint = true;
+    startOffset -= mComposition.mStart;
+  }
+  event.InitForQueryTextRect(startOffset, acpEnd - acpStart, options);
+
   DispatchEvent(event);
-  if (!event.mSucceeded) {
+  if (NS_WARN_IF(!event.mSucceeded)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::GetTextExt() FAILED due to "
             "eQueryTextRect failure", this));
@@ -5092,15 +5104,24 @@ TSFTextStore::CreateNativeCaret()
     return;
   }
 
+  WidgetQueryContentEvent queryCaretRect(true, eQueryCaretRect, mWidget);
+  mWidget->InitEvent(queryCaretRect);
+
+  WidgetQueryContentEvent::Options options;
   // XXX If this is called without composition and the selection isn't
   //     collapsed, is it OK?
-  uint32_t caretOffset = currentSel.MaxOffset();
+  int64_t caretOffset = currentSel.MaxOffset();
+  if (mComposition.IsComposing()) {
+    // If there is a composition, use insertion point relative query for
+    // deciding caret position because composition might be at different
+    // position where TSFTextStore believes it at.
+    options.mRelativeToInsertionPoint = true;
+    caretOffset -= mComposition.mStart;
+  }
+  queryCaretRect.InitForQueryCaretRect(caretOffset, options);
 
-  WidgetQueryContentEvent queryCaretRect(true, eQueryCaretRect, mWidget);
-  queryCaretRect.InitForQueryCaretRect(caretOffset);
-  mWidget->InitEvent(queryCaretRect);
   DispatchEvent(queryCaretRect);
-  if (!queryCaretRect.mSucceeded) {
+  if (NS_WARN_IF(!queryCaretRect.mSucceeded)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::CreateNativeCaret() FAILED due to "
             "eQueryCaretRect failure (offset=%d)", this, caretOffset));

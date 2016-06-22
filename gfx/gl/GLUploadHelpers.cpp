@@ -52,7 +52,7 @@ NextPowerOfTwo(int aNumber)
 }
 
 static unsigned int
-DataOffset(const IntPoint &aPoint, int32_t aStride, SurfaceFormat aFormat)
+DataOffset(const IntPoint& aPoint, int32_t aStride, SurfaceFormat aFormat)
 {
   unsigned int data = aPoint.y * aStride;
   data += aPoint.x * BytesPerPixel(aFormat);
@@ -81,8 +81,8 @@ CopyAndPadTextureData(const GLvoid* srcBuffer,
                       GLsizei dstWidth, GLsizei dstHeight,
                       GLsizei stride, GLint pixelsize)
 {
-    unsigned char *rowDest = static_cast<unsigned char*>(dstBuffer);
-    const unsigned char *source = static_cast<const unsigned char*>(srcBuffer);
+    unsigned char* rowDest = static_cast<unsigned char*>(dstBuffer);
+    const unsigned char* source = static_cast<const unsigned char*>(srcBuffer);
 
     for (GLsizei h = 0; h < srcHeight; ++h) {
         memcpy(rowDest, source, srcWidth * pixelsize);
@@ -176,7 +176,7 @@ TexSubImage2DWithUnpackSubimageGLES(GLContext* gl,
                        1,
                        format,
                        type,
-                       (const unsigned char *)pixels+(height-1)*stride);
+                       (const unsigned char*)pixels+(height-1)*stride);
     gl->fPixelStorei(LOCAL_GL_UNPACK_ALIGNMENT, 4);
 }
 
@@ -193,9 +193,9 @@ TexSubImage2DWithoutUnpackSubimage(GLContext* gl,
     // isn't supported. We make a copy of the texture data we're using,
     // such that we're using the whole row of data in the copy. This turns
     // out to be more efficient than uploading row-by-row; see bug 698197.
-    unsigned char *newPixels = new unsigned char[width*height*pixelsize];
-    unsigned char *rowDest = newPixels;
-    const unsigned char *rowSource = (const unsigned char *)pixels;
+    unsigned char* newPixels = new unsigned char[width*height*pixelsize];
+    unsigned char* rowDest = newPixels;
+    const unsigned char* rowSource = (const unsigned char*)pixels;
     for (int h = 0; h < height; h++) {
             memcpy(rowDest, rowSource, width*pixelsize);
             rowDest += width*pixelsize;
@@ -220,7 +220,7 @@ TexSubImage2DWithoutUnpackSubimage(GLContext* gl,
 }
 
 static void
-TexSubImage2DHelper(GLContext *gl,
+TexSubImage2DHelper(GLContext* gl,
                     GLenum target, GLint level,
                     GLint xoffset, GLint yoffset,
                     GLsizei width, GLsizei height, GLsizei stride,
@@ -274,11 +274,11 @@ TexSubImage2DHelper(GLContext *gl,
 }
 
 static void
-TexImage2DHelper(GLContext *gl,
+TexImage2DHelper(GLContext* gl,
                  GLenum target, GLint level, GLint internalformat,
                  GLsizei width, GLsizei height, GLsizei stride,
                  GLint pixelsize, GLint border, GLenum format,
-                 GLenum type, const GLvoid *pixels)
+                 GLenum type, const GLvoid* pixels)
 {
     if (gl->IsGLES()) {
 
@@ -562,7 +562,7 @@ UploadImageDataToTexture(GLContext* gl,
         // The inital data pointer is at the top left point of the region's
         // bounding rectangle. We need to find the offset of this rect
         // within the region and adjust the data pointer accordingly.
-        unsigned char *rectData =
+        unsigned char* rectData =
             aData + DataOffset(rect.TopLeft() - topLeft, aStride, aFormat);
 
         NS_ASSERTION(textureInited || (rect.x == 0 && rect.y == 0),

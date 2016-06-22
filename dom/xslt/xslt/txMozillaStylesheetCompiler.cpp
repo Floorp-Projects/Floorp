@@ -34,7 +34,6 @@
 #include "nsAttrName.h"
 #include "nsIScriptError.h"
 #include "nsIURL.h"
-#include "nsCORSListenerProxy.h"
 #include "nsError.h"
 #include "mozilla/Attributes.h"
 #include "mozilla/dom/Element.h"

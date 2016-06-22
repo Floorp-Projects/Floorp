@@ -91,11 +91,13 @@ class TestGenerator(unittest.TestCase):
         "The optimized task graph contains task ids"
         self.target_tasks = ['t-2']
         tid = self.tgg.label_to_taskid
-        self.assertEqual(self.tgg.optimized_task_graph.graph,
-             graph.Graph({tid['t-0'], tid['t-1'], tid['t-2']}, {
-                 (tid['t-1'], tid['t-0'], 'prev'),
-                 (tid['t-2'], tid['t-1'], 'prev'),
-             }))
+        self.assertEqual(
+            self.tgg.optimized_task_graph.graph,
+            graph.Graph({tid['t-0'], tid['t-1'], tid['t-2']}, {
+                (tid['t-1'], tid['t-0'], 'prev'),
+                (tid['t-2'], tid['t-1'], 'prev'),
+            })
+            )
 
 if __name__ == '__main__':
     main()

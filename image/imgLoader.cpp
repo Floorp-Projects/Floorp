@@ -20,7 +20,6 @@
 
 #include "nsContentPolicyUtils.h"
 #include "nsContentUtils.h"
-#include "nsCORSListenerProxy.h"
 #include "nsNetUtil.h"
 #include "nsNetCID.h"
 #include "nsIProtocolHandler.h"

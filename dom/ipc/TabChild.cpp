@@ -102,6 +102,7 @@
 #include "nsIOService.h"
 #include "nsDOMClassInfoID.h"
 #include "nsColorPickerProxy.h"
+#include "nsDatePickerProxy.h"
 #include "nsContentPermissionHelper.h"
 #include "nsPresShell.h"
 #include "nsIAppsService.h"
@@ -2280,6 +2281,21 @@ bool
 TabChild::DeallocPColorPickerChild(PColorPickerChild* aColorPicker)
 {
   nsColorPickerProxy* picker = static_cast<nsColorPickerProxy*>(aColorPicker);
+  NS_RELEASE(picker);
+  return true;
+}
+
+PDatePickerChild*
+TabChild::AllocPDatePickerChild(const nsString&, const nsString&)
+{
+  NS_RUNTIMEABORT("unused");
+  return nullptr;
+}
+
+bool
+TabChild::DeallocPDatePickerChild(PDatePickerChild* aDatePicker)
+{
+  nsDatePickerProxy* picker = static_cast<nsDatePickerProxy*>(aDatePicker);
   NS_RELEASE(picker);
   return true;
 }

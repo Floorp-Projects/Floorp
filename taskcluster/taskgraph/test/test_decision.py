@@ -16,6 +16,7 @@ from ..graph import Graph
 from ..types import Task, TaskGraph
 from mozunit import main
 
+
 class TestDecision(unittest.TestCase):
 
     def test_taskgraph_to_json(self):
@@ -43,7 +44,6 @@ class TestDecision(unittest.TestCase):
             }
         })
 
-
     def test_write_artifact_json(self):
         data = [{'some': 'data'}]
         tmpdir = tempfile.mkdtemp()
@@ -56,7 +56,6 @@ class TestDecision(unittest.TestCase):
             if os.path.exists(tmpdir):
                 shutil.rmtree(tmpdir)
             decision.ARTIFACTS_DIR = 'artifacts'
-
 
     def test_write_artifact_yml(self):
         data = [{'some': 'data'}]
@@ -74,5 +73,3 @@ class TestDecision(unittest.TestCase):
 
 if __name__ == '__main__':
     main()
-
-

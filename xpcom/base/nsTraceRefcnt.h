@@ -46,15 +46,6 @@ public:
   static void SetActivityIsLegal(bool aLegal);
 };
 
-#define NS_TRACE_REFCNT_CONTRACTID "@mozilla.org/xpcom/trace-refcnt;1"
-#define NS_TRACE_REFCNT_CID                          \
-{ /* e3e7511e-a395-4924-94b1-d527861cded4 */         \
-    0xe3e7511e,                                      \
-    0xa395,                                          \
-    0x4924,                                          \
-    {0x94, 0xb1, 0xd5, 0x27, 0x86, 0x1c, 0xde, 0xd4} \
-}                                                    \
-
 ////////////////////////////////////////////////////////////////////////////////
 // And now for that utility that you've all been asking for...
 

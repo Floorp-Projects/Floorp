@@ -332,7 +332,7 @@ ReadPixelsIntoDataSurface(GLContext* gl, DataSourceSurface* dest)
         needsTempSurf = true;
     }
     if (needsTempSurf) {
-        if (gl->DebugMode()) {
+        if (GLContext::ShouldSpew()) {
             NS_WARNING("Needing intermediary surface for ReadPixels. This will be slow!");
         }
         SurfaceFormat readFormatGFX;
