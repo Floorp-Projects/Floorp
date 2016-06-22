@@ -5,7 +5,7 @@
  * Test simple requests using the protocol helpers.
  */
 var protocol = require("devtools/shared/protocol");
-var {method, preEvent, types, Arg, Option, RetVal} = protocol;
+var {preEvent, types, Arg, Option, RetVal} = protocol;
 
 var events = require("sdk/event/core");
 
@@ -23,96 +23,8 @@ var testTypes = {};
 // implementation of the child actor.
 types.addActorType("childActor");
 
-var ChildActor = protocol.ActorClass({
+const childSpec = protocol.generateActorSpec({
   typeName: "childActor",
-
-  // Actors returned by this actor should be owned by the root actor.
-  marshallPool: function () { return this.parent(); },
-
-  toString: function () { return "[ChildActor " + this.childID + "]"; },
-
-  initialize: function (conn, id) {
-    protocol.Actor.prototype.initialize.call(this, conn);
-    this.childID = id;
-  },
-
-  destroy: function () {
-    protocol.Actor.prototype.destroy.call(this);
-    this.destroyed = true;
-  },
-
-  form: function (detail) {
-    if (detail === "actorid") {
-      return this.actorID;
-    }
-    return {
-      actor: this.actorID,
-      childID: this.childID,
-      detail: detail
-    };
-  },
-
-  echo: method(function (str) {
-    return str;
-  }, {
-    request: { str: Arg(0) },
-    response: { str: RetVal("string") },
-    telemetry: "ECHO"
-  }),
-
-  getDetail1: method(function () {
-    return this;
-  }, {
-    // This also exercises return-value-as-packet.
-    response: RetVal("childActor#detail1"),
-  }),
-
-  getDetail2: method(function () {
-    return this;
-  }, {
-    // This also exercises return-value-as-packet.
-    response: RetVal("childActor#detail2"),
-  }),
-
-  getIDDetail: method(function () {
-    return this;
-  }, {
-    response: {
-      idDetail: RetVal("childActor#actorid")
-    }
-  }),
-
-  getIntArray: method(function (inputArray) {
-    // Test that protocol.js converts an iterator to an array.
-    let f = function* () {
-      for (let i of inputArray) {
-        yield 2 * i;
-      }
-    };
-    return f();
-  }, {
-    request: { inputArray: Arg(0, "array:number") },
-    response: RetVal("array:number")
-  }),
-
-  getSibling: method(function (id) {
-    return this.parent().getChild(id);
-  }, {
-    request: { id: Arg(0) },
-    response: { sibling: RetVal("childActor") }
-  }),
-
-  emitEvents: method(function () {
-    events.emit(this, "event1", 1, 2, 3);
-    events.emit(this, "event2", 4, 5, 6);
-    events.emit(this, "named-event", 1, 2, 3);
-    events.emit(this, "object-event", this);
-    events.emit(this, "array-object-event", [this]);
-  }, {
-    response: { value: "correct response" },
-  }),
-
-  release: method(function () { }, { release: true }),
 
   events: {
     "event1" : {
@@ -139,10 +51,113 @@ var ChildActor = protocol.ActorClass({
       type: "arrayObjectEvent",
       detail: Arg(0, "array:childActor#detail2"),
     }
+  },
+
+  methods: {
+    echo: {
+      request: { str: Arg(0) },
+      response: { str: RetVal("string") },
+      telemetry: "ECHO"
+    },
+    getDetail1: {
+      // This also exercises return-value-as-packet.
+      response: RetVal("childActor#detail1"),
+    },
+    getDetail2: {
+      // This also exercises return-value-as-packet.
+      response: RetVal("childActor#detail2"),
+    },
+    getIDDetail: {
+      response: {
+        idDetail: RetVal("childActor#actorid")
+      }
+    },
+    getIntArray: {
+      request: { inputArray: Arg(0, "array:number") },
+      response: RetVal("array:number")
+    },
+    getSibling: {
+      request: { id: Arg(0) },
+      response: { sibling: RetVal("childActor") }
+    },
+    emitEvents: {
+      response: { value: "correct response" },
+    },
+    release: {
+      release: true
+    }
   }
 });
 
-var ChildFront = protocol.FrontClass(ChildActor, {
+var ChildActor = protocol.ActorClassWithSpec(childSpec, {
+  // Actors returned by this actor should be owned by the root actor.
+  marshallPool: function () { return this.parent(); },
+
+  toString: function () { return "[ChildActor " + this.childID + "]"; },
+
+  initialize: function (conn, id) {
+    protocol.Actor.prototype.initialize.call(this, conn);
+    this.childID = id;
+  },
+
+  destroy: function () {
+    protocol.Actor.prototype.destroy.call(this);
+    this.destroyed = true;
+  },
+
+  form: function (detail) {
+    if (detail === "actorid") {
+      return this.actorID;
+    }
+    return {
+      actor: this.actorID,
+      childID: this.childID,
+      detail: detail
+    };
+  },
+
+  echo: function (str) {
+    return str;
+  },
+
+  getDetail1: function () {
+    return this;
+  },
+
+  getDetail2: function () {
+    return this;
+  },
+
+  getIDDetail: function () {
+    return this;
+  },
+
+  getIntArray: function (inputArray) {
+    // Test that protocol.js converts an iterator to an array.
+    let f = function* () {
+      for (let i of inputArray) {
+        yield 2 * i;
+      }
+    };
+    return f();
+  },
+
+  getSibling: function (id) {
+    return this.parent().getChild(id);
+  },
+
+  emitEvents: function () {
+    events.emit(this, "event1", 1, 2, 3);
+    events.emit(this, "event2", 4, 5, 6);
+    events.emit(this, "named-event", 1, 2, 3);
+    events.emit(this, "object-event", this);
+    events.emit(this, "array-object-event", [this]);
+  },
+
+  release: function () { },
+});
+
+var ChildFront = protocol.FrontClassWithSpec(childSpec, {
   initialize: function (client, form) {
     protocol.Front.prototype.initialize.call(this, client, form);
   },
@@ -184,10 +199,35 @@ types.addDictType("manyChildrenDict", {
 
 types.addLifetime("temp", "_temporaryHolder");
 
-var rootActor = null;
-var RootActor = protocol.ActorClass({
+const rootSpec = protocol.generateActorSpec({
   typeName: "root",
 
+  methods: {
+    getChild: {
+      request: { str: Arg(0) },
+      response: { actor: RetVal("childActor") },
+    },
+    getChildren: {
+      request: { ids: Arg(0, "array:string") },
+      response: { children: RetVal("array:childActor") },
+    },
+    getChildren2: {
+      request: { ids: Arg(0, "array:childActor") },
+      response: { children: RetVal("array:childActor") },
+    },
+    getManyChildren: {
+      response: RetVal("manyChildrenDict")
+    },
+    getTemporaryChild: {
+      request: { id: Arg(0) },
+      response: { child: RetVal("temp:childActor") }
+    },
+    clearTemporaryChildren: {}
+  }
+});
+
+var rootActor = null;
+var RootActor = protocol.ActorClassWithSpec(rootSpec, {
   toString: function () { return "[root actor]"; },
 
   initialize: function (conn) {
@@ -201,68 +241,54 @@ var RootActor = protocol.ActorClass({
 
   sayHello: simpleHello,
 
-  getChild: method(function (id) {
+  getChild: function (id) {
     if (id in this._children) {
       return this._children[id];
     }
     let child = new ChildActor(this.conn, id);
     this._children[id] = child;
     return child;
-  }, {
-    request: { str: Arg(0) },
-    response: { actor: RetVal("childActor") },
-  }),
+  },
 
-  getChildren: method(function (ids) {
+  getChildren: function (ids) {
     return ids.map(id => this.getChild(id));
-  }, {
-    request: { ids: Arg(0, "array:string") },
-    response: { children: RetVal("array:childActor") },
-  }),
+  },
 
-  getChildren2: method(function (ids) {
+  getChildren2: function (ids) {
     let f = function* () {
       for (let c of ids) {
         yield c;
       }
     };
     return f();
-  }, {
-    request: { ids: Arg(0, "array:childActor") },
-    response: { children: RetVal("array:childActor") },
-  }),
+  },
 
-  getManyChildren: method(function () {
+  getManyChildren: function () {
     return {
       foo: "bar", // note that this isn't in the specialization array.
       child5: this.getChild("child5"),
       more: [ this.getChild("child6"), this.getChild("child7") ]
     };
-  }, {
-    response: RetVal("manyChildrenDict")
-  }),
+  },
 
   // This should remind you of a pause actor.
-  getTemporaryChild: method(function (id) {
+  getTemporaryChild: function (id) {
     if (!this._temporaryHolder) {
       this._temporaryHolder = this.manage(new protocol.Actor(this.conn));
     }
     return new ChildActor(this.conn, id);
-  }, {
-    request: { id: Arg(0) },
-    response: { child: RetVal("temp:childActor") }
-  }),
+  },
 
-  clearTemporaryChildren: method(function (id) {
+  clearTemporaryChildren: function (id) {
     if (!this._temporaryHolder) {
       return;
     }
     this._temporaryHolder.destroy();
     delete this._temporaryHolder;
-  })
+  }
 });
 
-var RootFront = protocol.FrontClass(RootActor, {
+var RootFront = protocol.FrontClassWithSpec(rootSpec, {
   toString: function () { return "[root front]"; },
   initialize: function (client) {
     this.actorID = "root";

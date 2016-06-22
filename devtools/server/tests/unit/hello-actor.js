@@ -3,13 +3,16 @@
 
 const protocol = require("devtools/shared/protocol");
 
-var HelloActor = protocol.ActorClass({
+const helloSpec = protocol.generateActorSpec({
   typeName: "helloActor",
 
-  hello: protocol.method(function () {
+  methods: {
+    hello: {}
+  }
+});
+
+var HelloActor = protocol.ActorClassWithSpec(helloSpec, {
+  hello: function () {
     return;
-  }, {
-    request: {},
-    response: {}
-  })
+  }
 });
