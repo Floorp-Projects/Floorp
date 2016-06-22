@@ -31,8 +31,8 @@
 <meta charset="utf-8">
 <title>WebGL OES_texture_float Conformance Tests</title>
 <link rel="stylesheet" href="../../resources/js-test-style.css"/>
-<script src="../../resources/js-test-pre.js"></script>
-<script src="../resources/webgl-test-utils.js"></script>
+<script src="../../js/js-test-pre.js"></script>
+<script src="../../js/webgl-test-utils.js"></script>
 </head>
 <body>
 <div id="description"></div>
@@ -87,7 +87,7 @@ if (!gl) {
   testPassed("WebGL context exists");
 
   var texturedShaders = [
-      wtu.setupSimpleTextureVertexShader(gl),
+      wtu.simpleTextureVertexShader,
       "testFragmentShader"
   ];
   var testProgram =
@@ -181,10 +181,10 @@ function arrayToString(arr, size) {
         mySize = size;
     var out = "[";
     for (var ii = 0; ii < mySize; ++ii) {
-	if (ii > 0) {
-	    out += ", ";
-	}
-	out += arr[ii];
+    if (ii > 0) {
+        out += ", ";
+    }
+    out += arr[ii];
     }
     return out + "]";
 }
@@ -250,25 +250,25 @@ function runRenderTargetAndReadbackTest(testProgram, format, numberOfChannels, s
     var implType = gl.getParameter(gl.IMPLEMENTATION_COLOR_READ_TYPE);
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "getParameter of IMPLEMENTATION_COLOR_READ_{FORMAT|TYPE} should succeed");
     if ((implFormat == gl.RGBA || implFormat == gl.RGB) && implType == gl.FLOAT) {
-	debug("Checking readback of floating-point values");
-	var arraySize = (implFormat == gl.RGBA) ? 4 : 3
-	var buf = new Float32Array(arraySize);
-	gl.readPixels(0, 0, 1, 1, implFormat, implType , buf);
-	wtu.glErrorShouldBe(gl, gl.NO_ERROR, "readPixels from floating-point renderbuffer should succeed");
-	var ok = true;
-	var tolerance = 8.0; // TODO: factor this out from both this test and the subtractor shader above.
-	for (var ii = 0; ii < buf.length; ++ii) {
-	    if (Math.abs(buf[ii] - subtractor[ii]) > tolerance) {
-		ok = false;
-		break;
-	    }
-	}
-	if (ok) {
-	    testPassed("readPixels of float-type data from floating-point renderbuffer succeeded");
-	} else {
-	    testFailed("readPixels of float-type data from floating-point renderbuffer failed: expected "
-		       + arrayToString(subtractor, arraySize) + ", got " + arrayToString(buf));
-	}
+    debug("Checking readback of floating-point values");
+    var arraySize = (implFormat == gl.RGBA) ? 4 : 3
+    var buf = new Float32Array(arraySize);
+    gl.readPixels(0, 0, 1, 1, implFormat, implType , buf);
+    wtu.glErrorShouldBe(gl, gl.NO_ERROR, "readPixels from floating-point renderbuffer should succeed");
+    var ok = true;
+    var tolerance = 8.0; // TODO: factor this out from both this test and the subtractor shader above.
+    for (var ii = 0; ii < buf.length; ++ii) {
+        if (Math.abs(buf[ii] - subtractor[ii]) > tolerance) {
+        ok = false;
+        break;
+        }
+    }
+    if (ok) {
+        testPassed("readPixels of float-type data from floating-point renderbuffer succeeded");
+    } else {
+        testFailed("readPixels of float-type data from floating-point renderbuffer failed: expected "
+               + arrayToString(subtractor, arraySize) + ", got " + arrayToString(buf));
+    }
     }
 }
 
@@ -277,7 +277,7 @@ function runUniqueObjectTest()
     debug("");
     debug("Testing that getExtension() returns the same object each time");
     gl.getExtension("OES_texture_float").myProperty = 2;
-    gc();
+    webglHarnessCollectGarbage();
     shouldBe('gl.getExtension("OES_texture_float").myProperty', '2');
 }
 
@@ -285,7 +285,7 @@ function runUniqueObjectTest()
 debug("");
 var successfullyParsed = true;
 </script>
-<script src="../../resources/js-test-post.js"></script>
+<script src="../../js/js-test-post.js"></script>
 
 </body>
 </html>

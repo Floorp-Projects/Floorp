@@ -31,8 +31,8 @@
 <meta charset="utf-8">
 <title>WebGL OES_element_index_uint Conformance Tests</title>
 <link rel="stylesheet" href="../../resources/js-test-style.css"/>
-<script src="../../resources/js-test-pre.js"></script>
-<script src="../resources/webgl-test-utils.js"></script>
+<script src="../../js/js-test-pre.js"></script>
+<script src="../../js/webgl-test-utils.js"></script>
 
 <script id="vs" type="x-shader/x-vertex">
 attribute vec4 vPosition;
@@ -133,7 +133,7 @@ function runDrawTests(drawType) {
     canvas.width = 50; canvas.height = 50;
     gl.viewport(0, 0, canvas.width, canvas.height);
     
-    var program = wtu.setupNoTexCoordTextureProgram(gl);
+    var program = wtu.setupSimpleColorProgram(gl);
 
     function setupDraw(s) {
         // Create a vertex buffer that cannot be fully indexed via shorts
@@ -197,6 +197,7 @@ function runDrawTests(drawType) {
     function verifyDraw(s) {
         gl.clearColor(1.0, 1.0, 1.0, 1.0);
         gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+        wtu.setFloatDrawColor(gl, [0.0, 0.0, 0.0, 1.0]);
         gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, 0);
 
         var blackList = [];
@@ -440,7 +441,7 @@ function runCrashWithBufferSubDataTests(drawType) {
 debug("");
 var successfullyParsed = true;
 </script>
-<script src="../../resources/js-test-post.js"></script>
+<script src="../../js/js-test-post.js"></script>
 
 </body>
 </html>
