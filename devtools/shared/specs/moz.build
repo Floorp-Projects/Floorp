@@ -25,6 +25,7 @@ DevToolsModules(
     'layout.js',
     'memory.js',
     'node.js',
+    'performance.js',
     'preference.js',
     'promises.js',
     'script.js',

@@ -8,7 +8,7 @@
 var BUFFER_SIZE = 20000;
 var config = { bufferSize: BUFFER_SIZE };
 
-const { PerformanceFront } = require("devtools/server/actors/performance");
+const { PerformanceFront } = require("devtools/shared/fronts/performance");
 
 add_task(function* () {
   let browser = yield addTab(MAIN_DOMAIN + "doc_perf.html");
