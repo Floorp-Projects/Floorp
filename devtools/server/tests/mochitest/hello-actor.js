@@ -3,18 +3,24 @@
 
 const protocol = require("devtools/shared/protocol");
 
-var HelloActor = protocol.ActorClass({
+const helloSpec = protocol.generateActorSpec({
   typeName: "helloActor",
 
+  methods: {
+    count: {
+      request: {},
+      response: {count: protocol.RetVal("number")}
+    }
+  }
+});
+
+var HelloActor = protocol.ActorClassWithSpec(helloSpec, {
   initialize: function () {
     protocol.Actor.prototype.initialize.apply(this, arguments);
     this.counter = 0;
   },
 
-  count: protocol.method(function () {
+  count: function () {
     return ++this.counter;
-  }, {
-    request: {},
-    response: {count: protocol.RetVal("number")}
-  })
+  }
 });

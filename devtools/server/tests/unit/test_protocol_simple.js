@@ -6,7 +6,7 @@
  */
 
 var protocol = require("devtools/shared/protocol");
-var {method, Arg, Option, RetVal} = protocol;
+var {Arg, Option, RetVal} = protocol;
 var events = require("sdk/event/core");
 
 function simpleHello() {
@@ -17,8 +17,91 @@ function simpleHello() {
   };
 }
 
-var RootActor = protocol.ActorClass({
+const rootSpec = protocol.generateActorSpec({
   typeName: "root",
+
+  events: {
+    "oneway": { a: Arg(0) },
+    "falsyOptions": {
+      zero: Option(0),
+      farce: Option(0)
+    }
+  },
+
+  methods: {
+    simpleReturn: {
+      response: { value: RetVal() },
+    },
+    promiseReturn: {
+      response: { value: RetVal("number") },
+    },
+    simpleArgs: {
+      request: {
+        firstArg: Arg(0),
+        secondArg: Arg(1),
+      },
+      response: RetVal()
+    },
+    nestedArgs: {
+      request: {
+        firstArg: Arg(0),
+        nest: {
+          secondArg: Arg(1),
+          nest: {
+            thirdArg: Arg(2)
+          }
+        }
+      },
+      response: RetVal()
+    },
+    optionArgs: {
+      request: {
+        option1: Option(0),
+        option2: Option(0)
+      },
+      response: RetVal()
+    },
+    optionalArgs: {
+      request: {
+        a: Arg(0),
+        b: Arg(1, "nullable:number")
+      },
+      response: {
+        value: RetVal("number")
+      },
+    },
+    arrayArgs: {
+      request: {
+        a: Arg(0, "array:number")
+      },
+      response: {
+        arrayReturn: RetVal("array:number")
+      },
+    },
+    nestedArrayArgs: {
+      request: { a: Arg(0, "array:array:number") },
+      response: { value: RetVal("array:array:number") },
+    },
+    renamedEcho: {
+      request: {
+        type: "echo",
+        a: Arg(0),
+      },
+      response: {
+        value: RetVal("string")
+      },
+    },
+    testOneWay: {
+      request: { a: Arg(0) },
+      oneway: true
+    },
+    emitFalsyOptions: {
+      oneway: true
+    }
+  }
+});
+
+var RootActor = protocol.ActorClassWithSpec(rootSpec, {
   initialize: function (conn) {
     protocol.Actor.prototype.initialize.call(this, conn);
     // Root actor owns itself.
@@ -28,126 +111,60 @@ var RootActor = protocol.ActorClass({
 
   sayHello: simpleHello,
 
-  simpleReturn: method(function () {
+  simpleReturn: function () {
     return 1;
-  }, {
-    response: { value: RetVal() },
-  }),
+  },
 
-  promiseReturn: method(function () {
+  promiseReturn: function () {
     return promise.resolve(1);
-  }, {
-    response: { value: RetVal("number") },
-  }),
+  },
 
-  simpleArgs: method(function (a, b) {
+  simpleArgs: function (a, b) {
     return { firstResponse: a + 1, secondResponse: b + 1 };
-  }, {
-    request: {
-      firstArg: Arg(0),
-      secondArg: Arg(1),
-    },
-    response: RetVal()
-  }),
+  },
 
-  nestedArgs: method(function (a, b, c) {
+  nestedArgs: function (a, b, c) {
     return { a: a, b: b, c: c };
-  }, {
-    request: {
-      firstArg: Arg(0),
-      nest: {
-        secondArg: Arg(1),
-        nest: {
-          thirdArg: Arg(2)
-        }
-      }
-    },
-    response: RetVal()
-  }),
+  },
 
-  optionArgs: method(function (options) {
+  optionArgs: function (options) {
     return { option1: options.option1, option2: options.option2 };
-  }, {
-    request: {
-      option1: Option(0),
-      option2: Option(0)
-    },
-    response: RetVal()
-  }),
+  },
 
-  optionalArgs: method(function (a, b = 200) {
+  optionalArgs: function (a, b = 200) {
     return b;
-  }, {
-    request: {
-      a: Arg(0),
-      b: Arg(1, "nullable:number")
-    },
-    response: {
-      value: RetVal("number")
-    },
-  }),
+  },
 
-  arrayArgs: method(function (a) {
+  arrayArgs: function (a) {
     return a;
-  }, {
-    request: {
-      a: Arg(0, "array:number")
-    },
-    response: {
-      arrayReturn: RetVal("array:number")
-    },
-  }),
+  },
 
-  nestedArrayArgs: method(function (a) {
+  nestedArrayArgs: function (a) {
     return a;
-  }, {
-    request: { a: Arg(0, "array:array:number") },
-    response: { value: RetVal("array:array:number") },
-  }),
+  },
 
   /**
    * Test that the 'type' part of the request packet works
    * correctly when the type isn't the same as the method name
    */
-  renamedEcho: method(function (a) {
+  renamedEcho: function (a) {
     if (this.conn.currentPacket.type != "echo") {
       return "goodbye";
     }
     return a;
-  }, {
-    request: {
-      type: "echo",
-      a: Arg(0),
-    },
-    response: {
-      value: RetVal("string")
-    },
-  }),
+  },
 
-  testOneWay: method(function (a) {
+  testOneWay: function (a) {
     // Emit to show that we got this message, because there won't be a response.
     events.emit(this, "oneway", a);
-  }, {
-    request: { a: Arg(0) },
-    oneway: true
-  }),
+  },
 
-  emitFalsyOptions: method(function () {
+  emitFalsyOptions: function () {
     events.emit(this, "falsyOptions", { zero: 0, farce: false });
-  }, {
-    oneway: true
-  }),
-
-  events: {
-    "oneway": { a: Arg(0) },
-    "falsyOptions": {
-      zero: Option(0),
-      farce: Option(0)
-    }
   }
 });
 
-var RootFront = protocol.FrontClass(RootActor, {
+var RootFront = protocol.FrontClassWithSpec(rootSpec, {
   initialize: function (client) {
     this.actorID = "root";
     protocol.Front.prototype.initialize.call(this, client);
@@ -164,7 +181,7 @@ function run_test()
   DebuggerServer.init();
 
   check_except(() => {
-    let badActor = ActorClass({
+    let badActor = ActorClassWithSpec({}, {
       missing: preEvent("missing-event", function () {
       })
     });
