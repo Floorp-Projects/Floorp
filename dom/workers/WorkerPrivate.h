@@ -30,7 +30,7 @@
 #include "nsTObserverArray.h"
 
 #include "Queue.h"
-#include "WorkerFeature.h"
+#include "WorkerHolder.h"
 
 #ifdef XP_WIN
 #undef PostMessage
@@ -862,6 +862,7 @@ private:
 
 class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
 {
+  friend class WorkerHolder;
   friend class WorkerPrivateParent<WorkerPrivate>;
   typedef WorkerPrivateParent<WorkerPrivate> ParentType;
   friend class AutoSyncLoopHolder;
@@ -897,7 +898,7 @@ class WorkerPrivate : public WorkerPrivateParent<WorkerPrivate>
   RefPtr<WorkerGlobalScope> mScope;
   RefPtr<WorkerDebuggerGlobalScope> mDebuggerScope;
   nsTArray<ParentType*> mChildWorkers;
-  nsTObserverArray<WorkerFeature*> mFeatures;
+  nsTObserverArray<WorkerHolder*> mHolders;
   nsTArray<nsAutoPtr<TimeoutInfo>> mTimeouts;
   uint32_t mDebuggerEventLoopLevel;
 
@@ -1074,22 +1075,6 @@ public:
 
   void
   RemoveChildWorker(ParentType* aChildWorker);
-
-  bool
-  AddFeature(WorkerFeature* aFeature);
-
-  void
-  RemoveFeature(WorkerFeature* aFeature);
-
-  void
-  NotifyFeatures(JSContext* aCx, Status aStatus);
-
-  bool
-  HasActiveFeatures()
-  {
-    return !(mChildWorkers.IsEmpty() && mTimeouts.IsEmpty() &&
-             mFeatures.IsEmpty());
-  }
 
   void
   PostMessageToParent(JSContext* aCx,
@@ -1442,6 +1427,22 @@ private:
 
   void
   ShutdownGCTimers();
+
+  bool
+  AddHolder(WorkerHolder* aHolder);
+
+  void
+  RemoveHolder(WorkerHolder* aHolder);
+
+  void
+  NotifyHolders(JSContext* aCx, Status aStatus);
+
+  bool
+  HasActiveHolders()
+  {
+    return !(mChildWorkers.IsEmpty() && mTimeouts.IsEmpty() &&
+             mHolders.IsEmpty());
+  }
 };
 
 // This class is only used to trick the DOM bindings.  We never create
