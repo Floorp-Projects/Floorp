@@ -1,0 +1,7 @@
+. $topsrcdir/browser/config/mozconfigs/win32/nightly
+
+#add-on signing is checked but not enforced
+MOZ_REQUIRE_SIGNING=0
+ac_add_options --with-branding=browser/branding/unofficial
+
+
