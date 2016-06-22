@@ -2,6 +2,13 @@ language: generic
 
 matrix:
   include:
+    - env: TARGET=armv7-unknown-linux-gnueabihf
+      addons:
+        apt:
+          packages: &armhf
+          - gcc-arm-linux-gnueabihf
+          - libc6-armhf-cross
+          - libc6-dev-armhf-cross
     - env: TARGET=i686-unknown-linux-gnu
       addons:
         apt:
