@@ -13,6 +13,7 @@
 #include "nsITableEditor.h"
 #include "nsIEditorMailSupport.h"
 #include "nsIEditorStyleSheets.h"
+#include "nsIEditorUtils.h"
 
 #include "nsEditor.h"
 #include "nsIDOMElement.h"
@@ -56,6 +57,7 @@ struct PropItem;
 namespace mozilla {
 template<class T> class OwningNonNull;
 namespace dom {
+class BlobImpl;
 class DocumentFragment;
 } // namespace dom
 namespace widget {
@@ -405,6 +407,30 @@ public:
   }
 
 protected:
+  class BlobReader final : public nsIEditorBlobListener
+  {
+  public:
+    BlobReader(mozilla::dom::BlobImpl* aBlob, nsHTMLEditor* aEditor,
+               bool aIsSafe, nsIDOMDocument* aSourceDoc,
+               nsIDOMNode* aDestinationNode, int32_t aDestOffset,
+               bool aDoDeleteSelection);
+
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIEDITORBLOBLISTENER
+
+  private:
+    ~BlobReader()
+    {
+    }
+
+    RefPtr<mozilla::dom::BlobImpl> mBlob;
+    RefPtr<nsHTMLEditor> mEditor;
+    bool mIsSafe;
+    nsCOMPtr<nsIDOMDocument> mSourceDoc;
+    nsCOMPtr<nsIDOMNode> mDestinationNode;
+    int32_t mDestOffset;
+    bool mDoDeleteSelection;
+  };
 
   NS_IMETHOD  InitRules() override;
 

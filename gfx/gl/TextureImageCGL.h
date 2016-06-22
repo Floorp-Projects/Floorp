@@ -38,7 +38,7 @@ private:
 };
 
 already_AddRefed<TextureImage>
-CreateTextureImageCGL(GLContext *gl,
+CreateTextureImageCGL(GLContext* gl,
                       const gfx::IntSize& aSize,
                       TextureImage::ContentType aContentType,
                       GLenum aWrapMode,
@@ -46,7 +46,7 @@ CreateTextureImageCGL(GLContext *gl,
                       TextureImage::ImageFormat aImageFormat);
 
 already_AddRefed<TextureImage>
-TileGenFuncCGL(GLContext *gl,
+TileGenFuncCGL(GLContext* gl,
                const gfx::IntSize& aSize,
                TextureImage::ContentType aContentType,
                TextureImage::Flags aFlags);

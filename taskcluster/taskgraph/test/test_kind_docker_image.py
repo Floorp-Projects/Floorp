@@ -6,12 +6,10 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 import unittest
 import tempfile
-import shutil
 import os
 
 from ..kind import docker_image
-from ..types import Task
-from mozunit import main, MockedOpen
+from mozunit import main
 
 
 class TestDockerImageKind(unittest.TestCase):

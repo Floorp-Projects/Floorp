@@ -18,10 +18,10 @@
 namespace mozilla {
 namespace gl {
 
-GLContextEAGL::GLContextEAGL(const SurfaceCaps& caps, EAGLContext* context,
-                             GLContext* sharedContext,
+GLContextEAGL::GLContextEAGL(CreateContextFlags flags, const SurfaceCaps& caps,
+                             EAGLContext* context, GLContext* sharedContext,
                              bool isOffscreen, ContextProfile profile)
-    : GLContext(caps, sharedContext, isOffscreen)
+    : GLContext(flags, caps, sharedContext, isOffscreen)
     , mContext(context)
     , mBackbufferRB(0)
     , mBackbufferFB(0)
@@ -166,7 +166,7 @@ GetGlobalContextEAGL()
 }
 
 static already_AddRefed<GLContext>
-CreateEAGLContext(bool aOffscreen, GLContextEAGL* sharedContext)
+CreateEAGLContext(CreateContextFlags flags, bool aOffscreen, GLContextEAGL* sharedContext)
 {
     EAGLRenderingAPI apis[] = { kEAGLRenderingAPIOpenGLES3, kEAGLRenderingAPIOpenGLES2 };
 
@@ -191,7 +191,7 @@ CreateEAGLContext(bool aOffscreen, GLContextEAGL* sharedContext)
 
     SurfaceCaps caps = SurfaceCaps::ForRGBA();
     ContextProfile profile = ContextProfile::OpenGLES;
-    RefPtr<GLContextEAGL> glContext = new GLContextEAGL(caps, context,
+    RefPtr<GLContextEAGL> glContext = new GLContextEAGL(flags, caps, context,
                                                         sharedContext,
                                                         aOffscreen,
                                                         profile);
@@ -207,7 +207,8 @@ CreateEAGLContext(bool aOffscreen, GLContextEAGL* sharedContext)
 already_AddRefed<GLContext>
 GLContextProviderEAGL::CreateForWindow(nsIWidget* aWidget, bool aForceAccelerated)
 {
-    RefPtr<GLContext> glContext = CreateEAGLContext(false, GetGlobalContextEAGL());
+    RefPtr<GLContext> glContext = CreateEAGLContext(CreateContextFlags::NONE, false,
+                                                    GetGlobalContextEAGL());
     if (!glContext) {
         return nullptr;
     }
@@ -220,17 +221,19 @@ GLContextProviderEAGL::CreateForWindow(nsIWidget* aWidget, bool aForceAccelerate
 }
 
 already_AddRefed<GLContext>
-GLContextProviderEAGL::CreateHeadless(CreateContextFlags flags)
+GLContextProviderEAGL::CreateHeadless(CreateContextFlags flags,
+                                      nsACString* const out_failureId)
 {
-    return CreateEAGLContext(true, GetGlobalContextEAGL());
+    return CreateEAGLContext(flags, true, GetGlobalContextEAGL());
 }
 
 already_AddRefed<GLContext>
 GLContextProviderEAGL::CreateOffscreen(const mozilla::gfx::IntSize& size,
                                        const SurfaceCaps& caps,
-                                       CreateContextFlags flags)
+                                       CreateContextFlags flags,
+                                       nsACString* const out_failureId)
 {
-    RefPtr<GLContext> glContext = CreateHeadless(flags);
+    RefPtr<GLContext> glContext = CreateHeadless(flags, out_failureId);
     if (!glContext->InitOffscreen(size, caps)) {
         return nullptr;
     }

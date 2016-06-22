@@ -8,10 +8,8 @@ import unittest
 
 from ..optimize import optimize_task_graph, resolve_task_references
 from ..optimize import annotate_task_graph, get_subgraph
-from .. import optimize
 from .. import types
 from .. import graph
-from mozunit import main
 
 
 class TestResolveTaskReferences(unittest.TestCase):
@@ -47,8 +45,11 @@ class TestResolveTaskReferences(unittest.TestCase):
 
     def test_invalid(self):
         "resolve_task_references raises a KeyError on reference to an invalid task"
-        self.assertRaisesRegexp(KeyError, "task 'subject' has no dependency with label 'no-such'", lambda:
-            resolve_task_references('subject', {'task-reference': '<no-such>'}, {}))
+        self.assertRaisesRegexp(
+            KeyError,
+            "task 'subject' has no dependency with label 'no-such'",
+            lambda: resolve_task_references('subject', {'task-reference': '<no-such>'}, {})
+            )
 
 
 class FakeKind(object):
@@ -79,7 +80,9 @@ class TestOptimize(unittest.TestCase):
     def assert_annotations(self, graph, **annotations):
         def repl(task_id):
             return 'SLUGID' if task_id and len(task_id) == 22 else task_id
-        got_annotations = {t.label: (t.optimized, repl(t.task_id)) for t in graph.tasks.itervalues()}
+        got_annotations = {
+            t.label: (t.optimized, repl(t.task_id)) for t in graph.tasks.itervalues()
+            }
         self.assertEqual(got_annotations, annotations)
 
     def test_annotate_task_graph_no_optimize(self):
@@ -92,19 +95,22 @@ class TestOptimize(unittest.TestCase):
             ('task2', 'task1', 'build'),
             ('task2', 'task3', 'image'),
         )
-        opt = annotate_task_graph(graph, set(),
-                graph.graph.named_links_dict(), {})
-        self.assert_annotations(graph,
+        annotate_task_graph(graph, set(), graph.graph.named_links_dict(), {})
+        self.assert_annotations(
+            graph,
             task1=(False, None),
             task2=(False, None),
-            task3=(False, None))
+            task3=(False, None)
+            )
 
     def test_annotate_task_graph_taskid_without_optimize(self):
         "raises exception if kind returns a taskid without optimizing"
         self.make_kind(lambda task, deps: (False, 'some-taskid'))
         graph = self.make_graph(self.make_task('task1'))
-        self.assertRaises(Exception, lambda:
-            annotate_task_graph(graph, set(), graph.graph.named_links_dict(), {}))
+        self.assertRaises(
+            Exception,
+            lambda: annotate_task_graph(graph, set(), graph.graph.named_links_dict(), {})
+            )
 
     def test_annotate_task_graph_optimize_away_dependency(self):
         "raises exception if kind optimizes away a task on which another depends"
@@ -114,8 +120,10 @@ class TestOptimize(unittest.TestCase):
             self.make_task('task2'),
             ('task2', 'task1', 'build'),
         )
-        self.assertRaises(Exception, lambda:
-            annotate_task_graph(graph, set(), graph.graph.named_links_dict(), {}))
+        self.assertRaises(
+            Exception,
+            lambda: annotate_task_graph(graph, set(), graph.graph.named_links_dict(), {})
+            )
 
     def test_annotate_task_graph_do_not_optimize(self):
         "annotating marks everything as un-optimized if in do_not_optimize"
@@ -126,16 +134,20 @@ class TestOptimize(unittest.TestCase):
             ('task2', 'task1', 'build'),
         )
         label_to_taskid = {}
-        opt = annotate_task_graph(graph, {'task1', 'task2'},
-                graph.graph.named_links_dict(), label_to_taskid)
-        self.assert_annotations(graph,
+        annotate_task_graph(graph, {'task1', 'task2'},
+                            graph.graph.named_links_dict(), label_to_taskid)
+        self.assert_annotations(
+            graph,
             task1=(False, None),
-            task2=(False, None))
+            task2=(False, None)
+            )
         self.assertEqual
 
     def test_annotate_task_graph_nos_propagate(self):
         "annotating marks a task with a non-optimized dependency as non-optimized"
-        self.make_kind(lambda task, deps: (False, None) if task.label == 'task1' else (True, 'taskid'))
+        self.make_kind(
+            lambda task, deps: (False, None) if task.label == 'task1' else (True, 'taskid')
+            )
         graph = self.make_graph(
             self.make_task('task1'),
             self.make_task('task2'),
@@ -143,12 +155,14 @@ class TestOptimize(unittest.TestCase):
             ('task2', 'task1', 'build'),
             ('task2', 'task3', 'image'),
         )
-        opt = annotate_task_graph(graph, set(),
-                graph.graph.named_links_dict(), {})
-        self.assert_annotations(graph,
+        annotate_task_graph(graph, set(),
+                            graph.graph.named_links_dict(), {})
+        self.assert_annotations(
+            graph,
             task1=(False, None),
             task2=(False, None),  # kind would have returned (True, 'taskid') here
-            task3=(True, 'taskid'))
+            task3=(True, 'taskid')
+            )
 
     def test_get_subgraph_single_dep(self):
         "when a single dependency is optimized, it is omitted from the graph"
@@ -207,8 +221,11 @@ class TestOptimize(unittest.TestCase):
         "get_subgraph resolves task references"
         graph = self.make_graph(
             self.make_task('task1', optimized=True, task_id='dep1'),
-            self.make_task('task2', optimized=False,
-                task_def={'payload': {'task-reference': 'http://<build>/<test>'}}),
+            self.make_task(
+                'task2',
+                optimized=False,
+                task_def={'payload': {'task-reference': 'http://<build>/<test>'}}
+                ),
             ('task2', 'task1', 'build'),
             ('task2', 'task3', 'test'),
             self.make_task('task3', optimized=False),
@@ -226,7 +243,9 @@ class TestOptimize(unittest.TestCase):
 
     def test_optimize(self):
         "optimize_task_graph annotates and extracts the subgraph from a simple graph"
-        self.make_kind(lambda task, deps: (True, 'dep1') if task.label == 'task1' else (False, None))
+        self.make_kind(
+            lambda task, deps: (True, 'dep1') if task.label == 'task1' else (False, None)
+            )
         input = self.make_graph(
             self.make_task('task1'),
             self.make_task('task2'),

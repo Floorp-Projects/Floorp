@@ -1748,6 +1748,10 @@ nsNSSComponent::InitializeNSS()
     return NS_ERROR_NOT_AVAILABLE;
   }
 
+  // ensure we have an initial value for the content signer root
+  mContentSigningRootHash =
+    Preferences::GetString("security.content.signature.root_hash");
+
   mNSSInitialized = true;
 
   PK11_SetPasswordFunc(PK11PasswordPrompt);
@@ -2181,16 +2185,19 @@ nsNSSComponent::IsCertContentSigningRoot(CERTCertificate* cert, bool& result)
   result = false;
 
   if (mContentSigningRootHash.IsEmpty()) {
-    return NS_OK;
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("mContentSigningRootHash is empty"));
+    return NS_ERROR_FAILURE;
   }
 
   RefPtr<nsNSSCertificate> nsc = nsNSSCertificate::Create(cert);
   if (!nsc) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("creating nsNSSCertificate failed"));
     return NS_ERROR_FAILURE;
   }
   nsAutoString certHash;
   nsresult rv = nsc->GetSha256Fingerprint(certHash);
   if (NS_FAILED(rv)) {
+    MOZ_LOG(gPIPNSSLog, LogLevel::Debug, ("getting cert fingerprint failed"));
     return rv;
   }
 

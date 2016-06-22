@@ -31,6 +31,7 @@ class IonBuilder;
 class IonICEntry;
 
 typedef Vector<JSObject*, 4, JitAllocPolicy> ObjectVector;
+typedef Vector<TraceLoggerEvent, 0, SystemAllocPolicy> TraceLoggerEventVector;
 
 class JitCode : public gc::TenuredCell
 {
@@ -283,8 +284,8 @@ struct IonScript
     // Allocated space for fallback stubs.
     FallbackICStubSpace fallbackStubSpace_;
 
-    // The tracelogger event used to log the start/stop of this IonScript.
-    TraceLoggerEvent traceLoggerScriptEvent_;
+    // TraceLogger events that are baked into the IonScript.
+    TraceLoggerEventVector traceLoggerEvents_;
 
   private:
     inline uint8_t* bottomBuffer() {
@@ -435,8 +436,8 @@ struct IonScript
     bool hasProfilingInstrumentation() const {
         return hasProfilingInstrumentation_;
     }
-    void setTraceLoggerEvent(TraceLoggerEvent& event) {
-        traceLoggerScriptEvent_ = event;
+    MOZ_MUST_USE bool addTraceLoggerEvent(TraceLoggerEvent& event) {
+        return traceLoggerEvents_.append(Move(event));
     }
     const uint8_t* snapshots() const {
         return reinterpret_cast<const uint8_t*>(this) + snapshots_;

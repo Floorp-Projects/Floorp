@@ -6,6 +6,7 @@
 
 #include "ContentEventHandler.h"
 #include "mozilla/IMEStateManager.h"
+#include "mozilla/TextComposition.h"
 #include "mozilla/TextEvents.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/HTMLUnknownElement.h"
@@ -274,6 +275,11 @@ ContentEventHandler::Init(WidgetQueryContentEvent* aEvent)
   MOZ_ASSERT(aEvent->mMessage == eQuerySelectedText ||
              aEvent->mInput.mSelectionType == SelectionType::eNormal);
 
+  if (NS_WARN_IF(!aEvent->mInput.IsValidOffset()) ||
+      NS_WARN_IF(!aEvent->mInput.IsValidEventMessage(aEvent->mMessage))) {
+    return NS_ERROR_FAILURE;
+  }
+
   // Note that we should ignore WidgetQueryContentEvent::Input::mSelectionType
   // if the event isn't eQuerySelectedText.
   SelectionType selectionType =
@@ -285,6 +291,33 @@ ContentEventHandler::Init(WidgetQueryContentEvent* aEvent)
 
   nsresult rv = InitCommon(selectionType);
   NS_ENSURE_SUCCESS(rv, rv);
+
+  // Be aware, WidgetQueryContentEvent::mInput::mOffset should be made absolute
+  // offset before sending it to ContentEventHandler because querying selection
+  // every time may be expensive.  So, if the caller caches selection, it
+  // should initialize the event with the cached value.
+  if (aEvent->mInput.mRelativeToInsertionPoint) {
+    MOZ_ASSERT(selectionType == SelectionType::eNormal);
+    RefPtr<TextComposition> composition =
+      IMEStateManager::GetTextCompositionFor(aEvent->mWidget);
+    if (composition) {
+      uint32_t compositionStart = composition->NativeOffsetOfStartComposition();
+      if (NS_WARN_IF(!aEvent->mInput.MakeOffsetAbsolute(compositionStart))) {
+        return NS_ERROR_FAILURE;
+      }
+    } else {
+      LineBreakType lineBreakType = GetLineBreakType(aEvent);
+      uint32_t selectionStart = 0;
+      rv = GetFlatTextLengthBefore(mFirstSelectedRange,
+                                   &selectionStart, lineBreakType);
+      if (NS_WARN_IF(NS_FAILED(rv))) {
+        return NS_ERROR_FAILURE;
+      }
+      if (NS_WARN_IF(!aEvent->mInput.MakeOffsetAbsolute(selectionStart))) {
+        return NS_ERROR_FAILURE;
+      }
+    }
+  }
 
   aEvent->mSucceeded = false;
 
@@ -1702,7 +1735,8 @@ ContentEventHandler::OnQueryCharacterAtPoint(WidgetQueryContentEvent* aEvent)
   }
 
   WidgetQueryContentEvent textRect(true, eQueryTextRect, aEvent->mWidget);
-  textRect.InitForQueryTextRect(offset, 1, aEvent->mUseNativeLineBreak);
+  WidgetQueryContentEvent::Options options(*aEvent);
+  textRect.InitForQueryTextRect(offset, 1, options);
   rv = OnQueryTextRect(&textRect);
   NS_ENSURE_SUCCESS(rv, rv);
   NS_ENSURE_TRUE(textRect.mSucceeded, NS_ERROR_FAILURE);

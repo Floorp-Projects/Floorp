@@ -1340,6 +1340,7 @@ CodeGeneratorShared::callVM(const VMFunction& fun, LInstruction* ins, const Regi
 
 #ifdef JS_TRACE_LOGGING
     emitTracelogStartEvent(TraceLogger_VM);
+    emitTracelogStartEvent(fun.name(), TraceLogger_VMSpecific);
 #endif
 
     // Stack is:
@@ -1391,6 +1392,7 @@ CodeGeneratorShared::callVM(const VMFunction& fun, LInstruction* ins, const Regi
 
 #ifdef JS_TRACE_LOGGING
     emitTracelogStopEvent(TraceLogger_VM);
+    emitTracelogStopEvent(fun.name(), TraceLogger_VMSpecific);
 #endif
 }
 
@@ -1768,6 +1770,44 @@ CodeGeneratorShared::emitTracelogTree(bool isStart, uint32_t textId)
     masm.bind(&done);
 
     masm.Pop(logger);
+}
+
+void
+CodeGeneratorShared::emitTracelogTree(bool isStart, const char* text,
+                                      TraceLoggerTextId enabledTextId)
+{
+    if (!TraceLogTextIdEnabled(enabledTextId))
+        return;
+
+    Label done;
+
+    AllocatableRegisterSet regs(RegisterSet::Volatile());
+    Register loggerReg = regs.takeAnyGeneral();
+    Register eventReg = regs.takeAnyGeneral();
+
+    masm.Push(loggerReg);
+
+    CodeOffset patchLocation = masm.movWithPatch(ImmPtr(nullptr), loggerReg);
+    masm.propagateOOM(patchableTraceLoggers_.append(patchLocation));
+
+    Address enabledAddress(loggerReg, TraceLoggerThread::offsetOfEnabled());
+    masm.branch32(Assembler::Equal, enabledAddress, Imm32(0), &done);
+
+    masm.Push(eventReg);
+
+    PatchableTLEvent patchEvent(masm.movWithPatch(ImmWord(0), eventReg), text);
+    masm.propagateOOM(patchableTLEvents_.append(Move(patchEvent)));
+
+    if (isStart)
+        masm.tracelogStartId(loggerReg, eventReg);
+    else
+        masm.tracelogStopId(loggerReg, eventReg);
+
+    masm.Pop(eventReg);
+
+    masm.bind(&done);
+
+    masm.Pop(loggerReg);
 }
 #endif
 

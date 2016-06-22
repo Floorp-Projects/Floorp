@@ -74,70 +74,70 @@ class MachCommands(MachCommandBase):
         suite = unittest.defaultTestLoader.discover('taskgraph.test')
         runner = mozunit.MozTestRunner(verbosity=2)
         result = runner.run(suite)
-        if not result.wasSuccessful:
+        if not result.wasSuccessful():
             sys.exit(1)
 
     @ShowTaskGraphSubCommand('taskgraph', 'tasks',
-                         description="Show all tasks in the taskgraph")
+                             description="Show all tasks in the taskgraph")
     def taskgraph_tasks(self, **options):
         return self.show_taskgraph('full_task_set', options)
 
     @ShowTaskGraphSubCommand('taskgraph', 'full',
-                         description="Show the full taskgraph")
+                             description="Show the full taskgraph")
     def taskgraph_full(self, **options):
         return self.show_taskgraph('full_task_graph', options)
 
     @ShowTaskGraphSubCommand('taskgraph', 'target',
-                         description="Show the target task set")
+                             description="Show the target task set")
     def taskgraph_target(self, **options):
         return self.show_taskgraph('target_task_set', options)
 
     @ShowTaskGraphSubCommand('taskgraph', 'target-graph',
-                         description="Show the target taskgraph")
+                             description="Show the target taskgraph")
     def taskgraph_target_taskgraph(self, **options):
         return self.show_taskgraph('target_task_graph', options)
 
     @ShowTaskGraphSubCommand('taskgraph', 'optimized',
-                         description="Show the optimized taskgraph")
+                             description="Show the optimized taskgraph")
     def taskgraph_optimized(self, **options):
         return self.show_taskgraph('optimized_task_graph', options)
 
     @SubCommand('taskgraph', 'decision',
                 description="Run the decision task")
     @CommandArgument('--root', '-r',
-        default='taskcluster/ci',
-        help="root of the taskgraph definition relative to topsrcdir")
+                     default='taskcluster/ci',
+                     help="root of the taskgraph definition relative to topsrcdir")
     @CommandArgument('--base-repository',
-        required=True,
-        help='URL for "base" repository to clone')
+                     required=True,
+                     help='URL for "base" repository to clone')
     @CommandArgument('--head-repository',
-        required=True,
-        help='URL for "head" repository to fetch revision from')
+                     required=True,
+                     help='URL for "head" repository to fetch revision from')
     @CommandArgument('--head-ref',
-        required=True,
-        help='Reference (this is same as rev usually for hg)')
+                     required=True,
+                     help='Reference (this is same as rev usually for hg)')
     @CommandArgument('--head-rev',
-        required=True,
-        help='Commit revision to use from head repository')
+                     required=True,
+                     help='Commit revision to use from head repository')
     @CommandArgument('--message',
-        required=True,
-        help='Commit message to be parsed. Example: "try: -b do -p all -u all"')
+                     required=True,
+                     help='Commit message to be parsed. Example: "try: -b do -p all -u all"')
     @CommandArgument('--revision-hash',
-        required=True,
-        help='Treeherder revision hash (long revision id) to attach results to')
+                     required=True,
+                     help='Treeherder revision hash (long revision id) to attach results to')
     @CommandArgument('--project',
-        required=True,
-        help='Project to use for creating task graph. Example: --project=try')
+                     required=True,
+                     help='Project to use for creating task graph. Example: --project=try')
     @CommandArgument('--pushlog-id',
-        dest='pushlog_id',
-        required=True,
-        default=0)
+                     dest='pushlog_id',
+                     required=True,
+                     default=0)
     @CommandArgument('--owner',
-        required=True,
-        help='email address of who owns this graph')
+                     required=True,
+                     help='email address of who owns this graph')
     @CommandArgument('--level',
-        required=True,
-        help='SCM level of this repository')
+                     required=True,
+                     help='SCM level of this repository')
     def taskgraph_decision(self, **options):
         """Run the decision task: generate a task graph and submit to
         TaskCluster.  This is only meant to be called within decision tasks,
@@ -149,10 +149,9 @@ class MachCommands(MachCommandBase):
         try:
             self.setup_logging()
             return taskgraph.decision.taskgraph_decision(options)
-        except Exception as e:
+        except Exception:
             traceback.print_exc()
             sys.exit(1)
-
 
     def setup_logging(self, quiet=False, verbose=True):
         """
@@ -170,7 +169,6 @@ class MachCommands(MachCommandBase):
 
         # all of the taskgraph logging is unstructured logging
         self.log_manager.enable_unstructured()
-        
 
     def show_taskgraph(self, graph_attr, options):
         import taskgraph.parameters
@@ -192,7 +190,7 @@ class MachCommands(MachCommandBase):
 
             show_method = getattr(self, 'show_taskgraph_' + (options['format'] or 'labels'))
             show_method(tg)
-        except Exception as e:
+        except Exception:
             traceback.print_exc()
             sys.exit(1)
 
@@ -210,13 +208,14 @@ class MachCommands(MachCommandBase):
 @CommandProvider
 class LoadImage(object):
     @Command('taskcluster-load-image', category="ci",
-        description="Load a pre-built Docker image")
+             description="Load a pre-built Docker image")
     @CommandArgument('--task-id',
-        help="Load the image at public/image.tar in this task, rather than "
-             "searching the index")
+                     help="Load the image at public/image.tar in this task,"
+                          "rather than searching the index")
     @CommandArgument('image_name', nargs='?',
-        help="Load the image of this name based on the current contents of the tree "
-             "(as built for mozilla-central or mozilla-inbound)")
+                     help="Load the image of this name based on the current"
+                          "contents of the tree (as built for mozilla-central"
+                          "or mozilla-inbound)")
     def load_image(self, image_name, task_id):
         from taskgraph.docker import load_image_by_name, load_image_by_task_id
         if not image_name and not task_id:
@@ -229,6 +228,6 @@ class LoadImage(object):
                 ok = load_image_by_name(image_name)
             if not ok:
                 sys.exit(1)
-        except Exception as e:
+        except Exception:
             traceback.print_exc()
             sys.exit(1)

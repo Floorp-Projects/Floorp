@@ -1103,6 +1103,15 @@ interface nsIDOMWindowUtils : nsISupports {
   const unsigned long QUERY_CONTENT_FLAG_SELECTION_URLSTRIKEOUT        = 0x0200;
 
   /**
+   * One of sendQueryContentEvent()'s aAdditionalFlags.  If this is specified,
+   * aOffset is relative to start of selection or composition.
+   * Note that this is supported only when QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK
+   * is not specified for now.
+   */
+  const unsigned long QUERY_CONTENT_FLAG_OFFSET_RELATIVE_TO_INSERTION_POINT =
+                                                                         0x0400;
+
+  /**
    * Synthesize a query content event. Note that the result value returned here
    * is in LayoutDevice pixels rather than CSS pixels.
    *
@@ -1112,7 +1121,7 @@ interface nsIDOMWindowUtils : nsISupports {
    */
   nsIQueryContentEventResult sendQueryContentEvent(
                                in unsigned long aType,
-                               in unsigned long aOffset,
+                               in long long aOffset,
                                in unsigned long aLength,
                                in long aX,
                                in long aY,

@@ -1,6 +1,6 @@
 ---
 $inherits:
-  from: 'tasks/tests/fx_desktop_generic.yml'
+  from: 'tasks/tests/fx_docker_desktop_generic.yml'
 task:
   payload:
     capabilities:
