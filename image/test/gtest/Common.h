@@ -6,6 +6,8 @@
 #ifndef mozilla_image_test_gtest_Common_h
 #define mozilla_image_test_gtest_Common_h
 
+#include <vector>
+
 #include "gtest/gtest.h"
 
 #include "mozilla/Maybe.h"
@@ -156,6 +158,14 @@ bool RectIsSolidColor(gfx::SourceSurface* aSurface,
 bool PalettedRectIsSolidColor(Decoder* aDecoder,
                               const gfx::IntRect& aRect,
                               uint8_t aColor);
+
+/**
+ * @returns true if the pixels in @aRow of @aSurface match the pixels given in
+ * @aPixels.
+ */
+bool RowHasPixels(gfx::SourceSurface* aSurface,
+                  int32_t aRow,
+                  const std::vector<BGRAColor>& aPixels);
 
 
 ///////////////////////////////////////////////////////////////////////////////
