@@ -485,15 +485,15 @@ CanvasClientSharedSurface::Updated()
 
 void
 CanvasClientSharedSurface::OnDetach() {
-  if (mShSurfClient) {
-    mShSurfClient->CancelWaitForRecycle();
-  }
   ClearSurfaces();
 }
 
 void
 CanvasClientSharedSurface::ClearSurfaces()
 {
+  if (mFront) {
+    mFront->CancelWaitForRecycle();
+  }
   mFront = nullptr;
   mNewFront = nullptr;
   mShSurfClient = nullptr;
