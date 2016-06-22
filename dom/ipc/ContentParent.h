@@ -1134,6 +1134,10 @@ private:
 
   virtual bool RecvDeleteGetFilesRequest(const nsID& aID) override;
 
+  virtual bool RecvAccumulateChildHistogram(
+                  InfallibleTArray<Accumulation>&& aAccumulations) override;
+  virtual bool RecvAccumulateChildKeyedHistogram(
+                  InfallibleTArray<KeyedAccumulation>&& aAccumulations) override;
 public:
   void SendGetFilesResponseAndForget(const nsID& aID,
                                      const GetFilesResponseResult& aResult);
