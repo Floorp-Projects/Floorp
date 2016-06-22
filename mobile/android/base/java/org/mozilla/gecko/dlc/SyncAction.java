@@ -34,6 +34,8 @@ public class SyncAction extends BaseAction {
     private static final String KINTO_KEY_ID = "id";
     private static final String KINTO_KEY_DELETED = "deleted";
     private static final String KINTO_KEY_DATA = "data";
+    private static final String KINTO_KEY_ATTACHMENT = "attachment";
+    private static final String KINTO_KEY_ORIGINAL = "original";
 
     private static final String KINTO_PARAMETER_SINCE = "_since";
     private static final String KINTO_PARAMETER_FIELDS = "_fields";
@@ -72,6 +74,12 @@ public class SyncAction extends BaseAction {
                 String id = object.getString(KINTO_KEY_ID);
 
                 final boolean isDeleted = object.optBoolean(KINTO_KEY_DELETED, false);
+
+                if (!isDeleted) {
+                    JSONObject attachment = object.getJSONObject(KINTO_KEY_ATTACHMENT);
+                    if (attachment.isNull(KINTO_KEY_ORIGINAL))
+                        throw new JSONException(String.format("Old Attachment Format"));
+                }
 
                 DownloadContent existingContent = catalog.getContentById(id);
 
@@ -122,7 +130,7 @@ public class SyncAction extends BaseAction {
             }
             // Only select the fields we are actually going to read.
             builder.appendQueryParameter(KINTO_PARAMETER_FIELDS,
-                    "attachment.location,original.filename,original.hash,attachment.hash,type,kind,original.size,match");
+                    "attachment.location,attachment.original.filename,attachment.original.hash,attachment.hash,type,kind,attachment.original.size,match");
 
             // We want to process items in the order they have been modified. This is to ensure that
             // our last_modified values are correct if we processing is interrupted and not all items
