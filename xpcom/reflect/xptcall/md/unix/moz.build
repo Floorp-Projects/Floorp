@@ -14,6 +14,10 @@ if CONFIG['OS_ARCH'] == 'Darwin':
             '!xptcstubs_asm_ppc_darwin.s',
             'xptcinvoke_asm_ppc_rhapsody.s',
         ]
+    if CONFIG['OS_TEST'] == 'x86_64':
+        SOURCES += [
+            'xptcinvoke_asm_x86_64_unix.S',
+        ]
     if '86' in CONFIG['OS_TEST'] and CONFIG['OS_TEST'] != 'x86_64':
         DEFINES['MOZ_NEED_LEADING_UNDERSCORE'] = True
 
@@ -28,6 +32,7 @@ if CONFIG['OS_ARCH'] in ('Linux', 'Bitrig', 'DragonFly', 'FreeBSD', 'NetBSD', 'O
    CONFIG['OS_ARCH'].startswith('GNU_'):
     if CONFIG['OS_TEST'] == 'x86_64':
         SOURCES += [
+            'xptcinvoke_asm_x86_64_unix.S',
             'xptcinvoke_x86_64_unix.cpp',
             'xptcstubs_x86_64_linux.cpp',
         ]
@@ -53,6 +58,7 @@ if CONFIG['OS_ARCH'] == 'SunOS' and '86' in CONFIG['OS_TEST']:
     if CONFIG['OS_TEST'] == 'x86_64':
         if CONFIG['GNU_CC']:
             SOURCES += [
+            'xptcinvoke_asm_x86_64_unix.S',
                 'xptcinvoke_x86_64_unix.cpp',
                 'xptcstubs_x86_64_linux.cpp'
             ]
