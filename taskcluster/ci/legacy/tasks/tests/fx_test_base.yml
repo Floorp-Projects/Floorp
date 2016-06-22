@@ -1,6 +1,6 @@
 ---
 $inherits:
-  from: 'tasks/docker_test.yml'
+  from: 'tasks/test.yml'
 docker-image: desktop-test
 task:
   workerType: desktop-test
