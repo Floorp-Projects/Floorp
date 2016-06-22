@@ -77,7 +77,7 @@ function HTMLTooltip(toolbox,
   this.container = this._createContainer();
 
   if (this._isXUL()) {
-    this.doc.querySelector("window").appendChild(this.container);
+    this.doc.documentElement.appendChild(this.container);
   } else {
     // In non-XUL context the container is ready to use as is.
     this.doc.body.appendChild(this.container);
