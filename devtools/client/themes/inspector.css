@@ -88,8 +88,10 @@
   background-image: var(--theme-pane-expand-image);
 }
 
+/* Rotate button icon 90deg if the toolbox container is
+  in vertical mode (sidebar displayed under the main panel) */
 @media (max-width: 700px) {
-  #inspector-pane-toggle > .toolbarbutton-icon {
+  #inspector-pane-toggle::before {
     transform: rotate(90deg);
   }
 }
