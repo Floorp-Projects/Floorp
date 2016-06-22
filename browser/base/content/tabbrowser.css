@@ -20,15 +20,18 @@
 
 .tab-close-button[pinned],
 .tabbrowser-tabs[closebuttons="activetab"] > * > * > * > .tab-close-button:not([visuallyselected="true"]),
-.tab-icon-image:not([src]):not([pinned]):not([crashed]),
+.tab-icon-image:not([src]):not([pinned]):not([crashed])[selected],
+.tab-icon-image:not([src]):not([pinned]):not([crashed]):not([sharing]),
 .tab-icon-image[busy],
 .tab-throbber:not([busy]),
 .tab-icon-sound:not([soundplaying]):not([muted]),
 .tab-icon-sound[pinned],
+.tab-sharing-icon-overlay,
 .tab-icon-overlay {
   display: none;
 }
 
+.tab-sharing-icon-overlay[sharing]:not([selected]),
 .tab-icon-overlay[soundplaying][pinned],
 .tab-icon-overlay[muted][pinned],
 .tab-icon-overlay[crashed] {
