@@ -287,6 +287,7 @@ SaveToEnv(const char *putenv)
   if (expr)
     PR_SetEnv(expr);
   // We intentionally leak |expr| here since it is required by PR_SetEnv.
+  MOZ_LSAN_INTENTIONALLY_LEAK_OBJECT(expr);
 }
 
 // Tests that an environment variable exists and has a value

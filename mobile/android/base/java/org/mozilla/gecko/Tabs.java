@@ -106,7 +106,6 @@ public class Tabs implements GeckoEventListener {
             "Tab:Close",
             "Tab:Select",
             "Content:LocationChange",
-            "Content:LoginInsecure",
             "Content:SecurityChange",
             "Content:StateChange",
             "Content:LoadError",
@@ -489,9 +488,6 @@ public class Tabs implements GeckoEventListener {
                 tab.handleLocationChange(message);
             } else if (event.equals("Content:SecurityChange")) {
                 tab.updateIdentityData(message.getJSONObject("identity"));
-                notifyListeners(tab, TabEvents.SECURITY_CHANGE);
-            } else if (event.equals("Content:LoginInsecure")) {
-                tab.setLoginInsecure(true);
                 notifyListeners(tab, TabEvents.SECURITY_CHANGE);
             } else if (event.equals("Content:StateChange")) {
                 int state = message.getInt("state");

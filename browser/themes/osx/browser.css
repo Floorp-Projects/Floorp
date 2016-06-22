@@ -1608,7 +1608,7 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   transition: none;
 }
 
-#navigator-toolbox:not(:hover) #urlbar:not([focused]) > .urlbar-textbox-container > .urlbar-history-dropmarker {
+#navigator-toolbox:not(:hover) #nav-bar:not([customizing="true"]) #urlbar:not([focused]) > .urlbar-textbox-container > .urlbar-history-dropmarker {
   opacity: 0;
 }
 
