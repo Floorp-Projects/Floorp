@@ -31,8 +31,8 @@
 <meta charset="utf-8">
 <title>Bug - the precision qualifier of a constant variable should affect the precision of a consuming operation</title>
 <link rel="stylesheet" href="../../../resources/js-test-style.css"/>
-<script src="../../../resources/js-test-pre.js"></script>
-<script src="../../resources/webgl-test-utils.js"></script>
+<script src="../../../js/js-test-pre.js"></script>
+<script src="../../../js/webgl-test-utils.js"></script>
 </head>
 <body>
 <canvas id="canvas" width="256" height="256"> </canvas>
@@ -67,7 +67,33 @@ void main() {
     gl_FragColor = vec4(0.0, 2.0 * a, 0.0, 1.0);
 }
 </script>
-<script type="text/javascript">
+<script id="fshaderNoConstants" type="x-shader/x-fragment">
+// This shader has the same functionality as the one above, but it doesn't contain
+// operations that can be constant folded at compile-time.
+// It's here to provide a point of comparison.
+uniform mediump float uTest;
+uniform highp float uTestHigh;
+
+void main() {
+    highp float c = 4096.5 + uTestHigh;
+    mediump float a = 0.0;
+    a = fract(c + uTest);
+    gl_FragColor = vec4(0.0, 2.0 * a, 0.0, 1.0);
+}
+</script>
+<script id="fshaderAllHighp" type="x-shader/x-fragment">
+// This shader has the same functionality as the one above, but it only uses highp.
+// It's here to provide a point of comparison.
+uniform highp float uTest;
+
+void main() {
+    highp float c = 4096.5 + uTest;
+    highp float a = 0.0;
+    a = fract(c + uTest);
+    gl_FragColor = vec4(0.0, 2.0 * a, 0.0, 1.0);
+}
+</script>
+<script type="application/javascript">
 "use strict";
 description();
 var wtu = WebGLTestUtils;
@@ -82,8 +108,28 @@ function test() {
     testPassed("highp precision not supported");
   } else {
     wtu.setupUnitQuad(gl);
+
+    debug("Testing shader where the precision qualifier of a constant affects built-in function results");
     var program = wtu.setupProgram(gl, ["vshader", "fshader"], ["aPosition"], undefined, true);
     var uniformLoc = gl.getUniformLocation(program, 'uTest');
+    gl.uniform1f(uniformLoc, 0);
+    wtu.drawUnitQuad(gl);
+    wtu.checkCanvasRect(gl, 0, 0, 256, 256, [0, 255, 0, 255]);
+
+    debug("");
+    debug("Testing shader where the precision qualifier of a variable affects built-in function results");
+    program = wtu.setupProgram(gl, ["vshader", "fshaderNoConstants"], ["aPosition"], undefined, true);
+    uniformLoc = gl.getUniformLocation(program, 'uTest');
+    gl.uniform1f(uniformLoc, 0);
+    uniformLoc = gl.getUniformLocation(program, 'uTestHigh');
+    gl.uniform1f(uniformLoc, 0);
+    wtu.drawUnitQuad(gl);
+    wtu.checkCanvasRect(gl, 0, 0, 256, 256, [0, 255, 0, 255]);
+
+    debug("");
+    debug("Testing shader where all variables are qualified as highp");
+    program = wtu.setupProgram(gl, ["vshader", "fshaderAllHighp"], ["aPosition"], undefined, true);
+    uniformLoc = gl.getUniformLocation(program, 'uTest');
     gl.uniform1f(uniformLoc, 0);
     wtu.drawUnitQuad(gl);
     wtu.checkCanvasRect(gl, 0, 0, 256, 256, [0, 255, 0, 255]);
@@ -96,4 +142,3 @@ finishTest();
 </script>
 </body>
 </html>
-

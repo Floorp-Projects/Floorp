@@ -30,8 +30,8 @@
 <head>
 <meta charset="utf-8">
 <link rel="stylesheet" href="../../resources/js-test-style.css"/>
-<script src="../../resources/js-test-pre.js"></script>
-<script src="../resources/webgl-test-utils.js"></script>
+<script src="../../js/js-test-pre.js"></script>
+<script src="../../js/webgl-test-utils.js"></script>
 </head>
 <body>
 <div id="description"></div>
@@ -44,6 +44,7 @@ description("Tests deletion behavior for texture, renderbuffer, shader, and prog
 var wtu = WebGLTestUtils;
 var gl = wtu.create3DContext();
 var shouldGenerateGLError = wtu.shouldGenerateGLError;
+var contextVersion = wtu.getDefault3DContextVersion();
 
 debug("");
 debug("shader and program deletion");
@@ -95,7 +96,11 @@ shouldGenerateGLError(gl, gl.NO_ERROR, "gl.deleteTexture(tex)");
 // Deleting a texture bound to the currently-bound fbo is the same as
 // detaching the textue from fbo first, then delete the texture.
 shouldBe("gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE)", "gl.NONE");
-shouldGenerateGLError(gl, gl.INVALID_ENUM, "gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME)");
+if (contextVersion > 1) {
+  shouldBeNull("gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME)");
+} else {
+  shouldGenerateGLError(gl, gl.INVALID_ENUM, "gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME)");
+}
 shouldBeFalse("gl.isTexture(tex)");
 shouldBeNull("gl.getParameter(gl.TEXTURE_BINDING_2D)");
 shouldGenerateGLError(gl, gl.NO_ERROR, "gl.bindTexture(gl.TEXTURE_2D, tex)");
@@ -147,7 +152,11 @@ shouldGenerateGLError(gl, gl.NO_ERROR, "gl.deleteRenderbuffer(rbo)");
 // Deleting a renderbuffer bound to the currently-bound fbo is the same as
 // detaching the renderbuffer from fbo first, then delete the renderbuffer.
 shouldBe("gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE)", "gl.NONE");
-shouldGenerateGLError(gl, gl.INVALID_ENUM, "gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME)");
+if (contextVersion > 1) {
+  shouldBeNull("gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME)");
+} else {
+  shouldGenerateGLError(gl, gl.INVALID_ENUM, "gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME)");
+}
 shouldBeFalse("gl.isRenderbuffer(rbo)");
 shouldBeNull("gl.getParameter(gl.RENDERBUFFER_BINDING)");
 shouldGenerateGLError(gl, gl.NO_ERROR, "gl.bindRenderbuffer(gl.RENDERBUFFER, rbo)");
@@ -281,7 +290,11 @@ if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE) {
   shouldBe("gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME)", "rbo");
 
   shouldGenerateGLError(gl, gl.NO_ERROR, "gl.bindFramebuffer(gl.FRAMEBUFFER, fbo)");
-  shouldGenerateGLError(gl, gl.INVALID_ENUM, "gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME)");
+  if (contextVersion > 1) {
+    shouldBeNull("gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME)");
+  } else {
+    shouldGenerateGLError(gl, gl.INVALID_ENUM, "gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME)");
+  }
   shouldGenerateGLError(gl, gl.NONE, "gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_TYPE)");
   shouldNotBe("gl.checkFramebufferStatus(gl.FRAMEBUFFER)", "gl.FRAMEBUFFER_COMPLETE");
   // Bind backbuffer.
@@ -318,7 +331,11 @@ if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE) {
   shouldBe("gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME)", "tex");
 
   shouldGenerateGLError(gl, gl.NO_ERROR, "gl.bindFramebuffer(gl.FRAMEBUFFER, fbo)");
-  shouldGenerateGLError(gl, gl.INVALID_ENUM, "gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME)");
+  if (contextVersion > 1) {
+    shouldBeNull("gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME)");
+  } else {
+    shouldGenerateGLError(gl, gl.INVALID_ENUM, "gl.getFramebufferAttachmentParameter(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.FRAMEBUFFER_ATTACHMENT_OBJECT_NAME)");
+  }
   shouldNotBe("gl.checkFramebufferStatus(gl.FRAMEBUFFER)", "gl.FRAMEBUFFER_COMPLETE");
   // Bind backbuffer.
   shouldGenerateGLError(gl, gl.NO_ERROR, "gl.bindFramebuffer(gl.FRAMEBUFFER, null)");
@@ -442,6 +459,6 @@ if (gl.checkFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE) {
 var successfullyParsed = true;
 </script>
 
-<script src="../../resources/js-test-post.js"></script>
+<script src="../../js/js-test-post.js"></script>
 </body>
 </html>

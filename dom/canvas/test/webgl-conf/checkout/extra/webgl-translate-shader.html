@@ -42,7 +42,11 @@ textarea {
     font-weight: bold;
 }
 </style>
-<script src="../conformance/resources/webgl-test-utils.js"> </script>
+<script>
+// Needed by wtu.create3DContext():
+var testFailed = function() {};
+</script>
+<script src="../js/webgl-test-utils.js"> </script>
 <script>
 "use strict";
 window.onload = main;
@@ -55,6 +59,9 @@ var translateButton;
 var extButton;
 
 function main() {
+  translateButton = document.getElementById('translate');
+  extButton = document.getElementById('getExts');
+
   var canvas = document.getElementById("example");
   var wtu = WebGLTestUtils;
   gl = wtu.create3DContext(canvas);
@@ -62,9 +69,6 @@ function main() {
     disable();
     return;
   }
-
-  translateButton = document.getElementById('translate');
-  extButton = document.getElementById('getExts');
 
   debugShaders = gl.getExtension('WEBGL_debug_shaders');
   if (!debugShaders) {
@@ -79,18 +83,21 @@ function disable() {
 }
 
 function getExtensions() {
-    if (enabledExtensions.length > 0) {
-        return;
-    }
-    var shaderExtensions = [
+    getExtensionSet([
         'EXT_frag_depth',
         'EXT_shader_texture_lod',
         'OES_standard_derivatives',
-        'WEBGL_draw_buffers'];
+        'WEBGL_draw_buffers'
+    ]);
+}
+
+function getExtensionSet(shaderExtensions) {
     for (var i = 0; i < shaderExtensions.length; ++i) {
-        var ext = gl.getExtension(shaderExtensions[i]);
-        if (ext) {
-            enabledExtensions.push(shaderExtensions[i]);
+        if (enabledExtensions.indexOf(shaderExtensions[i]) < 0) {
+            var ext = gl.getExtension(shaderExtensions[i]);
+            if (ext) {
+                enabledExtensions.push(shaderExtensions[i]);
+            }
         }
     }
     if (enabledExtensions.length > 0) {
@@ -105,24 +112,27 @@ function translateShader() {
     var output = document.getElementById('translated-shader');
     var infoLog = document.getElementById('info-log');
     var shaderType = document.getElementById('shader-type');
+    infoLog.value = '';
 
     // Try compiling the source as both vertex and fragment shader and see if either one works
     var tryCompile = function(type) {
         var shader = gl.createShader(type);
         gl.shaderSource(shader, source);
         gl.compileShader(shader);
+        var shaderTypeStr;
+        if (type == gl.FRAGMENT_SHADER) {
+            shaderTypeStr = 'Fragment shader';
+        } else {
+            shaderTypeStr = 'Vertex shader';
+        }
         if (gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
-            if (type == gl.FRAGMENT_SHADER) {
-                shaderType.textContent = 'Fragment shader';
-            } else {
-                shaderType.textContent = 'Vertex shader';
-            }
+            shaderType.textContent = shaderTypeStr;
             var translatedSource = debugShaders.getTranslatedShaderSource(shader);
             output.value = translatedSource;
             infoLog.value = gl.getShaderInfoLog(shader);
             return true;
         } else {
-            infoLog.value = gl.getShaderInfoLog(shader);
+            infoLog.value += 'Info log when compiling as ' + shaderTypeStr + ':\n' + gl.getShaderInfoLog(shader) + '\n';
             return false;
         }
     }
