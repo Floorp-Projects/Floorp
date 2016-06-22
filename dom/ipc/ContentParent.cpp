@@ -5405,3 +5405,19 @@ ContentParent::SendGetFilesResponseAndForget(const nsID& aUUID,
     Unused << SendGetFilesResponse(aUUID, aResult);
   }
 }
+
+bool
+ContentParent::RecvAccumulateChildHistogram(
+                InfallibleTArray<Accumulation>&& aAccumulations)
+{
+  Telemetry::AccumulateChild(aAccumulations);
+  return true;
+}
+
+bool
+ContentParent::RecvAccumulateChildKeyedHistogram(
+                InfallibleTArray<KeyedAccumulation>&& aAccumulations)
+{
+  Telemetry::AccumulateChildKeyed(aAccumulations);
+  return true;
+}
