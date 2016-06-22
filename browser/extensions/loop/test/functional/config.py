@@ -11,7 +11,7 @@ CONTENT_SERVER_URL = environ.get("CONTENT_SERVER_URL") or \
 
 LOOP_SERVER_URLS = {
     "local": "http://localhost:" + str(LOOP_SERVER_PORT),
-    "dev": "https://loop-dev.stage.mozaws.net",
+    "dev": "https://loop.dev.mozaws.net",
     "stage": "https://loop.stage.mozaws.net",
     "prod": "https://loop.services.mozilla.com"
 }

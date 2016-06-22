@@ -55,8 +55,7 @@ loop.store.ActiveRoomStore = function (mozL10n) {
     roomDescription: "roomDescription", 
     roomInfoFailure: "roomInfoFailure", 
     roomName: "roomName", 
-    roomState: "roomState", 
-    socialShareProviders: "socialShareProviders" };
+    roomState: "roomState" };
 
 
   var updateContextTimer = null;
@@ -158,8 +157,6 @@ loop.store.ActiveRoomStore = function (mozL10n) {
         roomName: null, 
         // True when sharing screen has been paused.
         streamPaused: false, 
-        // Social API state.
-        socialShareProviders: null, 
         // True if media has been connected both-ways.
         mediaConnected: false, 
         // True if a chat message was sent or received during a session.
@@ -273,7 +270,6 @@ loop.store.ActiveRoomStore = function (mozL10n) {
       "startBrowserShare", 
       "endScreenShare", 
       "toggleBrowserSharing", 
-      "updateSocialShareInfo", 
       "connectionStatus", 
       "mediaConnected", 
       "videoScreenStreamChanged"];
@@ -288,13 +284,11 @@ loop.store.ActiveRoomStore = function (mozL10n) {
 
       this._onUpdateListener = this._handleRoomUpdate.bind(this);
       this._onDeleteListener = this._handleRoomDelete.bind(this);
-      this._onSocialShareUpdate = this._handleSocialShareUpdate.bind(this);
 
       var roomToken = this._storeState.roomToken;
       loop.request("Rooms:PushSubscription", ["delete:" + roomToken, "update:" + roomToken]);
       loop.subscribe("Rooms:Delete:" + roomToken, this._handleRoomDelete.bind(this));
-      loop.subscribe("Rooms:Update:" + roomToken, this._handleRoomUpdate.bind(this));
-      loop.subscribe("SocialProvidersChanged", this._onSocialShareUpdate);}, 
+      loop.subscribe("Rooms:Update:" + roomToken, this._handleRoomUpdate.bind(this));}, 
 
 
     /**
@@ -320,16 +314,12 @@ loop.store.ActiveRoomStore = function (mozL10n) {
       this._registerPostSetupActions();
 
       // Get the window data from the Loop API.
-      return loop.requestMulti(
-      ["Rooms:Get", actionData.roomToken], 
-      ["GetSocialShareProviders"]).
-      then(function (results) {
-        var room = results[0];
-        var socialShareProviders = results[1];
+      return loop.request("Rooms:Get", actionData.roomToken).then(function (result) {
+        var room = result;
 
-        if (room.isError) {
+        if (result.isError) {
           this.dispatchAction(new sharedActions.RoomFailure({ 
-            error: room, 
+            error: result, 
             failedJoinRequest: false }));
 
           return;}
@@ -341,8 +331,7 @@ loop.store.ActiveRoomStore = function (mozL10n) {
           roomDescription: room.decryptedContext.description, 
           roomName: room.decryptedContext.roomName, 
           roomState: ROOM_STATES.READY, 
-          roomUrl: room.roomUrl, 
-          socialShareProviders: socialShareProviders }));
+          roomUrl: room.roomUrl }));
 
 
         // For the conversation window, we need to automatically join the room.
@@ -549,18 +538,6 @@ loop.store.ActiveRoomStore = function (mozL10n) {
 
 
     /**
-     * Handles the updateSocialShareInfo action. Updates the room data with new
-     * Social API info.
-     *
-     * @param  {sharedActions.UpdateSocialShareInfo} actionData
-     */
-    updateSocialShareInfo: function updateSocialShareInfo(actionData) {
-      this.setStoreState({ 
-        socialShareProviders: actionData.socialShareProviders });}, 
-
-
-
-    /**
      * Handles room updates notified by the Loop rooms API.
      *
      * @param {Object} roomData  The new roomData.
@@ -583,18 +560,6 @@ loop.store.ActiveRoomStore = function (mozL10n) {
       this._sdkDriver.forceDisconnectAll(function () {
         window.close();});}, 
 
-
-
-    /**
-     * Handles an update of the position of the Share widget and changes to list
-     * of Social API providers, notified by the Loop API.
-     */
-    _handleSocialShareUpdate: function _handleSocialShareUpdate() {
-      loop.request("GetSocialShareProviders").then(function (result) {
-        this.dispatchAction(new sharedActions.UpdateSocialShareInfo({ 
-          socialShareProviders: result }));}.
-
-      bind(this));}, 
 
 
     /**
@@ -750,9 +715,6 @@ loop.store.ActiveRoomStore = function (mozL10n) {
 
 
       this._setRefreshTimeout(actionData.expires);
-
-      // Only send media telemetry on one side of the call: the desktop side.
-      actionData.sendTwoWayMediaTelemetry = this._isDesktop;
 
       this._sdkDriver.connectSession(actionData);
 
@@ -1161,10 +1123,6 @@ loop.store.ActiveRoomStore = function (mozL10n) {
         return;}
 
 
-      if (loop.standaloneMedia) {
-        loop.standaloneMedia.multiplexGum.reset();}
-
-
       if (this._browserSharingListener) {
         // Remove the browser sharing listener as we don't need it now.
         loop.unsubscribe("BrowserSwitch", this._browserSharingListener);
@@ -1263,10 +1221,8 @@ loop.store.ActiveRoomStore = function (mozL10n) {
       // There's no need to listen to these actions anymore.
       this.dispatcher.unregister(this, [
       "receivedTextChatMessage", 
-      "sendTextChatMessage"]);
+      "sendTextChatMessage"]);}, 
 
-      // Ping telemetry of this session with successful message(s) exchange.
-      loop.request("TelemetryAddValue", "LOOP_ROOM_SESSION_WITHCHAT", 1);}, 
 
 
     /**
