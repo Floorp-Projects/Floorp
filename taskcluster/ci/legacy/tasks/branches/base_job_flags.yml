@@ -73,6 +73,7 @@ flags:
     - reftest-e10s
     - reftest-no-accel
     - reftest-no-accel-e10s
+    - robocop
     - web-platform-tests
     - web-platform-tests-e10s
     - web-platform-tests-reftests

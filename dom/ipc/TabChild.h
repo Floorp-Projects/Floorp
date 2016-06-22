@@ -453,6 +453,10 @@ public:
 
   virtual bool DeallocPColorPickerChild(PColorPickerChild* aActor) override;
 
+    virtual PDatePickerChild*
+    AllocPDatePickerChild(const nsString& title, const nsString& initialDate) override;
+    virtual bool DeallocPDatePickerChild(PDatePickerChild* actor) override;
+
   virtual PFilePickerChild*
   AllocPFilePickerChild(const nsString& aTitle, const int16_t& aMode) override;
 

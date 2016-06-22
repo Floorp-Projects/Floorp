@@ -182,7 +182,11 @@ ContentSignatureVerifier::CreateContext(const nsACString& aData,
                           CertPolicyId::anyPolicy,
                           nullptr/*stapledOCSPResponse*/);
   if (result != Success) {
-    // the chain is bad
+    // if there was a library error, return an appropriate error
+    if (IsFatalError(result)) {
+      return NS_ERROR_FAILURE;
+    }
+    // otherwise, assume the signature was invalid
     CSVerifier_LOG(("CSVerifier: The supplied chain is bad\n"));
     return NS_ERROR_INVALID_SIGNATURE;
   }

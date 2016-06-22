@@ -53,23 +53,23 @@ public:
     typedef BOOL (WINAPI * PFNWGLRELEASETEXIMAGEPROC) (HANDLE hPbuffer, int iBuffer);
     PFNWGLRELEASETEXIMAGEPROC fReleaseTexImage;
 
-    typedef BOOL (WINAPI * PFNWGLCHOOSEPIXELFORMATPROC) (HDC hdc, const int* piAttribIList, const FLOAT *pfAttribFList, UINT nMaxFormats, int *piFormats, UINT *nNumFormats);
+    typedef BOOL (WINAPI * PFNWGLCHOOSEPIXELFORMATPROC) (HDC hdc, const int* piAttribIList, const FLOAT* pfAttribFList, UINT nMaxFormats, int* piFormats, UINT* nNumFormats);
     PFNWGLCHOOSEPIXELFORMATPROC fChoosePixelFormat;
-    typedef BOOL (WINAPI * PFNWGLGETPIXELFORMATATTRIBIVPROC) (HDC hdc, int iPixelFormat, int iLayerPlane, UINT nAttributes, int* piAttributes, int *piValues);
+    typedef BOOL (WINAPI * PFNWGLGETPIXELFORMATATTRIBIVPROC) (HDC hdc, int iPixelFormat, int iLayerPlane, UINT nAttributes, int* piAttributes, int* piValues);
     PFNWGLGETPIXELFORMATATTRIBIVPROC fGetPixelFormatAttribiv;
 
-    typedef const char * (WINAPI * PFNWGLGETEXTENSIONSSTRINGPROC) (HDC hdc);
+    typedef const char* (WINAPI * PFNWGLGETEXTENSIONSSTRINGPROC) (HDC hdc);
     PFNWGLGETEXTENSIONSSTRINGPROC fGetExtensionsString;
 
-    typedef HGLRC (WINAPI * PFNWGLCREATECONTEXTATTRIBSPROC) (HDC hdc, HGLRC hShareContext, const int *attribList);
+    typedef HGLRC (WINAPI * PFNWGLCREATECONTEXTATTRIBSPROC) (HDC hdc, HGLRC hShareContext, const int* attribList);
     PFNWGLCREATECONTEXTATTRIBSPROC fCreateContextAttribs;
 
     // WGL_NV_DX_interop:
-    // BOOL wglDXSetResourceShareHandleNV(void *dxObject, HANDLE shareHandle);
+    // BOOL wglDXSetResourceShareHandleNV(void* dxObject, HANDLE shareHandle);
     typedef BOOL (WINAPI * PFNWGLDXSETRESOURCESHAREHANDLEPROC) (void* dxObject, HANDLE shareHandle);
     PFNWGLDXSETRESOURCESHAREHANDLEPROC fDXSetResourceShareHandle;
 
-    // HANDLE wglDXOpenDeviceNV(void *dxDevice);
+    // HANDLE wglDXOpenDeviceNV(void* dxDevice);
     typedef HANDLE (WINAPI * PFNWGLDXOPENDEVICEPROC) (void* dxDevice);
     PFNWGLDXOPENDEVICEPROC fDXOpenDevice;
 
@@ -77,7 +77,7 @@ public:
     typedef BOOL (WINAPI * PFNWGLDXCLOSEDEVICEPROC) (HANDLE hDevice);
     PFNWGLDXCLOSEDEVICEPROC fDXCloseDevice;
 
-    // HANDLE wglDXRegisterObjectNV(HANDLE hDevice, void *dxObject, GLuint name, GLenum type, GLenum access);
+    // HANDLE wglDXRegisterObjectNV(HANDLE hDevice, void* dxObject, GLuint name, GLenum type, GLenum access);
     typedef HANDLE (WINAPI * PFNWGLDXREGISTEROBJECTPROC) (HANDLE hDevice, void* dxObject, GLuint name, GLenum type, GLenum access);
     PFNWGLDXREGISTEROBJECTPROC fDXRegisterObject;
 
@@ -89,16 +89,16 @@ public:
     typedef BOOL (WINAPI * PFNWGLDXOBJECTACCESSPROC) (HANDLE hObject, GLenum access);
     PFNWGLDXOBJECTACCESSPROC fDXObjectAccess;
 
-    // BOOL wglDXLockObjectsNV(HANDLE hDevice, GLint count, HANDLE *hObjects);
+    // BOOL wglDXLockObjectsNV(HANDLE hDevice, GLint count, HANDLE* hObjects);
     typedef BOOL (WINAPI * PFNWGLDXLOCKOBJECTSPROC) (HANDLE hDevice, GLint count, HANDLE* hObjects);
     PFNWGLDXLOCKOBJECTSPROC fDXLockObjects;
 
-    // BOOL wglDXUnlockObjectsNV(HANDLE hDevice, GLint count, HANDLE *hObjects);
+    // BOOL wglDXUnlockObjectsNV(HANDLE hDevice, GLint count, HANDLE* hObjects);
     typedef BOOL (WINAPI * PFNWGLDXUNLOCKOBJECTSPROC) (HANDLE hDevice, GLint count, HANDLE* hObjects);
     PFNWGLDXUNLOCKOBJECTSPROC fDXUnlockObjects;
 
     bool EnsureInitialized();
-    HWND CreateDummyWindow(HDC *aWindowDC = nullptr);
+    HWND CreateDummyWindow(HDC* aWindowDC = nullptr);
 
     bool HasRobustness() const { return mHasRobustness; }
     bool HasDXInterop() const { return mHasDXInterop; }
@@ -108,11 +108,11 @@ public:
     HDC GetWindowDC() const {return mWindowDC; }
     HGLRC GetWindowGLContext() const {return mWindowGLContext; }
     int GetWindowPixelFormat() const { return mWindowPixelFormat; }
-    PRLibrary *GetOGLLibrary() { return mOGLLibrary; }
+    PRLibrary* GetOGLLibrary() { return mOGLLibrary; }
 
 private:
     bool mInitialized;
-    PRLibrary *mOGLLibrary;
+    PRLibrary* mOGLLibrary;
     bool mHasRobustness;
     bool mHasDXInterop;
     bool mHasDXInterop2;

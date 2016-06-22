@@ -14,6 +14,7 @@ from taskgraph.util.time import (
     json_time_from_now
 )
 
+
 class FromNowTest(unittest.TestCase):
 
     def test_invalid_str(self):
@@ -43,14 +44,14 @@ class FromNowTest(unittest.TestCase):
 
     def test_json_from_now_utc_now(self):
         # Just here to ensure we don't raise.
-        time = json_time_from_now('1 years')
+        json_time_from_now('1 years')
 
     def test_json_from_now(self):
         now = datetime(2014, 1, 1)
         self.assertEqual(json_time_from_now('1 years', now),
-                '2015-01-01T00:00:00Z')
+                         '2015-01-01T00:00:00Z')
         self.assertEqual(json_time_from_now('6 days', now),
-                '2014-01-07T00:00:00Z')
+                         '2014-01-07T00:00:00Z')
 
 if __name__ == '__main__':
     mozunit.main()

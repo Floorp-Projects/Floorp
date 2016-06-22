@@ -379,6 +379,10 @@ public:
   virtual bool
   DeallocPColorPickerParent(PColorPickerParent* aColorPicker) override;
 
+  virtual PDatePickerParent*
+  AllocPDatePickerParent(const nsString& aTitle, const nsString& aInitialDate) override;
+  virtual bool DeallocPDatePickerParent(PDatePickerParent* aDatePicker) override;
+
   virtual PDocAccessibleParent*
   AllocPDocAccessibleParent(PDocAccessibleParent*, const uint64_t&) override;
 

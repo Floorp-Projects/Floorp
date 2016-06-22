@@ -7,9 +7,9 @@
 from __future__ import absolute_import, print_function, unicode_literals
 
 import json
-import sys
 import yaml
 from mozbuild.util import ReadOnlyDict
+
 
 class Parameters(ReadOnlyDict):
     """An immutable dictionary with nicer KeyError messages on failure"""

@@ -52,7 +52,7 @@ public:
       RefPtr<GLContext> context = GLContextProvider::CreateOffscreen(
         IntSize(gCompWidth, gCompHeight), caps,
         CreateContextFlags::REQUIRE_COMPAT_PROFILE,
-        discardFailureId);
+        &discardFailureId);
       return context.forget().take();
     }
     return nullptr;

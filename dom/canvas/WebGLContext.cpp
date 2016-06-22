@@ -299,10 +299,9 @@ WebGLContext::DestroyResourcesAndContext()
 
     // We just got rid of everything, so the context had better
     // have been going away.
-#ifdef DEBUG
-    if (gl->DebugMode())
+    if (GLContext::ShouldSpew()) {
         printf_stderr("--- WebGL context destroyed: %p\n", gl.get());
-#endif
+    }
 
     gl = nullptr;
 }
@@ -587,7 +586,7 @@ CreateGLWithEGL(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
 {
     const gfx::IntSize dummySize(16, 16);
     RefPtr<GLContext> gl = gl::GLContextProviderEGL::CreateOffscreen(dummySize, caps,
-                                                                     flags, *out_failureId);
+                                                                     flags, out_failureId);
     if (gl && gl->IsANGLE()) {
         gl = nullptr;
     }
@@ -613,7 +612,7 @@ CreateGLWithANGLE(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
 {
     const gfx::IntSize dummySize(16, 16);
     RefPtr<GLContext> gl = gl::GLContextProviderEGL::CreateOffscreen(dummySize, caps,
-                                                                     flags, *out_failureId);
+                                                                     flags, out_failureId);
     if (gl && !gl->IsANGLE()) {
         gl = nullptr;
     }
@@ -652,7 +651,7 @@ CreateGLWithDefault(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
 
     const gfx::IntSize dummySize(16, 16);
     RefPtr<GLContext> gl = gl::GLContextProvider::CreateOffscreen(dummySize, caps,
-                                                                  flags, *out_failureId);
+                                                                  flags, out_failureId);
 
     if (gl && gl->IsANGLE()) {
         gl = nullptr;
@@ -719,7 +718,8 @@ WebGLContext::CreateAndInitGL(bool forceEnabled, nsACString* const out_failReaso
     useANGLE = !disableANGLE;
 #endif
 
-    gl::CreateContextFlags flags = gl::CreateContextFlags::NONE;
+    gl::CreateContextFlags flags = gl::CreateContextFlags::NO_VALIDATION;
+
     if (forceEnabled) flags |= gl::CreateContextFlags::FORCE_ENABLE_HARDWARE;
     if (!IsWebGL2())  flags |= gl::CreateContextFlags::REQUIRE_COMPAT_PROFILE;
     if (IsWebGL2())   flags |= gl::CreateContextFlags::PREFER_ES3;
@@ -961,10 +961,9 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
         return NS_ERROR_FAILURE;
     }
 
-#ifdef DEBUG
-    if (gl->DebugMode())
+    if (GLContext::ShouldSpew()) {
         printf_stderr("--- WebGL context created: %p\n", gl.get());
-#endif
+    }
 
     mResetLayer = true;
     mOptionsFrozen = true;
