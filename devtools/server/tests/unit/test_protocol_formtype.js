@@ -1,12 +1,21 @@
 var protocol = require("devtools/shared/protocol");
-var {method, Arg, Option, RetVal} = protocol;
+var {Arg, Option, RetVal} = protocol;
 
 protocol.types.addActorType("child");
 protocol.types.addActorType("root");
 
-// The child actor doesn't provide a form description
-var ChildActor = protocol.ActorClass({
+const childSpec = protocol.generateActorSpec({
   typeName: "child",
+
+  methods: {
+    getChild: {
+      response: RetVal("child")
+    }
+  }
+});
+
+// The child actor doesn't provide a form description
+var ChildActor = protocol.ActorClassWithSpec(childSpec, {
   initialize(conn) {
     protocol.Actor.prototype.initialize.call(this, conn);
   },
@@ -18,14 +27,12 @@ var ChildActor = protocol.ActorClass({
     };
   },
 
-  getChild: method(function () {
+  getChild: function () {
     return this;
-  }, {
-    response: RetVal("child")
-  }),
+  }
 });
 
-var ChildFront = protocol.FrontClass(ChildActor, {
+var ChildFront = protocol.FrontClassWithSpec(childSpec, {
   initialize(client) {
     protocol.Front.prototype.initialize.call(this, client);
   },
@@ -35,26 +42,12 @@ var ChildFront = protocol.FrontClass(ChildActor, {
   }
 });
 
-// The root actor does provide a form description.
-var RootActor = protocol.ActorClass({
+const rootSpec = protocol.generateActorSpec({
   typeName: "root",
-  initialize(conn) {
-    protocol.Actor.prototype.initialize.call(this, conn);
-    this.manage(this);
-    this.child = new ChildActor();
-  },
 
   // Basic form type, relies on implicit DictType creation
   formType: {
     childActor: "child"
-  },
-
-  sayHello() {
-    return {
-      from: "root",
-      applicationType: "xpcshell-tests",
-      traits: []
-    };
   },
 
   // This detail uses explicit DictType creation
@@ -64,6 +57,40 @@ var RootActor = protocol.ActorClass({
 
   // This detail a string type.
   "formType#actorid": "string",
+
+  methods: {
+    getDefault: {
+      response: RetVal("root")
+    },
+    getDetail1: {
+      response: RetVal("root#detail1")
+    },
+    getDetail2: {
+      response: {
+        item: RetVal("root#actorid")
+      }
+    },
+    getUnknownDetail: {
+      response: RetVal("root#unknownDetail")
+    }
+  }
+});
+
+// The root actor does provide a form description.
+var RootActor = protocol.ActorClassWithSpec(rootSpec, {
+  initialize(conn) {
+    protocol.Actor.prototype.initialize.call(this, conn);
+    this.manage(this);
+    this.child = new ChildActor();
+  },
+
+  sayHello() {
+    return {
+      from: "root",
+      applicationType: "xpcshell-tests",
+      traits: []
+    };
+  },
 
   form(detail) {
     if (detail === "detail1") {
@@ -81,34 +108,24 @@ var RootActor = protocol.ActorClass({
     };
   },
 
-  getDefault: method(function () {
+  getDefault: function () {
     return this;
-  }, {
-    response: RetVal("root")
-  }),
+  },
 
-  getDetail1: method(function () {
+  getDetail1: function () {
     return this;
-  }, {
-    response: RetVal("root#detail1")
-  }),
+  },
 
-  getDetail2: method(function () {
+  getDetail2: function () {
     return this;
-  }, {
-    response: {
-      item: RetVal("root#actorid")
-    }
-  }),
+  },
 
-  getUnknownDetail: method(function () {
+  getUnknownDetail: function () {
     return this;
-  }, {
-    response: RetVal("root#unknownDetail")
-  }),
+  }
 });
 
-var RootFront = protocol.FrontClass(RootActor, {
+var RootFront = protocol.FrontClassWithSpec(rootSpec, {
   initialize(client) {
     this.actorID = "root";
     protocol.Front.prototype.initialize.call(this, client);
