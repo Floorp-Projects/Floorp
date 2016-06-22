@@ -9,12 +9,6 @@ matrix:
           - gcc-arm-linux-gnueabihf
           - libc6-armhf-cross
           - libc6-dev-armhf-cross
-    - env: TARGET=i686-unknown-linux-gnu
-      addons:
-        apt:
-          packages:
-          - gcc-multilib
-    - env: TARGET=x86_64-unknown-linux-gnu
     - env: TARGET=x86_64-unknown-linux-musl
       dist: trusty
       sudo: required
@@ -29,10 +23,8 @@ matrix:
         apt:
           packages:
           - gcc-mingw-w64
-          - gcc-mingw-w64-i686
           - gcc-mingw-w64-x86-64
           - binutils-mingw-w64-x86-64
-          - binutils-mingw-w64-i686
           - libbz2-dev
 
 install:
@@ -47,3 +39,18 @@ script:
 branches:
   only:
     - master
+
+deploy:
+  provider: releases
+  api_key:
+    secure:
+      OY6y0xRhlGSBH+3+7+7K6s4pp0Tf3BA61NAubEK4gpO23AKfyJUK+vqqCbdo06Z0E4QO4O1ke6fot7Gq9EdxJmsl/Kk5LDd9Rv3BXSYdjPupzs7coYuD8wv10NfAX6ETd9ITyPim2Zq6bq8nx1S2ESTpos/js1HCtVW3nrlCV58=
+  skip_cleanup: true
+  file:
+    - "geckodriver-$TRAVIS_TAG.tar.gz"
+    - "geckodriver-$TRAVIS_TAG-arm7hf.zip"
+    - "geckodriver-$TRAVIS_TAG-win64.zip"
+    - "geckodriver-$TRAVIS_TAG-linux64.tar.gz"
+  on:
+    tags: true
+    repo: mozilla/geckodriver
