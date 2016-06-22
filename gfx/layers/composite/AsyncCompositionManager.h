@@ -243,6 +243,8 @@ private:
   gfx::Matrix mWorldTransform;
   LayerTransformRecorder mLayerTransformRecorder;
 
+  TimeStamp mPreviousFrameTimeStamp;
+
 #ifdef MOZ_ANDROID_APZ
   // The following two fields are only needed on Fennec with C++ APZ, because
   // then we need to reposition the gecko scrollbar to deal with the
