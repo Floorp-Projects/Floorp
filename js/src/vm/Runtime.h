@@ -1018,6 +1018,8 @@ struct JSRuntime : public JS::shadow::Runtime,
     js::LifoAlloc tempLifoAlloc;
 
   private:
+    JSContext* context_;
+
     js::jit::JitRuntime* jitRuntime_;
 
     /*
@@ -1052,6 +1054,18 @@ struct JSRuntime : public JS::shadow::Runtime,
         return interpreterStack_;
     }
 
+    // The runtime's context can be nullptr only while we're initializing or
+    // destroying the runtime.
+    JSContext* maybeContextFromMainThread() {
+        MOZ_ASSERT(CurrentThreadCanAccessRuntime(this));
+        return context_;
+    }
+    JSContext* contextFromMainThread() {
+        JSContext* cx = maybeContextFromMainThread();
+        MOZ_ASSERT(cx);
+        return cx;
+    }
+
     bool enqueuePromiseJob(JSContext* cx, js::HandleFunction job, js::HandleObject promise);
     void addUnhandledRejectedPromise(JSContext* cx, js::HandleObject promise);
     void removeUnhandledRejectedPromise(JSContext* cx, js::HandleObject promise);
@@ -1059,6 +1073,10 @@ struct JSRuntime : public JS::shadow::Runtime,
     //-------------------------------------------------------------------------
     // Self-hosting support
     //-------------------------------------------------------------------------
+
+    bool hasInitializedSelfHosting() const {
+        return selfHostingGlobal_;
+    }
 
     bool initSelfHosting(JSContext* cx);
     void finishSelfHosting();
@@ -1174,19 +1192,12 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* Code coverage output. */
     js::coverage::LCovRuntime lcovOutput;
 
-    /* Well-known numbers held for use by this runtime's contexts. */
+    /* Well-known numbers. */
     const js::Value     NaNValue;
     const js::Value     negativeInfinityValue;
     const js::Value     positiveInfinityValue;
 
     js::PropertyName*   emptyString;
-
-    /* List of active contexts sharing this runtime. */
-    mozilla::LinkedList<JSContext> contextList;
-
-    bool hasContexts() const {
-        return !contextList.isEmpty();
-    }
 
     mozilla::UniquePtr<js::SourceHook> sourceHook;
 
@@ -1218,9 +1229,6 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* We are currently deleting an object due to an initialization failure. */
     bool handlingInitFailure;
 #endif
-
-    /* A context has been created on this runtime. */
-    bool                haveCreatedContext;
 
     /*
      * Allow relazifying functions in compartments that are active. This is

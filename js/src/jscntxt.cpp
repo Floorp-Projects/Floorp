@@ -88,59 +88,21 @@ js::TraceCycleDetectionSet(JSTracer* trc, AutoCycleDetector::Set& set)
 }
 
 JSContext*
-js::NewContext(JSRuntime* rt, size_t stackChunkSize)
+js::NewContext(JSRuntime* rt)
 {
-    JS_AbortIfWrongThread(rt);
+    MOZ_ASSERT(!rt->maybeContextFromMainThread());
 
-    MOZ_RELEASE_ASSERT(!rt->haveCreatedContext,
-                       "There must be at most 1 JSContext per runtime");
+    JS_AbortIfWrongThread(rt);
 
     JSContext* cx = js_new<JSContext>(rt);
     if (!cx)
         return nullptr;
 
-    if (!cx->cycleDetectorSet.init()) {
-        js_delete(cx);
-        return nullptr;
-    }
-
-    /*
-     * Here the GC lock is still held after js_InitContextThreadAndLockGC took it and
-     * the GC is not running on another thread.
-     */
-    rt->contextList.insertBack(cx);
-
-    /*
-     * If cx is the first context on this runtime, initialize well-known atoms,
-     * keywords, numbers, strings and self-hosted scripts. If one of these
-     * steps should fail, the runtime will be left in a partially initialized
-     * state, with zeroes and nulls stored in the default-initialized remainder
-     * of the struct.
-     */
-    if (!rt->haveCreatedContext) {
-        JS_BeginRequest(cx);
-        bool ok = rt->initializeAtoms(cx);
-        if (ok)
-            ok = rt->initSelfHosting(cx);
-
-        if (ok && !rt->parentRuntime)
-            ok = rt->transformToPermanentAtoms(cx);
-
-        JS_EndRequest(cx);
-
-        if (!ok) {
-            DestroyContext(cx, DCM_NEW_FAILED);
-            return nullptr;
-        }
-
-        rt->haveCreatedContext = true;
-    }
-
     return cx;
 }
 
 void
-js::DestroyContext(JSContext* cx, DestroyContextMode mode)
+js::DestroyContext(JSContext* cx)
 {
     JSRuntime* rt = cx->runtime();
     JS_AbortIfWrongThread(rt);
@@ -151,21 +113,13 @@ js::DestroyContext(JSContext* cx, DestroyContextMode mode)
     cx->roots.checkNoGCRooters();
     cx->roots.finishPersistentRoots();
 
-    cx->remove();
-    bool last = !rt->hasContexts();
-    if (last) {
-        /*
-         * Dump remaining type inference results while we still have a context.
-         * This printing depends on atoms still existing.
-         */
-        for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
-            PrintTypes(cx, c, false);
-    }
-    if (mode == DCM_FORCE_GC) {
-        MOZ_ASSERT(!rt->isHeapBusy());
-        JS::PrepareForFullGC(rt);
-        rt->gc.gc(GC_NORMAL, JS::gcreason::DESTROY_CONTEXT);
-    }
+    /*
+     * Dump remaining type inference results while we still have a context.
+     * This printing depends on atoms still existing.
+     */
+    for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
+        PrintTypes(cx, c, false);
+
     js_delete_poison(cx);
 }
 

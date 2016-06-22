@@ -172,6 +172,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     ownerThread_(nullptr),
     ownerThreadNative_(0),
     tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
+    context_(nullptr),
     jitRuntime_(nullptr),
     selfHostingGlobal_(nullptr),
     nativeStackBase(GetNativeStackBase()),
@@ -205,7 +206,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
 #ifdef DEBUG
     handlingInitFailure(false),
 #endif
-    haveCreatedContext(false),
     allowRelazificationForTesting(false),
     data(nullptr),
     signalHandlersInstalled_(false),
@@ -369,11 +369,20 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
             return false;
     }
 
+    context_ = NewContext(this);
+    if (!context_)
+        return false;
+
     return true;
 }
 
 JSRuntime::~JSRuntime()
 {
+    if (context_) {
+        DestroyContext(context_);
+        context_ = nullptr;
+    }
+
     MOZ_ASSERT(!isHeapBusy());
     MOZ_ASSERT(childRuntimeCount == 0);
 
@@ -444,22 +453,6 @@ JSRuntime::~JSRuntime()
      * some filenames around because of gcKeepAtoms.
      */
     FreeScriptData(this, lock);
-
-#ifdef DEBUG
-    /* Don't hurt everyone in leaky ol' Mozilla with a fatal MOZ_ASSERT! */
-    if (hasContexts()) {
-        unsigned cxcount = 0;
-        for (ContextIter acx(this); !acx.done(); acx.next()) {
-            fprintf(stderr,
-"JS API usage error: found live context at %p\n",
-                    (void*) acx.get());
-            cxcount++;
-        }
-        fprintf(stderr,
-"JS API usage error: %u context%s left in runtime upon JS_DestroyRuntime.\n",
-                cxcount, (cxcount == 1) ? "" : "s");
-    }
-#endif
 
 #if !EXPOSE_INTL_API
     FinishRuntimeNumberState(this);
@@ -536,8 +529,7 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
         rtSizes->atomsTable += permanentAtoms->sizeOfIncludingThis(mallocSizeOf);
     }
 
-    for (ContextIter acx(this); !acx.done(); acx.next())
-        rtSizes->contexts += acx->sizeOfIncludingThis(mallocSizeOf);
+    rtSizes->contexts += context_->sizeOfIncludingThis(mallocSizeOf);
 
     rtSizes->temporary += tempLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
 
