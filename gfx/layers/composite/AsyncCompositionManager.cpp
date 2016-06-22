@@ -1459,7 +1459,18 @@ AsyncCompositionManager::TransformShadowTree(TimeStamp aCurrentFrame,
   // First, compute and set the shadow transforms from OMT animations.
   // NB: we must sample animations *before* sampling pan/zoom
   // transforms.
-  bool wantNextFrame = SampleAnimations(root, aCurrentFrame);
+  // Use a previous vsync time to make main thread animations and compositor
+  // more in sync with each other.
+  // On the initial frame we use aVsyncTimestamp here so the timestamp on the
+  // second frame are the same as the initial frame, but it does not matter.
+  bool wantNextFrame = SampleAnimations(root,
+    !mPreviousFrameTimeStamp.IsNull() ?
+      mPreviousFrameTimeStamp : aCurrentFrame);
+
+  // Reset the previous time stamp if we don't already have any running
+  // animations to avoid using the time which is far behind for newly
+  // started animations.
+  mPreviousFrameTimeStamp = wantNextFrame ? aCurrentFrame : TimeStamp();
 
   if (!(aSkip & TransformsToSkip::APZ)) {
     // FIXME/bug 775437: unify this interface with the ~native-fennec
