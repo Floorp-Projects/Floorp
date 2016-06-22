@@ -382,9 +382,9 @@ public:
   void InvalidateRemoteLayers();
 
   /**
-   * Returns a pointer to the compositor corresponding to the given ID.
+   * Returns a pointer to the CompositorBridgeParent corresponding to the given ID.
    */
-  static CompositorBridgeParent* GetCompositor(uint64_t id);
+  static CompositorBridgeParent* GetCompositorBridgeParent(uint64_t id);
 
   /**
    * Set aController as the pan/zoom callback for the subtree referred
