@@ -22,7 +22,8 @@ DeallocPCacheStorageChild(PCacheStorageChild* aActor)
   delete aActor;
 }
 
-CacheStorageChild::CacheStorageChild(CacheStorage* aListener, Feature* aFeature)
+CacheStorageChild::CacheStorageChild(CacheStorage* aListener,
+                                     CacheWorkerHolder* aWorkerHolder)
   : mListener(aListener)
   , mNumChildActors(0)
   , mDelayedDestroy(false)
@@ -30,7 +31,7 @@ CacheStorageChild::CacheStorageChild(CacheStorage* aListener, Feature* aFeature)
   MOZ_COUNT_CTOR(cache::CacheStorageChild);
   MOZ_ASSERT(mListener);
 
-  SetFeature(aFeature);
+  SetWorkerHolder(aWorkerHolder);
 }
 
 CacheStorageChild::~CacheStorageChild()
@@ -54,7 +55,7 @@ CacheStorageChild::ExecuteOp(nsIGlobalObject* aGlobal, Promise* aPromise,
 {
   mNumChildActors += 1;
   Unused << SendPCacheOpConstructor(
-    new CacheOpChild(GetFeature(), aGlobal, aParent, aPromise), aArgs);
+    new CacheOpChild(GetWorkerHolder(), aGlobal, aParent, aPromise), aArgs);
 }
 
 void
@@ -86,7 +87,8 @@ CacheStorageChild::StartDestroy()
 
   RefPtr<CacheStorage> listener = mListener;
 
-  // StartDestroy() can get called from either CacheStorage or the Feature.
+  // StartDestroy() can get called from either CacheStorage or the
+  // CacheWorkerHolder.
   // Theoretically we can get double called if the right race happens.  Handle
   // that by just ignoring the second StartDestroy() call.
   if (!listener) {
@@ -113,7 +115,7 @@ CacheStorageChild::ActorDestroy(ActorDestroyReason aReason)
     MOZ_ASSERT(!mListener);
   }
 
-  RemoveFeature();
+  RemoveWorkerHolder();
 }
 
 PCacheOpChild*
