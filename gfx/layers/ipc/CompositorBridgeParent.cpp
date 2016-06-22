@@ -669,11 +669,16 @@ CompositorBridgeParent::ForceIsFirstPaint()
   mCompositionManager->ForceIsFirstPaint();
 }
 
-bool
-CompositorBridgeParent::RecvWillClose()
+void
+CompositorBridgeParent::StopAndClearResources()
 {
+  CancelCurrentCompositeTask();
+  if (mForceCompositionTask) {
+    mForceCompositionTask->Cancel();
+    mForceCompositionTask = nullptr;
+  }
+
   mPaused = true;
-  RemoveCompositor(mCompositorID);
 
   // Ensure that the layer manager is destroyed before CompositorBridgeChild.
   if (mLayerManager) {
@@ -693,7 +698,12 @@ CompositorBridgeParent::RecvWillClose()
     mCompositor->Destroy();
     mCompositor = nullptr;
   }
+}
 
+bool
+CompositorBridgeParent::RecvWillClose()
+{
+  StopAndClearResources();
   return true;
 }
 
@@ -848,28 +858,9 @@ CompositorBridgeParent::UpdateVisibleRegion(const VisibilityCounter& aCounter,
 void
 CompositorBridgeParent::ActorDestroy(ActorDestroyReason why)
 {
-  CancelCurrentCompositeTask();
-  if (mForceCompositionTask) {
-    mForceCompositionTask->Cancel();
-    mForceCompositionTask = nullptr;
-  }
-  mPaused = true;
+  StopAndClearResources();
+
   RemoveCompositor(mCompositorID);
-
-  if (mLayerManager) {
-    mLayerManager->Destroy();
-    mLayerManager = nullptr;
-  }
-
-  { // scope lock
-    MonitorAutoLock lock(*sIndirectLayerTreesLock);
-    sIndirectLayerTrees.erase(mRootLayerTreeID);
-  }
-
-  if (mCompositor) {
-    mCompositor->Destroy();
-    mCompositor = nullptr;
-  }
 
   mCompositionManager = nullptr;
 
@@ -879,6 +870,11 @@ CompositorBridgeParent::ActorDestroy(ActorDestroyReason why)
   }
 
   mCompositorScheduler->Destroy();
+
+  { // scope lock
+    MonitorAutoLock lock(*sIndirectLayerTreesLock);
+    sIndirectLayerTrees.erase(mRootLayerTreeID);
+  }
 
   // There are chances that the ref count reaches zero on the main thread shortly
   // after this function returns while some ipdl code still needs to run on
@@ -1561,7 +1557,7 @@ CompositorBridgeParent::DeallocPLayerTransactionParent(PLayerTransactionParent* 
   return true;
 }
 
-CompositorBridgeParent* CompositorBridgeParent::GetCompositor(uint64_t id)
+CompositorBridgeParent* CompositorBridgeParent::GetCompositorBridgeParent(uint64_t id)
 {
   CompositorMap::iterator it = sCompositorMap->find(id);
   return it != sCompositorMap->end() ? it->second : nullptr;

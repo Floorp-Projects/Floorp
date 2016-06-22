@@ -246,7 +246,7 @@ public:
      * otherwise.
      */
     bool ReadPixels(GLint x, GLint y, GLsizei width, GLsizei height,
-                    GLenum format, GLenum type, GLvoid *pixels);
+                    GLenum format, GLenum type, GLvoid* pixels);
 
     // Morph changes the factory used to create surfaces.
     void Morph(UniquePtr<SurfaceFactory> newFactory);

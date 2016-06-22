@@ -82,8 +82,12 @@ private:
   const SHA1Sum::Hash *mHash;
   mozilla::Atomic<bool, ReleaseAcquire> mIsDoomed;
   mozilla::Atomic<bool, ReleaseAcquire> mClosed;
-  bool const           mPriority : 1;
-  bool const           mSpecialFile : 1;
+
+  // mPriority and mSpecialFile are plain "bool", not "bool:1", so as to
+  // avoid bitfield races with the byte containing mInvalid et al.  See
+  // bug 1278502.
+  bool const           mPriority;
+  bool const           mSpecialFile;
 
   // These bit flags are all accessed only on the IO thread
   bool                 mInvalid : 1;

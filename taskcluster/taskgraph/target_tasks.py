@@ -8,15 +8,19 @@ from __future__ import absolute_import, print_function, unicode_literals
 from taskgraph import try_option_syntax
 
 _target_task_methods = {}
+
+
 def _target_task(name):
     def wrap(func):
         _target_task_methods[name] = func
         return func
     return wrap
 
+
 def get_method(method):
     """Get a target_task_method to pass to a TaskGraphGenerator."""
     return _target_task_methods[method]
+
 
 @_target_task('from_parameters')
 def target_tasks_from_parameters(full_task_graph, parameters):
@@ -25,6 +29,7 @@ def target_tasks_from_parameters(full_task_graph, parameters):
     earlier run, by copying `target_tasks.json` into `parameters.yml`."""
     return parameters['target_tasks']
 
+
 @_target_task('try_option_syntax')
 def target_tasks_try_option_syntax(full_task_graph, parameters):
     """Generate a list of target tasks based on try syntax in
@@ -32,6 +37,7 @@ def target_tasks_try_option_syntax(full_task_graph, parameters):
     options = try_option_syntax.TryOptionSyntax(parameters['message'], full_task_graph)
     return [t.label for t in full_task_graph.tasks.itervalues()
             if options.task_matches(t.attributes)]
+
 
 @_target_task('all_builds_and_tests')
 def target_tasks_all_builds_and_tests(full_task_graph, parameters):

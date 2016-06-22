@@ -639,42 +639,70 @@ public:
     MOZ_CRASH("WidgetQueryContentEvent doesn't support Duplicate()");
   }
 
-  void InitForQueryTextContent(uint32_t aOffset, uint32_t aLength,
-                               bool aUseNativeLineBreak = true)
+  struct Options final
+  {
+    bool mUseNativeLineBreak;
+    bool mRelativeToInsertionPoint;
+
+    explicit Options()
+      : mUseNativeLineBreak(true)
+      , mRelativeToInsertionPoint(false)
+    {
+    }
+
+    explicit Options(const WidgetQueryContentEvent& aEvent)
+      : mUseNativeLineBreak(aEvent.mUseNativeLineBreak)
+      , mRelativeToInsertionPoint(aEvent.mInput.mRelativeToInsertionPoint)
+    {
+    }
+  };
+
+  void Init(const Options& aOptions)
+  {
+    mUseNativeLineBreak = aOptions.mUseNativeLineBreak;
+    mInput.mRelativeToInsertionPoint = aOptions.mRelativeToInsertionPoint;
+    MOZ_ASSERT(mInput.IsValidEventMessage(mMessage));
+  }
+
+  void InitForQueryTextContent(int64_t aOffset, uint32_t aLength,
+                               const Options& aOptions = Options())
   {
     NS_ASSERTION(mMessage == eQueryTextContent,
                  "wrong initializer is called");
     mInput.mOffset = aOffset;
     mInput.mLength = aLength;
-    mUseNativeLineBreak = aUseNativeLineBreak;
+    Init(aOptions);
+    MOZ_ASSERT(mInput.IsValidOffset());
   }
 
-  void InitForQueryCaretRect(uint32_t aOffset,
-                             bool aUseNativeLineBreak = true)
+  void InitForQueryCaretRect(int64_t aOffset,
+                             const Options& aOptions = Options())
   {
     NS_ASSERTION(mMessage == eQueryCaretRect,
                  "wrong initializer is called");
     mInput.mOffset = aOffset;
-    mUseNativeLineBreak = aUseNativeLineBreak;
+    Init(aOptions);
+    MOZ_ASSERT(mInput.IsValidOffset());
   }
 
-  void InitForQueryTextRect(uint32_t aOffset, uint32_t aLength,
-                            bool aUseNativeLineBreak = true)
+  void InitForQueryTextRect(int64_t aOffset, uint32_t aLength,
+                            const Options& aOptions = Options())
   {
     NS_ASSERTION(mMessage == eQueryTextRect,
                  "wrong initializer is called");
     mInput.mOffset = aOffset;
     mInput.mLength = aLength;
-    mUseNativeLineBreak = aUseNativeLineBreak;
+    Init(aOptions);
+    MOZ_ASSERT(mInput.IsValidOffset());
   }
 
   void InitForQuerySelectedText(SelectionType aSelectionType,
-                                bool aUseNativeLineBreak = true)
+                                const Options& aOptions = Options())
   {
     MOZ_ASSERT(mMessage == eQuerySelectedText);
     MOZ_ASSERT(aSelectionType != SelectionType::eNone);
     mInput.mSelectionType = aSelectionType;
-    mUseNativeLineBreak = aUseNativeLineBreak;
+    Init(aOptions);
   }
 
   void InitForQueryDOMWidgetHittest(const mozilla::LayoutDeviceIntPoint& aPoint)
@@ -726,15 +754,60 @@ public:
       return NS_WARN_IF(!endOffset.isValid()) ? UINT32_MAX : endOffset.value();
     }
 
-    uint32_t mOffset;
+    int64_t mOffset;
     uint32_t mLength;
     SelectionType mSelectionType;
+    // If mOffset is true, mOffset is relative to the start offset of
+    // composition if there is, otherwise, the start of the first selection
+    // range.
+    bool mRelativeToInsertionPoint;
 
     Input()
       : mOffset(0)
       , mLength(0)
       , mSelectionType(SelectionType::eNormal)
+      , mRelativeToInsertionPoint(false)
     {
+    }
+
+    bool IsValidOffset() const
+    {
+      return mRelativeToInsertionPoint || mOffset >= 0;
+    }
+    bool IsValidEventMessage(EventMessage aEventMessage) const
+    {
+      if (!mRelativeToInsertionPoint) {
+        return true;
+      }
+      switch (aEventMessage) {
+        case eQueryTextContent:
+        case eQueryCaretRect:
+        case eQueryTextRect:
+          return true;
+        default:
+          return false;
+      }
+    }
+    bool MakeOffsetAbsolute(uint32_t aInsertionPointOffset)
+    {
+      if (NS_WARN_IF(!mRelativeToInsertionPoint)) {
+        return true;
+      }
+      mRelativeToInsertionPoint = false;
+      // If mOffset + aInsertionPointOffset becomes negative value,
+      // we should assume the absolute offset is 0.
+      if (mOffset < 0 && -mOffset > aInsertionPointOffset) {
+        mOffset = 0;
+        return true;
+      }
+      // Otherwise, we don't allow too large offset.
+      CheckedInt<uint32_t> absOffset = mOffset + aInsertionPointOffset;
+      if (NS_WARN_IF(!absOffset.isValid())) {
+        mOffset = UINT32_MAX;
+        return false;
+      }
+      mOffset = absOffset.value();
+      return true;
     }
   } mInput;
 

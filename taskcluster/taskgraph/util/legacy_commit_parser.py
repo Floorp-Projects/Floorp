@@ -20,6 +20,7 @@ BUILD_TYPE_ALIASES = {
     'd': 'debug'
 }
 
+
 def parse_test_opts(input_str):
     '''Test argument parsing is surprisingly complicated with the "restrictions"
     logic this function is responsible for parsing this out into a easier to
@@ -109,6 +110,7 @@ def normalize_platform_list(alias, all_builds, build_list):
         return all_builds
     return [alias.get(build, build) for build in build_list.split(',')]
 
+
 def normalize_test_list(aliases, all_tests, job_list):
     '''
     Normalize a set of jobs (builds or tests) there are three common cases:
@@ -137,7 +139,7 @@ def normalize_test_list(aliases, all_tests, job_list):
         results = []
         all_entry = tests[0]
         for test in all_tests:
-            entry = { 'test': test }
+            entry = {'test': test}
             # If there are platform restrictions copy them across the list.
             if 'platforms' in all_entry:
                 entry['platforms'] = list(all_entry['platforms'])
@@ -160,6 +162,7 @@ def handle_alias(test, aliases, all_tests):
         return [test]
 
     alias = aliases[test['test']]
+
     def mktest(name):
         newtest = copy.deepcopy(test)
         newtest['test'] = name
@@ -217,6 +220,7 @@ def parse_test_chunks(aliases, all_tests, tests):
     # uniquify the results over the test names
     results = {test['test']: test for test in results}.values()
     return results
+
 
 def extract_tests_from_platform(test_jobs, build_platform, build_task, tests):
     '''
@@ -283,6 +287,7 @@ not try to build a graph or anything here but match up build flags to tasks via
 the "jobs" datastructure (see job_flags.yml)
 '''
 
+
 def parse_commit(message, jobs):
     '''
     :param message: Commit message that is typical to a try push.
@@ -303,9 +308,11 @@ def parse_commit(message, jobs):
     # Argument parser based on try flag flags
     parser = argparse.ArgumentParser()
     parser.add_argument('-b', '--build', dest='build_types')
-    parser.add_argument('-p', '--platform', nargs='?', dest='platforms', const='all', default='all')
+    parser.add_argument('-p', '--platform', nargs='?',
+                        dest='platforms', const='all', default='all')
     parser.add_argument('-u', '--unittests', nargs='?', dest='tests', const='all', default='all')
-    parser.add_argument('-i', '--interactive', dest='interactive', action='store_true', default=False)
+    parser.add_argument('-i', '--interactive',
+                        dest='interactive', action='store_true', default=False)
     parser.add_argument('-j', '--job', dest='jobs', action='append')
     # In order to run test jobs multiple times
     parser.add_argument('--trigger-tests', dest='trigger_tests', type=int, default=1)
@@ -328,8 +335,8 @@ def parse_commit(message, jobs):
     if args.build_types is None:
         args.build_types = []
 
-    build_types = [ BUILD_TYPE_ALIASES.get(build_type, build_type) for
-            build_type in args.build_types ]
+    build_types = [BUILD_TYPE_ALIASES.get(build_type, build_type) for
+                   build_type in args.build_types]
 
     aliases = jobs['flags'].get('aliases', {})
 

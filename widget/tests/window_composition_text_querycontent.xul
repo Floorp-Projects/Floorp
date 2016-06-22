@@ -148,6 +148,25 @@ function checkContent(aExpectedText, aMessage, aID)
   return textContent.text == aExpectedText;
 }
 
+function checkContentRelativeToSelection(aRelativeOffset, aLength, aExpectedOffset, aExpectedText, aMessage, aID)
+{
+  if (!aID) {
+    aID = "";
+  }
+  aMessage += " (aRelativeOffset=" + aRelativeOffset + "): "
+  var textContent = synthesizeQueryTextContent(aRelativeOffset, aLength, true);
+  if (!checkQueryContentResult(textContent, aMessage +
+                               "synthesizeQueryTextContent " + aID)) {
+    return false;
+  }
+  is(textContent.offset, aExpectedOffset,
+     aMessage + "offset is wrong " + aID);
+  is(textContent.text, aExpectedText,
+     aMessage + "text is wrong " + aID);
+  return textContent.offset == aExpectedOffset &&
+         textContent.text == aExpectedText;
+}
+
 function checkSelection(aExpectedOffset, aExpectedText, aMessage, aID)
 {
   if (!aID) {
@@ -3585,6 +3604,94 @@ function runQueryIMESelectionTest()
   synthesizeComposition({ type: "compositioncommitasis" });
 }
 
+function runQueryContentEventRelativeToInsertionPoint()
+{
+  textarea.focus();
+  textarea.value = "0123456789";
+
+  var startoffset = textarea.selectionStart = textarea.selectionEnd = 0;
+
+  if (!checkContentRelativeToSelection(0, 1, 0, "0", "runQueryContentEventRelativeToInsertionPoint[0-0]", "#1") ||
+      !checkContentRelativeToSelection(-1, 1, 0, "0", "runQueryContentEventRelativeToInsertionPoint[0-0]", "#2") ||
+      !checkContentRelativeToSelection(1, 1, 1, "1", "runQueryContentEventRelativeToInsertionPoint[0-0]", "#3") ||
+      !checkContentRelativeToSelection(5, 10, 5, "56789", "runQueryContentEventRelativeToInsertionPoint[0-0]", "#4") ||
+      !checkContentRelativeToSelection(10, 1, 10, "", "runQueryContentEventRelativeToInsertionPoint[0-0]", "#5")) {
+    return;
+  }
+
+  textarea.selectionEnd = 5;
+
+  if (!checkContentRelativeToSelection(0, 1, 0, "0", "runQueryContentEventRelativeToInsertionPoint[0-5]", "#1") ||
+      !checkContentRelativeToSelection(-1, 1, 0, "0", "runQueryContentEventRelativeToInsertionPoint[0-5]", "#2") ||
+      !checkContentRelativeToSelection(1, 1, 1, "1", "runQueryContentEventRelativeToInsertionPoint[0-5]", "#3") ||
+      !checkContentRelativeToSelection(5, 10, 5, "56789", "runQueryContentEventRelativeToInsertionPoint[0-5]", "#4") ||
+      !checkContentRelativeToSelection(10, 1, 10, "", "runQueryContentEventRelativeToInsertionPoint[0-5]"), "#5") {
+    return;
+  }
+
+  startoffset = textarea.selectionStart = textarea.selectionEnd = 4;
+
+  if (!checkContentRelativeToSelection(0, 1, startOffset + 0, "4", "runQueryContentEventRelativeToInsertionPoint[4-4]", "#1") ||
+      !checkContentRelativeToSelection(-1, 1, startOffset - 1, "3", "runQueryContentEventRelativeToInsertionPoint[4-4]", "#2") ||
+      !checkContentRelativeToSelection(1, 1, startOffset + 1, "5", "runQueryContentEventRelativeToInsertionPoint[4-4]", "#3") ||
+      !checkContentRelativeToSelection(5, 10, startOffset + 5, "9", "runQueryContentEventRelativeToInsertionPoint[4-4]", "#4") ||
+      !checkContentRelativeToSelection(10, 1, 10, "", "runQueryContentEventRelativeToInsertionPoint[4-4]", "#5")) {
+    return;
+  }
+
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "a",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  if (!checkContentRelativeToSelection(0, 1, startOffset + 0, "a", "runQueryContentEventRelativeToInsertionPoint[composition at 4]", "#1") ||
+      !checkContentRelativeToSelection(-1, 1, startOffset - 1, "3", "runQueryContentEventRelativeToInsertionPoint[composition at 4]", "#2") ||
+      !checkContentRelativeToSelection(1, 1, startOffset + 1, "4", "runQueryContentEventRelativeToInsertionPoint[composition at 4]", "#3") ||
+      !checkContentRelativeToSelection(5, 10, startOffset + 5, "89", "runQueryContentEventRelativeToInsertionPoint[composition at 4]", "#4") ||
+      !checkContentRelativeToSelection(11, 1, 11, "", "runQueryContentEventRelativeToInsertionPoint[composition at 4]")) {
+    synthesizeComposition({ type: "compositioncommitasis" });
+    return;
+  }
+
+  synthesizeComposition({ type: "compositioncommitasis" });
+
+  // Move start of composition at first compositionupdate event.
+  function onCompositionUpdate(aEvent)
+  {
+    startoffset = textarea.selectionStart = textarea.selectionEnd = textarea.selectionStart - 1;
+    textarea.removeEventListener("compositionupdate", onCompositionUpdate);
+  }
+  textarea.addEventListener("compositionupdate", onCompositionUpdate);
+
+  synthesizeCompositionChange(
+    { "composition":
+      { "string": "a",
+        "clauses":
+        [
+          { "length": 1, "attr": COMPOSITION_ATTR_RAW_CLAUSE }
+        ]
+      },
+      "caret": { "start": 1, "length": 0 }
+    });
+
+  if (!checkContentRelativeToSelection(0, 1, startOffset + 0, "b", "runQueryContentEventRelativeToInsertionPoint[composition at 3]", "#1") ||
+      !checkContentRelativeToSelection(-1, 1, startOffset - 1, "3", "runQueryContentEventRelativeToInsertionPoint[composition at 3]", "#2") ||
+      !checkContentRelativeToSelection(1, 1, startOffset + 1, "a", "runQueryContentEventRelativeToInsertionPoint[composition at 3]", "#3") ||
+      !checkContentRelativeToSelection(5, 10, startOffset + 5, "789", "runQueryContentEventRelativeToInsertionPoint[composition at 3]", "#4") ||
+      !checkContentRelativeToSelection(12, 1, 12, "", "runQueryContentEventRelativeToInsertionPoint[composition at 3]", "#5")) {
+    synthesizeComposition({ type: "compositioncommitasis" });
+    return;
+  }
+
+  synthesizeComposition({ type: "compositioncommitasis" });
+}
+
 function runCSSTransformTest()
 {
   textarea.focus();
@@ -5929,6 +6036,7 @@ function runTest()
   runSetSelectionEventTest();
   runQueryTextContentEventTest();
   runQueryIMESelectionTest();
+  runQueryContentEventRelativeToInsertionPoint();
   runCSSTransformTest();
   runBug722639Test();
   runForceCommitTest();

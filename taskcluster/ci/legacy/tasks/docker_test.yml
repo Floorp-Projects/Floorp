@@ -1,0 +1,27 @@
+$inherits:
+  from: 'tasks/test.yml'
+
+docker-image: tester
+task:
+  workerType: b2gtest
+
+  scopes:
+    - 'docker-worker:feature:allowPtrace'
+
+  payload:
+    image:
+      type: 'task-image'
+      path: 'public/image.tar'
+      taskId:
+        task-reference: "<docker-image>"
+
+    # Docker builds share a common artifact directory for ease of uploading.
+    artifacts:
+      'public/logs/':
+        type: directory
+        path: '/home/worker/workspace/build/upload/logs/'
+        expires: '{{#from_now}}1 year{{/from_now}}'
+      'public/test_info/':
+        type: directory
+        path: '/home/worker/workspace/build/blobber_upload_dir/'
+        expires: '{{#from_now}}1 year{{/from_now}}'

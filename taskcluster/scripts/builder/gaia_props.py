@@ -35,7 +35,7 @@ if not os.path.isfile(props_path):
 props = json.load(open(props_path))
 
 if args.prop == 'revision':
-    print(props['revision']);
+    print(props['revision'])
 
 if args.prop == 'repository':
     print(urlparse.urljoin('https://hg.mozilla.org', props['repo_path']))
