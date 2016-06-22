@@ -76,8 +76,7 @@ xul|description {
   line-height: 22px;
 }
 
-xul|*.text-link:-moz-focusring,
-xul|*.inline-link:-moz-focusring {
+xul|*.text-link:-moz-focusring {
   color: var(--in-content-link-highlight);
   text-decoration: underline;
   box-shadow: none;
