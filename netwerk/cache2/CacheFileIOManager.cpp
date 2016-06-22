@@ -1818,6 +1818,11 @@ CacheFileIOManager::Read(CacheFileHandle *aHandle, int64_t aOffset,
   LOG(("CacheFileIOManager::Read() [handle=%p, offset=%lld, count=%d, "
        "listener=%p]", aHandle, aOffset, aCount, aCallback));
 
+  if (CacheObserver::ShuttingDown()) {
+    LOG(("  no reads after shutdown"));
+    return NS_ERROR_NOT_INITIALIZED;
+  }
+
   nsresult rv;
   RefPtr<CacheFileIOManager> ioMan = gInstance;
 
@@ -1843,6 +1848,11 @@ CacheFileIOManager::ReadInternal(CacheFileHandle *aHandle, int64_t aOffset,
        aHandle, aOffset, aCount));
 
   nsresult rv;
+
+  if (CacheObserver::ShuttingDown()) {
+    LOG(("  no reads after shutdown"));
+    return NS_ERROR_NOT_INITIALIZED;
+  }
 
   if (!aHandle->mFileExists) {
     NS_WARNING("Trying to read from non-existent file");
