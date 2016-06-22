@@ -36,6 +36,7 @@ pub enum WebDriverCommand<T: WebDriverExtensionCommand> {
     IsDisplayed(WebElement),
     IsSelected(WebElement),
     GetElementAttribute(WebElement, String),
+    GetElementProperty(WebElement, String),
     GetCSSValue(WebElement, String),
     GetElementText(WebElement),
     GetElementTagName(WebElement),
@@ -190,6 +191,16 @@ impl <U: WebDriverExtensionRoute> WebDriverMessage<U> {
                                     "Missing name parameter").to_string();
                 WebDriverCommand::GetElementAttribute(element, attr)
             },
+            Route::GetElementProperty => {
+                let element_id = try_opt!(params.name("elementId"),
+                                          ErrorStatus::InvalidArgument,
+                                          "Missing elementId parameter");
+                let element = WebElement::new(element_id.to_string());
+                let property = try_opt!(params.name("name"),
+                                        ErrorStatus::InvalidArgument,
+                                        "Missing name parameter").to_string();
+                WebDriverCommand::GetElementProperty(element, property)
+            },
             Route::GetCSSValue => {
                 let element_id = try_opt!(params.name("elementId"),
                                           ErrorStatus::InvalidArgument,
@@ -324,7 +335,8 @@ impl <U:WebDriverExtensionRoute> ToJson for WebDriverMessage<U> {
             WebDriverCommand::Close | WebDriverCommand::GetWindowSize | WebDriverCommand::MaximizeWindow |
             WebDriverCommand::SwitchToParentFrame | WebDriverCommand::GetActiveElement |
             WebDriverCommand::IsDisplayed(_) | WebDriverCommand::IsSelected(_) |
-            WebDriverCommand::GetElementAttribute(_, _) | WebDriverCommand::GetCSSValue(_, _) |
+            WebDriverCommand::GetElementAttribute(_, _) | WebDriverCommand::GetElementProperty(_, _) |
+            WebDriverCommand::GetCSSValue(_, _) |
             WebDriverCommand::GetElementText(_) | WebDriverCommand::GetElementTagName(_) |
             WebDriverCommand::GetElementRect(_) | WebDriverCommand::IsEnabled(_) |
             WebDriverCommand::GetCookies | WebDriverCommand::GetCookie(_) |
