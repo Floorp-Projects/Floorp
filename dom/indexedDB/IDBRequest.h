@@ -226,12 +226,12 @@ protected:
 class IDBOpenDBRequest final
   : public IDBRequest
 {
-  class WorkerFeature;
+  class WorkerHolder;
 
   // Only touched on the owning thread.
   RefPtr<IDBFactory> mFactory;
 
-  nsAutoPtr<WorkerFeature> mWorkerFeature;
+  nsAutoPtr<WorkerHolder> mWorkerHolder;
 
   const bool mFileHandleDisabled;
 

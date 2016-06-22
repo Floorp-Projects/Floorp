@@ -4,8 +4,8 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_workers_workerfeature_h__
-#define mozilla_dom_workers_workerfeature_h__
+#ifndef mozilla_dom_workers_WorkerHolder_h
+#define mozilla_dom_workers_WorkerHolder_h
 
 #include "mozilla/dom/workers/Workers.h"
 
@@ -69,14 +69,23 @@ enum Status
   Dead
 };
 
-class WorkerFeature
+class WorkerHolder
 {
 public:
-  virtual ~WorkerFeature() { }
+  WorkerHolder();
+  virtual ~WorkerHolder();
+
+  bool HoldWorker(WorkerPrivate* aWorkerPrivate);
+  void ReleaseWorker();
 
   virtual bool Notify(Status aStatus) = 0;
+
+protected:
+  void ReleaseWorkerInternal();
+
+  WorkerPrivate* MOZ_NON_OWNING_REF mWorkerPrivate;
 };
 
 END_WORKERS_NAMESPACE
 
-#endif /* mozilla_dom_workers_workerfeature_h__ */
+#endif /* mozilla_dom_workers_WorkerHolder_h */

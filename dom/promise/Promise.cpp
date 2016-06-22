@@ -2527,7 +2527,7 @@ Promise::AppendCallbacks(PromiseCallback* aResolveCallback,
 #if defined(DOM_PROMISE_DEPRECATED_REPORTING)
   // Now that there is a callback, we don't need to report anymore.
   mHadRejectCallback = true;
-  RemoveFeature();
+  RemoveWorkerHolder();
 #endif // defined(DOM_PROMISE_DEPRECATED_REPORTING)
 
   mResolveCallbacks.AppendElement(aResolveCallback);
@@ -2767,10 +2767,9 @@ Promise::Settle(JS::Handle<JS::Value> aValue, PromiseState aState)
     MOZ_ASSERT(worker);
     worker->AssertIsOnWorkerThread();
 
-    mFeature = new PromiseReportRejectFeature(this);
-    if (NS_WARN_IF(!worker->AddFeature(mFeature))) {
-      // To avoid a false RemoveFeature().
-      mFeature = nullptr;
+    mWorkerHolder = new PromiseReportRejectWorkerHolder(this);
+    if (NS_WARN_IF(!mWorkerHolder->HoldWorker(worker))) {
+      mWorkerHolder = nullptr;
       // Worker is shutting down, report rejection immediately since it is
       // unlikely that reject callbacks will be added after this point.
       MaybeReportRejectedOnce();
@@ -2819,24 +2818,20 @@ Promise::TriggerPromiseReactions()
 
 #if defined(DOM_PROMISE_DEPRECATED_REPORTING)
 void
-Promise::RemoveFeature()
+Promise::RemoveWorkerHolder()
 {
   NS_ASSERT_OWNINGTHREAD(Promise);
 
-  if (mFeature) {
-    workers::WorkerPrivate* worker = GetCurrentThreadWorkerPrivate();
-    MOZ_ASSERT(worker);
-    worker->RemoveFeature(mFeature);
-    mFeature = nullptr;
-  }
+  // The DTOR of this WorkerHolder will release the worker for us.
+  mWorkerHolder = nullptr;
 }
 
 bool
-PromiseReportRejectFeature::Notify(workers::Status aStatus)
+PromiseReportRejectWorkerHolder::Notify(workers::Status aStatus)
 {
   MOZ_ASSERT(aStatus > workers::Running);
   mPromise->MaybeReportRejectedOnce();
-  // After this point, `this` has been deleted by RemoveFeature!
+  // After this point, `this` has been deleted by RemoveWorkerHolder!
   return true;
 }
 #endif // defined(DOM_PROMISE_DEPRECATED_REPORTING)
@@ -2971,7 +2966,7 @@ PromiseWorkerProxy::PromiseWorkerProxy(workers::WorkerPrivate* aWorkerPrivate,
   , mCallbacks(aCallbacks)
   , mCleanUpLock("cleanUpLock")
 #ifdef DEBUG
-  , mFeatureAdded(false)
+  , mWorkerHolderAdded(false)
 #endif
 {
 }
@@ -2979,7 +2974,7 @@ PromiseWorkerProxy::PromiseWorkerProxy(workers::WorkerPrivate* aWorkerPrivate,
 PromiseWorkerProxy::~PromiseWorkerProxy()
 {
   MOZ_ASSERT(mCleanedUp);
-  MOZ_ASSERT(!mFeatureAdded);
+  MOZ_ASSERT(!mWorkerHolderAdded);
   MOZ_ASSERT(!mWorkerPromise);
   MOZ_ASSERT(!mWorkerPrivate);
 }
@@ -3007,13 +3002,13 @@ PromiseWorkerProxy::AddRefObject()
 {
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();
-  MOZ_ASSERT(!mFeatureAdded);
-  if (!mWorkerPrivate->AddFeature(this)) {
+  MOZ_ASSERT(!mWorkerHolderAdded);
+  if (NS_WARN_IF(!HoldWorker(mWorkerPrivate))) {
     return false;
   }
 
 #ifdef DEBUG
-  mFeatureAdded = true;
+  mWorkerHolderAdded = true;
 #endif
   // Maintain a reference so that we have a valid object to clean up when
   // removing the feature.
@@ -3032,7 +3027,7 @@ PromiseWorkerProxy::GetWorkerPrivate() const
   // Safe to check this without a lock since we assert lock ownership on the
   // main thread above.
   MOZ_ASSERT(!mCleanedUp);
-  MOZ_ASSERT(mFeatureAdded);
+  MOZ_ASSERT(mWorkerHolderAdded);
 
   return mWorkerPrivate;
 }
@@ -3116,7 +3111,8 @@ PromiseWorkerProxy::CleanUp()
     MutexAutoLock lock(Lock());
 
     // |mWorkerPrivate| is not safe to use anymore if we have already
-    // cleaned up and RemoveFeature(), so we need to check |mCleanedUp| first.
+    // cleaned up and RemoveWorkerHolder(), so we need to check |mCleanedUp|
+    // first.
     if (CleanedUp()) {
       return;
     }
@@ -3127,10 +3123,10 @@ PromiseWorkerProxy::CleanUp()
     // Release the Promise and remove the PromiseWorkerProxy from the features of
     // the worker thread since the Promise has been resolved/rejected or the
     // worker thread has been cancelled.
-    MOZ_ASSERT(mFeatureAdded);
-    mWorkerPrivate->RemoveFeature(this);
+    MOZ_ASSERT(mWorkerHolderAdded);
+    ReleaseWorker();
 #ifdef DEBUG
-    mFeatureAdded = false;
+    mWorkerHolderAdded = false;
 #endif
     CleanProperties();
   }

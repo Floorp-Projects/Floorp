@@ -604,7 +604,7 @@ FileReader::OnInputStreamReady(nsIAsyncInputStream* aStream)
 
   // We use this class to decrease the busy counter at the end of this method.
   // In theory we can do it immediatelly but, for debugging reasons, we want to
-  // be 100% sure we have a feature when OnLoadEnd() is called.
+  // be 100% sure we have a workerHolder when OnLoadEnd() is called.
   FileReaderDecreaseBusyCounter RAII(this);
 
   uint64_t aCount;
@@ -701,7 +701,7 @@ nsresult
 FileReader::IncreaseBusyCounter()
 {
   if (mWorkerPrivate && mBusyCount++ == 0 &&
-      !mWorkerPrivate->AddFeature(this)) {
+      !HoldWorker(mWorkerPrivate)) {
     return NS_ERROR_FAILURE;
   }
 
@@ -713,7 +713,7 @@ FileReader::DecreaseBusyCounter()
 {
   MOZ_ASSERT_IF(mWorkerPrivate, mBusyCount);
   if (mWorkerPrivate && --mBusyCount == 0) {
-    mWorkerPrivate->RemoveFeature(this);
+    ReleaseWorker();
   }
 }
 
@@ -742,7 +742,7 @@ FileReader::Shutdown()
   }
 
   if (mWorkerPrivate && mBusyCount != 0) {
-    mWorkerPrivate->RemoveFeature(this);
+    ReleaseWorker();
     mWorkerPrivate = nullptr;
     mBusyCount = 0;
   }
