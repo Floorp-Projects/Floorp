@@ -54,6 +54,8 @@ enum class CreateContextFlags : int8_t {
     ALLOW_OFFLINE_RENDERER =  1 << 2,
     // Ask for ES3 if possible
     PREFER_ES3 = 1 << 3,
+
+    NO_VALIDATION = 1 << 4,
 };
 MOZ_MAKE_ENUM_CLASS_BITWISE_OPERATORS(CreateContextFlags)
 

@@ -8,11 +8,9 @@ import unittest
 
 from ..kind.legacy import (
     LegacyKind,
-    TASKID_PLACEHOLDER,
     validate_build_task,
     BuildTaskValidationException
 )
-from ..types import Task
 from mozunit import main
 
 

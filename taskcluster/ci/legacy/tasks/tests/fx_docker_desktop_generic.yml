@@ -1,6 +1,6 @@
 ---
 $inherits:
-  from: 'tasks/tests/fx_test_base.yml'
+  from: 'tasks/tests/fx_docker_test_base.yml'
 task:
   payload:
     command:

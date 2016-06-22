@@ -715,6 +715,37 @@ logging::Tree(const char* aTitle, const char* aMsgText,
 }
 
 void
+logging::DOMTree(const char* aTitle, const char* aMsgText,
+                 DocAccessible* aDocument)
+{
+  logging::MsgBegin(aTitle, aMsgText);
+  nsAutoString level;
+  nsINode* root = aDocument->DocumentNode();
+  do {
+    printf("%s", NS_ConvertUTF16toUTF8(level).get());
+    logging::Node("", root);
+    if (root->GetFirstChild()) {
+      level.Append(NS_LITERAL_STRING("  "));
+      root = root->GetFirstChild();
+      continue;
+    }
+    if (root->GetNextSibling()) {
+      root = root->GetNextSibling();
+      continue;
+    }
+    while ((root = root->GetParentNode())) {
+      level.Cut(0, 2);
+      if (root->GetNextSibling()) {
+        root = root->GetNextSibling();
+        break;
+      }
+    }
+  }
+  while (root);
+  logging::MsgEnd();
+}
+
+void
 logging::MsgBegin(const char* aTitle, const char* aMsgText, ...)
 {
   printf("\nA11Y %s: ", aTitle);

@@ -93,6 +93,8 @@ class TraceLoggerEvent {
     TraceLoggerEvent(TraceLoggerThread* logger, TraceLoggerTextId type,
                      const JS::ReadOnlyCompileOptions& compileOptions);
     TraceLoggerEvent(TraceLoggerThread* logger, const char* text);
+    TraceLoggerEvent(const TraceLoggerEvent& event);
+    TraceLoggerEvent& operator=(const TraceLoggerEvent& other);
     ~TraceLoggerEvent();
 #else
     TraceLoggerEvent (TraceLoggerThread* logger, TraceLoggerTextId textId) {}
@@ -100,6 +102,8 @@ class TraceLoggerEvent {
     TraceLoggerEvent (TraceLoggerThread* logger, TraceLoggerTextId type,
                       const JS::ReadOnlyCompileOptions& compileOptions) {}
     TraceLoggerEvent (TraceLoggerThread* logger, const char* text) {}
+    TraceLoggerEvent(const TraceLoggerEvent& event) {}
+    TraceLoggerEvent& operator=(const TraceLoggerEvent& other) {};
     ~TraceLoggerEvent() {}
 #endif
 
@@ -110,9 +114,6 @@ class TraceLoggerEvent {
     bool hasPayload() const {
         return !!payload_;
     }
-
-    TraceLoggerEvent& operator=(const TraceLoggerEvent& other);
-    TraceLoggerEvent(const TraceLoggerEvent& event) = delete;
 };
 
 /**

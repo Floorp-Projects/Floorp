@@ -8,13 +8,13 @@ import concurrent.futures as futures
 import requests
 import requests.adapters
 import json
-import collections
 import os
 import logging
 
 from slugid import nice as slugid
 
 logger = logging.getLogger(__name__)
+
 
 def create_tasks(taskgraph, label_to_taskid):
     # TODO: use the taskGroupId of the decision task
@@ -60,11 +60,13 @@ def create_tasks(taskgraph, label_to_taskid):
         for f in futures.as_completed(fs.values()):
             f.result()
 
+
 def _create_task(session, task_id, label, task_def):
     # create the task using 'http://taskcluster/queue', which is proxied to the queue service
     # with credentials appropriate to this job.
     logger.debug("Creating task with taskId {} for {}".format(task_id, label))
-    res = session.put('http://taskcluster/queue/v1/task/{}'.format(task_id), data=json.dumps(task_def))
+    res = session.put('http://taskcluster/queue/v1/task/{}'.format(task_id),
+                      data=json.dumps(task_def))
     if res.status_code != 200:
         try:
             logger.error(res.json()['message'])

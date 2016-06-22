@@ -9,13 +9,11 @@ import json
 import logging
 import os
 import re
-import sys
 import time
-from collections import defaultdict, namedtuple
+from collections import namedtuple
 
 from . import base
 from ..types import Task
-from functools import partial
 from mozpack.path import match as mozpackmatch
 from slugid import nice as slugid
 from taskgraph.util.legacy_commit_parser import parse_commit
@@ -49,14 +47,17 @@ TRY_EXPIRATION = "14 days"
 
 logger = logging.getLogger(__name__)
 
+
 def mklabel():
     return TASKID_PLACEHOLDER.format(slugid())
+
 
 def merge_dicts(*dicts):
     merged_dict = {}
     for dictionary in dicts:
         merged_dict.update(dictionary)
     return merged_dict
+
 
 def gaia_info():
     '''Fetch details from in tree gaia.json (which links this version of
@@ -68,13 +69,13 @@ def gaia_info():
        gaia['git']['git_revision'] == '' or \
        gaia['git']['branch'] == '':
 
-       # Just use the hg params...
-       return {
-         'gaia_base_repository': 'https://hg.mozilla.org/{}'.format(gaia['repo_path']),
-         'gaia_head_repository': 'https://hg.mozilla.org/{}'.format(gaia['repo_path']),
-         'gaia_ref': gaia['revision'],
-         'gaia_rev': gaia['revision']
-       }
+        # Just use the hg params...
+        return {
+          'gaia_base_repository': 'https://hg.mozilla.org/{}'.format(gaia['repo_path']),
+          'gaia_head_repository': 'https://hg.mozilla.org/{}'.format(gaia['repo_path']),
+          'gaia_ref': gaia['revision'],
+          'gaia_rev': gaia['revision']
+        }
 
     else:
         # Use git
@@ -84,6 +85,7 @@ def gaia_info():
             'gaia_rev': gaia['git']['git_revision'],
             'gaia_ref': gaia['git']['branch'],
         }
+
 
 def configure_dependent_task(task_path, parameters, taskid, templates, build_treeherder_config):
     """Configure a build dependent task. This is shared between post-build and test tasks.
@@ -128,6 +130,7 @@ def configure_dependent_task(task_path, parameters, taskid, templates, build_tre
 
     return task
 
+
 def set_interactive_task(task, interactive):
     r"""Make the task interactive.
 
@@ -141,6 +144,7 @@ def set_interactive_task(task, interactive):
     if "features" not in payload:
         payload["features"] = {}
     payload["features"]["interactive"] = True
+
 
 def remove_caches_from_task(task):
     r"""Remove all caches but tc-vcs from the task.
@@ -158,6 +162,7 @@ def remove_caches_from_task(task):
                 caches.pop(cache)
     except KeyError:
         pass
+
 
 def query_vcs_info(repository, revision):
     """Query the pushdate and pushid of a repository/revision.
@@ -189,7 +194,7 @@ def query_vcs_info(repository, revision):
 
     except Exception:
         logger.exception("Error querying VCS info for '%s' revision '%s'",
-                repository, revision)
+                         repository, revision)
         return None
 
 
@@ -210,11 +215,13 @@ def set_expiration(task, timestamp):
     for artifact in artifacts.values() if hasattr(artifacts, "values") else artifacts:
         artifact['expires'] = timestamp
 
+
 def format_treeherder_route(destination, project, revision, pushlog_id):
     return "{}.v2.{}.{}.{}".format(destination,
                                    project,
                                    revision,
                                    pushlog_id)
+
 
 def decorate_task_treeherder_routes(task, project, revision, pushlog_id):
     """Decorate the given task with treeherder routes.
@@ -243,6 +250,7 @@ def decorate_task_treeherder_routes(task, project, revision, pushlog_id):
                                         pushlog_id)
         task['routes'].append(route)
 
+
 def decorate_task_json_routes(task, json_routes, parameters):
     """Decorate the given task with routes.json routes.
 
@@ -256,8 +264,10 @@ def decorate_task_json_routes(task, json_routes, parameters):
 
     task['routes'] = routes
 
+
 class BuildTaskValidationException(Exception):
     pass
+
 
 def validate_build_task(task):
     '''The build tasks have some required fields in extra this function ensures
@@ -280,6 +290,7 @@ def validate_build_task(task):
         if 'tests' not in locations and 'test_packages' not in locations:
             raise BuildTaskValidationException('task.extra.locations.tests or '
                                                'task.extra.locations.tests_packages missing')
+
 
 class LegacyKind(base.Kind):
     """
@@ -312,18 +323,21 @@ class LegacyKind(base.Kind):
         cmdline_interactive = params.get('interactive', False)
 
         # Default to current time if querying the head rev fails
-        pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime())
+        push_epoch = int(time.time())
         vcs_info = query_vcs_info(params['head_repository'], params['head_rev'])
         changed_files = set()
         if vcs_info:
-            pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(vcs_info.pushdate))
+            push_epoch = vcs_info.pushdate
 
-            logger.debug('{} commits influencing task scheduling:'.format(len(vcs_info.changesets)))
+            logger.debug(
+                '{} commits influencing task scheduling:'.format(len(vcs_info.changesets)))
             for c in vcs_info.changesets:
                 logger.debug("{cset} {desc}".format(
                     cset=c['node'][0:12],
                     desc=c['desc'].splitlines()[0].encode('ascii', 'ignore')))
                 changed_files |= set(c['files'])
+
+        pushdate = time.strftime('%Y%m%d%H%M%S', time.gmtime(push_epoch))
 
         # Template parameters used when expanding the graph
         parameters = dict(gaia_info().items() + {
@@ -337,6 +351,7 @@ class LegacyKind(base.Kind):
             'head_ref': params['head_ref'] or params['head_rev'],
             'head_rev': params['head_rev'],
             'pushdate': pushdate,
+            'push_epoch': push_epoch,
             'pushtime': pushdate[8:],
             'year': pushdate[0:4],
             'month': pushdate[4:6],
@@ -367,7 +382,8 @@ class LegacyKind(base.Kind):
             graph['scopes'].add("queue:route:{}".format(route))
 
         graph['metadata'] = {
-            'source': '{repo}file/{rev}/testing/taskcluster/mach_commands.py'.format(repo=params['head_repository'], rev=params['head_rev']),
+            'source': '{repo}file/{rev}/testing/taskcluster/mach_commands.py'.format(
+                        repo=params['head_repository'], rev=params['head_rev']),
             'owner': params['owner'],
             # TODO: Add full mach commands to this example?
             'description': 'Task graph generated via ./mach taskcluster-graph',
@@ -397,7 +413,7 @@ class LegacyKind(base.Kind):
                                              task=task['task'],
                                              pattern=pattern,
                                              path=path,
-                            ))
+                                         ))
                             return True
 
                 # No file patterns matched. Discard task.
@@ -418,7 +434,8 @@ class LegacyKind(base.Kind):
             interactive = cmdline_interactive or build["interactive"]
             build_parameters = merge_dicts(parameters, build['additional-parameters'])
             build_parameters['build_slugid'] = mklabel()
-            build_parameters['source'] = '{repo}file/{rev}/testing/taskcluster/{file}'.format(repo=params['head_repository'], rev=params['head_rev'], file=build['task'])
+            build_parameters['source'] = '{repo}file/{rev}/testing/taskcluster/{file}'.format(
+                repo=params['head_repository'], rev=params['head_rev'], file=build['task'])
             build_task = templates.load(build['task'], build_parameters)
 
             # Copy build_* attributes to expose them to post-build tasks
@@ -445,7 +462,7 @@ class LegacyKind(base.Kind):
 
             # Ensure each build graph is valid after construction.
             validate_build_task(build_task)
-            attributes = build_task['attributes'] = {'kind':'legacy', 'legacy_kind': 'build'}
+            attributes = build_task['attributes'] = {'kind': 'legacy', 'legacy_kind': 'build'}
             if 'build_name' in build:
                 attributes['build_platform'] = build['build_name']
             if 'build_type' in task_extra:
@@ -457,7 +474,8 @@ class LegacyKind(base.Kind):
             graph['tasks'].append(build_task)
 
             for location in build_task['task']['extra'].get('locations', {}):
-                build_parameters['{}_location'.format(location)] = build_task['task']['extra']['locations'][location]
+                build_parameters['{}_location'.format(location)] = \
+                    build_task['task']['extra']['locations'][location]
 
             for url in build_task['task']['extra'].get('url', {}):
                 build_parameters['{}_url'.format(url)] = \
@@ -467,16 +485,19 @@ class LegacyKind(base.Kind):
 
             for route in build_task['task'].get('routes', []):
                 if route.startswith('index.gecko.v2') and route in all_routes:
-                    raise Exception("Error: route '%s' is in use by multiple tasks: '%s' and '%s'" % (
-                        route,
-                        build_task['task']['metadata']['name'],
-                        all_routes[route],
-                    ))
+                    raise Exception(
+                        "Error: route '%s' is in use by multiple tasks: '%s' and '%s'" % (
+                            route,
+                            build_task['task']['metadata']['name'],
+                            all_routes[route],
+                        ))
                 all_routes[route] = build_task['task']['metadata']['name']
 
             graph['scopes'].add(define_task)
             graph['scopes'] |= set(build_task['task'].get('scopes', []))
-            route_scopes = map(lambda route: 'queue:route:' + route, build_task['task'].get('routes', []))
+            route_scopes = map(
+                lambda route: 'queue:route:' + route, build_task['task'].get('routes', [])
+                )
             graph['scopes'] |= set(route_scopes)
 
             # Treeherder symbol configuration for the graph required for each
@@ -617,4 +638,3 @@ class LegacyKind(base.Kind):
     def optimize_task(self, task, taskgraph):
         # no optimization for the moment
         return False, None
-

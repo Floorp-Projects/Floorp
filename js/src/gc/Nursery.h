@@ -218,6 +218,11 @@ class Nursery
         return heapEnd_;
     }
 
+    // Free space remaining, not counting chunk trailers.
+    MOZ_ALWAYS_INLINE size_t approxFreeSpace() const {
+        return heapEnd_ - position_;
+    }
+
 #ifdef JS_GC_ZEAL
     void enterZealMode();
     void leaveZealMode();

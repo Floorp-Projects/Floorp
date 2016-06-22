@@ -1048,7 +1048,8 @@ template <typename T>
 void
 MacroAssemblerMIPSCompat::storePtr(ImmGCPtr imm, T address)
 {
-    storePtr(ImmWord(uintptr_t(imm.value)), address);
+    movePtr(imm, SecondScratchReg);
+    storePtr(SecondScratchReg, address);
 }
 
 template void MacroAssemblerMIPSCompat::storePtr<Address>(ImmGCPtr imm, Address address);
