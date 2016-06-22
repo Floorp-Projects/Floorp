@@ -40,7 +40,7 @@ add_task(function* () {
   let tooltip = new HTMLTooltip({doc}, {});
 
   info("Set tooltip content");
-  yield tooltip.setContent(getTooltipContent(doc), 100, 50);
+  tooltip.setContent(getTooltipContent(doc), 100, 50);
 
   is(tooltip.isVisible(), false, "Tooltip is not visible");
 
