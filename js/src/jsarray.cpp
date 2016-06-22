@@ -2607,7 +2607,7 @@ js::array_splice_impl(JSContext* cx, unsigned argc, Value* vp, bool returnValueI
             Rooted<ArrayObject*> arr(cx, &obj->as<ArrayObject>());
             if (arr->lengthIsWritable()) {
                 DenseElementResult result =
-                    arr->ensureDenseElements(cx, arr->length(), itemCount - actualDeleteCount);
+                    arr->ensureDenseElements(cx, len, itemCount - actualDeleteCount);
                 if (result == DenseElementResult::Failure)
                     return false;
             }
