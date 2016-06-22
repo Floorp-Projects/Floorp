@@ -16,18 +16,14 @@ by acting as a proxy between the local- and remote ends.
 geckodriver is written in [Rust](https://www.rust-lang.org/)
 and you need the Rust toolchain to compile it.
 
-To compile the project for release,
-ensure you do an optimised build:
+To build the project for release,
+ensure you do a compilation with optimisations:
 
-    % cargo build --no-default-features --release
+    % cargo build --release
 
-If you want to build a debug binary:
+Or if you want a non-optimised binary for debugging:
 
-    % cargo build --no-default-features
-
-The `--no-default-features` argument
-is required to compile on Windows
-due to the way dependencies need to be compiled.
+    % cargo build
  
 ## Usage
 
