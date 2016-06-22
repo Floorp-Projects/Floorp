@@ -44,7 +44,7 @@
     if (!evt.touches.length) {
       div.style.transform = "none";
     }
-    touchendTime = new Date().getTime();
+    touchendTime = performance.now();
     updatePreviousEvent(evt);
   }, true);
 
@@ -69,7 +69,7 @@
 
   div.addEventListener("mousedown", function(evt){
     if (previousEvent === "touchend" && touchendTime !== 0) {
-      let now = new Date().getTime();
+      let now = performance.now();
       div.dataset.isDelay = ((now - touchendTime) >= 300) ? true : false;
     } else {
       div.dataset.isDelay = false;
