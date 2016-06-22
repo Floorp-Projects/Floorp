@@ -324,50 +324,46 @@ public:
 
   /* If |isSome()|, runs the provided function or functor on the contents of
    * this Maybe. */
-  template<typename Func>
-  Maybe& apply(Func aFunc)
+  template<typename F, typename... Args>
+  void apply(F&& aFunc, Args&&... aArgs)
   {
     if (isSome()) {
-      aFunc(ref());
+      aFunc(ref(), Forward<Args>(aArgs)...);
     }
-    return *this;
   }
 
-  template<typename Func>
-  const Maybe& apply(Func aFunc) const
+  template<typename F, typename... Args>
+  void apply(F&& aFunc, Args&&... aArgs) const
   {
     if (isSome()) {
-      aFunc(ref());
+      aFunc(ref(), Forward<Args>(aArgs)...);
     }
-    return *this;
   }
 
   /*
    * If |isSome()|, runs the provided function and returns the result wrapped
    * in a Maybe. If |isNothing()|, returns an empty Maybe value.
    */
-  template<typename Func>
-  auto map(Func aFunc) -> Maybe<decltype(aFunc(ref()))>
+  template<typename R, typename... FArgs, typename... Args>
+  Maybe<R> map(R (*aFunc)(T&, FArgs...), Args&&... aArgs)
   {
-    using ReturnType = decltype(aFunc(ref()));
     if (isSome()) {
-      Maybe<ReturnType> val;
-      val.emplace(aFunc(ref()));
+      Maybe<R> val;
+      val.emplace(aFunc(ref(), Forward<Args>(aArgs)...));
       return val;
     }
-    return Maybe<ReturnType>();
+    return Maybe<R>();
   }
 
-  template<typename Func>
-  auto map(Func aFunc) const -> Maybe<decltype(aFunc(ref()))>
+  template<typename R, typename... FArgs, typename... Args>
+  Maybe<R> map(R (*aFunc)(const T&, FArgs...), Args&&... aArgs) const
   {
-    using ReturnType = decltype(aFunc(ref()));
     if (isSome()) {
-      Maybe<ReturnType> val;
-      val.emplace(aFunc(ref()));
+      Maybe<R> val;
+      val.emplace(aFunc(ref(), Forward<Args>(aArgs)...));
       return val;
     }
-    return Maybe<ReturnType>();
+    return Maybe<R>();
   }
 
   /* If |isSome()|, empties this Maybe and destroys its contents. */
