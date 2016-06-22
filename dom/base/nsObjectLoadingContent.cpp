@@ -1531,25 +1531,19 @@ nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI, nsIURI* aBaseURI,
     return;
   }
 
-  // Some youtube urls have invalid query strings attached, e.g.
+  // Some YouTube urls have parameters in path components, e.g.
   // http://youtube.com/embed/7LcUOEP7Brc&start=35. These URLs work with flash,
   // but break iframe/object embedding. If this situation occurs with rewritten
-  // URLs, and the user has flash installed, just use flash. If the user does
-  // not have flash installed or activated, chop off the query in order to make
-  // the video load correctly as an iframe. In either case, warn about it in the
+  // URLs, convert the parameters to query in order to make the video load
+  // correctly as an iframe. In either case, warn about it in the
   // developer console.
   int32_t ampIndex = uri.FindChar('&', 0);
-  bool trimQuery = false;
+  bool replaceQuery = false;
   if (ampIndex != -1) {
     int32_t qmIndex = uri.FindChar('?', 0);
     if (qmIndex == -1 ||
         qmIndex > ampIndex) {
-      if (!nsContentUtils::IsSWFPlayerEnabled()) {
-        trimQuery = true;
-      } else {
-        // Flash is enabled, just use it in this case.
-        return;
-      }
+      replaceQuery = true;
     }
   }
 
@@ -1563,10 +1557,13 @@ nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI, nsIURI* aBaseURI,
   }
 
   nsAutoString utf16OldURI = NS_ConvertUTF8toUTF16(uri);
-  // If we need to trim the query off the URL, it means it's malformed, and an
-  // ampersand comes first. Use the index we found earlier.
-  if (trimQuery) {
-    uri.Truncate(ampIndex);
+  // If we need to convert the URL, it means an ampersand comes first.
+  // Use the index we found earlier.
+  if (replaceQuery) {
+    // Replace question marks with ampersands.
+    uri.ReplaceChar('?', '&');
+    // Replace the first ampersand with a question mark.
+    uri.SetCharAt('?', ampIndex);
   }
   // Switch out video access url formats, which should possibly allow HTML5
   // video loading.
@@ -1584,7 +1581,7 @@ nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI, nsIURI* aBaseURI,
   const char* msgName;
   // If there's no query to rewrite, just notify in the developer console
   // that we're changing the embed.
-  if (!trimQuery) {
+  if (!replaceQuery) {
     msgName = "RewriteYoutubeEmbed";
   } else {
     msgName = "RewriteYoutubeEmbedInvalidQuery";
