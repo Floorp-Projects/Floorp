@@ -105,4 +105,15 @@ function run_test() {
   // test removeAll()
   pm.removeAll();
   do_check_eq(pm.enumerator.hasMoreElements(), false);
+
+  uri = ioService.newURI("https://www.example.com", null, null);
+  pm.add(uri, "offline-app", pm.ALLOW_ACTION);
+  principal = secMan.createCodebasePrincipalFromOrigin("https://www.example.com");
+  // Remove existing entry.
+  perm = pm.getPermissionObject(principal, "offline-app", true);
+  pm.removePermission(perm);
+  // Try to remove already deleted entry.
+  perm = pm.getPermissionObject(principal, "offline-app", true);
+  pm.removePermission(perm);
+  do_check_eq(pm.enumerator.hasMoreElements(), false);
 }
