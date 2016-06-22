@@ -27,12 +27,12 @@
 
 <!DOCTYPE html>
 <html>
-  <head>
+<head>
 <meta charset="utf-8">
-    <title>Canvas Compositing Test</title>
-    <link rel="stylesheet" href="../resources/js-test-style.css"/>
-    <script src="../resources/js-test-pre.js"></script>
-    <script src="../conformance/resources/webgl-test-utils.js"> </script>
+<title>Canvas Compositing Test</title>
+<link rel="stylesheet" href="../resources/js-test-style.css"/>
+<script src="../js/js-test-pre.js"></script>
+<script src="../js/webgl-test-utils.js"> </script>
 </head>
 <body>
 Below are 2 50x50 pixel canvas but using CSS to display them at 100x100 pixels. <br/>
@@ -88,7 +88,7 @@ img tag<br/>
 
 
             var gl = wtu.create3DContext("example");
-            var program = wtu.setupProgram(["vshader", "fshader"], ["vPosition"]);
+            var program = wtu.setupProgram(gl, ["vshader", "fshader"], ["vPosition"]);
 
             var vertexObject = gl.createBuffer();
             gl.bindBuffer(gl.ARRAY_BUFFER, vertexObject);
@@ -104,6 +104,6 @@ img tag<br/>
        var successfullyParsed = true;
     </script>
 </body>
-<script src="../resources/js-test-post.js"></script>
+<script src="../js/js-test-post.js"></script>
 </body>
 </html>

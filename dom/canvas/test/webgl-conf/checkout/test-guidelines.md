@@ -6,7 +6,9 @@ Please try to follow these guidelines when submitting a test.
 
 *   If you're new to git [here's a terse set of instructions](http://www.khronos.org/webgl/wiki/Using_Github_To_Contribute "Using Github to Contribute").
 
-*   All changes and/or new tests should go in the sdk/tests/conformance folder
+*   All changes and/or new tests should go in the sdk/tests folder:
+  *   Tests that apply to WebGL 1 to sdk/tests/conformance
+  *   Tests that only concern WebGL 2 to sdk/tests/conformance2
 
 The tests under conformance-suites are snapshots and are only to be updated by
 the WebGL Working Group when "official" snapshots are taken.
@@ -17,7 +19,7 @@ These lines appears at the top of every html and js file under sdk/tests/conform
 
     <!--
     /*
-    ** Copyright (c) 2014 The Khronos Group Inc.
+    ** Copyright (c) 2015 The Khronos Group Inc.
     **
     ** Permission is hereby granted, free of charge, to any person obtaining a
     ** copy of this software and/or associated documentation files (the
@@ -76,7 +78,8 @@ These lines appears at the top of every html and js file under sdk/tests/conform
                   By default the positions will be at location 0 and the texture coords at location 1.
 
         *    If you need a custom shader use `WebGLTestUtils.setupProgram`. Note that it takes
-             the following arguments. `gl`, `shaders`, `opt_attribs`, `opt_locations` where:
+             the following arguments. `gl`, `shaders`, `opt_attribs`, `opt_locations`, and
+             `opt_logShaders` where:
 
              `gl` is the WebGL context.
 
@@ -89,6 +92,10 @@ These lines appears at the top of every html and js file under sdk/tests/conform
 
              `opt_locations` is an optional array of attribute locations. If provided each attribute
              name in `opt_attribs` is bound to the corresponding location in `opt_locations`.
+
+             `opt_logShaders` is an optional boolean value. If set to true, the shader source will
+             be logged on the test page. It is recommended to use this in tests that concentrate on
+             shaders.
 
         *    If you need to wait for a composite call `WebGLTestUtils.waitForComposite`.
              As compositing is a browser specific thing this provides a central place to
@@ -138,7 +145,7 @@ These lines appears at the top of every html and js file under sdk/tests/conform
             many wrappers (`shouldXXX`, `glErrorShouldBe`, `WebGLTestUtils.checkCanvasXXX`, etc..)
             every so often the harness will not timeout your test.
 
-        *   The test harness requires the global variable `successfullyParse` to be set to true.
+        *   The test harness requires the global variable `successfullyParsed` to be set to true.
             This usually appears at the end of a file.
 
                 var successfullyParsed = true;
@@ -169,6 +176,6 @@ These lines appears at the top of every html and js file under sdk/tests/conform
     Each folder has a 00_test_list.txt file that lists the test in that folder.
     Each new test should be prefixed with the option `--min-version <version>` where
     version is 1 more than the newest official version. At the time of this writing
-    all new tests should be prefixed with `--min-version 1.0.2`
+    all new tests should be prefixed with `--min-version 1.0.4`
 
 

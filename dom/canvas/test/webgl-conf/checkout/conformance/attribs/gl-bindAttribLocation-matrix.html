@@ -1,4 +1,4 @@
-﻿<!--
+<!--
 
 /*
 ** Copyright (c) 2014 The Khronos Group Inc.
@@ -29,8 +29,8 @@
 <head>
 <meta charset="utf-8">
 <link rel="stylesheet" href="../../resources/js-test-style.css"/>
-<script src="../../resources/js-test-pre.js"></script>
-<script src="../resources/webgl-test-utils.js"></script>
+<script src="../../js/js-test-pre.js"></script>
+<script src="../../js/webgl-test-utils.js"></script>
 <title>WebGL bindAttribLocation with Matrix Attributes Conformance Test</title>
 </head>
 <body>
@@ -50,7 +50,7 @@ var maxAttributes = gl.getParameter(gl.MAX_VERTEX_ATTRIBS);
 debug('MAX_VERTEX_ATTRIBUTES is ' + maxAttributes);
 shouldBeGreaterThanOrEqual('maxAttributes', '4');
 
-var glFragmentShader = wtu.setupSimpleColorFragmentShader(gl);
+var glFragmentShader = wtu.loadShader(gl, wtu.simpleColorFragmentShader, gl.FRAGMENT_SHADER);
 
 // Given a matrix dimension, load a vertex shader with a matrix of that dimension
 // and a vector. Ensure that both the vector and matrix are active attributes.
@@ -114,6 +114,6 @@ for (var mm = 2; mm <= 4; ++mm) {
 
 var successfullyParsed = true;
 </script>
-<script src="../../resources/js-test-post.js"></script>
+<script src="../../js/js-test-post.js"></script>
 </body>
 </html>

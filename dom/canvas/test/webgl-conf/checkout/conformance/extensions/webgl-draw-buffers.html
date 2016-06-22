@@ -1,4 +1,4 @@
-﻿<!--
+<!--
 
 /*
 ** Copyright (c) 2013 The Khronos Group Inc.
@@ -31,8 +31,8 @@
 <meta charset="utf-8">
 <title>WebGL WEBGL_draw_buffers Conformance Tests</title>
 <link rel="stylesheet" href="../../resources/js-test-style.css"/>
-<script src="../../resources/js-test-pre.js"></script>
-<script src="../resources/webgl-test-utils.js"></script>
+<script src="../../js/js-test-pre.js"></script>
+<script src="../../js/webgl-test-utils.js"></script>
 </head>
 <body>
 <div id="description"></div>
@@ -102,7 +102,6 @@ var canvas = document.getElementById("canvas");
 var output = document.getElementById("console");
 var gl = wtu.create3DContext(canvas);
 var ext = null;
-var vao = null;
 
 var extensionConstants = [
   { name: "MAX_COLOR_ATTACHMENTS_WEBGL", enum: 0x8CDF, expectedFn: function(v) { return v >= 4; }, passMsg: " should be >= 4"},
@@ -177,8 +176,7 @@ if (!gl) {
 function createExtDrawBuffersProgram(scriptId, sub) {
   var fsource = wtu.getScript(scriptId);
   fsource = wtu.replaceParams(fsource, sub);
-  wtu.addShaderSource(output, "fragment shader", fsource);
-  return wtu.setupProgram(gl, ["vshader", fsource], ["a_position"]);
+  return wtu.setupProgram(gl, ["vshader", fsource], ["a_position"], undefined, true);
 }
 
 function runSupportedTest(extensionEnabled) {
@@ -244,9 +242,7 @@ function runEnumTestEnabled() {
 function testShaders(tests, sub) {
   tests.forEach(function(test) {
     var shaders = [wtu.getScript(test.shaders[0]), wtu.replaceParams(wtu.getScript(test.shaders[1]), sub)];
-    wtu.addShaderSource(output, "vertex shader", shaders[0]);
-    wtu.addShaderSource(output, "fragment shader", shaders[1]);
-    var program = wtu.setupProgram(gl, shaders, ["a_position"]);
+    var program = wtu.setupProgram(gl, shaders, ["a_position"], undefined, true);
     var programLinkedSuccessfully = (program != null);
     var expectedProgramToLinkSuccessfully = (test.expectFailure == true);
     expectTrue(programLinkedSuccessfully != expectedProgramToLinkSuccessfully, test.msg);
@@ -724,8 +720,25 @@ function runPreserveTests() {
     wtu.checkCanvas(gl, [0, 0, 0, 0], "should be clear");
     wtu.glErrorShouldBe(gl, gl.NO_ERROR, "there should be no errors");
 
-    finishTest();
+    runEndTests();
   });
+}
+
+function runEndTests() {
+  // Create new context and verify shader tests with no extension still succeeds.
+  debug("");
+  debug("Testing new context with no extension");
+  gl = wtu.create3DContext();
+  if (!gl) {
+    testFailed("New WebGL context does not exist");
+  } else {
+    testPassed("New WebGL context exists");
+    runEnumTestDisabled();
+    runShadersTestDisabled();
+    runAttachmentTestDisabled();
+  }
+
+  finishTest();
 }
 </script>
 </body>

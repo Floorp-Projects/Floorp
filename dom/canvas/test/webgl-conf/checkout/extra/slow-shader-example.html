@@ -31,8 +31,8 @@
 <meta charset="utf-8">
 <title>WebGL Slow Shader example.</title>
 <link rel="stylesheet" href="../resources/js-test-style.css"/>
-<script src="../resources/js-test-pre.js"></script>
-<script src="../conformance/resources/webgl-test-utils.js"> </script>
+<script src="../js/js-test-pre.js"></script>
+<script src="../js/webgl-test-utils.js"> </script>
 </head>
 <body>
 <canvas id="example" width="1024" height="1024" style="width: 40px; height: 40px;">
@@ -64,14 +64,9 @@ debug("Texture size: " + texSize);
 var shaderSource =
     document.getElementById("slow").text.replace(/\$size/g, texSize + ".0");
 wtu.glErrorShouldBe(gl, gl.NO_ERROR, "after getting a context");
-var vs = wtu.setupSimpleTextureVertexShader(gl);
-var fs = wtu.loadShader(
-    gl,
-    shaderSource,
-    gl.FRAGMENT_SHADER)
 var program = wtu.setupProgram(
     gl,
-    [vs, fs],
+    [wtu.simpleTextureVertexShader, shaderSource],
     ['vPosition', 'texCoord0'],
     [0, 1]);
 wtu.setupUnitQuad(gl, 0, 1);
