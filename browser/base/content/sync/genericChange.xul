@@ -67,7 +67,7 @@
           <label id="generatePassphraseButton"
                  hidden="true"
                  value="&syncGenerateNewKey.label;"
-                 class="text-link inline-link"
+                 class="text-link"
                  onclick="event.stopPropagation();
                           Change.doGeneratePassphrase();"/>
         </hbox>
