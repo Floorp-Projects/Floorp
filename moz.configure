@@ -90,8 +90,15 @@ js_option('--enable-debug',
           help='Enable building with developer debug info '
                '(using the given compiler flags).')
 
-add_old_configure_assignment('MOZ_DEBUG',
-                             depends_if('--enable-debug')(lambda _: True))
+@depends('--enable-debug')
+def debug_value(value):
+    # If a value was passed ensure this is set as the value for
+    # old-configure, so that --disable-debug works even when MOZ_DEBUG is
+    # set in the environment.
+    if value.origin != 'default':
+        return bool(value)
+
+add_old_configure_assignment('MOZ_DEBUG', debug_value)
 
 @depends('--disable-compile-environment', '--help')
 def toolchain_include(compile_env, help):
