@@ -7,6 +7,7 @@
 #include <algorithm>
 
 #include "mozilla/Casting.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/Snprintf.h"
 #include "mozilla/UniquePtr.h"
 #include "nsCOMPtr.h"
@@ -67,20 +68,6 @@ static SECOidData more_oids[] = {
 };
 
 static const unsigned int numOids = (sizeof more_oids) / (sizeof more_oids[0]);
-
-static nsresult
-GetIntValue(SECItem *versionItem, 
-            unsigned long *version)
-{
-  SECStatus srv;
-
-  srv = SEC_ASN1DecodeInteger(versionItem,version);
-  if (srv != SECSuccess) {
-    NS_ERROR("Could not decode version of cert");
-    return NS_ERROR_FAILURE;
-  }
-  return NS_OK;
-}
 
 static nsresult
 ProcessVersion(SECItem* versionItem, nsINSSComponent* nssComponent,
@@ -642,61 +629,71 @@ ProcessRawBytes(nsINSSComponent *nssComponent, SECItem *data,
     }
   }
   return NS_OK;
-}    
+}
+
+/**
+ * Appends a pipnss bundle string to the given string.
+ *
+ * @param nssComponent For accessing the string bundle.
+ * @param bundleKey Key for the string to append.
+ * @param currentText The text to append to, using |SEPARATOR| as the separator.
+ */
+template<size_t N>
+void AppendBundleString(const NotNull<nsINSSComponent*>& nssComponent,
+                        const char (&bundleKey)[N],
+             /*in/out*/ nsAString& currentText)
+{
+  nsAutoString bundleString;
+  nsresult rv = nssComponent->GetPIPNSSBundleString(bundleKey, bundleString);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  currentText.Append(bundleString);
+  currentText.AppendLiteral(SEPARATOR);
+}
 
 static nsresult
 ProcessKeyUsageExtension(SECItem *extData, nsAString &text,
                          nsINSSComponent *nssComponent)
 {
-  nsAutoString local;
-  SECItem decoded;
-  decoded.data = nullptr;
-  decoded.len  = 0;
-  if (SECSuccess != SEC_ASN1DecodeItem(nullptr, &decoded, 
-				SEC_ASN1_GET(SEC_BitStringTemplate), extData)) {
-    nssComponent->GetPIPNSSBundleString("CertDumpExtensionFailure", local);
-    text.Append(local.get());
+  MOZ_ASSERT(extData);
+  MOZ_ASSERT(nssComponent);
+  NS_ENSURE_ARG(extData);
+  NS_ENSURE_ARG(nssComponent);
+
+  NotNull<nsINSSComponent*> wrappedNSSComponent = WrapNotNull(nssComponent);
+  ScopedAutoSECItem decoded;
+  if (SEC_ASN1DecodeItem(nullptr, &decoded, SEC_ASN1_GET(SEC_BitStringTemplate),
+                         extData) != SECSuccess) {
+    AppendBundleString(wrappedNSSComponent, "CertDumpExtensionFailure", text);
     return NS_OK;
   }
   unsigned char keyUsage = 0;
   if (decoded.len) {
     keyUsage = decoded.data[0];
   }
-  free(decoded.data);
+
   if (keyUsage & KU_DIGITAL_SIGNATURE) {
-    nssComponent->GetPIPNSSBundleString("CertDumpKUSign", local);
-    text.Append(local.get());
-    text.AppendLiteral(SEPARATOR);
+    AppendBundleString(wrappedNSSComponent, "CertDumpKUSign", text);
   }
   if (keyUsage & KU_NON_REPUDIATION) {
-    nssComponent->GetPIPNSSBundleString("CertDumpKUNonRep", local);
-    text.Append(local.get());
-    text.AppendLiteral(SEPARATOR);
+    AppendBundleString(wrappedNSSComponent, "CertDumpKUNonRep", text);
   }
   if (keyUsage & KU_KEY_ENCIPHERMENT) {
-    nssComponent->GetPIPNSSBundleString("CertDumpKUEnc", local);
-    text.Append(local.get());
-    text.AppendLiteral(SEPARATOR);
+    AppendBundleString(wrappedNSSComponent, "CertDumpKUEnc", text);
   }
   if (keyUsage & KU_DATA_ENCIPHERMENT) {
-    nssComponent->GetPIPNSSBundleString("CertDumpKUDEnc", local);
-    text.Append(local.get());
-    text.AppendLiteral(SEPARATOR);
+    AppendBundleString(wrappedNSSComponent, "CertDumpKUDEnc", text);
   }
   if (keyUsage & KU_KEY_AGREEMENT) {
-    nssComponent->GetPIPNSSBundleString("CertDumpKUKA", local);
-    text.Append(local.get());
-    text.AppendLiteral(SEPARATOR);
+    AppendBundleString(wrappedNSSComponent, "CertDumpKUKA", text);
   }
   if (keyUsage & KU_KEY_CERT_SIGN) {
-    nssComponent->GetPIPNSSBundleString("CertDumpKUCertSign", local);
-    text.Append(local.get());
-    text.AppendLiteral(SEPARATOR);
+    AppendBundleString(wrappedNSSComponent, "CertDumpKUCertSign", text);
   }
   if (keyUsage & KU_CRL_SIGN) {
-    nssComponent->GetPIPNSSBundleString("CertDumpKUCRLSigner", local);
-    text.Append(local.get());
-    text.AppendLiteral(SEPARATOR);
+    AppendBundleString(wrappedNSSComponent, "CertDumpKUCRLSigner", text);
   }
 
   return NS_OK;
@@ -879,19 +876,16 @@ ProcessName(CERTName *name, nsINSSComponent *nssComponent, char16_t **value)
 }
 
 static nsresult
-ProcessIA5String(SECItem  *extData, 
-		 nsAString &text,
-		 nsINSSComponent *nssComponent)
+ProcessIA5String(const SECItem& extData, /*in/out*/ nsAString& text)
 {
-  SECItem item;
-  nsAutoString local;
-  if (SECSuccess != SEC_ASN1DecodeItem(nullptr, &item, 
-				       SEC_ASN1_GET(SEC_IA5StringTemplate),
-				       extData))
+  ScopedAutoSECItem item;
+  if (SEC_ASN1DecodeItem(nullptr, &item, SEC_ASN1_GET(SEC_IA5StringTemplate),
+                         &extData) != SECSuccess) {
     return NS_ERROR_FAILURE;
-  local.AssignASCII((char*)item.data, item.len);
-  free(item.data);
-  text.Append(local);
+  }
+
+  text.AppendASCII(BitwiseCast<char*, unsigned char*>(item.data),
+                   AssertedCast<uint32_t>(item.len));
   return NS_OK;
 }
 
@@ -1293,8 +1287,7 @@ ProcessCertificatePolicies(SECItem  *extData,
 	  text.AppendLiteral("    ");
 	  /* The CPS pointer ought to be the cPSuri alternative
 	     of the Qualifier choice. */
-	  rv = ProcessIA5String(&policyQualifier->qualifierValue,
-				text, nssComponent);
+          rv = ProcessIA5String(policyQualifier->qualifierValue, text);
           if (NS_FAILED(rv)) {
             return rv;
           }
@@ -1470,27 +1463,30 @@ ProcessMSCAVersion(SECItem  *extData,
 		   nsAString &text,
 		   nsINSSComponent *nssComponent)
 {
-  unsigned long version;
-  nsresult rv;
-  char buf[50];
-  SECItem decoded;
+  MOZ_ASSERT(extData);
+  NS_ENSURE_ARG(extData);
 
-  if (SECSuccess != SEC_ASN1DecodeItem(nullptr, &decoded, 
-				       SEC_ASN1_GET(SEC_IntegerTemplate), 
-				       extData))
+  ScopedAutoSECItem decoded;
+  if (SEC_ASN1DecodeItem(nullptr, &decoded, SEC_ASN1_GET(SEC_IntegerTemplate),
+                         extData) != SECSuccess) {
     /* This extension used to be an Integer when this code
        was written, but apparently isn't anymore. Display
        the raw bytes instead. */
     return ProcessRawBytes(nssComponent, extData, text);
+  }
 
-  rv = GetIntValue(&decoded, &version);
-  free(decoded.data);
-  if (NS_FAILED(rv))
+  unsigned long version;
+  if (SEC_ASN1DecodeInteger(&decoded, &version) != SECSuccess) {
     /* Value out of range, display raw bytes */
     return ProcessRawBytes(nssComponent, extData, text);
+  }
 
   /* Apparently, the encoding is <minor><major>, with 16 bits each */
-  snprintf_literal(buf, "%d.%d", version & 0xFFFF, version >> 16);
+  char buf[50];
+  if (snprintf_literal(buf, "%d.%d", version & 0xFFFF, version >> 16) <= 0) {
+    return NS_ERROR_FAILURE;
+  }
+
   text.AppendASCII(buf);
   return NS_OK;
 }
