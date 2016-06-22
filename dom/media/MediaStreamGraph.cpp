@@ -487,12 +487,7 @@ MediaStreamGraphImpl::AudioTrackPresent(bool& aNeedsAEC)
       }
     }
     if (source) {
-      for (auto& data : source->mPendingTracks) {
-        if (data.mData->GetType() == MediaSegment::AUDIO) {
-          audioTrackPresent = true;
-          break;
-        }
-      }
+      audioTrackPresent = source->HasPendingAudioTrack();
     }
   }
 
@@ -3047,6 +3042,22 @@ SourceMediaStream::NeedsMixing()
 {
   MutexAutoLock lock(mMutex);
   return mNeedsMixing;
+}
+
+bool
+SourceMediaStream::HasPendingAudioTrack()
+{
+  MutexAutoLock lock(mMutex);
+  bool audioTrackPresent = false;
+
+  for (auto& data : mPendingTracks) {
+    if (data.mData->GetType() == MediaSegment::AUDIO) {
+      audioTrackPresent = true;
+      break;
+    }
+  }
+
+  return audioTrackPresent;
 }
 
 void
