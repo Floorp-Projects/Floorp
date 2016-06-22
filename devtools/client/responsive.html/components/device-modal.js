@@ -53,21 +53,28 @@ module.exports = createClass({
       onUpdateDeviceModalOpen,
     } = this.props;
 
-    let displayedDeviceList = [];
+    let preferredDevices = {
+      "added": new Set(),
+      "removed": new Set(),
+    };
 
     for (let type of devices.types) {
       for (let device of devices[type]) {
-        if (this.state[device.name] != device.displayed) {
-          onUpdateDeviceDisplayed(device, type, this.state[device.name]);
+        let newState = this.state[device.name];
+
+        if (device.featured && !newState) {
+          preferredDevices.removed.add(device.name);
+        } else if (!device.featured && newState) {
+          preferredDevices.added.add(device.name);
         }
 
-        if (this.state[device.name]) {
-          displayedDeviceList.push(device.name);
+        if (this.state[device.name] != device.displayed) {
+          onUpdateDeviceDisplayed(device, type, this.state[device.name]);
         }
       }
     }
 
-    onDeviceListUpdate(displayedDeviceList);
+    onDeviceListUpdate(preferredDevices);
     onUpdateDeviceModalOpen(false);
   },
 
