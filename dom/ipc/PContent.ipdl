@@ -870,7 +870,7 @@ parent:
     async LoadURIExternal(URIParams uri, PBrowser windowContext);
 
     // PrefService message
-    sync ReadPrefsArray() returns (PrefSetting[] prefs);
+    sync ReadPrefsArray() returns (PrefSetting[] prefs) verify;
 
     sync ReadFontList() returns (FontListEntry[] retValue);
 
