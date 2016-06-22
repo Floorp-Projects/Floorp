@@ -1868,6 +1868,9 @@ nsPermissionManager::RemoveFromPrincipal(nsIPrincipal* aPrincipal,
 NS_IMETHODIMP
 nsPermissionManager::RemovePermission(nsIPermission* aPerm)
 {
+  if (!aPerm) {
+    return NS_OK;
+  }
   nsCOMPtr<nsIPrincipal> principal;
   nsresult rv = aPerm->GetPrincipal(getter_AddRefs(principal));
   NS_ENSURE_SUCCESS(rv, rv);
