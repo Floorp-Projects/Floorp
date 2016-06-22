@@ -12,6 +12,7 @@
 #ifndef mozilla_image_SurfaceFilters_h
 #define mozilla_image_SurfaceFilters_h
 
+#include <algorithm>
 #include <stdint.h>
 #include <string.h>
 
@@ -528,6 +529,362 @@ private:
                                      /// is larger than the image's logical width.
   int32_t  mRow;                     /// The row in unclamped frame rect space
                                      /// that we're currently writing.
+};
+
+
+//////////////////////////////////////////////////////////////////////////////
+// ADAM7InterpolatingFilter
+//////////////////////////////////////////////////////////////////////////////
+
+template <typename Next> class ADAM7InterpolatingFilter;
+
+/**
+ * A configuration struct for ADAM7InterpolatingFilter.
+ */
+struct ADAM7InterpolatingConfig
+{
+  template <typename Next> using Filter = ADAM7InterpolatingFilter<Next>;
+};
+
+/**
+ * ADAM7InterpolatingFilter performs bilinear interpolation over an ADAM7
+ * interlaced image.
+ *
+ * ADAM7 breaks up the image into 8x8 blocks. On each of the 7 passes, a new set
+ * of pixels in each block receives their final values, according to the
+ * following pattern:
+ *
+ *    1 6 4 6 2 6 4 6
+ *    7 7 7 7 7 7 7 7
+ *    5 6 5 6 5 6 5 6
+ *    7 7 7 7 7 7 7 7
+ *    3 6 4 6 3 6 4 6
+ *    7 7 7 7 7 7 7 7
+ *    5 6 5 6 5 6 5 6
+ *    7 7 7 7 7 7 7 7
+ *
+ * When rendering the pixels that have not yet received their final values, we
+ * can get much better intermediate results if we interpolate between
+ * the pixels we *have* gotten so far. This filter performs bilinear
+ * interpolation by first performing linear interpolation horizontally for each
+ * "important" row (which we'll define as a row that has received any pixels
+ * with final values at all) and then performing linear interpolation vertically
+ * to produce pixel values for rows which aren't important on the current pass.
+ *
+ * Note that this filter totally ignores the data which is written to rows which
+ * aren't important on the current pass! It's fine to write nothing at all for
+ * these rows, although doing so won't cause any harm.
+ *
+ * XXX(seth): In bug 1280552 we'll add a SIMD implementation for this filter.
+ *
+ * The 'Next' template parameter specifies the next filter in the chain.
+ */
+template <typename Next>
+class ADAM7InterpolatingFilter final : public SurfaceFilter
+{
+public:
+  ADAM7InterpolatingFilter()
+    : mPass(0)  // The current pass, in the range 1..7. Starts at 0 so that
+                // DoResetToFirstRow() doesn't have to special case the first pass.
+    , mRow(0)
+  { }
+
+  template <typename... Rest>
+  nsresult Configure(const ADAM7InterpolatingConfig& aConfig, Rest... aRest)
+  {
+    nsresult rv = mNext.Configure(aRest...);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+
+    if (mNext.IsValidPalettedPipe()) {
+      NS_WARNING("ADAM7InterpolatingFilter used with paletted pipe?");
+      return NS_ERROR_INVALID_ARG;
+    }
+
+    // We have two intermediate buffers, one for the previous row with final
+    // pixel values and one for the row that the previous filter in the chain is
+    // currently writing to.
+    size_t inputWidthInBytes = mNext.InputSize().width * sizeof(uint32_t);
+    mPreviousRow.reset(new (fallible) uint8_t[inputWidthInBytes]);
+    if (MOZ_UNLIKELY(!mPreviousRow)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    mCurrentRow.reset(new (fallible) uint8_t[inputWidthInBytes]);
+    if (MOZ_UNLIKELY(!mCurrentRow)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    memset(mPreviousRow.get(), 0, inputWidthInBytes);
+    memset(mCurrentRow.get(), 0, inputWidthInBytes);
+
+    ConfigureFilter(mNext.InputSize(), sizeof(uint32_t));
+    return NS_OK;
+  }
+
+  Maybe<SurfaceInvalidRect> TakeInvalidRect() override
+  {
+    return mNext.TakeInvalidRect();
+  }
+
+protected:
+  uint8_t* DoResetToFirstRow() override
+  {
+    mRow = 0;
+    mPass = std::min(mPass + 1, 7);
+
+    uint8_t* rowPtr = mNext.ResetToFirstRow();
+    if (mPass == 7) {
+      // Short circuit this filter on the final pass, since all pixels have
+      // their final values at that point.
+      return rowPtr;
+    }
+
+    return mCurrentRow.get();
+  }
+
+  uint8_t* DoAdvanceRow() override
+  {
+    MOZ_ASSERT(0 < mPass && mPass <= 7, "Invalid pass");
+
+    int32_t currentRow = mRow;
+    ++mRow;
+
+    if (mPass == 7) {
+      // On the final pass we short circuit this filter totally.
+      return mNext.AdvanceRow();
+    }
+
+    const int32_t lastImportantRow = LastImportantRow(InputSize().height, mPass);
+    if (currentRow > lastImportantRow) {
+      return nullptr;  // This pass is already complete.
+    }
+
+    if (!IsImportantRow(currentRow, mPass)) {
+      // We just ignore whatever the caller gives us for these rows. We'll
+      // interpolate them in later.
+      return mCurrentRow.get();
+    }
+
+    // This is an important row. We need to perform horizontal interpolation for
+    // these rows.
+    InterpolateHorizontally(mCurrentRow.get(), InputSize().width, mPass);
+
+    // Interpolate vertically between the previous important row and the current
+    // important row. We skip this if the current row is 0 (which is always an
+    // important row), because in that case there is no previous important row
+    // to interpolate with.
+    if (currentRow != 0) {
+      InterpolateVertically(mPreviousRow.get(), mCurrentRow.get(), mPass, mNext);
+    }
+
+    // Write out the current row itself, which, being an important row, does not
+    // need vertical interpolation.
+    uint32_t* currentRowAsPixels = reinterpret_cast<uint32_t*>(mCurrentRow.get());
+    mNext.WriteBuffer(currentRowAsPixels);
+
+    if (currentRow == lastImportantRow) {
+      // This is the last important row, which completes this pass. Note that
+      // for very small images, this may be the first row! Since there won't be
+      // another important row, there's nothing to interpolate with vertically,
+      // so we just duplicate this row until the end of the image.
+      while (mNext.WriteBuffer(currentRowAsPixels) == WriteState::NEED_MORE_DATA) { }
+
+      // All of the remaining rows in the image were determined above, so we're done.
+      return nullptr;
+    }
+
+    // The current row is now the previous important row; save it.
+    Swap(mPreviousRow, mCurrentRow);
+
+    MOZ_ASSERT(mRow < InputSize().height, "Reached the end of the surface without "
+                                          "hitting the last important row?");
+
+    return mCurrentRow.get();
+  }
+
+private:
+  static void InterpolateVertically(uint8_t* aPreviousRow,
+                                    uint8_t* aCurrentRow,
+                                    uint8_t aPass,
+                                    SurfaceFilter& aNext)
+  {
+    const float* weights = InterpolationWeights(ImportantRowStride(aPass));
+
+    // We need to interpolate vertically to generate the rows between the
+    // previous important row and the next one. Recall that important rows are
+    // rows which contain at least some final pixels; see
+    // InterpolateHorizontally() for some additional explanation as to what that
+    // means. Note that we've already written out the previous important row, so
+    // we start the iteration at 1.
+    for (int32_t outRow = 1; outRow < ImportantRowStride(aPass); ++outRow) {
+      const float weight = weights[outRow];
+
+      // We iterate through the previous and current important row every time we
+      // write out an interpolated row, so we need to copy the pointers.
+      uint8_t* prevRowBytes = aPreviousRow;
+      uint8_t* currRowBytes = aCurrentRow;
+
+      // Write out the interpolated pixels. Interpolation is componentwise.
+      aNext.template WritePixelsToRow<uint32_t>([&]{
+        uint32_t pixel = 0;
+        auto* component = reinterpret_cast<uint8_t*>(&pixel);
+        *component++ = InterpolateByte(*prevRowBytes++, *currRowBytes++, weight);
+        *component++ = InterpolateByte(*prevRowBytes++, *currRowBytes++, weight);
+        *component++ = InterpolateByte(*prevRowBytes++, *currRowBytes++, weight);
+        *component++ = InterpolateByte(*prevRowBytes++, *currRowBytes++, weight);
+        return AsVariant(pixel);
+      });
+    }
+  }
+
+  static void InterpolateHorizontally(uint8_t* aRow, int32_t aWidth, uint8_t aPass)
+  {
+    // Collect the data we'll need to perform horizontal interpolation. The
+    // terminology here bears some explanation: a "final pixel" is a pixel which
+    // has received its final value. On each pass, a new set of pixels receives
+    // their final value; see the diagram above of the 8x8 pattern that ADAM7
+    // uses. Any pixel which hasn't received its final value on this pass
+    // derives its value from either horizontal or vertical interpolation
+    // instead.
+    const size_t finalPixelStride = FinalPixelStride(aPass);
+    const size_t finalPixelStrideBytes = finalPixelStride * sizeof(uint32_t);
+    const size_t lastFinalPixel = LastFinalPixel(aWidth, aPass);
+    const size_t lastFinalPixelBytes = lastFinalPixel * sizeof(uint32_t);
+    const float* weights = InterpolationWeights(finalPixelStride);
+
+    // Interpolate blocks of pixels which lie between two final pixels.
+    // Horizontal interpolation is done in place, as we'll need the results
+    // later when we vertically interpolate.
+    for (size_t blockBytes = 0;
+         blockBytes < lastFinalPixelBytes;
+         blockBytes += finalPixelStrideBytes) {
+      uint8_t* finalPixelA = aRow + blockBytes;
+      uint8_t* finalPixelB = aRow + blockBytes + finalPixelStrideBytes;
+
+      MOZ_ASSERT(finalPixelA < aRow + aWidth * sizeof(uint32_t),
+                 "Running off end of buffer");
+      MOZ_ASSERT(finalPixelB < aRow + aWidth * sizeof(uint32_t),
+                 "Running off end of buffer");
+
+      // Interpolate the individual pixels componentwise. Note that we start
+      // iteration at 1 since we don't need to apply any interpolation to the
+      // first pixel in the block, which has its final value.
+      for (size_t pixelIndex = 1; pixelIndex < finalPixelStride; ++pixelIndex) {
+        const float weight = weights[pixelIndex];
+        uint8_t* pixel = aRow + blockBytes + pixelIndex * sizeof(uint32_t);
+
+        MOZ_ASSERT(pixel < aRow + aWidth * sizeof(uint32_t), "Running off end of buffer");
+
+        for (size_t component = 0; component < sizeof(uint32_t); ++component) {
+          pixel[component] =
+            InterpolateByte(finalPixelA[component], finalPixelB[component], weight);
+        }
+      }
+    }
+
+    // For the pixels after the last final pixel in the row, there isn't a
+    // second final pixel to interpolate with, so just duplicate.
+    uint32_t* rowPixels = reinterpret_cast<uint32_t*>(aRow);
+    uint32_t pixelToDuplicate = rowPixels[lastFinalPixel];
+    for (int32_t pixelIndex = lastFinalPixel + 1;
+         pixelIndex < aWidth;
+         ++pixelIndex) {
+      MOZ_ASSERT(pixelIndex < aWidth, "Running off end of buffer");
+      rowPixels[pixelIndex] = pixelToDuplicate;
+    }
+  }
+
+  static uint8_t InterpolateByte(uint8_t aByteA, uint8_t aByteB, float aWeight)
+  {
+    return uint8_t(aByteA * aWeight + aByteB * (1.0f - aWeight));
+  }
+
+  static int32_t ImportantRowStride(uint8_t aPass)
+  {
+    MOZ_ASSERT(0 < aPass && aPass <= 7, "Invalid pass");
+
+    // The stride between important rows for each pass, with a dummy value for
+    // the nonexistent pass 0.
+    static int32_t strides[] = { 1, 8, 8, 4, 4, 2, 2, 1 };
+
+    return strides[aPass];
+  }
+
+  static bool IsImportantRow(int32_t aRow, uint8_t aPass)
+  {
+    MOZ_ASSERT(aRow >= 0);
+
+    // Whether the row is important comes down to divisibility by the stride for
+    // this pass, which is always a power of 2, so we can check using a mask.
+    int32_t mask = ImportantRowStride(aPass) - 1;
+    return (aRow & mask) == 0;
+  }
+
+  static int32_t LastImportantRow(int32_t aHeight, uint8_t aPass)
+  {
+    MOZ_ASSERT(aHeight > 0);
+
+    // We can find the last important row using the same mask trick as above.
+    int32_t lastRow = aHeight - 1;
+    int32_t mask = ImportantRowStride(aPass) - 1;
+    return lastRow - (lastRow & mask);
+  }
+
+  static size_t FinalPixelStride(uint8_t aPass)
+  {
+    MOZ_ASSERT(0 < aPass && aPass <= 7, "Invalid pass");
+
+    // The stride between the final pixels in important rows for each pass, with
+    // a dummy value for the nonexistent pass 0.
+    static size_t strides[] = { 1, 8, 4, 4, 2, 2, 1, 1 };
+
+    return strides[aPass];
+  }
+
+  static size_t LastFinalPixel(int32_t aWidth, uint8_t aPass)
+  {
+    MOZ_ASSERT(aWidth >= 0);
+
+    // Again, we can use the mask trick above to find the last important pixel.
+    int32_t lastColumn = aWidth - 1;
+    size_t mask = FinalPixelStride(aPass) - 1;
+    return lastColumn - (lastColumn & mask);
+  }
+
+  static const float* InterpolationWeights(int32_t aStride)
+  {
+    // Precalculated interpolation weights. These are used to interpolate
+    // between final pixels or between important rows. Although no interpolation
+    // is actually applied to the previous final pixel or important row value,
+    // the arrays still start with 1.0f, which is always skipped, primarily
+    // because otherwise |stride1Weights| would have zero elements.
+    static float stride8Weights[] =
+      { 1.0f, 7 / 8.0f, 6 / 8.0f, 5 / 8.0f, 4 / 8.0f, 3 / 8.0f, 2 / 8.0f, 1 / 8.0f };
+    static float stride4Weights[] = { 1.0f, 3 / 4.0f, 2 / 4.0f, 1 / 4.0f };
+    static float stride2Weights[] = { 1.0f, 1 / 2.0f };
+    static float stride1Weights[] = { 1.0f };
+
+    switch (aStride) {
+      case 8:  return stride8Weights;
+      case 4:  return stride4Weights;
+      case 2:  return stride2Weights;
+      case 1:  return stride1Weights;
+      default: MOZ_CRASH();
+    }
+  }
+
+  Next mNext;                         /// The next SurfaceFilter in the chain.
+
+  UniquePtr<uint8_t[]> mPreviousRow;  /// The last important row (i.e., row with
+                                      /// final pixel values) that got written to.
+  UniquePtr<uint8_t[]> mCurrentRow;   /// The row that's being written to right
+                                      /// now.
+  uint8_t mPass;                      /// Which ADAM7 pass we're on. Valid passes
+                                      /// are 1..7 during processing and 0 prior
+                                      /// to configuraiton.
+  int32_t mRow;                       /// The row we're currently reading.
 };
 
 } // namespace image

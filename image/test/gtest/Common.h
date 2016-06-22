@@ -72,6 +72,8 @@ struct ImageTestCase
 
 struct BGRAColor
 {
+  BGRAColor() : BGRAColor(0, 0, 0, 0) { }
+
   BGRAColor(uint8_t aBlue, uint8_t aGreen, uint8_t aRed, uint8_t aAlpha)
     : mBlue(aBlue)
     , mGreen(aGreen)
@@ -81,6 +83,7 @@ struct BGRAColor
 
   static BGRAColor Green() { return BGRAColor(0x00, 0xFF, 0x00, 0xFF); }
   static BGRAColor Red()   { return BGRAColor(0x00, 0x00, 0xFF, 0xFF); }
+  static BGRAColor Blue()   { return BGRAColor(0xFF, 0x00, 0x00, 0xFF); }
   static BGRAColor Transparent() { return BGRAColor(0x00, 0x00, 0x00, 0x00); }
 
   uint32_t AsPixel() const { return gfxPackedPixel(mAlpha, mRed, mGreen, mBlue); }
