@@ -8,7 +8,10 @@ function* test_decoder_doctor_notification(type, notificationMessage, options) {
     yield ContentTask.spawn(browser, type, function*(type) {
       Services.obs.notifyObservers(content.window,
                                    "decoder-doctor-notification",
-                                   JSON.stringify({type: type}));
+                                   JSON.stringify({type: type,
+                                                   isSolved: false,
+                                                   decoderDoctorReportId: "test",
+                                                   formats: "test"}));
     });
 
     let notification;
