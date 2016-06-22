@@ -1067,6 +1067,8 @@ AccumulateCipherSuite(Telemetry::ID probe, const SSLChannelInfo& channelInfo)
     case TLS_RSA_WITH_RC4_128_MD5: value = 69; break;
     // TLS 1.3 PSK resumption
     case TLS_ECDHE_PSK_WITH_AES_128_GCM_SHA256: value = 70; break;
+    case TLS_ECDHE_PSK_WITH_CHACHA20_POLY1305_SHA256: value = 71; break;
+    case TLS_ECDHE_PSK_WITH_AES_256_GCM_SHA384: value = 72; break;
     // unknown
     default:
       value = 0;
