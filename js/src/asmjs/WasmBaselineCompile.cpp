@@ -1725,12 +1725,6 @@ class BaseCompiler
     }
 
     bool endFunction() {
-        // A frame greater than 256KB is implausible, probably an attack,
-        // so bail out.
-
-        if (maxFramePushed_ > 256 * 1024)
-            return false;
-
         // Out-of-line prologue.  Assumes that the in-line prologue has
         // been executed and that a frame of size = localSize_ + sizeof(AsmJSFrame)
         // has been allocated.
@@ -1771,6 +1765,12 @@ class BaseCompiler
             return false;
 
         compileResults_.offsets().end = masm.currentOffset();
+
+        // A frame greater than 256KB is implausible, probably an attack,
+        // so fail the compilation.
+
+        if (maxFramePushed_ > 256 * 1024)
+            return false;
 
         return true;
     }
