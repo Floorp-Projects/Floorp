@@ -17,14 +17,13 @@ import org.json.JSONException;
 import org.json.JSONObject;
 import org.mozilla.gecko.AboutPages;
 import org.mozilla.gecko.BrowserApp;
-import org.mozilla.gecko.delegates.BrowserAppDelegate;
 import org.mozilla.gecko.GeckoProfile;
 import org.mozilla.gecko.Tab;
 import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.UrlAnnotations;
-import org.mozilla.gecko.tabs.TabsPanel;
+import org.mozilla.gecko.delegates.ForegroundAwareDelegate;
 import org.mozilla.gecko.util.Experiments;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -35,7 +34,7 @@ import ch.boye.httpclientandroidlib.util.TextUtils;
 /**
  * Promote "Add to home screen" if user visits website often.
  */
-public class AddToHomeScreenPromotion extends BrowserAppDelegate implements Tabs.OnTabsChangedListener {
+public class AddToHomeScreenPromotion extends ForegroundAwareDelegate implements Tabs.OnTabsChangedListener {
     private static class URLHistory {
         public final long visits;
         public final long lastVisit;
@@ -54,15 +53,14 @@ public class AddToHomeScreenPromotion extends BrowserAppDelegate implements Tabs
 
     private WeakReference<Activity> activityReference;
     private boolean isEnabled;
-    private boolean isInForeground;
     private int minimumVisits;
     private int lastVisitMinimumAgeMs;
     private int lastVisitMaximumAgeMs;
 
     @Override
     public void onCreate(BrowserApp browserApp, Bundle savedInstanceState) {
+        super.onCreate(browserApp, savedInstanceState);
         activityReference = new WeakReference<Activity>(browserApp);
-        isInForeground = true;
 
         initializeExperiment(browserApp);
     }
@@ -75,16 +73,6 @@ public class AddToHomeScreenPromotion extends BrowserAppDelegate implements Tabs
     @Override
     public void onPause(BrowserApp browserApp) {
         Tabs.unregisterOnTabsChangedListener(this);
-    }
-
-    @Override
-    public void onTabsTrayShown(BrowserApp browserApp, TabsPanel tabsPanel) {
-        isInForeground = false;
-    }
-
-    @Override
-    public void onTabsTrayHidden(BrowserApp browserApp, TabsPanel tabsPanel) {
-        isInForeground = true;
     }
 
     private void initializeExperiment(Context context) {
