@@ -1,0 +1,14 @@
+include protocol messageVerifyTopLevel;
+
+intr protocol messageVerify {
+  manager messageVerifyTopLevel;
+
+parent:
+    sync __delete__(uint32_t x) returns (double rv1) verify;
+    async msg1() verify;
+    async msg2(uint32_t aParam1) verify;
+    sync msg3()
+      returns (uint32_t rv1) verify;
+    sync msg4(uint32_t aParam1)
+      returns (uint32_t rv1) verify;
+};
