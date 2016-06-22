@@ -6,7 +6,9 @@ var [, gHandlers] = LoopAPI.inspect();
 
 add_task(function* test_mozLoop_appVersionInfo() {
   let appVersionInfo;
-  gHandlers.GetAppVersionInfo({}, result => { appVersionInfo = result; });
+  gHandlers.GetAppVersionInfo({}, result => {
+    appVersionInfo = result;
+  });
 
   Assert.ok(appVersionInfo, "should have appVersionInfo");
 

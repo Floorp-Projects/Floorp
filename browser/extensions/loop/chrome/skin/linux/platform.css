@@ -12,18 +12,6 @@
    * due to the limitations caused by the bug.
    */
 
-  @media (-moz-windows-theme: luna-silver) and (max-resolution: 1dppx) {
-    #loop-button {
-      list-style-image: url(chrome://loop/skin/toolbar-lunaSilver.png)
-    }
-  }
-
-  @media (-moz-windows-theme: luna-silver) and (min-resolution: 1.1dppx) {
-    #loop-button {
-      list-style-image: url(chrome://loop/skin/toolbar-lunaSilver@2x.png)
-    }
-  }
-
   #loop-button[state="slideshow"] {
     background: none;
   }

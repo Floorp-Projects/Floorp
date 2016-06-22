@@ -151,43 +151,6 @@ html[dir="rtl"] .share-action-group > .invite-button:last-child {
   color: #4a4a4a;
 }
 
-.share-service-dropdown {
-  color: #000;
-  text-align: start;
-  bottom: auto;
-  top: 0;
-  overflow: hidden;
-  overflow-y: auto;
-}
-
-/* When the dropdown is showing a vertical scrollbar, compensate for its width. */
-body[platform="other"] .share-service-dropdown.overflow > .dropdown-menu-item,
-body[platform="win"] .share-service-dropdown.overflow > .dropdown-menu-item {
-  -moz-padding-end: 20px;
-}
-
-.share-service-dropdown > .dropdown-menu-item > .icon {
-  width: 14px;
-  height: 14px;
-  margin-right: 4px;
-}
-
-.dropdown-menu-item > .icon-add-share-service {
-  background-image: url("../img/icons-16x16.svg#add");
-  background-repeat: no-repeat;
-  background-size: 12px 12px;
-  width: 12px;
-  height: 12px;
-}
-
-.dropdown-menu-item:hover > .icon-add-share-service {
-  background-image: url("../img/icons-16x16.svg#add-hover");
-}
-
-.dropdown-menu-item:hover:active > .icon-add-share-service {
-  background-image: url("../img/icons-16x16.svg#add-active");
-}
-
 .share-panel-container {
   position: absolute;
   top: 0;

@@ -78,7 +78,9 @@ var loop = loop || {};
 
 
   // These functions should only be used in unit tests.
-  loop.request.inspect = function () {return _.extend({}, gListenersMap);};
+  loop.request.inspect = function () {
+    return _.extend({}, gListenersMap);};
+
   loop.request.reset = function () {
     gListeningForMessages = false;
     gListenersMap = {};};
@@ -187,7 +189,9 @@ var loop = loop || {};
 
 
   // These functions should only be used in unit tests.
-  loop.subscribe.inspect = function () {return _.extend({}, gSubscriptionsMap);};
+  loop.subscribe.inspect = function () {
+    return _.extend({}, gSubscriptionsMap);};
+
   loop.subscribe.reset = function () {
     gListeningForPushMessages = false;
     gSubscriptionsMap = {};};
