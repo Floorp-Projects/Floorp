@@ -64,7 +64,6 @@ xul|*.checkbox-label-box {
   border-style: none;
 }
 
-xul|*.inline-link:-moz-focusring,
 xul|button:-moz-focusring > xul|*.button-box,
 xul|menulist:-moz-focusring > xul|*.menulist-label-box,
 xul|radio[focused="true"] > xul|*.radio-label-box,
