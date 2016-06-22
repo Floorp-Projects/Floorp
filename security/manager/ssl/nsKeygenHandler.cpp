@@ -459,7 +459,7 @@ nsKeygenFormProcessor::GetPublicKey(const nsAString& aValue,
     }
 
     nsresult rv = NS_ERROR_FAILURE;
-    char *keystring = nullptr;
+    UniquePORTString keystring;
     char *keyparamsString = nullptr;
     uint32_t keyGenMechanism;
     PK11SlotInfo *slot = nullptr;
@@ -669,14 +669,14 @@ nsKeygenFormProcessor::GetPublicKey(const nsAString& aValue,
     /*
      * Convert the signed public key and challenge into base64/ascii.
      */
-    keystring = BTOA_DataToAscii(signedItem.data, signedItem.len);
+    keystring = UniquePORTString(
+      BTOA_DataToAscii(signedItem.data, signedItem.len));
     if (!keystring) {
         rv = NS_ERROR_OUT_OF_MEMORY;
         goto loser;
     }
 
-    CopyASCIItoUTF16(keystring, aOutPublicKey);
-    free(keystring);
+    CopyASCIItoUTF16(keystring.get(), aOutPublicKey);
 
     rv = NS_OK;
 
