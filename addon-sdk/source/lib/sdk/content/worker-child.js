@@ -51,9 +51,19 @@ const WorkerChild = Class({
 
     this.sandbox = WorkerSandbox(this, this.window);
 
-    // If the document is still loading wait for it to finish before passing on
-    // received messages
-    this.frozen = this.window.document.readyState == "loading";
+    // If the document has an unexpected readyState, its worker-child instance is initialized
+    // as frozen until one of the known readyState is reached.
+    let initialDocumentReadyState = this.window.document.readyState;
+    this.frozen = [
+      "loading", "interactive", "complete"
+    ].includes(initialDocumentReadyState) ? false : true;
+
+    if (this.frozen) {
+      console.warn("SDK worker-child started as frozen on unexpected initial document.readyState", {
+        initialDocumentReadyState, windowLocation: this.window.location.href,
+      });
+    }
+
     this.frozenMessages = [];
     this.on('pageshow', () => {
       this.frozen = false;
