@@ -9,6 +9,7 @@
 #ifdef MOZ_WIDGET_ANDROID
 
 #include <jni.h>
+#include <android/native_window.h>
 #include "nsIRunnable.h"
 #include "gfxPlatform.h"
 #include "GLDefs.h"
@@ -17,7 +18,6 @@
 #include "mozilla/Monitor.h"
 
 #include "SurfaceTexture.h"
-#include "AndroidNativeWindow.h"
 
 namespace mozilla {
 namespace gl {
@@ -62,7 +62,7 @@ public:
 
   GLContext* AttachedContext() const { return mAttachedContext; }
 
-  AndroidNativeWindow* NativeWindow() const {
+  ANativeWindow* NativeWindow() const {
     return mNativeWindow;
   }
 
@@ -97,7 +97,7 @@ private:
 
   GLContext* mAttachedContext;
 
-  RefPtr<AndroidNativeWindow> mNativeWindow;
+  ANativeWindow* mNativeWindow;
   int mID;
   nsCOMPtr<nsIRunnable> mFrameAvailableCallback;
 
