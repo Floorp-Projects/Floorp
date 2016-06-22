@@ -107,7 +107,7 @@ private:
   static bool sCacheFSReported;
   static bool sHashStatsReported;
   static Atomic<uint32_t, Relaxed> sMaxShutdownIOLag;
-  static Atomic<PRIntervalTime, Relaxed> sShutdownDemandedTime;
+  static Atomic<PRIntervalTime> sShutdownDemandedTime;
 
   // Non static properties, accessible via sSelf
   nsCOMPtr<nsIFile> mCacheParentDirectoryOverride;
