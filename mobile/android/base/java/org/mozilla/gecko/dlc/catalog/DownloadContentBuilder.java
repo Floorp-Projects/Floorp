@@ -216,13 +216,12 @@ public class DownloadContentBuilder {
         setKind(object.getString(KINTO_KEY_KIND));
         setLastModified(object.getLong(KINTO_KEY_LAST_MODIFIED));
 
-        JSONObject original = object.getJSONObject(KINTO_KEY_ORIGINAL);
+        JSONObject attachment = object.getJSONObject(KINTO_KEY_ATTACHMENT);
+        JSONObject original = attachment.getJSONObject(KINTO_KEY_ORIGINAL);
 
         setFilename(original.getString(KINTO_KEY_FILENAME));
         setChecksum(original.getString(KINTO_KEY_HASH));
         setSize(original.getLong(KINTO_KEY_SIZE));
-
-        JSONObject attachment = object.getJSONObject(KINTO_KEY_ATTACHMENT);
 
         setLocation(attachment.getString(KINTO_KEY_LOCATION));
         setDownloadChecksum(attachment.getString(KINTO_KEY_HASH));
