@@ -1826,7 +1826,11 @@ pref("network.prefetch-next", true);
 // enables the predictive service
 pref("network.predictor.enabled", true);
 pref("network.predictor.enable-hover-on-ssl", false);
+#ifdef NIGHTLY_BUILD
 pref("network.predictor.enable-prefetch", true);
+#else
+pref("network.predictor.enable-prefetch", false);
+#endif
 pref("network.predictor.page-degradation.day", 0);
 pref("network.predictor.page-degradation.week", 5);
 pref("network.predictor.page-degradation.month", 10);
