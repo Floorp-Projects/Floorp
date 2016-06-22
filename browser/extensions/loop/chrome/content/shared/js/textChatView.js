@@ -217,7 +217,10 @@ loop.shared.views.chat = function (mozL10n) {
 
         this.props.messageList.map(function (entry, i) {
           if (entry.type === CHAT_MESSAGE_TYPES.SPECIAL) {
-            if (!this.props.showInitialContext) {return null;}
+            if (!this.props.showInitialContext) {
+              return null;}
+
+
             switch (entry.contentType) {
               case CHAT_CONTENT_TYPES.CONTEXT:
                 return (
