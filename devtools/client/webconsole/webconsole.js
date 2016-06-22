@@ -2610,8 +2610,9 @@ WebConsoleFrame.prototype = {
         source: fullURL,
         line,
         column,
+        showEmptyPathAsHost: true,
       },
-      onClick
+      onClick,
     }), locationNode);
 
     return locationNode;
