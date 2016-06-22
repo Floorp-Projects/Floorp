@@ -8,46 +8,19 @@
 
 #include "xptcprivate.h"
 
-// 6 integral parameters are passed in registers
-const uint32_t GPR_COUNT = 6;
+// 6 integral parameters are passed in registers, but 1 is |this| which isn't
+// considered here.
+const uint32_t GPR_COUNT = 5;
 
 // 8 floating point parameters are passed in SSE registers
 const uint32_t FPR_COUNT = 8;
 
-// Remember that these 'words' are 64-bit long
-static inline void
-invoke_count_words(uint32_t paramCount, nsXPTCVariant * s,
-                   uint32_t & nr_stack)
+extern "C" void
+InvokeCopyToStack(uint64_t * gpregs, double * fpregs,
+                     uint32_t paramCount, nsXPTCVariant * s,
+                     uint64_t* d)
 {
-    uint32_t nr_gpr;
-    uint32_t nr_fpr;
-    nr_gpr = 1; // skip one GP register for 'that'
-    nr_fpr = 0;
-    nr_stack = 0;
-
-    /* Compute number of eightbytes of class MEMORY.  */
-    for (uint32_t i = 0; i < paramCount; i++, s++) {
-        if (!s->IsPtrData()
-            && (s->type == nsXPTType::T_FLOAT || s->type == nsXPTType::T_DOUBLE)) {
-            if (nr_fpr < FPR_COUNT)
-                nr_fpr++;
-            else
-                nr_stack++;
-        }
-        else {
-            if (nr_gpr < GPR_COUNT)
-                nr_gpr++;
-            else
-                nr_stack++;
-        }
-    }
-}
-
-static void
-invoke_copy_to_stack(uint64_t * d, uint32_t paramCount, nsXPTCVariant * s,
-                     uint64_t * gpregs, double * fpregs)
-{
-    uint32_t nr_gpr = 1u; // skip one GP register for 'that'
+    uint32_t nr_gpr = 0u; // skip one GP register for 'that'
     uint32_t nr_fpr = 0u;
     uint64_t value = 0u;
 
@@ -100,89 +73,3 @@ invoke_copy_to_stack(uint64_t * d, uint32_t paramCount, nsXPTCVariant * s,
         }
     }
 }
-
-// Disable avx for the next function to allow compilation with
-// -march=native on new machines, or similar hardcoded -march options.
-// Having avx enabled appears to change the alignment behavior of alloca
-// (apparently adding an extra 16 bytes) of padding/alignment (and using
-// 32-byte alignment instead of 16-byte).  This seems to be the best
-// available workaround, given that this code, which should perhaps
-// better be written in assembly, is written in C++.
-#ifndef __clang__
-#pragma GCC push_options
-#pragma GCC target ("no-avx")
-#endif
-
-// Avoid AddressSanitizer instrumentation for the next function because it
-// depends on __builtin_alloca behavior and alignment that cannot be relied on
-// once the function is compiled with a version of ASan that has dynamic-alloca
-// instrumentation enabled.
-
-MOZ_ASAN_BLACKLIST
-EXPORT_XPCOM_API(nsresult)
-NS_InvokeByIndex(nsISupports * that, uint32_t methodIndex,
-                 uint32_t paramCount, nsXPTCVariant * params)
-{
-    uint32_t nr_stack;
-    invoke_count_words(paramCount, params, nr_stack);
-    
-    // Stack, if used, must be 16-bytes aligned
-    if (nr_stack)
-        nr_stack = (nr_stack + 1) & ~1;
-
-    // Load parameters to stack, if necessary
-    uint64_t *stack = (uint64_t *) __builtin_alloca(nr_stack * 8);
-    uint64_t gpregs[GPR_COUNT];
-    double fpregs[FPR_COUNT];
-    invoke_copy_to_stack(stack, paramCount, params, gpregs, fpregs);
-
-    // We used to have switches to make sure we would only load the registers
-    // that are needed for this call. That produced larger code that was
-    // not faster in practice. It also caused compiler warnings about the
-    // variables being used uninitialized.
-    // We now just load every every register. There could still be a warning
-    // from a memory analysis tools that we are loading uninitialized stack
-    // positions.
-
-    // FIXME: this function depends on the above __builtin_alloca placing
-    // the array in the correct spot for the ABI.
-
-    // Load FPR registers from fpregs[]
-    double d0, d1, d2, d3, d4, d5, d6, d7;
-
-    d7 = fpregs[7];
-    d6 = fpregs[6];
-    d5 = fpregs[5];
-    d4 = fpregs[4];
-    d3 = fpregs[3];
-    d2 = fpregs[2];
-    d1 = fpregs[1];
-    d0 = fpregs[0];
-
-    // Load GPR registers from gpregs[]
-    uint64_t a0, a1, a2, a3, a4, a5;
-
-    a5 = gpregs[5];
-    a4 = gpregs[4];
-    a3 = gpregs[3];
-    a2 = gpregs[2];
-    a1 = gpregs[1];
-    a0 = (uint64_t) that;
-
-    // Get pointer to method
-    uint64_t methodAddress = *((uint64_t *)that);
-    methodAddress += 8 * methodIndex;
-    methodAddress = *((uint64_t *)methodAddress);
-    
-    typedef nsresult (*Method)(uint64_t, uint64_t, uint64_t, uint64_t,
-                               uint64_t, uint64_t, double, double, double,
-                               double, double, double, double, double);
-    nsresult result = ((Method)methodAddress)(a0, a1, a2, a3, a4, a5,
-                                              d0, d1, d2, d3, d4, d5,
-                                              d6, d7);
-    return result;
-}
-
-#ifndef __clang__
-#pragma GCC pop_options
-#endif
