@@ -1041,15 +1041,6 @@ class MOZ_RAII JSAutoRequest
 #endif
 };
 
-extern JS_PUBLIC_API(JSContext*)
-JS_NewContext(JSRuntime* rt, size_t stackChunkSize);
-
-extern JS_PUBLIC_API(void)
-JS_DestroyContext(JSContext* cx);
-
-extern JS_PUBLIC_API(void)
-JS_DestroyContextNoGC(JSContext* cx);
-
 extern JS_PUBLIC_API(void*)
 JS_GetContextPrivate(JSContext* cx);
 
@@ -1065,8 +1056,12 @@ JS_SetSecondContextPrivate(JSContext* cx, void* data);
 extern JS_PUBLIC_API(JSRuntime*)
 JS_GetRuntime(JSContext* cx);
 
+/**
+ * Returns the runtime's JSContext. The plan is to expose a single type to the
+ * API, so this function will likely be removed soon.
+ */
 extern JS_PUBLIC_API(JSContext*)
-JS_ContextIterator(JSRuntime* rt, JSContext** iterp);
+JS_GetContext(JSRuntime* rt);
 
 extern JS_PUBLIC_API(JSVersion)
 JS_GetVersion(JSContext* cx);
@@ -1252,6 +1247,14 @@ RuntimeOptionsRef(JSRuntime* rt);
 
 JS_PUBLIC_API(RuntimeOptions&)
 RuntimeOptionsRef(JSContext* cx);
+
+/**
+ * Initialize the runtime's self-hosted code. Embeddings should call this
+ * exactly once per runtime/context, before the first JS_NewGlobalObject
+ * call.
+ */
+JS_PUBLIC_API(bool)
+InitSelfHostedCode(JSContext* cx);
 
 } /* namespace JS */
 

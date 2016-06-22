@@ -2630,13 +2630,9 @@ class PreciseGCRunnable : public Runnable
     {
         JSRuntime* rt = nsXPConnect::GetRuntimeInstance()->Runtime();
 
-        JSContext* cx;
-        JSContext* iter = nullptr;
-        while ((cx = JS_ContextIterator(rt, &iter)) != nullptr) {
-            if (JS_IsRunning(cx)) {
-                return NS_DispatchToMainThread(this);
-            }
-        }
+        JSContext* cx = JS_GetContext(rt);
+        if (JS_IsRunning(cx))
+            return NS_DispatchToMainThread(this);
 
         nsJSContext::GarbageCollectNow(gcreason::COMPONENT_UTILS,
                                        nsJSContext::NonIncrementalGC,

@@ -18,8 +18,8 @@ bool JSAPITest::init()
     rt = createRuntime();
     if (!rt)
         return false;
-    cx = createContext();
-    if (!cx)
+    cx = JS_GetContext(rt);
+    if (!JS::InitSelfHostedCode(cx))
         return false;
     JS_BeginRequest(cx);
     global.init(rt);
@@ -42,7 +42,6 @@ void JSAPITest::uninit()
     }
     if (cx) {
         JS_EndRequest(cx);
-        JS_DestroyContext(cx);
         cx = nullptr;
     }
     if (rt) {
