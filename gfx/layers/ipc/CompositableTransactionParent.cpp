@@ -53,7 +53,7 @@ ScheduleComposition(CompositableHost* aCompositable)
   if (!id) {
     return false;
   }
-  CompositorBridgeParent* cp = CompositorBridgeParent::GetCompositor(id);
+  CompositorBridgeParent* cp = CompositorBridgeParent::GetCompositorBridgeParent(id);
   if (!cp) {
     return false;
   }
