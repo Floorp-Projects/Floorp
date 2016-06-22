@@ -31,8 +31,8 @@
 <meta charset="utf-8">
 <title>WebGL Out Of Memory Test</title>
 <link rel="stylesheet" href="../resources/js-test-style.css"/>
-<script src="../resources/js-test-pre.js"></script>
-<script src="../conformance/resources/webgl-test-utils.js"></script>
+<script src="../js/js-test-pre.js"></script>
+<script src="../js/webgl-test-utils.js"></script>
 </head>
 <body>
 <div id="description"></div>
@@ -84,32 +84,22 @@ if (!gl) {
     if (shader == null) {
       window.clearInterval(intervalId);
       testPassed("createShader returns null");  // not sure this is a passing
-      finish();
+      finishTest();
     } else {
       gl.shaderSource(shader, shaderSource);
       var err = gl.getError();
       if (err != gl.NO_ERROR) {
         window.clearInterval(intervalId);
         assertMsg(err == gl.OUT_OF_MEMORY, "shaderSource returns OUT_OF_MEMORY");
-        finish();
+        finishTest();
       }
     }
   }
 
   intervalId = window.setInterval(makeShader, 1000/15);
 }
-
-function finish() {
-  debug("");
-  var successfullyParsed = true;
-}
-
 </script>
-<!-- <script src="../resources/js-test-post.js"></script> -->
-
-<script>
-"use strict";
-</script>
+<script src="../js/js-test-post.js"></script>
 
 </body>
 </html>

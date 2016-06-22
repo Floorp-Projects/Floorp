@@ -29,8 +29,8 @@
 <head>
 <meta charset="utf-8">
 <link rel="stylesheet" href="../../resources/js-test-style.css"/>
-<script src="../../resources/js-test-pre.js"></script>
-<script src="../resources/webgl-test-utils.js"></script>
+<script src="../../js/js-test-pre.js"></script>
+<script src="../../js/webgl-test-utils.js"></script>
 <title>WebGL WEBGL_depth_texture Conformance Tests</title>
 </head>
 <body>
@@ -116,8 +116,10 @@ function runTestDisabled() {
 
     var tex = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, tex);
-    wtu.shouldGenerateGLError(gl, [gl.INVALID_ENUM, gl.INVALID_VALUE], 'gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, 1, 1, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null)');
-    wtu.shouldGenerateGLError(gl, [gl.INVALID_ENUM, gl.INVALID_VALUE], 'gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, 1, 1, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null)');
+    wtu.shouldGenerateGLError(gl, [gl.INVALID_ENUM, gl.INVALID_VALUE],
+                              'gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, 1, 1, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null)');
+    wtu.shouldGenerateGLError(gl, [gl.INVALID_ENUM, gl.INVALID_VALUE],
+                              'gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, 1, 1, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_INT, null)');
 }
 
 
@@ -331,6 +333,6 @@ function runTestExtension() {
 debug("");
 var successfullyParsed = true;
 </script>
-<script src="../../resources/js-test-post.js"></script>
+<script src="../../js/js-test-post.js"></script>
 </body>
 </html>
