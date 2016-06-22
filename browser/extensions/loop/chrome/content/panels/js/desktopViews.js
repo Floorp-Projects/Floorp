@@ -157,8 +157,7 @@ loop.shared.desktopViews = function (mozL10n) {
       locationForMetrics: React.PropTypes.string.isRequired, 
       // This data is supplied by the activeRoomStore.
       roomData: React.PropTypes.object.isRequired, 
-      show: React.PropTypes.bool.isRequired, 
-      socialShareProviders: React.PropTypes.array }, 
+      show: React.PropTypes.bool.isRequired }, 
 
 
     render: function render() {var _this = this;
@@ -204,83 +203,8 @@ loop.shared.desktopViews = function (mozL10n) {
               locationForMetrics: _this.props.locationForMetrics, 
               roomData: _this.props.roomData });}
 
-          return null;}()), 
+          return null;}())));} });
 
-
-        React.createElement(SocialShareDropdown, { 
-          dispatcher: this.props.dispatcher, 
-          ref: "menu", 
-          roomUrl: this.props.roomData.roomUrl, 
-          show: this.state.showMenu, 
-          socialShareProviders: this.props.socialShareProviders })));} });
-
-
-
-
-
-  var SocialShareDropdown = React.createClass({ displayName: "SocialShareDropdown", 
-    propTypes: { 
-      dispatcher: React.PropTypes.instanceOf(loop.Dispatcher).isRequired, 
-      roomUrl: React.PropTypes.string, 
-      show: React.PropTypes.bool.isRequired, 
-      socialShareProviders: React.PropTypes.array }, 
-
-
-    handleAddServiceClick: function handleAddServiceClick(event) {
-      event.preventDefault();
-
-      this.props.dispatcher.dispatch(new sharedActions.AddSocialShareProvider());}, 
-
-
-    handleProviderClick: function handleProviderClick(event) {
-      event.preventDefault();
-
-      var origin = event.currentTarget.dataset.provider;
-      var provider = this.props.socialShareProviders.
-      filter(function (socialProvider) {
-        return socialProvider.origin === origin;})[
-      0];
-
-      this.props.dispatcher.dispatch(new sharedActions.ShareRoomUrl({ 
-        provider: provider, 
-        roomUrl: this.props.roomUrl, 
-        previews: [] }));}, 
-
-
-
-    render: function render() {
-      // Don't render a thing when no data has been fetched yet.
-      if (!this.props.socialShareProviders) {
-        return null;}
-
-
-      var cx = classNames;
-      var shareDropdown = cx({ 
-        "share-service-dropdown": true, 
-        "dropdown-menu": true, 
-        "visually-hidden": true, 
-        "hide": !this.props.show });
-
-
-      return (
-        React.createElement("ul", { className: shareDropdown }, 
-        React.createElement("li", { className: "dropdown-menu-item", onClick: this.handleAddServiceClick }, 
-        React.createElement("i", { className: "icon icon-add-share-service" }), 
-        React.createElement("span", null, mozL10n.get("share_add_service_button"))), 
-
-        this.props.socialShareProviders.length ? React.createElement("li", { className: "dropdown-menu-separator" }) : null, 
-
-        this.props.socialShareProviders.map(function (provider, idx) {
-          return (
-            React.createElement("li", { className: "dropdown-menu-item", 
-              "data-provider": provider.origin, 
-              key: "provider-" + idx, 
-              onClick: this.handleProviderClick }, 
-            React.createElement("img", { className: "icon", src: provider.iconURL }), 
-            React.createElement("span", null, provider.name)));}.
-
-
-        bind(this))));} });
 
 
 
@@ -291,7 +215,6 @@ loop.shared.desktopViews = function (mozL10n) {
     CopyLinkButton: CopyLinkButton, 
     EmailLinkButton: EmailLinkButton, 
     FacebookShareButton: FacebookShareButton, 
-    SharePanelView: SharePanelView, 
-    SocialShareDropdown: SocialShareDropdown };}(
+    SharePanelView: SharePanelView };}(
 
 navigator.mozL10n || document.mozL10n);
