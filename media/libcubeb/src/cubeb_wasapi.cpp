@@ -1730,7 +1730,7 @@ wasapi_stream_init(cubeb * context, cubeb_stream ** stream,
 
 void close_wasapi_stream(cubeb_stream * stm)
 {
-  XASSERT(stm && !stm->thread && !stm->shutdown_event);
+  XASSERT(stm);
 
   stm->stream_reset_lock->assert_current_thread_owns();
 
