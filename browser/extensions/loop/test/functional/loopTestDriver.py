@@ -18,6 +18,11 @@ class LoopTestDriver():
     def setUp(self, marionette):
         self.marionette = marionette
 
+    # XXX This should be unnecessary once bug 1254132 is fixed.
+    def set_context(self, context):
+        self.context = context
+        self.marionette.set_context(context)
+
     def wait_for_element_displayed(self, by, locator, timeout=None):
         Wait(self.marionette, timeout,
              ignored_exceptions=[NoSuchElementException, StaleElementException])\
@@ -42,13 +47,25 @@ class LoopTestDriver():
             .until(lambda e: element.is_enabled(),
                    message="Timed out waiting for element to be enabled")
 
-    def wait_for_element_attribute_to_be_false(self, element, attribute, timeout=10):
+    def wait_for_element_property_to_be_false(self, element, property, timeout=10):
+        # XXX We have to switch between get_attribute and get_property here as the
+        # content mode now required get_property for real properties of HTMLElements.
+        # However, in some places (e.g. switch_to_chatbox), we're still operating in
+        # a chrome mode. So we have to use get_attribute for these.
+        # Bug 1277065 should fix this for marionette, alternately this should go
+        # away when the e10s bug 1254132 is fixed.
+        def check_property(m):
+            if self.context == "content":
+                return not element.get_property(property)
+
+            return element.get_attribute(property) == "false"
+
         Wait(self.marionette, timeout) \
-            .until(lambda e: element.get_attribute(attribute) == "false",
-                   message="Timeout out waiting for " + attribute + " to be false")
+            .until(check_property,
+                   message="Timeout out waiting for " + property + " to be false")
 
     def open_panel(self):
-        self.marionette.set_context("chrome")
+        self.set_context("chrome")
         self.marionette.switch_to_frame()
         button = self.marionette.find_element(By.ID, "loop-button")
 
@@ -56,13 +73,13 @@ class LoopTestDriver():
         button.click()
 
     def switch_to_panel(self):
-        self.marionette.set_context("chrome")
+        self.set_context("chrome")
         # switch to the frame
         frame = self.marionette.find_element(By.ID, "loop-panel-iframe")
         self.marionette.switch_to_frame(frame)
 
     def switch_to_chatbox(self):
-        self.marionette.set_context("chrome")
+        self.set_context("chrome")
         self.marionette.switch_to_frame()
 
         contentBox = "content"
@@ -94,7 +111,7 @@ class LoopTestDriver():
         copyLink.click()
 
     def switch_to_standalone(self):
-        self.marionette.set_context("content")
+        self.set_context("content")
 
     def load_homepage(self):
         self.switch_to_standalone()
@@ -128,8 +145,8 @@ class LoopTestDriver():
     # Assumes the standalone or the conversation window is selected first.
     def check_video(self, selector):
         video = self.wait_for_element_displayed(By.CSS_SELECTOR, selector, 30)
-        self.wait_for_element_attribute_to_be_false(video, "paused")
-        self.assertEqual(video.get_attribute("ended"), "false")
+        self.wait_for_element_property_to_be_false(video, "paused")
+        self.wait_for_element_property_to_be_false(video, "ended")
 
     def local_check_room_self_video(self):
         self.switch_to_chatbox()
