@@ -108,6 +108,18 @@ protected:
                    "The caller should check if the selection is valid");
       return Reversed() ? mAnchor - mFocus : mFocus - mAnchor;
     }
+    LayoutDeviceIntRect StartCharRect() const
+    {
+      NS_ASSERTION(IsValid(),
+                   "The caller should check if the selection is valid");
+      return Reversed() ? mFocusCharRect : mAnchorCharRect;
+    }
+    LayoutDeviceIntRect EndCharRect() const
+    {
+      NS_ASSERTION(IsValid(),
+                   "The caller should check if the selection is valid");
+      return Reversed() ? mAnchorCharRect : mFocusCharRect;
+    }
   } mSelection;
 
   bool IsSelectionValid() const
@@ -213,8 +225,9 @@ protected:
     }
     LayoutDeviceIntRect GetRect(uint32_t aOffset) const;
     LayoutDeviceIntRect GetUnionRect(uint32_t aOffset, uint32_t aLength) const;
-    LayoutDeviceIntRect GetUnionRectAsFarAsPossible(uint32_t aOffset,
-                                                    uint32_t aLength) const;
+    LayoutDeviceIntRect GetUnionRectAsFarAsPossible(
+                          uint32_t aOffset, uint32_t aLength,
+                          bool aRoundToExistingOffset) const;
   } mTextRectArray;
 
   LayoutDeviceIntRect mEditorRect;
@@ -371,11 +384,20 @@ private:
 
   bool mIsComposing;
 
-  bool GetCaretRect(uint32_t aOffset, LayoutDeviceIntRect& aCaretRect) const;
+  /**
+   * When following methods' aRoundToExistingOffset is true, even if specified
+   * offset or range is out of bounds, the result is computed with the existing
+   * cache forcibly.
+   */
+  bool GetCaretRect(uint32_t aOffset,
+                    bool aRoundToExistingOffset,
+                    LayoutDeviceIntRect& aCaretRect) const;
   bool GetTextRect(uint32_t aOffset,
+                   bool aRoundToExistingOffset,
                    LayoutDeviceIntRect& aTextRect) const;
   bool GetUnionTextRects(uint32_t aOffset,
                          uint32_t aLength,
+                         bool aRoundToExistingOffset,
                          LayoutDeviceIntRect& aUnionTextRect) const;
 
   void FlushPendingNotifications(nsIWidget* aWidget);
