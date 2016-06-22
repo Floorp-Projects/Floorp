@@ -13,8 +13,7 @@ describe("loop.store.ActiveRoomStore", function () {
   var FAILURE_DETAILS = loop.shared.utils.FAILURE_DETAILS;
   var SCREEN_SHARE_STATES = loop.shared.utils.SCREEN_SHARE_STATES;
   var ROOM_INFO_FAILURES = loop.shared.utils.ROOM_INFO_FAILURES;
-  var sandbox, dispatcher, store, requestStubs, fakeSdkDriver, fakeMultiplexGum;
-  var standaloneMediaRestore;
+  var sandbox, dispatcher, store, requestStubs, fakeSdkDriver;
   var clock;
 
   beforeEach(function () {
@@ -38,7 +37,6 @@ describe("loop.store.ActiveRoomStore", function () {
       "Rooms:PushSubscription": sinon.stub(), 
       SetScreenShareState: sinon.stub(), 
       GetActiveTabWindowId: sandbox.stub().returns(42), 
-      GetSocialShareProviders: sinon.stub().returns([]), 
       TelemetryAddValue: sinon.stub() });
 
 
@@ -56,15 +54,6 @@ describe("loop.store.ActiveRoomStore", function () {
       endScreenShare: sinon.stub().returns(true) };
 
 
-    fakeMultiplexGum = { 
-      reset: sandbox.spy() };
-
-
-    standaloneMediaRestore = loop.standaloneMedia;
-    loop.standaloneMedia = { 
-      multiplexGum: fakeMultiplexGum };
-
-
     store = new loop.store.ActiveRoomStore(dispatcher, { 
       sdkDriver: fakeSdkDriver });
 
@@ -76,8 +65,7 @@ describe("loop.store.ActiveRoomStore", function () {
 
   afterEach(function () {
     sandbox.restore();
-    LoopMochaUtils.restore();
-    loop.standaloneMedia = standaloneMediaRestore;});
+    LoopMochaUtils.restore();});
 
 
   describe("#constructor", function () {
@@ -180,15 +168,6 @@ describe("loop.store.ActiveRoomStore", function () {
 
       expect(store._storeState.roomState).eql(ROOM_STATES.FAILED);
       expect(store._storeState.failureReason).eql(FAILURE_DETAILS.EXPIRED_OR_INVALID);});
-
-
-    it("should reset the multiplexGum", function () {
-      store.roomFailure(new sharedActions.RoomFailure({ 
-        error: fakeError, 
-        failedJoinRequest: false }));
-
-
-      sinon.assert.calledOnce(fakeMultiplexGum.reset);});
 
 
     it("should disconnect from the servers via the sdk", function () {
@@ -370,8 +349,7 @@ describe("loop.store.ActiveRoomStore", function () {
           participants: [], 
           roomName: fakeRoomData.decryptedContext.roomName, 
           roomState: ROOM_STATES.READY, 
-          roomUrl: fakeRoomData.roomUrl, 
-          socialShareProviders: [] }));});});
+          roomUrl: fakeRoomData.roomUrl }));});});
 
 
 
@@ -806,28 +784,6 @@ describe("loop.store.ActiveRoomStore", function () {
 
 
 
-  describe("#updateSocialShareInfo", function () {
-    var fakeSocialShareInfo;
-
-    beforeEach(function () {
-      fakeSocialShareInfo = { 
-        socialShareProviders: [{ 
-          name: "foo", 
-          origin: "https://example.com", 
-          iconURL: "icon.png" }] };});
-
-
-
-
-    it("should save the Social API information", function () {
-      store.updateSocialShareInfo(new sharedActions.UpdateSocialShareInfo(fakeSocialShareInfo));
-
-      var state = store.getStoreState();
-      expect(state.socialShareProviders).
-      eql(fakeSocialShareInfo.socialShareProviders);});});
-
-
-
   describe("#joinRoom", function () {
     var hasDevicesStub;
 
@@ -1128,28 +1084,6 @@ describe("loop.store.ActiveRoomStore", function () {
       actionData);});
 
 
-    it("should pass 'sendTwoWayMediaTelemetry' as true to connectSession if " + 
-    "store._isDesktop is true", function () {
-      store._isDesktop = true;
-
-      store.joinedRoom(new sharedActions.JoinedRoom(fakeJoinedData));
-
-      sinon.assert.calledOnce(fakeSdkDriver.connectSession);
-      sinon.assert.calledWithMatch(fakeSdkDriver.connectSession, 
-      sinon.match.has("sendTwoWayMediaTelemetry", true));});
-
-
-    it("should pass 'sendTwoWayTelemetry' as false to connectionSession if " + 
-    "store._isDesktop is false", function () {
-      store._isDesktop = false;
-
-      store.joinedRoom(new sharedActions.JoinedRoom(fakeJoinedData));
-
-      sinon.assert.calledOnce(fakeSdkDriver.connectSession);
-      sinon.assert.calledWithMatch(fakeSdkDriver.connectSession, 
-      sinon.match.has("sendTwoWayMediaTelemetry", false));});
-
-
     it("should call LoopAPI.AddConversationContext", function () {
       var actionData = new sharedActions.JoinedRoom(fakeJoinedData);
 
@@ -1245,12 +1179,6 @@ describe("loop.store.ActiveRoomStore", function () {
       expect(store.getStoreState().failureReason).eql("FAIL");});
 
 
-    it("should reset the multiplexGum", function () {
-      store.connectionFailure(connectionFailureAction);
-
-      sinon.assert.calledOnce(fakeMultiplexGum.reset);});
-
-
     it("should disconnect from the servers via the sdk", function () {
       store.connectionFailure(connectionFailureAction);
 
@@ -1312,7 +1240,6 @@ describe("loop.store.ActiveRoomStore", function () {
 
       store.connectionFailure(connectionFailureAction);
 
-      sinon.assert.notCalled(fakeMultiplexGum.reset);
       sinon.assert.notCalled(fakeSdkDriver.disconnectSession);});});
 
 
@@ -1958,12 +1885,6 @@ describe("loop.store.ActiveRoomStore", function () {
       sinon.assert.calledWithExactly(requestStubs.SetScreenShareState, "1234", false);});
 
 
-    it("should reset the multiplexGum", function () {
-      store.windowUnload();
-
-      sinon.assert.calledOnce(fakeMultiplexGum.reset);});
-
-
     it("should disconnect from the servers via the sdk", function () {
       store.windowUnload();
 
@@ -2025,12 +1946,6 @@ describe("loop.store.ActiveRoomStore", function () {
         roomToken: "fakeToken", 
         sessionToken: "1627384950" });});
 
-
-
-    it("should reset the multiplexGum", function () {
-      store.leaveRoom();
-
-      sinon.assert.calledOnce(fakeMultiplexGum.reset);});
 
 
     it("should disconnect from the servers via the sdk", function () {
@@ -2129,24 +2044,6 @@ describe("loop.store.ActiveRoomStore", function () {
 
 
 
-  describe("#_handleSocialShareUpdate", function () {
-    it("should dispatch an UpdateRoomInfo action", function () {
-      store._handleSocialShareUpdate();
-
-      sinon.assert.calledOnce(dispatcher.dispatch);
-      sinon.assert.calledWithExactly(dispatcher.dispatch, 
-      new sharedActions.UpdateSocialShareInfo({ 
-        socialShareProviders: [] }));});
-
-
-
-    it("should call respective mozLoop methods", function () {
-      store._handleSocialShareUpdate();
-
-      sinon.assert.calledOnce(requestStubs.GetSocialShareProviders);});});
-
-
-
   describe("#_handleTextChatMessage", function () {
     beforeEach(function () {
       var fakeRoomData = { 
@@ -2204,22 +2101,7 @@ describe("loop.store.ActiveRoomStore", function () {
         sentTimestamp: "1970-01-01T00:00:00.000Z" }));
 
 
-      assertWeDidNothing();});
-
-
-    it("should ping telemetry when a chat message arrived or is to be sent", function () {
-      store._handleTextChatMessage(new sharedActions.ReceivedTextChatMessage({ 
-        contentType: CHAT_CONTENT_TYPES.TEXT, 
-        message: "Hello!", 
-        receivedTimestamp: "1970-01-01T00:00:00.000Z" }));
-
-
-      sinon.assert.calledOnce(requestStubs.TelemetryAddValue);
-      sinon.assert.calledWithExactly(requestStubs.TelemetryAddValue, 
-      "LOOP_ROOM_SESSION_WITHCHAT", 1);
-      expect(store.getStoreState().chatMessageExchanged).eql(true);
-      expect(dispatcher._eventData.hasOwnProperty("receivedTextChatMessage")).eql(false);
-      expect(dispatcher._eventData.hasOwnProperty("sendTextChatMessage")).eql(false);});});
+      assertWeDidNothing();});});
 
 
 

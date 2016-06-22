@@ -77,7 +77,6 @@ loop.store = loop.store || {};
      * @type {Array}
      */
     actions: [
-    "addSocialShareProvider", 
     "createRoom", 
     "createdRoom", 
     "createRoomError", 
@@ -89,7 +88,6 @@ loop.store = loop.store || {};
     "getAllRooms", 
     "getAllRoomsError", 
     "openRoom", 
-    "shareRoomUrl", 
     "updateRoomContext", 
     "updateRoomContextDone", 
     "updateRoomContextError", 
@@ -348,10 +346,7 @@ loop.store = loop.store || {};
         console.error("No URL sharing type bucket found for '" + from + "'");
         return;}
 
-      loop.requestMulti(
-      ["TelemetryAddValue", "LOOP_SHARING_ROOM_URL", bucket], 
-      ["TelemetryAddValue", "LOOP_ACTIVITY_COUNTER", this._constants.LOOP_MAU_TYPE.ROOM_SHARE]);}, 
-
+      loop.request("TelemetryAddValue", "LOOP_ACTIVITY_COUNTER", this._constants.LOOP_MAU_TYPE.ROOM_SHARE);}, 
 
 
     /**
@@ -373,7 +368,6 @@ loop.store = loop.store || {};
 
       loop.requestMulti(
       ["NotifyUITour", "Loop:RoomURLEmailed"], 
-      ["TelemetryAddValue", "LOOP_SHARING_ROOM_URL", bucket], 
       ["TelemetryAddValue", "LOOP_ACTIVITY_COUNTER", this._constants.LOOP_MAU_TYPE.ROOM_SHARE]);}, 
 
 
@@ -411,49 +405,7 @@ loop.store = loop.store || {};
         console.error("No URL sharing type bucket found for '" + from + "'");
         return;}
 
-      loop.requestMulti(
-      ["TelemetryAddValue", "LOOP_SHARING_ROOM_URL", bucket], 
-      ["TelemetryAddValue", "LOOP_ACTIVITY_COUNTER", this._constants.LOOP_MAU_TYPE.ROOM_SHARE]);}, 
-
-
-
-    /**
-     * Share a room url.
-     *
-     * @param  {sharedActions.ShareRoomUrl} actionData The action data.
-     */
-    shareRoomUrl: function shareRoomUrl(actionData) {
-      var providerOrigin = new URL(actionData.provider.origin).hostname;
-      var shareTitle = "";
-      var shareBody = null;
-
-      switch (providerOrigin) {
-        case "mail.google.com":
-          shareTitle = mozL10n.get("share_email_subject7");
-          shareBody = mozL10n.get("share_email_body7", { 
-            callUrl: actionData.roomUrl });
-
-          shareBody += mozL10n.get("share_email_footer2");
-          break;
-        case "twitter.com":
-        default:
-          shareTitle = mozL10n.get("share_tweet", { 
-            clientShortname2: mozL10n.get("clientShortname2") });
-
-          break;}
-
-
-      loop.requestMulti(
-      ["SocialShareRoom", actionData.provider.origin, actionData.roomUrl, 
-      shareTitle, shareBody], 
-      ["NotifyUITour", "Loop:RoomURLShared"]);}, 
-
-
-    /**
-     * Open the share panel to add a Social share provider.
-     */
-    addSocialShareProvider: function addSocialShareProvider() {
-      loop.request("AddSocialShareProvider");}, 
+      loop.request("TelemetryAddValue", "LOOP_ACTIVITY_COUNTER", this._constants.LOOP_MAU_TYPE.ROOM_SHARE);}, 
 
 
     /**
@@ -467,12 +419,7 @@ loop.store = loop.store || {};
         if (isError) {
           this.dispatchAction(new sharedActions.DeleteRoomError({ error: result }));}
 
-        var buckets = this._constants.ROOM_DELETE;
-        loop.requestMulti(
-        ["TelemetryAddValue", "LOOP_ROOM_DELETE", buckets[isError ? 
-        "DELETE_FAIL" : "DELETE_SUCCESS"]], 
-        ["TelemetryAddValue", "LOOP_ACTIVITY_COUNTER", this._constants.LOOP_MAU_TYPE.ROOM_DELETE]);}.
-
+        loop.request("TelemetryAddValue", "LOOP_ACTIVITY_COUNTER", this._constants.LOOP_MAU_TYPE.ROOM_DELETE);}.
       bind(this));}, 
 
 
