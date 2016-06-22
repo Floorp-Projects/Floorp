@@ -298,6 +298,34 @@ this.BrowserTestUtils = {
   },
 
   /**
+   * Waits for onLocationChange.
+   *
+   * @param {tabbrowser} tabbrowser
+   *        The tabbrowser to wait for the location change on.
+   * @param {string} url
+   *        The string URL to look for. The URL must match the URL in the
+   *        location bar exactly.
+   * @return {Promise}
+   * @resolves When onLocationChange fires.
+   */
+  waitForLocationChange(tabbrowser, url) {
+    return new Promise((resolve, reject) => {
+      let progressListener = {
+        onLocationChange(aBrowser) {
+          if ((url && aBrowser.currentURI.spec != url) ||
+              (!url && aBrowser.currentURI.spec == "about:blank")) {
+            return;
+          }
+
+          tabbrowser.removeTabsProgressListener(progressListener);
+          resolve();
+        },
+      };
+      tabbrowser.addTabsProgressListener(progressListener);
+    });
+  },
+
+  /**
    * Waits for the next browser window to open and be fully loaded.
    *
    * @param {bool} delayedStartup (optional)
