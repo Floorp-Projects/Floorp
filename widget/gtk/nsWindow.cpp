@@ -427,6 +427,7 @@ nsWindow::nsWindow()
     mHandleTouchEvent    = false;
 #endif
     mIsDragPopup         = false;
+    mIsX11Display        = GDK_IS_X11_DISPLAY(gdk_display_get_default());
 
     mContainer           = nullptr;
     mGdkWindow           = nullptr;
@@ -1537,7 +1538,7 @@ nsWindow::UpdateClientOffset()
 {
     PROFILER_LABEL("nsWindow", "UpdateClientOffset", js::ProfileEntry::Category::GRAPHICS);
 
-    if (!mIsTopLevel || !mShell || !mGdkWindow ||
+    if (!mIsTopLevel || !mShell || !mGdkWindow || !mIsX11Display ||
         gtk_window_get_window_type(GTK_WINDOW(mShell)) == GTK_WINDOW_POPUP) {
         mClientOffset = nsIntPoint(0, 0);
         return;
@@ -1968,9 +1969,8 @@ nsWindow::HasPendingInputEvent()
     bool haveEvent = false;
 #ifdef MOZ_X11
     XEvent ev;
-    GdkDisplay* gdkDisplay = gdk_display_get_default();
-    if (GDK_IS_X11_DISPLAY(gdkDisplay)) {
-        Display *display = GDK_DISPLAY_XDISPLAY(gdkDisplay);
+    if (mIsX11Display) {
+        Display *display = GDK_DISPLAY_XDISPLAY(gdk_display_get_default());
         haveEvent =
             XCheckMaskEvent(display,
                             KeyPressMask | KeyReleaseMask | ButtonPressMask |
@@ -2614,8 +2614,7 @@ nsWindow::OnMotionNotifyEvent(GdkEventMotion *aEvent)
 #ifdef MOZ_X11
     XEvent xevent;
 
-    bool isX11Display = GDK_IS_X11_DISPLAY(gdk_display_get_default());
-    if (isX11Display) {
+    if (mIsX11Display) {
         while (XPending (GDK_WINDOW_XDISPLAY(aEvent->window))) {
             XEvent peeked;
             XPeekEvent (GDK_WINDOW_XDISPLAY(aEvent->window), &peeked);
@@ -3991,7 +3990,7 @@ nsWindow::Create(nsIWidget* aParent,
         Resize(mBounds.x, mBounds.y, mBounds.width, mBounds.height, false);
 
 #ifdef MOZ_X11
-    if (mGdkWindow) {
+    if (mIsX11Display && mGdkWindow) {
       mXDisplay = GDK_WINDOW_XDISPLAY(mGdkWindow);
       mXWindow = gdk_x11_window_get_xid(mGdkWindow);
 
@@ -4038,8 +4037,7 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
   gdk_window_set_role(mGdkWindow, role);
 
 #ifdef MOZ_X11
-  GdkDisplay *display = gdk_display_get_default();
-  if (GDK_IS_X11_DISPLAY(display)) {
+  if (mIsX11Display) {
       XClassHint *class_hint = XAllocClassHint();
       if (!class_hint) {
         free(res_name);
@@ -4050,6 +4048,7 @@ nsWindow::SetWindowClass(const nsAString &xulWinType)
 
       // Can't use gtk_window_set_wmclass() for this; it prints
       // a warning & refuses to make the change.
+      GdkDisplay *display = gdk_display_get_default();
       XSetClassHint(GDK_DISPLAY_XDISPLAY(display),
                     gdk_x11_window_get_xid(mGdkWindow),
                     class_hint);
@@ -6535,7 +6534,7 @@ nsWindow::GetDrawTarget(const LayoutDeviceIntRegion& aRegion, BufferMode* aBuffe
   }
 
 #  ifdef MOZ_HAVE_SHMIMAGE
-  if (!dt && nsShmImage::UseShm()) {
+  if (!dt && mIsX11Display && nsShmImage::UseShm()) {
     mBackShmImage.swap(mFrontShmImage);
     if (!mBackShmImage) {
       mBackShmImage = new nsShmImage(mXDisplay, mXWindow, mXVisual, mXDepth);
