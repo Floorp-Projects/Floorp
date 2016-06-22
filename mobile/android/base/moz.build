@@ -263,6 +263,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'delegates/BrowserAppDelegate.java',
     'delegates/BrowserAppDelegateWithReference.java',
     'delegates/ScreenshotDelegate.java',
+    'delegates/TabsTrayVisibilityAwareDelegate.java',
     'DevToolsAuthHelper.java',
     'distribution/Distribution.java',
     'distribution/DistributionStoreCallback.java',
