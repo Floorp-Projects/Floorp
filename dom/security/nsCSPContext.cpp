@@ -339,9 +339,10 @@ nsCSPContext::GetReferrerPolicy(uint32_t* outPolicy, bool* outIsSet)
   mozilla::net::ReferrerPolicy previousPolicy = mozilla::net::RP_Default;
   for (uint32_t i = 0; i < mPolicies.Length(); i++) {
     mPolicies[i]->getReferrerPolicy(refpol);
-    // an empty string in refpol means it wasn't set (that's the default in
-    // nsCSPPolicy).
-    if (!refpol.IsEmpty()) {
+    // only set the referrer policy if not delievered through a CSPRO and
+    // note that and an empty string in refpol means it wasn't set
+    // (that's the default in nsCSPPolicy).
+    if (!mPolicies[i]->getReportOnlyFlag() && !refpol.IsEmpty()) {
       // Referrer Directive in CSP is no more used and going to be replaced by
       // Referrer-Policy HTTP header. But we still keep using referrer directive,
       // and would remove it later.

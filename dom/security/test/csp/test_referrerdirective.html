@@ -58,8 +58,20 @@ var testData = {
           'expected': {  'sameorigin': 'none',
                         'crossorigin': 'none',
                           'downgrade': 'none' }},
-  };
 
+  // referrer delivered through CSPRO should be ignored
+  'ignore-cspro':  { 'cspro': "script-src * 'unsafe-inline'; referrer origin",
+          'expected': {  'sameorigin': 'full',
+                        'crossorigin': 'full',
+                          'downgrade': 'none' }},
+
+  // referrer delivered through CSPRO should be ignored
+  'ignore-cspro2':   { 'csp'  : "script-src * 'unsafe-inline'; referrer no-referrer",
+                       'cspro': "script-src * 'unsafe-inline'; referrer origin",
+         'expected': {  'sameorigin': 'none',
+                        'crossorigin': 'none',
+                          'downgrade': 'none' }},
+  };
 
 var referrerDirectiveTests = {
   // called via postMessage when one of the iframes is done running.
@@ -112,10 +124,15 @@ SpecialPowers.pushPrefEnv({
       // one iframe created for each test case
       for (var id in testData) {
         var elt = document.createElement("iframe");
-        elt.src = "https://example.com/tests/dom/security/test/csp/file_testserver.sjs?" +
-                  "id=" + id +
-                  "&csp=" + escape(testData[id]['csp']) +
-                  "&file=tests/dom/security/test/csp/file_referrerdirective.html";
+        var src = "https://example.com/tests/dom/security/test/csp/file_testserver.sjs?id=" + id;
+        if (testData[id]['csp']) {
+          src += "&csp=" + escape(testData[id]['csp']);
+        }
+        if (testData[id]['cspro']) {
+          src += "&cspro=" + escape(testData[id]['cspro']);
+        }
+        src += "&file=tests/dom/security/test/csp/file_referrerdirective.html";
+        elt.src = src;
         document.getElementById("content").appendChild(elt);
       }
     });
