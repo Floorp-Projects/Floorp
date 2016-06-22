@@ -7,6 +7,7 @@
 #ifdef MOZ_WIDGET_ANDROID
 
 #include <map>
+#include <android/native_window_jni.h>
 #include <android/log.h>
 #include "AndroidSurfaceTexture.h"
 #include "gfxImageSurface.h"
@@ -199,8 +200,8 @@ AndroidSurfaceTexture::Init(GLContext* aContext, GLuint aTexture)
     return false;
   }
 
-  mNativeWindow = AndroidNativeWindow::CreateFromSurface(jni::GetEnvForThread(),
-                                                         mSurface.Get());
+  mNativeWindow = ANativeWindow_fromSurface(jni::GetEnvForThread(),
+                                            mSurface.Get());
   MOZ_ASSERT(mNativeWindow, "Failed to create native window from surface");
 
   mID = sInstances.Add(this);
@@ -226,6 +227,11 @@ AndroidSurfaceTexture::~AndroidSurfaceTexture()
   if (mSurfaceTexture) {
     GeckoAppShell::UnregisterSurfaceTextureFrameListener(mSurfaceTexture);
     mSurfaceTexture = nullptr;
+  }
+
+  if (mNativeWindow) {
+    ANativeWindow_release(mNativeWindow);
+    mNativeWindow = nullptr;
   }
 }
 
