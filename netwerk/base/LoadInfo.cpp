@@ -342,6 +342,14 @@ LoadInfo::Clone() const
 }
 
 already_AddRefed<nsILoadInfo>
+LoadInfo::CloneWithNewSecFlags(nsSecurityFlags aSecurityFlags) const
+{
+  RefPtr<LoadInfo> copy(new LoadInfo(*this));
+  copy->mSecurityFlags = aSecurityFlags;
+  return copy.forget();
+}
+
+already_AddRefed<nsILoadInfo>
 LoadInfo::CloneForNewRequest() const
 {
   RefPtr<LoadInfo> copy(new LoadInfo(*this));
