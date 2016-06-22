@@ -162,7 +162,7 @@ add_task(function* test_edit_username() {
       // Modify the username in the dialog if requested.
       if (testCase.usernameChangedTo) {
         notificationElement.querySelector("#password-notification-username")
-                .setAttribute("value", testCase.usernameChangedTo);
+                .value = testCase.usernameChangedTo;
       }
 
       // We expect a modifyLogin notification if the final username used by the
@@ -288,13 +288,13 @@ add_task(function* test_edit_password() {
       // Modify the username in the dialog if requested.
       if (testCase.usernameChangedTo) {
         notificationElement.querySelector("#password-notification-username")
-                .setAttribute("value", testCase.usernameChangedTo);
+                .value = testCase.usernameChangedTo;
       }
 
       // Modify the password in the dialog if requested.
       if (testCase.passwordChangedTo) {
         notificationElement.querySelector("#password-notification-password")
-                .setAttribute("value", testCase.passwordChangedTo);
+                .value = testCase.passwordChangedTo;
       }
 
       // We expect a modifyLogin notification if the final username used by the
