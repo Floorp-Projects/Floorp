@@ -1,0 +1,51 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+Test DateTime rep
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Rep test - DateTime</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  try {
+    let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
+    let { DateTime } = browserRequire("devtools/client/shared/components/reps/date-time");
+
+    let gripStub = {
+      "type": "object",
+      "class": "Date",
+      "actor": "server1.conn0.child1/obj32",
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "ownPropertyLength": 0,
+      "preview": {
+        "timestamp": 1459372644859
+      }
+    };
+
+    // Test that correct rep is chosen
+    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
+    is(renderedRep.type, DateTime.rep, `Rep correctly selects ${DateTime.rep.displayName}`);
+
+    // Test rendering
+    const renderedComponent = renderComponent(DateTime.rep, { object: gripStub });
+    is(renderedComponent.textContent, "2016-03-30T21:17:24.859Z", "DateTime rep has expected text content");
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+});
+</script>
+</pre>
+</body>
+</html>

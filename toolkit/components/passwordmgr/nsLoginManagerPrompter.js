@@ -974,11 +974,16 @@ LoginManagerPrompter.prototype = {
                 toggleBtn.setAttribute("accesskey", togglePasswordAccessKey);
                 toggleBtn.setAttribute("hidden", LoginHelper.isMasterPasswordSet());
               }
+              if (this.wasDismissed) {
+                chromeDoc.getElementById("password-notification-visibilityToggle")
+                         .setAttribute("hidden", true);
+              }
               break;
             case "shown":
               writeDataToUI();
               break;
             case "dismissed":
+              this.wasDismissed = true;
               readDataFromUI();
               // Fall through.
             case "removed":
