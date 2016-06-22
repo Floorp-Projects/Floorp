@@ -252,7 +252,8 @@ class StateType(IPDLType):
 
 class MessageType(IPDLType):
     def __init__(self, priority, sendSemantics, direction,
-                 ctor=False, dtor=False, cdtype=None, compress=False):
+                 ctor=False, dtor=False, cdtype=None, compress=False,
+                 verify=False):
         assert not (ctor and dtor)
         assert not (ctor or dtor) or type is not None
 
@@ -266,6 +267,7 @@ class MessageType(IPDLType):
         self.dtor = dtor
         self.cdtype = cdtype
         self.compress = compress
+        self.verify = verify
     def isMessage(self): return True
 
     def isCtor(self): return self.ctor
@@ -1125,7 +1127,7 @@ class GatherDecls(TcheckVisitor):
 
         msgtype = MessageType(md.priority, md.sendSemantics, md.direction,
                               ctor=isctor, dtor=isdtor, cdtype=cdtype,
-                              compress=md.compress)
+                              compress=md.compress, verify=md.verify)
 
         # replace inparam Param nodes with proper Decls
         def paramToDecl(param):
