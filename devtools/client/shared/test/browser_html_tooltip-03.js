@@ -132,6 +132,6 @@ function* createTooltip(doc, autofocus) {
   div.style.height = "50px";
   div.innerHTML = '<input type="text"></input>';
 
-  yield tooltip.setContent(div, 150, 50);
+  tooltip.setContent(div, 150, 50);
   return tooltip;
 }
