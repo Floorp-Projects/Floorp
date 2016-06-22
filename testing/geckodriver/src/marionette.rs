@@ -31,7 +31,7 @@ use webdriver::command::WebDriverCommand::{
     GetWindowSize, MaximizeWindow, SwitchToWindow, SwitchToFrame,
     SwitchToParentFrame, FindElement, FindElements,
     FindElementElement, FindElementElements, GetActiveElement,
-    IsDisplayed, IsSelected, GetElementAttribute, GetCSSValue,
+    IsDisplayed, IsSelected, GetElementAttribute, GetElementProperty, GetCSSValue,
     GetElementText, GetElementTagName, GetElementRect, IsEnabled,
     ElementClick, ElementTap, ElementClear, ElementSendKeys,
     ExecuteScript, ExecuteAsyncScript, GetCookies, GetCookie, AddCookie,
@@ -614,7 +614,8 @@ impl MarionetteSession {
             },
             //Things that simply return the contents of the marionette "value" property
             GetCurrentUrl | GetTitle | GetPageSource | GetWindowHandle | IsDisplayed(_) |
-            IsSelected(_) | GetElementAttribute(_, _) | GetCSSValue(_, _) | GetElementText(_) |
+            IsSelected(_) | GetElementAttribute(_, _) | GetElementProperty(_, _) |
+            GetCSSValue(_, _) | GetElementText(_) |
             GetElementTagName(_) | IsEnabled(_) | ExecuteScript(_) | ExecuteAsyncScript(_) |
             GetAlertText | TakeScreenshot => {
                 let value = try_opt!(resp.result.find("value"),
@@ -894,6 +895,12 @@ impl MarionetteCommand {
                 data.insert("id".to_string(), e.id.to_json());
                 data.insert("name".to_string(), x.to_json());
                 (Some("getElementAttribute"), Some(Ok(data)))
+            },
+            GetElementProperty(ref e, ref x) => {
+                let mut data = BTreeMap::new();
+                data.insert("id".to_string(), e.id.to_json());
+                data.insert("name".to_string(), x.to_json());
+                (Some("getElementProperty"), Some(Ok(data)))
             },
             GetCSSValue(ref e, ref x) => {
                 let mut data = BTreeMap::new();
