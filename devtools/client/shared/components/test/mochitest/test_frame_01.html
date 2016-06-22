@@ -141,6 +141,30 @@ window.onload = Task.async(function* () {
       tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
     });
 
+    // Check if file is rendered with "/" for root documents when showEmptyPathAsHost is false
+    yield checkFrameComponent({
+      source: "http://www.cnn.com/",
+      line: "1",
+      showEmptyPathAsHost: false,
+    }, {
+      file: "/",
+      line: "1",
+      shouldLink: true,
+      tooltip: "View source in Debugger → http://www.cnn.com/:1",
+    });
+
+    // Check if file is rendered with hostname for root documents when showEmptyPathAsHost is true
+    yield checkFrameComponent({
+      source: "http://www.cnn.com/",
+      line: "1",
+      showEmptyPathAsHost: true,
+    }, {
+      file: "www.cnn.com",
+      line: "1",
+      shouldLink: true,
+      tooltip: "View source in Debugger → http://www.cnn.com/:1",
+    });
+
     function* checkFrameComponent (input, expected) {
       let frame = ReactDOM.render(Frame({
         frame: input,
