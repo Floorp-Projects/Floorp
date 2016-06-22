@@ -152,6 +152,61 @@ function createRedirectImgTestCase(aParams, aAttributePolicy) {
           </html>`;
 }
 
+// test page using link referrer attribute
+function createLinkPageUsingRefferer(aMetaPolicy, aAttributePolicy, aNewAttributePolicy, aName, aRel, aStringBuilder, aSchemeFrom, aSchemeTo, aTestType) {
+  var metaString = "";
+  if (aMetaPolicy) {
+    metaString = `<meta name="referrer" content="${aMetaPolicy}">`;
+  }
+  var relString = "";
+  if (aRel) {
+    relString = `rel=${aRel}`;
+  }
+
+  var changeString = "";
+  var policy = aAttributePolicy ? aAttributePolicy : aMetaPolicy;
+  var elementString = aStringBuilder(policy, aName, relString, aSchemeFrom, aSchemeTo, aTestType);
+
+  if (aTestType === "setAttribute") {
+    changeString = `var link = document.getElementById("test_link");
+                    link.setAttribute("referrerpolicy", "${aNewAttributePolicy}");
+                    link.href = "${createTestUrl(policy, "test", aName, "link_element", aSchemeFrom, aSchemeTo)}";`;
+  } else if (aTestType === "property") {
+    changeString = `var link = document.getElementById("test_link");
+                    link.referrerPolicy = "${aNewAttributePolicy}";
+                    link.href = "${createTestUrl(policy, "test", aName, "link_element", aSchemeFrom, aSchemeTo)}";`;
+  }
+
+  return `<!DOCTYPE HTML>
+           <html>
+             <head>
+               ${metaString}
+               ${elementString}
+             </head>
+             <body>
+                <script>
+                  ${changeString}
+                </script>
+             </body>
+           </html>`;
+}
+
+function buildLinkString(aPolicy, aName, aRelString, aSchemeFrom, aSchemeTo, aTestType) {
+  var result;
+  var href = '';
+  var onChildComplete = `window.parent.postMessage("childLoadComplete", "http://mochi.test:8888");`
+  if (!aTestType) {
+    href = `href=${createTestUrl(aPolicy, "test", aName, "link_element", aSchemeFrom, aSchemeTo)}`;
+  }
+  if (!aPolicy) {
+    result = `<link ${aRelString} ${href} id="test_link" onload='${onChildComplete}' onerror='${onChildComplete}'>`;
+  } else {
+    result = `<link ${aRelString} ${href} referrerpolicy=${aPolicy} id="test_link" onload='${onChildComplete}' onerror='${onChildComplete}'>`;
+  }
+
+  return result;
+}
+
 function handleRequest(request, response) {
   var params = new URLSearchParams(request.queryString);
   var action = params.get("ACTION");
@@ -311,6 +366,23 @@ function handleRequest(request, response) {
   if (action === "generate-iframe-redirect-policy-test") {
     response.write(createIframeTestPageUsingRefferer(metaPolicy, attributePolicy, newAttributePolicy, name, params,
                                                      schemeFrom, schemeTo));
+    return;
+  }
+
+  var _getPage = createLinkPageUsingRefferer.bind(null, metaPolicy, attributePolicy, newAttributePolicy, name, rel);
+  var _getLinkPage = _getPage.bind(null, buildLinkString, schemeFrom, schemeTo);
+
+  // link
+  if (action === "generate-link-policy-test") {
+    response.write(_getLinkPage());
+    return;
+  }
+  if (action === "generate-link-policy-test-set-attribute") {
+    response.write(_getLinkPage("setAttribute"));
+    return;
+  }
+  if (action === "generate-link-policy-test-property") {
+    response.write(_getLinkPage("property"));
     return;
   }
 
