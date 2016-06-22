@@ -451,15 +451,13 @@ xul|textbox[disabled="true"] {
 /* Links */
 
 html|a,
-.text-link,
-.inline-link {
+.text-link {
   color: var(--in-content-link-color);
   text-decoration: none;
 }
 
 html|a:hover,
-.text-link:hover,
-.inline-link:hover {
+.text-link:hover {
   color: var(--in-content-link-color-hover);
   text-decoration: underline;
 }
@@ -469,8 +467,7 @@ html|a:visited {
 }
 
 html|a:hover:active,
-.text-link:hover:active,
-.inline-link:hover:active {
+.text-link:hover:active {
   color: var(--in-content-link-color-active);
   text-decoration: none;
 }
