@@ -45,15 +45,6 @@ loop.OTSdkDriver = function () {
     "toggleBrowserSharing"]);
 
 
-    // Set loop.debug.twoWayMediaTelemetry to true in the browser
-    // by changing the hidden pref loop.debug.twoWayMediaTelemetry using
-    // about:config, or use
-    //
-    // localStorage.setItem("debug.twoWayMediaTelemetry", true);
-    loop.shared.utils.getBoolPreference("debug.twoWayMediaTelemetry", function (enabled) {
-      this._debugTwoWayMediaTelemetry = enabled;}.
-    bind(this));
-
     // Set loop.debug.sdk to true in the browser, or in standalone:
     // localStorage.setItem("debug.sdk", true);
     loop.shared.utils.getBoolPreference("debug.sdk", function (enabled) {
@@ -260,19 +251,11 @@ loop.OTSdkDriver = function () {
      * - sessionId: The OT session ID
      * - apiKey: The OT API key
      * - sessionToken: The token for the OT session
-     * - sendTwoWayMediaTelemetry: boolean should we send telemetry on length
-     *                             of media sessions.  Callers should ensure
-     *                             that this is only set for one side of the
-     *                             session so that things don't get
-     *                             double-counted.
      *
      * @param {Object} sessionData The session data for setting up the OT session.
      */
     connectSession: function connectSession(sessionData) {
       this.session = this.sdk.initSession(sessionData.sessionId);
-
-      this._sendTwoWayMediaTelemetry = !!sessionData.sendTwoWayMediaTelemetry;
-      this._setTwoWayMediaStartTime(this.CONNECTION_START_TIME_UNINITIALIZED);
 
       this.session.on("sessionDisconnected", 
       this._onSessionDisconnected.bind(this));
@@ -324,8 +307,6 @@ loop.OTSdkDriver = function () {
       // Now reset the metrics as well.
       this._resetMetrics();
 
-      this._noteConnectionLengthIfNeeded(this._getTwoWayMediaStartTime(), performance.now());
-
       // Also, tidy these variables ready for next time.
       delete this._sessionConnected;
       delete this._publisherReady;
@@ -334,8 +315,7 @@ loop.OTSdkDriver = function () {
       delete this._mockPublisherEl;
       delete this._publisherChannel;
       delete this._subscriberChannel;
-      this.connections = {};
-      this._setTwoWayMediaStartTime(this.CONNECTION_START_TIME_UNINITIALIZED);}, 
+      this.connections = {};}, 
 
 
     /**
@@ -407,8 +387,6 @@ loop.OTSdkDriver = function () {
 
       this._notifyMetricsEvent("Session.connectionDestroyed", "peer");
 
-      this._noteConnectionLengthIfNeeded(this._getTwoWayMediaStartTime(), performance.now());
-
       this.dispatcher.dispatch(new sharedActions.RemotePeerDisconnected({ 
         peerHungup: event.reason === "clientDisconnected" }));}, 
 
@@ -435,8 +413,6 @@ loop.OTSdkDriver = function () {
           return;}
 
 
-      this._noteConnectionLengthIfNeeded(this._getTwoWayMediaStartTime(), 
-      performance.now());
       this._notifyMetricsEvent("Session." + event.reason);
       this.dispatcher.dispatch(new sharedActions.ConnectionFailure({ 
         reason: reason }));}, 
@@ -526,6 +502,8 @@ loop.OTSdkDriver = function () {
           break;
         case "Session.networkDisconnected":
         case "Session.forceDisconnected":
+        case "Session.subscribeCompleted":
+        case "Session.screen.subscribeCompleted":
           break;
         default:
           // We don't want unexpected events being sent to the server, so
@@ -646,9 +624,9 @@ loop.OTSdkDriver = function () {
         srcMediaElement: sdkSubscriberVideo }));
 
 
+      this._notifyMetricsEvent("Session.subscribeCompleted");
       this._subscribedRemoteStream = true;
       if (this._checkAllStreamsConnected()) {
-        this._setTwoWayMediaStartTime(performance.now());
         this.dispatcher.dispatch(new sharedActions.MediaConnected());}
 
 
@@ -677,9 +655,10 @@ loop.OTSdkDriver = function () {
       // _handleRemoteScreenShareCreated.  Maybe these should be separate
       // actions.  But even so, this shouldn't be necessary....
       this.dispatcher.dispatch(new sharedActions.ReceivingScreenShare({ 
-        receiving: true, srcMediaElement: sdkSubscriberVideo }));}, 
+        receiving: true, srcMediaElement: sdkSubscriberVideo }));
 
 
+      this._notifyMetricsEvent("Session.screen.subscribeCompleted");}, 
 
 
     /**
@@ -874,57 +853,6 @@ loop.OTSdkDriver = function () {
 
 
     /**
-     * Implementation detail, may be set to one of the CONNECTION_START_TIME
-     * constants, or a positive integer in milliseconds.
-     *
-     * @private
-     */
-    __twoWayMediaStartTime: undefined, 
-
-    /**
-     * Used as a guard to make sure we don't inadvertently use an
-     * uninitialized value.
-     */
-    CONNECTION_START_TIME_UNINITIALIZED: -1, 
-
-    /**
-     * Use as a guard to ensure that we don't note any bidirectional sessions
-     * twice.
-     */
-    CONNECTION_START_TIME_ALREADY_NOTED: -2, 
-
-    /**
-     * Set and get the start time of the two-way media connection.  These
-     * are done as wrapper functions so that we can log sets to make manual
-     * verification of various telemetry scenarios possible.  The get API is
-     * analogous in order to follow the principle of least surprise for
-     * people consuming this code.
-     *
-     * If this._sendTwoWayMediaTelemetry is not true, returns immediately
-     * without making any changes, since this data is not used, and it makes
-     * reading the logs confusing for manual verification of both ends of the
-     * call in the same browser, which is a case we care about.
-     *
-     * @param start  start time in milliseconds, as returned by
-     *               performance.now()
-     * @private
-     */
-    _setTwoWayMediaStartTime: function _setTwoWayMediaStartTime(start) {
-      if (!this._sendTwoWayMediaTelemetry) {
-        return;}
-
-
-      this.__twoWayMediaStartTime = start;
-      if (this._debugTwoWayMediaTelemetry) {
-        console.log("Loop Telemetry: noted two-way connection start, " + 
-        "start time in ms:", start);}}, 
-
-
-    _getTwoWayMediaStartTime: function _getTwoWayMediaStartTime() {
-      return this.__twoWayMediaStartTime;}, 
-
-
-    /**
      * Handles the event when the remote stream is destroyed.
      *
      * @param {StreamEvent} event The event details:
@@ -1050,13 +978,18 @@ loop.OTSdkDriver = function () {
      * @param  {OT.Event} event
      */
     _onOTException: function _onOTException(event) {
+      var baseException = "sdk.exception.";
+      if (event.target && event.target === this.screenshare) {
+        baseException += "screen.";}
+
+
       switch (event.code) {
         case OT.ExceptionCodes.PUBLISHER_ICE_WORKFLOW_FAILED:
         case OT.ExceptionCodes.SUBSCRIBER_ICE_WORKFLOW_FAILED:
           this.dispatcher.dispatch(new sharedActions.ConnectionFailure({ 
             reason: FAILURE_DETAILS.ICE_FAILED }));
 
-          this._notifyMetricsEvent("sdk.exception." + event.code);
+          this._notifyMetricsEvent(baseException + event.code);
           break;
         case OT.ExceptionCodes.TERMS_OF_SERVICE_FAILURE:
           this.dispatcher.dispatch(new sharedActions.ConnectionFailure({ 
@@ -1064,21 +997,17 @@ loop.OTSdkDriver = function () {
 
           // We still need to log the exception so that the server knows why this
           // attempt failed.
-          this._notifyMetricsEvent("sdk.exception." + event.code);
+          this._notifyMetricsEvent(baseException + event.code);
           break;
         case OT.ExceptionCodes.UNABLE_TO_PUBLISH:
           // Don't report errors for GetUserMedia events as these are expected if
           // the user denies the prompt.
           if (event.message !== "GetUserMedia") {
-            var baseException = "sdk.exception.";
-            if (event.target && event.target === this.screenshare) {
-              baseException += "screen.";}
-
             this._notifyMetricsEvent(baseException + event.code + "." + event.message);}
 
           break;
         default:
-          this._notifyMetricsEvent("sdk.exception." + event.code);
+          this._notifyMetricsEvent(baseException + event.code);
           break;}}, 
 
 
@@ -1150,7 +1079,6 @@ loop.OTSdkDriver = function () {
         // Now record the fact, and check if we've got all media yet.
         this._publishedLocalStream = true;
         if (this._checkAllStreamsConnected()) {
-          this._setTwoWayMediaStartTime(performance.now());
           this.dispatcher.dispatch(new sharedActions.MediaConnected());}}}, 
 
 
@@ -1215,92 +1143,8 @@ loop.OTSdkDriver = function () {
      * Called when a screenshare stream is published.
      */
     _onScreenShareStreamCreated: function _onScreenShareStreamCreated() {
-      this._notifyMetricsEvent("Publisher.streamCreated");}, 
+      this._notifyMetricsEvent("Publisher.streamCreated");} };
 
-
-    /*
-     * XXX all of the bi-directional media connection telemetry stuff in this
-     * file, (much, but not all, of it is below) should be hoisted into its
-     * own object for maintainability and clarity, also in part because this
-     * stuff only wants to run one side of the connection, not both (tracked
-     * by bug 1145237).
-     */
-
-    /**
-     * A hook exposed only for the use of the functional tests so that
-     * they can check that the bi-directional media count is being updated
-     * correctly.
-     *
-     * @type number
-     * @private
-     */
-    _connectionLengthNotedCalls: 0, 
-
-    /**
-     * Wrapper for adding a keyed value that also updates
-     * connectionLengthNoted calls and sets the twoWayMediaStartTime to
-     * this.CONNECTION_START_TIME_ALREADY_NOTED.
-     *
-     * @param {number} callLengthSeconds  the call length in seconds
-     * @private
-     */
-    _noteConnectionLength: function _noteConnectionLength(callLengthSeconds) {
-      var buckets = this._constants.TWO_WAY_MEDIA_CONN_LENGTH;
-
-      var bucket = buckets.SHORTER_THAN_10S;
-      if (callLengthSeconds >= 10 && callLengthSeconds <= 30) {
-        bucket = buckets.BETWEEN_10S_AND_30S;} else 
-      if (callLengthSeconds > 30 && callLengthSeconds <= 300) {
-        bucket = buckets.BETWEEN_30S_AND_5M;} else 
-      if (callLengthSeconds > 300) {
-        bucket = buckets.MORE_THAN_5M;}
-
-
-      loop.request("TelemetryAddValue", "LOOP_TWO_WAY_MEDIA_CONN_LENGTH_1", bucket);
-      this._setTwoWayMediaStartTime(this.CONNECTION_START_TIME_ALREADY_NOTED);
-
-      this._connectionLengthNotedCalls++;
-      if (this._debugTwoWayMediaTelemetry) {
-        console.log("Loop Telemetry: noted two-way media connection " + 
-        "in bucket: ", bucket);}}, 
-
-
-
-    /**
-     * Note connection length if it's valid (the startTime has been initialized
-     * and is not later than endTime) and not yet already noted.  If
-     * this._sendTwoWayMediaTelemetry is not true, we return immediately.
-     *
-     * @param {number} startTime  in milliseconds
-     * @param {number} endTime  in milliseconds
-     * @private
-     */
-    _noteConnectionLengthIfNeeded: function _noteConnectionLengthIfNeeded(startTime, endTime) {
-      if (!this._sendTwoWayMediaTelemetry) {
-        return;}
-
-
-      if (startTime === this.CONNECTION_START_TIME_ALREADY_NOTED || 
-      startTime === this.CONNECTION_START_TIME_UNINITIALIZED || 
-      startTime > endTime) {
-        if (this._debugTwoWayMediaTelemetry) {
-          console.log("_noteConnectionLengthIfNeeded called with " + 
-          " invalid params, either the calls were never" + 
-          " connected or there is a bug; startTime:", startTime, 
-          "endTime:", endTime);}
-
-        return;}
-
-
-      var callLengthSeconds = (endTime - startTime) / 1000;
-      this._noteConnectionLength(callLengthSeconds);}, 
-
-
-    /**
-     * If set to true, make it easy to test/verify 2-way media connection
-     * telemetry code operation by viewing the logs.
-     */
-    _debugTwoWayMediaTelemetry: false };
 
 
   return OTSdkDriver;}();

@@ -63,10 +63,6 @@ p {
   display: none !important;
 }
 
-.visually-hidden {
-  visibility: hidden;
-}
-
 .tc {
   text-align: center;
 }
@@ -464,13 +460,6 @@ html[dir="rtl"] .dropdown-menu {
 
 .dropdown-menu-item:hover {
   background-color: #dbf7ff;
-}
-
-.dropdown-menu-separator {
-  height: 1px;
-  margin: 2px -2px 1px -2px;
-  border-top: 1px solid #dedede;
-  background-color: #fff;
 }
 
 /* Custom checkbox */
