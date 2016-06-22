@@ -21,6 +21,7 @@ use std::path::{Path, PathBuf};
 use std::sync::Mutex;
 use std::thread::sleep;
 use std::time::Duration;
+use std::str::FromStr;
 use webdriver::command::{WebDriverCommand, WebDriverMessage, Parameters,
                          WebDriverExtensionCommand};
 use webdriver::command::WebDriverCommand::{
@@ -109,13 +110,12 @@ lazy_static! {
         ("toolkit.telemetry.rejected", Pref::new(true)),
     ];
 
-    pub static ref FIREFOX_REQUIRED_PREFERENCES: [(&'static str, Pref); 5] = [
+    pub static ref FIREFOX_REQUIRED_PREFERENCES: [(&'static str, Pref); 4] = [
         ("browser.tabs.warnOnClose", Pref::new(false)),
         ("browser.warnOnQuit", Pref::new(false)),
         // until bug 1238095 is fixed, we have to allow CPOWs
         ("dom.ipc.cpows.forbid-unsafe-from-browser", Pref::new(false)),
         ("marionette.defaultPrefs.enabled", Pref::new(true)),
-        ("marionette.logging", Pref::new(true)),
     ];
 }
 
@@ -230,20 +230,63 @@ pub enum BrowserLauncher {
     BinaryLauncher(PathBuf)
 }
 
-pub struct MarionetteSettings {
-    port: u16,
-    launcher: BrowserLauncher,
-    e10s: bool
+/// Logger levels from [Log.jsm]
+/// (https://developer.mozilla.org/en/docs/Mozilla/JavaScript_code_modules/Log.jsm).
+#[derive(Debug)]
+#[allow(dead_code)]
+pub enum LogLevel {
+    Fatal,
+    Error,
+    Warn,
+    Info,
+    Config,
+    Debug,
+    Trace,
 }
 
-impl MarionetteSettings {
-    pub fn new(port: u16, launcher: BrowserLauncher, e10s: bool) -> MarionetteSettings {
-        MarionetteSettings {
-            port: port,
-            launcher: launcher,
-            e10s: e10s
+impl ToString for LogLevel {
+    fn to_string(&self) -> String {
+        match *self {
+            LogLevel::Fatal => "fatal",
+            LogLevel::Error => "error",
+            LogLevel::Warn => "warn",
+            LogLevel::Info => "info",
+            LogLevel::Config => "config",
+            LogLevel::Debug => "debug",
+            LogLevel::Trace => "trace",
+        }.to_string()
+    }
+}
+
+impl FromStr for LogLevel {
+    type Err = ();
+
+    fn from_str(s: &str) -> Result<LogLevel, ()> {
+        let l: &str = &s.to_lowercase();
+        match l {
+            "fatal" => Ok(LogLevel::Fatal),
+            "error" => Ok(LogLevel::Error),
+            "warn" => Ok(LogLevel::Warn),
+            "info" => Ok(LogLevel::Info),
+            "config" => Ok(LogLevel::Config),
+            "debug" => Ok(LogLevel::Debug),
+            "trace" => Ok(LogLevel::Trace),
+            _ => Err(()),
         }
     }
+}
+
+pub struct MarionetteSettings {
+    pub port: u16,
+    pub launcher: BrowserLauncher,
+
+    /// Enable or disable Electrolysis, or multi-processing, in Gecko.
+    pub e10s: bool,
+
+    /// Optionally increase Marionette's verbosity by providing a log
+    /// level. The Gecko default is LogLevel::Info for optimised
+    /// builds and LogLevel::Debug for debug builds.
+    pub log_level: Option<LogLevel>,
 }
 
 pub struct MarionetteHandler {
@@ -252,6 +295,7 @@ pub struct MarionetteHandler {
     browser: Option<FirefoxRunner>,
     port: u16,
     e10s: bool,
+    log_level: Option<LogLevel>,
 }
 
 impl MarionetteHandler {
@@ -261,7 +305,8 @@ impl MarionetteHandler {
             launcher: settings.launcher,
             browser: None,
             port: settings.port,
-            e10s: settings.e10s
+            e10s: settings.e10s,
+            log_level: settings.log_level,
         }
     }
 
@@ -311,8 +356,7 @@ impl MarionetteHandler {
     pub fn set_prefs(&self, profile: &mut Profile, custom_profile: bool)
                  -> Result<(), RunnerError> {
         let prefs = try!(profile.user_prefs());
-        prefs.insert("marionette.defaultPrefs.port",
-                     Pref::new(self.port as i64));
+        prefs.insert("marionette.defaultPrefs.port", Pref::new(self.port as i64));
 
         prefs.insert_slice(&FIREFOX_REQUIRED_PREFERENCES[..]);
         if !custom_profile {
@@ -323,6 +367,10 @@ impl MarionetteHandler {
                 prefs.insert_slice(&NON_E10S_PREFERENCES[..]);
             }
         };
+        if let Some(ref l) = self.log_level {
+            prefs.insert("marionette.logging", Pref::new(l.to_string()));
+        };
+
         try!(prefs.write());
         Ok(())
     }
