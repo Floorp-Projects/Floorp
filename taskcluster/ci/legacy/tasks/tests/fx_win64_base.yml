@@ -1,9 +1,0 @@
----
-$inherits:
-  from: 'tasks/tests/fx_windows_test_base.yml'
-
-  variables:
-    test_platform: 'win64'
-
-task:
-  workerType: win10

@@ -1,6 +1,6 @@
 ---
 $inherits:
-  from: 'tasks/docker_test.yml'
+  from: 'tasks/test.yml'
 task:
   scopes:
     - 'docker-worker:cache:level-{{level}}-{{project}}-tc-vcs'
