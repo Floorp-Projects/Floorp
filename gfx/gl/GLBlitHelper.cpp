@@ -236,8 +236,8 @@ GLBlitHelper::InitTexQuadProgram(BlitType target)
 
     bool success = false;
 
-    GLuint *programPtr;
-    GLuint *fragShaderPtr;
+    GLuint* programPtr;
+    GLuint* fragShaderPtr;
     const char* fragShaderSource;
     switch (target) {
     case ConvertEGLImage:
@@ -329,7 +329,7 @@ GLBlitHelper::InitTexQuadProgram(BlitType target)
         mGL->fBindAttribLocation(program, 0, "aPosition");
         mGL->fLinkProgram(program);
 
-        if (mGL->DebugMode()) {
+        if (GLContext::ShouldSpew()) {
             GLint status = 0;
             mGL->fGetShaderiv(mTexBlit_VertShader, LOCAL_GL_COMPILE_STATUS, &status);
             if (status != LOCAL_GL_TRUE) {
@@ -372,7 +372,7 @@ GLBlitHelper::InitTexQuadProgram(BlitType target)
         GLint status = 0;
         mGL->fGetProgramiv(program, LOCAL_GL_LINK_STATUS, &status);
         if (status != LOCAL_GL_TRUE) {
-            if (mGL->DebugMode()) {
+            if (GLContext::ShouldSpew()) {
                 NS_ERROR("Linking blit program failed.");
                 GLint length = 0;
                 mGL->fGetProgramiv(program, LOCAL_GL_INFO_LOG_LENGTH, &length);

@@ -35,7 +35,7 @@ MOZ_THREAD_LOCAL(EGLContext) GLLibraryEGL::sCurrentContext;
 #endif
 
 // should match the order of EGLExtensions, and be null-terminated.
-static const char *sEGLExtensionNames[] = {
+static const char* sEGLExtensionNames[] = {
     "EGL_KHR_image_base",
     "EGL_KHR_image_pixmap",
     "EGL_KHR_gl_texture_2D_image",
@@ -129,7 +129,7 @@ GetAndInitWARPDisplay(GLLibraryEGL& egl, void* displayType)
     if (display == EGL_NO_DISPLAY) {
         const EGLint err = egl.fGetError();
         if (err != LOCAL_EGL_SUCCESS) {
-	    gfxCriticalError() << "Unexpected GL error: " << gfx::hexa(err);
+            gfxCriticalError() << "Unexpected GL error: " << gfx::hexa(err);
             MOZ_CRASH("GFX: Unexpected GL error.");
         }
         return EGL_NO_DISPLAY;
@@ -142,7 +142,8 @@ GetAndInitWARPDisplay(GLLibraryEGL& egl, void* displayType)
 }
 
 static bool
-IsAccelAngleSupported(const nsCOMPtr<nsIGfxInfo>& gfxInfo, nsACString& aFailureId)
+IsAccelAngleSupported(const nsCOMPtr<nsIGfxInfo>& gfxInfo,
+                      nsACString* const out_failureId)
 {
     int32_t angleSupport;
     nsCString failureId;
@@ -153,7 +154,7 @@ IsAccelAngleSupported(const nsCOMPtr<nsIGfxInfo>& gfxInfo, nsACString& aFailureI
     Telemetry::Accumulate(Telemetry::CANVAS_WEBGL_ACCL_FAILURE_ID,
                           failureId);
     if (failureId.IsEmpty()) {
-      aFailureId = failureId;
+        *out_failureId = failureId;
     }
     return (angleSupport == nsIGfxInfo::FEATURE_STATUS_OK);
 }
@@ -206,7 +207,7 @@ GLLibraryEGL::ReadbackEGLImage(EGLImage image, gfx::DataSourceSurface* out_surfa
     if (!mReadbackGL) {
         nsCString discardFailureId;
         mReadbackGL = gl::GLContextProvider::CreateHeadless(gl::CreateContextFlags::NONE,
-                                                            discardFailureId);
+                                                            &discardFailureId);
     }
 
     ScopedTexture destTex(mReadbackGL);
@@ -228,7 +229,7 @@ GLLibraryEGL::ReadbackEGLImage(EGLImage image, gfx::DataSourceSurface* out_surfa
 }
 
 bool
-GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString& aFailureId)
+GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString* const out_failureId)
 {
     if (mInitialized) {
         return true;
@@ -394,7 +395,7 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString& aFailureId)
     EGLDisplay chosenDisplay = nullptr;
 
     if (IsExtensionSupported(ANGLE_platform_angle_d3d)) {
-        bool accelAngleSupport = IsAccelAngleSupported(gfxInfo, aFailureId);
+        bool accelAngleSupport = IsAccelAngleSupported(gfxInfo, out_failureId);
 
         bool shouldTryAccel = forceAccel || accelAngleSupport;
         bool shouldTryWARP = !shouldTryAccel;
@@ -415,8 +416,8 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString& aFailureId)
             // If falling back to WARP did not work and we don't want to try
             // using HW accelerated ANGLE, then fail.
             if (!shouldTryAccel) {
-                if (aFailureId.IsEmpty()) {
-                    aFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_WARP_FALLBACK");
+                if (out_failureId->IsEmpty()) {
+                    *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_WARP_FALLBACK");
                 }
                 NS_ERROR("Fallback WARP ANGLE context failed to initialize.");
                 return false;
@@ -430,8 +431,8 @@ GLLibraryEGL::EnsureInitialized(bool forceAccel, nsACString& aFailureId)
     }
 
     if (!chosenDisplay) {
-        if (aFailureId.IsEmpty()) {
-            aFailureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_DISPLAY");
+        if (out_failureId->IsEmpty()) {
+            *out_failureId = NS_LITERAL_CSTRING("FEATURE_FAILURE_NO_DISPLAY");
         }
         NS_WARNING("Failed to initialize a display.");
         return false;
@@ -672,11 +673,11 @@ GLLibraryEGL::DumpEGLConfigs()
 {
     int nc = 0;
     fGetConfigs(mEGLDisplay, nullptr, 0, &nc);
-    EGLConfig *ec = new EGLConfig[nc];
+    EGLConfig* ec = new EGLConfig[nc];
     fGetConfigs(mEGLDisplay, ec, nc, &nc);
 
     for (int i = 0; i < nc; ++i) {
-        printf_stderr ("========= EGL Config %d ========\n", i);
+        printf_stderr("========= EGL Config %d ========\n", i);
         DumpEGLConfig(ec[i]);
     }
 
@@ -684,19 +685,25 @@ GLLibraryEGL::DumpEGLConfigs()
 }
 
 #ifdef DEBUG
+static bool
+ShouldTrace()
+{
+    static bool ret = gfxEnv::GlDebugVerbose();
+    return ret;
+}
+
 /*static*/ void
 GLLibraryEGL::BeforeGLCall(const char* glFunction)
 {
-    if (GLContext::DebugMode()) {
-        if (GLContext::DebugMode() & GLContext::DebugTrace)
-            printf_stderr("[egl] > %s\n", glFunction);
+    if (ShouldTrace()) {
+        printf_stderr("[egl] > %s\n", glFunction);
     }
 }
 
 /*static*/ void
 GLLibraryEGL::AfterGLCall(const char* glFunction)
 {
-    if (GLContext::DebugMode() & GLContext::DebugTrace) {
+    if (ShouldTrace()) {
         printf_stderr("[egl] < %s\n", glFunction);
     }
 }

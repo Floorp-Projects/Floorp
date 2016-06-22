@@ -9,10 +9,12 @@ import unittest
 from ..parameters import Parameters, load_parameters_file
 from mozunit import main, MockedOpen
 
+
 class TestParameters(unittest.TestCase):
 
     def test_Parameters_immutable(self):
         p = Parameters(x=10, y=20)
+
         def assign():
             p['x'] = 20
         self.assertRaises(Exception, assign)

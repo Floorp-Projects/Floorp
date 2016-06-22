@@ -48,6 +48,8 @@ enum MaybeTailCall {
     NonTailCall
 };
 
+static const char UnknownVMFunction[]        = "Unknown VM call";
+
 // Contains information about a virtual machine function that can be called
 // from JIT code. Functions described in this manner must conform to a simple
 // protocol: the return type must have a special "failure" value (for example,
@@ -67,6 +69,8 @@ struct VMFunction
 
     // Address of the C function.
     void* wrapped;
+
+    const char* name_;
 
     // Number of arguments expected, excluding JSContext * as an implicit
     // first argument and an outparam as a possible implicit final argument.
@@ -153,6 +157,10 @@ struct VMFunction
         return ((argumentPassedInFloatRegs >> explicitArg) & 1) == 1;
     }
 
+    const char* name() const {
+        return name_;
+    }
+
     // Return the stack size consumed by explicit arguments.
     size_t explicitStackSlots() const {
         size_t stackSlots = explicitArgs;
@@ -221,6 +229,7 @@ struct VMFunction
 
     VMFunction()
       : wrapped(nullptr),
+        name_(UnknownVMFunction),
         explicitArgs(0),
         argumentProperties(0),
         argumentPassedInFloatRegs(0),
@@ -232,11 +241,12 @@ struct VMFunction
     }
 
 
-    VMFunction(void* wrapped, uint32_t explicitArgs, uint32_t argumentProperties,
+    VMFunction(void* wrapped, const char* name, uint32_t explicitArgs, uint32_t argumentProperties,
                uint32_t argumentPassedInFloatRegs, uint64_t argRootTypes,
                DataType outParam, RootType outParamRootType, DataType returnType,
                uint32_t extraValuesToPop = 0, MaybeTailCall expectTailCall = NonTailCall)
       : wrapped(wrapped),
+        name_(name),
         explicitArgs(explicitArgs),
         argumentProperties(argumentProperties),
         argumentPassedInFloatRegs(argumentPassedInFloatRegs),
@@ -532,7 +542,7 @@ struct FunctionInfo<R (*)(Context, Args...)> : public VMFunction
         return BitMask<TypeToRootType, uint64_t, 3, Args...>::result;
     }
     explicit FunctionInfo(pf fun, PopValues extraValuesToPop = PopValues(0))
-        : VMFunction(JS_FUNC_TO_DATA_PTR(void*, fun), explicitArgs(),
+        : VMFunction(JS_FUNC_TO_DATA_PTR(void*, fun), UnknownVMFunction, explicitArgs(),
                      argumentProperties(), argumentPassedInFloatRegs(),
                      argumentRootTypes(), outParam(), outParamRootType(),
                      returnType(), extraValuesToPop.numValues, NonTailCall)
@@ -541,7 +551,24 @@ struct FunctionInfo<R (*)(Context, Args...)> : public VMFunction
     }
     explicit FunctionInfo(pf fun, MaybeTailCall expectTailCall,
                           PopValues extraValuesToPop = PopValues(0))
-        : VMFunction(JS_FUNC_TO_DATA_PTR(void*, fun), explicitArgs(),
+        : VMFunction(JS_FUNC_TO_DATA_PTR(void*, fun), UnknownVMFunction, explicitArgs(),
+                     argumentProperties(), argumentPassedInFloatRegs(),
+                     argumentRootTypes(), outParam(), outParamRootType(),
+                     returnType(), extraValuesToPop.numValues, expectTailCall)
+    {
+        static_assert(MatchContext<Context>::valid, "Invalid cx type in VMFunction");
+    }
+    explicit FunctionInfo(pf fun, const char* name, PopValues extraValuesToPop = PopValues(0))
+        : VMFunction(JS_FUNC_TO_DATA_PTR(void*, fun), name, explicitArgs(),
+                     argumentProperties(), argumentPassedInFloatRegs(),
+                     argumentRootTypes(), outParam(), outParamRootType(),
+                     returnType(), extraValuesToPop.numValues, NonTailCall)
+    {
+        static_assert(MatchContext<Context>::valid, "Invalid cx type in VMFunction");
+    }
+    explicit FunctionInfo(pf fun, const char* name, MaybeTailCall expectTailCall,
+                          PopValues extraValuesToPop = PopValues(0))
+        : VMFunction(JS_FUNC_TO_DATA_PTR(void*, fun), name, explicitArgs(),
                      argumentProperties(), argumentPassedInFloatRegs(),
                      argumentRootTypes(), outParam(), outParamRootType(),
                      returnType(), extraValuesToPop.numValues, expectTailCall)

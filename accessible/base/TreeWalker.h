@@ -50,8 +50,23 @@ public:
   ~TreeWalker();
 
   /**
-   * Clears the tree walker state and resets it to the given child within
-   * the anchor.
+   * Resets the walker state, and sets the given node as an anchor. Returns a
+   * first accessible element within the node including the node itself.
+   */
+  Accessible* Scope(nsIContent* aAnchorNode);
+
+  /**
+   * Resets the walker state.
+   */
+  void Reset()
+  {
+    mPhase = eAtStart;
+    mStateStack.Clear();
+    mARIAOwnsIdx = 0;
+  }
+
+  /**
+   * Sets the walker state to the given child node if it's within the anchor.
    */
   bool Seek(nsIContent* aChildNode);
 
@@ -62,7 +77,7 @@ public:
    *       rejected during tree creation then the caller should be unbind it
    *       from the document.
    */
-  Accessible* Next(nsIContent* aStopNode = nullptr);
+  Accessible* Next();
   Accessible* Prev();
 
   Accessible* Context() const { return mContext; }

@@ -1869,7 +1869,7 @@ InitEvent(WidgetGUIEvent& aEvent, LayoutDeviceIntPoint* aPt = nullptr)
 
 NS_IMETHODIMP
 nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType,
-                                        uint32_t aOffset, uint32_t aLength,
+                                        int64_t aOffset, uint32_t aLength,
                                         int32_t aX, int32_t aY,
                                         uint32_t aAdditionalFlags,
                                         nsIQueryContentEventResult **aResult)
@@ -1971,13 +1971,29 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType,
   nsCOMPtr<nsIWidget> targetWidget = widget;
   LayoutDeviceIntPoint pt(aX, aY);
 
-  bool useNativeLineBreak =
+  WidgetQueryContentEvent::Options options;
+  options.mUseNativeLineBreak =
     !(aAdditionalFlags & QUERY_CONTENT_FLAG_USE_XP_LINE_BREAK);
+  options.mRelativeToInsertionPoint =
+    (aAdditionalFlags &
+       QUERY_CONTENT_FLAG_OFFSET_RELATIVE_TO_INSERTION_POINT) != 0;
+  if (options.mRelativeToInsertionPoint) {
+    switch (message) {
+      case eQueryTextContent:
+      case eQueryCaretRect:
+      case eQueryTextRect:
+        break;
+      default:
+        return NS_ERROR_INVALID_ARG;
+    }
+  } else if (aOffset < 0) {
+    return NS_ERROR_INVALID_ARG;
+  }
 
   if (message == eQueryCharacterAtPoint) {
     // Looking for the widget at the point.
     WidgetQueryContentEvent dummyEvent(true, eQueryContentState, widget);
-    dummyEvent.mUseNativeLineBreak = useNativeLineBreak;
+    dummyEvent.Init(options);
     InitEvent(dummyEvent, &pt);
     nsIFrame* popupFrame =
       nsLayoutUtils::GetPopupFrameForEventCoordinates(presContext->GetRootPresContext(), &dummyEvent);
@@ -2004,19 +2020,19 @@ nsDOMWindowUtils::SendQueryContentEvent(uint32_t aType,
 
   switch (message) {
     case eQueryTextContent:
-      queryEvent.InitForQueryTextContent(aOffset, aLength, useNativeLineBreak);
+      queryEvent.InitForQueryTextContent(aOffset, aLength, options);
       break;
     case eQueryCaretRect:
-      queryEvent.InitForQueryCaretRect(aOffset, useNativeLineBreak);
+      queryEvent.InitForQueryCaretRect(aOffset, options);
       break;
     case eQueryTextRect:
-      queryEvent.InitForQueryTextRect(aOffset, aLength, useNativeLineBreak);
+      queryEvent.InitForQueryTextRect(aOffset, aLength, options);
       break;
     case eQuerySelectedText:
-      queryEvent.InitForQuerySelectedText(selectionType, useNativeLineBreak);
+      queryEvent.InitForQuerySelectedText(selectionType, options);
       break;
     default:
-      queryEvent.mUseNativeLineBreak = useNativeLineBreak;
+      queryEvent.Init(options);
       break;
   }
 

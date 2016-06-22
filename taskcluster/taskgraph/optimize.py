@@ -75,7 +75,9 @@ def annotate_task_graph(target_task_graph, do_not_optimize, named_links_dict, la
         dependencies = [target_task_graph.tasks[l] for l in named_task_dependencies.itervalues()]
         for t in dependencies:
             if t.optimized and not t.task_id:
-                raise Exception("task {} was optimized away, but {} depends on it".format(t.label, label))
+                raise Exception(
+                    "task {} was optimized away, but {} depends on it".format(
+                        t.label, label))
 
         # if this task is blacklisted, don't even consider optimizing
         replacement_task_id = None
@@ -131,12 +133,16 @@ def get_subgraph(annotated_task_graph, named_links_dict, label_to_taskid):
         tasks_by_taskid[task.task_id] = task
 
     # resolve edges to taskIds
-    edges_by_taskid = ((label_to_taskid.get(left), label_to_taskid.get(right), name)
-        for (left, right, name) in annotated_task_graph.graph.edges)
+    edges_by_taskid = (
+        (label_to_taskid.get(left), label_to_taskid.get(right), name)
+        for (left, right, name) in annotated_task_graph.graph.edges
+        )
     # ..and drop edges that are no longer in the task graph
-    edges_by_taskid = set((left, right, name)
+    edges_by_taskid = set(
+        (left, right, name)
         for (left, right, name) in edges_by_taskid
-        if left in tasks_by_taskid and right in tasks_by_taskid)
+        if left in tasks_by_taskid and right in tasks_by_taskid
+        )
 
     return TaskGraph(
         tasks_by_taskid,

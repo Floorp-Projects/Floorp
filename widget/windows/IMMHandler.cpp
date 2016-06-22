@@ -2172,22 +2172,6 @@ IMMHandler::GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
     return false;
   }
 
-  // The base offset of aOffset is the start of composition string during
-  // composing or the start of selected string not during composing.
-  uint32_t baseOffset =
-    mIsComposing ? mCompositionStart : selection.mOffset;
-
-  CheckedInt<uint32_t> checkingOffset =
-    CheckedInt<uint32_t>(baseOffset) + aOffset;
-  if (NS_WARN_IF(!checkingOffset.isValid()) ||
-      checkingOffset.value() == UINT32_MAX) {
-    MOZ_LOG(gIMMLog, LogLevel::Error,
-      ("IMM: GetCharacterRectOfSelectedTextAt, FAILED, due to "
-       "aOffset is too large (aOffset=%u, baseOffset=%u, mIsComposing=%s)",
-       aOffset, baseOffset, GetBoolName(mIsComposing)));
-    return false;
-  }
-
   // If the offset is larger than the end of composition string or selected
   // string, we should return false since such case must be a bug of the caller
   // or the active IME.  If it's an IME's bug, we need to set targetLength to
@@ -2202,8 +2186,6 @@ IMMHandler::GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
     return false;
   }
 
-  uint32_t offset = checkingOffset.value();
-
   // If there is caret, we might be able to use caret rect.
   uint32_t caretOffset = UINT32_MAX;
   // There is a caret only when the normal selection is collapsed.
@@ -2213,24 +2195,26 @@ IMMHandler::GetCharacterRectOfSelectedTextAt(nsWindow* aWindow,
       // the composition string.
       if (mCursorPosition != NO_IME_CARET) {
         MOZ_ASSERT(mCursorPosition >= 0);
-        caretOffset = mCompositionStart + mCursorPosition;
+        caretOffset = mCursorPosition;
       } else if (!ShouldDrawCompositionStringOurselves() ||
                  mCompositionString.IsEmpty()) {
         // Otherwise, if there is no composition string, we should assume that
         // there is a caret at the start of composition string.
-        caretOffset = mCompositionStart;
+        caretOffset = 0;
       }
     } else {
       // If there is no composition, the selection offset is the caret offset.
-      caretOffset = selection.mOffset;
+      caretOffset = 0;
     }
   }
 
   // If there is a caret and retrieving offset is same as the caret offset,
   // we should use the caret rect.
-  if (offset != caretOffset) {
+  if (aOffset != caretOffset) {
     WidgetQueryContentEvent charRect(true, eQueryTextRect, aWindow);
-    charRect.InitForQueryTextRect(offset, 1);
+    WidgetQueryContentEvent::Options options;
+    options.mRelativeToInsertionPoint = true;
+    charRect.InitForQueryTextRect(aOffset, 1, options);
     aWindow->InitEvent(charRect, &point);
     DispatchEvent(aWindow, charRect);
     if (charRect.mSucceeded) {
@@ -2258,16 +2242,10 @@ IMMHandler::GetCaretRect(nsWindow* aWindow,
 {
   LayoutDeviceIntPoint point(0, 0);
 
-  Selection& selection = GetSelection();
-  if (!selection.EnsureValidSelection(aWindow)) {
-    MOZ_LOG(gIMMLog, LogLevel::Error,
-      ("IMM: GetCaretRect, FAILED, due to "
-       "Selection::EnsureValidSelection() failure"));
-    return false;
-  }
-
   WidgetQueryContentEvent caretRect(true, eQueryCaretRect, aWindow);
-  caretRect.InitForQueryCaretRect(selection.mOffset);
+  WidgetQueryContentEvent::Options options;
+  options.mRelativeToInsertionPoint = true;
+  caretRect.InitForQueryCaretRect(0, options);
   aWindow->InitEvent(caretRect, &point);
   DispatchEvent(aWindow, caretRect);
   if (!caretRect.mSucceeded) {

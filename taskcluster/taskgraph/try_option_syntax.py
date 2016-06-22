@@ -18,13 +18,16 @@ BUILD_TYPE_ALIASES = {
     'd': 'debug'
 }
 
+
 # mapping from shortcut name (usable with -u) to a boolean function identifying
 # matching test names
 def alias_prefix(prefix):
     return lambda name: name.startswith(prefix)
 
+
 def alias_contains(infix):
     return lambda name: infix in name
+
 
 def alias_matches(pattern):
     pattern = re.compile(pattern)
@@ -102,18 +105,18 @@ UNITTEST_PLATFORM_PRETTY_NAMES = {
     'x64': ['linux64'],
     # other commonly-used substrings for platforms not yet supported with
     # in-tree taskgraphs:
-    #'10.10': [..TODO..],
-    #'10.10.5': [..TODO..],
-    #'10.6': [..TODO..],
-    #'10.8': [..TODO..],
-    #'Android 2.3 API9': [..TODO..],
-    #'Android 4.3 API15+': [..TODO..],
-    #'Windows 7':  [..TODO..],
-    #'Windows 7 VM': [..TODO..],
-    #'Windows 8':  [..TODO..],
-    #'Windows XP': [..TODO..],
-    #'win32': [..TODO..],
-    #'win64': [..TODO..],
+    # '10.10': [..TODO..],
+    # '10.10.5': [..TODO..],
+    # '10.6': [..TODO..],
+    # '10.8': [..TODO..],
+    # 'Android 2.3 API9': [..TODO..],
+    # 'Android 4.3 API15+': [..TODO..],
+    # 'Windows 7':  [..TODO..],
+    # 'Windows 7 VM': [..TODO..],
+    # 'Windows 8':  [..TODO..],
+    # 'Windows XP': [..TODO..],
+    # 'win32': [..TODO..],
+    # 'win64': [..TODO..],
 }
 
 # We have a few platforms for which we want to do some "extra" builds, or at
@@ -137,6 +140,7 @@ RIDEALONG_BUILDS = {
 
 TEST_CHUNK_SUFFIX = re.compile('(.*)-([0-9]+)$')
 
+
 class TryOptionSyntax(object):
 
     def __init__(self, message, full_task_graph):
@@ -151,7 +155,7 @@ class TryOptionSyntax(object):
         - platforms: a list of selected platform names, or None for all
         - unittests: a list of tests, of the form given below, or None for all
         - jobs: a list of requested job names, or None for all
-        - trigger_tests: the number of times tests should be triggered
+        - trigger_tests: the number of times tests should be triggered (--rebuild)
         - interactive; true if --interactive
 
         Note that -t is currently completely ignored.
@@ -186,19 +190,23 @@ class TryOptionSyntax(object):
         # Argument parser based on try flag flags
         parser = argparse.ArgumentParser()
         parser.add_argument('-b', '--build', dest='build_types')
-        parser.add_argument('-p', '--platform', nargs='?', dest='platforms', const='all', default='all')
-        parser.add_argument('-u', '--unittests', nargs='?', dest='unittests', const='all', default='all')
+        parser.add_argument('-p', '--platform', nargs='?',
+                            dest='platforms', const='all', default='all')
+        parser.add_argument('-u', '--unittests', nargs='?',
+                            dest='unittests', const='all', default='all')
         parser.add_argument('-t', '--talos', nargs='?', dest='talos', const='all', default='all')
-        parser.add_argument('-i', '--interactive', dest='interactive', action='store_true', default=False)
+        parser.add_argument('-i', '--interactive',
+                            dest='interactive', action='store_true', default=False)
         parser.add_argument('-j', '--job', dest='jobs', action='append')
         # In order to run test jobs multiple times
-        parser.add_argument('--trigger-tests', dest='trigger_tests', type=int, default=1)
+        parser.add_argument('--rebuild', dest='trigger_tests', type=int, default=1)
         args, _ = parser.parse_known_args(parts[try_idx:])
 
         self.jobs = self.parse_jobs(args.jobs)
         self.build_types = self.parse_build_types(args.build_types)
         self.platforms = self.parse_platforms(args.platforms)
-        self.unittests = self.parse_test_option("unittest_try_name", args.unittests, full_task_graph)
+        self.unittests = self.parse_test_option(
+            "unittest_try_name", args.unittests, full_task_graph)
         self.talos = self.parse_test_option("talos_try_name", args.talos, full_task_graph)
         self.trigger_tests = args.trigger_tests
         self.interactive = args.interactive
@@ -214,8 +222,8 @@ class TryOptionSyntax(object):
     def parse_build_types(self, build_types_arg):
         if build_types_arg is None:
             build_types_arg = []
-        build_types = filter(None, [ BUILD_TYPE_ALIASES.get(build_type) for
-                build_type in build_types_arg ])
+        build_types = filter(None, [BUILD_TYPE_ALIASES.get(build_type) for
+                             build_type in build_types_arg])
         return build_types
 
     def parse_platforms(self, platform_arg):
@@ -373,6 +381,7 @@ class TryOptionSyntax(object):
             return [test]
 
         alias = UNITTEST_ALIASES[test['test']]
+
         def mktest(name):
             newtest = copy.deepcopy(test)
             newtest['test'] = name
@@ -382,7 +391,6 @@ class TryOptionSyntax(object):
             return [t for t in all_tests if alias(t)]
 
         return [mktest(t) for t in exprmatch(alias)]
-
 
     def parse_test_chunks(self, all_tests, tests):
         '''
@@ -501,7 +509,7 @@ class TryOptionSyntax(object):
         def none_for_all(list):
             if list is None:
                 return '<all>'
-            return ', '.join(str (e) for e in list)
+            return ', '.join(str(e) for e in list)
 
         return "\n".join([
             "build_types: " + ", ".join(self.build_types),
@@ -511,4 +519,3 @@ class TryOptionSyntax(object):
             "trigger_tests: " + str(self.trigger_tests),
             "interactive: " + str(self.interactive),
         ])
-

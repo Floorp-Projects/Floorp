@@ -4,6 +4,7 @@
 
 from __future__ import absolute_import, print_function, unicode_literals
 
+
 class Task(object):
     """
     Representation of a task in a TaskGraph.
