@@ -145,7 +145,7 @@ TextTrackManager::AddTextTrack(TextTrackKind aKind, const nsAString& aLabel,
   AddCues(ttrack);
 
   if (aTextTrackSource == Track) {
-    HonorUserPreferencesForTrackSelection();
+    NS_DispatchToMainThread(NewRunnableMethod(this, &TextTrackManager::HonorUserPreferencesForTrackSelection));
   }
 
   return ttrack.forget();
@@ -160,7 +160,7 @@ TextTrackManager::AddTextTrack(TextTrack* aTextTrack)
   mTextTracks->AddTextTrack(aTextTrack, CompareTextTracks(mMediaElement));
   AddCues(aTextTrack);
   if (aTextTrack->GetTextTrackSource() == Track) {
-    HonorUserPreferencesForTrackSelection();
+    NS_DispatchToMainThread(NewRunnableMethod(this, &TextTrackManager::HonorUserPreferencesForTrackSelection));
   }
 }
 
