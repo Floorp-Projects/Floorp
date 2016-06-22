@@ -64,6 +64,11 @@ public:
 
   // create an exact copy of the loadinfo
   already_AddRefed<nsILoadInfo> Clone() const;
+  // hands off!!! don't use CloneWithNewSecFlags unless you know
+  // exactly what you are doing - it should only be used within
+  // nsBaseChannel::Redirect()
+  already_AddRefed<nsILoadInfo>
+  CloneWithNewSecFlags(nsSecurityFlags aSecurityFlags) const;
   // creates a copy of the loadinfo which is appropriate to use for a
   // separate request. I.e. not for a redirect or an inner channel, but
   // when a separate request is made with the same security properties.
