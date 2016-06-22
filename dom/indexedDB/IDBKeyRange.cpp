@@ -22,8 +22,7 @@ namespace {
 nsresult
 GetKeyFromJSVal(JSContext* aCx,
                 JS::Handle<JS::Value> aVal,
-                Key& aKey,
-                bool aAllowUnset = false)
+                Key& aKey)
 {
   nsresult rv = aKey.SetFromJSVal(aCx, aVal);
   if (NS_FAILED(rv)) {
@@ -31,7 +30,7 @@ GetKeyFromJSVal(JSContext* aCx,
     return rv;
   }
 
-  if (aKey.IsUnset() && !aAllowUnset) {
+  if (aKey.IsUnset()) {
     return NS_ERROR_DOM_INDEXEDDB_DATA_ERR;
   }
 
@@ -347,39 +346,38 @@ IDBKeyRange::Includes(JSContext* aCx,
     return false;
   }
 
-  switch (Key::CompareKeys(Lower(), key)) {
-  case 1:
-    return false;
-  case 0:
-    // Identical keys.
-    if (LowerOpen()) {
+  MOZ_ASSERT(!(Lower().IsUnset() && Upper().IsUnset()));
+  MOZ_ASSERT_IF(IsOnly(),
+    !Lower().IsUnset() && !LowerOpen() &&
+    Lower() == Upper() && LowerOpen() == UpperOpen());
+
+  if (!Lower().IsUnset()) {
+    switch (Key::CompareKeys(Lower(), key)) {
+    case 1:
       return false;
+    case 0:
+      // Identical keys.
+      return !LowerOpen();
+    case -1:
+      if (IsOnly()) {
+        return false;
+      }
+      break;
+    default:
+      MOZ_CRASH();
     }
-    break;
-  case -1:
-    if (IsOnly()) {
-      return false;
-    }
-    break;
-  default:
-    MOZ_CRASH();
   }
 
-  if (!IsOnly()) {
+  if (!Upper().IsUnset()) {
     switch (Key::CompareKeys(key, Upper())) {
     case 1:
       return false;
     case 0:
       // Identical keys.
-      if (UpperOpen()) {
-        return false;
-      }
-      break;
+      return !UpperOpen();
     case -1:
       break;
     }
-  } else {
-    MOZ_ASSERT(key == Lower());
   }
 
   return true;
