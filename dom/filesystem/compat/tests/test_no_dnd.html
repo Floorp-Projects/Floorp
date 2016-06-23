@@ -12,6 +12,7 @@
 
 var fileEntry;
 var directoryEntry;
+var script;
 
 function setup_tests() {
   SpecialPowers.pushPrefEnv({"set": [["dom.webkitBlink.dirPicker.enabled", true],
@@ -20,7 +21,7 @@ function setup_tests() {
 
 function populate_entries() {
   var url = SimpleTest.getTestFileURL("script_entries.js");
-  var script = SpecialPowers.loadChromeScript(url);
+  script = SpecialPowers.loadChromeScript(url);
 
   function onOpened(message) {
     var entries = document.getElementById('entries');
@@ -31,8 +32,6 @@ function populate_entries() {
         next();
       }
     }
-
-    script.destroy();
   }
 
   script.addMessageListener("entries.opened", onOpened);
@@ -48,11 +47,23 @@ function test_entries() {
   next();
 }
 
+function cleanUpTestingFiles() {
+  script.addMessageListener("entries.deleted", function onDeleted() {
+    script.removeMessageListener("entries.deleted");
+    script.destroy();
+    next();
+  });
+
+  script.sendAsyncMessage("entries.delete");
+}
+
 var tests = [
   setup_tests,
   populate_entries,
 
   test_entries,
+
+  cleanUpTestingFiles,
 ];
 
 function next() {
