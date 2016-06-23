@@ -721,16 +721,8 @@ WebGLContext::CreateAndInitGL(bool forceEnabled,
         if (useEGL)
             return CreateAndInitGLWith(CreateGLWithEGL, baseCaps, flags, out_failReasons);
 
-        bool tryNativeGL = true;
-#ifdef XP_WIN
-        if (gfxPrefs::WebGLDisableWGL()) {
-            tryNativeGL = false;
-        }
-#endif
-        if (tryNativeGL) {
-            if (CreateAndInitGLWith(CreateGLWithNative, baseCaps, flags, out_failReasons))
-                return true;
-        }
+        if (CreateAndInitGLWith(CreateGLWithNative, baseCaps, flags, out_failReasons))
+            return true;
     }
 
     //////
