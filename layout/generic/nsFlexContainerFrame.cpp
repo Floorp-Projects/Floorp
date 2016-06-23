@@ -4269,7 +4269,8 @@ nsFlexContainerFrame::MoveFlexItemToFinalPosition(
   LogicalMargin logicalOffsets(outerWM);
   if (NS_STYLE_POSITION_RELATIVE == aItem.Frame()->StyleDisplay()->mPosition) {
     FrameProperties props = aItem.Frame()->Properties();
-    nsMargin* cachedOffsets = props.Get(nsIFrame::ComputedOffsetProperty());
+    nsMargin* cachedOffsets =
+      static_cast<nsMargin*>(props.Get(nsIFrame::ComputedOffsetProperty()));
     MOZ_ASSERT(cachedOffsets,
                "relpos previously-reflowed frame should've cached its offsets");
     logicalOffsets = LogicalMargin(outerWM, *cachedOffsets);

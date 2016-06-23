@@ -3469,8 +3469,7 @@ SVGTextFrame::HandleAttributeChangeInDescendant(Element* aElement,
       // Blow away our reference, if any
       nsIFrame* childElementFrame = aElement->GetPrimaryFrame();
       if (childElementFrame) {
-        childElementFrame->Properties().Delete(
-          nsSVGEffects::HrefAsTextPathProperty());
+        childElementFrame->Properties().Delete(nsSVGEffects::HrefProperty());
         NotifyGlyphMetricsChange();
       }
     }
@@ -4894,8 +4893,8 @@ SVGTextFrame::AdjustPositionsForClusters()
 SVGPathElement*
 SVGTextFrame::GetTextPathPathElement(nsIFrame* aTextPathFrame)
 {
-  nsSVGTextPathProperty *property =
-    aTextPathFrame->Properties().Get(nsSVGEffects::HrefAsTextPathProperty());
+  nsSVGTextPathProperty *property = static_cast<nsSVGTextPathProperty*>
+    (aTextPathFrame->Properties().Get(nsSVGEffects::HrefProperty()));
 
   if (!property) {
     nsIContent* content = aTextPathFrame->GetContent();
@@ -4911,10 +4910,8 @@ SVGTextFrame::GetTextPathPathElement(nsIFrame* aTextPathFrame)
     nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(targetURI), href,
                                               content->GetUncomposedDoc(), base);
 
-    property = nsSVGEffects::GetTextPathProperty(
-      targetURI,
-      aTextPathFrame,
-      nsSVGEffects::HrefAsTextPathProperty());
+    property = nsSVGEffects::GetTextPathProperty(targetURI, aTextPathFrame,
+                                                 nsSVGEffects::HrefProperty());
     if (!property)
       return nullptr;
   }

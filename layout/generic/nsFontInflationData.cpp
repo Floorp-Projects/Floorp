@@ -27,7 +27,8 @@ nsFontInflationData::FindFontInflationDataFor(const nsIFrame *aFrame)
   NS_ASSERTION(bfc->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT,
                "should have found a flow root");
 
-  return bfc->Properties().Get(FontInflationDataProperty());
+  return static_cast<nsFontInflationData*>(
+             bfc->Properties().Get(FontInflationDataProperty()));
 }
 
 /* static */ bool
@@ -37,7 +38,8 @@ nsFontInflationData::UpdateFontInflationDataISizeFor(const nsHTMLReflowState& aR
   NS_ASSERTION(bfc->GetStateBits() & NS_FRAME_FONT_INFLATION_FLOW_ROOT,
                "should have been given a flow root");
   FrameProperties bfcProps(bfc->Properties());
-  nsFontInflationData *data = bfcProps.Get(FontInflationDataProperty());
+  nsFontInflationData *data = static_cast<nsFontInflationData*>(
+                                bfcProps.Get(FontInflationDataProperty()));
   bool oldInflationEnabled;
   nscoord oldNCAISize;
   if (data) {
@@ -66,7 +68,8 @@ nsFontInflationData::MarkFontInflationDataTextDirty(nsIFrame *aBFCFrame)
                "should have been given a flow root");
 
   FrameProperties bfcProps(aBFCFrame->Properties());
-  nsFontInflationData *data = bfcProps.Get(FontInflationDataProperty());
+  nsFontInflationData *data = static_cast<nsFontInflationData*>(
+                                bfcProps.Get(FontInflationDataProperty()));
   if (data) {
     data->MarkTextDirty();
   }

@@ -420,8 +420,8 @@ public:
   typedef nsInterfaceHashtable<nsURIHashKey, nsIMutationObserver>
     URIObserverHashtable;
 
-  using PaintingPropertyDescriptor =
-    const mozilla::FramePropertyDescriptor<nsSVGPaintingProperty>*;
+  using ObserverPropertyDescriptor =
+    const mozilla::FramePropertyDescriptor<nsISupports>*;
   using URIObserverHashtablePropertyDescriptor =
     const mozilla::FramePropertyDescriptor<URIObserverHashtable>*;
 
@@ -438,16 +438,13 @@ public:
   NS_DECLARE_FRAME_PROPERTY_WITH_DTOR(FilterProperty, nsSVGFilterProperty,
                                       DestroyFilterProperty)
   NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MaskProperty, nsSVGMaskProperty)
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(ClipPathProperty, nsSVGPaintingProperty)
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerBeginProperty, nsSVGMarkerProperty)
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerMiddleProperty, nsSVGMarkerProperty)
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerEndProperty, nsSVGMarkerProperty)
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(FillProperty, nsSVGPaintingProperty)
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(StrokeProperty, nsSVGPaintingProperty)
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(HrefAsTextPathProperty,
-                                       nsSVGTextPathProperty)
-  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(HrefAsPaintingProperty,
-                                       nsSVGPaintingProperty)
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(ClipPathProperty, nsISupports)
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerBeginProperty, nsISupports)
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerMiddleProperty, nsISupports)
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(MarkerEndProperty, nsISupports)
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(FillProperty, nsISupports)
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(StrokeProperty, nsISupports)
+  NS_DECLARE_FRAME_PROPERTY_RELEASABLE(HrefProperty, nsISupports)
   NS_DECLARE_FRAME_PROPERTY_DELETABLE(BackgroundImageProperty,
                                       URIObserverHashtable)
 
@@ -456,7 +453,7 @@ public:
    */
   static nsSVGPaintServerFrame *GetPaintServer(nsIFrame *aTargetFrame,
                                                const nsStyleSVGPaint *aPaint,
-                                               PaintingPropertyDescriptor aProperty);
+                                               ObserverPropertyDescriptor aProperty);
 
   struct EffectProperties {
     nsSVGFilterProperty*   mFilter;
@@ -564,19 +561,19 @@ public:
    */
   static nsSVGMarkerProperty *
   GetMarkerProperty(nsIURI *aURI, nsIFrame *aFrame,
-    const mozilla::FramePropertyDescriptor<nsSVGMarkerProperty>* aProperty);
+                    ObserverPropertyDescriptor aProperty);
   /**
    * Get an nsSVGTextPathProperty for the frame, creating a fresh one if necessary
    */
   static nsSVGTextPathProperty *
   GetTextPathProperty(nsIURI *aURI, nsIFrame *aFrame,
-    const mozilla::FramePropertyDescriptor<nsSVGTextPathProperty>* aProperty);
+                      ObserverPropertyDescriptor aProperty);
   /**
    * Get an nsSVGPaintingProperty for the frame, creating a fresh one if necessary
    */
   static nsSVGPaintingProperty *
   GetPaintingProperty(nsIURI *aURI, nsIFrame *aFrame,
-      const mozilla::FramePropertyDescriptor<nsSVGPaintingProperty>* aProperty);
+                      ObserverPropertyDescriptor aProperty);
   /**
    * Get an nsSVGPaintingProperty for the frame for that URI, creating a fresh
    * one if necessary

@@ -4374,7 +4374,8 @@ nsLayoutUtils::GetNextContinuationOrIBSplitSibling(nsIFrame *aFrame)
     // frame in the continuation chain. Walk back to find that frame now.
     aFrame = aFrame->FirstContinuation();
 
-    return aFrame->Properties().Get(nsIFrame::IBSplitSibling());
+    void* value = aFrame->Properties().Get(nsIFrame::IBSplitSibling());
+    return static_cast<nsIFrame*>(value);
   }
 
   return nullptr;
@@ -4386,8 +4387,8 @@ nsLayoutUtils::FirstContinuationOrIBSplitSibling(nsIFrame *aFrame)
   nsIFrame *result = aFrame->FirstContinuation();
   if (result->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) {
     while (true) {
-      nsIFrame* f =
-        result->Properties().Get(nsIFrame::IBSplitPrevSibling());
+      nsIFrame *f = static_cast<nsIFrame*>
+        (result->Properties().Get(nsIFrame::IBSplitPrevSibling()));
       if (!f)
         break;
       result = f;
@@ -4403,8 +4404,8 @@ nsLayoutUtils::LastContinuationOrIBSplitSibling(nsIFrame *aFrame)
   nsIFrame *result = aFrame->FirstContinuation();
   if (result->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) {
     while (true) {
-      nsIFrame* f =
-        result->Properties().Get(nsIFrame::IBSplitSibling());
+      nsIFrame *f = static_cast<nsIFrame*>
+        (result->Properties().Get(nsIFrame::IBSplitSibling()));
       if (!f)
         break;
       result = f;

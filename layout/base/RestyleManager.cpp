@@ -2268,16 +2268,16 @@ GetPrevContinuationWithPossiblySameStyle(nsIFrame* aFrame)
   // previous ib-split sibling is an inline and the previous ib-split
   // sibling of that is either another block-in-inline wrapper block box
   // or null.
-  nsIFrame* prevContinuation = aFrame->GetPrevContinuation();
+  nsIFrame *prevContinuation = aFrame->GetPrevContinuation();
   if (!prevContinuation &&
       (aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT)) {
     // We're the first continuation, so we can just get the frame
     // property directly
-    prevContinuation =
-      aFrame->Properties().Get(nsIFrame::IBSplitPrevSibling());
+    prevContinuation = static_cast<nsIFrame*>(
+      aFrame->Properties().Get(nsIFrame::IBSplitPrevSibling()));
     if (prevContinuation) {
-      prevContinuation =
-        prevContinuation->Properties().Get(nsIFrame::IBSplitPrevSibling());
+      prevContinuation = static_cast<nsIFrame*>(
+        prevContinuation->Properties().Get(nsIFrame::IBSplitPrevSibling()));
     }
   }
 
@@ -2335,11 +2335,11 @@ GetNextContinuationWithSameStyle(nsIFrame* aFrame,
       (aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT)) {
     // We're the last continuation, so we have to hop back to the first
     // before getting the frame property
-    nextContinuation = aFrame->FirstContinuation()->
-      Properties().Get(nsIFrame::IBSplitSibling());
+    nextContinuation = static_cast<nsIFrame*>(aFrame->FirstContinuation()->
+      Properties().Get(nsIFrame::IBSplitSibling()));
     if (nextContinuation) {
-      nextContinuation =
-        nextContinuation->Properties().Get(nsIFrame::IBSplitSibling());
+      nextContinuation = static_cast<nsIFrame*>(
+        nextContinuation->Properties().Get(nsIFrame::IBSplitSibling()));
     }
   }
 
@@ -2515,8 +2515,8 @@ RestyleManager::ReparentStyleContext(nsIFrame* aFrame)
       // oldContext)" check will prevent us from redoing work.
       if ((aFrame->GetStateBits() & NS_FRAME_PART_OF_IBSPLIT) &&
           !aFrame->GetPrevContinuation()) {
-        nsIFrame* sib =
-          aFrame->Properties().Get(nsIFrame::IBSplitSibling());
+        nsIFrame* sib = static_cast<nsIFrame*>
+          (aFrame->Properties().Get(nsIFrame::IBSplitSibling()));
         if (sib) {
           ReparentStyleContext(sib);
         }
