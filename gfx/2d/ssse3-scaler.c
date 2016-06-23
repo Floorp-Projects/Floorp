@@ -548,6 +548,7 @@ void ssse3_scale_data(uint32_t *src, int src_width, int src_height, int src_stri
     iter.width = width;
     iter.height = src_height;
     iter.buffer = dest;
+    iter.data = NULL;
 
     ssse3_bilinear_cover_iter_init(&iter);
     for (int iy = 0; iy < height; iy++) {
