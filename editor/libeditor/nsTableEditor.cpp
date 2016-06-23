@@ -125,7 +125,7 @@ nsHTMLEditor::InsertCell(nsIDOMElement *aCell, int32_t aRowSpan, int32_t aColSpa
   if(aAfter) cellOffset++;
 
   //Don't let Rules System change the selection
-  nsAutoTxnsConserveSelection dontChangeSelection(this);
+  AutoTransactionsConserveSelection dontChangeSelection(this);
   return InsertNode(newCell, cellParent, cellOffset);
 }
 
@@ -178,7 +178,7 @@ nsHTMLEditor::InsertTableCell(int32_t aNumber, bool aAfter)
   //We control selection resetting after the insert...
   nsSetSelectionAfterTableEdit setCaret(this, table, startRowIndex, newCellIndex, ePreviousColumn, false);
   //...so suppress Rules System selection munging
-  nsAutoTxnsConserveSelection dontChangeSelection(this);
+  AutoTransactionsConserveSelection dontChangeSelection(this);
 
   int32_t i;
   for (i = 0; i < aNumber; i++)
@@ -421,7 +421,7 @@ nsHTMLEditor::InsertTableColumn(int32_t aNumber, bool aAfter)
   //We reset caret in destructor...
   nsSetSelectionAfterTableEdit setCaret(this, table, startRowIndex, startColIndex, ePreviousRow, false);
   //.. so suppress Rules System selection munging
-  nsAutoTxnsConserveSelection dontChangeSelection(this);
+  AutoTransactionsConserveSelection dontChangeSelection(this);
 
   // If we are inserting after all existing columns
   // Make sure table is "well formed"
@@ -550,7 +550,7 @@ nsHTMLEditor::InsertTableRow(int32_t aNumber, bool aAfter)
   //We control selection resetting after the insert...
   nsSetSelectionAfterTableEdit setCaret(this, table, startRowIndex, startColIndex, ePreviousColumn, false);
   //...so suppress Rules System selection munging
-  nsAutoTxnsConserveSelection dontChangeSelection(this);
+  AutoTransactionsConserveSelection dontChangeSelection(this);
 
   nsCOMPtr<nsIDOMElement> cellForRowParent;
   int32_t cellsInRow = 0;
@@ -760,7 +760,7 @@ nsHTMLEditor::DeleteTableCell(int32_t aNumber)
 
     // The setCaret object will call SetSelectionAfterTableEdit in its destructor
     nsSetSelectionAfterTableEdit setCaret(this, table, startRowIndex, startColIndex, ePreviousColumn, false);
-    nsAutoTxnsConserveSelection dontChangeSelection(this);
+    AutoTransactionsConserveSelection dontChangeSelection(this);
 
     bool    checkToDeleteRow = true;
     bool    checkToDeleteColumn = true;
@@ -896,7 +896,7 @@ nsHTMLEditor::DeleteTableCell(int32_t aNumber)
 
       // The setCaret object will call SetSelectionAfterTableEdit in its destructor
       nsSetSelectionAfterTableEdit setCaret(this, table, startRowIndex, startColIndex, ePreviousColumn, false);
-      nsAutoTxnsConserveSelection dontChangeSelection(this);
+      AutoTransactionsConserveSelection dontChangeSelection(this);
 
       res = DeleteNode(cell);
       // If we fail, don't try to delete any more cells???
@@ -928,7 +928,7 @@ nsHTMLEditor::DeleteTableCellContents()
   // Prevent rules testing until we're done
   nsAutoRules beginRulesSniffing(this, EditAction::deleteNode, nsIEditor::eNext);
   //Don't let Rules System change the selection
-  nsAutoTxnsConserveSelection dontChangeSelection(this);
+  AutoTransactionsConserveSelection dontChangeSelection(this);
 
 
   nsCOMPtr<nsIDOMElement> firstCell;
@@ -1206,7 +1206,7 @@ nsHTMLEditor::DeleteTableRow(int32_t aNumber)
   //We control selection resetting after the insert...
   nsSetSelectionAfterTableEdit setCaret(this, table, startRowIndex, startColIndex, ePreviousRow, false);
   // Don't change selection during deletions
-  nsAutoTxnsConserveSelection dontChangeSelection(this);
+  AutoTransactionsConserveSelection dontChangeSelection(this);
 
   if (firstCell && rangeCount > 1)
   {
@@ -1706,7 +1706,7 @@ nsHTMLEditor::SplitTableCell()
   // We reset selection
   nsSetSelectionAfterTableEdit setCaret(this, table, startRowIndex, startColIndex, ePreviousColumn, false);
   //...so suppress Rules System selection munging
-  nsAutoTxnsConserveSelection dontChangeSelection(this);
+  AutoTransactionsConserveSelection dontChangeSelection(this);
 
   nsCOMPtr<nsIDOMElement> newCell;
   int32_t rowIndex = startRowIndex;
@@ -1972,7 +1972,7 @@ nsHTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
 
   nsAutoEditBatch beginBatching(this);
   //Don't let Rules System change the selection
-  nsAutoTxnsConserveSelection dontChangeSelection(this);
+  AutoTransactionsConserveSelection dontChangeSelection(this);
 
   // Note: We dont' use nsSetSelectionAfterTableEdit here so the selection
   //  is retained after joining. This leaves the target cell selected

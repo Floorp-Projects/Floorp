@@ -1186,7 +1186,7 @@ nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable,
   uint32_t len = 0;
   if (NS_SUCCEEDED(transferable->GetAnyTransferData(getter_Copies(bestFlavor), getter_AddRefs(genericDataObj), &len)))
   {
-    nsAutoTxnsConserveSelection dontSpazMySelection(this);
+    AutoTransactionsConserveSelection dontSpazMySelection(this);
     nsAutoString flavor;
     flavor.AssignWithConversion(bestFlavor);
     nsAutoString stuffToPaste;

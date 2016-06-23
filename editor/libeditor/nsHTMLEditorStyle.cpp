@@ -127,7 +127,7 @@ nsHTMLEditor::SetInlineProperty(nsIAtom* aProperty,
   nsAutoEditBatch batchIt(this);
   nsAutoRules beginRulesSniffing(this, EditAction::insertElement, nsIEditor::eNext);
   nsAutoSelectionReset selectionResetter(selection, this);
-  nsAutoTxnsConserveSelection dontSpazMySelection(this);
+  AutoTransactionsConserveSelection dontSpazMySelection(this);
 
   bool cancel, handled;
   nsTextRulesInfo ruleInfo(EditAction::setTextProperty);
@@ -1213,7 +1213,7 @@ nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
   nsAutoRules beginRulesSniffing(this, EditAction::removeTextProperty,
                                  nsIEditor::eNext);
   nsAutoSelectionReset selectionResetter(selection, this);
-  nsAutoTxnsConserveSelection dontSpazMySelection(this);
+  AutoTransactionsConserveSelection dontSpazMySelection(this);
 
   bool cancel, handled;
   nsTextRulesInfo ruleInfo(EditAction::removeTextProperty);
@@ -1362,7 +1362,7 @@ nsHTMLEditor::RelativeFontChange(FontSize aDir)
   nsAutoRules beginRulesSniffing(this, EditAction::setTextProperty,
                                  nsIEditor::eNext);
   nsAutoSelectionReset selectionResetter(selection, this);
-  nsAutoTxnsConserveSelection dontSpazMySelection(this);
+  AutoTransactionsConserveSelection dontSpazMySelection(this);
 
   // Loop through the ranges in the selection
   uint32_t rangeCount = selection->RangeCount();
