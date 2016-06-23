@@ -102,7 +102,7 @@ public:
     return !mAnimations.IsEmpty();
   }
 
-  void RemoveAnimation(Animation* aAnimation);
+  virtual void RemoveAnimation(Animation* aAnimation);
 
 protected:
   nsCOMPtr<nsIGlobalObject> mWindow;
