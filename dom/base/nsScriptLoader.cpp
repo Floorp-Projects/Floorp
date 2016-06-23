@@ -865,25 +865,16 @@ ResolveRequestedModules(nsModuleLoadRequest* aRequest, nsCOMArray<nsIURI> &aUrls
     return NS_ERROR_FAILURE;
   }
 
-  JS::Rooted<JS::Value> arrayValue(cx, JS::ObjectValue(*specifiers));
-  JS::ForOfIterator iter(cx);
-  if (!iter.init(arrayValue)) {
-    return NS_ERROR_FAILURE;
-  }
-
   JS::Rooted<JS::Value> val(cx);
-  while (true) {
-    bool done;
-    if (!iter.next(&val, &done)) {
+  for (uint32_t i = 0; i < length; i++) {
+    if (!JS_GetElement(cx, specifiers, i, &val)) {
       return NS_ERROR_FAILURE;
     }
 
-    if (done) {
-      break;
-    }
-
     nsAutoJSString specifier;
-    specifier.init(cx, val);
+    if (!specifier.init(cx, val)) {
+      return NS_ERROR_FAILURE;
+    }
 
     // Let url be the result of resolving a module specifier given module script and requested.
     nsModuleScript* ms = aRequest->mModuleScript;
