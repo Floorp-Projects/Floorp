@@ -592,16 +592,15 @@ CreateGLWithEGL(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
                 std::vector<WebGLContext::FailureReason>* const out_failReasons)
 {
     const gfx::IntSize dummySize(16, 16);
-    nsCString failureId;
     RefPtr<GLContext> gl = gl::GLContextProviderEGL::CreateOffscreen(dummySize, caps,
-                                                                     flags, &failureId);
+                                                                     flags, out_failureId);
     if (gl && gl->IsANGLE()) {
         gl = nullptr;
     }
 
     if (!gl) {
         out_failReasons->push_back(WebGLContext::FailureReason(
-            failureId,
+            "FEATURE_FAILURE_WEBGL_EGL_INIT",
             "Error during EGL OpenGL init."
         ));
         return nullptr;
@@ -616,16 +615,15 @@ CreateGLWithANGLE(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
                   std::vector<WebGLContext::FailureReason>* const out_failReasons)
 {
     const gfx::IntSize dummySize(16, 16);
-    nsCString failureId;
     RefPtr<GLContext> gl = gl::GLContextProviderEGL::CreateOffscreen(dummySize, caps,
-                                                                     flags, &failureId);
+                                                                     flags, out_failureId);
     if (gl && !gl->IsANGLE()) {
         gl = nullptr;
     }
 
     if (!gl) {
         out_failReasons->push_back(WebGLContext::FailureReason(
-            failureId,
+            "FEATURE_FAILURE_WEBGL_ANGLE_INIT",
             "Error during ANGLE OpenGL init."
         ));
         return nullptr;
@@ -640,9 +638,8 @@ CreateGLWithDefault(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
                     std::vector<WebGLContext::FailureReason>* const out_failReasons)
 {
     const gfx::IntSize dummySize(16, 16);
-    nsCString failureId;
     RefPtr<GLContext> gl = gl::GLContextProvider::CreateOffscreen(dummySize, caps,
-                                                                  flags, &failureId);
+                                                                  flags, out_failureId);
 
     if (gl && gl->IsANGLE()) {
         gl = nullptr;
@@ -650,7 +647,7 @@ CreateGLWithDefault(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
 
     if (!gl) {
         out_failReasons->push_back(WebGLContext::FailureReason(
-            failureId,
+            "FEATURE_FAILURE_WEBGL_DEFAULT_INIT",
             "Error during native OpenGL init."
         ));
         return nullptr;
@@ -744,7 +741,7 @@ WebGLContext::CreateAndInitGL(bool forceEnabled,
         }
 #endif
         if (tryNativeGL) {
-            if (CreateAndInitGLWith(CreateGLWithDefault, baseCaps, flags, out_failReasons))
+            if (CreateAndInitGLWith(CreateGLWithNative, baseCaps, flags, out_failReasons))
                 return true;
         }
     }
@@ -990,7 +987,6 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
             return NS_ERROR_FAILURE;
         }
 
-#ifdef XP_WIN
         if (gl->GetContextType() == gl::GLContextType::WGL &&
             !gl::sWGLLib.HasDXInterop2())
         {
@@ -1000,7 +996,6 @@ WebGLContext::SetDimensions(int32_t signedWidth, int32_t signedHeight)
             ThrowEvent_WebGLContextCreationError(text);
             return NS_ERROR_FAILURE;
         }
-#endif
     }
 
     if (!ResizeBackbuffer(width, height)) {
