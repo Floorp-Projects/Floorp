@@ -9,6 +9,7 @@ import mozinfo
 import moznetwork
 import os
 import random
+import re
 import socket
 import sys
 import time
@@ -781,16 +782,18 @@ setReq.onerror = function() {
                 self.marionette.baseurl = self.server_root
                 self.logger.info("using remote content from %s" % self.marionette.baseurl)
 
-
     def _add_tests(self, tests):
         for test in tests:
             self.add_test(test)
 
-        invalid_tests = \
-            [t['filepath'] for t in self.tests
-             if not os.path.basename(t['filepath']).startswith('test_')]
+        pattern = re.compile("^test(((_.+?)+?\.((py)|(js)))|(([A-Z].*?)+?\.js))$")
+        def is_valid(test):
+            filename = os.path.basename(test['filepath'])
+            return pattern.match(filename)
+        invalid_tests = [t['filepath'] for t in self.tests if not is_valid(t)]
         if invalid_tests:
-            raise Exception("Tests file names must start with 'test_'."
+            raise Exception("Test file names must be of the form "
+                            "'test_something.py', 'test_something.js', or 'testSomething.js'."
                             " Invalid test names:\n  %s"
                             % '\n  '.join(invalid_tests))
 
