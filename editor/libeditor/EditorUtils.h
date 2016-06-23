@@ -95,40 +95,41 @@ class MOZ_RAII nsAutoSelectionReset
     void Abort();
 };
 
+namespace mozilla {
+
 /***************************************************************************
  * stack based helper class for StartOperation()/EndOperation() sandwich
  */
-class MOZ_RAII nsAutoRules
+class MOZ_RAII AutoRules final
 {
-  public:
-
-  nsAutoRules(nsEditor *ed, EditAction action,
-              nsIEditor::EDirection aDirection
-              MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : mEd(ed), mDoNothing(false)
+public:
+  AutoRules(nsEditor* aEditor, EditAction aAction,
+            nsIEditor::EDirection aDirection
+            MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : mEditor(aEditor)
+    , mDoNothing(false)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    if (mEd && !mEd->mAction) // mAction will already be set if this is nested call
-    {
-      mEd->StartOperation(action, aDirection);
-    }
-    else mDoNothing = true; // nested calls will end up here
-  }
-  ~nsAutoRules()
-  {
-    if (mEd && !mDoNothing)
-    {
-      mEd->EndOperation();
+    // mAction will already be set if this is nested call
+    if (mEditor && !mEditor->mAction) {
+      mEditor->StartOperation(aAction, aDirection);
+    } else {
+      mDoNothing = true; // nested calls will end up here
     }
   }
 
-  protected:
-  nsEditor *mEd;
+  ~AutoRules()
+  {
+    if (mEditor && !mDoNothing) {
+      mEditor->EndOperation();
+    }
+  }
+
+protected:
+  nsEditor* mEditor;
   bool mDoNothing;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
-
-namespace mozilla {
 
 /***************************************************************************
  * stack based helper class for turning off active selection adjustment

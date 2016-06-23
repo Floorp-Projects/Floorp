@@ -54,6 +54,7 @@ class nsString;
 class nsTransactionManager;
 
 namespace mozilla {
+class AutoRules;
 class AutoTransactionsConserveSelection;
 class ErrorResult;
 class TextComposition;
@@ -885,9 +886,9 @@ protected:
   bool mHidingCaret;      // whether caret is hidden forcibly.
 
   friend bool NSCanUnload(nsISupports* serviceMgr);
+  friend class mozilla::AutoRules;
   friend class mozilla::AutoTransactionsConserveSelection;
   friend class nsAutoSelectionReset;
-  friend class nsAutoRules;
   friend class nsRangeUpdater;
 };
 
