@@ -1041,7 +1041,7 @@ nsHTMLEditor::UpdateBaseURL()
 NS_IMETHODIMP
 nsHTMLEditor::TypedText(const nsAString& aString, ETypingAction aAction)
 {
-  nsAutoPlaceHolderBatch batch(this, nsGkAtoms::TypingTxnName);
+  AutoPlaceHolderBatch batch(this, nsGkAtoms::TypingTxnName);
 
   if (aAction == eTypedBR) {
     // only inserts a br node
