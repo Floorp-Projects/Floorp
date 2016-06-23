@@ -193,13 +193,13 @@ class MOZ_RAII nsAutoUpdateViewBatch
  * some helper classes for iterating the dom tree
  *****************************************************************************/
 
-class nsBoolDomIterFunctor
-{
-  public:
-    virtual bool operator()(nsINode* aNode) const = 0;
-};
-
 namespace mozilla {
+
+class BoolDomIterFunctor
+{
+public:
+  virtual bool operator()(nsINode* aNode) const = 0;
+};
 
 class MOZ_RAII DOMIterator
 {
@@ -212,7 +212,7 @@ public:
   nsresult Init(nsRange& aRange);
 
   void AppendList(
-         const nsBoolDomIterFunctor& functor,
+         const BoolDomIterFunctor& functor,
          nsTArray<mozilla::OwningNonNull<nsINode>>& arrayOfNodes) const;
 
 protected:
@@ -229,7 +229,7 @@ public:
   nsresult Init(nsRange& aRange);
 };
 
-class TrivialFunctor final : public nsBoolDomIterFunctor
+class TrivialFunctor final : public BoolDomIterFunctor
 {
 public:
   // Used to build list of all nodes iterator covers

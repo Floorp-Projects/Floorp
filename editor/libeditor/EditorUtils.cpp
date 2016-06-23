@@ -94,7 +94,7 @@ DOMIterator::~DOMIterator()
 }
 
 void
-DOMIterator::AppendList(const nsBoolDomIterFunctor& functor,
+DOMIterator::AppendList(const BoolDomIterFunctor& functor,
                         nsTArray<OwningNonNull<nsINode>>& arrayOfNodes) const
 {
   // Iterate through dom and build list
