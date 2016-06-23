@@ -1,0 +1,14 @@
+e6dd814 evutil_rand.c fixup for clang
+diff --git a/ipc/chromium/src/third_party/libevent/evutil_rand.c b/ipc/chromium/src/third_party/libevent/evutil_rand.c
+index 86c86b2..0c41765 100644
+--- a/ipc/chromium/src/third_party/libevent/evutil_rand.c
++++ b/ipc/chromium/src/third_party/libevent/evutil_rand.c
+@@ -59,7 +59,7 @@ static void
+ ev_arc4random_buf(void *buf, size_t n)
+ {
+ #if defined(_EVENT_HAVE_ARC4RANDOM_BUF) && !defined(__APPLE__)
+-	return arc4random_buf(buf, n);
++	arc4random_buf(buf, n);
+ #else
+ 	unsigned char *b = buf;
+ 
