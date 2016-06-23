@@ -742,7 +742,11 @@ DispatchErrorEvent(IDBRequest* aRequest,
 
   MOZ_ASSERT(!transaction || transaction->IsOpen() || transaction->IsAborted());
 
-  if (transaction && transaction->IsOpen()) {
+  // Do not abort the transaction here if this request is failed due to the
+  // abortion of its transaction to ensure that the correct error cause of
+  // the abort event be set in IDBTransaction::FireCompleteOrAbortEvents() later.
+  if (transaction && transaction->IsOpen() &&
+      aErrorCode != NS_ERROR_DOM_INDEXEDDB_ABORT_ERR) {
     WidgetEvent* internalEvent = aEvent->WidgetEventPtr();
     MOZ_ASSERT(internalEvent);
 
@@ -899,7 +903,7 @@ protected:
 };
 
 class WorkerPermissionChallenge final : public Runnable
-                                      , public WorkerFeature
+                                      , public WorkerHolder
 {
 public:
   WorkerPermissionChallenge(WorkerPrivate* aWorkerPrivate,
@@ -959,7 +963,7 @@ public:
     mActor = nullptr;
 
     mWorkerPrivate->AssertIsOnWorkerThread();
-    mWorkerPrivate->RemoveFeature(this);
+    ReleaseWorker();
   }
 
 private:
@@ -1411,7 +1415,7 @@ BackgroundFactoryRequestChild::RecvPermissionChallenge(
       new WorkerPermissionChallenge(workerPrivate, this, mFactory,
                                     aPrincipalInfo);
 
-    if (NS_WARN_IF(!workerPrivate->AddFeature(challenge))) {
+    if (NS_WARN_IF(!challenge->HoldWorker(workerPrivate))) {
       return false;
     }
 

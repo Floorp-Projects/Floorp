@@ -206,7 +206,6 @@ GeckoDriver.prototype.switchToGlobalMessageManager = function() {
  *     Command ID to ensure synchronisity.
  */
 GeckoDriver.prototype.sendAsync = function(name, msg, cmdId) {
-  logger.info(`sendAsync ${this.sessionId}`)
   let curRemoteFrame = this.curBrowser.frameManager.currentRemoteFrame;
   name = "Marionette:" + name;
 

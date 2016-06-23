@@ -97,7 +97,7 @@ bool CacheObserver::sHashStatsReported = kDefaultHashStatsReported;
 static uint32_t const kDefaultMaxShutdownIOLag = 2; // seconds
 Atomic<uint32_t, Relaxed> CacheObserver::sMaxShutdownIOLag(kDefaultMaxShutdownIOLag);
 
-Atomic<PRIntervalTime, Relaxed> CacheObserver::sShutdownDemandedTime(PR_INTERVAL_NO_TIMEOUT);
+Atomic<PRIntervalTime> CacheObserver::sShutdownDemandedTime(PR_INTERVAL_NO_TIMEOUT);
 
 NS_IMPL_ISUPPORTS(CacheObserver,
                   nsIObserver,

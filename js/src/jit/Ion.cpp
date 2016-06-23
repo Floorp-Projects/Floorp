@@ -451,7 +451,7 @@ JitCompartment::ensureIonStubsExist(JSContext* cx)
 }
 
 void
-jit::FinishOffThreadBuilder(JSContext* cx, IonBuilder* builder)
+jit::FinishOffThreadBuilder(JSRuntime* runtime, IonBuilder* builder)
 {
     MOZ_ASSERT(HelperThreadState().isLocked());
 
@@ -463,8 +463,10 @@ jit::FinishOffThreadBuilder(JSContext* cx, IonBuilder* builder)
     }
 
     // If the builder is still in one of the helper thread list, then remove it.
-    if (builder->isInList())
-        HelperThreadState().ionLazyLinkListRemove(builder);
+    if (builder->isInList()) {
+        MOZ_ASSERT(runtime);
+        runtime->ionLazyLinkListRemove(builder);
+    }
 
     // Clear the recompiling flag of the old ionScript, since we continue to
     // use the old ionScript if recompiling fails.
@@ -473,9 +475,9 @@ jit::FinishOffThreadBuilder(JSContext* cx, IonBuilder* builder)
 
     // Clean up if compilation did not succeed.
     if (builder->script()->isIonCompilingOffThread()) {
-        builder->script()->setIonScript(cx, builder->abortReason() == AbortReason_Disable
-                                            ? ION_DISABLED_SCRIPT
-                                            : nullptr);
+        IonScript* ion =
+            builder->abortReason() == AbortReason_Disable ? ION_DISABLED_SCRIPT : nullptr;
+        builder->script()->setIonScript(runtime, ion);
     }
 
     // The builder is allocated into its LifoAlloc, so destroying that will
@@ -547,7 +549,7 @@ jit::LazyLink(JSContext* cx, HandleScript calleeScript)
         calleeScript->baselineScript()->removePendingIonBuilder(calleeScript);
 
         // Remove from pending.
-        HelperThreadState().ionLazyLinkListRemove(builder);
+        cx->runtime()->ionLazyLinkListRemove(builder);
     }
 
     {
@@ -565,7 +567,7 @@ jit::LazyLink(JSContext* cx, HandleScript calleeScript)
 
     {
         AutoLockHelperThreadState lock;
-        FinishOffThreadBuilder(cx, builder);
+        FinishOffThreadBuilder(cx->runtime(), builder);
     }
 }
 
@@ -2033,14 +2035,14 @@ AttachFinishedCompilations(JSContext* cx)
 
             JSScript* script = builder->script();
             MOZ_ASSERT(script->hasBaselineScript());
-            script->baselineScript()->setPendingIonBuilder(cx, script, builder);
-            HelperThreadState().ionLazyLinkListAdd(builder);
+            script->baselineScript()->setPendingIonBuilder(cx->runtime(), script, builder);
+            cx->runtime()->ionLazyLinkListAdd(builder);
 
             // Don't keep more than 100 lazy link builders.
             // Throw away the oldest items.
-            while (HelperThreadState().ionLazyLinkListSize() > 100) {
-                jit::IonBuilder* builder = HelperThreadState().ionLazyLinkList().getLast();
-                jit::FinishOffThreadBuilder(nullptr, builder);
+            while (cx->runtime()->ionLazyLinkListSize() > 100) {
+                jit::IonBuilder* builder = cx->runtime()->ionLazyLinkList().getLast();
+                jit::FinishOffThreadBuilder(cx->runtime(), builder);
             }
 
             continue;
@@ -2248,7 +2250,7 @@ IonCompile(JSContext* cx, JSScript* script,
         }
 
         if (!recompile)
-            builderScript->setIonScript(cx, ION_COMPILING_SCRIPT);
+            builderScript->setIonScript(cx->runtime(), ION_COMPILING_SCRIPT);
 
         // The allocator and associated data will be destroyed after being
         // processed in the finishedOffThreadCompilations list.
@@ -3286,7 +3288,7 @@ jit::ForbidCompilation(JSContext* cx, JSScript* script)
     if (script->hasIonScript())
         Invalidate(cx, script, false);
 
-    script->setIonScript(cx, ION_DISABLED_SCRIPT);
+    script->setIonScript(cx->runtime(), ION_DISABLED_SCRIPT);
 }
 
 AutoFlushICache*

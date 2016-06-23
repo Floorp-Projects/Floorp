@@ -23,14 +23,14 @@
 #include "nsIBidiKeyboard.h"
 #include "nsServiceManagerUtils.h"
 
-PRLogModuleInfo* gKeymapWrapperLog = nullptr;
-
 #include "mozilla/ArrayUtils.h"
 #include "mozilla/MouseEvents.h"
 #include "mozilla/TextEvents.h"
 
 namespace mozilla {
 namespace widget {
+
+LazyLogModule gKeymapWrapperLog("KeymapWrapperWidgets");
 
 #define IS_ASCII_ALPHABETICAL(key) \
     ((('a' <= key) && (key <= 'z')) || (('A' <= key) && (key <= 'Z')))
@@ -163,9 +163,6 @@ KeymapWrapper::KeymapWrapper() :
     mInitialized(false), mGdkKeymap(gdk_keymap_get_default()),
     mXKBBaseEventCode(0)
 {
-    if (!gKeymapWrapperLog) {
-        gKeymapWrapperLog = PR_NewLogModule("KeymapWrapperWidgets");
-    }
     MOZ_LOG(gKeymapWrapperLog, LogLevel::Info,
         ("KeymapWrapper(%p): Constructor, mGdkKeymap=%p",
          this, mGdkKeymap));

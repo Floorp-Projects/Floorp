@@ -1398,7 +1398,7 @@ this.Schemas = {
       return new NumberType(type);
     } else if (type.type == "integer") {
       checkTypeProperties("minimum", "maximum");
-      return new IntegerType(type, type.minimum || 0, type.maximum || Infinity);
+      return new IntegerType(type, type.minimum || -Infinity, type.maximum || Infinity);
     } else if (type.type == "boolean") {
       checkTypeProperties();
       return new BooleanType(type);

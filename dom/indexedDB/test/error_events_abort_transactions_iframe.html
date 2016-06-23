@@ -84,7 +84,7 @@
       request = objectStore.add({}, 1);
       request.onsuccess = unexpectedSuccessHandler;
       request.onerror = function(event) {
-        // Don't do anything! We want this error.
+        // Don't do anything! ConstraintError is expected in window.onerror.
       }
       event = yield undefined;
 
@@ -98,8 +98,10 @@
       event = yield undefined;
       is(event.type, "error", "Got request error event");
       is(event.target, originalRequest, "error event has right target");
-      is(event.target.error.name, "ConstraintError", "Right error");
+      is(event.target.error.name, "AbortError", "Right error");
       is(originalRequest.transaction, null, "request.transaction should now be null");
+      // Skip the verification of ConstraintError in window.onerror.
+      event.preventDefault();
 
       request = indexedDB.open(window.location.pathname, 1);
       request.onerror = errorHandler;
@@ -198,6 +200,7 @@
       ok(objectStore.indexNames.contains("dontDeleteMe"), "Has correct index");
       ok(objectStore.indexNames.contains("newIndex"), "Has correct index");
 
+      // ConstraintError is expected in window.onerror.
       objectStore.add({}, 1);
       trans.onabort = grabEventAndContinueHandler;
 
@@ -221,6 +224,10 @@
       request.onerror = grabEventAndContinueHandler;
 
       event = yield undefined;
+      is(event.type, "error", "Got request error event");
+      is(event.target.error.name, "AbortError", "Right error");
+      // Skip the verification of ConstraintError in window.onerror.
+      event.preventDefault();
 
       finishTest();
       yield undefined;

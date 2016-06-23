@@ -99,10 +99,11 @@ private:
    * Track the current seek promise made by the reader.
    */
   MozPromiseRequestHolder<MediaDecoderReader::SeekPromise> mSeekRequest;
-  CallbackID mAudioCallbackID;
-  CallbackID mVideoCallbackID;
-  CallbackID mWaitAudioCallbackID;
-  CallbackID mWaitVideoCallbackID;
+
+  MediaEventListener mAudioCallback;
+  MediaEventListener mVideoCallback;
+  MediaEventListener mAudioWaitCallback;
+  MediaEventListener mVideoWaitCallback;
 };
 
 } // namespace mozilla

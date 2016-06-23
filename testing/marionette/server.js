@@ -88,7 +88,7 @@ MarionetteServer.prototype.start = function() {
   if (this.forceLocal) {
     flags |= Ci.nsIServerSocket.LoopbackOnly;
   }
-  this.listener = new ServerSocket(this.port, flags, 0);
+  this.listener = new ServerSocket(this.port, flags, 1);
   this.listener.asyncListen(this);
   this.alive = true;
 };
