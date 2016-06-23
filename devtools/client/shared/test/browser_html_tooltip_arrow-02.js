@@ -54,7 +54,7 @@ add_task(function* () {
   let tooltip = new HTMLTooltip({doc}, {type: "arrow"});
   let div = doc.createElementNS(HTML_NS, "div");
   div.style.height = "35px";
-  tooltip.setContent(div, 200, 35);
+  tooltip.setContent(div, {width: 200, height: 35});
 
   let {right: docRight} = doc.documentElement.getBoundingClientRect();
 

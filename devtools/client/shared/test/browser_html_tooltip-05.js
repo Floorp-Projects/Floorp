@@ -40,7 +40,7 @@ add_task(function* () {
   let tooltip = new HTMLTooltip({doc}, {});
   let div = doc.createElementNS(HTML_NS, "div");
   div.style.height = "100%";
-  tooltip.setContent(div, TOOLTIP_WIDTH, TOOLTIP_HEIGHT);
+  tooltip.setContent(div, {width: TOOLTIP_WIDTH, height: TOOLTIP_HEIGHT});
 
   let box1 = doc.getElementById("box1");
   let box2 = doc.getElementById("box2");
