@@ -35,6 +35,7 @@ protected:
   uint32_t mTentativeCaretOffset;
   nsString mString;
   mozilla::LayoutDeviceIntRect mRect;
+  nsTArray<mozilla::LayoutDeviceIntRect> mRectArray;
 
   bool mSucceeded;
   bool mReversed;
