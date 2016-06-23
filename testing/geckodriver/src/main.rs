@@ -14,11 +14,9 @@ extern crate webdriver;
 extern crate zip;
 
 use std::borrow::ToOwned;
-use std::env;
 use std::io::Write;
 use std::net::{SocketAddr, IpAddr};
 use std::path::Path;
-use std::process;
 use std::str::FromStr;
 
 use argparse::{ArgumentParser, IncrBy, StoreTrue, Store};
@@ -35,22 +33,14 @@ macro_rules! try_opt {
     })
 }
 
-macro_rules! println_stderr {
-    ($($arg:tt)*) => { {
-        let r = writeln!(&mut ::std::io::stderr(), $($arg)*);
-        r.expect("failed printing to stderr");
-    } }
-}
-
-macro_rules! err {
-    ($($arg:tt)*) => { {
-        let prog = env::args().next().unwrap();
-        println_stderr!("{}: error: {}", prog, format_args!($($arg)*));
-        process::exit(64);
-    } }
-}
-
 mod marionette;
+
+type ProgramResult = std::result::Result<(), (ExitCode, String)>;
+
+enum ExitCode {
+    Ok = 0,
+    Usage = 64,
+}
 
 struct Options {
     binary: String,
@@ -61,8 +51,8 @@ struct Options {
     e10s: bool,
     log_level: String,
     verbosity: u8,
+    version: bool,
 }
-
 
 fn parse_args() -> Options {
     let mut opts = Options {
@@ -74,11 +64,13 @@ fn parse_args() -> Options {
         e10s: false,
         log_level: "".to_owned(),
         verbosity: 0,
+        version: false,
     };
 
     {
         let mut parser = ArgumentParser::new();
         parser.set_description("WebDriver to Marionette proxy.");
+
         parser.refer(&mut opts.binary)
             .add_option(&["-b", "--binary"], Store,
                         "Path to the Firefox binary");
@@ -107,35 +99,59 @@ fn parse_args() -> Options {
             "Shorthand to increase verbosity of output \
             to include debug messages with -v, \
             and trace messages with -vv");
-        parser.parse_args_or_exit();
-    }
+        parser.refer(&mut opts.version)
+            .add_option(&["--version"], StoreTrue,
+            "Show version and copying information.");
 
-    if opts.binary == "" && !opts.connect_existing {
-        err!("path to browser binary required unless --connect-existing");
+        parser.parse_args_or_exit();
     }
 
     opts
 }
 
-fn main() {
-    env_logger::init().unwrap();
+fn print_version() {
+    let version = option_env!("CARGO_PKG_VERSION").unwrap_or("unknown");
+
+    println!(r#"geckodriver v{}
+https://github.com/mozilla/geckodriver
+
+This program is subject to the terms of the Mozilla Public License 2.0.
+You can obtain a copy of the license at https://mozilla.org/MPL/2.0/."#,
+             version);
+}
+
+fn print_usage(reason: &str) {
+    let prog = std::env::args().next().unwrap();
+    let _ = writeln!(&mut ::std::io::stderr(), "{}: error: {}", prog, reason);
+}
+
+fn run() -> ProgramResult {
     let opts = parse_args();
+
+    if opts.version {
+        print_version();
+        return Ok(())
+    }
+    if opts.binary == "" && !opts.connect_existing {
+        return Err((ExitCode::Usage, "path to browser binary required unless --connect-existing".to_owned()))
+    }
 
     let host = &opts.webdriver_host[..];
     let port = opts.webdriver_port;
-    let addr = IpAddr::from_str(host).map(
-        |x| SocketAddr::new(x, port)).unwrap_or_else(
-        |_| { err!("invalid host address"); });
+    let addr = match IpAddr::from_str(host) {
+        Ok(addr) => SocketAddr::new(addr, port),
+        Err(_) => return Err((ExitCode::Usage, "invalid host address".to_owned())),
+    };
 
     // overrides defaults in Gecko
     // which are info for optimised builds
     // and debug for debug builds
     let log_level = if opts.log_level.len() > 0 && opts.verbosity > 0 {
-        err!("conflicting logging- and verbosity arguments");
+        return Err((ExitCode::Usage, "conflicting logging- and verbosity arguments".to_owned()))
     } else if opts.log_level.len() > 0 {
         match LogLevel::from_str(&opts.log_level) {
             Ok(level) => Some(level),
-            Err(_) => { err!("unknown log level: {}", opts.log_level); },
+            Err(_) => return Err((ExitCode::Usage, format!("unknown log level: {}", opts.log_level))),
         }
     } else {
         match opts.verbosity {
@@ -159,6 +175,23 @@ fn main() {
         log_level: log_level,
     };
     start(addr, MarionetteHandler::new(settings), extension_routes());
+
+    Ok(())
+}
+
+fn main() {
+    let _ = env_logger::init();
+
+    let exit_code = match run() {
+        Ok(_) => ExitCode::Ok,
+        Err((exit_code, reason)) => {
+            print_usage(&reason.to_string());
+            exit_code
+        },
+    };
+
+    std::io::stdout().flush().unwrap();
+    std::process::exit(exit_code as i32);
 }
 
 #[cfg(test)]
