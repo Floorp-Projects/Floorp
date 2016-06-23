@@ -65,6 +65,8 @@ public:
 
   void NotifyAnimationUpdated(Animation& aAnimation) override;
 
+  void RemoveAnimation(Animation* aAnimation) override;
+
   // nsARefreshObserver methods
   void WillRefresh(TimeStamp aTime) override;
 

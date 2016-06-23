@@ -181,6 +181,20 @@ DocumentTimeline::NotifyRefreshDriverDestroying(nsRefreshDriver* aDriver)
   mIsObservingRefreshDriver = false;
 }
 
+void
+DocumentTimeline::RemoveAnimation(Animation* aAnimation)
+{
+  AnimationTimeline::RemoveAnimation(aAnimation);
+
+  if (mIsObservingRefreshDriver && mAnimations.IsEmpty()) {
+    MOZ_ASSERT(GetRefreshDriver(),
+               "Refresh driver should still be valid when "
+               "mIsObservingRefreshDriver is true");
+    GetRefreshDriver()->RemoveRefreshObserver(this, Flush_Style);
+    mIsObservingRefreshDriver = false;
+  }
+}
+
 TimeStamp
 DocumentTimeline::ToTimeStamp(const TimeDuration& aTimeDuration) const
 {
