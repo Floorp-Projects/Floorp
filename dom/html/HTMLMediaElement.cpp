@@ -304,7 +304,7 @@ public:
 private:
   RefPtr<HTMLMediaElement> mElement;
   nsCOMPtr<nsIStreamListener> mNextListener;
-  uint32_t mLoadID;
+  const uint32_t mLoadID;
 };
 
 NS_IMPL_ISUPPORTS(HTMLMediaElement::MediaLoadListener, nsIRequestObserver,
@@ -313,7 +313,8 @@ NS_IMPL_ISUPPORTS(HTMLMediaElement::MediaLoadListener, nsIRequestObserver,
 
 NS_IMETHODIMP
 HTMLMediaElement::MediaLoadListener::Observe(nsISupports* aSubject,
-                                             const char* aTopic, const char16_t* aData)
+                                             const char* aTopic,
+                                             const char16_t* aData)
 {
   nsContentUtils::UnregisterShutdownObserver(this);
 
@@ -322,21 +323,9 @@ HTMLMediaElement::MediaLoadListener::Observe(nsISupports* aSubject,
   return NS_OK;
 }
 
-void HTMLMediaElement::ReportLoadError(const char* aMsg,
-                                       const char16_t** aParams,
-                                       uint32_t aParamCount)
-{
-  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
-                                  NS_LITERAL_CSTRING("Media"),
-                                  OwnerDoc(),
-                                  nsContentUtils::eDOM_PROPERTIES,
-                                  aMsg,
-                                  aParams,
-                                  aParamCount);
-}
-
-
-NS_IMETHODIMP HTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aRequest, nsISupports* aContext)
+NS_IMETHODIMP
+HTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aRequest,
+                                                    nsISupports* aContext)
 {
   nsContentUtils::UnregisterShutdownObserver(this);
 
@@ -399,8 +388,7 @@ NS_IMETHODIMP HTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aR
       mNextListener) {
     rv = mNextListener->OnStartRequest(aRequest, aContext);
   } else {
-    // If InitializeDecoderForChannel() returned an error, fire a network
-    // error.
+    // If InitializeDecoderForChannel() returned an error, fire a network error.
     if (NS_FAILED(rv) && !mNextListener && element) {
       // Load failed, attempt to load the next candidate resource. If there
       // are none, this will trigger a MEDIA_ERR_SRC_NOT_SUPPORTED error.
@@ -415,8 +403,10 @@ NS_IMETHODIMP HTMLMediaElement::MediaLoadListener::OnStartRequest(nsIRequest* aR
   return rv;
 }
 
-NS_IMETHODIMP HTMLMediaElement::MediaLoadListener::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
-                                                                 nsresult aStatus)
+NS_IMETHODIMP
+HTMLMediaElement::MediaLoadListener::OnStopRequest(nsIRequest* aRequest,
+                                                   nsISupports* aContext,
+                                                   nsresult aStatus)
 {
   if (mNextListener) {
     return mNextListener->OnStopRequest(aRequest, aContext, aStatus);
@@ -438,25 +428,42 @@ HTMLMediaElement::MediaLoadListener::OnDataAvailable(nsIRequest* aRequest,
   return mNextListener->OnDataAvailable(aRequest, aContext, aStream, aOffset, aCount);
 }
 
-NS_IMETHODIMP HTMLMediaElement::MediaLoadListener::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
-                                                                          nsIChannel* aNewChannel,
-                                                                          uint32_t aFlags,
-                                                                          nsIAsyncVerifyRedirectCallback* cb)
+NS_IMETHODIMP
+HTMLMediaElement::MediaLoadListener::AsyncOnChannelRedirect(nsIChannel* aOldChannel,
+                                                            nsIChannel* aNewChannel,
+                                                            uint32_t aFlags,
+                                                            nsIAsyncVerifyRedirectCallback* cb)
 {
   // TODO is this really correct?? See bug #579329.
-  if (mElement)
+  if (mElement) {
     mElement->OnChannelRedirect(aOldChannel, aNewChannel, aFlags);
+  }
   nsCOMPtr<nsIChannelEventSink> sink = do_QueryInterface(mNextListener);
-  if (sink)
+  if (sink) {
     return sink->AsyncOnChannelRedirect(aOldChannel, aNewChannel, aFlags, cb);
-
+  }
   cb->OnRedirectVerifyCallback(NS_OK);
   return NS_OK;
 }
 
-NS_IMETHODIMP HTMLMediaElement::MediaLoadListener::GetInterface(const nsIID & aIID, void **aResult)
+NS_IMETHODIMP
+HTMLMediaElement::MediaLoadListener::GetInterface(const nsIID& aIID,
+                                                  void** aResult)
 {
   return QueryInterface(aIID, aResult);
+}
+
+void HTMLMediaElement::ReportLoadError(const char* aMsg,
+                                       const char16_t** aParams,
+                                       uint32_t aParamCount)
+{
+  nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                  NS_LITERAL_CSTRING("Media"),
+                                  OwnerDoc(),
+                                  nsContentUtils::eDOM_PROPERTIES,
+                                  aMsg,
+                                  aParams,
+                                  aParamCount);
 }
 
 NS_IMPL_ADDREF_INHERITED(HTMLMediaElement, nsGenericHTMLElement)
