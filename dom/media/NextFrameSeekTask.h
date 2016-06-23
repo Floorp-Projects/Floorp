@@ -91,13 +91,10 @@ private:
   const bool mHasVideo;
   media::TimeUnit mDuration;
 
-  /*
-   * Track the current seek promise made by the reader.
-   */
-  CallbackID mAudioCallbackID;
-  CallbackID mVideoCallbackID;
-  CallbackID mWaitAudioCallbackID;
-  CallbackID mWaitVideoCallbackID;
+  MediaEventListener mAudioCallback;
+  MediaEventListener mVideoCallback;
+  MediaEventListener mAudioWaitCallback;
+  MediaEventListener mVideoWaitCallback;
 };
 
 } // namespace media

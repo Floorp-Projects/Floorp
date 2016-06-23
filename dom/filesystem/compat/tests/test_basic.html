@@ -12,6 +12,7 @@
 
 var fileEntry;
 var directoryEntry;
+var script;
 
 function setup_tests() {
   SpecialPowers.pushPrefEnv({"set": [["dom.webkitBlink.dirPicker.enabled", true],
@@ -20,13 +21,11 @@ function setup_tests() {
 
 function populate_entries() {
   var url = SimpleTest.getTestFileURL("script_entries.js");
-  var script = SpecialPowers.loadChromeScript(url);
+  script = SpecialPowers.loadChromeScript(url);
 
   function onOpened(message) {
     var entries = document.getElementById('entries');
     SpecialPowers.wrap(entries).mozSetDndFilesAndDirectories(message.data);
-
-    script.destroy();
     next();
   }
 
@@ -376,6 +375,16 @@ function test_root_getDirectory_deep() {
   });
 }
 
+function cleanUpTestingFiles() {
+  script.addMessageListener("entries.deleted", function onDeleted() {
+    script.removeMessageListener("entries.deleted");
+    script.destroy();
+    next();
+  });
+
+  script.sendAsyncMessage("entries.delete");
+}
+
 var tests = [
   setup_tests,
   populate_entries,
@@ -418,6 +427,8 @@ var tests = [
   test_root_getDirectory_nonExistingPath,
   test_root_getDirectory_simple,
   test_root_getDirectory_deep,
+
+  cleanUpTestingFiles,
 ];
 
 function next() {

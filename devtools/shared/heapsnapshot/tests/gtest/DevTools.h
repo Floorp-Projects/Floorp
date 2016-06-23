@@ -49,7 +49,7 @@ struct DevTools : public ::testing::Test {
       return;
 
     MOZ_RELEASE_ASSERT(!cx);
-    MOZ_RELEASE_ASSERT(JS_ContextIterator(rt, &cx));
+    cx = JS_GetContext(rt);
 
     JS_BeginRequest(cx);
 

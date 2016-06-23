@@ -5,5 +5,9 @@ task:
     command:
       - --download-symbols=true
   extra:
+    suite:
+      name: reftest-debug-{{chunk}}
+    chunks:
+      total: 48
     treeherder:
       tier: 2

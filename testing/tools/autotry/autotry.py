@@ -14,17 +14,96 @@ from collections import defaultdict
 
 import ConfigParser
 
+def validate_choices(values, choices):
+    for value in values:
+        if value not in choices:
+            print 'Invalid choice {v!r}. Allowed choices: {c!r}'.format(v=value, c=choices)
+            sys.exit(1)
+
+class ValidatePlatforms(argparse.Action):
+    def __call__(self, parser, args, values, option_string=None):
+        choices = ['linux', 'linux64', 'linux64-asan', 'linux64-st-an',
+                   'linux64-valgrind', 'linux64-haz', 'macosx64',
+                   'macosx64-st-an', 'win32', 'win64', 'android-api-9',
+                   'android-api-15', 'android-api-15-gradle-dependencies',
+                   'android-api-15-frontend', 'android-x86', 'sm-arm-sim',
+                   'sm-compacting', 'sm-generational', 'sm-plain',
+                   'sm-rootanalysis', 'sm-warnaserr']
+        validate_choices(values, choices)
+        setattr(args, self.dest, values)
+
+class ValidateUnittestSuites(argparse.Action):
+    def __call__(self, parser, args, values, option_string=None):
+        choices = ['none', 'all', 'reftest', 'reftest-1', 'reftest-2',
+                   'reftest-3', 'reftest-4', 'reftest-e10s',
+                   'reftest-no-accel', 'crashtest', 'crashtest-e10s',
+                   'xpcshell', 'jsreftest', 'marionette', 'marionette-e10s',
+                   'mozmill', 'cppunit', 'gtest', 'firefox-ui-functional',
+                   'firefox-ui-functional-e10s', 'jittests', 'jittest-1',
+                   'jittest-2', 'luciddream', 'mochitests',
+                   'mochitest-gl', 'mochitest-bc', 'mochitest-browser-screenshots',
+                   'mochitest-dt', 'mochitest-o', 'mochitest-media',
+                   'mochitest-jetpack', 'mochitest-e10s-1', 'mochitest-e10s-2',
+                   'mochitest-e10s-3', 'mochitest-e10s-4', 'mochitest-e10s-5',
+                   'mochitest-e10s-bc', 'mochitest-e10s-devtools-chrome',
+                   'mochitest-media-e10s', 'web-platform-tests',
+                   'web-platform-tests-1', 'web-platform-tests-2',
+                   'web-platform-tests-3', 'web-platform-tests-4',
+                   'web-platform-tests-5', 'web-platform-tests-6',
+                   'web-platform-tests-7', 'web-platform-tests-8',
+                   'web-platform-tests-reftests', 'web-platform-tests-e10s-1',
+                   'web-platform-tests-e10s-2', 'web-platform-tests-e10s-3',
+                   'web-platform-tests-e10s-4', 'web-platform-tests-e10s-5',
+                   'web-platform-tests-e10s-6', 'web-platform-tests-e10s-7',
+                   'web-platform-tests-e10s-8', 'web-platform-tests-e10s-reftests',
+                   'robocop-1', 'robocop-2', 'robocop-3', 'robocop-4',
+                   'plain-reftest-1', 'plain-reftest-2', 'plain-reftest-3',
+                   'plain-reftest-4', 'plain-reftest-5', 'plain-reftest-6',
+                   'plain-reftest-7', 'plain-reftest-8', 'plain-reftest-9',
+                   'plain-reftest-10', 'plain-reftest-11', 'plain-reftest-12',
+                   'plain-reftest-13', 'plain-reftest-14', 'plain-reftest-15',
+                   'plain-reftest-16', 'jsreftest-1', 'jsreftest-2',
+                   'jsreftest-3', 'jsreftest-4', 'jsreftest-5', 'jsreftest-6',
+                   'mochitest-1', 'mochitest-2', 'mochitest-3', 'mochitest-4',
+                   'mochitest-5', 'mochitest-6', 'mochitest-7', 'mochitest-8',
+                   'mochitest-9', 'mochitest-10', 'mochitest-11', 'mochitest-12',
+                   'mochitest-13', 'mochitest-14', 'mochitest-15', 'mochitest-16',
+                   'mochitest-17', 'mochitest-18', 'mochitest-19', 'mochitest-20',
+                   'mochitest-chrome', 'mochitest-gl-1', 'mochitest-gl-2',
+                   'mochitest-gl-3', 'mochitest-gl-4', 'mochitest-gl-5',
+                   'mochitest-gl-6', 'mochitest-gl-7', 'mochitest-gl-8',
+                   'mochitest-gl-9', 'mochitest-gl-10', 'mochitest-media-1',
+                   'mochitest-media-2', 'crashtest-1', 'crashtest-2',
+                   'crashtest-3', 'crashtest-4', 'xpcshell-1', 'xpcshell-2',
+                   'xpcshell-3', 'autophone-smoketest', 'autophone-s1s2',
+                   'autophone-webapp', 'autophone-mochitest-dom-browser-element',
+                   'autophone-mochitest-dom-media', 'autophone-mochitest-skia',
+                   'autophone-mochitest-toolkit-widgets']
+        validate_choices(values, choices)
+        setattr(args, self.dest, values)
+
+class ValidateTalosSuites(argparse.Action):
+    def __call__(self, parser, args, values, option_string=None):
+        choices = ['none', 'all', 'chromez', 'dromaeojs', 'other', 'g1', 'g2',
+                   'svgr', 'tp5o', 'xperf', 'chromez-e10s', 'dromaeojs-e10s',
+                   'other-e10s', 'g1-e10s', 'g2-e10s', 'svgr-e10s',
+                   'tp5o-e10s', 'xperf-e10s']
+        validate_choices(values, choices)
+        setattr(args, self.dest, values)
+
+def csv(val):
+    return str.split(val, ',')
 
 def arg_parser():
     parser = argparse.ArgumentParser()
     parser.add_argument('paths', nargs='*', help='Paths to search for tests to run on try.')
     parser.add_argument('-b', '--build', dest='builds', default='do',
                         help='Build types to run (d for debug, o for optimized).')
-    parser.add_argument('-p', '--platform', dest='platforms', action='append',
+    parser.add_argument('-p', '--platform', dest='platforms', action=ValidatePlatforms, type=csv,
                         help='Platforms to run (required if not found in the environment as AUTOTRY_PLATFORM_HINT).')
-    parser.add_argument('-u', '--unittests', dest='tests', action='append',
+    parser.add_argument('-u', '--unittests', dest='tests', action=ValidateUnittestSuites, type=csv,
                         help='Test suites to run in their entirety.')
-    parser.add_argument('-t', '--talos', dest='talos', action='append',
+    parser.add_argument('-t', '--talos', dest='talos', action=ValidateTalosSuites, type=csv,
                         help='Talos suites to run.')
     parser.add_argument('--tag', dest='tags', action='append',
                         help='Restrict tests to the given tag (may be specified multiple times).')

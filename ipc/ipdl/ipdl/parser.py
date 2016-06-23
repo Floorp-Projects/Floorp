@@ -152,7 +152,8 @@ reserved = set((
         'union',
         'upto',
         'urgent',
-        'using'))
+        'using',
+        'verify'))
 tokens = [
     'COLONCOLON', 'ID', 'STRING',
 ] + [ r.upper() for r in reserved ]
@@ -511,14 +512,14 @@ def p_MessageDecl(p):
     p[0] = msg
 
 def p_MessageBody(p):
-    """MessageBody : MessageId MessageInParams MessageOutParams OptionalMessageCompress"""
+    """MessageBody : MessageId MessageInParams MessageOutParams OptionalMessageModifiers"""
     # FIXME/cjones: need better loc info: use one of the quals
     loc, name = p[1]
     msg = MessageDecl(loc)
     msg.name = name
     msg.addInParams(p[2])
     msg.addOutParams(p[3])
-    msg.compress = p[4]
+    msg.addModifiers(p[4])
 
     p[0] = msg
 
@@ -546,13 +547,26 @@ def p_MessageOutParams(p):
     else:
         p[0] = p[3]
 
-def p_OptionalMessageCompress(p):
-    """OptionalMessageCompress : MessageCompress
-                               | """
+def p_OptionalMessageModifiers(p):
+    """OptionalMessageModifiers : OptionalMessageModifiers MessageModifier
+                                | MessageModifier
+                                | """
     if 1 == len(p):
-        p[0] = ''
+        p[0] = [ ]
+    elif 2 == len(p):
+        p[0] = [ p[1] ]
     else:
+        p[1].append(p[2])
         p[0] = p[1]
+
+def p_MessageModifier(p):
+    """ MessageModifier : MessageVerify
+                        | MessageCompress """
+    p[0] = p[1]
+
+def p_MessageVerify(p):
+    """MessageVerify : VERIFY"""
+    p[0] = p[1]
 
 def p_MessageCompress(p):
     """MessageCompress : COMPRESS

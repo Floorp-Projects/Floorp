@@ -40,17 +40,26 @@ function testSteps()
 
       info("Opening database for " + spec + " with version " + options.version);
 
-      let gotUpgradeNeeded = false;
+      let gotUpgradeIncomplete = false;
+      let gotUpgradeComplete = false;
 
       let request =
         indexedDB.openForPrincipal(getPrincipal(spec), name, options);
       request.onerror = function(event) {
-        is(request.error.name, "QuotaExceededError", "Reached quota limit");
+        is(request.error.name,
+           gotUpgradeIncomplete ? "AbortError" : "QuotaExceededError",
+           "Reached quota limit");
         event.preventDefault();
         testGenerator.send(false);
       }
       request.onupgradeneeded = function(event) {
-        gotUpgradeNeeded = true;
+        event.target.transaction.onabort = function(e) {
+          gotUpgradeIncomplete = true;
+          is(e.target.error.name, "QuotaExceededError", "Reached quota limit");
+        }
+        event.target.transaction.oncomplete = function() {
+          gotUpgradeComplete = true;
+        }
       }
       request.onsuccess = function(event) {
         let db = event.target.result;
@@ -61,7 +70,7 @@ function testSteps()
 
       let shouldContinue = yield undefined;
       if (shouldContinue) {
-        is(gotUpgradeNeeded, true, "Got upgradeneeded event");
+        is(gotUpgradeComplete, true, "Got upgradeneeded event");
         ok(true, "Got success event");
       } else {
         break;
@@ -78,17 +87,26 @@ function testSteps()
 
       info("Opening database for " + spec + " with version " + options.version);
 
-      let gotUpgradeNeeded = false;
+      let gotUpgradeIncomplete = false;
+      let gotUpgradeComplete = false;
 
       let request =
         indexedDB.openForPrincipal(getPrincipal(spec), name, options);
       request.onerror = function(event) {
-        is(request.error.name, "QuotaExceededError", "Reached quota limit");
+        is(request.error.name,
+           gotUpgradeIncomplete ? "AbortError" : "QuotaExceededError",
+           "Reached quota limit");
         event.preventDefault();
         testGenerator.send(false);
       }
       request.onupgradeneeded = function(event) {
-        gotUpgradeNeeded = true;
+        event.target.transaction.onabort = function(e) {
+          gotUpgradeIncomplete = true;
+          is(e.target.error.name, "QuotaExceededError", "Reached quota limit");
+        }
+        event.target.transaction.oncomplete = function() {
+          gotUpgradeComplete = true;
+        }
       }
       request.onsuccess = function(event) {
         let db = event.target.result;
@@ -99,7 +117,7 @@ function testSteps()
 
       let shouldContinue = yield undefined;
       if (shouldContinue) {
-        is(gotUpgradeNeeded, true, "Got upgradeneeded event");
+        is(gotUpgradeComplete, true, "Got upgradeneeded event");
         ok(true, "Got success event");
       } else {
         break;

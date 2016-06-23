@@ -125,6 +125,23 @@ Submission of child process crashes is handled by application code. This
 code prompts the user to submit crashes in context-appropriate UI and then
 submits the crashes using ``CrashSubmit.jsm``.
 
+Memory Reports
+==============
+
+When a process detects that it is running low on memory, a memory report is
+saved. If the process crashes, the memory report will be included with the crash
+report. ``nsThread::SaveMemoryReportNearOOM()`` checks to see if the process is
+low on memory every 30 seconds at most and saves a report every 3 minutes at
+most. Since a child process cannot actually save to the hard drive, it instead
+notifies its parent process, which saves the report for it. If a crash does
+occur, the memory report is moved to the *pending* directory with the other dump
+data and an annotation is added to indicate the presence of the report. This
+happens in ``nsExceptionHandler.cpp``, but occurs in different functions
+depending on what process crashed. When the main process crashes, this happens
+in ``MinidumpCallback()``. When a child process crashes, it happens in
+``OnChildProcessDumpRequested()``, with the annotation being added in
+``WriteExtraData()``.
+
 Flash Process Crashes
 =====================
 

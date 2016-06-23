@@ -29,7 +29,7 @@
 // Geotrust Global -> *. addons.mozilla.org
 {
   "chromium_data" : {
-    "cert_file_url": "https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.certs?format=TEXT",
+    "cert_file_url": "https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.pins?format=TEXT",
     "json_file_url": "https://chromium.googlesource.com/chromium/src/net/+/master/http/transport_security_state_static.json?format=TEXT",
     "substitute_pinsets": {
       // Use the larger google_root_pems pinset instead of google
