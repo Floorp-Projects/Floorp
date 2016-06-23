@@ -55,24 +55,27 @@ class MOZ_RAII nsAutoPlaceHolderBatch
     }
 };
 
+namespace mozilla {
+
 /***************************************************************************
  * stack based helper class for batching a collection of txns.
  * Note: I changed this to use placeholder batching so that we get
  * proper selection save/restore across undo/redo.
  */
-class MOZ_RAII nsAutoEditBatch : public nsAutoPlaceHolderBatch
+class MOZ_RAII AutoEditBatch final : public nsAutoPlaceHolderBatch
 {
+private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-  public:
-    explicit nsAutoEditBatch(nsIEditor *aEd MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : nsAutoPlaceHolderBatch(aEd, nullptr)
-    {
-      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    }
-    ~nsAutoEditBatch() {}
-};
 
-namespace mozilla {
+public:
+  explicit AutoEditBatch(nsIEditor* aEditor
+                         MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : nsAutoPlaceHolderBatch(aEditor, nullptr)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+  }
+  ~AutoEditBatch() {}
+};
 
 /***************************************************************************
  * stack based helper class for saving/restoring selection.  Note that this

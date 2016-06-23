@@ -5,7 +5,7 @@
 
 #include "nsPlaintextEditor.h"
 
-#include "EditorUtils.h"  // nsAutoEditBatch, AutoRules
+#include "EditorUtils.h"  // AutoEditBatch, AutoRules
 #include "gfxFontUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Preferences.h"
@@ -753,7 +753,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, EditAction::insertBreak, nsIEditor::eNext);
 
   // pre-process
@@ -1395,7 +1395,7 @@ nsPlaintextEditor::PasteAsQuotation(int32_t aSelectionType)
       {
         nsAutoString stuffToPaste;
         textDataObj->GetData ( stuffToPaste );
-        nsAutoEditBatch beginBatching(this);
+        AutoEditBatch beginBatching(this);
         rv = InsertAsQuotation(stuffToPaste, 0);
       }
     }
@@ -1426,7 +1426,7 @@ nsPlaintextEditor::InsertAsQuotation(const nsAString& aQuotedText,
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, EditAction::insertText, nsIEditor::eNext);
 
   // give rules a chance to handle or cancel

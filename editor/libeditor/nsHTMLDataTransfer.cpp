@@ -109,7 +109,7 @@ nsHTMLEditor::LoadHTML(const nsAString & aInputString)
 
   // force IME commit; set up rules sniffing and batching
   ForceCompositionEnd();
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, EditAction::loadHTML, nsIEditor::eNext);
 
   // Get selection
@@ -210,7 +210,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
 
   // force IME commit; set up rules sniffing and batching
   ForceCompositionEnd();
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, EditAction::htmlPaste, nsIEditor::eNext);
 
   // Get selection
@@ -1059,7 +1059,7 @@ nsHTMLEditor::BlobReader::OnResult(const nsACString& aResult)
   nsresult rv = ImgFromData(type, aResult, stuffToPaste);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsAutoEditBatch beginBatching(mEditor);
+  AutoEditBatch beginBatching(mEditor);
   rv = mEditor->DoInsertHTMLWithContext(stuffToPaste, EmptyString(), EmptyString(),
                                         NS_LITERAL_STRING(kFileMime),
                                         mSourceDoc,
@@ -1160,7 +1160,7 @@ nsresult nsHTMLEditor::InsertObject(const char* aType, nsISupports* aObject, boo
     rv = ImgFromData(type, imageData, stuffToPaste);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsAutoEditBatch beginBatching(this);
+    AutoEditBatch beginBatching(this);
     rv = DoInsertHTMLWithContext(stuffToPaste, EmptyString(), EmptyString(),
                                  NS_LITERAL_STRING(kFileMime),
                                  aSourceDoc,
@@ -1216,7 +1216,7 @@ nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable,
         rv = ParseCFHTML(cfhtml, getter_Copies(cffragment), getter_Copies(cfcontext));
         if (NS_SUCCEEDED(rv) && !cffragment.IsEmpty())
         {
-          nsAutoEditBatch beginBatching(this);
+          AutoEditBatch beginBatching(this);
           // If we have our private HTML flavor, we will only use the fragment
           // from the CF_HTML. The rest comes from the clipboard.
           if (havePrivateHTMLFlavor) {
@@ -1266,7 +1266,7 @@ nsHTMLEditor::InsertFromTransferable(nsITransferable *transferable,
       }
 
       if (!stuffToPaste.IsEmpty()) {
-        nsAutoEditBatch beginBatching(this);
+        AutoEditBatch beginBatching(this);
         if (0 == nsCRT::strcmp(bestFlavor, kHTMLMime)) {
           rv = DoInsertHTMLWithContext(stuffToPaste,
                                        aContextStr, aInfoStr, flavor,
@@ -1347,7 +1347,7 @@ nsresult nsHTMLEditor::InsertFromDataTransfer(DataTransfer *aDataTransfer,
         nsresult rv = ParseCFHTML(cfhtml, getter_Copies(cffragment), getter_Copies(cfcontext));
         if (NS_SUCCEEDED(rv) && !cffragment.IsEmpty())
         {
-          nsAutoEditBatch beginBatching(this);
+          AutoEditBatch beginBatching(this);
 
           if (hasPrivateHTMLFlavor) {
             // If we have our private HTML flavor, we will only use the fragment
@@ -1378,7 +1378,7 @@ nsresult nsHTMLEditor::InsertFromDataTransfer(DataTransfer *aDataTransfer,
         GetStringFromDataTransfer(aDataTransfer, NS_LITERAL_STRING(kHTMLContext), aIndex, contextString);
         GetStringFromDataTransfer(aDataTransfer, NS_LITERAL_STRING(kHTMLInfo), aIndex, infoString);
 
-        nsAutoEditBatch beginBatching(this);
+        AutoEditBatch beginBatching(this);
         if (type.EqualsLiteral(kHTMLMime)) {
           return DoInsertHTMLWithContext(text,
                                          contextString, infoString, type,
@@ -1395,7 +1395,7 @@ nsresult nsHTMLEditor::InsertFromDataTransfer(DataTransfer *aDataTransfer,
       nsAutoString text;
       GetStringFromDataTransfer(aDataTransfer, type, aIndex, text);
 
-      nsAutoEditBatch beginBatching(this);
+      AutoEditBatch beginBatching(this);
       return InsertTextAt(text, aDestinationNode, aDestOffset, aDoDeleteSelection);
     }
   }
@@ -1658,7 +1658,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsQuotation(int32_t aSelectionType)
 NS_IMETHODIMP nsHTMLEditor::PasteAsCitedQuotation(const nsAString & aCitation,
                                                   int32_t aSelectionType)
 {
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, EditAction::insertQuotation,
                                nsIEditor::eNext);
 
@@ -1735,7 +1735,7 @@ NS_IMETHODIMP nsHTMLEditor::PasteAsPlaintextQuotation(int32_t aSelectionType)
       nsAutoString stuffToPaste;
       textDataObj->GetData(stuffToPaste);
       NS_ASSERTION(stuffToPaste.Length() <= (len/2), "Invalid length!");
-      nsAutoEditBatch beginBatching(this);
+      AutoEditBatch beginBatching(this);
       rv = InsertAsPlaintextQuotation(stuffToPaste, true, 0);
     }
   }
@@ -1851,7 +1851,7 @@ nsHTMLEditor::InsertAsPlaintextQuotation(const nsAString & aQuotedText,
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, EditAction::insertQuotation,
                                nsIEditor::eNext);
 
@@ -1941,7 +1941,7 @@ nsHTMLEditor::InsertAsCitedQuotation(const nsAString & aQuotedText,
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, EditAction::insertQuotation,
                                nsIEditor::eNext);
 

@@ -1216,7 +1216,7 @@ nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsAString& aSourceToInsert)
   inputString.ReplaceSubstring(MOZ_UTF16("\r"),
                                MOZ_UTF16("\n"));
 
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
 
   // Get the first range in the selection, for context:
   RefPtr<nsRange> range = selection->GetRangeAt(0);
@@ -1304,7 +1304,7 @@ nsHTMLEditor::RebuildDocumentFromSource(const nsAString& aSourceString)
   }
 
   // Time to change the document
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
 
   nsReadingIterator<char16_t> endtotal;
   aSourceString.EndReading(endtotal);
@@ -1495,7 +1495,7 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, bool aDeleteSele
   nsCOMPtr<nsIDOMNode> node = do_QueryInterface(aElement);
 
   ForceCompositionEnd();
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, EditAction::insertElement,
                                nsIEditor::eNext);
 
@@ -1933,7 +1933,7 @@ nsHTMLEditor::MakeOrChangeList(const nsAString& aListType, bool entireList, cons
 
   bool cancel, handled;
 
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, EditAction::makeList, nsIEditor::eNext);
 
   // pre-process
@@ -2006,7 +2006,7 @@ nsHTMLEditor::RemoveList(const nsAString& aListType)
 
   bool cancel, handled;
 
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, EditAction::removeList, nsIEditor::eNext);
 
   // pre-process
@@ -2037,7 +2037,7 @@ nsHTMLEditor::MakeDefinitionItem(const nsAString& aItemType)
 
   bool cancel, handled;
 
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, EditAction::makeDefListItem,
                                nsIEditor::eNext);
 
@@ -2069,7 +2069,7 @@ nsHTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
 
   bool cancel, handled;
 
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, EditAction::makeBasicBlock,
                                nsIEditor::eNext);
 
@@ -2143,7 +2143,7 @@ nsHTMLEditor::Indent(const nsAString& aIndent)
   {
     opID = EditAction::outdent;
   }
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, opID, nsIEditor::eNext);
 
   // pre-process
@@ -2215,7 +2215,7 @@ nsHTMLEditor::Align(const nsAString& aAlignType)
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   AutoRules beginRulesSniffing(this, EditAction::align, nsIEditor::eNext);
 
   nsCOMPtr<nsIDOMNode> node;
@@ -2636,7 +2636,7 @@ nsHTMLEditor::InsertLinkAroundSelection(nsIDOMElement* aAnchorElement)
     return NS_OK;
   }
 
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
 
   // Set all attributes found on the supplied anchor element
   nsCOMPtr<nsIDOMMozNamedAttrMap> attrMap;
@@ -3396,7 +3396,7 @@ nsHTMLEditor::StyleSheetLoaded(StyleSheetHandle aSheet, bool aWasAlternate,
                                nsresult aStatus)
 {
   nsresult rv = NS_OK;
-  nsAutoEditBatch batchIt(this);
+  AutoEditBatch batchIt(this);
 
   if (!mLastStyleSheetURL.IsEmpty())
     RemoveStyleSheet(mLastStyleSheetURL);
@@ -4531,7 +4531,7 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
 
   bool isCollapsed = selection->Collapsed();
 
-  nsAutoEditBatch batchIt(this);
+  AutoEditBatch batchIt(this);
   AutoRules beginRulesSniffing(this, EditAction::insertElement,
                                nsIEditor::eNext);
   AutoSelectionRestorer selectionRestorer(selection, this);

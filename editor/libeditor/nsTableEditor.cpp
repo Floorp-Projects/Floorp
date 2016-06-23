@@ -398,7 +398,7 @@ nsHTMLEditor::InsertTableColumn(int32_t aNumber, bool aAfter)
   NS_ENSURE_SUCCESS(res, res);
   NS_ENSURE_TRUE(curCell, NS_ERROR_FAILURE);
 
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   // Prevent auto insertion of BR in new cell until we're done
   AutoRules beginRulesSniffing(this, EditAction::insertNode, nsIEditor::eNext);
 
@@ -530,7 +530,7 @@ nsHTMLEditor::InsertTableRow(int32_t aNumber, bool aAfter)
   res = GetTableSize(table, &rowCount, &colCount);
   NS_ENSURE_SUCCESS(res, res);
 
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   // Prevent auto insertion of BR in new cell until we're done
   AutoRules beginRulesSniffing(this, EditAction::insertNode, nsIEditor::eNext);
 
@@ -708,7 +708,7 @@ nsHTMLEditor::DeleteTable()
 
   NS_ENSURE_SUCCESS(res, res);
 
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   return DeleteTable2(table, selection);
 }
 
@@ -731,7 +731,7 @@ nsHTMLEditor::DeleteTableCell(int32_t aNumber)
   // Don't fail if we didn't find a table or cell
   NS_ENSURE_TRUE(table && cell, NS_EDITOR_ELEMENT_NOT_FOUND);
 
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   // Prevent rules testing until we're done
   AutoRules beginRulesSniffing(this, EditAction::deleteNode, nsIEditor::eNext);
 
@@ -924,7 +924,7 @@ nsHTMLEditor::DeleteTableCellContents()
   NS_ENSURE_TRUE(cell, NS_EDITOR_ELEMENT_NOT_FOUND);
 
 
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   // Prevent rules testing until we're done
   AutoRules beginRulesSniffing(this, EditAction::deleteNode, nsIEditor::eNext);
   //Don't let Rules System change the selection
@@ -1009,7 +1009,7 @@ nsHTMLEditor::DeleteTableColumn(int32_t aNumber)
   // Check for counts too high
   aNumber = std::min(aNumber,(colCount-startColIndex));
 
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   // Prevent rules testing until we're done
   AutoRules beginRulesSniffing(this, EditAction::deleteNode, nsIEditor::eNext);
 
@@ -1183,7 +1183,7 @@ nsHTMLEditor::DeleteTableRow(int32_t aNumber)
   if(startRowIndex == 0 && aNumber >= rowCount)
     return DeleteTable2(table, selection);
 
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   // Prevent rules testing until we're done
   AutoRules beginRulesSniffing(this, EditAction::deleteNode, nsIEditor::eNext);
 
@@ -1699,7 +1699,7 @@ nsHTMLEditor::SplitTableCell()
   if (actualRowSpan <= 1 && actualColSpan <= 1)
     return NS_OK;
 
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   // Prevent auto insertion of BR in new cell until we're done
   AutoRules beginRulesSniffing(this, EditAction::insertNode, nsIEditor::eNext);
 
@@ -1918,7 +1918,7 @@ nsHTMLEditor::SwitchTableCellHeaderType(nsIDOMElement *aSourceCell, nsIDOMElemen
   nsCOMPtr<Element> sourceCell = do_QueryInterface(aSourceCell);
   NS_ENSURE_TRUE(sourceCell, NS_ERROR_NULL_POINTER);
 
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   // Prevent auto insertion of BR in new cell created by ReplaceContainer
   AutoRules beginRulesSniffing(this, EditAction::insertNode, nsIEditor::eNext);
 
@@ -1970,7 +1970,7 @@ nsHTMLEditor::JoinTableCells(bool aMergeNonContiguousContents)
   NS_ENSURE_SUCCESS(res, res);
   if(!table || !targetCell) return NS_EDITOR_ELEMENT_NOT_FOUND;
 
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   //Don't let Rules System change the selection
   AutoTransactionsConserveSelection dontChangeSelection(this);
 
@@ -2476,7 +2476,7 @@ nsHTMLEditor::NormalizeTable(nsIDOMElement *aTable)
   // Save current selection
   AutoSelectionRestorer selectionRestorer(selection, this);
 
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   // Prevent auto insertion of BR in new cell until we're done
   AutoRules beginRulesSniffing(this, EditAction::insertNode, nsIEditor::eNext);
 
