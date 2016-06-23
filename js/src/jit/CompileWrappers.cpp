@@ -6,6 +6,8 @@
 
 #include "jit/Ion.h"
 
+#include "jscompartmentinlines.h"
+
 using namespace js;
 using namespace js::jit;
 
