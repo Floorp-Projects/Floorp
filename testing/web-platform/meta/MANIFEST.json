@@ -36444,6 +36444,12 @@
             "path": "webaudio/the-audio-api/the-audioparam-interface/setValueAtTime-within-block.html",
             "url": "/webaudio/the-audio-api/the-audioparam-interface/setValueAtTime-within-block.html"
           }
+        ],
+        "webaudio/the-audio-api/the-pannernode-interface/test-pannernode-automation.html": [
+          {
+            "path": "webaudio/the-audio-api/the-pannernode-interface/test-pannernode-automation.html",
+            "url": "/webaudio/the-audio-api/the-pannernode-interface/test-pannernode-automation.html"
+          }
         ]
       }
     },
