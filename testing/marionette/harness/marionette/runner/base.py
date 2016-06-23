@@ -696,9 +696,6 @@ class BaseMarionetteTestRunner(object):
             kwargs['workspace'] = self.workspace_path
         return kwargs
 
-    def start_marionette(self):
-        self.marionette = self.driverclass(**self._build_kwargs())
-
     def launch_test_container(self):
         if self.marionette.session is None:
             self.marionette.start_session()
@@ -755,22 +752,24 @@ setReq.onerror = function() {
             traceback.print_exc()
         return crash
 
-    def run_tests(self, tests):
+    def _initialize_test_run(self, tests):
         assert len(tests) > 0
         assert len(self.test_handlers) > 0
         self.reset_test_stats()
-        self.start_time = time.time()
 
+    def _start_marionette(self):
         need_external_ip = True
         if not self.marionette:
-            self.start_marionette()
+            self.marionette = self.driverclass(**self._build_kwargs())
             # if we're working against a desktop version, we usually don't need
             # an external ip
             if self.capabilities['device'] == "desktop":
                 need_external_ip = False
         self.logger.info('Initial Profile Destination is '
                          '"{}"'.format(self.marionette.profile_path))
+        return need_external_ip
 
+    def _set_baseurl(self, need_external_ip):
         # Gaia sets server_root and that means we shouldn't spin up our own httpd
         if not self.httpd:
             if self.server_root is None or os.path.isdir(self.server_root):
@@ -782,29 +781,20 @@ setReq.onerror = function() {
                 self.marionette.baseurl = self.server_root
                 self.logger.info("using remote content from %s" % self.marionette.baseurl)
 
-        device_info = None
 
+    def _add_tests(self, tests):
         for test in tests:
             self.add_test(test)
 
-        # ensure we have only tests files with names starting with 'test_'
         invalid_tests = \
             [t['filepath'] for t in self.tests
              if not os.path.basename(t['filepath']).startswith('test_')]
         if invalid_tests:
-            raise Exception("Tests file names must starts with 'test_'."
+            raise Exception("Tests file names must start with 'test_'."
                             " Invalid test names:\n  %s"
                             % '\n  '.join(invalid_tests))
 
-        self.logger.info("running with e10s: {}".format(self.e10s))
-        version_info = mozversion.get_version(binary=self.bin,
-                                              sources=self.sources,
-                                              dm_type=os.environ.get('DM_TRANS', 'adb') )
-
-        self.logger.suite_start(self.tests,
-                                version_info=version_info,
-                                device_info=device_info)
-
+    def _log_skipped_tests(self):
         for test in self.manifest_skipped_tests:
             name = os.path.basename(test['path'])
             self.logger.test_start(name)
@@ -813,13 +803,31 @@ setReq.onerror = function() {
                                  message=test['disabled'])
             self.todo += 1
 
+    def run_tests(self, tests):
+        start_time = time.time()
+        self._initialize_test_run(tests)
+
+        need_external_ip = self._start_marionette()
+        self._set_baseurl(need_external_ip)
+
+        self._add_tests(tests)
+
+        self.logger.info("running with e10s: {}".format(self.e10s))
+        version_info = mozversion.get_version(binary=self.bin,
+                                              sources=self.sources,
+                                              dm_type=os.environ.get('DM_TRANS', 'adb') )
+
+        self.logger.suite_start(self.tests, version_info=version_info)
+
+        self._log_skipped_tests()
+
         interrupted = None
         try:
             counter = self.repeat
             while counter >=0:
-                round = self.repeat - counter
-                if round > 0:
-                    self.logger.info('\nREPEAT %d\n-------' % round)
+                round_num = self.repeat - counter
+                if round_num > 0:
+                    self.logger.info('\nREPEAT %d\n-------' % round_num)
                 self.run_test_sets()
                 counter -= 1
         except KeyboardInterrupt:
@@ -829,6 +837,21 @@ setReq.onerror = function() {
             interrupted = sys.exc_info()
         try:
             self._print_summary(tests)
+            self.record_crash()
+            self.elapsedtime = time.time() - start_time
+
+            if self.marionette.instance:
+                self.marionette.instance.close()
+                self.marionette.instance = None
+            self.marionette.cleanup()
+
+            for run_tests in self.mixin_run_tests:
+                run_tests(tests)
+            if self.shuffle:
+                self.logger.info("Using seed where seed is:%d" % self.shuffle_seed)
+
+            self.logger.info('mode: {}'.format('e10s' if self.e10s else 'non-e10s'))
+            self.logger.suite_end()
         except:
             # raise only the exception if we were not interrupted
             if not interrupted:
@@ -854,24 +877,6 @@ setReq.onerror = function() {
             self.logger.info('\nFAILED TESTS\n-------')
             for failed_test in self.failures:
                 self.logger.info('%s' % failed_test[0])
-
-        self.record_crash()
-        self.end_time = time.time()
-        self.elapsedtime = self.end_time - self.start_time
-
-        if self.marionette.instance:
-            self.marionette.instance.close()
-            self.marionette.instance = None
-
-        self.marionette.cleanup()
-
-        for run_tests in self.mixin_run_tests:
-            run_tests(tests)
-        if self.shuffle:
-            self.logger.info("Using seed where seed is:%d" % self.shuffle_seed)
-
-        self.logger.info('mode: {}'.format('e10s' if self.e10s else 'non-e10s'))
-        self.logger.suite_end()
 
     def start_httpd(self, need_external_ip):
         warnings.warn("start_httpd has been deprecated in favour of create_httpd",
