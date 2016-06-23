@@ -5,7 +5,7 @@
  * Test that we get a "TimeStamp" marker.
  */
 
-const { PerformanceFront } = require("devtools/server/actors/performance");
+const { PerformanceFront } = require("devtools/shared/fronts/performance");
 const { PMM_consoleMethod, PMM_loadFrameScripts, PMM_clearFrameScripts } = require("devtools/client/performance/test/helpers/profiler-mm-utils");
 const MARKER_NAME = "TimeStamp";
 

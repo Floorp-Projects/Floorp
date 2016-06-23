@@ -71,12 +71,14 @@
 
 .tab-throbber,
 .tab-icon-image,
+.tab-sharing-icon-overlay,
 .tab-icon-sound,
 .tab-close-button {
   margin-top: 1px;
 }
 
 .tab-throbber,
+.tab-sharing-icon-overlay,
 .tab-icon-image {
   height: 16px;
   width: 16px;
@@ -85,6 +87,47 @@
 
 .tab-icon-image {
   list-style-image: url("chrome://mozapps/skin/places/defaultFavicon.png");
+}
+
+.tab-icon-image[sharing]:not([selected]),
+.tab-sharing-icon-overlay {
+  animation: 3s linear pulse infinite;
+}
+
+@keyframes pulse {
+  0%, 16.66%, 83.33%, 100% {
+    opacity: 0;
+  }
+  33.33%, 66.66% {
+    opacity: 1;
+  }
+}
+
+.tab-icon-image[sharing]:not([selected]) {
+  animation-delay: -1.5s;
+}
+
+.tab-sharing-icon-overlay {
+  /* 16px of the icon + 6px of margin-inline-end of .tab-icon-image */
+  margin-inline-start: -22px;
+  position: relative;
+}
+
+.tab-sharing-icon-overlay[sharing="camera"] {
+  list-style-image: url("chrome://browser/skin/glyphs.svg#camera");
+}
+
+.tab-sharing-icon-overlay[sharing="microphone"] {
+  list-style-image: url("chrome://browser/skin/glyphs.svg#microphone");
+}
+
+.tab-sharing-icon-overlay[sharing="screen"] {
+  list-style-image: url("chrome://browser/skin/glyphs.svg#screen");
+}
+
+.tab-sharing-icon-overlay[sharing] {
+  filter: url("chrome://browser/skin/filters.svg#fill");
+  fill: rgb(224, 41, 29);
 }
 
 .tab-icon-overlay {

@@ -7,7 +7,7 @@
  */
 
 var protocol = require("devtools/shared/protocol");
-var {method, Arg, Option, RetVal} = protocol;
+var {Arg, Option, RetVal} = protocol;
 var events = require("sdk/event/core");
 
 function simpleHello() {
@@ -18,7 +18,17 @@ function simpleHello() {
   };
 }
 
-var RootActor = protocol.ActorClass({
+const rootSpec = protocol.generateActorSpec({
+  typeName: "root",
+
+  methods: {
+    simpleReturn: {
+      response: { value: RetVal() }
+    }
+  }
+});
+
+var RootActor = protocol.ActorClassWithSpec(rootSpec, {
   typeName: "root",
   initialize: function (conn) {
     protocol.Actor.prototype.initialize.call(this, conn);
@@ -30,14 +40,12 @@ var RootActor = protocol.ActorClass({
 
   sayHello: simpleHello,
 
-  simpleReturn: method(function () {
+  simpleReturn: function () {
     return this.sequence++;
-  }, {
-    response: { value: RetVal() },
-  })
+  }
 });
 
-var RootFront = protocol.FrontClass(RootActor, {
+var RootFront = protocol.FrontClassWithSpec(rootSpec, {
   initialize: function (client) {
     this.actorID = "root";
     protocol.Front.prototype.initialize.call(this, client);

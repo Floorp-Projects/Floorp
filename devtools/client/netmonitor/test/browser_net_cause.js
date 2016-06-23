@@ -17,42 +17,63 @@ const EXPECTED_REQUESTS = [
     causeType: "document",
     causeUri: "",
     // The document load is from JS function in e10s, native in non-e10s
-    hasStack: !gMultiProcessBrowser
+    stack: !gMultiProcessBrowser
   },
   {
     method: "GET",
     url: EXAMPLE_URL + "stylesheet_request",
     causeType: "stylesheet",
     causeUri: CAUSE_URL,
-    hasStack: false
+    stack: false
   },
   {
     method: "GET",
     url: EXAMPLE_URL + "img_request",
     causeType: "img",
     causeUri: CAUSE_URL,
-    hasStack: false
+    stack: false
   },
   {
     method: "GET",
     url: EXAMPLE_URL + "xhr_request",
     causeType: "xhr",
     causeUri: CAUSE_URL,
-    hasStack: { fn: "performXhrRequest", file: CAUSE_FILE_NAME, line: 22 }
+    stack: [{ fn: "performXhrRequest", file: CAUSE_FILE_NAME, line: 22 }]
   },
   {
     method: "GET",
     url: EXAMPLE_URL + "fetch_request",
     causeType: "fetch",
     causeUri: CAUSE_URL,
-    hasStack: { fn: "performFetchRequest", file: CAUSE_FILE_NAME, line: 26 }
+    stack: [{ fn: "performFetchRequest", file: CAUSE_FILE_NAME, line: 26 }]
+  },
+  {
+    method: "GET",
+    url: EXAMPLE_URL + "promise_fetch_request",
+    causeType: "fetch",
+    causeUri: CAUSE_URL,
+    stack: [
+      { fn: "performPromiseFetchRequest", file: CAUSE_FILE_NAME, line: 38 },
+      { fn: null, file: CAUSE_FILE_NAME, line: 37, asyncCause: "promise callback" },
+    ]
+  },
+  {
+    method: "GET",
+    url: EXAMPLE_URL + "timeout_fetch_request",
+    causeType: "fetch",
+    causeUri: CAUSE_URL,
+    stack: [
+      { fn: "performTimeoutFetchRequest", file: CAUSE_FILE_NAME, line: 40 },
+      { fn: "performPromiseFetchRequest", file: CAUSE_FILE_NAME, line: 39,
+        asyncCause: "setTimeout handler" },
+    ]
   },
   {
     method: "POST",
     url: EXAMPLE_URL + "beacon_request",
     causeType: "beacon",
     causeUri: CAUSE_URL,
-    hasStack: { fn: "performBeaconRequest", file: CAUSE_FILE_NAME, line: 30 }
+    stack: [{ fn: "performBeaconRequest", file: CAUSE_FILE_NAME, line: 30 }]
   },
 ];
 
@@ -75,7 +96,7 @@ var test = Task.async(function* () {
     "All the page events should be recorded.");
 
   EXPECTED_REQUESTS.forEach((spec, i) => {
-    let { method, url, causeType, causeUri, hasStack } = spec;
+    let { method, url, causeType, causeUri, stack } = spec;
 
     let requestItem = RequestsMenu.getItemAtIndex(i);
     verifyRequestItemTarget(requestItem,
@@ -85,19 +106,23 @@ var test = Task.async(function* () {
     let { stacktrace } = requestItem.attachment.cause;
     let stackLen = stacktrace ? stacktrace.length : 0;
 
-    if (hasStack) {
+    if (stack) {
       ok(stacktrace, `Request #${i} has a stacktrace`);
       ok(stackLen > 0,
         `Request #${i} (${causeType}) has a stacktrace with ${stackLen} items`);
 
-      // if "hasStack" is object, check the details about the top stack frame
-      if (typeof hasStack === "object") {
-        is(stacktrace[0].functionName, hasStack.fn,
-          `Request #${i} has the correct function on top of the JS stack`);
-        is(stacktrace[0].filename.split("/").pop(), hasStack.file,
-          `Request #${i} has the correct file on top of the JS stack`);
-        is(stacktrace[0].lineNumber, hasStack.line,
-          `Request #${i} has the correct line number on top of the JS stack`);
+      // if "stack" is array, check the details about the top stack frames
+      if (Array.isArray(stack)) {
+        stack.forEach((frame, j) => {
+          is(stacktrace[j].functionName, frame.fn,
+            `Request #${i} has the correct function on JS stack frame #${j}`);
+          is(stacktrace[j].filename.split("/").pop(), frame.file,
+            `Request #${i} has the correct file on JS stack frame #${j}`);
+          is(stacktrace[j].lineNumber, frame.line,
+            `Request #${i} has the correct line number on JS stack frame #${j}`);
+          is(stacktrace[j].asyncCause, frame.asyncCause,
+            `Request #${i} has the correct async cause on JS stack frame #${j}`);
+        });
       }
     } else {
       is(stackLen, 0, `Request #${i} (${causeType}) has an empty stacktrace`);
