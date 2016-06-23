@@ -1262,9 +1262,6 @@ static bool Throw(nsresult errNum, XPCCallContext& ccx)
 class MOZ_STACK_CLASS CallMethodHelper
 {
     XPCCallContext& mCallContext;
-    // We wait to call SetLastResult(mInvokeResult) until ~CallMethodHelper(),
-    // so that XPCWN-implemented functions like XPCComponents::GetLastResult()
-    // can still access the previous result.
     nsresult mInvokeResult;
     nsIInterfaceInfo* const mIFaceInfo;
     const nsXPTMethodInfo* mMethodInfo;
@@ -1454,8 +1451,6 @@ CallMethodHelper::~CallMethodHelper()
             }
         }
     }
-
-    mCallContext.GetXPCContext()->SetLastResult(mInvokeResult);
 }
 
 bool
