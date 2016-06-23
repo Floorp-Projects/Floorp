@@ -440,7 +440,7 @@ JSRuntime::~JSRuntime()
     }
 
     MOZ_ASSERT(ionLazyLinkListSize_ == 0);
-    MOZ_ASSERT(ionLazyLinkList().isEmpty());
+    MOZ_ASSERT(ionLazyLinkList_.isEmpty());
 
     /*
      * Clear the self-hosted global and delete self-hosted classes *after*
