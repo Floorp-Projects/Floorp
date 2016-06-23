@@ -74,7 +74,8 @@ public:
 private:
 
   static nsRect GetPreEffectsVisualOverflowRect(nsIFrame* aFrame) {
-    nsRect* r = aFrame->Properties().Get(nsIFrame::PreEffectsBBoxProperty());
+    nsRect* r = static_cast<nsRect*>
+      (aFrame->Properties().Get(nsIFrame::PreEffectsBBoxProperty()));
     if (r) {
       return *r;
     }

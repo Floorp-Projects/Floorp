@@ -2542,7 +2542,8 @@ nsGridContainerFrame::GridItemCB(nsIFrame* aChild)
 {
   MOZ_ASSERT((aChild->GetStateBits() & NS_FRAME_OUT_OF_FLOW) &&
              aChild->IsAbsolutelyPositioned());
-  nsRect* cb = aChild->Properties().Get(GridItemContainingBlockRect());
+  nsRect* cb = static_cast<nsRect*>(aChild->Properties().Get(
+                 GridItemContainingBlockRect()));
   MOZ_ASSERT(cb, "this method must only be called on grid items, and the grid "
                  "container should've reflowed this item by now and set up cb");
   return *cb;
@@ -5267,7 +5268,8 @@ nsGridContainerFrame::ReflowChildren(GridReflowState&     aState,
         LogicalRect itemCB =
           aState.ContainingBlockForAbsPos(area, gridOrigin, gridCB);
         // nsAbsoluteContainingBlock::Reflow uses physical coordinates.
-        nsRect* cb = child->Properties().Get(GridItemContainingBlockRect());
+        nsRect* cb = static_cast<nsRect*>(child->Properties().Get(
+                       GridItemContainingBlockRect()));
         if (!cb) {
           cb = new nsRect;
           child->Properties().Set(GridItemContainingBlockRect(), cb);
@@ -5601,7 +5603,8 @@ nsGridContainerFrame::Reflow(nsPresContext*           aPresContext,
   }
 
   if (!prevInFlow) {
-    SharedGridData* sharedGridData = Properties().Get(SharedGridData::Prop());
+    auto sharedGridData = static_cast<SharedGridData*>(
+      Properties().Get(SharedGridData::Prop()));
     if (!NS_FRAME_IS_FULLY_COMPLETE(aStatus)) {
       if (!sharedGridData) {
         sharedGridData = new SharedGridData;
