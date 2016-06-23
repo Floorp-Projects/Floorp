@@ -212,6 +212,7 @@ UNIFIED_SOURCES += [
     'AnonymousContent.cpp',
     'Attr.cpp',
     'BarProps.cpp',
+    'BlobSet.cpp',
     'BodyUtil.cpp',
     'ChildIterator.cpp',
     'ChromeNodeList.cpp',
