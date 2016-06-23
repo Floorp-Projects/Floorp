@@ -82,22 +82,22 @@ bool xpc_IsReportableErrorCode(nsresult code)
     }
 }
 
-// A little stack-based RAII class to help management of the XPCContext
+// A little stack-based RAII class to help management of the XPCJSRuntime
 // PendingResult.
 class MOZ_STACK_CLASS AutoSavePendingResult {
 public:
-    explicit AutoSavePendingResult(XPCContext* xpcc) :
-        mXPCContext(xpcc)
+    explicit AutoSavePendingResult(XPCJSRuntime* xpcrt) :
+        mXPCRuntime(xpcrt)
     {
         // Save any existing pending result and reset to NS_OK for this invocation.
-        mSavedResult = xpcc->GetPendingResult();
-        xpcc->SetPendingResult(NS_OK);
+        mSavedResult = xpcrt->GetPendingResult();
+        xpcrt->SetPendingResult(NS_OK);
     }
     ~AutoSavePendingResult() {
-        mXPCContext->SetPendingResult(mSavedResult);
+        mXPCRuntime->SetPendingResult(mSavedResult);
     }
 private:
-    XPCContext* mXPCContext;
+    XPCJSRuntime* mXPCRuntime;
     nsresult mSavedResult;
 };
 
@@ -782,9 +782,11 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
     if (xpc_exception)
         xpcc->SetException(nullptr);
 
-    // get this right away in case we do something below to cause JS code
-    // to run on this JSContext
-    nsresult pending_result = xpcc->GetPendingResult();
+    XPCJSRuntime* xpcrt = XPCJSRuntime::Get();
+
+    // Get this right away in case we do something below to cause JS code
+    // to run.
+    nsresult pending_result = xpcrt->GetPendingResult();
 
     RootedValue js_exception(cx);
     bool is_js_exception = JS_GetPendingException(cx, &js_exception);
@@ -798,7 +800,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
 
         /* cleanup and set failed even if we can't build an exception */
         if (!xpc_exception) {
-            XPCJSRuntime::Get()->SetPendingException(nullptr); // XXX necessary?
+            xpcrt->SetPendingException(nullptr); // XXX necessary?
         }
     }
 
@@ -917,7 +919,7 @@ nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
             // Whether or not it passes the 'reportable' test, it might
             // still be an error and we have to do the right thing here...
             if (NS_FAILED(e_result)) {
-                XPCJSRuntime::Get()->SetPendingException(xpc_exception);
+                xpcrt->SetPendingException(xpc_exception);
                 return e_result;
             }
         }
@@ -988,7 +990,8 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     AutoValueVector args(cx);
     AutoScriptEvaluate scriptEval(cx);
 
-    AutoSavePendingResult apr(xpcc);
+    XPCJSRuntime* xpcrt = XPCJSRuntime::Get();
+    AutoSavePendingResult apr(xpcrt);
 
     // XXX ASSUMES that retval is last arg. The xpidl compiler ensures this.
     uint8_t paramCount = info->num_args;
@@ -999,7 +1002,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
         goto pre_call_clean_up;
 
     xpcc->SetException(nullptr);
-    XPCJSRuntime::Get()->SetPendingException(nullptr);
+    xpcrt->SetPendingException(nullptr);
 
     // We use js_Invoke so that the gcthings we use as args will be rooted by
     // the engine as we do conversions and prepare to do the function call.
@@ -1376,7 +1379,7 @@ pre_call_clean_up:
         CleanupOutparams(cx, methodIndex, info, nativeParams, /* inOutOnly = */ false, i);
     } else {
         // set to whatever the JS code might have set as the result
-        retval = xpcc->GetPendingResult();
+        retval = xpcrt->GetPendingResult();
     }
 
     return retval;

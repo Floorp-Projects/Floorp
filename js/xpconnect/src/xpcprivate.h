@@ -600,6 +600,9 @@ public:
 
     PRTime GetWatchdogTimestamp(WatchdogTimestampCategory aCategory);
 
+    nsresult GetPendingResult() { return mPendingResult; }
+    void SetPendingResult(nsresult rv) { mPendingResult = rv; }
+
 private:
     XPCJSRuntime();
 
@@ -647,6 +650,10 @@ private:
     mozilla::TimeDuration mSlowScriptActualWait;
     bool mTimeoutAccumulated;
 
+    // mPendingResult is used to implement Components.returnCode.  Only really
+    // meaningful while calling through XPCWrappedJS.
+    nsresult mPendingResult;
+
     friend class Watchdog;
     friend class AutoLockWatchdog;
     friend class XPCIncrementalReleaseRunnable;
@@ -685,9 +692,6 @@ public:
     nsresult GetLastResult() {return mLastResult;}
     void SetLastResult(nsresult rc) {mLastResult = rc;}
 
-    nsresult GetPendingResult() {return mPendingResult;}
-    void SetPendingResult(nsresult rc) {mPendingResult = rc;}
-
     void DebugDump(int16_t depth);
 
     ~XPCContext();
@@ -702,7 +706,6 @@ private:
     XPCJSRuntime* mRuntime;
     JSContext*  mJSContext;
     nsresult mLastResult;
-    nsresult mPendingResult;
     nsCOMPtr<nsIException> mException;
     bool mErrorUnreported;
 };
