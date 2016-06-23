@@ -1367,6 +1367,23 @@
         ]]></body>
       </method>
 
+      <method name="setBrowserSharing">
+        <parameter name="aBrowser"/>
+        <parameter name="aSharingState"/>
+        <body><![CDATA[
+          let tab = this.getTabForBrowser(aBrowser);
+          if (!tab)
+            return;
+
+          if (aSharingState)
+            tab.setAttribute("sharing", aSharingState);
+          else
+            tab.removeAttribute("sharing");
+          this._tabAttrModified(tab, ["sharing"]);
+        ]]></body>
+      </method>
+
+
       <method name="setTabTitleLoading">
         <parameter name="aTab"/>
         <body>
@@ -2619,6 +2636,10 @@
             if (aOtherTab.hasAttribute("usercontextid")) {
               aOurTab.setUserContextId(aOtherTab.getAttribute("usercontextid"));
               modifiedAttrs.push("usercontextid");
+            }
+            if (aOtherTab.hasAttribute("sharing")) {
+              aOurTab.setAttribute("sharing", aOtherTab.getAttribute("sharing"));
+              modifiedAttrs.push("sharing");
             }
 
             // If the other tab is pending (i.e. has not been restored, yet)
@@ -6211,10 +6232,14 @@
                      class="tab-throbber"
                      role="presentation"
                      layer="true" />
-          <xul:image xbl:inherits="src=image,fadein,pinned,selected,visuallyselected,busy,crashed"
+          <xul:image xbl:inherits="src=image,fadein,pinned,selected,visuallyselected,busy,crashed,sharing"
                      anonid="tab-icon-image"
                      class="tab-icon-image"
                      validate="never"
+                     role="presentation"/>
+          <xul:image xbl:inherits="sharing,selected"
+                     anonid="sharing-icon"
+                     class="tab-sharing-icon-overlay"
                      role="presentation"/>
           <xul:image xbl:inherits="crashed,busy,soundplaying,pinned,muted"
                      anonid="overlay-icon"

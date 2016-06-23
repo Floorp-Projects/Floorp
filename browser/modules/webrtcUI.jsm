@@ -875,6 +875,21 @@ function updateIndicators(data, target) {
 }
 
 function updateBrowserSpecificIndicator(aBrowser, aState) {
+  let chromeWin = aBrowser.ownerDocument.defaultView;
+  let tabbrowser = chromeWin.gBrowser;
+  if (tabbrowser) {
+    let sharing;
+    if (aState.screen) {
+      sharing = "screen";
+    } else if (aState.camera) {
+      sharing = "camera";
+    } else if (aState.microphone) {
+      sharing = "microphone";
+    }
+
+    tabbrowser.setBrowserSharing(aBrowser, sharing);
+  }
+
   let captureState;
   if (aState.camera && aState.microphone) {
     captureState = "CameraAndMicrophone";
@@ -884,7 +899,6 @@ function updateBrowserSpecificIndicator(aBrowser, aState) {
     captureState = "Microphone";
   }
 
-  let chromeWin = aBrowser.ownerDocument.defaultView;
   let stringBundle = chromeWin.gNavigatorBundle;
 
   let windowId = aState.windowId;

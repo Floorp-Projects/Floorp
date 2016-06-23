@@ -6,7 +6,7 @@
 
 // Check that inline inherited properties appear in the nested element.
 
-var {ELEMENT_STYLE} = require("devtools/server/actors/styles");
+var {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
 
 const TEST_URI = `
   <div id="test2" style="color: red">

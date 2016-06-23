@@ -10,7 +10,7 @@ const {Cc, Ci} = require("chrome");
 const promise = require("promise");
 const {Rule} = require("devtools/client/inspector/rules/models/rule");
 const {promiseWarn} = require("devtools/client/inspector/shared/utils");
-const {ELEMENT_STYLE} = require("devtools/server/actors/styles");
+const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 
 loader.lazyGetter(this, "PSEUDO_ELEMENTS", () => {

@@ -5,7 +5,7 @@
  * Test functionality of real time markers.
  */
 
-const { PerformanceFront } = require("devtools/server/actors/performance");
+const { PerformanceFront } = require("devtools/shared/fronts/performance");
 
 add_task(function* () {
   let browser = yield addTab(MAIN_DOMAIN + "doc_perf.html");

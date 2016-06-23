@@ -12,7 +12,7 @@ const {Cc, Ci} = require("chrome");
 
 const ToolDefinitions = require("devtools/client/definitions").Tools;
 const {CssLogic} = require("devtools/shared/inspector/css-logic");
-const {ELEMENT_STYLE} = require("devtools/server/actors/styles");
+const {ELEMENT_STYLE} = require("devtools/shared/specs/styles");
 const promise = require("promise");
 const Services = require("Services");
 const {OutputParser} = require("devtools/client/shared/output-parser");
