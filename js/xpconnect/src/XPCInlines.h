@@ -60,20 +60,6 @@ XPCCallContext::GetJSContext() const
     return mJSContext;
 }
 
-inline XPCContext::LangType
-XPCCallContext::GetCallerLanguage() const
-{
-    CHECK_STATE(HAVE_CONTEXT);
-    return mCallerLanguage;
-}
-
-inline XPCContext::LangType
-XPCCallContext::GetPrevCallerLanguage() const
-{
-    CHECK_STATE(HAVE_CONTEXT);
-    return mPrevCallerLanguage;
-}
-
 inline XPCCallContext*
 XPCCallContext::GetPrevCallContext() const
 {
