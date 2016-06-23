@@ -5,7 +5,7 @@
 
 #include "nsPlaintextEditor.h"
 
-#include "EditorUtils.h"  // nsAutoEditBatch, nsAutoRules
+#include "EditorUtils.h"  // nsAutoEditBatch, AutoRules
 #include "gfxFontUtils.h"
 #include "mozilla/Assertions.h"
 #include "mozilla/Preferences.h"
@@ -540,7 +540,7 @@ nsPlaintextEditor::InsertBR(nsCOMPtr<nsIDOMNode>* outBRNode)
   *outBRNode = nullptr;
 
   // calling it text insertion to trigger moz br treatment by rules
-  nsAutoRules beginRulesSniffing(this, EditAction::insertText, nsIEditor::eNext);
+  AutoRules beginRulesSniffing(this, EditAction::insertText, nsIEditor::eNext);
 
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_STATE(selection);
@@ -660,7 +660,7 @@ nsPlaintextEditor::DeleteSelection(EDirection aAction,
 
   // delete placeholder txns merge.
   nsAutoPlaceHolderBatch batch(this, nsGkAtoms::DeleteTxnName);
-  nsAutoRules beginRulesSniffing(this, EditAction::deleteSelection, aAction);
+  AutoRules beginRulesSniffing(this, EditAction::deleteSelection, aAction);
 
   // pre-process
   RefPtr<Selection> selection = GetSelection();
@@ -717,7 +717,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertText(const nsAString &aStringToInsert)
     opID = EditAction::insertIMEText;
   }
   nsAutoPlaceHolderBatch batch(this, nullptr);
-  nsAutoRules beginRulesSniffing(this, opID, nsIEditor::eNext);
+  AutoRules beginRulesSniffing(this, opID, nsIEditor::eNext);
 
   // pre-process
   RefPtr<Selection> selection = GetSelection();
@@ -754,7 +754,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
   nsAutoEditBatch beginBatching(this);
-  nsAutoRules beginRulesSniffing(this, EditAction::insertBreak, nsIEditor::eNext);
+  AutoRules beginRulesSniffing(this, EditAction::insertBreak, nsIEditor::eNext);
 
   // pre-process
   RefPtr<Selection> selection = GetSelection();
@@ -1100,7 +1100,7 @@ nsPlaintextEditor::Undo(uint32_t aCount)
 
   NotifyEditorObservers(eNotifyEditorObserversOfBefore);
 
-  nsAutoRules beginRulesSniffing(this, EditAction::undo, nsIEditor::eNone);
+  AutoRules beginRulesSniffing(this, EditAction::undo, nsIEditor::eNone);
 
   nsTextRulesInfo ruleInfo(EditAction::undo);
   RefPtr<Selection> selection = GetSelection();
@@ -1129,7 +1129,7 @@ nsPlaintextEditor::Redo(uint32_t aCount)
 
   NotifyEditorObservers(eNotifyEditorObserversOfBefore);
 
-  nsAutoRules beginRulesSniffing(this, EditAction::redo, nsIEditor::eNone);
+  AutoRules beginRulesSniffing(this, EditAction::redo, nsIEditor::eNone);
 
   nsTextRulesInfo ruleInfo(EditAction::redo);
   RefPtr<Selection> selection = GetSelection();
@@ -1427,7 +1427,7 @@ nsPlaintextEditor::InsertAsQuotation(const nsAString& aQuotedText,
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   nsAutoEditBatch beginBatching(this);
-  nsAutoRules beginRulesSniffing(this, EditAction::insertText, nsIEditor::eNext);
+  AutoRules beginRulesSniffing(this, EditAction::insertText, nsIEditor::eNext);
 
   // give rules a chance to handle or cancel
   nsTextRulesInfo ruleInfo(EditAction::insertElement);

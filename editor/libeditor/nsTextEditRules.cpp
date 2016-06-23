@@ -1171,7 +1171,7 @@ nsTextEditRules::CreateBogusNodeIfNeeded(Selection* aSelection)
   }
 
   // tell rules system to not do any post-processing
-  nsAutoRules beginRulesSniffing(mEditor, EditAction::ignore, nsIEditor::eNone);
+  AutoRules beginRulesSniffing(mEditor, EditAction::ignore, nsIEditor::eNone);
 
   nsCOMPtr<dom::Element> body = mEditor->GetRoot();
   if (!body) {

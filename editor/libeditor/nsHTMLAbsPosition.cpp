@@ -57,10 +57,10 @@ NS_IMETHODIMP
 nsHTMLEditor::AbsolutePositionSelection(bool aEnabled)
 {
   nsAutoEditBatch beginBatching(this);
-  nsAutoRules beginRulesSniffing(this,
-                                 aEnabled ? EditAction::setAbsolutePosition :
-                                            EditAction::removeAbsolutePosition,
-                                 nsIEditor::eNext);
+  AutoRules beginRulesSniffing(this,
+                               aEnabled ? EditAction::setAbsolutePosition :
+                                          EditAction::removeAbsolutePosition,
+                               nsIEditor::eNext);
 
   // the line below does not match the code; should it be removed?
   // Find out if the selection is collapsed:
@@ -162,10 +162,10 @@ NS_IMETHODIMP
 nsHTMLEditor::RelativeChangeZIndex(int32_t aChange)
 {
   nsAutoEditBatch beginBatching(this);
-  nsAutoRules beginRulesSniffing(this,
-                                 (aChange < 0) ? EditAction::decreaseZIndex :
-                                                 EditAction::increaseZIndex,
-                                 nsIEditor::eNext);
+  AutoRules beginRulesSniffing(this,
+                               (aChange < 0) ? EditAction::decreaseZIndex :
+                                               EditAction::increaseZIndex,
+                               nsIEditor::eNext);
 
   // brade: can we get rid of this comment?
   // Find out if the selection is collapsed:

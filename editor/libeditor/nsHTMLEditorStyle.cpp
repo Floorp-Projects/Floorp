@@ -125,7 +125,8 @@ nsHTMLEditor::SetInlineProperty(nsIAtom* aProperty,
   }
 
   nsAutoEditBatch batchIt(this);
-  nsAutoRules beginRulesSniffing(this, EditAction::insertElement, nsIEditor::eNext);
+  AutoRules beginRulesSniffing(this, EditAction::insertElement,
+                               nsIEditor::eNext);
   nsAutoSelectionReset selectionResetter(selection, this);
   AutoTransactionsConserveSelection dontSpazMySelection(this);
 
@@ -1169,7 +1170,8 @@ NS_IMETHODIMP nsHTMLEditor::GetInlinePropertyWithAttrValue(nsIAtom *aProperty,
 NS_IMETHODIMP nsHTMLEditor::RemoveAllInlineProperties()
 {
   nsAutoEditBatch batchIt(this);
-  nsAutoRules beginRulesSniffing(this, EditAction::resetTextProperties, nsIEditor::eNext);
+  AutoRules beginRulesSniffing(this, EditAction::resetTextProperties,
+                               nsIEditor::eNext);
 
   nsresult res = RemoveInlinePropertyImpl(nullptr, nullptr);
   NS_ENSURE_SUCCESS(res, res);
@@ -1210,8 +1212,8 @@ nsHTMLEditor::RemoveInlinePropertyImpl(nsIAtom* aProperty,
   }
 
   nsAutoEditBatch batchIt(this);
-  nsAutoRules beginRulesSniffing(this, EditAction::removeTextProperty,
-                                 nsIEditor::eNext);
+  AutoRules beginRulesSniffing(this, EditAction::removeTextProperty,
+                               nsIEditor::eNext);
   nsAutoSelectionReset selectionResetter(selection, this);
   AutoTransactionsConserveSelection dontSpazMySelection(this);
 
@@ -1359,8 +1361,8 @@ nsHTMLEditor::RelativeFontChange(FontSize aDir)
 
   // Wrap with txn batching, rules sniffing, and selection preservation code
   nsAutoEditBatch batchIt(this);
-  nsAutoRules beginRulesSniffing(this, EditAction::setTextProperty,
-                                 nsIEditor::eNext);
+  AutoRules beginRulesSniffing(this, EditAction::setTextProperty,
+                               nsIEditor::eNext);
   nsAutoSelectionReset selectionResetter(selection, this);
   AutoTransactionsConserveSelection dontSpazMySelection(this);
 
