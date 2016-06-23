@@ -5,7 +5,7 @@
  * Test simple requests using the protocol helpers.
  */
 var protocol = require("devtools/shared/protocol");
-var {method, RetVal, Arg, Option} = protocol;
+var {RetVal, Arg, Option} = protocol;
 var events = require("sdk/event/core");
 var {LongStringActor} = require("devtools/server/actors/string");
 
@@ -24,9 +24,32 @@ var LONG_STR = "abcdefghijklmnop";
 
 var rootActor = null;
 
-var RootActor = protocol.ActorClass({
+const rootSpec = protocol.generateActorSpec({
   typeName: "root",
 
+  events: {
+    "string-event": {
+      str: Arg(0, "longstring")
+    }
+  },
+
+  methods: {
+    shortString: {
+      response: { value: RetVal("longstring") },
+    },
+    longString: {
+      response: { value: RetVal("longstring") },
+    },
+    emitShortString: {
+      oneway: true,
+    },
+    emitLongString: {
+      oneway: true,
+    }
+  }
+});
+
+var RootActor = protocol.ActorClassWithSpec(rootSpec, {
   initialize: function (conn) {
     rootActor = this;
     protocol.Actor.prototype.initialize.call(this, conn);
@@ -37,38 +60,24 @@ var RootActor = protocol.ActorClass({
 
   sayHello: simpleHello,
 
-  shortString: method(function () {
+  shortString: function () {
     return new LongStringActor(this.conn, SHORT_STR);
-  }, {
-    response: { value: RetVal("longstring") },
-  }),
+  },
 
-  longString: method(function () {
+  longString: function () {
     return new LongStringActor(this.conn, LONG_STR);
-  }, {
-    response: { value: RetVal("longstring") },
-  }),
+  },
 
-  emitShortString: method(function () {
+  emitShortString: function () {
     events.emit(this, "string-event", new LongStringActor(this.conn, SHORT_STR));
-  }, {
-    oneway: true,
-  }),
+  },
 
-  emitLongString: method(function () {
+  emitLongString: function () {
     events.emit(this, "string-event", new LongStringActor(this.conn, LONG_STR));
-  }, {
-    oneway: true,
-  }),
-
-  events: {
-    "string-event": {
-      str: Arg(0, "longstring")
-    }
-  }
+  },
 });
 
-var RootFront = protocol.FrontClass(RootActor, {
+var RootFront = protocol.FrontClassWithSpec(rootSpec, {
   initialize: function (client) {
     this.actorID = "root";
     protocol.Front.prototype.initialize.call(this, client);

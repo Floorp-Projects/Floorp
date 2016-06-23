@@ -209,8 +209,13 @@ var gSearchPane = {
     else {
       let isMac = Services.appinfo.OS == "Darwin";
       if ((isMac && aEvent.keyCode == KeyEvent.DOM_VK_RETURN) ||
-          (!isMac && aEvent.keyCode == KeyEvent.DOM_VK_F2))
+          (!isMac && aEvent.keyCode == KeyEvent.DOM_VK_F2)) {
         tree.startEditing(index, tree.columns.getLastColumn());
+      } else if (aEvent.keyCode == KeyEvent.DOM_VK_DELETE ||
+                 isMac && aEvent.shiftKey && aEvent.keyCode == KeyEvent.DOM_VK_BACK_SPACE) {
+        // Delete and Shift+Backspace (Mac) removes selected engine.
+        Services.search.removeEngine(gEngineView.selectedEngine.originalEngine);
+     }
     }
   },
 

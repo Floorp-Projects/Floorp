@@ -5,7 +5,7 @@
  * Test that we get "Parse HTML" markers.
  */
 
-const { PerformanceFront } = require("devtools/server/actors/performance");
+const { PerformanceFront } = require("devtools/shared/fronts/performance");
 const MARKER_NAME = "Parse HTML";
 
 add_task(function* () {

@@ -59,7 +59,7 @@ loader.lazyRequireGetter(this, "DevToolsUtils",
 loader.lazyRequireGetter(this, "showDoorhanger",
   "devtools/client/shared/doorhanger", true);
 loader.lazyRequireGetter(this, "createPerformanceFront",
-  "devtools/server/actors/performance", true);
+  "devtools/shared/fronts/performance", true);
 loader.lazyRequireGetter(this, "system",
   "devtools/shared/system");
 loader.lazyRequireGetter(this, "getPreferenceFront",
