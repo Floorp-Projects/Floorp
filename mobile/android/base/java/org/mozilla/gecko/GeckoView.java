@@ -38,7 +38,7 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputConnection;
 
 public class GeckoView extends LayerView
-    implements ContextGetter {
+    implements ContextGetter, GeckoEventListener, NativeEventListener {
 
     private static final String DEFAULT_SHARED_PREFERENCES_FILE = "GeckoView";
     private static final String LOGTAG = "GeckoView";
@@ -48,74 +48,71 @@ public class GeckoView extends LayerView
 
     private InputConnectionListener mInputConnectionListener;
 
-    private final GeckoEventListener mGeckoEventListener = new GeckoEventListener() {
-        @Override
-        public void handleMessage(final String event, final JSONObject message) {
-            ThreadUtils.postToUiThread(new Runnable() {
-                @Override
-                public void run() {
-                    try {
-                        if (event.equals("Gecko:Ready")) {
-                            handleReady(message);
-                        } else if (event.equals("Content:StateChange")) {
-                            handleStateChange(message);
-                        } else if (event.equals("Content:LoadError")) {
-                            handleLoadError(message);
-                        } else if (event.equals("Content:PageShow")) {
-                            handlePageShow(message);
-                        } else if (event.equals("DOMTitleChanged")) {
-                            handleTitleChanged(message);
-                        } else if (event.equals("Link:Favicon")) {
-                            handleLinkFavicon(message);
-                        } else if (event.equals("Prompt:Show") || event.equals("Prompt:ShowTop")) {
-                            handlePrompt(message);
-                        } else if (event.equals("Accessibility:Event")) {
-                            int mode = getImportantForAccessibility();
-                            if (mode == View.IMPORTANT_FOR_ACCESSIBILITY_YES ||
+    @Override
+    public void handleMessage(final String event, final JSONObject message) {
+        ThreadUtils.postToUiThread(new Runnable() {
+            @Override
+            public void run() {
+                try {
+                    if (event.equals("Gecko:Ready")) {
+                        handleReady(message);
+                    } else if (event.equals("Content:StateChange")) {
+                        handleStateChange(message);
+                    } else if (event.equals("Content:LoadError")) {
+                        handleLoadError(message);
+                    } else if (event.equals("Content:PageShow")) {
+                        handlePageShow(message);
+                    } else if (event.equals("DOMTitleChanged")) {
+                        handleTitleChanged(message);
+                    } else if (event.equals("Link:Favicon")) {
+                        handleLinkFavicon(message);
+                    } else if (event.equals("Prompt:Show") || event.equals("Prompt:ShowTop")) {
+                        handlePrompt(message);
+                    } else if (event.equals("Accessibility:Event")) {
+                        int mode = getImportantForAccessibility();
+                        if (mode == View.IMPORTANT_FOR_ACCESSIBILITY_YES ||
                                 mode == View.IMPORTANT_FOR_ACCESSIBILITY_AUTO) {
-                                GeckoAccessibility.sendAccessibilityEvent(message);
-                            }
+                            GeckoAccessibility.sendAccessibilityEvent(message);
                         }
-                    } catch (Exception e) {
-                        Log.e(LOGTAG, "handleMessage threw for " + event, e);
                     }
+                } catch (Exception e) {
+                    Log.e(LOGTAG, "handleMessage threw for " + event, e);
                 }
-            });
-        }
-    };
-
-    private final NativeEventListener mNativeEventListener = new NativeEventListener() {
-        @Override
-        public void handleMessage(final String event, final NativeJSObject message, final EventCallback callback) {
-            try {
-                if ("Accessibility:Ready".equals(event)) {
-                    GeckoAccessibility.updateAccessibilitySettings(getContext());
-                } else if ("GeckoView:Message".equals(event)) {
-                    // We need to pull out the bundle while on the Gecko thread.
-                    NativeJSObject json = message.optObject("data", null);
-                    if (json == null) {
-                        // Must have payload to call the message handler.
-                        return;
-                    }
-                    final Bundle data = json.toBundle();
-                    ThreadUtils.postToUiThread(new Runnable() {
-                        @Override
-                        public void run() {
-                            handleScriptMessage(data, callback);
-                        }
-                    });
-                }
-            } catch (Exception e) {
-                Log.w(LOGTAG, "handleMessage threw for " + event, e);
             }
+        });
+    }
+
+    @Override
+    public void handleMessage(final String event, final NativeJSObject message, final EventCallback callback) {
+        try {
+            if ("Accessibility:Ready".equals(event)) {
+                GeckoAccessibility.updateAccessibilitySettings(getContext());
+            } else if ("GeckoView:Message".equals(event)) {
+                // We need to pull out the bundle while on the Gecko thread.
+                NativeJSObject json = message.optObject("data", null);
+                if (json == null) {
+                    // Must have payload to call the message handler.
+                    return;
+                }
+                final Bundle data = json.toBundle();
+                ThreadUtils.postToUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        handleScriptMessage(data, callback);
+                    }
+                });
+            }
+        } catch (Exception e) {
+            Log.w(LOGTAG, "handleMessage threw for " + event, e);
         }
-    };
+    }
 
     @WrapForJNI
     private static final class Window extends JNIObject {
         /* package */ final GLController glController = new GLController();
 
         static native void open(Window instance, GeckoView view, GLController glController,
+                                String chromeURI,
                                 int width, int height);
 
         @Override protected native void disposeNative();
@@ -228,13 +225,16 @@ public class GeckoView extends LayerView
         if (window == null) {
             // Open a new nsWindow if we didn't have one from before.
             window = new Window();
+            final String chromeURI = getGeckoInterface().getDefaultChromeURI();
 
             if (GeckoThread.isStateAtLeast(GeckoThread.State.PROFILE_READY)) {
                 Window.open(window, this, window.glController,
+                            chromeURI,
                             metrics.widthPixels, metrics.heightPixels);
             } else {
                 GeckoThread.queueNativeCallUntil(GeckoThread.State.PROFILE_READY, Window.class,
                         "open", window, GeckoView.class, this, window.glController,
+                        String.class, chromeURI,
                         metrics.widthPixels, metrics.heightPixels);
             }
         } else {
@@ -351,7 +351,7 @@ public class GeckoView extends LayerView
         throw new IllegalArgumentException("Must import script from 'resources://android/assets/' location.");
     }
 
-    private void connectToGecko() {
+    public void connectToGecko() {
         GeckoAppShell.notifyObservers("Viewport:Flush", null);
     }
 
@@ -705,5 +705,4 @@ public class GeckoView extends LayerView
         */
         public void onReceivedFavicon(GeckoView view, GeckoView.Browser browser, String url, int size);
     }
-
 }
