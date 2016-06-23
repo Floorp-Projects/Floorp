@@ -82,6 +82,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/PluginCrashedEvent.h"
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/Telemetry.h"
@@ -2518,6 +2519,12 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
     NS_ASSERTION(!mFrameLoader && !mInstanceOwner,
                  "switched to type null but also loaded something");
 
+    // Don't fire error events if we're falling back to click-to-play; instead
+    // pretend like this is a really slow-loading plug-in instead.
+    if (fallbackType != eFallbackClickToPlay) {
+      MaybeFireErrorEvent();
+    }
+
     if (mChannel) {
       // If we were loading with a channel but then failed over, throw it away
       CloseChannel();
@@ -3832,6 +3839,21 @@ nsObjectLoadingContent::GetOwnPropertyNames(JSContext* aCx,
   aRv = ScriptRequestPluginInstance(aCx, getter_AddRefs(pi));
 }
 
+void
+nsObjectLoadingContent::MaybeFireErrorEvent()
+{
+  nsCOMPtr<nsIContent> thisContent =
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  // Queue a task to fire an error event if we're an <object> element.  The
+  // queueing is important, since then we don't have to worry about reentry.
+  if (thisContent->IsHTMLElement(nsGkAtoms::object)) {
+    RefPtr<AsyncEventDispatcher> loadBlockingAsyncDispatcher =
+      new LoadBlockingAsyncEventDispatcher(thisContent,
+                                           NS_LITERAL_STRING("error"),
+                                           false, false);
+    loadBlockingAsyncDispatcher->PostDOMEvent();
+  }
+}
 
 // SetupProtoChainRunner implementation
 nsObjectLoadingContent::SetupProtoChainRunner::SetupProtoChainRunner(
