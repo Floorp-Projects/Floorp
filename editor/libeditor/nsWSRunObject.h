@@ -15,7 +15,9 @@
 
 class nsHTMLEditor;
 class nsIDOMNode;
-struct DOMPoint;
+namespace mozilla {
+struct EditorDOMPoint;
+} // namespace mozilla
 
 // class nsWSRunObject represents the entire whitespace situation
 // around a given point.  It collects up a list of nodes that contain
@@ -312,9 +314,11 @@ class MOZ_STACK_CLASS nsWSRunObject
     void     MakeSingleWSRun(WSType aType);
     nsIContent* GetPreviousWSNodeInner(nsINode* aStartNode,
                                        nsINode* aBlockParent);
-    nsIContent* GetPreviousWSNode(::DOMPoint aPoint, nsINode* aBlockParent);
+    nsIContent* GetPreviousWSNode(mozilla::EditorDOMPoint aPoint,
+                                  nsINode* aBlockParent);
     nsIContent* GetNextWSNodeInner(nsINode* aStartNode, nsINode* aBlockParent);
-    nsIContent* GetNextWSNode(::DOMPoint aPoint, nsINode* aBlockParent);
+    nsIContent* GetNextWSNode(mozilla::EditorDOMPoint aPoint,
+                              nsINode* aBlockParent);
     nsresult PrepareToDeleteRangePriv(nsWSRunObject* aEndObject);
     nsresult PrepareToSplitAcrossBlocksPriv();
     nsresult DeleteChars(nsINode* aStartNode, int32_t aStartOffset,

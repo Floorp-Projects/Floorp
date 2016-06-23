@@ -3871,7 +3871,7 @@ nsEditor::SplitNodeDeep(nsIContent& aNode,
  * This joins two like nodes "deeply", joining children as appropriate.
  * Returns the point of the join, or (nullptr, -1) in case of error.
  */
-::DOMPoint
+EditorDOMPoint
 nsEditor::JoinNodeDeep(nsIContent& aLeftNode, nsIContent& aRightNode)
 {
   // While the rightmost children and their descendants of the left node match
@@ -3882,7 +3882,7 @@ nsEditor::JoinNodeDeep(nsIContent& aLeftNode, nsIContent& aRightNode)
   nsCOMPtr<nsIContent> rightNodeToJoin = &aRightNode;
   nsCOMPtr<nsINode> parentNode = aRightNode.GetParentNode();
 
-  ::DOMPoint ret;
+  EditorDOMPoint ret;
 
   while (leftNodeToJoin && rightNodeToJoin && parentNode &&
          AreNodesSameType(leftNodeToJoin, rightNodeToJoin)) {
@@ -3893,7 +3893,7 @@ nsEditor::JoinNodeDeep(nsIContent& aLeftNode, nsIContent& aRightNode)
 
     // Do the join
     nsresult res = JoinNodes(*leftNodeToJoin, *rightNodeToJoin);
-    NS_ENSURE_SUCCESS(res, ::DOMPoint());
+    NS_ENSURE_SUCCESS(res, EditorDOMPoint());
 
     if (parentNode->GetAsText()) {
       // We've joined all the way down to text nodes, we're done!
