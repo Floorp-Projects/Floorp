@@ -673,16 +673,6 @@ public:
 
     enum LangType {LANG_UNKNOWN, LANG_JS, LANG_NATIVE};
 
-    LangType GetCallingLangType() const
-        {
-            return mCallingLangType;
-        }
-    LangType SetCallingLangType(LangType lt)
-        {
-            LangType tmp = mCallingLangType;
-            mCallingLangType = lt;
-            return tmp;
-        }
     nsresult GetException(nsIException** e)
         {
             nsCOMPtr<nsIException> rval = mException;
@@ -716,7 +706,6 @@ private:
     nsresult mLastResult;
     nsresult mPendingResult;
     nsCOMPtr<nsIException> mException;
-    LangType mCallingLangType;
     bool mErrorUnreported;
 };
 
@@ -851,8 +840,6 @@ private:
     JSContext*                      mJSContext;
 
     // ctor does not necessarily init the following. BEWARE!
-
-    XPCContext::LangType            mPrevCallerLanguage;
 
     XPCCallContext*                 mPrevCallContext;
 
