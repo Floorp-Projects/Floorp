@@ -39,6 +39,8 @@ double GetVolumeScale();
 bool GetFirstStream();
 cubeb* GetCubebContext();
 cubeb* GetCubebContextUnlocked();
+void ReportCubebStreamInitFailure(bool aIsFirstStream);
+void ReportCubebBackendUsed();
 uint32_t GetCubebLatency();
 bool CubebLatencyPrefSet();
 #if defined(__ANDROID__) && defined(MOZ_B2G)

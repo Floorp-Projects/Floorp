@@ -367,8 +367,10 @@ AudioStream::OpenCubeb(cubeb_stream_params& aParams,
                         CubebUtils::GetCubebLatency(),
                         DataCallback_S, StateCallback_S, this) == CUBEB_OK) {
     mCubebStream.reset(stream);
+    CubebUtils::ReportCubebBackendUsed();
   } else {
     NS_WARNING(nsPrintfCString("AudioStream::OpenCubeb() %p failed to init cubeb", this).get());
+    CubebUtils::ReportCubebStreamInitFailure(aIsFirst);
     return NS_ERROR_FAILURE;
   }
 
