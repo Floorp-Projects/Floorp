@@ -26,7 +26,7 @@ XPCCallContext::XPCCallContext(JSContext* cx,
     :   mAr(cx),
         mState(INIT_FAILED),
         mXPC(nsXPConnect::XPConnect()),
-        mXPCContext(nullptr),
+        mXPCJSRuntime(nullptr),
         mJSContext(cx),
         mWrapper(nullptr),
         mTearOff(nullptr),
@@ -38,12 +38,12 @@ XPCCallContext::XPCCallContext(JSContext* cx,
     if (!mXPC)
         return;
 
-    mXPCContext = XPCContext::GetXPCContext(mJSContext);
+    mXPCJSRuntime = XPCJSRuntime::Get();
 
     // hook into call context chain.
-    mPrevCallContext = XPCJSRuntime::Get()->SetCallContext(this);
+    mPrevCallContext = mXPCJSRuntime->SetCallContext(this);
 
-    mState = HAVE_CONTEXT;
+    mState = HAVE_RUNTIME;
 
     if (!obj)
         return;
@@ -124,7 +124,7 @@ void
 XPCCallContext::SetCallInfo(XPCNativeInterface* iface, XPCNativeMember* member,
                             bool isSetter)
 {
-    CHECK_STATE(HAVE_CONTEXT);
+    CHECK_STATE(HAVE_RUNTIME);
 
     // We are going straight to the method info and need not do a lookup
     // by id.
@@ -196,7 +196,7 @@ XPCCallContext::SystemIsBeingShutDown()
     // can be making this call on one thread for call contexts on another
     // thread.
     NS_WARNING("Shutting Down XPConnect even through there is a live XPCCallContext");
-    mXPCContext = nullptr;
+    mXPCJSRuntime = nullptr;
     mState = SYSTEM_SHUTDOWN;
     if (mPrevCallContext)
         mPrevCallContext->SystemIsBeingShutDown();
@@ -204,8 +204,8 @@ XPCCallContext::SystemIsBeingShutDown()
 
 XPCCallContext::~XPCCallContext()
 {
-    if (mXPCContext) {
-        DebugOnly<XPCCallContext*> old = XPCJSRuntime::Get()->SetCallContext(mPrevCallContext);
+    if (mXPCJSRuntime) {
+        DebugOnly<XPCCallContext*> old = mXPCJSRuntime->SetCallContext(mPrevCallContext);
         MOZ_ASSERT(old == this, "bad pop from per thread data");
     }
 }
