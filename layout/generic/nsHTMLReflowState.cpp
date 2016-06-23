@@ -970,7 +970,8 @@ nsHTMLReflowState::ComputeRelativeOffsets(WritingMode aWM,
   // Convert the offsets to physical coordinates and store them on the frame
   aComputedOffsets = offsets.GetPhysicalMargin(aWM);
   FrameProperties props = aFrame->Properties();
-  nsMargin* physicalOffsets = props.Get(nsIFrame::ComputedOffsetProperty());
+  nsMargin* physicalOffsets = static_cast<nsMargin*>
+    (props.Get(nsIFrame::ComputedOffsetProperty()));
   if (physicalOffsets) {
     *physicalOffsets = aComputedOffsets;
   } else {
@@ -995,7 +996,8 @@ nsHTMLReflowState::ApplyRelativePositioning(nsIFrame* aFrame,
 
   // Store the normal position
   FrameProperties props = aFrame->Properties();
-  nsPoint* normalPosition = props.Get(nsIFrame::NormalPositionProperty());
+  nsPoint* normalPosition = static_cast<nsPoint*>
+    (props.Get(nsIFrame::NormalPositionProperty()));
   if (normalPosition) {
     *normalPosition = *aPosition;
   } else {

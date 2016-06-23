@@ -449,6 +449,37 @@ nsSVGPaintingProperty::DoUpdate()
   }
 }
 
+static nsSVGRenderingObserver *
+CreateMarkerProperty(nsIURI *aURI, nsIFrame *aFrame, bool aReferenceImage)
+{ return new nsSVGMarkerProperty(aURI, aFrame, aReferenceImage); }
+
+static nsSVGRenderingObserver *
+CreateTextPathProperty(nsIURI *aURI, nsIFrame *aFrame, bool aReferenceImage)
+{ return new nsSVGTextPathProperty(aURI, aFrame, aReferenceImage); }
+
+static nsSVGRenderingObserver *
+CreatePaintingProperty(nsIURI *aURI, nsIFrame *aFrame, bool aReferenceImage)
+{ return new nsSVGPaintingProperty(aURI, aFrame, aReferenceImage); }
+
+static nsSVGRenderingObserver *
+GetEffectProperty(nsIURI *aURI, nsIFrame *aFrame,
+                  nsSVGEffects::ObserverPropertyDescriptor aProperty,
+                  nsSVGRenderingObserver * (* aCreate)(nsIURI *, nsIFrame *, bool))
+{
+  if (!aURI)
+    return nullptr;
+
+  FrameProperties props = aFrame->Properties();
+  nsSVGRenderingObserver *prop =
+    static_cast<nsSVGRenderingObserver*>(props.Get(aProperty));
+  if (prop)
+    return prop;
+  prop = aCreate(aURI, aFrame, false);
+  NS_ADDREF(prop);
+  props.Set(aProperty, static_cast<nsISupports*>(prop));
+  return prop;
+}
+
 static nsSVGFilterProperty*
 GetOrCreateFilterProperty(nsIFrame *aFrame)
 {
@@ -480,51 +511,37 @@ GetOrCreateMaskProperty(nsIFrame *aFrame)
   return prop;
 }
 
-template<class T>
-static T*
-GetEffectProperty(nsIURI *aURI, nsIFrame *aFrame,
-  const mozilla::FramePropertyDescriptor<T>* aProperty)
+nsSVGMarkerProperty *
+nsSVGEffects::GetMarkerProperty(nsIURI *aURI, nsIFrame *aFrame,
+                                ObserverPropertyDescriptor aProp)
 {
   MOZ_ASSERT(aFrame->GetType() == nsGkAtoms::svgPathGeometryFrame &&
                static_cast<nsSVGPathGeometryElement*>(aFrame->GetContent())->IsMarkable(),
-               "Bad frame");
-  if (!aURI)
-    return nullptr;
-
-  FrameProperties props = aFrame->Properties();
-  T* prop = props.Get(aProperty);
-  if (prop)
-    return prop;
-  prop = new T(aURI, aFrame, false);
-  NS_ADDREF(prop);
-  props.Set(aProperty, prop);
-  return prop;
-}
-
-nsSVGMarkerProperty *
-nsSVGEffects::GetMarkerProperty(nsIURI *aURI, nsIFrame *aFrame,
-  const mozilla::FramePropertyDescriptor<nsSVGMarkerProperty>* aProperty)
-{
-  return GetEffectProperty(aURI, aFrame, aProperty);
+             "Bad frame");
+  return static_cast<nsSVGMarkerProperty*>(
+          GetEffectProperty(aURI, aFrame, aProp, CreateMarkerProperty));
 }
 
 nsSVGTextPathProperty *
 nsSVGEffects::GetTextPathProperty(nsIURI *aURI, nsIFrame *aFrame,
-  const mozilla::FramePropertyDescriptor<nsSVGTextPathProperty>* aProperty)
+                                  ObserverPropertyDescriptor aProp)
 {
-  return GetEffectProperty(aURI, aFrame, aProperty);
+  return static_cast<nsSVGTextPathProperty*>(
+          GetEffectProperty(aURI, aFrame, aProp, CreateTextPathProperty));
 }
 
 nsSVGPaintingProperty *
 nsSVGEffects::GetPaintingProperty(nsIURI *aURI, nsIFrame *aFrame,
-  const mozilla::FramePropertyDescriptor<nsSVGPaintingProperty>* aProperty)
+                                  ObserverPropertyDescriptor aProp)
 {
-  return GetEffectProperty(aURI, aFrame, aProperty);
+  return static_cast<nsSVGPaintingProperty*>(
+          GetEffectProperty(aURI, aFrame, aProp, CreatePaintingProperty));
 }
 
-nsSVGPaintingProperty *
-nsSVGEffects::GetPaintingPropertyForURI(nsIURI *aURI, nsIFrame *aFrame,
-  URIObserverHashtablePropertyDescriptor aProperty)
+static nsSVGRenderingObserver *
+GetEffectPropertyForURI(nsIURI *aURI, nsIFrame *aFrame,
+                        nsSVGEffects::URIObserverHashtablePropertyDescriptor aProperty,
+                        nsSVGRenderingObserver * (* aCreate)(nsIURI *, nsIFrame *, bool))
 {
   if (!aURI)
     return nullptr;
@@ -535,14 +552,22 @@ nsSVGEffects::GetPaintingPropertyForURI(nsIURI *aURI, nsIFrame *aFrame,
     hashtable = new nsSVGEffects::URIObserverHashtable();
     props.Set(aProperty, hashtable);
   }
-  nsSVGPaintingProperty* prop =
-    static_cast<nsSVGPaintingProperty*>(hashtable->GetWeak(aURI));
+  nsSVGRenderingObserver* prop =
+    static_cast<nsSVGRenderingObserver*>(hashtable->GetWeak(aURI));
   if (!prop) {
     bool watchImage = aProperty == nsSVGEffects::BackgroundImageProperty();
-    prop = new nsSVGPaintingProperty(aURI, aFrame, watchImage);
+    prop = aCreate(aURI, aFrame, watchImage);
     hashtable->Put(aURI, prop);
   }
   return prop;
+}
+
+nsSVGPaintingProperty *
+nsSVGEffects::GetPaintingPropertyForURI(nsIURI *aURI, nsIFrame *aFrame,
+                                        URIObserverHashtablePropertyDescriptor aProp)
+{
+  return static_cast<nsSVGPaintingProperty*>(
+          GetEffectPropertyForURI(aURI, aFrame, aProp, CreatePaintingProperty));
 }
 
 nsSVGEffects::EffectProperties
@@ -571,7 +596,7 @@ nsSVGEffects::GetEffectProperties(nsIFrame *aFrame)
 
 nsSVGPaintServerFrame *
 nsSVGEffects::GetPaintServer(nsIFrame *aTargetFrame, const nsStyleSVGPaint *aPaint,
-                             PaintingPropertyDescriptor aType)
+                             ObserverPropertyDescriptor aType)
 {
   if (aPaint->mType != eStyleSVGPaintType_Server)
     return nullptr;
@@ -679,9 +704,12 @@ nsSVGEffects::UpdateEffects(nsIFrame *aFrame)
       static_cast<nsSVGPathGeometryElement*>(aFrame->GetContent())->IsMarkable()) {
     // Set marker properties here to avoid reference loops
     const nsStyleSVG *style = aFrame->StyleSVG();
-    GetMarkerProperty(style->mMarkerStart, aFrame, MarkerBeginProperty());
-    GetMarkerProperty(style->mMarkerMid, aFrame, MarkerMiddleProperty());
-    GetMarkerProperty(style->mMarkerEnd, aFrame, MarkerEndProperty());
+    GetEffectProperty(style->mMarkerStart, aFrame, MarkerBeginProperty(),
+                      CreateMarkerProperty);
+    GetEffectProperty(style->mMarkerMid, aFrame, MarkerMiddleProperty(),
+                      CreateMarkerProperty);
+    GetEffectProperty(style->mMarkerEnd, aFrame, MarkerEndProperty(),
+                      CreateMarkerProperty);
   }
 }
 
@@ -693,7 +721,8 @@ nsSVGEffects::GetFilterProperty(nsIFrame *aFrame)
   if (!aFrame->StyleEffects()->HasFilters())
     return nullptr;
 
-  return aFrame->Properties().Get(FilterProperty());
+  return static_cast<nsSVGFilterProperty *>
+    (aFrame->Properties().Get(FilterProperty()));
 }
 
 void
