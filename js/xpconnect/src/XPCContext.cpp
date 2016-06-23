@@ -15,8 +15,7 @@
 XPCContext::XPCContext(XPCJSRuntime* aRuntime,
                        JSContext* aJSContext)
     :   mRuntime(aRuntime),
-        mJSContext(aJSContext),
-        mLastResult(NS_OK)
+        mJSContext(aJSContext)
 {
     MOZ_COUNT_CTOR(XPCContext);
 
@@ -40,7 +39,6 @@ XPCContext::DebugDump(int16_t depth)
         XPC_LOG_INDENT();
         XPC_LOG_ALWAYS(("mRuntime @ %x", mRuntime));
         XPC_LOG_ALWAYS(("mJSContext @ %x", mJSContext));
-        XPC_LOG_ALWAYS(("mLastResult of %x", mLastResult));
         XPC_LOG_ALWAYS(("mException @ %x", mException.get()));
         if (depth && mException) {
             // XXX show the exception here...
