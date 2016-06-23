@@ -2029,7 +2029,12 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest)
 void
 nsScriptLoader::ProcessPendingRequestsAsync()
 {
-  if (mParserBlockingRequest || !mPendingChildLoaders.IsEmpty()) {
+  if (mParserBlockingRequest ||
+      !mXSLTRequests.isEmpty() ||
+      !mLoadedAsyncRequests.isEmpty() ||
+      !mNonAsyncExternalScriptInsertedRequests.isEmpty() ||
+      !mDeferRequests.isEmpty() ||
+      !mPendingChildLoaders.IsEmpty()) {
     NS_DispatchToCurrentThread(NewRunnableMethod(this,
                                                  &nsScriptLoader::ProcessPendingRequests));
   }

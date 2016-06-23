@@ -36006,6 +36006,12 @@
             "url": "/XMLHttpRequest/xmlhttprequest-sync-block-scripts.html"
           }
         ],
+        "XMLHttpRequest/xmlhttprequest-sync-not-hang-scriptloader.html": [
+          {
+            "path": "XMLHttpRequest/xmlhttprequest-sync-not-hang-scriptloader.html",
+            "url": "/XMLHttpRequest/xmlhttprequest-sync-not-hang-scriptloader.html"
+          }
+        ],
         "dom/events/EventListener-incumbent-global-1.sub.html": [
           {
             "path": "dom/events/EventListener-incumbent-global-1.sub.html",
