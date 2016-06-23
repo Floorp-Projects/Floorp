@@ -21,6 +21,7 @@
 #include "mozilla/gfx/2D.h"
 
 #include "DownscalingFilter.h"
+#include "SurfaceCache.h"
 #include "SurfacePipe.h"
 
 namespace mozilla {
@@ -90,6 +91,14 @@ public:
     const uint32_t bufferSize = outputSize.width *
                                 outputSize.height *
                                 sizeof(PixelType);
+
+    // Use the size of the SurfaceCache as a heuristic to avoid gigantic
+    // allocations. Even if DownscalingFilter allowed us to allocate space for
+    // the output image, the deinterlacing buffer may still be too big, and
+    // fallible allocation won't always save us in the presence of overcommit.
+    if (!SurfaceCache::CanHold(bufferSize)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     // Allocate the buffer, which contains deinterlaced scanlines of the image.
     // The buffer is necessary so that we can output rows which have already
