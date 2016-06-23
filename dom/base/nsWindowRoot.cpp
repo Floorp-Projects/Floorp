@@ -49,7 +49,6 @@ nsWindowRoot::~nsWindowRoot()
 NS_IMPL_CYCLE_COLLECTION_WRAPPERCACHE(nsWindowRoot,
                                       mWindow,
                                       mListenerManager,
-                                      mPopupNode,
                                       mParent)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION(nsWindowRoot)
@@ -363,13 +362,14 @@ nsWindowRoot::GetEnabledDisabledCommands(nsTArray<nsCString>& aEnabledCommands,
 nsIDOMNode*
 nsWindowRoot::GetPopupNode()
 {
-  return mPopupNode;
+  nsCOMPtr<nsIDOMNode> popupNode = do_QueryReferent(mPopupNode);
+  return popupNode;
 }
 
 void
 nsWindowRoot::SetPopupNode(nsIDOMNode* aNode)
 {
-  mPopupNode = aNode;
+  mPopupNode = do_GetWeakReference(aNode);
 }
 
 nsIGlobalObject*
