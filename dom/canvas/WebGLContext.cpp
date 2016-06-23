@@ -643,6 +643,7 @@ CreateGLWithDefault(const gl::SurfaceCaps& caps, gl::CreateContextFlags flags,
     nsCString failureId;
     RefPtr<GLContext> gl = gl::GLContextProvider::CreateOffscreen(dummySize, caps,
                                                                   flags, &failureId);
+
     if (gl && gl->IsANGLE()) {
         gl = nullptr;
     }
@@ -697,43 +698,10 @@ bool
 WebGLContext::CreateAndInitGL(bool forceEnabled,
                               std::vector<FailureReason>* const out_failReasons)
 {
-    const gl::SurfaceCaps baseCaps = BaseCaps(mOptions, this);
-    gl::CreateContextFlags flags = gl::CreateContextFlags::NO_VALIDATION;
-    bool tryNativeGL = true;
-    bool tryANGLE = false;
-
+    bool disableNativeGL = true;
     if (forceEnabled) {
-        flags |= gl::CreateContextFlags::FORCE_ENABLE_HARDWARE;
-    }
-
-    if (IsWebGL2()) {
-        flags |= gl::CreateContextFlags::PREFER_ES3;
-    } else {
-        flags |= gl::CreateContextFlags::REQUIRE_COMPAT_PROFILE;
-    }
-
-    //////
-
-    const bool useEGL = PR_GetEnv("MOZ_WEBGL_FORCE_EGL");
-
-#ifdef XP_WIN
-    if (!IsWebGL2()) {
-        // Use only ANGLE on Windows for WebGL 1.
-        tryNativeGL = false;
-        tryANGLE = true;
-    }
-
-    if (gfxPrefs::WebGLDisableWGL()) {
-        tryNativeGL = false;
-    }
-
-    if (gfxPrefs::WebGLDisableANGLE() || PR_GetEnv("MOZ_WEBGL_FORCE_OPENGL") || useEGL) {
-        tryNativeGL = true;
-        tryANGLE = false;
-    }
-#endif
-
-    if (tryNativeGL && !forceEnabled) {
+        disableNativeGL = false;
+    } else if (IsWebGL2()) {
         const nsCOMPtr<nsIGfxInfo> gfxInfo = services::GetGfxInfo();
         const auto feature = nsIGfxInfo::FEATURE_WEBGL_OPENGL;
 
@@ -746,23 +714,51 @@ WebGLContext::CreateAndInitGL(bool forceEnabled,
             out_failReasons->push_back(reason);
 
             GenerateWarning(reason.info.BeginReading());
-            tryNativeGL = false;
+        } else {
+            disableNativeGL = false;
         }
     }
 
     //////
 
-    if (tryNativeGL) {
+    gl::CreateContextFlags flags = gl::CreateContextFlags::NO_VALIDATION;
+
+    if (forceEnabled) flags |= gl::CreateContextFlags::FORCE_ENABLE_HARDWARE;
+    if (!IsWebGL2())  flags |= gl::CreateContextFlags::REQUIRE_COMPAT_PROFILE;
+    if (IsWebGL2())   flags |= gl::CreateContextFlags::PREFER_ES3;
+
+    const gl::SurfaceCaps baseCaps = BaseCaps(mOptions, this);
+
+    //////
+
+    if (!disableNativeGL) {
+        const bool useEGL = PR_GetEnv("MOZ_WEBGL_FORCE_EGL");
+
         if (useEGL)
             return CreateAndInitGLWith(CreateGLWithEGL, baseCaps, flags, out_failReasons);
 
-        if (CreateAndInitGLWith(CreateGLWithDefault, baseCaps, flags, out_failReasons))
-            return true;
+        bool tryNativeGL = true;
+#ifdef XP_WIN
+        if (gfxPrefs::WebGLDisableWGL()) {
+            tryNativeGL = false;
+        }
+#endif
+        if (tryNativeGL) {
+            if (CreateAndInitGLWith(CreateGLWithDefault, baseCaps, flags, out_failReasons))
+                return true;
+        }
     }
 
     //////
 
-    if (tryANGLE)
+    bool useANGLE = false;
+#ifdef XP_WIN
+    const bool disableANGLE = (gfxPrefs::WebGLDisableANGLE() ||
+                               PR_GetEnv("MOZ_WEBGL_FORCE_OPENGL"));
+    useANGLE = !disableANGLE;
+#endif
+
+    if (useANGLE)
         return CreateAndInitGLWith(CreateGLWithANGLE, baseCaps, flags, out_failReasons);
 
     //////
