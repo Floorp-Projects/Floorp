@@ -31,7 +31,6 @@ define(function (require, exports, module) {
     return object && object.actor;
   }
 
-
   function escapeNewLines(value) {
     return value.replace(/\r/gm, "\\r").replace(/\n/gm, "\\n");
   }
