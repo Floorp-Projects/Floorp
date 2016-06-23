@@ -906,7 +906,7 @@ nsHTMLEditor::SetFinalSize(int32_t aX, int32_t aY)
   y = top - ((mResizedObjectIsAbsolutelyPositioned) ? mResizedObjectBorderTop+mResizedObjectMarginTop : 0);
 
   // we want one transaction only from a user's point of view
-  nsAutoEditBatch batchIt(this);
+  AutoEditBatch batchIt(this);
 
   NS_NAMED_LITERAL_STRING(widthStr,  "width");
   NS_NAMED_LITERAL_STRING(heightStr, "height");

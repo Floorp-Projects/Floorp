@@ -2203,7 +2203,7 @@ nsEditor::CloneAttributes(Element* aDest, Element* aSource)
 {
   MOZ_ASSERT(aDest && aSource);
 
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
 
   // Use transaction system for undo only if destination is already in the
   // document
