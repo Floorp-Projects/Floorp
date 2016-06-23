@@ -1185,13 +1185,13 @@ NS_IMETHODIMP
 nsHTMLEditor::ReplaceHeadContentsWithHTML(const nsAString& aSourceToInsert)
 {
   // don't do any post processing, rules get confused
-  nsAutoRules beginRulesSniffing(this, EditAction::ignore, nsIEditor::eNone);
+  AutoRules beginRulesSniffing(this, EditAction::ignore, nsIEditor::eNone);
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
   ForceCompositionEnd();
 
-  // Do not use nsAutoRules -- rules code won't let us insert in <head>.  Use
+  // Do not use AutoRules -- rules code won't let us insert in <head>.  Use
   // the head node as a parent and delete/insert directly.
   nsCOMPtr<nsIDocument> doc = do_QueryReferent(mDocWeak);
   NS_ENSURE_TRUE(doc, NS_ERROR_NOT_INITIALIZED);
@@ -1496,7 +1496,8 @@ nsHTMLEditor::InsertElementAtSelection(nsIDOMElement* aElement, bool aDeleteSele
 
   ForceCompositionEnd();
   nsAutoEditBatch beginBatching(this);
-  nsAutoRules beginRulesSniffing(this, EditAction::insertElement, nsIEditor::eNext);
+  AutoRules beginRulesSniffing(this, EditAction::insertElement,
+                               nsIEditor::eNext);
 
   RefPtr<Selection> selection = GetSelection();
   if (!selection) {
@@ -1933,7 +1934,7 @@ nsHTMLEditor::MakeOrChangeList(const nsAString& aListType, bool entireList, cons
   bool cancel, handled;
 
   nsAutoEditBatch beginBatching(this);
-  nsAutoRules beginRulesSniffing(this, EditAction::makeList, nsIEditor::eNext);
+  AutoRules beginRulesSniffing(this, EditAction::makeList, nsIEditor::eNext);
 
   // pre-process
   RefPtr<Selection> selection = GetSelection();
@@ -2006,7 +2007,7 @@ nsHTMLEditor::RemoveList(const nsAString& aListType)
   bool cancel, handled;
 
   nsAutoEditBatch beginBatching(this);
-  nsAutoRules beginRulesSniffing(this, EditAction::removeList, nsIEditor::eNext);
+  AutoRules beginRulesSniffing(this, EditAction::removeList, nsIEditor::eNext);
 
   // pre-process
   RefPtr<Selection> selection = GetSelection();
@@ -2037,7 +2038,8 @@ nsHTMLEditor::MakeDefinitionItem(const nsAString& aItemType)
   bool cancel, handled;
 
   nsAutoEditBatch beginBatching(this);
-  nsAutoRules beginRulesSniffing(this, EditAction::makeDefListItem, nsIEditor::eNext);
+  AutoRules beginRulesSniffing(this, EditAction::makeDefListItem,
+                               nsIEditor::eNext);
 
   // pre-process
   RefPtr<Selection> selection = GetSelection();
@@ -2068,7 +2070,8 @@ nsHTMLEditor::InsertBasicBlock(const nsAString& aBlockType)
   bool cancel, handled;
 
   nsAutoEditBatch beginBatching(this);
-  nsAutoRules beginRulesSniffing(this, EditAction::makeBasicBlock, nsIEditor::eNext);
+  AutoRules beginRulesSniffing(this, EditAction::makeBasicBlock,
+                               nsIEditor::eNext);
 
   // pre-process
   RefPtr<Selection> selection = GetSelection();
@@ -2141,7 +2144,7 @@ nsHTMLEditor::Indent(const nsAString& aIndent)
     opID = EditAction::outdent;
   }
   nsAutoEditBatch beginBatching(this);
-  nsAutoRules beginRulesSniffing(this, opID, nsIEditor::eNext);
+  AutoRules beginRulesSniffing(this, opID, nsIEditor::eNext);
 
   // pre-process
   RefPtr<Selection> selection = GetSelection();
@@ -2213,7 +2216,7 @@ nsHTMLEditor::Align(const nsAString& aAlignType)
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
   nsAutoEditBatch beginBatching(this);
-  nsAutoRules beginRulesSniffing(this, EditAction::align, nsIEditor::eNext);
+  AutoRules beginRulesSniffing(this, EditAction::align, nsIEditor::eNext);
 
   nsCOMPtr<nsIDOMNode> node;
   bool cancel, handled;
@@ -4529,8 +4532,8 @@ nsHTMLEditor::SetCSSBackgroundColor(const nsAString& aColor)
   bool isCollapsed = selection->Collapsed();
 
   nsAutoEditBatch batchIt(this);
-  nsAutoRules beginRulesSniffing(this, EditAction::insertElement,
-                                 nsIEditor::eNext);
+  AutoRules beginRulesSniffing(this, EditAction::insertElement,
+                               nsIEditor::eNext);
   nsAutoSelectionReset selectionResetter(selection, this);
   AutoTransactionsConserveSelection dontSpazMySelection(this);
 

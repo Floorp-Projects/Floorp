@@ -16,7 +16,7 @@
 #include "DeleteRangeTxn.h"             // for DeleteRangeTxn
 #include "DeleteTextTxn.h"              // for DeleteTextTxn
 #include "EditAggregateTxn.h"           // for EditAggregateTxn
-#include "EditorUtils.h"                // for nsAutoRules, etc
+#include "EditorUtils.h"                // for AutoRules, etc
 #include "EditTxn.h"                    // for EditTxn
 #include "IMETextTxn.h"                 // for IMETextTxn
 #include "InsertNodeTxn.h"              // for InsertNodeTxn
@@ -808,7 +808,7 @@ nsEditor::Undo(uint32_t aCount)
   CanUndo(&hasTxnMgr, &hasTransaction);
   NS_ENSURE_TRUE(hasTransaction, NS_OK);
 
-  nsAutoRules beginRulesSniffing(this, EditAction::undo, nsIEditor::eNone);
+  AutoRules beginRulesSniffing(this, EditAction::undo, nsIEditor::eNone);
 
   if (!mTxnMgr) {
     return NS_OK;
@@ -847,7 +847,7 @@ nsEditor::Redo(uint32_t aCount)
   CanRedo(&hasTxnMgr, &hasTransaction);
   NS_ENSURE_TRUE(hasTransaction, NS_OK);
 
-  nsAutoRules beginRulesSniffing(this, EditAction::redo, nsIEditor::eNone);
+  AutoRules beginRulesSniffing(this, EditAction::redo, nsIEditor::eNone);
 
   if (!mTxnMgr) {
     return NS_OK;
@@ -1346,7 +1346,7 @@ nsEditor::CreateNode(nsIAtom* aTag,
 {
   MOZ_ASSERT(aTag && aParent);
 
-  nsAutoRules beginRulesSniffing(this, EditAction::createNode, nsIEditor::eNext);
+  AutoRules beginRulesSniffing(this, EditAction::createNode, nsIEditor::eNext);
 
   for (auto& listener : mActionListeners) {
     listener->WillCreateNode(nsDependentAtomString(aTag),
@@ -1387,7 +1387,7 @@ nsEditor::InsertNode(nsIDOMNode* aNode, nsIDOMNode* aParent, int32_t aPosition)
 nsresult
 nsEditor::InsertNode(nsIContent& aNode, nsINode& aParent, int32_t aPosition)
 {
-  nsAutoRules beginRulesSniffing(this, EditAction::insertNode, nsIEditor::eNext);
+  AutoRules beginRulesSniffing(this, EditAction::insertNode, nsIEditor::eNext);
 
   for (auto& listener : mActionListeners) {
     listener->WillInsertNode(aNode.AsDOMNode(), aParent.AsDOMNode(),
@@ -1425,8 +1425,7 @@ nsEditor::SplitNode(nsIDOMNode* aNode,
 nsIContent*
 nsEditor::SplitNode(nsIContent& aNode, int32_t aOffset, ErrorResult& aResult)
 {
-  nsAutoRules beginRulesSniffing(this, EditAction::splitNode,
-                                 nsIEditor::eNext);
+  AutoRules beginRulesSniffing(this, EditAction::splitNode, nsIEditor::eNext);
 
   for (auto& listener : mActionListeners) {
     listener->WillSplitNode(aNode.AsDOMNode(), aOffset);
@@ -1470,8 +1469,8 @@ nsEditor::JoinNodes(nsINode& aLeftNode, nsINode& aRightNode)
   nsCOMPtr<nsINode> parent = aLeftNode.GetParentNode();
   MOZ_ASSERT(parent);
 
-  nsAutoRules beginRulesSniffing(this, EditAction::joinNode,
-                                 nsIEditor::ePrevious);
+  AutoRules beginRulesSniffing(this, EditAction::joinNode,
+                               nsIEditor::ePrevious);
 
   // Remember some values; later used for saved selection updating.
   // Find the offset between the nodes to be joined.
@@ -1513,7 +1512,8 @@ nsEditor::DeleteNode(nsIDOMNode* aNode)
 nsresult
 nsEditor::DeleteNode(nsINode* aNode)
 {
-  nsAutoRules beginRulesSniffing(this, EditAction::createNode, nsIEditor::ePrevious);
+  AutoRules beginRulesSniffing(this, EditAction::createNode,
+                               nsIEditor::ePrevious);
 
   // save node location for selection updating code.
   for (auto& listener : mActionListeners) {
@@ -2596,7 +2596,8 @@ nsEditor::DeleteText(nsGenericDOMDataNode& aCharData, uint32_t aOffset,
     CreateTxnForDeleteText(aCharData, aOffset, aLength);
   NS_ENSURE_STATE(txn);
 
-  nsAutoRules beginRulesSniffing(this, EditAction::deleteText, nsIEditor::ePrevious);
+  AutoRules beginRulesSniffing(this, EditAction::deleteText,
+                               nsIEditor::ePrevious);
 
   // Let listeners know what's up
   for (auto& listener : mActionListeners) {
@@ -3995,7 +3996,7 @@ nsEditor::DeleteSelectionImpl(EDirection aAction,
 
   if (NS_SUCCEEDED(res))
   {
-    nsAutoRules beginRulesSniffing(this, EditAction::deleteSelection, aAction);
+    AutoRules beginRulesSniffing(this, EditAction::deleteSelection, aAction);
     // Notify nsIEditActionListener::WillDelete[Selection|Text|Node]
     if (!deleteNode) {
       for (auto& listener : mActionListeners) {
