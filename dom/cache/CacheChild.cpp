@@ -70,7 +70,7 @@ CacheChild::ExecuteOp(nsIGlobalObject* aGlobal, Promise* aPromise,
 {
   mNumChildActors += 1;
   MOZ_ALWAYS_TRUE(SendPCacheOpConstructor(
-    new CacheOpChild(GetFeature(), aGlobal, aParent, aPromise), aArgs));
+    new CacheOpChild(GetWorkerHolder(), aGlobal, aParent, aPromise), aArgs));
 }
 
 void
@@ -103,7 +103,7 @@ CacheChild::StartDestroy()
 
   RefPtr<Cache> listener = mListener;
 
-  // StartDestroy() can get called from either Cache or the Feature.
+  // StartDestroy() can get called from either Cache or the WorkerHolder.
   // Theoretically we can get double called if the right race happens.  Handle
   // that by just ignoring the second StartDestroy() call.
   if (!listener) {
@@ -130,7 +130,7 @@ CacheChild::ActorDestroy(ActorDestroyReason aReason)
     MOZ_ASSERT(!mListener);
   }
 
-  RemoveFeature();
+  RemoveWorkerHolder();
 }
 
 PCacheOpChild*
