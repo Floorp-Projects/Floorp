@@ -24,8 +24,6 @@ public:
 
   static void ResetStatistics();
 
-  static void DemangleSymbol(const char* aSymbol, char* aBuffer, int aBufLen);
-
   static void WalkTheStack(FILE* aStream);
 
   /**
