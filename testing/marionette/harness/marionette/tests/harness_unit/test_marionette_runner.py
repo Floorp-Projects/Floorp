@@ -2,7 +2,7 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import pytest
-from mock import patch, Mock, DEFAULT, mock_open
+from mock import patch, Mock, DEFAULT, mock_open, MagicMock
 
 from marionette.runtests import (
     MarionetteTestRunner,
@@ -10,6 +10,7 @@ from marionette.runtests import (
     cli
 )
 from marionette.runner import MarionetteTestResult
+from marionette_driver.marionette import Marionette
 
 # avoid importing MarionetteJSTestCase to prevent pytest from
 # collecting and running it as part of this test suite
@@ -27,8 +28,7 @@ def _check_crash_counts(has_crashed, runner, mock_marionette):
 @pytest.fixture()
 def mock_marionette(request):
     """ Mock marionette instance """
-    import marionette_driver
-    marionette = Mock(spec=marionette_driver.marionette.Marionette)
+    marionette = MagicMock(spec=Marionette)
     if 'has_crashed' in request.funcargnames:
         marionette.check_for_crash.return_value = request.getfuncargvalue(
             'has_crashed'
@@ -127,6 +127,18 @@ def runner(mach_parsed_kwargs):
     MarionetteTestRunner instance initialized with default options.
     """
     return MarionetteTestRunner(**mach_parsed_kwargs)
+
+
+@pytest.fixture()
+def mock_runner(runner, mock_marionette):
+    """
+    MarionetteTestRunner instance with mocked-out
+    self.marionette and other properties.
+    """
+    runner.driverclass = mock_marionette
+    runner._set_baseurl = Mock()
+    runner.run_test_set = Mock()
+    return runner
 
 
 @pytest.fixture
@@ -356,6 +368,36 @@ def test_add_test_manifest(runner):
             assert test['expected'] == 'fail'
         else:
             assert test['expected'] == 'pass'
+
+
+def test_reset_test_stats(runner):
+    def reset_successful(runner):
+        stats = ['passed', 'failed', 'unexpected_successes', 'todo', 'skipped', 'failures']
+        return all([((s in vars(runner)) and (not vars(runner)[s])) for s in stats])
+    assert reset_successful(runner)
+    runner.passed = 1
+    runner.failed = 1
+    runner.failures.append(['TEST-UNEXPECTED-FAIL'])
+    assert not reset_successful(runner)
+    with pytest.raises(Exception):
+        runner.run_tests([u'test_fake_thing.py'])
+    assert reset_successful(runner)
+
+
+def test_initialize_test_run(mock_runner):
+    tests = [u'test_fake_thing.py']
+    mock_runner.reset_test_stats = Mock()
+    with patch('marionette.runner.base.mozversion.get_version'):
+        mock_runner.run_tests(tests)
+    assert mock_runner.reset_test_stats.called
+    with pytest.raises(AssertionError) as test_exc:
+        mock_runner.run_tests([])
+    assert "len(tests)" in str(test_exc.traceback[-1].statement)
+    with pytest.raises(AssertionError) as hndl_exc:
+        mock_runner.test_handlers = []
+        mock_runner.run_tests(tests)
+    assert "test_handlers" in str(hndl_exc.traceback[-1].statement)
+    assert mock_runner.reset_test_stats.call_count == 1
 
 
 if __name__ == '__main__':
