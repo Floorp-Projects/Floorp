@@ -266,15 +266,15 @@ private:
 
 NS_IMPL_ISUPPORTS(TeardownRunnable, nsICancelableRunnable, nsIRunnable)
 
-class BroadcastChannelWorkerHolder final : public workers::WorkerHolder
+class BroadcastChannelFeature final : public workers::WorkerFeature
 {
   BroadcastChannel* mChannel;
 
 public:
-  explicit BroadcastChannelWorkerHolder(BroadcastChannel* aChannel)
+  explicit BroadcastChannelFeature(BroadcastChannel* aChannel)
     : mChannel(aChannel)
   {
-    MOZ_COUNT_CTOR(BroadcastChannelWorkerHolder);
+    MOZ_COUNT_CTOR(BroadcastChannelFeature);
   }
 
   virtual bool Notify(workers::Status aStatus) override
@@ -287,9 +287,9 @@ public:
   }
 
 private:
-  ~BroadcastChannelWorkerHolder()
+  ~BroadcastChannelFeature()
   {
-    MOZ_COUNT_DTOR(BroadcastChannelWorkerHolder);
+    MOZ_COUNT_DTOR(BroadcastChannelFeature);
   }
 };
 
@@ -300,7 +300,7 @@ BroadcastChannel::BroadcastChannel(nsPIDOMWindowInner* aWindow,
                                    const nsACString& aOrigin,
                                    const nsAString& aChannel)
   : DOMEventTargetHelper(aWindow)
-  , mWorkerHolder(nullptr)
+  , mWorkerFeature(nullptr)
   , mPrincipalInfo(new PrincipalInfo(aPrincipalInfo))
   , mOrigin(aOrigin)
   , mChannel(aChannel)
@@ -314,7 +314,7 @@ BroadcastChannel::BroadcastChannel(nsPIDOMWindowInner* aWindow,
 BroadcastChannel::~BroadcastChannel()
 {
   Shutdown();
-  MOZ_ASSERT(!mWorkerHolder);
+  MOZ_ASSERT(!mWorkerFeature);
 }
 
 JSObject*
@@ -406,9 +406,10 @@ BroadcastChannel::Constructor(const GlobalObject& aGlobal,
       obs->AddObserver(bc, "inner-window-destroyed", false);
     }
   } else {
-    bc->mWorkerHolder = new BroadcastChannelWorkerHolder(bc);
-    if (NS_WARN_IF(!bc->mWorkerHolder->HoldWorker(workerPrivate))) {
-      bc->mWorkerHolder = nullptr;
+    bc->mWorkerFeature = new BroadcastChannelFeature(bc);
+    if (NS_WARN_IF(!workerPrivate->AddFeature(bc->mWorkerFeature))) {
+      NS_WARNING("Failed to register the BroadcastChannel worker feature.");
+      bc->mWorkerFeature = nullptr;
       aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
@@ -527,8 +528,11 @@ BroadcastChannel::Shutdown()
 {
   mState = StateClosed;
 
-  // The DTOR of this WorkerHolder will release the worker for us.
-  mWorkerHolder = nullptr;
+  if (mWorkerFeature) {
+    WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+    workerPrivate->RemoveFeature(mWorkerFeature);
+    mWorkerFeature = nullptr;
+  }
 
   if (mActor) {
     mActor->SetParent(nullptr);

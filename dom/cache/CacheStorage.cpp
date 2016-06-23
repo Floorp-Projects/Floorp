@@ -14,7 +14,7 @@
 #include "mozilla/dom/cache/Cache.h"
 #include "mozilla/dom/cache/CacheChild.h"
 #include "mozilla/dom/cache/CacheStorageChild.h"
-#include "mozilla/dom/cache/CacheWorkerHolder.h"
+#include "mozilla/dom/cache/Feature.h"
 #include "mozilla/dom/cache/PCacheChild.h"
 #include "mozilla/dom/cache/ReadStream.h"
 #include "mozilla/dom/cache/TypeUtils.h"
@@ -202,9 +202,8 @@ CacheStorage::CreateOnWorker(Namespace aNamespace, nsIGlobalObject* aGlobal,
     return ref.forget();
   }
 
-  RefPtr<CacheWorkerHolder> workerHolder =
-    CacheWorkerHolder::Create(aWorkerPrivate);
-  if (!workerHolder) {
+  RefPtr<Feature> feature = Feature::Create(aWorkerPrivate);
+  if (!feature) {
     NS_WARNING("Worker thread is shutting down.");
     aRv.Throw(NS_ERROR_FAILURE);
     return nullptr;
@@ -237,7 +236,7 @@ CacheStorage::CreateOnWorker(Namespace aNamespace, nsIGlobalObject* aGlobal,
   }
 
   RefPtr<CacheStorage> ref = new CacheStorage(aNamespace, aGlobal,
-                                              principalInfo, workerHolder);
+                                                principalInfo, feature);
   return ref.forget();
 }
 
@@ -277,12 +276,11 @@ CacheStorage::DefineCaches(JSContext* aCx, JS::Handle<JSObject*> aGlobal)
 }
 
 CacheStorage::CacheStorage(Namespace aNamespace, nsIGlobalObject* aGlobal,
-                           const PrincipalInfo& aPrincipalInfo,
-                           CacheWorkerHolder* aWorkerHolder)
+                           const PrincipalInfo& aPrincipalInfo, Feature* aFeature)
   : mNamespace(aNamespace)
   , mGlobal(aGlobal)
   , mPrincipalInfo(MakeUnique<PrincipalInfo>(aPrincipalInfo))
-  , mWorkerHolder(aWorkerHolder)
+  , mFeature(aFeature)
   , mActor(nullptr)
   , mStatus(NS_OK)
 {
@@ -511,15 +509,15 @@ CacheStorage::ActorCreated(PBackgroundChild* aActor)
   NS_ASSERT_OWNINGTHREAD(CacheStorage);
   MOZ_ASSERT(aActor);
 
-  if (NS_WARN_IF(mWorkerHolder && mWorkerHolder->Notified())) {
+  if (NS_WARN_IF(mFeature && mFeature->Notified())) {
     ActorFailed();
     return;
   }
 
-  // WorkerHolder ownership is passed to the CacheStorageChild actor and any
-  // actors it may create.  The WorkerHolder will keep the worker thread alive
-  // until the actors can gracefully shutdown.
-  CacheStorageChild* newActor = new CacheStorageChild(this, mWorkerHolder);
+  // Feature ownership is passed to the CacheStorageChild actor and any actors
+  // it may create.  The Feature will keep the worker thread alive until the
+  // actors can gracefully shutdown.
+  CacheStorageChild* newActor = new CacheStorageChild(this, mFeature);
   PCacheStorageChild* constructedActor =
     aActor->SendPCacheStorageConstructor(newActor, mNamespace, *mPrincipalInfo);
 
@@ -528,7 +526,7 @@ CacheStorage::ActorCreated(PBackgroundChild* aActor)
     return;
   }
 
-  mWorkerHolder = nullptr;
+  mFeature = nullptr;
 
   MOZ_ASSERT(constructedActor == newActor);
   mActor = newActor;
@@ -544,7 +542,7 @@ CacheStorage::ActorFailed()
   MOZ_ASSERT(!NS_FAILED(mStatus));
 
   mStatus = NS_ERROR_UNEXPECTED;
-  mWorkerHolder = nullptr;
+  mFeature = nullptr;
 
   for (uint32_t i = 0; i < mPendingRequests.Length(); ++i) {
     nsAutoPtr<Entry> entry(mPendingRequests[i].forget());

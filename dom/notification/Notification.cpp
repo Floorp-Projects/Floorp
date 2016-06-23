@@ -458,10 +458,9 @@ public:
   }
 
   // This is only required because Gecko runs script in a worker's onclose
-  // handler (non-standard, Bug 790919) where calls to HoldWorker() will
-  // fail. Due to non-standardness and added complications if we decide to
-  // support this, attempts to create a Notification in onclose just throw
-  // exceptions.
+  // handler (non-standard, Bug 790919) where calls to AddFeature() will fail.
+  // Due to non-standardness and added complications if we decide to support
+  // this, attempts to create a Notification in onclose just throw exceptions.
   bool
   Initialized()
   {
@@ -1200,7 +1199,7 @@ Notification::~Notification()
   mData.setUndefined();
   mozilla::DropJSObjects(this);
   AssertIsOnTargetThread();
-  MOZ_ASSERT(!mWorkerHolder);
+  MOZ_ASSERT(!mFeature);
   MOZ_ASSERT(!mTempRef);
 }
 
@@ -2441,10 +2440,10 @@ bool
 Notification::AddRefObject()
 {
   AssertIsOnTargetThread();
-  MOZ_ASSERT_IF(mWorkerPrivate && !mWorkerHolder, mTaskCount == 0);
-  MOZ_ASSERT_IF(mWorkerPrivate && mWorkerHolder, mTaskCount > 0);
-  if (mWorkerPrivate && !mWorkerHolder) {
-    if (!RegisterWorkerHolder()) {
+  MOZ_ASSERT_IF(mWorkerPrivate && !mFeature, mTaskCount == 0);
+  MOZ_ASSERT_IF(mWorkerPrivate && mFeature, mTaskCount > 0);
+  if (mWorkerPrivate && !mFeature) {
+    if (!RegisterFeature()) {
       return false;
     }
   }
@@ -2458,16 +2457,16 @@ Notification::ReleaseObject()
 {
   AssertIsOnTargetThread();
   MOZ_ASSERT(mTaskCount > 0);
-  MOZ_ASSERT_IF(mWorkerPrivate, mWorkerHolder);
+  MOZ_ASSERT_IF(mWorkerPrivate, mFeature);
 
   --mTaskCount;
   if (mWorkerPrivate && mTaskCount == 0) {
-    UnregisterWorkerHolder();
+    UnregisterFeature();
   }
   Release();
 }
 
-NotificationWorkerHolder::NotificationWorkerHolder(Notification* aNotification)
+NotificationFeature::NotificationFeature(Notification* aNotification)
   : mNotification(aNotification)
 {
   MOZ_ASSERT(mNotification->mWorkerPrivate);
@@ -2515,7 +2514,7 @@ class CloseNotificationRunnable final
 };
 
 bool
-NotificationWorkerHolder::Notify(Status aStatus)
+NotificationFeature::Notify(Status aStatus)
 {
   if (aStatus >= Canceling) {
     // CloseNotificationRunnable blocks the worker by pushing a sync event loop
@@ -2558,26 +2557,28 @@ NotificationWorkerHolder::Notify(Status aStatus)
 }
 
 bool
-Notification::RegisterWorkerHolder()
+Notification::RegisterFeature()
 {
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();
-  MOZ_ASSERT(!mWorkerHolder);
-  mWorkerHolder = MakeUnique<NotificationWorkerHolder>(this);
-  if (NS_WARN_IF(!mWorkerHolder->HoldWorker(mWorkerPrivate))) {
-    return false;
+  MOZ_ASSERT(!mFeature);
+  mFeature = MakeUnique<NotificationFeature>(this);
+  bool added = mWorkerPrivate->AddFeature(mFeature.get());
+  if (!added) {
+    mFeature = nullptr;
   }
 
-  return true;
+  return added;
 }
 
 void
-Notification::UnregisterWorkerHolder()
+Notification::UnregisterFeature()
 {
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();
-  MOZ_ASSERT(mWorkerHolder);
-  mWorkerHolder = nullptr;
+  MOZ_ASSERT(mFeature);
+  mWorkerPrivate->RemoveFeature(mFeature.get());
+  mFeature = nullptr;
 }
 
 /*

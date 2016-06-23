@@ -9,7 +9,7 @@
 #include "mozilla/unused.h"
 #include "mozilla/dom/PContentChild.h"
 #include "mozilla/dom/WorkerPrivate.h"
-#include "mozilla/dom/workers/bindings/WorkerHolder.h"
+#include "mozilla/dom/workers/bindings/WorkerFeature.h"
 #include "mozilla/ipc/PBackgroundChild.h"
 #include "nsIAsyncInputStream.h"
 #include "nsICancelableRunnable.h"
@@ -23,13 +23,13 @@ namespace ipc {
 using mozilla::dom::PContentChild;
 using mozilla::dom::workers::GetCurrentThreadWorkerPrivate;
 using mozilla::dom::workers::Status;
-using mozilla::dom::workers::WorkerHolder;
+using mozilla::dom::workers::WorkerFeature;
 using mozilla::dom::workers::WorkerPrivate;
 
 namespace {
 
 class SendStreamChildImpl final : public SendStreamChild
-                                , public WorkerHolder
+                                , public WorkerFeature
 {
 public:
   explicit SendStreamChildImpl(nsIAsyncInputStream* aStream);
@@ -39,7 +39,7 @@ public:
   void StartDestroy() override;
 
   bool
-  AddAsWorkerHolder(dom::workers::WorkerPrivate* aWorkerPrivate);
+  AddAsWorkerFeature(dom::workers::WorkerPrivate* aWorkerPrivate);
 
 private:
   class Callback;
@@ -51,7 +51,7 @@ private:
   virtual bool
   RecvRequestClose(const nsresult& aRv) override;
 
-  // WorkerHolder methods
+  // WorkerFeature methods
   virtual bool
   Notify(Status aStatus) override;
 
@@ -93,7 +93,7 @@ public:
 
     // If this fails, then it means the owning thread is a Worker that has
     // been shutdown.  Its ok to lose the event in this case because the
-    // SendStreamChild listens for this event through the WorkerHolder.
+    // SendStreamChild listens for this event through the Feature.
     nsresult rv = mOwningThread->Dispatch(this, nsIThread::DISPATCH_NORMAL);
     if (NS_FAILED(rv)) {
       NS_WARNING("Failed to dispatch stream readable event to owning thread");
@@ -117,7 +117,7 @@ public:
   {
     // Cancel() gets called when the Worker thread is being shutdown.  We have
     // nothing to do here because SendStreamChild handles this case via
-    // the WorkerHolder.
+    // the Feature.
     return NS_OK;
   }
 
@@ -180,11 +180,11 @@ SendStreamChildImpl::StartDestroy()
 }
 
 bool
-SendStreamChildImpl::AddAsWorkerHolder(WorkerPrivate* aWorkerPrivate)
+SendStreamChildImpl::AddAsWorkerFeature(WorkerPrivate* aWorkerPrivate)
 {
   NS_ASSERT_OWNINGTHREAD(SendStreamChild);
   MOZ_ASSERT(aWorkerPrivate);
-  bool result = HoldWorker(aWorkerPrivate);
+  bool result = aWorkerPrivate->AddFeature(this);
   if (result) {
     mWorkerPrivate = aWorkerPrivate;
   }
@@ -207,7 +207,7 @@ SendStreamChildImpl::ActorDestroy(ActorDestroyReason aReason)
   }
 
   if (mWorkerPrivate) {
-    ReleaseWorker();
+    mWorkerPrivate->RemoveFeature(this);
     mWorkerPrivate = nullptr;
   }
 }
@@ -405,7 +405,7 @@ SendStreamChild::Create(nsIAsyncInputStream* aInputStream,
 
   SendStreamChildImpl* actor = new SendStreamChildImpl(aInputStream);
 
-  if (workerPrivate && !actor->AddAsWorkerHolder(workerPrivate)) {
+  if (workerPrivate && !actor->AddAsWorkerFeature(workerPrivate)) {
     delete actor;
     return nullptr;
   }

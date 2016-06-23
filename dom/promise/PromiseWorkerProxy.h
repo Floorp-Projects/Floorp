@@ -11,7 +11,7 @@
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/PromiseNativeHandler.h"
 #include "mozilla/dom/StructuredCloneHolder.h"
-#include "mozilla/dom/workers/bindings/WorkerHolder.h"
+#include "mozilla/dom/workers/bindings/WorkerFeature.h"
 #include "nsProxyRelease.h"
 
 #include "WorkerRunnable.h"
@@ -110,7 +110,7 @@ class WorkerPrivate;
 // references to it are dropped.
 
 class PromiseWorkerProxy : public PromiseNativeHandler
-                         , public workers::WorkerHolder
+                         , public workers::WorkerFeature
                          , public StructuredCloneHolderBase
 {
   friend class PromiseWorkerProxyRunnable;
@@ -229,7 +229,7 @@ private:
 
 #ifdef DEBUG
   // Maybe get rid of this entirely and rely on mCleanedUp
-  bool mWorkerHolderAdded;
+  bool mFeatureAdded;
 #endif
 };
 } // namespace dom

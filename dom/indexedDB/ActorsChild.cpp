@@ -903,7 +903,7 @@ protected:
 };
 
 class WorkerPermissionChallenge final : public Runnable
-                                      , public WorkerHolder
+                                      , public WorkerFeature
 {
 public:
   WorkerPermissionChallenge(WorkerPrivate* aWorkerPrivate,
@@ -963,7 +963,7 @@ public:
     mActor = nullptr;
 
     mWorkerPrivate->AssertIsOnWorkerThread();
-    ReleaseWorker();
+    mWorkerPrivate->RemoveFeature(this);
   }
 
 private:
@@ -1415,7 +1415,7 @@ BackgroundFactoryRequestChild::RecvPermissionChallenge(
       new WorkerPermissionChallenge(workerPrivate, this, mFactory,
                                     aPrincipalInfo);
 
-    if (NS_WARN_IF(!challenge->HoldWorker(workerPrivate))) {
+    if (NS_WARN_IF(!workerPrivate->AddFeature(challenge))) {
       return false;
     }
 

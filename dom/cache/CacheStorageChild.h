@@ -22,14 +22,14 @@ namespace cache {
 
 class CacheOpArgs;
 class CacheStorage;
-class CacheWorkerHolder;
 class PCacheChild;
+class Feature;
 
 class CacheStorageChild final : public PCacheStorageChild
                               , public ActorChild
 {
 public:
-  CacheStorageChild(CacheStorage* aListener, CacheWorkerHolder* aWorkerHolder);
+  CacheStorageChild(CacheStorage* aListener, Feature* aFeature);
   ~CacheStorageChild();
 
   // Must be called by the associated CacheStorage listener in its
@@ -48,7 +48,7 @@ public:
 private:
   // ActorChild methods
 
-  // CacheWorkerHolder is trying to destroy due to worker shutdown.
+  // Feature is trying to destroy due to worker shutdown.
   virtual void StartDestroy() override;
 
   // PCacheStorageChild methods

@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/cache/CacheWorkerHolder.h"
+#include "mozilla/dom/cache/Feature.h"
 
 #include "mozilla/dom/cache/ActorChild.h"
 #include "WorkerPrivate.h"
@@ -18,25 +18,24 @@ using mozilla::dom::workers::Status;
 using mozilla::dom::workers::WorkerPrivate;
 
 // static
-already_AddRefed<CacheWorkerHolder>
-CacheWorkerHolder::Create(WorkerPrivate* aWorkerPrivate)
+already_AddRefed<Feature>
+Feature::Create(WorkerPrivate* aWorkerPrivate)
 {
   MOZ_ASSERT(aWorkerPrivate);
 
-  RefPtr<CacheWorkerHolder> workerHolder =
-    new CacheWorkerHolder(aWorkerPrivate);
+  RefPtr<Feature> feature = new Feature(aWorkerPrivate);
 
-  if (NS_WARN_IF(!workerHolder->HoldWorker(aWorkerPrivate))) {
+  if (!aWorkerPrivate->AddFeature(feature)) {
     return nullptr;
   }
 
-  return workerHolder.forget();
+  return feature.forget();
 }
 
 void
-CacheWorkerHolder::AddActor(ActorChild* aActor)
+Feature::AddActor(ActorChild* aActor)
 {
-  NS_ASSERT_OWNINGTHREAD(CacheWorkerHolder);
+  NS_ASSERT_OWNINGTHREAD(Feature);
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(!mActorList.Contains(aActor));
 
@@ -52,9 +51,9 @@ CacheWorkerHolder::AddActor(ActorChild* aActor)
 }
 
 void
-CacheWorkerHolder::RemoveActor(ActorChild* aActor)
+Feature::RemoveActor(ActorChild* aActor)
 {
-  NS_ASSERT_OWNINGTHREAD(CacheWorkerHolder);
+  NS_ASSERT_OWNINGTHREAD(Feature);
   MOZ_ASSERT(aActor);
 
   DebugOnly<bool> removed = mActorList.RemoveElement(aActor);
@@ -64,15 +63,15 @@ CacheWorkerHolder::RemoveActor(ActorChild* aActor)
 }
 
 bool
-CacheWorkerHolder::Notified() const
+Feature::Notified() const
 {
   return mNotified;
 }
 
 bool
-CacheWorkerHolder::Notify(Status aStatus)
+Feature::Notify(Status aStatus)
 {
-  NS_ASSERT_OWNINGTHREAD(CacheWorkerHolder);
+  NS_ASSERT_OWNINGTHREAD(Feature);
 
   // When the service worker thread is stopped we will get Terminating,
   // but nothing higher than that.  We must shut things down at Terminating.
@@ -91,17 +90,19 @@ CacheWorkerHolder::Notify(Status aStatus)
   return true;
 }
 
-CacheWorkerHolder::CacheWorkerHolder(WorkerPrivate* aWorkerPrivate)
+Feature::Feature(WorkerPrivate* aWorkerPrivate)
   : mWorkerPrivate(aWorkerPrivate)
   , mNotified(false)
 {
   MOZ_ASSERT(mWorkerPrivate);
 }
 
-CacheWorkerHolder::~CacheWorkerHolder()
+Feature::~Feature()
 {
-  NS_ASSERT_OWNINGTHREAD(CacheWorkerHolder);
+  NS_ASSERT_OWNINGTHREAD(Feature);
   MOZ_ASSERT(mActorList.IsEmpty());
+
+  mWorkerPrivate->RemoveFeature(this);
 }
 
 } // namespace cache

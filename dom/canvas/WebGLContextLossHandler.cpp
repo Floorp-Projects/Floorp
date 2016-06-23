@@ -107,7 +107,7 @@ WebGLContextLossHandler::WebGLContextLossHandler(WebGLContext* webgl)
     , mIsTimerRunning(false)
     , mShouldRunTimerAgain(false)
     , mIsDisabled(false)
-    , mWorkerHolderAdded(false)
+    , mFeatureAdded(false)
 #ifdef DEBUG
     , mThread(NS_GetCurrentThread())
 #endif
@@ -186,9 +186,9 @@ WebGLContextLossHandler::RunTimer()
             dom::workers::GetCurrentThreadWorkerPrivate();
         nsCOMPtr<nsIEventTarget> target = workerPrivate->GetEventTarget();
         mTimer->SetTarget(new ContextLossWorkerEventTarget(target));
-        if (!mWorkerHolderAdded) {
-            HoldWorker(workerPrivate);
-            mWorkerHolderAdded = true;
+        if (!mFeatureAdded) {
+            workerPrivate->AddFeature(this);
+            mFeatureAdded = true;
         }
     }
 
@@ -206,12 +206,12 @@ WebGLContextLossHandler::DisableTimer()
 
     mIsDisabled = true;
 
-    if (mWorkerHolderAdded) {
+    if (mFeatureAdded) {
         dom::workers::WorkerPrivate* workerPrivate =
             dom::workers::GetCurrentThreadWorkerPrivate();
         MOZ_RELEASE_ASSERT(workerPrivate, "GFX: No private worker created.");
-        ReleaseWorker();
-        mWorkerHolderAdded = false;
+        workerPrivate->RemoveFeature(this);
+        mFeatureAdded = false;
     }
 
     // We can't just Cancel() the timer, as sometimes we end up
