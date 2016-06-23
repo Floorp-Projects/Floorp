@@ -27,10 +27,6 @@ public:
     NS_IMETHOD GetCalleeClassInfo(nsIClassInfo** aResult) = 0;
 
     NS_IMETHOD GetPreviousCallContext(nsAXPCNativeCallContext** aResult) = 0;
-
-    enum { LANG_UNKNOWN = 0,
-           LANG_JS      = 1,
-           LANG_NATIVE  = 2 };
 };
 
 #endif

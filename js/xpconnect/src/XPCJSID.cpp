@@ -384,7 +384,7 @@ nsJSIID::Resolve(nsIXPConnectWrappedNative* wrapper,
 {
     RootedObject obj(cx, objArg);
     RootedId id(cx, idArg);
-    XPCCallContext ccx(JS_CALLER, cx);
+    XPCCallContext ccx(cx);
 
     AutoMarkingNativeInterfacePtr iface(ccx);
 
@@ -415,7 +415,7 @@ nsJSIID::Enumerate(nsIXPConnectWrappedNative* wrapper,
     // In this case, let's just eagerly resolve...
 
     RootedObject obj(cx, objArg);
-    XPCCallContext ccx(JS_CALLER, cx);
+    XPCCallContext ccx(cx);
 
     AutoMarkingNativeInterfacePtr iface(ccx);
 
@@ -718,7 +718,7 @@ nsJSCID::Construct(nsIXPConnectWrappedNative* wrapper,
 
     // 'push' a call context and call on it
     RootedId name(cx, rt->GetStringID(XPCJSRuntime::IDX_CREATE_INSTANCE));
-    XPCCallContext ccx(JS_CALLER, cx, obj, nullptr, name, args.length(), args.array(),
+    XPCCallContext ccx(cx, obj, nullptr, name, args.length(), args.array(),
                        args.rval().address());
 
     *_retval = XPCWrappedNative::CallMethod(ccx);
