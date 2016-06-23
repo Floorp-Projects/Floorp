@@ -3335,9 +3335,9 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG
 
   nsStyleSVGPaint  mFill;             // [inherited]
   nsStyleSVGPaint  mStroke;           // [inherited]
-  nsCOMPtr<nsIURI> mMarkerEnd;        // [inherited]
-  nsCOMPtr<nsIURI> mMarkerMid;        // [inherited]
-  nsCOMPtr<nsIURI> mMarkerStart;      // [inherited]
+  FragmentOrURL    mMarkerEnd;        // [inherited]
+  FragmentOrURL    mMarkerMid;        // [inherited]
+  FragmentOrURL    mMarkerStart;      // [inherited]
   nsTArray<nsStyleCoord> mStrokeDasharray;  // [inherited] coord, percent, factor
 
   nsStyleCoord     mStrokeDashoffset; // [inherited] coord, percent, factor
@@ -3399,7 +3399,8 @@ struct MOZ_NEEDS_MEMMOVABLE_MEMBERS nsStyleSVG
   }
 
   bool HasMarker() const {
-    return mMarkerStart || mMarkerMid || mMarkerEnd;
+    return mMarkerStart.GetSourceURL() || mMarkerMid.GetSourceURL() ||
+           mMarkerEnd.GetSourceURL();
   }
 
   /**
