@@ -400,6 +400,31 @@ def test_initialize_test_run(mock_runner):
     assert mock_runner.reset_test_stats.call_count == 1
 
 
+def test_add_tests(mock_runner):
+    assert len(mock_runner.tests) == 0
+    fake_tests = ["test_" + i + ".py" for i in "abc"]
+    with patch('marionette.runner.base.mozversion.get_version'):
+        mock_runner.run_tests(fake_tests)
+    assert len(mock_runner.tests) == 3
+    for (test_name, added_test) in zip(fake_tests, mock_runner.tests):
+        assert added_test['filepath'].endswith(test_name)
+
+
+def test_catch_invalid_test_names(runner):
+    good_tests = [u'test_ok.py', u'test_is_ok.py', u'test_is_ok.js', u'testIsOk.js']
+    bad_tests = [u'bad_test.py', u'testbad.py', u'_test_bad.py', u'testBad.notjs',
+                 u'test_bad.notpy', u'test_bad', u'testbad.js', u'badtest.js',
+                 u'test.py', u'test_.py', u'test.js', u'test_.js']
+    with pytest.raises(Exception) as exc:
+        runner._add_tests(good_tests + bad_tests)
+    msg = exc.value.message
+    assert "Test file names must be of the form" in msg
+    for bad_name in bad_tests:
+        assert bad_name in msg
+    for good_name in good_tests:
+        assert good_name not in msg
+
+
 if __name__ == '__main__':
     import sys
     sys.exit(pytest.main(['--verbose', __file__]))
