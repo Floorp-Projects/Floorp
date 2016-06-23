@@ -12,6 +12,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/StaticMutex.h"
 #include "mozilla/StaticPtr.h"
+#include "mozilla/Telemetry.h"
 #include "nsThreadUtils.h"
 #include "CubebUtils.h"
 #include "nsAutoRef.h"
@@ -30,9 +31,33 @@ cubeb* sCubebContext;
 double sVolumeScale;
 uint32_t sCubebLatency;
 bool sCubebLatencyPrefSet;
+bool sAudioStreamInitEverSucceeded = false;
 StaticAutoPtr<char> sBrandName;
 
 const char kBrandBundleURL[]      = "chrome://branding/locale/brand.properties";
+
+const char* AUDIOSTREAM_BACKEND_ID_STR[] = {
+  "jack",
+  "pulse",
+  "alsa",
+  "audiounit",
+  "audioqueue",
+  "wasapi",
+  "winmm",
+  "directsound",
+  "sndio",
+  "opensl",
+  "audiotrack",
+  "kai"
+};
+/* Index for failures to create an audio stream the first time. */
+const int CUBEB_BACKEND_INIT_FAILURE_FIRST =
+  ArrayLength(AUDIOSTREAM_BACKEND_ID_STR);
+/* Index for failures to create an audio stream after the first time */
+const int CUBEB_BACKEND_INIT_FAILURE_OTHER = CUBEB_BACKEND_INIT_FAILURE_FIRST + 1;
+/* Index for an unknown backend. */
+const int CUBEB_BACKEND_UNKNOWN = CUBEB_BACKEND_INIT_FAILURE_FIRST + 2;
+
 
 // Prefered samplerate, in Hz (characteristic of the hardware, mixer, platform,
 // and API used).
@@ -148,6 +173,39 @@ cubeb* GetCubebContextUnlocked()
   NS_WARN_IF_FALSE(rv == CUBEB_OK, "Could not get a cubeb context.");
 
   return sCubebContext;
+}
+
+void ReportCubebBackendUsed()
+{
+  StaticMutexAutoLock lock(sMutex);
+
+  sAudioStreamInitEverSucceeded = true;
+
+  bool foundBackend = false;
+  for (uint32_t i = 0; i < ArrayLength(AUDIOSTREAM_BACKEND_ID_STR); i++) {
+    if (!strcmp(cubeb_get_backend_id(sCubebContext), AUDIOSTREAM_BACKEND_ID_STR[i])) {
+      Telemetry::Accumulate(Telemetry::AUDIOSTREAM_BACKEND_USED, i);
+      foundBackend = true;
+    }
+  }
+  if (!foundBackend) {
+    Telemetry::Accumulate(Telemetry::AUDIOSTREAM_BACKEND_USED,
+                          CUBEB_BACKEND_UNKNOWN);
+  }
+}
+
+void ReportCubebStreamInitFailure(bool aIsFirst)
+{
+  StaticMutexAutoLock lock(sMutex);
+  if (!aIsFirst && !sAudioStreamInitEverSucceeded) {
+    // This machine has no audio hardware, or it's in really bad shape, don't
+    // send this info, since we want CUBEB_BACKEND_INIT_FAILURE_OTHER to detect
+    // failures to open multiple streams in a process over time.
+    return;
+  }
+  Telemetry::Accumulate(Telemetry::AUDIOSTREAM_BACKEND_USED,
+                        aIsFirst ? CUBEB_BACKEND_INIT_FAILURE_FIRST
+                                 : CUBEB_BACKEND_INIT_FAILURE_OTHER);
 }
 
 uint32_t GetCubebLatency()
