@@ -63,12 +63,13 @@ nsAutoSelectionReset::Abort()
     mEd->StopPreservingSelection();
 }
 
+namespace mozilla {
 
 /******************************************************************************
  * some helper classes for iterating the dom tree
  *****************************************************************************/
 
-nsDOMIterator::nsDOMIterator(nsINode& aNode MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
+DOMIterator::DOMIterator(nsINode& aNode MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_IMPL)
 {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   mIter = NS_NewContentIterator();
@@ -77,24 +78,24 @@ nsDOMIterator::nsDOMIterator(nsINode& aNode MOZ_GUARD_OBJECT_NOTIFIER_PARAM_IN_I
 }
 
 nsresult
-nsDOMIterator::Init(nsRange& aRange)
+DOMIterator::Init(nsRange& aRange)
 {
   mIter = NS_NewContentIterator();
   return mIter->Init(&aRange);
 }
 
-nsDOMIterator::nsDOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+DOMIterator::DOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
 {
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 }
 
-nsDOMIterator::~nsDOMIterator()
+DOMIterator::~DOMIterator()
 {
 }
 
 void
-nsDOMIterator::AppendList(const nsBoolDomIterFunctor& functor,
-                          nsTArray<OwningNonNull<nsINode>>& arrayOfNodes) const
+DOMIterator::AppendList(const nsBoolDomIterFunctor& functor,
+                        nsTArray<OwningNonNull<nsINode>>& arrayOfNodes) const
 {
   // Iterate through dom and build list
   for (; !mIter->IsDone(); mIter->Next()) {
@@ -106,11 +107,9 @@ nsDOMIterator::AppendList(const nsBoolDomIterFunctor& functor,
   }
 }
 
-namespace mozilla {
-
 DOMSubtreeIterator::DOMSubtreeIterator(
                       MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
-  : nsDOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT)
+  : DOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT)
 {
 }
 
