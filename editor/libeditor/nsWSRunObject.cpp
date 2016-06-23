@@ -623,7 +623,7 @@ nsWSRunObject::GetWSNodes()
   // collect up an array of nodes that are contiguous with the insertion point
   // and which contain only whitespace.  Stop if you reach non-ws text or a new
   // block boundary.
-  ::DOMPoint start(mNode, mOffset), end(mNode, mOffset);
+  EditorDOMPoint start(mNode, mOffset), end(mNode, mOffset);
   nsCOMPtr<nsINode> wsBoundingParent = GetWSBoundingParent();
 
   // first look backwards to find preceding ws nodes
@@ -1044,7 +1044,7 @@ nsWSRunObject::GetPreviousWSNodeInner(nsINode* aStartNode,
 }
 
 nsIContent*
-nsWSRunObject::GetPreviousWSNode(::DOMPoint aPoint,
+nsWSRunObject::GetPreviousWSNode(EditorDOMPoint aPoint,
                                  nsINode* aBlockParent)
 {
   // Can't really recycle various getnext/prior routines because we
@@ -1128,7 +1128,7 @@ nsWSRunObject::GetNextWSNodeInner(nsINode* aStartNode,
 }
 
 nsIContent*
-nsWSRunObject::GetNextWSNode(::DOMPoint aPoint, nsINode* aBlockParent)
+nsWSRunObject::GetNextWSNode(EditorDOMPoint aPoint, nsINode* aBlockParent)
 {
   // Can't really recycle various getnext/prior routines because we have
   // special needs here.  Need to step into inline containers but not block
