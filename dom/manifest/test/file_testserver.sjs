@@ -38,6 +38,11 @@ function handleRequest(request, response) {
     response.setHeader("Content-Security-Policy", query.get("csp"), false);
   }
 
+  // Deliver the CSPRO policy encoded in the URL
+  if(query.has("cspro")){
+    response.setHeader("Content-Security-Policy-Report-Only", query.get("cspro"), false);
+  }
+
   // Deliver the CORS header in the URL
   if(query.has("cors")){
     response.setHeader("Access-Control-Allow-Origin", query.get("cors"), false);

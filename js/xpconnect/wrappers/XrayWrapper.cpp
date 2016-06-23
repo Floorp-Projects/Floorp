@@ -1336,7 +1336,7 @@ XPCWrappedNativeXrayTraits::resolveNativeProperty(JSContext* cx, HandleObject wr
 
     // This will do verification and the method lookup for us.
     RootedObject target(cx, getTargetObject(wrapper));
-    XPCCallContext ccx(JS_CALLER, cx, target, nullptr, id);
+    XPCCallContext ccx(cx, target, nullptr, id);
 
     // There are no native numeric (or symbol-keyed) properties, so we can
     // shortcut here. We will not find the property.
@@ -1573,7 +1573,7 @@ XPCWrappedNativeXrayTraits::call(JSContext* cx, HandleObject wrapper,
     // Run the call hook of the wrapped native.
     XPCWrappedNative* wn = getWN(wrapper);
     if (NATIVE_HAS_FLAG(wn, WantCall)) {
-        XPCCallContext ccx(JS_CALLER, cx, wrapper, nullptr, JSID_VOIDHANDLE, args.length(),
+        XPCCallContext ccx(cx, wrapper, nullptr, JSID_VOIDHANDLE, args.length(),
                            args.array(), args.rval().address());
         if (!ccx.IsValid())
             return false;
@@ -1599,7 +1599,7 @@ XPCWrappedNativeXrayTraits::construct(JSContext* cx, HandleObject wrapper,
     // Run the construct hook of the wrapped native.
     XPCWrappedNative* wn = getWN(wrapper);
     if (NATIVE_HAS_FLAG(wn, WantConstruct)) {
-        XPCCallContext ccx(JS_CALLER, cx, wrapper, nullptr, JSID_VOIDHANDLE, args.length(),
+        XPCCallContext ccx(cx, wrapper, nullptr, JSID_VOIDHANDLE, args.length(),
                            args.array(), args.rval().address());
         if (!ccx.IsValid())
             return false;
@@ -1864,7 +1864,7 @@ XrayToString(JSContext* cx, unsigned argc, Value* vp)
     nsAutoString result;
     result.AppendASCII(start);
 
-    XPCCallContext ccx(JS_CALLER, cx, obj);
+    XPCCallContext ccx(cx, obj);
     XPCWrappedNative* wn = XPCWrappedNativeXrayTraits::getWN(wrapper);
     char* wrapperStr = wn->ToString();
     if (!wrapperStr) {

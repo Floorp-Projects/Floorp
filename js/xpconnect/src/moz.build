@@ -19,7 +19,6 @@ UNIFIED_SOURCES += [
     'nsXPConnect.cpp',
     'Sandbox.cpp',
     'XPCCallContext.cpp',
-    'XPCContext.cpp',
     'XPCConvert.cpp',
     'XPCDebug.cpp',
     'XPCException.cpp',

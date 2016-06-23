@@ -144,10 +144,6 @@ MediaDecoderReaderWrapper::MediaDecoderReaderWrapper(bool aIsRealTime,
   : mForceZeroStartTime(aIsRealTime || aReader->ForceZeroStartTime())
   , mOwnerThread(aOwnerThread)
   , mReader(aReader)
-  , mAudioCallbackID("AudioCallbackID")
-  , mVideoCallbackID("VideoCallbackID")
-  , mWaitAudioCallbackID("WaitAudioCallbackID")
-  , mWaitVideoCallbackID("WaitVideoCallbackID")
 {}
 
 MediaDecoderReaderWrapper::~MediaDecoderReaderWrapper()
@@ -183,47 +179,10 @@ MediaDecoderReaderWrapper::AwaitStartTime()
 }
 
 void
-MediaDecoderReaderWrapper::CancelAudioCallback(CallbackID aID)
-{
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  MOZ_ASSERT(aID == mAudioCallbackID);
-  ++mAudioCallbackID;
-  mRequestAudioDataCB = nullptr;
-}
-
-void
-MediaDecoderReaderWrapper::CancelVideoCallback(CallbackID aID)
-{
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  MOZ_ASSERT(aID == mVideoCallbackID);
-  ++mVideoCallbackID;
-  mRequestVideoDataCB = nullptr;
-}
-
-void
-MediaDecoderReaderWrapper::CancelWaitAudioCallback(CallbackID aID)
-{
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  MOZ_ASSERT(aID == mWaitAudioCallbackID);
-  ++mWaitAudioCallbackID;
-  mWaitAudioDataCB = nullptr;
-}
-
-void
-MediaDecoderReaderWrapper::CancelWaitVideoCallback(CallbackID aID)
-{
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  MOZ_ASSERT(aID == mWaitVideoCallbackID);
-  ++mWaitVideoCallbackID;
-  mWaitVideoDataCB = nullptr;
-}
-
-void
 MediaDecoderReaderWrapper::RequestAudioData()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   MOZ_ASSERT(!mShutdown);
-  MOZ_ASSERT(mRequestAudioDataCB, "Request audio data without callback!");
 
   auto p = InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
                        &MediaDecoderReader::RequestAudioData);
@@ -238,14 +197,13 @@ MediaDecoderReaderWrapper::RequestAudioData()
   RefPtr<MediaDecoderReaderWrapper> self = this;
   mAudioDataRequest.Begin(p->Then(mOwnerThread, __func__,
     [self] (MediaData* aAudioSample) {
-      MOZ_ASSERT(self->mRequestAudioDataCB);
       self->mAudioDataRequest.Complete();
-      self->OnSampleDecoded(self->mRequestAudioDataCB.get(), aAudioSample, TimeStamp());
+      aAudioSample->AdjustForStartTime(self->StartTime().ToMicroseconds());
+      self->mAudioCallback.Notify(AsVariant(aAudioSample));
     },
     [self] (MediaDecoderReader::NotDecodedReason aReason) {
-      MOZ_ASSERT(self->mRequestAudioDataCB);
       self->mAudioDataRequest.Complete();
-      self->OnNotDecoded(self->mRequestAudioDataCB.get(), aReason);
+      self->mAudioCallback.Notify(AsVariant(aReason));
     }));
 }
 
@@ -255,7 +213,6 @@ MediaDecoderReaderWrapper::RequestVideoData(bool aSkipToNextKeyframe,
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
   MOZ_ASSERT(!mShutdown);
-  MOZ_ASSERT(mRequestVideoDataCB, "Request video data without callback!");
 
   // Time the video decode and send this value back to callbacks who accept
   // a TimeStamp as its second parameter.
@@ -280,14 +237,13 @@ MediaDecoderReaderWrapper::RequestVideoData(bool aSkipToNextKeyframe,
   RefPtr<MediaDecoderReaderWrapper> self = this;
   mVideoDataRequest.Begin(p->Then(mOwnerThread, __func__,
     [self, videoDecodeStartTime] (MediaData* aVideoSample) {
-      MOZ_ASSERT(self->mRequestVideoDataCB);
       self->mVideoDataRequest.Complete();
-      self->OnSampleDecoded(self->mRequestVideoDataCB.get(), aVideoSample, videoDecodeStartTime);
+      aVideoSample->AdjustForStartTime(self->StartTime().ToMicroseconds());
+      self->mVideoCallback.Notify(AsVariant(MakeTuple(aVideoSample, videoDecodeStartTime)));
     },
     [self] (MediaDecoderReader::NotDecodedReason aReason) {
-      MOZ_ASSERT(self->mRequestVideoDataCB);
       self->mVideoDataRequest.Complete();
-      self->OnNotDecoded(self->mRequestVideoDataCB.get(), aReason);
+      self->mVideoCallback.Notify(AsVariant(aReason));
     }));
 }
 
@@ -333,7 +289,6 @@ void
 MediaDecoderReaderWrapper::WaitForData(MediaData::Type aType)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  MOZ_ASSERT(WaitCallbackRef(aType));
 
   auto p = InvokeAsync(mReader->OwnerThread(), mReader.get(), __func__,
                        &MediaDecoderReader::WaitForData, aType);
@@ -341,22 +296,20 @@ MediaDecoderReaderWrapper::WaitForData(MediaData::Type aType)
   RefPtr<MediaDecoderReaderWrapper> self = this;
   WaitRequestRef(aType).Begin(p->Then(mOwnerThread, __func__,
     [self] (MediaData::Type aType) {
-      MOZ_ASSERT(self->WaitCallbackRef(aType));
       self->WaitRequestRef(aType).Complete();
-      self->WaitCallbackRef(aType)->OnResolved(aType);
+      self->WaitCallbackRef(aType).Notify(AsVariant(aType));
     },
     [self, aType] (WaitForDataRejectValue aRejection) {
-      MOZ_ASSERT(self->WaitCallbackRef(aType));
       self->WaitRequestRef(aType).Complete();
-      self->WaitCallbackRef(aType)->OnRejected(aRejection);
+      self->WaitCallbackRef(aType).Notify(AsVariant(aRejection));
     }));
 }
 
-UniquePtr<MediaDecoderReaderWrapper::WaitForDataCallbackBase>&
+MediaCallbackExc<WaitCallbackData>&
 MediaDecoderReaderWrapper::WaitCallbackRef(MediaData::Type aType)
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  return aType == MediaData::AUDIO_DATA ? mWaitAudioDataCB : mWaitVideoDataCB;
+  return aType == MediaData::AUDIO_DATA ? mAudioWaitCallback : mVideoWaitCallback;
 }
 
 MozPromiseRequestHolder<MediaDecoderReader::WaitForDataPromise>&
@@ -418,8 +371,6 @@ RefPtr<ShutdownPromise>
 MediaDecoderReaderWrapper::Shutdown()
 {
   MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  MOZ_ASSERT(!mRequestAudioDataCB);
-  MOZ_ASSERT(!mRequestVideoDataCB);
   MOZ_ASSERT(!mAudioDataRequest.Exists());
   MOZ_ASSERT(!mVideoDataRequest.Exists());
 
@@ -457,28 +408,6 @@ MediaDecoderReaderWrapper::OnMetadataRead(MetadataHolder* aMetadata)
         NS_WARNING("Setting start time on reader failed");
       });
   }
-}
-
-void
-MediaDecoderReaderWrapper::OnSampleDecoded(CallbackBase* aCallback,
-                                           MediaData* aSample,
-                                           TimeStamp aDecodeStartTime)
-{
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  MOZ_ASSERT(!mShutdown);
-
-  aSample->AdjustForStartTime(StartTime().ToMicroseconds());
-  aCallback->OnResolved(aSample, aDecodeStartTime);
-}
-
-void
-MediaDecoderReaderWrapper::OnNotDecoded(CallbackBase* aCallback,
-                                        MediaDecoderReader::NotDecodedReason aReason)
-{
-  MOZ_ASSERT(mOwnerThread->IsCurrentThreadIn());
-  MOZ_ASSERT(!mShutdown);
-
-  aCallback->OnRejected(aReason);
 }
 
 } // namespace mozilla

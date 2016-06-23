@@ -672,7 +672,7 @@ NS_IMETHODIMP
 nsXPCWrappedJS::GetEnumerator(nsISimpleEnumerator * *aEnumerate)
 {
     AutoJSContext cx;
-    XPCCallContext ccx(NATIVE_CALLER, cx);
+    XPCCallContext ccx(cx);
     if (!ccx.IsValid())
         return NS_ERROR_UNEXPECTED;
 
@@ -684,7 +684,7 @@ NS_IMETHODIMP
 nsXPCWrappedJS::GetProperty(const nsAString & name, nsIVariant** _retval)
 {
     AutoJSContext cx;
-    XPCCallContext ccx(NATIVE_CALLER, cx);
+    XPCCallContext ccx(cx);
     if (!ccx.IsValid())
         return NS_ERROR_UNEXPECTED;
 

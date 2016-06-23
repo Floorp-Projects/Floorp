@@ -541,10 +541,7 @@ public:
   /// ReadLock.
   /// This function provides a convenient way to do this delayed unlocking, if
   /// the texture itself requires it.
-  void UnlockAfterComposition(already_AddRefed<TextureReadLock> aLock)
-  {
-    mUnlockAfterComposition.AppendElement(aLock);
-  }
+  void UnlockAfterComposition(TextureHost* aTexture);
 
   /// Most compositor backends operate asynchronously under the hood. This
   /// means that when a layer stops using a texture it is often desirable to
@@ -565,6 +562,9 @@ protected:
 
   bool ShouldDrawDiagnostics(DiagnosticFlags);
 
+  // Should be called at the end of each composition.
+  void ReadUnlockTextures();
+
   /**
    * Given a layer rect, clip, and transform, compute the area of the backdrop that
    * needs to be copied for mix-blending. The output transform translates from 0..1
@@ -583,7 +583,7 @@ protected:
   /**
    * An array of locks that will need to be unlocked after the next composition.
    */
-  nsTArray<RefPtr<TextureReadLock>> mUnlockAfterComposition;
+  nsTArray<RefPtr<TextureHost>> mUnlockAfterComposition;
 
   /**
    * An array of TextureHosts that will need to call NotifyNotUsed() after the next composition.

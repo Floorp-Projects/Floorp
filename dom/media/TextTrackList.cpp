@@ -101,6 +101,9 @@ void
 TextTrackList::AddTextTrack(TextTrack* aTextTrack,
                             const CompareTextTracks& aCompareTT)
 {
+  if (mTextTracks.Contains(aTextTrack)) {
+    return;
+  }
   if (mTextTracks.InsertElementSorted(aTextTrack, aCompareTT)) {
     aTextTrack->SetTextTrackList(this);
     CreateAndDispatchTrackEventRunner(aTextTrack, NS_LITERAL_STRING("addtrack"));

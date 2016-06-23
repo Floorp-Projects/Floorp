@@ -112,6 +112,7 @@
 #include "nsIScriptError.h"
 #include "mozilla/EventForwards.h"
 #include "nsDeviceContext.h"
+#include "nsSandboxFlags.h"
 #include "FrameLayerBuilder.h"
 
 #ifdef NS_PRINTING
@@ -892,6 +893,11 @@ TabChild::NotifyTabContextUpdated()
 
   UpdateFrameType();
   nsDocShell::Cast(docShell)->SetOriginAttributes(OriginAttributesRef());
+
+  // Set SANDBOXED_AUXILIARY_NAVIGATION flag if this is a receiver page.
+  if (!PresentationURL().IsEmpty()) {
+    docShell->SetSandboxFlags(SANDBOXED_AUXILIARY_NAVIGATION);
+  }
 }
 
 void

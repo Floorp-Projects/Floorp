@@ -13,7 +13,7 @@ namespace mozilla {
 namespace dom {
 namespace cache {
 
-class Feature;
+class CacheWorkerHolder;
 
 class ActorChild
 {
@@ -22,23 +22,23 @@ public:
   StartDestroy() = 0;
 
   void
-  SetFeature(Feature* aFeature);
+  SetWorkerHolder(CacheWorkerHolder* aWorkerHolder);
 
   void
-  RemoveFeature();
+  RemoveWorkerHolder();
 
-  Feature*
-  GetFeature() const;
+  CacheWorkerHolder*
+  GetWorkerHolder() const;
 
   bool
-  FeatureNotified() const;
+  WorkerHolderNotified() const;
 
 protected:
   ActorChild();
   ~ActorChild();
 
 private:
-  RefPtr<Feature> mFeature;
+  RefPtr<CacheWorkerHolder> mWorkerHolder;
 };
 
 } // namespace cache

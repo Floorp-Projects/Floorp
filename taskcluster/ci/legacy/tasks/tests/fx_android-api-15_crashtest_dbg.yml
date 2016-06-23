@@ -5,5 +5,9 @@ task:
     command:
       - --download-symbols=true
   extra:
+    suite:
+      name: crashtest-debug-{{chunk}}
+    chunks:
+      total: 10
     treeherder:
       tier: 2
