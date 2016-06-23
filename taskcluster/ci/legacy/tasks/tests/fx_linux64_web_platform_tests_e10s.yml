@@ -22,6 +22,9 @@ task:
     name: '[TC] Linux64 web-platform-tests-e10s-{{chunk}}'
     description: Web platform e10s tests run {{chunk}}
   extra:
+    suite:
+      name: web-platform-tests
+      flavor: web-platform-tests-e10s
     chunks:
       total: 12
     treeherder:
