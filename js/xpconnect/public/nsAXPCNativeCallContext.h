@@ -31,8 +31,6 @@ public:
     enum { LANG_UNKNOWN = 0,
            LANG_JS      = 1,
            LANG_NATIVE  = 2 };
-
-    NS_IMETHOD GetLanguage(uint16_t* aResult) = 0;
 };
 
 #endif
