@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "mozilla/dom/cache/Feature.h"
+#include "mozilla/dom/cache/CacheWorkerHolder.h"
 
 #include "mozilla/dom/cache/ActorChild.h"
 #include "WorkerPrivate.h"
@@ -18,24 +18,23 @@ using mozilla::dom::workers::Status;
 using mozilla::dom::workers::WorkerPrivate;
 
 // static
-already_AddRefed<Feature>
-Feature::Create(WorkerPrivate* aWorkerPrivate)
+already_AddRefed<CacheWorkerHolder>
+CacheWorkerHolder::Create(WorkerPrivate* aWorkerPrivate)
 {
   MOZ_ASSERT(aWorkerPrivate);
 
-  RefPtr<Feature> feature = new Feature(aWorkerPrivate);
-
-  if (!aWorkerPrivate->AddFeature(feature)) {
+  RefPtr<CacheWorkerHolder> workerHolder = new CacheWorkerHolder();
+  if (NS_WARN_IF(!workerHolder->HoldWorker(aWorkerPrivate))) {
     return nullptr;
   }
 
-  return feature.forget();
+  return workerHolder.forget();
 }
 
 void
-Feature::AddActor(ActorChild* aActor)
+CacheWorkerHolder::AddActor(ActorChild* aActor)
 {
-  NS_ASSERT_OWNINGTHREAD(Feature);
+  NS_ASSERT_OWNINGTHREAD(CacheWorkerHolder);
   MOZ_ASSERT(aActor);
   MOZ_ASSERT(!mActorList.Contains(aActor));
 
@@ -51,9 +50,9 @@ Feature::AddActor(ActorChild* aActor)
 }
 
 void
-Feature::RemoveActor(ActorChild* aActor)
+CacheWorkerHolder::RemoveActor(ActorChild* aActor)
 {
-  NS_ASSERT_OWNINGTHREAD(Feature);
+  NS_ASSERT_OWNINGTHREAD(CacheWorkerHolder);
   MOZ_ASSERT(aActor);
 
   DebugOnly<bool> removed = mActorList.RemoveElement(aActor);
@@ -63,15 +62,15 @@ Feature::RemoveActor(ActorChild* aActor)
 }
 
 bool
-Feature::Notified() const
+CacheWorkerHolder::Notified() const
 {
   return mNotified;
 }
 
 bool
-Feature::Notify(Status aStatus)
+CacheWorkerHolder::Notify(Status aStatus)
 {
-  NS_ASSERT_OWNINGTHREAD(Feature);
+  NS_ASSERT_OWNINGTHREAD(CacheWorkerHolder);
 
   // When the service worker thread is stopped we will get Terminating,
   // but nothing higher than that.  We must shut things down at Terminating.
@@ -90,19 +89,15 @@ Feature::Notify(Status aStatus)
   return true;
 }
 
-Feature::Feature(WorkerPrivate* aWorkerPrivate)
-  : mWorkerPrivate(aWorkerPrivate)
-  , mNotified(false)
+CacheWorkerHolder::CacheWorkerHolder()
+  : mNotified(false)
 {
-  MOZ_ASSERT(mWorkerPrivate);
 }
 
-Feature::~Feature()
+CacheWorkerHolder::~CacheWorkerHolder()
 {
-  NS_ASSERT_OWNINGTHREAD(Feature);
+  NS_ASSERT_OWNINGTHREAD(CacheWorkerHolder);
   MOZ_ASSERT(mActorList.IsEmpty());
-
-  mWorkerPrivate->RemoveFeature(this);
 }
 
 } // namespace cache

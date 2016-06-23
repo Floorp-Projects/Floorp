@@ -22,7 +22,7 @@
 #include "nsTHashtable.h"
 #include "ProfilerHelpers.h"
 #include "ReportInternalError.h"
-#include "WorkerFeature.h"
+#include "WorkerHolder.h"
 #include "WorkerPrivate.h"
 
 // Include this last to avoid path problems on Windows.
@@ -35,8 +35,8 @@ using namespace mozilla::dom::indexedDB;
 using namespace mozilla::dom::workers;
 using namespace mozilla::ipc;
 
-class IDBTransaction::WorkerFeature final
-  : public mozilla::dom::workers::WorkerFeature
+class IDBTransaction::WorkerHolder final
+  : public mozilla::dom::workers::WorkerHolder
 {
   WorkerPrivate* mWorkerPrivate;
 
@@ -45,7 +45,7 @@ class IDBTransaction::WorkerFeature final
   IDBTransaction* mTransaction;
 
 public:
-  WorkerFeature(WorkerPrivate* aWorkerPrivate, IDBTransaction* aTransaction)
+  WorkerHolder(WorkerPrivate* aWorkerPrivate, IDBTransaction* aTransaction)
     : mWorkerPrivate(aWorkerPrivate)
     , mTransaction(aTransaction)
   {
@@ -54,16 +54,14 @@ public:
     aWorkerPrivate->AssertIsOnWorkerThread();
     aTransaction->AssertIsOnOwningThread();
 
-    MOZ_COUNT_CTOR(IDBTransaction::WorkerFeature);
+    MOZ_COUNT_CTOR(IDBTransaction::WorkerHolder);
   }
 
-  ~WorkerFeature()
+  ~WorkerHolder()
   {
     mWorkerPrivate->AssertIsOnWorkerThread();
 
-    MOZ_COUNT_DTOR(IDBTransaction::WorkerFeature);
-
-    mWorkerPrivate->RemoveFeature(this);
+    MOZ_COUNT_DTOR(IDBTransaction::WorkerHolder);
   }
 
 private:
@@ -241,8 +239,8 @@ IDBTransaction::Create(JSContext* aCx, IDBDatabase* aDatabase,
 
     workerPrivate->AssertIsOnWorkerThread();
 
-    transaction->mWorkerFeature = new WorkerFeature(workerPrivate, transaction);
-    MOZ_ALWAYS_TRUE(workerPrivate->AddFeature(transaction->mWorkerFeature));
+    transaction->mWorkerHolder = new WorkerHolder(workerPrivate, transaction);
+    MOZ_ALWAYS_TRUE(transaction->mWorkerHolder->HoldWorker(workerPrivate));
   }
 
   return transaction.forget();
@@ -786,8 +784,8 @@ IDBTransaction::FireCompleteOrAbortEvents(nsresult aResult)
   mFiredCompleteOrAbort = true;
 #endif
 
-  // Make sure we drop the WorkerFeature when this function completes.
-  nsAutoPtr<WorkerFeature> workerFeature = Move(mWorkerFeature);
+  // Make sure we drop the WorkerHolder when this function completes.
+  nsAutoPtr<WorkerHolder> workerHolder = Move(mWorkerHolder);
 
   nsCOMPtr<nsIDOMEvent> event;
   if (NS_SUCCEEDED(aResult)) {
@@ -1030,7 +1028,7 @@ IDBTransaction::Run()
 
 bool
 IDBTransaction::
-WorkerFeature::Notify(Status aStatus)
+WorkerHolder::Notify(Status aStatus)
 {
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();
