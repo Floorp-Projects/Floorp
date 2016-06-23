@@ -721,6 +721,7 @@ public:
     // the input rectangle, aRect.
     Point4DTyped<UnknownUnits, F> points[2][kTransformAndClipRectMaxVerts];
     Point4DTyped<UnknownUnits, F>* dstPoint = points[0];
+
     *dstPoint++ = *this * Point4DTyped<UnknownUnits, F>(aRect.x, aRect.y, 0, 1);
     *dstPoint++ = *this * Point4DTyped<UnknownUnits, F>(aRect.XMost(), aRect.y, 0, 1);
     *dstPoint++ = *this * Point4DTyped<UnknownUnits, F>(aRect.XMost(), aRect.YMost(), 0, 1);
@@ -739,14 +740,15 @@ public:
     // points[1].
     for (int plane=0; plane < 4; plane++) {
       planeNormals[plane].Normalize();
-
       Point4DTyped<UnknownUnits, F>* srcPoint = points[plane & 1];
       Point4DTyped<UnknownUnits, F>* srcPointEnd = dstPoint;
+
       dstPoint = points[~plane & 1];
+      Point4DTyped<UnknownUnits, F>* dstPointStart = dstPoint;
 
       Point4DTyped<UnknownUnits, F>* prevPoint = srcPointEnd - 1;
       F prevDot = planeNormals[plane].DotProduct(*prevPoint);
-      while (srcPoint < srcPointEnd) {
+      while (srcPoint < srcPointEnd && ((dstPoint - dstPointStart) < kTransformAndClipRectMaxVerts)) {
         F nextDot = planeNormals[plane].DotProduct(*srcPoint);
 
         if ((nextDot >= 0.0) != (prevDot >= 0.0)) {
@@ -764,6 +766,10 @@ public:
 
         prevPoint = srcPoint++;
         prevDot = nextDot;
+      }
+
+      if (dstPoint == dstPointStart) {
+        break;
       }
     }
 
@@ -788,7 +794,7 @@ public:
     return dstPointCount;
   }
 
-  static const size_t kTransformAndClipRectMaxVerts = 32;
+  static const int kTransformAndClipRectMaxVerts = 32;
 
   static Matrix4x4Typed From2D(const Matrix &aMatrix) {
     Matrix4x4Typed matrix;
