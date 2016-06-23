@@ -431,24 +431,6 @@ CssLogic.prototype = {
   },
 
   /**
-   * Process *some* cached stylesheets in the document using your callback. The
-   * callback function should return true in order to halt processing.
-   *
-   * @param {function} callback the function you want executed for some of the
-   * CssSheet objects cached.
-   * @param {object} scope the scope you want for the callback function. scope
-   * will be the this object when callback executes.
-   * @return {Boolean} true if callback returns true during any iteration,
-   * otherwise false is returned.
-   */
-  forSomeSheets: function (callback, scope) {
-    for (let cacheId in this._sheets) {
-      if (this._sheets[cacheId].some(callback, scope)) {
-        return true;
-      }
-    }
-    return false;
-  },
 
   /**
    * Get the number nsIDOMCSSRule objects in the document, counted from all of
@@ -698,40 +680,6 @@ CssLogic.getShortName = function (element) {
     priorSiblings++;
   }
   return element.tagName + "[" + priorSiblings + "]";
-};
-
-/**
- * Get an array of short names from the given element to document.body.
- *
- * @param {nsIDOMElement} element the element for which you want the array of
- * short names.
- * @return {array} The array of elements.
- * <p>Each element is an object of the form:
- * <ul>
- * <li>{ display: "what to display for the given (parent) element",
- * <li>  element: referenceToTheElement }
- * </ul>
- */
-CssLogic.getShortNamePath = function (element) {
-  let doc = element.ownerDocument;
-  let reply = [];
-
-  if (!element) {
-    return reply;
-  }
-
-  // We want to exclude nodes high up the tree (body/html) unless the user
-  // has selected that node, in which case we need to report something.
-  do {
-    reply.unshift({
-      display: CssLogic.getShortName(element),
-      element: element
-    });
-    element = element.parentNode;
-  } while (element && element != doc.body && element != doc.head &&
-           element != doc);
-
-  return reply;
 };
 
 /**
@@ -1186,7 +1134,6 @@ function CssSheet(cssLogic, domSheet, index) {
 CssSheet.prototype = {
   _passId: null,
   _contentSheet: null,
-  _mediaMatches: null,
 
   /**
    * Tells if the stylesheet is provided by the browser or not.
@@ -1207,18 +1154,6 @@ CssSheet.prototype = {
    */
   get disabled() {
     return this.domSheet.disabled;
-  },
-
-  /**
-   * Tells if the stylesheet matches the current browser view media.
-   * @return {boolean} true if this stylesheet matches the current browser view
-   * media, or false otherwise.
-   */
-  get mediaMatches() {
-    if (this._mediaMatches === null) {
-      this._mediaMatches = this._cssLogic.mediaMatches(this.domSheet);
-    }
-    return this._mediaMatches;
   },
 
   /**
@@ -1322,68 +1257,6 @@ CssSheet.prototype = {
     }
 
     return rule;
-  },
-
-  /**
-   * Process each rule in this stylesheet using your callback function. Your
-   * function receives one argument: the CssRule object for each CSSStyleRule
-   * inside the stylesheet.
-   *
-   * Note that this method also iterates through @media rules inside the
-   * stylesheet.
-   *
-   * @param {function} callback the function you want to execute for each of
-   * the style rules.
-   * @param {object} scope the scope you want for the callback function. scope
-   * will be the this object when callback executes.
-   */
-  forEachRule: function (callback, scope) {
-    let ruleCount = 0;
-    let domRules = this.domSheet.cssRules;
-
-    function _iterator(domRule) {
-      if (domRule.type == CSSRule.STYLE_RULE) {
-        callback.call(scope, this.getRule(domRule));
-        ruleCount++;
-      } else if (domRule.type == CSSRule.MEDIA_RULE &&
-          domRule.cssRules && this._cssLogic.mediaMatches(domRule)) {
-        Array.prototype.forEach.call(domRule.cssRules, _iterator, this);
-      }
-    }
-
-    Array.prototype.forEach.call(domRules, _iterator, this);
-
-    this._ruleCount = ruleCount;
-  },
-
-  /**
-   * Process *some* rules in this stylesheet using your callback function. Your
-   * function receives one argument: the CssRule object for each CSSStyleRule
-   * inside the stylesheet. In order to stop processing the callback function
-   * needs to return a value.
-   *
-   * Note that this method also iterates through @media rules inside the
-   * stylesheet.
-   *
-   * @param {function} callback the function you want to execute for each of
-   * the style rules.
-   * @param {object} scope the scope you want for the callback function. scope
-   * will be the this object when callback executes.
-   * @return {Boolean} true if callback returns true during any iteration,
-   * otherwise false is returned.
-   */
-  forSomeRules: function (callback, scope) {
-    let domRules = this.domSheet.cssRules;
-    function _iterator(domRule) {
-      if (domRule.type == CSSRule.STYLE_RULE) {
-        return callback.call(scope, this.getRule(domRule));
-      } else if (domRule.type == CSSRule.MEDIA_RULE &&
-          domRule.cssRules && this._cssLogic.mediaMatches(domRule)) {
-        return Array.prototype.some.call(domRule.cssRules, _iterator, this);
-      }
-      return false;
-    }
-    return Array.prototype.some.call(domRules, _iterator, this);
   },
 
   toString: function () {
@@ -1662,10 +1535,6 @@ function CssPropertyInfo(cssLogic, property, isInherited) {
   this._value = "";
   this._isInherited = isInherited;
 
-  // The number of matched rules holding the this.property style property.
-  // Additionally, only rules that come from allowed stylesheets are counted.
-  this._matchedRuleCount = 0;
-
   // An array holding CssSelectorInfo objects for each of the matched selectors
   // that are inside a CSS rule. Only rules that hold the this.property are
   // counted. This includes rules that come from filtered stylesheets (those
@@ -1695,22 +1564,6 @@ CssPropertyInfo.prototype = {
   },
 
   /**
-   * Retrieve the number of matched rules holding the this.property style
-   * property. Only rules that come from allowed stylesheets are counted.
-   *
-   * @return {number} the number of matched rules.
-   */
-  get matchedRuleCount() {
-    if (!this._matchedSelectors) {
-      this._findMatchedSelectors();
-    } else if (this.needRefilter) {
-      this._refilterSelectors();
-    }
-
-    return this._matchedRuleCount;
-  },
-
-  /**
    * Retrieve the array holding CssSelectorInfo objects for each of the matched
    * selectors, from each of the matched rules. Only selectors coming from
    * allowed stylesheets are included in the array.
@@ -1737,7 +1590,6 @@ CssPropertyInfo.prototype = {
    */
   _findMatchedSelectors: function () {
     this._matchedSelectors = [];
-    this._matchedRuleCount = 0;
     this.needRefilter = false;
 
     this._cssLogic.processMatchedSelectors(this._processMatchedSelector, this);
@@ -1776,9 +1628,6 @@ CssPropertyInfo.prototype = {
       let selectorInfo = new CssSelectorInfo(selector, this.property, value,
           status);
       this._matchedSelectors.push(selectorInfo);
-      if (this._cssLogic._passId !== cssRule._passId && cssRule.sheetAllowed) {
-        this._matchedRuleCount++;
-      }
     }
   },
 
@@ -1803,7 +1652,6 @@ CssPropertyInfo.prototype = {
 
     if (this._matchedSelectors) {
       this._matchedSelectors.forEach(iterator);
-      this._matchedRuleCount = ruleCount;
     }
 
     this.needRefilter = false;
