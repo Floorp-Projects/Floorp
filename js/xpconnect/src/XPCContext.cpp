@@ -17,8 +17,7 @@ XPCContext::XPCContext(XPCJSRuntime* aRuntime,
     :   mRuntime(aRuntime),
         mJSContext(aJSContext),
         mLastResult(NS_OK),
-        mPendingResult(NS_OK),
-        mCallingLangType(LANG_UNKNOWN)
+        mPendingResult(NS_OK)
 {
     MOZ_COUNT_CTOR(XPCContext);
 
@@ -49,10 +48,6 @@ XPCContext::DebugDump(int16_t depth)
             // XXX show the exception here...
         }
 
-        XPC_LOG_ALWAYS(("mCallingLangType of %s",
-                        mCallingLangType == LANG_UNKNOWN ? "LANG_UNKNOWN" :
-                        mCallingLangType == LANG_JS      ? "LANG_JS" :
-                        "LANG_NATIVE"));
         XPC_LOG_OUTDENT();
 #endif
 }
