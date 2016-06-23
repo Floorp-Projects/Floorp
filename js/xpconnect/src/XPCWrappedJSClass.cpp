@@ -770,17 +770,13 @@ nsresult
 nsXPCWrappedJSClass::CheckForException(XPCCallContext & ccx,
                                        AutoEntryScript& aes,
                                        const char * aPropertyName,
-                                       const char * anInterfaceName)
+                                       const char * anInterfaceName,
+                                       nsIException* aSyntheticException)
 {
-    XPCContext * xpcc = ccx.GetXPCContext();
     JSContext * cx = ccx.GetJSContext();
     MOZ_ASSERT(cx == aes.cx());
-    nsCOMPtr<nsIException> xpc_exception;
+    nsCOMPtr<nsIException> xpc_exception = aSyntheticException;
     /* this one would be set by our error reporter */
-
-    xpcc->GetException(getter_AddRefs(xpc_exception));
-    if (xpc_exception)
-        xpcc->SetException(nullptr);
 
     XPCJSRuntime* xpcrt = XPCJSRuntime::Get();
 
@@ -964,10 +960,9 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     if (!ccx.IsValid())
         return retval;
 
-    XPCContext* xpcc = ccx.GetXPCContext();
     JSContext* cx = ccx.GetJSContext();
 
-    if (!cx || !xpcc || !IsReflectable(methodIndex))
+    if (!cx || !IsReflectable(methodIndex))
         return NS_ERROR_FAILURE;
 
     // [implicit_jscontext] and [optional_argc] have a different calling
@@ -1001,7 +996,6 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16_t methodIndex,
     if (!scriptEval.StartEvaluating(obj))
         goto pre_call_clean_up;
 
-    xpcc->SetException(nullptr);
     xpcrt->SetPendingException(nullptr);
 
     // We use js_Invoke so that the gcthings we use as args will be rooted by
@@ -1205,6 +1199,7 @@ pre_call_clean_up:
 
     MOZ_ASSERT(!aes.HasException());
 
+    nsCOMPtr<nsIException> syntheticException;
     RootedValue rval(cx);
     if (XPT_MD_IS_GETTER(info->flags)) {
         success = JS_GetProperty(cx, obj, name, &rval);
@@ -1227,11 +1222,9 @@ pre_call_clean_up:
             if (nsXPCException::NameAndFormatForNSResult(code, nullptr, &msg) && msg)
                 sz = JS_smprintf(format, msg, name);
 
-            nsCOMPtr<nsIException> e;
-
             XPCConvert::ConstructException(code, sz, GetInterfaceName(), name,
-                                           nullptr, getter_AddRefs(e), nullptr, nullptr);
-            xpcc->SetException(e);
+                                           nullptr, getter_AddRefs(syntheticException),
+                                           nullptr, nullptr);
             if (sz)
                 JS_smprintf_free(sz);
             success = false;
@@ -1239,7 +1232,8 @@ pre_call_clean_up:
     }
 
     if (!success)
-        return CheckForException(ccx, aes, name, GetInterfaceName());
+        return CheckForException(ccx, aes, name, GetInterfaceName(),
+                                 syntheticException);
 
     XPCJSRuntime::Get()->SetPendingException(nullptr); // XXX necessary?
 
