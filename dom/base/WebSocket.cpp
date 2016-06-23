@@ -99,7 +99,7 @@ public:
   , mInnerWindowID(0)
   , mWorkerPrivate(nullptr)
 #ifdef DEBUG
-  , mHasWorkerHolderRegistered(false)
+  , mHasFeatureRegistered(false)
 #endif
   , mIsMainThread(true)
   , mMutex("WebSocketImpl::mMutex")
@@ -166,8 +166,8 @@ public:
   void AddRefObject();
   void ReleaseObject();
 
-  bool RegisterWorkerHolder();
-  void UnregisterWorkerHolder();
+  bool RegisterFeature();
+  void UnregisterFeature();
 
   nsresult CancelInternal();
 
@@ -213,24 +213,24 @@ public:
   uint64_t mInnerWindowID;
 
   WorkerPrivate* mWorkerPrivate;
-  nsAutoPtr<WorkerHolder> mWorkerHolder;
+  nsAutoPtr<WorkerFeature> mWorkerFeature;
 
 #ifdef DEBUG
   // This is protected by mutex.
-  bool mHasWorkerHolderRegistered;
+  bool mHasFeatureRegistered;
 
-  bool HasWorkerHolderRegistered()
+  bool HasFeatureRegistered()
   {
     MOZ_ASSERT(mWebSocket);
     MutexAutoLock lock(mWebSocket->mMutex);
-    return mHasWorkerHolderRegistered;
+    return mHasFeatureRegistered;
   }
 
-  void SetHasWorkerHolderRegistered(bool aValue)
+  void SetHasFeatureRegistered(bool aValue)
   {
     MOZ_ASSERT(mWebSocket);
     MutexAutoLock lock(mWebSocket->mMutex);
-    mHasWorkerHolderRegistered = aValue;
+    mHasFeatureRegistered = aValue;
   }
 #endif
 
@@ -489,7 +489,7 @@ WebSocketImpl::CloseConnection(uint16_t aReasonCode,
 
   // If this method is called because the worker is going away, we will not
   // receive the OnStop() method and we have to disconnect the WebSocket and
-  // release the WorkerHolder.
+  // release the WorkerFeature.
   MaybeDisconnect md(this);
 
   uint16_t readyState = mWebSocket->ReadyState();
@@ -610,7 +610,7 @@ WebSocketImpl::Disconnect()
   AssertIsOnTargetThread();
 
   // Disconnect can be called from some control event (such as Notify() of
-  // WorkerHolder). This will be schedulated before any other sync/async
+  // WorkerFeature). This will be schedulated before any other sync/async
   // runnable. In order to prevent some double Disconnect() calls, we use this
   // boolean.
   mDisconnectingOrDisconnected = true;
@@ -640,8 +640,8 @@ WebSocketImpl::Disconnect()
   mWebSocket->DontKeepAliveAnyMore();
   mWebSocket->mImpl = nullptr;
 
-  if (mWorkerPrivate && mWorkerHolder) {
-    UnregisterWorkerHolder();
+  if (mWorkerPrivate && mWorkerFeature) {
+    UnregisterFeature();
   }
 
   // We want to release the WebSocket in the correct thread.
@@ -1262,9 +1262,9 @@ WebSocket::ConstructorCommon(const GlobalObject& aGlobal,
                            aUrl, protocolArray, EmptyCString(),
                            0, 0, aRv, &connectionFailed);
   } else {
-    // In workers we have to keep the worker alive using a workerHolder in order
-    // to dispatch messages correctly.
-    if (!webSocket->mImpl->RegisterWorkerHolder()) {
+    // In workers we have to keep the worker alive using a feature in order to
+    // dispatch messages correctly.
+    if (!webSocket->mImpl->RegisterFeature()) {
       aRv.Throw(NS_ERROR_FAILURE);
       return nullptr;
     }
@@ -2204,10 +2204,10 @@ WebSocket::DontKeepAliveAnyMore()
 
 namespace {
 
-class WebSocketWorkerHolder final : public WorkerHolder
+class WebSocketWorkerFeature final : public WorkerFeature
 {
 public:
-  explicit WebSocketWorkerHolder(WebSocketImpl* aWebSocketImpl)
+  explicit WebSocketWorkerFeature(WebSocketImpl* aWebSocketImpl)
     : mWebSocketImpl(aWebSocketImpl)
   {
   }
@@ -2250,39 +2250,39 @@ WebSocketImpl::ReleaseObject()
 }
 
 bool
-WebSocketImpl::RegisterWorkerHolder()
+WebSocketImpl::RegisterFeature()
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
-  MOZ_ASSERT(!mWorkerHolder);
-  mWorkerHolder = new WebSocketWorkerHolder(this);
+  MOZ_ASSERT(!mWorkerFeature);
+  mWorkerFeature = new WebSocketWorkerFeature(this);
 
-  if (NS_WARN_IF(!mWorkerHolder->HoldWorker(mWorkerPrivate))) {
-    mWorkerHolder = nullptr;
+  if (!mWorkerPrivate->AddFeature(mWorkerFeature)) {
+    NS_WARNING("Failed to register a feature.");
+    mWorkerFeature = nullptr;
     return false;
   }
 
 #ifdef DEBUG
-  SetHasWorkerHolderRegistered(true);
+  SetHasFeatureRegistered(true);
 #endif
 
   return true;
 }
 
 void
-WebSocketImpl::UnregisterWorkerHolder()
+WebSocketImpl::UnregisterFeature()
 {
   MOZ_ASSERT(mDisconnectingOrDisconnected);
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();
-  MOZ_ASSERT(mWorkerHolder);
+  MOZ_ASSERT(mWorkerFeature);
 
-  // The DTOR of this WorkerHolder will release the worker for us.
-  mWorkerHolder = nullptr;
-
+  mWorkerPrivate->RemoveFeature(mWorkerFeature);
+  mWorkerFeature = nullptr;
   mWorkerPrivate = nullptr;
 
 #ifdef DEBUG
-  SetHasWorkerHolderRegistered(false);
+  SetHasFeatureRegistered(false);
 #endif
 }
 
@@ -2842,7 +2842,7 @@ WebSocketImpl::Dispatch(already_AddRefed<nsIRunnable> aEvent, uint32_t aFlags)
   MOZ_ASSERT(mWorkerPrivate);
 
 #ifdef DEBUG
-  MOZ_ASSERT(HasWorkerHolderRegistered());
+  MOZ_ASSERT(HasFeatureRegistered());
 #endif
 
   // If the target is a worker, we have to use a custom WorkerRunnableDispatcher

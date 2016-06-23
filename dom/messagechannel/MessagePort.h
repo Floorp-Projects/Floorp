@@ -29,7 +29,7 @@ class PostMessageRunnable;
 class SharedMessagePortMessage;
 
 namespace workers {
-class WorkerHolder;
+class WorkerFeature;
 } // namespace workers
 
 class MessagePort final : public DOMEventTargetHelper
@@ -164,7 +164,7 @@ private:
     return mIsKeptAlive;
   }
 
-  nsAutoPtr<workers::WorkerHolder> mWorkerHolder;
+  nsAutoPtr<workers::WorkerFeature> mWorkerFeature;
 
   RefPtr<PostMessageRunnable> mPostMessageRunnable;
 

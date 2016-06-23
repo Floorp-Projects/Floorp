@@ -9,7 +9,7 @@
 #include "mozilla/DOMEventTargetHelper.h"
 #include "mozilla/UniquePtr.h"
 #include "mozilla/dom/NotificationBinding.h"
-#include "mozilla/dom/workers/bindings/WorkerHolder.h"
+#include "mozilla/dom/workers/bindings/WorkerFeature.h"
 
 #include "nsIObserver.h"
 
@@ -36,14 +36,14 @@ namespace workers {
 } // namespace workers
 
 class Notification;
-class NotificationWorkerHolder final : public workers::WorkerHolder
+class NotificationFeature final : public workers::WorkerFeature
 {
   // Since the feature is strongly held by a Notification, it is ok to hold
   // a raw pointer here.
   Notification* mNotification;
 
 public:
-  explicit NotificationWorkerHolder(Notification* aNotification);
+  explicit NotificationFeature(Notification* aNotification);
 
   bool
   Notify(workers::Status aStatus) override;
@@ -448,13 +448,13 @@ private:
     return NS_IsMainThread() == !mWorkerPrivate;
   }
 
-  bool RegisterWorkerHolder();
-  void UnregisterWorkerHolder();
+  bool RegisterFeature();
+  void UnregisterFeature();
 
   nsresult ResolveIconAndSoundURL(nsString&, nsString&);
 
   // Only used for Notifications on Workers, worker thread only.
-  UniquePtr<NotificationWorkerHolder> mWorkerHolder;
+  UniquePtr<NotificationFeature> mFeature;
   // Target thread only.
   uint32_t mTaskCount;
 };

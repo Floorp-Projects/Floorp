@@ -50,8 +50,8 @@ class IDBTransaction final
   friend class indexedDB::BackgroundCursorChild;
   friend class indexedDB::BackgroundRequestChild;
 
-  class WorkerHolder;
-  friend class WorkerHolder;
+  class WorkerFeature;
+  friend class WorkerFeature;
 
 public:
   enum Mode
@@ -80,7 +80,7 @@ private:
   nsTArray<nsString> mObjectStoreNames;
   nsTArray<RefPtr<IDBObjectStore>> mObjectStores;
   nsTArray<RefPtr<IDBObjectStore>> mDeletedObjectStores;
-  nsAutoPtr<WorkerHolder> mWorkerHolder;
+  nsAutoPtr<WorkerFeature> mWorkerFeature;
 
   // Tagged with mMode. If mMode is VERSION_CHANGE then mBackgroundActor will be
   // a BackgroundVersionChangeTransactionChild. Otherwise it will be a

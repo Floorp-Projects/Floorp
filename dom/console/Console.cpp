@@ -314,7 +314,7 @@ private:
 };
 
 class ConsoleRunnable : public Runnable
-                      , public WorkerHolder
+                      , public WorkerFeature
                       , public StructuredCloneHolderBase
 {
 public:
@@ -382,7 +382,7 @@ private:
       return false;
     }
 
-    if (NS_WARN_IF(!HoldWorker(mWorkerPrivate))) {
+    if (NS_WARN_IF(!mWorkerPrivate->AddFeature(this))) {
       return false;
     }
 
@@ -427,7 +427,7 @@ private:
         mRunnable->ReleaseData();
         mRunnable->mConsole = nullptr;
 
-        mRunnable->ReleaseWorker();
+        aWorkerPrivate->RemoveFeature(mRunnable);
         return true;
       }
 

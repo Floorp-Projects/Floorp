@@ -22,49 +22,43 @@ using mozilla::ipc::PBackgroundChild;
 namespace {
 
 void
-AddWorkerHolderToStreamChild(const CacheReadStream& aReadStream,
-                             CacheWorkerHolder* aWorkerHolder)
+AddFeatureToStreamChild(const CacheReadStream& aReadStream, Feature* aFeature)
 {
-  MOZ_ASSERT_IF(!NS_IsMainThread(), aWorkerHolder);
+  MOZ_ASSERT_IF(!NS_IsMainThread(), aFeature);
   CacheStreamControlChild* cacheControl =
     static_cast<CacheStreamControlChild*>(aReadStream.controlChild());
   if (cacheControl) {
-    cacheControl->SetWorkerHolder(aWorkerHolder);
+    cacheControl->SetFeature(aFeature);
   }
 }
 
 void
-AddWorkerHolderToStreamChild(const CacheResponse& aResponse,
-                             CacheWorkerHolder* aWorkerHolder)
+AddFeatureToStreamChild(const CacheResponse& aResponse, Feature* aFeature)
 {
-  MOZ_ASSERT_IF(!NS_IsMainThread(), aWorkerHolder);
+  MOZ_ASSERT_IF(!NS_IsMainThread(), aFeature);
 
   if (aResponse.body().type() == CacheReadStreamOrVoid::Tvoid_t) {
     return;
   }
 
-  AddWorkerHolderToStreamChild(aResponse.body().get_CacheReadStream(),
-                               aWorkerHolder);
+  AddFeatureToStreamChild(aResponse.body().get_CacheReadStream(), aFeature);
 }
 
 void
-AddWorkerHolderToStreamChild(const CacheRequest& aRequest,
-                             CacheWorkerHolder* aWorkerHolder)
+AddFeatureToStreamChild(const CacheRequest& aRequest, Feature* aFeature)
 {
-  MOZ_ASSERT_IF(!NS_IsMainThread(), aWorkerHolder);
+  MOZ_ASSERT_IF(!NS_IsMainThread(), aFeature);
 
   if (aRequest.body().type() == CacheReadStreamOrVoid::Tvoid_t) {
     return;
   }
 
-  AddWorkerHolderToStreamChild(aRequest.body().get_CacheReadStream(),
-                               aWorkerHolder);
+  AddFeatureToStreamChild(aRequest.body().get_CacheReadStream(), aFeature);
 }
 
 } // namespace
 
-CacheOpChild::CacheOpChild(CacheWorkerHolder* aWorkerHolder,
-                           nsIGlobalObject* aGlobal,
+CacheOpChild::CacheOpChild(Feature* aFeature, nsIGlobalObject* aGlobal,
                            nsISupports* aParent, Promise* aPromise)
   : mGlobal(aGlobal)
   , mParent(aParent)
@@ -74,8 +68,8 @@ CacheOpChild::CacheOpChild(CacheWorkerHolder* aWorkerHolder,
   MOZ_ASSERT(mParent);
   MOZ_ASSERT(mPromise);
 
-  MOZ_ASSERT_IF(!NS_IsMainThread(), aWorkerHolder);
-  SetWorkerHolder(aWorkerHolder);
+  MOZ_ASSERT_IF(!NS_IsMainThread(), aFeature);
+  SetFeature(aFeature);
 }
 
 CacheOpChild::~CacheOpChild()
@@ -96,7 +90,7 @@ CacheOpChild::ActorDestroy(ActorDestroyReason aReason)
     mPromise = nullptr;
   }
 
-  RemoveWorkerHolder();
+  RemoveFeature();
 }
 
 bool
@@ -155,7 +149,7 @@ CacheOpChild::Recv__delete__(const ErrorResult& aRv,
     {
       auto actor = static_cast<CacheChild*>(
         aResult.get_StorageOpenResult().actorChild());
-      actor->SetWorkerHolder(GetWorkerHolder());
+      actor->SetFeature(GetFeature());
       RefPtr<Cache> cache = new Cache(mGlobal, actor);
       mPromise->MaybeResolve(cache);
       break;
@@ -184,8 +178,8 @@ CacheOpChild::StartDestroy()
 {
   NS_ASSERT_OWNINGTHREAD(CacheOpChild);
 
-  // Do not cancel on-going operations when WorkerHolder calls this.  Instead,
-  // keep the Worker alive until we are done.
+  // Do not cancel on-going operations when Feature calls this.  Instead, keep
+  // the Worker alive until we are done.
 }
 
 nsIGlobalObject*
@@ -218,7 +212,7 @@ CacheOpChild::HandleResponse(const CacheResponseOrVoid& aResponseOrVoid)
 
   const CacheResponse& cacheResponse = aResponseOrVoid.get_CacheResponse();
 
-  AddWorkerHolderToStreamChild(cacheResponse, GetWorkerHolder());
+  AddFeatureToStreamChild(cacheResponse, GetFeature());
   RefPtr<Response> response = ToResponse(cacheResponse);
 
   mPromise->MaybeResolve(response);
@@ -231,7 +225,7 @@ CacheOpChild::HandleResponseList(const nsTArray<CacheResponse>& aResponseList)
   responses.SetCapacity(aResponseList.Length());
 
   for (uint32_t i = 0; i < aResponseList.Length(); ++i) {
-    AddWorkerHolderToStreamChild(aResponseList[i], GetWorkerHolder());
+    AddFeatureToStreamChild(aResponseList[i], GetFeature());
     responses.AppendElement(ToResponse(aResponseList[i]));
   }
 
@@ -245,7 +239,7 @@ CacheOpChild::HandleRequestList(const nsTArray<CacheRequest>& aRequestList)
   requests.SetCapacity(aRequestList.Length());
 
   for (uint32_t i = 0; i < aRequestList.Length(); ++i) {
-    AddWorkerHolderToStreamChild(aRequestList[i], GetWorkerHolder());
+    AddFeatureToStreamChild(aRequestList[i], GetFeature());
     requests.AppendElement(ToRequest(aRequestList[i]));
   }
 

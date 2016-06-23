@@ -229,7 +229,7 @@ FetchRequest(nsIGlobalObject* aGlobal, const RequestOrUSVString& aInput,
 
     RefPtr<WorkerFetchResolver> resolver = WorkerFetchResolver::Create(worker, p);
     if (!resolver) {
-      NS_WARNING("Could not add WorkerFetchResolver workerHolder to worker");
+      NS_WARNING("Could not add WorkerFetchResolver feature to worker");
       aRv.Throw(NS_ERROR_DOM_ABORT_ERR);
       return nullptr;
     }
@@ -405,7 +405,7 @@ WorkerFetchResolver::OnResponseEnd()
     RefPtr<WorkerFetchResponseEndControlRunnable> cr =
       new WorkerFetchResponseEndControlRunnable(mPromiseProxy);
     // This can fail if the worker thread is canceled or killed causing
-    // the PromiseWorkerProxy to give up its WorkerHolder immediately,
+    // the PromiseWorkerProxy to give up its WorkerFeature immediately,
     // allowing the worker thread to become Dead.
     if (!cr->Dispatch()) {
       NS_WARNING("Failed to dispatch WorkerFetchResponseEndControlRunnable");
@@ -753,7 +753,7 @@ public:
                                         nonconstResult);
       if (!r->Dispatch()) {
         // XXXcatalinb: The worker is shutting down, the pump will be canceled
-        // by FetchBodyWorkerHolder::Notify.
+        // by FetchBodyFeature::Notify.
         NS_WARNING("Could not dispatch ConsumeBodyRunnable");
         // Return failure so that aResult is freed.
         return NS_ERROR_FAILURE;
@@ -819,20 +819,20 @@ public:
 } // namespace
 
 template <class Derived>
-class FetchBodyWorkerHolder final : public workers::WorkerHolder
+class FetchBodyFeature final : public workers::WorkerFeature
 {
-  // This is addrefed before the workerHolder is created, and is released in
-  // ContinueConsumeBody() so we can hold a rawptr.
+  // This is addrefed before the feature is created, and is released in ContinueConsumeBody()
+  // so we can hold a rawptr.
   FetchBody<Derived>* mBody;
   bool mWasNotified;
 
 public:
-  explicit FetchBodyWorkerHolder(FetchBody<Derived>* aBody)
+  explicit FetchBodyFeature(FetchBody<Derived>* aBody)
     : mBody(aBody)
     , mWasNotified(false)
   { }
 
-  ~FetchBodyWorkerHolder()
+  ~FetchBodyFeature()
   { }
 
   bool Notify(workers::Status aStatus) override
@@ -848,7 +848,7 @@ public:
 
 template <class Derived>
 FetchBody<Derived>::FetchBody()
-  : mWorkerHolder(nullptr)
+  : mFeature(nullptr)
   , mBodyUsed(false)
 #ifdef DEBUG
   , mReadDone(false)
@@ -875,8 +875,8 @@ FetchBody<Derived>::~FetchBody()
 
 // Returns true if addref succeeded.
 // Always succeeds on main thread.
-// May fail on worker if RegisterWorkerHolder() fails. In that case, it will
-// release the object before returning false.
+// May fail on worker if RegisterFeature() fails. In that case, it will release
+// the object before returning false.
 template <class Derived>
 bool
 FetchBody<Derived>::AddRefObject()
@@ -884,8 +884,8 @@ FetchBody<Derived>::AddRefObject()
   AssertIsOnTargetThread();
   DerivedClass()->AddRef();
 
-  if (mWorkerPrivate && !mWorkerHolder) {
-    if (!RegisterWorkerHolder()) {
+  if (mWorkerPrivate && !mFeature) {
+    if (!RegisterFeature()) {
       ReleaseObject();
       return false;
     }
@@ -899,8 +899,8 @@ FetchBody<Derived>::ReleaseObject()
 {
   AssertIsOnTargetThread();
 
-  if (mWorkerPrivate && mWorkerHolder) {
-    UnregisterWorkerHolder();
+  if (mWorkerPrivate && mFeature) {
+    UnregisterFeature();
   }
 
   DerivedClass()->Release();
@@ -908,16 +908,16 @@ FetchBody<Derived>::ReleaseObject()
 
 template <class Derived>
 bool
-FetchBody<Derived>::RegisterWorkerHolder()
+FetchBody<Derived>::RegisterFeature()
 {
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();
-  MOZ_ASSERT(!mWorkerHolder);
-  mWorkerHolder = new FetchBodyWorkerHolder<Derived>(this);
+  MOZ_ASSERT(!mFeature);
+  mFeature = new FetchBodyFeature<Derived>(this);
 
-  if (!mWorkerHolder->HoldWorker(mWorkerPrivate)) {
-    NS_WARNING("Failed to add workerHolder");
-    mWorkerHolder = nullptr;
+  if (!mWorkerPrivate->AddFeature(mFeature)) {
+    NS_WARNING("Failed to add feature");
+    mFeature = nullptr;
     return false;
   }
 
@@ -926,14 +926,14 @@ FetchBody<Derived>::RegisterWorkerHolder()
 
 template <class Derived>
 void
-FetchBody<Derived>::UnregisterWorkerHolder()
+FetchBody<Derived>::UnregisterFeature()
 {
   MOZ_ASSERT(mWorkerPrivate);
   mWorkerPrivate->AssertIsOnWorkerThread();
-  MOZ_ASSERT(mWorkerHolder);
+  MOZ_ASSERT(mFeature);
 
-  mWorkerHolder->ReleaseWorker();
-  mWorkerHolder = nullptr;
+  mWorkerPrivate->RemoveFeature(mFeature);
+  mFeature = nullptr;
 }
 
 template <class Derived>
@@ -952,7 +952,7 @@ nsresult
 FetchBody<Derived>::BeginConsumeBody()
 {
   AssertIsOnTargetThread();
-  MOZ_ASSERT(!mWorkerHolder);
+  MOZ_ASSERT(!mFeature);
   MOZ_ASSERT(mConsumePromise);
 
   // The FetchBody is not thread-safe refcounted. We addref it here and release
@@ -1036,7 +1036,7 @@ FetchBody<Derived>::ContinueConsumeBody(nsresult aStatus, uint32_t aResultLength
   // sync with a body read.
   MOZ_ASSERT(mBodyUsed);
   MOZ_ASSERT(!mReadDone);
-  MOZ_ASSERT_IF(mWorkerPrivate, mWorkerHolder);
+  MOZ_ASSERT_IF(mWorkerPrivate, mFeature);
 #ifdef DEBUG
   mReadDone = true;
 #endif

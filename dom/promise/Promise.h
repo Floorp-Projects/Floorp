@@ -29,7 +29,7 @@
 #define DOM_PROMISE_DEPRECATED_REPORTING !SPIDERMONKEY_PROMISE
 
 #if defined(DOM_PROMISE_DEPRECATED_REPORTING)
-#include "mozilla/dom/workers/bindings/WorkerHolder.h"
+#include "mozilla/dom/workers/bindings/WorkerFeature.h"
 #endif // defined(DOM_PROMISE_DEPRECATED_REPORTING)
 
 class nsIGlobalObject;
@@ -48,15 +48,14 @@ class PromiseDebugging;
 class Promise;
 
 #if defined(DOM_PROMISE_DEPRECATED_REPORTING)
-class PromiseReportRejectWorkerHolder : public workers::WorkerHolder
+class PromiseReportRejectFeature : public workers::WorkerFeature
 {
-  // PromiseReportRejectWorkerHolder is held by an nsAutoPtr on the Promise
-  // which means that this object will be destroyed before the Promise is
-  // destroyed.
+  // PromiseReportRejectFeature is held by an nsAutoPtr on the Promise which
+  // means that this object will be destroyed before the Promise is destroyed.
   Promise* MOZ_NON_OWNING_REF mPromise;
 
 public:
-  explicit PromiseReportRejectWorkerHolder(Promise* aPromise)
+  explicit PromiseReportRejectFeature(Promise* aPromise)
     : mPromise(aPromise)
   {
     MOZ_ASSERT(mPromise);
@@ -85,7 +84,7 @@ class Promise : public nsISupports,
   friend class PromiseResolverTask;
   friend class PromiseTask;
 #if defined(DOM_PROMISE_DEPRECATED_REPORTING)
-  friend class PromiseReportRejectWorkerHolder;
+  friend class PromiseReportRejectFeature;
 #endif // defined(DOM_PROMISE_DEPRECATED_REPORTING)
   friend class PromiseWorkerProxy;
   friend class PromiseWorkerProxyRunnable;
@@ -410,7 +409,7 @@ private:
 
   void MaybeReportRejectedOnce() {
     MaybeReportRejected();
-    RemoveWorkerHolder();
+    RemoveFeature();
     mResult.setUndefined();
   }
 #endif // defined(DOM_PROMISE_DEPRECATED_REPORTING)
@@ -465,7 +464,7 @@ private:
   CreateThenableFunction(JSContext* aCx, Promise* aPromise, uint32_t aTask);
 
 #if defined(DOM_PROMISE_DEPRECATED_REPORTING)
-  void RemoveWorkerHolder();
+  void RemoveFeature();
 #endif // defined(DOM_PROMISE_DEPRECATED_REPORTING)
 
   // Capture the current stack and store it in aTarget.  If false is
@@ -504,7 +503,7 @@ private:
   // needs to know when the worker is shutting down, to report the error on the
   // console before the worker's context is deleted. This feature is used for
   // that purpose.
-  nsAutoPtr<PromiseReportRejectWorkerHolder> mWorkerHolder;
+  nsAutoPtr<PromiseReportRejectFeature> mFeature;
 #endif // defined(DOM_PROMISE_DEPRECATED_REPORTING)
 
   bool mTaskPending;

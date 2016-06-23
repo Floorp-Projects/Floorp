@@ -65,7 +65,7 @@ public:
 private:
   // ActorChild methods
 
-  // WorkerHolder is trying to destroy due to worker shutdown.
+  // Feature is trying to destroy due to worker shutdown.
   virtual void StartDestroy() override;
 
   // PCacheChild methods
