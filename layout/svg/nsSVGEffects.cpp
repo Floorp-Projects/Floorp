@@ -18,6 +18,7 @@
 #include "nsSVGMaskFrame.h"
 #include "nsIReflowCallback.h"
 #include "nsCycleCollectionParticipant.h"
+#include "SVGUseElement.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;
@@ -694,10 +695,13 @@ nsSVGEffects::UpdateEffects(nsIFrame *aFrame)
   if (aFrame->GetType() == nsGkAtoms::svgPathGeometryFrame &&
       static_cast<nsSVGPathGeometryElement*>(aFrame->GetContent())->IsMarkable()) {
     // Set marker properties here to avoid reference loops
-    const nsStyleSVG *style = aFrame->StyleSVG();
-    GetMarkerProperty(style->mMarkerStart, aFrame, MarkerBeginProperty());
-    GetMarkerProperty(style->mMarkerMid, aFrame, MarkerMiddleProperty());
-    GetMarkerProperty(style->mMarkerEnd, aFrame, MarkerEndProperty());
+    nsCOMPtr<nsIURI> markerURL =
+      nsSVGEffects::GetMarkerURI(aFrame, &nsStyleSVG::mMarkerStart);
+    GetMarkerProperty(markerURL, aFrame, MarkerBeginProperty());
+    markerURL = nsSVGEffects::GetMarkerURI(aFrame, &nsStyleSVG::mMarkerMid);
+    GetMarkerProperty(markerURL, aFrame, MarkerMiddleProperty());
+    markerURL = nsSVGEffects::GetMarkerURI(aFrame, &nsStyleSVG::mMarkerEnd);
+    GetMarkerProperty(markerURL, aFrame, MarkerEndProperty());
   }
 }
 
@@ -868,4 +872,41 @@ nsSVGEffects::InvalidateDirectRenderingObservers(nsIFrame *aFrame, uint32_t aFla
   if (content && content->IsElement()) {
     InvalidateDirectRenderingObservers(content->AsElement(), aFlags);
   }
+}
+
+static already_AddRefed<nsIURI>
+ResolveFragmentOrURL(nsIFrame* aFrame, const FragmentOrURL* aFragmentOrURL)
+{
+  MOZ_ASSERT(aFrame);
+
+  if (!aFragmentOrURL) {
+    return nullptr;
+  }
+
+  // Non-local-reference URL.
+  if (!aFragmentOrURL->IsLocalRef()) {
+    nsCOMPtr<nsIURI> result = aFragmentOrURL->GetSourceURL();
+    return result.forget();
+  }
+
+  nsIContent* content = aFrame->GetContent();
+  nsCOMPtr<nsIURI> baseURI = content->GetBaseURI();
+
+  if (content->IsInAnonymousSubtree()) {
+    // content is in a shadow tree.
+    // Depending on where this url comes from, choose either the baseURI of the
+    // original document of content or the root document of the shadow tree
+    // to resolve URI.
+    if (!aFragmentOrURL->EqualsExceptRef(baseURI))
+      baseURI = content->OwnerDoc()->GetBaseURI();
+  }
+
+  return aFragmentOrURL->Resolve(baseURI);
+}
+
+already_AddRefed<nsIURI>
+nsSVGEffects::GetMarkerURI(nsIFrame* aFrame,
+                           FragmentOrURL nsStyleSVG::* aMarker)
+{
+  return ResolveFragmentOrURL(aFrame, &(aFrame->StyleSVG()->*aMarker));
 }
