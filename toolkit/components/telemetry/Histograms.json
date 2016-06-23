@@ -4451,14 +4451,14 @@
     "releaseChannelCollection": "opt-out",
     "description": "The browser that was the default on the initial profile migration. The values correspond to the internal browser ID (see MigrationUtils.jsm)"
   },
-  "FX_STARTUP_MIGRATION_AUTOMATED_IMPORT_SUCCEEDED": {
+  "FX_STARTUP_MIGRATION_AUTOMATED_IMPORT_PROCESS_SUCCESS": {
     "bug_numbers": [1271775],
     "alert_emails": ["gijs@mozilla.com"],
     "expires_in_version": "53",
-    "kind": "count",
-    "keyed": true,
+    "kind": "enumerated",
+    "n_values": 27,
     "releaseChannelCollection": "opt-out",
-    "description": "Where automatic migration was attempted, indicates to what degree we succeeded."
+    "description": "Where automatic migration was attempted, indicates to what degree we succeeded. Values 0-25 indicate progress through the automatic migration sequence, with 25 indicating the migration finished. 26 is only used when the migration produced errors before it finished."
   },
   "FX_STARTUP_MIGRATION_DATA_RECENCY": {
     "bug_numbers": [1276694],
