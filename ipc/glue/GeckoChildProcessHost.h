@@ -173,7 +173,7 @@ protected:
   task_t mChildTask;
 #endif
 
-  void OpenPrivilegedHandle(base::ProcessId aPid);
+  bool OpenPrivilegedHandle(base::ProcessId aPid);
 
 private:
   DISALLOW_EVIL_CONSTRUCTORS(GeckoChildProcessHost);
