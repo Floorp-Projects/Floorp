@@ -53,6 +53,8 @@ public:
   nsresult OnQueryCaretRect(WidgetQueryContentEvent* aEvent);
   // eQueryTextRect event handler
   nsresult OnQueryTextRect(WidgetQueryContentEvent* aEvent);
+  // eQueryTextRectArray event handler
+  nsresult OnQueryTextRectArray(WidgetQueryContentEvent* aEvent);
   // eQueryEditorRect event handler
   nsresult OnQueryEditorRect(WidgetQueryContentEvent* aEvent);
   // eQueryContentState event handler
@@ -299,6 +301,9 @@ protected:
                                   FontRangeArray& aFontRanges,
                                   uint32_t& aLength,
                                   LineBreakType aLineBreakType);
+  nsresult QueryTextRectByRange(nsRange* aRange,
+                                LayoutDeviceIntRect& aRect,
+                                WritingMode& aWritingMode);
 };
 
 } // namespace mozilla

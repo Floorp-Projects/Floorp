@@ -241,6 +241,9 @@ NS_EVENT_MESSAGE(eQueryCaretRect)
 // valid character range given offset and length. Result is relative to top
 // level widget coordinates
 NS_EVENT_MESSAGE(eQueryTextRect)
+// Query for the bounding rect array of a range of characters.
+// Thiis similar event of eQueryTextRect.
+NS_EVENT_MESSAGE(eQueryTextRectArray)
 // Query for the bounding rect of the current focused frame. Result is relative
 // to top level widget coordinates
 NS_EVENT_MESSAGE(eQueryEditorRect)
