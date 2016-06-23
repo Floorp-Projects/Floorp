@@ -543,26 +543,6 @@ Options(JSContext* cx, unsigned argc, Value* vp)
     return true;
 }
 
-static bool
-Atob(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.length())
-        return true;
-
-    return xpc::Base64Decode(cx, args[0], args.rval());
-}
-
-static bool
-Btoa(JSContext* cx, unsigned argc, Value* vp)
-{
-    CallArgs args = CallArgsFromVp(argc, vp);
-    if (!args.length())
-        return true;
-
-  return xpc::Base64Encode(cx, args[0], args.rval());
-}
-
 static PersistentRootedValue *sScriptedInterruptCallback = nullptr;
 
 static bool
@@ -673,8 +653,8 @@ static const JSFunctionSpec glob_functions[] = {
 #endif
     JS_FS("options",         Options,        0,0),
     JS_FS("sendCommand",     SendCommand,    1,0),
-    JS_FS("atob",            Atob,           1,0),
-    JS_FS("btoa",            Btoa,           1,0),
+    JS_FS("atob",            xpc::Atob,      1,0),
+    JS_FS("btoa",            xpc::Btoa,      1,0),
     JS_FS("setInterruptCallback", SetInterruptCallback, 1,0),
     JS_FS("simulateActivityCallback", SimulateActivityCallback, 1,0),
     JS_FS("registerAppManifest", RegisterAppManifest, 1, 0),

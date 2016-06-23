@@ -3652,11 +3652,8 @@ XPCJSRuntime::newXPCJSRuntime()
 }
 
 bool
-XPCJSRuntime::InitXPCContext(JSContext* cx)
+XPCJSRuntime::JSContextInitialized(JSContext* cx)
 {
-    // If we were the first cx ever created (like the SafeJSContext), the caller
-    // would have had no way to enter a request. Enter one now before doing the
-    // rest of the cx setup.
     JSAutoRequest ar(cx);
 
     // if it is our first context then we need to generate our string ids
@@ -3676,10 +3673,6 @@ XPCJSRuntime::InitXPCContext(JSContext* cx)
             return false;
         }
     }
-
-    XPCContext* xpc = new XPCContext(this, cx);
-    if (!xpc)
-        return false;
 
     return true;
 }
@@ -3790,12 +3783,6 @@ XPCJSRuntime::DebugDump(int16_t depth)
     XPC_LOG_ALWAYS(("XPCJSRuntime @ %x", this));
         XPC_LOG_INDENT();
         XPC_LOG_ALWAYS(("mJSRuntime @ %x", Runtime()));
-
-        JSContext* cx = JS_GetContext(Runtime());
-        XPCContext* xpc = XPCContext::GetXPCContext(cx);
-        XPC_LOG_INDENT();
-        xpc->DebugDump(depth);
-        XPC_LOG_OUTDENT();
 
         XPC_LOG_ALWAYS(("mWrappedJSClassMap @ %x with %d wrapperclasses(s)",
                         mWrappedJSClassMap, mWrappedJSClassMap->Count()));
