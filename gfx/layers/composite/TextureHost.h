@@ -606,8 +606,6 @@ public:
 
   virtual GrallocTextureHostOGL* AsGrallocTextureHostOGL() { return nullptr; }
 
-  void CallNotifyNotUsed();
-
 protected:
   void ReadUnlock();
 
@@ -624,12 +622,16 @@ protected:
    */
   void NotifyNotUsed();
 
+  // for Compositor.
+  void CallNotifyNotUsed();
+
   PTextureParent* mActor;
   RefPtr<TextureReadLock> mReadLock;
   TextureFlags mFlags;
   int mCompositableCount;
   uint64_t mFwdTransactionId;
 
+  friend class Compositor;
   friend class TextureParent;
   friend class TiledLayerBufferComposite;
 };

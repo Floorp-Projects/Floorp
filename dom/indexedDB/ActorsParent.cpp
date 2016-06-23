@@ -7908,10 +7908,6 @@ protected:
   {
     MOZ_COUNT_DTOR(NormalJSRuntime);
 
-    if (mContext) {
-      JS_DestroyContext(mContext);
-    }
-
     if (mRuntime) {
       JS_DestroyRuntime(mRuntime);
     }
@@ -15519,7 +15515,11 @@ VersionChangeTransaction::SendCompleteNotification(nsresult aResult)
   }
 
   if (NS_FAILED(aResult) && NS_SUCCEEDED(openDatabaseOp->mResultCode)) {
-    openDatabaseOp->mResultCode = aResult;
+    // 3.3.1 Opening a database:
+    // "If the upgrade transaction was aborted, run the steps for closing a
+    //  database connection with connection, create and return a new AbortError
+    //  exception and abort these steps."
+    openDatabaseOp->mResultCode = NS_ERROR_DOM_INDEXEDDB_ABORT_ERR;
   }
 
   openDatabaseOp->mState = OpenDatabaseOp::State::SendingResults;
@@ -24158,8 +24158,8 @@ NormalJSRuntime::Init()
   // Not setting this will cause JS_CHECK_RECURSION to report false positives.
   JS_SetNativeStackQuota(mRuntime, 128 * sizeof(size_t) * 1024);
 
-  mContext = JS_NewContext(mRuntime, 0);
-  if (NS_WARN_IF(!mContext)) {
+  mContext = JS_GetContext(mRuntime);
+  if (NS_WARN_IF(!JS::InitSelfHostedCode(mContext))) {
     return false;
   }
 

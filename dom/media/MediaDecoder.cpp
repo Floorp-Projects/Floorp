@@ -341,9 +341,6 @@ MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
 
   bool prevDormant = mIsDormant;
   mIsDormant = false;
-  if (!mOwner->IsActive()) {
-    mIsDormant = true;
-  }
 #ifdef MOZ_WIDGET_GONK
   if (mOwner->IsHidden()) {
     mIsDormant = true;
@@ -354,7 +351,8 @@ MediaDecoder::UpdateDormantState(bool aDormantTimeout, bool aActivity)
   bool prevHeuristicDormant = mIsHeuristicDormant;
   mIsHeuristicDormant = false;
   if (IsHeuristicDormantSupported() && !mIsVisible) {
-    if (aDormantTimeout && !aActivity &&
+    // Do not enter dormant when MediaDecoder is not paused nor ended.
+    if ((aDormantTimeout || !mOwner->IsActive()) && !aActivity &&
         (mPlayState == PLAY_STATE_PAUSED || IsEnded())) {
       // Enable heuristic dormant
       mIsHeuristicDormant = true;

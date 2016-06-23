@@ -99,8 +99,10 @@ this.ExtensionStorage = {
     let promise = OS.File.read(path);
     promise = promise.then(array => {
       return JSON.parse(decoder.decode(array));
-    }).catch(() => {
-      Cu.reportError("Unable to parse JSON data for extension storage.");
+    }).catch((error) => {
+      if (!error.becauseNoSuchFile) {
+        Cu.reportError("Unable to parse JSON data for extension storage.");
+      }
       return {};
     });
     this.cache.set(extensionId, promise);

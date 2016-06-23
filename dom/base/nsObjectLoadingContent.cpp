@@ -82,6 +82,7 @@
 #include "mozilla/dom/Event.h"
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/dom/PluginCrashedEvent.h"
+#include "mozilla/AsyncEventDispatcher.h"
 #include "mozilla/EventDispatcher.h"
 #include "mozilla/EventStates.h"
 #include "mozilla/Telemetry.h"
@@ -1531,25 +1532,19 @@ nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI, nsIURI* aBaseURI,
     return;
   }
 
-  // Some youtube urls have invalid query strings attached, e.g.
+  // Some YouTube urls have parameters in path components, e.g.
   // http://youtube.com/embed/7LcUOEP7Brc&start=35. These URLs work with flash,
   // but break iframe/object embedding. If this situation occurs with rewritten
-  // URLs, and the user has flash installed, just use flash. If the user does
-  // not have flash installed or activated, chop off the query in order to make
-  // the video load correctly as an iframe. In either case, warn about it in the
+  // URLs, convert the parameters to query in order to make the video load
+  // correctly as an iframe. In either case, warn about it in the
   // developer console.
   int32_t ampIndex = uri.FindChar('&', 0);
-  bool trimQuery = false;
+  bool replaceQuery = false;
   if (ampIndex != -1) {
     int32_t qmIndex = uri.FindChar('?', 0);
     if (qmIndex == -1 ||
         qmIndex > ampIndex) {
-      if (!nsContentUtils::IsSWFPlayerEnabled()) {
-        trimQuery = true;
-      } else {
-        // Flash is enabled, just use it in this case.
-        return;
-      }
+      replaceQuery = true;
     }
   }
 
@@ -1563,10 +1558,13 @@ nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI, nsIURI* aBaseURI,
   }
 
   nsAutoString utf16OldURI = NS_ConvertUTF8toUTF16(uri);
-  // If we need to trim the query off the URL, it means it's malformed, and an
-  // ampersand comes first. Use the index we found earlier.
-  if (trimQuery) {
-    uri.Truncate(ampIndex);
+  // If we need to convert the URL, it means an ampersand comes first.
+  // Use the index we found earlier.
+  if (replaceQuery) {
+    // Replace question marks with ampersands.
+    uri.ReplaceChar('?', '&');
+    // Replace the first ampersand with a question mark.
+    uri.SetCharAt('?', ampIndex);
   }
   // Switch out video access url formats, which should possibly allow HTML5
   // video loading.
@@ -1584,10 +1582,10 @@ nsObjectLoadingContent::MaybeRewriteYoutubeEmbed(nsIURI* aURI, nsIURI* aBaseURI,
   const char* msgName;
   // If there's no query to rewrite, just notify in the developer console
   // that we're changing the embed.
-  if (!trimQuery) {
-    msgName = "RewriteYoutubeEmbed";
+  if (!replaceQuery) {
+    msgName = "RewriteYouTubeEmbed";
   } else {
-    msgName = "RewriteYoutubeEmbedInvalidQuery";
+    msgName = "RewriteYouTubeEmbedPathParams";
   }
   nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
                                   NS_LITERAL_CSTRING("Plugins"),
@@ -2520,6 +2518,12 @@ nsObjectLoadingContent::LoadObject(bool aNotify,
     LOG(("OBJLC [%p]: Loading fallback, type %u", this, fallbackType));
     NS_ASSERTION(!mFrameLoader && !mInstanceOwner,
                  "switched to type null but also loaded something");
+
+    // Don't fire error events if we're falling back to click-to-play; instead
+    // pretend like this is a really slow-loading plug-in instead.
+    if (fallbackType != eFallbackClickToPlay) {
+      MaybeFireErrorEvent();
+    }
 
     if (mChannel) {
       // If we were loading with a channel but then failed over, throw it away
@@ -3835,6 +3839,21 @@ nsObjectLoadingContent::GetOwnPropertyNames(JSContext* aCx,
   aRv = ScriptRequestPluginInstance(aCx, getter_AddRefs(pi));
 }
 
+void
+nsObjectLoadingContent::MaybeFireErrorEvent()
+{
+  nsCOMPtr<nsIContent> thisContent =
+    do_QueryInterface(static_cast<nsIImageLoadingContent*>(this));
+  // Queue a task to fire an error event if we're an <object> element.  The
+  // queueing is important, since then we don't have to worry about reentry.
+  if (thisContent->IsHTMLElement(nsGkAtoms::object)) {
+    RefPtr<AsyncEventDispatcher> loadBlockingAsyncDispatcher =
+      new LoadBlockingAsyncEventDispatcher(thisContent,
+                                           NS_LITERAL_STRING("error"),
+                                           false, false);
+    loadBlockingAsyncDispatcher->PostDOMEvent();
+  }
+}
 
 // SetupProtoChainRunner implementation
 nsObjectLoadingContent::SetupProtoChainRunner::SetupProtoChainRunner(

@@ -624,56 +624,47 @@ AccurateSeekTask::SetMediaDecoderReaderWrapperCallback()
 {
   AssertOwnerThread();
 
-  mAudioCallbackID =
-    mReader->SetAudioCallback(this, &AccurateSeekTask::OnAudioDecoded,
-                                    &AccurateSeekTask::OnAudioNotDecoded);
+  mAudioCallback = mReader->AudioCallback().Connect(
+    OwnerThread(), [this] (AudioCallbackData aData) {
+    if (aData.is<MediaData*>()) {
+      OnAudioDecoded(aData.as<MediaData*>());
+    } else {
+      OnAudioNotDecoded(aData.as<MediaDecoderReader::NotDecodedReason>());
+    }
+  });
 
-  mVideoCallbackID =
-    mReader->SetVideoCallback(this, &AccurateSeekTask::OnVideoDecoded,
-                                    &AccurateSeekTask::OnVideoNotDecoded);
+  mVideoCallback = mReader->VideoCallback().Connect(
+    OwnerThread(), [this] (VideoCallbackData aData) {
+    typedef Tuple<MediaData*, TimeStamp> Type;
+    if (aData.is<Type>()) {
+      OnVideoDecoded(Get<0>(aData.as<Type>()));
+    } else {
+      OnVideoNotDecoded(aData.as<MediaDecoderReader::NotDecodedReason>());
+    }
+  });
 
-  RefPtr<AccurateSeekTask> self = this;
-  mWaitAudioCallbackID =
-    mReader->SetWaitAudioCallback(
-      [self] (MediaData::Type aType) -> void {
-        self->AssertOwnerThread();
-        self->EnsureAudioDecodeTaskQueued();
-      },
-      [self] (WaitForDataRejectValue aRejection) -> void {
-        self->AssertOwnerThread();
-      });
+  mAudioWaitCallback = mReader->AudioWaitCallback().Connect(
+    OwnerThread(), [this] (WaitCallbackData aData) {
+    if (aData.is<MediaData::Type>()) {
+      EnsureAudioDecodeTaskQueued();
+    }
+  });
 
-  mWaitVideoCallbackID =
-    mReader->SetWaitVideoCallback(
-      [self] (MediaData::Type aType) -> void {
-        self->AssertOwnerThread();
-        self->EnsureVideoDecodeTaskQueued();
-      },
-      [self] (WaitForDataRejectValue aRejection) -> void {
-        self->AssertOwnerThread();
-      });
-
-  DECODER_LOG("SeekTask set audio callbacks: mAudioCallbackID = %d\n", (int)mAudioCallbackID);
-  DECODER_LOG("SeekTask set video callbacks: mVideoCallbackID = %d\n", (int)mAudioCallbackID);
-  DECODER_LOG("SeekTask set wait audio callbacks: mWaitAudioCallbackID = %d\n", (int)mWaitAudioCallbackID);
-  DECODER_LOG("SeekTask set wait video callbacks: mWaitVideoCallbackID = %d\n", (int)mWaitVideoCallbackID);
+  mVideoWaitCallback = mReader->VideoWaitCallback().Connect(
+    OwnerThread(), [this] (WaitCallbackData aData) {
+    if (aData.is<MediaData::Type>()) {
+      EnsureVideoDecodeTaskQueued();
+    }
+  });
 }
 
 void
 AccurateSeekTask::CancelMediaDecoderReaderWrapperCallback()
 {
   AssertOwnerThread();
-
-  DECODER_LOG("SeekTask cancel audio callbacks: mVideoCallbackID = %d\n", (int)mAudioCallbackID);
-  mReader->CancelAudioCallback(mAudioCallbackID);
-
-  DECODER_LOG("SeekTask cancel video callbacks: mVideoCallbackID = %d\n", (int)mVideoCallbackID);
-  mReader->CancelVideoCallback(mVideoCallbackID);
-
-  DECODER_LOG("SeekTask cancel wait audio callbacks: mWaitAudioCallbackID = %d\n", (int)mWaitAudioCallbackID);
-  mReader->CancelWaitAudioCallback(mWaitAudioCallbackID);
-
-  DECODER_LOG("SeekTask cancel wait video callbacks: mWaitVideoCallbackID = %d\n", (int)mWaitVideoCallbackID);
-  mReader->CancelWaitVideoCallback(mWaitVideoCallbackID);
+  mAudioCallback.Disconnect();
+  mVideoCallback.Disconnect();
+  mAudioWaitCallback.Disconnect();
+  mVideoWaitCallback.Disconnect();
 }
 } // namespace mozilla

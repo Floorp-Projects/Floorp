@@ -295,8 +295,7 @@ void ReportOverRecursed(JSContext* cx, unsigned errorNumber);
 
 } /* namespace js */
 
-struct JSContext : public js::ExclusiveContext,
-                   public mozilla::LinkedListElement<JSContext>
+struct JSContext : public js::ExclusiveContext
 {
     explicit JSContext(JSRuntime* rt);
     ~JSContext();
@@ -492,55 +491,14 @@ struct MOZ_RAII AutoResolving {
 };
 
 /*
- * Enumerate all contexts in a runtime.
- */
-class ContextIter
-{
-    JSContext* iter;
-
-  public:
-    explicit ContextIter(JSRuntime* rt) {
-        iter = rt->contextList.getFirst();
-    }
-
-    bool done() const {
-        return !iter;
-    }
-
-    void next() {
-        MOZ_ASSERT(!done());
-        iter = iter->getNext();
-    }
-
-    JSContext* get() const {
-        MOZ_ASSERT(!done());
-        return iter;
-    }
-
-    operator JSContext*() const {
-        return get();
-    }
-
-    JSContext* operator ->() const {
-        return get();
-    }
-};
-
-/*
  * Create and destroy functions for JSContext, which is manually allocated
  * and exclusively owned.
  */
 extern JSContext*
-NewContext(JSRuntime* rt, size_t stackChunkSize);
-
-enum DestroyContextMode {
-    DCM_NO_GC,
-    DCM_FORCE_GC,
-    DCM_NEW_FAILED
-};
+NewContext(JSRuntime* rt);
 
 extern void
-DestroyContext(JSContext* cx, DestroyContextMode mode);
+DestroyContext(JSContext* cx);
 
 enum ErrorArgumentsType {
     ArgumentsAreUnicode,

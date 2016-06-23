@@ -2449,16 +2449,13 @@ NativeKey::DispatchKeyPressEventForFollowingCharMessage(
 KeyboardLayout* KeyboardLayout::sInstance = nullptr;
 nsIIdleServiceInternal* KeyboardLayout::sIdleService = nullptr;
 
-PRLogModuleInfo* sKeyboardLayoutLogger = nullptr;
+LazyLogModule sKeyboardLayoutLogger("KeyboardLayoutWidgets");
 
 // static
 KeyboardLayout*
 KeyboardLayout::GetInstance()
 {
   if (!sInstance) {
-    if (!sKeyboardLayoutLogger) {
-      sKeyboardLayoutLogger = PR_NewLogModule("KeyboardLayoutWidgets");
-    }
     sInstance = new KeyboardLayout();
     nsCOMPtr<nsIIdleServiceInternal> idleService =
       do_GetService("@mozilla.org/widget/idleservice;1");

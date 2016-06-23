@@ -301,12 +301,22 @@ class MessageDecl(Node):
         self.inParams = [ ]
         self.outParams = [ ]
         self.compress = ''
+        self.verify = ''
 
     def addInParams(self, inParamsList):
         self.inParams += inParamsList
 
     def addOutParams(self, outParamsList):
         self.outParams += outParamsList
+
+    def addModifiers(self, modifiers):
+        for modifier in modifiers:
+            if modifier.startswith('compress'):
+                self.compress = modifier
+            elif modifier == 'verify':
+                self.verify = modifier
+            elif modifier != '':
+                raise Exception, "Unexpected message modifier `%s'"% modifier
 
 class Transition(Node):
     def __init__(self, loc, trigger, msg, toStates):

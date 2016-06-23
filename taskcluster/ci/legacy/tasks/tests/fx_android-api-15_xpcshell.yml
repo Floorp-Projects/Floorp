@@ -4,7 +4,7 @@ $inherits:
 task:
   workerType: desktop-test-xlarge
   payload:
-    maxRunTime: 5400
+    maxRunTime: 7200
     command:
       - --test-suite={{suite}}{{chunk}}
   metadata:

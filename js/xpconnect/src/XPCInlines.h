@@ -42,42 +42,21 @@ XPCCallContext::IsValid() const
 inline XPCJSRuntime*
 XPCCallContext::GetRuntime() const
 {
-    CHECK_STATE(HAVE_CONTEXT);
-    return mXPCContext->GetRuntime();
-}
-
-inline XPCContext*
-XPCCallContext::GetXPCContext() const
-{
-    CHECK_STATE(HAVE_CONTEXT);
-    return mXPCContext;
+    CHECK_STATE(HAVE_RUNTIME);
+    return mXPCJSRuntime;
 }
 
 inline JSContext*
 XPCCallContext::GetJSContext() const
 {
-    CHECK_STATE(HAVE_CONTEXT);
+    CHECK_STATE(HAVE_RUNTIME);
     return mJSContext;
-}
-
-inline XPCContext::LangType
-XPCCallContext::GetCallerLanguage() const
-{
-    CHECK_STATE(HAVE_CONTEXT);
-    return mCallerLanguage;
-}
-
-inline XPCContext::LangType
-XPCCallContext::GetPrevCallerLanguage() const
-{
-    CHECK_STATE(HAVE_CONTEXT);
-    return mPrevCallerLanguage;
 }
 
 inline XPCCallContext*
 XPCCallContext::GetPrevCallContext() const
 {
-    CHECK_STATE(HAVE_CONTEXT);
+    CHECK_STATE(HAVE_RUNTIME);
     return mPrevCallContext;
 }
 
@@ -212,14 +191,14 @@ XPCCallContext::SetRetVal(JS::Value val)
 inline jsid
 XPCCallContext::GetResolveName() const
 {
-    CHECK_STATE(HAVE_CONTEXT);
+    CHECK_STATE(HAVE_RUNTIME);
     return XPCJSRuntime::Get()->GetResolveName();
 }
 
 inline jsid
 XPCCallContext::SetResolveName(JS::HandleId name)
 {
-    CHECK_STATE(HAVE_CONTEXT);
+    CHECK_STATE(HAVE_RUNTIME);
     return XPCJSRuntime::Get()->SetResolveName(name);
 }
 

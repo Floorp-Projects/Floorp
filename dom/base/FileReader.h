@@ -15,7 +15,7 @@
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsWeakReference.h"
-#include "WorkerFeature.h"
+#include "WorkerHolder.h"
 
 #define NS_PROGRESS_EVENT_INTERVAL 50
 
@@ -41,7 +41,7 @@ class FileReader final : public DOMEventTargetHelper,
                          public nsSupportsWeakReference,
                          public nsIInputStreamCallback,
                          public nsITimerCallback,
-                         public workers::WorkerFeature
+                         public workers::WorkerHolder
 {
   friend class FileReaderDecreaseBusyCounter;
 
@@ -106,7 +106,7 @@ public:
     ReadFileContent(aBlob, EmptyString(), FILE_AS_BINARY, aRv);
   }
 
-  // WorkerFeature
+  // WorkerHolder
   bool Notify(workers::Status) override;
 
 private:
@@ -190,7 +190,7 @@ private:
 
   uint64_t mBusyCount;
 
-  // Kept alive with a WorkerFeature.
+  // Kept alive with a WorkerHolder.
   workers::WorkerPrivate* mWorkerPrivate;
 };
 
