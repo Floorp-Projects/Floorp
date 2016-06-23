@@ -106,27 +106,28 @@ nsDOMIterator::AppendList(const nsBoolDomIterFunctor& functor,
   }
 }
 
-nsDOMSubtreeIterator::nsDOMSubtreeIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
+namespace mozilla {
+
+DOMSubtreeIterator::DOMSubtreeIterator(
+                      MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
   : nsDOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_TO_PARENT)
 {
 }
 
 nsresult
-nsDOMSubtreeIterator::Init(nsRange& aRange)
+DOMSubtreeIterator::Init(nsRange& aRange)
 {
   mIter = NS_NewContentSubtreeIterator();
   return mIter->Init(&aRange);
 }
 
-nsDOMSubtreeIterator::~nsDOMSubtreeIterator()
+DOMSubtreeIterator::~DOMSubtreeIterator()
 {
 }
 
 /******************************************************************************
  * some general purpose editor utils
  *****************************************************************************/
-
-namespace mozilla {
 
 bool
 EditorUtils::IsDescendantOf(nsINode* aNode,

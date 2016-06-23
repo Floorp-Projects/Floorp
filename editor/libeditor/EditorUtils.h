@@ -216,16 +216,16 @@ class MOZ_RAII nsDOMIterator
     MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
-class MOZ_RAII nsDOMSubtreeIterator : public nsDOMIterator
-{
-  public:
-    explicit nsDOMSubtreeIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
-    virtual ~nsDOMSubtreeIterator();
-
-    nsresult Init(nsRange& aRange);
-};
-
 namespace mozilla {
+
+class MOZ_RAII DOMSubtreeIterator final : public nsDOMIterator
+{
+public:
+  explicit DOMSubtreeIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+  virtual ~DOMSubtreeIterator();
+
+  nsresult Init(nsRange& aRange);
+};
 
 class TrivialFunctor final : public nsBoolDomIterFunctor
 {
