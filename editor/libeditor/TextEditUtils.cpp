@@ -23,6 +23,10 @@
 
 namespace mozilla {
 
+/******************************************************************************
+ * TextEditUtils
+ ******************************************************************************/
+
 /**
  * IsBody() returns true if aNode is an html body node.
  */
@@ -86,18 +90,26 @@ TextEditUtils::HasMozAttr(nsIDOMNode* aNode)
   return NS_SUCCEEDED(rv) && typeAttrVal.LowerCaseEqualsLiteral("_moz");
 }
 
+/******************************************************************************
+ * AutoEditInitRulesTrigger
+ ******************************************************************************/
+
+AutoEditInitRulesTrigger::AutoEditInitRulesTrigger(
+                            nsPlaintextEditor* aTextEditor,
+                            nsresult& aResult)
+  : mTextEditor(aTextEditor)
+  , mResult(aResult)
+{
+  if (mTextEditor) {
+    mTextEditor->BeginEditorInit();
+  }
+}
+
+AutoEditInitRulesTrigger::~AutoEditInitRulesTrigger()
+{
+  if (mTextEditor) {
+    mResult = mTextEditor->EndEditorInit();
+  }
+}
+
 } // namespace mozilla
-
-///////////////////////////////////////////////////////////////////////////
-// nsAutoEditInitRulesTrigger methods
-//
-nsAutoEditInitRulesTrigger::nsAutoEditInitRulesTrigger( nsPlaintextEditor *aEd, nsresult &aRes) : mEd(aEd), mRes(aRes)
-{
-    if (mEd) mEd->BeginEditorInit();
-}
-
-nsAutoEditInitRulesTrigger::~nsAutoEditInitRulesTrigger()
-{
-    if (mEd) mRes = mEd->EndEditorInit();
-}
-
