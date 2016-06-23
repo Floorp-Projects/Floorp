@@ -129,8 +129,8 @@ NS_IMETHODIMP nsPlaintextEditor::Init(nsIDOMDocument *aDoc,
   }
 
   {
-    // block to scope nsAutoEditInitRulesTrigger
-    nsAutoEditInitRulesTrigger rulesTrigger(this, rulesRes);
+    // block to scope AutoEditInitRulesTrigger
+    AutoEditInitRulesTrigger rulesTrigger(this, rulesRes);
 
     // Init the base editor
     res = nsEditor::Init(aDoc, aRoot, aSelCon, aFlags, aInitialValue);
