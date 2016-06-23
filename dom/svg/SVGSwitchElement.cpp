@@ -160,8 +160,10 @@ SVGSwitchElement::FindActiveChild() const
             break;
           case -2:
             // no systemLanguage attribute. If there's nothing better
-            // we'll use the last such child.
-            defaultChild = child;
+            // we'll use the first such child.
+            if (!defaultChild) {
+              defaultChild = child;
+            }
             break;
           default:
             if (bestLanguagePreferenceRank == -1 ||
