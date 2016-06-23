@@ -273,6 +273,10 @@ using namespace mozilla::system;
 #include "mozilla/widget/AudioSession.h"
 #endif
 
+#ifdef MOZ_CRASHREPORTER
+#include "nsThread.h"
+#endif
+
 #include "VRManagerParent.h"            // for VRManagerParent
 
 // For VP9Benchmark::sBenchmarkFpsPref
@@ -5834,6 +5838,15 @@ ContentParent::RecvNotifyPushSubscriptionModifiedObservers(const nsCString& aSco
 #ifndef MOZ_SIMPLEPUSH
   PushSubscriptionModifiedDispatcher dispatcher(aScope, aPrincipal);
   Unused << NS_WARN_IF(NS_FAILED(dispatcher.NotifyObservers()));
+#endif
+  return true;
+}
+
+bool
+ContentParent::RecvNotifyLowMemory()
+{
+#ifdef MOZ_CRASHREPORTER
+  nsThread::SaveMemoryReportNearOOM(nsThread::ShouldSaveMemoryReport::kForceReport);
 #endif
   return true;
 }

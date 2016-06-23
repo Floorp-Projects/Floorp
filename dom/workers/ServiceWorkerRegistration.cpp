@@ -861,7 +861,7 @@ ServiceWorkerRegistrationMainThread::GetPushManager(JSContext* aCx,
 // Worker Thread implementation
 
 class ServiceWorkerRegistrationWorkerThread final : public ServiceWorkerRegistration
-                                                  , public WorkerFeature
+                                                  , public WorkerHolder
 {
 public:
   NS_DECL_ISUPPORTS_INHERITED
@@ -1188,7 +1188,7 @@ ServiceWorkerRegistrationWorkerThread::InitListener()
   worker->AssertIsOnWorkerThread();
 
   mListener = new WorkerListener(worker, this);
-  if (!worker->AddFeature(this)) {
+  if (!HoldWorker(worker)) {
     mListener = nullptr;
     NS_WARNING("Could not add feature");
     return;
@@ -1242,12 +1242,12 @@ ServiceWorkerRegistrationWorkerThread::ReleaseListener(Reason aReason)
   }
 
   // We can assert worker here, because:
-  // 1) We always AddFeature, so if the worker has shutdown already, we'll have
-  //    received Notify and removed it. If AddFeature had failed, mListener will
-  //    be null and we won't reach here.
+  // 1) We always HoldWorker, so if the worker has shutdown already, we'll
+  //    have received Notify and removed it. If HoldWorker had failed,
+  //    mListener will be null and we won't reach here.
   // 2) Otherwise, worker is still around even if we are going away.
   mWorkerPrivate->AssertIsOnWorkerThread();
-  mWorkerPrivate->RemoveFeature(this);
+  ReleaseWorker();
 
   mListener->ClearRegistration();
 

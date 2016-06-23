@@ -6,7 +6,7 @@
 
 #include "mozilla/dom/cache/ActorChild.h"
 
-#include "mozilla/dom/cache/Feature.h"
+#include "mozilla/dom/cache/CacheWorkerHolder.h"
 #include "nsThreadUtils.h"
 
 namespace mozilla {
@@ -14,42 +14,42 @@ namespace dom {
 namespace cache {
 
 void
-ActorChild::SetFeature(Feature* aFeature)
+ActorChild::SetWorkerHolder(CacheWorkerHolder* aWorkerHolder)
 {
   // Some of the Cache actors can have multiple DOM objects associated with
-  // them.  In this case the feature will be added multiple times.  This is
-  // permitted, but the feature should be the same each time.
-  if (mFeature) {
-    MOZ_ASSERT(mFeature == aFeature);
+  // them.  In this case the workerHolder will be added multiple times.  This is
+  // permitted, but the workerHolder should be the same each time.
+  if (mWorkerHolder) {
+    MOZ_ASSERT(mWorkerHolder == aWorkerHolder);
     return;
   }
 
-  mFeature = aFeature;
-  if (mFeature) {
-    mFeature->AddActor(this);
+  mWorkerHolder = aWorkerHolder;
+  if (mWorkerHolder) {
+    mWorkerHolder->AddActor(this);
   }
 }
 
 void
-ActorChild::RemoveFeature()
+ActorChild::RemoveWorkerHolder()
 {
-  MOZ_ASSERT_IF(!NS_IsMainThread(), mFeature);
-  if (mFeature) {
-    mFeature->RemoveActor(this);
-    mFeature = nullptr;
+  MOZ_ASSERT_IF(!NS_IsMainThread(), mWorkerHolder);
+  if (mWorkerHolder) {
+    mWorkerHolder->RemoveActor(this);
+    mWorkerHolder = nullptr;
   }
 }
 
-Feature*
-ActorChild::GetFeature() const
+CacheWorkerHolder*
+ActorChild::GetWorkerHolder() const
 {
-  return mFeature;
+  return mWorkerHolder;
 }
 
 bool
-ActorChild::FeatureNotified() const
+ActorChild::WorkerHolderNotified() const
 {
-  return mFeature && mFeature->Notified();
+  return mWorkerHolder && mWorkerHolder->Notified();
 }
 
 ActorChild::ActorChild()
@@ -58,7 +58,7 @@ ActorChild::ActorChild()
 
 ActorChild::~ActorChild()
 {
-  MOZ_ASSERT(!mFeature);
+  MOZ_ASSERT(!mWorkerHolder);
 }
 
 } // namespace cache

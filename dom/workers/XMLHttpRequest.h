@@ -7,7 +7,7 @@
 #ifndef mozilla_dom_workers_xmlhttprequest_h__
 #define mozilla_dom_workers_xmlhttprequest_h__
 
-#include "mozilla/dom/workers/bindings/WorkerFeature.h"
+#include "mozilla/dom/workers/bindings/WorkerHolder.h"
 
 // Need this for XMLHttpRequestResponseType.
 #include "mozilla/dom/XMLHttpRequestBinding.h"
@@ -30,7 +30,7 @@ class XMLHttpRequestUpload;
 class WorkerPrivate;
 
 class XMLHttpRequest final: public nsXHREventTarget,
-                            public WorkerFeature
+                            public WorkerHolder
 {
 public:
   struct StateData

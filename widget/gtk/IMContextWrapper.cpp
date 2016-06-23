@@ -21,7 +21,7 @@
 namespace mozilla {
 namespace widget {
 
-PRLogModuleInfo* gGtkIMLog = nullptr;
+LazyLogModule gGtkIMLog("nsGtkIMModuleWidgets");
 
 static inline const char*
 ToChar(bool aBool)
@@ -180,9 +180,6 @@ IMContextWrapper::IMContextWrapper(nsWindow* aOwnerWindow)
     , mSetCursorPositionOnKeyEvent(true)
     , mPendingResettingIMContext(false)
 {
-    if (!gGtkIMLog) {
-        gGtkIMLog = PR_NewLogModule("nsGtkIMModuleWidgets");
-    }
     static bool sFirstInstance = true;
     if (sFirstInstance) {
         sFirstInstance = false;

@@ -1,0 +1,7 @@
+include protocol messageVerify;
+
+intr protocol messageVerifyTopLevel{
+  manages messageVerify;
+  parent:
+    sync messageVerify(uint32_t aParam1) returns (double rv1) verify;
+};
