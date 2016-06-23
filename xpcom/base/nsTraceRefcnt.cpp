@@ -956,38 +956,6 @@ WalkTheStackSavingLocations(std::vector<void*>& aLocations)
 
 //----------------------------------------------------------------------
 
-// This thing is exported by libstdc++
-// Yes, this is a gcc only hack
-#if defined(MOZ_DEMANGLE_SYMBOLS)
-#include <cxxabi.h>
-#include <stdlib.h> // for free()
-#endif // MOZ_DEMANGLE_SYMBOLS
-
-void
-nsTraceRefcnt::DemangleSymbol(const char* aSymbol,
-                              char* aBuffer,
-                              int aBufLen)
-{
-  NS_ASSERTION(aSymbol, "null symbol");
-  NS_ASSERTION(aBuffer, "null buffer");
-  NS_ASSERTION(aBufLen >= 32 , "pulled 32 out of you know where");
-
-  aBuffer[0] = '\0';
-
-#if defined(MOZ_DEMANGLE_SYMBOLS)
-  /* See demangle.h in the gcc source for the voodoo */
-  char* demangled = abi::__cxa_demangle(aSymbol, 0, 0, 0);
-
-  if (demangled) {
-    strncpy(aBuffer, demangled, aBufLen);
-    free(demangled);
-  }
-#endif // MOZ_DEMANGLE_SYMBOLS
-}
-
-
-//----------------------------------------------------------------------
-
 EXPORT_XPCOM_API(void)
 NS_LogInit()
 {
