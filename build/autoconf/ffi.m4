@@ -37,6 +37,12 @@ if test "$MOZ_BUILD_APP" != js -o -n "$JS_STANDALONE"; then
     for var in AS CC CXX CPP LD AR RANLIB STRIP; do
       ac_configure_args="$ac_configure_args $var='`eval echo \\${${var}}`'"
     done
+    old_cflags="$CFLAGS"
+    # The libffi sources (especially the ARM ones) are written expecting gas
+    # syntax, and clang's integrated assembler doesn't handle all of gas syntax.
+    if test -n "$CLANG_CC"; then
+      CFLAGS="-no-integrated-as $CFLAGS"
+    fi
     if test "$CROSS_COMPILE"; then
       export CPPFLAGS CFLAGS LDFLAGS
     fi
@@ -77,6 +83,7 @@ if test "$MOZ_BUILD_APP" != js -o -n "$JS_STANDALONE"; then
     AC_OUTPUT_SUBDIRS(js/src/ctypes/libffi)
     ac_configure_args="$_SUBDIR_CONFIG_ARGS"
     CONFIG_FILES=$old_config_files
+    CFLAGS="$old_cflags"
   fi
 
 fi
