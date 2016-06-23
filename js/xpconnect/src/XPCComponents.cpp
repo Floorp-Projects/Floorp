@@ -3473,10 +3473,7 @@ nsXPCComponents::GetLastResult(JSContext* aCx, MutableHandleValue aOut)
 NS_IMETHODIMP
 nsXPCComponents::GetReturnCode(JSContext* aCx, MutableHandleValue aOut)
 {
-    XPCContext* xpcc = XPCContext::GetXPCContext(aCx);
-    if (!xpcc)
-        return NS_ERROR_FAILURE;
-    nsresult res = xpcc->GetPendingResult();
+    nsresult res = XPCJSRuntime::Get()->GetPendingResult();
     aOut.setNumber(static_cast<uint32_t>(res));
     return NS_OK;
 }
@@ -3490,7 +3487,7 @@ nsXPCComponents::SetReturnCode(JSContext* aCx, HandleValue aCode)
     nsresult rv;
     if (!ToUint32(aCx, aCode, (uint32_t*)&rv))
         return NS_ERROR_FAILURE;
-    xpcc->SetPendingResult(rv);
+    XPCJSRuntime::Get()->SetPendingResult(rv);
     xpcc->SetLastResult(rv);
     return NS_OK;
 }
