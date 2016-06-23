@@ -25,9 +25,8 @@ BaseMediaMgrError::BaseMediaMgrError(const nsAString& aName,
                              "or the platform in the current context.");
     } else if (mName.EqualsLiteral("SecurityError")) {
       mMessage.AssignLiteral("The operation is insecure.");
-    } else if (mName.EqualsLiteral("SourceUnavailableError")) {
-      mMessage.AssignLiteral("The source of the MediaStream could not be "
-          "accessed due to a hardware error (e.g. lock from another process).");
+    } else if (mName.EqualsLiteral("NotReadableError")) {
+      mMessage.AssignLiteral("The I/O read operation failed.");
     } else if (mName.EqualsLiteral("InternalError")) {
       mMessage.AssignLiteral("Internal error.");
     } else if (mName.EqualsLiteral("NotSupportedError")) {
