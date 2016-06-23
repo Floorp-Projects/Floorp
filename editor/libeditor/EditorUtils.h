@@ -235,21 +235,25 @@ class nsTrivialFunctor : public nsBoolDomIterFunctor
     }
 };
 
+namespace mozilla {
 
 /******************************************************************************
  * general dom point utility struct
  *****************************************************************************/
-struct MOZ_STACK_CLASS DOMPoint
+struct MOZ_STACK_CLASS EditorDOMPoint final
 {
   nsCOMPtr<nsINode> node;
   int32_t offset;
 
-  DOMPoint() : node(nullptr), offset(-1) {}
-  DOMPoint(nsINode* aNode, int32_t aOffset)
+  EditorDOMPoint()
+    : node(nullptr)
+    , offset(-1)
+  {}
+  EditorDOMPoint(nsINode* aNode, int32_t aOffset)
     : node(aNode)
     , offset(aOffset)
   {}
-  DOMPoint(nsIDOMNode* aNode, int32_t aOffset)
+  EditorDOMPoint(nsIDOMNode* aNode, int32_t aOffset)
     : node(do_QueryInterface(aNode))
     , offset(aOffset)
   {}
@@ -265,8 +269,6 @@ struct MOZ_STACK_CLASS DOMPoint
     offset = aOffset;
   }
 };
-
-namespace mozilla {
 
 class EditorUtils final
 {

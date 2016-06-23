@@ -30,12 +30,12 @@ class nsPlaintextEditor;
 class nsRange;
 class nsRulesInfo;
 namespace mozilla {
+struct EditorDOMPoint;
 namespace dom {
 class Element;
 class Selection;
 } // namespace dom
 } // namespace mozilla
-struct DOMPoint;
 
 struct StyleCache : public PropItem
 {
@@ -142,8 +142,8 @@ protected:
                               nsIEditor::EDirection aDir,
                               nsresult aResult);
   nsresult InsertBRIfNeeded(Selection* aSelection);
-  ::DOMPoint GetGoodSelPointForNode(nsINode& aNode,
-                                    nsIEditor::EDirection aAction);
+  mozilla::EditorDOMPoint GetGoodSelPointForNode(nsINode& aNode,
+                                                 nsIEditor::EDirection aAction);
   nsresult JoinBlocks(nsIContent& aLeftNode, nsIContent& aRightNode,
                       bool* aCanceled);
   nsresult MoveBlock(Element& aLeftBlock, Element& aRightBlock,
@@ -255,7 +255,7 @@ protected:
                                 TouchContent aTouchContent = TouchContent::yes);
   void GetChildNodesForOperation(nsINode& aNode,
       nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes);
-  nsresult GetNodesFromPoint(::DOMPoint aPoint,
+  nsresult GetNodesFromPoint(mozilla::EditorDOMPoint aPoint,
                              EditAction aOperation,
                              nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes,
                              TouchContent aTouchContent);
@@ -287,7 +287,8 @@ protected:
   nsresult SplitAsNeeded(nsIAtom& aTag, nsCOMPtr<nsINode>& inOutParent,
                          int32_t& inOutOffset);
   nsresult AddTerminatingBR(nsIDOMNode *aBlock);
-  ::DOMPoint JoinNodesSmart(nsIContent& aNodeLeft, nsIContent& aNodeRight);
+  mozilla::EditorDOMPoint JoinNodesSmart(nsIContent& aNodeLeft,
+                                         nsIContent& aNodeRight);
   Element* GetTopEnclosingMailCite(nsINode& aNode);
   nsresult PopListItem(nsIDOMNode *aListItem, bool *aOutOfList);
   nsresult RemoveListStructure(Element& aList);

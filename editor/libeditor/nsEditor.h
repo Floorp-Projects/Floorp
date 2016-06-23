@@ -52,11 +52,11 @@ class nsIWidget;
 class nsRange;
 class nsString;
 class nsTransactionManager;
-struct DOMPoint;
 
 namespace mozilla {
 class ErrorResult;
 class TextComposition;
+struct EditorDOMPoint;
 
 namespace dom {
 class ChangeAttributeTxn;
@@ -639,7 +639,8 @@ public:
                           EmptyContainers::yes,
                         nsIContent** outLeftNode = nullptr,
                         nsIContent** outRightNode = nullptr);
-  ::DOMPoint JoinNodeDeep(nsIContent& aLeftNode, nsIContent& aRightNode);
+  mozilla::EditorDOMPoint JoinNodeDeep(nsIContent& aLeftNode,
+                                       nsIContent& aRightNode);
 
   nsresult GetString(const nsAString& name, nsAString& value);
 
