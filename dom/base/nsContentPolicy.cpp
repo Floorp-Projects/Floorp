@@ -160,7 +160,9 @@ nsContentPolicy::CheckPolicy(CPMethod          policyMethod,
     if (window) {
         nsCOMPtr<nsIDocShell> docShell = window->GetDocShell();
         nsCOMPtr<nsILoadContext> loadContext = do_QueryInterface(docShell);
-        loadContext->GetTopFrameElement(getter_AddRefs(topFrameElement));
+        if (loadContext) {
+          loadContext->GetTopFrameElement(getter_AddRefs(topFrameElement));
+        }
 
         MOZ_ASSERT(window->IsOuterWindow());
 
