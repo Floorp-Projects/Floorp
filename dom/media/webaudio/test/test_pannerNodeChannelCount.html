@@ -23,7 +23,9 @@ var gTest = {
     }
 
     var panner = context.createPanner();
-    panner.setPosition(1, 2, 3);
+    panner.positionX.value = 1;
+    panner.positionY.value = 2;
+    panner.positionZ.value = 3;
     panner.channelCount = 1;
     expectException(function() { panner.channelCount = 3; },
                     DOMException.NOT_SUPPORTED_ERR);

@@ -29,7 +29,7 @@ function test(type) {
 
   panner.distanceModel = "linear";
   panner.maxDistance = 100;
-  panner.setPosition(0, 200, 0);
+  panner.positionY.value = 200;
   ac.listener.setPosition(0, 0, 0);
 
   osc.connect(panner);
