@@ -4,6 +4,10 @@
 
 /* Customization mode */
 
+:root {
+  --drag-drop-transition-duration: .3s;
+}
+
 #main-window:-moz-any([customize-entering],[customize-entered]) #browser-bottombox {
   margin-bottom: 2em;
 }
@@ -213,7 +217,7 @@ toolbarpaletteitem[mousedown] {
 .panel-customization-placeholder,
 toolbarpaletteitem[place="palette"],
 toolbarpaletteitem[place="panel"] {
-  transition: transform .3s ease-in-out;
+  transition: transform var(--drag-drop-transition-duration) ease-in-out;
 }
 
 #customization-palette {
@@ -236,7 +240,7 @@ toolbarpaletteitem > toolbarbutton > .toolbarbutton-icon,
 toolbarpaletteitem > toolbarbutton > .toolbarbutton-badge-stack > .toolbarbutton-icon,
 toolbarpaletteitem > toolbaritem.panel-wide-item,
 toolbarpaletteitem > toolbarbutton[type="menu-button"] {
-  transition: transform .3s cubic-bezier(.6, 2, .75, 1.5) !important;
+  transition: transform var(--drag-drop-transition-duration) cubic-bezier(.6, 2, .75, 1.5) !important;
 }
 
 toolbarpaletteitem[mousedown] > toolbarbutton > .toolbarbutton-icon,
@@ -264,6 +268,14 @@ toolbarpaletteitem[place="toolbar"] {
 toolbarpaletteitem[place="palette"]:-moz-focusring,
 toolbarpaletteitem[place="panel"]:-moz-focusring,
 toolbarpaletteitem[place="toolbar"]:-moz-focusring {
+  outline-width: 0;
+}
+
+toolbarpaletteitem[place="palette"]:not([mousedown="true"]):-moz-focusring,
+toolbarpaletteitem[place="panel"]:not([mousedown="true"]):-moz-focusring,
+toolbarpaletteitem[place="toolbar"]:not([mousedown="true"]):-moz-focusring {
+  /* Delay adding the focusring back until after the transform transition completes. */
+  transition: outline-width .01s linear var(--drag-drop-transition-duration);
   outline: 1px dotted rgba(0,0,0,.5);
   outline-offset: -5px;
   -moz-outline-radius: 2.5px;
