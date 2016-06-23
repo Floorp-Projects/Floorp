@@ -4690,7 +4690,7 @@ nsHTMLEditRules::AlignInnerBlocks(nsINode& aNode, const nsAString* alignType)
   // Gather list of table cells or list items
   nsTArray<OwningNonNull<nsINode>> nodeArray;
   nsTableCellAndListItemFunctor functor;
-  nsDOMIterator iter(aNode);
+  DOMIterator iter(aNode);
   iter.AppendList(functor, nodeArray);
 
   // Now that we have the list, align their contents as requested
@@ -5955,7 +5955,7 @@ nsHTMLEditRules::BustUpInlinesAtBRs(nsIContent& aNode,
   // First build up a list of all the break nodes inside the inline container.
   nsTArray<OwningNonNull<nsINode>> arrayOfBreaks;
   nsBRNodeFunctor functor;
-  nsDOMIterator iter(aNode);
+  DOMIterator iter(aNode);
   iter.AppendList(functor, arrayOfBreaks);
 
   // If there aren't any breaks, just put inNode itself in the array
@@ -7111,7 +7111,7 @@ nsHTMLEditRules::AdjustSpecialBreaks()
   // Gather list of empty nodes
   nsTArray<OwningNonNull<nsINode>> nodeArray;
   nsEmptyEditableFunctor functor(mHTMLEditor);
-  nsDOMIterator iter;
+  DOMIterator iter;
   nsresult res = iter.Init(*mDocChangeRange);
   NS_ENSURE_SUCCESS(res, );
   iter.AppendList(functor, nodeArray);

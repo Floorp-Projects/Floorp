@@ -199,26 +199,28 @@ class nsBoolDomIterFunctor
     virtual bool operator()(nsINode* aNode) const = 0;
 };
 
-class MOZ_RAII nsDOMIterator
-{
-  public:
-    explicit nsDOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
-
-    explicit nsDOMIterator(nsINode& aNode MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
-    virtual ~nsDOMIterator();
-
-    nsresult Init(nsRange& aRange);
-
-    void AppendList(const nsBoolDomIterFunctor& functor,
-                    nsTArray<mozilla::OwningNonNull<nsINode>>& arrayOfNodes) const;
-  protected:
-    nsCOMPtr<nsIContentIterator> mIter;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-};
-
 namespace mozilla {
 
-class MOZ_RAII DOMSubtreeIterator final : public nsDOMIterator
+class MOZ_RAII DOMIterator
+{
+public:
+  explicit DOMIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
+
+  explicit DOMIterator(nsINode& aNode MOZ_GUARD_OBJECT_NOTIFIER_PARAM);
+  virtual ~DOMIterator();
+
+  nsresult Init(nsRange& aRange);
+
+  void AppendList(
+         const nsBoolDomIterFunctor& functor,
+         nsTArray<mozilla::OwningNonNull<nsINode>>& arrayOfNodes) const;
+
+protected:
+  nsCOMPtr<nsIContentIterator> mIter;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
+};
+
+class MOZ_RAII DOMSubtreeIterator final : public DOMIterator
 {
 public:
   explicit DOMSubtreeIterator(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM);
