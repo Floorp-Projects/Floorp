@@ -1493,8 +1493,9 @@ NS_IMETHODIMP nsHTMLEditor::Paste(int32_t aSelectionType)
   // handle transferable hooks
   nsCOMPtr<nsIDOMDocument> domdoc;
   GetDocument(getter_AddRefs(domdoc));
-  if (!nsEditorHookUtils::DoInsertionHook(domdoc, nullptr, trans))
+  if (!EditorHookUtils::DoInsertionHook(domdoc, nullptr, trans)) {
     return NS_OK;
+  }
 
   return InsertFromTransferable(trans, nullptr, contextStr, infoStr, bHavePrivateHTMLFlavor,
                                 nullptr, 0, true);
@@ -1510,8 +1511,9 @@ NS_IMETHODIMP nsHTMLEditor::PasteTransferable(nsITransferable *aTransferable)
 
   // handle transferable hooks
   nsCOMPtr<nsIDOMDocument> domdoc = GetDOMDocument();
-  if (!nsEditorHookUtils::DoInsertionHook(domdoc, nullptr, aTransferable))
+  if (!EditorHookUtils::DoInsertionHook(domdoc, nullptr, aTransferable)) {
     return NS_OK;
+  }
 
   nsAutoString contextStr, infoStr;
   return InsertFromTransferable(aTransferable, nullptr, contextStr, infoStr, false,

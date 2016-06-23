@@ -342,8 +342,9 @@ NS_IMETHODIMP nsPlaintextEditor::Paste(int32_t aSelectionType)
     {
       // handle transferable hooks
       nsCOMPtr<nsIDOMDocument> domdoc = GetDOMDocument();
-      if (!nsEditorHookUtils::DoInsertionHook(domdoc, nullptr, trans))
+      if (!EditorHookUtils::DoInsertionHook(domdoc, nullptr, trans)) {
         return NS_OK;
+      }
 
       rv = InsertTextFromTransferable(trans, nullptr, 0, true);
     }
@@ -365,8 +366,9 @@ NS_IMETHODIMP nsPlaintextEditor::PasteTransferable(nsITransferable *aTransferabl
 
   // handle transferable hooks
   nsCOMPtr<nsIDOMDocument> domdoc = GetDOMDocument();
-  if (!nsEditorHookUtils::DoInsertionHook(domdoc, nullptr, aTransferable))
+  if (!EditorHookUtils::DoInsertionHook(domdoc, nullptr, aTransferable)) {
     return NS_OK;
+  }
 
   return InsertTextFromTransferable(aTransferable, nullptr, 0, true);
 }

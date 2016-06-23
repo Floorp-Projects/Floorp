@@ -18,6 +18,9 @@
 class nsIAtom;
 class nsIContentIterator;
 class nsIDOMDocument;
+class nsIDOMEvent;
+class nsISimpleEnumerator;
+class nsITransferable;
 class nsRange;
 namespace mozilla {
 template <class T> class OwningNonNull;
@@ -275,20 +278,18 @@ public:
   static bool IsLeafNode(nsIDOMNode* aNode);
 };
 
-} // namespace mozilla
-
-class nsIDOMEvent;
-class nsISimpleEnumerator;
-class nsITransferable;
-
-class nsEditorHookUtils
+class EditorHookUtils final
 {
-  public:
-    static bool     DoInsertionHook(nsIDOMDocument *aDoc, nsIDOMEvent *aEvent,
-                                    nsITransferable *aTrans);
-  private:
-    static nsresult GetHookEnumeratorFromDocument(nsIDOMDocument *aDoc,
-                                                  nsISimpleEnumerator **aEnumerator);
+public:
+  static bool DoInsertionHook(nsIDOMDocument* aDoc, nsIDOMEvent* aEvent,
+                              nsITransferable* aTrans);
+
+private:
+  static nsresult GetHookEnumeratorFromDocument(
+                    nsIDOMDocument*aDoc,
+                    nsISimpleEnumerator** aEnumerator);
 };
+
+} // namespace mozilla
 
 #endif // #ifndef EditorUtils_h
