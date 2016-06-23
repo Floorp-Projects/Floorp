@@ -356,6 +356,15 @@ CodeGeneratorShared::verifyHeapAccessDisassembly(uint32_t begin, uint32_t end, b
 #endif
 }
 
+inline bool
+CodeGeneratorShared::isGlobalObject(JSObject* object)
+{
+    // Calling object->is<GlobalObject>() is racy because this relies on
+    // checking the group and this can be changed while we are compiling off the
+    // main thread.
+    return object == gen->compartment->maybeGlobal();
+}
+
 } // namespace jit
 } // namespace js
 
