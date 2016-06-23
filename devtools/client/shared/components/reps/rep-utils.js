@@ -31,7 +31,52 @@ define(function (require, exports, module) {
     return object && object.actor;
   }
 
+
+  function escapeNewLines(value) {
+    return value.replace(/\r/gm, "\\r").replace(/\n/gm, "\\n");
+  }
+
+  function cropMultipleLines(text, limit) {
+    return escapeNewLines(cropString(text, limit));
+  }
+
+  function cropString(text, limit, alternativeText) {
+    if (!alternativeText) {
+      alternativeText = "\u2026";
+    }
+
+    // Make sure it's a string.
+    text = text + "";
+
+    // Use default limit if necessary.
+    if (!limit) {
+      limit = 50;
+    }
+
+    // Crop the string only if a limit is actually specified.
+    if (limit <= 0) {
+      return text;
+    }
+
+    // Set the limit at least to the length of the alternative text
+    // plus one character of the original text.
+    if (limit <= alternativeText.length) {
+      limit = alternativeText.length + 1;
+    }
+
+    let halfLimit = (limit - alternativeText.length) / 2;
+
+    if (text.length > limit) {
+      return text.substr(0, Math.ceil(halfLimit)) + alternativeText +
+        text.substr(text.length - Math.floor(halfLimit));
+    }
+
+    return text;
+  }
+
   // Exports from this module
   exports.createFactories = createFactories;
   exports.isGrip = isGrip;
+  exports.cropString = cropString;
+  exports.cropMultipleLines = cropMultipleLines;
 });
