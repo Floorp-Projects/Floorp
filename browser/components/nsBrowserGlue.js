@@ -1927,7 +1927,7 @@ BrowserGlue.prototype = {
   },
 
   _migrateUI: function BG__migrateUI() {
-    const UI_VERSION = 39;
+    const UI_VERSION = 40;
     const BROWSER_DOCURL = "chrome://browser/content/browser.xul";
 
     let currentUIVersion;
@@ -2238,6 +2238,21 @@ BrowserGlue.prototype = {
         xulStore.removeValue(BROWSER_DOCURL, toolbarId, "defaultset");
       }
     }
+
+    if (currentUIVersion < 40) {
+      const kOldSafeBrowsingPref = "browser.safebrowsing.enabled";
+      // Default value is set to true, a user pref means that the pref was
+      // set to false.
+      if (Services.prefs.prefHasUserValue(kOldSafeBrowsingPref) &&
+          !Services.prefs.getBoolPref(kOldSafeBrowsingPref)) {
+        Services.prefs.setBoolPref("browser.safebrowsing.phishing.enabled",
+                                   false);
+        // Should just remove support for the pref entirely, even if it's
+        // only in about:config
+        Services.prefs.clearUserPref(kOldSafeBrowsingPref);
+      }
+    }
+
     // Update the migration version.
     Services.prefs.setIntPref("browser.migration.version", UI_VERSION);
   },
