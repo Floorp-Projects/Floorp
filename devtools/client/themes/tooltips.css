@@ -160,6 +160,10 @@
   flex-shrink: 0;
 }
 
+.tooltip-arrow:-moz-locale-dir(rtl) {
+  align-self: flex-end;
+}
+
 .tooltip-filler {
   flex: 1;
 }
