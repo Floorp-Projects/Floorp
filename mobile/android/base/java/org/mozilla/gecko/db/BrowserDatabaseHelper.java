@@ -761,6 +761,9 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
      * of visits for individual History GUIDs. It was only used by Sync.
      * This function migrates contents of that database over to the Visits table.
      *
+     * Warning to callers: this method might throw IllegalStateException if we fail to allocate a
+     * cursor to read HistoryExtensionsDB data for whatever reason. See Bug 1280409.
+     *
      * @param historyExtensionDb Source History Extensions database
      * @param db Destination database
      */
@@ -1772,14 +1775,20 @@ public final class BrowserDatabaseHelper extends SQLiteOpenHelper {
                     historyExtensionDb = SQLiteDatabase.openDatabase(historyExtensionsDatabase.getPath(), null,
                             SQLiteDatabase.OPEN_READONLY);
 
+                    if (historyExtensionDb != null) {
+                        copyHistoryExtensionDataToVisitsTable(historyExtensionDb, db);
+                    }
+
                 // If we fail to open HistoryExtensionDatabase, then synthesize visits marking them as remote
                 } catch (SQLiteException e) {
                     Log.w(LOGTAG, "Couldn't open history extension database; synthesizing visits instead", e);
                     synthesizeAndInsertVisits(db, false);
-                }
 
-                if (historyExtensionDb != null) {
-                    copyHistoryExtensionDataToVisitsTable(historyExtensionDb, db);
+                // It's possible that we might fail to copy over visit data from the HistoryExtensionsDB,
+                // so let's synthesize visits marking them as remote. See Bug 1280409.
+                } catch (IllegalStateException e) {
+                    Log.w(LOGTAG, "Couldn't copy over history extension data; synthesizing visits instead", e);
+                    synthesizeAndInsertVisits(db, false);
                 }
 
             // FxAccount doesn't exist, but there's evidence Sync was enabled at some point.
