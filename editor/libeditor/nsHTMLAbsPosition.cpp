@@ -56,7 +56,7 @@ using namespace mozilla::dom;
 NS_IMETHODIMP
 nsHTMLEditor::AbsolutePositionSelection(bool aEnabled)
 {
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   AutoRules beginRulesSniffing(this,
                                aEnabled ? EditAction::setAbsolutePosition :
                                           EditAction::removeAbsolutePosition,
@@ -161,7 +161,7 @@ nsHTMLEditor::SetElementZIndex(nsIDOMElement* aElement, int32_t aZindex)
 NS_IMETHODIMP
 nsHTMLEditor::RelativeChangeZIndex(int32_t aChange)
 {
-  nsAutoEditBatch beginBatching(this);
+  AutoEditBatch beginBatching(this);
   AutoRules beginRulesSniffing(this,
                                (aChange < 0) ? EditAction::decreaseZIndex :
                                                EditAction::increaseZIndex,
@@ -441,7 +441,7 @@ nsHTMLEditor::SetFinalPosition(int32_t aX, int32_t aY)
   y.AppendInt(newY);
 
   // we want one transaction only from a user's point of view
-  nsAutoEditBatch batchIt(this);
+  AutoEditBatch batchIt(this);
 
   nsCOMPtr<Element> absolutelyPositionedObject =
     do_QueryInterface(mAbsolutelyPositionedObject);
@@ -484,7 +484,7 @@ nsHTMLEditor::AbsolutelyPositionElement(nsIDOMElement* aElement,
   if (isPositioned == aEnabled)
     return NS_OK;
 
-  nsAutoEditBatch batchIt(this);
+  AutoEditBatch batchIt(this);
 
   if (aEnabled) {
     int32_t x, y;
@@ -582,7 +582,7 @@ nsHTMLEditor::SetElementPosition(nsIDOMElement *aElement, int32_t aX, int32_t aY
 void
 nsHTMLEditor::SetElementPosition(dom::Element& aElement, int32_t aX, int32_t aY)
 {
-  nsAutoEditBatch batchIt(this);
+  AutoEditBatch batchIt(this);
   mHTMLCSSUtils->SetCSSPropertyPixels(aElement, *nsGkAtoms::left, aX);
   mHTMLCSSUtils->SetCSSPropertyPixels(aElement, *nsGkAtoms::top, aY);
 }
