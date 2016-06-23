@@ -8,6 +8,7 @@
 #define mozilla_dom_cache_Connection_h
 
 #include "mozIStorageConnection.h"
+#include "nsCOMPtr.h"
 
 namespace mozilla {
 namespace dom {
