@@ -28,6 +28,7 @@ class nsISelectionController;
 class nsITransferable;
 
 namespace mozilla {
+class AutoEditInitRulesTrigger;
 namespace dom {
 class Selection;
 } // namespace dom
@@ -223,11 +224,10 @@ protected:
   int32_t mNewlineHandling;
   int32_t mCaretStyle;
 
-// friends
-friend class nsHTMLEditRules;
-friend class nsTextEditRules;
-friend class nsAutoEditInitRulesTrigger;
-
+  // friends
+  friend class mozilla::AutoEditInitRulesTrigger;
+  friend class nsHTMLEditRules;
+  friend class nsTextEditRules;
 };
 
 #endif //nsPlaintextEditor_h__

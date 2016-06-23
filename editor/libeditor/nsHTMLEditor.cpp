@@ -266,8 +266,8 @@ nsHTMLEditor::Init(nsIDOMDocument *aDoc,
 
   if (1)
   {
-    // block to scope nsAutoEditInitRulesTrigger
-    nsAutoEditInitRulesTrigger rulesTrigger(static_cast<nsPlaintextEditor*>(this), rulesRes);
+    // block to scope AutoEditInitRulesTrigger
+    AutoEditInitRulesTrigger rulesTrigger(this, rulesRes);
 
     // Init the plaintext editor
     result = nsPlaintextEditor::Init(aDoc, aRoot, nullptr, aFlags, aInitialValue);

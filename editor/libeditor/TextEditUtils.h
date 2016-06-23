@@ -26,20 +26,21 @@ public:
   static bool HasMozAttr(nsIDOMNode* aNode);
 };
 
-} // naemspace mozilla
-
 /***************************************************************************
  * stack based helper class for detecting end of editor initialization, in
  * order to trigger "end of init" initialization of the edit rules.
  */
-class nsAutoEditInitRulesTrigger
+class AutoEditInitRulesTrigger final
 {
 private:
-  nsPlaintextEditor* mEd;
-  nsresult& mRes;
+  nsPlaintextEditor* mTextEditor;
+  nsresult& mResult;
+
 public:
-  nsAutoEditInitRulesTrigger(nsPlaintextEditor* aEd, nsresult& aRes);
-  ~nsAutoEditInitRulesTrigger();
+  AutoEditInitRulesTrigger(nsPlaintextEditor* aTextEditor, nsresult& aResult);
+  ~AutoEditInitRulesTrigger();
 };
+
+} // naemspace mozilla
 
 #endif // #ifndef TextEditUtils_h
