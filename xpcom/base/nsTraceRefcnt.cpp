@@ -926,8 +926,16 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
 #endif
 }
 
-void
-nsTraceRefcnt::WalkTheStackCached(FILE* aStream)
+/**
+ * This is a variant of |WalkTheStack| that uses |CodeAddressService| to cache
+ * the results of |NS_DescribeCodeAddress|. If |WalkTheStackCached| is being
+ * called frequently, it will be a few orders of magnitude faster than
+ * |WalkTheStack|. However, the cache uses a lot of memory, which can cause
+ * OOM crashes. Therefore, this should only be used for things like refcount
+ * logging which walk the stack extremely frequently.
+ */
+static void
+WalkTheStackCached(FILE* aStream)
 {
 #ifdef MOZ_STACKWALKING
   if (!gCodeAddressService) {
@@ -1095,14 +1103,14 @@ NS_LogAddRef(void* aPtr, nsrefcnt aRefcnt,
     bool loggingThisObject = (!gObjectsToLog || LogThisObj(serialno));
     if (aRefcnt == 1 && gAllocLog && loggingThisType && loggingThisObject) {
       fprintf(gAllocLog, "\n<%s> %p %" PRIdPTR " Create [thread %p]\n", aClass, aPtr, serialno, PR_GetCurrentThread());
-      nsTraceRefcnt::WalkTheStackCached(gAllocLog);
+      WalkTheStackCached(gAllocLog);
     }
 
     if (gRefcntsLog && loggingThisType && loggingThisObject) {
       // Can't use MOZ_LOG(), b/c it truncates the line
       fprintf(gRefcntsLog, "\n<%s> %p %" PRIuPTR " AddRef %" PRIuPTR " [thread %p]\n",
               aClass, aPtr, serialno, aRefcnt, PR_GetCurrentThread());
-      nsTraceRefcnt::WalkTheStackCached(gRefcntsLog);
+      WalkTheStackCached(gRefcntsLog);
       fflush(gRefcntsLog);
     }
   }
@@ -1150,7 +1158,7 @@ NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClass)
       fprintf(gRefcntsLog,
               "\n<%s> %p %" PRIuPTR " Release %" PRIuPTR " [thread %p]\n",
               aClass, aPtr, serialno, aRefcnt, PR_GetCurrentThread());
-      nsTraceRefcnt::WalkTheStackCached(gRefcntsLog);
+      WalkTheStackCached(gRefcntsLog);
       fflush(gRefcntsLog);
     }
 
@@ -1159,7 +1167,7 @@ NS_LogRelease(void* aPtr, nsrefcnt aRefcnt, const char* aClass)
 
     if (aRefcnt == 0 && gAllocLog && loggingThisType && loggingThisObject) {
       fprintf(gAllocLog, "\n<%s> %p %" PRIdPTR " Destroy [thread %p]\n", aClass, aPtr, serialno, PR_GetCurrentThread());
-      nsTraceRefcnt::WalkTheStackCached(gAllocLog);
+      WalkTheStackCached(gAllocLog);
     }
 
     if (aRefcnt == 0 && gSerialNumbers && loggingThisType) {
@@ -1198,7 +1206,7 @@ NS_LogCtor(void* aPtr, const char* aType, uint32_t aInstanceSize)
     if (gAllocLog && loggingThisType && loggingThisObject) {
       fprintf(gAllocLog, "\n<%s> %p %" PRIdPTR " Ctor (%d)\n",
               aType, aPtr, serialno, aInstanceSize);
-      nsTraceRefcnt::WalkTheStackCached(gAllocLog);
+      WalkTheStackCached(gAllocLog);
     }
   }
 #endif
@@ -1238,7 +1246,7 @@ NS_LogDtor(void* aPtr, const char* aType, uint32_t aInstanceSize)
     if (gAllocLog && loggingThisType && loggingThisObject) {
       fprintf(gAllocLog, "\n<%s> %p %" PRIdPTR " Dtor (%d)\n",
               aType, aPtr, serialno, aInstanceSize);
-      nsTraceRefcnt::WalkTheStackCached(gAllocLog);
+      WalkTheStackCached(gAllocLog);
     }
   }
 #endif
@@ -1279,7 +1287,7 @@ NS_LogCOMPtrAddRef(void* aCOMPtr, nsISupports* aObject)
     if (gCOMPtrLog && loggingThisObject) {
       fprintf(gCOMPtrLog, "\n<?> %p %" PRIdPTR " nsCOMPtrAddRef %d %p\n",
               object, serialno, count ? (*count) : -1, aCOMPtr);
-      nsTraceRefcnt::WalkTheStackCached(gCOMPtrLog);
+      WalkTheStackCached(gCOMPtrLog);
     }
   }
 #endif
@@ -1320,7 +1328,7 @@ NS_LogCOMPtrRelease(void* aCOMPtr, nsISupports* aObject)
     if (gCOMPtrLog && loggingThisObject) {
       fprintf(gCOMPtrLog, "\n<?> %p %" PRIdPTR " nsCOMPtrRelease %d %p\n",
               object, serialno, count ? (*count) : -1, aCOMPtr);
-      nsTraceRefcnt::WalkTheStackCached(gCOMPtrLog);
+      WalkTheStackCached(gCOMPtrLog);
     }
   }
 #endif
