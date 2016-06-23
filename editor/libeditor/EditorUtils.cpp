@@ -170,15 +170,13 @@ EditorUtils::IsLeafNode(nsIDOMNode* aNode)
   return !hasChildren;
 }
 
-} // namespace mozilla
-
 /******************************************************************************
  * utility methods for drag/drop/copy/paste hooks
  *****************************************************************************/
 
 nsresult
-nsEditorHookUtils::GetHookEnumeratorFromDocument(nsIDOMDocument *aDoc,
-                                                 nsISimpleEnumerator **aResult)
+EditorHookUtils::GetHookEnumeratorFromDocument(nsIDOMDocument* aDoc,
+                                               nsISimpleEnumerator** aResult)
 {
   nsCOMPtr<nsIDocument> doc = do_QueryInterface(aDoc);
   NS_ENSURE_TRUE(doc, NS_ERROR_FAILURE);
@@ -191,8 +189,9 @@ nsEditorHookUtils::GetHookEnumeratorFromDocument(nsIDOMDocument *aDoc,
 }
 
 bool
-nsEditorHookUtils::DoInsertionHook(nsIDOMDocument *aDoc, nsIDOMEvent *aDropEvent,
-                                   nsITransferable *aTrans)
+EditorHookUtils::DoInsertionHook(nsIDOMDocument* aDoc,
+                                 nsIDOMEvent* aDropEvent,
+                                 nsITransferable *aTrans)
 {
   nsCOMPtr<nsISimpleEnumerator> enumerator;
   GetHookEnumeratorFromDocument(aDoc, getter_AddRefs(enumerator));
@@ -220,3 +219,5 @@ nsEditorHookUtils::DoInsertionHook(nsIDOMDocument *aDoc, nsIDOMEvent *aDropEvent
 
   return true;
 }
+
+} // namespace mozilla
