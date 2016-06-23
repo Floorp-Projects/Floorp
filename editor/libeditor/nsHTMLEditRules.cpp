@@ -467,7 +467,7 @@ nsHTMLEditRules::AfterEditInner(EditAction action,
     // don't let any txns in here move the selection around behind our back.
     // Note that this won't prevent explicit selection setting from working.
     NS_ENSURE_STATE(mHTMLEditor);
-    nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
+    AutoTransactionsConserveSelection dontSpazMySelection(mHTMLEditor);
 
     // expand the "changed doc range" as needed
     PromoteRange(*mDocChangeRange, action);
@@ -1353,7 +1353,7 @@ nsHTMLEditRules::WillInsertText(EditAction aAction,
 
     // don't spaz my selection in subtransactions
     NS_ENSURE_STATE(mHTMLEditor);
-    nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
+    AutoTransactionsConserveSelection dontSpazMySelection(mHTMLEditor);
     nsAutoString tString(*inString);
     const char16_t *unicodeBuf = tString.get();
     int32_t pos = 0;
@@ -2259,7 +2259,7 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
   // surrounding whitespace in preparation to delete selection.
   if (!IsPlaintextEditor()) {
     NS_ENSURE_STATE(mHTMLEditor);
-    nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
+    AutoTransactionsConserveSelection dontSpazMySelection(mHTMLEditor);
     res = nsWSRunObject::PrepareToDeleteRange(mHTMLEditor,
                                            address_of(startNode), &startOffset,
                                            address_of(endNode), &endOffset);
@@ -2623,7 +2623,7 @@ nsHTMLEditRules::JoinBlocks(nsIContent& aLeftNode, nsIContent& aRightNode,
     }
   }
 
-  nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
+  AutoTransactionsConserveSelection dontSpazMySelection(mHTMLEditor);
 
   nsresult res = NS_OK;
   int32_t rightOffset = 0;
@@ -3357,7 +3357,7 @@ nsHTMLEditRules::WillMakeBasicBlock(Selection& aSelection,
   nsresult res = NormalizeSelection(&aSelection);
   NS_ENSURE_SUCCESS(res, res);
   nsAutoSelectionReset selectionResetter(&aSelection, mHTMLEditor);
-  nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
+  AutoTransactionsConserveSelection dontSpazMySelection(mHTMLEditor);
   *aHandled = true;
 
   // Contruct a list of nodes to act on.
@@ -5750,7 +5750,7 @@ nsHTMLEditRules::GetListActionNodes(nsTArray<OwningNonNull<nsINode>>& aOutArrayO
 
   {
     // We don't like other people messing with our selection!
-    nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
+    AutoTransactionsConserveSelection dontSpazMySelection(mHTMLEditor);
 
     // contruct a list of nodes to act on.
     nsresult res = GetNodesFromSelection(*selection, EditAction::makeList,

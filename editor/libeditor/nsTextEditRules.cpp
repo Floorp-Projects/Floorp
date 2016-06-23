@@ -298,7 +298,7 @@ nsTextEditRules::DidDoAction(Selection* aSelection,
   NS_ENSURE_STATE(mEditor);
   // don't let any txns in here move the selection around behind our back.
   // Note that this won't prevent explicit selection setting from working.
-  nsAutoTxnsConserveSelection dontSpazMySelection(mEditor);
+  AutoTransactionsConserveSelection dontSpazMySelection(mEditor);
 
   NS_ENSURE_TRUE(aSelection && aInfo, NS_ERROR_NULL_POINTER);
 
@@ -749,7 +749,7 @@ nsTextEditRules::WillInsertText(EditAction aAction,
 
     // don't spaz my selection in subtransactions
     NS_ENSURE_STATE(mEditor);
-    nsAutoTxnsConserveSelection dontSpazMySelection(mEditor);
+    AutoTransactionsConserveSelection dontSpazMySelection(mEditor);
 
     res = mEditor->InsertTextImpl(*outString, address_of(curNode),
                                   &curOffset, doc);
@@ -1141,7 +1141,7 @@ nsTextEditRules::CreateTrailingBRIfNeeded()
   NS_ENSURE_TRUE(lastChild, NS_ERROR_NULL_POINTER);
 
   if (!lastChild->IsHTMLElement(nsGkAtoms::br)) {
-    nsAutoTxnsConserveSelection dontSpazMySelection(mEditor);
+    AutoTransactionsConserveSelection dontSpazMySelection(mEditor);
     nsCOMPtr<nsIDOMNode> domBody = do_QueryInterface(body);
     return CreateMozBR(domBody, body->Length());
   }
