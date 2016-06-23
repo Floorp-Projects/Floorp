@@ -683,10 +683,6 @@ public:
             mCallingLangType = lt;
             return tmp;
         }
-    bool CallerTypeIsJavaScript() const
-        {
-            return LANG_JS == mCallingLangType;
-        }
     nsresult GetException(nsIException** e)
         {
             nsCOMPtr<nsIException> rval = mException;

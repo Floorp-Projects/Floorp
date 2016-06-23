@@ -1356,9 +1356,6 @@ bool
 XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                              CallMode mode /*= CALL_METHOD */)
 {
-    MOZ_ASSERT(ccx.GetXPCContext()->CallerTypeIsJavaScript(),
-               "Native caller for XPCWrappedNative::CallMethod?");
-
     nsresult rv = ccx.CanCallNow();
     if (NS_FAILED(rv)) {
         return Throw(rv, ccx);
