@@ -1736,7 +1736,7 @@ create_bits (pixman_format_code_t format,
     if (_pixman_multiply_overflows_size (height, stride))
 	return NULL;
 
-    buf_size = height * stride;
+    buf_size = (size_t)height * stride;
 
     if (rowstride_bytes)
 	*rowstride_bytes = stride;
