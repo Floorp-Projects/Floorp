@@ -422,7 +422,7 @@ nsPlaintextEditor::HandleKeyPressEvent(nsIDOMKeyEvent* aKeyEvent)
 NS_IMETHODIMP
 nsPlaintextEditor::TypedText(const nsAString& aString, ETypingAction aAction)
 {
-  nsAutoPlaceHolderBatch batch(this, nsGkAtoms::TypingTxnName);
+  AutoPlaceHolderBatch batch(this, nsGkAtoms::TypingTxnName);
 
   switch (aAction) {
     case eTypedText:
@@ -659,7 +659,7 @@ nsPlaintextEditor::DeleteSelection(EDirection aAction,
   nsresult result;
 
   // delete placeholder txns merge.
-  nsAutoPlaceHolderBatch batch(this, nsGkAtoms::DeleteTxnName);
+  AutoPlaceHolderBatch batch(this, nsGkAtoms::DeleteTxnName);
   AutoRules beginRulesSniffing(this, EditAction::deleteSelection, aAction);
 
   // pre-process
@@ -716,7 +716,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertText(const nsAString &aStringToInsert)
   if (ShouldHandleIMEComposition()) {
     opID = EditAction::insertIMEText;
   }
-  nsAutoPlaceHolderBatch batch(this, nullptr);
+  AutoPlaceHolderBatch batch(this, nullptr);
   AutoRules beginRulesSniffing(this, opID, nsIEditor::eNext);
 
   // pre-process
@@ -878,7 +878,7 @@ nsPlaintextEditor::UpdateIMEComposition(nsIDOMEvent* aDOMTextEvent)
 
   nsresult rv;
   {
-    nsAutoPlaceHolderBatch batch(this, nsGkAtoms::IMETxnName);
+    AutoPlaceHolderBatch batch(this, nsGkAtoms::IMETxnName);
 
     rv = InsertText(compositionChangeEvent->mData);
 

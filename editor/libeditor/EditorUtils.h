@@ -22,47 +22,49 @@ class nsIDOMEvent;
 class nsISimpleEnumerator;
 class nsITransferable;
 class nsRange;
+
 namespace mozilla {
 template <class T> class OwningNonNull;
+
 namespace dom {
 class Selection;
 } // namespace dom
-} // namespace mozilla
 
 /***************************************************************************
  * stack based helper class for batching a collection of txns inside a
  * placeholder txn.
  */
-class MOZ_RAII nsAutoPlaceHolderBatch
+class MOZ_RAII AutoPlaceHolderBatch
 {
-  private:
-    nsCOMPtr<nsIEditor> mEd;
-    MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
-  public:
-    nsAutoPlaceHolderBatch(nsIEditor *aEd, nsIAtom *atom MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-      : mEd(do_QueryInterface(aEd))
-    {
-      MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-      if (mEd) {
-        mEd->BeginPlaceHolderTransaction(atom);
-      }
-    }
-    ~nsAutoPlaceHolderBatch()
-    {
-      if (mEd) {
-        mEd->EndPlaceHolderTransaction();
-      }
-    }
-};
+private:
+  nsCOMPtr<nsIEditor> mEditor;
+  MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 
-namespace mozilla {
+public:
+  AutoPlaceHolderBatch(nsIEditor* aEditor,
+                       nsIAtom* aAtom
+                       MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : mEditor(aEditor)
+  {
+    MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+    if (mEditor) {
+      mEditor->BeginPlaceHolderTransaction(aAtom);
+    }
+  }
+  ~AutoPlaceHolderBatch()
+  {
+    if (mEditor) {
+      mEditor->EndPlaceHolderTransaction();
+    }
+  }
+};
 
 /***************************************************************************
  * stack based helper class for batching a collection of txns.
  * Note: I changed this to use placeholder batching so that we get
  * proper selection save/restore across undo/redo.
  */
-class MOZ_RAII AutoEditBatch final : public nsAutoPlaceHolderBatch
+class MOZ_RAII AutoEditBatch final : public AutoPlaceHolderBatch
 {
 private:
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
@@ -70,7 +72,7 @@ private:
 public:
   explicit AutoEditBatch(nsIEditor* aEditor
                          MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : nsAutoPlaceHolderBatch(aEditor, nullptr)
+    : AutoPlaceHolderBatch(aEditor, nullptr)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
   }
