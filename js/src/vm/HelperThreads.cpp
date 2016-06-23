@@ -132,7 +132,7 @@ CompiledScriptMatches(JSCompartment* compartment, JSScript* script, JSScript* ta
 }
 
 void
-js::CancelOffThreadIonCompile(JSCompartment* compartment, JSScript* script)
+js::CancelOffThreadIonCompile(JSCompartment* compartment, JSScript* script, bool discardLazyLinkList)
 {
     if (compartment && !compartment->jitCompartment())
         return;
@@ -178,14 +178,16 @@ js::CancelOffThreadIonCompile(JSCompartment* compartment, JSScript* script)
     }
 
     /* Cancel lazy linking for pending builders (attached to the ionScript). */
-    jit::IonBuilder* builder = HelperThreadState().ionLazyLinkList().getFirst();
-    while (builder) {
-        jit::IonBuilder* next = builder->getNext();
-        if (CompiledScriptMatches(compartment, script, builder->script())) {
-            builder->script()->baselineScript()->removePendingIonBuilder(builder->script());
-            jit::FinishOffThreadBuilder(nullptr, builder);
+    if (discardLazyLinkList) {
+        MOZ_ASSERT(compartment);
+        JSRuntime* runtime = compartment->runtimeFromMainThread();
+        jit::IonBuilder* builder = runtime->ionLazyLinkList().getFirst();
+        while (builder) {
+            jit::IonBuilder* next = builder->getNext();
+            if (CompiledScriptMatches(compartment, script, builder->script()))
+                jit::FinishOffThreadBuilder(runtime, builder);
+            builder = next;
         }
-        builder = next;
     }
 }
 
@@ -629,7 +631,6 @@ GlobalHelperThreadState::GlobalHelperThreadState()
  : cpuCount(0),
    threadCount(0),
    threads(nullptr),
-   ionLazyLinkListSize_(0),
    wasmCompilationInProgress(false),
    numWasmFailedJobs(0),
    helperLock(nullptr),
@@ -657,9 +658,6 @@ GlobalHelperThreadState::finish()
     PR_DestroyCondVar(producerWakeup);
     PR_DestroyCondVar(pauseWakeup);
     PR_DestroyLock(helperLock);
-
-    ionLazyLinkList_.clear();
-    ionLazyLinkListSize_ = 0;
 }
 
 void
@@ -732,24 +730,6 @@ GlobalHelperThreadState::notifyOne(CondVar which)
     PR_NotifyCondVar(whichWakeup(which));
 }
 
-void
-GlobalHelperThreadState::ionLazyLinkListRemove(jit::IonBuilder* builder)
-{
-    MOZ_ASSERT(ionLazyLinkListSize_ > 0);
-
-    builder->removeFrom(HelperThreadState().ionLazyLinkList());
-    ionLazyLinkListSize_--;
-
-    MOZ_ASSERT(HelperThreadState().ionLazyLinkList().isEmpty() == (ionLazyLinkListSize_ == 0));
-}
-
-void
-GlobalHelperThreadState::ionLazyLinkListAdd(jit::IonBuilder* builder)
-{
-    HelperThreadState().ionLazyLinkList().insertFront(builder);
-    ionLazyLinkListSize_++;
-}
-
 bool
 GlobalHelperThreadState::hasActiveThreads()
 {
@@ -768,7 +748,7 @@ GlobalHelperThreadState::hasActiveThreads()
 void
 GlobalHelperThreadState::waitForAllThreads()
 {
-    CancelOffThreadIonCompile(nullptr, nullptr);
+    CancelOffThreadIonCompile(nullptr, nullptr, /* discardLazyLinkList = */ false);
 
     AutoLockHelperThreadState lock;
     while (hasActiveThreads())
