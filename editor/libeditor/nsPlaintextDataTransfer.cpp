@@ -112,7 +112,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertTextFromTransferable(nsITransferable *aTr
       && bestFlavor && (0 == nsCRT::strcmp(bestFlavor, kUnicodeMime) ||
                         0 == nsCRT::strcmp(bestFlavor, kMozTextInternal)))
   {
-    nsAutoTxnsConserveSelection dontSpazMySelection(this);
+    AutoTransactionsConserveSelection dontSpazMySelection(this);
     nsCOMPtr<nsISupportsString> textDataObj ( do_QueryInterface(genericDataObj) );
     if (textDataObj && len > 0)
     {

@@ -1482,7 +1482,7 @@ nsWSRunObject::ConvertToNBSP(WSPoint aPoint, AreaRestriction aAR)
   }
 
   // First, insert an nbsp
-  nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
+  AutoTransactionsConserveSelection dontSpazMySelection(mHTMLEditor);
   nsAutoString nbspStr(nbsp);
   nsresult res = mHTMLEditor->InsertTextIntoTextNodeImpl(nbspStr,
       *aPoint.mTextNode, aPoint.mOffset, true);
@@ -1797,7 +1797,7 @@ nsWSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
     }
     if (leftCheck && rightCheck) {
       // Now replace nbsp with space.  First, insert a space
-      nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
+      AutoTransactionsConserveSelection dontSpazMySelection(mHTMLEditor);
       nsAutoString spaceStr(char16_t(32));
       res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr,
                                                     *thePoint.mTextNode,
@@ -1828,7 +1828,7 @@ nsWSRunObject::CheckTrailingNBSPOfRun(WSFragment *aRun)
       NS_ENSURE_SUCCESS(res, res);
 
       // Finally, insert that nbsp before the ASCII ws run
-      nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
+      AutoTransactionsConserveSelection dontSpazMySelection(mHTMLEditor);
       nsAutoString nbspStr(nbsp);
       res = mHTMLEditor->InsertTextIntoTextNodeImpl(nbspStr, *startNode,
                                                     startOffset, true);
@@ -1863,7 +1863,7 @@ nsWSRunObject::CheckTrailingNBSP(WSFragment* aRun, nsINode* aNode,
   }
   if (canConvert) {
     // First, insert a space
-    nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
+    AutoTransactionsConserveSelection dontSpazMySelection(mHTMLEditor);
     nsAutoString spaceStr(char16_t(32));
     nsresult res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr,
         *thePoint.mTextNode, thePoint.mOffset, true);
@@ -1904,7 +1904,7 @@ nsWSRunObject::CheckLeadingNBSP(WSFragment* aRun, nsINode* aNode,
   }
   if (canConvert) {
     // First, insert a space
-    nsAutoTxnsConserveSelection dontSpazMySelection(mHTMLEditor);
+    AutoTransactionsConserveSelection dontSpazMySelection(mHTMLEditor);
     nsAutoString spaceStr(char16_t(32));
     nsresult res = mHTMLEditor->InsertTextIntoTextNodeImpl(spaceStr,
         *thePoint.mTextNode, thePoint.mOffset, true);

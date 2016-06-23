@@ -128,41 +128,39 @@ class MOZ_RAII nsAutoRules
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
 
+namespace mozilla {
 
 /***************************************************************************
  * stack based helper class for turning off active selection adjustment
  * by low level transactions
  */
-class MOZ_RAII nsAutoTxnsConserveSelection
+class MOZ_RAII AutoTransactionsConserveSelection final
 {
-  public:
-
-  explicit nsAutoTxnsConserveSelection(nsEditor *ed MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
-    : mEd(ed), mOldState(true)
+public:
+  explicit AutoTransactionsConserveSelection(nsEditor* aEditor
+                                             MOZ_GUARD_OBJECT_NOTIFIER_PARAM)
+    : mEditor(aEditor)
+    , mOldState(true)
   {
     MOZ_GUARD_OBJECT_NOTIFIER_INIT;
-    if (mEd)
-    {
-      mOldState = mEd->GetShouldTxnSetSelection();
-      mEd->SetShouldTxnSetSelection(false);
+    if (mEditor) {
+      mOldState = mEditor->GetShouldTxnSetSelection();
+      mEditor->SetShouldTxnSetSelection(false);
     }
   }
 
-  ~nsAutoTxnsConserveSelection()
+  ~AutoTransactionsConserveSelection()
   {
-    if (mEd)
-    {
-      mEd->SetShouldTxnSetSelection(mOldState);
+    if (mEditor) {
+      mEditor->SetShouldTxnSetSelection(mOldState);
     }
   }
 
-  protected:
-  nsEditor *mEd;
+protected:
+  nsEditor* mEditor;
   bool mOldState;
   MOZ_DECL_USE_GUARD_OBJECT_NOTIFIER
 };
-
-namespace mozilla {
 
 /***************************************************************************
  * stack based helper class for batching reflow and paint requests.
