@@ -195,16 +195,16 @@ NS_IMPL_RELEASE_INHERITED(MessagePort, DOMEventTargetHelper)
 
 namespace {
 
-class MessagePortWorkerHolder final : public workers::WorkerHolder
+class MessagePortFeature final : public workers::WorkerFeature
 {
   MessagePort* mPort;
 
 public:
-  explicit MessagePortWorkerHolder(MessagePort* aPort)
+  explicit MessagePortFeature(MessagePort* aPort)
     : mPort(aPort)
   {
     MOZ_ASSERT(aPort);
-    MOZ_COUNT_CTOR(MessagePortWorkerHolder);
+    MOZ_COUNT_CTOR(MessagePortFeature);
   }
 
   virtual bool Notify(workers::Status aStatus) override
@@ -219,9 +219,9 @@ public:
   }
 
 private:
-  ~MessagePortWorkerHolder()
+  ~MessagePortFeature()
   {
-    MOZ_COUNT_DTOR(MessagePortWorkerHolder);
+    MOZ_COUNT_DTOR(MessagePortFeature);
   }
 };
 
@@ -287,7 +287,7 @@ MessagePort::MessagePort(nsIGlobalObject* aGlobal)
 MessagePort::~MessagePort()
 {
   CloseForced();
-  MOZ_ASSERT(!mWorkerHolder);
+  MOZ_ASSERT(!mWorkerFeature);
 }
 
 /* static */ already_AddRefed<MessagePort>
@@ -340,7 +340,7 @@ MessagePort::Initialize(const nsID& aUUID,
 
   if (mNeutered) {
     // If this port is neutered we don't want to keep it alive artificially nor
-    // we want to add listeners or workerWorkerHolders.
+    // we want to add listeners or workerFeatures.
     mState = eStateDisentangled;
     return;
   }
@@ -357,15 +357,15 @@ MessagePort::Initialize(const nsID& aUUID,
   if (!NS_IsMainThread()) {
     WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
     MOZ_ASSERT(workerPrivate);
-    MOZ_ASSERT(!mWorkerHolder);
+    MOZ_ASSERT(!mWorkerFeature);
 
-    nsAutoPtr<WorkerHolder> workerHolder(new MessagePortWorkerHolder(this));
-    if (NS_WARN_IF(!workerHolder->HoldWorker(workerPrivate))) {
+    nsAutoPtr<WorkerFeature> feature(new MessagePortFeature(this));
+    if (NS_WARN_IF(!workerPrivate->AddFeature(feature))) {
       aRv.Throw(NS_ERROR_FAILURE);
       return;
     }
 
-    mWorkerHolder = Move(workerHolder);
+    mWorkerFeature = Move(feature);
   } else if (GetOwner()) {
     MOZ_ASSERT(NS_IsMainThread());
     MOZ_ASSERT(GetOwner()->IsInnerWindow());
@@ -912,8 +912,13 @@ MessagePort::UpdateMustKeepAlive()
       mIsKeptAlive) {
     mIsKeptAlive = false;
 
-    // The DTOR of this WorkerHolder will release the worker for us.
-    mWorkerHolder = nullptr;
+    if (mWorkerFeature) {
+      WorkerPrivate* workerPrivate = GetCurrentThreadWorkerPrivate();
+      MOZ_ASSERT(workerPrivate);
+
+      workerPrivate->RemoveFeature(mWorkerFeature);
+      mWorkerFeature = nullptr;
+    }
 
     if (NS_IsMainThread()) {
       nsCOMPtr<nsIObserverService> obs =

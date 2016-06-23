@@ -102,7 +102,7 @@
 #include "ServiceWorkerWindowClient.h"
 #include "SharedWorker.h"
 #include "WorkerDebuggerManager.h"
-#include "WorkerHolder.h"
+#include "WorkerFeature.h"
 #include "WorkerNavigator.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
@@ -4548,7 +4548,7 @@ WorkerPrivate::DoRunLoop(JSContext* aCx)
 
     // If the close handler has finished and all features are done then we can
     // kill this thread.
-    if (currentStatus != Running && !HasActiveHolders()) {
+    if (currentStatus != Running && !HasActiveFeatures()) {
       if (mCloseHandlerFinished && currentStatus != Killing) {
         NotifyInternal(aCx, Killing);
         MOZ_ASSERT(!JS_IsExceptionPending(aCx));
@@ -5252,7 +5252,7 @@ WorkerPrivate::RemoveChildWorker(ParentType* aChildWorker)
 }
 
 bool
-WorkerPrivate::AddHolder(WorkerHolder* aHolder)
+WorkerPrivate::AddFeature(WorkerFeature* aFeature)
 {
   AssertIsOnWorkerThread();
 
@@ -5264,31 +5264,31 @@ WorkerPrivate::AddHolder(WorkerHolder* aHolder)
     }
   }
 
-  MOZ_ASSERT(!mHolders.Contains(aHolder), "Already know about this one!");
+  MOZ_ASSERT(!mFeatures.Contains(aFeature), "Already know about this one!");
 
-  if (mHolders.IsEmpty() && !ModifyBusyCountFromWorker(true)) {
+  if (mFeatures.IsEmpty() && !ModifyBusyCountFromWorker(true)) {
     return false;
   }
 
-  mHolders.AppendElement(aHolder);
+  mFeatures.AppendElement(aFeature);
   return true;
 }
 
 void
-WorkerPrivate::RemoveHolder(WorkerHolder* aHolder)
+WorkerPrivate::RemoveFeature(WorkerFeature* aFeature)
 {
   AssertIsOnWorkerThread();
 
-  MOZ_ASSERT(mHolders.Contains(aHolder), "Didn't know about this one!");
-  mHolders.RemoveElement(aHolder);
+  MOZ_ASSERT(mFeatures.Contains(aFeature), "Didn't know about this one!");
+  mFeatures.RemoveElement(aFeature);
 
-  if (mHolders.IsEmpty() && !ModifyBusyCountFromWorker(false)) {
+  if (mFeatures.IsEmpty() && !ModifyBusyCountFromWorker(false)) {
     NS_WARNING("Failed to modify busy count!");
   }
 }
 
 void
-WorkerPrivate::NotifyHolders(JSContext* aCx, Status aStatus)
+WorkerPrivate::NotifyFeatures(JSContext* aCx, Status aStatus)
 {
   AssertIsOnWorkerThread();
   MOZ_ASSERT(!JS_IsExceptionPending(aCx));
@@ -5299,9 +5299,9 @@ WorkerPrivate::NotifyHolders(JSContext* aCx, Status aStatus)
     CancelAllTimeouts();
   }
 
-  nsTObserverArray<WorkerHolder*>::ForwardIterator iter(mHolders);
+  nsTObserverArray<WorkerFeature*>::ForwardIterator iter(mFeatures);
   while (iter.HasMore()) {
-    WorkerHolder* feature = iter.GetNext();
+    WorkerFeature* feature = iter.GetNext();
     if (!feature->Notify(aStatus)) {
       NS_WARNING("Failed to notify feature!");
     }
@@ -5795,7 +5795,7 @@ WorkerPrivate::NotifyInternal(JSContext* aCx, Status aStatus)
   MOZ_ASSERT(previousStatus >= Canceling || mKillTime.IsNull());
 
   // Let all our features know the new status.
-  NotifyHolders(aCx, aStatus);
+  NotifyFeatures(aCx, aStatus);
   MOZ_ASSERT(!JS_IsExceptionPending(aCx));
 
   // If this is the first time our status has changed then we need to clear the

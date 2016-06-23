@@ -58,7 +58,7 @@
 #include "mozilla/dom/ScriptSettings.h"
 #include "mozilla/UniquePtr.h"
 #include "Principal.h"
-#include "WorkerHolder.h"
+#include "WorkerFeature.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
 #include "WorkerScope.h"
@@ -538,7 +538,7 @@ private:
 
 NS_IMPL_ISUPPORTS(LoaderListener, nsIStreamLoaderObserver, nsIRequestObserver)
 
-class ScriptLoaderRunnable final : public WorkerHolder
+class ScriptLoaderRunnable final : public WorkerFeature
                                  , public nsIRunnable
 {
   friend class ScriptExecutorRunnable;
@@ -1946,7 +1946,7 @@ ScriptExecutorRunnable::ShutdownScriptLoader(JSContext* aCx,
     }
   }
 
-  mScriptLoader.ReleaseWorker();
+  aWorkerPrivate->RemoveFeature(&mScriptLoader);
   aWorkerPrivate->StopSyncLoop(mSyncLoopTarget, aResult);
 }
 
@@ -1998,7 +1998,7 @@ LoadAllScripts(WorkerPrivate* aWorkerPrivate,
 
   NS_ASSERTION(aLoadInfos.IsEmpty(), "Should have swapped!");
 
-  if (NS_WARN_IF(!loader->HoldWorker(aWorkerPrivate))) {
+  if (!aWorkerPrivate->AddFeature(loader)) {
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }
@@ -2006,7 +2006,7 @@ LoadAllScripts(WorkerPrivate* aWorkerPrivate,
   if (NS_FAILED(NS_DispatchToMainThread(loader))) {
     NS_ERROR("Failed to dispatch!");
 
-    loader->ReleaseWorker();
+    aWorkerPrivate->RemoveFeature(loader);
     aRv.Throw(NS_ERROR_FAILURE);
     return;
   }

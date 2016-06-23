@@ -4,12 +4,12 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_cache_CacheWorkerHolder_h
-#define mozilla_dom_cache_CacheWorkerHolder_h
+#ifndef mozilla_dom_cache_Feature_h
+#define mozilla_dom_cache_Feature_h
 
 #include "nsISupportsImpl.h"
 #include "nsTArray.h"
-#include "WorkerHolder.h"
+#include "WorkerFeature.h"
 
 namespace mozilla {
 
@@ -22,34 +22,33 @@ namespace cache {
 
 class ActorChild;
 
-class CacheWorkerHolder final : public workers::WorkerHolder
+class Feature final : public workers::WorkerFeature
 {
 public:
-  static already_AddRefed<CacheWorkerHolder>
-  Create(workers::WorkerPrivate* aWorkerPrivate);
+  static already_AddRefed<Feature> Create(workers::WorkerPrivate* aWorkerPrivate);
 
   void AddActor(ActorChild* aActor);
   void RemoveActor(ActorChild* aActor);
 
   bool Notified() const;
 
-  // WorkerHolder methods
+  // WorkerFeature methods
   virtual bool Notify(workers::Status aStatus) override;
 
 private:
-  explicit CacheWorkerHolder(workers::WorkerPrivate *aWorkerPrivate);
-  ~CacheWorkerHolder();
+  explicit Feature(workers::WorkerPrivate *aWorkerPrivate);
+  ~Feature();
 
   workers::WorkerPrivate* mWorkerPrivate;
   nsTArray<ActorChild*> mActorList;
   bool mNotified;
 
 public:
-  NS_INLINE_DECL_REFCOUNTING(mozilla::dom::cache::CacheWorkerHolder)
+  NS_INLINE_DECL_REFCOUNTING(mozilla::dom::cache::Feature)
 };
 
 } // namespace cache
 } // namespace dom
 } // namespace mozilla
 
-#endif // mozilla_dom_cache_CacheWorkerHolder_h
+#endif // mozilla_dom_cache_Feature_h

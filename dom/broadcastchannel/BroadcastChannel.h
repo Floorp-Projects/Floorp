@@ -26,7 +26,7 @@ class PrincipalInfo;
 namespace dom {
 
 namespace workers {
-class WorkerHolder;
+class WorkerFeature;
 } // namespace workers
 
 class BroadcastChannelChild;
@@ -110,7 +110,7 @@ private:
   RefPtr<BroadcastChannelChild> mActor;
   nsTArray<RefPtr<BroadcastChannelMessage>> mPendingMessages;
 
-  nsAutoPtr<workers::WorkerHolder> mWorkerHolder;
+  nsAutoPtr<workers::WorkerFeature> mWorkerFeature;
 
   nsAutoPtr<PrincipalInfo> mPrincipalInfo;
 
