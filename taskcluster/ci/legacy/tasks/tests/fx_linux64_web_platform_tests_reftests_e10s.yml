@@ -21,7 +21,7 @@ task:
   extra:
     suite:
       name: web-platform-tests-reftests
-      flavor: web-platform-tests-reftests
+      flavor: web-platform-tests-reftests-e10s
     treeherder:
       groupName: Desktop web-platform-tests
       groupSymbol: tc-W-e10s
