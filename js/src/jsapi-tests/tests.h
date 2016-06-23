@@ -311,10 +311,6 @@ class JSAPITest
                 message);
     }
 
-    virtual JSContext* createContext() {
-        return JS_NewContext(rt, 8192);
-    }
-
     virtual const JSClass * getGlobalClass() {
         return basicGlobalClass();
     }

@@ -20,7 +20,7 @@
 #include "mozilla/ErrorResult.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/RequestBinding.h"
-#include "mozilla/dom/workers/bindings/WorkerFeature.h"
+#include "mozilla/dom/workers/bindings/WorkerHolder.h"
 
 class nsIGlobalObject;
 
@@ -63,7 +63,7 @@ ExtractByteStreamFromBody(const ArrayBufferOrArrayBufferViewOrBlobOrFormDataOrUS
                           nsCString& aContentType,
                           uint64_t& aContentLength);
 
-template <class Derived> class FetchBodyFeature;
+template <class Derived> class FetchBodyWorkerHolder;
 
 /*
  * FetchBody's body consumption uses nsIInputStreamPump to read from the
@@ -155,7 +155,7 @@ public:
 
   // Set when consuming the body is attempted on a worker.
   // Unset when consumption is done/aborted.
-  nsAutoPtr<workers::WorkerFeature> mFeature;
+  nsAutoPtr<workers::WorkerHolder> mWorkerHolder;
 
 protected:
   FetchBody();
@@ -193,10 +193,10 @@ private:
   ReleaseObject();
 
   bool
-  RegisterFeature();
+  RegisterWorkerHolder();
 
   void
-  UnregisterFeature();
+  UnregisterWorkerHolder();
 
   bool
   IsOnTargetThread()

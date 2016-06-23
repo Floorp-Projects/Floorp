@@ -466,7 +466,7 @@ public:
     XPCWrappedNativeProtoMap* GetDetachedWrappedNativeProtoMap() const
         {return mDetachedWrappedNativeProtoMap;}
 
-    bool InitXPCContext(JSContext* cx);
+    bool JSContextInitialized(JSContext* cx);
 
     virtual bool
     DescribeCustomObjects(JSObject* aObject, const js::Class* aClasp,
@@ -600,6 +600,9 @@ public:
 
     PRTime GetWatchdogTimestamp(WatchdogTimestampCategory aCategory);
 
+    nsresult GetPendingResult() { return mPendingResult; }
+    void SetPendingResult(nsresult rv) { mPendingResult = rv; }
+
 private:
     XPCJSRuntime();
 
@@ -647,96 +650,16 @@ private:
     mozilla::TimeDuration mSlowScriptActualWait;
     bool mTimeoutAccumulated;
 
+    // mPendingResult is used to implement Components.returnCode.  Only really
+    // meaningful while calling through XPCWrappedJS.
+    nsresult mPendingResult;
+
     friend class Watchdog;
     friend class AutoLockWatchdog;
     friend class XPCIncrementalReleaseRunnable;
 };
 
 /***************************************************************************/
-/***************************************************************************/
-// XPCContext is mostly a dumb class to hold JSContext specific data and
-// maps that let us find wrappers created for the given JSContext.
-
-// no virtuals
-class XPCContext
-{
-    friend class XPCJSRuntime;
-public:
-    static XPCContext* GetXPCContext(JSContext* aJSContext)
-        {
-            MOZ_ASSERT(JS_GetSecondContextPrivate(aJSContext), "should already have XPCContext");
-            return static_cast<XPCContext*>(JS_GetSecondContextPrivate(aJSContext));
-        }
-
-    XPCJSRuntime* GetRuntime() const {return mRuntime;}
-    JSContext* GetJSContext() const {return mJSContext;}
-
-    enum LangType {LANG_UNKNOWN, LANG_JS, LANG_NATIVE};
-
-    LangType GetCallingLangType() const
-        {
-            return mCallingLangType;
-        }
-    LangType SetCallingLangType(LangType lt)
-        {
-            LangType tmp = mCallingLangType;
-            mCallingLangType = lt;
-            return tmp;
-        }
-    bool CallerTypeIsJavaScript() const
-        {
-            return LANG_JS == mCallingLangType;
-        }
-    bool CallerTypeIsNative() const
-        {
-            return LANG_NATIVE == mCallingLangType;
-        }
-    bool CallerTypeIsKnown() const
-        {
-            return LANG_UNKNOWN != mCallingLangType;
-        }
-
-    nsresult GetException(nsIException** e)
-        {
-            nsCOMPtr<nsIException> rval = mException;
-            rval.forget(e);
-            return NS_OK;
-        }
-    void SetException(nsIException* e)
-        {
-            mException = e;
-        }
-
-    nsresult GetLastResult() {return mLastResult;}
-    void SetLastResult(nsresult rc) {mLastResult = rc;}
-
-    nsresult GetPendingResult() {return mPendingResult;}
-    void SetPendingResult(nsresult rc) {mPendingResult = rc;}
-
-    void DebugDump(int16_t depth);
-
-    ~XPCContext();
-
-private:
-    XPCContext();    // no implementation
-    XPCContext(XPCJSRuntime* aRuntime, JSContext* aJSContext);
-
-    static XPCContext* newXPCContext(XPCJSRuntime* aRuntime,
-                                     JSContext* aJSContext);
-private:
-    XPCJSRuntime* mRuntime;
-    JSContext*  mJSContext;
-    nsresult mLastResult;
-    nsresult mPendingResult;
-    nsCOMPtr<nsIException> mException;
-    LangType mCallingLangType;
-    bool mErrorUnreported;
-};
-
-/***************************************************************************/
-
-#define NATIVE_CALLER  XPCContext::LANG_NATIVE
-#define JS_CALLER      XPCContext::LANG_JS
 
 // No virtuals
 // XPCCallContext is ALWAYS declared as a local variable in some function;
@@ -764,29 +687,24 @@ public:
     NS_IMETHOD GetCalleeInterface(nsIInterfaceInfo** aResult);
     NS_IMETHOD GetCalleeClassInfo(nsIClassInfo** aResult);
     NS_IMETHOD GetPreviousCallContext(nsAXPCNativeCallContext** aResult);
-    NS_IMETHOD GetLanguage(uint16_t* aResult);
 
     enum {NO_ARGS = (unsigned) -1};
 
-    XPCCallContext(XPCContext::LangType callerLanguage,
-                   JSContext* cx,
-                   JS::HandleObject obj    = nullptr,
-                   JS::HandleObject funobj = nullptr,
-                   JS::HandleId id         = JSID_VOIDHANDLE,
-                   unsigned argc           = NO_ARGS,
-                   JS::Value* argv         = nullptr,
-                   JS::Value* rval         = nullptr);
+    explicit XPCCallContext(JSContext* cx,
+                            JS::HandleObject obj    = nullptr,
+                            JS::HandleObject funobj = nullptr,
+                            JS::HandleId id         = JSID_VOIDHANDLE,
+                            unsigned argc           = NO_ARGS,
+                            JS::Value* argv         = nullptr,
+                            JS::Value* rval         = nullptr);
 
     virtual ~XPCCallContext();
 
     inline bool                         IsValid() const ;
 
     inline XPCJSRuntime*                GetRuntime() const ;
-    inline XPCContext*                  GetXPCContext() const ;
     inline JSContext*                   GetJSContext() const ;
     inline bool                         GetContextPopRequired() const ;
-    inline XPCContext::LangType         GetCallerLanguage() const ;
-    inline XPCContext::LangType         GetPrevCallerLanguage() const ;
     inline XPCCallContext*              GetPrevCallContext() const ;
 
     inline JSObject*                    GetFlattenedJSObject() const ;
@@ -843,7 +761,7 @@ private:
     enum State {
         INIT_FAILED,
         SYSTEM_SHUTDOWN,
-        HAVE_CONTEXT,
+        HAVE_RUNTIME,
         HAVE_OBJECT,
         HAVE_NAME,
         HAVE_ARGS,
@@ -863,14 +781,10 @@ private:
 
     RefPtr<nsXPConnect>           mXPC;
 
-    XPCContext*                     mXPCContext;
+    XPCJSRuntime*                   mXPCJSRuntime;
     JSContext*                      mJSContext;
 
-    XPCContext::LangType            mCallerLanguage;
-
     // ctor does not necessarily init the following. BEWARE!
-
-    XPCContext::LangType            mPrevCallerLanguage;
 
     XPCCallContext*                 mPrevCallContext;
 
@@ -2273,10 +2187,14 @@ public:
                                               nsIVariant** aResult);
 
 private:
+    // aSyntheticException, if not null, is the exception we should be using.
+    // If null, look for an exception on the JSContext hanging off the
+    // XPCCallContext.
     static nsresult CheckForException(XPCCallContext & ccx,
                                       mozilla::dom::AutoEntryScript& aes,
                                       const char * aPropertyName,
-                                      const char * anInterfaceName);
+                                      const char * anInterfaceName,
+                                      nsIException* aSyntheticException = nullptr);
     virtual ~nsXPCWrappedJSClass();
 
     nsXPCWrappedJSClass();   // not implemented
