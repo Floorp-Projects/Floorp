@@ -687,15 +687,6 @@ public:
         {
             return LANG_JS == mCallingLangType;
         }
-    bool CallerTypeIsNative() const
-        {
-            return LANG_NATIVE == mCallingLangType;
-        }
-    bool CallerTypeIsKnown() const
-        {
-            return LANG_UNKNOWN != mCallingLangType;
-        }
-
     nsresult GetException(nsIException** e)
         {
             nsCOMPtr<nsIException> rval = mException;
