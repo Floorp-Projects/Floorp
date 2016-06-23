@@ -31,26 +31,29 @@ const AutoMigrate = {
    *         failed for some reason.
    */
   migrate(profileStartup, migratorKey, profileToMigrate) {
-    let histogram = Services.telemetry.getKeyedHistogramById("FX_STARTUP_MIGRATION_AUTOMATED_IMPORT_SUCCEEDED");
-    histogram.add("initialized");
+    let histogram = Services.telemetry.getHistogramById("FX_STARTUP_MIGRATION_AUTOMATED_IMPORT_PROCESS_SUCCESS");
+    histogram.add(0);
     let migrator = this.pickMigrator(migratorKey);
-    histogram.add("got-browser");
+    histogram.add(5);
 
     profileToMigrate = this.pickProfile(migrator, profileToMigrate);
-    histogram.add("got-profile");
+    histogram.add(10);
 
     let resourceTypes = migrator.getMigrateData(profileToMigrate, profileStartup);
     if (!(resourceTypes & this.resourceTypesToUse)) {
       throw new Error("No usable resources were found for the selected browser!");
     }
-    histogram.add("got-data");
+    histogram.add(15);
 
     let sawErrors = false;
     let migrationObserver = function(subject, topic, data) {
       if (topic == "Migration:ItemError") {
         sawErrors = true;
       } else if (topic == "Migration:Ended") {
-        histogram.add(sawErrors ? "finished-with-errors" : "finished");
+        histogram.add(25);
+        if (sawErrors) {
+          histogram.add(26);
+        }
         Services.obs.removeObserver(migrationObserver, "Migration:Ended");
         Services.obs.removeObserver(migrationObserver, "Migration:ItemError");
         Services.prefs.setCharPref(kAutoMigrateFinishedPref, Date.now().toString());
@@ -61,7 +64,7 @@ const AutoMigrate = {
     Services.obs.addObserver(migrationObserver, "Migration:ItemError", false);
     Services.prefs.setCharPref(kAutoMigrateStartedPref, Date.now().toString());
     migrator.migrate(this.resourceTypesToUse, profileStartup, profileToMigrate);
-    histogram.add("migrate-called-without-exceptions");
+    histogram.add(20);
   },
 
   /**
