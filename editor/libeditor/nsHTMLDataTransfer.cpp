@@ -2251,7 +2251,7 @@ nsHTMLEditor::CreateListOfNodesToPaste(DocumentFragment& aFragment,
   NS_ENSURE_SUCCESS(rv, );
 
   // Now use a subtree iterator over the range to create a list of nodes
-  nsTrivialFunctor functor;
+  TrivialFunctor functor;
   nsDOMSubtreeIterator iter;
   rv = iter.Init(*docFragRange);
   NS_ENSURE_SUCCESS(rv, );
