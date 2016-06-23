@@ -107,7 +107,7 @@ IsStyleCachePreservingAction(EditAction action)
          action == EditAction::insertQuotation;
 }
 
-class nsTableCellAndListItemFunctor : public nsBoolDomIterFunctor
+class nsTableCellAndListItemFunctor : public mozilla::BoolDomIterFunctor
 {
   public:
     // Used to build list of all li's, td's & th's iterator covers
@@ -119,7 +119,7 @@ class nsTableCellAndListItemFunctor : public nsBoolDomIterFunctor
     }
 };
 
-class nsBRNodeFunctor : public nsBoolDomIterFunctor
+class nsBRNodeFunctor : public mozilla::BoolDomIterFunctor
 {
   public:
     virtual bool operator()(nsINode* aNode) const
@@ -131,7 +131,7 @@ class nsBRNodeFunctor : public nsBoolDomIterFunctor
     }
 };
 
-class nsEmptyEditableFunctor : public nsBoolDomIterFunctor
+class nsEmptyEditableFunctor : public mozilla::BoolDomIterFunctor
 {
   public:
     explicit nsEmptyEditableFunctor(nsHTMLEditor* editor) : mHTMLEditor(editor) {}
@@ -152,7 +152,7 @@ class nsEmptyEditableFunctor : public nsBoolDomIterFunctor
     nsHTMLEditor* mHTMLEditor;
 };
 
-class nsEditableTextFunctor : public nsBoolDomIterFunctor
+class nsEditableTextFunctor : public mozilla::BoolDomIterFunctor
 {
   public:
     explicit nsEditableTextFunctor(nsHTMLEditor* editor) : mHTMLEditor(editor) {}
@@ -5531,7 +5531,7 @@ nsHTMLEditRules::PromoteRange(nsRange& aRange, EditAction aOperationType)
   MOZ_ASSERT(NS_SUCCEEDED(res));
 }
 
-class nsUniqueFunctor : public nsBoolDomIterFunctor
+class nsUniqueFunctor : public mozilla::BoolDomIterFunctor
 {
 public:
   explicit nsUniqueFunctor(nsTArray<OwningNonNull<nsINode>> &aArray) : mArray(aArray)
