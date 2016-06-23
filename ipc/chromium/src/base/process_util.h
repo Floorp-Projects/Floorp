@@ -114,13 +114,10 @@ ProcessHandle GetCurrentProcessHandle();
 bool OpenProcessHandle(ProcessId pid, ProcessHandle* handle);
 
 // Converts a PID to a process handle. On Windows the handle is opened
-// with more access rights and must only be used by trusted code. Parameter
-// error can be used to get the error code in opening the process handle.
+// with more access rights and must only be used by trusted code.
 // You have to close returned handle using CloseProcessHandle. Returns true
 // on success.
-bool OpenPrivilegedProcessHandle(ProcessId pid,
-                                 ProcessHandle* handle,
-                                 int64_t* error = nullptr);
+bool OpenPrivilegedProcessHandle(ProcessId pid, ProcessHandle* handle);
 
 // Closes the process handle opened by OpenProcessHandle.
 void CloseProcessHandle(ProcessHandle process);

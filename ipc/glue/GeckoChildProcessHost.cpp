@@ -1151,43 +1151,47 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   mChildTask = child_task;
 #endif
 
-  OpenPrivilegedHandle(base::GetProcId(process));
-  {
-    MonitorAutoLock lock(mMonitor);
-    mProcessState = PROCESS_CREATED;
-    lock.Notify();
+  if (!OpenPrivilegedHandle(base::GetProcId(process))
+#ifdef XP_WIN
+      // If we failed in opening the process handle, try harder by duplicating
+      // one.
+      && !::DuplicateHandle(::GetCurrentProcess(), process,
+                            ::GetCurrentProcess(), &mChildProcessHandle,
+                            PROCESS_DUP_HANDLE | PROCESS_TERMINATE |
+                            PROCESS_QUERY_INFORMATION | PROCESS_VM_READ |
+                            SYNCHRONIZE,
+                            FALSE, 0)
+#endif
+     ) {
+    NS_RUNTIMEABORT("cannot open handle to child process");
   }
+  MonitorAutoLock lock(mMonitor);
+  mProcessState = PROCESS_CREATED;
+  lock.Notify();
 
   return true;
 }
 
-void
+bool
 GeckoChildProcessHost::OpenPrivilegedHandle(base::ProcessId aPid)
 {
   if (mChildProcessHandle) {
     MOZ_ASSERT(aPid == base::GetProcId(mChildProcessHandle));
-    return;
+    return true;
   }
-  int64_t error = 0;
-  if (!base::OpenPrivilegedProcessHandle(aPid, &mChildProcessHandle, &error)) {
-#ifdef MOZ_CRASHREPORTER
-    CrashReporter::
-      AnnotateCrashReport(NS_LITERAL_CSTRING("LastError"),
-                          nsPrintfCString ("%lld", error));
-#endif
-    NS_RUNTIMEABORT("can't open handle to child process");
-  }
+
+  return base::OpenPrivilegedProcessHandle(aPid, &mChildProcessHandle);
 }
 
 void
 GeckoChildProcessHost::OnChannelConnected(int32_t peer_pid)
 {
-  OpenPrivilegedHandle(peer_pid);
-  {
-    MonitorAutoLock lock(mMonitor);
-    mProcessState = PROCESS_CONNECTED;
-    lock.Notify();
+  if (!OpenPrivilegedHandle(peer_pid)) {
+    NS_RUNTIMEABORT("can't open handle to child process");
   }
+  MonitorAutoLock lock(mMonitor);
+  mProcessState = PROCESS_CONNECTED;
+  lock.Notify();
 }
 
 void
@@ -1254,7 +1258,9 @@ bool
 GeckoExistingProcessHost::PerformAsyncLaunch(StringVector aExtraOpts,
                                              base::ProcessArchitecture aArch)
 {
-  OpenPrivilegedHandle(base::GetProcId(mExistingProcessHandle));
+  if (!OpenPrivilegedHandle(base::GetProcId(mExistingProcessHandle))) {
+    NS_RUNTIMEABORT("can't open handle to child process");
+  }
 
   MonitorAutoLock lock(mMonitor);
   mProcessState = PROCESS_CREATED;
