@@ -24,6 +24,7 @@
 #include "mozilla/Preferences.h"
 #include "mozilla/SHA1.h"
 #include "mozilla/Base64.h"
+#include "mozilla/Telemetry.h"
 #include "nsNetworkLinkService.h"
 
 #import <Cocoa/Cocoa.h>
@@ -210,7 +211,7 @@ static bool scanArp(char *ip, char *mac, size_t maclen)
     return false;
 }
 
-static int routingTable(char *gw)
+static int routingTable(char *gw, size_t aGwLen)
 {
     size_t needed;
     int mib[6];
@@ -238,7 +239,7 @@ static int routingTable(char *gw)
     sa = reinterpret_cast<struct sockaddr *>(rtm + 1);
     sa = reinterpret_cast<struct sockaddr *>(SA_SIZE(sa) + (char *)sa);
     sockin = reinterpret_cast<struct sockaddr_in *>(sa);
-    inet_ntop(AF_INET, &sockin->sin_addr.s_addr, gw, MAXHOSTNAMELEN-1);
+    inet_ntop(AF_INET, &sockin->sin_addr.s_addr, gw, aGwLen-1);
 
     return 0;
 }
@@ -252,30 +253,43 @@ static int routingTable(char *gw)
 //
 void nsNetworkLinkService::calculateNetworkId(void)
 {
+    bool found = false;
     char hw[MAXHOSTNAMELEN];
-    routingTable(hw);
-
-    char mac[256]; // big enough for a printable MAC address
-    if (scanArp(hw, mac, sizeof(mac))) {
-        LOG(("networkid: MAC %s\n", hw));
-        nsAutoCString mac(hw);
-        // This 'addition' could potentially be a
-        // fixed number from the profile or something.
-        nsAutoCString addition("local-rubbish");
-        nsAutoCString output;
-        SHA1Sum sha1;
-        nsCString combined(mac + addition);
-        sha1.update(combined.get(), combined.Length());
-        uint8_t digest[SHA1Sum::kHashSize];
-        sha1.finish(digest);
-        nsCString newString(reinterpret_cast<char*>(digest),
-                            SHA1Sum::kHashSize);
-        nsresult rv = Base64Encode(newString, output);
-        MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
-        LOG(("networkid: id %s\n", output.get()));
-        mNetworkId = output;
+    if (!routingTable(hw, sizeof(hw))) {
+        char mac[256]; // big enough for a printable MAC address
+        if (scanArp(hw, mac, sizeof(mac))) {
+            LOG(("networkid: MAC %s\n", hw));
+            nsAutoCString mac(hw);
+            // This 'addition' could potentially be a
+            // fixed number from the profile or something.
+            nsAutoCString addition("local-rubbish");
+            nsAutoCString output;
+            SHA1Sum sha1;
+            nsCString combined(mac + addition);
+            sha1.update(combined.get(), combined.Length());
+            uint8_t digest[SHA1Sum::kHashSize];
+            sha1.finish(digest);
+            nsCString newString(reinterpret_cast<char*>(digest),
+                                SHA1Sum::kHashSize);
+            nsresult rv = Base64Encode(newString, output);
+            MOZ_RELEASE_ASSERT(NS_SUCCEEDED(rv));
+            LOG(("networkid: id %s\n", output.get()));
+            if (mNetworkId != output) {
+                // new id
+                Telemetry::Accumulate(Telemetry::NETWORK_ID, 1);
+                mNetworkId = output;
+            }
+            else {
+                // same id
+                Telemetry::Accumulate(Telemetry::NETWORK_ID, 2);
+            }
+            found = true;
+        }
     }
-
+    if (!found) {
+        // no id
+        Telemetry::Accumulate(Telemetry::NETWORK_ID, 0);
+    }
 }
 
 

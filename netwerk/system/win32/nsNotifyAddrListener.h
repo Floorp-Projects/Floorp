@@ -69,7 +69,7 @@ private:
 
     // Figure out the current network identification
     void calculateNetworkId(void);
-    void findMac(char *gateway);
+    bool findMac(char *gateway);
     nsCString mNetworkId;
 
     HANDLE mCheckEvent;

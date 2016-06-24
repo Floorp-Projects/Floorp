@@ -793,7 +793,6 @@ TextureClient::WaitFenceHandleOnImageBridge(Mutex& aMutex)
 void
 TextureClient::ClearWaitFenceHandleOnImageBridge(Mutex& aMutex)
 {
-  MOZ_ASSERT(InImageBridgeChildThread());
   aMutex.AssertCurrentThreadOwns();
 
   if (!mFenceHandleWaiter) {

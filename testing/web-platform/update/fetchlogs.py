@@ -62,20 +62,16 @@ def fetch_json(url, params=None):
 
 
 def get_blobber_url(branch, job):
-    job_id = job["id"]
-    artifact_url = urlparse.urljoin(treeherder_base, "/api/project/%s/artifact/" % branch)
+    job_guid = job["job_guid"]
+    artifact_url = urlparse.urljoin(treeherder_base, "/api/jobdetail/")
     artifact_params = {
-        'job_id': job_id,
-        'name': 'Job Info',
+        'job_guid': job_guid,
     }
     job_data = fetch_json(artifact_url, params=artifact_params)
 
     if job_data:
-        assert len(job_data) == 1
-        job_data = job_data[0]
         try:
-            details = job_data["blob"]["job_details"]
-            for item in details:
+            for item in job_data["results"]:
                 if item["value"] == "wpt_raw.log":
                     return item["url"]
         except:
