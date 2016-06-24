@@ -1,0 +1,52 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+Test Stylesheet rep
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Rep test - Stylesheet</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  try {
+    let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
+    let { StyleSheet } = browserRequire("devtools/client/shared/components/reps/stylesheet");
+
+    let gripStub = {
+      "type": "object",
+      "class": "CSSStyleSheet",
+      "actor": "server1.conn2.obj1067",
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "ownPropertyLength": 0,
+      "preview": {
+        "kind": "ObjectWithURL",
+        "url": "https://example.com/styles.css"
+      }
+    };
+
+    // Test that correct rep is chosen
+    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
+    is(renderedRep.type, StyleSheet.rep, `Rep correctly selects ${StyleSheet.rep.displayName}`);
+
+    // Test rendering
+    const renderedComponent = renderComponent(StyleSheet.rep, { object: gripStub });
+    is(renderedComponent.textContent, "StyleSheet styles.css", "StyleSheet rep has expected text content");
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+});
+</script>
+</pre>
+</body>
+</html>
