@@ -20,13 +20,14 @@ window.onload = Task.async(function* () {
     let React = browserRequire("devtools/client/shared/vendor/react");
     let Frame = React.createFactory(browserRequire("devtools/client/shared/components/frame"));
     ok(Frame, "Should get Frame");
-    let frame;
 
     // Check when there's a column
     yield checkFrameComponent({
-      source: "http://myfile.com/mahscripts.js",
-      line: 55,
-      column: 10,
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: 55,
+        column: 10,
+      }
     }, {
       file: "mahscripts.js",
       line: 55,
@@ -37,8 +38,10 @@ window.onload = Task.async(function* () {
 
     // Check when there's no column
     yield checkFrameComponent({
-      source: "http://myfile.com/mahscripts.js",
-      line: 55,
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: 55,
+      }
     }, {
       file: "mahscripts.js",
       line: 55,
@@ -48,9 +51,11 @@ window.onload = Task.async(function* () {
 
     // Check when column === 0
     yield checkFrameComponent({
-      source: "http://myfile.com/mahscripts.js",
-      line: 55,
-      column: 0,
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: 55,
+        column: 0,
+      }
     }, {
       file: "mahscripts.js",
       line: 55,
@@ -61,8 +66,10 @@ window.onload = Task.async(function* () {
     // Check when there's no parseable URL source;
     // should not render line/columns
     yield checkFrameComponent({
-      source: "self-hosted",
-      line: 1,
+      frame: {
+        source: "self-hosted",
+        line: 1,
+      }
     }, {
       file: "self-hosted",
       shouldLink: false,
@@ -72,7 +79,9 @@ window.onload = Task.async(function* () {
     // Check when there's no source;
     // should not render line/columns
     yield checkFrameComponent({
-      line: 1,
+      frame: {
+        line: 1,
+      }
     }, {
       file: "(unknown)",
       shouldLink: false,
@@ -82,8 +91,10 @@ window.onload = Task.async(function* () {
     // Check when there's a column, but no number;
     // no line/column info should render
     yield checkFrameComponent({
-      source: "http://myfile.com/mahscripts.js",
-      column: 55,
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        column: 55,
+      }
     }, {
       file: "mahscripts.js",
       shouldLink: true,
@@ -93,9 +104,11 @@ window.onload = Task.async(function* () {
     // Check when line is 0; this should be an invalid
     // line option, so don't render line/column
     yield checkFrameComponent({
-      source: "http://myfile.com/mahscripts.js",
-      line: 0,
-      column: 55,
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: 0,
+        column: 55,
+      }
     }, {
       file: "mahscripts.js",
       shouldLink: true,
@@ -105,9 +118,11 @@ window.onload = Task.async(function* () {
     // Check when source is via Scratchpad; we should render out the
     // lines and columns as this is linkable.
     yield checkFrameComponent({
-      source: "Scratchpad/1",
-      line: 10,
-      column: 50,
+      frame: {
+        source: "Scratchpad/1",
+        line: 10,
+        column: 50,
+      }
     }, {
       file: "Scratchpad/1",
       line: 10,
@@ -118,9 +133,11 @@ window.onload = Task.async(function* () {
 
     // Check that line and column can be strings
     yield checkFrameComponent({
-      source: "http://myfile.com/mahscripts.js",
-      line: "10",
-      column: "55",
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: "10",
+        column: "55",
+      }
     }, {
       file: "mahscripts.js",
       line: 10,
@@ -132,10 +149,81 @@ window.onload = Task.async(function* () {
     // Check that line and column can be strings,
     // and that the `0` rendering rules apply when they are strings as well
     yield checkFrameComponent({
-      source: "http://myfile.com/mahscripts.js",
-      line: "0",
-      column: "55",
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: "0",
+        column: "55",
+      }
     }, {
+      file: "mahscripts.js",
+      shouldLink: true,
+      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
+    });
+
+    // Check that the showFullSourceUrl option works correctly
+    yield checkFrameComponent({
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: 0,
+      },
+      showFullSourceUrl: true
+    }, {
+      file: "http://myfile.com/mahscripts.js",
+      shouldLink: true,
+      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
+    });
+
+    // Check that the showFunctionName option works correctly
+    yield checkFrameComponent({
+      frame: {
+        functionDisplayName: "myfun",
+        source: "http://myfile.com/mahscripts.js",
+        line: 0,
+      }
+    }, {
+      functionName: null,
+      file: "mahscripts.js",
+      shouldLink: true,
+      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
+    });
+
+    yield checkFrameComponent({
+      frame: {
+        functionDisplayName: "myfun",
+        source: "http://myfile.com/mahscripts.js",
+        line: 0,
+      },
+      showFunctionName: true
+    }, {
+      functionName: "myfun",
+      file: "mahscripts.js",
+      shouldLink: true,
+      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
+    });
+
+    // Check that anonymous function name is not displayed unless explicitly enabled
+    yield checkFrameComponent({
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: 0,
+      },
+      showFunctionName: true
+    }, {
+      functionName: null,
+      file: "mahscripts.js",
+      shouldLink: true,
+      tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
+    });
+
+    yield checkFrameComponent({
+      frame: {
+        source: "http://myfile.com/mahscripts.js",
+        line: 0,
+      },
+      showFunctionName: true,
+      showAnonymousFunctionName: true
+    }, {
+      functionName: "<anonymous>",
       file: "mahscripts.js",
       shouldLink: true,
       tooltip: "View source in Debugger → http://myfile.com/mahscripts.js",
@@ -143,8 +231,10 @@ window.onload = Task.async(function* () {
 
     // Check if file is rendered with "/" for root documents when showEmptyPathAsHost is false
     yield checkFrameComponent({
-      source: "http://www.cnn.com/",
-      line: "1",
+      frame: {
+        source: "http://www.cnn.com/",
+        line: "1",
+      },
       showEmptyPathAsHost: false,
     }, {
       file: "/",
@@ -155,8 +245,10 @@ window.onload = Task.async(function* () {
 
     // Check if file is rendered with hostname for root documents when showEmptyPathAsHost is true
     yield checkFrameComponent({
-      source: "http://www.cnn.com/",
-      line: "1",
+      frame: {
+        source: "http://www.cnn.com/",
+        line: "1",
+      },
       showEmptyPathAsHost: true,
     }, {
       file: "www.cnn.com",
@@ -165,13 +257,11 @@ window.onload = Task.async(function* () {
       tooltip: "View source in Debugger → http://www.cnn.com/:1",
     });
 
-    function* checkFrameComponent (input, expected) {
-      let frame = ReactDOM.render(Frame({
-        frame: input,
-        onClick: () => {},
-      }), window.document.body);
+    function* checkFrameComponent(input, expected) {
+      let props = Object.assign({ onClick: () => {} }, input);
+      let frame = ReactDOM.render(Frame(props), window.document.body);
       yield forceRender(frame);
-      let source = input.source;
+      let { source } = input.frame;
       checkFrameString(Object.assign({ frame, source }, expected));
     }
 
