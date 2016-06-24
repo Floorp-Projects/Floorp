@@ -2694,16 +2694,6 @@ public:
 
     virtual ~XPCJSContextStack();
 
-    uint32_t Count()
-    {
-        return mStack.Length();
-    }
-
-    JSContext* Peek()
-    {
-        return mStack.IsEmpty() ? nullptr : mStack[mStack.Length() - 1];
-    }
-
     void InitSafeJSContext();
     JSContext* GetSafeJSContext();
 
