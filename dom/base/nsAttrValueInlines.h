@@ -32,6 +32,7 @@ struct MiscContainer final
         uint32_t mEnumValue;
         int32_t mPercent;
         mozilla::css::Declaration* mGeckoCSSDeclaration;
+        ServoDeclarationBlock* mServoCSSDeclaration;
         mozilla::css::URLValue* mURL;
         mozilla::css::ImageValue* mImage;
         nsAttrValue::AtomArray* mAtomArray;
@@ -85,8 +86,9 @@ public:
   {
     // Nothing stops us from refcounting (and sharing) other types of
     // MiscContainer (except eDoubleValue types) but there's no compelling
-    // reason to 
-    return mType == nsAttrValue::eGeckoCSSDeclaration;
+    // reason to.
+    return mType == nsAttrValue::eGeckoCSSDeclaration ||
+           mType == nsAttrValue::eServoCSSDeclaration;
   }
 
   inline int32_t AddRef() {
@@ -153,6 +155,13 @@ nsAttrValue::GetGeckoCSSDeclarationValue() const
   return GetMiscContainer()->mValue.mGeckoCSSDeclaration;
 }
 
+inline ServoDeclarationBlock*
+nsAttrValue::GetServoCSSDeclarationValue() const
+{
+  NS_PRECONDITION(Type() == eServoCSSDeclaration, "wrong type");
+  return GetMiscContainer()->mValue.mServoCSSDeclaration;
+}
+
 inline mozilla::css::URLValue*
 nsAttrValue::GetURLValue() const
 {
@@ -198,7 +207,9 @@ nsAttrValue::StoresOwnData() const
     return true;
   }
   ValueType t = Type();
-  return t != eGeckoCSSDeclaration && !IsSVGType(t);
+  return t != eGeckoCSSDeclaration &&
+         t != eServoCSSDeclaration &&
+         !IsSVGType(t);
 }
 
 inline void
