@@ -985,23 +985,6 @@ nsXPConnect::GetSafeJSContext()
     return GetRuntime()->GetJSContextStack()->GetSafeJSContext();
 }
 
-namespace xpc {
-
-void
-PushNullJSContext()
-{
-    XPCJSRuntime::Get()->GetJSContextStack()->Push(nullptr);
-}
-
-void
-PopNullJSContext()
-{
-    MOZ_ASSERT(nsContentUtils::GetCurrentJSContext() == nullptr);
-    XPCJSRuntime::Get()->GetJSContextStack()->Pop();
-}
-
-} // namespace xpc
-
 nsIPrincipal*
 nsXPConnect::GetPrincipal(JSObject* obj, bool allowShortCircuit) const
 {

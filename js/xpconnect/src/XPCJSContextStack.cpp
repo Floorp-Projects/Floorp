@@ -15,7 +15,6 @@
 using namespace mozilla;
 using namespace JS;
 using namespace xpc;
-using mozilla::dom::DestroyProtoAndIfaceCache;
 
 /***************************************************************************/
 
@@ -24,22 +23,6 @@ XPCJSContextStack::~XPCJSContextStack()
     if (mSafeJSContext) {
         mSafeJSContext = nullptr;
     }
-}
-
-void
-XPCJSContextStack::Pop()
-{
-    MOZ_ASSERT(!mStack.IsEmpty());
-
-    uint32_t idx = mStack.Length() - 1; // The thing we're popping
-
-    mStack.RemoveElementAt(idx);
-}
-
-void
-XPCJSContextStack::Push(JSContext* cx)
-{
-    mStack.AppendElement(cx);
 }
 
 JSContext*

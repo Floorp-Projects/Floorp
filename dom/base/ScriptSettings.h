@@ -27,28 +27,6 @@ class nsIDocShell;
 namespace mozilla {
 namespace dom {
 
-// For internal use only - use AutoJSAPI instead.
-namespace danger {
-
-/**
- * Fundamental cx pushing class. All other cx pushing classes are implemented
- * in terms of this class.
- */
-class MOZ_STACK_CLASS AutoCxPusher
-{
-public:
-  explicit AutoCxPusher(JSContext *aCx, bool aAllowNull = false);
-  ~AutoCxPusher();
-
-private:
-#ifdef DEBUG
-  JSContext* mPushedContext;
-  unsigned mCompartmentDepthOnEntry;
-#endif
-};
-
-} /* namespace danger */
-
 /*
  * System-wide setup/teardown routines. Init and Destroy should be invoked
  * once each, at startup and shutdown (respectively).
@@ -310,7 +288,6 @@ protected:
 
 private:
   mozilla::Maybe<JSAutoRequest> mAutoRequest;
-  mozilla::Maybe<danger::AutoCxPusher> mCxPusher;
   mozilla::Maybe<JSAutoNullableCompartment> mAutoNullableCompartment;
   JSContext *mCx;
 
@@ -423,11 +400,8 @@ private:
  */
 class AutoNoJSAPI : protected ScriptSettingsStackEntry {
 public:
-  explicit AutoNoJSAPI(bool aIsMainThread = NS_IsMainThread());
+  explicit AutoNoJSAPI();
   ~AutoNoJSAPI();
-
-private:
-  mozilla::Maybe<danger::AutoCxPusher> mCxPusher;
 };
 
 } // namespace dom
