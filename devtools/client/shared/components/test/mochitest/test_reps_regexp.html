@@ -1,0 +1,49 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+Test RegExp rep
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Rep test - RegExp</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  try {
+    let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
+    let { RegExp } = browserRequire("devtools/client/shared/components/reps/regexp");
+
+    let gripStub = {
+      "type": "object",
+      "class": "RegExp",
+      "actor": "server1.conn22.obj39",
+      "extensible": true,
+      "frozen": false,
+      "sealed": false,
+      "ownPropertyLength": 1,
+      "displayString": "/ab+c/i"
+    };
+
+    // Test that correct rep is chosen
+    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
+    is(renderedRep.type, RegExp.rep, `Rep correctly selects ${RegExp.rep.displayName}`);
+
+    // Test rendering
+    const renderedComponent = renderComponent(RegExp.rep, { object: gripStub });
+    is(renderedComponent.textContent, "/ab+c/i", "RegExp rep has expected text content");
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+});
+</script>
+</pre>
+</body>
+</html>
