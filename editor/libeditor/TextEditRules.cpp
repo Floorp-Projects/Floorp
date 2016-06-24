@@ -177,7 +177,7 @@ TextEditRules::BeforeEdit(EditAction action,
 {
   if (mLockRulesSniffing) return NS_OK;
 
-  nsAutoLockRulesSniffing lockIt(this);
+  AutoLockRulesSniffing lockIt(this);
   mDidExplicitlySetInterline = false;
   if (!mActionNesting)
   {
@@ -203,7 +203,7 @@ TextEditRules::AfterEdit(EditAction action,
 {
   if (mLockRulesSniffing) return NS_OK;
 
-  nsAutoLockRulesSniffing lockIt(this);
+  AutoLockRulesSniffing lockIt(this);
 
   NS_PRECONDITION(mActionNesting>0, "bad action nesting!");
   nsresult res = NS_OK;

@@ -16,13 +16,13 @@
 #include "nsString.h"
 #include "nscore.h"
 
-class nsAutoLockRulesSniffing;
 class nsIDOMElement;
 class nsIDOMNode;
 class nsPlaintextEditor;
 
 namespace mozilla {
 
+class AutoLockRulesSniffing;
 namespace dom {
 class Selection;
 } // namespace dom
@@ -250,7 +250,7 @@ protected:
   uint32_t mLastLength;
 
   // friends
-  friend class nsAutoLockRulesSniffing;
+  friend class AutoLockRulesSniffing;
 };
 
 class TextRulesInfo final : public nsRulesInfo
@@ -297,27 +297,34 @@ public:
   const nsIDOMElement* insertElement;
 };
 
-} // namespace mozilla
-
-/***************************************************************************
- * stack based helper class for StartOperation()/EndOperation() sandwich.
- * this class sets a bool letting us know to ignore any rules sniffing
+/**
+ * Stack based helper class for StartOperation()/EndOperation() sandwich.
+ * This class sets a bool letting us know to ignore any rules sniffing
  * that tries to occur reentrantly.
  */
-class nsAutoLockRulesSniffing
+class MOZ_STACK_CLASS AutoLockRulesSniffing final
 {
-  public:
+public:
+  explicit AutoLockRulesSniffing(TextEditRules* aRules)
+    : mRules(aRules)
+  {
+    if (mRules) {
+      mRules->mLockRulesSniffing = true;
+    }
+  }
 
-  explicit nsAutoLockRulesSniffing(mozilla::TextEditRules *rules) : mRules(rules)
-                 {if (mRules) mRules->mLockRulesSniffing = true;}
-  ~nsAutoLockRulesSniffing()
-                 {if (mRules) mRules->mLockRulesSniffing = false;}
+  ~AutoLockRulesSniffing()
+  {
+    if (mRules) {
+      mRules->mLockRulesSniffing = false;
+    }
+  }
 
-  protected:
-  mozilla::TextEditRules *mRules;
+protected:
+  TextEditRules* mRules;
 };
 
-
+} // namespace mozilla
 
 /***************************************************************************
  * stack based helper class for turning on/off the edit listener.
