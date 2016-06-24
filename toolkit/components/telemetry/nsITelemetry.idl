@@ -30,6 +30,14 @@ interface nsITelemetry : nsISupports
   const unsigned long HISTOGRAM_COUNT = 4;
 
   /**
+   * Scalar types:
+   * SCALAR_COUNT - for storing a numeric value
+   * SCALAR_STRING - for storing a string value
+   */
+  const unsigned long SCALAR_COUNT = 0;
+  const unsigned long SCALAR_STRING = 1;
+
+  /**
    * Dataset types:
    * DATASET_RELEASE_CHANNEL_OPTOUT - the basic dataset that is on-by-default on all channels
    * DATASET_RELEASE_CHANNEL_OPTIN - the extended dataset that is opt-in on release,
@@ -374,4 +382,49 @@ interface nsITelemetry : nsISupports
    * @throws NS_ERROR_NOT_AVAILABLE if TimeStamp doesn't have the data.
    */
   double msSinceProcessStart();
+
+  /**
+   * Adds the value to the given scalar.
+   *
+   * @param aName The scalar name.
+   * @param aValue The numeric value to add to the scalar. Only unsigned integers supported.
+   */
+  [implicit_jscontext]
+  void scalarAdd(in ACString aName, in jsval aValue);
+
+  /**
+   * Sets the scalar to the given value.
+   *
+   * @param aName The scalar name.
+   * @param aValue The value to set the scalar to. If the type of aValue doesn't match the
+   *        type of the scalar, the function will fail. For scalar string types, the this
+   *        is truncated to 50 characters.
+   */
+  [implicit_jscontext]
+  void scalarSet(in ACString aName, in jsval aValue);
+
+  /**
+   * Sets the scalar to the maximum of the current and the passed value.
+   *
+   * @param aName The scalar name.
+   * @param aValue The numeric value to set the scalar to. Only unsigned integers supported.
+   */
+  [implicit_jscontext]
+  void scalarSetMaximum(in ACString aName, in jsval aValue);
+
+  /**
+   * Serializes the scalars from the given dataset to a JSON-style object and resets them.
+   * The returned structure looks like:
+   *   { "group1.probe": 1, "group1.other_probe": false, ... }
+   *
+   * @param aDataset DATASET_RELEASE_CHANNEL_OPTOUT or DATASET_RELEASE_CHANNEL_OPTIN.
+   * @param [aClear=false] Whether to clear out the scalars after snapshotting.
+   */
+  [implicit_jscontext, optional_argc]
+  jsval snapshotScalars(in uint32_t aDataset, [optional] in boolean aClear);
+
+  /**
+   * Resets all the stored scalars. This is intended to be only used in tests.
+   */
+  void clearScalars();
 };
