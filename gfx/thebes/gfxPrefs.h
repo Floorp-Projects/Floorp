@@ -84,26 +84,30 @@ private:
   };
 
   // Since we cannot use const char*, use a function that returns it.
-  template <UpdatePolicy Update, class T, T Default(void), const char* Pref(void)>
+  template <UpdatePolicy Update, class T, T Default(void), const char* Prefname(void)>
   class PrefTemplate
   {
   public:
     PrefTemplate()
     : mValue(Default())
     {
-      Register(Update, Pref());
+      // If not using the Preferences service, values are synced over IPC, so
+      // there's no need to register us as a Preferences observer.
+      if (IsPrefsServiceAvailable()) {
+        Register(Update, Prefname());
+      }
     }
     void Register(UpdatePolicy aUpdate, const char* aPreference)
     {
       AssertMainThread();
-      switch(aUpdate) {
+      switch (aUpdate) {
         case UpdatePolicy::Skip:
           break;
         case UpdatePolicy::Once:
           mValue = PrefGet(aPreference, mValue);
           break;
         case UpdatePolicy::Live:
-          PrefAddVarCache(&mValue,aPreference, mValue);
+          PrefAddVarCache(&mValue, aPreference, mValue);
           break;
         default:
           MOZ_CRASH("Incomplete switch");
@@ -493,6 +497,7 @@ private:
   static bool sInstanceHasBeenDestroyed;
 
 private:
+  static bool IsPrefsServiceAvailable();
   // Creating these to avoid having to include Preferences.h in the .h
   static void PrefAddVarCache(bool*, const char*, bool);
   static void PrefAddVarCache(int32_t*, const char*, int32_t);
