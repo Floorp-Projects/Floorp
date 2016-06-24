@@ -412,10 +412,11 @@ class BaseMarionetteArguments(ArgumentParser):
             print 'must specify one or more test files, manifests, or directories'
             sys.exit(1)
 
-        for path in args.tests:
-            if not os.path.exists(path):
+        missing_tests = [path for path in args.tests if not os.path.exists(path)]
+        if missing_tests:
+            for path in missing_tests:
                 print '{0} does not exist'.format(path)
-                sys.exit(1)
+            sys.exit(1)
 
         if not args.address and not args.binary:
             print 'must specify --binary, or --address'
