@@ -87,26 +87,18 @@ js::TraceCycleDetectionSet(JSTracer* trc, AutoCycleDetector::Set& set)
         TraceRoot(trc, &e.mutableFront(), "cycle detector table entry");
 }
 
-bool
-JSContext::init(uint32_t maxBytes, uint32_t maxNurseryBytes)
-{
-    if (!JSRuntime::init(maxBytes, maxNurseryBytes))
-        return false;
-
-    return true;
-}
-
 JSContext*
-js::NewContext(uint32_t maxBytes, uint32_t maxNurseryBytes, JSRuntime* parentRuntime)
+js::NewContext(JSRuntime* rt)
 {
-    UniquePtr<JSContext> cx(js_new<JSContext>(parentRuntime));
+    MOZ_ASSERT(!rt->maybeContextFromMainThread());
+
+    JS_AbortIfWrongThread(rt);
+
+    JSContext* cx = js_new<JSContext>(rt);
     if (!cx)
         return nullptr;
 
-    if (!cx->init(maxBytes, maxNurseryBytes))
-        return nullptr;
-
-    return cx.release();
+    return cx;
 }
 
 void
@@ -866,9 +858,8 @@ ExclusiveContext::recoverFromOutOfMemory()
         task->outOfMemory = false;
 }
 
-JSContext::JSContext(JSRuntime* parentRuntime)
-  : ExclusiveContext(this, &this->JSRuntime::mainThread, Context_JS),
-    JSRuntime(this, parentRuntime),
+JSContext::JSContext(JSRuntime* rt)
+  : ExclusiveContext(rt, &rt->mainThread, Context_JS),
     throwing(false),
     unwrappedException_(this),
     overRecursed_(false),
@@ -889,8 +880,6 @@ JSContext::JSContext(JSRuntime* parentRuntime)
 
 JSContext::~JSContext()
 {
-    destroyRuntime();
-
     /* Free the stuff hanging off of cx. */
     MOZ_ASSERT(!resolvingList);
 }
@@ -1035,8 +1024,9 @@ JSContext::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 void
 JSContext::mark(JSTracer* trc)
 {
-    if (cycleDetectorSet.initialized())
-        TraceCycleDetectionSet(trc, cycleDetectorSet);
+    /* Stack frames and slots are traced by StackSpace::mark. */
+
+    TraceCycleDetectionSet(trc, cycleDetectorSet);
 
     if (compartment_)
         compartment_->mark();

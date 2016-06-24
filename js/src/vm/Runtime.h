@@ -1054,9 +1054,16 @@ struct JSRuntime : public JS::shadow::Runtime,
         return interpreterStack_;
     }
 
-    JSContext* contextFromMainThread() {
+    // The runtime's context can be nullptr only while we're initializing or
+    // destroying the runtime.
+    JSContext* maybeContextFromMainThread() {
         MOZ_ASSERT(CurrentThreadCanAccessRuntime(this));
         return context_;
+    }
+    JSContext* contextFromMainThread() {
+        JSContext* cx = maybeContextFromMainThread();
+        MOZ_ASSERT(cx);
+        return cx;
     }
 
     bool enqueuePromiseJob(JSContext* cx, js::HandleFunction job, js::HandleObject promise);
@@ -1488,18 +1495,13 @@ struct JSRuntime : public JS::shadow::Runtime,
         return liveRuntimesCount > 0;
     }
 
-  protected:
-    JSRuntime(JSContext* cx, JSRuntime* parentRuntime);
-
-    // destroyRuntime is used instead of a destructor, to ensure the downcast
-    // to JSContext remains valid. The final GC triggered here depends on this.
-    void destroyRuntime();
+    explicit JSRuntime(JSRuntime* parentRuntime);
+    ~JSRuntime();
 
     bool init(uint32_t maxbytes, uint32_t maxNurseryBytes);
 
     JSRuntime* thisFromCtor() { return this; }
 
-  public:
     /*
      * Call this after allocating memory held by GC things, to update memory
      * pressure counters or report the OOM error if necessary. If oomError and
