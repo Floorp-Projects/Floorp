@@ -22,16 +22,6 @@ using namespace mozilla;
 using namespace mozilla::gfx;
 using namespace mozilla::image;
 
-TEST(ImageDecodeToSurface, ImageModuleAvailable)
-{
-  // We can run into problems if XPCOM modules get initialized in the wrong
-  // order. It's important that this test run first, both as a sanity check and
-  // to ensure we get the module initialization order we want.
-  nsCOMPtr<imgITools> imgTools =
-    do_CreateInstance("@mozilla.org/image/tools;1");
-  EXPECT_TRUE(imgTools != nullptr);
-}
-
 class DecodeToSurfaceRunnable : public Runnable
 {
 public:
@@ -95,24 +85,35 @@ RunDecodeToSurface(const ImageTestCase& aTestCase)
   surface = nullptr;
 }
 
-TEST(ImageDecodeToSurface, PNG) { RunDecodeToSurface(GreenPNGTestCase()); }
-TEST(ImageDecodeToSurface, GIF) { RunDecodeToSurface(GreenGIFTestCase()); }
-TEST(ImageDecodeToSurface, JPG) { RunDecodeToSurface(GreenJPGTestCase()); }
-TEST(ImageDecodeToSurface, BMP) { RunDecodeToSurface(GreenBMPTestCase()); }
-TEST(ImageDecodeToSurface, ICO) { RunDecodeToSurface(GreenICOTestCase()); }
-TEST(ImageDecodeToSurface, Icon) { RunDecodeToSurface(GreenIconTestCase()); }
+class ImageDecodeToSurface : public ::testing::Test
+{
+  protected:
+  static void SetUpTestCase()
+  {
+    // Ensure that ImageLib services are initialized.
+    nsCOMPtr<imgITools> imgTools = do_CreateInstance("@mozilla.org/image/tools;1");
+    EXPECT_TRUE(imgTools != nullptr);
+  }
+};
 
-TEST(ImageDecodeToSurface, AnimatedGIF)
+TEST_F(ImageDecodeToSurface, PNG) { RunDecodeToSurface(GreenPNGTestCase()); }
+TEST_F(ImageDecodeToSurface, GIF) { RunDecodeToSurface(GreenGIFTestCase()); }
+TEST_F(ImageDecodeToSurface, JPG) { RunDecodeToSurface(GreenJPGTestCase()); }
+TEST_F(ImageDecodeToSurface, BMP) { RunDecodeToSurface(GreenBMPTestCase()); }
+TEST_F(ImageDecodeToSurface, ICO) { RunDecodeToSurface(GreenICOTestCase()); }
+TEST_F(ImageDecodeToSurface, Icon) { RunDecodeToSurface(GreenIconTestCase()); }
+
+TEST_F(ImageDecodeToSurface, AnimatedGIF)
 {
   RunDecodeToSurface(GreenFirstFrameAnimatedGIFTestCase());
 }
 
-TEST(ImageDecodeToSurface, AnimatedPNG)
+TEST_F(ImageDecodeToSurface, AnimatedPNG)
 {
   RunDecodeToSurface(GreenFirstFrameAnimatedPNGTestCase());
 }
 
-TEST(ImageDecodeToSurface, Corrupt)
+TEST_F(ImageDecodeToSurface, Corrupt)
 {
   ImageTestCase testCase = CorruptTestCase();
 

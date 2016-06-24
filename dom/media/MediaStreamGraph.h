@@ -1092,6 +1092,13 @@ public:
 
   void RegisterForAudioMixing();
 
+  /**
+   * Returns true if this SourceMediaStream contains at least one audio track
+   * that is in pending state.
+   * This is thread safe, and takes the SourceMediaStream mutex.
+   */
+  bool HasPendingAudioTrack();
+
   // XXX need a Reset API
 
   friend class MediaStreamGraphImpl;

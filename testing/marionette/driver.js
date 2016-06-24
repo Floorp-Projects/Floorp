@@ -151,6 +151,7 @@ this.GeckoDriver = function(appName, device, stopSignal) {
     "XULappId" : Services.appinfo.ID,
     "appBuildId" : Services.appinfo.appBuildID,
     "device": device,
+    "processId" : Services.appinfo.processID,
     "version": Services.appinfo.version,
   };
 

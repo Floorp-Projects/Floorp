@@ -150,3 +150,12 @@ PYTHON_UNIT_TESTS += [
 
 if CONFIG['GNU_CXX']:
     CXXFLAGS += ['-Wno-error=shadow']
+
+if CONFIG['COMPILE_ENVIRONMENT']:
+    GENERATED_FILES += ['CSS2Properties.webidl']
+    css_props = GENERATED_FILES['CSS2Properties.webidl']
+    css_props.script = 'GenerateCSS2PropertiesWebIDL.py:generate'
+    css_props.inputs = [
+        '/dom/webidl/CSS2Properties.webidl.in',
+        '/layout/style/PythonCSSProps.h',
+    ]

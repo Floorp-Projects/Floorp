@@ -7,16 +7,20 @@
 #ifndef mozilla_dom_BlobSet_h
 #define mozilla_dom_BlobSet_h
 
-#include "mozilla/CheckedInt.h"
-#include "mozilla/dom/File.h"
+#include "mozilla/RefPtr.h"
 
 namespace mozilla {
 namespace dom {
 
-class BlobSet {
+class BlobImpl;
+
+class BlobSet final
+{
 public:
   BlobSet()
-    : mData(nullptr), mDataLen(0), mDataBufferLen(0)
+    : mData(nullptr)
+    , mDataLen(0)
+    , mDataBufferLen(0)
   {}
 
   ~BlobSet()
@@ -25,8 +29,12 @@ public:
   }
 
   nsresult AppendVoidPtr(const void* aData, uint32_t aLength);
-  nsresult AppendString(const nsAString& aString, bool nativeEOL, JSContext* aCx);
+
+  nsresult AppendString(const nsAString& aString, bool nativeEOL,
+                        JSContext* aCx);
+
   nsresult AppendBlobImpl(BlobImpl* aBlobImpl);
+
   nsresult AppendBlobImpls(const nsTArray<RefPtr<BlobImpl>>& aBlobImpls);
 
   nsTArray<RefPtr<BlobImpl>>& GetBlobImpls() { Flush(); return mBlobImpls; }
@@ -35,48 +43,10 @@ public:
                                          const nsACString& aContentType,
                                          ErrorResult& aRv);
 
-protected:
-  bool ExpandBufferSize(uint64_t aSize)
-  {
-    using mozilla::CheckedUint32;
+private:
+  bool ExpandBufferSize(uint64_t aSize);
 
-    if (mDataBufferLen >= mDataLen + aSize) {
-      mDataLen += aSize;
-      return true;
-    }
-
-    // Start at 1 or we'll loop forever.
-    CheckedUint32 bufferLen =
-      std::max<uint32_t>(static_cast<uint32_t>(mDataBufferLen), 1);
-    while (bufferLen.isValid() && bufferLen.value() < mDataLen + aSize)
-      bufferLen *= 2;
-
-    if (!bufferLen.isValid())
-      return false;
-
-    void* data = realloc(mData, bufferLen.value());
-    if (!data)
-      return false;
-
-    mData = data;
-    mDataBufferLen = bufferLen.value();
-    mDataLen += aSize;
-    return true;
-  }
-
-  void Flush() {
-    if (mData) {
-      // If we have some data, create a blob for it
-      // and put it on the stack
-
-      RefPtr<BlobImpl> blobImpl =
-        new BlobImplMemory(mData, mDataLen, EmptyString());
-      mBlobImpls.AppendElement(blobImpl);
-      mData = nullptr; // The nsDOMMemoryFile takes ownership of the buffer
-      mDataLen = 0;
-      mDataBufferLen = 0;
-    }
-  }
+  void Flush();
 
   nsTArray<RefPtr<BlobImpl>> mBlobImpls;
   void* mData;
