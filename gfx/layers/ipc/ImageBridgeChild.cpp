@@ -295,6 +295,9 @@ void
 ImageBridgeChild::HoldUntilFenceHandleDelivery(TextureClient* aClient, uint64_t aTransactionId)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  // XXX Re-enable fence handling
+  return;
+
 #ifdef MOZ_WIDGET_GONK
   if (!aClient) {
     return;
@@ -311,6 +314,9 @@ ImageBridgeChild::HoldUntilFenceHandleDelivery(TextureClient* aClient, uint64_t 
 void
 ImageBridgeChild::DeliverFenceToNonRecycle(uint64_t aTextureId, FenceHandle& aReleaseFenceHandle)
 {
+  // XXX Re-enable fence handling
+  return;
+
 #ifdef MOZ_WIDGET_GONK
   MutexAutoLock lock(mWaitingFenceHandleMutex);
   TextureClient* client = mTexturesWaitingFenceHandle.Get(aTextureId).get();
@@ -327,6 +333,9 @@ ImageBridgeChild::DeliverFenceToNonRecycle(uint64_t aTextureId, FenceHandle& aRe
 void
 ImageBridgeChild::NotifyNotUsedToNonRecycle(uint64_t aTextureId, uint64_t aTransactionId)
 {
+  // XXX Re-enable fence handling
+  return;
+
 #ifdef MOZ_WIDGET_GONK
   MutexAutoLock lock(mWaitingFenceHandleMutex);
 
@@ -356,6 +365,9 @@ ImageBridgeChild::NotifyNotUsedToNonRecycle(uint64_t aTextureId, uint64_t aTrans
 void
 ImageBridgeChild::CancelWaitFenceHandle(TextureClient* aClient)
 {
+  // XXX Re-enable fence handling
+  return;
+
 #ifdef MOZ_WIDGET_GONK
   MutexAutoLock lock(mWaitingFenceHandleMutex);
   aClient->ClearWaitFenceHandleOnImageBridge(mWaitingFenceHandleMutex);

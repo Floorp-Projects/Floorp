@@ -204,7 +204,9 @@ def extract_unittests_from_args(args, environ, manifest_path):
                 try:
                     mp.read(os.path.join(p, 'cppunittest.ini'))
                 except IOError:
-                    tests.extend([(os.path.abspath(os.path.join(p, x)), 1) for x in os.listdir(p)])
+                    files = [os.path.abspath(os.path.join(p, x)) for x in os.listdir(p)]
+                    tests.extend((f, 1) for f in files
+                                 if os.access(f, os.R_OK | os.X_OK))
             else:
                 tests.append((os.path.abspath(p), 1))
 

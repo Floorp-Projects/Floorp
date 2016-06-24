@@ -309,7 +309,6 @@ nsLayoutStatics::Initialize()
 #endif
 
   MediaDecoder::InitStatics();
-  MediaPrefs::GetSingleton();
 
   PromiseDebugging::Init();
 
@@ -321,6 +320,11 @@ nsLayoutStatics::Initialize()
 
 #ifdef MOZ_STYLO
   Servo_Initialize();
+#endif
+
+#ifndef MOZ_WIDGET_ANDROID
+  // On Android, we instantiate it when constructing AndroidBridge.
+  MediaPrefs::GetSingleton();
 #endif
 
   return NS_OK;
