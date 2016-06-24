@@ -22,6 +22,8 @@ var test = function (isContent) {
     ["screen.availTop", 0],
     ["screen.width", "innerWidth"],
     ["screen.height", "innerHeight"],
+    ["screen.orientation.type", "'landscape-primary'"],
+    ["screen.orientation.angle", 0],
     ["screen.mozOrientation", "'landscape-primary'"],
     ["devicePixelRatio", 1]
   ];
