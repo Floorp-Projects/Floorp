@@ -214,12 +214,7 @@ this.ReaderMode = {
    */
   downloadAndParseDocument: Task.async(function* (url) {
     let uri = Services.io.newURI(url, null, null);
-    TelemetryStopwatch.start("READER_MODE_DOWNLOAD_MS");
-    let doc = yield this._downloadDocument(url).catch(e => {
-      TelemetryStopwatch.finish("READER_MODE_DOWNLOAD_MS");
-      throw e;
-    });
-    TelemetryStopwatch.finish("READER_MODE_DOWNLOAD_MS");
+    let doc = yield this._downloadDocument(url);
     return yield this._readerParse(uri, doc);
   }),
 
@@ -426,13 +421,10 @@ this.ReaderMode = {
       pathBase: Services.io.newURI(".", null, uri).spec
     };
 
-    TelemetryStopwatch.start("READER_MODE_SERIALIZE_DOM_MS");
     let serializer = Cc["@mozilla.org/xmlextras/xmlserializer;1"].
                      createInstance(Ci.nsIDOMSerializer);
     let serializedDoc = serializer.serializeToString(doc);
-    TelemetryStopwatch.finish("READER_MODE_SERIALIZE_DOM_MS");
 
-    TelemetryStopwatch.start("READER_MODE_WORKER_PARSE_MS");
     let article = null;
     try {
       article = yield ReaderWorker.post("parseDocument", [uriParam, serializedDoc]);
@@ -440,7 +432,6 @@ this.ReaderMode = {
       Cu.reportError("Error in ReaderWorker: " + e);
       histogram.add(PARSE_ERROR_WORKER);
     }
-    TelemetryStopwatch.finish("READER_MODE_WORKER_PARSE_MS");
 
     if (!article) {
       this.log("Worker did not return an article");
