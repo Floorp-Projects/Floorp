@@ -4305,11 +4305,14 @@ JS_CheckForInterrupt(JSContext* cx);
  * if it re-enters the JS engine. The embedding must ensure that the callback
  * is disconnected before attempting such re-entry.
  */
-extern JS_PUBLIC_API(JSInterruptCallback)
-JS_SetInterruptCallback(JSContext* cx, JSInterruptCallback callback);
+extern JS_PUBLIC_API(bool)
+JS_AddInterruptCallback(JSContext* cx, JSInterruptCallback callback);
 
-extern JS_PUBLIC_API(JSInterruptCallback)
-JS_GetInterruptCallback(JSContext* cx);
+extern JS_PUBLIC_API(bool)
+JS_DisableInterruptCallback(JSContext* cx);
+
+extern JS_PUBLIC_API(void)
+JS_ResetInterruptCallback(JSContext* cx, bool enable);
 
 extern JS_PUBLIC_API(void)
 JS_RequestInterruptCallback(JSContext* cx);
