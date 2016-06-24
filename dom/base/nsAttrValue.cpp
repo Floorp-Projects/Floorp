@@ -72,12 +72,12 @@ void
 MiscContainer::Cache()
 {
   // Not implemented for anything else yet.
-  MOZ_ASSERT(mType == nsAttrValue::eCSSDeclaration);
+  MOZ_ASSERT(mType == nsAttrValue::eGeckoCSSDeclaration);
   MOZ_ASSERT(IsRefCounted());
   MOZ_ASSERT(mValue.mRefCount > 0);
   MOZ_ASSERT(!mValue.mCached);
 
-  css::Declaration* declaration = mValue.mCSSDeclaration;
+  css::Declaration* declaration = mValue.mGeckoCSSDeclaration;
   nsHTMLCSSStyleSheet* sheet = declaration->GetHTMLCSSStyleSheet();
   if (!sheet) {
     return;
@@ -100,7 +100,7 @@ void
 MiscContainer::Evict()
 {
   // Not implemented for anything else yet.
-  MOZ_ASSERT(mType == nsAttrValue::eCSSDeclaration);
+  MOZ_ASSERT(mType == nsAttrValue::eGeckoCSSDeclaration);
   MOZ_ASSERT(IsRefCounted());
   MOZ_ASSERT(mValue.mRefCount == 0);
 
@@ -108,7 +108,7 @@ MiscContainer::Evict()
     return;
   }
 
-  css::Declaration* declaration = mValue.mCSSDeclaration;
+  css::Declaration* declaration = mValue.mGeckoCSSDeclaration;
   nsHTMLCSSStyleSheet* sheet = declaration->GetHTMLCSSStyleSheet();
   MOZ_ASSERT(sheet);
 
@@ -307,7 +307,7 @@ nsAttrValue::SetTo(const nsAttrValue& aOther)
       cont->mValue.mColor = otherCont->mValue.mColor;
       break;
     }
-    case eCSSDeclaration:
+    case eGeckoCSSDeclaration:
     {
       MOZ_CRASH("These should be refcounted!");
     }
@@ -418,8 +418,8 @@ nsAttrValue::SetTo(css::Declaration* aValue, const nsAString* aSerialized)
 {
   MiscContainer* cont = EnsureEmptyMiscContainer();
   MOZ_ASSERT(cont->mValue.mRefCount == 0);
-  NS_ADDREF(cont->mValue.mCSSDeclaration = aValue);
-  cont->mType = eCSSDeclaration;
+  NS_ADDREF(cont->mValue.mGeckoCSSDeclaration = aValue);
+  cont->mType = eGeckoCSSDeclaration;
   NS_ADDREF(cont);
   SetMiscAtomOrString(aSerialized);
   MOZ_ASSERT(cont->mValue.mRefCount == 1);
@@ -632,11 +632,11 @@ nsAttrValue::ToString(nsAString& aResult) const
 
       break;
     }
-    case eCSSDeclaration:
+    case eGeckoCSSDeclaration:
     {
       aResult.Truncate();
       MiscContainer *container = GetMiscContainer();
-      css::Declaration *decl = container->mValue.mCSSDeclaration;
+      css::Declaration *decl = container->mValue.mGeckoCSSDeclaration;
       if (decl) {
         decl->ToString(aResult);
       }
@@ -881,9 +881,9 @@ nsAttrValue::HashValue() const
     {
       return cont->mValue.mColor;
     }
-    case eCSSDeclaration:
+    case eGeckoCSSDeclaration:
     {
-      return NS_PTR_TO_INT32(cont->mValue.mCSSDeclaration);
+      return NS_PTR_TO_INT32(cont->mValue.mGeckoCSSDeclaration);
     }
     // Intentionally identical, so that loading the image does not change the
     // hash code.
@@ -990,10 +990,10 @@ nsAttrValue::Equals(const nsAttrValue& aOther) const
       }
       break;
     }
-    case eCSSDeclaration:
+    case eGeckoCSSDeclaration:
     {
-      return thisCont->mValue.mCSSDeclaration ==
-               otherCont->mValue.mCSSDeclaration;
+      return thisCont->mValue.mGeckoCSSDeclaration ==
+               otherCont->mValue.mGeckoCSSDeclaration;
     }
     case eURL:
     {
@@ -1708,13 +1708,14 @@ nsAttrValue::SetMiscAtomOrString(const nsAString* aValue)
                "Trying to re-set atom or string!");
   if (aValue) {
     uint32_t len = aValue->Length();
-    // * We're allowing eCSSDeclaration attributes to store empty strings as it
-    //   can be beneficial to store an empty style attribute as a parsed rule.
+    // * We're allowing eGeckoCSSDeclaration attributes to store empty
+    //   strings as it can be beneficial to store an empty style attribute
+    //   as a parsed rule.
     // * We're allowing enumerated values because sometimes the empty
     //   string corresponds to a particular enumerated value, especially
     //   for enumerated values that are not limited enumerated.
     // Add other types as needed.
-    NS_ASSERTION(len || Type() == eCSSDeclaration || Type() == eEnum,
+    NS_ASSERTION(len || Type() == eGeckoCSSDeclaration || Type() == eEnum,
                  "Empty string?");
     MiscContainer* cont = GetMiscContainer();
     if (len <= NS_ATTRVALUE_MAX_STRINGLENGTH_ATOM) {
@@ -1778,12 +1779,12 @@ nsAttrValue::ClearMiscContainer()
     }
     else {
       switch (cont->mType) {
-        case eCSSDeclaration:
+        case eGeckoCSSDeclaration:
         {
           MOZ_ASSERT(cont->mValue.mRefCount == 1);
           cont->Release();
           cont->Evict();
-          NS_RELEASE(cont->mValue.mCSSDeclaration);
+          NS_RELEASE(cont->mValue.mGeckoCSSDeclaration);
           break;
         }
         case eURL:
@@ -1913,10 +1914,11 @@ nsAttrValue::SizeOfExcludingThis(MallocSizeOf aMallocSizeOf) const
         n += str ? str->SizeOfIncludingThisIfUnshared(aMallocSizeOf) : 0;
       }
 
-      if (Type() == eCSSDeclaration && container->mValue.mCSSDeclaration) {
-        // TODO: mCSSDeclaration might be owned by another object which would
-        //       make us count them twice, bug 677493.
-        //n += container->mCSSDeclaration->SizeOfIncludingThis(aMallocSizeOf);
+      if (Type() == eGeckoCSSDeclaration &&
+          container->mValue.mGeckoCSSDeclaration) {
+        // TODO: mGeckoCSSDeclaration might be owned by another object which
+        //       would make us count them twice, bug 677493.
+        //n += container->mGeckoCSSDeclaration->SizeOfIncludingThis(aMallocSizeOf);
       } else if (Type() == eAtomArray && container->mValue.mAtomArray) {
         // Don't measure each nsIAtom, they are measured separatly.
         n += container->mValue.mAtomArray->ShallowSizeOfIncludingThis(aMallocSizeOf);
