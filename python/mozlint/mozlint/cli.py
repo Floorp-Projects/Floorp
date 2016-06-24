@@ -42,6 +42,17 @@ class MozlintParser(ArgumentParser):
                   "testing a directory that otherwise wouldn't be run, "
                   "without needing to modify the config file.",
           }],
+        [['-r', '--rev'],
+         {'default': None,
+          'help': "Lint files touched by the given revision(s). Works with "
+                  "mercurial or git."
+          }],
+        [['-w', '--workdir'],
+         {'default': False,
+          'action': 'store_true',
+          'help': "Lint files touched by changes in the working directory "
+                  "(i.e haven't been committed yet). Works with mercurial or git.",
+          }],
     ]
 
     def __init__(self, **kwargs):
@@ -49,6 +60,50 @@ class MozlintParser(ArgumentParser):
 
         for cli, args in self.arguments:
             self.add_argument(*cli, **args)
+
+
+class VCFiles(object):
+    def __init__(self):
+        self._vcs = None
+
+    @property
+    def vcs(self):
+        if self._vcs:
+            return self._vcs
+
+        self._vcs = 'none'
+        with open(os.devnull, 'wb') as DEVNULL:
+            if not subprocess.call(['hg', 'root'], stdout=DEVNULL):
+                self._vcs = 'hg'
+            elif not subprocess.call(['git', 'rev-parse'], stdout=DEVNULL):
+                self._vcs = 'git'
+        return self._vcs
+
+    @property
+    def is_hg(self):
+        return self.vcs == 'hg'
+
+    @property
+    def is_git(self):
+        return self.vcs == 'git'
+
+    def by_rev(self, rev):
+        if self.is_hg:
+            cmd = ['hg', 'log', '-T', '{files % "\\n{file}"}', '-r', rev]
+        elif self.is_git(self):
+            cmd = ['git', 'diff', '--name-only', rev]
+        else:
+            return []
+        return subprocess.check_output(cmd).split()
+
+    def by_workdir(self):
+        if self.is_hg:
+            cmd = ['hg', 'status', '-amn']
+        elif self.is_git(self):
+            cmd = ['git', 'diff', '--name-only']
+        else:
+            return []
+        return subprocess.check_output(cmd).split()
 
 
 def find_linters(self, linters=None):
@@ -70,8 +125,15 @@ def find_linters(self, linters=None):
     return lints
 
 
-def run(paths, linters, fmt, **lintargs):
+def run(paths, linters, fmt, rev, workdir, **lintargs):
     from mozlint import LintRoller, formatters
+
+    # Calculate files from VCS
+    vcfiles = VCFiles()
+    if rev:
+        paths.extend(vcfiles.by_rev(rev))
+    if workdir:
+        paths.extend(vcfiles.by_workdir())
     paths = paths or ['.']
 
     lint = LintRoller(**lintargs)
