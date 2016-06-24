@@ -11,11 +11,20 @@ const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
 
 /**
+ * The pippki <stringbundle> element.
+ * @type <stringbundle>
+ */
+var bundle;
+/**
+ * The array of certs the user can choose from.
+ * @type nsIArray<nsIX509Cert>
+ */
+var certArray;
+/**
  * The param block to get params from and set results on.
  * @type nsIDialogParamBlock
  */
 var dialogParams;
-var itemCount = 0;
 /**
  * The checkbox storing whether the user wants to remember the selected cert.
  * @type nsIDOMXULCheckboxElement
@@ -25,7 +34,7 @@ var rememberBox;
 function onLoad() {
   dialogParams = window.arguments[0].QueryInterface(Ci.nsIDialogParamBlock);
 
-  let bundle = document.getElementById("pippki_bundle");
+  bundle = document.getElementById("pippki_bundle");
   let rememberSetting =
     Services.prefs.getBoolPref("security.remember_cert_checkbox_default_setting");
 
@@ -44,12 +53,15 @@ function onLoad() {
   setText("issuer", formattedIssuerOrg);
 
   let selectElement = document.getElementById("nicknames");
-  itemCount = dialogParams.GetInt(0);
-  for (let i = 0; i < itemCount; i++) {
+  certArray = dialogParams.objects.queryElementAt(0, Ci.nsIArray);
+  for (let i = 0; i < certArray.length; i++) {
     let menuItemNode = document.createElement("menuitem");
-    let nick = dialogParams.GetString(i + 3);
+    let cert = certArray.queryElementAt(i, Ci.nsIX509Cert);
+    let nickAndSerial =
+      bundle.getFormattedString("clientAuthNickAndSerial",
+                                [cert.nickname, cert.serialNumber]);
     menuItemNode.setAttribute("value", i);
-    menuItemNode.setAttribute("label", nick); // this is displayed
+    menuItemNode.setAttribute("label", nickAndSerial); // This is displayed.
     selectElement.firstChild.appendChild(menuItemNode);
     if (i == 0) {
       selectElement.selectedItem = menuItemNode;
@@ -64,8 +76,32 @@ function onLoad() {
  */
 function setDetails() {
   let index = parseInt(document.getElementById("nicknames").value);
-  let details = dialogParams.GetString(index + itemCount + 3);
-  document.getElementById("details").value = details;
+  let cert = certArray.queryElementAt(index, Ci.nsIX509Cert);
+
+  let detailLines = [
+    bundle.getFormattedString("clientAuthIssuedTo", [cert.subjectName]),
+    bundle.getFormattedString("clientAuthSerial", [cert.serialNumber]),
+    bundle.getFormattedString("clientAuthValidityPeriod",
+                              [cert.validity.notBeforeLocalTime,
+                               cert.validity.notAfterLocalTime]),
+  ];
+  let keyUsages = cert.keyUsages;
+  if (keyUsages) {
+    detailLines.push(bundle.getFormattedString("clientAuthKeyUsages",
+                                               [keyUsages]));
+  }
+  let emailAddresses = cert.getEmailAddresses({});
+  if (emailAddresses.length > 0) {
+    let joinedAddresses = emailAddresses.join(", ");
+    detailLines.push(bundle.getFormattedString("clientAuthEmailAddresses",
+                                               [joinedAddresses]));
+  }
+  detailLines.push(bundle.getFormattedString("clientAuthIssuedBy",
+                                             [cert.issuerName]));
+  detailLines.push(bundle.getFormattedString("clientAuthStoredOn",
+                                             [cert.tokenName]));
+
+  document.getElementById("details").value = detailLines.join("\n");
 }
 
 function onCertSelected() {

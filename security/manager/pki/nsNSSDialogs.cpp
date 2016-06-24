@@ -161,56 +161,66 @@ nsNSSDialogs::ChooseCertificate(nsIInterfaceRequestor* ctx,
                                 const nsAString& cnAndPort,
                                 const nsAString& organization,
                                 const nsAString& issuerOrg,
-                                const char16_t** certNickList,
-                                const char16_t** certDetailsList, uint32_t count,
+                                nsIArray* certList,
                         /*out*/ uint32_t* selectedIndex,
                         /*out*/ bool* certificateChosen)
 {
   NS_ENSURE_ARG_POINTER(ctx);
+  NS_ENSURE_ARG_POINTER(certList);
   NS_ENSURE_ARG_POINTER(selectedIndex);
   NS_ENSURE_ARG_POINTER(certificateChosen);
-
-  nsresult rv;
-  uint32_t i;
 
   *certificateChosen = false;
 
   nsCOMPtr<nsIDialogParamBlock> block =
-           do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
-  if (!block) return NS_ERROR_FAILURE;
+    do_CreateInstance(NS_DIALOGPARAMBLOCK_CONTRACTID);
+  if (!block) {
+    return NS_ERROR_FAILURE;
+  }
 
-  block->SetNumberStrings(4+count*2);
+  nsCOMPtr<nsIMutableArray> paramBlockArray = nsArrayBase::Create();
+  if (!paramBlockArray) {
+    return NS_ERROR_FAILURE;
+  }
+  nsresult rv = paramBlockArray->AppendElement(certList, false);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+  rv = block->SetObjects(paramBlockArray);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = block->SetNumberStrings(3);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   rv = block->SetString(0, PromiseFlatString(cnAndPort).get());
-  if (NS_FAILED(rv)) return rv;
-
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   rv = block->SetString(1, PromiseFlatString(organization).get());
-  if (NS_FAILED(rv)) return rv;
-
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
   rv = block->SetString(2, PromiseFlatString(issuerOrg).get());
-  if (NS_FAILED(rv)) return rv;
-
-  for (i = 0; i < count; i++) {
-    rv = block->SetString(i+3, certNickList[i]);
-    if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
   }
-
-  for (i = 0; i < count; i++) {
-    rv = block->SetString(i+count+3, certDetailsList[i]);
-    if (NS_FAILED(rv)) return rv;
-  }
-
-  rv = block->SetInt(0, count);
-  if (NS_FAILED(rv)) return rv;
 
   rv = nsNSSDialogHelper::openDialog(nullptr,
-                                "chrome://pippki/content/clientauthask.xul",
-                                block);
-  if (NS_FAILED(rv)) return rv;
+                                     "chrome://pippki/content/clientauthask.xul",
+                                     block);
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   int32_t status;
   rv = block->GetInt(0, &status);
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   nsCOMPtr<nsIClientAuthUserDecision> extraResult = do_QueryInterface(ctx);
   if (extraResult) {
