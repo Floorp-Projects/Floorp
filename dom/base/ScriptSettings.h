@@ -178,10 +178,6 @@ protected:
   Type mType;
 
 private:
-  // This constructor is only for use by AutoNoJSAPI.
-  friend class AutoNoJSAPI;
-  ScriptSettingsStackEntry();
-
   ScriptSettingsStackEntry *mOlder;
 };
 
@@ -219,7 +215,7 @@ private:
  * fail. This prevents system code from accidentally triggering script
  * execution at inopportune moments via surreptitious getters and proxies.
  */
-class MOZ_STACK_CLASS AutoJSAPI {
+class MOZ_STACK_CLASS AutoJSAPI : protected ScriptSettingsStackEntry {
 public:
   // Trivial constructor. One of the Init functions must be called before
   // accessing the JSContext through cx().
@@ -313,14 +309,10 @@ protected:
   // called on subclasses that use this.
   // If aGlobalObject, its associated JS global or aCx are null this will cause
   // an assertion, as will setting aIsMainThread incorrectly.
-  AutoJSAPI(nsIGlobalObject* aGlobalObject, bool aIsMainThread, JSContext* aCx);
+  AutoJSAPI(nsIGlobalObject* aGlobalObject, bool aIsMainThread, JSContext* aCx,
+            Type aType);
 
 private:
-  // We need to hold a strong ref to our global object, so it won't go away
-  // while we're being used.  This _could_ become a JS::Rooted<JSObject*> if we
-  // grabbed our JSContext in our constructor instead of waiting for Init(), so
-  // we could construct this at that point.  It might be worth it do to that.
-  RefPtr<nsIGlobalObject> mGlobalObject;
   mozilla::Maybe<danger::AutoCxPusher> mCxPusher;
   mozilla::Maybe<JSAutoNullableCompartment> mAutoNullableCompartment;
   JSContext *mCx;
@@ -343,8 +335,7 @@ private:
  * invoking JavaScript code: "setTimeout", "event", and so on. The devtools use
  * these strings to label JS execution in timeline and profiling displays.
  */
-class MOZ_STACK_CLASS AutoEntryScript : public AutoJSAPI,
-                                        protected ScriptSettingsStackEntry {
+class MOZ_STACK_CLASS AutoEntryScript : public AutoJSAPI {
 public:
   AutoEntryScript(nsIGlobalObject* aGlobalObject,
                   const char *aReason,
