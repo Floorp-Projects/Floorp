@@ -193,9 +193,7 @@ public final class ThumbnailHelper {
             Log.e(LOGTAG, "handleThumbnailData called with an unexpected ByteBuffer!");
         }
 
-        if (shouldUpdateThumbnail(tab)) {
-            processThumbnailData(tab, data, cachePolicy);
-        }
+        processThumbnailData(tab, data, cachePolicy);
     }
 
     private void processThumbnailData(Tab tab, ByteBuffer data, CachePolicy cachePolicy) {
@@ -214,9 +212,5 @@ public final class ThumbnailHelper {
             bitmap = BitmapUtils.decodeByteArray(compressed);
         }
         tab.updateThumbnail(bitmap, cachePolicy);
-    }
-
-    private boolean shouldUpdateThumbnail(Tab tab) {
-        return (Tabs.getInstance().isSelectedTab(tab));
     }
 }
