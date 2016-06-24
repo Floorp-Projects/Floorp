@@ -65,7 +65,7 @@ DeleteNodeTransaction::DoTransaction()
   mRefNode = mNode->GetNextSibling();
 
   // give range updater a chance.  SelAdjDeleteNode() needs to be called
-  // *before* we do the action, unlike some of the other nsRangeStore update
+  // *before* we do the action, unlike some of the other RangeItem update
   // methods.
   if (mRangeUpdater) {
     mRangeUpdater->SelAdjDeleteNode(mNode->AsDOMNode());

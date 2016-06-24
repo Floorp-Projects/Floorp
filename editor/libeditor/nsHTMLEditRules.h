@@ -272,7 +272,7 @@ protected:
       nsTArray<OwningNonNull<nsINode>>& outArrayOfNodes,
       TouchContent aTouchContent = TouchContent::yes);
   void LookInsideDivBQandList(nsTArray<OwningNonNull<nsINode>>& aNodeArray);
-  nsresult BustUpInlinesAtRangeEndpoints(nsRangeStore &inRange);
+  nsresult BustUpInlinesAtRangeEndpoints(mozilla::RangeItem& inRange);
   nsresult BustUpInlinesAtBRs(nsIContent& aNode,
                               nsTArray<OwningNonNull<nsINode>>& aOutArrayOfNodes);
   nsIContent* GetHighestInlineParent(nsINode& aNode);
@@ -342,7 +342,7 @@ protected:
   RefPtr<nsRange>       mUtilRange;
   uint32_t                mJoinOffset;  // need to remember an int across willJoin/didJoin...
   nsCOMPtr<Element>       mNewBlock;
-  RefPtr<nsRangeStore>  mRangeItem;
+  RefPtr<mozilla::RangeItem> mRangeItem;
   StyleCache              mCachedStyles[SIZE_STYLE_TABLE];
 };
 
