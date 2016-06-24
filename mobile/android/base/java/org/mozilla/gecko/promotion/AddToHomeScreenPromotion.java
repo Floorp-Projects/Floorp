@@ -9,6 +9,7 @@ import android.app.Activity;
 import android.content.Context;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.support.annotation.CallSuper;
 import android.util.Log;
 
 import com.keepsafe.switchboard.SwitchBoard;
@@ -23,7 +24,7 @@ import org.mozilla.gecko.Tabs;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.UrlAnnotations;
-import org.mozilla.gecko.delegates.ForegroundAwareDelegate;
+import org.mozilla.gecko.delegates.TabsTrayVisibilityAwareDelegate;
 import org.mozilla.gecko.util.Experiments;
 import org.mozilla.gecko.util.ThreadUtils;
 
@@ -34,7 +35,7 @@ import ch.boye.httpclientandroidlib.util.TextUtils;
 /**
  * Promote "Add to home screen" if user visits website often.
  */
-public class AddToHomeScreenPromotion extends ForegroundAwareDelegate implements Tabs.OnTabsChangedListener {
+public class AddToHomeScreenPromotion extends TabsTrayVisibilityAwareDelegate implements Tabs.OnTabsChangedListener {
     private static class URLHistory {
         public final long visits;
         public final long lastVisit;
@@ -57,6 +58,7 @@ public class AddToHomeScreenPromotion extends ForegroundAwareDelegate implements
     private int lastVisitMinimumAgeMs;
     private int lastVisitMaximumAgeMs;
 
+    @CallSuper
     @Override
     public void onCreate(BrowserApp browserApp, Bundle savedInstanceState) {
         super.onCreate(browserApp, savedInstanceState);
@@ -127,7 +129,7 @@ public class AddToHomeScreenPromotion extends ForegroundAwareDelegate implements
             return;
         }
 
-        if (!isInForeground) {
+        if (isTabsTrayVisible()) {
             // We only want to show this prompt if this tab is in the foreground and not on top
             // of the tabs tray.
             return;
