@@ -1276,7 +1276,7 @@ class MOZ_RAII JS_HAZ_GC_SUPPRESSED AutoSuppressGC
   public:
     explicit AutoSuppressGC(ExclusiveContext* cx);
     explicit AutoSuppressGC(JSCompartment* comp);
-    explicit AutoSuppressGC(JSRuntime* rt);
+    explicit AutoSuppressGC(JSContext* cx);
 
     ~AutoSuppressGC()
     {
