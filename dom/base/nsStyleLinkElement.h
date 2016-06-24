@@ -16,6 +16,7 @@
 #include "mozilla/Attributes.h"
 #include "mozilla/CORSMode.h"
 #include "mozilla/CSSStyleSheet.h"
+#include "mozilla/net/ReferrerPolicy.h"
 #include "nsCOMPtr.h"
 #include "nsIStyleSheetLinkingElement.h"
 #include "nsTArray.h"
@@ -111,6 +112,11 @@ protected:
   {
     // Default to no CORS
     return mozilla::CORS_NONE;
+  }
+
+  virtual mozilla::net::ReferrerPolicy GetLinkReferrerPolicy()
+  {
+    return mozilla::net::RP_Unset;
   }
 
   // CC methods

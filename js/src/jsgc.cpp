@@ -2470,11 +2470,20 @@ GCRuntime::updateCellPointers(MovingTracer* trc, Zone* zone, AllocKinds kinds, s
     }
 }
 
+// Pointer updates run in three phases because of depdendencies between the
+// different types of GC thing. The most important consideration is the
+// dependency:
+//
+//    object ---> shape ---> base shape
+
+static const AllocKinds UpdatePhaseBaseShapes {
+    AllocKind::BASE_SHAPE
+};
+
 static const AllocKinds UpdatePhaseMisc {
     AllocKind::SCRIPT,
     AllocKind::LAZY_SCRIPT,
     AllocKind::SHAPE,
-    AllocKind::BASE_SHAPE,
     AllocKind::ACCESSOR_SHAPE,
     AllocKind::OBJECT_GROUP,
     AllocKind::STRING,
@@ -2504,6 +2513,8 @@ GCRuntime::updateAllCellPointers(MovingTracer* trc, Zone* zone)
     AutoDisableProxyCheck noProxyCheck(rt); // These checks assert when run in parallel.
 
     size_t bgTaskCount = CellUpdateBackgroundTaskCount();
+
+    updateCellPointers(trc, zone, UpdatePhaseBaseShapes, bgTaskCount);
 
     updateCellPointers(trc, zone, UpdatePhaseMisc, bgTaskCount);
 

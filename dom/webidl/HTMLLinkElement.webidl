@@ -29,6 +29,8 @@ interface HTMLLinkElement : HTMLElement {
            attribute DOMString hreflang;
   [SetterThrows, Pure]
            attribute DOMString type;
+  [SetterThrows, Pure, Pref="network.http.enablePerElementReferrer"]
+           attribute DOMString referrerPolicy;
   [PutForwards=value] readonly attribute DOMTokenList sizes;
 };
 HTMLLinkElement implements LinkStyle;
