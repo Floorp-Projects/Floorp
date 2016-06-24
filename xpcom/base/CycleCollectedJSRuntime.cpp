@@ -438,6 +438,7 @@ CycleCollectedJSRuntime::CycleCollectedJSRuntime()
   : mGCThingCycleCollectorGlobal(sGCThingCycleCollectorGlobal)
   , mJSZoneCycleCollectorGlobal(sJSZoneCycleCollectorGlobal)
   , mJSRuntime(nullptr)
+  , mJSContext(nullptr)
   , mPrevGCSliceCallback(nullptr)
   , mPrevGCNurseryCollectionCallback(nullptr)
   , mJSHolders(256)
@@ -479,6 +480,7 @@ CycleCollectedJSRuntime::~CycleCollectedJSRuntime()
 
   JS_DestroyRuntime(mJSRuntime);
   mJSRuntime = nullptr;
+  mJSContext = nullptr;
   nsCycleCollector_forgetJSRuntime();
 
   mozilla::dom::DestroyScriptSettings();
@@ -509,6 +511,7 @@ CycleCollectedJSRuntime::Initialize(JSRuntime* aParentRuntime,
   if (!mJSRuntime) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
+  mJSContext = JS_GetContext(mJSRuntime);
 
   if (!JS_AddExtraGCRootsTracer(mJSRuntime, TraceBlackJS, this)) {
     MOZ_CRASH("JS_AddExtraGCRootsTracer failed");
