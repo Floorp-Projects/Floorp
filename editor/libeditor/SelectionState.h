@@ -170,73 +170,69 @@ ImplCycleCollectionUnlink(RangeUpdater& aField)
   ImplCycleCollectionUnlink(aField.mArray);
 }
 
-} // namespace mozilla
-
-/***************************************************************************
- * helper class for using SelectionState.  stack based class for doing
- * preservation of dom points across editor actions
+/**
+ * Helper class for using SelectionState.  Stack based class for doing
+ * preservation of dom points across editor actions.
  */
 
-class MOZ_STACK_CLASS nsAutoTrackDOMPoint
+class MOZ_STACK_CLASS AutoTrackDOMPoint final
 {
-  private:
-    mozilla::RangeUpdater& mRU;
-    // Allow tracking either nsIDOMNode or nsINode until nsIDOMNode is gone
-    nsCOMPtr<nsINode>* mNode;
-    nsCOMPtr<nsIDOMNode>* mDOMNode;
-    int32_t* mOffset;
-    RefPtr<mozilla::RangeItem> mRangeItem;
-  public:
-    nsAutoTrackDOMPoint(mozilla::RangeUpdater& aRangeUpdater,
-                        nsCOMPtr<nsINode>* aNode, int32_t* aOffset)
-      : mRU(aRangeUpdater)
-      , mNode(aNode)
-      , mDOMNode(nullptr)
-      , mOffset(aOffset)
-    {
-      mRangeItem = new mozilla::RangeItem();
-      mRangeItem->startNode = *mNode;
-      mRangeItem->endNode = *mNode;
-      mRangeItem->startOffset = *mOffset;
-      mRangeItem->endOffset = *mOffset;
-      mRU.RegisterRangeItem(mRangeItem);
-    }
+private:
+  RangeUpdater& mRangeUpdater;
+  // Allow tracking either nsIDOMNode or nsINode until nsIDOMNode is gone
+  nsCOMPtr<nsINode>* mNode;
+  nsCOMPtr<nsIDOMNode>* mDOMNode;
+  int32_t* mOffset;
+  RefPtr<RangeItem> mRangeItem;
 
-    nsAutoTrackDOMPoint(mozilla::RangeUpdater& aRangeUpdater,
-                        nsCOMPtr<nsIDOMNode>* aNode, int32_t* aOffset)
-      : mRU(aRangeUpdater)
-      , mNode(nullptr)
-      , mDOMNode(aNode)
-      , mOffset(aOffset)
-    {
-      mRangeItem = new mozilla::RangeItem();
-      mRangeItem->startNode = do_QueryInterface(*mDOMNode);
-      mRangeItem->endNode = do_QueryInterface(*mDOMNode);
-      mRangeItem->startOffset = *mOffset;
-      mRangeItem->endOffset = *mOffset;
-      mRU.RegisterRangeItem(mRangeItem);
-    }
+public:
+  AutoTrackDOMPoint(RangeUpdater& aRangeUpdater,
+                    nsCOMPtr<nsINode>* aNode, int32_t* aOffset)
+    : mRangeUpdater(aRangeUpdater)
+    , mNode(aNode)
+    , mDOMNode(nullptr)
+    , mOffset(aOffset)
+  {
+    mRangeItem = new RangeItem();
+    mRangeItem->startNode = *mNode;
+    mRangeItem->endNode = *mNode;
+    mRangeItem->startOffset = *mOffset;
+    mRangeItem->endOffset = *mOffset;
+    mRangeUpdater.RegisterRangeItem(mRangeItem);
+  }
 
-    ~nsAutoTrackDOMPoint()
-    {
-      mRU.DropRangeItem(mRangeItem);
-      if (mNode) {
-        *mNode = mRangeItem->startNode;
-      } else {
-        *mDOMNode = GetAsDOMNode(mRangeItem->startNode);
-      }
-      *mOffset = mRangeItem->startOffset;
+  AutoTrackDOMPoint(RangeUpdater& aRangeUpdater,
+                    nsCOMPtr<nsIDOMNode>* aNode, int32_t* aOffset)
+    : mRangeUpdater(aRangeUpdater)
+    , mNode(nullptr)
+    , mDOMNode(aNode)
+    , mOffset(aOffset)
+  {
+    mRangeItem = new RangeItem();
+    mRangeItem->startNode = do_QueryInterface(*mDOMNode);
+    mRangeItem->endNode = do_QueryInterface(*mDOMNode);
+    mRangeItem->startOffset = *mOffset;
+    mRangeItem->endOffset = *mOffset;
+    mRangeUpdater.RegisterRangeItem(mRangeItem);
+  }
+
+  ~AutoTrackDOMPoint()
+  {
+    mRangeUpdater.DropRangeItem(mRangeItem);
+    if (mNode) {
+      *mNode = mRangeItem->startNode;
+    } else {
+      *mDOMNode = GetAsDOMNode(mRangeItem->startNode);
     }
+    *mOffset = mRangeItem->startOffset;
+  }
 };
-
-
 
 /******************************************************************************
  * another helper class for SelectionState.  stack based class for doing
  * Will/DidReplaceContainer()
  */
 
-namespace mozilla {
 namespace dom {
 class MOZ_STACK_CLASS AutoReplaceContainerSelNotify
 {

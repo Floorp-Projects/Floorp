@@ -87,7 +87,7 @@ nsresult nsPlaintextEditor::InsertTextAt(const nsAString &aStringToInsert,
     {
       // Use an auto tracker so that our drop point is correctly
       // positioned after the delete.
-      nsAutoTrackDOMPoint tracker(mRangeUpdater, &targetNode, &targetOffset);
+      AutoTrackDOMPoint tracker(mRangeUpdater, &targetNode, &targetOffset);
       res = DeleteSelection(eNone, eStrip);
       NS_ENSURE_SUCCESS(res, res);
     }
