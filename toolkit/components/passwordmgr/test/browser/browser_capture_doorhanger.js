@@ -7,13 +7,15 @@ const BRAND_SHORT_NAME = BRAND_BUNDLE.GetStringFromName("brandShortName");
 
 let nsLoginInfo = new Components.Constructor("@mozilla.org/login-manager/loginInfo;1",
                                              Ci.nsILoginInfo, "init");
-let login1 = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888", null,
+let login1 = new nsLoginInfo("http://example.com", "http://example.com", null,
                              "notifyu1", "notifyp1", "user", "pass");
-let login2 = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888", null,
+let login1HTTPS = new nsLoginInfo("https://example.com", "https://example.com", null,
+                                  "notifyu1", "notifyp1", "user", "pass");
+let login2 = new nsLoginInfo("http://example.com", "http://example.com", null,
                              "", "notifyp1", "", "pass");
-let login1B = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888", null,
+let login1B = new nsLoginInfo("http://example.com", "http://example.com", null,
                               "notifyu1B", "notifyp1B", "user", "pass");
-let login2B = new nsLoginInfo("http://mochi.test:8888", "http://mochi.test:8888", null,
+let login2B = new nsLoginInfo("http://example.com", "http://example.com", null,
                               "", "notifyp1B", "", "pass");
 
 requestLongerTimeout(2);
@@ -46,7 +48,7 @@ add_task(function* test_clickNever() {
     is(fieldValues.password, "notifyp1", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-save");
     ok(notif, "got notification popup");
-    is(true, Services.logins.getLoginSavingEnabled("http://mochi.test:8888"),
+    is(true, Services.logins.getLoginSavingEnabled("http://example.com"),
        "Checking for login saving enabled");
     clickDoorhangerButton(notif, NEVER_BUTTON);
   });
@@ -59,9 +61,9 @@ add_task(function* test_clickNever() {
     is(fieldValues.password, "notifyp1", "Checking submitted password");
     let notif = getCaptureDoorhanger("password-save");
     ok(!notif, "checking for no notification popup");
-    is(false, Services.logins.getLoginSavingEnabled("http://mochi.test:8888"),
+    is(false, Services.logins.getLoginSavingEnabled("http://example.com"),
        "Checking for login saving disabled");
-    Services.logins.setLoginSavingEnabled("http://mochi.test:8888", true);
+    Services.logins.setLoginSavingEnabled("http://example.com", true);
   });
 
   is(Services.logins.getAllLogins().length, 0, "Should not have any logins yet");
@@ -80,7 +82,7 @@ add_task(function* test_clickRemember() {
 
   let logins = Services.logins.getAllLogins();
   is(logins.length, 1, "Should only have 1 login");
-  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   is(login.username, "notifyu1", "Check the username used on the new entry");
   is(login.password, "notifyp1", "Check the password used on the new entry");
   is(login.timesUsed, 1, "Check times used on new entry");
@@ -95,7 +97,7 @@ add_task(function* test_clickRemember() {
 
   logins = Services.logins.getAllLogins();
   is(logins.length, 1, "Should only have 1 login");
-  login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   is(login.username, "notifyu1", "Check the username used");
   is(login.password, "notifyp1", "Check the password used");
   is(login.timesUsed, 2, "Check times used incremented");
@@ -209,7 +211,7 @@ add_task(function* test_pwOnlyLoginMatchesForm() {
 
   let logins = Services.logins.getAllLogins();
   is(logins.length, 1, "Should only have 1 login");
-  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   is(login.username, "", "Check the username");
   is(login.password, "notifyp1", "Check the password");
   is(login.timesUsed, 1, "Check times used");
@@ -230,7 +232,7 @@ add_task(function* test_pwOnlyFormMatchesLogin() {
 
   let logins = Services.logins.getAllLogins();
   is(logins.length, 1, "Should only have 1 login");
-  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   is(login.username, "notifyu1", "Check the username");
   is(login.password, "notifyp1", "Check the password");
   is(login.timesUsed, 2, "Check times used");
@@ -252,7 +254,7 @@ add_task(function* test_pwOnlyFormDoesntMatchExisting() {
 
   let logins = Services.logins.getAllLogins();
   is(logins.length, 1, "Should only have 1 login");
-  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   is(login.username, "notifyu1B", "Check the username unchanged");
   is(login.password, "notifyp1B", "Check the password unchanged");
   is(login.timesUsed, 1, "Check times used");
@@ -274,7 +276,7 @@ add_task(function* test_changeUPLoginOnUPForm_dont() {
 
   let logins = Services.logins.getAllLogins();
   is(logins.length, 1, "Should only have 1 login");
-  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   is(login.username, "notifyu1", "Check the username unchanged");
   is(login.password, "notifyp1", "Check the password unchanged");
   is(login.timesUsed, 1, "Check times used");
@@ -297,7 +299,7 @@ add_task(function* test_changeUPLoginOnUPForm_change() {
 
   let logins = Services.logins.getAllLogins();
   is(logins.length, 1, "Should only have 1 login");
-  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   is(login.username, "notifyu1", "Check the username unchanged");
   is(login.password, "pass2", "Check the password changed");
   is(login.timesUsed, 2, "Check times used");
@@ -325,7 +327,7 @@ add_task(function* test_changePLoginOnUPForm() {
 
   let logins = Services.logins.getAllLogins();
   is(logins.length, 1, "Should only have 1 login");
-  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   is(login.username, "", "Check the username unchanged");
   is(login.password, "pass2", "Check the password changed");
   is(login.timesUsed, 2, "Check times used");
@@ -347,7 +349,7 @@ add_task(function* test_changePLoginOnPForm() {
 
   let logins = Services.logins.getAllLogins();
   is(logins.length, 1, "Should only have 1 login");
-  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   is(login.username, "", "Check the username unchanged");
   is(login.password, "notifyp1", "Check the password changed");
   is(login.timesUsed, 3, "Check times used");
@@ -422,7 +424,7 @@ add_task(function* test_change2pw0unExistingDifferentUP() {
 
   let logins = Services.logins.getAllLogins();
   is(logins.length, 1, "Should only have 1 login");
-  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   is(login.username, "notifyu1B", "Check the username unchanged");
   is(login.password, "notifyp1B", "Check the password unchanged");
   is(login.timesUsed, 1, "Check times used");
@@ -446,7 +448,7 @@ add_task(function* test_change2pw0unExistingDifferentP() {
 
   let logins = Services.logins.getAllLogins();
   is(logins.length, 1, "Should only have 1 login");
-  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   is(login.username, "", "Check the username unchanged");
   is(login.password, "notifyp1B", "Check the password unchanged");
   is(login.timesUsed, 1, "Check times used");
@@ -469,7 +471,7 @@ add_task(function* test_change2pw0unExistingWithSameP() {
 
   let logins = Services.logins.getAllLogins();
   is(logins.length, 1, "Should only have 1 login");
-  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   is(login.username, "", "Check the username unchanged");
   is(login.password, "notifyp1", "Check the password unchanged");
   is(login.timesUsed, 2, "Check times used incremented");
@@ -494,7 +496,7 @@ add_task(function* test_changeUPLoginOnPUpdateForm() {
 
   let logins = Services.logins.getAllLogins();
   is(logins.length, 1, "Should only have 1 login");
-  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   is(login.username, "notifyu1", "Check the username unchanged");
   is(login.password, "pass2", "Check the password changed");
   is(login.timesUsed, 2, "Check times used");
@@ -525,7 +527,7 @@ add_task(function* test_recipeCaptureFields_NewLogin() {
 
   let logins = Services.logins.getAllLogins();
   is(logins.length, 1, "Should only have 1 login");
-  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   is(login.username, "notifyu1", "Check the username unchanged");
   is(login.password, "notifyp1", "Check the password unchanged");
   is(login.timesUsed, 1, "Check times used");
@@ -545,7 +547,7 @@ add_task(function* test_recipeCaptureFields_ExistingLogin() {
   checkOnlyLoginWasUsedTwice({ justChanged: false });
   let logins = Services.logins.getAllLogins();
   is(logins.length, 1, "Should only have 1 login");
-  let login = SpecialPowers.wrap(logins[0]).QueryInterface(Ci.nsILoginMetaInfo);
+  let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
   is(login.username, "notifyu1", "Check the username unchanged");
   is(login.password, "notifyp1", "Check the password unchanged");
   is(login.timesUsed, 2, "Check times used incremented");
@@ -575,6 +577,115 @@ add_task(function* test_noShowPasswordOnDismissal() {
     is(passwordVisiblityToggle.hidden, true, "Check that the Show Password field is Hidden");
   });
 });
+
+add_task(function* test_httpsUpgradeCaptureFields_noChange() {
+  info("Check that we don't prompt to remember when capturing an upgraded login with no change");
+  Services.logins.addLogin(login1);
+  // Sanity check the HTTP login exists.
+  let logins = Services.logins.getAllLogins();
+  is(logins.length, 1, "Should have the HTTP login");
+
+  yield testSubmittingLoginForm("subtst_notifications_1.html", function*(fieldValues) {
+    is(fieldValues.username, "notifyu1", "Checking submitted username");
+    is(fieldValues.password, "notifyp1", "Checking submitted password");
+    let notif = getCaptureDoorhanger("password-save");
+    ok(!notif, "checking for no notification popup");
+  }, "https://example.com"); // This is HTTPS whereas the saved login is HTTP
+
+  logins = Services.logins.getAllLogins();
+  is(logins.length, 1, "Should only have 1 login still");
+  let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
+  is(login.hostname, "http://example.com", "Check the hostname is unchanged");
+  is(login.username, "notifyu1", "Check the username is unchanged");
+  is(login.password, "notifyp1", "Check the password is unchanged");
+  is(login.timesUsed, 2, "Check times used increased");
+
+  Services.logins.removeLogin(login1);
+});
+
+add_task(function* test_httpsUpgradeCaptureFields_changePW() {
+  info("Check that we prompt to change when capturing an upgraded login with a new PW");
+  Services.logins.addLogin(login1);
+  // Sanity check the HTTP login exists.
+  let logins = Services.logins.getAllLogins();
+  is(logins.length, 1, "Should have the HTTP login");
+
+  yield testSubmittingLoginForm("subtst_notifications_8.html", function*(fieldValues) {
+    is(fieldValues.username, "notifyu1", "Checking submitted username");
+    is(fieldValues.password, "pass2", "Checking submitted password");
+    let notif = getCaptureDoorhanger("password-change");
+    ok(notif, "checking for a change popup");
+    clickDoorhangerButton(notif, CHANGE_BUTTON);
+    ok(!getCaptureDoorhanger("password-change"), "popup should be gone");
+  }, "https://example.com"); // This is HTTPS whereas the saved login is HTTP
+
+  checkOnlyLoginWasUsedTwice({ justChanged: true });
+  logins = Services.logins.getAllLogins();
+  is(logins.length, 1, "Should only have 1 login still");
+  let login = logins[0].QueryInterface(Ci.nsILoginMetaInfo);
+  is(login.hostname, "https://example.com", "Check the hostname is upgraded");
+  is(login.formSubmitURL, "https://example.com", "Check the formSubmitURL is upgraded");
+  is(login.username, "notifyu1", "Check the username is unchanged");
+  is(login.password, "pass2", "Check the password changed");
+  is(login.timesUsed, 2, "Check times used increased");
+
+  Services.logins.removeAllLogins();
+});
+
+add_task(function* test_httpsUpgradeCaptureFields_captureMatchingHTTP() {
+  info("Capture a new HTTP login which matches a stored HTTPS one.");
+  Services.logins.addLogin(login1HTTPS);
+
+  yield testSubmittingLoginForm("subtst_notifications_1.html", function*(fieldValues) {
+    is(fieldValues.username, "notifyu1", "Checking submitted username");
+    is(fieldValues.password, "notifyp1", "Checking submitted password");
+    let notif = getCaptureDoorhanger("password-save");
+    ok(notif, "got notification popup");
+
+    is(Services.logins.getAllLogins().length, 1, "Should only have the HTTPS login");
+    clickDoorhangerButton(notif, REMEMBER_BUTTON);
+  });
+
+  let logins = Services.logins.getAllLogins();
+  is(logins.length, 2, "Should have both HTTP and HTTPS logins");
+  for (let login of logins) {
+    login = login.QueryInterface(Ci.nsILoginMetaInfo);
+    is(login.username, "notifyu1", "Check the username used on the new entry");
+    is(login.password, "notifyp1", "Check the password used on the new entry");
+    is(login.timesUsed, 1, "Check times used on entry");
+  }
+
+  info("Make sure Remember took effect and we don't prompt for an existing HTTP login");
+  yield testSubmittingLoginForm("subtst_notifications_1.html", function*(fieldValues) {
+    is(fieldValues.username, "notifyu1", "Checking submitted username");
+    is(fieldValues.password, "notifyp1", "Checking submitted password");
+    let notif = getCaptureDoorhanger("password-save");
+    ok(!notif, "checking for no notification popup");
+  });
+
+  logins = Services.logins.getAllLogins();
+  is(logins.length, 2, "Should have both HTTP and HTTPS still");
+
+  let httpsLogins = LoginHelper.searchLoginsWithObject({
+    hostname: "https://example.com",
+  });
+  is(httpsLogins.length, 1, "Check https logins count");
+  let httpsLogin = httpsLogins[0].QueryInterface(Ci.nsILoginMetaInfo);
+  ok(httpsLogin.equals(login1HTTPS), "Check HTTPS login didn't change");
+  is(httpsLogin.timesUsed, 1, "Check times used");
+
+  let httpLogins = LoginHelper.searchLoginsWithObject({
+    hostname: "http://example.com",
+  });
+  is(httpLogins.length, 1, "Check http logins count");
+  let httpLogin = httpLogins[0].QueryInterface(Ci.nsILoginMetaInfo);
+  ok(httpLogin.equals(login1), "Check HTTP login is as expected");
+  is(httpLogin.timesUsed, 2, "Check times used increased");
+
+  Services.logins.removeLogin(login1);
+  Services.logins.removeLogin(login1HTTPS);
+});
+
 
 // TODO:
 // * existing login test, form has different password --> change password, no save prompt
