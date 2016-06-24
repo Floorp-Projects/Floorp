@@ -9,7 +9,8 @@
 
 "use strict";
 
-const baseURL = "https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Errors/";
+const baseURL = "https://developer.mozilla.org/docs/Web/JavaScript/Reference/Errors/";
+const params = "?utm_source=mozilla&utm_medium=firefox-console-errors&utm_campaign=default";
 const ErrorDocs = {
   JSMSG_READ_ONLY: "Read-only",
   JSMSG_BAD_ARRAY_LENGTH: "Invalid_array_length",
@@ -49,12 +50,12 @@ const ErrorDocs = {
   JSMSG_CURLY_AFTER_LIST: "Missing_curly_after_property_list",
 };
 
-const MIXED_CONTENT_LEARN_MORE = "https://developer.mozilla.org/docs/Security/MixedContent";
+const MIXED_CONTENT_LEARN_MORE = "https://developer.mozilla.org/docs/Web/Security/Mixed_content";
 const TRACKING_PROTECTION_LEARN_MORE = "https://developer.mozilla.org/Firefox/Privacy/Tracking_Protection";
-const INSECURE_PASSWORDS_LEARN_MORE = "https://developer.mozilla.org/docs/Security/InsecurePasswords";
+const INSECURE_PASSWORDS_LEARN_MORE = "https://developer.mozilla.org/docs/Web/Security/Insecure_passwords";
 const PUBLIC_KEY_PINS_LEARN_MORE = "https://developer.mozilla.org/docs/Web/Security/Public_Key_Pinning";
-const STRICT_TRANSPORT_SECURITY_LEARN_MORE = "https://developer.mozilla.org/docs/Security/HTTP_Strict_Transport_Security";
-const WEAK_SIGNATURE_ALGORITHM_LEARN_MORE = "https://developer.mozilla.org/docs/Security/Weak_Signature_Algorithm";
+const STRICT_TRANSPORT_SECURITY_LEARN_MORE = "https://developer.mozilla.org/docs/Web/Security/HTTP_strict_transport_security";
+const WEAK_SIGNATURE_ALGORITHM_LEARN_MORE = "https://developer.mozilla.org/docs/Web/Security/Weak_Signature_Algorithm";
 const ErrorCategories = {
   "Insecure Password Field": INSECURE_PASSWORDS_LEARN_MORE,
   "Mixed Content Message": MIXED_CONTENT_LEARN_MORE,
@@ -72,11 +73,11 @@ exports.GetURL = (error) => {
 
   let doc = ErrorDocs[error.errorMessageName];
   if (doc) {
-    return baseURL + doc;
+    return baseURL + doc + params;
   }
 
   let categoryURL = ErrorCategories[error.category];
   if (categoryURL) {
-    return categoryURL;
+    return categoryURL + params;
   }
 };
