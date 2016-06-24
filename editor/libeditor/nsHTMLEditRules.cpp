@@ -2166,8 +2166,8 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
       int32_t selPointOffset = startOffset;
       {
         NS_ENSURE_STATE(mHTMLEditor);
-        nsAutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater,
-                                    address_of(selPointNode), &selPointOffset);
+        AutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater,
+                                  address_of(selPointNode), &selPointOffset);
         NS_ENSURE_STATE(leftNode && leftNode->IsContent() &&
                         rightNode && rightNode->IsContent());
         res = JoinBlocks(*leftNode->AsContent(), *rightNode->AsContent(),
@@ -2218,8 +2218,8 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
       int32_t selPointOffset = startOffset;
       {
         NS_ENSURE_STATE(mHTMLEditor);
-        nsAutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater,
-                                    address_of(selPointNode), &selPointOffset);
+        AutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater,
+                                  address_of(selPointNode), &selPointOffset);
         NS_ENSURE_STATE(leftNode->IsContent() && rightNode->IsContent());
         res = JoinBlocks(*leftNode->AsContent(), *rightNode->AsContent(),
                          aCancel);
@@ -2262,10 +2262,10 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
   {
     // Track location of where we are deleting
     NS_ENSURE_STATE(mHTMLEditor);
-    nsAutoTrackDOMPoint startTracker(mHTMLEditor->mRangeUpdater,
-                                     address_of(startNode), &startOffset);
-    nsAutoTrackDOMPoint endTracker(mHTMLEditor->mRangeUpdater,
-                                   address_of(endNode), &endOffset);
+    AutoTrackDOMPoint startTracker(mHTMLEditor->mRangeUpdater,
+                                   address_of(startNode), &startOffset);
+    AutoTrackDOMPoint endTracker(mHTMLEditor->mRangeUpdater,
+                                 address_of(endNode), &endOffset);
     // We are handling all ranged deletions directly now.
     *aHandled = true;
 
@@ -2418,10 +2418,10 @@ nsHTMLEditRules::WillDeleteSelection(Selection* aSelection,
 
   // We might have left only collapsed whitespace in the start/end nodes
   {
-    nsAutoTrackDOMPoint startTracker(mHTMLEditor->mRangeUpdater,
-                                     address_of(startNode), &startOffset);
-    nsAutoTrackDOMPoint endTracker(mHTMLEditor->mRangeUpdater,
-                                   address_of(endNode), &endOffset);
+    AutoTrackDOMPoint startTracker(mHTMLEditor->mRangeUpdater,
+                                   address_of(startNode), &startOffset);
+    AutoTrackDOMPoint endTracker(mHTMLEditor->mRangeUpdater,
+                                 address_of(endNode), &endOffset);
 
     DeleteNodeIfCollapsedText(*startNode);
     DeleteNodeIfCollapsedText(*endNode);
@@ -2636,9 +2636,8 @@ nsHTMLEditRules::JoinBlocks(nsIContent& aLeftNode, nsIContent& aRightNode,
     {
       // We can't just track rightBlock because it's an Element.
       nsCOMPtr<nsINode> trackingRightBlock(rightBlock);
-      nsAutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater,
-                                  address_of(trackingRightBlock),
-                                  &rightOffset);
+      AutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater,
+                                address_of(trackingRightBlock), &rightOffset);
       res = nsWSRunObject::ScrubBlockBoundary(mHTMLEditor,
                                               nsWSRunObject::kAfterBlock,
                                               rightBlock, rightOffset);
@@ -2680,8 +2679,8 @@ nsHTMLEditRules::JoinBlocks(nsIContent& aLeftNode, nsIContent& aRightNode,
       // We can't just track leftBlock because it's an Element, so track
       // something else.
       nsCOMPtr<nsINode> trackingLeftBlock(leftBlock);
-      nsAutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater,
-                                  address_of(trackingLeftBlock), &leftOffset);
+      AutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater,
+                                address_of(trackingLeftBlock), &leftOffset);
       res = nsWSRunObject::ScrubBlockBoundary(mHTMLEditor,
                                               nsWSRunObject::kBeforeBlock,
                                               leftBlock, leftOffset);
