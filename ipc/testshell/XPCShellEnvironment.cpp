@@ -494,8 +494,6 @@ XPCShellEnvironment::Init()
 
     AutoSafeJSContext cx;
 
-    JS_SetContextPrivate(cx, this);
-
     nsCOMPtr<nsIXPConnect> xpc =
       do_GetService(nsIXPConnect::GetCID());
     if (!xpc) {
