@@ -1817,7 +1817,8 @@ GeckoDriver.prototype.getElementProperty = function*(cmd, resp) {
       break;
 
     case Context.CONTENT:
-      return this.listener.getElementProperty(id, name);
+      resp.body.value = yield this.listener.getElementProperty(id, name);
+      break;
   }
 };
 
