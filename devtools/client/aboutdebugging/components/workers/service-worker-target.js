@@ -17,6 +17,25 @@ const Strings = Services.strings.createBundle(
 module.exports = createClass({
   displayName: "ServiceWorkerTarget",
 
+  getInitialState() {
+    return {
+      pushSubscription: null
+    };
+  },
+
+  componentDidMount() {
+    let { client } = this.props;
+    client.addListener("push-subscription-modified",
+      this.onPushSubscriptionModified);
+    this.updatePushSubscription();
+  },
+
+  componentWillUnmount() {
+    let { client } = this.props;
+    client.removeListener("push-subscription-modified",
+      this.onPushSubscriptionModified);
+  },
+
   debug() {
     if (!this.isRunning()) {
       // If the worker is not running, we can't debug it.
@@ -61,6 +80,23 @@ module.exports = createClass({
     });
   },
 
+  onPushSubscriptionModified(type, data) {
+    let { target } = this.props;
+    if (data.from === target.registrationActor) {
+      this.updatePushSubscription();
+    }
+  },
+
+  updatePushSubscription() {
+    let { client, target } = this.props;
+    client.request({
+      to: target.registrationActor,
+      type: "getPushSubscription"
+    }, ({ subscription }) => {
+      this.setState({ pushSubscription: subscription });
+    });
+  },
+
   isRunning() {
     // We know the target is running if it has a worker actor.
     return !!this.props.target.workerActor;
@@ -68,6 +104,7 @@ module.exports = createClass({
 
   render() {
     let { target, debugDisabled } = this.props;
+    let { pushSubscription } = this.state;
     let isRunning = this.isRunning();
 
     return dom.div({ className: "target-container" },
@@ -79,6 +116,13 @@ module.exports = createClass({
       dom.div({ className: "target" },
         dom.div({ className: "target-name" }, target.name),
         dom.ul({ className: "target-details" },
+          (pushSubscription ?
+            dom.li({ className: "target-detail" },
+              dom.strong(null, Strings.GetStringFromName("pushService")),
+              dom.span({ className: "service-worker-push-url" },
+                pushSubscription.endpoint)) :
+            null
+          ),
           dom.li({ className: "target-detail" },
             dom.strong(null, Strings.GetStringFromName("scope")),
             dom.span({ className: "service-worker-scope" }, target.scope),
