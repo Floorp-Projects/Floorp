@@ -542,12 +542,24 @@ GlyphObserver::NotifyGlyphsChanged()
       break;
     }
     f->InvalidateFrame();
-    // Theoretically we could just update overflow areas, perhaps using
-    // OverflowChangedTracker, but that would do a bunch of work eagerly that
-    // we should probably do lazily here since there could be a lot
-    // of text frames affected and we'd like to coalesce the work. So that's
-    // not easy to do well.
-    shell->FrameNeedsReflow(f, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+
+    // If this is a non-display text frame within SVG <text>, we need
+    // to reflow the SVGTextFrame. (This is similar to reflowing the
+    // SVGTextFrame in response to style changes, in
+    // SVGTextFrame::DidSetStyleContext.)
+    if (f->IsSVGText() && f->GetStateBits() & NS_FRAME_IS_NONDISPLAY) {
+      auto svgTextFrame = static_cast<SVGTextFrame*>(
+                            nsLayoutUtils::GetClosestFrameOfType(f,
+                            nsGkAtoms::svgTextFrame));
+      svgTextFrame->ScheduleReflowSVGNonDisplayText();
+    } else {
+      // Theoretically we could just update overflow areas, perhaps using
+      // OverflowChangedTracker, but that would do a bunch of work eagerly that
+      // we should probably do lazily here since there could be a lot
+      // of text frames affected and we'd like to coalesce the work. So that's
+      // not easy to do well.
+      shell->FrameNeedsReflow(f, nsIPresShell::eResize, NS_FRAME_IS_DIRTY);
+    }
   }
 }
 
