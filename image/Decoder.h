@@ -332,7 +332,8 @@ protected:
   void PostFrameStop(Opacity aFrameOpacity = Opacity::SOME_TRANSPARENCY,
                      DisposalMethod aDisposalMethod = DisposalMethod::KEEP,
                      int32_t aTimeout = 0,
-                     BlendMethod aBlendMethod = BlendMethod::OVER);
+                     BlendMethod aBlendMethod = BlendMethod::OVER,
+                     const Maybe<nsIntRect>& aBlendRect = Nothing());
 
   /**
    * Called by the decoders when they have a region to invalidate. We may not
