@@ -20,8 +20,6 @@ public:
   explicit GPUChild(GPUProcessHost* aHost);
   ~GPUChild();
 
-  void Init();
-
   static void Destroy(UniquePtr<GPUChild>&& aChild);
 
   void ActorDestroy(ActorDestroyReason aWhy) override;

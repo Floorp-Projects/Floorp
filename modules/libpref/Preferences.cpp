@@ -435,13 +435,6 @@ Preferences::GetInstanceForService()
 
 // static
 bool
-Preferences::IsServiceAvailable()
-{
-  return !!sPreferences;
-}
-
-// static
-bool
 Preferences::InitStaticMembers()
 {
 #ifndef MOZ_B2G
