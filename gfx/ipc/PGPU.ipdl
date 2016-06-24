@@ -3,31 +3,14 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-include protocol PContent;
-
 namespace mozilla {
 namespace gfx {
-
-union GfxPrefValue {
-  bool;
-  int32_t;
-  uint32_t;
-  float;
-};
-
-struct GfxPrefSetting {
-  int32_t index;
-  GfxPrefValue value;
-};
 
 sync protocol PGPU
 {
 parent:
-  // Sent by the UI process to initiate core settings.
-  async Init(GfxPrefSetting[] prefs);
-
-  // Called to update a gfx preference.
-  async UpdatePref(GfxPrefSetting pref);
+  // Sent by the UI process to initiate shutdown.
+  async Nothing();
 };
 
 } // namespace gfx

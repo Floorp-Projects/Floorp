@@ -19,13 +19,13 @@ static StaticAutoPtr<GPUProcessManager> sSingleton;
 GPUProcessManager*
 GPUProcessManager::Get()
 {
+  MOZ_ASSERT(sSingleton);
   return sSingleton;
 }
 
 void
 GPUProcessManager::Initialize()
 {
-  MOZ_ASSERT(XRE_IsParentProcess());
   sSingleton = new GPUProcessManager();
 }
 
