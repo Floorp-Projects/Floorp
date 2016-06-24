@@ -522,7 +522,7 @@ js::GetErrorTypeName(JSRuntime* rt, int16_t exnType)
         return nullptr;
     }
     JSProtoKey key = GetExceptionProtoKey(JSExnType(exnType));
-    return ClassName(key, rt);
+    return ClassName(key, rt->contextFromMainThread());
 }
 
 void
