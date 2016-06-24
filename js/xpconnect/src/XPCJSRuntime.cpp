@@ -3747,10 +3747,6 @@ XPCJSRuntime::BeforeProcessTask(bool aMightBlock)
     // cancel any ongoing performance measurement.
     js::ResetPerformanceMonitoring(Get()->Runtime());
 
-    // Push a null JSContext so that we don't see any script during
-    // event processing.
-    PushNullJSContext();
-
     CycleCollectedJSRuntime::BeforeProcessTask(aMightBlock);
 }
 
@@ -3769,8 +3765,6 @@ XPCJSRuntime::AfterProcessTask(uint32_t aNewRecursionDepth)
     // Now that we are certain that the event is complete,
     // we can flush any ongoing performance measurement.
     js::FlushPerformanceMonitoring(Get()->Runtime());
-
-    PopNullJSContext();
 }
 
 /***************************************************************************/
