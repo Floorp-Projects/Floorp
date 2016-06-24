@@ -73,9 +73,13 @@ function checkPromptState(promptState, expectedState) {
         is(promptState.butt1Disabled, false, "Checking cancel-button isn't disabled");
     }
 
-    is(promptState.defButton0, expectedState.defButton == "button0", "checking button0 default");
-    is(promptState.defButton1, expectedState.defButton == "button1", "checking button1 default");
-    is(promptState.defButton2, expectedState.defButton == "button2", "checking button2 default");
+    if (isLinux && !promptState.focused) {
+      todo(false, "Checking button default fails if focus is not correct."); // bug 1278418
+    } else {
+      is(promptState.defButton0, expectedState.defButton == "button0", "checking button0 default");
+      is(promptState.defButton1, expectedState.defButton == "button1", "checking button1 default");
+      is(promptState.defButton2, expectedState.defButton == "button2", "checking button2 default");
+    }
 
     if (isLinux && (!promptState.focused || isE10S)) {
         todo(false, "Focus seems missing or wrong on Linux"); // bug 1265077
