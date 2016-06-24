@@ -5,9 +5,9 @@
 
 #include "mozilla/EditorController.h"
 
+#include "EditorCommands.h"
 #include "mozilla/mozalloc.h"
 #include "nsDebug.h"
-#include "nsEditorCommands.h"
 #include "nsError.h"
 #include "nsIControllerCommandTable.h"
 
@@ -51,34 +51,35 @@ EditorController::RegisterEditingCommands(
   // now register all our commands
   // These are commands that will be used in text widgets, and in composer
 
-  NS_REGISTER_ONE_COMMAND(nsUndoCommand, "cmd_undo");
-  NS_REGISTER_ONE_COMMAND(nsRedoCommand, "cmd_redo");
-  NS_REGISTER_ONE_COMMAND(nsClearUndoCommand, "cmd_clearUndo");
+  NS_REGISTER_ONE_COMMAND(UndoCommand, "cmd_undo");
+  NS_REGISTER_ONE_COMMAND(RedoCommand, "cmd_redo");
+  NS_REGISTER_ONE_COMMAND(ClearUndoCommand, "cmd_clearUndo");
 
-  NS_REGISTER_ONE_COMMAND(nsCutCommand, "cmd_cut");
-  NS_REGISTER_ONE_COMMAND(nsCutOrDeleteCommand, "cmd_cutOrDelete");
-  NS_REGISTER_ONE_COMMAND(nsCopyCommand, "cmd_copy");
-  NS_REGISTER_ONE_COMMAND(nsCopyOrDeleteCommand, "cmd_copyOrDelete");
-  NS_REGISTER_ONE_COMMAND(nsCopyAndCollapseToEndCommand,
+  NS_REGISTER_ONE_COMMAND(CutCommand, "cmd_cut");
+  NS_REGISTER_ONE_COMMAND(CutOrDeleteCommand, "cmd_cutOrDelete");
+  NS_REGISTER_ONE_COMMAND(CopyCommand, "cmd_copy");
+  NS_REGISTER_ONE_COMMAND(CopyOrDeleteCommand, "cmd_copyOrDelete");
+  NS_REGISTER_ONE_COMMAND(CopyAndCollapseToEndCommand,
                           "cmd_copyAndCollapseToEnd");
-  NS_REGISTER_ONE_COMMAND(nsSelectAllCommand, "cmd_selectAll");
+  NS_REGISTER_ONE_COMMAND(SelectAllCommand, "cmd_selectAll");
 
-  NS_REGISTER_ONE_COMMAND(nsPasteCommand, "cmd_paste");
-  NS_REGISTER_ONE_COMMAND(nsPasteTransferableCommand, "cmd_pasteTransferable");
+  NS_REGISTER_ONE_COMMAND(PasteCommand, "cmd_paste");
+  NS_REGISTER_ONE_COMMAND(PasteTransferableCommand, "cmd_pasteTransferable");
 
-  NS_REGISTER_ONE_COMMAND(nsSwitchTextDirectionCommand, "cmd_switchTextDirection");
+  NS_REGISTER_ONE_COMMAND(SwitchTextDirectionCommand,
+                          "cmd_switchTextDirection");
 
-  NS_REGISTER_FIRST_COMMAND(nsDeleteCommand, "cmd_delete");
-  NS_REGISTER_NEXT_COMMAND(nsDeleteCommand, "cmd_deleteCharBackward");
-  NS_REGISTER_NEXT_COMMAND(nsDeleteCommand, "cmd_deleteCharForward");
-  NS_REGISTER_NEXT_COMMAND(nsDeleteCommand, "cmd_deleteWordBackward");
-  NS_REGISTER_NEXT_COMMAND(nsDeleteCommand, "cmd_deleteWordForward");
-  NS_REGISTER_NEXT_COMMAND(nsDeleteCommand, "cmd_deleteToBeginningOfLine");
-  NS_REGISTER_LAST_COMMAND(nsDeleteCommand, "cmd_deleteToEndOfLine");
+  NS_REGISTER_FIRST_COMMAND(DeleteCommand, "cmd_delete");
+  NS_REGISTER_NEXT_COMMAND(DeleteCommand, "cmd_deleteCharBackward");
+  NS_REGISTER_NEXT_COMMAND(DeleteCommand, "cmd_deleteCharForward");
+  NS_REGISTER_NEXT_COMMAND(DeleteCommand, "cmd_deleteWordBackward");
+  NS_REGISTER_NEXT_COMMAND(DeleteCommand, "cmd_deleteWordForward");
+  NS_REGISTER_NEXT_COMMAND(DeleteCommand, "cmd_deleteToBeginningOfLine");
+  NS_REGISTER_LAST_COMMAND(DeleteCommand, "cmd_deleteToEndOfLine");
 
   // Insert content
-  NS_REGISTER_ONE_COMMAND(nsInsertPlaintextCommand, "cmd_insertText");
-  NS_REGISTER_ONE_COMMAND(nsPasteQuotationCommand,  "cmd_pasteQuote");
+  NS_REGISTER_ONE_COMMAND(InsertPlaintextCommand, "cmd_insertText");
+  NS_REGISTER_ONE_COMMAND(PasteQuotationCommand, "cmd_pasteQuote");
 
   return NS_OK;
 }
@@ -90,52 +91,52 @@ EditorController::RegisterEditorCommands(
 {
   // These are commands that will be used in text widgets only.
 
-  NS_REGISTER_FIRST_COMMAND(nsSelectionMoveCommands, "cmd_scrollTop");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_scrollBottom");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_moveTop");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_moveBottom");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectTop");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectBottom");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_lineNext");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_linePrevious");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectLineNext");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectLinePrevious");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_charPrevious");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_charNext");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectCharPrevious");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectCharNext");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_beginLine");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_endLine");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectBeginLine");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectEndLine");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_wordPrevious");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_wordNext");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectWordPrevious");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectWordNext");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_scrollPageUp");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_scrollPageDown");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_scrollLineUp");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_scrollLineDown");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_movePageUp");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_movePageDown");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectPageUp");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectPageDown");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_moveLeft");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_moveRight");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_moveUp");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_moveDown");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_moveLeft2");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_moveRight2");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_moveUp2");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_moveDown2");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectLeft");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectRight");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectUp");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectDown");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectLeft2");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectRight2");
-  NS_REGISTER_NEXT_COMMAND(nsSelectionMoveCommands, "cmd_selectUp2");
-  NS_REGISTER_LAST_COMMAND(nsSelectionMoveCommands, "cmd_selectDown2");
+  NS_REGISTER_FIRST_COMMAND(SelectionMoveCommands, "cmd_scrollTop");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_scrollBottom");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_moveTop");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_moveBottom");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_selectTop");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_selectBottom");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_lineNext");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_linePrevious");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_selectLineNext");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_selectLinePrevious");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_charPrevious");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_charNext");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_selectCharPrevious");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_selectCharNext");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_beginLine");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_endLine");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_selectBeginLine");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_selectEndLine");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_wordPrevious");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_wordNext");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_selectWordPrevious");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_selectWordNext");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_scrollPageUp");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_scrollPageDown");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_scrollLineUp");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_scrollLineDown");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_movePageUp");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_movePageDown");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_selectPageUp");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_selectPageDown");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_moveLeft");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_moveRight");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_moveUp");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_moveDown");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_moveLeft2");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_moveRight2");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_moveUp2");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_moveDown2");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_selectLeft");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_selectRight");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_selectUp");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_selectDown");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_selectLeft2");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_selectRight2");
+  NS_REGISTER_NEXT_COMMAND(SelectionMoveCommands, "cmd_selectUp2");
+  NS_REGISTER_LAST_COMMAND(SelectionMoveCommands, "cmd_selectDown2");
 
   return NS_OK;
 }
