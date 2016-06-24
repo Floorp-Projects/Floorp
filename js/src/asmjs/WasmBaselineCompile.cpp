@@ -5666,14 +5666,20 @@ BaseCompiler::emitBody()
         // every iteration.
 
         if (overhead == 0) {
+            // Check every 50 expressions -- a happy medium between
+            // memory usage and checking overhead.
+            overhead = 50;
+
             // Checking every 50 expressions should be safe, as the
             // baseline JIT does very little allocation per expression.
             CHECK(alloc_.ensureBallast());
-            CHECK(stk_.reserve(stk_.length() + 64));
-            overhead = 50;
-        } else {
-            overhead -= 1;
+
+            // The pushiest opcode is LOOP, which pushes two values
+            // per instance.
+            CHECK(stk_.reserve(stk_.length() + overhead * 2));
         }
+
+        overhead--;
 
         if (done())
             return true;
