@@ -37,7 +37,7 @@ NSSDialogs.prototype = {
     if (!this.bundle) {
       this.bundle = Services.strings.createBundle("chrome://browser/locale/pippki.properties");
     }
-    return this.bundle.formatStringFromName(aName, argList, 1);
+    return this.bundle.formatStringFromName(aName, argList, argList.length);
   },
 
   getPrompt: function(aTitle, aText, aButtons) {
@@ -170,7 +170,7 @@ NSSDialogs.prototype = {
                                          [issuer]);
     let serverRequestedDetails = cn + '<br/>' + organizationString + '<br/>' + issuerString;
 
-    selectedIndex = 0;
+    selectedIndex.value = 0;
     while (true) {
       let prompt = this.getPrompt(this.getString("clientAuthAsk.title"),
                                      this.getString("clientAuthAsk.message1"),
@@ -182,16 +182,17 @@ NSSDialogs.prototype = {
       .addMenulist({
         id: "nicknames",
         label: this.getString("clientAuthAsk.message2"),
-        values: certNickList, selected: selectedIndex
+        values: certNickList,
+        selected: selectedIndex.value,
       }).addCheckbox({
         id: "rememberBox",
         label: this.getString("clientAuthAsk.remember.label"),
         checked: rememberSetting
       });
       let response = this.showPrompt(prompt);
-      selectedIndex = response.nicknames;
+      selectedIndex.value = response.nicknames;
       if (response.button == 1) {
-        this.viewCertDetails(certDetailsList[selectedIndex]);
+        this.viewCertDetails(certDetailsList[selectedIndex.value]);
         continue;
       } else if (response.button == 0) {
         canceled.value = false;
