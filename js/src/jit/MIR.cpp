@@ -2326,7 +2326,7 @@ MPhi::removeAllOperands()
 }
 
 MDefinition*
-MPhi::foldsTernary()
+MPhi::foldsTernary(TempAllocator& alloc)
 {
     /* Look if this MPhi is a ternary construct.
      * This is a very loose term as it actually only checks for
@@ -2416,6 +2416,14 @@ MPhi::foldsTernary()
         return trueDef;
     }
 
+    // If testArg is an double type we can:
+    // - fold testArg ? testArg : 0.0 to MNaNToZero(testArg)
+    if (testArg->type() == MIRType::Double && c->numberToDouble() == 0 && c != trueDef) {
+        MNaNToZero* replace = MNaNToZero::New(alloc, testArg);
+        test->block()->insertBefore(test, replace);
+        return replace;
+    }
+
     // If testArg is a string type we can:
     // - fold testArg ? testArg : "" to testArg
     // - fold testArg ? "" : testArg to ""
@@ -2495,7 +2503,7 @@ MPhi::foldsTo(TempAllocator& alloc)
     if (MDefinition* def = operandIfRedundant())
         return def;
 
-    if (MDefinition* def = foldsTernary())
+    if (MDefinition* def = foldsTernary(alloc))
         return def;
 
     if (MDefinition* def = foldsFilterTypeSet())
