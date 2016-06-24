@@ -32,6 +32,7 @@ class nsAString;
 class nsIDocument;
 class nsStyledElementNotElementCSSInlineStyle;
 struct MiscContainer;
+struct ServoDeclarationBlock;
 
 namespace mozilla {
 namespace css {
@@ -86,7 +87,7 @@ public:
   // This has to be the same as in ValueBaseType
   enum ValueType {
     eString =       0x00, //   00
-                          //   01  this value indicates an 'misc' struct
+                          //   01  this value indicates a 'misc' struct
     eAtom =         0x02, //   10
     eInteger =      0x03, // 0011
     eColor =        0x07, // 0111
@@ -94,26 +95,27 @@ public:
     ePercent =      0x0F, // 1111
     // Values below here won't matter, they'll be always stored in the 'misc'
     // struct.
-    eCSSDeclaration =          0x10
-    ,eURL =                    0x11
-    ,eImage =                  0x12
-    ,eAtomArray =              0x13
-    ,eDoubleValue  =           0x14
-    ,eIntMarginValue =         0x15
-    ,eSVGAngle =               0x16
-    ,eSVGTypesBegin =          eSVGAngle
-    ,eSVGIntegerPair =         0x17
-    ,eSVGLength =              0x18
-    ,eSVGLengthList =          0x19
-    ,eSVGNumberList =          0x1A
-    ,eSVGNumberPair =          0x1B
-    ,eSVGPathData =            0x1C
-    ,eSVGPointList =           0x1D
-    ,eSVGPreserveAspectRatio = 0x1E
-    ,eSVGStringList =          0x1F
-    ,eSVGTransformList =       0x20
-    ,eSVGViewBox =             0x21
-    ,eSVGTypesEnd =            eSVGViewBox
+    eGeckoCSSDeclaration = 0x10,
+    eServoCSSDeclaration,
+    eURL,
+    eImage,
+    eAtomArray,
+    eDoubleValue,
+    eIntMarginValue,
+    eSVGAngle,
+    eSVGTypesBegin = eSVGAngle,
+    eSVGIntegerPair,
+    eSVGLength,
+    eSVGLengthList,
+    eSVGNumberList,
+    eSVGNumberPair,
+    eSVGPathData,
+    eSVGPointList,
+    eSVGPreserveAspectRatio,
+    eSVGStringList,
+    eSVGTransformList,
+    eSVGViewBox,
+    eSVGTypesEnd = eSVGViewBox,
   };
 
   nsAttrValue();
@@ -146,6 +148,8 @@ public:
   void SetTo(int32_t aInt, const nsAString* aSerialized);
   void SetTo(double aValue, const nsAString* aSerialized);
   void SetTo(mozilla::css::Declaration* aValue, const nsAString* aSerialized);
+  void SetTo(ServoDeclarationBlock* aDeclarationBlock,
+             const nsAString* aSerialized);
   void SetTo(mozilla::css::URLValue* aValue, const nsAString* aSerialized);
   void SetTo(const nsIntMargin& aValue);
   void SetTo(const nsSVGAngle& aValue, const nsAString* aSerialized);
@@ -196,7 +200,8 @@ public:
   inline int16_t GetEnumValue() const;
   inline float GetPercentValue() const;
   inline AtomArray* GetAtomArrayValue() const;
-  inline mozilla::css::Declaration* GetCSSDeclarationValue() const;
+  inline mozilla::css::Declaration* GetGeckoCSSDeclarationValue() const;
+  inline ServoDeclarationBlock* GetServoCSSDeclarationValue() const;
   inline mozilla::css::URLValue* GetURLValue() const;
   inline mozilla::css::ImageValue* GetImageValue() const;
   inline double GetDoubleValue() const;

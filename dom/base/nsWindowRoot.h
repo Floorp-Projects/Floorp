@@ -13,6 +13,7 @@ class nsIGlobalObject;
 #include "mozilla/Attributes.h"
 #include "mozilla/EventListenerManager.h"
 #include "nsIDOMEventTarget.h"
+#include "nsIWeakReferenceUtils.h"
 #include "nsPIWindowRoot.h"
 #include "nsCycleCollectionParticipant.h"
 #include "nsTHashtable.h"
@@ -103,7 +104,7 @@ protected:
   nsCOMPtr<nsPIDOMWindowOuter> mWindow;
   // We own the manager, which owns event listeners attached to us.
   RefPtr<mozilla::EventListenerManager> mListenerManager; // [Strong]
-  nsCOMPtr<nsIDOMNode> mPopupNode; // [OWNER]
+  nsWeakPtr mPopupNode;
 
   // True if focus rings and accelerators are enabled for this
   // window hierarchy.

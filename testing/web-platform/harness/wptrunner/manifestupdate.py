@@ -33,6 +33,9 @@ set of results and conditionals. The AST of the underlying parsed manifest
 is updated with the changes, and the result is serialised to a file.
 """
 
+class ConditionError(Exception):
+    pass
+
 Result = namedtuple("Result", ["run_info", "status"])
 
 
@@ -210,7 +213,8 @@ class TestNode(ManifestItem):
                 result = results[0]
                 if (result.status == unconditional_status and
                     conditional_value.condition_node is not None):
-                    self.remove_value("expected", conditional_value)
+                    if "expected" in self:
+                        self.remove_value("expected", conditional_value)
                 else:
                     conditional_value.value = result.status
                     final_conditionals.append(conditional_value)
@@ -236,10 +240,15 @@ class TestNode(ManifestItem):
                     self.set("expected", status, condition=None)
                     final_conditionals.append(self._data["expected"][-1])
             else:
-                for conditional_node, status in group_conditionals(
+                try:
+                    conditionals = group_conditionals(
                         self.new_expected,
                         property_order=self.root.property_order,
-                        boolean_properties=self.root.boolean_properties):
+                        boolean_properties=self.root.boolean_properties)
+                except ConditionError:
+                    print "Conflicting test results for %s, cannot update" % self.root.test_path
+                    return
+                for conditional_node, status in conditionals:
                     if status != unconditional_status:
                         self.set("expected", status, condition=conditional_node.children[0])
                         final_conditionals.append(self._data["expected"][-1])
@@ -348,6 +357,8 @@ def group_conditionals(values, property_order=None, boolean_properties=None):
         for key, statuses in by_property.copy().iteritems():
             if len(statuses) == len(values):
                 del by_property[key]
+        if not by_property:
+            raise ConditionError
 
     properties = set(item[0] for item in by_property.iterkeys())
     include_props = []
