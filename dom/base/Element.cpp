@@ -16,6 +16,7 @@
 #include "mozilla/DebugOnly.h"
 #include "mozilla/dom/Animation.h"
 #include "mozilla/dom/Attr.h"
+#include "mozilla/dom/Grid.h"
 #include "nsDOMAttributeMap.h"
 #include "nsIAtom.h"
 #include "nsIContentInlines.h"
@@ -952,7 +953,6 @@ Element::GetClientRects()
           nsLayoutUtils::RECTS_ACCOUNT_FOR_TRANSFORMS);
   return rectList.forget();
 }
-
 
 //----------------------------------------------------------------------
 
@@ -3287,6 +3287,21 @@ void
 Element::MozRequestPointerLock()
 {
   OwnerDoc()->RequestPointerLock(this);
+}
+
+void
+Element::GetGridFragments(nsTArray<RefPtr<Grid>>& aResult)
+{
+  nsIFrame* frame = GetPrimaryFrame();
+  if (frame && (frame->GetType() == nsGkAtoms::gridContainerFrame)) {
+    // If primary frame is a nsGridContainerFrame, all the next frames
+    // in flow will also be nsGridContainerFrame.
+    for (; frame != nullptr; frame = frame->GetNextInFlow()) {
+      aResult.AppendElement(
+        new Grid(this, static_cast<nsGridContainerFrame*>(frame))
+      );
+    }
+  }
 }
 
 already_AddRefed<Animation>
