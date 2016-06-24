@@ -7,6 +7,7 @@ Cu.import("resource://gre/modules/Task.jsm", this);
 Cu.import("resource://gre/modules/AppConstants.jsm");
 
 const kPrefModalHighlight = "findbar.modalHighlight";
+const kFixtureBaseURL = "https://example.com/browser/toolkit/modules/tests/browser/";
 
 function promiseOpenFindbar(findbar) {
   findbar.onFindCommand()
@@ -34,7 +35,8 @@ function promiseFindResult(findbar, str = null) {
           findbar.browser.finder.removeResultListener(listener);
           resolve();
         }
-      }
+      },
+      onMatchesCountResult: () => {}
     };
     findbar.browser.finder.addResultListener(listener);
   });
@@ -51,13 +53,13 @@ function promiseEnterStringIntoFindField(findbar, str) {
   return promise;
 }
 
-function promiseTestHighlighterOutput(browser, word, expectedResult) {
-  return ContentTask.spawn(browser, { word, expectedResult }, function* ({ word, expectedResult }) {
+function promiseTestHighlighterOutput(browser, word, expectedResult, extraTest = () => {}) {
+  return ContentTask.spawn(browser, { word, expectedResult, extraTest: extraTest.toSource() },
+    function* ({ word, expectedResult, extraTest }) {
     let document = content.document;
 
     return new Promise((resolve, reject) => {
-      let stubbed = [document.insertAnonymousContent,
-        document.removeAnonymousContent];
+      let stubbed = {};
       let callCounts = {
         insertCalls: [],
         removeCalls: []
@@ -67,18 +69,26 @@ function promiseTestHighlighterOutput(browser, word, expectedResult) {
       // was called.
       const kTimeoutMs = 1000;
       // The initial timeout may wait for a while for results to come in.
-      let timeout = content.setTimeout(finish, kTimeoutMs * 4);
+      let timeout = content.setTimeout(() => finish(false, "Timeout"), kTimeoutMs * 5);
 
-      function finish(ok = true, message) {
+      function finish(ok = true, message = "finished with error") {
         // Restore the functions we stubbed out.
-        document.insertAnonymousContent = stubbed[0];
-        document.removeAnonymousContent = stubbed[1];
+        document.insertAnonymousContent = stubbed.insert;
+        document.removeAnonymousContent = stubbed.remove;
+        stubbed = {};
         content.clearTimeout(timeout);
 
-        Assert.equal(callCounts.insertCalls.length, expectedResult.insertCalls,
-          `Insert calls should match for '${word}'.`);
-        Assert.equal(callCounts.removeCalls.length, expectedResult.removeCalls,
-          `Remove calls should match for '${word}'.`);
+        if (expectedResult.rectCount !== 0)
+          Assert.ok(ok, message);
+
+        Assert.greaterOrEqual(callCounts.insertCalls.length, expectedResult.insertCalls[0],
+          `Min. insert calls should match for '${word}'.`);
+        Assert.lessOrEqual(callCounts.insertCalls.length, expectedResult.insertCalls[1],
+          `Max. insert calls should match for '${word}'.`);
+        Assert.greaterOrEqual(callCounts.removeCalls.length, expectedResult.removeCalls[0],
+          `Min. remove calls should match for '${word}'.`);
+        Assert.lessOrEqual(callCounts.removeCalls.length, expectedResult.removeCalls[1],
+          `Max. remove calls should match for '${word}'.`);
 
         // We reached the amount of calls we expected, so now we can check
         // the amount of rects.
@@ -86,10 +96,15 @@ function promiseTestHighlighterOutput(browser, word, expectedResult) {
         if (!lastMaskNode && expectedResult.rectCount !== 0) {
           Assert.ok(false, `No mask node found, but expected ${expectedResult.rectCount} rects.`);
         }
+
         if (lastMaskNode) {
           Assert.equal(lastMaskNode.getElementsByTagName("div").length,
             expectedResult.rectCount, `Amount of inserted rects should match for '${word}'.`);
         }
+
+        // Allow more specific assertions to be tested in `extraTest`.
+        extraTest = eval(extraTest);
+        extraTest(lastMaskNode);
 
         resolve();
       }
@@ -97,12 +112,13 @@ function promiseTestHighlighterOutput(browser, word, expectedResult) {
       // Create a function that will stub the original version and collects
       // the arguments so we can check the results later.
       function stub(which) {
+        stubbed[which] = document[which + "AnonymousContent"];
         let prop = which + "Calls";
         return function(node) {
           callCounts[prop].push(node);
           content.clearTimeout(timeout);
           timeout = content.setTimeout(finish, kTimeoutMs);
-          return node;
+          return stubbed[which].call(document, node);
         };
       }
       document.insertAnonymousContent = stub("insert");
@@ -121,35 +137,29 @@ add_task(function* setup() {
 // Test the results of modal highlighting, which is on by default.
 add_task(function* testModalResults() {
   let tests = new Map([
-    ["mo", {
-      rectCount: 4,
-      insertCalls: 2,
-      removeCalls: AppConstants.platform == "linux" ? 1 : 2
+    ["Roland", {
+      rectCount: 2,
+      insertCalls: [2, 4],
+      removeCalls: [1, 2]
     }],
-    ["m", {
-      rectCount: 8,
-      insertCalls: 1,
-      removeCalls: 1
+    ["ro", {
+      rectCount: 41,
+      insertCalls: [1, 2],
+      removeCalls: [1, 2]
     }],
     ["new", {
-      rectCount: 1,
-      insertCalls: 1,
-      removeCalls: 1
+      rectCount: 2,
+      insertCalls: [1, 2],
+      removeCalls: [1, 2]
     }],
     ["o", {
-      rectCount: 1217,
-      insertCalls: 1,
-      removeCalls: 1
+      rectCount: 492,
+      insertCalls: [1, 2],
+      removeCalls: [1, 2]
     }]
   ]);
-  yield BrowserTestUtils.withNewTab("about:mozilla", function* (browser) {
-    // We're inserting 1200 additional o's at the end of the document.
-    yield ContentTask.spawn(browser, null, function* () {
-      let document = content.document;
-      document.getElementsByTagName("section")[0].innerHTML += "<p>" +
-        (new Array(1200).join(" o ")) + "</p>";
-    });
-
+  let url = kFixtureBaseURL + "file_FinderSample.html";
+  yield BrowserTestUtils.withNewTab(url, function* (browser) {
     let findbar = gBrowser.getFindBar();
 
     for (let [word, expectedResult] of tests) {
@@ -160,7 +170,7 @@ add_task(function* testModalResults() {
       yield promiseEnterStringIntoFindField(findbar, word);
       yield promise;
 
-      findbar.close();
+      findbar.close(true);
     }
   });
 });
@@ -168,17 +178,18 @@ add_task(function* testModalResults() {
 // Test if runtime switching of highlight modes between modal and non-modal works
 // as expected.
 add_task(function* testModalSwitching() {
-  yield BrowserTestUtils.withNewTab("about:mozilla", function* (browser) {
+  let url = kFixtureBaseURL + "file_FinderSample.html";
+  yield BrowserTestUtils.withNewTab(url, function* (browser) {
     let findbar = gBrowser.getFindBar();
 
     yield promiseOpenFindbar(findbar);
     Assert.ok(!findbar.hidden, "Findbar should be open now.");
 
-    let word = "mo";
+    let word = "Roland";
     let expectedResult = {
-      rectCount: 4,
-      insertCalls: 2,
-      removeCalls: AppConstants.platform == "linux" ? 1 : 2
+      rectCount: 2,
+      insertCalls: [2, 4],
+      removeCalls: [1, 2]
     };
     let promise = promiseTestHighlighterOutput(browser, word, expectedResult);
     yield promiseEnterStringIntoFindField(findbar, word);
@@ -188,12 +199,74 @@ add_task(function* testModalSwitching() {
 
     expectedResult = {
       rectCount: 0,
-      insertCalls: 0,
-      removeCalls: 0
+      insertCalls: [0, 0],
+      removeCalls: [0, 0]
     };
     promise = promiseTestHighlighterOutput(browser, word, expectedResult);
     findbar.clear();
     yield promiseEnterStringIntoFindField(findbar, word);
     yield promise;
+
+    findbar.close(true);
+  });
+
+  yield SpecialPowers.pushPrefEnv({ "set": [[ kPrefModalHighlight, true ]] });
+});
+
+// Test if highlighting a dark page is detected properly.
+add_task(function* testDarkPageDetection() {
+  let url = kFixtureBaseURL + "file_FinderSample.html";
+  yield BrowserTestUtils.withNewTab(url, function* (browser) {
+    let findbar = gBrowser.getFindBar();
+
+    yield promiseOpenFindbar(findbar);
+
+    let word = "Roland";
+    let expectedResult = {
+      rectCount: 2,
+      insertCalls: [2, 4],
+      removeCalls: [1, 2]
+    };
+    let promise = promiseTestHighlighterOutput(browser, word, expectedResult, function(node) {
+      Assert.ok(!node.hasAttribute("brighttext"), "White HTML page shouldn't have 'brighttext' set");
+    });
+    yield promiseEnterStringIntoFindField(findbar, word);
+    yield promise;
+
+    findbar.close(true);
+  });
+
+  yield BrowserTestUtils.withNewTab(url, function* (browser) {
+    let findbar = gBrowser.getFindBar();
+
+    yield promiseOpenFindbar(findbar);
+
+    let word = "Roland";
+    let expectedResult = {
+      rectCount: 2,
+      insertCalls: [2, 4],
+      removeCalls: [1, 2]
+    };
+
+    yield ContentTask.spawn(browser, null, function* () {
+      let dwu = content.QueryInterface(Ci.nsIInterfaceRequestor)
+        .getInterface(Ci.nsIDOMWindowUtils);
+      let uri = "data:text/css;charset=utf-8," + encodeURIComponent(`
+        body {
+          background: maroon radial-gradient(circle, #a01010 0%, #800000 80%) center center / cover no-repeat;
+          color: white;
+        }`);
+      try {
+        dwu.loadSheetUsingURIString(uri, dwu.USER_SHEET);
+      } catch (e) {}
+    });
+
+    let promise = promiseTestHighlighterOutput(browser, word, expectedResult, node => {
+      Assert.ok(node.hasAttribute("brighttext"), "Dark HTML page should have 'brighttext' set");
+    });
+    yield promiseEnterStringIntoFindField(findbar, word);
+    yield promise;
+
+    findbar.close(true);
   });
 });
