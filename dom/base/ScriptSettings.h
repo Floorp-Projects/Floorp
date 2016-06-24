@@ -150,6 +150,11 @@ inline JSObject& IncumbentJSGlobal()
   return *GetIncumbentGlobal()->GetGlobalJSObject();
 }
 
+// Returns whether JSAPI is active right now.  If it is not, working with a
+// JSContext you grab from somewhere random is not OK and you should be doing
+// AutoJSAPI or AutoEntryScript to get yourself a properly set up JSContext.
+bool IsJSAPIActive();
+
 class ScriptSettingsStack;
 class ScriptSettingsStackEntry {
   friend class ScriptSettingsStack;
