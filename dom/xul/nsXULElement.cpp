@@ -386,9 +386,9 @@ nsXULElement::Clone(mozilla::dom::NodeInfo *aNodeInfo, nsINode **aResult) const
         nsAttrValue attrValue;
 
         // Style rules need to be cloned.
-        if (originalValue->Type() == nsAttrValue::eCSSDeclaration) {
-            RefPtr<css::Declaration> declClone =
-              new css::Declaration(*originalValue->GetCSSDeclarationValue());
+        if (originalValue->Type() == nsAttrValue::eGeckoCSSDeclaration) {
+            RefPtr<css::Declaration> declClone = new css::Declaration(
+                *originalValue->GetGeckoCSSDeclarationValue());
 
             nsString stringValue;
             originalValue->ToString(stringValue);
@@ -1885,9 +1885,9 @@ nsXULElement::MakeHeavyweight(nsXULPrototypeElement* aPrototype)
         nsAttrValue attrValue;
 
         // Style rules need to be cloned.
-        if (protoattr->mValue.Type() == nsAttrValue::eCSSDeclaration) {
+        if (protoattr->mValue.Type() == nsAttrValue::eGeckoCSSDeclaration) {
             RefPtr<css::Declaration> declClone = new css::Declaration(
-              *protoattr->mValue.GetCSSDeclarationValue());
+              *protoattr->mValue.GetGeckoCSSDeclarationValue());
 
             nsString stringValue;
             protoattr->mValue.ToString(stringValue);

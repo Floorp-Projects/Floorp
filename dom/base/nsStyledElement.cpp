@@ -97,8 +97,8 @@ nsStyledElementNotElementCSSInlineStyle::GetInlineStyleDeclaration()
   }
   const nsAttrValue* attrVal = mAttrsAndChildren.GetAttr(nsGkAtoms::style);
 
-  if (attrVal && attrVal->Type() == nsAttrValue::eCSSDeclaration) {
-    return attrVal->GetCSSDeclarationValue();
+  if (attrVal && attrVal->Type() == nsAttrValue::eGeckoCSSDeclaration) {
+    return attrVal->GetGeckoCSSDeclarationValue();
   }
 
   return nullptr;
@@ -131,7 +131,7 @@ nsStyledElementNotElementCSSInlineStyle::ReparseStyleAttribute(bool aForceInData
   }
   const nsAttrValue* oldVal = mAttrsAndChildren.GetAttr(nsGkAtoms::style);
   
-  if (oldVal && oldVal->Type() != nsAttrValue::eCSSDeclaration) {
+  if (oldVal && oldVal->Type() != nsAttrValue::eGeckoCSSDeclaration) {
     nsAttrValue attrValue;
     nsAutoString stringValue;
     oldVal->ToString(stringValue);

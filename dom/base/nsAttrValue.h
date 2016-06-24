@@ -94,7 +94,7 @@ public:
     ePercent =      0x0F, // 1111
     // Values below here won't matter, they'll be always stored in the 'misc'
     // struct.
-    eCSSDeclaration = 0x10,
+    eGeckoCSSDeclaration = 0x10,
     eURL,
     eImage,
     eAtomArray,
@@ -196,7 +196,7 @@ public:
   inline int16_t GetEnumValue() const;
   inline float GetPercentValue() const;
   inline AtomArray* GetAtomArrayValue() const;
-  inline mozilla::css::Declaration* GetCSSDeclarationValue() const;
+  inline mozilla::css::Declaration* GetGeckoCSSDeclarationValue() const;
   inline mozilla::css::URLValue* GetURLValue() const;
   inline mozilla::css::ImageValue* GetImageValue() const;
   inline double GetDoubleValue() const;
