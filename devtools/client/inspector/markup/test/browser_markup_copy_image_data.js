@@ -48,7 +48,7 @@ function* assertCopyImageDataAvailable(inspector) {
 }
 
 function triggerCopyImageUrlAndWaitForClipboard(expected, inspector) {
-  let def = promise.defer();
+  let def = defer();
 
   SimpleTest.waitForClipboard(expected, () => {
     inspector.markup.getContainer(inspector.selection.nodeFront)

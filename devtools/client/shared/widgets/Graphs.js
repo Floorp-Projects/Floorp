@@ -7,7 +7,7 @@ const { Task } = require("devtools/shared/task");
 const { setNamedTimeout } = require("devtools/client/shared/widgets/view-helpers");
 const { getCurrentZoom } = require("devtools/shared/layout/utils");
 
-loader.lazyRequireGetter(this, "promise");
+loader.lazyRequireGetter(this, "defer", "devtools/shared/defer");
 loader.lazyRequireGetter(this, "EventEmitter",
   "devtools/shared/event-emitter");
 
@@ -100,7 +100,7 @@ this.AbstractCanvasGraph = function (parent, name, sharpness) {
   EventEmitter.decorate(this);
 
   this._parent = parent;
-  this._ready = promise.defer();
+  this._ready = defer();
 
   this._uid = "canvas-graph-" + Date.now();
   this._renderTargets = new Map();

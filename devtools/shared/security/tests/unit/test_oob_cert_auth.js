@@ -32,7 +32,7 @@ add_task(function* () {
   // Grab our cert, instead of relying on a discovery advertisement
   let serverCert = yield cert.local.getOrCreate();
 
-  let oobData = promise.defer();
+  let oobData = defer();
   let AuthenticatorType = DebuggerServer.Authenticators.get("OOB_CERT");
   let serverAuth = new AuthenticatorType.Server();
   serverAuth.allowConnection = () => {
@@ -92,7 +92,7 @@ add_task(function* () {
 add_task(function* () {
   equal(DebuggerServer.listeningSockets, 0, "0 listening sockets");
 
-  let oobData = promise.defer();
+  let oobData = defer();
   let AuthenticatorType = DebuggerServer.Authenticators.get("OOB_CERT");
   let serverAuth = new AuthenticatorType.Server();
   serverAuth.allowConnection = () => {
@@ -118,7 +118,7 @@ add_task(function* () {
   });
 
   // Attempt to use the transport
-  let deferred = promise.defer();
+  let deferred = defer();
   let client = new DebuggerClient(transport);
   client.onPacket = packet => {
     // Client did not authenticate, so it ends up seeing the server's auth data
@@ -155,7 +155,7 @@ add_task(function* () {
   // Grab our cert, instead of relying on a discovery advertisement
   let serverCert = yield cert.local.getOrCreate();
 
-  let oobData = promise.defer();
+  let oobData = defer();
   let AuthenticatorType = DebuggerServer.Authenticators.get("OOB_CERT");
   let serverAuth = new AuthenticatorType.Server();
   serverAuth.allowConnection = () => {
@@ -209,7 +209,7 @@ add_task(function* () {
   // Grab our cert, instead of relying on a discovery advertisement
   let serverCert = yield cert.local.getOrCreate();
 
-  let oobData = promise.defer();
+  let oobData = defer();
   let AuthenticatorType = DebuggerServer.Authenticators.get("OOB_CERT");
   let serverAuth = new AuthenticatorType.Server();
   serverAuth.allowConnection = () => {

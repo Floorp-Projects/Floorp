@@ -131,7 +131,7 @@ function openEditor(editor) {
 }
 
 function listenForMediaChange(UI) {
-  let deferred = promise.defer();
+  let deferred = defer();
   UI.once("media-list-changed", () => {
     deferred.resolve();
   });

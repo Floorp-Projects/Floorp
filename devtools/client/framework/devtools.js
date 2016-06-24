@@ -6,6 +6,7 @@
 
 const Services = require("Services");
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 
 // Load gDevToolsBrowser toolbox lazily as they need gDevTools to be fully initialized
 loader.lazyRequireGetter(this, "Toolbox", "devtools/client/framework/toolbox", true);
@@ -393,7 +394,7 @@ DevTools.prototype = {
    *        The toolbox that was opened
    */
   showToolbox: function (target, toolId, hostType, hostOptions) {
-    let deferred = promise.defer();
+    let deferred = defer();
 
     let toolbox = this._toolboxes.get(target);
     if (toolbox) {

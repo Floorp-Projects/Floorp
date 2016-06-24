@@ -62,7 +62,7 @@ function* chooseWithInspectElementContextMenu(selector, testActor) {
 }
 
 function waitForLinkedBrowserEvent(tab, event) {
-  let def = promise.defer();
+  let def = defer();
   tab.linkedBrowser.addEventListener(event, function cb() {
     tab.linkedBrowser.removeEventListener(event, cb, true);
     def.resolve();

@@ -7,8 +7,8 @@ var { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
 var { require } = Cu.import("resource://gre/modules/devtools/shared/Loader.jsm", {});
 var { Assert } = require("resource://testing-common/Assert.jsm");
-var promise = require("promise");
 var { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
+var defer = require("devtools/shared/defer");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { Task } = require("devtools/shared/task");
 var { TargetFactory } = require("devtools/client/framework/target");
@@ -38,13 +38,13 @@ function onNextAnimationFrame(fn) {
 }
 
 function setState(component, newState) {
-  var deferred = promise.defer();
+  var deferred = defer();
   component.setState(newState, onNextAnimationFrame(deferred.resolve));
   return deferred.promise;
 }
 
 function setProps(component, newState) {
-  var deferred = promise.defer();
+  var deferred = defer();
   component.setProps(newState, onNextAnimationFrame(deferred.resolve));
   return deferred.promise;
 }

@@ -34,6 +34,7 @@ const {editableField, InplaceEditor} =
       require("devtools/client/shared/inplace-editor");
 const {HTMLEditor} = require("devtools/client/inspector/markup/html-editor");
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const Services = require("Services");
 const {HTMLTooltip} = require("devtools/client/shared/widgets/HTMLTooltip");
 const {setImageTooltip, setBrokenImageTooltip} =
@@ -425,7 +426,7 @@ MarkupView.prototype = {
   _brieflyShowBoxModel: function (nodeFront) {
     this._clearBriefBoxModelTimer();
     let onShown = this._showBoxModel(nodeFront);
-    this._briefBoxModelPromise = promise.defer();
+    this._briefBoxModelPromise = defer();
 
     this._briefBoxModelTimer = setTimeout(() => {
       this._hideBoxModel()
@@ -1329,7 +1330,7 @@ MarkupView.prototype = {
       return promise.reject();
     }
 
-    let def = promise.defer();
+    let def = defer();
 
     container.undo.do(() => {
       this.walker.setInnerHTML(node, newValue).then(def.resolve, def.reject);
@@ -1359,7 +1360,7 @@ MarkupView.prototype = {
       return promise.reject();
     }
 
-    let def = promise.defer();
+    let def = defer();
 
     let injectedNodes = [];
     container.undo.do(() => {

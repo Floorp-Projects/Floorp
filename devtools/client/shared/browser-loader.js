@@ -14,9 +14,18 @@ const { AppConstants } = devtools.require("resource://gre/modules/AppConstants.j
 const BROWSER_BASED_DIRS = [
   "resource://devtools/client/jsonview",
   "resource://devtools/client/shared/vendor",
-  "resource://devtools/client/shared/components",
-  "resource://devtools/client/shared/redux"
+  "resource://devtools/client/shared/redux",
 ];
+
+// Any directory that matches the following regular expression
+// is also considered as browser based module directory.
+// ('resource://devtools/client/.*/components/')
+//
+// An example:
+// * `resource://devtools/client/inspector/components`
+// * `resource://devtools/client/inspector/shared/components`
+const browserBasedDirsRegExp =
+  /^resource\:\/\/devtools\/client\/\S*\/components\//;
 
 function clearCache() {
   Services.obs.notifyObservers(null, "startupcache-invalidate", null);
@@ -93,9 +102,14 @@ function BrowserLoaderBuilder({ baseURI, window, useOnlyShared }) {
     invisibleToDebugger: loaderOptions.invisibleToDebugger,
     requireHook: (id, require) => {
       const uri = require.resolve(id);
-      const isBrowserDir = BROWSER_BASED_DIRS.filter(dir => {
+      let isBrowserDir = BROWSER_BASED_DIRS.filter(dir => {
         return uri.startsWith(dir);
       }).length > 0;
+
+      // If the URI doesn't match hardcoded paths try the regexp.
+      if (!isBrowserDir) {
+        isBrowserDir = uri.match(browserBasedDirsRegExp) != null;
+      }
 
       if ((useOnlyShared || !uri.startsWith(baseURI)) && !isBrowserDir) {
         return devtools.require(uri);

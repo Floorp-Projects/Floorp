@@ -10,6 +10,7 @@ const Services = require("Services");
 const { NetUtil } = require("resource://gre/modules/NetUtil.jsm");
 const { getRect } = require("devtools/shared/layout/utils");
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const { Task } = require("devtools/shared/task");
 
 loader.lazyImporter(this, "Downloads", "resource://gre/modules/Downloads.jsm");
@@ -464,7 +465,7 @@ function DownloadListener(win, transfer) {
   }
 
   // Allow saveToFile to await completion for error handling
-  this._completedDeferred = promise.defer();
+  this._completedDeferred = defer();
   this.completed = this._completedDeferred.promise;
 }
 

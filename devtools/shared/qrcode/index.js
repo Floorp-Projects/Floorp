@@ -6,6 +6,7 @@
 
 const { Cu } = require("chrome");
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 
 // Lazily require encoder and decoder in case only one is needed
 Object.defineProperty(this, "Encoder", {
@@ -95,7 +96,7 @@ exports.decodeFromURI = function (URI) {
   if (!decoder) {
     return promise.reject();
   }
-  let deferred = promise.defer();
+  let deferred = defer();
   decoder.decodeFromURI(URI, deferred.resolve, deferred.reject);
   return deferred.promise;
 };

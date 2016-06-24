@@ -25,7 +25,7 @@
 "use strict";
 
 const Services = require("Services");
-const Promise = require("promise");
+const defer = require("devtools/shared/defer");
 const {getCSSLexer} = require("devtools/shared/css-lexer");
 
 // Parameters for the XHR request
@@ -155,7 +155,7 @@ exports.appendSyntaxHighlightedCSS = appendSyntaxHighlightedCSS;
  * we could not load the page.
  */
 function getMdnPage(pageUrl) {
-  let deferred = Promise.defer();
+  let deferred = defer();
 
   let xhr = new XMLHttpRequest();
 
@@ -198,7 +198,7 @@ function getMdnPage(pageUrl) {
  * we could not load the page.
  */
 function getCssDocs(cssProperty) {
-  let deferred = Promise.defer();
+  let deferred = defer();
   let pageUrl = XHR_CSS_URL + cssProperty + XHR_PARAMS;
 
   getMdnPage(pageUrl).then(parseDocsFromResponse, handleRejection);
@@ -348,7 +348,7 @@ MdnDocsWidget.prototype = {
       deferred.resolve(this);
     }
 
-    let deferred = Promise.defer();
+    let deferred = defer();
     let elements = this.elements;
 
     initializeDocument(propertyName);

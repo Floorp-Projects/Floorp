@@ -55,6 +55,7 @@ devtools.jar:
     content/sourceeditor/codemirror/mode/css.js (sourceeditor/codemirror/mode/css.js)
     content/sourceeditor/codemirror/mode/htmlmixed.js (sourceeditor/codemirror/mode/htmlmixed.js)
     content/sourceeditor/codemirror/mode/clike.js (sourceeditor/codemirror/mode/clike.js)
+    content/sourceeditor/codemirror/mode/wasm.js (sourceeditor/codemirror/mode/wasm.js)
     content/sourceeditor/codemirror/keymap/emacs.js (sourceeditor/codemirror/keymap/emacs.js)
     content/sourceeditor/codemirror/keymap/sublime.js (sourceeditor/codemirror/keymap/sublime.js)
     content/sourceeditor/codemirror/keymap/vim.js (sourceeditor/codemirror/keymap/vim.js)

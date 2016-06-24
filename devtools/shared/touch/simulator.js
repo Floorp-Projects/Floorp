@@ -4,6 +4,7 @@
 "use strict";
 
 var promise = require("promise");
+var defer = require("devtools/shared/defer");
 var Services = require("Services");
 
 const FRAME_SCRIPT =
@@ -36,7 +37,7 @@ function TouchEventSimulator(browser) {
       }
       this.enabled = true;
 
-      let deferred = promise.defer();
+      let deferred = defer();
       let isReloadNeeded =
         Services.prefs.getIntPref("dom.w3c_touch_events.enabled") != 1;
       Services.prefs.setIntPref("dom.w3c_touch_events.enabled", 1);
@@ -55,7 +56,7 @@ function TouchEventSimulator(browser) {
       }
       this.enabled = false;
 
-      let deferred = promise.defer();
+      let deferred = defer();
       Services.prefs.setIntPref("dom.w3c_touch_events.enabled",
                                 savedTouchEventsEnabled);
       let onStopped = () => {

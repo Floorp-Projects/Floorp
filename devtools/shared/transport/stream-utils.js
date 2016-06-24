@@ -10,6 +10,7 @@ const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 const { dumpv } = DevToolsUtils;
 const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 
 DevToolsUtils.defineLazyGetter(this, "IOUtil", () => {
   return Cc["@mozilla.org/io-util;1"].getService(Ci.nsIIOUtil);
@@ -75,7 +76,7 @@ function StreamCopier(input, output, length) {
   }
   this._length = length;
   this._amountLeft = length;
-  this._deferred = promise.defer();
+  this._deferred = defer();
 
   this._copy = this._copy.bind(this);
   this._flush = this._flush.bind(this);

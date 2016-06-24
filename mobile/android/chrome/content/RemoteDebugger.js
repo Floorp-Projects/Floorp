@@ -155,6 +155,19 @@ var RemoteDebugger = {
       type: "DevToolsAuth:Scan"
     }).then(data => {
       return JSON.parse(data);
+    }, () => {
+      let title = Strings.browser.GetStringFromName("remoteQRScanFailedPromptTitle");
+      let msg = Strings.browser.GetStringFromName("remoteQRScanFailedPromptMessage");
+      let ok = Strings.browser.GetStringFromName("remoteQRScanFailedPromptOK");
+      let prompt = new Prompt({
+        window: null,
+        hint: "remotedebug",
+        title: title,
+        message: msg,
+        buttons: [ ok ],
+        priority: 1
+      });
+      prompt.show();
     });
 
     this._receivingOOB.then(() => this._receivingOOB = null);

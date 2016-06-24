@@ -29,7 +29,7 @@ add_task(function* () {
   let { ui } = yield openStyleEditor();
   let editor = yield ui.editors[0].getSourceEditor();
 
-  let onEditorChange = promise.defer();
+  let onEditorChange = defer();
   editor.sourceEditor.on("change", onEditorChange.resolve);
 
   yield toolbox.getPanel("inspector");
