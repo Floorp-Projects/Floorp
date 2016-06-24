@@ -1707,8 +1707,8 @@ nsEditor::MoveNode(nsIContent* aNode, nsINode* aParent, int32_t aOffset)
   }
 
   // Notify our internal selection state listener
-  nsAutoMoveNodeSelNotify selNotify(mRangeUpdater, oldParent, oldOffset,
-                                    aParent, aOffset);
+  AutoMoveNodeSelNotify selNotify(mRangeUpdater, oldParent, oldOffset,
+                                  aParent, aOffset);
 
   // Need to adjust aOffset if we're moving aNode later in its current parent
   if (aParent == oldParent && oldOffset < aOffset) {
