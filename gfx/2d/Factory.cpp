@@ -50,7 +50,6 @@
 
 #include "DrawEventRecorder.h"
 
-#include "Preferences.h"
 #include "Logging.h"
 
 #include "mozilla/CheckedInt.h"
@@ -154,9 +153,8 @@ HasCPUIDBit(unsigned int level, CPUIDRegister reg, unsigned int bit)
 namespace mozilla {
 namespace gfx {
 
-int32_t LoggingPrefs::sGfxLogLevel =
-  PreferenceAccess::RegisterLivePref("gfx.logging.level", &sGfxLogLevel,
-                                     LOG_DEFAULT);
+// In Gecko, this value is managed by gfx.logging.level in gfxPrefs.
+int32_t LoggingPrefs::sGfxLogLevel = LOG_DEFAULT;
 
 #ifdef WIN32
 ID3D11Device *Factory::mD3D11Device;
