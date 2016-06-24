@@ -4,28 +4,34 @@
 
 #include "nsISupports.idl"
 
+interface nsIArray;
 interface nsIInterfaceRequestor;
 
 /**
- * nsIClientAuthDialog
  * Provides UI for SSL client-auth dialogs.
  */
 [scriptable, uuid(fa4c7520-1433-11d5-ba24-00108303b117)]
 interface nsIClientAuthDialogs : nsISupports
 {
   /**
-   * display
-   *   UI shown when a user is asked to do SSL client auth.
+   * Called when a user is asked to choose a certificate for client auth.
+   *
+   * @param ctx Context that allows at least nsIClientAuthUserDecision to be
+   *            queried.
+   * @param cnAndPort Common Name of the server cert and the port of the server.
+   * @param organization Organization field of the server cert.
+   * @param issuerOrg Organization field of the issuer cert of the server cert.
+   * @param certList List of certificates the user can choose from.
+   * @param selectedIndex Index of the cert in |certList| that the user chose.
+   *                      Ignored if the return value is false.
+   * @return true if a certificate was chosen. false if the user canceled.
    */
-  void ChooseCertificate(in nsIInterfaceRequestor ctx, 
-                        in wstring cn,
-                        in wstring organization,
-                        in wstring issuer,
-                        [array, size_is(count)] in wstring certNickList,
-                        [array, size_is(count)] in wstring certDetailsList,
-                        in unsigned long count,
-                        out long selectedIndex,
-                        out boolean canceled);
+  boolean chooseCertificate(in nsIInterfaceRequestor ctx,
+                            in AString cnAndPort,
+                            in AString organization,
+                            in AString issuerOrg,
+                            in nsIArray certList,
+                            out unsigned long selectedIndex);
 };
 
 [scriptable, uuid(95c4373e-bdd4-4a63-b431-f5b000367721)]

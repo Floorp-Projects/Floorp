@@ -11,7 +11,7 @@ import utils
 
 from mozlog import get_proxy_logger
 
-# NOTE: we have a circular dependecy with output.py when we import results
+# NOTE: we have a circular dependency with output.py when we import results
 import results as TalosResults
 
 LOG = get_proxy_logger()
@@ -43,115 +43,6 @@ class Output(object):
         - results : TalosResults instance
         """
         self.results = results
-
-    def __call__(self):
-        """return list of results strings"""
-        raise NotImplementedError("Abstract base class")
-
-    def output(self, results, results_url, tbpl_output):
-        """output to the results_url
-        - results_url : http:// or file:// URL
-        - results : list of results
-        """
-
-        # parse the results url
-        results_url_split = utils.urlsplit(results_url)
-        results_scheme, results_server, results_path, _, _ = results_url_split
-
-        if results_scheme in ('http', 'https'):
-            self.post(results, results_server, results_path, results_scheme,
-                      tbpl_output)
-        elif results_scheme == 'file':
-            with open(results_path, 'w') as f:
-                for result in results:
-                    f.write("%s\n" % result)
-        else:
-            raise NotImplementedError(
-                "%s: %s - only http://, https://, and file:// supported"
-                % (self.__class__.__name__, results_url)
-            )
-
-    def post(self, results, server, path, scheme, tbpl_output):
-        raise NotImplementedError("Abstract base class")
-
-    @classmethod
-    def shortName(cls, name):
-        """short name for counters"""
-        names = {"Working Set": "memset",
-                 "% Processor Time": "%cpu",
-                 "Private Bytes": "pbytes",
-                 "RSS": "rss",
-                 "XRes": "xres",
-                 "Modified Page List Bytes": "modlistbytes",
-                 "Main_RSS": "main_rss"}
-        return names.get(name, name)
-
-    @classmethod
-    def isMemoryMetric(cls, resultName):
-        """returns if the result is a memory metric"""
-        memory_metric = ['memset', 'rss', 'pbytes', 'xres', 'modlistbytes',
-                         'main_rss', 'content_rss']  # measured in bytes
-        return bool([i for i in memory_metric if i in resultName])
-
-    @classmethod
-    def v8_Metric(cls, val_list):
-        results = [i for i, j in val_list]
-        score = 100 * filter.geometric_mean(results)
-        return score
-
-    @classmethod
-    def JS_Metric(cls, val_list):
-        """v8 benchmark score"""
-        results = [i for i, j in val_list]
-        LOG.info("javascript benchmark")
-        return sum(results)
-
-    @classmethod
-    def CanvasMark_Metric(cls, val_list):
-        """CanvasMark benchmark score (NOTE: this is identical to JS_Metric)"""
-        results = [i for i, j in val_list]
-        LOG.info("CanvasMark benchmark")
-        return sum(results)
-
-
-class PerfherderOutput(Output):
-    def __init__(self, results):
-        Output.__init__(self, results)
-
-    def output(self, results, results_url, tbpl_output):
-        """output to the a file if results_url starts with file://
-        - results : json instance
-        - results_url : file:// URL
-        """
-
-        # parse the results url
-        results_url_split = utils.urlsplit(results_url)
-        results_scheme, results_server, results_path, _, _ = results_url_split
-
-        # This is the output that treeherder expects to find when parsing the
-        # log file
-        LOG.info("PERFHERDER_DATA: %s" % json.dumps(results))
-        if results_scheme in ('file'):
-            json.dump(results, file(results_path, 'w'), indent=2,
-                      sort_keys=True)
-
-    def post(self, results, server, path, scheme, tbpl_output):
-        """conform to current code- not needed for perfherder"""
-        pass
-
-    def construct_results(self, vals, testname):
-        if 'responsiveness' in testname:
-            return filter.responsiveness_Metric([val for (val, page) in vals])
-        elif testname.startswith('v8_7'):
-            return self.v8_Metric(vals)
-        elif testname.startswith('kraken'):
-            return self.JS_Metric(vals)
-        elif testname.startswith('tcanvasmark'):
-            return self.CanvasMark_Metric(vals)
-        elif len(vals) > 1:
-            return filter.geometric_mean([i for i, j in vals])
-        else:
-            return filter.mean([i for i, j in vals])
 
     def __call__(self):
         suites = []
@@ -278,5 +169,88 @@ class PerfherderOutput(Output):
                                'subtests': counter_subtests})
         return test_results
 
-# available output formats
-formats = {'output_urls': PerfherderOutput}
+    def output(self, results, results_url, tbpl_output):
+        """output to the a file if results_url starts with file://
+        - results : json instance
+        - results_url : file:// URL
+        """
+
+        # parse the results url
+        results_url_split = utils.urlsplit(results_url)
+        results_scheme, results_server, results_path, _, _ = results_url_split
+
+        if results_scheme in ('http', 'https'):
+            self.post(results, results_server, results_path, results_scheme,
+                      tbpl_output)
+        elif results_scheme == 'file':
+            with open(results_path, 'w') as f:
+                for result in results:
+                    f.write("%s\n" % result)
+        else:
+            raise NotImplementedError(
+                "%s: %s - only http://, https://, and file:// supported"
+                % (self.__class__.__name__, results_url)
+            )
+
+        # This is the output that treeherder expects to find when parsing the
+        # log file
+        LOG.info("PERFHERDER_DATA: %s" % json.dumps(results))
+        if results_scheme in ('file'):
+            json.dump(results, file(results_path, 'w'), indent=2,
+                      sort_keys=True)
+
+    def post(self, results, server, path, scheme, tbpl_output):
+        raise NotImplementedError("Abstract base class")
+
+    @classmethod
+    def shortName(cls, name):
+        """short name for counters"""
+        names = {"Working Set": "memset",
+                 "% Processor Time": "%cpu",
+                 "Private Bytes": "pbytes",
+                 "RSS": "rss",
+                 "XRes": "xres",
+                 "Modified Page List Bytes": "modlistbytes",
+                 "Main_RSS": "main_rss"}
+        return names.get(name, name)
+
+    @classmethod
+    def isMemoryMetric(cls, resultName):
+        """returns if the result is a memory metric"""
+        memory_metric = ['memset', 'rss', 'pbytes', 'xres', 'modlistbytes',
+                         'main_rss', 'content_rss']  # measured in bytes
+        return bool([i for i in memory_metric if i in resultName])
+
+    @classmethod
+    def v8_Metric(cls, val_list):
+        results = [i for i, j in val_list]
+        score = 100 * filter.geometric_mean(results)
+        return score
+
+    @classmethod
+    def JS_Metric(cls, val_list):
+        """v8 benchmark score"""
+        results = [i for i, j in val_list]
+        LOG.info("javascript benchmark")
+        return sum(results)
+
+    @classmethod
+    def CanvasMark_Metric(cls, val_list):
+        """CanvasMark benchmark score (NOTE: this is identical to JS_Metric)"""
+        results = [i for i, j in val_list]
+        LOG.info("CanvasMark benchmark")
+        return sum(results)
+
+    def construct_results(self, vals, testname):
+        if 'responsiveness' in testname:
+            return filter.responsiveness_Metric([val for (val, page) in vals])
+        elif testname.startswith('v8_7'):
+            return self.v8_Metric(vals)
+        elif testname.startswith('kraken'):
+            return self.JS_Metric(vals)
+        elif testname.startswith('tcanvasmark'):
+            return self.CanvasMark_Metric(vals)
+        elif len(vals) > 1:
+            return filter.geometric_mean([i for i, j in vals])
+        else:
+            return filter.mean([i for i, j in vals])

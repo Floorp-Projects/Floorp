@@ -6,81 +6,109 @@
 /* import-globals-from pippki.js */
 "use strict";
 
-const nsIDialogParamBlock = Components.interfaces.nsIDialogParamBlock;
+const { classes: Cc, interfaces: Ci, utils: Cu, results: Cr } = Components;
 
+const { Services } = Cu.import("resource://gre/modules/Services.jsm", {});
+
+/**
+ * The pippki <stringbundle> element.
+ * @type <stringbundle>
+ */
+var bundle;
+/**
+ * The array of certs the user can choose from.
+ * @type nsIArray<nsIX509Cert>
+ */
+var certArray;
+/**
+ * The param block to get params from and set results on.
+ * @type nsIDialogParamBlock
+ */
 var dialogParams;
-var itemCount = 0;
+/**
+ * The checkbox storing whether the user wants to remember the selected cert.
+ * @type nsIDOMXULCheckboxElement
+ */
 var rememberBox;
 
-function onLoad()
-{
-    var cn;
-    var org;
-    var issuer;
+function onLoad() {
+  dialogParams = window.arguments[0].QueryInterface(Ci.nsIDialogParamBlock);
 
-    dialogParams = window.arguments[0].QueryInterface(nsIDialogParamBlock);
-    cn = dialogParams.GetString(0);
-    org = dialogParams.GetString(1);
-    issuer = dialogParams.GetString(2);
+  bundle = document.getElementById("pippki_bundle");
+  let rememberSetting =
+    Services.prefs.getBoolPref("security.remember_cert_checkbox_default_setting");
 
-    // added with bug 431819. reuse string from caps in order to avoid string changes
-    var capsBundle = document.getElementById("caps_bundle");
-    var rememberString = capsBundle.getString("CheckMessage");
-    var rememberSetting = true;
+  rememberBox = document.getElementById("rememberBox");
+  rememberBox.label = bundle.getString("clientAuthRemember");
+  rememberBox.checked = rememberSetting;
 
-    var pref = Components.classes['@mozilla.org/preferences-service;1']
-                         .getService(Components.interfaces.nsIPrefService);
-    if (pref) {
-      pref = pref.getBranch(null);
-      try {
-	rememberSetting =
-	  pref.getBoolPref("security.remember_cert_checkbox_default_setting");
-      } catch (e) {
-	// pref is missing
-      }
+  let cnAndPort = dialogParams.GetString(0);
+  let org = dialogParams.GetString(1);
+  let issuerOrg = dialogParams.GetString(2);
+  let formattedOrg = bundle.getFormattedString("clientAuthMessage1", [org]);
+  let formattedIssuerOrg = bundle.getFormattedString("clientAuthMessage2",
+                                                     [issuerOrg]);
+  setText("hostname", cnAndPort);
+  setText("organization", formattedOrg);
+  setText("issuer", formattedIssuerOrg);
+
+  let selectElement = document.getElementById("nicknames");
+  certArray = dialogParams.objects.queryElementAt(0, Ci.nsIArray);
+  for (let i = 0; i < certArray.length; i++) {
+    let menuItemNode = document.createElement("menuitem");
+    let cert = certArray.queryElementAt(i, Ci.nsIX509Cert);
+    let nickAndSerial =
+      bundle.getFormattedString("clientAuthNickAndSerial",
+                                [cert.nickname, cert.serialNumber]);
+    menuItemNode.setAttribute("value", i);
+    menuItemNode.setAttribute("label", nickAndSerial); // This is displayed.
+    selectElement.firstChild.appendChild(menuItemNode);
+    if (i == 0) {
+      selectElement.selectedItem = menuItemNode;
     }
+  }
 
-    rememberBox = document.getElementById("rememberBox");
-    rememberBox.label = rememberString;
-    rememberBox.checked = rememberSetting;
-
-    var bundle = document.getElementById("pippki_bundle");
-    var message1 = bundle.getFormattedString("clientAuthMessage1", [org]);
-    var message2 = bundle.getFormattedString("clientAuthMessage2", [issuer]);
-    setText("hostname", cn);
-    setText("organization", message1);
-    setText("issuer", message2);
-
-    var selectElement = document.getElementById("nicknames");
-    itemCount = dialogParams.GetInt(0);
-    for (let i = 0; i < itemCount; i++) {
-        var menuItemNode = document.createElement("menuitem");
-        let nick = dialogParams.GetString(i + 3);
-        menuItemNode.setAttribute("value", i);
-        menuItemNode.setAttribute("label", nick); // this is displayed
-        selectElement.firstChild.appendChild(menuItemNode);
-        if (i == 0) {
-            selectElement.selectedItem = menuItemNode;
-        }
-    }
-
-    setDetails();
-}
-
-function setDetails()
-{
-  let index = parseInt(document.getElementById("nicknames").value);
-  let details = dialogParams.GetString(index + itemCount + 3);
-  document.getElementById("details").value = details;
-}
-
-function onCertSelected()
-{
   setDetails();
 }
 
-function doOK()
-{
+/**
+ * Populates the details section with information concerning the selected cert.
+ */
+function setDetails() {
+  let index = parseInt(document.getElementById("nicknames").value);
+  let cert = certArray.queryElementAt(index, Ci.nsIX509Cert);
+
+  let detailLines = [
+    bundle.getFormattedString("clientAuthIssuedTo", [cert.subjectName]),
+    bundle.getFormattedString("clientAuthSerial", [cert.serialNumber]),
+    bundle.getFormattedString("clientAuthValidityPeriod",
+                              [cert.validity.notBeforeLocalTime,
+                               cert.validity.notAfterLocalTime]),
+  ];
+  let keyUsages = cert.keyUsages;
+  if (keyUsages) {
+    detailLines.push(bundle.getFormattedString("clientAuthKeyUsages",
+                                               [keyUsages]));
+  }
+  let emailAddresses = cert.getEmailAddresses({});
+  if (emailAddresses.length > 0) {
+    let joinedAddresses = emailAddresses.join(", ");
+    detailLines.push(bundle.getFormattedString("clientAuthEmailAddresses",
+                                               [joinedAddresses]));
+  }
+  detailLines.push(bundle.getFormattedString("clientAuthIssuedBy",
+                                             [cert.issuerName]));
+  detailLines.push(bundle.getFormattedString("clientAuthStoredOn",
+                                             [cert.tokenName]));
+
+  document.getElementById("details").value = detailLines.join("\n");
+}
+
+function onCertSelected() {
+  setDetails();
+}
+
+function doOK() {
   // Signal that the user accepted.
   dialogParams.SetInt(0, 1);
   let index = parseInt(document.getElementById("nicknames").value);
@@ -92,12 +120,9 @@ function doOK()
   return true;
 }
 
-function doCancel()
-{
+function doCancel() {
   // Signal that the user cancelled.
   dialogParams.SetInt(0, 0);
-  // Signal some invalid index value since a cert hasn't actually been chosen.
-  dialogParams.SetInt(1, -1); // invalid value
   // Signal whether the user wanted to remember the "selection".
   dialogParams.SetInt(2, rememberBox.checked);
   return true;
