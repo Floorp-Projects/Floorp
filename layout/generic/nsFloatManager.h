@@ -101,7 +101,6 @@ public:
    * Translate the current origin by the specified offsets. This
    * creates a new local coordinate space relative to the current
    * coordinate space.
-   * @returns previous writing mode
    */
   void Translate(nscoord aLineLeft, nscoord aBlockStart)
   {
