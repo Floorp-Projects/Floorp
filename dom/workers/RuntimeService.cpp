@@ -799,7 +799,7 @@ InitJSContextForWorker(WorkerPrivate* aWorkerPrivate, JSContext* aWorkerCx)
     return false;
   }
 
-  JS_SetInterruptCallback(aWorkerCx, InterruptCallback);
+  JS_AddInterruptCallback(aWorkerCx, InterruptCallback);
 
   js::SetCTypesActivityCallback(aWorkerCx, CTypesActivityCallback);
 
