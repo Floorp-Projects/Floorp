@@ -469,8 +469,11 @@ class HTMLMediaElement::ChannelLoader final {
 public:
   NS_INLINE_DECL_REFCOUNTING(ChannelLoader);
 
-  nsresult Load(HTMLMediaElement* aElement)
+  void LoadInternal(HTMLMediaElement* aElement)
   {
+    if (mCancelled) {
+      return;
+    }
 
     // determine what security checks need to be performed in AsyncOpen2().
     nsSecurityFlags securityFlags = aElement->ShouldCheckAllowOrigin()
@@ -511,7 +514,9 @@ public:
                                 nsIChannel::LOAD_CALL_CONTENT_SNIFFERS);
 
     if (NS_FAILED(rv)) {
-      return rv;
+      // Notify load error so the element will try next resource candidate.
+      aElement->NotifyLoadError();
+      return;
     }
 
     // This is a workaround and it will be fix in bug 1264230.
@@ -545,7 +550,9 @@ public:
 
     rv = channel->AsyncOpen2(loadListener);
     if (NS_FAILED(rv)) {
-      return rv;
+      // Notify load error so the element will try next resource candidate.
+      aElement->NotifyLoadError();
+      return;
     }
 
     // Else the channel must be open and starting to download. If it encounters
@@ -556,16 +563,27 @@ public:
     // loadListener will be unregistered either on shutdown or when
     // OnStartRequest for the channel we just opened fires.
     nsContentUtils::RegisterShutdownObserver(loadListener);
-    return NS_OK;
+  }
+
+  nsresult Load(HTMLMediaElement* aElement)
+  {
+    // Per bug 1235183 comment 8, we can't spin the event loop from stable
+    // state. Defer NS_NewChannel() to a new regular runnable.
+    return NS_DispatchToMainThread(NewRunnableMethod<HTMLMediaElement*>(
+      this, &ChannelLoader::LoadInternal, aElement));
   }
 
   void Cancel()
   {
-    mChannel->Cancel(NS_BINDING_ABORTED);
-    mChannel = nullptr;
+    mCancelled = true;
+    if (mChannel) {
+      mChannel->Cancel(NS_BINDING_ABORTED);
+      mChannel = nullptr;
+    }
   }
 
   void Done() {
+    MOZ_ASSERT(mChannel);
     // Decoder successfully created, the decoder now owns the MediaResource
     // which owns the channel.
     mChannel = nullptr;
@@ -609,6 +627,8 @@ private:
   // decoder, and we null out this reference. We must store this in case
   // we need to cancel the channel before control of it passes to the decoder.
   nsCOMPtr<nsIChannel> mChannel;
+
+  bool mCancelled = false;
 };
 
 NS_IMPL_ADDREF_INHERITED(HTMLMediaElement, nsGenericHTMLElement)
