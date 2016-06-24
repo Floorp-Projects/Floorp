@@ -58,21 +58,7 @@ function run1()
     var second = doc.getElementById("second");
     var third = doc.getElementById("third");
   
-    /* test for an exact match */
-    second.setAttribute("systemLanguage", "en-gb");
-    checkBounds(s, 75, 100, 50, 50);
-  
-    /* test for a close match i.e. the same language prefix */
-    second.setAttribute("systemLanguage", "en-us");
-    checkWidth(s, 50);
-
-    /* test that we pick the first match */
-    first.setAttribute("systemLanguage", "it");
-    checkWidth(s, 70);
-
-    /* this time with reordering */
     first.setAttribute("systemLanguage", "fr");
-    s.setAttribute("allowReorder", "yes");
 
     /* test for an exact match */
     second.setAttribute("systemLanguage", "en-gb");
