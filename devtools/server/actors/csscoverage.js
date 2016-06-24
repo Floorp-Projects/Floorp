@@ -18,7 +18,7 @@ loader.lazyGetter(this, "DOMUtils", () => {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
 });
 loader.lazyRequireGetter(this, "stylesheets", "devtools/server/actors/stylesheets");
-loader.lazyRequireGetter(this, "CssLogic", "devtools/shared/inspector/css-logic", true);
+loader.lazyRequireGetter(this, "prettifyCSS", "devtools/shared/inspector/css-logic", true);
 
 const CSSRule = Ci.nsIDOMCSSRule;
 
@@ -397,7 +397,7 @@ var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
         shortUrl: rule.url.split("/").slice(-1)[0],
         start: { line: rule.line, column: rule.column },
         selectorText: ruleData.selectorText,
-        formattedCssText: CssLogic.prettifyCSS(ruleData.cssText)
+        formattedCssText: prettifyCSS(ruleData.cssText)
       };
     };
 

@@ -18,7 +18,7 @@ const {originalSourceSpec, mediaRuleSpec, styleSheetSpec,
        styleSheetsSpec} = require("devtools/shared/specs/stylesheets");
 const {SourceMapConsumer} = require("source-map");
 
-loader.lazyGetter(this, "CssLogic", () => require("devtools/shared/inspector/css-logic").CssLogic);
+loader.lazyGetter(this, "CssLogic", () => require("devtools/shared/inspector/css-logic"));
 
 XPCOMUtils.defineLazyGetter(this, "DOMUtils", function () {
   return Cc["@mozilla.org/inspector/dom-utils;1"].getService(Ci.inIDOMUtils);
