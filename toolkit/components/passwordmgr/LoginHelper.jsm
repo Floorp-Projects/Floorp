@@ -204,6 +204,42 @@ this.LoginHelper = {
     return false;
   },
 
+  doLoginsMatch(aLogin1, aLogin2, {
+    ignorePassword = false,
+    ignoreSchemes = false,
+  }) {
+    if (aLogin1.httpRealm != aLogin2.httpRealm ||
+        aLogin1.username != aLogin2.username)
+      return false;
+
+    if (!ignorePassword && aLogin1.password != aLogin2.password)
+      return false;
+
+    if (ignoreSchemes) {
+      let hostname1URI = Services.io.newURI(aLogin1.hostname, null, null);
+      let hostname2URI = Services.io.newURI(aLogin2.hostname, null, null);
+      if (hostname1URI.hostPort != hostname2URI.hostPort)
+        return false;
+
+      if (aLogin1.formSubmitURL != "" && aLogin2.formSubmitURL != "" &&
+          Services.io.newURI(aLogin1.formSubmitURL, null, null).hostPort !=
+          Services.io.newURI(aLogin2.formSubmitURL, null, null).hostPort)
+        return false;
+    } else {
+      if (aLogin1.hostname != aLogin2.hostname)
+        return false;
+
+      // If either formSubmitURL is blank (but not null), then match.
+      if (aLogin1.formSubmitURL != "" && aLogin2.formSubmitURL != "" &&
+          aLogin1.formSubmitURL != aLogin2.formSubmitURL)
+        return false;
+    }
+
+    // The .usernameField and .passwordField values are ignored.
+
+    return true;
+  },
+
   /**
    * Creates a new login object that results by modifying the given object with
    * the provided data.

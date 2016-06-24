@@ -820,9 +820,13 @@ LoginManagerPrompter.prototype = {
     };
 
     let updateButtonLabel = () => {
-      let foundLogins = Services.logins.findLogins({}, login.hostname,
-                                                   login.formSubmitURL,
-                                                   login.httpRealm);
+      let foundLogins = LoginHelper.searchLoginsWithObject({
+        formSubmitURL: login.formSubmitURL,
+        hostname: login.hostname,
+        httpRealm: login.httpRealm,
+        schemeUpgrades: LoginHelper.schemeUpgrades,
+      });
+
       let logins = this._filterUpdatableLogins(login, foundLogins);
       let msgNames = (logins.length == 0) ? saveMsgNames : changeMsgNames;
 
@@ -886,9 +890,13 @@ LoginManagerPrompter.prototype = {
     };
 
     let persistData = () => {
-      let foundLogins = Services.logins.findLogins({}, login.hostname,
-                                                   login.formSubmitURL,
-                                                   login.httpRealm);
+      let foundLogins = LoginHelper.searchLoginsWithObject({
+        formSubmitURL: login.formSubmitURL,
+        hostname: login.hostname,
+        httpRealm: login.httpRealm,
+        schemeUpgrades: LoginHelper.schemeUpgrades,
+      });
+
       let logins = this._filterUpdatableLogins(login, foundLogins);
 
       if (logins.length == 0) {
@@ -1002,15 +1010,15 @@ LoginManagerPrompter.prototype = {
     );
   },
 
-  /*
-   * _showSaveLoginNotification
-   *
+  /**
    * Displays a notification bar or a popup notification, to allow the user
    * to save the specified login. This allows the user to see the results of
    * their login, and only save a login which they know worked.
    *
    * @param aNotifyObj
    *        A notification box or a popup notification.
+   * @param aLogin
+   *        The login captured from the form.
    */
   _showSaveLoginNotification : function (aNotifyObj, aLogin) {
     // Ugh. We can't use the strings from the popup window, because they
@@ -1223,6 +1231,8 @@ LoginManagerPrompter.prototype = {
 
     // Notification is a PopupNotification
     if (aNotifyObj == this._getPopupNote()) {
+      aOldLogin.hostname = aNewLogin.hostname;
+      aOldLogin.formSubmitURL = aNewLogin.formSubmitURL;
       aOldLogin.password = aNewLogin.password;
       aOldLogin.username = aNewLogin.username;
       this._showLoginCaptureDoorhanger(aOldLogin, "password-change");
@@ -1347,6 +1357,8 @@ LoginManagerPrompter.prototype = {
     var propBag = Cc["@mozilla.org/hash-property-bag;1"].
                   createInstance(Ci.nsIWritablePropertyBag);
     if (aNewLogin) {
+      propBag.setProperty("formSubmitURL", aNewLogin.formSubmitURL);
+      propBag.setProperty("hostname", aNewLogin.hostname);
       propBag.setProperty("password", aNewLogin.password);
       propBag.setProperty("username", aNewLogin.username);
       // Explicitly set the password change time here (even though it would
