@@ -355,11 +355,11 @@ class LegacyTask(base.Task):
             'head_ref': params['head_ref'] or params['head_rev'],
             'head_rev': params['head_rev'],
             'pushdate': pushdate,
-            'push_epoch': push_epoch,
             'pushtime': pushdate[8:],
             'year': pushdate[0:4],
             'month': pushdate[4:6],
             'day': pushdate[6:8],
+            'rank': push_epoch,
             'owner': params['owner'],
             'level': params['level'],
             'from_now': json_time_from_now,
@@ -448,6 +448,13 @@ class LegacyTask(base.Task):
             build_parameters['build_name'] = task_extra['build_name']
             build_parameters['build_type'] = task_extra['build_type']
             build_parameters['build_product'] = task_extra['build_product']
+
+            if 'treeherder' in task_extra:
+                tier = task_extra['treeherder'].get('tier', 1)
+                if tier != 1:
+                    # Only tier 1 jobs use the build time as rank. Everything
+                    # else gets rank 0 until it is promoted to tier 1.
+                    task_extra['index']['rank'] = 0
 
             set_interactive_task(build_task, interactive)
 
