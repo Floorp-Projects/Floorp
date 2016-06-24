@@ -53,9 +53,6 @@
 
   skin/classic/global/checkbox/cbox-check.gif              (../../windows/global/checkbox/cbox-check.gif)
   skin/classic/global/checkbox/cbox-check-dis.gif          (../../windows/global/checkbox/cbox-check-dis.gif)
-  skin/classic/global/console/console-error-caret.gif      (../../windows/global/console/console-error-caret.gif)
-  skin/classic/global/console/console-error-dash.gif       (../../windows/global/console/console-error-dash.gif)
-  skin/classic/global/console/itemSelected.png             (../../windows/global/console/itemSelected.png)
 * skin/classic/global/dirListing/dirListing.css            (../../windows/global/dirListing/dirListing.css)
   skin/classic/global/dirListing/folder.png                (../../windows/global/dirListing/folder.png)
   skin/classic/global/dirListing/local.png                 (../../windows/global/dirListing/local.png)

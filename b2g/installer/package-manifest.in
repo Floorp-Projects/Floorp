@@ -401,8 +401,6 @@
 @RESPATH@/components/SiteSpecificUserAgent.manifest
 @RESPATH@/components/storage-json.js
 @RESPATH@/components/crypto-SDR.js
-@RESPATH@/components/jsconsole-clhandler.manifest
-@RESPATH@/components/jsconsole-clhandler.js
 @RESPATH@/components/Downloads.manifest
 @RESPATH@/components/DownloadLegacy.js
 @RESPATH@/components/nsSidebar.manifest
