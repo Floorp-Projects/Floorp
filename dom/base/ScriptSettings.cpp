@@ -140,8 +140,6 @@ ScriptSettingsStackEntry::ScriptSettingsStackEntry(nsIGlobalObject *aGlobal,
              "Must have an actual JS global for the duration on the stack");
   MOZ_ASSERT(JS_IsGlobalObject(mGlobalObject->GetGlobalJSObject()),
              "No outer windows allowed");
-
-  ScriptSettingsStack::Push(this);
 }
 
 // This constructor is only for use by AutoNoJSAPI.
@@ -150,15 +148,12 @@ ScriptSettingsStackEntry::ScriptSettingsStackEntry()
    , mType(eNoJSAPI)
    , mOlder(nullptr)
 {
-  ScriptSettingsStack::Push(this);
 }
 
 ScriptSettingsStackEntry::~ScriptSettingsStackEntry()
 {
   // We must have an actual JS global for the entire time this is on the stack.
   MOZ_ASSERT_IF(mGlobalObject, mGlobalObject->GetGlobalJSObject());
-
-  ScriptSettingsStack::Pop(this);
 }
 
 // If the entry or incumbent global ends up being something that the subject
@@ -622,6 +617,8 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
   MOZ_ASSERT_IF(!aCx, aIsMainThread); // cx is mandatory off-main-thread.
   MOZ_ASSERT_IF(aCx && aIsMainThread, aCx == nsContentUtils::GetSafeJSContext());
 
+  ScriptSettingsStack::Push(this);
+
   if (aIsMainThread && gRunToCompletionListeners > 0) {
     mDocShellEntryMonitor.emplace(cx(), aReason);
   }
@@ -641,6 +638,8 @@ AutoEntryScript::~AutoEntryScript()
   // us out on certain (flawed) benchmarks like sunspider, because it lets us
   // avoid GCing during the timing loop.
   JS_MaybeGC(cx());
+
+  ScriptSettingsStack::Pop(this);
 }
 
 AutoEntryScript::DocshellEntryMonitor::DocshellEntryMonitor(JSContext* aCx,
@@ -722,6 +721,12 @@ AutoIncumbentScript::AutoIncumbentScript(nsIGlobalObject* aGlobalObject)
   : ScriptSettingsStackEntry(aGlobalObject, eIncumbentScript)
   , mCallerOverride(nsContentUtils::GetCurrentJSContextForThread())
 {
+  ScriptSettingsStack::Push(this);
+}
+
+AutoIncumbentScript::~AutoIncumbentScript()
+{
+  ScriptSettingsStack::Pop(this);
 }
 
 AutoNoJSAPI::AutoNoJSAPI(bool aIsMainThread)
@@ -731,6 +736,13 @@ AutoNoJSAPI::AutoNoJSAPI(bool aIsMainThread)
     mCxPusher.emplace(static_cast<JSContext*>(nullptr),
                       /* aAllowNull = */ true);
   }
+
+  ScriptSettingsStack::Push(this);
+}
+
+AutoNoJSAPI::~AutoNoJSAPI()
+{
+  ScriptSettingsStack::Pop(this);
 }
 
 danger::AutoCxPusher::AutoCxPusher(JSContext* cx, bool allowNull)
