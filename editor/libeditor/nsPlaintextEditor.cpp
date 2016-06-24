@@ -686,7 +686,7 @@ nsPlaintextEditor::DeleteSelection(EDirection aAction,
     }
   }
 
-  nsTextRulesInfo ruleInfo(EditAction::deleteSelection);
+  TextRulesInfo ruleInfo(EditAction::deleteSelection);
   ruleInfo.collapsedAction = aAction;
   ruleInfo.stripWrappers = aStripWrappers;
   bool cancel, handled;
@@ -726,7 +726,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertText(const nsAString &aStringToInsert)
   // XXX can we trust instring to outlive ruleInfo,
   // XXX and ruleInfo not to refer to instring in its dtor?
   //nsAutoString instring(aStringToInsert);
-  nsTextRulesInfo ruleInfo(opID);
+  TextRulesInfo ruleInfo(opID);
   ruleInfo.inString = &aStringToInsert;
   ruleInfo.outString = &resultString;
   ruleInfo.maxLength = mMaxTextLength;
@@ -760,7 +760,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertLineBreak()
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  nsTextRulesInfo ruleInfo(EditAction::insertBreak);
+  TextRulesInfo ruleInfo(EditAction::insertBreak);
   ruleInfo.maxLength = mMaxTextLength;
   bool cancel, handled;
   nsresult res = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
@@ -1101,7 +1101,7 @@ nsPlaintextEditor::Undo(uint32_t aCount)
 
   AutoRules beginRulesSniffing(this, EditAction::undo, nsIEditor::eNone);
 
-  nsTextRulesInfo ruleInfo(EditAction::undo);
+  TextRulesInfo ruleInfo(EditAction::undo);
   RefPtr<Selection> selection = GetSelection();
   bool cancel, handled;
   nsresult result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
@@ -1130,7 +1130,7 @@ nsPlaintextEditor::Redo(uint32_t aCount)
 
   AutoRules beginRulesSniffing(this, EditAction::redo, nsIEditor::eNone);
 
-  nsTextRulesInfo ruleInfo(EditAction::redo);
+  TextRulesInfo ruleInfo(EditAction::redo);
   RefPtr<Selection> selection = GetSelection();
   bool cancel, handled;
   nsresult result = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
@@ -1296,7 +1296,7 @@ nsPlaintextEditor::OutputToString(const nsAString& aFormatType,
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
 
   nsString resultString;
-  nsTextRulesInfo ruleInfo(EditAction::outputText);
+  TextRulesInfo ruleInfo(EditAction::outputText);
   ruleInfo.outString = &resultString;
   // XXX Struct should store a nsAReadable*
   nsAutoString str(aFormatType);
@@ -1429,7 +1429,7 @@ nsPlaintextEditor::InsertAsQuotation(const nsAString& aQuotedText,
   AutoRules beginRulesSniffing(this, EditAction::insertText, nsIEditor::eNext);
 
   // give rules a chance to handle or cancel
-  nsTextRulesInfo ruleInfo(EditAction::insertElement);
+  TextRulesInfo ruleInfo(EditAction::insertElement);
   bool cancel, handled;
   rv = mRules->WillDoAction(selection, &ruleInfo, &cancel, &handled);
   NS_ENSURE_SUCCESS(rv, rv);

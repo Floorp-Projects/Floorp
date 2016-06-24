@@ -65,8 +65,8 @@ nsHTMLEditor::AbsolutePositionSelection(bool aEnabled)
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
 
-  nsTextRulesInfo ruleInfo(aEnabled ? EditAction::setAbsolutePosition :
-                                      EditAction::removeAbsolutePosition);
+  TextRulesInfo ruleInfo(aEnabled ? EditAction::setAbsolutePosition :
+                                    EditAction::removeAbsolutePosition);
   bool cancel, handled;
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
@@ -169,8 +169,8 @@ nsHTMLEditor::RelativeChangeZIndex(int32_t aChange)
   // Find out if the selection is collapsed:
   RefPtr<Selection> selection = GetSelection();
   NS_ENSURE_TRUE(selection, NS_ERROR_NULL_POINTER);
-  nsTextRulesInfo ruleInfo(aChange < 0 ? EditAction::decreaseZIndex :
-                                         EditAction::increaseZIndex);
+  TextRulesInfo ruleInfo(aChange < 0 ? EditAction::decreaseZIndex :
+                                       EditAction::increaseZIndex);
   bool cancel, handled;
   // Protect the edit rules object from dying
   nsCOMPtr<nsIEditRules> kungFuDeathGrip(mRules);
