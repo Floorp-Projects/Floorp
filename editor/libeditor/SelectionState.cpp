@@ -50,7 +50,7 @@ SelectionState::SaveSelection(Selection* aSel)
   if (arrayCount < rangeCount) {
     for (int32_t i = arrayCount; i < rangeCount; i++) {
       mArray.AppendElement();
-      mArray[i] = new nsRangeStore();
+      mArray[i] = new RangeItem();
     }
   } else if (arrayCount > rangeCount) {
     // else if we have too many, delete them
@@ -154,7 +154,7 @@ nsRangeUpdater::~nsRangeUpdater()
 }
 
 void
-nsRangeUpdater::RegisterRangeItem(nsRangeStore *aRangeItem)
+nsRangeUpdater::RegisterRangeItem(RangeItem* aRangeItem)
 {
   if (!aRangeItem) return;
   if (mArray.Contains(aRangeItem))
@@ -166,7 +166,7 @@ nsRangeUpdater::RegisterRangeItem(nsRangeStore *aRangeItem)
 }
 
 void
-nsRangeUpdater::DropRangeItem(nsRangeStore *aRangeItem)
+nsRangeUpdater::DropRangeItem(RangeItem* aRangeItem)
 {
   if (!aRangeItem) return;
   mArray.RemoveElement(aRangeItem);
@@ -216,7 +216,7 @@ nsRangeUpdater::SelAdjCreateNode(nsINode* aParent, int32_t aPosition)
   }
 
   for (uint32_t i = 0; i < count; i++) {
-    nsRangeStore* item = mArray[i];
+    RangeItem* item = mArray[i];
     NS_ENSURE_TRUE(item, NS_ERROR_NULL_POINTER);
 
     if (item->startNode == aParent && item->startOffset > aPosition) {
@@ -266,7 +266,7 @@ nsRangeUpdater::SelAdjDeleteNode(nsINode* aNode)
 
   // check for range endpoints that are after aNode and in the same parent
   for (uint32_t i = 0; i < count; i++) {
-    nsRangeStore* item = mArray[i];
+    RangeItem* item = mArray[i];
     MOZ_ASSERT(item);
 
     if (item->startNode == parent && item->startOffset > offset) {
@@ -336,7 +336,7 @@ nsRangeUpdater::SelAdjSplitNode(nsIContent& aOldRightNode, int32_t aOffset,
 
   // next step is to check for range enpoints inside aOldRightNode
   for (uint32_t i = 0; i < count; i++) {
-    nsRangeStore* item = mArray[i];
+    RangeItem* item = mArray[i];
     NS_ENSURE_TRUE(item, NS_ERROR_NULL_POINTER);
 
     if (item->startNode == &aOldRightNode) {
@@ -374,7 +374,7 @@ nsRangeUpdater::SelAdjJoinNodes(nsINode& aLeftNode,
   }
 
   for (uint32_t i = 0; i < count; i++) {
-    nsRangeStore* item = mArray[i];
+    RangeItem* item = mArray[i];
     NS_ENSURE_TRUE(item, NS_ERROR_NULL_POINTER);
 
     if (item->startNode == &aParent) {
@@ -432,7 +432,7 @@ nsRangeUpdater::SelAdjInsertText(Text& aTextNode, int32_t aOffset,
 
   uint32_t len = aString.Length();
   for (uint32_t i = 0; i < count; i++) {
-    nsRangeStore* item = mArray[i];
+    RangeItem* item = mArray[i];
     MOZ_ASSERT(item);
 
     if (item->startNode == &aTextNode && item->startOffset > aOffset) {
@@ -461,7 +461,7 @@ nsRangeUpdater::SelAdjDeleteText(nsIContent* aTextNode, int32_t aOffset,
   NS_ENSURE_TRUE(aTextNode, NS_ERROR_NULL_POINTER);
 
   for (uint32_t i = 0; i < count; i++) {
-    nsRangeStore* item = mArray[i];
+    RangeItem* item = mArray[i];
     NS_ENSURE_TRUE(item, NS_ERROR_NULL_POINTER);
 
     if (item->startNode == aTextNode && item->startOffset > aOffset) {
@@ -511,7 +511,7 @@ nsRangeUpdater::DidReplaceContainer(Element* aOriginalNode, Element* aNewNode)
   }
 
   for (uint32_t i = 0; i < count; i++) {
-    nsRangeStore* item = mArray[i];
+    RangeItem* item = mArray[i];
     NS_ENSURE_TRUE(item, NS_ERROR_NULL_POINTER);
 
     if (item->startNode == aOriginalNode) {
@@ -548,7 +548,7 @@ nsRangeUpdater::DidRemoveContainer(nsINode* aNode, nsINode* aParent,
   }
 
   for (uint32_t i = 0; i < count; i++) {
-    nsRangeStore* item = mArray[i];
+    RangeItem* item = mArray[i];
     NS_ENSURE_TRUE(item, NS_ERROR_NULL_POINTER);
 
     if (item->startNode == aNode) {
@@ -613,7 +613,7 @@ nsRangeUpdater::DidMoveNode(nsINode* aOldParent, int32_t aOldOffset,
   mLock = false;
 
   for (uint32_t i = 0, count = mArray.Length(); i < count; ++i) {
-    nsRangeStore* item = mArray[i];
+    RangeItem* item = mArray[i];
     NS_ENSURE_TRUE_VOID(item);
 
     // like a delete in aOldParent
@@ -634,25 +634,28 @@ nsRangeUpdater::DidMoveNode(nsINode* aOldParent, int32_t aOldOffset,
   }
 }
 
+namespace mozilla {
 
+/******************************************************************************
+ * mozilla::RangeItem
+ *
+ * Helper struct for SelectionState.  This stores range endpoints.
+ ******************************************************************************/
 
-/***************************************************************************
- * helper class for SelectionState.  nsRangeStore stores range endpoints.
- */
-
-nsRangeStore::nsRangeStore()
+RangeItem::RangeItem()
 {
 }
-nsRangeStore::~nsRangeStore()
+
+RangeItem::~RangeItem()
 {
 }
 
-NS_IMPL_CYCLE_COLLECTION(nsRangeStore, startNode, endNode)
-NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(nsRangeStore, AddRef)
-NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(nsRangeStore, Release)
+NS_IMPL_CYCLE_COLLECTION(RangeItem, startNode, endNode)
+NS_IMPL_CYCLE_COLLECTION_ROOT_NATIVE(RangeItem, AddRef)
+NS_IMPL_CYCLE_COLLECTION_UNROOT_NATIVE(RangeItem, Release)
 
 void
-nsRangeStore::StoreRange(nsRange* aRange)
+RangeItem::StoreRange(nsRange* aRange)
 {
   MOZ_ASSERT(aRange);
   startNode = aRange->GetStartParent();
@@ -662,10 +665,12 @@ nsRangeStore::StoreRange(nsRange* aRange)
 }
 
 already_AddRefed<nsRange>
-nsRangeStore::GetRange()
+RangeItem::GetRange()
 {
   RefPtr<nsRange> range = new nsRange(startNode);
   nsresult res = range->Set(startNode, startOffset, endNode, endOffset);
   NS_ENSURE_SUCCESS(res, nullptr);
   return range.forget();
 }
+
+} // namespace mozilla

@@ -197,7 +197,7 @@ nsHTMLEditRules::InitFields()
   mUtilRange = nullptr;
   mJoinOffset = 0;
   mNewBlock = nullptr;
-  mRangeItem = new nsRangeStore();
+  mRangeItem = new RangeItem();
   // populate mCachedStyles
   mCachedStyles[0] = StyleCache(nsGkAtoms::b, EmptyString(), EmptyString());
   mCachedStyles[1] = StyleCache(nsGkAtoms::i, EmptyString(), EmptyString());
@@ -5590,12 +5590,12 @@ nsHTMLEditRules::GetNodesForOperation(nsTArray<RefPtr<nsRange>>& aArrayOfRanges,
   // allowed to touch content.
 
   if (aTouchContent == TouchContent::yes) {
-    nsTArray<OwningNonNull<nsRangeStore>> rangeItemArray;
+    nsTArray<OwningNonNull<RangeItem>> rangeItemArray;
     rangeItemArray.AppendElements(rangeCount);
 
     // First register ranges for special editor gravity
     for (int32_t i = 0; i < rangeCount; i++) {
-      rangeItemArray[i] = new nsRangeStore();
+      rangeItemArray[i] = new RangeItem();
       rangeItemArray[i]->StoreRange(aArrayOfRanges[0]);
       mHTMLEditor->mRangeUpdater.RegisterRangeItem(rangeItemArray[i]);
       aArrayOfRanges.RemoveElementAt(0);
@@ -5893,7 +5893,7 @@ nsHTMLEditRules::GetParagraphFormatNodes(nsTArray<OwningNonNull<nsINode>>& outAr
 // BustUpInlinesAtRangeEndpoints:
 //
 nsresult
-nsHTMLEditRules::BustUpInlinesAtRangeEndpoints(nsRangeStore &item)
+nsHTMLEditRules::BustUpInlinesAtRangeEndpoints(RangeItem& item)
 {
   bool isCollapsed = ((item.startNode == item.endNode) && (item.startOffset == item.endOffset));
 
