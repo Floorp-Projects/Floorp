@@ -1,0 +1,166 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test link policy attribute for Bug 1264165</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+
+  <!--
+  Testing that link referrer attributes are honoured correctly
+  https://bugzilla.mozilla.org/show_bug.cgi?id=1264165
+  -->
+
+  <script type="application/javascript;version=1.8">
+
+  const SJS = "://example.com/tests/dom/base/test/referrer_testserver.sjs?";
+  const PARAMS = ["ATTRIBUTE_POLICY", "NEW_ATTRIBUTE_POLICY", "META_POLICY", "REL", "SCHEME_FROM", "SCHEME_TO"];
+
+  const testCases = [
+    {ACTION: ["generate-link-policy-test"],
+      TESTS: [
+        {ATTRIBUTE_POLICY: 'unsafe-url',
+         NAME: 'stylesheet-unsafe-url-with-origin-in-meta',
+         META_POLICY: 'origin',
+         REL: 'stylesheet',
+         DESC: "stylesheet-unsafe-url with origin in meta",
+         RESULT: 'full'},
+        {ATTRIBUTE_POLICY: 'origin',
+         NAME: 'stylesheet-origin-with-unsafe-url-in-meta',
+         META_POLICY: 'unsafe-url',
+         REL: 'stylesheet',
+         DESC: "stylesheet-origin with unsafe-url in meta",
+         RESULT: 'origin'},
+        {ATTRIBUTE_POLICY: 'no-referrer',
+         NAME: 'stylesheet-no-referrer-with-origin-in-meta',
+         META_POLICY: 'origin',
+         REL: 'stylesheet',
+         DESC: "stylesheet-no-referrer with origin in meta",
+         RESULT: 'none'},
+        {NAME: 'stylesheet-no-referrer-in-meta',
+         META_POLICY: 'no-referrer',
+         REL: 'stylesheet',
+         DESC: "stylesheet-no-referrer in meta",
+         RESULT: 'none'},
+
+         // Downgrade.
+        {ATTRIBUTE_POLICY: 'no-referrer-when-downgrade',
+         NAME: 'stylesheet-origin-in-meta-downgrade-in-attr',
+         META_POLICY: 'origin',
+         DESC: 'stylesheet-origin in meta downgrade in attr',
+         REL: 'stylesheet',
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         RESULT: 'none'},
+
+          // No downgrade.
+        {ATTRIBUTE_POLICY: 'no-referrer-when-downgrade',
+         NAME: 'stylesheet-origin-in-meta-downgrade-in-attr',
+         META_POLICY: 'origin',
+         DESC: 'stylesheet-origin in meta downgrade in attr',
+         REL: 'stylesheet',
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'https',
+         RESULT: 'full'},
+
+        {ATTRIBUTE_POLICY: 'origin',
+         NAME: 'stylesheet-origin-with-no-meta',
+         META_POLICY: '',
+         REL: 'stylesheet',
+         DESC: "stylesheet-origin with no meta",
+         RESULT: 'origin'},
+
+        // Cross origin
+        {ATTRIBUTE_POLICY: 'origin-when-cross-origin',
+         NAME: 'stylesheet-origin-when-cross-origin-with-no-meta',
+         META_POLICY: '',
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         REL: 'stylesheet',
+         DESC: "stylesheet-origin-when-cross-origin with no meta",
+         RESULT: 'origin'},
+        {ATTRIBUTE_POLICY: 'origin-when-cross-origin',
+         NAME: 'stylesheet-origin-when-cross-origin-with-no-referrer-in-meta',
+         META_POLICY: 'no-referrer',
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         REL: 'stylesheet',
+         DESC: "stylesheet-origin-when-cross-origin with no-referrer in meta",
+         RESULT: 'origin'},
+        {ATTRIBUTE_POLICY: 'origin-when-cross-origin',
+         NAME: 'stylesheet-origin-when-cross-origin-with-unsafe-url-in-meta',
+         META_POLICY: 'unsafe-url',
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         REL: 'stylesheet',
+         DESC: "stylesheet-origin-when-cross-origin with unsafe-url in meta",
+         RESULT: 'origin'},
+        {ATTRIBUTE_POLICY: 'origin-when-cross-origin',
+         NAME: 'stylesheet-origin-when-cross-origin-with-origin-in-meta',
+         META_POLICY: 'origin',
+         SCHEME_FROM: 'https',
+         SCHEME_TO: 'http',
+         REL: 'stylesheet',
+         DESC: "stylesheet-origin-when-cross-origin with origin in meta",
+         RESULT: 'origin'},
+
+        // Invalid
+        {ATTRIBUTE_POLICY: 'default',
+         NAME: 'stylesheet-default-with-no-meta',
+         META_POLICY: '',
+         REL: 'stylesheet',
+         DESC: "stylesheet-default with no meta",
+         RESULT: 'full'},
+        {ATTRIBUTE_POLICY: 'something',
+         NAME: 'stylesheet-something-with-no-meta',
+         META_POLICY: '',
+         REL: 'stylesheet',
+         DESC: "stylesheet-something with no meta",
+         RESULT: 'full'},
+      ]},
+
+    {ACTION: ["generate-link-policy-test-set-attribute"],
+      TESTS: [
+        {ATTRIBUTE_POLICY: 'unsafe-url',
+         NEW_ATTRIBUTE_POLICY: 'no-referrer',
+         NAME: 'stylesheet-no-referrer-unsafe-url-set-attribute-with-origin-in-meta',
+         META_POLICY: 'origin',
+         REL: 'stylesheet',
+         DESC: "stylesheet-no-referrer-set-attribute (orginally unsafe-url) with origin in meta",
+         RESULT: 'none'},
+        {ATTRIBUTE_POLICY: 'origin',
+         NEW_ATTRIBUTE_POLICY: 'unsafe-url',
+         NAME: 'stylesheet-unsafe-url-origin-set-attribute-with-no-referrer-in-meta',
+         META_POLICY: 'no-referrer',
+         REL: 'stylesheet',
+         DESC: "stylesheet-unsafe-url-set-attribute (orginally origin) with no-referrer in meta",
+         RESULT: 'full'},
+      ]},
+
+    {ACTION: ["generate-link-policy-test-property"],
+      TESTS: [
+        {ATTRIBUTE_POLICY: 'no-referrer',
+         NEW_ATTRIBUTE_POLICY: 'unsafe-url',
+         NAME: 'stylesheet-unsafe-url-no-referrer-property-with-origin-in-meta',
+         META_POLICY: 'origin',
+         REL: 'stylesheet',
+         DESC: "stylesheet-unsafe-url-property (orginally no-referrer) with origin in meta",
+         RESULT: 'full'},
+        {ATTRIBUTE_POLICY: 'origin',
+         NEW_ATTRIBUTE_POLICY: 'unsafe-url',
+         NAME: 'stylesheet-unsafe-url-origin-property-with-no-referrer-in-meta',
+         META_POLICY: 'no-referrer',
+         REL: 'stylesheet',
+         DESC: "stylesheet-unsafe-url-property (orginally origin) with no-referrer in meta",
+         RESULT: 'full'},
+      ]},
+  ];
+  </script>
+  <script type="application/javascript;version=1.7" src="/tests/dom/base/test/referrer_helper.js"></script>
+</head>
+<body onload="tests.next();">
+  <iframe id="testframe"></iframe>
+</body>
+</html>
+
+

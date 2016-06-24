@@ -408,6 +408,8 @@ class BaseCompiler
 #endif
 
     // The join registers are used to carry values out of blocks.
+    // JoinRegI32 and joinRegI64 must overlap: emitBrIf and
+    // emitBrTable assume that.
 
     RegI32 joinRegI32;
     RegI64 joinRegI64;
@@ -1483,6 +1485,7 @@ class BaseCompiler
     void pushJoinReg(AnyReg r) {
         switch (r.tag) {
           case AnyReg::NONE:
+            pushVoid();
             break;
           case AnyReg::I32:
             pushI32(r.i32());
@@ -1723,12 +1726,6 @@ class BaseCompiler
     }
 
     bool endFunction() {
-        // A frame greater than 256KB is implausible, probably an attack,
-        // so bail out.
-
-        if (maxFramePushed_ > 256 * 1024)
-            return false;
-
         // Out-of-line prologue.  Assumes that the in-line prologue has
         // been executed and that a frame of size = localSize_ + sizeof(AsmJSFrame)
         // has been allocated.
@@ -1769,6 +1766,12 @@ class BaseCompiler
             return false;
 
         compileResults_.offsets().end = masm.currentOffset();
+
+        // A frame greater than 256KB is implausible, probably an attack,
+        // so fail the compilation.
+
+        if (maxFramePushed_ > 256 * 1024)
+            return false;
 
         return true;
     }
@@ -2433,7 +2436,7 @@ class BaseCompiler
 
     void lshiftI32(int32_t count, RegI32 srcDest) {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-        masm.shll(Imm32(count), srcDest.reg);
+        masm.shll(Imm32(count & 31), srcDest.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: lshiftI32");
 #endif
@@ -2459,7 +2462,7 @@ class BaseCompiler
 
     void rshiftI32(int32_t count, RegI32 srcDest) {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-        masm.sarl(Imm32(count), srcDest.reg);
+        masm.sarl(Imm32(count & 31), srcDest.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: rshiftI32");
 #endif
@@ -2485,7 +2488,7 @@ class BaseCompiler
 
     void rshiftU32(int32_t count, RegI32 srcDest) {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-        masm.shrl(Imm32(count), srcDest.reg);
+        masm.shrl(Imm32(count & 31), srcDest.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: rshiftU32");
 #endif
@@ -4617,8 +4620,9 @@ BaseCompiler::emitBrIf()
     // allowing a conditional expression to be left on the stack and
     // reified here as part of the branch instruction.
 
-    // Don't use it for rc
-    if (type == ExprType::I32)
+    // We'll need the joinreg later, so don't use it for rc.
+    // We assume joinRegI32 and joinRegI64 overlap.
+    if (type == ExprType::I32 || type == ExprType::I64)
         needI32(joinRegI32);
 
     // Condition value is on top, always I32.
@@ -4629,7 +4633,7 @@ BaseCompiler::emitBrIf()
     if (IsVoid(type))
         pushVoid();
 
-    if (type == ExprType::I32)
+    if (type == ExprType::I32 || type == ExprType::I64)
         freeI32(joinRegI32);
 
     // Save any value in the designated join register, where the
@@ -4680,8 +4684,9 @@ BaseCompiler::emitBrTable()
     if (!iter_.readBrTableEntry(type, &defaultDepth))
         return false;
 
-    // We'll need this, so don't use it for rc
-    if (type == ExprType::I32)
+    // We'll need the joinreg later, so don't use it for rc.
+    // We assume joinRegI32 and joinRegI64 overlap.
+    if (type == ExprType::I32 || type == ExprType::I64)
         needI32(joinRegI32);
 
     // Table switch value always on top.
@@ -4692,7 +4697,7 @@ BaseCompiler::emitBrTable()
     if (IsVoid(type))
         pushVoid();
 
-    if (type == ExprType::I32)
+    if (type == ExprType::I32 || type == ExprType::I64)
         freeI32(joinRegI32);
 
     AnyReg r = popJoinReg();
@@ -4814,9 +4819,10 @@ void
 BaseCompiler::pushReturned(ExprType type)
 {
     switch (type) {
-      case ExprType::Void:
+      case ExprType::Void: {
         pushVoid();
         break;
+      }
       case ExprType::I32: {
         RegI32 rv = needI32();
         captureReturnedI32(rv);
@@ -5375,6 +5381,7 @@ BaseCompiler::emitSelect()
 
     RegI32 rc = popI32();
     switch (type) {
+      case AnyType:
       case ExprType::Void: {
         popValueStackBy(2);
         pushVoid();
@@ -5659,14 +5666,20 @@ BaseCompiler::emitBody()
         // every iteration.
 
         if (overhead == 0) {
+            // Check every 50 expressions -- a happy medium between
+            // memory usage and checking overhead.
+            overhead = 50;
+
             // Checking every 50 expressions should be safe, as the
             // baseline JIT does very little allocation per expression.
             CHECK(alloc_.ensureBallast());
-            CHECK(stk_.reserve(stk_.length() + 64));
-            overhead = 50;
-        } else {
-            overhead -= 1;
+
+            // The pushiest opcode is LOOP, which pushes two values
+            // per instance.
+            CHECK(stk_.reserve(stk_.length() + overhead * 2));
         }
+
+        overhead--;
 
         if (done())
             return true;

@@ -105,7 +105,7 @@ Link::TryDNSPrefetchPreconnectOrPrefetch()
         nsCOMPtr<nsIDOMNode> domNode = GetAsDOMNode(mElement);
         prefetchService->PrefetchURI(uri,
                                      mElement->OwnerDoc()->GetDocumentURI(),
-                                     domNode, true);
+                                     domNode, linkTypes & nsStyleLinkElement::ePREFETCH);
         return;
       }
     }
