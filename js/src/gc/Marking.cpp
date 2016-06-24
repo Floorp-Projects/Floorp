@@ -184,7 +184,8 @@ js::CheckTracedThing(JSTracer* trc, T* thing)
     if (!trc->checkEdges())
         return;
 
-    thing = MaybeForwarded(thing);
+    if (IsForwarded(thing))
+        thing = Forwarded(thing);
 
     /* This function uses data that's not available in the nursery. */
     if (IsInsideNursery(thing))
@@ -235,8 +236,13 @@ js::CheckTracedThing(JSTracer* trc, T* thing)
      * fact that allocated things may still contain the poison pattern if that
      * part has not been overwritten.  Also, background sweeping may be running
      * and concurrently modifiying the free list.
+     *
+     * Tracing is done off main thread while compacting and reading the contents
+     * of the thing in IsThingPoisoned is racy so this check is skipped there.
      */
-    MOZ_ASSERT_IF(IsThingPoisoned(thing) && rt->isHeapBusy() && !rt->gc.isBackgroundSweeping(),
+    MOZ_ASSERT_IF(rt->isHeapBusy() && !zone->isGCCompacting() &&
+                  !rt->gc.isBackgroundSweeping() &&
+                  IsThingPoisoned(thing),
                   !InFreeList(thing->asTenured().arena(), thing));
 #endif
 }
