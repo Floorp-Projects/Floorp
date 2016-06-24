@@ -143,6 +143,40 @@ NSSDialogs.prototype = {
     this.showPrompt(p);
   },
 
+  /**
+   * Returns a list of details of the given cert relevant for TLS client
+   * authentication.
+   *
+   * @param {nsIX509Cert} cert Cert to get the details of.
+   * @returns {String} <br/> delimited list of details.
+   */
+  getCertDetails: function(cert) {
+    let detailLines = [
+      this.formatString("clientAuthAsk.issuedTo", [cert.subjectName]),
+      this.formatString("clientAuthAsk.serial", [cert.serialNumber]),
+      this.formatString("clientAuthAsk.validityPeriod",
+                        [cert.validity.notBeforeLocalTime,
+                         cert.validity.notAfterLocalTime]),
+    ];
+    let keyUsages = cert.keyUsages;
+    if (keyUsages) {
+      detailLines.push(this.formatString("clientAuthAsk.keyUsages",
+                                         [keyUsages]));
+    }
+    let emailAddresses = cert.getEmailAddresses({});
+    if (emailAddresses.length > 0) {
+      let joinedAddresses = emailAddresses.join(", ");
+      detailLines.push(this.formatString("clientAuthAsk.emailAddresses",
+                                         [joinedAddresses]));
+    }
+    detailLines.push(this.formatString("clientAuthAsk.issuedBy",
+                                       [cert.issuerName]));
+    detailLines.push(this.formatString("clientAuthAsk.storedOn",
+                                       [cert.tokenName]));
+
+    return detailLines.join("<br/>");
+  },
+
   viewCertDetails: function(details) {
     let p = this.getPrompt(this.getString("clientAuthAsk.message3"),
                     '',
@@ -151,8 +185,7 @@ NSSDialogs.prototype = {
     this.showPrompt(p);
   },
 
-  chooseCertificate: function(ctx, cnAndPort, organization, issuerOrg,
-                              certNickList, certDetailsList, count,
+  chooseCertificate: function(ctx, cnAndPort, organization, issuerOrg, certList,
                               selectedIndex) {
     let rememberSetting =
       Services.prefs.getBoolPref("security.remember_cert_checkbox_default_setting");
@@ -162,6 +195,15 @@ NSSDialogs.prototype = {
       this.formatString("clientAuthAsk.organization", [organization]),
       this.formatString("clientAuthAsk.issuer", [issuerOrg]),
     ].join("<br/>");
+
+    let certNickList = [];
+    let certDetailsList = [];
+    for (let i = 0; i < certList.length; i++) {
+      let cert = certList.queryElementAt(i, Ci.nsIX509Cert);
+      certNickList.push(this.formatString("clientAuthAsk.nickAndSerial",
+                                          [cert.nickname, cert.serialNumber]));
+      certDetailsList.push(this.getCertDetails(cert));
+    }
 
     selectedIndex.value = 0;
     while (true) {
