@@ -7,31 +7,13 @@
 
 #include "mozilla/Preferences.h"
 #include "MainThreadUtils.h"
-#include "mozilla/gfx/Preferences.h"
 #include "nsXULAppAPI.h"
+#include "mozilla/gfx/Logging.h"
 
 using namespace mozilla;
 
 gfxPrefs* gfxPrefs::sInstance = nullptr;
 bool gfxPrefs::sInstanceHasBeenDestroyed = false;
-
-class PreferenceAccessImpl : public mozilla::gfx::PreferenceAccess
-{
-public:
-  virtual ~PreferenceAccessImpl();
-  virtual void LivePref(const char* aName, int32_t* aVar, int32_t aDefault) override;
-};
-
-PreferenceAccessImpl::~PreferenceAccessImpl()
-{
-}
-
-void PreferenceAccessImpl::LivePref(const char* aName,
-                                    int32_t* aVar,
-                                    int32_t aDefault)
-{
-  Preferences::AddIntVarCache(aVar, aName, aDefault);
-}
 
 void
 gfxPrefs::DestroySingleton()
@@ -60,19 +42,21 @@ gfxPrefs::gfxPrefs()
                 Preferences::IsServiceAvailable());
 
   gfxPrefs::AssertMainThread();
-  mMoz2DPrefAccess = new PreferenceAccessImpl;
-  mozilla::gfx::PreferenceAccess::SetAccess(mMoz2DPrefAccess);
+}
+
+void
+gfxPrefs::Init()
+{
+  // Set up Moz2D prefs.
+  mPrefGfxLoggingLevel.SetChangeCallback([]() -> void {
+    mozilla::gfx::LoggingPrefs::sGfxLogLevel = GetSingleton().mPrefGfxLoggingLevel.GetLiveValue();
+  });
 }
 
 gfxPrefs::~gfxPrefs()
 {
   gfxPrefs::AssertMainThread();
-
-  // gfxPrefs is a singleton, we can reset this to null once
-  // it goes away.
-  mozilla::gfx::PreferenceAccess::SetAccess(nullptr);
-  delete mMoz2DPrefAccess;
-  mMoz2DPrefAccess = nullptr;
+  mPrefGfxLoggingLevel.SetChangeCallback(nullptr);
 }
 
 void gfxPrefs::AssertMainThread()
