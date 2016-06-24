@@ -5,13 +5,17 @@
 
 #include "gfxPrefs.h"
 
-#include "mozilla/Preferences.h"
 #include "MainThreadUtils.h"
 #include "nsXULAppAPI.h"
+#include "mozilla/Preferences.h"
+#include "mozilla/unused.h"
 #include "mozilla/gfx/Logging.h"
+#include "mozilla/gfx/GPUChild.h"
+#include "mozilla/gfx/GPUProcessManager.h"
 
 using namespace mozilla;
 
+nsTArray<gfxPrefs::Pref*> gfxPrefs::sGfxPrefList;
 gfxPrefs* gfxPrefs::sInstance = nullptr;
 bool gfxPrefs::sInstanceHasBeenDestroyed = false;
 
@@ -57,6 +61,7 @@ gfxPrefs::~gfxPrefs()
 {
   gfxPrefs::AssertMainThread();
   mPrefGfxLoggingLevel.SetChangeCallback(nullptr);
+  sGfxPrefList.Clear();
 }
 
 void gfxPrefs::AssertMainThread()
@@ -66,6 +71,19 @@ void gfxPrefs::AssertMainThread()
 
 void
 gfxPrefs::Pref::OnChange()
+{
+  if (auto gpm = gfx::GPUProcessManager::Get()) {
+    if (gfx::GPUChild* gpu = gpm->GetGPUChild()) {
+      GfxPrefValue value;
+      GetCachedValue(&value);
+      Unused << gpu->SendUpdatePref(gfx::GfxPrefSetting(mIndex, value));
+    }
+  }
+  FireChangeCallback();
+}
+
+void
+gfxPrefs::Pref::FireChangeCallback()
 {
   if (mChangeCallback) {
     mChangeCallback();
@@ -89,7 +107,7 @@ gfxPrefs::Pref::SetChangeCallback(ChangeCallback aCallback)
   }
 
   // Fire the callback once to make initialization easier for the caller.
-  OnChange();
+  FireChangeCallback();
 }
 
 // On lightweight processes such as for GMP and GPU, XPCOM is not initialized,
@@ -205,4 +223,44 @@ void gfxPrefs::UnwatchChanges(const char* aPrefname, Pref* aPref)
   if (IsPrefsServiceAvailable()) {
     Preferences::UnregisterCallback(OnGfxPrefChanged, aPrefname, aPref, Preferences::ExactMatch);
   }
+}
+
+void gfxPrefs::CopyPrefValue(const bool* aValue, GfxPrefValue* aOutValue)
+{
+  *aOutValue = *aValue;
+}
+
+void gfxPrefs::CopyPrefValue(const int32_t* aValue, GfxPrefValue* aOutValue)
+{
+  *aOutValue = *aValue;
+}
+
+void gfxPrefs::CopyPrefValue(const uint32_t* aValue, GfxPrefValue* aOutValue)
+{
+  *aOutValue = *aValue;
+}
+
+void gfxPrefs::CopyPrefValue(const float* aValue, GfxPrefValue* aOutValue)
+{
+  *aOutValue = *aValue;
+}
+
+void gfxPrefs::CopyPrefValue(const GfxPrefValue* aValue, bool* aOutValue)
+{
+  *aOutValue = aValue->get_bool();
+}
+
+void gfxPrefs::CopyPrefValue(const GfxPrefValue* aValue, int32_t* aOutValue)
+{
+  *aOutValue = aValue->get_int32_t();
+}
+
+void gfxPrefs::CopyPrefValue(const GfxPrefValue* aValue, uint32_t* aOutValue)
+{
+  *aOutValue = aValue->get_uint32_t();
+}
+
+void gfxPrefs::CopyPrefValue(const GfxPrefValue* aValue, float* aOutValue)
+{
+  *aOutValue = aValue->get_float();
 }
