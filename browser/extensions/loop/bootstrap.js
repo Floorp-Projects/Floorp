@@ -538,7 +538,8 @@ var WindowListener = {
           state = "error";
           mozL10nId += "-error";} else 
         if (this.isSlideshowOpen) {
-          state = "slideshow";} else 
+          state = "slideshow";
+          suffix = ".label";} else 
         if (this.MozLoopService.screenShareActive) {
           state = "action";
           mozL10nId += "-screensharing";} else 
@@ -663,7 +664,9 @@ var WindowListener = {
         this.activeSound.load();
         this.activeSound.play();
 
-        this.activeSound.addEventListener("ended", function () {_this11.activeSound = undefined;}, false);}, 
+        this.activeSound.addEventListener("ended", function () {
+          _this11.activeSound = undefined;}, 
+        false);}, 
 
 
       /**
@@ -744,41 +747,7 @@ var WindowListener = {
 
         this._listeningToTabSelect = false;
         this._browserSharePaused = false;
-        this._currentRoomToken = null;
-
-        this._sendTelemetryEventsIfNeeded();}, 
-
-
-      /**
-       * Sends telemetry events for pause/ resume buttons if needed.
-       */
-      _sendTelemetryEventsIfNeeded: function _sendTelemetryEventsIfNeeded() {
-        // The user can't click Resume button without clicking Pause button first.
-        if (!this._pauseButtonClicked) {
-          return;}
-
-
-        var buckets = this.constants.SHARING_SCREEN;
-        this.LoopAPI.sendMessageToHandler({ 
-          name: "TelemetryAddValue", 
-          data: [
-          "LOOP_INFOBAR_ACTION_BUTTONS", 
-          buckets.PAUSED] });
-
-
-
-        if (this._resumeButtonClicked) {
-          this.LoopAPI.sendMessageToHandler({ 
-            name: "TelemetryAddValue", 
-            data: [
-            "LOOP_INFOBAR_ACTION_BUTTONS", 
-            buckets.RESUMED] });}
-
-
-
-
-        this._pauseButtonClicked = false;
-        this._resumeButtonClicked = false;}, 
+        this._currentRoomToken = null;}, 
 
 
       /**
@@ -942,11 +911,8 @@ var WindowListener = {
             buttonNode.accessKey = stringObj.accesskey;
             LoopUI.MozLoopService.toggleBrowserSharing(_this13._browserSharePaused);
             if (_this13._browserSharePaused) {
-              _this13._pauseButtonClicked = true;
               // if paused we stop sharing remote cursors
-              _this13.removeRemoteCursor();} else 
-            {
-              _this13._resumeButtonClicked = true;}
+              _this13.removeRemoteCursor();}
 
             return true;}, 
 
@@ -1418,10 +1384,10 @@ function startup(data) {
   // Load our stylesheets.
   var styleSheetService = Cc["@mozilla.org/content/style-sheet-service;1"].
   getService(Components.interfaces.nsIStyleSheetService);
-  var sheets = ["chrome://loop-shared/skin/loop.css"];
+  var sheets = [
+  "chrome://loop-shared/skin/loop.css", 
+  "chrome://loop/skin/platform.css"];var _iteratorNormalCompletion2 = true;var _didIteratorError2 = false;var _iteratorError2 = undefined;try {
 
-  if (AppConstants.platform != "linux") {
-    sheets.push("chrome://loop/skin/platform.css");}var _iteratorNormalCompletion2 = true;var _didIteratorError2 = false;var _iteratorError2 = undefined;try {
 
 
     for (var _iterator2 = sheets[Symbol.iterator](), _step2; !(_iteratorNormalCompletion2 = (_step2 = _iterator2.next()).done); _iteratorNormalCompletion2 = true) {var sheet = _step2.value;

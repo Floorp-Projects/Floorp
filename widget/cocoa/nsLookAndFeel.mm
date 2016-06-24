@@ -51,6 +51,15 @@ static nscolor GetColorFromNSColor(NSColor* aColor)
                 (unsigned int)([deviceColor blueComponent] * 255.0));
 }
 
+static nscolor GetColorFromNSColorWithAlpha(NSColor* aColor, float alpha)
+{
+  NSColor* deviceColor = [aColor colorUsingColorSpaceName:NSDeviceRGBColorSpace];
+  return NS_RGBA((unsigned int)([deviceColor redComponent] * 255.0),
+                 (unsigned int)([deviceColor greenComponent] * 255.0),
+                 (unsigned int)([deviceColor blueComponent] * 255.0),
+                 (unsigned int)(alpha * 255.0));
+}
+
 nsresult
 nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
 {
@@ -253,7 +262,7 @@ nsLookAndFeel::NativeGetColor(ColorID aID, nscolor &aColor)
     }
       break;
     case eColorID__moz_mac_focusring:
-      aColor = GetColorFromNSColor([NSColor keyboardFocusIndicatorColor]);
+      aColor = GetColorFromNSColorWithAlpha([NSColor keyboardFocusIndicatorColor], 0.48);
       break;
     case eColorID__moz_mac_menushadow:
       aColor = NS_RGB(0xA3,0xA3,0xA3);
