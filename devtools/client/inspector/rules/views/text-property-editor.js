@@ -5,7 +5,7 @@
 "use strict";
 
 const {Ci} = require("chrome");
-const {CssLogic} = require("devtools/shared/inspector/css-logic");
+const {l10n} = require("devtools/shared/inspector/css-logic");
 const {getCssProperties} = require("devtools/shared/fronts/css-properties");
 const {InplaceEditor, editableField} =
       require("devtools/client/shared/inplace-editor");
@@ -176,7 +176,7 @@ TextPropertyEditor.prototype = {
     this.warning = createChild(this.container, "div", {
       class: "ruleview-warning",
       hidden: "",
-      title: CssLogic.l10n("rule.warning.title"),
+      title: l10n("rule.warning.title"),
     });
 
     // Filter button that filters for the current property name and is
@@ -184,7 +184,7 @@ TextPropertyEditor.prototype = {
     this.filterProperty = createChild(this.container, "div", {
       class: "ruleview-overridden-rule-filter",
       hidden: "",
-      title: CssLogic.l10n("rule.filterProperty.title"),
+      title: l10n("rule.filterProperty.title"),
     });
 
     this.filterProperty.addEventListener("click", event => {
@@ -371,7 +371,7 @@ TextPropertyEditor.prototype = {
           onRevert: this._onSwatchRevert
         });
         span.on("unit-change", this._onSwatchCommit);
-        let title = CssLogic.l10n("rule.colorSwatch.tooltip");
+        let title = l10n("rule.colorSwatch.tooltip");
         span.setAttribute("title", title);
       }
     }
@@ -389,7 +389,7 @@ TextPropertyEditor.prototype = {
           onCommit: this._onSwatchCommit,
           onRevert: this._onSwatchRevert
         });
-        let title = CssLogic.l10n("rule.bezierSwatch.tooltip");
+        let title = l10n("rule.bezierSwatch.tooltip");
         span.setAttribute("title", title);
       }
     }
@@ -406,7 +406,7 @@ TextPropertyEditor.prototype = {
           onCommit: this._onSwatchCommit,
           onRevert: this._onSwatchRevert
         }, outputParser, parserOptions);
-        let title = CssLogic.l10n("rule.filterSwatch.tooltip");
+        let title = l10n("rule.filterSwatch.tooltip");
         span.setAttribute("title", title);
       }
     }
@@ -416,7 +416,7 @@ TextPropertyEditor.prototype = {
     if (this.ruleEditor.isEditable) {
       for (let angleSpan of this.angleSwatchSpans) {
         angleSpan.on("unit-change", this._onSwatchCommit);
-        let title = CssLogic.l10n("rule.angleSwatch.tooltip");
+        let title = l10n("rule.angleSwatch.tooltip");
         angleSpan.setAttribute("title", title);
       }
     }
