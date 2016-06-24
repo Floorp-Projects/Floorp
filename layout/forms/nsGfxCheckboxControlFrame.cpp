@@ -18,62 +18,6 @@
 using namespace mozilla;
 using namespace mozilla::gfx;
 
-static void
-PaintCheckMark(nsIFrame* aFrame,
-               DrawTarget* aDrawTarget,
-               const nsRect& aDirtyRect,
-               nsPoint aPt)
-{
-  nsRect rect(aPt, aFrame->GetSize());
-  rect.Deflate(aFrame->GetUsedBorderAndPadding());
-
-  // Points come from the coordinates on a 7X7 unit box centered at 0,0
-  const int32_t checkPolygonX[] = { -3, -1,  3,  3, -1, -3 };
-  const int32_t checkPolygonY[] = { -1,  1, -3, -1,  3,  1 };
-  const int32_t checkNumPoints = sizeof(checkPolygonX) / sizeof(int32_t);
-  const int32_t checkSize      = 9; // 2 units of padding on either side
-                                    // of the 7x7 unit checkmark
-
-  // Scale the checkmark based on the smallest dimension
-  nscoord paintScale = std::min(rect.width, rect.height) / checkSize;
-  nsPoint paintCenter(rect.x + rect.width  / 2,
-                      rect.y + rect.height / 2);
-
-  RefPtr<PathBuilder> builder = aDrawTarget->CreatePathBuilder();
-  nsPoint p = paintCenter + nsPoint(checkPolygonX[0] * paintScale,
-                                    checkPolygonY[0] * paintScale);
-
-  int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
-  builder->MoveTo(NSPointToPoint(p, appUnitsPerDevPixel));
-  for (int32_t polyIndex = 1; polyIndex < checkNumPoints; polyIndex++) {
-    p = paintCenter + nsPoint(checkPolygonX[polyIndex] * paintScale,
-                              checkPolygonY[polyIndex] * paintScale);
-    builder->LineTo(NSPointToPoint(p, appUnitsPerDevPixel));
-  }
-  RefPtr<Path> path = builder->Finish();
-  aDrawTarget->Fill(path,
-                    ColorPattern(ToDeviceColor(aFrame->StyleColor()->mColor)));
-}
-
-static void
-PaintIndeterminateMark(nsIFrame* aFrame,
-                       DrawTarget* aDrawTarget,
-                       const nsRect& aDirtyRect,
-                       nsPoint aPt)
-{
-  int32_t appUnitsPerDevPixel = aFrame->PresContext()->AppUnitsPerDevPixel();
-
-  nsRect rect(aPt, aFrame->GetSize());
-  rect.Deflate(aFrame->GetUsedBorderAndPadding());
-  rect.y += (rect.height - rect.height/4) / 2;
-  rect.height /= 4;
-
-  Rect devPxRect = NSRectToSnappedRect(rect, appUnitsPerDevPixel, *aDrawTarget);
-
-  aDrawTarget->FillRect(
-    devPxRect, ColorPattern(ToDeviceColor(aFrame->StyleColor()->mColor)));
-}
-
 //------------------------------------------------------------
 nsIFrame*
 NS_NewGfxCheckboxControlFrame(nsIPresShell* aPresShell,
@@ -103,29 +47,6 @@ nsGfxCheckboxControlFrame::AccessibleType()
   return a11y::eHTMLCheckboxType;
 }
 #endif
-
-//------------------------------------------------------------
-void
-nsGfxCheckboxControlFrame::BuildDisplayList(nsDisplayListBuilder*   aBuilder,
-                                            const nsRect&           aDirtyRect,
-                                            const nsDisplayListSet& aLists)
-{
-  nsFormControlFrame::BuildDisplayList(aBuilder, aDirtyRect, aLists);
-  
-  // Get current checked state through content model.
-  if ((!IsChecked() && !IsIndeterminate()) || !IsVisibleForPainting(aBuilder))
-    return;   // we're not checked or not visible, nothing to paint.
-    
-  if (IsThemed())
-    return; // No need to paint the checkmark. The theme will do it.
-
-  aLists.Content()->AppendNewToTop(new (aBuilder)
-    nsDisplayGeneric(aBuilder, this,
-                     IsIndeterminate()
-                     ? PaintIndeterminateMark : PaintCheckMark,
-                     "CheckedCheckbox",
-                     nsDisplayItem::TYPE_CHECKED_CHECKBOX));
-}
 
 //------------------------------------------------------------
 bool
