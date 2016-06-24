@@ -128,24 +128,6 @@ var pktUI = (function() {
      * Show the sign-up panel
      */
     function showSignUp() {
-        // AB test: Direct logged-out users to tab vs panel
-        if (pktApi.getSignupPanelTabTestVariant() == 'tab')
-        {
-            let site = Services.prefs.getCharPref("extensions.pocket.site");
-            openTabWithUrl('https://' + site + '/firefox_learnmore?src=ff_ext&s=ffi&t=buttonclick', true);
-
-            // force the panel closed before it opens
-            // wrapped in setTimeout to avoid race condition after logging out
-            // if this test goes to 100%, we should move this logic up before
-            // the panel is actually opened
-            setTimeout(function() {
-                getPanel().hidePopup();
-            }, 0);
-
-            return;
-        }
-
-        // Control: Show panel as normal
         getFirefoxAccountSignedInUser(function(userdata)
         {
             var fxasignedin = (typeof userdata == 'object' && userdata !== null) ? '1' : '0';
@@ -156,12 +138,19 @@ var pktUI = (function() {
             {
                 startheight = overflowMenuHeight;
             }
-            else
+            else if (pktApi.getSignupAB().indexOf('storyboard') > -1)
             {
                 startheight = 460;
                 if (fxasignedin == '1')
                 {
                     startheight = 406;
+                }
+            }
+            else
+            {
+                if (fxasignedin == '1')
+                {
+                    startheight = 436;
                 }
             }
             var variant;
@@ -171,17 +160,16 @@ var pktUI = (function() {
             }
             else
             {
-                variant = 'storyboard_lm';
+                variant = pktApi.getSignupAB();
             }
-
             var panelId = showPanel("about:pocket-signup?pockethost=" + Services.prefs.getCharPref("extensions.pocket.site") + "&fxasignedin=" + fxasignedin + "&variant=" + variant + '&inoverflowmenu=' + inOverflowMenu + "&locale=" + getUILocale(), {
                     onShow: function() {
                     },
                     onHide: panelDidHide,
                     width: inOverflowMenu ? overflowMenuWidth : 300,
                     height: startheight
+                });
             });
-        });
     }
 
     /**
