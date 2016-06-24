@@ -102,6 +102,8 @@ private:
 
   void DispatchChangeEvent();
 
+  bool ShouldResistFingerprinting() const;
+
   LockPermission GetLockOrientationPermission(bool aCheckSandbox) const;
 
   // Gets the responsible document as defined in the spec.
