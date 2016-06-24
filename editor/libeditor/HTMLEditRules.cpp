@@ -1325,7 +1325,7 @@ HTMLEditRules::WillInsertText(EditAction aAction,
     // build the "doc changed range" ourselves, and it's
     // must faster to do it once here than to track all
     // the changes one at a time.
-    nsAutoLockListener lockit(&mListenerEnabled);
+    AutoLockListener lockit(&mListenerEnabled);
 
     // don't spaz my selection in subtransactions
     NS_ENSURE_STATE(mHTMLEditor);

@@ -324,17 +324,15 @@ protected:
   TextEditRules* mRules;
 };
 
-} // namespace mozilla
-
-/***************************************************************************
- * stack based helper class for turning on/off the edit listener.
+/**
+ * Stack based helper class for turning on/off the edit listener.
  */
-class nsAutoLockListener
+class MOZ_STACK_CLASS AutoLockListener final
 {
 public:
-
-  explicit nsAutoLockListener(bool *enabled)
-    : mEnabled(enabled), mOldState(false)
+  explicit AutoLockListener(bool* aEnabled)
+    : mEnabled(aEnabled)
+    , mOldState(false)
   {
     if (mEnabled) {
       mOldState = *mEnabled;
@@ -342,7 +340,7 @@ public:
     }
   }
 
-  ~nsAutoLockListener()
+  ~AutoLockListener()
   {
     if (mEnabled) {
       *mEnabled = mOldState;
@@ -350,8 +348,10 @@ public:
   }
 
 protected:
-  bool *mEnabled;
+  bool* mEnabled;
   bool mOldState;
 };
+
+} // namespace mozilla
 
 #endif // #ifndef mozilla_TextEditRules_h
