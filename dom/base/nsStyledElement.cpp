@@ -131,7 +131,12 @@ nsStyledElementNotElementCSSInlineStyle::ReparseStyleAttribute(bool aForceInData
   }
   const nsAttrValue* oldVal = mAttrsAndChildren.GetAttr(nsGkAtoms::style);
   
-  if (oldVal && oldVal->Type() != nsAttrValue::eGeckoCSSDeclaration) {
+  nsAttrValue::ValueType desiredType =
+    OwnerDoc()->GetStyleBackendType() == StyleBackendType::Gecko ?
+      nsAttrValue::eGeckoCSSDeclaration :
+      nsAttrValue::eServoCSSDeclaration;
+
+  if (oldVal && oldVal->Type() != desiredType) {
     nsAttrValue attrValue;
     nsAutoString stringValue;
     oldVal->ToString(stringValue);
