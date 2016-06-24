@@ -38,14 +38,13 @@ public:
   static void Push(ScriptSettingsStackEntry *aEntry) {
     MOZ_ASSERT(!aEntry->mOlder);
     // Whenever JSAPI use is disabled, the next stack entry pushed must
-    // either be an entry candidate or if not also not an incumbent candidate.
+    // not be an AutoIncumbentScript.
     MOZ_ASSERT_IF(!Top() || Top()->NoJSAPI(),
-                  aEntry->IsEntryCandidate() || !aEntry->IsIncumbentCandidate());
+                  !aEntry->IsIncumbentScript());
     // Whenever the top entry is not an incumbent canidate, the next stack entry
-    // pushed must either be an entry candidate or if not also not an incumbent
-    // candidate.
+    // pushed must not be an AutoIncumbentScript.
     MOZ_ASSERT_IF(Top() && !Top()->IsIncumbentCandidate(),
-                  aEntry->IsEntryCandidate() || !aEntry->IsIncumbentCandidate());
+                  !aEntry->IsIncumbentScript());
 
     aEntry->mOlder = Top();
     sScriptSettingsTLS.set(aEntry);
@@ -85,6 +84,19 @@ public:
     }
     return entry->mGlobalObject;
   }
+
+#ifdef DEBUG
+  static ScriptSettingsStackEntry* TopNonIncumbentScript() {
+    ScriptSettingsStackEntry *entry = Top();
+    while (entry) {
+      if (!entry->IsIncumbentScript()) {
+        return entry;
+      }
+      entry = entry->mOlder;
+    }
+    return nullptr;
+  }
+#endif // DEBUG
 
 };
 
@@ -594,7 +606,7 @@ AutoJSAPI::ReportException()
 bool
 AutoJSAPI::PeekException(JS::MutableHandle<JS::Value> aVal)
 {
-  MOZ_ASSERT_IF(mIsMainThread, CxPusherIsStackTop());
+  MOZ_ASSERT_IF(mIsMainThread, IsStackTop());
   MOZ_ASSERT(HasException());
   MOZ_ASSERT(js::GetContextCompartment(cx()));
   if (!JS_GetPendingException(cx(), aVal)) {
@@ -612,6 +624,14 @@ AutoJSAPI::StealException(JS::MutableHandle<JS::Value> aVal)
   JS_ClearPendingException(cx());
   return true;
 }
+
+#ifdef DEBUG
+bool
+AutoJSAPI::IsStackTop() const
+{
+  return ScriptSettingsStack::TopNonIncumbentScript() == this;
+}
+#endif // DEBUG
 
 AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
                                  const char *aReason,
@@ -758,7 +778,6 @@ danger::AutoCxPusher::AutoCxPusher(JSContext* cx, bool allowNull)
   stack->Push(cx);
 
 #ifdef DEBUG
-  mStackDepthAfterPush = stack->Count();
   mPushedContext = cx;
   mCompartmentDepthOnEntry = cx ? js::GetEnterCompartmentDepth(cx) : 0;
 #endif
@@ -787,16 +806,6 @@ danger::AutoCxPusher::~AutoCxPusher()
   // here.
   XPCJSRuntime::Get()->GetJSContextStack()->Pop();
 }
-
-#ifdef DEBUG
-bool
-danger::AutoCxPusher::IsStackTop() const
-{
-  uint32_t currentDepth = XPCJSRuntime::Get()->GetJSContextStack()->Count();
-  MOZ_ASSERT(currentDepth >= mStackDepthAfterPush);
-  return currentDepth == mStackDepthAfterPush;
-}
-#endif
 
 } // namespace dom
 

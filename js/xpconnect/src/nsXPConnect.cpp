@@ -996,7 +996,7 @@ PushNullJSContext()
 void
 PopNullJSContext()
 {
-    MOZ_ASSERT(XPCJSRuntime::Get()->GetJSContextStack()->Peek() == nullptr);
+    MOZ_ASSERT(nsContentUtils::GetCurrentJSContext() == nullptr);
     XPCJSRuntime::Get()->GetJSContextStack()->Pop();
 }
 

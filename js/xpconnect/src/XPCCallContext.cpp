@@ -9,6 +9,7 @@
 #include "xpcprivate.h"
 #include "jswrapper.h"
 #include "jsfriendapi.h"
+#include "nsContentUtils.h"
 
 using namespace mozilla;
 using namespace xpc;
@@ -33,7 +34,7 @@ XPCCallContext::XPCCallContext(JSContext* cx,
         mName(cx)
 {
     MOZ_ASSERT(cx);
-    MOZ_ASSERT(cx == XPCJSRuntime::Get()->GetJSContextStack()->Peek());
+    MOZ_ASSERT(cx == nsContentUtils::GetCurrentJSContext());
 
     if (!mXPC)
         return;
