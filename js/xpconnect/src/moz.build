@@ -22,7 +22,6 @@ UNIFIED_SOURCES += [
     'XPCConvert.cpp',
     'XPCDebug.cpp',
     'XPCException.cpp',
-    'XPCJSContextStack.cpp',
     'XPCJSID.cpp',
     'XPCJSRuntime.cpp',
     'XPCJSWeakReference.cpp',
