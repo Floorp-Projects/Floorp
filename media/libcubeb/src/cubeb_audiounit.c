@@ -1536,6 +1536,7 @@ audiounit_get_devices(AudioObjectID ** devices, uint32_t * count)
     }
   } else {
     *devices = NULL;
+    ret = -1;
   }
 
   return ret;
@@ -1598,24 +1599,23 @@ audiounit_get_available_samplerate(AudioObjectID devid, AudioObjectPropertyScope
   }
 
   adr.mSelector = kAudioDevicePropertyAvailableNominalSampleRates;
-  if (AudioObjectHasProperty(devid, &adr)) {
-    UInt32 size = 0;
-    AudioValueRange range;
-    if (AudioObjectGetPropertyDataSize(devid, &adr, 0, NULL, &size) == noErr) {
-      uint32_t i, count = size / sizeof(AudioValueRange);
-      AudioValueRange * ranges = malloc(size);
-      range.mMinimum = 9999999999.0;
-      range.mMaximum = 0.0;
-      if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, ranges) == noErr) {
-        for (i = 0; i < count; i++) {
-          if (ranges[i].mMaximum > range.mMaximum)
-            range.mMaximum = ranges[i].mMaximum;
-          if (ranges[i].mMinimum < range.mMinimum)
-            range.mMinimum = ranges[i].mMinimum;
-        }
+  UInt32 size = 0;
+  AudioValueRange range;
+  if (AudioObjectHasProperty(devid, &adr) &&
+      AudioObjectGetPropertyDataSize(devid, &adr, 0, NULL, &size) == noErr) {
+    uint32_t i, count = size / sizeof(AudioValueRange);
+    AudioValueRange * ranges = malloc(size);
+    range.mMinimum = 9999999999.0;
+    range.mMaximum = 0.0;
+    if (AudioObjectGetPropertyData(devid, &adr, 0, NULL, &size, ranges) == noErr) {
+      for (i = 0; i < count; i++) {
+        if (ranges[i].mMaximum > range.mMaximum)
+          range.mMaximum = ranges[i].mMaximum;
+        if (ranges[i].mMinimum < range.mMinimum)
+          range.mMinimum = ranges[i].mMinimum;
       }
-      free(ranges);
     }
+    free(ranges);
     *max = (uint32_t)range.mMaximum;
     *min = (uint32_t)range.mMinimum;
   } else {
@@ -1839,7 +1839,7 @@ audiounit_get_devices_of_type(cubeb_device_type devtype, AudioObjectID ** devid_
     }
   }
 
-  if (devid_array) {
+  if (devid_array && dev_count > 0) {
     *devid_array = calloc(dev_count, sizeof(AudioObjectID));
     assert(*devid_array);
     memcpy(*devid_array, &devices_in_scope, dev_count * sizeof(AudioObjectID));

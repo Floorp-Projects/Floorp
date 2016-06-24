@@ -192,7 +192,7 @@ nsMozIconURI::SetSpec(const nsACString& aSpec)
       }
 
       int32_t sizeValue = atoi(sizeString.get());
-      if (sizeValue) {
+      if (sizeValue > 0) {
         mSize = sizeValue;
       }
     }

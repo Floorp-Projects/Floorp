@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "AudioEventTimeline.h"
+#include "AudioEventTimeline.cpp"
 #include "TestHarness.h"
 #include <sstream>
 #include <limits>
@@ -92,7 +92,7 @@ private:
   nsresult mRv;
 };
 
-typedef AudioEventTimeline<ErrorResultMock> Timeline;
+typedef AudioEventTimeline Timeline;
 
 void TestSpecExample()
 {
