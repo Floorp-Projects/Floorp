@@ -151,33 +151,28 @@ NSSDialogs.prototype = {
     this.showPrompt(p);
   },
 
-  ChooseCertificate: function(aCtx, cn, organization, issuer, certNickList, certDetailsList, count, selectedIndex, canceled) {
-    let rememberSetting = true;
-    var pref = Cc['@mozilla.org/preferences-service;1']
-               .getService(Components.interfaces.nsIPrefService);
-    if (pref) {
-      pref = pref.getBranch(null);
-      try {
-        rememberSetting = pref.getBoolPref("security.remember_cert_checkbox_default_setting");
-      } catch (e) {
-        // pref is missing
-      }
-    }
+  chooseCertificate: function(ctx, cnAndPort, organization, issuerOrg,
+                              certNickList, certDetailsList, count,
+                              selectedIndex) {
+    let rememberSetting =
+      Services.prefs.getBoolPref("security.remember_cert_checkbox_default_setting");
 
-    let organizationString = this.formatString("clientAuthAsk.organization",
-                                               [organization]);
-    let issuerString = this.formatString("clientAuthAsk.issuer",
-                                         [issuer]);
-    let serverRequestedDetails = cn + '<br/>' + organizationString + '<br/>' + issuerString;
+    let serverRequestedDetails = [
+      cnAndPort,
+      this.formatString("clientAuthAsk.organization", [organization]),
+      this.formatString("clientAuthAsk.issuer", [issuerOrg]),
+    ].join("<br/>");
 
     selectedIndex.value = 0;
     while (true) {
+      let buttons = [
+        this.getString("nssdialogs.ok.label"),
+        this.getString("clientAuthAsk.viewCert.label"),
+        this.getString("nssdialogs.cancel.label"),
+      ];
       let prompt = this.getPrompt(this.getString("clientAuthAsk.title"),
-                                     this.getString("clientAuthAsk.message1"),
-                                     [ this.getString("nssdialogs.ok.label"),
-                                       this.getString("clientAuthAsk.viewCert.label"),
-                                       this.getString("nssdialogs.cancel.label")
-                                     ])
+                                  this.getString("clientAuthAsk.message1"),
+                                  buttons)
       .addLabel({ id: "requestedDetails", label: serverRequestedDetails } )
       .addMenulist({
         id: "nicknames",
@@ -191,17 +186,18 @@ NSSDialogs.prototype = {
       });
       let response = this.showPrompt(prompt);
       selectedIndex.value = response.nicknames;
-      if (response.button == 1) {
+      if (response.button == 1 /* buttons[1] */) {
         this.viewCertDetails(certDetailsList[selectedIndex.value]);
         continue;
-      } else if (response.button == 0) {
-        canceled.value = false;
+      } else if (response.button == 0 /* buttons[0] */) {
         if (response.rememberBox == true) {
-          aCtx.QueryInterface(Ci.nsIClientAuthUserDecision).rememberClientAuthCertificate = true;
+          let caud = ctx.QueryInterface(Ci.nsIClientAuthUserDecision);
+          if (caud) {
+            caud.rememberClientAuthCertificate = true;
+          }
         }
         return true;
       }
-      canceled.value = true;
       return false;
     }
   }
