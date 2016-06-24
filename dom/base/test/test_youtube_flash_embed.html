@@ -10,35 +10,23 @@
     <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
     <script type="application/javascript">
      SimpleTest.waitForExplicitFinish();
-     "use strict";
-     function onLoad () {
-       let youtube_changed_url_query = "https://mochitest.youtube.com/embed/Xm5i5kbIXzc?start=10&end=20";
-
-       function testEmbed(embed, expected_url) {
-         ok (embed, "Embed node exists");
-         embed = SpecialPowers.wrap(embed);
-         is (embed.srcURI.spec, expected_url, "Should have src uri of " + expected_url);
+     let path = location.pathname.substring(0, location.pathname.lastIndexOf('/')) + '/file_youtube_flash_embed.html';
+     onmessage = function(e) {
+       let msg = JSON.parse(e.data);
+       if (msg.fn == "finish") {
+         SimpleTest.finish();
+         return;
        }
-       info("Running youtube rewrite query test");
-       testEmbed(document.getElementById("testembed-correct"), youtube_changed_url_query);
-       testEmbed(document.getElementById("testembed-wrong"), youtube_changed_url_query);
-       testEmbed(document.getElementById("testembed-whywouldyouevendothat"), youtube_changed_url_query);
-       SimpleTest.finish();
+       self[msg.fn].apply(null, msg.args);
+     }
+     function onLoad() {
+       // The test file must be loaded into youtube.com domain
+       // because it needs unprivileged access to fullscreenEnabled.
+       ifr.src = "https://mochitest.youtube.com" + path;
      }
     </script>
   </head>
   <body onload="onLoad()">
-    <embed id="testembed-correct"
-           src="https://mochitest.youtube.com/v/Xm5i5kbIXzc?start=10&end=20"
-           type="application/x-shockwave-flash"
-           allowscriptaccess="always"></embed>
-    <embed id="testembed-wrong"
-           src="https://mochitest.youtube.com/v/Xm5i5kbIXzc&start=10&end=20"
-           type="application/x-shockwave-flash"
-           allowscriptaccess="always"></embed>
-    <embed id="testembed-whywouldyouevendothat"
-           src="https://mochitest.youtube.com/v/Xm5i5kbIXzc&start=10?end=20"
-           type="application/x-shockwave-flash"
-           allowscriptaccess="always"></embed>
+    <iframe id="ifr" allowfullscreen></iframe>
   </body>
 </html>

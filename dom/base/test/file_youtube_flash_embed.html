@@ -1,0 +1,65 @@
+<!DOCTYPE HTML>
+<html>
+  <!--
+       https://bugzilla.mozilla.org/show_bug.cgi?id=1240471
+     -->
+  <head>
+    <meta charset="utf-8">
+    <title>Test for Bug 1240471</title>
+    <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+    <script type="application/javascript">
+     let SimpleTest = {
+       finish: function() {
+         parent.postMessage(JSON.stringify({fn: "finish"}), "*");
+       }
+     };
+     ["ok", "is", "info"].forEach(fn => {
+       self[fn] = function (...args) {
+         parent.postMessage(JSON.stringify({fn: fn, args: args}), "*");
+       }
+     });
+     "use strict";
+     function onLoad() {
+       let youtube_changed_url_query = "https://mochitest.youtube.com/embed/Xm5i5kbIXzc?start=10&end=20";
+
+       function testEmbed(embed, expected_url, expected_fullscreen) {
+         ok (!!embed, "Embed node exists");
+         // getSVGDocument will return HTMLDocument if the content is HTML
+         let doc = embed.getSVGDocument();
+         // doc must be unprivileged because privileged doc will always be
+         // allowed to use fullscreen.
+         is (doc.fullscreenEnabled, expected_fullscreen,
+             "fullscreen should be " + (expected_fullscreen ? "enabled" : "disabled"));
+         embed = SpecialPowers.wrap(embed);
+         is (embed.srcURI.spec, expected_url, "Should have src uri of " + expected_url);
+       }
+       info("Running youtube rewrite query test");
+       testEmbed(document.getElementById("testembed-correct"), youtube_changed_url_query, false);
+       testEmbed(document.getElementById("testembed-correct-fs"), youtube_changed_url_query, true);
+       testEmbed(document.getElementById("testembed-wrong"), youtube_changed_url_query, false);
+       testEmbed(document.getElementById("testembed-whywouldyouevendothat"), youtube_changed_url_query, true);
+       SimpleTest.finish();
+     }
+    </script>
+  </head>
+  <body onload="onLoad()">
+    <embed id="testembed-correct"
+           src="https://mochitest.youtube.com/v/Xm5i5kbIXzc?start=10&end=20"
+           type="application/x-shockwave-flash"
+           allowscriptaccess="always"></embed>
+    <embed id="testembed-correct-fs"
+           src="https://mochitest.youtube.com/v/Xm5i5kbIXzc?start=10&end=20"
+           type="application/x-shockwave-flash"
+           allowfullscreen
+           allowscriptaccess="always"></embed>
+    <embed id="testembed-wrong"
+           src="https://mochitest.youtube.com/v/Xm5i5kbIXzc&start=10&end=20"
+           type="application/x-shockwave-flash"
+           allowscriptaccess="always"></embed>
+    <embed id="testembed-whywouldyouevendothat"
+           src="https://mochitest.youtube.com/v/Xm5i5kbIXzc&start=10?end=20"
+           type="application/x-shockwave-flash"
+           allowfullscreen
+           allowscriptaccess="always"></embed>
+  </body>
+</html>
