@@ -253,4 +253,3 @@ var gPermissionObject = {
 };
 
 const kPermissionIDs = Object.keys(gPermissionObject);
-

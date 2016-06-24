@@ -81,6 +81,7 @@
 .login-icon,
 .microphone-icon,
 .pointerLock-icon,
+.popup-icon,
 .screen-icon,
 .desktop-notification-icon,
 .popup-notification-icon[popupid="geolocation"],
@@ -177,6 +178,10 @@
 .popup-notification-icon[popupid="pointerLock"],
 .pointerLock-icon {
   list-style-image: url(chrome://browser/skin/glyphs.svg#pointerLock);
+}
+
+.popup-icon {
+  list-style-image: url("chrome://browser/skin/glyphs.svg#popup");
 }
 
 /* EME */

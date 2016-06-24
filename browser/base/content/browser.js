@@ -7242,8 +7242,13 @@ var gIdentityHandler = {
     label.setAttribute("control", menulist.getAttribute("id"));
     label.textContent = aPermission.label;
 
+    let img = document.createElement("image");
+    img.setAttribute("class",
+      "identity-popup-permission-icon " + aPermission.id + "-icon");
+
     let container = document.createElement("hbox");
     container.setAttribute("align", "center");
+    container.appendChild(img);
     container.appendChild(label);
     container.appendChild(menulist);
 
