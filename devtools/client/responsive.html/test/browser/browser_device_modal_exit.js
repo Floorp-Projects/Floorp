@@ -17,7 +17,7 @@ addRDMTask(TEST_URL, function* ({ ui }) {
 
   openDeviceModal(ui);
 
-  let deviceListBefore = loadDeviceList();
+  let preferredDevicesBefore = loadPreferredDevices();
 
   info("Check the first unchecked device and exit the modal.");
   let uncheckedCb = [...document.querySelectorAll(".device-input-checkbox")]
@@ -30,9 +30,14 @@ addRDMTask(TEST_URL, function* ({ ui }) {
     "The device modal is hidden on exit.");
 
   info("Check that the device list remains unchanged after exitting.");
-  let deviceListAfter = loadDeviceList();
-  is(deviceListBefore.size, deviceListAfter.size,
-    "Got expected number of displayed devices.");
-  ok(!deviceListAfter.has(value),
-    value + " was not added to displayed device list.");
+  let preferredDevicesAfter = loadPreferredDevices();
+
+  is(preferredDevicesBefore.added.size, preferredDevicesAfter.added.size,
+    "Got expected number of added devices.");
+
+  is(preferredDevicesBefore.removed.size, preferredDevicesAfter.removed.size,
+    "Got expected number of removed devices.");
+
+  ok(!preferredDevicesAfter.removed.has(value),
+    value + " was not added to removed device list.");
 });
