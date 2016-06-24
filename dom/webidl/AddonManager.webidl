@@ -26,6 +26,7 @@ interface Addon {
   readonly attribute boolean isActive;
 
   Promise<boolean> uninstall();
+  Promise<void> setEnabled(boolean value);
 };
 
 [ChromeOnly, JSImplementation="dummy"]
