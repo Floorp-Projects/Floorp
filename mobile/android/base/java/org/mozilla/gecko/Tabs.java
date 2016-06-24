@@ -105,6 +105,7 @@ public class Tabs implements GeckoEventListener {
             "Tab:Added",
             "Tab:Close",
             "Tab:Select",
+            "Tab:LoadedFromCache",
             "Content:LocationChange",
             "Content:SecurityChange",
             "Content:StateChange",
@@ -505,8 +506,9 @@ public class Tabs implements GeckoEventListener {
                 tab.handleContentLoaded();
                 notifyListeners(tab, Tabs.TabEvents.LOAD_ERROR);
             } else if (event.equals("Content:PageShow")) {
-                notifyListeners(tab, TabEvents.PAGE_SHOW);
+                tab.setLoadedFromCache(message.getBoolean("fromCache"));
                 tab.updateUserRequested(message.getString("userRequested"));
+                notifyListeners(tab, TabEvents.PAGE_SHOW);
             } else if (event.equals("DOMContentLoaded")) {
                 tab.handleContentLoaded();
                 String backgroundColor = message.getString("bgColor");

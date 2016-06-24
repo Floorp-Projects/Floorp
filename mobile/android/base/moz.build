@@ -262,6 +262,7 @@ gbjar.sources += ['java/org/mozilla/gecko/' + x for x in [
     'delegates/BookmarkStateChangeDelegate.java',
     'delegates/BrowserAppDelegate.java',
     'delegates/BrowserAppDelegateWithReference.java',
+    'delegates/OfflineTabStatusDelegate.java',
     'delegates/ScreenshotDelegate.java',
     'delegates/TabsTrayVisibilityAwareDelegate.java',
     'DevToolsAuthHelper.java',

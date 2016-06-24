@@ -104,6 +104,9 @@ public class Tab {
     private boolean mIsEditing;
     private final TabEditingState mEditingState = new TabEditingState();
 
+    // Will be true when tab is loaded from cache while device was offline.
+    private boolean mLoadedFromCache;
+
     public static final int STATE_DELAYED = 0;
     public static final int STATE_LOADING = 1;
     public static final int STATE_SUCCESS = 2;
@@ -299,6 +302,10 @@ public class Tab {
 
     public boolean hasOpenSearch() {
         return mHasOpenSearch;
+    }
+
+    public boolean hasLoadedFromCache() {
+        return mLoadedFromCache;
     }
 
     public SiteIdentity getSiteIdentity() {
@@ -534,6 +541,10 @@ public class Tab {
 
     public void setHasOpenSearch(boolean hasOpenSearch) {
         mHasOpenSearch = hasOpenSearch;
+    }
+
+    public void setLoadedFromCache(boolean loadedFromCache) {
+        mLoadedFromCache = loadedFromCache;
     }
 
     public void updateIdentityData(JSONObject identityData) {

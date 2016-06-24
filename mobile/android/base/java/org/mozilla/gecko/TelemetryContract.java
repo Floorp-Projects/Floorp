@@ -104,6 +104,9 @@ public interface TelemetryContract {
         // Stop holding a resource (reader, bookmark, etc) for viewing later.
         UNSAVE("unsave.1"),
 
+        // When the user performs actions on the in-content network error page.
+        NETERROR("neterror.1"),
+
         // VALUES BELOW THIS LINE ARE EXCLUSIVE TO TESTING.
         _TEST1("_test_event_1.1"),
         _TEST2("_test_event_2.1"),
