@@ -251,7 +251,7 @@ TextEditRules::WillDoAction(Selection* aSelection,
   *aHandled = false;
 
   // my kingdom for dynamic cast
-  nsTextRulesInfo *info = static_cast<nsTextRulesInfo*>(aInfo);
+  TextRulesInfo* info = static_cast<TextRulesInfo*>(aInfo);
 
   switch (info->action) {
     case EditAction::insertBreak:
@@ -299,7 +299,7 @@ TextEditRules::DidDoAction(Selection* aSelection,
   NS_ENSURE_TRUE(aSelection && aInfo, NS_ERROR_NULL_POINTER);
 
   // my kingdom for dynamic cast
-  nsTextRulesInfo *info = static_cast<nsTextRulesInfo*>(aInfo);
+  TextRulesInfo* info = static_cast<TextRulesInfo*>(aInfo);
 
   switch (info->action)
   {

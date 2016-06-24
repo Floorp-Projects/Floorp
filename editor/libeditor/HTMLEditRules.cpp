@@ -568,7 +568,7 @@ HTMLEditRules::WillDoAction(Selection* aSelection,
   *aHandled = false;
 
   // my kingdom for dynamic cast
-  nsTextRulesInfo *info = static_cast<nsTextRulesInfo*>(aInfo);
+  TextRulesInfo* info = static_cast<TextRulesInfo*>(aInfo);
 
   // Deal with actions for which we don't need to check whether the selection is
   // editable.
@@ -662,7 +662,7 @@ HTMLEditRules::DidDoAction(Selection* aSelection,
                            nsRulesInfo* aInfo,
                            nsresult aResult)
 {
-  nsTextRulesInfo *info = static_cast<nsTextRulesInfo*>(aInfo);
+  TextRulesInfo* info = static_cast<TextRulesInfo*>(aInfo);
   switch (info->action)
   {
     case EditAction::insertBreak:
