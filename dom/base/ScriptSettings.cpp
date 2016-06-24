@@ -782,7 +782,9 @@ danger::AutoCxPusher::~AutoCxPusher()
   // pop is the same as it was right after we pushed.
   MOZ_ASSERT_IF(mPushedContext, mCompartmentDepthOnEntry ==
                                 js::GetEnterCompartmentDepth(mPushedContext));
-  MOZ_ASSERT(mPushedContext == nsXPConnect::XPConnect()->GetCurrentJSContext());
+  // Note: mPushedContext doesn't match nsContentUtils::GetCurrentJSContext()
+  // here, since we already popped the script settings stack by the time we get
+  // here.
   XPCJSRuntime::Get()->GetJSContextStack()->Pop();
 }
 

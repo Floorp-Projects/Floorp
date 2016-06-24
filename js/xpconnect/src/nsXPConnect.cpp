@@ -31,6 +31,7 @@
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsScriptSecurityManager.h"
+#include "nsContentUtils.h"
 
 #include "jsfriendapi.h"
 
@@ -933,7 +934,7 @@ nsXPConnect::DebugPrintJSStack(bool showArgs,
                                bool showLocals,
                                bool showThisProps)
 {
-    JSContext* cx = GetCurrentJSContext();
+    JSContext* cx = nsContentUtils::GetCurrentJSContext();
     if (!cx)
         printf("there is no JSContext on the nsIThreadJSContextStack!\n");
     else
@@ -975,13 +976,6 @@ nsXPConnect::JSToVariant(JSContext* ctx, HandleValue value, nsIVariant** _retval
         return NS_ERROR_FAILURE;
 
     return NS_OK;
-}
-
-/* virtual */
-JSContext*
-nsXPConnect::GetCurrentJSContext()
-{
-    return GetRuntime()->GetJSContextStack()->Peek();
 }
 
 /* virtual */
