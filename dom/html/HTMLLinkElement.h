@@ -150,6 +150,18 @@ public:
   {
     SetHTMLAttr(nsGkAtoms::integrity, aIntegrity, aRv);
   }
+  void SetReferrerPolicy(const nsAString& aReferrer, ErrorResult& aError)
+  {
+    SetHTMLAttr(nsGkAtoms::referrerpolicy, aReferrer, aError);
+  }
+  void GetReferrerPolicy(nsAString& aReferrer)
+  {
+    GetEnumAttr(nsGkAtoms::referrerpolicy, EmptyCString().get(), aReferrer);
+  }
+  mozilla::net::ReferrerPolicy GetLinkReferrerPolicy() override
+  {
+    return GetReferrerPolicyAsEnum();
+  }
 
   already_AddRefed<nsIDocument> GetImport();
   already_AddRefed<ImportLoader> GetImportLoader()

@@ -17,6 +17,7 @@
 #include "mozilla/css/Loader.h"
 #include "mozilla/dom/Element.h"
 #include "mozilla/dom/FragmentOrElement.h"
+#include "mozilla/dom/HTMLLinkElement.h"
 #include "mozilla/dom/ShadowRoot.h"
 #include "mozilla/dom/SRILogHelper.h"
 #include "mozilla/Preferences.h"
@@ -435,13 +436,22 @@ nsStyleLinkElement::DoUpdateStyleSheet(nsIDocument* aOldDocument,
                NS_ConvertUTF16toUTF8(integrity).get()));
     }
 
+    // if referrer attributes are enabled in preferences, load the link's referrer
+    // attribute. If the link does not provide a referrer attribute, ignore this
+    // and use the document's referrer policy
+
+    net::ReferrerPolicy referrerPolicy = GetLinkReferrerPolicy();
+    if (referrerPolicy == net::RP_Unset) {
+      referrerPolicy = doc->GetReferrerPolicy();
+    }
+
     // XXXbz clone the URI here to work around content policies modifying URIs.
     nsCOMPtr<nsIURI> clonedURI;
     uri->Clone(getter_AddRefs(clonedURI));
     NS_ENSURE_TRUE(clonedURI, NS_ERROR_OUT_OF_MEMORY);
     rv = doc->CSSLoader()->
       LoadStyleLink(thisContent, clonedURI, title, media, isAlternate,
-                    GetCORSMode(), doc->GetReferrerPolicy(), integrity,
+                    GetCORSMode(), referrerPolicy, integrity,
                     aObserver, &isAlternate);
     if (NS_FAILED(rv)) {
       // Don't propagate LoadStyleLink() errors further than this, since some
