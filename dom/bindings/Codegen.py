@@ -4143,9 +4143,21 @@ class CastableObjectUnwrapper():
             "codeOnFailure": codeOnFailure,
         }
         if allowCrossOriginObj:
-            self.substitution["uncheckedObjDecl"] = (
-                "JS::Rooted<JSObject*> uncheckedObj(cx, js::UncheckedUnwrap(%s));\n" % source)
-            self.substitution["source"] = "uncheckedObj"
+            self.substitution["uncheckedObjDecl"] = fill(
+                """
+                JS::Rooted<JSObject*> maybeUncheckedObj(cx);
+                if (xpc::WrapperFactory::IsXrayWrapper(${source})) {
+                  maybeUncheckedObj = js::UncheckedUnwrap(${source});
+                } else {
+                  maybeUncheckedObj = js::CheckedUnwrap(${source});
+                  if (!maybeUncheckedObj) {
+                    $*{codeOnFailure}
+                  }
+                }
+                """,
+                source=source,
+                codeOnFailure=(codeOnFailure % { 'securityError': 'true'}))
+            self.substitution["source"] = "maybeUncheckedObj"
             xpconnectUnwrap = dedent("""
                 nsresult rv;
                 { // Scope for the JSAutoCompartment, because we only

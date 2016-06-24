@@ -1001,7 +1001,7 @@ pulse_ensure_dev_list_data_list_size (pulse_dev_list_data * list_data)
   if (list_data->count == list_data->max) {
     list_data->max += 8;
     list_data->devinfo = realloc(list_data->devinfo,
-        sizeof(cubeb_device_info) * list_data->max);
+        sizeof(cubeb_device_info *) * list_data->max);
   }
 }
 

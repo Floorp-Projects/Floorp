@@ -41,12 +41,14 @@ struct ServoNodeData;
 struct ServoComputedValues;
 struct RawServoStyleSheet;
 struct RawServoStyleSet;
+class nsHTMLCSSStyleSheet;
 struct nsStyleList;
 struct nsStyleImage;
 struct nsStyleGradientStop;
 class nsStyleGradient;
 class nsStyleCoord;
 struct nsStyleDisplay;
+struct ServoDeclarationBlock;
 
 #define NS_DECL_THREADSAFE_FFI_REFCOUNTING(class_, name_)                     \
   void Gecko_AddRef##name_##ArbitraryThread(class_* aPtr);                    \
@@ -113,6 +115,9 @@ nsIAtom* Gecko_GetElementId(RawGeckoElement* element);
 // invalidated by any DOM mutation. Use them in a tight scope.
 uint32_t Gecko_ClassOrClassList(RawGeckoElement* element,
                                 nsIAtom** class_, nsIAtom*** classList);
+
+// Style attributes.
+ServoDeclarationBlock* Gecko_GetServoDeclarationBlock(RawGeckoElement* element);
 
 // Node data.
 ServoNodeData* Gecko_GetNodeData(RawGeckoNode* node);
@@ -182,6 +187,16 @@ void Servo_InsertStyleSheetBefore(RawServoStyleSheet* sheet,
 bool Servo_StyleSheetHasRules(RawServoStyleSheet* sheet);
 RawServoStyleSet* Servo_InitStyleSet();
 void Servo_DropStyleSet(RawServoStyleSet* set);
+
+// Style attributes.
+ServoDeclarationBlock* Servo_ParseStyleAttribute(const uint8_t* bytes,
+                                                 uint8_t length,
+                                                 nsHTMLCSSStyleSheet* cache);
+void Servo_DropDeclarationBlock(ServoDeclarationBlock* declarations);
+nsHTMLCSSStyleSheet* Servo_GetDeclarationBlockCache(
+    ServoDeclarationBlock* declarations);
+void Servo_SetDeclarationBlockImmutable(ServoDeclarationBlock* declarations);
+void Servo_ClearDeclarationBlockCachePointer(ServoDeclarationBlock* declarations);
 
 // Computed style data.
 ServoComputedValues* Servo_GetComputedValues(RawGeckoNode* node);

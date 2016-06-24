@@ -3,7 +3,7 @@
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 # TODO This list should be emitted to a .pp file via
-# GenerateCSSPropsGenerated.py.
+# GenerateCSSPropsGenerated.py (bug 1281614)
 csspropsidlnames_dependencies = \
   $(srcdir)/nsCSSPropList.h \
   $(srcdir)/nsCSSPropAliasList.h \
@@ -14,8 +14,3 @@ csspropsidlnames_dependencies = \
   $(NULL)
 
 nsCSSPropsGenerated.inc : $(csspropsidlnames_dependencies)
-	$(CPP) $(DEFINES) $(ACDEFINES) \
-	  $(srcdir)/PythonCSSProps.h | \
-	    PYTHONDONTWRITEBYTECODE=1 $(PYTHON) \
-	      $(srcdir)/GenerateCSSPropsGenerated.py \
-	      $(srcdir)/nsCSSPropsGenerated.inc.in > $@

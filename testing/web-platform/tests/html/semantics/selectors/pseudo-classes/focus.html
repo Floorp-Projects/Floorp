@@ -23,10 +23,8 @@
 
     onload = function() {
       if (document.hasFocus() || frames[0].document.hasFocus()) {
-        console.log("hasFocus");
         run_test()
       } else {
-        console.log("waiting for focus");
         window.onfocus = run_test;
       }
     }
