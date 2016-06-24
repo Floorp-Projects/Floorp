@@ -11,6 +11,9 @@ the [Marionette](https://developer.mozilla.org/en-US/docs/Mozilla/QA/Marionette)
 automation protocol
 by acting as a proxy between the local- and remote ends.
 
+You can consult the [change log](https://github.com/mozilla/geckodriver/blob/master/CHANGES.md)
+for a record of all notable changes to the program.
+
 ## Building
 
 geckodriver is written in [Rust](https://www.rust-lang.org/)
