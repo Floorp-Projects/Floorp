@@ -295,10 +295,28 @@ void ReportOverRecursed(JSContext* cx, unsigned errorNumber);
 
 } /* namespace js */
 
-struct JSContext : public js::ExclusiveContext
+struct JSContext : public js::ExclusiveContext,
+                   public JSRuntime
 {
-    explicit JSContext(JSRuntime* rt);
+    explicit JSContext(JSRuntime* parentRuntime);
     ~JSContext();
+
+    bool init(uint32_t maxBytes, uint32_t maxNurseryBytes);
+
+    // For names that exist in both ExclusiveContext and JSRuntime, pick the
+    // ExclusiveContext version.
+    using ExclusiveContext::atomsCompartment;
+    using ExclusiveContext::buildIdOp;
+    using ExclusiveContext::emptyString;
+    using ExclusiveContext::jitSupportsSimd;
+    using ExclusiveContext::make_pod_array;
+    using ExclusiveContext::make_unique;
+    using ExclusiveContext::new_;
+    using ExclusiveContext::permanentAtoms;
+    using ExclusiveContext::pod_calloc;
+    using ExclusiveContext::pod_malloc;
+    using ExclusiveContext::staticStrings;
+    using ExclusiveContext::wellKnownSymbols;
 
     JSRuntime* runtime() const { return runtime_; }
     js::PerThreadData& mainThread() const { return runtime()->mainThread; }
@@ -495,7 +513,7 @@ struct MOZ_RAII AutoResolving {
  * and exclusively owned.
  */
 extern JSContext*
-NewContext(JSRuntime* rt);
+NewContext(uint32_t maxBytes, uint32_t maxNurseryBytes, JSRuntime* parentRuntime);
 
 extern void
 DestroyContext(JSContext* cx);
@@ -720,6 +738,10 @@ class MOZ_RAII AutoLockForExclusiveAccess
     explicit AutoLockForExclusiveAccess(JSRuntime* rt MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
         MOZ_GUARD_OBJECT_NOTIFIER_INIT;
         init(rt);
+    }
+    explicit AutoLockForExclusiveAccess(JSContext* cx MOZ_GUARD_OBJECT_NOTIFIER_PARAM) {
+        MOZ_GUARD_OBJECT_NOTIFIER_INIT;
+        init(cx->runtime());
     }
     ~AutoLockForExclusiveAccess() {
         if (runtime->numExclusiveThreads) {
