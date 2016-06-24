@@ -81,8 +81,21 @@ assertEq(Function.prototype[Symbol.hasInstance].call(doubleBound, instance), tru
 assertEq(Function.prototype[Symbol.hasInstance].call(tripleBound, instance), true);
 
 // Function.prototype[Symbol.hasInstance] is not configurable
-let desc = Object.getOwnPropertyDescriptor(Function.prototype, Symbol.hasInstance)
-assertEq(desc.configurable, false)
+let desc = Object.getOwnPropertyDescriptor(Function.prototype, Symbol.hasInstance);
+assertEq(desc.configurable, false);
+
+// Attempting to use a non-callable @@hasInstance triggers a type error
+// Bug 1280892
+assertThrowsInstanceOf(() => {
+    var fun = function() {}
+    var p = new Proxy(fun, {
+        get(target, key) {
+            return /not-callable/;
+        }
+    });
+    fun instanceof p;
+}, TypeError);
+
 
 if (typeof reportCompare === "function")
     reportCompare(true, true);
