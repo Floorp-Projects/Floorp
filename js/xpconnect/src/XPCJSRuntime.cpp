@@ -1546,12 +1546,6 @@ CompartmentPrivate::SizeOfIncludingThis(MallocSizeOf mallocSizeOf)
 
 /***************************************************************************/
 
-void XPCJSRuntime::DestroyJSContextStack()
-{
-    delete mJSContextStack;
-    mJSContextStack = nullptr;
-}
-
 void XPCJSRuntime::SystemIsBeingShutDown()
 {
     for (auto i = mDetachedWrappedNativeProtoMap->Iter(); !i.Done(); i.Next()) {
@@ -3386,8 +3380,7 @@ static const JSWrapObjectCallbacks WrapObjectCallbacks = {
 };
 
 XPCJSRuntime::XPCJSRuntime()
- : mJSContextStack(new XPCJSContextStack(this)),
-   mCallContext(nullptr),
+ : mCallContext(nullptr),
    mAutoRoots(nullptr),
    mResolveName(JSID_VOID),
    mResolvingWrapper(nullptr),
@@ -3777,6 +3770,7 @@ XPCJSRuntime::DebugDump(int16_t depth)
     XPC_LOG_ALWAYS(("XPCJSRuntime @ %x", this));
         XPC_LOG_INDENT();
         XPC_LOG_ALWAYS(("mJSRuntime @ %x", Runtime()));
+        XPC_LOG_ALWAYS(("mJSContext @ %x", Context()));
 
         XPC_LOG_ALWAYS(("mWrappedJSClassMap @ %x with %d wrapperclasses(s)",
                         mWrappedJSClassMap, mWrappedJSClassMap->Count()));
@@ -3884,7 +3878,7 @@ void
 XPCJSRuntime::InitSingletonScopes()
 {
     // This all happens very early, so we don't bother with cx pushing.
-    JSContext* cx = GetJSContextStack()->GetSafeJSContext();
+    JSContext* cx = Context();
     JSAutoRequest ar(cx);
     RootedValue v(cx);
     nsresult rv;
