@@ -6,8 +6,6 @@
 /* Network Info Body */
 
 .netInfoBody {
-  font-family: var(--net-font-family);
-  font-size: var(--net-font-size);
   margin: 10px 0 0 0;
   width: 100%;
   cursor: default;
@@ -32,8 +30,6 @@
 }
 
 .netInfoBody > .tabs .tabs-navigation {
-  font-family: var(--net-font-family);
-  font-size: var(--net-font-size);
   border-bottom-color: var(--net-border);
   background-color: transparent;
   text-decoration: none;

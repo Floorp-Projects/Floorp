@@ -6,8 +6,6 @@
 /* Net Info Group */
 
 .netInfoBody .netInfoGroup {
-  line-height: 13px;
-  color: var(--theme-body-color);
   padding-bottom: 6px;
 }
 

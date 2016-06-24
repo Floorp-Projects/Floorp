@@ -11,7 +11,7 @@
 }
 
 .netInfoBody .netInfoResponseContent {
-  font-family: monospace;
+  font-family: var(--monospace-font-family);
   word-wrap: break-word;
 }
 
