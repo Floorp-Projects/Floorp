@@ -4,6 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 #include "GPUChild.h"
+#include "gfxPrefs.h"
 #include "GPUProcessHost.h"
 
 namespace mozilla {
@@ -18,6 +19,28 @@ GPUChild::GPUChild(GPUProcessHost* aHost)
 GPUChild::~GPUChild()
 {
   MOZ_COUNT_DTOR(GPUChild);
+}
+
+void
+GPUChild::Init()
+{
+  // Build a list of prefs the GPU process will need. Note that because we
+  // limit the GPU process to prefs contained in gfxPrefs, we can simplify
+  // the message in two ways: one, we only need to send its index in gfxPrefs
+  // rather than its name, and two, we only need to send prefs that don't
+  // have their default value.
+  nsTArray<GfxPrefSetting> prefs;
+  for (auto pref : gfxPrefs::all()) {
+    if (pref->HasDefaultValue()) {
+      return;
+    }
+
+    GfxPrefValue value;
+    pref->GetCachedValue(&value);
+    prefs.AppendElement(GfxPrefSetting(pref->Index(), value));
+  }
+
+  SendInit(prefs);
 }
 
 void
