@@ -21,37 +21,38 @@ namespace dom {
 class Selection;
 class Text;
 } // namespace dom
-} // namespace mozilla
 
-/***************************************************************************
- * class for recording selection info.  stores selection as collection of
- * { {startnode, startoffset} , {endnode, endoffset} } tuples.  Can't store
- * ranges since dom gravity will possibly change the ranges.
+/**
+ * A helper struct for saving/setting ranges.
  */
-
-// first a helper struct for saving/setting ranges
-struct nsRangeStore final
+struct RangeItem final
 {
-  nsRangeStore();
+  RangeItem();
 
 private:
   // Private destructor, to discourage deletion outside of Release():
-  ~nsRangeStore();
+  ~RangeItem();
 
 public:
   void StoreRange(nsRange* aRange);
   already_AddRefed<nsRange> GetRange();
 
-  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(nsRangeStore)
-  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(nsRangeStore)
+  NS_INLINE_DECL_CYCLE_COLLECTING_NATIVE_REFCOUNTING(RangeItem)
+  NS_DECL_CYCLE_COLLECTION_NATIVE_CLASS(RangeItem)
 
   nsCOMPtr<nsINode> startNode;
-  int32_t           startOffset;
+  int32_t startOffset;
   nsCOMPtr<nsINode> endNode;
-  int32_t           endOffset;
+  int32_t endOffset;
 };
 
-namespace mozilla {
+/**
+ * mozilla::SelectionState
+ *
+ * Class for recording selection info.  Stores selection as collection of
+ * { {startnode, startoffset} , {endnode, endoffset} } tuples.  Can't store
+ * ranges since dom gravity will possibly change the ranges.
+ */
 
 class SelectionState final
 {
@@ -66,7 +67,7 @@ public:
   void MakeEmpty();
   bool IsEmpty();
 private:
-  nsTArray<RefPtr<nsRangeStore>> mArray;
+  nsTArray<RefPtr<RangeItem>> mArray;
 
   friend class nsRangeUpdater;
   friend void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,
@@ -100,8 +101,8 @@ class nsRangeUpdater
     nsRangeUpdater();
     ~nsRangeUpdater();
 
-    void RegisterRangeItem(nsRangeStore *aRangeItem);
-    void DropRangeItem(nsRangeStore *aRangeItem);
+    void RegisterRangeItem(mozilla::RangeItem* aRangeItem);
+    void DropRangeItem(mozilla::RangeItem* aRangeItem);
     nsresult RegisterSelectionState(mozilla::SelectionState& aSelState);
     nsresult DropSelectionState(mozilla::SelectionState& aSelState);
 
@@ -149,7 +150,7 @@ class nsRangeUpdater
                                             uint32_t);
     friend void ImplCycleCollectionUnlink(nsRangeUpdater& aField);
 
-    nsTArray<RefPtr<nsRangeStore> > mArray;
+    nsTArray<RefPtr<mozilla::RangeItem>> mArray;
     bool mLock;
 };
 
@@ -181,7 +182,7 @@ class MOZ_STACK_CLASS nsAutoTrackDOMPoint
     nsCOMPtr<nsINode>* mNode;
     nsCOMPtr<nsIDOMNode>* mDOMNode;
     int32_t* mOffset;
-    RefPtr<nsRangeStore> mRangeItem;
+    RefPtr<mozilla::RangeItem> mRangeItem;
   public:
     nsAutoTrackDOMPoint(nsRangeUpdater &aRangeUpdater,
                         nsCOMPtr<nsINode>* aNode, int32_t* aOffset)
@@ -190,7 +191,7 @@ class MOZ_STACK_CLASS nsAutoTrackDOMPoint
       , mDOMNode(nullptr)
       , mOffset(aOffset)
     {
-      mRangeItem = new nsRangeStore();
+      mRangeItem = new mozilla::RangeItem();
       mRangeItem->startNode = *mNode;
       mRangeItem->endNode = *mNode;
       mRangeItem->startOffset = *mOffset;
@@ -205,7 +206,7 @@ class MOZ_STACK_CLASS nsAutoTrackDOMPoint
       , mDOMNode(aNode)
       , mOffset(aOffset)
     {
-      mRangeItem = new nsRangeStore();
+      mRangeItem = new mozilla::RangeItem();
       mRangeItem->startNode = do_QueryInterface(*mDOMNode);
       mRangeItem->endNode = do_QueryInterface(*mDOMNode);
       mRangeItem->startOffset = *mOffset;
