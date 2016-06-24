@@ -8,6 +8,8 @@ package org.mozilla.gecko;
 import android.app.Activity;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.util.Log;
 import org.mozilla.gecko.util.ActivityResultHandler;
 import org.mozilla.gecko.util.EventCallback;
 import org.mozilla.gecko.util.InputOptionsUtils;
@@ -17,13 +19,24 @@ import org.mozilla.gecko.util.InputOptionsUtils;
  */
 public class DevToolsAuthHelper {
 
+    private static final String LOGTAG = "GeckoDevToolsAuthHelper";
+
     public static void scan(Context context, final EventCallback callback) {
         final Intent intent = InputOptionsUtils.createQRCodeReaderIntent();
 
         intent.putExtra("PROMPT_MESSAGE", context.getString(R.string.devtools_auth_scan_header));
 
-        Activity activity = GeckoAppShell.getGeckoInterface().getActivity();
-        ActivityHandlerHelper.startIntentForActivity(activity, intent, new ActivityResultHandler() {
+        // Check ahead of time if an activity exists for the intent.  This
+        // avoids a case where we get both an ActivityNotFoundException *and*
+        // an activity result when the activity is missing.
+        PackageManager pm = context.getPackageManager();
+        if (pm.resolveActivity(intent, 0) == null) {
+            Log.w(LOGTAG, "PackageManager can't resolve the activity.");
+            callback.sendError("PackageManager can't resolve the activity.");
+            return;
+        }
+
+        ActivityHandlerHelper.startIntent(intent, new ActivityResultHandler() {
             @Override
             public void onActivityResult(int resultCode, Intent intent) {
                 if (resultCode == Activity.RESULT_OK) {

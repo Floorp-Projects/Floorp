@@ -29,6 +29,7 @@
   const { Packet, JSONPacket, BulkPacket } =
   require("devtools/shared/transport/packets");
   const promise = require("promise");
+  const defer = require("devtools/shared/defer");
   const EventEmitter = require("devtools/shared/event-emitter");
 
   DevToolsUtils.defineLazyGetter(this, "Pipe", () => {
@@ -600,7 +601,7 @@
         }
 
         // Receiver
-        let deferred = promise.defer();
+        let deferred = defer();
         let packet = {
           actor: actor,
           type: type,
@@ -623,12 +624,12 @@
       }, "LocalDebuggerTransport instance's this.other.hooks.onBulkPacket"));
 
       // Sender
-      let sendDeferred = promise.defer();
+      let sendDeferred = defer();
 
       // The remote transport is not capable of resolving immediately here, so we
       // shouldn't be able to either.
       DevToolsUtils.executeSoon(() => {
-        let copyDeferred = promise.defer();
+        let copyDeferred = defer();
 
         sendDeferred.resolve({
           copyFrom: (input) => {

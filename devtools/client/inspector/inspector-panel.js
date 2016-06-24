@@ -12,6 +12,7 @@ const {Cc, Ci} = require("chrome");
 
 var Services = require("Services");
 var promise = require("promise");
+var defer = require("devtools/shared/defer");
 var EventEmitter = require("devtools/shared/event-emitter");
 var clipboard = require("sdk/clipboard");
 const {executeSoon} = require("devtools/shared/DevToolsUtils");
@@ -187,7 +188,7 @@ InspectorPanel.prototype = {
   },
 
   _deferredOpen: function (defaultSelection) {
-    let deferred = promise.defer();
+    let deferred = defer();
 
     this.walker.on("new-root", this.onNewRoot);
 

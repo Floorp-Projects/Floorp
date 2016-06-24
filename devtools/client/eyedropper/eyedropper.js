@@ -10,6 +10,7 @@ const {rgbToHsl, rgbToColorName} =
 const Telemetry = require("devtools/client/shared/telemetry");
 const EventEmitter = require("devtools/shared/event-emitter");
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const Services = require("Services");
 
 loader.lazyGetter(this, "clipboardHelper", function () {
@@ -201,7 +202,7 @@ Eyedropper.prototype = {
    *         Promise that resolves with the screenshot as a dataURL
    */
   getContentScreenshot: function () {
-    let deferred = promise.defer();
+    let deferred = defer();
 
     let mm = this._contentTab.linkedBrowser.messageManager;
     function onScreenshot(message) {
@@ -223,7 +224,7 @@ Eyedropper.prototype = {
       // the eyedropper is aready open, don't create another panel.
       return promise.resolve();
     }
-    let deferred = promise.defer();
+    let deferred = defer();
 
     this.isOpen = true;
 

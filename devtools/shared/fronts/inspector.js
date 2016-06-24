@@ -20,6 +20,7 @@ const {
   walkerSpec
 } = require("devtools/shared/specs/inspector");
 const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const { Task } = require("devtools/shared/task");
 const { Class } = require("sdk/core/heritage");
 const events = require("sdk/event/core");
@@ -531,7 +532,7 @@ const WalkerFront = FrontClassWithSpec(walkerSpec, {
    * on resolution.
    */
   _createRootNodePromise: function () {
-    this._rootNodeDeferred = promise.defer();
+    this._rootNodeDeferred = defer();
     this._rootNodeDeferred.promise.then(() => {
       events.emit(this, "new-root");
     });

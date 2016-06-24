@@ -237,7 +237,7 @@ function DevToolPanel(iframeWindow, toolbox) {
 
 DevToolPanel.prototype = {
   open: function () {
-    let deferred = promise.defer();
+    let deferred = defer();
 
     executeSoon(() => {
       this._isReady = true;
@@ -263,6 +263,6 @@ DevToolPanel.prototype = {
   _isReady: false,
 
   destroy: function DTI_destroy() {
-    return promise.defer(null);
+    return defer(null);
   },
 };

@@ -15,6 +15,7 @@ window.onload = function() {
   const { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
   const { Task } = require("devtools/shared/task");
   const promise = require("promise");
+  const defer = require("devtools/shared/defer");
 
   const QR = require("devtools/shared/qrcode/index");
 
@@ -39,7 +40,7 @@ window.onload = function() {
   }).then(SimpleTest.finish, ok.bind(null, false));
 
   function drawToCanvas(src) {
-    let deferred = promise.defer();
+    let deferred = defer();
     let canvas = document.createElement("canvas");
     let context = canvas.getContext("2d");
     let image = new Image();

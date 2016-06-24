@@ -26,6 +26,7 @@ const {gDevTools} = require("devtools/client/framework/devtools");
 const {TargetFactory} = require("devtools/client/framework/target");
 const DevToolsUtils = require("devtools/shared/DevToolsUtils");
 let promise = require("promise");
+let defer = require("devtools/shared/defer");
 const Services = require("Services");
 const {Task} = require("devtools/shared/task");
 const {KeyShortcuts} = require("devtools/client/shared/key-shortcuts");
@@ -202,7 +203,7 @@ function synthesizeKeyShortcut(key, target) {
 function waitForNEvents(target, eventName, numTimes, useCapture = false) {
   info("Waiting for event: '" + eventName + "' on " + target + ".");
 
-  let deferred = promise.defer();
+  let deferred = defer();
   let count = 0;
 
   for (let [add, remove] of [
@@ -261,7 +262,7 @@ function loadHelperScript(filePath) {
  * @return {Promise}
  */
 function waitForTick() {
-  let deferred = promise.defer();
+  let deferred = defer();
   executeSoon(deferred.resolve);
   return deferred.promise;
 }
@@ -275,7 +276,7 @@ function waitForTick() {
  * @return A promise that resolves when the time is passed
  */
 function wait(ms) {
-  let def = promise.defer();
+  let def = defer();
   content.setTimeout(def.resolve, ms);
   return def.promise;
 }
@@ -412,7 +413,7 @@ function evalInDebuggee(mm, script) {
  *         callback is invoked.
  */
 function waitForContextMenu(popup, button, onShown, onHidden) {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   function onPopupShown() {
     info("onPopupShown");

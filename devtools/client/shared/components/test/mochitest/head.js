@@ -9,6 +9,7 @@ var { Assert } = require("resource://testing-common/Assert.jsm");
 var { gDevTools } = require("devtools/client/framework/devtools");
 var { BrowserLoader } = Cu.import("resource://devtools/client/shared/browser-loader.js", {});
 var promise = require("promise");
+var defer = require("devtools/shared/defer");
 var Services = require("Services");
 var { DebuggerServer } = require("devtools/server/main");
 var { DebuggerClient } = require("devtools/shared/client/main");
@@ -44,13 +45,13 @@ function onNextAnimationFrame(fn) {
 }
 
 function setState(component, newState) {
-  var deferred = promise.defer();
+  var deferred = defer();
   component.setState(newState, onNextAnimationFrame(deferred.resolve));
   return deferred.promise;
 }
 
 function setProps(component, newState) {
-  var deferred = promise.defer();
+  var deferred = defer();
   component.setProps(newState, onNextAnimationFrame(deferred.resolve));
   return deferred.promise;
 }

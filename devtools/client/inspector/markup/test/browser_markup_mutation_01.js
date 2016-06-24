@@ -281,7 +281,7 @@ add_task(function* () {
 
     // If a test expects more than one mutation it may come through in a single
     // event or possibly in multiples.
-    let def = promise.defer();
+    let def = defer();
     let seenMutations = 0;
     inspector.on("markupmutation", function onmutation(e, mutations) {
       seenMutations += mutations.length;

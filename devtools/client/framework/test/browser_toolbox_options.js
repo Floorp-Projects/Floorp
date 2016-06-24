@@ -116,7 +116,7 @@ function* testSelect(select) {
       continue;
     }
 
-    let deferred = promise.defer();
+    let deferred = defer();
     gDevTools.once("pref-changed", (event, data) => {
       if (data.pref == pref) {
         ok(true, "Correct pref was changed");
@@ -136,7 +136,7 @@ function* testSelect(select) {
 }
 
 function* testMouseClick(node, prefValue) {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   let pref = node.getAttribute("data-pref");
   gDevTools.once("pref-changed", (event, data) => {
@@ -218,7 +218,7 @@ function* testToggleTools() {
 }
 
 function* toggleTool(node) {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   let toolId = node.getAttribute("id");
   if (node.checked) {

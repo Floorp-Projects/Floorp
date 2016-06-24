@@ -36,7 +36,7 @@ add_task(function* () {
 });
 
 function registerTestActor(toolbox) {
-  let deferred = promise.defer();
+  let deferred = defer();
 
   let options = {
     prefix: "eventsFormActor",
