@@ -112,18 +112,17 @@ exports.shortSource = function (sheet) {
   // We try, in turn, the filename, filePath, query string, whole thing
   let url = {};
   try {
-    url = Services.io.newURI(sheet.href, null, null);
-    url = url.QueryInterface(Ci.nsIURL);
+    url = new URL(sheet.href);
   } catch (ex) {
     // Some UA-provided stylesheets are not valid URLs.
   }
 
-  if (url.fileName) {
-    return url.fileName;
-  }
-
-  if (url.filePath) {
-    return url.filePath;
+  if (url.pathname) {
+    let index = url.pathname.lastIndexOf("/");
+    if (index !== -1 && index < url.pathname.length) {
+      return url.pathname.slice(index + 1);
+    }
+    return url.pathname;
   }
 
   if (url.query) {
