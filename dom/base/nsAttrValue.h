@@ -32,6 +32,7 @@ class nsAString;
 class nsIDocument;
 class nsStyledElementNotElementCSSInlineStyle;
 struct MiscContainer;
+struct ServoDeclarationBlock;
 
 namespace mozilla {
 namespace css {
@@ -95,6 +96,7 @@ public:
     // Values below here won't matter, they'll be always stored in the 'misc'
     // struct.
     eGeckoCSSDeclaration = 0x10,
+    eServoCSSDeclaration,
     eURL,
     eImage,
     eAtomArray,
@@ -146,6 +148,8 @@ public:
   void SetTo(int32_t aInt, const nsAString* aSerialized);
   void SetTo(double aValue, const nsAString* aSerialized);
   void SetTo(mozilla::css::Declaration* aValue, const nsAString* aSerialized);
+  void SetTo(ServoDeclarationBlock* aDeclarationBlock,
+             const nsAString* aSerialized);
   void SetTo(mozilla::css::URLValue* aValue, const nsAString* aSerialized);
   void SetTo(const nsIntMargin& aValue);
   void SetTo(const nsSVGAngle& aValue, const nsAString* aSerialized);
@@ -197,6 +201,7 @@ public:
   inline float GetPercentValue() const;
   inline AtomArray* GetAtomArrayValue() const;
   inline mozilla::css::Declaration* GetGeckoCSSDeclarationValue() const;
+  inline ServoDeclarationBlock* GetServoCSSDeclarationValue() const;
   inline mozilla::css::URLValue* GetURLValue() const;
   inline mozilla::css::ImageValue* GetImageValue() const;
   inline double GetDoubleValue() const;
