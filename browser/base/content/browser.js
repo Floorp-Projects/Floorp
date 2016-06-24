@@ -3911,11 +3911,6 @@ function addToUrlbarHistory(aUrlToAdd) {
     PlacesUIUtils.markPageAsTyped(aUrlToAdd);
 }
 
-function toJavaScriptConsole()
-{
-  toOpenWindowByType("global:console", "chrome://global/content/console.xul");
-}
-
 function BrowserDownloadsUI()
 {
   if (PrivateBrowsingUtils.isWindowPrivate(window)) {
