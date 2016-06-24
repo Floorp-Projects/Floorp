@@ -261,7 +261,7 @@ HTMLEditRules::Init(nsPlaintextEditor* aTextEditor)
 
   // set up mDocChangeRange to be whole doc
   // temporarily turn off rules sniffing
-  nsAutoLockRulesSniffing lockIt(static_cast<TextEditRules*>(this));
+  AutoLockRulesSniffing lockIt(this);
   if (!mDocChangeRange) {
     mDocChangeRange = new nsRange(node);
   }
@@ -300,7 +300,7 @@ HTMLEditRules::BeforeEdit(EditAction action,
   NS_ENSURE_STATE(mHTMLEditor);
   nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
 
-  nsAutoLockRulesSniffing lockIt(this);
+  AutoLockRulesSniffing lockIt(this);
   mDidExplicitlySetInterline = false;
 
   if (!mActionNesting) {
@@ -382,7 +382,7 @@ HTMLEditRules::AfterEdit(EditAction action,
   NS_ENSURE_STATE(mHTMLEditor);
   nsCOMPtr<nsIEditor> kungFuDeathGrip(mHTMLEditor);
 
-  nsAutoLockRulesSniffing lockIt(this);
+  AutoLockRulesSniffing lockIt(this);
 
   MOZ_ASSERT(mActionNesting > 0);
   nsresult rv = NS_OK;
