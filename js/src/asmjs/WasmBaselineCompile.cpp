@@ -4819,9 +4819,10 @@ void
 BaseCompiler::pushReturned(ExprType type)
 {
     switch (type) {
-      case ExprType::Void:
+      case ExprType::Void: {
         pushVoid();
         break;
+      }
       case ExprType::I32: {
         RegI32 rv = needI32();
         captureReturnedI32(rv);
@@ -5380,6 +5381,7 @@ BaseCompiler::emitSelect()
 
     RegI32 rc = popI32();
     switch (type) {
+      case AnyType:
       case ExprType::Void: {
         popValueStackBy(2);
         pushVoid();
