@@ -2435,7 +2435,7 @@ class BaseCompiler
 
     void lshiftI32(int32_t count, RegI32 srcDest) {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-        masm.shll(Imm32(count), srcDest.reg);
+        masm.shll(Imm32(count & 31), srcDest.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: lshiftI32");
 #endif
@@ -2461,7 +2461,7 @@ class BaseCompiler
 
     void rshiftI32(int32_t count, RegI32 srcDest) {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-        masm.sarl(Imm32(count), srcDest.reg);
+        masm.sarl(Imm32(count & 31), srcDest.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: rshiftI32");
 #endif
@@ -2487,7 +2487,7 @@ class BaseCompiler
 
     void rshiftU32(int32_t count, RegI32 srcDest) {
 #if defined(JS_CODEGEN_X86) || defined(JS_CODEGEN_X64)
-        masm.shrl(Imm32(count), srcDest.reg);
+        masm.shrl(Imm32(count & 31), srcDest.reg);
 #else
         MOZ_CRASH("BaseCompiler platform hook: rshiftU32");
 #endif
