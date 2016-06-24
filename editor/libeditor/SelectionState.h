@@ -15,8 +15,8 @@
 class nsCycleCollectionTraversalCallback;
 class nsIDOMCharacterData;
 class nsRange;
-class nsRangeUpdater;
 namespace mozilla {
+class RangeUpdater;
 namespace dom {
 class Selection;
 class Text;
@@ -69,7 +69,7 @@ public:
 private:
   nsTArray<RefPtr<RangeItem>> mArray;
 
-  friend class nsRangeUpdater;
+  friend class RangeUpdater;
   friend void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,
                                           SelectionState&,
                                           const char*,
@@ -92,71 +92,72 @@ ImplCycleCollectionUnlink(SelectionState& aField)
   ImplCycleCollectionUnlink(aField.mArray);
 }
 
-} // namespace mozilla
-
-class nsRangeUpdater
+class RangeUpdater final
 {
-  public:
+public:
+  RangeUpdater();
+  ~RangeUpdater();
 
-    nsRangeUpdater();
-    ~nsRangeUpdater();
+  void RegisterRangeItem(RangeItem* aRangeItem);
+  void DropRangeItem(RangeItem* aRangeItem);
+  nsresult RegisterSelectionState(SelectionState& aSelState);
+  nsresult DropSelectionState(SelectionState& aSelState);
 
-    void RegisterRangeItem(mozilla::RangeItem* aRangeItem);
-    void DropRangeItem(mozilla::RangeItem* aRangeItem);
-    nsresult RegisterSelectionState(mozilla::SelectionState& aSelState);
-    nsresult DropSelectionState(mozilla::SelectionState& aSelState);
+  // editor selection gravity routines.  Note that we can't always depend on
+  // DOM Range gravity to do what we want to the "real" selection.  For instance,
+  // if you move a node, that corresponds to deleting it and reinserting it.
+  // DOM Range gravity will promote the selection out of the node on deletion,
+  // which is not what you want if you know you are reinserting it.
+  nsresult SelAdjCreateNode(nsINode* aParent, int32_t aPosition);
+  nsresult SelAdjCreateNode(nsIDOMNode* aParent, int32_t aPosition);
+  nsresult SelAdjInsertNode(nsINode* aParent, int32_t aPosition);
+  nsresult SelAdjInsertNode(nsIDOMNode* aParent, int32_t aPosition);
+  void SelAdjDeleteNode(nsINode* aNode);
+  void SelAdjDeleteNode(nsIDOMNode* aNode);
+  nsresult SelAdjSplitNode(nsIContent& aOldRightNode, int32_t aOffset,
+                           nsIContent* aNewLeftNode);
+  nsresult SelAdjJoinNodes(nsINode& aLeftNode,
+                           nsINode& aRightNode,
+                           nsINode& aParent,
+                           int32_t aOffset,
+                           int32_t aOldLeftNodeLength);
+  void SelAdjInsertText(dom::Text& aTextNode, int32_t aOffset,
+                        const nsAString &aString);
+  nsresult SelAdjDeleteText(nsIContent* aTextNode, int32_t aOffset,
+                            int32_t aLength);
+  nsresult SelAdjDeleteText(nsIDOMCharacterData* aTextNode,
+                            int32_t aOffset, int32_t aLength);
+  // the following gravity routines need will/did sandwiches, because the other
+  // gravity routines will be called inside of these sandwiches, but should be
+  // ignored.
+  nsresult WillReplaceContainer();
+  nsresult DidReplaceContainer(dom::Element* aOriginalNode,
+                               dom::Element* aNewNode);
+  nsresult WillRemoveContainer();
+  nsresult DidRemoveContainer(nsINode* aNode, nsINode* aParent,
+                              int32_t aOffset, uint32_t aNodeOrigLen);
+  nsresult DidRemoveContainer(nsIDOMNode* aNode, nsIDOMNode* aParent,
+                              int32_t aOffset, uint32_t aNodeOrigLen);
+  nsresult WillInsertContainer();
+  nsresult DidInsertContainer();
+  void WillMoveNode();
+  void DidMoveNode(nsINode* aOldParent, int32_t aOldOffset,
+                   nsINode* aNewParent, int32_t aNewOffset);
 
-    // editor selection gravity routines.  Note that we can't always depend on
-    // DOM Range gravity to do what we want to the "real" selection.  For instance,
-    // if you move a node, that corresponds to deleting it and reinserting it.
-    // DOM Range gravity will promote the selection out of the node on deletion,
-    // which is not what you want if you know you are reinserting it.
-    nsresult SelAdjCreateNode(nsINode* aParent, int32_t aPosition);
-    nsresult SelAdjCreateNode(nsIDOMNode *aParent, int32_t aPosition);
-    nsresult SelAdjInsertNode(nsINode* aParent, int32_t aPosition);
-    nsresult SelAdjInsertNode(nsIDOMNode *aParent, int32_t aPosition);
-    void     SelAdjDeleteNode(nsINode* aNode);
-    void     SelAdjDeleteNode(nsIDOMNode *aNode);
-    nsresult SelAdjSplitNode(nsIContent& aOldRightNode, int32_t aOffset,
-                             nsIContent* aNewLeftNode);
-    nsresult SelAdjJoinNodes(nsINode& aLeftNode,
-                             nsINode& aRightNode,
-                             nsINode& aParent,
-                             int32_t aOffset,
-                             int32_t aOldLeftNodeLength);
-    void     SelAdjInsertText(mozilla::dom::Text& aTextNode, int32_t aOffset,
-                              const nsAString &aString);
-    nsresult SelAdjDeleteText(nsIContent* aTextNode, int32_t aOffset,
-                              int32_t aLength);
-    nsresult SelAdjDeleteText(nsIDOMCharacterData *aTextNode, int32_t aOffset, int32_t aLength);
-    // the following gravity routines need will/did sandwiches, because the other gravity
-    // routines will be called inside of these sandwiches, but should be ignored.
-    nsresult WillReplaceContainer();
-    nsresult DidReplaceContainer(mozilla::dom::Element* aOriginalNode,
-                                 mozilla::dom::Element* aNewNode);
-    nsresult WillRemoveContainer();
-    nsresult DidRemoveContainer(nsINode* aNode, nsINode* aParent,
-                                int32_t aOffset, uint32_t aNodeOrigLen);
-    nsresult DidRemoveContainer(nsIDOMNode *aNode, nsIDOMNode *aParent, int32_t aOffset, uint32_t aNodeOrigLen);
-    nsresult WillInsertContainer();
-    nsresult DidInsertContainer();
-    void WillMoveNode();
-    void DidMoveNode(nsINode* aOldParent, int32_t aOldOffset,
-                     nsINode* aNewParent, int32_t aNewOffset);
-  private:
-    friend void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,
-                                            nsRangeUpdater&,
-                                            const char*,
-                                            uint32_t);
-    friend void ImplCycleCollectionUnlink(nsRangeUpdater& aField);
+private:
+  friend void ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback&,
+                                          RangeUpdater&,
+                                          const char*,
+                                          uint32_t);
+  friend void ImplCycleCollectionUnlink(RangeUpdater& aField);
 
-    nsTArray<RefPtr<mozilla::RangeItem>> mArray;
-    bool mLock;
+  nsTArray<RefPtr<RangeItem>> mArray;
+  bool mLock;
 };
 
 inline void
 ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
-                            nsRangeUpdater& aField,
+                            RangeUpdater& aField,
                             const char* aName,
                             uint32_t aFlags = 0)
 {
@@ -164,10 +165,12 @@ ImplCycleCollectionTraverse(nsCycleCollectionTraversalCallback& aCallback,
 }
 
 inline void
-ImplCycleCollectionUnlink(nsRangeUpdater& aField)
+ImplCycleCollectionUnlink(RangeUpdater& aField)
 {
   ImplCycleCollectionUnlink(aField.mArray);
 }
+
+} // namespace mozilla
 
 /***************************************************************************
  * helper class for using SelectionState.  stack based class for doing
@@ -177,14 +180,14 @@ ImplCycleCollectionUnlink(nsRangeUpdater& aField)
 class MOZ_STACK_CLASS nsAutoTrackDOMPoint
 {
   private:
-    nsRangeUpdater &mRU;
+    mozilla::RangeUpdater& mRU;
     // Allow tracking either nsIDOMNode or nsINode until nsIDOMNode is gone
     nsCOMPtr<nsINode>* mNode;
     nsCOMPtr<nsIDOMNode>* mDOMNode;
     int32_t* mOffset;
     RefPtr<mozilla::RangeItem> mRangeItem;
   public:
-    nsAutoTrackDOMPoint(nsRangeUpdater &aRangeUpdater,
+    nsAutoTrackDOMPoint(mozilla::RangeUpdater& aRangeUpdater,
                         nsCOMPtr<nsINode>* aNode, int32_t* aOffset)
       : mRU(aRangeUpdater)
       , mNode(aNode)
@@ -199,7 +202,7 @@ class MOZ_STACK_CLASS nsAutoTrackDOMPoint
       mRU.RegisterRangeItem(mRangeItem);
     }
 
-    nsAutoTrackDOMPoint(nsRangeUpdater &aRangeUpdater,
+    nsAutoTrackDOMPoint(mozilla::RangeUpdater& aRangeUpdater,
                         nsCOMPtr<nsIDOMNode>* aNode, int32_t* aOffset)
       : mRU(aRangeUpdater)
       , mNode(nullptr)
@@ -238,12 +241,12 @@ namespace dom {
 class MOZ_STACK_CLASS AutoReplaceContainerSelNotify
 {
   private:
-    nsRangeUpdater &mRU;
+    RangeUpdater& mRU;
     Element* mOriginalElement;
     Element* mNewElement;
 
   public:
-    AutoReplaceContainerSelNotify(nsRangeUpdater& aRangeUpdater,
+    AutoReplaceContainerSelNotify(RangeUpdater& aRangeUpdater,
                                   Element* aOriginalElement,
                                   Element* aNewElement)
       : mRU(aRangeUpdater)
@@ -271,14 +274,14 @@ class MOZ_STACK_CLASS AutoReplaceContainerSelNotify
 class MOZ_STACK_CLASS nsAutoRemoveContainerSelNotify
 {
   private:
-    nsRangeUpdater &mRU;
+    mozilla::RangeUpdater& mRU;
     nsIDOMNode *mNode;
     nsIDOMNode *mParent;
     int32_t    mOffset;
     uint32_t   mNodeOrigLen;
 
   public:
-    nsAutoRemoveContainerSelNotify(nsRangeUpdater& aRangeUpdater,
+    nsAutoRemoveContainerSelNotify(mozilla::RangeUpdater& aRangeUpdater,
                                    nsINode* aNode,
                                    nsINode* aParent,
                                    int32_t aOffset,
@@ -306,10 +309,11 @@ class MOZ_STACK_CLASS nsAutoRemoveContainerSelNotify
 class MOZ_STACK_CLASS nsAutoInsertContainerSelNotify
 {
   private:
-    nsRangeUpdater &mRU;
+    mozilla::RangeUpdater& mRU;
 
   public:
-    explicit nsAutoInsertContainerSelNotify(nsRangeUpdater &aRangeUpdater) :
+    explicit nsAutoInsertContainerSelNotify(
+               mozilla::RangeUpdater& aRangeUpdater) :
     mRU(aRangeUpdater)
     {
       mRU.WillInsertContainer();
@@ -330,14 +334,14 @@ class MOZ_STACK_CLASS nsAutoInsertContainerSelNotify
 class MOZ_STACK_CLASS nsAutoMoveNodeSelNotify
 {
   private:
-    nsRangeUpdater &mRU;
+    mozilla::RangeUpdater& mRU;
     nsINode* mOldParent;
     nsINode* mNewParent;
     int32_t    mOldOffset;
     int32_t    mNewOffset;
 
   public:
-    nsAutoMoveNodeSelNotify(nsRangeUpdater &aRangeUpdater,
+    nsAutoMoveNodeSelNotify(mozilla::RangeUpdater& aRangeUpdater,
                             nsINode* aOldParent,
                             int32_t aOldOffset,
                             nsINode* aNewParent,

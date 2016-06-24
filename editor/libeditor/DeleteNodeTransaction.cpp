@@ -4,7 +4,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "DeleteNodeTransaction.h"
-#include "SelectionState.h" // nsRangeUpdater
+#include "SelectionState.h" // RangeUpdater
 #include "nsDebug.h"
 #include "nsEditor.h"
 #include "nsError.h"
@@ -35,7 +35,7 @@ NS_INTERFACE_MAP_END_INHERITING(EditTransactionBase)
 nsresult
 DeleteNodeTransaction::Init(nsEditor* aEditor,
                             nsINode* aNode,
-                            nsRangeUpdater* aRangeUpdater)
+                            RangeUpdater* aRangeUpdater)
 {
   NS_ENSURE_TRUE(aEditor && aNode, NS_ERROR_NULL_POINTER);
   mEditor = aEditor;

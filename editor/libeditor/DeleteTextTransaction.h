@@ -15,9 +15,10 @@
 #include "nscore.h"
 
 class nsEditor;
-class nsRangeUpdater;
 
 namespace mozilla {
+
+class RangeUpdater;
 
 /**
  * A transaction that removes text from a content node.
@@ -37,7 +38,7 @@ public:
                         nsGenericDOMDataNode& aCharData,
                         uint32_t aOffset,
                         uint32_t aNumCharsToDelete,
-                        nsRangeUpdater* aRangeUpdater);
+                        RangeUpdater* aRangeUpdater);
 
   nsresult Init();
 
@@ -68,7 +69,7 @@ protected:
   nsString mDeletedText;
 
   // Range updater object.
-  nsRangeUpdater* mRangeUpdater;
+  RangeUpdater* mRangeUpdater;
 };
 
 } // namespace mozilla
