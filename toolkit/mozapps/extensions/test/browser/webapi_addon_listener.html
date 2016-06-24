@@ -14,6 +14,7 @@ let resultEl = document.getElementById("result");
   "onInstalled",
   "onUninstalling",
   "onUninstalled",
+  "onOperationCancelled",
 ].forEach(event => {
   navigator.mozAddonManager.addEventListener(event, data => {
     let obj = {event, id: data.id, needsRestart: data.needsRestart};
