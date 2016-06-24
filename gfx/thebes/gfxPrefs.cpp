@@ -80,6 +80,34 @@ void gfxPrefs::AssertMainThread()
   MOZ_ASSERT(NS_IsMainThread(), "this code must be run on the main thread");
 }
 
+void
+gfxPrefs::Pref::OnChange()
+{
+  if (mChangeCallback) {
+    mChangeCallback();
+  }
+}
+
+void
+gfxPrefs::Pref::SetChangeCallback(ChangeCallback aCallback)
+{
+  mChangeCallback = aCallback;
+
+  if (!IsParentProcess() && IsPrefsServiceAvailable()) {
+    // If we're in the parent process, we watch prefs by default so we can
+    // send changes over to the GPU process. Otherwise, we need to add or
+    // remove a watch for the pref now.
+    if (aCallback) {
+      WatchChanges(Name(), this);
+    } else {
+      UnwatchChanges(Name(), this);
+    }
+  }
+
+  // Fire the callback once to make initialization easier for the caller.
+  OnChange();
+}
+
 // On lightweight processes such as for GMP and GPU, XPCOM is not initialized,
 // and therefore we don't have access to Preferences. When XPCOM is not
 // available we rely on manual synchronization of gfxPrefs values over IPC.
@@ -87,6 +115,12 @@ void gfxPrefs::AssertMainThread()
 gfxPrefs::IsPrefsServiceAvailable()
 {
   return Preferences::IsServiceAvailable();
+}
+
+/* static */ bool
+gfxPrefs::IsParentProcess()
+{
+  return XRE_IsParentProcess();
 }
 
 void gfxPrefs::PrefAddVarCache(bool* aVariable,
@@ -169,3 +203,22 @@ void gfxPrefs::PrefSet(const char* aPref, float aValue)
   Preferences::SetFloat(aPref, aValue);
 }
 
+static void
+OnGfxPrefChanged(const char* aPrefname, void* aClosure)
+{
+  reinterpret_cast<gfxPrefs::Pref*>(aClosure)->OnChange();
+}
+
+void gfxPrefs::WatchChanges(const char* aPrefname, Pref* aPref)
+{
+  MOZ_ASSERT(IsPrefsServiceAvailable());
+  Preferences::RegisterCallback(OnGfxPrefChanged, aPrefname, aPref, Preferences::ExactMatch);
+}
+
+void gfxPrefs::UnwatchChanges(const char* aPrefname, Pref* aPref)
+{
+  // The Preferences service can go offline before gfxPrefs is destroyed.
+  if (IsPrefsServiceAvailable()) {
+    Preferences::UnregisterCallback(OnGfxPrefChanged, aPrefname, aPref, Preferences::ExactMatch);
+  }
+}
