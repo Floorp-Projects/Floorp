@@ -1052,6 +1052,31 @@ RStringSplit::recover(JSContext* cx, SnapshotIterator& iter) const
 }
 
 bool
+MNaNToZero::writeRecoverData(CompactBufferWriter& writer) const
+{
+    MOZ_ASSERT(canRecoverOnBailout());
+    writer.writeUnsigned(uint32_t(RInstruction::Recover_NaNToZero));
+    return true;
+}
+
+RNaNToZero::RNaNToZero(CompactBufferReader& reader)
+{ }
+
+
+bool
+RNaNToZero::recover(JSContext* cx, SnapshotIterator& iter) const
+{
+    RootedValue v(cx, iter.read());
+    RootedValue result(cx);
+
+    MOZ_ASSERT(v.isDouble());
+    result.setDouble((mozilla::IsNaN(v.toDouble()) || mozilla::IsNegativeZero(v.toDouble())) ? 0.0 : v.toDouble());
+
+    iter.storeInstructionResult(result);
+    return true;
+}
+
+bool
 MRegExpMatcher::writeRecoverData(CompactBufferWriter& writer) const
 {
     MOZ_ASSERT(canRecoverOnBailout());

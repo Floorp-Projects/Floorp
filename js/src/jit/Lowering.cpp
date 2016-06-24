@@ -4841,6 +4841,19 @@ LIRGenerator::visitBlock(MBasicBlock* block)
     return true;
 }
 
+void
+LIRGenerator::visitNaNToZero(MNaNToZero *ins)
+{
+    MDefinition* input = ins->input();
+
+    if (ins->operandIsNeverNaN() && ins->operandIsNeverNegativeZero()) {
+        redefine(ins, input);
+        return;
+    }
+    LNaNToZero* lir = new(alloc()) LNaNToZero(useRegisterAtStart(input), tempDouble());
+    defineReuseInput(lir, ins, 0);
+}
+
 bool
 LIRGenerator::generate()
 {
