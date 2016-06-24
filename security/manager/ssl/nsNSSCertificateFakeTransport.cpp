@@ -5,13 +5,13 @@
 
 #include "nsNSSCertificateFakeTransport.h"
 
+#include "mozilla/Assertions.h"
 #include "nsIClassInfoImpl.h"
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsISupportsPrimitives.h"
 #include "nsNSSCertificate.h"
 #include "nsString.h"
-#include "nsXPIDLString.h"
 
 NS_IMPL_ISUPPORTS(nsNSSCertificateFakeTransport,
                   nsIX509Cert,
@@ -196,6 +196,13 @@ NS_IMETHODIMP
 nsNSSCertificateFakeTransport::GetUsagesString(bool, uint32_t*, nsAString&)
 {
   NS_NOTREACHED("Unimplemented on content process");
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsNSSCertificateFakeTransport::GetKeyUsages(nsAString&)
+{
+  MOZ_ASSERT_UNREACHABLE("Unimplemented on content process");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 

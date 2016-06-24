@@ -183,24 +183,6 @@ interface nsIX509Cert : nsISupports {
   const unsigned long SIGNATURE_ALGORITHM_DISABLED = 1 << 8;
 
   /**
-   *  Constants that describe the certified usages of a certificate.
-   *
-   *  Deprecated and unused
-   */
-  const unsigned long CERT_USAGE_SSLClient = 0;
-  const unsigned long CERT_USAGE_SSLServer = 1;
-  const unsigned long CERT_USAGE_SSLServerWithStepUp = 2;
-  const unsigned long CERT_USAGE_SSLCA = 3;
-  const unsigned long CERT_USAGE_EmailSigner = 4;
-  const unsigned long CERT_USAGE_EmailRecipient = 5;
-  const unsigned long CERT_USAGE_ObjectSigner = 6;
-  const unsigned long CERT_USAGE_UserCertImport = 7;
-  const unsigned long CERT_USAGE_VerifyCA = 8;
-  const unsigned long CERT_USAGE_ProtectedObjectSigner = 9;
-  const unsigned long CERT_USAGE_StatusResponder = 10;
-  const unsigned long CERT_USAGE_AnyCA = 11;
-
-  /**
    *  Constants for specifying the chain mode when exporting a certificate
    */
   const unsigned long CMS_CHAIN_MODE_CertOnly = 1;
@@ -249,6 +231,13 @@ interface nsIX509Cert : nsISupports {
    *  @param purposes The string listing the usages.
    */
   void getUsagesString(in boolean localOnly, out uint32_t verified, out AString usages);
+
+  /**
+   * A comma separated list of localized strings representing the contents of
+   * the certificate's key usage extension, if present. The empty string if the
+   * certificate doesn't have the key usage extension, or has an empty extension.
+   */
+  readonly attribute AString keyUsages;
 
   /**
    *  This is the attribute which describes the ASN1 layout
