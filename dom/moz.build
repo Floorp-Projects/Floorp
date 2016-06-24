@@ -63,6 +63,7 @@ DIRS += [
     'fmradio',
     'gamepad',
     'geolocation',
+    'grid',
     'html',
     'icc',
     'inputport',
