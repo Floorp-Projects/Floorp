@@ -38,9 +38,9 @@ nsHTMLCSSStyleSheet::~nsHTMLCSSStyleSheet()
 
     // Ideally we'd just call MiscContainer::Evict, but we can't do that since
     // we're iterating the hashtable.
-    MOZ_ASSERT(value->mType == nsAttrValue::eCSSDeclaration);
+    MOZ_ASSERT(value->mType == nsAttrValue::eGeckoCSSDeclaration);
 
-    css::Declaration* declaration = value->mValue.mCSSDeclaration;
+    css::Declaration* declaration = value->mValue.mGeckoCSSDeclaration;
     declaration->SetHTMLCSSStyleSheet(nullptr);
     value->mValue.mCached = 0;
 
