@@ -266,6 +266,13 @@ GetWebIDLCallerPrincipal()
   return aes->mWebIDLCallerPrincipal;
 }
 
+bool
+IsJSAPIActive()
+{
+  ScriptSettingsStackEntry* topEntry = ScriptSettingsStack::Top();
+  return topEntry && !topEntry->NoJSAPI();
+}
+
 AutoJSAPI::AutoJSAPI()
   : ScriptSettingsStackEntry(nullptr, eJSAPI)
   , mCx(nullptr)
@@ -796,13 +803,13 @@ AutoJSContext::AutoJSContext(MOZ_GUARD_OBJECT_NOTIFIER_ONLY_PARAM_IN_IMPL)
 {
   JS::AutoSuppressGCAnalysis nogc;
   MOZ_ASSERT(!mCx, "mCx should not be initialized!");
+  MOZ_ASSERT(NS_IsMainThread());
 
   MOZ_GUARD_OBJECT_NOTIFIER_INIT;
 
-  nsXPConnect *xpc = nsXPConnect::XPConnect();
-  mCx = xpc->GetCurrentJSContext();
-
-  if (!mCx) {
+  if (IsJSAPIActive()) {
+    mCx = nsContentUtils::GetSafeJSContext();
+  } else {
     mJSAPI.Init();
     mCx = mJSAPI.cx();
   }
