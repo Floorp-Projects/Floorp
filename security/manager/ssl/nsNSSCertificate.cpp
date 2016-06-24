@@ -11,6 +11,7 @@
 #include "certdb.h"
 #include "mozilla/Base64.h"
 #include "mozilla/Casting.h"
+#include "mozilla/NotNull.h"
 #include "mozilla/unused.h"
 #include "nsArray.h"
 #include "nsCOMPtr.h"
@@ -69,6 +70,8 @@ NS_IMPL_ISUPPORTS(nsNSSCertificate,
                   nsIX509Cert,
                   nsISerializable,
                   nsIClassInfo)
+
+static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
 
 /*static*/ nsNSSCertificate*
 nsNSSCertificate::Create(CERTCertificate* cert, SECOidTag* evOidPolicy)
@@ -256,90 +259,84 @@ nsNSSCertificate::MarkForPermDeletion()
   return NS_OK;
 }
 
-nsresult
-GetKeyUsagesString(CERTCertificate* cert, nsINSSComponent* nssComponent,
-                   nsString& text)
+/**
+ * Appends a pipnss bundle string to the given string.
+ *
+ * @param nssComponent For accessing the string bundle.
+ * @param bundleKey Key for the string to append.
+ * @param currentText The text to append to, using commas as separators.
+ */
+template<size_t N>
+void
+AppendBundleString(const NotNull<nsCOMPtr<nsINSSComponent>>& nssComponent,
+                   const char (&bundleKey)[N],
+        /*in/out*/ nsAString& currentText)
+{
+  nsAutoString bundleString;
+  nsresult rv = nssComponent->GetPIPNSSBundleString(bundleKey, bundleString);
+  if (NS_FAILED(rv)) {
+    return;
+  }
+
+  if (!currentText.IsEmpty()) {
+    currentText.Append(',');
+  }
+  currentText.Append(bundleString);
+}
+
+NS_IMETHODIMP
+nsNSSCertificate::GetKeyUsages(nsAString& text)
 {
   text.Truncate();
 
-  SECItem keyUsageItem;
-  keyUsageItem.data = nullptr;
-  keyUsageItem.len = 0;
-
-  SECStatus srv;
-
-  // There is no extension, v1 or v2 certificate
-  if (!cert->extensions)
-    return NS_OK;
-
-
-  srv = CERT_FindKeyUsageExtension(cert, &keyUsageItem);
-  if (srv == SECFailure) {
-    if (PORT_GetError () == SEC_ERROR_EXTENSION_NOT_FOUND)
-      return NS_OK;
-    else
-      return NS_ERROR_FAILURE;
+  nsCOMPtr<nsINSSComponent> nssComponent = do_GetService(kNSSComponentCID);
+  if (!nssComponent) {
+    return NS_ERROR_FAILURE;
   }
+
+  if (!mCert) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (!mCert->extensions) {
+    return NS_OK;
+  }
+
+  ScopedAutoSECItem keyUsageItem;
+  if (CERT_FindKeyUsageExtension(mCert.get(), &keyUsageItem) != SECSuccess) {
+    return PORT_GetError() == SEC_ERROR_EXTENSION_NOT_FOUND ? NS_OK
+                                                            : NS_ERROR_FAILURE;
+  }
+
   unsigned char keyUsage = 0;
   if (keyUsageItem.len) {
     keyUsage = keyUsageItem.data[0];
   }
 
-  nsAutoString local;
-  nsresult rv;
-  const char16_t comma = ',';
-
+  NotNull<nsCOMPtr<nsINSSComponent>> wrappedNSSComponent =
+    WrapNotNull(nssComponent);
   if (keyUsage & KU_DIGITAL_SIGNATURE) {
-    rv = nssComponent->GetPIPNSSBundleString("CertDumpKUSign", local);
-    if (NS_SUCCEEDED(rv)) {
-      if (!text.IsEmpty()) text.Append(comma);
-      text.Append(local.get());
-    }
+    AppendBundleString(wrappedNSSComponent, "CertDumpKUSign", text);
   }
   if (keyUsage & KU_NON_REPUDIATION) {
-    rv = nssComponent->GetPIPNSSBundleString("CertDumpKUNonRep", local);
-    if (NS_SUCCEEDED(rv)) {
-      if (!text.IsEmpty()) text.Append(comma);
-      text.Append(local.get());
-    }
+    AppendBundleString(wrappedNSSComponent, "CertDumpKUNonRep", text);
   }
   if (keyUsage & KU_KEY_ENCIPHERMENT) {
-    rv = nssComponent->GetPIPNSSBundleString("CertDumpKUEnc", local);
-    if (NS_SUCCEEDED(rv)) {
-      if (!text.IsEmpty()) text.Append(comma);
-      text.Append(local.get());
-    }
+    AppendBundleString(wrappedNSSComponent, "CertDumpKUEnc", text);
   }
   if (keyUsage & KU_DATA_ENCIPHERMENT) {
-    rv = nssComponent->GetPIPNSSBundleString("CertDumpKUDEnc", local);
-    if (NS_SUCCEEDED(rv)) {
-      if (!text.IsEmpty()) text.Append(comma);
-      text.Append(local.get());
-    }
+    AppendBundleString(wrappedNSSComponent, "CertDumpKUDEnc", text);
   }
   if (keyUsage & KU_KEY_AGREEMENT) {
-    rv = nssComponent->GetPIPNSSBundleString("CertDumpKUKA", local);
-    if (NS_SUCCEEDED(rv)) {
-      if (!text.IsEmpty()) text.Append(comma);
-      text.Append(local.get());
-    }
+    AppendBundleString(wrappedNSSComponent, "CertDumpKUKA", text);
   }
   if (keyUsage & KU_KEY_CERT_SIGN) {
-    rv = nssComponent->GetPIPNSSBundleString("CertDumpKUCertSign", local);
-    if (NS_SUCCEEDED(rv)) {
-      if (!text.IsEmpty()) text.Append(comma);
-      text.Append(local.get());
-    }
+    AppendBundleString(wrappedNSSComponent, "CertDumpKUCertSign", text);
   }
   if (keyUsage & KU_CRL_SIGN) {
-    rv = nssComponent->GetPIPNSSBundleString("CertDumpKUCRLSign", local);
-    if (NS_SUCCEEDED(rv)) {
-      if (!text.IsEmpty()) text.Append(comma);
-      text.Append(local.get());
-    }
+    AppendBundleString(wrappedNSSComponent, "CertDumpKUCRLSign", text);
   }
 
-  PORT_Free (keyUsageItem.data);
   return NS_OK;
 }
 
@@ -348,8 +345,6 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString& nickname,
                                   nsAutoString& nickWithSerial,
                                   nsAutoString& details)
 {
-  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
   if (!NS_IsMainThread()) {
     NS_ERROR("nsNSSCertificate::FormatUIStrings called off the main thread");
     return NS_ERROR_NOT_SAME_THREAD;
@@ -421,8 +416,7 @@ nsNSSCertificate::FormatUIStrings(const nsAutoString& nickname,
     details.Append(char16_t('\n'));
   }
 
-  if (NS_SUCCEEDED(GetKeyUsagesString(mCert.get(), nssComponent, temp1)) &&
-      !temp1.IsEmpty()) {
+  if (NS_SUCCEEDED(GetKeyUsages(temp1)) && !temp1.IsEmpty()) {
     details.AppendLiteral("  ");
     if (NS_SUCCEEDED(nssComponent->GetPIPNSSBundleString("CertDumpKeyUsage", info))) {
       details.Append(info);
@@ -585,8 +579,6 @@ nsNSSCertificate::GetWindowTitle(nsAString& aWindowTitle)
 NS_IMETHODIMP
 nsNSSCertificate::GetNickname(nsAString& aNickname)
 {
-  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -607,8 +599,6 @@ nsNSSCertificate::GetNickname(nsAString& aNickname)
 NS_IMETHODIMP
 nsNSSCertificate::GetEmailAddress(nsAString& aEmailAddress)
 {
-  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
@@ -1054,8 +1044,6 @@ nsNSSCertificate::GetSha1Fingerprint(nsAString& _sha1Fingerprint)
 NS_IMETHODIMP
 nsNSSCertificate::GetTokenName(nsAString& aTokenName)
 {
-  static NS_DEFINE_CID(kNSSComponentCID, NS_NSSCOMPONENT_CID);
-
   nsNSSShutDownPreventionLock locker;
   if (isAlreadyShutDown())
     return NS_ERROR_NOT_AVAILABLE;
