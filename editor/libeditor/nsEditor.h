@@ -6,7 +6,7 @@
 #ifndef __editor_h__
 #define __editor_h__
 
-#include "SelectionState.h"             // for nsRangeUpdater, etc
+#include "SelectionState.h"             // for RangeUpdater, etc
 #include "mozilla/Assertions.h"         // for MOZ_ASSERT, etc.
 #include "mozilla/OwningNonNull.h"      // for OwningNonNull
 #include "mozilla/StyleSheetHandle.h"   // for StyleSheetHandle
@@ -867,7 +867,8 @@ protected:
 
   // Cached selection for AutoSelectionRestorer.
   mozilla::SelectionState mSavedSel;
-  nsRangeUpdater    mRangeUpdater;       // utility class object for maintaining preserved ranges
+  // Utility class object for maintaining preserved ranges.
+  mozilla::RangeUpdater mRangeUpdater;
 
   uint32_t          mModCount;     // number of modifications (for undo/redo stack)
   uint32_t          mFlags;        // behavior flags. See nsIPlaintextEditor.idl for the flags we use.
@@ -897,7 +898,7 @@ protected:
   friend class mozilla::AutoRules;
   friend class mozilla::AutoSelectionRestorer;
   friend class mozilla::AutoTransactionsConserveSelection;
-  friend class nsRangeUpdater;
+  friend class mozilla::RangeUpdater;
 };
 
 

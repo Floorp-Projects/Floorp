@@ -41,7 +41,7 @@ NS_INTERFACE_MAP_END_INHERITING(EditAggregateTransaction)
 nsresult
 DeleteRangeTransaction::Init(nsEditor* aEditor,
                              nsRange* aRange,
-                             nsRangeUpdater* aRangeUpdater)
+                             RangeUpdater* aRangeUpdater)
 {
   MOZ_ASSERT(aEditor && aRange);
 

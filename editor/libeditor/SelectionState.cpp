@@ -137,24 +137,24 @@ SelectionState::IsEmpty()
   return mArray.IsEmpty();
 }
 
-} // namespace mozilla
+/******************************************************************************
+ * mozilla::RangeUpdater
+ *
+ * Class for updating nsRanges in response to editor actions.
+ ******************************************************************************/
 
-using namespace mozilla;
-using namespace mozilla::dom;
+RangeUpdater::RangeUpdater()
+  : mLock(false)
+{
+}
 
-/***************************************************************************
- * nsRangeUpdater:  class for updating nsRanges in response to editor actions.
- */
-
-nsRangeUpdater::nsRangeUpdater() : mArray(), mLock(false) {}
-
-nsRangeUpdater::~nsRangeUpdater()
+RangeUpdater::~RangeUpdater()
 {
   // nothing to do, we don't own the items in our array.
 }
 
 void
-nsRangeUpdater::RegisterRangeItem(RangeItem* aRangeItem)
+RangeUpdater::RegisterRangeItem(RangeItem* aRangeItem)
 {
   if (!aRangeItem) return;
   if (mArray.Contains(aRangeItem))
@@ -166,14 +166,14 @@ nsRangeUpdater::RegisterRangeItem(RangeItem* aRangeItem)
 }
 
 void
-nsRangeUpdater::DropRangeItem(RangeItem* aRangeItem)
+RangeUpdater::DropRangeItem(RangeItem* aRangeItem)
 {
   if (!aRangeItem) return;
   mArray.RemoveElement(aRangeItem);
 }
 
 nsresult
-nsRangeUpdater::RegisterSelectionState(SelectionState& aSelState)
+RangeUpdater::RegisterSelectionState(SelectionState& aSelState)
 {
   uint32_t i, theCount = aSelState.mArray.Length();
   if (theCount < 1) return NS_ERROR_FAILURE;
@@ -187,7 +187,7 @@ nsRangeUpdater::RegisterSelectionState(SelectionState& aSelState)
 }
 
 nsresult
-nsRangeUpdater::DropSelectionState(SelectionState& aSelState)
+RangeUpdater::DropSelectionState(SelectionState& aSelState)
 {
   uint32_t i, theCount = aSelState.mArray.Length();
   if (theCount < 1) return NS_ERROR_FAILURE;
@@ -203,7 +203,8 @@ nsRangeUpdater::DropSelectionState(SelectionState& aSelState)
 // gravity methods:
 
 nsresult
-nsRangeUpdater::SelAdjCreateNode(nsINode* aParent, int32_t aPosition)
+RangeUpdater::SelAdjCreateNode(nsINode* aParent,
+                               int32_t aPosition)
 {
   if (mLock) {
     // lock set by Will/DidReplaceParent, etc...
@@ -230,26 +231,29 @@ nsRangeUpdater::SelAdjCreateNode(nsINode* aParent, int32_t aPosition)
 }
 
 nsresult
-nsRangeUpdater::SelAdjCreateNode(nsIDOMNode* aParent, int32_t aPosition)
+RangeUpdater::SelAdjCreateNode(nsIDOMNode* aParent,
+                               int32_t aPosition)
 {
   nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
   return SelAdjCreateNode(parent, aPosition);
 }
 
 nsresult
-nsRangeUpdater::SelAdjInsertNode(nsINode* aParent, int32_t aPosition)
+RangeUpdater::SelAdjInsertNode(nsINode* aParent,
+                               int32_t aPosition)
 {
   return SelAdjCreateNode(aParent, aPosition);
 }
 
 nsresult
-nsRangeUpdater::SelAdjInsertNode(nsIDOMNode *aParent, int32_t aPosition)
+RangeUpdater::SelAdjInsertNode(nsIDOMNode* aParent,
+                               int32_t aPosition)
 {
   return SelAdjCreateNode(aParent, aPosition);
 }
 
 void
-nsRangeUpdater::SelAdjDeleteNode(nsINode* aNode)
+RangeUpdater::SelAdjDeleteNode(nsINode* aNode)
 {
   if (mLock) {
     // lock set by Will/DidReplaceParent, etc...
@@ -305,17 +309,17 @@ nsRangeUpdater::SelAdjDeleteNode(nsINode* aNode)
 }
 
 void
-nsRangeUpdater::SelAdjDeleteNode(nsIDOMNode *aNode)
+RangeUpdater::SelAdjDeleteNode(nsIDOMNode* aNode)
 {
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
   NS_ENSURE_TRUE(node, );
   return SelAdjDeleteNode(node);
 }
 
-
 nsresult
-nsRangeUpdater::SelAdjSplitNode(nsIContent& aOldRightNode, int32_t aOffset,
-                                nsIContent* aNewLeftNode)
+RangeUpdater::SelAdjSplitNode(nsIContent& aOldRightNode,
+                              int32_t aOffset,
+                              nsIContent* aNewLeftNode)
 {
   if (mLock) {
     // lock set by Will/DidReplaceParent, etc...
@@ -358,11 +362,11 @@ nsRangeUpdater::SelAdjSplitNode(nsIContent& aOldRightNode, int32_t aOffset,
 }
 
 nsresult
-nsRangeUpdater::SelAdjJoinNodes(nsINode& aLeftNode,
-                                nsINode& aRightNode,
-                                nsINode& aParent,
-                                int32_t aOffset,
-                                int32_t aOldLeftNodeLength)
+RangeUpdater::SelAdjJoinNodes(nsINode& aLeftNode,
+                              nsINode& aRightNode,
+                              nsINode& aParent,
+                              int32_t aOffset,
+                              int32_t aOldLeftNodeLength)
 {
   if (mLock) {
     // lock set by Will/DidReplaceParent, etc...
@@ -415,10 +419,10 @@ nsRangeUpdater::SelAdjJoinNodes(nsINode& aLeftNode,
   return NS_OK;
 }
 
-
 void
-nsRangeUpdater::SelAdjInsertText(Text& aTextNode, int32_t aOffset,
-                                 const nsAString& aString)
+RangeUpdater::SelAdjInsertText(Text& aTextNode,
+                               int32_t aOffset,
+                               const nsAString& aString)
 {
   if (mLock) {
     // lock set by Will/DidReplaceParent, etc...
@@ -446,8 +450,9 @@ nsRangeUpdater::SelAdjInsertText(Text& aTextNode, int32_t aOffset,
 }
 
 nsresult
-nsRangeUpdater::SelAdjDeleteText(nsIContent* aTextNode, int32_t aOffset,
-                                 int32_t aLength)
+RangeUpdater::SelAdjDeleteText(nsIContent* aTextNode,
+                               int32_t aOffset,
+                               int32_t aLength)
 {
   if (mLock) {
     // lock set by Will/DidReplaceParent, etc...
@@ -481,25 +486,25 @@ nsRangeUpdater::SelAdjDeleteText(nsIContent* aTextNode, int32_t aOffset,
 }
 
 nsresult
-nsRangeUpdater::SelAdjDeleteText(nsIDOMCharacterData* aTextNode,
-                                 int32_t aOffset, int32_t aLength)
+RangeUpdater::SelAdjDeleteText(nsIDOMCharacterData* aTextNode,
+                               int32_t aOffset,
+                               int32_t aLength)
 {
   nsCOMPtr<nsIContent> textNode = do_QueryInterface(aTextNode);
   return SelAdjDeleteText(textNode, aOffset, aLength);
 }
 
-
 nsresult
-nsRangeUpdater::WillReplaceContainer()
+RangeUpdater::WillReplaceContainer()
 {
   if (mLock) return NS_ERROR_UNEXPECTED;
   mLock = true;
   return NS_OK;
 }
 
-
 nsresult
-nsRangeUpdater::DidReplaceContainer(Element* aOriginalNode, Element* aNewNode)
+RangeUpdater::DidReplaceContainer(Element* aOriginalNode,
+                                  Element* aNewNode)
 {
   NS_ENSURE_TRUE(mLock, NS_ERROR_UNEXPECTED);
   mLock = false;
@@ -524,19 +529,19 @@ nsRangeUpdater::DidReplaceContainer(Element* aOriginalNode, Element* aNewNode)
   return NS_OK;
 }
 
-
 nsresult
-nsRangeUpdater::WillRemoveContainer()
+RangeUpdater::WillRemoveContainer()
 {
   if (mLock) return NS_ERROR_UNEXPECTED;
   mLock = true;
   return NS_OK;
 }
 
-
 nsresult
-nsRangeUpdater::DidRemoveContainer(nsINode* aNode, nsINode* aParent,
-                                   int32_t aOffset, uint32_t aNodeOrigLen)
+RangeUpdater::DidRemoveContainer(nsINode* aNode,
+                                 nsINode* aParent,
+                                 int32_t aOffset,
+                                 uint32_t aNodeOrigLen)
 {
   NS_ENSURE_TRUE(mLock, NS_ERROR_UNEXPECTED);
   mLock = false;
@@ -569,42 +574,40 @@ nsRangeUpdater::DidRemoveContainer(nsINode* aNode, nsINode* aParent,
 }
 
 nsresult
-nsRangeUpdater::DidRemoveContainer(nsIDOMNode* aNode, nsIDOMNode* aParent,
-                                   int32_t aOffset, uint32_t aNodeOrigLen)
+RangeUpdater::DidRemoveContainer(nsIDOMNode* aNode,
+                                 nsIDOMNode* aParent,
+                                 int32_t aOffset,
+                                 uint32_t aNodeOrigLen)
 {
   nsCOMPtr<nsINode> node = do_QueryInterface(aNode);
   nsCOMPtr<nsINode> parent = do_QueryInterface(aParent);
   return DidRemoveContainer(node, parent, aOffset, aNodeOrigLen);
 }
 
-
 nsresult
-nsRangeUpdater::WillInsertContainer()
+RangeUpdater::WillInsertContainer()
 {
   if (mLock) return NS_ERROR_UNEXPECTED;
   mLock = true;
   return NS_OK;
 }
 
-
 nsresult
-nsRangeUpdater::DidInsertContainer()
+RangeUpdater::DidInsertContainer()
 {
   NS_ENSURE_TRUE(mLock, NS_ERROR_UNEXPECTED);
   mLock = false;
   return NS_OK;
 }
 
-
 void
-nsRangeUpdater::WillMoveNode()
+RangeUpdater::WillMoveNode()
 {
   mLock = true;
 }
 
-
 void
-nsRangeUpdater::DidMoveNode(nsINode* aOldParent, int32_t aOldOffset,
+RangeUpdater::DidMoveNode(nsINode* aOldParent, int32_t aOldOffset,
                             nsINode* aNewParent, int32_t aNewOffset)
 {
   MOZ_ASSERT(aOldParent);
@@ -633,8 +636,6 @@ nsRangeUpdater::DidMoveNode(nsINode* aOldParent, int32_t aOldOffset,
     }
   }
 }
-
-namespace mozilla {
 
 /******************************************************************************
  * mozilla::RangeItem
