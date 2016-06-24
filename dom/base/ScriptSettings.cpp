@@ -38,8 +38,14 @@ public:
   static void Push(ScriptSettingsStackEntry *aEntry) {
     MOZ_ASSERT(!aEntry->mOlder);
     // Whenever JSAPI use is disabled, the next stack entry pushed must
-    // always be a candidate entry point.
-    MOZ_ASSERT_IF(!Top() || Top()->NoJSAPI(), aEntry->mIsCandidateEntryPoint);
+    // either be an entry candidate or if not also not an incumbent candidate.
+    MOZ_ASSERT_IF(!Top() || Top()->NoJSAPI(),
+                  aEntry->IsEntryCandidate() || !aEntry->IsIncumbentCandidate());
+    // Whenever the top entry is not an incumbent canidate, the next stack entry
+    // pushed must either be an entry candidate or if not also not an incumbent
+    // candidate.
+    MOZ_ASSERT_IF(Top() && !Top()->IsIncumbentCandidate(),
+                  aEntry->IsEntryCandidate() || !aEntry->IsIncumbentCandidate());
 
     aEntry->mOlder = Top();
     sScriptSettingsTLS.set(aEntry);
@@ -52,23 +58,24 @@ public:
 
   static nsIGlobalObject* IncumbentGlobal() {
     ScriptSettingsStackEntry *entry = Top();
-    if (!entry) {
-      return nullptr;
+    while (entry) {
+      if (entry->IsIncumbentCandidate()) {
+        return entry->mGlobalObject;
+      }
+      entry = entry->mOlder;
     }
-    return entry->mGlobalObject;
+    return nullptr;
   }
 
   static ScriptSettingsStackEntry* EntryPoint() {
     ScriptSettingsStackEntry *entry = Top();
-    if (!entry) {
-      return nullptr;
-    }
     while (entry) {
-      if (entry->mIsCandidateEntryPoint)
+      if (entry->IsEntryCandidate()) {
         return entry;
+      }
       entry = entry->mOlder;
     }
-    MOZ_CRASH("Non-empty stack should always have an entry point");
+    return nullptr;
   }
 
   static nsIGlobalObject* EntryGlobal() {
@@ -123,9 +130,9 @@ ScriptSettingsInitialized()
 }
 
 ScriptSettingsStackEntry::ScriptSettingsStackEntry(nsIGlobalObject *aGlobal,
-                                                   bool aCandidate)
+                                                   Type aType)
   : mGlobalObject(aGlobal)
-  , mIsCandidateEntryPoint(aCandidate)
+  , mType(aType)
   , mOlder(nullptr)
 {
   MOZ_ASSERT(mGlobalObject);
@@ -140,7 +147,7 @@ ScriptSettingsStackEntry::ScriptSettingsStackEntry(nsIGlobalObject *aGlobal,
 // This constructor is only for use by AutoNoJSAPI.
 ScriptSettingsStackEntry::ScriptSettingsStackEntry()
    : mGlobalObject(nullptr)
-   , mIsCandidateEntryPoint(true)
+   , mType(eNoJSAPI)
    , mOlder(nullptr)
 {
   ScriptSettingsStack::Push(this);
@@ -608,7 +615,7 @@ AutoEntryScript::AutoEntryScript(nsIGlobalObject* aGlobalObject,
                                  JSContext* aCx)
   : AutoJSAPI(aGlobalObject, aIsMainThread,
               aCx ? aCx : nsContentUtils::GetSafeJSContext())
-  , ScriptSettingsStackEntry(aGlobalObject, /* aCandidate = */ true)
+  , ScriptSettingsStackEntry(aGlobalObject, eEntryScript)
   , mWebIDLCallerPrincipal(nullptr)
 {
   MOZ_ASSERT(aGlobalObject);
@@ -712,7 +719,7 @@ AutoEntryScript::DocshellEntryMonitor::Exit(JSContext* aCx)
 }
 
 AutoIncumbentScript::AutoIncumbentScript(nsIGlobalObject* aGlobalObject)
-  : ScriptSettingsStackEntry(aGlobalObject, /* aCandidate = */ false)
+  : ScriptSettingsStackEntry(aGlobalObject, eIncumbentScript)
   , mCallerOverride(nsContentUtils::GetCurrentJSContextForThread())
 {
 }

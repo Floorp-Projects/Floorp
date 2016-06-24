@@ -157,13 +157,25 @@ class ScriptSettingsStackEntry {
 public:
   ~ScriptSettingsStackEntry();
 
-  bool NoJSAPI() { return !mGlobalObject; }
+  bool NoJSAPI() const { return mType == eNoJSAPI; }
+  bool IsEntryCandidate() const {
+    return mType == eEntryScript || mType == eNoJSAPI;
+  }
+  bool IsIncumbentCandidate() { return mType != eJSAPI; }
 
 protected:
-  ScriptSettingsStackEntry(nsIGlobalObject *aGlobal, bool aCandidate);
+  enum Type {
+    eEntryScript,
+    eIncumbentScript,
+    eJSAPI,
+    eNoJSAPI
+  };
+
+  ScriptSettingsStackEntry(nsIGlobalObject *aGlobal,
+                           Type aEntryType);
 
   nsCOMPtr<nsIGlobalObject> mGlobalObject;
-  bool mIsCandidateEntryPoint;
+  Type mType;
 
 private:
   // This constructor is only for use by AutoNoJSAPI.
