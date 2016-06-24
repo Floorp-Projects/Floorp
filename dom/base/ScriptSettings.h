@@ -419,6 +419,8 @@ private:
 class AutoIncumbentScript : protected ScriptSettingsStackEntry {
 public:
   explicit AutoIncumbentScript(nsIGlobalObject* aGlobalObject);
+  ~AutoIncumbentScript();
+
 private:
   JS::AutoHideScriptedCaller mCallerOverride;
 };
@@ -434,6 +436,8 @@ private:
 class AutoNoJSAPI : protected ScriptSettingsStackEntry {
 public:
   explicit AutoNoJSAPI(bool aIsMainThread = NS_IsMainThread());
+  ~AutoNoJSAPI();
+
 private:
   mozilla::Maybe<danger::AutoCxPusher> mCxPusher;
 };
