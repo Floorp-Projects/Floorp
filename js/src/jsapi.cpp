@@ -466,22 +466,14 @@ JS_NewRuntime(uint32_t maxbytes, uint32_t maxNurseryBytes, JSRuntime* parentRunt
     while (parentRuntime && parentRuntime->parentRuntime)
         parentRuntime = parentRuntime->parentRuntime;
 
-    JSRuntime* rt = js_new<JSRuntime>(parentRuntime);
-    if (!rt)
-        return nullptr;
-
-    if (!rt->init(maxbytes, maxNurseryBytes)) {
-        JS_DestroyRuntime(rt);
-        return nullptr;
-    }
-
-    return rt;
+    return NewContext(maxbytes, maxNurseryBytes, parentRuntime);
 }
 
 JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime* rt)
 {
-    js_delete(rt);
+    JSContext* cx = rt->contextFromMainThread();
+    DestroyContext(cx);
 }
 
 static JS_CurrentEmbedderTimeFunction currentEmbedderTimeFunction;
