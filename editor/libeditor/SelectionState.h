@@ -315,43 +315,43 @@ public:
   }
 };
 
-} // namespace mozilla
-
-/***************************************************************************
- * another helper class for SelectionState.  stack based class for doing
+/**
+ * Another helper class for SelectionState.  Stack based class for doing
  * Will/DidMoveNode()
  */
 
-class MOZ_STACK_CLASS nsAutoMoveNodeSelNotify
+class MOZ_STACK_CLASS AutoMoveNodeSelNotify final
 {
-  private:
-    mozilla::RangeUpdater& mRU;
-    nsINode* mOldParent;
-    nsINode* mNewParent;
-    int32_t    mOldOffset;
-    int32_t    mNewOffset;
+private:
+  RangeUpdater& mRangeUpdater;
+  nsINode* mOldParent;
+  nsINode* mNewParent;
+  int32_t mOldOffset;
+  int32_t mNewOffset;
 
-  public:
-    nsAutoMoveNodeSelNotify(mozilla::RangeUpdater& aRangeUpdater,
-                            nsINode* aOldParent,
-                            int32_t aOldOffset,
-                            nsINode* aNewParent,
-                            int32_t aNewOffset)
-      : mRU(aRangeUpdater)
-      , mOldParent(aOldParent)
-      , mNewParent(aNewParent)
-      , mOldOffset(aOldOffset)
-      , mNewOffset(aNewOffset)
-    {
-      MOZ_ASSERT(aOldParent);
-      MOZ_ASSERT(aNewParent);
-      mRU.WillMoveNode();
-    }
+public:
+  AutoMoveNodeSelNotify(RangeUpdater& aRangeUpdater,
+                        nsINode* aOldParent,
+                        int32_t aOldOffset,
+                        nsINode* aNewParent,
+                        int32_t aNewOffset)
+    : mRangeUpdater(aRangeUpdater)
+    , mOldParent(aOldParent)
+    , mNewParent(aNewParent)
+    , mOldOffset(aOldOffset)
+    , mNewOffset(aNewOffset)
+  {
+    MOZ_ASSERT(aOldParent);
+    MOZ_ASSERT(aNewParent);
+    mRangeUpdater.WillMoveNode();
+  }
 
-    ~nsAutoMoveNodeSelNotify()
-    {
-      mRU.DidMoveNode(mOldParent, mOldOffset, mNewParent, mNewOffset);
-    }
+  ~AutoMoveNodeSelNotify()
+  {
+    mRangeUpdater.DidMoveNode(mOldParent, mOldOffset, mNewParent, mNewOffset);
+  }
 };
+
+} // namespace mozilla
 
 #endif // #ifndef SelectionState_h
