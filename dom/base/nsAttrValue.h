@@ -86,7 +86,7 @@ public:
   // This has to be the same as in ValueBaseType
   enum ValueType {
     eString =       0x00, //   00
-                          //   01  this value indicates an 'misc' struct
+                          //   01  this value indicates a 'misc' struct
     eAtom =         0x02, //   10
     eInteger =      0x03, // 0011
     eColor =        0x07, // 0111
@@ -94,26 +94,26 @@ public:
     ePercent =      0x0F, // 1111
     // Values below here won't matter, they'll be always stored in the 'misc'
     // struct.
-    eCSSDeclaration =          0x10
-    ,eURL =                    0x11
-    ,eImage =                  0x12
-    ,eAtomArray =              0x13
-    ,eDoubleValue  =           0x14
-    ,eIntMarginValue =         0x15
-    ,eSVGAngle =               0x16
-    ,eSVGTypesBegin =          eSVGAngle
-    ,eSVGIntegerPair =         0x17
-    ,eSVGLength =              0x18
-    ,eSVGLengthList =          0x19
-    ,eSVGNumberList =          0x1A
-    ,eSVGNumberPair =          0x1B
-    ,eSVGPathData =            0x1C
-    ,eSVGPointList =           0x1D
-    ,eSVGPreserveAspectRatio = 0x1E
-    ,eSVGStringList =          0x1F
-    ,eSVGTransformList =       0x20
-    ,eSVGViewBox =             0x21
-    ,eSVGTypesEnd =            eSVGViewBox
+    eCSSDeclaration = 0x10,
+    eURL,
+    eImage,
+    eAtomArray,
+    eDoubleValue,
+    eIntMarginValue,
+    eSVGAngle,
+    eSVGTypesBegin = eSVGAngle,
+    eSVGIntegerPair,
+    eSVGLength,
+    eSVGLengthList,
+    eSVGNumberList,
+    eSVGNumberPair,
+    eSVGPathData,
+    eSVGPointList,
+    eSVGPreserveAspectRatio,
+    eSVGStringList,
+    eSVGTransformList,
+    eSVGViewBox,
+    eSVGTypesEnd = eSVGViewBox,
   };
 
   nsAttrValue();
