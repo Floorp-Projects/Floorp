@@ -24,7 +24,7 @@ RequestInterruptCallback(JSContext* cx, unsigned argc, jsval* vp)
 
 BEGIN_TEST(testSlowScript)
 {
-    JS_SetInterruptCallback(cx, InterruptCallback);
+    JS_AddInterruptCallback(cx, InterruptCallback);
     JS_DefineFunction(cx, global, "requestInterruptCallback", RequestInterruptCallback, 0, 0);
 
     test("while (true)"
