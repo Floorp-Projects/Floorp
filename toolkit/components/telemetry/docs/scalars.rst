@@ -5,7 +5,34 @@ Scalars
 Historically we started to overload our histogram mechanism to also collect scalar data,
 such as flag values, counts, labels and others.
 The scalar measurement types are the suggested way to collect that kind of scalar data.
+We currently only support recording of scalars from the parent process.
 The serialized scalar data is submitted with the :doc:`main pings <main-ping>`.
+
+The API
+=======
+Scalar probes can be managed either through the `nsITelemetry interface <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/nsITelemetry.idl>`_
+or the `C++ API <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Telemetry.h>`_.
+
+JS API
+------
+Probes in privileged JavaScript code can use the following functions to manipulate scalars::
+
+  Services.telemetry.scalarAdd(aName, aValue);
+  Services.telemetry.scalarSet(aName, aValue);
+  Services.telemetry.scalarSetMaximum(aName, aValue);
+
+These functions can throw if, for example, an operation is performed on a scalar type that doesn't support it
+(e.g. calling scalarSetMaximum on a scalar of the string kind). Please look at the code documentation for
+additional informations.
+
+C++ API
+-------
+Probes in native code can use the more convenient helper functions declared in `Telemetry.h <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Telemetry.h>`_::
+
+    void ScalarAdd(mozilla::Telemetry::ScalarID aId, uint32_t aValue);
+    void ScalarSet(mozilla::Telemetry::ScalarID aId, uint32_t aValue);
+    void ScalarSet(mozilla::Telemetry::ScalarID aId, const nsAString& aValue);
+    void ScalarSetMaximum(mozilla::Telemetry::ScalarID aId, uint32_t aValue);
 
 The YAML definition file
 ========================
