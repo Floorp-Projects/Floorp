@@ -55,14 +55,16 @@
 // example, if the accessor is Foo() then calling SetFoo(...) will update
 // the preference and also change the return value of subsequent Foo() calls.
 // This is true even for 'Once' prefs which otherwise do not change if the
-// pref is updated after initialization.
+// pref is updated after initialization. Changing gfxPrefs values in content
+// processes will not affect the result in other processes. Changing gfxPrefs
+// values in the GPU process is not supported at all.
 
-#define DECL_GFX_PREF(Update, Pref, Name, Type, Default)                     \
+#define DECL_GFX_PREF(Update, Prefname, Name, Type, Default)                  \
 public:                                                                       \
 static Type Name() { MOZ_ASSERT(SingletonExists()); return GetSingleton().mPref##Name.mValue; } \
-static void Set##Name(Type aVal) { MOZ_ASSERT(SingletonExists()); \
+static void Set##Name(Type aVal) { MOZ_ASSERT(SingletonExists());             \
     GetSingleton().mPref##Name.Set(UpdatePolicy::Update, Get##Name##PrefName(), aVal); } \
-static const char* Get##Name##PrefName() { return Pref; }                     \
+static const char* Get##Name##PrefName() { return Prefname; }                 \
 static Type Get##Name##PrefDefault() { return Default; }                      \
 private:                                                                      \
 PrefTemplate<UpdatePolicy::Update, Type, Get##Name##PrefDefault, Get##Name##PrefName> mPref##Name
@@ -83,9 +85,29 @@ private:
     Live  // Evaluate the preference and set callback so it stays current/live
   };
 
+public:
+  class Pref
+  {
+  public:
+    Pref() : mChangeCallback(nullptr)
+    {
+    }
+
+    void OnChange();
+
+    typedef void (*ChangeCallback)();
+    void SetChangeCallback(ChangeCallback aCallback);
+
+    virtual const char* Name() const = 0;
+
+  private:
+    ChangeCallback mChangeCallback;
+  };
+
+private:
   // Since we cannot use const char*, use a function that returns it.
   template <UpdatePolicy Update, class T, T Default(void), const char* Prefname(void)>
-  class PrefTemplate
+  class PrefTemplate : public Pref
   {
   public:
     PrefTemplate()
@@ -95,6 +117,16 @@ private:
       // there's no need to register us as a Preferences observer.
       if (IsPrefsServiceAvailable()) {
         Register(Update, Prefname());
+      }
+      // By default we only watch changes in the parent process, to communicate
+      // changes to the GPU process.
+      if (IsParentProcess() && Update == UpdatePolicy::Live) {
+        WatchChanges(Prefname(), this);
+      }
+    }
+    ~PrefTemplate() {
+      if (IsParentProcess() && Update == UpdatePolicy::Live) {
+        UnwatchChanges(Prefname(), this);
       }
     }
     void Register(UpdatePolicy aUpdate, const char* aPreference)
@@ -127,6 +159,9 @@ private:
         default:
           MOZ_CRASH("Incomplete switch");
       }
+    }
+    const char *Name() const override {
+      return Prefname();
     }
     T mValue;
   };
@@ -498,6 +533,7 @@ private:
 
 private:
   static bool IsPrefsServiceAvailable();
+  static bool IsParentProcess();
   // Creating these to avoid having to include Preferences.h in the .h
   static void PrefAddVarCache(bool*, const char*, bool);
   static void PrefAddVarCache(int32_t*, const char*, int32_t);
@@ -511,6 +547,8 @@ private:
   static void PrefSet(const char* aPref, int32_t aValue);
   static void PrefSet(const char* aPref, uint32_t aValue);
   static void PrefSet(const char* aPref, float aValue);
+  static void WatchChanges(const char* aPrefname, Pref* aPref);
+  static void UnwatchChanges(const char* aPrefname, Pref* aPref);
 
   static void AssertMainThread();
 
