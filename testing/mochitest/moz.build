@@ -71,6 +71,11 @@ TEST_HARNESS_FILES.testing.mochitest += [
     'start_desktop.js',
 ]
 
+TEST_HARNESS_FILES.testing.mochitest.embed += [
+    'embed/Xm5i5kbIXzc',
+    'embed/Xm5i5kbIXzc^headers^',
+]
+
 TEST_HARNESS_FILES.testing.mochitest.pywebsocket += [
     'pywebsocket/standalone.py',
 ]
