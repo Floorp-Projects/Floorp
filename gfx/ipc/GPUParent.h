@@ -21,8 +21,7 @@ public:
             MessageLoop* aIOLoop,
             IPC::Channel* aChannel);
 
-  bool RecvInit(nsTArray<GfxPrefSetting>&& prefs) override;
-  bool RecvUpdatePref(const GfxPrefSetting& pref) override;
+  bool RecvNothing() override;
 
   void ActorDestroy(ActorDestroyReason aWhy) override;
 };
