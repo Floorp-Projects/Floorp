@@ -228,37 +228,35 @@ public:
   }
 };
 
-/******************************************************************************
- * another helper class for SelectionState.  stack based class for doing
+/**
+ * Another helper class for SelectionState.  Stack based class for doing
  * Will/DidReplaceContainer()
  */
 
-namespace dom {
-class MOZ_STACK_CLASS AutoReplaceContainerSelNotify
+class MOZ_STACK_CLASS AutoReplaceContainerSelNotify final
 {
-  private:
-    RangeUpdater& mRU;
-    Element* mOriginalElement;
-    Element* mNewElement;
+private:
+  RangeUpdater& mRangeUpdater;
+  dom::Element* mOriginalElement;
+  dom::Element* mNewElement;
 
-  public:
-    AutoReplaceContainerSelNotify(RangeUpdater& aRangeUpdater,
-                                  Element* aOriginalElement,
-                                  Element* aNewElement)
-      : mRU(aRangeUpdater)
-      , mOriginalElement(aOriginalElement)
-      , mNewElement(aNewElement)
-    {
-      mRU.WillReplaceContainer();
-    }
+public:
+  AutoReplaceContainerSelNotify(RangeUpdater& aRangeUpdater,
+                                dom::Element* aOriginalElement,
+                                dom::Element* aNewElement)
+    : mRangeUpdater(aRangeUpdater)
+    , mOriginalElement(aOriginalElement)
+    , mNewElement(aNewElement)
+  {
+    mRangeUpdater.WillReplaceContainer();
+  }
 
-    ~AutoReplaceContainerSelNotify()
-    {
-      mRU.DidReplaceContainer(mOriginalElement, mNewElement);
-    }
+  ~AutoReplaceContainerSelNotify()
+  {
+    mRangeUpdater.DidReplaceContainer(mOriginalElement, mNewElement);
+  }
 };
 
-} // namespace dom
 } // namespace mozilla
 
 
