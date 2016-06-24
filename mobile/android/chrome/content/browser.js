@@ -4297,7 +4297,8 @@ Tab.prototype = {
         Messaging.sendRequest({
           type: "Content:PageShow",
           tabID: this.id,
-          userRequested: this.userRequested
+          userRequested: this.userRequested,
+          fromCache: Tabs.useCache
         });
 
         this.isSearch = false;
@@ -7377,25 +7378,6 @@ var Tabs = {
         // Clear the domain cache whenever a page is loaded into any browser.
         this._domains.clear();
 
-        // Notify if we are loading a page from cache.
-        if (this._useCache) {
-          let targetDoc = aEvent.originalTarget;
-          let isTopLevel = (targetDoc.defaultView.parent === targetDoc.defaultView);
-
-          // Ignore any about: pages, especially about:neterror since it means we failed to find the page in cache.
-          let targetURI = targetDoc.documentURI;
-          if (isTopLevel && !targetURI.startsWith("about:")) {
-            UITelemetry.addEvent("neterror.1", "toast", null, "usecache");
-            Snackbars.show(
-              Strings.browser.GetStringFromName("networkOffline.message2"),
-              Snackbars.LENGTH_INDEFINITE,
-              {
-                // link_blue
-                backgroundColor: "#0096DD"
-              }
-            );
-          }
-        }
         break;
       case "TabOpen":
         // Use opening a new tab as a trigger to expire the most stale tab.
