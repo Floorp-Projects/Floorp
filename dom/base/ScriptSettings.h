@@ -40,14 +40,9 @@ public:
   explicit AutoCxPusher(JSContext *aCx, bool aAllowNull = false);
   ~AutoCxPusher();
 
-  // Returns true if this AutoCxPusher performed the push that is currently at
-  // the top of the cx stack.
-  bool IsStackTop() const;
-
 private:
   mozilla::Maybe<JSAutoRequest> mAutoRequest;
 #ifdef DEBUG
-  uint32_t mStackDepthAfterPush;
   JSContext* mPushedContext;
   unsigned mCompartmentDepthOnEntry;
 #endif
@@ -167,6 +162,7 @@ public:
     return mType == eEntryScript || mType == eNoJSAPI;
   }
   bool IsIncumbentCandidate() { return mType != eJSAPI; }
+  bool IsIncumbentScript() { return mType == eIncumbentScript; }
 
 protected:
   enum Type {
@@ -271,19 +267,19 @@ public:
 
   JSContext* cx() const {
     MOZ_ASSERT(mCx, "Must call Init before using an AutoJSAPI");
-    MOZ_ASSERT_IF(mIsMainThread, CxPusherIsStackTop());
+    MOZ_ASSERT(IsStackTop());
     return mCx;
   }
 
 #ifdef DEBUG
-  bool CxPusherIsStackTop() const { return mCxPusher->IsStackTop(); }
+  bool IsStackTop() const;
 #endif
 
   // If HasException, report it.  Otherwise, a no-op.
   void ReportException();
 
   bool HasException() const {
-    MOZ_ASSERT_IF(NS_IsMainThread(), CxPusherIsStackTop());
+    MOZ_ASSERT(IsStackTop());
     return JS_IsExceptionPending(cx());
   };
 
@@ -304,7 +300,7 @@ public:
   bool PeekException(JS::MutableHandle<JS::Value> aVal);
 
   void ClearException() {
-    MOZ_ASSERT_IF(NS_IsMainThread(), CxPusherIsStackTop());
+    MOZ_ASSERT(IsStackTop());
     JS_ClearPendingException(cx());
   }
 
