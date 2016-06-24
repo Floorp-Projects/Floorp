@@ -1663,7 +1663,7 @@ nsEditor::InsertContainerAbove(nsIContent* aNode,
   }
 
   // Notify our internal selection state listener
-  nsAutoInsertContainerSelNotify selNotify(mRangeUpdater);
+  AutoInsertContainerSelNotify selNotify(mRangeUpdater);
 
   // Put inNode in new parent, outNode
   res = DeleteNode(aNode);
