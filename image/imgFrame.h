@@ -7,6 +7,7 @@
 #ifndef mozilla_image_imgFrame_h
 #define mozilla_image_imgFrame_h
 
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/Monitor.h"
 #include "mozilla/Move.h"
@@ -57,13 +58,14 @@ struct AnimationData
 {
   AnimationData(uint8_t* aRawData, uint32_t aPaletteDataLength,
                 int32_t aRawTimeout, const nsIntRect& aRect,
-                BlendMethod aBlendMethod, DisposalMethod aDisposalMethod,
-                bool aHasAlpha)
+                BlendMethod aBlendMethod, const Maybe<gfx::IntRect>& aBlendRect,
+                DisposalMethod aDisposalMethod, bool aHasAlpha)
     : mRawData(aRawData)
     , mPaletteDataLength(aPaletteDataLength)
     , mRawTimeout(aRawTimeout)
     , mRect(aRect)
     , mBlendMethod(aBlendMethod)
+    , mBlendRect(aBlendRect)
     , mDisposalMethod(aDisposalMethod)
     , mHasAlpha(aHasAlpha)
   { }
@@ -73,6 +75,7 @@ struct AnimationData
   int32_t mRawTimeout;
   nsIntRect mRect;
   BlendMethod mBlendMethod;
+  Maybe<gfx::IntRect> mBlendRect;
   DisposalMethod mDisposalMethod;
   bool mHasAlpha;
 };
@@ -170,11 +173,15 @@ public:
    *                         used; see FrameAnimator::GetTimeoutForFrame.
    * @param aBlendMethod     For animation frames, a blending method to be used
    *                         when compositing this frame.
+   * @param aBlendRect       For animation frames, if present, the subrect in
+   *                         which @aBlendMethod applies. Outside of this
+   *                         subrect, BlendMethod::OVER is always used.
    */
   void Finish(Opacity aFrameOpacity = Opacity::SOME_TRANSPARENCY,
               DisposalMethod aDisposalMethod = DisposalMethod::KEEP,
               int32_t aRawTimeout = 0,
-              BlendMethod aBlendMethod = BlendMethod::OVER);
+              BlendMethod aBlendMethod = BlendMethod::OVER,
+              const Maybe<IntRect>& aBlendRect = Nothing());
 
   /**
    * Mark this imgFrame as aborted. This informs the imgFrame that if it isn't
@@ -309,6 +316,7 @@ private: // data
 
   DisposalMethod mDisposalMethod;
   BlendMethod    mBlendMethod;
+  Maybe<IntRect> mBlendRect;
   SurfaceFormat  mFormat;
 
   bool mHasNoAlpha;
