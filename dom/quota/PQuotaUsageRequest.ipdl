@@ -12,6 +12,7 @@ struct UsageResponse
 {
   uint64_t usage;
   uint64_t fileUsage;
+  uint64_t limit;
 };
 
 union UsageRequestResponse
