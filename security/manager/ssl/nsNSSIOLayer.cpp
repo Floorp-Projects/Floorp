@@ -21,6 +21,7 @@
 #include "mozilla/Move.h"
 #include "mozilla/Preferences.h"
 #include "mozilla/Telemetry.h"
+#include "nsArrayUtils.h"
 #include "nsCharSeparatedTokenizer.h"
 #include "nsClientAuthRemember.h"
 #include "nsContentUtils.h"
@@ -2099,8 +2100,6 @@ ClientAuthDataRunnable::RunOnTargetThread()
   char** caNameStrings;
   UniqueCERTCertificate cert;
   UniqueSECKEYPrivateKey privKey;
-  UniqueCERTCertNicknames nicknames;
-  int32_t NumberOfCerts = 0;
   void* wincx = mSocketInfo;
   nsresult rv;
 
@@ -2247,8 +2246,6 @@ ClientAuthDataRunnable::RunOnTargetThread()
     if (!hasRemembered) {
       // user selects a cert to present
       nsCOMPtr<nsIClientAuthDialogs> dialogs;
-      char16_t** certNicknameList = nullptr;
-      char16_t** certDetailsList = nullptr;
 
       // find all user certs that are for SSL
       // note that we are allowing expired certs in this list
@@ -2274,21 +2271,6 @@ ClientAuthDataRunnable::RunOnTargetThread()
         // list is empty - no matching certs
         goto loser;
       }
-
-      // filter it further for hostname restriction
-      for (CERTCertListNode* node = CERT_LIST_HEAD(certList.get());
-           !CERT_LIST_END(node, certList.get());
-           node = CERT_LIST_NEXT(node)) {
-        ++NumberOfCerts;
-      }
-
-      nicknames.reset(getNSSCertNicknamesFromCertList(certList));
-
-      if (!nicknames) {
-        goto loser;
-      }
-
-      NS_ASSERTION(nicknames->numnicknames == NumberOfCerts, "nicknames->numnicknames != NumberOfCerts");
 
       // Get CN and O of the subject and O of the issuer
       UniquePORTString ccn(CERT_GetCommonName(&mServerCert->subject));
@@ -2316,42 +2298,23 @@ ClientAuthDataRunnable::RunOnTargetThread()
       UniquePORTString cissuer(CERT_GetOrgName(&mServerCert->issuer));
       NS_ConvertUTF8toUTF16 issuer(cissuer.get());
 
-      certNicknameList =
-        (char16_t**)moz_xmalloc(sizeof(char16_t*)* nicknames->numnicknames);
-      if (!certNicknameList)
-        goto loser;
-      certDetailsList =
-        (char16_t**)moz_xmalloc(sizeof(char16_t*)* nicknames->numnicknames);
-      if (!certDetailsList) {
-        free(certNicknameList);
+      nsCOMPtr<nsIMutableArray> certArray = nsArrayBase::Create();
+      if (!certArray) {
         goto loser;
       }
 
-      int32_t CertsToUse = 0;
       for (CERTCertListNode* node = CERT_LIST_HEAD(certList);
-           !CERT_LIST_END(node, certList) && CertsToUse < nicknames->numnicknames;
+           !CERT_LIST_END(node, certList);
            node = CERT_LIST_NEXT(node)) {
-        RefPtr<nsNSSCertificate> tempCert(nsNSSCertificate::Create(node->cert));
-
-        if (!tempCert)
-          continue;
-
-        NS_ConvertUTF8toUTF16 i_nickname(nicknames->nicknames[CertsToUse]);
-        nsAutoString nickWithSerial, details;
-
-        if (NS_FAILED(tempCert->FormatUIStrings(i_nickname, nickWithSerial, details)))
-          continue;
-
-        certNicknameList[CertsToUse] = ToNewUnicode(nickWithSerial);
-        if (!certNicknameList[CertsToUse])
-          continue;
-        certDetailsList[CertsToUse] = ToNewUnicode(details);
-        if (!certDetailsList[CertsToUse]) {
-          free(certNicknameList[CertsToUse]);
-          continue;
+        nsCOMPtr<nsIX509Cert> tempCert = nsNSSCertificate::Create(node->cert);
+        if (!tempCert) {
+          goto loser;
         }
 
-        ++CertsToUse;
+        rv = certArray->AppendElement(tempCert, false);
+        if (NS_FAILED(rv)) {
+          goto loser;
+        }
       }
 
       // Throw up the client auth dialog and get back the index of the selected cert
@@ -2360,21 +2323,13 @@ ClientAuthDataRunnable::RunOnTargetThread()
                          NS_CLIENTAUTHDIALOGS_CONTRACTID);
 
       if (NS_FAILED(rv)) {
-        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(CertsToUse, certNicknameList);
-        NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(CertsToUse, certDetailsList);
         goto loser;
       }
 
       uint32_t selectedIndex = 0;
       bool certChosen = false;
       rv = dialogs->ChooseCertificate(mSocketInfo, cn_host_port, org, issuer,
-                                      (const char16_t**)certNicknameList,
-                                      (const char16_t**)certDetailsList,
-                                      CertsToUse, &selectedIndex, &certChosen);
-
-      NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(CertsToUse, certNicknameList);
-      NS_FREE_XPCOM_ALLOCATED_POINTER_ARRAY(CertsToUse, certDetailsList);
-
+                                      certArray, &selectedIndex, &certChosen);
       if (NS_FAILED(rv)) {
         goto loser;
       }
@@ -2384,15 +2339,12 @@ ClientAuthDataRunnable::RunOnTargetThread()
       mSocketInfo->GetRememberClientAuthCertificate(&wantRemember);
 
       if (certChosen) {
-        uint32_t i = 0;
-        for (CERTCertListNode* node = CERT_LIST_HEAD(certList);
-             !CERT_LIST_END(node, certList);
-             ++i, node = CERT_LIST_NEXT(node)) {
-          if (i == selectedIndex) {
-            cert.reset(CERT_DupCertificate(node->cert));
-            break;
-          }
+        nsCOMPtr<nsIX509Cert> selectedCert = do_QueryElementAt(certArray,
+                                                               selectedIndex);
+        if (!selectedCert) {
+          goto loser;
         }
+        cert.reset(selectedCert->GetCert());
       }
 
       if (cars && wantRemember) {
