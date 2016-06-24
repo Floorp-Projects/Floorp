@@ -137,7 +137,7 @@ class TestGetElementProperty(MarionetteTestCase):
         self.assertIsInstance(prop, bool)
         self.assertTrue(prop)
 
-    def test_missing_property_returns_false(self):
+    def test_missing_property_returns_default(self):
         self.marionette.navigate(input)
         el = self.marionette.find_element(By.TAG_NAME, "input")
         prop = el.get_property("checked")
