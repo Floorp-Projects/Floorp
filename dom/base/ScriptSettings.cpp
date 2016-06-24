@@ -309,6 +309,11 @@ AutoJSAPI::~AutoJSAPI()
     JS::SetWarningReporter(JS_GetRuntime(cx()), mOldWarningReporter.value());
   }
 
+  // Leave the request before popping.
+  if (mIsMainThread) {
+    mAutoRequest.reset();
+  }
+
   ScriptSettingsStack::Pop(this);
 }
 
@@ -337,6 +342,7 @@ AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
     // nsIPrincipal.Equals. Once that is removed, the Rooted<> will no longer
     // be necessary.
     JS::Rooted<JSObject*> global(JS_GetRuntime(aCx), aGlobal);
+    mAutoRequest.emplace(mCx);
     mCxPusher.emplace(mCx);
     mAutoNullableCompartment.emplace(mCx, global);
   } else {
@@ -781,19 +787,10 @@ danger::AutoCxPusher::AutoCxPusher(JSContext* cx, bool allowNull)
   mPushedContext = cx;
   mCompartmentDepthOnEntry = cx ? js::GetEnterCompartmentDepth(cx) : 0;
 #endif
-
-  // Enter a request and a compartment for the duration that the cx is on the
-  // stack if non-null.
-  if (cx) {
-    mAutoRequest.emplace(cx);
-  }
 }
 
 danger::AutoCxPusher::~AutoCxPusher()
 {
-  // Leave the request before popping.
-  mAutoRequest.reset();
-
   // When we push a context, we may save the frame chain and pretend like we
   // haven't entered any compartment. This gets restored on Pop(), but we can
   // run into trouble if a Push/Pop are interleaved with a
