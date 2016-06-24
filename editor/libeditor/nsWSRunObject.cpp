@@ -148,9 +148,9 @@ nsWSRunObject::PrepareToDeleteRange(nsHTMLEditor* aHTMLEd,
   NS_ENSURE_TRUE(aHTMLEd && aStartNode && *aStartNode && aStartOffset &&
                  aEndNode && *aEndNode && aEndOffset, NS_ERROR_NULL_POINTER);
 
-  nsAutoTrackDOMPoint trackerStart(aHTMLEd->mRangeUpdater, aStartNode,
-                                   aStartOffset);
-  nsAutoTrackDOMPoint trackerEnd(aHTMLEd->mRangeUpdater, aEndNode, aEndOffset);
+  AutoTrackDOMPoint trackerStart(aHTMLEd->mRangeUpdater, aStartNode,
+                                 aStartOffset);
+  AutoTrackDOMPoint trackerEnd(aHTMLEd->mRangeUpdater, aEndNode, aEndOffset);
 
   nsWSRunObject leftWSObj(aHTMLEd, *aStartNode, *aStartOffset);
   nsWSRunObject rightWSObj(aHTMLEd, *aEndNode, *aEndOffset);
@@ -182,7 +182,7 @@ nsWSRunObject::PrepareToSplitAcrossBlocks(nsHTMLEditor* aHTMLEd,
   NS_ENSURE_TRUE(aHTMLEd && aSplitNode && *aSplitNode && aSplitOffset,
                  NS_ERROR_NULL_POINTER);
 
-  nsAutoTrackDOMPoint tracker(aHTMLEd->mRangeUpdater, aSplitNode, aSplitOffset);
+  AutoTrackDOMPoint tracker(aHTMLEd->mRangeUpdater, aSplitNode, aSplitOffset);
 
   nsWSRunObject wsObj(aHTMLEd, *aSplitNode, *aSplitOffset);
 
@@ -209,10 +209,10 @@ nsWSRunObject::InsertBreak(nsCOMPtr<nsINode>* aInOutParent,
   FindRun(*aInOutParent, *aInOutOffset, &afterRun, true);
 
   {
-    // Some scoping for nsAutoTrackDOMPoint.  This will track our insertion
+    // Some scoping for AutoTrackDOMPoint.  This will track our insertion
     // point while we tweak any surrounding whitespace
-    nsAutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater, aInOutParent,
-                                aInOutOffset);
+    AutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater, aInOutParent,
+                              aInOutOffset);
 
     // Handle any changes needed to ws run after inserted br
     if (!afterRun || (afterRun->mType & WSType::trailingWS)) {
@@ -288,10 +288,10 @@ nsWSRunObject::InsertText(const nsAString& aStringToInsert,
 
   nsresult res;
   {
-    // Some scoping for nsAutoTrackDOMPoint.  This will track our insertion
+    // Some scoping for AutoTrackDOMPoint.  This will track our insertion
     // point while we tweak any surrounding whitespace
-    nsAutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater, aInOutParent,
-                                aInOutOffset);
+    AutoTrackDOMPoint tracker(mHTMLEditor->mRangeUpdater, aInOutParent,
+                              aInOutOffset);
 
     // Handle any changes needed to ws run after inserted text
     if (!afterRun || afterRun->mType & WSType::trailingWS) {

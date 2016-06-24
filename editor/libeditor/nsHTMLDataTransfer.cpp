@@ -275,7 +275,7 @@ nsHTMLEditor::DoInsertHTMLWithContext(const nsAString & aInputString,
     {
       // Use an auto tracker so that our drop point is correctly
       // positioned after the delete.
-      nsAutoTrackDOMPoint tracker(mRangeUpdater, &targetNode, &targetOffset);
+      AutoTrackDOMPoint tracker(mRangeUpdater, &targetNode, &targetOffset);
       rv = DeleteSelection(eNone, eStrip);
       NS_ENSURE_SUCCESS(rv, rv);
     }
