@@ -23,7 +23,7 @@ DeleteTextTransaction::DeleteTextTransaction(
                          nsGenericDOMDataNode& aCharData,
                          uint32_t aOffset,
                          uint32_t aNumCharsToDelete,
-                         nsRangeUpdater* aRangeUpdater)
+                         RangeUpdater* aRangeUpdater)
   : mEditor(aEditor)
   , mCharData(&aCharData)
   , mOffset(aOffset)

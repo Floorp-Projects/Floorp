@@ -15,9 +15,10 @@
 #include "nscore.h"
 
 class nsEditor;
-class nsRangeUpdater;
 
 namespace mozilla {
+
+class RangeUpdater;
 
 /**
  * A transaction that deletes a single element
@@ -30,7 +31,7 @@ public:
    * @param aElement        The node to delete.
    */
   nsresult Init(nsEditor* aEditor, nsINode* aNode,
-                nsRangeUpdater* aRangeUpdater);
+                RangeUpdater* aRangeUpdater);
 
   DeleteNodeTransaction();
 
@@ -58,7 +59,7 @@ protected:
   nsEditor* mEditor;
 
   // Range updater object.
-  nsRangeUpdater* mRangeUpdater;
+  RangeUpdater* mRangeUpdater;
 };
 
 } // namespace mozilla

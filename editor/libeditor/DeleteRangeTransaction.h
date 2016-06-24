@@ -16,9 +16,10 @@
 
 class nsEditor;
 class nsINode;
-class nsRangeUpdater;
 
 namespace mozilla {
+
+class RangeUpdater;
 
 /**
  * A transaction that deletes an entire range in the content tree
@@ -33,7 +34,7 @@ public:
    */
   nsresult Init(nsEditor* aEditor,
                 nsRange* aRange,
-                nsRangeUpdater* aRangeUpdater);
+                RangeUpdater* aRangeUpdater);
 
   DeleteRangeTransaction();
 
@@ -69,7 +70,7 @@ protected:
   nsEditor* mEditor;
 
   // Range updater object.
-  nsRangeUpdater* mRangeUpdater;
+  RangeUpdater* mRangeUpdater;
 };
 
 } // namespace mozilla
