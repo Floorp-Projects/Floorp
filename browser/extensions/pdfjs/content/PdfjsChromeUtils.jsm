@@ -181,8 +181,7 @@ var PdfjsChromeUtils = {
   _findbarFromMessage: function(aMsg) {
     let browser = aMsg.target;
     let tabbrowser = browser.getTabBrowser();
-    let tab;
-    tab = tabbrowser.getTabForBrowser(browser);
+    let tab = tabbrowser.getTabForBrowser(browser);
     return tabbrowser.getFindBar(tab);
   },
 
