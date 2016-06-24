@@ -1101,7 +1101,7 @@ function getElementAttribute(id, name) {
 
 function getElementProperty(id, name) {
   let el = seenEls.get(id, curContainer);
-  return el[name];
+  return typeof el[name] != "undefined" ? el[name] : null;
 }
 
 /**
