@@ -13,6 +13,7 @@ Cc["@mozilla.org/psm;1"].getService(Ci.nsISupports);
 
 var Services = require("Services");
 var promise = require("promise");
+var defer = require("devtools/shared/defer");
 var DevToolsUtils = require("devtools/shared/DevToolsUtils");
 var { dumpn, dumpv } = DevToolsUtils;
 loader.lazyRequireGetter(this, "DebuggerTransport",
@@ -233,7 +234,7 @@ var _attemptConnect = Task.async(function* ({ host, port, encryption }) {
     clientCert = yield cert.local.getOrCreate();
   }
 
-  let deferred = promise.defer();
+  let deferred = defer();
   let input;
   let output;
   // Delay opening the input stream until the transport has fully connected.
@@ -290,7 +291,7 @@ var _attemptConnect = Task.async(function* ({ host, port, encryption }) {
  * first connection to a new host because the cert is self-signed.
  */
 function _isInputAlive(input) {
-  let deferred = promise.defer();
+  let deferred = defer();
   input.asyncWait({
     onInputStreamReady(stream) {
       try {
@@ -638,7 +639,7 @@ ServerSocketConnection.prototype = {
    * |onHandshakeDone|.
    */
   _listenForTLSHandshake() {
-    this._handshakeDeferred = promise.defer();
+    this._handshakeDeferred = defer();
     if (!this._listener.encryption) {
       this._handshakeDeferred.resolve();
       return;

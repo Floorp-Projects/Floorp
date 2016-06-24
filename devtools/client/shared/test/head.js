@@ -11,7 +11,6 @@ Services.scriptloader.loadSubScript("chrome://mochitests/content/browser/devtool
 
 const {DOMHelpers} = Cu.import("resource://devtools/client/shared/DOMHelpers.jsm", {});
 const {Hosts} = require("devtools/client/framework/toolbox-hosts");
-const {defer} = require("promise");
 
 const TEST_URI_ROOT = "http://example.com/browser/devtools/client/shared/test/";
 const OPTIONS_VIEW_URL = TEST_URI_ROOT + "doc_options-view.xul";

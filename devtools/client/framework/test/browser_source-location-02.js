@@ -90,7 +90,7 @@ function createScript(url) {
 
 function waitForSourceShown(debuggerPanel, url) {
   let { panelWin } = debuggerPanel;
-  let deferred = promise.defer();
+  let deferred = defer();
 
   info(`Waiting for source ${url} to be shown in the debugger...`);
   panelWin.on(panelWin.EVENTS.SOURCE_SHOWN, function onSourceShown(_, source) {

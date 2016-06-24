@@ -7,7 +7,7 @@
 "use strict";
 
 const Services = require("Services");
-const promise = require("promise");
+const defer = require("devtools/shared/defer");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 const {Task} = require("devtools/shared/task");
 const {gDevTools} = require("devtools/client/framework/devtools");
@@ -396,7 +396,7 @@ OptionsPanel.prototype = {
       return this.destroyPromise;
     }
 
-    let deferred = promise.defer();
+    let deferred = defer();
     this.destroyPromise = deferred.promise;
 
     this._removeListeners();

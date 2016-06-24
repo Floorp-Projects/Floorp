@@ -46,7 +46,7 @@ function testIndentifierGeneration(ui) {
 }
 
 function saveFirstInlineStyleSheet(ui) {
-  let deferred = promise.defer();
+  let deferred = defer();
   let editor = ui.editors[0];
 
   let destFile = FileUtils.getFile("ProfD", [SAVE_PATH]);

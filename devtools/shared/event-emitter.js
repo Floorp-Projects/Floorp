@@ -17,8 +17,8 @@
     let require = function (module) {
       const Cu = Components.utils;
       switch (module) {
-        case "promise":
-          return Cu.import("resource://gre/modules/Promise.jsm", {}).Promise;
+        case "devtools/shared/defer":
+          return Cu.import("resource://gre/modules/Promise.jsm", {}).Promise.defer;
         case "Services":
           return Cu.import("resource://gre/modules/Services.jsm", {}).Services;
         case "chrome":
@@ -39,7 +39,7 @@
   // See comment in JSM module boilerplate when adding a new dependency.
   const { components } = require("chrome");
   const Services = require("Services");
-  const promise = require("promise");
+  const defer = require("devtools/shared/defer");
   let loggingEnabled = true;
 
   if (!isWorker) {
@@ -100,7 +100,7 @@
      *        that this is needed) then use listener
      */
     once(event, listener) {
-      let deferred = promise.defer();
+      let deferred = defer();
 
       let handler = (_, first, ...rest) => {
         this.off(event, handler);

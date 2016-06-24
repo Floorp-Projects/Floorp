@@ -7,7 +7,7 @@
 
 /* eslint no-unused-vars: [2, {"vars": "local"}] */
 /* import-globals-from ./shared-head.js */
-// Currently this file expects "promise" to be imported into scope.
+// Currently this file expects "defer" to be imported into scope.
 
 // Common utility functions for working with Redux stores.  The file is meant
 // to be safe to load in both mochitest and xpcshell environments.
@@ -38,7 +38,7 @@ function commonLog(message) {
  *         Resolved once the store reaches the expected state.
  */
 function waitUntilState(store, predicate) {
-  let deferred = promise.defer();
+  let deferred = defer();
   let unsubscribe = store.subscribe(check);
 
   commonLog(`Waiting for state predicate "${predicate}"`);
@@ -66,7 +66,7 @@ function waitUntilState(store, predicate) {
  *         Resolved once the expected action is emitted by the store.
  */
 function waitUntilAction(store, actionType) {
-  let deferred = promise.defer();
+  let deferred = defer();
   let unsubscribe = store.subscribe(check);
   let history = store.history;
   let index = history.length;

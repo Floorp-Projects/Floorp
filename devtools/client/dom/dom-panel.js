@@ -6,7 +6,7 @@
 "use strict";
 
 const { Cu } = require("chrome");
-const { defer } = require("sdk/core/promise");
+const defer = require("devtools/shared/defer");
 const { ObjectClient } = require("devtools/shared/client/main");
 
 const promise = require("promise");

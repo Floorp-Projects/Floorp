@@ -59,7 +59,7 @@ var test_helper = Task.async(function* (payload) {
     host: "127.0.0.1",
     port: listener.port
   });
-  let closedDeferred = promise.defer();
+  let closedDeferred = defer();
   transport.hooks = {
     onPacket: function (aPacket) {
       this.onPacket = function (aPacket) {
