@@ -74,12 +74,12 @@ class MachCommands(MachCommandBase):
         'lint', category='devenv',
         description='Run linters.',
         parser=setup_argument_parser)
-    def lint(self, paths, linters, fmt, **lintargs):
+    def lint(self, *runargs, **lintargs):
         """Run linters."""
         from mozlint import cli
         lintargs['exclude'] = ['obj*']
         cli.SEARCH_PATHS.append(here)
-        return cli.run(paths, linters, fmt, **lintargs)
+        return cli.run(*runargs, **lintargs)
 
     @Command('eslint', category='devenv',
              description='Run eslint or help configure eslint for optimal development.')
