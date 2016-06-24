@@ -1510,6 +1510,13 @@ toolbar .toolbarbutton-1 > .toolbarbutton-menubutton-button {
   box-shadow: @focusRingShadow@;
 }
 
+@media (-moz-mac-yosemite-theme) {
+  #urlbar[focused="true"],
+  .searchbar-textbox[focused="true"] {
+    box-shadow: @yosemiteFocusRingShadow@;
+  }
+}
+
 #urlbar-container {
   -moz-box-align: center;
 }

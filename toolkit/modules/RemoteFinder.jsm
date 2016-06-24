@@ -310,7 +310,7 @@ RemoteFinderListener.prototype = {
         break;
 
       case "Finder:ModalHighlightChange":
-        this._finder.ModalHighlightChange(data.useModalHighlight);
+        this._finder.onModalHighlightChange(data.useModalHighlight);
         break;
     }
   }
