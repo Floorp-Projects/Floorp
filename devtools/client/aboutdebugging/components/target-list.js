@@ -24,7 +24,8 @@ module.exports = createClass({
       targets = targets.sort(LocaleCompare);
     }
     targets = targets.map(target => {
-      return targetClass({ client, target, debugDisabled });
+      let key = target.name || target.url || target.title;
+      return targetClass({ client, key, target, debugDisabled });
     });
 
     let content = "";
