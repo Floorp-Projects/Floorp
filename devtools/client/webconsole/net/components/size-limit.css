@@ -6,8 +6,6 @@
 /* Response Size Limit */
 
 .netInfoBody .netInfoSizeLimit {
-  font-family: var(--net-font-family);
-  font-size: var(--net-font-size);
   font-weight: bold;
   padding-top: 10px;
 }
