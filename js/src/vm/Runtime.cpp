@@ -187,7 +187,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     requestDepth(0),
 #ifdef DEBUG
     checkRequestDepth(0),
-    activeContext(nullptr),
 #endif
     gc(thisFromCtor()),
     gcInitialized(false),
