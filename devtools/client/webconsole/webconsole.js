@@ -44,7 +44,7 @@ var l10n = new WebConsoleUtils.L10n(STRINGS_URI);
 
 const XHTML_NS = "http://www.w3.org/1999/xhtml";
 
-const MIXED_CONTENT_LEARN_MORE = "https://developer.mozilla.org/docs/Security/MixedContent";
+const MIXED_CONTENT_LEARN_MORE = "https://developer.mozilla.org/docs/Web/Security/Mixed_content";
 
 const IGNORED_SOURCE_URLS = ["debugger eval code"];
 
@@ -1675,7 +1675,7 @@ WebConsoleFrame.prototype = {
     let moreInfoLabel = "[" + l10n.getStr("webConsoleMoreInfoLabel") + "]";
 
     let warningNode = this.document.createElementNS(XHTML_NS, "a");
-    warningNode.title = url;
+    warningNode.title = url.split("?")[0];
     warningNode.href = url;
     warningNode.draggable = false;
     warningNode.textContent = moreInfoLabel;
