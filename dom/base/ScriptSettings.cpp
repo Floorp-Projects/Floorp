@@ -9,7 +9,6 @@
 #include "mozilla/Assertions.h"
 
 #include "jsapi.h"
-#include "xpcprivate.h" // For AutoCxPusher guts
 #include "xpcpublic.h"
 #include "nsIGlobalObject.h"
 #include "nsIDocShell.h"
@@ -337,17 +336,12 @@ AutoJSAPI::InitInternal(nsIGlobalObject* aGlobalObject, JSObject* aGlobal,
   mIsMainThread = aIsMainThread;
   mGlobalObject = aGlobalObject;
   if (aIsMainThread) {
-    // This Rooted<> is necessary only as long as AutoCxPusher::AutoCxPusher
-    // can GC, which is only possible because XPCJSContextStack::Push calls
-    // nsIPrincipal.Equals. Once that is removed, the Rooted<> will no longer
-    // be necessary.
-    JS::Rooted<JSObject*> global(JS_GetRuntime(aCx), aGlobal);
+    // We _could_ just unconditionally emplace mAutoRequest here.  It's just not
+    // needed on worker threads, and we're hoping to kill it on the main thread
+    // too.
     mAutoRequest.emplace(mCx);
-    mCxPusher.emplace(mCx);
-    mAutoNullableCompartment.emplace(mCx, global);
-  } else {
-    mAutoNullableCompartment.emplace(mCx, aGlobal);
   }
+  mAutoNullableCompartment.emplace(mCx, aGlobal);
 
   ScriptSettingsStack::Push(this);
 
@@ -760,48 +754,15 @@ AutoIncumbentScript::~AutoIncumbentScript()
   ScriptSettingsStack::Pop(this);
 }
 
-AutoNoJSAPI::AutoNoJSAPI(bool aIsMainThread)
+AutoNoJSAPI::AutoNoJSAPI()
   : ScriptSettingsStackEntry(nullptr, eNoJSAPI)
 {
-  if (aIsMainThread) {
-    mCxPusher.emplace(static_cast<JSContext*>(nullptr),
-                      /* aAllowNull = */ true);
-  }
-
   ScriptSettingsStack::Push(this);
 }
 
 AutoNoJSAPI::~AutoNoJSAPI()
 {
   ScriptSettingsStack::Pop(this);
-}
-
-danger::AutoCxPusher::AutoCxPusher(JSContext* cx, bool allowNull)
-{
-  MOZ_ASSERT_IF(!allowNull, cx);
-
-  XPCJSContextStack *stack = XPCJSRuntime::Get()->GetJSContextStack();
-  stack->Push(cx);
-
-#ifdef DEBUG
-  mPushedContext = cx;
-  mCompartmentDepthOnEntry = cx ? js::GetEnterCompartmentDepth(cx) : 0;
-#endif
-}
-
-danger::AutoCxPusher::~AutoCxPusher()
-{
-  // When we push a context, we may save the frame chain and pretend like we
-  // haven't entered any compartment. This gets restored on Pop(), but we can
-  // run into trouble if a Push/Pop are interleaved with a
-  // JSAutoEnterCompartment. Make sure the compartment depth right before we
-  // pop is the same as it was right after we pushed.
-  MOZ_ASSERT_IF(mPushedContext, mCompartmentDepthOnEntry ==
-                                js::GetEnterCompartmentDepth(mPushedContext));
-  // Note: mPushedContext doesn't match nsContentUtils::GetCurrentJSContext()
-  // here, since we already popped the script settings stack by the time we get
-  // here.
-  XPCJSRuntime::Get()->GetJSContextStack()->Pop();
 }
 
 } // namespace dom

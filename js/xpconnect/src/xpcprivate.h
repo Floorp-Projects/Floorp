@@ -2669,21 +2669,6 @@ private:
 /***************************************************************************/
 // XPCJSContextStack is not actually an xpcom object, but xpcom calls are
 // delegated to it as an implementation detail.
-
-namespace xpc {
-void PushNullJSContext();
-void PopNullJSContext();
-
-} /* namespace xpc */
-
-namespace mozilla {
-namespace dom {
-namespace danger {
-class AutoCxPusher;
-} // namespace danger
-} // namespace dom
-} // namespace mozilla
-
 class XPCJSContextStack
 {
 public:
@@ -2698,16 +2683,6 @@ public:
     JSContext* GetSafeJSContext();
 
 private:
-    friend class mozilla::dom::danger::AutoCxPusher;
-    friend void xpc::PushNullJSContext();
-    friend void xpc::PopNullJSContext();
-
-    // We make these private so that stack manipulation can only happen
-    // through one of the above friends.
-    void Pop();
-    void Push(JSContext* cx);
-
-    AutoTArray<JSContext*, 16> mStack;
     XPCJSRuntime* mRuntime;
     JSContext*  mSafeJSContext;
 };
