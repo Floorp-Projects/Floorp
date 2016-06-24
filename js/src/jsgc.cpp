@@ -6996,8 +6996,8 @@ AutoSuppressGC::AutoSuppressGC(JSCompartment* comp)
     suppressGC_++;
 }
 
-AutoSuppressGC::AutoSuppressGC(JSRuntime* rt)
-  : suppressGC_(rt->mainThread.suppressGC)
+AutoSuppressGC::AutoSuppressGC(JSContext* cx)
+  : suppressGC_(cx->mainThread().suppressGC)
 {
     suppressGC_++;
 }
