@@ -65,7 +65,7 @@ task:
         build: null
         tests: null
     index:
-      rank: {{push_epoch}}
+      rank: {{rank}}
     treeherder:
       jobKind: test
       groupSymbol: tc

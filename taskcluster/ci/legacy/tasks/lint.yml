@@ -37,6 +37,6 @@ task:
     build_name: {{build_name}}
     build_type: {{build_type}}
     index:
-      rank: {{push_epoch}}
+      rank: {{rank}}
     treeherder:
       jobKind: test
