@@ -158,6 +158,7 @@ HTMLTooltip.prototype = {
     // Keep a pointer on the focused element to refocus it when hiding the tooltip.
     this._focusedElement = this.doc.activeElement;
 
+    this.doc.defaultView.clearTimeout(this.attachEventsTimer);
     this.attachEventsTimer = this.doc.defaultView.setTimeout(() => {
       this._maybeFocusTooltip();
       this.topWindow.addEventListener("click", this._onClick, true);
