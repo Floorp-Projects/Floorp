@@ -128,7 +128,7 @@ ReturnZeroSize(const void* p)
     return 0;
 }
 
-JSRuntime::JSRuntime(JSContext* cx, JSRuntime* parentRuntime)
+JSRuntime::JSRuntime(JSRuntime* parentRuntime)
   : mainThread(this),
     jitTop(nullptr),
     jitJSContext(nullptr),
@@ -173,7 +173,7 @@ JSRuntime::JSRuntime(JSContext* cx, JSRuntime* parentRuntime)
     ownerThread_(nullptr),
     ownerThreadNative_(0),
     tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
-    context_(cx),
+    context_(nullptr),
     jitRuntime_(nullptr),
     selfHostingGlobal_(nullptr),
     nativeStackBase(GetNativeStackBase()),
@@ -371,12 +371,20 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
             return false;
     }
 
+    context_ = NewContext(this);
+    if (!context_)
+        return false;
+
     return true;
 }
 
-void
-JSRuntime::destroyRuntime()
+JSRuntime::~JSRuntime()
 {
+    if (context_) {
+        DestroyContext(context_);
+        context_ = nullptr;
+    }
+
     MOZ_ASSERT(!isHeapBusy());
     MOZ_ASSERT(childRuntimeCount == 0);
 
@@ -750,7 +758,7 @@ JSRuntime::triggerActivityCallback(bool active)
      * suppression serves to inform the exact rooting hazard analysis of this
      * property and ensures that it remains true in the future.
      */
-    AutoSuppressGC suppress(contextFromMainThread());
+    AutoSuppressGC suppress(this);
 
     activityCallback(activityCallbackArg, active);
 }

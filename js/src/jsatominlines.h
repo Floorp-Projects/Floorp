@@ -210,6 +210,12 @@ ClassName(JSProtoKey key, JSAtomState& atomState)
 }
 
 inline Handle<PropertyName*>
+ClassName(JSProtoKey key, JSRuntime* rt)
+{
+    return ClassName(key, *rt->commonNames);
+}
+
+inline Handle<PropertyName*>
 ClassName(JSProtoKey key, ExclusiveContext* cx)
 {
     return ClassName(key, cx->names());
