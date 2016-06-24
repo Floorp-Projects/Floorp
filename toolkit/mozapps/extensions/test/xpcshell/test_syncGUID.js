@@ -22,6 +22,8 @@ function run_test() {
   run_next_test();
 }
 
+const UUID_PATTERN = /^\{[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\}$/i;
+
 add_test(function test_getter_and_setter() {
   // Our test add-on requires a restart.
   let listener = {
@@ -35,7 +37,7 @@ add_test(function test_getter_and_setter() {
 
         do_check_neq(addon, null);
         do_check_neq(addon.syncGUID, null);
-        do_check_true(addon.syncGUID.length >= 9);
+        do_check_true(UUID_PATTERN.test(addon.syncGUID));
 
         let oldGUID = addon.SyncGUID;
         let newGUID = "foo";
