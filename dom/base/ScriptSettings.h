@@ -41,7 +41,6 @@ public:
   ~AutoCxPusher();
 
 private:
-  mozilla::Maybe<JSAutoRequest> mAutoRequest;
 #ifdef DEBUG
   JSContext* mPushedContext;
   unsigned mCompartmentDepthOnEntry;
@@ -195,19 +194,15 @@ private:
  *   the JSContext stack.
  * * Entering an initial (possibly null) compartment, to ensure that the
  *   previously entered compartment for that JSContext is not used by mistake.
+ * * Reporting any exceptions left on the JSRuntime, unless the caller steals
+ *   or silences them.
+ * * On main thread, entering a JSAutoRequest.
  *
  * Additionally, the following duties are planned, but not yet implemented:
  *
- * * De-poisoning the JSRuntime to allow manipulation of JSAPI. We can't
- *   actually implement this poisoning until all the JSContext pushing in the
- *   system goes through AutoJSAPI (see bug 951991). For now, this de-poisoning
+ * * De-poisoning the JSRuntime to allow manipulation of JSAPI. This requires
+ *   implementing the poisoning first.  For now, this de-poisoning
  *   effectively corresponds to having a non-null cx on the stack.
- * * Reporting any exceptions left on the JSRuntime, unless the caller steals
- *   or silences them.
- * * Entering a JSAutoRequest. At present, this is handled by the cx pushing
- *   on the main thread, and by other code on workers. Depending on the order
- *   in which various cleanup lands, this may never be necessary, because
- *   JSAutoRequests may go away.
  *
  * In situations where the consumer expects to run script, AutoEntryScript
  * should be used, which does additional manipulation of the script settings
@@ -314,6 +309,7 @@ protected:
             Type aType);
 
 private:
+  mozilla::Maybe<JSAutoRequest> mAutoRequest;
   mozilla::Maybe<danger::AutoCxPusher> mCxPusher;
   mozilla::Maybe<JSAutoNullableCompartment> mAutoNullableCompartment;
   JSContext *mCx;
