@@ -93,10 +93,10 @@ static const int kWordAndSurrogateRanges[] = {
 static const int kWordAndSurrogateRangeCount = ArrayLength(kWordAndSurrogateRanges);
 static const int kNegatedIgnoreCaseWordAndSurrogateRanges[] = {
     0, '0', '9' + 1, 'A',
-    'K', 'K' + 1, 'S', 'S' + 1,
     'Z' + 1, '_', '_' + 1, 'a',
-    'k', 'k' + 1, 's', 's' + 1,
-    'z' + 1, unicode::LeadSurrogateMin,
+    'z' + 1, 0x017F,
+    0x017F + 1, 0x212A,
+    0x212A + 1, unicode::LeadSurrogateMin,
     unicode::TrailSurrogateMax + 1, 0x10000,
     0x10000 };
 static const int kNegatedIgnoreCaseWordAndSurrogateRangeCount =
