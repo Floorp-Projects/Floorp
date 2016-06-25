@@ -863,7 +863,7 @@ nsPNGDecoder::WriteRow(uint8_t* aRow)
       png_longjmp(mPNG, 1);  // Abort the decode.
   }
 
-  MOZ_ASSERT(result != WriteState::FAILURE);
+  MOZ_ASSERT(WriteState(result) != WriteState::FAILURE);
 
   PostInvalidationIfNeeded();
 }
