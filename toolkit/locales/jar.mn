@@ -32,8 +32,6 @@
   locale/@AB_CD@/global/commonDialogs.properties        (%chrome/global/commonDialogs.properties)
   locale/@AB_CD@/global/config.dtd                      (%chrome/global/config.dtd)
   locale/@AB_CD@/global/config.properties               (%chrome/global/config.properties)
-  locale/@AB_CD@/global/console.dtd                     (%chrome/global/console.dtd)
-  locale/@AB_CD@/global/console.properties              (%chrome/global/console.properties)
   locale/@AB_CD@/global/contentAreaCommands.properties  (%chrome/global/contentAreaCommands.properties)
 #ifndef MOZ_FENNEC
   locale/@AB_CD@/global/customizeToolbar.dtd            (%chrome/global/customizeToolbar.dtd)

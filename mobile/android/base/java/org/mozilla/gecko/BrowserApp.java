@@ -24,6 +24,7 @@ import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserDB;
 import org.mozilla.gecko.db.SuggestedSites;
 import org.mozilla.gecko.delegates.BrowserAppDelegate;
+import org.mozilla.gecko.delegates.OfflineTabStatusDelegate;
 import org.mozilla.gecko.delegates.ScreenshotDelegate;
 import org.mozilla.gecko.distribution.Distribution;
 import org.mozilla.gecko.distribution.DistributionStoreCallback;
@@ -312,7 +313,8 @@ public class BrowserApp extends GeckoApp
             (BrowserAppDelegate) new ReaderViewBookmarkPromotion(),
             (BrowserAppDelegate) new ContentNotificationsDelegate(),
             (BrowserAppDelegate) new PostUpdateHandler(),
-            new TelemetryCorePingDelegate()
+            new TelemetryCorePingDelegate(),
+            new OfflineTabStatusDelegate()
     ));
 
     @NonNull

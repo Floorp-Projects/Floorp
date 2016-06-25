@@ -17,14 +17,8 @@ add_task(function* () {
   // 2. DUMMY_2_URL
   let tab = yield addTab(DUMMY_1_URL);
   let browser = tab.linkedBrowser;
-
-  let loaded = BrowserTestUtils.browserLoaded(browser, false, TEST_URL);
-  browser.loadURI(TEST_URL, null, null);
-  yield loaded;
-
-  loaded = BrowserTestUtils.browserLoaded(browser, false, DUMMY_2_URL);
-  browser.loadURI(DUMMY_2_URL, null, null);
-  yield loaded;
+  yield load(browser, TEST_URL);
+  yield load(browser, DUMMY_2_URL);
 
   // Check session history state
   let history = yield getSessionHistory(browser);
@@ -35,9 +29,7 @@ add_task(function* () {
   is(history.entries[2].uri, DUMMY_2_URL, "Page 2 URL matches");
 
   // Go back one so we're at the test page
-  let shown = waitForPageShow(browser);
-  browser.goBack();
-  yield shown;
+  yield back(browser);
 
   // Check session history state
   history = yield getSessionHistory(browser);
@@ -82,41 +74,3 @@ add_task(function* () {
 
   yield removeTab(tab);
 });
-
-function getSessionHistory(browser) {
-  return ContentTask.spawn(browser, {}, function* () {
-    /* eslint-disable no-undef */
-    let { interfaces: Ci } = Components;
-    let webNav = docShell.QueryInterface(Ci.nsIWebNavigation);
-    let sessionHistory = webNav.sessionHistory;
-    let result = {
-      index: sessionHistory.index,
-      entries: []
-    };
-
-    for (let i = 0; i < sessionHistory.count; i++) {
-      let entry = sessionHistory.getEntryAtIndex(i, false);
-      result.entries.push({
-        uri: entry.URI.spec,
-        title: entry.title
-      });
-    }
-
-    return result;
-    /* eslint-enable no-undef */
-  });
-}
-
-function waitForPageShow(browser) {
-  let mm = browser.messageManager;
-  return new Promise(resolve => {
-    let onShow = message => {
-      if (message.target != browser) {
-        return;
-      }
-      mm.removeMessageListener("PageVisibility:Show", onShow);
-      resolve();
-    };
-    mm.addMessageListener("PageVisibility:Show", onShow);
-  });
-}

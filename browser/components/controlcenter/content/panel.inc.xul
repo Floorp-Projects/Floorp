@@ -87,7 +87,8 @@
       <!-- Permissions Section -->
       <hbox class="identity-popup-section">
         <vbox id="identity-popup-permissions-content" flex="1">
-          <label class="identity-popup-headline"
+          <label id="identity-popup-permissions-headline"
+                 class="identity-popup-headline"
                  value="&identity.permissions;"/>
           <vbox id="identity-popup-permission-list"/>
           <description>&identity.permissionsEmpty;</description>

@@ -16,6 +16,7 @@ import org.mozilla.gecko.mozglue.SafeIntent;
 import org.mozilla.gecko.util.GeckoEventListener;
 
 import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.Bitmap;
@@ -45,7 +46,6 @@ public final class NotificationHelper implements GeckoEventListener {
     private static final String WHEN_ATTR = "when";
     private static final String PRIORITY_ATTR = "priority";
     private static final String LARGE_ICON_ATTR = "largeIcon";
-    private static final String EVENT_TYPE_ATTR = "eventType";
     private static final String ACTIONS_ATTR = "actions";
     private static final String ACTION_ID_ATTR = "buttonId";
     private static final String ACTION_TITLE_ATTR = "title";
@@ -53,13 +53,16 @@ public final class NotificationHelper implements GeckoEventListener {
     private static final String PERSISTENT_ATTR = "persistent";
     private static final String HANDLER_ATTR = "handlerKey";
     private static final String COOKIE_ATTR = "cookie";
+    static final String EVENT_TYPE_ATTR = "eventType";
 
     private static final String NOTIFICATION_SCHEME = "moz-notification";
 
     private static final String BUTTON_EVENT = "notification-button-clicked";
     private static final String CLICK_EVENT = "notification-clicked";
-    private static final String CLEARED_EVENT = "notification-cleared";
     private static final String CLOSED_EVENT = "notification-closed";
+    static final String CLEARED_EVENT = "notification-cleared";
+
+    static final String ORIGINAL_EXTRA_COMPONENT = "originalComponent";
 
     private final Context mContext;
 
@@ -107,40 +110,17 @@ public final class NotificationHelper implements GeckoEventListener {
         return i.getBooleanExtra(HELPER_NOTIFICATION, false);
     }
 
-    public void handleNotificationIntent(SafeIntent i) {
-        final Uri data = i.getData();
-        if (data == null) {
-            Log.e(LOGTAG, "handleNotificationEvent: empty data");
-            return;
-        }
-        final String id = data.getQueryParameter(ID_ATTR);
+    public static void getArgsAndSendNotificationIntent(SafeIntent intent) {
+        final JSONObject args = new JSONObject();
+        final Uri data = intent.getData();
+
         final String notificationType = data.getQueryParameter(EVENT_TYPE_ATTR);
-        if (id == null || notificationType == null) {
-            Log.e(LOGTAG, "handleNotificationEvent: invalid intent parameters");
-            return;
-        }
-
-        // In case the user swiped out the notification, we empty the id set.
-        if (CLEARED_EVENT.equals(notificationType)) {
-            mClearableNotifications.remove(id);
-            // If Gecko isn't running, we throw away events where the notification was cancelled.
-            // i.e. Don't bug the user if they're just closing a bunch of notifications.
-            if (!GeckoThread.isRunning()) {
-                return;
-            }
-        }
-
-        JSONObject args = new JSONObject();
-
-        // The handler and cookie parameters are optional.
-        final String handler = data.getQueryParameter(HANDLER_ATTR);
-        final String cookie = i.getStringExtra(COOKIE_ATTR);
 
         try {
-            args.put(ID_ATTR, id);
+            args.put(ID_ATTR, data.getQueryParameter(ID_ATTR));
             args.put(EVENT_TYPE_ATTR, notificationType);
-            args.put(HANDLER_ATTR, handler);
-            args.put(COOKIE_ATTR, cookie);
+            args.put(HANDLER_ATTR, data.getQueryParameter(HANDLER_ATTR));
+            args.put(COOKIE_ATTR, data.getQueryParameter(COOKIE_ATTR));
 
             if (BUTTON_EVENT.equals(notificationType)) {
                 final String actionName = data.getQueryParameter(ACTION_ID_ATTR);
@@ -152,14 +132,28 @@ public final class NotificationHelper implements GeckoEventListener {
         } catch (JSONException e) {
             Log.e(LOGTAG, "Error building JSON notification arguments.", e);
         }
+    }
+
+    public void handleNotificationIntent(SafeIntent i) {
+        final Uri data = i.getData();
+        final String notificationType = data.getQueryParameter(EVENT_TYPE_ATTR);
+        final String id = data.getQueryParameter(ID_ATTR);
+        if (id == null || notificationType == null) {
+            Log.e(LOGTAG, "handleNotificationEvent: invalid intent parameters");
+            return;
+        }
+
+        getArgsAndSendNotificationIntent(i);
 
         // If the notification was clicked, we are closing it. This must be executed after
         // sending the event to js side because when the notification is canceled no event can be
         // handled.
         if (CLICK_EVENT.equals(notificationType) && !i.getBooleanExtra(ONGOING_ATTR, false)) {
+            // The handler and cookie parameters are optional.
+            final String handler = data.getQueryParameter(HANDLER_ATTR);
+            final String cookie = i.getStringExtra(COOKIE_ATTR);
             hideNotification(id, handler, cookie);
         }
-
     }
 
     private Uri.Builder getNotificationBuilder(JSONObject message, String type) {
@@ -192,15 +186,18 @@ public final class NotificationHelper implements GeckoEventListener {
         notificationIntent.setData(dataUri);
         notificationIntent.putExtra(HELPER_NOTIFICATION, true);
         notificationIntent.putExtra(COOKIE_ATTR, message.optString(COOKIE_ATTR));
-        notificationIntent.setClass(mContext, GeckoAppShell.getGeckoInterface().getActivity().getClass());
+
+        // All intents get routed through the notificationReceiver. That lets us bail if we don't want to start Gecko
+        final ComponentName name = new ComponentName(mContext, GeckoAppShell.getGeckoInterface().getActivity().getClass());
+        notificationIntent.putExtra(ORIGINAL_EXTRA_COMPONENT, name);
+
         return notificationIntent;
     }
 
     private PendingIntent buildNotificationPendingIntent(JSONObject message, String type) {
         Uri.Builder builder = getNotificationBuilder(message, type);
         final Intent notificationIntent = buildNotificationIntent(message, builder);
-        PendingIntent pi = PendingIntent.getActivity(mContext, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        return pi;
+        return PendingIntent.getBroadcast(mContext, 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     private PendingIntent buildButtonClickPendingIntent(JSONObject message, JSONObject action) {

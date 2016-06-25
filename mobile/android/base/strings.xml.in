@@ -68,6 +68,8 @@
 
   <string name="switch_to_tab">&switch_to_tab;</string>
 
+  <string name="tab_offline_version">&tab_offline_version;</string>
+
   <string name="crash_reporter_title">&crash_reporter_title;</string>
   <string name="crash_message2">&crash_message2;</string>
   <string name="crash_send_report_message3">&crash_send_report_message3;</string>

@@ -349,6 +349,19 @@ description#identity-popup-content-verifier,
   background-image: url(chrome://browser/skin/controlcenter/permissions.svg);
 }
 
+#identity-popup-permissions-headline {
+  /* Make sure the label is as tall as the icon so that the permission list
+     which is aligned with the icon doesn't cover it up. */
+  min-height: 24px;
+}
+
+#identity-popup-permission-list {
+  /* Offset the padding set on #identity-popup-permissions-content so that it
+     shows up just below the section. The permission icons are 16px wide and
+     should be right aligned with the section icon. */
+  margin-inline-start: calc(-1em - 16px);
+}
+
 #identity-popup-permission-list menulist {
   min-width: 60px;
 }
@@ -361,8 +374,12 @@ description#identity-popup-content-verifier,
   display: none;
 }
 
-.identity-popup-permission-label {
-  margin-inline-start: 0;
-  word-wrap: break-word;
+.identity-popup-permission-icon {
+  width: 16px;
+  height: 16px;
 }
 
+.identity-popup-permission-label {
+  margin-inline-start: 1em;
+  word-wrap: break-word;
+}
