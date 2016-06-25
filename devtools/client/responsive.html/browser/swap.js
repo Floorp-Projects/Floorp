@@ -6,6 +6,7 @@
 
 const promise = require("promise");
 const { Task } = require("devtools/shared/task");
+const { tunnelToInnerBrowser } = require("./tunnel");
 
 /**
  * Swap page content from an existing tab into a new browser within a container
@@ -32,10 +33,14 @@ const { Task } = require("devtools/shared/task");
 function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
   let gBrowser = tab.ownerDocument.defaultView.gBrowser;
   let innerBrowser;
+  let tunnel;
 
   return {
 
     start: Task.async(function* () {
+      // Freeze navigation temporarily to avoid "blinking" in the location bar.
+      freezeNavigationState(tab);
+
       // 1. Create a temporary, hidden tab to load the tool UI.
       let containerTab = gBrowser.addTab(containerURL, {
         skipAnimation: true,
@@ -78,32 +83,47 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
       //    original browser tab and close the temporary tab used to load the
       //    tool via `swapBrowsersAndCloseOther`.
       gBrowser.swapBrowsersAndCloseOther(tab, containerTab);
+
+      // 7. Start a tunnel from the tool tab's browser to the viewport browser
+      //    so that some browser UI functions, like navigation, are connected to
+      //    the content in the viewport, instead of the tool page.
+      tunnel = tunnelToInnerBrowser(tab.linkedBrowser, innerBrowser);
+      yield tunnel.start();
+
+      // Force the browser UI to match the new state of the tab and browser.
+      thawNavigationState(tab);
+      gBrowser.setTabTitle(tab);
+      gBrowser.updateCurrentBrowser(true);
     }),
 
     stop() {
-      // 1. Create a temporary, hidden tab to hold the content.
+      // 1. Stop the tunnel between outer and inner browsers.
+      tunnel.stop();
+      tunnel = null;
+
+      // 2. Create a temporary, hidden tab to hold the content.
       let contentTab = gBrowser.addTab("about:blank", {
         skipAnimation: true,
       });
       gBrowser.hideTab(contentTab);
       let contentBrowser = contentTab.linkedBrowser;
 
-      // 2. Mark the content tab browser's docshell as active so the frame
+      // 3. Mark the content tab browser's docshell as active so the frame
       //    is created eagerly and will be ready to swap.
       contentBrowser.docShellIsActive = true;
 
-      // 3. Swap tab content from the browser within the viewport in the tool UI
+      // 4. Swap tab content from the browser within the viewport in the tool UI
       //    to the regular browser tab, preserving all state via
       //    `gBrowser._swapBrowserDocShells`.
       gBrowser._swapBrowserDocShells(contentTab, innerBrowser);
       innerBrowser = null;
 
-      // 4. Force the original browser tab to be remote since web content is
+      // 5. Force the original browser tab to be remote since web content is
       //    loaded in the child process, and we're about to swap the content
       //    into this tab.
       gBrowser.updateBrowserRemoteness(tab.linkedBrowser, true);
 
-      // 5. Swap the content into the original browser tab and close the
+      // 6. Swap the content into the original browser tab and close the
       //    temporary tab used to hold the content via
       //    `swapBrowsersAndCloseOther`.
       gBrowser.swapBrowsersAndCloseOther(tab, contentTab);
@@ -111,6 +131,40 @@ function swapToInnerBrowser({ tab, containerURL, getInnerBrowser }) {
     },
 
   };
+}
+
+/**
+ * Browser navigation properties we'll freeze temporarily to avoid "blinking" in the
+ * location bar, etc. caused by the containerURL peeking through before the swap is
+ * complete.
+ */
+const NAVIGATION_PROPERTIES = [
+  "currentURI",
+  "contentTitle",
+  "securityUI",
+];
+
+function freezeNavigationState(tab) {
+  // Browser navigation properties we'll freeze temporarily to avoid "blinking" in the
+  // location bar, etc. caused by the containerURL peeking through before the swap is
+  // complete.
+  for (let property of NAVIGATION_PROPERTIES) {
+    let value = tab.linkedBrowser[property];
+    Object.defineProperty(tab.linkedBrowser, property, {
+      get() {
+        return value;
+      },
+      configurable: true,
+      enumerable: true,
+    });
+  }
+}
+
+function thawNavigationState(tab) {
+  // Thaw out the properties we froze at the beginning now that the swap is complete.
+  for (let property of NAVIGATION_PROPERTIES) {
+    delete tab.linkedBrowser[property];
+  }
 }
 
 /**

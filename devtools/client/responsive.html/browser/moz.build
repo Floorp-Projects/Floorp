@@ -6,4 +6,6 @@
 
 DevToolsModules(
     'swap.js',
+    'tunnel.js',
+    'web-navigation.js',
 )

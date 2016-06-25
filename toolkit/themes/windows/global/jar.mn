@@ -37,8 +37,6 @@ toolkit.jar:
   skin/classic/global/toolbarbutton.css
 * skin/classic/global/tree.css
   skin/classic/global/alerts/alert.css                     (alerts/alert.css)
-* skin/classic/global/console/console.css                  (console/console.css)
-  skin/classic/global/console/console-toolbar.png          (console/console-toolbar.png)
   skin/classic/global/dirListing/remote.png                (dirListing/remote.png)
   skin/classic/global/icons/autocomplete-search.svg        (icons/autocomplete-search.svg)
   skin/classic/global/icons/blacklist_favicon.png          (icons/blacklist_favicon.png)
@@ -55,7 +53,6 @@ toolkit.jar:
 * skin/classic/global/in-content/info-pages.css            (in-content/info-pages.css)
   skin/classic/global/toolbar/spring.png                   (toolbar/spring.png)
 
-  skin/classic/global/console/console-toolbar-XP.png             (console/console-toolbar-XP.png)
   skin/classic/global/dirListing/folder-XP.png                   (dirListing/folder-XP.png)
   skin/classic/global/dirListing/local-XP.png                    (dirListing/local-XP.png)
   skin/classic/global/dirListing/remote-XP.png                   (dirListing/remote-XP.png)
@@ -101,7 +98,6 @@ toolkit.jar:
 #elif MOZ_SEPARATE_MANIFEST_FOR_THEME_OVERRIDES
 [extensions/{972ce4c6-7e08-4474-a285-3208198ce6fd}] chrome.jar:
 #endif
-% override chrome://global/skin/console/console-toolbar.png       chrome://global/skin/console/console-toolbar-XP.png      osversion<6
 % override chrome://global/skin/dirListing/folder.png             chrome://global/skin/dirListing/folder-XP.png            osversion<6
 % override chrome://global/skin/dirListing/local.png              chrome://global/skin/dirListing/local-XP.png             osversion<6
 % override chrome://global/skin/dirListing/remote.png             chrome://global/skin/dirListing/remote-XP.png            osversion<6
