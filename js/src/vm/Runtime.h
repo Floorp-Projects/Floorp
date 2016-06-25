@@ -1054,16 +1054,9 @@ struct JSRuntime : public JS::shadow::Runtime,
         return interpreterStack_;
     }
 
-    // The runtime's context can be nullptr only while we're initializing or
-    // destroying the runtime.
-    JSContext* maybeContextFromMainThread() {
+    JSContext* contextFromMainThread() {
         MOZ_ASSERT(CurrentThreadCanAccessRuntime(this));
         return context_;
-    }
-    JSContext* contextFromMainThread() {
-        JSContext* cx = maybeContextFromMainThread();
-        MOZ_ASSERT(cx);
-        return cx;
     }
 
     bool enqueuePromiseJob(JSContext* cx, js::HandleFunction job, js::HandleObject promise);
@@ -1149,14 +1142,6 @@ struct JSRuntime : public JS::shadow::Runtime,
 
 #ifdef DEBUG
     unsigned            checkRequestDepth;
-
-    /*
-     * To help embedders enforce their invariants, we allow them to specify in
-     * advance which JSContext should be passed to JSAPI calls. If this is set
-     * to a non-null value, the assertSameCompartment machinery does double-
-     * duty (in debug builds) to verify that it matches the cx being used.
-     */
-    JSContext*         activeContext;
 #endif
 
     /* Garbage collector state, used by jsgc.c. */
@@ -1495,13 +1480,18 @@ struct JSRuntime : public JS::shadow::Runtime,
         return liveRuntimesCount > 0;
     }
 
-    explicit JSRuntime(JSRuntime* parentRuntime);
-    ~JSRuntime();
+  protected:
+    JSRuntime(JSContext* cx, JSRuntime* parentRuntime);
+
+    // destroyRuntime is used instead of a destructor, to ensure the downcast
+    // to JSContext remains valid. The final GC triggered here depends on this.
+    void destroyRuntime();
 
     bool init(uint32_t maxbytes, uint32_t maxNurseryBytes);
 
     JSRuntime* thisFromCtor() { return this; }
 
+  public:
     /*
      * Call this after allocating memory held by GC things, to update memory
      * pressure counters or report the OOM error if necessary. If oomError and

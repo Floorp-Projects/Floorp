@@ -223,16 +223,13 @@ AutoGCRooter::trace(JSTracer* trc)
 /* static */ void
 AutoGCRooter::traceAll(JSTracer* trc)
 {
-    if (JSContext* cx = trc->runtime()->maybeContextFromMainThread())
-        traceAllInContext(cx, trc);
+    traceAllInContext(trc->runtime()->contextFromMainThread(), trc);
 }
 
 /* static */ void
 AutoGCRooter::traceAllWrappers(JSTracer* trc)
 {
-    JSContext* cx = trc->runtime()->maybeContextFromMainThread();
-    if (!cx)
-        return;
+    JSContext* cx = trc->runtime()->contextFromMainThread();
 
     for (AutoGCRooter* gcr = cx->roots.autoGCRooters_; gcr; gcr = gcr->down) {
         if (gcr->tag_ == WRAPVECTOR || gcr->tag_ == WRAPPER)
@@ -320,8 +317,7 @@ js::gc::GCRuntime::markRuntime(JSTracer* trc, TraceOrMarkRuntime traceOrMark,
     if (rt->isHeapMinorCollecting())
         jit::JitRuntime::MarkJitcodeGlobalTableUnconditionally(trc);
 
-    if (JSContext* cx = rt->maybeContextFromMainThread())
-        cx->mark(trc);
+    rt->contextFromMainThread()->mark(trc);
 
     for (CompartmentsIter c(rt, SkipAtoms); !c.done(); c.next())
         c->traceRoots(trc, traceOrMark);

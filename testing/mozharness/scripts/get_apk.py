@@ -57,7 +57,8 @@ class GetAPK(BaseScript, VirtualenvMixin):
 
     arch_values = ["arm", "x86"]
     multi_api_archs = ["arm"]
-    multi_apis = ["api-9", "api-15"] # v11 has been dropped in fx 46 (1155801)
+    multi_apis = ["api-15"] # v11 has been dropped in fx 46 (1155801)
+    # v9 has been dropped in fx 48 (1220184)
 
     download_dir = "apk-download"
 

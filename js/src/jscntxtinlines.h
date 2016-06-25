@@ -30,14 +30,6 @@ class CompartmentChecker
     explicit CompartmentChecker(ExclusiveContext* cx)
       : compartment(cx->compartment())
     {
-#ifdef DEBUG
-        // In debug builds, make sure the embedder passed the cx it claimed it
-        // was going to use.
-        JSContext* activeContext = nullptr;
-        if (cx->isJSContext())
-            activeContext = cx->asJSContext()->runtime()->activeContext;
-        MOZ_ASSERT_IF(activeContext, cx == activeContext);
-#endif
     }
 
     /*

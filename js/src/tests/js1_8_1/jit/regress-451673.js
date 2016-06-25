@@ -24,9 +24,7 @@ function test()
   function doTest(enablejit)
   {
     if (enablejit)
-      jit(true);
     else
-      jit(false);
 
     var n = 1000000;
     var start = new Date();
@@ -65,7 +63,6 @@ function test()
     timetaken = timetaken / 1000;
 
     if (enablejit)
-      jit(false);
 
     print((enablejit ? '    JIT' : 'Non-JIT') + ": Number of primes up to: " + n + " is " + numprimes + ", counted in " + timetaken + " secs.");
 

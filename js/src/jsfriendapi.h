@@ -2691,20 +2691,6 @@ JS_FRIEND_API(void)
 SetScriptEnvironmentPreparer(JSRuntime* rt, ScriptEnvironmentPreparer*
 preparer);
 
-/**
- * To help embedders enforce their invariants, we allow them to specify in
- * advance which JSContext should be passed to JSAPI calls. If this is set
- * to a non-null value, the assertSameCompartment machinery does double-
- * duty (in debug builds) to verify that it matches the cx being used.
- */
-#ifdef DEBUG
-JS_FRIEND_API(void)
-Debug_SetActiveJSContext(JSRuntime* rt, JSContext* cx);
-#else
-inline void
-Debug_SetActiveJSContext(JSRuntime* rt, JSContext* cx) {}
-#endif
-
 enum CTypesActivityType {
     CTYPES_CALL_BEGIN,
     CTYPES_CALL_END,

@@ -54,16 +54,6 @@ class WaitableEvent {
   // waiting thread has been released.
   WaitableEvent(bool manual_reset, bool initially_signaled);
 
-#if defined(OS_WIN)
-  // Create a WaitableEvent from an Event HANDLE which has already been
-  // created. This objects takes ownership of the HANDLE and will close it when
-  // deleted.
-  explicit WaitableEvent(HANDLE event_handle);
-
-  // Releases ownership of the handle from this object.
-  HANDLE Release();
-#endif
-
   ~WaitableEvent();
 
   // Put the event in the un-signaled state.

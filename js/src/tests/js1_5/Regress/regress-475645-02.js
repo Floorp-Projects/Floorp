@@ -20,7 +20,6 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  jit(true);
 
   if (typeof window != 'undefined')
   {
@@ -48,7 +47,6 @@ function test()
     }
   }
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 

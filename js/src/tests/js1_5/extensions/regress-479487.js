@@ -20,7 +20,6 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  jit(true);
 
   Array.prototype[1] = 2;
 
@@ -38,7 +37,6 @@ function test()
 
   f();
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 

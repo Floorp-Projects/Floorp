@@ -23,11 +23,9 @@ function test()
   expect = 'true,true,true,true,true,';
   actual = '';
 
-  jit(true);
 
   for (var i=0;i<5;++i) actual += (false == '') + ',';
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 
