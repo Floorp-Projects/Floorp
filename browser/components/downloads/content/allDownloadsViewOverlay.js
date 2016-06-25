@@ -302,9 +302,8 @@ HistoryDownloadElementShell.prototype = {
 
     if (this.element.selected) {
       goUpdateDownloadCommands();
-    } else {
-      goUpdateCommand("downloadsCmd_clearDownloads");
     }
+    goUpdateCommand("downloadsCmd_clearDownloads");
   },
 
   onChanged() {
