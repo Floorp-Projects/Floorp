@@ -298,7 +298,8 @@ struct AutoEnterAnalysis
     }
 
     AutoEnterAnalysis(FreeOp* fop, Zone* zone)
-      : suppressGC(zone->runtimeFromMainThread()), oom(zone), suppressMetadata(zone)
+      : suppressGC(zone->runtimeFromMainThread()->contextFromMainThread()),
+        oom(zone), suppressMetadata(zone)
     {
         init(fop, zone);
     }

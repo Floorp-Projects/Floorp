@@ -87,16 +87,26 @@ js::TraceCycleDetectionSet(JSTracer* trc, AutoCycleDetector::Set& set)
         TraceRoot(trc, &e.mutableFront(), "cycle detector table entry");
 }
 
-JSContext*
-js::NewContext(JSRuntime* rt)
+bool
+JSContext::init(uint32_t maxBytes, uint32_t maxNurseryBytes)
 {
-    MOZ_ASSERT(!rt->maybeContextFromMainThread());
+    if (!JSRuntime::init(maxBytes, maxNurseryBytes))
+        return false;
 
-    JS_AbortIfWrongThread(rt);
+    return true;
+}
 
-    JSContext* cx = js_new<JSContext>(rt);
+JSContext*
+js::NewContext(uint32_t maxBytes, uint32_t maxNurseryBytes, JSRuntime* parentRuntime)
+{
+    JSContext* cx = js_new<JSContext>(parentRuntime);
     if (!cx)
         return nullptr;
+
+    if (!cx->init(maxBytes, maxNurseryBytes)) {
+        js_delete(cx);
+        return nullptr;
+    }
 
     return cx;
 }
@@ -858,8 +868,9 @@ ExclusiveContext::recoverFromOutOfMemory()
         task->outOfMemory = false;
 }
 
-JSContext::JSContext(JSRuntime* rt)
-  : ExclusiveContext(rt, &rt->mainThread, Context_JS),
+JSContext::JSContext(JSRuntime* parentRuntime)
+  : ExclusiveContext(this, &this->JSRuntime::mainThread, Context_JS),
+    JSRuntime(this, parentRuntime),
     throwing(false),
     unwrappedException_(this),
     overRecursed_(false),
@@ -869,8 +880,6 @@ JSContext::JSContext(JSRuntime* rt)
     resolvingList(nullptr),
     generatingError(false),
     cycleDetectorSet(this),
-    data(nullptr),
-    data2(nullptr),
     outstandingRequests(0),
     jitIsBroken(false)
 {
@@ -880,6 +889,8 @@ JSContext::JSContext(JSRuntime* rt)
 
 JSContext::~JSContext()
 {
+    destroyRuntime();
+
     /* Free the stuff hanging off of cx. */
     MOZ_ASSERT(!resolvingList);
 }
@@ -1011,22 +1022,21 @@ JSContext::updateJITEnabled()
 }
 
 size_t
-JSContext::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+JSContext::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
     /*
      * There are other JSContext members that could be measured; the following
      * ones have been found by DMD to be worth measuring.  More stuff may be
      * added later.
      */
-    return mallocSizeOf(this) + cycleDetectorSet.sizeOfExcludingThis(mallocSizeOf);
+    return cycleDetectorSet.sizeOfExcludingThis(mallocSizeOf);
 }
 
 void
 JSContext::mark(JSTracer* trc)
 {
-    /* Stack frames and slots are traced by StackSpace::mark. */
-
-    TraceCycleDetectionSet(trc, cycleDetectorSet);
+    if (cycleDetectorSet.initialized())
+        TraceCycleDetectionSet(trc, cycleDetectorSet);
 
     if (compartment_)
         compartment_->mark();

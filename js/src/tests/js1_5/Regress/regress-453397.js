@@ -20,7 +20,6 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  jit(true);
 
   function computeEscapeSpeed(real) {
     for (var j = 1; j < 4; ++j) {
@@ -40,7 +39,6 @@ function test()
     }
   }
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 

@@ -41,11 +41,8 @@ function loop()
   return stop - start;
 }
 
-jit(false);
 var timenonjit = loop();
-jit(true);
 var timejit = loop();
-jit(false);
 
 print('time: nonjit = ' + timenonjit + ', jit = ' + timejit);
 

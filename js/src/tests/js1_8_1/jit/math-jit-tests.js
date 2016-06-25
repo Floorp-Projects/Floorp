@@ -10,7 +10,6 @@ var summary = 'trace-capability math mini-testsuite';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-jit(true);
 
 /**
  * A number of the tests in this file depend on the setting of
@@ -680,7 +679,6 @@ testmath("Math.tan", "5*Math.PI/4", 1)
 testmath("Math.tan", "7*Math.PI/4", -1)
 testmath("Infinity/Math.tan", "-0", -Infinity)
 
-jit(false);
 
 /* Keep these at the end so that we can see the summary after the trace-debug spew. */
 if (0) {

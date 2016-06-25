@@ -128,7 +128,7 @@ ReturnZeroSize(const void* p)
     return 0;
 }
 
-JSRuntime::JSRuntime(JSRuntime* parentRuntime)
+JSRuntime::JSRuntime(JSContext* cx, JSRuntime* parentRuntime)
   : mainThread(this),
     jitTop(nullptr),
     jitJSContext(nullptr),
@@ -173,7 +173,7 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     ownerThread_(nullptr),
     ownerThreadNative_(0),
     tempLifoAlloc(TEMP_LIFO_ALLOC_PRIMARY_CHUNK_SIZE),
-    context_(nullptr),
+    context_(cx),
     jitRuntime_(nullptr),
     selfHostingGlobal_(nullptr),
     nativeStackBase(GetNativeStackBase()),
@@ -187,7 +187,6 @@ JSRuntime::JSRuntime(JSRuntime* parentRuntime)
     requestDepth(0),
 #ifdef DEBUG
     checkRequestDepth(0),
-    activeContext(nullptr),
 #endif
     gc(thisFromCtor()),
     gcInitialized(false),
@@ -371,20 +370,12 @@ JSRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
             return false;
     }
 
-    context_ = NewContext(this);
-    if (!context_)
-        return false;
-
     return true;
 }
 
-JSRuntime::~JSRuntime()
+void
+JSRuntime::destroyRuntime()
 {
-    if (context_) {
-        DestroyContext(context_);
-        context_ = nullptr;
-    }
-
     MOZ_ASSERT(!isHeapBusy());
     MOZ_ASSERT(childRuntimeCount == 0);
 
@@ -524,7 +515,10 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
     // Several tables in the runtime enumerated below can be used off thread.
     AutoLockForExclusiveAccess lock(this);
 
-    rtSizes->object += mallocSizeOf(this);
+    // For now, measure the size of the derived class (JSContext).
+    // TODO (bug 1281529): make memory reporting reflect the new
+    // JSContext/JSRuntime world better.
+    rtSizes->object += mallocSizeOf(context_);
 
     rtSizes->atomsTable += atoms(lock).sizeOfIncludingThis(mallocSizeOf);
 
@@ -534,7 +528,7 @@ JSRuntime::addSizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf, JS::Runtim
         rtSizes->atomsTable += permanentAtoms->sizeOfIncludingThis(mallocSizeOf);
     }
 
-    rtSizes->contexts += context_->sizeOfIncludingThis(mallocSizeOf);
+    rtSizes->contexts += context_->sizeOfExcludingThis(mallocSizeOf);
 
     rtSizes->temporary += tempLifoAlloc.sizeOfExcludingThis(mallocSizeOf);
 
@@ -758,7 +752,7 @@ JSRuntime::triggerActivityCallback(bool active)
      * suppression serves to inform the exact rooting hazard analysis of this
      * property and ensures that it remains true in the future.
      */
-    AutoSuppressGC suppress(this);
+    AutoSuppressGC suppress(contextFromMainThread());
 
     activityCallback(activityCallbackArg, active);
 }

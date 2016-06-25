@@ -22,7 +22,6 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  jit(true);
 
   if (typeof gczeal == 'function')
   {
@@ -35,7 +34,6 @@ function test()
     new Function("for (var j = 0; j < 1; ++j) { } ")();
   }
 
-  jit(false);
 
   if (typeof gczeal == 'function')
   {

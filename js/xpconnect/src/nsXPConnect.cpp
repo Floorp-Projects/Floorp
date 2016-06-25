@@ -31,6 +31,7 @@
 #include "nsIObjectInputStream.h"
 #include "nsIObjectOutputStream.h"
 #include "nsScriptSecurityManager.h"
+#include "nsContentUtils.h"
 
 #include "jsfriendapi.h"
 
@@ -71,7 +72,6 @@ nsXPConnect::nsXPConnect()
 nsXPConnect::~nsXPConnect()
 {
     mRuntime->DeleteSingletonScopes();
-    mRuntime->DestroyJSContextStack();
 
     // In order to clean up everything properly, we need to GC twice: once now,
     // to clean anything that can go away on its own (like the Junk Scope, which
@@ -123,8 +123,10 @@ nsXPConnect::InitStatics()
     gScriptSecurityManager->GetSystemPrincipal(&gSystemPrincipal);
     MOZ_RELEASE_ASSERT(gSystemPrincipal);
 
-    // Initialize the SafeJSContext.
-    gSelf->mRuntime->GetJSContextStack()->InitSafeJSContext();
+    if (!JS::InitSelfHostedCode(gSelf->mRuntime->Context()))
+        MOZ_CRASH("InitSelfHostedCode failed");
+    if (!gSelf->mRuntime->JSContextInitialized(gSelf->mRuntime->Context()))
+        MOZ_CRASH("JSContextInitialized failed");
 
     // Initialize our singleton scopes.
     gSelf->mRuntime->InitSingletonScopes();
@@ -933,7 +935,7 @@ nsXPConnect::DebugPrintJSStack(bool showArgs,
                                bool showLocals,
                                bool showThisProps)
 {
-    JSContext* cx = GetCurrentJSContext();
+    JSContext* cx = nsContentUtils::GetCurrentJSContext();
     if (!cx)
         printf("there is no JSContext on the nsIThreadJSContextStack!\n");
     else
@@ -979,34 +981,10 @@ nsXPConnect::JSToVariant(JSContext* ctx, HandleValue value, nsIVariant** _retval
 
 /* virtual */
 JSContext*
-nsXPConnect::GetCurrentJSContext()
-{
-    return GetRuntime()->GetJSContextStack()->Peek();
-}
-
-/* virtual */
-JSContext*
 nsXPConnect::GetSafeJSContext()
 {
-    return GetRuntime()->GetJSContextStack()->GetSafeJSContext();
+    return GetRuntime()->Context();
 }
-
-namespace xpc {
-
-void
-PushNullJSContext()
-{
-    XPCJSRuntime::Get()->GetJSContextStack()->Push(nullptr);
-}
-
-void
-PopNullJSContext()
-{
-    MOZ_ASSERT(XPCJSRuntime::Get()->GetJSContextStack()->Peek() == nullptr);
-    XPCJSRuntime::Get()->GetJSContextStack()->Pop();
-}
-
-} // namespace xpc
 
 nsIPrincipal*
 nsXPConnect::GetPrincipal(JSObject* obj, bool allowShortCircuit) const
