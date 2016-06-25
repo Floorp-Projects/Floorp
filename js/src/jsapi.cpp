@@ -466,22 +466,14 @@ JS_NewRuntime(uint32_t maxbytes, uint32_t maxNurseryBytes, JSRuntime* parentRunt
     while (parentRuntime && parentRuntime->parentRuntime)
         parentRuntime = parentRuntime->parentRuntime;
 
-    JSRuntime* rt = js_new<JSRuntime>(parentRuntime);
-    if (!rt)
-        return nullptr;
-
-    if (!rt->init(maxbytes, maxNurseryBytes)) {
-        JS_DestroyRuntime(rt);
-        return nullptr;
-    }
-
-    return rt;
+    return NewContext(maxbytes, maxNurseryBytes, parentRuntime);
 }
 
 JS_PUBLIC_API(void)
 JS_DestroyRuntime(JSRuntime* rt)
 {
-    js_delete(rt);
+    JSContext* cx = rt->contextFromMainThread();
+    DestroyContext(cx);
 }
 
 static JS_CurrentEmbedderTimeFunction currentEmbedderTimeFunction;
@@ -561,30 +553,6 @@ JS_EndRequest(JSContext* cx)
     MOZ_ASSERT(cx->outstandingRequests != 0);
     cx->outstandingRequests--;
     StopRequest(cx);
-}
-
-JS_PUBLIC_API(void*)
-JS_GetContextPrivate(JSContext* cx)
-{
-    return cx->data;
-}
-
-JS_PUBLIC_API(void)
-JS_SetContextPrivate(JSContext* cx, void* data)
-{
-    cx->data = data;
-}
-
-JS_PUBLIC_API(void*)
-JS_GetSecondContextPrivate(JSContext* cx)
-{
-    return cx->data2;
-}
-
-JS_PUBLIC_API(void)
-JS_SetSecondContextPrivate(JSContext* cx, void* data)
-{
-    cx->data2 = data;
 }
 
 JS_PUBLIC_API(JSRuntime*)

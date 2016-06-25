@@ -12,7 +12,6 @@ var expect = '';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-jit(true);
 
 for each (let x in ['']) {
   for (var b = 0; b < 5; ++b) {
@@ -22,6 +21,5 @@ for each (let x in ['']) {
   }
 }
 
-jit(false);
 
 reportCompare(expect, actual, summary);

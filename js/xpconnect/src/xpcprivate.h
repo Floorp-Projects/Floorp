@@ -354,7 +354,6 @@ private:
 // In the current xpconnect system there can only be one XPCJSRuntime.
 // So, xpconnect can only be used on one JSRuntime within the process.
 
-class XPCJSContextStack;
 class WatchdogManager;
 
 enum WatchdogTimestampCategory
@@ -419,9 +418,6 @@ class XPCJSRuntime : public mozilla::CycleCollectedJSRuntime
 public:
     static XPCJSRuntime* newXPCJSRuntime();
     static XPCJSRuntime* Get() { return nsXPConnect::XPConnect()->GetRuntime(); }
-
-    XPCJSContextStack* GetJSContextStack() {return mJSContextStack;}
-    void DestroyJSContextStack();
 
     void RemoveWrappedJS(nsXPCWrappedJS* wrapper);
     void AssertInvalidWrappedJSNotInTable(nsXPCWrappedJS* wrapper) const;
@@ -614,7 +610,6 @@ private:
     jsid mStrIDs[IDX_TOTAL_COUNT];
     JS::Value mStrJSVals[IDX_TOTAL_COUNT];
 
-    XPCJSContextStack*       mJSContextStack;
     XPCCallContext*          mCallContext;
     AutoMarkingPtr*          mAutoRoots;
     jsid                     mResolveName;
@@ -2667,62 +2662,6 @@ private:
 
 
 /***************************************************************************/
-// XPCJSContextStack is not actually an xpcom object, but xpcom calls are
-// delegated to it as an implementation detail.
-
-namespace xpc {
-void PushNullJSContext();
-void PopNullJSContext();
-
-} /* namespace xpc */
-
-namespace mozilla {
-namespace dom {
-namespace danger {
-class AutoCxPusher;
-} // namespace danger
-} // namespace dom
-} // namespace mozilla
-
-class XPCJSContextStack
-{
-public:
-    explicit XPCJSContextStack(XPCJSRuntime* aRuntime)
-      : mRuntime(aRuntime)
-      , mSafeJSContext(nullptr)
-    { }
-
-    virtual ~XPCJSContextStack();
-
-    uint32_t Count()
-    {
-        return mStack.Length();
-    }
-
-    JSContext* Peek()
-    {
-        return mStack.IsEmpty() ? nullptr : mStack[mStack.Length() - 1];
-    }
-
-    void InitSafeJSContext();
-    JSContext* GetSafeJSContext();
-
-private:
-    friend class mozilla::dom::danger::AutoCxPusher;
-    friend void xpc::PushNullJSContext();
-    friend void xpc::PopNullJSContext();
-
-    // We make these private so that stack manipulation can only happen
-    // through one of the above friends.
-    void Pop();
-    void Push(JSContext* cx);
-
-    AutoTArray<JSContext*, 16> mStack;
-    XPCJSRuntime* mRuntime;
-    JSContext*  mSafeJSContext;
-};
-
-/***************************************************************************/
 // 'Components' object implementations. nsXPCComponentsBase has the
 // less-privileged stuff that we're willing to expose to XBL.
 
@@ -3207,7 +3146,7 @@ xpc_GetJSPrivate(JSObject* obj)
 inline JSContext*
 xpc_GetSafeJSContext()
 {
-    return XPCJSRuntime::Get()->GetJSContextStack()->GetSafeJSContext();
+    return XPCJSRuntime::Get()->Context();
 }
 
 namespace xpc {

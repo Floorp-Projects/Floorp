@@ -14,7 +14,6 @@ var expect = 'No Crash';
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-jit(true);
 
 const IS_TOKEN_ARRAY =
   [0, 0, 0, 0, 0, 0, 0, 0, //   0
@@ -57,6 +56,5 @@ normalizeFieldName: function(fieldName)
 
 headerUtils.normalizeFieldName("Host");
 
-jit(false);
 
 reportCompare(expect, actual, summary);

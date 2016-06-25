@@ -3,6 +3,51 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
+// NOTE: If you're adding new test harness functionality to this file -- first,
+//       should you at all?  Most stuff is better in specific tests, or in
+//       nested shell.js/browser.js.  Second, can you instead add it to
+//       shell.js?  Our goal is to unify these two files for readability, and
+//       the plan is to empty out this file into that one over time.  Third,
+//       supposing you must add to this file, please add it to this IIFE for
+//       better modularity/resilience against tests that must do particularly
+//       bizarre things that might break the harness.
+
+(function(global) {
+  /****************************
+   * UTILITY FUNCTION EXPORTS *
+   ****************************/
+
+  var newGlobal = global.newGlobal;
+  if (typeof newGlobal !== "function") {
+    newGlobal = function newGlobal() {
+      var iframe = global.document.createElement("iframe");
+      global.document.documentElement.appendChild(iframe);
+      var win = iframe.contentWindow;
+      iframe.remove();
+      // Shim in "evaluate"
+      win.evaluate = win.eval;
+      return win;
+    };
+    global.newGlobal = newGlobal;
+  }
+
+  // This function is *only* used in this file!  Ultimately it should only be
+  // used by other exports in this IIFE, but for now just export it so that
+  // functions not exported within this IIFE (but still in this file) can use
+  // it.
+  function DocumentWrite(s) {
+    try {
+      var msgDiv = global.document.createElement('div');
+      msgDiv.innerHTML = s;
+      global.document.body.appendChild(msgDiv);
+    } catch (e) {
+      global.document.write(s + '<br>\n');
+    }
+  }
+  global.DocumentWrite = DocumentWrite;
+})(this);
+
+
 var gPageCompleted;
 var GLOBAL = this + '';
 
@@ -46,21 +91,6 @@ function htmlesc(str) {
   if (str == '&')
     return '&amp;';
   return str;
-}
-
-function DocumentWrite(s)
-{
-  try
-  {
-    var msgDiv = document.createElement('div');
-    msgDiv.innerHTML = s;
-    document.body.appendChild(msgDiv);
-    msgDiv = null;
-  }
-  catch(excp)
-  {
-    document.write(s + '<br>\n');
-  }
 }
 
 function print() {
@@ -251,10 +281,6 @@ function gczeal(z)
   SpecialPowers.setGCZeal(z);
 }
 
-function jit(on)
-{
-}
-
 function jsTestDriverBrowserInit()
 {
 
@@ -356,18 +382,6 @@ function jsTestDriverBrowserInit()
   {
     gczeal(Number(properties.gczeal));
   }
-
-  /*
-   * since the default setting of jit changed from false to true
-   * in http://hg.mozilla.org/tracemonkey/rev/685e00e68be9
-   * bisections which depend upon jit settings can be thrown off.
-   * default jit(false) when not running jsreftests to make bisections
-   * depending upon jit settings consistent over time. This is not needed
-   * in shell tests as the default jit setting has not changed there.
-   */
-
-  if (properties.jit  || !document.location.href.match(/jsreftest.html/))
-    jit(properties.jit);
 
   var testpathparts = properties.test.split(/\//);
 
@@ -558,16 +572,6 @@ function closeDialog()
       subject.close();
     }
   }
-}
-
-function newGlobal() {
-  var iframe = document.createElement("iframe");
-  document.documentElement.appendChild(iframe);
-  var win = iframe.contentWindow;
-  iframe.remove();
-  // Shim in "evaluate"
-  win.evaluate = win.eval;
-  return win;
 }
 
 registerDialogCloser();

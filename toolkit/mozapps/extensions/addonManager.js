@@ -243,6 +243,7 @@ amManager.prototype = {
               onInstalled: (addon) => handler("onInstalled", addon.id, false),
               onUninstalling: (addon, needsRestart) => handler("onUninstalling", addon.id, needsRestart),
               onUninstalled: (addon) => handler("onUninstalled", addon.id, false),
+              onOperationCancelled: (addon) => handler("onOperationCancelled", addon.id, false),
             };
           }
           AddonManager.addAddonListener(this.addonListener);

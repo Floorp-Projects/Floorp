@@ -27,12 +27,10 @@ UNIFIED_SOURCES += [
     'src/base/timer.cc',
     'src/chrome/common/child_process.cc',
     'src/chrome/common/child_process_host.cc',
-    'src/chrome/common/child_process_info.cc',
     'src/chrome/common/child_thread.cc',
     'src/chrome/common/chrome_switches.cc',
     'src/chrome/common/ipc_channel.cc',
     'src/chrome/common/ipc_message.cc',
-    'src/chrome/common/notification_service.cc',
 ]
 
 if os_win:
@@ -54,7 +52,6 @@ if os_win:
         'src/base/thread_local_storage_win.cc',
         'src/base/thread_local_win.cc',
         'src/base/time_win.cc',
-        'src/base/waitable_event_watcher_win.cc',
         'src/base/waitable_event_win.cc',
         'src/base/win_util.cc',
         'src/chrome/common/ipc_channel_win.cc',
@@ -82,7 +79,6 @@ if os_posix:
         'src/base/thread_local_posix.cc',
         'src/base/thread_local_storage_posix.cc',
         'src/base/waitable_event_posix.cc',
-        'src/base/waitable_event_watcher_posix.cc',
         'src/chrome/common/file_descriptor_set_posix.cc',
         'src/chrome/common/ipc_channel_posix.cc',
         'src/chrome/common/process_watcher_posix_sigchld.cc',

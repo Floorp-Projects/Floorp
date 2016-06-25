@@ -22,7 +22,6 @@ function test()
   printStatus (summary);
 
   expect = 'PASS';
-  jit(true);
 
   if (typeof gczeal == 'function')
   {
@@ -32,7 +31,6 @@ function test()
   Object.prototype.q = 3;
   for each (let x in [6, 7]) { } print(actual = "PASS");
  
-  jit(false);
 
   delete Object.prototype.q;
 

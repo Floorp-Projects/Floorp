@@ -23,6 +23,16 @@ add_task(function*() {
 
   ok(time > 2000, "Interval is throttled with no webaudio (" + time + " ms)");
 
+  // Set up a listener for the oscillator's demise
+  let oscillatorDemisePromise = ContentTask.spawn(browser, null, function() {
+    return new Promise(resolve => {
+      let observer = () => resolve();
+      // Record the observer on the content object so we can throw it out later
+      content.__bug1181073_observer = observer;
+      Services.obs.addObserver(observer, "webaudio-node-demise", false);
+    });
+  });
+
   time = yield ContentTask.spawn(browser, null, function () {
     return new Promise(resolve => {
       // Start playing audio, save it on the window so it doesn't get GCed
@@ -46,6 +56,7 @@ add_task(function*() {
 
   // Destroy the oscillator, but not the audio context
   yield new Promise(resolve => SpecialPowers.exactGC(browser.contentWindow, resolve));
+  yield oscillatorDemisePromise;
 
   time = yield ContentTask.spawn(browser, null, function () {
     return new Promise(resolve => {
