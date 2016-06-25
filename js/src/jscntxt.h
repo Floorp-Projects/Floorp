@@ -452,7 +452,7 @@ struct JSContext : public js::ExclusiveContext,
      */
     inline bool runningWithTrustedPrincipals() const;
 
-    JS_FRIEND_API(size_t) sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
+    JS_FRIEND_API(size_t) sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const;
 
     void mark(JSTracer* trc);
 
