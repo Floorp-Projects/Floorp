@@ -21,7 +21,7 @@ task:
     description: XPCShell run {{chunk}}
   extra:
     chunks:
-      total: 5
+      total: 6
     suite:
       name: xpcshell
       flavor: xpcshell
