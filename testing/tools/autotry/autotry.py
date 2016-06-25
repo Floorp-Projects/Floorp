@@ -9,16 +9,29 @@ import re
 import subprocess
 import sys
 import which
+import difflib
 
 from collections import defaultdict
 
 import ConfigParser
 
 def validate_choices(values, choices):
+    valid = True
     for value in values:
-        if value not in choices:
-            print 'Invalid choice {v!r}. Allowed choices: {c!r}'.format(v=value, c=choices)
-            sys.exit(1)
+        corrections = difflib.get_close_matches(value, choices)
+        if len(corrections) == 0:
+            print 'Potentially invalid choice {v!r}. Neither the requested value nor a similar value was found.'.format(v=value)
+            print 'List of possible values: {c!r}'.format(c=choices)
+            result = raw_input('Are you sure you want to continue? [y/N] ').strip()
+            if not 'y' in result.lower():
+                valid = False
+        elif corrections[0] == value:
+            continue
+        else:
+            valid = False
+            print 'Invalid choice {v!r}. Some suggestions (limit three): {c!r}?'.format(v=value, c=corrections)
+    if not valid:
+        sys.exit(1)
 
 class ValidatePlatforms(argparse.Action):
     def __call__(self, parser, args, values, option_string=None):

@@ -485,6 +485,7 @@ class JsapiTestsCommand(MachCommandBase):
         return jsapi_tests_result
 
 def autotry_parser():
+    print("mach try is under development, please file bugs blocking 1149670.")
     from autotry import arg_parser
     return arg_parser()
 
@@ -613,8 +614,6 @@ class PushToTry(MachCommandBase):
 
         from mozbuild.testing import TestResolver
         from autotry import AutoTry
-
-        print("mach try is under development, please file bugs blocking 1149670.")
 
         resolver_func = lambda: self._spawn(TestResolver)
         at = AutoTry(self.topsrcdir, resolver_func, self._mach_context)

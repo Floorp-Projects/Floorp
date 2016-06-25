@@ -45,6 +45,10 @@ add_task(function* testMainViewVisible() {
   is(menulists[0].value, "1", "Correct value on install menulist");
   gIdentityHandler._identityPopup.hidden = true;
 
+  let img = menulists[0].parentNode.querySelector("image");
+  ok(img, "There is an image for the permissions");
+  ok(img.classList.contains("install-icon"), "proper class is in image class");
+
   gIdentityHandler.setPermission("install", SitePermissions.getDefault("install"));
 
   gIdentityHandler._identityBox.click();

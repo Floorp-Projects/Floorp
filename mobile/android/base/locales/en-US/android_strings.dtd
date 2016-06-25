@@ -47,6 +47,9 @@
 
 <!ENTITY  switch_to_tab "Switch to tab">
 
+<!-- Localization note: Shown in a snackbar when tab is loaded from cache while device was offline. -->
+<!ENTITY  tab_offline_version "Showing offline version">
+
 <!ENTITY  crash_reporter_title "&brandShortName; Crash Reporter">
 <!ENTITY  crash_message2 "&brandShortName; had a problem and crashed. Your tabs should be listed on the &brandShortName; Start page when you restart.">
 <!ENTITY  crash_send_report_message3 "Tell &vendorShortName; about this crash so they can fix it">

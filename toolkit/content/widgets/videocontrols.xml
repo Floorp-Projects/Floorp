@@ -1222,14 +1222,17 @@
                     event.preventDefault(); // Prevent page scrolling
                 },
 
-                get videoSubtitles() {
-                  return Array.prototype.filter.call(this.video.textTracks, function (tt) {
-                    return tt.kind === "subtitles";
-                  });
+                isSupportedTextTrack : function(textTrack) {
+                  return textTrack.kind == "subtitles" ||
+                         textTrack.kind == "captions";
+                },
+
+                get overlayableTextTracks() {
+                  return Array.prototype.filter.call(this.video.textTracks, this.isSupportedTextTrack);
                 },
 
                 isClosedCaptionOn : function () {
-                  for (let tt of this.videoSubtitles) {
+                  for (let tt of this.overlayableTextTracks) {
                     if (tt.mode === "showing") {
                       return true;
                     }
@@ -1239,7 +1242,7 @@
                 },
 
                 setClosedCaptionButtonState : function () {
-                  if (!this.videoSubtitles.length || this.videocontrols.isTouchControl) {
+                  if (!this.overlayableTextTracks.length || this.videocontrols.isTouchControl) {
                     this.closedCaptionButton.setAttribute("hidden", "true");
                     return;
                   }
@@ -1266,7 +1269,7 @@
                 },
 
                 addNewTextTrack : function (tt) {
-                  if (tt.kind !== "subtitles") {
+                  if (!this.isSupportedTextTrack(tt)) {
                     return;
                   }
 
@@ -1299,7 +1302,7 @@
                 },
 
                 changeTextTrack : function (index) {
-                  for (let tt of this.videoSubtitles) {
+                  for (let tt of this.overlayableTextTracks) {
                     if (tt.index === index) {
                       tt.mode = "showing";
 
@@ -1323,8 +1326,8 @@
                 },
 
                 toggleClosedCaption : function () {
-                  if (this.videoSubtitles.length === 1) {
-                    const lastTTIdx = this.videoSubtitles[0].index;
+                  if (this.overlayableTextTracks.length === 1) {
+                    const lastTTIdx = this.overlayableTextTracks[0].index;
 
                     return this.changeTextTrack(this.isClosedCaptionOn() ? 0 : lastTTIdx);
                   }
@@ -1391,7 +1394,7 @@
                     kind: "subtitles"
                   });
 
-                  for (let tt of this.videoSubtitles) {
+                  for (let tt of this.overlayableTextTracks) {
                     this.addNewTextTrack(tt);
                   }
 
