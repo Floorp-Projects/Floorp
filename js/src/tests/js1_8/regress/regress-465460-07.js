@@ -22,8 +22,6 @@ function test()
  
   expect = actual = 'pass';
 
-  jit (true);
-
   try
   {
     e = {}; for (j=0;j<3;++j) { 3 | e; } "PASS";
@@ -33,7 +31,6 @@ function test()
     actual = ex + '';
   }
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 

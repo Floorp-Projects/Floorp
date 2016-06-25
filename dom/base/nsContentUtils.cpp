@@ -5469,7 +5469,10 @@ nsContentUtils::GetCurrentJSContext()
 {
   MOZ_ASSERT(NS_IsMainThread());
   MOZ_ASSERT(IsInitialized());
-  return sXPConnect->GetCurrentJSContext();
+  if (!IsJSAPIActive()) {
+    return nullptr;
+  }
+  return GetSafeJSContext();
 }
 
 /* static */

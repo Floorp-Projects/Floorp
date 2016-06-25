@@ -20,7 +20,6 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  jit(true);
 
   expect = '[1, 1, 1, 1, 1, 1, 1, 1, 1, 1]';
   empty = [];
@@ -28,7 +27,6 @@ function test()
   for (var j=0;j<10;++j) { empty[42]; out.push((1 * (1)) | ""); }
   print(actual = uneval(out));
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 

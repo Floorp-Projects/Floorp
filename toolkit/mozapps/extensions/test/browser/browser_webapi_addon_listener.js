@@ -18,6 +18,7 @@ const RESTART_ID = "restart@tests.mozilla.org";
 const RESTART_DISABLED_ID = "restart_disabled@tests.mozilla.org";
 const RESTARTLESS_ID = "restartless@tests.mozilla.org";
 const INSTALL_ID = "install@tests.mozilla.org";
+const CANCEL_ID = "cancel@tests.mozilla.org";
 
 let provider = new MockProvider(false);
 provider.createAddons([
@@ -34,6 +35,10 @@ provider.createAddons([
     id: RESTARTLESS_ID,
     name: "Restartless add-on",
     operationsRequiringRestart: AddonManager.OP_NEED_RESTART_NONE,
+  },
+  {
+    id: CANCEL_ID,
+    name: "Add-on for uninstall cancel",
   },
 ]);
 
@@ -145,3 +150,25 @@ add_task(function* test_uninstall() {
     Assert.deepEqual(events, expected, "Got expected uninstall events");
   });
 });
+
+// Test cancel of uninstall.
+add_task(function* test_cancel() {
+  yield BrowserTestUtils.withNewTab(TESTPAGE, function*(browser) {
+    let addon = yield promiseAddonByID(CANCEL_ID);
+    isnot(addon, null, "Found add-on for cancelling uninstall");
+
+    addon.uninstall();
+
+    let events = yield getListenerEvents(browser);
+    let expected = [
+      {id: CANCEL_ID, needsRestart: true, event: "onUninstalling"},
+    ];
+    Assert.deepEqual(events, expected, "Got expected uninstalling event");
+
+    addon.cancelUninstall();
+    events = yield getListenerEvents(browser);
+    expected.push({id: CANCEL_ID, needsRestart: false, event: "onOperationCancelled"});
+    Assert.deepEqual(events, expected, "Got expected cancel event");
+  });
+});
+

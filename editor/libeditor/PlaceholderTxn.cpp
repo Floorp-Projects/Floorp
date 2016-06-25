@@ -32,13 +32,17 @@ NS_IMPL_CYCLE_COLLECTION_CLASS(PlaceholderTxn)
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(PlaceholderTxn,
                                                 EditAggregateTxn)
-  ImplCycleCollectionUnlink(*tmp->mStartSel);
+  if (tmp->mStartSel) {
+    ImplCycleCollectionUnlink(*tmp->mStartSel);
+  }
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mEndSel);
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(PlaceholderTxn,
                                                   EditAggregateTxn)
-  ImplCycleCollectionTraverse(cb, *tmp->mStartSel, "mStartSel", 0);
+  if (tmp->mStartSel) {
+    ImplCycleCollectionTraverse(cb, *tmp->mStartSel, "mStartSel", 0);
+  }
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mEndSel);
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 

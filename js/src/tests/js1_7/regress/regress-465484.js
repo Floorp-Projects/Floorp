@@ -21,9 +21,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  jit(true);
   for each (let a in [2, 2, 2]) { a %= a; a %= a; }
-  jit(false);
   reportCompare(expect, actual, summary);
 
   exitFunc ('test');

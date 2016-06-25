@@ -13,7 +13,6 @@
 #include "base/file_path.h"
 #include "base/task.h"
 #include "base/thread.h"
-#include "base/waitable_event.h"
 #include "chrome/common/child_process_host.h"
 
 #include "mozilla/ipc/GeckoChildProcessHost.h"
@@ -66,7 +65,6 @@ public:
 
     const std::string& GetPluginFilePath() { return mPluginFilePath; }
 
-    using mozilla::ipc::GeckoChildProcessHost::GetShutDownEvent;
     using mozilla::ipc::GeckoChildProcessHost::GetChannel;
 
     void SetCallRunnableImmediately(bool aCallImmediately);

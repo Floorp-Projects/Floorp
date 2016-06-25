@@ -1903,7 +1903,7 @@ Decoder::DecodeSpecialCondition(Instruction* instr)
             }
             break;
         }
-        // else fall through
+        MOZ_FALLTHROUGH;
       case 0xB:
         if ((instr->Bits(22, 20) == 5) && (instr->Bits(15, 12) == 0xf)) {
             int Rn = instr->Bits(19, 16);

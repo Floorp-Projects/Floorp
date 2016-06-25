@@ -14,11 +14,9 @@ var expect = 1;
 printBugNumber(BUGNUMBER);
 printStatus (summary);
 
-jit(true);
 
 function test()
 {
-    jit(true);
     for (var i = 0; i != 100; ++i)
         var tmp = { a: 1 };
     return 1;

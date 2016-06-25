@@ -328,6 +328,12 @@ public:
     return mJSRuntime;
   }
 
+  JSContext* Context() const
+  {
+    MOZ_ASSERT(mJSContext);
+    return mJSContext;
+  }
+
 protected:
   JSRuntime* MaybeRuntime() const { return mJSRuntime; }
 
@@ -394,6 +400,7 @@ private:
   JSZoneParticipant mJSZoneCycleCollectorGlobal;
 
   JSRuntime* mJSRuntime;
+  JSContext* mJSContext;
 
   JS::GCSliceCallback mPrevGCSliceCallback;
   JS::GCNurseryCollectionCallback mPrevGCNurseryCollectionCallback;

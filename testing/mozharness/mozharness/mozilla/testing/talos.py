@@ -429,7 +429,8 @@ class Talos(TestingMixin, MercurialScript, BlobUploadMixin):
 
             parser.update_worst_log_and_tbpl_levels(log_level, tbpl_level)
         else:
-            self._validate_treeherder_data(parser)
+            if not self.sps_profile:
+                self._validate_treeherder_data(parser)
 
         self.buildbot_status(parser.worst_tbpl_status,
                              level=parser.worst_log_level)

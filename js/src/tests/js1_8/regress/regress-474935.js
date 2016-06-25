@@ -20,7 +20,6 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  jit(true);
 
   var a = ["", 0, 0, 0, 0, 0, "", "", 0, "", 0, ""];
   var i = 0;
@@ -34,7 +33,6 @@ function test()
       ++i;
     }
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 

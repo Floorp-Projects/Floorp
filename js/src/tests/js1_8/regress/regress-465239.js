@@ -23,11 +23,9 @@ function test()
   expect = '3,3,3,3,3,';
   actual = '';
 
-  jit(true);
 
   for (let j = 0; j < 5; ++j) actual += ("1e+81" ^  3) + ',';
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 
