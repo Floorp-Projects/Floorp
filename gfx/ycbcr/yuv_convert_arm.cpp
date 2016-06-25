@@ -16,7 +16,11 @@ namespace mozilla {
 namespace gfx {
 
 #  if defined(MOZILLA_MAY_SUPPORT_NEON)
+#  if defined(__clang__)
+void __attribute((noinline))
+#  else
 void __attribute((noinline,optimize("-fomit-frame-pointer")))
+#  endif
     yuv42x_to_rgb565_row_neon(uint16 *dst,
                               const uint8 *y,
                               const uint8 *u,
