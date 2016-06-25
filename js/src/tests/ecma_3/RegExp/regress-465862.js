@@ -24,7 +24,6 @@ var expectedmatches = new Array();
 // time, they will not be compiled to native code and we will not
 // actually be testing jitted regexps.
 
-jit(true);
 
 status = inSection(1);
 string = '@';
@@ -57,7 +56,6 @@ print('`'.match(/@/i));
 expectedmatch = null;
 addThis();
 
-jit(false);
 
 //-----------------------------------------------------------------------------
 test();

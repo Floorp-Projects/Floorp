@@ -1256,14 +1256,6 @@ js::SetScriptEnvironmentPreparer(JSRuntime* rt, ScriptEnvironmentPreparer* prepa
     rt->scriptEnvironmentPreparer = preparer;
 }
 
-#ifdef DEBUG
-JS_FRIEND_API(void)
-js::Debug_SetActiveJSContext(JSRuntime* rt, JSContext* cx)
-{
-    rt->activeContext = cx;
-}
-#endif
-
 JS_FRIEND_API(void)
 js::SetCTypesActivityCallback(JSRuntime* rt, CTypesActivityCallback cb)
 {

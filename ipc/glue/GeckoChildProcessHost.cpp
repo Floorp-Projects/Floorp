@@ -93,8 +93,7 @@ GeckoChildProcessHost::DefaultChildPrivileges()
 
 GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
                                              ChildPrivileges aPrivileges)
-  : ChildProcessHost(RENDER_PROCESS), // FIXME/cjones: we should own this enum
-    mProcessType(aProcessType),
+  : mProcessType(aProcessType),
     mPrivileges(aPrivileges),
     mMonitor("mozilla.ipc.GeckChildProcessHost.mMonitor"),
     mProcessState(CREATING_CHANNEL),
@@ -102,12 +101,10 @@ GeckoChildProcessHost::GeckoChildProcessHost(GeckoProcessType aProcessType,
     mEnableSandboxLogging(false),
     mSandboxLevel(0),
 #endif
-    mDelegate(nullptr),
     mChildProcessHandle(0)
 #if defined(MOZ_WIDGET_COCOA)
   , mChildTask(MACH_PORT_NULL)
 #endif
-  , mAssociatedActors(1)
 {
     MOZ_COUNT_CTOR(GeckoChildProcessHost);
 }
@@ -485,26 +482,6 @@ GeckoChildProcessHost::SetAlreadyDead()
   }
 
   mChildProcessHandle = 0;
-}
-
-namespace {
-
-void
-DelayedDeleteSubprocess(GeckoChildProcessHost* aSubprocess)
-{
-  XRE_GetIOMessageLoop()
-    ->PostTask(mozilla::MakeAndAddRef<DeleteTask<GeckoChildProcessHost>>(aSubprocess));
-}
-
-}
-
-void
-GeckoChildProcessHost::DissociateActor()
-{
-  if (!--mAssociatedActors) {
-    MessageLoop::current()->
-      PostTask(NewRunnableFunction(DelayedDeleteSubprocess, this));
-  }
 }
 
 int32_t GeckoChildProcessHost::mChildCounter = 0;
@@ -1160,7 +1137,6 @@ GeckoChildProcessHost::PerformAsyncLaunchInternal(std::vector<std::string>& aExt
   // NB: on OS X, we block much longer than we need to in order to
   // reach this call, waiting for the child process's task_t.  The
   // best way to fix that is to refactor this file, hard.
-  SetHandle(process);
 #if defined(MOZ_WIDGET_COCOA)
   mChildTask = child_task;
 #endif
@@ -1234,15 +1210,6 @@ GeckoChildProcessHost::GetQueuedMessages(std::queue<IPC::Message>& queue)
   DCHECK(MessageLoopForIO::current());
   swap(queue, mQueue);
   // We expect the next listener to take over processing of our queue.
-}
-
-void
-GeckoChildProcessHost::OnWaitableEventSignaled(base::WaitableEvent *event)
-{
-  if (mDelegate) {
-    mDelegate->OnWaitableEventSignaled(event);
-  }
-  ChildProcessHost::OnWaitableEventSignaled(event);
 }
 
 bool GeckoChildProcessHost::sRunSelfAsContentProc(false);

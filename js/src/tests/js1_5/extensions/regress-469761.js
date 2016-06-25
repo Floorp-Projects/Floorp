@@ -20,12 +20,10 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
  
-  jit(true);
 
   var o = { __proto__: function(){} };
   for (var j = 0; j < 3; ++j) { try { o.call(3); } catch (e) { } }
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 

@@ -21,19 +21,8 @@ WaitableEvent::WaitableEvent(bool manual_reset, bool signaled)
   CHECK(handle_);
 }
 
-WaitableEvent::WaitableEvent(HANDLE handle)
-    : handle_(handle) {
-  CHECK(handle) << "Tried to create WaitableEvent from NULL handle";
-}
-
 WaitableEvent::~WaitableEvent() {
   CloseHandle(handle_);
-}
-
-HANDLE WaitableEvent::Release() {
-  HANDLE rv = handle_;
-  handle_ = INVALID_HANDLE_VALUE;
-  return rv;
 }
 
 void WaitableEvent::Reset() {

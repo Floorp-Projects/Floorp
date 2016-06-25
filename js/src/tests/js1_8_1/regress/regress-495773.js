@@ -34,9 +34,7 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  jit(true);
   actual = f();
-  jit(false);
 
   reportCompare(expect, actual, summary);
 
