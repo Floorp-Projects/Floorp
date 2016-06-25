@@ -1022,14 +1022,14 @@ JSContext::updateJITEnabled()
 }
 
 size_t
-JSContext::sizeOfIncludingThis(mozilla::MallocSizeOf mallocSizeOf) const
+JSContext::sizeOfExcludingThis(mozilla::MallocSizeOf mallocSizeOf) const
 {
     /*
      * There are other JSContext members that could be measured; the following
      * ones have been found by DMD to be worth measuring.  More stuff may be
      * added later.
      */
-    return mallocSizeOf(this) + cycleDetectorSet.sizeOfExcludingThis(mallocSizeOf);
+    return cycleDetectorSet.sizeOfExcludingThis(mallocSizeOf);
 }
 
 void
