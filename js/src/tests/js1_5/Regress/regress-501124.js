@@ -20,7 +20,6 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  jit(true);
 
   var hexVal = "00000000000000000000000000000000DEADBABE";
   var nblk   = (((hexVal.length/2) + 8) >> 6) + 1;
@@ -37,7 +36,6 @@ function test()
   expect = '0,0,0,0,-559039810,0,0,0,0,0,0,0,0,0,0,0';
   actual   = blks + '';
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 

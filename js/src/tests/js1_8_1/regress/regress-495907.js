@@ -26,11 +26,9 @@ function start_test() {
   enterFunc ('test');
   printBugNumber(BUGNUMBER);
   printStatus (summary);
-  jit(true);
 }
 
 function finish_test() {
-  jit(false);
   reportCompare(expect, actual, summary);
   exitFunc ('test');
 }

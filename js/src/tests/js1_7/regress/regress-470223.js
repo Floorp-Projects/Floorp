@@ -20,7 +20,6 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  jit(true);
 
   function F(A) {
     for (R = [], s = 0; (m = A.indexOf("m", s++)) >= 0; )
@@ -32,7 +31,6 @@ function test()
   }
   F("m"); F("mm");
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 

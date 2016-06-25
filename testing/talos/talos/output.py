@@ -194,7 +194,8 @@ class Output(object):
 
         # This is the output that treeherder expects to find when parsing the
         # log file
-        LOG.info("PERFHERDER_DATA: %s" % json.dumps(results))
+        if 'spsProfile' not in self.results.extra_options:
+            LOG.info("PERFHERDER_DATA: %s" % json.dumps(results))
         if results_scheme in ('file'):
             json.dump(results, file(results_path, 'w'), indent=2,
                       sort_keys=True)

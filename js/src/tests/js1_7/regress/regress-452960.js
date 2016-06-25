@@ -19,13 +19,11 @@ function test()
   printBugNumber(BUGNUMBER);
   printStatus (summary);
 
-  jit(true);
 
   var f = function(){};
   f.prototype = false;
   for (let j=0;j<5;++j) { new f; }
 
-  jit(false);
 
   reportCompare(expect, actual, summary);
 

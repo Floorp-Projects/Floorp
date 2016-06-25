@@ -23,13 +23,11 @@ else
   // trying to do all the enumerate hook object creation with a gc on
   // every object, because that makes tests time out.
   for (z in this);
-  jit(true);
   gczeal(2);
 
   a=b=c=d=0; this.__defineGetter__('g', gc); for each (y in this);
 
   gczeal(0);
-  jit(false);
 }
 
 reportCompare(expect, actual, summary);

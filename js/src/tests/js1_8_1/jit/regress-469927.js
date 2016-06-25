@@ -30,11 +30,8 @@ function test()
     return stop - start;
   }
 
-  jit(false);
   var timenonjit = letitbe();
-  jit(true);
   var timejit = letitbe();
-  jit(false);
 
   print('time: nonjit = ' + timenonjit + ', jit = ' + timejit);
 

@@ -2111,9 +2111,24 @@ BytecodeEmitter::checkSideEffects(ParseNode* pn, bool* answer)
       case PNK_TYPEOFEXPR:
       case PNK_VOID:
       case PNK_NOT:
-      case PNK_COMPUTED_NAME:
         MOZ_ASSERT(pn->isArity(PN_UNARY));
         return checkSideEffects(pn->pn_kid, answer);
+
+      // Even if the name expression is effect-free, performing ToPropertyKey on
+      // it might not be effect-free:
+      //
+      //   RegExp.prototype.toString = () => { throw 42; };
+      //   ({ [/regex/]: 0 }); // ToPropertyKey(/regex/) throws 42
+      //
+      //   function Q() {
+      //     ({ [new.target]: 0 });
+      //   }
+      //   Q.toString = () => { throw 17; };
+      //   new Q; // new.target will be Q, ToPropertyKey(Q) throws 17
+      case PNK_COMPUTED_NAME:
+        MOZ_ASSERT(pn->isArity(PN_UNARY));
+        *answer = true;
+        return true;
 
       // Looking up or evaluating the associated name could throw.
       case PNK_TYPEOFNAME:
