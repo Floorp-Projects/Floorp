@@ -10,6 +10,7 @@
 #include "mozilla/TimeStamp.h"
 #include "AnimationTimeline.h"
 #include "nsIDocument.h"
+#include "nsDOMNavigationTiming.h" // for DOMHighResTimeStamp
 #include "nsRefreshDriver.h"
 
 struct JSContext;
@@ -50,6 +51,11 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
+
+  static already_AddRefed<DocumentTimeline>
+  Constructor(const GlobalObject& aGlobal,
+              const DOMHighResTimeStamp& aOriginTime,
+              ErrorResult& aRv);
 
   // AnimationTimeline methods
   virtual Nullable<TimeDuration> GetCurrentTime() const override;
