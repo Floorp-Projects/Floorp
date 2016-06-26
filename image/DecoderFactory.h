@@ -20,6 +20,7 @@ namespace mozilla {
 namespace image {
 
 class Decoder;
+class IDecodingTask;
 class RasterImage;
 class SourceBuffer;
 
@@ -64,7 +65,7 @@ public:
    * @param aSampleSize The sample size requested using #-moz-samplesize (or 0
    *                    if none).
    */
-  static already_AddRefed<Decoder>
+  static already_AddRefed<IDecodingTask>
   CreateDecoder(DecoderType aType,
                 RasterImage* aImage,
                 SourceBuffer* aSourceBuffer,
@@ -86,7 +87,7 @@ public:
    * @param aSurfaceFlags Flags specifying the type of output this decoder
    *                      should produce.
    */
-  static already_AddRefed<Decoder>
+  static already_AddRefed<IDecodingTask>
   CreateAnimationDecoder(DecoderType aType,
                          RasterImage* aImage,
                          SourceBuffer* aSourceBuffer,
@@ -107,7 +108,7 @@ public:
    * @param aSampleSize The sample size requested using #-moz-samplesize (or 0
    *                    if none).
    */
-  static already_AddRefed<Decoder>
+  static already_AddRefed<IDecodingTask>
   CreateMetadataDecoder(DecoderType aType,
                         RasterImage* aImage,
                         SourceBuffer* aSourceBuffer,
