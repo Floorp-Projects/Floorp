@@ -6,6 +6,7 @@
 
 "use strict";
 
+Cu.import("resource://gre/modules/ClientID.jsm", this);
 Cu.import("resource://gre/modules/TelemetryController.jsm", this);
 Cu.import("resource://gre/modules/TelemetryArchive.jsm", this);
 Cu.import("resource://gre/modules/XPCOMUtils.jsm", this);
@@ -402,7 +403,7 @@ add_task(function* test_clientId() {
   // Check that a ping submitted after the delayed telemetry initialization completed
   // should get a valid client id.
   yield TelemetryController.testReset();
-  const clientId = TelemetryController.clientID;
+  const clientId = yield ClientID.getClientID();
 
   let id = yield TelemetryController.submitExternalPing("test-type", {}, {addClientId: true});
   let ping = yield TelemetryArchive.promiseArchivedPingById(id);
