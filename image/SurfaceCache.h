@@ -12,6 +12,7 @@
 #define mozilla_image_SurfaceCache_h
 
 #include "mozilla/Maybe.h"           // for Maybe
+#include "mozilla/NotNull.h"
 #include "mozilla/MemoryReporting.h" // for MallocSizeOf
 #include "mozilla/HashFunctions.h"   // for HashGeneric and AddToHash
 #include "gfx2DGlue.h"
@@ -26,7 +27,7 @@ namespace mozilla {
 namespace image {
 
 class Image;
-class imgFrame;
+class ISurfaceProvider;
 class LookupResult;
 struct SurfaceMemoryCounter;
 
@@ -127,10 +128,9 @@ enum class InsertOutcome : uint8_t {
  * surfaces. Surfaces normally expire from the cache automatically if they go
  * too long without being accessed.
  *
- * SurfaceCache does not hold surfaces directly; instead, it holds imgFrame
- * objects, which hold surfaces but also layer on additional features specific
- * to imagelib's needs like animation, padding support, and transparent support
- * for volatile buffers.
+ * SurfaceCache does not hold surfaces directly; instead, it holds
+ * ISurfaceProvider objects, which usually hold surfaces but may sometimes
+ * generate them on the fly when requested.
  *
  * Sometime it's useful to temporarily prevent surfaces from expiring from the
  * cache. This is most often because losing the data could harm the user
@@ -158,13 +158,13 @@ struct SurfaceCache
   static void Shutdown();
 
   /**
-   * Look up the imgFrame containing a surface in the cache and returns a
-   * drawable reference to that imgFrame.
+   * Looks up the requested surface in the cache and returns a drawable
+   * reference to it.
    *
    * If the image associated with the surface is locked, then the surface will
    * be locked before it is returned.
    *
-   * If the imgFrame was found in the cache, but had stored its surface in a
+   * If the surface was found in the cache, but had stored its surface in a
    * volatile buffer which was discarded by the OS, then it is automatically
    * removed from the cache and an empty LookupResult is returned. Note that
    * this will never happen to surfaces associated with a locked image; the
@@ -185,7 +185,7 @@ struct SurfaceCache
 
   /**
    * Looks up the best matching surface in the cache and returns a drawable
-   * reference to the imgFrame containing it.
+   * reference to it.
    *
    * Returned surfaces may vary from the requested surface only in terms of
    * size.
@@ -206,9 +206,10 @@ struct SurfaceCache
                                       const SurfaceKey& aSurfaceKey);
 
   /**
-   * Insert a surface into the cache. If a surface with the same ImageKey and
-   * SurfaceKey is already in the cache, Insert returns FAILURE_ALREADY_PRESENT.
-   * If a matching placeholder is already present, the placeholder is removed.
+   * Insert a SurfaceProvider into the cache. If a surface with the same
+   * ImageKey and SurfaceKey is already in the cache, Insert returns
+   * FAILURE_ALREADY_PRESENT. If a matching placeholder is already present, the
+   * placeholder is removed.
    *
    * Surfaces will never expire as long as they remain locked, but if they
    * become unlocked, they can expire either because the SurfaceCache runs out
@@ -235,8 +236,8 @@ struct SurfaceCache
    * Insert() returned SUCCESS. Thus, many callers do not need to check the
    * result of Insert() at all.
    *
-   * @param aTarget      The new surface (wrapped in an imgFrame) to insert into
-   *                     the cache.
+   * @param aProvider    The new surface (wrapped in an ISurfaceProvider) to
+   *                     insert into the cache.
    * @param aImageKey    Key data identifying which image the surface belongs
    *                     to.
    * @param aSurfaceKey  Key data which uniquely identifies the requested
@@ -249,7 +250,7 @@ struct SurfaceCache
    *         FAILURE_ALREADY_PRESENT if a surface with the same ImageKey and
    *           SurfaceKey already exists in the cache.
    */
-  static InsertOutcome Insert(imgFrame*         aSurface,
+  static InsertOutcome Insert(NotNull<ISurfaceProvider*> aProvider,
                               const ImageKey    aImageKey,
                               const SurfaceKey& aSurfaceKey);
 
