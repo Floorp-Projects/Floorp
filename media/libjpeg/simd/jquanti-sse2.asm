@@ -3,8 +3,7 @@
 ;
 ; Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
 ;
-; Based on
-; x86 SIMD extension for IJG JPEG library
+; Based on the x86 SIMD extension for IJG JPEG library
 ; Copyright (C) 1999-2006, MIYASAKA Masaru.
 ; For conditions of distribution and use, see copyright notice in jsimdext.inc
 ;
@@ -27,12 +26,12 @@
 ;
 ; GLOBAL(void)
 ; jsimd_convsamp_sse2 (JSAMPARRAY sample_data, JDIMENSION start_col,
-;                      DCTELEM * workspace);
+;                      DCTELEM *workspace);
 ;
 
 %define sample_data     ebp+8           ; JSAMPARRAY sample_data
 %define start_col       ebp+12          ; JDIMENSION start_col
-%define workspace       ebp+16          ; DCTELEM * workspace
+%define workspace       ebp+16          ; DCTELEM *workspace
 
         align   16
         global  EXTN(jsimd_convsamp_sse2)
@@ -104,8 +103,8 @@ EXTN(jsimd_convsamp_sse2):
 ;   (http://www.agner.org/assem/).
 ;
 ; GLOBAL(void)
-; jsimd_quantize_sse2 (JCOEFPTR coef_block, DCTELEM * divisors,
-;                      DCTELEM * workspace);
+; jsimd_quantize_sse2 (JCOEFPTR coef_block, DCTELEM *divisors,
+;                      DCTELEM *workspace);
 ;
 
 %define RECIPROCAL(m,n,b) XMMBLOCK(DCTSIZE*0+(m),(n),(b),SIZEOF_DCTELEM)
@@ -113,8 +112,8 @@ EXTN(jsimd_convsamp_sse2):
 %define SCALE(m,n,b)      XMMBLOCK(DCTSIZE*2+(m),(n),(b),SIZEOF_DCTELEM)
 
 %define coef_block      ebp+8           ; JCOEFPTR coef_block
-%define divisors        ebp+12          ; DCTELEM * divisors
-%define workspace       ebp+16          ; DCTELEM * workspace
+%define divisors        ebp+12          ; DCTELEM *divisors
+%define workspace       ebp+16          ; DCTELEM *workspace
 
         align   16
         global  EXTN(jsimd_quantize_sse2)

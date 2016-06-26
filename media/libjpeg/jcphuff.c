@@ -3,9 +3,10 @@
  *
  * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1995-1997, Thomas G. Lane.
- * It was modified by The libjpeg-turbo Project to include only code relevant
- * to libjpeg-turbo.
- * For conditions of distribution and use, see the accompanying README file.
+ * libjpeg-turbo Modifications:
+ * Copyright (C) 2015, D. R. Commander.
+ * For conditions of distribution and use, see the accompanying README.ijg
+ * file.
  *
  * This file contains Huffman entropy encoding routines for progressive JPEG.
  *
@@ -32,9 +33,9 @@ typedef struct {
   /* Bit-level coding status.
    * next_output_byte/free_in_buffer are local copies of cinfo->dest fields.
    */
-  JOCTET * next_output_byte;    /* => next byte to write in buffer */
+  JOCTET *next_output_byte;     /* => next byte to write in buffer */
   size_t free_in_buffer;        /* # of byte spaces remaining in buffer */
-  INT32 put_buffer;             /* current bit-accumulation buffer */
+  size_t put_buffer;            /* current bit-accumulation buffer */
   int put_bits;                 /* # of bits now in it */
   j_compress_ptr cinfo;         /* link to cinfo (needed for dump_buffer) */
 
@@ -45,7 +46,7 @@ typedef struct {
   int ac_tbl_no;                /* the table number of the single component */
   unsigned int EOBRUN;          /* run length of EOBs */
   unsigned int BE;              /* # of buffered correction bits before MCU */
-  char * bit_buffer;            /* buffer for correction bits (1 per char) */
+  char *bit_buffer;             /* buffer for correction bits (1 per char) */
   /* packing correction bits tightly would save some space but cost time... */
 
   unsigned int restarts_to_go;  /* MCUs left in this restart interval */
@@ -55,13 +56,13 @@ typedef struct {
    * Since any one scan codes only DC or only AC, we only need one set
    * of tables, not one for DC and one for AC.
    */
-  c_derived_tbl * derived_tbls[NUM_HUFF_TBLS];
+  c_derived_tbl *derived_tbls[NUM_HUFF_TBLS];
 
   /* Statistics tables for optimization; again, one set is enough */
-  long * count_ptrs[NUM_HUFF_TBLS];
+  long *count_ptrs[NUM_HUFF_TBLS];
 } phuff_entropy_encoder;
 
-typedef phuff_entropy_encoder * phuff_entropy_ptr;
+typedef phuff_entropy_encoder *phuff_entropy_ptr;
 
 /* MAX_CORR_BITS is the number of bits the AC refinement correction-bit
  * buffer can hold.  Larger sizes may slightly improve compression, but
@@ -71,8 +72,8 @@ typedef phuff_entropy_encoder * phuff_entropy_ptr;
 
 #define MAX_CORR_BITS  1000     /* Max # of correction bits I can buffer */
 
-/* IRIGHT_SHIFT is like RIGHT_SHIFT, but works on int rather than INT32.
- * We assume that int right shift is unsigned if INT32 right shift is,
+/* IRIGHT_SHIFT is like RIGHT_SHIFT, but works on int rather than JLONG.
+ * We assume that int right shift is unsigned if JLONG right shift is,
  * which should be safe.
  */
 
@@ -110,7 +111,7 @@ start_pass_phuff (j_compress_ptr cinfo, boolean gather_statistics)
   phuff_entropy_ptr entropy = (phuff_entropy_ptr) cinfo->entropy;
   boolean is_DC_band;
   int ci, tbl;
-  jpeg_component_info * compptr;
+  jpeg_component_info *compptr;
 
   entropy->cinfo = cinfo;
   entropy->gather_statistics = gather_statistics;
@@ -207,7 +208,7 @@ LOCAL(void)
 dump_buffer (phuff_entropy_ptr entropy)
 /* Empty the output buffer; we do not support suspension in this module. */
 {
-  struct jpeg_destination_mgr * dest = entropy->cinfo->dest;
+  struct jpeg_destination_mgr *dest = entropy->cinfo->dest;
 
   if (! (*dest->empty_output_buffer) (entropy->cinfo))
     ERREXIT(entropy->cinfo, JERR_CANT_SUSPEND);
@@ -230,7 +231,7 @@ emit_bits (phuff_entropy_ptr entropy, unsigned int code, int size)
 /* Emit some bits, unless we are in gather mode */
 {
   /* This routine is heavily used, so it's worth coding tightly. */
-  register INT32 put_buffer = (INT32) code;
+  register size_t put_buffer = (size_t) code;
   register int put_bits = entropy->put_bits;
 
   /* if size is 0, caller used an invalid Huffman table entry */
@@ -240,7 +241,7 @@ emit_bits (phuff_entropy_ptr entropy, unsigned int code, int size)
   if (entropy->gather_statistics)
     return;                     /* do nothing if we're only getting stats */
 
-  put_buffer &= (((INT32) 1)<<size) - 1; /* mask off any extra bits in code */
+  put_buffer &= (((size_t) 1)<<size) - 1; /* mask off any extra bits in code */
 
   put_bits += size;             /* new number of bits in buffer */
 
@@ -283,7 +284,7 @@ emit_symbol (phuff_entropy_ptr entropy, int tbl_no, int symbol)
   if (entropy->gather_statistics)
     entropy->count_ptrs[tbl_no][symbol]++;
   else {
-    c_derived_tbl * tbl = entropy->derived_tbls[tbl_no];
+    c_derived_tbl *tbl = entropy->derived_tbls[tbl_no];
     emit_bits(entropy, tbl->ehufco[symbol], tbl->ehufsi[symbol]);
   }
 }
@@ -294,7 +295,7 @@ emit_symbol (phuff_entropy_ptr entropy, int tbl_no, int symbol)
  */
 
 LOCAL(void)
-emit_buffered_bits (phuff_entropy_ptr entropy, char * bufstart,
+emit_buffered_bits (phuff_entropy_ptr entropy, char *bufstart,
                     unsigned int nbits)
 {
   if (entropy->gather_statistics)
@@ -382,7 +383,7 @@ encode_mcu_DC_first (j_compress_ptr cinfo, JBLOCKROW *MCU_data)
   int blkn, ci;
   int Al = cinfo->Al;
   JBLOCKROW block;
-  jpeg_component_info * compptr;
+  jpeg_component_info *compptr;
   ISHIFT_TEMPS
 
   entropy->next_output_byte = cinfo->dest->next_output_byte;
@@ -769,7 +770,7 @@ finish_pass_gather_phuff (j_compress_ptr cinfo)
   phuff_entropy_ptr entropy = (phuff_entropy_ptr) cinfo->entropy;
   boolean is_DC_band;
   int ci, tbl;
-  jpeg_component_info * compptr;
+  jpeg_component_info *compptr;
   JHUFF_TBL **htblptr;
   boolean did[NUM_HUFF_TBLS];
 

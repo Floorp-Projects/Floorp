@@ -6,7 +6,8 @@
  * Modified 2003-2010 by Guido Vollbeding.
  * libjpeg-turbo Modifications:
  * Copyright (C) 2010, D. R. Commander.
- * For conditions of distribution and use, see the accompanying README file.
+ * For conditions of distribution and use, see the accompanying README.ijg
+ * file.
  *
  * This file contains routines to write JPEG datastream markers.
  */
@@ -93,7 +94,7 @@ typedef struct {
   unsigned int last_restart_interval; /* last DRI value emitted; 0 after SOI */
 } my_marker_writer;
 
-typedef my_marker_writer * my_marker_ptr;
+typedef my_marker_writer *my_marker_ptr;
 
 
 /*
@@ -112,7 +113,7 @@ LOCAL(void)
 emit_byte (j_compress_ptr cinfo, int val)
 /* Emit a byte */
 {
-  struct jpeg_destination_mgr * dest = cinfo->dest;
+  struct jpeg_destination_mgr *dest = cinfo->dest;
 
   *(dest->next_output_byte)++ = (JOCTET) val;
   if (--dest->free_in_buffer == 0) {
@@ -149,7 +150,7 @@ emit_dqt (j_compress_ptr cinfo, int index)
 /* Emit a DQT marker */
 /* Returns the precision used (0 = 8bits, 1 = 16bits) for baseline checking */
 {
-  JQUANT_TBL * qtbl = cinfo->quant_tbl_ptrs[index];
+  JQUANT_TBL *qtbl = cinfo->quant_tbl_ptrs[index];
   int prec;
   int i;
 
@@ -188,7 +189,7 @@ LOCAL(void)
 emit_dht (j_compress_ptr cinfo, int index, boolean is_ac)
 /* Emit a DHT marker */
 {
-  JHUFF_TBL * htbl;
+  JHUFF_TBL *htbl;
   int length, i;
 
   if (is_ac) {

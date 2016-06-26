@@ -5,7 +5,8 @@
  * Copyright (C) 1994-1997, Thomas G. Lane.
  * It was modified by The libjpeg-turbo Project to include only code and
  * information relevant to libjpeg-turbo.
- * For conditions of distribution and use, see the accompanying README file.
+ * For conditions of distribution and use, see the accompanying README.ijg
+ * file.
  *
  * This file contains the coefficient buffer controller for compression.
  * This controller is the top level of the JPEG compressor proper.
@@ -53,7 +54,7 @@ typedef struct {
   jvirt_barray_ptr whole_image[MAX_COMPONENTS];
 } my_coef_controller;
 
-typedef my_coef_controller * my_coef_ptr;
+typedef my_coef_controller *my_coef_ptr;
 
 
 /* Forward declarations */
