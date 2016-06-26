@@ -22,6 +22,8 @@
 
 using namespace mozilla;
 
+#define MAX_NOTIFICATION_NAME_LEN 5000
+
 #if !defined(MAC_OS_X_VERSION_10_8) || (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_8)
 @protocol NSUserNotificationCenterDelegate
 @end
@@ -344,6 +346,13 @@ OSXNotificationCenter::ShowAlertWithIconData(nsIAlertNotification* aAlert,
   }
   nsAutoString name;
   rv = aAlert->GetName(name);
+  // Don't let an alert name be more than MAX_NOTIFICATION_NAME_LEN characters.
+  // More than that shouldn't be necessary and userInfo (assigned to below) has
+  // a length limit of 16k on OS X 10.11. Exception thrown if limit exceeded.
+  if (name.Length() > MAX_NOTIFICATION_NAME_LEN) {
+    return NS_ERROR_FAILURE;
+  }
+
   NS_ENSURE_SUCCESS(rv, rv);
   NSString *alertName = nsCocoaUtils::ToNSString(name);
   if (!alertName) {
