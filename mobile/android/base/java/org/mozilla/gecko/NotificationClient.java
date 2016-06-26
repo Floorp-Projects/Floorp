@@ -67,7 +67,7 @@ public abstract class NotificationClient {
 
             mHandler.update(mNotificationID, progress, progressMax, alertText);
         }
-    };
+    }
 
     /**
      * Adds a notification.
@@ -114,7 +114,7 @@ public abstract class NotificationClient {
      * @see NotificationHandler#update(int, long, long, String)
      */
     public void update(final int notificationID, final long aProgress, final long aProgressMax,
-            final String aAlertText) {
+                       final String aAlertText) {
         UpdateRunnable runnable = mUpdatesMap.get(notificationID);
 
         if (runnable == null) {
@@ -162,7 +162,7 @@ public abstract class NotificationClient {
     /**
      * Determines whether a notification is showing progress.
      *
-     * @see NotificationHandler#isProgressStyle(int)
+     * @see NotificationHandler#isOngoing(int)
      */
     public boolean isOngoing(int notificationID) {
         final NotificationHandler handler = mHandler;
