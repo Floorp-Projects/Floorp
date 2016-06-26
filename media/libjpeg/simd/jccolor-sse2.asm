@@ -1,9 +1,10 @@
 ;
 ; jccolor.asm - colorspace conversion (SSE2)
 ;
-; x86 SIMD extension for IJG JPEG library
-; Copyright (C) 1999-2006, MIYASAKA Masaru.
 ; Copyright (C) 2009, D. R. Commander.
+;
+; Based on the x86 SIMD extension for IJG JPEG library
+; Copyright (C) 1999-2006, MIYASAKA Masaru.
 ; For conditions of distribution and use, see copyright notice in jsimdext.inc
 ;
 ; This file should be assembled with NASM (Netwide Assembler),
