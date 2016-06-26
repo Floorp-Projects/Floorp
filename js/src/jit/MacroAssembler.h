@@ -873,8 +873,11 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void clz64(Register64 src, Register64 dest) DEFINED_ON(x64);
     inline void ctz64(Register64 src, Register64 dest) DEFINED_ON(x64);
 
+    // On x86_shared, temp may be Invalid only if the chip has the POPCNT instruction.
+    // On ARM, temp may never be Invalid.
+    inline void popcnt32(Register src, Register dest, Register temp) DEFINED_ON(arm, x86_shared);
+
     // temp may be invalid only if the chip has the POPCNT instruction.
-    inline void popcnt32(Register src, Register dest, Register temp) DEFINED_ON(x86_shared);
     inline void popcnt64(Register64 src, Register64 dest, Register64 temp) DEFINED_ON(x64);
 
     // ===============================================================
