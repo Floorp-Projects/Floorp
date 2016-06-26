@@ -628,6 +628,27 @@ MacroAssembler::ctz32(Register src, Register dest, bool knownNotZero)
     ma_ctz(src, dest);
 }
 
+void
+MacroAssembler::popcnt32(Register input,  Register output, Register tmp)
+{
+    // Equivalent to GCC output of mozilla::CountPopulation32()
+
+    if (input != output)
+        ma_mov(input, output);
+    as_mov(tmp, asr(output, 1));
+    ma_and(Imm32(0x55555555), tmp);
+    ma_sub(output, tmp, output);
+    as_mov(tmp, asr(output, 2));
+    ma_and(Imm32(0x33333333), output);
+    ma_and(Imm32(0x33333333), tmp);
+    ma_add(output, tmp, output);
+    as_add(output, output, lsr(output, 4));
+    ma_and(Imm32(0xF0F0F0F), output);
+    as_add(output, output, lsl(output, 8));
+    as_add(output, output, lsl(output, 16));
+    as_mov(output, asr(output, 24));
+}
+
 // ===============================================================
 // Branch functions
 
