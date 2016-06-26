@@ -4,8 +4,10 @@
  * This file was part of the Independent JPEG Group's software:
  * Copyright (C) 1991-1997, Thomas G. Lane.
  * libjpeg-turbo Modifications:
- * Copyright (C) 2009-2011, 2014-2015 D. R. Commander.
- * For conditions of distribution and use, see the accompanying README file.
+ * Copyright (C) 2009-2011, 2014-2016, D. R. Commander.
+ * Copyright (C) 2015, Matthieu Darbois.
+ * For conditions of distribution and use, see the accompanying README.ijg
+ * file.
  *
  * This file contains Huffman entropy encoding routines.
  *
@@ -19,7 +21,8 @@
 #define JPEG_INTERNALS
 #include "jinclude.h"
 #include "jpeglib.h"
-#include "jchuff.h"             /* Declarations shared with jcphuff.c */
+#include "jsimd.h"
+#include "jconfigint.h"
 #include <limits.h>
 
 /*
@@ -99,23 +102,25 @@ typedef struct {
   int next_restart_num;         /* next restart number to write (0-7) */
 
   /* Pointers to derived tables (these workspaces have image lifespan) */
-  c_derived_tbl * dc_derived_tbls[NUM_HUFF_TBLS];
-  c_derived_tbl * ac_derived_tbls[NUM_HUFF_TBLS];
+  c_derived_tbl *dc_derived_tbls[NUM_HUFF_TBLS];
+  c_derived_tbl *ac_derived_tbls[NUM_HUFF_TBLS];
 
 #ifdef ENTROPY_OPT_SUPPORTED    /* Statistics tables for optimization */
-  long * dc_count_ptrs[NUM_HUFF_TBLS];
-  long * ac_count_ptrs[NUM_HUFF_TBLS];
+  long *dc_count_ptrs[NUM_HUFF_TBLS];
+  long *ac_count_ptrs[NUM_HUFF_TBLS];
 #endif
+
+  int simd;
 } huff_entropy_encoder;
 
-typedef huff_entropy_encoder * huff_entropy_ptr;
+typedef huff_entropy_encoder *huff_entropy_ptr;
 
 /* Working state while writing an MCU.
  * This struct contains all the fields that are needed by subroutines.
  */
 
 typedef struct {
-  JOCTET * next_output_byte;    /* => next byte to write in buffer */
+  JOCTET *next_output_byte;     /* => next byte to write in buffer */
   size_t free_in_buffer;        /* # of byte spaces remaining in buffer */
   savable_state cur;            /* Current bit buffer & DC state */
   j_compress_ptr cinfo;         /* dump_buffer needs access to this */
@@ -143,7 +148,7 @@ start_pass_huff (j_compress_ptr cinfo, boolean gather_statistics)
 {
   huff_entropy_ptr entropy = (huff_entropy_ptr) cinfo->entropy;
   int ci, dctbl, actbl;
-  jpeg_component_info * compptr;
+  jpeg_component_info *compptr;
 
   if (gather_statistics) {
 #ifdef ENTROPY_OPT_SUPPORTED
@@ -156,6 +161,8 @@ start_pass_huff (j_compress_ptr cinfo, boolean gather_statistics)
     entropy->pub.encode_mcu = encode_mcu_huff;
     entropy->pub.finish_pass = finish_pass_huff;
   }
+
+  entropy->simd = jsimd_can_huff_encode_one_block();
 
   for (ci = 0; ci < cinfo->comps_in_scan; ci++) {
     compptr = cinfo->cur_comp_info[ci];
@@ -213,7 +220,7 @@ start_pass_huff (j_compress_ptr cinfo, boolean gather_statistics)
 
 GLOBAL(void)
 jpeg_make_c_derived_tbl (j_compress_ptr cinfo, boolean isDC, int tblno,
-                         c_derived_tbl ** pdtbl)
+                         c_derived_tbl **pdtbl)
 {
   JHUFF_TBL *htbl;
   c_derived_tbl *dtbl;
@@ -268,7 +275,7 @@ jpeg_make_c_derived_tbl (j_compress_ptr cinfo, boolean isDC, int tblno,
     /* code is now 1 more than the last code used for codelength si; but
      * it must still fit in si bits, since no code is allowed to be all ones.
      */
-    if (((INT32) code) >= (((INT32) 1) << si))
+    if (((JLONG) code) >= (((JLONG) 1) << si))
       ERREXIT(cinfo, JERR_BAD_HUFF_TABLE);
     code <<= 1;
     si++;
@@ -311,10 +318,10 @@ jpeg_make_c_derived_tbl (j_compress_ptr cinfo, boolean isDC, int tblno,
 
 
 LOCAL(boolean)
-dump_buffer (working_state * state)
+dump_buffer (working_state *state)
 /* Empty the output buffer; return TRUE if successful, FALSE if must suspend */
 {
-  struct jpeg_destination_mgr * dest = state->cinfo->dest;
+  struct jpeg_destination_mgr *dest = state->cinfo->dest;
 
   if (! (*dest->empty_output_buffer) (state->cinfo))
     return FALSE;
@@ -388,7 +395,7 @@ dump_buffer (working_state * state)
 }
 
 #define EMIT_CODE(code, size) { \
-  temp2 &= (((INT32) 1)<<nbits) - 1; \
+  temp2 &= (((JLONG) 1)<<nbits) - 1; \
   CHECKBUF31() \
   PUT_BITS(code, size) \
   PUT_BITS(temp2, nbits) \
@@ -402,7 +409,7 @@ dump_buffer (working_state * state)
 }
 
 #define EMIT_CODE(code, size) { \
-  temp2 &= (((INT32) 1)<<nbits) - 1; \
+  temp2 &= (((JLONG) 1)<<nbits) - 1; \
   PUT_BITS(code, size) \
   CHECKBUF15() \
   PUT_BITS(temp2, nbits) \
@@ -454,7 +461,7 @@ dump_buffer (working_state * state)
 
 
 LOCAL(boolean)
-flush_bits (working_state * state)
+flush_bits (working_state *state)
 {
   JOCTET _buffer[BUFSIZE], *buffer;
   size_t put_buffer;  int put_bits;
@@ -479,7 +486,24 @@ flush_bits (working_state * state)
 /* Encode a single block's worth of coefficients */
 
 LOCAL(boolean)
-encode_one_block (working_state * state, JCOEFPTR block, int last_dc_val,
+encode_one_block_simd (working_state *state, JCOEFPTR block, int last_dc_val,
+                       c_derived_tbl *dctbl, c_derived_tbl *actbl)
+{
+  JOCTET _buffer[BUFSIZE], *buffer;
+  size_t bytes, bytestocopy;  int localbuf = 0;
+
+  LOAD_BUFFER()
+
+  buffer = jsimd_huff_encode_one_block(state, buffer, block, last_dc_val,
+                                       dctbl, actbl);
+
+  STORE_BUFFER()
+
+  return TRUE;
+}
+
+LOCAL(boolean)
+encode_one_block (working_state *state, JCOEFPTR block, int last_dc_val,
                   c_derived_tbl *dctbl, c_derived_tbl *actbl)
 {
   int temp, temp2, temp3;
@@ -520,7 +544,7 @@ encode_one_block (working_state * state, JCOEFPTR block, int last_dc_val,
   EMIT_BITS(code, size)
 
   /* Mask off any extra bits in code */
-  temp2 &= (((INT32) 1)<<nbits) - 1;
+  temp2 &= (((JLONG) 1)<<nbits) - 1;
 
   /* Emit that number of bits of the value, if positive, */
   /* or the complement of its magnitude, if negative. */
@@ -592,7 +616,7 @@ encode_one_block (working_state * state, JCOEFPTR block, int last_dc_val,
  */
 
 LOCAL(boolean)
-emit_restart (working_state * state, int restart_num)
+emit_restart (working_state *state, int restart_num)
 {
   int ci;
 
@@ -622,7 +646,7 @@ encode_mcu_huff (j_compress_ptr cinfo, JBLOCKROW *MCU_data)
   huff_entropy_ptr entropy = (huff_entropy_ptr) cinfo->entropy;
   working_state state;
   int blkn, ci;
-  jpeg_component_info * compptr;
+  jpeg_component_info *compptr;
 
   /* Load up working state */
   state.next_output_byte = cinfo->dest->next_output_byte;
@@ -638,16 +662,30 @@ encode_mcu_huff (j_compress_ptr cinfo, JBLOCKROW *MCU_data)
   }
 
   /* Encode the MCU data blocks */
-  for (blkn = 0; blkn < cinfo->blocks_in_MCU; blkn++) {
-    ci = cinfo->MCU_membership[blkn];
-    compptr = cinfo->cur_comp_info[ci];
-    if (! encode_one_block(&state,
-                           MCU_data[blkn][0], state.cur.last_dc_val[ci],
-                           entropy->dc_derived_tbls[compptr->dc_tbl_no],
-                           entropy->ac_derived_tbls[compptr->ac_tbl_no]))
-      return FALSE;
-    /* Update last_dc_val */
-    state.cur.last_dc_val[ci] = MCU_data[blkn][0][0];
+  if (entropy->simd) {
+    for (blkn = 0; blkn < cinfo->blocks_in_MCU; blkn++) {
+      ci = cinfo->MCU_membership[blkn];
+      compptr = cinfo->cur_comp_info[ci];
+      if (! encode_one_block_simd(&state,
+                                  MCU_data[blkn][0], state.cur.last_dc_val[ci],
+                                  entropy->dc_derived_tbls[compptr->dc_tbl_no],
+                                  entropy->ac_derived_tbls[compptr->ac_tbl_no]))
+        return FALSE;
+      /* Update last_dc_val */
+      state.cur.last_dc_val[ci] = MCU_data[blkn][0][0];
+    }
+  } else {
+    for (blkn = 0; blkn < cinfo->blocks_in_MCU; blkn++) {
+      ci = cinfo->MCU_membership[blkn];
+      compptr = cinfo->cur_comp_info[ci];
+      if (! encode_one_block(&state,
+                             MCU_data[blkn][0], state.cur.last_dc_val[ci],
+                             entropy->dc_derived_tbls[compptr->dc_tbl_no],
+                             entropy->ac_derived_tbls[compptr->ac_tbl_no]))
+        return FALSE;
+      /* Update last_dc_val */
+      state.cur.last_dc_val[ci] = MCU_data[blkn][0][0];
+    }
   }
 
   /* Completed MCU, so update state */
@@ -790,7 +828,7 @@ encode_mcu_gather (j_compress_ptr cinfo, JBLOCKROW *MCU_data)
 {
   huff_entropy_ptr entropy = (huff_entropy_ptr) cinfo->entropy;
   int blkn, ci;
-  jpeg_component_info * compptr;
+  jpeg_component_info *compptr;
 
   /* Take care of restart intervals if needed */
   if (cinfo->restart_interval) {
@@ -846,7 +884,7 @@ encode_mcu_gather (j_compress_ptr cinfo, JBLOCKROW *MCU_data)
  */
 
 GLOBAL(void)
-jpeg_gen_optimal_table (j_compress_ptr cinfo, JHUFF_TBL * htbl, long freq[])
+jpeg_gen_optimal_table (j_compress_ptr cinfo, JHUFF_TBL *htbl, long freq[])
 {
 #define MAX_CLEN 32             /* assumed maximum initial code length */
   UINT8 bits[MAX_CLEN+1];       /* bits[k] = # of symbols with code length k */
@@ -991,7 +1029,7 @@ finish_pass_gather (j_compress_ptr cinfo)
 {
   huff_entropy_ptr entropy = (huff_entropy_ptr) cinfo->entropy;
   int ci, dctbl, actbl;
-  jpeg_component_info * compptr;
+  jpeg_component_info *compptr;
   JHUFF_TBL **htblptr;
   boolean did_dc[NUM_HUFF_TBLS];
   boolean did_ac[NUM_HUFF_TBLS];

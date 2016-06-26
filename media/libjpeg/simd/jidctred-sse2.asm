@@ -3,8 +3,7 @@
 ;
 ; Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
 ;
-; Based on
-; x86 SIMD extension for IJG JPEG library
+; Based on the x86 SIMD extension for IJG JPEG library
 ; Copyright (C) 1999-2006, MIYASAKA Masaru.
 ; For conditions of distribution and use, see copyright notice in jsimdext.inc
 ;
@@ -99,11 +98,11 @@ PB_CENTERJSAMP  times 16 db CENTERJSAMPLE
 ; producing a reduced-size 4x4 output block.
 ;
 ; GLOBAL(void)
-; jsimd_idct_4x4_sse2 (void * dct_table, JCOEFPTR coef_block,
+; jsimd_idct_4x4_sse2 (void *dct_table, JCOEFPTR coef_block,
 ;                      JSAMPARRAY output_buf, JDIMENSION output_col)
 ;
 
-%define dct_table(b)    (b)+8           ; void * dct_table
+%define dct_table(b)    (b)+8           ; void *dct_table
 %define coef_block(b)   (b)+12          ; JCOEFPTR coef_block
 %define output_buf(b)   (b)+16          ; JSAMPARRAY output_buf
 %define output_col(b)   (b)+20          ; JDIMENSION output_col
@@ -414,11 +413,11 @@ EXTN(jsimd_idct_4x4_sse2):
 ; producing a reduced-size 2x2 output block.
 ;
 ; GLOBAL(void)
-; jsimd_idct_2x2_sse2 (void * dct_table, JCOEFPTR coef_block,
+; jsimd_idct_2x2_sse2 (void *dct_table, JCOEFPTR coef_block,
 ;                      JSAMPARRAY output_buf, JDIMENSION output_col)
 ;
 
-%define dct_table(b)    (b)+8           ; void * dct_table
+%define dct_table(b)    (b)+8           ; void *dct_table
 %define coef_block(b)   (b)+12          ; JCOEFPTR coef_block
 %define output_buf(b)   (b)+16          ; JSAMPARRAY output_buf
 %define output_col(b)   (b)+20          ; JDIMENSION output_col
