@@ -1,0 +1,8 @@
+. $topsrcdir/browser/config/mozconfigs/win64/nightly
+
+#add-on signing is checked but not enforced
+MOZ_REQUIRE_SIGNING=0
+ac_add_options --with-branding=browser/branding/unofficial
+
+#Need this to prevent name conflicts with the normal nightly build packages
+export MOZ_PKG_SPECIAL=add-on-devel
