@@ -52,6 +52,11 @@ public:
   nsresult Init();
 
   /**
+   * Returns true if the Preferences service is available, false otherwise.
+   */
+  static bool IsServiceAvailable();
+
+  /**
    * Reset loaded user prefs then read them
    */
   static nsresult ResetAndReadUserPrefs();

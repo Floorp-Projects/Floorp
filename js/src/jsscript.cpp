@@ -1684,7 +1684,7 @@ ScriptSourceObject::create(ExclusiveContext* cx, ScriptSource* source)
 ScriptSourceObject::initFromOptions(JSContext* cx, HandleScriptSource source,
                                     const ReadOnlyCompileOptions& options)
 {
-    assertSameCompartment(cx, source);
+    releaseAssertSameCompartment(cx, source);
     MOZ_ASSERT(source->getReservedSlot(ELEMENT_SLOT).isMagic(JS_GENERIC_MAGIC));
     MOZ_ASSERT(source->getReservedSlot(ELEMENT_PROPERTY_SLOT).isMagic(JS_GENERIC_MAGIC));
     MOZ_ASSERT(source->getReservedSlot(INTRODUCTION_SCRIPT_SLOT).isMagic(JS_GENERIC_MAGIC));

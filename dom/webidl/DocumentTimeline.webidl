@@ -10,7 +10,8 @@
  * liability, trademark and document use rules apply.
  */
 
-[Func="nsDocument::IsWebAnimationsEnabled",
- Constructor (DOMHighResTimeStamp originTime)]
+// Not yet implemented:
+// [Constructor (DOMHighResTimeStamp originTime)]
+[Func="nsDocument::IsWebAnimationsEnabled"]
 interface DocumentTimeline : AnimationTimeline {
 };
