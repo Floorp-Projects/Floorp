@@ -224,7 +224,7 @@ module.exports = {
       addSyntheticLine(`*/`, 0);
     }
 
-    addSyntheticLine(`var bindings = {`, bindings.textLine);
+    addSyntheticLine(`this.bindings = {`, bindings.textLine);
 
     for (let binding of bindings.children) {
       if (binding.local != "binding" || binding.namespace != NS_XBL) {
