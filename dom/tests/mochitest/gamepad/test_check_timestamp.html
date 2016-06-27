@@ -10,24 +10,30 @@
 <body>
 <script type="text/javascript" src="mock_gamepad.js"></script>
 <script class="testbody" type="text/javascript">
-SimpleTest.waitForExplicitFinish();
+
 window.addEventListener("gamepadbuttondown", buttonpresshandler);
+
 var index;
-addGamepad("test gamepad 1", // id
-           SpecialPowers.Ci.nsIGamepadServiceTest.NO_MAPPING,
-           4, // buttons
-           2).then(function(i) {
-             index = i;
-             // Press a button to make the gamepad visible to the page.
-             GamepadService.newButtonEvent(index, 0, true);
-             GamepadService.newButtonEvent(index, 0, true);
-           });
-
 var timea=0;
-
-
 var firstPress = true;
 var testOver = false;
+
+SimpleTest.waitForExplicitFinish();
+runGamepadTest(checkTimestamp);
+
+function checkTimestamp(){
+  GamepadService.addGamepad("test gamepad 1",
+                            GamepadService.standardMapping,
+                            4,
+                            2).then(function(i) {
+                              index = i;
+                              // Press a button to make the gamepad visible
+                              // to the page.
+                              GamepadService.newButtonEvent(index, 0, true);
+                              GamepadService.newButtonEvent(index, 0, true);
+                              ok(true, "test");
+                            });
+}
 
 function cleanup(){
   SpecialPowers.executeSoon(function() {
