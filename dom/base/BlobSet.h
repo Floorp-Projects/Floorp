@@ -12,6 +12,7 @@
 namespace mozilla {
 namespace dom {
 
+class Blob;
 class BlobImpl;
 
 class BlobSet final

@@ -10,7 +10,6 @@
 #include "nsCOMPtr.h"
 #include "mozilla/dom/bluetooth/BluetoothCommon.h"
 #include "mozilla/dom/DOMRequest.h"
-#include "mozilla/dom/BlobSet.h"
 
 namespace mozilla {
   class ErrorResult;
