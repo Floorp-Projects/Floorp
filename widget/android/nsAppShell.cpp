@@ -44,7 +44,7 @@
 
 #include "mozilla/dom/ScreenOrientation.h"
 #ifdef MOZ_GAMEPAD
-#include "mozilla/dom/GamepadFunctions.h"
+#include "mozilla/dom/GamepadPlatformService.h"
 #include "mozilla/dom/Gamepad.h"
 #endif
 
@@ -69,6 +69,7 @@
 #endif
 
 using namespace mozilla;
+typedef mozilla::dom::GamepadPlatformService GamepadPlatformService;
 
 nsIGeolocationUpdate *gLocationCallback = nullptr;
 nsAutoPtr<mozilla::AndroidGeckoEvent> gLastSizeChange;
@@ -933,16 +934,19 @@ nsAppShell::LegacyGeckoEvent::Run()
 
     case AndroidGeckoEvent::GAMEPAD_ADDREMOVE: {
 #ifdef MOZ_GAMEPAD
+            GamepadPlatformService* service;
+            service = GamepadPlatformService::GetParentService();
+            MOZ_ASSERT(service);
             if (curEvent->Action() == AndroidGeckoEvent::ACTION_GAMEPAD_ADDED) {
-            int svc_id = dom::GamepadFunctions::AddGamepad("android",
-                                                           dom::GamepadMappingType::Standard,
-                                                           dom::kStandardGamepadButtons,
-                                                           dom::kStandardGamepadAxes);
-                widget::GeckoAppShell::GamepadAdded(curEvent->ID(),
-                                                    svc_id);
+              int svc_id = service->AddGamepad("android",
+                                               dom::GamepadMappingType::Standard,
+                                               dom::kStandardGamepadButtons,
+                                               dom::kStandardGamepadAxes);
+              widget::GeckoAppShell::GamepadAdded(curEvent->ID(),
+                                                  svc_id);
             } else if (curEvent->Action() == AndroidGeckoEvent::ACTION_GAMEPAD_REMOVED) {
-            dom::GamepadFunctions::RemoveGamepad(curEvent->ID());
-        }
+              service->RemoveGamepad(curEvent->ID());
+            }
 #endif
         break;
     }
@@ -950,19 +954,22 @@ nsAppShell::LegacyGeckoEvent::Run()
     case AndroidGeckoEvent::GAMEPAD_DATA: {
 #ifdef MOZ_GAMEPAD
             int id = curEvent->ID();
+            GamepadPlatformService* service;
+            service = GamepadPlatformService::GetParentService();
+            MOZ_ASSERT(service);
             if (curEvent->Action() == AndroidGeckoEvent::ACTION_GAMEPAD_BUTTON) {
-            dom::GamepadFunctions::NewButtonEvent(id, curEvent->GamepadButton(),
-                                     curEvent->GamepadButtonPressed(),
-                                     curEvent->GamepadButtonValue());
+              service->NewButtonEvent(id, curEvent->GamepadButton(),
+                                      curEvent->GamepadButtonPressed(),
+                                      curEvent->GamepadButtonValue());
             } else if (curEvent->Action() == AndroidGeckoEvent::ACTION_GAMEPAD_AXES) {
                 int valid = curEvent->Flags();
                 const nsTArray<float>& values = curEvent->GamepadValues();
                 for (unsigned i = 0; i < values.Length(); i++) {
                     if (valid & (1<<i)) {
-                    dom::GamepadFunctions::NewAxisMoveEvent(id, i, values[i]);
+                      service->NewAxisMoveEvent(id, i, values[i]);
+                    }
                 }
             }
-        }
 #endif
         break;
     }

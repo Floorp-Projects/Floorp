@@ -5,8 +5,8 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "GamepadServiceTest.h"
-#include "mozilla/dom/GamepadService.h"
-#include "mozilla/dom/GamepadFunctions.h"
+#include "mozilla/dom/GamepadManager.h"
+#include "mozilla/dom/GamepadPlatformService.h"
 
 using namespace mozilla::dom;
 
@@ -31,7 +31,7 @@ GamepadServiceTest::CreateService()
 }
 
 GamepadServiceTest::GamepadServiceTest() :
-  mService(GamepadService::GetService())
+  mService(GamepadManager::GetService())
 {
 }
 
@@ -46,16 +46,20 @@ GamepadServiceTest::AddGamepad(const char* aID,
                                uint32_t aNumAxes,
                                uint32_t* aGamepadIndex)
 {
-  *aGamepadIndex = GamepadFunctions::AddGamepad(aID,
-                                                static_cast<GamepadMappingType>(aMapping),
-                                                aNumButtons,
-                                                aNumAxes);
+  GamepadService* service = GamepadService::GetService();
+  MOZ_ASSERT(service);
+  *aGamepadIndex = service->AddGamepad(aID,
+                                       static_cast<GamepadMappingType>(aMapping),
+                                       aNumButtons,
+                                       aNumAxes);
   return NS_OK;
 }
 
 NS_IMETHODIMP GamepadServiceTest::RemoveGamepad(uint32_t aIndex)
 {
-  GamepadFunctions::RemoveGamepad(aIndex);
+  GamepadService* service = GamepadService::GetService();
+  MOZ_ASSERT(service);
+  service->RemoveGamepad(aIndex);
   return NS_OK;
 }
 
@@ -63,7 +67,9 @@ NS_IMETHODIMP GamepadServiceTest::NewButtonEvent(uint32_t aIndex,
                                                  uint32_t aButton,
                                                  bool aPressed)
 {
-  GamepadFunctions::NewButtonEvent(aIndex, aButton, aPressed);
+  GamepadService* service = GamepadService::GetService();
+  MOZ_ASSERT(service);
+  service->NewButtonEvent(aIndex, aButton, aPressed);
   return NS_OK;
 }
 
@@ -72,7 +78,9 @@ NS_IMETHODIMP GamepadServiceTest::NewButtonValueEvent(uint32_t aIndex,
                                                       bool aPressed,
                                                       double aValue)
 {
-  GamepadFunctions::NewButtonEvent(aIndex, aButton, aPressed, aValue);
+  GamepadService* service = GamepadService::GetService();
+  MOZ_ASSERT(service);
+  service->NewButtonEvent(aIndex, aButton, aPressed, aValue);
   return NS_OK;
 }
 
@@ -80,7 +88,9 @@ NS_IMETHODIMP GamepadServiceTest::NewAxisMoveEvent(uint32_t aIndex,
                                                    uint32_t aAxis,
                                                    double aValue)
 {
-  GamepadFunctions::NewAxisMoveEvent(aIndex, aAxis, aValue);
+  GamepadService* service = GamepadService::GetService();
+  MOZ_ASSERT(service);
+  service->NewAxisMoveEvent(aIndex, aAxis, aValue);
   return NS_OK;
 }
 
