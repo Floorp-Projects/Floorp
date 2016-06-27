@@ -26,7 +26,7 @@ BEGIN_WORKERS_NAMESPACE
 
 class Proxy;
 class SendRunnable;
-class XMLHttpRequestUpload;
+class XMLHttpRequestUploadWorker;
 class WorkerPrivate;
 
 class XMLHttpRequestWorker final : public nsXHREventTarget,
@@ -55,7 +55,7 @@ public:
   };
 
 private:
-  RefPtr<XMLHttpRequestUpload> mUpload;
+  RefPtr<XMLHttpRequestUploadWorker> mUpload;
   WorkerPrivate* mWorkerPrivate;
   RefPtr<Proxy> mProxy;
   XMLHttpRequestResponseType mResponseType;
@@ -160,7 +160,7 @@ public:
   void
   SetMozBackgroundRequest(bool aBackgroundRequest, ErrorResult& aRv);
 
-  XMLHttpRequestUpload*
+  XMLHttpRequestUploadWorker*
   GetUpload(ErrorResult& aRv);
 
   void
@@ -239,7 +239,7 @@ public:
     aRv.Throw(NS_ERROR_FAILURE);
   }
 
-  XMLHttpRequestUpload*
+  XMLHttpRequestUploadWorker*
   GetUploadObjectNoCreate() const
   {
     return mUpload;
