@@ -9,6 +9,10 @@
 #include "nsTHashtable.h"
 #include "jsapi.h"
 
+namespace mozilla {
+namespace Telemetry {
+namespace Common {
+
 template<class EntryType>
 class AutoHashtable : public nsTHashtable<EntryType>
 {
@@ -41,5 +45,13 @@ AutoHashtable<EntryType>::ReflectIntoJS(ReflectEntryFunc entryFunc,
   }
   return true;
 }
+
+bool IsExpiredVersion(const char* aExpiration);
+bool IsInDataset(uint32_t aDataset, uint32_t aContainingDataset);
+bool CanRecordDataset(uint32_t aDataset, bool aCanRecordBase, bool aCanRecordExtended);
+
+} // namespace Common
+} // namespace Telemetry
+} // namespace mozilla
 
 #endif // TelemetryCommon_h__

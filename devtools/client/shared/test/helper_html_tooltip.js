@@ -16,14 +16,13 @@
  *        The tooltip instance to display
  * @param {Node} anchor
  *        The anchor that should be used to display the tooltip
- * @param {String} position
- *        The preferred display position ("top", "bottom")
+ * @param {Object} see HTMLTooltip:show documentation
  * @return {Promise} promise that resolves when "shown" has been fired, reflow
  *         and repaint done.
  */
-function* showTooltip(tooltip, anchor, position) {
+function* showTooltip(tooltip, anchor, {position, x, y} = {}) {
   let onShown = tooltip.once("shown");
-  tooltip.show(anchor, {position});
+  tooltip.show(anchor, {position, x, y});
   yield onShown;
   return waitForReflow(tooltip);
 }

@@ -242,6 +242,30 @@ function checkPayloadInfo(data) {
   Assert.ok(data.timezoneOffset <= 12*60, "The timezone must be in a valid range.");
 }
 
+function checkScalars(payload) {
+  // Check that the scalars section is available in the ping payload.
+  Assert.ok("scalars" in payload, "The scalars section must be available in the payload.");
+  Assert.equal(typeof payload.scalars, "object", "The scalars entry must be an object.");
+
+  // Check that we have valid scalar entries.
+  const scalars = payload.scalars;
+  for (let name in scalars) {
+    Assert.equal(typeof name, "string", "Scalar names must be strings.");
+    // Check if the value is of a supported type.
+    const valueType = typeof(scalars[name]);
+    if (valueType === "string") {
+      Assert.ok(scalars[name].length <= 50,
+                "String values can't have more than 50 characters");
+    } else if (valueType === "number") {
+      Assert.ok(scalars[name] >= 0,
+                "We only support unsigned integer values in scalars.");
+    } else {
+      Assert.ok(false,
+                name + " contains an unsupported value type (" + valueType + ")");
+    }
+  }
+}
+
 function checkPayload(payload, reason, successfulPings, savedPings) {
   Assert.ok("info" in payload, "Payload must contain an info section.");
   checkPayloadInfo(payload.info);
@@ -378,6 +402,8 @@ function checkPayload(payload, reason, successfulPings, savedPings) {
     },
   };
   Assert.deepEqual(expected_keyed_count, keyedHistograms[TELEMETRY_TEST_KEYED_COUNT]);
+
+  checkScalars(payload);
 }
 
 function writeStringToFile(file, contents) {
@@ -554,6 +580,66 @@ add_task(function* test_saveLoadPing() {
   checkPayload(pings[0].payload, REASON_TEST_PING, 0, 1);
   checkPingFormat(pings[1], PING_TYPE_SAVED_SESSION, true, true);
   checkPayload(pings[1].payload, REASON_SAVED_SESSION, 0, 0);
+});
+
+add_task(function* test_checkSubsessionScalars() {
+  if (gIsAndroid) {
+    // We don't support subsessions yet on Android.
+    return;
+  }
+
+  // Clear the scalars.
+  Telemetry.clearScalars();
+  yield TelemetryController.testReset();
+
+  // Set some scalars.
+  const UINT_SCALAR = "telemetry.test.unsigned_int_kind";
+  const STRING_SCALAR = "telemetry.test.string_kind";
+  let expectedUint = 37;
+  let expectedString = "Test value. Yay.";
+  Telemetry.scalarSet(UINT_SCALAR, expectedUint);
+  Telemetry.scalarSet(STRING_SCALAR, expectedString);
+
+  // Check that scalars are not available in classic pings but are in subsession
+  // pings. Also clear the subsession.
+  let classic = TelemetrySession.getPayload();
+  let subsession = TelemetrySession.getPayload("environment-change", true);
+
+  const TEST_SCALARS = [ UINT_SCALAR, STRING_SCALAR ];
+  for (let name of TEST_SCALARS) {
+    // Scalar must be reported in subsession pings (e.g. main).
+    Assert.ok(name in subsession.scalars,
+              name + " must be reported in a subsession ping.");
+  }
+  // No scalar must be reported in classic pings (e.g. saved-session).
+  Assert.ok(Object.keys(classic.scalars).length == 0,
+            "Scalars must not be reported in a classic ping.");
+
+  // And make sure that we're getting the right values in the
+  // subsession ping.
+  Assert.equal(subsession.scalars[UINT_SCALAR], expectedUint,
+               UINT_SCALAR + " must contain the expected value.");
+  Assert.equal(subsession.scalars[STRING_SCALAR], expectedString,
+               STRING_SCALAR + " must contain the expected value.");
+
+  // Since we cleared the subsession in the last getPayload(), check that
+  // breaking subsessions clears the scalars.
+  subsession = TelemetrySession.getPayload("environment-change");
+  for (let name of TEST_SCALARS) {
+    Assert.ok(!(name in subsession.scalars),
+              name + " must be cleared with the new subsession.");
+  }
+
+  // Check if setting the scalars again works as expected.
+  expectedUint = 85;
+  expectedString = "A creative different value";
+  Telemetry.scalarSet(UINT_SCALAR, expectedUint);
+  Telemetry.scalarSet(STRING_SCALAR, expectedString);
+  subsession = TelemetrySession.getPayload("environment-change");
+  Assert.equal(subsession.scalars[UINT_SCALAR], expectedUint,
+               UINT_SCALAR + " must contain the expected value.");
+  Assert.equal(subsession.scalars[STRING_SCALAR], expectedString,
+               STRING_SCALAR + " must contain the expected value.");
 });
 
 add_task(function* test_checkSubsessionHistograms() {

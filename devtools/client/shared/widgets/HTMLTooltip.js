@@ -43,6 +43,128 @@ const EXTRA_BORDER = {
 };
 
 /**
+ * Calculate the vertical position & offsets to use for the tooltip. Will attempt to
+ * respect the provided height and position preferences, unless the available height
+ * prevents this.
+ *
+ * @param {DOMRect} anchorRect
+ *        Bounding rectangle for the anchor, relative to the tooltip document.
+ * @param {DOMRect} docRect
+ *        Bounding rectange for the tooltip document owner.
+ * @param {Number} height
+ *        Preferred height for the tooltip.
+ * @param {String} pos
+ *        Preferred position for the tooltip. Possible values: "top" or "bottom".
+ * @return {Object}
+ *         - {Number} top: the top offset for the tooltip.
+ *         - {Number} height: the height to use for the tooltip container.
+ *         - {String} computedPosition: Can differ from the preferred position depending
+ *           on the available height). "top" or "bottom"
+ */
+const calculateVerticalPosition = function (anchorRect, docRect, height, pos, offset) {
+  let {TOP, BOTTOM} = POSITION;
+
+  let {top: anchorTop, height: anchorHeight} = anchorRect;
+  let {bottom: docBottom} = docRect;
+
+  // Calculate available space for the tooltip.
+  let availableTop = anchorTop;
+  let availableBottom = docBottom - (anchorTop + anchorHeight);
+
+  // Find POSITION
+  let keepPosition = false;
+  if (pos === TOP) {
+    keepPosition = availableTop >= height + offset;
+  } else if (pos === BOTTOM) {
+    keepPosition = availableBottom >= height + offset;
+  }
+  if (!keepPosition) {
+    pos = availableTop > availableBottom ? TOP : BOTTOM;
+  }
+
+  // Calculate HEIGHT.
+  let availableHeight = pos === TOP ? availableTop : availableBottom;
+  height = Math.min(height, availableHeight - offset);
+  height = Math.floor(height);
+
+  // Calculate TOP.
+  let top = pos === TOP ? anchorTop - height - offset : anchorTop + anchorHeight + offset;
+
+  return {top, height, computedPosition: pos};
+};
+
+/**
+ * Calculate the vertical position & offsets to use for the tooltip. Will attempt to
+ * respect the provided height and position preferences, unless the available height
+ * prevents this.
+ *
+ * @param {DOMRect} anchorRect
+ *        Bounding rectangle for the anchor, relative to the tooltip document.
+ * @param {DOMRect} docRect
+ *        Bounding rectange for the tooltip document owner.
+ * @param {Number} width
+ *        Preferred width for the tooltip.
+ * @return {Object}
+ *         - {Number} left: the left offset for the tooltip.
+ *         - {Number} width: the width to use for the tooltip container.
+ *         - {Number} arrowLeft: the left offset to use for the arrow element.
+ */
+const calculateHorizontalPosition = function (anchorRect, docRect, width, type, offset) {
+  let {left: anchorLeft, width: anchorWidth} = anchorRect;
+  let {right: docRight} = docRect;
+
+  // Calculate WIDTH.
+  let availableWidth = docRight;
+  width = Math.min(width, availableWidth);
+
+  // Calculate LEFT.
+  // By default the tooltip is aligned with the anchor left edge. Unless this
+  // makes it overflow the viewport, in which case is shifts to the left.
+  let left = Math.min(anchorLeft + offset, docRight - width);
+
+  // Calculate ARROW LEFT (tooltip's LEFT might be updated)
+  let arrowLeft;
+  // Arrow style tooltips may need to be shifted to the left
+  if (type === TYPE.ARROW) {
+    let arrowCenter = left + ARROW_OFFSET + ARROW_WIDTH / 2;
+    let anchorCenter = anchorLeft + anchorWidth / 2;
+    // If the anchor is too narrow, align the arrow and the anchor center.
+    if (arrowCenter > anchorCenter) {
+      left = Math.max(0, left - (arrowCenter - anchorCenter));
+    }
+    // Arrow's left offset relative to the anchor.
+    arrowLeft = Math.min(ARROW_OFFSET, (anchorWidth - ARROW_WIDTH) / 2) | 0;
+    // Translate the coordinate to tooltip container
+    arrowLeft += anchorLeft - left;
+    // Make sure the arrow remains in the tooltip container.
+    arrowLeft = Math.min(arrowLeft, width - ARROW_WIDTH);
+    arrowLeft = Math.max(arrowLeft, 0);
+  }
+
+  return {left, width, arrowLeft};
+};
+
+/**
+ * Get the bounding client rectangle for a given node, relative to a custom
+ * reference element (instead of the default for getBoundingClientRect which
+ * is always the element's ownerDocument).
+ */
+const getRelativeRect = function (node, relativeTo) {
+  // Width and Height can be taken from the rect.
+  let {width, height} = node.getBoundingClientRect();
+
+  let quads = node.getBoxQuads({relativeTo});
+  let top = quads[0].bounds.top;
+  let left = quads[0].bounds.left;
+
+  // Compute right and bottom coordinates using the rest of the data.
+  let right = left + width;
+  let bottom = top + height;
+
+  return {top, right, bottom, left, width, height};
+};
+
+/**
  * The HTMLTooltip can display HTML content in a tooltip popup.
  *
  * @param {Toolbox} toolbox
@@ -77,7 +199,7 @@ function HTMLTooltip(toolbox,
   this.container = this._createContainer();
 
   if (this._isXUL()) {
-    this.doc.querySelector("window").appendChild(this.container);
+    this.doc.documentElement.appendChild(this.container);
   } else {
     // In non-XUL context the container is ready to use as is.
     this.doc.body.appendChild(this.container);
@@ -108,22 +230,17 @@ HTMLTooltip.prototype = {
    *
    * @param {Element} content
    *        The tooltip content, should be a HTML element.
-   * @param {Number} width
-   *        Preferred width for the tooltip container
-   * @param {Number} height (optional)
-   *        Preferred height for the tooltip container. If the content height is
-   *        smaller than the container's height, the tooltip will automatically
-   *        shrink around the content. If not specified, will use all the height
-   *        available.
-   * @return {Promise} a promise that will resolve when the content has been
-   *         added in the tooltip container.
+   * @param {Object}
+   *        - {Number} width: preferred width for the tooltip container. If not specified
+   *          the tooltip container will be measured before being displayed, and the
+   *          measured width will be used as preferred width.
+   *        - {Number} height: optional, preferred height for the tooltip container. This
+   *          parameter acts as a max-height for the tooltip content. If not specified,
+   *          the tooltip will be able to use all the height available.
    */
-  setContent: function (content, width, height = Infinity) {
-    let themeHeight = EXTRA_HEIGHT[this.type] + 2 * EXTRA_BORDER[this.type];
-    let themeWidth = 2 * EXTRA_BORDER[this.type];
-
-    this.preferredWidth = width + themeWidth;
-    this.preferredHeight = height + themeHeight;
+  setContent: function (content, {width = "auto", height = Infinity} = {}) {
+    this.preferredWidth = width;
+    this.preferredHeight = height;
 
     this.panel.innerHTML = "";
     this.panel.appendChild(content);
@@ -140,21 +257,40 @@ HTMLTooltip.prototype = {
    *          If layout permits, the tooltip will be displayed on top/bottom
    *          of the anchor. If ommitted, the tooltip will be displayed where
    *          more space is available.
+   *        - {Number} x: optional, horizontal offset between the anchor and the tooltip
+   *        - {Number} y: optional, vertical offset between the anchor and the tooltip
    */
-  show: function (anchor, {position} = {}) {
-    let computedPosition = this._findBestPosition(anchor, position);
+  show: function (anchor, {position, x = 0, y = 0} = {}) {
+    // Get anchor geometry
+    let anchorRect = getRelativeRect(anchor, this.doc);
+    // Get document geometry
+    let docRect = this.doc.documentElement.getBoundingClientRect();
 
-    let isTop = computedPosition.position === POSITION.TOP;
+    let themeHeight = EXTRA_HEIGHT[this.type] + 2 * EXTRA_BORDER[this.type];
+    let preferredHeight = this.preferredHeight + themeHeight;
+
+    let {top, height, computedPosition} =
+      calculateVerticalPosition(anchorRect, docRect, preferredHeight, position, y);
+
+    // Apply height and top information before measuring the content width (if "auto").
+    let isTop = computedPosition === POSITION.TOP;
     this.container.classList.toggle("tooltip-top", isTop);
     this.container.classList.toggle("tooltip-bottom", !isTop);
+    this.container.style.height = height + "px";
+    this.container.style.top = top + "px";
 
-    this.container.style.width = computedPosition.width + "px";
-    this.container.style.height = computedPosition.height + "px";
-    this.container.style.top = computedPosition.top + "px";
-    this.container.style.left = computedPosition.left + "px";
+    let themeWidth = 2 * EXTRA_BORDER[this.type];
+    let preferredWidth = this.preferredWidth === "auto" ?
+      this._measureContainerWidth() : this.preferredWidth + themeWidth;
+
+    let {left, width, arrowLeft} =
+      calculateHorizontalPosition(anchorRect, docRect, preferredWidth, this.type, x);
+
+    this.container.style.width = width + "px";
+    this.container.style.left = left + "px";
 
     if (this.type === TYPE.ARROW) {
-      this.arrow.style.left = computedPosition.arrowLeft + "px";
+      this.arrow.style.left = arrowLeft + "px";
     }
 
     this.container.classList.add("tooltip-visible");
@@ -162,11 +298,21 @@ HTMLTooltip.prototype = {
     // Keep a pointer on the focused element to refocus it when hiding the tooltip.
     this._focusedElement = this.doc.activeElement;
 
+    this.doc.defaultView.clearTimeout(this.attachEventsTimer);
     this.attachEventsTimer = this.doc.defaultView.setTimeout(() => {
       this._maybeFocusTooltip();
       this.topWindow.addEventListener("click", this._onClick, true);
       this.emit("shown");
     }, 0);
+  },
+
+  _measureContainerWidth: function () {
+    this.container.classList.add("tooltip-hidden");
+    this.container.style.left = "0px";
+    this.container.style.width = "auto";
+    let width = this.container.getBoundingClientRect().width;
+    this.container.classList.remove("tooltip-hidden");
+    return width;
   },
 
   /**
@@ -259,102 +405,6 @@ HTMLTooltip.prototype = {
     }
 
     return false;
-  },
-
-  /**
-   * Calculates the best possible position to display the tooltip near the
-   * provided anchor. An optional position can be provided, but will be
-   * respected only if it doesn't force the tooltip to be resized.
-   *
-   * If the tooltip has to be resized, the position will be wherever the most
-   * space is available.
-   *
-   */
-  _findBestPosition: function (anchor, position) {
-    let {TOP, BOTTOM} = POSITION;
-
-    // Get anchor geometry
-    let {
-      left: anchorLeft, top: anchorTop,
-      height: anchorHeight, width: anchorWidth
-    } = this._getRelativeRect(anchor, this.doc);
-
-    // Get document geometry
-    let {bottom: docBottom, right: docRight} =
-      this.doc.documentElement.getBoundingClientRect();
-
-    // Calculate available space for the tooltip.
-    let availableTop = anchorTop;
-    let availableBottom = docBottom - (anchorTop + anchorHeight);
-
-    // Find POSITION
-    let keepPosition = false;
-    if (position === TOP) {
-      keepPosition = availableTop >= this.preferredHeight;
-    } else if (position === BOTTOM) {
-      keepPosition = availableBottom >= this.preferredHeight;
-    }
-    if (!keepPosition) {
-      position = availableTop > availableBottom ? TOP : BOTTOM;
-    }
-
-    // Calculate HEIGHT.
-    let availableHeight = position === TOP ? availableTop : availableBottom;
-    let height = Math.min(this.preferredHeight, availableHeight);
-    height = Math.floor(height);
-
-    // Calculate TOP.
-    let top = position === TOP ? anchorTop - height : anchorTop + anchorHeight;
-
-    // Calculate WIDTH.
-    let availableWidth = docRight;
-    let width = Math.min(this.preferredWidth, availableWidth);
-
-    // Calculate LEFT.
-    // By default the tooltip is aligned with the anchor left edge. Unless this
-    // makes it overflow the viewport, in which case is shifts to the left.
-    let left = Math.min(anchorLeft, docRight - width);
-
-    // Calculate ARROW LEFT (tooltip's LEFT might be updated)
-    let arrowLeft;
-    // Arrow style tooltips may need to be shifted to the left
-    if (this.type === TYPE.ARROW) {
-      let arrowCenter = left + ARROW_OFFSET + ARROW_WIDTH / 2;
-      let anchorCenter = anchorLeft + anchorWidth / 2;
-      // If the anchor is too narrow, align the arrow and the anchor center.
-      if (arrowCenter > anchorCenter) {
-        left = Math.max(0, left - (arrowCenter - anchorCenter));
-      }
-      // Arrow's left offset relative to the anchor.
-      arrowLeft = Math.min(ARROW_OFFSET, (anchorWidth - ARROW_WIDTH) / 2) | 0;
-      // Translate the coordinate to tooltip container
-      arrowLeft += anchorLeft - left;
-      // Make sure the arrow remains in the tooltip container.
-      arrowLeft = Math.min(arrowLeft, width - ARROW_WIDTH);
-      arrowLeft = Math.max(arrowLeft, 0);
-    }
-
-    return {top, left, width, height, position, arrowLeft};
-  },
-
-  /**
-   * Get the bounding client rectangle for a given node, relative to a custom
-   * reference element (instead of the default for getBoundingClientRect which
-   * is always the element's ownerDocument).
-   */
-  _getRelativeRect: function (node, relativeTo) {
-    // Width and Height can be taken from the rect.
-    let {width, height} = node.getBoundingClientRect();
-
-    let quads = node.getBoxQuads({relativeTo});
-    let top = quads[0].bounds.top;
-    let left = quads[0].bounds.left;
-
-    // Compute right and bottom coordinates using the rest of the data.
-    let right = left + width;
-    let bottom = top + height;
-
-    return {top, right, bottom, left, width, height};
   },
 
   /**
