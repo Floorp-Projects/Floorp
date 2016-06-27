@@ -299,12 +299,6 @@ public:
   PositionAlignSetting ComputedPositionAlign();
 
   // Helper functions for implementation.
-  bool
-  operator==(const TextTrackCue& rhs) const
-  {
-    return mId.Equals(rhs.mId);
-  }
-
   const nsAString& Id() const
   {
     return mId;
