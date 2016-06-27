@@ -8608,7 +8608,7 @@ BytecodeEmitter::emitClass(ParseNode* pn)
         ClassMethod& method = mn->as<ClassMethod>();
         ParseNode& methodName = method.name();
         if (!method.isStatic() &&
-            methodName.isKind(PNK_OBJECT_PROPERTY_NAME) &&
+            (methodName.isKind(PNK_OBJECT_PROPERTY_NAME) || methodName.isKind(PNK_STRING)) &&
             methodName.pn_atom == cx->names().constructor)
         {
             constructor = &method.method();
