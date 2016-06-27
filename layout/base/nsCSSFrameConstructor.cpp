@@ -2496,14 +2496,14 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   // Make sure to start any background image loads for the root element now.
   styleContext->StartBackgroundImageLoads();
 
-  nsFrameConstructorSaveState absoluteSaveState;
+  nsFrameConstructorSaveState docElementContainingBlockAbsoluteSaveState;
   if (mHasRootAbsPosContainingBlock) {
     // Push the absolute containing block now so we can absolutely position
     // the root element
     mDocElementContainingBlock->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
     state.PushAbsoluteContainingBlock(mDocElementContainingBlock,
                                       mDocElementContainingBlock,
-                                      absoluteSaveState);
+                                      docElementContainingBlockAbsoluteSaveState);
   }
 
   // The rules from CSS 2.1, section 9.2.4, have already been applied
@@ -2519,6 +2519,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
   nsContainerFrame* contentFrame;
   nsIFrame* newFrame;
   bool processChildren = false;
+
+  nsFrameConstructorSaveState absoluteSaveState;
 
   // Check whether we need to build a XUL box or SVG root frame
 #ifdef MOZ_XUL
@@ -2565,12 +2567,26 @@ nsCSSFrameConstructor::ConstructDocElementFrame(Element*                 aDocEle
                         contentFrame);
     newFrame = contentFrame;
     processChildren = true;
+
+    newFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
+    if (display->IsAbsPosContainingBlock(newFrame)) {
+      state.PushAbsoluteContainingBlock(contentFrame, newFrame,
+                                        absoluteSaveState);
+    }
+
   } else if (display->mDisplay == NS_STYLE_DISPLAY_GRID) {
     contentFrame = NS_NewGridContainerFrame(mPresShell, styleContext);
     InitAndRestoreFrame(state, aDocElement, mDocElementContainingBlock,
                         contentFrame);
     newFrame = contentFrame;
     processChildren = true;
+
+    newFrame->AddStateBits(NS_FRAME_CAN_HAVE_ABSPOS_CHILDREN);
+    if (display->IsAbsPosContainingBlock(newFrame)) {
+      state.PushAbsoluteContainingBlock(contentFrame, newFrame,
+                                        absoluteSaveState);
+    }
+
   } else if (display->mDisplay == NS_STYLE_DISPLAY_TABLE) {
     // We're going to call the right function ourselves, so no need to give a
     // function to this FrameConstructionData.

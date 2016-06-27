@@ -24,13 +24,13 @@ To upgrade to a new revision of libjpeg-turbo, do the following:
 
   You can easily look for all non *.c, *.h, *.asm, and *.inc files by running
 
-    $ hg status -nu | grep -v '\(c\|h\|asm\|inc\)$'
+    $ hg status -nu | grep -v '\(c\|h\|asm\|inc\|md\|ijg\)$'
 
   Once you're comfortable that you're only deleting files you want to delete
   (and you've hg add'ed the files you want to keep), you can nuke the remaining
   files with
 
-    $ hg status -nu | grep -v '\(c\|h\|asm\|inc\)$' | xargs rm
+    $ hg status -nu | grep -v '\(c\|h\|asm\|inc\|md\|ijg\)$' | xargs rm
 
   A helpful command for finding the *.c files which aren't *currently* part of
   the build is
@@ -47,6 +47,10 @@ To upgrade to a new revision of libjpeg-turbo, do the following:
 * Finally, tell hg that we've added or removed some files:
 
     $ hg addremove
+
+== June 23, 2016 (libjpeg-turbo v1.5.0 3ff13e651bbe6de9c6f15d05235d1d4f26f63ffc 2016-05-31) ==
+
+* Updated to v1.5.0 release.
 
 == October 5, 2015 (libjpeg-turbo v1.4.2 d8da49effe6460d55239c4c009c57f42d8e4a494 2015-09-21) ==
 

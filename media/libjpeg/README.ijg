@@ -1,7 +1,7 @@
 libjpeg-turbo note:  This file has been modified by The libjpeg-turbo Project
 to include only information relevant to libjpeg-turbo, to wordsmith certain
 sections, and to remove impolitic language that existed in the libjpeg v8
-README.  It is included only for reference.  Please see README-turbo.txt for
+README.  It is included only for reference.  Please see README.md for
 information specific to libjpeg-turbo.
 
 
@@ -128,7 +128,7 @@ with respect to this software, its quality, accuracy, merchantability, or
 fitness for a particular purpose.  This software is provided "AS IS", and you,
 its user, assume the entire risk as to its quality and accuracy.
 
-This software is copyright (C) 1991-2012, Thomas G. Lane, Guido Vollbeding.
+This software is copyright (C) 1991-2016, Thomas G. Lane, Guido Vollbeding.
 All Rights Reserved except as specified below.
 
 Permission is hereby granted to use, copy, modify, and distribute this
@@ -166,11 +166,11 @@ ltmain.sh).  Another support script, install-sh, is copyright by X Consortium
 but is also freely distributable.
 
 The IJG distribution formerly included code to read and write GIF files.
-To avoid entanglement with the Unisys LZW patent, GIF reading support has
-been removed altogether, and the GIF writer has been simplified to produce
-"uncompressed GIFs".  This technique does not use the LZW algorithm; the
-resulting GIF files are larger than usual, but are readable by all standard
-GIF decoders.
+To avoid entanglement with the Unisys LZW patent (now expired), GIF reading
+support has been removed altogether, and the GIF writer has been simplified
+to produce "uncompressed GIFs".  This technique does not use the LZW
+algorithm; the resulting GIF files are larger than usual, but are readable
+by all standard GIF decoders.
 
 We are required to state that
     "The Graphics Interchange Format(c) is the Copyright property of
@@ -189,8 +189,8 @@ The best short technical introduction to the JPEG compression algorithm is
 	Communications of the ACM, April 1991 (vol. 34 no. 4), pp. 30-44.
 (Adjacent articles in that issue discuss MPEG motion picture compression,
 applications of JPEG, and related topics.)  If you don't have the CACM issue
-handy, a PostScript file containing a revised version of Wallace's article is
-available at http://www.ijg.org/files/wallace.ps.gz.  The file (actually
+handy, a PDF file containing a revised version of Wallace's article is
+available at http://www.ijg.org/files/Wallace.JPEG.pdf.  The file (actually
 a preprint for an article that appeared in IEEE Trans. Consumer Electronics)
 omits the sample images that appeared in CACM, but it includes corrections
 and some added material.  Note: the Wallace article is copyright ACM and IEEE,
@@ -246,9 +246,7 @@ ARCHIVE LOCATIONS
 
 The "official" archive site for this software is www.ijg.org.
 The most recent released version can always be found there in
-directory "files".  This particular version will be archived as
-http://www.ijg.org/files/jpegsrc.v8d.tar.gz, and in Windows-compatible
-"zip" archive format as http://www.ijg.org/files/jpegsr8d.zip.
+directory "files".
 
 The JPEG FAQ (Frequently Asked Questions) article is a source of some
 general information about JPEG.

@@ -48,9 +48,13 @@ enum class SurfacePipeFlags
 {
   DEINTERLACE         = 1 << 0,  // If set, deinterlace the image.
 
-  FLIP_VERTICALLY     = 1 << 1,  // If set, flip the image vertically.
+  ADAM7_INTERPOLATE   = 1 << 1,  // If set, the caller is deinterlacing the
+                                 // image using ADAM7, and we may want to
+                                 // interpolate it for better intermediate results.
 
-  PROGRESSIVE_DISPLAY = 1 << 2   // If set, we expect the image to be displayed
+  FLIP_VERTICALLY     = 1 << 2,  // If set, flip the image vertically.
+
+  PROGRESSIVE_DISPLAY = 1 << 3   // If set, we expect the image to be displayed
                                  // progressively. This enables features that
                                  // result in a better user experience for
                                  // progressive display but which may be more
@@ -99,12 +103,26 @@ public:
     const bool removeFrameRect =
       !aFrameRect.IsEqualEdges(nsIntRect(0, 0, aInputSize.width, aInputSize.height));
 
+    // Don't interpolate if we're sure we won't show this surface to the user
+    // until it's completely decoded. The final pass of an ADAM7 image doesn't
+    // need interpolation, so we only need to interpolate if we'll be displaying
+    // the image while it's still being decoded.
+    const bool adam7Interpolate = bool(aFlags & SurfacePipeFlags::ADAM7_INTERPOLATE) &&
+                                  progressiveDisplay;
+
+    if (deinterlace && adam7Interpolate) {
+      MOZ_ASSERT_UNREACHABLE("ADAM7 deinterlacing is handled by libpng");
+      return Nothing();
+    }
+
     // Construct configurations for the SurfaceFilters. Note that the order of
-    // these filters is significant. We want to deinterlace raw input rows,
-    // before any other transformations, and we want to remove the frame rect
-    // (which may involve adding blank rows or columns to the image) before any
-    // downscaling, so that the new rows and columns are taken into account.
+    // these filters is significant. We want to deinterlace or interpolate raw
+    // input rows, before any other transformations, and we want to remove the
+    // frame rect (which may involve adding blank rows or columns to the image)
+    // before any downscaling, so that the new rows and columns are taken into
+    // account.
     DeinterlacingConfig<uint32_t> deinterlacingConfig { progressiveDisplay };
+    ADAM7InterpolatingConfig interpolatingConfig;
     RemoveFrameRectConfig removeFrameRectConfig { aFrameRect };
     DownscalingConfig downscalingConfig { aInputSize, aFormat };
     SurfaceConfig surfaceConfig { aDecoder, aFrameNum, aOutputSize,
@@ -117,13 +135,18 @@ public:
         if (deinterlace) {
           pipe = MakePipe(deinterlacingConfig, removeFrameRectConfig,
                           downscalingConfig, surfaceConfig);
-        } else {  // (deinterlace is false)
+        } else if (adam7Interpolate) {
+          pipe = MakePipe(interpolatingConfig, removeFrameRectConfig,
+                          downscalingConfig, surfaceConfig);
+        } else {  // (deinterlace and adam7Interpolate are false)
           pipe = MakePipe(removeFrameRectConfig, downscalingConfig, surfaceConfig);
         }
       } else {  // (removeFrameRect is false)
         if (deinterlace) {
           pipe = MakePipe(deinterlacingConfig, downscalingConfig, surfaceConfig);
-        } else {  // (deinterlace is false)
+        } else if (adam7Interpolate) {
+          pipe = MakePipe(interpolatingConfig, downscalingConfig, surfaceConfig);
+        } else {  // (deinterlace and adam7Interpolate are false)
           pipe = MakePipe(downscalingConfig, surfaceConfig);
         }
       }
@@ -131,13 +154,17 @@ public:
       if (removeFrameRect) {
         if (deinterlace) {
           pipe = MakePipe(deinterlacingConfig, removeFrameRectConfig, surfaceConfig);
-        } else {  // (deinterlace is false)
+        } else if (adam7Interpolate) {
+          pipe = MakePipe(interpolatingConfig, removeFrameRectConfig, surfaceConfig);
+        } else {  // (deinterlace and adam7Interpolate are false)
           pipe = MakePipe(removeFrameRectConfig, surfaceConfig);
         }
       } else {  // (removeFrameRect is false)
         if (deinterlace) {
           pipe = MakePipe(deinterlacingConfig, surfaceConfig);
-        } else {  // (deinterlace is false)
+        } else if (adam7Interpolate) {
+          pipe = MakePipe(interpolatingConfig, surfaceConfig);
+        } else {  // (deinterlace and adam7Interpolate are false)
           pipe = MakePipe(surfaceConfig);
         }
       }

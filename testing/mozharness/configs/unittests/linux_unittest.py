@@ -276,6 +276,11 @@ config = {
                         "--manifest=tests/xpcshell/tests/xpcshell.ini"],
             "tests": []
         },
+        "xpcshell-coverage": {
+            "options": ["--xpcshell=%(abs_app_dir)s/" + XPCSHELL_NAME,
+                        "--manifest=tests/xpcshell/tests/xpcshell.ini"],
+            "tests": []
+        },
     },
     "all_cppunittest_suites": {
         "cppunittest": {"tests": ["tests/cppunittest"]}

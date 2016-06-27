@@ -23,6 +23,7 @@ namespace image {
 using namespace gfx;
 
 using std::abs;
+using std::vector;
 
 ///////////////////////////////////////////////////////////////////////////////
 // General Helpers
@@ -42,9 +43,21 @@ using std::abs;
     return rv;                        \
   }
 
+#define ASSERT_GE_OR_RETURN(a, b, rv) \
+  EXPECT_GE(a, b);                    \
+  if (!((a) >= (b))) {                \
+    return rv;                        \
+  }
+
 #define ASSERT_LE_OR_RETURN(a, b, rv) \
   EXPECT_LE(a, b);                    \
-  if (!((a) <= (b))) {                 \
+  if (!((a) <= (b))) {                \
+    return rv;                        \
+  }
+
+#define ASSERT_LT_OR_RETURN(a, b, rv) \
+  EXPECT_LT(a, b);                    \
+  if (!((a) < (b))) {                 \
     return rv;                        \
   }
 
@@ -200,6 +213,41 @@ PalettedRectIsSolidColor(Decoder* aDecoder, const IntRect& aRect, uint8_t aColor
       int32_t i = row * rowLength + col;
       ASSERT_EQ_OR_RETURN(aColor, imageData[i], false);
     }
+  }
+
+  return true;
+}
+
+bool
+RowHasPixels(SourceSurface* aSurface,
+             int32_t aRow,
+             const vector<BGRAColor>& aPixels)
+{
+  ASSERT_GE_OR_RETURN(aRow, 0, false);
+
+  IntSize surfaceSize = aSurface->GetSize();
+  ASSERT_EQ_OR_RETURN(aPixels.size(), size_t(surfaceSize.width), false);
+  ASSERT_LT_OR_RETURN(aRow, surfaceSize.height, false);
+
+  RefPtr<DataSourceSurface> dataSurface = aSurface->GetDataSurface();
+  ASSERT_TRUE_OR_RETURN(dataSurface, false);
+
+  ASSERT_EQ_OR_RETURN(dataSurface->Stride(), surfaceSize.width * 4, false);
+
+  DataSourceSurface::ScopedMap mapping(dataSurface,
+                                       DataSourceSurface::MapType::READ);
+  ASSERT_TRUE_OR_RETURN(mapping.IsMapped(), false);
+
+  uint8_t* data = dataSurface->GetData();
+  ASSERT_TRUE_OR_RETURN(data != nullptr, false);
+
+  int32_t rowLength = dataSurface->Stride();
+  for (int32_t col = 0; col < surfaceSize.width; ++col) {
+    int32_t i = aRow * rowLength + col * 4;
+    ASSERT_EQ_OR_RETURN(aPixels[col].mBlue,  data[i + 0], false);
+    ASSERT_EQ_OR_RETURN(aPixels[col].mGreen, data[i + 1], false);
+    ASSERT_EQ_OR_RETURN(aPixels[col].mRed,   data[i + 2], false);
+    ASSERT_EQ_OR_RETURN(aPixels[col].mAlpha, data[i + 3], false);
   }
 
   return true;
