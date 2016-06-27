@@ -306,7 +306,7 @@ class LegacyTask(base.Task):
         super(LegacyTask, self).__init__(*args, **kwargs)
 
     @classmethod
-    def load_tasks(cls, kind, path, config, params):
+    def load_tasks(cls, kind, path, config, params, loaded_tasks):
         root = os.path.abspath(os.path.join(path, config['legacy_path']))
 
         project = params['project']
