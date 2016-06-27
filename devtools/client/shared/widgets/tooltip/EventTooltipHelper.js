@@ -160,7 +160,7 @@ EventTooltip.prototype = {
       this._addContentListeners(header);
     }
 
-    this._tooltip.setContent(this.container, CONTAINER_WIDTH);
+    this._tooltip.setContent(this.container, {width: CONTAINER_WIDTH});
     this._tooltip.on("hidden", this.destroy);
   },
 

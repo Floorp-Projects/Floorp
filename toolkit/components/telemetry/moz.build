@@ -16,6 +16,7 @@ XPIDL_MODULE = 'telemetry'
 
 EXPORTS.mozilla += [
     '!TelemetryHistogramEnums.h',
+    '!TelemetryScalarEnums.h',
     'ProcessedStack.h',
     'Telemetry.h',
     'ThreadHangStats.h',
@@ -23,7 +24,9 @@ EXPORTS.mozilla += [
 
 SOURCES += [
     'Telemetry.cpp',
+    'TelemetryCommon.cpp',
     'TelemetryHistogram.cpp',
+    'TelemetryScalar.cpp',
     'WebrtcTelemetry.cpp',
 ]
 
@@ -59,6 +62,8 @@ FINAL_LIBRARY = 'xul'
 GENERATED_FILES = [
     'TelemetryHistogramData.inc',
     'TelemetryHistogramEnums.h',
+    'TelemetryScalarData.h',
+    'TelemetryScalarEnums.h',
 ]
 
 histogram_files = [
@@ -74,6 +79,19 @@ data.inputs = histogram_files
 enums = GENERATED_FILES['TelemetryHistogramEnums.h']
 enums.script = 'gen-histogram-enum.py'
 enums.inputs = histogram_files
+
+# Generate Scalars
+scalar_files = [
+    'Scalars.yaml',
+]
+
+scalar_data = GENERATED_FILES['TelemetryScalarData.h']
+scalar_data.script = 'gen-scalar-data.py'
+scalar_data.inputs = scalar_files
+
+scalar_enums = GENERATED_FILES['TelemetryScalarEnums.h']
+scalar_enums.script = 'gen-scalar-enum.py'
+scalar_enums.inputs = scalar_files
 
 DEFINES['MOZ_APP_VERSION'] = '"%s"' % CONFIG['MOZ_APP_VERSION']
 

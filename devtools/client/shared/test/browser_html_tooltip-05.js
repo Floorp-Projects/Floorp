@@ -40,7 +40,7 @@ add_task(function* () {
   let tooltip = new HTMLTooltip({doc}, {});
   let div = doc.createElementNS(HTML_NS, "div");
   div.style.height = "100%";
-  yield tooltip.setContent(div, TOOLTIP_WIDTH, TOOLTIP_HEIGHT);
+  tooltip.setContent(div, {width: TOOLTIP_WIDTH, height: TOOLTIP_HEIGHT});
 
   let box1 = doc.getElementById("box1");
   let box2 = doc.getElementById("box2");
@@ -71,7 +71,7 @@ add_task(function* () {
   yield hideTooltip(tooltip);
 
   info("Try to display the tooltip on top of box2.");
-  yield showTooltip(tooltip, box2, "top");
+  yield showTooltip(tooltip, box2, {position: "top"});
   expectedTooltipGeometry = {position: "bottom", height: 100, width};
   checkTooltipGeometry(tooltip, box2, expectedTooltipGeometry);
   yield hideTooltip(tooltip);
@@ -85,7 +85,7 @@ add_task(function* () {
   yield hideTooltip(tooltip);
 
   info("Try to display the tooltip on bottom of box3.");
-  yield showTooltip(tooltip, box3, "bottom");
+  yield showTooltip(tooltip, box3, {position: "bottom"});
   expectedTooltipGeometry = {position: "top", height: 100, width};
   checkTooltipGeometry(tooltip, box3, expectedTooltipGeometry);
   yield hideTooltip(tooltip);
@@ -99,7 +99,7 @@ add_task(function* () {
   yield hideTooltip(tooltip);
 
   info("Try to display the tooltip on bottom of box4.");
-  yield showTooltip(tooltip, box4, "bottom");
+  yield showTooltip(tooltip, box4, {position: "bottom"});
   expectedTooltipGeometry = {position: "top", height: 150, width};
   checkTooltipGeometry(tooltip, box4, expectedTooltipGeometry);
   yield hideTooltip(tooltip);

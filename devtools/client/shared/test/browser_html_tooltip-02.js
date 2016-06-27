@@ -42,7 +42,7 @@ function* testClickInTooltipContent(doc) {
   info("Test a tooltip is not closed when clicking inside itself");
 
   let tooltip = new HTMLTooltip({doc}, {});
-  yield tooltip.setContent(getTooltipContent(doc), 100, 50);
+  tooltip.setContent(getTooltipContent(doc), {width: 100, height: 50});
   yield showTooltip(tooltip, doc.getElementById("box1"));
 
   let onTooltipContainerClick = once(tooltip.container, "click");
@@ -58,7 +58,7 @@ function* testConsumeOutsideClicksFalse(doc) {
   let box4 = doc.getElementById("box4");
 
   let tooltip = new HTMLTooltip({doc}, {consumeOutsideClicks: false});
-  yield tooltip.setContent(getTooltipContent(doc), 100, 50);
+  tooltip.setContent(getTooltipContent(doc), {width: 100, height: 50});
   yield showTooltip(tooltip, doc.getElementById("box1"));
 
   let onBox4Clicked = once(box4, "click");
@@ -81,7 +81,7 @@ function* testConsumeOutsideClicksTrue(doc) {
   box4.addEventListener("click", () => box4clicks++);
 
   let tooltip = new HTMLTooltip({doc}, {consumeOutsideClicks: true});
-  yield tooltip.setContent(getTooltipContent(doc), 100, 50);
+  tooltip.setContent(getTooltipContent(doc), {width: 100, height: 50});
   yield showTooltip(tooltip, doc.getElementById("box1"));
 
   let onHidden = once(tooltip, "hidden");
@@ -99,7 +99,7 @@ function* testClickInOuterIframe(doc) {
   let frame = doc.getElementById("frame");
 
   let tooltip = new HTMLTooltip({doc});
-  yield tooltip.setContent(getTooltipContent(doc), 100, 50);
+  tooltip.setContent(getTooltipContent(doc), {width: 100, height: 50});
   yield showTooltip(tooltip, doc.getElementById("box1"));
 
   let onHidden = once(tooltip, "hidden");
@@ -118,7 +118,7 @@ function* testClickInInnerIframe(doc) {
   let iframe = doc.createElementNS(HTML_NS, "iframe");
   iframe.style.width = "100px";
   iframe.style.height = "50px";
-  yield tooltip.setContent(iframe, 100, 50);
+  tooltip.setContent(iframe, {width: 100, height: 50});
   yield showTooltip(tooltip, doc.getElementById("box1"));
 
   let onTooltipContainerClick = once(tooltip.container, "click");
