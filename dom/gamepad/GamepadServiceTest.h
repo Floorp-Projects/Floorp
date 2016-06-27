@@ -12,7 +12,7 @@
 namespace mozilla {
 namespace dom {
 
-class GamepadService;
+class GamepadManager;
 
 // Service for testing purposes
 class GamepadServiceTest : public nsIGamepadServiceTest
@@ -29,7 +29,7 @@ private:
   static GamepadServiceTest* sSingleton;
   // Hold a reference to the gamepad service so we don't have to worry about
   // execution order in tests.
-  RefPtr<GamepadService> mService;
+  RefPtr<GamepadManager> mService;
   virtual ~GamepadServiceTest();
 };
 

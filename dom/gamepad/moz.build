@@ -7,19 +7,23 @@
 EXPORTS.mozilla.dom += [
     'Gamepad.h',
     'GamepadButton.h',
-    'GamepadFunctions.h',
+    'GamepadManager.h',
     'GamepadMonitoring.h',
-    'GamepadService.h',
-    'GamepadServiceTest.h'
+    'GamepadPlatformService.h',
+    'GamepadServiceTest.h',
+    'ipc/GamepadEventChannelChild.h',
+    'ipc/GamepadEventChannelParent.h'
     ]
 
 UNIFIED_SOURCES = [
     'Gamepad.cpp',
     'GamepadButton.cpp',
-    'GamepadFunctions.cpp',
+    'GamepadManager.cpp',
     'GamepadMonitoring.cpp',
-    'GamepadService.cpp',
-    'GamepadServiceTest.cpp'
+    'GamepadPlatformService.cpp',
+    'GamepadServiceTest.cpp',
+    'ipc/GamepadEventChannelChild.cpp',
+    'ipc/GamepadEventChannelParent.cpp'
     ]
 
 if CONFIG['MOZ_GAMEPAD_BACKEND'] == 'stub':
@@ -42,6 +46,14 @@ elif CONFIG['MOZ_GAMEPAD_BACKEND'] == 'android':
     UNIFIED_SOURCES += [
         'android/AndroidGamepad.cpp'
     ]
+
+LOCAL_INCLUDES += [
+    'ipc',
+]
+
+IPDL_SOURCES += [
+    'ipc/PGamepadEventChannel.ipdl'
+]
 
 include('/ipc/chromium/chromium-config.mozbuild')
 

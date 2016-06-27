@@ -203,6 +203,12 @@ protected:
   virtual bool
   DeallocPFileSystemRequestParent(PFileSystemRequestParent*) override;
 
+  // Gamepad API Background IPC
+  virtual PGamepadEventChannelParent*
+  AllocPGamepadEventChannelParent() override;
+
+  virtual bool
+  DeallocPGamepadEventChannelParent(PGamepadEventChannelParent *aActor) override;
 };
 
 } // namespace ipc

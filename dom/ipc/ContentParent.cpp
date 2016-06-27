@@ -261,10 +261,6 @@ using namespace mozilla::system;
 #include "nsIProfileSaveEvent.h"
 #endif
 
-#ifdef MOZ_GAMEPAD
-#include "mozilla/dom/GamepadMonitoring.h"
-#endif
-
 #ifndef MOZ_SIMPLEPUSH
 #include "mozilla/dom/PushNotifier.h"
 #endif
@@ -2308,7 +2304,6 @@ ContentParent::InitializeMembers()
   mShutdownPending = false;
   mIPCOpen = true;
   mHangMonitorActor = nullptr;
-  mHasGamepadListener = false;
 }
 
 bool
@@ -5625,34 +5620,6 @@ ContentParent::GetBrowserConfiguration(const nsCString& aURI, BrowserConfigurati
   }
 
   return ContentChild::GetSingleton()->SendGetBrowserConfiguration(aURI, &aConfig);
-}
-
-bool
-ContentParent::RecvGamepadListenerAdded()
-{
-#ifdef MOZ_GAMEPAD
-  if (mHasGamepadListener) {
-    NS_WARNING("Gamepad listener already started, cannot start again!");
-    return false;
-  }
-  mHasGamepadListener = true;
-  StartGamepadMonitoring();
-#endif
-  return true;
-}
-
-bool
-ContentParent::RecvGamepadListenerRemoved()
-{
-#ifdef MOZ_GAMEPAD
-  if (!mHasGamepadListener) {
-    NS_WARNING("Gamepad listener already stopped, cannot stop again!");
-    return false;
-  }
-  mHasGamepadListener = false;
-  MaybeStopGamepadMonitoring();
-#endif
-  return true;
 }
 
 bool

@@ -173,10 +173,6 @@
 #endif
 #include "NuwaChild.h"
 
-#ifdef MOZ_GAMEPAD
-#include "mozilla/dom/GamepadService.h"
-#endif
-
 #ifndef MOZ_SIMPLEPUSH
 #include "mozilla/dom/PushNotifier.h"
 #endif
@@ -3226,18 +3222,6 @@ bool
 ContentChild::DeallocPWebBrowserPersistDocumentChild(PWebBrowserPersistDocumentChild* aActor)
 {
   delete aActor;
-  return true;
-}
-
-bool
-ContentChild::RecvGamepadUpdate(const GamepadChangeEvent& aGamepadEvent)
-{
-#ifdef MOZ_GAMEPAD
-  RefPtr<GamepadService> svc(GamepadService::GetService());
-  if (svc) {
-    svc->Update(aGamepadEvent);
-  }
-#endif
   return true;
 }
 
