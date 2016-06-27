@@ -47,6 +47,7 @@ PushNotifier::NotifyPushWithData(const nsACString& aScope,
                                  const nsAString& aMessageId,
                                  uint32_t aDataLen, uint8_t* aData)
 {
+  NS_ENSURE_ARG(aPrincipal);
   nsTArray<uint8_t> data;
   if (!data.SetCapacity(aDataLen, fallible)) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -62,6 +63,7 @@ NS_IMETHODIMP
 PushNotifier::NotifyPush(const nsACString& aScope, nsIPrincipal* aPrincipal,
                          const nsAString& aMessageId)
 {
+  NS_ENSURE_ARG(aPrincipal);
   PushMessageDispatcher dispatcher(aScope, aPrincipal, aMessageId, Nothing());
   return Dispatch(dispatcher);
 }
@@ -70,6 +72,7 @@ NS_IMETHODIMP
 PushNotifier::NotifySubscriptionChange(const nsACString& aScope,
                                        nsIPrincipal* aPrincipal)
 {
+  NS_ENSURE_ARG(aPrincipal);
   PushSubscriptionChangeDispatcher dispatcher(aScope, aPrincipal);
   return Dispatch(dispatcher);
 }
@@ -78,6 +81,7 @@ NS_IMETHODIMP
 PushNotifier::NotifySubscriptionModified(const nsACString& aScope,
                                          nsIPrincipal* aPrincipal)
 {
+  NS_ENSURE_ARG(aPrincipal);
   PushSubscriptionModifiedDispatcher dispatcher(aScope, aPrincipal);
   return Dispatch(dispatcher);
 }
@@ -86,6 +90,7 @@ NS_IMETHODIMP
 PushNotifier::NotifyError(const nsACString& aScope, nsIPrincipal* aPrincipal,
                           const nsAString& aMessage, uint32_t aFlags)
 {
+  NS_ENSURE_ARG(aPrincipal);
   PushErrorDispatcher dispatcher(aScope, aPrincipal, aMessage, aFlags);
   return Dispatch(dispatcher);
 }
@@ -276,6 +281,9 @@ PushDispatcher::NotifyObserversAndWorkers()
 bool
 PushDispatcher::ShouldNotifyWorkers()
 {
+  if (NS_WARN_IF(!mPrincipal)) {
+    return false;
+  }
   // System subscriptions use observer notifications instead of service worker
   // events. The `testing.notifyWorkers` pref disables worker events for
   // non-system subscriptions.

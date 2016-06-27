@@ -110,11 +110,23 @@ add_task(function* test_expiration_history_observer() {
     return notifiedScopes.length == 2;
   });
 
-  // Add an expired registration that we'll revive later.
+  // Add an expired registration that we'll revive later using the idle
+  // observer.
   yield putRecord('ALLOW_ACTION', {
     channelID: 'eb33fc90-c883-4267-b5cb-613969e8e349',
     pushEndpoint: 'https://example.org/push/2',
     scope: 'https://example.com/auctions',
+    pushCount: 0,
+    lastPush: 0,
+    version: null,
+    originAttributes: '',
+    quota: 0,
+  });
+  // ...And an expired registration that we'll revive on fetch.
+  yield putRecord('ALLOW_ACTION', {
+    channelID: '6b2d13fe-d848-4c5f-bdda-e9fc89727dca',
+    pushEndpoint: 'https://example.org/push/4',
+    scope: 'https://example.net/sales',
     pushCount: 0,
     lastPush: 0,
     version: null,
@@ -143,4 +155,29 @@ add_task(function* test_expiration_history_observer() {
 
   let bRecord = yield db.getByKeyID('eb33fc90-c883-4267-b5cb-613969e8e349');
   ok(!bRecord, 'Should drop evicted record');
+
+  // Simulate a visit to a site with an expired registration, then fetch the
+  // record. This should drop the expired record and fire an observer
+  // notification.
+  yield PlacesTestUtils.addVisits({
+    uri: 'https://example.net/sales',
+    title: 'Firefox plushies, 99% off',
+    visitDate: Date.now() * 1000,
+    transition: Ci.nsINavHistoryService.TRANSITION_LINK
+  });
+  subChangePromise = promiseObserverNotification(PushServiceComponent.subscriptionChangeTopic, (subject, data) => {
+    if (data == 'https://example.net/sales') {
+      ok(subject.isCodebasePrincipal,
+        'Should pass subscription principal as the subject');
+      return true;
+    }
+  });
+  let record = yield PushService.registration({
+    scope: 'https://example.net/sales',
+    originAttributes: '',
+  });
+  ok(!record, 'Should not return evicted record');
+  ok(!(yield db.getByKeyID('6b2d13fe-d848-4c5f-bdda-e9fc89727dca')),
+    'Should drop evicted record on fetch');
+  yield subChangePromise;
 });
