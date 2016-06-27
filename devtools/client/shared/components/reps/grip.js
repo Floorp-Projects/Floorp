@@ -16,8 +16,11 @@ define(function (require, exports, module) {
   const { PropRep } = createFactories(require("./prop-rep"));
   // Shortcuts
   const { span } = React.DOM;
+
   /**
-   * @template TODO docs
+   * Renders generic grip. Grip is client representation
+   * of remote JS object and is used as an input object
+   * for this rep component.
    */
   const Grip = React.createClass({
     displayName: "Grip",
@@ -139,7 +142,9 @@ define(function (require, exports, module) {
 
     render: function () {
       let object = this.props.object;
-      let props = this.shortPropIterator(object);
+      let props = (this.props.mode == "long") ?
+        this.longPropIterator(object) :
+        this.shortPropIterator(object);
 
       if (this.props.mode == "tiny" || !props.length) {
         return (
@@ -159,6 +164,7 @@ define(function (require, exports, module) {
       );
     },
   });
+
   // Registration
   function supportsObject(object, type) {
     if (!isGrip(object)) {
