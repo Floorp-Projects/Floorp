@@ -17,7 +17,7 @@ void
 MaybeStopGamepadMonitoring()
 {
   AssertIsOnBackgroundThread();
-  GamepadPlatformService* service =
+  RefPtr<GamepadPlatformService> service =
     GamepadPlatformService::GetParentService();
   MOZ_ASSERT(service);
   if(service->HasGamepadListeners()) {

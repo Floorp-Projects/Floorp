@@ -431,6 +431,12 @@ WindowsGamepadService::ScanForXInputDevices()
   MOZ_ASSERT(mXInput, "XInput should be present!");
 
   bool found = false;
+  RefPtr<GamepadPlatformService> service =
+    GamepadPlatformService::GetParentService();
+  if (!service) {
+    return found;
+  }
+
   for (int i = 0; i < XUSER_MAX_COUNT; i++) {
     XINPUT_STATE state = {};
     if (mXInput.mXInputGetState(i, &state) != ERROR_SUCCESS) {
@@ -443,9 +449,6 @@ WindowsGamepadService::ScanForXInputDevices()
     }
 
     // Not already present, add it.
-    GamepadPlatformService* service =
-      GamepadPlatformService::GetParentService();
-    MOZ_ASSERT(service);
     Gamepad gamepad = {};
     gamepad.type = kXInputGamepad;
     gamepad.present = true;
@@ -466,6 +469,12 @@ WindowsGamepadService::ScanForXInputDevices()
 void
 WindowsGamepadService::ScanForDevices()
 {
+  RefPtr<GamepadPlatformService> service =
+    GamepadPlatformService::GetParentService();
+  if (!service) {
+    return;
+  }
+
   for (int i = mGamepads.Length() - 1; i >= 0; i--) {
     mGamepads[i].present = false;
   }
@@ -486,9 +495,6 @@ WindowsGamepadService::ScanForDevices()
   }
 
   // Look for devices that are no longer present and remove them.
-  GamepadPlatformService* service =
-    GamepadPlatformService::GetParentService();
-  MOZ_ASSERT(service);
   for (int i = mGamepads.Length() - 1; i >= 0; i--) {
     if (!mGamepads[i].present) {
       service->RemoveGamepad(mGamepads[i].id);
@@ -516,9 +522,11 @@ WindowsGamepadService::PollXInput()
 
 void WindowsGamepadService::CheckXInputChanges(Gamepad& gamepad,
                                                XINPUT_STATE& state) {
-  GamepadPlatformService* service =
+  RefPtr<GamepadPlatformService> service =
     GamepadPlatformService::GetParentService();
-  MOZ_ASSERT(service);
+  if (!service) {
+    return;
+  }
   // Handle digital buttons first
   for (size_t b = 0; b < kNumMappings; b++) {
     if (state.Gamepad.wButtons & kXIButtonMap[b].button &&
@@ -586,6 +594,12 @@ public:
 bool
 WindowsGamepadService::GetRawGamepad(HANDLE handle)
 {
+  RefPtr<GamepadPlatformService> service =
+    GamepadPlatformService::GetParentService();
+  if (!service) {
+    return true;
+  }
+
   if (!mHID) {
     return false;
   }
@@ -722,10 +736,6 @@ WindowsGamepadService::GetRawGamepad(HANDLE handle)
   gamepad.type = kRawInputGamepad;
   gamepad.handle = handle;
   gamepad.present = true;
-
-  GamepadPlatformService* service =
-    GamepadPlatformService::GetParentService();
-  MOZ_ASSERT(service);
   gamepad.id = service->AddGamepad(gamepad_id,
                                    GamepadMappingType::_empty,
                                    gamepad.numButtons,
@@ -739,6 +749,12 @@ WindowsGamepadService::HandleRawInput(HRAWINPUT handle)
 {
   if (!mHID) {
     return false;
+  }
+
+  RefPtr<GamepadPlatformService> service =
+    GamepadPlatformService::GetParentService();
+  if (service) {
+    return true;
   }
 
   // First, get data from the handle
@@ -773,9 +789,6 @@ WindowsGamepadService::HandleRawInput(HRAWINPUT handle)
     reinterpret_cast<PHIDP_PREPARSED_DATA>(parsedbytes.Elements());
 
   // Get all the pressed buttons.
-  GamepadPlatformService* service =
-    GamepadPlatformService::GetParentService();
-  MOZ_ASSERT(service);
   nsTArray<USAGE> usages(gamepad->numButtons);
   usages.SetLength(gamepad->numButtons);
   ULONG usageLength = gamepad->numButtons;

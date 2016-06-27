@@ -247,6 +247,12 @@ class DarwinGamepadServiceStartupRunnable final : public Runnable
 void
 DarwinGamepadService::DeviceAdded(IOHIDDeviceRef device)
 {
+  RefPtr<GamepadPlatformService> service =
+    GamepadPlatformService::GetParentService();
+  if (!service) {
+    return;
+  }
+
   size_t slot = size_t(-1);
   for (size_t i = 0; i < mGamepads.size(); i++) {
     if (mGamepads[i] == device)
@@ -276,9 +282,6 @@ DarwinGamepadService::DeviceAdded(IOHIDDeviceRef device)
                      sizeof(product_name), kCFStringEncodingASCII);
   char buffer[256];
   sprintf(buffer, "%x-%x-%s", vendorId, productId, product_name);
-  GamepadPlatformService* service =
-    GamepadPlatformService::GetParentService();
-  MOZ_ASSERT(service);
   uint32_t index = service->AddGamepad(buffer,
                                        mozilla::dom::GamepadMappingType::_empty,
                                        (int)mGamepads[slot].numButtons(),
@@ -289,9 +292,11 @@ DarwinGamepadService::DeviceAdded(IOHIDDeviceRef device)
 void
 DarwinGamepadService::DeviceRemoved(IOHIDDeviceRef device)
 {
-  GamepadPlatformService* service =
+  RefPtr<GamepadPlatformService> service =
     GamepadPlatformService::GetParentService();
-  MOZ_ASSERT(service);
+  if (!service) {
+    return;
+  }
   for (size_t i = 0; i < mGamepads.size(); i++) {
     if (mGamepads[i] == device) {
       service->RemoveGamepad(mGamepads[i].mSuperIndex);
@@ -343,6 +348,12 @@ UnpackDpad(int dpad_value, int min, int max, dpad_buttons& buttons)
 void
 DarwinGamepadService::InputValueChanged(IOHIDValueRef value)
 {
+  RefPtr<GamepadPlatformService> service =
+    GamepadPlatformService::GetParentService();
+  if (!service) {
+    return;
+  }
+
   uint32_t value_length = IOHIDValueGetLength(value);
   if (value_length > 4) {
     // Workaround for bizarre issue with PS3 controllers that try to return
@@ -351,9 +362,7 @@ DarwinGamepadService::InputValueChanged(IOHIDValueRef value)
   }
   IOHIDElementRef element = IOHIDValueGetElement(value);
   IOHIDDeviceRef device = IOHIDElementGetDevice(element);
-  GamepadPlatformService* service =
-    GamepadPlatformService::GetParentService();
-  MOZ_ASSERT(service);
+
   for (unsigned i = 0; i < mGamepads.size(); i++) {
     Gamepad &gamepad = mGamepads[i];
     if (gamepad == device) {

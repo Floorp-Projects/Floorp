@@ -86,6 +86,12 @@ LinuxGamepadService* gService = nullptr;
 void
 LinuxGamepadService::AddDevice(struct udev_device* dev)
 {
+  RefPtr<GamepadPlatformService> service =
+    GamepadPlatformService::GetParentService();
+  if (!service) {
+    return;
+  }
+
   const char* devpath = mUdev.udev_device_get_devnode(dev);
   if (!devpath) {
     return;
@@ -134,9 +140,6 @@ LinuxGamepadService::AddDevice(struct udev_device* dev)
            name);
 
   char numAxes = 0, numButtons = 0;
-  GamepadPlatformService* service =
-    GamepadPlatformService::GetParentService();
-  MOZ_ASSERT(service);
   ioctl(fd, JSIOCGAXES, &numAxes);
   gamepad.numAxes = numAxes;
   ioctl(fd, JSIOCGBUTTONS, &numButtons);
@@ -160,13 +163,17 @@ LinuxGamepadService::AddDevice(struct udev_device* dev)
 void
 LinuxGamepadService::RemoveDevice(struct udev_device* dev)
 {
+  RefPtr<GamepadPlatformService> service =
+    GamepadPlatformService::GetParentService();
+  if (!service) {
+    return;
+  }
+
   const char* devpath = mUdev.udev_device_get_devnode(dev);
   if (!devpath) {
     return;
   }
-  GamepadPlatformService* service =
-    GamepadPlatformService::GetParentService();
-  MOZ_ASSERT(service);
+
   for (unsigned int i = 0; i < mGamepads.Length(); i++) {
     if (strcmp(mGamepads[i].devpath, devpath) == 0) {
       g_source_remove(mGamepads[i].source_id);
@@ -300,10 +307,12 @@ LinuxGamepadService::OnGamepadData(GIOChannel* source,
                                    GIOCondition condition,
                                    gpointer data)
 {
-  int index = GPOINTER_TO_INT(data);
-  GamepadPlatformService* service =
+  RefPtr<GamepadPlatformService> service =
     GamepadPlatformService::GetParentService();
-  MOZ_ASSERT(service);
+  if (!service) {
+    return TRUE;
+  }
+  int index = GPOINTER_TO_INT(data);
   //TODO: remove gamepad?
   if (condition & G_IO_ERR || condition & G_IO_HUP)
     return FALSE;
