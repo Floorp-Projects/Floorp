@@ -104,6 +104,28 @@ public class TestSyncAction {
     }
 
     /**
+     * Scenario: The catalog is using the old format, we want to make sure we abort cleanly.
+     */
+    @Test
+    public void testUpdatingWithOldCatalog() throws Exception{
+        SyncAction action = spy(new SyncAction());
+        doReturn(true).when(action).isSyncEnabledForClient(RuntimeEnvironment.application);
+        doReturn(fromFile("dlc_sync_old_format.json")).when(action).fetchRawCatalog(anyLong());
+
+        DownloadContent existingContent = createTestContent("c906275c-3747-fe27-426f-6187526a6f06");
+        DownloadContentCatalog catalog = spy(new MockedContentCatalog(existingContent));
+
+        action.perform(RuntimeEnvironment.application, catalog);
+
+        // make sure nothing was done
+        verify(action, never()).createContent(anyCatalog(), anyJSONObject());
+        verify(action, never()).updateContent(anyCatalog(), anyJSONObject(), anyContent());
+        verify(action, never()).deleteContent(anyCatalog(), anyString());
+        verify(action, never()).startStudyAction(anyContext());
+    }
+
+
+    /**
      * Scenario: The catalog contains one item and the server returns a new version.
      */
     @Test
