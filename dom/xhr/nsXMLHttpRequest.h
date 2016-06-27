@@ -55,6 +55,7 @@ namespace dom {
 class Blob;
 class BlobSet;
 class FormData;
+class XMLHttpRequestUpload;
 } // namespace dom
 
 // A helper for building up an ArrayBuffer object's data
@@ -109,35 +110,6 @@ protected:
 };
 
 } // namespace mozilla
-
-class nsXMLHttpRequestUpload final : public mozilla::dom::XMLHttpRequestEventTarget,
-                                     public nsIXMLHttpRequestUpload
-{
-public:
-  explicit nsXMLHttpRequestUpload(mozilla::DOMEventTargetHelper* aOwner)
-    : XMLHttpRequestEventTarget(aOwner)
-  {
-  }
-
-  NS_DECL_ISUPPORTS_INHERITED
-  NS_FORWARD_NSIXMLHTTPREQUESTEVENTTARGET(XMLHttpRequestEventTarget::)
-  NS_REALLY_FORWARD_NSIDOMEVENTTARGET(mozilla::dom::XMLHttpRequestEventTarget)
-  NS_DECL_NSIXMLHTTPREQUESTUPLOAD
-
-  virtual JSObject* WrapObject(JSContext *cx, JS::Handle<JSObject*> aGivenProto) override;
-  nsISupports* GetParentObject()
-  {
-    return GetOwner();
-  }
-
-  bool HasListeners()
-  {
-    return mListenerManager && mListenerManager->HasListeners();
-  }
-
-private:
-  virtual ~nsXMLHttpRequestUpload() {}
-};
 
 class nsXMLHttpRequestXPCOMifier;
 
@@ -296,7 +268,7 @@ public:
   void SetTimeout(uint32_t aTimeout, mozilla::ErrorResult& aRv);
   bool WithCredentials();
   void SetWithCredentials(bool aWithCredentials, mozilla::ErrorResult& aRv);
-  nsXMLHttpRequestUpload* Upload();
+  mozilla::dom::XMLHttpRequestUpload* Upload();
 
 private:
   virtual ~nsXMLHttpRequest();
@@ -695,7 +667,7 @@ protected:
 
   uint32_t mState;
 
-  RefPtr<nsXMLHttpRequestUpload> mUpload;
+  RefPtr<mozilla::dom::XMLHttpRequestUpload> mUpload;
   int64_t mUploadTransferred;
   int64_t mUploadTotal;
   bool mUploadLengthComputable;
