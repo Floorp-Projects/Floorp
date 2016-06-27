@@ -7,13 +7,13 @@
 #ifndef mozilla_dom_workers_xmlhttprequestupload_h__
 #define mozilla_dom_workers_xmlhttprequestupload_h__
 
-#include "nsXMLHttpRequest.h"
+#include "mozilla/dom/XMLHttpRequestEventTarget.h"
 
 BEGIN_WORKERS_NAMESPACE
 
 class XMLHttpRequestWorker;
 
-class XMLHttpRequestUploadWorker final : public nsXHREventTarget
+class XMLHttpRequestUploadWorker final : public XMLHttpRequestEventTarget
 {
   RefPtr<XMLHttpRequestWorker> mXHR;
 
@@ -28,7 +28,7 @@ public:
   static already_AddRefed<XMLHttpRequestUploadWorker>
   Create(XMLHttpRequestWorker* aXHR);
 
-  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XMLHttpRequestUploadWorker, nsXHREventTarget)
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XMLHttpRequestUploadWorker, XMLHttpRequestEventTarget)
 
   NS_DECL_ISUPPORTS_INHERITED
 

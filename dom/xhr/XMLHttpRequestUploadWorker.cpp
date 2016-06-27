@@ -21,13 +21,13 @@ XMLHttpRequestUploadWorker::~XMLHttpRequestUploadWorker()
 {
 }
 
-NS_IMPL_ADDREF_INHERITED(XMLHttpRequestUploadWorker, nsXHREventTarget)
-NS_IMPL_RELEASE_INHERITED(XMLHttpRequestUploadWorker, nsXHREventTarget)
+NS_IMPL_ADDREF_INHERITED(XMLHttpRequestUploadWorker, XMLHttpRequestEventTarget)
+NS_IMPL_RELEASE_INHERITED(XMLHttpRequestUploadWorker, XMLHttpRequestEventTarget)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(XMLHttpRequestUploadWorker)
-NS_INTERFACE_MAP_END_INHERITING(nsXHREventTarget)
+NS_INTERFACE_MAP_END_INHERITING(XMLHttpRequestEventTarget)
 
-NS_IMPL_CYCLE_COLLECTION_INHERITED(XMLHttpRequestUploadWorker, nsXHREventTarget,
+NS_IMPL_CYCLE_COLLECTION_INHERITED(XMLHttpRequestUploadWorker, XMLHttpRequestEventTarget,
                                    mXHR)
 
 JSObject*
