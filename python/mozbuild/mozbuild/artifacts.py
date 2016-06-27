@@ -726,7 +726,9 @@ class ArtifactCache(CacheManager):
 class Artifacts(object):
     '''Maintain state to efficiently fetch build artifacts from a Firefox tree.'''
 
-    def __init__(self, tree, substs, defines, job=None, log=None, cache_dir='.', hg=None, git=None, skip_cache=False):
+    def __init__(self, tree, substs, defines, job=None, log=None,
+                 cache_dir='.', hg=None, git=None, skip_cache=False,
+                 topsrcdir=None):
         if (hg and git) or (not hg and not git):
             raise ValueError("Must provide path to exactly one of hg and git")
 
@@ -739,6 +741,7 @@ class Artifacts(object):
         self._git = git
         self._cache_dir = cache_dir
         self._skip_cache = skip_cache
+        self._topsrcdir = topsrcdir
 
         try:
             self._artifact_job = get_job_details(self._job, log=self._log)
@@ -861,7 +864,7 @@ class Artifacts(object):
             '--template', '{node}\n',
             '-r', 'last(public() and ::., {num})'.format(
                 num=NUM_REVISIONS_TO_QUERY)
-        ]).splitlines()
+        ], cwd=self._topsrcdir).splitlines()
 
     def _find_pushheads(self):
         """Returns an iterator of recent pushhead revisions, starting with the
