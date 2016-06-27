@@ -22,7 +22,7 @@ class WorkerPrivate;
 }
 
 class XMLHttpRequestWorker final : public XMLHttpRequest,
-                                   public worker::WorkerHolder
+                                   public workers::WorkerHolder
 {
 public:
   struct StateData
