@@ -77,10 +77,7 @@ const PingServer = {
 
   promiseNextRequest: function() {
     const deferred = this._defers[this._currentDeferred++];
-    // Send the ping to the consumer on the next tick, so that the completion gets
-    // signaled to Telemetry.
-    return new Promise(r => Services.tm.currentThread.dispatch(() => r(deferred.promise),
-                                                               Ci.nsIThread.DISPATCH_NORMAL));
+    return deferred.promise;
   },
 
   promiseNextPing: function() {

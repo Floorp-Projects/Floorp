@@ -650,9 +650,7 @@ this.UITour = {
         string.data = value;
         Services.prefs.setComplexValue("browser.uitour.treatment." + name,
                                        Ci.nsISupportsString, string);
-        // The notification is only meant to be used in tests.
-        UITourHealthReport.recordTreatmentTag(name, value)
-                          .then(() => this.notify("TreatmentTag:TelemetrySent"));
+        UITourHealthReport.recordTreatmentTag(name, value);
         break;
       }
 
@@ -2165,15 +2163,15 @@ this.UITour.init();
  */
 const UITourHealthReport = {
   recordTreatmentTag: function(tag, value) {
-    return TelemetryController.submitExternalPing("uitour-tag",
-      {
-        version: 1,
-        tagName: tag,
-        tagValue: value,
-      },
-      {
-        addClientId: true,
-        addEnvironment: true,
-      });
+  TelemetryController.submitExternalPing("uitour-tag",
+    {
+      version: 1,
+      tagName: tag,
+      tagValue: value,
+    },
+    {
+      addClientId: true,
+      addEnvironment: true,
+    });
   }
 };
