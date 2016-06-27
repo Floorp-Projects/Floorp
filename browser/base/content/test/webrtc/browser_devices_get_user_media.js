@@ -4,12 +4,6 @@
 
 requestLongerTimeout(2);
 
-const CONTENT_SCRIPT_HELPER = getRootDirectory(gTestPath) + "get_user_media_content_script.js";
-Cc["@mozilla.org/moz/jssubscript-loader;1"]
-  .getService(Ci.mozIJSSubScriptLoader)
-  .loadSubScript(getRootDirectory(gTestPath) + "get_user_media_helpers.js",
-                 this);
-
 registerCleanupFunction(function() {
   gBrowser.removeCurrentTab();
 });
