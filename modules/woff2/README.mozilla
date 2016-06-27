@@ -11,7 +11,7 @@ The in-tree copy is updated by running
   sh update.sh
 from within the modules/woff2 directory.
 
-Current version: [commit 643c7b45891cbeb5dc1f7599a4c9b53fbe82a08f].
+Current version: [commit afbecce5ff16faf92ce637eab991810f5b66f803].
 
 redefine-unique_ptr.patch redefines the class std::unique_ptr to workaround a
 build issue with missing C++11 features.
