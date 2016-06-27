@@ -122,6 +122,8 @@ GPUProcessHost::InitAfterConnect(bool aSucceeded)
     DebugOnly<bool> rv =
       mGPUChild->Open(GetChannel(), base::GetProcId(GetChildProcessHandle()));
     MOZ_ASSERT(rv);
+
+    mGPUChild->Init();
   }
 
   if (mListener) {

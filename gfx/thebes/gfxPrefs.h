@@ -9,7 +9,9 @@
 #include <cmath>                 // for M_PI
 #include <stdint.h>
 #include "mozilla/Assertions.h"
+#include "mozilla/Function.h"
 #include "mozilla/gfx/LoggingConstants.h"
+#include "nsTArray.h"
 
 // First time gfxPrefs::GetSingleton() needs to be called on the main thread,
 // before any of the methods accessing the values are used, but after
@@ -68,11 +70,20 @@ static void Set##Name(Type aVal) { MOZ_ASSERT(SingletonExists());             \
 static const char* Get##Name##PrefName() { return Prefname; }                 \
 static Type Get##Name##PrefDefault() { return Default; }                      \
 private:                                                                      \
+static Pref* Get##Name##PrefPtr() { return &GetSingleton().mPref##Name; }     \
 PrefTemplate<UpdatePolicy::Update, Type, Get##Name##PrefDefault, Get##Name##PrefName> mPref##Name
+
+namespace mozilla {
+namespace gfx {
+class GfxPrefValue;   // defined in PGPU.ipdl
+} // namespace gfx
+} // namespace mozilla
 
 class gfxPrefs;
 class gfxPrefs final
 {
+  typedef mozilla::gfx::GfxPrefValue GfxPrefValue;
+
 private:
   // Enums for the update policy.
   enum class UpdatePolicy {
@@ -87,8 +98,11 @@ public:
   public:
     Pref() : mChangeCallback(nullptr)
     {
+      mIndex = sGfxPrefList->Length();
+      sGfxPrefList->AppendElement(this);
     }
 
+    size_t Index() const { return mIndex; }
     void OnChange();
 
     typedef void (*ChangeCallback)();
@@ -96,9 +110,26 @@ public:
 
     virtual const char* Name() const = 0;
 
+    // Returns true if the value is default, false if changed.
+    virtual bool HasDefaultValue() const = 0;
+
+    // Returns the pref value as a discriminated union.
+    virtual void GetCachedValue(GfxPrefValue* aOutValue) const = 0;
+
+    // Change the cached value. GfxPrefValue must be a compatible type.
+    virtual void SetCachedValue(const GfxPrefValue& aOutValue) = 0;
+
+  protected:
+    void FireChangeCallback();
+
   private:
+    size_t mIndex;
     ChangeCallback mChangeCallback;
   };
+
+  static const nsTArray<Pref*>& all() {
+    return *sGfxPrefList;
+  }
 
 private:
   // Since we cannot use const char*, use a function that returns it.
@@ -167,6 +198,24 @@ private:
         return PrefGet(Prefname(), mValue);
       }
       return mValue;
+    }
+    bool HasDefaultValue() const override {
+      return mValue == Default();
+    }
+    void GetCachedValue(GfxPrefValue* aOutValue) const override {
+      CopyPrefValue(&mValue, aOutValue);
+    }
+    void SetCachedValue(const GfxPrefValue& aOutValue) override {
+      // This is only used in non-XPCOM processes.
+      MOZ_ASSERT(!IsPrefsServiceAvailable());
+
+      T newValue;
+      CopyPrefValue(&aOutValue, &newValue);
+
+      if (mValue != newValue) {
+        mValue = newValue;
+        FireChangeCallback();
+      }
     }
     T mValue;
   };
@@ -525,6 +574,7 @@ public:
   {
     MOZ_ASSERT(!sInstanceHasBeenDestroyed, "Should never recreate a gfxPrefs instance!");
     if (!sInstance) {
+      sGfxPrefList = new nsTArray<Pref*>();
       sInstance = new gfxPrefs;
       sInstance->Init();
     }
@@ -537,6 +587,7 @@ public:
 private:
   static gfxPrefs* sInstance;
   static bool sInstanceHasBeenDestroyed;
+  static nsTArray<Pref*>* sGfxPrefList;
 
 private:
   // The constructor cannot access GetSingleton(), since sInstance (necessarily)
@@ -561,6 +612,15 @@ private:
   static void PrefSet(const char* aPref, float aValue);
   static void WatchChanges(const char* aPrefname, Pref* aPref);
   static void UnwatchChanges(const char* aPrefname, Pref* aPref);
+  // Creating these to avoid having to include PGPU.h in the .h
+  static void CopyPrefValue(const bool* aValue, GfxPrefValue* aOutValue);
+  static void CopyPrefValue(const int32_t* aValue, GfxPrefValue* aOutValue);
+  static void CopyPrefValue(const uint32_t* aValue, GfxPrefValue* aOutValue);
+  static void CopyPrefValue(const float* aValue, GfxPrefValue* aOutValue);
+  static void CopyPrefValue(const GfxPrefValue* aValue, bool* aOutValue);
+  static void CopyPrefValue(const GfxPrefValue* aValue, int32_t* aOutValue);
+  static void CopyPrefValue(const GfxPrefValue* aValue, uint32_t* aOutValue);
+  static void CopyPrefValue(const GfxPrefValue* aValue, float* aOutValue);
 
   static void AssertMainThread();
 
