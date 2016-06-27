@@ -1109,7 +1109,7 @@ struct JSRuntime : public JS::shadow::Runtime,
     /* Gets current default locale. String remains owned by context. */
     const char* getDefaultLocale();
 
-    JSVersion defaultVersion() { return defaultVersion_; }
+    JSVersion defaultVersion() const { return defaultVersion_; }
     void setDefaultVersion(JSVersion v) { defaultVersion_ = v; }
 
     /* Base address of the native stack for the current thread. */
