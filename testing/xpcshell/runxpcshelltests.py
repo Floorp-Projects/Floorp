@@ -132,6 +132,7 @@ class XPCShellTestThread(Thread):
         self.xpcshell = kwargs.get('xpcshell')
         self.xpcsRunArgs = kwargs.get('xpcsRunArgs')
         self.failureManifest = kwargs.get('failureManifest')
+        self.jscovdir = kwargs.get('jscovdir')
         self.stack_fixer_function = kwargs.get('stack_fixer_function')
         self._rootTempDir = kwargs.get('tempDir')
 
@@ -631,7 +632,14 @@ class XPCShellTestThread(Thread):
 
         # The test name to log
         cmdI = ['-e', 'const _TEST_NAME = "%s"' % name]
-        self.complete_command = cmdH + cmdT + cmdI + args
+
+        # Directory for javascript code coverage output, null by default.
+        cmdC = ['-e', 'const _JSCOV_DIR = null']
+        if self.jscovdir:
+            cmdC = ['-e', 'const _JSCOV_DIR = "%s"' % self.jscovdir.replace('\\', '/')]
+            self.complete_command = cmdH + cmdT + cmdI + cmdC + args
+        else:
+            self.complete_command = cmdH + cmdT + cmdI + args
 
         if self.test_object.get('dmd') == 'true':
             if sys.platform.startswith('linux'):
@@ -1081,7 +1089,7 @@ class XPCShellTests(object):
                  testClass=XPCShellTestThread, failureManifest=None,
                  log=None, stream=None, jsDebugger=False, jsDebuggerPort=0,
                  test_tags=None, dump_tests=None, utility_path=None,
-                 rerun_failures=False, failure_manifest=None, **otherOptions):
+                 rerun_failures=False, failure_manifest=None, jscovdir=None, **otherOptions):
         """Run xpcshell tests.
 
         |xpcshell|, is the xpcshell executable to use to run the tests.
@@ -1181,6 +1189,7 @@ class XPCShellTests(object):
         self.pluginsPath = pluginsPath
         self.sequential = sequential
         self.failure_manifest = failure_manifest
+        self.jscovdir = jscovdir
 
         self.testCount = 0
         self.passCount = 0
@@ -1263,6 +1272,7 @@ class XPCShellTests(object):
             'xpcshell': self.xpcshell,
             'xpcsRunArgs': self.xpcsRunArgs,
             'failureManifest': self.failure_manifest,
+            'jscovdir': self.jscovdir,
             'harness_timeout': self.harness_timeout,
             'stack_fixer_function': self.stack_fixer_function,
         }

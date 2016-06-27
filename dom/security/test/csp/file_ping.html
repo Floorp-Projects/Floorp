@@ -1,0 +1,19 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Bug 1100181 - CSP: Enforce connect-src when submitting pings</title>
+</head>
+<body>
+  <!-- we are using an image for the test, but can be anything -->
+  <a id="testlink"
+     href="http://mochi.test:8888/tests/image/test/mochitest/blue.png"
+     ping="http://mochi.test:8888/tests/image/test/mochitest/blue.png?send-ping">
+     Send ping
+  </a>
+  
+  <script type="text/javascript">
+    var link = document.getElementById("testlink");
+    link.click();
+  </script>
+</body>
+</html>

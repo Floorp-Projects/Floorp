@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" /> 
+  <title></title>
+  <script>
+  window.onload = function() {
+    setTimeout(function() {
+      var rng = document.createRange();
+      rng.setStart(document.getElementsByTagName("p").item(0).firstChild, 100);
+      rng.setEndAfter(document.getElementsByTagName("p").item(0));
+      try {
+        rng.extractContents();
+        opener.ok(true, "extractContents should not throw when document in iframe is being modified.");
+      } catch(ex) {
+        opener.ok(false, "extractContents shouldn't have thrown: " + ex);
+      }
+
+      opener.setTimeout("SimpleTest.finish();", 0);
+      window.close();
+
+    }, 0);
+  };
+  </script>
+</head>
+<body>
+<p>
+  Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur elit nisi, convallis sed scelerisque sit amet, vestibulum eu odio. Pellentesque et quam et nibh sollicitudin rutrum. Fusce tristique hendrerit ligula, et euismod sapien facilisis quis. Donec tincidunt turpis tortor, in pharetra tellus euismod ac. Vestibulum consectetur nulla lacinia, consectetur mauris ac, tempus libero. Nam non dui id enim dapibus porta id sed lectus. Praesent at suscipit neque. Vestibulum tellus lorem, placerat et volutpat sed, elementum eget lacus. Sed interdum nisi et imperdiet varius. Sed non magna odio. Cum sociis natoque penatibus et magnis dis parturient montes, nascetur ridiculus mus. Vivamus velit risus, accumsan nec efficitur nec, semper sed arcu. Praesent consectetur lectus justo, fringilla imperdiet neque lobortis id. Donec efficitur pulvinar finibus.
+  <iframe src="data:text/html,<script>window.onunload = function() {document.removeChild(document.documentElement); }</script>" width="10" height="10"></iframe>
+</p>
+<p>test</p>
+</body>
+</html>

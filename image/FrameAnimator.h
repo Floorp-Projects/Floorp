@@ -7,6 +7,7 @@
 #ifndef mozilla_image_FrameAnimator_h
 #define mozilla_image_FrameAnimator_h
 
+#include "mozilla/Maybe.h"
 #include "mozilla/MemoryReporting.h"
 #include "mozilla/TimeStamp.h"
 #include "gfx2DGlue.h"
@@ -246,7 +247,8 @@ private: // methods
                               const nsIntRect& aSrcRect,
                               uint32_t aSrcPaletteLength, bool aSrcHasAlpha,
                               uint8_t* aDstPixels, const nsIntRect& aDstRect,
-                              BlendMethod aBlendMethod);
+                              BlendMethod aBlendMethod,
+                              const Maybe<nsIntRect>& aBlendRect);
 
 private: // data
   //! A weak pointer to our owning image.

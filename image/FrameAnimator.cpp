@@ -625,7 +625,8 @@ FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
                         prevFrameData.mHasAlpha,
                         compositingFrameData.mRawData,
                         compositingFrameData.mRect,
-                        prevFrameData.mBlendMethod);
+                        prevFrameData.mBlendMethod,
+                        prevFrameData.mBlendRect);
           }
         }
     }
@@ -673,7 +674,8 @@ FrameAnimator::DoBlend(nsIntRect* aDirtyRect,
               nextFrameData.mHasAlpha,
               compositingFrameData.mRawData,
               compositingFrameData.mRect,
-              nextFrameData.mBlendMethod);
+              nextFrameData.mBlendMethod,
+              nextFrameData.mBlendRect);
 
   // Tell the image that it is fully 'downloaded'.
   mCompositingFrame->Finish();
@@ -742,7 +744,7 @@ nsresult
 FrameAnimator::DrawFrameTo(const uint8_t* aSrcData, const nsIntRect& aSrcRect,
                            uint32_t aSrcPaletteLength, bool aSrcHasAlpha,
                            uint8_t* aDstPixels, const nsIntRect& aDstRect,
-                           BlendMethod aBlendMethod)
+                           BlendMethod aBlendMethod, const Maybe<nsIntRect>& aBlendRect)
 {
   NS_ENSURE_ARG_POINTER(aSrcData);
   NS_ENSURE_ARG_POINTER(aDstPixels);
@@ -822,16 +824,53 @@ FrameAnimator::DrawFrameTo(const uint8_t* aSrcData, const nsIntRect& aSrcRect,
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
+    // XXX(seth): This is inefficient but we'll remove it quite soon when we
+    // move frame compositing into SurfacePipe. For now we need this because
+    // RemoveFrameRectFilter has transformed PNG frames with frame rects into
+    // imgFrame's with no frame rects, but with a region of 0 alpha where the
+    // frame rect should be. This works really nicely if we're using
+    // BlendMethod::OVER, but BlendMethod::SOURCE will result in that frame rect
+    // area overwriting the previous frame, which makes the animation look
+    // wrong. This quick hack fixes that by first compositing the whle new frame
+    // with BlendMethod::OVER, and then recopying the area that uses
+    // BlendMethod::SOURCE if needed. To make this work, the decoder has to
+    // provide a "blend rect" that tells us where to do this. This is just the
+    // frame rect, but hidden in a way that makes it invisible to most of the
+    // system, so we can keep eliminating dependencies on it.
     auto op = aBlendMethod == BlendMethod::SOURCE ? PIXMAN_OP_SRC
                                                   : PIXMAN_OP_OVER;
-    pixman_image_composite32(op,
-                             src,
-                             nullptr,
-                             dst,
-                             0, 0,
-                             0, 0,
-                             aSrcRect.x, aSrcRect.y,
-                             aSrcRect.width, aSrcRect.height);
+
+    if (aBlendMethod == BlendMethod::OVER || !aBlendRect ||
+        (aBlendMethod == BlendMethod::SOURCE && aSrcRect.IsEqualEdges(*aBlendRect))) {
+      // We don't need to do anything clever. (Or, in the case where no blend
+      // rect was specified, we can't.)
+      pixman_image_composite32(op,
+                               src,
+                               nullptr,
+                               dst,
+                               0, 0,
+                               0, 0,
+                               aSrcRect.x, aSrcRect.y,
+                               aSrcRect.width, aSrcRect.height);
+    } else {
+      // We need to do the OVER followed by SOURCE trick above.
+      pixman_image_composite32(PIXMAN_OP_OVER,
+                               src,
+                               nullptr,
+                               dst,
+                               0, 0,
+                               0, 0,
+                               aSrcRect.x, aSrcRect.y,
+                               aSrcRect.width, aSrcRect.height);
+      pixman_image_composite32(PIXMAN_OP_SRC,
+                               src,
+                               nullptr,
+                               dst,
+                               aBlendRect->x, aBlendRect->y,
+                               0, 0,
+                               aBlendRect->x, aBlendRect->y,
+                               aBlendRect->width, aBlendRect->height);
+    }
 
     pixman_image_unref(src);
     pixman_image_unref(dst);
