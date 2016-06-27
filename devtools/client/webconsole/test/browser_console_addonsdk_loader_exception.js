@@ -58,7 +58,7 @@ function test() {
     let msg = [...result.matched][0];
     ok(msg, "message element found");
     let locationNode = msg
-      .querySelector(".message > .message-location > .frame-link");
+      .querySelector(".message .message-location > .frame-link");
     ok(locationNode, "message location element found");
 
     let url = locationNode.getAttribute("data-url");
