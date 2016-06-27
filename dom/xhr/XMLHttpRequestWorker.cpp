@@ -1352,7 +1352,7 @@ EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     return false;
   }
 
-  nsXHREventTarget* target;
+  XMLHttpRequestEventTarget* target;
   if (mUploadEvent) {
     target = xhr->GetUploadObjectNoCreate();
   }
@@ -1581,28 +1581,28 @@ XMLHttpRequestWorker::~XMLHttpRequestWorker()
   mozilla::DropJSObjects(this);
 }
 
-NS_IMPL_ADDREF_INHERITED(XMLHttpRequestWorker, nsXHREventTarget)
-NS_IMPL_RELEASE_INHERITED(XMLHttpRequestWorker, nsXHREventTarget)
+NS_IMPL_ADDREF_INHERITED(XMLHttpRequestWorker, XMLHttpRequestEventTarget)
+NS_IMPL_RELEASE_INHERITED(XMLHttpRequestWorker, XMLHttpRequestEventTarget)
 
 NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(XMLHttpRequestWorker)
-NS_INTERFACE_MAP_END_INHERITING(nsXHREventTarget)
+NS_INTERFACE_MAP_END_INHERITING(XMLHttpRequestEventTarget)
 
 NS_IMPL_CYCLE_COLLECTION_CLASS(XMLHttpRequestWorker)
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XMLHttpRequestWorker,
-                                                  nsXHREventTarget)
+                                                  XMLHttpRequestEventTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mUpload)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XMLHttpRequestWorker,
-                                                nsXHREventTarget)
+                                                XMLHttpRequestEventTarget)
   tmp->ReleaseProxy(XHRIsGoingAway);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mUpload)
   tmp->mStateData.mResponse.setUndefined();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(XMLHttpRequestWorker,
-                                               nsXHREventTarget)
+                                               XMLHttpRequestEventTarget)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mStateData.mResponse)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 

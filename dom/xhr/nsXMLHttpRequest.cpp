@@ -180,37 +180,12 @@ static void AddLoadFlags(nsIRequest *request, nsLoadFlags newFlags)
 
 /////////////////////////////////////////////
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(nsXHREventTarget)
-
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXHREventTarget,
-                                                  DOMEventTargetHelper)
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
-
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXHREventTarget,
-                                                DOMEventTargetHelper)
-NS_IMPL_CYCLE_COLLECTION_UNLINK_END
-
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXHREventTarget)
-  NS_INTERFACE_MAP_ENTRY(nsIXMLHttpRequestEventTarget)
-NS_INTERFACE_MAP_END_INHERITING(DOMEventTargetHelper)
-
-NS_IMPL_ADDREF_INHERITED(nsXHREventTarget, DOMEventTargetHelper)
-NS_IMPL_RELEASE_INHERITED(nsXHREventTarget, DOMEventTargetHelper)
-
-void
-nsXHREventTarget::DisconnectFromOwner()
-{
-  DOMEventTargetHelper::DisconnectFromOwner();
-}
-
-/////////////////////////////////////////////
-
 NS_INTERFACE_MAP_BEGIN(nsXMLHttpRequestUpload)
   NS_INTERFACE_MAP_ENTRY(nsIXMLHttpRequestUpload)
-NS_INTERFACE_MAP_END_INHERITING(nsXHREventTarget)
+NS_INTERFACE_MAP_END_INHERITING(XMLHttpRequestEventTarget)
 
-NS_IMPL_ADDREF_INHERITED(nsXMLHttpRequestUpload, nsXHREventTarget)
-NS_IMPL_RELEASE_INHERITED(nsXMLHttpRequestUpload, nsXHREventTarget)
+NS_IMPL_ADDREF_INHERITED(nsXMLHttpRequestUpload, XMLHttpRequestEventTarget)
+NS_IMPL_RELEASE_INHERITED(nsXMLHttpRequestUpload, XMLHttpRequestEventTarget)
 
 /* virtual */ JSObject*
 nsXMLHttpRequestUpload::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
@@ -402,7 +377,7 @@ NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_BEGIN(nsXMLHttpRequest)
 NS_IMPL_CYCLE_COLLECTION_CAN_SKIP_THIS_END
 
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLHttpRequest,
-                                                  nsXHREventTarget)
+                                                  XMLHttpRequestEventTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mContext)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mChannel)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mResponseXML)
@@ -420,7 +395,7 @@ NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(nsXMLHttpRequest,
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
 NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXMLHttpRequest,
-                                                nsXHREventTarget)
+                                                XMLHttpRequestEventTarget)
   tmp->mResultArrayBuffer = nullptr;
   tmp->mArrayBufferBuilder.reset();
   tmp->mResultJSON.setUndefined();
@@ -441,7 +416,7 @@ NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(nsXMLHttpRequest,
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
 NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(nsXMLHttpRequest,
-                                               nsXHREventTarget)
+                                               XMLHttpRequestEventTarget)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mResultArrayBuffer)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mResultJSON)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
@@ -458,17 +433,17 @@ NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(nsXMLHttpRequest)
   NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
   NS_INTERFACE_MAP_ENTRY(nsITimerCallback)
   NS_INTERFACE_MAP_ENTRY(nsISizeOfEventTarget)
-NS_INTERFACE_MAP_END_INHERITING(nsXHREventTarget)
+NS_INTERFACE_MAP_END_INHERITING(XMLHttpRequestEventTarget)
 
-NS_IMPL_ADDREF_INHERITED(nsXMLHttpRequest, nsXHREventTarget)
-NS_IMPL_RELEASE_INHERITED(nsXMLHttpRequest, nsXHREventTarget)
+NS_IMPL_ADDREF_INHERITED(nsXMLHttpRequest, XMLHttpRequestEventTarget)
+NS_IMPL_RELEASE_INHERITED(nsXMLHttpRequest, XMLHttpRequestEventTarget)
 
 NS_IMPL_EVENT_HANDLER(nsXMLHttpRequest, readystatechange)
 
 void
 nsXMLHttpRequest::DisconnectFromOwner()
 {
-  nsXHREventTarget::DisconnectFromOwner();
+  XMLHttpRequestEventTarget::DisconnectFromOwner();
   Abort();
 }
 
