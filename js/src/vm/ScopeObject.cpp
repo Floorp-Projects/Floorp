@@ -2737,7 +2737,12 @@ DebugScopes::onPopCall(AbstractFramePtr frame, JSContext* cx)
          * but it simplifies later indexing logic.
          */
         Rooted<GCVector<Value>> vec(cx, GCVector<Value>(cx));
-        if (!frame.copyRawFrameSlots(&vec) || vec.length() == 0)
+        if (!frame.copyRawFrameSlots(&vec)) {
+            cx->recoverFromOutOfMemory();
+            return;
+        }
+
+        if (vec.length() == 0)
             return;
 
         /*
@@ -2758,7 +2763,7 @@ DebugScopes::onPopCall(AbstractFramePtr frame, JSContext* cx)
          */
         RootedArrayObject snapshot(cx, NewDenseCopiedArray(cx, vec.length(), vec.begin()));
         if (!snapshot) {
-            cx->clearPendingException();
+            cx->recoverFromOutOfMemory();
             return;
         }
 
