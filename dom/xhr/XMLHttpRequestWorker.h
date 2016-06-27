@@ -4,33 +4,25 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#ifndef mozilla_dom_workers_xmlhttprequest_h__
-#define mozilla_dom_workers_xmlhttprequest_h__
+#ifndef mozilla_dom_XMLHttpRequestWorker_h
+#define mozilla_dom_XMLHttpRequestWorker_h
 
-#include "mozilla/dom/workers/bindings/WorkerHolder.h"
-
-// Need this for XMLHttpRequestResponseType.
-#include "mozilla/dom/XMLHttpRequestBinding.h"
-
+#include "WorkerHolder.h"
+#include "XMLHttpRequest.h"
 #include "mozilla/dom/TypedArray.h"
-
-#include "nsXMLHttpRequest.h"
 
 namespace mozilla {
 namespace dom {
-class Blob;
-class XMLHttpRequestUpload;
-} // namespace dom
-} // namespace mozilla
-
-BEGIN_WORKERS_NAMESPACE
 
 class Proxy;
 class SendRunnable;
-class WorkerPrivate;
 
-class XMLHttpRequestWorker final : public XMLHttpRequestEventTarget,
-                                   public WorkerHolder
+namespace workers {
+class WorkerPrivate;
+}
+
+class XMLHttpRequestWorker final : public XMLHttpRequest,
+                                   public worker::WorkerHolder
 {
 public:
   struct StateData
@@ -56,7 +48,7 @@ public:
 
 private:
   RefPtr<XMLHttpRequestUpload> mUpload;
-  WorkerPrivate* mWorkerPrivate;
+  workers::WorkerPrivate* mWorkerPrivate;
   RefPtr<Proxy> mProxy;
   XMLHttpRequestResponseType mResponseType;
   StateData mStateData;
@@ -72,169 +64,183 @@ private:
   bool mMozSystem;
 
 public:
-  virtual JSObject*
-  WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
-
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(XMLHttpRequestWorker,
-                                                         XMLHttpRequestEventTarget)
+                                                         XMLHttpRequest)
 
-  nsISupports*
-  GetParentObject() const
-  {
-    // There's only one global on a worker, so we don't need to specify.
-    return nullptr;
-  }
 
-  static already_AddRefed<XMLHttpRequestWorker>
-  Constructor(const GlobalObject& aGlobal,
-              const MozXMLHttpRequestParameters& aParams,
-              ErrorResult& aRv);
-
-  static already_AddRefed<XMLHttpRequestWorker>
-  Constructor(const GlobalObject& aGlobal, const nsAString& ignored,
-              ErrorResult& aRv)
-  {
-    // Pretend like someone passed null, so we can pick up the default values
-    MozXMLHttpRequestParameters params;
-    if (!params.Init(aGlobal.Context(), JS::NullHandleValue)) {
-      aRv.Throw(NS_ERROR_UNEXPECTED);
-      return nullptr;
-    }
-
-    return Constructor(aGlobal, params, aRv);
-  }
+  static already_AddRefed<XMLHttpRequest>
+  Construct(const GlobalObject& aGlobal,
+            const MozXMLHttpRequestParameters& aParams,
+            ErrorResult& aRv);
 
   void
   Unpin();
 
   bool
-  Notify(Status aStatus) override;
+  Notify(workers::Status aStatus) override;
 
-  IMPL_EVENT_HANDLER(readystatechange)
-
-  uint16_t
-  ReadyState() const
+  virtual uint16_t
+  ReadyState() const override
   {
     return mStateData.mReadyState;
   }
 
-  void Open(const nsACString& aMethod, const nsAString& aUrl, ErrorResult& aRv)
+  virtual void
+  Open(const nsACString& aMethod, const nsAString& aUrl,
+       ErrorResult& aRv) override
   {
     Open(aMethod, aUrl, true, Optional<nsAString>(),
          Optional<nsAString>(), aRv);
   }
-  void
+
+  virtual void
   Open(const nsACString& aMethod, const nsAString& aUrl, bool aAsync,
        const Optional<nsAString>& aUser, const Optional<nsAString>& aPassword,
-       ErrorResult& aRv);
+       ErrorResult& aRv) override;
 
-  void
+  virtual void
   SetRequestHeader(const nsACString& aHeader, const nsACString& aValue,
-                   ErrorResult& aRv);
+                   ErrorResult& aRv) override;
 
-  uint32_t
-  Timeout() const
+  virtual uint32_t
+  Timeout() const override
   {
     return mTimeout;
   }
 
-  void
-  SetTimeout(uint32_t aTimeout, ErrorResult& aRv);
+  virtual void
+  SetTimeout(uint32_t aTimeout, ErrorResult& aRv) override;
 
-  bool
-  WithCredentials() const
+  virtual bool
+  WithCredentials() const override
   {
     return mWithCredentials;
   }
 
-  void
-  SetWithCredentials(bool aWithCredentials, ErrorResult& aRv);
+  virtual void
+  SetWithCredentials(bool aWithCredentials, ErrorResult& aRv) override;
 
-  bool
-  MozBackgroundRequest() const
+  virtual bool
+  MozBackgroundRequest() const override
   {
     return mBackgroundRequest;
   }
 
-  void
-  SetMozBackgroundRequest(bool aBackgroundRequest, ErrorResult& aRv);
+  virtual void
+  SetMozBackgroundRequest(bool aBackgroundRequest, ErrorResult& aRv) override;
 
-  XMLHttpRequestUpload*
-  GetUpload(ErrorResult& aRv);
+  virtual nsIChannel*
+  GetChannel() const override
+  {
+    MOZ_CRASH("This method cannot be called on workers.");
+  }
 
-  void
-  Send(ErrorResult& aRv);
+  virtual void
+  GetNetworkInterfaceId(nsACString& aId) const override
+  {
+    MOZ_CRASH("This method cannot be called on workers.");
+  }
 
-  void
-  Send(const nsAString& aBody, ErrorResult& aRv);
+  virtual void
+  SetNetworkInterfaceId(const nsACString& aId) override
+  {
+    MOZ_CRASH("This method cannot be called on workers.");
+  }
 
-  void
-  Send(JS::Handle<JSObject*> aBody, ErrorResult& aRv);
+  virtual XMLHttpRequestUpload*
+  GetUpload(ErrorResult& aRv) override;
 
-  void
-  Send(Blob& aBody, ErrorResult& aRv);
+  virtual void
+  Send(JSContext* aCx, ErrorResult& aRv) override;
 
-  void
-  Send(FormData& aBody, ErrorResult& aRv);
+  virtual void
+  Send(JSContext* aCx, const nsAString& aBody, ErrorResult& aRv) override;
 
-  void
-  Send(const ArrayBuffer& aBody, ErrorResult& aRv);
+  virtual void
+  Send(JSContext* aCx, nsIInputStream* aStream, ErrorResult& aRv) override
+  {
+    MOZ_CRASH("This method cannot be called on workers.");
+  }
 
-  void
-  Send(const ArrayBufferView& aBody, ErrorResult& aRv);
+  virtual void
+  Send(JSContext* aCx, Blob& aBody, ErrorResult& aRv) override;
 
-  void
-  Abort(ErrorResult& aRv);
+  virtual void
+  Send(JSContext* aCx, FormData& aBody, ErrorResult& aRv) override;
 
-  void
-  GetResponseURL(nsAString& aUrl) const
+  virtual void
+  Send(JSContext* aCx, const ArrayBuffer& aBody, ErrorResult& aRv) override;
+
+  virtual void
+  Send(JSContext* aCx, const ArrayBufferView& aBody, ErrorResult& aRv) override;
+
+  virtual void
+  Send(JSContext* aCx, nsIDocument& aDoc, ErrorResult& aRv) override
+  {
+    MOZ_CRASH("This method cannot be called on workers.");
+  }
+
+  virtual void
+  Abort(ErrorResult& aRv) override;
+
+  virtual void
+  GetResponseURL(nsAString& aUrl) override
   {
     aUrl = mStateData.mResponseURL;
   }
 
-  uint16_t
-  GetStatus(ErrorResult& aRv) const
+  uint32_t
+  GetStatus(ErrorResult& aRv) override
   {
     aRv = mStateData.mStatusResult;
     return mStateData.mStatus;
   }
 
-  void
-  GetStatusText(nsACString& aStatusText) const
+  virtual void
+  GetStatusText(nsACString& aStatusText, ErrorResult& aRv) override
   {
     aStatusText = mStateData.mStatusText;
   }
 
-  void
+  virtual void
   GetResponseHeader(const nsACString& aHeader, nsACString& aResponseHeader,
-                    ErrorResult& aRv);
+                    ErrorResult& aRv) override;
 
-  void
-  GetAllResponseHeaders(nsACString& aResponseHeaders, ErrorResult& aRv);
+  virtual void
+  GetAllResponseHeaders(nsACString& aResponseHeaders,
+                        ErrorResult& aRv) override;
 
-  void
-  OverrideMimeType(const nsAString& aMimeType, ErrorResult& aRv);
+  virtual void
+  OverrideMimeType(const nsAString& aMimeType, ErrorResult& aRv) override;
 
-  XMLHttpRequestResponseType
-  ResponseType() const
+  virtual XMLHttpRequestResponseType
+  ResponseType() const override
   {
     return mResponseType;
   }
 
-  void
-  SetResponseType(XMLHttpRequestResponseType aResponseType, ErrorResult& aRv);
+  virtual void
+  SetResponseType(XMLHttpRequestResponseType aResponseType,
+                  ErrorResult& aRv) override;
 
-  void
+  virtual void
   GetResponse(JSContext* /* unused */, JS::MutableHandle<JS::Value> aResponse,
-              ErrorResult& aRv);
+              ErrorResult& aRv) override;
 
-  void
-  GetResponseText(nsAString& aResponseText, ErrorResult& aRv);
+  virtual void
+  GetResponseText(nsAString& aResponseText, ErrorResult& aRv) override;
 
-  void
-  GetInterface(JSContext* cx, JS::Handle<JSObject*> aIID,
-               JS::MutableHandle<JS::Value> aRetval, ErrorResult& aRv)
+  virtual nsIDocument*
+  GetResponseXML(ErrorResult& aRv) override
+  {
+    MOZ_CRASH("This method should not be called.");
+  }
+
+  virtual void
+  GetInterface(JSContext* aCx, nsIJSID* aIID,
+               JS::MutableHandle<JS::Value> aRetval,
+               ErrorResult& aRv) override
   {
     aRv.Throw(NS_ERROR_FAILURE);
   }
@@ -255,12 +261,12 @@ public:
     mStateData.mResponse.setNull();
   }
 
-  bool MozAnon() const
+  virtual bool MozAnon() const override
   {
     return mMozAnon;
   }
 
-  bool MozSystem() const
+  virtual bool MozSystem() const override
   {
     return mMozSystem;
   }
@@ -272,7 +278,7 @@ public:
   }
 
 private:
-  explicit XMLHttpRequestWorker(WorkerPrivate* aWorkerPrivate);
+  explicit XMLHttpRequestWorker(workers::WorkerPrivate* aWorkerPrivate);
   ~XMLHttpRequestWorker();
 
   enum ReleaseType { Default, XHRIsGoingAway, WorkerIsGoingAway };
@@ -292,10 +298,14 @@ private:
                               ErrorResult& aRv);
 
   void
+  Send(JSContext* aCx, JS::Handle<JSObject*> aBody, ErrorResult& aRv);
+
+  void
   SendInternal(SendRunnable* aRunnable,
                ErrorResult& aRv);
 };
 
-END_WORKERS_NAMESPACE
+} // dom namespace
+} // mozilla namespace
 
 #endif // mozilla_dom_workers_xmlhttprequest_h__
