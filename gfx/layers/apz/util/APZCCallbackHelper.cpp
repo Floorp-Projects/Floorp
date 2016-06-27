@@ -162,7 +162,15 @@ ScrollFrame(nsIContent* aContent,
   // requested (|apzScrollOffset|). Since we may not have, record the difference
   // between what APZ asked for and what we actually applied, and apply it to
   // input events to compensate.
-  if (aContent) {
+  // Note that if the main-thread had a change in its scroll position, we don't
+  // want to record that difference here, because it can be large and throw off
+  // input events by a large amount. It is also going to be transient, because
+  // any main-thread scroll position change will be synced to APZ and we will
+  // get another repaint request when APZ confirms. In the interval while this
+  // is happening we can just leave the callback transform as it was.
+  bool mainThreadScrollChanged =
+    sf && sf->CurrentScrollGeneration() != aMetrics.GetScrollGeneration();
+  if (aContent && !mainThreadScrollChanged) {
     CSSPoint scrollDelta = apzScrollOffset - actualScrollOffset;
     aContent->SetProperty(nsGkAtoms::apzCallbackTransform, new CSSPoint(scrollDelta),
                           nsINode::DeleteProperty<CSSPoint>);
