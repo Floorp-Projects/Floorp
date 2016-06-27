@@ -6,6 +6,7 @@
 #ifndef nsXULAlerts_h__
 #define nsXULAlerts_h__
 
+#include "nsCycleCollectionParticipant.h"
 #include "nsHashKeys.h"
 #include "nsInterfaceHashtable.h"
 
