@@ -4,7 +4,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this file,
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "XMLHttpRequest.h"
+#include "XMLHttpRequestWorker.h"
 
 #include "nsIDOMEvent.h"
 #include "nsIDOMEventListener.h"
@@ -42,9 +42,9 @@ using namespace mozilla::dom;
 USING_WORKERS_NAMESPACE
 
 /* static */ void
-XMLHttpRequest::StateData::trace(JSTracer *aTrc)
+XMLHttpRequestWorker::StateData::trace(JSTracer *aTrc)
 {
-    JS::TraceEdge(aTrc, &mResponse, "XMLHttpRequest::StateData::mResponse");
+    JS::TraceEdge(aTrc, &mResponse, "XMLHttpRequestWorker::StateData::mResponse");
 }
 
 /**
@@ -97,7 +97,7 @@ class Proxy final : public nsIDOMEventListener
 public:
   // Read on multiple threads.
   WorkerPrivate* mWorkerPrivate;
-  XMLHttpRequest* mXMLHttpRequestPrivate;
+  XMLHttpRequestWorker* mXMLHttpRequestPrivate;
 
   // XHR Params:
   bool mMozAnon;
@@ -133,7 +133,7 @@ public:
   bool mArrayBufferResponseWasTransferred;
 
 public:
-  Proxy(XMLHttpRequest* aXHRPrivate, bool aMozAnon, bool aMozSystem)
+  Proxy(XMLHttpRequestWorker* aXHRPrivate, bool aMozAnon, bool aMozSystem)
   : mWorkerPrivate(nullptr), mXMLHttpRequestPrivate(aXHRPrivate),
     mMozAnon(aMozAnon), mMozSystem(aMozSystem),
     mInnerEventStreamId(0), mInnerChannelId(0), mOutstandingSendCount(0),
@@ -356,11 +356,11 @@ protected:
 
 class XHRUnpinRunnable final : public MainThreadWorkerControlRunnable
 {
-  XMLHttpRequest* mXMLHttpRequestPrivate;
+  XMLHttpRequestWorker* mXMLHttpRequestPrivate;
 
 public:
   XHRUnpinRunnable(WorkerPrivate* aWorkerPrivate,
-                   XMLHttpRequest* aXHRPrivate)
+                   XMLHttpRequestWorker* aXHRPrivate)
   : MainThreadWorkerControlRunnable(aWorkerPrivate),
     mXMLHttpRequestPrivate(aXHRPrivate)
   {
@@ -417,19 +417,19 @@ class LoadStartDetectionRunnable final : public Runnable,
   WorkerPrivate* mWorkerPrivate;
   RefPtr<Proxy> mProxy;
   RefPtr<nsXMLHttpRequest> mXHR;
-  XMLHttpRequest* mXMLHttpRequestPrivate;
+  XMLHttpRequestWorker* mXMLHttpRequestPrivate;
   nsString mEventType;
   uint32_t mChannelId;
   bool mReceivedLoadStart;
 
   class ProxyCompleteRunnable final : public MainThreadProxyRunnable
   {
-    XMLHttpRequest* mXMLHttpRequestPrivate;
+    XMLHttpRequestWorker* mXMLHttpRequestPrivate;
     uint32_t mChannelId;
 
   public:
     ProxyCompleteRunnable(WorkerPrivate* aWorkerPrivate, Proxy* aProxy,
-                          XMLHttpRequest* aXHRPrivate, uint32_t aChannelId)
+                          XMLHttpRequestWorker* aXHRPrivate, uint32_t aChannelId)
     : MainThreadProxyRunnable(aWorkerPrivate, aProxy),
       mXMLHttpRequestPrivate(aXHRPrivate), mChannelId(aChannelId)
     { }
@@ -468,7 +468,7 @@ class LoadStartDetectionRunnable final : public Runnable,
   };
 
 public:
-  LoadStartDetectionRunnable(Proxy* aProxy, XMLHttpRequest* aXHRPrivate)
+  LoadStartDetectionRunnable(Proxy* aProxy, XMLHttpRequestWorker* aXHRPrivate)
   : mWorkerPrivate(aProxy->mWorkerPrivate), mProxy(aProxy), mXHR(aProxy->mXHR),
     mXMLHttpRequestPrivate(aXHRPrivate), mChannelId(mProxy->mInnerChannelId),
     mReceivedLoadStart(false)
@@ -856,10 +856,10 @@ private:
 
 class AutoUnpinXHR
 {
-  XMLHttpRequest* mXMLHttpRequestPrivate;
+  XMLHttpRequestWorker* mXMLHttpRequestPrivate;
 
 public:
-  explicit AutoUnpinXHR(XMLHttpRequest* aXMLHttpRequestPrivate)
+  explicit AutoUnpinXHR(XMLHttpRequestWorker* aXMLHttpRequestPrivate)
   : mXMLHttpRequestPrivate(aXMLHttpRequestPrivate)
   {
     MOZ_ASSERT(aXMLHttpRequestPrivate);
@@ -1292,7 +1292,7 @@ EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
     }
   }
 
-  JS::Rooted<UniquePtr<XMLHttpRequest::StateData>> state(aCx, new XMLHttpRequest::StateData());
+  JS::Rooted<UniquePtr<XMLHttpRequestWorker::StateData>> state(aCx, new XMLHttpRequestWorker::StateData());
 
   state->mResponseTextResult = mResponseTextResult;
   state->mResponseText = mResponseText;
@@ -1339,7 +1339,7 @@ EventRunnable::WorkerRun(JSContext* aCx, WorkerPrivate* aWorkerPrivate)
 
   state->mResponseURL = mResponseURL;
 
-  XMLHttpRequest* xhr = mProxy->mXMLHttpRequestPrivate;
+  XMLHttpRequestWorker* xhr = mProxy->mXMLHttpRequestPrivate;
   xhr->UpdateState(*state.get(), mUseCachedArrayBufferResponse);
 
   if (mUploadEvent && !xhr->GetUploadObjectNoCreate()) {
@@ -1559,7 +1559,7 @@ SendRunnable::RunOnMainThread()
   return rv;
 }
 
-XMLHttpRequest::XMLHttpRequest(WorkerPrivate* aWorkerPrivate)
+XMLHttpRequestWorker::XMLHttpRequestWorker(WorkerPrivate* aWorkerPrivate)
 : mWorkerPrivate(aWorkerPrivate),
   mResponseType(XMLHttpRequestResponseType::Text), mTimeout(0),
   mRooted(false), mBackgroundRequest(false), mWithCredentials(false),
@@ -1570,7 +1570,7 @@ XMLHttpRequest::XMLHttpRequest(WorkerPrivate* aWorkerPrivate)
   mozilla::HoldJSObjects(this);
 }
 
-XMLHttpRequest::~XMLHttpRequest()
+XMLHttpRequestWorker::~XMLHttpRequestWorker()
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -1581,42 +1581,42 @@ XMLHttpRequest::~XMLHttpRequest()
   mozilla::DropJSObjects(this);
 }
 
-NS_IMPL_ADDREF_INHERITED(XMLHttpRequest, nsXHREventTarget)
-NS_IMPL_RELEASE_INHERITED(XMLHttpRequest, nsXHREventTarget)
+NS_IMPL_ADDREF_INHERITED(XMLHttpRequestWorker, nsXHREventTarget)
+NS_IMPL_RELEASE_INHERITED(XMLHttpRequestWorker, nsXHREventTarget)
 
-NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(XMLHttpRequest)
+NS_INTERFACE_MAP_BEGIN_CYCLE_COLLECTION_INHERITED(XMLHttpRequestWorker)
 NS_INTERFACE_MAP_END_INHERITING(nsXHREventTarget)
 
-NS_IMPL_CYCLE_COLLECTION_CLASS(XMLHttpRequest)
+NS_IMPL_CYCLE_COLLECTION_CLASS(XMLHttpRequestWorker)
 
-NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XMLHttpRequest,
+NS_IMPL_CYCLE_COLLECTION_TRAVERSE_BEGIN_INHERITED(XMLHttpRequestWorker,
                                                   nsXHREventTarget)
   NS_IMPL_CYCLE_COLLECTION_TRAVERSE(mUpload)
 NS_IMPL_CYCLE_COLLECTION_TRAVERSE_END
 
-NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XMLHttpRequest,
+NS_IMPL_CYCLE_COLLECTION_UNLINK_BEGIN_INHERITED(XMLHttpRequestWorker,
                                                 nsXHREventTarget)
   tmp->ReleaseProxy(XHRIsGoingAway);
   NS_IMPL_CYCLE_COLLECTION_UNLINK(mUpload)
   tmp->mStateData.mResponse.setUndefined();
 NS_IMPL_CYCLE_COLLECTION_UNLINK_END
 
-NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(XMLHttpRequest,
+NS_IMPL_CYCLE_COLLECTION_TRACE_BEGIN_INHERITED(XMLHttpRequestWorker,
                                                nsXHREventTarget)
   NS_IMPL_CYCLE_COLLECTION_TRACE_JS_MEMBER_CALLBACK(mStateData.mResponse)
 NS_IMPL_CYCLE_COLLECTION_TRACE_END
 
 JSObject*
-XMLHttpRequest::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
+XMLHttpRequestWorker::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
 {
   return XMLHttpRequestBinding_workers::Wrap(aCx, this, aGivenProto);
 }
 
 // static
-already_AddRefed<XMLHttpRequest>
-XMLHttpRequest::Constructor(const GlobalObject& aGlobal,
-                            const MozXMLHttpRequestParameters& aParams,
-                            ErrorResult& aRv)
+already_AddRefed<XMLHttpRequestWorker>
+XMLHttpRequestWorker::Constructor(const GlobalObject& aGlobal,
+                                  const MozXMLHttpRequestParameters& aParams,
+                                  ErrorResult& aRv)
 {
   JSContext* cx = aGlobal.Context();
   WorkerPrivate* workerPrivate = GetWorkerPrivateFromContext(cx);
@@ -1624,7 +1624,7 @@ XMLHttpRequest::Constructor(const GlobalObject& aGlobal,
 
   Telemetry::Accumulate(Telemetry::XHR_IN_WORKER, 1);
 
-  RefPtr<XMLHttpRequest> xhr = new XMLHttpRequest(workerPrivate);
+  RefPtr<XMLHttpRequestWorker> xhr = new XMLHttpRequestWorker(workerPrivate);
 
   if (workerPrivate->XHRParamsAllowed()) {
     if (aParams.mMozSystem)
@@ -1638,7 +1638,7 @@ XMLHttpRequest::Constructor(const GlobalObject& aGlobal,
 }
 
 void
-XMLHttpRequest::ReleaseProxy(ReleaseType aType)
+XMLHttpRequestWorker::ReleaseProxy(ReleaseType aType)
 {
   // Can't assert that we're on the worker thread here because mWorkerPrivate
   // may be gone.
@@ -1677,7 +1677,7 @@ XMLHttpRequest::ReleaseProxy(ReleaseType aType)
 }
 
 void
-XMLHttpRequest::MaybePin(ErrorResult& aRv)
+XMLHttpRequestWorker::MaybePin(ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -1696,7 +1696,7 @@ XMLHttpRequest::MaybePin(ErrorResult& aRv)
 }
 
 void
-XMLHttpRequest::MaybeDispatchPrematureAbortEvents(ErrorResult& aRv)
+XMLHttpRequestWorker::MaybeDispatchPrematureAbortEvents(ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(mProxy);
@@ -1751,10 +1751,10 @@ XMLHttpRequest::MaybeDispatchPrematureAbortEvents(ErrorResult& aRv)
 }
 
 void
-XMLHttpRequest::DispatchPrematureAbortEvent(EventTarget* aTarget,
-                                            const nsAString& aEventType,
-                                            bool aUploadTarget,
-                                            ErrorResult& aRv)
+XMLHttpRequestWorker::DispatchPrematureAbortEvent(EventTarget* aTarget,
+                                                  const nsAString& aEventType,
+                                                  bool aUploadTarget,
+                                                  ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
   MOZ_ASSERT(aTarget);
@@ -1797,7 +1797,7 @@ XMLHttpRequest::DispatchPrematureAbortEvent(EventTarget* aTarget,
 }
 
 void
-XMLHttpRequest::Unpin()
+XMLHttpRequestWorker::Unpin()
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -1811,8 +1811,8 @@ XMLHttpRequest::Unpin()
 }
 
 void
-XMLHttpRequest::SendInternal(SendRunnable* aRunnable,
-                             ErrorResult& aRv)
+XMLHttpRequestWorker::SendInternal(SendRunnable* aRunnable,
+                                   ErrorResult& aRv)
 {
   MOZ_ASSERT(aRunnable);
   mWorkerPrivate->AssertIsOnWorkerThread();
@@ -1874,7 +1874,7 @@ XMLHttpRequest::SendInternal(SendRunnable* aRunnable,
 }
 
 bool
-XMLHttpRequest::Notify(Status aStatus)
+XMLHttpRequestWorker::Notify(Status aStatus)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -1887,9 +1887,9 @@ XMLHttpRequest::Notify(Status aStatus)
 }
 
 void
-XMLHttpRequest::Open(const nsACString& aMethod, const nsAString& aUrl,
-                     bool aAsync, const Optional<nsAString>& aUser,
-                     const Optional<nsAString>& aPassword, ErrorResult& aRv)
+XMLHttpRequestWorker::Open(const nsACString& aMethod, const nsAString& aUrl,
+                           bool aAsync, const Optional<nsAString>& aUser,
+                           const Optional<nsAString>& aPassword, ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -1936,8 +1936,8 @@ XMLHttpRequest::Open(const nsACString& aMethod, const nsAString& aUrl,
 }
 
 void
-XMLHttpRequest::SetRequestHeader(const nsACString& aHeader,
-                                 const nsACString& aValue, ErrorResult& aRv)
+XMLHttpRequestWorker::SetRequestHeader(const nsACString& aHeader,
+                                       const nsACString& aValue, ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -1957,7 +1957,7 @@ XMLHttpRequest::SetRequestHeader(const nsACString& aHeader,
 }
 
 void
-XMLHttpRequest::SetTimeout(uint32_t aTimeout, ErrorResult& aRv)
+XMLHttpRequestWorker::SetTimeout(uint32_t aTimeout, ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -1980,7 +1980,7 @@ XMLHttpRequest::SetTimeout(uint32_t aTimeout, ErrorResult& aRv)
 }
 
 void
-XMLHttpRequest::SetWithCredentials(bool aWithCredentials, ErrorResult& aRv)
+XMLHttpRequestWorker::SetWithCredentials(bool aWithCredentials, ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -2003,8 +2003,8 @@ XMLHttpRequest::SetWithCredentials(bool aWithCredentials, ErrorResult& aRv)
 }
 
 void
-XMLHttpRequest::SetMozBackgroundRequest(bool aBackgroundRequest,
-                                        ErrorResult& aRv)
+XMLHttpRequestWorker::SetMozBackgroundRequest(bool aBackgroundRequest,
+                                              ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -2028,7 +2028,7 @@ XMLHttpRequest::SetMozBackgroundRequest(bool aBackgroundRequest,
 }
 
 XMLHttpRequestUpload*
-XMLHttpRequest::GetUpload(ErrorResult& aRv)
+XMLHttpRequestWorker::GetUpload(ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -2050,7 +2050,7 @@ XMLHttpRequest::GetUpload(ErrorResult& aRv)
 }
 
 void
-XMLHttpRequest::Send(ErrorResult& aRv)
+XMLHttpRequestWorker::Send(ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -2072,7 +2072,7 @@ XMLHttpRequest::Send(ErrorResult& aRv)
 }
 
 void
-XMLHttpRequest::Send(const nsAString& aBody, ErrorResult& aRv)
+XMLHttpRequestWorker::Send(const nsAString& aBody, ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -2094,7 +2094,7 @@ XMLHttpRequest::Send(const nsAString& aBody, ErrorResult& aRv)
 }
 
 void
-XMLHttpRequest::Send(JS::Handle<JSObject*> aBody, ErrorResult& aRv)
+XMLHttpRequestWorker::Send(JS::Handle<JSObject*> aBody, ErrorResult& aRv)
 {
   JSContext* cx = mWorkerPrivate->GetJSContext();
 
@@ -2138,7 +2138,7 @@ XMLHttpRequest::Send(JS::Handle<JSObject*> aBody, ErrorResult& aRv)
 }
 
 void
-XMLHttpRequest::Send(Blob& aBody, ErrorResult& aRv)
+XMLHttpRequestWorker::Send(Blob& aBody, ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
   JSContext* cx = mWorkerPrivate->GetJSContext();
@@ -2179,7 +2179,7 @@ XMLHttpRequest::Send(Blob& aBody, ErrorResult& aRv)
 }
 
 void
-XMLHttpRequest::Send(FormData& aBody, ErrorResult& aRv)
+XMLHttpRequestWorker::Send(FormData& aBody, ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
   JSContext* cx = mWorkerPrivate->GetJSContext();
@@ -2212,14 +2212,14 @@ XMLHttpRequest::Send(FormData& aBody, ErrorResult& aRv)
 }
 
 void
-XMLHttpRequest::Send(const ArrayBuffer& aBody, ErrorResult& aRv)
+XMLHttpRequestWorker::Send(const ArrayBuffer& aBody, ErrorResult& aRv)
 {
   JS::Rooted<JSObject*> obj(mWorkerPrivate->GetJSContext(), aBody.Obj());
   return Send(obj, aRv);
 }
 
 void
-XMLHttpRequest::Send(const ArrayBufferView& aBody, ErrorResult& aRv)
+XMLHttpRequestWorker::Send(const ArrayBufferView& aBody, ErrorResult& aRv)
 {
   if (JS_IsTypedArrayObject(aBody.Obj()) &&
       JS_GetTypedArraySharedness(aBody.Obj())) {
@@ -2232,7 +2232,7 @@ XMLHttpRequest::Send(const ArrayBufferView& aBody, ErrorResult& aRv)
 }
 
 void
-XMLHttpRequest::Abort(ErrorResult& aRv)
+XMLHttpRequestWorker::Abort(ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -2263,8 +2263,8 @@ XMLHttpRequest::Abort(ErrorResult& aRv)
 }
 
 void
-XMLHttpRequest::GetResponseHeader(const nsACString& aHeader,
-                                  nsACString& aResponseHeader, ErrorResult& aRv)
+XMLHttpRequestWorker::GetResponseHeader(const nsACString& aHeader,
+                                        nsACString& aResponseHeader, ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -2290,8 +2290,8 @@ XMLHttpRequest::GetResponseHeader(const nsACString& aHeader,
 }
 
 void
-XMLHttpRequest::GetAllResponseHeaders(nsACString& aResponseHeaders,
-                                      ErrorResult& aRv)
+XMLHttpRequestWorker::GetAllResponseHeaders(nsACString& aResponseHeaders,
+                                            ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -2317,7 +2317,7 @@ XMLHttpRequest::GetAllResponseHeaders(nsACString& aResponseHeaders,
 }
 
 void
-XMLHttpRequest::OverrideMimeType(const nsAString& aMimeType, ErrorResult& aRv)
+XMLHttpRequestWorker::OverrideMimeType(const nsAString& aMimeType, ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -2344,8 +2344,8 @@ XMLHttpRequest::OverrideMimeType(const nsAString& aMimeType, ErrorResult& aRv)
 }
 
 void
-XMLHttpRequest::SetResponseType(XMLHttpRequestResponseType aResponseType,
-                                ErrorResult& aRv)
+XMLHttpRequestWorker::SetResponseType(XMLHttpRequestResponseType aResponseType,
+                                      ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
 
@@ -2391,9 +2391,9 @@ XMLHttpRequest::SetResponseType(XMLHttpRequestResponseType aResponseType,
 }
 
 void
-XMLHttpRequest::GetResponse(JSContext* /* unused */,
-                            JS::MutableHandle<JS::Value> aResponse,
-                            ErrorResult& aRv)
+XMLHttpRequestWorker::GetResponse(JSContext* /* unused */,
+                                  JS::MutableHandle<JS::Value> aResponse,
+                                  ErrorResult& aRv)
 {
   if (NS_SUCCEEDED(mStateData.mResponseTextResult) &&
       mStateData.mResponse.isUndefined()) {
@@ -2423,15 +2423,15 @@ XMLHttpRequest::GetResponse(JSContext* /* unused */,
 }
 
 void
-XMLHttpRequest::GetResponseText(nsAString& aResponseText, ErrorResult& aRv)
+XMLHttpRequestWorker::GetResponseText(nsAString& aResponseText, ErrorResult& aRv)
 {
   aRv = mStateData.mResponseTextResult;
   aResponseText = mStateData.mResponseText;
 }
 
 void
-XMLHttpRequest::UpdateState(const StateData& aStateData,
-                            bool aUseCachedArrayBufferResponse)
+XMLHttpRequestWorker::UpdateState(const StateData& aStateData,
+                                  bool aUseCachedArrayBufferResponse)
 {
   if (aUseCachedArrayBufferResponse) {
     MOZ_ASSERT(mStateData.mResponse.isObject() &&
