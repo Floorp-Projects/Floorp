@@ -10,7 +10,6 @@
 #include "mozilla/TimeStamp.h"
 #include "AnimationTimeline.h"
 #include "nsIDocument.h"
-#include "nsDOMNavigationTiming.h" // for DOMHighResTimeStamp
 #include "nsRefreshDriver.h"
 
 struct JSContext;
@@ -29,11 +28,10 @@ class DocumentTimeline final
   , public nsARefreshObserver
 {
 public:
-  DocumentTimeline(nsIDocument* aDocument, const TimeDuration& aOriginTime)
+  explicit DocumentTimeline(nsIDocument* aDocument)
     : AnimationTimeline(aDocument->GetParentObject())
     , mDocument(aDocument)
     , mIsObservingRefreshDriver(false)
-    , mOriginTime(aOriginTime)
   {
   }
 
@@ -51,11 +49,6 @@ public:
 
   virtual JSObject* WrapObject(JSContext* aCx,
                                JS::Handle<JSObject*> aGivenProto) override;
-
-  static already_AddRefed<DocumentTimeline>
-  Constructor(const GlobalObject& aGlobal,
-              const DOMHighResTimeStamp& aOriginTime,
-              ErrorResult& aRv);
 
   // AnimationTimeline methods
   virtual Nullable<TimeDuration> GetCurrentTime() const override;
@@ -91,8 +84,6 @@ protected:
   // iframe).
   mutable TimeStamp mLastRefreshDriverTime;
   bool mIsObservingRefreshDriver;
-
-  TimeDuration mOriginTime;
 };
 
 } // namespace dom
