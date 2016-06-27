@@ -85,6 +85,8 @@ nsMenuBarFrame::Init(nsIContent*       aContent,
   mTarget->AddEventListener(NS_LITERAL_STRING("mousedown"), mMenuBarListener, true);
   mTarget->AddEventListener(NS_LITERAL_STRING("mousedown"), mMenuBarListener, false);
   mTarget->AddEventListener(NS_LITERAL_STRING("blur"), mMenuBarListener, true);
+
+  mTarget->AddEventListener(NS_LITERAL_STRING("MozDOMFullscreen:Entered"), mMenuBarListener, false);
 }
 
 NS_IMETHODIMP
@@ -422,6 +424,8 @@ nsMenuBarFrame::DestroyFrom(nsIFrame* aDestructRoot)
   mTarget->RemoveEventListener(NS_LITERAL_STRING("mousedown"), mMenuBarListener, true);
   mTarget->RemoveEventListener(NS_LITERAL_STRING("mousedown"), mMenuBarListener, false);
   mTarget->RemoveEventListener(NS_LITERAL_STRING("blur"), mMenuBarListener, true);
+
+  mTarget->RemoveEventListener(NS_LITERAL_STRING("MozDOMFullscreen:Entered"), mMenuBarListener, false);
 
   mMenuBarListener->OnDestroyMenuBarFrame();
   mMenuBarListener = nullptr;
