@@ -791,10 +791,11 @@ WMFVideoMFTManager::Output(int64_t aStreamOffset,
       }
       if (mSeekTargetThreshold.isSome()) {
         media::TimeUnit pts = GetSampleTime(sample);
-        if (!pts.IsValid()) {
+		media::TimeUnit duration = GetSampleDuration(sample);
+        if (!pts.IsValid() || !duration.IsValid()) {
           return E_FAIL;
         }
-        if (pts < mSeekTargetThreshold.ref()) {
+        if ((pts + duration) < mSeekTargetThreshold.ref()) {
           LOG("Dropping video frame which pts is smaller than seek target.");
           // It is necessary to clear the pointer to release the previous output
           // buffer.

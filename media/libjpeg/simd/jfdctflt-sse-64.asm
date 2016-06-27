@@ -2,10 +2,9 @@
 ; jfdctflt.asm - floating-point FDCT (64-bit SSE)
 ;
 ; Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
-; Copyright 2009 D. R. Commander
+; Copyright (C) 2009, D. R. Commander.
 ;
-; Based on
-; x86 SIMD extension for IJG JPEG library
+; Based on the x86 SIMD extension for IJG JPEG library
 ; Copyright (C) 1999-2006, MIYASAKA Masaru.
 ; For conditions of distribution and use, see copyright notice in jsimdext.inc
 ;
@@ -56,10 +55,10 @@ PD_1_306        times 4 dd  1.306562964876376527856643
 ; Perform the forward DCT on one block of samples.
 ;
 ; GLOBAL(void)
-; jsimd_fdct_float_sse (FAST_FLOAT * data)
+; jsimd_fdct_float_sse (FAST_FLOAT *data)
 ;
 
-; r10 = FAST_FLOAT * data
+; r10 = FAST_FLOAT *data
 
 %define wk(i)           rbp-(WK_NUM-(i))*SIZEOF_XMMWORD ; xmmword wk[WK_NUM]
 %define WK_NUM          2

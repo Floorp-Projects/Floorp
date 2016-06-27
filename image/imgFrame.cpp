@@ -16,13 +16,14 @@
 #include "gfxAlphaRecovery.h"
 
 #include "GeckoProfiler.h"
-#include "mozilla/Likely.h"
 #include "MainThreadUtils.h"
-#include "mozilla/MemoryReporting.h"
-#include "nsMargin.h"
-#include "nsThreadUtils.h"
 #include "mozilla/CheckedInt.h"
 #include "mozilla/gfx/Tools.h"
+#include "mozilla/Likely.h"
+#include "mozilla/MemoryReporting.h"
+#include "mozilla/Telemetry.h"
+#include "nsMargin.h"
+#include "nsThreadUtils.h"
 
 
 namespace mozilla {
@@ -397,12 +398,19 @@ imgFrame::Optimize()
     // moment
   }
 
+  const bool usedSingleColorOptimizationUsefully = mSinglePixel &&
+                                                   mFrameRect.Area() > 1;
+  Telemetry::Accumulate(Telemetry::IMAGE_OPTIMIZE_TO_SINGLE_COLOR_USED,
+                        usedSingleColorOptimizationUsefully);
+
 #ifdef ANDROID
   SurfaceFormat optFormat = gfxPlatform::GetPlatform()
     ->Optimal2DFormatForContent(gfxContentType::COLOR);
 
   if (mFormat != SurfaceFormat::B8G8R8A8 &&
       optFormat == SurfaceFormat::R5G6B5_UINT16) {
+    Telemetry::Accumulate(Telemetry::IMAGE_OPTIMIZE_TO_565_USED, true);
+
     RefPtr<VolatileBuffer> buf =
       AllocateBufferForImage(mFrameRect.Size(), optFormat);
     if (!buf) {
@@ -638,7 +646,8 @@ void
 imgFrame::Finish(Opacity aFrameOpacity /* = Opacity::SOME_TRANSPARENCY */,
                  DisposalMethod aDisposalMethod /* = DisposalMethod::KEEP */,
                  int32_t aRawTimeout /* = 0 */,
-                 BlendMethod aBlendMethod /* = BlendMethod::OVER */)
+                 BlendMethod aBlendMethod /* = BlendMethod::OVER */,
+                 const Maybe<IntRect>& aBlendRect /* = Nothing() */)
 {
   MonitorAutoLock lock(mMonitor);
   MOZ_ASSERT(mLockCount > 0, "Image data should be locked");
@@ -650,6 +659,7 @@ imgFrame::Finish(Opacity aFrameOpacity /* = Opacity::SOME_TRANSPARENCY */,
   mDisposalMethod = aDisposalMethod;
   mTimeout = aRawTimeout;
   mBlendMethod = aBlendMethod;
+  mBlendRect = aBlendRect;
   ImageUpdatedInternal(GetRect());
   mFinished = true;
 
@@ -925,7 +935,7 @@ imgFrame::GetAnimationData() const
   bool hasAlpha = mFormat == SurfaceFormat::B8G8R8A8;
 
   return AnimationData(data, PaletteDataLength(), mTimeout, GetRect(),
-                       mBlendMethod, mDisposalMethod, hasAlpha);
+                       mBlendMethod, mBlendRect, mDisposalMethod, hasAlpha);
 }
 
 void

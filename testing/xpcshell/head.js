@@ -502,6 +502,12 @@ function _execute_test() {
   _PromiseTestUtils.init();
   _PromiseTestUtils.Assert = Assert;
 
+  let coverageCollector = null;
+  if (typeof _JSCOV_DIR === 'string') {
+    let _CoverageCollector = Components.utils.import("resource://testing-common/CoverageUtils.jsm", {}).CoverageCollector;
+    coverageCollector = new _CoverageCollector(_JSCOV_DIR);
+  }
+
   // _HEAD_FILES is dynamically defined by <runxpcshelltests.py>.
   _load_files(_HEAD_FILES);
   // _TEST_FILE is dynamically defined by <runxpcshelltests.py>.
@@ -529,6 +535,11 @@ function _execute_test() {
     } else {
       run_next_test();
     }
+
+    if (coverageCollector != null) {
+      coverageCollector.recordTestCoverage(_TEST_FILE);
+    }
+
     do_test_finished("MAIN run_test");
     _do_main();
     _PromiseTestUtils.assertNoUncaughtRejections();
@@ -539,6 +550,10 @@ function _execute_test() {
     // has already been logged so there is no need to log it again. It's
     // possible that this will mask an NS_ERROR_ABORT that happens after a
     // do_check failure though.
+    if (coverageCollector != null) {
+      coverageCollector.recordTestCoverage(_TEST_FILE);
+    }
+
     if (!_quit || e != Components.results.NS_ERROR_ABORT) {
       let extra = {};
       if (e.fileName) {
@@ -555,6 +570,10 @@ function _execute_test() {
       }
       _testLogger.error(message, extra);
     }
+  }
+
+  if (coverageCollector != null) {
+    coverageCollector.finalize();
   }
 
   // _TAIL_FILES is dynamically defined by <runxpcshelltests.py>.
@@ -1248,6 +1267,10 @@ function do_load_child_test_harness()
       // We'll need more magic to get the debugger working in the child
       + "const _JSDEBUGGER_PORT=0; "
       + "const _XPCSHELL_PROCESS='child';";
+
+  if (typeof _JSCOV_DIR === 'string') {
+    command += " const _JSCOV_DIR=" + uneval(_JSCOV_DIR) + ";";
+  }
 
   if (_TESTING_MODULES_DIR) {
     command += " const _TESTING_MODULES_DIR=" + uneval(_TESTING_MODULES_DIR) + ";";
