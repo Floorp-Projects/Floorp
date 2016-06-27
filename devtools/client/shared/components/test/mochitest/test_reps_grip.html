@@ -98,10 +98,19 @@ window.onload = Task.async(function* () {
   }
 
   function testMoreThanMaxProps() {
-    // Test object = `{a: "a", b: "b", c: "c", d: "d", e: "e"}`
+    // Test object = `{p0: "0", p1: "1", p2: "2", ..., p101: "101"}`
     const testName = "testMoreThanMaxProps";
 
-    const defaultOutput = `Object {a: "a", b: "b", c: "c", more...}`;
+    const defaultOutput = `Object {p0: "0", p1: "1", p2: "2", more...}`;
+
+    // Generate string with 100 properties, which is the max limit
+    // for 'long' mode.
+    let props = "";
+    for (let i = 0; i < 100; i++) {
+      props += "p" + i + ": \"" + i + "\", ";
+    }
+
+    const longOutput = `Object {${props}more...}`;
 
     const modeTests = [
       {
@@ -116,11 +125,9 @@ window.onload = Task.async(function* () {
         mode: "short",
         expectedOutput: defaultOutput,
       },
-      // @TODO Fix this test case.
-      // See Bug 1281489 - Reps: Grips rep renders only 3 properties in long mode
       {
         mode: "long",
-        expectedOutput: defaultOutput,
+        expectedOutput: longOutput,
       }
     ];
 
@@ -258,53 +265,36 @@ window.onload = Task.async(function* () {
           }
         };
 
-      case "testMoreThanMaxProps":
-        return {
+      case "testMoreThanMaxProps": {
+        let grip = {
           "type": "object",
           "class": "Object",
           "actor": "server1.conn0.obj332",
           "extensible": true,
           "frozen": false,
           "sealed": false,
-          "ownPropertyLength": 5,
+          "ownPropertyLength": 101,
           "preview": {
             "kind": "Object",
-            "ownProperties": {
-              "a": {
-                "configurable": true,
-                "enumerable": true,
-                "writable": true,
-                "value": "a"
-              },
-              "b": {
-                "configurable": true,
-                "enumerable": true,
-                "writable": true,
-                "value": "b"
-              },
-              "c": {
-                "configurable": true,
-                "enumerable": true,
-                "writable": true,
-                "value": "c"
-              },
-              "d": {
-                "configurable": true,
-                "enumerable": true,
-                "writable": true,
-                "value": "d"
-              },
-              "e": {
-                "configurable": true,
-                "enumerable": true,
-                "writable": true,
-                "value": "e"
-              }
-            },
-            "ownPropertiesLength": 5,
+            "ownProperties": {},
+            "ownPropertiesLength": 101,
             "safeGetterValues": {}
           }
         };
+
+        // Generate 101 properties, which is more that the maximum
+        // limit in case of the 'long' mode.
+        for (let i = 0; i < 101; i++) {
+          grip.preview.ownProperties["p" + i] = {
+            "configurable": true,
+            "enumerable": true,
+            "writable": true,
+            "value": i + ""
+          };
+        }
+
+        return grip;
+      }
 
       case "testUninterestingProps":
         return {
