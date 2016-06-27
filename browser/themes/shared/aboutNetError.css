@@ -79,6 +79,7 @@ body.certerror #advancedButton {
 #advancedPanelContainer {
   position: absolute;
   padding: 24px 0;
+  width: 100%;
 }
 
 .advanced-panel {
