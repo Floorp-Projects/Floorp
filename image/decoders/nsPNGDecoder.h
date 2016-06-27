@@ -10,6 +10,7 @@
 #include "Decoder.h"
 #include "png.h"
 #include "qcms.h"
+#include "StreamingLexer.h"
 #include "SurfacePipe.h"
 
 namespace mozilla {
@@ -83,6 +84,17 @@ private:
       return false;
     }
   }
+
+  enum class State
+  {
+    PNG_DATA,
+    FINISHED_PNG_DATA
+  };
+
+  LexerTransition<State> ReadPNGData(const char* aData, size_t aLength);
+  LexerTransition<State> FinishedPNGData();
+
+  StreamingLexer<State> mLexer;
 
 public:
   png_structp mPNG;
