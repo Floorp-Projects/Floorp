@@ -4,36 +4,25 @@
  * http://creativecommons.org/publicdomain/zero/1.0/ */
 
 // Tests that source URLs in the Web Console can be clicked to display the
-// standard View Source window.
+// standard View Source window. As JS exceptions and console.log() messages always
+// have their locations opened in Debugger, we need to test a security message in
+// order to have it opened in the standard View Source window.
 
 "use strict";
 
-const TEST_URI = "http://example.com/browser/devtools/client/webconsole/" +
-                 "test/test-error.html";
+const TEST_URI = "https://example.com/browser/devtools/client/webconsole/" +
+                 "test/test-mixedcontent-securityerrors.html";
 
 add_task(function* () {
   yield loadTab(TEST_URI);
   let hud = yield openConsole(null);
   info("console opened");
 
-
-  // On e10s, the exception is triggered in child process
-  // and is ignored by test harness
-  if (!Services.appinfo.browserTabsRemoteAutostart) {
-    expectUncaughtException();
-  }
-
-  ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
-    let button = content.document.querySelector("button");
-    ok(button, "we have the button on the page");
-    button.click();
-  });
-
   let [result] = yield waitForMessages({
     webconsole: hud,
     messages: [{
-      text: "fooBazBaz is not defined",
-      category: CATEGORY_JS,
+      text: "Blocked loading mixed active content",
+      category: CATEGORY_SECURITY,
       severity: SEVERITY_ERROR,
     }],
   });
@@ -48,7 +37,6 @@ add_task(function* () {
   EventUtils.sendMouseEvent({ type: "click" }, locationNode);
 
   let tab = yield onTabOpen;
-  ok(true, "the view source tab was opened in response to clicking " +
-           "the location node");
+  ok(true, "the view source tab was opened in response to clicking the location node");
   gBrowser.removeTab(tab);
 });
