@@ -375,12 +375,12 @@ class BaseMarionetteArguments(ArgumentParser):
 
         self.argument_containers.append(container)
 
-    def parse_args(self, args=None, values=None):
-        args = ArgumentParser.parse_args(self, args, values)
+    def parse_known_args(self, args=None, namespace=None):
+        args, remainder = ArgumentParser.parse_known_args(self, args, namespace)
         for container in self.argument_containers:
             if hasattr(container, 'parse_args_handler'):
                 container.parse_args_handler(args)
-        return args
+        return (args, remainder)
 
     def _get_preferences(self, prefs_files, prefs_args):
         """
