@@ -222,7 +222,7 @@ public class TopSitesPanel extends HomeFragment {
 
                         Telemetry.sendUIEvent(TelemetryContract.Event.LOAD_URL, method, extra);
 
-                        mUrlOpenListener.onUrlOpen(url, EnumSet.noneOf(OnUrlOpenListener.Flags.class));
+                        mUrlOpenListener.onUrlOpen(url, EnumSet.of(OnUrlOpenListener.Flags.NO_READER_VIEW));
                     }
                 } else {
                     if (mEditPinnedSiteListener != null) {
