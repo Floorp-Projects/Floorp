@@ -111,7 +111,7 @@ function setImageTooltip(tooltip, doc, imageUrl, options) {
   }
   let width = Math.max(CONTAINER_MIN_WIDTH, imgWidth + 2 * IMAGE_PADDING);
 
-  tooltip.setContent(div, width, height);
+  tooltip.setContent(div, {width, height});
 }
 
 /*
@@ -133,7 +133,7 @@ function setBrokenImageTooltip(tooltip, doc) {
 
   let message = GetStringFromName("previewTooltip.image.brokenImage");
   div.textContent = message;
-  tooltip.setContent(div, 150, 30);
+  tooltip.setContent(div, {width: 150, height: 30});
 }
 
 module.exports.getImageDimensions = getImageDimensions;
