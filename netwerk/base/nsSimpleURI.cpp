@@ -202,7 +202,10 @@ nsSimpleURI::SetSpec(const nsACString &aSpec)
 
     // nsSimpleURI currently restricts the charset to US-ASCII
     nsAutoCString spec;
-    spec = NS_EscapeURL(filteredSpec, esc_OnlyNonASCII, spec);
+    nsresult rv = NS_EscapeURL(filteredSpec, esc_OnlyNonASCII, spec, fallible);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
     int32_t colonPos = spec.FindChar(':');
     if (colonPos < 0 || !net_IsValidScheme(spec.get(), colonPos))
