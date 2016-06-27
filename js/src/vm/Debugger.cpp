@@ -6065,6 +6065,12 @@ Debugger::observesFrame(AbstractFramePtr frame) const
 bool
 Debugger::observesFrame(const ScriptFrameIter& iter) const
 {
+    // Skip frames not yet fully initialized during their prologue.
+    if (iter.isInterp() && iter.isFunctionFrame()) {
+        const Value& thisVal = iter.interpFrame()->thisArgument();
+        if (thisVal.isMagic() && thisVal.whyMagic() == JS_IS_CONSTRUCTING)
+            return false;;
+    }
     return observesScript(iter.script());
 }
 
