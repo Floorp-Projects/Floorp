@@ -110,6 +110,10 @@ span#hostname {
 
 #automaticallyReportInFuture {
   cursor: pointer;
+  display: inline-block;
+  padding-left: 2.3em;
+  text-indent: -2.3em;
+  line-height: 16px
 }
 
 #errorCode:not([href]) {
