@@ -52,6 +52,7 @@ Structure::
       // The following properties may all be null if we fail to collect them.
       histograms: {...},
       keyedHistograms: {...},
+      scalars: {...},
       chromeHangs: {...},
       threadHangStats: [...],
       log: [...],
@@ -181,6 +182,10 @@ keyedHistograms
 This section contains the keyed histograms available for the current platform.
 
 As of Firefox 48, this section does not contain empty keyed histograms anymore.
+
+scalars
+----------
+This section contains the :doc:`scalars` that are valid for the current platform. Scalars are not created nor submitted if no data was added to them, and are only reported with subsession pings. Their type and format is described by the ``Scalars.yaml`` file. Its most recent version is available `here <https://dxr.mozilla.org/mozilla-central/source/toolkit/components/telemetry/Scalars.yaml>`_. The ``info.revision`` field indicates the revision of the file that describes the reported scalars.
 
 threadHangStats
 ---------------

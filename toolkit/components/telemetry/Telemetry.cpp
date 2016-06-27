@@ -43,6 +43,7 @@
 #include "Telemetry.h"
 #include "TelemetryCommon.h"
 #include "TelemetryHistogram.h"
+#include "TelemetryScalar.h"
 #include "WebrtcTelemetry.h"
 #include "nsTHashtable.h"
 #include "nsHashKeys.h"
@@ -79,6 +80,7 @@ namespace {
 
 using namespace mozilla;
 using namespace mozilla::HangMonitor;
+using Telemetry::Common::AutoHashtable;
 
 // The maximum number of chrome hangs stacks that we're keeping.
 const size_t kMaxChromeStacksKept = 50;
@@ -1090,8 +1092,7 @@ TelemetryImpl::AddSQLInfo(JSContext *cx, JS::Handle<JSObject*> rootObj, bool mai
   if (!statsObj)
     return false;
 
-  AutoHashtable<SlowSQLEntryType> &sqlMap =
-    (privateSQL ? mPrivateSQL : mSanitizedSQL);
+  AutoHashtable<SlowSQLEntryType>& sqlMap = (privateSQL ? mPrivateSQL : mSanitizedSQL);
   AutoHashtable<SlowSQLEntryType>::ReflectEntryFunc reflectFunction =
     (mainThread ? ReflectMainThreadSQL : ReflectOtherThreadsSQL);
   if (!sqlMap.ReflectIntoJS(reflectFunction, cx, statsObj)) {
@@ -1887,6 +1888,7 @@ TelemetryImpl::GetCanRecordBase(bool *ret) {
 NS_IMETHODIMP
 TelemetryImpl::SetCanRecordBase(bool canRecord) {
   TelemetryHistogram::SetCanRecordBase(canRecord);
+  TelemetryScalar::SetCanRecordBase(canRecord);
   return NS_OK;
 }
 
@@ -1906,6 +1908,7 @@ TelemetryImpl::GetCanRecordExtended(bool *ret) {
 NS_IMETHODIMP
 TelemetryImpl::SetCanRecordExtended(bool canRecord) {
   TelemetryHistogram::SetCanRecordExtended(canRecord);
+  TelemetryScalar::SetCanRecordExtended(canRecord);
   return NS_OK;
 }
 
@@ -1925,10 +1928,13 @@ TelemetryImpl::CreateTelemetryInstance()
 {
   MOZ_ASSERT(sTelemetry == nullptr, "CreateTelemetryInstance may only be called once, via GetService()");
 
-  // First, initialize the TelemetryHistogram global state.
+  // First, initialize the TelemetryHistogram and TelemetryScalar global states.
   TelemetryHistogram::InitializeGlobalState(
                         XRE_IsParentProcess() || XRE_IsContentProcess(),
                         XRE_IsParentProcess() || XRE_IsContentProcess());
+
+  // Only record scalars from the parent process.
+  TelemetryScalar::InitializeGlobalState(XRE_IsParentProcess(), XRE_IsParentProcess());
 
   // Now, create and initialize the Telemetry global state.
   sTelemetry = new TelemetryImpl();
@@ -1951,16 +1957,17 @@ TelemetryImpl::ShutdownTelemetry()
   ClearIOReporting();
   NS_IF_RELEASE(sTelemetry);
 
-  // Lastly, de-initialise the TelemetryHistogram global state, so as to
-  // release any heap storage that would otherwise be kept alive by it.
+  // Lastly, de-initialise the TelemetryHistogram and TelemetryScalar global states,
+  // so as to release any heap storage that would otherwise be kept alive by it.
   TelemetryHistogram::DeInitializeGlobalState();
+  TelemetryScalar::DeInitializeGlobalState();
 }
 
 void
 TelemetryImpl::StoreSlowSQL(const nsACString &sql, uint32_t delay,
                             SanitizedState state)
 {
-  AutoHashtable<SlowSQLEntryType> *slowSQLMap = nullptr;
+  AutoHashtable<SlowSQLEntryType>* slowSQLMap = nullptr;
   if (state == Sanitized)
     slowSQLMap = &(sTelemetry->mSanitizedSQL);
   else
@@ -2326,6 +2333,40 @@ TelemetryImpl::MsSinceProcessStart(double* aResult)
   return NS_OK;
 }
 
+// Telemetry Scalars IDL Implementation
+
+NS_IMETHODIMP
+TelemetryImpl::ScalarAdd(const nsACString& aName, JS::HandleValue aVal, JSContext* aCx)
+{
+  return TelemetryScalar::Add(aName, aVal, aCx);
+}
+
+NS_IMETHODIMP
+TelemetryImpl::ScalarSet(const nsACString& aName, JS::HandleValue aVal, JSContext* aCx)
+{
+  return TelemetryScalar::Set(aName, aVal, aCx);
+}
+
+NS_IMETHODIMP
+TelemetryImpl::ScalarSetMaximum(const nsACString& aName, JS::HandleValue aVal, JSContext* aCx)
+{
+  return TelemetryScalar::SetMaximum(aName, aVal, aCx);
+}
+
+NS_IMETHODIMP
+TelemetryImpl::SnapshotScalars(unsigned int aDataset, bool aClearScalars, JSContext* aCx,
+                               uint8_t optional_argc, JS::MutableHandleValue aResult)
+{
+  return TelemetryScalar::CreateSnapshots(aDataset, aClearScalars, aCx, optional_argc, aResult);
+}
+
+NS_IMETHODIMP
+TelemetryImpl::ClearScalars()
+{
+  TelemetryScalar::ClearScalars();
+  return NS_OK;
+}
+
 size_t
 TelemetryImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 {
@@ -2333,6 +2374,7 @@ TelemetryImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
 
   // Ignore the hashtables in mAddonMap; they are not significant.
   n += TelemetryHistogram::GetMapShallowSizesOfExcludingThis(aMallocSizeOf);
+  n += TelemetryScalar::GetMapShallowSizesOfExcludingThis(aMallocSizeOf);
   n += mWebrtcTelemetry.SizeOfExcludingThis(aMallocSizeOf);
   { // Scope for mHashMutex lock
     MutexAutoLock lock(mHashMutex);
@@ -2355,6 +2397,7 @@ TelemetryImpl::SizeOfIncludingThis(mozilla::MallocSizeOf aMallocSizeOf)
   }
 
   n += TelemetryHistogram::GetHistogramSizesofIncludingThis(aMallocSizeOf);
+  n += TelemetryScalar::GetScalarSizesOfIncludingThis(aMallocSizeOf);
 
   return n;
 }
@@ -2914,6 +2957,56 @@ void CreateStatisticsRecorder()
 void DestroyStatisticsRecorder()
 {
   TelemetryHistogram::DestroyStatisticsRecorder();
+}
+
+// Scalar API C++ Endpoints
+
+/**
+ * Adds the value to the given scalar.
+ *
+ * @param aId The scalar enum id.
+ * @param aValue The unsigned value to add to the scalar.
+ */
+void
+ScalarAdd(mozilla::Telemetry::ScalarID aId, uint32_t aVal)
+{
+  TelemetryScalar::Add(aId, aVal);
+}
+
+/**
+ * Sets the scalar to the given value.
+ *
+ * @param aId The scalar enum id.
+ * @param aValue The numeric, unsigned value to set the scalar to.
+ */
+void
+ScalarSet(mozilla::Telemetry::ScalarID aId, uint32_t aVal)
+{
+  TelemetryScalar::Set(aId, aVal);
+}
+
+/**
+ * Sets the scalar to the given value.
+ *
+ * @param aId The scalar enum id.
+ * @param aValue The string value to set the scalar to.
+ */
+void
+ScalarSet(mozilla::Telemetry::ScalarID aId, const nsAString& aVal)
+{
+  TelemetryScalar::Set(aId, aVal);
+}
+
+/**
+ * Sets the scalar to the maximum of the current and the passed value.
+ *
+ * @param aId The scalar enum id.
+ * @param aValue The unsigned value to set the scalar to.
+ */
+void
+ScalarSetMaximum(mozilla::Telemetry::ScalarID aId, uint32_t aVal)
+{
+  TelemetryScalar::SetMaximum(aId, aVal);
 }
 
 } // namespace Telemetry
