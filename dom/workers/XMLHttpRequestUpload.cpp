@@ -6,13 +6,13 @@
 
 #include "XMLHttpRequestUpload.h"
 
-#include "XMLHttpRequest.h"
+#include "XMLHttpRequestWorker.h"
 
 #include "mozilla/dom/XMLHttpRequestUploadBinding.h"
 
 USING_WORKERS_NAMESPACE
 
-XMLHttpRequestUpload::XMLHttpRequestUpload(XMLHttpRequest* aXHR)
+XMLHttpRequestUpload::XMLHttpRequestUpload(XMLHttpRequestWorker* aXHR)
 : mXHR(aXHR)
 {
 }
@@ -38,7 +38,7 @@ XMLHttpRequestUpload::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenPro
 
 // static
 already_AddRefed<XMLHttpRequestUpload>
-XMLHttpRequestUpload::Create(XMLHttpRequest* aXHR)
+XMLHttpRequestUpload::Create(XMLHttpRequestWorker* aXHR)
 {
   RefPtr<XMLHttpRequestUpload> upload = new XMLHttpRequestUpload(aXHR);
   return upload.forget();

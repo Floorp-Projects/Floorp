@@ -11,13 +11,13 @@
 
 BEGIN_WORKERS_NAMESPACE
 
-class XMLHttpRequest;
+class XMLHttpRequestWorker;
 
 class XMLHttpRequestUpload final : public nsXHREventTarget
 {
-  RefPtr<XMLHttpRequest> mXHR;
+  RefPtr<XMLHttpRequestWorker> mXHR;
 
-  explicit XMLHttpRequestUpload(XMLHttpRequest* aXHR);
+  explicit XMLHttpRequestUpload(XMLHttpRequestWorker* aXHR);
 
   ~XMLHttpRequestUpload();
 
@@ -26,7 +26,7 @@ public:
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   static already_AddRefed<XMLHttpRequestUpload>
-  Create(XMLHttpRequest* aXHR);
+  Create(XMLHttpRequestWorker* aXHR);
 
   NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(XMLHttpRequestUpload, nsXHREventTarget)
 

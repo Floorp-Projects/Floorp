@@ -29,8 +29,8 @@ class SendRunnable;
 class XMLHttpRequestUpload;
 class WorkerPrivate;
 
-class XMLHttpRequest final: public nsXHREventTarget,
-                            public WorkerHolder
+class XMLHttpRequestWorker final : public nsXHREventTarget,
+                                   public WorkerHolder
 {
 public:
   struct StateData
@@ -76,7 +76,7 @@ public:
   WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto) override;
 
   NS_DECL_ISUPPORTS_INHERITED
-  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(XMLHttpRequest,
+  NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(XMLHttpRequestWorker,
                                                          nsXHREventTarget)
 
   nsISupports*
@@ -86,12 +86,12 @@ public:
     return nullptr;
   }
 
-  static already_AddRefed<XMLHttpRequest>
+  static already_AddRefed<XMLHttpRequestWorker>
   Constructor(const GlobalObject& aGlobal,
               const MozXMLHttpRequestParameters& aParams,
               ErrorResult& aRv);
 
-  static already_AddRefed<XMLHttpRequest>
+  static already_AddRefed<XMLHttpRequestWorker>
   Constructor(const GlobalObject& aGlobal, const nsAString& ignored,
               ErrorResult& aRv)
   {
@@ -272,8 +272,8 @@ public:
   }
 
 private:
-  explicit XMLHttpRequest(WorkerPrivate* aWorkerPrivate);
-  ~XMLHttpRequest();
+  explicit XMLHttpRequestWorker(WorkerPrivate* aWorkerPrivate);
+  ~XMLHttpRequestWorker();
 
   enum ReleaseType { Default, XHRIsGoingAway, WorkerIsGoingAway };
 
