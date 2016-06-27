@@ -14,9 +14,15 @@ const TEST_URI = "data:text/html;charset=utf8,<p>hello world from bug 877778 " +
 function test() {
   let hud;
 
-  loadTab(TEST_URI).then(() => {
-    HUDService.toggleBrowserConsole().then(browserConsoleOpened);
+  let prefsPushed = new Promise(resolve => {
+    SpecialPowers.pushPrefEnv({"set": [
+      ["devtools.browserconsole.filter.cssparser", true]
+    ]}, resolve);
   });
+
+  prefsPushed.then(() => loadTab(TEST_URI))
+             .then(() => HUDService.toggleBrowserConsole())
+             .then(browserConsoleOpened);
 
   function browserConsoleOpened(hudConsole) {
     hud = hudConsole;
@@ -54,16 +60,18 @@ function test() {
   function onMessageFound(results) {
     let viewSource = hud.viewSource;
     let viewSourceCalled = false;
-    hud.viewSourceInDebugger = () => {
+
+    hud.viewSource = () => {
       viewSourceCalled = true;
     };
 
     for (let result of results) {
       viewSourceCalled = false;
 
-      let msg = [...results[0].matched][0];
+      let msg = [...result.matched][0];
       ok(msg, "message element found for: " + result.text);
-      let selector = ".message > .message-location .frame-link-filename";
+      ok(!msg.classList.contains("filtered-by-type"), "message element is not filtered");
+      let selector = ".message > .message-location .frame-link-source";
       let locationNode = msg.querySelector(selector);
       ok(locationNode, "message location element found");
 
@@ -72,7 +80,8 @@ function test() {
       ok(viewSourceCalled, "view source opened");
     }
 
-    hud.viewSourceInDebugger = viewSource;
+    hud.viewSource = viewSource;
+
     finishTest();
   }
 }
