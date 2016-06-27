@@ -4,12 +4,6 @@
 
 const PREF_LOOP_CSP = "loop.CSP";
 
-const CONTENT_SCRIPT_HELPER = getRootDirectory(gTestPath) + "get_user_media_content_script.js";
-Cc["@mozilla.org/moz/jssubscript-loader;1"]
-  .getService(Ci.mozIJSSubScriptLoader)
-  .loadSubScript(getRootDirectory(gTestPath) + "get_user_media_helpers.js",
-                 this);
-
 var gTab;
 
 // Taken from dom/media/tests/mochitest/head.js
@@ -70,9 +64,9 @@ var gTests = [
 {
   desc: "getUserMedia about:loopconversation shouldn't prompt",
   run: function checkAudioVideoLoop() {
-    yield new Promise(resolve => SpecialPowers.pushPrefEnv({
+    yield SpecialPowers.pushPrefEnv({
       "set": [[PREF_LOOP_CSP, "default-src 'unsafe-inline'"]],
-    }, resolve));
+    });
 
     yield loadPage("about:loopconversation");
 
@@ -90,7 +84,7 @@ var gTests = [
 
     yield closeStream();
 
-    yield new Promise((resolve) => SpecialPowers.popPrefEnv(resolve));
+    yield SpecialPowers.popPrefEnv();
   }
 },
 
@@ -101,9 +95,9 @@ var gTests = [
       return;
     }
 
-    yield new Promise(resolve => SpecialPowers.pushPrefEnv({
+    yield SpecialPowers.pushPrefEnv({
       "set": [[PREF_LOOP_CSP, "default-src 'unsafe-inline'"]],
-    }, resolve));
+    });
 
     yield loadPage("about:loopconversation");
 
@@ -125,7 +119,7 @@ var gTests = [
     yield expectObserverCalled("getUserMedia:response:deny");
     yield expectObserverCalled("recording-window-ended");
 
-    yield new Promise((resolve) => SpecialPowers.popPrefEnv(resolve));
+    yield SpecialPowers.popPrefEnv();
   }
 },
 
@@ -193,10 +187,10 @@ function test() {
                                 factory);
     });
 
-    yield new Promise(resolve => SpecialPowers.pushPrefEnv({
+    yield SpecialPowers.pushPrefEnv({
       "set": [[PREF_PERMISSION_FAKE, true],
               ["media.getusermedia.screensharing.enabled", true]],
-    }, resolve));
+    });
 
     for (let test of gTests) {
       info(test.desc);
