@@ -10,6 +10,7 @@ UNIFIED_SOURCES += [
     'TestCloneInputStream.cpp',
     'TestCRT.cpp',
     'TestEncoding.cpp',
+    'TestEscapeURL.cpp',
     'TestExpirationTracker.cpp',
     'TestNSPRLogModulesParser.cpp',
     'TestPipes.cpp',
