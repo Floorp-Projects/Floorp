@@ -1,0 +1,262 @@
+
+<!DOCTYPE HTML>
+<html>
+<!--
+Test GripArray rep
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Rep test - GripArray</title>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="chrome://mochikit/content/tests/SimpleTest/test.css">
+</head>
+<body>
+<pre id="test">
+<script src="head.js" type="application/javascript;version=1.8"></script>
+<script type="application/javascript;version=1.8">
+window.onload = Task.async(function* () {
+  let { Rep } = browserRequire("devtools/client/shared/components/reps/rep");
+  let { GripArray } = browserRequire("devtools/client/shared/components/reps/grip-array");
+
+  let componentUnderTest = GripArray;
+
+  try {
+    yield testBasic();
+
+    // Test property iterator
+    yield testMaxProps();
+    yield testMoreThanMaxProps();
+    yield testRecursiveArray();
+  } catch(e) {
+    ok(false, "Got an error: " + DevToolsUtils.safeErrorString(e));
+  } finally {
+    SimpleTest.finish();
+  }
+
+  function testBasic() {
+    // Test array: `[]`
+    const testName = "testBasic";
+
+    // Test that correct rep is chosen
+    const gripStub = getGripStub("testBasic");
+    const renderedRep = shallowRenderComponent(Rep, { object: gripStub });
+    is(renderedRep.type, GripArray.rep, `Rep correctly selects ${GripArray.rep.displayName}`);
+
+    // Test rendering
+    const defaultOutput = `[]`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `[0]`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testMaxProps() {
+    // Test array: `[1, "foo", {}]`;
+    const testName = "testMaxProps";
+
+    const defaultOutput = `[1, "foo", Object]`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `[3]`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testMoreThanMaxProps() {
+    // Test array = `["test string"...] //301 items`
+    const testName = "testMoreThanMaxProps";
+
+    const defaultOutput = `[${Array(3).fill("\"test string\"").join(", ")}, more...]`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `[302]`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: `[${Array(300).fill("\"test string\"").join(", ")}, more...]`,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function testRecursiveArray() {
+    // @TODO This is not how this feature should actually work
+    // See Bug 1282465 - Reps: fix or remove recursive handling in grip-array
+
+    // Test array = `let a = []; a = [a]`
+    const testName = "testRecursiveArray";
+
+    const defaultOutput = `[[1]]`;
+
+    const modeTests = [
+      {
+        mode: undefined,
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "tiny",
+        expectedOutput: `[1]`,
+      },
+      {
+        mode: "short",
+        expectedOutput: defaultOutput,
+      },
+      {
+        mode: "long",
+        expectedOutput: defaultOutput,
+      }
+    ];
+
+    testRepRenderModes(modeTests, testName, componentUnderTest, getGripStub(testName));
+  }
+
+  function getGripStub(functionName) {
+    switch (functionName) {
+      case "testBasic":
+        return {
+          "type": "object",
+          "class": "Array",
+          "actor": "server1.conn0.obj35",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 1,
+          "preview": {
+            "kind": "ArrayLike",
+            "length": 0,
+            "items": []
+          }
+        };
+
+      case "testMaxProps":
+        return {
+          "type": "object",
+          "class": "Array",
+          "actor": "server1.conn1.obj35",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 4,
+          "preview": {
+            "kind": "ArrayLike",
+            "length": 3,
+            "items": [
+              1,
+              "foo",
+              {
+                "type": "object",
+                "class": "Object",
+                "actor": "server1.conn1.obj36",
+                "extensible": true,
+                "frozen": false,
+                "sealed": false,
+                "ownPropertyLength": 0
+              }
+            ]
+          }
+        };
+
+      case "testMoreThanMaxProps":
+        let grip = {
+          "type": "object",
+          "class": "Array",
+          "actor": "server1.conn1.obj35",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 4,
+          "preview": {
+            "kind": "ArrayLike",
+            "length": 302,
+            "items": []
+          }
+        };
+
+        // Generate 101 properties, which is more that the maximum
+        // limit in case of the 'long' mode.
+        for (let i = 0; i < 302; i++) {
+          grip.preview.items.push("test string");
+        }
+
+        return grip;
+
+      case "testRecursiveArray":
+        return {
+          "type": "object",
+          "class": "Array",
+          "actor": "server1.conn3.obj42",
+          "extensible": true,
+          "frozen": false,
+          "sealed": false,
+          "ownPropertyLength": 2,
+          "preview": {
+            "kind": "ArrayLike",
+            "length": 1,
+            "items": [
+              {
+                "type": "object",
+                "class": "Array",
+                "actor": "server1.conn3.obj43",
+                "extensible": true,
+                "frozen": false,
+                "sealed": false,
+                "ownPropertyLength": 2,
+                "preview": {
+                  "kind": "ArrayLike",
+                  "length": 1
+                }
+              }
+            ]
+          }
+        };
+    }
+  }
+});
+</script>
+</pre>
+</body>
+</html>
