@@ -9,6 +9,7 @@
 
 #include "nsBaseHashtable.h"
 #include "nsHashKeys.h"
+#include "TelemetryCommon.h"
 
 class WebrtcTelemetry {
 public:
@@ -37,7 +38,7 @@ private:
 
   bool AddIceInfo(JSContext *cx, JS::Handle<JSObject*> rootObj, bool loop);
 
-  AutoHashtable<WebrtcIceCandidateType> mWebrtcIceCandidates;
+  mozilla::Telemetry::Common::AutoHashtable<WebrtcIceCandidateType> mWebrtcIceCandidates;
 };
 
 #endif // WebrtcTelemetry_h__

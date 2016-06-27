@@ -2,12 +2,6 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-const CONTENT_SCRIPT_HELPER = getRootDirectory(gTestPath) + "get_user_media_content_script.js";
-Cc["@mozilla.org/moz/jssubscript-loader;1"]
-  .getService(Ci.mozIJSSubScriptLoader)
-  .loadSubScript(getRootDirectory(gTestPath) + "get_user_media_helpers.js",
-                 this);
-
 registerCleanupFunction(function() {
   gBrowser.removeCurrentTab();
 });
@@ -239,9 +233,7 @@ function test() {
        "should start the test without any prior popup notification");
 
     Task.spawn(function () {
-      yield new Promise(resolve => SpecialPowers.pushPrefEnv({
-        "set": [[PREF_PERMISSION_FAKE, true]],
-      }, resolve));
+      yield SpecialPowers.pushPrefEnv({"set": [[PREF_PERMISSION_FAKE, true]]});
 
       for (let test of gTests) {
         info(test.desc);

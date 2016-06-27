@@ -13,7 +13,6 @@
 #include "nsBaseHashtable.h"
 #include "nsClassHashtable.h"
 #include "nsITelemetry.h"
-#include "nsVersionComparator.h"
 
 #include "mozilla/dom/ToJSValue.h"
 #include "mozilla/StartupTimeline.h"
@@ -96,6 +95,11 @@ using mozilla::StaticMutexAutoLock;
 
 namespace {
 
+using mozilla::Telemetry::Common::AutoHashtable;
+using mozilla::Telemetry::Common::IsExpiredVersion;
+using mozilla::Telemetry::Common::CanRecordDataset;
+using mozilla::Telemetry::Common::IsInDataset;
+
 class KeyedHistogram;
 
 typedef nsBaseHashtableET<nsDepCharHashKey, mozilla::Telemetry::ID>
@@ -140,7 +144,8 @@ typedef StatisticsRecorder::Histograms::iterator HistogramIterator;
 typedef nsBaseHashtableET<nsCStringHashKey, AddonHistogramInfo>
           AddonHistogramEntryType;
 
-typedef AutoHashtable<AddonHistogramEntryType> AddonHistogramMapType;
+typedef AutoHashtable<AddonHistogramEntryType>
+          AddonHistogramMapType;
 
 typedef nsBaseHashtableET<nsCStringHashKey, AddonHistogramMapType *>
           AddonEntryType;
@@ -224,54 +229,6 @@ internal_IsHistogramEnumId(mozilla::Telemetry::ID aID)
 }
 
 bool
-internal_IsExpired(const char *expiration)
-{
-  static mozilla::Version current_version = mozilla::Version(MOZ_APP_VERSION);
-  MOZ_ASSERT(expiration);
-  return strcmp(expiration, "never") && strcmp(expiration, "default") &&
-    (mozilla::Version(expiration) <= current_version);
-}
-
-bool
-internal_IsInDataset(uint32_t dataset, uint32_t containingDataset)
-{
-  if (dataset == containingDataset) {
-    return true;
-  }
-
-  // The "optin on release channel" dataset is a superset of the
-  // "optout on release channel one".
-  if (containingDataset == nsITelemetry::DATASET_RELEASE_CHANNEL_OPTIN
-      && dataset == nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT) {
-    return true;
-  }
-
-  return false;
-}
-
-bool
-internal_CanRecordDataset(uint32_t dataset)
-{
-  // If we are extended telemetry is enabled, we are allowed to record
-  // regardless of the dataset.
-  if (internal_CanRecordExtended()) {
-    return true;
-  }
-
-  // If base telemetry data is enabled and we're trying to record base
-  // telemetry, allow it.
-  if (internal_CanRecordBase() &&
-      internal_IsInDataset(dataset,
-                           nsITelemetry::DATASET_RELEASE_CHANNEL_OPTOUT)) {
-      return true;
-  }
-
-  // We're not recording extended telemetry or this is not the base
-  // dataset. Bail out.
-  return false;
-}
-
-bool
 internal_IsValidHistogramName(const nsACString& name)
 {
   return !FindInReadable(NS_LITERAL_CSTRING(KEYED_HISTOGRAM_NAME_SEPARATOR), name);
@@ -300,8 +257,9 @@ internal_GetRegisteredHistogramIds(bool keyed, uint32_t dataset,
 
   for (size_t i = 0; i < mozilla::ArrayLength(gHistograms); ++i) {
     const HistogramInfo& h = gHistograms[i];
-    if (internal_IsExpired(h.expiration()) || h.keyed != keyed ||
-        !internal_IsInDataset(h.dataset, dataset)) {
+    if (IsExpiredVersion(h.expiration()) ||
+        h.keyed != keyed ||
+        !IsInDataset(h.dataset, dataset)) {
       continue;
     }
 
@@ -383,7 +341,7 @@ internal_HistogramGet(const char *name, const char *expiration,
     return rv;
   }
 
-  if (internal_IsExpired(expiration)) {
+  if (IsExpiredVersion(expiration)) {
     name = EXPIRED_ID;
     min = 1;
     max = 2;
@@ -453,7 +411,7 @@ internal_GetHistogramByEnumId(mozilla::Telemetry::ID id, Histogram **ret)
 #ifdef DEBUG
   // Check that the C++ Histogram code computes the same ranges as the
   // Python histogram code.
-  if (!internal_IsExpired(p.expiration())) {
+  if (!IsExpiredVersion(p.expiration())) {
     const struct bounds &b = gBucketLowerBoundIndex[id];
     if (b.length != 0) {
       MOZ_ASSERT(size_t(b.length) == h->bucket_count(),
@@ -569,7 +527,10 @@ nsresult
 internal_HistogramAdd(Histogram& histogram, int32_t value, uint32_t dataset)
 {
   // Check if we are allowed to record the data.
-  if (!internal_CanRecordDataset(dataset) || !histogram.IsRecordingEnabled()) {
+  bool canRecordDataset = CanRecordDataset(dataset,
+                                           internal_CanRecordBase(),
+                                           internal_CanRecordExtended());
+  if (!canRecordDataset || !histogram.IsRecordingEnabled()) {
     return NS_OK;
   }
 
@@ -913,7 +874,10 @@ KeyedHistogram::GetDataset(uint32_t* dataset) const
 nsresult
 KeyedHistogram::Add(const nsCString& key, uint32_t sample)
 {
-  if (!internal_CanRecordDataset(mDataset)) {
+  bool canRecordDataset = CanRecordDataset(mDataset,
+                                           internal_CanRecordBase(),
+                                           internal_CanRecordExtended());
+  if (!canRecordDataset) {
     return NS_OK;
   }
 
