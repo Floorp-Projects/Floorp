@@ -1,0 +1,118 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <title>Test for Bug 1233086</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="text/javascript" src="/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+
+<body>
+<p id="display"></p>
+
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+const Cc = SpecialPowers.Cc;
+const Ci = SpecialPowers.Ci;
+const Services = SpecialPowers.Services;
+
+const imageServerURL = "http://mochi.test:8888/tests/toolkit/components/alerts/test/image_server.sjs";
+
+function makeAlert(...params) {
+  var alert = Cc["@mozilla.org/alert-notification;1"]
+                .createInstance(Ci.nsIAlertNotification);
+  alert.init(...params);
+  return alert;
+}
+
+function promiseImage(alert, timeout = 0, userData = null) {
+  return new Promise(resolve => {
+    var isDone = false;
+    function done(value) {
+      ok(!isDone, "Should call the image listener once");
+      isDone = true;
+      resolve(value);
+    }
+    alert.loadImage(timeout, SpecialPowers.wrapCallbackObject({
+      onImageReady(userData, request) {
+        done([true, request, userData]);
+      },
+      onImageMissing(userData) {
+        done([false, userData]);
+      },
+    }), SpecialPowers.wrap(userData));
+  });
+}
+
+add_task(function* testContext() {
+  var inUserData = Cc["@mozilla.org/supports-PRInt64;1"]
+                     .createInstance(Ci.nsISupportsPRInt64);
+  inUserData.data = 123;
+
+  var alert = makeAlert(null, imageServerURL + "?f=image.png");
+  var [ready, request, userData] = yield promiseImage(alert, 0, inUserData);
+  ok(ready, "Should load requested image");
+  is(userData.QueryInterface(Ci.nsISupportsPRInt64).data, 123,
+     "Should pass user data for loaded image");
+
+  alert = makeAlert(null, imageServerURL + "?s=404");
+  [ready, userData] = yield promiseImage(alert, 0, inUserData);
+  ok(!ready, "Should not load missing image");
+  is(userData.QueryInterface(Ci.nsISupportsPRInt64).data, 123,
+     "Should pass user data for missing image");
+});
+
+add_task(function* testTimeout() {
+  var alert = makeAlert(null, imageServerURL + "?f=image.png&t=3");
+  var [ready] = yield promiseImage(alert, 1000);
+  ok(!ready, "Should cancel request if timeout fires");
+
+  [ready, request] = yield promiseImage(alert, 45000);
+  ok(ready, "Should load image if request finishes before timeout");
+});
+
+add_task(function* testAnimatedGIF() {
+  var alert = makeAlert(null, imageServerURL + "?f=image.gif");
+  var [ready, request] = yield promiseImage(alert);
+  ok(ready, "Should load first animated GIF frame");
+  is(request.mimeType, "image/gif", "Should report correct GIF MIME type");
+  is(request.image.width, 256, "GIF width should be 256px");
+  is(request.image.height, 256, "GIF height should be 256px");
+});
+
+add_task(function* testCancel() {
+  var alert = makeAlert(null, imageServerURL + "?f=image.gif&t=180");
+  yield new Promise((resolve, reject) => {
+    var request = alert.loadImage(0, SpecialPowers.wrapCallbackObject({
+      onImageReady(userData, request) {
+        reject(new Error("Should not load cancelled request"));
+      },
+      onImageMissing(userData) {
+        resolve();
+      },
+    }), null);
+    request.cancel(SpecialPowers.Cr.NS_BINDING_ABORTED);
+  });
+});
+
+add_task(function* testMixedContent() {
+  // Loading principal is HTTPS; image URL is HTTP.
+  var origin = "https://mochi.test:8888";
+  var principal = Services.scriptSecurityManager
+                          .createCodebasePrincipalFromOrigin(origin);
+
+  var alert = makeAlert(null, imageServerURL + "?f=image.png",
+                        null, null, false, null, null, null,
+                        null, principal);
+  var [ready, request] = yield promiseImage(alert);
+  ok(ready, "Should load cross-protocol image");
+  is(request.mimeType, "image/png", "Should report correct MIME type");
+  is(request.image.width, 32, "Width should be 32px");
+  is(request.image.height, 32, "Height should be 32px");
+});
+
+</script>
+</pre>
+</body>
+</html>
