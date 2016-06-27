@@ -38,6 +38,7 @@ struct LoadInfoArgs
   uint64_t              innerWindowID;
   uint64_t              outerWindowID;
   uint64_t              parentOuterWindowID;
+  uint64_t              frameOuterWindowID;
   bool                  enforceSecurity;
   bool                  initialSecurityCheckDone;
   bool                  isInThirdPartyContext;

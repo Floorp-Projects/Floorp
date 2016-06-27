@@ -909,11 +909,6 @@ AudioContext::Suspend(ErrorResult& aRv)
     return promise.forget();
   }
 
-  if (mAudioContextState == AudioContextState::Suspended) {
-    promise->MaybeResolve(JS::UndefinedHandleValue);
-    return promise.forget();
-  }
-
   Destination()->Suspend();
 
   mPromiseGripArray.AppendElement(promise);
@@ -953,11 +948,6 @@ AudioContext::Resume(ErrorResult& aRv)
   if (mAudioContextState == AudioContextState::Closed ||
       mCloseCalled) {
     promise->MaybeReject(NS_ERROR_DOM_INVALID_STATE_ERR);
-    return promise.forget();
-  }
-
-  if (mAudioContextState == AudioContextState::Running) {
-    promise->MaybeResolve(JS::UndefinedHandleValue);
     return promise.forget();
   }
 
