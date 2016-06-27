@@ -41,19 +41,6 @@ Python class implementing the kind in its ``implementation`` key.  That
 implementation may rely on lots of code shared with other kinds, or contain a
 completely unique implementation of some functionality.
 
-The full list of pre-defined keys in this file is:
-
-``implementation``
-   Class implementing this kind, in the form ``<module-path>:<object-path>``.
-   This class should be a subclass of ``taskgraph.kind.base:Kind``.
-
-``kind-dependencies``
-   Kinds which should be loaded before this one.  This is useful when the kind
-   will use the list of already-created tasks to determine which tasks to
-   create, for example adding an upload-symbols task after every build task.
-
-Any other keys are subject to interpretation by the kind implementation.
-
 The result is a nice segmentation of implementation so that the more esoteric
 in-tree projects can do their crazy stuff in an isolated kind without making
 the bread-and-butter build and test configuration more complicated.

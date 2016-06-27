@@ -49,8 +49,7 @@ def create_tasks(taskgraph, label_to_taskid):
             task_def['taskGroupId'] = task_group_id
 
             # Wait for dependencies before submitting this.
-            deps_fs = [fs[dep] for dep in task_def.get('dependencies', [])
-                       if dep in fs]
+            deps_fs = [fs[dep] for dep in task_def['dependencies'] if dep in fs]
             for f in futures.as_completed(deps_fs):
                 f.result()
 
