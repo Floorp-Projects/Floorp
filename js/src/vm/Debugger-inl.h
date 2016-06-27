@@ -80,6 +80,13 @@ js::Debugger::onNewWasmInstance(JSContext* cx, Handle<WasmInstanceObject*> wasmI
 }
 
 inline js::Debugger*
+js::DebuggerEnvironment::owner() const
+{
+    JSObject* dbgobj = &getReservedSlot(OWNER_SLOT).toObject();
+    return Debugger::fromJSObject(dbgobj);
+}
+
+inline js::Debugger*
 js::DebuggerObject::owner() const
 {
     JSObject* dbgobj = &getReservedSlot(OWNER_SLOT).toObject();
