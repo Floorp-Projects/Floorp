@@ -9,15 +9,15 @@
 
 "use strict";
 
-var worker = new Worker("xhr_cors_redirect.js");
+var worker = new Worker("worker_xhr_cors_redirect.js");
 worker.onmessage = function(e) {
   is(e.data, 200, "We want to read 200 here.");
   runTests();
 };
 
-var tests = [ 'http://example.com/tests/dom/workers/test/xhr_cors_redirect.sjs',
-              'http://example.com/tests/dom/workers/test/xhr_cors_redirect.sjs?redirect',
-              'xhr_cors_redirect.sjs?redirect' ];
+var tests = [ 'http://example.com/tests/dom/xhr/tests/worker_xhr_cors_redirect.sjs',
+              'http://example.com/tests/dom/xhr/tests/worker_xhr_cors_redirect.sjs?redirect',
+              'worker_xhr_cors_redirect.sjs?redirect' ];
 function runTests() {
   if (!tests.length) {
     SimpleTest.finish();

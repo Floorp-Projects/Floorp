@@ -216,6 +216,7 @@
 #endif
 @RESPATH@/components/dom_workers.xpt
 @RESPATH@/components/dom_xbl.xpt
+@RESPATH@/components/dom_xhr.xpt
 @RESPATH@/components/dom_xpath.xpt
 @RESPATH@/components/dom_xul.xpt
 #ifdef MOZ_GAMEPAD

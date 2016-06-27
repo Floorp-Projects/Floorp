@@ -1,4 +1,4 @@
-﻿<!--
+<!--
   Any copyright is dedicated to the Public Domain.
   http://creativecommons.org/publicdomain/zero/1.0/
 -->
@@ -15,21 +15,28 @@ Tests of DOM Worker Threads XHR(Bug 450452 )
 <body>
 <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=450452">DOM Worker Threads XHR (Bug 450452)</a>
 <p id="display"></p>
-<div id="content" style="display: none">
-
+<div id="content">
+  <iframe id="iframe" src="worker_terminateSyncXHR_frame.html"></iframe>
 </div>
 <pre id="test">
 <script class="testbody" type="text/javascript">
+  var ifr = document.getElementById("iframe");
 
-  var worker = new Worker("xhr2_worker.js");
-
-  worker.onmessage = function(event) {
-    is(event.data, "done", "Got correct result");
-    SimpleTest.finish();
+  window.onmessage = function(event) {
+    if (event.data == "TERMINATE") {
+      ok(true, "Got TERMINATE");
+      ifr.parentNode.removeChild(ifr);
+      SimpleTest.finish();
+    } else {
+      ok(false, "Unexpected message: " + event.data);
+    }
   }
-  worker.postMessage("testXHR.txt");
 
   SimpleTest.waitForExplicitFinish();
+
+  window.onload = function() {
+    ifr.contentWindow.doStuff();
+  }
 
 </script>
 </pre>

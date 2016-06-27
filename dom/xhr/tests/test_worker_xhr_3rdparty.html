@@ -64,7 +64,7 @@ Tests of DOM Worker Threads XHR(Bug 450452 )
 
   document.cookie = "a=cookie_is_set";
   SpecialPowers.pushPrefEnv({ set: [[ "network.cookie.cookieBehavior", 1 ]] },
-                            () => worker.postMessage("file_getcookie.sjs"));
+                            () => worker.postMessage("worker_file_getcookie.sjs"));
 
   SimpleTest.waitForExplicitFinish();
 
