@@ -78,7 +78,12 @@ public class HomePager extends ViewPager {
     public interface OnUrlOpenListener {
         public enum Flags {
             ALLOW_SWITCH_TO_TAB,
-            OPEN_WITH_INTENT
+            OPEN_WITH_INTENT,
+            /**
+             * Ensure that the raw URL is opened. If not set, then the reader view version of the page
+             * might be opened if the URL is stored as an offline reader-view bookmark.
+             */
+            NO_READER_VIEW
         }
 
         public void onUrlOpen(String url, EnumSet<Flags> flags);
