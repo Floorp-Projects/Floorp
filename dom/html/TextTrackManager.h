@@ -103,6 +103,8 @@ public:
     mShutdown = true;
   }
 
+  void NotifyReset();
+
 private:
   void TimeMarchesOn();
 
