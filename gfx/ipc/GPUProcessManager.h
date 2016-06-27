@@ -106,6 +106,11 @@ public:
   void OnProcessLaunchComplete(GPUProcessHost* aHost) override;
   void OnProcessUnexpectedShutdown(GPUProcessHost* aHost) override;
 
+  // Returns access to the PGPU protocol if a GPU process is present.
+  GPUChild* GetGPUChild() {
+    return mGPUChild;
+  }
+
 private:
   // Called from our xpcom-shutdown observer.
   void OnXPCOMShutdown();

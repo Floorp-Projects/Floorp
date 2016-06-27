@@ -232,18 +232,20 @@ js::CheckTracedThing(JSTracer* trc, T* thing)
     }
 
     /*
-     * Try to assert that the thing is allocated.  This is complicated by the
-     * fact that allocated things may still contain the poison pattern if that
-     * part has not been overwritten.  Also, background sweeping may be running
-     * and concurrently modifiying the free list.
+     * Try to assert that the thing is allocated.
      *
-     * Tracing is done off main thread while compacting and reading the contents
-     * of the thing in IsThingPoisoned is racy so this check is skipped there.
+     * We would like to assert that the thing is not in the free list, but this
+     * check is very slow. Instead we check whether the thing has been poisoned:
+     * if it has not then we assume it is allocated, but if it has then it is
+     * either free or uninitialized in which case we check the free list.
+     *
+     * Further complications are that background sweeping may be running and
+     * concurrently modifiying the free list and that tracing is done off main
+     * thread during compacting GC and reading the contents of the thing by
+     * IsThingPoisoned would be racy in this case.
      */
-    MOZ_ASSERT_IF(rt->isHeapBusy() && !zone->isGCCompacting() &&
-                  !rt->gc.isBackgroundSweeping() &&
-                  IsThingPoisoned(thing),
-                  !InFreeList(thing->asTenured().arena(), thing));
+    MOZ_ASSERT_IF(rt->isHeapBusy() && !zone->isGCCompacting() && !rt->gc.isBackgroundSweeping(),
+                  !IsThingPoisoned(thing) || !InFreeList(thing->asTenured().arena(), thing));
 #endif
 }
 

@@ -21,7 +21,6 @@
 
 namespace js {
 
-#ifdef JS_CRASH_DIAGNOSTICS
 class CompartmentChecker
 {
     JSCompartment* compartment;
@@ -135,7 +134,6 @@ class CompartmentChecker
         check(desc.value());
     }
 };
-#endif /* JS_CRASH_DIAGNOSTICS */
 
 /*
  * Don't perform these checks when called from a finalizer. The checking
@@ -145,6 +143,13 @@ class CompartmentChecker
     if (cx->isJSContext() && cx->asJSContext()->runtime()->isHeapBusy())      \
         return;                                                               \
     CompartmentChecker c(cx)
+
+template <class T1> inline void
+releaseAssertSameCompartment(ExclusiveContext* cx, const T1& t1)
+{
+    START_ASSERT_SAME_COMPARTMENT();
+    c.check(t1);
+}
 
 template <class T1> inline void
 assertSameCompartment(ExclusiveContext* cx, const T1& t1)
@@ -371,7 +376,7 @@ JSContext::setPendingException(js::Value v)
 inline bool
 JSContext::runningWithTrustedPrincipals() const
 {
-    return !compartment() || compartment()->principals() == runtime()->trustedPrincipals();
+    return !compartment() || compartment()->principals() == trustedPrincipals();
 }
 
 inline void
@@ -439,7 +444,7 @@ JSContext::currentScript(jsbytecode** ppc,
     if (ppc)
         *ppc = nullptr;
 
-    js::Activation* act = runtime()->activation();
+    js::Activation* act = activation();
     while (act && (act->cx() != this || (act->isJit() && !act->asJit()->isActive())))
         act = act->prev();
 
