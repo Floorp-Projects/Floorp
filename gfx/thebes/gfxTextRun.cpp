@@ -231,14 +231,15 @@ gfxTextRun::SetPotentialLineBreaks(Range aRange, uint8_t *aBreakBefore)
 }
 
 gfxTextRun::LigatureData
-gfxTextRun::ComputeLigatureData(Range aPartRange, PropertyProvider *aProvider)
+gfxTextRun::ComputeLigatureData(Range aPartRange,
+                                PropertyProvider *aProvider) const
 {
     NS_ASSERTION(aPartRange.start < aPartRange.end,
                  "Computing ligature data for empty range");
     NS_ASSERTION(aPartRange.end <= GetLength(), "Character length overflow");
   
     LigatureData result;
-    CompressedGlyph *charGlyphs = mCharacterGlyphs;
+    const CompressedGlyph *charGlyphs = mCharacterGlyphs;
 
     uint32_t i;
     for (i = aPartRange.start; !charGlyphs[i].IsLigatureGroupStart(); --i) {
@@ -313,7 +314,7 @@ gfxTextRun::ComputeLigatureData(Range aPartRange, PropertyProvider *aProvider)
 
 gfxFloat
 gfxTextRun::ComputePartialLigatureWidth(Range aPartRange,
-                                        PropertyProvider *aProvider)
+                                        PropertyProvider *aProvider) const
 {
     if (aPartRange.start >= aPartRange.end)
         return 0;
@@ -322,7 +323,7 @@ gfxTextRun::ComputePartialLigatureWidth(Range aPartRange,
 }
 
 int32_t
-gfxTextRun::GetAdvanceForGlyphs(Range aRange)
+gfxTextRun::GetAdvanceForGlyphs(Range aRange) const
 {
     int32_t advance = 0;
     for (auto i = aRange.start; i < aRange.end; ++i) {
@@ -332,7 +333,7 @@ gfxTextRun::GetAdvanceForGlyphs(Range aRange)
 }
 
 static void
-GetAdjustedSpacing(gfxTextRun *aTextRun, gfxTextRun::Range aRange,
+GetAdjustedSpacing(const gfxTextRun *aTextRun, gfxTextRun::Range aRange,
                    gfxTextRun::PropertyProvider *aProvider,
                    gfxTextRun::PropertyProvider::Spacing *aSpacing)
 {
@@ -363,7 +364,8 @@ GetAdjustedSpacing(gfxTextRun *aTextRun, gfxTextRun::Range aRange,
 bool
 gfxTextRun::GetAdjustedSpacingArray(Range aRange, PropertyProvider *aProvider,
                                     Range aSpacingRange,
-                                    nsTArray<PropertyProvider::Spacing> *aSpacing)
+                                    nsTArray<PropertyProvider::Spacing>*
+                                        aSpacing) const
 {
     if (!aProvider || !(mFlags & gfxTextRunFactory::TEXT_ENABLE_SPACING))
         return false;
@@ -379,12 +381,12 @@ gfxTextRun::GetAdjustedSpacingArray(Range aRange, PropertyProvider *aProvider,
 }
 
 void
-gfxTextRun::ShrinkToLigatureBoundaries(Range* aRange)
+gfxTextRun::ShrinkToLigatureBoundaries(Range* aRange) const
 {
     if (aRange->start >= aRange->end)
         return;
   
-    CompressedGlyph *charGlyphs = mCharacterGlyphs;
+    const CompressedGlyph *charGlyphs = mCharacterGlyphs;
 
     while (aRange->start < aRange->end &&
            !charGlyphs[aRange->start].IsLigatureGroupStart()) {
@@ -401,7 +403,7 @@ gfxTextRun::ShrinkToLigatureBoundaries(Range* aRange)
 void
 gfxTextRun::DrawGlyphs(gfxFont *aFont, Range aRange, gfxPoint *aPt,
                        PropertyProvider *aProvider, Range aSpacingRange,
-                       TextRunDrawParams& aParams, uint16_t aOrientation)
+                       TextRunDrawParams& aParams, uint16_t aOrientation) const
 {
     AutoTArray<PropertyProvider::Spacing,200> spacingBuffer;
     bool haveSpacing = GetAdjustedSpacingArray(aRange, aProvider,
@@ -437,7 +439,8 @@ ClipPartialLigature(const gfxTextRun* aTextRun,
 void
 gfxTextRun::DrawPartialLigature(gfxFont *aFont, Range aRange,
                                 gfxPoint *aPt, PropertyProvider *aProvider,
-                                TextRunDrawParams& aParams, uint16_t aOrientation)
+                                TextRunDrawParams& aParams,
+                                uint16_t aOrientation) const
 {
     if (aRange.start >= aRange.end) {
         return;
@@ -495,7 +498,7 @@ gfxTextRun::DrawPartialLigature(gfxFont *aFont, Range aRange,
 // check whether the text run needs to be explicitly composited in order to
 // support opacity.
 static bool
-HasSyntheticBoldOrColor(gfxTextRun *aRun, gfxTextRun::Range aRange)
+HasSyntheticBoldOrColor(const gfxTextRun *aRun, gfxTextRun::Range aRange)
 {
     gfxTextRun::GlyphRunIterator iter(aRun, aRange);
     while (iter.NextRun()) {
@@ -565,7 +568,7 @@ struct BufferAlphaColor {
 };
 
 void
-gfxTextRun::Draw(Range aRange, gfxPoint aPt, const DrawParams& aParams)
+gfxTextRun::Draw(Range aRange, gfxPoint aPt, const DrawParams& aParams) const
 {
     NS_ASSERTION(aRange.end <= GetLength(), "Substring out of range");
     NS_ASSERTION(aParams.drawMode == DrawMode::GLYPH_PATH ||
@@ -689,7 +692,7 @@ gfxTextRun::Draw(Range aRange, gfxPoint aPt, const DrawParams& aParams)
 void
 gfxTextRun::DrawEmphasisMarks(gfxContext *aContext, gfxTextRun* aMark,
                               gfxFloat aMarkAdvance, gfxPoint aPt,
-                              Range aRange, PropertyProvider* aProvider)
+                              Range aRange, PropertyProvider* aProvider) const
 {
     MOZ_ASSERT(aRange.end <= GetLength());
 
@@ -733,7 +736,7 @@ gfxTextRun::AccumulateMetricsForRun(gfxFont *aFont, Range aRange,
                                     PropertyProvider *aProvider,
                                     Range aSpacingRange,
                                     uint16_t aOrientation,
-                                    Metrics *aMetrics)
+                                    Metrics *aMetrics) const
 {
     AutoTArray<PropertyProvider::Spacing,200> spacingBuffer;
     bool haveSpacing = GetAdjustedSpacingArray(aRange, aProvider,
@@ -748,7 +751,8 @@ gfxTextRun::AccumulateMetricsForRun(gfxFont *aFont, Range aRange,
 void
 gfxTextRun::AccumulatePartialLigatureMetrics(gfxFont *aFont, Range aRange,
     gfxFont::BoundingBoxType aBoundingBoxType, DrawTarget* aRefDrawTarget,
-    PropertyProvider *aProvider, uint16_t aOrientation, Metrics *aMetrics)
+    PropertyProvider *aProvider, uint16_t aOrientation,
+    Metrics *aMetrics) const
 {
     if (aRange.start >= aRange.end)
         return;
@@ -786,7 +790,7 @@ gfxTextRun::Metrics
 gfxTextRun::MeasureText(Range aRange,
                         gfxFont::BoundingBoxType aBoundingBoxType,
                         DrawTarget* aRefDrawTarget,
-                        PropertyProvider *aProvider)
+                        PropertyProvider *aProvider) const
 {
     NS_ASSERTION(aRange.end <= GetLength(), "Substring out of range");
 
@@ -1006,7 +1010,7 @@ gfxTextRun::BreakAndMeasureText(uint32_t aStart, uint32_t aMaxLength,
 
 gfxFloat
 gfxTextRun::GetAdvanceWidth(Range aRange, PropertyProvider *aProvider,
-                            PropertyProvider::Spacing* aSpacing)
+                            PropertyProvider::Spacing* aSpacing) const
 {
     NS_ASSERTION(aRange.end <= GetLength(), "Substring out of range");
 
@@ -1059,7 +1063,7 @@ gfxTextRun::SetLineBreaks(Range aRange,
 }
 
 uint32_t
-gfxTextRun::FindFirstGlyphRunContaining(uint32_t aOffset)
+gfxTextRun::FindFirstGlyphRunContaining(uint32_t aOffset) const
 {
     NS_ASSERTION(aOffset <= GetLength(), "Bad offset looking for glyphrun");
     NS_ASSERTION(GetLength() == 0 || mGlyphRuns.Length() > 0,
@@ -1204,7 +1208,7 @@ gfxTextRun::SanitizeGlyphRuns()
 }
 
 uint32_t
-gfxTextRun::CountMissingGlyphs()
+gfxTextRun::CountMissingGlyphs() const
 {
     uint32_t i;
     uint32_t count = 0;
@@ -1286,7 +1290,7 @@ gfxTextRun::CopyGlyphDataFrom(gfxTextRun *aSource, Range aRange, uint32_t aDest)
     // Copy glyph runs
     GlyphRunIterator iter(aSource, aRange);
 #ifdef DEBUG
-    GlyphRun *prevRun = nullptr;
+    const GlyphRun *prevRun = nullptr;
 #endif
     while (iter.NextRun()) {
         gfxFont *font = iter.GetGlyphRun()->mFont;
