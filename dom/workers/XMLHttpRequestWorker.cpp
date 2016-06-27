@@ -32,7 +32,7 @@
 #include "WorkerScope.h"
 #include "WorkerPrivate.h"
 #include "WorkerRunnable.h"
-#include "XMLHttpRequestUpload.h"
+#include "XMLHttpRequestUploadWorker.h"
 
 #include "mozilla/UniquePtr.h"
 
@@ -2027,7 +2027,7 @@ XMLHttpRequestWorker::SetMozBackgroundRequest(bool aBackgroundRequest,
   runnable->Dispatch(aRv);
 }
 
-XMLHttpRequestUpload*
+XMLHttpRequestUploadWorker*
 XMLHttpRequestWorker::GetUpload(ErrorResult& aRv)
 {
   mWorkerPrivate->AssertIsOnWorkerThread();
@@ -2038,7 +2038,7 @@ XMLHttpRequestWorker::GetUpload(ErrorResult& aRv)
   }
 
   if (!mUpload) {
-    mUpload = XMLHttpRequestUpload::Create(this);
+    mUpload = XMLHttpRequestUploadWorker::Create(this);
 
     if (!mUpload) {
       aRv.Throw(NS_ERROR_FAILURE);
