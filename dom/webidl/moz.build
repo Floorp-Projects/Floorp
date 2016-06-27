@@ -172,6 +172,7 @@ WEBIDL_FILES = [
     'FormData.webidl',
     'Function.webidl',
     'GainNode.webidl',
+    'GamepadServiceTest.webidl',
     'Geolocation.webidl',
     'GeometryUtils.webidl',
     'GetUserMediaRequest.webidl',

@@ -349,6 +349,10 @@ partial interface Navigator {
   [Throws, Pref="dom.gamepad.enabled"]
   sequence<Gamepad?> getGamepads();
 };
+partial interface Navigator {
+  [Pref="dom.gamepad.test.enabled"]
+  GamepadServiceTest requestGamepadServiceTest();
+};
 #endif // MOZ_GAMEPAD
 
 partial interface Navigator {

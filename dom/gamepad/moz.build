@@ -12,7 +12,9 @@ EXPORTS.mozilla.dom += [
     'GamepadPlatformService.h',
     'GamepadServiceTest.h',
     'ipc/GamepadEventChannelChild.h',
-    'ipc/GamepadEventChannelParent.h'
+    'ipc/GamepadEventChannelParent.h',
+    'ipc/GamepadTestChannelChild.h',
+    'ipc/GamepadTestChannelParent.h'
     ]
 
 UNIFIED_SOURCES = [
@@ -23,7 +25,9 @@ UNIFIED_SOURCES = [
     'GamepadPlatformService.cpp',
     'GamepadServiceTest.cpp',
     'ipc/GamepadEventChannelChild.cpp',
-    'ipc/GamepadEventChannelParent.cpp'
+    'ipc/GamepadEventChannelParent.cpp',
+    'ipc/GamepadTestChannelChild.cpp',
+    'ipc/GamepadTestChannelParent.cpp'
     ]
 
 if CONFIG['MOZ_GAMEPAD_BACKEND'] == 'stub':
@@ -52,7 +56,9 @@ LOCAL_INCLUDES += [
 ]
 
 IPDL_SOURCES += [
-    'ipc/PGamepadEventChannel.ipdl'
+    'ipc/GamepadEventTypes.ipdlh',
+    'ipc/PGamepadEventChannel.ipdl',
+    'ipc/PGamepadTestChannel.ipdl'
 ]
 
 include('/ipc/chromium/chromium-config.mozbuild')

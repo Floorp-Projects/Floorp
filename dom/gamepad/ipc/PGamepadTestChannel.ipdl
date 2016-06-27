@@ -7,14 +7,14 @@ include GamepadEventTypes;
 namespace mozilla {
 namespace dom {
 
-async protocol PGamepadEventChannel {
+async protocol PGamepadTestChannel {
   manager PBackground;
   parent:
-    async GamepadListenerAdded();
-    async GamepadListenerRemoved();
+    async GamepadTestEvent(uint32_t aID, GamepadChangeEvent aGamepadEvent);
+    async ShutdownChannel();
   child:
     async __delete__();
-    async GamepadUpdate(GamepadChangeEvent aGamepadEvent);
+    async ReplyGamepadIndex(uint32_t aID, uint32_t aIndex);
 };
 
 }

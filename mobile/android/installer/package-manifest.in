@@ -149,9 +149,6 @@
 @BINPATH@/components/dom_xhr.xpt
 @BINPATH@/components/dom_xpath.xpt
 @BINPATH@/components/dom_xul.xpt
-#ifdef MOZ_GAMEPAD
-@BINPATH@/components/dom_gamepad.xpt
-#endif
 @BINPATH@/components/dom_presentation.xpt
 @BINPATH@/components/downloads.xpt
 @BINPATH@/components/editor.xpt

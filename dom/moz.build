@@ -31,7 +31,6 @@ interfaces = [
     'svg',
     'smil',
     'apps',
-    'gamepad',
     'push',
 ]
 

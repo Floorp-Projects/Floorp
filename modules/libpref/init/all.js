@@ -174,6 +174,7 @@ pref("dom.enable_performance_observer", false);
 
 // Whether the Gamepad API is enabled
 pref("dom.gamepad.enabled", true);
+pref("dom.gamepad.test.enabled", false);
 #ifdef RELEASE_BUILD
 pref("dom.gamepad.non_standard_events.enabled", false);
 #else
