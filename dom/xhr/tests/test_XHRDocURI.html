@@ -106,14 +106,14 @@ function runTest() {
 
   // use content XHR and access URI properties from content privileged script
   xhr = new XMLHttpRequest;
-  xhr.open("GET", "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.xml");
+  xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.xml");
   xhr.onreadystatechange = function(e) {
     if (!xhr.responseXML) {
       return;
     }
     var expects = {
-      documentURI: "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.xml",
-      baseURI: "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.xml",
+      documentURI: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.xml",
+      baseURI: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.xml",
       elementBaseURI: "http://www.example.com/"
     };
     testXMLDocURI(xhr.responseXML, expects);
@@ -125,15 +125,15 @@ function runTest() {
   yield undefined;
 
   xhr = new XMLHttpRequest;
-  xhr.open("GET", "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.html");
+  xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.html");
   xhr.responseType = "document";
   xhr.onreadystatechange = function(e) {
     if (!xhr.response) {
       return;
     }
     var expects = {
-      documentURI: "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.html",
-      baseURI: "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.html"
+      documentURI: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.html",
+      baseURI: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.html"
     };
     testHTMLDocURI(xhr.response, expects);
     if (xhr.readyState == 4) {
@@ -144,7 +144,7 @@ function runTest() {
   yield undefined;
 
   xhr = new XMLHttpRequest;
-  xhr.open("GET", "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.text");
+  xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.text");
   xhr.onreadystatechange = function(e) {
     is(xhr.responseXML, null, "should not have document");
     if (xhr.readyState == 4) {
@@ -155,14 +155,14 @@ function runTest() {
   yield undefined;
 
   xhr = new XMLHttpRequest;
-  xhr.open("GET", "http://example.com/tests/dom/base/test/file_XHRDocURI.xml");
+  xhr.open("GET", "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml");
   xhr.onreadystatechange = function(e) {
     if (!xhr.responseXML) {
       return;
     }
     var expects = {
-      documentURI: "http://example.com/tests/dom/base/test/file_XHRDocURI.xml",
-      baseURI: "http://example.com/tests/dom/base/test/file_XHRDocURI.xml",
+      documentURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml",
+      baseURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml",
       elementBaseURI: "http://www.example.com/"
     };
     testXMLDocURI(xhr.responseXML, expects);
@@ -174,15 +174,15 @@ function runTest() {
   yield undefined;
 
   xhr = new XMLHttpRequest;
-  xhr.open("GET", "http://example.com/tests/dom/base/test/file_XHRDocURI.html");
+  xhr.open("GET", "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.html");
   xhr.responseType = "document";
   xhr.onreadystatechange = function(e) {
     if (!xhr.response) {
       return;
     }
     var expects = {
-      documentURI: "http://example.com/tests/dom/base/test/file_XHRDocURI.html",
-      baseURI: "http://example.com/tests/dom/base/test/file_XHRDocURI.html"
+      documentURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.html",
+      baseURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.html"
     };
     testHTMLDocURI(xhr.response, expects);
     if (xhr.readyState == 4) {
@@ -193,14 +193,14 @@ function runTest() {
   yield undefined;
 
   xhr = new XMLHttpRequest;
-  xhr.open("GET", "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.sjs?url=http://example.com/tests/dom/base/test/file_XHRDocURI.xml");
+  xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.sjs?url=http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml");
   xhr.onreadystatechange = function(e) {
     if (!xhr.responseXML) {
       return;
     }
     var expects = {
-      documentURI: "http://example.com/tests/dom/base/test/file_XHRDocURI.xml",
-      baseURI: "http://example.com/tests/dom/base/test/file_XHRDocURI.xml",
+      documentURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml",
+      baseURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml",
       elementBaseURI: "http://www.example.com/"
     };
     testXMLDocURI(xhr.responseXML, expects);
@@ -212,15 +212,15 @@ function runTest() {
   yield undefined;
 
   xhr = new XMLHttpRequest;
-  xhr.open("GET", "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.sjs?url=http://example.com/tests/dom/base/test/file_XHRDocURI.html");
+  xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.sjs?url=http://example.com/tests/dom/xhr/tests/file_XHRDocURI.html");
   xhr.responseType = "document";
   xhr.onreadystatechange = function(e) {
     if (!xhr.response) {
       return;
     }
     var expects = {
-      documentURI: "http://example.com/tests/dom/base/test/file_XHRDocURI.html",
-      baseURI: "http://example.com/tests/dom/base/test/file_XHRDocURI.html"
+      documentURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.html",
+      baseURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.html"
     };
     testHTMLDocURI(xhr.response, expects);
     if (xhr.readyState == 4) {
@@ -231,7 +231,7 @@ function runTest() {
   yield undefined;
 
   xhr = new XMLHttpRequest;
-  xhr.open("GET", "http://example.com/tests/dom/base/test/file_XHRDocURI.text");
+  xhr.open("GET", "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.text");
   xhr.onreadystatechange = function(e) {
     is(xhr.responseXML, null, "should not have document");
     if (xhr.readyState == 4) {
@@ -245,14 +245,14 @@ function runTest() {
   // use content XHR and access URI properties from chrome privileged script
 
   xhr = new XMLHttpRequest;
-  xhr.open("GET", "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.xml");
+  xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.xml");
   xhr.onreadystatechange = function(e) {
     if (!xhr.responseXML) {
       return;
     }
     var expects = {
-      documentURI: "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.xml",
-      baseURI: "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.xml",
+      documentURI: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.xml",
+      baseURI: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.xml",
       elementBaseURI: "http://www.example.com/"
     };
     var xml = SpecialPowers.wrap(xhr.responseXML);
@@ -266,18 +266,18 @@ function runTest() {
   yield undefined;
 
   xhr = new XMLHttpRequest;
-  xhr.open("GET", "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.html");
+  xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.html");
   xhr.responseType = "document";
   xhr.onreadystatechange = function(e) {
     if (!xhr.response) {
       return;
     }
     var expects = {
-      documentURI: "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.html",
-      baseURI: "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.html"
+      documentURI: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.html",
+      baseURI: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.html"
     };
     var doc = SpecialPowers.wrap(xhr.response);
-    testChromeHTMLDocURI(doc, "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.html", expects);
+    testChromeHTMLDocURI(doc, "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.html", expects);
     testCloneDocURI(doc);
     if (xhr.readyState == 4) {
       gen.next();
@@ -287,7 +287,7 @@ function runTest() {
   yield undefined;
 
   xhr = new XMLHttpRequest;
-  xhr.open("GET", "http://example.com/tests/dom/base/test/file_XHRDocURI.xml");
+  xhr.open("GET", "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml");
   xhr.onreadystatechange = function(e) {
     if (!xhr.responseXML) {
       return;
@@ -308,7 +308,7 @@ function runTest() {
   yield undefined;
 
   xhr = new XMLHttpRequest;
-  xhr.open("GET", "http://example.com/tests/dom/base/test/file_XHRDocURI.html");
+  xhr.open("GET", "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.html");
   xhr.responseType = "document";
   xhr.onreadystatechange = function(e) {
     if (!xhr.response) {
@@ -319,7 +319,7 @@ function runTest() {
       baseURI: document.baseURI
     };
     var doc = SpecialPowers.wrap(xhr.response);
-    testChromeHTMLDocURI(doc, "http://example.com/tests/dom/base/test/file_XHRDocURI.html", expects);
+    testChromeHTMLDocURI(doc, "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.html", expects);
     testCloneDocURI(doc);
     if (xhr.readyState == 4) {
       gen.next();
@@ -329,7 +329,7 @@ function runTest() {
   yield undefined;
 
   xhr = new XMLHttpRequest;
-  xhr.open("GET", "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.sjs?url=http://example.com/tests/dom/base/test/file_XHRDocURI.xml");
+  xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.sjs?url=http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml");
   xhr.onreadystatechange = function(e) {
     if (!xhr.responseXML) {
       return;
@@ -350,7 +350,7 @@ function runTest() {
   yield undefined;
 
   xhr = new XMLHttpRequest;
-  xhr.open("GET", "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.sjs?url=http://example.com/tests/dom/base/test/file_XHRDocURI.html");
+  xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.sjs?url=http://example.com/tests/dom/xhr/tests/file_XHRDocURI.html");
   xhr.responseType = "document";
   xhr.onreadystatechange = function(e) {
     if (!xhr.response) {
@@ -361,7 +361,7 @@ function runTest() {
       baseURI: document.baseURI
     };
     var doc = SpecialPowers.wrap(xhr.response);
-    testChromeHTMLDocURI(doc, "http://example.com/tests/dom/base/test/file_XHRDocURI.html", expects);
+    testChromeHTMLDocURI(doc, "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.html", expects);
     testCloneDocURI(doc);
     if (xhr.readyState == 4) {
       gen.next();
@@ -374,14 +374,14 @@ function runTest() {
   // use the systemXHR special privilege
   SpecialPowers.addPermission("systemXHR", true, document);
   xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
-  xhr.open("GET", "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.xml");
+  xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.xml");
   xhr.onreadystatechange = function(e) {
     if (!xhr.responseXML) {
       return;
     }
     var expects = {
-      documentURI: "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.xml",
-      baseURI: "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.xml",
+      documentURI: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.xml",
+      baseURI: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.xml",
       elementBaseURI: "http://www.example.com/"
     };
     testXMLDocURI(xhr.responseXML, expects);
@@ -393,15 +393,15 @@ function runTest() {
   yield undefined;
 
   xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
-  xhr.open("GET", "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.html");
+  xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.html");
   xhr.responseType = "document";
   xhr.onreadystatechange = function(e) {
     if (!xhr.response) {
       return;
     }
     var expects = {
-      documentURI: "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.html",
-      baseURI: "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.html"
+      documentURI: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.html",
+      baseURI: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.html"
     };
     testHTMLDocURI(xhr.response, expects);
     if (xhr.readyState == 4) {
@@ -412,14 +412,14 @@ function runTest() {
   yield undefined;
 
   xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
-  xhr.open("GET", "http://example.com/tests/dom/base/test/file_XHRDocURI.xml");
+  xhr.open("GET", "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml");
   xhr.onreadystatechange = function(e) {
     if (!xhr.responseXML) {
       return;
     }
     var expects = {
-      documentURI: "http://example.com/tests/dom/base/test/file_XHRDocURI.xml",
-      baseURI: "http://example.com/tests/dom/base/test/file_XHRDocURI.xml",
+      documentURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml",
+      baseURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml",
       elementBaseURI: "http://www.example.com/"
     };
     testXMLDocURI(xhr.responseXML, expects);
@@ -431,15 +431,15 @@ function runTest() {
   yield undefined;
 
   xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
-  xhr.open("GET", "http://example.com/tests/dom/base/test/file_XHRDocURI.html");
+  xhr.open("GET", "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.html");
   xhr.responseType = "document";
   xhr.onreadystatechange = function(e) {
     if (!xhr.response) {
       return;
     }
     var expects = {
-      documentURI: "http://example.com/tests/dom/base/test/file_XHRDocURI.html",
-      baseURI: "http://example.com/tests/dom/base/test/file_XHRDocURI.html"
+      documentURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.html",
+      baseURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.html"
     };
     testHTMLDocURI(xhr.response, expects);
     if (xhr.readyState == 4) {
@@ -450,14 +450,14 @@ function runTest() {
   yield undefined;
 
   xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
-  xhr.open("GET", "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.sjs?url=http://example.com/tests/dom/base/test/file_XHRDocURI.xml");
+  xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.sjs?url=http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml");
   xhr.onreadystatechange = function(e) {
     if (!xhr.responseXML) {
       return;
     }
     var expects = {
-      documentURI: "http://example.com/tests/dom/base/test/file_XHRDocURI.xml",
-      baseURI: "http://example.com/tests/dom/base/test/file_XHRDocURI.xml",
+      documentURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml",
+      baseURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.xml",
       elementBaseURI: "http://www.example.com/"
     };
     testXMLDocURI(xhr.responseXML, expects);
@@ -469,15 +469,15 @@ function runTest() {
   yield undefined;
 
   xhr = new XMLHttpRequest({mozAnon: false, mozSystem: true});
-  xhr.open("GET", "http://mochi.test:8888/tests/dom/base/test/file_XHRDocURI.sjs?url=http://example.com/tests/dom/base/test/file_XHRDocURI.html");
+  xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRDocURI.sjs?url=http://example.com/tests/dom/xhr/tests/file_XHRDocURI.html");
   xhr.responseType = "document";
   xhr.onreadystatechange = function(e) {
     if (!xhr.response) {
       return;
     }
     var expects = {
-      documentURI: "http://example.com/tests/dom/base/test/file_XHRDocURI.html",
-      baseURI: "http://example.com/tests/dom/base/test/file_XHRDocURI.html"
+      documentURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.html",
+      baseURI: "http://example.com/tests/dom/xhr/tests/file_XHRDocURI.html"
     };
     testHTMLDocURI(xhr.response, expects);
     if (xhr.readyState == 4) {

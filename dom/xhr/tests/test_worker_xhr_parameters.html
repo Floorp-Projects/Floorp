@@ -26,7 +26,7 @@ function message(event) {
 };
 
 function test1() {
-  var worker = new Worker("test_xhr_parameters.js");
+  var worker = new Worker("test_worker_xhr_parameters.js");
   worker.onmessage = message;
 
   // Run the tests once without API privileges...
@@ -37,7 +37,7 @@ function test2() {
   // ...and once with privileges.
   SpecialPowers.pushPermissions([{type: "systemXHR", allow: true, context: document}],
     function () {
-      var worker = new Worker("test_xhr_parameters.js");
+      var worker = new Worker("test_worker_xhr_parameters.js");
       worker.onmessage = message;
       worker.postMessage(true);
     }

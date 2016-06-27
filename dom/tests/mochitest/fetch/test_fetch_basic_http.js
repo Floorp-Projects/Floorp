@@ -1,4 +1,4 @@
-var path = "/tests/dom/base/test/";
+var path = "/tests/dom/xhr/tests/";
 
 var passFiles = [['file_XHR_pass1.xml', 'GET', 200, 'OK', 'text/xml'],
                  ['file_XHR_pass2.txt', 'GET', 200, 'OK', 'text/plain'],

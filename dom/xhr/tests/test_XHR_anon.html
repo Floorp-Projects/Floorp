@@ -17,7 +17,7 @@
 <script class="testbody" type="application/javascript;version=1.8">
 
 // An XHR with the anon flag set will not send cookie and auth information.
-const TEST_URL = "http://example.com/tests/dom/base/test/file_XHR_anon.sjs";
+const TEST_URL = "http://example.com/tests/dom/xhr/tests/file_XHR_anon.sjs";
 document.cookie = "foo=bar";
 
 let am = {
@@ -43,6 +43,9 @@ var tests = [ test1, test2, test2a, test3, test3, test3, test4, test4, test4, te
 function runTests() {
   if (!tests.length) {
     am.tearDown();
+
+    // Resetting the cookie.
+    document.cookie = "foo=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
     SimpleTest.finish();
     return;
   }
