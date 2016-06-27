@@ -1,7 +1,6 @@
 /* Any copyright is dedicated to the Public Domain.
    http://creativecommons.org/publicdomain/zero/1.0/ */
 
-/* eslint-disable mozilla/no-cpows-in-tests */
 /* global sendAsyncMessage */
 
 "use strict";
@@ -12,10 +11,8 @@
 
 // Service workers can't be loaded from chrome://, but http:// is ok with
 // dom.serviceWorkers.testing.enabled turned on.
-const HTTP_ROOT = CHROME_ROOT.replace(
-  "chrome://mochitests/content/", "http://mochi.test:8888/");
-const SERVICE_WORKER = HTTP_ROOT + "service-workers/push-sw.js";
-const TAB_URL = HTTP_ROOT + "service-workers/push-sw.html";
+const SERVICE_WORKER = URL_ROOT + "service-workers/push-sw.js";
+const TAB_URL = URL_ROOT + "service-workers/push-sw.html";
 
 add_task(function* () {
   info("Turn on workers via mochitest http.");
