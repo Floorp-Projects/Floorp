@@ -36,8 +36,9 @@ public:
   virtual bool DoSample(FrameMetrics& aFrameMetrics,
                         const TimeDuration& aDelta) override;
 private:
+  void DeferHandleFlingOverscroll(ParentLayerPoint& aVelocity);
   // Returns true if value is on or outside of axis bounds.
-  bool CheckBounds(Axis& aAxis, float aValue, float* aClamped);
+  bool CheckBounds(Axis& aAxis, float aValue, float aDirection, float* aClamped);
 
   AsyncPanZoomController& mApzc;
   widget::sdk::OverScroller::GlobalRef mOverScroller;
@@ -49,7 +50,7 @@ private:
   ParentLayerPoint mPreviousOffset;
   // Unit vector in the direction of the fling.
   ParentLayerPoint mFlingDirection;
-  int32_t mOverScrollCount;
+  ParentLayerPoint mPreviousVelocity;
 };
 
 
