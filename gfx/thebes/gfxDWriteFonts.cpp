@@ -559,7 +559,7 @@ gfxDWriteFont::GetCairoScaledFont()
 }
 
 gfxFont::RunMetrics
-gfxDWriteFont::Measure(gfxTextRun* aTextRun,
+gfxDWriteFont::Measure(const gfxTextRun* aTextRun,
                        uint32_t aStart, uint32_t aEnd,
                        BoundingBoxType aBoundingBoxType,
                        DrawTarget* aRefDrawTarget,
