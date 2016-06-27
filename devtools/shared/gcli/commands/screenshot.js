@@ -276,12 +276,15 @@ function createScreenshotData(document, args) {
   const currentX = window.scrollX;
   const currentY = window.scrollY;
 
+  let filename = getFilename(args.filename);
+
   if (args.fullpage) {
     // Bug 961832: GCLI screenshot shows fixed position element in wrong
     // position if we don't scroll to top
     window.scrollTo(0,0);
     width = window.innerWidth + window.scrollMaxX - window.scrollMinX;
     height = window.innerHeight + window.scrollMaxY - window.scrollMinY;
+    filename = filename.replace(".png", "-fullpage.png");
   }
   else if (args.selector) {
     ({ top, left, width, height } = getRect(window, args.selector, window));
@@ -323,7 +326,7 @@ function createScreenshotData(document, args) {
     data: data,
     height: height,
     width: width,
-    filename: getFilename(args.filename),
+    filename: filename,
   });
 }
 
