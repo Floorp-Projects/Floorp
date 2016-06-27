@@ -3,7 +3,7 @@ function handleRequest(request, response) {
 
   if (request.queryString == 'redirect') {
     response.setStatusLine("1.1", 302, "Found");
-    response.setHeader("Location", "xhr_cors_redirect.sjs");
+    response.setHeader("Location", "worker_xhr_cors_redirect.sjs");
   } else {
     response.write("'hello world'");
   }

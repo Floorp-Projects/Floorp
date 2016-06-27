@@ -18,8 +18,8 @@
 let tests = [];
 
 const PROTECTED_URL = "file:///etc/passwd";
-const REDIRECT_URL = window.location.protocol + "//" + window.location.host + "/tests/dom/base/test/file_XHR_system_redirect.html";
-const CROSSSITE_URL = "http://example.com/tests/dom/base/test/test_XHR_system.html";
+const REDIRECT_URL = window.location.protocol + "//" + window.location.host + "/tests/dom/xhr/tests/file_XHR_system_redirect.html";
+const CROSSSITE_URL = "http://example.com/tests/dom/xhr/tests/test_XHR_system.html";
 
 tests.push(function test_cross_origin() {
   // System XHR can load cross-origin resources.

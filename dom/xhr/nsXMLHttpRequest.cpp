@@ -83,6 +83,7 @@
 
 using namespace mozilla;
 using namespace mozilla::dom;
+using namespace mozilla::net;
 
 // Maximum size that we'll grow an ArrayBuffer instead of doubling,
 // once doubling reaches this threshold

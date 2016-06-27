@@ -86,75 +86,75 @@ function testSuccessResponse() {
     // tests that start with same-origin request
     {
       message: "request to same-origin without redirect",
-      requestURL: "http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.text",
-      responseURL: "http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.text"
+      requestURL: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.text",
+      responseURL: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.text"
     },
     {
       message: "request to same-origin redirect to same-origin URL",
-      requestURL: "http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.sjs?url=http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.text",
-      responseURL: "http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.text"
+      requestURL: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.text",
+      responseURL: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.text"
     },
     {
       message: "request to same-origin redirects several times and finally go to same-origin URL",
-      requestURL: "http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.sjs?url=" + encodeURIComponent("http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.sjs?url=http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.text"),
-      responseURL: "http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.text"
+      requestURL: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=" + encodeURIComponent("http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.text"),
+      responseURL: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.text"
     },
     {
       message: "request to same-origin redirect to cross-origin URL",
-      requestURL: "http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.sjs?url=http://example.com/tests/dom/base/test/file_XHRResponseURL.text",
-      responseURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL.text",
+      requestURL: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=http://example.com/tests/dom/xhr/tests/file_XHRResponseURL.text",
+      responseURL: "http://example.com/tests/dom/xhr/tests/file_XHRResponseURL.text",
     },
     {
       message: "request to same-origin redirects several times and finally go to cross-origin URL",
-      requestURL: "http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.sjs?url=" + encodeURIComponent("http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.sjs?url=http://example.com/tests/dom/base/test/file_XHRResponseURL.text"),
-      responseURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL.text",
+      requestURL: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=" + encodeURIComponent("http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=http://example.com/tests/dom/xhr/tests/file_XHRResponseURL.text"),
+      responseURL: "http://example.com/tests/dom/xhr/tests/file_XHRResponseURL.text",
     },
 
     // tests that start with cross-origin request
     {
       message: "request to cross-origin without redirect",
-      requestURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL.text",
-      responseURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL.text"
+      requestURL: "http://example.com/tests/dom/xhr/tests/file_XHRResponseURL.text",
+      responseURL: "http://example.com/tests/dom/xhr/tests/file_XHRResponseURL.text"
     },
     {
       message: "request to cross-origin redirect back to same-origin URL",
-      requestURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL.sjs?url=http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.text",
-      responseURL: "http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.text"
+      requestURL: "http://example.com/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.text",
+      responseURL: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.text"
     },
     {
       message: "request to cross-origin redirect to the same cross-origin URL",
-      requestURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL.sjs?url=http://example.com/tests/dom/base/test/file_XHRResponseURL.text",
-      responseURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL.text",
+      requestURL: "http://example.com/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=http://example.com/tests/dom/xhr/tests/file_XHRResponseURL.text",
+      responseURL: "http://example.com/tests/dom/xhr/tests/file_XHRResponseURL.text",
     },
     {
       message: "request to cross-origin redirect to another cross-origin URL",
-      requestURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL.sjs?url=http://example.org/tests/dom/base/test/file_XHRResponseURL.text",
-      responseURL: "http://example.org/tests/dom/base/test/file_XHRResponseURL.text",
+      requestURL: "http://example.com/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=http://example.org/tests/dom/xhr/tests/file_XHRResponseURL.text",
+      responseURL: "http://example.org/tests/dom/xhr/tests/file_XHRResponseURL.text",
     },
     {
       message: "request to cross-origin redirects several times and finally go to same-origin URL",
-      requestURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL.sjs?url=" + encodeURIComponent("http://example.com/tests/dom/base/test/file_XHRResponseURL.sjs?url=http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.text"),
-      responseURL: "http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.text",
+      requestURL: "http://example.com/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=" + encodeURIComponent("http://example.com/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.text"),
+      responseURL: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.text",
     },
     {
       message: "request to cross-origin redirects several times and finally go to the same cross-origin URL",
-      requestURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL.sjs?url=" + encodeURIComponent("http://example.com/tests/dom/base/test/file_XHRResponseURL.sjs?url=http://example.com/tests/dom/base/test/file_XHRResponseURL.text"),
-      responseURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL.text",
+      requestURL: "http://example.com/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=" + encodeURIComponent("http://example.com/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=http://example.com/tests/dom/xhr/tests/file_XHRResponseURL.text"),
+      responseURL: "http://example.com/tests/dom/xhr/tests/file_XHRResponseURL.text",
     },
     {
       message: "request to cross-origin redirects several times and finally go to another cross-origin URL",
-      requestURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL.sjs?url=" + encodeURIComponent("http://example.com/tests/dom/base/test/file_XHRResponseURL.sjs?url=http://example.org/tests/dom/base/test/file_XHRResponseURL.text"),
-      responseURL: "http://example.org/tests/dom/base/test/file_XHRResponseURL.text",
+      requestURL: "http://example.com/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=" + encodeURIComponent("http://example.com/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=http://example.org/tests/dom/xhr/tests/file_XHRResponseURL.text"),
+      responseURL: "http://example.org/tests/dom/xhr/tests/file_XHRResponseURL.text",
     },
     {
       message: "request to cross-origin redirects to another cross-origin and finally go to the other cross-origin URL",
-      requestURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL.sjs?url=" + encodeURIComponent("http://example.org/tests/dom/base/test/file_XHRResponseURL.sjs?url=http://test1.example.com/tests/dom/base/test/file_XHRResponseURL.text"),
-      responseURL: "http://test1.example.com/tests/dom/base/test/file_XHRResponseURL.text",
+      requestURL: "http://example.com/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=" + encodeURIComponent("http://example.org/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=http://test1.example.com/tests/dom/xhr/tests/file_XHRResponseURL.text"),
+      responseURL: "http://test1.example.com/tests/dom/xhr/tests/file_XHRResponseURL.text",
     },
     {
       message: "request URL has fragment",
-      requestURL: "http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.text#fragment",
-      responseURL: "http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.text"
+      requestURL: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.text#fragment",
+      responseURL: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.text"
     },
 
     // tests for non-http(s) URL
@@ -187,11 +187,11 @@ function testFailedResponse() {
   var parameters = [
     {
       message: "should be empty for denied cross-origin request without redirect",
-      requestURL: "http://example.com/tests/dom/base/test/file_XHRResponseURL_nocors.text"
+      requestURL: "http://example.com/tests/dom/xhr/tests/file_XHRResponseURL_nocors.text"
     },
     {
       message: "should be empty for denied cross-origin request with redirect",
-      requestURL: "http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.sjs?url=http://example.com/tests/dom/base/test/file_XHRResponseURL_nocors.text"
+      requestURL: "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=http://example.com/tests/dom/xhr/tests/file_XHRResponseURL_nocors.text"
     }
   ];
 
@@ -225,7 +225,7 @@ function testNotToLeakResponseURLWhileDoingRedirectsInWindow() {
   SpecialPowers.addObserver(requestObserver, "specialpowers-http-notify-request", false);
 
   return new Promise(function (aResolve, aReject) {
-    xhr.open("GET", "http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.sjs?url=http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.text");
+    xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.text");
     xhr.addEventListener("load", function () {
       SpecialPowers.removeObserver(requestObserver, "specialpowers-http-notify-request");
       aResolve();
@@ -251,7 +251,7 @@ function testNotToLeakResponseURLWhileDoingRedirectsInWorker() {
   return new Promise(function (aResolve, aReject) {
     self.addEventListener("message", testRedirect);
     message({type: "redirect_test", status: "start"});
-    xhr.open("GET", "http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.sjs?url=http://mochi.test:8888/tests/dom/base/test/file_XHRResponseURL.text");
+    xhr.open("GET", "http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.sjs?url=http://mochi.test:8888/tests/dom/xhr/tests/file_XHRResponseURL.text");
     xhr.addEventListener("load", function () {
       self.removeEventListener("message", testRedirect);
       message({type: "redirect_test", status: "end"});

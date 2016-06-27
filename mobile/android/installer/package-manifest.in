@@ -146,6 +146,7 @@
 @BINPATH@/components/dom_webspeechrecognition.xpt
 #endif
 @BINPATH@/components/dom_xbl.xpt
+@BINPATH@/components/dom_xhr.xpt
 @BINPATH@/components/dom_xpath.xpt
 @BINPATH@/components/dom_xul.xpt
 #ifdef MOZ_GAMEPAD

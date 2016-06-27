@@ -26,7 +26,7 @@ function message(event) {
 };
 
 function test1() {
-  var worker = new Worker("test_xhr_system.js");
+  var worker = new Worker("test_worker_xhr_system.js");
   worker.onmessage = message;
   worker.postMessage(true);
 }

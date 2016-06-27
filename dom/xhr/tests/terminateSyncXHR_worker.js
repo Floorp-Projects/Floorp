@@ -8,7 +8,7 @@ onmessage = function(event) {
 }
 
 var xhr = new XMLHttpRequest();
-xhr.open("GET", "testXHR.txt", false);
+xhr.open("GET", "worker_testXHR.txt", false);
 xhr.addEventListener("loadstart", function ()
 {
   // Tell the parent to terminate us.

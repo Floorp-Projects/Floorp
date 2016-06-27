@@ -4,12 +4,12 @@ const BinaryInputStream = CC("@mozilla.org/binaryinputstream;1",
                              "setInputStream");
 
 function setReq(req) {
-  setObjectState("dom/base/test/progressserver", req);
+  setObjectState("dom/xhr/tests/progressserver", req);
 }
 
 function getReq() {
   var req;
-  getObjectState("dom/base/test/progressserver", function(v) {
+  getObjectState("dom/xhr/tests/progressserver", function(v) {
     req = v;
   });
   return req;
