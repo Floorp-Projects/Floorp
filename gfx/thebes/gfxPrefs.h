@@ -9,6 +9,7 @@
 #include <cmath>                 // for M_PI
 #include <stdint.h>
 #include "mozilla/Assertions.h"
+#include "mozilla/gfx/LoggingConstants.h"
 
 // First time gfxPrefs::GetSingleton() needs to be called on the main thread,
 // before any of the methods accessing the values are used, but after
@@ -69,14 +70,9 @@ static Type Get##Name##PrefDefault() { return Default; }                      \
 private:                                                                      \
 PrefTemplate<UpdatePolicy::Update, Type, Get##Name##PrefDefault, Get##Name##PrefName> mPref##Name
 
-class PreferenceAccessImpl;
 class gfxPrefs;
 class gfxPrefs final
 {
-private:
-  /// See Logging.h.  This lets Moz2D access preference values it owns.
-  PreferenceAccessImpl* mMoz2DPrefAccess;
-
 private:
   // Enums for the update policy.
   enum class UpdatePolicy {
@@ -162,6 +158,15 @@ private:
     }
     const char *Name() const override {
       return Prefname();
+    }
+    // When using the Preferences service, the change callback can be triggered
+    // *before* our cached value is updated, so we expose a method to grab the
+    // true live value.
+    T GetLiveValue() const {
+      if (IsPrefsServiceAvailable()) {
+        return PrefGet(Prefname(), mValue);
+      }
+      return mValue;
     }
     T mValue;
   };
@@ -300,7 +305,8 @@ private:
   DECL_GFX_PREF(Live, "gfx.gralloc.fence-with-readpixels",     GrallocFenceWithReadPixels, bool, false);
   DECL_GFX_PREF(Live, "gfx.layerscope.enabled",                LayerScopeEnabled, bool, false);
   DECL_GFX_PREF(Live, "gfx.layerscope.port",                   LayerScopePort, int32_t, 23456);
-  // Note that        "gfx.logging.level" is defined in Logging.h
+  // Note that        "gfx.logging.level" is defined in Logging.h.
+  DECL_GFX_PREF(Live, "gfx.logging.level",                     GfxLoggingLevel, int32_t, mozilla::gfx::LOG_DEFAULT);
   DECL_GFX_PREF(Once, "gfx.logging.crash.length",              GfxLoggingCrashLength, uint32_t, 16);
   DECL_GFX_PREF(Live, "gfx.logging.painted-pixel-count.enabled",GfxLoggingPaintedPixelCountEnabled, bool, false);
   // The maximums here are quite conservative, we can tighten them if problems show up.
@@ -520,6 +526,7 @@ public:
     MOZ_ASSERT(!sInstanceHasBeenDestroyed, "Should never recreate a gfxPrefs instance!");
     if (!sInstance) {
       sInstance = new gfxPrefs;
+      sInstance->Init();
     }
     MOZ_ASSERT(SingletonExists());
     return *sInstance;
@@ -532,6 +539,11 @@ private:
   static bool sInstanceHasBeenDestroyed;
 
 private:
+  // The constructor cannot access GetSingleton(), since sInstance (necessarily)
+  // has not been assigned yet. Follow-up initialization that needs GetSingleton()
+  // must be added to Init().
+  void Init();
+
   static bool IsPrefsServiceAvailable();
   static bool IsParentProcess();
   // Creating these to avoid having to include Preferences.h in the .h
