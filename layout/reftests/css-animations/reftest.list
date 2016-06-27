@@ -8,6 +8,22 @@ fails != print-no-animations.html print-no-animations-notref.html # reftest harn
 == in-visibility-hidden-animation-pseudo-element.html in-visibility-hidden-animation-pseudo-element-ref.html
 == partially-out-of-view-animation.html partially-out-of-view-animation-ref.html
 == animate-display-table-opacity.html animate-display-table-opacity-ref.html
-== stacking-context-transform-none-animation.html  stacking-context-transform-animation-ref.html
-== stacking-context-transform-none-animation-on-svg.html  stacking-context-transform-animation-ref.html
-== stacking-context-transform-none-animation-with-preserve-3d.html  stacking-context-transform-animation-ref.html
+# We need to run 100% opacity test case when OMTA is disabled to check that the animation creates a stacking context even if the animation is not running on the compositor
+test-pref(layers.offmainthreadcomposition.async-animations,false) == stacking-context-opacity-1-animation.html stacking-context-animation-ref.html
+# We need to run transform:none test case when OMTA is disabled to check that the animation creates a stacking context even if the animation is not running on the compositor
+test-pref(layers.offmainthreadcomposition.async-animations,false) == stacking-context-transform-none-animation.html stacking-context-animation-ref.html
+== stacking-context-lose-opacity-1.html no-stacking-context-animation-ref.html
+== stacking-context-lose-transform-none.html no-stacking-context-animation-ref.html
+== stacking-context-opacity-1-animation.html stacking-context-animation-ref.html
+== stacking-context-opacity-1-with-fill-backwards.html stacking-context-animation-ref.html
+== stacking-context-opacity-1-with-fill-forwards.html stacking-context-animation-ref.html
+== stacking-context-paused-on-opacity-1.html stacking-context-animation-ref.html
+== stacking-context-paused-on-transform-none.html stacking-context-animation-ref.html
+== stacking-context-transform-none-animation.html stacking-context-animation-ref.html
+== stacking-context-transform-none-animation-on-svg.html  stacking-context-animation-ref.html
+== stacking-context-transform-none-animation-with-backface-visibility.html stacking-context-animation-ref.html
+== stacking-context-transform-none-animation-with-preserve-3d.html stacking-context-animation-ref.html
+== stacking-context-transform-none-with-fill-backwards.html stacking-context-animation-ref.html
+== stacking-context-transform-none-with-fill-forwards.html stacking-context-animation-ref.html
+fails == stacking-context-opacity-1-in-delay.html stacking-context-animation-ref.html # bug 1278136 and bug 1279403
+fails == stacking-context-transform-none-in-delay.html stacking-context-animation-ref.html # bug 1278136 and bug 1279403
