@@ -4,12 +4,6 @@
 
 const PREF_LOOP_CSP = "loop.CSP";
 
-const CONTENT_SCRIPT_HELPER = getRootDirectory(gTestPath) + "get_user_media_content_script.js";
-Cc["@mozilla.org/moz/jssubscript-loader;1"]
-  .getService(Ci.mozIJSSubScriptLoader)
-  .loadSubScript(getRootDirectory(gTestPath) + "get_user_media_helpers.js",
-                 this);
-
 var gTab;
 
 // Taken from dom/media/tests/mochitest/head.js
