@@ -33,12 +33,12 @@ import ch.boye.httpclientandroidlib.util.TextUtils;
 public class FloatingToolbarTextSelection implements TextSelection, GeckoEventListener {
     private static final String LOGTAG = "GeckoFloatTextSelection";
 
-    private Activity activity;
+    private final Activity activity;
+    private final LayerView layerView;
+    private final int[] locationInWindow;
+
     private ActionMode actionMode;
     private FloatingActionModeCallback actionModeCallback;
-    private LayerView layerView;
-    private int[] locationInWindow;
-
     private String selectionID;
     /* package-private */ Rect contentRect;
 
