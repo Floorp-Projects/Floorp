@@ -242,6 +242,7 @@ let lastElementSelector = null;
  *        waitForSpellCheck: wait until spellcheck is initialized before
  *                           starting test
  *        preCheckContextMenuFn: callback to run before opening menu
+ *        onContextMenuShown: callback to run when the context menu is shown
  *        postCheckContextMenuFn: callback to run after opening menu
  * @return {Promise} resolved after the test finishes
  */
@@ -294,6 +295,11 @@ function* test_contextmenu(selector, menuItems, options={}) {
     gBrowser.selectedBrowser);
   yield awaitPopupShown;
   info("Popup Shown");
+
+  if (options.onContextMenuShown) {
+    yield options.onContextMenuShown();
+    info("Completed onContextMenuShown");
+  }
 
   if (menuItems) {
     if (Services.prefs.getBoolPref("devtools.inspector.enabled")) {
