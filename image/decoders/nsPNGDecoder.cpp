@@ -5,6 +5,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "ImageLogging.h" // Must appear first
+
+#include <algorithm>
+#include <cstdint>
+
 #include "gfxColor.h"
 #include "gfxPlatform.h"
 #include "imgFrame.h"
@@ -19,8 +23,6 @@
 #include "SurfacePipeFactory.h"
 #include "mozilla/DebugOnly.h"
 #include "mozilla/Telemetry.h"
-
-#include <algorithm>
 
 using namespace mozilla::gfx;
 
@@ -94,6 +96,9 @@ nsPNGDecoder::pngSignatureBytes[] = { 137, 80, 78, 71, 13, 10, 26, 10 };
 
 nsPNGDecoder::nsPNGDecoder(RasterImage* aImage)
  : Decoder(aImage)
+ , mLexer(Transition::ToUnbuffered(State::FINISHED_PNG_DATA,
+                                   State::PNG_DATA,
+                                   SIZE_MAX))
  , mPNG(nullptr)
  , mInfo(nullptr)
  , mCMSLine(nullptr)
@@ -347,23 +352,58 @@ void
 nsPNGDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
 {
   MOZ_ASSERT(!HasError(), "Shouldn't call WriteInternal after error!");
+  MOZ_ASSERT(aBuffer);
+  MOZ_ASSERT(aCount > 0);
 
-  // libpng uses setjmp/longjmp for error handling. Set it up.
+  Maybe<TerminalState> terminalState =
+    mLexer.Lex(aBuffer, aCount, [=](State aState,
+                                    const char* aData, size_t aLength) {
+      switch (aState) {
+        case State::PNG_DATA:
+          return ReadPNGData(aData, aLength);
+        case State::FINISHED_PNG_DATA:
+          return FinishedPNGData();
+      }
+      MOZ_CRASH("Unknown State");
+    });
+
+  if (terminalState == Some(TerminalState::FAILURE)) {
+    PostDataError();
+  }
+}
+
+LexerTransition<nsPNGDecoder::State>
+nsPNGDecoder::ReadPNGData(const char* aData, size_t aLength)
+{
+  // libpng uses setjmp/longjmp for error handling.
   if (setjmp(png_jmpbuf(mPNG))) {
-
-    // We exited early due to an error. We might not really know what caused
-    // it, but it makes more sense to blame the data.
-    if (!HasError()) {
-      PostDataError();
-    }
-
-    return;
+    return Transition::TerminateFailure();
   }
 
   // Pass the data off to libpng.
   png_process_data(mPNG, mInfo,
-                   reinterpret_cast<unsigned char*>(const_cast<char*>((aBuffer))),
-                   aCount);
+                   reinterpret_cast<unsigned char*>(const_cast<char*>((aData))),
+                   aLength);
+
+  if (HasError()) {
+    return Transition::TerminateFailure();
+  }
+
+  if (GetDecodeDone()) {
+    return Transition::TerminateSuccess();
+  }
+
+  // Keep reading data.
+  return Transition::ContinueUnbuffered(State::PNG_DATA);
+}
+
+LexerTransition<nsPNGDecoder::State>
+nsPNGDecoder::FinishedPNGData()
+{
+  // Since we set up an unbuffered read for SIZE_MAX bytes, if we actually read
+  // all that data something is really wrong.
+  MOZ_ASSERT_UNREACHABLE("Read the entire address space?");
+  return Transition::TerminateFailure();
 }
 
 // Sets up gamma pre-correction in libpng before our callback gets called.
