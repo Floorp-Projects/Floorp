@@ -934,9 +934,11 @@ nsAppShell::LegacyGeckoEvent::Run()
 
     case AndroidGeckoEvent::GAMEPAD_ADDREMOVE: {
 #ifdef MOZ_GAMEPAD
-            GamepadPlatformService* service;
+            RefPtr<GamepadPlatformService> service;
             service = GamepadPlatformService::GetParentService();
-            MOZ_ASSERT(service);
+            if (!service) {
+              break;
+            }
             if (curEvent->Action() == AndroidGeckoEvent::ACTION_GAMEPAD_ADDED) {
               int svc_id = service->AddGamepad("android",
                                                dom::GamepadMappingType::Standard,
@@ -954,9 +956,11 @@ nsAppShell::LegacyGeckoEvent::Run()
     case AndroidGeckoEvent::GAMEPAD_DATA: {
 #ifdef MOZ_GAMEPAD
             int id = curEvent->ID();
-            GamepadPlatformService* service;
+            RefPtr<GamepadPlatformService> service;
             service = GamepadPlatformService::GetParentService();
-            MOZ_ASSERT(service);
+            if (!service) {
+              break;
+            }
             if (curEvent->Action() == AndroidGeckoEvent::ACTION_GAMEPAD_BUTTON) {
               service->NewButtonEvent(id, curEvent->GamepadButton(),
                                       curEvent->GamepadButtonPressed(),

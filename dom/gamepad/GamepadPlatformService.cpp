@@ -24,7 +24,7 @@ namespace {
 
 // This is the singleton instance of GamepadPlatformService, can be called
 // by both background and monitor thread.
-StaticAutoPtr<GamepadPlatformService> gGamepadPlatformServiceSingleton;
+StaticRefPtr<GamepadPlatformService> gGamepadPlatformServiceSingleton;
 
 } //namepsace
 
@@ -39,15 +39,21 @@ GamepadPlatformService::~GamepadPlatformService()
 }
 
 // static
-GamepadPlatformService*
+already_AddRefed<GamepadPlatformService>
 GamepadPlatformService::GetParentService()
 {
   //GamepadPlatformService can only be accessed in parent process
   MOZ_ASSERT(XRE_IsParentProcess());
-  if(!gGamepadPlatformServiceSingleton) {
-    gGamepadPlatformServiceSingleton = new GamepadPlatformService();
+  if (!gGamepadPlatformServiceSingleton) {
+    // Only Background Thread can create new GamepadPlatformService instance.
+    if (IsOnBackgroundThread()) {
+      gGamepadPlatformServiceSingleton = new GamepadPlatformService();
+    } else {
+      return nullptr;
+    }
   }
-  return gGamepadPlatformServiceSingleton;
+  RefPtr<GamepadPlatformService> service(gGamepadPlatformServiceSingleton);
+  return service.forget();
 }
 
 template<class T>
@@ -195,13 +201,21 @@ GamepadPlatformService::MaybeShutdown()
   // an IPDL channel is going to be destroyed
   AssertIsOnBackgroundThread();
 
+  // We have to release gGamepadPlatformServiceSingleton ouside
+  // the mutex as well as making upcoming GetParentService() call
+  // recreate new singleton, so we use this RefPtr to temporarily
+  // hold the reference, postponing the release process until this
+  // method ends.
+  RefPtr<GamepadPlatformService> kungFuDeathGrip;
+
   bool isChannelParentEmpty;
   {
     MutexAutoLock autoLock(mMutex);
     isChannelParentEmpty = mChannelParents.IsEmpty();
-  }
-  if(isChannelParentEmpty) {
-    gGamepadPlatformServiceSingleton = nullptr;
+    if(isChannelParentEmpty) {
+      kungFuDeathGrip = gGamepadPlatformServiceSingleton;
+      gGamepadPlatformServiceSingleton = nullptr;
+    }
   }
 }
 

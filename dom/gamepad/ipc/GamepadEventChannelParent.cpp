@@ -42,7 +42,7 @@ class SendGamepadUpdateRunnable final : public Runnable
 GamepadEventChannelParent::GamepadEventChannelParent()
   : mHasGamepadListener(false)
 {
-  GamepadPlatformService* service =
+  RefPtr<GamepadPlatformService> service =
     GamepadPlatformService::GetParentService();
   MOZ_ASSERT(service);
   service->AddChannelParent(this);
@@ -65,7 +65,7 @@ GamepadEventChannelParent::RecvGamepadListenerRemoved()
   AssertIsOnBackgroundThread();
   MOZ_ASSERT(mHasGamepadListener);
   mHasGamepadListener = false;
-  GamepadPlatformService* service =
+  RefPtr<GamepadPlatformService> service =
     GamepadPlatformService::GetParentService();
   MOZ_ASSERT(service);
   service->RemoveChannelParent(this);
@@ -82,7 +82,7 @@ GamepadEventChannelParent::ActorDestroy(ActorDestroyReason aWhy)
   // not receive RecvGamepadListenerRemoved in that case
   if (mHasGamepadListener) {
     mHasGamepadListener = false;
-    GamepadPlatformService* service =
+    RefPtr<GamepadPlatformService> service =
       GamepadPlatformService::GetParentService();
     MOZ_ASSERT(service);
     service->RemoveChannelParent(this);
