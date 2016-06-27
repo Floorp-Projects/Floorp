@@ -88,7 +88,7 @@ Your system should be ready to build %s!
 SOURCE_ADVERTISE = '''
 Source code can be obtained by running
 
-    hg clone https://hg.mozilla.org/firefox
+    hg clone https://hg.mozilla.org/mozilla-unified
 
 Or, if you prefer Git, you should install git-cinnabar, and follow the
 instruction here to clone from the Mercurial repository:
@@ -369,7 +369,7 @@ def clone_firefox(hg, dest):
     # unless someone complains about it.
     with open(os.path.join(dest, '.hg', 'hgrc'), 'ab') as fh:
         fh.write('[paths]\n')
-        fh.write('default = https://hg.mozilla.org/firefox\n')
+        fh.write('default = https://hg.mozilla.org/mozilla-unified\n')
         fh.write('\n')
 
         # The server uses aggressivemergedeltas which can blow up delta chain
@@ -380,10 +380,10 @@ def clone_firefox(hg, dest):
         fh.write('# This is necessary to keep performance in check\n')
         fh.write('maxchainlen = 10000\n')
 
-    res = subprocess.call([hg, 'pull', 'https://hg.mozilla.org/firefox'], cwd=dest)
+    res = subprocess.call([hg, 'pull', 'https://hg.mozilla.org/mozilla-unified'], cwd=dest)
     print('')
     if res:
-        print('error pulling; try running `hg pull https://hg.mozilla.org/firefox` manually')
+        print('error pulling; try running `hg pull https://hg.mozilla.org/mozilla-unified` manually')
         return False
 
     print('updating to "central" - the development head of Gecko and Firefox')
