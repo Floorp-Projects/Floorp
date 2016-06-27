@@ -182,10 +182,6 @@ public:
 
   NS_REALLY_FORWARD_NSIDOMEVENTTARGET(XMLHttpRequestEventTarget)
 
-#ifdef DEBUG
-  void StaticAssertions();
-#endif
-
   // states
   virtual uint16_t ReadyState() const override;
 
@@ -636,22 +632,7 @@ protected:
 
   nsCString mResponseCharset;
 
-  enum ResponseTypeEnum {
-    XML_HTTP_RESPONSE_TYPE_DEFAULT,
-    XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER,
-    XML_HTTP_RESPONSE_TYPE_BLOB,
-    XML_HTTP_RESPONSE_TYPE_DOCUMENT,
-    XML_HTTP_RESPONSE_TYPE_JSON,
-    XML_HTTP_RESPONSE_TYPE_TEXT,
-    XML_HTTP_RESPONSE_TYPE_CHUNKED_TEXT,
-    XML_HTTP_RESPONSE_TYPE_CHUNKED_ARRAYBUFFER,
-    XML_HTTP_RESPONSE_TYPE_MOZ_BLOB
-  };
-
-  void SetResponseType(XMLHttpRequestMainThread::ResponseTypeEnum aType,
-                       ErrorResult& aRv);
-
-  ResponseTypeEnum mResponseType;
+  XMLHttpRequestResponseType mResponseType;
 
   // It is either a cached blob-response from the last call to GetResponse,
   // but is also explicitly set in OnStopRequest.
