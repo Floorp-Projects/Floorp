@@ -187,6 +187,7 @@ html, body {
   text-align: center;
   text-overflow: ellipsis;
   width: 150px;
+  font-size: 11px;
 }
 
 .viewport-device-selector.selected {
