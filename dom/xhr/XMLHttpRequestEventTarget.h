@@ -41,6 +41,11 @@ public:
   IMPL_EVENT_HANDLER(timeout)
   IMPL_EVENT_HANDLER(loadend)
 
+  nsISupports* GetParentObject() const
+  {
+    return GetOwner();
+  }
+
   virtual void DisconnectFromOwner() override;
 };
 

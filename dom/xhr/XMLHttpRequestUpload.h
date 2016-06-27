@@ -13,10 +13,6 @@
 namespace mozilla {
 namespace dom {
 
-namespace workers {
-class XMLHttpRequestWorker;
-}
-
 class XMLHttpRequestUpload final : public XMLHttpRequestEventTarget,
                                    public nsIXMLHttpRequestUpload
 {

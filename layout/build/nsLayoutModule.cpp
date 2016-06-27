@@ -61,8 +61,8 @@
 #include "txNodeSetAdaptor.h"
 
 #include "mozilla/dom/DOMParser.h"
+#include "mozilla/dom/XMLHttpRequestMainThread.h"
 #include "nsDOMSerializer.h"
-#include "nsXMLHttpRequest.h"
 
 // view stuff
 #include "nsContentCreatorFunctions.h"
@@ -308,7 +308,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(txMozillaXSLTProcessor)
 NS_GENERIC_FACTORY_CONSTRUCTOR(XPathEvaluator)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(txNodeSetAdaptor, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDOMSerializer)
-NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsXMLHttpRequest, Init)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(XMLHttpRequestMainThread, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(FormData)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsHostObjectURI)
 NS_GENERIC_FACTORY_CONSTRUCTOR(DOMParser)
@@ -1073,7 +1073,7 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kNS_XMLSERIALIZER_CID, false, nullptr, nsDOMSerializerConstructor },
   { &kNS_FORMDATA_CID, false, nullptr, FormDataConstructor },
   { &kNS_HOSTOBJECTURI_CID, false, nullptr, nsHostObjectURIConstructor },
-  { &kNS_XMLHTTPREQUEST_CID, false, nullptr, nsXMLHttpRequestConstructor },
+  { &kNS_XMLHTTPREQUEST_CID, false, nullptr, XMLHttpRequestMainThreadConstructor },
   { &kNS_DOMPARSER_CID, false, nullptr, DOMParserConstructor },
   { &kNS_XPCEXCEPTION_CID, false, nullptr, ExceptionConstructor },
   { &kNS_DOMSESSIONSTORAGEMANAGER_CID, false, nullptr, DOMSessionStorageManagerConstructor },
