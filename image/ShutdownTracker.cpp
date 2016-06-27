@@ -32,13 +32,13 @@ struct ShutdownObserver : public nsIObserver
 
   NS_IMETHOD Observe(nsISupports*, const char* aTopic, const char16_t*) override
   {
-    if (strcmp(aTopic, "xpcom-shutdown") != 0) {
+    if (strcmp(aTopic, "xpcom-will-shutdown") != 0) {
       return NS_OK;
     }
 
     nsCOMPtr<nsIObserverService> os = services::GetObserverService();
     if (os) {
-      os->RemoveObserver(this, "xpcom-shutdown");
+      os->RemoveObserver(this, "xpcom-will-shutdown");
     }
 
     sShutdownHasStarted = true;
@@ -61,7 +61,7 @@ ShutdownTracker::Initialize()
 {
   nsCOMPtr<nsIObserverService> os = services::GetObserverService();
   if (os) {
-    os->AddObserver(new ShutdownObserver, "xpcom-shutdown", false);
+    os->AddObserver(new ShutdownObserver, "xpcom-will-shutdown", false);
   }
 }
 

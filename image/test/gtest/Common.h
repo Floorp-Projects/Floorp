@@ -6,6 +6,8 @@
 #ifndef mozilla_image_test_gtest_Common_h
 #define mozilla_image_test_gtest_Common_h
 
+#include <vector>
+
 #include "gtest/gtest.h"
 
 #include "mozilla/Maybe.h"
@@ -70,6 +72,8 @@ struct ImageTestCase
 
 struct BGRAColor
 {
+  BGRAColor() : BGRAColor(0, 0, 0, 0) { }
+
   BGRAColor(uint8_t aBlue, uint8_t aGreen, uint8_t aRed, uint8_t aAlpha)
     : mBlue(aBlue)
     , mGreen(aGreen)
@@ -79,6 +83,7 @@ struct BGRAColor
 
   static BGRAColor Green() { return BGRAColor(0x00, 0xFF, 0x00, 0xFF); }
   static BGRAColor Red()   { return BGRAColor(0x00, 0x00, 0xFF, 0xFF); }
+  static BGRAColor Blue()   { return BGRAColor(0xFF, 0x00, 0x00, 0xFF); }
   static BGRAColor Transparent() { return BGRAColor(0x00, 0x00, 0x00, 0x00); }
 
   uint32_t AsPixel() const { return gfxPackedPixel(mAlpha, mRed, mGreen, mBlue); }
@@ -156,6 +161,14 @@ bool RectIsSolidColor(gfx::SourceSurface* aSurface,
 bool PalettedRectIsSolidColor(Decoder* aDecoder,
                               const gfx::IntRect& aRect,
                               uint8_t aColor);
+
+/**
+ * @returns true if the pixels in @aRow of @aSurface match the pixels given in
+ * @aPixels.
+ */
+bool RowHasPixels(gfx::SourceSurface* aSurface,
+                  int32_t aRow,
+                  const std::vector<BGRAColor>& aPixels);
 
 
 ///////////////////////////////////////////////////////////////////////////////
