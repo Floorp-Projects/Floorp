@@ -42,7 +42,8 @@ add_task(function* testPageActionPopupResize() {
     is(panelBody.clientHeight, panelBody.scrollHeight,
       "Panel body should be tall enough to fit its contents");
 
-    is(panelWindow.innerWidth, expected, `Panel window should be ${expected}px wide`);
+    // Tolerate if it is 1px too wide, as that may happen with the current resizing method.
+    ok(Math.abs(panelWindow.innerWidth - expected) <= 1, `Panel window should be ${expected}px wide`);
     is(panelBody.clientWidth, panelBody.scrollWidth,
       "Panel body should be wide enough to fit its contents");
   }

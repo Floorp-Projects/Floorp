@@ -294,3 +294,6 @@ defineLazyGetter(globals, "URL", () => {
   return sandbox.URL;
 });
 defineLazyGetter(globals, "CSSRule", () => Ci.nsIDOMCSSRule);
+defineLazyGetter(globals, "DOMParser", () => {
+  return CC("@mozilla.org/xmlextras/domparser;1", "nsIDOMParser");
+});

@@ -7,10 +7,21 @@
 <body>
 <script type="text/javascript">
 "use strict";
+SpecialPowers.addPermission("desktop-notification", true, document);
 var sw = navigator.serviceWorker.register("push-sw.js");
+var sub = null;
 sw.then(
   function (registration) {
     dump("SW registered\n");
+    registration.pushManager.subscribe().then(
+      function (subscription) {
+        sub = subscription;
+        dump("SW subscribed to push: " + sub.endpoint + "\n");
+      },
+      function (error) {
+        dump("SW not subscribed to push: " + error + "\n");
+      }
+    );
   },
   function (error) {
     dump("SW not registered: " + error + "\n");
