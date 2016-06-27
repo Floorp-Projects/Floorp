@@ -73,9 +73,9 @@ class TlsConnectTestBase : public ::testing::Test {
   void SetExpectedVersion(uint16_t version);
   // Expect resumption of a particular type.
   void ExpectResumption(SessionResumptionMode expected);
-  void DisableDheAndEcdheCiphers();
-  void DisableDheCiphers();
-  void DisableEcdheCiphers();
+  void DisableAllCiphers();
+  void EnableOnlyStaticRsaCiphers();
+  void EnableOnlyDheCiphers();
   void EnableSomeEcdhCiphers();
   void EnableExtendedMasterSecret();
   void ConfigureSessionCache(SessionResumptionMode client,
@@ -158,8 +158,23 @@ class TlsConnectTls12
   TlsConnectTls12();
 };
 
+// A TLS 1.2+ generic test.
+class TlsConnectTls12Plus
+  : public TlsConnectTestBase,
+    public ::testing::WithParamInterface<std::tuple<std::string, uint16_t>> {
+ public:
+  TlsConnectTls12Plus();
+};
+
 #ifdef NSS_ENABLE_TLS_1_3
 // A TLS 1.3 only generic test.
+class TlsConnectTls13
+  : public TlsConnectTestBase,
+    public ::testing::WithParamInterface<std::string> {
+ public:
+  TlsConnectTls13();
+};
+
 class TlsConnectDatagram13
   : public TlsConnectTestBase {
  public:

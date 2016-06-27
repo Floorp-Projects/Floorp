@@ -294,19 +294,26 @@ void TlsConnectTestBase::SetExpectedVersion(uint16_t version) {
   server_->SetExpectedVersion(version);
 }
 
-void TlsConnectTestBase::DisableDheCiphers() {
-  client_->DisableCiphersByKeyExchange(ssl_kea_dh);
-  server_->DisableCiphersByKeyExchange(ssl_kea_dh);
+void TlsConnectTestBase::DisableAllCiphers() {
+  EnsureTlsSetup();
+  client_->DisableAllCiphers();
+  server_->DisableAllCiphers();
 }
 
-void TlsConnectTestBase::DisableEcdheCiphers() {
-  client_->DisableCiphersByKeyExchange(ssl_kea_ecdh);
-  server_->DisableCiphersByKeyExchange(ssl_kea_ecdh);
+void TlsConnectTestBase::EnableOnlyStaticRsaCiphers() {
+  DisableAllCiphers();
+
+  client_->EnableCiphersByKeyExchange(ssl_kea_rsa);
+  server_->EnableCiphersByKeyExchange(ssl_kea_rsa);
 }
 
-void TlsConnectTestBase::DisableDheAndEcdheCiphers() {
-  DisableDheCiphers();
-  DisableEcdheCiphers();
+void TlsConnectTestBase::EnableOnlyDheCiphers() {
+  DisableAllCiphers();
+
+  client_->EnableCiphersByKeyExchange(ssl_kea_dh);
+  client_->EnableCiphersByKeyExchange(ssl_kea_dh_psk);
+  server_->EnableCiphersByKeyExchange(ssl_kea_dh);
+  server_->EnableCiphersByKeyExchange(ssl_kea_dh_psk);
 }
 
 void TlsConnectTestBase::EnableSomeEcdhCiphers() {
@@ -320,6 +327,12 @@ void TlsConnectTestBase::ConfigureSessionCache(SessionResumptionMode client,
                                                SessionResumptionMode server) {
   client_->ConfigureSessionCache(client);
   server_->ConfigureSessionCache(server);
+  if ((server & RESUME_TICKET) != 0) {
+    // This is an abomination.  NSS encrypts session tickets with the server's
+    // RSA public key.  That means we need the server to have an RSA certificate
+    // even if it won't be used for the connection.
+    server_->ConfigServerCert(TlsAgent::kServerRsaDecrypt);
+  }
 }
 
 void TlsConnectTestBase::CheckResumption(SessionResumptionMode expected) {
@@ -400,5 +413,15 @@ TlsConnectPre12::TlsConnectPre12()
 TlsConnectTls12::TlsConnectTls12()
   : TlsConnectTestBase(TlsConnectTestBase::ToMode(GetParam()),
                        SSL_LIBRARY_VERSION_TLS_1_2) {}
+
+TlsConnectTls12Plus::TlsConnectTls12Plus()
+  : TlsConnectTestBase(TlsConnectTestBase::ToMode(std::get<0>(GetParam())),
+                       std::get<1>(GetParam())) {}
+
+#ifdef NSS_ENABLE_TLS_1_3
+TlsConnectTls13::TlsConnectTls13()
+  : TlsConnectTestBase(TlsConnectTestBase::ToMode(GetParam()),
+                       SSL_LIBRARY_VERSION_TLS_1_3) {}
+#endif
 
 } // namespace nss_test
