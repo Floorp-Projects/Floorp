@@ -16,12 +16,17 @@ EXPORTS.mozilla.dom.workers.bindings += [
     'XMLHttpRequestWorker.h',
 ]
 
+EXPORTS.mozilla.dom += [
+    'XMLHttpRequestEventTarget.h',
+]
+
 EXPORTS += [
     'nsXMLHttpRequest.h',
 ]
 
 UNIFIED_SOURCES += [
     'nsXMLHttpRequest.cpp',
+    'XMLHttpRequestEventTarget.cpp',
     'XMLHttpRequestUploadWorker.cpp',
     'XMLHttpRequestWorker.cpp',
 ]
