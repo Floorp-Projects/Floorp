@@ -1309,28 +1309,17 @@ RasterImage::Decode(const IntSize& aSize, uint32_t aFlags)
   RefPtr<IDecodingTask> task;
   if (mAnim) {
     task = DecoderFactory::CreateAnimationDecoder(mDecoderType, WrapNotNull(this),
-                                                  mSourceBuffer, decoderFlags,
-                                                  surfaceFlags);
+                                                  mSourceBuffer, mSize,
+                                                  decoderFlags, surfaceFlags);
   } else {
     task = DecoderFactory::CreateDecoder(mDecoderType, WrapNotNull(this),
-                                         mSourceBuffer, targetSize, decoderFlags,
-                                         surfaceFlags, mRequestedSampleSize);
+                                         mSourceBuffer, mSize, targetSize,
+                                         decoderFlags, surfaceFlags,
+                                         mRequestedSampleSize);
   }
 
   // Make sure DecoderFactory was able to create a decoder successfully.
   if (!task) {
-    return NS_ERROR_FAILURE;
-  }
-
-  // Add a placeholder for the first frame to the SurfaceCache so we won't
-  // trigger any more decoders with the same parameters.
-  SurfaceKey surfaceKey =
-    RasterSurfaceKey(aSize,
-                     task->GetDecoder()->GetSurfaceFlags(),
-                     /* aFrameNum = */ 0);
-  InsertOutcome outcome =
-    SurfaceCache::InsertPlaceholder(ImageKey(this), surfaceKey);
-  if (outcome != InsertOutcome::SUCCESS) {
     return NS_ERROR_FAILURE;
   }
 
