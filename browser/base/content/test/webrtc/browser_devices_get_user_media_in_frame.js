@@ -233,9 +233,7 @@ function test() {
        "should start the test without any prior popup notification");
 
     Task.spawn(function () {
-      yield new Promise(resolve => SpecialPowers.pushPrefEnv({
-        "set": [[PREF_PERMISSION_FAKE, true]],
-      }, resolve));
+      yield SpecialPowers.pushPrefEnv({"set": [[PREF_PERMISSION_FAKE, true]]});
 
       for (let test of gTests) {
         info(test.desc);
