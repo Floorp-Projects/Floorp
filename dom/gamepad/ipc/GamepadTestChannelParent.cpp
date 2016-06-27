@@ -15,7 +15,7 @@ GamepadTestChannelParent::RecvGamepadTestEvent(const uint32_t& aID,
                                                const GamepadChangeEvent& aEvent)
 {
   mozilla::ipc::AssertIsOnBackgroundThread();
-  GamepadPlatformService*  service =
+  RefPtr<GamepadPlatformService>  service =
     GamepadPlatformService::GetParentService();
   MOZ_ASSERT(service);
   if (aEvent.type() == GamepadChangeEvent::TGamepadAdded) {
