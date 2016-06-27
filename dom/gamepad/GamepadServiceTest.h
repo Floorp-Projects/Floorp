@@ -7,38 +7,81 @@
 #ifndef mozilla_dom_GamepadServiceTest_h_
 #define mozilla_dom_GamepadServiceTest_h_
 
-#include "nsIGamepadServiceTest.h"
+#include "nsIIPCBackgroundChildCreateCallback.h"
 
 namespace mozilla {
 namespace dom {
 
+class GamepadChangeEvent;
 class GamepadManager;
+class GamepadTestChannelChild;
+class Promise;
 
 // Service for testing purposes
-class GamepadServiceTest : public nsIGamepadServiceTest
+class GamepadServiceTest final : public DOMEventTargetHelper,
+                                 public nsIIPCBackgroundChildCreateCallback
 {
 public:
-  NS_DECL_ISUPPORTS
-  NS_DECL_NSIGAMEPADSERVICETEST
+  NS_DECL_NSIIPCBACKGROUNDCHILDCREATECALLBACK
+  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_CYCLE_COLLECTION_CLASS_INHERITED(GamepadServiceTest,
+                                           DOMEventTargetHelper)
 
-  GamepadServiceTest();
+  uint32_t NoMapping() const { return 0; }
+  uint32_t StandardMapping() const { return 1; }
 
-  static already_AddRefed<GamepadServiceTest> CreateService();
+  already_AddRefed<Promise> AddGamepad(const nsAString& aID,
+                                       uint32_t aMapping,
+                                       uint32_t aNumButtons,
+                                       uint32_t aNumAxes,
+                                       ErrorResult& aRv);
+  void RemoveGamepad(uint32_t aIndex);
+  void NewButtonEvent(uint32_t aIndex, uint32_t aButton, bool aPressed);
+  void NewButtonValueEvent(uint32_t aIndex, uint32_t aButton, bool aPressed, double aValue);
+  void NewAxisMoveEvent(uint32_t aIndex, uint32_t aAxis, double aValue);
+  void Shutdown();
+
+  static already_AddRefed<GamepadServiceTest> CreateTestService(nsPIDOMWindowInner* aWindow);
+  nsPIDOMWindowInner* GetParentObject() const { return mWindow; }
+  JSObject* WrapObject(JSContext* aCx, JS::HandleObject aGivenProto) override;
 
 private:
-  static GamepadServiceTest* sSingleton;
+
+  // We need to asynchronously create IPDL channel, it is possible that
+  // we send commands before the channel is created, so we have to buffer
+  // them until the channel is created in that case.
+  struct PendingOperation {
+    explicit PendingOperation(const uint32_t& aID,
+                              const GamepadChangeEvent& aEvent,
+                              Promise* aPromise = nullptr)
+               : mID(aID), mEvent(aEvent), mPromise(aPromise) {}
+    uint32_t mID;
+    const GamepadChangeEvent& mEvent;
+    RefPtr<Promise> mPromise;
+  };
+
   // Hold a reference to the gamepad service so we don't have to worry about
   // execution order in tests.
   RefPtr<GamepadManager> mService;
-  virtual ~GamepadServiceTest();
+  nsCOMPtr<nsPIDOMWindowInner> mWindow;
+  nsTArray<PendingOperation> mPendingOperations;
+  uint32_t mEventNumber;
+  bool mShuttingDown;
+
+  // IPDL Channel for us to send test events to GamepadPlatformService, it
+  // will only be used in this singleton class and deleted during the IPDL
+  // shutdown chain
+  GamepadTestChannelChild* MOZ_NON_OWNING_REF mChild;
+
+  explicit GamepadServiceTest(nsPIDOMWindowInner* aWindow);
+  ~GamepadServiceTest();
+  void InitPBackgroundActor();
+  void DestroyPBackgroundActor();
+  void FlushPendingOperations();
+
 };
 
 } // namespace dom
 } // namespace mozilla
-
-#define NS_GAMEPAD_TEST_CID \
-{ 0xfb1fcb57, 0xebab, 0x4cf4, \
-{ 0x96, 0x3b, 0x1e, 0x4d, 0xb8, 0x52, 0x16, 0x96 } }
-#define NS_GAMEPAD_TEST_CONTRACTID "@mozilla.org/gamepad-test;1"
 
 #endif

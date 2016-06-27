@@ -214,9 +214,6 @@ static void Shutdown();
 
 #include "nsGeolocation.h"
 #include "nsDeviceSensors.h"
-#ifdef MOZ_GAMEPAD
-#include "mozilla/dom/GamepadServiceTest.h"
-#endif
 #include "mozilla/dom/nsContentSecurityManager.h"
 #include "mozilla/dom/nsCSPService.h"
 #include "mozilla/dom/nsCSPContext.h"
@@ -370,12 +367,6 @@ NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsITimeService,
                                          TimeService::GetInstance)
 NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(nsIStreamingProtocolControllerService,
                                          StreamingProtocolControllerService::GetInstance)
-
-#ifdef MOZ_GAMEPAD
-using mozilla::dom::GamepadServiceTest;
-NS_GENERIC_FACTORY_SINGLETON_CONSTRUCTOR(GamepadServiceTest,
-                                         GamepadServiceTest::CreateService)
-#endif
 
 #ifdef MOZ_WIDGET_GONK
 #ifndef DISABLE_MOZ_RIL_GEOLOC
@@ -845,9 +836,6 @@ NS_DEFINE_NAMED_CID(UDPSOCKETCHILD_CID);
 NS_DEFINE_NAMED_CID(NS_TIMESERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_MEDIASTREAMCONTROLLERSERVICE_CID);
 NS_DEFINE_NAMED_CID(NS_MEDIAMANAGERSERVICE_CID);
-#ifdef MOZ_GAMEPAD
-NS_DEFINE_NAMED_CID(NS_GAMEPAD_TEST_CID);
-#endif
 #ifdef MOZ_WEBSPEECH_TEST_BACKEND
 NS_DEFINE_NAMED_CID(NS_FAKE_SPEECH_RECOGNITION_SERVICE_CID);
 #endif
@@ -1157,9 +1145,6 @@ static const mozilla::Module::CIDEntry kLayoutCIDs[] = {
   { &kGONK_GPS_GEOLOCATION_PROVIDER_CID, false, nullptr, nsIGeolocationProviderConstructor },
 #endif
   { &kNS_MEDIAMANAGERSERVICE_CID, false, nullptr, nsIMediaManagerServiceConstructor },
-#ifdef MOZ_GAMEPAD
-  { &kNS_GAMEPAD_TEST_CID, false, nullptr, GamepadServiceTestConstructor },
-#endif
 #ifdef ACCESSIBILITY
   { &kNS_ACCESSIBILITY_SERVICE_CID, false, nullptr, CreateA11yService },
 #endif
@@ -1323,9 +1308,6 @@ static const mozilla::Module::ContractIDEntry kLayoutContracts[] = {
   { MEDIASTREAMCONTROLLERSERVICE_CONTRACTID, &kNS_MEDIASTREAMCONTROLLERSERVICE_CID },
 #if defined(MOZ_WIDGET_GONK) && !defined(DISABLE_MOZ_RIL_GEOLOC)
   { GONK_GPS_GEOLOCATION_PROVIDER_CONTRACTID, &kGONK_GPS_GEOLOCATION_PROVIDER_CID },
-#endif
-#ifdef MOZ_GAMEPAD
-  { NS_GAMEPAD_TEST_CONTRACTID, &kNS_GAMEPAD_TEST_CID },
 #endif
   { MEDIAMANAGERSERVICE_CONTRACTID, &kNS_MEDIAMANAGERSERVICE_CID },
 #ifdef ACCESSIBILITY
