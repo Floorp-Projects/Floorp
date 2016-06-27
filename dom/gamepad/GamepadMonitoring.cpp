@@ -5,28 +5,27 @@
  * You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/dom/GamepadMonitoring.h"
-#include "mozilla/dom/GamepadFunctions.h"
-#include "mozilla/dom/PContentParent.h"
+#include "mozilla/dom/GamepadPlatformService.h"
+#include "mozilla/ipc/BackgroundParent.h"
+
+using namespace mozilla::ipc;
 
 namespace mozilla {
 namespace dom {
 
-using namespace GamepadFunctions;
-
 void
 MaybeStopGamepadMonitoring()
 {
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(XRE_IsParentProcess());
-  nsTArray<ContentParent*> t;
-  ContentParent::GetAll(t);
-  for(uint32_t i = 0; i < t.Length(); ++i) {
-    if (t[i]->HasGamepadListener()) {
-      return;
-    }
+  AssertIsOnBackgroundThread();
+  GamepadPlatformService* service =
+    GamepadPlatformService::GetParentService();
+  MOZ_ASSERT(service);
+  if(service->HasGamepadListeners()) {
+    return;
   }
   StopGamepadMonitoring();
-  ResetGamepadIndexes();
+  service->ResetGamepadIndexes();
+  service->MaybeShutdown();
 }
 
 } // namespace dom
