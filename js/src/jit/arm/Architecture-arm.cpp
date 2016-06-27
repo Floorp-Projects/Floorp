@@ -187,7 +187,7 @@ InitARMFlags()
         return;
 
 #ifdef JS_SIMULATOR_ARM
-    flags = HWCAP_ARMv7 | HWCAP_VFP | HWCAP_VFPv3 | HWCAP_VFPv4 | HWCAP_NEON;
+    flags = HWCAP_ARMv7 | HWCAP_VFP | HWCAP_VFPv3 | HWCAP_VFPv4 | HWCAP_NEON | HWCAP_IDIVA;
 #else
 
 #if defined(__linux__)
