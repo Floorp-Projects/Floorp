@@ -19,6 +19,7 @@
 namespace mozilla {
 namespace dom {
 class Blob;
+class XMLHttpRequestUpload;
 } // namespace dom
 } // namespace mozilla
 
@@ -26,7 +27,6 @@ BEGIN_WORKERS_NAMESPACE
 
 class Proxy;
 class SendRunnable;
-class XMLHttpRequestUploadWorker;
 class WorkerPrivate;
 
 class XMLHttpRequestWorker final : public XMLHttpRequestEventTarget,
@@ -55,7 +55,7 @@ public:
   };
 
 private:
-  RefPtr<XMLHttpRequestUploadWorker> mUpload;
+  RefPtr<XMLHttpRequestUpload> mUpload;
   WorkerPrivate* mWorkerPrivate;
   RefPtr<Proxy> mProxy;
   XMLHttpRequestResponseType mResponseType;
@@ -160,7 +160,7 @@ public:
   void
   SetMozBackgroundRequest(bool aBackgroundRequest, ErrorResult& aRv);
 
-  XMLHttpRequestUploadWorker*
+  XMLHttpRequestUpload*
   GetUpload(ErrorResult& aRv);
 
   void
@@ -239,7 +239,7 @@ public:
     aRv.Throw(NS_ERROR_FAILURE);
   }
 
-  XMLHttpRequestUploadWorker*
+  XMLHttpRequestUpload*
   GetUploadObjectNoCreate() const
   {
     return mUpload;

@@ -12,12 +12,12 @@ XPIDL_MODULE = 'dom_xhr'
 
 # Stuff needed for the bindings, not really public though.
 EXPORTS.mozilla.dom.workers.bindings += [
-    'XMLHttpRequestUploadWorker.h',
     'XMLHttpRequestWorker.h',
 ]
 
 EXPORTS.mozilla.dom += [
     'XMLHttpRequestEventTarget.h',
+    'XMLHttpRequestUpload.h',
 ]
 
 EXPORTS += [
@@ -27,7 +27,7 @@ EXPORTS += [
 UNIFIED_SOURCES += [
     'nsXMLHttpRequest.cpp',
     'XMLHttpRequestEventTarget.cpp',
-    'XMLHttpRequestUploadWorker.cpp',
+    'XMLHttpRequestUpload.cpp',
     'XMLHttpRequestWorker.cpp',
 ]
 
