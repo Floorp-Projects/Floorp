@@ -152,5 +152,14 @@ TextTrackCueList::GetCueListByTimeInterval(media::Interval<double>& aInterval)
   return output.forget();
 }
 
+bool
+TextTrackCueList::IsCueExist(TextTrackCue *aCue)
+{
+  if (aCue && mList.Contains(aCue)) {
+    return true;
+  }
+  return false;
+}
+
 } // namespace dom
 } // namespace mozilla
