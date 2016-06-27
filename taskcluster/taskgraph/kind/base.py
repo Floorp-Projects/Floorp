@@ -45,7 +45,7 @@ class Task(object):
 
     @classmethod
     @abc.abstractmethod
-    def load_tasks(cls, kind, path, config, parameters):
+    def load_tasks(cls, kind, path, config, parameters, loaded_tasks):
         """
         Load the tasks for a given kind.
 
@@ -57,6 +57,11 @@ class Task(object):
 
         The `parameters` give details on which to base the task generation.
         See `taskcluster/docs/parameters.rst` for details.
+
+        At the time this method is called, all kinds on which this kind depends
+        (that is, specified in the `kind-dependencies` key in `self.config`
+        have already loaded their tasks, and those tasks are available in
+        the list `loaded_tasks`.
 
         The return value is a list of Task instances.
         """
