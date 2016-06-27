@@ -68,7 +68,7 @@
             <menuitem value="x-western"       label="&font.langGroup.latin;"/>
             <menuitem value="x-mlym"          label="&font.langGroup.malayalam;"/>
             <menuitem value="x-math"          label="&font.langGroup.math;"/>
-            <menuitem value="x-orya"          label="&font.langGroup.oriya;"/>
+            <menuitem value="x-orya"          label="&font.langGroup.odia;"/>
             <menuitem value="x-sinh"          label="&font.langGroup.sinhala;"/>
             <menuitem value="x-tamil"         label="&font.langGroup.tamil;"/>
             <menuitem value="x-telu"          label="&font.langGroup.telugu;"/>
