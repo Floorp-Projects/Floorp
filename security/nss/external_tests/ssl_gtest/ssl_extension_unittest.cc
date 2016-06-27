@@ -495,7 +495,7 @@ TEST_P(TlsExtensionTest12, SignatureAlgorithmConfiguration) {
     new TlsExtensionCapture(ssl_signature_algorithms_xtn);
   client_->SetSignatureAlgorithms(algorithms, PR_ARRAY_SIZE(algorithms));
   client_->SetPacketFilter(capture);
-  DisableDheAndEcdheCiphers();
+  EnableOnlyStaticRsaCiphers();
   Connect();
 
   const DataBuffer& ext = capture->extension();

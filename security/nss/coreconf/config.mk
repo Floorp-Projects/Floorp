@@ -209,6 +209,11 @@ DEFINES += -DSSL_DISABLE_DEPRECATED_CIPHER_SUITE_NAMES
 # So we add a NSS_SSL_ENABLE_ZLIB variable to allow Mozilla to turn this off.
 NSS_SSL_ENABLE_ZLIB = 1
 
+# Allow disabling PKCS11 bypass.
+ifdef NSS_NO_PKCS11_BYPASS
+DEFINES += -DNO_PKCS11_BYPASS
+endif
+
 # Allow build-time configuration of TLS 1.3 (Experimental)
 ifdef NSS_ENABLE_TLS_1_3
 ifdef NSS_DISABLE_ECC

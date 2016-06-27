@@ -166,7 +166,7 @@ PrintUsageHeader(const char *progName)
             " [-e ec_nickname]"
 #endif /* NSS_DISABLE_ECC */
             "\n"
-            "         -U [0|1] -H [0|1] -W [0|1]\n",
+            "         -U [0|1] -H [0|1|2] -W [0|1]\n",
             progName);
 }
 
@@ -219,7 +219,8 @@ PrintParameterUsage()
         "   ocsp: fetch from external OCSP server using AIA, or none\n"
         "-A <ca> Nickname of a CA used to sign a stapled cert status\n"
         "-U override default ECDHE ephemeral key reuse, 0: refresh, 1: reuse\n"
-        "-H override default DHE server support, 0: disable, 1: enable\n"
+        "-H override default DHE server support, 0: disable, 1: enable, "
+            " 2: require DH named groups\n"
         "-W override default DHE server weak parameters support, 0: disable, 1: enable\n"
         "-c Restrict ciphers\n"
         "-Y prints cipher values allowed for parameter -c and exits\n"
@@ -1933,6 +1934,11 @@ server_main(
         if (rv != SECSuccess) {
             errExit("error configuring server side DHE support");
         }
+        rv = SSL_OptionSet(model_sock, SSL_REQUIRE_DH_NAMED_GROUPS, (configureDHE > 1));
+        if (rv != SECSuccess) {
+            errExit("error configuring server side FFDHE support");
+        }
+        PORT_Assert(configureDHE <= 2);
     }
 
     if (configureReuseECDHE > -1) {

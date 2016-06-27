@@ -62,10 +62,6 @@ static const char *s_dmap_1 =
 
 /* }}} */
 
-unsigned long mp_allocs;
-unsigned long mp_frees;
-unsigned long mp_copies;
-
 /* {{{ Default precision manipulation */
 
 /* Default precision for newly created mp_int's      */
@@ -2809,8 +2805,6 @@ inline void s_mp_copy(const mp_digit *sp, mp_digit *dp, mp_size count)
 #else
   memcpy(dp, sp, count * sizeof(mp_digit));
 #endif
-  ++mp_copies;
-
 } /* end s_mp_copy() */
 
 /* }}} */
@@ -2820,7 +2814,6 @@ inline void s_mp_copy(const mp_digit *sp, mp_digit *dp, mp_size count)
 /* Allocate ni records of nb bytes each, and return a pointer to that     */
 inline void *s_mp_alloc(size_t nb, size_t ni)
 {
-  ++mp_allocs;
   return calloc(nb, ni);
 
 } /* end s_mp_alloc() */
@@ -2833,7 +2826,6 @@ inline void *s_mp_alloc(size_t nb, size_t ni)
 inline void s_mp_free(void *ptr)
 {
   if(ptr) {
-    ++mp_frees;
     free(ptr);
   }
 } /* end s_mp_free() */

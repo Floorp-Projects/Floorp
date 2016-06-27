@@ -99,3 +99,5 @@ tasks:
           revision_hash: '{{revision_hash}}'
           build:
             platform: nss-decision
+          machine:
+            platform: nss-decision
