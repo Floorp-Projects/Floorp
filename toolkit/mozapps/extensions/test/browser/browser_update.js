@@ -9,7 +9,6 @@ function test() {
   waitForExplicitFinish();
 
   Services.prefs.setBoolPref("extensions.checkUpdateSecurity", false);
-  Services.prefs.setBoolPref("xpinstall.signatures.required", false);
 
   run_next_test();
 }
@@ -45,7 +44,6 @@ add_test(function() {
 // Finally, cleanup things
 add_test(function() {
   Services.prefs.setBoolPref("xpinstall.signatures.required", true);
-  Services.prefs.setBoolPref("extensions.checkUpdateSecurity", true);
 
   AddonManager.getAddonByID("update1@tests.mozilla.org", function(aAddon) {
     aAddon.uninstall();
