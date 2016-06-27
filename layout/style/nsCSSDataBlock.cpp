@@ -71,10 +71,12 @@ TryToStartImageLoadOnValue(const nsCSSValue& aValue, nsIDocument* aDocument,
     if (aProperty == eCSSProperty_mask_image) {
       nsIURI* docURI = aDocument->GetDocumentURI();
       nsIURI* imageURI = aValue.GetURLValue();
-      bool isEqualExceptRef = false;
-      nsresult  rv = imageURI->EqualsExceptRef(docURI, &isEqualExceptRef);
-      if (NS_SUCCEEDED(rv) && isEqualExceptRef) {
-        return;
+      if (imageURI) {
+        bool isEqualExceptRef = false;
+        nsresult  rv = imageURI->EqualsExceptRef(docURI, &isEqualExceptRef);
+        if (NS_SUCCEEDED(rv) && isEqualExceptRef) {
+          return;
+        }
       }
     }
 #endif

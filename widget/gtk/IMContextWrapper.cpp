@@ -1187,9 +1187,9 @@ IMContextWrapper::OnDeleteSurroundingNative(GtkIMContext* aContext,
                                             gint aNChars)
 {
     MOZ_LOG(gGtkIMLog, LogLevel::Info,
-        ("GTKIM: %p OnDeleteSurroundingNative(aContext=%p, aOffset=%ld, "
-         "aNChar=%ld), current context=%p",
-         this, aContext, GetCurrentContext()));
+        ("GTKIM: %p OnDeleteSurroundingNative(aContext=%p, aOffset=%d, "
+         "aNChar=%d), current context=%p",
+         this, aContext, aOffset, aNChars, GetCurrentContext()));
 
     // See bug 472635, we should do nothing if IM context doesn't match.
     if (GetCurrentContext() != aContext) {
@@ -2061,7 +2061,7 @@ IMContextWrapper::DeleteText(GtkIMContext* aContext,
                              uint32_t aNChars)
 {
     MOZ_LOG(gGtkIMLog, LogLevel::Info,
-        ("GTKIM: %p DeleteText(aContext=%p, aOffset=%d, aNChars=%d), "
+        ("GTKIM: %p DeleteText(aContext=%p, aOffset=%d, aNChars=%u), "
          "mCompositionState=%s",
          this, aContext, aOffset, aNChars, GetCompositionStateName()));
 

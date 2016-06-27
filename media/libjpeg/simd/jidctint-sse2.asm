@@ -3,8 +3,7 @@
 ;
 ; Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
 ;
-; Based on
-; x86 SIMD extension for IJG JPEG library
+; Based on the x86 SIMD extension for IJG JPEG library
 ; Copyright (C) 1999-2006, MIYASAKA Masaru.
 ; For conditions of distribution and use, see copyright notice in jsimdext.inc
 ;
@@ -91,11 +90,11 @@ PB_CENTERJSAMP  times 16 db CENTERJSAMPLE
 ; Perform dequantization and inverse DCT on one block of coefficients.
 ;
 ; GLOBAL(void)
-; jsimd_idct_islow_sse2 (void * dct_table, JCOEFPTR coef_block,
+; jsimd_idct_islow_sse2 (void *dct_table, JCOEFPTR coef_block,
 ;                        JSAMPARRAY output_buf, JDIMENSION output_col)
 ;
 
-%define dct_table(b)    (b)+8           ; jpeg_component_info * compptr
+%define dct_table(b)    (b)+8           ; jpeg_component_info *compptr
 %define coef_block(b)   (b)+12          ; JCOEFPTR coef_block
 %define output_buf(b)   (b)+16          ; JSAMPARRAY output_buf
 %define output_col(b)   (b)+20          ; JDIMENSION output_col

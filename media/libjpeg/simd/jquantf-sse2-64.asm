@@ -2,10 +2,9 @@
 ; jquantf.asm - sample data conversion and quantization (64-bit SSE & SSE2)
 ;
 ; Copyright 2009 Pierre Ossman <ossman@cendio.se> for Cendio AB
-; Copyright 2009 D. R. Commander
+; Copyright (C) 2009, D. R. Commander.
 ;
-; Based on
-; x86 SIMD extension for IJG JPEG library
+; Based on the x86 SIMD extension for IJG JPEG library
 ; Copyright (C) 1999-2006, MIYASAKA Masaru.
 ; For conditions of distribution and use, see copyright notice in jsimdext.inc
 ;
@@ -28,12 +27,12 @@
 ;
 ; GLOBAL(void)
 ; jsimd_convsamp_float_sse2 (JSAMPARRAY sample_data, JDIMENSION start_col,
-;                            FAST_FLOAT * workspace);
+;                            FAST_FLOAT *workspace);
 ;
 
 ; r10 = JSAMPARRAY sample_data
 ; r11 = JDIMENSION start_col
-; r12 = FAST_FLOAT * workspace
+; r12 = FAST_FLOAT *workspace
 
         align   16
         global  EXTN(jsimd_convsamp_float_sse2)
@@ -101,13 +100,13 @@ EXTN(jsimd_convsamp_float_sse2):
 ; Quantize/descale the coefficients, and store into coef_block
 ;
 ; GLOBAL(void)
-; jsimd_quantize_float_sse2 (JCOEFPTR coef_block, FAST_FLOAT * divisors,
-;                         FAST_FLOAT * workspace);
+; jsimd_quantize_float_sse2 (JCOEFPTR coef_block, FAST_FLOAT *divisors,
+;                         FAST_FLOAT *workspace);
 ;
 
 ; r10 = JCOEFPTR coef_block
-; r11 = FAST_FLOAT * divisors
-; r12 = FAST_FLOAT * workspace
+; r11 = FAST_FLOAT *divisors
+; r12 = FAST_FLOAT *workspace
 
         align   16
         global  EXTN(jsimd_quantize_float_sse2)

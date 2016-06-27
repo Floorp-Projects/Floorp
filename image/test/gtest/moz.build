@@ -8,6 +8,7 @@ Library('imagetest')
 
 UNIFIED_SOURCES = [
     'Common.cpp',
+    'TestADAM7InterpolatingFilter.cpp',
     'TestCopyOnWrite.cpp',
     'TestDecoders.cpp',
     'TestDecodeToSurface.cpp',
