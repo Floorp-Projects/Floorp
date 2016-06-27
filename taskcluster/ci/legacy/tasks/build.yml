@@ -26,7 +26,7 @@ task:
       GECKO_HEAD_REPOSITORY: '{{head_repository}}'
       GECKO_HEAD_REV: '{{head_rev}}'
       GECKO_HEAD_REF: '{{head_ref}}'
-      TOOLTOOL_REPO: 'https://github.com/mozilla/build-tooltool.git'
+      TOOLTOOL_REPO: 'https://git.mozilla.org/build/tooltool.git'
       TOOLTOOL_REV: 'master'
       MOZ_BUILD_DATE: '{{pushdate}}'
       MOZ_SCM_LEVEL: '{{level}}'
