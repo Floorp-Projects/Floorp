@@ -14,8 +14,6 @@ const MSG_PROMISE_REQUEST  = "WebAPIPromiseRequest";
 const MSG_PROMISE_RESULT   = "WebAPIPromiseResult";
 const MSG_INSTALL_EVENT    = "WebAPIInstallEvent";
 const MSG_INSTALL_CLEANUP  = "WebAPICleanup";
-const MSG_ADDON_EVENT_REQ  = "WebAPIAddonEventRequest";
-const MSG_ADDON_EVENT      = "WebAPIAddonEvent";
 
 const APIBroker = {
   _nextID: 0,
@@ -28,8 +26,6 @@ const APIBroker = {
 
     Services.cpmm.addMessageListener(MSG_PROMISE_RESULT, this);
     Services.cpmm.addMessageListener(MSG_INSTALL_EVENT, this);
-
-    this._eventListener = null;
   },
 
   receiveMessage(message) {
@@ -61,12 +57,6 @@ const APIBroker = {
         install._dispatch(payload);
         break;
       }
-
-      case MSG_ADDON_EVENT: {
-        if (this._eventListener) {
-          this._eventListener(payload);
-        }
-      }
     }
   },
 
@@ -79,19 +69,7 @@ const APIBroker = {
     });
   },
 
-  setAddonListener(callback) {
-    this._eventListener = callback;
-    if (callback) {
-      Services.cpmm.addMessageListener(MSG_ADDON_EVENT, this);
-      Services.cpmm.sendAsyncMessage(MSG_ADDON_EVENT_REQ, {enabled: true});
-    } else {
-      Services.cpmm.removeMessageListener(MSG_ADDON_EVENT, this);
-      Services.cpmm.sendAsyncMessage(MSG_ADDON_EVENT_REQ, {enabled: false});
-    }
-  },
-
   sendCleanup: function(ids) {
-    this.setAddonListener(null);
     Services.cpmm.sendAsyncMessage(MSG_INSTALL_CLEANUP, { ids });
   },
 };
@@ -193,7 +171,6 @@ WebAPI.prototype = {
   init(window) {
     this.window = window;
     this.allInstalls = [];
-    this.listenerCount = 0;
 
     window.addEventListener("unload", event => {
       APIBroker.sendCleanup(this.allInstalls);
@@ -214,23 +191,6 @@ WebAPI.prototype = {
     this.allInstalls.push(installInfo.id);
     return install;
   }),
-
-  eventListenerWasAdded(type) {
-    if (this.listenerCount == 0) {
-      APIBroker.setAddonListener(data => {
-        let event = new this.window.AddonEvent(data.event, data);
-        this.__DOM_IMPL__.dispatchEvent(event);
-      });
-    }
-    this.listenerCount++;
-  },
-
-  eventListenerWasRemoved(type) {
-    this.listenerCount--;
-    if (this.listenerCount == 0) {
-      APIBroker.setAddonListener(null);
-    }
-  },
 
   classID: Components.ID("{8866d8e3-4ea5-48b7-a891-13ba0ac15235}"),
   contractID: "@mozilla.org/addon-web-api/manager;1",
