@@ -9,10 +9,8 @@
 
 // Service workers can't be loaded from chrome://, but http:// is ok with
 // dom.serviceWorkers.testing.enabled turned on.
-const HTTP_ROOT = CHROME_ROOT.replace(
-  "chrome://mochitests/content/", "http://mochi.test:8888/");
-const SERVICE_WORKER = HTTP_ROOT + "service-workers/empty-sw.js";
-const TAB_URL = HTTP_ROOT + "service-workers/empty-sw.html";
+const SERVICE_WORKER = URL_ROOT + "service-workers/empty-sw.js";
+const TAB_URL = URL_ROOT + "service-workers/empty-sw.html";
 
 const SW_TIMEOUT = 1000;
 

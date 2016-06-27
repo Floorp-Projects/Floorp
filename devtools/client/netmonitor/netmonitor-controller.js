@@ -136,9 +136,6 @@ XPCOMUtils.defineLazyModuleGetter(this, "PluralForm",
 XPCOMUtils.defineLazyServiceGetter(this, "clipboardHelper",
   "@mozilla.org/widget/clipboardhelper;1", "nsIClipboardHelper");
 
-XPCOMUtils.defineLazyServiceGetter(this, "DOMParser",
-  "@mozilla.org/xmlextras/domparser;1", "nsIDOMParser");
-
 Object.defineProperty(this, "NetworkHelper", {
   get: function () {
     return require("devtools/shared/webconsole/network-helper");

@@ -3643,7 +3643,7 @@ NetworkDetailsView.prototype = {
       errorbox.hidden = false;
 
       // Strip any HTML from the message.
-      let plain = DOMParser.parseFromString(securityInfo.errorMessage,
+      let plain = new DOMParser().parseFromString(securityInfo.errorMessage,
         "text/html");
       setValue("#security-error-message", plain.body.textContent);
     }

@@ -32,8 +32,20 @@ const workerSpec = generateActorSpec({
 
 exports.workerSpec = workerSpec;
 
+const pushSubscriptionSpec = generateActorSpec({
+  typeName: "pushSubscription",
+});
+
+exports.pushSubscriptionSpec = pushSubscriptionSpec;
+
 const serviceWorkerRegistrationSpec = generateActorSpec({
   typeName: "serviceWorkerRegistration",
+
+  events: {
+    "push-subscription-modified": {
+      type: "push-subscription-modified"
+    }
+  },
 
   methods: {
     start: {
@@ -43,6 +55,12 @@ const serviceWorkerRegistrationSpec = generateActorSpec({
     unregister: {
       request: {},
       response: RetVal("json")
+    },
+    getPushSubscription: {
+      request: {},
+      response: {
+        subscription: RetVal("nullable:pushSubscription")
+      }
     },
   },
 });
