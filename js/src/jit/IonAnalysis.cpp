@@ -2791,6 +2791,7 @@ IsResumableMIRType(MIRType type)
       case MIRType::MagicOptimizedArguments:
       case MIRType::MagicOptimizedOut:
       case MIRType::MagicUninitializedLexical:
+      case MIRType::MagicIsConstructing:
       case MIRType::Value:
       case MIRType::Int32x4:
       case MIRType::Int16x8:
@@ -2802,7 +2803,6 @@ IsResumableMIRType(MIRType type)
         return true;
 
       case MIRType::MagicHole:
-      case MIRType::MagicIsConstructing:
       case MIRType::ObjectOrNull:
       case MIRType::None:
       case MIRType::Slots:

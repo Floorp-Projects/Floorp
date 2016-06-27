@@ -224,7 +224,10 @@ InterpreterFrame::prologue(JSContext* cx)
         } else if (script->isDerivedClassConstructor()) {
             MOZ_ASSERT(callee().isClassConstructor());
             thisArgument() = MagicValue(JS_UNINITIALIZED_LEXICAL);
-        } else if (thisArgument().isPrimitive()) {
+        } else if (thisArgument().isObject()) {
+            // Nothing to do. Correctly set.
+        } else {
+            MOZ_ASSERT(thisArgument().isMagic(JS_IS_CONSTRUCTING));
             RootedObject callee(cx, &this->callee());
             RootedObject newTarget(cx, &this->newTarget().toObject());
             JSObject* obj = CreateThisForFunction(cx, callee, newTarget,
