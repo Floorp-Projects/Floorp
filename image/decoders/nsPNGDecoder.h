@@ -95,10 +95,6 @@ public:
 
   gfx::SurfaceFormat format;
 
-  // For metadata decodes.
-  uint8_t mSizeBytes[8]; // Space for width and height, both 4 bytes
-  uint32_t mHeaderBytesRead;
-
   // whether CMS or premultiplied alpha are forced off
   uint32_t mCMSMode;
 
