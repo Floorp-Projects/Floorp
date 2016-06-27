@@ -39,7 +39,7 @@ EXPORTS.mozilla.dom.workers.bindings += [
     'SharedWorker.h',
     'URL.h',
     'WorkerHolder.h',
-    'XMLHttpRequestUpload.h',
+    'XMLHttpRequestUploadWorker.h',
     'XMLHttpRequestWorker.h',
 ]
 
@@ -89,7 +89,7 @@ UNIFIED_SOURCES += [
     'WorkerRunnable.cpp',
     'WorkerScope.cpp',
     'WorkerThread.cpp',
-    'XMLHttpRequestUpload.cpp',
+    'XMLHttpRequestUploadWorker.cpp',
     'XMLHttpRequestWorker.cpp',
 ]
 
