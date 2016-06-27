@@ -4633,5 +4633,11 @@ PluginInstanceChild::AnswerNPP_Destroy(NPError* aResult)
 void
 PluginInstanceChild::ActorDestroy(ActorDestroyReason why)
 {
+#ifdef XP_WIN
+    // ClearAllSurfaces() should not try to send anything after ActorDestroy.
+    mCurrentSurfaceActor = nullptr;
+    mBackSurfaceActor = nullptr;
+#endif
+
     Destroy();
 }
