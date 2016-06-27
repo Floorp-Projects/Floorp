@@ -534,8 +534,10 @@ HttpObserverManager = {
             commonData.originUrl = originPrincipal.URI.spec;
           }
           Object.assign(commonData, {
-            windowId: loadInfo.outerWindowID,
-            parentWindowId: loadInfo.parentOuterWindowID,
+            windowId: loadInfo.frameOuterWindowID ?
+                        loadInfo.frameOuterWindowID : loadInfo.outerWindowID,
+            parentWindowId: loadInfo.frameOuterWindowID ?
+                              loadInfo.outerWindowID : loadInfo.parentOuterWindowID,
           });
         } else {
           Object.assign(commonData, {
