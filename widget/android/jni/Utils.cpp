@@ -47,19 +47,19 @@ DEFINE_PRIMITIVE_TYPE_ADAPTER(double,   jdouble,  Double,  MOZ_JNICALL_ABI);
 
 } // namespace detail
 
-template<> const char Context<Object, jobject>::name[] = "java/lang/Object";
-template<> const char Context<TypedObject<jstring>, jstring>::name[] = "java/lang/String";
-template<> const char Context<TypedObject<jclass>, jclass>::name[] = "java/lang/Class";
-template<> const char Context<TypedObject<jthrowable>, jthrowable>::name[] = "java/lang/Throwable";
-template<> const char Context<TypedObject<jbooleanArray>, jbooleanArray>::name[] = "[Z";
-template<> const char Context<TypedObject<jbyteArray>, jbyteArray>::name[] = "[B";
-template<> const char Context<TypedObject<jcharArray>, jcharArray>::name[] = "[C";
-template<> const char Context<TypedObject<jshortArray>, jshortArray>::name[] = "[S";
-template<> const char Context<TypedObject<jintArray>, jintArray>::name[] = "[I";
-template<> const char Context<TypedObject<jlongArray>, jlongArray>::name[] = "[J";
-template<> const char Context<TypedObject<jfloatArray>, jfloatArray>::name[] = "[F";
-template<> const char Context<TypedObject<jdoubleArray>, jdoubleArray>::name[] = "[D";
-template<> const char Context<TypedObject<jobjectArray>, jobjectArray>::name[] = "[Ljava/lang/Object;";
+template<> const char ObjectBase<Object, jobject>::name[] = "java/lang/Object";
+template<> const char ObjectBase<TypedObject<jstring>, jstring>::name[] = "java/lang/String";
+template<> const char ObjectBase<TypedObject<jclass>, jclass>::name[] = "java/lang/Class";
+template<> const char ObjectBase<TypedObject<jthrowable>, jthrowable>::name[] = "java/lang/Throwable";
+template<> const char ObjectBase<TypedObject<jbooleanArray>, jbooleanArray>::name[] = "[Z";
+template<> const char ObjectBase<TypedObject<jbyteArray>, jbyteArray>::name[] = "[B";
+template<> const char ObjectBase<TypedObject<jcharArray>, jcharArray>::name[] = "[C";
+template<> const char ObjectBase<TypedObject<jshortArray>, jshortArray>::name[] = "[S";
+template<> const char ObjectBase<TypedObject<jintArray>, jintArray>::name[] = "[I";
+template<> const char ObjectBase<TypedObject<jlongArray>, jlongArray>::name[] = "[J";
+template<> const char ObjectBase<TypedObject<jfloatArray>, jfloatArray>::name[] = "[F";
+template<> const char ObjectBase<TypedObject<jdoubleArray>, jdoubleArray>::name[] = "[D";
+template<> const char ObjectBase<TypedObject<jobjectArray>, jobjectArray>::name[] = "[Ljava/lang/Object;";
 
 
 JNIEnv* sGeckoThreadEnv;
