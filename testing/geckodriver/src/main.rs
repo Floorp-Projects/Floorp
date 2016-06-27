@@ -19,7 +19,7 @@ use std::net::{SocketAddr, IpAddr};
 use std::path::Path;
 use std::str::FromStr;
 
-use argparse::{ArgumentParser, IncrBy, StoreTrue, Store};
+use argparse::{ArgumentParser, IncrBy, StoreTrue, Store, StoreOption};
 use webdriver::server::start;
 
 use marionette::{MarionetteHandler, BrowserLauncher, LogLevel, MarionetteSettings, extension_routes};
@@ -46,7 +46,7 @@ struct Options {
     binary: String,
     webdriver_host: String,
     webdriver_port: u16,
-    marionette_port: u16,
+    marionette_port: Option<u16>,
     connect_existing: bool,
     e10s: bool,
     log_level: String,
@@ -59,7 +59,7 @@ fn parse_args() -> Options {
         binary: "".to_owned(),
         webdriver_host: "127.0.0.1".to_owned(),
         webdriver_port: 4444u16,
-        marionette_port: 2828u16,
+        marionette_port: None,
         connect_existing: false,
         e10s: false,
         log_level: "".to_owned(),
@@ -81,7 +81,7 @@ fn parse_args() -> Options {
             .add_option(&["--webdriver-port"], Store,
                         "Port to run webdriver on");
         parser.refer(&mut opts.marionette_port)
-            .add_option(&["--marionette-port"], Store,
+            .add_option(&["--marionette-port"], StoreOption,
                         "Port to run marionette on");
         parser.refer(&mut opts.connect_existing)
             .add_option(&["--connect-existing"], StoreTrue,
@@ -205,6 +205,8 @@ mod tests {
     use mozprofile::preferences::Pref;
     use std::io::Read;
 
+    const MARIONETTE_DEFAULT_PORT: u16 = 2828;
+
     #[test]
     fn test_profile() {
         let mut profile_data = Vec::with_capacity(1024);
@@ -227,7 +229,7 @@ mod tests {
         };
 
         let settings = MarionetteSettings {
-            port: 2828,
+            port: None,
             launcher: BrowserLauncher::None,
             e10s: false,
             log_level: None,
@@ -235,7 +237,7 @@ mod tests {
         let handler = MarionetteHandler::new(settings);
 
         let mut gecko_profile = handler.load_profile(&capabilities).unwrap().unwrap();
-        handler.set_prefs(&mut gecko_profile, true).unwrap();
+        handler.set_prefs(MARIONETTE_DEFAULT_PORT, &mut gecko_profile, true).unwrap();
 
         let prefs = gecko_profile.user_prefs().unwrap();
 
