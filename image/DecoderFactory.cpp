@@ -108,6 +108,7 @@ DecoderFactory::GetDecoder(DecoderType aType,
 DecoderFactory::CreateDecoder(DecoderType aType,
                               NotNull<RasterImage*> aImage,
                               NotNull<SourceBuffer*> aSourceBuffer,
+                              const IntSize& aIntrinsicSize,
                               const Maybe<IntSize>& aTargetSize,
                               DecoderFlags aDecoderFlags,
                               SurfaceFlags aSurfaceFlags,
@@ -139,6 +140,17 @@ DecoderFactory::CreateDecoder(DecoderType aType,
     return nullptr;
   }
 
+  // Add a placeholder to the SurfaceCache so we won't trigger any more decoders
+  // with the same parameters.
+  IntSize surfaceSize = aTargetSize.valueOr(aIntrinsicSize);
+  SurfaceKey surfaceKey =
+    RasterSurfaceKey(surfaceSize, aSurfaceFlags, /* aFrameNum = */ 0);
+  InsertOutcome outcome =
+    SurfaceCache::InsertPlaceholder(ImageKey(aImage.get()), surfaceKey);
+  if (outcome != InsertOutcome::SUCCESS) {
+    return nullptr;
+  }
+
   RefPtr<IDecodingTask> task = new DecodingTask(WrapNotNull(decoder));
   return task.forget();
 }
@@ -147,6 +159,7 @@ DecoderFactory::CreateDecoder(DecoderType aType,
 DecoderFactory::CreateAnimationDecoder(DecoderType aType,
                                        NotNull<RasterImage*> aImage,
                                        NotNull<SourceBuffer*> aSourceBuffer,
+                                       const IntSize& aIntrinsicSize,
                                        DecoderFlags aDecoderFlags,
                                        SurfaceFlags aSurfaceFlags)
 {
@@ -169,6 +182,16 @@ DecoderFactory::CreateAnimationDecoder(DecoderType aType,
 
   decoder->Init();
   if (NS_FAILED(decoder->GetDecoderError())) {
+    return nullptr;
+  }
+
+  // Add a placeholder for the first frame to the SurfaceCache so we won't
+  // trigger any more decoders with the same parameters.
+  SurfaceKey surfaceKey =
+    RasterSurfaceKey(aIntrinsicSize, aSurfaceFlags, /* aFrameNum = */ 0);
+  InsertOutcome outcome =
+    SurfaceCache::InsertPlaceholder(ImageKey(aImage.get()), surfaceKey);
+  if (outcome != InsertOutcome::SUCCESS) {
     return nullptr;
   }
 
