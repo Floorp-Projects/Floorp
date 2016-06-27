@@ -193,25 +193,21 @@ nsScreen::Orientation() const
 void
 nsScreen::GetMozOrientation(nsString& aOrientation) const
 {
-  if (ShouldResistFingerprinting()) {
+  switch (mScreenOrientation->DeviceType()) {
+  case OrientationType::Portrait_primary:
+    aOrientation.AssignLiteral("portrait-primary");
+    break;
+  case OrientationType::Portrait_secondary:
+    aOrientation.AssignLiteral("portrait-secondary");
+    break;
+  case OrientationType::Landscape_primary:
     aOrientation.AssignLiteral("landscape-primary");
-  } else {
-    switch (mScreenOrientation->DeviceType()) {
-    case OrientationType::Portrait_primary:
-      aOrientation.AssignLiteral("portrait-primary");
-      break;
-    case OrientationType::Portrait_secondary:
-      aOrientation.AssignLiteral("portrait-secondary");
-      break;
-    case OrientationType::Landscape_primary:
-      aOrientation.AssignLiteral("landscape-primary");
-      break;
-    case OrientationType::Landscape_secondary:
-      aOrientation.AssignLiteral("landscape-secondary");
-      break;
-    default:
-      MOZ_CRASH("Unacceptable screen orientation type.");
-    }
+    break;
+  case OrientationType::Landscape_secondary:
+    aOrientation.AssignLiteral("landscape-secondary");
+    break;
+  default:
+    MOZ_CRASH("Unacceptable screen orientation type.");
   }
 }
 
@@ -263,6 +259,9 @@ bool
 nsScreen::MozLockOrientation(const Sequence<nsString>& aOrientations,
                              ErrorResult& aRv)
 {
+  if (ShouldResistFingerprinting()) {
+    return false;
+  }
   ScreenOrientationInternal orientation = eScreenOrientation_None;
 
   for (uint32_t i = 0; i < aOrientations.Length(); ++i) {
@@ -310,6 +309,9 @@ nsScreen::MozLockOrientation(const Sequence<nsString>& aOrientations,
 void
 nsScreen::MozUnlockOrientation()
 {
+  if (ShouldResistFingerprinting()) {
+    return;
+  }
   UpdateDocShellOrientationLock(GetOwner(), eScreenOrientation_None);
   mScreenOrientation->UnlockDeviceOrientation();
 }

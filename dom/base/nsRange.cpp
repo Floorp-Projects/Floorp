@@ -1842,8 +1842,23 @@ ValidateCurrentNode(nsRange* aRange, RangeSubtreeIterator& aIter)
   }
 
   nsresult res = nsRange::CompareNodeToRange(node, aRange, &before, &after);
+  NS_ENSURE_SUCCESS(res, false);
 
-  return NS_SUCCEEDED(res) && !before && !after;
+  if (before || after) {
+    nsCOMPtr<nsIDOMCharacterData> charData = do_QueryInterface(node);
+    if (charData) {
+      // If we're dealing with the start/end container which is a character
+      // node, pretend that the node is in the range.
+      if (before && node == aRange->GetStartParent()) {
+        before = false;
+      }
+      if (after && node == aRange->GetEndParent()) {
+        after = false;
+      }
+    }
+  }
+
+  return !before && !after;
 }
 
 nsresult

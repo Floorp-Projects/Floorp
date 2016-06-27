@@ -64,6 +64,10 @@ def add_common_arguments(parser):
                         action="store", type=str, dest="symbolsPath",
                         default=None,
                         help="absolute path to directory containing breakpad symbols, or the URL of a zip file containing symbols")
+    parser.add_argument("--jscov-dir-prefix",
+                        action="store", type=str, dest="jscovdir",
+                        default=argparse.SUPPRESS,
+                        help="Directory to store per-test javascript line coverage data as json.")
     parser.add_argument("--debugger",
                         action="store", dest="debugger",
                         help="use the given debugger to launch the application")
