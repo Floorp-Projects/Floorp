@@ -104,7 +104,7 @@ void WithSingleChunkDecode(const ImageTestCase& aTestCase,
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   // Write the data into a SourceBuffer.
-  RefPtr<SourceBuffer> sourceBuffer = new SourceBuffer();
+  NotNull<RefPtr<SourceBuffer>> sourceBuffer = WrapNotNull(new SourceBuffer());
   sourceBuffer->ExpectLength(length);
   rv = sourceBuffer->AppendFromInputStream(inputStream, length);
   ASSERT_TRUE(NS_SUCCEEDED(rv));
@@ -146,7 +146,7 @@ CheckDecoderMultiChunk(const ImageTestCase& aTestCase)
   ASSERT_TRUE(NS_SUCCEEDED(rv));
 
   // Create a SourceBuffer and a decoder.
-  RefPtr<SourceBuffer> sourceBuffer = new SourceBuffer();
+  NotNull<RefPtr<SourceBuffer>> sourceBuffer = WrapNotNull(new SourceBuffer());
   sourceBuffer->ExpectLength(length);
   DecoderType decoderType =
     DecoderFactory::GetDecoderType(aTestCase.mMimeType);
