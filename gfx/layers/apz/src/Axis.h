@@ -244,6 +244,7 @@ public:
   ParentLayerCoord GetPageLength() const;
   ParentLayerCoord GetCompositionEnd() const;
   ParentLayerCoord GetPageEnd() const;
+  ParentLayerCoord GetScrollRangeEnd() const;
 
   ParentLayerCoord GetPos() const { return mPos; }
 
