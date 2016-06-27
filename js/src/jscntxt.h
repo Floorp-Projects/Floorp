@@ -318,8 +318,8 @@ struct JSContext : public js::ExclusiveContext,
     using ExclusiveContext::staticStrings;
     using ExclusiveContext::wellKnownSymbols;
 
-    JSRuntime* runtime() const { return runtime_; }
-    js::PerThreadData& mainThread() const { return runtime()->mainThread; }
+    JSRuntime* runtime() { return this; }
+    js::PerThreadData& mainThread() { return this->JSRuntime::mainThread; }
 
     static size_t offsetOfRuntime() {
         return offsetof(JSContext, runtime_);
