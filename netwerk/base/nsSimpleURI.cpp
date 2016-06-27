@@ -199,12 +199,10 @@ nsSimpleURI::SetSpec(const nsACString &aSpec)
     // filter out unexpected chars "\r\n\t" if necessary
     nsAutoCString filteredSpec;
     net_FilterURIString(aSpec, filteredSpec);
-    const char* specPtr = filteredSpec.get();
-    int32_t specLen = filteredSpec.Length();
 
     // nsSimpleURI currently restricts the charset to US-ASCII
     nsAutoCString spec;
-    NS_EscapeURL(specPtr, specLen, esc_OnlyNonASCII|esc_AlwaysCopy, spec);
+    spec = NS_EscapeURL(filteredSpec, esc_OnlyNonASCII, spec);
 
     int32_t colonPos = spec.FindChar(':');
     if (colonPos < 0 || !net_IsValidScheme(spec.get(), colonPos))
