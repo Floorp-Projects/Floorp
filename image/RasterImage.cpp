@@ -84,7 +84,7 @@ RasterImage::RasterImage(ImageURL* aURI /* = nullptr */) :
 #ifdef DEBUG
   mFramesNotified(0),
 #endif
-  mSourceBuffer(new SourceBuffer()),
+  mSourceBuffer(WrapNotNull(new SourceBuffer())),
   mFrameCount(0),
   mHasSize(false),
   mTransient(false),
@@ -1308,14 +1308,13 @@ RasterImage::Decode(const IntSize& aSize, uint32_t aFlags)
   // Create a decoder.
   RefPtr<IDecodingTask> task;
   if (mAnim) {
-    task = DecoderFactory::CreateAnimationDecoder(mDecoderType, this,
+    task = DecoderFactory::CreateAnimationDecoder(mDecoderType, WrapNotNull(this),
                                                   mSourceBuffer, decoderFlags,
                                                   surfaceFlags);
   } else {
-    task = DecoderFactory::CreateDecoder(mDecoderType, this, mSourceBuffer,
-                                         targetSize, decoderFlags,
-                                         surfaceFlags,
-                                         mRequestedSampleSize);
+    task = DecoderFactory::CreateDecoder(mDecoderType, WrapNotNull(this),
+                                         mSourceBuffer, targetSize, decoderFlags,
+                                         surfaceFlags, mRequestedSampleSize);
   }
 
   // Make sure DecoderFactory was able to create a decoder successfully.
@@ -1353,8 +1352,8 @@ RasterImage::DecodeMetadata(uint32_t aFlags)
 
   // Create a decoder.
   RefPtr<IDecodingTask> task =
-    DecoderFactory::CreateMetadataDecoder(mDecoderType, this, mSourceBuffer,
-                                          mRequestedSampleSize);
+    DecoderFactory::CreateMetadataDecoder(mDecoderType, WrapNotNull(this),
+                                          mSourceBuffer, mRequestedSampleSize);
 
   // Make sure DecoderFactory was able to create a decoder successfully.
   if (!task) {

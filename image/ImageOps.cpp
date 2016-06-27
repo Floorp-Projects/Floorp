@@ -107,7 +107,7 @@ ImageOps::DecodeToSurface(nsIInputStream* aInputStream,
   }
 
   // Write the data into a SourceBuffer.
-  RefPtr<SourceBuffer> sourceBuffer = new SourceBuffer();
+  NotNull<RefPtr<SourceBuffer>> sourceBuffer = WrapNotNull(new SourceBuffer());
   sourceBuffer->ExpectLength(length);
   rv = sourceBuffer->AppendFromInputStream(inputStream, length);
   if (NS_FAILED(rv)) {
@@ -119,10 +119,8 @@ ImageOps::DecodeToSurface(nsIInputStream* aInputStream,
   DecoderType decoderType =
     DecoderFactory::GetDecoderType(PromiseFlatCString(aMimeType).get());
   RefPtr<Decoder> decoder =
-    DecoderFactory::CreateAnonymousDecoder(decoderType,
-                                           sourceBuffer,
-                                           Nothing(),
-                                           ToSurfaceFlags(aFlags));
+    DecoderFactory::CreateAnonymousDecoder(decoderType, sourceBuffer,
+                                           Nothing(), ToSurfaceFlags(aFlags));
   if (!decoder) {
     return nullptr;
   }
