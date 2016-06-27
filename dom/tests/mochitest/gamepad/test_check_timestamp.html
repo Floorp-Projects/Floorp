@@ -11,7 +11,7 @@
 <script type="text/javascript" src="mock_gamepad.js"></script>
 <script class="testbody" type="text/javascript">
 SimpleTest.waitForExplicitFinish();
-
+window.addEventListener("gamepadbuttondown", buttonpresshandler);
 var index;
 addGamepad("test gamepad 1", // id
            SpecialPowers.Ci.nsIGamepadServiceTest.NO_MAPPING,
@@ -24,7 +24,7 @@ addGamepad("test gamepad 1", // id
            });
 
 var timea=0;
-window.addEventListener("gamepadbuttondown", buttonpresshandler);
+
 
 var firstPress = true;
 var testOver = false;
