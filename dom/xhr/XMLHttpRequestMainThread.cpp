@@ -179,7 +179,7 @@ XMLHttpRequestMainThread::sDontWarnAboutSyncXHR = false;
 
 XMLHttpRequestMainThread::XMLHttpRequestMainThread()
   : mResponseBodyDecodedPos(0),
-    mResponseType(XML_HTTP_RESPONSE_TYPE_DEFAULT),
+    mResponseType(XMLHttpRequestResponseType::_empty),
     mRequestObserver(nullptr),
     mState(XML_HTTP_REQUEST_UNSENT | XML_HTTP_REQUEST_ASYNC),
     mUploadTransferred(0), mUploadTotal(0), mUploadComplete(true),
@@ -199,9 +199,6 @@ XMLHttpRequestMainThread::XMLHttpRequestMainThread()
     mIsMappedArrayBuffer(false),
     mXPCOMifier(nullptr)
 {
-#ifdef DEBUG
-  StaticAssertions();
-#endif
 }
 
 XMLHttpRequestMainThread::~XMLHttpRequestMainThread()
@@ -491,8 +488,8 @@ XMLHttpRequestMainThread::GetResponseXML(nsIDOMDocument **aResponseXML)
 nsIDocument*
 XMLHttpRequestMainThread::GetResponseXML(ErrorResult& aRv)
 {
-  if (mResponseType != XML_HTTP_RESPONSE_TYPE_DEFAULT &&
-      mResponseType != XML_HTTP_RESPONSE_TYPE_DOCUMENT) {
+  if (mResponseType != XMLHttpRequestResponseType::_empty &&
+      mResponseType != XMLHttpRequestResponseType::Document) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return nullptr;
   }
@@ -516,10 +513,10 @@ XMLHttpRequestMainThread::DetectCharset()
   mResponseCharset.Truncate();
   mDecoder = nullptr;
 
-  if (mResponseType != XML_HTTP_RESPONSE_TYPE_DEFAULT &&
-      mResponseType != XML_HTTP_RESPONSE_TYPE_TEXT &&
-      mResponseType != XML_HTTP_RESPONSE_TYPE_JSON &&
-      mResponseType != XML_HTTP_RESPONSE_TYPE_CHUNKED_TEXT) {
+  if (mResponseType != XMLHttpRequestResponseType::_empty &&
+      mResponseType != XMLHttpRequestResponseType::Text &&
+      mResponseType != XMLHttpRequestResponseType::Json &&
+      mResponseType != XMLHttpRequestResponseType::Moz_chunked_text) {
     return NS_OK;
   }
 
@@ -532,7 +529,7 @@ XMLHttpRequestMainThread::DetectCharset()
     mResponseCharset.AssignLiteral("UTF-8");
   }
 
-  if (mResponseType == XML_HTTP_RESPONSE_TYPE_JSON &&
+  if (mResponseType == XMLHttpRequestResponseType::Json &&
       !mResponseCharset.EqualsLiteral("UTF-8")) {
     // The XHR spec says only UTF-8 is supported for responseType == "json"
     LogMessage("JSONCharsetWarning", GetOwner());
@@ -603,14 +600,14 @@ XMLHttpRequestMainThread::GetResponseText(nsAString& aResponseText,
 {
   aResponseText.Truncate();
 
-  if (mResponseType != XML_HTTP_RESPONSE_TYPE_DEFAULT &&
-      mResponseType != XML_HTTP_RESPONSE_TYPE_TEXT &&
-      mResponseType != XML_HTTP_RESPONSE_TYPE_CHUNKED_TEXT) {
+  if (mResponseType != XMLHttpRequestResponseType::_empty &&
+      mResponseType != XMLHttpRequestResponseType::Text &&
+      mResponseType != XMLHttpRequestResponseType::Moz_chunked_text) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
-  if (mResponseType == XML_HTTP_RESPONSE_TYPE_CHUNKED_TEXT &&
+  if (mResponseType == XMLHttpRequestResponseType::Moz_chunked_text &&
       !mInLoadProgressEvent) {
     aResponseText.SetIsVoid(true);
     return;
@@ -706,103 +703,30 @@ XMLHttpRequestMainThread::CreatePartialBlob(ErrorResult& aRv)
 
 NS_IMETHODIMP XMLHttpRequestMainThread::GetResponseType(nsAString& aResponseType)
 {
-  switch (mResponseType) {
-  case XML_HTTP_RESPONSE_TYPE_DEFAULT:
-    aResponseType.Truncate();
-    break;
-  case XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER:
-    aResponseType.AssignLiteral("arraybuffer");
-    break;
-  case XML_HTTP_RESPONSE_TYPE_BLOB:
-    aResponseType.AssignLiteral("blob");
-    break;
-  case XML_HTTP_RESPONSE_TYPE_DOCUMENT:
-    aResponseType.AssignLiteral("document");
-    break;
-  case XML_HTTP_RESPONSE_TYPE_TEXT:
-    aResponseType.AssignLiteral("text");
-    break;
-  case XML_HTTP_RESPONSE_TYPE_JSON:
-    aResponseType.AssignLiteral("json");
-    break;
-  case XML_HTTP_RESPONSE_TYPE_CHUNKED_TEXT:
-    aResponseType.AssignLiteral("moz-chunked-text");
-    break;
-  case XML_HTTP_RESPONSE_TYPE_CHUNKED_ARRAYBUFFER:
-    aResponseType.AssignLiteral("moz-chunked-arraybuffer");
-    break;
-  case XML_HTTP_RESPONSE_TYPE_MOZ_BLOB:
-    aResponseType.AssignLiteral("moz-blob");
-    break;
-  default:
-    NS_ERROR("Should not happen");
+  MOZ_ASSERT(mResponseType < XMLHttpRequestResponseType::EndGuard_);
+  const EnumEntry& entry =
+    XMLHttpRequestResponseTypeValues::strings[static_cast<uint32_t>(mResponseType)];
+  aResponseType.AssignASCII(entry.value, entry.length);
+  return NS_OK;
+}
+
+NS_IMETHODIMP XMLHttpRequestMainThread::SetResponseType(const nsAString& aResponseType)
+{
+  uint32_t i = 0;
+  for (const EnumEntry* entry = XMLHttpRequestResponseTypeValues::strings;
+       entry->value; ++entry, ++i) {
+    if (aResponseType.EqualsASCII(entry->value, entry->length)) {
+      ErrorResult rv;
+      SetResponseType(static_cast<XMLHttpRequestResponseType>(i), rv);
+      return rv.StealNSResult();
+    }
   }
 
   return NS_OK;
 }
 
-#ifdef DEBUG
 void
-XMLHttpRequestMainThread::StaticAssertions()
-{
-#define ASSERT_ENUM_EQUAL(_lc, _uc) \
-  static_assert(\
-    static_cast<int>(XMLHttpRequestResponseType::_lc)  \
-    == XML_HTTP_RESPONSE_TYPE_ ## _uc, \
-    #_uc " should match")
-
-  ASSERT_ENUM_EQUAL(_empty, DEFAULT);
-  ASSERT_ENUM_EQUAL(Arraybuffer, ARRAYBUFFER);
-  ASSERT_ENUM_EQUAL(Blob, BLOB);
-  ASSERT_ENUM_EQUAL(Document, DOCUMENT);
-  ASSERT_ENUM_EQUAL(Json, JSON);
-  ASSERT_ENUM_EQUAL(Text, TEXT);
-  ASSERT_ENUM_EQUAL(Moz_chunked_text, CHUNKED_TEXT);
-  ASSERT_ENUM_EQUAL(Moz_chunked_arraybuffer, CHUNKED_ARRAYBUFFER);
-  ASSERT_ENUM_EQUAL(Moz_blob, MOZ_BLOB);
-#undef ASSERT_ENUM_EQUAL
-}
-#endif
-
-NS_IMETHODIMP XMLHttpRequestMainThread::SetResponseType(const nsAString& aResponseType)
-{
-  XMLHttpRequestMainThread::ResponseTypeEnum responseType;
-  if (aResponseType.IsEmpty()) {
-    responseType = XML_HTTP_RESPONSE_TYPE_DEFAULT;
-  } else if (aResponseType.EqualsLiteral("arraybuffer")) {
-    responseType = XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER;
-  } else if (aResponseType.EqualsLiteral("blob")) {
-    responseType = XML_HTTP_RESPONSE_TYPE_BLOB;
-  } else if (aResponseType.EqualsLiteral("document")) {
-    responseType = XML_HTTP_RESPONSE_TYPE_DOCUMENT;
-  } else if (aResponseType.EqualsLiteral("text")) {
-    responseType = XML_HTTP_RESPONSE_TYPE_TEXT;
-  } else if (aResponseType.EqualsLiteral("json")) {
-    responseType = XML_HTTP_RESPONSE_TYPE_JSON;
-  } else if (aResponseType.EqualsLiteral("moz-chunked-text")) {
-    responseType = XML_HTTP_RESPONSE_TYPE_CHUNKED_TEXT;
-  } else if (aResponseType.EqualsLiteral("moz-chunked-arraybuffer")) {
-    responseType = XML_HTTP_RESPONSE_TYPE_CHUNKED_ARRAYBUFFER;
-  } else if (aResponseType.EqualsLiteral("moz-blob")) {
-    responseType = XML_HTTP_RESPONSE_TYPE_MOZ_BLOB;
-  } else {
-    return NS_OK;
-  }
-
-  ErrorResult rv;
-  SetResponseType(responseType, rv);
-  return rv.StealNSResult();
-}
-
-void
-XMLHttpRequestMainThread::SetResponseType(XMLHttpRequestResponseType aType,
-                                          ErrorResult& aRv)
-{
-  SetResponseType(ResponseTypeEnum(static_cast<int>(aType)), aRv);
-}
-
-void
-XMLHttpRequestMainThread::SetResponseType(XMLHttpRequestMainThread::ResponseTypeEnum aResponseType,
+XMLHttpRequestMainThread::SetResponseType(XMLHttpRequestResponseType aResponseType,
                                           ErrorResult& aRv)
 {
   // If the state is LOADING or DONE raise an INVALID_STATE_ERR exception
@@ -821,15 +745,14 @@ XMLHttpRequestMainThread::SetResponseType(XMLHttpRequestMainThread::ResponseType
   }
 
   if (!(mState & XML_HTTP_REQUEST_ASYNC) &&
-      (aResponseType == XML_HTTP_RESPONSE_TYPE_CHUNKED_TEXT ||
-       aResponseType == XML_HTTP_RESPONSE_TYPE_CHUNKED_ARRAYBUFFER)) {
+      (aResponseType == XMLHttpRequestResponseType::Moz_chunked_text ||
+       aResponseType == XMLHttpRequestResponseType::Moz_chunked_arraybuffer)) {
     aRv.Throw(NS_ERROR_DOM_INVALID_STATE_ERR);
     return;
   }
 
   // Set the responseType attribute's value to the given value.
   mResponseType = aResponseType;
-
 }
 
 NS_IMETHODIMP
@@ -846,9 +769,9 @@ XMLHttpRequestMainThread::GetResponse(JSContext* aCx,
                                       ErrorResult& aRv)
 {
   switch (mResponseType) {
-  case XML_HTTP_RESPONSE_TYPE_DEFAULT:
-  case XML_HTTP_RESPONSE_TYPE_TEXT:
-  case XML_HTTP_RESPONSE_TYPE_CHUNKED_TEXT:
+  case XMLHttpRequestResponseType::_empty:
+  case XMLHttpRequestResponseType::Text:
+  case XMLHttpRequestResponseType::Moz_chunked_text:
   {
     nsString str;
     aRv = GetResponseText(str);
@@ -861,12 +784,12 @@ XMLHttpRequestMainThread::GetResponse(JSContext* aCx,
     return;
   }
 
-  case XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER:
-  case XML_HTTP_RESPONSE_TYPE_CHUNKED_ARRAYBUFFER:
+  case XMLHttpRequestResponseType::Arraybuffer:
+  case XMLHttpRequestResponseType::Moz_chunked_arraybuffer:
   {
-    if (!(mResponseType == XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER &&
+    if (!(mResponseType == XMLHttpRequestResponseType::Arraybuffer &&
           mState & XML_HTTP_REQUEST_DONE) &&
-        !(mResponseType == XML_HTTP_RESPONSE_TYPE_CHUNKED_ARRAYBUFFER &&
+        !(mResponseType == XMLHttpRequestResponseType::Moz_chunked_arraybuffer &&
           mInLoadProgressEvent)) {
       aResponse.setNull();
       return;
@@ -885,11 +808,11 @@ XMLHttpRequestMainThread::GetResponse(JSContext* aCx,
     aResponse.setObject(*mResultArrayBuffer);
     return;
   }
-  case XML_HTTP_RESPONSE_TYPE_BLOB:
-  case XML_HTTP_RESPONSE_TYPE_MOZ_BLOB:
+  case XMLHttpRequestResponseType::Blob:
+  case XMLHttpRequestResponseType::Moz_blob:
   {
     if (!(mState & XML_HTTP_REQUEST_DONE)) {
-      if (mResponseType != XML_HTTP_RESPONSE_TYPE_MOZ_BLOB) {
+      if (mResponseType != XMLHttpRequestResponseType::Moz_blob) {
         aResponse.setNull();
         return;
       }
@@ -907,7 +830,7 @@ XMLHttpRequestMainThread::GetResponse(JSContext* aCx,
     GetOrCreateDOMReflector(aCx, mResponseBlob, aResponse);
     return;
   }
-  case XML_HTTP_RESPONSE_TYPE_DOCUMENT:
+  case XMLHttpRequestResponseType::Document:
   {
     if (!(mState & XML_HTTP_REQUEST_DONE) || !mResponseXML) {
       aResponse.setNull();
@@ -917,7 +840,7 @@ XMLHttpRequestMainThread::GetResponse(JSContext* aCx,
     aRv = nsContentUtils::WrapNative(aCx, mResponseXML, aResponse);
     return;
   }
-  case XML_HTTP_RESPONSE_TYPE_JSON:
+  case XMLHttpRequestResponseType::Json:
   {
     if (!(mState & XML_HTTP_REQUEST_DONE)) {
       aResponse.setNull();
@@ -1484,11 +1407,11 @@ XMLHttpRequestMainThread::Open(const nsACString& inMethod, const nsACString& url
   // in window context
   if (!async && HasOrHasHadOwner() &&
       (mTimeoutMilliseconds ||
-       mResponseType != XML_HTTP_RESPONSE_TYPE_DEFAULT)) {
+       mResponseType != XMLHttpRequestResponseType::_empty)) {
     if (mTimeoutMilliseconds) {
       LogMessage("TimeoutSyncXHRWarning", GetOwner());
     }
-    if (mResponseType != XML_HTTP_RESPONSE_TYPE_DEFAULT) {
+    if (mResponseType != XMLHttpRequestResponseType::_empty) {
       LogMessage("ResponseTypeSyncXHRWarning", GetOwner());
     }
     return NS_ERROR_DOM_INVALID_ACCESS_ERR;
@@ -1674,8 +1597,8 @@ XMLHttpRequestMainThread::StreamReaderFunc(nsIInputStream* in,
 
   nsresult rv = NS_OK;
 
-  if (xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_BLOB ||
-      xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_MOZ_BLOB) {
+  if (xmlHttpRequest->mResponseType == XMLHttpRequestResponseType::Blob ||
+      xmlHttpRequest->mResponseType == XMLHttpRequestResponseType::Moz_blob) {
     if (!xmlHttpRequest->mDOMBlob) {
       if (!xmlHttpRequest->mBlobSet) {
         xmlHttpRequest->mBlobSet = new BlobSet();
@@ -1683,12 +1606,12 @@ XMLHttpRequestMainThread::StreamReaderFunc(nsIInputStream* in,
       rv = xmlHttpRequest->mBlobSet->AppendVoidPtr(fromRawSegment, count);
     }
     // Clear the cache so that the blob size is updated.
-    if (xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_MOZ_BLOB) {
+    if (xmlHttpRequest->mResponseType == XMLHttpRequestResponseType::Moz_blob) {
       xmlHttpRequest->mResponseBlob = nullptr;
     }
-  } else if ((xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER &&
+  } else if ((xmlHttpRequest->mResponseType == XMLHttpRequestResponseType::Arraybuffer &&
               !xmlHttpRequest->mIsMappedArrayBuffer) ||
-             xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_CHUNKED_ARRAYBUFFER) {
+             xmlHttpRequest->mResponseType == XMLHttpRequestResponseType::Moz_chunked_arraybuffer) {
     // get the initial capacity to something reasonable to avoid a bunch of reallocs right
     // at the start
     if (xmlHttpRequest->mArrayBufferBuilder.capacity() == 0)
@@ -1696,16 +1619,16 @@ XMLHttpRequestMainThread::StreamReaderFunc(nsIInputStream* in,
 
     xmlHttpRequest->mArrayBufferBuilder.append(reinterpret_cast<const uint8_t*>(fromRawSegment), count,
                                                XML_HTTP_REQUEST_ARRAYBUFFER_MAX_GROWTH);
-  } else if (xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_DEFAULT &&
+  } else if (xmlHttpRequest->mResponseType == XMLHttpRequestResponseType::_empty &&
              xmlHttpRequest->mResponseXML) {
     // Copy for our own use
     if (!xmlHttpRequest->mResponseBody.Append(fromRawSegment, count, fallible)) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
-  } else if (xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_DEFAULT ||
-             xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_TEXT ||
-             xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_JSON ||
-             xmlHttpRequest->mResponseType == XML_HTTP_RESPONSE_TYPE_CHUNKED_TEXT) {
+  } else if (xmlHttpRequest->mResponseType == XMLHttpRequestResponseType::_empty ||
+             xmlHttpRequest->mResponseType == XMLHttpRequestResponseType::Text ||
+             xmlHttpRequest->mResponseType == XMLHttpRequestResponseType::Json ||
+             xmlHttpRequest->mResponseType == XMLHttpRequestResponseType::Moz_chunked_text) {
     NS_ASSERTION(!xmlHttpRequest->mResponseXML,
                  "We shouldn't be parsing a doc here");
     xmlHttpRequest->AppendToResponseText(fromRawSegment, count);
@@ -1780,8 +1703,8 @@ XMLHttpRequestMainThread::OnDataAvailable(nsIRequest *request,
   mProgressSinceLastProgressEvent = true;
 
   bool cancelable = false;
-  if ((mResponseType == XML_HTTP_RESPONSE_TYPE_BLOB ||
-       mResponseType == XML_HTTP_RESPONSE_TYPE_MOZ_BLOB) && !mDOMBlob) {
+  if ((mResponseType == XMLHttpRequestResponseType::Blob ||
+       mResponseType == XMLHttpRequestResponseType::Moz_blob) && !mDOMBlob) {
     cancelable = CreateDOMBlob(request);
     // The nsIStreamListener contract mandates us
     // to read from the stream before returning.
@@ -1884,7 +1807,8 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   DetectCharset();
 
   // Set up arraybuffer
-  if (mResponseType == XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER && NS_SUCCEEDED(status)) {
+  if (mResponseType == XMLHttpRequestResponseType::Arraybuffer &&
+      NS_SUCCEEDED(status)) {
     if (mIsMappedArrayBuffer) {
       nsCOMPtr<nsIJARChannel> jarChannel = do_QueryInterface(channel);
       if (jarChannel) {
@@ -1933,8 +1857,8 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
   }
 
   // Set up responseXML
-  bool parseBody = mResponseType == XML_HTTP_RESPONSE_TYPE_DEFAULT ||
-                     mResponseType == XML_HTTP_RESPONSE_TYPE_DOCUMENT;
+  bool parseBody = mResponseType == XMLHttpRequestResponseType::_empty ||
+                   mResponseType == XMLHttpRequestResponseType::Document;
   nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(mChannel));
   if (parseBody && httpChannel) {
     nsAutoCString method;
@@ -1952,7 +1876,7 @@ XMLHttpRequestMainThread::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
     nsAutoCString type;
     channel->GetContentType(type);
 
-    if ((mResponseType == XML_HTTP_RESPONSE_TYPE_DOCUMENT) &&
+    if ((mResponseType == XMLHttpRequestResponseType::Document) &&
         type.EqualsLiteral("text/html")) {
       // HTML parsing is only supported for responseType == "document" to
       // avoid running the parser and, worse, populating responseXML for
@@ -2103,8 +2027,8 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
   }
 
   if (NS_SUCCEEDED(status) &&
-      (mResponseType == XML_HTTP_RESPONSE_TYPE_BLOB ||
-       mResponseType == XML_HTTP_RESPONSE_TYPE_MOZ_BLOB)) {
+      (mResponseType == XMLHttpRequestResponseType::Blob ||
+       mResponseType == XMLHttpRequestResponseType::Moz_blob)) {
     if (!mDOMBlob) {
       CreateDOMBlob(request);
     }
@@ -2133,9 +2057,9 @@ XMLHttpRequestMainThread::OnStopRequest(nsIRequest *request, nsISupports *ctxt, 
     NS_ASSERTION(mResponseBody.IsEmpty(), "mResponseBody should be empty");
     NS_ASSERTION(mResponseText.IsEmpty(), "mResponseText should be empty");
   } else if (NS_SUCCEEDED(status) &&
-             ((mResponseType == XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER &&
+             ((mResponseType == XMLHttpRequestResponseType::Arraybuffer &&
                !mIsMappedArrayBuffer) ||
-              mResponseType == XML_HTTP_RESPONSE_TYPE_CHUNKED_ARRAYBUFFER)) {
+              mResponseType == XMLHttpRequestResponseType::Moz_chunked_arraybuffer)) {
     // set the capacity down to the actual length, to realloc back
     // down to the actual size
     if (!mArrayBufferBuilder.setCapacity(mArrayBufferBuilder.length())) {
@@ -2803,7 +2727,7 @@ XMLHttpRequestMainThread::Send(nsIVariant* aVariant, const Nullable<RequestBody>
   }
 
   mIsMappedArrayBuffer = false;
-  if (mResponseType == XML_HTTP_RESPONSE_TYPE_ARRAYBUFFER &&
+  if (mResponseType == XMLHttpRequestResponseType::Arraybuffer &&
       Preferences::GetBool("dom.mapped_arraybuffer.enabled", false)) {
     nsCOMPtr<nsIURI> uri;
     nsAutoCString scheme;
@@ -3342,8 +3266,8 @@ XMLHttpRequestMainThread::MaybeDispatchProgressEvents(bool aFinalProgress)
                           mLoadLengthComputable, mLoadTransferred,
                           mLoadTotal);
     mInLoadProgressEvent = false;
-    if (mResponseType == XML_HTTP_RESPONSE_TYPE_CHUNKED_TEXT ||
-        mResponseType == XML_HTTP_RESPONSE_TYPE_CHUNKED_ARRAYBUFFER) {
+    if (mResponseType == XMLHttpRequestResponseType::Moz_chunked_text ||
+        mResponseType == XMLHttpRequestResponseType::Moz_chunked_arraybuffer) {
       mResponseBody.Truncate();
       mResponseText.Truncate();
       mResultArrayBuffer = nullptr;
