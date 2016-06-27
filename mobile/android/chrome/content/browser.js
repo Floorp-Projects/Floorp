@@ -4167,7 +4167,7 @@ Tab.prototype = {
             return;
 
           jsonMessage = this.makeFeedMessage(target, type);
-        } else if (list.indexOf("[search]" != -1) && aEvent.type == "DOMLinkAdded") {
+        } else if (list.indexOf("[search]") != -1 && aEvent.type == "DOMLinkAdded") {
           this.sendOpenSearchMessage(target);
         }
         if (!jsonMessage)
