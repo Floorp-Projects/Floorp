@@ -537,7 +537,7 @@ function _execute_test() {
     }
 
     if (coverageCollector != null) {
-      coverageCollector.recordTestCoverage(_TEST_FILE);
+      coverageCollector.recordTestCoverage(_TEST_FILE[0]);
     }
 
     do_test_finished("MAIN run_test");
@@ -551,7 +551,7 @@ function _execute_test() {
     // possible that this will mask an NS_ERROR_ABORT that happens after a
     // do_check failure though.
     if (coverageCollector != null) {
-      coverageCollector.recordTestCoverage(_TEST_FILE);
+      coverageCollector.recordTestCoverage(_TEST_FILE[0]);
     }
 
     if (!_quit || e != Components.results.NS_ERROR_ABORT) {
