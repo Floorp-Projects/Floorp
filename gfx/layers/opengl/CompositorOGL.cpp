@@ -864,6 +864,8 @@ CompositorOGL::GetShaderConfigFor(Effect *aEffect,
     gfx::SurfaceFormat format = effectComponentAlpha->mOnWhite->GetFormat();
     config.SetRBSwap(format == gfx::SurfaceFormat::B8G8R8A8 ||
                      format == gfx::SurfaceFormat::B8G8R8X8);
+    TextureSourceOGL* source = effectComponentAlpha->mOnWhite->AsSourceOGL();
+    config.SetTextureTarget(source->GetTextureTarget());
     break;
   }
   case EffectTypes::RENDER_TARGET:
@@ -1160,9 +1162,16 @@ CompositorOGL::DrawQuad(const Rect& aRect,
   if (aOpacity != 1.f)
     program->SetLayerOpacity(aOpacity);
   if (config.mFeatures & ENABLE_TEXTURE_RECT) {
-    TexturedEffect* texturedEffect =
+    TextureSourceOGL* source = nullptr;
+    if (aEffectChain.mPrimaryEffect->mType == EffectTypes::COMPONENT_ALPHA) {
+      EffectComponentAlpha* effectComponentAlpha =
+        static_cast<EffectComponentAlpha*>(aEffectChain.mPrimaryEffect.get());
+      source = effectComponentAlpha->mOnWhite->AsSourceOGL();
+    } else {
+      TexturedEffect* texturedEffect =
         static_cast<TexturedEffect*>(aEffectChain.mPrimaryEffect.get());
-    TextureSourceOGL* source = texturedEffect->mTexture->AsSourceOGL();
+      source = texturedEffect->mTexture->AsSourceOGL();
+    }
     // This is used by IOSurface that use 0,0...w,h coordinate rather then 0,0..1,1.
     program->SetTexCoordMultiplier(source->GetSize().width, source->GetSize().height);
   }

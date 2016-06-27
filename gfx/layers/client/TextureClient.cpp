@@ -47,6 +47,10 @@
 #endif
 #endif
 
+#ifdef XP_MACOSX
+#include "mozilla/layers/MacIOSurfaceTextureClientOGL.h"
+#endif
+
 #ifdef MOZ_WIDGET_GONK
 #include <cutils/properties.h>
 #include "mozilla/layers/GrallocTextureClient.h"
@@ -996,6 +1000,12 @@ TextureClient::CreateForDrawing(TextureForwarder* aAllocator,
   if (!data) {
     data = GrallocTextureData::CreateForDrawing(aSize, aFormat, moz2DBackend,
                                                 aAllocator);
+  }
+#endif
+
+#ifdef XP_MACOSX
+  if (!data && gfxPrefs::UseIOSurfaceTextures()) {
+    data = MacIOSurfaceTextureData::Create(aSize, aFormat, moz2DBackend);
   }
 #endif
 
