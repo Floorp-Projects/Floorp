@@ -11,77 +11,69 @@
 const TEST_URI = "data:text/html;charset=utf8,<p>hello world from bug 877778 " +
                  "<button onclick='foobar.explode()' " +
                  "style='test-color: green-please'>click!</button>";
-function test() {
-  let hud;
 
-  let prefsPushed = new Promise(resolve => {
+add_task(function* () {
+  yield new Promise(resolve => {
     SpecialPowers.pushPrefEnv({"set": [
       ["devtools.browserconsole.filter.cssparser", true]
     ]}, resolve);
   });
 
-  prefsPushed.then(() => loadTab(TEST_URI))
-             .then(() => HUDService.toggleBrowserConsole())
-             .then(browserConsoleOpened);
+  yield loadTab(TEST_URI);
+  let hud = yield HUDService.toggleBrowserConsole();
+  ok(hud, "browser console opened");
 
-  function browserConsoleOpened(hudConsole) {
-    hud = hudConsole;
-    ok(hud, "browser console opened");
-
-    // On e10s, the exception is triggered in child process
-    // and is ignored by test harness
-    if (!Services.appinfo.browserTabsRemoteAutostart) {
-      expectUncaughtException();
-    }
-
-    info("generate exception and wait for the message");
-    ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
-      let button = content.document.querySelector("button");
-      button.click();
-    });
-
-    waitForMessages({
-      webconsole: hud,
-      messages: [
-        {
-          text: "ReferenceError: foobar is not defined",
-          category: CATEGORY_JS,
-          severity: SEVERITY_ERROR,
-        },
-        {
-          text: "Unknown property \u2018test-color\u2019",
-          category: CATEGORY_CSS,
-          severity: SEVERITY_WARNING,
-        },
-      ],
-    }).then(onMessageFound);
+  // On e10s, the exception is triggered in child process
+  // and is ignored by test harness
+  if (!Services.appinfo.browserTabsRemoteAutostart) {
+    expectUncaughtException();
   }
 
-  function onMessageFound(results) {
-    let viewSource = hud.viewSource;
-    let viewSourceCalled = false;
+  info("generate exception and wait for the message");
+  ContentTask.spawn(gBrowser.selectedBrowser, {}, function* () {
+    let button = content.document.querySelector("button");
+    button.click();
+  });
 
-    hud.viewSource = () => {
-      viewSourceCalled = true;
-    };
+  let results = yield waitForMessages({
+    webconsole: hud,
+    messages: [
+      {
+        text: "ReferenceError: foobar is not defined",
+        category: CATEGORY_JS,
+        severity: SEVERITY_ERROR,
+      },
+      {
+        text: "Unknown property \u2018test-color\u2019",
+        category: CATEGORY_CSS,
+        severity: SEVERITY_WARNING,
+      },
+    ],
+  });
 
-    for (let result of results) {
-      viewSourceCalled = false;
+  let viewSourceCalled = false;
 
-      let msg = [...result.matched][0];
-      ok(msg, "message element found for: " + result.text);
-      ok(!msg.classList.contains("filtered-by-type"), "message element is not filtered");
-      let selector = ".message > .message-location .frame-link-source";
-      let locationNode = msg.querySelector(selector);
-      ok(locationNode, "message location element found");
+  let viewSource = hud.viewSource;
+  hud.viewSource = () => {
+    viewSourceCalled = true;
+  };
 
-      EventUtils.synthesizeMouse(locationNode, 2, 2, {}, hud.iframeWindow);
+  for (let result of results) {
+    viewSourceCalled = false;
 
-      ok(viewSourceCalled, "view source opened");
-    }
+    let msg = [...result.matched][0];
+    ok(msg, "message element found for: " + result.text);
+    ok(!msg.classList.contains("filtered-by-type"), "message element is not filtered");
+    let selector = ".message > .message-location .frame-link-source";
+    let locationNode = msg.querySelector(selector);
+    ok(locationNode, "message location element found");
 
-    hud.viewSource = viewSource;
+    EventUtils.synthesizeMouse(locationNode, 2, 2, {}, hud.iframeWindow);
 
-    finishTest();
+    ok(viewSourceCalled, "view source opened");
   }
-}
+
+  hud.viewSource = viewSource;
+
+  yield finishTest();
+});
