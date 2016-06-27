@@ -7,40 +7,41 @@ from __future__ import absolute_import, print_function, unicode_literals
 import unittest
 
 from ..generator import TaskGraphGenerator
-from .. import types
 from .. import graph
+from ..kind import base
 from mozunit import main
 
 
-class FakeKind(object):
+class FakeTask(base.Task):
 
-    def maketask(self, i):
-        return types.Task(
-            self,
-            label='t-{}'.format(i),
-            attributes={'tasknum': str(i)},
-            task={},
-            i=i)
+    def __init__(self, **kwargs):
+        self.i = kwargs.pop('i')
+        super(FakeTask, self).__init__(**kwargs)
 
-    def load_tasks(self, parameters):
-        self.tasks = [self.maketask(i) for i in range(3)]
-        return self.tasks
+    @classmethod
+    def load_tasks(cls, kind, path, config, parameters):
+        return [cls(kind=kind,
+                    label='t-{}'.format(i),
+                    attributes={'tasknum': str(i)},
+                    task={},
+                    i=i)
+                for i in range(3)]
 
-    def get_task_dependencies(self, task, full_task_set):
-        i = task.extra['i']
+    def get_dependencies(self, full_task_set):
+        i = self.i
         if i > 0:
             return [('t-{}'.format(i - 1), 'prev')]
         else:
             return []
 
-    def optimize_task(self, task, dependencies):
+    def optimize(self):
         return False, None
 
 
-class WithFakeKind(TaskGraphGenerator):
+class WithFakeTask(TaskGraphGenerator):
 
     def _load_kinds(self):
-        yield FakeKind()
+        return FakeTask.load_tasks('fake', '/fake', {}, {})
 
 
 class TestGenerator(unittest.TestCase):
@@ -50,7 +51,7 @@ class TestGenerator(unittest.TestCase):
 
         def target_tasks_method(full_task_graph, parameters):
             return self.target_tasks
-        self.tgg = WithFakeKind('/root', {}, target_tasks_method)
+        self.tgg = WithFakeTask('/root', {}, target_tasks_method)
 
     def test_full_task_set(self):
         "The full_task_set property has all tasks"

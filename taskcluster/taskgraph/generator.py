@@ -115,8 +115,8 @@ class TaskGraphGenerator(object):
             path = os.path.join(self.root_dir, path)
             if not os.path.isdir(path):
                 continue
-            name = os.path.basename(path)
-            logger.debug("loading kind `{}` from `{}`".format(name, path))
+            kind_name = os.path.basename(path)
+            logger.debug("loading kind `{}` from `{}`".format(kind_name, path))
 
             kind_yml = os.path.join(path, 'kind.yml')
             with open(kind_yml) as f:
@@ -138,16 +138,16 @@ class TaskGraphGenerator(object):
             for a in impl_object.split('.'):
                 impl_class = getattr(impl_class, a)
 
-            yield impl_class(path, config)
+            for task in impl_class.load_tasks(kind_name, path, config, self.parameters):
+                yield task
 
     def _run(self):
         logger.info("Generating full task set")
         all_tasks = {}
-        for kind in self._load_kinds():
-            for task in kind.load_tasks(self.parameters):
-                if task.label in all_tasks:
-                    raise Exception("duplicate tasks with label " + task.label)
-                all_tasks[task.label] = task
+        for task in self._load_kinds():
+            if task.label in all_tasks:
+                raise Exception("duplicate tasks with label " + task.label)
+            all_tasks[task.label] = task
 
         full_task_set = TaskGraph(all_tasks, Graph(set(all_tasks), set()))
         yield 'full_task_set', full_task_set
@@ -155,7 +155,7 @@ class TaskGraphGenerator(object):
         logger.info("Generating full task graph")
         edges = set()
         for t in full_task_set:
-            for dep, depname in t.kind.get_task_dependencies(t, full_task_set):
+            for dep, depname in t.get_dependencies(full_task_set):
                 edges.add((t.label, dep, depname))
 
         full_task_graph = TaskGraph(all_tasks,
