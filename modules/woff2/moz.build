@@ -6,6 +6,7 @@
 
 EXPORTS += [
     'src/woff2_dec.h',
+    'src/woff2_out.h',
 ]
 
 UNIFIED_SOURCES += [
@@ -13,6 +14,7 @@ UNIFIED_SOURCES += [
     'src/variable_length.cc',
     'src/woff2_common.cc',
     'src/woff2_dec.cc',
+    'src/woff2_out.cc',
 ]
 
 # We allow warnings for third-party code that can be updated from upstream.
