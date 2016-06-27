@@ -107,7 +107,6 @@ nsPNGDecoder::nsPNGDecoder(RasterImage* aImage)
  , mPass(0)
  , mFrameIsHidden(false)
  , mDisablePremultipliedAlpha(false)
- , mSuccessfulEarlyFinish(false)
  , mNumFrames(0)
 { }
 
@@ -353,14 +352,12 @@ nsPNGDecoder::WriteInternal(const char* aBuffer, uint32_t aCount)
   // libpng uses setjmp/longjmp for error handling. Set it up.
   if (setjmp(png_jmpbuf(mPNG))) {
 
-    // We exited early. If mSuccessfulEarlyFinish isn't true, then we
-    // encountered an error. We might not really know what caused it, but it
-    // makes more sense to blame the data.
-    if (!mSuccessfulEarlyFinish && !HasError()) {
+    // We exited early due to an error. We might not really know what caused
+    // it, but it makes more sense to blame the data.
+    if (!HasError()) {
       PostDataError();
     }
 
-    png_destroy_read_struct(&mPNG, &mInfo, nullptr);
     return;
   }
 
@@ -652,10 +649,10 @@ nsPNGDecoder::info_callback(png_structp png_ptr, png_infop info_ptr)
     auto transparency = decoder->GetTransparencyType(decoder->format, frameRect);
     decoder->PostHasTransparencyIfNeeded(transparency);
 
-    // We have the metadata we're looking for, so we don't need to decode any
-    // further.
-    decoder->mSuccessfulEarlyFinish = true;
-    png_longjmp(decoder->mPNG, 1);
+    // We have the metadata we're looking for, so stop here, before we allocate
+    // buffers below.
+    png_process_data_pause(png_ptr, /* save = */ false);
+    return;
   }
 
 #ifdef PNG_APNG_SUPPORTED
@@ -776,6 +773,8 @@ nsPNGDecoder::row_callback(png_structp png_ptr, png_bytep new_row,
     return;  // Skip this frame.
   }
 
+  MOZ_ASSERT_IF(decoder->IsFirstFrameDecode(), decoder->mNumFrames == 0);
+
   while (pass > decoder->mPass) {
     // Advance to the next pass. We may have to do this multiple times because
     // libpng will skip passes if the image is so small that no pixels have
@@ -881,10 +880,10 @@ nsPNGDecoder::frame_info_callback(png_structp png_ptr, png_uint_32 frame_num)
 
   if (!decoder->mFrameIsHidden && decoder->IsFirstFrameDecode()) {
     // We're about to get a second non-hidden frame, but we only want the first.
-    // Stop decoding now.
+    // Stop decoding now. (And avoid allocating the unnecessary buffers below.)
     decoder->PostDecodeDone();
-    decoder->mSuccessfulEarlyFinish = true;
-    png_longjmp(decoder->mPNG, 1);
+    png_process_data_pause(png_ptr, /* save = */ false);
+    return;
   }
 
   // Only the first frame can be hidden, so unhide unconditionally here.

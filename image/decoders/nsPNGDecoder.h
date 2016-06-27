@@ -106,7 +106,6 @@ public:
   uint8_t mPass;
   bool mFrameIsHidden;
   bool mDisablePremultipliedAlpha;
-  bool mSuccessfulEarlyFinish;
 
   struct AnimFrameInfo
   {
