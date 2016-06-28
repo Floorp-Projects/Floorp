@@ -454,57 +454,6 @@ var Bookmarks = Object.freeze({
   },
 
   /**
-   * Searches a list of bookmark-items by a search term, url or title.
-   *
-   * @param query
-   *        Either a string to use as search term, or an object
-   *        containing any of these keys: query, title or url with the
-   *        corresponding string to match as value.
-   *        The url property can be either a string or an nsIURI.
-   *
-   * @return {Promise} resolved when the search is complete.
-   * @resolves to an array of found bookmark-items.
-   * @rejects if an error happens while searching.
-   * @throws if the arguments are invalid.
-   *
-   * @note Any unknown property in the query object is ignored.
-   *       Known properties may be overwritten.
-   */
-  search(query) {
-    if (!query) {
-      throw new Error("Query object is required");
-    }
-    if (typeof query === "string") {
-      query = { query: query };
-    }
-    if (typeof query !== "object") {
-      throw new Error("Query must be an object or a string");
-    }
-    if (query.query && typeof query.query !== "string") {
-      throw new Error("Query option must be a string");
-    }
-    if (query.title && typeof query.title !== "string") {
-      throw new Error("Title option must be a string");
-    }
-
-    if (query.url) {
-      if (typeof query.url === "string" || (query.url instanceof URL)) {
-        query.url = new URL(query.url).href;
-      } else if (query.url instanceof Ci.nsIURI) {
-        query.url = query.url.spec;
-      } else {
-        throw new Error("Url option must be a string or a URL object");
-      }
-    }
-
-    return Task.spawn(function* () {
-      let results = yield queryBookmarks(query);
-
-      return results;
-    });
-  },
-
-  /**
    * Returns a list of recently bookmarked items.
    *
    * @param {integer} numberOfItems
@@ -736,7 +685,64 @@ var Bookmarks = Object.freeze({
                                            child.parentGuid ]);
       }
     }.bind(this));
-  }
+  },
+
+  /**
+   * Searches a list of bookmark-items by a search term, url or title.
+   *
+   * IMPORTANT:
+   * This is intended as an interim API for the web-extensions implementation.
+   * It will be removed as soon as we have a new querying API.
+   *
+   * If you just want to search bookmarks by URL, use .fetch() instead.
+   *
+   * @param query
+   *        Either a string to use as search term, or an object
+   *        containing any of these keys: query, title or url with the
+   *        corresponding string to match as value.
+   *        The url property can be either a string or an nsIURI.
+   *
+   * @return {Promise} resolved when the search is complete.
+   * @resolves to an array of found bookmark-items.
+   * @rejects if an error happens while searching.
+   * @throws if the arguments are invalid.
+   *
+   * @note Any unknown property in the query object is ignored.
+   *       Known properties may be overwritten.
+   */
+  search(query) {
+    if (!query) {
+      throw new Error("Query object is required");
+    }
+    if (typeof query === "string") {
+      query = { query: query };
+    }
+    if (typeof query !== "object") {
+      throw new Error("Query must be an object or a string");
+    }
+    if (query.query && typeof query.query !== "string") {
+      throw new Error("Query option must be a string");
+    }
+    if (query.title && typeof query.title !== "string") {
+      throw new Error("Title option must be a string");
+    }
+
+    if (query.url) {
+      if (typeof query.url === "string" || (query.url instanceof URL)) {
+        query.url = new URL(query.url).href;
+      } else if (query.url instanceof Ci.nsIURI) {
+        query.url = query.url.spec;
+      } else {
+        throw new Error("Url option must be a string or a URL object");
+      }
+    }
+
+    return Task.spawn(function* () {
+      let results = yield queryBookmarks(query);
+
+      return results;
+    });
+  },
 });
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -914,7 +920,7 @@ function queryBookmarks(info) {
   }
 
   if (info.url) {
-    queryString += " AND h.url = :url";
+    queryString += " AND h.url_hash = hash(:url) AND h.url = :url";
     queryParams.url = info.url;
   }
 
