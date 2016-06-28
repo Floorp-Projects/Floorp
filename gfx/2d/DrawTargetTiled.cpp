@@ -54,10 +54,6 @@ DrawTargetTiled::Snapshot()
   return MakeAndAddRef<SnapshotTiled>(mTiles, mRect);
 }
 
-void
-DrawTargetTiled::DetachAllSnapshots()
-{}
-
 // Skip the mClippedOut check since this is only used for Flush() which
 // should happen even if we're clipped.
 #define TILED_COMMAND(command) \
