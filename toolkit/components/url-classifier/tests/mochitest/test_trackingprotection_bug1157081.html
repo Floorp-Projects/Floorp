@@ -74,7 +74,7 @@ SpecialPowers.pushPrefEnv(
   {"set" : [["urlclassifier.trackingTable", "test-track-simple"],
             ["privacy.trackingprotection.enabled", true],
             ["browser.safebrowsing.malware.enabled", false],
-            ["browser.safebrowsing.enabled", false],
+            ["browser.safebrowsing.phishing.enabled", false],
             ["channelclassifier.allowlist_example", true]]},
   test);
 
@@ -87,7 +87,7 @@ function test() {
       aWindow.close();
 
       // Safe Browsing turned ON, tracking protection should still work
-      SpecialPowers.setBoolPref("browser.safebrowsing.enabled", true);
+      SpecialPowers.setBoolPref("browser.safebrowsing.phishing.enabled", true);
       testOnWindow(function(aWindow) {
         checkLoads(aWindow, true);
         aWindow.close();
