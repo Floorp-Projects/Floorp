@@ -373,6 +373,12 @@ static bool
 HasValidOffsets(const nsTArray<Keyframe>& aKeyframes);
 
 static void
+MarkAsComputeValuesFailureKey(PropertyValuePair& aPair);
+
+static bool
+IsComputeValuesFailureKey(const PropertyValuePair& aPair);
+
+static void
 BuildSegmentsFromValueEntries(nsStyleContext* aStyleContext,
                               nsTArray<KeyframeValueEntry>& aEntries,
                               nsTArray<AnimationProperty>& aResult);
@@ -518,7 +524,8 @@ KeyframeUtils::GetAnimationPropertiesFromKeyframes(
         nsCSSValueTokenStream* tokenStream = pair.mValue.GetTokenStreamValue();
         if (!StyleAnimationValue::ComputeValues(pair.mProperty,
               CSSEnabledState::eForAllContent, aElement, aStyleContext,
-              tokenStream->mTokenStream, /* aUseSVGMode */ false, values)) {
+              tokenStream->mTokenStream, /* aUseSVGMode */ false, values) ||
+            IsComputeValuesFailureKey(pair)) {
           continue;
         }
       } else {
@@ -677,6 +684,17 @@ ConvertKeyframeSequence(JSContext* aCx,
       MOZ_ASSERT(pair.mValues.Length() == 1);
       keyframe->mPropertyValues.AppendElement(
         MakePropertyValuePair(pair.mProperty, pair.mValues[0], parser, doc));
+
+      // When we go to convert keyframes into arrays of property values we
+      // call StyleAnimation::ComputeValues. This should normally return true
+      // but in order to test the case where it does not, BaseKeyframeDict
+      // includes a chrome-only member that can be set to indicate that
+      // ComputeValues should fail for shorthand property values on that
+      // keyframe.
+      if (nsCSSProps::IsShorthand(pair.mProperty) &&
+          keyframeDict.mSimulateComputeValuesFailure) {
+        MarkAsComputeValuesFailureKey(keyframe->mPropertyValues.LastElement());
+      }
     }
   }
 
@@ -907,6 +925,51 @@ HasValidOffsets(const nsTArray<Keyframe>& aKeyframes)
     }
   }
   return true;
+}
+
+/**
+ * Takes a property-value pair for a shorthand property and modifies the
+ * value to indicate that when we call StyleAnimationValue::ComputeValues on
+ * that value we should behave as if that function had failed.
+ *
+ * @param aPair The PropertyValuePair to modify. |aPair.mProperty| must be
+ *              a shorthand property.
+ */
+static void
+MarkAsComputeValuesFailureKey(PropertyValuePair& aPair)
+{
+  MOZ_ASSERT(nsCSSProps::IsShorthand(aPair.mProperty),
+             "Only shorthand property values can be marked as failure values");
+
+  // We store shorthand values as nsCSSValueTokenStream objects whose mProperty
+  // and mShorthandPropertyID are eCSSProperty_UNKNOWN and whose mTokenStream
+  // member contains the shorthand property's value as a string.
+  //
+  // We need to leave mShorthandPropertyID as eCSSProperty_UNKNOWN so that
+  // nsCSSValue::AppendToString returns the mTokenStream value, but we can
+  // update mPropertyID to a special value to indicate that this is
+  // a special failure sentinel.
+  nsCSSValueTokenStream* tokenStream = aPair.mValue.GetTokenStreamValue();
+  MOZ_ASSERT(tokenStream->mPropertyID == eCSSProperty_UNKNOWN,
+             "Shorthand value should initially have an unknown property ID");
+  tokenStream->mPropertyID = eCSSPropertyExtra_no_properties;
+}
+
+/**
+ * Returns true if |aPair| is a property-value pair on which we have
+ * previously called MarkAsComputeValuesFailureKey (and hence we should
+ * simulate failure when calling StyleAnimationValue::ComputeValues using its
+ * value).
+ *
+ * @param aPair The property-value pair to test.
+ * @return True if |aPair| represents a failure value.
+ */
+static bool
+IsComputeValuesFailureKey(const PropertyValuePair& aPair)
+{
+  return nsCSSProps::IsShorthand(aPair.mProperty) &&
+         aPair.mValue.GetTokenStreamValue()->mPropertyID ==
+           eCSSPropertyExtra_no_properties;
 }
 
 static already_AddRefed<nsStyleContext>
