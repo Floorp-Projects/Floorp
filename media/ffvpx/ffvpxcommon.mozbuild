@@ -78,11 +78,6 @@ elif CONFIG['_MSC_VER']:
         '-wd4057', '-wd4204', '-wd4706', '-wd4305', '-wd4152', '-wd4324',
         '-we4013', '-wd4100', '-wd4214', '-wd4307', '-wd4273', '-wd4554',
     ]
-    if CONFIG['_MSC_VER'] < '1900':
-        DEFINES['MSVC_2013_OR_LOWER'] = True
-        DEFINES['snprintf'] = "avpriv_snprintf"
-        DEFINES['_snprintf'] = "avpriv_snprintf"
-        DEFINES['vsnprintf'] = "avpriv_vsnprintf"
 
 DEFINES['HAVE_AV_CONFIG_H'] = True
 
