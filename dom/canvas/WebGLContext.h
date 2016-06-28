@@ -19,6 +19,7 @@
 #include "mozilla/gfx/2D.h"
 #include "mozilla/LinkedList.h"
 #include "mozilla/UniquePtr.h"
+#include "mozilla/WeakPtr.h"
 #include "nsCycleCollectionNoteChild.h"
 #include "nsICanvasRenderingContextInternal.h"
 #include "nsLayoutUtils.h"
@@ -33,7 +34,6 @@
 #endif
 
 // Local
-#include "WebGLContextLossHandler.h"
 #include "WebGLContextUnchecked.h"
 #include "WebGLFormats.h"
 #include "WebGLObjectModel.h"
@@ -90,6 +90,7 @@ class ScopedCopyTexImageSource;
 class ScopedResolveTexturesForDraw;
 class ScopedUnpackReset;
 class WebGLActiveInfo;
+class WebGLContextLossHandler;
 class WebGLBuffer;
 class WebGLExtensionBase;
 class WebGLFramebuffer;
@@ -186,6 +187,7 @@ class WebGLContext
     , public WebGLContextUnchecked
     , public WebGLRectangleObject
     , public nsWrapperCache
+    , public SupportsWeakPtr<WebGLContext>
 {
     friend class WebGL2Context;
     friend class WebGLContextUserData;
@@ -221,6 +223,8 @@ protected:
     virtual ~WebGLContext();
 
 public:
+    MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLContext)
+
     NS_DECL_CYCLE_COLLECTING_ISUPPORTS
 
     NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_AMBIGUOUS(WebGLContext,
@@ -1487,7 +1491,7 @@ protected:
     GLsizei mViewportHeight;
     bool mAlreadyWarnedAboutViewportLargerThanDest;
 
-    WebGLContextLossHandler mContextLossHandler;
+    RefPtr<WebGLContextLossHandler> mContextLossHandler;
     bool mAllowContextRestore;
     bool mLastLossWasSimulated;
     ContextStatus mContextStatus;

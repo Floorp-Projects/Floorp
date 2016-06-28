@@ -6,8 +6,11 @@
 #ifndef WEBGL_CONTEXT_LOSS_HANDLER_H_
 #define WEBGL_CONTEXT_LOSS_HANDLER_H_
 
+#include "mozilla/DebugOnly.h"
 #include "mozilla/WeakPtr.h"
 #include "nsCOMPtr.h"
+#include "nsISupportsImpl.h"
+#include "WorkerHolder.h"
 
 class nsIThread;
 class nsITimer;
@@ -15,30 +18,35 @@ class nsITimer;
 namespace mozilla {
 class WebGLContext;
 
-class WebGLContextLossHandler final : public SupportsWeakPtr<WebGLContextLossHandler>
+class WebGLContextLossHandler : public dom::workers::WorkerHolder
 {
-    WebGLContext* const mWebGL;
-    const nsCOMPtr<nsITimer> mTimer; // If we don't hold a ref to the timer, it will think
-    bool mTimerPending;              // that it's been discarded, and be canceled 'for our
-    bool mShouldRunTimerAgain;       // convenience'.
+    WeakPtr<WebGLContext> mWeakWebGL;
+    nsCOMPtr<nsITimer> mTimer;
+    bool mIsTimerRunning;
+    bool mShouldRunTimerAgain;
+    bool mIsDisabled;
+    bool mWorkerHolderAdded;
 #ifdef DEBUG
-    nsIThread* const mThread;
+    nsIThread* mThread;
 #endif
 
-    friend class WatchdogTimerEvent;
-
 public:
-    MOZ_DECLARE_WEAKREFERENCE_TYPENAME(WebGLContextLossHandler)
+    NS_INLINE_DECL_REFCOUNTING(WebGLContextLossHandler)
 
     explicit WebGLContextLossHandler(WebGLContext* webgl);
-    ~WebGLContextLossHandler();
 
     void RunTimer();
+    void DisableTimer();
+    bool Notify(dom::workers::Status aStatus) override;
 
-private:
+protected:
+    ~WebGLContextLossHandler();
+
+    void StartTimer(unsigned long delayMS);
+    static void StaticTimerCallback(nsITimer*, void* tempRefForTimer);
     void TimerCallback();
 };
 
 } // namespace mozilla
 
-#endif // WEBGL_CONTEXT_LOSS_HANDLER_H_
+#endif
