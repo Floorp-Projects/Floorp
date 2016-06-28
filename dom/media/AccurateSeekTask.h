@@ -53,11 +53,9 @@ private:
 
   void OnAudioDecoded(MediaData* aAudioSample);
 
-  void OnAudioNotDecoded(MediaDecoderReader::NotDecodedReason aReason);
-
   void OnVideoDecoded(MediaData* aVideoSample);
 
-  void OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReason);
+  void OnNotDecoded(MediaData::Type, MediaDecoderReader::NotDecodedReason);
 
   void SetCallbacks();
 
