@@ -547,8 +547,8 @@ ReportErrorNumberUCArray(JSContext* cx, unsigned flags, JSErrorCallback callback
 extern bool
 ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                        void* userRef, const unsigned errorNumber,
-                       char** message, JSErrorReport* reportp,
-                       ErrorArgumentsType argumentsType, va_list ap);
+                       char** message, ErrorArgumentsType argumentsType,
+                       JSErrorReport* reportp, va_list ap);
 
 /* |callee| requires a usage string provided by JS_DefineFunctionsWithHelp. */
 extern void
