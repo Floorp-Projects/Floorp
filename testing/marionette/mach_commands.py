@@ -148,7 +148,7 @@ class MachCommands(MachCommandBase):
             del kwargs['test_objects']
 
         bin_path = self.get_binary_path('app')
-        if 'binary' in kwargs:
+        if kwargs.get('binary') is not None:
             print "Warning: ignoring '--binary' option, using binary at " + bin_path
         kwargs['binary'] = bin_path
         return run_marionette(tests, topsrcdir=self.topsrcdir, **kwargs)
