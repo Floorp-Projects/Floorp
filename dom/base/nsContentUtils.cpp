@@ -2892,7 +2892,8 @@ nsContentUtils::SplitQName(const nsIContent* aNamespaceResolver,
                                                         nameSpace);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    *aNamespace = NameSpaceManager()->GetNameSpaceID(nameSpace);
+    *aNamespace = NameSpaceManager()->GetNameSpaceID(nameSpace,
+                                                     aNamespaceResolver->OwnerDoc());
     if (*aNamespace == kNameSpaceID_Unknown)
       return NS_ERROR_FAILURE;
 

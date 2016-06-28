@@ -232,7 +232,8 @@ static bool
 DoMatch(Implementor* aElement, nsIAtom* aNS, nsIAtom* aName, MatchFn aMatch)
 {
   if (aNS) {
-    int32_t ns = nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNS);
+    int32_t ns = nsContentUtils::NameSpaceManager()->GetNameSpaceID(aNS,
+                                                                    aElement->OwnerDoc());
     NS_ENSURE_TRUE(ns != kNameSpaceID_Unknown, false);
     const nsAttrValue* value = aElement->GetParsedAttr(aName, ns);
     return value && aMatch(value);

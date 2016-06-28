@@ -30,7 +30,7 @@ public:
    *   "http://www.w3.org/1999/xhtml" and "http://www.w3.org/1998/Math/MathML"
    */
   static bool
-  HasExtension(const nsAString& aExtension);
+  HasExtension(const nsAString& aExtension, const bool aIsInChrome);
 };
 
 #endif // __NS_SVGFEATURES_H__
