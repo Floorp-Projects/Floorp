@@ -7,6 +7,8 @@ task:
   scopes:
     - 'docker-worker:cache:level-{{level}}-{{project}}-build-aries-eng'
     - 'docker-worker:cache:level-{{level}}-{{project}}-build-aries-eng-objdir-gecko'
+    - 'docker-worker:relengapi-proxy:tooltool.download.internal'
+    - 'docker-worker:relengapi-proxy:tooltool.download.public'
   metadata:
     name: '[TC] B2G Aries Eng'
 
@@ -14,9 +16,10 @@ task:
     cache:
       level-{{level}}-{{project}}-build-aries-eng: /home/worker/workspace
       level-{{level}}-{{project}}-build-aries-eng-objdir-gecko: /home/worker/objdir-gecko
+    features:
+      relengAPIProxy: true
     env:
       TARGET: 'aries'
-      MOZHARNESS_CONFIG: b2g/taskcluster-phone-eng.py
   extra:
     treeherderEnv:
       - production
