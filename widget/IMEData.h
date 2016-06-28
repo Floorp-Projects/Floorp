@@ -39,7 +39,6 @@ struct nsIMEUpdatePreference final
   enum : Notifications
   {
     NOTIFY_NOTHING                       = 0,
-    NOTIFY_SELECTION_CHANGE              = 1 << 0,
     NOTIFY_TEXT_CHANGE                   = 1 << 1,
     NOTIFY_POSITION_CHANGE               = 1 << 2,
     // NOTIFY_MOUSE_BUTTON_EVENT_ON_CHAR is used when mouse button is pressed
@@ -81,11 +80,6 @@ struct nsIMEUpdatePreference final
     mWantUpdates &= ~DEFAULT_CONDITIONS_OF_NOTIFYING_CHANGES;
   }
 
-  bool WantSelectionChange() const
-  {
-    return !!(mWantUpdates & NOTIFY_SELECTION_CHANGE);
-  }
-
   bool WantTextChange() const
   {
     return !!(mWantUpdates & NOTIFY_TEXT_CHANGE);
@@ -98,7 +92,7 @@ struct nsIMEUpdatePreference final
 
   bool WantChanges() const
   {
-    return WantSelectionChange() || WantTextChange();
+    return WantTextChange();
   }
 
   bool WantMouseButtonEventOnChar() const
