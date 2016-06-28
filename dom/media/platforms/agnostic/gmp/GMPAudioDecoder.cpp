@@ -131,6 +131,7 @@ GMPAudioDecoderParams::GMPAudioDecoderParams(const CreateDecoderParams& aParams)
   , mTaskQueue(aParams.mTaskQueue)
   , mCallback(nullptr)
   , mAdapter(nullptr)
+  , mCrashHelper(aParams.mCrashHelper)
 {}
 
 GMPAudioDecoderParams&
@@ -158,6 +159,7 @@ GMPAudioDecoder::GMPAudioDecoder(const GMPAudioDecoderParams& aParams)
   , mCallback(aParams.mCallback)
   , mGMP(nullptr)
   , mAdapter(aParams.mAdapter)
+  , mCrashHelper(aParams.mCrashHelper)
 {
   MOZ_ASSERT(!mAdapter || mCallback == mAdapter->Callback());
   if (!mAdapter) {
@@ -230,7 +232,7 @@ GMPAudioDecoder::Init()
   nsTArray<nsCString> tags;
   InitTags(tags);
   UniquePtr<GetGMPAudioDecoderCallback> callback(new GMPInitDoneCallback(this));
-  if (NS_FAILED(mMPS->GetGMPAudioDecoder(nullptr, &tags, GetNodeId(), Move(callback)))) {
+  if (NS_FAILED(mMPS->GetGMPAudioDecoder(mCrashHelper, &tags, GetNodeId(), Move(callback)))) {
     mInitPromise.Reject(MediaDataDecoder::DecoderFailureReason::INIT_ERROR, __func__);
   }
 
