@@ -80,10 +80,8 @@ GMPDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
   }
 
   RefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aParams.mCallback);
-  wrapper->SetProxyTarget(new GMPAudioDecoder(aParams.AudioConfig(),
-                                              aParams.mTaskQueue,
-                                              wrapper->Callback(),
-                                              nullptr));
+  auto params = GMPAudioDecoderParams(aParams).WithCallback(wrapper);
+  wrapper->SetProxyTarget(new GMPAudioDecoder(params));
   return wrapper.forget();
 }
 
