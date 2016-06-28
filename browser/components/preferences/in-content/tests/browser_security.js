@@ -1,5 +1,5 @@
 const PREFS = [
-  "browser.safebrowsing.enabled",
+  "browser.safebrowsing.phishing.enabled",
   "browser.safebrowsing.malware.enabled",
 
   "browser.safebrowsing.downloads.enabled",
@@ -18,7 +18,7 @@ registerCleanupFunction(function() {
 // test the safebrowsing preference
 add_task(function*() {
   function* checkPrefSwitch(val1, val2) {
-    Services.prefs.setBoolPref("browser.safebrowsing.enabled", val1);
+    Services.prefs.setBoolPref("browser.safebrowsing.phishing.enabled", val1);
     Services.prefs.setBoolPref("browser.safebrowsing.malware.enabled", val2);
 
     yield openPreferencesViaOpenPreferencesAPI("security", undefined, { leaveOpen: true });
@@ -37,7 +37,7 @@ add_task(function*() {
     EventUtils.synthesizeMouseAtCenter(checkbox, {}, gBrowser.selectedBrowser.contentWindow);
 
     // check that both settings are now turned on or off
-    is(Services.prefs.getBoolPref("browser.safebrowsing.enabled"), !checked,
+    is(Services.prefs.getBoolPref("browser.safebrowsing.phishing.enabled"), !checked,
        "safebrowsing.enabled is set correctly");
     is(Services.prefs.getBoolPref("browser.safebrowsing.malware.enabled"), !checked,
        "safebrowsing.malware.enabled is set correctly");

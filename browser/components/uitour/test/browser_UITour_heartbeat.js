@@ -206,6 +206,51 @@ add_UITour_task(function* test_heartbeat_stars_show() {
 })
 
 /**
+ * Check that the heartbeat UI correctly takes optional icon URL.
+ */
+add_UITour_task(function* test_heartbeat_take_optional_icon_URL() {
+  let flowId = "ui-ratefirefox-" + Math.random();
+  let engagementURL = "http://example.com";
+  let iconURL = "chrome://branding/content/icon48.png";
+
+  // We need to call |gContentAPI.observe| at least once to set a valid |notificationListener|
+  // in UITour-lib.js, otherwise no message will get propagated.
+  gContentAPI.observe(() => {});
+
+  let receivedExpectedPromise = promiseWaitExpectedNotifications(
+    ["Heartbeat:NotificationOffered", "Heartbeat:NotificationClosed", "Heartbeat:TelemetrySent"]);
+
+  // Show the Heartbeat notification and wait for it to be displayed.
+  let shownPromise = promiseWaitHeartbeatNotification("Heartbeat:NotificationOffered");
+  gContentAPI.showHeartbeat("How would you rate Firefox?", "Thank you!", flowId, engagementURL, null, null, {
+    iconURL: iconURL
+  });
+
+  // Validate the returned timestamp.
+  let data = yield shownPromise;
+  validateTimestamp('Heartbeat:Offered', data.timestamp);
+
+  // Check the icon URL
+  let notification = getHeartbeatNotification(flowId);
+  is(notification.image, iconURL, "The optional icon URL is not taken correctly");
+
+  // Close the heartbeat notification.
+  let closedPromise = promiseWaitHeartbeatNotification("Heartbeat:NotificationClosed");
+  let pingSentPromise = promiseWaitHeartbeatNotification("Heartbeat:TelemetrySent");
+  cleanUpNotification(flowId);
+
+  data = yield closedPromise;
+  validateTimestamp('Heartbeat:NotificationClosed', data.timestamp);
+
+  data = yield pingSentPromise;
+  info("'Heartbeat:TelemetrySent' notification received");
+  checkTelemetry(data, flowId, ["offeredTS", "closedTS"]);
+
+  // This rejects whenever an unexpected notification is received.
+  yield receivedExpectedPromise;
+})
+
+/**
  * Test that the heartbeat UI correctly works with null engagement URL.
  */
 add_UITour_task(function* test_heartbeat_null_engagementURL() {

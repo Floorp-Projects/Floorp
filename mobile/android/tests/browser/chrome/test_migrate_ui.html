@@ -29,7 +29,7 @@ Migrated from Robocop: https://bugzilla.mozilla.org/show_bug.cgi?id=1184186
       BrowserApp._migrateUI();
 
       // Check that migration version increased.
-      is(Services.prefs.getIntPref("browser.migration.version"), 2, "found expected version");
+      is(Services.prefs.getIntPref("browser.migration.version"), 3, "found expected version");
 
       // Check that user pref value was reset.
       is(Services.prefs.prefHasUserValue("nglayout.debug.paint_flashing"), false, "found expected user value");

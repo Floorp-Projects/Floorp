@@ -197,7 +197,7 @@ class DesktopInstance(GeckoInstance):
         'browser.newtab.url': 'about:newtab',
         'browser.newtabpage.enabled': False,
         'browser.reader.detectedFirstArticle': True,
-        'browser.safebrowsing.enabled': False,
+        'browser.safebrowsing.phishing.enabled': False,
         'browser.safebrowsing.forbiddenURIs.enabled': False,
         'browser.safebrowsing.malware.enabled': False,
         'browser.safebrowsing.blockedURIs.enabled': False,

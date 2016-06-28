@@ -14,7 +14,7 @@
   "browser.newtab.url": "about:blank",
   "browser.search.update": false,
   "browser.search.suggest.enabled": false,
-  "browser.safebrowsing.enabled": false,
+  "browser.safebrowsing.phishing.enabled": false,
   "browser.safebrowsing.provider.google.updateURL": "http://localhost/safebrowsing-dummy/update",
   "browser.safebrowsing.provider.google.gethashURL": "http://localhost/safebrowsing-dummy/gethash",
   "browser.safebrowsing.provider.google.reportURL": "http://localhost/safebrowsing-dummy/malwarereport",
