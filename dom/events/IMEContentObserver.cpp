@@ -875,13 +875,6 @@ IMEContentObserver::CharacterDataWillChange(nsIDocument* aDocument,
 
   mEndOfAddedTextCache.Clear();
   mStartOfRemovingTextRangeCache.Clear();
-
-  bool causedByComposition = IsEditorHandlingEventForComposition();
-  if (!mTextChangeData.IsValid() && causedByComposition &&
-      !mUpdatePreference.WantChangesCausedByComposition()) {
-    return;
-  }
-
   mPreCharacterDataChangeLength =
     ContentEventHandler::GetNativeTextLength(aContent, aInfo->mChangeStart,
                                              aInfo->mChangeEnd);
@@ -903,12 +896,6 @@ IMEContentObserver::CharacterDataChanged(nsIDocument* aDocument,
 
   int64_t removedLength = mPreCharacterDataChangeLength;
   mPreCharacterDataChangeLength = -1;
-
-  bool causedByComposition = IsEditorHandlingEventForComposition();
-  if (!mTextChangeData.IsValid() && causedByComposition &&
-      !mUpdatePreference.WantChangesCausedByComposition()) {
-    return;
-  }
 
   MOZ_ASSERT(removedLength >= 0,
              "mPreCharacterDataChangeLength should've been set by "
@@ -933,7 +920,8 @@ IMEContentObserver::CharacterDataChanged(nsIDocument* aDocument,
   uint32_t oldEnd = offset + static_cast<uint32_t>(removedLength);
   uint32_t newEnd = offset + newLength;
 
-  TextChangeData data(offset, oldEnd, newEnd, causedByComposition,
+  TextChangeData data(offset, oldEnd, newEnd,
+                      IsEditorHandlingEventForComposition(),
                       IsEditorComposing());
   MaybeNotifyIMEOfTextChange(data);
 }
@@ -944,12 +932,6 @@ IMEContentObserver::NotifyContentAdded(nsINode* aContainer,
                                        int32_t aEndIndex)
 {
   mStartOfRemovingTextRangeCache.Clear();
-
-  bool causedByComposition = IsEditorHandlingEventForComposition();
-  if (!mTextChangeData.IsValid() && causedByComposition &&
-      !mUpdatePreference.WantChangesCausedByComposition()) {
-    return;
-  }
 
   uint32_t offset = 0;
   nsresult rv = NS_OK;
@@ -989,7 +971,8 @@ IMEContentObserver::NotifyContentAdded(nsINode* aContainer,
   }
 
   TextChangeData data(offset, offset, offset + addingLength,
-                      causedByComposition, IsEditorComposing());
+                      IsEditorHandlingEventForComposition(),
+                      IsEditorComposing());
   MaybeNotifyIMEOfTextChange(data);
 }
 
@@ -1021,12 +1004,6 @@ IMEContentObserver::ContentRemoved(nsIDocument* aDocument,
                                    nsIContent* aPreviousSibling)
 {
   mEndOfAddedTextCache.Clear();
-
-  bool causedByComposition = IsEditorHandlingEventForComposition();
-  if (!mTextChangeData.IsValid() && causedByComposition &&
-      !mUpdatePreference.WantChangesCausedByComposition()) {
-    return;
-  }
 
   nsINode* containerNode = NODE_FROM(aContainer, aDocument);
 
@@ -1071,7 +1048,8 @@ IMEContentObserver::ContentRemoved(nsIDocument* aDocument,
   }
 
   TextChangeData data(offset, offset + textLength, offset,
-                      causedByComposition, IsEditorComposing());
+                      IsEditorHandlingEventForComposition(),
+                      IsEditorComposing());
   MaybeNotifyIMEOfTextChange(data);
 }
 
@@ -1098,12 +1076,6 @@ IMEContentObserver::AttributeChanged(nsIDocument* aDocument,
   mEndOfAddedTextCache.Clear();
   mStartOfRemovingTextRangeCache.Clear();
 
-  bool causedByComposition = IsEditorHandlingEventForComposition();
-  if (!mTextChangeData.IsValid() && causedByComposition &&
-      !mUpdatePreference.WantChangesCausedByComposition()) {
-    return;
-  }
-
   uint32_t postAttrChangeLength =
     ContentEventHandler::GetNativeTextLengthBefore(aElement, mRootContent);
   if (postAttrChangeLength == mPreAttrChangeLength) {
@@ -1120,7 +1092,8 @@ IMEContentObserver::AttributeChanged(nsIDocument* aDocument,
   }
 
   TextChangeData data(start, start + mPreAttrChangeLength,
-                      start + postAttrChangeLength, causedByComposition,
+                      start + postAttrChangeLength,
+                      IsEditorHandlingEventForComposition(),
                       IsEditorComposing());
   MaybeNotifyIMEOfTextChange(data);
 }
@@ -1716,15 +1689,6 @@ IMEContentObserver::IMENotificationSender::SendSelectionChange()
     return;
   }
 
-  // If the IME doesn't want selection change notifications caused by
-  // composition, we should do nothing anymore.
-  SelectionChangeData& newSelChangeData = mIMEContentObserver->mSelectionData;
-  if (newSelChangeData.mCausedByComposition &&
-      !mIMEContentObserver->
-        mUpdatePreference.WantChangesCausedByComposition()) {
-    return;
-  }
-
   // The state may be changed since querying content causes flushing layout.
   if (!CanNotifyIME(eChangeEventType_Selection)) {
     MOZ_LOG(sIMECOLog, LogLevel::Debug,
@@ -1736,6 +1700,7 @@ IMEContentObserver::IMENotificationSender::SendSelectionChange()
 
   // If the selection isn't changed actually, we shouldn't notify IME of
   // selection change.
+  SelectionChangeData& newSelChangeData = mIMEContentObserver->mSelectionData;
   if (lastSelChangeData.IsValid() &&
       lastSelChangeData.mOffset == newSelChangeData.mOffset &&
       lastSelChangeData.String() == newSelChangeData.String() &&
