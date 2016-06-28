@@ -22,10 +22,9 @@ EMEAudioCallbackAdapter::Error(GMPErr aErr)
 }
 
 EMEAudioDecoder::EMEAudioDecoder(CDMProxy* aProxy,
-                                 const AudioInfo& aConfig,
-                                 TaskQueue* aTaskQueue,
-                                 MediaDataDecoderCallbackProxy* aCallback)
-  : GMPAudioDecoder(aConfig, aTaskQueue, aCallback, new EMEAudioCallbackAdapter(aCallback))
+                                 const GMPAudioDecoderParams& aParams)
+  : GMPAudioDecoder(GMPAudioDecoderParams(aParams).WithAdapter(
+                    new EMEAudioCallbackAdapter(aParams.mCallback)))
   , mProxy(aProxy)
 {}
 

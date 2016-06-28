@@ -271,10 +271,8 @@ EMEDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
     // GMP decodes. Assume that means it can decrypt too.
     RefPtr<MediaDataDecoderProxy> wrapper =
       CreateDecoderWrapper(aParams.mCallback, mProxy, aParams.mTaskQueue);
-    wrapper->SetProxyTarget(new EMEAudioDecoder(mProxy,
-                                                aParams.AudioConfig(),
-                                                aParams.mTaskQueue,
-                                                wrapper->Callback()));
+    auto gmpParams = GMPAudioDecoderParams(aParams).WithCallback(wrapper);
+    wrapper->SetProxyTarget(new EMEAudioDecoder(mProxy, gmpParams));
     return wrapper.forget();
   }
 
