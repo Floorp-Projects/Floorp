@@ -196,7 +196,16 @@
                          oncommand="_setCaseSensitivity(this.checked ? 1 : 0);"
                          type="checkbox"
                          xbl:inherits="accesskey=matchcaseaccesskey"/>
+      <xul:toolbarbutton anonid="find-entire-word"
+                         class="findbar-entire-word findbar-button tabbable"
+                         label="&entireWord.label;"
+                         accesskey="&entireWord.accesskey;"
+                         tooltiptext="&entireWord.tooltiptext;"
+                         oncommand="_setEntireWord(this.checked);"
+                         type="checkbox"
+                         xbl:inherits="accesskey=entirewordaccesskey"/>
       <xul:label anonid="match-case-status" class="findbar-find-fast"/>
+      <xul:label anonid="entire-word-status" class="findbar-find-fast"/>
       <xul:label anonid="found-matches" class="findbar-find-fast found-matches" hidden="true"/>
       <xul:image anonid="find-status-icon" class="findbar-find-fast find-status-icon"/>
       <xul:description anonid="find-status"
@@ -334,6 +343,10 @@
             case "accessibility.typeaheadfind.casesensitive":
               this._self._setCaseSensitivity(prefsvc.getIntPref(aPrefName));
               break;
+            case "findbar.entireword":
+              this._self._entireWord = prefsvc.getBoolPref(aPrefName);
+              this._self._updateEntireWord();
+              break;
             case "findbar.highlightAll":
               this._self.toggleHighlight(prefsvc.getBoolPref(aPrefName), true);
               break;
@@ -375,6 +388,7 @@
                             this._observer, false);
         prefsvc.addObserver("accessibility.typeaheadfind.casesensitive",
                             this._observer, false);
+        prefsvc.addObserver("findbar.entireword", this._observer, false);
         prefsvc.addObserver("findbar.highlightAll", this._observer, false);
         prefsvc.addObserver("findbar.modalHighlight", this._observer, false);
 
@@ -384,6 +398,7 @@
           prefsvc.getBoolPref("accessibility.typeaheadfind.linksonly");
         this._typeAheadCaseSensitive =
           prefsvc.getIntPref("accessibility.typeaheadfind.casesensitive");
+        this._entireWord = prefsvc.getBoolPref("findbar.entireword");
         this._highlightAll = prefsvc.getBoolPref("findbar.highlightAll");
 
         // Convenience
@@ -424,6 +439,7 @@
                                  this._observer);
           prefsvc.removeObserver("accessibility.typeaheadfind.casesensitive",
                                  this._observer);
+          prefsvc.removeObserver("findbar.entireword", this._observer);
           prefsvc.removeObserver("findbar.highlightAll", this._observer);
           prefsvc.removeObserver("findbar.modalHighlight", this._observer);
 
@@ -622,6 +638,51 @@
         ]]></body>
       </method>
 
+      <!--
+        - Updates the entire-word mode of the findbar and its UI.
+        -->
+      <method name="_updateEntireWord">
+        <body><![CDATA[
+          let entireWord = this._entireWord;
+          let checkbox = this.getElement("find-entire-word");
+          let statusLabel = this.getElement("entire-word-status");
+          checkbox.checked = entireWord;
+
+          statusLabel.value = entireWord ? this._entireWordStr : "";
+
+          // Show the checkbox on the full Find bar in non-auto mode.
+          // Show the label in all other cases.
+          let hideCheckbox = this._findMode != this.FIND_NORMAL;
+          checkbox.hidden = hideCheckbox;
+          statusLabel.hidden = !hideCheckbox;
+
+          this.browser.finder.entireWord = entireWord;
+
+          // Update the matches count
+          this._updateMatchesCount(this.nsITypeAheadFind.FIND_FOUND);
+        ]]></body>
+      </method>
+
+      <!--
+        - Sets the findbar entire-word mode
+        - @param aEntireWord (boolean)
+        - Whether or not entire-word mode should be turned on.
+        -->
+      <method name="_setEntireWord">
+        <parameter name="aEntireWord"/>
+        <body><![CDATA[
+          let prefsvc =
+            Components.classes["@mozilla.org/preferences-service;1"]
+                      .getService(Components.interfaces.nsIPrefBranch);
+
+          // Just set the pref; our observer will change the find bar behavior.
+          prefsvc.setBoolPref("findbar.entireword", aEntireWord);
+
+          if (this.getElement("highlight").checked)
+            this._setHighlightTimeout();
+        ]]></body>
+      </method>
+
       <field name="_strBundle">null</field>
       <property name="strBundle">
         <getter><![CDATA[
@@ -665,6 +726,8 @@
               stringsBundle.GetStringFromName("FastFindLinks");
             this._caseSensitiveStr =
               stringsBundle.GetStringFromName("CaseSensitive");
+            this._entireWordStr =
+              stringsBundle.GetStringFromName("EntireWord");
           }
 
           this._findFailedString = null;
@@ -910,6 +973,7 @@
             this.getElement("find-previous").hidden = showMinimalUI;
           foundMatches.hidden = showMinimalUI || !foundMatches.value;
           this._updateCaseSensitivity();
+          this._updateEntireWord();
           this._setHighlightAll();
 
           if (showMinimalUI)
@@ -941,9 +1005,13 @@
 
           // Only search on input if we don't have a last-failed string,
           // or if the current search string doesn't start with it.
+          // In entire-word mode we always attemp a find; since sequential matching
+          // is not guaranteed, the first character typed may not be a word (no
+          // match), but the with the second character it may well be a word,
+          // thus a match.
           if (!this._findFailedString ||
-              !val.startsWith(this._findFailedString))
-          {
+              !val.startsWith(this._findFailedString) ||
+              this._entireWord) {
             // Getting here means the user commanded a find op. Make sure any
             // initial prefilling is ignored if it hasn't happened yet.
             if (this._startFindDeferred) {
@@ -956,6 +1024,7 @@
               this._setHighlightTimeout();
 
             this._updateCaseSensitivity(val);
+            this._updateEntireWord();
 
             this.browser.finder.fastFind(val, this._findMode == this.FIND_LINKS,
                                          this._findMode != this.FIND_NORMAL);
@@ -1065,6 +1134,7 @@
           event.initCustomEvent("find" + aType, true, true, {
             query: this._findField.value,
             caseSensitive: !!this._typeAheadCaseSensitive,
+            entireWord: this._entireWord,
             highlightAll: this._highlightAll,
             findPrevious: aFindPrevious
           });

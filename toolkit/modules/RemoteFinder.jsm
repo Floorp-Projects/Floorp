@@ -127,6 +127,11 @@ RemoteFinder.prototype = {
                                                   { caseSensitive: aSensitive });
   },
 
+  set entireWord(aEntireWord) {
+    this._browser.messageManager.sendAsyncMessage("Finder:EntireWord",
+                                                  { entireWord: aEntireWord });
+  },
+
   getInitialSelection: function() {
     this._browser.messageManager.sendAsyncMessage("Finder:GetInitialSelection", {});
   },
@@ -217,6 +222,7 @@ RemoteFinderListener.prototype = {
   MESSAGES: [
     "Finder:CaseSensitive",
     "Finder:Destroy",
+    "Finder:EntireWord",
     "Finder:FastFind",
     "Finder:FindAgain",
     "Finder:SetSearchStringToSelection",
@@ -255,6 +261,10 @@ RemoteFinderListener.prototype = {
 
       case "Finder:CaseSensitive":
         this._finder.caseSensitive = data.caseSensitive;
+        break;
+
+      case "Finder:EntireWord":
+        this._finder.entireWord = data.entireWord;
         break;
 
       case "Finder:SetSearchStringToSelection": {
