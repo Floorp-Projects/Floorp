@@ -625,6 +625,15 @@ RenderLayers(ContainerT* aContainer,
       continue;
     }
 
+    if (gfxPrefs::LayersDrawFPS()) {
+      for (auto metadata : layer->GetAllScrollMetadata()) {
+        if (metadata.IsApzForceDisabled()) {
+          aManager->DisabledApzWarning();
+          break;
+        }
+      }
+    }
+
     Color color;
     if (NeedToDrawCheckerboardingForLayer(layer, &color)) {
       if (gfxPrefs::APZHighlightCheckerboardedAreas()) {
