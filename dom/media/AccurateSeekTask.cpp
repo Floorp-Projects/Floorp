@@ -433,8 +433,6 @@ AccurateSeekTask::OnAudioNotDecoded(MediaDecoderReader::NotDecodedReason aReason
   // If the decoder is waiting for data, we tell it to call us back when the
   // data arrives.
   if (aReason == MediaDecoderReader::WAITING_FOR_DATA) {
-    MOZ_ASSERT(mReader->IsWaitForDataSupported(),
-               "Readers that send WAITING_FOR_DATA need to implement WaitForData");
     mReader->WaitForData(MediaData::AUDIO_DATA);
     return;
   }
@@ -519,8 +517,6 @@ AccurateSeekTask::OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReason
   // If the decoder is waiting for data, we tell it to call us back when the
   // data arrives.
   if (aReason == MediaDecoderReader::WAITING_FOR_DATA) {
-    MOZ_ASSERT(mReader->IsWaitForDataSupported(),
-               "Readers that send WAITING_FOR_DATA need to implement WaitForData");
     mReader->WaitForData(MediaData::VIDEO_DATA);
     return;
   }
