@@ -27,6 +27,8 @@ public:
    , mImageContainer(aImageContainer)
   {}
 
+  MediaDataDecoderCallbackProxy* Callback() const { return mCallback; }
+
   // GMPVideoDecoderCallbackProxy
   void Decoded(GMPVideoi420Frame* aDecodedFrame) override;
   void ReceivedDecodedReferenceFrame(const uint64_t aPictureId) override;
@@ -56,33 +58,7 @@ protected:
                   layers::ImageContainer* aImageContainer,
                   TaskQueue* aTaskQueue,
                   MediaDataDecoderCallbackProxy* aCallback,
-                  VideoCallbackAdapter* aAdapter)
-   : mConfig(aConfig)
-   , mCallback(aCallback)
-   , mGMP(nullptr)
-   , mHost(nullptr)
-   , mAdapter(aAdapter)
-   , mConvertNALUnitLengths(false)
-  {
-  }
-
-public:
-  GMPVideoDecoder(const VideoInfo& aConfig,
-                  layers::LayersBackend aLayersBackend,
-                  layers::ImageContainer* aImageContainer,
-                  TaskQueue* aTaskQueue,
-                  MediaDataDecoderCallbackProxy* aCallback)
-   : mConfig(aConfig)
-   , mCallback(aCallback)
-   , mGMP(nullptr)
-   , mHost(nullptr)
-   , mAdapter(new VideoCallbackAdapter(aCallback,
-                                       VideoInfo(aConfig.mDisplay.width,
-                                                 aConfig.mDisplay.height),
-                                       aImageContainer))
-   , mConvertNALUnitLengths(false)
-  {
-  }
+                  VideoCallbackAdapter* aAdapter);
 
   RefPtr<InitPromise> Init() override;
   nsresult Input(MediaRawData* aSample) override;

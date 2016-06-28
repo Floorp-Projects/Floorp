@@ -104,6 +104,28 @@ VideoCallbackAdapter::Terminated()
   mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
 }
 
+GMPVideoDecoder::GMPVideoDecoder(const VideoInfo& aConfig,
+                                 layers::LayersBackend aLayersBackend,
+                                 layers::ImageContainer* aImageContainer,
+                                 TaskQueue* aTaskQueue,
+                                 MediaDataDecoderCallbackProxy* aCallback,
+                                 VideoCallbackAdapter* aAdapter)
+  : mConfig(aConfig)
+  , mCallback(aCallback)
+  , mGMP(nullptr)
+  , mHost(nullptr)
+  , mAdapter(aAdapter)
+  , mConvertNALUnitLengths(false)
+{
+  MOZ_ASSERT(!aAdapter || mCallback == aAdapter->Callback());
+  if (!aAdapter) {
+    mAdapter = new VideoCallbackAdapter(aCallback,
+                                        VideoInfo(aConfig.mDisplay.width,
+                                                  aConfig.mDisplay.height),
+                                        aImageContainer);
+  }
+}
+
 void
 GMPVideoDecoder::InitTags(nsTArray<nsCString>& aTags)
 {

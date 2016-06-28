@@ -126,6 +126,21 @@ AudioCallbackAdapter::Terminated()
   mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
 }
 
+GMPAudioDecoder::GMPAudioDecoder(const AudioInfo& aConfig,
+                                 TaskQueue* aTaskQueue,
+                                 MediaDataDecoderCallbackProxy* aCallback,
+                                 AudioCallbackAdapter* aAdapter)
+  : mConfig(aConfig)
+  , mCallback(aCallback)
+  , mGMP(nullptr)
+  , mAdapter(aAdapter)
+{
+  MOZ_ASSERT(!aAdapter || aCallback == aAdapter->Callback());
+  if (!aAdapter) {
+    mAdapter = new AudioCallbackAdapter(aCallback);
+  }
+}
+
 void
 GMPAudioDecoder::InitTags(nsTArray<nsCString>& aTags)
 {
