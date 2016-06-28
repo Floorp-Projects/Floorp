@@ -408,7 +408,8 @@ public:
  *  Returns error if it detects change in format or cache wasn't closed.
  */
     nsresult  Open( nsIFile *  cacheDirectory,
-                    nsDiskCache::CorruptCacheInfo *  corruptInfo);
+                    nsDiskCache::CorruptCacheInfo *  corruptInfo,
+                    bool reportCacheCleanTelemetryData);
     nsresult  Close(bool flush);
     nsresult  Trim();
 
@@ -541,7 +542,8 @@ private:
 
     // Initializes the _CACHE_CLEAN_ related functionality
     nsresult InitCacheClean(nsIFile *  cacheDirectory,
-                            nsDiskCache::CorruptCacheInfo *  corruptInfo);
+                            nsDiskCache::CorruptCacheInfo *  corruptInfo,
+                            bool reportCacheCleanTelemetryData);
     // Writes out a value of '0' or '1' in the _CACHE_CLEAN_ file
     nsresult WriteCacheClean(bool clean);
     // Resets the timout for revalidating the cache
