@@ -88,6 +88,8 @@ private:
   const bool mHasVideo;
   bool mDropAudioUntilNextDiscontinuity;
   bool mDropVideoUntilNextDiscontinuity;
+  bool mDoneAudioSeeking;
+  bool mDoneVideoSeeking;
 
   // This temporarily stores the first frame we decode after we seek.
   // This is so that if we hit end of stream while we're decoding to reach
