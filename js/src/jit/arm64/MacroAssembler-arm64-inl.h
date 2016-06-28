@@ -511,6 +511,30 @@ MacroAssembler::sqrtDouble(FloatRegister src, FloatRegister dest)
     MOZ_CRASH("NYI - sqrtDouble");
 }
 
+void
+MacroAssembler::minFloat32(FloatRegister other, FloatRegister srcDest, bool handleNaN)
+{
+    MOZ_CRASH("NYI - minFloat32");
+}
+
+void
+MacroAssembler::minDouble(FloatRegister other, FloatRegister srcDest, bool handleNaN)
+{
+    MOZ_CRASH("NYI - minDouble");
+}
+
+void
+MacroAssembler::maxFloat32(FloatRegister other, FloatRegister srcDest, bool handleNaN)
+{
+    MOZ_CRASH("NYI - maxFloat32");
+}
+
+void
+MacroAssembler::maxDouble(FloatRegister other, FloatRegister srcDest, bool handleNaN)
+{
+    MOZ_CRASH("NYI - maxDouble");
+}
+
 // ===============================================================
 // Shift functions
 

@@ -2451,6 +2451,94 @@ MacroAssemblerARMCompat::setStackArg(Register reg, uint32_t arg)
 }
 
 void
+MacroAssemblerARMCompat::minMaxDouble(FloatRegister srcDest, FloatRegister second, bool handleNaN, bool isMax)
+{
+    FloatRegister first = srcDest;
+
+    Assembler::Condition cond = isMax
+        ? Assembler::VFP_LessThanOrEqual
+        : Assembler::VFP_GreaterThanOrEqual;
+    Label nan, equal, returnSecond, done;
+
+    compareDouble(first, second);
+    // First or second is NaN, result is NaN.
+    ma_b(&nan, Assembler::VFP_Unordered);
+    // Make sure we handle -0 and 0 right.
+    ma_b(&equal, Assembler::VFP_Equal);
+    ma_b(&returnSecond, cond);
+    ma_b(&done);
+
+    // Check for zero.
+    bind(&equal);
+    compareDouble(first, NoVFPRegister);
+    // First wasn't 0 or -0, so just return it.
+    ma_b(&done, Assembler::VFP_NotEqualOrUnordered);
+    // So now both operands are either -0 or 0.
+    if (isMax) {
+        // -0 + -0 = -0 and -0 + 0 = 0.
+        ma_vadd(second, first, first);
+    } else {
+        ma_vneg(first, first);
+        ma_vsub(first, second, first);
+        ma_vneg(first, first);
+    }
+    ma_b(&done);
+
+    bind(&nan);
+    loadConstantDouble(JS::GenericNaN(), srcDest);
+    ma_b(&done);
+
+    bind(&returnSecond);
+    ma_vmov(second, srcDest);
+
+    bind(&done);
+}
+
+void
+MacroAssemblerARMCompat::minMaxFloat32(FloatRegister srcDest, FloatRegister second, bool handleNaN, bool isMax)
+{
+    FloatRegister first = srcDest;
+
+    Assembler::Condition cond = isMax
+        ? Assembler::VFP_LessThanOrEqual
+        : Assembler::VFP_GreaterThanOrEqual;
+    Label nan, equal, returnSecond, done;
+
+    compareFloat(first, second);
+    // First or second is NaN, result is NaN.
+    ma_b(&nan, Assembler::VFP_Unordered);
+    // Make sure we handle -0 and 0 right.
+    ma_b(&equal, Assembler::VFP_Equal);
+    ma_b(&returnSecond, cond);
+    ma_b(&done);
+
+    // Check for zero.
+    bind(&equal);
+    compareFloat(first, NoVFPRegister);
+    // First wasn't 0 or -0, so just return it.
+    ma_b(&done, Assembler::VFP_NotEqualOrUnordered);
+    // So now both operands are either -0 or 0.
+    if (isMax) {
+        // -0 + -0 = -0 and -0 + 0 = 0.
+        ma_vadd_f32(second, first, first);
+    } else {
+        ma_vneg_f32(first, first);
+        ma_vsub_f32(first, second, first);
+        ma_vneg_f32(first, first);
+    }
+    ma_b(&done);
+
+    bind(&nan);
+    loadConstantFloat32(float(JS::GenericNaN()), srcDest);
+    ma_b(&done);
+
+    bind(&returnSecond);
+    ma_vmov_f32(second, srcDest);
+
+    bind(&done);
+}
+
+void
 MacroAssemblerARMCompat::compareDouble(FloatRegister lhs, FloatRegister rhs)
 {
     // Compare the doubles, setting vector status flags.
