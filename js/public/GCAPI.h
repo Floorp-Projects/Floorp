@@ -54,7 +54,7 @@ namespace JS {
     D(API)                                      \
     D(EAGER_ALLOC_TRIGGER)                      \
     D(DESTROY_RUNTIME)                          \
-    D(DESTROY_CONTEXT)                          \
+    D(UNUSED0)                                  \
     D(LAST_DITCH)                               \
     D(TOO_MUCH_MALLOC)                          \
     D(ALLOC_TRIGGER)                            \
