@@ -1,0 +1,55 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=744830
+-->
+<head>
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SimpleTest.js"></script>
+<!--
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"></script>
+-->
+  <script type="application/javascript" src="chrome://mochikit/content/tests/SimpleTest/SpawnTask.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=166235">Mozilla Bug 166235</a>
+<div id="testnodes"><span>hi</span> there <!-- mon ami --></div>
+<pre id="test">
+<script type="application/javascript">
+  add_task(function* () {
+    const initialPrefValue = SpecialPowers.getBoolPref("mathml.disabled");
+    SpecialPowers.setBoolPref("mathml.disabled", true);
+    const Cu = SpecialPowers.Components.utils;
+    const { ContentTaskUtils } = Cu.import("resource://testing-common/ContentTaskUtils.jsm", {});
+    let t = document.getElementById('testnodes');
+
+    let url = 'chrome://mochitests/content/chrome/layout/mathml/tests/mathml_example_test.html'
+    const chromeIframeEl = document.createElement('iframe');
+    let chromeLoadPromise = ContentTaskUtils.waitForEvent(chromeIframeEl, 'load', false);
+    chromeIframeEl.src = url;
+    t.appendChild(chromeIframeEl);
+
+    yield chromeLoadPromise;
+    const chromeBR = chromeIframeEl.contentDocument.body.getBoundingClientRect();
+
+    url = "http://mochi.test:8888/chrome/layout/mathml/tests/mathml_example_test.html";
+    const iframeEl = document.createElement('iframe');
+    iframeEl.src = url;
+    let loadPromise = ContentTaskUtils.waitForEvent(iframeEl, 'load', false);
+    t.appendChild(iframeEl);
+    yield loadPromise;
+
+    const contentBR = iframeEl.contentDocument.body.getBoundingClientRect();
+
+    ok(chromeBR.height > contentBR.height, "Chrome content height should be bigger than content due to layout");
+
+    ok(!iframeEl.contentDocument.getElementById('svgel').hasExtension("http://www.w3.org/1998/Math/MathML"), 'SVG namespace support is disabled in content iframe');
+    ok(chromeIframeEl.contentDocument.getElementById('svgel').hasExtension("http://www.w3.org/1998/Math/MathML"), 'SVG namespace support is enabled in chrome iframe');
+
+    SpecialPowers.setBoolPref("mathml.disabled", initialPrefValue);
+  });
+</script>
+</pre>
+</body>
+</html>
+
