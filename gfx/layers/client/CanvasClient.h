@@ -111,7 +111,6 @@ public:
 
   virtual bool AddTextureClient(TextureClient* aTexture) override
   {
-    MOZ_ASSERT((mTextureFlags & aTexture->GetFlags()) == mTextureFlags);
     return CanvasClient::AddTextureClient(aTexture);
   }
 
