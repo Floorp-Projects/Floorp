@@ -20,7 +20,7 @@ public:
     CSSToLayoutDeviceScale aScale,
     bool aUseAPZ,
     bool aUseExternalSurfaceSize,
-    int aSurfaceWidth, int aSurfaceHeight);
+    const gfx::IntSize& aSurfaceSize);
 
   CompositorBridgeParent* GetInProcessBridge() const override;
   void SetContentController(GeckoContentController* aController) override;
@@ -38,7 +38,7 @@ CompositorSession::CreateInProcess(widget::CompositorWidgetProxy* aWidgetProxy,
                                    CSSToLayoutDeviceScale aScale,
                                    bool aUseAPZ,
                                    bool aUseExternalSurfaceSize,
-                                   int aSurfaceWidth, int aSurfaceHeight)
+                                   const gfx::IntSize& aSurfaceSize)
 {
   RefPtr<InProcessCompositorSession> session = new InProcessCompositorSession(
     aWidgetProxy,
@@ -46,7 +46,7 @@ CompositorSession::CreateInProcess(widget::CompositorWidgetProxy* aWidgetProxy,
     aScale,
     aUseAPZ,
     aUseExternalSurfaceSize,
-    aSurfaceWidth, aSurfaceHeight);
+    aSurfaceSize);
   return session.forget();
 }
 
@@ -69,15 +69,14 @@ InProcessCompositorSession::InProcessCompositorSession(widget::CompositorWidgetP
                                                        CSSToLayoutDeviceScale aScale,
                                                        bool aUseAPZ,
                                                        bool aUseExternalSurfaceSize,
-                                                       int aSurfaceWidth, int aSurfaceHeight)
+                                                       const gfx::IntSize& aSurfaceSize)
 {
   mCompositorBridgeParent = new CompositorBridgeParent(
     aWidgetProxy,
     aScale,
     aUseAPZ,
     aUseExternalSurfaceSize,
-    aSurfaceWidth,
-    aSurfaceHeight);
+    aSurfaceSize);
   mCompositorBridgeChild = new CompositorBridgeChild(aLayerManager);
   mCompositorBridgeChild->OpenSameProcess(mCompositorBridgeParent);
   mCompositorBridgeParent->SetOtherProcessId(base::GetCurrentProcId());
