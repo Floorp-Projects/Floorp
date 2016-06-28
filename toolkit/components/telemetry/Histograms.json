@@ -1672,32 +1672,6 @@
     "kind": "boolean",
     "description": "Fraction of sockets that used a nsConnectionEntry with history - size 300."
   },
-  "DISK_CACHE_CORRUPT_DETAILS": {
-    "expires_in_version": "40",
-    "kind": "enumerated",
-    "n_values": 50,
-    "description": "Why the HTTP disk cache was corrupted at startup"
-  },
-  "DISK_CACHE_REDUCTION_TRIAL": {
-    "expires_in_version": "40",
-    "kind": "boolean",
-    "description": "Stores 1 if the cache would be clean with the disk cache corruption plan of Bug 105843"
-  },
-  "DISK_CACHE_REVALIDATION_SAFE": {
-    "expires_in_version": "40",
-    "kind": "boolean",
-    "description": "Stores 1 if the cache clean file was revalidated, or 0 if a non empty doom list prevented revalidation"
-  },
-  "DISK_CACHE_INVALIDATION_SUCCESS": {
-    "expires_in_version": "40",
-    "kind": "boolean",
-    "description": "Stores 1 if writing '0' to the cache clean file succeeded, and 0 if it failed."
-  },
-  "DISK_CACHE_REVALIDATION_SUCCESS": {
-    "expires_in_version": "40",
-    "kind": "boolean",
-    "description": "Stores 1 if writing '1' to the cache clean file succeeded, and 0 if it failed."
-  },
   "HTTP_CACHE_DISPOSITION_2": {
     "expires_in_version": "never",
     "kind": "enumerated",
@@ -1845,11 +1819,6 @@
     "high": 10000,
     "n_buckets": 50,
     "description": "Time spent waiting on the cache service lock on the main thread (ms)"
-  },
-  "DISK_CACHE_SMART_SIZE_USING_OLD_MAX": {
-    "expires_in_version": "40",
-    "kind": "boolean",
-    "description": "Whether we are using the old default cache smart size"
   },
   "CACHE_SERVICE_LOCK_WAIT_MAINTHREAD_NSSETDISKSMARTSIZECALLBACK_NOTIFY": {
     "expires_in_version": "never",
