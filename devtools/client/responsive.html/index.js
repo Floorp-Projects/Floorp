@@ -23,11 +23,11 @@ const ReactDOM = require("devtools/client/shared/vendor/react-dom");
 const { Provider } = require("devtools/client/shared/vendor/react-redux");
 
 const message = require("./utils/message");
-const { initDevices } = require("./devices");
 const App = createFactory(require("./app"));
 const Store = require("./store");
 const { changeLocation } = require("./actions/location");
 const { addViewport, resizeViewport } = require("./actions/viewports");
+const { loadDevices } = require("./actions/devices");
 
 let bootstrap = {
 
@@ -43,7 +43,7 @@ let bootstrap = {
               "agent");
     this.telemetry.toolOpened("responsive");
     let store = this.store = Store();
-    yield initDevices(this.dispatch.bind(this));
+    this.dispatch(loadDevices());
     let provider = createElement(Provider, { store }, App());
     ReactDOM.render(provider, document.querySelector("#root"));
     message.post(window, "init:done");

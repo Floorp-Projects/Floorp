@@ -38,7 +38,7 @@ registerCleanupFunction(() => {
   Services.prefs.clearUserPref("devtools.responsive.html.displayedDeviceList");
 });
 const { ResponsiveUIManager } = require("resource://devtools/client/responsivedesign/responsivedesign.jsm");
-const { loadPreferredDevices } = require("devtools/client/responsive.html/devices");
+const { _loadPreferredDevices } = require("devtools/client/responsive.html/actions/devices");
 const { getOwnerWindow } = require("sdk/tabs/utils");
 
 const OPEN_DEVICE_MODAL_VALUE = "OPEN_DEVICE_MODAL";
