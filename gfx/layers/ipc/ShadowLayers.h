@@ -356,7 +356,7 @@ public:
 
   virtual void CancelWaitForRecycle(uint64_t aTextureId) override;
 
-  virtual base::ProcessId GetParentPid() const override;
+  base::ProcessId GetParentPid() const;
 
   /**
    * Construct a shadow of |aLayer| on the "other side", at the
