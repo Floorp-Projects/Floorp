@@ -82,15 +82,13 @@ let App = createClass({
     this.props.dispatch(updateDeviceModalOpen(isOpen));
   },
 
-  onUpdateTouchSimulationEnabled() {
-    let { enabled } = this.props.touchSimulation;
-
+  onUpdateTouchSimulation(isEnabled) {
     window.postMessage({
       type: "update-touch-simulation",
-      enabled,
+      enabled: isEnabled,
     }, "*");
 
-    this.props.dispatch(updateTouchSimulationEnabled(!enabled));
+    this.props.dispatch(updateTouchSimulationEnabled(isEnabled));
   },
 
   render() {
@@ -113,7 +111,7 @@ let App = createClass({
       onScreenshot,
       onUpdateDeviceDisplayed,
       onUpdateDeviceModalOpen,
-      onUpdateTouchSimulationEnabled,
+      onUpdateTouchSimulation,
     } = this;
 
     return dom.div(
@@ -125,7 +123,7 @@ let App = createClass({
         touchSimulation,
         onExit,
         onScreenshot,
-        onUpdateTouchSimulationEnabled,
+        onUpdateTouchSimulation,
       }),
       Viewports({
         devices,
