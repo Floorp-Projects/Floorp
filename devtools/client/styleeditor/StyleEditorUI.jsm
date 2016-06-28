@@ -616,19 +616,19 @@ StyleEditorUI.prototype = {
             return;
           }
 
-          let href = csscoverage.sheetToUrl(showEditor.styleSheet);
-          let reportData = yield usage.createEditorReport(href);
+          let sheet = showEditor.styleSheet;
+          let {reports} = yield usage.createEditorReportForSheet(sheet);
 
           showEditor.removeAllUnusedRegions();
 
-          if (reportData.reports.length > 0) {
+          if (reports.length > 0) {
             // Only apply if this file isn't compressed. We detect a
             // compressed file if there are more rules than lines.
             let editorText = showEditor.sourceEditor.getText();
             let lineCount = editorText.split("\n").length;
             let ruleCount = showEditor.styleSheet.ruleCount;
             if (lineCount >= ruleCount) {
-              showEditor.addUnusedRegions(reportData.reports);
+              showEditor.addUnusedRegions(reports);
             } else {
               this.emit("error", { key: "error-compressed", level: "info" });
             }
