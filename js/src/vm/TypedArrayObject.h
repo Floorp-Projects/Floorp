@@ -155,10 +155,6 @@ class TypedArrayObject : public NativeObject
 
     void notifyBufferDetached(void* newData);
 
-    static bool
-    GetTemplateObjectForNative(JSContext* cx, Native native, uint32_t len,
-                               MutableHandleObject res);
-
     /*
      * Byte length above which created typed arrays and data views will have
      * singleton types regardless of the context in which they are created.
@@ -270,9 +266,6 @@ class TypedArrayObject : public NativeObject
 
     static bool set(JSContext* cx, unsigned argc, Value* vp);
 };
-
-extern TypedArrayObject*
-TypedArrayCreateWithTemplate(JSContext* cx, HandleObject templateObj);
 
 inline bool
 IsTypedArrayClass(const Class* clasp)

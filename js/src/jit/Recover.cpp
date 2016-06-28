@@ -1202,16 +1202,11 @@ RNewObject::recover(JSContext* cx, SnapshotIterator& iter) const
     JSObject* resultObject = nullptr;
 
     // See CodeGenerator::visitNewObjectVMCall
-    switch (mode_) {
-      case MNewObject::ObjectLiteral:
+    if (mode_ == MNewObject::ObjectLiteral) {
         resultObject = NewObjectOperationWithTemplate(cx, templateObject);
-        break;
-      case MNewObject::ObjectCreate:
+    } else {
+        MOZ_ASSERT(mode_ == MNewObject::ObjectCreate);
         resultObject = ObjectCreateWithTemplate(cx, templateObject.as<PlainObject>());
-        break;
-      case MNewObject::TypedArray:
-        resultObject = TypedArrayCreateWithTemplate(cx, templateObject.as<TypedArrayObject>());
-        break;
     }
 
     if (!resultObject)
