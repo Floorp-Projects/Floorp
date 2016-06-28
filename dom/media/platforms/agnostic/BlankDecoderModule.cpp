@@ -26,11 +26,10 @@ class BlankMediaDataDecoder : public MediaDataDecoder {
 public:
 
   BlankMediaDataDecoder(BlankMediaDataCreator* aCreator,
-                        MediaDataDecoderCallback* aCallback,
-                        TrackInfo::TrackType aType)
+                        const CreateDecoderParams& aParams)
     : mCreator(aCreator)
-    , mCallback(aCallback)
-    , mType(aType)
+    , mCallback(aParams.mCallback)
+    , mType(aParams.mConfig.GetType())
   {
   }
 
@@ -199,34 +198,24 @@ public:
 
   // Decode thread.
   already_AddRefed<MediaDataDecoder>
-  CreateVideoDecoder(const VideoInfo& aConfig,
-                     layers::LayersBackend aLayersBackend,
-                     layers::ImageContainer* aImageContainer,
-                     TaskQueue* aTaskQueue,
-                     MediaDataDecoderCallback* aCallback,
-                     DecoderDoctorDiagnostics* aDiagnostics) override {
+  CreateVideoDecoder(const CreateDecoderParams& aParams) override {
+    const VideoInfo& config = aParams.VideoConfig();
     BlankVideoDataCreator* creator = new BlankVideoDataCreator(
-      aConfig.mDisplay.width, aConfig.mDisplay.height, aImageContainer);
+      config.mDisplay.width, config.mDisplay.height, aParams.mImageContainer);
     RefPtr<MediaDataDecoder> decoder =
-      new BlankMediaDataDecoder<BlankVideoDataCreator>(creator,
-                                                       aCallback,
-                                                       TrackInfo::kVideoTrack);
+      new BlankMediaDataDecoder<BlankVideoDataCreator>(creator, aParams);
     return decoder.forget();
   }
 
   // Decode thread.
   already_AddRefed<MediaDataDecoder>
-  CreateAudioDecoder(const AudioInfo& aConfig,
-                     TaskQueue* aTaskQueue,
-                     MediaDataDecoderCallback* aCallback,
-                     DecoderDoctorDiagnostics* aDiagnostics) override {
+  CreateAudioDecoder(const CreateDecoderParams& aParams) override {
+    const AudioInfo& config = aParams.AudioConfig();
     BlankAudioDataCreator* creator = new BlankAudioDataCreator(
-      aConfig.mChannels, aConfig.mRate);
+      config.mChannels, config.mRate);
 
     RefPtr<MediaDataDecoder> decoder =
-      new BlankMediaDataDecoder<BlankAudioDataCreator>(creator,
-                                                       aCallback,
-                                                       TrackInfo::kAudioTrack);
+      new BlankMediaDataDecoder<BlankAudioDataCreator>(creator, aParams);
     return decoder.forget();
   }
 

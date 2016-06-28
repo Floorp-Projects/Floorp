@@ -46,53 +46,45 @@ CreateDecoderWrapper(MediaDataDecoderCallback* aCallback)
 }
 
 already_AddRefed<MediaDataDecoder>
-GMPDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
-                                     layers::LayersBackend aLayersBackend,
-                                     layers::ImageContainer* aImageContainer,
-                                     TaskQueue* aTaskQueue,
-                                     MediaDataDecoderCallback* aCallback,
-                                     DecoderDoctorDiagnostics* aDiagnostics)
+GMPDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
 {
-  if (!aConfig.mMimeType.EqualsLiteral("video/avc")) {
+  if (!aParams.mConfig.mMimeType.EqualsLiteral("video/avc")) {
     return nullptr;
   }
 
-  if (aDiagnostics) {
-    const Maybe<nsCString> preferredGMP = PreferredGMP(aConfig.mMimeType);
+  if (aParams.mDiagnostics) {
+    const Maybe<nsCString> preferredGMP = PreferredGMP(aParams.mConfig.mMimeType);
     if (preferredGMP.isSome()) {
-      aDiagnostics->SetGMP(preferredGMP.value());
+      aParams.mDiagnostics->SetGMP(preferredGMP.value());
     }
   }
 
-  RefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aCallback);
-  wrapper->SetProxyTarget(new GMPVideoDecoder(aConfig,
-                                              aLayersBackend,
-                                              aImageContainer,
-                                              aTaskQueue,
+  RefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aParams.mCallback);
+  wrapper->SetProxyTarget(new GMPVideoDecoder(aParams.VideoConfig(),
+                                              aParams.mLayersBackend,
+                                              aParams.mImageContainer,
+                                              aParams.mTaskQueue,
                                               wrapper->Callback()));
   return wrapper.forget();
 }
 
 already_AddRefed<MediaDataDecoder>
-GMPDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
-                                     TaskQueue* aTaskQueue,
-                                     MediaDataDecoderCallback* aCallback,
-                                     DecoderDoctorDiagnostics* aDiagnostics)
+GMPDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
 {
-  if (!aConfig.mMimeType.EqualsLiteral("audio/mp4a-latm")) {
+  if (!aParams.mConfig.mMimeType.EqualsLiteral("audio/mp4a-latm")) {
     return nullptr;
   }
 
-  if (aDiagnostics) {
-    const Maybe<nsCString> preferredGMP = PreferredGMP(aConfig.mMimeType);
+  if (aParams.mDiagnostics) {
+    const Maybe<nsCString> preferredGMP = PreferredGMP(aParams.mConfig.mMimeType);
     if (preferredGMP.isSome()) {
-      aDiagnostics->SetGMP(preferredGMP.value());
+      aParams.mDiagnostics->SetGMP(preferredGMP.value());
     }
   }
 
-  RefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aCallback);
-  wrapper->SetProxyTarget(new GMPAudioDecoder(aConfig,
-                                              aTaskQueue,
+  RefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aParams.mCallback);
+  wrapper->SetProxyTarget(new GMPAudioDecoder(aParams.AudioConfig(),
+                                              aParams.mTaskQueue,
                                               wrapper->Callback()));
   return wrapper.forget();
 }

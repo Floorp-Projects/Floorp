@@ -20,12 +20,10 @@
 
 namespace mozilla {
 
-OpusDataDecoder::OpusDataDecoder(const AudioInfo& aConfig,
-                                 TaskQueue* aTaskQueue,
-                                 MediaDataDecoderCallback* aCallback)
-  : mInfo(aConfig)
-  , mTaskQueue(aTaskQueue)
-  , mCallback(aCallback)
+OpusDataDecoder::OpusDataDecoder(const CreateDecoderParams& aParams)
+  : mInfo(aParams.AudioConfig())
+  , mTaskQueue(aParams.mTaskQueue)
+  , mCallback(aParams.mCallback)
   , mOpusDecoder(nullptr)
   , mSkip(0)
   , mDecodedHeader(false)

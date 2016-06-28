@@ -22,12 +22,7 @@ class H264Converter : public MediaDataDecoder {
 public:
 
   H264Converter(PlatformDecoderModule* aPDM,
-                const VideoInfo& aConfig,
-                layers::LayersBackend aLayersBackend,
-                layers::ImageContainer* aImageContainer,
-                TaskQueue* aTaskQueue,
-                MediaDataDecoderCallback* aCallback,
-                DecoderDoctorDiagnostics* aDiagnostics);
+                const CreateDecoderParams& aParams);
   virtual ~H264Converter();
 
   RefPtr<InitPromise> Init() override;

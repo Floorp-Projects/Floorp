@@ -207,8 +207,7 @@ BenchmarkPlayback::InitDecoder(TrackInfo&& aInfo)
   MOZ_ASSERT(OnThread());
 
   RefPtr<PDMFactory> platform = new PDMFactory();
-  mDecoder = platform->CreateDecoder(aInfo, mDecoderTaskQueue, this,
-     /* DecoderDoctorDiagnostics* */ nullptr);
+  mDecoder = platform->CreateDecoder({ aInfo, mDecoderTaskQueue, reinterpret_cast<MediaDataDecoderCallback*>(this) });
   if (!mDecoder) {
     MainThreadShutdown();
     return;
