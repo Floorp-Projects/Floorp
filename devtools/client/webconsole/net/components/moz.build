@@ -21,4 +21,5 @@ DevToolsModules(
     'size-limit.css',
     'size-limit.js',
     'spinner.js',
+    'stacktrace-tab.js',
 )

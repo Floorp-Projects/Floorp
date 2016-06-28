@@ -1623,7 +1623,7 @@ WebConsoleFrame.prototype = {
 
     if (this.window.NetRequest) {
       this.window.NetRequest.onNetworkEvent({
-        client: this.webConsoleClient,
+        consoleFrame: this,
         response: networkInfo,
         node: messageNode,
         update: false
