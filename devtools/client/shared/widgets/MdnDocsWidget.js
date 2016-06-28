@@ -259,8 +259,7 @@ function MdnDocsWidget(tooltipDocument) {
   this.elements.linkToMdn.addEventListener("click", function (e) {
     e.stopPropagation();
     e.preventDefault();
-    let link = e.target.href;
-    mainWindow.gBrowser.addTab(link);
+    mainWindow.openUILinkIn(e.target.href, "tab", { inBackground: true });
   });
 }
 
