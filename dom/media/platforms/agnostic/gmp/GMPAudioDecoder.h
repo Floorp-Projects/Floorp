@@ -48,12 +48,20 @@ private:
   bool mMustRecaptureAudioPosition;
 };
 
+struct GMPAudioDecoderParams {
+  explicit GMPAudioDecoderParams(const CreateDecoderParams& aParams);
+  GMPAudioDecoderParams& WithCallback(MediaDataDecoderProxy* aWrapper);
+  GMPAudioDecoderParams& WithAdapter(AudioCallbackAdapter* aAdapter);
+
+  const AudioInfo& mConfig;
+  TaskQueue* mTaskQueue;
+  MediaDataDecoderCallbackProxy* mCallback;
+  AudioCallbackAdapter* mAdapter;
+};
+
 class GMPAudioDecoder : public MediaDataDecoder {
 public:
-  GMPAudioDecoder(const AudioInfo& aConfig,
-                  TaskQueue* aTaskQueue,
-                  MediaDataDecoderCallbackProxy* aCallback,
-                  AudioCallbackAdapter* aAdapter);
+  explicit GMPAudioDecoder(const GMPAudioDecoderParams& aParams);
 
   RefPtr<InitPromise> Init() override;
   nsresult Input(MediaRawData* aSample) override;
