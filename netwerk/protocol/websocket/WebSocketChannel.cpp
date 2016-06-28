@@ -1402,13 +1402,7 @@ WebSocketChannel::BeginOpenInternal()
   }
 #endif
 
-  nsCOMPtr<nsILoadInfo> loadInfo = localChannel->GetLoadInfo();
-  if (loadInfo && loadInfo->GetSecurityMode()) {
-    rv = localChannel->AsyncOpen2(this);
-  }
-  else {
-    rv = localChannel->AsyncOpen(this, nullptr);
-  }
+  rv = NS_MaybeOpenChannelUsingAsyncOpen2(localChannel, this);
 
   if (NS_FAILED(rv)) {
     LOG(("WebSocketChannel::BeginOpenInternal: cannot async open\n"));
