@@ -297,8 +297,8 @@ AppCacheUtils.prototype = {
     let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
                .getService(Ci.nsIWindowMediator);
     let win = wm.getMostRecentWindow(gDevTools.chromeWindowType);
-    win.gBrowser.selectedTab = win.gBrowser.addTab(
-      "about:cache-entry?storage=appcache&context=&eid=&uri=" + key);
+    let url = "about:cache-entry?storage=appcache&context=&eid=&uri=" + key;
+    win.openUILinkIn(url, "tab");
   },
 
   clearAll: function ACU_clearAll() {

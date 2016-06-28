@@ -2061,9 +2061,8 @@ var Scratchpad = {
   openDocumentationPage: function SP_openDocumentationPage()
   {
     let url = this.strings.GetStringFromName("help.openDocumentationPage");
-    let newTab = this.gBrowser.addTab(url);
+    this.browserWindow.openUILinkIn(url,"tab");
     this.browserWindow.focus();
-    this.gBrowser.selectedTab = newTab;
   },
 };
 
