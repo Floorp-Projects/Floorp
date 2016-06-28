@@ -28,6 +28,7 @@ if CONFIG['OS_ARCH'] in ('Linux', 'Bitrig', 'DragonFly', 'FreeBSD', 'NetBSD', 'O
    CONFIG['OS_ARCH'].startswith('GNU_'):
     if CONFIG['OS_TEST'] == 'x86_64':
         SOURCES += [
+            'xptcinvoke_asm_x86_64_unix.s',
             'xptcinvoke_x86_64_unix.cpp',
             'xptcstubs_x86_64_linux.cpp',
         ]
@@ -53,6 +54,7 @@ if CONFIG['OS_ARCH'] == 'SunOS' and '86' in CONFIG['OS_TEST']:
     if CONFIG['OS_TEST'] == 'x86_64':
         if CONFIG['GNU_CC']:
             SOURCES += [
+            'xptcinvoke_asm_x86_64_unix.s',
                 'xptcinvoke_x86_64_unix.cpp',
                 'xptcstubs_x86_64_linux.cpp'
             ]
