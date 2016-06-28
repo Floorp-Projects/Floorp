@@ -339,6 +339,23 @@ AccurateSeekTask::OnSeekRejected(nsresult aResult)
 }
 
 void
+AccurateSeekTask::AdjustFastSeekIfNeeded(MediaData* aSample)
+{
+  AssertOwnerThread();
+  if (mSeekJob.mTarget.IsFast() &&
+      mSeekJob.mTarget.GetTime().ToMicroseconds() > mCurrentTimeBeforeSeek &&
+      aSample->mTime < mCurrentTimeBeforeSeek) {
+    // We are doing a fastSeek, but we ended up *before* the previous
+    // playback position. This is surprising UX, so switch to an accurate
+    // seek and decode to the seek target. This is not conformant to the
+    // spec, fastSeek should always be fast, but until we get the time to
+    // change all Readers to seek to the keyframe after the currentTime
+    // in this case, we'll just decode forward. Bug 1026330.
+    mSeekJob.mTarget.SetType(SeekTarget::Accurate);
+  }
+}
+
+void
 AccurateSeekTask::OnAudioDecoded(MediaData* aAudioSample)
 {
   AssertOwnerThread();
@@ -360,17 +377,8 @@ AccurateSeekTask::OnAudioDecoded(MediaData* aAudioSample)
   if (!mDropAudioUntilNextDiscontinuity) {
     // We must be after the discontinuity; we're receiving samples
     // at or after the seek target.
-    if (mSeekJob.mTarget.IsFast() &&
-        mSeekJob.mTarget.GetTime().ToMicroseconds() > mCurrentTimeBeforeSeek &&
-        audio->mTime < mCurrentTimeBeforeSeek) {
-      // We are doing a fastSeek, but we ended up *before* the previous
-      // playback position. This is surprising UX, so switch to an accurate
-      // seek and decode to the seek target. This is not conformant to the
-      // spec, fastSeek should always be fast, but until we get the time to
-      // change all Readers to seek to the keyframe after the currentTime
-      // in this case, we'll just decode forward. Bug 1026330.
-      mSeekJob.mTarget.SetType(SeekTarget::Accurate);
-    }
+    AdjustFastSeekIfNeeded(audio);
+
     if (mSeekJob.mTarget.IsFast()) {
       // Non-precise seek; we can stop the seek at the first sample.
       mSeekedAudioData = audio;
@@ -459,17 +467,8 @@ AccurateSeekTask::OnVideoDecoded(MediaData* aVideoSample)
   if (!mDropVideoUntilNextDiscontinuity) {
     // We must be after the discontinuity; we're receiving samples
     // at or after the seek target.
-    if (mSeekJob.mTarget.IsFast() &&
-        mSeekJob.mTarget.GetTime().ToMicroseconds() > mCurrentTimeBeforeSeek &&
-        video->mTime < mCurrentTimeBeforeSeek) {
-      // We are doing a fastSeek, but we ended up *before* the previous
-      // playback position. This is surprising UX, so switch to an accurate
-      // seek and decode to the seek target. This is not conformant to the
-      // spec, fastSeek should always be fast, but until we get the time to
-      // change all Readers to seek to the keyframe after the currentTime
-      // in this case, we'll just decode forward. Bug 1026330.
-      mSeekJob.mTarget.SetType(SeekTarget::Accurate);
-    }
+    AdjustFastSeekIfNeeded(video);
+
     if (mSeekJob.mTarget.IsFast()) {
       // Non-precise seek. We can stop the seek at the first sample.
       mSeekedVideoData = video;
