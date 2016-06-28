@@ -261,6 +261,9 @@ BrowserToolboxProcess.prototype = {
 
     this._dbgProcess = null;
     this._options = null;
+    if (this.loader) {
+      this.loader.destroy();
+    }
     this.loader = null;
     this._telemetry = null;
   }
