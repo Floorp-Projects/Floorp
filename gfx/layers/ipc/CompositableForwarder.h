@@ -18,7 +18,6 @@
 #include "mozilla/layers/TextureForwarder.h"  // for TextureForwarder
 #include "nsRegion.h"                   // for nsIntRegion
 #include "mozilla/gfx/Rect.h"
-#include "nsExpirationTracker.h"
 #include "nsHashKeys.h"
 #include "nsTHashtable.h"
 
@@ -33,36 +32,6 @@ class SurfaceDescriptor;
 class SurfaceDescriptorTiles;
 class ThebesBufferData;
 class PTextureChild;
-
-/**
- * See ActiveResourceTracker below.
- */
-class ActiveResource
-{
-public:
- virtual void NotifyInactive() = 0;
-  nsExpirationState* GetExpirationState() { return &mExpirationState; }
-  bool IsActivityTracked() { return mExpirationState.IsTracked(); }
-private:
-  nsExpirationState mExpirationState;
-};
-
-/**
- * A convenience class on top of nsExpirationTracker
- */
-class ActiveResourceTracker : public nsExpirationTracker<ActiveResource, 3>
-{
-public:
-  ActiveResourceTracker(uint32_t aExpirationCycle, const char* aName)
-  : nsExpirationTracker(aExpirationCycle, aName)
-  {}
-
-  virtual void NotifyExpired(ActiveResource* aResource) override
-  {
-    RemoveObject(aResource);
-    aResource->NotifyInactive();
-  }
-};
 
 /**
  * A transaction is a set of changes that happenned on the content side, that
@@ -80,7 +49,6 @@ public:
 
   CompositableForwarder(const char* aName)
     : TextureForwarder(aName)
-    , mActiveResourceTracker(1000, "CompositableForwarder")
     , mSerial(++sSerialCounter)
   {}
 
@@ -201,16 +169,12 @@ public:
     return mTextureFactoryIdentifier;
   }
 
-  ActiveResourceTracker& GetActiveResourceTracker() { return mActiveResourceTracker; }
-
 protected:
   TextureFactoryIdentifier mTextureFactoryIdentifier;
 
   nsTArray<RefPtr<TextureClient> > mTexturesToRemove;
   nsTArray<RefPtr<CompositableClient>> mCompositableClientsToRemove;
   RefPtr<SyncObject> mSyncObject;
-
-  ActiveResourceTracker mActiveResourceTracker;
 
   const int32_t mSerial;
   static mozilla::Atomic<int32_t> sSerialCounter;

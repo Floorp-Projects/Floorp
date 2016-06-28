@@ -90,15 +90,13 @@ PersistentBufferProviderShared::Create(gfx::IntSize aSize,
   RefPtr<TextureClient> texture = TextureClient::CreateForDrawing(
     aFwd, aFormat, aSize,
     BackendSelector::Canvas,
-    TextureFlags::DEFAULT,
+    TextureFlags::IMMEDIATE_UPLOAD,
     TextureAllocationFlags::ALLOC_DEFAULT
   );
 
   if (!texture) {
     return nullptr;
   }
-
-  texture->EnableReadLock();
 
   RefPtr<PersistentBufferProviderShared> provider =
     new PersistentBufferProviderShared(aSize, aFormat, aFwd, texture);
@@ -122,19 +120,12 @@ PersistentBufferProviderShared::~PersistentBufferProviderShared()
 {
   MOZ_COUNT_DTOR(PersistentBufferProviderShared);
 
-  if (IsActivityTracked()) {
-    mFwd->GetActiveResourceTracker().RemoveObject(this);
-  }
-
   mDrawTarget = nullptr;
   if (mBack && mBack->IsLocked()) {
     mBack->Unlock();
   }
   if (mFront && mFront->IsLocked()) {
     mFront->Unlock();
-  }
-  if (mBuffer && mBuffer->IsLocked()) {
-    mBuffer->Unlock();
   }
 }
 
@@ -145,46 +136,25 @@ PersistentBufferProviderShared::BorrowDrawTarget(const gfx::IntRect& aPersistedR
     return nullptr;
   }
 
-  MOZ_ASSERT(!mSnapshot);
-
-  if (IsActivityTracked()) {
-    mFwd->GetActiveResourceTracker().MarkUsed(this);
-  } else {
-    mFwd->GetActiveResourceTracker().AddObject(this);
-  }
-
   if (!mDrawTarget) {
-    bool changedBackBuffer = false;
-    if (!mBack || mBack->IsReadLocked()) {
-      if (mBuffer && !mBuffer->IsReadLocked()) {
-        mBack.swap(mBuffer);
-      } else {
-        mBack = TextureClient::CreateForDrawing(
-          mFwd, mFormat, mSize,
-          BackendSelector::Canvas,
-          TextureFlags::DEFAULT,
-          TextureAllocationFlags::ALLOC_DEFAULT
-        );
-        if (mBack) {
-          mBack->EnableReadLock();
-        }
-      }
-      changedBackBuffer = true;
-    } else {
-      // Fast path, our front buffer is already writable because the texture upload
-      // has completed on the compositor side.
-      if (mBack->HasIntermediateBuffer()) {
-        // No need to keep an extra buffer around
-        mBuffer = nullptr;
-      }
+    if (!mBack) {
+      mBack = TextureClient::CreateForDrawing(
+        mFwd, mFormat, mSize,
+        BackendSelector::Canvas,
+        TextureFlags::IMMEDIATE_UPLOAD,
+        TextureAllocationFlags::ALLOC_DEFAULT
+      );
     }
 
-    if (!mBack || !mBack->Lock(OpenMode::OPEN_READ_WRITE)) {
+    if (!mBack) {
       return nullptr;
     }
 
-    if (changedBackBuffer && !aPersistedRect.IsEmpty()
-        && mFront && mFront->Lock(OpenMode::OPEN_READ)) {
+    if (!mBack->Lock(OpenMode::OPEN_READ_WRITE)) {
+      return nullptr;
+    }
+    if (!aPersistedRect.IsEmpty() && mFront
+        && mFront->Lock(OpenMode::OPEN_READ)) {
 
       DebugOnly<bool> success = mFront->CopyToTextureClient(mBack, &aPersistedRect, nullptr);
       MOZ_ASSERT(success);
@@ -207,18 +177,14 @@ PersistentBufferProviderShared::ReturnDrawTarget(already_AddRefed<gfx::DrawTarge
 {
   RefPtr<gfx::DrawTarget> dt(aDT);
   MOZ_ASSERT(mDrawTarget == dt);
-  MOZ_ASSERT(!mSnapshot);
 
   mDrawTarget = nullptr;
   dt = nullptr;
 
   mBack->Unlock();
 
-  if (!mBuffer && mFront && !mFront->IsLocked()) {
-    mBuffer.swap(mFront);
-  }
-
   mFront = mBack;
+  mBack = nullptr;
 
   return true;
 }
@@ -226,10 +192,6 @@ PersistentBufferProviderShared::ReturnDrawTarget(already_AddRefed<gfx::DrawTarge
 already_AddRefed<gfx::SourceSurface>
 PersistentBufferProviderShared::BorrowSnapshot()
 {
-  // TODO[nical] currently we can't snapshot while drawing, looks like it does
-  // the job but I am not sure whether we want to be able to do that.
-  MOZ_ASSERT(!mDrawTarget);
-
   if (!mFront || mFront->IsLocked()) {
     MOZ_ASSERT(false);
     return nullptr;
@@ -263,17 +225,6 @@ PersistentBufferProviderShared::ReturnSnapshot(already_AddRefed<gfx::SourceSurfa
   mDrawTarget = nullptr;
 
   mFront->Unlock();
-}
-
-void
-PersistentBufferProviderShared::NotifyInactive()
-{
-  if (mBuffer && mBuffer->IsLocked()) {
-    // mBuffer should never be locked
-    MOZ_ASSERT(false);
-    mBuffer->Unlock();
-  }
-  mBuffer = nullptr;
 }
 
 } // namespace layers
