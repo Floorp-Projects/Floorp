@@ -96,6 +96,7 @@ private:
  * requiring a copy.
  */
 class PersistentBufferProviderShared : public PersistentBufferProvider
+                                     , public ActiveResource
 {
 public:
   MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PersistentBufferProviderShared, override)
@@ -118,6 +119,8 @@ public:
     return mFront;
   }
 
+  virtual void NotifyInactive() override;
+
 protected:
   PersistentBufferProviderShared(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
                                  CompositableForwarder* aFwd,
@@ -128,8 +131,12 @@ protected:
   gfx::IntSize mSize;
   gfx::SurfaceFormat mFormat;
   RefPtr<CompositableForwarder> mFwd;
+  // The texture presented to the compositor.
   RefPtr<TextureClient> mFront;
+  // The texture that the canvas uses.
   RefPtr<TextureClient> mBack;
+  // An extra texture we keep around temporarily to avoid allocating.
+  RefPtr<TextureClient> mBuffer;
   RefPtr<gfx::DrawTarget> mDrawTarget;
   RefPtr<gfx::SourceSurface > mSnapshot;
 };
