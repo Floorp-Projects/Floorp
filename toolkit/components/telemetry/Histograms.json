@@ -775,6 +775,60 @@
     "description": "Number of low-commit-space events fired since last ping",
     "cpp_guard": "XP_WIN"
   },
+  "EARLY_GLUESTARTUP_READ_OPS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "40",
+    "kind": "linear",
+    "high": 100,
+    "n_buckets": 12,
+    "description": "ProcessIoCounters.ReadOperationCount before glue startup *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***",
+    "cpp_guard": "XP_WIN"
+  },
+  "EARLY_GLUESTARTUP_READ_TRANSFER": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": 51200,
+    "n_buckets": 12,
+    "description": "ProcessIoCounters.ReadTransferCount before glue startup (KB) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***",
+    "cpp_guard": "XP_WIN"
+  },
+  "GLUESTARTUP_READ_OPS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "40",
+    "kind": "linear",
+    "high": 100,
+    "n_buckets": 12,
+    "description": "ProcessIoCounters.ReadOperationCount after glue startup *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***",
+    "cpp_guard": "XP_WIN"
+  },
+  "GLUESTARTUP_READ_TRANSFER": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": 51200,
+    "n_buckets": 12,
+    "description": "ProcessIoCounters.ReadTransferCount after glue startup (KB) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***",
+    "cpp_guard": "XP_WIN"
+  },
+  "EARLY_GLUESTARTUP_HARD_FAULTS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "40",
+    "kind": "linear",
+    "high": 100,
+    "n_buckets": 12,
+    "description": "Hard faults count before glue startup *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***",
+    "cpp_guard": "XP_UNIX"
+  },
+  "GLUESTARTUP_HARD_FAULTS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": 500,
+    "n_buckets": 12,
+    "description": "Hard faults count after glue startup *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***",
+    "cpp_guard": "XP_UNIX"
+  },
   "PAGE_FAULTS_HARD": {
     "expires_in_version": "default",
     "kind": "exponential",
