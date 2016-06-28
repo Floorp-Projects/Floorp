@@ -873,6 +873,11 @@ void HTMLMediaElement::AbortExistingLoads()
   // with a different load ID to silently be cancelled.
   mCurrentLoadID++;
 
+  if (mChannelLoader) {
+    mChannelLoader->Cancel();
+    mChannelLoader = nullptr;
+  }
+
   bool fireTimeUpdate = false;
 
   // When aborting the existing loads, empty the objects in audio track list and
