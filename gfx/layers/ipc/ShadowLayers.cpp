@@ -795,7 +795,7 @@ ShadowLayerForwarder::AllocUnsafeShmem(size_t aSize,
   }
 
   ShmemAllocated(mShadowManager);
-  return GetCompositorBridgeChild()->AllocUnsafeShmem(aSize, aShmType, aShmem);
+  return mShadowManager->AllocUnsafeShmem(aSize, aShmType, aShmem);
 }
 
 bool
@@ -809,7 +809,7 @@ ShadowLayerForwarder::AllocShmem(size_t aSize,
   }
 
   ShmemAllocated(mShadowManager);
-  return GetCompositorBridgeChild()->AllocShmem(aSize, aShmType, aShmem);
+  return mShadowManager->AllocShmem(aSize, aShmType, aShmem);
 }
 
 void
@@ -817,7 +817,7 @@ ShadowLayerForwarder::DeallocShmem(ipc::Shmem& aShmem)
 {
   MOZ_ASSERT(HasShadowManager(), "no shadow manager");
   if (HasShadowManager() && mShadowManager->IPCOpen()) {
-    GetCompositorBridgeChild()->DeallocShmem(aShmem);
+    mShadowManager->DeallocShmem(aShmem);
   }
 }
 
@@ -1117,14 +1117,8 @@ ShadowLayerForwarder::GetCompositorBridgeChild()
   if (mCompositorBridgeChild) {
     return mCompositorBridgeChild;
   }
-  mCompositorBridgeChild = static_cast<CompositorBridgeChild*>(mShadowManager->Manager());
+  mCompositorBridgeChild = mClientLayerManager->GetCompositorBridgeChild();
   return mCompositorBridgeChild;
-}
-
-TextureForwarder*
-ShadowLayerForwarder::AsTextureForwarder()
-{
-  return GetCompositorBridgeChild();
 }
 
 } // namespace layers
