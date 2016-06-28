@@ -281,7 +281,7 @@ GMPVideoDecoder::Init()
   nsTArray<nsCString> tags;
   InitTags(tags);
   UniquePtr<GetGMPVideoDecoderCallback> callback(new GMPInitDoneCallback(this));
-  if (NS_FAILED(mMPS->GetGMPVideoDecoder(&tags, GetNodeId(), Move(callback)))) {
+  if (NS_FAILED(mMPS->GetGMPVideoDecoder(nullptr, &tags, GetNodeId(), Move(callback)))) {
     mInitPromise.Reject(MediaDataDecoder::DecoderFailureReason::INIT_ERROR, __func__);
   }
 
