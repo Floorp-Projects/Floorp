@@ -339,6 +339,30 @@ MacroAssembler::sqrtDouble(FloatRegister src, FloatRegister dest)
     vsqrtsd(src, src, dest);
 }
 
+void
+MacroAssembler::minFloat32(FloatRegister other, FloatRegister srcDest, bool handleNaN)
+{
+    minMaxFloat32(srcDest, other, handleNaN, false);
+}
+
+void
+MacroAssembler::minDouble(FloatRegister other, FloatRegister srcDest, bool handleNaN)
+{
+    minMaxDouble(srcDest, other, handleNaN, false);
+}
+
+void
+MacroAssembler::maxFloat32(FloatRegister other, FloatRegister srcDest, bool handleNaN)
+{
+    minMaxFloat32(srcDest, other, handleNaN, true);
+}
+
+void
+MacroAssembler::maxDouble(FloatRegister other, FloatRegister srcDest, bool handleNaN)
+{
+    minMaxDouble(srcDest, other, handleNaN, true);
+}
+
 // ===============================================================
 // Rotation instructions
 void

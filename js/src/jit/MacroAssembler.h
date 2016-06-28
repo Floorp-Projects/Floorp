@@ -816,6 +816,15 @@ class MacroAssembler : public MacroAssemblerSpecific
     inline void sqrtFloat32(FloatRegister src, FloatRegister dest) DEFINED_ON(arm, arm64, x86_shared);
     inline void sqrtDouble(FloatRegister src, FloatRegister dest) DEFINED_ON(arm, arm64, x86_shared);
 
+    // srcDest = {min,max}{Float32,Double}(srcDest, other)
+    // For min and max, handle NaN specially if handleNaN is true.
+
+    inline void minFloat32(FloatRegister other, FloatRegister srcDest, bool handleNaN) DEFINED_ON(arm, arm64, x86_shared);
+    inline void minDouble(FloatRegister other, FloatRegister srcDest, bool handleNaN) DEFINED_ON(arm, arm64, x86_shared);
+
+    inline void maxFloat32(FloatRegister other, FloatRegister srcDest, bool handleNaN) DEFINED_ON(arm, arm64, x86_shared);
+    inline void maxDouble(FloatRegister other, FloatRegister srcDest, bool handleNaN) DEFINED_ON(arm, arm64, x86_shared);
+
     // ===============================================================
     // Shift functions
 
