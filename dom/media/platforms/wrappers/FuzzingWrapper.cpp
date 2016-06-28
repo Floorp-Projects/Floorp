@@ -82,14 +82,6 @@ DecoderFuzzingWrapper::Shutdown()
   return result;
 }
 
-void
-DecoderFuzzingWrapper::SetSeekThreshold(const media::TimeUnit& aTime)
-{
-  DFW_LOGV("");
-  MOZ_ASSERT(mDecoder);
-  mDecoder->SetSeekThreshold(aTime);
-}
-
 bool
 DecoderFuzzingWrapper::IsHardwareAccelerated(nsACString& aFailureReason) const
 {

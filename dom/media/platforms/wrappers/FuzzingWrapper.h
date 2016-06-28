@@ -113,7 +113,6 @@ public:
   {
     return mDecoder->GetDescriptionName();
   }
-  void SetSeekThreshold(const media::TimeUnit& aTime) override;
 
 private:
   virtual ~DecoderFuzzingWrapper();
