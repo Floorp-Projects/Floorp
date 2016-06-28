@@ -183,6 +183,8 @@ public:
 
   virtual MessageLoop* GetMessageLoop() const override { return mMessageLoop; }
 
+  virtual base::ProcessId GetParentPid() const override { return OtherPid(); }
+
   virtual bool AllocUnsafeShmem(size_t aSize,
                                 mozilla::ipc::SharedMemory::SharedMemoryType aShmType,
                                 mozilla::ipc::Shmem* aShmem) override;
