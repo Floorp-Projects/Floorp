@@ -966,6 +966,8 @@ class GenericArgsBase
 
         *static_cast<JS::CallArgs*>(this) = CallArgsFromVp(argc, v_.begin());
         this->constructing_ = Construct;
+        if (Construct)
+            this->CallArgs::setThis(MagicValue(JS_IS_CONSTRUCTING));
         return true;
     }
 };
@@ -981,6 +983,8 @@ class FixedArgsBase
     explicit FixedArgsBase(JSContext* cx) : v_(cx) {
         *static_cast<JS::CallArgs*>(this) = CallArgsFromVp(N, v_.begin());
         this->constructing_ = Construct;
+        if (Construct)
+            this->CallArgs::setThis(MagicValue(JS_IS_CONSTRUCTING));
     }
 };
 

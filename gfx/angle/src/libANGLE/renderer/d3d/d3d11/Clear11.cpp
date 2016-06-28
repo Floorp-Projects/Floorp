@@ -196,7 +196,8 @@ Clear11::~Clear11()
     SafeRelease(mRasterizerState);
 }
 
-gl::Error Clear11::clearFramebuffer(const ClearParameters &clearParams, const gl::Framebuffer::Data &fboData)
+gl::Error Clear11::clearFramebuffer(const ClearParameters &clearParams,
+                                    const gl::FramebufferState &fboData)
 {
     const auto &colorAttachments = fboData.getColorAttachments();
     const auto &drawBufferStates = fboData.getDrawBufferStates();
@@ -327,7 +328,8 @@ gl::Error Clear11::clearFramebuffer(const ClearParameters &clearParams, const gl
                     return gl::Error(GL_OUT_OF_MEMORY, "Internal render target view pointer unexpectedly null.");
                 }
 
-                const d3d11::DXGIFormat &dxgiFormatInfo = d3d11::GetDXGIFormatInfo(renderTarget->getDXGIFormat());
+                const auto &dxgiFormatInfo = d3d11::GetDXGIFormatInfo(
+                    d3d11::GetANGLEFormatSet(renderTarget->getANGLEFormat()).rtvFormat);
 
                 // Check if the actual format has a channel that the internal format does not and set them to the
                 // default values
@@ -380,7 +382,8 @@ gl::Error Clear11::clearFramebuffer(const ClearParameters &clearParams, const gl
             return error;
         }
 
-        const d3d11::DXGIFormat &dxgiFormatInfo = d3d11::GetDXGIFormatInfo(renderTarget->getDXGIFormat());
+        const auto &dxgiFormatInfo = d3d11::GetDXGIFormatInfo(
+            d3d11::GetANGLEFormatSet(renderTarget->getANGLEFormat()).dsvFormat);
 
         unsigned int stencilUnmasked = (stencilAttachment != nullptr) ? (1 << dxgiFormatInfo.stencilBits) - 1 : 0;
         bool needMaskedStencilClear = clearParams.clearStencil && (clearParams.stencilWriteMask & stencilUnmasked) != stencilUnmasked;
@@ -432,7 +435,7 @@ gl::Error Clear11::clearFramebuffer(const ClearParameters &clearParams, const gl
         // be a compatible clear type.
 
         // Bind all the render targets which need clearing
-        ASSERT(maskedClearRenderTargets.size() <= mRenderer->getRendererCaps().maxDrawBuffers);
+        ASSERT(maskedClearRenderTargets.size() <= mRenderer->getNativeCaps().maxDrawBuffers);
         std::vector<ID3D11RenderTargetView*> rtvs(maskedClearRenderTargets.size());
         for (unsigned int i = 0; i < maskedClearRenderTargets.size(); i++)
         {
@@ -519,8 +522,7 @@ gl::Error Clear11::clearFramebuffer(const ClearParameters &clearParams, const gl
         deviceContext->IASetPrimitiveTopology(D3D_PRIMITIVE_TOPOLOGY_TRIANGLESTRIP);
 
         // Apply render targets
-        deviceContext->OMSetRenderTargets(static_cast<unsigned int>(rtvs.size()),
-                                          (rtvs.empty() ? nullptr : &rtvs[0]), dsv);
+        mRenderer->getStateManager()->setOneTimeRenderTargets(rtvs, dsv);
 
         // Draw the clear quad
         deviceContext->Draw(4, 0);

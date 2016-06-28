@@ -18,11 +18,12 @@ namespace rx
 class DynamicHLSL;
 class RendererD3D;
 struct D3DCompilerWorkarounds;
+struct D3DUniform;
 
 class ShaderD3D : public ShaderImpl
 {
   public:
-    ShaderD3D(const gl::Shader::Data &data);
+    ShaderD3D(const gl::ShaderState &data);
     virtual ~ShaderD3D();
 
     // ShaderImpl implementation
@@ -33,7 +34,13 @@ class ShaderD3D : public ShaderImpl
 
     // D3D-specific methods
     void uncompile();
+
+    bool hasUniform(const D3DUniform *d3dUniform) const;
+
+    // Query regular uniforms with their name. Query sampler fields of structs with field selection
+    // using dot (.) operator.
     unsigned int getUniformRegister(const std::string &uniformName) const;
+
     unsigned int getInterfaceBlockRegister(const std::string &blockName) const;
     void appendDebugInfo(const std::string &info) const { mDebugInfo += info; }
 
@@ -48,7 +55,6 @@ class ShaderD3D : public ShaderImpl
     bool usesPointCoord() const { return mUsesPointCoord; }
     bool usesDepthRange() const { return mUsesDepthRange; }
     bool usesFragDepth() const { return mUsesFragDepth; }
-    bool usesDeferredInit() const { return mUsesDeferredInit; }
 
     ShShaderOutput getCompilerOutputType() const;
 
@@ -64,7 +70,6 @@ class ShaderD3D : public ShaderImpl
     bool mUsesFragDepth;
     bool mUsesDiscardRewriting;
     bool mUsesNestedBreak;
-    bool mUsesDeferredInit;
     bool mRequiresIEEEStrictCompiling;
 
     ShShaderOutput mCompilerOutputType;

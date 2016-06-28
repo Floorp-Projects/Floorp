@@ -351,6 +351,21 @@ TIntermTyped::TIntermTyped(const TIntermTyped &node) : TIntermNode(), mType(node
     mLine = node.mLine;
 }
 
+bool TIntermTyped::isConstructorWithOnlyConstantUnionParameters()
+{
+    TIntermAggregate *constructor = getAsAggregate();
+    if (!constructor || !constructor->isConstructor())
+    {
+        return false;
+    }
+    for (TIntermNode *&node : *constructor->getSequence())
+    {
+        if (!node->getAsConstantUnion())
+            return false;
+    }
+    return true;
+}
+
 TIntermConstantUnion::TIntermConstantUnion(const TIntermConstantUnion &node) : TIntermTyped(node)
 {
     mUnionArrayPointer = node.mUnionArrayPointer;

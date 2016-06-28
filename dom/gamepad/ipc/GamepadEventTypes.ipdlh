@@ -1,0 +1,41 @@
+/* This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this file,
+ * You can obtain one at http://mozilla.org/MPL/2.0/. */
+
+namespace mozilla {
+namespace dom {
+
+struct GamepadAdded {
+  nsString id;
+  uint32_t index;
+  uint32_t mapping;
+  uint32_t num_buttons;
+  uint32_t num_axes;
+};
+
+struct GamepadRemoved {
+  uint32_t index;
+};
+
+struct GamepadAxisInformation {
+  uint32_t index;
+  uint32_t axis;
+  double value;
+};
+
+struct GamepadButtonInformation {
+  uint32_t index;
+  uint32_t button;
+  bool pressed;
+  double value;
+};
+
+union GamepadChangeEvent {
+  GamepadAdded;
+  GamepadRemoved;
+  GamepadAxisInformation;
+  GamepadButtonInformation;
+};
+
+} // namespace dom
+} // namespace mozilla

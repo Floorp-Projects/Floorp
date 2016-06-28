@@ -1,0 +1,35 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for Bug 1206121</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+  <script type="application/javascript">
+
+"use strict";
+
+var worker = new Worker("worker_xhr_cors_redirect.js");
+worker.onmessage = function(e) {
+  is(e.data, 200, "We want to read 200 here.");
+  runTests();
+};
+
+var tests = [ 'http://example.com/tests/dom/xhr/tests/worker_xhr_cors_redirect.sjs',
+              'http://example.com/tests/dom/xhr/tests/worker_xhr_cors_redirect.sjs?redirect',
+              'worker_xhr_cors_redirect.sjs?redirect' ];
+function runTests() {
+  if (!tests.length) {
+    SimpleTest.finish();
+    return;
+  }
+
+  worker.postMessage(tests.shift());
+}
+
+SimpleTest.waitForExplicitFinish();
+  </script>
+</head>
+<body onload="runTests()">
+</body>
+</html>

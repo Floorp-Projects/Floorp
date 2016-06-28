@@ -19,9 +19,9 @@
 #include "mozilla/ComputedTiming.h"
 #include "mozilla/ComputedTimingFunction.h"
 #include "mozilla/EffectCompositor.h"
+#include "mozilla/KeyframeEffectParams.h"
 #include "mozilla/LayerAnimationInfo.h" // LayerAnimations::kRecords
 #include "mozilla/Maybe.h"
-#include "mozilla/OwningNonNull.h"      // OwningNonNull<...>
 #include "mozilla/StickyTimeDuration.h"
 #include "mozilla/StyleAnimationValue.h"
 #include "mozilla/TimeStamp.h"
@@ -107,7 +107,8 @@ struct Keyframe
   }
 
   Maybe<double>                 mOffset;
-  double                        mComputedOffset = 0.0;
+  static MOZ_CONSTEXPR_VAR double kComputedOffsetNotSet = -1.0;
+  double                        mComputedOffset = kComputedOffsetNotSet;
   Maybe<ComputedTimingFunction> mTimingFunction; // Nothing() here means
                                                  // "linear"
   nsTArray<PropertyValuePair>   mPropertyValues;
@@ -196,7 +197,8 @@ class KeyframeEffectReadOnly : public AnimationEffectReadOnly
 public:
   KeyframeEffectReadOnly(nsIDocument* aDocument,
                          const Maybe<OwningAnimationTarget>& aTarget,
-                         const TimingParams& aTiming);
+                         const TimingParams& aTiming,
+                         const KeyframeEffectParams& aOptions);
 
   NS_DECL_ISUPPORTS_INHERITED
   NS_DECL_CYCLE_COLLECTION_SCRIPT_HOLDER_CLASS_INHERITED(KeyframeEffectReadOnly,
@@ -236,8 +238,9 @@ public:
 
   IterationCompositeOperation IterationComposite() const;
   CompositeOperation Composite() const;
-  void GetSpacing(nsString& aRetVal) const {
-    aRetVal.AssignLiteral("distribute");
+  void GetSpacing(nsString& aRetVal) const
+  {
+    mEffectOptions.GetSpacingAsString(aRetVal);
   }
 
   already_AddRefed<AnimationEffectTimingReadOnly> Timing() const override;
@@ -355,7 +358,8 @@ public:
 protected:
   KeyframeEffectReadOnly(nsIDocument* aDocument,
                          const Maybe<OwningAnimationTarget>& aTarget,
-                         AnimationEffectTimingReadOnly* aTiming);
+                         AnimationEffectTimingReadOnly* aTiming,
+                         const KeyframeEffectParams& aOptions);
 
   virtual ~KeyframeEffectReadOnly();
 
@@ -385,10 +389,20 @@ protected:
 
   void RequestRestyle(EffectCompositor::RestyleType aRestyleType);
 
+  // Looks up the style context associated with the target element, if any.
+  // We need to be careful to *not* call this when we are updating the style
+  // context. That's because calling GetStyleContextForElement when we are in
+  // the process of building a style context may trigger various forms of
+  // infinite recursion.
+  // If aDoc is nullptr, we will use the owner doc of the target element.
+  already_AddRefed<nsStyleContext>
+  GetTargetStyleContext(nsIDocument* aDoc = nullptr);
+
   Maybe<OwningAnimationTarget> mTarget;
   RefPtr<Animation> mAnimation;
 
   RefPtr<AnimationEffectTimingReadOnly> mTiming;
+  KeyframeEffectParams mEffectOptions;
 
   // The specified keyframes.
   nsTArray<Keyframe>          mKeyframes;
@@ -429,7 +443,8 @@ class KeyframeEffect : public KeyframeEffectReadOnly
 public:
   KeyframeEffect(nsIDocument* aDocument,
                  const Maybe<OwningAnimationTarget>& aTarget,
-                 const TimingParams& aTiming);
+                 const TimingParams& aTiming,
+                 const KeyframeEffectParams& aOptions);
 
   JSObject* WrapObject(JSContext* aCx,
                        JS::Handle<JSObject*> aGivenProto) override;
@@ -453,7 +468,7 @@ public:
 
   void NotifySpecifiedTimingUpdated();
 
-  // This method calls MaybeUpdateProperties which is not safe to use when
+  // This method calls GetTargetStyleContext which is not safe to use when
   // we are in the middle of updating style. If we need to use this when
   // updating style, we should pass the nsStyleContext into this method and use
   // that to update the properties rather than calling
@@ -462,12 +477,6 @@ public:
 
 protected:
   ~KeyframeEffect() override;
-
-  // We need to be careful to *not* call this when we are updating the style
-  // context. That's because calling GetStyleContextForElement when we are in
-  // the process of building a style context may trigger various forms of
-  // infinite recursion.
-  void MaybeUpdateProperties();
 };
 
 } // namespace dom

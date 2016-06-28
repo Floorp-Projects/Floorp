@@ -1252,22 +1252,13 @@ function loadManifestFromRDF(aUri, aStream) {
 }
 
 function defineSyncGUID(aAddon) {
-  // Load the storage service before NSS (nsIRandomGenerator),
-  // to avoid a SQLite initialization error (bug 717904).
-  let storage = Services.storage;
-
   // Define .syncGUID as a lazy property which is also settable
   Object.defineProperty(aAddon, "syncGUID", {
     get: () => {
       // Generate random GUID used for Sync.
-      // This was lifted from util.js:makeGUID() from services-sync.
-      let rng = Cc["@mozilla.org/security/random-generator;1"].
-        createInstance(Ci.nsIRandomGenerator);
-      let bytes = rng.generateRandomBytes(9);
-      let byte_string = bytes.map(byte => String.fromCharCode(byte)).join("");
-      // Base64 encode
-      let guid = btoa(byte_string).replace(/\+/g, '-')
-        .replace(/\//g, '_');
+      let guid = Cc["@mozilla.org/uuid-generator;1"]
+          .getService(Ci.nsIUUIDGenerator)
+          .generateUUID().toString();
 
       delete aAddon.syncGUID;
       aAddon.syncGUID = guid;

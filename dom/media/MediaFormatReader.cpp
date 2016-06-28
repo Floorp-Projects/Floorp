@@ -407,28 +407,27 @@ MediaFormatReader::EnsureDecoderCreated(TrackType aTrack)
   MonitorAutoLock mon(decoder.mMonitor);
 
   switch (aTrack) {
-    case TrackType::kAudioTrack:
-      decoder.mDecoder =
-        mPlatform->CreateDecoder(decoder.mInfo ?
-                                   *decoder.mInfo->GetAsAudioInfo() :
-                                   mInfo.mAudio,
-                                 decoder.mTaskQueue,
-                                 decoder.mCallback,
-                                 /* DecoderDoctorDiagnostics* */ nullptr);
+    case TrackType::kAudioTrack: {
+      decoder.mDecoder = mPlatform->CreateDecoder({
+        decoder.mInfo ? *decoder.mInfo->GetAsAudioInfo() : mInfo.mAudio,
+        decoder.mTaskQueue,
+        decoder.mCallback.get()
+      });
       break;
-    case TrackType::kVideoTrack:
+    }
+
+    case TrackType::kVideoTrack: {
       // Decoders use the layers backend to decide if they can use hardware decoding,
       // so specify LAYERS_NONE if we want to forcibly disable it.
-      decoder.mDecoder =
-        mPlatform->CreateDecoder(mVideo.mInfo ?
-                                   *mVideo.mInfo->GetAsVideoInfo() :
-                                   mInfo.mVideo,
-                                 decoder.mTaskQueue,
-                                 decoder.mCallback,
-                                 /* DecoderDoctorDiagnostics* */ nullptr,
-                                 mLayersBackendType,
-                                 GetImageContainer());
+      decoder.mDecoder = mPlatform->CreateDecoder({
+        mVideo.mInfo ? *mVideo.mInfo->GetAsVideoInfo() : mInfo.mVideo,
+        decoder.mTaskQueue,
+        decoder.mCallback.get(),
+        mLayersBackendType,
+        GetImageContainer(),
+      });
       break;
+    }
     default:
       break;
   }

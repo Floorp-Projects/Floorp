@@ -1011,9 +1011,6 @@ namespace js {
 void
 AssertHeapIsIdle(JSRuntime* rt);
 
-void
-AssertHeapIsIdle(JSContext* cx);
-
 } /* namespace js */
 
 class MOZ_RAII JSAutoRequest
@@ -2309,7 +2306,6 @@ class JS_PUBLIC_API(CompartmentBehaviors)
     }
 
     bool extraWarnings(JSRuntime* rt) const;
-    bool extraWarnings(JSContext* cx) const;
     Override& extraWarningsOverride() { return extraWarningsOverride_; }
 
     bool getSingletonsAsTemplates() const {

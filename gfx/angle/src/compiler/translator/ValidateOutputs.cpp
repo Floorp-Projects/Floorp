@@ -34,10 +34,10 @@ void ValidateOutputs::visitSymbol(TIntermSymbol *symbol)
     TString name = symbol->getSymbol();
     TQualifier qualifier = symbol->getQualifier();
 
-    if (mVisitedSymbols.count(name) == 1)
+    if (mVisitedSymbols.count(name.c_str()) == 1)
         return;
 
-    mVisitedSymbols.insert(name);
+    mVisitedSymbols.insert(name.c_str());
 
     if (qualifier == EvqFragmentOut)
     {

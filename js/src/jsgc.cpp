@@ -6280,6 +6280,11 @@ GCRuntime::checkIfGCAllowedInCurrentState(JS::gcreason::Reason reason)
     if (rt->mainThread.suppressGC)
         return false;
 
+    // Only allow shutdown GCs when we're destroying the runtime. This keeps
+    // the GC callback from triggering a nested GC and resetting global state.
+    if (rt->isBeingDestroyed() && !IsShutdownGC(reason))
+        return false;
+
 #ifdef JS_GC_ZEAL
     if (deterministicOnly && !IsDeterministicGCReason(reason))
         return false;
@@ -7370,12 +7375,6 @@ JS_PUBLIC_API(bool)
 JS::IsIncrementalBarrierNeeded(JSRuntime* rt)
 {
     return rt->gc.state() == gc::MARK && !rt->isHeapBusy();
-}
-
-JS_PUBLIC_API(bool)
-JS::IsIncrementalBarrierNeeded(JSContext* cx)
-{
-    return IsIncrementalBarrierNeeded(cx->runtime());
 }
 
 struct IncrementalReferenceBarrierFunctor {

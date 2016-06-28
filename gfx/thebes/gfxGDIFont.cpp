@@ -141,7 +141,7 @@ gfxGDIFont::SetupCairoFont(DrawTarget* aDrawTarget)
 }
 
 gfxFont::RunMetrics
-gfxGDIFont::Measure(gfxTextRun *aTextRun,
+gfxGDIFont::Measure(const gfxTextRun *aTextRun,
                     uint32_t aStart, uint32_t aEnd,
                     BoundingBoxType aBoundingBoxType,
                     DrawTarget *aRefDrawTarget,

@@ -4329,6 +4329,13 @@ BaselineCompiler::emit_JSOP_DEBUGCHECKSELFHOSTED()
 }
 
 bool
+BaselineCompiler::emit_JSOP_IS_CONSTRUCTING()
+{
+    frame.push(MagicValue(JS_IS_CONSTRUCTING));
+    return true;
+}
+
+bool
 BaselineCompiler::emit_JSOP_JUMPTARGET()
 {
     if (!script->hasScriptCounts())

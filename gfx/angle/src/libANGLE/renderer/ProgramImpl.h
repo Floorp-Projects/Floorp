@@ -14,9 +14,13 @@
 #include "libANGLE/Constants.h"
 #include "libANGLE/Program.h"
 #include "libANGLE/Shader.h"
-#include "libANGLE/renderer/Renderer.h"
 
 #include <map>
+
+namespace sh
+{
+struct BlockMemberInfo;
+}
 
 namespace rx
 {
@@ -32,14 +36,14 @@ struct LinkResult
 class ProgramImpl : angle::NonCopyable
 {
   public:
-    ProgramImpl(const gl::Program::Data &data) : mData(data) {}
+    ProgramImpl(const gl::ProgramState &state) : mState(state) {}
     virtual ~ProgramImpl() {}
 
     virtual LinkResult load(gl::InfoLog &infoLog, gl::BinaryInputStream *stream) = 0;
     virtual gl::Error save(gl::BinaryOutputStream *stream) = 0;
     virtual void setBinaryRetrievableHint(bool retrievable) = 0;
 
-    virtual LinkResult link(const gl::Data &data, gl::InfoLog &infoLog) = 0;
+    virtual LinkResult link(const gl::ContextState &data, gl::InfoLog &infoLog) = 0;
     virtual GLboolean validate(const gl::Caps &caps, gl::InfoLog *infoLog) = 0;
 
     virtual void setUniform1fv(GLint location, GLsizei count, const GLfloat *v) = 0;
@@ -77,7 +81,7 @@ class ProgramImpl : angle::NonCopyable
                                            sh::BlockMemberInfo *memberInfoOut) const = 0;
 
   protected:
-    const gl::Program::Data &mData;
+    const gl::ProgramState &mState;
 };
 
 }

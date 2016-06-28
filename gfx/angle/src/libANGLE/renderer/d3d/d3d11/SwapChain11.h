@@ -16,12 +16,13 @@
 namespace rx
 {
 class Renderer11;
+class NativeWindow11;
 
 class SwapChain11 : public SwapChainD3D
 {
   public:
     SwapChain11(Renderer11 *renderer,
-                NativeWindow nativeWindow,
+                NativeWindow11 *nativeWindow,
                 HANDLE shareHandle,
                 GLenum backBufferFormat,
                 GLenum depthBufferFormat,
@@ -71,8 +72,10 @@ class SwapChain11 : public SwapChainD3D
     unsigned int mSwapInterval;
     bool mPassThroughResourcesInit;
 
+    NativeWindow11 *mNativeWindow;  // Handler for the Window that the surface is created for.
+
     bool mFirstSwap;
-    DXGISwapChain *mSwapChain;
+    IDXGISwapChain *mSwapChain;
     IDXGISwapChain1 *mSwapChain1;
     IDXGIKeyedMutex *mKeyedMutex;
 

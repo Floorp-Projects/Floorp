@@ -74,21 +74,16 @@ AppleDecoderModule::Startup()
 }
 
 already_AddRefed<MediaDataDecoder>
-AppleDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
-                                       layers::LayersBackend aLayersBackend,
-                                       layers::ImageContainer* aImageContainer,
-                                       TaskQueue* aTaskQueue,
-                                       MediaDataDecoderCallback* aCallback,
-                                       DecoderDoctorDiagnostics* aDiagnostics)
+AppleDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
 {
   RefPtr<MediaDataDecoder> decoder;
 
   if (sIsVDAAvailable && (!sIsVTHWAvailable || MediaPrefs::AppleForceVDA())) {
     decoder =
-      AppleVDADecoder::CreateVDADecoder(aConfig,
-                                        aTaskQueue,
-                                        aCallback,
-                                        aImageContainer);
+      AppleVDADecoder::CreateVDADecoder(aParams.VideoConfig(),
+                                        aParams.mTaskQueue,
+                                        aParams.mCallback,
+                                        aParams.mImageContainer);
     if (decoder) {
       return decoder.forget();
     }
@@ -97,19 +92,21 @@ AppleDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
   // supported by the current platform.
   if (sIsVTAvailable) {
     decoder =
-      new AppleVTDecoder(aConfig, aTaskQueue, aCallback, aImageContainer);
+      new AppleVTDecoder(aParams.VideoConfig(),
+                         aParams.mTaskQueue,
+                         aParams.mCallback,
+                         aParams.mImageContainer);
   }
   return decoder.forget();
 }
 
 already_AddRefed<MediaDataDecoder>
-AppleDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
-                                       TaskQueue* aTaskQueue,
-                                       MediaDataDecoderCallback* aCallback,
-                                       DecoderDoctorDiagnostics* aDiagnostics)
+AppleDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
 {
   RefPtr<MediaDataDecoder> decoder =
-    new AppleATDecoder(aConfig, aTaskQueue, aCallback);
+    new AppleATDecoder(aParams.AudioConfig(),
+                       aParams.mTaskQueue,
+                       aParams.mCallback);
   return decoder.forget();
 }
 

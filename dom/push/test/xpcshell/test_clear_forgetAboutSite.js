@@ -63,6 +63,11 @@ add_task(function* setup() {
           equal(request.code, 200,
             'Expected manual unregister reason');
           resolve();
+          this.serverSendMsg(JSON.stringify({
+            messageType: 'unregister',
+            status: 200,
+            channelID: request.channelID,
+          }));
         },
       });
     },

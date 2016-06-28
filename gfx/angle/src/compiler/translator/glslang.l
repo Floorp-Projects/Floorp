@@ -390,6 +390,11 @@ O           [0-7]
     return FIELD_SELECTION;
 }
 <FIELDS>[ \t\v\f\r] {}
+<FIELDS>. {
+    yyextra->error(*yylloc, "Illegal character at fieldname start", yytext, "");
+    yyextra->recover();
+    return 0;
+}
 
 [ \t\v\n\f\r] { }
 <*><<EOF>>    { yyterminate(); }

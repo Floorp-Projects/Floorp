@@ -21,7 +21,6 @@
 #include "nsNetUtil.h"
 #include "nsNullPrincipal.h"
 #include "nsPrincipal.h"
-#include "nsXMLHttpRequest.h"
 #include "WrapperFactory.h"
 #include "xpcprivate.h"
 #include "XPCWrapper.h"
@@ -48,6 +47,7 @@
 #include "mozilla/dom/UnionConversions.h"
 #include "mozilla/dom/URLBinding.h"
 #include "mozilla/dom/URLSearchParamsBinding.h"
+#include "mozilla/dom/XMLHttpRequest.h"
 
 using namespace mozilla;
 using namespace JS;

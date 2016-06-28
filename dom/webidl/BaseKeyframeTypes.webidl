@@ -28,6 +28,19 @@ dictionary BaseKeyframe {
   double? offset = null;
   DOMString easing = "linear";
   CompositeOperation composite;
+
+  // Non-standard extensions
+
+  // Member to allow testing when StyleAnimationValue::ComputeValues fails.
+  //
+  // Note that we currently only apply this to shorthand properties since
+  // it's easier to annotate shorthand property values and because we have
+  // only ever observed ComputeValues failing on shorthand values.
+  //
+  // Bug 1216844 should remove this member since after that bug is fixed we will
+  // have a well-defined behavior to use when animation endpoints are not
+  // available.
+  [ChromeOnly] boolean simulateComputeValuesFailure = false;
 };
 
 dictionary BaseComputedKeyframe : BaseKeyframe {

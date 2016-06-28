@@ -1,0 +1,45 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker Threads XHR(Bug 450452 )
+-->
+<head>
+  <title>Test for DOM Worker Threads XHR (Bug 450452 )</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=450452">DOM Worker Threads XHR (Bug 450452)</a>
+<p id="display"></p>
+<div id="content">
+  <iframe id="iframe" src="worker_terminateSyncXHR_frame.html"></iframe>
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+  var ifr = document.getElementById("iframe");
+
+  window.onmessage = function(event) {
+    if (event.data == "TERMINATE") {
+      ok(true, "Got TERMINATE");
+      ifr.parentNode.removeChild(ifr);
+      SimpleTest.finish();
+    } else {
+      ok(false, "Unexpected message: " + event.data);
+    }
+  }
+
+  SimpleTest.waitForExplicitFinish();
+
+  window.onload = function() {
+    ifr.contentWindow.doStuff();
+  }
+
+</script>
+</pre>
+</body>
+</html>
+

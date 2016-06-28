@@ -172,6 +172,17 @@ DefaultJitOptions::DefaultJitOptions()
     // pc-relative jump and call instructions.
     SET_DEFAULT(jumpThreshold, UINT32_MAX);
 
+    // Branch pruning heuristic is based on a scoring system, which is look at
+    // different metrics and provide a score. The score is computed as a
+    // projection where each factor defines the weight of each metric. Then this
+    // score is compared against a threshold to prevent a branch from being
+    // removed.
+    SET_DEFAULT(branchPruningHitCountFactor, 1);
+    SET_DEFAULT(branchPruningInstFactor, 10);
+    SET_DEFAULT(branchPruningBlockSpanFactor, 100);
+    SET_DEFAULT(branchPruningEffectfulInstFactor, 3500);
+    SET_DEFAULT(branchPruningThreshold, 4000);
+
     // Force how many invocation or loop iterations are needed before compiling
     // a function with the highest ionmonkey optimization level.
     // (i.e. OptimizationLevel_Normal)

@@ -172,7 +172,7 @@ function promiseAsync_SyncXHRAndImportScripts()
 
   ok(!handlerExecuted, "Sync XHR should not trigger microtask execution.");
 
-  importScripts("relativeLoad_import.js");
+  importScripts("../../../dom/xhr/tests/relativeLoad_import.js");
 
   ok(!handlerExecuted, "importScripts should not trigger microtask execution.");
 }

@@ -6,15 +6,15 @@
 
 #include "compiler/translator/PoolAlloc.h"
 
-#include "compiler/translator/InitializeGlobals.h"
-
-#include "common/platform.h"
-#include "common/angleutils.h"
-#include "common/tls.h"
-
 #include <stdint.h>
 #include <stdio.h>
 #include <assert.h>
+
+#include "common/angleutils.h"
+#include "common/debug.h"
+#include "common/platform.h"
+#include "common/tls.h"
+#include "compiler/translator/InitializeGlobals.h"
 
 TLSIndex PoolIndex = TLS_INVALID_INDEX;
 
@@ -56,7 +56,8 @@ TPoolAllocator::TPoolAllocator(int growthIncrement, int allocationAlignment) :
     freeList(0),
     inUseList(0),
     numCalls(0),
-    totalBytes(0)
+    totalBytes(0),
+    mLocked(false)
 {
     //
     // Don't allow page sizes we know are smaller than all common
@@ -206,6 +207,8 @@ void TPoolAllocator::popAll()
 
 void* TPoolAllocator::allocate(size_t numBytes)
 {
+    ASSERT(!mLocked);
+
     //
     // Just keep some interesting statistics.
     //
@@ -284,6 +287,17 @@ void* TPoolAllocator::allocate(size_t numBytes)
     return initializeAllocation(inUseList, ret, numBytes);
 }
 
+void TPoolAllocator::lock()
+{
+    ASSERT(!mLocked);
+    mLocked = true;
+}
+
+void TPoolAllocator::unlock()
+{
+    ASSERT(mLocked);
+    mLocked = false;
+}
 
 //
 // Check all allocations in a list for damage by calling check on each.

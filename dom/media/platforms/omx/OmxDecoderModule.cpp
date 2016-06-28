@@ -12,24 +12,20 @@
 namespace mozilla {
 
 already_AddRefed<MediaDataDecoder>
-OmxDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
-                                     mozilla::layers::LayersBackend aLayersBackend,
-                                     mozilla::layers::ImageContainer* aImageContainer,
-                                     TaskQueue* aTaskQueue,
-                                     MediaDataDecoderCallback* aCallback,
-                                     DecoderDoctorDiagnostics* aDiagnostics)
+OmxDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
 {
-  RefPtr<OmxDataDecoder> decoder = new OmxDataDecoder(aConfig, aCallback, aImageContainer);
+  RefPtr<OmxDataDecoder> decoder = new OmxDataDecoder(aParams.mConfig,
+                                                      aParams.mCallback,
+                                                      aParams.mImageContainer);
   return decoder.forget();
 }
 
 already_AddRefed<MediaDataDecoder>
-OmxDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
-                                     TaskQueue* aTaskQueue,
-                                     MediaDataDecoderCallback* aCallback,
-                                     DecoderDoctorDiagnostics* aDiagnostics)
+OmxDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
 {
-  RefPtr<OmxDataDecoder> decoder = new OmxDataDecoder(aConfig, aCallback, nullptr);
+  RefPtr<OmxDataDecoder> decoder = new OmxDataDecoder(aParams.mConfig,
+                                                      aParams.mCallback,
+                                                      nullptr);
   return decoder.forget();
 }
 

@@ -551,10 +551,11 @@ void ssse3_scale_data(uint32_t *src, int src_width, int src_height, int src_stri
     iter.data = NULL;
 
     ssse3_bilinear_cover_iter_init(&iter);
-    for (int iy = 0; iy < height; iy++) {
-        ssse3_fetch_bilinear_cover(&iter, NULL);
-        iter.buffer += dest_stride;
+    if (iter.data) {
+        for (int iy = 0; iy < height; iy++) {
+            ssse3_fetch_bilinear_cover(&iter, NULL);
+            iter.buffer += dest_stride;
+        }
+        ssse3_bilinear_cover_iter_fini(&iter);
     }
-    ssse3_bilinear_cover_iter_fini(&iter);
-
 }

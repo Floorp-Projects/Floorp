@@ -17,16 +17,29 @@ SimpleTest.waitForExplicitFinish();
 // we account for timing before checking values.
 window.addEventListener("gamepadconnected", connecthandler);
 var index;
-// Add a gamepad
-addGamepad("test gamepad", // id
-           SpecialPowers.Ci.nsIGamepadServiceTest.STANDARD_MAPPING,
-           4,
-           2).then(function(i) {
-             index = i;
-             // Simulate button events on the gamepad we added
-             GamepadService.newButtonEvent(index, 0, true);
-             GamepadService.newButtonValueEvent(index, 1, true, 0.5);
-           });
+var testNum = 0;
+
+window.addEventListener("gamepadbuttondown", () => {
+  SpecialPowers.executeSoon(buttontest1);
+});
+
+window.addEventListener("gamepadbuttonup", () => {
+  SpecialPowers.executeSoon(buttontest2);
+});
+
+runGamepadTest(startTest);
+
+function startTest() {
+  // Add a gamepad
+  GamepadService.addGamepad("test gamepad", // id
+                     GamepadService.standardMapping,
+                     4,
+                     2).then(function(i) {
+                       index = i;
+                       // Simulate button events on the gamepad we added
+                       GamepadService.newButtonEvent(index, 0, true);
+                     });
+}
 
 function connecthandler(e) {
   ok(e.gamepad.timestamp <= performance.now(),
@@ -36,17 +49,22 @@ function connecthandler(e) {
   is(e.gamepad.mapping, "standard", "standard mapping");
   is(e.gamepad.buttons.length, 4, "correct number of buttons");
   is(e.gamepad.axes.length, 2, "correct number of axes");
-  // Execute button event tests later, since we need to make sure button
-  // event updates executed on the parent process first.
-  SimpleTest.executeSoon(function() {
-    gamepads = navigator.getGamepads();
-    is(gamepads[0].buttons[0].pressed, true, "gamepad button should register as pressed");
-    is(gamepads[0].buttons[1].pressed, true, "gamepad button should register as pressed");
-    is(gamepads[0].buttons[1].value, 0.5, "gamepad button value should be 0.5");
-    GamepadService.removeGamepad(index);
-    SimpleTest.finish();
-  });
 }
+
+function buttontest1() {
+  var gamepads = navigator.getGamepads();
+  is(gamepads[0].buttons[0].pressed, true, "gamepad button should register as pressed");
+  GamepadService.newButtonValueEvent(index, 1, true, 0.5);
+}
+
+function buttontest2() {
+  var gamepads = navigator.getGamepads();
+  is(gamepads[0].buttons[1].pressed, true, "gamepad button should register as pressed");
+  is(gamepads[0].buttons[1].value, 0.5, "gamepad button value should be 0.5");
+  GamepadService.removeGamepad(index);
+  SimpleTest.finish();
+}
+
 </script>
 </body>
 </html>

@@ -17,9 +17,7 @@ namespace mozilla {
 class OpusDataDecoder : public MediaDataDecoder
 {
 public:
-  OpusDataDecoder(const AudioInfo& aConfig,
-                  TaskQueue* aTaskQueue,
-                  MediaDataDecoderCallback* aCallback);
+  explicit OpusDataDecoder(const CreateDecoderParams& aParams);
   ~OpusDataDecoder();
 
   RefPtr<InitPromise> Init() override;

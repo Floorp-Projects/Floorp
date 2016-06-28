@@ -213,6 +213,7 @@
 @RESPATH@/components/dom_webspeechrecognition.xpt
 #endif
 @RESPATH@/components/dom_xbl.xpt
+@RESPATH@/components/dom_xhr.xpt
 @RESPATH@/components/dom_xpath.xpt
 @RESPATH@/components/dom_xul.xpt
 @RESPATH@/components/dom_time.xpt

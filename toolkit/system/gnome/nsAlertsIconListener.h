@@ -7,26 +7,26 @@
 #define nsAlertsIconListener_h__
 
 #include "nsCOMPtr.h"
-#include "imgINotificationObserver.h"
+#include "nsIAlertsService.h"
 #include "nsString.h"
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 
 #include <gdk-pixbuf/gdk-pixbuf.h>
 
-class imgIRequest;
 class nsIAlertNotification;
+class nsICancelable;
 class nsSystemAlertsService;
 
 struct NotifyNotification;
 
-class nsAlertsIconListener : public imgINotificationObserver,
+class nsAlertsIconListener : public nsIAlertNotificationImageListener,
                              public nsIObserver,
                              public nsSupportsWeakReference
 {
 public:
   NS_DECL_ISUPPORTS
-  NS_DECL_IMGINOTIFICATIONOBSERVER
+  NS_DECL_NSIALERTNOTIFICATIONIMAGELISTENER
   NS_DECL_NSIOBSERVER
 
   nsAlertsIconListener(nsSystemAlertsService* aBackend,
@@ -41,9 +41,6 @@ public:
 
 protected:
   virtual ~nsAlertsIconListener();
-
-  nsresult OnLoadComplete(imgIRequest* aRequest);
-  nsresult OnFrameComplete(imgIRequest* aRequest);
 
   /**
    * The only difference between libnotify.so.4 and libnotify.so.1 for these symbols
@@ -61,7 +58,7 @@ protected:
   typedef void (*notify_notification_add_action_t)(void*, const char*, const char*, NotifyActionCallback, gpointer, GFreeFunc);
   typedef bool (*notify_notification_close_t)(void*, GError**);
 
-  nsCOMPtr<imgIRequest> mIconRequest;
+  nsCOMPtr<nsICancelable> mIconRequest;
   nsCString mAlertTitle;
   nsCString mAlertText;
 
@@ -71,7 +68,6 @@ protected:
 
   RefPtr<nsSystemAlertsService> mBackend;
 
-  bool mLoadedFrame;
   bool mAlertHasAction;
 
   static void* libNotifyHandle;
@@ -87,7 +83,6 @@ protected:
   NotifyNotification* mNotification;
   gulong mClosureHandler;
 
-  nsresult StartRequest(const nsAString & aImageUrl, bool aInPrivateBrowsing);
   nsresult ShowAlert(GdkPixbuf* aPixbuf);
 
   void NotifyFinished();

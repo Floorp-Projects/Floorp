@@ -18,8 +18,12 @@
 #include "mozilla/dom/DOMTypes.h"
 #include "mozilla/dom/FileSystemBase.h"
 #include "mozilla/dom/FileSystemRequestParent.h"
+#include "mozilla/dom/GamepadEventChannelParent.h"
+#include "mozilla/dom/GamepadTestChannelParent.h"
 #include "mozilla/dom/NuwaParent.h"
 #include "mozilla/dom/PBlobParent.h"
+#include "mozilla/dom/PGamepadEventChannelParent.h"
+#include "mozilla/dom/PGamepadTestChannelParent.h"
 #include "mozilla/dom/MessagePortParent.h"
 #include "mozilla/dom/ServiceWorkerRegistrar.h"
 #include "mozilla/dom/asmjscache/AsmJSCache.h"
@@ -913,6 +917,43 @@ BackgroundParentImpl::DeallocPFileSystemRequestParent(
 
   RefPtr<FileSystemRequestParent> parent =
     dont_AddRef(static_cast<FileSystemRequestParent*>(aDoomed));
+  return true;
+}
+
+// Gamepad API Background IPC
+dom::PGamepadEventChannelParent*
+BackgroundParentImpl::AllocPGamepadEventChannelParent()
+{
+  RefPtr<dom::GamepadEventChannelParent> parent =
+    new dom::GamepadEventChannelParent();
+
+  return parent.forget().take();
+}
+
+bool
+BackgroundParentImpl::DeallocPGamepadEventChannelParent(dom::PGamepadEventChannelParent *aActor)
+{
+  MOZ_ASSERT(aActor);
+  RefPtr<dom::GamepadEventChannelParent> parent =
+    dont_AddRef(static_cast<dom::GamepadEventChannelParent*>(aActor));
+  return true;
+}
+
+dom::PGamepadTestChannelParent*
+BackgroundParentImpl::AllocPGamepadTestChannelParent()
+{
+  RefPtr<dom::GamepadTestChannelParent> parent =
+    new dom::GamepadTestChannelParent();
+
+  return parent.forget().take();
+}
+
+bool
+BackgroundParentImpl::DeallocPGamepadTestChannelParent(dom::PGamepadTestChannelParent *aActor)
+{
+  MOZ_ASSERT(aActor);
+  RefPtr<dom::GamepadTestChannelParent> parent =
+    dont_AddRef(static_cast<dom::GamepadTestChannelParent*>(aActor));
   return true;
 }
 
