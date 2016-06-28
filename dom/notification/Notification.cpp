@@ -1037,7 +1037,7 @@ Notification::Constructor(const GlobalObject& aGlobal,
 {
   // FIXME(nsm): If the sticky flag is set, throw an error.
   ServiceWorkerGlobalScope* scope = nullptr;
-  UNWRAP_WORKER_OBJECT(ServiceWorkerGlobalScope, aGlobal.Get(), scope);
+  UNWRAP_OBJECT(ServiceWorkerGlobalScope, aGlobal.Get(), scope);
   if (scope) {
     aRv.ThrowTypeError<MSG_NOTIFICATION_NO_CONSTRUCTOR_IN_SERVICEWORKER>();
     return nullptr;
