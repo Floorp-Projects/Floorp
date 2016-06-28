@@ -23,43 +23,29 @@ AgnosticDecoderModule::SupportsMimeType(const nsACString& aMimeType,
 }
 
 already_AddRefed<MediaDataDecoder>
-AgnosticDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
-                                          layers::LayersBackend aLayersBackend,
-                                          layers::ImageContainer* aImageContainer,
-                                          TaskQueue* aTaskQueue,
-                                          MediaDataDecoderCallback* aCallback,
-                                          DecoderDoctorDiagnostics* aDiagnostics)
+AgnosticDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
 {
   RefPtr<MediaDataDecoder> m;
 
-  if (VPXDecoder::IsVPX(aConfig.mMimeType)) {
-    m = new VPXDecoder(*aConfig.GetAsVideoInfo(),
-                       aImageContainer,
-                       aTaskQueue,
-                       aCallback);
+  if (VPXDecoder::IsVPX(aParams.mConfig.mMimeType)) {
+    m = new VPXDecoder(aParams);
   }
 
   return m.forget();
 }
 
 already_AddRefed<MediaDataDecoder>
-AgnosticDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
-                                          TaskQueue* aTaskQueue,
-                                          MediaDataDecoderCallback* aCallback,
-                                          DecoderDoctorDiagnostics* aDiagnostics)
+AgnosticDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
 {
   RefPtr<MediaDataDecoder> m;
 
-  if (VorbisDataDecoder::IsVorbis(aConfig.mMimeType)) {
-    m = new VorbisDataDecoder(*aConfig.GetAsAudioInfo(),
-                              aTaskQueue,
-                              aCallback);
-  } else if (OpusDataDecoder::IsOpus(aConfig.mMimeType)) {
-    m = new OpusDataDecoder(*aConfig.GetAsAudioInfo(),
-                            aTaskQueue,
-                            aCallback);
-  } else if (WaveDataDecoder::IsWave(aConfig.mMimeType)) {
-    m = new WaveDataDecoder(*aConfig.GetAsAudioInfo(), aCallback);
+  const TrackInfo& config = aParams.mConfig;
+  if (VorbisDataDecoder::IsVorbis(config.mMimeType)) {
+    m = new VorbisDataDecoder(aParams);
+  } else if (OpusDataDecoder::IsOpus(config.mMimeType)) {
+    m = new OpusDataDecoder(aParams);
+  } else if (WaveDataDecoder::IsWave(config.mMimeType)) {
+    m = new WaveDataDecoder(aParams);
   }
 
   return m.forget();

@@ -2930,6 +2930,18 @@ var AddonManagerInternal = {
       });
     },
 
+    addonSetEnabled(target, id, value) {
+      return new Promise((resolve, reject) => {
+        AddonManager.getAddonByID(id, addon => {
+          if (!addon) {
+            reject({message: `No such addon ${id}`});
+          }
+          addon.userDisabled = !value;
+          resolve();
+        });
+      });
+    },
+
     addonInstallDoInstall(target, id) {
       let state = this.installs.get(id);
       if (!state) {

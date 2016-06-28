@@ -102,7 +102,7 @@ TEST_P(BufferDataTest, NULLData)
             for (int k = 0; k < bufferSize - j; k++)
             {
                 glBufferSubData(GL_ARRAY_BUFFER, k, j, NULL);
-                EXPECT_GL_NO_ERROR();
+                ASSERT_GL_NO_ERROR();
             }
         }
     }
@@ -207,6 +207,31 @@ TEST_P(BufferDataTest, DISABLED_HugeSetDataShouldNotCrash)
     delete[] data;
 }
 
+// Internally in D3D, we promote dynamic data to static after many draw loops. This code tests
+// path.
+TEST_P(BufferDataTest, RepeatedDrawWithDynamic)
+{
+    std::vector<GLfloat> data;
+    for (int i = 0; i < 16; ++i)
+    {
+        data.push_back(static_cast<GLfloat>(i));
+    }
+
+    glUseProgram(mProgram);
+    glBindBuffer(GL_ARRAY_BUFFER, mBuffer);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(GLfloat) * data.size(), data.data(), GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(mAttribLocation, 1, GL_FLOAT, GL_FALSE, 0, nullptr);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    glEnableVertexAttribArray(mAttribLocation);
+
+    for (int drawCount = 0; drawCount < 40; ++drawCount)
+    {
+        drawQuad(mProgram, "position", 0.5f);
+    }
+
+    EXPECT_GL_NO_ERROR();
+}
+
 class IndexedBufferCopyTest : public ANGLETest
 {
   protected:
@@ -288,7 +313,7 @@ class IndexedBufferCopyTest : public ANGLETest
 TEST_P(IndexedBufferCopyTest, IndexRangeBug)
 {
     // TODO(geofflang): Figure out why this fails on AMD OpenGL (http://anglebug.com/1291)
-    if (isAMD() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    if (IsAMD() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
     {
         std::cout << "Test disabled on AMD OpenGL." << std::endl;
         return;

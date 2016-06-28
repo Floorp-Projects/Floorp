@@ -15,6 +15,7 @@
 #include "gfxFcPlatformFontList.h"
 #include "gfxFontconfigUtils.h"
 #include "gfxFontconfigFonts.h"
+#include "gfxConfig.h"
 #include "gfxContext.h"
 #include "gfxUserFontSet.h"
 #include "gfxUtils.h"
@@ -839,16 +840,21 @@ private:
 already_AddRefed<gfx::VsyncSource>
 gfxPlatformGtk::CreateHardwareVsyncSource()
 {
-  if (gl::sGLXLibrary.SupportsVideoSync()) {
-    RefPtr<VsyncSource> vsyncSource = new GLXVsyncSource();
-    VsyncSource::Display& display = vsyncSource->GetGlobalDisplay();
-    if (!static_cast<GLXVsyncSource::GLXDisplay&>(display).Setup()) {
-      NS_WARNING("Failed to setup GLContext, falling back to software vsync.");
-      return gfxPlatform::CreateHardwareVsyncSource();
+  // Only use GLX vsync when the OpenGL compositor is being used.
+  // The extra cost of initializing a GLX context while blocking the main
+  // thread is not worth it when using basic composition.
+  if (gfxConfig::IsEnabled(Feature::HW_COMPOSITING)) {
+    if (gl::sGLXLibrary.SupportsVideoSync()) {
+      RefPtr<VsyncSource> vsyncSource = new GLXVsyncSource();
+      VsyncSource::Display& display = vsyncSource->GetGlobalDisplay();
+      if (!static_cast<GLXVsyncSource::GLXDisplay&>(display).Setup()) {
+        NS_WARNING("Failed to setup GLContext, falling back to software vsync.");
+        return gfxPlatform::CreateHardwareVsyncSource();
+      }
+      return vsyncSource.forget();
     }
-    return vsyncSource.forget();
+    NS_WARNING("SGI_video_sync unsupported. Falling back to software vsync.");
   }
-  NS_WARNING("SGI_video_sync unsupported. Falling back to software vsync.");
   return gfxPlatform::CreateHardwareVsyncSource();
 }
 

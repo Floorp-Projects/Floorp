@@ -14,6 +14,7 @@
 namespace gl
 {
 class Context;
+struct IndexRange;
 class ValidationContext;
 
 bool ValidateES3TexImageParametersBase(ValidationContext *context,
@@ -141,10 +142,6 @@ bool ValidateES3TexStorage3DParameters(Context *context,
                                        GLsizei height,
                                        GLsizei depth);
 
-bool ValidateGenQueries(Context *context, GLsizei n, const GLuint *ids);
-
-bool ValidateDeleteQueries(Context *context, GLsizei n, const GLuint *ids);
-
 bool ValidateBeginQuery(Context *context, GLenum target, GLuint id);
 
 bool ValidateEndQuery(Context *context, GLenum target);
@@ -156,7 +153,10 @@ bool ValidateGetQueryObjectuiv(Context *context, GLuint id, GLenum pname, GLuint
 bool ValidateFramebufferTextureLayer(Context *context, GLenum target, GLenum attachment,
                                      GLuint texture, GLint level, GLint layer);
 
-bool ValidES3ReadFormatType(Context *context, GLenum internalFormat, GLenum format, GLenum type);
+bool ValidES3ReadFormatType(ValidationContext *context,
+                            GLenum internalFormat,
+                            GLenum format,
+                            GLenum type);
 
 bool ValidateES3RenderbufferStorageParameters(Context *context, GLenum target, GLsizei samples,
                                               GLenum internalformat, GLsizei width, GLsizei height);
@@ -165,6 +165,15 @@ bool ValidateInvalidateFramebuffer(Context *context, GLenum target, GLsizei numA
                                    const GLenum *attachments);
 
 bool ValidateClearBuffer(ValidationContext *context);
+
+bool ValidateDrawRangeElements(Context *context,
+                               GLenum mode,
+                               GLuint start,
+                               GLuint end,
+                               GLsizei count,
+                               GLenum type,
+                               const GLvoid *indices,
+                               IndexRange *indexRange);
 
 bool ValidateGetUniformuiv(Context *context, GLuint program, GLint location, GLuint* params);
 
@@ -182,8 +191,6 @@ bool ValidateCompressedTexImage3D(Context *context,
                                   const GLvoid *data);
 
 bool ValidateBindVertexArray(Context *context, GLuint array);
-bool ValidateDeleteVertexArrays(Context *context, GLsizei n);
-bool ValidateGenVertexArrays(Context *context, GLsizei n);
 bool ValidateIsVertexArray(Context *context);
 
 bool ValidateProgramBinary(Context *context,
@@ -197,7 +204,7 @@ bool ValidateGetProgramBinary(Context *context,
                               GLsizei *length,
                               GLenum *binaryFormat,
                               void *binary);
-bool ValidateProgramParameter(Context *context, GLuint program, GLenum pname, GLint value);
+bool ValidateProgramParameteri(Context *context, GLuint program, GLenum pname, GLint value);
 bool ValidateBlitFramebuffer(Context *context,
                              GLint srcX0,
                              GLint srcY0,
@@ -237,6 +244,70 @@ bool ValidateCopyTexSubImage3D(Context *context,
                                GLint y,
                                GLsizei width,
                                GLsizei height);
+bool ValidateTexImage3D(Context *context,
+                        GLenum target,
+                        GLint level,
+                        GLint internalformat,
+                        GLsizei width,
+                        GLsizei height,
+                        GLsizei depth,
+                        GLint border,
+                        GLenum format,
+                        GLenum type,
+                        const GLvoid *pixels);
+bool ValidateTexSubImage3D(Context *context,
+                           GLenum target,
+                           GLint level,
+                           GLint xoffset,
+                           GLint yoffset,
+                           GLint zoffset,
+                           GLsizei width,
+                           GLsizei height,
+                           GLsizei depth,
+                           GLenum format,
+                           GLenum type,
+                           const GLvoid *pixels);
+bool ValidateCompressedTexSubImage3D(Context *context,
+                                     GLenum target,
+                                     GLint level,
+                                     GLint xoffset,
+                                     GLint yoffset,
+                                     GLint zoffset,
+                                     GLsizei width,
+                                     GLsizei height,
+                                     GLsizei depth,
+                                     GLenum format,
+                                     GLsizei imageSize,
+                                     const GLvoid *data);
+
+bool ValidateGenQueries(Context *context, GLint n, GLuint *ids);
+bool ValidateDeleteQueries(Context *context, GLint n, const GLuint *ids);
+bool ValidateGenSamplers(Context *context, GLint count, GLuint *samplers);
+bool ValidateDeleteSamplers(Context *context, GLint count, const GLuint *samplers);
+bool ValidateGenTransformFeedbacks(Context *context, GLint n, GLuint *ids);
+bool ValidateDeleteTransformFeedbacks(Context *context, GLint n, const GLuint *ids);
+bool ValidateGenVertexArrays(Context *context, GLint n, GLuint *arrays);
+bool ValidateDeleteVertexArrays(Context *context, GLint n, const GLuint *arrays);
+
+bool ValidateGenOrDeleteES3(Context *context, GLint n);
+bool ValidateGenOrDeleteCountES3(Context *context, GLint count);
+
+bool ValidateBeginTransformFeedback(Context *context, GLenum primitiveMode);
+
+bool ValidateSamplerParameteri(Context *context, GLuint sampler, GLenum pname, GLint param);
+bool ValidateSamplerParameterf(Context *context, GLuint sampler, GLenum pname, GLfloat param);
+
+bool ValidateGetBufferPointerv(Context *context, GLenum target, GLenum pname, GLvoid **params);
+bool ValidateUnmapBuffer(Context *context, GLenum target);
+bool ValidateMapBufferRange(Context *context,
+                            GLenum target,
+                            GLintptr offset,
+                            GLsizeiptr length,
+                            GLbitfield access);
+bool ValidateFlushMappedBufferRange(Context *context,
+                                    GLenum target,
+                                    GLintptr offset,
+                                    GLsizeiptr length);
 
 }  // namespace gl
 

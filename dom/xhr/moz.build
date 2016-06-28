@@ -1,0 +1,36 @@
+# -*- Mode: python; c-basic-offset: 4; indent-tabs-mode: nil; tab-width: 40 -*-
+# vim: set filetype=python:
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+XPIDL_SOURCES += [
+    'nsIXMLHttpRequest.idl',
+]
+
+XPIDL_MODULE = 'dom_xhr'
+
+EXPORTS.mozilla.dom += [
+    'XMLHttpRequest.h',
+    'XMLHttpRequestEventTarget.h',
+    'XMLHttpRequestMainThread.h',
+    'XMLHttpRequestUpload.h',
+]
+
+UNIFIED_SOURCES += [
+    'XMLHttpRequest.cpp',
+    'XMLHttpRequestEventTarget.cpp',
+    'XMLHttpRequestMainThread.cpp',
+    'XMLHttpRequestUpload.cpp',
+    'XMLHttpRequestWorker.cpp',
+]
+
+LOCAL_INCLUDES += [
+    '/dom/base',
+    '/dom/workers',
+    '/netwerk/base',
+]
+
+MOCHITEST_MANIFESTS += [ 'tests/mochitest.ini' ]
+
+FINAL_LIBRARY = 'xul'

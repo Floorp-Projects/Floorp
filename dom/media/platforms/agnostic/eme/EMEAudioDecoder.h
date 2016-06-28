@@ -23,14 +23,7 @@ public:
 
 class EMEAudioDecoder : public GMPAudioDecoder {
 public:
-  EMEAudioDecoder(CDMProxy* aProxy,
-                  const AudioInfo& aConfig,
-                  TaskQueue* aTaskQueue,
-                  MediaDataDecoderCallbackProxy* aCallback)
-   : GMPAudioDecoder(aConfig, aTaskQueue, aCallback, new EMEAudioCallbackAdapter(aCallback))
-   , mProxy(aProxy)
-  {
-  }
+  EMEAudioDecoder(CDMProxy* aProxy, const GMPAudioDecoderParams& aParams);
 
 private:
   void InitTags(nsTArray<nsCString>& aTags) override;

@@ -189,7 +189,7 @@
 
 #ifdef MOZ_GAMEPAD
 #include "mozilla/dom/Gamepad.h"
-#include "mozilla/dom/GamepadService.h"
+#include "mozilla/dom/GamepadManager.h"
 #endif
 
 #include "mozilla/dom/VRDevice.h"
@@ -9919,9 +9919,9 @@ nsGlobalWindow::EnableGamepadUpdates()
 
   if (mHasGamepad) {
 #ifdef MOZ_GAMEPAD
-    RefPtr<GamepadService> gamepadsvc(GamepadService::GetService());
-    if (gamepadsvc) {
-      gamepadsvc->AddListener(this);
+    RefPtr<GamepadManager> gamepadManager(GamepadManager::GetService());
+    if (gamepadManager) {
+      gamepadManager->AddListener(this);
     }
 #endif
   }
@@ -9934,9 +9934,9 @@ nsGlobalWindow::DisableGamepadUpdates()
 
   if (mHasGamepad) {
 #ifdef MOZ_GAMEPAD
-    RefPtr<GamepadService> gamepadsvc(GamepadService::GetService());
-    if (gamepadsvc) {
-      gamepadsvc->RemoveListener(this);
+    RefPtr<GamepadManager> gamepadManager(GamepadManager::GetService());
+    if (gamepadManager) {
+      gamepadManager->RemoveListener(this);
     }
 #endif
   }
@@ -13403,9 +13403,9 @@ nsGlobalWindow::SyncGamepadState()
 {
   MOZ_ASSERT(IsInnerWindow());
   if (mHasSeenGamepadInput) {
-    RefPtr<GamepadService> gamepadsvc(GamepadService::GetService());
+    RefPtr<GamepadManager> gamepadManager(GamepadManager::GetService());
     for (auto iter = mGamepads.Iter(); !iter.Done(); iter.Next()) {
-      gamepadsvc->SyncGamepadState(iter.Key(), iter.UserData());
+      gamepadManager->SyncGamepadState(iter.Key(), iter.UserData());
     }
   }
 }

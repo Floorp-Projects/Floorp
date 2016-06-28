@@ -49,47 +49,39 @@ Error Renderbuffer::setStorage(GLenum internalformat, size_t width, size_t heigh
 {
     orphanImages();
 
-    Error error = mRenderbuffer->setStorage(internalformat, width, height);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(mRenderbuffer->setStorage(internalformat, width, height));
 
     mWidth          = static_cast<GLsizei>(width);
     mHeight         = static_cast<GLsizei>(height);
     mInternalFormat = internalformat;
     mSamples = 0;
 
-    return Error(GL_NO_ERROR);
+    mDirtyChannel.signal();
+
+    return NoError();
 }
 
 Error Renderbuffer::setStorageMultisample(size_t samples, GLenum internalformat, size_t width, size_t height)
 {
     orphanImages();
 
-    Error error = mRenderbuffer->setStorageMultisample(samples, internalformat, width, height);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(mRenderbuffer->setStorageMultisample(samples, internalformat, width, height));
 
     mWidth          = static_cast<GLsizei>(width);
     mHeight         = static_cast<GLsizei>(height);
     mInternalFormat = internalformat;
     mSamples        = static_cast<GLsizei>(samples);
 
-    return Error(GL_NO_ERROR);
+    mDirtyChannel.signal();
+
+    return NoError();
 }
 
 Error Renderbuffer::setStorageEGLImageTarget(egl::Image *image)
 {
     orphanImages();
 
-    Error error = mRenderbuffer->setStorageEGLImageTarget(image);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(mRenderbuffer->setStorageEGLImageTarget(image));
 
     setTargetImage(image);
 
@@ -98,7 +90,9 @@ Error Renderbuffer::setStorageEGLImageTarget(egl::Image *image)
     mInternalFormat = image->getInternalFormat();
     mSamples        = 0;
 
-    return Error(GL_NO_ERROR);
+    mDirtyChannel.signal();
+
+    return NoError();
 }
 
 rx::RenderbufferImpl *Renderbuffer::getImplementation()
@@ -181,4 +175,4 @@ Extents Renderbuffer::getAttachmentSize(const FramebufferAttachment::Target & /*
 {
     return Extents(mWidth, mHeight, 1);
 }
-}
+}  // namespace gl

@@ -198,7 +198,8 @@ EGLBoolean EGLAPIENTRY ChooseConfig(EGLDisplay dpy, const EGLint *attrib_list, E
         return EGL_FALSE;
     }
 
-    std::vector<const Config*> filteredConfigs = display->getConfigs(AttributeMap(attrib_list));
+    std::vector<const Config *> filteredConfigs =
+        display->getConfigs(AttributeMap::CreateFromIntArray(attrib_list));
     if (configs)
     {
         filteredConfigs.resize(std::min<size_t>(filteredConfigs.size(), config_size));
@@ -245,7 +246,7 @@ EGLSurface EGLAPIENTRY CreateWindowSurface(EGLDisplay dpy, EGLConfig config, EGL
 
     Display *display = static_cast<Display*>(dpy);
     Config *configuration = static_cast<Config*>(config);
-    AttributeMap attributes(attrib_list);
+    AttributeMap attributes = AttributeMap::CreateFromIntArray(attrib_list);
 
     Error error = ValidateCreateWindowSurface(display, configuration, win, attributes);
     if (error.isError())
@@ -272,7 +273,7 @@ EGLSurface EGLAPIENTRY CreatePbufferSurface(EGLDisplay dpy, EGLConfig config, co
 
     Display *display = static_cast<Display*>(dpy);
     Config *configuration = static_cast<Config*>(config);
-    AttributeMap attributes(attrib_list);
+    AttributeMap attributes = AttributeMap::CreateFromIntArray(attrib_list);
 
     Error error = ValidateCreatePbufferSurface(display, configuration, attributes);
     if (error.isError())
@@ -474,7 +475,7 @@ EGLContext EGLAPIENTRY CreateContext(EGLDisplay dpy, EGLConfig config, EGLContex
     Display *display = static_cast<Display*>(dpy);
     Config *configuration = static_cast<Config*>(config);
     gl::Context* sharedGLContext = static_cast<gl::Context*>(share_context);
-    AttributeMap attributes(attrib_list);
+    AttributeMap attributes      = AttributeMap::CreateFromIntArray(attrib_list);
 
     Error error = ValidateCreateContext(display, configuration, sharedGLContext, attributes);
     if (error.isError())
@@ -1065,7 +1066,7 @@ EGLSurface EGLAPIENTRY CreatePbufferFromClientBuffer(EGLDisplay dpy, EGLenum buf
 
     Display *display = static_cast<Display*>(dpy);
     Config *configuration = static_cast<Config*>(config);
-    AttributeMap attributes(attrib_list);
+    AttributeMap attributes = AttributeMap::CreateFromIntArray(attrib_list);
 
     Error error = ValidateCreatePbufferFromClientBuffer(display, buftype, buffer, configuration, attributes);
     if (error.isError())
@@ -1410,6 +1411,19 @@ __eglMustCastToProperFunctionPointerType EGLAPIENTRY GetProcAddress(const char *
         INSERT_PROC_ADDRESS(gl, GetQueryivEXT);
         INSERT_PROC_ADDRESS(gl, GetQueryObjectuivEXT);
 
+        // GL_EXT_disjoint_timer_query
+        INSERT_PROC_ADDRESS(gl, GenQueriesEXT);
+        INSERT_PROC_ADDRESS(gl, DeleteQueriesEXT);
+        INSERT_PROC_ADDRESS(gl, IsQueryEXT);
+        INSERT_PROC_ADDRESS(gl, BeginQueryEXT);
+        INSERT_PROC_ADDRESS(gl, EndQueryEXT);
+        INSERT_PROC_ADDRESS(gl, QueryCounterEXT);
+        INSERT_PROC_ADDRESS(gl, GetQueryivEXT);
+        INSERT_PROC_ADDRESS(gl, GetQueryObjectivEXT);
+        INSERT_PROC_ADDRESS(gl, GetQueryObjectuivEXT);
+        INSERT_PROC_ADDRESS(gl, GetQueryObjecti64vEXT);
+        INSERT_PROC_ADDRESS(gl, GetQueryObjectui64vEXT);
+
         // GL_EXT_draw_buffers
         INSERT_PROC_ADDRESS(gl, DrawBuffersEXT);
 
@@ -1458,6 +1472,9 @@ __eglMustCastToProperFunctionPointerType EGLAPIENTRY GetProcAddress(const char *
         INSERT_PROC_ADDRESS(gl, ObjectPtrLabelKHR);
         INSERT_PROC_ADDRESS(gl, GetObjectPtrLabelKHR);
         INSERT_PROC_ADDRESS(gl, GetPointervKHR);
+
+        // GL_CHROMIUM_bind_uniform_location
+        INSERT_PROC_ADDRESS(gl, BindUniformLocationCHROMIUM);
 
         // GLES3 core
         INSERT_PROC_ADDRESS(gl, ReadBuffer);
@@ -1641,6 +1658,25 @@ __eglMustCastToProperFunctionPointerType EGLAPIENTRY GetProcAddress(const char *
         // EGL_EXT_device_creation
         INSERT_PROC_ADDRESS(egl, CreateDeviceANGLE);
         INSERT_PROC_ADDRESS(egl, ReleaseDeviceANGLE);
+
+        // EGL_KHR_stream
+        INSERT_PROC_ADDRESS(egl, CreateStreamKHR);
+        INSERT_PROC_ADDRESS(egl, DestroyStreamKHR);
+        INSERT_PROC_ADDRESS(egl, StreamAttribKHR);
+        INSERT_PROC_ADDRESS(egl, QueryStreamKHR);
+        INSERT_PROC_ADDRESS(egl, QueryStreamu64KHR);
+
+        // EGL_KHR_stream_consumer_gltexture
+        INSERT_PROC_ADDRESS(egl, StreamConsumerGLTextureExternalKHR);
+        INSERT_PROC_ADDRESS(egl, StreamConsumerAcquireKHR);
+        INSERT_PROC_ADDRESS(egl, StreamConsumerReleaseKHR);
+
+        // EGL_NV_stream_consumer_gltexture_yuv
+        INSERT_PROC_ADDRESS(egl, StreamConsumerGLTextureExternalAttribsNV);
+
+        // EGL_ANGLE_stream_producer_d3d_texture_nv12
+        INSERT_PROC_ADDRESS(egl, CreateStreamProducerD3DTextureNV12ANGLE);
+        INSERT_PROC_ADDRESS(egl, StreamPostD3DTextureNV12ANGLE);
 
 #undef INSERT_PROC_ADDRESS
         return map;

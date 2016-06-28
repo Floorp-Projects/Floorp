@@ -1194,7 +1194,7 @@ public:
                                   mPrefs, mOrigin);
       if (NS_FAILED(rv)) {
         LOG(("Failed to allocate audiosource %d",rv));
-        Fail(NS_LITERAL_STRING("SourceUnavailableError"),
+        Fail(NS_LITERAL_STRING("NotReadableError"),
              NS_LITERAL_STRING("Failed to allocate audiosource"));
         return NS_OK;
       }
@@ -1207,7 +1207,7 @@ public:
         if (mAudioDevice) {
           mAudioDevice->GetSource()->Deallocate();
         }
-        Fail(NS_LITERAL_STRING("SourceUnavailableError"),
+        Fail(NS_LITERAL_STRING("NotReadableError"),
              NS_LITERAL_STRING("Failed to allocate videosource"));
         return NS_OK;
       }

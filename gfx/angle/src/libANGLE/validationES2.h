@@ -16,6 +16,7 @@ namespace gl
 {
 class Context;
 class ValidationContext;
+class Texture;
 
 bool ValidateES2TexImageParameters(Context *context, GLenum target, GLint level, GLenum internalformat, bool isCompressed, bool isSubImage,
                                    GLint xoffset, GLint yoffset, GLsizei width, GLsizei height,
@@ -37,7 +38,7 @@ bool ValidateES2CopyTexImageParameters(ValidationContext *context,
 bool ValidateES2TexStorageParameters(Context *context, GLenum target, GLsizei levels, GLenum internalformat,
                                                    GLsizei width, GLsizei height);
 
-bool ValidES2ReadFormatType(Context *context, GLenum format, GLenum type);
+bool ValidES2ReadFormatType(ValidationContext *context, GLenum format, GLenum type);
 
 bool ValidateDiscardFramebufferEXT(Context *context, GLenum target, GLsizei numAttachments,
                                    const GLenum *attachments);
@@ -128,6 +129,96 @@ bool ValidateBlitFramebufferANGLE(Context *context,
                                   GLenum filter);
 
 bool ValidateClear(ValidationContext *context, GLbitfield mask);
+bool ValidateTexImage2D(Context *context,
+                        GLenum target,
+                        GLint level,
+                        GLint internalformat,
+                        GLsizei width,
+                        GLsizei height,
+                        GLint border,
+                        GLenum format,
+                        GLenum type,
+                        const GLvoid *pixels);
+bool ValidateTexSubImage2D(Context *context,
+                           GLenum target,
+                           GLint level,
+                           GLint xoffset,
+                           GLint yoffset,
+                           GLsizei width,
+                           GLsizei height,
+                           GLenum format,
+                           GLenum type,
+                           const GLvoid *pixels);
+bool ValidateCompressedTexImage2D(Context *context,
+                                  GLenum target,
+                                  GLint level,
+                                  GLenum internalformat,
+                                  GLsizei width,
+                                  GLsizei height,
+                                  GLint border,
+                                  GLsizei imageSize,
+                                  const GLvoid *data);
+bool ValidateCompressedTexSubImage2D(Context *context,
+                                     GLenum target,
+                                     GLint level,
+                                     GLint xoffset,
+                                     GLint yoffset,
+                                     GLsizei width,
+                                     GLsizei height,
+                                     GLenum format,
+                                     GLsizei imageSize,
+                                     const GLvoid *data);
+bool ValidateBindTexture(Context *context, GLenum target, GLuint texture);
+
+bool ValidateGetBufferPointervOES(Context *context, GLenum target, GLenum pname, void **params);
+bool ValidateMapBufferOES(Context *context, GLenum target, GLenum access);
+bool ValidateUnmapBufferOES(Context *context, GLenum target);
+bool ValidateMapBufferRangeEXT(Context *context,
+                               GLenum target,
+                               GLintptr offset,
+                               GLsizeiptr length,
+                               GLbitfield access);
+bool ValidateFlushMappedBufferRangeEXT(Context *context,
+                                       GLenum target,
+                                       GLintptr offset,
+                                       GLsizeiptr length);
+
+bool ValidateBindUniformLocationCHROMIUM(Context *context,
+                                         GLuint program,
+                                         GLint location,
+                                         const GLchar *name);
+
+bool ValidateCoverageModulationCHROMIUM(Context *context, GLenum components);
+
+// CHROMIUM_path_rendering
+bool ValidateMatrix(Context *context, GLenum matrixMode, const GLfloat *matrix);
+bool ValidateMatrixMode(Context *context, GLenum matrixMode);
+bool ValidateGenPaths(Context *context, GLsizei range);
+bool ValidateDeletePaths(Context *context, GLuint first, GLsizei range);
+bool ValidatePathCommands(Context *context,
+                          GLuint path,
+                          GLsizei numCommands,
+                          const GLubyte *commands,
+                          GLsizei numCoords,
+                          GLenum coordType,
+                          const void *coords);
+bool ValidateSetPathParameter(Context *context, GLuint path, GLenum pname, GLfloat value);
+bool ValidateGetPathParameter(Context *context, GLuint path, GLenum pname, GLfloat *value);
+bool ValidatePathStencilFunc(Context *context, GLenum func, GLint ref, GLuint mask);
+bool ValidateStencilFillPath(Context *context, GLuint path, GLenum fillMode, GLuint mask);
+bool ValidateStencilStrokePath(Context *context, GLuint path, GLint reference, GLuint mask);
+bool ValidateCoverPath(Context *context, GLuint path, GLenum coverMode);
+bool ValidateStencilThenCoverFillPath(Context *context,
+                                      GLuint path,
+                                      GLenum fillMode,
+                                      GLuint mask,
+                                      GLenum coverMode);
+bool ValidateStencilThenCoverStrokePath(Context *context,
+                                        GLuint path,
+                                        GLint reference,
+                                        GLuint mask,
+                                        GLenum coverMode);
+bool ValidateIsPath(Context *context);
 
 }  // namespace gl
 

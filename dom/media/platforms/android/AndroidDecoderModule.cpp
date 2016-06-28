@@ -282,47 +282,45 @@ AndroidDecoderModule::SupportsMimeType(const nsACString& aMimeType,
 }
 
 already_AddRefed<MediaDataDecoder>
-AndroidDecoderModule::CreateVideoDecoder(
-    const VideoInfo& aConfig, layers::LayersBackend aLayersBackend,
-    layers::ImageContainer* aImageContainer, TaskQueue* aTaskQueue,
-    MediaDataDecoderCallback* aCallback,
-    DecoderDoctorDiagnostics* aDiagnostics)
+AndroidDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
 {
   MediaFormat::LocalRef format;
 
+  const VideoInfo& config = aParams.VideoConfig();
   NS_ENSURE_SUCCESS(MediaFormat::CreateVideoFormat(
-      TranslateMimeType(aConfig.mMimeType),
-      aConfig.mDisplay.width,
-      aConfig.mDisplay.height,
+      TranslateMimeType(config.mMimeType),
+      config.mDisplay.width,
+      config.mDisplay.height,
       &format), nullptr);
 
   RefPtr<MediaDataDecoder> decoder =
-    new VideoDataDecoder(aConfig, format, aCallback, aImageContainer);
+    new VideoDataDecoder(config,
+                         format,
+                         aParams.mCallback,
+                         aParams.mImageContainer);
 
   return decoder.forget();
 }
 
 already_AddRefed<MediaDataDecoder>
-AndroidDecoderModule::CreateAudioDecoder(
-    const AudioInfo& aConfig, TaskQueue* aTaskQueue,
-    MediaDataDecoderCallback* aCallback,
-    DecoderDoctorDiagnostics* aDiagnostics)
+AndroidDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
 {
-  MOZ_ASSERT(aConfig.mBitDepth == 16, "We only handle 16-bit audio!");
+  const AudioInfo& config = aParams.AudioConfig();
+  MOZ_ASSERT(config.mBitDepth == 16, "We only handle 16-bit audio!");
 
   MediaFormat::LocalRef format;
 
   LOG("CreateAudioFormat with mimeType=%s, mRate=%d, channels=%d",
-      aConfig.mMimeType.Data(), aConfig.mRate, aConfig.mChannels);
+      config.mMimeType.Data(), config.mRate, config.mChannels);
 
   NS_ENSURE_SUCCESS(MediaFormat::CreateAudioFormat(
-      aConfig.mMimeType,
-      aConfig.mRate,
-      aConfig.mChannels,
+      config.mMimeType,
+      config.mRate,
+      config.mChannels,
       &format), nullptr);
 
   RefPtr<MediaDataDecoder> decoder =
-    new AudioDataDecoder(aConfig, format, aCallback);
+    new AudioDataDecoder(config, format, aParams.mCallback);
 
   return decoder.forget();
 }

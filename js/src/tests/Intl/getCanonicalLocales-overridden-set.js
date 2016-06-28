@@ -10,7 +10,7 @@ Object.defineProperty(Array.prototype, 0, { set() { throw 42; } });
 // must not throw 42, might if push is used
 var arr = Intl.getCanonicalLocales(["en-US"]);
 
-assertShallowArray(arr, ["en-US"]);
+assertEqArray(arr, ["en-US"]);
 
 if (typeof reportCompare === 'function')
     reportCompare(0, 0);

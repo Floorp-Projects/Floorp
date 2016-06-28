@@ -1,15 +1,15 @@
 diff --git a/modules/woff2/src/woff2_dec.cc b/modules/woff2/src/woff2_dec.cc
 --- a/modules/woff2/src/woff2_dec.cc
 +++ b/modules/woff2/src/woff2_dec.cc
-@@ -20,16 +20,24 @@
- #include <algorithm>
- #include <complex>
+@@ -22,16 +22,25 @@
  #include <cstring>
  #include <limits>
  #include <string>
  #include <vector>
  #include <map>
  #include <memory>
+ #include <utility>
+ 
 +#include "mozilla/UniquePtr.h"
 +namespace std
 +{
@@ -18,7 +18,7 @@ diff --git a/modules/woff2/src/woff2_dec.cc b/modules/woff2/src/woff2_dec.cc
 +  #define default_delete DefaultDelete
 +  #define unique_ptr UniquePtr
 +}
- 
++
  #include "./decode.h"
  #include "./buffer.h"
  #include "./port.h"
@@ -26,3 +26,4 @@ diff --git a/modules/woff2/src/woff2_dec.cc b/modules/woff2/src/woff2_dec.cc
  #include "./store_bytes.h"
  #include "./table_tags.h"
  #include "./variable_length.h"
+ #include "./woff2_common.h"

@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Test for XMLHttpRequest with system privileges</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>        
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body onload="setup();">
+<p id="display">
+<iframe id="loader"></iframe>
+</p>
+<div id="content" style="display: none">
+  
+</div>
+<pre id="test">
+<script class="testbody" type="application/javascript;version=1.8">
+
+// An XHR with the anon flag set will not send cookie and auth information.
+const TEST_URL = "http://example.com/tests/dom/xhr/tests/file_XHR_anon.sjs";
+document.cookie = "foo=bar";
+
+let am = {
+  authMgr: null,
+
+  init: function() {
+    this.authMgr = SpecialPowers.Cc["@mozilla.org/network/http-auth-manager;1"]
+                                .getService(SpecialPowers.Ci.nsIHttpAuthManager)
+  },
+
+  addIdentity: function() {
+    this.authMgr.setAuthIdentity("http", "example.com", -1, "basic", "testrealm",
+                                 "", "example.com", "user1", "password1");
+  },
+
+  tearDown: function() {
+    this.authMgr.clearAll();
+  },
+}
+
+var tests = [ test1, test2, test2a, test3, test3, test3, test4, test4, test4, test5, test5, test5 ];
+
+function runTests() {
+  if (!tests.length) {
+    am.tearDown();
+
+    // Resetting the cookie.
+    document.cookie = "foo=; expires=Thu, 01 Jan 1970 00:00:00 GMT";
+    SimpleTest.finish();
+    return;
+  }
+
+  var test = tests.shift();
+  test();
+}
+
+function test1() {
+  am.addIdentity();
+
+  let xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
+  is(xhr.mozAnon, true, "test1: .mozAnon == true");
+  xhr.open("GET", TEST_URL);
+  xhr.onload = function onload() {
+    is(xhr.status, 200, "test1: " + xhr.responseText);
+    am.tearDown();
+    runTests();
+  };
+  xhr.onerror = function onerror() {
+    ok(false, "Got an error event!");
+    am.tearDown();
+    runTests();
+  }
+  xhr.send();
+}
+
+function test2() {
+  am.addIdentity();
+
+  let xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
+  is(xhr.mozAnon, true, "test2: .mozAnon == true");
+  xhr.open("GET", TEST_URL + "?expectAuth=true", true,
+           "user2name", "pass2word");
+  xhr.onload = function onload() {
+    is(xhr.status, 200, "test2: " + xhr.responseText);
+    let response = JSON.parse(xhr.responseText);
+    is(response.authorization, "Basic dXNlcjJuYW1lOnBhc3Myd29yZA==");
+    am.tearDown();
+    runTests();
+  };
+  xhr.onerror = function onerror() {
+    ok(false, "Got an error event!");
+    am.tearDown();
+    runTests();
+  }
+  xhr.send();
+}
+
+function test2a() {
+  am.addIdentity();
+
+  let xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
+  is(xhr.mozAnon, true, "test2: .mozAnon == true");
+  xhr.open("GET", TEST_URL + "?expectAuth=true", true,
+           "user1", "pass2word");
+  xhr.onload = function onload() {
+    is(xhr.status, 200, "test2: " + xhr.responseText);
+    let response = JSON.parse(xhr.responseText);
+    is(response.authorization, "Basic dXNlcjE6cGFzczJ3b3Jk");
+    am.tearDown();
+    runTests();
+  };
+  xhr.onerror = function onerror() {
+    ok(false, "Got an error event!");
+    am.tearDown();
+    runTests();
+  }
+  xhr.send();
+}
+
+function test3() {
+  am.addIdentity();
+
+  let xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
+  is(xhr.mozAnon, true, "test3: .mozAnon == true");
+  xhr.open("GET", TEST_URL + "?expectAuth=true", true);
+  xhr.onload = function onload() {
+    is(xhr.status, 401, "test3: " + xhr.responseText);
+    am.tearDown();
+    runTests();
+  };
+  xhr.onerror = function onerror() {
+    ok(false, "Got an error event!");
+    am.tearDown();
+    runTests();
+  }
+  xhr.send();
+}
+
+function test4() {
+  let xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
+  is(xhr.mozAnon, true, "test4: .mozAnon == true");
+  xhr.open("GET", TEST_URL + "?expectAuth=true", true);
+  xhr.onload = function onload() {
+    is(xhr.status, 401, "test4: " + xhr.responseText);
+    runTests();
+  };
+  xhr.onerror = function onerror() {
+    ok(false, "Got an error event!");
+    runTests();
+  }
+  xhr.send();
+}
+
+function test5() {
+  let xhr = new XMLHttpRequest({mozAnon: true, mozSystem: true});
+  is(xhr.mozAnon, true, "test5: .mozAnon == true");
+  xhr.open("GET", TEST_URL + "?expectAuth=true", true,
+           "user2name", "pass2word");
+  xhr.onload = function onload() {
+    is(xhr.status, 200, "test5: " + xhr.responseText);
+    let response = JSON.parse(xhr.responseText);
+    is(response.authorization, "Basic dXNlcjJuYW1lOnBhc3Myd29yZA==");
+    runTests();
+  };
+  xhr.onerror = function onerror() {
+    ok(false, "Got an error event!");
+    runTests();
+  }
+  xhr.send();
+}
+
+function setup() {
+  am.init();
+  SimpleTest.waitForExplicitFinish();
+  SpecialPowers.pushPermissions([{'type': 'systemXHR', 'allow': true, 'context': document}], runTests);
+}
+</script>
+</pre>
+</body>
+</html>

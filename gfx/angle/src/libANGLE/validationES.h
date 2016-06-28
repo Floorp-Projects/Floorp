@@ -31,6 +31,7 @@ bool ValidCap(const Context *context, GLenum cap);
 bool ValidTextureTarget(const ValidationContext *context, GLenum target);
 bool ValidTexture2DTarget(const ValidationContext *context, GLenum target);
 bool ValidTexture3DTarget(const ValidationContext *context, GLenum target);
+bool ValidTextureExternalTarget(const ValidationContext *context, GLenum target);
 bool ValidTexture2DDestinationTarget(const ValidationContext *context, GLenum target);
 bool ValidTexture3DDestinationTarget(const ValidationContext *context, GLenum target);
 bool ValidFramebufferTarget(GLenum target);
@@ -69,7 +70,7 @@ bool ValidateRenderbufferStorageParametersANGLE(Context *context, GLenum target,
 bool ValidateFramebufferRenderbufferParameters(Context *context, GLenum target, GLenum attachment,
                                                GLenum renderbuffertarget, GLuint renderbuffer);
 
-bool ValidateBlitFramebufferParameters(Context *context,
+bool ValidateBlitFramebufferParameters(ValidationContext *context,
                                        GLint srcX0,
                                        GLint srcY0,
                                        GLint srcX1,
@@ -83,11 +84,11 @@ bool ValidateBlitFramebufferParameters(Context *context,
 
 bool ValidateGetVertexAttribParameters(Context *context, GLenum pname);
 
-bool ValidateTexParamParameters(Context *context, GLenum pname, GLint param);
+bool ValidateTexParamParameters(Context *context, GLenum target, GLenum pname, GLint param);
 
 bool ValidateSamplerObjectParameter(Context *context, GLenum pname);
 
-bool ValidateReadPixels(Context *context,
+bool ValidateReadPixels(ValidationContext *context,
                         GLint x,
                         GLint y,
                         GLsizei width,
@@ -105,10 +106,8 @@ bool ValidateReadnPixelsEXT(Context *context,
                             GLsizei bufSize,
                             GLvoid *pixels);
 
-bool ValidateGenQueriesBase(gl::Context *context, GLsizei n, const GLuint *ids);
-bool ValidateGenQueriesEXT(gl::Context *context, GLsizei n, const GLuint *ids);
-bool ValidateDeleteQueriesBase(gl::Context *context, GLsizei n, const GLuint *ids);
-bool ValidateDeleteQueriesEXT(gl::Context *context, GLsizei n, const GLuint *ids);
+bool ValidateGenQueriesEXT(gl::Context *context, GLsizei n);
+bool ValidateDeleteQueriesEXT(gl::Context *context, GLsizei n);
 bool ValidateBeginQueryBase(Context *context, GLenum target, GLuint id);
 bool ValidateBeginQueryEXT(Context *context, GLenum target, GLuint id);
 bool ValidateEndQueryBase(Context *context, GLenum target);
@@ -126,7 +125,10 @@ bool ValidateUniform(Context *context, GLenum uniformType, GLint location, GLsiz
 bool ValidateUniformMatrix(Context *context, GLenum matrixType, GLint location, GLsizei count,
                            GLboolean transpose);
 
-bool ValidateStateQuery(Context *context, GLenum pname, GLenum *nativeType, unsigned int *numParams);
+bool ValidateStateQuery(ValidationContext *context,
+                        GLenum pname,
+                        GLenum *nativeType,
+                        unsigned int *numParams);
 
 bool ValidateCopyTexImageParametersBase(ValidationContext *context,
                                         GLenum target,
@@ -143,7 +145,11 @@ bool ValidateCopyTexImageParametersBase(ValidationContext *context,
                                         GLint border,
                                         GLenum *textureInternalFormatOut);
 
-bool ValidateDrawArrays(Context *context, GLenum mode, GLint first, GLsizei count, GLsizei primcount);
+bool ValidateDrawArrays(ValidationContext *context,
+                        GLenum mode,
+                        GLint first,
+                        GLsizei count,
+                        GLsizei primcount);
 bool ValidateDrawArraysInstanced(Context *context, GLenum mode, GLint first, GLsizei count, GLsizei primcount);
 bool ValidateDrawArraysInstancedANGLE(Context *context, GLenum mode, GLint first, GLsizei count, GLsizei primcount);
 
@@ -202,9 +208,8 @@ bool ValidateEGLImageTargetRenderbufferStorageOES(Context *context,
                                                   egl::Image *image);
 
 bool ValidateBindVertexArrayBase(Context *context, GLuint array);
-bool ValidateDeleteVertexArraysBase(Context *context, GLsizei n);
-bool ValidateGenVertexArraysBase(Context *context, GLsizei n);
 
+bool ValidateLinkProgram(Context *context, GLuint program);
 bool ValidateProgramBinaryBase(Context *context,
                                GLuint program,
                                GLenum binaryFormat,
@@ -216,6 +221,7 @@ bool ValidateGetProgramBinaryBase(Context *context,
                                   GLsizei *length,
                                   GLenum *binaryFormat,
                                   void *binary);
+bool ValidateUseProgram(Context *context, GLuint program);
 
 bool ValidateCopyTexImage2D(ValidationContext *context,
                             GLenum target,
@@ -236,6 +242,31 @@ bool ValidateCopyTexSubImage2D(Context *context,
                                GLint y,
                                GLsizei width,
                                GLsizei height);
+
+bool ValidateGetBufferPointervBase(Context *context, GLenum target, GLenum pname, void **params);
+bool ValidateUnmapBufferBase(Context *context, GLenum target);
+bool ValidateMapBufferRangeBase(Context *context,
+                                GLenum target,
+                                GLintptr offset,
+                                GLsizeiptr length,
+                                GLbitfield access);
+bool ValidateFlushMappedBufferRangeBase(Context *context,
+                                        GLenum target,
+                                        GLintptr offset,
+                                        GLsizeiptr length);
+
+bool ValidateGenerateMipmap(Context *context, GLenum target);
+
+bool ValidateGenBuffers(Context *context, GLint n, GLuint *buffers);
+bool ValidateDeleteBuffers(Context *context, GLint n, const GLuint *buffers);
+bool ValidateGenFramebuffers(Context *context, GLint n, GLuint *framebuffers);
+bool ValidateDeleteFramebuffers(Context *context, GLint n, const GLuint *framebuffers);
+bool ValidateGenRenderbuffers(Context *context, GLint n, GLuint *renderbuffers);
+bool ValidateDeleteRenderbuffers(Context *context, GLint n, const GLuint *renderbuffers);
+bool ValidateGenTextures(Context *context, GLint n, GLuint *textures);
+bool ValidateDeleteTextures(Context *context, GLint n, const GLuint *textures);
+
+bool ValidateGenOrDelete(Context *context, GLint n);
 
 // Error messages shared here for use in testing.
 extern const char *g_ExceedsMaxElementErrorMessage;

@@ -14,9 +14,55 @@
    * CACHED PRIMORDIAL FUNCTIONALITY (before a test might overwrite it) *
    **********************************************************************/
 
+  var undefined; // sigh
+
   var Error = global.Error;
   var Number = global.Number;
   var TypeError = global.TypeError;
+
+  var ArrayIsArray = global.Array.isArray;
+  var ObjectCreate = global.Object.create;
+  var ObjectDefineProperty = global.Object.defineProperty;
+  var ReflectApply = global.Reflect.apply;
+  var StringPrototypeEndsWith = global.String.prototype.endsWith;
+
+  /****************************
+   * GENERAL HELPER FUNCTIONS *
+   ****************************/
+
+  // We could use Array.prototype.pop, but we don't so it's clear exactly what
+  // dependencies this function has on test-modifiable behavior (i.e. none).
+  function ArrayPop(arr) {
+    assertEq(ArrayIsArray(arr), true,
+             "ArrayPop must only be used on actual arrays");
+
+    var len = arr.length;
+    if (len === 0)
+      return undefined;
+
+    var v = arr[len - 1];
+    arr.length--;
+    return v;
+  }
+
+  // We *cannot* use Array.prototype.push for this, because that function sets
+  // the new trailing element, which could invoke a setter (left by a test) on
+  // Array.prototype or Object.prototype.
+  function ArrayPush(arr, val) {
+    assertEq(ArrayIsArray(arr), true,
+             "ArrayPush must only be used on actual arrays");
+
+    var desc = ObjectCreate(null);
+    desc.value = val;
+    desc.enumerable = true;
+    desc.configurable = true;
+    desc.writable = true;
+    ObjectDefineProperty(arr, arr.length, desc);
+  }
+
+  function StringEndsWith(str, needle) {
+    return ReflectApply(StringPrototypeEndsWith, str, [needle]);
+  }
 
   /****************************
    * TESTING FUNCTION EXPORTS *
@@ -42,6 +88,20 @@
     };
     global.assertEq = assertEq;
   }
+
+  function assertEqArray(actual, expected) {
+    var len = actual.length;
+    assertEq(len, expected.length, "mismatching array lengths");
+
+    var i = 0;
+    try {
+      for (; i < len; i++)
+        assertEq(actual[i], expected[i], "mismatch at element " + i);
+    } catch (e) {
+      throw new Error("Exception thrown at index " + i + ": " + e);
+    }
+  }
+  global.assertEqArray = assertEqArray;
 
   function assertThrows(f) {
     var ok = false;
@@ -107,6 +167,57 @@
   }
   global.startTest = startTest;
 
+  var callStack = [];
+
+  /**
+   * Puts funcName at the top of the call stack.  This stack is used to show
+   * a function-reported-from field when reporting failures.
+   */
+  function enterFunc(funcName) {
+    assertEq(typeof funcName, "string",
+             "enterFunc must be given a string funcName");
+
+    if (!StringEndsWith(funcName, "()"))
+      funcName += "()";
+
+    ArrayPush(callStack, funcName);
+  }
+  global.enterFunc = enterFunc;
+
+  /**
+   * Pops the top funcName off the call stack.  funcName, if provided, is used
+   * to check push-pop balance.
+   */
+  function exitFunc(funcName) {
+    assertEq(typeof funcName === "string" || typeof funcName === "undefined",
+             true,
+             "exitFunc must be given no arguments or a string");
+
+    var lastFunc = ArrayPop(callStack);
+    assertEq(typeof lastFunc, "string", "exitFunc called too many times");
+
+    if (funcName) {
+      if (!StringEndsWith(funcName, "()"))
+        funcName += "()";
+
+      if (lastFunc !== funcName) {
+        // XXX Eliminate this dependency on global.reportCompare's identity.
+        global.reportCompare(funcName, lastFunc,
+                             "Test driver failure wrong exit function ");
+      }
+    }
+  }
+  global.exitFunc = exitFunc;
+
+  /** Peeks at the top of the call stack. */
+  function currentFunc() {
+    assertEq(callStack.length > 0, true,
+             "must be a current function to examine");
+
+    return callStack[callStack.length - 1];
+  }
+  global.currentFunc = currentFunc;
+
   /*****************************************************
    * RHINO-SPECIFIC EXPORTS (are these used any more?) *
    *****************************************************/
@@ -134,7 +245,6 @@ var STATUS = "STATUS: ";
 var VERBOSE = false;
 var SECT_PREFIX = 'Section ';
 var SECT_SUFFIX = ' of test - ';
-var callStack = new Array();
 
 var gDelayTestDriverEnd = false;
 
@@ -450,18 +560,6 @@ function reportMatch (expectedRegExp, actual, description) {
 }
 
 /*
- * Puts funcName at the top of the call stack.  This stack is used to show
- * a function-reported-from field when reporting failures.
- */
-function enterFunc (funcName)
-{
-  if (!funcName.match(/\(\)$/))
-    funcName += "()";
-
-  callStack.push(funcName);
-}
-
-/*
  * An xorshift pseudo-random number generator see:
  * https://en.wikipedia.org/wiki/Xorshift#xorshift.2A
  * This generator will always produce a value, n, where
@@ -475,182 +573,6 @@ function *XorShiftGenerator(seed, size) {
         x ^= x >> 27;
         yield x % 256;
     }
-}
-
-/*
- * Yield every permutation of the elements in some iterable.
- */
-function *Permutations(items) {
-    if (items.length == 0) {
-        yield [];
-    } else {
-        let swap;
-        for (let i = 0; i < items.length; i++) {
-            swap = items[0];
-            items[0] = items[i];
-            items[i] = swap;
-            for (let e of Permutations(items.slice(1, items.length)))
-                yield [items[0]].concat(e);
-        }
-    }
-}
-
-/*
- * Pops the top funcName off the call stack.  funcName is optional, and can be
- * used to check push-pop balance.
- */
-function exitFunc (funcName)
-{
-  var lastFunc = callStack.pop();
-
-  if (funcName)
-  {
-    if (!funcName.match(/\(\)$/))
-      funcName += "()";
-
-    if (lastFunc != funcName)
-      reportCompare(funcName, lastFunc, "Test driver failure wrong exit function ");
-  }
-}
-
-/*
- * Peeks at the top of the call stack.
- */
-function currentFunc()
-{
-  return callStack[callStack.length - 1];
-}
-
-/*
-  Calculate the "order" of a set of data points {X: [], Y: []}
-  by computing successive "derivatives" of the data until
-  the data is exhausted or the derivative is linear.
-*/
-function BigO(data)
-{
-  var order = 0;
-  var origLength = data.X.length;
-
-  while (data.X.length > 2)
-  {
-    var lr = new LinearRegression(data);
-    if (lr.b > 1e-6)
-    {
-      // only increase the order if the slope
-      // is "great" enough
-      order++;
-    }
-
-    if (lr.r > 0.98 || lr.Syx < 1 || lr.b < 1e-6)
-    {
-      // terminate if close to a line lr.r
-      // small error lr.Syx
-      // small slope lr.b
-      break;
-    }
-    data = dataDeriv(data);
-  }
-
-  if (2 == origLength - order)
-  {
-    order = Number.POSITIVE_INFINITY;
-  }
-  return order;
-
-  function LinearRegression(data)
-  {
-    /*
-      y = a + bx
-      for data points (Xi, Yi); 0 <= i < n
-
-      b = (n*SUM(XiYi) - SUM(Xi)*SUM(Yi))/(n*SUM(Xi*Xi) - SUM(Xi)*SUM(Xi))
-      a = (SUM(Yi) - b*SUM(Xi))/n
-    */
-    var i;
-
-    if (data.X.length != data.Y.length)
-    {
-      throw 'LinearRegression: data point length mismatch';
-    }
-    if (data.X.length < 3)
-    {
-      throw 'LinearRegression: data point length < 2';
-    }
-    var n = data.X.length;
-    var X = data.X;
-    var Y = data.Y;
-
-    this.Xavg = 0;
-    this.Yavg = 0;
-
-    var SUM_X  = 0;
-    var SUM_XY = 0;
-    var SUM_XX = 0;
-    var SUM_Y  = 0;
-    var SUM_YY = 0;
-
-    for (i = 0; i < n; i++)
-    {
-      SUM_X  += X[i];
-      SUM_XY += X[i]*Y[i];
-      SUM_XX += X[i]*X[i];
-      SUM_Y  += Y[i];
-      SUM_YY += Y[i]*Y[i];
-    }
-
-    this.b = (n * SUM_XY - SUM_X * SUM_Y)/(n * SUM_XX - SUM_X * SUM_X);
-    this.a = (SUM_Y - this.b * SUM_X)/n;
-
-    this.Xavg = SUM_X/n;
-    this.Yavg = SUM_Y/n;
-
-    var SUM_Ydiff2 = 0;
-    var SUM_Xdiff2 = 0;
-    var SUM_XdiffYdiff = 0;
-
-    for (i = 0; i < n; i++)
-    {
-      var Ydiff = Y[i] - this.Yavg;
-      var Xdiff = X[i] - this.Xavg;
-
-      SUM_Ydiff2 += Ydiff * Ydiff;
-      SUM_Xdiff2 += Xdiff * Xdiff;
-      SUM_XdiffYdiff += Xdiff * Ydiff;
-    }
-
-    var Syx2 = (SUM_Ydiff2 - Math.pow(SUM_XdiffYdiff/SUM_Xdiff2, 2))/(n - 2);
-    var r2   = Math.pow((n*SUM_XY - SUM_X * SUM_Y), 2) /
-      ((n*SUM_XX - SUM_X*SUM_X)*(n*SUM_YY-SUM_Y*SUM_Y));
-
-    this.Syx = Math.sqrt(Syx2);
-    this.r = Math.sqrt(r2);
-
-  }
-
-  function dataDeriv(data)
-  {
-    if (data.X.length != data.Y.length)
-    {
-      throw 'length mismatch';
-    }
-    var length = data.X.length;
-
-    if (length < 2)
-    {
-      throw 'length ' + length + ' must be >= 2';
-    }
-    var X = data.X;
-    var Y = data.Y;
-
-    var deriv = {X: [], Y: [] };
-
-    for (var i = 0; i < length - 1; i++)
-    {
-      deriv.X[i] = (X[i] + X[i+1])/2;
-      deriv.Y[i] = (Y[i+1] - Y[i])/(X[i+1] - X[i]);
-    }
-    return deriv;
-  }
 }
 
 function compareSource(expect, actual, summary)
@@ -900,20 +822,6 @@ function stopTest() {
   }
 }
 
-/*
- * Convenience function for displaying failed test cases.  Useful
- * when running tests manually.
- *
- */
-function getFailedCases() {
-  for ( var i = 0; i < gTestcases.length; i++ ) {
-    if ( ! gTestcases[i].passed ) {
-      print( gTestcases[i].description + " = " +gTestcases[i].actual +
-             " expected: " + gTestcases[i].expect );
-    }
-  }
-}
-
 function jsTestDriverEnd()
 {
   // gDelayTestDriverEnd is used to
@@ -943,15 +851,4 @@ function jsTestDriverEnd()
     gTestcases[i].dump();
   }
 
-}
-
-function assertEqArray(a1, a2) {
-  assertEq(a1.length, a2.length);
-  for (var i = 0; i < a1.length; i++) {
-    try {
-      assertEq(a1[i], a2[i]);
-    } catch (e) {
-      throw new Error("At index " + i + ": " + e);
-    }
-  }
 }

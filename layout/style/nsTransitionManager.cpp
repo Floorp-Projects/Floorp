@@ -762,9 +762,11 @@ nsTransitionManager::ConsiderStartingTransition(
   // aElement is non-null here, so we emplace it directly.
   Maybe<OwningAnimationTarget> target;
   target.emplace(aElement, aNewStyleContext->GetPseudoType());
+  KeyframeEffectParams effectOptions;
   RefPtr<ElementPropertyTransition> pt =
     new ElementPropertyTransition(aElement->OwnerDoc(), target, timing,
-                                  startForReversingTest, reversePortion);
+                                  startForReversingTest, reversePortion,
+                                  effectOptions);
 
   pt->SetKeyframes(GetTransitionKeyframes(aNewStyleContext, aProperty,
                                           Move(startValue), Move(endValue), tf),

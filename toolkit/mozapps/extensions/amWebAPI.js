@@ -151,6 +151,10 @@ Addon.prototype = {
   uninstall: WebAPITask(function*() {
     return yield APIBroker.sendRequest("addonUninstall", this.id);
   }),
+
+  setEnabled: WebAPITask(function* (value) {
+    return yield APIBroker.sendRequest("addonSetEnabled", this.id, value);
+  }),
 };
 
 const INSTALL_EVENTS = [

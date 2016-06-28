@@ -21,22 +21,10 @@ class BufferFactoryD3D;
 class StaticIndexBufferInterface;
 class StaticVertexBufferInterface;
 
-enum D3DBufferUsage
+enum class D3DBufferUsage
 {
-    D3D_BUFFER_USAGE_STATIC,
-    D3D_BUFFER_USAGE_DYNAMIC,
-};
-
-enum D3DBufferInvalidationType
-{
-    D3D_BUFFER_INVALIDATE_WHOLE_CACHE,
-    D3D_BUFFER_INVALIDATE_DEFAULT_BUFFER_ONLY,
-};
-
-enum D3DStaticBufferCreationType
-{
-    D3D_BUFFER_CREATE_IF_NECESSARY,
-    D3D_BUFFER_DO_NOT_CREATE,
+    STATIC,
+    DYNAMIC,
 };
 
 class BufferD3D : public BufferImpl
@@ -49,16 +37,14 @@ class BufferD3D : public BufferImpl
 
     virtual size_t getSize() const = 0;
     virtual bool supportsDirectBinding() const = 0;
-    virtual void markTransformFeedbackUsage() = 0;
+    virtual gl::Error markTransformFeedbackUsage() = 0;
     virtual gl::Error getData(const uint8_t **outData) = 0;
 
-    StaticVertexBufferInterface *getStaticVertexBuffer(const gl::VertexAttribute &attribute,
-                                                       D3DStaticBufferCreationType creationType);
+    StaticVertexBufferInterface *getStaticVertexBuffer(const gl::VertexAttribute &attribute);
     StaticIndexBufferInterface *getStaticIndexBuffer();
 
-    void initializeStaticData();
-    void invalidateStaticData(D3DBufferInvalidationType invalidationType);
-    void reinitOutOfDateStaticData();
+    virtual void initializeStaticData();
+    virtual void invalidateStaticData();
 
     void promoteStaticUsage(int dataSize);
 
@@ -67,6 +53,9 @@ class BufferD3D : public BufferImpl
                             size_t count,
                             bool primitiveRestartEnabled,
                             gl::IndexRange *outRange) override;
+
+    BufferFactoryD3D *getFactory() const { return mFactory; }
+    D3DBufferUsage getUsage() const { return mUsage; }
 
   protected:
     void updateSerial();
@@ -77,9 +66,8 @@ class BufferD3D : public BufferImpl
     unsigned int mSerial;
     static unsigned int mNextSerial;
 
-    StaticVertexBufferInterface *mStaticVertexBuffer;
+    std::vector<std::unique_ptr<StaticVertexBufferInterface>> mStaticVertexBuffers;
     StaticIndexBufferInterface *mStaticIndexBuffer;
-    std::vector<StaticVertexBufferInterface *> *mStaticBufferCache;
     unsigned int mStaticBufferCacheTotalSize;
     unsigned int mStaticVertexBufferOutOfDate;
     unsigned int mUnmodifiedDataUse;

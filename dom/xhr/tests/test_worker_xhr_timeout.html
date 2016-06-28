@@ -1,0 +1,58 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=498998
+-->
+<head>
+  <title>Test for Bug 498998</title>
+  <script type="application/javascript"
+          src="/MochiKit/MochiKit.js"></script>
+  <script type="application/javascript"
+          src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet"
+        type="text/css"
+        href="/tests/SimpleTest/test.css">
+</head>
+<body>
+
+<a target="_blank"
+   href="https://bugzilla.mozilla.org/show_bug.cgi?id=498998"
+  >Mozilla Bug 498998 (Worker XMLHttpRequest timeout)</a>
+<p id="display"></p>
+<div id="content">
+  This test takes over 1 minute to run, probably over 2 minutes.
+</div>
+<pre id="test">
+<script type="text/javascript">
+  var worker = new Worker("../../../dom/xhr/tests/test_XHR_timeout.js");
+
+  worker.addEventListener("message", function (event) {
+    if (event.data == "done") {
+      SimpleTest.finish();
+      return;
+    }
+    if (event.data == "start") {
+      return;
+    }
+    if (event.data.type == "is") {
+      SimpleTest.is(event.data.got, event.data.expected, event.data.msg);
+      return;
+    }
+    if (event.data.type == "ok") {
+      SimpleTest.ok(event.data.bool, event.data.msg);
+      return;
+    }
+  });
+  // Final test harness setup and launch.
+  (function() {
+    SimpleTest.waitForExplicitFinish();
+    SimpleTest.requestLongerTimeout(20);
+    var msg = "This test will take approximately " + (20 * 10)
+    msg += " seconds to complete, at most.";
+    document.getElementById("content").firstChild.nodeValue = msg;
+    worker.postMessage("start");
+  })();
+</script>
+</pre>
+</body>
+</html>

@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 
+#include "common/Optional.h"
 #include "libANGLE/renderer/gl/DisplayGL.h"
 #include "libANGLE/renderer/gl/glx/FunctionsGLX.h"
 
@@ -43,19 +44,23 @@ class DisplayGLX : public DisplayGL
     egl::Error initialize(egl::Display *display) override;
     void terminate() override;
 
-    SurfaceImpl *createWindowSurface(const egl::Config *configuration,
+    SurfaceImpl *createWindowSurface(const egl::SurfaceState &state,
+                                     const egl::Config *configuration,
                                      EGLNativeWindowType window,
                                      const egl::AttributeMap &attribs) override;
-    SurfaceImpl *createPbufferSurface(const egl::Config *configuration,
+    SurfaceImpl *createPbufferSurface(const egl::SurfaceState &state,
+                                      const egl::Config *configuration,
                                       const egl::AttributeMap &attribs) override;
-    SurfaceImpl *createPbufferFromClientBuffer(const egl::Config *configuration,
+    SurfaceImpl *createPbufferFromClientBuffer(const egl::SurfaceState &state,
+                                               const egl::Config *configuration,
                                                EGLClientBuffer shareHandle,
                                                const egl::AttributeMap &attribs) override;
-    SurfaceImpl *createPixmapSurface(const egl::Config *configuration,
+    SurfaceImpl *createPixmapSurface(const egl::SurfaceState &state,
+                                     const egl::Config *configuration,
                                      NativePixmapType nativePixmap,
                                      const egl::AttributeMap &attribs) override;
 
-    egl::ConfigSet generateConfigs() const override;
+    egl::ConfigSet generateConfigs() override;
 
     bool isDeviceLost() const override;
     bool testDeviceLost() override;
@@ -71,6 +76,8 @@ class DisplayGLX : public DisplayGL
     egl::Error waitNative(EGLint engine,
                           egl::Surface *drawSurface,
                           egl::Surface *readSurface) const override;
+
+    egl::Error getDriverVersion(std::string *version) const override;
 
     // Synchronizes with the X server, if the display has been opened by ANGLE.
     // Calling this is required at the end of every functions that does buffered
@@ -98,14 +105,15 @@ class DisplayGLX : public DisplayGL
 
     int getGLXFBConfigAttrib(glx::FBConfig config, int attrib) const;
     egl::Error createContextAttribs(glx::FBConfig,
-                                    gl::Version version,
+                                    const Optional<gl::Version> &version,
                                     int profileMask,
                                     glx::Context *context) const;
 
+    egl::Error getNVIDIADriverVersion(std::string *version) const;
+
     FunctionsGL *mFunctionsGL;
 
-    //TODO(cwallez) yuck, change generateConfigs to be non-const or add a userdata member to egl::Config?
-    mutable std::map<int, glx::FBConfig> configIdToGLXConfig;
+    std::map<int, glx::FBConfig> configIdToGLXConfig;
 
     EGLint mRequestedVisual;
     glx::FBConfig mContextConfig;
@@ -133,6 +141,7 @@ class DisplayGLX : public DisplayGL
     int mCurrentSwapInterval;
 
     FunctionsGLX mGLX;
+    Display *mXDisplay;
     egl::Display *mEGLDisplay;
 };
 

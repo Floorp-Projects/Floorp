@@ -45,7 +45,7 @@ class BlendMinMaxTest : public ANGLETest
         }
 
         // TODO(geofflang): figure out why this fails
-        if (isIntel() && GetParam() == ES2_OPENGL())
+        if (IsIntel() && GetParam() == ES2_OPENGL())
         {
             std::cout << "Test skipped on OpenGL Intel due to flakyness." << std::endl;
             return;
@@ -174,14 +174,14 @@ TEST_P(BlendMinMaxTest, RGBA32f)
     }
 
     // TODO(jmadill): Figure out why this is broken on Intel
-    if (isIntel() && (GetParam() == ES2_D3D11() || GetParam() == ES2_D3D9()))
+    if (IsIntel() && (GetParam() == ES2_D3D11() || GetParam() == ES2_D3D9()))
     {
         std::cout << "Test skipped on Intel OpenGL." << std::endl;
         return;
     }
 
     // TODO (bug 1284): Investigate RGBA32f D3D SDK Layers messages on D3D11_FL9_3
-    if (isD3D11_FL93())
+    if (IsD3D11_FL93())
     {
         std::cout << "Test skipped on Feature Level 9_3." << std::endl;
         return;
@@ -200,7 +200,7 @@ TEST_P(BlendMinMaxTest, RGBA16F)
     }
 
     // TODO(jmadill): figure out why this fails
-    if (isIntel() && (GetParam() == ES2_D3D11() || GetParam() == ES2_D3D9()))
+    if (IsIntel() && (GetParam() == ES2_D3D11() || GetParam() == ES2_D3D9()))
     {
         std::cout << "Test skipped on Intel due to failures." << std::endl;
         return;

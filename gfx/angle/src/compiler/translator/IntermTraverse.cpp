@@ -390,6 +390,8 @@ void TIntermTraverser::traverseAggregate(TIntermAggregate *node)
 
         if (node->getOp() == EOpSequence)
             pushParentBlock(node);
+        else if (node->getOp() == EOpFunction)
+            mInGlobalScope = false;
 
         for (auto *child : *sequence)
         {
@@ -406,6 +408,8 @@ void TIntermTraverser::traverseAggregate(TIntermAggregate *node)
 
         if (node->getOp() == EOpSequence)
             popParentBlock();
+        else if (node->getOp() == EOpFunction)
+            mInGlobalScope = true;
 
         decrementDepth();
     }
@@ -481,6 +485,8 @@ void TLValueTrackingTraverser::traverseAggregate(TIntermAggregate *node)
         {
             if (node->getOp() == EOpSequence)
                 pushParentBlock(node);
+            else if (node->getOp() == EOpFunction)
+                mInGlobalScope = false;
 
             // Find the built-in function corresponding to this op so that we can determine the
             // in/out qualifiers of its parameters.
@@ -533,6 +539,8 @@ void TLValueTrackingTraverser::traverseAggregate(TIntermAggregate *node)
 
             if (node->getOp() == EOpSequence)
                 popParentBlock();
+            else if (node->getOp() == EOpFunction)
+                mInGlobalScope = true;
         }
 
         decrementDepth();

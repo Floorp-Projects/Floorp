@@ -26,19 +26,11 @@ public:
 protected:
   // Decode thread.
   already_AddRefed<MediaDataDecoder>
-  CreateVideoDecoder(const VideoInfo& aConfig,
-                    layers::LayersBackend aLayersBackend,
-                    layers::ImageContainer* aImageContainer,
-                    TaskQueue* aTaskQueue,
-                    MediaDataDecoderCallback* aCallback,
-                    DecoderDoctorDiagnostics* aDiagnostics) override;
+  CreateVideoDecoder(const CreateDecoderParams& aParams) override;
 
   // Decode thread.
   already_AddRefed<MediaDataDecoder>
-  CreateAudioDecoder(const AudioInfo& aConfig,
-                     TaskQueue* aTaskQueue,
-                     MediaDataDecoderCallback* aCallback,
-                     DecoderDoctorDiagnostics* aDiagnostics) override;
+  CreateAudioDecoder(const CreateDecoderParams& aParams) override;
 
   ConversionRequired
   DecoderNeedsConversion(const TrackInfo& aConfig) const override;

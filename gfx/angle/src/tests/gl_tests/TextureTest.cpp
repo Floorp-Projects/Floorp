@@ -5,11 +5,33 @@
 //
 
 #include "test_utils/ANGLETest.h"
+#include "test_utils/gl_raii.h"
 
 using namespace angle;
 
 namespace
 {
+
+// Take a pixel, and reset the components not covered by the format to default
+// values. In particular, the default value for the alpha component is 65535
+// (1.0 as unsigned normalized fixed point value).
+GLColor16 SliceFormatColor16(GLenum format, GLColor16 full)
+{
+    switch (format)
+    {
+        case GL_RED:
+            return GLColor16(full.R, 0, 0, 65535u);
+        case GL_RG:
+            return GLColor16(full.R, full.G, 0, 65535u);
+        case GL_RGB:
+            return GLColor16(full.R, full.G, full.B, 65535u);
+        case GL_RGBA:
+            return full;
+        default:
+            UNREACHABLE();
+    }
+    return GLColor16::white;
+}
 
 class TexCoordDrawTest : public ANGLETest
 {
@@ -43,15 +65,19 @@ class TexCoordDrawTest : public ANGLETest
 
     virtual std::string getFragmentShaderSource() = 0;
 
-    void SetUp() override
+    virtual void setUpProgram()
     {
-        ANGLETest::SetUp();
         const std::string vertexShaderSource   = getVertexShaderSource();
         const std::string fragmentShaderSource = getFragmentShaderSource();
 
         mProgram = CompileProgram(vertexShaderSource, fragmentShaderSource);
         ASSERT_NE(0u, mProgram);
         ASSERT_GL_NO_ERROR();
+    }
+
+    void SetUp() override
+    {
+        ANGLETest::SetUp();
 
         setUpFramebuffer();
     }
@@ -127,15 +153,21 @@ class Texture2DTest : public TexCoordDrawTest
         );
     }
 
+    virtual const char *getTextureUniformName() { return "tex"; }
+
+    void setUpProgram() override
+    {
+        TexCoordDrawTest::setUpProgram();
+        mTexture2DUniformLocation = glGetUniformLocation(mProgram, getTextureUniformName());
+        ASSERT_NE(-1, mTexture2DUniformLocation);
+    }
+
     void SetUp() override
     {
         TexCoordDrawTest::SetUp();
         mTexture2D = create2DTexture();
 
         ASSERT_GL_NO_ERROR();
-
-        mTexture2DUniformLocation = glGetUniformLocation(mProgram, "tex");
-        ASSERT_NE(-1, mTexture2DUniformLocation);
     }
 
     void TearDown() override
@@ -148,11 +180,13 @@ class Texture2DTest : public TexCoordDrawTest
     void testFloatCopySubImage(int sourceImageChannels, int destImageChannels)
     {
         // TODO(jmadill): Figure out why this is broken on Intel D3D11
-        if (isIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
+        if (IsIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
         {
             std::cout << "Test skipped on Intel D3D11." << std::endl;
             return;
         }
+
+        setUpProgram();
 
         if (getClientVersion() < 3)
         {
@@ -256,7 +290,7 @@ class Texture2DTest : public TexCoordDrawTest
 
         int testImageChannels = std::min(sourceImageChannels, destImageChannels);
 
-        EXPECT_PIXEL_EQ(0, 0, 255, 0, 0, 255);
+        EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::red);
         if (testImageChannels > 1)
         {
             EXPECT_PIXEL_EQ(getWindowHeight() - 1, 0, 0, 255, 0, 255);
@@ -308,6 +342,94 @@ class Texture2DTestES3 : public Texture2DTest
             "    fragColor = texture(tex, texcoord);\n"
             "}\n");
     }
+
+    void SetUp() override
+    {
+        Texture2DTest::SetUp();
+        setUpProgram();
+    }
+};
+
+class Texture2DIntegerAlpha1TestES3 : public Texture2DTest
+{
+  protected:
+    Texture2DIntegerAlpha1TestES3() : Texture2DTest() {}
+
+    std::string getVertexShaderSource() override
+    {
+        return std::string(
+            "#version 300 es\n"
+            "out vec2 texcoord;\n"
+            "in vec4 position;\n"
+            "void main()\n"
+            "{\n"
+            "    gl_Position = vec4(position.xy, 0.0, 1.0);\n"
+            "    texcoord = (position.xy * 0.5) + 0.5;\n"
+            "}\n");
+    }
+
+    std::string getFragmentShaderSource() override
+    {
+        return std::string(
+            "#version 300 es\n"
+            "precision highp float;\n"
+            "uniform highp isampler2D tex;\n"
+            "in vec2 texcoord;\n"
+            "out vec4 fragColor;\n"
+            "void main()\n"
+            "{\n"
+            "    vec4 green = vec4(0, 1, 0, 1);\n"
+            "    vec4 black = vec4(0, 0, 0, 0);\n"
+            "    fragColor = (texture(tex, texcoord).a == 1) ? green : black;\n"
+            "}\n");
+    }
+
+    void SetUp() override
+    {
+        Texture2DTest::SetUp();
+        setUpProgram();
+    }
+};
+
+class Texture2DUnsignedIntegerAlpha1TestES3 : public Texture2DTest
+{
+  protected:
+    Texture2DUnsignedIntegerAlpha1TestES3() : Texture2DTest() {}
+
+    std::string getVertexShaderSource() override
+    {
+        return std::string(
+            "#version 300 es\n"
+            "out vec2 texcoord;\n"
+            "in vec4 position;\n"
+            "void main()\n"
+            "{\n"
+            "    gl_Position = vec4(position.xy, 0.0, 1.0);\n"
+            "    texcoord = (position.xy * 0.5) + 0.5;\n"
+            "}\n");
+    }
+
+    std::string getFragmentShaderSource() override
+    {
+        return std::string(
+            "#version 300 es\n"
+            "precision highp float;\n"
+            "uniform highp usampler2D tex;\n"
+            "in vec2 texcoord;\n"
+            "out vec4 fragColor;\n"
+            "void main()\n"
+            "{\n"
+            "    vec4 green = vec4(0, 1, 0, 1);\n"
+            "    vec4 black = vec4(0, 0, 0, 0);\n"
+            "    fragColor = (texture(tex, texcoord).a == 1u) ? green : black;\n"
+            "}\n");
+    }
+
+    void SetUp() override
+    {
+        Texture2DTest::SetUp();
+        setUpProgram();
+    }
 };
 
 class Texture2DTestWithDrawScale : public Texture2DTest
@@ -337,6 +459,9 @@ class Texture2DTestWithDrawScale : public Texture2DTest
     void SetUp() override
     {
         Texture2DTest::SetUp();
+
+        setUpProgram();
+
         mDrawScaleUniformLocation = glGetUniformLocation(mProgram, "drawScale");
         ASSERT_NE(-1, mDrawScaleUniformLocation);
 
@@ -373,6 +498,12 @@ class Sampler2DAsFunctionParameterTest : public Texture2DTest
             }
         )
         );
+    }
+
+    void SetUp() override
+    {
+        Texture2DTest::SetUp();
+        setUpProgram();
     }
 };
 
@@ -416,6 +547,8 @@ class TextureCubeTest : public TexCoordDrawTest
         EXPECT_GL_NO_ERROR();
 
         mTexture2D = create2DTexture();
+
+        setUpProgram();
 
         mTexture2DUniformLocation = glGetUniformLocation(mProgram, "tex2D");
         ASSERT_NE(-1, mTexture2DUniformLocation);
@@ -466,6 +599,8 @@ class SamplerArrayTest : public TexCoordDrawTest
     void SetUp() override
     {
         TexCoordDrawTest::SetUp();
+
+        setUpProgram();
 
         mTexture0UniformLocation = glGetUniformLocation(mProgram, "tex2DArray[0]");
         ASSERT_NE(-1, mTexture0UniformLocation);
@@ -581,6 +716,8 @@ class Texture2DArrayTestES3 : public TexCoordDrawTest
     {
         TexCoordDrawTest::SetUp();
 
+        setUpProgram();
+
         mTextureArrayLocation = glGetUniformLocation(mProgram, "tex2DArray");
         ASSERT_NE(-1, mTextureArrayLocation);
 
@@ -596,6 +733,127 @@ class Texture2DArrayTestES3 : public TexCoordDrawTest
 
     GLuint m2DArrayTexture;
     GLint mTextureArrayLocation;
+};
+
+class TextureSizeTextureArrayTest : public TexCoordDrawTest
+{
+  protected:
+    TextureSizeTextureArrayTest()
+        : TexCoordDrawTest(),
+          mTexture2DA(0),
+          mTexture2DB(0),
+          mTexture0Location(-1),
+          mTexture1Location(-1)
+    {
+    }
+
+    std::string getVertexShaderSource() override
+    {
+        return std::string(
+            "#version 300 es\n"
+            "in vec4 position;\n"
+            "void main()\n"
+            "{\n"
+            "    gl_Position = vec4(position.xy, 0.0, 1.0);\n"
+            "}\n");
+    }
+
+    std::string getFragmentShaderSource() override
+    {
+        return std::string(
+            "#version 300 es\n"
+            "precision highp float;\n"
+            "uniform highp sampler2D tex2DArray[2];\n"
+            "out vec4 fragColor;\n"
+            "void main()\n"
+            "{\n"
+            "    float red = float(textureSize(tex2DArray[0], 0).x) / 255.0;\n"
+            "    float green = float(textureSize(tex2DArray[1], 0).x) / 255.0;\n"
+            "    fragColor = vec4(red, green, 0.0, 1.0);\n"
+            "}\n");
+    }
+
+    void SetUp() override
+    {
+        TexCoordDrawTest::SetUp();
+
+        setUpProgram();
+
+        mTexture0Location = glGetUniformLocation(mProgram, "tex2DArray[0]");
+        ASSERT_NE(-1, mTexture0Location);
+        mTexture1Location = glGetUniformLocation(mProgram, "tex2DArray[1]");
+        ASSERT_NE(-1, mTexture1Location);
+
+        mTexture2DA = create2DTexture();
+        mTexture2DB = create2DTexture();
+        ASSERT_GL_NO_ERROR();
+    }
+
+    void TearDown() override
+    {
+        glDeleteTextures(1, &mTexture2DA);
+        glDeleteTextures(1, &mTexture2DB);
+        TexCoordDrawTest::TearDown();
+    }
+
+    GLuint mTexture2DA;
+    GLuint mTexture2DB;
+    GLint mTexture0Location;
+    GLint mTexture1Location;
+};
+
+class Texture3DTestES3 : public TexCoordDrawTest
+{
+  protected:
+    Texture3DTestES3() : TexCoordDrawTest(), mTexture3D(0), mTexture3DUniformLocation(-1) {}
+
+    std::string getVertexShaderSource() override
+    {
+        return std::string(
+            "#version 300 es\n"
+            "out vec2 texcoord;\n"
+            "in vec4 position;\n"
+            "void main()\n"
+            "{\n"
+            "    gl_Position = vec4(position.xy, 0.0, 1.0);\n"
+            "    texcoord = (position.xy * 0.5) + 0.5;\n"
+            "}\n");
+    }
+
+    std::string getFragmentShaderSource() override
+    {
+        return std::string(
+            "#version 300 es\n"
+            "precision highp float;\n"
+            "uniform highp sampler3D tex3D;\n"
+            "in vec2 texcoord;\n"
+            "out vec4 fragColor;\n"
+            "void main()\n"
+            "{\n"
+            "    fragColor = texture(tex3D, vec3(texcoord, 0.0));\n"
+            "}\n");
+    }
+
+    void SetUp() override
+    {
+        TexCoordDrawTest::SetUp();
+
+        glGenTextures(1, &mTexture3D);
+
+        setUpProgram();
+
+        mTexture3DUniformLocation = glGetUniformLocation(mProgram, "tex3D");
+        ASSERT_NE(-1, mTexture3DUniformLocation);
+    }
+
+    void TearDown() override
+    {
+        glDeleteTextures(1, &mTexture3D);
+        TexCoordDrawTest::TearDown();
+    }
+
+    GLuint mTexture3D;
+    GLint mTexture3DUniformLocation;
 };
 
 class ShadowSamplerPlusSampler3DTestES3 : public TexCoordDrawTest
@@ -650,6 +908,8 @@ class ShadowSamplerPlusSampler3DTestES3 : public TexCoordDrawTest
         glGenTextures(1, &mTextureShadow);
         glBindTexture(GL_TEXTURE_2D, mTextureShadow);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
+
+        setUpProgram();
 
         mTextureShadowUniformLocation = glGetUniformLocation(mProgram, "tex2DShadow");
         ASSERT_NE(-1, mTextureShadowUniformLocation);
@@ -740,6 +1000,8 @@ class SamplerTypeMixTestES3 : public TexCoordDrawTest
         glBindTexture(GL_TEXTURE_CUBE_MAP, mTextureCubeShadow);
         glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_REF_TO_TEXTURE);
 
+        setUpProgram();
+
         mTexture2DUniformLocation = glGetUniformLocation(mProgram, "tex2D");
         ASSERT_NE(-1, mTexture2DUniformLocation);
         mTextureCubeUniformLocation = glGetUniformLocation(mProgram, "texCube");
@@ -774,10 +1036,159 @@ class SamplerTypeMixTestES3 : public TexCoordDrawTest
     GLint mDepthRefUniformLocation;
 };
 
+class SamplerInStructTest : public Texture2DTest
+{
+  protected:
+    SamplerInStructTest() : Texture2DTest() {}
+
+    const char *getTextureUniformName() override { return "us.tex"; }
+
+    std::string getFragmentShaderSource() override
+    {
+        return std::string(
+            "precision highp float;\n"
+            "struct S\n"
+            "{\n"
+            "    vec4 a;\n"
+            "    highp sampler2D tex;\n"
+            "};\n"
+            "uniform S us;\n"
+            "varying vec2 texcoord;\n"
+            "void main()\n"
+            "{\n"
+            "    gl_FragColor = texture2D(us.tex, texcoord + us.a.x);\n"
+            "}\n");
+    }
+
+    void runSamplerInStructTest()
+    {
+        setUpProgram();
+
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, mTexture2D);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                     &GLColor::green);
+        drawQuad(mProgram, "position", 0.5f);
+        EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+    }
+};
+
+class SamplerInStructAsFunctionParameterTest : public SamplerInStructTest
+{
+  protected:
+    SamplerInStructAsFunctionParameterTest() : SamplerInStructTest() {}
+
+    std::string getFragmentShaderSource() override
+    {
+        return std::string(
+            "precision highp float;\n"
+            "struct S\n"
+            "{\n"
+            "    vec4 a;\n"
+            "    highp sampler2D tex;\n"
+            "};\n"
+            "uniform S us;\n"
+            "varying vec2 texcoord;\n"
+            "vec4 sampleFrom(S s) {\n"
+            "    return texture2D(s.tex, texcoord + s.a.x);\n"
+            "}\n"
+            "void main()\n"
+            "{\n"
+            "    gl_FragColor = sampleFrom(us);\n"
+            "}\n");
+    }
+};
+
+class SamplerInStructArrayAsFunctionParameterTest : public SamplerInStructTest
+{
+  protected:
+    SamplerInStructArrayAsFunctionParameterTest() : SamplerInStructTest() {}
+
+    const char *getTextureUniformName() override { return "us[0].tex"; }
+
+    std::string getFragmentShaderSource() override
+    {
+        return std::string(
+            "precision highp float;\n"
+            "struct S\n"
+            "{\n"
+            "    vec4 a;\n"
+            "    highp sampler2D tex;\n"
+            "};\n"
+            "uniform S us[1];\n"
+            "varying vec2 texcoord;\n"
+            "vec4 sampleFrom(S s) {\n"
+            "    return texture2D(s.tex, texcoord + s.a.x);\n"
+            "}\n"
+            "void main()\n"
+            "{\n"
+            "    gl_FragColor = sampleFrom(us[0]);\n"
+            "}\n");
+    }
+};
+
+class SamplerInNestedStructAsFunctionParameterTest : public SamplerInStructTest
+{
+  protected:
+    SamplerInNestedStructAsFunctionParameterTest() : SamplerInStructTest() {}
+
+    const char *getTextureUniformName() override { return "us[0].sub.tex"; }
+
+    std::string getFragmentShaderSource() override
+    {
+        return std::string(
+            "precision highp float;\n"
+            "struct SUB\n"
+            "{\n"
+            "    vec4 a;\n"
+            "    highp sampler2D tex;\n"
+            "};\n"
+            "struct S\n"
+            "{\n"
+            "    SUB sub;\n"
+            "};\n"
+            "uniform S us[1];\n"
+            "varying vec2 texcoord;\n"
+            "vec4 sampleFrom(SUB s) {\n"
+            "    return texture2D(s.tex, texcoord + s.a.x);\n"
+            "}\n"
+            "void main()\n"
+            "{\n"
+            "    gl_FragColor = sampleFrom(us[0].sub);\n"
+            "}\n");
+    }
+};
+
+class SamplerInStructAndOtherVariableTest : public SamplerInStructTest
+{
+  protected:
+    SamplerInStructAndOtherVariableTest() : SamplerInStructTest() {}
+
+    std::string getFragmentShaderSource() override
+    {
+        return std::string(
+            "precision highp float;\n"
+            "struct S\n"
+            "{\n"
+            "    vec4 a;\n"
+            "    highp sampler2D tex;\n"
+            "};\n"
+            "uniform S us;\n"
+            "uniform float us_tex;\n"
+            "varying vec2 texcoord;\n"
+            "void main()\n"
+            "{\n"
+            "    gl_FragColor = texture2D(us.tex, texcoord + us.a.x + us_tex);\n"
+            "}\n");
+    }
+};
+
 TEST_P(Texture2DTest, NegativeAPISubImage)
 {
     glBindTexture(GL_TEXTURE_2D, mTexture2D);
     EXPECT_GL_ERROR(GL_NO_ERROR);
+
+    setUpProgram();
 
     const GLubyte *pixels[20] = { 0 };
     glTexSubImage2D(GL_TEXTURE_2D, 0, 1, 1, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
@@ -788,6 +1199,8 @@ TEST_P(Texture2DTest, ZeroSizedUploads)
 {
     glBindTexture(GL_TEXTURE_2D, mTexture2D);
     EXPECT_GL_ERROR(GL_NO_ERROR);
+
+    setUpProgram();
 
     // Use the texture first to make sure it's in video memory
     glUseProgram(mProgram);
@@ -894,17 +1307,9 @@ TEST_P(Texture2DTestWithDrawScale, MipmapsTwice)
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, mTexture2D);
 
-    // Fill with red
-    std::vector<GLubyte> pixels(4 * 16 * 16);
-    for (size_t pixelId = 0; pixelId < 16 * 16; ++pixelId)
-    {
-        pixels[pixelId * 4 + 0] = 255;
-        pixels[pixelId * 4 + 1] = 0;
-        pixels[pixelId * 4 + 2] = 0;
-        pixels[pixelId * 4 + 3] = 255;
-    }
+    std::vector<GLColor> pixelsRed(16u * 16u, GLColor::red);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 16, 16, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 16, 16, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixelsRed.data());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glGenerateMipmap(GL_TEXTURE_2D);
@@ -914,36 +1319,24 @@ TEST_P(Texture2DTestWithDrawScale, MipmapsTwice)
     glUniform2f(mDrawScaleUniformLocation, 0.0625f, 0.0625f);
     drawQuad(mProgram, "position", 0.5f);
     EXPECT_GL_NO_ERROR();
-    EXPECT_PIXEL_EQ(px, py, 255, 0, 0, 255);
+    EXPECT_PIXEL_COLOR_EQ(px, py, GLColor::red);
 
-    // Fill with blue
-    for (size_t pixelId = 0; pixelId < 16 * 16; ++pixelId)
-    {
-        pixels[pixelId * 4 + 0] = 0;
-        pixels[pixelId * 4 + 1] = 0;
-        pixels[pixelId * 4 + 2] = 255;
-        pixels[pixelId * 4 + 3] = 255;
-    }
+    std::vector<GLColor> pixelsBlue(16u * 16u, GLColor::blue);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 16, 16, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 16, 16, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 pixelsBlue.data());
     glGenerateMipmap(GL_TEXTURE_2D);
 
-    // Fill with green
-    for (size_t pixelId = 0; pixelId < 16 * 16; ++pixelId)
-    {
-        pixels[pixelId * 4 + 0] = 0;
-        pixels[pixelId * 4 + 1] = 255;
-        pixels[pixelId * 4 + 2] = 0;
-        pixels[pixelId * 4 + 3] = 255;
-    }
+    std::vector<GLColor> pixelsGreen(16u * 16u, GLColor::green);
 
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 16, 16, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels.data());
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 16, 16, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 pixelsGreen.data());
     glGenerateMipmap(GL_TEXTURE_2D);
 
     drawQuad(mProgram, "position", 0.5f);
 
     EXPECT_GL_NO_ERROR();
-    EXPECT_PIXEL_EQ(px, py, 0, 255, 0, 255);
+    EXPECT_PIXEL_COLOR_EQ(px, py, GLColor::green);
 }
 
 // Test creating a FBO with a cube map render target, to test an ANGLE bug
@@ -994,6 +1387,8 @@ TEST_P(Texture2DTest, TexStorage)
     glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 8, 8, GL_RGB, GL_UNSIGNED_BYTE, pixels.data());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    setUpProgram();
 
     glUseProgram(mProgram);
     glUniform1i(mTexture2DUniformLocation, 0);
@@ -1047,6 +1442,8 @@ TEST_P(Texture2DTest, TexStorageWithPBO)
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
         glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
+        setUpProgram();
+
         glUseProgram(mProgram);
         glUniform1i(mTexture2DUniformLocation, 0);
         drawQuad(mProgram, "position", 0.5f);
@@ -1076,18 +1473,39 @@ TEST_P(Texture2DTest, CopySubImageFloat_RG_RG)
 
 TEST_P(Texture2DTest, CopySubImageFloat_RGB_R)
 {
+    if (IsIntel() && IsLinux())
+    {
+        // TODO(cwallez): Fix on Linux Intel drivers (http://anglebug.com/1346)
+        std::cout << "Test disabled on Linux Intel OpenGL." << std::endl;
+        return;
+    }
+
     testFloatCopySubImage(3, 1);
 }
 
 TEST_P(Texture2DTest, CopySubImageFloat_RGB_RG)
 {
+    if (IsIntel() && IsLinux())
+    {
+        // TODO(cwallez): Fix on Linux Intel drivers (http://anglebug.com/1346)
+        std::cout << "Test disabled on Linux Intel OpenGL." << std::endl;
+        return;
+    }
+
     testFloatCopySubImage(3, 2);
 }
 
 TEST_P(Texture2DTest, CopySubImageFloat_RGB_RGB)
 {
+    if (IsIntel() && IsLinux())
+    {
+        // TODO(cwallez): Fix on Linux Intel drivers (http://anglebug.com/1346)
+        std::cout << "Test disabled on Linux Intel OpenGL." << std::endl;
+        return;
+    }
+
     // TODO (bug 1284): Investigate RGBA32f D3D SDK Layers messages on D3D11_FL9_3
-    if (isD3D11_FL93())
+    if (IsD3D11_FL93())
     {
         std::cout << "Test skipped on Feature Level 9_3." << std::endl;
         return;
@@ -1109,7 +1527,7 @@ TEST_P(Texture2DTest, CopySubImageFloat_RGBA_RG)
 TEST_P(Texture2DTest, CopySubImageFloat_RGBA_RGB)
 {
     // TODO (bug 1284): Investigate RGBA32f D3D SDK Layers messages on D3D11_FL9_3
-    if (isD3D11_FL93())
+    if (IsD3D11_FL93())
     {
         std::cout << "Test skipped on Feature Level 9_3." << std::endl;
         return;
@@ -1121,7 +1539,7 @@ TEST_P(Texture2DTest, CopySubImageFloat_RGBA_RGB)
 TEST_P(Texture2DTest, CopySubImageFloat_RGBA_RGBA)
 {
     // TODO (bug 1284): Investigate RGBA32f D3D SDK Layers messages on D3D11_FL9_3
-    if (isD3D11_FL93())
+    if (IsD3D11_FL93())
     {
         std::cout << "Test skipped on Feature Level 9_3." << std::endl;
         return;
@@ -1143,6 +1561,8 @@ TEST_P(Texture2DTest, TextureNPOT_GL_ALPHA_UBYTE)
         // This test isn't applicable if texture_npot is enabled
         return;
     }
+
+    setUpProgram();
 
     glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
 
@@ -1251,25 +1671,14 @@ TEST_P(Texture2DTestES3, DrawWithBaseLevel1)
 {
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, mTexture2D);
-    GLubyte texDataRed[4u * 4u * 4u];
-    for (size_t i = 0u; i < 4u * 4u; ++i)
-    {
-        texDataRed[i * 4u]      = 255u;
-        texDataRed[i * 4u + 1u] = 0u;
-        texDataRed[i * 4u + 2u] = 0u;
-        texDataRed[i * 4u + 3u] = 255u;
-    }
-    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 4, 4, 0, GL_RGBA, GL_UNSIGNED_BYTE, texDataRed);
-    GLubyte texDataGreen[2u * 2u * 4u];
-    for (size_t i = 0u; i < 2u * 2u; ++i)
-    {
-        texDataGreen[i * 4u]      = 0u;
-        texDataGreen[i * 4u + 1u] = 255u;
-        texDataGreen[i * 4u + 2u] = 0u;
-        texDataGreen[i * 4u + 3u] = 255u;
-    }
-    glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE, texDataGreen);
-    glTexImage2D(GL_TEXTURE_2D, 2, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, texDataGreen);
+
+    std::vector<GLColor> texDataRed(4u * 4u, GLColor::red);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 4, 4, 0, GL_RGBA, GL_UNSIGNED_BYTE, texDataRed.data());
+    std::vector<GLColor> texDataGreen(2u * 2u, GLColor::green);
+    glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 texDataGreen.data());
+    glTexImage2D(GL_TEXTURE_2D, 2, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 texDataGreen.data());
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 1);
@@ -1278,7 +1687,612 @@ TEST_P(Texture2DTestES3, DrawWithBaseLevel1)
 
     drawQuad(mProgram, "position", 0.5f);
 
-    EXPECT_PIXEL_EQ(0, 0, 0, 255, 0, 255);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Test that drawing works correctly when levels outside the BASE_LEVEL/MAX_LEVEL range do not
+// have images defined.
+TEST_P(Texture2DTestES3, DrawWithLevelsOutsideRangeUndefined)
+{
+    if (IsAMD() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    {
+        // Observed crashing on AMD. Oddly the crash only happens with 2D textures, not 3D or array.
+        std::cout << "Test skipped on AMD OpenGL." << std::endl;
+        return;
+    }
+    if (IsOSX())
+    {
+        // Observed incorrect rendering on OSX.
+        std::cout << "Test skipped on OSX." << std::endl;
+        return;
+    }
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+    std::vector<GLColor> texDataGreen(2u * 2u, GLColor::green);
+    glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA8, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 texDataGreen.data());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 1);
+
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Test that drawing works correctly when level 0 is undefined and base level is 1.
+TEST_P(Texture2DTestES3, DrawWithLevelZeroUndefined)
+{
+    if (IsAMD() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    {
+        // Observed crashing on AMD. Oddly the crash only happens with 2D textures, not 3D or array.
+        std::cout << "Test skipped on AMD OpenGL." << std::endl;
+        return;
+    }
+    if (IsOSX())
+    {
+        // Observed incorrect rendering on OSX.
+        std::cout << "Test skipped on OSX." << std::endl;
+        return;
+    }
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+    std::vector<GLColor> texDataGreen(2u * 2u, GLColor::green);
+    glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA8, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 texDataGreen.data());
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 2);
+
+    EXPECT_GL_NO_ERROR();
+
+    // Texture is incomplete.
+    drawQuad(mProgram, "position", 0.5f);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::black);
+
+    glTexImage2D(GL_TEXTURE_2D, 2, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 texDataGreen.data());
+
+    // Texture is now complete.
+    drawQuad(mProgram, "position", 0.5f);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Test that drawing works correctly when levels outside the BASE_LEVEL/MAX_LEVEL range have
+// dimensions that don't fit the images inside the range.
+// GLES 3.0.4 section 3.8.13 Texture completeness
+TEST_P(Texture2DTestES3, DrawWithLevelsOutsideRangeWithInconsistentDimensions)
+{
+    if (IsOSX())
+    {
+        // Observed incorrect rendering on OSX.
+        std::cout << "Test skipped on OSX." << std::endl;
+        return;
+    }
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+    std::vector<GLColor> texDataRed(8u * 8u, GLColor::red);
+    std::vector<GLColor> texDataGreen(2u * 2u, GLColor::green);
+    std::vector<GLColor> texDataCyan(2u * 2u, GLColor::cyan);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+    // Two levels that are initially unused.
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 8, 8, 0, GL_RGBA, GL_UNSIGNED_BYTE, texDataRed.data());
+    glTexImage2D(GL_TEXTURE_2D, 2, GL_RGBA8, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 texDataCyan.data());
+
+    // One level that is used - only this level should affect completeness.
+    glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA8, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 texDataGreen.data());
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 1);
+
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+
+    if (IsIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    {
+        // Intel was observed drawing color 0,0,0,0 instead of the texture color after the base
+        // level was changed.
+        std::cout << "Test partially skipped on Intel OpenGL." << std::endl;
+        return;
+    }
+
+    // Switch the level that is being used to the cyan level 2.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 2);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 2);
+
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::cyan);
+}
+
+// Test that drawing works correctly when levels outside the BASE_LEVEL/MAX_LEVEL range do not
+// have images defined.
+TEST_P(Texture3DTestES3, DrawWithLevelsOutsideRangeUndefined)
+{
+    if (IsOSX())
+    {
+        // Observed incorrect rendering on OSX.
+        std::cout << "Test skipped on OSX." << std::endl;
+        return;
+    }
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_3D, mTexture3D);
+    std::vector<GLColor> texDataGreen(2u * 2u * 2u, GLColor::green);
+    glTexImage3D(GL_TEXTURE_3D, 1, GL_RGBA8, 2, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 texDataGreen.data());
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_BASE_LEVEL, 1);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAX_LEVEL, 1);
+
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Test that drawing works correctly when levels outside the BASE_LEVEL/MAX_LEVEL range have
+// dimensions that don't fit the images inside the range.
+// GLES 3.0.4 section 3.8.13 Texture completeness
+TEST_P(Texture3DTestES3, DrawWithLevelsOutsideRangeWithInconsistentDimensions)
+{
+    if (IsOSX())
+    {
+        // Observed incorrect rendering on OSX.
+        std::cout << "Test skipped on OSX." << std::endl;
+        return;
+    }
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_3D, mTexture3D);
+    std::vector<GLColor> texDataRed(8u * 8u * 8u, GLColor::red);
+    std::vector<GLColor> texDataGreen(2u * 2u * 2u, GLColor::green);
+    std::vector<GLColor> texDataCyan(2u * 2u * 2u, GLColor::cyan);
+
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+    // Two levels that are initially unused.
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8, 8, 8, 8, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 texDataRed.data());
+    glTexImage3D(GL_TEXTURE_3D, 2, GL_RGBA8, 2, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 texDataCyan.data());
+
+    // One level that is used - only this level should affect completeness.
+    glTexImage3D(GL_TEXTURE_3D, 1, GL_RGBA8, 2, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 texDataGreen.data());
+
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_BASE_LEVEL, 1);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAX_LEVEL, 1);
+
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+
+    if (IsIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    {
+        // Intel was observed drawing color 0,0,0,0 instead of the texture color after the base
+        // level was changed.
+        std::cout << "Test partially skipped on Intel OpenGL." << std::endl;
+        return;
+    }
+
+    // Switch the level that is being used to the cyan level 2.
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_BASE_LEVEL, 2);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAX_LEVEL, 2);
+
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::cyan);
+}
+
+// Test that drawing works correctly when levels outside the BASE_LEVEL/MAX_LEVEL range do not
+// have images defined.
+TEST_P(Texture2DArrayTestES3, DrawWithLevelsOutsideRangeUndefined)
+{
+    if (IsOSX())
+    {
+        // Observed incorrect rendering on OSX.
+        std::cout << "Test skipped on OSX." << std::endl;
+        return;
+    }
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D_ARRAY, m2DArrayTexture);
+    std::vector<GLColor> texDataGreen(2u * 2u * 2u, GLColor::green);
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGBA8, 2, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 texDataGreen.data());
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BASE_LEVEL, 1);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, 1);
+
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Test that drawing works correctly when levels outside the BASE_LEVEL/MAX_LEVEL range have
+// dimensions that don't fit the images inside the range.
+// GLES 3.0.4 section 3.8.13 Texture completeness
+TEST_P(Texture2DArrayTestES3, DrawWithLevelsOutsideRangeWithInconsistentDimensions)
+{
+    if (IsOSX())
+    {
+        // Observed incorrect rendering on OSX.
+        std::cout << "Test skipped on OSX." << std::endl;
+        return;
+    }
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_3D, m2DArrayTexture);
+    std::vector<GLColor> texDataRed(8u * 8u * 8u, GLColor::red);
+    std::vector<GLColor> texDataGreen(2u * 2u * 2u, GLColor::green);
+    std::vector<GLColor> texDataCyan(2u * 2u * 2u, GLColor::cyan);
+
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+    // Two levels that are initially unused.
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGBA8, 8, 8, 8, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 texDataRed.data());
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 2, GL_RGBA8, 2, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 texDataCyan.data());
+
+    // One level that is used - only this level should affect completeness.
+    glTexImage3D(GL_TEXTURE_2D_ARRAY, 1, GL_RGBA8, 2, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 texDataGreen.data());
+
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BASE_LEVEL, 1);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, 1);
+
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+
+    if (IsIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    {
+        // Intel was observed drawing color 0,0,0,0 instead of the texture color after the base
+        // level was changed.
+        std::cout << "Test partially skipped on Intel OpenGL." << std::endl;
+        return;
+    }
+    if (IsNVIDIA() && (getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE ||
+                       getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE))
+    {
+        // NVIDIA was observed drawing color 0,0,0,0 instead of the texture color after the base
+        // level was changed.
+        std::cout << "Test partially skipped on NVIDIA OpenGL." << std::endl;
+        return;
+    }
+
+    // Switch the level that is being used to the cyan level 2.
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_BASE_LEVEL, 2);
+    glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_MAX_LEVEL, 2);
+
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::cyan);
+}
+
+// Test that texture completeness is updated if texture max level changes.
+// GLES 3.0.4 section 3.8.13 Texture completeness
+TEST_P(Texture2DTestES3, TextureCompletenessChangesWithMaxLevel)
+{
+    if (IsIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    {
+        // Intel was observed having wrong behavior after the texture is made incomplete by changing
+        // the base level.
+        std::cout << "Test skipped on Intel OpenGL." << std::endl;
+        return;
+    }
+    if (IsOSX())
+    {
+        // Observed incorrect rendering on OSX.
+        std::cout << "Test skipped on OSX." << std::endl;
+        return;
+    }
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+    std::vector<GLColor> texDataGreen(8u * 8u, GLColor::green);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+    // A level that is initially unused.
+    glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA8, 8, 8, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 texDataGreen.data());
+
+    // One level that is initially used - only this level should affect completeness.
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 texDataGreen.data());
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+
+    // Switch the max level to level 1. The levels within the used range now have inconsistent
+    // dimensions and the texture should be incomplete.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 1);
+
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::black);
+}
+
+// Test that 3D texture completeness is updated if texture max level changes.
+// GLES 3.0.4 section 3.8.13 Texture completeness
+TEST_P(Texture3DTestES3, Texture3DCompletenessChangesWithMaxLevel)
+{
+    if (IsIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    {
+        // Intel was observed having wrong behavior after the texture is made incomplete by changing
+        // the base level.
+        std::cout << "Test skipped on Intel OpenGL." << std::endl;
+        return;
+    }
+    if (IsOSX())
+    {
+        // Observed incorrect rendering on OSX.
+        std::cout << "Test skipped on OSX." << std::endl;
+        return;
+    }
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_3D, mTexture3D);
+    std::vector<GLColor> texDataGreen(2u * 2u * 2u, GLColor::green);
+
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+    // A level that is initially unused.
+    glTexImage3D(GL_TEXTURE_3D, 1, GL_RGBA8, 1, 1, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 texDataGreen.data());
+
+    // One level that is initially used - only this level should affect completeness.
+    glTexImage3D(GL_TEXTURE_3D, 0, GL_RGBA8, 2, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 texDataGreen.data());
+
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_BASE_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAX_LEVEL, 0);
+
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+
+    // Switch the max level to level 1. The levels within the used range now have inconsistent
+    // dimensions and the texture should be incomplete.
+    glTexParameteri(GL_TEXTURE_3D, GL_TEXTURE_MAX_LEVEL, 1);
+
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::black);
+}
+
+// Test that texture completeness is updated if texture base level changes.
+// GLES 3.0.4 section 3.8.13 Texture completeness
+TEST_P(Texture2DTestES3, TextureCompletenessChangesWithBaseLevel)
+{
+    if (IsIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    {
+        // Intel was observed having wrong behavior after the texture is made incomplete by changing
+        // the base level.
+        std::cout << "Test skipped on Intel OpenGL." << std::endl;
+        return;
+    }
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+    std::vector<GLColor> texDataGreen(8u * 8u, GLColor::green);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+    // Two levels that are initially unused.
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 8, 8, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 texDataGreen.data());
+    glTexImage2D(GL_TEXTURE_2D, 1, GL_RGBA8, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 texDataGreen.data());
+
+    // One level that is initially used - only this level should affect completeness.
+    glTexImage2D(GL_TEXTURE_2D, 2, GL_RGBA8, 2, 2, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 texDataGreen.data());
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 2);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 2);
+
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+
+    // Switch the base level to level 1. The levels within the used range now have inconsistent
+    // dimensions and the texture should be incomplete.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 1);
+
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::black);
+}
+
+// Test that texture is not complete if base level is greater than max level.
+// GLES 3.0.4 section 3.8.13 Texture completeness
+TEST_P(Texture2DTestES3, TextureBaseLevelGreaterThanMaxLevel)
+{
+    if (IsIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    {
+        // Intel Windows OpenGL driver crashes if the base level of a non-immutable texture is out
+        // of range.
+        std::cout << "Test skipped on Intel OpenGL." << std::endl;
+        return;
+    }
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &GLColor::green);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 10000);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    // Texture should be incomplete.
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::black);
+}
+
+// Test that immutable texture base level and max level are clamped.
+// GLES 3.0.4 section 3.8.10 subsection Mipmapping
+TEST_P(Texture2DTestES3, ImmutableTextureBaseLevelOutOfRange)
+{
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    glTexStorage2D(GL_TEXTURE_2D, 1, GL_RGBA8, 1, 1);
+
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 1, 1, GL_RGBA, GL_UNSIGNED_BYTE, &GLColor::green);
+
+    // For immutable-format textures, base level should be clamped to [0, levels - 1], and max level
+    // should be clamped to [base_level, levels - 1].
+    // GLES 3.0.4 section 3.8.10 subsection Mipmapping
+    // In the case of this test, those rules make the effective base level and max level 0.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 10000);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 10000);
+
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    // Texture should be complete.
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Test that changing base level works when it affects the format of the texture.
+TEST_P(Texture2DTestES3, TextureFormatChangesWithBaseLevel)
+{
+    if (IsNVIDIA() && IsOpenGL())
+    {
+        // Observed rendering corruption on NVIDIA OpenGL.
+        std::cout << "Test skipped on NVIDIA OpenGL." << std::endl;
+        return;
+    }
+    if (IsIntel() && IsDesktopOpenGL())
+    {
+        // Observed incorrect rendering on Intel OpenGL.
+        std::cout << "Test skipped on Intel OpenGL." << std::endl;
+        return;
+    }
+    if (IsAMD() && IsDesktopOpenGL())
+    {
+        // Observed incorrect rendering on AMD OpenGL.
+        std::cout << "Test skipped on AMD OpenGL." << std::endl;
+        return;
+    }
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+    std::vector<GLColor> texDataCyan(4u * 4u, GLColor::cyan);
+    std::vector<GLColor> texDataGreen(4u * 4u, GLColor::green);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+    // RGBA8 level that's initially unused.
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 4, 4, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 texDataCyan.data());
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 1);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 1);
+
+    // RG8 level that's initially used, with consistent dimensions with level 0 but a different
+    // format. It reads green channel data from the green and alpha channels of texDataGreen
+    // (this is a bit hacky but works).
+    glTexImage2D(GL_TEXTURE_2D, 1, GL_RG8, 2, 2, 0, GL_RG, GL_UNSIGNED_BYTE, texDataGreen.data());
+
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+
+    // Switch the texture to use the cyan level 0 with the RGBA format.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 0);
+
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::cyan);
+}
+
+// Test that setting a texture image works when base level is out of range.
+TEST_P(Texture2DTestES3, SetImageWhenBaseLevelOutOfRange)
+{
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 10000);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAX_LEVEL, 10000);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, &GLColor::green);
+
+    EXPECT_GL_NO_ERROR();
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 0);
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    // Texture should be complete.
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
 }
 
 // In the D3D11 renderer, we need to initialize some texture formats, to fill empty channels. EG RBA->RGBA8, with 1.0
@@ -1306,12 +2320,12 @@ TEST_P(Texture2DArrayTestES3, RedefineInittableArray)
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_S, GL_REPEAT);
     glTexParameteri(GL_TEXTURE_2D_ARRAY, GL_TEXTURE_WRAP_T, GL_REPEAT);
     drawQuad(mProgram, "position", 1.0f);
-    EXPECT_PIXEL_EQ(0, 0, 0, 255, 0, 255);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
 
     // The dimension of the respecification must match the original exactly to trigger the bug.
     glTexImage3D(GL_TEXTURE_2D_ARRAY, 0, GL_RGB, 4, 4, 2, 0, GL_RGB, GL_UNSIGNED_BYTE, &pixelData[0]);
     drawQuad(mProgram, "position", 1.0f);
-    EXPECT_PIXEL_EQ(0, 0, 0, 255, 0, 255);
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
 
     ASSERT_GL_NO_ERROR();
 }
@@ -1418,6 +2432,355 @@ TEST_P(SamplerTypeMixTestES3, SamplerTypeMixDraw)
     // 0.25 * <comparison result (1.0)> +
     // 0.125 * <comparison result (0.0)>
     EXPECT_PIXEL_NEAR(0, 0, 64, 154, 184, 255, 2);
+}
+
+// Test different base levels on textures accessed through the same sampler array.
+// Calling textureSize() on the samplers hits the D3D sampler metadata workaround.
+TEST_P(TextureSizeTextureArrayTest, BaseLevelVariesInTextureArray)
+{
+    if ((IsAMD() || IsIntel()) && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
+    {
+        std::cout << "Test skipped on Intel and AMD D3D." << std::endl;
+        return;
+    }
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture2DA);
+    GLsizei size = 64;
+    for (GLint level = 0; level < 7; ++level)
+    {
+        ASSERT_LT(0, size);
+        glTexImage2D(GL_TEXTURE_2D, level, GL_RGBA, size, size, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                     nullptr);
+        size = size / 2;
+    }
+    ASSERT_EQ(0, size);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 1);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, mTexture2DB);
+    size = 128;
+    for (GLint level = 0; level < 8; ++level)
+    {
+        ASSERT_LT(0, size);
+        glTexImage2D(GL_TEXTURE_2D, level, GL_RGBA, size, size, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                     nullptr);
+        size = size / 2;
+    }
+    ASSERT_EQ(0, size);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_BASE_LEVEL, 3);
+    EXPECT_GL_NO_ERROR();
+
+    glUseProgram(mProgram);
+    glUniform1i(mTexture0Location, 0);
+    glUniform1i(mTexture1Location, 1);
+
+    drawQuad(mProgram, "position", 0.5f);
+    EXPECT_GL_NO_ERROR();
+    // Red channel: width of level 1 of texture A: 32.
+    // Green channel: width of level 3 of texture B: 16.
+    EXPECT_PIXEL_NEAR(0, 0, 32, 16, 0, 255, 2);
+}
+
+// When sampling a texture without an alpha channel, "1" is returned as the alpha value.
+// ES 3.0.4 table 3.24
+TEST_P(Texture2DTestES3, TextureRGBImplicitAlpha1)
+{
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8, 1, 1, 0, GL_RGB, GL_UNSIGNED_BYTE, nullptr);
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_ALPHA_EQ(0, 0, 255);
+}
+
+// When sampling a texture without an alpha channel, "1" is returned as the alpha value.
+// ES 3.0.4 table 3.24
+TEST_P(Texture2DTestES3, TextureLuminanceImplicitAlpha1)
+{
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 1, 1, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, nullptr);
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_ALPHA_EQ(0, 0, 255);
+}
+
+// When sampling a texture without an alpha channel, "1" is returned as the alpha value.
+// ES 3.0.4 table 3.24
+TEST_P(Texture2DTestES3, TextureLuminance32ImplicitAlpha1)
+{
+    if (extensionEnabled("GL_OES_texture_float"))
+    {
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, mTexture2D);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 1, 1, 0, GL_LUMINANCE, GL_FLOAT, nullptr);
+        EXPECT_GL_NO_ERROR();
+
+        drawQuad(mProgram, "position", 0.5f);
+
+        EXPECT_PIXEL_ALPHA_EQ(0, 0, 255);
+    }
+}
+
+// When sampling a texture without an alpha channel, "1" is returned as the alpha value.
+// ES 3.0.4 table 3.24
+TEST_P(Texture2DTestES3, TextureLuminance16ImplicitAlpha1)
+{
+    if (extensionEnabled("GL_OES_texture_half_float"))
+    {
+        if (IsNVIDIA() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE)
+        {
+            std::cout << "Test skipped on NVIDIA" << std::endl;
+            return;
+        }
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, mTexture2D);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 1, 1, 0, GL_LUMINANCE, GL_HALF_FLOAT_OES,
+                     nullptr);
+        EXPECT_GL_NO_ERROR();
+
+        drawQuad(mProgram, "position", 0.5f);
+
+        EXPECT_PIXEL_ALPHA_EQ(0, 0, 255);
+    }
+}
+
+// When sampling a texture without an alpha channel, "1" is returned as the alpha value.
+// ES 3.0.4 table 3.24
+TEST_P(Texture2DUnsignedIntegerAlpha1TestES3, TextureRGB8UIImplicitAlpha1)
+{
+    if (IsIntel())
+    {
+        std::cout << "Test disabled on Intel." << std::endl;
+        return;
+    }
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8UI, 1, 1, 0, GL_RGB_INTEGER, GL_UNSIGNED_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_ALPHA_EQ(0, 0, 255);
+}
+
+// When sampling a texture without an alpha channel, "1" is returned as the alpha value.
+// ES 3.0.4 table 3.24
+TEST_P(Texture2DIntegerAlpha1TestES3, TextureRGB8IImplicitAlpha1)
+{
+    if (IsIntel())
+    {
+        std::cout << "Test disabled on Intel." << std::endl;
+        return;
+    }
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8I, 1, 1, 0, GL_RGB_INTEGER, GL_BYTE, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_ALPHA_EQ(0, 0, 255);
+}
+
+// When sampling a texture without an alpha channel, "1" is returned as the alpha value.
+// ES 3.0.4 table 3.24
+TEST_P(Texture2DUnsignedIntegerAlpha1TestES3, TextureRGB16UIImplicitAlpha1)
+{
+    if (IsIntel())
+    {
+        std::cout << "Test disabled on Intel." << std::endl;
+        return;
+    }
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16UI, 1, 1, 0, GL_RGB_INTEGER, GL_UNSIGNED_SHORT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_ALPHA_EQ(0, 0, 255);
+}
+
+// When sampling a texture without an alpha channel, "1" is returned as the alpha value.
+// ES 3.0.4 table 3.24
+TEST_P(Texture2DIntegerAlpha1TestES3, TextureRGB16IImplicitAlpha1)
+{
+    if (IsIntel())
+    {
+        std::cout << "Test disabled on Intel." << std::endl;
+        return;
+    }
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB16I, 1, 1, 0, GL_RGB_INTEGER, GL_SHORT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_ALPHA_EQ(0, 0, 255);
+}
+
+// When sampling a texture without an alpha channel, "1" is returned as the alpha value.
+// ES 3.0.4 table 3.24
+TEST_P(Texture2DUnsignedIntegerAlpha1TestES3, TextureRGB32UIImplicitAlpha1)
+{
+    if (IsIntel())
+    {
+        std::cout << "Test disabled on Intel." << std::endl;
+        return;
+    }
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32UI, 1, 1, 0, GL_RGB_INTEGER, GL_UNSIGNED_INT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_ALPHA_EQ(0, 0, 255);
+}
+
+// When sampling a texture without an alpha channel, "1" is returned as the alpha value.
+// ES 3.0.4 table 3.24
+TEST_P(Texture2DIntegerAlpha1TestES3, TextureRGB32IImplicitAlpha1)
+{
+    if (IsIntel())
+    {
+        std::cout << "Test disabled on Intel." << std::endl;
+        return;
+    }
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB32I, 1, 1, 0, GL_RGB_INTEGER, GL_INT, nullptr);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_ALPHA_EQ(0, 0, 255);
+}
+
+// When sampling a texture without an alpha channel, "1" is returned as the alpha value.
+// ES 3.0.4 table 3.24
+TEST_P(Texture2DTestES3, TextureRGBSNORMImplicitAlpha1)
+{
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB8_SNORM, 1, 1, 0, GL_RGB, GL_BYTE, nullptr);
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_ALPHA_EQ(0, 0, 255);
+}
+
+// When sampling a texture without an alpha channel, "1" is returned as the alpha value.
+// ES 3.0.4 table 3.24
+TEST_P(Texture2DTestES3, TextureRGB9E5ImplicitAlpha1)
+{
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB9_E5, 1, 1, 0, GL_RGB, GL_UNSIGNED_INT_5_9_9_9_REV,
+                 nullptr);
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_ALPHA_EQ(0, 0, 255);
+}
+
+// When sampling a texture without an alpha channel, "1" is returned as the alpha value.
+// ES 3.0.4 table 3.24
+TEST_P(Texture2DTestES3, TextureCOMPRESSEDRGB8ETC2ImplicitAlpha1)
+{
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+    glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_RGB8_ETC2, 1, 1, 0, 8, nullptr);
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_ALPHA_EQ(0, 0, 255);
+}
+
+// When sampling a texture without an alpha channel, "1" is returned as the alpha value.
+// ES 3.0.4 table 3.24
+TEST_P(Texture2DTestES3, TextureCOMPRESSEDSRGB8ETC2ImplicitAlpha1)
+{
+    if (IsIntel() && IsLinux())
+    {
+        // TODO(cwallez): Fix on Linux Intel drivers (http://anglebug.com/1346)
+        std::cout << "Test disabled on Linux Intel OpenGL." << std::endl;
+        return;
+    }
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+    glCompressedTexImage2D(GL_TEXTURE_2D, 0, GL_COMPRESSED_SRGB8_ETC2, 1, 1, 0, 8, nullptr);
+    EXPECT_GL_NO_ERROR();
+
+    drawQuad(mProgram, "position", 0.5f);
+
+    EXPECT_PIXEL_ALPHA_EQ(0, 0, 255);
+}
+
+// Use a sampler in a uniform struct.
+TEST_P(SamplerInStructTest, SamplerInStruct)
+{
+    runSamplerInStructTest();
+}
+
+// Use a sampler in a uniform struct that's passed as a function parameter.
+TEST_P(SamplerInStructAsFunctionParameterTest, SamplerInStructAsFunctionParameter)
+{
+    runSamplerInStructTest();
+}
+
+// Use a sampler in a uniform struct array with a struct from the array passed as a function
+// parameter.
+TEST_P(SamplerInStructArrayAsFunctionParameterTest, SamplerInStructArrayAsFunctionParameter)
+{
+    if (IsIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    {
+        std::cout << "Test skipped on Intel OpenGL." << std::endl;
+        return;
+    }
+    runSamplerInStructTest();
+}
+
+// Use a sampler in a struct inside a uniform struct with the nested struct passed as a function
+// parameter.
+TEST_P(SamplerInNestedStructAsFunctionParameterTest, SamplerInNestedStructAsFunctionParameter)
+{
+    if (IsIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    {
+        std::cout << "Test skipped on Intel OpenGL." << std::endl;
+        return;
+    }
+    runSamplerInStructTest();
+}
+
+// Make sure that there isn't a name conflict between sampler extracted from a struct and a
+// similarly named uniform.
+TEST_P(SamplerInStructAndOtherVariableTest, SamplerInStructAndOtherVariable)
+{
+    runSamplerInStructTest();
 }
 
 class TextureLimitsTest : public ANGLETest
@@ -1634,7 +2997,7 @@ class TextureLimitsTest : public ANGLETest
 TEST_P(TextureLimitsTest, MaxVertexTextures)
 {
     // TODO(jmadill): Figure out why this fails on Intel.
-    if (isIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    if (IsIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
     {
         std::cout << "Test skipped on Intel." << std::endl;
         return;
@@ -1651,7 +3014,7 @@ TEST_P(TextureLimitsTest, MaxVertexTextures)
 TEST_P(TextureLimitsTest, MaxFragmentTextures)
 {
     // TODO(jmadill): Figure out why this fails on Intel.
-    if (isIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    if (IsIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
     {
         std::cout << "Test skipped on Intel." << std::endl;
         return;
@@ -1668,7 +3031,7 @@ TEST_P(TextureLimitsTest, MaxFragmentTextures)
 TEST_P(TextureLimitsTest, MaxCombinedTextures)
 {
     // TODO(jmadill): Investigate workaround.
-    if (isIntel() && GetParam() == ES2_OPENGL())
+    if (IsIntel() && GetParam() == ES2_OPENGL())
     {
         std::cout << "Test skipped on Intel." << std::endl;
         return;
@@ -1709,7 +3072,7 @@ TEST_P(TextureLimitsTest, ExcessiveFragmentTextures)
 TEST_P(TextureLimitsTest, MaxActiveVertexTextures)
 {
     // TODO(jmadill): Figure out why this fails on Intel.
-    if (isIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    if (IsIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
     {
         std::cout << "Test skipped on Intel." << std::endl;
         return;
@@ -1726,7 +3089,7 @@ TEST_P(TextureLimitsTest, MaxActiveVertexTextures)
 TEST_P(TextureLimitsTest, MaxActiveFragmentTextures)
 {
     // TODO(jmadill): Figure out why this fails on Intel.
-    if (isIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    if (IsIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
     {
         std::cout << "Test skipped on Intel." << std::endl;
         return;
@@ -1815,6 +3178,277 @@ TEST_P(TextureLimitsTest, DrawWithTexturePastMaximum)
     EXPECT_GL_ERROR(GL_INVALID_OPERATION);
 }
 
+class Texture2DNorm16TestES3 : public Texture2DTestES3
+{
+  protected:
+    Texture2DNorm16TestES3() : Texture2DTestES3(), mTextures{0, 0, 0}, mFBO(0), mRenderbuffer(0) {}
+
+    void SetUp() override
+    {
+        Texture2DTestES3::SetUp();
+
+        glActiveTexture(GL_TEXTURE0);
+        glGenTextures(3, mTextures);
+        glGenFramebuffers(1, &mFBO);
+        glGenRenderbuffers(1, &mRenderbuffer);
+
+        for (size_t textureIndex = 0; textureIndex < 3; textureIndex++)
+        {
+            glBindTexture(GL_TEXTURE_2D, mTextures[textureIndex]);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+        }
+
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        ASSERT_GL_NO_ERROR();
+    }
+
+    void TearDown() override
+    {
+        glDeleteTextures(3, mTextures);
+        glDeleteFramebuffers(1, &mFBO);
+        glDeleteRenderbuffers(1, &mRenderbuffer);
+
+        Texture2DTestES3::TearDown();
+    }
+
+    void testNorm16Texture(GLint internalformat, GLenum format, GLenum type)
+    {
+        GLushort pixelValue = type == GL_SHORT ? 0x7FFF : 0x6A35;
+        GLColor16 imageData(pixelValue, pixelValue, pixelValue, pixelValue);
+
+        setUpProgram();
+
+        glBindFramebuffer(GL_FRAMEBUFFER, mFBO);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mTextures[0],
+                               0);
+
+        glBindTexture(GL_TEXTURE_2D, mTextures[0]);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA16_EXT, 1, 1, 0, GL_RGBA, GL_UNSIGNED_SHORT, nullptr);
+
+        glBindTexture(GL_TEXTURE_2D, mTextures[1]);
+        glTexImage2D(GL_TEXTURE_2D, 0, internalformat, 1, 1, 0, format, type, &imageData.R);
+
+        EXPECT_GL_NO_ERROR();
+
+        drawQuad(mProgram, "position", 0.5f);
+
+        GLColor16 expectedValue = imageData;
+        if (type == GL_SHORT)
+        {
+            // sampled as signed value; then stored as unsigned value
+            expectedValue = GLColor16::white;
+        }
+
+        EXPECT_PIXEL_COLOR16_EQ(0, 0, SliceFormatColor16(format, expectedValue));
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        ASSERT_GL_NO_ERROR();
+    }
+
+    void testNorm16Render(GLint internalformat, GLenum format, GLenum type)
+    {
+        GLushort pixelValue = 0x6A35;
+        GLColor16 imageData(pixelValue, pixelValue, pixelValue, pixelValue);
+
+        setUpProgram();
+
+        glBindTexture(GL_TEXTURE_2D, mTextures[1]);
+        glTexImage2D(GL_TEXTURE_2D, 0, internalformat, 1, 1, 0, format, type, nullptr);
+
+        glBindFramebuffer(GL_FRAMEBUFFER, mFBO);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mTextures[1],
+                               0);
+
+        glBindTexture(GL_TEXTURE_2D, mTextures[2]);
+        glTexImage2D(GL_TEXTURE_2D, 0, internalformat, 1, 1, 0, format, type, &imageData.R);
+
+        EXPECT_GL_NO_ERROR();
+
+        drawQuad(mProgram, "position", 0.5f);
+
+        EXPECT_PIXEL_COLOR16_EQ(0, 0, SliceFormatColor16(format, imageData));
+
+        glBindRenderbuffer(GL_RENDERBUFFER, mRenderbuffer);
+        glRenderbufferStorage(GL_RENDERBUFFER, internalformat, 1, 1);
+        glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER,
+                                  mRenderbuffer);
+        glBindRenderbuffer(GL_RENDERBUFFER, 0);
+        EXPECT_GL_NO_ERROR();
+
+        glClearColor(1.0f, 1.0f, 1.0f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT);
+
+        glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, 1, 1);
+
+        GLColor16 expectedValue = GLColor16::white;
+        EXPECT_PIXEL_COLOR16_EQ(0, 0, SliceFormatColor16(format, expectedValue));
+
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+        ASSERT_GL_NO_ERROR();
+    }
+
+    GLuint mTextures[3];
+    GLuint mFBO;
+    GLuint mRenderbuffer;
+};
+
+// Test texture formats enabled by the GL_EXT_texture_norm16 extension.
+TEST_P(Texture2DNorm16TestES3, TextureNorm16Test)
+{
+    if (!extensionEnabled("GL_EXT_texture_norm16"))
+    {
+        std::cout << "Test skipped due to missing GL_EXT_texture_norm16." << std::endl;
+        return;
+    }
+
+    testNorm16Texture(GL_R16_EXT, GL_RED, GL_UNSIGNED_SHORT);
+    testNorm16Texture(GL_RG16_EXT, GL_RG, GL_UNSIGNED_SHORT);
+    testNorm16Texture(GL_RGB16_EXT, GL_RGB, GL_UNSIGNED_SHORT);
+    testNorm16Texture(GL_RGBA16_EXT, GL_RGBA, GL_UNSIGNED_SHORT);
+    testNorm16Texture(GL_R16_SNORM_EXT, GL_RED, GL_SHORT);
+    testNorm16Texture(GL_RG16_SNORM_EXT, GL_RG, GL_SHORT);
+    testNorm16Texture(GL_RGB16_SNORM_EXT, GL_RGB, GL_SHORT);
+    testNorm16Texture(GL_RGBA16_SNORM_EXT, GL_RGBA, GL_SHORT);
+
+    testNorm16Render(GL_R16_EXT, GL_RED, GL_UNSIGNED_SHORT);
+    testNorm16Render(GL_RG16_EXT, GL_RG, GL_UNSIGNED_SHORT);
+    testNorm16Render(GL_RGBA16_EXT, GL_RGBA, GL_UNSIGNED_SHORT);
+}
+
+// Test that UNPACK_SKIP_IMAGES doesn't have an effect on 2D texture uploads.
+// GLES 3.0.4 section 3.8.3.
+TEST_P(Texture2DTestES3, UnpackSkipImages2D)
+{
+    if (IsIntel() && IsDesktopOpenGL())
+    {
+        std::cout << "Test skipped on Intel OpenGL." << std::endl;
+        return;
+    }
+
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    ASSERT_GL_NO_ERROR();
+
+    // SKIP_IMAGES should not have an effect on uploading 2D textures
+    glPixelStorei(GL_UNPACK_SKIP_IMAGES, 1000);
+    ASSERT_GL_NO_ERROR();
+
+    std::vector<GLColor> pixelsGreen(128u * 128u, GLColor::green);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 128, 128, 0, GL_RGBA, GL_UNSIGNED_BYTE,
+                 pixelsGreen.data());
+    ASSERT_GL_NO_ERROR();
+
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 128, 128, GL_RGBA, GL_UNSIGNED_BYTE,
+                    pixelsGreen.data());
+    ASSERT_GL_NO_ERROR();
+
+    glUseProgram(mProgram);
+    drawQuad(mProgram, "position", 0.5f);
+    ASSERT_GL_NO_ERROR();
+
+    EXPECT_PIXEL_COLOR_EQ(0, 0, GLColor::green);
+}
+
+// Test that skip defined in unpack parameters is taken into account when determining whether
+// unpacking source extends outside unpack buffer bounds.
+TEST_P(Texture2DTestES3, UnpackSkipPixelsOutOfBounds)
+{
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    ASSERT_GL_NO_ERROR();
+
+    GLBuffer buf;
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buf.get());
+    std::vector<GLColor> pixelsGreen(128u * 128u, GLColor::green);
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, pixelsGreen.size() * 4u, pixelsGreen.data(),
+                 GL_DYNAMIC_COPY);
+    ASSERT_GL_NO_ERROR();
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, 128, 128, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+    ASSERT_GL_NO_ERROR();
+
+    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 1);
+    ASSERT_GL_NO_ERROR();
+
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 128, 128, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+    EXPECT_GL_ERROR(GL_INVALID_OPERATION);
+
+    glPixelStorei(GL_UNPACK_SKIP_PIXELS, 0);
+    glPixelStorei(GL_UNPACK_SKIP_ROWS, 1);
+    ASSERT_GL_NO_ERROR();
+
+    glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 128, 128, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+    EXPECT_GL_ERROR(GL_INVALID_OPERATION);
+}
+
+// Test that unpacking rows that overlap in a pixel unpack buffer works as expected.
+TEST_P(Texture2DTestES3, UnpackOverlappingRowsFromUnpackBuffer)
+{
+    if (IsD3D11())
+    {
+        std::cout << "Test skipped on D3D." << std::endl;
+        return;
+    }
+    if (IsOSX() && IsAMD())
+    {
+        // Incorrect rendering results seen on OSX AMD.
+        std::cout << "Test skipped on OSX AMD." << std::endl;
+        return;
+    }
+
+    const GLuint width            = 8u;
+    const GLuint height           = 8u;
+    const GLuint unpackRowLength  = 5u;
+    const GLuint unpackSkipPixels = 1u;
+
+    setWindowWidth(width);
+    setWindowHeight(height);
+
+    glBindTexture(GL_TEXTURE_2D, mTexture2D);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    ASSERT_GL_NO_ERROR();
+
+    GLBuffer buf;
+    glBindBuffer(GL_PIXEL_UNPACK_BUFFER, buf.get());
+    std::vector<GLColor> pixelsGreen((height - 1u) * unpackRowLength + width + unpackSkipPixels,
+                                     GLColor::green);
+
+    for (GLuint skippedPixel = 0u; skippedPixel < unpackSkipPixels; ++skippedPixel)
+    {
+        pixelsGreen[skippedPixel] = GLColor(255, 0, 0, 255);
+    }
+
+    glBufferData(GL_PIXEL_UNPACK_BUFFER, pixelsGreen.size() * 4u, pixelsGreen.data(),
+                 GL_DYNAMIC_COPY);
+    ASSERT_GL_NO_ERROR();
+
+    glPixelStorei(GL_UNPACK_ROW_LENGTH, unpackRowLength);
+    glPixelStorei(GL_UNPACK_SKIP_PIXELS, unpackSkipPixels);
+    ASSERT_GL_NO_ERROR();
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+    ASSERT_GL_NO_ERROR();
+
+    glUseProgram(mProgram);
+    drawQuad(mProgram, "position", 0.5f);
+    ASSERT_GL_NO_ERROR();
+
+    GLuint windowPixelCount = getWindowWidth() * getWindowHeight();
+    std::vector<GLColor> actual(windowPixelCount, GLColor::black);
+    glReadPixels(0, 0, getWindowWidth(), getWindowHeight(), GL_RGBA, GL_UNSIGNED_BYTE,
+                 actual.data());
+    std::vector<GLColor> expected(windowPixelCount, GLColor::green);
+    EXPECT_EQ(expected, actual);
+}
+
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
 // TODO(oetuaho): Enable all below tests on OpenGL. Requires a fix for ANGLE bug 1278.
 ANGLE_INSTANTIATE_TEST(Texture2DTest,
@@ -1854,12 +3488,50 @@ ANGLE_INSTANTIATE_TEST(SamplerArrayAsFunctionParameterTest,
                        ES2_OPENGL(),
                        ES2_OPENGLES());
 ANGLE_INSTANTIATE_TEST(Texture2DTestES3, ES3_D3D11(), ES3_OPENGL(), ES3_OPENGLES());
+ANGLE_INSTANTIATE_TEST(Texture3DTestES3, ES3_D3D11(), ES3_OPENGL(), ES3_OPENGLES());
+ANGLE_INSTANTIATE_TEST(Texture2DIntegerAlpha1TestES3, ES3_D3D11(), ES3_OPENGL(), ES3_OPENGLES());
+ANGLE_INSTANTIATE_TEST(Texture2DUnsignedIntegerAlpha1TestES3,
+                       ES3_D3D11(),
+                       ES3_OPENGL(),
+                       ES3_OPENGLES());
 ANGLE_INSTANTIATE_TEST(ShadowSamplerPlusSampler3DTestES3,
                        ES3_D3D11(),
                        ES3_OPENGL(),
                        ES3_OPENGLES());
 ANGLE_INSTANTIATE_TEST(SamplerTypeMixTestES3, ES3_D3D11(), ES3_OPENGL(), ES3_OPENGLES());
 ANGLE_INSTANTIATE_TEST(Texture2DArrayTestES3, ES3_D3D11(), ES3_OPENGL(), ES3_OPENGLES());
+ANGLE_INSTANTIATE_TEST(TextureSizeTextureArrayTest, ES3_D3D11(), ES3_OPENGL());
+ANGLE_INSTANTIATE_TEST(SamplerInStructTest,
+                       ES2_D3D11(),
+                       ES2_D3D11_FL9_3(),
+                       ES2_D3D9(),
+                       ES2_OPENGL(),
+                       ES2_OPENGLES());
+ANGLE_INSTANTIATE_TEST(SamplerInStructAsFunctionParameterTest,
+                       ES2_D3D11(),
+                       ES2_D3D11_FL9_3(),
+                       ES2_D3D9(),
+                       ES2_OPENGL(),
+                       ES2_OPENGLES());
+ANGLE_INSTANTIATE_TEST(SamplerInStructArrayAsFunctionParameterTest,
+                       ES2_D3D11(),
+                       ES2_D3D11_FL9_3(),
+                       ES2_D3D9(),
+                       ES2_OPENGL(),
+                       ES2_OPENGLES());
+ANGLE_INSTANTIATE_TEST(SamplerInNestedStructAsFunctionParameterTest,
+                       ES2_D3D11(),
+                       ES2_D3D11_FL9_3(),
+                       ES2_D3D9(),
+                       ES2_OPENGL(),
+                       ES2_OPENGLES());
+ANGLE_INSTANTIATE_TEST(SamplerInStructAndOtherVariableTest,
+                       ES2_D3D11(),
+                       ES2_D3D11_FL9_3(),
+                       ES2_D3D9(),
+                       ES2_OPENGL(),
+                       ES2_OPENGLES());
 ANGLE_INSTANTIATE_TEST(TextureLimitsTest, ES2_D3D11(), ES2_OPENGL(), ES2_OPENGLES());
+ANGLE_INSTANTIATE_TEST(Texture2DNorm16TestES3, ES3_D3D11(), ES3_OPENGL(), ES3_OPENGLES());
 
 } // namespace

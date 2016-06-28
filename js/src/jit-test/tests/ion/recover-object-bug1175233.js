@@ -7,8 +7,8 @@
 // Ion eager fails the test below because we have not yet created any
 // template object in baseline before running the content of the top-level
 // function.
-if (getJitCompilerOptions()["ion.warmup.trigger"] <= 90)
-    setJitCompilerOption("ion.warmup.trigger", 90);
+if (getJitCompilerOptions()["ion.warmup.trigger"] <= 130)
+    setJitCompilerOption("ion.warmup.trigger", 130);
 
 // This test checks that we are able to remove the getelem & setelem with scalar
 // replacement, so we should not force inline caches, as this would skip the
@@ -17,7 +17,7 @@ if (getJitCompilerOptions()["ion.forceinlineCaches"])
     setJitCompilerOption("ion.forceinlineCaches", 0);
 
 var uceFault = function (j) {
-    if (j >= 31)
+    if (j >= max)
         uceFault = function (j) { return true; };
     return false;
 }
@@ -41,8 +41,8 @@ function f(j) {
     return 2 * obj.i;
 }
 
-var min = -100;
-for (var j = min; j <= 31; ++j) {
+var max = 150;
+for (var j = 0; j <= max; ++j) {
     with({}){};
     f(j);
 }

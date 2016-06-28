@@ -196,17 +196,16 @@ nsSimpleURI::SetSpec(const nsACString &aSpec)
 {
     NS_ENSURE_STATE(mMutable);
     
-    const nsAFlatCString& flat = PromiseFlatCString(aSpec);
-
     // filter out unexpected chars "\r\n\t" if necessary
     nsAutoCString filteredSpec;
-    net_FilterURIString(flat, filteredSpec);
-    const char* specPtr = filteredSpec.get();
-    int32_t specLen = filteredSpec.Length();
+    net_FilterURIString(aSpec, filteredSpec);
 
     // nsSimpleURI currently restricts the charset to US-ASCII
     nsAutoCString spec;
-    NS_EscapeURL(specPtr, specLen, esc_OnlyNonASCII|esc_AlwaysCopy, spec);
+    nsresult rv = NS_EscapeURL(filteredSpec, esc_OnlyNonASCII, spec, fallible);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
 
     int32_t colonPos = spec.FindChar(':');
     if (colonPos < 0 || !net_IsValidScheme(spec.get(), colonPos))

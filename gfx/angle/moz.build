@@ -39,6 +39,7 @@ UNIFIED_SOURCES += [
     'src/compiler/translator/CallDAG.cpp',
     'src/compiler/translator/CodeGen.cpp',
     'src/compiler/translator/Compiler.cpp',
+    'src/compiler/translator/DeferGlobalInitializers.cpp',
     'src/compiler/translator/depgraph/DependencyGraph.cpp',
     'src/compiler/translator/depgraph/DependencyGraphBuilder.cpp',
     'src/compiler/translator/depgraph/DependencyGraphOutput.cpp',
@@ -83,6 +84,7 @@ UNIFIED_SOURCES += [
     'src/compiler/translator/ShaderVars.cpp',
     'src/compiler/translator/StructureHLSL.cpp',
     'src/compiler/translator/SymbolTable.cpp',
+    'src/compiler/translator/TextureFunctionHLSL.cpp',
     'src/compiler/translator/timing/RestrictFragmentShaderTiming.cpp',
     'src/compiler/translator/timing/RestrictVertexShaderTiming.cpp',
     'src/compiler/translator/TranslatorESSL.cpp',
@@ -96,6 +98,7 @@ UNIFIED_SOURCES += [
     'src/compiler/translator/UtilsHLSL.cpp',
     'src/compiler/translator/ValidateGlobalInitializer.cpp',
     'src/compiler/translator/ValidateLimitations.cpp',
+    'src/compiler/translator/ValidateMaxParameters.cpp',
     'src/compiler/translator/ValidateOutputs.cpp',
     'src/compiler/translator/ValidateSwitch.cpp',
     'src/compiler/translator/VariableInfo.cpp',
@@ -163,7 +166,7 @@ DEFINES['ANGLE_ENABLE_KEYEDMUTEX'] = "1"
 EXPORTS.angle += [ 'include/GLSLANG/ShaderLang.h', 'include/GLSLANG/ShaderVars.h' ]
 EXPORTS.angle.KHR += [ 'include/KHR/khrplatform.h' ]
 
-LOCAL_INCLUDES += [ 'include', 'src' ]
+LOCAL_INCLUDES += [ 'include', 'src', 'src/common/third_party/numerics' ]
 
 # We allow warnings for third-party code that can be updated from upstream.
 ALLOW_COMPILER_WARNINGS = True

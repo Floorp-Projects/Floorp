@@ -173,8 +173,6 @@ protected:
     JNIEnv* const mEnv;
 
 public:
-    static const char name[];
-
     static jclass RawClassRef()
     {
         return sClassRef;
@@ -193,7 +191,7 @@ public:
     jclass ClassRef() const
     {
         if (!sClassRef) {
-            sClassRef = GetClassGlobalRef(mEnv, name);
+            sClassRef = GetClassGlobalRef(mEnv, Cls::name);
         }
         return sClassRef;
     }
@@ -251,6 +249,7 @@ public:
     using Param = const Ref&;
 
     static const bool isMultithreaded = true;
+    static const char name[];
 
     explicit ObjectBase(const Context& ctx) : mCtx(ctx) {}
 

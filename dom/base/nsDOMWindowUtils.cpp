@@ -2298,7 +2298,7 @@ nsDOMWindowUtils::GetSupportsHardwareH264Decoding(JS::MutableHandle<JS::Value> a
   if (rv.Failed()) {
     return rv.StealNSResult();
   }
-  promise.MaybeResolve(NS_LITERAL_STRING("No; Compiled without MP4 support."));
+  promise->MaybeResolve(NS_LITERAL_STRING("No; Compiled without MP4 support."));
   aPromise.setObject(*promise->PromiseObj());
 #endif
   return NS_OK;
