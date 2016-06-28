@@ -23,6 +23,24 @@ EMEVideoCallbackAdapter::Error(GMPErr aErr)
   VideoCallbackAdapter::Error(aErr);
 }
 
+EMEVideoDecoder::EMEVideoDecoder(CDMProxy* aProxy,
+                                 const VideoInfo& aConfig,
+                                 layers::LayersBackend aLayersBackend,
+                                 layers::ImageContainer* aImageContainer,
+                                 TaskQueue* aTaskQueue,
+                                 MediaDataDecoderCallbackProxy* aCallback)
+  : GMPVideoDecoder(aConfig,
+                    aLayersBackend,
+                    aImageContainer,
+                    aTaskQueue,
+                    aCallback,
+                    new EMEVideoCallbackAdapter(aCallback,
+                                                VideoInfo(aConfig.mDisplay.width,
+                                                          aConfig.mDisplay.height),
+                                                aImageContainer))
+  , mProxy(aProxy)
+{}
+
 void
 EMEVideoDecoder::InitTags(nsTArray<nsCString>& aTags)
 {

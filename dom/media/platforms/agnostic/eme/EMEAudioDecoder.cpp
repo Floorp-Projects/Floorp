@@ -21,6 +21,14 @@ EMEAudioCallbackAdapter::Error(GMPErr aErr)
   AudioCallbackAdapter::Error(aErr);
 }
 
+EMEAudioDecoder::EMEAudioDecoder(CDMProxy* aProxy,
+                                 const AudioInfo& aConfig,
+                                 TaskQueue* aTaskQueue,
+                                 MediaDataDecoderCallbackProxy* aCallback)
+  : GMPAudioDecoder(aConfig, aTaskQueue, aCallback, new EMEAudioCallbackAdapter(aCallback))
+  , mProxy(aProxy)
+{}
+
 void
 EMEAudioDecoder::InitTags(nsTArray<nsCString>& aTags)
 {
