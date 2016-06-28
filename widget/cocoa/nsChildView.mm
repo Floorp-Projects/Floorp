@@ -1934,11 +1934,10 @@ nsChildView::ExecuteNativeKeyBinding(NativeKeyBindingsType aType,
 nsIMEUpdatePreference
 nsChildView::GetIMEUpdatePreference()
 {
-  // While a plugin has focus, IMEInputHandler doesn't need any notifications.
-  if (mInputContext.mIMEState.mEnabled == IMEState::PLUGIN) {
-    return nsIMEUpdatePreference();
-  }
-  return nsIMEUpdatePreference(nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE);
+  // XXX Shouldn't we move floating window which shows composition string
+  //     when plugin has focus and its parent is scrolled or the window is
+  //     moved?
+  return nsIMEUpdatePreference();
 }
 
 NSView<mozView>* nsChildView::GetEditorView()
