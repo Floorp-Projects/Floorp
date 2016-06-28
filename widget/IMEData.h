@@ -47,37 +47,24 @@ struct nsIMEUpdatePreference final
     // returns NS_SUCCESS_EVENT_CONSUMED.  Otherwise, it returns NS_OK if it's
     // handled without any error.
     NOTIFY_MOUSE_BUTTON_EVENT_ON_CHAR    = 1 << 3,
-    // Following values indicate when widget needs or doesn't need notification.
-    NOTIFY_CHANGES_CAUSED_BY_COMPOSITION = 1 << 6,
     // NOTE: NOTIFY_DURING_DEACTIVE isn't supported in environments where two
     //       or more compositions are possible.  E.g., Mac and Linux (GTK).
-    NOTIFY_DURING_DEACTIVE               = 1 << 7,
-    // Changes are notified in following conditions if the instance is
-    // just constructed.  If some platforms don't need change notifications
-    // in some of following conditions, the platform should remove following
-    // flags before returing the instance from nsIWidget::GetUpdatePreference().
-    DEFAULT_CONDITIONS_OF_NOTIFYING_CHANGES =
-      NOTIFY_CHANGES_CAUSED_BY_COMPOSITION
+    NOTIFY_DURING_DEACTIVE               = 1 << 7
   };
 
   nsIMEUpdatePreference()
-    : mWantUpdates(DEFAULT_CONDITIONS_OF_NOTIFYING_CHANGES)
+    : mWantUpdates(NOTIFY_NOTHING)
   {
   }
 
   explicit nsIMEUpdatePreference(Notifications aWantUpdates)
-    : mWantUpdates(aWantUpdates | DEFAULT_CONDITIONS_OF_NOTIFYING_CHANGES)
+    : mWantUpdates(aWantUpdates)
   {
   }
 
   nsIMEUpdatePreference operator|(const nsIMEUpdatePreference& aOther) const
   {
     return nsIMEUpdatePreference(aOther.mWantUpdates | mWantUpdates);
-  }
-
-  void DontNotifyChangesCausedByComposition()
-  {
-    mWantUpdates &= ~DEFAULT_CONDITIONS_OF_NOTIFYING_CHANGES;
   }
 
   bool WantTextChange() const
@@ -98,12 +85,6 @@ struct nsIMEUpdatePreference final
   bool WantMouseButtonEventOnChar() const
   {
     return !!(mWantUpdates & NOTIFY_MOUSE_BUTTON_EVENT_ON_CHAR);
-  }
-
-  bool WantChangesCausedByComposition() const
-  {
-    return WantChanges() &&
-             !!(mWantUpdates & NOTIFY_CHANGES_CAUSED_BY_COMPOSITION);
   }
 
   bool WantDuringDeactive() const
