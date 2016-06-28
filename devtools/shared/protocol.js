@@ -934,7 +934,6 @@ exports.Actor = Actor;
  *      request (object): a request template.
  *      response (object): a response template.
  *      oneway (bool): 'true' if no response should be sent.
- *      telemetry (string): Telemetry probe ID for measuring completion time.
  */
 exports.method = function (fn, spec = {}) {
   fn._methodSpec = Object.freeze(spec);
@@ -976,7 +975,6 @@ var generateActorSpec = function (actorDesc) {
       spec.name = methodSpec.name || name;
       spec.request = Request(object.merge({type: spec.name}, methodSpec.request || undefined));
       spec.response = Response(methodSpec.response || undefined);
-      spec.telemetry = methodSpec.telemetry;
       spec.release = methodSpec.release;
       spec.oneway = methodSpec.oneway;
 
@@ -993,7 +991,6 @@ var generateActorSpec = function (actorDesc) {
       spec.name = methodSpec.name || name;
       spec.request = Request(object.merge({type: spec.name}, methodSpec.request || undefined));
       spec.response = Response(methodSpec.response || undefined);
-      spec.telemetry = methodSpec.telemetry;
       spec.release = methodSpec.release;
       spec.oneway = methodSpec.oneway;
 
@@ -1346,27 +1343,6 @@ var generateRequestMethods = function (actorSpec, frontProto) {
     }
 
     frontProto[name] = function (...args) {
-      let histogram, startTime;
-      if (spec.telemetry) {
-        if (spec.oneway) {
-          // That just doesn't make sense.
-          throw Error("Telemetry specified for a oneway request");
-        }
-        let transportType = this.conn.localTransport
-          ? "LOCAL_"
-          : "REMOTE_";
-        let histogramId = "DEVTOOLS_DEBUGGER_RDP_"
-          + transportType + spec.telemetry + "_MS";
-        try {
-          histogram = Services.telemetry.getHistogramById(histogramId);
-          startTime = new Date();
-        } catch (ex) {
-          // XXX: Is this expected in xpcshell tests?
-          console.error(ex);
-          spec.telemetry = false;
-        }
-      }
-
       let packet;
       try {
         packet = spec.request.write(args, this);
@@ -1388,11 +1364,6 @@ var generateRequestMethods = function (actorSpec, frontProto) {
           console.error("Error reading response to: " + name);
           throw ex;
         }
-
-        if (histogram) {
-          histogram.add(+new Date - startTime);
-        }
-
         return ret;
       });
     };
