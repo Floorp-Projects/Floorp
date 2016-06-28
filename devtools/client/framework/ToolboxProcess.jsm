@@ -132,7 +132,7 @@ BrowserToolboxProcess.prototype = {
     dumpn("Created a separate loader instance for the DebuggerServer.");
 
     // Forward interesting events.
-    this.debuggerServer.on("connectionchange", this.emit.bind(this));
+    this.debuggerServer.on("connectionchange", this.emit);
 
     this.debuggerServer.init();
     this.debuggerServer.addBrowserActors();
@@ -249,6 +249,7 @@ BrowserToolboxProcess.prototype = {
 
     this._telemetry.toolClosed("jsbrowserdebugger");
     if (this.debuggerServer) {
+      this.debuggerServer.off("connectionchange", this.emit);
       this.debuggerServer.destroy();
       this.debuggerServer = null;
     }
