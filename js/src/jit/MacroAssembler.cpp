@@ -1128,16 +1128,47 @@ MacroAssembler::initGCThing(Register obj, Register temp, JSObject* templateObj,
         } else {
             // If the target type could be a TypedArray that maps shared memory
             // then this would need to store emptyObjectElementsShared in that case.
-            // That cannot happen at present; TypedArray allocation is always
-            // a VM call.
+            MOZ_ASSERT(!ntemplate->isSharedMemory());
+
             storePtr(ImmPtr(emptyObjectElements), Address(obj, NativeObject::offsetOfElements()));
 
             initGCSlots(obj, temp, ntemplate, initContents);
 
-            if (ntemplate->hasPrivate()) {
-                uint32_t nfixed = ntemplate->numFixedSlots();
-                storePtr(ImmPtr(ntemplate->getPrivate()),
-                         Address(obj, NativeObject::getPrivateDataOffset(nfixed)));
+            if (ntemplate->is<TypedArrayObject>()) {
+                TypedArrayObject* ttemplate = &ntemplate->as<TypedArrayObject>();
+                MOZ_ASSERT(ntemplate->hasPrivate());
+                MOZ_ASSERT(!ttemplate->hasBuffer());
+
+                size_t dataSlotOffset = TypedArrayObject::dataOffset();
+                size_t dataOffset = TypedArrayObject::dataOffset() + sizeof(HeapSlot);
+
+                static_assert(TypedArrayObject::FIXED_DATA_START == TypedArrayObject::DATA_SLOT + 1,
+                              "fixed inline element data assumed to begin after the data slot");
+
+                computeEffectiveAddress(Address(obj, dataOffset), temp);
+                storePtr(temp, Address(obj, dataSlotOffset));
+
+                // Initialise inline data elements to zero.
+                size_t n = ttemplate->length() * ttemplate->bytesPerElement();
+                MOZ_ASSERT(dataOffset + n <= JSObject::MAX_BYTE_SIZE);
+
+                // Write enough zero pointers into fixed data to zero every
+                // element.  (This zeroes past the end of a byte count that's
+                // not a multiple of pointer size.  That's okay, because fixed
+                // data is a count of 8-byte HeapSlots (i.e. <= pointer size),
+                // and we won't inline unless the desired memory fits in that
+                // space.)
+                static_assert(sizeof(HeapSlot) == 8, "Assumed 8 bytes alignment");
+
+                size_t numZeroPointers = ((n + 7) & ~0x7) / sizeof(char *);
+                for (size_t i = 0; i < numZeroPointers; i++)
+                    storePtr(ImmWord(0), Address(obj, dataOffset + i * sizeof(char *)));
+            } else {
+                if (ntemplate->hasPrivate()) {
+                    uint32_t nfixed = ntemplate->numFixedSlots();
+                    storePtr(ImmPtr(ntemplate->getPrivate()),
+                             Address(obj, NativeObject::getPrivateDataOffset(nfixed)));
+                }
             }
         }
     } else if (templateObj->is<InlineTypedObject>()) {
