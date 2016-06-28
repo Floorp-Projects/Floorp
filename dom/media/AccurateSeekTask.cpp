@@ -66,7 +66,7 @@ AccurateSeekTask::AccurateSeekTask(const void* aDecoderID,
   mDropVideoUntilNextDiscontinuity = HasVideo();
 
   // Configure MediaDecoderReaderWrapper.
-  SetMediaDecoderReaderWrapperCallback();
+  SetCallbacks();
 }
 
 AccurateSeekTask::~AccurateSeekTask()
@@ -102,7 +102,7 @@ AccurateSeekTask::Discard()
 
   // Disconnect MediaDecoderReaderWrapper.
   mSeekRequest.DisconnectIfExists();
-  CancelMediaDecoderReaderWrapperCallback();
+  CancelCallbacks();
 
   mIsDiscarded = true;
 }
@@ -612,7 +612,7 @@ AccurateSeekTask::OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReason
 }
 
 void
-AccurateSeekTask::SetMediaDecoderReaderWrapperCallback()
+AccurateSeekTask::SetCallbacks()
 {
   AssertOwnerThread();
 
@@ -651,7 +651,7 @@ AccurateSeekTask::SetMediaDecoderReaderWrapperCallback()
 }
 
 void
-AccurateSeekTask::CancelMediaDecoderReaderWrapperCallback()
+AccurateSeekTask::CancelCallbacks()
 {
   AssertOwnerThread();
   mAudioCallback.Disconnect();
