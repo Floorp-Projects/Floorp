@@ -1297,7 +1297,7 @@ JS_GetDefaultFreeOp(JSRuntime* rt)
 JS_PUBLIC_API(void)
 JS_updateMallocCounter(JSContext* cx, size_t nbytes)
 {
-    return cx->runtime()->updateMallocCounter(cx->zone(), nbytes);
+    return cx->updateMallocCounter(nbytes);
 }
 
 JS_PUBLIC_API(char*)
