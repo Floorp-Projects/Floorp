@@ -110,7 +110,7 @@ AccurateSeekTask::Seek(const media::TimeUnit& aDuration)
   return mSeekTaskPromise.Ensure(__func__);
 }
 
-nsresult
+void
 AccurateSeekTask::EnsureAudioDecodeTaskQueued()
 {
   AssertOwnerThread();
@@ -120,14 +120,13 @@ AccurateSeekTask::EnsureAudioDecodeTaskQueued()
 
   if (mReader->IsRequestingAudioData() ||
       mReader->IsWaitingAudioData()) {
-    return NS_OK;
+    return;
   }
 
   RequestAudioData();
-  return NS_OK;
 }
 
-nsresult
+void
 AccurateSeekTask::EnsureVideoDecodeTaskQueued()
 {
   AssertOwnerThread();
@@ -137,11 +136,10 @@ AccurateSeekTask::EnsureVideoDecodeTaskQueued()
 
   if (mReader->IsRequestingVideoData() ||
       mReader->IsWaitingVideoData()) {
-    return NS_OK;
+    return;
   }
 
   RequestVideoData();
-  return NS_OK;
 }
 
 const char*
@@ -319,18 +317,12 @@ AccurateSeekTask::CheckIfSeekComplete()
 
   if (!mDoneVideoSeeking) {
     // We haven't reached the target. Ensure we have requested another sample.
-    if (NS_FAILED(EnsureVideoDecodeTaskQueued())) {
-      DECODER_WARN("Failed to request video during seek");
-      RejectIfExist(__func__);
-    }
+    EnsureVideoDecodeTaskQueued();
   }
 
   if (!mDoneAudioSeeking) {
     // We haven't reached the target. Ensure we have requested another sample.
-    if (NS_FAILED(EnsureAudioDecodeTaskQueued())) {
-      DECODER_WARN("Failed to request audio during seek");
-      RejectIfExist(__func__);
-    }
+    EnsureAudioDecodeTaskQueued();
   }
 
   SAMPLE_LOG("CheckIfSeekComplete() doneAudio=%d doneVideo=%d",

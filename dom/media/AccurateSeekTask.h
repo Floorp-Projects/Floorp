@@ -33,9 +33,9 @@ public:
 private:
   ~AccurateSeekTask();
 
-  nsresult EnsureVideoDecodeTaskQueued();
+  void EnsureVideoDecodeTaskQueued();
 
-  nsresult EnsureAudioDecodeTaskQueued();
+  void EnsureAudioDecodeTaskQueued();
 
   const char* AudioRequestStatus();
 
