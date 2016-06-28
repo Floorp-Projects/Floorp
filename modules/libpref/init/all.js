@@ -112,6 +112,9 @@ pref("offline-apps.quota.warn",        51200);
 // cache compression turned off for now - see bug #715198
 pref("browser.cache.compression_level", 0);
 
+// Don't show "Open with" option on download dialog if true.
+pref("browser.download.forbid_open_with", false);
+
 // Whether or not testing features are enabled.
 pref("dom.quotaManager.testing", false);
 
