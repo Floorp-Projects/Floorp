@@ -738,7 +738,7 @@ Services.obs.addObserver(gDevToolsBrowser, "browser-delayed-startup-finished", f
 
 // Fake end of browser window load event for all already opened windows
 // that is already fully loaded.
-let enumerator = Services.wm.getEnumerator("navigator:browser");
+let enumerator = Services.wm.getEnumerator(gDevTools.chromeWindowType);
 while (enumerator.hasMoreElements()) {
   let win = enumerator.getNext();
   if (win.gBrowserInit && win.gBrowserInit.delayedStartupFinished) {

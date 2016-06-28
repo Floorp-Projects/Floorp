@@ -7,7 +7,7 @@
 var { Task } = require("devtools/shared/task");
 
 var Services = require("Services");
-var {gDevTools} = require("devtools/client/framework/devtools");
+var { gDevTools } = require("devtools/client/framework/devtools");
 var { getSourceText } = require("devtools/client/debugger/content/queries");
 
 /**
@@ -157,8 +157,8 @@ exports.viewSourceInScratchpad = Task.async(function* (sourceURL, sourceLine) {
 exports.viewSource = Task.async(function* (toolbox, sourceURL, sourceLine) {
   // Attempt to access view source via a browser first, which may display it in
   // a tab, if enabled.
-  let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
-  if (browserWin) {
+  let browserWin = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
+  if (browserWin && browserWin.BrowserViewSourceOfDocument) {
     return browserWin.BrowserViewSourceOfDocument({
       URL: sourceURL,
       lineNumber: sourceLine
