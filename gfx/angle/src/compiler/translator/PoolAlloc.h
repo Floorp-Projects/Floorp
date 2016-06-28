@@ -152,6 +152,11 @@ public:
     // by calling pop(), and to not have to solve memory leak problems.
     //
 
+    // Catch unwanted allocations.
+    // TODO(jmadill): Remove this when we remove the global allocator.
+    void lock();
+    void unlock();
+
 protected:
     friend struct tHeader;
     
@@ -211,6 +216,7 @@ protected:
 private:
     TPoolAllocator& operator=(const TPoolAllocator&);  // dont allow assignment operator
     TPoolAllocator(const TPoolAllocator&);  // dont allow default copy constructor
+    bool mLocked;
 };
 
 

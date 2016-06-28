@@ -135,7 +135,7 @@ MergeCharactersInTextRun(gfxTextRun* aDest, gfxTextRun* aSrc,
   uint32_t offset = 0;
   AutoTArray<gfxTextRun::DetailedGlyph,2> glyphs;
   while (iter.NextRun()) {
-    gfxTextRun::GlyphRun* run = iter.GetGlyphRun();
+    const gfxTextRun::GlyphRun* run = iter.GetGlyphRun();
     nsresult rv = aDest->AddGlyphRun(run->mFont, run->mMatchType,
                                      offset, false, run->mOrientation);
     if (NS_FAILED(rv))

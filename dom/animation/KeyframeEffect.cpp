@@ -15,11 +15,13 @@
 #include "mozilla/StyleAnimationValue.h"
 #include "Layers.h" // For Layer
 #include "nsComputedDOMStyle.h" // nsComputedDOMStyle::GetStyleContextForElement
+#include "nsContentUtils.h"  // nsContentUtils::ReportToConsole
 #include "nsCSSPropertySet.h"
 #include "nsCSSProps.h" // For nsCSSProps::PropHasFlags
 #include "nsCSSPseudoElements.h" // For CSSPseudoElementType
 #include "nsDOMMutationObserver.h" // For nsAutoAnimationMutationBatch
 #include "nsIPresShell.h" // For nsIPresShell
+#include "nsIScriptError.h"
 
 namespace mozilla {
 
@@ -77,20 +79,24 @@ NS_IMPL_RELEASE_INHERITED(KeyframeEffectReadOnly, AnimationEffectReadOnly)
 KeyframeEffectReadOnly::KeyframeEffectReadOnly(
   nsIDocument* aDocument,
   const Maybe<OwningAnimationTarget>& aTarget,
-  const TimingParams& aTiming)
+  const TimingParams& aTiming,
+  const KeyframeEffectParams& aOptions)
   : KeyframeEffectReadOnly(aDocument, aTarget,
                            new AnimationEffectTimingReadOnly(aDocument,
-                                                             aTiming))
+                                                             aTiming),
+                           aOptions)
 {
 }
 
 KeyframeEffectReadOnly::KeyframeEffectReadOnly(
   nsIDocument* aDocument,
   const Maybe<OwningAnimationTarget>& aTarget,
-  AnimationEffectTimingReadOnly* aTiming)
+  AnimationEffectTimingReadOnly* aTiming,
+  const KeyframeEffectParams& aOptions)
   : AnimationEffectReadOnly(aDocument)
   , mTarget(aTarget)
   , mTiming(aTiming)
+  , mEffectOptions(aOptions)
   , mInEffectOnLastAnimationTimingUpdate(false)
   , mCumulativeChangeHint(nsChangeHint(0))
 {
@@ -442,17 +448,7 @@ KeyframeEffectReadOnly::SetKeyframes(JSContext* aContext,
     return;
   }
 
-  RefPtr<nsStyleContext> styleContext;
-  nsIPresShell* shell = doc->GetShell();
-  if (shell && mTarget) {
-    nsIAtom* pseudo =
-      mTarget->mPseudoType < CSSPseudoElementType::Count ?
-      nsCSSPseudoElements::GetPseudoAtom(mTarget->mPseudoType) : nullptr;
-    styleContext =
-      nsComputedDOMStyle::GetStyleContextForElement(mTarget->mElement,
-                                                    pseudo, shell);
-  }
-
+  RefPtr<nsStyleContext> styleContext = GetTargetStyleContext(doc);
   SetKeyframes(Move(keyframes), styleContext);
 }
 
@@ -465,6 +461,10 @@ KeyframeEffectReadOnly::SetKeyframes(nsTArray<Keyframe>&& aKeyframes,
   }
 
   mKeyframes = Move(aKeyframes);
+  // Apply distribute spacing irrespective of the spacing mode. We will apply
+  // the specified spacing mode when we generate computed animation property
+  // values from the keyframes since both operations require a style context
+  // and need to be performed whenever the style context changes.
   KeyframeUtils::ApplyDistributeSpacing(mKeyframes);
 
   if (mAnimation && mAnimation->IsRelevant()) {
@@ -512,11 +512,20 @@ KeyframeEffectReadOnly::UpdateProperties(nsStyleContext* aStyleContext)
 
   nsTArray<AnimationProperty> properties;
   if (mTarget) {
+    nsTArray<ComputedKeyframeValues> computedValues =
+      KeyframeUtils::GetComputedKeyframeValues(mKeyframes, mTarget->mElement,
+                                               aStyleContext);
+
+    if (mEffectOptions.mSpacingMode == SpacingMode::paced) {
+      KeyframeUtils::ApplySpacing(mKeyframes, SpacingMode::paced,
+                                  mEffectOptions.mPacedProperty,
+                                  computedValues);
+    }
+
     properties =
-      KeyframeUtils::GetAnimationPropertiesFromKeyframes(aStyleContext,
-                                                         mTarget->mElement,
-                                                         mTarget->mPseudoType,
-                                                         mKeyframes);
+      KeyframeUtils::GetAnimationPropertiesFromKeyframes(mKeyframes,
+                                                         computedValues,
+                                                         aStyleContext);
   }
 
   if (mProperties == properties) {
@@ -706,6 +715,41 @@ KeyframeEffectReadOnly::~KeyframeEffectReadOnly()
 {
 }
 
+static const KeyframeEffectOptions&
+KeyframeEffectOptionsFromUnion(
+  const UnrestrictedDoubleOrKeyframeEffectOptions& aOptions)
+{
+  MOZ_ASSERT(aOptions.IsKeyframeEffectOptions());
+  return aOptions.GetAsKeyframeEffectOptions();
+}
+
+static const KeyframeEffectOptions&
+KeyframeEffectOptionsFromUnion(
+  const UnrestrictedDoubleOrKeyframeAnimationOptions& aOptions)
+{
+  MOZ_ASSERT(aOptions.IsKeyframeAnimationOptions());
+  return aOptions.GetAsKeyframeAnimationOptions();
+}
+
+template <class OptionsType>
+static KeyframeEffectParams
+KeyframeEffectParamsFromUnion(const OptionsType& aOptions,
+                              nsAString& aInvalidPacedProperty,
+                              ErrorResult& aRv)
+{
+  KeyframeEffectParams result;
+  if (!aOptions.IsUnrestrictedDouble()) {
+    const KeyframeEffectOptions& options =
+      KeyframeEffectOptionsFromUnion(aOptions);
+    KeyframeEffectParams::ParseSpacing(options.mSpacing,
+                                       result.mSpacingMode,
+                                       result.mPacedProperty,
+                                       aInvalidPacedProperty,
+                                       aRv);
+  }
+  return result;
+}
+
 static Maybe<OwningAnimationTarget>
 ConvertTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget)
 {
@@ -750,9 +794,26 @@ KeyframeEffectReadOnly::ConstructKeyframeEffect(
     return nullptr;
   }
 
+  nsAutoString invalidPacedProperty;
+  KeyframeEffectParams effectOptions =
+    KeyframeEffectParamsFromUnion(aOptions, invalidPacedProperty, aRv);
+  if (aRv.Failed()) {
+    return nullptr;
+  }
+
+  if (!invalidPacedProperty.IsEmpty()) {
+    const char16_t* params[] = { invalidPacedProperty.get() };
+    nsContentUtils::ReportToConsole(nsIScriptError::warningFlag,
+                                    NS_LITERAL_CSTRING("Animation"),
+                                    doc,
+                                    nsContentUtils::eDOM_PROPERTIES,
+                                    "UnanimatablePacedProperty",
+                                    params, ArrayLength(params));
+  }
+
   Maybe<OwningAnimationTarget> target = ConvertTarget(aTarget);
   RefPtr<KeyframeEffectType> effect =
-    new KeyframeEffectType(doc, target, timingParams);
+    new KeyframeEffectType(doc, target, timingParams, effectOptions);
 
   effect->SetKeyframes(aGlobal.Context(), aKeyframes, aRv);
   if (aRv.Failed()) {
@@ -818,6 +879,28 @@ KeyframeEffectReadOnly::RequestRestyle(
       RequestRestyle(mTarget->mElement, mTarget->mPseudoType,
                      aRestyleType, mAnimation->CascadeLevel());
   }
+}
+
+already_AddRefed<nsStyleContext>
+KeyframeEffectReadOnly::GetTargetStyleContext(nsIDocument* aDoc)
+{
+  if (!mTarget) {
+    return nullptr;
+  }
+
+  if (!aDoc) {
+    aDoc = mTarget->mElement->OwnerDoc();
+    if (!aDoc) {
+      return nullptr;
+    }
+  }
+
+  nsIAtom* pseudo = mTarget->mPseudoType < CSSPseudoElementType::Count
+                    ? nsCSSPseudoElements::GetPseudoAtom(mTarget->mPseudoType)
+                    : nullptr;
+  return nsComputedDOMStyle::GetStyleContextForElement(mTarget->mElement,
+                                                       pseudo,
+                                                       aDoc->GetShell());
 }
 
 #ifdef DEBUG
@@ -988,6 +1071,8 @@ KeyframeEffectReadOnly::GetKeyframes(JSContext*& aCx,
     if (keyframe.mOffset) {
       keyframeDict.mOffset.SetValue(keyframe.mOffset.value());
     }
+    MOZ_ASSERT(keyframe.mComputedOffset != Keyframe::kComputedOffsetNotSet,
+               "Invalid computed offset");
     keyframeDict.mComputedOffset.Construct(keyframe.mComputedOffset);
     if (keyframe.mTimingFunction) {
       keyframeDict.mEasing.Truncate();
@@ -1367,9 +1452,11 @@ KeyframeEffectReadOnly::CanIgnoreIfNotVisible() const
 
 KeyframeEffect::KeyframeEffect(nsIDocument* aDocument,
                                const Maybe<OwningAnimationTarget>& aTarget,
-                               const TimingParams& aTiming)
+                               const TimingParams& aTiming,
+                               const KeyframeEffectParams& aOptions)
   : KeyframeEffectReadOnly(aDocument, aTarget,
-                           new AnimationEffectTiming(aDocument, aTiming, this))
+                           new AnimationEffectTiming(aDocument, aTiming, this),
+                           aOptions)
 {
 }
 
@@ -1449,7 +1536,12 @@ KeyframeEffect::SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget)
 
   if (mTarget) {
     UpdateTargetRegistration();
-    MaybeUpdateProperties();
+    RefPtr<nsStyleContext> styleContext = GetTargetStyleContext();
+    if (styleContext) {
+      UpdateProperties(styleContext);
+    } else if (mEffectOptions.mSpacingMode == SpacingMode::paced) {
+      KeyframeUtils::ApplyDistributeSpacing(mKeyframes);
+    }
 
     RequestRestyle(EffectCompositor::RestyleType::Layer);
 
@@ -1457,6 +1549,9 @@ KeyframeEffect::SetTarget(const Nullable<ElementOrCSSPseudoElement>& aTarget)
     if (mAnimation) {
       nsNodeUtils::AnimationAdded(mAnimation);
     }
+  } else if (mEffectOptions.mSpacingMode == SpacingMode::paced) {
+    // New target is null, so fall back to distribute spacing.
+    KeyframeUtils::ApplyDistributeSpacing(mKeyframes);
   }
 }
 
@@ -1467,31 +1562,6 @@ KeyframeEffect::~KeyframeEffect()
   if (mTiming) {
     mTiming->Unlink();
   }
-}
-
-void
-KeyframeEffect::MaybeUpdateProperties()
-{
-  if (!mTarget) {
-    return;
-  }
-
-  nsIDocument* doc = mTarget->mElement->OwnerDoc();
-  if (!doc) {
-    return;
-  }
-
-  nsIAtom* pseudo = mTarget->mPseudoType < CSSPseudoElementType::Count ?
-                    nsCSSPseudoElements::GetPseudoAtom(mTarget->mPseudoType) :
-                    nullptr;
-  RefPtr<nsStyleContext> styleContext =
-    nsComputedDOMStyle::GetStyleContextForElement(mTarget->mElement, pseudo,
-                                                  doc->GetShell());
-  if (!styleContext) {
-    return;
-  }
-
-  UpdateProperties(styleContext);
 }
 
 } // namespace dom

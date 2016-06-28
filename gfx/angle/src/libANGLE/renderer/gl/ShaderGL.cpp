@@ -19,7 +19,7 @@
 namespace rx
 {
 
-ShaderGL::ShaderGL(const gl::Shader::Data &data,
+ShaderGL::ShaderGL(const gl::ShaderState &data,
                    const FunctionsGL *functions,
                    const WorkaroundsGL &workarounds)
     : ShaderImpl(data), mFunctions(functions), mWorkarounds(workarounds), mShaderID(0)
@@ -77,14 +77,23 @@ bool ShaderGL::postTranslateCompile(gl::Compiler *compiler, std::string *infoLog
         GLint infoLogLength = 0;
         mFunctions->getShaderiv(mShaderID, GL_INFO_LOG_LENGTH, &infoLogLength);
 
-        std::vector<char> buf(infoLogLength);
-        mFunctions->getShaderInfoLog(mShaderID, infoLogLength, nullptr, &buf[0]);
+        // Info log length includes the null terminator, so 1 means that the info log is an empty
+        // string.
+        if (infoLogLength > 1)
+        {
+            std::vector<char> buf(infoLogLength);
+            mFunctions->getShaderInfoLog(mShaderID, infoLogLength, nullptr, &buf[0]);
 
-        mFunctions->deleteShader(mShaderID);
-        mShaderID = 0;
+            mFunctions->deleteShader(mShaderID);
+            mShaderID = 0;
 
-        *infoLog = &buf[0];
-        TRACE("\n%s", infoLog->c_str());
+            *infoLog = &buf[0];
+            TRACE("\n%s", infoLog->c_str());
+        }
+        else
+        {
+            TRACE("\nShader compilation failed with no info log.");
+        }
         return false;
     }
 

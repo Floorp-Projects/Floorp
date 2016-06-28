@@ -586,14 +586,14 @@ CompositorBridgeParent::CompositorBridgeParent(widget::CompositorWidgetProxy* aW
                                                CSSToLayoutDeviceScale aScale,
                                                bool aUseAPZ,
                                                bool aUseExternalSurfaceSize,
-                                               int aSurfaceWidth, int aSurfaceHeight)
+                                               const gfx::IntSize& aSurfaceSize)
   : CompositorBridgeParentIPCAllocator("CompositorBridgeParent")
   , mWidgetProxy(aWidget)
   , mIsTesting(false)
   , mPendingTransaction(0)
   , mPaused(false)
   , mUseExternalSurfaceSize(aUseExternalSurfaceSize)
-  , mEGLSurfaceSize(aSurfaceWidth, aSurfaceHeight)
+  , mEGLSurfaceSize(aSurfaceSize)
   , mPauseCompositionMonitor("PauseCompositionMonitor")
   , mResumeCompositionMonitor("ResumeCompositionMonitor")
   , mResetCompositorMonitor("ResetCompositorMonitor")

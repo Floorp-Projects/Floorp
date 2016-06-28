@@ -53,7 +53,17 @@ class ErrorOrResult
 {
   public:
     ErrorOrResult(const gl::Error &error) : mError(error) {}
-    ErrorOrResult(T &&result) : mError(GL_NO_ERROR), mResult(std::move(result)) {}
+    ErrorOrResult(gl::Error &&error) : mError(std::move(error)) {}
+
+    ErrorOrResult(T &&result)
+        : mError(GL_NO_ERROR), mResult(std::forward<T>(result))
+    {
+    }
+
+    ErrorOrResult(const T &result)
+        : mError(GL_NO_ERROR), mResult(result)
+    {
+    }
 
     bool isError() const { return mError.isError(); }
     const gl::Error &getError() const { return mError; }
@@ -63,6 +73,11 @@ class ErrorOrResult
     Error mError;
     T mResult;
 };
+
+inline Error NoError()
+{
+    return Error(GL_NO_ERROR);
+}
 
 }  // namespace gl
 
@@ -96,6 +111,35 @@ class Error final
 };
 
 }  // namespace egl
+
+#define ANGLE_CONCAT1(x, y) x##y
+#define ANGLE_CONCAT2(x, y) ANGLE_CONCAT1(x, y)
+#define ANGLE_LOCAL_VAR ANGLE_CONCAT2(_localVar, __LINE__)
+
+#define ANGLE_TRY(EXPR)                \
+    {                                  \
+        auto ANGLE_LOCAL_VAR = EXPR;   \
+        if (ANGLE_LOCAL_VAR.isError()) \
+        {                              \
+            return ANGLE_LOCAL_VAR;    \
+        }                              \
+    }                                  \
+    ANGLE_EMPTY_STATEMENT
+
+#define ANGLE_TRY_RESULT(EXPR, RESULT)         \
+    {                                          \
+        auto ANGLE_LOCAL_VAR = EXPR;           \
+        if (ANGLE_LOCAL_VAR.isError())         \
+        {                                      \
+            return ANGLE_LOCAL_VAR.getError(); \
+        }                                      \
+        RESULT = ANGLE_LOCAL_VAR.getResult();  \
+    }                                          \
+    ANGLE_EMPTY_STATEMENT
+
+#undef ANGLE_LOCAL_VAR
+#undef ANGLE_CONCAT2
+#undef ANGLE_CONCAT1
 
 #include "Error.inl"
 

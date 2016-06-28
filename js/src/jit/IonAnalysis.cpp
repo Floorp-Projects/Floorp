@@ -265,10 +265,13 @@ jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph)
     bool someUnreachable = false;
     for (ReversePostorderIterator block(graph.rpoBegin()); block != graph.rpoEnd(); block++) {
         JitSpew(JitSpew_Prune, "Investigate Block %d:", block->id());
+        JitSpewIndent indent(JitSpew_Prune);
 
         // Do not touch entry basic blocks.
-        if (*block == graph.osrBlock() || *block == graph.entryBlock())
+        if (*block == graph.osrBlock() || *block == graph.entryBlock()) {
+            JitSpew(JitSpew_Prune, "Block %d is an entry point.", block->id());
             continue;
+        }
 
         // Compute if all the predecessors of this block are either bailling out
         // or are already flagged as unreachable.
@@ -302,31 +305,94 @@ jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph)
         // Check if the predecessors got accessed a large number of times in
         // comparisons of the current block, in order to know if our attempt at
         // removing this block is not premature.
-        if (shouldBailout) {
+        if (!isUnreachable && shouldBailout) {
             size_t p = numPred;
             size_t predCount = 0;
+            size_t numSuccessorsOfPreds = 1;
             bool isLoopExit = false;
             while (p--) {
                 MBasicBlock* pred = block->getPredecessor(p);
                 if (pred->getHitState() == MBasicBlock::HitState::Count)
                     predCount += pred->getHitCount();
                 isLoopExit |= pred->isLoopHeader() && pred->backedge() != *block;
+                numSuccessorsOfPreds += pred->numSuccessors() - 1;
             }
 
-            // This assumes that instructions are numbered in sequence, which is
-            // the case after IonBuilder creation of basic blocks.
-            size_t numInst = block->rbegin()->id() - block->begin()->id();
+            // Iterate over the approximated set of dominated blocks and count
+            // the number of instructions which are dominated.  Note that this
+            // approximation has issues with OSR blocks, but this should not be
+            // a big deal.
+            size_t numDominatedInst = 0;
+            size_t numEffectfulInst = 0;
+            int numInOutEdges = block->numPredecessors();
+            size_t branchSpan = 0;
+            ReversePostorderIterator it(block);
+            do {
+                // Iterate over dominated blocks, and visit exit blocks as well.
+                numInOutEdges -= it->numPredecessors();
+                if (numInOutEdges < 0)
+                    break;
+                numInOutEdges += it->numSuccessors();
 
-            // This sum is not homogeneous but gives good results on benchmarks
-            // like Kraken and Octane. The current block has not been executed
-            // yet, and ...
+                // Collect information about the instructions within the block.
+                for (MDefinitionIterator def(*it); def; def++) {
+                    numDominatedInst++;
+                    if (def->isEffectful())
+                        numEffectfulInst++;
+                }
+
+                it++;
+                branchSpan++;
+            } while(numInOutEdges > 0 && it != graph.rpoEnd());
+
+            // The goal of branch pruning is to remove branches which are
+            // preventing other optimization, while keeping branches which would
+            // be costly if we were to bailout. The following heuristics are
+            // made to prevent bailouts in branches when we estimate that the
+            // confidence is not enough to compensate for the cost of a bailout.
             //
-            //   1. If the number of times the predecessor got executed is
-            //      larger, then we are less likely to hit this block.
+            //   1. Confidence for removal varies with the number of hit counts
+            //      of the predecessor. The reason being that the likelyhood of
+            //      taking this branch is decreasing with the number of hit
+            //      counts of the predecessor.
             //
-            //   2. If the block is large, then this is likely a corner case,
-            //      and thus we are less likely to hit this block.
-            if (predCount + numInst < 75)
+            //   2. Confidence for removal varies with the number of dominated
+            //      instructions. The reason being that the complexity of the
+            //      branch increases with the number of instructions, thus
+            //      working against other optimizations.
+            //
+            //   3. Confidence for removal varies with the span of the
+            //      branch. The reason being that a branch that spans over a
+            //      large set of blocks is likely to remove optimization
+            //      opportunity as it prevents instructions from the other
+            //      branches to dominate the blocks which are after.
+            //
+            //   4. Confidence for removal varies with the number of effectful
+            //      instructions. The reason being that an effectful instruction
+            //      can remove optimization opportunities based on Scalar
+            //      Replacement, and based on Alias Analysis.
+            //
+            // The following converts various units in some form of arbitrary
+            // score, such that we can compare it to a threshold.
+            size_t score = 0;
+            MOZ_ASSERT(numSuccessorsOfPreds >= 1);
+            score += predCount * JitOptions.branchPruningHitCountFactor / numSuccessorsOfPreds;
+            score += numDominatedInst * JitOptions.branchPruningInstFactor;
+            score += branchSpan * JitOptions.branchPruningBlockSpanFactor;
+            score += numEffectfulInst * JitOptions.branchPruningEffectfulInstFactor;
+            if (score < JitOptions.branchPruningThreshold)
+                shouldBailout = false;
+
+            // If the predecessors do not have enough hit counts, keep the
+            // branch, until we recompile this function later, with more
+            // information.
+            if (predCount / numSuccessorsOfPreds < 50)
+                shouldBailout = false;
+
+            // There is only a single successors to the predecessors, thus the
+            // decision should be taken as part of the previous block
+            // investigation, and this block should be unreachable.
+            if (numSuccessorsOfPreds == 1)
                 shouldBailout = false;
 
             // If this is the exit block of a loop, then keep this basic
@@ -334,6 +400,21 @@ jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph)
             // costly than a simple exit sequence.
             if (isLoopExit)
                 shouldBailout = false;
+
+            // Interpreters are often implemented as a table switch within a for
+            // loop. What might happen is that the interpreter heats up in a
+            // subset of instructions, but might need other instructions for the
+            // rest of the evaluation.
+            if (numSuccessorsOfPreds > 8)
+                shouldBailout = false;
+
+            JitSpew(JitSpew_Prune, "info: block %d,"
+                    " predCount: %lu, domInst: %lu, span: %lu, effectful: %lu, "
+                    " isLoopExit: %s, numSuccessorsOfPred: %lu."
+                    " (score: %lu, shouldBailout: %s)",
+                    block->id(), predCount, numDominatedInst, branchSpan, numEffectfulInst,
+                    isLoopExit ? "true" : "false", numSuccessorsOfPreds,
+                    score, shouldBailout ? "true" : "false");
         }
 
         // Continue to the next basic block if the current basic block can
@@ -341,7 +422,6 @@ jit::PruneUnusedBranches(MIRGenerator* mir, MIRGraph& graph)
         if (!isUnreachable && !shouldBailout)
             continue;
 
-        JitSpewIndent indent(JitSpew_Prune);
         someUnreachable = true;
         if (isUnreachable) {
             JitSpew(JitSpew_Prune, "Mark block %d as unreachable.", block->id());
@@ -2711,6 +2791,7 @@ IsResumableMIRType(MIRType type)
       case MIRType::MagicOptimizedArguments:
       case MIRType::MagicOptimizedOut:
       case MIRType::MagicUninitializedLexical:
+      case MIRType::MagicIsConstructing:
       case MIRType::Value:
       case MIRType::Int32x4:
       case MIRType::Int16x8:
@@ -2722,7 +2803,6 @@ IsResumableMIRType(MIRType type)
         return true;
 
       case MIRType::MagicHole:
-      case MIRType::MagicIsConstructing:
       case MIRType::ObjectOrNull:
       case MIRType::None:
       case MIRType::Slots:

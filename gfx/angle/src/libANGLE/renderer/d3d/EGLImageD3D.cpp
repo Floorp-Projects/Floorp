@@ -123,6 +123,9 @@ gl::Error EGLImageD3D::copyToLocalRendertarget()
         return error;
     }
 
+    // This only currently applies do D3D11, where it invalidates FBOs with this Image attached.
+    curRenderTarget->signalDirty();
+
     // Clear the source image buffers
     mBuffer           = nullptr;
     mAttachmentBuffer = nullptr;

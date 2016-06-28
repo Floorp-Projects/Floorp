@@ -167,8 +167,8 @@ class ConfigSorter
         // components that are 0 or don't-care.
         for (auto attribIter = attributeMap.begin(); attribIter != attributeMap.end(); attribIter++)
         {
-            EGLint attributeKey = attribIter->first;
-            EGLint attributeValue = attribIter->second;
+            EGLAttrib attributeKey   = attribIter->first;
+            EGLAttrib attributeValue = attribIter->second;
             if (attributeKey != 0 && attributeValue != EGL_DONT_CARE)
             {
                 switch (attributeKey)
@@ -215,8 +215,8 @@ std::vector<const Config*> ConfigSet::filter(const AttributeMap &attributeMap) c
 
         for (auto attribIter = attributeMap.begin(); attribIter != attributeMap.end(); attribIter++)
         {
-            EGLint attributeKey = attribIter->first;
-            EGLint attributeValue = attribIter->second;
+            EGLAttrib attributeKey   = attribIter->first;
+            EGLAttrib attributeValue = attribIter->second;
 
             switch (attributeKey)
             {

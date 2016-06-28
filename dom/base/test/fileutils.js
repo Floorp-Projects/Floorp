@@ -49,7 +49,7 @@ function testFile(file, contents, test) {
 
   // Send file to server using plain XMLHttpRequest
   var xhr = new XMLHttpRequest;
-  xhr.open("POST", "file_XHRSendData.sjs");
+  xhr.open("POST", "../../../dom/xhr/tests/file_XHRSendData.sjs");
   xhr.onload = function (event) {
     is(event.target.getResponseHeader("Result-Content-Type"),
        file.type ? file.type : null,

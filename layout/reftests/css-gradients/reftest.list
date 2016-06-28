@@ -114,7 +114,7 @@ fuzzy-if(skiaContent,18,600) == twostops-1f.html twostops-1-ref.html
 fuzzy-if(skiaContent,18,600) == twostops-1g.html twostops-1-ref.html
 
 # from http://www.xanthir.com/:4bhipd by way of http://a-ja.net/newgrad.html
-fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL||skiaContent,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1a.html aja-linear-1-ref.html 
+fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL||skiaContent&&layersGPUAccelerated,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1a.html aja-linear-1-ref.html
 fails-if(!d2d&&!(OSX==1010)) == aja-linear-1b.html aja-linear-1-ref.html # bug 526694
 fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL||skiaContent,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1c.html aja-linear-1-ref.html 
 fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL||skiaContent,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4646) == aja-linear-1d.html aja-linear-1-ref.html 
@@ -124,7 +124,7 @@ fuzzy-if(!contentSameGfxBackendAsCanvas,3,20000) fuzzy-if(azureSkiaGL||skiaConte
 fuzzy-if(!contentSameGfxBackendAsCanvas,2,20000) fuzzy-if(azureSkiaGL||skiaContent,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4667) == aja-linear-2a.html aja-linear-2-ref.html 
 fuzzy-if(!contentSameGfxBackendAsCanvas,2,20000) fuzzy-if(azureSkiaGL,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,4667) == aja-linear-2b.html aja-linear-2-ref.html 
 fails == aja-linear-2c.html aja-linear-2-ref.html # bug 522607
-fails-if(!d2d) fuzzy-if(skiaContent&&!winWidget,1,200) == aja-linear-2d.html aja-linear-2-ref.html # bug 526694
+fails-if(!d2d&&!(skiaContent&&winWidget)) fuzzy-if(skiaContent&&!winWidget,1,200) == aja-linear-2d.html aja-linear-2-ref.html # bug 526694
 fuzzy-if(!contentSameGfxBackendAsCanvas,2,19999) fuzzy-if(azureSkiaGL||skiaContent,8,20000) fuzzy-if(azureQuartz,1,10553) == aja-linear-3a.html aja-linear-3-ref.html 
 fuzzy-if(!contentSameGfxBackendAsCanvas,2,19999) fuzzy-if(azureSkiaGL||skiaContent,8,20000) fuzzy-if(azureQuartz,1,10553) == aja-linear-3b.html aja-linear-3-ref.html 
 fuzzy-if(!contentSameGfxBackendAsCanvas,4,20000) fuzzy-if(azureSkiaGL||skiaContent,8,20000) fuzzy-if(azureQuartz&&OSX==1006,1,8655) == aja-linear-4a.html aja-linear-4-ref.html 

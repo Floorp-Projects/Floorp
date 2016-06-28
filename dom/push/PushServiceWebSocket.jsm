@@ -143,10 +143,6 @@ this.PushServiceWebSocket = {
                       PushRecordWebSocket);
   },
 
-  serviceType: function() {
-    return "WebSocket";
-  },
-
   disconnect: function() {
     this._shutdownWS();
   },
@@ -234,17 +230,15 @@ this.PushServiceWebSocket = {
       requestTimedOut = true;
 
     } else {
-      for (let [channelID, request] of this._registerRequests) {
+      for (let [key, request] of this._pendingRequests) {
         let duration = now - request.ctime;
         // If any of the registration requests time out, all the ones after it
         // also made to fail, since we are going to be disconnecting the
         // socket.
         requestTimedOut |= duration > this._requestTimeout;
         if (requestTimedOut) {
-          request.reject(new Error(
-            "Register request timed out for channel ID " + channelID));
-
-          this._registerRequests.delete(channelID);
+          request.reject(new Error("Request timed out: " + key));
+          this._pendingRequests.delete(key);
         }
       }
     }
@@ -278,7 +272,7 @@ this.PushServiceWebSocket = {
   },
 
   _ws: null,
-  _registerRequests: new Map(),
+  _pendingRequests: new Map(),
   _currentState: STATE_SHUT_DOWN,
   _requestTimeout: 0,
   _requestTimeoutTimer: null,
@@ -376,7 +370,7 @@ this.PushServiceWebSocket = {
     }
 
     if (shouldCancelPending) {
-      this._cancelRegisterRequests();
+      this._cancelPendingRequests();
     }
 
     if (this._notifyRequestQueue) {
@@ -437,7 +431,7 @@ this.PushServiceWebSocket = {
 
   /** Indicates whether we're waiting for pongs or requests. */
   _hasPendingRequests() {
-    return this._lastPingTime > 0 || this._registerRequests.size > 0;
+    return this._lastPingTime > 0 || this._pendingRequests.size > 0;
   },
 
   /**
@@ -622,7 +616,7 @@ this.PushServiceWebSocket = {
         this._notifyRequestQueue();
         this._notifyRequestQueue = null;
       }
-      this._sendRegisterRequests();
+      this._sendPendingRequests();
     };
 
     function finishHandshake() {
@@ -669,15 +663,10 @@ this.PushServiceWebSocket = {
    */
   _handleRegisterReply: function(reply) {
     console.debug("handleRegisterReply()");
-    if (typeof reply.channelID !== "string" ||
-        !this._registerRequests.has(reply.channelID)) {
-      return;
-    }
 
-    let tmp = this._registerRequests.get(reply.channelID);
-    this._registerRequests.delete(reply.channelID);
-    if (!this._hasPendingRequests()) {
-      this._requestTimeoutTimer.cancel();
+    let tmp = this._takeRequestForReply(reply);
+    if (!tmp) {
+      return;
     }
 
     if (reply.status == 200) {
@@ -706,6 +695,18 @@ this.PushServiceWebSocket = {
       tmp.reject(new Error("Wrong status code for register reply: " +
         reply.status));
     }
+  },
+
+  _handleUnregisterReply(reply) {
+    console.debug("handleUnregisterReply()");
+
+    let request = this._takeRequestForReply(reply);
+    if (!request) {
+      return;
+    }
+
+    let success = reply.status === 200;
+    request.resolve(success);
   },
 
   _handleDataUpdate: function(update) {
@@ -845,9 +846,6 @@ this.PushServiceWebSocket = {
   register(record) {
     console.debug("register() ", record);
 
-    // start the timer since we now have at least one request
-    this._startRequestTimeoutTimer();
-
     let data = {channelID: this._generateID(),
                 messageType: "register"};
 
@@ -858,15 +856,7 @@ this.PushServiceWebSocket = {
       });
     }
 
-    return new Promise((resolve, reject) => {
-      this._registerRequests.set(data.channelID, {
-        record: record,
-        resolve: resolve,
-        reject: reject,
-        ctime: Date.now(),
-      });
-      this._queueRequest(data);
-    }).then(record => {
+    return this._sendRequestForReply(record, data).then(record => {
       if (!this._dataEnabled) {
         return record;
       }
@@ -883,15 +873,17 @@ this.PushServiceWebSocket = {
   unregister(record, reason) {
     console.debug("unregister() ", record, reason);
 
-    let code = kUNREGISTER_REASON_TO_CODE[reason];
-    if (!code) {
-      return Promise.reject(new Error('Invalid unregister reason'));
-    }
-    let data = {channelID: record.channelID,
-                messageType: "unregister",
-                code: code};
-    this._queueRequest(data);
-    return Promise.resolve();
+    return Promise.resolve().then(_ => {
+      let code = kUNREGISTER_REASON_TO_CODE[reason];
+      if (!code) {
+        throw new Error('Invalid unregister reason');
+      }
+      let data = {channelID: record.channelID,
+                  messageType: "unregister",
+                  code: code};
+
+      return this._sendRequestForReply(record, data);
+    });
   },
 
   _queueStart: Promise.resolve(),
@@ -907,40 +899,68 @@ this.PushServiceWebSocket = {
                     .catch(_ => {});
   },
 
+  /** Sends a request to the server. */
   _send(data) {
-    if (this._currentState == STATE_READY) {
-      if (data.messageType != "register" ||
-          this._registerRequests.has(data.channelID)) {
-
-        // check if request has not been cancelled
-        this._wsSendMessage(data);
-      }
+    if (this._currentState != STATE_READY) {
+      console.warn("send: Unexpected state; ignoring message",
+        this._currentState);
+      return;
     }
+    if (!this._requestHasReply(data)) {
+      this._wsSendMessage(data);
+      return;
+    }
+    // If we're expecting a reply, check that we haven't cancelled the request.
+    let key = this._makePendingRequestKey(data);
+    if (!this._pendingRequests.has(key)) {
+      console.log("send: Request cancelled; ignoring message", key);
+      return;
+    }
+    this._wsSendMessage(data);
   },
 
-  _sendRegisterRequests() {
+  /** Indicates whether a request has a corresponding reply from the server. */
+  _requestHasReply(data) {
+    return data.messageType == "register" || data.messageType == "unregister";
+  },
+
+  /**
+   * Sends all pending requests that expect replies. Called after the connection
+   * is established and the handshake is complete.
+   */
+  _sendPendingRequests() {
     this._enqueue(_ => {
-      for (let channelID of this._registerRequests.keys()) {
-        this._send({
-          messageType: "register",
-          channelID: channelID,
-        });
+      for (let request of this._pendingRequests.values()) {
+        this._send(request.data);
       }
     });
   },
 
+  /** Queues an outgoing request, establishing a connection if necessary. */
   _queueRequest(data) {
-    if (data.messageType != "register") {
-      if (this._currentState != STATE_READY && !this._notifyRequestQueue) {
-        let promise = new Promise((resolve, reject) => {
-          this._notifyRequestQueue = resolve;
-        });
-        this._enqueue(_ => promise);
-      }
+    console.debug("queueRequest()", data);
 
-      this._enqueue(_ => this._send(data));
-    } else if (this._currentState == STATE_READY) {
+    if (this._currentState == STATE_READY) {
+      // If we're ready, no need to queue; just send the request.
       this._send(data);
+      return;
+    }
+
+    // Otherwise, we're still setting up. If we don't have a request queue,
+    // make one now.
+    if (!this._notifyRequestQueue) {
+      let promise = new Promise((resolve, reject) => {
+        this._notifyRequestQueue = resolve;
+      });
+      this._enqueue(_ => promise);
+    }
+
+    let isRequest = this._requestHasReply(data);
+    if (!isRequest) {
+      // Don't queue requests, since they're stored in `_pendingRequests`, and
+      // `_sendPendingRequests` will send them after reconnecting. Without this
+      // check, we'd send requests twice.
+      this._enqueue(_ => this._send(data));
     }
 
     if (!this._ws) {
@@ -1059,7 +1079,7 @@ this.PushServiceWebSocket = {
 
     // A whitelist of protocol handlers. Add to these if new messages are added
     // in the protocol.
-    let handlers = ["Hello", "Register", "Notification"];
+    let handlers = ["Hello", "Register", "Unregister", "Notification"];
 
     // Build up the handler name to call from messageType.
     // e.g. messageType == "register" -> _handleRegisterReply.
@@ -1105,11 +1125,58 @@ this.PushServiceWebSocket = {
   /**
    * Rejects all pending register requests with errors.
    */
-  _cancelRegisterRequests: function() {
-    for (let request of this._registerRequests.values()) {
-      request.reject(new Error("Register request aborted"));
+  _cancelPendingRequests() {
+    for (let request of this._pendingRequests.values()) {
+      request.reject(new Error("Request aborted"));
     }
-    this._registerRequests.clear();
+    this._pendingRequests.clear();
+  },
+
+  /** Creates a case-insensitive map key for a request that expects a reply. */
+  _makePendingRequestKey(data) {
+    return (data.messageType + "|" + data.channelID).toLowerCase();
+  },
+
+  /** Sends a request and waits for a reply from the server. */
+  _sendRequestForReply(record, data) {
+    return Promise.resolve().then(_ => {
+      // start the timer since we now have at least one request
+      this._startRequestTimeoutTimer();
+
+      let key = this._makePendingRequestKey(data);
+      if (!this._pendingRequests.has(key)) {
+        let request = {
+          data: data,
+          record: record,
+          ctime: Date.now(),
+        };
+        request.promise = new Promise((resolve, reject) => {
+          request.resolve = resolve;
+          request.reject = reject;
+        });
+        this._pendingRequests.set(key, request);
+        this._queueRequest(data);
+      }
+
+      return this._pendingRequests.get(key).promise;
+    });
+  },
+
+  /** Removes and returns a pending request for a server reply. */
+  _takeRequestForReply(reply) {
+    if (typeof reply.channelID !== "string") {
+      return null;
+    }
+    let key = this._makePendingRequestKey(reply);
+    let request = this._pendingRequests.get(key);
+    if (!request) {
+      return null;
+    }
+    this._pendingRequests.delete(key);
+    if (!this._hasPendingRequests()) {
+      this._requestTimeoutTimer.cancel();
+    }
+    return request;
   },
 };
 

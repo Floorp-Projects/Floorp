@@ -45,10 +45,9 @@ DecodeULawSample(uint8_t aValue)
   return sign * sample;
 }
 
-WaveDataDecoder::WaveDataDecoder(const AudioInfo& aConfig,
-                                 MediaDataDecoderCallback* aCallback)
-  : mInfo(aConfig)
-  , mCallback(aCallback)
+WaveDataDecoder::WaveDataDecoder(const CreateDecoderParams& aParams)
+  : mInfo(aParams.AudioConfig())
+  , mCallback(aParams.mCallback)
 {
 }
 

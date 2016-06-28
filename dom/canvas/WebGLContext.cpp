@@ -67,6 +67,7 @@
 #include "WebGLQuery.h"
 #include "WebGLSampler.h"
 #include "WebGLShader.h"
+#include "WebGLSync.h"
 #include "WebGLTimerQuery.h"
 #include "WebGLTransformFeedback.h"
 #include "WebGLVertexArray.h"
@@ -266,6 +267,7 @@ WebGLContext::DestroyResourcesAndContext()
     ClearLinkedList(mRenderbuffers);
     ClearLinkedList(mSamplers);
     ClearLinkedList(mShaders);
+    ClearLinkedList(mSyncs);
     ClearLinkedList(mTextures);
     ClearLinkedList(mTimerQueries);
     ClearLinkedList(mTransformFeedbacks);

@@ -23,6 +23,15 @@ EMEVideoCallbackAdapter::Error(GMPErr aErr)
   VideoCallbackAdapter::Error(aErr);
 }
 
+EMEVideoDecoder::EMEVideoDecoder(CDMProxy* aProxy,
+                                 const GMPVideoDecoderParams& aParams)
+  : GMPVideoDecoder(GMPVideoDecoderParams(aParams).WithAdapter(
+                    new EMEVideoCallbackAdapter(aParams.mCallback,
+                                                VideoInfo(aParams.mConfig.mDisplay),
+                                                aParams.mImageContainer)))
+  , mProxy(aProxy)
+{}
+
 void
 EMEVideoDecoder::InitTags(nsTArray<nsCString>& aTags)
 {

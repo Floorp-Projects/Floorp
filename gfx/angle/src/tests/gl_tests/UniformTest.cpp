@@ -6,6 +6,7 @@
 
 #include "test_utils/ANGLETest.h"
 
+#include <array>
 #include <cmath>
 
 using namespace angle;
@@ -99,7 +100,7 @@ TEST_P(UniformTest, GetUniformNoCurrentProgram)
 TEST_P(UniformTest, UniformArrayLocations)
 {
     // TODO(geofflang): Figure out why this is broken on Intel OpenGL
-    if (isIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    if (IsIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
     {
         std::cout << "Test skipped on Intel OpenGL." << std::endl;
         return;
@@ -331,41 +332,48 @@ TEST_P(UniformTest, BooleanUniformStateQuery)
 TEST_P(UniformTest, BooleanArrayUniformStateQuery)
 {
     glUseProgram(mProgram);
-    GLint intValues[4]     = {0};
-    GLfloat floatValues[4] = {0.0f};
     GLint boolValuesi[4]   = {0, 1, 0, 1};
     GLfloat boolValuesf[4] = {0, 1, 0, 1};
 
-    GLint location = glGetUniformLocation(mProgram, "uniBArr");
+    GLint locations[4] = {
+        glGetUniformLocation(mProgram, "uniBArr"),
+        glGetUniformLocation(mProgram, "uniBArr[1]"),
+        glGetUniformLocation(mProgram, "uniBArr[2]"),
+        glGetUniformLocation(mProgram, "uniBArr[3]"),
+    };
 
     // Calling Uniform1iv
-    glUniform1iv(location, 4, boolValuesi);
+    glUniform1iv(locations[0], 4, boolValuesi);
 
-    glGetUniformiv(mProgram, location, intValues);
     for (unsigned int idx = 0; idx < 4; ++idx)
     {
-        EXPECT_EQ(boolValuesi[idx], intValues[idx]);
+        int value = -1;
+        glGetUniformiv(mProgram, locations[idx], &value);
+        EXPECT_EQ(boolValuesi[idx], value);
     }
 
-    glGetUniformfv(mProgram, location, floatValues);
     for (unsigned int idx = 0; idx < 4; ++idx)
     {
-        EXPECT_EQ(boolValuesf[idx], floatValues[idx]);
+        float value = -1.0f;
+        glGetUniformfv(mProgram, locations[idx], &value);
+        EXPECT_EQ(boolValuesf[idx], value);
     }
 
     // Calling Uniform1fv
-    glUniform1fv(location, 4, boolValuesf);
+    glUniform1fv(locations[0], 4, boolValuesf);
 
-    glGetUniformiv(mProgram, location, intValues);
     for (unsigned int idx = 0; idx < 4; ++idx)
     {
-        EXPECT_EQ(boolValuesi[idx], intValues[idx]);
+        int value = -1;
+        glGetUniformiv(mProgram, locations[idx], &value);
+        EXPECT_EQ(boolValuesi[idx], value);
     }
 
-    glGetUniformfv(mProgram, location, floatValues);
     for (unsigned int idx = 0; idx < 4; ++idx)
     {
-        EXPECT_EQ(boolValuesf[idx], floatValues[idx]);
+        float value = -1.0f;
+        glGetUniformfv(mProgram, locations[idx], &value);
+        EXPECT_EQ(boolValuesf[idx], value);
     }
 
     ASSERT_GL_NO_ERROR();
@@ -379,21 +387,6 @@ class UniformTestES3 : public ANGLETest
     void SetUp() override
     {
         ANGLETest::SetUp();
-
-        const std::string &vertexShader =
-            "#version 300 es\n"
-            "void main() { gl_Position = vec4(1); }";
-        const std::string &fragShader =
-            "#version 300 es\n"
-            "precision mediump float;\n"
-            "uniform mat3x2 uniMat3x2[5];\n"
-            "out vec4 color;\n"
-            "void main() {\n"
-            "  color = vec4(uniMat3x2[0][0][0]);\n"
-            "}";
-
-        mProgram = CompileProgram(vertexShader, fragShader);
-        ASSERT_NE(mProgram, 0u);
     }
 
     void TearDown() override
@@ -411,6 +404,21 @@ class UniformTestES3 : public ANGLETest
 // Test queries for transposed arrays of non-square matrix uniforms.
 TEST_P(UniformTestES3, TranposedMatrixArrayUniformStateQuery)
 {
+    const std::string &vertexShader =
+        "#version 300 es\n"
+        "void main() { gl_Position = vec4(1); }";
+    const std::string &fragShader =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "uniform mat3x2 uniMat3x2[5];\n"
+        "out vec4 color;\n"
+        "void main() {\n"
+        "  color = vec4(uniMat3x2[0][0][0]);\n"
+        "}";
+
+    mProgram = CompileProgram(vertexShader, fragShader);
+    ASSERT_NE(mProgram, 0u);
+
     glUseProgram(mProgram);
 
     std::vector<GLfloat> transposedValues;
@@ -498,6 +506,120 @@ TEST_P(UniformTest, SamplerUniformsAppearOnce)
     EXPECT_GL_NO_ERROR();
 
     glDeleteProgram(program);
+}
+
+template <typename T, typename GetUniformV>
+void CheckOneElement(GetUniformV getUniformv,
+                     GLuint program,
+                     const std::string &name,
+                     int components,
+                     T canary)
+{
+    // The buffer getting the results has three chunks
+    //  - A chunk to see underflows
+    //  - A chunk that will hold the result
+    //  - A chunk to see overflows for when components = kChunkSize
+    static const size_t kChunkSize = 4;
+    std::array<T, 3 * kChunkSize> buffer;
+    buffer.fill(canary);
+
+    GLint location = glGetUniformLocation(program, name.c_str());
+    ASSERT_NE(location, -1);
+
+    getUniformv(program, location, &buffer[kChunkSize]);
+    for (size_t i = 0; i < kChunkSize; i++)
+    {
+        ASSERT_EQ(canary, buffer[i]);
+    }
+    for (size_t i = kChunkSize + components; i < buffer.size(); i++)
+    {
+        ASSERT_EQ(canary, buffer[i]);
+    }
+}
+
+// Check that getting an element array doesn't return the whole array.
+TEST_P(UniformTestES3, ReturnsOnlyOneArrayElement)
+{
+    static const size_t kArraySize = 4;
+    struct UniformArrayInfo
+    {
+        UniformArrayInfo(std::string type, std::string name, int components)
+            : type(type), name(name), components(components)
+        {
+        }
+        std::string type;
+        std::string name;
+        int components;
+    };
+
+    // Check for various number of components and types
+    std::vector<UniformArrayInfo> uniformArrays;
+    uniformArrays.emplace_back("bool", "uBool", 1);
+    uniformArrays.emplace_back("vec2", "uFloat", 2);
+    uniformArrays.emplace_back("ivec3", "uInt", 3);
+    uniformArrays.emplace_back("uvec4", "uUint", 4);
+
+    std::ostringstream uniformStream;
+    std::ostringstream additionStream;
+    for (const auto &array : uniformArrays)
+    {
+        uniformStream << "uniform " << array.type << " " << array.name << "["
+                      << std::to_string(kArraySize) << "];\n";
+
+        // We need to make use of the uniforms or they get compiled out.
+        for (int i = 0; i < 4; i++)
+        {
+            if (array.components == 1)
+            {
+                additionStream << " + float(" << array.name << "[" << i << "])";
+            }
+            else
+            {
+                for (int component = 0; component < array.components; component++)
+                {
+                    additionStream << " + float(" << array.name << "[" << i << "][" << component
+                                   << "])";
+                }
+            }
+        }
+    }
+
+    const std::string &vertexShader =
+        "#version 300 es\n" +
+        uniformStream.str() +
+        "void main()\n"
+        "{\n"
+        "    gl_Position = vec4(1.0" + additionStream.str() + ");\n"
+        "}";
+
+    const std::string &fragmentShader =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 color;\n"
+        "void main ()\n"
+        "{\n"
+        "    color = vec4(1, 0, 0, 1);\n"
+        "}";
+
+    mProgram = CompileProgram(vertexShader, fragmentShader);
+    ASSERT_NE(0u, mProgram);
+
+    glUseProgram(mProgram);
+
+    for (const auto &uniformArray : uniformArrays)
+    {
+        for (size_t index = 0; index < kArraySize; index++)
+        {
+            std::string strIndex = "[" + std::to_string(index) + "]";
+            // Check all the different glGetUniformv functions
+            CheckOneElement<float>(glGetUniformfv, mProgram, uniformArray.name + strIndex,
+                                   uniformArray.components, 42.4242f);
+            CheckOneElement<int>(glGetUniformiv, mProgram, uniformArray.name + strIndex,
+                                 uniformArray.components, 0x7BADBED5);
+            CheckOneElement<unsigned int>(glGetUniformuiv, mProgram, uniformArray.name + strIndex,
+                                          uniformArray.components, 0xDEADBEEF);
+        }
+    }
 }
 
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.

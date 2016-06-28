@@ -179,14 +179,9 @@ TString TextureTypeSuffix(const TBasicType type)
     }
 }
 
-TString DecorateUniform(const TString &string, const TType &type)
+TString DecorateUniform(const TName &name, const TType &type)
 {
-    if (type.getBasicType() == EbtSamplerExternalOES)
-    {
-        return "ex_" + string;
-    }
-
-    return Decorate(string);
+    return DecorateIfNeeded(name);
 }
 
 TString DecorateField(const TString &string, const TStructure &structure)
@@ -396,43 +391,22 @@ TString QualifierString(TQualifier qualifier)
     return "";
 }
 
-int HLSLTextureCoordsCount(const TBasicType samplerType)
+TString DisambiguateFunctionName(const TIntermSequence *parameters)
 {
-    switch (samplerType)
+    TString disambiguatingString;
+    for (auto parameter : *parameters)
     {
-        case EbtSampler2D:
-            return 2;
-        case EbtSampler3D:
-            return 3;
-        case EbtSamplerCube:
-            return 3;
-        case EbtSampler2DArray:
-            return 3;
-        case EbtISampler2D:
-            return 2;
-        case EbtISampler3D:
-            return 3;
-        case EbtISamplerCube:
-            return 3;
-        case EbtISampler2DArray:
-            return 3;
-        case EbtUSampler2D:
-            return 2;
-        case EbtUSampler3D:
-            return 3;
-        case EbtUSamplerCube:
-            return 3;
-        case EbtUSampler2DArray:
-            return 3;
-        case EbtSampler2DShadow:
-            return 2;
-        case EbtSamplerCubeShadow:
-            return 3;
-        case EbtSampler2DArrayShadow:
-            return 3;
-        default:
-            UNREACHABLE();
+        const TType &paramType = parameter->getAsTyped()->getType();
+        // Disambiguation is needed for float2x2 and float4 parameters. These are the only parameter
+        // types that HLSL thinks are identical. float2x3 and float3x2 are different types, for
+        // example. Other parameter types are not added to function names to avoid making function
+        // names longer.
+        if (paramType.getObjectSize() == 4 && paramType.getBasicType() == EbtFloat)
+        {
+            disambiguatingString += "_" + TypeString(paramType);
+        }
     }
-    return 0;
+    return disambiguatingString;
 }
-}
+
+}  // namespace sh

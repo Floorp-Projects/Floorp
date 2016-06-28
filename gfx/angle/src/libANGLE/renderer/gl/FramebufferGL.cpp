@@ -10,11 +10,12 @@
 
 #include "common/BitSetIterator.h"
 #include "common/debug.h"
-#include "libANGLE/Data.h"
+#include "libANGLE/ContextState.h"
 #include "libANGLE/State.h"
 #include "libANGLE/FramebufferAttachment.h"
 #include "libANGLE/angletypes.h"
 #include "libANGLE/formatutils.h"
+#include "libANGLE/renderer/ContextImpl.h"
 #include "libANGLE/renderer/gl/FunctionsGL.h"
 #include "libANGLE/renderer/gl/RenderbufferGL.h"
 #include "libANGLE/renderer/gl/StateManagerGL.h"
@@ -27,12 +28,12 @@ using namespace gl;
 namespace rx
 {
 
-FramebufferGL::FramebufferGL(const Framebuffer::Data &data,
+FramebufferGL::FramebufferGL(const FramebufferState &state,
                              const FunctionsGL *functions,
                              StateManagerGL *stateManager,
                              const WorkaroundsGL &workarounds,
                              bool isDefault)
-    : FramebufferImpl(data),
+    : FramebufferImpl(state),
       mFunctions(functions),
       mStateManager(stateManager),
       mWorkarounds(workarounds),
@@ -46,11 +47,11 @@ FramebufferGL::FramebufferGL(const Framebuffer::Data &data,
 }
 
 FramebufferGL::FramebufferGL(GLuint id,
-                             const Framebuffer::Data &data,
+                             const FramebufferState &state,
                              const FunctionsGL *functions,
                              const WorkaroundsGL &workarounds,
                              StateManagerGL *stateManager)
-    : FramebufferImpl(data),
+    : FramebufferImpl(state),
       mFunctions(functions),
       mStateManager(stateManager),
       mWorkarounds(workarounds),
@@ -149,7 +150,7 @@ Error FramebufferGL::invalidateSub(size_t count,
     return Error(GL_NO_ERROR);
 }
 
-Error FramebufferGL::clear(const Data &data, GLbitfield mask)
+Error FramebufferGL::clear(ContextImpl *context, GLbitfield mask)
 {
     syncClearState(mask);
     mStateManager->bindFramebuffer(GL_FRAMEBUFFER, mFramebufferID);
@@ -158,7 +159,7 @@ Error FramebufferGL::clear(const Data &data, GLbitfield mask)
     return Error(GL_NO_ERROR);
 }
 
-Error FramebufferGL::clearBufferfv(const Data &data,
+Error FramebufferGL::clearBufferfv(ContextImpl *context,
                                    GLenum buffer,
                                    GLint drawbuffer,
                                    const GLfloat *values)
@@ -170,7 +171,7 @@ Error FramebufferGL::clearBufferfv(const Data &data,
     return Error(GL_NO_ERROR);
 }
 
-Error FramebufferGL::clearBufferuiv(const Data &data,
+Error FramebufferGL::clearBufferuiv(ContextImpl *context,
                                     GLenum buffer,
                                     GLint drawbuffer,
                                     const GLuint *values)
@@ -182,7 +183,7 @@ Error FramebufferGL::clearBufferuiv(const Data &data,
     return Error(GL_NO_ERROR);
 }
 
-Error FramebufferGL::clearBufferiv(const Data &data,
+Error FramebufferGL::clearBufferiv(ContextImpl *context,
                                    GLenum buffer,
                                    GLint drawbuffer,
                                    const GLint *values)
@@ -194,7 +195,7 @@ Error FramebufferGL::clearBufferiv(const Data &data,
     return Error(GL_NO_ERROR);
 }
 
-Error FramebufferGL::clearBufferfi(const Data &data,
+Error FramebufferGL::clearBufferfi(ContextImpl *context,
                                    GLenum buffer,
                                    GLint drawbuffer,
                                    GLfloat depth,
@@ -209,7 +210,7 @@ Error FramebufferGL::clearBufferfi(const Data &data,
 
 GLenum FramebufferGL::getImplementationColorReadFormat() const
 {
-    const FramebufferAttachment *readAttachment = getData().getReadAttachment();
+    const FramebufferAttachment *readAttachment = mState.getReadAttachment();
     GLenum internalFormat = readAttachment->getInternalFormat();
     const InternalFormat &internalFormatInfo    = GetInternalFormatInfo(internalFormat);
     return internalFormatInfo.format;
@@ -217,13 +218,13 @@ GLenum FramebufferGL::getImplementationColorReadFormat() const
 
 GLenum FramebufferGL::getImplementationColorReadType() const
 {
-    const FramebufferAttachment *readAttachment = getData().getReadAttachment();
+    const FramebufferAttachment *readAttachment = mState.getReadAttachment();
     GLenum internalFormat = readAttachment->getInternalFormat();
     const InternalFormat &internalFormatInfo    = GetInternalFormatInfo(internalFormat);
     return internalFormatInfo.type;
 }
 
-Error FramebufferGL::readPixels(const State &state,
+Error FramebufferGL::readPixels(ContextImpl *context,
                                 const gl::Rectangle &area,
                                 GLenum format,
                                 GLenum type,
@@ -231,7 +232,7 @@ Error FramebufferGL::readPixels(const State &state,
 {
     // TODO: don't sync the pixel pack state here once the dirty bits contain the pixel pack buffer
     // binding
-    const PixelPackState &packState = state.getPackState();
+    const PixelPackState &packState = context->getGLState().getPackState();
     mStateManager->setPixelPackState(packState);
 
     mStateManager->bindFramebuffer(GL_READ_FRAMEBUFFER, mFramebufferID);
@@ -240,13 +241,13 @@ Error FramebufferGL::readPixels(const State &state,
     return Error(GL_NO_ERROR);
 }
 
-Error FramebufferGL::blit(const State &state,
+Error FramebufferGL::blit(ContextImpl *context,
                           const gl::Rectangle &sourceArea,
                           const gl::Rectangle &destArea,
                           GLbitfield mask,
-                          GLenum filter,
-                          const Framebuffer *sourceFramebuffer)
+                          GLenum filter)
 {
+    const Framebuffer *sourceFramebuffer     = context->getGLState().getReadFramebuffer();
     const FramebufferGL *sourceFramebufferGL = GetImplAs<FramebufferGL>(sourceFramebuffer);
 
     mStateManager->bindFramebuffer(GL_READ_FRAMEBUFFER, sourceFramebufferGL->getFramebufferID());
@@ -285,21 +286,21 @@ void FramebufferGL::syncState(const Framebuffer::DirtyBits &dirtyBits)
         {
             case Framebuffer::DIRTY_BIT_DEPTH_ATTACHMENT:
                 BindFramebufferAttachment(mFunctions, GL_DEPTH_ATTACHMENT,
-                                          mData.getDepthAttachment());
+                                          mState.getDepthAttachment());
                 break;
             case Framebuffer::DIRTY_BIT_STENCIL_ATTACHMENT:
                 BindFramebufferAttachment(mFunctions, GL_STENCIL_ATTACHMENT,
-                                          mData.getStencilAttachment());
+                                          mState.getStencilAttachment());
                 break;
             case Framebuffer::DIRTY_BIT_DRAW_BUFFERS:
             {
-                const auto &drawBuffers = mData.getDrawBufferStates();
+                const auto &drawBuffers = mState.getDrawBufferStates();
                 mFunctions->drawBuffers(static_cast<GLsizei>(drawBuffers.size()),
                                         drawBuffers.data());
                 break;
             }
             case Framebuffer::DIRTY_BIT_READ_BUFFER:
-                mFunctions->readBuffer(mData.getReadBufferState());
+                mFunctions->readBuffer(mState.getReadBufferState());
                 break;
             default:
             {
@@ -309,7 +310,7 @@ void FramebufferGL::syncState(const Framebuffer::DirtyBits &dirtyBits)
                     static_cast<size_t>(dirtyBit - Framebuffer::DIRTY_BIT_COLOR_ATTACHMENT_0);
                 BindFramebufferAttachment(mFunctions,
                                           static_cast<GLenum>(GL_COLOR_ATTACHMENT0 + index),
-                                          mData.getColorAttachment(index));
+                                          mState.getColorAttachment(index));
                 break;
             }
         }
@@ -336,24 +337,27 @@ void FramebufferGL::syncDrawState() const
 
 void FramebufferGL::syncClearState(GLbitfield mask)
 {
-    if (mWorkarounds.doesSRGBClearsOnLinearFramebufferAttachments &&
-        (mask & GL_COLOR_BUFFER_BIT) != 0 && !mIsDefault)
+    if (mFunctions->standard == STANDARD_GL_DESKTOP)
     {
-        bool hasSRBAttachment = false;
-        for (const auto &attachment : mData.getColorAttachments())
+        if (mWorkarounds.doesSRGBClearsOnLinearFramebufferAttachments &&
+            (mask & GL_COLOR_BUFFER_BIT) != 0 && !mIsDefault)
         {
-            if (attachment.isAttached() && attachment.getColorEncoding() == GL_SRGB)
+            bool hasSRBAttachment = false;
+            for (const auto &attachment : mState.getColorAttachments())
             {
-                hasSRBAttachment = true;
-                break;
+                if (attachment.isAttached() && attachment.getColorEncoding() == GL_SRGB)
+                {
+                    hasSRBAttachment = true;
+                    break;
+                }
             }
-        }
 
-        mStateManager->setFramebufferSRGBEnabled(hasSRBAttachment);
-    }
-    else
-    {
-        mStateManager->setFramebufferSRGBEnabled(!mIsDefault);
+            mStateManager->setFramebufferSRGBEnabled(hasSRBAttachment);
+        }
+        else
+        {
+            mStateManager->setFramebufferSRGBEnabled(!mIsDefault);
+        }
     }
 }
 
@@ -366,8 +370,8 @@ void FramebufferGL::syncClearBufferState(GLenum buffer, GLint drawBuffer)
         {
             // If doing a clear on a color buffer, set SRGB blend enabled only if the color buffer
             // is an SRGB format.
-            const auto &drawbufferState  = mData.getDrawBufferStates();
-            const auto &colorAttachments = mData.getColorAttachments();
+            const auto &drawbufferState  = mState.getDrawBufferStates();
+            const auto &colorAttachments = mState.getColorAttachments();
 
             const FramebufferAttachment *attachment = nullptr;
             if (drawbufferState[drawBuffer] >= GL_COLOR_ATTACHMENT0 &&

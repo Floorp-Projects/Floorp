@@ -82,6 +82,9 @@ ContentSearchUIController.prototype = {
   },
 
   set defaultEngine(engine) {
+    if (this._defaultEngine && this._defaultEngine.icon) {
+      URL.revokeObjectURL(this._defaultEngine.icon);
+    }
     let icon;
     if (engine.iconBuffer) {
       icon = this._getFaviconURIFromBuffer(engine.iconBuffer);
@@ -868,6 +871,10 @@ ContentSearchUIController.prototype = {
           "chrome://browser/skin/search-engine-placeholder.png");
       }
       img.setAttribute("src", uri);
+      img.addEventListener("load", function imgLoad() {
+        img.removeEventListener("load", imgLoad);
+        URL.revokeObjectURL(uri);
+      });
       button.appendChild(img);
       button.style.width = buttonWidth + "px";
       button.setAttribute("title", engine.name);

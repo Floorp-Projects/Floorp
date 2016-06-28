@@ -311,6 +311,7 @@ enum TQualifier
 
     // built-ins read by vertex shader
     EvqInstanceID,
+    EvqVertexID,
 
     // built-ins written by vertex shader
     EvqPosition,
@@ -411,6 +412,7 @@ inline const char* getQualifierString(TQualifier q)
     case EvqInOut:                  return "inout";
     case EvqConstReadOnly:          return "const";
     case EvqInstanceID:             return "InstanceID";
+    case EvqVertexID:               return "VertexID";
     case EvqPosition:               return "Position";
     case EvqPointSize:              return "PointSize";
     case EvqFragCoord:              return "FragCoord";

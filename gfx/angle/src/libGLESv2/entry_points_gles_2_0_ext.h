@@ -140,6 +140,45 @@ ANGLE_EXPORT void GL_APIENTRY GetObjectPtrLabelKHR(const void *ptr,
                                                    GLsizei *length,
                                                    GLchar *label);
 ANGLE_EXPORT void GL_APIENTRY GetPointervKHR(GLenum pname, void **params);
+
+// GL_CHROMIUM_bind_uniform_location
+ANGLE_EXPORT void GL_APIENTRY BindUniformLocationCHROMIUM(GLuint program,
+                                                          GLint location,
+                                                          const GLchar *name);
+
+// GL_CHROMIUM_framebuffer_mixed_samples
+ANGLE_EXPORT void GL_APIENTRY MatrixLoadfCHROMIUM(GLenum matrixMode, const GLfloat *matrix);
+ANGLE_EXPORT void GL_APIENTRY MatrixLoadIdentityCHROMIUM(GLenum matrixMode);
+
+ANGLE_EXPORT void GL_APIENTRY CoverageModulationCHROMIUM(GLenum components);
+
+// GL_CHROMIUM_path_rendering
+ANGLE_EXPORT GLuint GL_APIENTRY GenPathsCHROMIUM(GLsizei chromium);
+ANGLE_EXPORT void GL_APIENTRY DeletePathsCHROMIUM(GLuint first, GLsizei range);
+ANGLE_EXPORT GLboolean GL_APIENTRY IsPathCHROMIUM(GLuint path);
+ANGLE_EXPORT void GL_APIENTRY PathCommandsCHROMIUM(GLuint path,
+                                                   GLsizei numCommands,
+                                                   const GLubyte *commands,
+                                                   GLsizei numCoords,
+                                                   GLenum coordType,
+                                                   const void *coords);
+ANGLE_EXPORT void GL_APIENTRY PathParameterfCHROMIUM(GLuint path, GLenum pname, GLfloat value);
+ANGLE_EXPORT void GL_APIENTRY PathParameteriCHROMIUM(GLuint path, GLenum pname, GLint value);
+ANGLE_EXPORT void GL_APIENTRY GetPathParameterfCHROMIUM(GLuint path, GLenum pname, GLfloat *value);
+ANGLE_EXPORT void GL_APIENTRY GetPathParameteriCHROMIUM(GLuint path, GLenum pname, GLint *value);
+ANGLE_EXPORT void GL_APIENTRY PathStencilFuncCHROMIUM(GLenum func, GLint ref, GLuint mask);
+ANGLE_EXPORT void GL_APIENTRY StencilFillPathCHROMIUM(GLuint path, GLenum fillMode, GLuint mask);
+ANGLE_EXPORT void GL_APIENTRY StencilStrokePathCHROMIUM(GLuint path, GLint reference, GLuint mask);
+ANGLE_EXPORT void GL_APIENTRY CoverFillPathCHROMIUM(GLuint path, GLenum coverMode);
+ANGLE_EXPORT void GL_APIENTRY CoverStrokePathCHROMIUM(GLuint path, GLenum coverMode);
+ANGLE_EXPORT void GL_APIENTRY StencilThenCoverFillPathCHROMIUM(GLuint path,
+                                                               GLenum fillMode,
+                                                               GLuint mask,
+                                                               GLenum coverMode);
+ANGLE_EXPORT void GL_APIENTRY StencilThenCoverStrokePathCHROMIUM(GLuint path,
+                                                                 GLint reference,
+                                                                 GLuint mask,
+                                                                 GLenum coverMode);
 }
 
 #endif // LIBGLESV2_ENTRYPOINTGLES20EXT_H_

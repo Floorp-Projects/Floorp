@@ -110,8 +110,8 @@ public:
   size_t GetDevicePixelWidth(size_t plane = 0);
   size_t GetDevicePixelHeight(size_t plane = 0);
   size_t GetBytesPerRow(size_t plane = 0);
-  void Lock();
-  void Unlock();
+  void Lock(bool aReadOnly = true);
+  void Unlock(bool aReadOnly = true);
   void IncrementUseCount();
   void DecrementUseCount();
   bool HasAlpha() { return mHasAlpha; }

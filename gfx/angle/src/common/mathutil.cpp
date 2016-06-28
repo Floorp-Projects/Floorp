@@ -64,4 +64,4 @@ void convert999E5toRGBFloats(unsigned int input, float *red, float *green, float
     *blue = inputData->B * pow(2.0f, (int)inputData->E - g_sharedexp_bias - g_sharedexp_mantissabits);
 }
 
-}
+}  // namespace gl

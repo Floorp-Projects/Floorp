@@ -9,6 +9,7 @@
 #include "base/basictypes.h"
 #include "Units.h"
 #include "nsISupportsImpl.h"
+#include "mozilla/gfx/Point.h"
 
 namespace mozilla {
 namespace widget {
@@ -61,7 +62,7 @@ protected:
     CSSToLayoutDeviceScale aScale,
     bool aUseAPZ,
     bool aUseExternalSurfaceSize,
-    int aSurfaceWidth, int aSurfaceHeight);
+    const gfx::IntSize& aSurfaceSize);
 
 protected:
   RefPtr<CompositorBridgeChild> mCompositorBridgeChild;

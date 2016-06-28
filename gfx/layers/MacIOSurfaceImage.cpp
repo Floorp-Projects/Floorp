@@ -5,6 +5,7 @@
 
 #include "MacIOSurfaceHelpers.h"
 #include "MacIOSurfaceImage.h"
+#include "gfxPlatform.h"
 #include "mozilla/layers/CompositableClient.h"
 #include "mozilla/layers/CompositableForwarder.h"
 #include "mozilla/layers/MacIOSurfaceTextureClientOGL.h"
@@ -18,8 +19,9 @@ TextureClient*
 MacIOSurfaceImage::GetTextureClient(CompositableClient* aClient)
 {
   if (!mTextureClient) {
+    BackendType backend = BackendType::NONE;
     mTextureClient = TextureClient::CreateWithData(
-      MacIOSurfaceTextureData::Create(mSurface),
+      MacIOSurfaceTextureData::Create(mSurface, backend),
       TextureFlags::DEFAULT,
       aClient->GetForwarder()
     );

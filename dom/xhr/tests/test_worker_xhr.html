@@ -1,0 +1,73 @@
+<!--
+  Any copyright is dedicated to the Public Domain.
+  http://creativecommons.org/publicdomain/zero/1.0/
+-->
+<!DOCTYPE HTML>
+<html>
+<!--
+Tests of DOM Worker Threads XHR(Bug 450452 )
+-->
+<head>
+  <title>Test for DOM Worker Threads XHR (Bug 450452 )</title>
+  <script type="text/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css" />
+</head>
+<body>
+<a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=450452">DOM Worker Threads XHR (Bug 450452)</a>
+<p id="display"></p>
+<div id="content" style="display: none">
+
+</div>
+<pre id="test">
+<script class="testbody" type="text/javascript">
+
+  var worker = new Worker("xhr_worker.js");
+
+  var gotUploadLoad = false, gotLoadend = false;
+
+  worker.onmessage = function(event) {
+    is(event.target, worker);
+    var args = event.data;
+    switch (args.type) {
+      case "progress": {
+        ok(parseInt(args.current) <= parseInt(args.total));
+      } break;
+      case "error": {
+        ok(false, "XHR error: " + args.error);
+      } break;
+      case "upload.load": {
+        gotUploadLoad = true;
+      } break;
+      case "load": {
+        ok(gotUploadLoad, "Should have gotten upload load event");
+        gotLoadend = true;
+        is(args.data, "A noisy noise annoys an oyster.", "correct data");
+        document.getElementById("content").textContent = args.data;
+      } break;
+      case "loadend": {
+        ok(gotLoadend, "Should have gotten load.");
+        SimpleTest.finish();
+        break;
+      }
+      default: {
+        ok(false, "Unexpected message");
+        SimpleTest.finish();
+      }
+    }
+  };
+
+  worker.onerror = function(event) {
+    is(event.target, worker);
+    ok(false, "Worker had an error:" + event.message);
+    SimpleTest.finish();
+  }
+
+  worker.postMessage("worker_testXHR.txt");
+
+  SimpleTest.waitForExplicitFinish();
+
+</script>
+</pre>
+</body>
+</html>
+

@@ -163,6 +163,7 @@ that it should be possible to make a context with a D24S8 depth-stencil
 buffer to a surface without a depth-stencil buffer. This doesn't work on the
 Mesa Intel driver. The list before the workaround was the following, with
 0x020 being the fbconfig chosen for the context:
+
 ```
     visual  x   bf lv rg d st  colorbuffer  sr ax dp st accumbuffer  ms  cav
   id dep cl sp  sz l  ci b ro  r  g  b  a F gb bf th cl  r  g  b  a ns b eat
@@ -176,6 +177,7 @@ Mesa Intel driver. The list before the workaround was the following, with
 ```
 
 After the workaround that list becomes the following:
+
 ```
     visual  x   bf lv rg d st  colorbuffer  sr ax dp st accumbuffer  ms  cav
   id dep cl sp  sz l  ci b ro  r  g  b  a F gb bf th cl  r  g  b  a ns b eat
@@ -196,6 +198,7 @@ using the GLX EGL implementation in the wild it would be good to test it on othe
 drivers and hardware.
 
 The drivers tested were:
+
  - the proprietary NVIDIA driver
  - the proprietary AMD driver
  - the open source Intel (Broadwell) Mesa driver

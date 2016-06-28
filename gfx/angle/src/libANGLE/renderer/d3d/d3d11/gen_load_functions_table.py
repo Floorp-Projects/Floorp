@@ -98,7 +98,7 @@ dxgi_format_param = 'dxgiFormat'
 dxgi_format_unknown = "DXGI_FORMAT_UNKNOWN"
 
 def get_function_maps_string(typestr, function, requiresConversion):
-    return '                        loadMap[' + typestr + '] = LoadImageFunctionInfo(' + function + ', ' + requiresConversion + ');\n'
+    return '                        { ' + typestr + ', LoadImageFunctionInfo(' + function + ', ' + requiresConversion + ') },\n'
 
 def get_unknown_format_string(dxgi_to_type_map, dxgi_unknown_string):
      if dxgi_unknown_string not in dxgi_to_type_map:
@@ -126,11 +126,9 @@ def create_dxgi_to_type_map(dst, json_data, internal_format_str):
 
 def get_load_function_map_snippet(insert_map_string):
     load_function_map_snippet = ''
-    load_function_map_snippet += '                    static const std::map<GLenum, LoadImageFunctionInfo> loadFunctionsMap = []() {\n'
-    load_function_map_snippet += '                        std::map<GLenum, LoadImageFunctionInfo> loadMap;\n'
+    load_function_map_snippet += '                    static const std::map<GLenum, LoadImageFunctionInfo> loadFunctionsMap = {\n'
     load_function_map_snippet += insert_map_string
-    load_function_map_snippet += '                        return loadMap;\n'
-    load_function_map_snippet += '                    }();\n\n'
+    load_function_map_snippet += '                    };\n\n'
     load_function_map_snippet += '                    return loadFunctionsMap;\n'
 
     return load_function_map_snippet

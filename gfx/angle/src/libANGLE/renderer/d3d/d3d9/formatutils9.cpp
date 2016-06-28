@@ -7,8 +7,9 @@
 // formatutils9.cpp: Queries for GL image formats and their translations to D3D9
 // formats.
 
-#include "libANGLE/renderer/d3d/copyimage.h"
 #include "libANGLE/renderer/d3d/d3d9/formatutils9.h"
+
+#include "libANGLE/renderer/copyimage.h"
 #include "libANGLE/renderer/d3d/d3d9/Renderer9.h"
 #include "libANGLE/renderer/d3d/d3d9/vertexconversion.h"
 #include "libANGLE/renderer/d3d/generatemip.h"
@@ -39,15 +40,25 @@ struct D3D9FastCopyFormat
     }
 };
 
-typedef std::multimap<D3DFORMAT, D3D9FastCopyFormat> D3D9FastCopyMap;
-
-static D3D9FastCopyMap BuildFastCopyMap()
+static const FastCopyFunctionMap &GetFastCopyFunctionMap(D3DFORMAT d3dFormat)
 {
-    D3D9FastCopyMap map;
-
-    map.insert(std::make_pair(D3DFMT_A8R8G8B8, D3D9FastCopyFormat(GL_RGBA, GL_UNSIGNED_BYTE, CopyBGRA8ToRGBA8)));
-
-    return map;
+    switch (d3dFormat)
+    {
+        case D3DFMT_A8R8G8B8:
+        {
+            static FastCopyFunctionMap fastCopyMap;
+            if (fastCopyMap.empty())
+            {
+                fastCopyMap[gl::FormatType(GL_RGBA, GL_UNSIGNED_BYTE)] = CopyBGRA8ToRGBA8;
+            }
+            return fastCopyMap;
+        }
+        default:
+        {
+            static FastCopyFunctionMap emptyMap;
+            return emptyMap;
+        }
+    }
 }
 
 // A map to determine the pixel size and mip generation function of a given D3D format
@@ -71,12 +82,6 @@ D3DFormat::D3DFormat()
 {
 }
 
-ColorCopyFunction D3DFormat::getFastCopyFunction(GLenum format, GLenum type) const
-{
-    FastCopyFunctionMap::const_iterator iter = fastCopyFunctions.find(std::make_pair(format, type));
-    return (iter != fastCopyFunctions.end()) ? iter->second : NULL;
-}
-
 static inline void InsertD3DFormatInfo(D3D9FormatInfoMap *map, D3DFORMAT format, GLuint bits, GLuint blockWidth,
                                        GLuint blockHeight, GLuint redBits, GLuint greenBits, GLuint blueBits,
                                        GLuint alphaBits, GLuint lumBits, GLuint depthBits, GLuint stencilBits,
@@ -97,13 +102,7 @@ static inline void InsertD3DFormatInfo(D3D9FormatInfoMap *map, D3DFORMAT format,
     info.internalFormat = internalFormat;
     info.mipGenerationFunction = mipFunc;
     info.colorReadFunction = colorReadFunc;
-
-    static const D3D9FastCopyMap fastCopyMap = BuildFastCopyMap();
-    std::pair<D3D9FastCopyMap::const_iterator, D3D9FastCopyMap::const_iterator> fastCopyIter = fastCopyMap.equal_range(format);
-    for (D3D9FastCopyMap::const_iterator i = fastCopyIter.first; i != fastCopyIter.second; i++)
-    {
-        info.fastCopyFunctions.insert(std::make_pair(std::make_pair(i->second.destFormat, i->second.destType), i->second.copyFunction));
-    }
+    info.fastCopyFunctions     = GetFastCopyFunctionMap(format);
 
     map->insert(std::make_pair(format, info));
 }

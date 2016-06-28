@@ -13,6 +13,8 @@ include protocol PCacheStorage;
 include protocol PCacheStreamControl;
 include protocol PFileDescriptorSet;
 include protocol PFileSystemRequest;
+include protocol PGamepadEventChannel;
+include protocol PGamepadTestChannel;
 include protocol PMessagePort;
 include protocol PCameras;
 include protocol PNuwa;
@@ -54,6 +56,8 @@ sync protocol PBackground
   manages PCacheStreamControl;
   manages PFileDescriptorSet;
   manages PFileSystemRequest;
+  manages PGamepadEventChannel;
+  manages PGamepadTestChannel;
   manages PMessagePort;
   manages PCameras;
   manages PNuwa;
@@ -102,6 +106,10 @@ parent:
   async PQuota();
 
   async PFileSystemRequest(FileSystemParams params);
+
+  async PGamepadEventChannel();
+
+  async PGamepadTestChannel();
 
 child:
   async PCache();

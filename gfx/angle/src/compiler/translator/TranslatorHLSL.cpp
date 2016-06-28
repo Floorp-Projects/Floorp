@@ -72,13 +72,7 @@ unsigned int TranslatorHLSL::getInterfaceBlockRegister(const std::string &interf
     return mInterfaceBlockRegisterMap.find(interfaceBlockName)->second;
 }
 
-bool TranslatorHLSL::hasUniform(const std::string &uniformName) const
+const std::map<std::string, unsigned int> *TranslatorHLSL::getUniformRegisterMap() const
 {
-    return (mUniformRegisterMap.count(uniformName) > 0);
-}
-
-unsigned int TranslatorHLSL::getUniformRegister(const std::string &uniformName) const
-{
-    ASSERT(hasUniform(uniformName));
-    return mUniformRegisterMap.find(uniformName)->second;
+    return &mUniformRegisterMap;
 }

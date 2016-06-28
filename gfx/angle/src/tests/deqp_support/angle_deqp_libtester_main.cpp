@@ -19,6 +19,7 @@
 #include "tcuRandomOrderExecutor.h"
 #include "tcuResource.hpp"
 #include "tcuTestLog.hpp"
+#include "system_utils.h"
 
 #if (DE_OS == DE_OS_WIN32)
 #include <Windows.h>
@@ -78,17 +79,25 @@ deBool deIsDir(const char *filename)
 #error TODO(jmadill): support other platforms
 #endif
 
-const char *FindDataDir()
+bool FindDataDir(std::string *dataDir)
 {
-    for (size_t dirIndex = 0; dirIndex < ArraySize(g_dEQPDataSearchDirs); ++dirIndex)
+    for (auto searchDir : g_dEQPDataSearchDirs)
     {
-        if (deIsDir(g_dEQPDataSearchDirs[dirIndex]))
+        if (deIsDir(searchDir))
         {
-            return g_dEQPDataSearchDirs[dirIndex];
+            *dataDir = searchDir;
+            return true;
+        }
+
+        std::string directory = angle::GetExecutableDirectory() + "/" + searchDir;
+        if (deIsDir(directory.c_str()))
+        {
+            *dataDir = directory;
+            return true;
         }
     }
 
-    return nullptr;
+    return false;
 }
 
 bool InitPlatform(int argc, const char *argv[])
@@ -107,16 +116,15 @@ bool InitPlatform(int argc, const char *argv[])
             return false;
         }
 
-        const char *deqpDataDir = FindDataDir();
-
-        if (deqpDataDir == nullptr)
+        std::string deqpDataDir;
+        if (!FindDataDir(&deqpDataDir))
         {
             std::cout << "Failed to find dEQP data directory." << std::endl;
             return false;
         }
 
         g_cmdLine = new tcu::CommandLine(argc, argv);
-        g_archive = new tcu::DirArchive(deqpDataDir);
+        g_archive = new tcu::DirArchive(deqpDataDir.c_str());
         g_log = new tcu::TestLog(g_cmdLine->getLogFileName(), g_cmdLine->getLogFlags());
         g_testCtx = new tcu::TestContext(*g_platform, *g_archive, *g_log, *g_cmdLine, DE_NULL);
         g_root = new tcu::TestPackageRoot(*g_testCtx, tcu::TestPackageRegistry::getSingleton());
