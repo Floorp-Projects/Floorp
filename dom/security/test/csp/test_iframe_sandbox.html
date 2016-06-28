@@ -1,0 +1,239 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=671389
+Bug 671389 - Implement CSP sandbox directive
+-->
+<head>
+  <meta charset="utf-8">
+  <title>Tests for Bug 671389</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<script type="application/javascript">
+
+  SimpleTest.waitForExplicitFinish();
+
+  // Check if two sandbox flags are the same, ignoring case-sensitivity.
+  // getSandboxFlags returns a list of sandbox flags (if any) or
+  // null if the flag is not set.
+  // This function checks if two flags are the same, i.e., they're
+  // either not set or have the same flags.
+  function eqFlags(a, b) {
+    if (a === null && b === null) { return true; }
+    if (a === null || b === null) { return false; }
+    if (a.length !== b.length) {  return false; }
+    var a_sorted = a.map(function(e) { return e.toLowerCase(); }).sort();
+    var b_sorted = b.map(function(e) { return e.toLowerCase(); }).sort();
+    for (var i in a_sorted) {
+      if (a_sorted[i] !== b_sorted[i]) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  // Get the sandbox flags of document doc.
+  // If the flag is not set sandboxFlagsAsString returns null,
+  // this function also returns null.
+  // If the flag is set it may have some flags; in this case
+  // this function returns the (potentially empty) list of flags.
+  function getSandboxFlags(doc) {
+    var flags = doc.sandboxFlagsAsString;
+    if (flags === null) { return null; }
+    return flags? flags.split(" "):[];
+  }
+
+  // Constructor for a CSP sandbox flags test. The constructor
+  // expectes a description 'desc' and set of options 'opts':
+  //  - sandboxAttribute: [null] or string corresponding to the iframe sandbox attributes
+  //  - csp: [null] or string corresponding to the CSP sandbox flags
+  //  - cspReportOnly: [null] or string corresponding to the CSP report-only sandbox flags
+  //  - file: [null] or string corresponding to file the server should serve
+  // Above, we use [brackets] to denote default values.
+  function CSPFlagsTest(desc, opts) {
+    function ifundef(x, v) {
+      return (x !== undefined) ? x : v;
+    }
+
+    function intersect(as, bs) { // Intersect two csp attributes:
+      as = as === null ? null
+                       : as.split(' ').filter(function(x) { return !!x; });
+      bs = bs === null ? null
+                       : bs.split(' ').filter(function(x) { return !!x; });
+
+      if (as === null) { return bs; }
+      if (bs === null) { return as; }
+
+      var cs = [];
+      as.forEach(function(a) {
+        if (a && bs.indexOf(a) != -1)
+          cs.push(a);
+      });
+      return cs;
+    }
+
+    this.desc     = desc || "Untitled test";
+    this.attr     = ifundef(opts.sandboxAttribute, null);
+    this.csp      = ifundef(opts.csp, null);
+    this.cspRO    = ifundef(opts.cspReportOnly, null);
+    this.file     = ifundef(opts.file, null);
+    this.expected = intersect(this.attr, this.csp);
+  }
+
+  // Return function that checks that the actual flags are the same as the
+  // expected flags
+  CSPFlagsTest.prototype.checkFlags = function(iframe) {
+    var this_ = this;
+    return function() {
+      try {
+        var actual = getSandboxFlags(SpecialPowers.wrap(iframe).contentDocument);
+        ok(eqFlags(actual, this_.expected),
+           this_.desc, 'expected: "' + this_.expected + '", got: "' + actual + '"');
+      } catch (e) {
+        ok(false, this_.desc, 'expected: "' + this_.expected + '", failed with: "' + e + '"');
+      }
+      runNextTest();
+     };
+  };
+
+  // Set the iframe src and sandbox attribute
+  CSPFlagsTest.prototype.runTest = function () {
+    var iframe = document.createElement('iframe');
+    document.getElementById("content").appendChild(iframe);
+    iframe.onload = this.checkFlags(iframe);
+
+    // set sandbox attribute
+    if (this.attr === null) {
+      iframe.removeAttribute('sandbox');
+    } else {
+      iframe.sandbox = this.attr;
+    }
+
+    // set query string
+    var src = 'http://mochi.test:8888/tests/dom/security/test/csp/file_testserver.sjs';
+
+    var delim = '?';
+
+    if (this.csp !== null) {
+      src += delim + 'csp=' + escape('sandbox ' + this.csp);
+      delim = '&';
+    }
+
+    if (this.cspRO !== null) {
+      src += delim + 'cspRO=' + escape('sandbox ' + this.cspRO);
+      delim = '&';
+    }
+
+    if (this.file !== null) {
+      src += delim + 'file=' + escape(this.file);
+      delim = '&';
+    }
+
+    iframe.src = src;
+    iframe.width = iframe.height = 10;
+
+  }
+
+  testCases = [
+    {
+      desc: "Test 1: Header should not override attribute",
+      sandboxAttribute: "",
+      csp: "allow-forms aLLOw-POinter-lock alLOW-popups aLLOW-SAME-ORIGin ALLOW-SCRIPTS allow-top-navigation"
+    },
+    {
+      desc: "Test 2: Attribute should not override header",
+      sandboxAttribute: "sandbox allow-forms allow-pointer-lock allow-popups allow-same-origin allow-scripts allow-top-navigation",
+      csp: ""
+    },
+    {
+      desc: "Test 3: Header and attribute intersect",
+      sandboxAttribute: "allow-same-origin allow-scripts",
+      csp: "allow-forms allow-same-origin allow-scripts"
+    },
+    {
+      desc: "Test 4: CSP sandbox sets the right flags (pt 1)",
+      csp: "alLOW-FORms ALLOW-pointer-lock allow-popups allow-same-origin allow-scripts ALLOW-TOP-NAVIGation"
+    },
+    {
+      desc: "Test 5: CSP sandbox sets the right flags (pt 2)",
+      csp: "allow-same-origin allow-TOP-navigation"
+    },
+    {
+      desc: "Test 6: CSP sandbox sets the right flags (pt 3)",
+      csp: "allow-FORMS ALLOW-scripts"
+    },
+    {
+      desc: "Test 7: CSP sandbox sets the right flags (pt 4)",
+      csp: ""
+    },
+    {
+      desc: "Test 8: CSP sandbox sets the right flags (pt 5)",
+      csp: null
+    },
+    {
+      desc: "Test 9: Read-only header should not override attribute",
+      sandboxAttribute: "",
+      cspReportOnly: "allow-forms ALLOW-pointer-lock allow-POPUPS allow-same-origin ALLOW-scripts allow-top-NAVIGATION"
+    },
+    {
+      desc: "Test 10: Read-only header should not override CSP header",
+      csp: "allow-forms allow-scripts",
+      cspReportOnly: "allow-forms aLlOw-PoInTeR-lOcK aLLow-pOPupS aLLoW-SaME-oRIgIN alLow-scripts allow-tOp-navigation"
+    },
+    {
+      desc: "Test 11: Read-only header should not override attribute or CSP header",
+      sandboxAttribute: "allow-same-origin allow-scripts",
+      csp: "allow-forms allow-same-origin allow-scripts",
+      cspReportOnly: "allow-forms allow-pointer-lock allow-popups allow-same-origin allow-scripts allow-top-navigation"
+    },
+    {
+      desc: "Test 12: CSP sandbox not affected by document.write()",
+      csp: "allow-scripts",
+      file: 'tests/dom/security/test/csp/file_iframe_sandbox_document_write.html'
+    },
+  ].map(function(t) { return (new CSPFlagsTest(t.desc,t)); });
+
+
+  var testCaseIndex = 0;
+
+  // Track ok messages from iframes
+  var childMessages = 0;
+  var totalChildMessages = 1;
+
+
+  // Check to see if we ran all the tests and received all messges
+  // from child iframes. If so, finish.
+  function tryFinish() {
+    if (testCaseIndex === testCases.length && childMessages === totalChildMessages){
+      SimpleTest.finish();
+    }
+  }
+
+  function runNextTest() {
+
+    tryFinish();
+
+    if (testCaseIndex < testCases.length) {
+      testCases[testCaseIndex].runTest();
+      testCaseIndex++;
+    }
+  }
+
+  function receiveMessage(event) {
+    ok(event.data.ok, event.data.desc);
+    childMessages++;
+    tryFinish();
+  }
+
+  window.addEventListener("message", receiveMessage, false);
+
+  addLoadEvent(runNextTest);
+</script>
+<body>
+  <a target="_blank" href="https://bugzilla.mozilla.org/show_bug.cgi?id=671389">Mozilla Bug 671389</a> - Implement CSP sandbox directive
+  <p id="display"></p>
+  <div id="content">
+  </div>
+</body>
+</html>
