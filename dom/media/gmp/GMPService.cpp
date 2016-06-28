@@ -413,22 +413,25 @@ GeckoMediaPluginService::GetAbstractGMPThread()
 class GetGMPContentParentForAudioDecoderDone : public GetGMPContentParentCallback
 {
 public:
-  explicit GetGMPContentParentForAudioDecoderDone(UniquePtr<GetGMPAudioDecoderCallback>&& aCallback)
+  explicit GetGMPContentParentForAudioDecoderDone(UniquePtr<GetGMPAudioDecoderCallback>&& aCallback,
+                                                  GMPCrashHelper* aHelper)
    : mCallback(Move(aCallback))
+   , mHelper(aHelper)
   {
   }
 
   void Done(GMPContentParent* aGMPParent) override
   {
     GMPAudioDecoderParent* gmpADP = nullptr;
-    if (aGMPParent) {
-      aGMPParent->GetGMPAudioDecoder(&gmpADP);
+    if (aGMPParent && NS_SUCCEEDED(aGMPParent->GetGMPAudioDecoder(&gmpADP))) {
+      gmpADP->SetCrashHelper(mHelper);
     }
     mCallback->Done(gmpADP);
   }
 
 private:
   UniquePtr<GetGMPAudioDecoderCallback> mCallback;
+  RefPtr<GMPCrashHelper> mHelper;
 };
 
 NS_IMETHODIMP
@@ -446,7 +449,7 @@ GeckoMediaPluginService::GetGMPAudioDecoder(GMPCrashHelper* aHelper,
   }
 
   UniquePtr<GetGMPContentParentCallback> callback(
-    new GetGMPContentParentForAudioDecoderDone(Move(aCallback)));
+    new GetGMPContentParentForAudioDecoderDone(Move(aCallback), aHelper));
   if (!GetContentParentFrom(aHelper,
                             aNodeId,
                             NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER),
@@ -461,8 +464,10 @@ GeckoMediaPluginService::GetGMPAudioDecoder(GMPCrashHelper* aHelper,
 class GetGMPContentParentForVideoDecoderDone : public GetGMPContentParentCallback
 {
 public:
-  explicit GetGMPContentParentForVideoDecoderDone(UniquePtr<GetGMPVideoDecoderCallback>&& aCallback)
+  explicit GetGMPContentParentForVideoDecoderDone(UniquePtr<GetGMPVideoDecoderCallback>&& aCallback,
+                                                  GMPCrashHelper* aHelper)
    : mCallback(Move(aCallback))
+   , mHelper(aHelper)
   {
   }
 
@@ -472,12 +477,14 @@ public:
     GMPVideoHostImpl* videoHost = nullptr;
     if (aGMPParent && NS_SUCCEEDED(aGMPParent->GetGMPVideoDecoder(&gmpVDP))) {
       videoHost = &gmpVDP->Host();
+      gmpVDP->SetCrashHelper(mHelper);
     }
     mCallback->Done(gmpVDP, videoHost);
   }
 
 private:
   UniquePtr<GetGMPVideoDecoderCallback> mCallback;
+  RefPtr<GMPCrashHelper> mHelper;
 };
 
 NS_IMETHODIMP
@@ -495,7 +502,7 @@ GeckoMediaPluginService::GetGMPVideoDecoder(GMPCrashHelper* aHelper,
   }
 
   UniquePtr<GetGMPContentParentCallback> callback(
-    new GetGMPContentParentForVideoDecoderDone(Move(aCallback)));
+    new GetGMPContentParentForVideoDecoderDone(Move(aCallback), aHelper));
   if (!GetContentParentFrom(aHelper,
                             aNodeId,
                             NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
@@ -510,8 +517,10 @@ GeckoMediaPluginService::GetGMPVideoDecoder(GMPCrashHelper* aHelper,
 class GetGMPContentParentForVideoEncoderDone : public GetGMPContentParentCallback
 {
 public:
-  explicit GetGMPContentParentForVideoEncoderDone(UniquePtr<GetGMPVideoEncoderCallback>&& aCallback)
+  explicit GetGMPContentParentForVideoEncoderDone(UniquePtr<GetGMPVideoEncoderCallback>&& aCallback,
+                                                  GMPCrashHelper* aHelper)
    : mCallback(Move(aCallback))
+   , mHelper(aHelper)
   {
   }
 
@@ -521,12 +530,14 @@ public:
     GMPVideoHostImpl* videoHost = nullptr;
     if (aGMPParent && NS_SUCCEEDED(aGMPParent->GetGMPVideoEncoder(&gmpVEP))) {
       videoHost = &gmpVEP->Host();
+      gmpVEP->SetCrashHelper(mHelper);
     }
     mCallback->Done(gmpVEP, videoHost);
   }
 
 private:
   UniquePtr<GetGMPVideoEncoderCallback> mCallback;
+  RefPtr<GMPCrashHelper> mHelper;
 };
 
 NS_IMETHODIMP
@@ -544,7 +555,7 @@ GeckoMediaPluginService::GetGMPVideoEncoder(GMPCrashHelper* aHelper,
   }
 
   UniquePtr<GetGMPContentParentCallback> callback(
-    new GetGMPContentParentForVideoEncoderDone(Move(aCallback)));
+    new GetGMPContentParentForVideoEncoderDone(Move(aCallback), aHelper));
   if (!GetContentParentFrom(aHelper,
                             aNodeId,
                             NS_LITERAL_CSTRING(GMP_API_VIDEO_ENCODER),
@@ -559,22 +570,25 @@ GeckoMediaPluginService::GetGMPVideoEncoder(GMPCrashHelper* aHelper,
 class GetGMPContentParentForDecryptorDone : public GetGMPContentParentCallback
 {
 public:
-  explicit GetGMPContentParentForDecryptorDone(UniquePtr<GetGMPDecryptorCallback>&& aCallback)
+  explicit GetGMPContentParentForDecryptorDone(UniquePtr<GetGMPDecryptorCallback>&& aCallback,
+                                               GMPCrashHelper* aHelper)
    : mCallback(Move(aCallback))
+   , mHelper(aHelper)
   {
   }
 
   void Done(GMPContentParent* aGMPParent) override
   {
     GMPDecryptorParent* ksp = nullptr;
-    if (aGMPParent) {
-      aGMPParent->GetGMPDecryptor(&ksp);
+    if (aGMPParent && NS_SUCCEEDED(aGMPParent->GetGMPDecryptor(&ksp))) {
+      ksp->SetCrashHelper(mHelper);
     }
     mCallback->Done(ksp);
   }
 
 private:
   UniquePtr<GetGMPDecryptorCallback> mCallback;
+  RefPtr<GMPCrashHelper> mHelper;
 };
 
 NS_IMETHODIMP
@@ -600,7 +614,7 @@ GeckoMediaPluginService::GetGMPDecryptor(GMPCrashHelper* aHelper,
   }
 
   UniquePtr<GetGMPContentParentCallback> callback(
-    new GetGMPContentParentForDecryptorDone(Move(aCallback)));
+    new GetGMPContentParentForDecryptorDone(Move(aCallback), aHelper));
   if (!GetContentParentFrom(aHelper,
                             aNodeId,
                             NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
