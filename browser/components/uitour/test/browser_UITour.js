@@ -379,6 +379,9 @@ var tests = [
     let ac = new TelemetryArchiveTesting.Checker();
     yield ac.promiseInit();
     yield gContentAPI.setTreatmentTag("foobar", "baz");
+    // Wait until the treatment telemetry is sent before looking in the archive.
+    yield BrowserTestUtils.waitForContentEvent(gTestTab.linkedBrowser, "mozUITourNotification", false,
+                                               event => event.detail.event === "TreatmentTag:TelemetrySent");
     yield new Promise((resolve) => {
       gContentAPI.getTreatmentTag("foobar", (data) => {
         is(data.value, "baz", "set and retrieved treatmentTag");

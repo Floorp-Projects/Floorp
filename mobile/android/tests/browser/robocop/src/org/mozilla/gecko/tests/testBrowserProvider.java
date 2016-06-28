@@ -5,11 +5,17 @@
 package org.mozilla.gecko.tests;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
-import org.mozilla.gecko.background.db.CursorDumper;
 import org.mozilla.gecko.db.BrowserContract;
 import org.mozilla.gecko.db.BrowserContract.UrlAnnotations.SyncStatus;
+import org.mozilla.gecko.db.URLMetadata;
+import org.mozilla.gecko.db.URLMetadataTable;
 
 import android.content.ContentProviderOperation;
 import android.content.ContentProviderResult;
@@ -188,6 +194,16 @@ public class testBrowserProvider extends ContentProviderTest {
         return thumbnailEntry;
     }
 
+    private ContentValues createUrlMetadataEntry(final String url, final String tileImage, final String tileColor,
+                final String touchIcon) {
+        final ContentValues values = new ContentValues();
+        values.put(URLMetadataTable.URL_COLUMN, url);
+        values.put(URLMetadataTable.TILE_IMAGE_URL_COLUMN, tileImage);
+        values.put(URLMetadataTable.TILE_COLOR_COLUMN, tileColor);
+        values.put(URLMetadataTable.TOUCH_ICON_COLUMN, touchIcon);
+        return values;
+    }
+
     private ContentValues createUrlAnnotationEntry(final String url, final String key, final String value,
                 final long dateCreated) {
         final ContentValues values = new ContentValues();
@@ -243,6 +259,13 @@ public class testBrowserProvider extends ContentProviderTest {
                 null);
     }
 
+    private Cursor getUrlMetadataByUrl(final String url) throws Exception {
+        return mProvider.query(URLMetadataTable.CONTENT_URI, null,
+                URLMetadataTable.URL_COLUMN + " = ?",
+                new String[] { url },
+                null);
+    }
+
     @Override
     public void setUp() throws Exception {
         super.setUp(sBrowserProviderCallable, BrowserContract.AUTHORITY, "browser.db");
@@ -269,6 +292,7 @@ public class testBrowserProvider extends ContentProviderTest {
         mTests.add(new TestDeleteHistoryThumbnails());
 
         mTests.add(new TestInsertUrlAnnotations());
+        mTests.add(new TestInsertUrlMetadata());
 
         mTests.add(new TestBatchOperations());
 
@@ -1489,6 +1513,116 @@ public class testBrowserProvider extends ContentProviderTest {
                     "Inserted url annotation has correct value");
             mAsserter.is(c.getInt(c.getColumnIndex(BrowserContract.UrlAnnotations.SYNC_STATUS)), SyncStatus.NEW.getDBValue(),
                     "Inserted url annotation has default sync status");
+        }
+    }
+
+    private class TestInsertUrlMetadata extends TestCase {
+        @Override
+        public void test() throws Exception {
+            testInsertionViaContentProvider();
+            testInsertionViaUrlMetadata();
+            // testRetrievalViaUrlMetadata depends on data added in the previous two tests
+            testRetrievalViaUrlMetadata();
+        }
+
+        final String url1 = "http://mozilla.org";
+        final String url2 = "http://hello.org";
+
+        private void testInsertionViaContentProvider() throws Exception {
+            final String tileImage = "http://mozilla.org/tileImage.png";
+            final String tileColor = "#FF0000";
+            final String touchIcon = "http://mozilla.org/touchIcon.png";
+
+            // We can only use update since the redirection machinery doesn't exist for insert
+            mProvider.update(URLMetadataTable.CONTENT_URI.buildUpon().appendQueryParameter(BrowserContract.PARAM_INSERT_IF_NEEDED, "true").build(),
+                    createUrlMetadataEntry(url1, tileImage, tileColor, touchIcon),
+                    URLMetadataTable.URL_COLUMN + "=?",
+                    new String[] {url1}
+            );
+
+            final Cursor c = getUrlMetadataByUrl(url1);
+            try {
+                mAsserter.is(c.getCount(), 1, "URL metadata inserted via Content Provider not found");
+            } finally {
+                c.close();
+            }
+        }
+
+        private void testInsertionViaUrlMetadata() throws Exception {
+            final String tileImage = "http://hello.org/tileImage.png";
+            final String tileColor = "#FF0000";
+            final String touchIcon = "http://hello.org/touchIcon.png";
+
+            final Map<String, Object> data = new HashMap<>();
+            data.put(URLMetadataTable.URL_COLUMN, url2);
+            data.put(URLMetadataTable.TILE_IMAGE_URL_COLUMN, tileImage);
+            data.put(URLMetadataTable.TILE_COLOR_COLUMN, tileColor);
+            data.put(URLMetadataTable.TOUCH_ICON_COLUMN, touchIcon);
+
+            getTestProfile().getDB().getURLMetadata().save(mResolver, data);
+
+            final Cursor c = getUrlMetadataByUrl(url2);
+            try {
+                mAsserter.is(c.moveToFirst(), true, "URL metadata inserted via UrlMetadata not found");
+            } finally {
+                c.close();
+            }
+        }
+
+        private void testRetrievalViaUrlMetadata() {
+            // LocalURLMetadata has some caching of results: we need to test that this caching
+            // doesn't prevent us from accessing data that might not have been loaded into the cache.
+            // We do this by first doing queries with a subset of data, then later querying additional
+            // data for a given URL. E.g. even if the first query results in only the requested
+            // column being cached, the subsequent query should still retrieve all requested columns.
+            // (In this case the URL may be cached but without all data, we need to make sure that
+            // this state is correctly handled.)
+            URLMetadata metadata = getTestProfile().getDB().getURLMetadata();
+
+            Map<String, Map<String, Object>> results;
+            Map<String, Object> urlData;
+
+            // 1: retrieve just touch Icons for URL 1
+            results = metadata.getForURLs(mResolver,
+                    Collections.singletonList(url1),
+                    Collections.singletonList(URLMetadataTable.TOUCH_ICON_COLUMN));
+
+            mAsserter.is(results.containsKey(url1), true, "URL 1 not found in results");
+
+            urlData = results.get(url1);
+            mAsserter.is(urlData.containsKey(URLMetadataTable.TOUCH_ICON_COLUMN), true, "touchIcon column missing in UrlMetadata results");
+
+            // 2: retrieve just tile color for URL 2
+            results = metadata.getForURLs(mResolver,
+                    Collections.singletonList(url2),
+                    Collections.singletonList(URLMetadataTable.TILE_COLOR_COLUMN));
+
+            mAsserter.is(results.containsKey(url2), true, "URL 2 not found in results");
+
+            urlData = results.get(url2);
+            mAsserter.is(urlData.containsKey(URLMetadataTable.TILE_COLOR_COLUMN), true, "touchIcon column missing in UrlMetadata results");
+
+
+            // 3: retrieve all columns for both URLs
+            final List<String> urls = Arrays.asList(url1, url2);
+
+            results = metadata.getForURLs(mResolver,
+                    urls,
+                    Arrays.asList(URLMetadataTable.TILE_IMAGE_URL_COLUMN,
+                            URLMetadataTable.TILE_COLOR_COLUMN,
+                            URLMetadataTable.TOUCH_ICON_COLUMN
+                    ));
+
+            mAsserter.is(results.containsKey(url1), true, "URL 1 not found in results");
+            mAsserter.is(results.containsKey(url2), true, "URL 2 not found in results");
+
+
+            for (final String url : urls) {
+                urlData = results.get(url);
+                mAsserter.is(urlData.containsKey(URLMetadataTable.TILE_IMAGE_URL_COLUMN), true, "touchIcon column missing in UrlMetadata results");
+                mAsserter.is(urlData.containsKey(URLMetadataTable.TILE_COLOR_COLUMN), true, "touchIcon column missing in UrlMetadata results");
+                mAsserter.is(urlData.containsKey(URLMetadataTable.TOUCH_ICON_COLUMN), true, "touchIcon column missing in UrlMetadata results");
+            }
         }
     }
 

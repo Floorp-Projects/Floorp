@@ -107,14 +107,6 @@ function run_test() {
 
 add_task(function* asyncSetup() {
   yield TelemetryController.testSetup();
-
-  gClientID = yield ClientID.getClientID();
-
-  // We should have cached the client id now. Lets confirm that by
-  // checking the client id before the async ping setup is finished.
-  let promisePingSetup = TelemetryController.testReset();
-  do_check_eq(TelemetryController.clientID, gClientID);
-  yield promisePingSetup;
 });
 
 // Ensure that not overwriting an existing file fails silently
@@ -128,6 +120,10 @@ add_task(function* test_overwritePing() {
 // Checks that a sent ping is correctly received by a dummy http server.
 add_task(function* test_simplePing() {
   PingServer.start();
+  // Update the Telemetry Server preference with the address of the local server.
+  // Otherwise we might end up sending stuff to a non-existing server after
+  // |TelemetryController.testReset| is called.
+  Preferences.set(TelemetryController.Constants.PREF_SERVER, "http://localhost:" + PingServer.port);
 
   yield sendPing(false, false);
   let request = yield PingServer.promiseNextRequest();
@@ -150,8 +146,6 @@ add_task(function* test_disableDataUpload() {
     // be generated.
     return;
   }
-
-  const PREF_TELEMETRY_SERVER = "toolkit.telemetry.server";
 
   // Disable FHR upload: this should trigger a deletion ping.
   Preferences.set(PREF_FHR_UPLOAD_ENABLED, false);
@@ -190,25 +184,83 @@ add_task(function* test_disableDataUpload() {
   PingServer.start();
   // We set the new server using the pref, otherwise it would get reset with
   // |TelemetryController.testReset|.
-  Preferences.set(PREF_TELEMETRY_SERVER, "http://localhost:" + PingServer.port);
+  Preferences.set(TelemetryController.Constants.PREF_SERVER, "http://localhost:" + PingServer.port);
 
   // Reset the controller to spin the ping sending task.
   yield TelemetryController.testReset();
   ping = yield PingServer.promiseNextPing();
   checkPingFormat(ping, DELETION_PING_TYPE, true, false);
 
+  // Wait on ping activity to settle before moving on to the next test. If we were
+  // to shut down telemetry, even though the PingServer caught the expected pings,
+  // TelemetrySend could still be processing them (clearing pings would happen in
+  // a couple of ticks). Shutting down would cancel the request and save them as
+  // pending pings.
+  yield TelemetrySend.testWaitOnOutgoingPings();
   // Restore FHR Upload.
   Preferences.set(PREF_FHR_UPLOAD_ENABLED, true);
 });
 
 add_task(function* test_pingHasClientId() {
-  // Send a ping with a clientId.
+  const PREF_CACHED_CLIENTID = "toolkit.telemetry.cachedClientID";
+
+  // Make sure we have no cached client ID for this test: we'll try to send
+  // a ping with it while Telemetry is being initialized.
+  Preferences.reset(PREF_CACHED_CLIENTID);
+  yield TelemetryController.testShutdown();
+  yield ClientID._reset();
+  yield TelemetryStorage.testClearPendingPings();
+  // And also clear the counter histogram since we're here.
+  let h = Telemetry.getHistogramById("TELEMETRY_PING_SUBMISSION_WAITING_CLIENTID");
+  h.clear();
+
+  // Init telemetry and try to send a ping with a client ID.
+  let promisePingSetup = TelemetryController.testReset();
   yield sendPing(true, false);
+  Assert.equal(h.snapshot().sum, 1,
+               "We must have a ping waiting for the clientId early during startup.");
+  // Wait until we are fully initialized. Pings will be assembled but won't get
+  // sent before then.
+  yield promisePingSetup;
 
   let ping = yield PingServer.promiseNextPing();
-  checkPingFormat(ping, TEST_PING_TYPE, true, false);
+  // Fetch the client ID after initializing and fetching the the ping, so we
+  // don't unintentionally trigger its loading. We'll still need the client ID
+  // to see if the ping looks sane.
+  gClientID = yield ClientID.getClientID();
 
+  checkPingFormat(ping, TEST_PING_TYPE, true, false);
   Assert.equal(ping.clientId, gClientID, "The correct clientId must be reported.");
+
+  // Shutdown Telemetry so we can safely restart it.
+  yield TelemetryController.testShutdown();
+  yield TelemetryStorage.testClearPendingPings();
+
+  // We should have cached the client ID now. Lets confirm that by checking it before
+  // the async ping setup is finished.
+  h.clear();
+  promisePingSetup = TelemetryController.testReset();
+  yield sendPing(true, false);
+  yield promisePingSetup;
+
+  // Check that we received the cached client id.
+  Assert.equal(h.snapshot().sum, 0, "We must have used the cached clientId.");
+  ping = yield PingServer.promiseNextPing();
+  checkPingFormat(ping, TEST_PING_TYPE, true, false);
+  Assert.equal(ping.clientId, gClientID,
+               "Telemetry should report the correct cached clientId.");
+
+  // Check that sending a ping without relying on the cache, after the
+  // initialization, still works.
+  Preferences.reset(PREF_CACHED_CLIENTID);
+  yield TelemetryController.testShutdown();
+  yield TelemetryStorage.testClearPendingPings();
+  yield TelemetryController.testReset();
+  yield sendPing(true, false);
+  ping = yield PingServer.promiseNextPing();
+  checkPingFormat(ping, TEST_PING_TYPE, true, false);
+  Assert.equal(ping.clientId, gClientID, "The correct clientId must be reported.");
+  Assert.equal(h.snapshot().sum, 0, "No ping should have been waiting for a clientId.");
 });
 
 add_task(function* test_pingHasEnvironment() {

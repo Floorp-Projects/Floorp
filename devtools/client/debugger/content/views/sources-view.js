@@ -1087,10 +1087,6 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
   },
 
   renderSourceSelected: function (source) {
-    // Set window title. No need to split the url by " -> " here,
-    // because it was already sanitized when the source was added.
-    document.title = L10N.getFormatStr("DebuggerWindowScriptTitle", source.url);
-
     if (source.url) {
       this._preferredSourceURL = source.url;
     }

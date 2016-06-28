@@ -153,7 +153,7 @@ var gSecurityPane = {
     let blockDownloads = document.getElementById("blockDownloads");
     let blockUncommonUnwanted = document.getElementById("blockUncommonUnwanted");
 
-    let safeBrowsingPhishingPref = document.getElementById("browser.safebrowsing.enabled");
+    let safeBrowsingPhishingPref = document.getElementById("browser.safebrowsing.phishing.enabled");
     let safeBrowsingMalwarePref = document.getElementById("browser.safebrowsing.malware.enabled");
 
     let blockDownloadsPref = document.getElementById("browser.safebrowsing.downloads.enabled");
