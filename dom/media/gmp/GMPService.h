@@ -97,12 +97,6 @@ public:
   NS_IMETHOD RunPluginCrashCallbacks(uint32_t aPluginId,
                                      const nsACString& aPluginName) override;
 
-  // Sets the window to which 'PluginCrashed' chromeonly event is dispatched.
-  // Note: if the plugin has crashed before the target window has been set,
-  // the 'PluginCrashed' event is dispatched as soon as a target window is set.
-  void AddPluginCrashedEventTarget(const uint32_t aPluginId,
-                                   nsPIDOMWindowInner* aParentWindow);
-
   RefPtr<AbstractThread> GetAbstractGMPThread();
 
   void ConnectCrashHelper(uint32_t aPluginId, GMPCrashHelper* aHelper);
@@ -111,8 +105,6 @@ public:
 protected:
   GeckoMediaPluginService();
   virtual ~GeckoMediaPluginService();
-
-  void RemoveObsoletePluginCrashCallbacks(); // Called from add/run.
 
   virtual void InitializePlugins(AbstractThread* aAbstractGMPThread) = 0;
   virtual bool GetContentParentFrom(GMPCrashHelper* aHelper,
@@ -131,49 +123,6 @@ protected:
   RefPtr<AbstractThread> mAbstractGMPThread;
   bool mGMPThreadShutdown;
   bool mShuttingDownOnGMPThread;
-
-  class GMPCrashCallback
-  {
-  public:
-    NS_INLINE_DECL_REFCOUNTING(GMPCrashCallback)
-
-    GMPCrashCallback(const uint32_t aPluginId,
-                     nsPIDOMWindowInner* aParentWindow,
-                     nsIDocument* aDocument);
-    void Run(const nsACString& aPluginName);
-    bool IsStillValid();
-    uint32_t GetPluginId() const { return mPluginId; }
-  private:
-    virtual ~GMPCrashCallback() { MOZ_ASSERT(NS_IsMainThread()); }
-
-    bool GetParentWindowAndDocumentIfValid(nsCOMPtr<nsPIDOMWindowInner>& parentWindow,
-                                           nsCOMPtr<nsIDocument>& document);
-    const uint32_t mPluginId;
-    nsWeakPtr mParentWindowWeakPtr;
-    nsWeakPtr mDocumentWeakPtr;
-  };
-
-  struct PluginCrash
-  {
-    PluginCrash(uint32_t aPluginId,
-                const nsACString& aPluginName)
-      : mPluginId(aPluginId)
-      , mPluginName(aPluginName)
-    {
-    }
-    uint32_t mPluginId;
-    nsCString mPluginName;
-
-    bool operator==(const PluginCrash& aOther) const {
-      return mPluginId == aOther.mPluginId &&
-             mPluginName == aOther.mPluginName;
-    }
-  };
-
-  static const size_t MAX_PLUGIN_CRASHES = 100;
-  nsTArray<PluginCrash> mPluginCrashes;
-
-  nsTArray<RefPtr<GMPCrashCallback>> mPluginCrashCallbacks;
 
   nsClassHashtable<nsUint32HashKey, nsTArray<RefPtr<GMPCrashHelper>>> mPluginCrashHelpers;
 };

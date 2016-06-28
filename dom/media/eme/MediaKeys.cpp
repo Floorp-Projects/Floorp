@@ -411,21 +411,6 @@ MediaKeys::OnCDMCreated(PromiseId aId, const nsACString& aNodeId, const uint32_t
   MediaKeySystemAccess::NotifyObservers(mParent,
                                         mKeySystem,
                                         MediaKeySystemStatus::Cdm_created);
-
-  if (aPluginId) {
-    // Prepare plugin crash reporter.
-    RefPtr<gmp::GeckoMediaPluginService> service =
-      gmp::GeckoMediaPluginService::GetGeckoMediaPluginService();
-    if (NS_WARN_IF(!service)) {
-      return;
-    }
-    if (NS_WARN_IF(!mParent)) {
-      return;
-    }
-    service->AddPluginCrashedEventTarget(aPluginId, mParent);
-    EME_LOG("MediaKeys[%p]::OnCDMCreated() registered crash handler for pluginId '%i'",
-            this, aPluginId);
-  }
 }
 
 already_AddRefed<MediaKeySession>
