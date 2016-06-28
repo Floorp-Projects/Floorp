@@ -123,7 +123,7 @@ AccurateSeekTask::EnsureAudioDecodeTaskQueued()
     return;
   }
 
-  RequestAudioData();
+  mReader->RequestAudioData();
 }
 
 void
@@ -139,7 +139,7 @@ AccurateSeekTask::EnsureVideoDecodeTaskQueued()
     return;
   }
 
-  RequestVideoData();
+  mReader->RequestVideoData(false, media::TimeUnit());
 }
 
 const char*
@@ -168,27 +168,6 @@ AccurateSeekTask::VideoRequestStatus()
     return "waiting";
   }
   return "idle";
-}
-
-void
-AccurateSeekTask::RequestAudioData()
-{
-  AssertOwnerThread();
-  SAMPLE_LOG("Queueing audio task - queued=%i, decoder-queued=%o",
-             !!mSeekedAudioData, mReader->SizeOfAudioQueueInFrames());
-
-  mReader->RequestAudioData();
-}
-
-void
-AccurateSeekTask::RequestVideoData()
-{
-  AssertOwnerThread();
-  SAMPLE_LOG("Queueing video task - queued=%i, decoder-queued=%o, skip=%i, time=%lld",
-               !!mSeekedVideoData, mReader->SizeOfVideoQueueInFrames(), false,
-               media::TimeUnit().ToMicroseconds());
-
-  mReader->RequestVideoData(false, media::TimeUnit());
 }
 
 nsresult

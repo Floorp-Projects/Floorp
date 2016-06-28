@@ -41,10 +41,6 @@ private:
 
   const char* VideoRequestStatus();
 
-  void RequestVideoData();
-
-  void RequestAudioData();
-
   nsresult DropAudioUpToSeekTarget(MediaData* aSample);
 
   nsresult DropVideoUpToSeekTarget(MediaData* aSample);
