@@ -48,7 +48,7 @@
     "gecko_l10n_root": "https://hg.mozilla.org/l10n-central",
     "gaia": {
         "l10n": {
-            "vcs": "hgtool",
+            "vcs": "hg",
             "root": "https://hg.mozilla.org/gaia-l10n"
         }
     }

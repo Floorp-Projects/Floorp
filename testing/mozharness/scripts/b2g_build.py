@@ -438,7 +438,7 @@ class B2GBuild(LocalesMixin, PurgeMixin,
         repo = self.config['compare_locales_repo']
         rev = self.config['compare_locales_rev']
         vcs = self.config['compare_locales_vcs']
-        abs_rev = self.vcs_checkout(repo=repo, dest=dest, revision=rev, vcs=vcs)
+        abs_rev = self.vcs_checkout(repo=repo, dest=dest, branch=rev, vcs=vcs)
         self.set_buildbot_property('compare_locales_revision', abs_rev, write_to_file=True)
 
     def query_do_translate_hg_to_git(self, gecko_config_key=None):
