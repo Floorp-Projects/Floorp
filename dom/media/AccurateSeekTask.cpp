@@ -45,10 +45,8 @@ AccurateSeekTask::AccurateSeekTask(const void* aDecoderID,
   : SeekTask(aDecoderID, aThread, aReader, Move(aSeekJob))
   , mCurrentTimeBeforeSeek(aCurrentMediaTime)
   , mAudioRate(aInfo.mAudio.mRate)
-  , mHasAudio(aInfo.HasAudio())
-  , mHasVideo(aInfo.HasVideo())
-  , mDropAudioUntilNextDiscontinuity(false)
-  , mDropVideoUntilNextDiscontinuity(false)
+  , mDropAudioUntilNextDiscontinuity(aInfo.HasAudio())
+  , mDropVideoUntilNextDiscontinuity(aInfo.HasVideo())
   , mDoneAudioSeeking(!aInfo.HasAudio() || aSeekJob.mTarget.IsVideoOnly())
   , mDoneVideoSeeking(!aInfo.HasVideo())
 {
@@ -64,9 +62,6 @@ AccurateSeekTask::AccurateSeekTask(const void* aDecoderID,
                "Can only seek in range [0,duration]");
   mSeekJob.mTarget.SetTime(media::TimeUnit::FromMicroseconds(seekTime));
 
-  mDropAudioUntilNextDiscontinuity = HasAudio();
-  mDropVideoUntilNextDiscontinuity = HasVideo();
-
   // Configure MediaDecoderReaderWrapper.
   SetCallbacks();
 }
@@ -75,20 +70,6 @@ AccurateSeekTask::~AccurateSeekTask()
 {
   AssertOwnerThread();
   MOZ_ASSERT(mIsDiscarded);
-}
-
-bool
-AccurateSeekTask::HasAudio() const
-{
-  AssertOwnerThread();
-  return mHasAudio;
-}
-
-bool
-AccurateSeekTask::HasVideo() const
-{
-  AssertOwnerThread();
-  return mHasVideo;
 }
 
 void
@@ -127,20 +108,6 @@ AccurateSeekTask::Seek(const media::TimeUnit& aDuration)
            &AccurateSeekTask::OnSeekResolved, &AccurateSeekTask::OnSeekRejected));
 
   return mSeekTaskPromise.Ensure(__func__);
-}
-
-bool
-AccurateSeekTask::IsVideoDecoding() const
-{
-  AssertOwnerThread();
-  return HasVideo() && !mIsVideoQueueFinished;
-}
-
-bool
-AccurateSeekTask::IsAudioDecoding() const
-{
-  AssertOwnerThread();
-  return HasAudio() && !mIsAudioQueueFinished;
 }
 
 nsresult
@@ -345,32 +312,6 @@ AccurateSeekTask::DropVideoUpToSeekTarget(MediaData* aSample)
   }
 
   return NS_OK;
-}
-
-bool
-AccurateSeekTask::IsAudioSeekComplete()
-{
-  AssertOwnerThread();
-  SAMPLE_LOG("IsAudioSeekComplete() curTarVal=%d mAudDis=%d aqFin=%d aqSz=%d",
-      mSeekJob.Exists(), mDropAudioUntilNextDiscontinuity, mIsAudioQueueFinished, !!mSeekedAudioData);
-  return
-    !HasAudio() ||
-    mSeekJob.mTarget.IsVideoOnly() ||
-    (!mDropAudioUntilNextDiscontinuity &&
-     (mIsAudioQueueFinished || mSeekedAudioData));
-}
-
-bool
-AccurateSeekTask::IsVideoSeekComplete()
-{
-  AssertOwnerThread();
-  SAMPLE_LOG("IsVideoSeekComplete() curTarVal=%d mVidDis=%d vqFin=%d vqSz=%d",
-      mSeekJob.Exists(), mDropVideoUntilNextDiscontinuity, mIsVideoQueueFinished, !!mSeekedVideoData);
-
-  return
-    !HasVideo() ||
-    (!mDropVideoUntilNextDiscontinuity &&
-     (mIsVideoQueueFinished || mSeekedVideoData));
 }
 
 void
