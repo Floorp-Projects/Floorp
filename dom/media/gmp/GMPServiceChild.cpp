@@ -50,10 +50,11 @@ GeckoMediaPluginServiceChild::GetSingleton()
 class GetContentParentFromDone : public GetServiceChildCallback
 {
 public:
-  GetContentParentFromDone(const nsACString& aNodeId, const nsCString& aAPI,
+  GetContentParentFromDone(GMPCrashHelper* aHelper, const nsACString& aNodeId, const nsCString& aAPI,
                            const nsTArray<nsCString>& aTags,
                            UniquePtr<GetGMPContentParentCallback>&& aCallback)
-    : mNodeId(aNodeId),
+    : mHelper(aHelper),
+      mNodeId(aNodeId),
       mAPI(aAPI),
       mTags(aTags),
       mCallback(Move(aCallback))
@@ -73,6 +74,11 @@ public:
     if (!ok || rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN) {
       mCallback->Done(nullptr);
       return;
+    }
+
+    if (mHelper) {
+      RefPtr<GeckoMediaPluginService> gmps(GeckoMediaPluginService::GetGeckoMediaPluginService());
+      gmps->ConnectCrashHelper(pluginId, mHelper);
     }
 
     nsTArray<base::ProcessId> alreadyBridgedTo;
@@ -99,6 +105,7 @@ public:
   }
 
 private:
+  RefPtr<GMPCrashHelper> mHelper;
   nsCString mNodeId;
   nsCString mAPI;
   const nsTArray<nsCString> mTags;
@@ -106,7 +113,8 @@ private:
 };
 
 bool
-GeckoMediaPluginServiceChild::GetContentParentFrom(const nsACString& aNodeId,
+GeckoMediaPluginServiceChild::GetContentParentFrom(GMPCrashHelper* aHelper,
+                                                   const nsACString& aNodeId,
                                                    const nsCString& aAPI,
                                                    const nsTArray<nsCString>& aTags,
                                                    UniquePtr<GetGMPContentParentCallback>&& aCallback)
@@ -114,7 +122,7 @@ GeckoMediaPluginServiceChild::GetContentParentFrom(const nsACString& aNodeId,
   MOZ_ASSERT(NS_GetCurrentThread() == mGMPThread);
 
   UniquePtr<GetServiceChildCallback> callback(
-    new GetContentParentFromDone(aNodeId, aAPI, aTags, Move(aCallback)));
+    new GetContentParentFromDone(aHelper, aNodeId, aAPI, aTags, Move(aCallback)));
   GetServiceChild(Move(callback));
 
   return true;

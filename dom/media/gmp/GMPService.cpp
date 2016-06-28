@@ -276,20 +276,42 @@ GeckoMediaPluginService::RunPluginCrashCallbacks(uint32_t aPluginId,
 {
   MOZ_ASSERT(NS_IsMainThread());
   LOGD(("%s::%s(%i)", __CLASS__, __FUNCTION__, aPluginId));
-  RemoveObsoletePluginCrashCallbacks();
 
-  for (size_t i = mPluginCrashCallbacks.Length(); i != 0; --i) {
-    RefPtr<GMPCrashCallback>& callback = mPluginCrashCallbacks[i - 1];
-    if (callback->GetPluginId() == aPluginId) {
-      LOGD(("%s::%s(%i) - Running #%u",
-          __CLASS__, __FUNCTION__, aPluginId, i - 1));
-      callback->Run(aPluginName);
-      mPluginCrashCallbacks.RemoveElementAt(i - 1);
-    }
+  nsAutoPtr<nsTArray<RefPtr<GMPCrashHelper>>> helpers;
+  {
+    MutexAutoLock lock(mMutex);
+    mPluginCrashHelpers.RemoveAndForget(aPluginId, helpers);
   }
-  mPluginCrashes.AppendElement(PluginCrash(aPluginId, aPluginName));
-  if (mPluginCrashes.Length() > MAX_PLUGIN_CRASHES) {
-    mPluginCrashes.RemoveElementAt(0);
+  if (!helpers) {
+    LOGD(("%s::%s(%i) No crash helpers, not handling crash.", __CLASS__, __FUNCTION__, aPluginId));
+    return NS_OK;
+  }
+
+  for (const auto& helper : *helpers) {
+    nsCOMPtr<nsPIDOMWindowInner> window = helper->GetPluginCrashedEventTarget();
+    if (NS_WARN_IF(!window)) {
+      continue;
+    }
+    nsCOMPtr<nsIDocument> document(window->GetExtantDoc());
+    if (NS_WARN_IF(!document)) {
+      continue;
+    }
+
+    dom::PluginCrashedEventInit init;
+    init.mPluginID = aPluginId;
+    init.mBubbles = true;
+    init.mCancelable = true;
+    init.mGmpPlugin = true;
+    CopyUTF8toUTF16(aPluginName, init.mPluginName);
+    init.mSubmittedCrashReport = false;
+    RefPtr<dom::PluginCrashedEvent> event =
+      dom::PluginCrashedEvent::Constructor(document,
+                                           NS_LITERAL_STRING("PluginCrashed"),
+                                           init);
+    event->SetTrusted(true);
+    event->WidgetEventPtr()->mFlags.mOnlyChromeDispatch = true;
+
+    EventDispatcher::DispatchDOMEvent(window, nullptr, event, nullptr, nullptr);
   }
 
   return NS_OK;
@@ -408,7 +430,8 @@ private:
 };
 
 NS_IMETHODIMP
-GeckoMediaPluginService::GetGMPAudioDecoder(nsTArray<nsCString>* aTags,
+GeckoMediaPluginService::GetGMPAudioDecoder(GMPCrashHelper* aHelper,
+                                            nsTArray<nsCString>* aTags,
                                             const nsACString& aNodeId,
                                             UniquePtr<GetGMPAudioDecoderCallback>&& aCallback)
 {
@@ -422,8 +445,11 @@ GeckoMediaPluginService::GetGMPAudioDecoder(nsTArray<nsCString>* aTags,
 
   UniquePtr<GetGMPContentParentCallback> callback(
     new GetGMPContentParentForAudioDecoderDone(Move(aCallback)));
-  if (!GetContentParentFrom(aNodeId, NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER),
-                            *aTags, Move(callback))) {
+  if (!GetContentParentFrom(aHelper,
+                            aNodeId,
+                            NS_LITERAL_CSTRING(GMP_API_AUDIO_DECODER),
+                            *aTags,
+                            Move(callback))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -453,7 +479,8 @@ private:
 };
 
 NS_IMETHODIMP
-GeckoMediaPluginService::GetGMPVideoDecoder(nsTArray<nsCString>* aTags,
+GeckoMediaPluginService::GetGMPVideoDecoder(GMPCrashHelper* aHelper,
+                                            nsTArray<nsCString>* aTags,
                                             const nsACString& aNodeId,
                                             UniquePtr<GetGMPVideoDecoderCallback>&& aCallback)
 {
@@ -467,8 +494,11 @@ GeckoMediaPluginService::GetGMPVideoDecoder(nsTArray<nsCString>* aTags,
 
   UniquePtr<GetGMPContentParentCallback> callback(
     new GetGMPContentParentForVideoDecoderDone(Move(aCallback)));
-  if (!GetContentParentFrom(aNodeId, NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
-                            *aTags, Move(callback))) {
+  if (!GetContentParentFrom(aHelper,
+                            aNodeId,
+                            NS_LITERAL_CSTRING(GMP_API_VIDEO_DECODER),
+                            *aTags,
+                            Move(callback))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -498,7 +528,8 @@ private:
 };
 
 NS_IMETHODIMP
-GeckoMediaPluginService::GetGMPVideoEncoder(nsTArray<nsCString>* aTags,
+GeckoMediaPluginService::GetGMPVideoEncoder(GMPCrashHelper* aHelper,
+                                            nsTArray<nsCString>* aTags,
                                             const nsACString& aNodeId,
                                             UniquePtr<GetGMPVideoEncoderCallback>&& aCallback)
 {
@@ -512,8 +543,11 @@ GeckoMediaPluginService::GetGMPVideoEncoder(nsTArray<nsCString>* aTags,
 
   UniquePtr<GetGMPContentParentCallback> callback(
     new GetGMPContentParentForVideoEncoderDone(Move(aCallback)));
-  if (!GetContentParentFrom(aNodeId, NS_LITERAL_CSTRING(GMP_API_VIDEO_ENCODER),
-                            *aTags, Move(callback))) {
+  if (!GetContentParentFrom(aHelper,
+                            aNodeId,
+                            NS_LITERAL_CSTRING(GMP_API_VIDEO_ENCODER),
+                            *aTags,
+                            Move(callback))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -542,7 +576,8 @@ private:
 };
 
 NS_IMETHODIMP
-GeckoMediaPluginService::GetGMPDecryptor(nsTArray<nsCString>* aTags,
+GeckoMediaPluginService::GetGMPDecryptor(GMPCrashHelper* aHelper,
+                                         nsTArray<nsCString>* aTags,
                                          const nsACString& aNodeId,
                                          UniquePtr<GetGMPDecryptorCallback>&& aCallback)
 {
@@ -564,8 +599,11 @@ GeckoMediaPluginService::GetGMPDecryptor(nsTArray<nsCString>* aTags,
 
   UniquePtr<GetGMPContentParentCallback> callback(
     new GetGMPContentParentForDecryptorDone(Move(aCallback)));
-  if (!GetContentParentFrom(aNodeId, NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
-                            *aTags, Move(callback))) {
+  if (!GetContentParentFrom(aHelper,
+                            aNodeId,
+                            NS_LITERAL_CSTRING(GMP_API_DECRYPTOR),
+                            *aTags,
+                            Move(callback))) {
     return NS_ERROR_FAILURE;
   }
 
@@ -579,6 +617,42 @@ GeckoMediaPluginService::HasPluginForAPI(const nsACString& aAPI,
 {
   nsCString unused;
   return GetPluginVersionForAPI(aAPI, aTags, aOutHavePlugin, unused);
+}
+
+void
+GeckoMediaPluginService::ConnectCrashHelper(uint32_t aPluginId, GMPCrashHelper* aHelper)
+{
+  if (!aHelper) {
+    return;
+  }
+  MutexAutoLock lock(mMutex);
+  nsTArray<RefPtr<GMPCrashHelper>>* helpers;
+  if (!mPluginCrashHelpers.Get(aPluginId, &helpers)) {
+    helpers = new nsTArray<RefPtr<GMPCrashHelper>>();
+    mPluginCrashHelpers.Put(aPluginId, helpers);
+  } else if (helpers->Contains(aHelper)) {
+    return;
+  }
+  helpers->AppendElement(aHelper);
+}
+
+void GeckoMediaPluginService::DisconnectCrashHelper(GMPCrashHelper* aHelper)
+{
+  if (!aHelper) {
+    return;
+  }
+  MutexAutoLock lock(mMutex);
+  for (auto iter = mPluginCrashHelpers.Iter(); !iter.Done(); iter.Next()) {
+    nsTArray<RefPtr<GMPCrashHelper>>* helpers = iter.Data();
+    if (!helpers->Contains(aHelper)) {
+      continue;
+    }
+    helpers->RemoveElement(aHelper);
+    MOZ_ASSERT(!helpers->Contains(aHelper)); // Ensure there aren't duplicates.
+    if (helpers->IsEmpty()) {
+      iter.Remove();
+    }
+  }
 }
 
 } // namespace gmp

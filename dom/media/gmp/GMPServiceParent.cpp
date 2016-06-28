@@ -525,7 +525,8 @@ GeckoMediaPluginServiceParent::EnsureInitialized() {
 }
 
 bool
-GeckoMediaPluginServiceParent::GetContentParentFrom(const nsACString& aNodeId,
+GeckoMediaPluginServiceParent::GetContentParentFrom(GMPCrashHelper* aHelper,
+                                                    const nsACString& aNodeId,
                                                     const nsCString& aAPI,
                                                     const nsTArray<nsCString>& aTags,
                                                     UniquePtr<GetGMPContentParentCallback>&& aCallback)
@@ -540,8 +541,9 @@ GeckoMediaPluginServiceParent::GetContentParentFrom(const nsACString& aNodeId,
   nsTArray<nsCString> tags(aTags);
   nsCString api(aAPI);
   GetGMPContentParentCallback* rawCallback = aCallback.release();
+  RefPtr<GMPCrashHelper> helper(aHelper);
   EnsureInitialized()->Then(thread, __func__,
-    [self, tags, api, nodeId, rawCallback]() -> void {
+    [self, tags, api, nodeId, rawCallback, helper]() -> void {
       UniquePtr<GetGMPContentParentCallback> callback(rawCallback);
       RefPtr<GMPParent> gmp = self->SelectPluginForAPI(nodeId, api, tags);
       LOGD(("%s: %p returning %p for api %s", __FUNCTION__, (void *)self, (void *)gmp, api.get()));
@@ -550,6 +552,7 @@ GeckoMediaPluginServiceParent::GetContentParentFrom(const nsACString& aNodeId,
         callback->Done(nullptr);
         return;
       }
+      self->ConnectCrashHelper(gmp->GetPluginId(), helper);
       gmp->GetGMPContentParent(Move(callback));
     },
     [rawCallback]() -> void {
