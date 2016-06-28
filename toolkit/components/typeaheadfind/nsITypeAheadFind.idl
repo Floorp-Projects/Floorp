@@ -18,7 +18,7 @@ interface nsIDocShell;
 
 /****************************** nsTypeAheadFind ******************************/
 
-[scriptable, uuid(c8ca2c38-7030-4453-ae63-a16eeb10e096)]
+[scriptable, uuid(ae501e28-c57f-4692-ac74-410e1bed98b7)]
 interface nsITypeAheadFind : nsISupports
 {
   /****************************** Initializer ******************************/
@@ -65,6 +65,7 @@ interface nsITypeAheadFind : nsISupports
   readonly attribute AString searchString;
                                         // Most recent search string
   attribute boolean caseSensitive;      // Searches are case sensitive
+  attribute boolean entireWord;         // Search for whole words only
   readonly attribute nsIDOMElement foundLink;
                                         // Most recent elem found, if a link
   readonly attribute nsIDOMElement foundEditable;
