@@ -20,6 +20,7 @@ class DeclEnvObject;
 class StaticWithScope;
 class InlineTypedObject;
 class GeneratorObject;
+class TypedArrayObject;
 
 namespace jit {
 
@@ -281,6 +282,7 @@ template <> struct TypeToDataType<PlainObject*> { static const DataType result =
 template <> struct TypeToDataType<InlineTypedObject*> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<DeclEnvObject*> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<ArrayObject*> { static const DataType result = Type_Object; };
+template <> struct TypeToDataType<TypedArrayObject*> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<JSString*> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<JSFlatString*> { static const DataType result = Type_Object; };
 template <> struct TypeToDataType<HandleObject> { static const DataType result = Type_Handle; };
