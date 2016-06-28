@@ -388,12 +388,13 @@ AccurateSeekTask::OnAudioDecoded(MediaData* aAudioSample)
 }
 
 void
-AccurateSeekTask::OnAudioNotDecoded(MediaDecoderReader::NotDecodedReason aReason)
+AccurateSeekTask::OnNotDecoded(MediaData::Type aType,
+                               MediaDecoderReader::NotDecodedReason aReason)
 {
   AssertOwnerThread();
   MOZ_ASSERT(!mSeekTaskPromise.IsEmpty(), "Seek shouldn't be finished");
 
-  SAMPLE_LOG("OnAduioNotDecoded (aReason=%u)", aReason);
+  SAMPLE_LOG("OnNotDecoded type=%d reason=%u", aType, aReason);
 
   if (aReason == MediaDecoderReader::DECODE_ERROR) {
     // If this is a decode error, delegate to the generic error path.
@@ -404,18 +405,32 @@ AccurateSeekTask::OnAudioNotDecoded(MediaDecoderReader::NotDecodedReason aReason
   // If the decoder is waiting for data, we tell it to call us back when the
   // data arrives.
   if (aReason == MediaDecoderReader::WAITING_FOR_DATA) {
-    mReader->WaitForData(MediaData::AUDIO_DATA);
+    mReader->WaitForData(aType);
     return;
   }
 
   if (aReason == MediaDecoderReader::CANCELED) {
-    EnsureAudioDecodeTaskQueued();
+    if (aType == MediaData::AUDIO_DATA) {
+      EnsureAudioDecodeTaskQueued();
+    } else {
+      EnsureVideoDecodeTaskQueued();
+    }
     return;
   }
 
   if (aReason == MediaDecoderReader::END_OF_STREAM) {
-    mIsAudioQueueFinished = true;
-    mDoneAudioSeeking = true;
+    if (aType == MediaData::AUDIO_DATA) {
+      mIsAudioQueueFinished = true;
+      mDoneAudioSeeking = true;
+    } else {
+      mIsVideoQueueFinished = true;
+      mDoneVideoSeeking = true;
+      if (mFirstVideoFrameAfterSeek) {
+        // Hit the end of stream. Move mFirstVideoFrameAfterSeek into
+        // mSeekedVideoData so we have something to display after seeking.
+        mSeekedVideoData = mFirstVideoFrameAfterSeek.forget();
+      }
+    }
     CheckIfSeekComplete();
   }
 }
@@ -472,48 +487,6 @@ AccurateSeekTask::OnVideoDecoded(MediaData* aVideoSample)
 }
 
 void
-AccurateSeekTask::OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReason)
-{
-  AssertOwnerThread();
-  MOZ_ASSERT(!mSeekTaskPromise.IsEmpty(), "Seek shouldn't be finished");
-
-  SAMPLE_LOG("OnVideoNotDecoded (aReason=%u)", aReason);
-
-  if (aReason == MediaDecoderReader::DECODE_ERROR) {
-    // If this is a decode error, delegate to the generic error path.
-    RejectIfExist(__func__);
-    return;
-  }
-
-  // If the decoder is waiting for data, we tell it to call us back when the
-  // data arrives.
-  if (aReason == MediaDecoderReader::WAITING_FOR_DATA) {
-    mReader->WaitForData(MediaData::VIDEO_DATA);
-    return;
-  }
-
-  if (aReason == MediaDecoderReader::CANCELED) {
-    EnsureVideoDecodeTaskQueued();
-    return;
-  }
-
-  if (aReason == MediaDecoderReader::END_OF_STREAM) {
-    if (mFirstVideoFrameAfterSeek) {
-      // Null sample. Hit end of stream. If we have decoded a frame,
-      // insert it into the queue so that we have something to display.
-      // We make sure to do this before invoking VideoQueue().Finish()
-      // below.
-      mSeekedVideoData = mFirstVideoFrameAfterSeek;
-      mFirstVideoFrameAfterSeek = nullptr;
-    }
-
-    mIsVideoQueueFinished = true;
-    mDoneVideoSeeking = true;
-    CheckIfSeekComplete();
-  }
-}
-
-void
 AccurateSeekTask::SetCallbacks()
 {
   AssertOwnerThread();
@@ -523,7 +496,8 @@ AccurateSeekTask::SetCallbacks()
     if (aData.is<MediaData*>()) {
       OnAudioDecoded(aData.as<MediaData*>());
     } else {
-      OnAudioNotDecoded(aData.as<MediaDecoderReader::NotDecodedReason>());
+      OnNotDecoded(MediaData::AUDIO_DATA,
+        aData.as<MediaDecoderReader::NotDecodedReason>());
     }
   });
 
@@ -533,7 +507,8 @@ AccurateSeekTask::SetCallbacks()
     if (aData.is<Type>()) {
       OnVideoDecoded(Get<0>(aData.as<Type>()));
     } else {
-      OnVideoNotDecoded(aData.as<MediaDecoderReader::NotDecodedReason>());
+      OnNotDecoded(MediaData::VIDEO_DATA,
+        aData.as<MediaDecoderReader::NotDecodedReason>());
     }
   });
 
