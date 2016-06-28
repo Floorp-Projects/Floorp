@@ -67,16 +67,21 @@ public:
       return;
     }
 
+    uint32_t pluginId;
+    nsresult rv;
+    bool ok = aGMPServiceChild->SendSelectGMP(mNodeId, mAPI, mTags, &pluginId, &rv);
+    if (!ok || rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN) {
+      mCallback->Done(nullptr);
+      return;
+    }
+
     nsTArray<base::ProcessId> alreadyBridgedTo;
     aGMPServiceChild->GetAlreadyBridgedTo(alreadyBridgedTo);
 
     base::ProcessId otherProcess;
     nsCString displayName;
-    uint32_t pluginId;
-    nsresult rv;
-    bool ok = aGMPServiceChild->SendLoadGMP(mNodeId, mAPI, mTags,
-                                            alreadyBridgedTo, &otherProcess,
-                                            &displayName, &pluginId, &rv);
+    ok = aGMPServiceChild->SendLaunchGMP(pluginId, alreadyBridgedTo, &otherProcess,
+                                         &displayName, &rv);
     if (!ok || rv == NS_ERROR_ILLEGAL_DURING_SHUTDOWN) {
       mCallback->Done(nullptr);
       return;
