@@ -21,7 +21,7 @@ public:
                    MediaDecoderReaderWrapper* aReader,
                    SeekJob&& aSeekJob,
                    const MediaInfo& aInfo,
-                   const media::TimeUnit& aDuration,
+                   const media::TimeUnit& aEnd,
                    int64_t aCurrentMediaTime);
 
   void Discard() override;
@@ -66,7 +66,7 @@ private:
   /*
    * Internal state.
    */
-  const int64_t mCurrentTimeBeforeSeek;
+  const media::TimeUnit mCurrentTimeBeforeSeek;
   const uint32_t mAudioRate;  // Audio sample rate.
   bool mDropAudioUntilNextDiscontinuity;
   bool mDropVideoUntilNextDiscontinuity;

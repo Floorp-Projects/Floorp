@@ -40,10 +40,10 @@ AccurateSeekTask::AccurateSeekTask(const void* aDecoderID,
                                    MediaDecoderReaderWrapper* aReader,
                                    SeekJob&& aSeekJob,
                                    const MediaInfo& aInfo,
-                                   const media::TimeUnit& aDuration,
+                                   const media::TimeUnit& aEnd,
                                    int64_t aCurrentMediaTime)
   : SeekTask(aDecoderID, aThread, aReader, Move(aSeekJob))
-  , mCurrentTimeBeforeSeek(aCurrentMediaTime)
+  , mCurrentTimeBeforeSeek(media::TimeUnit::FromMicroseconds(aCurrentMediaTime))
   , mAudioRate(aInfo.mAudio.mRate)
   , mDropAudioUntilNextDiscontinuity(aInfo.HasAudio())
   , mDropVideoUntilNextDiscontinuity(aInfo.HasVideo())
@@ -53,14 +53,9 @@ AccurateSeekTask::AccurateSeekTask(const void* aDecoderID,
   AssertOwnerThread();
 
   // Bound the seek time to be inside the media range.
-  int64_t end = aDuration.ToMicroseconds();
-  NS_ASSERTION(end != -1, "Should know end time by now");
-  int64_t seekTime = mSeekJob.mTarget.GetTime().ToMicroseconds();
-  seekTime = std::min(seekTime, end);
-  seekTime = std::max(int64_t(0), seekTime);
-  NS_ASSERTION(seekTime >= 0 && seekTime <= end,
-               "Can only seek in range [0,duration]");
-  mSeekJob.mTarget.SetTime(media::TimeUnit::FromMicroseconds(seekTime));
+  NS_ASSERTION(aEnd.ToMicroseconds() != -1, "Should know end time by now");
+  mSeekJob.mTarget.SetTime(
+    std::max(media::TimeUnit(), std::min(mSeekJob.mTarget.GetTime(), aEnd)));
 
   // Configure MediaDecoderReaderWrapper.
   SetCallbacks();
@@ -343,8 +338,8 @@ AccurateSeekTask::AdjustFastSeekIfNeeded(MediaData* aSample)
 {
   AssertOwnerThread();
   if (mSeekJob.mTarget.IsFast() &&
-      mSeekJob.mTarget.GetTime().ToMicroseconds() > mCurrentTimeBeforeSeek &&
-      aSample->mTime < mCurrentTimeBeforeSeek) {
+      mSeekJob.mTarget.GetTime() > mCurrentTimeBeforeSeek &&
+      aSample->mTime < mCurrentTimeBeforeSeek.ToMicroseconds()) {
     // We are doing a fastSeek, but we ended up *before* the previous
     // playback position. This is surprising UX, so switch to an accurate
     // seek and decode to the seek target. This is not conformant to the
