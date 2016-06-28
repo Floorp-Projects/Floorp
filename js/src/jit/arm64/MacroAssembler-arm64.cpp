@@ -458,6 +458,12 @@ MacroAssembler::Pop(Register reg)
 }
 
 void
+MacroAssembler::Pop(FloatRegister f)
+{
+    MOZ_CRASH("NYI: Pop(FloatRegister)");
+}
+
+void
 MacroAssembler::Pop(const ValueOperand& val)
 {
     pop(val);
