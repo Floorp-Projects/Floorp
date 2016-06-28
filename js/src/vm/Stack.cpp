@@ -717,7 +717,6 @@ FrameIter::operator++()
                     popInterpreterFrame();
             }
 
-            data_.cx_ = data_.activations_->cx();
             break;
         }
         popInterpreterFrame();
@@ -742,11 +741,6 @@ FrameIter::copyData() const
     MOZ_ASSERT(data_.state_ != WASM);
     if (data && data_.jitFrames_.isIonScripted())
         data->ionInlineFrameNo_ = ionInlineFrames_.frameNo();
-    // Give the copied Data the cx of the current activation, which may be
-    // different than the cx that the current FrameIter was constructed
-    // with. This ensures that when we instantiate another FrameIter with the
-    // copied data, its cx is still alive.
-    data->cx_ = activation()->cx();
     return data;
 }
 
