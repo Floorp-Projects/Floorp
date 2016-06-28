@@ -3262,27 +3262,6 @@
     "n_buckets": 10,
     "description": "Time spent (ms) during showdown deleting disk cache v2 for 'clear private data' option"
   },
-  "NETWORK_DISK_CACHE_REVALIDATION": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 10,
-    "description": "Total Time spent (ms) during disk cache revalidation"
-  },
-  "NETWORK_DISK_CACHE_STREAMIO_CLOSE": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 10,
-    "description": "Time spent in nsDiskCacheStreamIO::Close() on non-main thread (ms)"
-  },
-  "NETWORK_DISK_CACHE_STREAMIO_CLOSE_MAIN_THREAD": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 10000,
-    "n_buckets": 10,
-    "description": "Time spent in nsDiskCacheStreamIO::Close() on the main thread (ms)"
-  },
   "NETWORK_ID": {
     "alert_emails": ["necko@mozilla.com"],
     "bug_numbers": [1240932],
@@ -3291,33 +3270,12 @@
     "n_values": 6,
     "description": "Network identification (0=None, 1=New, 2=Same)"
   },
-  "IDLE_NOTIFY_BACK_MS": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 5000,
-    "n_buckets": 10,
-    "description": "Time spent checking for and notifying listeners that the user is back (ms)"
-  },
-  "IDLE_NOTIFY_BACK_LISTENERS": {
-    "expires_in_version": "40",
-    "kind": "linear",
-    "high": 100,
-    "n_buckets": 20,
-    "description": "Number of listeners notified that the user is back"
-  },
   "IDLE_NOTIFY_IDLE_MS": {
     "expires_in_version": "default",
     "kind": "exponential",
     "high": 5000,
     "n_buckets": 10,
     "description": "Time spent checking for and notifying listeners that the user is idle (ms)"
-  },
-  "IDLE_NOTIFY_IDLE_LISTENERS": {
-    "expires_in_version": "40",
-    "kind": "linear",
-    "high": 100,
-    "n_buckets": 20,
-    "description": "Number of listeners notified that the user is idle"
   },
   "URLCLASSIFIER_LOOKUP_TIME": {
     "expires_in_version": "never",
@@ -4121,13 +4079,6 @@
     "high": 100,
     "n_buckets": 20,
     "description": "Gloda: indexing rate (message/s)"
-  },
-  "FX_GESTURE_TAKE_SNAPSHOT_OF_PAGE": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 1000,
-    "n_buckets": 30,
-    "description": "Firefox: Time taken to capture the page to a canvas, for reuse while swiping through history (ms)."
   },
   "FX_GESTURE_INSTALL_SNAPSHOT_OF_PAGE": {
     "expires_in_version": "50",
