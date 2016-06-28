@@ -489,6 +489,8 @@ DOMStorageDBThread::OpenAndUpdateDatabase()
 nsresult
 DOMStorageDBThread::InitDatabase()
 {
+  Telemetry::AutoTimer<Telemetry::LOCALDOMSTORAGE_INIT_DATABASE_MS> timer;
+
   nsresult rv;
 
   // Here we are on the worker thread. This opens the worker connection.

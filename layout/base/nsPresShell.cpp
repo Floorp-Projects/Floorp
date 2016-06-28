@@ -1650,6 +1650,8 @@ PresShell::Initialize(nscoord aWidth, nscoord aHeight)
     return NS_OK;
   }
 
+  mozilla::TimeStamp timerStart = mozilla::TimeStamp::Now();
+
   NS_ASSERTION(!mDidInitialize, "Why are we being called?");
 
   nsCOMPtr<nsIPresShell> kungFuDeathGrip(this);
@@ -1808,6 +1810,11 @@ PresShell::Initialize(nscoord aWidth, nscoord aHeight)
   // and we should fire the before-first-paint notification
   if (!mPaintingSuppressed) {
     ScheduleBeforeFirstPaint();
+  }
+
+  if (root && root->IsXULElement()) {
+    mozilla::Telemetry::AccumulateTimeDelta(Telemetry::XUL_INITIAL_FRAME_CONSTRUCTION,
+                                            timerStart);
   }
 
   return NS_OK; //XXX this needs to be real. MMP
@@ -9824,9 +9831,17 @@ PresShell::ProcessReflowCommands(bool aInterruptible)
     TimeDuration elapsed = TimeStamp::Now() - timerStart;
     int32_t intElapsed = int32_t(elapsed.ToMilliseconds());
 
-    if (!mDocument->GetRootElement()->IsXULElement() && mIsActive) {
-      Telemetry::Accumulate(Telemetry::HTML_FOREGROUND_REFLOW_MS_2, intElapsed);
+    Telemetry::ID id;
+    if (mDocument->GetRootElement()->IsXULElement()) {
+      id = mIsActive
+        ? Telemetry::XUL_FOREGROUND_REFLOW_MS
+        : Telemetry::XUL_BACKGROUND_REFLOW_MS;
+    } else {
+      id = mIsActive
+        ? Telemetry::HTML_FOREGROUND_REFLOW_MS_2
+        : Telemetry::HTML_BACKGROUND_REFLOW_MS_2;
     }
+    Telemetry::Accumulate(id, intElapsed);
     if (intElapsed > NS_LONG_REFLOW_TIME_MS) {
       Telemetry::Accumulate(Telemetry::LONG_REFLOW_INTERRUPTIBLE,
                             aInterruptible ? 1 : 0);
