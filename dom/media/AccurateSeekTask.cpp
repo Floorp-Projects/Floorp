@@ -119,8 +119,7 @@ AccurateSeekTask::EnsureAudioDecodeTaskQueued()
   SAMPLE_LOG("EnsureAudioDecodeTaskQueued status=%s", AudioRequestStatus());
 
   if (mReader->IsRequestingAudioData() ||
-      mReader->IsWaitingAudioData() ||
-      mSeekRequest.Exists()) {
+      mReader->IsWaitingAudioData()) {
     return NS_OK;
   }
 
@@ -137,8 +136,7 @@ AccurateSeekTask::EnsureVideoDecodeTaskQueued()
   SAMPLE_LOG("EnsureVideoDecodeTaskQueued status=%s", VideoRequestStatus());
 
   if (mReader->IsRequestingVideoData() ||
-      mReader->IsWaitingVideoData() ||
-      mSeekRequest.Exists()) {
+      mReader->IsWaitingVideoData()) {
     return NS_OK;
   }
 
