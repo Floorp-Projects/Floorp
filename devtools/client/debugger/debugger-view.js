@@ -80,8 +80,6 @@ var DebuggerView = {
     this._editorSource = {};
     this._editorDocuments = {};
 
-    document.title = L10N.getStr("DebuggerWindowTitle");
-
     this.editor.on("cursorActivity", this.Sources._onEditorCursorActivity);
 
     this.controller = DebuggerController;

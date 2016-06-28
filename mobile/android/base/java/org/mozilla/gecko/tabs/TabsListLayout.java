@@ -496,8 +496,12 @@ class TabsListLayout extends TwoWayView
 
                     if (!swiping) {
                         TabsLayoutItemView item = (TabsLayoutItemView) swipeView;
-                        Tabs.getInstance().selectTab(item.getTabId());
+                        final int tabId = item.getTabId();
+                        Tabs.getInstance().selectTab(tabId);
                         autoHidePanel();
+                        Tabs.getInstance().notifyListeners(
+                                Tabs.getInstance().getTab(tabId), Tabs.TabEvents.OPENED_FROM_TABS_TRAY
+                        );
                         velocityTracker.recycle();
                         velocityTracker = null;
                         break;

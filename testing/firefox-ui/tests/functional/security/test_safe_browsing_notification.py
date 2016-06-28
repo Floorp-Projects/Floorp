@@ -37,7 +37,7 @@ class TestSafeBrowsingNotificationBar(FirefoxTestCase):
             }
         ]
 
-        self.prefs.set_pref('browser.safebrowsing.enabled', True)
+        self.prefs.set_pref('browser.safebrowsing.phishing.enabled', True)
         self.prefs.set_pref('browser.safebrowsing.malware.enabled', True)
 
         # Give the browser a little time, because SafeBrowsing.jsm takes a while

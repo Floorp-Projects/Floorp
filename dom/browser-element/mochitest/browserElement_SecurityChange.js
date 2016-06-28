@@ -70,7 +70,7 @@ addEventListener('testready', function() {
   SpecialPowers.pushPrefEnv({"set" : [
     ["privacy.trackingprotection.enabled", true],
     ["privacy.trackingprotection.pbmode.enabled", false],
-    ["browser.safebrowsing.enabled", false],
+    ["browser.safebrowsing.phishing.enabled", false],
     ["browser.safebrowsing.malware.enabled", false],
   ]}, () => {
      SimpleTest.registerCleanupFunction(UrlClassifierTestUtils.cleanupTestTrackers);

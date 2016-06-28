@@ -619,6 +619,7 @@ public class Tabs implements GeckoEventListener {
         BOOKMARK_ADDED,
         BOOKMARK_REMOVED,
         AUDIO_PLAYING_CHANGE,
+        OPENED_FROM_TABS_TRAY,
     }
 
     public void notifyListeners(Tab tab, TabEvents msg) {
