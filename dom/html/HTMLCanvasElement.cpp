@@ -353,8 +353,7 @@ HTMLCanvasElement::HTMLCanvasElement(already_AddRefed<mozilla::dom::NodeInfo>& a
   : nsGenericHTMLElement(aNodeInfo),
     mResetLayer(true) ,
     mWriteOnly(false)
-{
-}
+{}
 
 HTMLCanvasElement::~HTMLCanvasElement()
 {
