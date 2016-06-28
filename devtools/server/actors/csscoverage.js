@@ -340,6 +340,18 @@ var CSSUsageActor = protocol.ActorClassWithSpec(cssUsageSpec, {
   },
 
   /**
+   * Compute the stylesheet URL and delegate the report creation to createEditorReport.
+   * See createEditorReport documentation.
+   *
+   * @param {StyleSheetActor} stylesheetActor
+   *        the stylesheet actor for which the coverage report should be generated.
+   */
+  createEditorReportForSheet: function (stylesheetActor) {
+    let url = sheetToUrl(stylesheetActor.rawSheet);
+    return this.createEditorReport(url);
+  },
+
+  /**
    * Returns a JSONable structure designed for the page report which shows
    * the recommended changes to a page.
    *
@@ -694,9 +706,9 @@ exports.SEL_ALL = [
 
 /**
  * Find a URL for a given stylesheet
- * @param stylesheet {StyleSheet|StyleSheetActor}
+ * @param {StyleSheet} stylesheet raw stylesheet
  */
-const sheetToUrl = exports.sheetToUrl = function (stylesheet) {
+const sheetToUrl = function (stylesheet) {
   // For <link> elements
   if (stylesheet.href) {
     return stylesheet.href;
@@ -708,11 +720,6 @@ const sheetToUrl = exports.sheetToUrl = function (stylesheet) {
     let sheets = [...document.querySelectorAll("style")];
     let index = sheets.indexOf(stylesheet.ownerNode);
     return getURL(document) + " → <style> index " + index;
-  }
-
-  // When `stylesheet` is a StyleSheetActor, we don't have access to ownerNode
-  if (stylesheet.nodeHref) {
-    return stylesheet.nodeHref + " → <style> index " + stylesheet.styleSheetIndex;
   }
 
   throw new Error("Unknown sheet source");
