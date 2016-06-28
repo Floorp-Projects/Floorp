@@ -1009,6 +1009,19 @@ MacroAssemblerARM::ma_clz(Register src, Register dest, Condition cond)
     as_clz(dest, src, cond);
 }
 
+void
+MacroAssemblerARM::ma_ctz(Register src, Register dest)
+{
+    // int c = __clz(a & -a);
+    // return a ? 31 - c : c;
+
+    ScratchRegisterScope scratch(asMasm());
+    as_rsb(scratch, src, Imm8(0), SetCC);
+    as_and(dest, src, O2Reg(scratch), LeaveCC);
+    as_clz(dest, dest);
+    as_rsb(dest, dest, Imm8(0x1F), LeaveCC, Assembler::NotEqual);
+}
+
 // Memory.
 // Shortcut for when we know we're transferring 32 bits of data.
 void
@@ -4668,6 +4681,13 @@ MacroAssembler::Pop(Register reg)
 {
     ma_pop(reg);
     adjustFrame(-sizeof(intptr_t));
+}
+
+void
+MacroAssembler::Pop(FloatRegister reg)
+{
+    ma_vpop(reg);
+    adjustFrame(-reg.size());
 }
 
 void
