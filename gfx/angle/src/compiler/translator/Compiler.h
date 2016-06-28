@@ -208,6 +208,7 @@ class TCompiler : public TShHandleBase
     int maxUniformVectors;
     int maxExpressionComplexity;
     int maxCallStackDepth;
+    int maxFunctionParameters;
 
     ShBuiltInResources compileResources;
     std::string builtInResourcesString;

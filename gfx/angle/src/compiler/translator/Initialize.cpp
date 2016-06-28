@@ -233,7 +233,7 @@ void InsertBuiltInFunctions(sh::GLenum type, ShShaderSpec spec, const ShBuiltInR
     symbolTable.insertBuiltIn(ESSL1_BUILTINS, float4, "texture2DProj", sampler2D, float4);
     symbolTable.insertBuiltIn(ESSL1_BUILTINS, float4, "textureCube", samplerCube, float3);
 
-    if (resources.OES_EGL_image_external)
+    if (resources.OES_EGL_image_external || resources.NV_EGL_stream_consumer_external)
     {
         const TType *samplerExternalOES = TCache::getType(EbtSamplerExternalOES);
 
@@ -315,6 +315,17 @@ void InsertBuiltInFunctions(sh::GLenum type, ShShaderSpec spec, const ShBuiltInR
     symbolTable.insertBuiltIn(ESSL3_BUILTINS, gvec4, "textureLod", gsamplerCube, float3, float1);
     symbolTable.insertBuiltIn(ESSL3_BUILTINS, gvec4, "textureLod", gsampler2DArray, float3, float1);
 
+    if (resources.OES_EGL_image_external_essl3)
+    {
+        const TType *samplerExternalOES = TCache::getType(EbtSamplerExternalOES);
+
+        symbolTable.insertBuiltIn(ESSL3_BUILTINS, float4, "texture", samplerExternalOES, float2);
+        symbolTable.insertBuiltIn(ESSL3_BUILTINS, float4, "textureProj", samplerExternalOES,
+                                  float3);
+        symbolTable.insertBuiltIn(ESSL3_BUILTINS, float4, "textureProj", samplerExternalOES,
+                                  float4);
+    }
+
     if (type == GL_FRAGMENT_SHADER)
     {
         symbolTable.insertBuiltIn(ESSL3_BUILTINS, gvec4, "texture", gsampler2D, float2, float1);
@@ -324,6 +335,18 @@ void InsertBuiltInFunctions(sh::GLenum type, ShShaderSpec spec, const ShBuiltInR
         symbolTable.insertBuiltIn(ESSL3_BUILTINS, gvec4, "textureProj", gsampler2D, float3, float1);
         symbolTable.insertBuiltIn(ESSL3_BUILTINS, gvec4, "textureProj", gsampler2D, float4, float1);
         symbolTable.insertBuiltIn(ESSL3_BUILTINS, gvec4, "textureProj", gsampler3D, float4, float1);
+
+        if (resources.OES_EGL_image_external_essl3)
+        {
+            const TType *samplerExternalOES = TCache::getType(EbtSamplerExternalOES);
+
+            symbolTable.insertBuiltIn(ESSL3_BUILTINS, float4, "texture", samplerExternalOES, float2,
+                                      float1);
+            symbolTable.insertBuiltIn(ESSL3_BUILTINS, float4, "textureProj", samplerExternalOES,
+                                      float3, float1);
+            symbolTable.insertBuiltIn(ESSL3_BUILTINS, float4, "textureProj", samplerExternalOES,
+                                      float4, float1);
+        }
     }
 
     const TType *sampler2DShadow = TCache::getType(EbtSampler2DShadow);
@@ -350,6 +373,13 @@ void InsertBuiltInFunctions(sh::GLenum type, ShShaderSpec spec, const ShBuiltInR
     symbolTable.insertBuiltIn(ESSL3_BUILTINS, int2, "textureSize", sampler2DShadow, int1);
     symbolTable.insertBuiltIn(ESSL3_BUILTINS, int2, "textureSize", samplerCubeShadow, int1);
     symbolTable.insertBuiltIn(ESSL3_BUILTINS, int3, "textureSize", sampler2DArrayShadow, int1);
+
+    if (resources.OES_EGL_image_external_essl3)
+    {
+        const TType *samplerExternalOES = TCache::getType(EbtSamplerExternalOES);
+
+        symbolTable.insertBuiltIn(ESSL3_BUILTINS, int2, "textureSize", samplerExternalOES, int1);
+    }
 
     if (type == GL_FRAGMENT_SHADER)
     {
@@ -402,6 +432,14 @@ void InsertBuiltInFunctions(sh::GLenum type, ShShaderSpec spec, const ShBuiltInR
     symbolTable.insertBuiltIn(ESSL3_BUILTINS, gvec4, "texelFetch", gsampler2D, int2, int1);
     symbolTable.insertBuiltIn(ESSL3_BUILTINS, gvec4, "texelFetch", gsampler3D, int3, int1);
     symbolTable.insertBuiltIn(ESSL3_BUILTINS, gvec4, "texelFetch", gsampler2DArray, int3, int1);
+
+    if (resources.OES_EGL_image_external_essl3)
+    {
+        const TType *samplerExternalOES = TCache::getType(EbtSamplerExternalOES);
+
+        symbolTable.insertBuiltIn(ESSL3_BUILTINS, float4, "texelFetch", samplerExternalOES, int2,
+                                  int1);
+    }
 
     symbolTable.insertBuiltIn(ESSL3_BUILTINS, gvec4, "texelFetchOffset", gsampler2D, int2, int1, int2);
     symbolTable.insertBuiltIn(ESSL3_BUILTINS, gvec4, "texelFetchOffset", gsampler3D, int3, int1, int3);
@@ -578,6 +616,8 @@ void IdentifyBuiltIns(sh::GLenum type, ShShaderSpec spec,
             TType(EbtFloat, EbpMedium, EvqPointSize, 1)));
         symbolTable.insert(ESSL3_BUILTINS, new TVariable(NewPoolTString("gl_InstanceID"),
             TType(EbtInt, EbpHigh, EvqInstanceID, 1)));
+        symbolTable.insert(ESSL3_BUILTINS, new TVariable(NewPoolTString("gl_VertexID"),
+                                                         TType(EbtInt, EbpHigh, EvqVertexID, 1)));
         break;
 
       default:
@@ -592,6 +632,10 @@ void InitExtensionBehavior(const ShBuiltInResources& resources,
         extBehavior["GL_OES_standard_derivatives"] = EBhUndefined;
     if (resources.OES_EGL_image_external)
         extBehavior["GL_OES_EGL_image_external"] = EBhUndefined;
+    if (resources.OES_EGL_image_external_essl3)
+        extBehavior["GL_OES_EGL_image_external_essl3"] = EBhUndefined;
+    if (resources.NV_EGL_stream_consumer_external)
+        extBehavior["GL_NV_EGL_stream_consumer_external"] = EBhUndefined;
     if (resources.ARB_texture_rectangle)
         extBehavior["GL_ARB_texture_rectangle"] = EBhUndefined;
     if (resources.EXT_blend_func_extended)

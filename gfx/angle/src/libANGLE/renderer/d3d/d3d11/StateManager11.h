@@ -12,10 +12,11 @@
 #include <array>
 
 #include "libANGLE/angletypes.h"
-#include "libANGLE/Data.h"
+#include "libANGLE/ContextState.h"
 #include "libANGLE/State.h"
 #include "libANGLE/renderer/d3d/d3d11/RenderStateCache.h"
 #include "libANGLE/renderer/d3d/d3d11/renderer11_utils.h"
+#include "libANGLE/renderer/d3d/d3d11/Query11.h"
 #include "libANGLE/renderer/d3d/RendererD3D.h"
 
 namespace rx
@@ -47,6 +48,7 @@ class StateManager11 final : angle::NonCopyable
     ~StateManager11();
 
     void initialize(const gl::Caps &caps);
+    void deinitialize();
     void syncState(const gl::State &state, const gl::State::DirtyBits &dirtyBits);
 
     gl::Error setBlendState(const gl::Framebuffer *framebuffer,
@@ -75,20 +77,33 @@ class StateManager11 final : angle::NonCopyable
                            ID3D11ShaderResourceView *srv);
     gl::Error clearTextures(gl::SamplerType samplerType, size_t rangeStart, size_t rangeEnd);
 
-    gl::Error syncFramebuffer(const gl::Framebuffer *framebuffer);
+    gl::Error syncFramebuffer(gl::Framebuffer *framebuffer);
 
     void invalidateRenderTarget();
+    void invalidateBoundViews();
     void invalidateEverything();
-    bool setRenderTargets(const RenderTargetArray &renderTargets,
-                          ID3D11DepthStencilView *depthStencil);
-    void setRenderTarget(ID3D11RenderTargetView *renderTarget,
-                         ID3D11DepthStencilView *depthStencil);
+
+    void setOneTimeRenderTarget(ID3D11RenderTargetView *renderTarget,
+                                ID3D11DepthStencilView *depthStencil);
+    void setOneTimeRenderTargets(const std::vector<ID3D11RenderTargetView *> &renderTargets,
+                                 ID3D11DepthStencilView *depthStencil);
+
+    void onBeginQuery(Query11 *query);
+    void onDeleteQueryObject(Query11 *query);
+    gl::Error onMakeCurrent(const gl::ContextState &data);
+
+    gl::Error updateCurrentValueAttribs(const gl::State &state,
+                                        VertexDataManager *vertexDataManager);
+
+    const std::vector<TranslatedAttribute> &getCurrentValueAttribs() const;
 
   private:
+    void setViewportBounds(const int width, const int height);
     void unsetConflictingSRVs(gl::SamplerType shaderType,
                               uintptr_t resource,
                               const gl::ImageIndex &index);
-    void setViewportBounds(const int width, const int height);
+    void unsetConflictingAttachmentResources(const gl::FramebufferAttachment *attachment,
+                                             ID3D11Resource *resource);
 
     Renderer11 *mRenderer;
 
@@ -136,8 +151,10 @@ class StateManager11 final : angle::NonCopyable
     int mCurPresentPathFastColorBufferHeight;
 
     // Current RenderTarget state
-    std::array<uintptr_t, gl::IMPLEMENTATION_MAX_DRAW_BUFFERS> mAppliedRTVs;
-    uintptr_t mAppliedDSV;
+    bool mRenderTargetIsDirty;
+
+    // Queries that are currently active in this state
+    std::set<Query11 *> mCurrentQueries;
 
     // Currently applied textures
     struct SRVRecord
@@ -175,6 +192,10 @@ class StateManager11 final : angle::NonCopyable
 
     // A block of NULL pointers, cached so we don't re-allocate every draw call
     std::vector<ID3D11ShaderResourceView *> mNullSRVs;
+
+    // Current translations of "Current-Value" data - owned by Context, not VertexArray.
+    gl::AttributesMask mDirtyCurrentValueAttribs;
+    std::vector<TranslatedAttribute> mCurrentValueAttribs;
 };
 
 }  // namespace rx

@@ -202,6 +202,26 @@ EXPORTS
     glGetQueryObjectivEXT           @315
     glGetQueryObjecti64vEXT         @316
     glGetQueryObjectui64vEXT        @317
+    glBindUniformLocationCHROMIUM   @318
+    glCoverageModulationCHROMIUM    @319
+
+    glMatrixLoadfCHROMIUM           @320
+    glMatrixLoadIdentityCHROMIUM    @321
+    glGenPathsCHROMIUM              @322
+    glDeletePathsCHROMIUM           @323
+    glIsPathCHROMIUM                @324
+    glPathCommandsCHROMIUM          @325
+    glPathParameterfCHROMIUM        @326
+    glPathParameteriCHROMIUM        @327
+    glGetPathParameterfvCHROMIUM    @328
+    glGetPathParameterivCHROMIUM    @329
+    glPathStencilFuncCHROMIUM       @330
+    glStencilFillPathCHROMIUM       @331
+    glStencilStrokePathCHROMIUM     @332
+    glCoverFillPathCHROMIUM         @333
+    glCoverStrokePathCHROMIUM       @334
+    glStencilThenCoverFillPathCHROMIUM   @335
+    glStencilThenCoverStrokePathCHROMIUM @336
 
     ; GLES 3.0 Functions
     glReadBuffer                    @180

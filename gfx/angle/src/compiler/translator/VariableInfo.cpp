@@ -134,6 +134,7 @@ CollectVariables::CollectVariables(std::vector<sh::Attribute> *attribs,
       mFrontFacingAdded(false),
       mFragCoordAdded(false),
       mInstanceIDAdded(false),
+      mVertexIDAdded(false),
       mPositionAdded(false),
       mPointSizeAdded(false),
       mLastFragDataAdded(false),
@@ -313,6 +314,22 @@ void CollectVariables::visitSymbol(TIntermSymbol *symbol)
                 mInstanceIDAdded = true;
             }
             return;
+          case EvqVertexID:
+              if (!mVertexIDAdded)
+              {
+                  Attribute info;
+                  const char kName[] = "gl_VertexID";
+                  info.name          = kName;
+                  info.mappedName    = kName;
+                  info.type          = GL_INT;
+                  info.arraySize     = 0;
+                  info.precision     = GL_HIGH_INT;  // Defined by spec.
+                  info.staticUse     = true;
+                  info.location      = -1;
+                  mAttribs->push_back(info);
+                  mVertexIDAdded = true;
+              }
+              return;
           case EvqPosition:
             if (!mPositionAdded)
             {

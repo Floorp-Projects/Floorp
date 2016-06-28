@@ -53,6 +53,7 @@ class CollectVariables : public TIntermTraverser
     bool mFragCoordAdded;
 
     bool mInstanceIDAdded;
+    bool mVertexIDAdded;
     bool mPositionAdded;
     bool mPointSizeAdded;
     bool mLastFragDataAdded;

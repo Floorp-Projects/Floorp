@@ -8,7 +8,7 @@
 
 #include "test_utils/ANGLETest.h"
 
-#include "libANGLE/renderer/d3d/imageformats.h"
+#include "libANGLE/renderer/imageformats.h"
 
 using namespace angle;
 
@@ -129,7 +129,7 @@ TEST_P(D3DImageFormatConversionTest, WriteColorFunctionR4G4B4A4)
     // These tests fail on certain Intel machines running an un-updated version of Win7
     // The tests pass after installing the latest updates from Windows Update.
     // TODO: reenable these tests once the bots have been updated
-    if (isIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
+    if (IsIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
     {
         std::cout << "Test skipped on Intel D3D11." << std::endl;
         return;
@@ -144,7 +144,7 @@ TEST_P(D3DImageFormatConversionTest, WriteColorFunctionR5G5B5A1)
     // These tests fail on certain Intel machines running an un-updated version of Win7
     // The tests pass after installing the latest updates from Windows Update.
     // TODO: reenable these tests once the bots have been updated
-    if (isIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
+    if (IsIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
     {
         std::cout << "Test skipped on Intel D3D11." << std::endl;
         return;
@@ -159,7 +159,7 @@ TEST_P(D3DImageFormatConversionTest, WriteColorFunctionR5G6B5)
     // These tests fail on certain Intel machines running an un-updated version of Win7
     // The tests pass after installing the latest updates from Windows Update.
     // TODO: reenable these tests once the bots have been updated
-    if (isIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
+    if (IsIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
     {
         std::cout << "Test skipped on Intel D3D11." << std::endl;
         return;
@@ -174,7 +174,7 @@ TEST_P(D3DImageFormatConversionTest, WriteColorFunctionR8G8B8A8)
     // These tests fail on certain Intel machines running an un-updated version of Win7
     // The tests pass after installing the latest updates from Windows Update.
     // TODO: reenable these tests once the bots have been updated
-    if (isIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
+    if (IsIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
     {
         std::cout << "Test skipped on Intel D3D11." << std::endl;
         return;
@@ -189,7 +189,7 @@ TEST_P(D3DImageFormatConversionTest, WriteColorFunctionR8G8B8)
     // These tests fail on certain Intel machines running an un-updated version of Win7
     // The tests pass after installing the latest updates from Windows Update.
     // TODO: reenable these tests once the bots have been updated
-    if (isIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
+    if (IsIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
     {
         std::cout << "Test skipped on Intel D3D11." << std::endl;
         return;

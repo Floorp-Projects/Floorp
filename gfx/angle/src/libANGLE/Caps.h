@@ -87,6 +87,7 @@ struct Extensions
     // GL_EXT_sRGB
     // GL_ANGLE_depth_texture, GL_OES_depth32
     // GL_EXT_color_buffer_float
+    // GL_EXT_texture_norm16
     void setTextureExtensionSupport(const TextureCapsMap &textureCaps);
 
     // ES2 Extension support
@@ -256,6 +257,9 @@ struct Extensions
     // GL_OES_EGL_image_external_essl3
     bool eglImageExternalEssl3;
 
+    // NV_EGL_stream_consumer_external
+    bool eglStreamConsumerExternal;
+
     // EXT_unpack_subimage
     bool unpackSubimage;
 
@@ -278,10 +282,30 @@ struct Extensions
     // GL_ANGLE_lossy_etc_decode
     bool lossyETCDecode;
 
+    // GL_CHROMIUM_bind_uniform_location
+    bool bindUniformLocation;
+
+    // GL_CHROMIUM_sync_query
+    bool syncQuery;
+
     // ES3 Extension support
 
     // GL_EXT_color_buffer_float
     bool colorBufferFloat;
+
+    // GL_EXT_multisample_compatibility.
+    // written against ES 3.1 but can apply to earlier versions.
+    bool multisampleCompatibility;
+
+    // GL_CHROMIUM_framebuffer_mixed_samples
+    bool framebufferMixedSamples;
+
+    // GL_EXT_texture_norm16
+    // written against ES 3.1 but can apply to ES 3.0 as well.
+    bool textureNorm16;
+
+    // GL_CHROMIUM_path_rendering
+    bool pathRendering;
 };
 
 struct Limitations
@@ -482,6 +506,18 @@ struct DisplayExtensions
 
     // KHR_create_context_no_error
     bool createContextNoError;
+
+    // EGL_KHR_stream
+    bool stream;
+
+    // EGL_KHR_stream_consumer_gltexture
+    bool streamConsumerGLTexture;
+
+    // EGL_NV_stream_consumer_gltexture_yuv
+    bool streamConsumerGLTextureYUV;
+
+    // EGL_ANGLE_stream_producer_d3d_texture_nv12
+    bool streamProducerD3DTextureNV12;
 };
 
 struct DeviceExtensions

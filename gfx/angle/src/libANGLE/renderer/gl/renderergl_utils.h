@@ -30,6 +30,7 @@ class FunctionsGL;
 struct WorkaroundsGL;
 
 VendorID GetVendorID(const FunctionsGL *functions);
+std::string GetDriverVersion(const FunctionsGL *functions);
 
 namespace nativegl_gl
 {
@@ -40,6 +41,12 @@ void GenerateCaps(const FunctionsGL *functions, gl::Caps *caps, gl::TextureCapsM
 void GenerateWorkarounds(const FunctionsGL *functions, WorkaroundsGL *workarounds);
 }
 
+bool CanMapBufferForRead(const FunctionsGL *functions);
+uint8_t *MapBufferRangeWithFallback(const FunctionsGL *functions,
+                                    GLenum target,
+                                    size_t offset,
+                                    size_t length,
+                                    GLbitfield access);
 }
 
 #endif // LIBANGLE_RENDERER_GL_RENDERERGLUTILS_H_

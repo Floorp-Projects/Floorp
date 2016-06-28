@@ -698,7 +698,7 @@ TEST_P(BlitFramebufferANGLETest, BlitStencil)
 {
     // TODO(jmadill): Figure out if we can fix this on D3D9.
     // https://code.google.com/p/angleproject/issues/detail?id=809
-    if (isIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D9_ANGLE)
+    if (IsIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D9_ANGLE)
     {
         std::cout << "Test skipped on Intel D3D9." << std::endl;
         return;

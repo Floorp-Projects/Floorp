@@ -15,6 +15,7 @@
 #include "libANGLE/formatutils.h"
 #include "libANGLE/Framebuffer.h"
 #include "libANGLE/FramebufferAttachment.h"
+#include "libANGLE/renderer/TextureImpl.h"
 #include "libANGLE/renderer/d3d/BufferD3D.h"
 #include "libANGLE/renderer/d3d/DeviceD3D.h"
 #include "libANGLE/renderer/d3d/DisplayD3D.h"
@@ -28,21 +29,11 @@
 namespace rx
 {
 
-namespace
-{
-// If we request a scratch buffer requesting a smaller size this many times,
-// release and recreate the scratch buffer. This ensures we don't have a
-// degenerate case where we are stuck hogging memory.
-const int ScratchMemoryBufferLifetime = 1000;
-
-}  // anonymous namespace
-
 RendererD3D::RendererD3D(egl::Display *display)
     : mDisplay(display),
       mDeviceLost(false),
-      mAnnotator(nullptr),
       mPresentPathFastEnabled(false),
-      mScratchMemoryBufferResetCounter(0),
+      mCapsInitialized(false),
       mWorkaroundsInitialized(false),
       mDisjoint(false)
 {
@@ -55,280 +46,20 @@ RendererD3D::~RendererD3D()
 
 void RendererD3D::cleanup()
 {
-    mScratchMemoryBuffer.resize(0);
     for (auto &incompleteTexture : mIncompleteTextures)
     {
-        incompleteTexture.second.set(NULL);
+        incompleteTexture.second.set(nullptr);
     }
     mIncompleteTextures.clear();
-
-    if (mAnnotator != nullptr)
-    {
-        gl::UninitializeDebugAnnotations();
-        SafeDelete(mAnnotator);
-    }
 }
 
-SamplerImpl *RendererD3D::createSampler()
+unsigned int RendererD3D::GetBlendSampleMask(const gl::ContextState &data, int samples)
 {
-    return new SamplerD3D();
-}
-
-gl::Error RendererD3D::drawArrays(const gl::Data &data, GLenum mode, GLint first, GLsizei count)
-{
-    return genericDrawArrays(data, mode, first, count, 0);
-}
-
-gl::Error RendererD3D::drawArraysInstanced(const gl::Data &data,
-                                           GLenum mode,
-                                           GLint first,
-                                           GLsizei count,
-                                           GLsizei instanceCount)
-{
-    return genericDrawArrays(data, mode, first, count, instanceCount);
-}
-
-gl::Error RendererD3D::drawElements(const gl::Data &data,
-                                    GLenum mode,
-                                    GLsizei count,
-                                    GLenum type,
-                                    const GLvoid *indices,
-                                    const gl::IndexRange &indexRange)
-{
-    return genericDrawElements(data, mode, count, type, indices, 0, indexRange);
-}
-
-gl::Error RendererD3D::drawElementsInstanced(const gl::Data &data,
-                                             GLenum mode,
-                                             GLsizei count,
-                                             GLenum type,
-                                             const GLvoid *indices,
-                                             GLsizei instances,
-                                             const gl::IndexRange &indexRange)
-{
-    return genericDrawElements(data, mode, count, type, indices, instances, indexRange);
-}
-
-gl::Error RendererD3D::drawRangeElements(const gl::Data &data,
-                                         GLenum mode,
-                                         GLuint start,
-                                         GLuint end,
-                                         GLsizei count,
-                                         GLenum type,
-                                         const GLvoid *indices,
-                                         const gl::IndexRange &indexRange)
-{
-    return genericDrawElements(data, mode, count, type, indices, 0, indexRange);
-}
-
-gl::Error RendererD3D::genericDrawElements(const gl::Data &data,
-                                           GLenum mode,
-                                           GLsizei count,
-                                           GLenum type,
-                                           const GLvoid *indices,
-                                           GLsizei instances,
-                                           const gl::IndexRange &indexRange)
-{
-    gl::Program *program = data.state->getProgram();
-    ASSERT(program != nullptr);
-    ProgramD3D *programD3D = GetImplAs<ProgramD3D>(program);
-    bool usesPointSize     = programD3D->usesPointSize();
-
-    programD3D->updateSamplerMapping();
-
-    gl::Error error = generateSwizzles(data);
-    if (error.isError())
-    {
-        return error;
-    }
-
-    if (!applyPrimitiveType(mode, count, usesPointSize))
-    {
-        return gl::Error(GL_NO_ERROR);
-    }
-
-    error = updateState(data, mode);
-    if (error.isError())
-    {
-        return error;
-    }
-
-    TranslatedIndexData indexInfo;
-    indexInfo.indexRange = indexRange;
-
-    error = applyIndexBuffer(data, indices, count, mode, type, &indexInfo);
-    if (error.isError())
-    {
-        return error;
-    }
-
-    applyTransformFeedbackBuffers(*data.state);
-    // Transform feedback is not allowed for DrawElements, this error should have been caught at the API validation
-    // layer.
-    ASSERT(!data.state->isTransformFeedbackActiveUnpaused());
-
-    size_t vertexCount = indexInfo.indexRange.vertexCount();
-    error = applyVertexBuffer(*data.state, mode, static_cast<GLsizei>(indexInfo.indexRange.start),
-                              static_cast<GLsizei>(vertexCount), instances, &indexInfo);
-    if (error.isError())
-    {
-        return error;
-    }
-
-    error = applyTextures(data);
-    if (error.isError())
-    {
-        return error;
-    }
-
-    error = applyShaders(data, mode);
-    if (error.isError())
-    {
-        return error;
-    }
-
-    error = programD3D->applyUniformBuffers(data);
-    if (error.isError())
-    {
-        return error;
-    }
-
-    if (!skipDraw(data, mode))
-    {
-        error = drawElementsImpl(data, indexInfo, mode, count, type, indices, instances);
-        if (error.isError())
-        {
-            return error;
-        }
-    }
-
-    return gl::Error(GL_NO_ERROR);
-}
-
-gl::Error RendererD3D::genericDrawArrays(const gl::Data &data,
-                                         GLenum mode,
-                                         GLint first,
-                                         GLsizei count,
-                                         GLsizei instances)
-{
-    gl::Program *program = data.state->getProgram();
-    ASSERT(program != nullptr);
-    ProgramD3D *programD3D = GetImplAs<ProgramD3D>(program);
-    bool usesPointSize     = programD3D->usesPointSize();
-
-    programD3D->updateSamplerMapping();
-
-    gl::Error error = generateSwizzles(data);
-    if (error.isError())
-    {
-        return error;
-    }
-
-    if (!applyPrimitiveType(mode, count, usesPointSize))
-    {
-        return gl::Error(GL_NO_ERROR);
-    }
-
-    error = updateState(data, mode);
-    if (error.isError())
-    {
-        return error;
-    }
-
-    applyTransformFeedbackBuffers(*data.state);
-
-    error = applyVertexBuffer(*data.state, mode, first, count, instances, nullptr);
-    if (error.isError())
-    {
-        return error;
-    }
-
-    error = applyTextures(data);
-    if (error.isError())
-    {
-        return error;
-    }
-
-    error = applyShaders(data, mode);
-    if (error.isError())
-    {
-        return error;
-    }
-
-    error = programD3D->applyUniformBuffers(data);
-    if (error.isError())
-    {
-        return error;
-    }
-
-    if (!skipDraw(data, mode))
-    {
-        error = drawArraysImpl(data, mode, count, instances);
-        if (error.isError())
-        {
-            return error;
-        }
-
-        if (data.state->isTransformFeedbackActiveUnpaused())
-        {
-            markTransformFeedbackUsage(data);
-        }
-    }
-
-    return gl::Error(GL_NO_ERROR);
-}
-
-gl::Error RendererD3D::generateSwizzles(const gl::Data &data, gl::SamplerType type)
-{
-    ProgramD3D *programD3D = GetImplAs<ProgramD3D>(data.state->getProgram());
-
-    unsigned int samplerRange = static_cast<unsigned int>(programD3D->getUsedSamplerRange(type));
-
-    for (unsigned int i = 0; i < samplerRange; i++)
-    {
-        GLenum textureType = programD3D->getSamplerTextureType(type, i);
-        GLint textureUnit = programD3D->getSamplerMapping(type, i, *data.caps);
-        if (textureUnit != -1)
-        {
-            gl::Texture *texture = data.state->getSamplerTexture(textureUnit, textureType);
-            ASSERT(texture);
-            if (texture->getTextureState().swizzleRequired())
-            {
-                gl::Error error = generateSwizzle(texture);
-                if (error.isError())
-                {
-                    return error;
-                }
-            }
-        }
-    }
-
-    return gl::Error(GL_NO_ERROR);
-}
-
-gl::Error RendererD3D::generateSwizzles(const gl::Data &data)
-{
-    gl::Error error = generateSwizzles(data, gl::SAMPLER_VERTEX);
-    if (error.isError())
-    {
-        return error;
-    }
-
-    error = generateSwizzles(data, gl::SAMPLER_PIXEL);
-    if (error.isError())
-    {
-        return error;
-    }
-
-    return gl::Error(GL_NO_ERROR);
-}
-
-unsigned int RendererD3D::GetBlendSampleMask(const gl::Data &data, int samples)
-{
+    const auto &glState = data.getState();
     unsigned int mask = 0;
-    if (data.state->isSampleCoverageEnabled())
+    if (glState.isSampleCoverageEnabled())
     {
-        GLclampf coverageValue = data.state->getSampleCoverageValue();
+        GLclampf coverageValue = glState.getSampleCoverageValue();
         if (coverageValue != 0)
         {
             float threshold = 0.5f;
@@ -345,7 +76,7 @@ unsigned int RendererD3D::GetBlendSampleMask(const gl::Data &data, int samples)
             }
         }
 
-        bool coverageInvert = data.state->getSampleCoverageInvert();
+        bool coverageInvert = glState.getSampleCoverageInvert();
         if (coverageInvert)
         {
             mask = ~mask;
@@ -359,30 +90,19 @@ unsigned int RendererD3D::GetBlendSampleMask(const gl::Data &data, int samples)
     return mask;
 }
 
-// Applies the shaders and shader constants to the Direct3D device
-gl::Error RendererD3D::applyShaders(const gl::Data &data, GLenum drawMode)
-{
-    gl::Program *program = data.state->getProgram();
-    ProgramD3D *programD3D = GetImplAs<ProgramD3D>(program);
-    programD3D->updateCachedInputLayout(*data.state);
-
-    gl::Error error = applyShadersImpl(data, drawMode);
-    if (error.isError())
-    {
-        return error;
-    }
-
-    return programD3D->applyUniforms(drawMode);
-}
-
 // For each Direct3D sampler of either the pixel or vertex stage,
 // looks up the corresponding OpenGL texture image unit and texture type,
 // and sets the texture and its addressing/filtering state (or NULL when inactive).
 // Sampler mapping needs to be up-to-date on the program object before this is called.
-gl::Error RendererD3D::applyTextures(const gl::Data &data, gl::SamplerType shaderType,
-                                     const FramebufferTextureArray &framebufferTextures, size_t framebufferTextureCount)
+gl::Error RendererD3D::applyTextures(GLImplFactory *implFactory,
+                                     const gl::ContextState &data,
+                                     gl::SamplerType shaderType,
+                                     const FramebufferTextureArray &framebufferTextures,
+                                     size_t framebufferTextureCount)
 {
-    ProgramD3D *programD3D = GetImplAs<ProgramD3D>(data.state->getProgram());
+    const auto &glState    = data.getState();
+    const auto &caps       = data.getCaps();
+    ProgramD3D *programD3D = GetImplAs<ProgramD3D>(glState.getProgram());
 
     ASSERT(!programD3D->isSamplerMappingDirty());
 
@@ -390,95 +110,65 @@ gl::Error RendererD3D::applyTextures(const gl::Data &data, gl::SamplerType shade
     for (unsigned int samplerIndex = 0; samplerIndex < samplerRange; samplerIndex++)
     {
         GLenum textureType = programD3D->getSamplerTextureType(shaderType, samplerIndex);
-        GLint textureUnit = programD3D->getSamplerMapping(shaderType, samplerIndex, *data.caps);
+        GLint textureUnit  = programD3D->getSamplerMapping(shaderType, samplerIndex, caps);
         if (textureUnit != -1)
         {
-            gl::Texture *texture = data.state->getSamplerTexture(textureUnit, textureType);
+            gl::Texture *texture = glState.getSamplerTexture(textureUnit, textureType);
             ASSERT(texture);
 
-            gl::Sampler *samplerObject = data.state->getSampler(textureUnit);
+            gl::Sampler *samplerObject = glState.getSampler(textureUnit);
 
             const gl::SamplerState &samplerState =
                 samplerObject ? samplerObject->getSamplerState() : texture->getSamplerState();
 
             // TODO: std::binary_search may become unavailable using older versions of GCC
-            if (texture->isSamplerComplete(samplerState, data) &&
+            if (texture->getTextureState().isSamplerComplete(samplerState, data) &&
                 !std::binary_search(framebufferTextures.begin(),
                                     framebufferTextures.begin() + framebufferTextureCount, texture))
             {
-                gl::Error error = setSamplerState(shaderType, samplerIndex, texture, samplerState);
-                if (error.isError())
-                {
-                    return error;
-                }
-
-                error = setTexture(shaderType, samplerIndex, texture);
-                if (error.isError())
-                {
-                    return error;
-                }
+                ANGLE_TRY(setSamplerState(shaderType, samplerIndex, texture, samplerState));
+                ANGLE_TRY(setTexture(shaderType, samplerIndex, texture));
             }
             else
             {
                 // Texture is not sampler complete or it is in use by the framebuffer.  Bind the incomplete texture.
-                gl::Texture *incompleteTexture = getIncompleteTexture(textureType);
+                gl::Texture *incompleteTexture = getIncompleteTexture(implFactory, textureType);
 
-                gl::Error error = setSamplerState(shaderType, samplerIndex, incompleteTexture,
-                                                  incompleteTexture->getSamplerState());
-                if (error.isError())
-                {
-                    return error;
-                }
-
-                error = setTexture(shaderType, samplerIndex, incompleteTexture);
-                if (error.isError())
-                {
-                    return error;
-                }
+                ANGLE_TRY(setSamplerState(shaderType, samplerIndex, incompleteTexture,
+                                          incompleteTexture->getSamplerState()));
+                ANGLE_TRY(setTexture(shaderType, samplerIndex, incompleteTexture));
             }
         }
         else
         {
             // No texture bound to this slot even though it is used by the shader, bind a NULL texture
-            gl::Error error = setTexture(shaderType, samplerIndex, NULL);
-            if (error.isError())
-            {
-                return error;
-            }
+            ANGLE_TRY(setTexture(shaderType, samplerIndex, nullptr));
         }
     }
 
     // Set all the remaining textures to NULL
-    size_t samplerCount = (shaderType == gl::SAMPLER_PIXEL) ? data.caps->maxTextureImageUnits
-                                                            : data.caps->maxVertexTextureImageUnits;
+    size_t samplerCount = (shaderType == gl::SAMPLER_PIXEL) ? caps.maxTextureImageUnits
+                                                            : caps.maxVertexTextureImageUnits;
     clearTextures(shaderType, samplerRange, samplerCount);
 
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
-gl::Error RendererD3D::applyTextures(const gl::Data &data)
+gl::Error RendererD3D::applyTextures(GLImplFactory *implFactory, const gl::ContextState &data)
 {
     FramebufferTextureArray framebufferTextures;
     size_t framebufferSerialCount = getBoundFramebufferTextures(data, &framebufferTextures);
 
-    gl::Error error = applyTextures(data, gl::SAMPLER_VERTEX, framebufferTextures, framebufferSerialCount);
-    if (error.isError())
-    {
-        return error;
-    }
-
-    error = applyTextures(data, gl::SAMPLER_PIXEL, framebufferTextures, framebufferSerialCount);
-    if (error.isError())
-    {
-        return error;
-    }
-
-    return gl::Error(GL_NO_ERROR);
+    ANGLE_TRY(applyTextures(implFactory, data, gl::SAMPLER_VERTEX, framebufferTextures,
+                            framebufferSerialCount));
+    ANGLE_TRY(applyTextures(implFactory, data, gl::SAMPLER_PIXEL, framebufferTextures,
+                            framebufferSerialCount));
+    return gl::NoError();
 }
 
-bool RendererD3D::skipDraw(const gl::Data &data, GLenum drawMode)
+bool RendererD3D::skipDraw(const gl::ContextState &data, GLenum drawMode)
 {
-    const gl::State &state = *data.state;
+    const gl::State &state = data.getState();
 
     if (drawMode == GL_POINTS)
     {
@@ -508,25 +198,28 @@ bool RendererD3D::skipDraw(const gl::Data &data, GLenum drawMode)
     return false;
 }
 
-void RendererD3D::markTransformFeedbackUsage(const gl::Data &data)
+gl::Error RendererD3D::markTransformFeedbackUsage(const gl::ContextState &data)
 {
-    const gl::TransformFeedback *transformFeedback = data.state->getCurrentTransformFeedback();
+    const gl::TransformFeedback *transformFeedback = data.getState().getCurrentTransformFeedback();
     for (size_t i = 0; i < transformFeedback->getIndexedBufferCount(); i++)
     {
         const OffsetBindingPointer<gl::Buffer> &binding = transformFeedback->getIndexedBuffer(i);
         if (binding.get() != nullptr)
         {
             BufferD3D *bufferD3D = GetImplAs<BufferD3D>(binding.get());
-            bufferD3D->markTransformFeedbackUsage();
+            ANGLE_TRY(bufferD3D->markTransformFeedbackUsage());
         }
     }
+
+    return gl::NoError();
 }
 
-size_t RendererD3D::getBoundFramebufferTextures(const gl::Data &data, FramebufferTextureArray *outTextureArray)
+size_t RendererD3D::getBoundFramebufferTextures(const gl::ContextState &data,
+                                                FramebufferTextureArray *outTextureArray)
 {
     size_t textureCount = 0;
 
-    const gl::Framebuffer *drawFramebuffer = data.state->getDrawFramebuffer();
+    const gl::Framebuffer *drawFramebuffer = data.getState().getDrawFramebuffer();
     for (size_t i = 0; i < drawFramebuffer->getNumColorBuffers(); i++)
     {
         const gl::FramebufferAttachment *attachment = drawFramebuffer->getColorbuffer(i);
@@ -547,7 +240,7 @@ size_t RendererD3D::getBoundFramebufferTextures(const gl::Data &data, Framebuffe
     return textureCount;
 }
 
-gl::Texture *RendererD3D::getIncompleteTexture(GLenum type)
+gl::Texture *RendererD3D::getIncompleteTexture(GLImplFactory *implFactory, GLenum type)
 {
     if (mIncompleteTextures.find(type) == mIncompleteTextures.end())
     {
@@ -556,11 +249,13 @@ gl::Texture *RendererD3D::getIncompleteTexture(GLenum type)
         const gl::PixelUnpackState unpack(1, 0);
         const gl::Box area(0, 0, 0, 1, 1, 1);
 
+        // If a texture is external use a 2D texture for the incomplete texture
+        GLenum createType = (type == GL_TEXTURE_EXTERNAL_OES) ? GL_TEXTURE_2D : type;
+
         // Skip the API layer to avoid needing to pass the Context and mess with dirty bits.
         gl::Texture *t =
-            new gl::Texture(createTexture(type), std::numeric_limits<GLuint>::max(), type);
-        t->setStorage(type, 1, GL_RGBA8, colorSize);
-
+            new gl::Texture(implFactory, std::numeric_limits<GLuint>::max(), createType);
+        t->setStorage(createType, 1, GL_RGBA8, colorSize);
         if (type == GL_TEXTURE_CUBE_MAP)
         {
             for (GLenum face = GL_TEXTURE_CUBE_MAP_POSITIVE_X; face <= GL_TEXTURE_CUBE_MAP_NEGATIVE_Z; face++)
@@ -571,10 +266,9 @@ gl::Texture *RendererD3D::getIncompleteTexture(GLenum type)
         }
         else
         {
-            t->getImplementation()->setSubImage(type, 0, area, GL_RGBA8, GL_UNSIGNED_BYTE, unpack,
+            t->getImplementation()->setSubImage(createType, 0, area, GL_RGBA8, GL_UNSIGNED_BYTE, unpack,
                                                 color);
         }
-
         mIncompleteTextures[type].set(t);
     }
 
@@ -606,63 +300,6 @@ std::string RendererD3D::getVendorString() const
     return std::string("");
 }
 
-gl::Error RendererD3D::getScratchMemoryBuffer(size_t requestedSize, MemoryBuffer **bufferOut)
-{
-    if (mScratchMemoryBuffer.size() == requestedSize)
-    {
-        mScratchMemoryBufferResetCounter = ScratchMemoryBufferLifetime;
-        *bufferOut = &mScratchMemoryBuffer;
-        return gl::Error(GL_NO_ERROR);
-    }
-
-    if (mScratchMemoryBuffer.size() > requestedSize)
-    {
-        mScratchMemoryBufferResetCounter--;
-    }
-
-    if (mScratchMemoryBufferResetCounter <= 0 || mScratchMemoryBuffer.size() < requestedSize)
-    {
-        mScratchMemoryBuffer.resize(0);
-        if (!mScratchMemoryBuffer.resize(requestedSize))
-        {
-            return gl::Error(GL_OUT_OF_MEMORY, "Failed to allocate internal buffer.");
-        }
-        mScratchMemoryBufferResetCounter = ScratchMemoryBufferLifetime;
-    }
-
-    ASSERT(mScratchMemoryBuffer.size() >= requestedSize);
-
-    *bufferOut = &mScratchMemoryBuffer;
-    return gl::Error(GL_NO_ERROR);
-}
-
-void RendererD3D::insertEventMarker(GLsizei length, const char *marker)
-{
-    std::vector<wchar_t> wcstring (length + 1);
-    size_t convertedChars = 0;
-    errno_t err = mbstowcs_s(&convertedChars, wcstring.data(), length + 1, marker, _TRUNCATE);
-    if (err == 0)
-    {
-        getAnnotator()->setMarker(wcstring.data());
-    }
-}
-
-void RendererD3D::pushGroupMarker(GLsizei length, const char *marker)
-{
-    std::vector<wchar_t> wcstring(length + 1);
-    size_t convertedChars = 0;
-    errno_t err = mbstowcs_s(&convertedChars, wcstring.data(), length + 1, marker, _TRUNCATE);
-    if (err == 0)
-    {
-        getAnnotator()->beginEvent(wcstring.data());
-    }
-}
-
-void RendererD3D::popGroupMarker()
-{
-    getAnnotator()->endEvent();
-}
-
 void RendererD3D::setGPUDisjoint()
 {
     mDisjoint = true;
@@ -684,20 +321,37 @@ GLint64 RendererD3D::getTimestamp()
     return 0;
 }
 
-void RendererD3D::onMakeCurrent(const gl::Data &data)
+void RendererD3D::ensureCapsInitialized() const
 {
+    if (!mCapsInitialized)
+    {
+        generateCaps(&mNativeCaps, &mNativeTextureCaps, &mNativeExtensions, &mNativeLimitations);
+        mCapsInitialized = true;
+    }
 }
 
-void RendererD3D::initializeDebugAnnotator()
+const gl::Caps &RendererD3D::getNativeCaps() const
 {
-    createAnnotator();
-    ASSERT(mAnnotator);
-    gl::InitializeDebugAnnotations(mAnnotator);
+    ensureCapsInitialized();
+    return mNativeCaps;
 }
 
-gl::DebugAnnotator *RendererD3D::getAnnotator()
+const gl::TextureCapsMap &RendererD3D::getNativeTextureCaps() const
 {
-    ASSERT(mAnnotator);
-    return mAnnotator;
+    ensureCapsInitialized();
+    return mNativeTextureCaps;
 }
+
+const gl::Extensions &RendererD3D::getNativeExtensions() const
+{
+    ensureCapsInitialized();
+    return mNativeExtensions;
 }
+
+const gl::Limitations &RendererD3D::getNativeLimitations() const
+{
+    ensureCapsInitialized();
+    return mNativeLimitations;
+}
+
+}  // namespace rx

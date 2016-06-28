@@ -26,9 +26,6 @@ struct DrawCallPerfParams final : public RenderTestParams
         minorVersion = 0;
         windowWidth = 256;
         windowHeight = 256;
-        iterations = 50;
-        numTris = 1;
-        runTimeSeconds = 10.0;
     }
 
     std::string suffix() const override
@@ -42,6 +39,11 @@ struct DrawCallPerfParams final : public RenderTestParams
             strstr << "_validation_only";
         }
 
+        if (useFBO)
+        {
+            strstr << "_render_to_texture";
+        }
+
         if (eglParameters.deviceType == EGL_PLATFORM_ANGLE_DEVICE_TYPE_NULL_ANGLE)
         {
             strstr << "_null";
@@ -50,9 +52,10 @@ struct DrawCallPerfParams final : public RenderTestParams
         return strstr.str();
     }
 
-    unsigned int iterations;
-    double runTimeSeconds;
-    int numTris;
+    unsigned int iterations = 50;
+    double runTimeSeconds   = 10.0;
+    int numTris             = 1;
+    bool useFBO             = false;
 };
 
 std::ostream &operator<<(std::ostream &os, const DrawCallPerfParams &params)
@@ -72,16 +75,14 @@ class DrawCallPerfBenchmark : public ANGLERenderTest,
     void drawBenchmark() override;
 
   private:
-    GLuint mProgram;
-    GLuint mBuffer;
-    int mNumTris;
+    GLuint mProgram = 0;
+    GLuint mBuffer  = 0;
+    GLuint mFBO     = 0;
+    GLuint mTexture = 0;
+    int mNumTris    = GetParam().numTris;
 };
 
-DrawCallPerfBenchmark::DrawCallPerfBenchmark()
-    : ANGLERenderTest("DrawCallPerf", GetParam()),
-      mProgram(0),
-      mBuffer(0),
-      mNumTris(GetParam().numTris)
+DrawCallPerfBenchmark::DrawCallPerfBenchmark() : ANGLERenderTest("DrawCallPerf", GetParam())
 {
     mRunTimeSeconds = GetParam().runTimeSeconds;
 }
@@ -155,6 +156,17 @@ void DrawCallPerfBenchmark::initializeBenchmark()
     glUniform1f(glGetUniformLocation(mProgram, "uScale"), scale);
     glUniform1f(glGetUniformLocation(mProgram, "uOffset"), offset);
 
+    if (params.useFBO)
+    {
+        glGenFramebuffers(1, &mFBO);
+        glBindFramebuffer(GL_FRAMEBUFFER, mFBO);
+        glGenTextures(1, &mTexture);
+        glBindTexture(GL_TEXTURE_2D, mTexture);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, getWindow()->getWidth(), getWindow()->getHeight(),
+                     0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mTexture, 0);
+    }
+
     ASSERT_GL_NO_ERROR();
 }
 
@@ -162,11 +174,22 @@ void DrawCallPerfBenchmark::destroyBenchmark()
 {
     glDeleteProgram(mProgram);
     glDeleteBuffers(1, &mBuffer);
+    glDeleteTextures(1, &mTexture);
+    glDeleteFramebuffers(1, &mFBO);
 }
 
 void DrawCallPerfBenchmark::drawBenchmark()
 {
-    glClear(GL_COLOR_BUFFER_BIT);
+    // This workaround fixes a huge queue of graphics commands accumulating on the GL
+    // back-end. The GL back-end doesn't have a proper NULL device at the moment.
+    // TODO(jmadill): Remove this when/if we ever get a proper OpenGL NULL device.
+    const auto &eglParams = GetParam().eglParameters;
+    if (eglParams.deviceType != EGL_PLATFORM_ANGLE_DEVICE_TYPE_NULL_ANGLE ||
+        (eglParams.renderer != EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE &&
+         eglParams.renderer != EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE))
+    {
+        glClear(GL_COLOR_BUFFER_BIT);
+    }
 
     const auto &params = GetParam();
 
@@ -180,24 +203,27 @@ void DrawCallPerfBenchmark::drawBenchmark()
 
 using namespace egl_platform;
 
-DrawCallPerfParams DrawCallPerfD3D11Params(bool useNullDevice)
+DrawCallPerfParams DrawCallPerfD3D11Params(bool useNullDevice, bool renderToTexture)
 {
     DrawCallPerfParams params;
     params.eglParameters = useNullDevice ? D3D11_NULL() : D3D11();
+    params.useFBO        = renderToTexture;
     return params;
 }
 
-DrawCallPerfParams DrawCallPerfD3D9Params(bool useNullDevice)
+DrawCallPerfParams DrawCallPerfD3D9Params(bool useNullDevice, bool renderToTexture)
 {
     DrawCallPerfParams params;
     params.eglParameters = useNullDevice ? D3D9_NULL() : D3D9();
+    params.useFBO        = renderToTexture;
     return params;
 }
 
-DrawCallPerfParams DrawCallPerfOpenGLParams(bool useNullDevice)
+DrawCallPerfParams DrawCallPerfOpenGLParams(bool useNullDevice, bool renderToTexture)
 {
     DrawCallPerfParams params;
     params.eglParameters = useNullDevice ? OPENGL_NULL() : OPENGL();
+    params.useFBO        = renderToTexture;
     return params;
 }
 
@@ -217,12 +243,14 @@ TEST_P(DrawCallPerfBenchmark, Run)
 }
 
 ANGLE_INSTANTIATE_TEST(DrawCallPerfBenchmark,
-                       DrawCallPerfD3D11Params(false),
-                       DrawCallPerfD3D9Params(false),
-                       DrawCallPerfOpenGLParams(false),
-                       DrawCallPerfD3D11Params(true),
-                       DrawCallPerfD3D9Params(true),
-                       DrawCallPerfOpenGLParams(true),
+                       DrawCallPerfD3D9Params(false, false),
+                       DrawCallPerfD3D9Params(true, false),
+                       DrawCallPerfD3D11Params(false, false),
+                       DrawCallPerfD3D11Params(true, false),
+                       DrawCallPerfD3D11Params(true, true),
+                       DrawCallPerfOpenGLParams(false, false),
+                       DrawCallPerfOpenGLParams(true, false),
+                       DrawCallPerfOpenGLParams(true, true),
                        DrawCallPerfValidationOnly());
 
 } // namespace
