@@ -56,6 +56,7 @@ DIRS += [
 if CONFIG['NIGHTLY_BUILD']:
     DIRS += [
         'jsoncpp/src/lib_json',
+        'minidump-analyzer',
     ]
 
 if CONFIG['MOZ_CRASHREPORTER_INJECTOR']:
