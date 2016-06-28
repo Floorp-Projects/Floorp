@@ -76,20 +76,6 @@ AllocateBufferForImage(const IntSize& size, SurfaceFormat format)
   RefPtr<VolatileBuffer> buf = new VolatileBuffer();
   if (buf->Init(stride * size.height,
                 size_t(1) << gfxAlphaRecovery::GoodAlignmentLog2())) {
-    VolatileBufferPtr<uint8_t> vbufptr(buf);
-
-    if ((format == SurfaceFormat::B8G8R8X8) &&
-        (gfxPlatform::GetPlatform()->GetDefaultContentBackend() == BackendType::SKIA)) {
-      // Skia doesn't support RGBX surfaces, so ensure the alpha value is set
-      // to opaque white.
-      memset(vbufptr, 0xFF, stride * size.height);
-    } else if (buf->OnHeap()) {
-      // We only need to memset it if the buffer was allocated on the heap.
-      // Otherwise, it's allocated via mmap and refers to a zeroed page and will
-      // be COW once it's written to.
-      memset(vbufptr, 0, stride * size.height);
-    }
-
     return buf.forget();
   }
 
@@ -223,7 +209,11 @@ imgFrame::InitForDecoder(const nsIntSize& aImageSize,
       mAborted = true;
       return NS_ERROR_OUT_OF_MEMORY;
     }
-
+    if (mVBuf->OnHeap()) {
+      int32_t stride = VolatileSurfaceStride(mFrameRect.Size(), mFormat);
+      VolatileBufferPtr<uint8_t> ptr(mVBuf);
+      memset(ptr, 0, stride * mFrameRect.height);
+    }
     mImageSurface = CreateLockedSurface(mVBuf, mFrameRect.Size(), mFormat);
 
     if (!mImageSurface) {
@@ -279,7 +269,9 @@ imgFrame::InitWithDrawable(gfxDrawable* aDrawable,
       mAborted = true;
       return NS_ERROR_OUT_OF_MEMORY;
     }
-
+    if (mVBuf->OnHeap()) {
+      memset(ptr, 0, stride * mFrameRect.height);
+    }
     mImageSurface = CreateLockedSurface(mVBuf, mFrameRect.Size(), mFormat);
 
     target = gfxPlatform::GetPlatform()->
@@ -331,23 +323,6 @@ imgFrame::InitWithDrawable(gfxDrawable* aDrawable,
   return NS_OK;
 }
 
-bool
-imgFrame::CanOptimizeOpaqueImage()
-{
-  MOZ_ASSERT(NS_IsMainThread());
-  MOZ_ASSERT(!ShutdownTracker::ShutdownHasStarted());
-  mMonitor.AssertCurrentThreadOwns();
-
-  // If we're using a surface format with alpha but the image has no alpha,
-  // change the format. This doesn't change the underlying data at all, but
-  // allows DrawTargets to avoid blending when drawing known opaque images.
-  // This optimization is free and safe, so we always do it when we can except
-  // if we have a Skia backend. Skia doesn't support RGBX so ensure we don't
-  // optimize to a RGBX surface.
-  return mHasNoAlpha && mFormat == SurfaceFormat::B8G8R8A8 && mImageSurface &&
-         (gfxPlatform::GetPlatform()->GetDefaultContentBackend() != BackendType::SKIA);
-}
-
 nsresult
 imgFrame::Optimize()
 {
@@ -369,12 +344,6 @@ imgFrame::Optimize()
   // Don't optimize during shutdown because gfxPlatform may not be available.
   if (ShutdownTracker::ShutdownHasStarted()) {
     return NS_OK;
-  }
-
-  // This optimization is basically free, so we perform it even if optimization is disabled.
-  if (CanOptimizeOpaqueImage()) {
-    mFormat = SurfaceFormat::B8G8R8X8;
-    mImageSurface = CreateLockedSurface(mVBuf, mFrameRect.Size(), mFormat);
   }
 
   if (!mOptimizable || gDisableOptimize) {
@@ -866,6 +835,14 @@ imgFrame::UnlockImageData()
       nsCOMPtr<nsIRunnable> runnable = new UnlockImageDataRunnable(this);
       NS_DispatchToMainThread(runnable);
       return NS_OK;
+    }
+
+    // If we're using a surface format with alpha but the image has no alpha,
+    // change the format. This doesn't change the underlying data at all, but
+    // allows DrawTargets to avoid blending when drawing known opaque images.
+    if (mHasNoAlpha && mFormat == SurfaceFormat::B8G8R8A8 && mImageSurface) {
+      mFormat = SurfaceFormat::B8G8R8X8;
+      mImageSurface = CreateLockedSurface(mVBuf, mFrameRect.Size(), mFormat);
     }
 
     // Convert the data surface to a GPU surface or a single color if possible.
