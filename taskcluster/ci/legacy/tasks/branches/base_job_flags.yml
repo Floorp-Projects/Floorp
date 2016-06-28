@@ -17,7 +17,6 @@ flags:
     - android-api-15
     - android-api-15-frontend
     - android-partner-sample1
-    - android-x86
     - linux
     - linux-l10n    # Desktop l10n
     - linux64
