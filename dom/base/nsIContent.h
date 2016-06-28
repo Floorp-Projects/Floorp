@@ -243,6 +243,12 @@ public:
    */
   inline bool IsInHTMLDocument() const;
 
+
+  /**
+   * Returns true if in a chrome document
+   */
+  virtual bool IsInChromeDocument();
+
   /**
    * Get the namespace that this element's tag is defined in
    * @return the namespace
