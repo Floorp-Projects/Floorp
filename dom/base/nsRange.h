@@ -345,6 +345,7 @@ protected:
   int32_t mEndOffset;
 
   bool mIsPositioned : 1;
+  bool mIsDetached : 1;
   bool mMaySpanAnonymousSubtrees : 1;
   bool mIsGenerated : 1;
   bool mStartOffsetWasIncremented : 1;
