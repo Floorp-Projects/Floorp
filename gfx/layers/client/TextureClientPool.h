@@ -44,10 +44,9 @@ class TextureClientPool final : public TextureClientAllocator
   ~TextureClientPool();
 
 public:
-  TextureClientPool(LayersBackend aBackend,
-                    gfx::SurfaceFormat aFormat,
-                    gfx::IntSize aSize,
+  TextureClientPool(gfx::SurfaceFormat aFormat,
                     TextureFlags aFlags,
+                    gfx::IntSize aSize,
                     uint32_t aMaxTextureClients,
                     uint32_t aShrinkTimeoutMsec,
                     TextureForwarder* aAllocator);
@@ -105,7 +104,6 @@ public:
    */
   void Clear();
 
-  LayersBackend GetBackend() const { return mBackend; }
   gfx::SurfaceFormat GetFormat() { return mFormat; }
   TextureFlags GetFlags() const { return mFlags; }
 
@@ -121,17 +119,14 @@ private:
   // shrinking).
   static const uint32_t sMinCacheSize = 0;
 
-  /// Backend passed to the TextureClient for buffer creation.
-  LayersBackend mBackend;
-
   /// Format is passed to the TextureClient for buffer creation.
   gfx::SurfaceFormat mFormat;
 
-  /// The width and height of the tiles to be used.
-  gfx::IntSize mSize;
-
   /// Flags passed to the TextureClient for buffer creation.
   const TextureFlags mFlags;
+
+  /// The width and height of the tiles to be used.
+  gfx::IntSize mSize;
 
   // The maximum number of texture clients managed by this pool that we want
   // to remain active.
