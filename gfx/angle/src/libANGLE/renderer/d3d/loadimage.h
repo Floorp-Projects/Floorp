@@ -6,8 +6,8 @@
 
 // loadimage.h: Defines image loading functions
 
-#ifndef LIBANGLE_RENDERER_D3D_LOADIMAGE_H_
-#define LIBANGLE_RENDERER_D3D_LOADIMAGE_H_
+#ifndef LIBANGLE_RENDERER_LOADIMAGE_H_
+#define LIBANGLE_RENDERER_LOADIMAGE_H_
 
 #include "libANGLE/angletypes.h"
 
@@ -80,6 +80,16 @@ void LoadR8ToBGRX8(size_t width, size_t height, size_t depth,
                    const uint8_t *input, size_t inputRowPitch, size_t inputDepthPitch,
                    uint8_t *output, size_t outputRowPitch, size_t outputDepthPitch);
 
+void LoadRGB8ToBGR565(size_t width,
+                      size_t height,
+                      size_t depth,
+                      const uint8_t *input,
+                      size_t inputRowPitch,
+                      size_t inputDepthPitch,
+                      uint8_t *output,
+                      size_t outputRowPitch,
+                      size_t outputDepthPitch);
+
 void LoadR5G6B5ToBGRA8(size_t width, size_t height, size_t depth,
                        const uint8_t *input, size_t inputRowPitch, size_t inputDepthPitch,
                        uint8_t *output, size_t outputRowPitch, size_t outputDepthPitch);
@@ -108,9 +118,39 @@ void LoadRGBA4ToRGBA8(size_t width, size_t height, size_t depth,
                       const uint8_t *input, size_t inputRowPitch, size_t inputDepthPitch,
                       uint8_t *output, size_t outputRowPitch, size_t outputDepthPitch);
 
+void LoadRGBA8ToBGRA4(size_t width,
+                      size_t height,
+                      size_t depth,
+                      const uint8_t *input,
+                      size_t inputRowPitch,
+                      size_t inputDepthPitch,
+                      uint8_t *output,
+                      size_t outputRowPitch,
+                      size_t outputDepthPitch);
+
 void LoadBGRA4ToBGRA8(size_t width, size_t height, size_t depth,
                       const uint8_t *input, size_t inputRowPitch, size_t inputDepthPitch,
                       uint8_t *output, size_t outputRowPitch, size_t outputDepthPitch);
+
+void LoadRGBA8ToBGR5A1(size_t width,
+                       size_t height,
+                       size_t depth,
+                       const uint8_t *input,
+                       size_t inputRowPitch,
+                       size_t inputDepthPitch,
+                       uint8_t *output,
+                       size_t outputRowPitch,
+                       size_t outputDepthPitch);
+
+void LoadRGB10A2ToBGR5A1(size_t width,
+                         size_t height,
+                         size_t depth,
+                         const uint8_t *input,
+                         size_t inputRowPitch,
+                         size_t inputDepthPitch,
+                         uint8_t *output,
+                         size_t outputRowPitch,
+                         size_t outputDepthPitch);
 
 void LoadRGB5A1ToA1RGB5(size_t width, size_t height, size_t depth,
                         const uint8_t *input, size_t inputRowPitch, size_t inputDepthPitch,
@@ -198,4 +238,4 @@ inline const T *OffsetDataPointer(const uint8_t *data, size_t y, size_t z, size_
 
 #include "loadimage.inl"
 
-#endif // LIBANGLE_RENDERER_D3D_LOADIMAGE_H_
+#endif  // LIBANGLE_RENDERER_LOADIMAGE_H_

@@ -338,12 +338,6 @@ GetShellRuntime(JSRuntime *rt)
     return sr;
 }
 
-static ShellRuntime*
-GetShellRuntime(JSContext* cx)
-{
-    return GetShellRuntime(cx->runtime());
-}
-
 static char*
 GetLine(FILE* file, const char * prompt)
 {

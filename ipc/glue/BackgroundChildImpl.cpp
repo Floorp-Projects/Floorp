@@ -24,6 +24,8 @@
 #include "mozilla/dom/indexedDB/PBackgroundIndexedDBUtilsChild.h"
 #include "mozilla/dom/ipc/BlobChild.h"
 #include "mozilla/dom/quota/PQuotaChild.h"
+#include "mozilla/dom/GamepadEventChannelChild.h"
+#include "mozilla/dom/GamepadTestChannelChild.h"
 #include "mozilla/dom/MessagePortChild.h"
 #include "mozilla/dom/NuwaChild.h"
 #include "mozilla/ipc/PBackgroundTestChild.h"
@@ -480,6 +482,37 @@ BackgroundChildImpl::DeallocPFileSystemRequestChild(PFileSystemRequestChild* aAc
   // FileSystemTaskBase.cpp. We should decrease it after IPC.
   RefPtr<dom::FileSystemTaskChildBase> child =
     dont_AddRef(static_cast<dom::FileSystemTaskChildBase*>(aActor));
+  return true;
+}
+
+// Gamepad API Background IPC
+dom::PGamepadEventChannelChild*
+BackgroundChildImpl::AllocPGamepadEventChannelChild()
+{
+  MOZ_CRASH("PGamepadEventChannelChild actor should be manually constructed!");
+  return nullptr;
+}
+
+bool
+BackgroundChildImpl::DeallocPGamepadEventChannelChild(PGamepadEventChannelChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+  delete static_cast<dom::GamepadEventChannelChild*>(aActor);
+  return true;
+}
+
+dom::PGamepadTestChannelChild*
+BackgroundChildImpl::AllocPGamepadTestChannelChild()
+{
+  MOZ_CRASH("PGamepadTestChannelChild actor should be manually constructed!");
+  return nullptr;
+}
+
+bool
+BackgroundChildImpl::DeallocPGamepadTestChannelChild(PGamepadTestChannelChild* aActor)
+{
+  MOZ_ASSERT(aActor);
+  delete static_cast<dom::GamepadTestChannelChild*>(aActor);
   return true;
 }
 

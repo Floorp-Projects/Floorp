@@ -161,7 +161,6 @@ compartment.
         * "API"
         * "EAGER_ALLOC_TRIGGER"
         * "DESTROY_RUNTIME"
-        * "DESTROY_CONTEXT"
         * "LAST_DITCH"
         * "TOO_MUCH_MALLOC"
         * "ALLOC_TRIGGER"

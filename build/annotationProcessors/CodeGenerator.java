@@ -42,13 +42,14 @@ public class CodeGenerator {
                         unqualifiedName + ", jobject>\n" +
                 "{\n" +
                 "public:\n" +
+                "    static const char name[];\n" +
+                "\n" +
                 "    explicit " + unqualifiedName + "(const Context& ctx) : ObjectBase<" +
                         unqualifiedName + ", jobject>(ctx) {}\n" +
                 "\n");
 
         cpp.append(
-                "template<> const char mozilla::jni::Context<" +
-                        clsName + ", jobject>::name[] =\n" +
+                "const char " + clsName + "::name[] =\n" +
                 "        \"" + cls.getName().replace('.', '/') + "\";\n" +
                 "\n");
 

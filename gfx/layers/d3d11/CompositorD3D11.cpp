@@ -1206,6 +1206,8 @@ CompositorD3D11::BeginFrame(const nsIntRegion& aInvalidRegion,
       gfxCriticalNote << "GFX: D3D11 timeout with device-removed:" << gfx::hexa(hr);
       *aRenderBoundsOut = IntRect();
       return;
+    } else if (hr == WAIT_ABANDONED) {
+      gfxCriticalNote << "GFX: D3D11 abandoned sync";
     }
 
     mutex->ReleaseSync(0);

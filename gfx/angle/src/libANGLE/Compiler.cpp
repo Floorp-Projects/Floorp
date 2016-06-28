@@ -9,9 +9,9 @@
 #include "libANGLE/Compiler.h"
 
 #include "common/debug.h"
-#include "libANGLE/Data.h"
+#include "libANGLE/ContextState.h"
 #include "libANGLE/renderer/CompilerImpl.h"
-#include "libANGLE/renderer/ImplFactory.h"
+#include "libANGLE/renderer/GLImplFactory.h"
 
 namespace gl
 {
@@ -25,18 +25,18 @@ size_t activeCompilerHandles = 0;
 
 }  // anonymous namespace
 
-Compiler::Compiler(rx::ImplFactory *implFactory, const gl::Data &data)
+Compiler::Compiler(rx::GLImplFactory *implFactory, const ContextState &state)
     : mImplementation(implFactory->createCompiler()),
-      mSpec(data.clientVersion > 2 ? SH_GLES3_SPEC : SH_GLES2_SPEC),
+      mSpec(state.getClientVersion() > 2 ? SH_GLES3_SPEC : SH_GLES2_SPEC),
       mOutputType(mImplementation->getTranslatorOutputType()),
       mResources(),
       mFragmentCompiler(nullptr),
       mVertexCompiler(nullptr)
 {
-    ASSERT(data.clientVersion == 2 || data.clientVersion == 3);
+    ASSERT(state.getClientVersion() == 2 || state.getClientVersion() == 3);
 
-    const gl::Caps &caps             = *data.caps;
-    const gl::Extensions &extensions = *data.extensions;
+    const gl::Caps &caps             = state.getCaps();
+    const gl::Extensions &extensions = state.getExtensions();
 
     ShInitBuiltInResources(&mResources);
     mResources.MaxVertexAttribs             = caps.maxVertexAttributes;
@@ -50,8 +50,9 @@ Compiler::Compiler(rx::ImplFactory *implFactory, const gl::Data &data)
     mResources.OES_standard_derivatives     = extensions.standardDerivatives;
     mResources.EXT_draw_buffers             = extensions.drawBuffers;
     mResources.EXT_shader_texture_lod       = extensions.shaderTextureLOD;
-    // TODO: disabled until the extension is actually supported.
-    mResources.OES_EGL_image_external = 0;
+    mResources.OES_EGL_image_external          = extensions.eglImageExternal;
+    mResources.OES_EGL_image_external_essl3    = extensions.eglImageExternalEssl3;
+    mResources.NV_EGL_stream_consumer_external = extensions.eglStreamConsumerExternal;
     // TODO: use shader precision caps to determine if high precision is supported?
     mResources.FragmentPrecisionHigh = 1;
     mResources.EXT_frag_depth        = extensions.fragDepth;

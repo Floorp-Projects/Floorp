@@ -115,6 +115,13 @@ add_task(function* setUp() {
             uaid: userAgentID,
           }));
         },
+        onUnregister(request) {
+          this.serverSendMsg(JSON.stringify({
+            messageType: 'unregister',
+            channelID: request.channelID,
+            status: 200,
+          }));
+        },
       });
     },
   });

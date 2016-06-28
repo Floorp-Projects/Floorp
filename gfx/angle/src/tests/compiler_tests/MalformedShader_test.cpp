@@ -1532,3 +1532,43 @@ TEST_F(MalformedShaderTest, ESSL300FragmentInvariantAll)
         FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
     }
 }
+
+// Built-in functions can be overloaded in ESSL 1.00.
+TEST_F(MalformedShaderTest, ESSL100BuiltInFunctionOverload)
+{
+    const std::string &shaderString =
+        "precision mediump float;\n"
+        "int sin(int x)\n"
+        "{\n"
+        "    return int(sin(float(x)));\n"
+        "}\n"
+        "void main()\n"
+        "{\n"
+        "   gl_FragColor = vec4(sin(1));"
+        "}\n";
+    if (!compile(shaderString))
+    {
+        FAIL() << "Shader compilation failed, expecting success " << mInfoLog;
+    }
+}
+
+// Built-in functions can not be overloaded in ESSL 3.00.
+TEST_F(MalformedShaderTest, ESSL300BuiltInFunctionOverload)
+{
+    const std::string &shaderString =
+        "#version 300 es\n"
+        "precision mediump float;\n"
+        "out vec4 my_FragColor;\n"
+        "int sin(int x)\n"
+        "{\n"
+        "    return int(sin(float(x)));\n"
+        "}\n"
+        "void main()\n"
+        "{\n"
+        "   my_FragColor = vec4(sin(1));"
+        "}\n";
+    if (compile(shaderString))
+    {
+        FAIL() << "Shader compilation succeeded, expecting failure " << mInfoLog;
+    }
+}

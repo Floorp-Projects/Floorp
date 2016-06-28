@@ -124,6 +124,24 @@ TEST_P(ProgramBinaryTest, FloatDynamicShaderSize)
     }
 }
 
+// Tests that switching between signed and unsigned un-normalized data doesn't trigger a bug
+// in the D3D11 back-end.
+TEST_P(ProgramBinaryTest, DynamicShadersSignatureBug)
+{
+    glUseProgram(mProgram);
+    glBindBuffer(GL_ARRAY_BUFFER, mBuffer);
+
+    GLint attribLocation = glGetAttribLocation(mProgram, "inputAttribute");
+    ASSERT_NE(-1, attribLocation);
+    glEnableVertexAttribArray(attribLocation);
+
+    glVertexAttribPointer(attribLocation, 2, GL_BYTE, GL_FALSE, 0, nullptr);
+    glDrawArrays(GL_POINTS, 0, 1);
+
+    glVertexAttribPointer(attribLocation, 2, GL_UNSIGNED_BYTE, GL_FALSE, 0, nullptr);
+    glDrawArrays(GL_POINTS, 0, 1);
+}
+
 // This tests the ability to successfully save and load a program binary.
 TEST_P(ProgramBinaryTest, SaveAndLoadBinary)
 {

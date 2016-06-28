@@ -160,6 +160,15 @@ NS_EscapeURL(const nsCSubstring& aStr, uint32_t aFlags, nsCSubstring& aResult)
   }
   return aStr;
 }
+
+/**
+ * Fallible version of NS_EscapeURL. On success aResult will point to either
+ * the original string or an escaped copy.
+ */
+nsresult
+NS_EscapeURL(const nsCSubstring& aStr, uint32_t aFlags, nsCSubstring& aResult,
+             const mozilla::fallible_t&);
+
 inline const nsCSubstring&
 NS_UnescapeURL(const nsCSubstring& aStr, uint32_t aFlags, nsCSubstring& aResult)
 {

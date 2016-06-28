@@ -320,7 +320,7 @@ JSExternalString::new_(JSContext* cx, const char16_t* chars, size_t length,
     if (!str)
         return nullptr;
     str->init(chars, length, fin);
-    cx->runtime()->updateMallocCounter(cx->zone(), (length + 1) * sizeof(char16_t));
+    cx->updateMallocCounter((length + 1) * sizeof(char16_t));
     return str;
 }
 

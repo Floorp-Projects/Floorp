@@ -13,21 +13,21 @@
 #include "angle_gl.h"
 #include "common/angleutils.h"
 #include "libANGLE/angletypes.h"
+#include "libANGLE/Error.h"
 #include "libANGLE/HandleAllocator.h"
-
-#include <map>
+#include "libANGLE/HandleRangeAllocator.h"
 
 namespace rx
 {
-class ImplFactory;
+class GLImplFactory;
 }
 
 namespace gl
 {
 class Buffer;
-struct Data;
 class FenceSync;
 struct Limitations;
+class Path;
 class Program;
 class Renderbuffer;
 class Sampler;
@@ -37,19 +37,22 @@ class Texture;
 class ResourceManager : angle::NonCopyable
 {
   public:
-    explicit ResourceManager(rx::ImplFactory *factory);
+    ResourceManager();
     ~ResourceManager();
 
     void addRef();
     void release();
 
     GLuint createBuffer();
-    GLuint createShader(const gl::Limitations &rendererLimitations, GLenum type);
-    GLuint createProgram();
+    GLuint createShader(rx::GLImplFactory *factory,
+                        const gl::Limitations &rendererLimitations,
+                        GLenum type);
+    GLuint createProgram(rx::GLImplFactory *factory);
     GLuint createTexture();
     GLuint createRenderbuffer();
     GLuint createSampler();
-    GLuint createFenceSync();
+    GLuint createFenceSync(rx::GLImplFactory *factory);
+    ErrorOrResult<GLuint> createPaths(rx::GLImplFactory *factory, GLsizei range);
 
     void deleteBuffer(GLuint buffer);
     void deleteShader(GLuint shader);
@@ -58,6 +61,7 @@ class ResourceManager : angle::NonCopyable
     void deleteRenderbuffer(GLuint renderbuffer);
     void deleteSampler(GLuint sampler);
     void deleteFenceSync(GLuint fenceSync);
+    void deletePaths(GLuint first, GLsizei range);
 
     Buffer *getBuffer(GLuint handle);
     Shader *getShader(GLuint handle);
@@ -67,49 +71,49 @@ class ResourceManager : angle::NonCopyable
     Sampler *getSampler(GLuint handle);
     FenceSync *getFenceSync(GLuint handle);
 
+    // CHROMIUM_path_rendering
+    const Path *getPath(GLuint path) const;
+    Path *getPath(GLuint path);
+    bool hasPath(GLuint path) const;
+
     void setRenderbuffer(GLuint handle, Renderbuffer *renderbuffer);
 
-    void checkBufferAllocation(GLuint handle);
-    void checkTextureAllocation(GLuint handle, GLenum type);
-    void checkRenderbufferAllocation(GLuint handle);
-    void checkSamplerAllocation(GLuint sampler);
+    Buffer *checkBufferAllocation(rx::GLImplFactory *factory, GLuint handle);
+    Texture *checkTextureAllocation(rx::GLImplFactory *factory, GLuint handle, GLenum type);
+    Renderbuffer *checkRenderbufferAllocation(rx::GLImplFactory *factory, GLuint handle);
+    Sampler *checkSamplerAllocation(rx::GLImplFactory *factory, GLuint samplerHandle);
 
     bool isSampler(GLuint sampler);
 
   private:
     void createTextureInternal(GLuint handle);
 
-    rx::ImplFactory *mFactory;
     std::size_t mRefCount;
 
-    typedef std::map<GLuint, Buffer*> BufferMap;
-    BufferMap mBufferMap;
+    ResourceMap<Buffer> mBufferMap;
     HandleAllocator mBufferHandleAllocator;
 
-    typedef std::map<GLuint, Shader*> ShaderMap;
-    ShaderMap mShaderMap;
+    ResourceMap<Shader> mShaderMap;
 
-    typedef std::map<GLuint, Program*> ProgramMap;
-    ProgramMap mProgramMap;
+    ResourceMap<Program> mProgramMap;
     HandleAllocator mProgramShaderHandleAllocator;
 
-    typedef std::map<GLuint, Texture*> TextureMap;
-    TextureMap mTextureMap;
+    ResourceMap<Texture> mTextureMap;
     HandleAllocator mTextureHandleAllocator;
 
-    typedef std::map<GLuint, Renderbuffer*> RenderbufferMap;
-    RenderbufferMap mRenderbufferMap;
+    ResourceMap<Renderbuffer> mRenderbufferMap;
     HandleAllocator mRenderbufferHandleAllocator;
 
-    typedef std::map<GLuint, Sampler*> SamplerMap;
-    SamplerMap mSamplerMap;
+    ResourceMap<Sampler> mSamplerMap;
     HandleAllocator mSamplerHandleAllocator;
 
-    typedef std::map<GLuint, FenceSync*> FenceMap;
-    FenceMap mFenceSyncMap;
+    ResourceMap<FenceSync> mFenceSyncMap;
     HandleAllocator mFenceSyncHandleAllocator;
+
+    ResourceMap<Path> mPathMap;
+    HandleRangeAllocator mPathHandleAllocator;
 };
 
-}
+}  // namespace gl
 
 #endif // LIBANGLE_RESOURCEMANAGER_H_

@@ -432,12 +432,12 @@ void MacIOSurface::DecrementUseCount() {
 }
 
 #define READ_ONLY 0x1
-void MacIOSurface::Lock() {
-  MacIOSurfaceLib::IOSurfaceLock(mIOSurfacePtr, READ_ONLY, nullptr);
+void MacIOSurface::Lock(bool aReadOnly) {
+  MacIOSurfaceLib::IOSurfaceLock(mIOSurfacePtr, aReadOnly ? READ_ONLY : 0, nullptr);
 }
 
-void MacIOSurface::Unlock() {
-  MacIOSurfaceLib::IOSurfaceUnlock(mIOSurfacePtr, READ_ONLY, nullptr);
+void MacIOSurface::Unlock(bool aReadOnly) {
+  MacIOSurfaceLib::IOSurfaceUnlock(mIOSurfacePtr, aReadOnly ? READ_ONLY : 0, nullptr);
 }
 
 using mozilla::gfx::SourceSurface;

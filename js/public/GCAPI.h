@@ -54,7 +54,7 @@ namespace JS {
     D(API)                                      \
     D(EAGER_ALLOC_TRIGGER)                      \
     D(DESTROY_RUNTIME)                          \
-    D(DESTROY_CONTEXT)                          \
+    D(UNUSED0)                                  \
     D(LAST_DITCH)                               \
     D(TOO_MUCH_MALLOC)                          \
     D(ALLOC_TRIGGER)                            \
@@ -420,9 +420,6 @@ IsIncrementalGCInProgress(JSRuntime* rt);
  */
 extern JS_PUBLIC_API(bool)
 IsIncrementalBarrierNeeded(JSRuntime* rt);
-
-extern JS_PUBLIC_API(bool)
-IsIncrementalBarrierNeeded(JSContext* cx);
 
 /*
  * Notify the GC that a reference to a GC thing is about to be overwritten.

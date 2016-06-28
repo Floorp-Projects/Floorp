@@ -337,6 +337,12 @@ class JSFunction : public js::NativeObject
         atom_ = atom;
         flags_ |= HAS_GUESSED_ATOM;
     }
+    void clearGuessedAtom() {
+        MOZ_ASSERT(hasGuessedAtom());
+        MOZ_ASSERT(atom_);
+        atom_ = nullptr;
+        flags_ &= ~HAS_GUESSED_ATOM;
+    }
 
     /* uint16_t representation bounds number of call object dynamic slots. */
     enum { MAX_ARGS_AND_VARS = 2 * ((1U << 16) - 1) };

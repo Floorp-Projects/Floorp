@@ -13,6 +13,8 @@
 #include <string>
 #include <vector>
 
+#include "common/Optional.h"
+
 namespace angle
 {
 
@@ -44,6 +46,7 @@ bool HexStringToUInt(const std::string &input, unsigned int *uintOut);
 
 bool ReadFileToString(const std::string &path, std::string *stringOut);
 
+Optional<std::vector<wchar_t>> WidenString(size_t length, const char *cString);
 }
 
 #endif // LIBANGLE_STRING_UTILS_H_

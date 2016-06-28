@@ -56,23 +56,4 @@ inline bool operator!=(const SamplerState &a, const SamplerState &b)
     return !(a == b);
 }
 
-inline bool operator==(const TextureState &a, const TextureState &b)
-{
-    return a.swizzleRed == b.swizzleRed &&
-           a.swizzleGreen == b.swizzleGreen &&
-           a.swizzleBlue == b.swizzleBlue &&
-           a.swizzleAlpha == b.swizzleAlpha &&
-           a.samplerState == b.samplerState &&
-           a.baseLevel == b.baseLevel &&
-           a.maxLevel == b.maxLevel &&
-           a.immutableFormat == b.immutableFormat &&
-           a.immutableLevels == b.immutableLevels &&
-           a.usage == b.usage;
-}
-
-inline bool operator!=(const TextureState &a, const TextureState &b)
-{
-    return !(a == b);
-}
-
 }

@@ -24,9 +24,6 @@ function run_next_test(event) {
   SpecialPowers.executeSoon(function() { tests[testNum++](event); });
 }
 
-// gamepads should be empty first
-is(navigator.getGamepads().length, 0, "should be zero gamepads exposed");
-
 function buttonhandler(e) {
  run_next_test(e);
 }
@@ -36,15 +33,22 @@ function disconnecthandler(e) {
 }
 window.addEventListener("gamepadbuttondown", buttonhandler);
 window.addEventListener("gamepaddisconnected", disconnecthandler);
-// Add a gamepad
-addGamepad("test gamepad 1", // id
-           SpecialPowers.Ci.nsIGamepadServiceTest.NO_MAPPING,
-           4, // buttons
-           2).then(function(index) {
-             internal_index1 = index;
-             // Press a button to make the gamepad visible to the page.
-             GamepadService.newButtonEvent(internal_index1, 0, true);
-           });
+
+runGamepadTest(startTest)
+
+function startTest() {
+  // gamepads should be empty first
+  is(navigator.getGamepads().length, 0, "should be zero gamepads exposed");
+  // Add a gamepad
+  GamepadService.addGamepad("test gamepad 1", // id
+                     GamepadService.standardMapping,
+                     4, // buttons
+                     2).then(function(index) {
+                       internal_index1 = index;
+                       // Press a button to make the gamepad visible to the page.
+                       GamepadService.newButtonEvent(internal_index1, 0, true);
+                     });
+}
 
 var content_index1 = 0;
 var internal_index2;
@@ -59,13 +63,13 @@ function check_first_gamepad(e) {
   is(gamepads[e.gamepad.index], e.gamepad, "right gamepad exposed at index");
   is(gamepads[content_index1], e.gamepad, "gamepad counter working correctly");
   // Add a second gamepad, should automatically show up.
-  addGamepad("test gamepad 2", // id
-             SpecialPowers.Ci.nsIGamepadServiceTest.NO_MAPPING,
-             4, // buttons
-             2).then(function(index) {
-               internal_index2 = index;
-               GamepadService.newButtonEvent(internal_index2, 0, true);
-             });
+  GamepadService.addGamepad("test gamepad 2", // id
+                     GamepadService.standardMapping,
+                     4, // buttons
+                     2).then(function(index) {
+                       internal_index2 = index;
+                       GamepadService.newButtonEvent(internal_index2, 0, true);
+                     });
   ok(true, "Done checking first gamepad");
 }
 

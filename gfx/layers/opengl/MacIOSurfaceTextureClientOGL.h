@@ -16,29 +16,40 @@ namespace layers {
 class MacIOSurfaceTextureData : public TextureData
 {
 public:
-  static MacIOSurfaceTextureData* Create(MacIOSurface* aSurface);
+  static MacIOSurfaceTextureData* Create(MacIOSurface* aSurface,
+                                         gfx::BackendType aBackend);
+
+  static MacIOSurfaceTextureData*
+  Create(const gfx::IntSize& aSize, gfx::SurfaceFormat aFormat,
+         gfx::BackendType aBackend);
 
   ~MacIOSurfaceTextureData();
 
   virtual void FillInfo(TextureData::Info& aInfo) const override;
 
-  virtual bool Lock(OpenMode, FenceHandle*) override { return true; }
+  virtual bool Lock(OpenMode, FenceHandle*) override;
 
-  virtual void Unlock() override {}
+  virtual void Unlock() override;
+
+  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget() override;
 
   virtual bool Serialize(SurfaceDescriptor& aOutDescriptor) override;
 
-  virtual void Deallocate(ClientIPCAllocator*) override { mSurface = nullptr; }
+  virtual void Deallocate(ClientIPCAllocator*) override;
 
-  virtual void Forget(ClientIPCAllocator*) override { mSurface = nullptr; }
+  virtual void Forget(ClientIPCAllocator*) override;
+
+  virtual bool UpdateFromSurface(gfx::SourceSurface* aSurface) override;
 
   // For debugging purposes only.
   already_AddRefed<gfx::DataSourceSurface> GetAsSurface();
 
 protected:
-  explicit MacIOSurfaceTextureData(MacIOSurface* aSurface);
+  MacIOSurfaceTextureData(MacIOSurface* aSurface,
+                          gfx::BackendType aBackend);
 
   RefPtr<MacIOSurface> mSurface;
+  gfx::BackendType mBackend;
 };
 
 } // namespace layers

@@ -12,15 +12,18 @@
 
 #include "common/debug.h"
 #include "libANGLE/AttributeMap.h"
-#include "libANGLE/Data.h"
+#include "libANGLE/ContextState.h"
+#include "libANGLE/Path.h"
 #include "libANGLE/Surface.h"
 #include "libANGLE/renderer/gl/BlitGL.h"
 #include "libANGLE/renderer/gl/BufferGL.h"
 #include "libANGLE/renderer/gl/CompilerGL.h"
+#include "libANGLE/renderer/gl/ContextGL.h"
 #include "libANGLE/renderer/gl/FenceNVGL.h"
 #include "libANGLE/renderer/gl/FenceSyncGL.h"
 #include "libANGLE/renderer/gl/FramebufferGL.h"
 #include "libANGLE/renderer/gl/FunctionsGL.h"
+#include "libANGLE/renderer/gl/PathGL.h"
 #include "libANGLE/renderer/gl/ProgramGL.h"
 #include "libANGLE/renderer/gl/QueryGL.h"
 #include "libANGLE/renderer/gl/RenderbufferGL.h"
@@ -81,16 +84,16 @@ namespace rx
 {
 
 RendererGL::RendererGL(const FunctionsGL *functions, const egl::AttributeMap &attribMap)
-    : Renderer(),
-      mMaxSupportedESVersion(0, 0),
+    : mMaxSupportedESVersion(0, 0),
       mFunctions(functions),
       mStateManager(nullptr),
       mBlitter(nullptr),
       mHasDebugOutput(false),
-      mSkipDrawCalls(false)
+      mSkipDrawCalls(false),
+      mCapsInitialized(false)
 {
     ASSERT(mFunctions);
-    mStateManager = new StateManagerGL(mFunctions, getRendererCaps());
+    mStateManager = new StateManagerGL(mFunctions, getNativeCaps());
     nativegl_gl::GenerateWorkarounds(mFunctions, &mWorkarounds);
     mBlitter = new BlitGL(functions, mWorkarounds, mStateManager);
 
@@ -110,7 +113,8 @@ RendererGL::RendererGL(const FunctionsGL *functions, const egl::AttributeMap &at
     }
 #endif
 
-    EGLint deviceType = attribMap.get(EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE, EGL_NONE);
+    EGLint deviceType =
+        static_cast<EGLint>(attribMap.get(EGL_PLATFORM_ANGLE_DEVICE_TYPE_ANGLE, EGL_NONE));
     if (deviceType == EGL_PLATFORM_ANGLE_DEVICE_TYPE_NULL_ANGLE)
     {
         mSkipDrawCalls = true;
@@ -150,66 +154,56 @@ gl::Error RendererGL::finish()
     return gl::Error(GL_NO_ERROR);
 }
 
-gl::Error RendererGL::drawArrays(const gl::Data &data, GLenum mode, GLint first, GLsizei count)
+gl::Error RendererGL::drawArrays(const gl::ContextState &data,
+                                 GLenum mode,
+                                 GLint first,
+                                 GLsizei count)
 {
-    gl::Error error = mStateManager->setDrawArraysState(data, first, count, 0);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(mStateManager->setDrawArraysState(data, first, count, 0));
 
     if (!mSkipDrawCalls)
     {
         mFunctions->drawArrays(mode, first, count);
     }
 
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
-gl::Error RendererGL::drawArraysInstanced(const gl::Data &data,
+gl::Error RendererGL::drawArraysInstanced(const gl::ContextState &data,
                                           GLenum mode,
                                           GLint first,
                                           GLsizei count,
                                           GLsizei instanceCount)
 {
-    gl::Error error = mStateManager->setDrawArraysState(data, first, count, instanceCount);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(mStateManager->setDrawArraysState(data, first, count, instanceCount));
 
     if (!mSkipDrawCalls)
     {
         mFunctions->drawArraysInstanced(mode, first, count, instanceCount);
     }
 
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
-gl::Error RendererGL::drawElements(const gl::Data &data,
+gl::Error RendererGL::drawElements(const gl::ContextState &data,
                                    GLenum mode,
                                    GLsizei count,
                                    GLenum type,
                                    const GLvoid *indices,
                                    const gl::IndexRange &indexRange)
 {
-    const GLvoid *drawIndexPointer = nullptr;
-    gl::Error error =
-        mStateManager->setDrawElementsState(data, count, type, indices, 0, &drawIndexPointer);
-    if (error.isError())
-    {
-        return error;
-    }
+    const GLvoid *drawIndexPtr = nullptr;
+    ANGLE_TRY(mStateManager->setDrawElementsState(data, count, type, indices, 0, &drawIndexPtr));
 
     if (!mSkipDrawCalls)
     {
-        mFunctions->drawElements(mode, count, type, drawIndexPointer);
+        mFunctions->drawElements(mode, count, type, drawIndexPtr);
     }
 
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
-gl::Error RendererGL::drawElementsInstanced(const gl::Data &data,
+gl::Error RendererGL::drawElementsInstanced(const gl::ContextState &data,
                                             GLenum mode,
                                             GLsizei count,
                                             GLenum type,
@@ -218,22 +212,18 @@ gl::Error RendererGL::drawElementsInstanced(const gl::Data &data,
                                             const gl::IndexRange &indexRange)
 {
     const GLvoid *drawIndexPointer = nullptr;
-    gl::Error error = mStateManager->setDrawElementsState(data, count, type, indices, instances,
-                                                          &drawIndexPointer);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(mStateManager->setDrawElementsState(data, count, type, indices, instances,
+                                                  &drawIndexPointer));
 
     if (!mSkipDrawCalls)
     {
         mFunctions->drawElementsInstanced(mode, count, type, drawIndexPointer, instances);
     }
 
-    return gl::Error(GL_NO_ERROR);
+    return gl::NoError();
 }
 
-gl::Error RendererGL::drawRangeElements(const gl::Data &data,
+gl::Error RendererGL::drawRangeElements(const gl::ContextState &data,
                                         GLenum mode,
                                         GLuint start,
                                         GLuint end,
@@ -243,12 +233,8 @@ gl::Error RendererGL::drawRangeElements(const gl::Data &data,
                                         const gl::IndexRange &indexRange)
 {
     const GLvoid *drawIndexPointer = nullptr;
-    gl::Error error =
-        mStateManager->setDrawElementsState(data, count, type, indices, 0, &drawIndexPointer);
-    if (error.isError())
-    {
-        return error;
-    }
+    ANGLE_TRY(
+        mStateManager->setDrawElementsState(data, count, type, indices, 0, &drawIndexPointer));
 
     if (!mSkipDrawCalls)
     {
@@ -258,70 +244,80 @@ gl::Error RendererGL::drawRangeElements(const gl::Data &data,
     return gl::Error(GL_NO_ERROR);
 }
 
-CompilerImpl *RendererGL::createCompiler()
+void RendererGL::stencilFillPath(const gl::ContextState &state,
+                                 const gl::Path *path,
+                                 GLenum fillMode,
+                                 GLuint mask)
 {
-    return new CompilerGL(mFunctions);
+    const auto *pathObj = GetImplAs<PathGL>(path);
+
+    mFunctions->stencilFillPathNV(pathObj->getPathID(), fillMode, mask);
+
+    ASSERT(mFunctions->getError() == GL_NO_ERROR);
 }
 
-ShaderImpl *RendererGL::createShader(const gl::Shader::Data &data)
+void RendererGL::stencilStrokePath(const gl::ContextState &state,
+                                   const gl::Path *path,
+                                   GLint reference,
+                                   GLuint mask)
 {
-    return new ShaderGL(data, mFunctions, mWorkarounds);
+    const auto *pathObj = GetImplAs<PathGL>(path);
+
+    mFunctions->stencilStrokePathNV(pathObj->getPathID(), reference, mask);
+
+    ASSERT(mFunctions->getError() == GL_NO_ERROR);
 }
 
-ProgramImpl *RendererGL::createProgram(const gl::Program::Data &data)
+void RendererGL::coverFillPath(const gl::ContextState &state,
+                               const gl::Path *path,
+                               GLenum coverMode)
 {
-    return new ProgramGL(data, mFunctions, mStateManager);
+
+    const auto *pathObj = GetImplAs<PathGL>(path);
+    mFunctions->coverFillPathNV(pathObj->getPathID(), coverMode);
+
+    ASSERT(mFunctions->getError() == GL_NO_ERROR);
 }
 
-FramebufferImpl *RendererGL::createFramebuffer(const gl::Framebuffer::Data &data)
+void RendererGL::coverStrokePath(const gl::ContextState &state,
+                                 const gl::Path *path,
+                                 GLenum coverMode)
 {
-    return new FramebufferGL(data, mFunctions, mStateManager, mWorkarounds, false);
+    const auto *pathObj = GetImplAs<PathGL>(path);
+    mFunctions->coverStrokePathNV(pathObj->getPathID(), coverMode);
+
+    ASSERT(mFunctions->getError() == GL_NO_ERROR);
 }
 
-TextureImpl *RendererGL::createTexture(GLenum target)
+void RendererGL::stencilThenCoverFillPath(const gl::ContextState &state,
+                                          const gl::Path *path,
+                                          GLenum fillMode,
+                                          GLuint mask,
+                                          GLenum coverMode)
 {
-    return new TextureGL(target, mFunctions, mWorkarounds, mStateManager, mBlitter);
+
+    const auto *pathObj = GetImplAs<PathGL>(path);
+    mFunctions->stencilThenCoverFillPathNV(pathObj->getPathID(), fillMode, mask, coverMode);
+
+    ASSERT(mFunctions->getError() == GL_NO_ERROR);
 }
 
-RenderbufferImpl *RendererGL::createRenderbuffer()
+void RendererGL::stencilThenCoverStrokePath(const gl::ContextState &state,
+                                            const gl::Path *path,
+                                            GLint reference,
+                                            GLuint mask,
+                                            GLenum coverMode)
 {
-    return new RenderbufferGL(mFunctions, mWorkarounds, mStateManager, getRendererTextureCaps());
+
+    const auto *pathObj = GetImplAs<PathGL>(path);
+    mFunctions->stencilThenCoverStrokePathNV(pathObj->getPathID(), reference, mask, coverMode);
+
+    ASSERT(mFunctions->getError() == GL_NO_ERROR);
 }
 
-BufferImpl *RendererGL::createBuffer()
+ContextImpl *RendererGL::createContext(const gl::ContextState &state)
 {
-    return new BufferGL(mFunctions, mStateManager);
-}
-
-VertexArrayImpl *RendererGL::createVertexArray(const gl::VertexArray::Data &data)
-{
-    return new VertexArrayGL(data, mFunctions, mStateManager);
-}
-
-QueryImpl *RendererGL::createQuery(GLenum type)
-{
-    return new QueryGL(type, mFunctions, mStateManager);
-}
-
-FenceNVImpl *RendererGL::createFenceNV()
-{
-    return new FenceNVGL(mFunctions);
-}
-
-FenceSyncImpl *RendererGL::createFenceSync()
-{
-    return new FenceSyncGL(mFunctions);
-}
-
-TransformFeedbackImpl *RendererGL::createTransformFeedback()
-{
-    return new TransformFeedbackGL(mFunctions, mStateManager,
-                                   getRendererCaps().maxTransformFeedbackSeparateComponents);
-}
-
-SamplerImpl *RendererGL::createSampler()
-{
-    return new SamplerGL(mFunctions, mStateManager);
+    return new ContextGL(state, this);
 }
 
 void RendererGL::insertEventMarker(GLsizei length, const char *marker)
@@ -400,7 +396,7 @@ std::string RendererGL::getRendererDescription() const
 const gl::Version &RendererGL::getMaxSupportedESVersion() const
 {
     // Force generation of caps
-    getRendererCaps();
+    getNativeCaps();
 
     return mMaxSupportedESVersion;
 }
@@ -410,11 +406,6 @@ void RendererGL::generateCaps(gl::Caps *outCaps, gl::TextureCapsMap* outTextureC
                               gl::Limitations * /* outLimitations */) const
 {
     nativegl_gl::GenerateCaps(mFunctions, outCaps, outTextureCaps, outExtensions, &mMaxSupportedESVersion);
-}
-
-void RendererGL::syncState(const gl::State &state, const gl::State::DirtyBits &dirtyBits)
-{
-    mStateManager->syncState(state, dirtyBits);
 }
 
 GLint RendererGL::getGPUDisjoint()
@@ -430,9 +421,37 @@ GLint64 RendererGL::getTimestamp()
     return result;
 }
 
-void RendererGL::onMakeCurrent(const gl::Data &data)
+void RendererGL::ensureCapsInitialized() const
 {
-    // Queries need to be paused/resumed on context switches
-    mStateManager->onMakeCurrent(data);
+    if (!mCapsInitialized)
+    {
+        generateCaps(&mNativeCaps, &mNativeTextureCaps, &mNativeExtensions, &mNativeLimitations);
+        mCapsInitialized = true;
+    }
 }
+
+const gl::Caps &RendererGL::getNativeCaps() const
+{
+    ensureCapsInitialized();
+    return mNativeCaps;
 }
+
+const gl::TextureCapsMap &RendererGL::getNativeTextureCaps() const
+{
+    ensureCapsInitialized();
+    return mNativeTextureCaps;
+}
+
+const gl::Extensions &RendererGL::getNativeExtensions() const
+{
+    ensureCapsInitialized();
+    return mNativeExtensions;
+}
+
+const gl::Limitations &RendererGL::getNativeLimitations() const
+{
+    ensureCapsInitialized();
+    return mNativeLimitations;
+}
+
+}  // namespace rx

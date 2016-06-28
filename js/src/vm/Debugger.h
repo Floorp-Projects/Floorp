@@ -245,6 +245,7 @@ typedef mozilla::Variant<JSScript*, WasmInstanceObject*> DebuggerScriptReferent;
 // denoting the synthesized source of a wasm module.
 typedef mozilla::Variant<ScriptSourceObject*, WasmInstanceObject*> DebuggerSourceReferent;
 
+class DebuggerEnvironment;
 class DebuggerObject;
 
 class Debugger : private mozilla::LinkedListElement<Debugger>
@@ -908,6 +909,8 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
      * store the Environment object in *vp and return true.
      */
     MOZ_MUST_USE bool wrapEnvironment(JSContext* cx, Handle<Env*> env, MutableHandleValue vp);
+    MOZ_MUST_USE bool wrapEnvironment(JSContext* cx, Handle<Env*> env,
+                                      MutableHandle<DebuggerEnvironment*> result);
 
     /*
      * Like cx->compartment()->wrap(cx, vp), but for the debugger compartment.
@@ -1055,6 +1058,76 @@ class Debugger : private mozilla::LinkedListElement<Debugger>
   private:
     Debugger(const Debugger&) = delete;
     Debugger & operator=(const Debugger&) = delete;
+};
+
+enum class DebuggerEnvironmentType {
+    Declarative,
+    With,
+    Object
+};
+
+class DebuggerEnvironment : public NativeObject
+{
+  public:
+    enum {
+        OWNER_SLOT
+    };
+
+    static const unsigned RESERVED_SLOTS = 1;
+
+    static const Class class_;
+
+    static NativeObject* initClass(JSContext* cx, HandleObject dbgCtor, HandleObject objProto);
+    static DebuggerEnvironment* create(JSContext* cx, HandleObject proto, HandleObject referent,
+                                       HandleNativeObject debugger);
+
+    DebuggerEnvironmentType type() const;
+    MOZ_MUST_USE bool getParent(JSContext* cx, MutableHandle<DebuggerEnvironment*> result) const;
+    MOZ_MUST_USE bool getObject(JSContext* cx, MutableHandle<DebuggerObject*> result) const;
+    MOZ_MUST_USE bool getCallee(JSContext* cx, MutableHandle<DebuggerObject*> result) const;
+    bool isDebuggee() const;
+    bool isOptimized() const;
+
+    static MOZ_MUST_USE bool getNames(JSContext* cx, Handle<DebuggerEnvironment*> environment,
+                                      MutableHandle<IdVector> result);
+    static MOZ_MUST_USE bool find(JSContext* cx, Handle<DebuggerEnvironment*> environment,
+                                  HandleId id, MutableHandle<DebuggerEnvironment*> result);
+    static MOZ_MUST_USE bool getVariable(JSContext* cx, Handle<DebuggerEnvironment*> environment,
+                                         HandleId id, MutableHandleValue result);
+    static MOZ_MUST_USE bool setVariable(JSContext* cx, Handle<DebuggerEnvironment*> environment,
+                                         HandleId id, HandleValue value);
+
+  private:
+    static const ClassOps classOps_;
+
+    static const JSPropertySpec properties_[];
+    static const JSFunctionSpec methods_[];
+
+    Env* referent() const {
+        Env* env = static_cast<Env*>(getPrivate());
+        MOZ_ASSERT(env);
+        return env;
+    }
+
+    Debugger* owner() const;
+
+    static DebuggerEnvironment* checkThis(JSContext* cx, const CallArgs& args, const char* fnname,
+                                          bool requireDebuggee);
+    bool requireDebuggee(JSContext* cx) const;
+
+    static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
+
+    static MOZ_MUST_USE bool typeGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool parentGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool objectGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool calleeGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool inspectableGetter(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool optimizedOutGetter(JSContext* cx, unsigned argc, Value* vp);
+
+    static MOZ_MUST_USE bool namesMethod(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool findMethod(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool getVariableMethod(JSContext* cx, unsigned argc, Value* vp);
+    static MOZ_MUST_USE bool setVariableMethod(JSContext* cx, unsigned argc, Value* vp);
 };
 
 class DebuggerObject : public NativeObject

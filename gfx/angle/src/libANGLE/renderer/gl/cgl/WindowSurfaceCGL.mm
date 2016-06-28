@@ -142,11 +142,12 @@
     namespace rx
     {
 
-    WindowSurfaceCGL::WindowSurfaceCGL(RendererGL *renderer,
+    WindowSurfaceCGL::WindowSurfaceCGL(const egl::SurfaceState &state,
+                                       RendererGL *renderer,
                                        CALayer *layer,
                                        const FunctionsGL *functions,
                                        CGLContextObj context)
-        : SurfaceGL(renderer),
+        : SurfaceGL(state, renderer),
           mSwapLayer(nil),
           mCurrentSwapId(0),
           mLayer(layer),
@@ -250,7 +251,7 @@ egl::Error WindowSurfaceCGL::swap()
     unsigned height = getHeight();
     auto &texture   = *mSwapState.beingRendered;
 
-    if (texture.width != width || texture.height != texture.height)
+    if (texture.width != width || texture.height != height)
     {
         mStateManager->bindTexture(GL_TEXTURE_2D, texture.texture);
         mFunctions->texImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA,
@@ -320,10 +321,10 @@ EGLint WindowSurfaceCGL::getSwapBehavior() const
     return EGL_BUFFER_DESTROYED;
 }
 
-FramebufferImpl *WindowSurfaceCGL::createDefaultFramebuffer(const gl::Framebuffer::Data &data)
+FramebufferImpl *WindowSurfaceCGL::createDefaultFramebuffer(const gl::FramebufferState &state)
 {
     // TODO(cwallez) assert it happens only once?
-    return new FramebufferGL(mFramebuffer, data, mFunctions, mWorkarounds, mStateManager);
+    return new FramebufferGL(mFramebuffer, state, mFunctions, mWorkarounds, mStateManager);
 }
 
 }
