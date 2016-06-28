@@ -57,7 +57,12 @@ nsEventQueue::GetEvent(bool aMayWait, nsIRunnable** aResult,
   }
 
   if (aResult) {
+    MOZ_ASSERT(mOffsetHead < EVENTS_PER_PAGE);
+    MOZ_ASSERT_IF(mHead == mTail, mOffsetHead <= mOffsetTail);
     *aResult = mHead->mEvents[mOffsetHead++];
+
+    MOZ_ASSERT(*aResult);
+    MOZ_ASSERT(mOffsetHead <= EVENTS_PER_PAGE);
 
     // Check if mHead points to empty Page
     if (mOffsetHead == EVENTS_PER_PAGE) {
