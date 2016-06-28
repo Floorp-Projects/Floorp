@@ -82,6 +82,15 @@ this.DevToolsLoader = function DevToolsLoader() {
 };
 
 DevToolsLoader.prototype = {
+  destroy: function (reason = "shutdown") {
+    Services.obs.removeObserver(this, "devtools-unload");
+
+    if (this._provider) {
+      this._provider.unload(reason);
+      delete this._provider;
+    }
+  },
+
   get provider() {
     if (!this._provider) {
       this._loadProvider();
@@ -177,12 +186,7 @@ DevToolsLoader.prototype = {
     if (topic != "devtools-unload") {
       return;
     }
-    Services.obs.removeObserver(this, "devtools-unload");
-
-    if (this._provider) {
-      this._provider.unload(data);
-      delete this._provider;
-    }
+    this.destroy(data);
   },
 
   /**
