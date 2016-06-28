@@ -109,6 +109,7 @@ devtools/client/webconsole/**
 devtools/client/webide/**
 !devtools/client/webide/components/webideCli.js
 devtools/server/**
+!devtools/server/child.js
 !devtools/server/css-logic.js
 !devtools/server/actors/webbrowser.js
 !devtools/server/actors/styles.js
