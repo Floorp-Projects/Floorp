@@ -76,17 +76,12 @@ WMFDecoderModule::Startup()
 }
 
 already_AddRefed<MediaDataDecoder>
-WMFDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
-                                     layers::LayersBackend aLayersBackend,
-                                     layers::ImageContainer* aImageContainer,
-                                     TaskQueue* aTaskQueue,
-                                     MediaDataDecoderCallback* aCallback,
-                                     DecoderDoctorDiagnostics* aDiagnostics)
+WMFDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
 {
   nsAutoPtr<WMFVideoMFTManager> manager(
-    new WMFVideoMFTManager(aConfig,
-                           aLayersBackend,
-                           aImageContainer,
+    new WMFVideoMFTManager(aParams.VideoConfig(),
+                           aParams.mLayersBackend,
+                           aParams.mImageContainer,
                            sDXVAEnabled));
 
   if (!manager->Init()) {
@@ -94,25 +89,22 @@ WMFDecoderModule::CreateVideoDecoder(const VideoInfo& aConfig,
   }
 
   RefPtr<MediaDataDecoder> decoder =
-    new WMFMediaDataDecoder(manager.forget(), aTaskQueue, aCallback);
+    new WMFMediaDataDecoder(manager.forget(), aParams.mTaskQueue, aParams.mCallback);
 
   return decoder.forget();
 }
 
 already_AddRefed<MediaDataDecoder>
-WMFDecoderModule::CreateAudioDecoder(const AudioInfo& aConfig,
-                                     TaskQueue* aTaskQueue,
-                                     MediaDataDecoderCallback* aCallback,
-                                     DecoderDoctorDiagnostics* aDiagnostics)
+WMFDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
 {
-  nsAutoPtr<WMFAudioMFTManager> manager(new WMFAudioMFTManager(aConfig));
+  nsAutoPtr<WMFAudioMFTManager> manager(new WMFAudioMFTManager(aParams.AudioConfig()));
 
   if (!manager->Init()) {
     return nullptr;
   }
 
   RefPtr<MediaDataDecoder> decoder =
-    new WMFMediaDataDecoder(manager.forget(), aTaskQueue, aCallback);
+    new WMFMediaDataDecoder(manager.forget(), aParams.mTaskQueue, aParams.mCallback);
   return decoder.forget();
 }
 

@@ -16,24 +16,19 @@ namespace mozilla
 {
 
 H264Converter::H264Converter(PlatformDecoderModule* aPDM,
-                             const VideoInfo& aConfig,
-                             layers::LayersBackend aLayersBackend,
-                             layers::ImageContainer* aImageContainer,
-                             TaskQueue* aTaskQueue,
-                             MediaDataDecoderCallback* aCallback,
-                             DecoderDoctorDiagnostics* aDiagnostics)
+                             const CreateDecoderParams& aParams)
   : mPDM(aPDM)
-  , mOriginalConfig(aConfig)
-  , mCurrentConfig(aConfig)
-  , mLayersBackend(aLayersBackend)
-  , mImageContainer(aImageContainer)
-  , mTaskQueue(aTaskQueue)
-  , mCallback(aCallback)
+  , mOriginalConfig(aParams.VideoConfig())
+  , mCurrentConfig(aParams.VideoConfig())
+  , mLayersBackend(aParams.mLayersBackend)
+  , mImageContainer(aParams.mImageContainer)
+  , mTaskQueue(aParams.mTaskQueue)
+  , mCallback(aParams.mCallback)
   , mDecoder(nullptr)
-  , mNeedAVCC(aPDM->DecoderNeedsConversion(aConfig) == PlatformDecoderModule::kNeedAVCC)
+  , mNeedAVCC(aPDM->DecoderNeedsConversion(aParams.mConfig) == PlatformDecoderModule::kNeedAVCC)
   , mLastError(NS_OK)
 {
-  CreateDecoder(aDiagnostics);
+  CreateDecoder(aParams.mDiagnostics);
 }
 
 H264Converter::~H264Converter()
@@ -146,12 +141,15 @@ H264Converter::CreateDecoder(DecoderDoctorDiagnostics* aDiagnostics)
     mOriginalConfig = mCurrentConfig;
   }
 
-  mDecoder = mPDM->CreateVideoDecoder(mNeedAVCC ? mCurrentConfig : mOriginalConfig,
-                                      mLayersBackend,
-                                      mImageContainer,
-                                      mTaskQueue,
-                                      mCallback,
-                                      aDiagnostics);
+  mDecoder = mPDM->CreateVideoDecoder({
+    mNeedAVCC ? mCurrentConfig : mOriginalConfig,
+    mTaskQueue,
+    mCallback,
+    aDiagnostics,
+    mImageContainer,
+    mLayersBackend
+  });
+
   if (!mDecoder) {
     mLastError = NS_ERROR_FAILURE;
     return NS_ERROR_FAILURE;

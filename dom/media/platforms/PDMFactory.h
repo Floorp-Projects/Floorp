@@ -30,12 +30,7 @@ public:
   // PlatformDecoderModules alive at the same time.
   // This is called on the decode task queue.
   already_AddRefed<MediaDataDecoder>
-  CreateDecoder(const TrackInfo& aConfig,
-                TaskQueue* aTaskQueue,
-                MediaDataDecoderCallback* aCallback,
-                DecoderDoctorDiagnostics* aDiagnostics,
-                layers::LayersBackend aLayersBackend = layers::LayersBackend::LAYERS_NONE,
-                layers::ImageContainer* aImageContainer = nullptr) const;
+  CreateDecoder(const CreateDecoderParams& aParams);
 
   bool SupportsMimeType(const nsACString& aMimeType,
                         DecoderDoctorDiagnostics* aDiagnostics) const;
@@ -61,12 +56,7 @@ private:
 
   already_AddRefed<MediaDataDecoder>
   CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
-                       const TrackInfo& aConfig,
-                       TaskQueue* aTaskQueue,
-                       MediaDataDecoderCallback* aCallback,
-                       DecoderDoctorDiagnostics* aDiagnostics,
-                       layers::LayersBackend aLayersBackend,
-                       layers::ImageContainer* aImageContainer) const;
+                       const CreateDecoderParams& aParams);
 
   nsTArray<RefPtr<PlatformDecoderModule>> mCurrentPDMs;
   RefPtr<PlatformDecoderModule> mEMEPDM;
