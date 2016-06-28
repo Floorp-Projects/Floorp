@@ -228,7 +228,7 @@ CDMProxy::gmp_InitGetGMPDecryptor(nsresult aResult,
 
   UniquePtr<GetGMPDecryptorCallback> callback(new gmp_InitDoneCallback(this,
                                                                        Move(aData)));
-  nsresult rv = mps->GetGMPDecryptor(&tags, GetNodeId(), Move(callback));
+  nsresult rv = mps->GetGMPDecryptor(nullptr, &tags, GetNodeId(), Move(callback));
   if (NS_FAILED(rv)) {
     RejectPromise(promiseID, NS_ERROR_DOM_INVALID_STATE_ERR,
                   NS_LITERAL_CSTRING("Call to GetGMPDecryptor() failed early"));

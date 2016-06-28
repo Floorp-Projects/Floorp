@@ -230,7 +230,7 @@ GMPAudioDecoder::Init()
   nsTArray<nsCString> tags;
   InitTags(tags);
   UniquePtr<GetGMPAudioDecoderCallback> callback(new GMPInitDoneCallback(this));
-  if (NS_FAILED(mMPS->GetGMPAudioDecoder(&tags, GetNodeId(), Move(callback)))) {
+  if (NS_FAILED(mMPS->GetGMPAudioDecoder(nullptr, &tags, GetNodeId(), Move(callback)))) {
     mInitPromise.Reject(MediaDataDecoder::DecoderFailureReason::INIT_ERROR, __func__);
   }
 
