@@ -32,16 +32,13 @@ static int MimeTypeToCodec(const nsACString& aMimeType)
   return -1;
 }
 
-VPXDecoder::VPXDecoder(const VideoInfo& aConfig,
-                       ImageContainer* aImageContainer,
-                       TaskQueue* aTaskQueue,
-                       MediaDataDecoderCallback* aCallback)
-  : mImageContainer(aImageContainer)
-  , mTaskQueue(aTaskQueue)
-  , mCallback(aCallback)
+VPXDecoder::VPXDecoder(const CreateDecoderParams& aParams)
+  : mImageContainer(aParams.mImageContainer)
+  , mTaskQueue(aParams.mTaskQueue)
+  , mCallback(aParams.mCallback)
   , mIsFlushing(false)
-  , mInfo(aConfig)
-  , mCodec(MimeTypeToCodec(aConfig.mMimeType))
+  , mInfo(aParams.VideoConfig())
+  , mCodec(MimeTypeToCodec(aParams.VideoConfig().mMimeType))
 {
   MOZ_COUNT_CTOR(VPXDecoder);
   PodZero(&mVPX);
