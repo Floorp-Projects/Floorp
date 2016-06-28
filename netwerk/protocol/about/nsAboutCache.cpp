@@ -146,8 +146,7 @@ NS_IMETHODIMP nsAboutCache::Channel::AsyncOpen(nsIStreamListener *aListener, nsI
     rv = VisitNextStorage();
     if (NS_FAILED(rv)) return rv;
 
-    MOZ_ASSERT(!aContext, "asyncOpen2() does not take a context argument");
-    rv = mChannel->AsyncOpen2(aListener);
+    rv = mChannel->AsyncOpen(aListener, aContext);
     if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
@@ -160,12 +159,25 @@ NS_IMETHODIMP nsAboutCache::Channel::AsyncOpen2(nsIStreamListener *aListener)
 
 NS_IMETHODIMP nsAboutCache::Channel::Open(nsIInputStream * *_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    nsresult rv;
+
+    if (!mChannel) {
+        return NS_ERROR_UNEXPECTED;
+    }
+
+    // Kick the walk loop.
+    rv = VisitNextStorage();
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mChannel->Open(_retval);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsAboutCache::Channel::Open2(nsIInputStream * *_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    return Open(_retval);
 }
 
 nsresult
