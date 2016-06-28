@@ -13,6 +13,7 @@ const { connect } = require("devtools/client/shared/vendor/react-redux");
 const {
   updateDeviceDisplayed,
   updateDeviceModalOpen,
+  updatePreferredDevices,
 } = require("./actions/devices");
 const {
   changeDevice,
@@ -24,7 +25,6 @@ const { updateTouchSimulationEnabled } = require("./actions/touch-simulation");
 const DeviceModal = createFactory(require("./components/device-modal"));
 const GlobalToolbar = createFactory(require("./components/global-toolbar"));
 const Viewports = createFactory(require("./components/viewports"));
-const { updatePreferredDevices } = require("./devices");
 const Types = require("./types");
 
 let App = createClass({
