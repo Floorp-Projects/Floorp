@@ -106,6 +106,8 @@ private:
   void ForgetThisSiteOnGMPThread(const nsACString& aOrigin);
   void ClearRecentHistoryOnGMPThread(PRTime aSince);
 
+  already_AddRefed<GMPParent> GetById(uint32_t aPluginId);
+
 protected:
   friend class GMPParent;
   void ReAddOnGMPThread(const RefPtr<GMPParent>& aOld);
@@ -225,14 +227,6 @@ public:
   }
   virtual ~GMPServiceParent();
 
-  bool RecvLoadGMP(const nsCString& aNodeId,
-                   const nsCString& aApi,
-                   nsTArray<nsCString>&& aTags,
-                   nsTArray<ProcessId>&& aAlreadyBridgedTo,
-                   base::ProcessId* aID,
-                   nsCString* aDisplayName,
-                   uint32_t* aPluginId,
-                   nsresult* aRv) override;
   bool RecvGetGMPNodeId(const nsString& aOrigin,
                         const nsString& aTopLevelOrigin,
                         const nsString& aGMPName,
@@ -245,6 +239,18 @@ public:
   void ActorDestroy(ActorDestroyReason aWhy) override;
 
   static PGMPServiceParent* Create(Transport* aTransport, ProcessId aOtherPid);
+
+  bool RecvSelectGMP(const nsCString& aNodeId,
+                     const nsCString& aAPI,
+                     nsTArray<nsCString>&& aTags,
+                     uint32_t* aOutPluginId,
+                     nsresult* aOutRv) override;
+
+  bool RecvLaunchGMP(const uint32_t& aPluginId,
+                     nsTArray<ProcessId>&& aAlreadyBridgedTo,
+                     ProcessId* aOutID,
+                     nsCString* aOutDisplayName,
+                     nsresult* aOutRv) override;
 
 private:
   RefPtr<GeckoMediaPluginServiceParent> mService;
