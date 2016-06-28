@@ -64,7 +64,8 @@ GMPDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
                                               aParams.mLayersBackend,
                                               aParams.mImageContainer,
                                               aParams.mTaskQueue,
-                                              wrapper->Callback()));
+                                              wrapper->Callback(),
+                                              nullptr));
   return wrapper.forget();
 }
 
@@ -85,7 +86,8 @@ GMPDecoderModule::CreateAudioDecoder(const CreateDecoderParams& aParams)
   RefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aParams.mCallback);
   wrapper->SetProxyTarget(new GMPAudioDecoder(aParams.AudioConfig(),
                                               aParams.mTaskQueue,
-                                              wrapper->Callback()));
+                                              wrapper->Callback(),
+                                              nullptr));
   return wrapper.forget();
 }
 
