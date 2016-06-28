@@ -106,6 +106,7 @@ protected:
   nsCOMPtr<nsIFind> mFind;
 
   bool mCaseSensitive;
+  bool mEntireWord;
 
   bool EnsureFind() {
     if (mFind) {
@@ -118,7 +119,7 @@ protected:
     }
 
     mFind->SetCaseSensitive(mCaseSensitive);
-    mFind->SetWordBreaker(nullptr);
+    mFind->SetEntireWord(mEntireWord);
 
     return true;
   }

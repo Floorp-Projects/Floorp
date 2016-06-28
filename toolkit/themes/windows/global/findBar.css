@@ -131,12 +131,14 @@ findbar[noanim] {
 }
 
 .findbar-highlight,
-.findbar-case-sensitive {
+.findbar-case-sensitive,
+.findbar-entire-word {
   margin-inline-start: 5px;
 }
 
 .findbar-highlight > .toolbarbutton-icon,
-.findbar-case-sensitive > .toolbarbutton-icon {
+.findbar-case-sensitive > .toolbarbutton-icon,
+.findbar-entire-word > .toolbarbutton-icon {
   display: none;
 }
 
