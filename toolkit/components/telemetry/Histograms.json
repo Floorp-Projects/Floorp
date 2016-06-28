@@ -5150,29 +5150,12 @@
     "n_values": 10,
     "description": "Track click count on about:newtab tiles per index (0-8). For non-default row or column configurations all clicks into the '9' bucket. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
-  "BROWSERPROVIDER_XUL_IMPORT_TIME": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "low": 20,
-    "high": 600000,
-    "n_buckets": 20,
-    "description": "Time for the initial conversion of a XUL places database (ms)",
-    "cpp_guard": "ANDROID"
-  },
   "BROWSERPROVIDER_XUL_IMPORT_BOOKMARKS": {
     "expires_in_version": "default",
     "kind": "exponential",
     "high": 50000,
     "n_buckets": 20,
     "description": "Number of bookmarks in the original XUL places database",
-    "cpp_guard": "ANDROID"
-  },
-  "BROWSERPROVIDER_XUL_IMPORT_HISTORY": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 1000000,
-    "n_buckets": 20,
-    "description": "Number of history entries in the original XUL places database",
     "cpp_guard": "ANDROID"
   },
   "FENNEC_GLOBALHISTORY_ADD_MS": {
@@ -5367,13 +5350,6 @@
     "bug_numbers": [1259510],
     "description": "Recorded once per session near startup: records true/false whether the search service has engines with icon update URLs.",
     "releaseChannelCollection": "opt-out"
-  },
-  "SEARCH_SERVICE_BUILD_CACHE_MS": {
-    "expires_in_version": "40",
-    "kind": "exponential",
-    "high": 1000,
-    "n_buckets": 15,
-    "description": "Time (ms) it takes to build the cache of the search service"
   },
   "SEARCH_SERVICE_COUNTRY_FETCH_TIME_MS": {
     "alert_emails": ["mhammond@mozilla.com", "gavin@mozilla.com"],
@@ -6792,38 +6768,6 @@
     "n_buckets": 1000,
     "description": "The time (in milliseconds) that it took a 'stopTrace' request to go round trip."
   },
-  "COOKIES_3RDPARTY_NUM_SITES_ACCEPTED": {
-    "expires_in_version": "40",
-    "kind": "linear",
-    "low": 5,
-    "high": 145,
-    "n_buckets": 30,
-    "description": "The number of distinct pairs (first-party site, third-party site attempting to set cookie) for which the third-party cookie has been accepted. Sites are considered identical if they have the same eTLD + 1. Measures are normalized per 24h. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "COOKIES_3RDPARTY_NUM_SITES_BLOCKED": {
-    "expires_in_version": "40",
-    "kind": "linear",
-    "low": 5,
-    "high": 145,
-    "n_buckets": 30,
-    "description": "The number of distinct pairs (first-party site, third-party site attempting to set cookie) for which the third-party cookie has been rejected. Sites are considered identical if they have the same eTLD + 1. Measures are normalized per 24h. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "COOKIES_3RDPARTY_NUM_ATTEMPTS_ACCEPTED": {
-    "expires_in_version": "40",
-    "kind": "linear",
-    "low": 10,
-    "high": 500,
-    "n_buckets": 50,
-    "description": "The total number of distinct attempts by third-party sites to place cookies which have been accepted.  Measures are normalized per 24h. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "COOKIES_3RDPARTY_NUM_ATTEMPTS_BLOCKED": {
-    "expires_in_version": "40",
-    "kind": "linear",
-    "low": 10,
-    "high": 500,
-    "n_buckets": 50,
-    "description": "The total number of distinct attempts by third-party sites to place cookies which have been rejected.  Measures are normalized per 24h. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
   "DEVTOOLS_DEBUGGER_RDP_LOCAL_GET_EXECUTABLE_LINES_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -8108,24 +8052,6 @@
     "kind": "enumerated",
     "description": "Record on which attempt we successfully unlocked a database. See DATABASE_LOCKED_EXCEPTION.",
     "n_values": 5
-  },
-  "SQLITEBRIDGE_PROVIDER_PASSWORDS_LOCKED": {
-    "expires_in_version": "40",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "The number of errors using the PasswordsProvider due to a locked DB. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "SQLITEBRIDGE_PROVIDER_FORMS_LOCKED": {
-    "expires_in_version": "40",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "The number of errors using the FormHistoryProvider due to a locked DB. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
-  },
-  "SQLITEBRIDGE_PROVIDER_HOME_LOCKED": {
-    "expires_in_version": "40",
-    "kind": "enumerated",
-    "n_values": 10,
-    "description": "The number of errors using the HomeProvider due to a locked DB. *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
   "SSL_TLS13_INTOLERANCE_REASON_PRE": {
     "alert_emails": ["seceng-telemetry@mozilla.com"],
