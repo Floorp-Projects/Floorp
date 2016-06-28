@@ -215,8 +215,8 @@ public:
   explicit CompositorBridgeParent(widget::CompositorWidgetProxy* aWidget,
                                   CSSToLayoutDeviceScale aScale,
                                   bool aUseAPZ,
-                                  bool aUseExternalSurfaceSize = false,
-                                  int aSurfaceWidth = -1, int aSurfaceHeight = -1);
+                                  bool aUseExternalSurfaceSize,
+                                  const gfx::IntSize& aSurfaceSize);
 
   virtual bool RecvGetFrameUniformity(FrameUniformityData* aOutData) override;
   virtual bool RecvRequestOverfill() override;
