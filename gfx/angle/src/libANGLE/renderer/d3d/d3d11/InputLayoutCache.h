@@ -21,6 +21,7 @@
 #include "libANGLE/Constants.h"
 #include "libANGLE/Error.h"
 #include "libANGLE/formatutils.h"
+#include "libANGLE/renderer/d3d/RendererD3D.h"
 
 namespace gl
 {
@@ -34,9 +35,6 @@ struct TranslatedIndexData;
 struct SourceIndexData;
 class ProgramD3D;
 
-using SortedAttribArray = std::array<const TranslatedAttribute *, gl::MAX_VERTEX_ATTRIBS>;
-using SortedIndexArray  = std::array<int, gl::MAX_VERTEX_ATTRIBS>;
-
 class InputLayoutCache : angle::NonCopyable
 {
   public:
@@ -47,13 +45,16 @@ class InputLayoutCache : angle::NonCopyable
     void clear();
     void markDirty();
 
-    gl::Error applyVertexBuffers(const std::vector<TranslatedAttribute> &attributes,
+    gl::Error applyVertexBuffers(const gl::State &state,
+                                 const std::vector<TranslatedAttribute> &vertexArrayAttribs,
+                                 const std::vector<TranslatedAttribute> &currentValueAttribs,
                                  GLenum mode,
-                                 gl::Program *program,
+                                 GLint start,
                                  TranslatedIndexData *indexInfo,
                                  GLsizei numIndicesPerInstance);
 
-    gl::Error updateVertexOffsetsForPointSpritesEmulation(GLsizei emulatedInstanceId);
+    gl::Error updateVertexOffsetsForPointSpritesEmulation(GLint startVertex,
+                                                          GLsizei emulatedInstanceId);
 
     // Useful for testing
     void setCacheSize(unsigned int cacheSize) { mCacheSize = cacheSize; }
@@ -86,15 +87,11 @@ class InputLayoutCache : angle::NonCopyable
         uint32_t attributeData[gl::MAX_VERTEX_ATTRIBS];
     };
 
-    gl::Error updateInputLayout(gl::Program *program,
+    gl::Error updateInputLayout(const gl::State &state,
                                 GLenum mode,
-                                const SortedAttribArray &sortedAttributes,
-                                const SortedIndexArray &sortedSemanticIndices,
-                                size_t attribCount,
+                                const AttribIndexArray &sortedSemanticIndices,
                                 GLsizei numIndicesPerInstance);
-    gl::Error createInputLayout(const SortedAttribArray &sortedAttributes,
-                                const SortedIndexArray &sortedSemanticIndices,
-                                size_t attribCount,
+    gl::Error createInputLayout(const AttribIndexArray &sortedSemanticIndices,
                                 GLenum mode,
                                 gl::Program *program,
                                 GLsizei numIndicesPerInstance,
@@ -103,17 +100,15 @@ class InputLayoutCache : angle::NonCopyable
     std::map<PackedAttributeLayout, ID3D11InputLayout *> mLayoutMap;
 
     ID3D11InputLayout *mCurrentIL;
-    ID3D11Buffer *mCurrentBuffers[gl::MAX_VERTEX_ATTRIBS];
-    UINT mCurrentVertexStrides[gl::MAX_VERTEX_ATTRIBS];
-    UINT mCurrentVertexOffsets[gl::MAX_VERTEX_ATTRIBS];
-    SortedAttribArray mSortedAttributes;
-    size_t mUnsortedAttributesCount;
+    std::array<ID3D11Buffer *, gl::MAX_VERTEX_ATTRIBS> mCurrentBuffers;
+    std::array<UINT, gl::MAX_VERTEX_ATTRIBS> mCurrentVertexStrides;
+    std::array<UINT, gl::MAX_VERTEX_ATTRIBS> mCurrentVertexOffsets;
+    std::vector<const TranslatedAttribute *> mCurrentAttributes;
 
     ID3D11Buffer *mPointSpriteVertexBuffer;
     ID3D11Buffer *mPointSpriteIndexBuffer;
 
     unsigned int mCacheSize;
-    unsigned long long mCounter;
 
     ID3D11Device *mDevice;
     ID3D11DeviceContext *mDeviceContext;

@@ -82,7 +82,7 @@ class CopyTexImageTest : public ANGLETest
         glCopyTexSubImage2D(GL_TEXTURE_2D, 0, xoffset, yoffset, x, y, w, h);
     }
 
-    virtual void SetUp()
+    void SetUp() override
     {
         ANGLETest::SetUp();
 
@@ -119,14 +119,14 @@ class CopyTexImageTest : public ANGLETest
         ASSERT_GL_NO_ERROR();
     }
 
-    virtual void TearDown()
+    void TearDown() override
     {
         glDeleteProgram(mTextureProgram);
 
         ANGLETest::TearDown();
     }
 
-    void verifyResults(GLuint texture, GLubyte data[4], GLint x, GLint y) const
+    void verifyResults(GLuint texture, GLubyte data[4], GLint x, GLint y)
     {
         glViewport(0, 0, 16, 16);
 
@@ -166,7 +166,7 @@ TEST_P(CopyTexImageTest, RGBToL)
 {
     // TODO (geofflang): Figure out why CopyTex[Sub]Image doesn't work with
     // RGB->L on older Intel chips
-    if (isIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    if (IsIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
     {
         std::cout << "Test skipped on Intel OpenGL." << std::endl;
         return;
@@ -269,7 +269,7 @@ TEST_P(CopyTexImageTest, SubImageRGBToL)
 {
     // TODO (geofflang): Figure out why CopyTex[Sub]Image doesn't work with
     // RGB->L on older Intel chips
-    if (isIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    if (IsIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
     {
         std::cout << "Test skipped on Intel OpenGL." << std::endl;
         return;

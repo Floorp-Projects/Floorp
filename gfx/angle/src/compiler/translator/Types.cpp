@@ -9,6 +9,8 @@
 #endif
 
 #include "compiler/translator/Types.h"
+#include "compiler/translator/InfoSink.h"
+#include "compiler/translator/IntermNode.h"
 
 #include <algorithm>
 #include <climits>
@@ -242,6 +244,76 @@ bool TStructure::containsSamplers() const
             return true;
     }
     return false;
+}
+
+void TStructure::createSamplerSymbols(const TString &structName,
+                                      const TString &structAPIName,
+                                      const int arrayOfStructsSize,
+                                      TVector<TIntermSymbol *> *outputSymbols,
+                                      TMap<TIntermSymbol *, TString> *outputSymbolsToAPINames) const
+{
+    for (auto &field : *mFields)
+    {
+        const TType *fieldType = field->type();
+        if (IsSampler(fieldType->getBasicType()))
+        {
+            if (arrayOfStructsSize > 0)
+            {
+                for (int arrayIndex = 0; arrayIndex < arrayOfStructsSize; ++arrayIndex)
+                {
+                    TStringStream name;
+                    name << structName << "_" << arrayIndex << "_" << field->name();
+                    TIntermSymbol *symbol = new TIntermSymbol(0, name.str(), *fieldType);
+                    outputSymbols->push_back(symbol);
+
+                    if (outputSymbolsToAPINames)
+                    {
+                        TStringStream apiName;
+                        apiName << structAPIName << "[" << arrayIndex << "]." << field->name();
+                        (*outputSymbolsToAPINames)[symbol] = apiName.str();
+                    }
+                }
+            }
+            else
+            {
+                TString symbolName    = structName + "_" + field->name();
+                TIntermSymbol *symbol = new TIntermSymbol(0, symbolName, *fieldType);
+                outputSymbols->push_back(symbol);
+
+                if (outputSymbolsToAPINames)
+                {
+                    TString apiName = structAPIName + "." + field->name();
+                    (*outputSymbolsToAPINames)[symbol] = apiName;
+                }
+            }
+        }
+        else if (fieldType->isStructureContainingSamplers())
+        {
+            int nestedArrayOfStructsSize = fieldType->isArray() ? fieldType->getArraySize() : 0;
+            if (arrayOfStructsSize > 0)
+            {
+                for (int arrayIndex = 0; arrayIndex < arrayOfStructsSize; ++arrayIndex)
+                {
+                    TStringStream fieldName;
+                    fieldName << structName << "_" << arrayIndex << "_" << field->name();
+                    TStringStream fieldAPIName;
+                    if (outputSymbolsToAPINames)
+                    {
+                        fieldAPIName << structAPIName << "[" << arrayIndex << "]." << field->name();
+                    }
+                    fieldType->createSamplerSymbols(fieldName.str(), fieldAPIName.str(),
+                                                    nestedArrayOfStructsSize, outputSymbols,
+                                                    outputSymbolsToAPINames);
+                }
+            }
+            else
+            {
+                fieldType->createSamplerSymbols(
+                    structName + "_" + field->name(), structAPIName + "." + field->name(),
+                    nestedArrayOfStructsSize, outputSymbols, outputSymbolsToAPINames);
+            }
+        }
+    }
 }
 
 TString TFieldListCollection::buildMangledName(const TString &mangledNamePrefix) const

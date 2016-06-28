@@ -11,9 +11,15 @@
 #include "libANGLE/renderer/d3d/d3d11/renderer11_utils.h"
 
 #if defined (ANGLE_ENABLE_WINDOWS_STORE)
-using namespace ABI::Windows::Foundation;
+#include <wrl.h>
+#include <wrl/wrappers/corewrappers.h>
+#include <windows.applicationmodel.core.h>
+using namespace Microsoft::WRL;
+using namespace Microsoft::WRL::Wrappers;
 using namespace ABI::Windows::ApplicationModel;
 using namespace ABI::Windows::ApplicationModel::Core;
+using namespace ABI::Windows::Foundation;
+using namespace ABI::Windows::Foundation::Collections;
 #endif
 
 namespace rx

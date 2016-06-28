@@ -11,6 +11,7 @@
 
 #include "libANGLE/angletypes.h"
 #include "libANGLE/renderer/TextureImpl.h"
+#include "libANGLE/Texture.h"
 
 namespace rx
 {
@@ -51,14 +52,12 @@ struct LevelInfoGL
 class TextureGL : public TextureImpl
 {
   public:
-    TextureGL(GLenum type,
+    TextureGL(const gl::TextureState &state,
               const FunctionsGL *functions,
               const WorkaroundsGL &workarounds,
               StateManagerGL *stateManager,
               BlitGL *blitter);
     ~TextureGL() override;
-
-    void setUsage(GLenum usage) override;
 
     gl::Error setImage(GLenum target, size_t level, GLenum internalFormat, const gl::Extents &size, GLenum format, GLenum type,
                        const gl::PixelUnpackState &unpack, const uint8_t *pixels) override;
@@ -77,14 +76,18 @@ class TextureGL : public TextureImpl
 
     gl::Error setStorage(GLenum target, size_t levels, GLenum internalFormat, const gl::Extents &size) override;
 
-    gl::Error generateMipmaps(const gl::TextureState &textureState) override;
+    gl::Error setImageExternal(GLenum target,
+                               egl::Stream *stream,
+                               const egl::Stream::GLTextureDescription &desc) override;
+
+    gl::Error generateMipmap() override;
 
     void bindTexImage(egl::Surface *surface) override;
     void releaseTexImage() override;
 
     gl::Error setEGLImageTarget(GLenum target, egl::Image *image) override;
 
-    void syncState(size_t textureUnit, const gl::TextureState &textureState) const;
+    void syncState(size_t textureUnit) const;
     GLuint getTextureID() const;
 
     gl::Error getAttachmentRenderTarget(const gl::FramebufferAttachment::Target &target,
@@ -93,8 +96,29 @@ class TextureGL : public TextureImpl
         return gl::Error(GL_OUT_OF_MEMORY, "Not supported on OpenGL");
     }
 
+    void setBaseLevel(GLuint) override {}
+
   private:
-    GLenum mTextureType;
+    void setImageHelper(GLenum target,
+                        size_t level,
+                        GLenum internalFormat,
+                        const gl::Extents &size,
+                        GLenum format,
+                        GLenum type,
+                        const uint8_t *pixels);
+    void reserveTexImageToBeFilled(GLenum target,
+                                   size_t level,
+                                   GLenum internalFormat,
+                                   const gl::Extents &size,
+                                   GLenum format,
+                                   GLenum type);
+    gl::Error setSubImageRowByRowWorkaround(GLenum target,
+                                            size_t level,
+                                            const gl::Box &area,
+                                            GLenum format,
+                                            GLenum type,
+                                            const gl::PixelUnpackState &unpack,
+                                            const uint8_t *pixels);
 
     const FunctionsGL *mFunctions;
     const WorkaroundsGL &mWorkarounds;

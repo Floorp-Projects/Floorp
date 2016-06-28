@@ -144,51 +144,6 @@ gl::Error VertexBuffer11::storeVertexAttributes(const gl::VertexAttribute &attri
     return gl::Error(GL_NO_ERROR);
 }
 
-gl::Error VertexBuffer11::getSpaceRequired(const gl::VertexAttribute &attrib, GLsizei count,
-                                           GLsizei instances, unsigned int *outSpaceRequired) const
-{
-    unsigned int elementCount = 0;
-    if (attrib.enabled)
-    {
-        if (instances == 0 || attrib.divisor == 0)
-        {
-            elementCount = count;
-        }
-        else
-        {
-            // Round up to divisor, if possible
-            elementCount = UnsignedCeilDivide(static_cast<unsigned int>(instances), attrib.divisor);
-        }
-
-        gl::VertexFormatType formatType = gl::GetVertexFormatType(attrib);
-        const D3D_FEATURE_LEVEL featureLevel = mRenderer->getRenderer11DeviceCaps().featureLevel;
-        const d3d11::VertexFormat &vertexFormatInfo = d3d11::GetVertexFormatInfo(formatType, featureLevel);
-        const d3d11::DXGIFormat &dxgiFormatInfo = d3d11::GetDXGIFormatInfo(vertexFormatInfo.nativeFormat);
-        unsigned int elementSize = dxgiFormatInfo.pixelBytes;
-        if (elementSize <= std::numeric_limits<unsigned int>::max() / elementCount)
-        {
-            if (outSpaceRequired)
-            {
-                *outSpaceRequired = elementSize * elementCount;
-            }
-            return gl::Error(GL_NO_ERROR);
-        }
-        else
-        {
-            return gl::Error(GL_OUT_OF_MEMORY, "New vertex buffer size would result in an overflow.");
-        }
-    }
-    else
-    {
-        const unsigned int elementSize = 4;
-        if (outSpaceRequired)
-        {
-            *outSpaceRequired = elementSize * 4;
-        }
-        return gl::Error(GL_NO_ERROR);
-    }
-}
-
 unsigned int VertexBuffer11::getBufferSize() const
 {
     return mBufferSize;
@@ -232,4 +187,4 @@ ID3D11Buffer *VertexBuffer11::getBuffer() const
     return mBuffer;
 }
 
-}
+}  // namespace rx

@@ -244,6 +244,9 @@ class TParseContext : angle::NonCopyable
                                 TIntermAggregate **aggregateOut);
     TFunction *parseFunctionDeclarator(const TSourceLoc &location,
                                        TFunction *function);
+    TFunction *parseFunctionHeader(const TPublicType &type,
+                                   const TString *name,
+                                   const TSourceLoc &location);
     TFunction *addConstructorFunc(const TPublicType &publicType);
     TIntermTyped *addConstructor(TIntermNode *arguments,
                                  TType *type,
