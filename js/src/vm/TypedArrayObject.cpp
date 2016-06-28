@@ -7,6 +7,7 @@
 #include "vm/TypedArrayObject.h"
 
 #include "mozilla/Alignment.h"
+#include "mozilla/Casting.h"
 #include "mozilla/FloatingPoint.h"
 #include "mozilla/PodOperations.h"
 
@@ -31,6 +32,7 @@
 #include "builtin/TypedObjectConstants.h"
 #include "gc/Barrier.h"
 #include "gc/Marking.h"
+#include "jit/InlinableNatives.h"
 #include "js/Conversions.h"
 #include "vm/ArrayBufferObject.h"
 #include "vm/GlobalObject.h"
@@ -49,6 +51,7 @@
 using namespace js;
 using namespace js::gc;
 
+using mozilla::AssertedCast;
 using JS::CanonicalizeNaN;
 using JS::ToInt32;
 using JS::ToUint32;
@@ -175,6 +178,17 @@ template<typename ElementType>
 static inline JSObject*
 NewArray(JSContext* cx, uint32_t nelements);
 
+#define JS_FOR_EACH_TYPED_ARRAY(macro) \
+    macro(int8_t, Int8) \
+    macro(uint8_t, Uint8) \
+    macro(int16_t, Int16) \
+    macro(uint16_t, Uint16) \
+    macro(int32_t, Int32) \
+    macro(uint32_t, Uint32) \
+    macro(float, Float32) \
+    macro(double, Float64) \
+    macro(uint8_clamped, Uint8Clamped)
+
 namespace {
 
 // We allow nullptr for newTarget for all the creation methods, to allow for
@@ -225,11 +239,16 @@ class TypedArrayObjectTemplate : public TypedArrayObject
         if (!ctorProto)
             return nullptr;
 
-        return NewFunctionWithProto(cx, class_constructor, 3,
-                                    JSFunction::NATIVE_CTOR, nullptr,
-                                    ClassName(key, cx),
-                                    ctorProto, gc::AllocKind::FUNCTION,
-                                    SingletonObject);
+        JSFunction* fun = NewFunctionWithProto(cx, class_constructor, 3,
+                                               JSFunction::NATIVE_CTOR, nullptr,
+                                               ClassName(key, cx),
+                                               ctorProto, gc::AllocKind::FUNCTION,
+                                               SingletonObject);
+
+        if (fun)
+            fun->setJitInfo(&jit::JitInfo_TypedArrayConstructor);
+
+        return fun;
     }
 
     static bool
@@ -436,6 +455,45 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     {
         RootedObject proto(cx, nullptr);
         return makeInstance(cx, buffer, byteOffset, len, proto);
+    }
+
+    static TypedArrayObject*
+    makeTemplateObject(JSContext* cx, uint32_t len, NewObjectKind newKind)
+    {
+        MOZ_ASSERT(len <= TypedArrayObject::INLINE_BUFFER_LIMIT / sizeof(NativeType));
+        gc::AllocKind allocKind = AllocKindForLazyBuffer(len * sizeof(NativeType));
+
+        AutoSetNewObjectMetadata metadata(cx);
+        MOZ_ASSERT(len * sizeof(NativeType) < TypedArrayObject::SINGLETON_BYTE_LENGTH);
+
+        const Class* clasp = instanceClass();
+        jsbytecode* pc;
+        RootedScript script(cx, cx->currentScript(&pc));
+        if (script && ObjectGroup::useSingletonForAllocationSite(script, pc, clasp))
+            newKind = SingletonObject;
+        RootedObject tmp(cx, NewBuiltinClassInstance(cx, clasp, allocKind, newKind));
+        if (!tmp)
+            return nullptr;
+        if (script && !ObjectGroup::setAllocationSiteObjectGroup(cx, script, pc, tmp,
+                                                                 newKind == SingletonObject))
+        {
+            return nullptr;
+        }
+
+        TypedArrayObject* tarray = &tmp->as<TypedArrayObject>();
+
+        void* data = tarray->fixedData(FIXED_DATA_START);
+        tarray->initPrivate(data);
+        memset(data, 0, len * sizeof(NativeType));
+
+        tarray->setFixedSlot(TypedArrayObject::BUFFER_SLOT, NullValue());
+        tarray->setFixedSlot(TypedArrayObject::LENGTH_SLOT, Int32Value(AssertedCast<int32_t>(len)));
+        tarray->setFixedSlot(TypedArrayObject::BYTEOFFSET_SLOT, Int32Value(0));
+
+        // Verify that the private slot is at the expected place.
+        MOZ_ASSERT(tarray->numFixedSlots() == TypedArrayObject::DATA_SLOT);
+
+        return tarray;
     }
 
     /*
@@ -728,17 +786,51 @@ class TypedArrayObjectTemplate : public TypedArrayObject
     static Value getIndexValue(JSObject* tarray, uint32_t index);
 };
 
-typedef TypedArrayObjectTemplate<int8_t> Int8Array;
-typedef TypedArrayObjectTemplate<uint8_t> Uint8Array;
-typedef TypedArrayObjectTemplate<int16_t> Int16Array;
-typedef TypedArrayObjectTemplate<uint16_t> Uint16Array;
-typedef TypedArrayObjectTemplate<int32_t> Int32Array;
-typedef TypedArrayObjectTemplate<uint32_t> Uint32Array;
-typedef TypedArrayObjectTemplate<float> Float32Array;
-typedef TypedArrayObjectTemplate<double> Float64Array;
-typedef TypedArrayObjectTemplate<uint8_clamped> Uint8ClampedArray;
+#define CREATE_TYPE_FOR_TYPED_ARRAY(T, N) \
+    typedef TypedArrayObjectTemplate<T> N##Array;
+JS_FOR_EACH_TYPED_ARRAY(CREATE_TYPE_FOR_TYPED_ARRAY)
+#undef CREATE_TYPE_FOR_TYPED_ARRAY
 
 } /* anonymous namespace */
+
+static void
+UpdateTypedArrayAfterMove(JSObject* obj, const JSObject* old)
+{
+    MOZ_ASSERT(obj->is<TypedArrayObject>());
+    MOZ_ASSERT(old->is<TypedArrayObject>());
+    TypedArrayObject* newObj = &obj->as<TypedArrayObject>();
+    const TypedArrayObject* oldObj = &old->as<TypedArrayObject>();
+
+    // Typed arrays with a buffer or small typed arrays with a *shared* buffer object are not
+    // supported yet!
+    if (oldObj->hasBuffer())
+        return;
+
+    // Update the data slot pointer if it points to the old JSObject.
+    void* oldData = newObj->fixedData(TypedArrayObject::FIXED_DATA_START);
+    if (oldData == ((char *)oldObj) + oldObj->dataOffset()) {
+        void* newData = newObj->fixedData(TypedArrayObject::FIXED_DATA_START);
+        *(void **)((((char *)newObj) + newObj->dataOffset())) = newData;
+    }
+}
+
+TypedArrayObject*
+js::TypedArrayCreateWithTemplate(JSContext* cx, HandleObject templateObj)
+{
+    MOZ_ASSERT(templateObj->is<TypedArrayObject>());
+    TypedArrayObject* obj = &templateObj->as<TypedArrayObject>();
+    size_t len = obj->length();
+
+    switch (obj->type()) {
+#define CREATE_TYPED_ARRAY(T, N) \
+      case Scalar::N: \
+        return TypedArrayObjectTemplate<T>::makeTemplateObject(cx, len, GenericObject);
+JS_FOR_EACH_TYPED_ARRAY(CREATE_TYPED_ARRAY)
+#undef CREATE_TYPED_ARRAY
+      default:
+        MOZ_CRASH("Unsupported TypedArray type");
+    }
+}
 
 template<typename T>
 struct TypedArrayObject::OfType
@@ -1018,6 +1110,22 @@ bool
 TypedArrayConstructor(JSContext* cx, unsigned argc, Value* vp)
 {
     JS_ReportError(cx, "%%TypedArray%% calling/constructing not implemented yet");
+    return false;
+}
+
+/* static */ bool
+TypedArrayObject::GetTemplateObjectForNative(JSContext* cx, Native native, uint32_t len,
+                                             MutableHandleObject res)
+{
+#define CHECK_TYPED_ARRAY_CONSTRUCTOR(T, N) \
+    if (native == &TypedArrayObjectTemplate<T>::class_constructor &&  \
+            len <= TypedArrayObject::INLINE_BUFFER_LIMIT / sizeof(T)) \
+    { \
+        res.set(TypedArrayObjectTemplate<T>::makeTemplateObject(cx, len, TenuredObject)); \
+        return true; \
+    }
+JS_FOR_EACH_TYPED_ARRAY(CHECK_TYPED_ARRAY_CONSTRUCTOR)
+#undef CHECK_TYPED_ARRAY_CONSTRUCTOR
     return false;
 }
 
@@ -2196,6 +2304,11 @@ static const ClassOps TypedArrayClassOps = {
     TypedArrayObject::trace, /* trace  */
 };
 
+static const ClassExtension TypedArrayClassExtension = {
+    nullptr,
+    UpdateTypedArrayAfterMove,
+};
+
 #define IMPL_TYPED_ARRAY_CLASS_SPEC(_type)                                     \
 {                                                                              \
     _type##Array::createConstructor,                                           \
@@ -2228,7 +2341,8 @@ static const ClassSpec TypedArrayObjectClassSpecs[Scalar::MaxTypedArrayViewType]
     JSCLASS_HAS_CACHED_PROTO(JSProto_##_type##Array) |                         \
     JSCLASS_DELAY_METADATA_BUILDER,                                            \
     &TypedArrayClassOps,                                                       \
-    &TypedArrayObjectClassSpecs[Scalar::Type::_type]                           \
+    &TypedArrayObjectClassSpecs[Scalar::Type::_type],                          \
+    &TypedArrayClassExtension                                                  \
 }
 
 const Class TypedArrayObject::classes[Scalar::MaxTypedArrayViewType] = {
