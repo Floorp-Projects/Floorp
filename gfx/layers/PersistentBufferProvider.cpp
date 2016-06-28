@@ -126,16 +126,7 @@ PersistentBufferProviderShared::~PersistentBufferProviderShared()
     mFwd->GetActiveResourceTracker().RemoveObject(this);
   }
 
-  mDrawTarget = nullptr;
-  if (mBack && mBack->IsLocked()) {
-    mBack->Unlock();
-  }
-  if (mFront && mFront->IsLocked()) {
-    mFront->Unlock();
-  }
-  if (mBuffer && mBuffer->IsLocked()) {
-    mBuffer->Unlock();
-  }
+  Destroy();
 }
 
 already_AddRefed<gfx::DrawTarget>
@@ -273,6 +264,29 @@ PersistentBufferProviderShared::NotifyInactive()
     MOZ_ASSERT(false);
     mBuffer->Unlock();
   }
+  mBuffer = nullptr;
+}
+
+void
+PersistentBufferProviderShared::Destroy()
+{
+  mSnapshot = nullptr;
+  mDrawTarget = nullptr;
+
+  if (mFront && mFront->IsLocked()) {
+    mFront->Unlock();
+  }
+
+  if (mBack && mBack->IsLocked()) {
+    mBack->Unlock();
+  }
+
+  if (mBuffer && mBuffer->IsLocked()) {
+    mBuffer->Unlock();
+  }
+
+  mFront = nullptr;
+  mBack = nullptr;
   mBuffer = nullptr;
 }
 
