@@ -1182,11 +1182,18 @@ XMLHttpRequestMainThread::GetAllResponseHeaders(nsACString& aResponseHeaders,
     aResponseHeaders.AppendLiteral("\r\n");
   }
 
-  int64_t length;
-  if (NS_SUCCEEDED(mChannel->GetContentLength(&length))) {
-    aResponseHeaders.AppendLiteral("Content-Length: ");
-    aResponseHeaders.AppendInt(length);
-    aResponseHeaders.AppendLiteral("\r\n");
+  // Don't provide Content-Length for data URIs
+  nsCOMPtr<nsIURI> uri;
+  bool isDataURI;
+  if (NS_FAILED(mChannel->GetURI(getter_AddRefs(uri))) ||
+      NS_FAILED(uri->SchemeIs("data", &isDataURI)) ||
+      !isDataURI) {
+    int64_t length;
+    if (NS_SUCCEEDED(mChannel->GetContentLength(&length))) {
+      aResponseHeaders.AppendLiteral("Content-Length: ");
+      aResponseHeaders.AppendInt(length);
+      aResponseHeaders.AppendLiteral("\r\n");
+    }
   }
 }
 
