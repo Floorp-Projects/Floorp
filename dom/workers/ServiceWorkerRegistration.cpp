@@ -394,7 +394,7 @@ class UpdateResultRunnable final : public WorkerRunnable
 
 public:
   UpdateResultRunnable(PromiseWorkerProxy* aPromiseProxy, ErrorResult& aStatus)
-    : WorkerRunnable(aPromiseProxy->GetWorkerPrivate(), WorkerThreadModifyBusyCount)
+    : WorkerRunnable(aPromiseProxy->GetWorkerPrivate())
     , mPromiseProxy(aPromiseProxy)
     , mStatus(Move(aStatus))
   { }
@@ -556,7 +556,7 @@ class FulfillUnregisterPromiseRunnable final : public WorkerRunnable
 public:
   FulfillUnregisterPromiseRunnable(PromiseWorkerProxy* aProxy,
                                    Maybe<bool> aState)
-    : WorkerRunnable(aProxy->GetWorkerPrivate(), WorkerThreadModifyBusyCount)
+    : WorkerRunnable(aProxy->GetWorkerPrivate())
     , mPromiseWorkerProxy(aProxy)
     , mState(aState)
   {
@@ -1285,7 +1285,7 @@ class FireUpdateFoundRunnable final : public WorkerRunnable
 public:
   FireUpdateFoundRunnable(WorkerPrivate* aWorkerPrivate,
                           WorkerListener* aListener)
-    : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
+    : WorkerRunnable(aWorkerPrivate)
     , mListener(aListener)
   {
     // Need this assertion for now since runnables which modify busy count can
