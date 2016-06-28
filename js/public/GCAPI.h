@@ -421,9 +421,6 @@ IsIncrementalGCInProgress(JSRuntime* rt);
 extern JS_PUBLIC_API(bool)
 IsIncrementalBarrierNeeded(JSRuntime* rt);
 
-extern JS_PUBLIC_API(bool)
-IsIncrementalBarrierNeeded(JSContext* cx);
-
 /*
  * Notify the GC that a reference to a GC thing is about to be overwritten.
  * These methods must be called if IsIncrementalBarrierNeeded.
