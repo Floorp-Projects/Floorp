@@ -4094,6 +4094,22 @@
     "n_buckets": 30,
     "description": "Firefox: Time taken to kick off image compression of the canvas that will be used during swiping through history (ms)."
   },
+  "FX_TAB_ANIM_OPEN_MS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": 3000,
+    "n_buckets": 10,
+    "description": "Firefox: Time taken by the tab opening animation in milliseconds *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
+  },
+  "FX_TAB_ANIM_CLOSE_MS": {
+    "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": 3000,
+    "n_buckets": 10,
+    "description": "Firefox: Time taken by the tab closing animation in milliseconds *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
+  },
   "FX_TAB_ANIM_OPEN_PREVIEW_FRAME_INTERVAL_MS": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4117,6 +4133,13 @@
     "high": 500,
     "n_buckets": 50,
     "description": "Average frame interval during any tab open/close animation (excluding tabstrip scroll)"
+  },
+  "FX_TAB_ANIM_ANY_FRAME_PAINT_MS": {
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": 500,
+    "n_buckets": 30,
+    "description": "Average paint duration during any tab open/close animation (excluding tabstrip scroll) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
   },
   "FX_REFRESH_DRIVER_CHROME_FRAME_DELAY_MS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
@@ -4180,6 +4203,13 @@
     "high": 1000,
     "n_buckets": 20,
     "description": "Firefox: Time in ms spent on switching tabs in response to a tab click"
+  },
+  "FX_IDENTITY_POPUP_OPEN_MS": {
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": 1000,
+    "n_buckets": 10,
+    "description": "Firefox: Time taken by the identity popup to open in milliseconds"
   },
   "FX_BOOKMARKS_TOOLBAR_INIT_MS": {
     "expires_in_version": "never",
@@ -4614,6 +4644,20 @@
     "kind": "flag",
     "description": "Whether the decoder for ISO-8859-5 has been instantiated in this session."
   },
+  "XUL_FOREGROUND_REFLOW_MS": {
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": 3000,
+    "n_buckets": 10,
+    "description": "XUL reflows in foreground windows (ms) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
+  },
+  "XUL_BACKGROUND_REFLOW_MS": {
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": 3000,
+    "n_buckets": 10,
+    "description": "XUL reflows in background windows (ms) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
+  },
   "HTML_FOREGROUND_REFLOW_MS_2": {
     "expires_in_version": "never",
     "kind": "exponential",
@@ -4621,15 +4665,60 @@
     "n_buckets": 20,
     "description": "HTML reflows in foreground windows (ms)"
   },
+  "HTML_BACKGROUND_REFLOW_MS_2": {
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": 10000,
+    "n_buckets": 20,
+    "description": "HTML reflows in background windows (ms)"
+  },
   "LONG_REFLOW_INTERRUPTIBLE": {
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Long running reflow, interruptible or not"
   },
+  "XUL_INITIAL_FRAME_CONSTRUCTION": {
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": 3000,
+    "n_buckets": 10,
+    "description": "initial xul frame construction *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
+  },
   "XMLHTTPREQUEST_ASYNC_OR_SYNC": {
     "expires_in_version": "never",
     "kind": "boolean",
     "description": "Type of XMLHttpRequest, async or sync"
+  },
+  "DOM_TIMERS_FIRED_PER_NATIVE_TIMEOUT": {
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": 3000,
+    "n_buckets": 10,
+    "description": "DOM: Timer handlers called per native timer expiration *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
+  },
+  "DOM_TIMERS_RECENTLY_SET": {
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": 3000,
+    "n_buckets": 10,
+    "description": "DOM: setTimeout/setInterval calls recently (last 30s or more) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
+  },
+  "DOM_RANGE_DETACHED": {
+    "expires_in_version": "40",
+    "kind": "boolean",
+    "description": "DOM: Ranges that are detached on destruction (bug 702948) *** No longer needed (bug 1156565). Delete histogram and accumulation code! ***"
+  },
+  "DOM_WINDOW_SHOWMODALDIALOG_USED": {
+    "expires_in_version": "41",
+    "kind": "flag",
+    "description": "Whether Window.showModalDialog was used in this session"
+  },
+  "LOCALDOMSTORAGE_INIT_DATABASE_MS": {
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "high": 3000,
+    "n_buckets": 10,
+    "description": "Time to open the localStorage database (ms)"
   },
   "LOCALDOMSTORAGE_SHUTDOWN_DATABASE_MS": {
     "expires_in_version": "default",
@@ -4705,6 +4794,38 @@
     "high": 3000,
     "n_buckets": 10,
     "description": "Time to fetch LocalStorage data before we can expose them as session only data (ms)"
+  },
+  "LOCALDOMSTORAGE_KEY_SIZE_BYTES": {
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "low": 1024,
+    "high": 32768,
+    "n_buckets": 10,
+    "description": "DOM storage: size of keys stored in localStorage"
+  },
+  "LOCALDOMSTORAGE_VALUE_SIZE_BYTES": {
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "low": 1024,
+    "high": 32768,
+    "n_buckets": 10,
+    "description": "DOM storage: size of values stored in localStorage"
+  },
+  "SESSIONDOMSTORAGE_KEY_SIZE_BYTES": {
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "low": 1024,
+    "high": 32768,
+    "n_buckets": 10,
+    "description": "DOM storage: size of keys stored in sessionStorage"
+  },
+  "SESSIONDOMSTORAGE_VALUE_SIZE_BYTES": {
+    "expires_in_version": "40",
+    "kind": "exponential",
+    "low": 1024,
+    "high": 32768,
+    "n_buckets": 10,
+    "description": "DOM storage: size of values stored in sessionStorage"
   },
   "RANGE_CHECKSUM_ERRORS": {
     "alert_emails": ["perf-telemetry-alerts@mozilla.com"],
