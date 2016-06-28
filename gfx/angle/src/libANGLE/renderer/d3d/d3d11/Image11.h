@@ -25,6 +25,7 @@ namespace rx
 class Renderer11;
 class TextureHelper11;
 class TextureStorage11;
+struct Renderer11DeviceCaps;
 
 class Image11 : public ImageD3D
 {
@@ -32,7 +33,9 @@ class Image11 : public ImageD3D
     Image11(Renderer11 *renderer);
     virtual ~Image11();
 
-    static gl::Error generateMipmap(Image11 *dest, Image11 *src);
+    static gl::Error generateMipmap(Image11 *dest,
+                                    Image11 *src,
+                                    const Renderer11DeviceCaps &rendererCaps);
 
     virtual bool isDirty() const;
 
@@ -42,8 +45,12 @@ class Image11 : public ImageD3D
 
     DXGI_FORMAT getDXGIFormat() const;
 
-    virtual gl::Error loadData(const gl::Box &area, const gl::PixelUnpackState &unpack, GLenum type, const void *input);
-    virtual gl::Error loadCompressedData(const gl::Box &area, const void *input);
+    gl::Error loadData(const gl::Box &area,
+                       const gl::PixelUnpackState &unpack,
+                       GLenum type,
+                       const void *input,
+                       bool applySkipImages) override;
+    gl::Error loadCompressedData(const gl::Box &area, const void *input) override;
 
     gl::Error copyFromTexStorage(const gl::ImageIndex &imageIndex, TextureStorage *source) override;
     gl::Error copyFromFramebuffer(const gl::Offset &destOffset,

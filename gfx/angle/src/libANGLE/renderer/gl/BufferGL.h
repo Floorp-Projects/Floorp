@@ -9,6 +9,7 @@
 #ifndef LIBANGLE_RENDERER_GL_BUFFERGL_H_
 #define LIBANGLE_RENDERER_GL_BUFFERGL_H_
 
+#include "common/MemoryBuffer.h"
 #include "libANGLE/renderer/BufferImpl.h"
 
 namespace rx
@@ -40,6 +41,13 @@ class BufferGL : public BufferImpl
 
   private:
     bool mIsMapped;
+    size_t mMapOffset;
+    size_t mMapSize;
+
+    bool mShadowBufferData;
+    MemoryBuffer mShadowCopy;
+
+    size_t mBufferSize;
 
     const FunctionsGL *mFunctions;
     StateManagerGL *mStateManager;

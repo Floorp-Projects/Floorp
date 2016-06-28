@@ -108,8 +108,8 @@ class ProgramD3DMetadata : angle::NonCopyable
                        const ShaderD3D *fragmentShader);
 
     int getRendererMajorShaderModel() const;
-    bool usesBroadcast(const gl::Data &data) const;
-    bool usesFragDepth(const gl::Program::Data &programData) const;
+    bool usesBroadcast(const gl::ContextState &data) const;
+    bool usesFragDepth() const;
     bool usesPointCoord() const;
     bool usesFragCoord() const;
     bool usesPointSize() const;
@@ -134,9 +134,7 @@ class ProgramD3DMetadata : angle::NonCopyable
 class ProgramD3D : public ProgramImpl
 {
   public:
-    typedef int SemanticIndexArray[gl::MAX_VERTEX_ATTRIBS];
-
-    ProgramD3D(const gl::Program::Data &data, RendererD3D *renderer);
+    ProgramD3D(const gl::ProgramState &data, RendererD3D *renderer);
     virtual ~ProgramD3D();
 
     const std::vector<PixelShaderOutputVariable> &getPixelShaderKey() { return mPixelShaderKey; }
@@ -145,7 +143,7 @@ class ProgramD3D : public ProgramImpl
                             unsigned int samplerIndex,
                             const gl::Caps &caps) const;
     GLenum getSamplerTextureType(gl::SamplerType type, unsigned int samplerIndex) const;
-    GLint getUsedSamplerRange(gl::SamplerType type) const;
+    GLuint getUsedSamplerRange(gl::SamplerType type) const;
     void updateSamplerMapping();
 
     bool usesPointSize() const { return mUsesPointSize; }
@@ -165,12 +163,12 @@ class ProgramD3D : public ProgramImpl
     gl::Error getVertexExecutableForInputLayout(const gl::InputLayout &inputLayout,
                                                 ShaderExecutableD3D **outExectuable,
                                                 gl::InfoLog *infoLog);
-    gl::Error getGeometryExecutableForPrimitiveType(const gl::Data &data,
+    gl::Error getGeometryExecutableForPrimitiveType(const gl::ContextState &data,
                                                     GLenum drawMode,
                                                     ShaderExecutableD3D **outExecutable,
                                                     gl::InfoLog *infoLog);
 
-    LinkResult link(const gl::Data &data, gl::InfoLog &infoLog) override;
+    LinkResult link(const gl::ContextState &data, gl::InfoLog &infoLog) override;
     GLboolean validate(const gl::Caps &caps, gl::InfoLog *infoLog) override;
 
     bool getUniformBlockSize(const std::string &blockName, size_t *sizeOut) const override;
@@ -179,7 +177,7 @@ class ProgramD3D : public ProgramImpl
 
     void initializeUniformStorage();
     gl::Error applyUniforms(GLenum drawMode);
-    gl::Error applyUniformBuffers(const gl::Data &data);
+    gl::Error applyUniformBuffers(const gl::ContextState &data);
     void dirtyAllUniforms();
 
     void setUniform1fv(GLint location, GLsizei count, const GLfloat *v);
@@ -238,12 +236,10 @@ class ProgramD3D : public ProgramImpl
 
     unsigned int getSerial() const;
 
-    void sortAttributesByLayout(
-        const std::vector<TranslatedAttribute> &unsortedAttributes,
-        int sortedSemanticIndicesOut[gl::MAX_VERTEX_ATTRIBS],
-        const rx::TranslatedAttribute *sortedAttributesOut[gl::MAX_VERTEX_ATTRIBS]) const;
-    const SemanticIndexArray &getSemanticIndexes() const { return mSemanticIndexes; }
-    const SemanticIndexArray &getAttributesByLayout() const { return mAttributesByLayout; }
+    const AttribIndexArray &getAttribLocationToD3DSemantics() const
+    {
+        return mAttribLocationToD3DSemantic;
+    }
 
     void updateCachedInputLayout(const gl::State &state);
     const gl::InputLayout &getCachedInputLayout() const { return mCachedInputLayout; }
@@ -254,7 +250,14 @@ class ProgramD3D : public ProgramImpl
     class VertexExecutable
     {
       public:
-        typedef std::vector<bool> Signature;
+        enum HLSLAttribType
+        {
+            FLOAT,
+            UNSIGNED_INT,
+            SIGNED_INT,
+        };
+
+        typedef std::vector<HLSLAttribType> Signature;
 
         VertexExecutable(const gl::InputLayout &inputLayout,
                          const Signature &signature,
@@ -271,6 +274,8 @@ class ProgramD3D : public ProgramImpl
         ShaderExecutableD3D *shaderExecutable() const { return mShaderExecutable; }
 
       private:
+        static HLSLAttribType GetAttribType(GLenum type);
+
         gl::InputLayout mInputs;
         Signature mSignature;
         ShaderExecutableD3D *mShaderExecutable;
@@ -317,7 +322,7 @@ class ProgramD3D : public ProgramImpl
                        sh::HLSLBlockEncoder *encoder,
                        D3DUniformMap *uniformMap);
     void assignAllSamplerRegisters();
-    void assignSamplerRegisters(const D3DUniform *d3dUniform);
+    void assignSamplerRegisters(D3DUniform *d3dUniform);
 
     static void AssignSamplers(unsigned int startSamplerIndex,
                                GLenum samplerType,
@@ -335,14 +340,13 @@ class ProgramD3D : public ProgramImpl
                             const GLfloat *value,
                             GLenum targetUniformType);
 
-    LinkResult compileProgramExecutables(const gl::Data &data, gl::InfoLog &infoLog);
+    LinkResult compileProgramExecutables(const gl::ContextState &data, gl::InfoLog &infoLog);
 
     void gatherTransformFeedbackVaryings(const VaryingPacking &varyings);
     D3DUniform *getD3DUniformByName(const std::string &name);
     D3DUniform *getD3DUniformFromLocation(GLint location);
 
-    void initSemanticIndex();
-    void initAttributesByLayout();
+    void initAttribLocationsToD3DSemantic();
 
     void reset();
     void assignUniformBlockRegisters();
@@ -385,8 +389,7 @@ class ProgramD3D : public ProgramImpl
     // Cache for getPixelExecutableForFramebuffer
     std::vector<GLenum> mPixelShaderOutputFormatCache;
 
-    SemanticIndexArray mSemanticIndexes;
-    SemanticIndexArray mAttributesByLayout;
+    AttribIndexArray mAttribLocationToD3DSemantic;
 
     unsigned int mSerial;
 

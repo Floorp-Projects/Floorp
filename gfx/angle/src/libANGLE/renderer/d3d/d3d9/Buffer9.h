@@ -35,13 +35,13 @@ class Buffer9 : public BufferD3D
     virtual gl::Error map(GLenum access, GLvoid **mapPtr);
     virtual gl::Error mapRange(size_t offset, size_t length, GLbitfield access, GLvoid **mapPtr);
     virtual gl::Error unmap(GLboolean *result);
-    virtual void markTransformFeedbackUsage();
+    virtual gl::Error markTransformFeedbackUsage();
 
   private:
     MemoryBuffer mMemory;
     size_t mSize;
 };
 
-}
+}  // namespace rx
 
 #endif // LIBANGLE_RENDERER_D3D_D3D9_BUFFER9_H_

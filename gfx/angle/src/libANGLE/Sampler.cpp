@@ -9,13 +9,13 @@
 
 #include "libANGLE/Sampler.h"
 #include "libANGLE/angletypes.h"
-#include "libANGLE/renderer/ImplFactory.h"
+#include "libANGLE/renderer/GLImplFactory.h"
 #include "libANGLE/renderer/SamplerImpl.h"
 
 namespace gl
 {
 
-Sampler::Sampler(rx::ImplFactory *factory, GLuint id)
+Sampler::Sampler(rx::GLImplFactory *factory, GLuint id)
     : RefCountObject(id), mImpl(factory->createSampler()), mLabel(), mSamplerState()
 {
 }

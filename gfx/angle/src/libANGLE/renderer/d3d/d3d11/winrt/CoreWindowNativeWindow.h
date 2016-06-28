@@ -13,6 +13,8 @@
 
 #include <memory>
 
+#include <EGL/eglplatform.h>
+
 typedef ABI::Windows::Foundation::__FITypedEventHandler_2_Windows__CUI__CCore__CCoreWindow_Windows__CUI__CCore__CWindowSizeChangedEventArgs_t IWindowSizeChangedEventHandler;
 
 namespace rx
@@ -26,12 +28,12 @@ class CoreWindowNativeWindow : public InspectableNativeWindow, public std::enabl
 
     bool initialize(EGLNativeWindowType window, IPropertySet *propertySet) override;
     HRESULT createSwapChain(ID3D11Device *device,
-                            DXGIFactory *factory,
+                            IDXGIFactory2 *factory,
                             DXGI_FORMAT format,
                             unsigned int width,
                             unsigned int height,
                             bool containsAlpha,
-                            DXGISwapChain **swapChain) override;
+                            IDXGISwapChain1 **swapChain) override;
 
   protected:
     HRESULT scaleSwapChain(const SIZE &windowSize, const RECT &clientRect) override;

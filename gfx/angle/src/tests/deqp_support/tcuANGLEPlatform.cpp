@@ -74,6 +74,17 @@ ANGLEPlatform::ANGLEPlatform()
     m_nativeDisplayFactoryRegistry.registerFactory(d3d1193Factory);
 #endif // (DE_OS == DE_OS_WIN32)
 
+#ifdef ANGLE_USE_OZONE
+    std::vector<eglw::EGLAttrib> glesAttribs;
+    glesAttribs.push_back(EGL_PLATFORM_ANGLE_TYPE_ANGLE);
+    glesAttribs.push_back(EGL_PLATFORM_ANGLE_TYPE_OPENGLES_ANGLE);
+    glesAttribs.push_back(EGL_NONE);
+
+    auto *glesFactory = new ANGLENativeDisplayFactory(
+        "angle-gles", "ANGLE OpenGL ES Display", glesAttribs, &mEvents);
+    m_nativeDisplayFactoryRegistry.registerFactory(glesFactory);
+#endif
+
     std::vector<eglw::EGLAttrib> glAttribs;
     glAttribs.push_back(EGL_PLATFORM_ANGLE_TYPE_ANGLE);
     glAttribs.push_back(EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE);

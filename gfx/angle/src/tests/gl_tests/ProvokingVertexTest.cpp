@@ -142,7 +142,7 @@ TEST_P(ProvokingVertexTest, FlatTriWithTransformFeedback)
 {
     // TODO(cwallez) figure out why it is broken on AMD on Mac
 #if defined(ANGLE_PLATFORM_APPLE)
-    if (isAMD())
+    if (IsAMD())
     {
         std::cout << "Test skipped on AMD on Mac." << std::endl;
         return;
@@ -161,9 +161,11 @@ TEST_P(ProvokingVertexTest, FlatTriWithTransformFeedback)
     GLint vertexData[] = {1, 2, 3, 1, 2, 3};
     glVertexAttribIPointer(mIntAttribLocation, 1, GL_INT, 0, vertexData);
 
+    glUseProgram(mProgram);
     glBeginTransformFeedback(GL_TRIANGLES);
     drawQuad(mProgram, "position", 0.5f);
     glEndTransformFeedback();
+    glUseProgram(0);
 
     GLint pixelValue = 0;
     glReadPixels(0, 0, 1, 1, GL_RED_INTEGER, GL_INT, &pixelValue);
@@ -253,7 +255,7 @@ TEST_P(ProvokingVertexTest, FlatTriStrip)
 TEST_P(ProvokingVertexTest, FlatTriStripPrimitiveRestart)
 {
     // TODO(jmadill): Implement on the D3D back-end.
-    if (isD3D11())
+    if (IsD3D11())
     {
         std::cout << "Test disabled on D3D11." << std::endl;
         return;

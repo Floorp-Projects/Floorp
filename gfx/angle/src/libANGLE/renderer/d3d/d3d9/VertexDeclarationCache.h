@@ -30,6 +30,7 @@ class VertexDeclarationCache
     gl::Error applyDeclaration(IDirect3DDevice9 *device,
                                const std::vector<TranslatedAttribute> &attributes,
                                gl::Program *program,
+                               GLint start,
                                GLsizei instances,
                                GLsizei *repeatDraw);
 

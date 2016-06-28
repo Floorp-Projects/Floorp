@@ -9,6 +9,7 @@
 #ifndef LIBANGLE_RENDERER_GL_PROGRAMGL_H_
 #define LIBANGLE_RENDERER_GL_PROGRAMGL_H_
 
+#include "libANGLE/renderer/gl/WorkaroundsGL.h"
 #include "libANGLE/renderer/ProgramImpl.h"
 
 namespace rx
@@ -26,8 +27,9 @@ struct SamplerBindingGL
 class ProgramGL : public ProgramImpl
 {
   public:
-    ProgramGL(const gl::Program::Data &data,
+    ProgramGL(const gl::ProgramState &data,
               const FunctionsGL *functions,
+              const WorkaroundsGL &workarounds,
               StateManagerGL *stateManager);
     ~ProgramGL() override;
 
@@ -35,7 +37,7 @@ class ProgramGL : public ProgramImpl
     gl::Error save(gl::BinaryOutputStream *stream) override;
     void setBinaryRetrievableHint(bool retrievable) override;
 
-    LinkResult link(const gl::Data &data, gl::InfoLog &infoLog) override;
+    LinkResult link(const gl::ContextState &data, gl::InfoLog &infoLog) override;
     GLboolean validate(const gl::Caps &caps, gl::InfoLog *infoLog) override;
 
     void setUniform1fv(GLint location, GLsizei count, const GLfloat *v) override;
@@ -70,12 +72,15 @@ class ProgramGL : public ProgramImpl
     const std::vector<SamplerBindingGL> &getAppliedSamplerUniforms() const;
 
   private:
-    void reset();
+    void preLink();
+    bool checkLinkStatus(gl::InfoLog &infoLog);
+    void postLink();
 
     // Helper function, makes it simpler to type.
     GLint uniLoc(GLint glLocation) const { return mUniformRealLocationMap[glLocation]; }
 
     const FunctionsGL *mFunctions;
+    const WorkaroundsGL &mWorkarounds;
     StateManagerGL *mStateManager;
 
     std::vector<GLint> mUniformRealLocationMap;

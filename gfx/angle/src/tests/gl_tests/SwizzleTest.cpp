@@ -85,12 +85,10 @@ class SwizzleTest : public ANGLETest
         );
 
         mProgram = CompileProgram(vertexShaderSource, fragmentShaderSource);
-        if (mProgram == 0)
-        {
-            FAIL() << "shader compilation failed.";
-        }
+        ASSERT_NE(0u, mProgram);
 
         mTextureUniformLocation = glGetUniformLocation(mProgram, "tex");
+        ASSERT_NE(-1, mTextureUniformLocation);
 
         glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
         ASSERT_GL_NO_ERROR();
@@ -142,7 +140,7 @@ class SwizzleTest : public ANGLETest
     void runTest2D()
     {
         // TODO(jmadill): Figure out why this fails on Intel.
-        if (isIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+        if (IsIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
         {
             std::cout << "Test skipped on Intel." << std::endl;
             return;
@@ -202,6 +200,54 @@ class SwizzleTest : public ANGLETest
     std::vector<swizzlePermutation> mPermutations;
 };
 
+class SwizzleIntegerTest : public SwizzleTest
+{
+  protected:
+    void SetUp() override
+    {
+        ANGLETest::SetUp();
+
+        const std::string vertexShaderSource =
+            "#version 300 es\n"
+            "precision highp float;\n"
+            "in vec4 position;\n"
+            "out vec2 texcoord;\n"
+            "\n"
+            "void main()\n"
+            "{\n"
+            "    gl_Position = position;\n"
+            "    texcoord = (position.xy * 0.5) + 0.5;\n"
+            "}\n";
+
+        const std::string fragmentShaderSource =
+            "#version 300 es\n"
+            "precision highp float;\n"
+            "precision highp usampler2D;\n"
+            "uniform usampler2D tex;\n"
+            "in vec2 texcoord;\n"
+            "out vec4 my_FragColor;\n"
+            "\n"
+            "void main()\n"
+            "{\n"
+            "    uvec4 s = texture(tex, texcoord);\n"
+            "    if (s[0] == 1u) s[0] = 255u;\n"
+            "    if (s[1] == 1u) s[1] = 255u;\n"
+            "    if (s[2] == 1u) s[2] = 255u;\n"
+            "    if (s[3] == 1u) s[3] = 255u;\n"
+            "    my_FragColor = vec4(s) / 255.0;\n"
+            "}\n";
+
+        mProgram = CompileProgram(vertexShaderSource, fragmentShaderSource);
+        ASSERT_NE(0u, mProgram);
+
+        mTextureUniformLocation = glGetUniformLocation(mProgram, "tex");
+        ASSERT_NE(-1, mTextureUniformLocation);
+
+        glClearColor(0.0f, 0.0f, 0.0f, 0.0f);
+        ASSERT_GL_NO_ERROR();
+    }
+};
+
 TEST_P(SwizzleTest, RGBA8_2D)
 {
     GLubyte data[] = { 1, 64, 128, 200 };
@@ -227,6 +273,13 @@ TEST_P(SwizzleTest, R8_2D)
 {
     GLubyte data[] = { 2 };
     init2DTexture(GL_R8, GL_RED, GL_UNSIGNED_BYTE, data);
+    runTest2D();
+}
+
+TEST_P(SwizzleTest, RGB10_A2_2D)
+{
+    GLuint data[] = {20u | (40u << 10) | (60u << 20) | (2u << 30)};
+    init2DTexture(GL_RGB10_A2, GL_RGBA, GL_UNSIGNED_INT_2_10_10_10_REV, data);
     runTest2D();
 }
 
@@ -339,7 +392,19 @@ TEST_P(SwizzleTest, CompressedDXT_2D)
     runTest2D();
 }
 
+TEST_P(SwizzleIntegerTest, RGB8UI_2D)
+{
+    GLubyte data[] = {77, 66, 55};
+    init2DTexture(GL_RGB8UI, GL_RGB_INTEGER, GL_UNSIGNED_BYTE, data);
+    runTest2D();
+}
+
 // Use this to select which configurations (e.g. which renderer, which GLES major version) these tests should be run against.
 ANGLE_INSTANTIATE_TEST(SwizzleTest, ES3_D3D11(), ES3_OPENGL(), ES3_OPENGL(3, 3), ES3_OPENGLES());
+ANGLE_INSTANTIATE_TEST(SwizzleIntegerTest,
+                       ES3_D3D11(),
+                       ES3_OPENGL(),
+                       ES3_OPENGL(3, 3),
+                       ES3_OPENGLES());
 
 } // namespace
