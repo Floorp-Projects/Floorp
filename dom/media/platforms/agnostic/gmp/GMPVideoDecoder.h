@@ -51,14 +51,22 @@ private:
   RefPtr<layers::ImageContainer> mImageContainer;
 };
 
+struct GMPVideoDecoderParams {
+  explicit GMPVideoDecoderParams(const CreateDecoderParams& aParams);
+  GMPVideoDecoderParams& WithCallback(MediaDataDecoderProxy* aWrapper);
+  GMPVideoDecoderParams& WithAdapter(VideoCallbackAdapter* aAdapter);
+
+  const VideoInfo& mConfig;
+  TaskQueue* mTaskQueue;
+  MediaDataDecoderCallbackProxy* mCallback;
+  VideoCallbackAdapter* mAdapter;
+  layers::ImageContainer* mImageContainer;
+  layers::LayersBackend mLayersBackend;
+};
+
 class GMPVideoDecoder : public MediaDataDecoder {
-protected:
-  GMPVideoDecoder(const VideoInfo& aConfig,
-                  layers::LayersBackend aLayersBackend,
-                  layers::ImageContainer* aImageContainer,
-                  TaskQueue* aTaskQueue,
-                  MediaDataDecoderCallbackProxy* aCallback,
-                  VideoCallbackAdapter* aAdapter);
+public:
+  explicit GMPVideoDecoder(const GMPVideoDecoderParams& aParams);
 
   RefPtr<InitPromise> Init() override;
   nsresult Input(MediaRawData* aSample) override;

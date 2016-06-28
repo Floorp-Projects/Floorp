@@ -60,12 +60,8 @@ GMPDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
   }
 
   RefPtr<MediaDataDecoderProxy> wrapper = CreateDecoderWrapper(aParams.mCallback);
-  wrapper->SetProxyTarget(new GMPVideoDecoder(aParams.VideoConfig(),
-                                              aParams.mLayersBackend,
-                                              aParams.mImageContainer,
-                                              aParams.mTaskQueue,
-                                              wrapper->Callback(),
-                                              nullptr));
+  auto params = GMPVideoDecoderParams(aParams).WithCallback(wrapper);
+  wrapper->SetProxyTarget(new GMPVideoDecoder(params));
   return wrapper.forget();
 }
 

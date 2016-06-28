@@ -244,12 +244,8 @@ EMEDecoderModule::CreateVideoDecoder(const CreateDecoderParams& aParams)
     // GMP decodes. Assume that means it can decrypt too.
     RefPtr<MediaDataDecoderProxy> wrapper =
       CreateDecoderWrapper(aParams.mCallback, mProxy, aParams.mTaskQueue);
-    wrapper->SetProxyTarget(new EMEVideoDecoder(mProxy,
-                                                aParams.VideoConfig(),
-                                                aParams.mLayersBackend,
-                                                aParams.mImageContainer,
-                                                aParams.mTaskQueue,
-                                                wrapper->Callback()));
+    auto params = GMPVideoDecoderParams(aParams).WithCallback(wrapper);
+    wrapper->SetProxyTarget(new EMEVideoDecoder(mProxy, params));
     return wrapper.forget();
   }
 
