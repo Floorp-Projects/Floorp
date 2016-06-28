@@ -4546,7 +4546,6 @@ TSFTextStore::GetIMEUpdatePreference()
     sThreadMgr->GetFocus(getter_AddRefs(docMgr));
     if (docMgr == sEnabledTextStore->mDocumentMgr) {
       nsIMEUpdatePreference updatePreference(
-        nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE |
         nsIMEUpdatePreference::NOTIFY_TEXT_CHANGE |
         nsIMEUpdatePreference::NOTIFY_POSITION_CHANGE |
         nsIMEUpdatePreference::NOTIFY_MOUSE_BUTTON_EVENT_ON_CHAR |
