@@ -472,7 +472,8 @@ nsUnknownContentTypeDialog.prototype = {
     var shouldntRememberChoice = (mimeType == "application/octet-stream" ||
                                   mimeType == "application/x-msdownload" ||
                                   this.mLauncher.targetFileIsExecutable);
-    if (shouldntRememberChoice && !this.openWithDefaultOK()) {
+    if ((shouldntRememberChoice && !this.openWithDefaultOK()) ||
+        Services.prefs.getBoolPref("browser.download.forbid_open_with")) {
       // hide featured choice
       this.dialogElement("normalBox").collapsed = true;
       // show basic choice
