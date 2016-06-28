@@ -635,7 +635,8 @@ protected:
    *
    * Returns the actual rendering mode being used by the created target.
    */
-  RenderingMode EnsureTarget(RenderingMode aRenderMode = RenderingMode::DefaultBackendMode);
+  RenderingMode EnsureTarget(const gfx::Rect* aCoveredRect = nullptr,
+                             RenderingMode aRenderMode = RenderingMode::DefaultBackendMode);
 
   /**
    * Disposes an old target and prepares to lazily create a new target.
@@ -660,6 +661,12 @@ protected:
     * into account mOpaque, platform requirements, etc.
     */
   mozilla::gfx::SurfaceFormat GetSurfaceFormat() const;
+
+  /**
+   * Returns true if we know for sure that the pattern for a given style is opaque.
+   * Usefull to know if we can discard the content below in certain situations.
+   */
+  bool PatternIsOpaque(Style aStyle) const;
 
   /**
    * Update CurrentState().filter with the filter description for
