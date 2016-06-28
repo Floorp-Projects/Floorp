@@ -127,6 +127,8 @@ public:
 
   virtual void *GetNativeSurface(NativeSurfaceType aType) override { return nullptr; }
 
+  virtual void DetachAllSnapshots() override { MarkChanged(); }
+
   bool Init(const IntSize &aSize, SurfaceFormat aFormat);
   bool Init(ID3D11Texture2D* aTexture, SurfaceFormat aFormat);
   uint32_t GetByteSize() const;

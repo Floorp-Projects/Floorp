@@ -49,7 +49,9 @@ public:
     return MakeAndAddRef<SourceSurfaceDual>(mA, mB);
   }
   virtual IntSize GetSize() override { return mA->GetSize(); }
-     
+
+  virtual void DetachAllSnapshots() override;
+
   FORWARD_FUNCTION(Flush)
   FORWARD_FUNCTION1(PushClip, const Path *, aPath)
   FORWARD_FUNCTION1(PushClipRect, const Rect &, aRect)
