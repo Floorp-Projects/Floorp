@@ -101,51 +101,35 @@ PDMFactory::EnsureInit() const
 }
 
 already_AddRefed<MediaDataDecoder>
-PDMFactory::CreateDecoder(const TrackInfo& aConfig,
-                          TaskQueue* aTaskQueue,
-                          MediaDataDecoderCallback* aCallback,
-                          DecoderDoctorDiagnostics* aDiagnostics,
-                          layers::LayersBackend aLayersBackend,
-                          layers::ImageContainer* aImageContainer) const
+PDMFactory::CreateDecoder(const CreateDecoderParams& aParams)
 {
-  bool isEncrypted = mEMEPDM && aConfig.mCrypto.mValid;
+  const TrackInfo& config = aParams.mConfig;
+  bool isEncrypted = mEMEPDM && config.mCrypto.mValid;
 
   if (isEncrypted) {
-    return CreateDecoderWithPDM(mEMEPDM,
-                                aConfig,
-                                aTaskQueue,
-                                aCallback,
-                                aDiagnostics,
-                                aLayersBackend,
-                                aImageContainer);
+    return CreateDecoderWithPDM(mEMEPDM, aParams);
   }
 
-  if (aDiagnostics) {
+  DecoderDoctorDiagnostics* diagnostics = aParams.mDiagnostics;
+  if (diagnostics) {
     // If libraries failed to load, the following loop over mCurrentPDMs
     // will not even try to use them. So we record failures now.
     if (mWMFFailedToLoad) {
-      aDiagnostics->SetWMFFailedToLoad();
+      diagnostics->SetWMFFailedToLoad();
     }
     if (mFFmpegFailedToLoad) {
-      aDiagnostics->SetFFmpegFailedToLoad();
+      diagnostics->SetFFmpegFailedToLoad();
     }
     if (mGMPPDMFailedToStartup) {
-      aDiagnostics->SetGMPPDMFailedToStartup();
+      diagnostics->SetGMPPDMFailedToStartup();
     }
   }
 
   for (auto& current : mCurrentPDMs) {
-    if (!current->SupportsMimeType(aConfig.mMimeType, aDiagnostics)) {
+    if (!current->SupportsMimeType(config.mMimeType, diagnostics)) {
       continue;
     }
-    RefPtr<MediaDataDecoder> m =
-      CreateDecoderWithPDM(current,
-                           aConfig,
-                           aTaskQueue,
-                           aCallback,
-                           aDiagnostics,
-                           aLayersBackend,
-                           aImageContainer);
+    RefPtr<MediaDataDecoder> m = CreateDecoderWithPDM(current, aParams);
     if (m) {
       return m.forget();
     }
@@ -156,47 +140,36 @@ PDMFactory::CreateDecoder(const TrackInfo& aConfig,
 
 already_AddRefed<MediaDataDecoder>
 PDMFactory::CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
-                                 const TrackInfo& aConfig,
-                                 TaskQueue* aTaskQueue,
-                                 MediaDataDecoderCallback* aCallback,
-                                 DecoderDoctorDiagnostics* aDiagnostics,
-                                 layers::LayersBackend aLayersBackend,
-                                 layers::ImageContainer* aImageContainer) const
+                                 const CreateDecoderParams& aParams)
 {
   MOZ_ASSERT(aPDM);
   RefPtr<MediaDataDecoder> m;
 
-  if (aConfig.GetAsAudioInfo()) {
-    m = aPDM->CreateAudioDecoder(*aConfig.GetAsAudioInfo(),
-                                 aTaskQueue,
-                                 aCallback,
-                                 aDiagnostics);
+  const TrackInfo& config = aParams.mConfig;
+  if (config.IsAudio()) {
+    m = aPDM->CreateAudioDecoder(aParams);
     return m.forget();
   }
 
-  if (!aConfig.GetAsVideoInfo()) {
+  if (!config.IsVideo()) {
     return nullptr;
   }
 
-  MediaDataDecoderCallback* callback = aCallback;
+  MediaDataDecoderCallback* callback = aParams.mCallback;
   RefPtr<DecoderCallbackFuzzingWrapper> callbackWrapper;
   if (MediaPrefs::PDMFuzzingEnabled()) {
-    callbackWrapper = new DecoderCallbackFuzzingWrapper(aCallback);
+    callbackWrapper = new DecoderCallbackFuzzingWrapper(callback);
     callbackWrapper->SetVideoOutputMinimumInterval(
       TimeDuration::FromMilliseconds(MediaPrefs::PDMFuzzingInterval()));
     callbackWrapper->SetDontDelayInputExhausted(!MediaPrefs::PDMFuzzingDelayInputExhausted());
     callback = callbackWrapper.get();
   }
 
-  if (H264Converter::IsH264(aConfig)) {
-    RefPtr<H264Converter> h
-      = new H264Converter(aPDM,
-                          *aConfig.GetAsVideoInfo(),
-                          aLayersBackend,
-                          aImageContainer,
-                          aTaskQueue,
-                          callback,
-                          aDiagnostics);
+  CreateDecoderParams params = aParams;
+  params.mCallback = callback;
+
+  if (H264Converter::IsH264(config)) {
+    RefPtr<H264Converter> h = new H264Converter(aPDM, params);
     const nsresult rv = h->GetLastError();
     if (NS_SUCCEEDED(rv) || rv == NS_ERROR_NOT_INITIALIZED) {
       // The H264Converter either successfully created the wrapped decoder,
@@ -205,12 +178,7 @@ PDMFactory::CreateDecoderWithPDM(PlatformDecoderModule* aPDM,
       m = h.forget();
     }
   } else {
-    m = aPDM->CreateVideoDecoder(*aConfig.GetAsVideoInfo(),
-                                 aLayersBackend,
-                                 aImageContainer,
-                                 aTaskQueue,
-                                 callback,
-                                 aDiagnostics);
+    m = aPDM->CreateVideoDecoder(params);
   }
 
   if (callbackWrapper && m) {

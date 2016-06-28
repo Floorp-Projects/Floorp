@@ -900,6 +900,7 @@ public:
 
     // Accessor for the array of CompressedGlyph records, which will be in
     // a different place in gfxShapedWord vs gfxTextRun
+    virtual const CompressedGlyph *GetCharacterGlyphs() const = 0;
     virtual CompressedGlyph *GetCharacterGlyphs() = 0;
 
     /**
@@ -939,7 +940,7 @@ public:
     // NOTE that this must not be called for a character offset that does
     // not have any DetailedGlyph records; callers must have verified that
     // GetCharacterGlyphs()[aCharIndex].GetGlyphCount() is greater than zero.
-    DetailedGlyph *GetDetailedGlyphs(uint32_t aCharIndex) {
+    DetailedGlyph *GetDetailedGlyphs(uint32_t aCharIndex) const {
         NS_ASSERTION(GetCharacterGlyphs() && HasDetailedGlyphs() &&
                      !GetCharacterGlyphs()[aCharIndex].IsSimpleGlyph() &&
                      GetCharacterGlyphs()[aCharIndex].GetGlyphCount() > 0,
@@ -1239,6 +1240,9 @@ public:
         free(p);
     }
 
+    virtual const CompressedGlyph *GetCharacterGlyphs() const override {
+        return &mCharGlyphsStorage[0];
+    }
     virtual CompressedGlyph *GetCharacterGlyphs() override {
         return &mCharGlyphsStorage[0];
     }
@@ -1616,7 +1620,7 @@ public:
      * -- aStart and aEnd are aligned to cluster and ligature boundaries
      * -- all glyphs use this font
      */
-    void Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
+    void Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
               gfxPoint *aPt, const TextRunDrawParams& aRunParams,
               uint16_t aOrientation);
 
@@ -1626,7 +1630,7 @@ public:
      * @param aPt the baseline origin of the emphasis marks.
      * @param aParams some drawing parameters, see EmphasisMarkDrawParams.
      */
-    void DrawEmphasisMarks(gfxTextRun* aShapedText, gfxPoint* aPt,
+    void DrawEmphasisMarks(const gfxTextRun* aShapedText, gfxPoint* aPt,
                            uint32_t aOffset, uint32_t aCount,
                            const EmphasisMarkDrawParams& aParams);
 
@@ -1651,7 +1655,7 @@ public:
      * advances, and assumes no characters fall outside the font box. In
      * general this is insufficient, because that assumption is not always true.
      */
-    virtual RunMetrics Measure(gfxTextRun *aTextRun,
+    virtual RunMetrics Measure(const gfxTextRun *aTextRun,
                                uint32_t aStart, uint32_t aEnd,
                                BoundingBoxType aBoundingBoxType,
                                DrawTarget* aDrawTargetForTightBoundingBox,
@@ -1883,7 +1887,7 @@ protected:
     // Output a run of glyphs at *aPt, which is updated to follow the last glyph
     // in the run. This method also takes account of any letter-spacing provided
     // in aRunParams.
-    bool DrawGlyphs(gfxShapedText            *aShapedText,
+    bool DrawGlyphs(const gfxShapedText      *aShapedText,
                     uint32_t                  aOffset, // offset in the textrun
                     uint32_t                  aCount, // length of run to draw
                     gfxPoint                 *aPt,
@@ -1917,7 +1921,7 @@ protected:
     }
 
     bool IsSpaceGlyphInvisible(DrawTarget* aRefDrawTarget,
-                               gfxTextRun* aTextRun);
+                               const gfxTextRun* aTextRun);
 
     void AddGlyphChangeObserver(GlyphChangeObserver *aObserver);
     void RemoveGlyphChangeObserver(GlyphChangeObserver *aObserver);

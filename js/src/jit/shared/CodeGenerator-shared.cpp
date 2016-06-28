@@ -485,13 +485,28 @@ CodeGeneratorShared::encodeAllocation(LSnapshot* snapshot, MDefinition* mir,
       case MIRType::MagicOptimizedArguments:
       case MIRType::MagicOptimizedOut:
       case MIRType::MagicUninitializedLexical:
+      case MIRType::MagicIsConstructing:
       {
         uint32_t index;
-        Value v = MagicValue(type == MIRType::MagicOptimizedArguments
-                             ? JS_OPTIMIZED_ARGUMENTS
-                             : (type == MIRType::MagicOptimizedOut
-                                ? JS_OPTIMIZED_OUT
-                                : JS_UNINITIALIZED_LEXICAL));
+        JSWhyMagic why = JS_GENERIC_MAGIC;
+        switch (type) {
+          case MIRType::MagicOptimizedArguments:
+            why = JS_OPTIMIZED_ARGUMENTS;
+            break;
+          case MIRType::MagicOptimizedOut:
+            why = JS_OPTIMIZED_OUT;
+            break;
+          case MIRType::MagicUninitializedLexical:
+            why = JS_UNINITIALIZED_LEXICAL;
+            break;
+          case MIRType::MagicIsConstructing:
+            why = JS_IS_CONSTRUCTING;
+            break;
+          default:
+            MOZ_CRASH("Invalid Magic MIRType");
+        }
+
+        Value v = MagicValue(why);
         masm.propagateOOM(graph.addConstantToPool(v, &index));
         alloc = RValueAllocation::ConstantPool(index);
         break;

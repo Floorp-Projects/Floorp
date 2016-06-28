@@ -12,11 +12,14 @@
 
 #include <gtest/gtest.h>
 #include <algorithm>
+#include <array>
 
 #include "angle_gl.h"
 #include "angle_test_configs.h"
 #include "common/angleutils.h"
 #include "shader_utils.h"
+#include "system_utils.h"
+#include "Vector.h"
 
 #define EXPECT_GL_ERROR(err) EXPECT_EQ(static_cast<GLenum>(err), glGetError())
 #define EXPECT_GL_NO_ERROR() EXPECT_EQ(static_cast<GLenum>(GL_NO_ERROR), glGetError())
@@ -41,13 +44,36 @@
 
 namespace angle
 {
+struct GLColorRGB
+{
+    GLColorRGB();
+    GLColorRGB(GLubyte r, GLubyte g, GLubyte b);
+
+    GLubyte R, G, B;
+
+    static const GLColorRGB blue;
+    static const GLColorRGB green;
+    static const GLColorRGB red;
+    static const GLColorRGB yellow;
+};
+
 struct GLColor
 {
     GLColor();
     GLColor(GLubyte r, GLubyte g, GLubyte b, GLubyte a);
     GLColor(GLuint colorValue);
 
+    Vector4 toNormalizedVector() const;
+
     GLubyte R, G, B, A;
+
+    static const GLColor black;
+    static const GLColor blue;
+    static const GLColor cyan;
+    static const GLColor green;
+    static const GLColor red;
+    static const GLColor white;
+    static const GLColor yellow;
 };
 
 // Useful to cast any type to GLubyte.
@@ -62,10 +88,34 @@ bool operator==(const GLColor &a, const GLColor &b);
 std::ostream &operator<<(std::ostream &ostream, const GLColor &color);
 GLColor ReadColor(GLint x, GLint y);
 
+struct GLColor16
+{
+    GLColor16();
+    GLColor16(GLushort r, GLushort g, GLushort b, GLushort a);
+
+    GLushort R, G, B, A;
+
+    static const GLColor16 white;
+};
+
+// Useful to cast any type to GLushort.
+template <typename TR, typename TG, typename TB, typename TA>
+GLColor16 MakeGLColor16(TR r, TG g, TB b, TA a)
+{
+    return GLColor16(static_cast<GLushort>(r), static_cast<GLushort>(g), static_cast<GLushort>(b),
+                     static_cast<GLushort>(a));
+}
+
+bool operator==(const GLColor16 &a, const GLColor16 &b);
+std::ostream &operator<<(std::ostream &ostream, const GLColor16 &color);
+GLColor16 ReadColor16(GLint x, GLint y);
+
 }  // namespace angle
 
 #define EXPECT_PIXEL_EQ(x, y, r, g, b, a) \
     EXPECT_EQ(angle::MakeGLColor(r, g, b, a), angle::ReadColor(x, y))
+
+#define EXPECT_PIXEL_ALPHA_EQ(x, y, a) EXPECT_EQ(a, angle::ReadColor(x, y).A)
 
 #define EXPECT_PIXEL_COLOR_EQ(x, y, angleColor) EXPECT_EQ(angleColor, angle::ReadColor(x, y))
 
@@ -80,6 +130,8 @@ GLColor ReadColor(GLint x, GLint y);
     EXPECT_NEAR((b), pixel[2], abs_error); \
     EXPECT_NEAR((a), pixel[3], abs_error); \
 }
+
+#define EXPECT_PIXEL_COLOR16_EQ(x, y, angleColor) EXPECT_EQ(angleColor, angle::ReadColor16(x, y))
 
 class EGLWindow;
 class OSWindow;
@@ -102,13 +154,27 @@ class ANGLETest : public ::testing::TestWithParam<angle::PlatformParameters>
 
     virtual void swapBuffers();
 
-    static void drawQuad(GLuint program,
+    void setupQuadVertexBuffer(GLfloat positionAttribZ, GLfloat positionAttribXYScale);
+
+    void drawQuad(GLuint program, const std::string &positionAttribName, GLfloat positionAttribZ);
+    void drawQuad(GLuint program,
+                  const std::string &positionAttribName,
+                  GLfloat positionAttribZ,
+                  GLfloat positionAttribXYScale);
+    void drawQuad(GLuint program,
+                  const std::string &positionAttribName,
+                  GLfloat positionAttribZ,
+                  GLfloat positionAttribXYScale,
+                  bool useVertexBuffer);
+    static std::array<Vector3, 6> GetQuadVertices();
+    void drawIndexedQuad(GLuint program,
                          const std::string &positionAttribName,
                          GLfloat positionAttribZ);
-    static void drawQuad(GLuint program,
+    void drawIndexedQuad(GLuint program,
                          const std::string &positionAttribName,
                          GLfloat positionAttribZ,
                          GLfloat positionAttribXYScale);
+
     static GLuint compileShader(GLenum type, const std::string &source);
     static bool extensionEnabled(const std::string &extName);
     static bool eglClientExtensionEnabled(const std::string &extName);
@@ -126,23 +192,13 @@ class ANGLETest : public ::testing::TestWithParam<angle::PlatformParameters>
     void setNoErrorEnabled(bool enabled);
 
     int getClientVersion() const;
+    int getClientMinorVersion() const;
 
     EGLWindow *getEGLWindow() const;
     int getWindowWidth() const;
     int getWindowHeight() const;
     bool isMultisampleEnabled() const;
 
-    bool isIntel() const;
-    bool isAMD() const;
-    bool isNVidia() const;
-    // Note: FL9_3 is explicitly *not* considered D3D11.
-    bool isD3D11() const;
-    bool isD3D11_FL93() const;
-    // Is a D3D9-class renderer.
-    bool isD3D9() const;
-    // Is D3D9 or SM9_3 renderer.
-    bool isD3DSM3() const;
-    bool isOSX() const;
     EGLint getPlatformRenderer() const;
 
     void ignoreD3D11SDKLayersWarnings();
@@ -159,14 +215,48 @@ class ANGLETest : public ::testing::TestWithParam<angle::PlatformParameters>
 
     bool mIgnoreD3D11SDKLayersWarnings;
 
+    // Used for indexed quad rendering
+    GLuint mQuadVertexBuffer;
+
     static OSWindow *mOSWindow;
 };
 
 class ANGLETestEnvironment : public testing::Environment
 {
   public:
-    virtual void SetUp();
-    virtual void TearDown();
+    void SetUp() override;
+    void TearDown() override;
+
+  private:
+    // For loading and freeing platform
+    std::unique_ptr<angle::Library> mGLESLibrary;
 };
+
+// Driver vendors
+bool IsIntel();
+bool IsAdreno();
+bool IsAMD();
+bool IsNVIDIA();
+
+// Renderer back-ends
+// Note: FL9_3 is explicitly *not* considered D3D11.
+bool IsD3D11();
+bool IsD3D11_FL93();
+// Is a D3D9-class renderer.
+bool IsD3D9();
+// Is D3D9 or SM9_3 renderer.
+bool IsD3DSM3();
+bool IsDesktopOpenGL();
+bool IsOpenGLES();
+bool IsOpenGL();
+
+// Operating systems
+bool IsAndroid();
+bool IsLinux();
+bool IsOSX();
+bool IsWindows();
+
+// Negative tests may trigger expected errors/warnings in the ANGLE Platform.
+void IgnoreANGLEPlatformMessages();
 
 #endif  // ANGLE_TESTS_ANGLE_TEST_H_

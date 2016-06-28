@@ -18,9 +18,12 @@
 
 class nsINode;
 class nsPIDOMWindowOuter;
-class nsXMLHttpRequest;
 
 namespace mozilla {
+
+namespace dom {
+class XMLHttpRequestMainThread;
+}
 
 namespace net {
 class OptionalLoadInfoArgs;
@@ -117,7 +120,7 @@ private:
   // of a loadinfo. It only exists because of the XHR code. Don't call it
   // from anywhere else!
   void SetIncludeCookiesSecFlag();
-  friend class ::nsXMLHttpRequest;
+  friend class mozilla::dom::XMLHttpRequestMainThread;
 
   // if you add a member, please also update the copy constructor
   nsCOMPtr<nsIPrincipal>           mLoadingPrincipal;

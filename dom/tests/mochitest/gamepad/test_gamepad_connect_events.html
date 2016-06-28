@@ -24,13 +24,13 @@ function pressButton() {
 
  // Add a gamepad
 function startTests() {
-   addGamepad("test gamepad", // id
-              SpecialPowers.Ci.nsIGamepadServiceTest.STANDARD_MAPPING,
-              4, // buttons
-              2).then(function(i) {
-                gamepad_index = i;
-                gamepad_connected()
-              });
+   GamepadService.addGamepad("test gamepad", // id
+                             GamepadService.standardMapping,
+                             4, // buttons
+                             2).then(function(i) {
+                               gamepad_index = i;
+                               gamepad_connected()
+                             });
 }
 
 var f1, f2;
@@ -71,6 +71,6 @@ function test2() {
 }
 
 </script>
-<iframe id="f1" src="gamepad_frame.html" onload="startTests()"></iframe>
+<iframe id="f1" src="gamepad_frame.html" onload="runGamepadTest(startTests)"></iframe>
 </body>
 </html>

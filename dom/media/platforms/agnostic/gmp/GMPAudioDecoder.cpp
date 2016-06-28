@@ -126,6 +126,45 @@ AudioCallbackAdapter::Terminated()
   mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
 }
 
+GMPAudioDecoderParams::GMPAudioDecoderParams(const CreateDecoderParams& aParams)
+  : mConfig(aParams.AudioConfig())
+  , mTaskQueue(aParams.mTaskQueue)
+  , mCallback(nullptr)
+  , mAdapter(nullptr)
+{}
+
+GMPAudioDecoderParams&
+GMPAudioDecoderParams::WithCallback(MediaDataDecoderProxy* aWrapper)
+{
+  MOZ_ASSERT(aWrapper);
+  MOZ_ASSERT(!mCallback); // Should only be called once per instance.
+  mCallback = aWrapper->Callback();
+  mAdapter = nullptr;
+  return *this;
+}
+
+GMPAudioDecoderParams&
+GMPAudioDecoderParams::WithAdapter(AudioCallbackAdapter* aAdapter)
+{
+  MOZ_ASSERT(aAdapter);
+  MOZ_ASSERT(!mAdapter); // Should only be called once per instance.
+  mCallback = aAdapter->Callback();
+  mAdapter = aAdapter;
+  return *this;
+}
+
+GMPAudioDecoder::GMPAudioDecoder(const GMPAudioDecoderParams& aParams)
+  : mConfig(aParams.mConfig)
+  , mCallback(aParams.mCallback)
+  , mGMP(nullptr)
+  , mAdapter(aParams.mAdapter)
+{
+  MOZ_ASSERT(!mAdapter || mCallback == mAdapter->Callback());
+  if (!mAdapter) {
+    mAdapter = new AudioCallbackAdapter(mCallback);
+  }
+}
+
 void
 GMPAudioDecoder::InitTags(nsTArray<nsCString>& aTags)
 {

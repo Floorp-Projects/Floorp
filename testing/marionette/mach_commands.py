@@ -147,7 +147,10 @@ class MachCommands(MachCommandBase):
                 tests.append(obj['file_relpath'])
             del kwargs['test_objects']
 
-        kwargs['binary'] = self.get_binary_path('app')
+        bin_path = self.get_binary_path('app')
+        if 'binary' in kwargs:
+            print "Warning: ignoring '--binary' option, using binary at " + bin_path
+        kwargs['binary'] = bin_path
         return run_marionette(tests, topsrcdir=self.topsrcdir, **kwargs)
 
     @Command('session-test', category='testing',

@@ -80,6 +80,9 @@ class EGLX11VisualHintTest : public ::testing::TestWithParam<angle::PlatformPara
 // Test that display creation fails if the visual ID passed in invalid.
 TEST_P(EGLX11VisualHintTest, InvalidVisualID)
 {
+    // The test platform will log an error in this negative test.
+    IgnoreANGLEPlatformMessages();
+
     static const int gInvalidVisualId = -1;
     auto attributes                   = getDisplayAttributes(gInvalidVisualId);
 

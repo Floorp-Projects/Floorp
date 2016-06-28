@@ -78,7 +78,7 @@ class UniformBufferTest : public ANGLETest
 TEST_P(UniformBufferTest, Simple)
 {
     // TODO(jmadill): Figure out why this fails on Intel.
-    if (isIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
+    if (IsIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
     {
         std::cout << "Test skipped on Intel." << std::endl;
         return;
@@ -105,7 +105,7 @@ TEST_P(UniformBufferTest, Simple)
 TEST_P(UniformBufferTest, UniformBufferRange)
 {
     // TODO(jmadill): Figure out why this fails on Intel.
-    if (isIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
+    if (IsIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
     {
         std::cout << "Test skipped on Intel." << std::endl;
         return;
@@ -183,7 +183,7 @@ TEST_P(UniformBufferTest, UniformBufferRange)
 TEST_P(UniformBufferTest, UniformBufferBindings)
 {
     // TODO(jmadill): Figure out why this fails on Intel.
-    if (isIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
+    if (IsIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
     {
         std::cout << "Test skipped on Intel." << std::endl;
         return;
@@ -246,7 +246,7 @@ TEST_P(UniformBufferTest, UnboundUniformBuffer)
 TEST_P(UniformBufferTest, UniformBufferManyUpdates)
 {
     // TODO(jmadill): Figure out why this fails on Intel.
-    if (isIntel() && (getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE ||
+    if (IsIntel() && (getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE ||
                       getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE))
     {
         std::cout << "Test skipped on Intel." << std::endl;
@@ -287,7 +287,7 @@ TEST_P(UniformBufferTest, UniformBufferManyUpdates)
 TEST_P(UniformBufferTest, ManyUniformBufferRange)
 {
     // TODO(jmadill): Figure out why this fails on Intel.
-    if (isIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
+    if (IsIntel() && GetParam().getRenderer() == EGL_PLATFORM_ANGLE_TYPE_D3D11_ANGLE)
     {
         std::cout << "Test skipped on Intel." << std::endl;
         return;

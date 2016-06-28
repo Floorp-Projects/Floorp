@@ -151,6 +151,8 @@ class EGLPresentPathD3D11 : public testing::TestWithParam<PlatformParameters>
 
     void TearDown() override
     {
+        SafeRelease(mOffscreenSurfaceD3D11Texture);
+
         if (mDisplay != EGL_NO_DISPLAY)
         {
             eglMakeCurrent(mDisplay, EGL_NO_SURFACE, EGL_NO_SURFACE, EGL_NO_CONTEXT);
@@ -173,8 +175,6 @@ class EGLPresentPathD3D11 : public testing::TestWithParam<PlatformParameters>
 
         mOSWindow->destroy();
         SafeDelete(mOSWindow);
-
-        SafeRelease(mOffscreenSurfaceD3D11Texture);
     }
 
     void drawQuadUsingGL()

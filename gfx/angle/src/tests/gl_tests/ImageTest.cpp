@@ -40,6 +40,18 @@ class ImageTest : public ANGLETest
             "    texcoord = (position.xy * 0.5) + 0.5;\n"
             "    texcoord.y = 1.0 - texcoord.y;\n"
             "}\n";
+        const std::string vsESSL3Source =
+            "#version 300 es\n"
+            "precision highp float;\n"
+            "in vec4 position;\n"
+            "out vec2 texcoord;\n"
+            "\n"
+            "void main()\n"
+            "{\n"
+            "    gl_Position = position;\n"
+            "    texcoord = (position.xy * 0.5) + 0.5;\n"
+            "    texcoord.y = 1.0 - texcoord.y;\n"
+            "}\n";
 
         const std::string textureFSSource =
             "precision highp float;\n"
@@ -50,6 +62,28 @@ class ImageTest : public ANGLETest
             "{\n"
             "    gl_FragColor = texture2D(tex, texcoord);\n"
             "}\n";
+        const std::string textureExternalFSSource =
+            "#extension GL_OES_EGL_image_external : require\n"
+            "precision highp float;\n"
+            "uniform samplerExternalOES tex;\n"
+            "varying vec2 texcoord;\n"
+            "\n"
+            "void main()\n"
+            "{\n"
+            "    gl_FragColor = texture2D(tex, texcoord);\n"
+            "}\n";
+        const std::string textureExternalESSL3FSSource =
+            "#version 300 es\n"
+            "#extension GL_OES_EGL_image_external_essl3 : require\n"
+            "precision highp float;\n"
+            "uniform samplerExternalOES tex;\n"
+            "in vec2 texcoord;\n"
+            "out vec4 color;"
+            "\n"
+            "void main()\n"
+            "{\n"
+            "    color = texture(tex, texcoord);\n"
+            "}\n";
 
         mTextureProgram = CompileProgram(vsSource, textureFSSource);
         if (mTextureProgram == 0)
@@ -58,6 +92,24 @@ class ImageTest : public ANGLETest
         }
 
         mTextureUniformLocation = glGetUniformLocation(mTextureProgram, "tex");
+
+        if (extensionEnabled("GL_OES_EGL_image_external"))
+        {
+            mTextureExternalProgram = CompileProgram(vsSource, textureExternalFSSource);
+            ASSERT_NE(0u, mTextureExternalProgram) << "shader compilation failed.";
+
+            mTextureExternalUniformLocation = glGetUniformLocation(mTextureExternalProgram, "tex");
+        }
+
+        if (extensionEnabled("GL_OES_EGL_image_external_essl3"))
+        {
+            mTextureExternalESSL3Program =
+                CompileProgram(vsESSL3Source, textureExternalESSL3FSSource);
+            ASSERT_NE(0u, mTextureExternalESSL3Program) << "shader compilation failed.";
+
+            mTextureExternalESSL3UniformLocation =
+                glGetUniformLocation(mTextureExternalESSL3Program, "tex");
+        }
 
         eglCreateImageKHR =
             reinterpret_cast<PFNEGLCREATEIMAGEKHRPROC>(eglGetProcAddress("eglCreateImageKHR"));
@@ -69,9 +121,11 @@ class ImageTest : public ANGLETest
 
     void TearDown() override
     {
-        ANGLETest::TearDown();
-
         glDeleteProgram(mTextureProgram);
+        glDeleteProgram(mTextureExternalProgram);
+        glDeleteProgram(mTextureExternalESSL3Program);
+
+        ANGLETest::TearDown();
     }
 
     void createEGLImage2DTextureSource(size_t width,
@@ -245,6 +299,23 @@ class ImageTest : public ANGLETest
         *outTargetTexture = target;
     }
 
+    void createEGLImageTargetTextureExternal(EGLImageKHR image, GLuint *outTargetTexture)
+    {
+        // Create a target texture from the image
+        GLuint target;
+        glGenTextures(1, &target);
+        glBindTexture(GL_TEXTURE_EXTERNAL_OES, target);
+        glEGLImageTargetTexture2DOES(GL_TEXTURE_EXTERNAL_OES, image);
+
+        // Disable mipmapping
+        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+        ASSERT_GL_NO_ERROR();
+
+        *outTargetTexture = target;
+    }
+
     void createEGLImageTargetRenderbuffer(EGLImageKHR image, GLuint *outTargetRenderbuffer)
     {
         // Create a target texture from the image
@@ -258,17 +329,39 @@ class ImageTest : public ANGLETest
         *outTargetRenderbuffer = target;
     }
 
-    void verifyResults2D(GLuint texture, GLubyte data[4])
+    void verifyResultsTexture(GLuint texture,
+                              GLubyte data[4],
+                              GLenum textureTarget,
+                              GLuint program,
+                              GLuint textureUniform)
     {
         // Draw a quad with the target texture
-        glUseProgram(mTextureProgram);
-        glBindTexture(GL_TEXTURE_2D, texture);
-        glUniform1i(mTextureUniformLocation, 0);
+        glUseProgram(program);
+        glBindTexture(textureTarget, texture);
+        glUniform1i(textureUniform, 0);
 
-        drawQuad(mTextureProgram, "position", 0.5f);
+        drawQuad(program, "position", 0.5f);
 
         // Expect that the rendered quad has the same color as the source texture
         EXPECT_PIXEL_EQ(0, 0, data[0], data[1], data[2], data[3]);
+    }
+
+    void verifyResults2D(GLuint texture, GLubyte data[4])
+    {
+        verifyResultsTexture(texture, data, GL_TEXTURE_2D, mTextureProgram,
+                             mTextureUniformLocation);
+    }
+
+    void verifyResultsExternal(GLuint texture, GLubyte data[4])
+    {
+        verifyResultsTexture(texture, data, GL_TEXTURE_EXTERNAL_OES, mTextureExternalProgram,
+                             mTextureExternalUniformLocation);
+    }
+
+    void verifyResultsExternalESSL3(GLuint texture, GLubyte data[4])
+    {
+        verifyResultsTexture(texture, data, GL_TEXTURE_EXTERNAL_OES, mTextureExternalESSL3Program,
+                             mTextureExternalESSL3UniformLocation);
     }
 
     void verifyResultsRenderbuffer(GLuint renderbuffer, GLubyte data[4])
@@ -298,8 +391,18 @@ class ImageTest : public ANGLETest
     GLuint mTextureProgram;
     GLint mTextureUniformLocation;
 
+    GLuint mTextureExternalProgram        = 0;
+    GLint mTextureExternalUniformLocation = -1;
+
+    GLuint mTextureExternalESSL3Program        = 0;
+    GLint mTextureExternalESSL3UniformLocation = -1;
+
     PFNEGLCREATEIMAGEKHRPROC eglCreateImageKHR;
     PFNEGLDESTROYIMAGEKHRPROC eglDestroyImageKHR;
+};
+
+class ImageTestES3 : public ImageTest
+{
 };
 
 // Check validation from the EGL_KHR_image_base extension
@@ -755,17 +858,114 @@ TEST_P(ImageTest, ValidationGLEGLImage)
 // Check validation from the GL_OES_EGL_image_external extension
 TEST_P(ImageTest, ValidationGLEGLImageExternal)
 {
-    // This extension is not implemented anywhere yet.  This makes sure that it is tested once it is
-    // added.
-    EXPECT_FALSE(extensionEnabled("GL_OES_EGL_image_external"));
+    if (!extensionEnabled("GL_OES_EGL_image_external"))
+    {
+        std::cout << "Test skipped because GL_OES_EGL_image_external is not available."
+                  << std::endl;
+        return;
+    }
+
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_EXTERNAL_OES, texture);
+
+    // In the initial state of a TEXTURE_EXTERNAL_OES texture object, the value assigned to
+    // TEXTURE_MIN_FILTER and TEXTURE_MAG_FILTER is LINEAR, and the s and t wrap modes are both set
+    // to CLAMP_TO_EDGE
+    auto getTexParam = [](GLenum target, GLenum pname)
+    {
+        GLint value = 0;
+        glGetTexParameteriv(target, pname, &value);
+        EXPECT_GL_NO_ERROR();
+        return value;
+    };
+    EXPECT_GLENUM_EQ(GL_LINEAR, getTexParam(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER));
+    EXPECT_GLENUM_EQ(GL_LINEAR, getTexParam(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MAG_FILTER));
+    EXPECT_GLENUM_EQ(GL_CLAMP_TO_EDGE, getTexParam(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S));
+    EXPECT_GLENUM_EQ(GL_CLAMP_TO_EDGE, getTexParam(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T));
+
+    // "When <target> is TEXTURE_EXTERNAL_OES only NEAREST and LINEAR are accepted as
+    // TEXTURE_MIN_FILTER, only CLAMP_TO_EDGE is accepted as TEXTURE_WRAP_S and TEXTURE_WRAP_T, and
+    // only FALSE is accepted as GENERATE_MIPMAP. Attempting to set other values for
+    // TEXTURE_MIN_FILTER, TEXTURE_WRAP_S, TEXTURE_WRAP_T, or GENERATE_MIPMAP will result in an
+    // INVALID_ENUM error.
+    GLenum validMinFilters[]{
+        GL_NEAREST, GL_LINEAR,
+    };
+    for (auto minFilter : validMinFilters)
+    {
+        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, minFilter);
+        EXPECT_GL_NO_ERROR();
+    }
+
+    GLenum invalidMinFilters[]{
+        GL_NEAREST_MIPMAP_LINEAR, GL_NEAREST_MIPMAP_NEAREST, GL_LINEAR_MIPMAP_LINEAR,
+        GL_LINEAR_MIPMAP_NEAREST,
+    };
+    for (auto minFilter : invalidMinFilters)
+    {
+        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_MIN_FILTER, minFilter);
+        EXPECT_GL_ERROR(GL_INVALID_ENUM);
+    }
+
+    GLenum validWrapModes[]{
+        GL_CLAMP_TO_EDGE,
+    };
+    for (auto minFilter : validWrapModes)
+    {
+        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, minFilter);
+        EXPECT_GL_NO_ERROR();
+        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, minFilter);
+        EXPECT_GL_NO_ERROR();
+    }
+
+    GLenum invalidWrapModes[]{
+        GL_REPEAT, GL_MIRRORED_REPEAT,
+    };
+    for (auto minFilter : invalidWrapModes)
+    {
+        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_S, minFilter);
+        EXPECT_GL_ERROR(GL_INVALID_ENUM);
+        glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, minFilter);
+        EXPECT_GL_ERROR(GL_INVALID_ENUM);
+    }
+
+    // When <target> is set to TEXTURE_EXTERNAL_OES, GenerateMipmap always fails and generates an
+    // INVALID_ENUM error.
+    glGenerateMipmap(GL_TEXTURE_EXTERNAL_OES);
+    EXPECT_GL_ERROR(GL_INVALID_ENUM);
+
+    glDeleteTextures(1, &texture);
 }
 
 // Check validation from the GL_OES_EGL_image_external_essl3 extension
 TEST_P(ImageTest, ValidationGLEGLImageExternalESSL3)
 {
-    // This extension is not implemented anywhere yet.  This makes sure that it is tested once it is
-    // added.
-    EXPECT_FALSE(extensionEnabled("GL_OES_EGL_image_external_essl3"));
+    if (!extensionEnabled("GL_OES_EGL_image_external_essl3"))
+    {
+        std::cout << "Test skipped because GL_OES_EGL_image_external is not available."
+                  << std::endl;
+        return;
+    }
+
+    // Make sure this extension is not exposed without ES3.
+    ASSERT_GE(getClientVersion(), 3);
+
+    GLuint texture;
+    glGenTextures(1, &texture);
+    glBindTexture(GL_TEXTURE_EXTERNAL_OES, texture);
+
+    // It is an INVALID_OPERATION error to set the TEXTURE_BASE_LEVEL to a value other than zero.
+    glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_BASE_LEVEL, 1);
+    EXPECT_GL_ERROR(GL_INVALID_OPERATION);
+
+    glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_BASE_LEVEL, 10);
+    EXPECT_GL_ERROR(GL_INVALID_OPERATION);
+
+    glTexParameteri(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_BASE_LEVEL, 0);
+    EXPECT_GL_NO_ERROR();
+
+    glDeleteTextures(1, &texture);
 }
 
 TEST_P(ImageTest, Source2DTarget2D)
@@ -827,6 +1027,74 @@ TEST_P(ImageTest, Source2DTargetRenderbuffer)
 
     // Expect that the target renderbuffer has the same color as the source texture
     verifyResultsRenderbuffer(target, data);
+
+    // Clean up
+    glDeleteTextures(1, &source);
+    eglDestroyImageKHR(window->getDisplay(), image);
+    glDeleteRenderbuffers(1, &target);
+}
+
+TEST_P(ImageTest, Source2DTargetExternal)
+{
+    EGLWindow *window = getEGLWindow();
+    if (!extensionEnabled("OES_EGL_image") || !extensionEnabled("OES_EGL_image_external") ||
+        !eglDisplayExtensionEnabled(window->getDisplay(), "EGL_KHR_image_base") ||
+        !eglDisplayExtensionEnabled(window->getDisplay(), "EGL_KHR_gl_texture_2D_image"))
+    {
+        std::cout
+            << "Test skipped because OES_EGL_image, OES_EGL_image_external, EGL_KHR_image_base or "
+               "EGL_KHR_gl_texture_2D_image is not available."
+            << std::endl;
+        return;
+    }
+
+    GLubyte data[4] = {255, 0, 255, 255};
+
+    // Create the Image
+    GLuint source;
+    EGLImageKHR image;
+    createEGLImage2DTextureSource(1, 1, GL_RGBA, GL_UNSIGNED_BYTE, data, &source, &image);
+
+    // Create the target
+    GLuint target;
+    createEGLImageTargetTextureExternal(image, &target);
+
+    // Expect that the target renderbuffer has the same color as the source texture
+    verifyResultsExternal(target, data);
+
+    // Clean up
+    glDeleteTextures(1, &source);
+    eglDestroyImageKHR(window->getDisplay(), image);
+    glDeleteRenderbuffers(1, &target);
+}
+
+TEST_P(ImageTestES3, Source2DTargetExternalESSL3)
+{
+    EGLWindow *window = getEGLWindow();
+    if (!extensionEnabled("OES_EGL_image") || !extensionEnabled("OES_EGL_image_external_essl3") ||
+        !eglDisplayExtensionEnabled(window->getDisplay(), "EGL_KHR_image_base") ||
+        !eglDisplayExtensionEnabled(window->getDisplay(), "EGL_KHR_gl_texture_2D_image"))
+    {
+        std::cout << "Test skipped because OES_EGL_image, OES_EGL_image_external_essl3, "
+                     "EGL_KHR_image_base or "
+                     "EGL_KHR_gl_texture_2D_image is not available."
+                  << std::endl;
+        return;
+    }
+
+    GLubyte data[4] = {255, 0, 255, 255};
+
+    // Create the Image
+    GLuint source;
+    EGLImageKHR image;
+    createEGLImage2DTextureSource(1, 1, GL_RGBA, GL_UNSIGNED_BYTE, data, &source, &image);
+
+    // Create the target
+    GLuint target;
+    createEGLImageTargetTextureExternal(image, &target);
+
+    // Expect that the target renderbuffer has the same color as the source texture
+    verifyResultsExternalESSL3(target, data);
 
     // Clean up
     glDeleteTextures(1, &source);
@@ -908,6 +1176,92 @@ TEST_P(ImageTest, SourceCubeTargetRenderbuffer)
 
         // Expect that the target texture has the same color as the source texture
         verifyResultsRenderbuffer(target, &data[faceIdx * 4]);
+
+        // Clean up
+        glDeleteTextures(1, &source);
+        eglDestroyImageKHR(window->getDisplay(), image);
+        glDeleteRenderbuffers(1, &target);
+    }
+}
+
+// Test cubemap -> external texture EGL images.
+TEST_P(ImageTest, SourceCubeTargetExternal)
+{
+    EGLWindow *window = getEGLWindow();
+    if (!extensionEnabled("OES_EGL_image") || !extensionEnabled("OES_EGL_image_external") ||
+        !eglDisplayExtensionEnabled(window->getDisplay(), "EGL_KHR_image_base") ||
+        !eglDisplayExtensionEnabled(window->getDisplay(), "EGL_KHR_gl_texture_cubemap_image"))
+    {
+        std::cout
+            << "Test skipped because OES_EGL_image, OES_EGL_image_external, EGL_KHR_image_base or "
+               "EGL_KHR_gl_texture_cubemap_image is not available."
+            << std::endl;
+        return;
+    }
+
+    GLubyte data[24] = {
+        255, 0, 255, 255, 255, 255, 255, 255, 255, 0, 0, 255,
+        0,   0, 255, 255, 0,   255, 0,   255, 0,   0, 0, 255,
+    };
+
+    for (EGLenum faceIdx = 0; faceIdx < 6; faceIdx++)
+    {
+        // Create the Image
+        GLuint source;
+        EGLImageKHR image;
+        createEGLImageCubemapTextureSource(
+            1, 1, GL_RGBA, GL_UNSIGNED_BYTE, reinterpret_cast<uint8_t *>(data), sizeof(GLubyte) * 4,
+            EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_X_KHR + faceIdx, &source, &image);
+
+        // Create the target
+        GLuint target;
+        createEGLImageTargetTextureExternal(image, &target);
+
+        // Expect that the target texture has the same color as the source texture
+        verifyResultsExternal(target, &data[faceIdx * 4]);
+
+        // Clean up
+        glDeleteTextures(1, &source);
+        eglDestroyImageKHR(window->getDisplay(), image);
+        glDeleteRenderbuffers(1, &target);
+    }
+}
+
+// Test cubemap -> external texture EGL images using ESSL3 shaders.
+TEST_P(ImageTestES3, SourceCubeTargetExternalESSL3)
+{
+    EGLWindow *window = getEGLWindow();
+    if (!extensionEnabled("OES_EGL_image") || !extensionEnabled("OES_EGL_image_external_essl3") ||
+        !eglDisplayExtensionEnabled(window->getDisplay(), "EGL_KHR_image_base") ||
+        !eglDisplayExtensionEnabled(window->getDisplay(), "EGL_KHR_gl_texture_cubemap_image"))
+    {
+        std::cout << "Test skipped because OES_EGL_image, OES_EGL_image_external_essl3, "
+                     "EGL_KHR_image_base or "
+                     "EGL_KHR_gl_texture_cubemap_image is not available."
+                  << std::endl;
+        return;
+    }
+
+    GLubyte data[24] = {
+        255, 0, 255, 255, 255, 255, 255, 255, 255, 0, 0, 255,
+        0,   0, 255, 255, 0,   255, 0,   255, 0,   0, 0, 255,
+    };
+
+    for (EGLenum faceIdx = 0; faceIdx < 6; faceIdx++)
+    {
+        // Create the Image
+        GLuint source;
+        EGLImageKHR image;
+        createEGLImageCubemapTextureSource(
+            1, 1, GL_RGBA, GL_UNSIGNED_BYTE, reinterpret_cast<uint8_t *>(data), sizeof(GLubyte) * 4,
+            EGL_GL_TEXTURE_CUBE_MAP_POSITIVE_X_KHR + faceIdx, &source, &image);
+
+        // Create the target
+        GLuint target;
+        createEGLImageTargetTextureExternal(image, &target);
+
+        // Expect that the target texture has the same color as the source texture
+        verifyResultsExternalESSL3(target, &data[faceIdx * 4]);
 
         // Clean up
         glDeleteTextures(1, &source);
@@ -1008,6 +1362,102 @@ TEST_P(ImageTest, Source3DTargetRenderbuffer)
     }
 }
 
+// Test 3D -> external texture EGL images.
+TEST_P(ImageTest, Source3DTargetExternal)
+{
+    EGLWindow *window = getEGLWindow();
+    if (!extensionEnabled("OES_EGL_image") || !extensionEnabled("OES_EGL_image_external") ||
+        !eglDisplayExtensionEnabled(window->getDisplay(), "EGL_KHR_image_base") ||
+        !eglDisplayExtensionEnabled(window->getDisplay(), "EGL_KHR_gl_texture_3D_image"))
+    {
+        std::cout
+            << "Test skipped because OES_EGL_image, OES_EGL_image_external, EGL_KHR_image_base or "
+               "EGL_KHR_gl_texture_3D_image is not available."
+            << std::endl;
+        return;
+    }
+
+    if (getClientVersion() < 3 && !extensionEnabled("GL_OES_texture_3D"))
+    {
+        std::cout << "Test skipped because 3D textures are not available." << std::endl;
+        return;
+    }
+
+    const size_t depth      = 2;
+    GLubyte data[4 * depth] = {
+        255, 0, 255, 255, 255, 255, 0, 255,
+    };
+
+    for (size_t layer = 0; layer < depth; layer++)
+    {
+        // Create the Image
+        GLuint source;
+        EGLImageKHR image;
+        createEGLImage3DTextureSource(1, 1, depth, GL_RGBA, GL_UNSIGNED_BYTE, data, layer, &source,
+                                      &image);
+
+        // Create the target
+        GLuint target;
+        createEGLImageTargetTextureExternal(image, &target);
+
+        // Expect that the target renderbuffer has the same color as the source texture
+        verifyResultsExternal(target, &data[layer * 4]);
+
+        // Clean up
+        glDeleteTextures(1, &source);
+        eglDestroyImageKHR(window->getDisplay(), image);
+        glDeleteTextures(1, &target);
+    }
+}
+
+// Test 3D -> external texture EGL images using ESSL3 shaders.
+TEST_P(ImageTestES3, Source3DTargetExternalESSL3)
+{
+    EGLWindow *window = getEGLWindow();
+    if (!extensionEnabled("OES_EGL_image") || !extensionEnabled("OES_EGL_image_external_essl3") ||
+        !eglDisplayExtensionEnabled(window->getDisplay(), "EGL_KHR_image_base") ||
+        !eglDisplayExtensionEnabled(window->getDisplay(), "EGL_KHR_gl_texture_3D_image"))
+    {
+        std::cout << "Test skipped because OES_EGL_image, OES_EGL_image_external_essl3, "
+                     "EGL_KHR_image_base or "
+                     "EGL_KHR_gl_texture_3D_image is not available."
+                  << std::endl;
+        return;
+    }
+
+    if (getClientVersion() < 3 && !extensionEnabled("GL_OES_texture_3D"))
+    {
+        std::cout << "Test skipped because 3D textures are not available." << std::endl;
+        return;
+    }
+
+    const size_t depth      = 2;
+    GLubyte data[4 * depth] = {
+        255, 0, 255, 255, 255, 255, 0, 255,
+    };
+
+    for (size_t layer = 0; layer < depth; layer++)
+    {
+        // Create the Image
+        GLuint source;
+        EGLImageKHR image;
+        createEGLImage3DTextureSource(1, 1, depth, GL_RGBA, GL_UNSIGNED_BYTE, data, layer, &source,
+                                      &image);
+
+        // Create the target
+        GLuint target;
+        createEGLImageTargetTextureExternal(image, &target);
+
+        // Expect that the target renderbuffer has the same color as the source texture
+        verifyResultsExternalESSL3(target, &data[layer * 4]);
+
+        // Clean up
+        glDeleteTextures(1, &source);
+        eglDestroyImageKHR(window->getDisplay(), image);
+        glDeleteTextures(1, &target);
+    }
+}
+
 TEST_P(ImageTest, SourceRenderbufferTargetTexture)
 {
     EGLWindow *window = getEGLWindow();
@@ -1034,6 +1484,76 @@ TEST_P(ImageTest, SourceRenderbufferTargetTexture)
 
     // Expect that the target texture has the same color as the source texture
     verifyResults2D(target, data);
+
+    // Clean up
+    glDeleteRenderbuffers(1, &source);
+    eglDestroyImageKHR(window->getDisplay(), image);
+    glDeleteTextures(1, &target);
+}
+
+// Test renderbuffer -> external texture EGL images.
+TEST_P(ImageTest, SourceRenderbufferTargetTextureExternal)
+{
+    EGLWindow *window = getEGLWindow();
+    if (!extensionEnabled("OES_EGL_image") || !extensionEnabled("OES_EGL_image_external") ||
+        !eglDisplayExtensionEnabled(window->getDisplay(), "EGL_KHR_image_base") ||
+        !eglDisplayExtensionEnabled(window->getDisplay(), "EGL_KHR_gl_renderbuffer_image"))
+    {
+        std::cout
+            << "Test skipped because OES_EGL_image, OES_EGL_image_external, EGL_KHR_image_base or "
+               "EGL_KHR_gl_renderbuffer_image is not available."
+            << std::endl;
+        return;
+    }
+
+    GLubyte data[4] = {255, 0, 255, 255};
+
+    // Create the Image
+    GLuint source;
+    EGLImageKHR image;
+    createEGLImageRenderbufferSource(1, 1, GL_RGBA8_OES, data, &source, &image);
+
+    // Create the target
+    GLuint target;
+    createEGLImageTargetTextureExternal(image, &target);
+
+    // Expect that the target texture has the same color as the source texture
+    verifyResultsExternal(target, data);
+
+    // Clean up
+    glDeleteRenderbuffers(1, &source);
+    eglDestroyImageKHR(window->getDisplay(), image);
+    glDeleteTextures(1, &target);
+}
+
+// Test renderbuffer -> external texture EGL images using ESSL3 shaders.
+TEST_P(ImageTestES3, SourceRenderbufferTargetTextureExternalESSL3)
+{
+    EGLWindow *window = getEGLWindow();
+    if (!extensionEnabled("OES_EGL_image") || !extensionEnabled("OES_EGL_image_external_essl3") ||
+        !eglDisplayExtensionEnabled(window->getDisplay(), "EGL_KHR_image_base") ||
+        !eglDisplayExtensionEnabled(window->getDisplay(), "EGL_KHR_gl_renderbuffer_image"))
+    {
+        std::cout
+            << "Test skipped because OES_EGL_image, OES_EGL_image_external, EGL_KHR_image_base or "
+               "EGL_KHR_gl_renderbuffer_image is not available."
+            << std::endl;
+        return;
+    }
+
+    GLubyte data[4] = {255, 0, 255, 255};
+
+    // Create the Image
+    GLuint source;
+    EGLImageKHR image;
+    createEGLImageRenderbufferSource(1, 1, GL_RGBA8_OES, data, &source, &image);
+
+    // Create the target
+    GLuint target;
+    createEGLImageTargetTextureExternal(image, &target);
+
+    // Expect that the target texture has the same color as the source texture
+    verifyResultsExternalESSL3(target, data);
 
     // Clean up
     glDeleteRenderbuffers(1, &source);
@@ -1252,6 +1772,75 @@ TEST_P(ImageTest, Respecification)
     glDeleteTextures(1, &target);
 }
 
+// First render to a target texture, then respecify the source texture, orphaning it.
+// The target texture's FBO should be notified of the target texture's orphaning.
+TEST_P(ImageTest, RespecificationWithFBO)
+{
+    EGLWindow *window = getEGLWindow();
+    if (!extensionEnabled("OES_EGL_image") ||
+        !eglDisplayExtensionEnabled(window->getDisplay(), "EGL_KHR_image_base") ||
+        !eglDisplayExtensionEnabled(window->getDisplay(), "EGL_KHR_gl_texture_2D_image"))
+    {
+        std::cout << "Test skipped because OES_EGL_image, EGL_KHR_image_base or "
+                     "EGL_KHR_gl_texture_2D_image is not available."
+                  << std::endl;
+        return;
+    }
+
+    // Simple shader
+    const std::string &vertexSource =
+        "attribute vec2 position;\n"
+        "void main()\n"
+        "{\n"
+        "    gl_Position = vec4(position, 0, 1);\n"
+        "}";
+    const std::string &fragmentSource =
+        "void main()\n"
+        "{\n"
+        "    gl_FragColor = vec4(0.0, 0.0, 1.0, 1.0);\n"
+        "}";
+    GLuint program = CompileProgram(vertexSource, fragmentSource);
+    ASSERT_NE(0u, program);
+
+    GLubyte originalData[4] = {255, 0, 255, 255};
+    GLubyte updateData[4]   = {0, 255, 0, 255};
+
+    // Create the Image
+    GLuint source;
+    EGLImageKHR image;
+    createEGLImage2DTextureSource(1, 1, GL_RGBA, GL_UNSIGNED_BYTE, originalData, &source, &image);
+
+    // Create the target
+    GLuint target;
+    createEGLImageTargetTexture2D(image, &target);
+
+    // Render to the target texture
+    GLuint fbo;
+    glGenFramebuffers(1, &fbo);
+    glBindFramebuffer(GL_FRAMEBUFFER, fbo);
+    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, target, 0);
+    drawQuad(program, "position", 0.5f);
+    EXPECT_PIXEL_EQ(0, 0, 0, 0, 255, 255);
+
+    // Respecify source with same parameters. This should not change the texture storage in D3D11.
+    glBindTexture(GL_TEXTURE_2D, source);
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 1, 1, 0, GL_RGBA, GL_UNSIGNED_BYTE, updateData);
+
+    // Expect that the source texture has the updated data
+    verifyResults2D(source, updateData);
+
+    // Render to the target texture again and verify it gets the rendered pixels.
+    drawQuad(program, "position", 0.5f);
+    EXPECT_PIXEL_EQ(0, 0, 0, 0, 255, 255);
+
+    // Clean up
+    glDeleteTextures(1, &source);
+    eglDestroyImageKHR(window->getDisplay(), image);
+    glDeleteTextures(1, &target);
+    glDeleteProgram(program);
+    glDeleteFramebuffers(1, &fbo);
+}
+
 // Test that respecifying a level of the target texture orphans it and keeps a copy of the EGLimage
 // data
 TEST_P(ImageTest, RespecificationOfOtherLevel)
@@ -1380,4 +1969,5 @@ ANGLE_INSTANTIATE_TEST(ImageTest,
                        ES3_OPENGL(),
                        ES2_OPENGLES(),
                        ES3_OPENGLES());
+ANGLE_INSTANTIATE_TEST(ImageTestES3, ES3_D3D11(), ES3_OPENGL(), ES3_OPENGLES());
 }

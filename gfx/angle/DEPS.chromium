@@ -1,0 +1,26 @@
+# This file is used to manage the ANGLE's dependencies in the Chromium src repo. It is
+# used by gclient to determine what version of each dependency to check out, and
+# where.
+#
+# These deps are duplicated in ANGLE's DEPS file which we use for the standalone
+# build. The dual file setup is necessary because Chromium can only recurse into
+# a single file and we do not want to import all of ANGLE's standalone DEPS.
+#
+# If you make a change to one of these dependencies please also update the
+# standalone DEPS file.
+
+vars = {
+  'android_git': 'https://android.googlesource.com',
+  'deqp_revision': 'f4f3d8079e7a37d7675ab93583e6438d0bca0e58',
+}
+
+deps_os = {
+  'win': {
+    'src/third_party/deqp/src':
+      Var('android_git') + '/platform/external/deqp@' + Var('deqp_revision'),
+  },
+  'unix': {
+    'src/third_party/deqp/src':
+      Var('android_git') + '/platform/external/deqp@' + Var('deqp_revision'),
+  }
+}

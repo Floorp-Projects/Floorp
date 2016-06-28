@@ -313,24 +313,12 @@ AssertHeapIsIdle(JSRuntime* rt)
     MOZ_ASSERT(!rt->isHeapBusy());
 }
 
-void
-AssertHeapIsIdle(JSContext* cx)
-{
-    AssertHeapIsIdle(cx->runtime());
-}
-
 } // namespace js
 
 static void
 AssertHeapIsIdleOrIterating(JSRuntime* rt)
 {
     MOZ_ASSERT(!rt->isHeapCollecting());
-}
-
-static void
-AssertHeapIsIdleOrIterating(JSContext* cx)
-{
-    AssertHeapIsIdleOrIterating(cx->runtime());
 }
 
 static void
@@ -1309,7 +1297,7 @@ JS_GetDefaultFreeOp(JSRuntime* rt)
 JS_PUBLIC_API(void)
 JS_updateMallocCounter(JSContext* cx, size_t nbytes)
 {
-    return cx->runtime()->updateMallocCounter(cx->zone(), nbytes);
+    return cx->updateMallocCounter(nbytes);
 }
 
 JS_PUBLIC_API(char*)
@@ -1763,12 +1751,6 @@ bool
 JS::CompartmentBehaviors::extraWarnings(JSRuntime* rt) const
 {
     return extraWarningsOverride_.get(rt->options().extraWarnings());
-}
-
-bool
-JS::CompartmentBehaviors::extraWarnings(JSContext* cx) const
-{
-    return extraWarnings(cx->runtime());
 }
 
 JS::CompartmentCreationOptions&

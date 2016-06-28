@@ -71,9 +71,9 @@ namespace jni {
  *   };
  */
 
-namespace {
+namespace detail {
 
-uintptr_t CheckNativeHandle(JNIEnv* env, uintptr_t handle)
+inline uintptr_t CheckNativeHandle(JNIEnv* env, uintptr_t handle)
 {
     if (!handle) {
         if (!env->ExceptionCheck()) {
@@ -173,7 +173,9 @@ struct NativePtr<Impl, /* UseWeakPtr = */ true>
     }
 };
 
-} // namespace
+} // namespace detail
+
+using namespace detail;
 
 /**
  * For C++ classes whose native methods all return void, they can choose to
@@ -221,10 +223,6 @@ namespace detail {
 
 template<class Traits, class Impl, class Args, bool IsStatic, bool IsVoid>
 class NativeStubImpl;
-
-}
-
-namespace {
 
 // ProxyArg is used to handle JNI ref arguments for proxies. Because a proxied
 // call may happen outside of the original JNI native call, we must save all
@@ -417,7 +415,7 @@ Dispatch(ProxyNativeCall<Impl, O, S, V, A...>&& call)
 template<typename T>
 void Dispatch(const T&) {}
 
-} // namespace
+} // namespace detail
 
 template<class Cls, class Impl> class NativeImpl;
 

@@ -43,7 +43,7 @@ class PointSpritesTest : public ANGLETest
 TEST_P(PointSpritesTest, PointCoordAndPointSizeCompliance)
 {
     // TODO(jmadill): figure out why this fails
-    if (isIntel() && GetParam() == ES2_D3D9())
+    if (IsIntel() && GetParam() == ES2_D3D9())
     {
         std::cout << "Test skipped on Intel due to failures." << std::endl;
         return;

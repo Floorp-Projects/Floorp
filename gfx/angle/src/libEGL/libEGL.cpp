@@ -288,4 +288,74 @@ __eglMustCastToProperFunctionPointerType EGLAPIENTRY eglGetProcAddress(const cha
     return egl::GetProcAddress(procname);
 }
 
+EGLStreamKHR EGLAPIENTRY eglCreateStreamKHR(EGLDisplay dpy, const EGLint *attrib_list)
+{
+    return egl::CreateStreamKHR(dpy, attrib_list);
+}
+
+EGLBoolean EGLAPIENTRY eglDestroyStreamKHR(EGLDisplay dpy, EGLStreamKHR stream)
+{
+    return egl::DestroyStreamKHR(dpy, stream);
+}
+
+EGLBoolean EGLAPIENTRY eglStreamAttribKHR(EGLDisplay dpy,
+                                          EGLStreamKHR stream,
+                                          EGLenum attribute,
+                                          EGLint value)
+{
+    return egl::StreamAttribKHR(dpy, stream, attribute, value);
+}
+
+EGLBoolean EGLAPIENTRY eglQueryStreamKHR(EGLDisplay dpy,
+                                         EGLStreamKHR stream,
+                                         EGLenum attribute,
+                                         EGLint *value)
+{
+    return egl::QueryStreamKHR(dpy, stream, attribute, value);
+}
+
+EGLBoolean EGLAPIENTRY eglQueryStreamu64KHR(EGLDisplay dpy,
+                                            EGLStreamKHR stream,
+                                            EGLenum attribute,
+                                            EGLuint64KHR *value)
+{
+    return egl::QueryStreamu64KHR(dpy, stream, attribute, value);
+}
+
+EGLBoolean EGLAPIENTRY eglStreamConsumerGLTextureExternalKHR(EGLDisplay dpy, EGLStreamKHR stream)
+{
+    return egl::StreamConsumerGLTextureExternalKHR(dpy, stream);
+}
+
+EGLBoolean EGLAPIENTRY eglStreamConsumerAcquireKHR(EGLDisplay dpy, EGLStreamKHR stream)
+{
+    return egl::StreamConsumerAcquireKHR(dpy, stream);
+}
+
+EGLBoolean EGLAPIENTRY eglStreamConsumerReleaseKHR(EGLDisplay dpy, EGLStreamKHR stream)
+{
+    return egl::StreamConsumerReleaseKHR(dpy, stream);
+}
+
+EGLBoolean EGLAPIENTRY eglStreamConsumerGLTextureExternalAttribsNV(EGLDisplay dpy,
+                                                                   EGLStreamKHR stream,
+                                                                   EGLAttrib *attrib_list)
+{
+    return egl::StreamConsumerGLTextureExternalAttribsNV(dpy, stream, attrib_list);
+}
+
+EGLBoolean EGLAPIENTRY eglCreateStreamProducerD3DTextureNV12ANGLE(EGLDisplay dpy,
+                                                                  EGLStreamKHR stream,
+                                                                  const EGLAttrib *attrib_list)
+{
+    return egl::CreateStreamProducerD3DTextureNV12ANGLE(dpy, stream, attrib_list);
+}
+
+EGLBoolean EGLAPIENTRY eglStreamPostD3DTextureNV12ANGLE(EGLDisplay dpy,
+                                                        EGLStreamKHR stream,
+                                                        void *texture,
+                                                        const EGLAttrib *attrib_list)
+{
+    return egl::StreamPostD3DTextureNV12ANGLE(dpy, stream, texture, attrib_list);
+}
 }

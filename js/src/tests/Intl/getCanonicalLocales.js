@@ -9,29 +9,29 @@ let gCL = Intl.getCanonicalLocales;
 
 assertEq(Intl.getCanonicalLocales.length, 1);
 
-assertShallowArray(gCL(), []);
+assertEqArray(gCL(), []);
 
-assertShallowArray(gCL('ab-cd'), ['ab-CD']);
+assertEqArray(gCL('ab-cd'), ['ab-CD']);
 
-assertShallowArray(gCL(['ab-cd']), ['ab-CD']);
+assertEqArray(gCL(['ab-cd']), ['ab-CD']);
 
-assertShallowArray(gCL(['ab-cd', 'FF']), ['ab-CD', 'ff']);
+assertEqArray(gCL(['ab-cd', 'FF']), ['ab-CD', 'ff']);
 
-assertShallowArray(gCL({'a': 0}), []);
+assertEqArray(gCL({'a': 0}), []);
 
-assertShallowArray(gCL({}), []);
+assertEqArray(gCL({}), []);
 
-assertShallowArray(gCL(['ar-ma-u-ca-islamicc']), ['ar-MA-u-ca-islamicc']);
+assertEqArray(gCL(['ar-ma-u-ca-islamicc']), ['ar-MA-u-ca-islamicc']);
 
-assertShallowArray(gCL(['th-th-u-nu-thai']), ['th-TH-u-nu-thai']);
+assertEqArray(gCL(['th-th-u-nu-thai']), ['th-TH-u-nu-thai']);
 
-assertShallowArray(gCL(NaN), []);
+assertEqArray(gCL(NaN), []);
 
-assertShallowArray(gCL(1), []);
+assertEqArray(gCL(1), []);
 
 Number.prototype[0] = "en-US";
 Number.prototype.length = 1;
-assertShallowArray(gCL(NaN), ["en-US"]);
+assertEqArray(gCL(NaN), ["en-US"]);
 
 if (typeof reportCompare === 'function')
     reportCompare(0, 0);

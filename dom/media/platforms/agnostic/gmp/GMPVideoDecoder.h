@@ -27,6 +27,8 @@ public:
    , mImageContainer(aImageContainer)
   {}
 
+  MediaDataDecoderCallbackProxy* Callback() const { return mCallback; }
+
   // GMPVideoDecoderCallbackProxy
   void Decoded(GMPVideoi420Frame* aDecodedFrame) override;
   void ReceivedDecodedReferenceFrame(const uint64_t aPictureId) override;
@@ -49,40 +51,22 @@ private:
   RefPtr<layers::ImageContainer> mImageContainer;
 };
 
-class GMPVideoDecoder : public MediaDataDecoder {
-protected:
-  GMPVideoDecoder(const VideoInfo& aConfig,
-                  layers::LayersBackend aLayersBackend,
-                  layers::ImageContainer* aImageContainer,
-                  TaskQueue* aTaskQueue,
-                  MediaDataDecoderCallbackProxy* aCallback,
-                  VideoCallbackAdapter* aAdapter)
-   : mConfig(aConfig)
-   , mCallback(aCallback)
-   , mGMP(nullptr)
-   , mHost(nullptr)
-   , mAdapter(aAdapter)
-   , mConvertNALUnitLengths(false)
-  {
-  }
+struct GMPVideoDecoderParams {
+  explicit GMPVideoDecoderParams(const CreateDecoderParams& aParams);
+  GMPVideoDecoderParams& WithCallback(MediaDataDecoderProxy* aWrapper);
+  GMPVideoDecoderParams& WithAdapter(VideoCallbackAdapter* aAdapter);
 
+  const VideoInfo& mConfig;
+  TaskQueue* mTaskQueue;
+  MediaDataDecoderCallbackProxy* mCallback;
+  VideoCallbackAdapter* mAdapter;
+  layers::ImageContainer* mImageContainer;
+  layers::LayersBackend mLayersBackend;
+};
+
+class GMPVideoDecoder : public MediaDataDecoder {
 public:
-  GMPVideoDecoder(const VideoInfo& aConfig,
-                  layers::LayersBackend aLayersBackend,
-                  layers::ImageContainer* aImageContainer,
-                  TaskQueue* aTaskQueue,
-                  MediaDataDecoderCallbackProxy* aCallback)
-   : mConfig(aConfig)
-   , mCallback(aCallback)
-   , mGMP(nullptr)
-   , mHost(nullptr)
-   , mAdapter(new VideoCallbackAdapter(aCallback,
-                                       VideoInfo(aConfig.mDisplay.width,
-                                                 aConfig.mDisplay.height),
-                                       aImageContainer))
-   , mConvertNALUnitLengths(false)
-  {
-  }
+  explicit GMPVideoDecoder(const GMPVideoDecoderParams& aParams);
 
   RefPtr<InitPromise> Init() override;
   nsresult Input(MediaRawData* aSample) override;

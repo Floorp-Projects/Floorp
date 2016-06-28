@@ -22,18 +22,10 @@ typedef std::deque<RefPtr<MediaRawData>> SampleQueue;
 class AndroidDecoderModule : public PlatformDecoderModule {
 public:
   already_AddRefed<MediaDataDecoder>
-  CreateVideoDecoder(const VideoInfo& aConfig,
-                     layers::LayersBackend aLayersBackend,
-                     layers::ImageContainer* aImageContainer,
-                     TaskQueue* aTaskQueue,
-                     MediaDataDecoderCallback* aCallback,
-                     DecoderDoctorDiagnostics* aDiagnostics) override;
+  CreateVideoDecoder(const CreateDecoderParams& aParams) override;
 
   already_AddRefed<MediaDataDecoder>
-  CreateAudioDecoder(const AudioInfo& aConfig,
-                     TaskQueue* aTaskQueue,
-                     MediaDataDecoderCallback* aCallback,
-                     DecoderDoctorDiagnostics* aDiagnostics) override;
+  CreateAudioDecoder(const CreateDecoderParams& aParams) override;
 
 
   AndroidDecoderModule() {}

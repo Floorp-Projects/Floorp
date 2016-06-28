@@ -41,6 +41,7 @@ class TIntermLoop;
 class TInfoSink;
 class TInfoSinkBase;
 class TIntermRaw;
+class TIntermBranch;
 
 class TSymbolTable;
 
@@ -96,6 +97,7 @@ class TIntermNode : angle::NonCopyable
     virtual TIntermSymbol *getAsSymbolNode() { return 0; }
     virtual TIntermLoop *getAsLoopNode() { return 0; }
     virtual TIntermRaw *getAsRawNode() { return 0; }
+    virtual TIntermBranch *getAsBranchNode() { return 0; }
 
     // Replace a child node. Return true if |original| is a child
     // node and it is replaced; otherwise, return false.
@@ -152,6 +154,8 @@ class TIntermTyped : public TIntermNode
     TString getCompleteString() const { return mType.getCompleteString(); }
 
     int getArraySize() const { return mType.getArraySize(); }
+
+    bool isConstructorWithOnlyConstantUnionParameters();
 
   protected:
     TType mType;
@@ -215,6 +219,7 @@ class TIntermBranch : public TIntermNode
           mExpression(e) { }
 
     void traverse(TIntermTraverser *it) override;
+    TIntermBranch *getAsBranchNode() override { return this; }
     bool replaceChildNode(TIntermNode *original, TIntermNode *replacement) override;
 
     TOperator getFlowOp() { return mFlowOp; }
@@ -483,12 +488,15 @@ class TIntermAggregate : public TIntermOperator
     TIntermAggregate()
         : TIntermOperator(EOpNull),
           mUserDefined(false),
+          mFunctionId(0),
           mUseEmulatedFunction(false),
           mGotPrecisionFromChildren(false)
     {
     }
     TIntermAggregate(TOperator op)
         : TIntermOperator(op),
+          mUserDefined(false),
+          mFunctionId(0),
           mUseEmulatedFunction(false),
           mGotPrecisionFromChildren(false)
     {
@@ -670,6 +678,7 @@ class TIntermTraverser : angle::NonCopyable
           postVisit(postVisit),
           mDepth(0),
           mMaxDepth(0),
+          mInGlobalScope(true),
           mTemporaryIndex(nullptr)
     {
     }
@@ -735,6 +744,16 @@ class TIntermTraverser : angle::NonCopyable
         return mPath.size() == 0 ? NULL : mPath.back();
     }
 
+    // Return the nth ancestor of the node being traversed. getAncestorNode(0) == getParentNode()
+    TIntermNode *getAncestorNode(unsigned int n)
+    {
+        if (mPath.size() > n)
+        {
+            return mPath[mPath.size() - n - 1u];
+        }
+        return nullptr;
+    }
+
     void pushParentBlock(TIntermAggregate *node);
     void incrementParentBlockPos();
     void popParentBlock();
@@ -753,6 +772,8 @@ class TIntermTraverser : angle::NonCopyable
 
     // All the nodes from root to the current node's parent during traversing.
     TVector<TIntermNode *> mPath;
+
+    bool mInGlobalScope;
 
     // To replace a single node with another on the parent node
     struct NodeUpdateEntry

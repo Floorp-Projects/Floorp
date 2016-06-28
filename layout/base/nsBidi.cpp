@@ -389,7 +389,9 @@ nsresult nsBidi::SetPara(const char16_t *aText, int32_t aLength,
           level=nextLevel;
 
           /* search for the limit of this run */
-          while(++limit<aLength && levels[limit]==level) {}
+          while(++limit<aLength &&
+                (levels[limit]==level ||
+                 (DIRPROP_FLAG(mDirProps[limit])&MASK_BN_EXPLICIT))) {}
 
           /* get the correct level of the next run */
           if(limit<aLength) {
@@ -1516,11 +1518,14 @@ void nsBidi::ResolveImplicitLevels(int32_t aStart, int32_t aLimit,
 
   for (i = aStart; i <= aLimit; i++) {
     if (i >= aLimit) {
-      if (aLimit > aStart) {
-        dirProp = mDirProps[aLimit - 1];
-        if (dirProp == LRI || dirProp == RLI) {
-          break;  /* no forced closing for sequence ending with LRI/RLI */
-        }
+      int32_t k;
+      for (k = aLimit - 1;
+           k > aStart && (DIRPROP_FLAG(dirProps[k]) & MASK_BN_EXPLICIT); k--) {
+        // empty loop body
+      }
+      dirProp = mDirProps[k];
+      if (dirProp == LRI || dirProp == RLI) {
+        break;  /* no forced closing for sequence ending with LRI/RLI */
       }
       gprop = aEOR;
     } else {
@@ -1563,7 +1568,11 @@ void nsBidi::ResolveImplicitLevels(int32_t aStart, int32_t aLimit,
     }
   }
 
-  dirProp = dirProps[aLimit - 1];
+  for (i = aLimit - 1;
+       i > aStart && (DIRPROP_FLAG(dirProps[i]) & MASK_BN_EXPLICIT); i--) {
+    // empty loop body
+  }
+  dirProp = dirProps[i];
   if ((dirProp == LRI || dirProp == RLI) && aLimit < mLength) {
     mIsolateCount++;
     mIsolates[mIsolateCount].stateImp = stateImp;

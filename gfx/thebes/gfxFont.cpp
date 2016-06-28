@@ -1812,7 +1812,7 @@ gfxFont::DrawOneGlyph(uint32_t aGlyphID, double aAdvance, gfxPoint *aPt,
 // Draw a run of CharacterGlyph records from the given offset in aShapedText.
 // Returns true if glyph paths were actually emitted.
 bool
-gfxFont::DrawGlyphs(gfxShapedText            *aShapedText,
+gfxFont::DrawGlyphs(const gfxShapedText      *aShapedText,
                     uint32_t                  aOffset, // offset in the textrun
                     uint32_t                  aCount, // length of run to draw
                     gfxPoint                 *aPt,
@@ -1924,7 +1924,7 @@ gfxFont::DrawGlyphs(gfxShapedText            *aShapedText,
 
 // This method is mostly parallel to DrawGlyphs.
 void
-gfxFont::DrawEmphasisMarks(gfxTextRun* aShapedText, gfxPoint* aPt,
+gfxFont::DrawEmphasisMarks(const gfxTextRun* aShapedText, gfxPoint* aPt,
                            uint32_t aOffset, uint32_t aCount,
                            const EmphasisMarkDrawParams& aParams)
 {
@@ -1963,7 +1963,7 @@ gfxFont::DrawEmphasisMarks(gfxTextRun* aShapedText, gfxPoint* aPt,
 }
 
 void
-gfxFont::Draw(gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
+gfxFont::Draw(const gfxTextRun *aTextRun, uint32_t aStart, uint32_t aEnd,
               gfxPoint *aPt, const TextRunDrawParams& aRunParams,
               uint16_t aOrientation)
 {
@@ -2211,14 +2211,15 @@ UnionRange(gfxFloat aX, gfxFloat* aDestMin, gfxFloat* aDestMax)
 // if the font is a user font --- in which case the author may be relying
 // on overflowing glyphs.
 static bool
-NeedsGlyphExtents(gfxFont *aFont, gfxTextRun *aTextRun)
+NeedsGlyphExtents(gfxFont *aFont, const gfxTextRun *aTextRun)
 {
     return (aTextRun->GetFlags() & gfxTextRunFactory::TEXT_NEED_BOUNDING_BOX) ||
         aFont->GetFontEntry()->IsUserFont();
 }
 
 bool
-gfxFont::IsSpaceGlyphInvisible(DrawTarget* aRefDrawTarget, gfxTextRun* aTextRun)
+gfxFont::IsSpaceGlyphInvisible(DrawTarget* aRefDrawTarget,
+                               const gfxTextRun* aTextRun)
 {
     if (!mFontEntry->mSpaceGlyphIsInvisibleInitialized &&
         GetAdjustedSize() >= 1.0) {
@@ -2235,7 +2236,7 @@ gfxFont::IsSpaceGlyphInvisible(DrawTarget* aRefDrawTarget, gfxTextRun* aTextRun)
 }
 
 gfxFont::RunMetrics
-gfxFont::Measure(gfxTextRun *aTextRun,
+gfxFont::Measure(const gfxTextRun *aTextRun,
                  uint32_t aStart, uint32_t aEnd,
                  BoundingBoxType aBoundingBoxType,
                  DrawTarget* aRefDrawTarget,

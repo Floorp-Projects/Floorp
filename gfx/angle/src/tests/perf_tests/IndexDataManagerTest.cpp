@@ -56,6 +56,10 @@ class MockBufferFactoryD3D : public rx::BufferFactoryD3D
     MOCK_METHOD0(createVertexBuffer, rx::VertexBuffer*());
     MOCK_CONST_METHOD1(getVertexConversionType, rx::VertexConversionType(gl::VertexFormatType));
     MOCK_CONST_METHOD1(getVertexComponentType, GLenum(gl::VertexFormatType));
+    MOCK_CONST_METHOD3(getVertexSpaceRequired,
+                       gl::ErrorOrResult<unsigned int>(const gl::VertexAttribute &,
+                                                       GLsizei,
+                                                       GLsizei));
 
     // Dependency injection
     rx::IndexBuffer* createIndexBuffer() override
@@ -95,7 +99,7 @@ class MockBufferD3D : public rx::BufferD3D
     MOCK_METHOD1(unmap, gl::Error(GLboolean *));
 
     // BufferD3D
-    MOCK_METHOD0(markTransformFeedbackUsage, void());
+    MOCK_METHOD0(markTransformFeedbackUsage, gl::Error());
 
     // inlined for speed
     bool supportsDirectBinding() const override { return false; }

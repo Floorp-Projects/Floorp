@@ -603,7 +603,14 @@
      *   Stack: => null
      */ \
     macro(JSOP_NULL,      64, js_null_str,  js_null_str,  1,  0,  1, JOF_BYTE) \
-    macro(JSOP_UNUSED65,  65, "unused65",   NULL,         1,  0,  1, JOF_BYTE) \
+    /*
+     * Pushes 'JS_IS_CONSTRUCTING'
+     *   Category: Literals
+     *   Type: Constants
+     *   Operands:
+     *   Stack: => JS_IS_CONSTRUCTING
+     */ \
+    macro(JSOP_IS_CONSTRUCTING,  65, "is-constructing",   NULL,         1,  0,  1, JOF_BYTE) \
     /*
      * Pushes boolean value onto the stack.
      *   Category: Literals

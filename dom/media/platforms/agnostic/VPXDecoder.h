@@ -21,11 +21,7 @@ using namespace layers;
 class VPXDecoder : public MediaDataDecoder
 {
 public:
-  VPXDecoder(const VideoInfo& aConfig,
-             ImageContainer* aImageContainer,
-             TaskQueue* aTaskQueue,
-             MediaDataDecoderCallback* aCallback);
-
+  explicit VPXDecoder(const CreateDecoderParams& aParams);
   ~VPXDecoder();
 
   RefPtr<InitPromise> Init() override;

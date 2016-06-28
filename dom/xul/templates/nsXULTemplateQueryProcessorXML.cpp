@@ -19,12 +19,12 @@
 #include "nsArrayUtils.h"
 #include "nsPIDOMWindow.h"
 #include "nsXULContentUtils.h"
-#include "nsXMLHttpRequest.h"
 #include "mozilla/dom/XPathEvaluator.h"
 #include "nsXULTemplateQueryProcessorXML.h"
 #include "nsXULTemplateResultXML.h"
 #include "nsXULSortService.h"
 #include "mozilla/dom/Element.h"
+#include "mozilla/dom/XMLHttpRequest.h"
 
 using namespace mozilla;
 using namespace mozilla::dom;

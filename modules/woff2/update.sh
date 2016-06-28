@@ -13,7 +13,6 @@ perl -p -i -e "s/\[commit [0-9a-f]{40}\]/[${COMMIT}]/" README.mozilla;
 rm -rf src
 mv ${MY_TEMP_DIR}/woff2/src src
 patch -p3 < redefine-unique_ptr.patch
-patch -p3 < missing-assert-header.patch
 rm -rf ${MY_TEMP_DIR}
 hg add src
 
