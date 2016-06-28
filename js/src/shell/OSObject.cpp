@@ -723,12 +723,7 @@ ReportSysError(JSContext* cx, const char* prefix)
         return;
     }
 
-#ifdef XP_WIN
-    _snprintf(final, nbytes, "%s: %s", prefix, errstr);
-#else
     snprintf(final, nbytes, "%s: %s", prefix, errstr);
-#endif
-
     JS_ReportError(cx, final);
     js_free(final);
 }
