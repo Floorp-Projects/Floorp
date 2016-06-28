@@ -153,8 +153,8 @@ exports.items = [
         root.style.cursor = "pointer";
         root.addEventListener("click", () => {
           if (imageSummary.href) {
-            const gBrowser = context.environment.chromeWindow.gBrowser;
-            gBrowser.selectedTab = gBrowser.addTab(imageSummary.href);
+            let mainWindow = context.environment.chromeWindow;
+            mainWindow.openUILinkIn(imageSummary.href, "tab");
           } else if (imageSummary.filename) {
             const file = Cc["@mozilla.org/file/local;1"].createInstance(Ci.nsILocalFile);
             file.initWithPath(imageSummary.filename);
