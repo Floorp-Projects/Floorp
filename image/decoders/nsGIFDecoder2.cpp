@@ -416,6 +416,7 @@ ConvertColormap(uint32_t* aColormap, uint32_t aColors)
       qcms_transform_data(transform, aColormap, aColormap, aColors);
     }
   }
+
   // Convert from the GIF's RGB format to the Cairo format.
   // Work from end to begin, because of the in-place expansion
   uint8_t* from = ((uint8_t*)aColormap) + 3 * aColors;
@@ -890,7 +891,10 @@ nsGIFDecoder2::ReadImageDescriptor(const char* aData)
     const size_t size = 3 << depth;
     if (mColormapSize > size) {
       // Clear the part of the colormap which will be unused with this palette.
-      memset(reinterpret_cast<uint8_t*>(mColormap) + size, 0,
+      // If a GIF references an invalid palette entry, ensure the entry is opaque white.
+      // This is needed for Skia as if it isn't, RGBX surfaces will cause blending issues
+      // with Skia.
+      memset(reinterpret_cast<uint8_t*>(mColormap) + size, 0xFF,
              mColormapSize - size);
     }
 
