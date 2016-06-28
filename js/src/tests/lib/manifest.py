@@ -326,7 +326,7 @@ def _apply_external_manifests(filename, testcase, entries, xul_tester):
 def _is_test_file(path_from_root, basename, filename, requested_paths,
                   excluded_paths):
     # Any file whose basename matches something in this set is ignored.
-    EXCLUDED = set(('browser.js', 'shell.js', 'jsref.js', 'template.js',
+    EXCLUDED = set(('browser.js', 'shell.js', 'template.js',
                     'user.js', 'sta.js',
                     'test262-browser.js', 'test262-shell.js',
                     'test402-browser.js', 'test402-shell.js',

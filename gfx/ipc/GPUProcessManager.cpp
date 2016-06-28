@@ -155,8 +155,7 @@ GPUProcessManager::CreateTopLevelCompositor(widget::CompositorWidgetProxy* aProx
                                             CSSToLayoutDeviceScale aScale,
                                             bool aUseAPZ,
                                             bool aUseExternalSurfaceSize,
-                                            int aSurfaceWidth,
-                                            int aSurfaceHeight)
+                                            const gfx::IntSize& aSurfaceSize)
 {
   return CompositorSession::CreateInProcess(
     aProxy,
@@ -164,8 +163,7 @@ GPUProcessManager::CreateTopLevelCompositor(widget::CompositorWidgetProxy* aProx
     aScale,
     aUseAPZ,
     aUseExternalSurfaceSize,
-    aSurfaceWidth,
-    aSurfaceHeight);
+    aSurfaceSize);
 }
 
 PCompositorBridgeParent*

@@ -18,7 +18,7 @@ namespace rx
 class ShaderImpl : angle::NonCopyable
 {
   public:
-    ShaderImpl(const gl::Shader::Data &data) : mData(data) {}
+    ShaderImpl(const gl::ShaderState &data) : mData(data) {}
     virtual ~ShaderImpl() { }
 
     // Returns additional ShCompile options.
@@ -29,10 +29,10 @@ class ShaderImpl : angle::NonCopyable
 
     virtual std::string getDebugInfo() const = 0;
 
-    const gl::Shader::Data &getData() const { return mData; }
+    const gl::ShaderState &getData() const { return mData; }
 
   protected:
-    const gl::Shader::Data &mData;
+    const gl::ShaderState &mData;
 };
 
 }

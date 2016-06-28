@@ -136,6 +136,7 @@ void VideoFrameContainer::ClearCurrentFrame()
   mImageContainer->GetCurrentImages(&kungFuDeathGrip);
 
   mImageContainer->ClearAllImages();
+  mImageContainer->ClearCachedResources();
 }
 
 void VideoFrameContainer::ClearFutureFrames()

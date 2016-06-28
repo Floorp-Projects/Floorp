@@ -1554,6 +1554,21 @@ private:
   nsCSSValueGradient& operator=(const nsCSSValueGradient& aOther) = delete;
 };
 
+// A string value used primarily to represent variable references.
+//
+// Animation code, specifically the KeyframeUtils class, also uses this
+// type as a container for various string values including:
+//
+// * Shorthand property values
+// * Shorthand sentinel values used for testing failure conditions
+// * Invalid longhand property values
+//
+// For the most part, the above values are not passed to functions that
+// manipulate nsCSSValue objects in a generic fashion. Instead KeyframeUtils
+// extracts the string from the nsCSSValueTokenStream and passes that around
+// instead. The single exception is nsCSSValue::AppendToString which we use
+// to serialize the string contained in the nsCSSValueTokenStream by ensuring
+// the mShorthandPropertyID is set to eCSSProperty_UNKNOWN.
 struct nsCSSValueTokenStream final {
   nsCSSValueTokenStream();
 

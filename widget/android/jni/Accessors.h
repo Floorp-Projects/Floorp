@@ -11,7 +11,7 @@
 namespace mozilla {
 namespace jni {
 
-namespace {
+namespace detail {
 
 // Helper class to convert an arbitrary type to a jvalue, e.g. Value(123).val.
 struct Value
@@ -29,8 +29,9 @@ struct Value
     jvalue val;
 };
 
-}
+} // namespace detail
 
+using namespace detail;
 
 // Base class for Method<>, Field<>, and Constructor<>.
 class Accessor

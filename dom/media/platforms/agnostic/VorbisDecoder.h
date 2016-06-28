@@ -21,9 +21,7 @@ namespace mozilla {
 class VorbisDataDecoder : public MediaDataDecoder
 {
 public:
-  VorbisDataDecoder(const AudioInfo& aConfig,
-                TaskQueue* aTaskQueue,
-                MediaDataDecoderCallback* aCallback);
+  explicit VorbisDataDecoder(const CreateDecoderParams& aParams);
   ~VorbisDataDecoder();
 
   RefPtr<InitPromise> Init() override;

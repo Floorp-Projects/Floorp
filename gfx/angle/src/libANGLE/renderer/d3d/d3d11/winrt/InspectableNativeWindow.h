@@ -10,14 +10,18 @@
 #ifndef LIBANGLE_RENDERER_D3D_D3D11_WINRT_INSPECTABLENATIVEWINDOW_H_
 #define LIBANGLE_RENDERER_D3D_D3D11_WINRT_INSPECTABLENATIVEWINDOW_H_
 
-#include "libANGLE/renderer/d3d/d3d11/NativeWindow.h"
-
+#include "common/debug.h"
 #include "common/platform.h"
 
 #include "angle_windowsstore.h"
 
+#include <EGL/eglplatform.h>
+
+#include <windows.applicationmodel.core.h>
 #include <windows.ui.xaml.h>
 #include <windows.ui.xaml.media.dxinterop.h>
+#include <wrl.h>
+#include <wrl/wrappers/corewrappers.h>
 
 using namespace Microsoft::WRL;
 using namespace Microsoft::WRL::Wrappers;
@@ -44,12 +48,12 @@ class InspectableNativeWindow
 
     virtual bool initialize(EGLNativeWindowType window, IPropertySet *propertySet) = 0;
     virtual HRESULT createSwapChain(ID3D11Device *device,
-                                    DXGIFactory *factory,
+                                    IDXGIFactory2 *factory,
                                     DXGI_FORMAT format,
                                     unsigned int width,
                                     unsigned int height,
                                     bool containsAlpha,
-                                    DXGISwapChain **swapChain) = 0;
+                                    IDXGISwapChain1 **swapChain) = 0;
 
     bool getClientRect(RECT *rect)
     {
@@ -108,7 +112,6 @@ class InspectableNativeWindow
     EventRegistrationToken mSizeChangedEventToken;
 };
 
-bool IsValidEGLNativeWindowType(EGLNativeWindowType window);
 bool IsCoreWindow(EGLNativeWindowType window, ComPtr<ABI::Windows::UI::Core::ICoreWindow> *coreWindow = nullptr);
 bool IsSwapChainPanel(EGLNativeWindowType window, ComPtr<ABI::Windows::UI::Xaml::Controls::ISwapChainPanel> *swapChainPanel = nullptr);
 bool IsEGLConfiguredPropertySet(EGLNativeWindowType window, ABI::Windows::Foundation::Collections::IPropertySet **propertySet = nullptr, IInspectable **inspectable = nullptr);

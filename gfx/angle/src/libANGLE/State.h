@@ -29,7 +29,6 @@ class Query;
 class VertexArray;
 class Context;
 struct Caps;
-struct Data;
 
 typedef std::map<GLenum, BindingPointer<Texture>> TextureMap;
 
@@ -119,6 +118,12 @@ class State : angle::NonCopyable
     GLclampf getSampleCoverageValue() const;
     bool getSampleCoverageInvert() const;
 
+    // Multisampling/alpha to one manipulation.
+    void setSampleAlphaToOne(bool enabled);
+    bool isSampleAlphaToOneEnabled() const;
+    void setMultisampling(bool enabled);
+    bool isMultisamplingEnabled() const;
+
     // Scissor test state toggle & query
     bool isScissorTestEnabled() const;
     void setScissorTest(bool enabled);
@@ -131,7 +136,7 @@ class State : angle::NonCopyable
 
     // Generic state toggle & query
     void setEnableFeature(GLenum feature, bool enabled);
-    bool getEnableFeature(GLenum feature);
+    bool getEnableFeature(GLenum feature) const;
 
     // Line width state setter
     void setLineWidth(GLfloat width);
@@ -164,17 +169,15 @@ class State : angle::NonCopyable
     // Renderbuffer binding manipulation
     void setRenderbufferBinding(Renderbuffer *renderbuffer);
     GLuint getRenderbufferId() const;
-    Renderbuffer *getCurrentRenderbuffer();
+    Renderbuffer *getCurrentRenderbuffer() const;
     void detachRenderbuffer(GLuint renderbuffer);
 
     // Framebuffer binding manipulation
     void setReadFramebufferBinding(Framebuffer *framebuffer);
     void setDrawFramebufferBinding(Framebuffer *framebuffer);
     Framebuffer *getTargetFramebuffer(GLenum target) const;
-    Framebuffer *getReadFramebuffer();
-    Framebuffer *getDrawFramebuffer();
-    const Framebuffer *getReadFramebuffer() const;
-    const Framebuffer *getDrawFramebuffer() const;
+    Framebuffer *getReadFramebuffer() const;
+    Framebuffer *getDrawFramebuffer() const;
     bool removeReadFramebufferBinding(GLuint framebuffer);
     bool removeDrawFramebufferBinding(GLuint framebuffer);
 
@@ -192,10 +195,10 @@ class State : angle::NonCopyable
     void setTransformFeedbackBinding(TransformFeedback *transformFeedback);
     TransformFeedback *getCurrentTransformFeedback() const;
     bool isTransformFeedbackActiveUnpaused() const;
-    void detachTransformFeedback(GLuint transformFeedback);
+    bool removeTransformFeedbackBinding(GLuint transformFeedback);
 
     // Query binding manipulation
-    bool isQueryActive() const;
+    bool isQueryActive(GLenum type) const;
     bool isQueryActive(Query *query) const;
     void setActiveQuery(GLenum target, Query *query);
     GLuint getActiveQueryId(GLenum target) const;
@@ -269,10 +272,23 @@ class State : angle::NonCopyable
     const Debug &getDebug() const;
     Debug &getDebug();
 
+    // CHROMIUM_framebuffer_mixed_samples coverage modulation
+    void setCoverageModulation(GLenum components);
+    GLenum getCoverageModulation() const;
+
+    // CHROMIUM_path_rendering
+    void loadPathRenderingMatrix(GLenum matrixMode, const GLfloat *matrix);
+    const GLfloat *getPathRenderingMatrix(GLenum which) const;
+    void setPathStencilFunc(GLenum func, GLint ref, GLuint mask);
+
+    GLenum getPathStencilFunc() const;
+    GLint getPathStencilRef() const;
+    GLuint getPathStencilMask() const;
+
     // State query functions
     void getBooleanv(GLenum pname, GLboolean *params);
     void getFloatv(GLenum pname, GLfloat *params);
-    void getIntegerv(const gl::Data &data, GLenum pname, GLint *params);
+    void getIntegerv(const ContextState &data, GLenum pname, GLint *params);
     void getPointerv(GLenum pname, void **params) const;
     bool getIndexedIntegerv(GLenum target, GLuint index, GLint *data);
     bool getIndexedInteger64v(GLenum target, GLuint index, GLint64 *data);
@@ -320,11 +336,13 @@ class State : angle::NonCopyable
         DIRTY_BIT_UNPACK_SKIP_IMAGES,
         DIRTY_BIT_UNPACK_SKIP_ROWS,
         DIRTY_BIT_UNPACK_SKIP_PIXELS,
+        DIRTY_BIT_UNPACK_BUFFER_BINDING,
         DIRTY_BIT_PACK_ALIGNMENT,
         DIRTY_BIT_PACK_REVERSE_ROW_ORDER,
         DIRTY_BIT_PACK_ROW_LENGTH,
         DIRTY_BIT_PACK_SKIP_ROWS,
         DIRTY_BIT_PACK_SKIP_PIXELS,
+        DIRTY_BIT_PACK_BUFFER_BINDING,
         DIRTY_BIT_DITHER_ENABLED,
         DIRTY_BIT_GENERATE_MIPMAP_HINT,
         DIRTY_BIT_SHADER_DERIVATIVE_HINT,
@@ -333,6 +351,12 @@ class State : angle::NonCopyable
         DIRTY_BIT_RENDERBUFFER_BINDING,
         DIRTY_BIT_VERTEX_ARRAY_BINDING,
         DIRTY_BIT_PROGRAM_BINDING,
+        DIRTY_BIT_MULTISAMPLING,
+        DIRTY_BIT_SAMPLE_ALPHA_TO_ONE,
+        DIRTY_BIT_COVERAGE_MODULATION,         // CHROMIUM_framebuffer_mixed_samples
+        DIRTY_BIT_PATH_RENDERING_MATRIX_MV,    // CHROMIUM_path_rendering path model view matrix
+        DIRTY_BIT_PATH_RENDERING_MATRIX_PROJ,  // CHROMIUM_path_rendering path projection matrix
+        DIRTY_BIT_PATH_RENDERING_STENCIL_STATE,
         DIRTY_BIT_CURRENT_VALUE_0,
         DIRTY_BIT_CURRENT_VALUE_MAX = DIRTY_BIT_CURRENT_VALUE_0 + MAX_VERTEX_ATTRIBS,
         DIRTY_BIT_INVALID           = DIRTY_BIT_CURRENT_VALUE_MAX,
@@ -363,12 +387,6 @@ class State : angle::NonCopyable
     void syncDirtyObjects(const DirtyObjects &bitset);
     void syncDirtyObject(GLenum target);
     void setObjectDirty(GLenum target);
-
-    // Dirty bit masks
-    const DirtyBits &unpackStateBitMask() const { return mUnpackStateBitMask; }
-    const DirtyBits &packStateBitMask() const { return mPackStateBitMask; }
-    const DirtyBits &clearStateBitMask() const { return mClearStateBitMask; }
-    const DirtyBits &blitStateBitMask() const { return mBlitStateBitMask; }
 
   private:
     // Cached values from Context's caps
@@ -441,16 +459,23 @@ class State : angle::NonCopyable
 
     Debug mDebug;
 
-    DirtyBits mDirtyBits;
-    DirtyBits mUnpackStateBitMask;
-    DirtyBits mPackStateBitMask;
-    DirtyBits mClearStateBitMask;
-    DirtyBits mBlitStateBitMask;
+    bool mMultiSampling;
+    bool mSampleAlphaToOne;
 
+    GLenum mCoverageModulation;
+
+    // CHROMIUM_path_rendering
+    GLfloat mPathMatrixMV[16];
+    GLfloat mPathMatrixProj[16];
+    GLenum mPathStencilFunc;
+    GLint mPathStencilRef;
+    GLuint mPathStencilMask;
+
+    DirtyBits mDirtyBits;
     DirtyObjects mDirtyObjects;
 };
 
-}
+}  // namespace gl
 
 #endif // LIBANGLE_STATE_H_
 

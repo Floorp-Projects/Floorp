@@ -10,6 +10,7 @@
 #include <sstream>
 
 #include "libANGLE/Context.h"
+#include "libANGLE/renderer/d3d/d3d11/Context11.h"
 #include "libANGLE/renderer/d3d/d3d11/Renderer11.h"
 #include "test_utils/ANGLETest.h"
 #include "test_utils/angle_test_instantiate.h"
@@ -65,7 +66,8 @@ TEST_P(D3D11InputLayoutCacheTest, StressTest)
 {
     // Hack the ANGLE!
     gl::Context *context = reinterpret_cast<gl::Context *>(getEGLWindow()->getContext());
-    rx::Renderer11 *renderer11 = rx::GetAs<rx::Renderer11>(context->getRenderer());
+    rx::Context11 *context11               = rx::GetImplAs<rx::Context11>(context);
+    rx::Renderer11 *renderer11             = context11->getRenderer();
     rx::InputLayoutCache *inputLayoutCache = renderer11->getInputLayoutCache();
 
     // Clamp the cache size to something tiny

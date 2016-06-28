@@ -135,12 +135,12 @@ void CoreWindowNativeWindow::unregisterForSizeChangeEvents()
 }
 
 HRESULT CoreWindowNativeWindow::createSwapChain(ID3D11Device *device,
-                                                DXGIFactory *factory,
+                                                IDXGIFactory2 *factory,
                                                 DXGI_FORMAT format,
                                                 unsigned int width,
                                                 unsigned int height,
                                                 bool containsAlpha,
-                                                DXGISwapChain **swapChain)
+                                                IDXGISwapChain1 **swapChain)
 {
     if (device == NULL || factory == NULL || swapChain == NULL || width == 0 || height == 0)
     {

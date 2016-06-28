@@ -12,6 +12,8 @@
 #include <fstream>
 #include <sstream>
 
+#include "common/platform.h"
+
 namespace angle
 {
 
@@ -133,4 +135,24 @@ bool ReadFileToString(const std::string &path, std::string *stringOut)
     return !inFile.fail();
 }
 
+Optional<std::vector<wchar_t>> WidenString(size_t length, const char *cString)
+{
+    std::vector<wchar_t> wcstring(length + 1);
+#if !defined(ANGLE_PLATFORM_WINDOWS)
+    size_t written = mbstowcs(wcstring.data(), cString, length + 1);
+    if (written == 0)
+    {
+        return Optional<std::vector<wchar_t>>::Invalid();
+    }
+#else
+    size_t convertedChars = 0;
+    errno_t err = mbstowcs_s(&convertedChars, wcstring.data(), length + 1, cString, _TRUNCATE);
+    if (err != 0)
+    {
+        return Optional<std::vector<wchar_t>>::Invalid();
+    }
+#endif
+    return Optional<std::vector<wchar_t>>(wcstring);
 }
+
+}  // namespace angle

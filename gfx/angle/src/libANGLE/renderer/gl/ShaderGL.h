@@ -19,7 +19,7 @@ struct WorkaroundsGL;
 class ShaderGL : public ShaderImpl
 {
   public:
-    ShaderGL(const gl::Shader::Data &data,
+    ShaderGL(const gl::ShaderState &data,
              const FunctionsGL *functions,
              const WorkaroundsGL &workarounds);
     ~ShaderGL() override;

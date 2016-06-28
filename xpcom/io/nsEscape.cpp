@@ -367,10 +367,22 @@ static uint16_t dontNeedEscape(uint16_t aChar, uint32_t aFlags)
 
 //----------------------------------------------------------------------------------------
 
+/**
+ * Templated helper for URL escaping a portion of a string.
+ *
+ * @param aPart The pointer to the beginning of the portion of the string to
+ *  escape.
+ * @param aPartLen The length of the string to escape.
+ * @param aFlags Flags used to configure escaping. @see EscapeMask
+ * @param aResult String that has the URL escaped portion appended to. Only
+ *  altered if the string is URL escaped or |esc_AlwaysCopy| is specified.
+ * @param aDidAppend Indicates whether or not data was appended to |aResult|.
+ * @return NS_ERROR_INVALID_ARG, NS_ERROR_OUT_OF_MEMORY on failure.
+ */
 template<class T>
-static bool
+static nsresult
 T_EscapeURL(const typename T::char_type* aPart, size_t aPartLen,
-            uint32_t aFlags, T& aResult)
+            uint32_t aFlags, T& aResult, bool& aDidAppend)
 {
   typedef nsCharTraits<typename T::char_type> traits;
   typedef typename traits::unsigned_char_type unsigned_char_type;
@@ -379,7 +391,7 @@ T_EscapeURL(const typename T::char_type* aPart, size_t aPartLen,
 
   if (!aPart) {
     NS_NOTREACHED("null pointer");
-    return false;
+    return NS_ERROR_INVALID_ARG;
   }
 
   bool forced = !!(aFlags & esc_Forced);
@@ -423,7 +435,9 @@ T_EscapeURL(const typename T::char_type* aPart, size_t aPartLen,
       }
     } else { /* do the escape magic */
       if (!writing) {
-        aResult.Append(aPart, i);
+        if (!aResult.Append(aPart, i, fallible)) {
+          return NS_ERROR_OUT_OF_MEMORY;
+        }
         writing = true;
       }
       uint32_t len = ::AppendPercentHex(tempBuffer + tempBufferPos, c);
@@ -434,16 +448,21 @@ T_EscapeURL(const typename T::char_type* aPart, size_t aPartLen,
     // Flush the temp buffer if it doesnt't have room for another encoded char.
     if (tempBufferPos >= mozilla::ArrayLength(tempBuffer) - ENCODE_MAX_LEN) {
       NS_ASSERTION(writing, "should be writing");
-      aResult.Append(tempBuffer, tempBufferPos);
+      if (!aResult.Append(tempBuffer, tempBufferPos, fallible)) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
       tempBufferPos = 0;
     }
 
     previousIsNonASCII = (c > 0x7f);
   }
   if (writing) {
-    aResult.Append(tempBuffer, tempBufferPos);
+    if (!aResult.Append(tempBuffer, tempBufferPos, fallible)) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
   }
-  return writing;
+  aDidAppend = writing;
+  return NS_OK;
 }
 
 bool
@@ -453,13 +472,45 @@ NS_EscapeURL(const char* aPart, int32_t aPartLen, uint32_t aFlags,
   if (aPartLen < 0) {
     aPartLen = strlen(aPart);
   }
-  return T_EscapeURL(aPart, aPartLen, aFlags, aResult);
+
+  bool result = false;
+  nsresult rv = T_EscapeURL(aPart, aPartLen, aFlags, aResult, result);
+  if (NS_FAILED(rv)) {
+    ::NS_ABORT_OOM(aResult.Length() * sizeof(nsACString::char_type));
+  }
+
+  return result;
+}
+
+nsresult
+NS_EscapeURL(const nsCSubstring& aStr, uint32_t aFlags, nsCSubstring& aResult,
+             const mozilla::fallible_t&)
+{
+  bool appended = false;
+  nsresult rv = T_EscapeURL(aStr.Data(), aStr.Length(), aFlags, aResult, appended);
+  if (NS_FAILED(rv)) {
+    aResult.Truncate();
+    return rv;
+  }
+
+  if (!appended) {
+    aResult = aStr;
+  }
+
+  return rv;
 }
 
 const nsSubstring&
 NS_EscapeURL(const nsSubstring& aStr, uint32_t aFlags, nsSubstring& aResult)
 {
-  if (T_EscapeURL<nsSubstring>(aStr.Data(), aStr.Length(), aFlags, aResult)) {
+  bool result = false;
+  nsresult rv = T_EscapeURL<nsSubstring>(aStr.Data(), aStr.Length(), aFlags, aResult, result);
+
+  if (NS_FAILED(rv)) {
+    ::NS_ABORT_OOM(aResult.Length() * sizeof(nsSubstring::char_type));
+  }
+
+  if (result) {
     return aResult;
   }
   return aStr;

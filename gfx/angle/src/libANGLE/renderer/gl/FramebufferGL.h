@@ -21,7 +21,7 @@ struct WorkaroundsGL;
 class FramebufferGL : public FramebufferImpl
 {
   public:
-    FramebufferGL(const gl::Framebuffer::Data &data,
+    FramebufferGL(const gl::FramebufferState &data,
                   const FunctionsGL *functions,
                   StateManagerGL *stateManager,
                   const WorkaroundsGL &workarounds,
@@ -30,7 +30,7 @@ class FramebufferGL : public FramebufferImpl
     // existing framebuffer name, for example for the default framebuffer
     // on the Mac EGL CGL backend.
     FramebufferGL(GLuint id,
-                  const gl::Framebuffer::Data &data,
+                  const gl::FramebufferState &data,
                   const FunctionsGL *functions,
                   const WorkaroundsGL &workarounds,
                   StateManagerGL *stateManager);
@@ -40,20 +40,20 @@ class FramebufferGL : public FramebufferImpl
     gl::Error invalidate(size_t count, const GLenum *attachments) override;
     gl::Error invalidateSub(size_t count, const GLenum *attachments, const gl::Rectangle &area) override;
 
-    gl::Error clear(const gl::Data &data, GLbitfield mask) override;
-    gl::Error clearBufferfv(const gl::Data &data,
+    gl::Error clear(ContextImpl *context, GLbitfield mask) override;
+    gl::Error clearBufferfv(ContextImpl *context,
                             GLenum buffer,
                             GLint drawbuffer,
                             const GLfloat *values) override;
-    gl::Error clearBufferuiv(const gl::Data &data,
+    gl::Error clearBufferuiv(ContextImpl *context,
                              GLenum buffer,
                              GLint drawbuffer,
                              const GLuint *values) override;
-    gl::Error clearBufferiv(const gl::Data &data,
+    gl::Error clearBufferiv(ContextImpl *context,
                             GLenum buffer,
                             GLint drawbuffer,
                             const GLint *values) override;
-    gl::Error clearBufferfi(const gl::Data &data,
+    gl::Error clearBufferfi(ContextImpl *context,
                             GLenum buffer,
                             GLint drawbuffer,
                             GLfloat depth,
@@ -61,10 +61,17 @@ class FramebufferGL : public FramebufferImpl
 
     GLenum getImplementationColorReadFormat() const override;
     GLenum getImplementationColorReadType() const override;
-    gl::Error readPixels(const gl::State &state, const gl::Rectangle &area, GLenum format, GLenum type, GLvoid *pixels) const override;
+    gl::Error readPixels(ContextImpl *context,
+                         const gl::Rectangle &area,
+                         GLenum format,
+                         GLenum type,
+                         GLvoid *pixels) const override;
 
-    gl::Error blit(const gl::State &state, const gl::Rectangle &sourceArea, const gl::Rectangle &destArea,
-                   GLbitfield mask, GLenum filter, const gl::Framebuffer *sourceFramebuffer) override;
+    gl::Error blit(ContextImpl *context,
+                   const gl::Rectangle &sourceArea,
+                   const gl::Rectangle &destArea,
+                   GLbitfield mask,
+                   GLenum filter) override;
 
     bool checkStatus() const override;
 

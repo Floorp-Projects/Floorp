@@ -10,7 +10,6 @@
 
 #include "libANGLE/Buffer.h"
 #include "libANGLE/renderer/BufferImpl.h"
-#include "libANGLE/renderer/Renderer.h"
 
 namespace gl
 {
@@ -193,4 +192,4 @@ Error Buffer::getIndexRange(GLenum type,
     return Error(GL_NO_ERROR);
 }
 
-}
+}  // namespace gl

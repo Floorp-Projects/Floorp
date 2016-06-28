@@ -222,10 +222,7 @@ CreateTestH264Decoder(layers::LayersBackend aBackend,
                                      MOZ_ARRAY_LENGTH(sTestH264ExtraData));
 
   RefPtr<PDMFactory> platform = new PDMFactory();
-  RefPtr<MediaDataDecoder> decoder(
-    platform->CreateDecoder(aConfig, aTaskQueue, nullptr,
-                            /* DecoderDoctorDiagnostics* */ nullptr,
-                            aBackend, nullptr));
+  RefPtr<MediaDataDecoder> decoder(platform->CreateDecoder({ aConfig, aTaskQueue, aBackend }));
 
   return decoder.forget();
 }

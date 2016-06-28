@@ -3,6 +3,7 @@
 # found in the LICENSE file.
 
 # import the use_x11 variable
+import("//build/config/dcheck_always_on.gni")
 import("//build/config/ui.gni")
 import("//third_party/angle/build/angle_common.gni")
 
@@ -50,6 +51,11 @@ if (is_win) {
   }
 }
 
+angle_undefine_configs = [
+  "//build/config/compiler:chromium_code",
+  "//build/config/compiler:default_include_dirs",
+]
+
 component("translator") {
   sources = [
     "src/compiler/translator/ShaderLang.cpp",
@@ -58,7 +64,7 @@ component("translator") {
 
   defines = [ "ANGLE_TRANSLATOR_IMPLEMENTATION" ]
 
-  configs -= [ "//build/config/compiler:chromium_code" ]
+  configs -= angle_undefine_configs
   configs += [
     ":internal_config",
     "//build/config/compiler:no_chromium_code",
@@ -90,7 +96,7 @@ source_set("includes") {
 static_library("preprocessor") {
   sources = rebase_path(compiler_gypi.angle_preprocessor_sources, ".", "src")
 
-  configs -= [ "//build/config/compiler:chromium_code" ]
+  configs -= angle_undefine_configs
   configs += [
     ":internal_config",
     "//build/config/compiler:no_chromium_code",
@@ -107,14 +113,33 @@ config("debug_annotations_config") {
   }
 }
 
+config("angle_release_asserts_config") {
+  if (dcheck_always_on) {
+    defines = [ "ANGLE_ENABLE_RELEASE_ASSERTS" ]
+  }
+}
+
+config("angle_common_config") {
+  include_dirs = [ "src/common/third_party/numerics" ]
+}
+
 static_library("angle_common") {
   sources = rebase_path(gles_gypi.libangle_common_sources, ".", "src")
 
-  configs -= [ "//build/config/compiler:chromium_code" ]
+  configs -= angle_undefine_configs
   configs += [
-    ":internal_config",
+    ":angle_common_config",
     ":debug_annotations_config",
+    ":internal_config",
     "//build/config/compiler:no_chromium_code",
+  ]
+
+  public_deps = [
+    ":commit_id",
+  ]
+  public_configs = [
+    ":angle_release_asserts_config",
+    ":angle_common_config",
   ]
 }
 
@@ -139,7 +164,7 @@ static_library("translator_lib") {
         rebase_path(compiler_gypi.angle_translator_lib_hlsl_sources, ".", "src")
     defines += [ "ANGLE_ENABLE_HLSL" ]
   }
-  configs -= [ "//build/config/compiler:chromium_code" ]
+  configs -= angle_undefine_configs
   configs += [
     ":internal_config",
     ":translator_static_config",
@@ -167,7 +192,7 @@ static_library("translator_static") {
     defines = [ "ANGLE_ENABLE_HLSL" ]
   }
 
-  configs -= [ "//build/config/compiler:chromium_code" ]
+  configs -= angle_undefine_configs
   configs += [
     ":internal_config",
     "//build/config/compiler:no_chromium_code",
@@ -222,9 +247,12 @@ config("libANGLE_config") {
   }
   if (angle_enable_gl) {
     defines += [ "ANGLE_ENABLE_OPENGL" ]
+    if (use_x11) {
+      defines += [ "ANGLE_USE_X11" ]
+    }
   }
-  if (use_x11) {
-    defines += [ "ANGLE_USE_X11" ]
+  if (angle_enable_vulkan) {
+    defines += [ "ANGLE_ENABLE_VULKAN" ]
   }
   defines += [
     "GL_GLEXT_PROTOTYPES",
@@ -253,6 +281,14 @@ static_library("libANGLE") {
   include_dirs = []
   libs = []
   defines = [ "LIBANGLE_IMPLEMENTATION" ]
+  public_deps = [
+    ":angle_common",
+  ]
+  deps = [
+    ":commit_id",
+    ":includes",
+    ":translator_static",
+  ]
 
   # Shared D3D sources.
   if (angle_enable_d3d9 || angle_enable_d3d11) {
@@ -281,15 +317,43 @@ static_library("libANGLE") {
     }
     if (use_x11) {
       sources += rebase_path(gles_gypi.libangle_gl_glx_sources, ".", "src")
-      libs += [ "X11" ]
+      deps += [ "src/third_party/libXNVCtrl:libXNVCtrl" ]
+      libs += [
+        "X11",
+        "Xi",
+        "Xext",
+      ]
     }
+    if (is_mac) {
+      sources += rebase_path(gles_gypi.libangle_gl_cgl_sources, ".", "src")
+      libs += [
+        "Cocoa.framework",
+        "IOSurface.framework",
+        "OpenGL.framework",
+        "QuartzCore.framework",
+      ]
+    }
+    if (is_android) {
+      sources += rebase_path(gles_gypi.libangle_gl_egl_sources, ".", "src")
+      sources += rebase_path(gles_gypi.libangle_gl_egl_dl_sources, ".", "src")
+      sources +=
+          rebase_path(gles_gypi.libangle_gl_egl_android_sources, ".", "src")
+      libs += [
+        "android",
+        "log",
+      ]
+    }
+  }
+
+  if (angle_enable_vulkan) {
+    sources += rebase_path(gles_gypi.libangle_vulkan_sources, ".", "src")
   }
 
   if (is_debug) {
     defines += [ "ANGLE_GENERATE_SHADER_DEBUG_INFO" ]
   }
 
-  configs -= [ "//build/config/compiler:chromium_code" ]
+  configs -= angle_undefine_configs
   configs += [
     ":commit_id_config",
     ":debug_annotations_config",
@@ -298,15 +362,10 @@ static_library("libANGLE") {
     "//build/config/compiler:no_chromium_code",
   ]
 
-  deps = [
-    ":angle_common",
-    ":commit_id",
-    ":includes",
-    ":translator_static",
-  ]
-
   if (is_win) {
-    deps += [ ":copy_compiler_dll" ]
+    data_deps = [
+      ":copy_compiler_dll",
+    ]
   }
 }
 
@@ -318,7 +377,7 @@ shared_library("libGLESv2") {
         [ "/DEF:" + rebase_path("src/libGLESv2/libGLESv2.def", root_build_dir) ]
   }
 
-  configs -= [ "//build/config/compiler:chromium_code" ]
+  configs -= angle_undefine_configs
   configs += [
     ":internal_config",
     ":commit_id_config",
@@ -342,7 +401,7 @@ shared_library("libEGL") {
     ldflags = [ "/DEF:" + rebase_path("src/libEGL/libEGL.def", root_build_dir) ]
   }
 
-  configs -= [ "//build/config/compiler:chromium_code" ]
+  configs -= angle_undefine_configs
   configs += [
     ":internal_config",
     ":commit_id_config",
@@ -380,7 +439,10 @@ static_library("angle_util") {
 
   if (is_linux) {
     sources += rebase_path(util_gypi.util_linux_sources, ".", "util")
-    libs = [ "rt" ]
+    libs = [
+      "rt",
+      "dl",
+    ]
   }
 
   if (is_mac) {
@@ -389,6 +451,17 @@ static_library("angle_util") {
 
   if (use_x11) {
     sources += rebase_path(util_gypi.util_x11_sources, ".", "util")
+  }
+
+  if (is_android) {
+    # To prevent linux sources filtering on android
+    set_sources_assignment_filter([])
+    sources += rebase_path(util_gypi.util_linux_sources, ".", "util")
+    sources += rebase_path(util_gypi.util_android_sources, ".", "util")
+    libs = [
+      "android",
+      "log",
+    ]
   }
 
   defines = [

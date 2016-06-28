@@ -2117,7 +2117,16 @@ TFunction *TParseContext::parseFunctionDeclarator(const TSourceLoc &location, TF
     //
     TFunction *prevDec =
         static_cast<TFunction *>(symbolTable.find(function->getMangledName(), getShaderVersion()));
-    if (prevDec)
+
+    if (getShaderVersion() >= 300 && symbolTable.hasUnmangledBuiltIn(function->getName().c_str()))
+    {
+        // With ESSL 3.00, names of built-in functions cannot be redeclared as functions.
+        // Therefore overloading or redefining builtin functions is an error.
+        error(location, "Name of a built-in function cannot be redeclared as function",
+              function->getName().c_str());
+        recover();
+    }
+    else if (prevDec)
     {
         if (prevDec->getReturnType() != function->getReturnType())
         {
@@ -2167,6 +2176,45 @@ TFunction *TParseContext::parseFunctionDeclarator(const TSourceLoc &location, TF
     // being redeclared.  So, pass back up this declaration, not the one in the symbol table.
     //
     return function;
+}
+
+TFunction *TParseContext::parseFunctionHeader(const TPublicType &type,
+                                              const TString *name,
+                                              const TSourceLoc &location)
+{
+    if (type.qualifier != EvqGlobal && type.qualifier != EvqTemporary)
+    {
+        error(location, "no qualifiers allowed for function return",
+              getQualifierString(type.qualifier));
+        recover();
+    }
+    if (!type.layoutQualifier.isEmpty())
+    {
+        error(location, "no qualifiers allowed for function return", "layout");
+        recover();
+    }
+    // make sure a sampler is not involved as well...
+    if (samplerErrorCheck(location, type, "samplers can't be function return values"))
+    {
+        recover();
+    }
+    if (mShaderVersion < 300)
+    {
+        // Array return values are forbidden, but there's also no valid syntax for declaring array
+        // return values in ESSL 1.00.
+        ASSERT(type.arraySize == 0 || mDiagnostics.numErrors() > 0);
+
+        if (type.isStructureContainingArrays())
+        {
+            // ESSL 1.00.17 section 6.1 Function Definitions
+            error(location, "structures containing arrays can't be function return values",
+                  TType(type).getCompleteString().c_str());
+            recover();
+        }
+    }
+
+    // Add the function as a prototype after parsing it (we do not support recursion)
+    return new TFunction(name, new TType(type));
 }
 
 TFunction *TParseContext::addConstructorFunc(const TPublicType &publicTypeIn)

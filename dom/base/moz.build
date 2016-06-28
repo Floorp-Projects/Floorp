@@ -35,7 +35,6 @@ XPIDL_SOURCES += [
     'nsISimpleContentPolicy.idl',
     'nsISiteSpecificUserAgent.idl',
     'nsISlowScriptDebug.idl',
-    'nsIXMLHttpRequest.idl',
 ]
 
 XPIDL_MODULE = 'dom'
@@ -322,7 +321,6 @@ UNIFIED_SOURCES += [
     'nsWrapperCache.cpp',
     'nsXHTMLContentSerializer.cpp',
     'nsXMLContentSerializer.cpp',
-    'nsXMLHttpRequest.cpp',
     'nsXMLNameSpaceMap.cpp',
     'PostMessageEvent.cpp',
     'ProcessGlobal.cpp',

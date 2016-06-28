@@ -55,7 +55,7 @@ class ANGLEPerfTest : public testing::Test, angle::NonCopyable
     // Call if the test step was aborted and the test should stop running.
     void abortTest() { mRunning = false; }
 
-    int getNumStepsPerformed() const { return mNumStepsPerformed; }
+    unsigned int getNumStepsPerformed() const { return mNumStepsPerformed; }
 
     std::string mName;
     std::string mSuffix;
@@ -63,7 +63,7 @@ class ANGLEPerfTest : public testing::Test, angle::NonCopyable
     double mRunTimeSeconds;
 
   private:
-    int mNumStepsPerformed;
+    unsigned int mNumStepsPerformed;
     bool mRunning;
 };
 

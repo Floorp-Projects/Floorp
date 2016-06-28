@@ -1,4 +1,4 @@
-// |jit-test| error: out of memory
+// |jit-test| error: out of memory; slow;
 
 if (!('oomTest' in this))
     throw new Error("out of memory");

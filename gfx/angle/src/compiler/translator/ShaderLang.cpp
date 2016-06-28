@@ -148,6 +148,8 @@ void ShInitBuiltInResources(ShBuiltInResources* resources)
     // Extensions.
     resources->OES_standard_derivatives = 0;
     resources->OES_EGL_image_external = 0;
+    resources->OES_EGL_image_external_essl3    = 0;
+    resources->NV_EGL_stream_consumer_external = 0;
     resources->ARB_texture_rectangle = 0;
     resources->EXT_blend_func_extended      = 0;
     resources->EXT_draw_buffers = 0;
@@ -178,7 +180,8 @@ void ShInitBuiltInResources(ShBuiltInResources* resources)
     resources->ArrayIndexClampingStrategy = SH_CLAMP_WITH_CLAMP_INTRINSIC;
 
     resources->MaxExpressionComplexity = 256;
-    resources->MaxCallStackDepth = 256;
+    resources->MaxCallStackDepth       = 256;
+    resources->MaxFunctionParameters   = 1024;
 }
 
 //
@@ -362,23 +365,15 @@ bool ShGetInterfaceBlockRegister(const ShHandle handle,
 #endif // ANGLE_ENABLE_HLSL
 }
 
-bool ShGetUniformRegister(const ShHandle handle,
-                          const std::string &uniformName,
-                          unsigned int *indexOut)
+const std::map<std::string, unsigned int> *ShGetUniformRegisterMap(const ShHandle handle)
 {
 #ifdef ANGLE_ENABLE_HLSL
-    ASSERT(indexOut);
     TranslatorHLSL *translator = GetTranslatorHLSLFromHandle(handle);
     ASSERT(translator);
 
-    if (!translator->hasUniform(uniformName))
-    {
-        return false;
-    }
-
-    *indexOut = translator->getUniformRegister(uniformName);
-    return true;
+    return translator->getUniformRegisterMap();
 #else
-    return false;
-#endif // ANGLE_ENABLE_HLSL
+    static std::map<std::string, unsigned int> map;
+    return &map;
+#endif  // ANGLE_ENABLE_HLSL
 }

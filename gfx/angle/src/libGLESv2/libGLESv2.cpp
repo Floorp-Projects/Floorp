@@ -1562,4 +1562,111 @@ void GL_APIENTRY glGetPointervKHR(GLenum pname, void **params)
 {
     return gl::GetPointervKHR(pname, params);
 }
+
+void GL_APIENTRY glBindUniformLocationCHROMIUM(GLuint program, GLint location, const GLchar *name)
+{
+    return gl::BindUniformLocationCHROMIUM(program, location, name);
+}
+
+void GL_APIENTRY glCoverageModulationCHROMIUM(GLenum components)
+{
+    return gl::CoverageModulationCHROMIUM(components);
+}
+}
+
+// CHROMIUM_path_rendendering
+void GL_APIENTRY glMatrixLoadfCHROMIUM(GLenum matrixMode, const GLfloat *matrix)
+{
+    gl::MatrixLoadfCHROMIUM(matrixMode, matrix);
+}
+
+void GL_APIENTRY glMatrixLoadIdentityCHROMIUM(GLenum matrixMode)
+{
+    gl::MatrixLoadIdentityCHROMIUM(matrixMode);
+}
+
+GLuint GL_APIENTRY glGenPathsCHROMIUM(GLsizei range)
+{
+    return gl::GenPathsCHROMIUM(range);
+}
+
+void GL_APIENTRY glDeletePathsCHROMIUM(GLuint first, GLsizei range)
+{
+    gl::DeletePathsCHROMIUM(first, range);
+}
+
+GLboolean GL_APIENTRY glIsPathCHROMIUM(GLuint path)
+{
+    return gl::IsPathCHROMIUM(path);
+}
+
+void GL_APIENTRY glPathCommandsCHROMIUM(GLuint path,
+                                        GLsizei numCommands,
+                                        const GLubyte *commands,
+                                        GLsizei numCoords,
+                                        GLenum coordType,
+                                        const void *coords)
+{
+    gl::PathCommandsCHROMIUM(path, numCommands, commands, numCoords, coordType, coords);
+}
+
+void GL_APIENTRY glPathParameterfCHROMIUM(GLuint path, GLenum pname, GLfloat value)
+{
+    gl::PathParameterfCHROMIUM(path, pname, value);
+}
+
+void GL_APIENTRY glPathParameteriCHROMIUM(GLuint path, GLenum pname, GLint value)
+{
+    gl::PathParameteriCHROMIUM(path, pname, value);
+}
+
+void GL_APIENTRY glGetPathParameterfvCHROMIUM(GLuint path, GLenum pname, GLfloat *value)
+{
+    gl::GetPathParameterfCHROMIUM(path, pname, value);
+}
+
+void GL_APIENTRY glGetPathParameterivCHROMIUM(GLuint path, GLenum pname, GLint *value)
+{
+    gl::GetPathParameteriCHROMIUM(path, pname, value);
+}
+
+void GL_APIENTRY glPathStencilFuncCHROMIUM(GLenum func, GLint ref, GLuint mask)
+{
+    gl::PathStencilFuncCHROMIUM(func, ref, mask);
+}
+
+void GL_APIENTRY glStencilFillPathCHROMIUM(GLuint path, GLenum fillMode, GLuint mask)
+{
+    gl::StencilFillPathCHROMIUM(path, fillMode, mask);
+}
+
+void GL_APIENTRY glStencilStrokePathCHROMIUM(GLuint path, GLint reference, GLuint mask)
+{
+    gl::StencilStrokePathCHROMIUM(path, reference, mask);
+}
+
+void GL_APIENTRY glCoverFillPathCHROMIUM(GLuint path, GLenum coverMode)
+{
+    gl::CoverFillPathCHROMIUM(path, coverMode);
+}
+
+void GL_APIENTRY glCoverStrokePathCHROMIUM(GLuint path, GLenum coverMode)
+{
+    gl::CoverStrokePathCHROMIUM(path, coverMode);
+}
+
+void GL_APIENTRY glStencilThenCoverFillPathCHROMIUM(GLuint path,
+                                                    GLenum fillMode,
+                                                    GLuint mask,
+                                                    GLenum coverMode)
+{
+    gl::StencilThenCoverFillPathCHROMIUM(path, fillMode, mask, coverMode);
+}
+
+void GL_APIENTRY glStencilThenCoverStrokePathCHROMIUM(GLuint path,
+                                                      GLint reference,
+                                                      GLuint mask,
+                                                      GLenum coverMode)
+{
+    gl::StencilThenCoverStrokePathCHROMIUM(path, reference, mask, coverMode);
 }

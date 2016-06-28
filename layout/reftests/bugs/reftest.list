@@ -1574,7 +1574,7 @@ random-if(!winWidget) fails-if(winWidget&&!d2d) random-if(winWidget&&d2d) != 574
 skip-if(!haveTestPlugin) skip-if(B2G||Mulet) fails-if(Android) == 579808-1.html 579808-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) fails-if(Android) random-if(layersGPUAccelerated) fuzzy-if(skiaContent,1,10000) == 579985-1.html 579985-1-ref.html # bug 623452 for WinXP; this bug was only for a regression in BasicLayers anyway # Initial mulet triage: parity with B2G/B2G Desktop
 skip-if(B2G||Mulet) skip-if(Android) == 580160-1.html 580160-1-ref.html # bug 920927 for Android; issues without the test-plugin # Initial mulet triage: parity with B2G/B2G Desktop
-fuzzy-if(asyncPan&&!layersGPUAccelerated,255,13) HTTP(..) == 580863-1.html 580863-1-ref.html
+fuzzy-if(asyncPan&&!layersGPUAccelerated,255,33) HTTP(..) == 580863-1.html 580863-1-ref.html
 skip-if(B2G||Mulet) fails-if(Android) random-if(layersGPUAccelerated) fuzzy-if(skiaContent,1,6436) == 581317-1.html 581317-1-ref.html # Initial mulet triage: parity with B2G/B2G Desktop
 == 581579-1.html 581579-1-ref.html
 == 582037-1a.html 582037-1-ref.html
@@ -1672,7 +1672,7 @@ skip-if(B2G||Mulet) == 641770-1.html 641770-1-ref.html # Initial mulet triage: p
 == 645647-1.html 645647-1-ref.html
 == 645647-2.html 645647-2-ref.html
 == 645768-1.html 645768-1-ref.html
-fails-if(layersGPUAccelerated&&cocoaWidget) fuzzy-if(!layersGPUAccelerated,41,260) fuzzy-if(skiaContent,41,11000) == 650228-1.html 650228-1-ref.html # Quartz alpha blending doesn't match GL alpha blending
+fails-if(layersGPUAccelerated&&cocoaWidget) fuzzy-if(!layersGPUAccelerated,41,260) fuzzy-if(skiaContent,49,11000) == 650228-1.html 650228-1-ref.html # Quartz alpha blending doesn't match GL alpha blending
 needs-focus == 652301-1a.html 652301-1-ref.html
 needs-focus == 652301-1b.html 652301-1-ref.html
 fuzzy-if(skiaContent,2,5) == 652775-1.html 652775-1-ref.html

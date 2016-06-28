@@ -17,7 +17,7 @@ var weirdCases =
   ];
 
 for (let weird of weirdCases)
-  assertShallowArray(Intl.getCanonicalLocales(weird), [weird]);
+  assertEqArray(Intl.getCanonicalLocales(weird), [weird]);
 
 if (typeof reportCompare === 'function')
     reportCompare(0, 0);

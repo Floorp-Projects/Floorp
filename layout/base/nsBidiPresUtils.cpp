@@ -80,7 +80,8 @@ static char16_t GetBidiControl(nsStyleContext* aStyleContext,
                                WhichBidiControl aBidiControl)
 {
   const nsStyleVisibility* vis = aStyleContext->StyleVisibility();
-  if (vis->mWritingMode != NS_STYLE_WRITING_MODE_HORIZONTAL_TB &&
+  if ((vis->mWritingMode == NS_STYLE_WRITING_MODE_VERTICAL_RL ||
+       vis->mWritingMode == NS_STYLE_WRITING_MODE_VERTICAL_LR) &&
       vis->mTextOrientation == NS_STYLE_TEXT_ORIENTATION_UPRIGHT) {
     return kLRO;
   }

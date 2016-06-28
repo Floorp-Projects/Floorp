@@ -15,10 +15,12 @@
 class ExpressionLimitTest : public testing::Test {
 protected:
     static const int kMaxExpressionComplexity = 16;
-    static const int kMaxCallStackDepth = 16;
+    static const int kMaxCallStackDepth       = 16;
+    static const int kMaxFunctionParameters   = 16;
     static const char* kExpressionTooComplex;
     static const char* kCallStackTooDeep;
     static const char* kHasRecursion;
+    static const char *kTooManyParameters;
 
     virtual void SetUp()
     {
@@ -46,6 +48,7 @@ protected:
 
         res->MaxExpressionComplexity = kMaxExpressionComplexity;
         res->MaxCallStackDepth       = kMaxCallStackDepth;
+        res->MaxFunctionParameters   = kMaxFunctionParameters;
     }
 
     void GenerateLongExpression(int length, std::stringstream* ss)
@@ -140,6 +143,34 @@ protected:
         return ss.str();
     }
 
+    std::string GenerateShaderWithFunctionParameters(int parameters)
+    {
+        std::stringstream ss;
+
+        ss << "precision mediump float;\n"
+           << "\n"
+           << "float foo(";
+        for (int i = 0; i < parameters; ++i)
+        {
+            ss << "float f" << i;
+            if (i + 1 < parameters)
+            {
+                ss << ", ";
+            }
+        }
+        ss << ")\n"
+           << "{\n"
+           << "    return f0;\n"
+           << "}\n"
+           << "\n"
+           << "void main()\n"
+           << "{\n"
+           << "    gl_FragColor = vec4(0,0,0,0);\n"
+           << "}";
+
+        return ss.str();
+    }
+
     // Compiles a shader and if there's an error checks for a specific
     // substring in the error log. This way we know the error is specific
     // to the issue we are testing.
@@ -173,6 +204,8 @@ const char* ExpressionLimitTest::kCallStackTooDeep =
     "Call stack too deep";
 const char* ExpressionLimitTest::kHasRecursion =
     "Function recursion detected";
+const char* ExpressionLimitTest::kTooManyParameters =
+    "Function has too many parameters";
 
 TEST_F(ExpressionLimitTest, ExpressionComplexity)
 {
@@ -506,3 +539,24 @@ TEST_F(ExpressionLimitTest, Recursion)
     ShDestruct(vertexCompiler);
 }
 
+TEST_F(ExpressionLimitTest, FunctionParameterCount)
+{
+    ShShaderSpec spec     = SH_WEBGL_SPEC;
+    ShShaderOutput output = SH_ESSL_OUTPUT;
+    ShHandle compiler     = ShConstructCompiler(GL_FRAGMENT_SHADER, spec, output, &resources);
+    int compileOptions    = SH_LIMIT_EXPRESSION_COMPLEXITY;
+
+    // Test parameters under the limit succeeds.
+    EXPECT_TRUE(CheckShaderCompilation(
+        compiler, GenerateShaderWithFunctionParameters(kMaxFunctionParameters).c_str(),
+        compileOptions, nullptr));
+    // Test parameters over the limit fails.
+    EXPECT_TRUE(CheckShaderCompilation(
+        compiler, GenerateShaderWithFunctionParameters(kMaxFunctionParameters + 1).c_str(),
+        compileOptions, kTooManyParameters));
+    // Test parameters over the limit without limit does not fail.
+    EXPECT_TRUE(CheckShaderCompilation(
+        compiler, GenerateShaderWithFunctionParameters(kMaxFunctionParameters + 1).c_str(),
+        compileOptions & ~SH_LIMIT_EXPRESSION_COMPLEXITY, nullptr));
+    ShDestruct(compiler);
+}

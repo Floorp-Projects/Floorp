@@ -84,12 +84,11 @@ TEST_P(FramebufferRenderMipmapTest, Validation)
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
 
-    const size_t levels = 5;
-    for (size_t i = 0; i < levels; i++)
+    const GLint levels = 5;
+    for (GLint i = 0; i < levels; i++)
     {
-        size_t size = 1 << ((levels - 1) - i);
-        glTexImage2D(GL_TEXTURE_2D, static_cast<GLint>(i), GL_RGBA, static_cast<GLsizei>(size),
-                     static_cast<GLsizei>(size), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        GLsizei size = 1 << ((levels - 1) - i);
+        glTexImage2D(GL_TEXTURE_2D, i, GL_RGBA, size, size, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     }
 
     EXPECT_GL_NO_ERROR();
@@ -99,10 +98,9 @@ TEST_P(FramebufferRenderMipmapTest, Validation)
     glBindFramebuffer(GL_FRAMEBUFFER, fbo);
     EXPECT_GL_NO_ERROR();
 
-    for (size_t i = 0; i < levels; i++)
+    for (GLint i = 0; i < levels; i++)
     {
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex,
-                               static_cast<GLint>(i));
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, i);
 
         if (i > 0 && !renderToMipmapSupported)
         {
@@ -123,7 +121,7 @@ TEST_P(FramebufferRenderMipmapTest, Validation)
 TEST_P(FramebufferRenderMipmapTest, RenderToMipmap)
 {
     // TODO(geofflang): Figure out why this is broken on Intel OpenGL
-    if (isIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
+    if (IsIntel() && getPlatformRenderer() == EGL_PLATFORM_ANGLE_TYPE_OPENGL_ANGLE)
     {
         std::cout << "Test skipped on Intel OpenGL." << std::endl;
         return;
@@ -145,17 +143,16 @@ TEST_P(FramebufferRenderMipmapTest, RenderToMipmap)
         1.0f, 0.0f, 1.0f, 1.0f,
         0.0f, 1.0f, 1.0f, 1.0f,
     };
-    const size_t testLevels = ArraySize(levelColors) / 4;
+    const GLint testLevels = static_cast<GLint>(ArraySize(levelColors) / 4);
 
     GLuint tex = 0;
     glGenTextures(1, &tex);
     glBindTexture(GL_TEXTURE_2D, tex);
 
-    for (size_t i = 0; i < testLevels; i++)
+    for (GLint i = 0; i < testLevels; i++)
     {
-        size_t size = 1 << ((testLevels - 1) - i);
-        glTexImage2D(GL_TEXTURE_2D, static_cast<GLint>(i), GL_RGBA, static_cast<GLsizei>(size),
-                     static_cast<GLsizei>(size), 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        GLsizei size = 1 << ((testLevels - 1) - i);
+        glTexImage2D(GL_TEXTURE_2D, i, GL_RGBA, size, size, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
     }
 
     EXPECT_GL_NO_ERROR();
@@ -166,10 +163,9 @@ TEST_P(FramebufferRenderMipmapTest, RenderToMipmap)
     EXPECT_GL_NO_ERROR();
 
     // Render to the levels of the texture with different colors
-    for (size_t i = 0; i < testLevels; i++)
+    for (GLint i = 0; i < testLevels; i++)
     {
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex,
-                               static_cast<GLint>(i));
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, i);
         EXPECT_GL_NO_ERROR();
 
         glUseProgram(mProgram);
@@ -180,10 +176,9 @@ TEST_P(FramebufferRenderMipmapTest, RenderToMipmap)
     }
 
     // Test that the levels of the texture are correct
-    for (size_t i = 0; i < testLevels; i++)
+    for (GLint i = 0; i < testLevels; i++)
     {
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex,
-                               static_cast<GLint>(i));
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, tex, i);
         EXPECT_GL_NO_ERROR();
 
         const GLfloat *color = levelColors + (i * 4);
