@@ -33,14 +33,6 @@ public:
 private:
   ~AccurateSeekTask();
 
-  bool HasAudio() const;
-
-  bool HasVideo() const;
-
-  bool IsVideoDecoding() const;
-
-  bool IsAudioDecoding() const;
-
   nsresult EnsureVideoDecodeTaskQueued();
 
   nsresult EnsureAudioDecodeTaskQueued();
@@ -56,10 +48,6 @@ private:
   nsresult DropAudioUpToSeekTarget(MediaData* aSample);
 
   nsresult DropVideoUpToSeekTarget(MediaData* aSample);
-
-  bool IsAudioSeekComplete();
-
-  bool IsVideoSeekComplete();
 
   void CheckIfSeekComplete();
 
@@ -84,8 +72,6 @@ private:
    */
   const int64_t mCurrentTimeBeforeSeek;
   const uint32_t mAudioRate;  // Audio sample rate.
-  const bool mHasAudio;
-  const bool mHasVideo;
   bool mDropAudioUntilNextDiscontinuity;
   bool mDropVideoUntilNextDiscontinuity;
   bool mDoneAudioSeeking;
