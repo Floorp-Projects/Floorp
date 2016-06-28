@@ -28,12 +28,7 @@ public:
 
 class EMEVideoDecoder : public GMPVideoDecoder {
 public:
-  EMEVideoDecoder(CDMProxy* aProxy,
-                  const VideoInfo& aConfig,
-                  layers::LayersBackend aLayersBackend,
-                  layers::ImageContainer* aImageContainer,
-                  TaskQueue* aTaskQueue,
-                  MediaDataDecoderCallbackProxy* aCallback);
+  EMEVideoDecoder(CDMProxy* aProxy, const GMPVideoDecoderParams& aParams);
 
 private:
   void InitTags(nsTArray<nsCString>& aTags) override;

@@ -24,20 +24,11 @@ EMEVideoCallbackAdapter::Error(GMPErr aErr)
 }
 
 EMEVideoDecoder::EMEVideoDecoder(CDMProxy* aProxy,
-                                 const VideoInfo& aConfig,
-                                 layers::LayersBackend aLayersBackend,
-                                 layers::ImageContainer* aImageContainer,
-                                 TaskQueue* aTaskQueue,
-                                 MediaDataDecoderCallbackProxy* aCallback)
-  : GMPVideoDecoder(aConfig,
-                    aLayersBackend,
-                    aImageContainer,
-                    aTaskQueue,
-                    aCallback,
-                    new EMEVideoCallbackAdapter(aCallback,
-                                                VideoInfo(aConfig.mDisplay.width,
-                                                          aConfig.mDisplay.height),
-                                                aImageContainer))
+                                 const GMPVideoDecoderParams& aParams)
+  : GMPVideoDecoder(GMPVideoDecoderParams(aParams).WithAdapter(
+                    new EMEVideoCallbackAdapter(aParams.mCallback,
+                                                VideoInfo(aParams.mConfig.mDisplay),
+                                                aParams.mImageContainer)))
   , mProxy(aProxy)
 {}
 
