@@ -1471,16 +1471,10 @@ nsresult nsWebBrowserPersist::SaveChannelInternal(
     nsCOMPtr<nsIFileChannel> fc(do_QueryInterface(aChannel));
     nsCOMPtr<nsIFileURL> fu(do_QueryInterface(aFile));
 
-    nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
     if (fc && !fu) {
         nsCOMPtr<nsIInputStream> fileInputStream, bufferedInputStream;
-        nsresult rv;
-        if (loadInfo && loadInfo->GetSecurityMode()) {
-          rv = aChannel->Open2(getter_AddRefs(fileInputStream));
-        }
-        else {
-          rv = aChannel->Open(getter_AddRefs(fileInputStream));
-        }
+        nsresult rv = NS_MaybeOpenChannelUsingOpen2(aChannel,
+                        getter_AddRefs(fileInputStream));
         NS_ENSURE_SUCCESS(rv, rv);
         rv = NS_NewBufferedInputStream(getter_AddRefs(bufferedInputStream),
                                        fileInputStream, BUFFERED_OUTPUT_SIZE);
@@ -1491,13 +1485,7 @@ nsresult nsWebBrowserPersist::SaveChannelInternal(
     }
 
     // Read from the input channel
-    nsresult rv;
-    if (loadInfo && loadInfo->GetSecurityMode()) {
-        rv = aChannel->AsyncOpen2(this);
-    }
-    else {
-        rv = aChannel->AsyncOpen(this, nullptr);
-    }
+    nsresult rv = NS_MaybeOpenChannelUsingAsyncOpen2(aChannel, this);
     if (rv == NS_ERROR_NO_CONTENT)
     {
         // Assume this is a protocol such as mailto: which does not feed out

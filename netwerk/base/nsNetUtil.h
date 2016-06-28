@@ -910,6 +910,22 @@ nsresult NS_LinkRedirectChannels(uint32_t channelId,
 nsresult NS_MakeRandomInvalidURLString(nsCString &result);
 
 /**
+ * Helper function which checks whether the channel can be
+ * openend using Open2() or has to fall back to opening
+ * the channel using Open().
+ */
+nsresult NS_MaybeOpenChannelUsingOpen2(nsIChannel* aChannel,
+                                       nsIInputStream **aStream);
+
+/**
+ * Helper function which checks whether the channel can be
+ * openend using AsyncOpen2() or has to fall back to opening
+ * the channel using AsyncOpen().
+ */
+nsresult NS_MaybeOpenChannelUsingAsyncOpen2(nsIChannel* aChannel,
+                                            nsIStreamListener *aListener);
+
+/**
  * Helper function to determine whether urlString is Java-compatible --
  * whether it can be passed to the Java URL(String) constructor without the
  * latter throwing a MalformedURLException, or without Java otherwise
