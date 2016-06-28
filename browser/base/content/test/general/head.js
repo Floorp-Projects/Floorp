@@ -767,7 +767,6 @@ function assertMixedContentBlockingState(tabbrowser, states = {}) {
   // Make sure the correct icon is visible in the Control Center.
   // This logic is controlled with CSS, so this helps prevent regressions there.
   let securityView = doc.getElementById("identity-popup-securityView");
-  let securityContent = doc.getElementById("identity-popup-security-content");
   let securityViewBG = tabbrowser.ownerGlobal.getComputedStyle(securityView, "").
                        getPropertyValue("background-image");
   let securityContentBG = tabbrowser.ownerGlobal.getComputedStyle(securityView, "").
