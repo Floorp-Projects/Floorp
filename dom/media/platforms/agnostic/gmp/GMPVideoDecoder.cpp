@@ -104,25 +104,49 @@ VideoCallbackAdapter::Terminated()
   mCallback->Error(MediaDataDecoderError::FATAL_ERROR);
 }
 
-GMPVideoDecoder::GMPVideoDecoder(const VideoInfo& aConfig,
-                                 layers::LayersBackend aLayersBackend,
-                                 layers::ImageContainer* aImageContainer,
-                                 TaskQueue* aTaskQueue,
-                                 MediaDataDecoderCallbackProxy* aCallback,
-                                 VideoCallbackAdapter* aAdapter)
-  : mConfig(aConfig)
-  , mCallback(aCallback)
+GMPVideoDecoderParams::GMPVideoDecoderParams(const CreateDecoderParams& aParams)
+  : mConfig(aParams.VideoConfig())
+  , mTaskQueue(aParams.mTaskQueue)
+  , mCallback(nullptr)
+  , mAdapter(nullptr)
+  , mImageContainer(aParams.mImageContainer)
+  , mLayersBackend(aParams.mLayersBackend)
+{}
+
+GMPVideoDecoderParams&
+GMPVideoDecoderParams::WithCallback(MediaDataDecoderProxy* aWrapper)
+{
+  MOZ_ASSERT(aWrapper);
+  MOZ_ASSERT(!mCallback); // Should only be called once per instance.
+  mCallback = aWrapper->Callback();
+  mAdapter = nullptr;
+  return *this;
+}
+
+GMPVideoDecoderParams&
+GMPVideoDecoderParams::WithAdapter(VideoCallbackAdapter* aAdapter)
+{
+  MOZ_ASSERT(aAdapter);
+  MOZ_ASSERT(!mAdapter); // Should only be called once per instance.
+  mCallback = aAdapter->Callback();
+  mAdapter = aAdapter;
+  return *this;
+}
+
+GMPVideoDecoder::GMPVideoDecoder(const GMPVideoDecoderParams& aParams)
+  : mConfig(aParams.mConfig)
+  , mCallback(aParams.mCallback)
   , mGMP(nullptr)
   , mHost(nullptr)
-  , mAdapter(aAdapter)
+  , mAdapter(aParams.mAdapter)
   , mConvertNALUnitLengths(false)
 {
-  MOZ_ASSERT(!aAdapter || mCallback == aAdapter->Callback());
-  if (!aAdapter) {
-    mAdapter = new VideoCallbackAdapter(aCallback,
-                                        VideoInfo(aConfig.mDisplay.width,
-                                                  aConfig.mDisplay.height),
-                                        aImageContainer);
+  MOZ_ASSERT(!mAdapter || mCallback == mAdapter->Callback());
+  if (!mAdapter) {
+    mAdapter = new VideoCallbackAdapter(mCallback,
+                                        VideoInfo(mConfig.mDisplay.width,
+                                                  mConfig.mDisplay.height),
+                                        aParams.mImageContainer);
   }
 }
 
