@@ -492,6 +492,17 @@ bool CheckEndOfLifed(string version)
   return UIFileExists(reportPath);
 }
 
+static string
+GetMinidumpAnalyzerPath()
+{
+  string path = gArgv[0];
+  size_t pos = path.rfind(UI_CRASH_REPORTER_FILENAME BIN_SUFFIX);
+  path.erase(pos);
+  path.append(UI_MINIDUMP_ANALYZER_FILENAME BIN_SUFFIX);
+
+  return path;
+}
+
 int main(int argc, char** argv)
 {
   gArgc = argc;
@@ -513,6 +524,10 @@ int main(int argc, char** argv)
     // no dump file specified, run the default UI
     UIShowDefaultUI();
   } else {
+    // start by running minidump analyzer
+    UIRunMinidumpAnalyzer(GetMinidumpAnalyzerPath(), gReporterDumpFile);
+
+    // go ahead with the crash reporter
     gExtraFile = GetAdditionalFilename(gReporterDumpFile, kExtraDataExtension);
     if (gExtraFile.empty()) {
       UIError(gStrings[ST_ERROR_BADARGUMENTS]);
