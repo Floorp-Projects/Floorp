@@ -54,25 +54,6 @@
 # define NS_T(str) L ## str
 # define NS_SLASH NS_T('\\')
 
-#if defined(_MSC_VER) && _MSC_VER < 1900
-// On Windows, _snprintf and _snwprintf don't guarantee null termination. These
-// macros always leave room in the buffer for null termination and set the end
-// of the buffer to null in case the string is larger than the buffer. Having
-// multiple nulls in a string is fine and this approach is simpler (possibly
-// faster) than calculating the string length to place the null terminator and
-// truncates the string as _snprintf and _snwprintf do on other platforms.
-static inline int mysnprintf(char* dest, size_t count, const char* fmt, ...)
-{
-  size_t _count = count - 1;
-  va_list varargs;
-  va_start(varargs, fmt);
-  int result = _vsnprintf(dest, count - 1, fmt, varargs);
-  va_end(varargs);
-  dest[_count] = '\0';
-  return result;
-}
-#define snprintf mysnprintf
-#endif
 static inline int mywcsprintf(WCHAR* dest, size_t count, const WCHAR* fmt, ...)
 {
   size_t _count = count - 1;
