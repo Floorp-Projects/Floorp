@@ -16,6 +16,7 @@ const EventEmitter = require("devtools/shared/event-emitter");
 const {colorUtils} = require("devtools/client/shared/css-color");
 const Heritage = require("sdk/core/heritage");
 const {Eyedropper} = require("devtools/client/eyedropper/eyedropper");
+const {gDevTools} = require("devtools/client/framework/devtools");
 const Services = require("Services");
 const {XPCOMUtils} = require("resource://gre/modules/XPCOMUtils.jsm");
 
@@ -920,11 +921,11 @@ Heritage.extend(SwatchBasedEditorTooltip.prototype, {
     let windowType = chromeWindow.document.documentElement
                      .getAttribute("windowtype");
     let toolboxWindow;
-    if (windowType != "navigator:browser") {
+    if (windowType != gDevTools.chromeWindowType) {
       // this means the toolbox is in a seperate window. We need to make
       // sure we'll be inspecting the browser window instead
       toolboxWindow = chromeWindow;
-      chromeWindow = Services.wm.getMostRecentWindow("navigator:browser");
+      chromeWindow = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
       chromeWindow.focus();
     }
     let dropper = new Eyedropper(chromeWindow, { copyOnSelect: false,

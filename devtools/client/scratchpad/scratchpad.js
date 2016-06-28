@@ -434,11 +434,11 @@ var Scratchpad = {
   },
 
   /**
-   * Get the most recent chrome window of type navigator:browser.
+   * Get the most recent main chrome browser window
    */
   get browserWindow()
   {
-    return Services.wm.getMostRecentWindow("navigator:browser");
+    return Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
   },
 
   /**
