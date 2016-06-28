@@ -315,9 +315,7 @@ public class GeckoNetworkManager extends BroadcastReceiver implements NativeEven
      */
     private void registerBroadcastReceiver() {
         final IntentFilter filter = new IntentFilter(ConnectivityManager.CONNECTIVITY_ACTION);
-        if (GeckoAppShell.getApplicationContext().registerReceiver(this, filter) == null) {
-            Log.e(LOGTAG, "Registering receiver failed");
-        }
+        GeckoAppShell.getApplicationContext().registerReceiver(this, filter);
     }
 
     private static int wifiDhcpGatewayAddress(Context context) {
