@@ -153,7 +153,7 @@ public:
                                 nsTArray<uint8_t>&& aRawP256dhKey,
                                 nsTArray<uint8_t>&& aAuthSecret,
                                 nsTArray<uint8_t>&& aAppServerKey)
-    : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
+    : WorkerRunnable(aWorkerPrivate)
     , mProxy(Move(aProxy))
     , mStatus(aStatus)
     , mEndpoint(aEndpoint)
@@ -360,7 +360,7 @@ public:
   PermissionResultRunnable(PromiseWorkerProxy *aProxy,
                            nsresult aStatus,
                            PushPermissionState aState)
-    : WorkerRunnable(aProxy->GetWorkerPrivate(), WorkerThreadModifyBusyCount)
+    : WorkerRunnable(aProxy->GetWorkerPrivate())
     , mProxy(aProxy)
     , mStatus(aStatus)
     , mState(aState)

@@ -590,7 +590,7 @@ class SkipWaitingResultRunnable final : public WorkerRunnable
 public:
   SkipWaitingResultRunnable(WorkerPrivate* aWorkerPrivate,
                             PromiseWorkerProxy* aPromiseProxy)
-    : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
+    : WorkerRunnable(aWorkerPrivate)
     , mPromiseProxy(aPromiseProxy)
   {
     AssertIsOnMainThread();
