@@ -161,18 +161,9 @@ EOF
 peep install -r requirements.txt
 
 # Install node
-tooltool_fetch <<'EOF'
-[
-{
-    "size": 5676610,
-    "digest": "ce27b788dfd141a5ba7674332825fc136fe2c4f49a319dd19b3a87c8fffa7a97d86cbb8535661c9a68c9122719aa969fc6a8c886458a0df9fc822eec99ed130b",
-    "algorithm": "sha512",
-    "filename": "node-v0.10.36-linux-x64.tar.gz"
-}
-]
-
-EOF
-tar -C /usr/local -xz --strip-components 1 < node-*.tar.gz
+wget https://nodejs.org/dist/v5.0.0/node-v5.0.0-linux-x64.tar.gz
+echo 'ef73b59048a0ed11d01633f0061627b7a9879257deb9add2255e4d0808f8b671  node-v5.0.0-linux-x64.tar.gz' | sha256sum -c
+tar -C /usr/local -xz --strip-components 1 < node-v5.0.0-linux-x64.tar.gz
 node -v  # verify
 
 # Install custom-built Debian packages.  These come from a set of repositories
@@ -266,6 +257,13 @@ mesa_version=$(dpkg-query -s libgl1-mesa-dri-lts-saucy | grep ^Version | awk '{ 
 # revert the list of repos
 cp sources.list.orig /etc/apt/sources.list
 apt-get update
+
+# node 5 requires a C++11 compiler.
+add-apt-repository ppa:ubuntu-toolchain-r/test
+apt-get update
+apt-get -y install gcc-4.8 g++-4.8
+update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.8 20 --slave /usr/bin/g++ g++ /usr/bin/g++-4.8
+update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-4.6 10 --slave /usr/bin/g++ g++ /usr/bin/g++-4.6
 
 # clean up
 apt_packages+=('mesa-common-dev')
