@@ -11,7 +11,7 @@
 #include "HyperTextAccessibleWrap.h"
 #include "AccEvent.h"
 
-#include <memory>
+#include "nsAutoPtr.h"
 #include "nsClassHashtable.h"
 #include "nsDataHashtable.h"
 #include "nsIDocument.h"
@@ -671,7 +671,7 @@ protected:
   /**
    * The cache of IDs pointed by relation attributes.
    */
-  typedef nsTArray<std::unique_ptr<AttrRelProvider>> AttrRelProviderArray;
+  typedef nsTArray<nsAutoPtr<AttrRelProvider> > AttrRelProviderArray;
   nsClassHashtable<nsStringHashKey, AttrRelProviderArray>
     mDependentIDsHash;
 
