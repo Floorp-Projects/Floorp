@@ -174,7 +174,9 @@ public:
 
   virtual void CancelWaitForRecycle(uint64_t aTextureId) override;
 
-  TextureClientPool* GetTexturePool(gfx::SurfaceFormat aFormat, TextureFlags aFlags);
+  TextureClientPool* GetTexturePool(LayersBackend aBackend,
+                                    gfx::SurfaceFormat aFormat,
+                                    TextureFlags aFlags);
   void ClearTexturePool();
 
   void HandleMemoryPressure();
