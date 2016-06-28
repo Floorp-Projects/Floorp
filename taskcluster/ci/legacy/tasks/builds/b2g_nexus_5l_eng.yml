@@ -8,20 +8,18 @@ task:
   scopes:
     - 'docker-worker:cache:level-{{level}}-{{project}}-build-nexus-5-l-eng'
     - 'docker-worker:cache:level-{{level}}-{{project}}-build-nexus-5-l-eng-objdir-gecko'
+    - 'docker-worker:relengapi-proxy:tooltool.download.internal'
+    - 'docker-worker:relengapi-proxy:tooltool.download.public'
   metadata:
     name: '[TC] B2G Nexus 5-L Eng'
   payload:
     cache:
       level-{{level}}-{{project}}-build-nexus-5-l-eng: /home/worker/object-folder
       level-{{level}}-{{project}}-build-nexus-5-l-eng-objdir-gecko: /home/worker/objdir-gecko
+    features:
+      relengAPIProxy: true
     env:
       TARGET: 'nexus-5-l'
-      DEBUG: 0
-    command:
-      - >
-        checkout-gecko workspace &&
-        cd ./workspace/gecko/taskcluster/scripts/phone-builder &&
-        buildbot_step 'Build' ./build-phone.sh $HOME/workspace
   extra:
     treeherderEnv:
       - production
