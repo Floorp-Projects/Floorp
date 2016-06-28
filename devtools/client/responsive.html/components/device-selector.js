@@ -73,26 +73,45 @@ module.exports = createClass({
       selectClass += " selected";
     }
 
+    let state = devices.listState;
+    let listContent;
+
+    if (state == Types.deviceListState.LOADED) {
+      listContent = [dom.option({
+        value: "",
+        disabled: true,
+        hidden: true,
+      }, getStr("responsive.noDeviceSelected")),
+        options.map(device => {
+          return dom.option({
+            key: device.name,
+            value: device.name,
+          }, device.name);
+        }),
+        dom.option({
+          value: OPEN_DEVICE_MODAL_VALUE,
+        }, getStr("responsive.editDeviceList"))];
+    } else if (state == Types.deviceListState.LOADING
+      || state == Types.deviceListState.INITIALIZED) {
+      listContent = [dom.option({
+        value: "",
+        disabled: true,
+      }, getStr("responsive.deviceListLoading"))];
+    } else if (state == Types.deviceListState.ERROR) {
+      listContent = [dom.option({
+        value: "",
+        disabled: true,
+      }, getStr("responsive.deviceListError"))];
+    }
+
     return dom.select(
       {
         className: selectClass,
         value: selectedDevice,
         onChange: this.onSelectChange,
+        disabled: (state !== Types.deviceListState.LOADED),
       },
-      dom.option({
-        value: "",
-        disabled: true,
-        hidden: true,
-      }, getStr("responsive.noDeviceSelected")),
-      options.map(device => {
-        return dom.option({
-          key: device.name,
-          value: device.name,
-        }, device.name);
-      }),
-      dom.option({
-        value: OPEN_DEVICE_MODAL_VALUE,
-      }, getStr("responsive.editDeviceList"))
+      ...listContent
     );
   },
 

@@ -6,6 +6,7 @@
 
 const {CC} = require("chrome");
 const defer = require("devtools/shared/defer");
+const promise = require("promise");
 const Services = require("Services");
 
 loader.lazyRequireGetter(this, "asyncStorage", "devtools/shared/async-storage");
@@ -41,7 +42,10 @@ exports.getJSON = function (prefName) {
 
   function readFromStorage(networkError) {
     asyncStorage.getItem(prefName + "_cache").then(function (json) {
-      deferred.resolve(json);
+      if (!json) {
+        return promise.reject("Empty cache for " + prefName);
+      }
+      return deferred.resolve(json);
     }).catch(function (e) {
       deferred.reject("JSON not available, CDN error: " + networkError +
                       ", storage error: " + e);
