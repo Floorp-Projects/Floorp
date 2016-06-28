@@ -496,17 +496,10 @@ SessionStore.prototype = {
     aBrowser.removeEventListener("scroll", this, true);
     aBrowser.removeEventListener("resize", this, true);
 
-    let tabId = aWindow.BrowserApp.getTabForBrowser(aBrowser).id;
-
-    // If this browser is being restored, skip any session save activity
-    if (aBrowser.__SS_restore) {
-      log("onTabRemove() ran for zombie tab " + tabId + ", aNoNotification = " + aNoNotification);
-      return;
-    }
-
     delete aBrowser.__SS_data;
 
-    log("onTabRemove() ran for tab " + tabId + ", aNoNotification = " + aNoNotification);
+    log("onTabRemove() ran for tab " + aWindow.BrowserApp.getTabForBrowser(aBrowser).id +
+        ", aNoNotification = " + aNoNotification);
     if (!aNoNotification) {
       this.saveStateDelayed();
     }
