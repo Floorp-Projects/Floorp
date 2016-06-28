@@ -61,6 +61,8 @@ private:
 
   void CancelCallbacks();
 
+  void AdjustFastSeekIfNeeded(MediaData* aSample);
+
   /*
    * Internal state.
    */
