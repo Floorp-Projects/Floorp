@@ -10906,5 +10906,13 @@
     "bug_numbers": [1272501],
     "releaseChannelCollection": "opt-out",
     "description": "Webkit/Blink filesystem used"
+  },
+  "WEBKIT_DIRECTORY_USED": {
+    "alert_emails": ["amarchesini@mozilla.com"],
+    "expires_in_version": "never",
+    "kind": "boolean",
+    "bug_numbers": [1272501],
+    "releaseChannelCollection": "opt-out",
+    "description": "HTMLInputElement.webkitdirectory attribute used"
   }
 }
