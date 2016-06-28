@@ -79,6 +79,7 @@ body.certerror #advancedButton {
 #advancedPanelContainer {
   position: absolute;
   padding: 24px 0;
+  width: 100%;
 }
 
 .advanced-panel {
@@ -109,6 +110,10 @@ span#hostname {
 
 #automaticallyReportInFuture {
   cursor: pointer;
+  display: inline-block;
+  -moz-padding-start: 2.3em;
+  text-indent: -2.3em;
+  line-height: 16px
 }
 
 #errorCode:not([href]) {

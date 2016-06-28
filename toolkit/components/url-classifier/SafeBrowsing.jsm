@@ -167,7 +167,7 @@ this.SafeBrowsing = {
     log("reading prefs");
 
     this.debug = Services.prefs.getBoolPref("browser.safebrowsing.debug");
-    this.phishingEnabled = Services.prefs.getBoolPref("browser.safebrowsing.enabled");
+    this.phishingEnabled = Services.prefs.getBoolPref("browser.safebrowsing.phishing.enabled");
     this.malwareEnabled = Services.prefs.getBoolPref("browser.safebrowsing.malware.enabled");
     this.trackingEnabled = Services.prefs.getBoolPref("privacy.trackingprotection.enabled") || Services.prefs.getBoolPref("privacy.trackingprotection.pbmode.enabled");
     this.forbiddenEnabled = Services.prefs.getBoolPref("browser.safebrowsing.forbiddenURIs.enabled");

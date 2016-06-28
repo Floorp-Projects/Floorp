@@ -54,7 +54,7 @@ DEFAULT_NO_CONNECTIONS_PREFS = {
     'browser.newtab.url' : 'about:blank',
     'browser.search.update': False,
     'browser.search.suggest.enabled' : False,
-    'browser.safebrowsing.enabled' : False,
+    'browser.safebrowsing.phishing.enabled' : False,
     'browser.safebrowsing.provider.google.updateURL': 'http://localhost/safebrowsing-dummy/update',
     'browser.safebrowsing.provider.google.gethashURL': 'http://localhost/safebrowsing-dummy/gethash',
     'browser.safebrowsing.malware.reportURL': 'http://localhost/safebrowsing-dummy/malwarereport',

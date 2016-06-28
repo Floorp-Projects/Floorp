@@ -72,6 +72,8 @@ public class OfflineTabStatusDelegate extends TabsTrayVisibilityAwareDelegate im
                     tabsQueuedForOfflineSnackbar.put(tab, null);
                 }
                 break;
+            // Fallthrough; see Bug 1278980 for details on why this event is here.
+            case OPENED_FROM_TABS_TRAY:
             // When tab is selected and offline notification was queued, display it if possible.
             // SELECTED event might also fire when we're on a TabStrip, so check first.
             case SELECTED:
