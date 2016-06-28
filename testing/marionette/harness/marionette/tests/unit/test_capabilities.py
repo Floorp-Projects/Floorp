@@ -54,7 +54,6 @@ class TestCapabilities(MarionetteTestCase):
     def test_extensions(self):
         self.assertIn("XULappId", self.caps)
         self.assertIn("appBuildId", self.caps)
-        self.assertIn("device", self.caps)
         self.assertIn("version", self.caps)
 
         self.assertEqual(self.caps["XULappId"], self.appinfo["ID"])
