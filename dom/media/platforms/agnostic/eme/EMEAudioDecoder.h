@@ -26,11 +26,7 @@ public:
   EMEAudioDecoder(CDMProxy* aProxy,
                   const AudioInfo& aConfig,
                   TaskQueue* aTaskQueue,
-                  MediaDataDecoderCallbackProxy* aCallback)
-   : GMPAudioDecoder(aConfig, aTaskQueue, aCallback, new EMEAudioCallbackAdapter(aCallback))
-   , mProxy(aProxy)
-  {
-  }
+                  MediaDataDecoderCallbackProxy* aCallback);
 
 private:
   void InitTags(nsTArray<nsCString>& aTags) override;

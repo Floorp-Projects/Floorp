@@ -33,19 +33,7 @@ public:
                   layers::LayersBackend aLayersBackend,
                   layers::ImageContainer* aImageContainer,
                   TaskQueue* aTaskQueue,
-                  MediaDataDecoderCallbackProxy* aCallback)
-   : GMPVideoDecoder(aConfig,
-                     aLayersBackend,
-                     aImageContainer,
-                     aTaskQueue,
-                     aCallback,
-                     new EMEVideoCallbackAdapter(aCallback,
-                                                 VideoInfo(aConfig.mDisplay.width,
-                                                           aConfig.mDisplay.height),
-                                                 aImageContainer))
-   , mProxy(aProxy)
-  {
-  }
+                  MediaDataDecoderCallbackProxy* aCallback);
 
 private:
   void InitTags(nsTArray<nsCString>& aTags) override;
