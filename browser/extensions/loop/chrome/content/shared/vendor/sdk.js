@@ -1,11 +1,11 @@
 /**
- * @license OpenTok.js v2.7.5 ccd6792 HEAD
+ * @license OpenTok.js v2.7.6 cff9122 HEAD
  *
  * Copyright (c) 2010-2015 TokBox, Inc.
  * Released under the MIT license
  * http://opensource.org/licenses/MIT
  *
- * Date: March 18 10:46:23 2016
+ * Date: June 24 07:05:09 2016
  */
 
 (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
@@ -3816,12 +3816,12 @@ var makeEverythingAttachToOTHelpers = require('./makeEverythingAttachToOTHelpers
 var util = exports;
 
 /**
- * @license  Common JS Helpers on OpenTok v2.7.5 ccd6792 HEAD
+ * @license  Common JS Helpers on OpenTok v2.7.6 cff9122 HEAD
  * http://www.tokbox.com/
  *
  * Copyright (c) 2016 TokBox, Inc.
  *
- * Date: March 18 10:46:49 2016
+ * Date: June 24 07:05:32 2016
  *
  */
 
@@ -14169,12 +14169,40 @@ var substr = 'ab'.substr(-1) === 'b'
 // shim for using process in browser
 
 var process = module.exports = {};
+
+// cached from whatever global is present so that test runners that stub it
+// don't break things.  But we need to wrap it in a try catch in case it is
+// wrapped in strict mode code which doesn't define any globals.  It's inside a
+// function because try/catches deoptimize in certain engines.
+
+var cachedSetTimeout;
+var cachedClearTimeout;
+
+(function () {
+  try {
+    cachedSetTimeout = setTimeout;
+  } catch (e) {
+    cachedSetTimeout = function () {
+      throw new Error('setTimeout is not defined');
+    }
+  }
+  try {
+    cachedClearTimeout = clearTimeout;
+  } catch (e) {
+    cachedClearTimeout = function () {
+      throw new Error('clearTimeout is not defined');
+    }
+  }
+} ())
 var queue = [];
 var draining = false;
 var currentQueue;
 var queueIndex = -1;
 
 function cleanUpNextTick() {
+    if (!draining || !currentQueue) {
+        return;
+    }
     draining = false;
     if (currentQueue.length) {
         queue = currentQueue.concat(queue);
@@ -14190,7 +14218,7 @@ function drainQueue() {
     if (draining) {
         return;
     }
-    var timeout = setTimeout(cleanUpNextTick);
+    var timeout = cachedSetTimeout(cleanUpNextTick);
     draining = true;
 
     var len = queue.length;
@@ -14207,7 +14235,7 @@ function drainQueue() {
     }
     currentQueue = null;
     draining = false;
-    clearTimeout(timeout);
+    cachedClearTimeout(timeout);
 }
 
 process.nextTick = function (fun) {
@@ -14219,7 +14247,7 @@ process.nextTick = function (fun) {
     }
     queue.push(new Item(fun, args));
     if (queue.length === 1 && !draining) {
-        setTimeout(drainQueue, 0);
+        cachedSetTimeout(drainQueue, 0);
     }
 };
 
@@ -20254,9 +20282,9 @@ if (WebSocket) ws.prototype = WebSocket.prototype;
 
 },{}],111:[function(require,module,exports){
 module.exports = {
-  "version": "v2.7.5",
-  "build": "ccd6792",
-  "buildTime": "March 18 10:46:49 2016",
+  "version": "v2.7.6",
+  "build": "cff9122",
+  "buildTime": "June 24 07:05:32 2016",
   "debug": "false",
   "websiteURL": "http://www.tokbox.com",
   "cdnURL": "http://static.opentok.com",
@@ -29954,6 +29982,7 @@ var PeerConnection = function(config) {
       subscribeProcessor(
         _peerConnection,
         config.numberOfSimulcastStreams,
+        config.offerConstraints,
 
         // Success: Relay Offer
         function(offer) {
@@ -30423,8 +30452,13 @@ module.exports = function PublisherPeerConnection(
     var pcConfig = {
       iceServers: iceServers,
       channels: channels,
-      numberOfSimulcastStreams: numberOfSimulcastStreams
+      numberOfSimulcastStreams: numberOfSimulcastStreams,
+      offerConstraints: {}
     };
+
+    if (session.sessionInfo.reconnection) {
+      pcConfig.offerConstraints.iceRestart = true;
+    }
 
     setCertificates(pcConfig, function(err, pcConfigWithCerts) {
       if (err) {
@@ -31224,6 +31258,7 @@ var SDPHelpers = require('./sdp_helpers.js');
 module.exports = function subscribeProcessor(
   peerConnection,
   numberOfSimulcastStreams,
+  offerConstraints,
   success,
   failure
 ) {
@@ -31270,9 +31305,7 @@ module.exports = function subscribeProcessor(
     generateErrorCallback('Error while creating Offer', 'CreateOffer'),
 
     // Constraints
-    {
-      iceRestart: true
-    }
+    offerConstraints
   );
 };
 
@@ -31486,7 +31519,13 @@ module.exports = function SubscriberPeerConnection(remoteConnection, session, st
 
   // Init
   this.init = function(completion) {
-    var pcConfig = {};
+    var pcConfig = {
+      offerConstraints: {}
+    };
+
+    if (session.sessionInfo.reconnection) {
+      pcConfig.offerConstraints.iceRestart = true;
+    }
 
     setCertificates(pcConfig, function(err, pcConfigWithCerts) {
       if (err) {
