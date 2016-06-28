@@ -52,18 +52,18 @@ this.BrowserToolboxProcess = function BrowserToolboxProcess(aOnClose, aOnRun, aO
   // all three arguments
   if (typeof aOnClose === "object") {
     if (aOnClose.onClose) {
-      this.on("close", aOnClose.onClose);
+      this.once("close", aOnClose.onClose);
     }
     if (aOnClose.onRun) {
-      this.on("run", aOnClose.onRun);
+      this.once("run", aOnClose.onRun);
     }
     this._options = aOnClose;
   } else {
     if (aOnClose) {
-      this.on("close", aOnClose);
+      this.once("close", aOnClose);
     }
     if (aOnRun) {
-      this.on("run", aOnRun);
+      this.once("run", aOnRun);
     }
     this._options = aOptions || {};
   }
