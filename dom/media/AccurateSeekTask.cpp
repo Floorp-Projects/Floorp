@@ -435,9 +435,7 @@ AccurateSeekTask::OnAudioDecoded(MediaData* aAudioSample)
   // resolved.
 
   SAMPLE_LOG("OnAudioDecoded [%lld,%lld] disc=%d",
-             (audio ? audio->mTime : -1),
-             (audio ? audio->GetEndTime() : -1),
-             (audio ? audio->mDiscontinuity : 0));
+    audio->mTime, audio->GetEndTime(), audio->mDiscontinuity);
 
   if (!Exists()) {
     // We've received a sample from a previous decode. Discard it.
@@ -527,9 +525,7 @@ AccurateSeekTask::OnVideoDecoded(MediaData* aVideoSample)
   // resolved.
 
   SAMPLE_LOG("OnVideoDecoded [%lld,%lld] disc=%d",
-             (video ? video->mTime : -1),
-             (video ? video->GetEndTime() : -1),
-             (video ? video->mDiscontinuity : 0));
+    video->mTime, video->GetEndTime(), video->mDiscontinuity);
 
   if (!Exists()) {
     // We've received a sample from a previous decode. Discard it.
