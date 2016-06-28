@@ -7377,12 +7377,6 @@ JS::IsIncrementalBarrierNeeded(JSRuntime* rt)
     return rt->gc.state() == gc::MARK && !rt->isHeapBusy();
 }
 
-JS_PUBLIC_API(bool)
-JS::IsIncrementalBarrierNeeded(JSContext* cx)
-{
-    return IsIncrementalBarrierNeeded(cx->runtime());
-}
-
 struct IncrementalReferenceBarrierFunctor {
     template <typename T> void operator()(T* t) { T::writeBarrierPre(t); }
 };
