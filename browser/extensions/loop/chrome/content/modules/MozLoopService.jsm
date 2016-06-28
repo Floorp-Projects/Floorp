@@ -1105,19 +1105,19 @@ var MozLoopServiceInternal = {
         // It's common for unit tests to overload Chat.open, so check if we actually
         // got a DOM node back.
       } else if (chatboxInstance.setAttribute) {
-          // Set properties that influence visual appearance of the chatbox right
-          // away to circumvent glitches.
-          chatboxInstance.setAttribute("customSize", "loopDefault");
-          chatboxInstance.parentNode.setAttribute("customSize", "loopDefault");
-          var buttons = "minimize,";
-          if (MozLoopService.getLoopPref("conversationPopOut.enabled")) {
-            buttons += "swap,";}
+        // Set properties that influence visual appearance of the chatbox right
+        // away to circumvent glitches.
+        chatboxInstance.setAttribute("customSize", "loopDefault");
+        chatboxInstance.parentNode.setAttribute("customSize", "loopDefault");
+        var buttons = "minimize,";
+        if (MozLoopService.getLoopPref("conversationPopOut.enabled")) {
+          buttons += "swap,";}
 
-          Chat.loadButtonSet(chatboxInstance, buttons + kChatboxHangupButton.id);
-          // Final fall-through in case a unit test overloaded Chat.open. Here we can
-          // immediately resolve the promise.
-        } else {
-            resolve(windowId);}});}, 
+        Chat.loadButtonSet(chatboxInstance, buttons + kChatboxHangupButton.id);
+        // Final fall-through in case a unit test overloaded Chat.open. Here we can
+        // immediately resolve the promise.
+      } else {
+        resolve(windowId);}});}, 
 
 
 
