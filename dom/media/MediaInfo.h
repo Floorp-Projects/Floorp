@@ -188,16 +188,21 @@ public:
   {
   }
 
-  VideoInfo(int32_t aWidth, int32_t aHeight)
+  explicit VideoInfo(int32_t aWidth, int32_t aHeight)
+    : VideoInfo(nsIntSize(aWidth, aHeight))
+  {
+  }
+
+  explicit VideoInfo(const nsIntSize& aSize)
     : TrackInfo(kVideoTrack, NS_LITERAL_STRING("2"), NS_LITERAL_STRING("main"),
                 EmptyString(), EmptyString(), true, 2)
-    , mDisplay(nsIntSize(aWidth, aHeight))
+    , mDisplay(aSize)
     , mStereoMode(StereoMode::MONO)
-    , mImage(nsIntSize(aWidth, aHeight))
+    , mImage(aSize)
     , mCodecSpecificConfig(new MediaByteBuffer)
     , mExtraData(new MediaByteBuffer)
     , mRotation(kDegree_0)
-    , mImageRect(nsIntRect(0, 0, aWidth, aHeight))
+    , mImageRect(nsIntRect(nsIntPoint(), aSize))
   {
   }
 
