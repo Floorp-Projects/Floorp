@@ -13,6 +13,12 @@
 #include "mozilla/gfx/Types.h"
 
 namespace mozilla {
+
+namespace gfx {
+  class SourceSurface;
+  class DrawTarget;
+}
+
 namespace layers {
 
 class CopyableCanvasLayer;
@@ -38,43 +44,112 @@ public:
    *
    * \param aPersistedRect This indicates the area of the DrawTarget that needs
    *                       to have remained the same since the call to
-   *                       ReturnAndUseDT.
+   *                       ReturnDrawTarget.
    */
-  virtual already_AddRefed<gfx::DrawTarget> GetDT(const gfx::IntRect& aPersistedRect) = 0;
+  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget(const gfx::IntRect& aPersistedRect) = 0;
+
   /**
    * Return a DrawTarget to the PersistentBufferProvider and indicate the
    * contents of this DrawTarget is to be considered current by the
    * BufferProvider. The caller should forget any references to the DrawTarget.
    */
-  virtual bool ReturnAndUseDT(already_AddRefed<gfx::DrawTarget> aDT) = 0;
+  virtual bool ReturnDrawTarget(already_AddRefed<gfx::DrawTarget> aDT) = 0;
 
-  virtual already_AddRefed<gfx::SourceSurface> GetSnapshot() = 0;
-protected:
+  virtual already_AddRefed<gfx::SourceSurface> BorrowSnapshot() = 0;
+
+  virtual void ReturnSnapshot(already_AddRefed<gfx::SourceSurface> aSnapshot) = 0;
+
+  virtual TextureClient* GetTextureClient() { return nullptr; }
 };
+
 
 class PersistentBufferProviderBasic : public PersistentBufferProvider
 {
 public:
-  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PersistentBufferProviderBasic)
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PersistentBufferProviderBasic, override)
 
-  PersistentBufferProviderBasic(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
-                                gfx::BackendType aBackend);
-  explicit PersistentBufferProviderBasic(gfx::DrawTarget* aTarget) : mDrawTarget(aTarget) {}
+  static already_AddRefed<PersistentBufferProviderBasic>
+  Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat, gfx::BackendType aBackend);
 
-  bool IsValid() { return !!mDrawTarget; }
-  virtual LayersBackend GetType() { return LayersBackend::LAYERS_BASIC; }
-  already_AddRefed<gfx::DrawTarget> GetDT(const gfx::IntRect& aPersistedRect) {
-    RefPtr<gfx::DrawTarget> dt(mDrawTarget);
-    return dt.forget();
-  }
-  bool ReturnAndUseDT(already_AddRefed<gfx::DrawTarget> aDT) {
-    RefPtr<gfx::DrawTarget> dt(aDT);
-    MOZ_ASSERT(mDrawTarget == dt);
-    return true;
-  }
-  virtual already_AddRefed<gfx::SourceSurface> GetSnapshot() { return mDrawTarget->Snapshot(); }
+  explicit PersistentBufferProviderBasic(gfx::DrawTarget* aTarget);
+
+  virtual LayersBackend GetType() override { return LayersBackend::LAYERS_BASIC; }
+
+  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget(const gfx::IntRect& aPersistedRect) override;
+
+  virtual bool ReturnDrawTarget(already_AddRefed<gfx::DrawTarget> aDT) override;
+
+  virtual already_AddRefed<gfx::SourceSurface> BorrowSnapshot() override;
+
+  virtual void ReturnSnapshot(already_AddRefed<gfx::SourceSurface> aSnapshot) override;
+
 private:
+  ~PersistentBufferProviderBasic();
+
   RefPtr<gfx::DrawTarget> mDrawTarget;
+  RefPtr<gfx::SourceSurface> mSnapshot;
+};
+
+
+/**
+ * Provides access to a buffer which can be sent to the compositor without
+ * requiring a copy.
+ */
+class PersistentBufferProviderShared : public PersistentBufferProvider
+{
+public:
+  MOZ_DECLARE_REFCOUNTED_VIRTUAL_TYPENAME(PersistentBufferProviderShared, override)
+
+  static already_AddRefed<PersistentBufferProviderShared>
+  Create(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+         CompositableForwarder* aFwd);
+
+  virtual LayersBackend GetType() override { return LayersBackend::LAYERS_CLIENT; }
+
+  virtual already_AddRefed<gfx::DrawTarget> BorrowDrawTarget(const gfx::IntRect& aPersistedRect) override;
+
+  virtual bool ReturnDrawTarget(already_AddRefed<gfx::DrawTarget> aDT) override;
+
+  virtual already_AddRefed<gfx::SourceSurface> BorrowSnapshot() override;
+
+  virtual void ReturnSnapshot(already_AddRefed<gfx::SourceSurface> aSnapshot) override;
+
+  TextureClient* GetTextureClient() override {
+    return mFront;
+  }
+
+protected:
+  PersistentBufferProviderShared(gfx::IntSize aSize, gfx::SurfaceFormat aFormat,
+                                 CompositableForwarder* aFwd,
+                                 RefPtr<TextureClient>& aTexture);
+
+  ~PersistentBufferProviderShared();
+
+  gfx::IntSize mSize;
+  gfx::SurfaceFormat mFormat;
+  RefPtr<CompositableForwarder> mFwd;
+  RefPtr<TextureClient> mFront;
+  RefPtr<TextureClient> mBack;
+  RefPtr<gfx::DrawTarget> mDrawTarget;
+  RefPtr<gfx::SourceSurface > mSnapshot;
+};
+
+struct AutoReturnSnapshot
+{
+  PersistentBufferProvider* mBufferProvider;
+  RefPtr<gfx::SourceSurface>* mSnapshot;
+
+  explicit AutoReturnSnapshot(PersistentBufferProvider* aProvider = nullptr)
+  : mBufferProvider(aProvider)
+  , mSnapshot(nullptr)
+  {}
+
+  ~AutoReturnSnapshot()
+  {
+    if (mBufferProvider) {
+      mBufferProvider->ReturnSnapshot(mSnapshot ? mSnapshot->forget() : nullptr);
+    }
+  }
 };
 
 } // namespace layers
