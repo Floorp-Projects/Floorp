@@ -351,7 +351,7 @@ AccurateSeekTask::IsAudioSeekComplete()
   return
     !HasAudio() ||
     mSeekJob.mTarget.IsVideoOnly() ||
-    (Exists() && !mDropAudioUntilNextDiscontinuity &&
+    (!mDropAudioUntilNextDiscontinuity &&
      (mIsAudioQueueFinished || mSeekedAudioData));
 }
 
@@ -364,7 +364,7 @@ AccurateSeekTask::IsVideoSeekComplete()
 
   return
     !HasVideo() ||
-    (Exists() && !mDropVideoUntilNextDiscontinuity &&
+    (!mDropVideoUntilNextDiscontinuity &&
      (mIsVideoQueueFinished || mSeekedVideoData));
 }
 
@@ -427,6 +427,7 @@ void
 AccurateSeekTask::OnAudioDecoded(MediaData* aAudioSample)
 {
   AssertOwnerThread();
+  MOZ_ASSERT(!mSeekTaskPromise.IsEmpty(), "Seek shouldn't be finished");
 
   RefPtr<MediaData> audio(aAudioSample);
   MOZ_ASSERT(audio);
@@ -436,11 +437,6 @@ AccurateSeekTask::OnAudioDecoded(MediaData* aAudioSample)
 
   SAMPLE_LOG("OnAudioDecoded [%lld,%lld] disc=%d",
     audio->mTime, audio->GetEndTime(), audio->mDiscontinuity);
-
-  if (!Exists()) {
-    // We've received a sample from a previous decode. Discard it.
-    return;
-  }
 
   if (audio->mDiscontinuity) {
     mDropAudioUntilNextDiscontinuity = false;
@@ -479,6 +475,8 @@ void
 AccurateSeekTask::OnAudioNotDecoded(MediaDecoderReader::NotDecodedReason aReason)
 {
   AssertOwnerThread();
+  MOZ_ASSERT(!mSeekTaskPromise.IsEmpty(), "Seek shouldn't be finished");
+
   SAMPLE_LOG("OnAduioNotDecoded (aReason=%u)", aReason);
 
   if (aReason == MediaDecoderReader::DECODE_ERROR) {
@@ -517,6 +515,7 @@ void
 AccurateSeekTask::OnVideoDecoded(MediaData* aVideoSample)
 {
   AssertOwnerThread();
+  MOZ_ASSERT(!mSeekTaskPromise.IsEmpty(), "Seek shouldn't be finished");
 
   RefPtr<MediaData> video(aVideoSample);
   MOZ_ASSERT(video);
@@ -526,11 +525,6 @@ AccurateSeekTask::OnVideoDecoded(MediaData* aVideoSample)
 
   SAMPLE_LOG("OnVideoDecoded [%lld,%lld] disc=%d",
     video->mTime, video->GetEndTime(), video->mDiscontinuity);
-
-  if (!Exists()) {
-    // We've received a sample from a previous decode. Discard it.
-    return;
-  }
 
   if (mDropVideoUntilNextDiscontinuity) {
     if (video->mDiscontinuity) {
@@ -571,6 +565,8 @@ void
 AccurateSeekTask::OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReason)
 {
   AssertOwnerThread();
+  MOZ_ASSERT(!mSeekTaskPromise.IsEmpty(), "Seek shouldn't be finished");
+
   SAMPLE_LOG("OnVideoNotDecoded (aReason=%u)", aReason);
 
   if (aReason == MediaDecoderReader::DECODE_ERROR) {
@@ -600,7 +596,7 @@ AccurateSeekTask::OnVideoNotDecoded(MediaDecoderReader::NotDecodedReason aReason
 
   if (aReason == MediaDecoderReader::END_OF_STREAM) {
 
-    if (Exists() && mFirstVideoFrameAfterSeek) {
+    if (mFirstVideoFrameAfterSeek) {
       // Null sample. Hit end of stream. If we have decoded a frame,
       // insert it into the queue so that we have something to display.
       // We make sure to do this before invoking VideoQueue().Finish()
