@@ -28,6 +28,9 @@ public:
   virtual DrawTargetType GetType() const { return mRefDT->GetType(); }
 
   virtual already_AddRefed<SourceSurface> Snapshot();
+
+  virtual void DetachAllSnapshots();
+
   virtual IntSize GetSize() { return mSize; }
 
   virtual void Flush() {}

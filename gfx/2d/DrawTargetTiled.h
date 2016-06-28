@@ -41,6 +41,7 @@ public:
   virtual DrawTargetType GetType() const override { return mTiles[0].mDrawTarget->GetType(); }
   virtual BackendType GetBackendType() const override { return mTiles[0].mDrawTarget->GetBackendType(); }
   virtual already_AddRefed<SourceSurface> Snapshot() override;
+  virtual void DetachAllSnapshots() override;
   virtual IntSize GetSize() override {
     MOZ_ASSERT(mRect.width > 0 && mRect.height > 0);
     return IntSize(mRect.XMost(), mRect.YMost());

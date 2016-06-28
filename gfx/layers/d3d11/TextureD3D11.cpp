@@ -397,6 +397,7 @@ D3D11TextureData::Create(IntSize aSize, SurfaceFormat aFormat, TextureAllocation
 void
 D3D11TextureData::Deallocate(ClientIPCAllocator* aAllocator)
 {
+  mDrawTarget = nullptr;
   mTexture = nullptr;
 }
 
