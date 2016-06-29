@@ -34,7 +34,7 @@ add_task(function* () {
              WHERE from_visit IN
                 (SELECT v.id FROM moz_historyvisits v
                  JOIN moz_places p ON p.id = v.place_id
-                 WHERE p.url = :url)
+                 WHERE p.url_hash = hash(:url) AND p.url = :url)
             `, { url: TEST_URI.spec });
 
           is(rows.length, 1, "Found right number of visits");

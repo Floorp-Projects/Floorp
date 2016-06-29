@@ -1094,7 +1094,7 @@ BookmarksStore.prototype = {
     return this._getStmt(
         "SELECT frecency " +
         "FROM moz_places " +
-        "WHERE url = :url " +
+        "WHERE url_hash = hash(:url) AND url = :url " +
         "LIMIT 1");
   },
   _frecencyCols: ["frecency"],

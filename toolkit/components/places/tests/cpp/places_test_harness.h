@@ -269,7 +269,7 @@ do_get_place(nsIURI* aURI, PlaceRecord& result)
 
   rv = dbConn->CreateStatement(NS_LITERAL_CSTRING(
     "SELECT id, hidden, typed, visit_count, guid FROM moz_places "
-    "WHERE url=?1 "
+    "WHERE url_hash = hash(?1) AND url = ?1"
   ), getter_AddRefs(stmt));
   do_check_success(rv);
 

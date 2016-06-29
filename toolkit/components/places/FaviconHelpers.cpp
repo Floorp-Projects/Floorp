@@ -63,7 +63,7 @@ FetchPageInfo(const RefPtr<Database>& aDB,
         "AND EXISTS(SELECT 1 FROM moz_bookmarks b WHERE b.fk = r_place_id) "
         "LIMIT 1 "
       ") "
-    ") FROM moz_places h WHERE h.url = :page_url",
+    ") FROM moz_places h WHERE h.url_hash = hash(:page_url) AND h.url = :page_url",
     nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
     nsINavHistoryService::TRANSITION_REDIRECT_TEMPORARY,
     nsINavHistoryService::TRANSITION_REDIRECT_PERMANENT,
@@ -248,7 +248,7 @@ FetchIconURL(const RefPtr<Database>& aDB,
     "SELECT f.url "
     "FROM moz_places h "
     "JOIN moz_favicons f ON h.favicon_id = f.id "
-    "WHERE h.url = :page_url"
+    "WHERE h.url_hash = hash(:page_url) AND h.url = :page_url"
   );
   NS_ENSURE_STATE(stmt);
   mozStorageStatementScoper scoper(stmt);
@@ -696,7 +696,8 @@ AsyncAssociateIconToPage::Run()
     }
     else {
       stmt = DB->GetStatement(
-        "UPDATE moz_places SET favicon_id = :icon_id WHERE url = :page_url"
+        "UPDATE moz_places SET favicon_id = :icon_id "
+        "WHERE url_hash = hash(:page_url) AND url = :page_url"
       );
       NS_ENSURE_STATE(stmt);
       rv = URIBinder::Bind(stmt, NS_LITERAL_CSTRING("page_url"), mPage.spec);
