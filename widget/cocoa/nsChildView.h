@@ -38,7 +38,6 @@ class nsCocoaWindow;
 
 namespace {
 class GLPresenter;
-class RectTextureImage;
 } // namespace
 
 namespace mozilla {
@@ -51,6 +50,9 @@ namespace layers {
 class GLManager;
 class APZCTreeManager;
 } // namespace layers
+namespace widget {
+class RectTextureImage;
+} // namespace widget
 } // namespace mozilla
 
 @interface NSEvent (Undocumented)
@@ -599,10 +601,10 @@ protected:
   CGContextRef mTitlebarCGContext;
 
   // Compositor thread only
-  mozilla::UniquePtr<RectTextureImage> mResizerImage;
-  mozilla::UniquePtr<RectTextureImage> mCornerMaskImage;
-  mozilla::UniquePtr<RectTextureImage> mTitlebarImage;
-  mozilla::UniquePtr<RectTextureImage> mBasicCompositorImage;
+  mozilla::UniquePtr<mozilla::widget::RectTextureImage> mResizerImage;
+  mozilla::UniquePtr<mozilla::widget::RectTextureImage> mCornerMaskImage;
+  mozilla::UniquePtr<mozilla::widget::RectTextureImage> mTitlebarImage;
+  mozilla::UniquePtr<mozilla::widget::RectTextureImage> mBasicCompositorImage;
 
   // The area of mTitlebarCGContext that has changed and needs to be
   // uploaded to to mTitlebarImage. Main thread only.
