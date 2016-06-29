@@ -793,19 +793,24 @@ protected:
 
     bool mInitialized;
   };
-  // mContentForTSF starts to cache content of the document at first query of
-  // the content during a document lock.  The information is expected by TSF
+  // mContentForTSF is cache of content.  The information is expected by TSF
   // and TIP.  Therefore, this is useful for answering the query from TSF or
-  // TIP.  This is abandoned after document is unlocked and dispatched events
-  // are handled.  This is initialized by ContentForTSFRef() automatically.
-  // So, don't access this member directly except at calling Clear(),
-  // IsInitialized(), IsLayoutChangedAfter() or IsLayoutChanged().
+  // TIP.
+  // This is initialized by ContentForTSFRef() automatically (therefore, don't
+  // access this member directly except at calling Clear(), IsInitialized(),
+  // IsLayoutChangeAfter() or IsLayoutChanged()).
+  // This is cleared when:
+  //  - When there is no composition, the document is unlocked.
+  //  - When there is a composition, all dispatched events are handled by
+  //    the focused editor which may be in a remote process.
+  // So, if two compositions are created very quickly, this cache may not be
+  // cleared between eCompositionCommit(AsIs) and eCompositionStart.
   Content mContentForTSF;
 
   Content& ContentForTSFRef();
 
-  // While the documet is locked, this returns the text stored by
-  // mContentForTSF.  Otherwise, return the current text content.
+  // While mContentForTSF is valid, this returns the text stored by it.
+  // Otherwise, return the current text content retrieved by eQueryTextContent.
   bool GetCurrentText(nsAString& aTextContent);
 
   class MouseTracker final

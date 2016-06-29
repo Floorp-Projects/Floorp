@@ -1676,8 +1676,10 @@ TSFTextStore::FlushPendingActions()
         if (NS_WARN_IF(NS_FAILED(rv))) {
           MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("TSF: 0x%p   TSFTextStore::FlushPendingActions() "
-             "FAILED to dispatch compositionstart event.", this));
-          mDeferClearingContentForTSF = false;
+             "FAILED to dispatch compositionstart event, "
+             "IsComposingInContent()=%s",
+             this, GetBoolName(!IsComposingInContent())));
+          mDeferClearingContentForTSF = !IsComposingInContent();
         }
         if (!mWidget || mWidget->Destroyed()) {
           break;
@@ -1703,8 +1705,10 @@ TSFTextStore::FlushPendingActions()
         if (NS_WARN_IF(NS_FAILED(rv))) {
           MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("TSF: 0x%p   TSFTextStore::FlushPendingActions() "
-             "FAILED to setting pending composition...", this));
-          mDeferClearingContentForTSF = false;
+             "FAILED to setting pending composition... "
+             "IsComposingInContent()=%s",
+             this, GetBoolName(IsComposingInContent())));
+          mDeferClearingContentForTSF = !IsComposingInContent();
         } else {
           MOZ_LOG(sTextStoreLog, LogLevel::Debug,
             ("TSF: 0x%p   TSFTextStore::FlushPendingActions() "
@@ -1715,8 +1719,10 @@ TSFTextStore::FlushPendingActions()
           if (NS_WARN_IF(NS_FAILED(rv))) {
             MOZ_LOG(sTextStoreLog, LogLevel::Error,
               ("TSF: 0x%p   TSFTextStore::FlushPendingActions() "
-               "FAILED to dispatch compositionchange event.", this));
-            mDeferClearingContentForTSF = false;
+               "FAILED to dispatch compositionchange event, "
+               "IsComposingInContent()=%s",
+               this, GetBoolName(IsComposingInContent())));
+            mDeferClearingContentForTSF = !IsComposingInContent();
           }
           // Be aware, the mWidget might already have been destroyed.
         }
@@ -1743,8 +1749,10 @@ TSFTextStore::FlushPendingActions()
         if (NS_WARN_IF(NS_FAILED(rv))) {
           MOZ_LOG(sTextStoreLog, LogLevel::Error,
             ("TSF: 0x%p   TSFTextStore::FlushPendingActions() "
-             "FAILED to dispatch compositioncommit event.", this));
-          mDeferClearingContentForTSF = false;
+             "FAILED to dispatch compositioncommit event, "
+             "IsComposingInContent()=%s",
+             this, GetBoolName(IsComposingInContent())));
+          mDeferClearingContentForTSF = !IsComposingInContent();
         }
         break;
       }
@@ -2025,10 +2033,11 @@ TSFTextStore::ContentForTSFRef()
     }
 
     mContentForTSF.Init(text);
-    // Basically, the locked content should be cleared after the document is
+    // Basically, the cached content which is expected by TSF/TIP should be
+    // cleared after active composition is committed or the document lock is
     // unlocked.  However, in e10s mode, content will be modified
     // asynchronously.  In such case, mDeferClearingContentForTSF may be
-    // true even after the document is unlocked.
+    // true until whole dispatched events are handled by the focused editor.
     mDeferClearingContentForTSF = false;
   }
 
@@ -5000,9 +5009,12 @@ TSFTextStore::OnUpdateCompositionInternal()
     return NS_OK;
   }
 
-  // Now, all sent composition events are handled by the content even in
-  // e10s mode.
-  mDeferClearingContentForTSF = false;
+  // If composition is completely finished both in TSF/TIP and the focused
+  // editor which may be in a remote process, we can clear the cache until
+  // starting next composition.
+  if (!mComposition.IsComposing() && !IsComposingInContent()) {
+    mDeferClearingContentForTSF = false;
+  }
   mDeferNotifyingTSF = false;
   MaybeFlushPendingNotifications();
   return NS_OK;
