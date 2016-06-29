@@ -197,7 +197,7 @@ class Output(object):
         if 'spsProfile' not in self.results.extra_options:
             LOG.info("PERFHERDER_DATA: %s" % json.dumps(results))
         if results_scheme in ('file'):
-            json.dump(results, file(results_path, 'w'), indent=2,
+            json.dump(results, open(results_path, 'w'), indent=2,
                       sort_keys=True)
 
     def post(self, results, server, path, scheme, tbpl_output):

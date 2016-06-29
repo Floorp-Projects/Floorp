@@ -266,7 +266,7 @@ class ProfileSymbolicator:
             delta_time = profile_start_time - self.main_start_time
 
         for i, thread in enumerate(profile_json["threads"]):
-            if isinstance(thread, basestring):
+            if isinstance(thread, str):
                 thread_json = json.loads(thread)
                 self.symbolicate_profile(thread_json)
                 profile_json["threads"][i] = json.dumps(thread_json)
@@ -297,7 +297,7 @@ class ProfileSymbolicator:
     def _find_addresses_v3(self, profile_json):
         addresses = set()
         for thread in profile_json["threads"]:
-            if isinstance(thread, basestring):
+            if isinstance(thread, str):
                 continue
             for s in thread["stringTable"]:
                 if s[0:2] == "0x":
@@ -306,7 +306,7 @@ class ProfileSymbolicator:
 
     def _substitute_symbols_v3(self, profile_json, symbolication_table):
         for thread in profile_json["threads"]:
-            if isinstance(thread, basestring):
+            if isinstance(thread, str):
                 continue
             for i, s in enumerate(thread["stringTable"]):
                 thread["stringTable"][i] = symbolication_table.get(s, s)
