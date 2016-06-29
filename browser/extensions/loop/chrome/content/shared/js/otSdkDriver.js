@@ -41,8 +41,7 @@ loop.OTSdkDriver = function () {
 
     this.dispatcher.register(this, [
     "setupStreamElements", 
-    "setMute", 
-    "toggleBrowserSharing"]);
+    "setMute"]);
 
 
     // Set loop.debug.sdk to true in the browser, or in standalone:
@@ -237,11 +236,12 @@ loop.OTSdkDriver = function () {
     /**
      * Paused or resumes an active screenshare session as appropriate.
      *
-     * @param {sharedActions.ToggleBrowserSharing} actionData The data associated with the
-     *                                             action. See action.js.
+     * @param {Boolean} enabled  True if browser sharing should be enabled.
      */
-    toggleBrowserSharing: function toggleBrowserSharing(actionData) {
-      this.screenshare.publishVideo(actionData.enabled);}, 
+    toggleBrowserSharing: function toggleBrowserSharing(enabled) {
+      if (this.screenshare) {
+        this.screenshare.publishVideo(enabled);}}, 
+
 
 
     /**
@@ -537,10 +537,8 @@ loop.OTSdkDriver = function () {
     _handleRemoteScreenShareCreated: function _handleRemoteScreenShareCreated(stream) {
       // Let the stores know first if the screen sharing is paused or not so
       // they can update the display properly
-      if (!stream[STREAM_PROPERTIES.HAS_VIDEO]) {
-        this.dispatcher.dispatch(new sharedActions.VideoScreenStreamChanged({ 
-          hasVideo: false }));}
-
+      this.dispatcher.dispatch(new sharedActions.VideoScreenStreamChanged({ 
+        hasVideo: stream[STREAM_PROPERTIES.HAS_VIDEO] }));
 
 
       // Let the stores know so they can update the display if needed.

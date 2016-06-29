@@ -134,8 +134,10 @@ function Eyedropper(chromeWindow, opts = { copyOnSelect: true, context: "other" 
     height: CANVAS_WIDTH      // height of canvas
   };
 
-  let mm = this._contentTab.linkedBrowser.messageManager;
-  mm.loadFrameScript("resource://devtools/client/eyedropper/eyedropper-child.js", true);
+  if (this._contentTab) {
+    let mm = this._contentTab.linkedBrowser.messageManager;
+    mm.loadFrameScript("resource://devtools/client/eyedropper/eyedropper-child.js", true);
+  }
 
   // record if this was opened via the picker or standalone
   var telemetry = new Telemetry();
@@ -192,7 +194,7 @@ Eyedropper.prototype = {
   },
 
   get _contentTab() {
-    return this._chromeWindow.gBrowser.selectedTab;
+    return this._chromeWindow.gBrowser && this._chromeWindow.gBrowser.selectedTab;
   },
 
   /**
@@ -202,6 +204,10 @@ Eyedropper.prototype = {
    *         Promise that resolves with the screenshot as a dataURL
    */
   getContentScreenshot: function () {
+    if (!this._contentTab) {
+        return promise.resolve(null);
+    }
+
     let deferred = defer();
 
     let mm = this._contentTab.linkedBrowser.messageManager;
@@ -224,29 +230,29 @@ Eyedropper.prototype = {
       // the eyedropper is aready open, don't create another panel.
       return promise.resolve();
     }
-    let deferred = defer();
 
     this.isOpen = true;
 
     this._showCrosshairs();
 
     // Get screenshot of content so we can inspect colors
-    this.getContentScreenshot().then((dataURL) => {
-      this._contentImage = new this._chromeWindow.Image();
-      this._contentImage.src = dataURL;
+    return this.getContentScreenshot().then((dataURL) => {
+      // The data url may be null, e.g. if there is no content tab
+      if (dataURL) {
+        this._contentImage = new this._chromeWindow.Image();
+        this._contentImage.src = dataURL;
 
-      // Wait for screenshot to load
-      this._contentImage.onload = () => {
-        // Then start showing the eyedropper UI
-        this._chromeDocument.addEventListener("mousemove", this._onFirstMouseMove);
-        deferred.resolve();
-
-        this.isStarted = true;
-        this.emit("started");
-      };
+        // Wait for screenshot to load
+        let imageLoaded = promise.defer();
+        this._contentImage.onload = imageLoaded.resolve
+        return imageLoaded.promise;
+      }
+    }).then(() => {
+      // Then start showing the eyedropper UI
+      this._chromeDocument.addEventListener("mousemove", this._onFirstMouseMove);
+      this.isStarted = true;
+      this.emit("started");
     });
-
-    return deferred.promise;
   },
 
   /**
@@ -282,8 +288,9 @@ Eyedropper.prototype = {
    *        y-coordinate of mouse relative to browser window.
    */
   _isInContent: function (clientX, clientY) {
-    let box = this._contentTab.linkedBrowser.getBoundingClientRect();
-    if (clientX > box.left &&
+    let box = this._contentTab && this._contentTab.linkedBrowser.getBoundingClientRect();
+    if (box &&
+        clientX > box.left &&
         clientX < box.right &&
         clientY > box.top &&
         clientY < box.bottom) {

@@ -94,6 +94,7 @@ public:
                          nsIEditor* aEditor);
   bool IsManaging(nsPresContext* aPresContext, nsIContent* aContent) const;
   bool IsManaging(const TextComposition* aTextComposition) const;
+  bool WasInitializedWithPlugin() const;
   bool IsEditorHandlingEventForComposition() const;
   bool KeepAliveDuringDeactive() const
   {
@@ -186,8 +187,7 @@ private:
    * UpdateSelectionCache() updates mSelectionData with the latest selection.
    * This should be called only when IsSafeToNotifyIME() returns true.
    *
-   * Note that this does nothing if mUpdatePreference.WantSelectionChange()
-   * returns false.
+   * Note that this does nothing if WasInitializedWithPlugin() returns true.
    */
   bool UpdateSelectionCache();
 

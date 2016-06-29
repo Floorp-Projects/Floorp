@@ -11,6 +11,7 @@
     -->
     <style name="GeckoBase" parent="Theme.AppCompat.Light.DarkActionBar">
         <item name="windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
         <item name="android:windowContentOverlay">@null</item>
     </style>
 

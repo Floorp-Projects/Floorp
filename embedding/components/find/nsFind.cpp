@@ -557,18 +557,21 @@ nsFind::SetCaseSensitive(bool aCaseSensitive)
   return NS_OK;
 }
 
+/* attribute boolean entireWord; */
 NS_IMETHODIMP
-nsFind::GetWordBreaker(nsIWordBreaker** aWordBreaker)
+nsFind::GetEntireWord(bool *aEntireWord)
 {
-  *aWordBreaker = mWordBreaker;
-  NS_IF_ADDREF(*aWordBreaker);
+  if (!aEntireWord)
+    return NS_ERROR_NULL_POINTER;
+
+  *aEntireWord = !!mWordBreaker;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsFind::SetWordBreaker(nsIWordBreaker* aWordBreaker)
+nsFind::SetEntireWord(bool aEntireWord)
 {
-  mWordBreaker = aWordBreaker;
+  mWordBreaker = aEntireWord ? nsContentUtils::WordBreaker() : nullptr;
   return NS_OK;
 }
 
@@ -728,6 +731,82 @@ nsFind::NextNode(nsIDOMRange* aSearchRange,
   DumpNode(mIterNode);
 #endif
   return NS_OK;
+}
+
+class MOZ_STACK_CLASS PeekNextCharRestoreState final
+{
+public:
+  explicit PeekNextCharRestoreState(nsFind* aFind)
+    : mIterOffset(aFind->mIterOffset),
+      mIterNode(aFind->mIterNode),
+      mCurrNode(aFind->mIterator->GetCurrentNode()),
+      mFind(aFind)
+  {
+  }
+
+  ~PeekNextCharRestoreState()
+  {
+    mFind->mIterOffset = mIterOffset;
+    mFind->mIterNode = mIterNode;
+    mFind->mIterator->PositionAt(mCurrNode);
+  }
+
+private:
+  int32_t mIterOffset;
+  nsCOMPtr<nsIDOMNode> mIterNode;
+  nsCOMPtr<nsINode> mCurrNode;
+  RefPtr<nsFind> mFind;
+};
+
+char16_t
+nsFind::PeekNextChar(nsIDOMRange* aSearchRange,
+                     nsIDOMRange* aStartPoint,
+                     nsIDOMRange* aEndPoint)
+{
+  // We need to restore the necessary member variables before this function
+  // returns.
+  PeekNextCharRestoreState restoreState(this);
+
+  nsCOMPtr<nsIContent> tc;
+  nsresult rv;
+  const nsTextFragment *frag;
+  int32_t fragLen;
+
+  // Loop through non-block nodes until we find one that's not empty.
+  do {
+    tc = nullptr;
+    NextNode(aSearchRange, aStartPoint, aEndPoint, false);
+
+    // Get the text content:
+    tc = do_QueryInterface(mIterNode);
+
+    // Get the block parent.
+    nsCOMPtr<nsIDOMNode> blockParent;
+    rv = GetBlockParent(mIterNode, getter_AddRefs(blockParent));
+    if (NS_FAILED(rv))
+      return L'\0';
+
+    // If out of nodes or in new parent.
+    if (!mIterNode || !tc || (blockParent != mLastBlockParent))
+      return L'\0';
+
+    frag = tc->GetText();
+    fragLen = frag->GetLength();
+  } while (fragLen <= 0);
+
+  const char16_t *t2b = nullptr;
+  const char *t1b = nullptr;
+
+  if (frag->Is2b()) {
+    t2b = frag->Get2b();
+  } else {
+    t1b = frag->Get1b();
+  }
+
+  // Index of char to return.
+  int32_t index = mFindBackward ? fragLen - 1 : 0;
+
+  return t1b ? CHAR_TO_UNICHAR(t1b[index]) : t2b[index];
 }
 
 bool
@@ -901,6 +980,8 @@ nsFind::Find(const char16_t* aPatText, nsIDOMRange* aSearchRange,
   // Keep track of when we're in whitespace:
   // (only matters when we're matching)
   bool inWhitespace = false;
+  // Keep track of whether the previous char was a word-breaking one.
+  bool wordBreakPrev = false;
 
   // Place to save the range start point in case we find a match:
   nsCOMPtr<nsIDOMNode> matchAnchorNode;
@@ -912,7 +993,10 @@ nsFind::Find(const char16_t* aPatText, nsIDOMRange* aSearchRange,
   aEndPoint->GetEndContainer(getter_AddRefs(endNode));
   aEndPoint->GetEndOffset(&endOffset);
 
+  char16_t c = 0;
+  char16_t patc = 0;
   char16_t prevChar = 0;
+  char16_t prevCharInMatch = 0;
   while (1) {
 #ifdef DEBUG_FIND
     printf("Loop ...\n");
@@ -1046,9 +1130,11 @@ nsFind::Find(const char16_t* aPatText, nsIDOMRange* aSearchRange,
       return NS_OK;
     }
 
+    // Save the previous character for word boundary detection
+    prevChar = c;
     // The two characters we'll be comparing:
-    char16_t c = (t2b ? t2b[findex] : CHAR_TO_UNICHAR(t1b[findex]));
-    char16_t patc = patStr[pindex];
+    c = (t2b ? t2b[findex] : CHAR_TO_UNICHAR(t1b[findex]));
+    patc = patStr[pindex];
 
 #ifdef DEBUG_FIND
     printf("Comparing '%c'=%x to '%c' (%d of %d), findex=%d%s\n",
@@ -1111,7 +1197,7 @@ nsFind::Find(const char16_t* aPatText, nsIDOMRange* aSearchRange,
 
     // a '\n' between CJ characters is ignored
     if (pindex != (mFindBackward ? patLen : 0) && c != patc && !inWhitespace) {
-      if (c == '\n' && t2b && IS_CJ_CHAR(prevChar)) {
+      if (c == '\n' && t2b && IS_CJ_CHAR(prevCharInMatch)) {
         int32_t nindex = findex + incr;
         if (mFindBackward ? (nindex >= 0) : (nindex < fragLen)) {
           if (IS_CJ_CHAR(t2b[nindex])) {
@@ -1121,9 +1207,22 @@ nsFind::Find(const char16_t* aPatText, nsIDOMRange* aSearchRange,
       }
     }
 
-    // Compare
-    if (c == patc || (inWhitespace && IsSpace(c))) {
-      prevChar = c;
+    wordBreakPrev = false;
+    if (mWordBreaker) {
+      if (prevChar == NBSP_CHARCODE)
+        prevChar = CHAR_TO_UNICHAR(' ');
+      wordBreakPrev = mWordBreaker->BreakInBetween(&prevChar, 1, &c, 1);
+    }
+
+    // Compare. Match if we're in whitespace and c is whitespace, or if the
+    // characters match and at least one of the following is true:
+    // a) we're not matching the entire word
+    // b) a match has already been stored
+    // c) the previous character is a different "class" than the current character.
+    if ((c == patc && (!mWordBreaker || matchAnchorNode || wordBreakPrev)) ||
+        (inWhitespace && IsSpace(c)))
+    {
+      prevCharInMatch = c;
 #ifdef DEBUG_FIND
       if (inWhitespace) {
         printf("YES (whitespace)(%d of %d)\n", pindex, patLen);
@@ -1148,6 +1247,29 @@ nsFind::Find(const char16_t* aPatText, nsIDOMRange* aSearchRange,
         // Make the range:
         nsCOMPtr<nsIDOMNode> startParent;
         nsCOMPtr<nsIDOMNode> endParent;
+
+        // Check for word break (if necessary)
+        if (mWordBreaker) {
+          int32_t nextfindex = findex + incr;
+
+          char16_t nextChar;
+          // If still in array boundaries, get nextChar.
+          if (mFindBackward ? (nextfindex >= 0) : (nextfindex < fragLen))
+            nextChar = (t2b ? t2b[nextfindex] : CHAR_TO_UNICHAR(t1b[nextfindex]));
+          // Get next character from the next node.
+          else
+            nextChar = PeekNextChar(aSearchRange, aStartPoint, aEndPoint);
+
+          if (nextChar == NBSP_CHARCODE)
+            nextChar = CHAR_TO_UNICHAR(' ');
+
+          // If a word break isn't there when it needs to be, reset search.
+          if (!mWordBreaker->BreakInBetween(&c, 1, &nextChar, 1)) {
+            matchAnchorNode = nullptr;
+            continue;
+          }
+        }
+
         nsCOMPtr<nsIDOMRange> range = CreateRange(tc);
         if (range) {
           int32_t matchStartOffset, matchEndOffset;
