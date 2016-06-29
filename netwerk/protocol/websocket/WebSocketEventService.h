@@ -111,4 +111,14 @@ private:
 } // net namespace
 } // mozilla namespace
 
+/**
+ * Casting WebSocketEventService to nsISupports is ambiguous.
+ * This method handles that.
+ */
+inline nsISupports*
+ToSupports(mozilla::net::WebSocketEventService* p)
+{
+  return NS_ISUPPORTS_CAST(nsIWebSocketEventService*, p);
+}
+
 #endif // mozilla_net_WebSocketEventService_h
