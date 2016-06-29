@@ -1978,13 +1978,13 @@ TSFTextStore::GetSelection(ULONG ulIndex,
 }
 
 TSFTextStore::Content&
-TSFTextStore::LockedContent()
+TSFTextStore::ContentForTSFRef()
 {
   // This should be called when the document is locked or the content hasn't
   // been abandoned yet.
   if (NS_WARN_IF(!IsReadLocked() && !mContentForTSF.IsInitialized())) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
-           ("TSF: 0x%p   TSFTextStore::LockedContent(), FAILED, due to "
+           ("TSF: 0x%p   TSFTextStore::ContentForTSFRef(), FAILED, due to "
             "called wrong timing, IsReadLocked()=%s, "
             "mContentForTSF.IsInitialized()=%s",
             this, GetBoolName(IsReadLocked()),
@@ -1996,7 +1996,7 @@ TSFTextStore::LockedContent()
   Selection& currentSel = CurrentSelection();
   if (currentSel.IsDirty()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
-           ("TSF: 0x%p   TSFTextStore::LockedContent(), FAILED, due to "
+           ("TSF: 0x%p   TSFTextStore::ContentForTSFRef(), FAILED, due to "
             "CurrentSelection() failure", this));
     mContentForTSF.Clear();
     return mContentForTSF;
@@ -2006,7 +2006,7 @@ TSFTextStore::LockedContent()
     nsAutoString text;
     if (NS_WARN_IF(!GetCurrentText(text))) {
       MOZ_LOG(sTextStoreLog, LogLevel::Error,
-             ("TSF: 0x%p   TSFTextStore::LockedContent(), FAILED, due to "
+             ("TSF: 0x%p   TSFTextStore::ContentForTSFRef(), FAILED, due to "
               "GetCurrentText() failure", this));
       mContentForTSF.Clear();
       return mContentForTSF;
@@ -2021,7 +2021,7 @@ TSFTextStore::LockedContent()
   }
 
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
-         ("TSF: 0x%p   TSFTextStore::LockedContent(): "
+         ("TSF: 0x%p   TSFTextStore::ContentForTSFRef(): "
           "mContentForTSF={ mText=\"%s\" (Length()=%u), "
           "mLastCompositionString=\"%s\" (Length()=%u), "
           "mMinTextModifiedOffset=%u }",
@@ -2324,11 +2324,11 @@ TSFTextStore::RestartComposition(ITfCompositionView* aCompositionView,
   commitString.Cut(keepComposingStartOffset - mComposition.mStart,
                    keepComposingLength);
   // Update the composition string.
-  Content& lockedContent = LockedContent();
+  Content& lockedContent = ContentForTSFRef();
   if (!lockedContent.IsInitialized()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::RestartComposition() FAILED "
-            "due to LockedContent() failure", this));
+            "due to ContentForTSFRef() failure", this));
     return E_FAIL;
   }
   lockedContent.ReplaceTextWith(mComposition.mStart,
@@ -2782,11 +2782,11 @@ TSFTextStore::GetText(LONG acpStart,
     prgRunInfo->type = TS_RT_PLAIN;
   }
 
-  Content& lockedContent = LockedContent();
+  Content& lockedContent = ContentForTSFRef();
   if (!lockedContent.IsInitialized()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::GetText() FAILED due to "
-            "LockedContent() failure", this));
+            "ContentForTSFRef() failure", this));
     return E_FAIL;
   }
   if (lockedContent.Text().Length() < static_cast<uint32_t>(acpStart)) {
@@ -3248,11 +3248,11 @@ TSFTextStore::GetEndACP(LONG* pacp)
     return E_INVALIDARG;
   }
 
-  Content& lockedContent = LockedContent();
+  Content& lockedContent = ContentForTSFRef();
   if (!lockedContent.IsInitialized()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::GetEndACP() FAILED due to "
-            "LockedContent() failure", this));
+            "ContentForTSFRef() failure", this));
     return E_FAIL;
   }
   *pacp = static_cast<LONG>(lockedContent.Text().Length());
@@ -3407,11 +3407,11 @@ TSFTextStore::GetACPFromPoint(TsViewCookie vcView,
 
     // However, if it's after the last character, we need to decrement the
     // offset.
-    Content& lockedContent = LockedContent();
+    Content& lockedContent = ContentForTSFRef();
     if (!lockedContent.IsInitialized()) {
       MOZ_LOG(sTextStoreLog, LogLevel::Error,
              ("TSF: 0x%p   TSFTextStore::GetACPFromPoint() FAILED due to "
-              "LockedContent() failure", this));
+              "ContentForTSFRef() failure", this));
       return E_FAIL;
     }
     if (lockedContent.Text().Length() <= offset) {
@@ -3910,11 +3910,11 @@ TSFTextStore::InsertTextAtSelectionInternal(const nsAString& aInsertStr,
           this, NS_ConvertUTF16toUTF8(aInsertStr).get(), aTextChange,
           GetBoolName(mComposition.IsComposing())));
 
-  Content& lockedContent = LockedContent();
+  Content& lockedContent = ContentForTSFRef();
   if (!lockedContent.IsInitialized()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::InsertTextAtSelectionInternal() failed "
-            "due to LockedContent() failure()", this));
+            "due to ContentForTSFRef() failure()", this));
     return false;
   }
 
@@ -4017,11 +4017,11 @@ TSFTextStore::RecordCompositionStartAction(ITfCompositionView* aComposition,
           this, aComposition, aStart, aLength, GetBoolName(aPreserveSelection),
           mComposition.mView.get()));
 
-  Content& lockedContent = LockedContent();
+  Content& lockedContent = ContentForTSFRef();
   if (!lockedContent.IsInitialized()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::RecordCompositionStartAction() FAILED "
-            "due to LockedContent() failure", this));
+            "due to ContentForTSFRef() failure", this));
     return E_FAIL;
   }
 
@@ -4109,11 +4109,11 @@ TSFTextStore::RecordCompositionEndAction()
   action->mType = PendingAction::COMPOSITION_END;
   action->mData = mComposition.mString;
 
-  Content& lockedContent = LockedContent();
+  Content& lockedContent = ContentForTSFRef();
   if (!lockedContent.IsInitialized()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::RecordCompositionEndAction() FAILED due "
-            "to LockedContent() failure", this));
+            "to ContentForTSFRef() failure", this));
     return E_FAIL;
   }
   lockedContent.EndComposition(*action);
