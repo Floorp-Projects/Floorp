@@ -2175,50 +2175,16 @@ CodeGeneratorARM::visitAsmJSLoadHeap(LAsmJSLoadHeap* ins)
             masm.ma_dataTransferN(IsLoad, size, isSigned, HeapReg, Imm32(ptrImm),
                                   ToRegister(ins->output()), Offset, Assembler::Always);
         }
-        memoryBarrier(mir->barrierAfter());
-        return;
-    }
-
-    Register ptrReg = ToRegister(ptr);
-
-    if (!mir->needsBoundsCheck()) {
-        if (isFloat) {
-            VFPRegister vd(ToFloatRegister(ins->output()));
-            if (size == 32)
-                masm.ma_vldr(vd.singleOverlay(), HeapReg, ptrReg, 0, Assembler::Always);
-            else
-                masm.ma_vldr(vd, HeapReg, ptrReg, 0, Assembler::Always);
-        } else {
-            masm.ma_dataTransferN(IsLoad, size, isSigned, HeapReg, ptrReg,
-                                  ToRegister(ins->output()), Offset, Assembler::Always);
-        }
-        memoryBarrier(mir->barrierAfter());
-        return;
-    }
-
-    uint32_t cmpOffset = masm.ma_BoundsCheck(ptrReg).getOffset();
-    masm.append(wasm::BoundsCheck(cmpOffset));
-
-    if (isFloat) {
-        FloatRegister dst = ToFloatRegister(ins->output());
-        VFPRegister vd(dst);
-        if (size == 32) {
-            masm.ma_vldr(Address(GlobalReg, wasm::NaN32GlobalDataOffset - AsmJSGlobalRegBias),
-                         vd.singleOverlay(), Assembler::AboveOrEqual);
-            masm.ma_vldr(vd.singleOverlay(), HeapReg, ptrReg, 0, Assembler::Below);
-        } else {
-            masm.ma_vldr(Address(GlobalReg, wasm::NaN64GlobalDataOffset - AsmJSGlobalRegBias),
-                         vd, Assembler::AboveOrEqual);
-            masm.ma_vldr(vd, HeapReg, ptrReg, 0, Assembler::Below);
-        }
     } else {
-        Register d = ToRegister(ins->output());
-        if (mir->isAtomicAccess())
-            masm.ma_b(wasm::JumpTarget::OutOfBounds, Assembler::AboveOrEqual);
+        Register ptrReg = ToRegister(ptr);
+        if (isFloat)
+            masm.ma_loadHeapAsmJS(ptrReg, size, mir->needsBoundsCheck(),
+                                  /*faultOnOOB=*/false, ToFloatRegister(ins->output()));
         else
-            masm.ma_mov(Imm32(0), d, Assembler::AboveOrEqual);
-        masm.ma_dataTransferN(IsLoad, size, isSigned, HeapReg, ptrReg, d, Offset, Assembler::Below);
+            masm.ma_loadHeapAsmJS(ptrReg, size, isSigned, mir->needsBoundsCheck(),
+                                  mir->isAtomicAccess(), ToRegister(ins->output()));
     }
+
     memoryBarrier(mir->barrierAfter());
 }
 
@@ -2240,8 +2206,11 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
       case Scalar::Float32: isFloat = true;   size = 32; break;
       default: MOZ_CRASH("unexpected array type");
     }
-    const LAllocation* ptr = ins->ptr();
+
     memoryBarrier(mir->barrierBefore());
+
+    const LAllocation* ptr = ins->ptr();
+
     if (ptr->isConstant()) {
         MOZ_ASSERT(!mir->needsBoundsCheck());
         int32_t ptrImm = ptr->toConstant()->toInt32();
@@ -2257,44 +2226,16 @@ CodeGeneratorARM::visitAsmJSStoreHeap(LAsmJSStoreHeap* ins)
             masm.ma_dataTransferN(IsStore, size, isSigned, HeapReg, Imm32(ptrImm),
                                   ToRegister(ins->value()), Offset, Assembler::Always);
         }
-        memoryBarrier(mir->barrierAfter());
-        return;
-    }
-
-    Register ptrReg = ToRegister(ptr);
-
-    if (!mir->needsBoundsCheck()) {
-        Register ptrReg = ToRegister(ptr);
-        if (isFloat) {
-            VFPRegister vd(ToFloatRegister(ins->value()));
-            BaseIndex addr(HeapReg, ptrReg, TimesOne, 0);
-            if (size == 32)
-                masm.storeFloat32(vd, addr);
-            else
-                masm.storeDouble(vd, addr);
-        } else {
-            masm.ma_dataTransferN(IsStore, size, isSigned, HeapReg, ptrReg,
-                                  ToRegister(ins->value()), Offset, Assembler::Always);
-        }
-        memoryBarrier(mir->barrierAfter());
-        return;
-    }
-
-    uint32_t cmpOffset = masm.ma_BoundsCheck(ptrReg).getOffset();
-    masm.append(wasm::BoundsCheck(cmpOffset));
-
-    if (isFloat) {
-        VFPRegister vd(ToFloatRegister(ins->value()));
-        if (size == 32)
-            masm.ma_vstr(vd.singleOverlay(), HeapReg, ptrReg, 0, 0, Assembler::Below);
-        else
-            masm.ma_vstr(vd, HeapReg, ptrReg, 0, 0, Assembler::Below);
     } else {
-        if (mir->isAtomicAccess())
-            masm.ma_b(wasm::JumpTarget::OutOfBounds, Assembler::AboveOrEqual);
-        masm.ma_dataTransferN(IsStore, size, isSigned, HeapReg, ptrReg,
-                              ToRegister(ins->value()), Offset, Assembler::Below);
+        Register ptrReg = ToRegister(ptr);
+        if (isFloat)
+            masm.ma_storeHeapAsmJS(ptrReg, size, mir->needsBoundsCheck(), /*faultOnOOB=*/false,
+                                   ToFloatRegister(ins->value()));
+        else
+            masm.ma_storeHeapAsmJS(ptrReg, size, isSigned, mir->needsBoundsCheck(),
+                                   mir->isAtomicAccess(), ToRegister(ins->value()));
     }
+
     memoryBarrier(mir->barrierAfter());
 }
 
