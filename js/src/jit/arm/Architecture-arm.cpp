@@ -345,9 +345,13 @@ Registers::FromName(const char* name)
 FloatRegisters::Code
 FloatRegisters::FromName(const char* name)
 {
-    for (size_t i = 0; i < Total; i++) {
-        if (strcmp(GetName(i), name) == 0)
-            return Code(i);
+    for (size_t i = 0; i < TotalSingle; ++i) {
+        if (strcmp(GetSingleName(Encoding(i)), name) == 0)
+            return VFPRegister(i, VFPRegister::Single).code();
+    }
+    for (size_t i = 0; i < TotalDouble; ++i) {
+        if (strcmp(GetDoubleName(Encoding(i)), name) == 0)
+            return VFPRegister(i, VFPRegister::Double).code();
     }
 
     return Invalid;
