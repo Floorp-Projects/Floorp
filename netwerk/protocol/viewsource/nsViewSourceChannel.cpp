@@ -251,14 +251,7 @@ nsViewSourceChannel::Open(nsIInputStream **_retval)
 {
     NS_ENSURE_TRUE(mChannel, NS_ERROR_FAILURE);
 
-    nsresult rv = NS_OK;
-    nsCOMPtr<nsILoadInfo> loadInfo = mChannel->GetLoadInfo();
-    if (loadInfo && loadInfo->GetEnforceSecurity()) {
-        mChannel->Open2(_retval);
-    }
-    else {
-        mChannel->Open(_retval);
-    }
+    nsresult rv = NS_MaybeOpenChannelUsingOpen2(mChannel, _retval);
     if (NS_SUCCEEDED(rv)) {
         mOpened = true;
     }

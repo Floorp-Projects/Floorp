@@ -15,7 +15,6 @@
 #include "mozilla/dom/Headers.h"
 #include "mozilla/dom/Promise.h"
 #include "mozilla/dom/URL.h"
-#include "mozilla/dom/workers/bindings/URL.h"
 
 #include "nsDOMString.h"
 
@@ -88,8 +87,7 @@ Response::Redirect(const GlobalObject& aGlobal, const nsAString& aUrl,
     worker->AssertIsOnWorkerThread();
 
     NS_ConvertUTF8toUTF16 baseURL(worker->GetLocationInfo().mHref);
-    RefPtr<workers::URL> url =
-      workers::URL::Constructor(aGlobal, aUrl, baseURL, aRv);
+    RefPtr<URL> url = URL::WorkerConstructor(aGlobal, aUrl, baseURL, aRv);
     if (aRv.Failed()) {
       return nullptr;
     }

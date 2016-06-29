@@ -7,20 +7,10 @@ from __future__ import absolute_import, print_function, unicode_literals
 import unittest
 
 from ..kind.legacy import (
-    LegacyKind,
     validate_build_task,
     BuildTaskValidationException
 )
 from mozunit import main
-
-
-class TestLegacyKind(unittest.TestCase):
-    # NOTE: much of LegacyKind is copy-pasted from the old legacy code, which
-    # is emphatically *not* designed for testing, so this test class does not
-    # attempt to test the entire class.
-
-    def setUp(self):
-        self.kind = LegacyKind('/root', {})
 
 
 class TestValidateBuildTask(unittest.TestCase):

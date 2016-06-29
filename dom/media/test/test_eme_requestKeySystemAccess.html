@@ -390,12 +390,84 @@ var tests = [
     shouldPass: true,
   },
   {
-    name: 'WebM CLEARKEY_ID not supported',
+    name: 'Basic WebM video',
+    keySystem: CLEARKEY_ID,
+    options: [
+      {
+        label: SUPPORTED_LABEL,
+        initDataTypes: ['webm'],
+        videoCapabilities: [{contentType: 'video/webm'}],
+      }
+    ],
+    expectedConfig: {
+      label: SUPPORTED_LABEL,
+      initDataTypes: ['webm'],
+      videoCapabilities: [{contentType: 'video/webm'}],
+    },
+    shouldPass: true,
+  },
+  {
+    name: 'Basic WebM audio',
+    keySystem: CLEARKEY_ID,
+    options: [
+      {
+        label: SUPPORTED_LABEL,
+        initDataTypes: ['webm'],
+        audioCapabilities: [{contentType: 'audio/webm'}],
+      }
+    ],
+    expectedConfig: {
+      label: SUPPORTED_LABEL,
+      initDataTypes: ['webm'],
+      audioCapabilities: [{contentType: 'audio/webm'}],
+    },
+    shouldPass: true,
+  },
+  {
+    name: 'Webm with Vorbis audio and VP8 video.',
+    keySystem: CLEARKEY_ID,
+    options: [
+      {
+        label: SUPPORTED_LABEL,
+        initDataTypes: ['webm'],
+        videoCapabilities: [{contentType: 'video/webm;codecs="vp8"'}],
+        audioCapabilities: [{contentType: 'audio/webm;codecs="vorbis"'}],
+      }
+    ],
+    expectedConfig: {
+      label: SUPPORTED_LABEL,
+      initDataTypes: ['webm'],
+      videoCapabilities: [{contentType: 'video/webm;codecs="vp8"'}],
+      audioCapabilities: [{contentType: 'audio/webm;codecs="vorbis"'}],
+    },
+    shouldPass: true,
+  },
+  {
+    name: 'Webm with Vorbis audio and VP9 video.',
+    keySystem: CLEARKEY_ID,
+    options: [
+      {
+        label: SUPPORTED_LABEL,
+        initDataTypes: ['webm'],
+        videoCapabilities: [{contentType: 'video/webm;codecs="vp9"'}],
+        audioCapabilities: [{contentType: 'audio/webm;codecs="vorbis"'}],
+      }
+    ],
+    expectedConfig: {
+      label: SUPPORTED_LABEL,
+      initDataTypes: ['webm'],
+      videoCapabilities: [{contentType: 'video/webm;codecs="vp9"'}],
+      audioCapabilities: [{contentType: 'audio/webm;codecs="vorbis"'}],
+    },
+    shouldPass: true,
+  },
+  {
+    name: 'Webm with bogus video.',
     keySystem: CLEARKEY_ID,
     options: [
       {
         initDataTypes: ['webm'],
-        videoCapabilities: [{contentType: 'video/webm'}],
+        videoCapabilities: [{contentType: 'video/webm;codecs="bogus"'}],
       }
     ],
     shouldPass: false,

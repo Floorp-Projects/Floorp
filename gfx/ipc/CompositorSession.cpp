@@ -109,12 +109,13 @@ InProcessCompositorSession::GetAPZCTreeManager() const
 void
 InProcessCompositorSession::Shutdown()
 {
-  // XXX CompositorBridgeChild and CompositorBridgeParent might be re-created in
-  // ClientLayerManager destructor. See bug 1133426.
-  RefPtr<CompositorBridgeChild> compositorChild = mCompositorBridgeChild;
-  RefPtr<CompositorBridgeParent> compositorParent = mCompositorBridgeParent;
+  // Destroy will synchronously wait for the parent to acknowledge shutdown,
+  // at which point CBP will defer a Release on the compositor thread. We
+  // can safely release our reference now, and let the destructor run on either
+  // thread.
   mCompositorBridgeChild->Destroy();
   mCompositorBridgeChild = nullptr;
+  mCompositorBridgeParent = nullptr;
 }
 
 } // namespace layers

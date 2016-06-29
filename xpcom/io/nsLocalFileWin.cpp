@@ -643,7 +643,7 @@ FileTimeToPRTime(const FILETIME* aFiletime, PRTime* aPrtm)
   const PRTime _pr_filetime_offset = 116444736000000000i64;
 #endif
 
-  PR_ASSERT(sizeof(FILETIME) == sizeof(PRTime));
+  MOZ_ASSERT(sizeof(FILETIME) == sizeof(PRTime));
   ::CopyMemory(aPrtm, aFiletime, sizeof(PRTime));
 #ifdef __GNUC__
   *aPrtm = (*aPrtm - _pr_filetime_offset) / 10LL;

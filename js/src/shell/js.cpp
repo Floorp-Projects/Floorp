@@ -3728,7 +3728,6 @@ class OffThreadState {
 
   public:
     OffThreadState() : monitor(), state(IDLE), token(), source(nullptr) { }
-    bool init() { return monitor.init(); }
 
     bool startIfIdle(JSContext* cx, ScriptKind kind,
                      ScopedJSFreePtr<char16_t>& newSource)
@@ -7202,7 +7201,7 @@ main(int argc, char** argv, char** envp)
         || !op.addStringOption('\0', "ion-edgecase-analysis", "on/off",
                                "Find edge cases where Ion can avoid bailouts (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-pgo", "on/off",
-                               "Profile guided optimization (default: off, on to enable)")
+                               "Profile guided optimization (default: on, off to disable)")
         || !op.addStringOption('\0', "ion-range-analysis", "on/off",
                                "Range analysis (default: on, off to disable)")
 #if defined(__APPLE__)
@@ -7391,9 +7390,6 @@ main(int argc, char** argv, char** envp)
     JS_SetNativeStackQuota(rt, gMaxStackSize);
 
     JS::dbg::SetDebuggerMallocSizeOf(rt, moz_malloc_size_of);
-
-    if (!offThreadState.init())
-        return 1;
 
     JSContext* cx = JS_GetContext(rt);
     if (!JS::InitSelfHostedCode(cx))
