@@ -45,7 +45,7 @@ private:
 
   nsresult DropVideoUpToSeekTarget(MediaData* aSample);
 
-  void CheckIfSeekComplete();
+  void MaybeFinishSeek();
 
   void OnSeekResolved(media::TimeUnit);
 
