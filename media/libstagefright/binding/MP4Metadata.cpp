@@ -14,6 +14,7 @@
 #include "mozilla/RefPtr.h"
 #include "mozilla/Telemetry.h"
 #include "mozilla/UniquePtr.h"
+#include "OpusDecoder.h"
 #include "VideoUtils.h"
 #include "mp4_demuxer/MoofParser.h"
 #include "mp4_demuxer/MP4Metadata.h"
@@ -670,10 +671,8 @@ MP4MetadataRust::GetTrackInfo(mozilla::TrackInfo::TrackType aType,
           LittleEndian::readUint16(audio.codec_specific_config.data + 10);
         MOZ_LOG(sLog, LogLevel::Debug,
             ("Copying opus pre-skip value of %d as CodecDelay.",(int)preskip));
-        uint8_t codecDelay[sizeof(uint64_t)];
-        BigEndian::writeUint64(codecDelay,
+        OpusDataDecoder::AppendCodecDelay(track->mCodecSpecificConfig,
             mozilla::FramesToUsecs(preskip, 48000).value());
-        track->mCodecSpecificConfig->AppendElements(codecDelay, sizeof(uint64_t));
       } else if (info.codec == MP4PARSE_CODEC_AAC) {
         track->mMimeType = MEDIA_MIMETYPE_AUDIO_AAC;
       }
