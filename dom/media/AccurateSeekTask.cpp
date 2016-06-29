@@ -109,13 +109,7 @@ AccurateSeekTask::EnsureAudioDecodeTaskQueued()
   AssertOwnerThread();
   MOZ_ASSERT(!mDoneAudioSeeking);
   MOZ_ASSERT(!mReader->IsRequestingAudioData());
-
-  SAMPLE_LOG("EnsureAudioDecodeTaskQueued status=%s", AudioRequestStatus());
-
-  if (mReader->IsWaitingAudioData()) {
-    return;
-  }
-
+  MOZ_ASSERT(!mReader->IsWaitingAudioData());
   mReader->RequestAudioData();
 }
 
@@ -125,13 +119,7 @@ AccurateSeekTask::EnsureVideoDecodeTaskQueued()
   AssertOwnerThread();
   MOZ_ASSERT(!mDoneVideoSeeking);
   MOZ_ASSERT(!mReader->IsRequestingVideoData());
-
-  SAMPLE_LOG("EnsureVideoDecodeTaskQueued status=%s", VideoRequestStatus());
-
-  if (mReader->IsWaitingVideoData()) {
-    return;
-  }
-
+  MOZ_ASSERT(!mReader->IsWaitingVideoData());
   mReader->RequestVideoData(false, media::TimeUnit());
 }
 
