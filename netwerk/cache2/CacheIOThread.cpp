@@ -62,17 +62,25 @@ nsresult CacheIOThread::Init()
 
 nsresult CacheIOThread::Dispatch(nsIRunnable* aRunnable, uint32_t aLevel)
 {
+  return Dispatch(do_AddRef(aRunnable), aLevel);
+}
+
+nsresult CacheIOThread::Dispatch(already_AddRefed<nsIRunnable> aRunnable,
+				 uint32_t aLevel)
+{
   NS_ENSURE_ARG(aLevel < LAST_LEVEL);
 
+  nsCOMPtr<nsIRunnable> runnable(aRunnable);
+
   // Runnable is always expected to be non-null, hard null-check bellow.
-  MOZ_ASSERT(aRunnable);
+  MOZ_ASSERT(runnable);
 
   MonitorAutoLock lock(mMonitor);
 
   if (mShutdown && (PR_GetCurrentThread() != mThread))
     return NS_ERROR_UNEXPECTED;
 
-  return DispatchInternal(aRunnable, aLevel);
+  return DispatchInternal(runnable.forget(), aLevel);
 }
 
 nsresult CacheIOThread::DispatchAfterPendingOpens(nsIRunnable* aRunnable)
@@ -90,17 +98,20 @@ nsresult CacheIOThread::DispatchAfterPendingOpens(nsIRunnable* aRunnable)
   mEventQueue[OPEN_PRIORITY].AppendElements(mEventQueue[OPEN]);
   mEventQueue[OPEN].Clear();
 
-  return DispatchInternal(aRunnable, OPEN_PRIORITY);
+  return DispatchInternal(do_AddRef(aRunnable), OPEN_PRIORITY);
 }
 
-nsresult CacheIOThread::DispatchInternal(nsIRunnable* aRunnable, uint32_t aLevel)
+nsresult CacheIOThread::DispatchInternal(already_AddRefed<nsIRunnable> aRunnable,
+					 uint32_t aLevel)
 {
-  if (NS_WARN_IF(!aRunnable))
+  nsCOMPtr<nsIRunnable> runnable(aRunnable);
+
+  if (NS_WARN_IF(!runnable))
     return NS_ERROR_NULL_POINTER;
 
   mMonitor.AssertCurrentThreadOwns();
 
-  mEventQueue[aLevel].AppendElement(aRunnable);
+  mEventQueue[aLevel].AppendElement(runnable.forget());
   if (mLowestLevelWaiting > aLevel)
     mLowestLevelWaiting = aLevel;
 
