@@ -14,6 +14,8 @@ EXPORTS += [
 
 EXPORTS.mozilla.widget += [
     'AudioSession.h',
+    'CompositorWidgetChild.h',
+    'CompositorWidgetParent.h',
     'WinCompositorWidget.h',
     'WinMessages.h',
     'WinModifierKeyState.h',
@@ -22,6 +24,8 @@ EXPORTS.mozilla.widget += [
 
 UNIFIED_SOURCES += [
     'AudioSession.cpp',
+    'CompositorWidgetChild.cpp',
+    'CompositorWidgetParent.cpp',
     'GfxInfo.cpp',
     'IEnumFE.cpp',
     'IMMHandler.cpp',

@@ -244,10 +244,12 @@ LOCAL_INCLUDES += [
 
 if toolkit == 'windows':
     IPDL_SOURCES = [
+        'windows/PCompositorWidget.ipdl',
         'windows/PlatformWidgetTypes.ipdlh',
     ]
 else:
     IPDL_SOURCES = [
+        'PCompositorWidget.ipdl',
         'PlatformWidgetTypes.ipdlh',
     ]
 
