@@ -26,6 +26,15 @@
   var ReflectApply = global.Reflect.apply;
   var StringPrototypeEndsWith = global.String.prototype.endsWith;
 
+  var runningInBrowser = typeof global.window !== "undefined";
+  if (runningInBrowser) {
+    // Certain cached functionality only exists (and is only needed) when
+    // running in the browser.  Segregate that caching here.
+
+    var SpecialPowersSetGCZeal =
+      global.SpecialPowers ? global.SpecialPowers.setGCZeal : undefined;
+  }
+
   /****************************
    * GENERAL HELPER FUNCTIONS *
    ****************************/
@@ -148,6 +157,28 @@
            "print function is pre-existing, either provided by the shell or " +
            "the already-executed top-level browser.js");
 
+  var quit = global.quit;
+  if (typeof quit !== "function") {
+    // XXX There's something very strange about quit() in browser runs being a
+    //     function that doesn't quit at all (!).  We should get rid of quit()
+    //     as an integral part of tests in favor of something else.
+    quit = function quit() {};
+    global.quit = quit;
+  }
+
+  var gczeal = global.gczeal;
+  if (typeof gczeal !== "function") {
+    if (typeof SpecialPowersSetGCZeal === "function") {
+      gczeal = function gczeal(z) {
+        SpecialPowersSetGCZeal(z);
+      };
+    } else {
+      gczeal = function() {}; // no-op if not available
+    }
+
+    global.gczeal = gczeal;
+  }
+
   /******************************************************
    * TEST METADATA EXPORTS (these are of dubious value) *
    ******************************************************/
@@ -242,8 +273,6 @@
 
 
 var STATUS = "STATUS: ";
-var SECT_PREFIX = 'Section ';
-var SECT_SUFFIX = ' of test - ';
 
 var gDelayTestDriverEnd = false;
 
@@ -349,7 +378,7 @@ function expectExitCode(n)
  */
 function inSection(x)
 {
-  return SECT_PREFIX + x + SECT_SUFFIX;
+  return "Section " + x + " of test - ";
 }
 
 /*
