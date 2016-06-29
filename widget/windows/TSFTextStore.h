@@ -785,18 +785,19 @@ protected:
 
     bool mInitialized;
   };
-  // mLockedContent starts to cache content of the document at first query of
-  // the content during a document lock.  This is abandoned after document is
-  // unlocked and dispatched events are handled.  This is initialized by
-  // LockedContent() automatically.  So, don't access this member directly
-  // except at calling Clear(), IsInitialized(), IsLayoutChangedAfter() or
-  // IsLayoutChanged().
-  Content mLockedContent;
+  // mContentForTSF starts to cache content of the document at first query of
+  // the content during a document lock.  The information is expected by TSF
+  // and TIP.  Therefore, this is useful for answering the query from TSF or
+  // TIP.  This is abandoned after document is unlocked and dispatched events
+  // are handled.  This is initialized by LockedContent() automatically.
+  // So, don't access this member directly except at calling Clear(),
+  // IsInitialized(), IsLayoutChangedAfter() or IsLayoutChanged().
+  Content mContentForTSF;
 
   Content& LockedContent();
 
   // While the documet is locked, this returns the text stored by
-  // mLockedContent.  Otherwise, return the current text content.
+  // mContentForTSF.  Otherwise, return the current text content.
   bool GetCurrentText(nsAString& aTextContent);
 
   class MouseTracker final
@@ -884,7 +885,7 @@ protected:
   // If this is true, the instance will be destroyed after unlocked.
   bool                         mPendingDestroy;
   // If this is false, MaybeFlushPendingNotifications() will clear the
-  // mLockedContent.
+  // mContentForTSF.
   bool                         mDeferClearingLockedContent;
   // While there is native caret, this is true.  Otherwise, false.
   bool                         mNativeCaretIsCreated;
