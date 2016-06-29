@@ -281,14 +281,14 @@ public:
   static nsIFrame* GetFirstLeaf(nsIFrame* aFrame);
     
   /**
+   * Get the bidi data of the given (inline) frame.
+   */
+  static mozilla::FrameBidiData GetFrameBidiData(nsIFrame* aFrame);
+
+  /**
    * Get the bidi embedding level of the given (inline) frame.
    */
   static nsBidiLevel GetFrameEmbeddingLevel(nsIFrame* aFrame);
-    
-  /**
-   * Get the paragraph depth of the given (inline) frame.
-   */
-  static uint8_t GetParagraphDepth(nsIFrame* aFrame);
 
   /**
    * Get the bidi base level of the given (inline) frame.
@@ -524,11 +524,6 @@ private:
    * @param aFrame       the frame whose continuations are to be removed
    * @param aFirstIndex  index of aFrame in mLogicalFrames
    * @param aLastIndex   index of the last frame to be removed
-   * @param aOffset      [OUT] count of directional frames removed. Since
-   *                     directional frames have control characters
-   *                     corresponding to them in mBuffer, the pointers to
-   *                     mBuffer in Resolve() will need to be updated after
-   *                     deleting the frames.
    *
    * @see Resolve()
    * @see EnsureBidiContinuation()
@@ -536,8 +531,7 @@ private:
   static void RemoveBidiContinuation(BidiParagraphData* aBpd,
                                      nsIFrame*          aFrame,
                                      int32_t            aFirstIndex,
-                                     int32_t            aLastIndex,
-                                     int32_t&           aOffset);
+                                     int32_t            aLastIndex);
   static void CalculateCharType(nsBidi*          aBidiEngine,
                                 const char16_t* aText,
                                 int32_t&         aOffset,

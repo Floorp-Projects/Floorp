@@ -340,6 +340,16 @@ public:
   CreateForDrawing(TextureForwarder* aAllocator,
                    gfx::SurfaceFormat aFormat,
                    gfx::IntSize aSize,
+                   LayersBackend aLayersBackend,
+                   BackendSelector aSelector,
+                   TextureFlags aTextureFlags,
+                   TextureAllocationFlags aAllocFlags = ALLOC_DEFAULT);
+
+  // TODO: remove this one and use the one above instead.
+  static already_AddRefed<TextureClient>
+  CreateForDrawing(CompositableForwarder* aAllocator,
+                   gfx::SurfaceFormat aFormat,
+                   gfx::IntSize aSize,
                    BackendSelector aSelector,
                    TextureFlags aTextureFlags,
                    TextureAllocationFlags flags = ALLOC_DEFAULT);

@@ -129,6 +129,12 @@ public:
 
   virtual ShadowLayerForwarder* AsLayerForwarder() override { return this; }
 
+  // TODO: confusingly, this returns a pointer to the CompositorBridgeChild.
+  // Right now ShadowLayerForwarder inherits TextureForwarder but it would
+  // probably be best if it didn't, since it forwards all of the relevent
+  // methods to CompositorBridgeChild.
+  virtual TextureForwarder* AsTextureForwarder() override;
+
   virtual LegacySurfaceDescriptorAllocator*
   AsLegacySurfaceDescriptorAllocator() override { return this; }
 
@@ -350,7 +356,7 @@ public:
 
   virtual void CancelWaitForRecycle(uint64_t aTextureId) override;
 
-  base::ProcessId GetParentPid() const;
+  virtual base::ProcessId GetParentPid() const override;
 
   /**
    * Construct a shadow of |aLayer| on the "other side", at the

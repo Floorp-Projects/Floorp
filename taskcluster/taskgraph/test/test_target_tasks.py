@@ -9,7 +9,8 @@ import unittest
 from .. import target_tasks
 from .. import try_option_syntax
 from ..graph import Graph
-from ..types import Task, TaskGraph
+from ..taskgraph import TaskGraph
+from .util import TestTask
 from mozunit import main
 
 
@@ -32,16 +33,16 @@ class TestTargetTasks(unittest.TestCase):
     def test_all_builds_and_tests(self):
         method = target_tasks.get_method('all_builds_and_tests')
         graph = TaskGraph(tasks={
-            'a': Task(kind=None, label='a', attributes={'kind': 'legacy'}),
-            'b': Task(kind=None, label='b', attributes={'kind': 'legacy'}),
-            'boring': Task(kind=None, label='boring', attributes={'kind': 'docker-image'}),
+            'a': TestTask(kind='legacy', label='a'),
+            'b': TestTask(kind='legacy', label='b'),
+            'boring': TestTask(kind='docker', label='boring'),
         }, graph=Graph(nodes={'a', 'b', 'boring'}, edges=set()))
         self.assertEqual(sorted(method(graph, {})), sorted(['a', 'b']))
 
     def test_try_option_syntax(self):
         tasks = {
-            'a': Task(kind=None, label='a'),
-            'b': Task(kind=None, label='b', attributes={'at-at': 'yep'}),
+            'a': TestTask(kind=None, label='a'),
+            'b': TestTask(kind=None, label='b', attributes={'at-at': 'yep'}),
         }
         graph = Graph(nodes=set('ab'), edges=set())
         tg = TaskGraph(tasks, graph)

@@ -116,8 +116,7 @@ class Configuration:
         (mainCallbacks, mainDictionaries) = findCallbacksAndDictionaries(mainTypes)
 
         workerTypes = set()
-        for descriptor in ([self.getDescriptor("DummyInterfaceWorkers", workers=True)] +
-                           self.getDescriptors(workers=True, isExternal=False, skipGen=False)):
+        for descriptor in (self.getDescriptors(workers=True, isExternal=False, skipGen=False)):
             workerTypes |= set(getFlatTypes(getTypesFromDescriptor(descriptor)))
         (workerCallbacks, workerDictionaries) = findCallbacksAndDictionaries(workerTypes)
 

@@ -36087,10 +36087,12 @@
   },
   "local_changes": {
     "deleted": [
-      "WebCryptoAPI/generateKey/successes.worker.js",
       "WebCryptoAPI/generateKey/failures.worker.js",
+      "web-animations/interfaces/AnimationTimeline/document-timeline.html",
       "WebCryptoAPI/generateKey/test_failures.html",
-      "WebCryptoAPI/generateKey/test_successes.html"
+      "WebCryptoAPI/generateKey/test_successes.html",
+      "web-animations/interfaces/AnimationTimeline/idlharness.html",
+      "WebCryptoAPI/generateKey/successes.worker.js"
     ],
     "deleted_reftests": {},
     "items": {
@@ -36372,7 +36374,7 @@
         "XMLHttpRequest/xmlhttprequest-sync-not-hang-scriptloader.html": [
           {
             "path": "XMLHttpRequest/xmlhttprequest-sync-not-hang-scriptloader.html",
-              "url": "/XMLHttpRequest/xmlhttprequest-sync-not-hang-scriptloader.html"
+            "url": "/XMLHttpRequest/xmlhttprequest-sync-not-hang-scriptloader.html"
           }
         ],
         "editing/run/justifycenter.html": [
@@ -36395,10 +36397,28 @@
             "url": "/web-animations/animation-model/keyframe-effects/spacing-keyframes.html"
           }
         ],
+        "web-animations/interfaces/DocumentTimeline/constructor.html": [
+          {
+            "path": "web-animations/interfaces/DocumentTimeline/constructor.html",
+            "url": "/web-animations/interfaces/DocumentTimeline/constructor.html"
+          }
+        ],
+        "web-animations/interfaces/DocumentTimeline/idlharness.html": [
+          {
+            "path": "web-animations/interfaces/DocumentTimeline/idlharness.html",
+            "url": "/web-animations/interfaces/DocumentTimeline/idlharness.html"
+          }
+        ],
         "web-animations/interfaces/KeyframeEffectReadOnly/spacing.html": [
           {
             "path": "web-animations/interfaces/KeyframeEffectReadOnly/spacing.html",
             "url": "/web-animations/interfaces/KeyframeEffectReadOnly/spacing.html"
+          }
+        ],
+        "web-animations/timing-model/timelines/default-document-timeline.html": [
+          {
+            "path": "web-animations/timing-model/timelines/default-document-timeline.html",
+            "url": "/web-animations/timing-model/timelines/default-document-timeline.html"
           }
         ],
         "webaudio/the-audio-api/the-audioparam-interface/setTargetAtTime-after-event-within-block.html": [

@@ -18,8 +18,13 @@ QueueObject::~QueueObject() {}
 void
 QueueObject::Dispatch(nsIRunnable* aRunnable)
 {
-  nsCOMPtr<nsIRunnable> runnable = aRunnable;
-  mThread->Dispatch(runnable.forget());
+  Dispatch(do_AddRef(aRunnable));
+}
+
+void
+QueueObject::Dispatch(already_AddRefed<nsIRunnable> aRunnable)
+{
+  mThread->Dispatch(Move(aRunnable));
 }
 
 bool

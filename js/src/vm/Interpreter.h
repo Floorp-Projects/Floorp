@@ -276,7 +276,7 @@ class ExecuteState : public RunState
 };
 
 // Data to invoke a function.
-class InvokeState : public RunState
+class InvokeState final : public RunState
 {
     const CallArgs& args_;
     MaybeConstruct construct_;

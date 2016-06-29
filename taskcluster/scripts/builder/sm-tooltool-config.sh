@@ -3,7 +3,7 @@
 set -xe
 
 : ${TOOLTOOL_SERVER:=https://api.pub.build.mozilla.org/tooltool/}
-: ${TOOLTOOL_REPO:=https://git.mozilla.org/build/tooltool.git}
+: ${TOOLTOOL_REPO:=https://github.com/mozilla/build-tooltool}
 : ${TOOLTOOL_REV:=master}
 : ${SPIDERMONKEY_VARIANT:=plain}
 : ${UPLOAD_DIR:=$HOME/artifacts/}

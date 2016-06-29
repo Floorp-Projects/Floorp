@@ -189,6 +189,8 @@ public:
    */
   virtual MessageLoop * GetMessageLoop() const override;
 
+  virtual base::ProcessId GetParentPid() const override { return OtherPid(); }
+
   PCompositableChild* AllocPCompositableChild(const TextureInfo& aInfo,
                                               PImageContainerChild* aChild, uint64_t* aID) override;
   bool DeallocPCompositableChild(PCompositableChild* aActor) override;

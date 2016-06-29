@@ -4545,16 +4545,11 @@ TSFTextStore::GetIMEUpdatePreference()
     RefPtr<ITfDocumentMgr> docMgr;
     sThreadMgr->GetFocus(getter_AddRefs(docMgr));
     if (docMgr == sEnabledTextStore->mDocumentMgr) {
-      nsIMEUpdatePreference updatePreference(
-        nsIMEUpdatePreference::NOTIFY_SELECTION_CHANGE |
-        nsIMEUpdatePreference::NOTIFY_TEXT_CHANGE |
-        nsIMEUpdatePreference::NOTIFY_POSITION_CHANGE |
-        nsIMEUpdatePreference::NOTIFY_MOUSE_BUTTON_EVENT_ON_CHAR |
-        nsIMEUpdatePreference::NOTIFY_DURING_DEACTIVE);
-      // TSFTextStore shouldn't notify TSF of selection change and text change
-      // which are caused by composition.
-      updatePreference.DontNotifyChangesCausedByComposition();
-      return updatePreference;
+      return nsIMEUpdatePreference(
+               nsIMEUpdatePreference::NOTIFY_TEXT_CHANGE |
+               nsIMEUpdatePreference::NOTIFY_POSITION_CHANGE |
+               nsIMEUpdatePreference::NOTIFY_MOUSE_BUTTON_EVENT_ON_CHAR |
+               nsIMEUpdatePreference::NOTIFY_DURING_DEACTIVE);
     }
   }
   return nsIMEUpdatePreference();

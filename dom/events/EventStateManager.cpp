@@ -860,6 +860,7 @@ EventStateManager::HandleQueryContentEvent(WidgetQueryContentEvent* aEvent)
     case eQuerySelectionAsTransferable:
     case eQueryCharacterAtPoint:
     case eQueryDOMWidgetHittest:
+    case eQueryTextRectArray:
       break;
     default:
       return;

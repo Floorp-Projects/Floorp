@@ -41,7 +41,7 @@ public:
   ResolveOrRejectPromiseRunnable(WorkerPrivate* aWorkerPrivate,
                                  PromiseWorkerProxy* aPromiseProxy,
                                  UniquePtr<ServiceWorkerClientInfo>&& aClientInfo)
-    : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
+    : WorkerRunnable(aWorkerPrivate)
     , mPromiseProxy(aPromiseProxy)
     , mClientInfo(Move(aClientInfo))
   {

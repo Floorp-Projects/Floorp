@@ -24,6 +24,10 @@ interface nsIQueryContentEventResult : nsISupports
   readonly attribute long height;
   readonly attribute AString text;
 
+  void getCharacterRect(in long offset,
+                        out long left, out long top,
+                        out long width, out long height);
+
   readonly attribute boolean succeeded;
   readonly attribute boolean notFound;
   readonly attribute boolean tentativeCaretOffsetNotFound;

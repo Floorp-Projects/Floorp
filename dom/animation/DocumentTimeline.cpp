@@ -36,6 +36,31 @@ DocumentTimeline::WrapObject(JSContext* aCx, JS::Handle<JSObject*> aGivenProto)
   return DocumentTimelineBinding::Wrap(aCx, this, aGivenProto);
 }
 
+/* static */ already_AddRefed<DocumentTimeline>
+DocumentTimeline::Constructor(const GlobalObject& aGlobal,
+                              const DOMHighResTimeStamp& aOriginTime,
+                              ErrorResult& aRv)
+{
+  nsIDocument* doc = AnimationUtils::GetCurrentRealmDocument(aGlobal.Context());
+  if (!doc) {
+    aRv.Throw(NS_ERROR_FAILURE);
+    return nullptr;
+  }
+
+  TimeDuration originTime = TimeDuration::FromMilliseconds(aOriginTime);
+  if (originTime == TimeDuration::Forever() ||
+      originTime == -TimeDuration::Forever()) {
+    nsAutoString inputOriginTime;
+    inputOriginTime.AppendFloat(aOriginTime);
+    aRv.ThrowTypeError<dom::MSG_TIME_VALUE_OUT_OF_RANGE>(
+      NS_LITERAL_STRING("Origin time"));
+    return nullptr;
+  }
+  RefPtr<DocumentTimeline> timeline = new DocumentTimeline(doc, originTime);
+
+  return timeline.forget();
+}
+
 Nullable<TimeDuration>
 DocumentTimeline::GetCurrentTime() const
 {
@@ -88,7 +113,9 @@ DocumentTimeline::ToTimelineTime(const TimeStamp& aTimeStamp) const
     return result;
   }
 
-  result.SetValue(aTimeStamp - timing->GetNavigationStartTimeStamp());
+  result.SetValue(aTimeStamp
+                  - timing->GetNavigationStartTimeStamp()
+                  - mOriginTime);
   return result;
 }
 
@@ -204,7 +231,8 @@ DocumentTimeline::ToTimeStamp(const TimeDuration& aTimeDuration) const
     return result;
   }
 
-  result = timing->GetNavigationStartTimeStamp() + aTimeDuration;
+  result =
+    timing->GetNavigationStartTimeStamp() + (aTimeDuration + mOriginTime);
   return result;
 }
 

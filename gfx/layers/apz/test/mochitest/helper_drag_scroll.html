@@ -1,0 +1,603 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width; initial-scale=1.0">
+  <title>Dragging the mouse on a content-implemented scrollbar</title>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <style>
+    body {
+        background: linear-gradient(135deg, red, blue);
+    }
+    #scrollbar {
+        position:fixed;
+        top: 0;
+        right: 10px;
+        height: 100%;
+        width: 150px;
+        background-color: gray;
+    }
+  </style>
+  <script type="text/javascript">
+var bar = null;
+var mouseDown = false;
+
+function moveTo(mouseY, testDriver) {
+  var fraction = (mouseY - bar.getBoundingClientRect().top) / bar.getBoundingClientRect().height;
+  fraction = Math.max(0, fraction);
+  fraction = Math.min(1, fraction);
+  var oldScrollPos = document.scrollingElement.scrollTop;
+  var newScrollPos = fraction * window.scrollMaxY;
+  SimpleTest.ok(newScrollPos > oldScrollPos, "Scroll position strictly increased");
+  // split the scroll in two with a paint in between, just to increase the
+  // complexity of the simulated web content, and to ensure this works as well.
+  document.scrollingElement.scrollTop = (oldScrollPos + newScrollPos) / 2;
+  waitForAllPaints(function() {
+    document.scrollingElement.scrollTop = newScrollPos;
+    testDriver();
+  });
+}
+
+function setupDragging(testDriver) {
+  bar = document.getElementById('scrollbar');
+  mouseDown = false;
+
+  bar.addEventListener('mousedown', function(e) {
+    mouseDown = true;
+    moveTo(e.clientY, testDriver);
+  }, true);
+
+  bar.addEventListener('mousemove', function(e) {
+    if (mouseDown) {
+      dump("Got mousemove clientY " + e.clientY + "\n");
+      moveTo(e.clientY, testDriver);
+      e.stopPropagation();
+    }
+  }, true);
+
+  bar.addEventListener('mouseup', function(e) {
+    mouseDown = false;
+  }, true);
+
+  window.addEventListener('mousemove', function(e) {
+    if (mouseDown) {
+      SimpleTest.ok(false, "The mousemove at " + e.clientY + " was not stopped by the bar listener, and is a glitchy event!");
+      setTimeout(testDriver, 0);
+    }
+  }, false);
+}
+
+function* test(testDriver) {
+  setupDragging(testDriver);
+
+  // Move the mouse to the "scrollbar" (the div upon which dragging changes scroll position)
+  yield synthesizeNativeMouseEvent(bar, 10, 10, nativeMouseMoveEventMsg(), testDriver);
+  // mouse down
+  yield synthesizeNativeMouseEvent(bar, 10, 10, nativeMouseDownEventMsg());
+  // drag vertically by 400px, in 50px increments
+  yield synthesizeNativeMouseEvent(bar, 10, 60, nativeMouseMoveEventMsg());
+  yield synthesizeNativeMouseEvent(bar, 10, 110, nativeMouseMoveEventMsg());
+  yield synthesizeNativeMouseEvent(bar, 10, 160, nativeMouseMoveEventMsg());
+  yield synthesizeNativeMouseEvent(bar, 10, 210, nativeMouseMoveEventMsg());
+  yield synthesizeNativeMouseEvent(bar, 10, 260, nativeMouseMoveEventMsg());
+  yield synthesizeNativeMouseEvent(bar, 10, 310, nativeMouseMoveEventMsg());
+  yield synthesizeNativeMouseEvent(bar, 10, 360, nativeMouseMoveEventMsg());
+  yield synthesizeNativeMouseEvent(bar, 10, 410, nativeMouseMoveEventMsg());
+  // and release
+  yield synthesizeNativeMouseEvent(bar, 10, 410, nativeMouseUpEventMsg(), testDriver);
+}
+
+waitUntilApzStable()
+.then(runContinuation(test))
+.then(subtestDone);
+
+  </script>
+</head>
+<body>
+
+<div id="scrollbar">Drag up and down on this bar. The background/scrollbar shouldn't glitch</div>
+This is a tall page<br/>
+1<br/>
+2<br/>
+3<br/>
+4<br/>
+5<br/>
+6<br/>
+7<br/>
+8<br/>
+9<br/>
+10<br/>
+11<br/>
+12<br/>
+13<br/>
+14<br/>
+15<br/>
+16<br/>
+17<br/>
+18<br/>
+19<br/>
+20<br/>
+21<br/>
+22<br/>
+23<br/>
+24<br/>
+25<br/>
+26<br/>
+27<br/>
+28<br/>
+29<br/>
+30<br/>
+31<br/>
+32<br/>
+33<br/>
+34<br/>
+35<br/>
+36<br/>
+37<br/>
+38<br/>
+39<br/>
+40<br/>
+41<br/>
+42<br/>
+43<br/>
+44<br/>
+45<br/>
+46<br/>
+47<br/>
+48<br/>
+49<br/>
+50<br/>
+51<br/>
+52<br/>
+53<br/>
+54<br/>
+55<br/>
+56<br/>
+57<br/>
+58<br/>
+59<br/>
+60<br/>
+61<br/>
+62<br/>
+63<br/>
+64<br/>
+65<br/>
+66<br/>
+67<br/>
+68<br/>
+69<br/>
+70<br/>
+71<br/>
+72<br/>
+73<br/>
+74<br/>
+75<br/>
+76<br/>
+77<br/>
+78<br/>
+79<br/>
+80<br/>
+81<br/>
+82<br/>
+83<br/>
+84<br/>
+85<br/>
+86<br/>
+87<br/>
+88<br/>
+89<br/>
+90<br/>
+91<br/>
+92<br/>
+93<br/>
+94<br/>
+95<br/>
+96<br/>
+97<br/>
+98<br/>
+99<br/>
+100<br/>
+101<br/>
+102<br/>
+103<br/>
+104<br/>
+105<br/>
+106<br/>
+107<br/>
+108<br/>
+109<br/>
+110<br/>
+111<br/>
+112<br/>
+113<br/>
+114<br/>
+115<br/>
+116<br/>
+117<br/>
+118<br/>
+119<br/>
+120<br/>
+121<br/>
+122<br/>
+123<br/>
+124<br/>
+125<br/>
+126<br/>
+127<br/>
+128<br/>
+129<br/>
+130<br/>
+131<br/>
+132<br/>
+133<br/>
+134<br/>
+135<br/>
+136<br/>
+137<br/>
+138<br/>
+139<br/>
+140<br/>
+141<br/>
+142<br/>
+143<br/>
+144<br/>
+145<br/>
+146<br/>
+147<br/>
+148<br/>
+149<br/>
+150<br/>
+151<br/>
+152<br/>
+153<br/>
+154<br/>
+155<br/>
+156<br/>
+157<br/>
+158<br/>
+159<br/>
+160<br/>
+161<br/>
+162<br/>
+163<br/>
+164<br/>
+165<br/>
+166<br/>
+167<br/>
+168<br/>
+169<br/>
+170<br/>
+171<br/>
+172<br/>
+173<br/>
+174<br/>
+175<br/>
+176<br/>
+177<br/>
+178<br/>
+179<br/>
+180<br/>
+181<br/>
+182<br/>
+183<br/>
+184<br/>
+185<br/>
+186<br/>
+187<br/>
+188<br/>
+189<br/>
+190<br/>
+191<br/>
+192<br/>
+193<br/>
+194<br/>
+195<br/>
+196<br/>
+197<br/>
+198<br/>
+199<br/>
+200<br/>
+201<br/>
+202<br/>
+203<br/>
+204<br/>
+205<br/>
+206<br/>
+207<br/>
+208<br/>
+209<br/>
+210<br/>
+211<br/>
+212<br/>
+213<br/>
+214<br/>
+215<br/>
+216<br/>
+217<br/>
+218<br/>
+219<br/>
+220<br/>
+221<br/>
+222<br/>
+223<br/>
+224<br/>
+225<br/>
+226<br/>
+227<br/>
+228<br/>
+229<br/>
+230<br/>
+231<br/>
+232<br/>
+233<br/>
+234<br/>
+235<br/>
+236<br/>
+237<br/>
+238<br/>
+239<br/>
+240<br/>
+241<br/>
+242<br/>
+243<br/>
+244<br/>
+245<br/>
+246<br/>
+247<br/>
+248<br/>
+249<br/>
+250<br/>
+251<br/>
+252<br/>
+253<br/>
+254<br/>
+255<br/>
+256<br/>
+257<br/>
+258<br/>
+259<br/>
+260<br/>
+261<br/>
+262<br/>
+263<br/>
+264<br/>
+265<br/>
+266<br/>
+267<br/>
+268<br/>
+269<br/>
+270<br/>
+271<br/>
+272<br/>
+273<br/>
+274<br/>
+275<br/>
+276<br/>
+277<br/>
+278<br/>
+279<br/>
+280<br/>
+281<br/>
+282<br/>
+283<br/>
+284<br/>
+285<br/>
+286<br/>
+287<br/>
+288<br/>
+289<br/>
+290<br/>
+291<br/>
+292<br/>
+293<br/>
+294<br/>
+295<br/>
+296<br/>
+297<br/>
+298<br/>
+299<br/>
+300<br/>
+301<br/>
+302<br/>
+303<br/>
+304<br/>
+305<br/>
+306<br/>
+307<br/>
+308<br/>
+309<br/>
+310<br/>
+311<br/>
+312<br/>
+313<br/>
+314<br/>
+315<br/>
+316<br/>
+317<br/>
+318<br/>
+319<br/>
+320<br/>
+321<br/>
+322<br/>
+323<br/>
+324<br/>
+325<br/>
+326<br/>
+327<br/>
+328<br/>
+329<br/>
+330<br/>
+331<br/>
+332<br/>
+333<br/>
+334<br/>
+335<br/>
+336<br/>
+337<br/>
+338<br/>
+339<br/>
+340<br/>
+341<br/>
+342<br/>
+343<br/>
+344<br/>
+345<br/>
+346<br/>
+347<br/>
+348<br/>
+349<br/>
+350<br/>
+351<br/>
+352<br/>
+353<br/>
+354<br/>
+355<br/>
+356<br/>
+357<br/>
+358<br/>
+359<br/>
+360<br/>
+361<br/>
+362<br/>
+363<br/>
+364<br/>
+365<br/>
+366<br/>
+367<br/>
+368<br/>
+369<br/>
+370<br/>
+371<br/>
+372<br/>
+373<br/>
+374<br/>
+375<br/>
+376<br/>
+377<br/>
+378<br/>
+379<br/>
+380<br/>
+381<br/>
+382<br/>
+383<br/>
+384<br/>
+385<br/>
+386<br/>
+387<br/>
+388<br/>
+389<br/>
+390<br/>
+391<br/>
+392<br/>
+393<br/>
+394<br/>
+395<br/>
+396<br/>
+397<br/>
+398<br/>
+399<br/>
+400<br/>
+401<br/>
+402<br/>
+403<br/>
+404<br/>
+405<br/>
+406<br/>
+407<br/>
+408<br/>
+409<br/>
+410<br/>
+411<br/>
+412<br/>
+413<br/>
+414<br/>
+415<br/>
+416<br/>
+417<br/>
+418<br/>
+419<br/>
+420<br/>
+421<br/>
+422<br/>
+423<br/>
+424<br/>
+425<br/>
+426<br/>
+427<br/>
+428<br/>
+429<br/>
+430<br/>
+431<br/>
+432<br/>
+433<br/>
+434<br/>
+435<br/>
+436<br/>
+437<br/>
+438<br/>
+439<br/>
+440<br/>
+441<br/>
+442<br/>
+443<br/>
+444<br/>
+445<br/>
+446<br/>
+447<br/>
+448<br/>
+449<br/>
+450<br/>
+451<br/>
+452<br/>
+453<br/>
+454<br/>
+455<br/>
+456<br/>
+457<br/>
+458<br/>
+459<br/>
+460<br/>
+461<br/>
+462<br/>
+463<br/>
+464<br/>
+465<br/>
+466<br/>
+467<br/>
+468<br/>
+469<br/>
+470<br/>
+471<br/>
+472<br/>
+473<br/>
+474<br/>
+475<br/>
+476<br/>
+477<br/>
+478<br/>
+479<br/>
+480<br/>
+481<br/>
+482<br/>
+483<br/>
+484<br/>
+485<br/>
+486<br/>
+487<br/>
+488<br/>
+489<br/>
+490<br/>
+491<br/>
+492<br/>
+493<br/>
+494<br/>
+495<br/>
+496<br/>
+497<br/>
+498<br/>
+499<br/>
+
+</body>
+</html>

@@ -25,15 +25,17 @@ ShrinkCallback(nsITimer *aTimer, void *aClosure)
   static_cast<TextureClientPool*>(aClosure)->ShrinkToMinimumSize();
 }
 
-TextureClientPool::TextureClientPool(gfx::SurfaceFormat aFormat,
-                                     TextureFlags aFlags,
+TextureClientPool::TextureClientPool(LayersBackend aLayersBackend,
+                                     gfx::SurfaceFormat aFormat,
                                      gfx::IntSize aSize,
+                                     TextureFlags aFlags,
                                      uint32_t aMaxTextureClients,
                                      uint32_t aShrinkTimeoutMsec,
                                      TextureForwarder* aAllocator)
-  : mFormat(aFormat)
-  , mFlags(aFlags)
+  : mBackend(aLayersBackend)
+  , mFormat(aFormat)
   , mSize(aSize)
+  , mFlags(aFlags)
   , mMaxTextureClients(aMaxTextureClients)
   , mShrinkTimeoutMsec(aShrinkTimeoutMsec)
   , mOutstandingClients(0)
@@ -115,7 +117,7 @@ TextureClientPool::GetTextureClient()
       mFlags, ALLOC_DEFAULT);
   } else {
     textureClient = TextureClient::CreateForDrawing(mSurfaceAllocator,
-      mFormat, mSize, BackendSelector::Content, mFlags);
+      mFormat, mSize, mBackend, BackendSelector::Content, mFlags);
   }
 
   mOutstandingClients++;

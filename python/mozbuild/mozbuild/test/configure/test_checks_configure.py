@@ -6,6 +6,7 @@ from __future__ import absolute_import, print_function, unicode_literals
 
 from StringIO import StringIO
 import os
+import sys
 import textwrap
 import unittest
 
@@ -19,7 +20,7 @@ from mozbuild.util import exec_
 from mozpack import path as mozpath
 
 from buildconfig import topsrcdir
-from common import ConfigureTestSandbox
+from common import ConfigureTestSandbox, ensure_exe_extension
 
 
 class TestChecksConfigure(unittest.TestCase):
@@ -123,10 +124,10 @@ class TestChecksConfigure(unittest.TestCase):
         foo(['foo', 'bar'])
         self.assertEqual(out.getvalue(), 'checking for a thing... foo bar\n')
 
-    KNOWN_A = mozpath.abspath('/usr/bin/known-a')
-    KNOWN_B = mozpath.abspath('/usr/local/bin/known-b')
-    KNOWN_C = mozpath.abspath('/home/user/bin/known c')
-    OTHER_A = mozpath.abspath('/lib/other/known-a')
+    KNOWN_A = ensure_exe_extension(mozpath.abspath('/usr/bin/known-a'))
+    KNOWN_B = ensure_exe_extension(mozpath.abspath('/usr/local/bin/known-b'))
+    KNOWN_C = ensure_exe_extension(mozpath.abspath('/home/user/bin/known c'))
+    OTHER_A = ensure_exe_extension(mozpath.abspath('/lib/other/known-a'))
 
     def get_result(self, command='', args=[], environ={},
                    prog='/bin/configure', extra_paths=None,
@@ -206,6 +207,23 @@ class TestChecksConfigure(unittest.TestCase):
         self.assertEqual(status, 0)
         self.assertEqual(config, {'FOO': ':'})
         self.assertEqual(out, 'checking for foo... not found\n')
+
+    @unittest.skipIf(not sys.platform.startswith('win'), 'Windows-only test')
+    def test_check_prog_exe(self):
+        config, out, status = self.get_result(
+            'check_prog("FOO", ("unknown", "known-b", "known c"))',
+            ['FOO=known-a.exe'])
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {'FOO': self.KNOWN_A})
+        self.assertEqual(out, 'checking for foo... %s\n' % self.KNOWN_A)
+
+        config, out, status = self.get_result(
+            'check_prog("FOO", ("unknown", "known-b", "known c"))',
+            ['FOO=%s' % os.path.splitext(self.KNOWN_A)[0]])
+        self.assertEqual(status, 0)
+        self.assertEqual(config, {'FOO': self.KNOWN_A})
+        self.assertEqual(out, 'checking for foo... %s\n' % self.KNOWN_A)
+
 
     def test_check_prog_with_args(self):
         config, out, status = self.get_result(

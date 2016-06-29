@@ -175,6 +175,11 @@ GLXLibrary::EnsureInitialized()
       { nullptr, { nullptr } }
     };
 
+    GLLibraryLoader::SymLoadStruct symbols_swapcontrol[] = {
+      { (PRFuncPtr*) &xSwapIntervalInternal, { "glXSwapIntervalEXT", nullptr } },
+      { nullptr, { nullptr } }
+    };
+
     if (!GLLibraryLoader::LoadSymbols(mOGLLibrary, &symbols[0])) {
         NS_WARNING("Couldn't find required entry point in OpenGL shared library");
         return false;
@@ -257,6 +262,12 @@ GLXLibrary::EnsureInitialized()
                                      (GLLibraryLoader::PlatformLookupFunction)&xGetProcAddress))
     {
         mHasVideoSync = true;
+    }
+
+    if (!(HasExtension(extensionsStr, "GLX_EXT_swap_control") &&
+          GLLibraryLoader::LoadSymbols(mOGLLibrary, symbols_swapcontrol)))
+    {
+        NS_WARNING("GLX_swap_control unsupported, ASAP mode may still block on buffer swaps.");
     }
 
     mIsATI = serverVendor && DoesStringMatch(serverVendor, "ATI");
@@ -778,6 +789,14 @@ GLXLibrary::xWaitVideoSync(int divisor, int remainder, unsigned int* count)
     return result;
 }
 
+void
+GLXLibrary::xSwapInterval(Display* display, GLXDrawable drawable, int interval)
+{
+    BEFORE_GLX_CALL;
+    xSwapIntervalInternal(display, drawable, interval);
+    AFTER_GLX_CALL;
+}
+
 already_AddRefed<GLContextGLX>
 GLContextGLX::CreateGLContext(CreateContextFlags flags, const SurfaceCaps& caps,
                               GLContextGLX* shareContext, bool isOffscreen,
@@ -923,6 +942,14 @@ GLContextGLX::MakeCurrentImpl(bool aForce)
     if (aForce || mGLX->xGetCurrentContext() != mContext) {
         succeeded = mGLX->xMakeCurrent(mDisplay, mDrawable, mContext);
         NS_ASSERTION(succeeded, "Failed to make GL context current!");
+
+        if (!IsOffscreen() && mGLX->SupportsSwapControl()) {
+            // Many GLX implementations default to blocking until the next
+            // VBlank when calling glXSwapBuffers. We want to run unthrottled
+            // in ASAP mode. See bug 1280744.
+            int interval = gfxPlatform::IsInLayoutAsapMode() ? 0 : 1;
+            mGLX->xSwapInterval(mDisplay, mDrawable, interval);
+        }
     }
 
     return succeeded;

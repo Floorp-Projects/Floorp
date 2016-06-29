@@ -484,8 +484,8 @@ js::PrintError(JSContext* cx, FILE* file, const char* message, JSErrorReport* re
 bool
 js::ExpandErrorArgumentsVA(ExclusiveContext* cx, JSErrorCallback callback,
                            void* userRef, const unsigned errorNumber,
-                           char** messagep, JSErrorReport* reportp,
-                           ErrorArgumentsType argumentsType, va_list ap)
+                           char** messagep, ErrorArgumentsType argumentsType,
+                           JSErrorReport* reportp, va_list ap)
 {
     const JSErrorFormatString* efs;
     uint16_t argCount;
@@ -665,7 +665,7 @@ js::ReportErrorNumberVA(JSContext* cx, unsigned flags, JSErrorCallback callback,
     PopulateReportBlame(cx, &report);
 
     if (!ExpandErrorArgumentsVA(cx, callback, userRef, errorNumber,
-                                &message, &report, argumentsType, ap)) {
+                                &message, argumentsType, &report, ap)) {
         return false;
     }
 
@@ -692,13 +692,13 @@ js::ReportErrorNumberVA(JSContext* cx, unsigned flags, JSErrorCallback callback,
 static bool
 ExpandErrorArguments(ExclusiveContext* cx, JSErrorCallback callback,
                      void* userRef, const unsigned errorNumber,
-                     char** messagep, JSErrorReport* reportp,
-                     ErrorArgumentsType argumentsType, ...)
+                     char** messagep, ErrorArgumentsType argumentsType,
+                     JSErrorReport* reportp, ...)
 {
     va_list ap;
-    va_start(ap, argumentsType);
+    va_start(ap, reportp);
     bool expanded = js::ExpandErrorArgumentsVA(cx, callback, userRef, errorNumber,
-                                               messagep, reportp, argumentsType, ap);
+                                               messagep, argumentsType, reportp, ap);
     va_end(ap);
     return expanded;
 }
@@ -720,7 +720,7 @@ js::ReportErrorNumberUCArray(JSContext* cx, unsigned flags, JSErrorCallback call
 
     char* message;
     if (!ExpandErrorArguments(cx, callback, userRef, errorNumber,
-                              &message, &report, ArgumentsAreUnicode)) {
+                              &message, ArgumentsAreUnicode, &report)) {
         return false;
     }
 

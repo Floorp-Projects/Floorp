@@ -5,6 +5,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "mozilla/ArrayUtils.h"
+#include "mozilla/Preferences.h"
 #include "nsCOMPtr.h"
 #include "nsCSPParser.h"
 #include "nsCSPUtils.h"
@@ -120,6 +121,7 @@ nsCSPTokenizer::tokenizeCSPPolicy(const nsAString &aPolicyString,
 }
 
 /* ===== nsCSPParser ==================== */
+bool nsCSPParser::sCSPExperimentalEnabled = false;
 
 nsCSPParser::nsCSPParser(cspTokens& aTokens,
                          nsIURI* aSelfURI,
@@ -137,6 +139,11 @@ nsCSPParser::nsCSPParser(cspTokens& aTokens,
  , mCSPContext(aCSPContext)
  , mDeliveredViaMetaTag(aDeliveredViaMetaTag)
 {
+  static bool initialized = false;
+  if (!initialized) {
+    initialized = true;
+    Preferences::AddBoolVarCache(&sCSPExperimentalEnabled, "security.csp.experimentalEnabled");
+  }
   CSPPARSERLOG(("nsCSPParser::nsCSPParser"));
 }
 
@@ -1007,13 +1014,6 @@ nsCSPParser::directiveValue(nsTArray<nsCSPBaseSrc*>& outSrcs)
     return;
   }
 
-  // special case handling of the require-sri-for directive (since it doesn't
-  // contain a source lists but rather types, e.g., style or script)
-  if (CSP_IsDirective(mCurDir[0], nsIContentSecurityPolicy::REQUIRE_SRI_FOR)) {
-    // handled in directive()
-    return;
-  }
-
   // Otherwise just forward to sourceList
   sourceList(outSrcs);
 }
@@ -1027,7 +1027,9 @@ nsCSPParser::directiveName()
                NS_ConvertUTF16toUTF8(mCurValue).get()));
 
   // Check if it is a valid directive
-  if (!CSP_IsValidDirective(mCurToken)) {
+  if (!CSP_IsValidDirective(mCurToken) ||
+       (!sCSPExperimentalEnabled &&
+         CSP_IsDirective(mCurToken, nsIContentSecurityPolicy::REQUIRE_SRI_FOR))) {
     const char16_t* params[] = { mCurToken.get() };
     logWarningErrorToConsole(nsIScriptError::warningFlag, "couldNotProcessUnknownDirective",
                              params, ArrayLength(params));

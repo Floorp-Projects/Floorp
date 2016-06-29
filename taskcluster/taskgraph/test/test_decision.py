@@ -13,7 +13,8 @@ import tempfile
 
 from .. import decision
 from ..graph import Graph
-from ..types import Task, TaskGraph
+from ..taskgraph import TaskGraph
+from .util import TestTask
 from mozunit import main
 
 
@@ -21,8 +22,8 @@ class TestDecision(unittest.TestCase):
 
     def test_taskgraph_to_json(self):
         tasks = {
-            'a': Task(kind=None, label='a', attributes={'attr': 'a-task'}),
-            'b': Task(kind=None, label='b', task={'task': 'def'}),
+            'a': TestTask(label='a', attributes={'attr': 'a-task'}),
+            'b': TestTask(label='b', task={'task': 'def'}),
         }
         graph = Graph(nodes=set('ab'), edges={('a', 'b', 'edgelabel')})
         taskgraph = TaskGraph(tasks, graph)
@@ -32,13 +33,13 @@ class TestDecision(unittest.TestCase):
         self.assertEqual(res, {
             'a': {
                 'label': 'a',
-                'attributes': {'attr': 'a-task'},
+                'attributes': {'attr': 'a-task', 'kind': 'test'},
                 'task': {},
                 'dependencies': {'edgelabel': 'b'},
             },
             'b': {
                 'label': 'b',
-                'attributes': {},
+                'attributes': {'kind': 'test'},
                 'task': {'task': 'def'},
                 'dependencies': {},
             }

@@ -75,4 +75,23 @@ assertEq(({"[abba]": () => 1})["[abba]"].name, "[abba]");
 let zip = obj.wubba;
 assertEq(zip.name, "wubba");
 
+// (Bug 1282332) Accessed as a property based on a function name
+// This creates a tricky display name of the form: x[y[0]].
+let idaho = {0: () => 1};
+
+let planetz = {};
+planetz[idaho[0]] = () => 1;
+assertEq(planetz[idaho[0]].name, "");
+
+let moya = {};
+moya[planetz[idaho[0]]] =  () => 1;
+assertEq(moya[planetz[idaho[0]]].name, "");
+
+
+// Bound function names
+function bound() {};
+assertEq(bound.name, "bound");
+assertEq(bound.bind(Object).name, "bound bound");
+assertEq((function(){}).bind(function(){}).name, "bound ");
+
 reportCompare(0, 0, 'ok');
