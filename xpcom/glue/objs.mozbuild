@@ -39,6 +39,7 @@ xpcom_glue_src_cppsrcs = [
 xpcom_gluens_src_lcppsrcs = [
     'BlockingResourceBase.cpp',
     'GenericFactory.cpp',
+    'nsProxyRelease.cpp',
     'nsTextFormatter.cpp',
 ]
 
