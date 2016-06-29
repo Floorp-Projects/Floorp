@@ -257,13 +257,32 @@ nsBaseWidget::Shutdown()
 
 void nsBaseWidget::DestroyCompositor()
 {
-  if (mCompositorBridgeChild) {
+  // The compositor shutdown sequence looks like this:
+  //  1. CompositorSession calls CompositorBridgeChild::Destroy.
+  //  2. CompositorBridgeChild synchronously sends WillClose.
+  //  3. CompositorBridgeParent releases some resources (such as the layer
+  //     manager, compositor, and widget).
+  //  4. CompositorBridgeChild::Destroy returns.
+  //  5. Asynchronously, CompositorBridgeParent::ActorDestroy will fire on the
+  //     compositor thread when the I/O thread closes the IPC channel.
+  //  6. Step 5 will schedule DeferredDestroy on the compositor thread, which
+  //     releases the reference CompositorBridgeParent holds to itself.
+  //
+  // When CompositorSession::Shutdown returns, we assume the compositor is gone
+  // or will be gone very soon.
+  if (mCompositorSession) {
+    ReleaseContentController();
+    mAPZC = nullptr;
+    mCompositorBridgeChild = nullptr;
+
     // XXX CompositorBridgeChild and CompositorBridgeParent might be re-created in
     // ClientLayerManager destructor. See bug 1133426.
-    RefPtr<CompositorBridgeChild> compositorChild = mCompositorBridgeChild;
-    RefPtr<CompositorSession> compositorSession = mCompositorSession;
-    mCompositorSession->Shutdown();
-    mCompositorBridgeChild = nullptr;
+    RefPtr<CompositorSession> session = mCompositorSession.forget();
+    session->Shutdown();
+
+    // Widget is used in CompositorBridgeParent, so we can't release it until
+    // it has acknowledged shutdown.
+    mCompositorWidgetProxy = nullptr;
   }
 
   // Can have base widgets that are things like tooltips
@@ -271,6 +290,14 @@ void nsBaseWidget::DestroyCompositor()
   if (mCompositorVsyncDispatcher) {
     mCompositorVsyncDispatcher->Shutdown();
     mCompositorVsyncDispatcher = nullptr;
+  }
+}
+
+void nsBaseWidget::ReleaseContentController()
+{
+  if (mRootContentController) {
+    mRootContentController->Destroy();
+    mRootContentController = nullptr;
   }
 }
 
@@ -1323,16 +1350,8 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
 
   if (!success || !lf) {
     NS_WARNING("Failed to create an OMT compositor.");
-    mAPZC = nullptr;
-    if (mRootContentController) {
-      mRootContentController->Destroy();
-      mRootContentController = nullptr;
-    }
     DestroyCompositor();
     mLayerManager = nullptr;
-    mCompositorBridgeChild = nullptr;
-    mCompositorSession = nullptr;
-    mCompositorVsyncDispatcher = nullptr;
     return;
   }
 
@@ -1427,10 +1446,7 @@ void nsBaseWidget::OnDestroy()
   // If this widget is being destroyed, let the APZ code know to drop references
   // to this widget. Callers of this function all should be holding a deathgrip
   // on this widget already.
-  if (mRootContentController) {
-    mRootContentController->Destroy();
-    mRootContentController = nullptr;
-  }
+  ReleaseContentController();
 }
 
 NS_METHOD nsBaseWidget::SetWindowClass(const nsAString& xulWinType)

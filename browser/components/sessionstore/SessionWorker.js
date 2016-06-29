@@ -344,25 +344,29 @@ var Agent = {
     let exn = null;
 
     let iterator = new File.DirectoryIterator(path);
-    if (!iterator.exists()) {
-      return;
-    }
-    for (let entry in iterator) {
-      if (entry.isDir) {
-        continue;
+    try {
+      if (!iterator.exists()) {
+        return;
       }
-      if (!prefix || entry.name.startsWith(prefix)) {
-        try {
-          File.remove(entry.path);
-        } catch (ex) {
-          // Don't stop immediately
-          exn = exn || ex;
+      for (let entry in iterator) {
+        if (entry.isDir) {
+          continue;
+        }
+        if (!prefix || entry.name.startsWith(prefix)) {
+          try {
+            File.remove(entry.path);
+          } catch (ex) {
+            // Don't stop immediately
+            exn = exn || ex;
+          }
         }
       }
-    }
 
-    if (exn) {
-      throw exn;
+      if (exn) {
+        throw exn;
+      }
+    } finally {
+      iterator.close();
     }
   },
 };

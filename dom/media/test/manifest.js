@@ -1349,6 +1349,56 @@ var gEMETests = [
     sessionCount:3,
     duration:1.60,
   },
+  {
+    name: "WebM vorbis audio & vp8 video clearkey",
+    tracks: [
+      {
+        name:"audio",
+        type:"audio/webm; codecs=\"vorbis\"",
+        fragments:[ "bipbop_360w_253kbps-clearkey-audio.webm",
+                  ],
+      },
+      {
+        name:"video",
+        type:"video/webm; codecs=\"vp8\"",
+        fragments:[ "bipbop_360w_253kbps-clearkey-video-vp8.webm",
+                  ],
+      },
+    ],
+    keys: {
+      // "keyid" : "key"
+      "f1f3ee1790527e9de47217d43835f76a" : "97b9ddc459c8d5ff23c1f2754c95abe8",
+      "8b5df745ad84145b5617c33116e35a67" : "bddfd35dd9be033ee73bc18bc1885056",
+    },
+    sessionType:"temporary",
+    sessionCount:2,
+    duration:1.60,
+  },
+  {
+    name: "WebM vorbis audio & vp9 video clearkey",
+    tracks: [
+      {
+        name:"audio",
+        type:"audio/webm; codecs=\"vorbis\"",
+        fragments:[ "bipbop_360w_253kbps-clearkey-audio.webm",
+                  ],
+      },
+      {
+        name:"video",
+        type:"video/webm; codecs=\"vp9\"",
+        fragments:[ "bipbop_360w_253kbps-clearkey-video-vp9.webm",
+                  ],
+      },
+    ],
+    keys: {
+      // "keyid" : "key"
+      "f1f3ee1790527e9de47217d43835f76a" : "97b9ddc459c8d5ff23c1f2754c95abe8",
+      "eedf63a94fa7c398ee094f123a4ee709" : "973b679a746c82f3acdb856b30e9378e",
+    },
+    sessionType:"temporary",
+    sessionCount:2,
+    duration:1.60,
+  },
 ];
 
 var gEMENonMSEFailTests = [

@@ -496,7 +496,7 @@ class CompileScriptRunnable final : public WorkerRunnable
 public:
   explicit CompileScriptRunnable(WorkerPrivate* aWorkerPrivate,
                                  const nsAString& aScriptURL)
-  : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount),
+  : WorkerRunnable(aWorkerPrivate),
     mScriptURL(aScriptURL)
   { }
 
@@ -1087,7 +1087,7 @@ public:
 
         if (aWorkerPrivate) {
           WorkerGlobalScope* globalScope = nullptr;
-          UNWRAP_WORKER_OBJECT(WorkerGlobalScope, global, globalScope);
+          UNWRAP_OBJECT(WorkerGlobalScope, global, globalScope);
 
           if (!globalScope) {
             WorkerDebuggerGlobalScope* globalScope = nullptr;
@@ -1492,7 +1492,7 @@ class UpdateLanguagesRunnable final : public WorkerRunnable
 public:
   UpdateLanguagesRunnable(WorkerPrivate* aWorkerPrivate,
                           const nsTArray<nsString>& aLanguages)
-    : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount),
+    : WorkerRunnable(aWorkerPrivate),
       mLanguages(aLanguages)
   { }
 
@@ -1609,7 +1609,7 @@ class OfflineStatusChangeRunnable : public WorkerRunnable
 {
 public:
   OfflineStatusChangeRunnable(WorkerPrivate* aWorkerPrivate, bool aIsOffline)
-    : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount),
+    : WorkerRunnable(aWorkerPrivate),
       mIsOffline(aIsOffline)
   {
   }
@@ -1723,9 +1723,8 @@ class MessagePortRunnable final : public WorkerRunnable
   MessagePortIdentifier mPortIdentifier;
 
 public:
-  MessagePortRunnable(WorkerPrivate* aWorkerPrivate,
-                      MessagePort* aPort)
-  : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
+  MessagePortRunnable(WorkerPrivate* aWorkerPrivate, MessagePort* aPort)
+  : WorkerRunnable(aWorkerPrivate)
   {
     MOZ_ASSERT(aPort);
     // In order to move the port from one thread to another one, we have to

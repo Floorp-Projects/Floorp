@@ -1199,7 +1199,13 @@ MacroAssembler::call(Label* label)
 CodeOffset
 MacroAssembler::callWithPatch()
 {
-    as_bal(BOffImm16(0));
+    as_bal(BOffImm16(3 * sizeof(uint32_t)));
+    addPtr(Imm32(5 * sizeof(uint32_t)), ra);
+    // Allocate space which will be patched by patchCall().
+    writeInst(UINT32_MAX);
+    as_lw(ScratchRegister, ra, -(int32_t)(5 * sizeof(uint32_t)));
+    addPtr(ra, ScratchRegister);
+    as_jr(ScratchRegister);
     as_nop();
     return CodeOffset(currentOffset());
 }
@@ -1207,9 +1213,16 @@ MacroAssembler::callWithPatch()
 void
 MacroAssembler::patchCall(uint32_t callerOffset, uint32_t calleeOffset)
 {
-    BufferOffset call(callerOffset - 2 * sizeof(uint32_t));
-    InstImm* bal = (InstImm*)editSrc(call);
-    bal->setBOffImm16(BufferOffset(calleeOffset).diffB<BOffImm16>(call));
+    BufferOffset call(callerOffset - 7 * sizeof(uint32_t));
+
+    if (BOffImm16::IsInRange(BufferOffset(calleeOffset).diffB<int>(call))) {
+        InstImm* bal = (InstImm*)editSrc(call);
+        bal->setBOffImm16(BufferOffset(calleeOffset).diffB<BOffImm16>(call));
+    } else {
+        uint32_t u32Offset = callerOffset - 5 * sizeof(uint32_t);
+        uint32_t* u32 = reinterpret_cast<uint32_t*>(editSrc(BufferOffset(u32Offset)));
+        *u32 = calleeOffset - callerOffset;
+    }
 }
 
 CodeOffset

@@ -8,7 +8,8 @@ import unittest
 
 from ..try_option_syntax import TryOptionSyntax
 from ..graph import Graph
-from ..types import TaskGraph, Task
+from ..taskgraph import TaskGraph
+from .util import TestTask
 from mozunit import main
 
 # an empty graph, for things that don't look at it
@@ -16,14 +17,14 @@ empty_graph = TaskGraph({}, Graph(set(), set()))
 
 
 def unittest_task(n, tp):
-    return (n, Task('test', n, {
+    return (n, TestTask('test', n, {
         'unittest_try_name': n,
         'test_platform': tp,
     }))
 
 
 def talos_task(n, tp):
-    return (n, Task('test', n, {
+    return (n, TestTask('test', n, {
         'talos_try_name': n,
         'test_platform': tp,
     }))
@@ -258,8 +259,8 @@ class TestTryOptionSyntax(unittest.TestCase):
     # -t shares an implementation with -u, so it's not tested heavily
 
     def test_trigger_tests(self):
-        "--trigger-tests 10 sets trigger_tests"
-        tos = TryOptionSyntax('try: --trigger-tests 10', empty_graph)
+        "--rebuild 10 sets trigger_tests"
+        tos = TryOptionSyntax('try: --rebuild 10', empty_graph)
         self.assertEqual(tos.trigger_tests, 10)
 
     def test_interactive(self):

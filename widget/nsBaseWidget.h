@@ -559,6 +559,7 @@ protected:
    */
   virtual void DestroyCompositor();
   void DestroyLayerManager();
+  void ReleaseContentController();
 
   void FreeShutdownObserver();
 

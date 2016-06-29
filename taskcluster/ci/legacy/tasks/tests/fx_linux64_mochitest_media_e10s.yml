@@ -3,6 +3,7 @@ $inherits:
   from: 'tasks/tests/fx_docker_desktop_generic.yml'
 task:
   payload:
+    maxRunTime: 5400
     capabilities:
       devices:
         loopbackVideo: true

@@ -21,6 +21,7 @@ public:
   explicit QueueObject(RefPtr<AbstractThread> aThread);
   ~QueueObject();
   void Dispatch(nsIRunnable* aRunnable);
+  void Dispatch(already_AddRefed<nsIRunnable> aRunnable);
   bool OnThread();
   AbstractThread* Thread();
 

@@ -77,9 +77,10 @@ interface nsIWebVTTParserWrapper : nsISupports
    * @param cues    An array of VTTCues who need there display state to be
    *                computed.
    * @param overlay The HTMLElement that the cues will be displayed within.
+   * @param controls The video control element that will affect cues position.
    */
   void processCues(in mozIDOMWindow window, in nsIVariant cues,
-                   in nsISupports overlay);
+                   in nsISupports overlay, in nsISupports controls);
 };
 
 %{C++

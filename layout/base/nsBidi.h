@@ -410,12 +410,20 @@ struct LevState {
 };
 
 namespace mozilla {
+
+// Pseudo bidi embedding level indicating nonexistence.
+static const nsBidiLevel kBidiLevelNone = 0xff;
+
 struct FrameBidiData
 {
   nsBidiLevel baseLevel;
   nsBidiLevel embeddingLevel;
-  uint8_t paragraphDepth;
+  // The embedding level of virtual bidi formatting character before
+  // this frame if any. kBidiLevelNone is used to indicate nonexistence
+  // or unnecessity of such virtual character.
+  nsBidiLevel precedingControl;
 };
+
 } // namespace mozilla
 
 /**
@@ -682,11 +690,6 @@ public:
   static nsBidiLevel GetEmbeddingLevel(nsIFrame* aFrame)
   {
     return GetBidiData(aFrame).embeddingLevel;
-  }
-
-  static uint8_t GetParagraphDepth(nsIFrame* aFrame)
-  {
-    return GetBidiData(aFrame).paragraphDepth;
   }
 
 protected:

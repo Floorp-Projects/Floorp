@@ -254,6 +254,7 @@ public:
 
     void               ThemeChanged(void);
     void               OnDPIChanged(void);
+    void               OnCheckResize(void);
 
 #ifdef MOZ_X11
     Window             mOldFocusWindow;
@@ -472,6 +473,10 @@ private:
 
     // A fallback image surface when a SHM surface is unavailable.
     cairo_surface_t* mFallbackSurface;
+
+    // Upper bound on pending ConfigureNotify events to be dispatched to the
+    // window. See bug 1225044.
+    int mPendingConfigures;
 
 #ifdef ACCESSIBILITY
     RefPtr<mozilla::a11y::Accessible> mRootAccessible;

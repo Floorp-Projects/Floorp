@@ -117,6 +117,32 @@ function runTests()
   is(result.width, textRectNative.width,
      "sendQueryContentEvent(QUERY_TEXT_RECT) should return same width as calling with QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK");
 
+  // QueryTextRectArray
+  var textRectArray = gUtils.sendQueryContentEvent(gUtils.QUERY_TEXT_RECT_ARRAY, 1, 2, 0, 0);
+  ok(textRectArray.succeeded,
+     "sendQueryContentEvent(QUERY_TEXT_RECT_ARRAY) should succeed");
+  var textRect = gUtils.sendQueryContentEvent(gUtils.QUERY_TEXT_RECT, 1, 2, 0, 0);
+  ok(textRect.succeeded,
+     "sendQueryContentEvent(QUERY_TEXT_RECT) should succeed");
+  var left = {};
+  var top = {};
+  var width = {};
+  var height = {};
+  var left2 = {};
+  var top2 = {};
+  var width2 = {};
+  var height2 = {};
+  textRectArray.getCharacterRect(0, left, top, width, height);
+  ok(textRect.top, top.value,
+     "sendQueryContentEvent(QUERY_TEXT_RECT_ARRAY) should return same top that returns QUERY_TEXT_RECT");
+  ok(textRect.left, left.value,
+     "sendQueryContentEvent(QUERY_TEXT_RECT_ARRAY) should return same left that returns QUERY_TEXT_RECT");
+  textRectArray.getCharacterRect(1, left2, top2, width2, height2);
+  ok(textRect.width, width.value + width2.value,
+     "sendQueryContentEvent(QUERY_TEXT_RECT_ARRAY) should return same width that QUERY_TEXT_RECT is returned for offset 1 and 2");
+  ok(textRect.height, height.value,
+     "sendQueryContentEvent(QUERY_TEXT_RECT_ARRAY) should return same height that returns QUERY_TEXT_RECT");
+
   // QueryCharacterAtOffset
   result = gUtils.sendQueryContentEvent(gUtils.QUERY_CHARACTER_AT_POINT, 0, 0, textRectNative.left + 1, textRectNative.top + 1,
                                         gUtils.QUERY_CONTENT_FLAG_USE_NATIVE_LINE_BREAK);

@@ -885,7 +885,6 @@ GCRuntime::GCRuntime(JSRuntime* rt) :
     noGCOrAllocationCheck(0),
     noNurseryAllocationCheck(0),
 #endif
-    lock(nullptr),
     allocTask(rt, emptyChunks_),
     helperState(rt)
 {
@@ -1043,14 +1042,7 @@ GCRuntime::init(uint32_t maxbytes, uint32_t maxNurseryBytes)
 {
     InitMemorySubsystem();
 
-    lock = PR_NewLock();
-    if (!lock)
-        return false;
-
     if (!rootsHash.init(256))
-        return false;
-
-    if (!helperState.init())
         return false;
 
     /*
@@ -1129,11 +1121,6 @@ GCRuntime::finish()
     FreeChunkPool(rt, fullChunks_);
     FreeChunkPool(rt, availableChunks_);
     FreeChunkPool(rt, emptyChunks_);
-
-    if (lock) {
-        PR_DestroyLock(lock);
-        lock = nullptr;
-    }
 
     FinishTrace();
 }
@@ -3265,28 +3252,11 @@ js::GetCPUCount()
     return ncpus;
 }
 
-bool
-GCHelperState::init()
-{
-    if (!(done = PR_NewCondVar(rt->gc.lock)))
-        return false;
-
-    return true;
-}
-
 void
 GCHelperState::finish()
 {
-    if (!rt->gc.lock) {
-        MOZ_ASSERT(state_ == IDLE);
-        return;
-    }
-
     // Wait for any lingering background sweeping to finish.
     waitBackgroundSweepEnd();
-
-    if (done)
-        PR_DestroyCondVar(done);
 }
 
 GCHelperState::State
@@ -3319,14 +3289,14 @@ GCHelperState::startBackgroundThread(State newState)
 }
 
 void
-GCHelperState::waitForBackgroundThread()
+GCHelperState::waitForBackgroundThread(js::AutoLockGC& lock)
 {
     MOZ_ASSERT(CurrentThreadCanAccessRuntime(rt));
 
 #ifdef DEBUG
     rt->gc.lockOwner = nullptr;
 #endif
-    PR_WaitCondVar(done, PR_INTERVAL_NO_TIMEOUT);
+    done.wait(lock.guard());
 #ifdef DEBUG
     rt->gc.lockOwner = PR_GetCurrentThread();
 #endif
@@ -3362,7 +3332,7 @@ GCHelperState::work()
     setState(IDLE);
     thread = nullptr;
 
-    PR_NotifyAllCondVar(done);
+    done.notify_all();
 }
 
 void
@@ -3428,7 +3398,7 @@ GCHelperState::waitBackgroundSweepEnd()
 {
     AutoLockGC lock(rt);
     while (state() == SWEEPING)
-        waitForBackgroundThread();
+        waitForBackgroundThread(lock);
     if (!rt->gc.isIncrementalGCInProgress())
         rt->gc.assertBackgroundSweepingFinished();
 }

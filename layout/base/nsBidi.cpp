@@ -10,6 +10,9 @@
 
 using namespace mozilla::unicode;
 
+static_assert(mozilla::kBidiLevelNone > NSBIDI_MAX_EXPLICIT_LEVEL + 1,
+              "The pseudo embedding level should be out-of-range");
+
 // These are #defined in <sys/regset.h> under Solaris 10 x86
 #undef CS
 #undef ES

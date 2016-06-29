@@ -260,8 +260,6 @@ fi
 
 MOZ_TOOL_VARIABLES
 
-MOZ_RUST_SUPPORT
-
 AC_PROG_CPP
 AC_PROG_CXXCPP
 
@@ -1036,7 +1034,7 @@ if test -n "$MACOSX_DEPLOYMENT_TARGET" -a -n "$MOZ_RUST"; then
       [#[no_mangle]]
       pub extern fn rusty_answer() -> u8 { 42 }
 EOF
-    ac_try="$RUSTC --crate-type staticlib -o conftest.a conftest.rs >/dev/null"
+    ac_try="$RUSTC $RUST_TARGET --crate-type staticlib -o conftest.a conftest.rs >/dev/null"
     AC_TRY_EVAL(ac_try)
     save_LDFLAGS=$LDFLAGS
     LDFLAGS="$LDFLAGS conftest.a -lpthread -lm"

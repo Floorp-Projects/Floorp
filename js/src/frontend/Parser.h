@@ -391,7 +391,7 @@ enum DefaultHandling { NameRequired, AllowDefaultName };
 enum TripledotHandling { TripledotAllowed, TripledotProhibited };
 
 template <typename ParseHandler>
-class Parser : private JS::AutoGCRooter, public StrictModeGetter
+class Parser final : private JS::AutoGCRooter, public StrictModeGetter
 {
     class MOZ_STACK_CLASS AutoPushStmtInfoPC
     {

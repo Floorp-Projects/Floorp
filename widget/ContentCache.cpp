@@ -12,6 +12,7 @@
 #include "mozilla/TextEvents.h"
 #include "nsIWidget.h"
 #include "mozilla/RefPtr.h"
+#include "mozilla/Move.h"
 
 namespace mozilla {
 
@@ -307,20 +308,14 @@ ContentCacheInChild::CacheTextRects(nsIWidget* aWidget,
     // it's modified after all edit action listeners are performed but this
     // is called while some of them are performed.
     uint32_t length = textComposition->LastData().Length();
-    mTextRectArray.mRects.SetCapacity(length);
     mTextRectArray.mStart = mCompositionStart;
-    uint32_t endOffset = mTextRectArray.mStart + length;
-    for (uint32_t i = mTextRectArray.mStart; i < endOffset; i++) {
-      LayoutDeviceIntRect charRect;
-      if (NS_WARN_IF(!QueryCharRect(aWidget, i, charRect))) {
-        MOZ_LOG(sContentCacheLog, LogLevel::Error,
-          ("ContentCacheInChild: 0x%p CacheTextRects(), FAILED, "
-           "couldn't retrieve text rect at offset=%u", this, i));
-        mTextRectArray.Clear();
-        return false;
-      }
-      mTextRectArray.mRects.AppendElement(charRect);
-    }
+
+    nsEventStatus status = nsEventStatus_eIgnore;
+    WidgetQueryContentEvent textRects(true, eQueryTextRectArray, aWidget);
+    textRects.InitForQueryTextRectArray(mTextRectArray.mStart, length);
+    aWidget->DispatchEvent(&textRects, status);
+
+    mTextRectArray.mRects = Move(textRects.mReply.mRectArray);
   }
 
   if (mTextRectArray.InRange(mSelection.mAnchor)) {

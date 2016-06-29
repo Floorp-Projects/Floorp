@@ -79,19 +79,23 @@ var Agent = {
   getFileEntriesInDirectory:
   function Agent_getFileEntriesInDirectory(path, skipFiles) {
     let iter = new OS.File.DirectoryIterator(path);
-    if (!iter.exists()) {
-      return [];
-    }
-
-    let skip = new Set(skipFiles);
-
-    let entries = [];
-    for (let entry in iter) {
-      if (!entry.isDir && !entry.isSymLink && !skip.has(entry.name)) {
-        entries.push(entry);
+    try {
+      if (!iter.exists()) {
+        return [];
       }
+
+      let skip = new Set(skipFiles);
+
+      let entries = [];
+      for (let entry in iter) {
+        if (!entry.isDir && !entry.isSymLink && !skip.has(entry.name)) {
+          entries.push(entry);
+        }
+      }
+      return entries;
+    } finally {
+      iter.close();
     }
-    return entries;
   },
 
   moveOrDeleteAllThumbnails:

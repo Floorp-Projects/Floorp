@@ -697,7 +697,7 @@ class GCRuntime
     }
 
     void lockGC() {
-        PR_Lock(lock);
+        lock.lock();
 #ifdef DEBUG
         MOZ_ASSERT(!lockOwner);
         lockOwner = PR_GetCurrentThread();
@@ -709,7 +709,7 @@ class GCRuntime
         MOZ_ASSERT(lockOwner == PR_GetCurrentThread());
         lockOwner = nullptr;
 #endif
-        PR_Unlock(lock);
+        lock.unlock();
     }
 
 #ifdef DEBUG
@@ -1350,7 +1350,8 @@ class GCRuntime
 #endif
 
     /* Synchronize GC heap access between main thread and GCHelperState. */
-    PRLock* lock;
+    friend class js::AutoLockGC;
+    js::Mutex lock;
 #ifdef DEBUG
     mozilla::Atomic<PRThread*> lockOwner;
 #endif

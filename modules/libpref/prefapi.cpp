@@ -702,7 +702,7 @@ static PrefTypeFlags pref_SetValue(PrefValue* existingValue, PrefTypeFlags flags
     }
     flags.SetPrefType(newType);
     if (flags.IsTypeString()) {
-        PR_ASSERT(newValue.stringVal);
+        MOZ_ASSERT(newValue.stringVal);
         existingValue->stringVal = newValue.stringVal ? PL_strdup(newValue.stringVal) : nullptr;
     }
     else {
