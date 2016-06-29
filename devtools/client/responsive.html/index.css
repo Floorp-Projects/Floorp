@@ -177,17 +177,18 @@ html, body {
   -moz-appearance: none;
   background-color: var(--theme-toolbar-background);
   background-image: var(--viewport-selection-arrow);
-  background-position: 136px;
+  background-position: 100% 52%;
   background-repeat: no-repeat;
   background-size: 7px;
   border: none;
   color: var(--viewport-color);
   height: 100%;
-  padding: 0 16px 0 0;
+  padding: 0 8px 0 8px;
   text-align: center;
   text-overflow: ellipsis;
   width: 150px;
   font-size: 11px;
+  width: -moz-fit-content;
 }
 
 .viewport-device-selector.selected {
