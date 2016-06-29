@@ -229,6 +229,10 @@ toolbarpaletteitem[place="panel"] {
   opacity: 1;
 }
 
+toolbarpaletteitem toolbarbutton[disabled] {
+  color: inherit !important;
+}
+
 toolbarpaletteitem[notransition].panel-customization-placeholder,
 toolbarpaletteitem[notransition][place="toolbar"],
 toolbarpaletteitem[notransition][place="palette"],

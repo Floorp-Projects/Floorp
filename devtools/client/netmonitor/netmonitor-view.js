@@ -30,6 +30,7 @@ const {LocalizationHelper} = require("devtools/client/shared/l10n");
 const {PrefsHelper} = require("devtools/client/shared/prefs");
 const {ViewHelpers, Heritage, WidgetMethods, setNamedTimeout} =
   require("devtools/client/shared/widgets/view-helpers");
+const {gDevTools} = require("devtools/client/framework/devtools");
 
 /**
  * Localization convenience methods.
@@ -714,7 +715,7 @@ RequestsMenuView.prototype = Heritage.extend(WidgetMethods, {
    * Opens selected item in a new tab.
    */
   openRequestInTab: function () {
-    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    let win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
     let selected = this.selectedItem.attachment;
     win.openUILinkIn(selected.url, "tab", { relatedToCurrent: true });
   },

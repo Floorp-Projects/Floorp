@@ -1,0 +1,264 @@
+<?xml version="1.0"?>
+
+<!-- This Source Code Form is subject to the terms of the Mozilla Public
+   - License, v. 2.0. If a copy of the MPL was not distributed with this
+   - file, You can obtain one at http://mozilla.org/MPL/2.0/. -->
+
+<?xml-stylesheet href="chrome://global/skin" type="text/css"?>
+<?xml-stylesheet href="chrome://mochikit/content/tests/SimpleTest/test.css"?>
+
+<window id="FindbarEntireWordTest"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        width="600"
+        height="600"
+        onload="onLoad();"
+        title="findbar test - entire words only">
+
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/EventUtils.js"/>
+  <script type="application/javascript"
+          src="chrome://mochikit/content/tests/SimpleTest/ChromeUtils.js"/>
+
+  <script type="application/javascript"><![CDATA[
+    const {interfaces: Ci, classes: Cc, results: Cr, utils: Cu} = Components;
+    Cu.import("resource://gre/modules/Task.jsm");
+    Cu.import("resource://testing-common/ContentTask.jsm");
+    ContentTask.setTestScope(window.opener.wrappedJSObject);
+
+    var gFindBar = null;
+    var gBrowser;
+
+    var imports = ["SimpleTest", "SpecialPowers", "ok", "is", "isnot", "info"];
+    for (var name of imports) {
+      window[name] = window.opener.wrappedJSObject[name];
+    }
+    SimpleTest.requestLongerTimeout(2);
+
+    const kBaseURL = "chrome://mochitests/content/chrome/toolkit/content/tests/chrome";
+    const kTests = {
+      latin1: {
+        testSimpleEntireWord: {
+          "and": results => {
+            isnot(results.find.result, Ci.nsITypeAheadFind.FIND_NOTFOUND, "'and' should've been found");
+            is(results.matches.total, 6, "should've found 6 matches");
+          },
+          "an": results => {
+            is(results.find.result, Ci.nsITypeAheadFind.FIND_NOTFOUND, "'an' shouldn't have been found");
+            is(results.matches.total, 0, "should've found 0 matches");
+          },
+          "darkness": results => {
+            isnot(results.find.result, Ci.nsITypeAheadFind.FIND_NOTFOUND, "'darkness' should've been found");
+            is(results.matches.total, 3, "should've found 3 matches");
+          },
+          "mammon": results => {
+            isnot(results.find.result, Ci.nsITypeAheadFind.FIND_NOTFOUND, "'mammon' should've been found");
+            is(results.matches.total, 1, "should've found 1 match");
+          }
+        },
+        testCaseSensitive: {
+          "And": results => {
+            isnot(results.find.result, Ci.nsITypeAheadFind.FIND_NOTFOUND, "'And' should've been found");
+            is(results.matches.total, 1, "should've found 1 match");
+          },
+          "and": results => {
+            isnot(results.find.result, Ci.nsITypeAheadFind.FIND_NOTFOUND, "'and' should've been found");
+            is(results.matches.total, 5, "should've found 5 matches");
+          },
+          "Mammon": results => {
+            isnot(results.find.result, Ci.nsITypeAheadFind.FIND_NOTFOUND, "'mammon' should've been found");
+            is(results.matches.total, 1, "should've found 1 match");
+          }
+        },
+        testWordBreakChars: {
+          "a": results => {
+            // 'a' is a common charactar, but there should only be one occurrence
+            // separated by word boundaries.
+            isnot(results.find.result, Ci.nsITypeAheadFind.FIND_NOTFOUND, "'a' should've been found");
+            is(results.matches.total, 1, "should've found 1 match");
+          },
+          "quarrelled": results => {
+            // 'quarrelled' is denoted as a word by a period char.
+            isnot(results.find.result, Ci.nsITypeAheadFind.FIND_NOTFOUND, "'quarrelled' should've been found");
+            is(results.matches.total, 1, "should've found 1 match");
+          }
+        },
+        testQuickfind: {
+          "and": results => {
+            isnot(results.find.result, Ci.nsITypeAheadFind.FIND_NOTFOUND, "'and' should've been found");
+            is(results.matches.total, 6, "should've found 6 matches");
+          },
+          "an": results => {
+            is(results.find.result, Ci.nsITypeAheadFind.FIND_NOTFOUND, "'an' shouldn't have been found");
+            is(results.matches.total, 0, "should've found 0 matches");
+          },
+          "darkness": results => {
+            isnot(results.find.result, Ci.nsITypeAheadFind.FIND_NOTFOUND, "'darkness' should've been found");
+            is(results.matches.total, 3, "should've found 3 matches");
+          },
+          "mammon": results => {
+            isnot(results.find.result, Ci.nsITypeAheadFind.FIND_NOTFOUND, "'mammon' should've been found");
+            is(results.matches.total, 1, "should've found 1 match");
+          }
+        }
+      }
+    };
+
+    function onLoad() {
+      Task.spawn(function* () {
+        yield new Promise(resolve => {
+          SpecialPowers.pushPrefEnv(
+            { set: [["findbar.entireword", true]] }, resolve);
+        });
+
+        gFindBar = document.getElementById("FindToolbar");
+        for (let browserId of ["content", "content-remote"]) {
+          // XXXmikedeboer: when multiple test samples are available, make this
+          //                a nested loop that iterates over them. For now, only
+          //                latin is available.
+          yield startTestWithBrowser("latin1", browserId);
+        }
+      }).then(() => {
+        window.close();
+        SimpleTest.finish();
+      });
+    }
+
+    function* startTestWithBrowser(testName, browserId) {
+      info("Starting test with browser '" + browserId + "'");
+      gBrowser = document.getElementById(browserId);
+      gFindBar.browser = gBrowser;
+
+      let promise = ContentTask.spawn(gBrowser, null, function* () {
+        return new Promise(resolve => {
+          addEventListener("DOMContentLoaded", function listener() {
+            removeEventListener("DOMContentLoaded", listener);
+            resolve();
+          });
+        });
+      });
+      gBrowser.loadURI(kBaseURL + "/sample_entireword_" + testName + ".html");
+      yield promise;
+      yield onDocumentLoaded(testName);
+    }
+
+    function* onDocumentLoaded(testName) {
+      let suite = kTests[testName];
+      yield testSimpleEntireWord(suite.testSimpleEntireWord);
+      yield testCaseSensitive(suite.testCaseSensitive);
+      yield testWordBreakChars(suite.testWordBreakChars);
+      yield testQuickfind(suite.testQuickfind);
+    }
+
+    var enterStringIntoFindField = Task.async(function* (str, waitForResult = true) {
+      for (let promise, i = 0; i < str.length; i++) {
+        if (waitForResult) {
+          promise = promiseFindResult();
+        }
+        let event = document.createEvent("KeyEvents");
+        event.initKeyEvent("keypress", true, true, null, false, false,
+                           false, false, 0, str.charCodeAt(i));
+        gFindBar._findField.inputField.dispatchEvent(event);
+        if (waitForResult) {
+          yield promise;
+        }
+      }
+    });
+
+    function openFindbar() {
+      document.getElementById("cmd_find").doCommand();
+      return gFindBar._startFindDeferred && gFindBar._startFindDeferred.promise;
+    }
+
+    function promiseFindResult() {
+      return new Promise(resolve => {
+        let data = {};
+        let listener = {
+          onFindResult: maybeResolve.bind(null, "find"),
+          onMatchesCountResult: maybeResolve.bind(null, "matches")
+        };
+
+        function maybeResolve(which, res) {
+          data[which] = res;
+          if (!data.find || !data.matches)
+            return;
+          gFindBar.browser.finder.removeResultListener(listener);
+          resolve(data);
+        }
+
+        gFindBar.browser.finder.addResultListener(listener);
+      });
+    }
+
+    function* testIterator(tests) {
+      for (let searchString of Object.getOwnPropertyNames(tests)) {
+        gFindBar.clear();
+
+        let promise = promiseFindResult();
+
+        yield enterStringIntoFindField(searchString, false);
+
+        tests[searchString](yield promise);
+      }
+    }
+
+    function* testSimpleEntireWord(tests) {
+      yield openFindbar();
+      ok(!gFindBar.hidden, "testSimpleEntireWord: findbar should be open");
+
+      yield* testIterator(tests);
+
+      gFindBar.close();
+    }
+
+    function* testCaseSensitive(tests) {
+      yield openFindbar();
+      ok(!gFindBar.hidden, "testCaseSensitive: findbar should be open");
+
+      let matchCaseCheckbox = gFindBar.getElement("find-case-sensitive");
+      if (!matchCaseCheckbox.hidden && !matchCaseCheckbox.checked)
+        matchCaseCheckbox.click();
+
+      yield* testIterator(tests);
+
+      if (!matchCaseCheckbox.hidden)
+        matchCaseCheckbox.click();
+      gFindBar.close();
+    }
+
+    function* testWordBreakChars(tests) {
+      yield openFindbar();
+      ok(!gFindBar.hidden, "testWordBreakChars: findbar should be open");
+
+      yield* testIterator(tests);
+
+      gFindBar.close();
+    }
+
+    function* testQuickfind(tests) {
+      yield ContentTask.spawn(gBrowser, null, function* () {
+        let document = content.document;
+        let event = document.createEvent("KeyEvents");
+        event.initKeyEvent("keypress", true, true, null, false, false,
+                           false, false, 0, "/".charCodeAt(0));
+        document.documentElement.dispatchEvent(event);
+      });
+
+      ok(!gFindBar.hidden, "testQuickfind: failed to open findbar");
+      ok(document.commandDispatcher.focusedElement == gFindBar._findField.inputField,
+        "testQuickfind: find field is not focused");
+      ok(!gFindBar.getElement("entire-word-status").hidden,
+        "testQuickfind: entire word mode status text should be visible");
+
+      yield* testIterator(tests);
+
+      gFindBar.close();
+    }
+  ]]></script>
+
+  <commandset>
+    <command id="cmd_find" oncommand="document.getElementById('FindToolbar').onFindCommand();"/>
+  </commandset>
+  <browser type="content-primary" flex="1" id="content" src="about:blank"/>
+  <browser type="content-primary" flex="1" id="content-remote" remote="true" src="about:blank"/>
+  <findbar id="FindToolbar" browserid="content"/>
+</window>

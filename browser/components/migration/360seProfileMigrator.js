@@ -18,6 +18,8 @@ XPCOMUtils.defineLazyModuleGetter(this, "PlacesUtils",
 XPCOMUtils.defineLazyModuleGetter(this, "Sqlite",
                                   "resource://gre/modules/Sqlite.jsm");
 
+const kBookmarksFileName = "360sefav.db";
+
 function copyToTempUTF8File(file, charset) {
   let inputStream = Cc["@mozilla.org/network/file-input-stream;1"]
                       .createInstance(Ci.nsIFileInputStream);
@@ -95,7 +97,7 @@ function getHash(aStr) {
 
 function Bookmarks(aProfileFolder) {
   let file = aProfileFolder.clone();
-  file.append("360sefav.db");
+  file.append(kBookmarksFileName);
 
   this._file = file;
 }
@@ -296,6 +298,23 @@ Qihoo360seProfileMigrator.prototype.getResources = function(aProfile) {
     new Bookmarks(profileFolder)
   ];
   return resources.filter(r => r.exists);
+};
+
+Qihoo360seProfileMigrator.prototype.getLastUsedDate = function() {
+  let bookmarksPaths = this.sourceProfiles.map(({id}) => {
+    return OS.Path.join(this._usersDir.path, id, kBookmarksFileName);
+  });
+  if (!bookmarksPaths.length) {
+    return Promise.resolve(new Date(0));
+  }
+  let datePromises = bookmarksPaths.map(path => {
+    return OS.File.stat(path).catch(_ => null).then(info => {
+      return info ? info.lastModificationDate : 0;
+    });
+  });
+  return Promise.all(datePromises).then(dates => {
+    return new Date(Math.max.apply(Math, dates));
+  });
 };
 
 Qihoo360seProfileMigrator.prototype.classDescription = "360 Secure Browser Profile Migrator";

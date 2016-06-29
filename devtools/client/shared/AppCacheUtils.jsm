@@ -31,6 +31,8 @@ var { XPCOMUtils } = Cu.import("resource://gre/modules/XPCOMUtils.jsm", {});
 var { NetUtil } = Cu.import("resource://gre/modules/NetUtil.jsm", {});
 var { LoadContextInfo } = Cu.import("resource://gre/modules/LoadContextInfo.jsm", {});
 var { require } = Cu.import("resource://devtools/shared/Loader.jsm", {});
+
+var { gDevTools } = require("devtools/client/framework/devtools");
 var Services = require("Services");
 var promise = require("promise");
 var defer = require("devtools/shared/defer");
@@ -294,9 +296,9 @@ AppCacheUtils.prototype = {
   viewEntry: function ACU_viewEntry(key) {
     let wm = Cc["@mozilla.org/appshell/window-mediator;1"]
                .getService(Ci.nsIWindowMediator);
-    let win = wm.getMostRecentWindow("navigator:browser");
-    win.gBrowser.selectedTab = win.gBrowser.addTab(
-      "about:cache-entry?storage=appcache&context=&eid=&uri=" + key);
+    let win = wm.getMostRecentWindow(gDevTools.chromeWindowType);
+    let url = "about:cache-entry?storage=appcache&context=&eid=&uri=" + key;
+    win.openUILinkIn(url, "tab");
   },
 
   clearAll: function ACU_clearAll() {
