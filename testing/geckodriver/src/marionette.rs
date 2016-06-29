@@ -2,6 +2,7 @@ use hyper::method::Method;
 use mozprofile::preferences::Pref;
 use mozprofile::profile::Profile;
 use mozrunner::runner::{Runner, FirefoxRunner, RunnerError};
+use mozrunner::runner::platform::firefox_default_path;
 use regex::Captures;
 use rustc_serialize::base64::FromBase64;
 use rustc_serialize::json::{Json, ToJson};
@@ -325,15 +326,7 @@ impl MarionetteHandler {
         let launcher = if self.connect_existing {
             BrowserLauncher::None
         } else {
-            let binary = if let Some(binary_capability) = capabilities.get("firefox_binary") {
-                Some(PathBuf::from(try!(binary_capability
-                                        .as_string()
-                                        .ok_or(WebDriverError::new(
-                                            ErrorStatus::InvalidArgument,
-                                            "'firefox_binary' capability was not a string")))))
-            } else {
-                self.binary.as_ref().map(|x| x.clone())
-            };
+            let binary = try!(self.binary_path(capabilities));
             if let Some(path) = binary {
                 BrowserLauncher::BinaryLauncher(path)
             } else {
@@ -401,6 +394,19 @@ impl MarionetteHandler {
         Ok(())
     }
 
+    fn binary_path(&self, capabilities: &NewSessionParameters) -> WebDriverResult<Option<PathBuf>> {
+        if let Some(binary_capability) = capabilities.get("firefox_binary") {
+            Ok(Some(PathBuf::from(try!(binary_capability
+                                       .as_string()
+                                       .ok_or(WebDriverError::new(
+                                           ErrorStatus::InvalidArgument,
+                                           "'firefox_binary' capability was not a string"))))))
+        } else if self.binary.is_some() {
+            Ok(self.binary.as_ref().map(|x| x.clone()))
+        } else {
+            Ok(firefox_default_path())
+        }
+    }
     pub fn load_profile(&self, capabilities: &NewSessionParameters) -> WebDriverResult<Option<Profile>> {
         let profile_opt = capabilities.get("firefox_profile");
         if profile_opt.is_none() {
