@@ -478,17 +478,6 @@ public:
    */
   bool RemovePrincipalChangeObserver(dom::PrincipalChangeObserver<DOMMediaStream>* aObserver);
 
-  /**
-   * Called when this stream's MediaStreamGraph has been shut down. Normally
-   * MSGs are only shut down when all streams have been removed, so this
-   * will only be called during a forced shutdown due to application exit.
-   */
-  void NotifyMediaStreamGraphShutdown();
-  /**
-   * Called when the main-thread state of the MediaStream goes to finished.
-   */
-  void NotifyStreamFinished();
-
   // Webrtc allows the remote side to name a stream whatever it wants, and we
   // need to surface this to content.
   void AssignId(const nsAString& aID) { mID = aID; }
@@ -555,13 +544,11 @@ public:
 
   /**
    * Add an nsISupports object that this stream will keep alive as long as
-   * the stream is not finished.
+   * the stream itself is alive.
    */
   void AddConsumerToKeepAlive(nsISupports* aConsumer)
   {
-    if (!IsFinished() && !mNotifiedOfMediaStreamGraphShutdown) {
-      mConsumersToKeepAlive.AppendElement(aConsumer);
-    }
+    mConsumersToKeepAlive.AppendElement(aConsumer);
   }
 
   // Registers a track listener to this MediaStream, for listening to changes
@@ -685,7 +672,12 @@ protected:
   // track sources.
   RefPtr<MediaStreamTrackSourceGetter> mTrackSourceGetter;
 
+  // Listener tracking changes to mOwnedStream. We use this to notify the
+  // MediaStreamTracks we own about state changes.
   RefPtr<OwnedStreamListener> mOwnedListener;
+
+  // Listener tracking changes to mPlaybackStream. This drives state changes
+  // in this DOMMediaStream and notifications to mTrackListeners.
   RefPtr<PlaybackStreamListener> mPlaybackListener;
 
   nsTArray<nsAutoPtr<OnTracksAvailableCallback> > mRunOnTracksAvailable;
@@ -695,8 +687,8 @@ protected:
 
   nsString mID;
 
-  // Keep these alive until the stream finishes
-  nsTArray<nsCOMPtr<nsISupports> > mConsumersToKeepAlive;
+  // Keep these alive while the stream is alive.
+  nsTArray<nsCOMPtr<nsISupports>> mConsumersToKeepAlive;
 
   bool mNotifiedOfMediaStreamGraphShutdown;
 

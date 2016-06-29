@@ -162,7 +162,7 @@ nsSpeechTask::InitDirectAudio()
 {
   mStream = MediaStreamGraph::GetInstance(MediaStreamGraph::AUDIO_THREAD_DRIVER,
                                           AudioChannel::Normal)->
-    CreateSourceStream(nullptr);
+    CreateSourceStream();
   mIndirectAudio = false;
   mInited = true;
 }
