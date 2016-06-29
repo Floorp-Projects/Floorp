@@ -106,8 +106,8 @@ nsSVGFilterFrame::GetReferencedFilter()
   if (mNoHRefURI)
     return nullptr;
 
-  nsSVGPaintingProperty *property = static_cast<nsSVGPaintingProperty*>
-    (Properties().Get(nsSVGEffects::HrefProperty()));
+  nsSVGPaintingProperty *property =
+    Properties().Get(nsSVGEffects::HrefAsPaintingProperty());
 
   if (!property) {
     // Fetch our Filter element's xlink:href attribute
@@ -126,7 +126,8 @@ nsSVGFilterFrame::GetReferencedFilter()
                                               mContent->GetUncomposedDoc(), base);
 
     property =
-      nsSVGEffects::GetPaintingProperty(targetURI, this, nsSVGEffects::HrefProperty());
+      nsSVGEffects::GetPaintingProperty(targetURI, this,
+                                        nsSVGEffects::HrefAsPaintingProperty());
     if (!property)
       return nullptr;
   }
@@ -174,7 +175,7 @@ nsSVGFilterFrame::AttributeChanged(int32_t  aNameSpaceID,
   } else if (aNameSpaceID == kNameSpaceID_XLink &&
              aAttribute == nsGkAtoms::href) {
     // Blow away our reference, if any
-    Properties().Delete(nsSVGEffects::HrefProperty());
+    Properties().Delete(nsSVGEffects::HrefAsPaintingProperty());
     mNoHRefURI = false;
     // And update whoever references us
     nsSVGEffects::InvalidateDirectRenderingObservers(this);

@@ -58,6 +58,8 @@ class Function;
 class MessagePort;
 class MessagePortIdentifier;
 class StructuredCloneHolder;
+class WorkerDebuggerGlobalScope;
+class WorkerGlobalScope;
 } // namespace dom
 namespace ipc {
 class PrincipalInfo;
@@ -76,8 +78,6 @@ class SharedWorker;
 class ServiceWorkerClientInfo;
 class WorkerControlRunnable;
 class WorkerDebugger;
-class WorkerDebuggerGlobalScope;
-class WorkerGlobalScope;
 class WorkerPrivate;
 class WorkerRunnable;
 class WorkerThread;

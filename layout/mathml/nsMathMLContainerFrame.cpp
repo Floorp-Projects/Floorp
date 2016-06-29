@@ -146,7 +146,7 @@ nsMathMLContainerFrame::GetReflowAndBoundingMetricsFor(nsIFrame*            aFra
 {
   NS_PRECONDITION(aFrame, "null arg");
 
-  nsHTMLReflowMetrics *metrics =
+  nsHTMLReflowMetrics* metrics =
     aFrame->Properties().Get(HTMLReflowMetricsProperty());
 
   // IMPORTANT: This function is only meant to be called in Place() methods

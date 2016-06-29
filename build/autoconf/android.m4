@@ -95,7 +95,9 @@ AC_DEFUN([MOZ_ANDROID_STLPORT],
 
 if test "$OS_TARGET" = "Android"; then
     cpu_arch_dir="$ANDROID_CPU_ARCH"
-    if test "$MOZ_THUMB2" = 1; then
+    # NDK r12 removed the arm/thumb library split and just made everything
+    # thumb by default.  Attempt to compensate.
+    if test "$MOZ_THUMB2" = 1 -a -d "$cpu_arch_dir/thumb"; then
         cpu_arch_dir="$cpu_arch_dir/thumb"
     fi
 
@@ -129,6 +131,12 @@ if test "$OS_TARGET" = "Android"; then
             fi
 
             STLPORT_LIBS="-L$cxx_libs -lc++_static"
+            # NDK r12 split the libc++ runtime libraries into pieces.
+            for lib in c++abi unwind android_support; do
+                if test -e "$cxx_libs/lib${lib}.a"; then
+                     STLPORT_LIBS="$STLPORT_LIBS -l${lib}"
+                fi
+            done
             # Add android/support/include/ for prototyping long double math
             # functions, locale-specific C library functions, multibyte support,
             # etc.

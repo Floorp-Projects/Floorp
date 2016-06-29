@@ -274,11 +274,6 @@ class FloatRegisters
         return Names[code];
     }
 
-    static const char* GetName(uint32_t i) {
-        MOZ_ASSERT(i < Total);
-        return GetName(Encoding(i));
-    }
-
     static Code FromName(const char* name);
 
     static const Encoding Invalid = invalid_freg;

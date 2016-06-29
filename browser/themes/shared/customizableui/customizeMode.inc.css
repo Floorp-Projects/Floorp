@@ -94,7 +94,7 @@
 
 #customization-palette,
 #customization-empty {
-  padding: 0 25px 25px;
+  padding: 5px 25px 25px;
 }
 
 #customization-header {
@@ -281,8 +281,11 @@ toolbarpaletteitem[place="toolbar"]:not([mousedown="true"]):-moz-focusring {
   /* Delay adding the focusring back until after the transform transition completes. */
   transition: outline-width .01s linear var(--drag-drop-transition-duration);
   outline: 1px dotted rgba(0,0,0,.5);
-  outline-offset: -5px;
   -moz-outline-radius: 2.5px;
+}
+
+toolbarpaletteitem[place="toolbar"]:not([mousedown="true"]):-moz-focusring {
+  outline-offset: -5px;
 }
 
 #wrapper-edit-controls[place="palette"] > #edit-controls > toolbarbutton,

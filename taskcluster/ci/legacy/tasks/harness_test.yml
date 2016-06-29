@@ -50,7 +50,7 @@ task:
       GECKO_HEAD_REPOSITORY: '{{head_repository}}'
       GECKO_HEAD_REV: '{{head_rev}}'
       GECKO_HEAD_REF: '{{head_ref}}'
-      TOOLTOOL_REPO: 'https://git.mozilla.org/build/tooltool.git'
+      TOOLTOOL_REPO: 'https://github.com/mozilla/build-tooltool'
       TOOLTOOL_REV: 'master'
       TOOLS_DISABLE: true
       MOZ_BUILD_DATE: '{{pushdate}}'
@@ -65,7 +65,7 @@ task:
         build: null
         tests: null
     index:
-      rank: {{push_epoch}}
+      rank: {{rank}}
     treeherder:
       jobKind: test
       groupSymbol: tc

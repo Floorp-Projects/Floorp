@@ -3583,6 +3583,7 @@ DiffuseLightingSoftware::LightPixel(const Point3D &aNormal,
 SpecularLightingSoftware::SpecularLightingSoftware()
  : mSpecularConstant(0)
  , mSpecularExponent(0)
+ , mSpecularConstantInt(0)
 {
 }
 

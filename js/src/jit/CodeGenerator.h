@@ -53,7 +53,7 @@ class OutOfLineRegExpPrototypeOptimizable;
 class OutOfLineRegExpInstanceOptimizable;
 class OutOfLineLambdaArrow;
 
-class CodeGenerator : public CodeGeneratorSpecific
+class CodeGenerator final : public CodeGeneratorSpecific
 {
     void generateArgumentsChecks(bool bailout = true);
     MOZ_MUST_USE bool generateBody();

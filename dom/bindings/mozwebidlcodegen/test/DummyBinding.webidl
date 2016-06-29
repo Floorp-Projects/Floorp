@@ -1,2 +1,1 @@
 interface DummyInterface {};
-interface DummyInterfaceWorkers {};

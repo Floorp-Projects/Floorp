@@ -1670,13 +1670,17 @@ FunctionNameFromDisplayName(JSContext* cx, TextChar* text, size_t textLen, Strin
             MOZ_ASSERT(0);
             break;
         } else if (text[index] == (TextChar)']') {
-            // Here we're dealing with an unquoted numeric value so we can
-            // just skip to the closing bracket to save some work.
+            // Here we expect an unquoted numeric value. If that's the case
+            // we can just skip to the closing bracket to save some work.
             for (size_t j = 0; j < index; j++) {
-                if (text[(index - j) - 1] == (TextChar)'[') {
+                TextChar numeral = text[(index - j) - 1];
+                if (numeral == (TextChar)'[') {
                     start = index - j;
                     end = index;
                     break;
+                } else if (numeral > (TextChar)'9' || numeral < (TextChar)'0') {
+                    // Fail on anything that isn't a numeral (Bug 1282332).
+                    return false;
                 }
             }
             break;

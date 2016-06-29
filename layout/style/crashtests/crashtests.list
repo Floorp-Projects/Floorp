@@ -149,3 +149,4 @@ load long-url-list-stack-overflow.html
 pref(layout.css.background-clip-text.enabled,true) load 1264949.html
 pref(layout.css.background-clip-text.enabled,true) load 1270795.html
 pref(layout.css.background-clip-text.enabled,true) load 1275026.html
+load 1278463-1.html

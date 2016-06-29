@@ -751,13 +751,7 @@ NS_ImplementChannelOpen(nsIChannel      *channel,
                                            getter_AddRefs(stream));
     NS_ENSURE_SUCCESS(rv, rv);
 
-    nsCOMPtr<nsILoadInfo> loadInfo = channel->GetLoadInfo();
-    if (loadInfo && loadInfo->GetEnforceSecurity()) {
-      rv = channel->AsyncOpen2(listener);
-    }
-    else {
-      rv = channel->AsyncOpen(listener, nullptr);
-    }
+    rv = NS_MaybeOpenChannelUsingAsyncOpen2(channel, listener);
     NS_ENSURE_SUCCESS(rv, rv);
 
     uint64_t n;
@@ -2002,6 +1996,26 @@ nsresult NS_MakeRandomInvalidURLString(nsCString &result)
 }
 #undef NS_FAKE_SCHEME
 #undef NS_FAKE_TLD
+
+nsresult NS_MaybeOpenChannelUsingOpen2(nsIChannel* aChannel,
+                                       nsIInputStream **aStream)
+{
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+  if (loadInfo && loadInfo->GetSecurityMode() != 0) {
+    return aChannel->Open2(aStream);
+  }
+  return aChannel->Open(aStream);
+}
+
+nsresult NS_MaybeOpenChannelUsingAsyncOpen2(nsIChannel* aChannel,
+                                            nsIStreamListener *aListener)
+{
+  nsCOMPtr<nsILoadInfo> loadInfo = aChannel->GetLoadInfo();
+  if (loadInfo && loadInfo->GetSecurityMode() != 0) {
+    return aChannel->AsyncOpen2(aListener);
+  }
+  return aChannel->AsyncOpen(aListener, nullptr);
+}
 
 nsresult
 NS_CheckIsJavaCompatibleURLString(nsCString &urlString, bool *result)
