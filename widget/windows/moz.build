@@ -14,7 +14,7 @@ EXPORTS += [
 
 EXPORTS.mozilla.widget += [
     'AudioSession.h',
-    'WinCompositorWidgetProxy.h',
+    'WinCompositorWidget.h',
     'WinMessages.h',
     'WinModifierKeyState.h',
     'WinNativeEventData.h',
@@ -55,7 +55,7 @@ UNIFIED_SOURCES += [
     'TaskbarTabPreview.cpp',
     'TaskbarWindowPreview.cpp',
     'WidgetTraceEvent.cpp',
-    'WinCompositorWidgetProxy.cpp',
+    'WinCompositorWidget.cpp',
     'WindowHook.cpp',
     'WinIMEHandler.cpp',
     'WinTaskbar.cpp',
