@@ -62,15 +62,18 @@ SandboxPolicyBase::EvaluateSyscall(int aSysno) const {
       return acc->Default(InvalidSyscall());
     }
 #endif // ANDROID
-#else // __NR_socketcall
-#define DISPATCH_SOCKETCALL(sysnum, socketnum)         \
-    case sysnum:                                       \
+#endif // __NR_socketcall
+#define DISPATCH_SOCKETCALL(sysnum, socketnum)                       \
+    case sysnum:                                                     \
       return EvaluateSocketCall(socketnum).valueOr(InvalidSyscall())
+#ifdef __NR_socket
       DISPATCH_SOCKETCALL(__NR_socket,      SYS_SOCKET);
       DISPATCH_SOCKETCALL(__NR_bind,        SYS_BIND);
       DISPATCH_SOCKETCALL(__NR_connect,     SYS_CONNECT);
       DISPATCH_SOCKETCALL(__NR_listen,      SYS_LISTEN);
+#ifdef __NR_accept
       DISPATCH_SOCKETCALL(__NR_accept,      SYS_ACCEPT);
+#endif
       DISPATCH_SOCKETCALL(__NR_getsockname, SYS_GETSOCKNAME);
       DISPATCH_SOCKETCALL(__NR_getpeername, SYS_GETPEERNAME);
       DISPATCH_SOCKETCALL(__NR_socketpair,  SYS_SOCKETPAIR);
@@ -88,7 +91,9 @@ SandboxPolicyBase::EvaluateSyscall(int aSysno) const {
       DISPATCH_SOCKETCALL(__NR_accept4,     SYS_ACCEPT4);
       DISPATCH_SOCKETCALL(__NR_recvmmsg,    SYS_RECVMMSG);
       DISPATCH_SOCKETCALL(__NR_sendmmsg,    SYS_SENDMMSG);
+#endif // __NR_socket
 #undef DISPATCH_SOCKETCALL
+#ifndef __NR_socketcall
 #ifndef ANDROID
 #define DISPATCH_SYSVCALL(sysnum, ipcnum)         \
     case sysnum:                                  \
