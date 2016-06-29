@@ -16,6 +16,7 @@ class nsIWidget;
 namespace mozilla {
 namespace widget {
 class CompositorWidget;
+class CompositorWidgetDelegate;
 } // namespace widget
 namespace gfx {
 class GPUProcessManager;
@@ -36,6 +37,7 @@ class CompositorSession
 
 protected:
   typedef widget::CompositorWidget CompositorWidget;
+  typedef widget::CompositorWidgetDelegate CompositorWidgetDelegate;
 
 public:
   NS_INLINE_DECL_THREADSAFE_REFCOUNTING(CompositorSession)
@@ -58,8 +60,8 @@ public:
   CompositorBridgeChild* GetCompositorBridgeChild();
 
   // Return the proxy for accessing the compositor's widget.
-  RefPtr<CompositorWidget> GetCompositorWidget() {
-    return mCompositorWidget;
+  CompositorWidgetDelegate* GetCompositorWidgetDelegate() {
+    return mCompositorWidgetDelegate;
   }
 
 protected:
@@ -76,7 +78,7 @@ protected:
 
 protected:
   RefPtr<CompositorBridgeChild> mCompositorBridgeChild;
-  RefPtr<CompositorWidget> mCompositorWidget;
+  CompositorWidgetDelegate* mCompositorWidgetDelegate;
 
 private:
   DISALLOW_COPY_AND_ASSIGN(CompositorSession);

@@ -171,6 +171,7 @@ nsBaseWidget::nsBaseWidget()
 , mSizeMode(nsSizeMode_Normal)
 , mPopupLevel(ePopupLevelTop)
 , mPopupType(ePopupTypeAny)
+, mCompositorWidgetDelegate(nullptr)
 , mUpdateCursor(true)
 , mUseAttachedEvents(false)
 , mIMEHasFocus(false)
@@ -273,7 +274,7 @@ void nsBaseWidget::DestroyCompositor()
   if (mCompositorSession) {
     ReleaseContentController();
     mAPZC = nullptr;
-    mCompositorWidget = nullptr;
+    mCompositorWidgetDelegate = nullptr;
     mCompositorBridgeChild = nullptr;
 
     // XXX CompositorBridgeChild and CompositorBridgeParent might be re-created in
@@ -1314,7 +1315,7 @@ void nsBaseWidget::CreateCompositor(int aWidth, int aHeight)
     UseExternalCompositingSurface(),
     gfx::IntSize(aWidth, aHeight));
   mCompositorBridgeChild = mCompositorSession->GetCompositorBridgeChild();
-  mCompositorWidget = mCompositorSession->GetCompositorWidget();
+  mCompositorWidgetDelegate = mCompositorSession->GetCompositorWidgetDelegate();
 
   mAPZC = mCompositorSession->GetAPZCTreeManager();
   if (mAPZC) {
