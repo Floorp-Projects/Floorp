@@ -19,6 +19,8 @@
 #include "mozilla/Services.h"
 #include "nsIObserverService.h"
 #include "nsCRT.h"
+#include "nsAppDirectoryServiceDefs.h"
+#include "nsDirectoryServiceUtils.h"
 
 using namespace mozilla;
 
@@ -167,6 +169,14 @@ nsHyphenationManager::LoadPatternList()
     if (NS_SUCCEEDED(appDir->Equals(greDir, &equals)) && !equals) {
       LoadPatternListFromDir(appDir);
     }
+  }
+
+  nsCOMPtr<nsIFile> profileDir;
+  rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_LOCAL_50_DIR,
+                                       getter_AddRefs(profileDir));
+  if (NS_SUCCEEDED(rv)) {
+      profileDir->AppendNative(NS_LITERAL_CSTRING("hyphenation"));
+      LoadPatternListFromDir(profileDir);
   }
 }
 
