@@ -105,6 +105,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     LinkData                        linkData_;
     MutableMetadata                 metadata_;
     ExportMap                       exportMap_;
+    DataSegmentVector               dataSegments_;
 
     // Data scoped to the ModuleGenerator's lifetime
     UniqueModuleGeneratorData       shared_;
@@ -152,8 +153,10 @@ class MOZ_STACK_CLASS ModuleGenerator
     jit::MacroAssembler& masm() { return masm_; }
 
     // Heap usage:
-    void initHeapUsage(HeapUsage heapUsage, uint32_t minHeapLength = 0);
+    void initHeapUsage(HeapUsage heapUsage, uint32_t initialHeapLength = 0);
     bool usesHeap() const;
+    uint32_t initialHeapLength() const;
+    MOZ_MUST_USE bool addDataSegment(DataSegment s) { return dataSegments_.append(s); }
 
     // Signatures:
     uint32_t numSigs() const { return numSigs_; }
@@ -183,7 +186,7 @@ class MOZ_STACK_CLASS ModuleGenerator
     MOZ_MUST_USE bool finishFuncDef(uint32_t funcIndex, FunctionGenerator* fg);
     MOZ_MUST_USE bool finishFuncDefs();
 
-    // Pretty function names:
+    // Function names:
     void setFuncNames(NameInBytecodeVector&& funcNames);
 
     // asm.js lazy initialization:
