@@ -1653,6 +1653,7 @@ void
 MediaDecoder::SetCDMProxy(CDMProxy* aProxy)
 {
   MOZ_ASSERT(NS_IsMainThread());
+  MOZ_ASSERT(aProxy);
 
   RefPtr<CDMProxy> proxy = aProxy;
   {
