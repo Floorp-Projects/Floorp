@@ -3728,7 +3728,6 @@ class OffThreadState {
 
   public:
     OffThreadState() : monitor(), state(IDLE), token(), source(nullptr) { }
-    bool init() { return monitor.init(); }
 
     bool startIfIdle(JSContext* cx, ScriptKind kind,
                      ScopedJSFreePtr<char16_t>& newSource)
@@ -7391,9 +7390,6 @@ main(int argc, char** argv, char** envp)
     JS_SetNativeStackQuota(rt, gMaxStackSize);
 
     JS::dbg::SetDebuggerMallocSizeOf(rt, moz_malloc_size_of);
-
-    if (!offThreadState.init())
-        return 1;
 
     JSContext* cx = JS_GetContext(rt);
     if (!JS::InitSelfHostedCode(cx))

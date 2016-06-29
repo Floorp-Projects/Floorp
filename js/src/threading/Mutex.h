@@ -40,6 +40,10 @@ public:
     return *this;
   }
 
+  bool operator==(const Mutex& rhs) {
+    return platformData_ == rhs.platformData_;
+  }
+
 private:
   Mutex(const Mutex&) = delete;
   void operator=(const Mutex&) = delete;

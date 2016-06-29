@@ -11,8 +11,6 @@
 
 #include <stddef.h>
 
-#include "jslock.h"
-
 #include "js/Utility.h"
 
 namespace js {
@@ -28,67 +26,47 @@ class Monitor
     friend class AutoLockMonitor;
     friend class AutoUnlockMonitor;
 
-    PRLock* lock_;
-    PRCondVar* condVar_;
+    Mutex lock_;
+    ConditionVariable condVar_;
 
   public:
-    Monitor()
-      : lock_(nullptr),
-        condVar_(nullptr)
-    { }
-
-    ~Monitor() {
-        if (lock_)
-            PR_DestroyLock(lock_);
-        if (condVar_)
-            PR_DestroyCondVar(condVar_);
-    }
-
-    bool init();
+    Monitor() { }
 };
 
-class AutoLockMonitor
+class AutoLockMonitor : public LockGuard<Mutex>
 {
   private:
+    using Base = LockGuard<Mutex>;
     Monitor& monitor;
 
   public:
     explicit AutoLockMonitor(Monitor& monitor)
-      : monitor(monitor)
-    {
-        PR_Lock(monitor.lock_);
-    }
-
-    ~AutoLockMonitor() {
-        PR_Unlock(monitor.lock_);
-    }
+      : Base(monitor.lock_)
+      , monitor(monitor)
+    { }
 
     bool isFor(Monitor& other) const {
         return monitor.lock_ == other.lock_;
     }
 
-    void wait(PRCondVar* condVar) {
-        mozilla::DebugOnly<PRStatus> status =
-          PR_WaitCondVar(condVar, PR_INTERVAL_NO_TIMEOUT);
-        MOZ_ASSERT(status == PR_SUCCESS);
+    void wait(ConditionVariable& condVar) {
+        condVar.wait(*this);
     }
 
     void wait() {
         wait(monitor.condVar_);
     }
 
-    void notify(PRCondVar* condVar) {
-        mozilla::DebugOnly<PRStatus> status = PR_NotifyCondVar(condVar);
-        MOZ_ASSERT(status == PR_SUCCESS);
+    void notify(ConditionVariable& condVar) {
+        condVar.notify_one();
     }
 
     void notify() {
         notify(monitor.condVar_);
     }
 
-    void notifyAll(PRCondVar* condVar) {
-        mozilla::DebugOnly<PRStatus> status = PR_NotifyAllCondVar(monitor.condVar_);
-        MOZ_ASSERT(status == PR_SUCCESS);
+    void notifyAll(ConditionVariable& condVar) {
+        condVar.notify_all();
     }
 
     void notifyAll() {
@@ -105,11 +83,11 @@ class AutoUnlockMonitor
     explicit AutoUnlockMonitor(Monitor& monitor)
       : monitor(monitor)
     {
-        PR_Unlock(monitor.lock_);
+        monitor.lock_.unlock();
     }
 
     ~AutoUnlockMonitor() {
-        PR_Lock(monitor.lock_);
+        monitor.lock_.lock();
     }
 
     bool isFor(Monitor& other) const {
