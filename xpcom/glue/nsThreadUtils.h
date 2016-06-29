@@ -283,14 +283,14 @@ private:
 };
 
 template<typename Function>
-nsRunnableFunction<typename mozilla::RemoveReference<Function>::Type>*
+already_AddRefed<nsRunnableFunction<typename mozilla::RemoveReference<Function>::Type>>
 NS_NewRunnableFunction(Function&& aFunction)
 {
-  return new nsRunnableFunction
-               // Make sure we store a non-reference in nsRunnableFunction.
-               <typename mozilla::RemoveReference<Function>::Type>
-               // But still forward aFunction to move if possible.
-               (mozilla::Forward<Function>(aFunction));
+  return do_AddRef(new nsRunnableFunction
+                   // Make sure we store a non-reference in nsRunnableFunction.
+                   <typename mozilla::RemoveReference<Function>::Type>
+                   // But still forward aFunction to move if possible.
+                   (mozilla::Forward<Function>(aFunction)));
 }
 
 // An event that can be used to call a method on a class.  The class type must
