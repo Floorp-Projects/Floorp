@@ -282,7 +282,6 @@ enum Index {
     // 1 << 21 | 0 << 24 encodes dtrt.
 };
 
-// Seriously, wtf arm
 enum IsImmOp2_ {
     IsImmOp2    = 1 << 25,
     IsNotImmOp2 = 0 << 25

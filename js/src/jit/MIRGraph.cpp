@@ -109,7 +109,7 @@ MIRGenerator::addAbortedPreliminaryGroup(ObjectGroup* group)
 }
 
 bool
-MIRGenerator::needsAsmJSBoundsCheckBranch(const MWasmMemoryAccess* access) const
+MIRGenerator::needsBoundsCheckBranch(const MWasmMemoryAccess* access) const
 {
     // A heap access needs a bounds-check branch if we're not relying on signal
     // handlers to catch errors, and if it's not proven to be within bounds.
