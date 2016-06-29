@@ -10,6 +10,7 @@
 #include "nsThreadUtils.h"
 #include "mozilla/AbstractThread.h"
 #include "mozilla/Monitor.h"
+#include "mozilla/Move.h"
 
 namespace mozilla {
 
@@ -34,6 +35,13 @@ class SyncRunnable : public Runnable
 public:
   explicit SyncRunnable(nsIRunnable* aRunnable)
     : mRunnable(aRunnable)
+    , mMonitor("SyncRunnable")
+    , mDone(false)
+  {
+  }
+
+  explicit SyncRunnable(already_AddRefed<nsIRunnable> aRunnable)
+    : mRunnable(Move(aRunnable))
     , mMonitor("SyncRunnable")
     , mDone(false)
   {
