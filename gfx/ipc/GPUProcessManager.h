@@ -24,7 +24,7 @@ class CompositorUpdateObserver;
 class PCompositorBridgeParent;
 } // namespace layers
 namespace widget {
-class CompositorWidgetProxy;
+class CompositorWidget;
 } // namespace widget
 namespace dom {
 class ContentParent;
@@ -61,7 +61,7 @@ public:
   void EnsureGPUReady();
 
   already_AddRefed<layers::CompositorSession> CreateTopLevelCompositor(
-    widget::CompositorWidgetProxy* aProxy,
+    widget::CompositorWidget* aWidget,
     layers::ClientLayerManager* aLayerManager,
     CSSToLayoutDeviceScale aScale,
     bool aUseAPZ,

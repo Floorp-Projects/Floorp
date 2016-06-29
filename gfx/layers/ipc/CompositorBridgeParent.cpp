@@ -233,13 +233,13 @@ CompositorVsyncScheduler::Observer::Destroy()
 }
 
 CompositorVsyncScheduler::CompositorVsyncScheduler(CompositorBridgeParent* aCompositorBridgeParent,
-                                                   widget::CompositorWidgetProxy* aWidgetProxy)
+                                                   widget::CompositorWidget* aWidget)
   : mCompositorBridgeParent(aCompositorBridgeParent)
   , mLastCompose(TimeStamp::Now())
   , mIsObservingVsync(false)
   , mNeedsComposite(0)
   , mVsyncNotificationsSkipped(0)
-  , mCompositorVsyncDispatcher(aWidgetProxy->GetCompositorVsyncDispatcher())
+  , mCompositorVsyncDispatcher(aWidget->GetCompositorVsyncDispatcher())
   , mCurrentCompositeTaskMonitor("CurrentCompositeTaskMonitor")
   , mCurrentCompositeTask(nullptr)
   , mSetNeedsCompositeMonitor("SetNeedsCompositeMonitor")
@@ -582,13 +582,13 @@ CompositorLoop()
   return CompositorThreadHolder::Loop();
 }
 
-CompositorBridgeParent::CompositorBridgeParent(widget::CompositorWidgetProxy* aWidget,
+CompositorBridgeParent::CompositorBridgeParent(widget::CompositorWidget* aWidget,
                                                CSSToLayoutDeviceScale aScale,
                                                bool aUseAPZ,
                                                bool aUseExternalSurfaceSize,
                                                const gfx::IntSize& aSurfaceSize)
   : CompositorBridgeParentIPCAllocator("CompositorBridgeParent")
-  , mWidgetProxy(aWidget)
+  , mWidget(aWidget)
   , mIsTesting(false)
   , mPendingTransaction(0)
   , mPaused(false)
@@ -699,7 +699,7 @@ CompositorBridgeParent::StopAndClearResources()
   }
 
   // After this point, it is no longer legal to access the widget.
-  mWidgetProxy = nullptr;
+  mWidget = nullptr;
 }
 
 bool
@@ -1149,7 +1149,7 @@ CompositorBridgeParent::CompositeToTarget(DrawTarget* aTarget, const gfx::IntRec
   // to local pages, hide every plugin associated with the window.
   if (!hasRemoteContent && BrowserTabsRemoteAutostart() &&
       mCachedPluginData.Length()) {
-    Unused << SendHideAllPlugins(GetWidgetProxy()->GetWidgetKey());
+    Unused << SendHideAllPlugins(GetWidget()->GetWidgetKey());
     mCachedPluginData.Clear();
   }
 #endif
@@ -1495,24 +1495,24 @@ CompositorBridgeParent::NewCompositor(const nsTArray<LayersBackend>& aBackendHin
     RefPtr<Compositor> compositor;
     if (aBackendHints[i] == LayersBackend::LAYERS_OPENGL) {
       compositor = new CompositorOGL(this,
-                                     mWidgetProxy,
+                                     mWidget,
                                      mEGLSurfaceSize.width,
                                      mEGLSurfaceSize.height,
                                      mUseExternalSurfaceSize);
     } else if (aBackendHints[i] == LayersBackend::LAYERS_BASIC) {
 #ifdef MOZ_WIDGET_GTK
       if (gfxPlatformGtk::GetPlatform()->UseXRender()) {
-        compositor = new X11BasicCompositor(this, mWidgetProxy);
+        compositor = new X11BasicCompositor(this, mWidget);
       } else
 #endif
       {
-        compositor = new BasicCompositor(this, mWidgetProxy);
+        compositor = new BasicCompositor(this, mWidget);
       }
 #ifdef XP_WIN
     } else if (aBackendHints[i] == LayersBackend::LAYERS_D3D11) {
-      compositor = new CompositorD3D11(this, mWidgetProxy);
+      compositor = new CompositorD3D11(this, mWidget);
     } else if (aBackendHints[i] == LayersBackend::LAYERS_D3D9) {
-      compositor = new CompositorD3D9(this, mWidgetProxy);
+      compositor = new CompositorD3D9(this, mWidget);
 #endif
     }
 
@@ -2465,7 +2465,7 @@ CompositorBridgeParent::UpdatePluginWindowState(uint64_t aId)
       return false;
     }
 
-    uintptr_t parentWidget = GetWidgetProxy()->GetWidgetKey();
+    uintptr_t parentWidget = GetWidget()->GetWidgetKey();
 
     // We will pass through here in cases where the previous shadow layer
     // tree contained visible plugins and the new tree does not. All we need
@@ -2550,7 +2550,7 @@ CompositorBridgeParent::HideAllPluginWindows()
     return;
   }
 
-  uintptr_t parentWidget = GetWidgetProxy()->GetWidgetKey();
+  uintptr_t parentWidget = GetWidget()->GetWidgetKey();
 
   mDeferPluginWindows = true;
   mPluginWindowsHidden = true;

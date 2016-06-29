@@ -58,7 +58,7 @@ namespace mozilla {
 namespace widget {
 class NativeKey;
 struct MSGResult;
-class WinCompositorWidgetProxy;
+class WinCompositorWidget;
 } // namespace widget
 } // namespacw mozilla;
 
@@ -313,7 +313,7 @@ public:
                      const mozilla::NativeEventData& aKeyEventData,
                      nsIKeyEventInPluginCallback* aCallback) override;
 
-  mozilla::widget::CompositorWidgetProxy* NewCompositorWidgetProxy() override;
+  mozilla::widget::CompositorWidget* NewCompositorWidget() override;
 
 protected:
   virtual ~nsWindow();
@@ -488,7 +488,7 @@ protected:
   void                    ClearCachedResources();
   nsIWidgetListener*      GetPaintListener();
 
-  mozilla::widget::WinCompositorWidgetProxy* GetCompositorWidgetProxy();
+  mozilla::widget::WinCompositorWidget* GetCompositorWidget();
 
 protected:
   nsCOMPtr<nsIWidget>   mParent;

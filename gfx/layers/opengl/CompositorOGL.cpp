@@ -84,7 +84,7 @@ CompositorOGL::BindBackdrop(ShaderProgramOGL* aProgram, GLuint aBackdrop, GLenum
 }
 
 CompositorOGL::CompositorOGL(CompositorBridgeParent* aParent,
-                             widget::CompositorWidgetProxy* aWidget,
+                             widget::CompositorWidget* aWidget,
                              int aSurfaceWidth, int aSurfaceHeight,
                              bool aUseExternalSurfaceSize)
   : Compositor(aWidget, aParent)
@@ -618,7 +618,7 @@ CompositorOGL::GetCurrentRenderTarget() const
 static GLenum
 GetFrameBufferInternalFormat(GLContext* gl,
                              GLuint aFrameBuffer,
-                             mozilla::widget::CompositorWidgetProxy* aWidget)
+                             mozilla::widget::CompositorWidget* aWidget)
 {
   if (aFrameBuffer == 0) { // default framebuffer
     return aWidget->GetGLFrameBufferFormat();

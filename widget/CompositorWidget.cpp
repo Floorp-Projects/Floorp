@@ -2,7 +2,7 @@
  * License, v. 2.0. If a copy of the MPL was not distributed with this
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
-#include "CompositorWidgetProxy.h"
+#include "CompositorWidget.h"
 #include "GLConsts.h"
 #include "nsBaseWidget.h"
 #include "VsyncDispatcher.h"
@@ -10,26 +10,26 @@
 namespace mozilla {
 namespace widget {
 
-CompositorWidgetProxy::~CompositorWidgetProxy()
+CompositorWidget::~CompositorWidget()
 {
 }
 
 already_AddRefed<gfx::DrawTarget>
-CompositorWidgetProxy::StartRemoteDrawing()
+CompositorWidget::StartRemoteDrawing()
 {
   return nullptr;
 }
 
 void
-CompositorWidgetProxy::CleanupRemoteDrawing()
+CompositorWidget::CleanupRemoteDrawing()
 {
   mLastBackBuffer = nullptr;
 }
 
 already_AddRefed<gfx::DrawTarget>
-CompositorWidgetProxy::GetBackBufferDrawTarget(gfx::DrawTarget* aScreenTarget,
-                                               const LayoutDeviceIntRect& aRect,
-                                               const LayoutDeviceIntRect& aClearRect)
+CompositorWidget::GetBackBufferDrawTarget(gfx::DrawTarget* aScreenTarget,
+                                          const LayoutDeviceIntRect& aRect,
+                                          const LayoutDeviceIntRect& aClearRect)
 {
   MOZ_ASSERT(aScreenTarget);
   gfx::SurfaceFormat format =
@@ -58,125 +58,125 @@ CompositorWidgetProxy::GetBackBufferDrawTarget(gfx::DrawTarget* aScreenTarget,
 }
 
 already_AddRefed<gfx::SourceSurface>
-CompositorWidgetProxy::EndBackBufferDrawing()
+CompositorWidget::EndBackBufferDrawing()
 {
   RefPtr<gfx::SourceSurface> surface = mLastBackBuffer ? mLastBackBuffer->Snapshot() : nullptr;
   return surface.forget();
 }
 
 uint32_t
-CompositorWidgetProxy::GetGLFrameBufferFormat()
+CompositorWidget::GetGLFrameBufferFormat()
 {
   return LOCAL_GL_RGBA;
 }
 
-CompositorWidgetProxyWrapper::CompositorWidgetProxyWrapper(nsBaseWidget* aWidget)
+InProcessCompositorWidget::InProcessCompositorWidget(nsBaseWidget* aWidget)
  : mWidget(aWidget)
 {
 }
 
 bool
-CompositorWidgetProxyWrapper::PreRender(layers::LayerManagerComposite* aManager)
+InProcessCompositorWidget::PreRender(layers::LayerManagerComposite* aManager)
 {
   return mWidget->PreRender(aManager);
 }
 
 void
-CompositorWidgetProxyWrapper::PostRender(layers::LayerManagerComposite* aManager)
+InProcessCompositorWidget::PostRender(layers::LayerManagerComposite* aManager)
 {
   mWidget->PostRender(aManager);
 }
 
 void
-CompositorWidgetProxyWrapper::DrawWindowUnderlay(layers::LayerManagerComposite* aManager,
-                                                 LayoutDeviceIntRect aRect)
+InProcessCompositorWidget::DrawWindowUnderlay(layers::LayerManagerComposite* aManager,
+                                          LayoutDeviceIntRect aRect)
 {
   mWidget->DrawWindowUnderlay(aManager, aRect);
 }
 
 void
-CompositorWidgetProxyWrapper::DrawWindowOverlay(layers::LayerManagerComposite* aManager,
-                                                LayoutDeviceIntRect aRect)
+InProcessCompositorWidget::DrawWindowOverlay(layers::LayerManagerComposite* aManager,
+                                         LayoutDeviceIntRect aRect)
 {
   mWidget->DrawWindowOverlay(aManager, aRect);
 }
 
 already_AddRefed<gfx::DrawTarget>
-CompositorWidgetProxyWrapper::StartRemoteDrawing()
+InProcessCompositorWidget::StartRemoteDrawing()
 {
   return mWidget->StartRemoteDrawing();
 }
 
 already_AddRefed<gfx::DrawTarget>
-CompositorWidgetProxyWrapper::StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion,
-                                                         layers::BufferMode* aBufferMode)
+InProcessCompositorWidget::StartRemoteDrawingInRegion(LayoutDeviceIntRegion& aInvalidRegion,
+                                                  layers::BufferMode* aBufferMode)
 {
   return mWidget->StartRemoteDrawingInRegion(aInvalidRegion, aBufferMode);
 }
 
 void
-CompositorWidgetProxyWrapper::EndRemoteDrawing()
+InProcessCompositorWidget::EndRemoteDrawing()
 {
   mWidget->EndRemoteDrawing();
 }
 
 void
-CompositorWidgetProxyWrapper::EndRemoteDrawingInRegion(gfx::DrawTarget* aDrawTarget,
-                                                       LayoutDeviceIntRegion& aInvalidRegion)
+InProcessCompositorWidget::EndRemoteDrawingInRegion(gfx::DrawTarget* aDrawTarget,
+                                                LayoutDeviceIntRegion& aInvalidRegion)
 {
   mWidget->EndRemoteDrawingInRegion(aDrawTarget, aInvalidRegion);
 }
 
 void
-CompositorWidgetProxyWrapper::CleanupRemoteDrawing()
+InProcessCompositorWidget::CleanupRemoteDrawing()
 {
   mWidget->CleanupRemoteDrawing();
 }
 
 void
-CompositorWidgetProxyWrapper::CleanupWindowEffects()
+InProcessCompositorWidget::CleanupWindowEffects()
 {
   mWidget->CleanupWindowEffects();
 }
 
 bool
-CompositorWidgetProxyWrapper::InitCompositor(layers::Compositor* aCompositor)
+InProcessCompositorWidget::InitCompositor(layers::Compositor* aCompositor)
 {
   return mWidget->InitCompositor(aCompositor);
 }
 
 LayoutDeviceIntSize
-CompositorWidgetProxyWrapper::GetClientSize()
+InProcessCompositorWidget::GetClientSize()
 {
   return mWidget->GetClientSize();
 }
 
 uint32_t
-CompositorWidgetProxyWrapper::GetGLFrameBufferFormat()
+InProcessCompositorWidget::GetGLFrameBufferFormat()
 {
   return mWidget->GetGLFrameBufferFormat();
 }
 
 layers::Composer2D*
-CompositorWidgetProxyWrapper::GetComposer2D()
+InProcessCompositorWidget::GetComposer2D()
 {
   return mWidget->GetComposer2D();
 }
 
 uintptr_t
-CompositorWidgetProxyWrapper::GetWidgetKey()
+InProcessCompositorWidget::GetWidgetKey()
 {
   return reinterpret_cast<uintptr_t>(mWidget);
 }
 
 nsIWidget*
-CompositorWidgetProxyWrapper::RealWidget()
+InProcessCompositorWidget::RealWidget()
 {
   return mWidget;
 }
 
 already_AddRefed<CompositorVsyncDispatcher>
-CompositorWidgetProxyWrapper::GetCompositorVsyncDispatcher()
+InProcessCompositorWidget::GetCompositorVsyncDispatcher()
 {
   RefPtr<CompositorVsyncDispatcher> cvd = mWidget->GetCompositorVsyncDispatcher();
   return cvd.forget();

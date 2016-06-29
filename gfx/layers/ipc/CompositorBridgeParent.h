@@ -33,10 +33,10 @@
 #include "mozilla/layers/PCompositorBridgeParent.h"
 #include "mozilla/layers/ShadowLayersManager.h" // for ShadowLayersManager
 #include "mozilla/layers/APZTestData.h"
+#include "mozilla/widget/CompositorWidget.h"
 #include "nsISupportsImpl.h"
 #include "ThreadSafeRefcountingWithMainThreadDestruction.h"
 #include "mozilla/VsyncDispatcher.h"
-#include "CompositorWidgetProxy.h"
 
 class MessageLoop;
 class nsIWidget;
@@ -90,7 +90,7 @@ class CompositorVsyncScheduler
 
 public:
   explicit CompositorVsyncScheduler(CompositorBridgeParent* aCompositorBridgeParent,
-                                    widget::CompositorWidgetProxy* aWidgetProxy);
+                                    widget::CompositorWidget* aWidget);
 
 #ifdef MOZ_WIDGET_GONK
   // emulator-ics never trigger the display on/off, so compositor will always
@@ -212,7 +212,7 @@ class CompositorBridgeParent final : public PCompositorBridgeParent,
   friend class gfx::GPUProcessManager;
 
 public:
-  explicit CompositorBridgeParent(widget::CompositorWidgetProxy* aWidget,
+  explicit CompositorBridgeParent(widget::CompositorWidget* aWidget,
                                   CSSToLayoutDeviceScale aScale,
                                   bool aUseAPZ,
                                   bool aUseExternalSurfaceSize,
@@ -464,7 +464,7 @@ public:
 
   float ComputeRenderIntegrity();
 
-  widget::CompositorWidgetProxy* GetWidgetProxy() { return mWidgetProxy; }
+  widget::CompositorWidget* GetWidget() { return mWidget; }
 
   void ForceComposeToTarget(gfx::DrawTarget* aTarget, const gfx::IntRect* aRect = nullptr);
 
@@ -586,7 +586,7 @@ protected:
   RefPtr<LayerManagerComposite> mLayerManager;
   RefPtr<Compositor> mCompositor;
   RefPtr<AsyncCompositionManager> mCompositionManager;
-  widget::CompositorWidgetProxy* mWidgetProxy;
+  widget::CompositorWidget* mWidget;
   TimeStamp mTestTime;
   bool mIsTesting;
 
