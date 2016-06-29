@@ -42,6 +42,7 @@
 #include "mozilla/dom/CSPDictionariesBinding.h"
 #include "mozilla/net/ReferrerPolicy.h"
 #include "nsINetworkInterceptController.h"
+#include "nsSandboxFlags.h"
 
 using namespace mozilla;
 
@@ -1320,6 +1321,45 @@ nsCSPContext::ToJSON(nsAString& outCSPinJSON)
   if (!jsonPolicies.ToJSON(outCSPinJSON)) {
     return NS_ERROR_FAILURE;
   }
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsCSPContext::GetCSPSandboxFlags(uint32_t* aOutSandboxFlags)
+{
+  if (!aOutSandboxFlags) {
+    return NS_ERROR_FAILURE;
+  }
+  *aOutSandboxFlags = SANDBOXED_NONE;
+
+  for (uint32_t i = 0; i < mPolicies.Length(); i++) {
+    uint32_t flags = mPolicies[i]->getSandboxFlags();
+
+    // current policy doesn't have sandbox flag, check next policy
+    if (!flags) {
+      continue;
+    }
+
+    // current policy has sandbox flags, if the policy is in enforcement-mode
+    // (i.e. not report-only) set these flags and check for policies with more
+    // restrictions
+    if (!mPolicies[i]->getReportOnlyFlag()) {
+      *aOutSandboxFlags |= flags;
+    } else {
+      // sandbox directive is ignored in report-only mode, warn about it and
+      // continue the loop checking for an enforcement policy.
+      nsAutoString policy;
+      mPolicies[i]->toString(policy);
+
+      CSPCONTEXTLOG(("nsCSPContext::GetCSPSandboxFlags, report only policy, ignoring sandbox in: %s",
+                    policy.get()));
+
+      const char16_t* params[] = { policy.get() };
+      logToConsole(MOZ_UTF16("ignoringReportOnlyDirective"), params, ArrayLength(params),
+                   EmptyString(), EmptyString(), 0, 0, nsIScriptError::warningFlag);
+    }
+  }
+
   return NS_OK;
 }
 
