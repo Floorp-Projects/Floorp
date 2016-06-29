@@ -21,9 +21,7 @@ namespace widget {
 class WinCompositorWidget: public CompositorWidget
 {
 public:
-  WinCompositorWidget(HWND aWnd,
-                      uintptr_t aWidgetKey,
-                      nsTransparencyMode aMode,
+  WinCompositorWidget(const CompositorWidgetInitData& aInitData,
                       nsWindow* aWindow = nullptr);
 
   bool PreRender(layers::LayerManagerComposite*) override;

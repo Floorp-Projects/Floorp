@@ -3,9 +3,21 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/. */
 
 #include "InProcessCompositorWidget.h"
+#include "nsBaseWidget.h"
 
 namespace mozilla {
 namespace widget {
+
+// Platforms with no OOP compositor process support use
+// InProcessCompositorWidget by default.
+#if !defined(XP_WIN)
+/* static */ RefPtr<CompositorWidget>
+CompositorWidget::CreateLocal(const CompositorWidgetInitData& aInitData, nsIWidget* aWidget)
+{
+  MOZ_ASSERT(aWidget);
+  return new InProcessCompositorWidget(static_cast<nsBaseWidget*>(aWidget));
+}
+#endif
 
 InProcessCompositorWidget::InProcessCompositorWidget(nsBaseWidget* aWidget)
  : mWidget(aWidget)

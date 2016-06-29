@@ -313,7 +313,7 @@ public:
                      const mozilla::NativeEventData& aKeyEventData,
                      nsIKeyEventInPluginCallback* aCallback) override;
 
-  mozilla::widget::CompositorWidget* NewCompositorWidget() override;
+  void GetCompositorWidgetInitData(mozilla::widget::CompositorWidgetInitData* aInitData) override;
 
 protected:
   virtual ~nsWindow();

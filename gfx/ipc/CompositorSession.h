@@ -34,6 +34,7 @@ class CompositorSession
 {
   friend class gfx::GPUProcessManager;
 
+protected:
   typedef widget::CompositorWidget CompositorWidget;
 
 public:

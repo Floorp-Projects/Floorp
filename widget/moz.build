@@ -242,6 +242,15 @@ LOCAL_INCLUDES += [
     '/widget',
 ]
 
+if toolkit == 'windows':
+    IPDL_SOURCES = [
+        'windows/PlatformWidgetTypes.ipdlh',
+    ]
+else:
+    IPDL_SOURCES = [
+        'PlatformWidgetTypes.ipdlh',
+    ]
+
 widget_dir = toolkit
 if widget_dir in ('gtk3', 'gtk2'):
     # gtk3 shares includes with gtk2

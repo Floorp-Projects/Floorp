@@ -6,6 +6,7 @@
 #include "CompositorSession.h"
 #include "mozilla/layers/CompositorBridgeChild.h"
 #include "mozilla/layers/CompositorBridgeParent.h"
+#include "mozilla/widget/PlatformWidgetTypes.h"
 #include "base/process_util.h"
 
 namespace mozilla {
@@ -73,7 +74,10 @@ InProcessCompositorSession::InProcessCompositorSession(nsIWidget* aWidget,
                                                        bool aUseExternalSurfaceSize,
                                                        const gfx::IntSize& aSurfaceSize)
 {
-  mCompositorWidget = aWidget->NewCompositorWidget();
+  CompositorWidgetInitData initData;
+  aWidget->GetCompositorWidgetInitData(&initData);
+  mCompositorWidget = CompositorWidget::CreateLocal(initData, aWidget);
+
   mCompositorBridgeParent = new CompositorBridgeParent(
     mCompositorWidget,
     aScale,
