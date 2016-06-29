@@ -1184,7 +1184,7 @@ TSFTextStore::TSFTextStore()
   , mLock(0)
   , mLockQueued(0)
   , mHandlingKeyMessage(0)
-  , mLockedContent(mComposition, mSelection)
+  , mContentForTSF(mComposition, mSelection)
   , mRequestedAttrValues(false)
   , mIsRecordingActionsWithoutLock(false)
   , mPendingOnSelectionChange(false)
@@ -1495,7 +1495,7 @@ TSFTextStore::RequestLock(DWORD dwLockFlags,
     return E_FAIL;
   }
   if (mDestroyed &&
-      (!mLockedContent.IsInitialized() || mSelection.IsDirty())) {
+      (!mContentForTSF.IsInitialized() || mSelection.IsDirty())) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
       ("TSF: 0x%p   TSFTextStore::RequestLock() FAILED due to "
        "being destroyed and no information of the contents", this));
@@ -1837,11 +1837,11 @@ TSFTextStore::MaybeFlushPendingNotifications()
     return;
   }
 
-  if (!mDeferClearingLockedContent && mLockedContent.IsInitialized()) {
-    mLockedContent.Clear();
+  if (!mDeferClearingLockedContent && mContentForTSF.IsInitialized()) {
+    mContentForTSF.Clear();
     MOZ_LOG(sTextStoreLog, LogLevel::Debug,
            ("TSF: 0x%p   TSFTextStore::MaybeFlushPendingNotifications(), "
-            "mLockedContent is cleared", this));
+            "mContentForTSF is cleared", this));
   }
 
   if (mHasReturnedNoLayoutError) {
@@ -1982,15 +1982,15 @@ TSFTextStore::LockedContent()
 {
   // This should be called when the document is locked or the content hasn't
   // been abandoned yet.
-  if (NS_WARN_IF(!IsReadLocked() && !mLockedContent.IsInitialized())) {
+  if (NS_WARN_IF(!IsReadLocked() && !mContentForTSF.IsInitialized())) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::LockedContent(), FAILED, due to "
             "called wrong timing, IsReadLocked()=%s, "
-            "mLockedContent.IsInitialized()=%s",
+            "mContentForTSF.IsInitialized()=%s",
             this, GetBoolName(IsReadLocked()),
-            GetBoolName(mLockedContent.IsInitialized())));
-    mLockedContent.Clear();
-    return mLockedContent;
+            GetBoolName(mContentForTSF.IsInitialized())));
+    mContentForTSF.Clear();
+    return mContentForTSF;
   }
 
   Selection& currentSel = CurrentSelection();
@@ -1998,21 +1998,21 @@ TSFTextStore::LockedContent()
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::LockedContent(), FAILED, due to "
             "CurrentSelection() failure", this));
-    mLockedContent.Clear();
-    return mLockedContent;
+    mContentForTSF.Clear();
+    return mContentForTSF;
   }
 
-  if (!mLockedContent.IsInitialized()) {
+  if (!mContentForTSF.IsInitialized()) {
     nsAutoString text;
     if (NS_WARN_IF(!GetCurrentText(text))) {
       MOZ_LOG(sTextStoreLog, LogLevel::Error,
              ("TSF: 0x%p   TSFTextStore::LockedContent(), FAILED, due to "
               "GetCurrentText() failure", this));
-      mLockedContent.Clear();
-      return mLockedContent;
+      mContentForTSF.Clear();
+      return mContentForTSF;
     }
 
-    mLockedContent.Init(text);
+    mContentForTSF.Init(text);
     // Basically, the locked content should be cleared after the document is
     // unlocked.  However, in e10s mode, content will be modified
     // asynchronously.  In such case, mDeferClearingLockedContent may be
@@ -2022,24 +2022,24 @@ TSFTextStore::LockedContent()
 
   MOZ_LOG(sTextStoreLog, LogLevel::Debug,
          ("TSF: 0x%p   TSFTextStore::LockedContent(): "
-          "mLockedContent={ mText=\"%s\" (Length()=%u), "
+          "mContentForTSF={ mText=\"%s\" (Length()=%u), "
           "mLastCompositionString=\"%s\" (Length()=%u), "
           "mMinTextModifiedOffset=%u }",
-          this, mLockedContent.Text().Length() <= 20 ?
-            NS_ConvertUTF16toUTF8(mLockedContent.Text()).get() : "<omitted>",
-          mLockedContent.Text().Length(),
-          NS_ConvertUTF16toUTF8(mLockedContent.LastCompositionString()).get(),
-          mLockedContent.LastCompositionString().Length(),
-          mLockedContent.MinTextModifiedOffset()));
+          this, mContentForTSF.Text().Length() <= 20 ?
+            NS_ConvertUTF16toUTF8(mContentForTSF.Text()).get() : "<omitted>",
+          mContentForTSF.Text().Length(),
+          NS_ConvertUTF16toUTF8(mContentForTSF.LastCompositionString()).get(),
+          mContentForTSF.LastCompositionString().Length(),
+          mContentForTSF.MinTextModifiedOffset()));
 
-  return mLockedContent;
+  return mContentForTSF;
 }
 
 bool
 TSFTextStore::GetCurrentText(nsAString& aTextContent)
 {
-  if (mLockedContent.IsInitialized()) {
-    aTextContent = mLockedContent.Text();
+  if (mContentForTSF.IsInitialized()) {
+    aTextContent = mContentForTSF.Text();
     return true;
   }
 
@@ -3325,7 +3325,7 @@ TSFTextStore::GetACPFromPoint(TsViewCookie vcView,
 
   mWaitingQueryLayout = false;
 
-  if (mDestroyed || mLockedContent.IsLayoutChanged()) {
+  if (mDestroyed || mContentForTSF.IsLayoutChanged()) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::GetACPFromPoint() returned "
             "TS_E_NOLAYOUT", this));
@@ -3485,7 +3485,7 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
 
   const TSFStaticSink* kSink = TSFStaticSink::GetInstance();
   if (mComposition.IsComposing() && mComposition.mStart < acpEnd &&
-      mLockedContent.IsLayoutChangedAfter(acpEnd)) {
+      mContentForTSF.IsLayoutChangedAfter(acpEnd)) {
     const Selection& currentSel = CurrentSelection();
     // The bug of Microsoft Office IME 2010 for Japanese is similar to
     // MS-IME for Win 8.1 and Win 10.  Newer version of MS Office IME is not
@@ -3509,7 +3509,7 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
       // available, we should use it as the result.
       if ((kIsMSOfficeJapaneseIME2010 ||
            sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtFirstChar) &&
-          !mLockedContent.IsLayoutChangedAfter(acpStart) &&
+          !mContentForTSF.IsLayoutChangedAfter(acpStart) &&
           acpStart < acpEnd) {
         acpEnd = acpStart;
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
@@ -3526,7 +3526,7 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
                 sDoNotReturnNoLayoutErrorToMSJapaneseIMEAtCaret) &&
                acpStart == acpEnd &&
                currentSel.IsCollapsed() && currentSel.EndOffset() == acpEnd) {
-        acpEnd = acpStart = mLockedContent.MinOffsetOfLayoutChanged();
+        acpEnd = acpStart = mContentForTSF.MinOffsetOfLayoutChanged();
         MOZ_LOG(sTextStoreLog, LogLevel::Debug,
                ("TSF: 0x%p   TSFTextStore::GetTextExt() hacked the offsets "
                 "of the caret of the composition string for TIP acpStart=%d, "
@@ -3564,7 +3564,7 @@ TSFTextStore::GetTextExt(TsViewCookie vcView,
     }
   }
 
-  if (mLockedContent.IsLayoutChangedAfter(acpEnd)) {
+  if (mContentForTSF.IsLayoutChangedAfter(acpEnd)) {
     MOZ_LOG(sTextStoreLog, LogLevel::Error,
            ("TSF: 0x%p   TSFTextStore::GetTextExt() returned TS_E_NOLAYOUT "
             "(acpEnd=%d)", this, acpEnd));
@@ -4847,10 +4847,10 @@ TSFTextStore::NotifyTSFOfLayoutChange()
   // calls of OnLayoutChange(), reset mHasReturnedNoLayoutError.
   mHasReturnedNoLayoutError = false;
 
-  // Now, layout has been computed.  We should notify mLockedContent for
+  // Now, layout has been computed.  We should notify mContentForTSF for
   // making GetTextExt() and GetACPFromPoint() not return TS_E_NOLAYOUT.
-  if (mLockedContent.IsInitialized()) {
-    mLockedContent.OnLayoutChanged();
+  if (mContentForTSF.IsInitialized()) {
+    mContentForTSF.OnLayoutChanged();
   }
 
   // Now, the caret position is different from ours.  Destroy the native caret
