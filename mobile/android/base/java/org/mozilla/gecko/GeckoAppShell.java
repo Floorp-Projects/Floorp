@@ -896,17 +896,28 @@ public class GeckoAppShell
         }
     }
 
+    private static PendingIntent makePersistentNotificationIntent(
+            int aNotificationID, String aType, String aPersistentData) {
+        Uri.Builder b = new Uri.Builder();
+        Uri u = b.scheme("notification-event").path(Integer.toString(aNotificationID))
+                .appendQueryParameter("type", aType)
+                .build();
+        Intent intent = GeckoService.getIntentToCreateServices(
+                getApplicationContext(), aType, aPersistentData);
+        intent.setData(u);
+        return PendingIntent.getService(
+                getApplicationContext(), 0, intent, PendingIntent.FLAG_UPDATE_CURRENT);
+    }
+
     @WrapForJNI(stubName = "ShowPersistentAlertNotificationWrapper")
     public static void showPersistentAlertNotification(
-          String aPersistentData,
-          String aImageUrl, String aAlertTitle, String aAlertText,
-          String aAlertCookie, String aAlertName, String aHost) {
-        Intent notificationIntent = GeckoService.getIntentToCreateServices(
-                getApplicationContext(), "persistent-notification-click", aPersistentData);
+            String aPersistentData,
+            String aImageUrl, String aAlertTitle, String aAlertText,
+            String aAlertCookie, String aAlertName, String aHost) {
         int notificationID = aAlertName.hashCode();
-        PendingIntent contentIntent = PendingIntent.getService(
-                getApplicationContext(), 0, notificationIntent, PendingIntent.FLAG_UPDATE_CURRENT);
-        notificationClient.add(notificationID, aImageUrl, aHost, aAlertTitle, aAlertText, contentIntent);
+        PendingIntent clickIntent = makePersistentNotificationIntent(notificationID, "persistent-notification-click", aPersistentData);
+        PendingIntent closeIntent = makePersistentNotificationIntent(notificationID, "persistent-notification-close", aPersistentData);
+        notificationClient.add(notificationID, aImageUrl, aHost, aAlertTitle, aAlertText, clickIntent, closeIntent);
     }
 
     @WrapForJNI(stubName = "ShowAlertNotificationWrapper")
@@ -931,7 +942,7 @@ public class GeckoAppShell
         ALERT_COOKIES.put(aAlertName, aAlertCookie);
         callObserver(aAlertName, "alertshow", aAlertCookie);
 
-        notificationClient.add(notificationID, aImageUrl, aHost, aAlertTitle, aAlertText, contentIntent);
+        notificationClient.add(notificationID, aImageUrl, aHost, aAlertTitle, aAlertText, contentIntent, null);
     }
 
     @WrapForJNI
