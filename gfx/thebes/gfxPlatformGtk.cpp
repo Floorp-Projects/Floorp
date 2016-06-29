@@ -640,6 +640,7 @@ public:
 
   public:
     GLXDisplay() : mGLContext(nullptr)
+                 , mXDisplay(nullptr)
                  , mSetupLock("GLXVsyncSetupLock")
                  , mVsyncThread("GLXVsyncThread")
                  , mVsyncTask(nullptr)
