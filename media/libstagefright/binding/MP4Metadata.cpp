@@ -456,7 +456,7 @@ MP4MetadataStagefright::Metadata(Stream* aSource)
 
 #ifdef MOZ_RUST_MP4PARSE
 static int32_t
-read_source(RefPtr<Stream> aSource, std::vector<uint8_t>& aBuffer)
+read_source(RefPtr<Stream> aSource, nsTArray<uint8_t>& aBuffer)
 {
   static LazyLogModule sLog("MP4Metadata");
   int64_t length;
@@ -467,9 +467,12 @@ read_source(RefPtr<Stream> aSource, std::vector<uint8_t>& aBuffer)
   MOZ_LOG(sLog, LogLevel::Debug,
          ("Source length %d bytes\n", (long long int)length));
   length = std::min<int64_t>(length, 1024 * 1024); // Don't read the entire file.
-  aBuffer.resize(length);
+  if (!aBuffer.SetLength(length, mozilla::fallible)) {
+    MOZ_LOG(sLog, LogLevel::Warning, ("Couldn't allocate temporary buffer"));
+    return MP4PARSE_ERROR_IO;
+  }
   size_t bytes_read = 0;
-  bool rv = aSource->ReadAt(0, aBuffer.data(), aBuffer.size(), &bytes_read);
+  bool rv = aSource->ReadAt(0, aBuffer.Elements(), aBuffer.Length(), &bytes_read);
   if (!rv || bytes_read != size_t(length)) {
     MOZ_LOG(sLog, LogLevel::Warning, ("Error copying mp4 data"));
     return MP4PARSE_ERROR_IO;
@@ -483,10 +486,10 @@ MP4MetadataRust::MP4MetadataRust(Stream* aSource)
 {
   static LazyLogModule sLog("MP4Metadata");
 
-  std::vector<uint8_t> buffer;
+  nsTArray<uint8_t> buffer;
   int32_t rv = read_source(mSource, buffer);
   if (rv == MP4PARSE_OK) {
-    rv = mp4parse_read(mRustState.get(), buffer.data(), buffer.size());
+    rv = mp4parse_read(mRustState.get(), buffer.Elements(), buffer.Length());
   }
   MOZ_LOG(sLog, LogLevel::Debug, ("rust parser returned %d\n", rv));
   Telemetry::Accumulate(Telemetry::MEDIA_RUST_MP4PARSE_SUCCESS,
