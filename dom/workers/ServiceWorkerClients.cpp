@@ -73,7 +73,7 @@ class GetRunnable final : public Runnable
                                  PromiseWorkerProxy* aPromiseProxy,
                                  UniquePtr<ServiceWorkerClientInfo>&& aValue,
                                  nsresult aRv)
-      : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount),
+      : WorkerRunnable(aWorkerPrivate),
         mPromiseProxy(aPromiseProxy),
         mValue(Move(aValue)),
         mRv(Move(aRv))
@@ -153,7 +153,7 @@ class MatchAllRunnable final : public Runnable
     ResolvePromiseWorkerRunnable(WorkerPrivate* aWorkerPrivate,
                                  PromiseWorkerProxy* aPromiseProxy,
                                  nsTArray<ServiceWorkerClientInfo>& aValue)
-      : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount),
+      : WorkerRunnable(aWorkerPrivate),
         mPromiseProxy(aPromiseProxy)
     {
       AssertIsOnMainThread();
@@ -229,7 +229,7 @@ public:
   ResolveClaimRunnable(WorkerPrivate* aWorkerPrivate,
                        PromiseWorkerProxy* aPromiseProxy,
                        nsresult aResult)
-    : WorkerRunnable(aWorkerPrivate, WorkerThreadModifyBusyCount)
+    : WorkerRunnable(aWorkerPrivate)
     , mPromiseProxy(aPromiseProxy)
     , mResult(aResult)
   {
@@ -304,7 +304,7 @@ public:
   ResolveOpenWindowRunnable(PromiseWorkerProxy* aPromiseProxy,
                             UniquePtr<ServiceWorkerClientInfo>&& aClientInfo,
                             const nsresult aStatus)
-  : WorkerRunnable(aPromiseProxy->GetWorkerPrivate(), WorkerThreadModifyBusyCount)
+  : WorkerRunnable(aPromiseProxy->GetWorkerPrivate())
   , mPromiseProxy(aPromiseProxy)
   , mClientInfo(Move(aClientInfo))
   , mStatus(aStatus)

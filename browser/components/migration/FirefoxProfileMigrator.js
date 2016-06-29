@@ -97,6 +97,13 @@ FirefoxProfileMigrator.prototype.getResources = function(aProfile) {
   return this._getResourcesInternal(sourceProfileDir, currentProfileDir, aProfile);
 };
 
+FirefoxProfileMigrator.prototype.getLastUsedDate = function() {
+  // We always pretend we're really old, so that we don't mess
+  // up the determination of which browser is the most 'recent'
+  // to import from.
+  return Promise.resolve(new Date(0));
+};
+
 FirefoxProfileMigrator.prototype._getResourcesInternal = function(sourceProfileDir, currentProfileDir, aProfile) {
   let getFileResource = function(aMigrationType, aFileNames) {
     let files = [];

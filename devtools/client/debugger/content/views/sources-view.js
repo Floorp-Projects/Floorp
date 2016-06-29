@@ -27,6 +27,7 @@ const {
 } = require("devtools/client/shared/widgets/view-helpers");
 const { Task } = require("devtools/shared/task");
 const { SideMenuWidget } = require("resource://devtools/client/shared/widgets/SideMenuWidget.jsm");
+const { gDevTools } = require("devtools/client/framework/devtools");
 
 const NEW_SOURCE_DISPLAY_DELAY = 200; // ms
 const FUNCTION_SEARCH_POPUP_POSITION = "topcenter bottomleft";
@@ -905,7 +906,7 @@ SourcesView.prototype = Heritage.extend(WidgetMethods, {
    * Opens selected item source in a new tab.
    */
   _onNewTabCommand: function () {
-    let win = Services.wm.getMostRecentWindow("navigator:browser");
+    let win = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
     let selected = this.selectedItem.attachment;
     win.openUILinkIn(selected.source.url, "tab", { relatedToCurrent: true });
   },

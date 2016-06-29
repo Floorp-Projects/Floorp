@@ -99,6 +99,7 @@ DIRS += [
     'smil',
     'telephony',
     'tv',
+    'url',
     'voicemail',
     'inputmethod',
     'webidl',

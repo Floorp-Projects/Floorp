@@ -1120,7 +1120,9 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
   // Runs the processing model over the cues and regions passed to it.
   // @param overlay A block level element (usually a div) that the computed cues
   //                and regions will be placed into.
-  WebVTT.processCues = function(window, cues, overlay) {
+  // @param controls  A Control bar element. Cues' position will be
+  //                 affected and repositioned according to it.
+  WebVTT.processCues = function(window, cues, overlay, controls) {
     if (!window || !cues || !overlay) {
       return null;
     }
@@ -1128,6 +1130,15 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
     // Remove all previous children.
     while (overlay.firstChild) {
       overlay.removeChild(overlay.firstChild);
+    }
+
+    var controlBar;
+    var controlBarShown;
+
+    if (controls) {
+      controlBar = controls.ownerDocument.getAnonymousElementByAttribute(
+        controls, "class", "controlBar");
+      controlBarShown = controlBar ? !!controlBar.clientHeight : false;
     }
 
     var paddedOverlay = window.document.createElement("div");
@@ -1143,6 +1154,10 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
     // be the case if a cue's state has been changed since the last computation or
     // if it has not been computed yet.
     function shouldCompute(cues) {
+      if (controlBarShown) {
+        return true;
+      }
+
       for (var i = 0; i < cues.length; i++) {
         if (cues[i].hasBeenReset || !cues[i].displayState) {
           return true;
@@ -1168,6 +1183,11 @@ this.EXPORTED_SYMBOLS = ["WebVTT"];
 
     (function() {
       var styleBox, cue;
+
+      if (controlBarShown) {
+        // Add an empty output box that cover the same region as video control bar.
+        boxPositions.push(BoxPosition.getSimpleBoxPosition(controlBar));
+      }
 
       for (var i = 0; i < cues.length; i++) {
         cue = cues[i];

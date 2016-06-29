@@ -37,7 +37,6 @@ EXPORTS.mozilla.dom.workers.bindings += [
     'ServiceWorkerClients.h',
     'ServiceWorkerWindowClient.h',
     'SharedWorker.h',
-    'URL.h',
     'WorkerHolder.h',
 ]
 
@@ -78,7 +77,6 @@ UNIFIED_SOURCES += [
     'ServiceWorkerUpdateJob.cpp',
     'ServiceWorkerWindowClient.cpp',
     'SharedWorker.cpp',
-    'URL.cpp',
     'WorkerDebuggerManager.cpp',
     'WorkerHolder.cpp',
     'WorkerLocation.cpp',

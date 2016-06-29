@@ -719,8 +719,7 @@ nsWebBrowserFind::SearchInFrame(nsPIDOMWindowOuter* aWindow, bool aWrapping,
   (void)find->SetCaseSensitive(mMatchCase);
   (void)find->SetFindBackwards(mFindBackwards);
 
-  // XXX Make and set a line breaker here, once that's implemented.
-  (void)find->SetWordBreaker(nullptr);
+  (void)find->SetEntireWord(mEntireWord);
 
   // Now make sure the content (for actual finding) and frame (for
   // selection) models are up to date.

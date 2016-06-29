@@ -9,10 +9,11 @@ var Ci = Components.interfaces;
 var Cu = Components.utils;
 
 Cu.import("resource://gre/modules/AppConstants.jsm");
-Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource://gre/modules/FileUtils.jsm");
+Cu.import("resource://gre/modules/osfile.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
 Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 Cu.import("resource:///modules/MigrationUtils.jsm");
 
 XPCOMUtils.defineLazyModuleGetter(this, "Downloads",
@@ -638,6 +639,24 @@ SafariProfileMigrator.prototype.getResources = function SM_getResources() {
   }
 
   return resources;
+};
+
+SafariProfileMigrator.prototype.getLastUsedDate = function SM_getLastUsedDate() {
+  let profileDir;
+  if (AppConstants.platform == "macosx") {
+    profileDir = FileUtils.getDir("ULibDir", ["Safari"], false);
+  } else {
+    profileDir = FileUtils.getDir("AppData", ["Apple Computer", "Safari"], false);
+  }
+  let datePromises = ["Bookmarks.plist", "History.plist"].map(file => {
+    let path = OS.Path.join(profileDir.path, file);
+    return OS.File.stat(path).catch(_ => null).then(info => {
+      return info ? info.lastModificationDate : 0;
+    });
+  });
+  return Promise.all(datePromises).then(dates => {
+    return new Date(Math.max.apply(Math, dates));
+  });
 };
 
 Object.defineProperty(SafariProfileMigrator.prototype, "mainPreferencesPropertyList", {
