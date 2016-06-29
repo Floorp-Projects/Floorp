@@ -1024,23 +1024,6 @@ class TracerConcrete : public Base {
     static void construct(void* storage, Referent* ptr) { new (storage) TracerConcrete(ptr); }
 };
 
-// Forward declarations, to silence compiler warnings.
-
-// Defined in js/src/vm/UbiNode.cpp.
-template<> const char16_t TracerConcrete<JS::Symbol>::concreteTypeName[];
-template<> const char16_t TracerConcrete<JSScript>::concreteTypeName[];
-template<> const char16_t TracerConcrete<js::LazyScript>::concreteTypeName[];
-template<> const char16_t TracerConcrete<js::jit::JitCode>::concreteTypeName[];
-template<> const char16_t TracerConcrete<js::Shape>::concreteTypeName[];
-template<> const char16_t TracerConcrete<js::BaseShape>::concreteTypeName[];
-template<> const char16_t TracerConcrete<js::ObjectGroup>::concreteTypeName[];
-
-// Defined in js/src/vm/String.cpp.
-template<> const char16_t TracerConcrete<JSString>::concreteTypeName[];
-
-// Defined in js/src/jsobj.cpp.
-template<> const char16_t TracerConcrete<JSObject>::concreteTypeName[];
-
 // For JS::TraceChildren-based types that have a 'compartment' method.
 template<typename Referent>
 class TracerConcreteWithCompartment : public TracerConcrete<Referent> {
