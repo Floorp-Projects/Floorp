@@ -461,14 +461,14 @@ private:
   // aLastPrevLevelNode.
   void AssertNoImportantRules(nsRuleNode* aCurrLevelNode,
                               nsRuleNode* aLastPrevLevelNode);
-  
+
   // Just like AddImportantRules except it doesn't actually add anything; it
   // just asserts that there are no CSS rules between aCurrLevelNode and
   // aLastPrevLevelNode.  Mostly useful for the preshint level.
   void AssertNoCSSRules(nsRuleNode* aCurrLevelNode,
                         nsRuleNode* aLastPrevLevelNode);
 #endif
-  
+
   // Enumerate the rules in a way that cares about the order of the
   // rules.
   // aElement is the element the rules are for.  It might be null.  aData

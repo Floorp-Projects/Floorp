@@ -1029,15 +1029,15 @@ public:
   static void ComputeFontFeatures(const nsCSSValuePairList *aFeaturesList,
                                   nsTArray<gfxFontFeature>& aFeatureSettings);
 
-  static nscoord CalcFontPointSize(int32_t aHTMLSize, int32_t aBasePointSize, 
+  static nscoord CalcFontPointSize(int32_t aHTMLSize, int32_t aBasePointSize,
                                    nsPresContext* aPresContext,
                                    nsFontSizeType aFontSizeType = eFontSize_HTML);
 
-  static nscoord FindNextSmallerFontSize(nscoord aFontSize, int32_t aBasePointSize, 
+  static nscoord FindNextSmallerFontSize(nscoord aFontSize, int32_t aBasePointSize,
                                          nsPresContext* aPresContext,
                                          nsFontSizeType aFontSizeType = eFontSize_HTML);
 
-  static nscoord FindNextLargerFontSize(nscoord aFontSize, int32_t aBasePointSize, 
+  static nscoord FindNextLargerFontSize(nscoord aFontSize, int32_t aBasePointSize,
                                         nsPresContext* aPresContext,
                                         nsFontSizeType aFontSizeType = eFontSize_HTML);
 
