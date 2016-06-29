@@ -175,6 +175,13 @@ DoContentSecurityChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo)
   nsCString mimeTypeGuess;
   nsCOMPtr<nsINode> requestingContext = nullptr;
 
+#ifdef DEBUG
+  // Don't enforce TYPE_DOCUMENT assertions for loads
+  // initiated by javascript tests.
+  bool skipContentTypeCheck = false;
+  skipContentTypeCheck = Preferences::GetBool("network.loadinfo.skip_type_assertion");
+#endif
+
   switch(contentPolicyType) {
     case nsIContentPolicy::TYPE_OTHER: {
       mimeTypeGuess = EmptyCString();
@@ -207,7 +214,7 @@ DoContentSecurityChecks(nsIChannel* aChannel, nsILoadInfo* aLoadInfo)
     }
 
     case nsIContentPolicy::TYPE_DOCUMENT: {
-      MOZ_ASSERT(false, "contentPolicyType not supported yet");
+      MOZ_ASSERT(skipContentTypeCheck || false, "contentPolicyType not supported yet");
       break;
     }
 
