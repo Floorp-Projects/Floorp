@@ -3222,11 +3222,11 @@ JS_IsArrayObject(JSContext* cx, JS::HandleObject obj, bool* isArray)
 {
     assertSameCompartment(cx, obj);
 
-    ESClassValue cls;
+    ESClass cls;
     if (!GetBuiltinClass(cx, obj, &cls))
         return false;
 
-    *isArray = cls == ESClass_Array;
+    *isArray = cls == ESClass::Array;
     return true;
 }
 
@@ -5670,11 +5670,11 @@ JS_ObjectIsDate(JSContext* cx, HandleObject obj, bool* isDate)
 {
     assertSameCompartment(cx, obj);
 
-    ESClassValue cls;
+    ESClass cls;
     if (!GetBuiltinClass(cx, obj, &cls))
         return false;
 
-    *isDate = cls == ESClass_Date;
+    *isDate = cls == ESClass::Date;
     return true;
 }
 
@@ -5774,11 +5774,11 @@ JS_ObjectIsRegExp(JSContext* cx, HandleObject obj, bool* isRegExp)
 {
     assertSameCompartment(cx, obj);
 
-    ESClassValue cls;
+    ESClass cls;
     if (!GetBuiltinClass(cx, obj, &cls))
         return false;
 
-    *isRegExp = cls == ESClass_RegExp;
+    *isRegExp = cls == ESClass::RegExp;
     return true;
 }
 
