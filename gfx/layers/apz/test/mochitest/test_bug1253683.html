@@ -1,0 +1,59 @@
+<!DOCTYPE HTML>
+<html>
+<!--
+https://bugzilla.mozilla.org/show_bug.cgi?id=1253683
+-->
+<head>
+  <title>Test to ensure non-scrollable frames don't get layerized</title>
+  <script type="application/javascript" src="/tests/SimpleTest/SimpleTest.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/EventUtils.js"></script>
+  <script type="application/javascript" src="/tests/SimpleTest/paint_listener.js"></script>
+  <script type="application/javascript" src="apz_test_native_event_utils.js"></script>
+  <script type="application/javascript" src="apz_test_utils.js"></script>
+  <link rel="stylesheet" type="text/css" href="/tests/SimpleTest/test.css"/>
+</head>
+<body>
+ <p id="display"></p>
+ <div id="container" style="height: 500px; overflow:scroll">
+  <pre id="no_layer" style="background-color: #f5f5f5; margin: 15px; padding: 15px; margin-top: 100px; border: 1px solid #eee; overflow:scroll">sample code here</pre>
+  <div style="height: 5000px">spacer to make the 'container' div the root scrollable element</div>
+ </div>
+<pre id="test">
+<script type="application/javascript;version=1.7">
+
+function* test(testDriver) {
+  var container = document.getElementById('container');
+  var no_layer = document.getElementById('no_layer');
+
+  // Check initial state
+  is(container.scrollTop, 0, "Initial scrollY should be 0");
+  ok(!isLayerized('no_layer'), "initially 'no_layer' should not be layerized");
+
+  // Scrolling over outer1 should layerize outer1, but not inner1.
+  yield moveMouseAndScrollWheelOver(no_layer, 10, 10, testDriver, true);
+  yield waitForAllPaints(function() {
+    flushApzRepaints(testDriver);
+  });
+
+  ok(container.scrollTop > 0, "We should have scrolled the body");
+  ok(!isLayerized('no_layer'), "no_layer should still not be layerized");
+}
+
+if (isApzEnabled()) {
+  SimpleTest.waitForExplicitFinish();
+
+  // Turn off displayport expiry so that we don't miss failures where the
+  // displayport is set and expired before we check for layerization.
+  // Also enable APZ test logging, since we use that data to determine whether
+  // a scroll frame was layerized.
+  pushPrefs([["apz.displayport_expiry_ms", 0],
+             ["apz.test.logging_enabled", true]])
+  .then(waitUntilApzStable)
+  .then(runContinuation(test))
+  .then(SimpleTest.finish);
+}
+
+</script>
+</pre>
+</body>
+</html>
