@@ -2116,6 +2116,55 @@ MacroAssemblerARMCompat::loadFloat32(const BaseIndex& src, FloatRegister dest)
     ma_vldr(Address(scratch, offset), VFPRegister(dest).singleOverlay());
 }
 
+
+void
+MacroAssemblerARMCompat::ma_loadHeapAsmJS(Register ptrReg, int size, bool needsBoundsCheck,
+                                          bool faultOnOOB, FloatRegister output)
+{
+    if (size == 32)
+        output = output.singleOverlay();
+
+    if (!needsBoundsCheck) {
+        ma_vldr(output, HeapReg, ptrReg, 0, Assembler::Always);
+    } else {
+        uint32_t cmpOffset = ma_BoundsCheck(ptrReg).getOffset();
+        append(wasm::BoundsCheck(cmpOffset));
+
+        if (faultOnOOB) {
+            ma_b(wasm::JumpTarget::OutOfBounds, Assembler::AboveOrEqual);
+        }
+        else {
+            size_t nanOffset =
+                size == 32 ? wasm::NaN32GlobalDataOffset : wasm::NaN64GlobalDataOffset;
+            ma_vldr(Address(GlobalReg, nanOffset - AsmJSGlobalRegBias), output,
+                    Assembler::AboveOrEqual);
+        }
+        ma_vldr(output, HeapReg, ptrReg, 0, Assembler::Below);
+    }
+}
+
+void
+MacroAssemblerARMCompat::ma_loadHeapAsmJS(Register ptrReg, int size, bool isSigned,
+                                          bool needsBoundsCheck, bool faultOnOOB,
+                                          Register output)
+{
+    if (!needsBoundsCheck) {
+        ma_dataTransferN(IsLoad, size, isSigned, HeapReg, ptrReg, output, Offset,
+                         Assembler::Always);
+        return;
+    }
+
+    uint32_t cmpOffset = ma_BoundsCheck(ptrReg).getOffset();
+    append(wasm::BoundsCheck(cmpOffset));
+
+    if (faultOnOOB)
+        ma_b(wasm::JumpTarget::OutOfBounds, Assembler::AboveOrEqual);
+    else
+        ma_mov(Imm32(0), output, Assembler::AboveOrEqual);
+
+    ma_dataTransferN(IsLoad, size, isSigned, HeapReg, ptrReg, output, Offset, Assembler::Below);
+}
+
 void
 MacroAssemblerARMCompat::store8(Imm32 imm, const Address& address)
 {
@@ -2290,6 +2339,51 @@ MacroAssemblerARMCompat::storePtr(Register src, AbsoluteAddress dest)
     ScratchRegisterScope scratch(asMasm());
     movePtr(ImmWord(uintptr_t(dest.addr)), scratch);
     storePtr(src, Address(scratch, 0));
+}
+
+void
+MacroAssemblerARMCompat::ma_storeHeapAsmJS(Register ptrReg, int size, bool needsBoundsCheck,
+                                           bool faultOnOOB, FloatRegister value)
+{
+    if (!needsBoundsCheck) {
+        BaseIndex addr(HeapReg, ptrReg, TimesOne, 0);
+        if (size == 32)
+            asMasm().storeFloat32(value, addr);
+        else
+            asMasm().storeDouble(value, addr);
+    } else {
+        uint32_t cmpOffset = ma_BoundsCheck(ptrReg).getOffset();
+        append(wasm::BoundsCheck(cmpOffset));
+
+        if (faultOnOOB)
+            ma_b(wasm::JumpTarget::OutOfBounds, Assembler::AboveOrEqual);
+
+        if (size == 32)
+            value = value.singleOverlay();
+
+        ma_vstr(value, HeapReg, ptrReg, 0, 0, Assembler::Below);
+    }
+}
+
+void
+MacroAssemblerARMCompat::ma_storeHeapAsmJS(Register ptrReg, int size, bool isSigned,
+                                           bool needsBoundsCheck, bool faultOnOOB,
+                                           Register value)
+{
+    if (!needsBoundsCheck) {
+        ma_dataTransferN(IsStore, size, isSigned, HeapReg, ptrReg, value, Offset,
+                         Assembler::Always);
+        return;
+    }
+
+    uint32_t cmpOffset = ma_BoundsCheck(ptrReg).getOffset();
+    append(wasm::BoundsCheck(cmpOffset));
+
+    if (faultOnOOB)
+        ma_b(wasm::JumpTarget::OutOfBounds, Assembler::AboveOrEqual);
+
+    ma_dataTransferN(IsStore, size, isSigned, HeapReg, ptrReg, value, Offset,
+                     Assembler::Below);
 }
 
 // Note: this function clobbers the input register.
