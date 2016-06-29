@@ -9330,3 +9330,26 @@ nsLayoutUtils::IsTransformed(nsIFrame* aForFrame, nsIFrame* aTopFrame)
   return false;
 }
 
+/*static*/ CSSPoint
+nsLayoutUtils::GetCumulativeApzCallbackTransform(nsIFrame* aFrame)
+{
+  CSSPoint delta;
+  if (!aFrame) {
+    return delta;
+  }
+  nsIFrame* frame = aFrame;
+  nsCOMPtr<nsIContent> content = frame->GetContent();
+  nsCOMPtr<nsIContent> lastContent;
+  while (frame) {
+    if (content && (content != lastContent)) {
+      void* property = content->GetProperty(nsGkAtoms::apzCallbackTransform);
+      if (property) {
+        delta += *static_cast<CSSPoint*>(property);
+      }
+    }
+    frame = GetCrossDocParentFrame(frame);
+    lastContent = content;
+    content = frame ? frame->GetContent() : nullptr;
+  }
+  return delta;
+}
