@@ -216,6 +216,9 @@ static gboolean window_state_event_cb     (GtkWidget *widget,
 static void     theme_changed_cb          (GtkSettings *settings,
                                            GParamSpec *pspec,
                                            nsWindow *data);
+static void     check_resize_cb           (GtkContainer* container,
+                                           gpointer user_data);
+
 #if (MOZ_WIDGET_GTK == 3)
 static void     scale_changed_cb          (GtkWidget* widget,
                                            GParamSpec* aPSpec,
@@ -475,6 +478,7 @@ nsWindow::nsWindow()
 #endif
 
     mFallbackSurface = nullptr;
+    mPendingConfigures = 0;
 }
 
 nsWindow::~nsWindow()
@@ -2417,6 +2421,8 @@ nsWindow::OnConfigureEvent(GtkWidget *aWidget, GdkEventConfigure *aEvent)
     LOG(("configure event [%p] %d %d %d %d\n", (void *)this,
          aEvent->x, aEvent->y, aEvent->width, aEvent->height));
 
+    mPendingConfigures--;
+
     LayoutDeviceIntRect screenBounds;
     GetScreenBounds(screenBounds);
 
@@ -3404,6 +3410,12 @@ nsWindow::OnDPIChanged()
 }
 
 void
+nsWindow::OnCheckResize()
+{
+    mPendingConfigures++;
+}
+
+void
 nsWindow::DispatchDragEvent(EventMessage aMsg, const LayoutDeviceIntPoint& aRefPoint,
                             guint aTime)
 {
@@ -3859,6 +3871,8 @@ nsWindow::Create(nsIWidget* aParent,
                          G_CALLBACK(delete_event_cb), nullptr);
         g_signal_connect(mShell, "window_state_event",
                          G_CALLBACK(window_state_event_cb), nullptr);
+        g_signal_connect(mShell, "check-resize",
+                         G_CALLBACK(check_resize_cb), nullptr);
 
         GtkSettings* default_settings = gtk_settings_get_default();
         g_signal_connect_after(default_settings,
@@ -4178,7 +4192,31 @@ nsWindow::NativeShow(bool aAction)
     }
     else {
         if (mIsTopLevel) {
-            gtk_widget_hide(GTK_WIDGET(mShell));
+            // Workaround window freezes on GTK versions before 3.21.2 by
+            // ensuring that configure events get dispatched to windows before
+            // they are unmapped. See bug 1225044.
+            if (gtk_check_version(3, 21, 2) != nullptr && mPendingConfigures > 0) {
+                GtkAllocation allocation;
+                gtk_widget_get_allocation(GTK_WIDGET(mShell), &allocation);
+
+                GdkEventConfigure event;
+                PodZero(&event);
+                event.type = GDK_CONFIGURE;
+                event.window = mGdkWindow;
+                event.send_event = TRUE;
+                event.x = allocation.x;
+                event.y = allocation.y;
+                event.width = allocation.width;
+                event.height = allocation.height;
+
+                auto shellClass = GTK_WIDGET_GET_CLASS(mShell);
+                for (int i = 0; i < mPendingConfigures; i++) {
+                    Unused << shellClass->configure_event(mShell, &event);
+                }
+                mPendingConfigures = 0;
+            }
+
+            gtk_widget_hide(mShell);
 
             ClearTransparencyBitmap(); // Release some resources
         }
@@ -6031,6 +6069,16 @@ theme_changed_cb (GtkSettings *settings, GParamSpec *pspec, nsWindow *data)
 {
     RefPtr<nsWindow> window = data;
     window->ThemeChanged();
+}
+
+static void
+check_resize_cb (GtkContainer* container, gpointer user_data)
+{
+    RefPtr<nsWindow> window = get_window_for_gtk_widget(GTK_WIDGET(container));
+    if (!window) {
+      return;
+    }
+    window->OnCheckResize();
 }
 
 #if (MOZ_WIDGET_GTK == 3)

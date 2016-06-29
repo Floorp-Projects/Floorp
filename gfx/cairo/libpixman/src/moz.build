@@ -24,6 +24,10 @@ if CONFIG['OS_ARCH'] != 'Darwin' and CONFIG['GNU_CC']:
             'pixman-arm-simd-asm-scaled.S',
             'pixman-arm-simd-asm.S',
         ]
+    if CONFIG['CLANG_CXX']:
+        ASFLAGS += [
+            '-no-integrated-as',
+        ]
 
 SOURCES += [
     'pixman-access-accessors.c',

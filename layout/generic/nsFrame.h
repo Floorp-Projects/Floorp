@@ -169,6 +169,9 @@ public:
 
   virtual nsresult  GetPointFromOffset(int32_t  inOffset,
                                        nsPoint* outPoint) override;
+  virtual nsresult  GetCharacterRectsInRange(int32_t aInOffset,
+                                             int32_t aLength,
+                                             nsTArray<nsRect>& aOutRect) override;
 
   virtual nsresult  GetChildFrameContainingOffset(int32_t    inContentOffset,
                                                   bool       inHint,

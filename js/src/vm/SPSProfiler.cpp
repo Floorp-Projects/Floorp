@@ -30,7 +30,6 @@ SPSProfiler::SPSProfiler(JSRuntime* rt)
     max_(0),
     slowAssertions(false),
     enabled_(false),
-    lock_(nullptr),
     eventMarker_(nullptr)
 {
     MOZ_ASSERT(rt != nullptr);
@@ -39,10 +38,6 @@ SPSProfiler::SPSProfiler(JSRuntime* rt)
 bool
 SPSProfiler::init()
 {
-    lock_ = PR_NewLock();
-    if (lock_ == nullptr)
-        return false;
-
     if (!strings.init())
         return false;
 
@@ -55,14 +50,12 @@ SPSProfiler::~SPSProfiler()
         for (ProfileStringMap::Enum e(strings); !e.empty(); e.popFront())
             js_free(const_cast<char*>(e.front().value()));
     }
-    if (lock_)
-        PR_DestroyLock(lock_);
 }
 
 void
 SPSProfiler::setProfilingStack(ProfileEntry* stack, uint32_t* size, uint32_t max)
 {
-    AutoSPSLock lock(lock_);
+    LockGuard<Mutex> lock(lock_);
     MOZ_ASSERT_IF(size_ && *size_ != 0, !enabled());
     MOZ_ASSERT(strings.initialized());
 
@@ -145,7 +138,7 @@ SPSProfiler::enable(bool enabled)
 const char*
 SPSProfiler::profileString(JSScript* script, JSFunction* maybeFun)
 {
-    AutoSPSLock lock(lock_);
+    LockGuard<Mutex> lock(lock_);
     MOZ_ASSERT(strings.initialized());
     ProfileStringMap::AddPtr s = strings.lookupForAdd(script);
     if (s)
@@ -170,7 +163,7 @@ SPSProfiler::onScriptFinalized(JSScript* script)
      * off, we still want to remove the string, so no check of enabled() is
      * done.
      */
-    AutoSPSLock lock(lock_);
+    LockGuard<Mutex> lock(lock_);
     if (!strings.initialized())
         return;
     if (ProfileStringMap::Ptr entry = strings.lookup(script)) {

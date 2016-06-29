@@ -1754,14 +1754,26 @@ class MOZ_RAII AutoLockGC
     }
 
     void lock() {
-        runtime_->lockGC();
+        MOZ_ASSERT(lockGuard_.isNothing());
+        lockGuard_.emplace(runtime_->gc.lock);
+#ifdef DEBUG
+        runtime_->gc.lockOwner = PR_GetCurrentThread();
+#endif
     }
 
     void unlock() {
-        runtime_->unlockGC();
+        MOZ_ASSERT(lockGuard_.isSome());
+#ifdef DEBUG
+        runtime_->gc.lockOwner = nullptr;
+#endif
+        lockGuard_.reset();
 #ifdef DEBUG
         wasUnlocked_ = true;
 #endif
+    }
+
+    js::LockGuard<js::Mutex>& guard() {
+        return lockGuard_.ref();
     }
 
 #ifdef DEBUG
@@ -1772,6 +1784,7 @@ class MOZ_RAII AutoLockGC
 
   private:
     JSRuntime* runtime_;
+    mozilla::Maybe<js::LockGuard<js::Mutex>> lockGuard_;
 #ifdef DEBUG
     bool wasUnlocked_;
 #endif

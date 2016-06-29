@@ -15,11 +15,10 @@ this.checkFromJSM = function checkFromJSM(ok, is, finish) {
     }
   }
 
-  var self = this;
   worker.onerror = function(event) {
     is(event.target, worker);
     ok(false, "Worker had an error: " + event.data);
-    self.worker.terminate();
+    worker.terminate();
     finish();
   };
 

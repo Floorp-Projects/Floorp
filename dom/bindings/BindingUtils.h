@@ -185,10 +185,6 @@ IsDOMObject(JSObject* obj)
   mozilla::dom::UnwrapObject<mozilla::dom::prototypes::id::Interface,        \
     mozilla::dom::Interface##Binding::NativeType>(obj, value)
 
-#define UNWRAP_WORKER_OBJECT(Interface, obj, value)                           \
-  UnwrapObject<prototypes::id::Interface##_workers,                           \
-    mozilla::dom::Interface##Binding_workers::NativeType>(obj, value)
-
 // Some callers don't want to set an exception when unwrapping fails
 // (for example, overload resolution uses unwrapping to tell what sort
 // of thing it's looking at).

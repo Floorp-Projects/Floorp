@@ -24,6 +24,7 @@ task:
       groupSymbol: tc
       groupName: Submitted by taskcluster
       symbol: B
+      tier: 2
       collection:
         debug: true
 
