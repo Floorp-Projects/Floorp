@@ -397,11 +397,15 @@ class BaseMarionetteArguments(ArgumentParser):
         separator = ':'
         cli_prefs = []
         if prefs_args:
+            misformatted = []
             for pref in prefs_args:
                 if separator not in pref:
-                    continue
-                cli_prefs.append(pref.split(separator, 1))
-
+                    misformatted.append(pref)
+                else:
+                    cli_prefs.append(pref.split(separator, 1))
+            if misformatted:
+                self._print_message("Warning: Ignoring preferences not in key{}value format: {}\n"
+                                    .format(separator, ", ".join(misformatted)))
         # string preferences
         prefs.add(cli_prefs, cast=True)
 
