@@ -28,7 +28,7 @@ class ValidatePlatforms(argparse.Action):
                    'android-api-15', 'android-api-15-gradle-dependencies',
                    'android-api-15-frontend', 'android-x86', 'sm-arm-sim',
                    'sm-compacting', 'sm-generational', 'sm-plain',
-                   'sm-rootanalysis', 'sm-warnaserr', 'all']
+                   'sm-rootanalysis', 'sm-warnaserr']
         validate_choices(values, choices)
         setattr(args, self.dest, values)
 
