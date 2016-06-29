@@ -205,7 +205,7 @@ WinCompositorWidget::EnsureTransparentSurface()
 
   if (!mTransparentSurface) {
     LayoutDeviceIntSize size = GetClientSize();
-    CreateTransparentSurface(size.width, size.height);
+    CreateTransparentSurface(IntSize(size.width, size.height));
   }
 
   RefPtr<gfxASurface> surface = mTransparentSurface;
@@ -213,11 +213,10 @@ WinCompositorWidget::EnsureTransparentSurface()
 }
 
 void
-WinCompositorWidget::CreateTransparentSurface(int32_t aWidth, int32_t aHeight)
+WinCompositorWidget::CreateTransparentSurface(const gfx::IntSize& aSize)
 {
   MOZ_ASSERT(!mTransparentSurface && !mMemoryDC);
-  RefPtr<gfxWindowsSurface> surface =
-    new gfxWindowsSurface(IntSize(aWidth, aHeight), SurfaceFormat::A8R8G8B8_UINT32);
+  RefPtr<gfxWindowsSurface> surface = new gfxWindowsSurface(aSize, SurfaceFormat::A8R8G8B8_UINT32);
   mTransparentSurface = surface;
   mMemoryDC = surface->GetDC();
 }
@@ -253,13 +252,11 @@ WinCompositorWidget::ClearTransparentWindow()
 }
 
 void
-WinCompositorWidget::ResizeTransparentWindow(int32_t aNewWidth, int32_t aNewHeight)
+WinCompositorWidget::ResizeTransparentWindow(const gfx::IntSize& aSize)
 {
   MOZ_ASSERT(mTransparencyMode == eTransparencyTransparent);
 
-  if (mTransparentSurface &&
-      mTransparentSurface->GetSize() == IntSize(aNewWidth, aNewHeight))
-  {
+  if (mTransparentSurface && mTransparentSurface->GetSize() == aSize) {
     return;
   }
 
@@ -267,7 +264,7 @@ WinCompositorWidget::ResizeTransparentWindow(int32_t aNewWidth, int32_t aNewHeig
   mTransparentSurface = nullptr;
   mMemoryDC = nullptr;
 
-  CreateTransparentSurface(aNewWidth, aNewHeight);
+  CreateTransparentSurface(aSize);
 }
 
 bool
