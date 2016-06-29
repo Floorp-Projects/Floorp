@@ -2836,6 +2836,16 @@ public:
    */
   static bool IsTransformed(nsIFrame* aForFrame, nsIFrame* aTopFrame = nullptr);
 
+  /**
+   * Walk up from aFrame to the cross-doc root, accumulating all the APZ callback
+   * transforms on the content elements encountered along the way. Return the
+   * accumulated value.
+   * XXX: Note that this does not take into account CSS transforms, nor
+   * differences in structure between the frame tree and the layer tree (which
+   * is probably what we *want* to be computing).
+   */
+  static CSSPoint GetCumulativeApzCallbackTransform(nsIFrame* aFrame);
+
 private:
   static uint32_t sFontSizeInflationEmPerLine;
   static uint32_t sFontSizeInflationMinTwips;
