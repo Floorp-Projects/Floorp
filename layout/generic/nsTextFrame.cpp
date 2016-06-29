@@ -1609,8 +1609,7 @@ BuildTextRunsScanner::ContinueTextRunAcrossFrames(nsTextFrame* aFrame1, nsTextFr
   if (mBidiEnabled) {
     FrameBidiData data1 = nsBidi::GetBidiData(aFrame1);
     FrameBidiData data2 = nsBidi::GetBidiData(aFrame2);
-    if (data1.embeddingLevel != data2.embeddingLevel ||
-        data1.paragraphDepth != data2.paragraphDepth) {
+    if (data1.embeddingLevel != data2.embeddingLevel) {
       return false;
     }
   }
@@ -4166,8 +4165,7 @@ nsContinuingTextFrame::Init(nsIContent*       aContent,
 #ifdef DEBUG
         FrameBidiData nextBidiData = nsBidi::GetBidiData(nextContinuation);
         NS_ASSERTION(bidiData.embeddingLevel == nextBidiData.embeddingLevel &&
-                     bidiData.baseLevel == nextBidiData.baseLevel &&
-                     bidiData.paragraphDepth == nextBidiData.paragraphDepth,
+                     bidiData.baseLevel == nextBidiData.baseLevel,
                      "stealing text from different type of BIDI continuation");
 #endif
         nextContinuation->mContentOffset = mContentOffset;

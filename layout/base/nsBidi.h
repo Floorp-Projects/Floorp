@@ -414,7 +414,6 @@ struct FrameBidiData
 {
   nsBidiLevel baseLevel;
   nsBidiLevel embeddingLevel;
-  uint8_t paragraphDepth;
 };
 } // namespace mozilla
 
@@ -682,11 +681,6 @@ public:
   static nsBidiLevel GetEmbeddingLevel(nsIFrame* aFrame)
   {
     return GetBidiData(aFrame).embeddingLevel;
-  }
-
-  static uint8_t GetParagraphDepth(nsIFrame* aFrame)
-  {
-    return GetBidiData(aFrame).paragraphDepth;
   }
 
 protected:
