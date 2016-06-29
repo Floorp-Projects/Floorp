@@ -243,6 +243,10 @@ toolbar[customizing] > .overflow-button {
   -moz-appearance: -moz-window-button-box;
 }
 
+#personal-bookmarks {
+  -moz-window-dragging: inherit;
+}
+
 %ifdef XP_MACOSX
 #titlebar-fullscreen-button {
   -moz-appearance: -moz-mac-fullscreen-button;
@@ -286,8 +290,8 @@ toolbar[customizing] > .overflow-button {
 }
 
 #main-window[tabsintitlebar] #TabsToolbar,
-#main-window[tabsintitlebar] #toolbar-menubar:not([autohide=true]),
-#main-window[tabsintitlebar] #navigator-toolbox > toolbar:not(#toolbar-menubar):-moz-lwtheme {
+#main-window[tabsintitlebar] #toolbar-menubar,
+#main-window[tabsintitlebar] #navigator-toolbox > toolbar:-moz-lwtheme {
   -moz-window-dragging: drag;
 }
 %endif
@@ -358,16 +362,6 @@ toolbarpaletteitem > #personal-bookmarks > #bookmarks-toolbar-placeholder,
 toolbar:not(#TabsToolbar) > #wrapper-personal-bookmarks,
 toolbar:not(#TabsToolbar) > #personal-bookmarks {
   -moz-box-flex: 1;
-}
-
-/* Ensure that empty parts of the bookmarks container can be dragged on OSX, and on other OSes
- * only when a lwtheme is in use. */
-%ifdef XP_MACOSX
-#main-window[tabsintitlebar]:not([customizing]) #personal-bookmarks {
-%else
-#main-window[tabsintitlebar]:not([customizing]) #personal-bookmarks:-moz-lwtheme {
-%endif
-  -moz-window-dragging: drag;
 }
 
 #zoom-controls[cui-areatype="toolbar"]:not([overflowedItem=true]) > #zoom-reset-button > .toolbarbutton-text {
