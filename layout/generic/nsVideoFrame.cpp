@@ -670,13 +670,16 @@ void
 nsVideoFrame::OnVisibilityChange(Visibility aNewVisibility,
                                  Maybe<OnNonvisible> aNonvisibleAction)
 {
-  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mPosterImage);
-  if (!imageLoader) {
-    nsContainerFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
-    return;
+  if (HasVideoElement()) {
+    nsCOMPtr<nsIDOMHTMLMediaElement> mediaDomElement = do_QueryInterface(mContent);
+    mediaDomElement->OnVisibilityChange(aNewVisibility);
   }
 
-  imageLoader->OnVisibilityChange(aNewVisibility, aNonvisibleAction);
+  nsCOMPtr<nsIImageLoadingContent> imageLoader = do_QueryInterface(mPosterImage);
+  if (imageLoader) {
+    imageLoader->OnVisibilityChange(aNewVisibility,
+                                    aNonvisibleAction);
+  }
 
   nsContainerFrame::OnVisibilityChange(aNewVisibility, aNonvisibleAction);
 }
