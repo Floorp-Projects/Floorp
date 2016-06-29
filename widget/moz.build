@@ -130,6 +130,7 @@ EXPORTS.mozilla += [
 EXPORTS.mozilla.widget += [
     'CompositorWidget.h',
     'IMEData.h',
+    'InProcessCompositorWidget.h',
     'PuppetBidiKeyboard.h',
     'WidgetMessageUtils.h',
 ]
@@ -141,6 +142,7 @@ UNIFIED_SOURCES += [
     'GfxInfoBase.cpp',
     'GfxInfoCollector.cpp',
     'GfxInfoWebGL.cpp',
+    'InProcessCompositorWidget.cpp',
     'InputData.cpp',
     'nsBaseAppShell.cpp',
     'nsBaseScreen.cpp',
