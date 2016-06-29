@@ -50,6 +50,10 @@ this.DevTools = function DevTools() {
 };
 
 DevTools.prototype = {
+  // The windowtype of the main window, used in various tools. This may be set
+  // to something different by other gecko apps.
+  chromeWindowType: "navigator:browser",
+
   registerDefaults() {
     // Ensure registering items in the sorted order (getDefault* functions
     // return sorted lists)

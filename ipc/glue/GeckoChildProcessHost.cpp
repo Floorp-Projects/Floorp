@@ -1244,8 +1244,6 @@ bool
 GeckoExistingProcessHost::PerformAsyncLaunch(StringVector aExtraOpts,
                                              base::ProcessArchitecture aArch)
 {
-  SetHandle(mExistingProcessHandle);
-
   OpenPrivilegedHandle(base::GetProcId(mExistingProcessHandle));
 
   MonitorAutoLock lock(mMonitor);

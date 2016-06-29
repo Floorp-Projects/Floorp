@@ -238,11 +238,10 @@ var UI = {
 
   openInBrowser: function (url) {
     // Open a URL in a Firefox window
-    let browserWin = Services.wm.getMostRecentWindow("navigator:browser");
-    if (browserWin) {
-      let gBrowser = browserWin.gBrowser;
-      gBrowser.selectedTab = gBrowser.addTab(url);
-      browserWin.focus();
+    let mainWindow = Services.wm.getMostRecentWindow(gDevTools.chromeWindowType);
+    if (mainWindow) {
+      mainWindow.openUILinkIn(url, "tab");
+      mainWindow.focus()
     } else {
       window.open(url);
     }

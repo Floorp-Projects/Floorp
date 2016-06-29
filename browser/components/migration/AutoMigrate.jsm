@@ -8,13 +8,19 @@ this.EXPORTED_SYMBOLS = ["AutoMigrate"];
 
 const { classes: Cc, interfaces: Ci, results: Cr, utils: Cu } = Components;
 
+const kAutoMigrateStartedPref = "browser.migrate.automigrate-started";
+const kAutoMigrateFinishedPref = "browser.migrate.automigrate-finished";
+
 Cu.import("resource:///modules/MigrationUtils.jsm");
+Cu.import("resource://gre/modules/PlacesUtils.jsm");
 Cu.import("resource://gre/modules/Services.jsm");
+Cu.import("resource://gre/modules/Task.jsm");
+Cu.import("resource://gre/modules/XPCOMUtils.jsm");
 
 const AutoMigrate = {
   get resourceTypesToUse() {
-    let {BOOKMARKS, HISTORY, FORMDATA, PASSWORDS} = Ci.nsIBrowserProfileMigrator;
-    return BOOKMARKS | HISTORY | FORMDATA | PASSWORDS;
+    let {BOOKMARKS, HISTORY, PASSWORDS} = Ci.nsIBrowserProfileMigrator;
+    return BOOKMARKS | HISTORY | PASSWORDS;
   },
 
   /**
@@ -25,35 +31,40 @@ const AutoMigrate = {
    *         failed for some reason.
    */
   migrate(profileStartup, migratorKey, profileToMigrate) {
-    let histogram = Services.telemetry.getKeyedHistogramById("FX_STARTUP_MIGRATION_AUTOMATED_IMPORT_SUCCEEDED");
-    histogram.add("initialized");
+    let histogram = Services.telemetry.getHistogramById("FX_STARTUP_MIGRATION_AUTOMATED_IMPORT_PROCESS_SUCCESS");
+    histogram.add(0);
     let migrator = this.pickMigrator(migratorKey);
-    histogram.add("got-browser");
+    histogram.add(5);
 
     profileToMigrate = this.pickProfile(migrator, profileToMigrate);
-    histogram.add("got-profile");
+    histogram.add(10);
 
     let resourceTypes = migrator.getMigrateData(profileToMigrate, profileStartup);
     if (!(resourceTypes & this.resourceTypesToUse)) {
       throw new Error("No usable resources were found for the selected browser!");
     }
-    histogram.add("got-data");
+    histogram.add(15);
 
     let sawErrors = false;
     let migrationObserver = function(subject, topic, data) {
       if (topic == "Migration:ItemError") {
         sawErrors = true;
       } else if (topic == "Migration:Ended") {
-        histogram.add(sawErrors ? "finished-with-errors" : "finished");
+        histogram.add(25);
+        if (sawErrors) {
+          histogram.add(26);
+        }
         Services.obs.removeObserver(migrationObserver, "Migration:Ended");
         Services.obs.removeObserver(migrationObserver, "Migration:ItemError");
+        Services.prefs.setCharPref(kAutoMigrateFinishedPref, Date.now().toString());
       }
     };
 
     Services.obs.addObserver(migrationObserver, "Migration:Ended", false);
     Services.obs.addObserver(migrationObserver, "Migration:ItemError", false);
+    Services.prefs.setCharPref(kAutoMigrateStartedPref, Date.now().toString());
     migrator.migrate(this.resourceTypesToUse, profileStartup, profileToMigrate);
-    histogram.add("migrate-called-without-exceptions");
+    histogram.add(20);
   },
 
   /**
@@ -109,5 +120,59 @@ const AutoMigrate = {
     }
     return profiles ? profiles[0].id : null;
   },
+
+  getUndoRange() {
+    let start, finish;
+    try {
+      start = parseInt(Services.prefs.getCharPref(kAutoMigrateStartedPref), 10);
+      finish = parseInt(Services.prefs.getCharPref(kAutoMigrateFinishedPref), 10);
+    } catch (ex) {
+      Cu.reportError(ex);
+    }
+    if (!finish || !start) {
+      return null;
+    }
+    return [new Date(start), new Date(finish)];
+  },
+
+  canUndo() {
+    if (!this.getUndoRange()) {
+      return Promise.resolve(false);
+    }
+    // Return a promise resolving to false if we're signed into sync, resolve
+    // to true otherwise.
+    let {fxAccounts} = Cu.import("resource://gre/modules/FxAccounts.jsm", {});
+    return fxAccounts.getSignedInUser().then(user => !user, () => Promise.resolve(true));
+  },
+
+  undo: Task.async(function* () {
+    if (!(yield this.canUndo())) {
+      throw new Error("Can't undo!");
+    }
+
+    yield PlacesUtils.bookmarks.eraseEverything();
+
+    // NB: we drop the start time of the migration for now. This is because
+    // imported history will always end up being 'backdated' to the actual
+    // visit time recorded by the browser from which we imported. As a result,
+    // a lower bound on this item doesn't really make sense.
+    // Note that for form data this could be different, but we currently don't
+    // support form data import from any non-Firefox browser, so it isn't
+    // imported from other browsers by the automigration code, nor do we
+    // remove it here.
+    let range = this.getUndoRange();
+    yield PlacesUtils.history.removeVisitsByFilter({
+      beginDate: new Date(0),
+      endDate: range[1]
+    });
+
+    try {
+      Services.logins.removeAllLogins();
+    } catch (ex) {
+      // ignore failure.
+    }
+    Services.prefs.clearUserPref("browser.migrate.automigrate-started");
+    Services.prefs.clearUserPref("browser.migrate.automigrate-finished");
+  }),
 };
 

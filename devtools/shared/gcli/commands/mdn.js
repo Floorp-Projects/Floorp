@@ -69,8 +69,8 @@ exports.items = [{
       root.appendChild(link);
 
       link.addEventListener("click", () => {
-        let gBrowser = context.environment.chromeWindow.gBrowser;
-        gBrowser.selectedTab = gBrowser.addTab(result.url);
+        let mainWindow = context.environment.chromeWindow;
+        mainWindow.openUILinkIn(result.url, "tab");
       });
 
       let summary = document.createElement("p");

@@ -361,17 +361,17 @@ if (inChrome) {
       // MediaStreamTrack is the older version of the API, implemented originally
       // by Google Chrome.
     } else if ("MediaStreamTrack" in rootObject && 
-      "getSources" in rootObject.MediaStreamTrack) {
-        rootObject.MediaStreamTrack.getSources(function (result) {
-          function checkForInput(device) {
-            return device.kind === "audio" || device.kind === "video";}
+    "getSources" in rootObject.MediaStreamTrack) {
+      rootObject.MediaStreamTrack.getSources(function (result) {
+        function checkForInput(device) {
+          return device.kind === "audio" || device.kind === "video";}
 
 
-          callback(result.some(checkForInput));});} else 
+        callback(result.some(checkForInput));});} else 
 
-      {
-        // We don't know, so assume true.
-        callback(true);}}
+    {
+      // We don't know, so assume true.
+      callback(true);}}
 
 
 
