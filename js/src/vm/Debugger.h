@@ -1139,33 +1139,25 @@ class DebuggerObject : public NativeObject
     static DebuggerObject* create(JSContext* cx, HandleObject proto, HandleObject obj,
                                   HandleNativeObject debugger);
 
-    static MOZ_MUST_USE bool isCallable(JSContext* cx, Handle<DebuggerObject*> object);
-    static MOZ_MUST_USE bool isFunction(JSContext* cx, Handle<DebuggerObject*> object);
-    static MOZ_MUST_USE bool isDebuggeeFunction(JSContext* cx, Handle<DebuggerObject*> object);
-    static MOZ_MUST_USE bool isBoundFunction(JSContext* cx, Handle<DebuggerObject*> object);
-    static MOZ_MUST_USE bool isArrowFunction(JSContext* cx, Handle<DebuggerObject*> object);
-    static MOZ_MUST_USE bool isGlobal(JSContext* cx, Handle<DebuggerObject*> object);
-    static MOZ_MUST_USE bool className(JSContext* cx, Handle<DebuggerObject*> object,
-                                       MutableHandleString result);
-    static MOZ_MUST_USE bool global(JSContext* cx, Handle<DebuggerObject*> object,
-                                    MutableHandle<DebuggerObject*> result);
-    static MOZ_MUST_USE bool name(JSContext* cx, Handle<DebuggerObject*> object,
-                                  MutableHandleString result);
-    static MOZ_MUST_USE bool displayName(JSContext* cx, Handle<DebuggerObject*> object,
-                                         MutableHandleString result);
-    static MOZ_MUST_USE bool parameterNames(JSContext* cx, Handle<DebuggerObject*> object,
-                                            MutableHandle<StringVector> result);
-    static MOZ_MUST_USE bool boundTargetFunction(JSContext* cx, Handle<DebuggerObject*> object,
+    // Properties
+    static MOZ_MUST_USE bool getClassName(JSContext* cx, Handle<DebuggerObject*> object,
+                                          MutableHandleString result);
+    static MOZ_MUST_USE bool getGlobal(JSContext* cx, Handle<DebuggerObject*> object,
+                                       MutableHandle<DebuggerObject*> result);
+    static MOZ_MUST_USE bool getParameterNames(JSContext* cx, Handle<DebuggerObject*> object,
+                                               MutableHandle<StringVector> result);
+    static MOZ_MUST_USE bool getBoundTargetFunction(JSContext* cx, Handle<DebuggerObject*> object,
                                                  MutableHandle<DebuggerObject*> result);
-    static MOZ_MUST_USE bool boundThis(JSContext* cx, Handle<DebuggerObject*> object,
-                                       MutableHandleValue result);
-    static MOZ_MUST_USE bool boundArguments(JSContext* cx, Handle<DebuggerObject*> object,
-                                            MutableHandle<ValueVector> result);
-    static MOZ_MUST_USE bool allocationSite(JSContext* cx, Handle<DebuggerObject*> object,
+    static MOZ_MUST_USE bool getBoundThis(JSContext* cx, Handle<DebuggerObject*> object,
+                                          MutableHandleValue result);
+    static MOZ_MUST_USE bool getBoundArguments(JSContext* cx, Handle<DebuggerObject*> object,
+                                               MutableHandle<ValueVector> result);
+    static MOZ_MUST_USE bool getAllocationSite(JSContext* cx, Handle<DebuggerObject*> object,
                                             MutableHandleObject result);
-    static MOZ_MUST_USE bool errorMessageName(JSContext* cx, Handle<DebuggerObject*> object,
-                                              MutableHandleString result);
+    static MOZ_MUST_USE bool getErrorMessageName(JSContext* cx, Handle<DebuggerObject*> object,
+                                                 MutableHandleString result);
 
+    // Methods
     static MOZ_MUST_USE bool isExtensible(JSContext* cx, Handle<DebuggerObject*> object,
                                           bool& result);
     static MOZ_MUST_USE bool isSealed(JSContext* cx, Handle<DebuggerObject*> object, bool& result);
@@ -1205,6 +1197,16 @@ class DebuggerObject : public NativeObject
     static MOZ_MUST_USE bool unwrap(JSContext* cx, Handle<DebuggerObject*> object,
                                     MutableHandle<DebuggerObject*> result);
 
+    // Infallible properties
+    bool isCallable() const;
+    bool isFunction() const;
+    bool isDebuggeeFunction() const;
+    bool isBoundFunction() const;
+    bool isArrowFunction() const;
+    bool isGlobal() const;
+    JSAtom* name() const;
+    JSAtom* displayName() const;
+
   private:
     enum {
         OWNER_SLOT
@@ -1233,6 +1235,7 @@ class DebuggerObject : public NativeObject
 
     static MOZ_MUST_USE bool construct(JSContext* cx, unsigned argc, Value* vp);
 
+    // JSNative properties
     static MOZ_MUST_USE bool callableGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool isBoundFunctionGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool isArrowFunctionGetter(JSContext* cx, unsigned argc, Value* vp);
@@ -1250,6 +1253,7 @@ class DebuggerObject : public NativeObject
     static MOZ_MUST_USE bool allocationSiteGetter(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool errorMessageNameGetter(JSContext* cx, unsigned argc, Value* vp);
 
+    // JSNative methods
     static MOZ_MUST_USE bool isExtensibleMethod(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool isSealedMethod(JSContext* cx, unsigned argc, Value* vp);
     static MOZ_MUST_USE bool isFrozenMethod(JSContext* cx, unsigned argc, Value* vp);
